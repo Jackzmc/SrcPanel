@@ -1,0 +1,138 @@
+{
+    "troll": {
+        "name": "Troll Commands",
+        "commands": [
+            {
+                "command": "fta",
+                "description": "Will apply a troll mode (See 'Feed The Trolls') to a player, shows a menu"
+            },
+            {
+                "command": "ftr <player(s)>",
+                "description": "Will reset all troll modes on a player"
+            },
+            {
+                "command": "ftl",
+                "description": "Will list all users & the modes that are applied on them"
+            },
+            {
+                "command": "ftm",
+                "description": "Will list all the modes & the descriptions (see 'Feed The Trolls' for a list)"
+            },
+            {
+                "command": "ftc",
+                "description": "Activates manual auto punishment on the last person to start a crescendo"
+            },
+            {
+                "command": "ftt",
+                "description": "Will list all the troll commands that are available"
+            },
+            {
+                "command": "mark <player(s)>",
+                "description": "Marks the player to be banned when they leave, and prevents any friendly fire"
+            }
+        ]
+    },
+    "player": {
+        "name": "Player Commands",
+        "commands": [
+            {
+                "command": "vomitplayer <player(s)>",
+                "description": "Not as subtle as swarming a player, will just blind them like they got boomed on, and attract commons to them obviously"
+            },
+            {
+                "command": "sethpplayer <player(s)> <health>",
+                "description": "Sets the player’s permanent health to this amount. < 0 will give them insane amount of health, 100 can give them extra as temporary health is added on."
+            },
+            {
+                "command": "slay <player(s)>",
+                "description": "Kills the given player(s)"
+            },
+            {
+                "command": "respawn <player(s)>",
+                "description": "Respawns the player at wherever you are looking. "
+            },
+            {
+                "command": "model <player(s)> <survivor_name>",
+                "description": "Sets the player's model to the survivor specified. Full name required (zoey, francis, etc)"
+            }
+        ]
+    },
+    "users": {
+        "name": "User Management",
+        "commands": [
+            {
+                "command": "ban <player(s)> [time=0] [reason_message]",
+                "description": "Bans the player(s) for the optional specified time. A time of 0 is a permament ban."
+            },
+            {
+                "command": "kick <player(s)> [reason_message]",
+                "description": "Kicks the player(s) for the specified optional reason.",
+                "note": "It will delete and recreate their character, resulting in 100 health and no items."
+            },
+            {
+                "command": "bandisconnected",
+                "description": "Will open a menu with a list of disconnected players. Select a player to activate a ban on them. Just permanently ban them if they are for sure troll and not a noob."
+            }
+        ]
+    },
+    "specials": {
+        "name": "Special Commands",
+        "commands": [
+            {
+                "command": "forcespecial <special:string> [amount] ",
+                "description": "Will force the director to spawn X whatever special normally, bypassing normal limits"
+            },
+            {
+                "command": "forcecursor <special:string> [amount] ",
+                "description": "Will force the director to spawn X at your cursor at set amount"
+            },
+            {
+                "command": "specialmenu",
+                "description": "Shows GUI of specials to spawn bypassing director limits"
+            },
+            {
+                "command": "cursormenu",
+                "description": "Shows GUI of specials to spawn at your cursor"
+            }
+        ]
+    },
+    "default": {
+        "name": "Miscellaneous",
+        "commands": [
+            {
+                "command": "respawn_all",
+                "description": "Will make all dead players respawn at the next available respawn closet. It won’t work for already opened rooms, even if door is closed. "
+            },
+            {
+                "command": "forcespecial <special:string> [amount] ",
+                "description": "Will force the director to spawn X whatever special normally, bypassing normal limits"
+            },
+            {
+                "command": "panic",
+                "description": "Forces a panic event, can be used in addition to swarm or vomitplayer commands"
+            },
+            {
+                "command": "spawnweapon <weapon> [amount]",
+                "description": "Will spawn the weapon wherever your mouse is pointing at"
+            },
+            {
+                "command": "give <weapon>",
+                "description": "Same as above, except will put it in your inventory (if full, drops on ground)"
+            },
+            {
+                "command": "populations",
+                "description": "Will show the population of all uncommon special types (ex. clowns)"
+            },
+            {
+                "command": "status",
+                "description": "Will print out (very hard to understand text) information about every player, their full ping, user id, etc. Only can be used in console",
+                "hidePrefix": true,
+                "consoleOnly": true
+            },
+            {
+                "command": "execcfg honks.cfg",
+                "description": "Sets up honks (sets population to 40%, sets the max shove timeout up)"
+            }
+        ]
+    }
+}

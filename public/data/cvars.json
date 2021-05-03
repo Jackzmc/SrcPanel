@@ -1,0 +1,56 @@
+[
+    {
+        "cvar": "l4d2_population_clowns <0.0 – 1.0>",
+        "description": "This will change the % of clowns that spawn. It needs a percentage as a decimal (so between 0.0 and 1.0), example 50% would be l4d2_population_clowns 0.",
+        "default": 0.0
+    },
+    {
+        "cvar": "z_gun_swing_coop_min_penalty <0-Infinity>",
+        "description": "This sets the minimum amount of swings until your shoves slow down. Default is 5, recommended for clowns is 20",
+        "default": 5
+    },
+    {
+        "cvar": "z_gun_swing_coop_max_penalty <0-Infinity> ",
+        "description": "This sets the absolute maximum amount of swings until you cannot shove anymore. Default is 15, recommended for clowns is 40",
+        "default": 15
+    },
+    {
+        "cvar": "l4d_anti_rush_allow <0 / 1>",
+        "description": "This will turn on or off the antirush prevention plugin. 0 disables, 1 enables. Default is set to 1.",
+        "default": 1
+    },
+    {
+        "cvar": "sb_all_bot_game <0 / 1>",
+        "description": "Will make bots play without any players, instead of restarting when all real players die. For some reason something keeps turning it to 1, so if you ever want to force level to reset set to 0.",
+        "default": 0
+    },
+    {
+        "cvar": "l4d2_eft_chance <0.0 - 1.0>",
+        "description": "The chance that each extra tank should spawn",
+        "default": 0.0
+    },
+    {
+        "cvar": "l4d2_eft_count <0-Infinity>",
+        "description": "The amount of extra tanks that should spawn",
+        "default": 1
+    },
+    {
+        "cvar": "l4d2_extraitem_chance <0.0 - 1.0",
+        "description": "The base chance (multiplied by player count) of an extra item being spawned for games that contain > 4 survivors. Default is 0.056",
+        "default": 0.056
+    },
+    {
+        "cvar": "sm_ftt_magnet_chance <0.0 - 1.0>",
+        "description": "% of the time that a magnet will work on a player. Default is 1.0 or 100%",
+        "default": 1.0
+    },
+    {
+        "cvar": "sm_ftt_autopunish_action <#>",
+        "description": "Setup automatic punishment of players. Add bits together\n0=Disabled, 1=Tank magnet, 2=Special magnet, 4=Swarm, 8=InstantVomit. Default is 7",
+        "default": 7
+    },
+    {
+        "cvar": "sm_ftt_autopunish_expire <0-Infinity>",
+        "description": "How many minutes of gametime until autopunish is turned off? 0 for never."
+    }
+]
