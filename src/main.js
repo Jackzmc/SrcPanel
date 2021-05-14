@@ -2,11 +2,11 @@ import Vue from 'vue'
 import App from './App.vue'
 import './registerServiceWorker'
 import VueSkeletonLoader from 'skeleton-loader-vue';
-import Tooltip from 'vue-bulma-tooltip'
 
-// Register the component globally
 Vue.component('vue-skeleton-loader', VueSkeletonLoader);
-Vue.component('tooltip', Tooltip)
+
+import '@/assets/main.scss'
+import '@creativebulma/bulma-tooltip/dist/bulma-tooltip.min.css'
 
 /*import { library } from '@fortawesome/fontawesome-svg-core'
 import { faUser, faFont, faCircle, faInfo } from '@fortawesome/free-solid-svg-icons'

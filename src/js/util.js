@@ -1,0 +1,69 @@
+export function parseType(type) {
+  switch(type) {
+    case "int":
+    case "integer":
+        type = "integer"
+        break
+    case "players":
+        return "multiple player targets"
+    case "player":
+        return "a player target"
+    case "float":
+        type = "decimal"
+        break
+    case "string":
+        type = "string"
+        break
+    case "bool":
+    case "boolean":
+        type = "boolean"
+        break
+  }
+  return type + " value(s)"
+}
+
+export function formatParameters({parameters, defaultValue, args}) {
+  const chars = parameters.split('')
+  let lastChar = null, hasType = false, letters = "", string = "", type = ""
+
+  for(const char of chars) {
+    if(char === '<') {
+      lastChar = '>'
+    }else if(char === '[') {
+      lastChar = ']'
+    }else if(char === lastChar) {
+      let tooltip = "";
+      if(type.length > 0)
+        tooltip = `Accepts ${parseType(type)}.`
+      if(defaultValue !== undefined && defaultValue !== null)
+        tooltip += ` Default value is ${defaultValue}`
+      if(args && args[letters]) {
+        if(args[letters].allowed_values)
+          if(Array.isArray(args[letters].allowed_values))
+            tooltip += `\nAllowed Values: ${args[letters].allowed_values.join(", ")}`
+          else
+            tooltip += `\nAllowed Values: ${args[letters].allowed_values.replace(/>=/,'≥').replace(/<=/,'≤')}`
+      }
+      if(tooltip.length > 0)
+        tooltip = `data-tooltip="${tooltip}"`
+
+      const tagType = char === '>' ? 'is-link' : 'is-secondary'
+      string += `<span class='tag ${tagType}' ${tooltip}>${letters.replace(/_/, ' ')}</span> `
+      lastChar = null
+      letters = ''
+      tooltip = ""
+      type = ""
+      hasType = false
+    }else if(lastChar)
+      if(char == ':') {
+        hasType = true
+      }else if(hasType) {
+        type += char
+      }else{
+        letters += char
+      }
+    else
+      string += char
+  }
+  return string
+}

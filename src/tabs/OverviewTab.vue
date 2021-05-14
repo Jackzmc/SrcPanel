@@ -53,7 +53,7 @@
 </template>
 
 <script>
-import Servers from './Servers.vue'
+import Servers from '../components/Servers.vue'
 
 export default {
   components: {

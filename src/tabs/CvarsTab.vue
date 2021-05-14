@@ -4,7 +4,18 @@
         <div class="column is-7">
             <ul>
               <li v-for="cvar in cvars" :key="cvar.cvar">
-                <b class="is-size-5" v-html="formatCvar(cvar.cvar)" /> - {{cvar.description}}
+                <b class="is-size-5">
+                  <component
+                      @click='showExamples(cvar)'
+                      :is="cvar.examples && cvar.examples.length > 0 ? 'a' : 'span'"
+                      class="is-size-5 has-tooltip-success"
+                      :data-tooltip="cvar.examples && cvar.examples.length > 0 ? 'Click to view examples' : null"
+                    >
+                      {{cvar.name}}
+                    </component>
+                  <span v-html="formatParameters(cvar)" />
+                </b>
+                 - {{cvar.description}}
               </li>
             </ul>
         </div>
@@ -42,12 +53,15 @@
 </template>
 
 <script>
+import { formatParameters } from '@/js/util'
+
 export default {
   data() {
     return {
      cvars: []
     }
   },
+
   computed: {
     prefix() {
         if(this.commandViewmode === 'console') return "sm_"
@@ -57,35 +71,21 @@ export default {
     }
   },
   methods: {
-    formatCvar(cvar) {
-      const args = cvar.trim().split('')
-      let letters = "", lastChar = null, string = "";
-      for(const char of args) {
-        if(char === '<') {
-          lastChar = '>'
-        }else if(char === '[') {
-          lastChar = ']'
-        }else if(char === lastChar) {
-          if(char === '>') {
-            string += `<span class='tag is-link'>${letters}</span> `
-          }else{
-            string += `<span class='tag is-secondary'>${letters}</span> `
-          }
-          lastChar = null
-          letters = ''
-        }else if(lastChar)
-          letters += char
-        else
-          string += char
-      }
-      return string
+    formatParameters,
+    getParameters(cvar) {
+      return cvar.split(' ').slice(1).join("")
     }
   },
   created() {
     fetch('./data/cvars.json')
     .then(response => response.json())
     .then(cvars => {
-      this.cvars = cvars
+      for(let cvar of cvars) {
+        const split = cvar.cvar.trim().split(' ')
+        cvar.name = split.shift()
+        cvar.parameters = split.join(" ")
+        this.cvars.push(cvar)
+      }
     })
     .catch(err => {
         console.error('Could not fetch commands, network error.', err)

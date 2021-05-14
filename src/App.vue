@@ -3,7 +3,7 @@
     <span id="lastUpdate">Last Updated {{$LAST_UPDATED}}</span>
     <section class="hero is-info has-text-centered">
         <div class="hero-body">
-            <p class="title">
+            <p class="title" >
                 Administration Guide
             </p>
             <p class="subtitle">
@@ -25,14 +25,15 @@
 </template>
 
 <script>
-import CommandsTab from './components/CommandsTab.vue'
-import CvarsTab from './components/CvarsTab.vue'
-import OverviewTab from './components/OverviewTab.vue'
-import ExtraPlayersTab from './components/ExtraPlayersTab.vue'
-import FeedTheTrollsTab from './components/FeedTheTrollsTab.vue'
-import AdvancedTab from './components/AdvancedTab.vue'
-import StateManagementTab from './components/StateManagementTab.vue'
-import BansTab from './components/BansTab.vue'
+import CommandsTab from './tabs/CommandsTab.vue'
+import CvarsTab from './tabs/CvarsTab.vue'
+import OverviewTab from './tabs/OverviewTab.vue'
+import ExtraPlayersTab from './tabs/ExtraPlayersTab.vue'
+import FeedTheTrollsTab from './tabs/FeedTheTrollsTab.vue'
+import AdvancedTab from './tabs/AdvancedTab.vue'
+import StateManagementTab from './tabs/StateManagementTab.vue'
+import BansTab from './tabs/BansTab.vue'
+import PluginDescriptionsTab from './tabs/PluginDescriptionsTab.vue'
 
 export default {
   name: 'App',
@@ -44,7 +45,8 @@ export default {
     advanced: ["Advanced", AdvancedTab],
     extraplayers: ["5+ Player Games", ExtraPlayersTab],
     states:   ["State Management", StateManagementTab],
-    bans:     ["Bans", BansTab]
+    bans:     ["Bans", BansTab],
+    plugins:  ["Plugins", PluginDescriptionsTab]
   },
   data() {
     return {
@@ -76,8 +78,8 @@ export default {
 }
 </script>
 
-<style>
 
+<style>
 #lastUpdate {
     position: fixed;
     top: 0;

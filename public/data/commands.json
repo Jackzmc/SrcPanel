@@ -7,7 +7,7 @@
                 "description": "Will apply a troll mode (See 'Feed The Trolls') to a player, shows a menu"
             },
             {
-                "command": "ftr <player(s)>",
+                "command": "ftr <player(s):players>",
                 "description": "Will reset all troll modes on a player"
             },
             {
@@ -15,7 +15,11 @@
                 "description": "Will list all users & the modes that are applied on them"
             },
             {
-                "command": "ftm",
+                "command": "ftt",
+                "description": "[In Beta] A new menu for applying troll modes, is categorized by type."
+            },
+            {
+                "command": "fth",
                 "description": "Will list all the modes & the descriptions (see 'Feed The Trolls' for a list)"
             },
             {
@@ -23,12 +27,8 @@
                 "description": "Activates manual auto punishment on the last person to start a crescendo"
             },
             {
-                "command": "ftt",
-                "description": "Will list all the troll commands that are available"
-            },
-            {
-                "command": "mark <player(s)>",
-                "description": "Marks the player to be banned when they leave, and prevents any friendly fire"
+                "command": "mark <player(s):players>",
+                "description": "Marks the player to be banned when they leave, and prevents any friendly fire. Run again to unmark."
             }
         ]
     },
@@ -36,24 +36,37 @@
         "name": "Player Commands",
         "commands": [
             {
-                "command": "vomitplayer <player(s)>",
+                "command": "vomitplayer <player(s):players>",
                 "description": "Not as subtle as swarming a player, will just blind them like they got boomed on, and attract commons to them obviously"
             },
             {
-                "command": "sethpplayer <player(s)> <health>",
+                "command": "sethpplayer <player(s):players> <health:int>",
                 "description": "Sets the player’s permanent health to this amount. < 0 will give them insane amount of health, 100 can give them extra as temporary health is added on."
             },
             {
-                "command": "slay <player(s)>",
+                "command": "slay <player(s):players>",
                 "description": "Kills the given player(s)"
             },
             {
-                "command": "respawn <player(s)>",
+                "command": "charge <player(s):players>",
+                "description": "Make the player get shoved like a charger charged them"
+            },
+            {
+                "command": "slap <player(s):players> [health:int]",
+                "description": "Slaps the player around, optionally dealing damage"
+            },
+            {
+                "command": "respawn <player(s):players>",
                 "description": "Respawns the player at wherever you are looking. "
             },
             {
-                "command": "model <player(s)> <survivor_name>",
-                "description": "Sets the player's model to the survivor specified. Full name required (zoey, francis, etc)"
+                "command": "model <player(s):players> <survivor_name:string>",
+                "description": "Sets the player's model to the survivor specified. Full name required (zoey, francis, etc)",
+                "args": {
+                    "survivor_name": {
+                        "allowed_values": ["nick", "ellis", "rochelle", "coach", "bill", "francis", "zoey", "louis"]
+                    }
+                }
             }
         ]
     },
@@ -61,11 +74,16 @@
         "name": "User Management",
         "commands": [
             {
-                "command": "ban <player(s)> [time=0] [reason_message]",
-                "description": "Bans the player(s) for the optional specified time. A time of 0 is a permament ban."
+                "command": "ban <player(s):players> [minutes=0:int] [reason message:string]",
+                "description": "Bans the player(s) for the optional specified time. A time of 0 is a permament ban.",
+                "args": {
+                    "minutes=0": {
+                        "allowed_values": ">= 0"
+                    }
+                }
             },
             {
-                "command": "kick <player(s)> [reason_message]",
+                "command": "kick <player(s):players> [reason message:string]",
                 "description": "Kicks the player(s) for the specified optional reason.",
                 "note": "It will delete and recreate their character, resulting in 100 health and no items."
             },
@@ -79,12 +97,22 @@
         "name": "Special Commands",
         "commands": [
             {
-                "command": "forcespecial <special:string> [amount] ",
-                "description": "Will force the director to spawn X whatever special normally, bypassing normal limits"
+                "command": "forcespecial <special:string> [amount:int] ",
+                "description": "Will force the director to spawn X whatever special normally, bypassing normal limits",
+                "args": {
+                    "amount": {
+                        "allowed_values": ">= 0"
+                    }
+                }
             },
             {
-                "command": "forcecursor <special:string> [amount] ",
-                "description": "Will force the director to spawn X at your cursor at set amount"
+                "command": "forcecursor <special:string> [amount:int] ",
+                "description": "Will force the director to spawn X at your cursor at set amount",
+                "args": {
+                    "amount": {
+                        "allowed_values": ">= 0"
+                    }
+                }
             },
             {
                 "command": "specialmenu",
@@ -104,19 +132,29 @@
                 "description": "Will make all dead players respawn at the next available respawn closet. It won’t work for already opened rooms, even if door is closed. "
             },
             {
-                "command": "forcespecial <special:string> [amount] ",
-                "description": "Will force the director to spawn X whatever special normally, bypassing normal limits"
+                "command": "forcespecial <special:string> [amount:int] ",
+                "description": "Will force the director to spawn X whatever special normally, bypassing normal limits",
+                "args": {
+                    "amount": {
+                        "allowed_values": ">= 0"
+                    }
+                }
             },
             {
                 "command": "panic",
                 "description": "Forces a panic event, can be used in addition to swarm or vomitplayer commands"
             },
             {
-                "command": "spawnweapon <weapon> [amount]",
-                "description": "Will spawn the weapon wherever your mouse is pointing at"
+                "command": "spawnweapon <weapon:string> [amount:int]",
+                "description": "Will spawn any amount of a specified weapon wherever your mouse is pointing at",
+                "args": {
+                    "amount": {
+                        "allowed_values": ">= 0"
+                    }
+                }
             },
             {
-                "command": "give <weapon>",
+                "command": "give <weapon:string>",
                 "description": "Same as above, except will put it in your inventory (if full, drops on ground)"
             },
             {
@@ -132,6 +170,17 @@
             {
                 "command": "execcfg honks.cfg",
                 "description": "Sets up honks (sets population to 40%, sets the max shove timeout up)"
+            },
+            {
+                "command": "playsound <player(s):players> <soundpath:string>",
+                "description": "Plays the specified soundpath to specified player(s). Automatically stops last sound",
+                "examples": [
+                    "To play <b>mariokartmusic.mp3</b>: %cmd% jackz custom/mariokartmusic.mp3"
+                ]
+            },
+            {
+                "command": "stopsound <player(s):players> [soundpath:string]",
+                "description": "Stops the soundpath for the selected player(s). If blank will stop last played sound"
             }
         ]
     }
