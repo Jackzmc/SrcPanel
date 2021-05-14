@@ -66,7 +66,10 @@
                     "survivor_name": {
                         "allowed_values": ["nick", "ellis", "rochelle", "coach", "bill", "francis", "zoey", "louis"]
                     }
-                }
+                },
+                "examples": [
+                    "%cmd% grace rochelle - Sets the player's model that has the name 'grace' to rochelle"
+                ]
             }
         ]
     },
@@ -103,7 +106,10 @@
                     "amount": {
                         "allowed_values": ">= 0"
                     }
-                }
+                },
+                "examples": [
+                    "%cmd% smoker 5 - Spawns 5 smokers in the area"
+                ]
             },
             {
                 "command": "forcecursor <special:string> [amount:int] ",
