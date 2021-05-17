@@ -52,5 +52,10 @@
     {
         "cvar": "sm_ftt_autopunish_expire <0-Infinity:int>",
         "description": "How many minutes of gametime until autopunish is turned off? 0 for never."
+    },
+    {
+        "cvar": "sm_ftt_magnet_targetting <0/1/2/3:int>",
+        "description": "Determines how specials will target magnetted players. 0 will target any alive magnetted players, 1 will make specials ignore incapped, 2 will make tanks ignore incapped, and 3 will do both. Default is 1",
+        "default": 1
     }
 ]

@@ -8,8 +8,15 @@
       <div class="column content">
         <h4>Sections</h4>
         <ul>
-          <li v-for="header in headers" :key="header">
-            <a @click='gotoHeader(header)'>{{header}}</a>
+          <li v-for="(subheaders, key) in headers" :key="key">
+            <a @click='gotoHeader(header)'>{{key}}</a>
+            <template v-if="subheaders.length > 0">
+              <ul>
+                <li v-for="subheader in subheaders" :key="subheader">
+                  <a @click='gotoHeader(subheader)'>{{subheader}}</a>
+                </li>
+              </ul>
+            </template>
           </li>
         </ul>
       </div>
@@ -25,7 +32,7 @@ export default {
   data() {
     return {
       html: null,
-      headers: []
+      headers: {},
     }
   },
   methods: {
@@ -42,10 +49,15 @@ export default {
         this.html = "<p class='has-text-danger'>Could not fetch information.</p>"
     })
     .then(text => {
+      //TODO: Implement nested headers, h3 under h2, h4 under h3, etc.
       this.html = Marked(text)
-      for(const match of this.html.matchAll(/h2 id="(.+)"/g)) {
-        console.log(match[1])
-        this.headers.push(match[1])
+      let lastH2Header;
+      for(const match of this.html.matchAll(/h(\d) id="(.+)"/g)) {
+        if(match[1] == "2") {
+          lastH2Header = match[2]
+          this.headers[match[2]] = []
+        }
+        else this.headers[lastH2Header].push(match[2])
       }
     })
   }
