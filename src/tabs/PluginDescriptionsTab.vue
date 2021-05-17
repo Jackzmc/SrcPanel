@@ -43,7 +43,7 @@ export default {
     })
     .then(text => {
       this.html = Marked(text)
-      for(const match of this.html.matchAll(/id="(.+)"/g)) {
+      for(const match of this.html.matchAll(/h2 id="(.+)"/g)) {
         console.log(match[1])
         this.headers.push(match[1])
       }
