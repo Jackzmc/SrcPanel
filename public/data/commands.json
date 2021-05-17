@@ -93,6 +93,10 @@
             {
                 "command": "bandisconnected",
                 "description": "Will open a menu with a list of disconnected players. Select a player to activate a ban on them. Just permanently ban them if they are for sure troll and not a noob."
+            },
+            {
+                "command": "ignore <player(s):players>",
+                "description": "Will make the player immune to being banned for friendly fire. Will toggle it on/off and will clear any pending bans for players. Only lasts until player disconnects."
             }
         ]
     },
