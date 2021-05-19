@@ -18,8 +18,6 @@
           </li>
         </ul>
     </div>
-    <br>
-
     <component :is="tab" />
   </div>
 </template>

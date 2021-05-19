@@ -16,6 +16,7 @@
     "marked": "^2.0.3",
     "register-service-worker": "^1.7.1",
     "skeleton-loader-vue": "^1.0.10",
+    "sugar": "^2.0.6",
     "vue": "^2.6.11"
   },
   "devDependencies": {
