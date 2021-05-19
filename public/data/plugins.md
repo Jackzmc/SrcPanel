@@ -29,7 +29,7 @@ Possibly a random one of these combinations:
 
 This plugin prevents the activation of buttons ahead of the team. It will prevent players from starting crescendos (and some small other activities as a side effect) until a certain threshold of the team has reached the area.
 
-Flow is an internal system in l4d2 that measures how far along a survivor is in a map.
+Flow is an internal system in l4d2 that measures how far along a survivor is in a map. The plugin caches the highest flow rate the survivor has achieved. (Therefore players need to be at the button only once)
 If a button press activates a horde, then the next button press will be allowed.
 
 The algorithm for detecting if the button should be pressable or not is as followed:

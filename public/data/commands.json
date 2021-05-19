@@ -191,6 +191,10 @@
             {
                 "command": "stopsound <player(s):players> [soundpath:string]",
                 "description": "Stops the soundpath for the selected player(s). If blank will stop last played sound"
+            },
+            {
+                "command": "swap <player:player> [player:player]",
+                "description": "Swaps the two players' locations. If second player not filled in, it will be yourself."
             }
         ]
     }
