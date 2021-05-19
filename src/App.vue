@@ -1,6 +1,12 @@
 <template>
   <div id="app">
-    <span id="lastUpdate">Last Updated {{$LAST_UPDATED}}</span>
+    <span id="lastUpdate">
+      Last Updated {{$LAST_UPDATED}}
+      <template v-if="updatePending">
+        <br>
+        <a style="color:#0f3bea " @click='reloadPage'>An update is available, click to refresh</a>
+      </template>
+    </span>
     <section class="hero is-info has-text-centered">
         <div class="hero-body">
             <p class="title" >
@@ -42,7 +48,7 @@ export default {
     ftt:      ["Feed The Trolls", FeedTheTrollsTab],
     advanced: ["Advanced", AdvancedTab],
     extraplayers: ["5+ Player Games", ExtraPlayersTab],
-    states:   ["State Management", StateManagementTab],
+    //states:   ["State Management", StateManagementTab],
     bans:     ["Bans", BansTab],
     plugins:  ["Plugins", PluginDescriptionsTab]
   },
@@ -50,7 +56,8 @@ export default {
     return {
       tabIndex: 'overview',
       tab: OverviewTab,
-      servers: []
+      servers: [],
+      updatePending: false
     }
   },
   methods: {
@@ -62,8 +69,28 @@ export default {
     isActive(tab) {
       return this.tabIndex == tab
     },
+    reloadPage() {
+      window.location.reload()
+    },
+    updateAvailable(event) {
+      this.updatePending = true
+      const registeration = event.detail
+      this.$buefy.snackbar.open({
+        type: 'is-danger',
+        message: 'An update is available.',
+        actionText: 'Reload',
+        onAction() {
+          window.location.reload()
+          if(registeration && registeration.waiting) {
+            registeration.waiting.postMessage({type: 'SKIP_WAITING'})
+          }
+        }
+      })
+      console.log(event)
+    },
   },
   created() {
+    document.addEventListener('swUpdated', this.updateAvailable, { once: true })
     if(window.location.hash) {
       const hash = window.location.hash.substring(1)
       if(this.$options.TABS[hash]) {
@@ -79,9 +106,9 @@ export default {
 
 <style>
 #lastUpdate {
-    position: fixed;
-    top: 0;
-    right: 5px;
-    color: white;
+  position: fixed;
+  top: 0;
+  right: 5px;
+  color: white;
 }
 </style>
