@@ -34,23 +34,22 @@
 export default {
   SERVER_IP: "45.33.30.87",
   data() {
-      return {
-        servers: {}
-      }
+    return {
+      servers: {},
+    }
   },
   methods: {
     copyCommand(event) {
-        if (document.selection) { // IE
-            const range = document.body.createTextRange();
-            range.moveToElementText(event.target);
-            range.select();
-        } else if (window.getSelection) {
-            const range = document.createRange();
-            range.selectNode(event.target);
-            window.getSelection().removeAllRanges();
-            window.getSelection().addRange(range);
-
-        }
+      if (document.selection) { // IE
+        const range = document.body.createTextRange();
+        range.moveToElementText(event.target);
+        range.select();
+      } else if (window.getSelection) {
+        const range = document.createRange();
+        range.selectNode(event.target);
+        window.getSelection().removeAllRanges();
+        window.getSelection().addRange(range);
+      }
     },
     getServerClasses(server) {
       const classes = ['has-tooltip-arrow']
@@ -68,7 +67,6 @@ export default {
         classes.push('has-tooltip-danger')
       }
 
-
       return classes
     },
     getServerMessage(server) {
@@ -78,6 +76,7 @@ export default {
       return
     },
     refreshServers() {
+      this.$emit('refresh', 'start')
       fetch('https://servers.jackz.me/api/gameservers?group=l4d2')
       .then(response => {
         if(response.ok) return response.json()
@@ -88,13 +87,16 @@ export default {
             this.$set(this.servers, server.meta.id, server)
           }
       })
+      .finally(() => {
+        this.$emit('refresh', 'stop')
+      })
     }
   },
   created() {
     this.refreshServers()
     setInterval(() => {
-        this.refreshServers()
-    }, 1000 * 60 * 2)
+      this.refreshServers()
+    }, 1000 * 60 * 1)
   }
 }
 </script>
@@ -102,9 +104,13 @@ export default {
 <style>
 
 #lastUpdate {
-    position: fixed;
-    top: 0;
-    right: 5px;
-    color: white;
+  position: fixed;
+  top: 0;
+  right: 5px;
+  color: white;
+}
+
+.has-text-warning {
+  color: #b79613 !important
 }
 </style>

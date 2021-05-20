@@ -26,8 +26,8 @@
     <br>
     <div class="columns is-gapless">
         <div class="column is-9">
-            <Servers />
-            <p class="is-inline is-pulled-right" style="margin-right: 90px">List auto updates every 2 minutes</p>
+            <Servers @refresh="onServerRefresh" />
+            <p class="is-inline is-pulled-right" style="margin-right: 90px">List refreshing in {{countdown}} seconds</p>
             <em>* Server supports custom maps</em><br>
             <em>** Server supports custom maps AND 5+ players</em>
         </div>
@@ -61,7 +61,30 @@ export default {
   },
   data() {
     return {
+      countdown: 0,
+      interval: null
     }
   },
+  methods: {
+    onServerRefresh(mode) {
+      if(mode == 'start') {
+        this.countdown = "Refreshing..."
+      }else{
+        this.countdown = 60 * 1;
+        this.startCountdown()
+      }
+    },
+    startCountdown() {
+      clearInterval(this.interval)
+      this.interval = setInterval(() => {
+        if(--this.countdown == 0) {
+          clearInterval(this.interval)
+        }
+      }, 1000)
+    }
+  },
+  created() {
+
+  }
 }
 </script>
