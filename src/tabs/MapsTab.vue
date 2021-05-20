@@ -46,7 +46,7 @@
           <h4 class='title is-4'>
             <a :href="prefetch.result.file_url">{{prefetch.result.title}}</a>
           </h4>
-          <p class="subtitle is-6">{{prefetch.result.fileSizeReadable}}</p>
+          <p class="subtitle is-6">{{prefetch.result.fileSizeReadable}} • Updated {{prefetch.result.updateDate}}</p>
           <p>{{prefetch.result.description}}</p>
         </template>
       </div>
@@ -112,9 +112,9 @@ export default {
 
     preview(entry) {
       if(!this.prefetch.result || this.prefetch.result.name !== entry.name) {
-        if(entry.info)
-          this.prefetch.result = entry.info
-        else {
+        if(entry.info) {
+          this.prefetch.result = generatePrefetch(entry.info)
+        } else {
           this.itemid = null
           this.fetchItem(entry.name.slice(0, -4))
         }
@@ -150,7 +150,7 @@ export default {
 
       if(isNaN(this.itemid)) {
         return this.prefetch.error = "An invalid workshop item id was provided."
-      }else if(this.vpks.includes(`${this.itemid}.vpk`)) {
+      }else if(this.vpks.find(vpk => vpk.name === `${this.itemid}.vpk`)) {
         return this.prefetch.error = "Item has already been downloaded."
       }else{
         fetch(`https://jackz.me/l4d2/scripts/workshop.php?key=${this.key}&mode=prefetch&itemid=${itemid}`)
@@ -176,11 +176,8 @@ export default {
             info: json
           }
 
-          this.prefetch.result = {
-            ...result,
-            tags,
-            fileSizeReadable: humanFileSize(result.file_size)
-          }
+          const lastUpdateDate = new Date(result.time_updated);
+          this.prefetch.result = generatePrefetch(result)
         })
       }
     },
@@ -211,6 +208,16 @@ export default {
       this.key = this.$SCRIPT_KEY
       this.fetchVPKS()
     }
+  }
+}
+
+function generatePrefetch(result) {
+  const lastUpdateDate = new Date(result.time_updated * 1000);
+  return {
+    ...result,
+    tags: result.tags.map(t => t.tag),
+    fileSizeReadable: humanFileSize(result.file_size, true),
+    updateDate: `${lastUpdateDate.toLocaleDateString()} at ${lastUpdateDate.toLocaleTimeString()}`
   }
 }
 
