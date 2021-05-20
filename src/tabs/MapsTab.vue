@@ -6,9 +6,10 @@
         <div class="content">
           <b>Listing {{vpks.length}} workshop items</b>
           <div class="columns is-multiline">
-            <div class="column is-3" v-for="entry in vpks" :key="entry.vpk">
-              <a v-if="entry.url" :href="entry.url">{{entry.vpk}}</a>
-              <p v-else>{{entry.vpk}}</p>
+            <div class="column is-4" v-for="entry in vpks" :key="entry.vpk">
+              <b><a @click='preview(entry)' class="has-text-info">{{entry.display}}</a></b>
+              <br>
+              <a v-if="entry.url" :href="entry.url"><em>View on workshop</em></a>
             </div>
           </div>
         </div>
@@ -30,7 +31,7 @@
           <div class="field">
             <div class="control">
               <a v-if="prefetch.invalidType" click='download'>Click here to force download. Please do not abuse.</a>
-              <input class="button" type="submit" value="Download" v-if="isDownloadable" :disabled="download.status"/>
+              <input class="button is-success" type="submit" value="Download" v-if="isDownloadable" :disabled="download.status"/>
             </div>
           </div>
 
@@ -69,7 +70,7 @@ export default {
     return {
       vpks: [],
       ready: false,
-      key: "M4HD76yX58DDZ2bxrDTFrYAu",
+      key: "",
       keyInput: null,
       error: false,
       itemid: null,
@@ -109,8 +110,19 @@ export default {
       this.fetchVPKS()
     },
 
+    preview(entry) {
+      if(!this.prefetch.result || this.prefetch.result.name !== entry.name) {
+        if(entry.info)
+          this.prefetch.result = entry.info
+        else {
+          this.itemid = null
+          this.fetchItem(entry.name.slice(0, -4))
+        }
+      }
+    },
+
     fetchVPKS() {
-      fetch(`https://jackz.me/l4d2/scripts/workshop.php?key=${this.key}&mode=vpks`)
+      fetch(`https://jackz.me/l4d2/scripts/workshop.php?key=${this.key}&mode=list`)
       .then(response => {
         if(response.ok) return response.json()
         if(response.status === 401) {
@@ -119,54 +131,49 @@ export default {
         }
       })
       .then(json => {
-        this.vpks = json.map(vpk => {
-          let entry = {
-            vpk: vpk
+        this.vpks = json.map(entry => {
+          if(/^(\d+)\.vpk/.test(entry.name)) {
+            entry.url = `https://steamcommunity.com/sharedfiles/filedetails/?id=${entry.name.slice(0,-4)}`
           }
-
-          if(/^(\d+)\.vpk/.test(vpk)) {
-            entry.url = `https://steamcommunity.com/sharedfiles/filedetails/?id=${vpk.slice(0,-4)}`
-          }
-
+          entry.display = entry.info ? entry.info.title : entry.name
           return entry
         })
         this.ready = true
       })
     },
 
-    fetchItem() {
-      if(!this.itemid || this.itemid.length == "") return
+    fetchItem(itemid = this.itemid) {
+      if(!itemid || itemid.length == "") return
       this.prefetch.error = null
       this.download.error = null
       this.download.result = null
+
       if(isNaN(this.itemid)) {
         return this.prefetch.error = "An invalid workshop item id was provided."
       }else if(this.vpks.includes(`${this.itemid}.vpk`)) {
         return this.prefetch.error = "Item has already been downloaded."
       }else{
-        const parameters = new URLSearchParams();
-        parameters.append('itemcount', '1')
-        parameters.append(`publishedfileids[0]`, this.itemid)
-
-        fetch(`https://proxy.jackz.me/api.steampowered.com/ISteamRemoteStorage/GetPublishedFileDetails/v1/`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-          body: parameters
-        })
+        fetch(`https://jackz.me/l4d2/scripts/workshop.php?key=${this.key}&mode=prefetch&itemid=${itemid}`)
         .then(response => {
           if(response.ok) return response.json()
-          else this.pretch.error = response.statusText
+          else this.prefetch.error = response.statusText
         })
         .then(json => {
-          const result = json.response.publishedfiledetails[0]
+          const result = json
           const tags = result.tags.map(t => t.tag)
           if(!tags.includes("Campaigns") && !tags.includes("Co-op")) {
             this.prefetch.error = `Item does not seem to be a valid campaign. If you think this is an error press the button below`
             this.prefetch.invalidType = true
           }else{
-            this.prefetch.lastValid = this.itemid
+            this.prefetch.lastValid = itemid
+          }
+
+          const index = this.vpks.findIndex(entry => entry.name === `${itemid}.vpk`)
+          if(index > -1) this.vpks[index] = {
+            ...this.vpks[index].info,
+            display: json.title,
+            url: `https://steamcommunity.com/sharedfiles/filedetails/?id=${itemid}`,
+            info: json
           }
 
           this.prefetch.result = {
@@ -192,7 +199,7 @@ export default {
         }
       })
       .then(json => {
-        this.vpks.push(`${this.itemid}.vpk`)
+        this.vpks = json.vpks
         this.download.status = "success"
         this.itemid = null
         setTimeout(() => this.download.status = null, 7000)
@@ -200,7 +207,8 @@ export default {
     }
   },
   created() {
-    if(this.key) {
+    if(this.$SCRIPT_KEY) {
+      this.key = this.$SCRIPT_KEY
       this.fetchVPKS()
     }
   }
