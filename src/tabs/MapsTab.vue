@@ -4,7 +4,7 @@
     <div class="columns">
       <div class="column is-8">
         <div class="content">
-          <b>Listing {{vpks.length}} workshop items</b>
+          <b>Listing {{vpks.length}} workshop items - Click a name to view information</b>
           <div class="columns is-multiline">
             <div class="column is-4" v-for="entry in vpks" :key="entry.vpk">
               <b><a @click='preview(entry)' class="has-text-info">{{entry.display}}</a></b>
@@ -30,8 +30,9 @@
           </div>
           <div class="field">
             <div class="control">
-              <a v-if="prefetch.invalidType" click='download'>Click here to force download. Please do not abuse.</a>
+              <a v-if="prefetch.invalidType" click='download(true)'>Click here to force download. Please do not abuse.</a>
               <input class="button is-success" type="submit" value="Download" v-if="isDownloadable" :disabled="download.status"/>
+              <input class="button is-info" @click="restartServer" v-if="download.status === 'success'" value="Restart Server" />
             </div>
           </div>
 
@@ -109,7 +110,19 @@ export default {
       this.error = null
       this.fetchVPKS()
     },
-
+    restartServer() {
+      fetch(`https://jackz.me/l4d2/scripts/manage.php?key=${this.$SCRIPT_KEY}&method=${type}&port=${server.meta.port}`)
+      .then(async(response) => {
+        if(response.ok) {
+          this.download.status = null
+        }else{
+          this.download.error = await response.json().error
+        }
+      })
+      .catch(err => {
+        this.download.error = err.message
+      })
+    },
     preview(entry) {
       if(!this.prefetch.result || this.prefetch.result.name !== entry.name) {
         if(entry.info) {
@@ -176,18 +189,17 @@ export default {
             info: json
           }
 
-          const lastUpdateDate = new Date(result.time_updated);
           this.prefetch.result = generatePrefetch(result)
         })
       }
     },
 
-    downloadItem() {
+    downloadItem(forced = false) {
       if(!this.itemid || this.itemid.length == "") return
       this.download.status = "Downloading"
       this.download.error = null
       this.prefetch.invalidType = false
-      fetch(`https://jackz.me/l4d2/scripts/workshop.php?key=${this.key}&mode=download&itemid=${this.itemid}`)
+      fetch(`https://jackz.me/l4d2/scripts/workshop.php?key=${this.key}&mode=download&itemid=${this.itemid}&forced=${forced}`)
       .then(response => {
         if(response.ok) return response.json()
         if(response.status === 401) {
