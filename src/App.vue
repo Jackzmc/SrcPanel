@@ -38,6 +38,7 @@ import AdvancedTab from './tabs/AdvancedTab.vue'
 import StateManagementTab from './tabs/StateManagementTab.vue'
 import BansTab from './tabs/BansTab.vue'
 import PluginDescriptionsTab from './tabs/PluginDescriptionsTab.vue'
+import MapsTab from './tabs/MapsTab.vue'
 
 export default {
   name: 'App',
@@ -50,6 +51,7 @@ export default {
     extraplayers: ["5+ Player Games", ExtraPlayersTab],
     //states:   ["State Management", StateManagementTab],
     bans:     ["Bans", BansTab],
+    workshop: ['Maps', MapsTab],
     plugins:  ["Plugins", PluginDescriptionsTab]
   },
   data() {
