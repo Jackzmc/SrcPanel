@@ -23,7 +23,7 @@
                   {{server.meta.connect}}
                 </p></td>
                 <td><p @click='copyCommand'>
-                  mm_dedicated_force_servers {{$options.SERVER_IP}}:{{server.meta.port}}
+                  mm_dedicated_force_servers {{$CONNECT_IP}}:{{server.meta.port}}
                 </p></td>
             </tr>
         </tbody>
@@ -32,7 +32,6 @@
 
 <script>
 export default {
-  SERVER_IP: "45.33.30.87",
   data() {
     return {
       servers: {},
@@ -59,7 +58,7 @@ export default {
           classes.push('has-text-success')
           classes.push('has-tooltip-success')
         } else {
-          classes.push('has-text-warning')
+          classes.push('')
           classes.push('has-tooltip-warning')
         }
       } else {
@@ -110,7 +109,7 @@ export default {
   color: white;
 }
 
-.has-text-warning {
+b.warn {
   color: #b79613 !important
 }
 </style>

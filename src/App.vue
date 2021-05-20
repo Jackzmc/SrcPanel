@@ -39,6 +39,7 @@ import StateManagementTab from './tabs/StateManagementTab.vue'
 import BansTab from './tabs/BansTab.vue'
 import PluginDescriptionsTab from './tabs/PluginDescriptionsTab.vue'
 import MapsTab from './tabs/MapsTab.vue'
+import ManagementTab from './tabs/ManagementTab.vue'
 
 export default {
   name: 'App',
@@ -52,6 +53,7 @@ export default {
     //states:   ["State Management", StateManagementTab],
     bans:     ["Bans", BansTab],
     workshop: ['Maps', MapsTab],
+    //manage:   ["Management", ManagementTab],
     plugins:  ["Plugins", PluginDescriptionsTab]
   },
   data() {
