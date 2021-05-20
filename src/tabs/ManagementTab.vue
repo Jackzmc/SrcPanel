@@ -1,0 +1,128 @@
+<template>
+<div class="container">
+  <p :class='message.type' v-if="message" v-html="message.content"></p>
+  <table class="table">
+      <thead>
+          <tr>
+              <th>Name</th>
+              <th>Players</th>
+              <th>Actions</th>
+          </tr>
+      </thead>
+      <tbody>
+        <tr v-for="server in servers" :key="server.id">
+          <td>
+            <a :href="'steam://connect/lgs.jackz.me:' + server.meta.port">
+              <b :data-tooltip="getServerMessage(server)" :class="getServerClasses(server)" >{{server.meta.name}}</b>
+            </a>
+            <span v-if='server.id === "Left_4_Dead_2_Improved"' class='is-size-5'><b>**</b></span>
+            <span v-else-if='server.id.startsWith("Left_4_Dead_2_Public")' class='is-size-5'><b>*</b></span>
+          </td>
+          <td><span v-if="server.status === 'online'">{{server.players.online}} / {{server.players.max}}</span></td>
+          <td>
+            <div class="buttons">
+              <a @click="processAction(server,'request')" class="button">Request Restart</a>
+              <a @click="processAction(server,'restart')" class="button is-warning" :disabled="!shiftPressed">Force Restart</a>
+              <a @click="processAction(server,'update')" class="button is-info">Update</a>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+  </table>
+  <em>* Server supports custom maps</em><br>
+  <em>** Server supports custom maps AND 5+ players</em>
+</div>
+</template>
+
+<script>
+export default {
+  data() {
+    return {
+      servers: {},
+      shiftPressed: false,
+      message: {
+        content: null,
+        type: null
+      }
+    }
+  },
+  methods: {
+    sendMessage(type, content) {
+      this.message = {
+        type: type === "error" ? "has-text-danger" : type === "success" ? "has-text-success" : type,
+        content: content
+      }
+      setTimeout(() => this.message = null, 8000)
+    },
+    processAction(server, type) {
+      fetch(`https://jackz.me/l4d2/scripts/manage.php?key=${this.$SCRIPT_KEY}&method=${type}&port=${server.meta.port}`)
+      .then(async(response) => {
+        if(response.ok) {
+          const json = await response.json()
+          if(json.error)
+            this.sendMessage('error', json.error)
+          else
+           this.sendMessage('success', json.response)
+        }else{
+          this.sendMessage('error', `<b>Server returned error</b><br>${response.statusText}`)
+        }
+      })
+      .catch(err => {
+        this.sendMessage('error', `${err.message}`)
+      })
+    },
+    getServerClasses(server) {
+      const classes = ['has-tooltip-arrow']
+
+      if(server.status === 'online') {
+        if(server.players.online == 0) {
+          classes.push('has-text-success')
+          classes.push('has-tooltip-success')
+        } else {
+          classes.push('has-tooltip-warning')
+        }
+      } else {
+        classes.push('has-text-danger')
+        classes.push('has-tooltip-danger')
+      }
+
+      return classes
+    },
+    getServerMessage(server) {
+      if(server.status === 'online') return server.players.online == 0 ? 'Server is currently online & empty. Click to join' : 'Server has players online. Click to join.'
+      else return 'Server is offline'
+      //
+      return
+    },
+    refreshServers() {
+      this.$emit('refresh', 'start')
+      fetch('https://servers.jackz.me/api/gameservers?group=l4d2')
+      .then(response => {
+        if(response.ok) return response.json()
+        else console.error('Failure getting servers', response)
+      })
+      .then(json => {
+          for(const server of json) {
+            this.$set(this.servers, server.meta.id, server)
+          }
+      })
+      .finally(() => {
+        this.$emit('refresh', 'stop')
+      })
+    }
+  },
+  created() {
+    this.refreshServers()
+    setInterval(() => {
+      this.refreshServers()
+    }, 1000 * 60 * 1)
+
+    document.onkeydown = (e) => {
+      this.shiftPressed = !!e.shiftKey
+    }
+    document.onkeyup = (e) => {
+      this.shiftPressed = !!e.shiftKey
+    }
+  }
+}
+</script>
