@@ -2,7 +2,7 @@
   <div id="app">
     <span id="lastUpdate">
       Last Updated {{$LAST_UPDATED}}
-      <template v-if="updatePending">
+      <template v-if="updateRegistration">
         <br>
         <a style="color:#0f3bea " @click='reloadPage'>An update is available, click to refresh</a>
       </template>
@@ -53,7 +53,7 @@ export default {
     //states:   ["State Management", StateManagementTab],
     bans:     ["Bans", BansTab],
     workshop: ['Maps', MapsTab],
-    //manage:   ["Management", ManagementTab],
+    manage:   ["Management", ManagementTab],
     plugins:  ["Plugins", PluginDescriptionsTab]
   },
   data() {
@@ -61,7 +61,7 @@ export default {
       tabIndex: 'overview',
       tab: OverviewTab,
       servers: [],
-      updatePending: false
+      updateRegistration: null
     }
   },
   methods: {
@@ -74,23 +74,12 @@ export default {
       return this.tabIndex == tab
     },
     reloadPage() {
+      if (!this.updateRegistration || !this.updateRegistration.waiting) return
+      this.updateRegistration.waiting.postMessage({ type: 'SKIP_WAITING' })
       window.location.reload()
     },
     updateAvailable(event) {
-      this.updatePending = true
-      const registeration = event.detail
-      this.$buefy.snackbar.open({
-        type: 'is-danger',
-        message: 'An update is available.',
-        actionText: 'Reload',
-        onAction() {
-          window.location.reload()
-          if(registeration && registeration.waiting) {
-            registeration.waiting.postMessage({type: 'SKIP_WAITING'})
-          }
-        }
-      })
-      console.log(event)
+      this.updateRegistration = event.detail
     },
   },
   created() {
