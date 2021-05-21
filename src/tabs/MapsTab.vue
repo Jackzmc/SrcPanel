@@ -43,7 +43,7 @@
             Please avoid downloading any items that are content items, only download campaigns.
           </div>
           <div class="notification is-info">
-            <b>Note:</b> Currently this only supports downloading COLLECTIONS, single entry items are not supported. Either find a collection or create your own by "Add to Collection" on the workshop page.
+            <b>Note:</b> There is no indication that the maps were actally downloaded, or how long it took. Just wait a minute, refresh the page and see if the map shows up in the list.
           </div>
         </form>
 
@@ -206,7 +206,8 @@ export default {
       this.download.status = "Downloading"
       this.download.error = null
       this.prefetch.invalidType = false
-      fetch(`https://jackz.me/l4d2/scripts/workshop.php?key=${this.key}&mode=download&itemid=${this.itemid}&forced=${forced}`)
+      forced = forced ? '&forced=1' : ''
+      fetch(`https://jackz.me/l4d2/scripts/workshop.php?key=${this.key}&mode=download-v2&itemid=${this.itemid}${forced}`)
       .then(response => {
         if(response.ok) return response.json()
         if(response.status === 401) {
