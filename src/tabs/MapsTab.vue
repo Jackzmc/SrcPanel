@@ -28,7 +28,7 @@
           <div class="field">
             <label class="label">Download Workshop Item</label>
             <div class="control">
-              <input class="input" type="text" v-model="itemid" placeholder="Enter an itemid or workshop url" />
+              <input class="input" type="text" v-model="itemid" placeholder="Paste a workshop link" />
             </div>
           </div>
           <div class="field">
@@ -41,6 +41,9 @@
 
           <div class="notification is-warning">
             Please avoid downloading any items that are content items, only download campaigns.
+          </div>
+          <div class="notification is-info">
+            <b>Note:</b> Currently this only supports downloading COLLECTIONS, single entry items are not supported. Either find a collection or create your own by "Add to Collection" on the workshop page.
           </div>
         </form>
 
@@ -96,6 +99,7 @@ export default {
   },
   watch: {
     itemid() {
+      if(!this.itemid) return
       this.prefetch.invalidType = false
       const match = this.itemid.match(WORKSHOP_REGEX)
       if(match) {
