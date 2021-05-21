@@ -1,36 +1,50 @@
 <template>
 <div class="container">
-  <p :class='message.type' v-if="message" v-html="message.content"></p>
-  <table class="table">
-      <thead>
-          <tr>
-              <th>Name</th>
-              <th>Players</th>
-              <th>Actions</th>
-          </tr>
-      </thead>
-      <tbody>
-        <tr v-for="server in servers" :key="server.id">
-          <td>
-            <a :href="'steam://connect/lgs.jackz.me:' + server.meta.port">
-              <b :data-tooltip="getServerMessage(server)" :class="getServerClasses(server)" >{{server.meta.name}}</b>
-            </a>
-            <span v-if='server.id === "Left_4_Dead_2_Improved"' class='is-size-5'><b>**</b></span>
-            <span v-else-if='server.id.startsWith("Left_4_Dead_2_Public")' class='is-size-5'><b>*</b></span>
-          </td>
-          <td><span v-if="server.status === 'online'">{{server.players.online}} / {{server.players.max}}</span></td>
-          <td>
-            <div class="buttons">
-              <a @click="processAction(server,'request')" class="button">Request Restart</a>
-              <a @click="processAction(server,'restart')" class="button is-warning" :disabled="!shiftPressed">Force Restart</a>
-              <a @click="processAction(server,'update')" class="button is-info">Update</a>
-            </div>
-          </td>
-        </tr>
-      </tbody>
-  </table>
-  <em>* Server supports custom maps</em><br>
-  <em>** Server supports custom maps AND 5+ players</em>
+  <div class="columns">
+    <div class="column is-8">
+      <p :class='message.type' v-if="message" v-html="message.content"></p>
+
+      <table class="table is-fullwidth">
+          <thead>
+              <tr>
+                  <th>Name</th>
+                  <th>Players</th>
+                  <th>Actions</th>
+              </tr>
+          </thead>
+          <tbody>
+            <tr v-for="server in servers" :key="server.id">
+              <td class="is-size-5">
+                <a :href="'steam://connect/lgs.jackz.me:' + server.meta.port">
+                  <b :data-tooltip="getServerMessage(server)" :class="getServerClasses(server)" >{{server.meta.name}}</b>
+                </a>
+                <span v-if='server.id === "Left_4_Dead_2_Improved"' class='is-size-5'><b>**</b></span>
+                <span v-else-if='server.id.startsWith("Left_4_Dead_2_Public")' class='is-size-5'><b>*</b></span>
+              </td>
+              <td><span v-if="server.status === 'online'">{{server.players.online}} / {{server.players.max}}</span></td>
+              <td>
+                <div class="buttons">
+                  <a @click="processAction(server,'request')" class="button">Request Restart</a>
+                  <a @click="processAction(server,'restart')" class="button is-warning" :disabled="!shiftPressed">Force Restart</a>
+                  <a @click="processAction(server,'update')" class="button is-info">Update</a>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+      </table>
+      <em>* Server supports custom maps</em><br>
+      <em>** Server supports custom maps AND 5+ players</em>
+    </div>
+    <div class="column">
+      <b>Request Restart</b> will restart the server if its empty
+      <br>
+      <b>Force Restart</b> requires you to hold SHIFT to select, and will force restart even if people are playing
+      <br>
+      <b>Update</b> will run an update script to update the server. This will take a while, server will not auto restart.
+      <p>Updating does not show any progress, just have to wait and hope its updated.</p>
+    </div>
+  </div>
+
 </div>
 </template>
 
