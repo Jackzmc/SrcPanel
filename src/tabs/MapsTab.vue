@@ -7,7 +7,10 @@
           <b>Listing {{vpks.length}} workshop items - Click a name to view information</b>
           <div class="columns is-multiline">
             <div class="column is-4" v-for="entry in vpks" :key="entry.vpk">
-              <b><a @click='preview(entry)' class="has-text-info">{{entry.display}}</a></b>
+              <a v-if="entry.url" @click='preview(entry)' class="has-text-info">
+                <b>{{entry.display}}</b>
+              </a>
+              <b v-else>{{entry.display}}</b>
               <br>
               <a v-if="entry.url" :href="entry.url"><em>View on workshop</em></a>
             </div>
