@@ -80,6 +80,7 @@ export default {
     },
     updateAvailable(event) {
       this.updateRegistration = event.detail
+      this.reloadPage()
     },
   },
   created() {
