@@ -24,8 +24,8 @@
               <td><span v-if="server.status === 'online'">{{server.players.online}} / {{server.players.max}}</span></td>
               <td>
                 <div class="buttons">
-                  <a @click="processAction(server,'request')" class="button">Request Restart</a>
-                  <a @click="processAction(server,'restart')" class="button is-warning" :disabled="!shiftPressed">Force Restart</a>
+                  <a @click="processAction(server,'request')" class="button is-dark">Request Restart</a>
+                  <a @click="processAction(server,'restart')" class="button is-warning" v-if="shiftPressed">Force Restart</a>
                   <a @click="processAction(server,'update')" class="button is-info">Update</a>
                 </div>
               </td>
