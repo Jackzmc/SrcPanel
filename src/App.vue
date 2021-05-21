@@ -65,10 +65,13 @@ export default {
     }
   },
   methods: {
-    setTab(tab) {
-      this.tabIndex = tab
-      this.tab = this.$options.TABS[tab][1]
-      window.location.hash = `#${tab}`
+    setTab(tabid) {
+      this.tabIndex = tabid
+      const tab = this.$options.TABS[tabid]
+      if(!tab) return console.warn('Tab not found: ', tabid)
+      document.title = `${tab[0]} - L4D2 Admin Guide`
+      this.tab = tab[1]
+      window.location.hash = `#${tabid}`
     },
     isActive(tab) {
       return this.tabIndex == tab
@@ -92,6 +95,7 @@ export default {
       }
     }else{
       window.location.hash = '#overview'
+      document.title = "Overview - L4D2 Admin Guide"
     }
   }
 }
