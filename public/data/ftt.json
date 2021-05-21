@@ -118,5 +118,10 @@
         "name": "Vocalize Gag",
         "description": "Prevents player from sending any vocalizations (even automatic)",
         "modes": []
+    },
+    {
+        "name": "Meow",
+        "description": "Instead of honking, they meow",
+        "modes": []
     }
 ]
