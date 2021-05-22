@@ -1,11 +1,13 @@
 <template>
   <div class="container">
+    <p class="has-text-danger" v-if="ban_error">{{ban_error}}</p>
     <table class="table is-fullwidth" v-if="!loading&&!error">
       <thead>
         <th>Player</th>
         <th>Executor</th>
         <th>Reason</th>
         <th>Date</th>
+        <th>Action</th>
       </thead>
       <tbody>
         <tr v-for="ban in bans" :key="ban.steamid" :class="{'has-text-danger': ban.expired}">
@@ -14,14 +16,33 @@
             <em class='has-text-info'>{{ban.steamid}}</em>
           </td>
           <td>
-            <b v-if="ban.adminName">{{ban.adminName}} </b>
+            <input class="input" type="text" v-if="edited && edited.steamid == ban.steamid" v-model="edited.executor" maxlength="32" />
             <template v-else>
-              <em v-if="ban.isAdminPlayer" class='has-text-info'>{{ban.executor}}</em>
-              <em v-else>{{ban.executor}}</em>
+              <b v-if="ban.adminName">{{ban.adminName}} </b>
+              <template v-else>
+                <em v-if="ban.isAdminPlayer" class='has-text-info'>{{ban.executor}}</em>
+                <em v-else>{{ban.executor}}</em>
+              </template>
             </template>
+
           </td>
-          <td>{{ban.reason}}</td>
+          <td>
+            <input class="input" type="text" v-if="edited && edited.steamid == ban.steamid" v-model="edited.reason" maxlength="128" />
+            <span v-else>{{ban.reason}}</span>
+          </td>
           <td :data-tooltip="ban.timestamp">{{ban.relDate}}</td>
+          <td>
+            <div class="buttons">
+              <template v-if="edited && edited.steamid == ban.steamid">
+                <a class="button is-success is-small" @click='saveEdit()' v-if="editChanged">Save</a>
+                <a class="button is-small" @click='edited = null'>Cancel Edit</a>
+              </template>
+              <template v-else>
+                <a class="button is-warning is-small" @click='edit(ban)'>Edit</a>
+                <a class="button is-danger is-small" @click='unban(ban)' data-tooltip="Hold shift to confirm" :disabled="!shiftPressed">Remove Ban</a>
+              </template>
+            </div>
+          </td>
         </tr>
       </tbody>
     </table>
@@ -40,11 +61,23 @@ export default {
     return {
       loading: true,
       error: null,
-      bans: []
+      ban_error: null,
+      bans: [],
+      edited: null,
+      shiftPressed: false,
+      editChanged: false
     }
   },
-  computed: {
-
+  watch: {
+    edited: {
+      handler(val) {
+        if(this.editChanged) return
+        const ban = this.bans.find(ban => ban.steamid === this.edited.steamid)
+        console.log(ban.reason !== this.edited.reason)
+        this.editChanged = ban.reason !== this.edited.reason || ban.executor !== this.edited.executor
+      },
+      deep: true
+    }
   },
   methods: {
     async getAdmins() {
@@ -61,10 +94,48 @@ export default {
           }
         }
       }
+    },
+    unban(ban) {
+      alert("not implemented")
+    },
+    edit(ban) {
+      this.editChanged = false
+      this.edited = {...ban}
+    },
+    saveEdit() {
+      fetch(`https://jackz.me/l4d2/scripts/bans.php?mode=update`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          steamid: this.edited.steamid,
+          reason: this.edited.reason,
+          executor: this.edited.executor
+        })
+      })
+      .then(async(response) => {
+        if(response.ok) {
+          const index = this.bans.findIndex(ban => ban.steamid === this.edited.steamid)
+          this.$set(this.bans, index, this.edited)
+          this.edited = null
+        } else
+          this.ban_error = await response.text()
+      })
+      .catch(err => {
+        this.ban_error = err.message
+      })
+
     }
   },
   created() {
-    fetch('https://jackz.me/l4d2/scripts/bans.php')
+    document.onkeydown = (e) => {
+      this.shiftPressed = !!e.shiftKey
+    }
+    document.onkeyup = (e) => {
+      this.shiftPressed = !!e.shiftKey
+    }
+    fetch('https://jackz.me/l4d2/scripts/bans.php?mode=list')
     .then(response => {
       if(response.ok)
         return response.json()
