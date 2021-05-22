@@ -101,6 +101,8 @@ export default {
     itemid() {
       if(!this.itemid) return
       this.prefetch.invalidType = false
+      this.download.status = null
+      this.download.error = null
       const match = this.itemid.match(WORKSHOP_REGEX)
       if(match) {
         this.itemid = match[2]
@@ -118,7 +120,7 @@ export default {
       this.fetchVPKS()
     },
     restartServer() {
-      fetch(`https://jackz.me/l4d2/scripts/manage.php?key=${this.$SCRIPT_KEY}&method=${type}&port=${server.meta.port}`)
+      fetch(`https://jackz.me/l4d2/scripts/manage.php?key=${this.$SCRIPT_KEY}&method=${type}&port=${server.meta.port}&symlink=1`)
       .then(async(response) => {
         if(response.ok) {
           this.download.status = null
