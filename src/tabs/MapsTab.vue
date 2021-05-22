@@ -206,7 +206,7 @@ export default {
       this.download.status = "Downloading"
       this.download.error = null
       this.prefetch.invalidType = false
-      forced = forced ? '&forced=1' : ''
+      forced = forced === true ? '&forced=1' : ''
       fetch(`https://jackz.me/l4d2/scripts/workshop.php?key=${this.key}&mode=download-v2&itemid=${this.itemid}${forced}`)
       .then(response => {
         if(response.ok) return response.json()
