@@ -216,7 +216,7 @@ export default {
         }
       })
       .then(json => {
-        this.vpks = json.vpks
+        //this.vpks = json.vpks
         this.download.status = "success"
         this.itemid = null
         setTimeout(() => this.download.status = null, 7000)
