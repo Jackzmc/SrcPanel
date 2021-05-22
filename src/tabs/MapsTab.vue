@@ -2,7 +2,7 @@
 <div>
   <div class="container" v-if="key">
     <div class="columns">
-      <div class="column is-8">
+      <div class="column is-7">
         <div class="content">
           <b>Listing {{vpks.length}} workshop items - Click a name to view information</b>
           <div class="columns is-multiline">

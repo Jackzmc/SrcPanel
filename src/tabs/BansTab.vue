@@ -10,7 +10,7 @@
         <th>Action</th>
       </thead>
       <tbody>
-        <tr v-for="ban in bans" :key="ban.steamid" :class="{'has-text-danger': ban.expired}">
+        <tr v-for="(ban, i) in bans" :key="ban.steamid" :class="{'has-text-danger': ban.expired}">
           <td>
             <b v-if="ban.last_alias">{{ban.last_alias}} </b>
             <em class='has-text-info'>{{ban.steamid}}</em>
@@ -34,12 +34,12 @@
           <td>
             <div class="buttons">
               <template v-if="edited && edited.steamid == ban.steamid">
-                <a class="button is-success is-small" @click='saveEdit()' v-if="editChanged">Save</a>
+                <a class="button is-success is-small" @click='saveEdit(i)' v-if="editChanged">Save</a>
                 <a class="button is-small" @click='edited = null'>Cancel Edit</a>
               </template>
               <template v-else>
                 <a class="button is-warning is-small" @click='edit(ban)'>Edit</a>
-                <a class="button is-danger is-small" @click='unban(ban)' data-tooltip="Hold shift to confirm" :disabled="!shiftPressed">Remove Ban</a>
+                <a class="button is-danger is-small" @click='unban(ban, i)' data-tooltip="Hold shift to confirm" :disabled="!shiftPressed">Remove Ban</a>
               </template>
             </div>
           </td>
@@ -95,14 +95,29 @@ export default {
         }
       }
     },
-    unban(ban) {
-      alert("not implemented")
+    unban(ban, index) {
+      fetch(`https://jackz.me/l4d2/scripts/bans.php?mode=delete`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: "steamid=" + ban.steamid
+      })
+      .then(async(response) => {
+        if(response.ok) {
+          this.bans.slice(index, 1)
+        } else
+          this.ban_error = await response.text()
+      })
+      .catch(err => {
+        this.ban_error = err.message
+      })
     },
     edit(ban) {
       this.editChanged = false
       this.edited = {...ban}
     },
-    saveEdit() {
+    saveEdit(index) {
       fetch(`https://jackz.me/l4d2/scripts/bans.php?mode=update`, {
         method: 'POST',
         headers: {
@@ -116,7 +131,6 @@ export default {
       })
       .then(async(response) => {
         if(response.ok) {
-          const index = this.bans.findIndex(ban => ban.steamid === this.edited.steamid)
           this.$set(this.bans, index, this.edited)
           this.edited = null
         } else
