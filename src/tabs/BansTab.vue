@@ -6,6 +6,7 @@
         <th>Player</th>
         <th>Executor</th>
         <th>Reason</th>
+        <th>Expires</th>
         <th>Date</th>
         <th>Action</th>
       </thead>
@@ -30,15 +31,30 @@
             <input class="input" type="text" v-if="edited && edited.steamid == ban.steamid" v-model="edited.reason" maxlength="128" />
             <span v-else>{{ban.reason}}</span>
           </td>
+          <td>
+            <div class="select" v-if="edited && edited.steamid == ban.steamid">
+              <select v-model="edited.expires">
+                <option value="never" v-if="ban.expires">Never</option>
+                <option value="keep">Keep Same</option>
+                <option value="1hour">1 Hour</option>
+                <option value="1day">1 Day</option>
+                <option value="1day">1 Day</option>
+                <option value="1week">1 Week</option>
+                <option value="1month">1 Month</option>
+              </select>
+            </div>
+            <span v-else-if="ban.expired" class="has-text-danger">Expired</span>
+            <span v-else>{{ban.expires || 'Never'}}</span>
+          </td>
           <td :data-tooltip="ban.timestamp">{{ban.relDate}}</td>
           <td>
             <div class="buttons">
               <template v-if="edited && edited.steamid == ban.steamid">
-                <a class="button is-success is-small" @click='saveEdit(i)' v-if="editChanged">Save</a>
+                <a class="button is-success is-small" @click='saveEdit()' v-if="editChanged">Save</a>
                 <a class="button is-small" @click='edited = null'>Cancel Edit</a>
               </template>
               <template v-else>
-                <a class="button is-warning is-small" @click='edit(ban)'>Edit</a>
+                <a class="button is-warning is-small" @click='edit(ban, i)'>Edit</a>
                 <a class="button is-danger is-small" @click='unban(ban, i)' data-tooltip="Hold shift to confirm" :disabled="!shiftPressed">Remove Ban</a>
               </template>
             </div>
@@ -74,7 +90,9 @@ export default {
         if(this.editChanged) return
         const ban = this.bans.find(ban => ban.steamid === this.edited.steamid)
         console.log(ban.reason !== this.edited.reason)
-        this.editChanged = ban.reason !== this.edited.reason || ban.executor !== this.edited.executor
+        this.editChanged = ban.reason !== this.edited.reason
+          || ban.executor !== this.edited.executor
+          || ban.expires !== "keep"
       },
       deep: true
     }
@@ -113,11 +131,17 @@ export default {
         this.ban_error = err.message
       })
     },
-    edit(ban) {
+    edit(ban, index) {
       this.editChanged = false
-      this.edited = {...ban}
+      this.edited = {
+        index,
+        ...ban,
+        expires: 'keep'
+      }
     },
-    saveEdit(index) {
+    saveEdit() {
+      const expires = getExpires(this.edited, this.bans[this.edited.index])
+      return alert('expires: ' + expires)
       fetch(`https://jackz.me/l4d2/scripts/bans.php?mode=update`, {
         method: 'POST',
         headers: {
@@ -126,12 +150,13 @@ export default {
         body: JSON.stringify({
           steamid: this.edited.steamid,
           reason: this.edited.reason,
-          executor: this.edited.executor
+          executor: this.edited.executor,
+          expires
         })
       })
       .then(async(response) => {
         if(response.ok) {
-          this.$set(this.bans, index, this.edited)
+          this.$set(this.bans, this.edited.index, this.edited)
           this.edited = null
         } else
           this.ban_error = await response.text()
@@ -175,6 +200,25 @@ export default {
         console.error('Could not fetch bans, network error.', err)
     })
     .finally(() => this.loading = false)
+  }
+}
+
+function getExpires(edited, ban) {
+  const baseDate = new Date(ban.timestamp).valueOf()
+
+  if(edited.expires === "keep") return ban.expires
+  else if(edited.expires === "never") return null
+  else if(edited.expires === "1hour") {
+    return baseDate + 3.6e+6
+  }else if(edited.expires === "1day") {
+    return baseDate + 8.64e+7
+  }else if(edited.expires === "1week") {
+    return baseDate + 6.048e+8
+  } else if(edited.expires === "1month") {
+    return baseDate + 2629800000
+  } else {
+    alert('Could not save unknown value: ' + edited.expires)
+    return ban.expires
   }
 }
 
