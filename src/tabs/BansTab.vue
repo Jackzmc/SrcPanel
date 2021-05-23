@@ -204,21 +204,21 @@ export default {
 }
 
 function getExpires(edited, ban) {
-  const baseDate = new Date(ban.timestamp).valueOf()
+  const baseDate = new Date().valueOf()
 
-  if(edited.expires === "keep") return ban.expires
-  else if(edited.expires === "never") return null
+  if(edited.expires === "keep") return null
+  else if(edited.expires === "never") return "never"
   else if(edited.expires === "1hour") {
-    return baseDate + 3.6e+6
+    return (baseDate + 3.6e+6) / 1000
   }else if(edited.expires === "1day") {
-    return baseDate + 8.64e+7
+    return (baseDate + 8.64e+7) / 1000
   }else if(edited.expires === "1week") {
-    return baseDate + 6.048e+8
+    return (baseDate + 6.048e+8) / 1000
   } else if(edited.expires === "1month") {
-    return baseDate + 2629800000
+    return (baseDate + 2629800000) / 1000
   } else {
     alert('Could not save unknown value: ' + edited.expires)
-    return ban.expires
+    return null
   }
 }
 
