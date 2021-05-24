@@ -73,10 +73,11 @@ export default {
       .then(async(response) => {
         if(response.ok) {
           const json = await response.json()
-          if(json.error)
-            this.sendMessage('error', json.error)
-          else
+          if(json.response.includes("players online")) {
+            this.sendMessage('error', 'Cannot restart server: There are players online')
+          }else{
            this.sendMessage('success', json.response)
+          }
         }else{
           this.sendMessage('error', `<b>Server returned error</b><br>${response.statusText}`)
         }

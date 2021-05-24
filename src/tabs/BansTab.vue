@@ -155,6 +155,7 @@ export default {
       })
       .then(async(response) => {
         if(response.ok) {
+          if(this.edited.expires === "same") this.edited.expires = this.bans[index].expires
           this.$set(this.bans, this.edited.index, this.edited)
           this.edited = null
         } else
