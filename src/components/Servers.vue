@@ -35,6 +35,7 @@ export default {
   data() {
     return {
       servers: {},
+      refreshTimer: null
     }
   },
   methods: {
@@ -92,11 +93,16 @@ export default {
     }
   },
   created() {
-    this.refreshServers()
-    setInterval(() => {
+  },
+  activated() {
+    this.refreshTimer = setInterval(() => {
       this.refreshServers()
     }, 1000 * 60 * 1)
-  }
+    this.refreshServers()
+  },
+  deactivated() {
+    clearInterval(this.refreshTimer)
+  },
 }
 </script>
 

@@ -23,7 +23,7 @@
               </td>
               <td><span v-if="server.status === 'online'">{{server.players.online}} / {{server.players.max}}</span></td>
               <td>
-                <div class="buttons">
+                <div class="buttons" v-if="server.meta.host === 'lgs.jackz.me'">
                   <a @click="processAction(server,'request')" class="button is-dark">Request Restart</a>
                   <a @click="processAction(server,'restart')" class="button is-warning" v-if="shiftPressed">Force Restart</a>
                   <a @click="processAction(server,'update')" class="button is-info">Update</a>
@@ -57,7 +57,8 @@ export default {
       message: {
         content: null,
         type: null
-      }
+      },
+      refreshTimer: null
     }
   },
   methods: {
@@ -126,11 +127,17 @@ export default {
       })
     }
   },
-  created() {
-    this.refreshServers()
-    setInterval(() => {
+  activated() {
+    this.refreshTimer = setInterval(() => {
       this.refreshServers()
     }, 1000 * 60 * 1)
+  },
+  deactivated() {
+    clearInterval(this.refreshTimer)
+  },
+  created() {
+    this.refreshServers()
+
 
     document.onkeydown = (e) => {
       this.shiftPressed = !!e.shiftKey

@@ -24,7 +24,9 @@
           </li>
         </ul>
     </div>
-    <component :is="tab" />
+    <keep-alive :name="tabIndex">
+      <component :is="tab" />
+    </keep-alive>
   </div>
 </template>
 
