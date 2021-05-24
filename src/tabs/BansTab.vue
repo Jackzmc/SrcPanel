@@ -141,7 +141,6 @@ export default {
     },
     saveEdit() {
       const expires = getExpires(this.edited, this.bans[this.edited.index])
-      return alert('expires: ' + expires)
       fetch(`https://jackz.me/l4d2/scripts/bans.php?mode=update`, {
         method: 'POST',
         headers: {
@@ -184,7 +183,7 @@ export default {
     .then(bans => {
       this.bans = bans.map(ban => {
         const expired = ban.expires != null && Number(ban.expires) <= Date.now()
-        const relDate = new Sugar.Date(ban.timestamp).relative()
+        const relDate = new Sugar.Date(ban.timestamp, { fromUTC: true }).relative()
 
         return {
           ...ban,
