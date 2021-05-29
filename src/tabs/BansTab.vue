@@ -183,12 +183,10 @@ export default {
     })
     .then(bans => {
       this.bans = bans.map(ban => {
-        const expired = ban.expires != null && Number(ban.expires) <= Date.now()
         const relDate = new Sugar.Date(ban.timestamp, { fromUTC: true }).relative()
 
         return {
           ...ban,
-          expired,
           relDate,
           adminName: null,
           isAdminPlayer: ban.executor.startsWith("STEAM_")
