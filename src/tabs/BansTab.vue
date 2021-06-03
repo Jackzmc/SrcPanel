@@ -1,5 +1,6 @@
 <template>
   <div class="container">
+    <p class="subtitle is-4">Viewing {{bans.length}} total bans</p>
     <p class="has-text-danger" v-if="ban_error">{{ban_error}}</p>
     <table class="table is-fullwidth" v-if="!loading&&!error">
       <thead>
@@ -13,7 +14,7 @@
       <tbody>
         <tr v-for="(ban, i) in bans" :key="ban.steamid" :class="{'has-text-danger': ban.expired}">
           <td>
-            <b v-if="ban.last_alias">{{ban.last_alias}} </b>
+            <b v-if="ban.last_alias">{{ban.last_alias}}<br></b>
             <em class='has-text-info'>{{ban.steamid}}</em>
           </td>
           <td>
