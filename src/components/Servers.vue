@@ -14,7 +14,8 @@
                     <a :href="'steam://connect/lgs.jackz.me:' + server.meta.port">
                       <b :data-tooltip="getServerMessage(server)" :class="getServerClasses(server)" >{{server.meta.name}}</b>
                     </a>
-                    <span v-if='server.id === "Left_4_Dead_2_Improved"' class='is-size-5'><b>**</b></span>
+                    <span v-if='server.id === "Left_4_Dead_2_Improved"' class='is-size-5'><b>***</b></span>
+                    <span v-if='server.id === "Left_4_Dead_2_Extra_Players_Public"' class='is-size-5'><b>**</b></span>
                     <span v-else-if='server.id.startsWith("Left_4_Dead_2_Public")' class='is-size-5'><b>*</b></span>
 
                 </td>

@@ -33,7 +33,8 @@
           </tbody>
       </table>
       <em>* Server supports custom maps</em><br>
-      <em>** Server supports custom maps AND 5+ players</em>
+      <em>** Server supports 5+ players</em><br>
+      <em>*** Server supports custom maps AND 5+ players</em>
     </div>
     <div class="column">
       <b>Request Restart</b> will restart the server if its empty
