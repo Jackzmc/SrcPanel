@@ -119,7 +119,7 @@ export default {
         else console.error('Failure getting servers', response)
       })
       .then(json => {
-          for(const server of json) {
+          for(const server of json.servers) {
             this.$set(this.servers, server.meta.id, server)
           }
       })
