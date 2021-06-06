@@ -45,6 +45,9 @@
           <div class="notification is-info">
             <b>Note:</b> There is no indication that the maps were actally downloaded, or how long it took. Just wait a minute, refresh the page and see if the map shows up in the list.
           </div>
+          <div class="notification is-info">
+            <b>Note:</b> Single items may not work, collections DO work.
+          </div>
         </form>
 
         <template v-if="prefetch.result">
