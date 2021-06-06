@@ -18,15 +18,21 @@
                 <a :href="'steam://connect/lgs.jackz.me:' + server.meta.port">
                   <b :data-tooltip="getServerMessage(server)" :class="getServerClasses(server)" >{{server.meta.name}}</b>
                 </a>
-                <span v-if='server.id === "Left_4_Dead_2_Improved"' class='is-size-5'><b>**</b></span>
+                <span v-if='server.id === "Left_4_Dead_2_Improved"' class='is-size-5'><b>***</b></span>
+                <span v-if='server.id === "Left_4_Dead_2_Extra_Players_Public"' class='is-size-5'><b>**</b></span>
                 <span v-else-if='server.id.startsWith("Left_4_Dead_2_Public")' class='is-size-5'><b>*</b></span>
               </td>
               <td><span v-if="server.status === 'online'">{{server.players.online}} / {{server.players.max}}</span></td>
               <td>
                 <div class="buttons" v-if="server.meta.host === 'lgs.jackz.me'">
-                  <a @click="processAction(server,'request')" class="button is-dark">Request Restart</a>
-                  <a @click="processAction(server,'restart')" class="button is-warning" v-if="shiftPressed">Force Restart</a>
-                  <a @click="processAction(server,'update')" class="button is-info">Update</a>
+                  <template v-if="server.status === 'online'">
+                    <a @click="processAction(server, 'request')" class="button is-dark">Request Restart</a>
+                    <a @click="processAction(server, 'restart')" class="button is-warning" v-if="shiftPressed">Force Restart</a>
+                  </template>
+                  <template v-else-if="server.meta.name.includes('Public')">
+                    <a @click="processAction(server, 'start')" v-if="!starting[server.meta.port]" class="button is-success">Start Server</a>
+                  </template>
+                  <a @click="processAction(server, 'update')" class="button is-info">Update</a>
                 </div>
               </td>
             </tr>
@@ -43,6 +49,8 @@
       <br>
       <b>Update</b> will run an update script to update the server. This will take a while, server will not auto restart.
       <p>Updating does not show any progress, just have to wait and hope its updated.</p>
+      <b>Start</b> will start the service if the server is currently not running. Check in 1-2 minutes to see if the server goes online.
+      <p>Improved and vanilla do not support this, as they are managed differently</p>
     </div>
   </div>
 
@@ -59,6 +67,7 @@ export default {
         content: null,
         type: null
       },
+      starting: [],
       refreshTimer: null
     }
   },
@@ -71,6 +80,12 @@ export default {
       setTimeout(() => this.message = null, 8000)
     },
     processAction(server, type) {
+      if(type === "start") {
+        this.$set(this.starting, server.meta.port, true);
+        setTimeout(() => {
+          this.$set(this.starting, server.meta.port, false);
+        }, 1000 * 30)
+      }
       fetch(`https://jackz.me/l4d2/scripts/manage.php?key=${this.$SCRIPT_KEY}&method=${type}&port=${server.meta.port}`)
       .then(async(response) => {
         if(response.ok) {
