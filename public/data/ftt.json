@@ -123,5 +123,10 @@
         "name": "Meow",
         "description": "Instead of honking, they meow",
         "modes": []
+    },
+    {
+        "name": "Witch Magnet",
+        "description": "All witches when startled will target any player with this troll",
+        "modes": ["repeat"]
     }
 ]

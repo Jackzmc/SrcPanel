@@ -97,6 +97,18 @@
             {
                 "command": "ignore <player(s):players>",
                 "description": "Will make the player immune to being banned for friendly fire. Will toggle it on/off and will clear any pending bans for players. Only lasts until player disconnects."
+            },
+            {
+                "command": "mute <player(s):players>",
+                "description": "Mutes them from voice chat"
+            },
+            {
+                "command": "gag <player(s):players>",
+                "description": "Mutes them from text chat"
+            },
+            {
+                "command": "vgag <player(s):players>",
+                "description": "Will mute all vocalizations from this player only for you. For global gags use troll mode vocalize gag"
             }
         ]
     },
@@ -131,6 +143,10 @@
             {
                 "command": "cursormenu",
                 "description": "Shows GUI of specials to spawn at your cursor"
+            },
+            {
+                "command": "witch_attack <player:player>",
+                "description": "Makes all witches attack the victim"
             }
         ]
     },

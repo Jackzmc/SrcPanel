@@ -57,5 +57,15 @@
         "cvar": "sm_ftt_magnet_targetting <0/1/2/3:int>",
         "description": "Determines how specials will target magnetted players. 0 will target any alive magnetted players, 1 will make specials ignore incapped, 2 will make tanks ignore incapped, and 3 will do both. Default is 1",
         "default": 1
+    },
+    {
+        "cvar": "sm_ftt_witch_target_incapped <0/1:boolean>",
+        "description": "Should the witch target any witch magnet victims who are incapped?. 0 no, 1 yes",
+        "default": 0
+    },
+    {
+        "cvar": "l4d_force_survivorset <0/1/2:int>",
+        "description": "Sets the survivor set. Allows l4d2 characters in l4d1 if set to 2",
+        "default": "0"
     }
 ]
