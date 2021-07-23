@@ -124,7 +124,7 @@ export default {
       })
       .then(async(response) => {
         if(response.ok) {
-          this.bans.slice(index, 1)
+          this.bans.splice(index, 1)
         } else
           this.ban_error = await response.text()
       })
@@ -185,7 +185,9 @@ export default {
     .then(bans => {
       this.bans = bans.map(ban => {
         const relDate = new Sugar.Date(ban.timestamp, { fromUTC: true }).relative()
-
+        if(!ban.last_alias) {
+          console.warn(ban.steamid, 'does not have alias')
+        }
         return {
           ...ban,
           relDate,
