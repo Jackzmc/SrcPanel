@@ -2,12 +2,12 @@
     {
         "name": "Slow Speed",
         "description": "Sets the player’s speed to 0.8x of normal speed",
-        "modes": []
+        "modes": ["constant"]
     },
     {
         "name": "Higher Gravity",
         "description": "Sets player’s gravity to 1.3x of normal gravity. Some jumps will kill them as they take more fall damage",
-        "modes": []
+        "modes": ["constant"]
     },
     {
         "name": "Half Primary Ammo",
@@ -17,52 +17,52 @@
     {
         "name": "UziRules",
         "description": "Will make any weapon they pickup be an UZI smg",
-        "modes": []
+        "modes": ["constant"]
     },
     {
         "name": "PrimaryDisable",
         "description": "Will prevent them entirely from picking up any guns, except secondary (melee / pistols)",
-        "modes": ["repeat"]
+        "modes": ["constant"]
     },
     {
         "name": "SlowDrain",
         "description": "Will make the player slowly lose health over time",
-        "modes": []
+        "modes": ["constant"]
     },
     {
         "name": "Clumsy",
         "description": "Will make the player drop the axe OR on demand",
-        "modes": ["repeat", "single"]
+        "modes": ["constant", "instant"]
     },
     {
         "name": "iCantSpellNoMore",
         "description": "Random letters in chat will be replaced with incorrect letters. 50% of the time it activates to keep it subtle.",
-        "modes": []
+        "modes": ["constant"]
     },
     {
         "name": "CameTooEarly",
         "description": "[Not Implemented] When they shoot, random chance the empty their whole clip",
-        "modes": []
+        "modes": ["constant"]
     },
     {
         "name": "KillMeSoftly",
         "description": "Will make the player switch to pills/adrenaline and try to give it away. Not fully implemented.",
-        "modes": ["repeat", "single"]
+        "modes": ["constant", "instant"]
     },
     {
         "name": "ThrowItall",
         "description": "Will make the player throw all their items at the nearest player.",
-        "modes": ["repeat", "single"]
+        "modes": ["constant", "instant"]
     },
     {
         "name": "GunJam",
         "description": "On reload, small chance their gun gets jammed, and they fail to reload",
-        "modes": []
+        "modes": ["constant"]
     },
     {
         "name": "NoPickup",
         "description": "Prevents a player from picking up ANY new item. ",
-        "modes": [],
+        "modes": ["constant"],
         "subnotes": [
             "Use ThrowItAll to drop their items"
         ]
@@ -70,7 +70,7 @@
     {
         "name": "Swarm",
         "description": "Will make all zombies, even ones that are “sleeping” swarm the player.",
-        "modes": ["repeat", "single"],
+        "modes": ["constant", "instant"],
         "subnotes": [
             "Repeat mode will only work on one player at a time"
         ]
@@ -78,22 +78,22 @@
     {
         "name": "Honk",
         "description": "honk",
-        "modes": []
+        "modes": ["constant"]
     },
     {
         "name": "Special Magnet",
         "description": "Attracts ALL specials to the closest alive trolled target with this troll enabled",
-        "modes": ["repeat"]
+        "modes": ["constant"]
     },
     {
         "name": "Tank Magnet",
         "description": "Attracts ALL tanks to the closest alive trolled target with this troll enabled",
-        "modes": ["repeat"]
+        "modes": ["constant"]
     },
     {
         "name": "No Shove",
         "description": "Prevents player from shoving at a % chance",
-        "modes": [],
+        "modes": ["constant"],
         "subnotes": [
             "Percentage affected by sm_ftt_shove_fail_chance cvar (default: 50%)",
             "Will still visually shove survivors, but will not affect the victim"
@@ -102,31 +102,41 @@
     {
         "name": "Damage Boost",
         "description": "Will make the player take 2x more damage than normal",
-        "modes": []
+        "modes": ["constant"]
     },
     {
         "name": "Temp Quick Drain",
         "description": "Will make a player’s temp health drain very quickly",
-        "modes": []
+        "modes": ["constant"]
     },
     {
         "name": "Vomit Player",
         "description": "Vomits the player instantly",
-        "modes": ["single"]
+        "modes": ["instant"]
     },
     {
         "name": "Vocalize Gag",
         "description": "Prevents player from sending any vocalizations (even automatic)",
-        "modes": []
+        "modes": ["constant"]
     },
     {
         "name": "Meow",
         "description": "Instead of honking, they meow",
-        "modes": []
+        "modes": ["constant"]
     },
     {
         "name": "Witch Magnet",
         "description": "All witches when startled will target any player with this troll",
-        "modes": ["repeat"]
+        "modes": ["constant"]
+    },
+    {
+        "name": "No Profanity",
+        "description": "Will replace all swear words with a random phrase. If no swear found, the whole message will be replaced with a random phrase.",
+        "modes": ["constant"]
+    },
+    {
+        "name": "Bad Throw",
+        "description": "Player drops throwables on throw, and biles/molotovs themselves",
+        "modes": ["constant"]
     }
 ]

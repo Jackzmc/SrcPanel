@@ -67,5 +67,10 @@
         "cvar": "l4d_force_survivorset <0/1/2:int>",
         "description": "Sets the survivor set. Allows l4d2 characters in l4d1 if set to 2",
         "default": "0"
+    },
+    {
+        "cvar": "sm_ftt_badthrow_hitself <0/1:boolean>",
+        "description": "1 = Victim of this troll will bile themselves or burn themselves.\n0 = Victim just drops the item instead",
+        "default": 1
     }
 ]
