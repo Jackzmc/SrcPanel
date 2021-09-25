@@ -12,19 +12,22 @@
       </div>
     </div>
     <div class="is-size-5">
-        <h3 class="title is-3">Troll Modes</h3>
-        <ul>
-            <li v-for="(troll, i) in trolls" :key="troll.name" >
-                <p><b class="has-text-link" :data-tooltip="troll.modes.join(', ')">{{i+1}}. {{troll.name}}</b> - {{troll.description}}</p>
-                <div class="content"  v-if="troll.subnotes" >
-                    <ol class="is-lower-alpha">
-                        <li v-for="note in troll.subnotes" :key="note">
-                            {{note}}
-                        </li>
-                    </ol>
-                </div>
-            </li>
-        </ul>
+        <div v-for="(trolls, category) in trolls" :key="category">
+          <h4 class="title is-4">{{category}}</h4>
+          <ul>
+              <li v-for="(troll, i) in trolls" :key="troll.name" >
+                  <p><b class="has-text-link" :data-tooltip="troll.modes.join('\n')">{{i+1}}. {{troll.name}}</b> - {{troll.description}}</p>
+                  <div class="content"  v-if="troll.subnotes" >
+                      <ol class="is-lower-alpha">
+                          <li v-for="note in troll.subnotes" :key="note">
+                              {{note}}
+                          </li>
+                      </ol>
+                  </div>
+              </li>
+          </ul>
+          <br>
+        </div>
     </div>
     <br>
     <div class="content">
@@ -45,7 +48,7 @@
 export default {
   data() {
     return {
-        trolls: []
+        trolls: {}
     }
   },
   computed: {

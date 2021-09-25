@@ -69,8 +69,8 @@
         "default": "0"
     },
     {
-        "cvar": "sm_ftt_badthrow_hitself <0/1:boolean>",
-        "description": "1 = Victim of this troll will bile themselves or burn themselves.\n0 = Victim just drops the item instead",
+        "cvar": "sm_ftt_badthrow_fail_chance <0.0 - 1.0:float>",
+        "description": "The % chance that on a throw, they will instead hit themselves. 0 to disable",
         "default": 1
     }
 ]
