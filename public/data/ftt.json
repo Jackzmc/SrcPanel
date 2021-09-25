@@ -1,5 +1,5 @@
 {
-    "Magnet / Horde": [
+    "Magnets": [
         {
             "name": "Special Magnet",
             "description": "Attracts ALL specials to any alive target with this troll enabled",
@@ -14,7 +14,9 @@
             "name": "Witch Magnet",
             "description": "All witches when startled will target any player with this troll",
             "modes": ["constant"]
-        },
+        }
+    ],
+    "Infected": [
         {
             "name": "Swarm",
             "description": "Swarms a player with zombies. Requires swarm plugin",
