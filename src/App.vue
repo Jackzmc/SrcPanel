@@ -36,7 +36,7 @@ import CvarsTab from './tabs/CvarsTab.vue'
 import OverviewTab from './tabs/OverviewTab.vue'
 import ExtraPlayersTab from './tabs/ExtraPlayersTab.vue'
 import FeedTheTrollsTab from './tabs/FeedTheTrollsTab.vue'
-import AdvancedTab from './tabs/AdvancedTab.vue'
+import PlayerTargetting from './tabs/PlayerTargetting.vue'
 import StateManagementTab from './tabs/StateManagementTab.vue'
 import BansTab from './tabs/BansTab.vue'
 import PluginDescriptionsTab from './tabs/PluginDescriptionsTab.vue'
@@ -50,7 +50,7 @@ export default {
     commands: ["Commands", CommandsTab],
     cvars:    ["Cvars", CvarsTab],
     ftt:      ["Feed The Trolls", FeedTheTrollsTab],
-    advanced: ["Advanced", AdvancedTab],
+    targetting: ["Player Targetting", PlayerTargetting],
     extraplayers: ["5+ Player Games", ExtraPlayersTab],
     //states:   ["State Management", StateManagementTab],
     bans:     ["Bans", BansTab],
