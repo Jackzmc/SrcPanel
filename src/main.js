@@ -23,5 +23,5 @@ Vue.prototype.$CONNECT_IP = process.env.VUE_APP_SERVER_IP
 Vue.prototype.$SCRIPT_KEY = process.env.VUE_APP_SCRIPT_KEY
 
 new Vue({
-  render: h => h(App)
+  render: h => h(App),
 }).$mount('#app')

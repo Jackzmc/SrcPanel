@@ -22,6 +22,7 @@
             <option v-for="entry in list" :key="entry" :value="entry">{{entry}}</option>
           </select>
           <a @click="filters[filter] = []">Clear</a>
+          <a @click="filters[filter] = $options.FILTERS[filter]" class="is-pulled-right is-inline">Select All</a>
         </div>
       </div>
     </div>
@@ -39,13 +40,18 @@
           <th style="width:0" data-tooltip="The server the action was recorded on">Server</th>
           <th style="width:0" data-tooltip="The type of action that occurred">Type</th>
           <th style="width:0" data-tooltip="Who caused the action to occur. May not exist">Activator</th>
-          <th>Message</th>
+          <th>
+            <div class="is-inline-block">
+              <label class="label is-inline-block">Message</label>&nbsp;&nbsp;
+              <input class="input is-inline is-small is-expanded" v-model="search.message" placeholder="Filter" />
+            </div>
+          </th>
           <th v-if="isTargetColumnVisible" style="width:0" data-tooltip="Who the action was against. May not exist">Target</th>
           <th style="width:0">Date</th>
         </tr>
       </thead>
       <tbody>
-        <tr v-for="log in data" :key="log.id">
+        <tr v-for="log in filteredData" :key="log.id">
           <td class="nowrap">
               <span v-if="log.server" :class="['tag', $options.SERVER_COLORS[log.server]]">{{ log.server }}</span>
           </td>
@@ -80,6 +86,8 @@
 
 <script>
 import Pagination from '@/components/pagination'
+import Debounce from '@/js/debounce.js'
+
 const FULLNAME_REGEX = /"([^"\n<>]+)<\d+><(STEAM_\d:\d:\d+|Console)><(Console)?>"/g
 const ADMINCHAT_REGEX = /triggered sm_say \(text (.*)\)/
 
@@ -104,23 +112,39 @@ export default {
   },
   data() {
     return {
-      loading: null,
+      loading: true,
       data: [],
       count: 0,
       filters: {
         servers: ["improved", "reserved"],
         types: ["ACTION", "CHAT", "INFO"],
       },
+      search: {
+        message: null,
+        client: null,
+        target: null,
+      },
       page: 1,
-      limit: 20
+      limit: 20,
+      fetchDebounce: null
     }
   },
   computed: {
+    filteredData() {
+      if(!this.search.message) return this.data
+      return this.data.filter(log => log.message.includes(this.search.message))
+    },
     query() {
+      //todo: search
       let query = ""
       for(const filter in this.filters) {
         if(this.filters[filter] && this.filters[filter].length > 0) {
           query += `&${filter}=${this.filters[filter].join(",")}`
+        }
+      }
+      for(const search in this.search) {
+        if(this.search[search]) {
+          query += `&search_${search}=${this.search[search]}`
         }
       }
       return query.length > 0 ? query : ""
@@ -134,7 +158,8 @@ export default {
   },
   watch: {
     query() {
-      this.getData()
+      this.page = 1
+      this.fetchDebounce()
     }
   },
   methods: {
@@ -146,7 +171,6 @@ export default {
       this.getData()
     },
     getData() {
-      this.loading = true
       fetch(`//api.lgs.jackz.me/get-activity.php?page=${this.page}&limit=${this.limit}${this.query}`)
         .then(res => res.json())
         .then(json => {
@@ -190,6 +214,7 @@ export default {
     }
   },
   created() {
+    this.fetchDebounce = Debounce(this.getData, 500)
     for(const filter in this.$options.FILTERS) {
       if(!this.filters[filter])
         this.$set(this.filters, filter, [])
@@ -198,6 +223,7 @@ export default {
     setInterval(() => this.getData(), 1000 * 60 * 2)
   }
 }
+
 </script>
 
 <style>
