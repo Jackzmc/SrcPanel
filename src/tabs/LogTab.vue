@@ -22,24 +22,28 @@
     <table class="table is-fullwidth is-striped is-hoverable is-bordered">
       <thead>
         <tr>
-          <th>Server</th>
+          <th style="width:0">Server</th>
           <th style="width:0">Type</th>
-          <th>Activator</th>
+          <th style="width:0">Activator</th>
           <th>Message</th>
-          <th>Target</th>
-          <th>Date</th>
+          <th style="width:0">Target</th>
+          <th style="width:0">Date</th>
         </tr>
       </thead>
       <tbody>
         <tr v-for="log in data" :key="log.id">
-          <td class="nowrap">{{ log.server }}</td>
+          <td class="nowrap">
+              <span :class="['tag', $options.SERVER_COLORS[log.server]]">{{ log.server }}</span>
+          </td>
           <td class="nowrap">
             <span :class="['tag', $options.TYPE_COLORS[log.type]]">{{ log.type }}</span>
           </td>
           <td class="nowrap">
+            <b>
             <component :is="log.client.hasStats?'a':'span'" :href="getStatProfile(log.client.steamid)" :data-tooltip="log.client.steamid">
               {{ log.client.name }}
             </component>
+            </b>
           </td>
           <td>{{ log.message }}</td>
           <td class="nowrap">
@@ -77,6 +81,10 @@ export default {
     CHAT: "is-primary",
     QUIT: "is-danger",
     JOIN: "is-success",
+  },
+  SERVER_COLORS: {
+    improved: "is-success",
+    reserved: "is-dark",
   },
   data() {
     return {
