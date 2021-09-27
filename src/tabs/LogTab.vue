@@ -140,7 +140,6 @@ export default {
             if(log.message) {
               const msg = [...log.message.matchAll(FULLNAME_REGEX)]
               if(msg && msg.length > 0) {
-                console.log(msg)
                 if(msg[0] && log.client.steamid !== "Server") log.client.name = msg[0][1]
                 if(msg[1] && log.target.steamid !== "Server") log.target.name = msg[1][1]
                 log.message = log.message.replace(FULLNAME_REGEX, '')
