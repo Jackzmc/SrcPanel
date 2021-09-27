@@ -4,10 +4,13 @@
     <div class="columns">
       <div class="column is-11">
         <p class="title is-3">Server Logs</p>
-        <p class="subtitle is-6">{{count.toLocaleString()}} log entries</p>
+        <p class="subtitle is-6">
+          {{count.toLocaleString()}} log entries
+          <em v-if="query != ''">(filtered)</em>
+        </p>
       </div>
       <div class="column">
-        <button @click="getData" class="button is-info">Refresh</button>
+        <button @click="getData" :disabled="loading" :class="['button','is-info',{'is-loading':loading}]">Refresh</button>
       </div>
     </div>
     <br>
@@ -25,10 +28,11 @@
   </div>
   <hr>
   <div class="container">
-    <Pagination :page="page" :count="count" :limit="limit" @page="setPage" />
+    <p v-if="loading" class="subtitle is-3 has-text-centered">Loading...</p>
+    <Pagination v-else :page="page" :count="count" :limit="limit" @page="setPage" />
   </div>
   <br>
-  <div class="container is-fluid">
+  <div class="container is-fluid" v-show="!loading">
     <table class="table is-fullwidth is-striped is-hoverable is-bordered">
       <thead>
         <tr>
@@ -67,7 +71,7 @@
     </table>
   </div>
   <br>
-  <div class="container">
+  <div class="container" v-if="!loading">
     <Pagination :page="page" :count="count" :limit="limit" @page="setPage" />
   </div>
 <br>
@@ -85,13 +89,14 @@ export default {
     servers: [
       "improved", "reserved", "public1", "public2", "public3", "public4"
     ],
-    types: [ "ACTION", "CHAT", "QUIT", "JOIN", "BAN", "KICK" ],
+    types: [ "ACTION", "CHAT", "INFO", "QUIT", "JOIN" ],
   },
   TYPE_COLORS: {
     ACTION: "is-info",
     CHAT: "is-primary",
     QUIT: "is-danger",
     JOIN: "is-success",
+    INFO: "is-info"
   },
   SERVER_COLORS: {
     improved: "is-success",
@@ -103,7 +108,8 @@ export default {
       data: [],
       count: 0,
       filters: {
-        types: ["ACTION", "CHAT"]
+        servers: ["improved", "reserved"],
+        types: ["ACTION", "CHAT", "INFO"],
       },
       page: 1,
       limit: 20
@@ -168,6 +174,7 @@ export default {
               const adminChatMatch = log.message.match(ADMINCHAT_REGEX)
               if(adminChatMatch) {
                 log.message = `<span class='tag is-warning' data-tooltip='Message was sent in admin chat'>${adminChatMatch[1]}</span>`
+                log.type = "CHAT"
               }
             }
           })
@@ -188,6 +195,7 @@ export default {
         this.$set(this.filters, filter, [])
     }
     this.getData()
+    setInterval(() => this.getData(), 1000 * 60 * 2)
   }
 }
 </script>
