@@ -2,6 +2,16 @@
 <div>
   <div class="container">
     <div class="columns">
+      <div class="column is-11">
+        <p class="title is-3">Server Logs</p>
+        <p class="subtitle is-6">{{count.toLocaleString()}} log entries</p>
+      </div>
+      <div class="column">
+        <button @click="getData" class="button is-info">Refresh</button>
+      </div>
+    </div>
+    <br>
+    <div class="columns">
       <div class="column is-narrow" v-for="(list, filter) in $options.FILTERS" :key="filter">
         <label class="label">{{ formatFilter(filter) }}</label>
         <div class="select is-multiple">
@@ -22,18 +32,18 @@
     <table class="table is-fullwidth is-striped is-hoverable is-bordered">
       <thead>
         <tr>
-          <th style="width:0">Server</th>
-          <th style="width:0">Type</th>
-          <th style="width:0">Activator</th>
+          <th style="width:0" data-tooltip="The server the action was recorded on">Server</th>
+          <th style="width:0" data-tooltip="The type of action that occurred">Type</th>
+          <th style="width:0" data-tooltip="Who caused the action to occur. May not exist">Activator</th>
           <th>Message</th>
-          <th style="width:0">Target</th>
+          <th v-if="isTargetColumnVisible" style="width:0" data-tooltip="Who the action was against. May not exist">Target</th>
           <th style="width:0">Date</th>
         </tr>
       </thead>
       <tbody>
         <tr v-for="log in data" :key="log.id">
           <td class="nowrap">
-              <span :class="['tag', $options.SERVER_COLORS[log.server]]">{{ log.server }}</span>
+              <span v-if="log.server" :class="['tag', $options.SERVER_COLORS[log.server]]">{{ log.server }}</span>
           </td>
           <td class="nowrap">
             <span :class="['tag', $options.TYPE_COLORS[log.type]]">{{ log.type }}</span>
@@ -45,8 +55,8 @@
             </component>
             </b>
           </td>
-          <td>{{ log.message }}</td>
-          <td class="nowrap">
+          <td v-html="log.message"></td>
+          <td class="nowrap" v-if="isTargetColumnVisible">
             <component :is="log.target.hasStats?'a':'span'" :href="getStatProfile(log.target.steamid)" :data-tooltip="log.target.steamid">
               {{ log.target.name }}
             </component>
@@ -67,6 +77,7 @@
 <script>
 import Pagination from '@/components/pagination'
 const FULLNAME_REGEX = /"([^"\n<>]+)<\d+><(STEAM_\d:\d:\d+|Console)><(Console)?>"/g
+const ADMINCHAT_REGEX = /triggered sm_say \(text (.*)\)/
 
 export default {
   components: { Pagination },
@@ -88,9 +99,12 @@ export default {
   },
   data() {
     return {
+      loading: null,
       data: [],
       count: 0,
-      filters: {},
+      filters: {
+        types: ["ACTION", "CHAT"]
+      },
       page: 1,
       limit: 20
     }
@@ -105,7 +119,12 @@ export default {
       }
       return query.length > 0 ? query : ""
     },
-
+    isTargetColumnVisible() {
+      for(const data in this.data) {
+        if(this.data[data]['target']['steamid']) return true
+      }
+      return false
+    }
   },
   watch: {
     query() {
@@ -121,9 +140,11 @@ export default {
       this.getData()
     },
     getData() {
+      this.loading = true
       fetch(`//api.lgs.jackz.me/get-activity.php?page=${this.page}&limit=${this.limit}${this.query}`)
         .then(res => res.json())
         .then(json => {
+          this.loading = false
           this.count = json.count
           json.logs.forEach(log => {
             log.timestamp = this.formatDate(log.timestamp)
@@ -144,6 +165,10 @@ export default {
                 if(msg[1] && log.target.steamid !== "Server") log.target.name = msg[1][1]
                 log.message = log.message.replace(FULLNAME_REGEX, '')
               }
+              const adminChatMatch = log.message.match(ADMINCHAT_REGEX)
+              if(adminChatMatch) {
+                log.message = `<span class='tag is-warning' data-tooltip='Message was sent in admin chat'>${adminChatMatch[1]}</span>`
+              }
             }
           })
           this.data = json.logs
@@ -159,7 +184,8 @@ export default {
   },
   created() {
     for(const filter in this.$options.FILTERS) {
-      this.$set(this.filters, filter, [])
+      if(!this.filters[filter])
+        this.$set(this.filters, filter, [])
     }
     this.getData()
   }
