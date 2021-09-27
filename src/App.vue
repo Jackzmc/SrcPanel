@@ -42,6 +42,7 @@ import BansTab from './tabs/BansTab.vue'
 import PluginDescriptionsTab from './tabs/PluginDescriptionsTab.vue'
 import MapsTab from './tabs/MapsTab.vue'
 import ManagementTab from './tabs/ManagementTab.vue'
+import LogTab from './tabs/LogTab.vue'
 
 export default {
   name: 'App',
@@ -50,13 +51,14 @@ export default {
     commands: ["Commands", CommandsTab],
     cvars:    ["Cvars", CvarsTab],
     ftt:      ["Feed The Trolls", FeedTheTrollsTab],
-    targetting: ["Player Targetting", PlayerTargetting],
-    extraplayers: ["5+ Player Games", ExtraPlayersTab],
+    targetting: ["Player Targets", PlayerTargetting],
+    extraplayers: ["5+ Players", ExtraPlayersTab],
     //states:   ["State Management", StateManagementTab],
     bans:     ["Bans", BansTab],
     workshop: ['Maps', MapsTab],
     manage:   ["Management", ManagementTab],
-    plugins:  ["Plugins", PluginDescriptionsTab]
+    plugins:  ["Plugins", PluginDescriptionsTab],
+    logs:     ["Logs", LogTab]
   },
   data() {
     return {
