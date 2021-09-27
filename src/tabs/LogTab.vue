@@ -8,17 +8,22 @@
           <select multiple v-model="filters[filter]">
             <option v-for="entry in list" :key="entry" :value="entry">{{entry}}</option>
           </select>
+          <a @click="filters[filter] = []">Clear</a>
         </div>
       </div>
     </div>
   </div>
-    <hr>
+  <hr>
+  <div class="container">
+    <Pagination :page="page" :count="count" :limit="limit" @page="setPage" />
+  </div>
+  <br>
   <div class="container is-fluid">
     <table class="table is-fullwidth is-striped is-hoverable is-bordered">
       <thead>
         <tr>
           <th>Server</th>
-          <th>Type</th>
+          <th style="width:0">Type</th>
           <th>Activator</th>
           <th>Message</th>
           <th>Target</th>
@@ -28,7 +33,9 @@
       <tbody>
         <tr v-for="log in data" :key="log.id">
           <td class="nowrap">{{ log.server }}</td>
-          <td class="nowrap">{{ log.type }}</td>
+          <td class="nowrap">
+            <span :class="['tag', $options.TYPE_COLORS[log.type]]">{{ log.type }}</span>
+          </td>
           <td class="nowrap">
             <component :is="log.client.hasStats?'a':'span'" :href="getStatProfile(log.client.steamid)" :data-tooltip="log.client.steamid">
               {{ log.client.name }}
@@ -45,23 +52,39 @@
       </tbody>
     </table>
   </div>
+  <br>
+  <div class="container">
+    <Pagination :page="page" :count="count" :limit="limit" @page="setPage" />
+  </div>
+<br>
 </div>
 </template>
 
 <script>
+import Pagination from '@/components/pagination'
 const FULLNAME_REGEX = /"([^"\n<>]+)<\d+><(STEAM_\d:\d:\d+|Console)><(Console)?>"/g
 
 export default {
+  components: { Pagination },
   FILTERS: {
     servers: [
       "improved", "reserved", "public1", "public2", "public3", "public4"
     ],
     types: [ "ACTION", "CHAT", "QUIT", "JOIN", "BAN", "KICK" ],
   },
+  TYPE_COLORS: {
+    ACTION: "is-info",
+    CHAT: "is-primary",
+    QUIT: "is-danger",
+    JOIN: "is-success",
+  },
   data() {
     return {
       data: [],
-      filters: {}
+      count: 0,
+      filters: {},
+      page: 1,
+      limit: 20
     }
   },
   computed: {
@@ -73,7 +96,8 @@ export default {
         }
       }
       return query.length > 0 ? query : ""
-    }
+    },
+
   },
   watch: {
     query() {
@@ -84,11 +108,16 @@ export default {
     formatFilter(id) {
       return id[0].toUpperCase() + id.slice(1)
     },
+    setPage(page) {
+      this.page = page
+      this.getData()
+    },
     getData() {
-      fetch(`//api.lgs.jackz.me/get-activity.php?v=1${this.query}`)
+      fetch(`//api.lgs.jackz.me/get-activity.php?page=${this.page}&limit=${this.limit}${this.query}`)
         .then(res => res.json())
         .then(json => {
-          json.forEach(log => {
+          this.count = json.count
+          json.logs.forEach(log => {
             log.timestamp = this.formatDate(log.timestamp)
             log.client = {
               steamid: log.client,
@@ -110,7 +139,7 @@ export default {
               }
             }
           })
-          this.data = json
+          this.data = json.logs
         })
     },
     formatDate(timestamp) {
