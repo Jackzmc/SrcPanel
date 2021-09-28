@@ -54,7 +54,6 @@ export default {
   },
   methods: {
     setPage(page) {
-      this.page = page
       this.$emit('page', page)
     },
   }
