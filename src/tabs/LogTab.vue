@@ -241,8 +241,8 @@ export default {
               hasStats: !!log.targetName,
             }
 
-            if(log.client.steamid && !this.history.activators.some(c => c.steamid == log.client.steamid)) this.history.activators.push(log.client)
-            if(log.target.steamid && !this.history.targets.some(c => c.steamid == log.target.steamid)) this.history.targets.push(log.target)
+            if(log.client.steamid && log.client.steamid.startsWith("STEAM_") && !this.history.activators.some(c => c.steamid == log.client.steamid)) this.history.activators.push(log.client)
+            if(log.target.steamid && log.target.steamid.startsWith("STEAM_") &&  !this.history.targets.some(c => c.steamid == log.target.steamid)) this.history.targets.push(log.target)
 
             if(log.message) {
               // const msg = [...log.message.matchAll(FULLNAME_REGEX)]
