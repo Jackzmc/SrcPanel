@@ -1,5 +1,5 @@
 <template>
-    <table class="table">
+    <table class="table is-bordered">
         <thead>
             <tr>
                 <th>Name</th>
@@ -19,7 +19,7 @@
                     <span v-else-if='server.id.startsWith("Left_4_Dead_2_Public")' class='is-size-5'><b>*</b></span>
 
                 </td>
-                <td><span v-if="server.status === 'online'">{{server.players.online}} / {{server.players.max}}</span></td>
+                <td class="has-text-centered"><span v-if="server.status === 'online'">{{server.players.online}} / {{server.players.max}}</span></td>
                 <td><p @click='copyCommand'>
                   {{server.meta.connect}}
                 </p></td>
