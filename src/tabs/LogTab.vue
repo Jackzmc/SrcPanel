@@ -262,7 +262,7 @@ export default {
     },
     formatDate(timestamp) {
       const d = new Date(timestamp * 1000)
-      return d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      return d.toLocaleDateString() + ' ' + d.toLocaleTimeString()
     },
     getStatProfile(id) {
       return `https://stats.jackz.me/user/${id}/overview`
