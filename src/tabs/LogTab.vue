@@ -129,14 +129,15 @@ export default {
     servers: [
       "improved", "reserved", "public1", "public2", "public3", "public4"
     ],
-    types: [ "ACTION", "CHAT", "INFO", "QUIT", "JOIN" ],
+    types: [ "ACTION", "CHAT", "INFO", "STATE", "QUIT", "JOIN" ],
   },
   TYPE_COLORS: {
     ACTION: "is-info",
-    CHAT: "is-primary",
+    CHAT: "is-secondary",
+    STATE: "is-primary",
     QUIT: "is-danger",
     JOIN: "is-success",
-    INFO: "is-info"
+    INFO: "is-link"
   },
   SERVER_COLORS: {
     improved: "is-success",
@@ -149,7 +150,7 @@ export default {
       count: 0,
       filters: {
         servers: ["improved", "reserved"],
-        types: ["ACTION", "CHAT", "INFO"],
+        types: ["ACTION", "CHAT", "INFO", "STATE"],
         client: null,
         target: null
       },
