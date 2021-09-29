@@ -111,6 +111,8 @@
   <br>
   <div class="container" v-if="!loading">
     <Pagination :page="page" :count="count" :limit="limit" @page="setPage" />
+    <a @click="toggleDebug" v-if="debugView"><em>(click to disable debug view)</em></a>
+    <a @click="toggleDebug" v-else><em>(click to enable debug view)</em></a>
   </div>
 <br>
 </div>
@@ -163,7 +165,8 @@ export default {
       },
       page: 1,
       limit: 20,
-      fetchDebounce: null
+      fetchDebounce: null,
+      debugView: false
     }
   },
   computed: {
@@ -205,6 +208,10 @@ export default {
     }
   },
   methods: {
+    toggleDebug() {
+      this.debugView = !this.debugView
+      this.getData()
+    },
     onBtnRefresh() {
       this.loading = 2
       this.getData()
@@ -251,7 +258,8 @@ export default {
               //   if(msg[1] && log.target.steamid !== "Server") log.target.name = msg[1][1]
               //   // log.message = log.message.replace(FULLNAME_REGEX, '')
               // }
-              log.message = log.message.replace(FULLNAME_REGEX, '')
+              if(!this.debugView)
+                log.message = log.message.replace(FULLNAME_REGEX, (m, p1) => p1)
               const adminChatMatch = log.message.match(ADMINCHAT_REGEX)
               if(adminChatMatch) {
                 log.message = `<span class='tag is-warning' data-tooltip='Message was sent in admin chat'>${adminChatMatch[1]}</span>`
