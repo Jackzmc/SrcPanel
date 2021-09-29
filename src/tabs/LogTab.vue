@@ -10,7 +10,7 @@
         </p>
       </div>
       <div class="column">
-        <button @click="getData" :disabled="loading" :class="['button','is-info',{'is-loading':loading}]">Refresh</button>
+        <button @click="onBtnRefresh" :disabled="loading > 0" :class="['button','is-info',{'is-loading':loading > 0}]">Refresh</button>
       </div>
     </div>
     <br>
@@ -56,11 +56,11 @@
   </div>
   <hr>
   <div class="container">
-    <p v-if="loading" class="subtitle is-3 has-text-centered">Loading...</p>
+    <p v-if="loading == 1" class="subtitle is-3 has-text-centered">Loading...</p>
     <Pagination v-else :page="page" :count="count" :limit="limit" @page="setPage" />
   </div>
   <br>
-  <div class="container is-fluid" v-show="!loading">
+  <div class="container is-fluid" v-show="loading == 0">
     <table class="table is-fullwidth is-striped is-hoverable is-bordered">
       <thead>
         <tr>
@@ -120,7 +120,7 @@
 import Pagination from '@/components/pagination'
 import Debounce from '@/js/debounce.js'
 
-const FULLNAME_REGEX = /"([^"\n<>]+)<\d+><(STEAM_\d:\d:\d+|Console)><(Console)?>"/g
+const FULLNAME_REGEX = /"([^"<>]+)<\d+><(STEAM_\d:\d:\d+|Console|BOT)><(Console)?>"/g
 const ADMINCHAT_REGEX = /triggered sm_say \(text (.*)\)/
 
 export default {
@@ -145,7 +145,7 @@ export default {
   },
   data() {
     return {
-      loading: true,
+      loading: 1,
       data: [],
       count: 0,
       filters: {
@@ -205,6 +205,10 @@ export default {
     }
   },
   methods: {
+    onBtnRefresh() {
+      this.loading = 2
+      this.getData()
+    },
     formatFilter(id) {
       return id[0].toUpperCase() + id.slice(1)
     },
