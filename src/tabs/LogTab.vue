@@ -155,7 +155,7 @@ export default {
   components: { Pagination },
   FILTERS: {
     servers: [
-      "improved", "reserved", "public1", "public2", "public3", "public4"
+      "improved", "reserved", "public1", "public2", "public3", "public4", "public5", "public6", "public7", "public8"
     ],
     types: [ "ACTION", "CHAT", "INFO", "STATE", "QUIT", "JOIN" ],
   },
