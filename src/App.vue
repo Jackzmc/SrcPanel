@@ -1,10 +1,11 @@
 <template>
   <div id="app">
     <span id="lastUpdate">
-      Last Updated {{$LAST_UPDATED}}
-      <template v-if="updateRegistration">
-        <br>
-        <a style="color:#0f3bea " @click='reloadPage'>An update is available, click to refresh</a>
+      <p v-if="updating" class="has-text-black has-text-weight-bold">New update available, updating...</p>
+      <a v-else-if="updateRegistration" class="has-text-black" @click='reloadPage'>
+        <b>New update available.</b><br>Click here if page does not reload.</a>
+      <template v-else>
+        Last Updated {{$LAST_UPDATED}}
       </template>
     </span>
     <section class="hero is-info has-text-centered">
@@ -64,7 +65,8 @@ export default {
     return {
       tabIndex: 'overview',
       tab: OverviewTab,
-      updateRegistration: null
+      updateRegistration: null,
+      updating: false
     }
   },
   methods: {
@@ -91,6 +93,7 @@ export default {
   },
   created() {
     document.addEventListener('swUpdated', this.updateAvailable, { once: true })
+    document.addEventListener('swUpdating', () => this.updating = true, { once: true })
     if(window.location.hash) {
       const hash = window.location.hash.substring(1)
       if(this.$options.TABS[hash]) {
