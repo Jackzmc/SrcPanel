@@ -64,7 +64,6 @@ export default {
     return {
       tabIndex: 'overview',
       tab: OverviewTab,
-      servers: [],
       updateRegistration: null
     }
   },
