@@ -4,7 +4,7 @@
     <div class="columns">
       <div class="column is-11">
         <p class="title is-3">Server Logs</p>
-        <p class="subtitle is-6">
+        <p class="subtitle is-4">
           {{count.toLocaleString()}} log entries
           <em v-if="query != ''">(filtered)</em>
         </p>
@@ -15,14 +15,35 @@
     </div>
     <br>
     <div class="columns">
-      <div class="column is-narrow" v-for="(list, filter) in $options.FILTERS" :key="filter">
-        <label class="label">{{ formatFilter(filter) }}</label>
-        <div class="select is-multiple">
-          <select multiple v-model="filters[filter]">
-            <option v-for="entry in list" :key="entry" :value="entry">{{entry}}</option>
-          </select>
-          <a @click="filters[filter] = []">Clear</a>
-          <a @click="filters[filter] = $options.FILTERS[filter]" class="is-pulled-right is-inline">Select All</a>
+      <div class="column">
+        <label class="label">
+          Enabled Servers
+          <a class="is-inline" @click="filters['servers'] = []">(Clear)</a>&nbsp;
+          <a @click="filters['servers'] = $options.FILTERS['servers']">(Select All)</a>
+        </label>
+
+        <div class="buttons">
+          <a
+            v-for="key in $options.FILTERS.servers" :key="key"
+            :class="['button', 'is-small', serverColors[key]]"
+            @click="toggleList('servers', key)"
+          >
+            {{key}}
+          </a>
+        </div>
+        <label class="label">
+          Enabled Types
+          <a class="is-inline" @click="filters['types'] = []">(Clear)</a>&nbsp;
+          <a @click="filters['types'] = $options.FILTERS['types']">(Select All)</a>
+        </label>
+        <div class="buttons">
+          <a
+            v-for="key in $options.FILTERS.types" :key="key"
+            :class="['button', 'is-small', typeColors[key]]"
+            @click="toggleList('types', key)"
+          >
+            {{key}}
+          </a>
         </div>
       </div>
       <div class="column">
@@ -91,7 +112,7 @@
               :is="log.client.hasStats?'a':'span'"
               @click="setUserFilter('client', log.client.steamid)"
               @click.ctrl="openStatsProfile(log.client.steamid)"
-              :data-tooltip="log.client.steamid + '\n\nClick to only see entries from this user.\nCtrl + Click to view stats profile'"
+              :data-tooltip="log.client.steamid + '\n\nClick to only see entries from this activator.' + (log.client.hasStats?'\nCtrl + Click to view stats profile':'')"
             >
               {{ log.client.name }}
             </component>
@@ -99,7 +120,12 @@
           </td>
           <td v-html="log.message"></td>
           <td class="nowrap" v-if="isTargetColumnVisible">
-            <component :is="log.target.hasStats?'a':'span'" :href="getStatProfile(log.target.steamid)" :data-tooltip="log.target.steamid">
+            <component
+              :is="log.target.hasStats ? 'a' : 'span'"
+              @click="setUserFilter('target', log.target.steamid)"
+              @click.ctrl="openStatsProfile(log.target.steamid)"
+              :data-tooltip="log.target.steamid + '\n\nClick to only see entries from this target.' + (log.target.hasStats?'\nCtrl + Click to view stats profile':'')"
+            >
               {{ log.target.name }}
             </component>
           </td>
@@ -170,6 +196,20 @@ export default {
     }
   },
   computed: {
+    serverColors() {
+      let obj = {}
+      for(const server of this.$options.FILTERS.servers) {
+        obj[server] = this.filters.servers.includes(server) ? this.$options.SERVER_COLORS[server] : 'is-light'
+      }
+      return obj
+    },
+    typeColors() {
+      let obj = {}
+      for(const type of this.$options.FILTERS.types) {
+        obj[type] = this.filters.types.includes(type) ? this.$options.TYPE_COLORS[type] : 'is-light'
+      }
+      return obj
+    },
     filteredData() {
       if(!this.search.message) return this.data
       return this.data.filter(log => log.message.includes(this.search.message))
@@ -208,6 +248,15 @@ export default {
     }
   },
   methods: {
+    toggleList(listName, element) {
+      const index = this.filters[listName].findIndex(e => e == element)
+      if(index > -1) {
+        this.filters[listName].splice(index, 1)
+      } else {
+        this.filters[listName].push(element)
+      }
+      this.getData()
+    },
     toggleDebug() {
       this.debugView = !this.debugView
       this.getData()
@@ -251,15 +300,8 @@ export default {
             if(log.client.steamid && log.client.steamid.startsWith("STEAM_") && !this.history.activators.some(c => c.steamid == log.client.steamid)) this.history.activators.push(log.client)
             if(log.target.steamid && log.target.steamid.startsWith("STEAM_") &&  !this.history.targets.some(c => c.steamid == log.target.steamid)) this.history.targets.push(log.target)
 
-            if(log.message) {
-              // const msg = [...log.message.matchAll(FULLNAME_REGEX)]
-              // if(msg && msg.length > 0) {
-              //   if(msg[0] && log.client.steamid !== "Server") log.client.name = msg[0][1]
-              //   if(msg[1] && log.target.steamid !== "Server") log.target.name = msg[1][1]
-              //   // log.message = log.message.replace(FULLNAME_REGEX, '')
-              // }
-              if(!this.debugView)
-                log.message = log.message.replace(FULLNAME_REGEX, (m, p1) => p1)
+            if(!this.debugView && log.message) {
+              log.message = log.message.replace(FULLNAME_REGEX, (m, p1) => p1)
               const adminChatMatch = log.message.match(ADMINCHAT_REGEX)
               if(adminChatMatch) {
                 log.message = `<span class='tag is-warning' data-tooltip='Message was sent in admin chat'>${adminChatMatch[1]}</span>`
