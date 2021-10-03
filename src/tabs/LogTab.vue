@@ -73,6 +73,12 @@
           </select>
         </div>
       </div>
+      <div class="column is-2">
+        <label class="label">Find Messages Around ID</label>
+        <input type="text" class="input" v-model="search.id" placeholder="#####" />
+        <em v-if="showIds"><a @click="showIds = false">(click here to hide ids)</a></em>
+        <em v-else><a @click="showIds = true">(click here to see ids)</a></em>
+      </div>
     </div>
   </div>
   <hr>
@@ -85,6 +91,7 @@
     <table class="table is-fullwidth is-striped is-hoverable is-bordered">
       <thead>
         <tr>
+          <th style="width:0" v-if="debugView||showIds">ID</th>
           <th style="width:0" data-tooltip="The server the action was recorded on">Server</th>
           <th style="width:0" data-tooltip="The type of action that occurred">Type</th>
           <th style="width:0" data-tooltip="Who caused the action to occur. May not exist">Activator</th>
@@ -99,9 +106,12 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-for="log in filteredData" :key="log.id">
+        <tr v-for="log in filteredData" :key="log.id" :class="search.id==log.id?['has-background-primary']:[]">
+          <td v-if="debugView||showIds" class="nowrap">
+            <a data-tooltip="Click to view all messages around this entry" class="has-tooltip-right" @click="search.id=log.id;getData()">{{ log.id }}</a>
+          </td>
           <td class="nowrap">
-              <span v-if="log.server" :class="['tag', $options.SERVER_COLORS[log.server]]">{{ log.server }}</span>
+            <span v-if="log.server" :class="['tag', $options.SERVER_COLORS[log.server]]">{{ log.server }}</span>
           </td>
           <td class="nowrap">
             <span :class="['tag', $options.TYPE_COLORS[log.type]]">{{ log.type }}</span>
@@ -184,6 +194,7 @@ export default {
       },
       search: {
         message: null,
+        id: null
       },
       history: {
         activators: [],
@@ -192,7 +203,8 @@ export default {
       page: 1,
       limit: 20,
       fetchDebounce: null,
-      debugView: false
+      debugView: false,
+      showIds: false
     }
   },
   computed: {

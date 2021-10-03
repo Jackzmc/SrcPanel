@@ -151,6 +151,11 @@
             "name": "CameTooEarly",
             "description": "When they shoot, random chance they empty whole clip",
             "modes": ["constant"]
+        },
+        {
+            "name": "Inverted Controls",
+            "description": "Swaps the movement controls (forward/sides/jump/crouch) and swaps reload & shove",
+            "modes": ["constant"]
         }
     ]
 }
