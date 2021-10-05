@@ -3,6 +3,7 @@
     <h3 class='title is-3'>Feed The Trolls</h3>
     <p class="subtitle is-5">You can apply trolls on any amount of players to punish or mess with them.
       <br>See the commands section <b>Troll Commands</b> for commands.
+      <br>Hover over the troll name to view the possible modes and all possible flags
       <br>Use the <b>fta</b> command to apply one of these trolls:
       <br>
     </p>

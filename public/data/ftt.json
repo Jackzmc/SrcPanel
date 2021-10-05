@@ -100,15 +100,11 @@
             "modes": ["constant"]
         },
         {
-            "name": "Honk",
-            "description": "Honk",
-            "modes": ["constant"]
-        },
-        {
-            "name": "Meow",
-            "description": "Makes the player meow",
-            "modes": ["constant"]
-        }        
+            "name": "Honk / Meow",
+            "description": "Honk or Meow",
+            "modes": ["constant"],
+            "flags": ["Honk", "Meow"]
+        }     
     ],
     "Health": [
         {
