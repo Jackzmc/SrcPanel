@@ -3,17 +3,23 @@
         {
             "name": "Special Magnet",
             "description": "Attracts ALL specials to any alive target with this troll enabled",
-            "modes": ["constant"]
+            "modes": ["constant"],
+            "flags": ["Always (100%)", "Sometimes (50%)", "Rare (10%)"],
+            "flagsMultiple": false
         },
         {
             "name": "Tank Magnet",
             "description": "Attracts ALL tanks to any alive target with this troll enabled",
-            "modes": ["constant"]
+            "modes": ["constant"],
+            "flags": ["Always (100%)", "Sometimes (50%)", "Rare (10%)"],
+            "flagsMultiple": false
         },
         {
             "name": "Witch Magnet",
             "description": "All witches when startled will target any player with this troll",
-            "modes": ["constant"]
+            "modes": ["constant"],
+            "flags": ["Always (100%)", "Sometimes (50%)", "Rare (10%)"],
+            "flagsMultiple": false
         }
     ],
     "Infected": [
@@ -36,6 +42,11 @@
             "name": "Insta Special",
             "description": "Shortcut to sm_insta",
             "modes": ["instant"]
+        },
+        {
+            "name": "Goo",
+            "description": "Spawns a spitter puddle underneath them",
+            "modes": ["instant"]
         }
     ],
     "Items": [
@@ -47,7 +58,9 @@
         {
             "name": "Bad Throw",
             "description": "Player drops throwables on throw, and biles/molotovs themselves",
-            "modes": ["constant"]
+            "modes": ["constant"],
+            "flags": ["Bile", "Molotov", "Pipebomb"],
+            "flagsMultiple": true
         },
         {
             "name": "No Pickup",
@@ -156,6 +169,11 @@
             "name": "Inverted Controls",
             "description": "Swaps the movement controls (forward/sides/jump/crouch) and swaps reload & shove",
             "modes": ["constant"]
+        },
+        {
+            "name": "Stagger",
+            "description": "Like if an explosion goes off, slaps you into a stun.",
+            "modes": ["instant"]
         }
     ]
 }

@@ -78,7 +78,7 @@
                     I want to respawn disgruntled pea, the problem is that he has a space in his name. You can either:
                     <br>a.	Surround his name with quotes, “Disgruntled pea”
                     <br>b.	Only mention part of his name (disgruntled, or pea)
-                    <br>/respawn “disgruntled pea” or /respawn disgruntled
+                    <br>/respawn “disgruntled pea” or /respawn disgruntled or even /respawn disgr
                 </p></li>
             </ol>
         </div>

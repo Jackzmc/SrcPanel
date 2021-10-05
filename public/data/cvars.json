@@ -72,5 +72,16 @@
         "cvar": "sm_ftt_badthrow_fail_chance <0.0 - 1.0:float>",
         "description": "The % chance that on a throw, they will instead hit themselves. 0 to disable",
         "default": 1
+    },
+    {
+        "cvar": "abm_autohard <0/1:boolean>",
+        "description": "Only valid for 5+: Enables increased difficulty when there is > 4 players. By default, this will only increase tank health. See below for specials:",
+        "default": 0
+    },
+    {
+        "cvar": "abm_spawninterval <0/18/36/48:int>",
+        "description": "Will set the spawn interval of the extra specials. Recommended 48, 36, or 18. 18 Being the hardest, 48 being easier. 0 turns off spawning of extras.",
+        "default": 0
     }
+
 ]

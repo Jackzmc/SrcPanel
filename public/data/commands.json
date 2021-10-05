@@ -3,20 +3,20 @@
         "name": "Troll Commands",
         "commands": [
             {
-                "command": "fta",
-                "description": "Will apply a troll mode (See 'Feed The Trolls') to a player, shows a menu"
+                "command": "fta [player:player] [category:string]",
+                "description": "Will apply a troll mode (See 'Feed The Trolls') to a player, shows a menu of options. Both player and category are optional. Will jump to category and player respectively."
             },
             {
                 "command": "ftr <player(s):players>",
                 "description": "Will reset all troll modes on a player"
             },
             {
-                "command": "ftl",
-                "description": "Will list all users & the modes that are applied on them"
+                "command": "ftl [player:player]",
+                "description": "Will list all users & the modes that are applied on them. If a player is provided, more details are shown such the names of the enabled flag(s)"
             },
             {
                 "command": "ftt",
-                "description": "[In Beta] A new menu for applying troll modes, is categorized by type."
+                "description": "Shows all the feedthetrolls commands incase you forget in game."
             },
             {
                 "command": "fth",

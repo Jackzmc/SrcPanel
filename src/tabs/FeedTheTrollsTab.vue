@@ -16,7 +16,14 @@
           <h4 class="title is-4">{{category}}</h4>
           <ul>
               <li v-for="(troll, i) in trolls" :key="troll.name" >
-                  <p><b class="has-text-link" :data-tooltip="getTooltip(troll)">{{i+1}}. {{troll.name}}</b> - {{troll.description}}</p>
+                  <p>
+                    <b
+                      class="has-text-link has-tooltip-right"
+                      :data-tooltip="getTooltip(troll)"
+                    >
+                      {{i+1}}. {{troll.name}}
+                    </b> - {{troll.description}}
+                  </p>
                   <div class="content"  v-if="troll.subnotes" >
                       <ol class="is-lower-alpha">
                           <li v-for="note in troll.subnotes" :key="note">
@@ -57,7 +64,8 @@ export default {
   methods: {
     getTooltip(troll) {
       const modes = troll.modes.map(v => `runs ${v}ly`).join("\n-or-\n")
-      return `${modes}`
+      const flags = troll.flags ? `\n\nFlags: \n` + troll.flags.join(troll.flagsMultiple ? ', ' : ' or ') : ''
+      return `${modes}${flags}`
     }
   },
   created() {
