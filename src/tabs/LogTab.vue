@@ -72,6 +72,16 @@
             </option>
           </select>
         </div>
+        <br>
+        <span class="has-text-weight-bold"> - or enter manually: - </span>
+        <div class="columns">
+          <div class="column">
+            <input type="text" :class="filterTargetClass" v-model="filters.target" message="a" placeholder="STEAM_#:#:########" />
+          </div>
+          <div class="column" v-show="filterTargetName">
+            <input type="text" v-model="filterTargetName" disabled class="input disabled" />
+          </div>
+        </div>
       </div>
       <div class="column is-2">
         <label class="label">Find Messages Around ID</label>
@@ -159,6 +169,7 @@ import Pagination from '@/components/pagination'
 import Debounce from '@/js/debounce.js'
 
 const FULLNAME_REGEX = /"([^"<>]+)<\d+><(STEAM_\d:\d:\d+|Console|BOT)><(Console)?>"/g
+const USER_REGEX = /^(STEAM_\d:\d:\d+|Server|CONSOLE)$/
 const ADMINCHAT_REGEX = /triggered sm_say \(text (.*)\)/
 
 export default {
@@ -208,6 +219,20 @@ export default {
     }
   },
   computed: {
+    isFilterTargetValid() {
+      return USER_REGEX.test(this.filters.target)
+    },
+    filterTargetClass() {
+      let value = this.filters.target ? (this.isFilterTargetValid ? "is-success" : "is-danger") : ""
+      return [
+        'input',
+        value
+      ]
+    },
+    filterTargetName() {
+      const result = this.history.targets.find(t => t.steamid === this.filters.target)
+      return result ? result.name : null
+    },
     serverColors() {
       let obj = {}
       for(const server of this.$options.FILTERS.servers) {
@@ -229,6 +254,7 @@ export default {
     query() {
       //todo: search
       let query = ""
+      if(!this.isFilterTargetValid) return query
       for(const filter in this.filters) {
         if(this.filters[filter]) {
           if(Array.isArray(this.filters[filter])) {
@@ -308,8 +334,7 @@ export default {
               name: log.targetName || log.target,
               hasStats: !!log.targetName,
             }
-
-            if(log.client.steamid && log.client.steamid.startsWith("STEAM_") && !this.history.activators.some(c => c.steamid == log.client.steamid)) this.history.activators.push(log.client)
+            if(log.type == "ACTION" && log.client.steamid && log.client.steamid.startsWith("STEAM_") && !this.history.activators.some(c => c.steamid == log.client.steamid)) this.history.activators.push(log.client)
             if(log.target.steamid && log.target.steamid.startsWith("STEAM_") &&  !this.history.targets.some(c => c.steamid == log.target.steamid)) this.history.targets.push(log.target)
 
             if(!this.debugView && log.message) {
@@ -333,6 +358,13 @@ export default {
     },
     getStatProfile(id) {
       return `https://stats.jackz.me/user/${id}/overview`
+    },
+    addToHistory(steamid, list) {
+      if(!steamid || !list || !this.history[list]) return false
+      if(!this.history[list][steamid]) {
+        this.history[list][steamid] = 0
+      }
+      this.history[list][steamid]++
     }
   },
   created() {
