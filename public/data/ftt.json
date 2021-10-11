@@ -126,6 +126,12 @@
             "name": "KillMeSoftly",
             "description": "Make player eat or waste pills whenever possible",
             "modes": ["constant", "instant"]
+        },
+        {
+            "name": "Reverse FF",
+            "description": "Reverses all damage to attacker on friendly fire",
+            "modes": ["constant"],
+            "flags": ["1:1", "2x", "1/2x"]
         }
     ],
     "Misc": [
