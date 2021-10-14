@@ -4,22 +4,25 @@
             "name": "Special Magnet",
             "description": "Attracts ALL specials to any alive target with this troll enabled",
             "modes": ["constant"],
-            "flags": ["Always (100%)", "Sometimes (50%)", "Rare (10%)"],
-            "flagsMultiple": false
+            "prompts": [
+              { "flags": ["Always (100%)", "Sometimes (50%)", "Rare (10%)"], "multiple": false }
+            ]
         },
         {
             "name": "Tank Magnet",
             "description": "Attracts ALL tanks to any alive target with this troll enabled",
             "modes": ["constant"],
-            "flags": ["Always (100%)", "Sometimes (50%)", "Rare (10%)"],
-            "flagsMultiple": false
+            "prompts": [
+              { "flags": ["Always (100%)", "Sometimes (50%)", "Rare (10%)"], "multiple": false }
+            ]
         },
         {
             "name": "Witch Magnet",
             "description": "All witches when startled will target any player with this troll",
             "modes": ["constant"],
-            "flags": ["Always (100%)", "Sometimes (50%)", "Rare (10%)"],
-            "flagsMultiple": false
+            "prompts": [
+              { "flags": ["Always (100%)", "Sometimes (50%)", "Rare (10%)"], "multiple": false }
+            ]
         }
     ],
     "Infected": [
@@ -59,8 +62,9 @@
             "name": "Bad Throw",
             "description": "Player drops throwables on throw, and biles/molotovs themselves",
             "modes": ["constant"],
-            "flags": ["Bile", "Molotov", "Pipebomb"],
-            "flagsMultiple": true
+            "prompts": [
+              { "flags": ["Bile", "Molotov", "Pipebomb"], "multiple": true }
+            ]
         },
         {
             "name": "No Pickup",
@@ -103,7 +107,17 @@
             "name": "Honk / Meow",
             "description": "Honk or Meow",
             "modes": ["constant"],
-            "flags": ["Honk", "Meow"]
+            "prompts": [
+              { 
+                "flags": ["Honk", "Meow"], 
+                "multiple": false
+              },
+              { 
+                "flags": ["Show Modified to Them", "Show Original to Them"], 
+                "multiple": false,
+                "conditions": ["Honk"]
+              }
+            ]
         }     
     ],
     "Health": [
@@ -131,7 +145,12 @@
             "name": "Reverse FF",
             "description": "Reverses all damage to attacker on friendly fire",
             "modes": ["constant"],
-            "flags": ["1:1", "2x", "1/2x"]
+            "prompts": [
+              {
+                "flags": ["1:1", "2x", "1/2x"],
+                "multi": false
+              }
+            ]
         }
     ],
     "Misc": [
