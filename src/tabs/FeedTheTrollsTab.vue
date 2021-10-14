@@ -1,23 +1,23 @@
 <template>
 <div class="container">
-  <div :class="['modal', {'is-active': modal}]">
-    <div class="modal-background" @click="modal = null"></div>
+  <div :class="['modal', {'is-active': modal.content}]">
+    <div class="modal-background" @click="modal.content = null"></div>
     <div class="modal-content">
       <div class="box">
         <h3 class="title is-3">
-          Flags
-          <button class="delete is-inline is-pulled-right" aria-label="close" @click="modal = null"></button>
+          Flags for {{modal.troll}}
+          <button class="delete is-inline is-pulled-right" aria-label="close" @click="modal.content = null"></button>
         </h3>
         <hr>
-        <div class="content" v-html="modal" />
+        <div class="content" v-html="modal.content" />
       </div>
     </div>
-    <button class="modal-close is-large" aria-label="close" @click="modal = null"></button>
   </div>
   <h3 class='title is-3'>Feed The Trolls</h3>
   <p class="subtitle is-5">You can apply trolls on any amount of players to punish or mess with them.
     <br>See the commands section <b>Troll Commands</b> for commands.
-    <br>Hover over the troll name to view the possible modes and all possible flags
+    <br><b>Hover</b> over the troll name to view the possible modes
+    <br><b>Click</b> on any bolded troll to view all the possible flags
     <br>Use the <b>fta</b> command to apply one of these trolls:
     <br>
   </p>
@@ -32,13 +32,13 @@
         <ul>
             <li v-for="(troll, i) in trolls" :key="troll.name" >
                 <p>
-                  <a
-                    class="has-text-link has-tooltip-right has-text-weight-bold"
+                  <component :is="troll.prompts ? 'a' : 'span'"
+                    :class="['has-text-link','has-tooltip-right',{'has-text-weight-bold': troll.prompts}]"
                     :data-tooltip="getTooltip(troll)"
                     @click="showFlags(troll)"
                   >
                     {{i+1}}. {{troll.name}}
-                  </a> - {{troll.description}}
+                  </component> - {{troll.description}}
                 </p>
                 <div class="content"  v-if="troll.subnotes" >
                     <ol class="is-lower-alpha">
@@ -72,7 +72,10 @@ export default {
   data() {
     return {
       trolls: {},
-      modal: null
+      modal: {
+        content: null,
+        troll: null
+      }
     }
   },
   computed: {
@@ -86,7 +89,9 @@ export default {
       return `${modes}${flags}`
     },
     showFlags(troll) {
-      this.modal = troll.prompts.map((prompt, i) => {
+      if(!troll.prompts) return
+      this.modal.troll = troll.name
+      this.modal.content = troll.prompts.map((prompt, i) => {
         let text = `<div class='columns'><div class='column'><h5>Prompt ${i+1}</b> `
         if(prompt.multiple)
           text += `(any combination)`
