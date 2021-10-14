@@ -94,7 +94,8 @@
   <hr>
   <div class="container">
     <p v-if="loading == 1" class="subtitle is-3 has-text-centered">Loading...</p>
-    <Pagination v-else :page="page" :count="count" :limit="limit" @page="setPage" />
+    <Pagination v-else-if="isFilterTargetValid||!filters.target||filters.target==''" :page="page" :count="count" :limit="limit" @page="setPage" />
+    <p v-else class="has-text-danger">Invalid filter target</p>
   </div>
   <br>
   <div class="container is-fluid" v-show="loading == 0">
@@ -169,7 +170,7 @@ import Pagination from '@/components/pagination'
 import Debounce from '@/js/debounce.js'
 
 const FULLNAME_REGEX = /"([^"<>]+)<\d+><(STEAM_\d:\d:\d+|Console|BOT)><(Console)?>"/g
-const USER_REGEX = /^(STEAM_\d:\d:\d+|Server|CONSOLE)$/
+const USER_REGEX = /^(STEAM_\d:\d:\d+|Server|CONSOLE|Smoker|Boomer|Charger|Jockey|Hunter|Spitter|Tank|Witch)$/
 const ADMINCHAT_REGEX = /triggered sm_say \(text (.*)\)/
 
 export default {
@@ -254,7 +255,7 @@ export default {
     query() {
       //todo: search
       let query = ""
-      if(!this.isFilterTargetValid) return query
+      if(!this.isFilterTargetValid&&this.filters.target) return query
       for(const filter in this.filters) {
         if(this.filters[filter]) {
           if(Array.isArray(this.filters[filter])) {
