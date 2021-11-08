@@ -82,6 +82,14 @@
             "modes": ["constant"]
         },
         {
+            "name": "Dull Melee",
+            "description": "Player's melee weapon does 0 damage (based on %). Headshots still instant kill.",
+            "modes": ["constant"],
+            "prompts": [
+                { "flags": ["Bile", "Molotov", "Pipebomb"], "multiple": true }
+              ]
+        },
+        {
             "name": "Half Primary Ammo",
             "description": "Cuts their primary reserve ammo in half",
             "modes": ["instant"]

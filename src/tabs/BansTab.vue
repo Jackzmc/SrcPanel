@@ -1,12 +1,13 @@
 <template>
-  <div class="container">
+  <div class="container is-fluid">
     <p class="subtitle is-4">Viewing {{bans.length}} total bans</p>
     <p class="has-text-danger" v-if="ban_error">{{ban_error}}</p>
     <table class="table is-fullwidth" v-if="!loading&&!error">
       <thead>
-        <th>Player</th>
+        <th style="width:0">Player</th>
         <th>Executor</th>
         <th>Reason</th>
+        <th>IP Ban</th>
         <th>Expires</th>
         <th>Date</th>
         <th>Action</th>
@@ -33,6 +34,10 @@
             <span v-else>{{ban.reason}}</span>
           </td>
           <td>
+            <input v-if="edited && edited.steamid == ban.steamid" class="checkbox" style="transform: scale(1.5)" type="checkbox" v-model="edited.ip_banned" />
+            <input v-else class="checkbox disabled" disabled style="transform: scale(1.5)" type="checkbox" v-model="ban.ip_banned" />
+          </td>
+          <td>
             <div class="select" v-if="edited && edited.steamid == ban.steamid">
               <select v-model="edited.expires">
                 <option value="never" v-if="ban.expires">Never</option>
@@ -56,7 +61,7 @@
               </template>
               <template v-else>
                 <a class="button is-warning is-small" @click='edit(ban, i)'>Edit</a>
-                <a class="button is-danger is-small" @click='unban(ban, i)' data-tooltip="Hold shift to confirm" :disabled="!shiftPressed">Remove Ban</a>
+                <a class="button is-danger is-small" @click='unban(ban, i)' data-tooltip="Hold shift to confirm" :disabled="!shiftPressed">Remove</a>
               </template>
             </div>
           </td>
