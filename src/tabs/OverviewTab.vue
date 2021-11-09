@@ -19,7 +19,6 @@
           <h5 class="title is-5">Server Notes</h5>
           <div class="content">
           <ol>
-              <li>Click on the name to have direct connect as a shortcut</li>
               <li>Only servers marked as such support 5+ campaign <em>(see bottom left)</em></li>
               <li>Directly connecting does not start matchmaking - no randoms will join! See the below section on how to create a lobby:</li>
           </ol>

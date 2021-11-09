@@ -75,12 +75,12 @@
     },
     {
         "cvar": "abm_autohard <0/1:boolean>",
-        "description": "Only valid for 5+: Enables increased difficulty when there is > 4 players. By default, this will only increase tank health. See below for specials:",
+        "description": "Only valid for 5+: Enables increased difficulty when there is > 4 players. By default, this will only increase tank health. See below for specials. Use -l# (ex -l1) to lock it between chapters",
         "default": 0
     },
     {
         "cvar": "abm_spawninterval <0/18/36/48:int>",
-        "description": "Will set the spawn interval of the extra specials. Recommended 48, 36, or 18. 18 Being the hardest, 48 being easier. 0 turns off spawning of extras.",
+        "description": "Will set the spawn interval of the extra specials. Recommended 48, 36, or 18. 18 Being the hardest, 48 being easier. 0 turns off spawning of extras. Use -l# (ex -l48) to lock it between chapters",
         "default": 0
     }
 
