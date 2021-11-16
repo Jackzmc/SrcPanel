@@ -204,5 +204,23 @@
             "description": "Like if an explosion goes off, slaps you into a stun.",
             "modes": ["instant"]
         }
-    ]
+    ],
+    "_Combos_": {
+        "Magnet Galore": [
+            "Special Magnet",
+            "Tank Magnet",
+            "Witch Magnet"
+        ],
+        "Tank Run Noob": [
+            "Slow Speed",
+            "Tank Magnet"
+        ],
+        "Nuclear": [
+            "Special Magnet",
+            "Tank Magnet",
+            "Witch Magnet",
+            "Reverse FF (2x)",
+            "Vomit Player"
+        ]
+    }
 }

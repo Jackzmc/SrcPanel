@@ -13,20 +13,22 @@
       </div>
     </div>
   </div>
-  <h3 class='title is-3'>Feed The Trolls</h3>
-  <p class="subtitle is-5">You can apply trolls on any amount of players to punish or mess with them.
-    <br>See the commands section <b>Troll Commands</b> for commands.
-    <br><b>Hover</b> over the troll name to view the possible modes
-    <br><b>Click</b> on any bolded troll to view all the possible flags
-    <br>Use the <b>fta</b> command to apply one of these trolls:
-    <br>
-  </p>
-  <div class="message is-warning is-small">
-    <div class="message-body">
-      The number index of the troll, for current version will no longer work. But none of y'all use it anyway, so why do I even bother putting this here. I don't know, but hey incase I have a case of brain damage I might see this and remember this.
-    </div>
-  </div>
-  <div class="is-size-5">
+
+  <div class="columns">
+    <div class="column is-size-5">
+      <h3 class='title is-3'>Feed The Trolls</h3>
+      <p class="subtitle is-5">You can apply trolls on any amount of players to punish or mess with them.
+        <br>See the commands section <b>Troll Commands</b> for commands.
+        <br><b>Hover</b> over the troll name to view the possible modes
+        <br><b>Click</b> on any bolded troll to view all the possible flags
+        <br>Use the <b>fta</b> command to apply one of these trolls:
+        <br>
+      </p>
+      <div class="message is-warning is-small">
+        <div class="message-body">
+          The number index of the troll, for current version will no longer work. But none of y'all use it anyway, so why do I even bother putting this here. I don't know, but hey incase I have a case of brain damage I might see this and remember this.
+        </div>
+      </div>
       <div v-for="(trolls, category) in trolls" :key="category">
         <h4 class="title is-4">{{category}}</h4>
         <ul>
@@ -51,7 +53,21 @@
         </ul>
         <br>
       </div>
+    </div>
+    <div class="column is-3">
+        <h2 class="title is-2 has-text-centered">Troll Combos</h2>
+        <p class="subtitle">These combos will apply multiple trolls at once for your convienence.</p>
+        <div v-for="(trolls, combo) in combos" :key="combo" class="content">
+          <h5 class="title is-5">{{combo}}</h5>
+          <ul>
+            <li v-for="(trollName) in trolls" :key="trollName" >
+              <p>{{trollName}}</p>
+            </li>
+          </ul>
+        </div>
+    </div>
   </div>
+
   <br>
   <div class="content">
       <h3 class="title is-3">Auto Punishment</h3>
@@ -72,6 +88,7 @@ export default {
   data() {
     return {
       trolls: {},
+      combos: {},
       modal: {
         content: null,
         troll: null
@@ -117,7 +134,10 @@ export default {
     fetch('./data/ftt.json')
     .then(response => response.json())
     .then(trolls => {
+      console.log(trolls)
       this.trolls = trolls
+      this.combos = trolls._Combos_
+      delete this.trolls._Combos_
     })
     .catch(err => {
         console.error('Could not fetch trolls, network error.', err)
