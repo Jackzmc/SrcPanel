@@ -16,7 +16,7 @@
 
   <div class="columns">
     <div class="column is-size-5">
-      <h3 class='title is-3'>Feed The Trolls</h3>
+      <h2 class='title is-2'>Feed The Trolls</h2>
       <p class="subtitle is-5">You can apply trolls on any amount of players to punish or mess with them.
         <br>See the commands section <b>Troll Commands</b> for commands.
         <br><b>Hover</b> over the troll name to view the possible modes
@@ -57,6 +57,7 @@
     <div class="column is-3">
         <h2 class="title is-2 has-text-centered">Troll Combos</h2>
         <p class="subtitle">These combos will apply multiple trolls at once for your convienence.</p>
+        <p class="subtitle">Use the <b>ftc</b> command to apply these combinations.</p>
         <div v-for="(trolls, combo) in combos" :key="combo" class="content">
           <h5 class="title is-5">{{combo}}</h5>
           <ul>
