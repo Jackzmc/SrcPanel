@@ -9,6 +9,7 @@
         <th>Reason</th>
         <th>IP Ban</th>
         <th>Expires</th>
+        <th>Attempts</th>
         <th>Date</th>
         <th>Action</th>
       </thead>
@@ -52,6 +53,7 @@
             <span v-else-if="ban.expired" class="has-text-danger">Expired</span>
             <span v-else>{{ban.expires || 'Never'}}</span>
           </td>
+          <td>{{ban.times_tried}}</td>
           <td :data-tooltip="ban.timestamp">{{ban.relDate}}</td>
           <td>
             <div class="buttons">
@@ -75,6 +77,8 @@
 
 <script>
 import Sugar from 'sugar'
+
+const DISCORD_SOURCE_REGEX = new RegExp(/([^\n]+#\d{4})\s\((\d+)\)/)
 
 let adminNames = {}
 
@@ -107,7 +111,7 @@ export default {
     async getAdmins() {
       for(let i = 0; i < this.bans.length; i++) {
         const ban = this.bans[i]
-        if(!ban.executor) continue;
+        if(!ban.executor || ban.source === "discord") continue;
         ban.adminName = adminNames[ban.executor];
         if(!ban.adminName && ban.executor.startsWith("STEAM_")) {
           const response = await fetch(`https://jackz.me/l4d2/scripts/get_alias.php?steamid=${ban.executor}`)
@@ -189,14 +193,20 @@ export default {
     })
     .then(bans => {
       this.bans = bans.map(ban => {
-        const relDate = new Sugar.Date(ban.timestamp, { fromUTC: true }).relative()
+        const relDate = new Sugar.Date(ban.timestamp).relative()
         if(!ban.last_alias) {
           console.warn(ban.steamid, 'does not have alias')
+        }
+        const discordBanMatch = ban.executor.match(DISCORD_SOURCE_REGEX)
+        if(discordBanMatch && discordBanMatch.length == 3) {
+          ban.executor = discordBanMatch[2]
+          ban.adminName = discordBanMatch[1]
+          ban.source = "discord"
         }
         return {
           ...ban,
           relDate,
-          adminName: null,
+          adminName: ban.adminName,
           isAdminPlayer: ban.executor.startsWith("STEAM_")
         }
       })
