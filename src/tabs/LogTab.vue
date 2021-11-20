@@ -119,7 +119,7 @@
       <tbody>
         <tr v-for="log in filteredData" :key="log.id" :class="search.id==log.id?['has-background-primary']:[]">
           <td v-if="debugView||showIds" class="nowrap">
-            <a data-tooltip="Click to view all messages around this entry" class="has-tooltip-right" @click="search.id=log.id;getData()">{{ log.id }}</a>
+            <a data-tooltip="Click to view all messages around this entry" class="has-tooltip-right" @click="searchID(log.id)">{{ log.id }}</a>
           </td>
           <td class="nowrap">
             <span v-if="log.server" :class="['tag', $options.SERVER_COLORS[log.server]]">{{ log.server }}</span>
@@ -287,6 +287,11 @@ export default {
     }
   },
   methods: {
+    searchID(id) {
+      this.search.id = id;
+      this.search.message = null
+      this.getData()
+    },
     toggleList(listName, element) {
       const index = this.filters[listName].findIndex(e => e == element)
       if(index > -1) {
