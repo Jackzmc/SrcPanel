@@ -44,6 +44,7 @@ import PluginDescriptionsTab from './tabs/PluginDescriptionsTab.vue'
 import MapsTab from './tabs/MapsTab.vue'
 import ManagementTab from './tabs/ManagementTab.vue'
 import LogTab from './tabs/LogTab.vue'
+import NotesTab from './tabs/NotesTab.vue'
 
 export default {
   name: 'App',
@@ -59,7 +60,8 @@ export default {
     workshop: ['Maps', MapsTab],
     manage:   ["Management", ManagementTab],
     plugins:  ["Plugins", PluginDescriptionsTab],
-    logs:     ["Logs", LogTab]
+    logs:     ["Logs", LogTab],
+    info:    ["Info", NotesTab]
   },
   data() {
     return {

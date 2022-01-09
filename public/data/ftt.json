@@ -221,6 +221,15 @@
             "Witch Magnet",
             "Reverse FF (2x)",
             "Vomit Player"
+        ],
+        "Shut up": [
+            "Vocalize Gag",
+            "Honk / Meow (Honk)"
+        ],
+        "Weakness Compels You": [
+            "No Shove",
+            "Dull Melee (50%)",
+            "Temp Health Quick Drain"
         ]
     }
 }
