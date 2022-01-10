@@ -41,7 +41,7 @@
             <tr v-for="admin in admins" :key="admin.id">
               <td><a :href="getStatURL(admin.id)">{{admin.id}}</a></td>
               <td>{{admin.perms}}</td>
-              <td>{{admin.immunity}}</td>
+              <td>{{admin.immunity == 0 ? 'None' : admin.immunity}}</td>
               <td>{{admin.note}}</td>
             </tr>
           </tbody>

@@ -284,6 +284,7 @@ export default {
     query() {
       this.page = 1
       this.fetchDebounce()
+      window.history.pushState("", "", this.query);
     }
   },
   methods: {
@@ -382,6 +383,19 @@ export default {
     for(const filter in this.$options.FILTERS) {
       if(!this.filters[filter])
         this.$set(this.filters, filter, [])
+    }
+    const params = new URLSearchParams(window.location.search);
+    if(params.has('target')) {
+      this.filters.target = params.get('target')
+    }
+    if(params.has('activator')) {
+      this.filters.activator = params.get('activator')
+    }
+    if(params.has('id')) {
+      this.search.id = params.get('id')
+    }
+    if(params.has('msg')) {
+      this.search.message = params.get('msg')
     }
     this.getData()
     setInterval(() => this.getData(), 1000 * 60 * 2)
