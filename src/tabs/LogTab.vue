@@ -10,7 +10,10 @@
         </p>
       </div>
       <div class="column">
-        <button @click="onBtnRefresh" :disabled="loading > 0" :class="['button','is-info',{'is-loading':loading > 0}]">Refresh</button>
+        <div class="buttons">
+          <button @click="onBtnRefresh" :disabled="loading > 0" :class="['button','is-info',{'is-loading':loading > 0}]">Refresh</button>
+          <button @click="setDefaults" class="button is-secondary">Reset</button>
+        </div>
       </div>
     </div>
     <br>
@@ -284,10 +287,19 @@ export default {
     query() {
       this.page = 1
       this.fetchDebounce()
-      window.history.pushState("", "", this.query);
+      window.history.pushState("", "", `?page=${this.page}${this.query}#logs`);
     }
   },
   methods: {
+    setDefaults() {
+      this.filters.servers = ["improved", "reserved"]
+      this.filters.types = ["ACTION", "CHAT", "INFO", "STATE"]
+      this.filters.client = null
+      this.filters.target = null
+      this.search.message = null
+      this.search.id = null
+      this.page = 1
+    },
     searchID(id) {
       this.search.id = id;
       this.search.message = null
@@ -385,18 +397,29 @@ export default {
         this.$set(this.filters, filter, [])
     }
     const params = new URLSearchParams(window.location.search);
+    console.log(Object.fromEntries(params.entries()))
+    if(params.has('types')) {
+      this.filters.types = params.get('types').split(",")
+    }
+    if(params.has('servers')) {
+      this.filters.servers = params.get('servers').split(",")
+    }
     if(params.has('target')) {
       this.filters.target = params.get('target')
     }
     if(params.has('activator')) {
       this.filters.activator = params.get('activator')
     }
-    if(params.has('id')) {
-      this.search.id = params.get('id')
+    if(params.has('search_id')) {
+      this.search.id = params.get('search_id')
     }
-    if(params.has('msg')) {
-      this.search.message = params.get('msg')
+    if(params.has('search_message')) {
+      this.search.message = params.get('search_message')
     }
+    if(params.has('page')) {
+      this.page = parseInt(params.get('page'))
+    }
+
     this.getData()
     setInterval(() => this.getData(), 1000 * 60 * 2)
   },

@@ -86,14 +86,17 @@ export default {
           this.$set(this.starting, server.meta.port, false);
         }, 1000 * 30)
       }
-      fetch(`https://jackz.me/l4d2/scripts/manage.php?key=${this.$SCRIPT_KEY}&method=${type}&port=${server.meta.port}`)
+      fetch(`https://api.lgs.jackz.me/internal/call-rcon.php?method=${type}&port=${server.meta.port}&key=${this.$SCRIPT_KEY}`)
       .then(async(response) => {
-        if(response.ok) {
+        if(response.ok ) {
           const json = await response.json()
-          if(json.response.includes("players online")) {
+          if(json.error) {
+            return this.sendMessage('error', `<b>Server returned error</b><br>${json.error}`)
+          }
+          if(json.stdout[0].includes("players online")) {
             this.sendMessage('error', 'Cannot restart server: There are players online')
           }else{
-           this.sendMessage('success', json.response)
+           this.sendMessage('success', json.stdout[0])
           }
         }else{
           this.sendMessage('error', `<b>Server returned error</b><br>${response.statusText}`)
