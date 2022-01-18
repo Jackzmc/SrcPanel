@@ -27,14 +27,17 @@ const TROLL_REGEX = new RegExp(/[^de]activated (constant\s)?troll "([a-zA-Z\s]+)
 export default {
   data() {
     return {
+
     }
   },
   computed: {
   },
   async created() {
-    await this.fetchBanStat()
-    await this.fetchStates()
-    await this.fetchTrolls()
+    Promise.allSettled([
+      this.fetchBanStat(),
+      this.fetchStates(),
+      this.fetchTrolls()
+    ])
   },
   methods: {
     async fetchTrolls() {
@@ -139,13 +142,14 @@ export default {
           text: 'States over time'
         },
         xAxis: {
-          type: 'datetime',
+          reversed: true,
+          type: 'category',
           title: {
             text: 'Date'
           },
           labels: {
             formatter: function() {
-              return new Date(this.value).toLocaleDateString('en-us', { month: 'long', year: 'numeric'})
+              return this.value
             },
           },
         },
