@@ -85,11 +85,12 @@ export default {
         yAxis: {
           title: {
             text: 'Times Applied'
-          }
+          },
+
         },
         plotOptions: {
           series: {
-            stacking: 'normal'
+            stacking: 'normal',
           }
         },
         series: [
@@ -127,11 +128,6 @@ export default {
       new Chart('stategraph', {
         chart: {
           zoomType: "x"
-        },
-        plotOptions: {
-          line: {
-            connectNulls: false
-          }
         },
         rangeSelector: {
           selected: 1,

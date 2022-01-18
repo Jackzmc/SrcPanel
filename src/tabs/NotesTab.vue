@@ -28,12 +28,12 @@
       </div>
       <div class="column is-5">
         <h4 class="title is-4 has-text-centered">Admins</h4>
+        <p><b>Admin CC Bypass</b> is anti-rush bypass</p>
         <table class="table is-fullwidth">
           <thead>
             <tr>
               <th>SteamID</th>
               <th>Permissions</th>
-              <th>Immunity Level</th>
               <th>Note</th>
             </tr>
           </thead>
@@ -41,7 +41,6 @@
             <tr v-for="admin in admins" :key="admin.id">
               <td><a :href="getStatURL(admin.id)">{{admin.id}}</a></td>
               <td>{{admin.perms}}</td>
-              <td>{{admin.immunity == 0 ? 'None' : admin.immunity}}</td>
               <td>{{admin.note}}</td>
             </tr>
           </tbody>
