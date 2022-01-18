@@ -21,7 +21,7 @@
       <div class="column">
         <label class="label">
           Enabled Servers
-          <a class="is-inline" @click="filters['servers'] = []">(Clear)</a>&nbsp;
+          <a class="is-inline" @click="filters['servers'] = ['unknown']">(Clear)</a>&nbsp;
           <a @click="filters['servers'] = $options.FILTERS['servers']">(Select All)</a>
         </label>
 
@@ -76,7 +76,7 @@
           </select>
         </div>
         <br>
-        <span class="has-text-weight-bold"> - or enter manually: - </span>
+        <span class="has-text-weight-bold"> - or enter target manually: - </span>
         <div class="columns">
           <div class="column">
             <input type="text" :class="filterTargetClass" v-model="filters.target" message="a" placeholder="STEAM_#:#:########" />
@@ -106,14 +106,12 @@
       <thead>
         <tr>
           <th style="width:0" v-if="debugView||showIds">ID</th>
-          <th style="width:0" data-tooltip="The server the action was recorded on">Server</th>
+          <th style="width:0" data-tooltip="The server the action was recorded on" class="has-tooltip-right">Server</th>
           <th style="width:0" data-tooltip="The type of action that occurred">Type</th>
           <th style="width:0" data-tooltip="Who caused the action to occur. May not exist">Activator</th>
           <th>
-            <div class="is-inline-block">
               <label class="label is-inline-block">Message</label>&nbsp;&nbsp;
-              <input class="input is-inline is-small is-expanded" v-model="search.message" placeholder="Filter" />
-            </div>
+              <input class="input is-inline is-small is-rounded" v-model="search.message" style="width:50%" placeholder="Filter" />
           </th>
           <th v-if="isTargetColumnVisible" style="width:0" data-tooltip="Who the action was against. May not exist">Target</th>
           <th style="width:0">Date</th>
@@ -134,8 +132,8 @@
             <b>
             <component
               :is="log.client.hasStats?'a':'span'"
-              @click="setUserFilter('client', log.client.steamid)"
               @click.ctrl="openStatsProfile(log.client.steamid)"
+              @click="setUserFilter('client', log.client.steamid)"
               :data-tooltip="log.client.steamid + '\n\nClick to only see entries from this activator.' + (log.client.hasStats?'\nCtrl + Click to view stats profile':'')"
             >
               {{ log.client.name }}
@@ -146,8 +144,8 @@
           <td class="nowrap" v-if="isTargetColumnVisible">
             <component
               :is="log.target.hasStats ? 'a' : 'span'"
-              @click="setUserFilter('target', log.target.steamid)"
               @click.ctrl="openStatsProfile(log.target.steamid)"
+              @click.exact="setUserFilter('target', log.target.steamid)"
               :data-tooltip="log.target.steamid + '\n\nClick to only see entries from this target.' + (log.target.hasStats?'\nCtrl + Click to view stats profile':'')"
             >
               {{ log.target.name }}
@@ -180,7 +178,7 @@ export default {
   components: { Pagination },
   FILTERS: {
     servers: [
-      "improved", "reserved", "public1", "public2", "public3", "public4", "public5", "public6", "public7", "public8"
+      "improved", "reserved", "public1", "public2", "public3", "public4", "public5", "public6", "public7", "public8", "unknown"
     ],
     types: [ "ACTION", "CHAT", "INFO", "STATE", "QUIT", "JOIN" ],
   },
@@ -253,7 +251,7 @@ export default {
     },
     filteredData() {
       if(!this.search.message) return this.data
-      return this.data.filter(log => log.message.includes(this.search.message))
+      return this.data
     },
     query() {
       //todo: search

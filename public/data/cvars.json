@@ -75,13 +75,20 @@
     },
     {
         "cvar": "abm_autohard <0/1:boolean>",
-        "description": "Only valid for 5+: Enables increased difficulty when there is > 4 players. By default, this will only increase tank health. See below for specials. Use -l# (ex -l1) to lock it between chapters",
-        "default": 0
+        "description": "Only valid for 5+: Enables increased difficulty when there is > 4 players. See below for specials. Use -l# (ex -l1) to lock it between chapters",
+        "default": 1
     },
     {
         "cvar": "abm_spawninterval <0/18/36/48:int>",
         "description": "Will set the spawn interval of the extra specials. Recommended 48, 36, or 18. 18 Being the hardest, 48 being easier. 0 turns off spawning of extras. Use -l# (ex -l48) to lock it between chapters",
-        "default": 0
+        "default": 48
+    },
+    {
+        "cvar": "l4d2_tk_auto_ff_ignore_admins <0/1:boolean>",
+        "description": "Should automatic reverse ff ignore admins? 0 = Admins are subjected, 1 = Admins are excempt"
+    },
+    {
+        "cvar": "sm_ftt_bot_defend <0/1/2:int>",
+        "description": "Should bots automatically defend themselves and shoot back at attackers? 0: No, 1: Only against non-admins, 2: Anyone"
     }
-
 ]

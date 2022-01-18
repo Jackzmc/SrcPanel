@@ -19,10 +19,7 @@
         {
             "name": "Witch Magnet",
             "description": "All witches when startled will target any player with this troll",
-            "modes": ["constant"],
-            "prompts": [
-              { "flags": ["Always (100%)", "Sometimes (50%)", "Rare (10%)"], "multiple": false }
-            ]
+            "modes": ["constant"]
         }
     ],
     "Infected": [
@@ -72,9 +69,15 @@
             "modes": ["constant"]
         },
         {
-            "name": "UziRules",
+            "name": "UziRules / AWP Smells",
             "description": "Picking up a weapon gives them a UZI instead",
-            "modes": ["constant"]
+            "modes": ["constant"],
+            "prompts": [
+                {
+                    "flags": ["Uzi", "AWP"],
+                    "multiple": false
+                }
+            ]
         },
         {
             "name": "Primary Disable",
@@ -109,7 +112,13 @@
         {
             "name": "Vocalize Gag",
             "description": "Prevents player from sending any vocalizations (even automatic)",
-            "modes": ["constant"]
+            "modes": ["constant"],
+            "prompts": [
+                {
+                    "flags": ["Mute for All", "Mute For All But Them"],
+                    "multiple": false
+                }
+            ]
         },
         {
             "name": "Honk / Meow",
@@ -126,7 +135,12 @@
                 "conditions": ["Honk"]
               }
             ]
-        }     
+        },
+        {
+            "name": "Voice Mute",
+            "description": "Mutes a player from talking. Same as /mute, but will last until they actually leave",
+            "modes": ["constant"]
+        }
     ],
     "Health": [
         {
@@ -155,7 +169,7 @@
             "modes": ["constant"],
             "prompts": [
               {
-                "flags": ["1:1", "2x", "1/2x"],
+                "flags": ["1:1", "2x", "0.5x", "0.0x", "3x"],
                 "multi": false
               }
             ]
