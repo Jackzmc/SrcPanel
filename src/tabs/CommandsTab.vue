@@ -65,7 +65,7 @@
                   <li>Parameters are separated by spaces. Use "quotes to surround a word".
                   <li><b class="tag is-link">&lt;&gt;</b> indictates the argument is <u>required.</u></li>
                   <li><b class="tag is-secondary">[&nbsp;]</b> indictates the argument is optional.</li>
-                  <li>Do not include the <b class="tag is-link">&lt; &gt;</b> or <b class="tag is-secondary">[ ]</b> as its an indication</li>
+                  <li>Do not include the <b class="tag is-link">&lt; &gt;</b> or <b class="tag is-secondary">[ ]</b> as its only to indicate if a value is optional or not.</li>
               </ul>
               For player selection purposes, you do not need to input their FULL name, just enough to make it only select a player (‘ja’ for jackz, as a jockey could exist, and it wouldn’t know if you wanted jockey or jackz)
             </p>
@@ -76,9 +76,13 @@
                 <li>I want to kick jackz, the command is {{prefix}}kick &lt;player&gt; [reason], I don’t need to input a reason so I will just type in: {{prefix}}kick jackz</li>
                 <li><p>
                     I want to respawn disgruntled pea, the problem is that he has a space in his name. You can either:
-                    <br>a.	Surround his name with quotes, “Disgruntled pea”
-                    <br>b.	Only mention part of his name (disgruntled, or pea)
-                    <br>/respawn “disgruntled pea” or /respawn disgruntled or even /respawn disgr
+                    <ol type="a">
+                      <li>Surround his name with quotes, “Disgruntled pea”</li>
+                      <li>Only mention part of his name (disgruntled, or pea):
+                        <br>/respawn “disgruntled pea” or /respawn disgruntled or even /respawn pea
+                      </li>
+                    </ol>
+                    <br>
                 </p></li>
             </ol>
         </div>

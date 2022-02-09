@@ -5,21 +5,21 @@ export function parseType(type) {
         type = "integer"
         break
     case "players":
-        return "multiple player targets"
+        return "one or more player targets"
     case "player":
-        return "a player target"
+        return "player target"
     case "float":
         type = "decimal"
         break
     case "string":
-        type = "string"
+        type = "text"
         break
     case "bool":
     case "boolean":
         type = "boolean"
         break
   }
-  return type + " value(s)"
+  return type + " value"
 }
 
 export function formatParameters({parameters, defaultValue, args}) {
@@ -32,9 +32,10 @@ export function formatParameters({parameters, defaultValue, args}) {
     }else if(char === '[') {
       lastChar = ']'
     }else if(char === lastChar) {
+      const isRequired = char === '>'
       let tooltip = "";
       if(type.length > 0)
-        tooltip = `Accepts ${parseType(type)}.`
+        tooltip = `Accepts a(n) ${isRequired?'':'optional '}${parseType(type)}.`
       if(defaultValue !== undefined && defaultValue !== null)
         tooltip += ` Default value is ${defaultValue}`
       if(args && args[letters]) {
@@ -47,7 +48,7 @@ export function formatParameters({parameters, defaultValue, args}) {
       if(tooltip.length > 0)
         tooltip = `data-tooltip="${tooltip}"`
 
-      const tagType = char === '>' ? 'is-link' : 'is-secondary'
+      const tagType = isRequired ? 'is-link' : 'is-secondary'
       string += `<span class='tag ${tagType}' ${tooltip}>${letters.replace(/_/, ' ')}</span> `
       lastChar = null
       letters = ''

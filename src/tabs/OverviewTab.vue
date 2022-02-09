@@ -21,12 +21,13 @@
           <ol>
               <li>Only servers marked as such support 5+ campaign <em>(see bottom left)</em></li>
               <li>Directly connecting does not start matchmaking - no randoms will join! See the below section on how to create a lobby:</li>
+              <li>The public servers will automatically scale, so that only one server is empty (upto 7 active)</li>
           </ol>
           <h5>To create a lobby to a server:</h5>
           <ul>
               <li>Create a normal lobby,<br><b>you need to be the host</b></li>
               <li>Open the console <br><em>(see above for instructions)</em></li>
-              <li>Copy the <span class="has-text-info">Create Lobby Command</span> command and paste it in console</li>
+              <li>Copy the <b>Create Lobby Command</b> command and paste it in console</li>
               <li>Start the lobby</li>
           </ul>
           </div>

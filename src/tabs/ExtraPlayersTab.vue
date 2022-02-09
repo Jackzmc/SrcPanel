@@ -29,6 +29,7 @@
     </div>
     <div class="column">
       <a class="button" href="https://steamcommunity.com/sharedfiles/filedetails/?id=2276071285">8 Player Lobby Addon - Workshop Page</a>
+      <p><b>Note: </b>In the case that a player cannot join due to the server being "full", use the command in console sm_l4dd_unreserve (or /l4dd_unreserve in chat)</p>
     </div>
   </div>
 

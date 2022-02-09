@@ -13,6 +13,14 @@
       <div id="trollbar" />
     </div>
   </div>
+  <div class="columns">
+    <div class="column is-6">
+      <div id="slapsbar" />
+    </div>
+    <div class="column">
+      <div id="playtimegraph" />
+    </div>
+  </div>
 </div>
 </template>
 
@@ -23,6 +31,7 @@ import ColumnSeries from 'highcharts/es-modules/Series/Column/ColumnSeries.js';
 import BarSeries from 'highcharts/es-modules/Series/Bar/BarSeries.js';
 
 const TROLL_REGEX = new RegExp(/[^de]activated (constant\s)?troll "([a-zA-Z\s]+)"( with flags=(\d+)\s)?(\s\(?(\d+)?\)? for (.*\((\d+)x\))?)?/)
+const COUNT_REGEX = new RegExp(/\((\d+)x\)$/)
 
 export default {
   data() {
@@ -36,12 +45,14 @@ export default {
     Promise.allSettled([
       this.fetchBanStat(),
       this.fetchStates(),
-      this.fetchTrolls()
+      this.fetchTrolls(),
+      this.fetchSlaps(),
+      this.fetchPlaytime()
     ])
   },
   methods: {
     async fetchTrolls() {
-      const response = await fetch('https://api.lgs.jackz.me/get-activity.php?all=1&types=ACTION&search_message=activated%20troll')
+      const response = await fetch('https://api.lgs.jackz.me/get-activity.php?all=1&types=ACTION&search_message=activated%20troll&ts-only')
       const json = await response.json()
       let data = {}
       for(const entry of json.logs) {
@@ -106,8 +117,61 @@ export default {
         ]
       });
     },
+    async fetchSlaps() {
+      const response = await fetch('https://api.lgs.jackz.me/get-activity.php?all=1&types=ACTION&search_message= slapped ')
+      const json = await response.json()
+      let data = {}
+      for(const entry of json.logs) {
+        if(!entry.timestamp) continue;
+        const match = entry.message.match(COUNT_REGEX)
+        const count = match ? Number(match[1]) : 1
+        if(!data[entry.clientName]) data[entry.clientName] = 0
+        data[entry.clientName] += count
+      }
+      new Chart('slapsbar', {
+        chart: {
+          type: 'column',
+          zoomType: 'x'
+        },
+        plotOptions: {
+          line: {
+            connectNulls: false
+          }
+        },
+        rangeSelector: {
+          selected: 1,
+          verticalAlign: 'top',
+          x: 0,
+          y: 0
+        },
+        title: {
+          text: 'Biggest Slapper'
+        },
+        xAxis: {
+          categories: Object.keys(data)
+        },
+        yAxis: {
+          title: {
+            text: 'Slaps'
+          },
+
+        },
+        plotOptions: {
+          series: {
+            stacking: 'normal',
+          }
+        },
+        series: [
+          {
+            name: 'Slaps',
+            type: 'column',
+            data: Object.values(data)
+          },
+        ]
+      });
+    },
     async fetchStates() {
-      const response = await fetch('https://api.lgs.jackz.me/get-activity.php?all&types=STATE')
+      const response = await fetch('https://api.lgs.jackz.me/get-activity.php?all&types=STATE&ts-only')
       const json = await response.json()
       const incaps = {}
       const deaths = {}
@@ -186,6 +250,81 @@ export default {
             color: 'pink',
           }
         ]
+      });
+    },
+    async fetchPlaytime() {
+      const response = await fetch('https://jackz.me/l4d2/scripts/analyze.php?stats=playtime')
+      const json = await response.json()
+      let series = {
+        improved: [],
+        reserved: [],
+        public: []
+      }
+      for(const entry of json) {
+        const tags = entry.tags.split(",")
+        const date = entry.x
+        if(tags.includes("server-r")) {
+          series.reserved.push([date, entry.y])
+        } else if(tags.includes("improved")) {
+          series.improved.push([date, entry.y])
+        } else if(tags.includes("public")) {
+          series.public.push([date, entry.y])
+        }
+      }
+      const seriesGraph = []
+      for(const [k, v] of Object.entries(series)) {
+        seriesGraph.push({
+          name: k,
+          type: 'line',
+          data: v,
+        })
+      }
+      // console.table(data)
+      new Chart('playtimegraph', {
+        chart: {
+          zoomType: "x"
+        },
+        rangeSelector: {
+          selected: 1,
+          verticalAlign: 'top',
+          x: 0,
+          y: 0
+        },
+        title: {
+          text: 'Campaigns Played'
+        },
+        xAxis: {
+          type: 'datetime',
+          title: {
+            text: 'Date'
+          },
+          labels: {
+            formatter: function() {
+              return this.value
+            },
+          },
+        },
+        yAxis: {
+          title: {
+            text: 'Games Played'
+          }
+        },
+        plotOptions: {
+          line: {
+            pointInterval: 24 * 3600 * 1000,
+            type: 'line',
+            // dataGrouping: {
+            //   groupAll: true,
+            //   forced: true,
+            //   units: [['week', [1]]]
+            // },
+            dataLabels: [{
+              enabled: true,
+
+            }],
+          }
+        },
+        series: seriesGraph
       });
     },
     async fetchBanStat() {

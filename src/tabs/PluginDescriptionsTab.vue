@@ -9,7 +9,7 @@
         <h4>Sections</h4>
         <ul>
           <li v-for="(subheaders, key) in headers" :key="key">
-            <a @click='gotoHeader(header)'>{{key}}</a>
+            <a @click='gotoHeader(key)'>{{key}}</a>
             <template v-if="subheaders.length > 0">
               <ul>
                 <li v-for="subheader in subheaders" :key="subheader">
@@ -37,11 +37,13 @@ export default {
   },
   methods: {
     gotoHeader(header) {
-      document.getElementById(header).scrollIntoView()
+      const element = document.getElementById(header)
+      if(element) element.scrollIntoView()
+      else console.warn(`Element not found: ${header}`)
     }
   },
   created() {
-    fetch('./data/plugins.md')
+    fetch('./data/plugins.md?timestamp=' + this.$LAST_UPDATED)
     .then(response => {
       if(response.ok)
         return response.text()

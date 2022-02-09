@@ -18,40 +18,11 @@
         </div>
       </div>
       <div class="column" v-if="ready">
-        <p class="has-text-danger" v-if="download.error">{{download.error}}</p>
-        <p class="has-text-danger" v-if="prefetch.error">{{prefetch.error}}</p>
-        <p class="has-text-success" v-if="download.status === 'success'">File successfully downloaded.</p>
-        <p v-if="download.status === 'downloading'">Downloading...</p>
-
-
-        <form @submit.prevent="downloadItem">
-          <div class="field">
-            <label class="label">Download Workshop Item</label>
-            <div class="control">
-              <input class="input" type="text" v-model="itemid" placeholder="Paste a workshop link" />
-            </div>
-          </div>
-          <div class="field">
-            <div class="control">
-              <a v-if="prefetch.invalidType" click='download(true)'>Click here to force download. Please do not abuse.</a>
-              <input class="button is-success" type="submit" value="Download" v-if="isDownloadable" :disabled="download.status"/>
-              <input class="button is-info" @click="restartServer" v-if="download.status === 'success'" value="Restart Server" />
-            </div>
-          </div>
-
-          <div class="notification is-warning">
-            Please avoid downloading any items that are content items, only download campaigns.
-          </div>
-          <div class="notification is-info">
-            <b>Note:</b> There is no indication that the maps were actally downloaded, or how long it took. Just wait a minute, refresh the page and see if the map shows up in the list.
-          </div>
-          <div class="notification is-info">
-            <b>Note:</b> Single items may not work, collections DO work.
-          </div>
-        </form>
+        <div class="notification is-danger">
+          Downloading maps from this page is disabled. Please join the discord and post links in #maps to download. It's a better experience.
+        </div>
 
         <template v-if="prefetch.result">
-          <hr>
           <img :src="prefetch.result.preview_url" />
           <h4 class='title is-4'>
             <a :href="prefetch.result.file_url">{{prefetch.result.title}}</a>
@@ -121,19 +92,6 @@ export default {
       this.key = this.keyInput
       this.error = null
       this.fetchVPKS()
-    },
-    restartServer() {
-      fetch(`https://jackz.me/l4d2/scripts/manage.php?key=${this.$SCRIPT_KEY}&method=${type}&port=${server.meta.port}&symlink=1`)
-      .then(async(response) => {
-        if(response.ok) {
-          this.download.status = null
-        }else{
-          this.download.error = await response.json().error
-        }
-      })
-      .catch(err => {
-        this.download.error = err.message
-      })
     },
     preview(entry) {
       if(!this.prefetch.result || this.prefetch.result.name !== entry.name) {
@@ -205,28 +163,6 @@ export default {
         })
       }
     },
-
-    downloadItem(forced = false) {
-      if(!this.itemid || this.itemid.length == "") return
-      this.download.status = "Downloading"
-      this.download.error = null
-      this.prefetch.invalidType = false
-      forced = forced === true ? '&forced=1' : ''
-      fetch(`https://jackz.me/l4d2/scripts/workshop.php?key=${this.key}&mode=download-v2&itemid=${this.itemid}${forced}`)
-      .then(response => {
-        if(response.ok) return response.json()
-        if(response.status === 401) {
-          this.key = null
-          this.download.error = "Unauthorized"
-        }
-      })
-      .then(json => {
-        //this.vpks = json.vpks
-        this.download.status = "success"
-        this.itemid = null
-        setTimeout(() => this.download.status = null, 7000)
-      })
-    }
   },
   created() {
     if(this.$SCRIPT_KEY) {

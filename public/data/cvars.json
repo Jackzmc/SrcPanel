@@ -90,5 +90,15 @@
     {
         "cvar": "sm_ftt_bot_defend <0/1/2:int>",
         "description": "Should bots automatically defend themselves and shoot back at attackers? 0: No, 1: Only against non-admins, 2: Anyone"
+    },
+    {
+        "cvar": "l4d2_extraitems_extra_tanks <0/1/2/3:int>",
+        "description": "Add bits together. 0: Normal vanilla behavior, 1: Non finale split tanks (half hp), 2: Split finale tank (full hp)",
+        "default": 3
+    },
+    {
+        "cvar": "l4d2_extraitems_splittank_chance <0.0 - 1.0:float>",
+        "description": "The chance a tank will split (Only applies in non finale, and when >= 7 players",
+        "default": 3
     }
 ]

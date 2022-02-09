@@ -95,12 +95,12 @@
                 "description": "Will open a menu with a list of disconnected players. Select a player to activate a ban on them. Just permanently ban them if they are for sure troll and not a noob."
             },
             {
-                "command": "ignore <player(s):players>",
-                "description": "Will make the player immune to being banned for friendly fire. Will toggle it on/off and will clear any pending bans for players. Only lasts until player disconnects."
+                "command": "ignore <player(s):players> <tk/rff:string>",
+                "description": "Will make the player immune to being banned for friendly fire or auto reverse ff. (Only lasts one session, will clear any pending bans)"
             },
             {
                 "command": "mute <player(s):players>",
-                "description": "Mutes them from voice chat"
+                "description": "Mutes them from voice chat, resets on map change. Use 'Voice Mute' troll for persistance"
             },
             {
                 "command": "gag <player(s):players>",
@@ -111,8 +111,16 @@
                 "description": "Will mute all vocalizations from this player only for you. For global gags use troll mode vocalize gag"
             },
             {
-                "command": "sm_perms [public/notify/admins/private]",
+                "command": "perms [public/notify/admins/private]",
                 "description": "Sets the server's permission level. It will kick players with \"Server is Reserved\" when they join if in admins-only or private. Notify will only notify all players when a player is connecting."
+            },
+            {
+                "command": "free <player>",
+                "description": "Kicks a player with a predefined message of \"Sorry, this server is reserved\" and indicates to others you kicked them to free a slot."
+            },
+            {
+                "command": "review <player>",
+                "description": "Shows information about friendly fire, auto rff, immunity status, and more of a player."
             }
         ]
     },
@@ -139,7 +147,7 @@
                 ]
             },
             {
-                "command": "instaface <player(s):players> [special:string] ",
+                "command": "inface <player(s):players> [special:string] ",
                 "description": "Will spawn specified special as close as possible to them. Basically on top",
                 "examples": [
                     "%cmd% insta pea jockey - Spawns a jockey on pea"
@@ -155,7 +163,7 @@
                 }
             },
             {
-                "command": "specialmenu",
+                "command": "forcemenu",
                 "description": "Shows GUI of specials to spawn bypassing director limits"
             },
             {
@@ -186,20 +194,34 @@
             },
             {
                 "command": "panic",
-                "description": "Forces a panic event, can be used in addition to swarm or vomitplayer commands"
+                "description": "Forces a panic event, can be used in addition to swarm or vomitplayer commands."
             },
             {
                 "command": "spawnweapon <weapon:string> [amount:int]",
-                "description": "Will spawn any amount of a specified weapon wherever your mouse is pointing at",
+                "description": "Will spawn any amount of a specified weapon wherever your mouse is pointing at.  Weapon names must be exact, unlike give.",
                 "args": {
                     "amount": {
                         "allowed_values": ">= 0"
                     }
-                }
+                },
+                "examples": [
+                    "<b>Spawn shotgun:</b> %cmd% shotgun",
+                    "<b>Spawn a kit:</b> %cmd% first_aid_kit",
+                    "<b>Spawns a bile</b> %cmd% vomitjar",
+                    "<b>Spawn adrendaline: </b> %cmd% adrendaline",
+                    "Discover item ids by googling l4d2 item ids, or by typing give in console, then whatever autocompletes put into sm_give (give != sm_give)"
+                ]
             },
             {
                 "command": "give <weapon:string>",
-                "description": "Same as above, except will put it in your inventory (if full, drops on ground)"
+                "description": "Same as above, except will directly put them in your hand, or drops on ground if you have no free hand",
+                "examples": [
+                    "<b>Spawn shotgun:</b> %cmd% shotgun",
+                    "<b>Spawn a kit:</b> %cmd% kit",
+                    "<b>Spawns a bile</b> %cmd% bile",
+                    "<b>Spawn adrendaline: </b> %cmd% adr",
+                    "Discover item ids by googling l4d2 item ids, or by typing give in console, then whatever autocompletes put into sm_give (give != sm_give)"
+                ]
             },
             {
                 "command": "populations",
@@ -229,6 +251,10 @@
             {
                 "command": "swap <player:player> [player:player]",
                 "description": "Swaps the two players' locations. If second player not filled in, it will be yourself."
+            },
+            {
+                "command": "l4dd_unreserve",
+                "description": "Removes the lobby reservation, which allows extra players to join (on improved+)"
             }
         ]
     }
