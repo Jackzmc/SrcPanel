@@ -198,6 +198,7 @@
           </a>
         </div>
       </div>
+      <em>For privacy reasons, a password is now required. Ask Jackz for the password</em>
     </div>
   </div>
 </div>
