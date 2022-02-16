@@ -161,6 +161,9 @@
     <Pagination :page="page" :count="count" :limit="limit" @page="setPage" />
     <a @click="toggleDebug" v-if="debugView"><em>(click to disable debug view)</em></a>
     <a @click="toggleDebug" v-else><em>(click to enable debug view)</em></a>
+    <span v-if="debugView">
+      {{query}}
+    </span>
   </div>
 <br>
 </div>
