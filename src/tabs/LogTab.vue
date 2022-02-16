@@ -1,5 +1,20 @@
 <template>
 <div>
+<Modal :active="modal.message !== null" v-if="modal.message" :closable="false">
+  <div class="modal-card">
+    <header class="modal-card-head">
+      <p class="modal-card-title"><b>Error</b></p>
+      <button class="delete" aria-label="close" @click='modal.message = null'></button>
+    </header>
+    <section class="modal-card-body">
+      {{modal.message}}
+    </section>
+    <footer class="modal-card-foot">
+      <button class="button is-success" aria-label="close" @click='modal.message = null'>Close</button>
+    </footer>
+  </div>
+</Modal>
+<div v-if="auth.state == 2">
   <div class="container">
     <div class="columns">
       <div class="column is-11">
@@ -167,6 +182,26 @@
   </div>
 <br>
 </div>
+<div v-else class="container">
+  <div class="columns">
+    <div class="column is-6">
+      <p class="title is-3">Server Logs</p>
+      <p class="subtitle is-4">Please enter a password to continue</p>
+      <br>
+      <div class="field has-addons">
+        <div class="control">
+          <input class="input" type="text" placeholder="Enter a password" v-model="auth.password" @keyup.enter="login">
+        </div>
+        <div class="control">
+          <a class="button is-info" @click="login">
+            Enter
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
 </template>
 
 <script>
@@ -177,8 +212,12 @@ const FULLNAME_REGEX = /"([^"<>]+)<\d+><(STEAM_\d:\d:\d+|Console|BOT)><(Console)
 const USER_REGEX = /^(STEAM_\d:\d:\d+|Server|CONSOLE|Smoker|Boomer|Charger|Jockey|Hunter|Spitter|Tank|Witch)$/
 const ADMINCHAT_REGEX = /triggered sm_say \(text (.*)\)/
 
+import Modal from '@/components/Modal'
+
+let savedPassword;
+
 export default {
-  components: { Pagination },
+  components: { Pagination, Modal },
   FILTERS: {
     servers: [
       "improved", "reserved", "public1", "public2", "public3", "public4", "public5", "public6", "public7", "public8", "unknown"
@@ -199,6 +238,13 @@ export default {
   },
   data() {
     return {
+      modal: {
+        message: null
+      },
+      auth: {
+        password: null,
+        state: 0
+      },
       loading: 1,
       data: [],
       count: 0,
@@ -292,6 +338,16 @@ export default {
     }
   },
   methods: {
+    async login(password) {
+      savedPassword = password || this.auth.password
+      if(await this.getData()) {
+        // Enable auto-refresh on successful login
+        this.auth.state = 2
+        this.auth.password = null
+        window.sessionStorage.setItem('savedkey', savedPassword)
+        setInterval(() => this.getData(), 1000 * 60 * 2)
+      }
+    },
     setDefaults() {
       this.filters.servers = ["improved", "reserved"]
       this.filters.types = ["ACTION", "CHAT", "INFO", "STATE"]
@@ -336,10 +392,15 @@ export default {
     openStatsProfile(id) {
       window.open(`https://stats.jackz.me/user/${id}/overview`)
     },
-    getData() {
-      fetch(`//api.lgs.jackz.me/get-activity.php?page=${this.page}&limit=${this.limit}${this.query}`)
-        .then(res => res.json())
-        .then(json => {
+    async getData() {
+      try {
+        const response = await fetch(`//api.lgs.jackz.me/get-activity.php?page=${this.page}&limit=${this.limit}${this.query}`, {
+          headers: {
+            'X-APIKEY': savedPassword
+          }
+        })
+        if(response.ok && response.status == 200) {
+          const json = await response.json()
           this.loading = false
           this.count = json.count
           json.logs.forEach(log => {
@@ -370,7 +431,20 @@ export default {
           window.localStorage.setItem('l4d2admin_data', JSON.stringify({
             history: this.history
           }))
-        })
+          return true
+        } else if(response.status == 401) {
+          this.modal.message = "The password you entered is incorrect"
+          this.auth.password = null
+          this.auth.state = 1
+          return false
+        } else {
+          alert("Server error while fetching logs: " + response.statusText)
+          return false
+        }
+      } catch(err) {
+        alert("Error while fetching logs: " + err.message)
+        return false
+      }
     },
     formatDate(timestamp) {
       const d = new Date(timestamp * 1000)
@@ -398,7 +472,6 @@ export default {
         this.$set(this.filters, filter, [])
     }
     const params = new URLSearchParams(window.location.search);
-    console.log(Object.fromEntries(params.entries()))
     if(params.has('types')) {
       this.filters.types = params.get('types').split(",")
     }
@@ -420,9 +493,10 @@ export default {
     if(params.has('page')) {
       this.page = parseInt(params.get('page'))
     }
-
-    this.getData()
-    setInterval(() => this.getData(), 1000 * 60 * 2)
+    const apikey =  window.sessionStorage.getItem('savedkey')
+    if(apikey) {
+      this.login(apikey)
+    }
   },
 }
 
