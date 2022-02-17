@@ -52,7 +52,9 @@ export default {
   },
   methods: {
     async fetchTrolls() {
-      const response = await fetch('https://api.lgs.jackz.me/get-activity.php?all=1&types=ACTION&search_message=activated%20troll&ts-only')
+      const response = await fetch('https://api.lgs.jackz.me/get-activity.php?all=1&types=ACTION&search_message=activated%20troll&ts-only', {
+        headers: { 'X-APIKEY': this.$GRAPH_KEY }
+      })
       const json = await response.json()
       let data = {}
       for(const entry of json.logs) {
@@ -118,7 +120,9 @@ export default {
       });
     },
     async fetchSlaps() {
-      const response = await fetch('https://api.lgs.jackz.me/get-activity.php?all=1&types=ACTION&search_message= slapped ')
+      const response = await fetch('https://api.lgs.jackz.me/get-activity.php?all=1&types=ACTION&search_message= slapped ', {
+        headers: { 'X-APIKEY': this.$GRAPH_KEY }
+      })
       const json = await response.json()
       let data = {}
       for(const entry of json.logs) {
@@ -171,7 +175,9 @@ export default {
       });
     },
     async fetchStates() {
-      const response = await fetch('https://api.lgs.jackz.me/get-activity.php?all&types=STATE&ts-only')
+      const response = await fetch('https://api.lgs.jackz.me/get-activity.php?all&types=STATE&ts-only', {
+        headers: { 'X-APIKEY': this.$GRAPH_KEY }
+      })
       const json = await response.json()
       const incaps = {}
       const deaths = {}
@@ -262,7 +268,7 @@ export default {
       }
       for(const entry of json) {
         const tags = entry.tags.split(",")
-        const date = entry.x
+        const date = entry.x*1000
         if(tags.includes("server-r")) {
           series.reserved.push([date, entry.y])
         } else if(tags.includes("improved")) {
@@ -291,7 +297,7 @@ export default {
           y: 0
         },
         title: {
-          text: 'Campaigns Played'
+          text: 'Campaigns Played (really broken)'
         },
         xAxis: {
           type: 'datetime',
@@ -300,7 +306,7 @@ export default {
           },
           labels: {
             formatter: function() {
-              return this.value
+              return new Date(this.value).toLocaleDateString()
             },
           },
         },

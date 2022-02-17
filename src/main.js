@@ -21,6 +21,7 @@ Vue.config.productionTip = false
 Vue.prototype.$LAST_UPDATED = process.env.VUE_APP_BUILD_DATE
 Vue.prototype.$CONNECT_IP = process.env.VUE_APP_SERVER_IP
 Vue.prototype.$SCRIPT_KEY = process.env.VUE_APP_SCRIPT_KEY
+Vue.prototype.$GRAPH_KEY = process.env.VUE_APP_GRAPH_KEY
 
 new Vue({
   render: h => h(App),
