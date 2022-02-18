@@ -190,10 +190,10 @@
       <br>
       <div class="field has-addons">
         <div class="control">
-          <input class="input" type="text" placeholder="Enter a password" v-model="auth.password" @keyup.enter="login">
+          <input class="input" type="text" placeholder="Enter a password" v-model="auth.password" @keyup.enter="login()">
         </div>
         <div class="control">
-          <a class="button is-info" @click="login">
+          <a class="button is-info" @click="login()">
             Enter
           </a>
         </div>
