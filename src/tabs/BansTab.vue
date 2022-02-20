@@ -52,6 +52,7 @@
                 <em v-if="ban.isAdminPlayer" class='has-text-info'>{{ban.executor}}</em>
                 <em v-else>{{ban.executor}}</em>
               </template>
+              <p class='has-text-info' v-if="ban.source"><em>via {{ban.source}}</em></p>
             </template>
 
           </td>
@@ -239,6 +240,7 @@ export default {
           ban.adminName = discordBanMatch[1]
           ban.source = "discord"
         }
+        if(ban.executor === "CONSOLE") ban.executor = '[Automatic]'
         return {
           ...ban,
           relDate,
