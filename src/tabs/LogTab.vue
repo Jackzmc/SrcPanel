@@ -190,7 +190,7 @@
       <br>
       <div class="field has-addons">
         <div class="control">
-          <input class="input" type="text" placeholder="Enter a password" v-model="auth.password" @keyup.enter="login()">
+          <input class="input" type="password" placeholder="Enter a password" v-model="auth.password" @keyup.enter="login()">
         </div>
         <div class="control">
           <a class="button is-info" @click="login()">
@@ -208,6 +208,7 @@
 <script>
 import Pagination from '@/components/pagination'
 import Debounce from '@/js/debounce.js'
+import auth from '@/mixins/auth.vue'
 
 const FULLNAME_REGEX = /"([^"<>]+)<\d+><(STEAM_\d:\d:\d+|Console|BOT)><(Console)?>"/g
 const USER_REGEX = /^(STEAM_\d:\d:\d+|Server|CONSOLE|Smoker|Boomer|Charger|Jockey|Hunter|Spitter|Tank|Witch)$/
@@ -215,10 +216,9 @@ const ADMINCHAT_REGEX = /triggered sm_say \(text (.*)\)/
 
 import Modal from '@/components/Modal'
 
-let savedPassword;
-
 export default {
   components: { Pagination, Modal },
+  mixins: [auth],
   FILTERS: {
     servers: [
       "improved", "reserved", "public1", "public2", "public3", "public4", "public5", "public6", "public7", "public8", "unknown"
@@ -241,10 +241,6 @@ export default {
     return {
       modal: {
         message: null
-      },
-      auth: {
-        password: null,
-        state: 0
       },
       loading: 1,
       data: [],
@@ -334,20 +330,19 @@ export default {
   watch: {
     query() {
       this.page = 1
-      this.fetchDebounce()
+      if(this.auth.state == 2)
+        this.fetchDebounce()
       window.history.pushState("", "", `?page=${this.page}${this.query}#logs`);
     }
   },
   methods: {
-    async login(password) {
-      savedPassword = password || this.auth.password
-      if(await this.getData()) {
-        // Enable auto-refresh on successful login
-        this.auth.state = 2
-        this.auth.password = null
-        window.sessionStorage.setItem('savedkey', savedPassword)
+    async onAuthed() {
+      console.debug('authed', JSON.stringify(this.auth))
+      if(await this.getData())
         setInterval(() => this.getData(), 1000 * 60 * 2)
-      }
+    },
+    onAuthError() {
+      this.modal.message = "The password you entered is incorrect"
     },
     setDefaults() {
       this.filters.servers = ["improved", "reserved"]
@@ -359,11 +354,13 @@ export default {
       this.page = 1
     },
     searchID(id) {
+      if(this.auth.state != 2) return
       this.search.id = id;
       this.search.message = null
       this.getData()
     },
     toggleList(listName, element) {
+      if(this.auth.state != 2) return
       const index = this.filters[listName].findIndex(e => e == element)
       if(index > -1) {
         this.filters[listName].splice(index, 1)
@@ -373,10 +370,12 @@ export default {
       this.getData()
     },
     toggleDebug() {
+      if(this.auth.state != 2) return
       this.debugView = !this.debugView
       this.getData()
     },
     onBtnRefresh() {
+      if(this.auth.state != 2) return
       this.loading = 2
       this.getData()
     },
@@ -384,6 +383,7 @@ export default {
       return id[0].toUpperCase() + id.slice(1)
     },
     setPage(page) {
+      if(this.auth.state != 2) return
       this.page = page
       this.getData()
     },
@@ -394,10 +394,11 @@ export default {
       window.open(`https://stats.jackz.me/user/${id}/overview`)
     },
     async getData() {
+      if(!this.auth.password) return console.warn('getData() called with no key set')
       try {
         const response = await fetch(`//api.lgs.jackz.me/get-activity.php?page=${this.page}&limit=${this.limit}${this.query}`, {
           headers: {
-            'X-APIKEY': savedPassword
+            'X-APIKEY': this.auth.password
           }
         })
         if(response.ok && response.status == 200) {
@@ -434,8 +435,7 @@ export default {
           }))
           return true
         } else if(response.status == 401) {
-          this.modal.message = "The password you entered is incorrect"
-          this.auth.password = null
+          this.modal.message = "The server refused your password. This may be a bug."
           this.auth.state = 1
           return false
         } else {
@@ -493,10 +493,6 @@ export default {
     }
     if(params.has('page')) {
       this.page = parseInt(params.get('page'))
-    }
-    const apikey =  window.sessionStorage.getItem('savedkey')
-    if(apikey) {
-      this.login(apikey)
     }
   },
 }

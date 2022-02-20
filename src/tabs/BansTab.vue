@@ -1,7 +1,32 @@
 <template>
   <div class="container is-fluid">
-    <p class="subtitle is-4">Viewing {{bans.length}} total bans</p>
-    <p class="has-text-danger" v-if="ban_error">{{ban_error}}</p>
+    <div class="columns">
+      <div class="column">
+        <p class="subtitle is-4">Viewing {{filteredBans.length}} total bans</p>
+        <p class="has-text-danger" v-if="ban_error">{{ban_error}}</p>
+      </div>
+      <div class="column is-2">
+        <div class="field has-addons" v-if="auth.state != 2">
+          <div class="control">
+            <input class="input is-small" type="password" placeholder="Enter a password" v-model="auth.password" @keyup.enter="login()">
+          </div>
+          <div class="control">
+            <a class="button is-info is-small" @click="login()">
+              Login
+            </a>
+          </div>
+        </div>
+        <p class="has-text-success" v-else-if="auth.state == 2">Authorized.</p>
+        <p class="has-text-danger" v-if="auth.state == 1">Wrong password</p>
+      </div>
+      <div class="column is-2">
+        <label class="checkbox">
+          <input type="checkbox" class="checkbox" v-model="showExpired" />
+          Show Expired Bans
+        </label>
+      </div>
+    </div>
+
     <table class="table is-fullwidth" v-if="!loading&&!error">
       <thead>
         <th style="width:0">Player</th>
@@ -11,10 +36,10 @@
         <th>Expires</th>
         <th>Attempts</th>
         <th>Date</th>
-        <th>Action</th>
+        <th v-if="auth.state == 1">Action</th>
       </thead>
       <tbody>
-        <tr v-for="(ban, i) in bans" :key="ban.steamid" :class="{'has-text-danger': ban.expired}">
+        <tr v-for="(ban, i) in filteredBans" :key="ban.steamid" :class="{'has-text-grey-light': ban.expired}">
           <td>
             <b v-if="ban.last_alias">{{ban.last_alias}}<br></b>
             <em class='has-text-info'>{{ban.steamid}}</em>
@@ -55,7 +80,7 @@
           </td>
           <td>{{ban.times_tried}}</td>
           <td :data-tooltip="ban.timestamp">{{ban.relDate}}</td>
-          <td>
+          <td v-if="auth.state == 2">
             <div class="buttons">
               <template v-if="edited && edited.steamid == ban.steamid">
                 <a class="button is-success is-small" @click='saveEdit()' v-if="editChanged">Save</a>
@@ -77,12 +102,14 @@
 
 <script>
 import Sugar from 'sugar'
+import auth from '@/mixins/auth.vue'
 
 const DISCORD_SOURCE_REGEX = new RegExp(/([^\n]+#\d{4})\s\((\d+)\)/)
 
 let adminNames = {}
 
 export default {
+  mixins: [auth],
   data() {
     return {
       loading: true,
@@ -91,7 +118,14 @@ export default {
       bans: [],
       edited: null,
       shiftPressed: false,
-      editChanged: false
+      editChanged: false,
+      showExpired: true
+    }
+  },
+  computed: {
+    filteredBans() {
+      if(this.showExpired) return this.bans
+      else return this.bans.filter(ban => !ban.expired)
     }
   },
   watch: {
@@ -127,7 +161,8 @@ export default {
       fetch(`https://jackz.me/l4d2/scripts/bans.php?mode=delete`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'X-APIKEY': this.auth.password
         },
         body: "steamid=" + ban.steamid
       })
@@ -154,7 +189,8 @@ export default {
       fetch(`https://jackz.me/l4d2/scripts/bans.php?mode=update`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'X-APIKEY': this.auth.password
         },
         body: JSON.stringify({
           steamid: this.edited.steamid,

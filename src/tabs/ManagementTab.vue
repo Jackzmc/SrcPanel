@@ -1,5 +1,6 @@
 <template>
-<div class="container">
+<div>
+<div class="container" v-if="auth.state == 2">
   <div class="columns">
     <div class="column is-8">
       <p :class='message.type' v-if="message" v-html="message.content"></p>
@@ -53,12 +54,34 @@
       <p>Improved and vanilla do not support this, as they are managed differently</p>
     </div>
   </div>
-
+</div>
+<div v-else class="container">
+  <div class="columns">
+    <div class="column is-6">
+      <p class="title is-3">Server Management</p>
+      <p class="subtitle is-4">Please enter a password to continue</p>
+      <br>
+      <div class="field has-addons">
+        <div class="control">
+          <input class="input" type="password" placeholder="Enter a password" v-model="auth.password" @keyup.enter="login()">
+        </div>
+        <div class="control">
+          <a class="button is-info" @click="login()">
+            Enter
+          </a>
+        </div>
+      </div>
+      <em>For privacy reasons, a password is now required. Ask Jackz for the password</em>
+    </div>
+  </div>
+</div>
 </div>
 </template>
 
 <script>
+import auth from '@/mixins/auth.vue'
 export default {
+  mixins: [auth],
   data() {
     return {
       servers: {},
@@ -80,13 +103,18 @@ export default {
       setTimeout(() => this.message = null, 8000)
     },
     processAction(server, type) {
+      if(this.auth.state !== 2) {
+        return alert("Illegal operation")
+      }
       if(type === "start") {
         this.$set(this.starting, server.meta.port, true);
         setTimeout(() => {
           this.$set(this.starting, server.meta.port, false);
         }, 1000 * 30)
       }
-      fetch(`https://api.lgs.jackz.me/internal/call-rcon.php?method=${type}&port=${server.meta.port}&key=${this.$SCRIPT_KEY}`)
+      fetch(`https://api.lgs.jackz.me/internal/call-rcon.php?method=${type}&port=${server.meta.port}&key=${this.$SCRIPT_KEY}`, {
+        headers: {'X-APIKEY': this.auth.password}
+      })
       .then(async(response) => {
         if(response.ok ) {
           const json = await response.json()
