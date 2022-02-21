@@ -17,12 +17,28 @@
 <div v-if="auth.state == 2">
   <div class="container">
     <div class="columns">
-      <div class="column is-11">
+      <div class="column is-9">
         <p class="title is-3">Server Logs</p>
         <p class="subtitle is-4">
           {{count.toLocaleString()}} log entries
           <em v-if="query != ''">(filtered)</em>
         </p>
+      </div>
+      <div class="column is-2">
+        <label class="label">Find Messages Around ID</label>
+        <div class="field has-addons">
+          <div class="control">
+            <input type="text" class="input" v-model="search.id" placeholder="######" />
+          </div>
+          <div class="control">
+            <a class="button is-secondary" @click="search.id = null">
+              x
+            </a>
+          </div>
+        </div>
+
+        <em v-if="showIds"><a @click="showIds = false">(click here to hide ids)</a></em>
+        <em v-else><a @click="showIds = true">(click here to see ids)</a></em>
       </div>
       <div class="column">
         <div class="buttons">
@@ -77,7 +93,7 @@
             </option>
           </select>
         </div>
-
+        <br>
         <label class="label">Filter Target</label>
         <div class="select">
           <select v-model="filters.target">
@@ -90,22 +106,40 @@
             </option>
           </select>
         </div>
-        <br>
-        <span class="has-text-weight-bold"> - or enter target manually: - </span>
+      </div>
+      <div class="column">
+        <label class="label">Manual Input:</label>
+
         <div class="columns">
           <div class="column">
-            <input type="text" :class="filterTargetClass" v-model="filters.target" message="a" placeholder="STEAM_#:#:########" />
+            <div class="field has-addons">
+              <div class="control">
+                <input type="text" :class="filterClientClass" v-model="filters.client" placeholder="STEAM_#:#:########" />
+              </div>
+              <div class="control">
+                <a class="button is-secondary" @click="filters.client = null">
+                  x
+                </a>
+              </div>
+            </div>
+            <br>
+            <div class="field has-addons">
+              <div class="control">
+                <input type="text" :class="filterTargetClass" v-model="filters.target" placeholder="STEAM_#:#:########" />
+              </div>
+              <div class="control">
+                <a class="button is-secondary" @click="filters.target = null">
+                  x
+                </a>
+              </div>
+            </div>
           </div>
-          <div class="column" v-show="filterTargetName">
+          <div class="column">
+            <input type="text" v-model="filterClientName" disabled class="input disabled" />
+            <br><br>
             <input type="text" v-model="filterTargetName" disabled class="input disabled" />
           </div>
         </div>
-      </div>
-      <div class="column is-2">
-        <label class="label">Find Messages Around ID</label>
-        <input type="text" class="input" v-model="search.id" placeholder="#####" />
-        <em v-if="showIds"><a @click="showIds = false">(click here to hide ids)</a></em>
-        <em v-else><a @click="showIds = true">(click here to see ids)</a></em>
       </div>
     </div>
   </div>
@@ -279,6 +313,20 @@ export default {
     },
     filterTargetName() {
       const result = this.history.targets.find(t => t.steamid === this.filters.target)
+      return result ? result.name : null
+    },
+    isFilterClientValid() {
+      return USER_REGEX.test(this.filters.client)
+    },
+    filterClientClass() {
+      let value = this.filters.client ? (this.isFilterClientValid ? "is-success" : "is-danger") : ""
+      return [
+        'input',
+        value
+      ]
+    },
+    filterClientName() {
+      const result = this.history.activators.find(t => t.steamid === this.filters.client)
       return result ? result.name : null
     },
     serverColors() {
