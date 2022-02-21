@@ -29,21 +29,6 @@ export default {
       headersTree: null
     }
   },
-  methods: {
-    gotoHeader(header) {
-      const element = document.getElementById(header)
-      if(element) element.scrollIntoView()
-      else console.warn(`Element not found: ${header}`)
-    },
-    recurseTree(str, node) {
-      str.push()
-    }
-  },
-  computed: {
-    sections() {
-      return ''
-    }
-  },
   created() {
     fetch('./data/plugins.md?timestamp=' + this.$LAST_UPDATED)
     .then(response => {
@@ -53,7 +38,6 @@ export default {
         this.html = "<p class='has-text-danger'>Could not fetch information.</p>"
     })
     .then(text => {
-      //TODO: Implement nested headers, h3 under h2, h4 under h3, etc.
       this.html = Marked(text)
       const tree = new Tree(0, 0)
       let lastNode

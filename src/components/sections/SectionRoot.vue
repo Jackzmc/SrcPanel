@@ -15,13 +15,6 @@ export default {
   name: "SectionRoot",
   props: {
     node: Object
-  },
-  methods: {
-    gotoHeader() {
-      const element = document.getElementById(this.node.key)
-      if(element) element.scrollIntoView()
-      else console.warn(`Element not found: ${this.node.key}`)
-    }
   }
 };
 
