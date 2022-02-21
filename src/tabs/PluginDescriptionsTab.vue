@@ -5,20 +5,9 @@
       <div class="column is-6">
         <div class="content" v-html="html" />
       </div>
-      <div class="column content">
+      <div class="column content" v-if="headersTree">
         <h4>Sections</h4>
-        <ul>
-          <li v-for="(subheaders, key) in headers" :key="key">
-            <a @click='gotoHeader(key)'>{{key}}</a>
-            <template v-if="subheaders.length > 0">
-              <ul>
-                <li v-for="subheader in subheaders" :key="subheader">
-                  <a @click='gotoHeader(subheader)'>{{subheader}}</a>
-                </li>
-              </ul>
-            </template>
-          </li>
-        </ul>
+        <SectionRoot :node="headersTree.root" />
       </div>
     </div>
     <br>
@@ -28,12 +17,16 @@
 <script>
 import Marked from 'marked'
 import { Tree, TreeNode } from '@/js/tree.js'
+import SectionRoot from '@/components/sections/SectionRoot.vue'
 
 export default {
+  components: {
+    SectionRoot
+  },
   data() {
     return {
       html: null,
-      headers: {},
+      headersTree: null
     }
   },
   methods: {
@@ -41,6 +34,14 @@ export default {
       const element = document.getElementById(header)
       if(element) element.scrollIntoView()
       else console.warn(`Element not found: ${header}`)
+    },
+    recurseTree(str, node) {
+      str.push()
+    }
+  },
+  computed: {
+    sections() {
+      return ''
     }
   },
   created() {
@@ -67,22 +68,8 @@ export default {
           newNode = tree.insert(0, name, level)
         }
         lastNode = newNode
-        // if(match[1] == "2") {
-        //   lastH2Header = match[2]
-        //   this.headers[match[2]] = []
-        // }
-        // else this.headers[lastH2Header].push(match[2])
       }
-
-      console.debug(tree)
-      /*let prev = arr.shift()
-      for (const elem of arr) {
-        if(elem.level < prev.level) {
-          prev.subheaders.push(elem)
-        } else if(elem.level == prev.level) {
-
-        }
-      }*/
+      this.headersTree = tree
     })
   }
 }
