@@ -27,6 +27,7 @@
 
 <script>
 import Marked from 'marked'
+import { Tree, TreeNode } from '@/js/tree.js'
 
 export default {
   data() {
@@ -53,15 +54,38 @@ export default {
     .then(text => {
       //TODO: Implement nested headers, h3 under h2, h4 under h3, etc.
       this.html = Marked(text)
-      let lastH2Header;
-      for(const match of this.html.matchAll(/h(\d) id="(.+)"/g)) {
-        if(match[1] == "2") {
-          lastH2Header = match[2]
-          this.headers[match[2]] = []
+      const tree = new Tree(0, 0)
+      let lastNode
+      for (const [,level,name] of this.html.matchAll(/h(\d) id="(.+)"/g)) {
+        level = Number(level)
+        let newNode;
+        if(lastNode && level > lastNode.value) {
+          newNode = tree.insert(lastNode.key, name, level)
+        } else if(lastNode && level === lastNode.value) {
+          newNode = tree.insert(lastNode.parent.key, name, level)
+        } else {
+          newNode = tree.insert(0, name, level)
         }
-        else this.headers[lastH2Header].push(match[2])
+        lastNode = newNode
+        // if(match[1] == "2") {
+        //   lastH2Header = match[2]
+        //   this.headers[match[2]] = []
+        // }
+        // else this.headers[lastH2Header].push(match[2])
       }
+
+      console.debug(tree)
+      /*let prev = arr.shift()
+      for (const elem of arr) {
+        if(elem.level < prev.level) {
+          prev.subheaders.push(elem)
+        } else if(elem.level == prev.level) {
+
+        }
+      }*/
     })
   }
 }
+
+function recurseDown(){}
 </script>
