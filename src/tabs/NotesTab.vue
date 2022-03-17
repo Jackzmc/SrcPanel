@@ -1,5 +1,5 @@
 <template>
-  <div class="container is-fullwidth">
+  <div class="container is-fullwidth is-fluid">
     <div class="columns">
       <div class="column">
         <h4 class="title is-4 has-text-centered">Notes</h4>
@@ -15,7 +15,9 @@
           </thead>
           <tbody>
             <tr v-for="note in notes" :key="note.id">
-              <td>{{note.id}}</td>
+              <td>
+                {{note.id}}
+              </td>
               <td><a :href="getStatURL(note.steamid)">{{note.user}}</a></td>
               <td><a :href="getStatURL(note.markedBy)">{{note.executor}}</a></td>
               <td>{{note.content}}</td>
@@ -26,21 +28,19 @@
           </tbody>
         </table>
       </div>
-      <div class="column is-5">
+      <div class="column is-3">
         <h4 class="title is-4 has-text-centered">Admins</h4>
         <p><b>Admin CC Bypass</b> is anti-rush bypass</p>
         <table class="table is-fullwidth">
           <thead>
             <tr>
               <th>SteamID</th>
-              <th>Permissions</th>
               <th>Note</th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="admin in admins" :key="admin.id">
               <td><a :href="getStatURL(admin.id)">{{admin.id}}</a></td>
-              <td>{{admin.perms}}</td>
               <td>{{admin.note}}</td>
             </tr>
           </tbody>
@@ -74,7 +74,7 @@ export default {
       fetch('https://api.lgs.jackz.me/internal/get-admins.php')
         .then(response => response.json())
         .then(json => {
-          this.admins = json
+          this.admins = json.sort((a,b) => b.immunity - a.immunity)
         })
     },
     getStatURL(steamid) {

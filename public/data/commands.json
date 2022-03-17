@@ -60,8 +60,8 @@
                 "description": "Respawns the player at wherever you are looking. "
             },
             {
-                "command": "model <player(s):players> <survivor_name:string>",
-                "description": "Sets the player's model to the survivor specified. Full name required (zoey, francis, etc)",
+                "command": "model <survivor_name:string> [player(s):players] [keep:string]",
+                "description": "Sets your model or an optional player's model to the survivor specified.",
                 "args": {
                     "survivor_name": {
                         "allowed_values": ["nick", "ellis", "rochelle", "coach", "bill", "francis", "zoey", "louis"]
