@@ -1,4 +1,6 @@
 <template>
+<div>
+  <BanEditModal v-if="edit.banIndex !== null" :ban="edit.data" @edit="onEdit" :auth="auth" />
   <div class="container is-fluid">
     <div class="columns">
       <div class="column">
@@ -32,7 +34,8 @@
         <th style="width:0">Player</th>
         <th>Executor</th>
         <th>Reason</th>
-        <th>IP Ban</th>
+        <th>Public Reason</th>
+        <th>Flags</th>
         <th>Expires</th>
         <th>Attempts</th>
         <th>Date</th>
@@ -45,8 +48,7 @@
             <em class='has-text-info'>{{ban.steamid}}</em>
           </td>
           <td>
-            <input class="input" type="text" v-if="edited && edited.steamid == ban.steamid" v-model="edited.executor" maxlength="32" />
-            <template v-else>
+            <template>
               <b v-if="ban.adminName">{{ban.adminName}} </b>
               <template v-else>
                 <em v-if="ban.isAdminPlayer" class='has-text-info'>{{ban.executor}}</em>
@@ -57,40 +59,23 @@
 
           </td>
           <td>
-            <input class="input" type="text" v-if="edited && edited.steamid == ban.steamid" v-model="edited.reason" maxlength="128" />
-            <span v-else>{{ban.reason}}</span>
+            {{ban.reason}}
           </td>
           <td>
-            <input v-if="edited && edited.steamid == ban.steamid" class="checkbox" style="transform: scale(1.5)" type="checkbox" v-model="edited.ip_banned" />
-            <input v-else class="checkbox disabled" disabled style="transform: scale(1.5)" type="checkbox" v-model="ban.ip_banned" />
+            {{ban.public_message}}
           </td>
           <td>
-            <div class="select" v-if="edited && edited.steamid == ban.steamid">
-              <select v-model="edited.expires">
-                <option value="never" v-if="ban.expires">Never</option>
-                <option value="keep">Keep Same</option>
-                <option value="1hour">1 Hour</option>
-                <option value="1day">1 Day</option>
-                <option value="1day">1 Day</option>
-                <option value="1week">1 Week</option>
-                <option value="1month">1 Month</option>
-              </select>
-            </div>
-            <span v-else-if="ban.expired" class="has-text-danger">Expired</span>
-            <span v-else>{{ban.expires || 'Never'}}</span>
+            <span v-html="getBanFlags(ban.flags)" />
+          </td>
+          <td>
+            <span v-if="ban.expired" class="has-text-danger">Expired</span>
+            <span v-else>{{getRelDate(ban.expires) || 'Never'}}</span>
           </td>
           <td>{{ban.times_tried}}</td>
           <td :data-tooltip="ban.timestamp">{{ban.relDate}}</td>
           <td v-if="auth.state == 2">
             <div class="buttons">
-              <template v-if="edited && edited.steamid == ban.steamid">
-                <a class="button is-success is-small" @click='saveEdit()' v-if="editChanged">Save</a>
-                <a class="button is-small" @click='edited = null'>Cancel Edit</a>
-              </template>
-              <template v-else>
-                <a class="button is-warning is-small" @click='edit(ban, i)'>Edit</a>
-                <a class="button is-danger is-small" @click='unban(ban, i)' data-tooltip="Hold shift to confirm" :disabled="!shiftPressed">Remove</a>
-              </template>
+              <a class="button is-warning is-small" @click='startEdit(ban, i)'>Edit</a>
             </div>
           </td>
         </tr>
@@ -99,11 +84,13 @@
     <p class="has-text-centered has-text-danger title is-3" v-else-if="error">{{error}}</p>
     <p class="has-text-centered title is-2" v-else><br>Fetching bans...</p>
   </div>
+</div>
 </template>
 
 <script>
 import Sugar from 'sugar'
 import auth from '@/mixins/auth.vue'
+import BanEditModal from '@/components/BanEditModal'
 
 const DISCORD_SOURCE_REGEX = new RegExp(/([^\n]+#\d{4})\s\((\d+)\)/)
 
@@ -111,16 +98,22 @@ let adminNames = {}
 
 export default {
   mixins: [auth],
+  components: { BanEditModal },
   data() {
     return {
       loading: true,
       error: null,
       ban_error: null,
       bans: [],
-      edited: null,
+      edit: {
+        data: null,
+        banIndex: null,
+      },
+      edited: {
+
+      },
       shiftPressed: false,
-      editChanged: false,
-      showExpired: true
+      showExpired: false
     }
   },
   computed: {
@@ -129,20 +122,20 @@ export default {
       else return this.bans.filter(ban => !ban.expired)
     }
   },
-  watch: {
-    edited: {
-      handler(val) {
-        if(this.editChanged) return
-        const ban = this.bans.find(ban => ban.steamid === this.edited.steamid)
-        console.log(ban.reason !== this.edited.reason)
-        this.editChanged = ban.reason !== this.edited.reason
-          || ban.executor !== this.edited.executor
-          || ban.expires !== "keep"
-      },
-      deep: true
-    }
-  },
   methods: {
+    onEdit(edit) {
+      if(edit)
+        this.$set(this.bans, this.edit.banIndex, edit)
+      this.edit.data = null
+      this.edit.banIndex = 0
+    },
+    getBanFlags(flags) {
+      let str = ""
+      if(flags & 1) str += `<span class='tag' data-tooltip='Is player ip banned'>IP</span>`
+      if(flags & 2) str += `<span class='tag is-warning' data-tooltip='Is the ban inactive?'>S</span>`
+      if(flags & 4) str += `<span class='tag' data-tooltip='Has a ban appeal'>A</span>`
+      return str
+    },
     async getAdmins() {
       for(let i = 0; i < this.bans.length; i++) {
         const ban = this.bans[i]
@@ -151,21 +144,24 @@ export default {
         if(!ban.adminName && ban.executor.startsWith("STEAM_")) {
           const response = await fetch(`https://jackz.me/l4d2/scripts/get_alias.php?steamid=${ban.executor}`)
           if(response.ok) {
-            const {last_alias} = await response.json()
-            adminNames[ban.executor] = last_alias
-            ban.adminName = last_alias
+            let bits = ban.executor.split(":")
+            bits = bits[bits.length - 1]
+            const res = await response.json()
+            if(res) {
+              adminNames[`STEAM_0:0:${bits}`] = adminNames[`STEAM_1:0:${bits}`] = adminNames[`STEAM_0:1:${bits}`] = res.last_alias
+              ban.adminName = res.last_alias
+            }
           }
         }
       }
     },
     unban(ban, index) {
-      fetch(`https://jackz.me/l4d2/scripts/bans.php?mode=delete`, {
+      fetch(`https://jackz.me/l4d2/scripts/bans.php?mode=delete&steamid=${ban.steamid}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'X-APIKEY': this.auth.password
         },
-        body: "steamid=" + ban.steamid
       })
       .then(async(response) => {
         if(response.ok) {
@@ -177,16 +173,15 @@ export default {
         this.ban_error = err.message
       })
     },
-    edit(ban, index) {
-      this.editChanged = false
-      this.edited = {
-        index,
+    startEdit(ban, index) {
+      this.edit.banIndex = index
+      this.edit.data = {
         ...ban,
         expires: 'keep'
       }
     },
     saveEdit() {
-      const expires = getExpires(this.edited, this.bans[this.edited.index])
+      const expires = getExpires(this.edit.data, this.bans[this.edit.banIndex])
       fetch(`https://jackz.me/l4d2/scripts/bans.php?mode=update`, {
         method: 'POST',
         headers: {
@@ -194,17 +189,19 @@ export default {
           'X-APIKEY': this.auth.password
         },
         body: JSON.stringify({
-          steamid: this.edited.steamid,
-          reason: this.edited.reason,
-          executor: this.edited.executor,
+          steamid: this.edit.data.steamid,
+          reason: this.edit.data.reason,
+          executor: this.edit.data.executor,
+          public_message: this.edit.data.public_message,
           expires
         })
       })
       .then(async(response) => {
         if(response.ok) {
-          if(this.edited.expires === "same") this.edited.expires = this.bans[index].expires
-          this.$set(this.bans, this.edited.index, this.edited)
-          this.edited = null
+          if(this.edit.data.expires === "same") this.edit.data.expires = this.bans[this.edit.banIndex].expires
+          this.$set(this.bans, this.edit.banIndex, this.edit.data)
+          this.edit.data = null
+          this.edit.banIndex = null
         } else
           this.ban_error = await response.text()
       })
@@ -212,6 +209,16 @@ export default {
         this.ban_error = err.message
       })
 
+    },
+    getRelDate(time) {
+      const date = new Date((time || "").toString().replace(/-/g, "/").replace(/[TZ]/g, " ")),
+        diff = (((new Date()).getTime() - date.getTime()) / 1000),
+        day_diff = Math.floor(diff / 86400);
+
+      if (isNaN(day_diff) || day_diff < 0 || day_diff >= 31) return;
+
+      return day_diff == 0 && (
+      diff < 60 && "just now" || diff < 120 && "1 minute ago" || diff < 3600 && Math.floor(diff / 60) + " minutes ago" || diff < 7200 && "1 hour ago" || diff < 86400 && Math.floor(diff / 3600) + " hours ago") || day_diff == 1 && "Yesterday" || day_diff < 7 && day_diff + " days ago" || day_diff < 31 && Math.ceil(day_diff / 7) + " weeks ago";
     }
   },
   created() {
@@ -230,7 +237,7 @@ export default {
     })
     .then(bans => {
       this.bans = bans.map(ban => {
-        const relDate = new Sugar.Date(ban.timestamp).relative()
+        const relDate = new Sugar.Date(ban.timestamp*1000).relative()
         if(!ban.last_alias) {
           console.warn(ban.steamid, 'does not have alias')
         }
@@ -257,33 +264,4 @@ export default {
   }
 }
 
-function getExpires(edited, ban) {
-  const baseDate = new Date().valueOf()
-
-  if(edited.expires === "keep") return null
-  else if(edited.expires === "never") return "never"
-  else if(edited.expires === "1hour") {
-    return (baseDate + 3.6e+6) / 1000
-  }else if(edited.expires === "1day") {
-    return (baseDate + 8.64e+7) / 1000
-  }else if(edited.expires === "1week") {
-    return (baseDate + 6.048e+8) / 1000
-  } else if(edited.expires === "1month") {
-    return (baseDate + 2629800000) / 1000
-  } else {
-    alert('Could not save unknown value: ' + edited.expires)
-    return null
-  }
-}
-
-function getRelDate(time) {
-  const date = new Date((time || "").toString().replace(/-/g, "/").replace(/[TZ]/g, " ")),
-    diff = (((new Date()).getTime() - date.getTime()) / 1000),
-    day_diff = Math.floor(diff / 86400);
-
-  if (isNaN(day_diff) || day_diff < 0 || day_diff >= 31) return;
-
-  return day_diff == 0 && (
-  diff < 60 && "just now" || diff < 120 && "1 minute ago" || diff < 3600 && Math.floor(diff / 60) + " minutes ago" || diff < 7200 && "1 hour ago" || diff < 86400 && Math.floor(diff / 3600) + " hours ago") || day_diff == 1 && "Yesterday" || day_diff < 7 && day_diff + " days ago" || day_diff < 31 && Math.ceil(day_diff / 7) + " weeks ago";
-}
 </script>

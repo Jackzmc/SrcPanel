@@ -33,7 +33,7 @@
                 </td>
                 <td>
                   <p @click='copyCommand' :class="{'has-text-grey': server.status !== 'online'}">
-                    {{server.meta.connect}}
+                    connect {{$CONNECT_IP}}:{{server.meta.port}}
                   </p>
                 </td>
                 <td>
