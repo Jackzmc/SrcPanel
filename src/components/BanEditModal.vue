@@ -11,7 +11,7 @@
             <li :class="{'is-active': tab == 0}" @click="setTab(0)"><a>Review</a></li>
             <li :class="{'is-active': tab == 1}" @click="setTab(1)"><a>Appeals</a></li>
             <li :class="{'is-active': tab == 2}" @click="setTab(2)"><a>Notes</a></li>
-            <li :class="{'is-active': tab == 3}" @click="setTab(3)"><a>Links</a></li>
+            <li :class="{'is-active': tab == 3}" @click="setTab(3)"><a>Info</a></li>
           </ul>
         </div>
         <template v-if="tab == 0">
@@ -194,9 +194,43 @@
       </template>
 
       <template v-else-if="tab == 3">
+        <div class="container has-text-centered" v-if="!info">
+          <br>
+          <p>Fetching player statistics... please wait</p>
+          <br>
+        </div>
+        <div class="container has-text-centered" v-else>
+          <div class="columns">
+            <div class="column">
+              <label class="label">Friendly Fires</label>
+              <p>{{info.survivor_ff}}</p>
+            </div>
+            <div class="column">
+              <label class="label">Self Heals</label>
+              <p>{{info.heal_self}}</p>
+            </div>
+            <div class="column">
+              <label class="label">Heals (Other)</label>
+              <p>{{info.heal_others}}</p>
+            </div>
+            <div class="column">
+              <label class="label">Hours Played</label>
+              <p>{{Math.round(info.minutes_played - info.minutes_idle / 60)}}</p>
+            </div>
+            <div class="column">
+              <label class="label">Team kills</label>
+              <p>{{info.ff_kills}}</p>
+            </div>
+          </div>
+
+        </div>
+
+        <br>
+
         <ul class="content is-medium">
           <li><a :href="'https://stats.jackz.me/user/' + ban.steamid" target="_blank">Stats Profile</a></li>
           <li><a :href="'https://steamcommunity.com/profiles/' + steamid64" target="_blank">Steam Profile</a></li>
+          <li><a :href="'?client=' + ban.steamid + '#logs'" target="_blank">View Logs</a></li>
         </ul>
       </template>
 
@@ -239,7 +273,8 @@ export default {
       executorEdit: {
         active: false,
         edit: null
-      }
+      },
+      info: null
     }
   },
   watch: {
@@ -255,11 +290,11 @@ export default {
       deep: true
     },
     ban() {
-      this._init()
+      this.init()
     }
   },
   created() {
-    this._init()
+    this.init()
   },
   computed: {
     steamid64() {
@@ -268,7 +303,7 @@ export default {
     }
   },
   methods: {
-    _init() {
+    init() {
       this.error = null
       if(this.ban) {
         this.edited = Object.assign({}, this.ban)
@@ -282,6 +317,8 @@ export default {
         this.appeals.list = []
         this.appeals.state = 0
         this.changed = false
+        this.info = null
+        this.setTab(0)
       }
     },
     onExEditBlur() {
@@ -328,6 +365,18 @@ export default {
           else if(this.notes.state === 0) this.fetchNotes()
           break
         }
+        case 3: {
+          if(!this.info) this.fetchInfo()
+        }
+      }
+    },
+    async fetchInfo() {
+      const response = await fetch(`https://stats.jackz.me/api/user/${this.ban.steamid}`)
+      if(response.ok) {
+        const json = await response.json()
+        this.info = json.user
+      } else {
+        alert("Could not fetch user statistics: " + await response.text())
       }
     },
     async fetchAppeals() {
