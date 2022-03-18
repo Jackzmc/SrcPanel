@@ -8,6 +8,8 @@
         <p class="has-text-danger" v-if="ban_error">{{ban_error}}</p>
       </div>
       <div class="column is-2">
+        <!-- <LoginButton v-if="auth.state == 0" /> -->
+
         <div class="field has-addons" v-if="auth.state != 2">
           <div class="control">
             <input class="input is-small" type="password" placeholder="Enter a password" v-model="auth.password" @keyup.enter="login()">

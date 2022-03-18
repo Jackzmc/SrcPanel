@@ -98,6 +98,15 @@ export default {
   created() {
     document.addEventListener('swUpdated', this.updateAvailable, { once: true })
     document.addEventListener('swUpdating', () => this.updating = true, { once: true })
+    const params = new URLSearchParams(window.location.search);
+    if(params.has('openid.mode')) {
+      const mode = params.get('openid.mode')
+      if(mode === "error") {
+        alert("Steam login failed: " + params.get("openid.error"))
+        window.location.search = ''
+      }
+    }
+
     if(window.location.hash) {
       const hash = window.location.hash.substring(1)
       if(this.$options.TABS[hash]) {

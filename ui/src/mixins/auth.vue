@@ -10,7 +10,10 @@ async function validateLogin(password) {
   return response.ok
 }
 
+import LoginButton from '@/components/LoginButton'
+
 export default {
+  components: { LoginButton },
   data() {
     return {
       auth: {
@@ -20,6 +23,9 @@ export default {
     }
   },
   methods: {
+    async login2() {
+
+    },
     async login(password) {
       let savedPassword = password || this.auth.password
       if(await validateLogin(savedPassword)) {
