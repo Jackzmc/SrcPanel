@@ -531,7 +531,7 @@ export default {
       this.filters.target = params.get('target')
     }
     if(params.has('client') || params.has('activator')) {
-      this.filters.activator = params.get('client') ?? params.get('activator')
+      this.filters.client = params.get('client') ?? params.get('activator')
     }
     if(params.has('search_id')) {
       this.search.id = params.get('search_id')
