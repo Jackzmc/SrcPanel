@@ -11,6 +11,7 @@
             <li :class="{'is-active': tab == 0}" @click="setTab(0)"><a>Review</a></li>
             <li :class="{'is-active': tab == 1}" @click="setTab(1)"><a>Appeals</a></li>
             <li :class="{'is-active': tab == 2}" @click="setTab(2)"><a>Notes</a></li>
+            <li :class="{'is-active': tab == 3}" @click="setTab(3)"><a>Links</a></li>
           </ul>
         </div>
         <template v-if="tab == 0">
@@ -48,9 +49,10 @@
             <div class="field">
               <label class="label">Banned By</label>
               <input v-if="executorEdit.active" v-model="executorEdit.edit" class="input" type="text" @blur='onExEditBlur' />
-              <p v-else @click='executorEdit.active = true'>
-                {{ban.adminName}} ({{ban.executor}})
-              </p>
+              <span v-else @click='executorEdit.active = true'>
+                <p>{{ban.adminName}}</p>
+                ({{ban.executor}})
+              </span>
             </div>
           </div>
           <div class="column">
@@ -94,9 +96,9 @@
               <label class="label">Flags</label>
               <div class="control">
                 <div class="select is-multiple">
-                  <select multiple size="2" v-model="flags.edited">
+                  <select multiple size="2" v-model="flags.edited" @change="changed = true">
                     <option value="1">IP Banned</option>
-                    <option value="2">Suspended (inactive)</option>
+                    <option value="2">Suspended</option>
                   </select>
                 </div>
               </div>
@@ -119,6 +121,8 @@
                 </div>
               </div>
               <p class="help has-text-danger" v-if="ban.expired">Ban is currently expired</p>
+              <p class="help" v-else-if="ban.expires">Will expire on {{formatTime(ban.expires)}}</p>
+              <p class="help" v-else>Ban will not currently expire.</p>
             </div>
           </div>
         </div>
@@ -169,6 +173,7 @@
           <div class="container has-text-centered" v-if="notes.list.length == 0">
             <br>
             <p>User has no attached notes.</p>
+            <!-- <p><a>Add a new note</a></p> -->
             <br>
           </div>
           <div class="box" v-for="note in notes.list" :key="note.id">
@@ -179,13 +184,20 @@
         </template>
       </template>
 
+      <template v-else-if="tab == 3">
+        <ul class="content is-medium">
+          <li><a :href="'https://stats.jackz.me/user/' + ban.steamid" target="_blank">Stats Profile</a></li>
+          <li><a :href="'https://steamcommunity.com/profiles/' + steamid64" target="_blank">Steam Profile</a></li>
+        </ul>
+      </template>
+
       </section>
       <footer class="modal-card-foot" v-if="tab == 0">
         <button :disabled="!changed" :class="['button','is-success',{'is-loading': loading, 'disabled': !changed}]" @click="save">Save changes</button>
         <button :class="['button',{'is-loading': loading}]" @click="cancel">Cancel</button>
         <p class="has-text-danger" v-if="error">{{error}}</p>
       </footer>
-      <footer class="modal-card-foot" v-else-if="tab == 1 || tab == 2">
+      <footer class="modal-card-foot" v-else-if="tab == 1 || tab == 2 || tab == 3">
         <button :disabled="loading" :class="['button',{'disabled': loading}]" @click="cancel">Done</button>
       </footer>
     </div>
@@ -193,6 +205,7 @@
 </template>
 
 <script>
+import SteamID from 'steamid'
 export default {
   props: ['ban', 'auth'],
   data() {
@@ -239,11 +252,18 @@ export default {
   created() {
     this._init()
   },
+  computed: {
+    steamid64() {
+      if(!this.ban) return null
+      return new SteamID(this.ban.steamid).getSteamID64()
+    }
+  },
   methods: {
     _init() {
       this.error = null
       if(this.ban) {
         this.edited = Object.assign({}, this.ban)
+        this.edited.expires = 'keep'
         for(const i of [1,2,4]) {
           if(this.ban.flags & i) this.flags.original.push(i.toString())
         }
@@ -287,10 +307,17 @@ export default {
     },
     setTab(index) {
       this.tab = index
-      if(index == 1 && this.appeals.state === 0) {
-        this.fetchAppeals()
-      } else if(index == 2 && this.notes.state == 0) {
-        this.fetchNotes()
+      switch(index) {
+        case 1: {
+          if(this.ban.appeals == 0) this.appeals.state = 1
+          else if(this.appeals.state === 0) this.fetchAppeals()
+          break
+        }
+        case 2: {
+          if(this.ban.notes == 0) this.notes.state = 1
+          else if(this.notes.state === 0) this.fetchNotes()
+          break
+        }
       }
     },
     async fetchAppeals() {

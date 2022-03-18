@@ -177,10 +177,7 @@ export default {
     },
     startEdit(ban, index) {
       this.edit.banIndex = index
-      this.edit.data = {
-        ...ban,
-        expires: 'keep'
-      }
+      this.edit.data = ban
     },
     getRelDate(time) {
       const date = new Date((time || "").toString().replace(/-/g, "/").replace(/[TZ]/g, " ")),

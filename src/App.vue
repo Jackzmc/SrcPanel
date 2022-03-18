@@ -11,10 +11,10 @@
     <section class="hero is-info has-text-centered">
         <div class="hero-body">
             <p class="title" >
-                Administration Guide
+              Jackz's L4D2 Network
             </p>
             <p class="subtitle">
-            Click on one of the tabs.
+              Information & Administration Dashboard
             </p>
         </div>
     </section>
