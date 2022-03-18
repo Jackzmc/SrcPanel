@@ -18,7 +18,7 @@
             </a>
           </div>
         </div>
-        <p class="has-text-success" v-else-if="auth.state == 2">Authorized.</p>
+        <p class="has-text-success" v-else-if="auth.state == 2">Authorized</p>
         <p class="has-text-danger" v-if="auth.state == 1">Wrong password</p>
       </div>
       <div class="column is-2">
@@ -33,7 +33,7 @@
       <thead>
         <th style="width:0">Player</th>
         <th>Executor</th>
-        <th>Reason</th>
+        <th v-if="auth.state == 2">Reason</th>
         <th>Public Reason</th>
         <th>Flags</th>
         <th>Expires</th>
@@ -58,14 +58,14 @@
             </template>
 
           </td>
-          <td>
+          <td v-if="auth.state == 2">
             {{ban.reason}}
           </td>
           <td>
             {{ban.public_message}}
           </td>
           <td>
-            <span v-html="getBanFlags(ban.flags)" />
+            <div class="tags" v-html="getBanFlags(ban)"></div>
           </td>
           <td>
             <span v-if="ban.expired" class="has-text-danger">Expired</span>
@@ -75,7 +75,7 @@
           <td :data-tooltip="ban.timestamp">{{ban.relDate}}</td>
           <td v-if="auth.state == 2">
             <div class="buttons">
-              <a class="button is-warning is-small" @click='startEdit(ban, i)'>Edit</a>
+              <a class="button is-info is-small" @click='startEdit(ban, i)'>View</a>
             </div>
           </td>
         </tr>
@@ -124,16 +124,18 @@ export default {
   },
   methods: {
     onEdit(edit) {
+      // TODO: Figure out why it replaces wrong idnex
       if(edit)
         this.$set(this.bans, this.edit.banIndex, edit)
       this.edit.data = null
       this.edit.banIndex = 0
     },
-    getBanFlags(flags) {
+    getBanFlags(ban) {
       let str = ""
-      if(flags & 1) str += `<span class='tag' data-tooltip='Is player ip banned'>IP</span>`
-      if(flags & 2) str += `<span class='tag is-warning' data-tooltip='Is the ban inactive?'>S</span>`
-      if(flags & 4) str += `<span class='tag' data-tooltip='Has a ban appeal'>A</span>`
+      if(ban.flags & 1) str += `<span class='tag' data-tooltip='Player is IP banned'>IP</span>`
+      if(ban.flags & 2) str += `<span class='tag is-warning' data-tooltip='Ban is no longer in effect'>S</span>`
+      if(ban.appeals > 0) str += `<span class='tag is-success' data-tooltip="Has ban appeal(s)">A</span>`
+      if(ban.notes > 0) str += `<span class='tag is-dark' data-tooltip="Has note(s) attached">N</span>`
       return str
     },
     async getAdmins() {
@@ -179,36 +181,6 @@ export default {
         ...ban,
         expires: 'keep'
       }
-    },
-    saveEdit() {
-      const expires = getExpires(this.edit.data, this.bans[this.edit.banIndex])
-      fetch(`https://jackz.me/l4d2/scripts/bans.php?mode=update`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-APIKEY': this.auth.password
-        },
-        body: JSON.stringify({
-          steamid: this.edit.data.steamid,
-          reason: this.edit.data.reason,
-          executor: this.edit.data.executor,
-          public_message: this.edit.data.public_message,
-          expires
-        })
-      })
-      .then(async(response) => {
-        if(response.ok) {
-          if(this.edit.data.expires === "same") this.edit.data.expires = this.bans[this.edit.banIndex].expires
-          this.$set(this.bans, this.edit.banIndex, this.edit.data)
-          this.edit.data = null
-          this.edit.banIndex = null
-        } else
-          this.ban_error = await response.text()
-      })
-      .catch(err => {
-        this.ban_error = err.message
-      })
-
     },
     getRelDate(time) {
       const date = new Date((time || "").toString().replace(/-/g, "/").replace(/[TZ]/g, " ")),

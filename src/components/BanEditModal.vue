@@ -14,22 +14,53 @@
           </ul>
         </div>
         <template v-if="tab == 0">
-        <div class="columns">
-          <div class="column">
+        <div class="columns is-multiline">
+          <div class="column is-2">
             <div class="field">
-              <label class="label">Banned By</label>
-              <component :is="ban.executor.startsWith('STEAM_') ? 'a':'em'" :href="'https://stats.jackz.me/user/' + ban.executor">
-                {{ban.adminName}} ({{ban.executor}})
-              </component>
+              <label class="label">ID</label>
+              <p>{{ban.id}}</p>
             </div>
           </div>
+          <div class="column">
+            <div class="field">
+              <label class="label">IP</label>
+              <p v-if="ban.ip">{{ban.ip}}</p>
+              <em v-else>(no ip recorded)</em>
+            </div>
+          </div>
+          <div class="column">
+            <div class="field">
+              <label class="label">Country</label>
+              <p v-if="ban.country">{{ban.country}}</p>
+              <em v-else>unknown</em>
+            </div>
+          </div>
+          <div class="column">
+            <div class="field">
+              <label class="label">Join Attempts</label>
+              <p>{{ban.times_tried}}</p>
+            </div>
+          </div>
+        </div>
 
+        <div class="columns">
+          <div class="column is-8">
+            <div class="field">
+              <label class="label">Banned By</label>
+              <input v-if="executorEdit.active" v-model="executorEdit.edit" class="input" type="text" @blur='onExEditBlur' />
+              <p v-else @click='executorEdit.active = true'>
+                {{ban.adminName}} ({{ban.executor}})
+              </p>
+            </div>
+          </div>
           <div class="column">
             <div class="field">
               <label class="label">Timestamp</label>
               <p>{{formatTime(ban.timestamp)}}</p>
+              <em>about {{ban.relDate}}</em>
             </div>
           </div>
+
         </div>
 
         <div class="field">
@@ -91,7 +122,6 @@
             </div>
           </div>
         </div>
-
       </template>
 
       <template v-else-if="tab == 1">
@@ -135,14 +165,16 @@
           <p>Fetching notes... please wait</p>
           <br>
         </div>
-        <template v-else-if="appeals.state == 1">
+        <template v-else-if="notes.state == 1">
           <div class="container has-text-centered" v-if="notes.list.length == 0">
             <br>
             <p>User has no attached notes.</p>
             <br>
           </div>
           <div class="box" v-for="note in notes.list" :key="note.id">
-            {{note.content}}
+            <h6 class="title is-6">#{{note.id}}: {{note.executor}} ({{note.markedBy}})</h6>
+
+            "{{note.content}}"
           </div>
         </template>
       </template>
@@ -181,6 +213,10 @@ export default {
       notes: {
         list: [],
         state: 0
+      },
+      executorEdit: {
+        active: false,
+        edit: null
       }
     }
   },
@@ -190,27 +226,39 @@ export default {
         if(this.changed) return
         this.changed = this.ban.reason !== val.reason
           || this.ban.public_message !== val.public_message
-          || this.ban.executor !== val.executor
+          || this.ban.executor !== this.executorEdit.edit
           || this.flags.original.length !== this.flags.edited.length
           || val.expires !== "keep"
       },
       deep: true
     },
     ban() {
+      this._init()
+    }
+  },
+  created() {
+    this._init()
+  },
+  methods: {
+    _init() {
       this.error = null
       if(this.ban) {
         this.edited = Object.assign({}, this.ban)
         for(const i of [1,2,4]) {
           if(this.ban.flags & i) this.flags.original.push(i.toString())
         }
+        this.executorEdit.edit = this.ban.executor
         this.flags.edited = [...this.flags.original]
         this.appeals.list = []
         this.appeals.state = 0
         this.changed = false
       }
-    }
-  },
-  methods: {
+    },
+    onExEditBlur() {
+      if(this.ban.executor === this.executorEdit.edit) {
+        this.executorEdit.active = false
+      }
+    },
     async setAppealState(appeal, approved) {
       this.loading = true
       let rejectReason
@@ -286,7 +334,7 @@ export default {
         body: JSON.stringify({
           steamid: this.edited.steamid,
           reason: this.edited.reason,
-          executor: this.edited.executor,
+          executor: this.executorEdit.edit,
           public_message: this.edited.public_message,
           expires,
           flags
