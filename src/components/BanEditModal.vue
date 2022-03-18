@@ -125,6 +125,15 @@
               <p class="help" v-else>Ban will not currently expire.</p>
             </div>
           </div>
+          <div class="column">
+            <div class="field">
+              <label class="label">Danger Zone</label>
+              <div class="control">
+                <a class="button is-danger" @click='deleteBan'>Remove Ban Record</a>
+              </div>
+              <p class="help has-text-danger">This will remove the ban from the records, suspending is recommended instead</p>
+            </div>
+          </div>
         </div>
       </template>
 
@@ -347,6 +356,27 @@ export default {
     formatTime(time) {
       const date = new Date(time*1000)
       return `${date.toLocaleDateString()} at ${date.toLocaleTimeString()}`
+    },
+    deleteBan() {
+      if(window.confirm("Are you sure you want to remove this ban from the records? This should only be done if mistakes were made when banning them. Recommend to suspend the ban instead.")) {
+        fetch(`https://jackz.me/l4d2/scripts/bans.php?mode=delete&steamid=${ban.steamid}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-APIKEY': this.auth.password
+          },
+        })
+        .then(async(response) => {
+          if(response.ok) {
+            this.cancel()
+            alert("Ban was successfully removed")
+          } else
+            this.error = await response.text()
+        })
+        .catch(err => {
+          this.error = err.message
+        })
+      }
     },
     save() {
       this.loading = true
