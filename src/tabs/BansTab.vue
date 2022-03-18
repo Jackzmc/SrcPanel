@@ -23,6 +23,10 @@
       </div>
       <div class="column is-2">
         <label class="checkbox">
+          <input type="checkbox" class="checkbox" v-model="showOnlyAppeals" />
+          Only Appeals
+        </label>
+        <label class="checkbox">
           <input type="checkbox" class="checkbox" v-model="showExpired" />
           Show Expired Bans
         </label>
@@ -109,17 +113,18 @@ export default {
         data: null,
         banIndex: null,
       },
-      edited: {
-
-      },
       shiftPressed: false,
-      showExpired: false
+      showExpired: false,
+      showOnlyAppeals: false
     }
   },
   computed: {
     filteredBans() {
-      if(this.showExpired) return this.bans
-      else return this.bans.filter(ban => !ban.expired)
+      return this.bans.filter(ban => {
+        if(!this.showExpired && ban.expired) return false
+        if(this.showOnlyAppeals && ban.appeals == 0) return false
+        return true
+      })
     }
   },
   methods: {
@@ -186,8 +191,11 @@ export default {
       else
         this.error = response.statusText
     })
-    .then(bans => {
-      this.bans = bans.map(ban => {
+    .then(result => {
+      if(result.error) {
+        return this.ban_error = result.message || result.error
+      }
+      this.bans = result.map(ban => {
         const relDate = new Sugar.Date(ban.timestamp*1000).relative()
         if(!ban.last_alias) {
           console.warn(ban.steamid, 'does not have alias')
