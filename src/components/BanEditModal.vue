@@ -273,6 +273,7 @@ export default {
       if(this.ban) {
         this.edited = Object.assign({}, this.ban)
         this.edited.expires = 'keep'
+        this.flags.original = []
         for(const i of [1,2,4]) {
           if(this.ban.flags & i) this.flags.original.push(i.toString())
         }

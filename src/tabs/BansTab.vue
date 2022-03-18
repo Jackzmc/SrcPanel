@@ -37,6 +37,7 @@
         <th>Public Reason</th>
         <th>Flags</th>
         <th>Expires</th>
+        <th>Attempts</th>
         <th>Date</th>
         <th v-if="auth.state == 1">Action</th>
       </thead>
@@ -70,6 +71,7 @@
             <span v-if="ban.expired" class="has-text-danger">Expired</span>
             <span v-else>{{getRelDate(ban.expires) || 'Never'}}</span>
           </td>
+          <td>{{ban.times_tried}}</td>
           <td :data-tooltip="ban.timestamp">{{ban.relDate}}</td>
           <td v-if="auth.state == 2">
             <div class="buttons">
