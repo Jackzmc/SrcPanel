@@ -3,7 +3,7 @@
     <div class="modal-background"></div>
     <div class="modal-card">
       <header class="modal-card-head">
-        <p class="modal-card-title"><b>{{ban.last_alias}}</b> <span class="is-pulled-right">{{ban.steamid}}</span></p>&nbsp;&nbsp;
+        <p class="modal-card-title"><b>{{ban.client.name}}</b> <span class="is-pulled-right">{{ban.client.id}}</span></p>&nbsp;&nbsp;
       </header>
       <section class="modal-card-body">
         <div class="tabs">
@@ -39,7 +39,7 @@
           <div class="column">
             <div class="field">
               <label class="label">Join Attempts</label>
-              <p>{{ban.times_tried}}</p>
+              <p>{{ban.joinAttempts}}</p>
             </div>
           </div>
         </div>
@@ -50,8 +50,8 @@
               <label class="label">Banned By</label>
               <input v-if="executorEdit.active" v-model="executorEdit.edit" class="input" type="text" @blur='onExEditBlur' />
               <span v-else @click='executorEdit.active = true'>
-                <p>{{ban.adminName}}</p>
-                ({{ban.executor}})
+                <p>{{ban.executor.name}}</p>
+                ({{ban.executor.id}})
               </span>
             </div>
           </div>
@@ -81,7 +81,7 @@
           <label class="label">Shown Reason</label>
           <div class="control">
             <textarea
-              v-model="edited.public_message"
+              v-model="edited.publicReason"
               class="textarea has-fixed-size"
               placeholder="Enter a reason for this ban (shown to target)"
               maxlength="250"
@@ -186,7 +186,7 @@
             <br>
           </div>
           <div class="box" v-for="note in notes.list" :key="note.id">
-            <h6 class="title is-6">#{{note.id}}: {{note.executor}} ({{note.markedBy}})</h6>
+            <h6 class="title is-6">#{{note.id}}: {{note.markedBy.name}} ({{note.markedBy.id}})</h6>
 
             "{{note.content}}"
           </div>
@@ -282,8 +282,8 @@ export default {
       handler(val) {
         if(this.changed) return
         this.changed = this.ban.reason !== val.reason
-          || this.ban.public_message !== val.public_message
-          || this.ban.executor !== this.executorEdit.edit
+          || this.ban.publicReason !== val.publicReason
+          || this.ban.executor.id !== this.executorEdit.edit.id
           || this.flags.original.length !== this.flags.edited.length
           || val.expires !== "keep"
       },
@@ -322,7 +322,7 @@ export default {
       }
     },
     onExEditBlur() {
-      if(this.ban.executor === this.executorEdit.edit) {
+      if(this.ban.executor.id === this.executorEdit.edit.id) {
         this.executorEdit.active = false
       }
     },
@@ -392,10 +392,10 @@ export default {
       }
     },
     async fetchNotes() {
-      const response = await fetch(`https://jackz.me/l4d2/scripts/notes.php?steamid=${this.ban.steamid}`)
+      const response = await fetch(`/api/notes/user/${this.ban.client.id}`)
       if(response.ok) {
           const json = await response.json()
-          this.notes.list = json.result
+          this.notes.list = json.notes
           this.notes.state = 1
       } else {
         this.notes.state = 2

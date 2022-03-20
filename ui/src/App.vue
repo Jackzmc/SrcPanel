@@ -1,5 +1,6 @@
 <template>
   <div id="app">
+    <NavBar v-if="userdata" :userdata="userdata" />
     <span id="lastUpdate">
       <p v-if="updating" class="has-text-black has-text-weight-bold">New update available, updating...</p>
       <a v-else-if="updateRegistration" class="has-text-black" @click='reloadPage'>
@@ -20,13 +21,13 @@
     </section>
     <div class="tabs is-centered">
         <ul>
-          <li v-for="(data, id) in $options.TABS" :key="id" :class="{'is-active': isActive(id)}">
+          <li v-for="(data, id) in tabs" :key="id" :class="{'is-active': isActive(id)}">
             <a @click='setTab(id)'>{{data[0]}}</a>
           </li>
         </ul>
     </div>
     <keep-alive :name="tabIndex">
-      <component :is="tab" />
+      <component :userdata="userdata" :is="tab" />
     </keep-alive>
   </div>
 </template>
@@ -47,9 +48,12 @@ import LogTab from './tabs/LogTab.vue'
 import NotesTab from './tabs/NotesTab.vue'
 import GraphsTab from './tabs/GraphsTab.vue'
 
+import NavBar from '@/components/NavBar'
+
 export default {
   name: 'App',
-  TABS: {
+  components: { NavBar },
+  DEFAULT_TABS: {
     overview: ["Overview", OverviewTab],
     commands: ["Commands", CommandsTab],
     cvars:    ["Cvars", CvarsTab],
@@ -58,10 +62,7 @@ export default {
     extraplayers: ["5+ Players", ExtraPlayersTab],
     //states:   ["State Management", StateManagementTab],
     bans:     ["Bans", BansTab],
-    workshop: ['Maps', MapsTab],
-    manage:   ["Management", ManagementTab],
     plugins:  ["Plugins", PluginDescriptionsTab],
-    logs:     ["Logs", LogTab],
     info:    ["Info", NotesTab],
     graphs:   ["Graphs", GraphsTab],
   },
@@ -70,13 +71,27 @@ export default {
       tabIndex: 'overview',
       tab: OverviewTab,
       updateRegistration: null,
-      updating: false
+      updating: false,
+      userdata: null
+    }
+  },
+  computed: {
+    tabs() {
+      if(this.userdata) {
+        return {
+          ...this.$options.DEFAULT_TABS,
+          workshop: ['Maps', MapsTab],
+          manage:   ["Management", ManagementTab],
+          logs:     ["Logs", LogTab],
+          info:    ["Info", NotesTab],
+        }
+      } else return this.$options.DEFAULT_TABS
     }
   },
   methods: {
     setTab(tabid) {
       this.tabIndex = tabid
-      const tab = this.$options.TABS[tabid]
+      const tab = this.tabs[tabid]
       if(!tab) return console.warn('Tab not found: ', tabid)
       document.title = `${tab[0]} - L4D2 Admin Guide`
       this.tab = tab[1]
@@ -94,23 +109,29 @@ export default {
       this.updateRegistration = event.detail
       this.reloadPage()
     },
-  },
-  created() {
-    document.addEventListener('swUpdated', this.updateAvailable, { once: true })
-    document.addEventListener('swUpdating', () => this.updating = true, { once: true })
-    const params = new URLSearchParams(window.location.search);
-    if(params.has('openid.mode')) {
-      const mode = params.get('openid.mode')
-      if(mode === "error") {
-        alert("Steam login failed: " + params.get("openid.error"))
-        window.location.search = ''
+    async getAuth() {
+      const response = await fetch(`api/auth/steam/details`, {
+        credentials: 'include'
+      })
+      if(response.ok) {
+        const json = await response.json()
+        this.userdata = {
+          user: json.user,
+          permissions: json.permissions
+        }
+        console.log('Authorized: Hello', json.user.name)
       }
     }
+  },
+  async created() {
+    document.addEventListener('swUpdated', this.updateAvailable, { once: true })
+    document.addEventListener('swUpdating', () => this.updating = true, { once: true })
+    await this.getAuth()
 
     if(window.location.hash) {
-      const hash = window.location.hash.substring(1)
-      if(this.$options.TABS[hash]) {
-        this.setTab(hash)
+      let tab = window.location.hash.substring(1)
+      if(this.tabs[tab]) {
+        this.setTab(tab)
       }
     }else{
       window.location.hash = '#overview'

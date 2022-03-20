@@ -1,0 +1,25 @@
+{
+    "compilerOptions": {
+        "module": "esnext",
+        "esModuleInterop": true,
+        "allowSyntheticDefaultImports": true,
+        "target": "esnext",
+        "noImplicitAny": false,
+        "moduleResolution": "node",
+        "inlineSourceMap": true,
+        "outDir": "dist",
+        "allowJs": true,
+        "paths": {
+            "*": [
+                "node_modules/*",
+                "src/*"
+            ]
+        },
+        "baseUrl": "./src",
+        "types": ["node"],
+        "incremental": true
+    },
+    "include": [
+        "src/**/*"
+, "../index.d.ts"    ]
+}

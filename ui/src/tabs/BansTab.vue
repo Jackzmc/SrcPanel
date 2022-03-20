@@ -1,6 +1,6 @@
 <template>
 <div>
-  <BanEditModal v-if="edit.banIndex !== null" :ban="edit.data" @edit="onEdit" :auth="auth" />
+  <BanEditModal v-if="edit.banIndex !== null" :ban="edit.data" @edit="onEdit" :userdata="userdata" />
   <div class="container is-fluid">
     <div class="columns">
       <div class="column">
@@ -8,20 +8,8 @@
         <p class="has-text-danger" v-if="ban_error">{{ban_error}}</p>
       </div>
       <div class="column is-2">
-        <!-- <LoginButton v-if="auth.state == 0" /> -->
-
-        <div class="field has-addons" v-if="auth.state != 2">
-          <div class="control">
-            <input class="input is-small" type="password" placeholder="Enter a password" v-model="auth.password" @keyup.enter="login()">
-          </div>
-          <div class="control">
-            <a class="button is-info is-small" @click="login()">
-              Login
-            </a>
-          </div>
-        </div>
-        <p class="has-text-success" v-else-if="auth.state == 2">Authorized</p>
-        <p class="has-text-danger" v-if="auth.state == 1">Wrong password</p>
+        <p v-if="userdata" class="has-text-success">Hello {{userdata.user.name}}</p>
+        <LoginButton v-else />
       </div>
       <div class="column is-2">
         <label class="checkbox">
@@ -39,36 +27,36 @@
       <thead>
         <th style="width:0">Player</th>
         <th>Executor</th>
-        <th v-if="auth.state == 2">Reason</th>
+        <th v-if="userdata">Reason</th>
         <th>Public Reason</th>
         <th>Flags</th>
         <th>Expires</th>
         <th>Attempts</th>
         <th>Date</th>
-        <th v-if="auth.state == 1">Action</th>
+        <th v-if="userdata">Action</th>
       </thead>
       <tbody>
-        <tr v-for="(ban, i) in filteredBans" :key="ban.steamid" :class="{'has-text-grey-light': ban.expired}">
+        <tr v-for="(ban, i) in filteredBans" :key="ban.id" :class="{'has-text-grey-light': ban.expired}">
           <td>
-            <b v-if="ban.last_alias">{{ban.last_alias}}<br></b>
-            <em class='has-text-info'>{{ban.steamid}}</em>
+            <b v-if="ban.client.name">{{ban.client.name}}<br></b>
+            <em class='has-text-info'>{{ban.client.id}}</em>
           </td>
           <td>
             <template>
-              <b v-if="ban.adminName">{{ban.adminName}} </b>
+              <b v-if="ban.executor.name">{{ban.executor.name}} </b>
               <template v-else>
-                <em v-if="ban.isAdminPlayer" class='has-text-info'>{{ban.executor}}</em>
-                <em v-else>{{ban.executor}}</em>
+                <em v-if="ban.executor.name" class='has-text-info'>{{ban.executor.name}}</em>
+                <em v-else>{{ban.executor.id}}</em>
               </template>
-              <p class='has-text-info' v-if="ban.source"><em>via {{ban.source}}</em></p>
+              <p class='has-text-info' v-if="ban.executor.source"><em>via {{ban.executor.source}}</em></p>
             </template>
 
           </td>
-          <td v-if="auth.state == 2">
+          <td v-if="userdata">
             {{ban.reason}}
           </td>
           <td>
-            {{ban.public_message}}
+            {{ban.pubicReason}}
           </td>
           <td>
             <div class="tags" v-html="getBanFlags(ban)"></div>
@@ -77,9 +65,9 @@
             <span v-if="ban.expired" class="has-text-danger">Expired</span>
             <span v-else>{{getRelDate(ban.expires) || 'Never'}}</span>
           </td>
-          <td>{{ban.times_tried}}</td>
+          <td>{{ban.joinAttempts}}</td>
           <td :data-tooltip="ban.timestamp">{{ban.relDate}}</td>
-          <td v-if="auth.state == 2">
+          <td v-if="userdata">
             <div class="buttons">
               <a class="button is-info is-small" @click='startEdit(ban, i)'>View</a>
             </div>
@@ -95,16 +83,14 @@
 
 <script>
 import Sugar from 'sugar'
-import auth from '@/mixins/auth.vue'
 import BanEditModal from '@/components/BanEditModal'
+import LoginButton from '@/components/LoginButton'
 
 const DISCORD_SOURCE_REGEX = new RegExp(/([^\n]+#\d{4})\s\((\d+)\)/)
 
-let adminNames = {}
-
 export default {
-  mixins: [auth],
-  components: { BanEditModal },
+  components: { BanEditModal, LoginButton },
+  props: ['userdata'],
   data() {
     return {
       loading: true,
@@ -124,7 +110,7 @@ export default {
     filteredBans() {
       return this.bans.filter(ban => {
         if(!this.showExpired && ban.expired) return false
-        if(this.showOnlyAppeals && ban.appeals == 0) return false
+        if(this.showOnlyAppeals && ban.appealsCount == 0) return false
         return true
       })
     }
@@ -141,28 +127,9 @@ export default {
       let str = ""
       if(ban.flags & 1) str += `<span class='tag' data-tooltip='Player is IP banned'>IP</span>`
       if(ban.flags & 2) str += `<span class='tag is-warning' data-tooltip='Ban is no longer in effect'>S</span>`
-      if(ban.appeals > 0) str += `<span class='tag is-success' data-tooltip="Has ban appeal(s)">A</span>`
-      if(ban.notes > 0) str += `<span class='tag is-dark' data-tooltip="Has note(s) attached">N</span>`
+      if(ban.appealsCount > 0) str += `<span class='tag is-success' data-tooltip="Has ban appeal(s)">A</span>`
+      if(ban.notesCount > 0) str += `<span class='tag is-dark' data-tooltip="Has note(s) attached">N</span>`
       return str
-    },
-    async getAdmins() {
-      for(let i = 0; i < this.bans.length; i++) {
-        const ban = this.bans[i]
-        if(!ban.executor || ban.source === "discord") continue;
-        ban.adminName = adminNames[ban.executor];
-        if(!ban.adminName && ban.executor.startsWith("STEAM_")) {
-          const response = await fetch(`https://jackz.me/l4d2/scripts/get_alias.php?steamid=${ban.executor}`)
-          if(response.ok) {
-            let bits = ban.executor.split(":")
-            bits = bits[bits.length - 1]
-            const res = await response.json()
-            if(res) {
-              adminNames[`STEAM_0:0:${bits}`] = adminNames[`STEAM_1:0:${bits}`] = adminNames[`STEAM_0:1:${bits}`] = res.last_alias
-              ban.adminName = res.last_alias
-            }
-          }
-        }
-      }
     },
     startEdit(ban, index) {
       this.edit.banIndex = index
@@ -186,7 +153,7 @@ export default {
     document.onkeyup = (e) => {
       this.shiftPressed = !!e.shiftKey
     }
-    fetch('https://jackz.me/l4d2/scripts/bans.php?mode=list')
+    fetch('/api/bans', { credentials: 'include' })
     .then(response => {
       if(response.ok)
         return response.json()
@@ -197,26 +164,20 @@ export default {
       if(result.error) {
         return this.ban_error = result.message || result.error
       }
-      this.bans = result.map(ban => {
+      this.bans = result.bans.map(ban => {
         const relDate = new Sugar.Date(ban.timestamp*1000).relative()
-        if(!ban.last_alias) {
-          console.warn(ban.steamid, 'does not have alias')
-        }
-        const discordBanMatch = ban.executor.match(DISCORD_SOURCE_REGEX)
+        const discordBanMatch = ban.executor.id.match(DISCORD_SOURCE_REGEX)
         if(discordBanMatch && discordBanMatch.length == 3) {
-          ban.executor = discordBanMatch[2]
-          ban.adminName = discordBanMatch[1]
-          ban.source = "discord"
+          ban.executor.id = discordBanMatch[2]
+          ban.executor.name = discordBanMatch[1]
+          ban.executor.source = "discord"
         }
-        if(ban.executor === "CONSOLE") ban.executor = '[Automatic]'
+        if(ban.executor.id === "CONSOLE") ban.executor.id = '[Automatic]'
         return {
           ...ban,
           relDate,
-          adminName: ban.adminName,
-          isAdminPlayer: ban.executor.startsWith("STEAM_")
         }
       })
-      this.getAdmins()
     })
     .catch(err => {
         console.error('Could not fetch bans, network error.', err)
