@@ -10,6 +10,7 @@
     "dotenv": "^16.0.0",
     "express": "^4.17.3",
     "express-mysql-session": "^2.1.7",
+    "fast-geoip": "^1.1.64",
     "fastify": "^3.27.4",
     "fastify-cookie": "^5.6.0",
     "mysql2": "^2.3.3",

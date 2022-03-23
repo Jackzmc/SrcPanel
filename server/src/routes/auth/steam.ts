@@ -1,6 +1,7 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyReply, FastifyRequest } from 'fastify';
 import SteamID from 'steamid'
 import fetch from 'node-fetch'
+import FastGeoip from 'fast-geoip'
 
 const STEAM_WEB_APIKEY = process.env.STEAM_WEB_APIKEY
 
@@ -17,22 +18,16 @@ interface OpenIDQuery {
     'openid.signed': string,
     'openid.error'?: string
     'openid.sig': string,
-    'return_tab': string
+    'return_uri': string
 }
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
     fastify.get('/details', async(req, reply) => {
-        if(await fastify.authmngr.verify(req)) {
+        if(fastify.authmngr.verify(req, reply)) {
             return {
                 user: req.session.user,
                 permissions: req.session.permissions
             }
-        } else {
-            return reply.code(401).send({
-                error: 'UNAUTHORIZED',
-                message: 'No user is authenticated or apikey is invalid',
-                statusCode: 401
-            })
         }
     })
 
@@ -78,13 +73,16 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                                 avatarhash: details[0].avatarhash
                             }
 
+                            req.session.ip = req.ip
+                            req.session.countryName = (await FastGeoip.lookup(req.ip)).country
+
                             req.session.permissions = {
                                 immunityLevel: admin.immunity,
                             }
 
                             if(req.query['return_tab']) {
-                                if(process.env.NODE_ENV === "production") return reply.redirect(`https://jackz.me/l4d2/admin#${req.query['return_tab']}`)
-                                else return reply.redirect(`http://localhost:8080#${req.query['return_tab']}`)
+                                if(process.env.NODE_ENV === "production") return reply.redirect(`https://jackz.me/l4d2/admin${req.query['return_uri']}`)
+                                else return reply.redirect(`http://localhost:8080${req.query['return_uri']}`)
                             } else {
                                 return {
                                     user: req.session.user,

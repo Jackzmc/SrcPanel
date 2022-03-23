@@ -77,7 +77,7 @@ export default {
     }
   },
   created() {
-    fetch('./data/cvars.json')
+    fetch('../data/cvars.json')
     .then(response => response.json())
     .then(cvars => {
       for(let cvar of cvars) {

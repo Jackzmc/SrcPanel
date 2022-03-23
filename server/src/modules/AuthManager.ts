@@ -1,8 +1,19 @@
-import { Connection, Pool, RowDataPacket } from "mysql2/promise";
+import { Connection, Pool, RowDataPacket, OkPacket } from "mysql2/promise";
 import QuickLRU from 'quick-lru'
 import SteamID from 'steamid'
-import { FastifyRequest } from 'fastify';
+import { FastifyReply, FastifyRequest } from 'fastify';
 import ActivityLog from "./ActivityLog.js";
+
+interface AddAdmin {
+    id?: number,
+    authtype: "steam" | "name" | "ip",
+    identity: string,
+    flags?: string,
+    password?: string,
+    name: string,
+    immunity: number,
+    groupIds?: string[]
+}
 
 interface Admin {
     id?: number,
@@ -44,11 +55,15 @@ export default class AuthManager {
         this.fetchAdmins()
     }
 
+    getConnection() {
+        return this.connection
+    }
+
     get log() {
         return this.actLog
     }
 
-    async verify(req: FastifyRequest) {
+    async isAuthorized(req: FastifyRequest): Promise<boolean> {
         if(req.headers['x-apikey']) {
             const key = Array.isArray(req.headers['x-apikey']) ? req.headers['x-apikey'][0] : req.headers['x-apikey']
             const apikey = await this.getAPIKey(key)
@@ -56,11 +71,51 @@ export default class AuthManager {
         } else if(req.session.sessionId && req.session.permissions) {
             return true
         }
+
         return false
     }
 
-    public async addAdmin(admin: Admin) {
+    async verify(req: FastifyRequest, reply: FastifyReply): Promise<boolean> {
+        const authorized = await this.isAuthorized(req)
 
+        if(!authorized) {
+            reply.code(401).send({
+                error: 'UNAUTHORIZED',
+                message: 'No user is authenticated or apikey is invalid',
+                statusCode: 401
+            })
+        }
+    
+        return authorized
+    }
+
+    public async addAdmin(admin: AddAdmin, webPermissions?: number, webFlags?: number) {
+        const [ok] = await this.connection.execute<OkPacket>(
+            `INSERT INTO \`l4d2-admins\` (\`authtype\`, \`identity\`, \`password\`, \`flags\`, \`name\`, \`immunity\`) VALUES (:authtype, :identity, :password, :flags, :name, :immunity)`,
+            {
+                authtype: admin.authtype || "steam",
+                identity: admin.identity,
+                password: admin.password || "",
+                flags: admin.flags || "",
+                name: admin.name || "",
+                immunity: admin.immunity || 0,
+            }
+        )
+
+        if(webPermissions) {
+            await this.connection.execute(
+                "INSERT INTO dash_perms (steamid, permissions, flags) VALUES (:steamid, :permissions, :flags)",
+                {
+                    steamid: admin.identity,
+                    permissions: webPermissions,
+                    flags: webFlags || 0
+
+                }
+            )
+        }
+
+
+        return ok.insertId
     }
 
     public isAdmin(steamid: SteamID) {

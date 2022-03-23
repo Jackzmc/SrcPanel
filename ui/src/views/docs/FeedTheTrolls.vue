@@ -132,7 +132,7 @@ export default {
     }
   },
   created() {
-    fetch('./data/ftt.json')
+    fetch('../data/ftt.json')
     .then(response => response.json())
     .then(trolls => {
       console.log(trolls)

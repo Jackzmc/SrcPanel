@@ -18,8 +18,8 @@
               <td>
                 {{note.id}}
               </td>
-              <td><a :href="getStatURL(note.steamid)">{{note.user}}</a></td>
-              <td><a :href="getStatURL(note.markedBy)">{{note.executor}}</a></td>
+              <td><a :href="getStatURL(note.client.id)">{{note.client.name}}</a></td>
+              <td><a :href="getStatURL(note.markedBy.id)">{{note.markedBy.name}}</a></td>
               <td>{{note.content}}</td>
               <td>
                 <span v-if="note.banned">Banned</span>
@@ -40,8 +40,8 @@
           </thead>
           <tbody>
             <tr v-for="admin in admins" :key="admin.id">
-              <td><a :href="getStatURL(admin.id)">{{admin.id}}</a></td>
-              <td>{{admin.note}}</td>
+              <td><a :href="getStatURL(admin.steamid)">{{admin.steamid}}</a></td>
+              <td>{{admin.name || admin.comment}}</td>
             </tr>
           </tbody>
         </table>
@@ -64,17 +64,17 @@ export default {
   },
   methods: {
     fetchNotes() {
-      fetch('https://jackz.me/l4d2/scripts/notes.php')
+      fetch('/api/notes')
         .then(response => response.json())
-        .then(notes => {
-          this.notes = notes.result
+        .then(result => {
+          this.notes = result.notes
         })
     },
     fetchAdmins() {
-      fetch('https://api.lgs.jackz.me/internal/get-admins.php')
+      fetch('/api/admins')
         .then(response => response.json())
         .then(json => {
-          this.admins = json.sort((a,b) => b.immunity - a.immunity)
+          this.admins = json.admins
         })
     },
     getStatURL(steamid) {

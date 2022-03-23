@@ -17,7 +17,7 @@ export default {
   },
   computed: {
     redirectUri() {
-      return `http://localhost:8081/api/auth/steam/callback?return_tab=${window.location.hash.substr(1)}`
+      return `http://localhost:8081/api/auth/steam/callback?return_uri=${encodeURIComponent(this.$router.fullPath)}`
     },
     returnTab() {
       return window.location.hash

@@ -69,7 +69,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         },
         async handler(req: FastifyRequest<{ Params: { id: string }}>, reply) {
             const id = req.params.id
-            const authorized = await fastify.authmngr.verify(req)
+            const authorized = await fastify.authmngr.isAuthorized(req)
 
             const fetchStart = Date.now()
 
@@ -157,7 +157,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     })
 
     fastify.get('/', async(req, reply): Promise<{ meta: Record<string, number>, bans: APIBan[] }> => {
-        const authorized = await fastify.authmngr.verify(req)
+        const authorized = await fastify.authmngr.isAuthorized(req)
 
         let profilerStart = Date.now()
         let meta: Record<string, number> = {}
@@ -202,7 +202,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 ban.client.name = ban.last_alias
                 ban.client.nameResolver = "stats"
             } else {
-                redisBuffer[i] = ban.steamid
+                redisBuffer[i.toString()] = `steamname.${ban.steamid}`
             }
 
             ban.executor = {

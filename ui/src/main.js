@@ -2,6 +2,7 @@ import Vue from 'vue'
 import App from './App.vue'
 import './registerServiceWorker'
 import VueSkeletonLoader from 'skeleton-loader-vue';
+import router from './router'
 
 Vue.component('vue-skeleton-loader', VueSkeletonLoader);
 
@@ -25,5 +26,6 @@ Vue.prototype.$GRAPH_KEY = process.env.VUE_APP_GRAPH_KEY
 Vue.prototype.$API_URL = process.env.VUE_APP_API_URL
 
 new Vue({
+  router,
   render: h => h(App),
 }).$mount('#app')

@@ -1,11 +1,74 @@
 <template>
-  <nav class="navbar" role="navigation" aria-label="main navigation">
+  <nav class="navbar is-info is-fixed-top" role="navigation" aria-label="main navigation">
     <div class="navbar-menu">
-      <div class="navbar-end">
+      <div class="navbar-start">
+        <router-link to='/' class="navbar-item" tag="a">
+          Overview
+        </router-link>
         <div class="navbar-item has-dropdown is-hoverable " >
           <a class="navbar-link">
-            <img :src="avatarurl" />
-            {{userdata.user.name}}
+            Documentation
+          </a>
+          <div class="navbar-dropdown is-left">
+            <router-link to="/docs/commands" class="navbar-item">
+              Commands
+            </router-link>
+            <router-link to="/docs/cvars" class="navbar-item">
+              Cvars
+            </router-link>
+            <hr class="navbar-divider">
+            <router-link to="/docs/ftt" class="navbar-item">
+              Feed The Trolls
+            </router-link>
+            <router-link to="/docs/targetting" class="navbar-item">
+              Player Targetting
+            </router-link>
+            <router-link to="/docs/extraplayers" class="navbar-item">
+              5+ Player
+            </router-link>
+            <router-link to="/docs/plugins" class="navbar-item">
+              Plugin Development Info
+            </router-link>
+          </div>
+        </div>
+        <div class="navbar-item has-dropdown is-hoverable" v-if="userdata">
+          <a class="navbar-link">
+            Administration
+          </a>
+          <div class="navbar-dropdown is-left">
+            <router-link to="/admin/addons" class="navbar-item">
+              Maps / Addons
+            </router-link>
+            <router-link to="/admin/servers" class="navbar-item">
+              Server Management
+            </router-link>
+            <router-link to="/admin/logs" class="navbar-item">
+              Audit & Activity Log
+            </router-link>
+            <router-link to="/admin/players" class="navbar-item">
+              Player Management
+            </router-link>
+            <hr class="navbar-divider">
+            <div class="navbar-item">
+              <a href="/api/admins/discord" class="button" style="background-color: #5865F2; color: white">Join the Discord</a>
+            </div>
+          </div>
+        </div>
+        <router-link to="/bans" class="navbar-item">
+          Bans
+        </router-link>
+        <router-link to="/info" class="navbar-item">
+          Info
+        </router-link>
+        <router-link to="/graphs" class="navbar-item">
+          Graphs
+        </router-link>
+      </div>
+      <div class="navbar-end">
+        <div v-if="userdata" class="navbar-item has-dropdown is-hoverable " >
+          <a class="navbar-link">
+            <img class="mx-2" :src="avatarurl" />
+            <span>{{userdata.user.name}}</span>
           </a>
           <div class="navbar-dropdown is-right">
             <div class="navbar-item">
@@ -17,16 +80,23 @@
             </a>
           </div>
         </div>
+        <div class="navbar-item" v-else>
+          <LoginButton />
+        </div>
       </div>
     </div>
   </nav>
 </template>
 
 <script>
+import LoginButton from '@/components/LoginButton'
+
 export default {
   props: ['userdata'],
+  components: { LoginButton },
   computed: {
     avatarurl() {
+      if(!this.userdata) return ''
       return `https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/79/${this.userdata.user.avatarhash}.jpg`
     }
   }

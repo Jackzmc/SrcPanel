@@ -30,7 +30,7 @@ export default {
     }
   },
   created() {
-    fetch('./data/plugins.md?timestamp=' + this.$LAST_UPDATED)
+    fetch('../data/plugins.md?timestamp=' + this.$LAST_UPDATED)
     .then(response => {
       if(response.ok)
         return response.text()

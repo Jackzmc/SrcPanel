@@ -42,6 +42,8 @@ declare module 'fastify' {
         permissions: {
             immunityLevel: number
         },
+        ip: string
+        countryName: string
     }
 }
 
@@ -87,9 +89,11 @@ app.register(import('./middlewares/database.js'))
     app.register(import('./routes/auth/steam.js'), { prefix: '/api/auth/steam' })
     app.register(import('./routes/unprivileged/bans.js'), { prefix: '/api/bans' })
     app.register(import('./routes/unprivileged/notes.js'), { prefix: '/api/notes' })
+    app.register(import('./routes/unprivileged/admins.js'), { prefix: '/api/admins' })
     app.register(import('./routes/privileged/bans.js'), { prefix: '/api/admin/bans/' })
     app.register(import('./routes/privileged/notes.js'), { prefix: '/api/notes/' })
     app.register(import('./routes/privileged/logs.js'), { prefix: '/api/logs/' })
+    app.register(import('./routes/privileged/admins.js'), { prefix: '/api/admins/' })
 
     const start = async () => {
         try {

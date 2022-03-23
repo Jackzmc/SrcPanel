@@ -121,7 +121,7 @@ export default {
     }
   },
   created() {
-    fetch('./data/commands.json')
+    fetch('../data/commands.json')
     .then(response => response.json())
     .then(groups => {
       for(const group in groups) {

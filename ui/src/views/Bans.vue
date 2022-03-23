@@ -4,12 +4,8 @@
   <div class="container is-fluid">
     <div class="columns">
       <div class="column">
-        <p class="subtitle is-4">Viewing {{filteredBans.length}} total bans</p>
+        <p class="subtitle is-4">Viewing {{filteredBans.length}} bans</p>
         <p class="has-text-danger" v-if="ban_error">{{ban_error}}</p>
-      </div>
-      <div class="column is-2">
-        <p v-if="userdata" class="has-text-success">Hello {{userdata.user.name}}</p>
-        <LoginButton v-else />
       </div>
       <div class="column is-2">
         <label class="checkbox">
@@ -43,7 +39,7 @@
           </td>
           <td>
             <template>
-              <b v-if="ban.executor.name">{{ban.executor.name}} </b>
+              <b v-if="ban.executor.name" :data-tooltip="ban.executor.id">{{ban.executor.name}} </b>
               <template v-else>
                 <em v-if="ban.executor.name" class='has-text-info'>{{ban.executor.name}}</em>
                 <em v-else>{{ban.executor.id}}</em>
@@ -66,7 +62,7 @@
             <span v-else>{{getRelDate(ban.expires) || 'Never'}}</span>
           </td>
           <td>{{ban.joinAttempts}}</td>
-          <td :data-tooltip="ban.timestamp">{{ban.relDate}}</td>
+          <td :data-tooltip="formatDate(ban.timestamp)">{{ban.relDate}}</td>
           <td v-if="userdata">
             <div class="buttons">
               <a class="button is-info is-small" @click='startEdit(ban, i)'>View</a>
@@ -84,12 +80,12 @@
 <script>
 import Sugar from 'sugar'
 import BanEditModal from '@/components/BanEditModal'
-import LoginButton from '@/components/LoginButton'
 
 const DISCORD_SOURCE_REGEX = new RegExp(/([^\n]+#\d{4})\s\((\d+)\)/)
+const AUTO_REFRESH_INTERVAL = 1000 * 60 * 15
 
 export default {
-  components: { BanEditModal, LoginButton },
+  components: { BanEditModal },
   props: ['userdata'],
   data() {
     return {
@@ -144,6 +140,42 @@ export default {
 
       return day_diff == 0 && (
       diff < 60 && "just now" || diff < 120 && "1 minute ago" || diff < 3600 && Math.floor(diff / 60) + " minutes ago" || diff < 7200 && "1 hour ago" || diff < 86400 && Math.floor(diff / 3600) + " hours ago") || day_diff == 1 && "Yesterday" || day_diff < 7 && day_diff + " days ago" || day_diff < 31 && Math.ceil(day_diff / 7) + " weeks ago";
+    },
+    formatDate(timestamp) {
+      const date = new Date(timestamp * 1000)
+      return `${date.toLocaleDateString()} at ${date.toLocaleTimeString()}`
+    },
+    fetchBans() {
+      fetch('/api/bans', { credentials: 'include' })
+        .then(response => {
+          if(response.ok)
+            return response.json()
+          else
+            this.error = response.statusText
+        })
+        .then(result => {
+          if(result.error) {
+            return this.ban_error = result.message || result.error
+          }
+          this.bans = result.bans.map(ban => {
+            const relDate = new Sugar.Date(ban.timestamp*1000).relative()
+            const discordBanMatch = ban.executor.id.match(DISCORD_SOURCE_REGEX)
+            if(discordBanMatch && discordBanMatch.length == 3) {
+              ban.executor.id = discordBanMatch[2]
+              ban.executor.name = discordBanMatch[1]
+              ban.executor.source = "discord"
+            }
+            if(ban.executor.id === "CONSOLE") ban.executor.id = '[Automatic]'
+            return {
+              ...ban,
+              relDate,
+            }
+          })
+        })
+        .catch(err => {
+            console.error('Could not fetch bans, network error.', err)
+        })
+        .finally(() => this.loading = false)
     }
   },
   created() {
@@ -153,36 +185,12 @@ export default {
     document.onkeyup = (e) => {
       this.shiftPressed = !!e.shiftKey
     }
-    fetch('/api/bans', { credentials: 'include' })
-    .then(response => {
-      if(response.ok)
-        return response.json()
-      else
-        this.error = response.statusText
-    })
-    .then(result => {
-      if(result.error) {
-        return this.ban_error = result.message || result.error
-      }
-      this.bans = result.bans.map(ban => {
-        const relDate = new Sugar.Date(ban.timestamp*1000).relative()
-        const discordBanMatch = ban.executor.id.match(DISCORD_SOURCE_REGEX)
-        if(discordBanMatch && discordBanMatch.length == 3) {
-          ban.executor.id = discordBanMatch[2]
-          ban.executor.name = discordBanMatch[1]
-          ban.executor.source = "discord"
-        }
-        if(ban.executor.id === "CONSOLE") ban.executor.id = '[Automatic]'
-        return {
-          ...ban,
-          relDate,
-        }
-      })
-    })
-    .catch(err => {
-        console.error('Could not fetch bans, network error.', err)
-    })
-    .finally(() => this.loading = false)
+
+    this.fetchBans()
+    setInterval(() => {
+      this.fetchBans()
+    }, AUTO_REFRESH_INTERVAL)
+
   }
 }
 

@@ -13,12 +13,7 @@ type PUTNotesType = Static<typeof PUTNotes>;
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
     fastify.addHook('preHandler', async(req, reply) => {
-        if(!fastify.authmngr.verify(req)) 
-            return reply.code(401).send({
-                error: 'UNAUTHORIZED',
-                message: 'No user is authenticated or apikey is invalid',
-                statusCode: 401
-            })
+        await fastify.authmngr.verify(req, reply)
     })
     
     fastify.route({
