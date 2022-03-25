@@ -34,11 +34,6 @@ const TROLL_REGEX = new RegExp(/[^de]activated (constant\s)?troll "([a-zA-Z\s]+)
 const COUNT_REGEX = new RegExp(/\((\d+)x\)$/)
 
 export default {
-  data() {
-    return {
-
-    }
-  },
   computed: {
   },
   async created() {
@@ -52,9 +47,7 @@ export default {
   },
   methods: {
     async fetchTrolls() {
-      const response = await fetch('https://api.lgs.jackz.me/get-activity.php?all=1&types=ACTION&search_message=activated%20troll&ts-only', {
-        headers: { 'X-APIKEY': this.$GRAPH_KEY }
-      })
+      const response = await fetch('/api/graph?types=ACTION&search_message=activated%20troll&timestampOnly=1')
       const json = await response.json()
       let data = {}
       for(const entry of json.logs) {
@@ -120,9 +113,7 @@ export default {
       });
     },
     async fetchSlaps() {
-      const response = await fetch('https://api.lgs.jackz.me/get-activity.php?all=1&types=ACTION&search_message= slapped ', {
-        headers: { 'X-APIKEY': this.$GRAPH_KEY }
-      })
+      const response = await fetch('/api/graph?types=ACTION&search_message= slapped ')
       const json = await response.json()
       let data = {}
       for(const entry of json.logs) {
@@ -175,9 +166,7 @@ export default {
       });
     },
     async fetchStates() {
-      const response = await fetch('https://api.lgs.jackz.me/get-activity.php?all&types=STATE&ts-only', {
-        headers: { 'X-APIKEY': this.$GRAPH_KEY }
-      })
+      const response = await fetch('/api/graph&types=STATE&timestampOnly=1')
       const json = await response.json()
       const incaps = {}
       const deaths = {}
@@ -334,10 +323,8 @@ export default {
       });
     },
     async fetchBanStat() {
-      const response = await fetch('https://jackz.me/l4d2/scripts/bans.php?mode=stats')
+      const response = await fetch('/api/bans/stats')
       const json = await response.json()
-      this.bans = json.bans
-      this.tkers = json.tkers
       new Chart('bangraph', {
         chart: {
           zoomType: "x"

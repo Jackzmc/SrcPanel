@@ -99,6 +99,7 @@ app.register(import('./middlewares/database.js'))
     app.register(import('./routes/unprivileged/bans.js'), { prefix: '/api/bans' })
     app.register(import('./routes/unprivileged/notes.js'), { prefix: '/api/notes' })
     app.register(import('./routes/unprivileged/admins.js'), { prefix: '/api/admins' })
+    app.register(import('./routes/unprivileged/index.js'), { prefix: '/api/' })
 
     const start = async () => {
         try {
