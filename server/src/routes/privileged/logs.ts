@@ -23,7 +23,7 @@ const LogQuery = Type.Object({
 
 type LogQueryType = Static<typeof LogQuery>
 
-const ACTIVITY_LOG_TABLE_NAME = 'activity_log'
+export const ACTIVITY_LOG_TABLE_NAME = 'activity_log'
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
     fastify.get('/:page?', async(req: FastifyRequest<{ Querystring: LogQueryType, Params: { page?: number } }>, reply) => {
@@ -128,6 +128,6 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     })
 }
 
-function generateParams(length: number) {
+export function generateParams(length: number) {
     return Array(length).fill(`?`).join(",")
 }
