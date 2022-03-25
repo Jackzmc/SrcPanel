@@ -17,8 +17,10 @@ interface AddAdmin {
 
 export interface AdminPermissions {
     immunityLevel: number
-    webPermissions: number,
-    webFlags: number
+    web: {
+        role: number,
+        flags: number
+    }
 }
 
 interface Admin {
@@ -49,11 +51,14 @@ interface APIKey {
     lastUsed: number
 }
 
-export enum WebPermission {
+export enum WebRole {
     None = 0,
-    ReadOnly = 1 << 0,
-    ReadWrite = 1 << 1,
-    Admin = 1 << 2,
+    ReadOnly = 1,
+    ReadWrite = 2,
+    Admin = 3,
+}
+
+export enum WebPermission {
     RconAccess = 1 << 3
 }
 
@@ -105,6 +110,8 @@ export default class AuthManager {
     }
 
     public async addAdmin(admin: AddAdmin, webPermissions?: number, webFlags?: number) {
+        // TODO: Add group support
+
         const [ok] = await this.connection.execute<OkPacket>(
             `INSERT INTO \`l4d2-admins\` (\`authtype\`, \`identity\`, \`password\`, \`flags\`, \`name\`, \`immunity\`) VALUES (:authtype, :identity, :password, :flags, :name, :immunity)`,
             {
@@ -127,6 +134,20 @@ export default class AuthManager {
 
                 }
             )
+        }
+
+        this.admins[admin.identity] = {
+            password: "",
+            authtype: admin.authtype || "steam",
+            ...admin,
+            permissions: {
+                immunityLevel: admin.immunity,
+                web: {
+                    role: webPermissions || 0,
+                    flags: webFlags || 0
+                }
+            },
+            groups: []
         }
 
 
@@ -161,12 +182,14 @@ export default class AuthManager {
     public async fetchAdmins() { 
         const admins: Record<string, Admin> = {}, groups: Record<number, Group> = {}
         const [rows] = await this.connection.execute(`
-            SELECT sm_admins.*, sag.group_id as sg_id, sg.name as sg_name, sg.immunity_level as sg_immunity, sg.flags as sg_flags, dash.flags as web_flags, dash.permissions as web_permissions
+            SELECT sm_admins.*, sag.group_id as sg_id, sg.name as sg_name, sg.immunity_level as sg_immunity, sg.flags as sg_flags, 
+            dash.flags as web_flags, dash.role as web_role
             FROM sm_admins
             LEFT JOIN sm_admins_groups sag on sm_admins.id = sag.admin_id
             LEFT JOIN sm_groups sg on sg.id = sag.group_id
             LEFT JOIN dash_perms AS dash on dash.steamid = sm_admins.identity`
         )
+
 
         for(const row of rows as RowDataPacket[]) {
             if(!groups[row.sg_id]) {
@@ -189,8 +212,10 @@ export default class AuthManager {
                     name: row.name,
                     permissions: {
                         immunityLevel: row.immunity,
-                        webFlags: row.dash_flags || 0,
-                        webPermissions: row.dash_permissions || 0
+                        web: {
+                            role: row.web_role || 0,
+                            flags: row.web_flags || 0
+                        }
                     },
                     groups: [groups[row.sg_id]]
                 }

@@ -1,5 +1,8 @@
 <template>
 <div class="container">
+  <div class="title is-4 has-text-danger box">
+    <strong>Notice: </strong> Server control is currently not available at this time.
+  </div>
   <div class="columns">
     <div class="column is-8">
       <p :class='message.type' v-if="message" v-html="message.content"></p>
@@ -86,7 +89,7 @@ export default {
         }, 1000 * 30)
       }
       fetch(`https://api.lgs.jackz.me/internal/call-rcon.php?method=${type}&port=${server.meta.port}&key=${this.$SCRIPT_KEY}`, {
-        headers: {'X-APIKEY': ''}, credentials: 'include'
+        credentials: 'include'
       })
       .then(async(response) => {
         if(response.ok ) {
