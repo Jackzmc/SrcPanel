@@ -12,6 +12,7 @@ dotenv.config()
 const MySQLStore = MySQLSession(FastifySession)
 
 const app = Fastify({
+    trustProxy: process.env.NODE_ENV === "production",
     logger: {
         prettyPrint:
             process.env.NODE_ENV !== 'production'

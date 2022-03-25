@@ -77,8 +77,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                             req.session.permissions = admin.permissions
 
                             if(req.query.return_uri) {
-                                if(process.env.NODE_ENV === "production") return reply.redirect(`https://jackz.me/l4d2/admin${req.query.return_uri}`)
-                                else return reply.redirect(`http://localhost:8080${req.query.return_uri}`)
+                                const redirectUri = process.env.STEAM_REDIRECT_URI || "http://localhost:8080"
+                                reply.redirect(`${redirectUri}${req.query.return_uri}`)
                             } else {
                                 return {
                                     user: req.session.user,
