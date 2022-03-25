@@ -6,7 +6,7 @@ import { Pool } from 'mysql2/promise';
 import dotenv from 'dotenv'
 import { RedisClientType } from '@node-redis/client';
 import SteamAPI from './modules/steam.js'
-import AuthManager from './modules/AuthManager';
+import AuthManager, { AdminPermissions } from './modules/AuthManager';
 dotenv.config()
 
 const MySQLStore = MySQLSession(FastifySession)
@@ -26,25 +26,25 @@ const app = Fastify({
 })
 
 declare module 'fastify' {
-    export interface FastifyInstance {
-        db: Pool;
-        cache: RedisClientType,
-        steam: SteamAPI,
-        authmngr: AuthManager
-    }
-    interface Session {
-        user: {
-            steamid: string,
-            name:  string,
-            profileurl: string,
-            avatarhash: string,
-        },
-        permissions: {
-            immunityLevel: number
-        },
-        ip: string
-        countryName: string
-    }
+  export interface FastifyInstance {
+    db: Pool;
+    cache: RedisClientType,
+    steam: SteamAPI,
+    authmngr: AuthManager
+  }
+  interface Session {
+    user: {
+      steamid: string,
+      accountid: string,
+      name:  string,
+      profileurl: string,
+      avatarhash: string,
+    },
+    permissions: AdminPermissions
+    ip: string,
+    loginTime: number,
+    countryCode: string
+  }
 }
 
 app.register(import('./middlewares/database.js'))
@@ -55,10 +55,11 @@ app.register(import('./middlewares/database.js'))
         cookieName: 'srcds-sessid',
         cookie: { secure: process.env.NODE_ENV === "production" },
         store: new MySQLStore({
-            schema: {
-                tableName: 'dash_sessions',
-            }
-        }, app.db)
+          schema: {
+              tableName: 'dash_sessions',
+          }
+        }, app.db),
+        saveUninitialized: false
     })
     
 
@@ -86,14 +87,18 @@ app.register(import('./middlewares/database.js'))
 
     app.register(import('./middlewares/redisCache.js'))
     app.register(import('./middlewares/steam.js'))
+
+    app.register(import('./routes/auth/index.js'), { prefix: '/api/auth' })
     app.register(import('./routes/auth/steam.js'), { prefix: '/api/auth/steam' })
-    app.register(import('./routes/unprivileged/bans.js'), { prefix: '/api/bans' })
-    app.register(import('./routes/unprivileged/notes.js'), { prefix: '/api/notes' })
-    app.register(import('./routes/unprivileged/admins.js'), { prefix: '/api/admins' })
+        
     app.register(import('./routes/privileged/bans.js'), { prefix: '/api/admin/bans/' })
     app.register(import('./routes/privileged/notes.js'), { prefix: '/api/notes/' })
     app.register(import('./routes/privileged/logs.js'), { prefix: '/api/logs/' })
     app.register(import('./routes/privileged/admins.js'), { prefix: '/api/admins/' })
+
+    app.register(import('./routes/unprivileged/bans.js'), { prefix: '/api/bans' })
+    app.register(import('./routes/unprivileged/notes.js'), { prefix: '/api/notes' })
+    app.register(import('./routes/unprivileged/admins.js'), { prefix: '/api/admins' })
 
     const start = async () => {
         try {

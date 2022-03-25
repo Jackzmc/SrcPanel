@@ -15,6 +15,12 @@ interface AddAdmin {
     groupIds?: string[]
 }
 
+export interface AdminPermissions {
+    immunityLevel: number
+    webPermissions: number,
+    webFlags: number
+}
+
 interface Admin {
     id?: number,
     authtype: "steam" | "name" | "ip",
@@ -22,7 +28,8 @@ interface Admin {
     password: string | null,
     flags?: string,
     name: string,
-    immunity: number,
+
+    permissions: AdminPermissions
 
     groups: Group[]
 }
@@ -40,6 +47,14 @@ interface APIKey {
     perms: number,
     created: number,
     lastUsed: number
+}
+
+export enum WebPermission {
+    None = 0,
+    ReadOnly = 1 << 0,
+    ReadWrite = 1 << 1,
+    Admin = 1 << 2,
+    RconAccess = 1 << 3
 }
 
 export default class AuthManager {
@@ -146,9 +161,11 @@ export default class AuthManager {
     public async fetchAdmins() { 
         const admins: Record<string, Admin> = {}, groups: Record<number, Group> = {}
         const [rows] = await this.connection.execute(`
-            SELECT sm_admins.*, sag.group_id as sg_id, sg.name as sg_name, sg.immunity_level as sg_immunity, sg.flags as sg_flags FROM sm_admins
+            SELECT sm_admins.*, sag.group_id as sg_id, sg.name as sg_name, sg.immunity_level as sg_immunity, sg.flags as sg_flags, dash.flags as web_flags, dash.permissions as web_permissions
+            FROM sm_admins
             LEFT JOIN sm_admins_groups sag on sm_admins.id = sag.admin_id
-            LEFT JOIN sm_groups sg on sg.id = sag.group_id`
+            LEFT JOIN sm_groups sg on sg.id = sag.group_id
+            LEFT JOIN dash_perms AS dash on dash.steamid = sm_admins.identity`
         )
 
         for(const row of rows as RowDataPacket[]) {
@@ -170,7 +187,11 @@ export default class AuthManager {
                     password: row.password,
                     flags: row.flags,
                     name: row.name,
-                    immunity: row.immunity,
+                    permissions: {
+                        immunityLevel: row.immunity,
+                        webFlags: row.dash_flags || 0,
+                        webPermissions: row.dash_permissions || 0
+                    },
                     groups: [groups[row.sg_id]]
                 }
             } else { 

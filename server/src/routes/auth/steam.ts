@@ -21,16 +21,8 @@ interface OpenIDQuery {
     'return_uri': string
 }
 
-export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
-    fastify.get('/details', async(req, reply) => {
-        if(fastify.authmngr.verify(req, reply)) {
-            return {
-                user: req.session.user,
-                permissions: req.session.permissions
-            }
-        }
-    })
 
+export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
     fastify.route({
         url: '/callback', 
         method: 'GET',
@@ -56,7 +48,11 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                     message: req.query['openid.error']
                 }
             }
-            const validateRes = await fetch(`https://steamcommunity.com/openid/login?openid.mode=check_authentication&openid.claimed_id=${req.query['openid.claimed_id']}&openid.identity=${req.query['openid.identity']}&openid.return_to=${req.query['openid.return_to']}&openid.response_nonce=${req.query['openid.response_nonce']}&openid.assoc_handle=${req.query['openid.assoc_handle']}&openid.signed=${req.query['openid.signed']}&openid.sig=${req.query['openid.sig']}&openid.ns=${req.query['openid.ns']}&openid.op_endpoint=${req.query['openid.op_endpoint']}`)
+
+            const params = new URLSearchParams({...req.query})
+            params.set('openid.mode', 'check_authentication')
+            
+            const validateRes = await fetch(`https://steamcommunity.com/openid/login?${params.toString()}`)
             if(validateRes.ok) {
                 const text = await validateRes.text()
                 if(text.includes('is_valid:true')) {
@@ -68,21 +64,21 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                         if(admin) {
                             req.session.user = {
                                 steamid: steamid.getSteam2RenderedID(),
+                                accountid: steamid.accountid.toString(),
                                 name: details[0].personaname,
                                 profileurl: details[0].profileurl,
                                 avatarhash: details[0].avatarhash
                             }
 
                             req.session.ip = req.ip
-                            req.session.countryName = (await FastGeoip.lookup(req.ip)).country
+                            req.session.countryCode = (await FastGeoip.lookup(req.ip)).country
+                            req.session.loginTime = Date.now()
 
-                            req.session.permissions = {
-                                immunityLevel: admin.immunity,
-                            }
+                            req.session.permissions = admin.permissions
 
-                            if(req.query['return_tab']) {
-                                if(process.env.NODE_ENV === "production") return reply.redirect(`https://jackz.me/l4d2/admin${req.query['return_uri']}`)
-                                else return reply.redirect(`http://localhost:8080${req.query['return_uri']}`)
+                            if(req.query.return_uri) {
+                                if(process.env.NODE_ENV === "production") return reply.redirect(`https://jackz.me/l4d2/admin${req.query.return_uri}`)
+                                else return reply.redirect(`http://localhost:8080${req.query.return_uri}`)
                             } else {
                                 return {
                                     user: req.session.user,
@@ -106,7 +102,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
             return reply.code(401).send({
                 error: 'Unauthorized',
-                message: 'Could not validate user'
+                message: 'Could not validate user',
+                debug: req.query
             })
         }
     })
