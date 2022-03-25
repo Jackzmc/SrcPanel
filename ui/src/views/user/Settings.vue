@@ -26,8 +26,8 @@
           <td>{{session.ip}}</td>
           <td>{{formatTime(session.lastLogin)}}</td>
           <td>
-            <button v-if="currentId != session.id"  class="button is-danger" @click="revokeSession(session.id, i)">Revoke</button>
-            <b>Current Session</b>
+            <b v-if="currentId == session.id">Current Session</b>
+            <button v-else class="button is-danger" @click="revokeSession(session.id, i)">Revoke</button>
           </td>
         </tr>
       </tbody>
