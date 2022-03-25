@@ -67,7 +67,8 @@ export default {
       }
     },
     formatTime(s) {
-      const d = new Date(s*1000)
+      const d = new Date(s)
+      console.log(d, s)
       return d.toLocaleString()
     },
     formatCountry(code) {

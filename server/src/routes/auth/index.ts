@@ -71,7 +71,16 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             [req.session.user.accountid]
         )
 
-        return { sessions, currentSessionId: req.session.sessionId }
+
+        return { 
+            sessions: sessions.map(session => { 
+                return {
+                    ...session, 
+                    lastLogin: Number(session.lastLogin)
+                }
+            }), 
+            currentSessionId: req.session.sessionId 
+        }
     })
 
     fastify.get('/logout', (req, reply) => {
