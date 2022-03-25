@@ -74,6 +74,9 @@ export default {
     formatParameters,
     getParameters(cvar) {
       return cvar.split(' ').slice(1).join("")
+    },
+    showExamples(cmd) {
+     this.selected = cmd
     }
   },
   created() {
