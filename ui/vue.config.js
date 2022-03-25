@@ -4,6 +4,7 @@ process.env.VUE_APP_BUILD_DATE = `${date.toLocaleDateString()} at ${date.toLocal
 module.exports = {
   publicPath: process.env.NODE_ENV === 'production' ? '/l4d2/admin' : '/',
   devServer: {
+    disableHostCheck: true,
     proxy: {
       '^/api': {
         target: process.env.VUE_APP_API_URL,

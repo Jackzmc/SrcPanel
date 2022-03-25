@@ -79,7 +79,7 @@
 
 <script>
 import Sugar from 'sugar'
-import BanEditModal from '@/components/BanEditModal'
+import BanEditModal from '@/components/modals/BanEditModal'
 
 const DISCORD_SOURCE_REGEX = new RegExp(/([^\n]+#\d{4})\s\((\d+)\)/)
 const AUTO_REFRESH_INTERVAL = 1000 * 60 * 15

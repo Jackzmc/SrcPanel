@@ -67,7 +67,8 @@ const routes = [
     path: '/bans',
     component: () => import(/* webpackChunkName: 'bans' */ '../views/Bans.vue'),
     meta: {
-      title: 'Bans'
+      title: 'Bans',
+      hideHero: true,
     }
   },
   {
@@ -91,15 +92,17 @@ const routes = [
     component: () => import(/* webpackChunkName: 'maps' */ '../views/admin/ServerAddons.vue'),
     meta: {
       title: 'Addons / Maps',
-      description: 'View all the installed custom maps (and some non-map addons)'
+      description: 'View all the installed custom maps (and some non-map addons)',
+      authRequired: true
     }
   },
   {
     path: '/admin/players',
-    // component: () => import(/* webpackChunkName: 'players' */ '../views/admin/Players.vue'),
+    component: () => import(/* webpackChunkName: 'players' */ '../views/admin/PlayerManager.vue'),
     meta: {
       title: 'Player Management',
-      description: 'View all players and manage them, all in one place'
+      description: 'View all players and manage them, all in one place',
+      authRequired: true
     }
   },
   {
@@ -107,7 +110,8 @@ const routes = [
     component: () => import(/* webpackChunkName: 'logs' */ '../views/admin/Logs.vue'),
     meta: {
       name: 'Audit & Activity Logs',
-      description: 'View all activity inside and outside the game'
+      description: 'View all activity inside and outside the game',
+      authRequired: true
     }
   },
   {
@@ -115,7 +119,17 @@ const routes = [
     component: () => import(/* webpackChunkName: 'servers' */ '../views/admin/ServerManagement.vue'),
     meta: {
       title: 'Server Management',
-      description: 'View all the servers and manage them, all in one place'
+      description: 'View all the servers and manage them, all in one place',
+      authRequired: true
+    }
+  },
+  {
+    path: '/user/settings',
+    component: () => import(/* webpackChunkName: 'sessions' */ '../views/user/Settings.vue'),
+    meta: {
+      title: 'Settings',
+      description: null,
+      authRequired: true
     }
   }
 ]

@@ -13,15 +13,10 @@
 
 <script>
 export default {
-  methods: {
-  },
   computed: {
     redirectUri() {
-      return `http://localhost:8081/api/auth/steam/callback?return_uri=${encodeURIComponent(this.$router.fullPath)}`
+      return `http://localhost:8081/api/auth/steam/callback?return_uri=${this.$route.fullPath}`
     },
-    returnTab() {
-      return window.location.hash
-    }
   }
 }
 </script>

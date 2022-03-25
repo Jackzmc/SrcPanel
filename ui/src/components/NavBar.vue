@@ -1,4 +1,5 @@
 <template>
+<div>
   <nav class="navbar is-info is-fixed-top" role="navigation" aria-label="main navigation">
     <div class="navbar-menu">
       <div class="navbar-start">
@@ -65,17 +66,21 @@
         </router-link>
       </div>
       <div class="navbar-end">
+        <div class="navbar-item">
+          <span v-if="updateInfo.updating">Updating...</span>
+          <span v-else :data-tooltip="updateTooltip" class="has-tooltip-bottom">Up-to-date</span>
+        </div>
         <div v-if="userdata" class="navbar-item has-dropdown is-hoverable " >
           <a class="navbar-link">
             <img class="mx-2" :src="avatarurl" />
             <span>{{userdata.user.name}}</span>
           </a>
           <div class="navbar-dropdown is-right">
-            <div class="navbar-item">
-              {{userdata.user.steamid}}
-            </div>
+            <router-link class="navbar-item" to="/user/settings">
+              Settings
+            </router-link>
             <hr class="navbar-divider">
-            <a class="navbar-item has-text-danger">
+            <a class="navbar-item has-text-danger" @click="logout">
               Logout
             </a>
           </div>
@@ -86,19 +91,34 @@
       </div>
     </div>
   </nav>
+</div>
 </template>
 
 <script>
 import LoginButton from '@/components/LoginButton'
 
 export default {
-  props: ['userdata'],
+  props: ['userdata', 'updateInfo'],
   components: { LoginButton },
   computed: {
     avatarurl() {
       if(!this.userdata) return ''
       return `https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/79/${this.userdata.user.avatarhash}.jpg`
+    },
+    updateTooltip() {
+      return `Updated ${this.$LAST_UPDATED}`
     }
+  },
+  methods: {
+    async logout() {
+      const res = await fetch('/api/auth/logout')
+      if(res.ok) {
+        this.$emit('logout')
+        if(this.$route.meta.authRequired) {
+          this.$router.push('/')
+        }
+      }
+    },
   }
 }
 </script>

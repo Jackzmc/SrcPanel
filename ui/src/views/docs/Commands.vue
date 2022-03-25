@@ -92,7 +92,7 @@
 
 <script>
 import { formatParameters } from '@/js/util'
-import ExamplesModal from '@/components/ExamplesModal'
+import ExamplesModal from '@/components/modals/ExamplesModal'
 
 export default {
   components: {
