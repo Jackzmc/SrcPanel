@@ -9,17 +9,6 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     fastify.addHook('preHandler', async(req, reply) => {
         await fastify.authmngr.verify(req, reply)
     })
-
-    function promiseDeleteSession(req: FastifyRequest, sessId: string): Promise<void> {
-        return new Promise((resolve, reject) => {
-            req.sessionStore.destroy(sessId, (err: Error) => {
-                if(err) return reject(err)
-                resolve()
-            })
-        })
-        
-    }
-
     
     fastify.get('/profile', async(req, reply) => {
         return {
@@ -42,24 +31,10 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 message: 'No session found'
             })
         } else {
-            await promiseDeleteSession(req, req.session.sessionId)
-            console.log('deleted')
-            reply.code(204).send()
-            /*req.sessionStore.destroy(req.session.sessionId, (err: Error) => {
+            req.sessionStore.destroy(req.session.sessionId, (err: Error) => {
                 if(err) throw err
                 reply.code(204).send()
-            })*/
-            
-            /*
-            const [ok] = await fastify.db.query<OkPacket>("DELETE FROM dash_sessions WHERE session_id = ? LIMIT 1", [sessions[0].session_id])
-            console.log('ok', ok)
-            if(ok.affectedRows > 0)
-                reply.code(204).send()
-            else
-                reply.code(500).send({
-                    error: 'SESSION_NOT_TERMINATED',
-                    code: "The session could not be terminated"
-                })*/
+            })
         }
     })
 
