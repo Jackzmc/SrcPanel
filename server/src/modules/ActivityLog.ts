@@ -35,8 +35,11 @@ export default class ActivityLog {
 
     async addWebEntry(adminId: string, type: string, message?: string) {
         const [r] = await this.db.execute<OkPacket>(
-            `INSERT INTO activity_log (server, type, client, target, message) VALUES ('web', 'WEB', ?, NULL, '')`,
-            [adminId, message ? `${type.toUpperCase()}: ${message}` : type.toUpperCase()]
+            `INSERT INTO activity_log (server, type, client, target, message, timestamp) VALUES ('web', 'WEB', :client, NULL, :message, UNIX_TIMESTAMP())`,
+            {
+                client: adminId, 
+                message: message ? `${type.toUpperCase()}: ${message}` : type.toUpperCase()
+            }
         )
 
         return r.affectedRows > 0
