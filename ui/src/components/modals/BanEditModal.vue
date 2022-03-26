@@ -409,12 +409,12 @@ export default {
     },
     deleteBan() {
       if(window.confirm("Are you sure you want to remove this ban from the records? This should only be done if mistakes were made when banning them. Recommend to suspend the ban instead.")) {
-        fetch(`https://jackz.me/l4d2/scripts/bans.php?mode=delete&steamid=${ban.steamid}`, {
-          method: 'POST',
+        fetch(`/api/bans/${ban.steamid}`, {
+          method: 'DELETE',
           headers: {
             'Content-Type': 'application/json',
-            'X-APIKEY': this.auth.password
           },
+          credentials: 'include'
         })
         .then(async(response) => {
           if(response.ok) {
@@ -432,12 +432,12 @@ export default {
       this.loading = true
       const expires = getExpires(this.edited, this.ban)
       const flags = this.flags.edited.reduce((pv, cv) => pv + Number(cv), 0)
-      fetch(`https://jackz.me/l4d2/scripts/bans.php?mode=update`, {
-        method: 'POST',
+      fetch(`/api/bans/${this.ban.id}`, {
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'X-APIKEY': this.auth.password
         },
+        credentials: 'include',
         body: JSON.stringify({
           steamid: this.edited.steamid,
           reason: this.edited.reason,
