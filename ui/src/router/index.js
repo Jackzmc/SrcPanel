@@ -95,7 +95,7 @@ const routes = [
     }
   },
   {
-    path: '/admin/addons',
+    path: '/admin/addons/:id?',
     component: () => import(/* webpackChunkName: 'maps' */ '../views/admin/ServerAddons.vue'),
     meta: {
       title: 'Addons / Maps',

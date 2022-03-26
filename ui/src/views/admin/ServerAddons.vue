@@ -1,30 +1,44 @@
 <template>
 <div>
-  <div class="container">
+  <div class="container" v-if="ready">
     <div class="columns">
-      <div class="column is-8">
+      <div :class="['column', {'is-8': prefetch}]">
         <div class="content">
           <b>Listing {{vpks.length}} workshop items - Click a name to view information</b>
-          <div class="columns is-multiline">
-            <div class="column is-4" v-for="entry in vpks" :key="entry.vpk">
-              <a v-if="entry.url && (!entry.workshop || !entry.workshop.deleted)" @click='preview(entry)' class="has-text-info">
-                <b>{{entry.display}}</b>
-              </a>
-              <b v-else>{{entry.display}}</b>
-
-              <br>
-              <em class="has-text-danger" v-if="entry.workshop && entry.workshop.deleted">was deleted from workshop</em>
-              <a v-else-if="entry.url" :href="entry.url"><em>View on workshop</em></a>
-            </div>
-          </div>
+          <table class="table is-striped">
+            <thead>
+              <tr>
+                <th></th>
+                <th><input type="text" class="input" placeholder="Search" v-model="search" /></th>
+                <th></th>
+              </tr>
+              <tr>
+                <th>Filename / WorkshopID</th>
+                <th>Name</th>
+                <th>File Size</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="vpk in filteredVPKs" :key="vpk.filename">
+                <td>
+                  <a :href="vpk.url" v-if="vpk.workshop">{{vpk.filename}}</a>
+                  <span v-else>{{vpk.filename}}</span>
+                </td>
+                <td>
+                  <a v-if="vpk.workshop" @click="preview(vpk)">{{vpk.workshop.title}}</a>
+                </td>
+                <td>
+                  <span v-if="vpk.workshop">{{formatSize(vpk.workshop.filesize)}}</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
-      <div class="column">
-        <div class="notification is-danger"  v-if="!prefetch">
-          Downloading maps from this page is disabled. Please join the discord and post links in #maps to download. It's a better experience.
-        </div>
-
-        <template v-if="prefetch">
+      <div class="column" v-if="prefetch">
+        <template >
+          <a class="button" @click="closePreview">⟵</a>
+          <br><br>
           <img :src="prefetch.previewUrl" />
           <h4 class='title is-4'>
             <a :href="prefetch.fileUrl">{{prefetch.title}}</a>
@@ -35,12 +49,14 @@
       </div>
     </div>
   </div>
+  <div v-else>
+    <p class="title is-4 has-text-centered">Fetching addons...</p>
+    <p class="subtitle is-6 has-text-centered">This could take a bit</p>
+  </div>
 </div>
 </template>
 
 <script>
-
-const WORKSHOP_REGEX = new RegExp(/https:\/\/steamcommunity.com\/(workshop|sharedfiles)\/filedetails\/\?id=(\d+)/);
 
 export default {
   data() {
@@ -49,16 +65,22 @@ export default {
       ready: false,
       error: false,
       itemid: null,
-      download: {
-        status: null,
-        error: null
-      },
+      search: null,
       prefetch: null
     }
   },
   computed: {
     isDownloadable() {
       return this.itemid && this.prefetch.result && this.prefetch.lastValid === this.itemid && !this.prefetch.error
+    },
+    filteredVPKs() {
+      if (!this.search) {
+        return this.vpks
+      }
+      const query = this.search.toLowerCase()
+      return this.vpks.filter(vpk => {
+        return vpk.filename.toLowerCase().includes(query) || (vpk.workshop && vpk.workshop.title.toLowerCase().includes(query))
+      })
     }
   },
   methods: {
@@ -66,24 +88,29 @@ export default {
       this.fetchVPKS()
     },
     preview(entry) {
+      this.$router.push(`/admin/addons/${entry.filename}`)
       this.prefetch = entry.workshop
     },
 
-    fetchVPKS() {
-      fetch(`/api/admins/addons`)
-      .then(response => {
-        if(response.ok) return response.json()
-      })
-      .then(json => {
+    async fetchVPKS() {
+      const response = await fetch(`/api/admins/addons`)
+      if(response.ok) {
+        const json = await response.json()
         this.vpks = json.addons.map(entry => {
           if(entry.workshop) {
-            entry.url = `https://steamcommunity.com/sharedfiles/filedetails/?id=${entry.filename}`
+            if(entry.workshop.deleted) entry.workshop = null
+            else entry.url = `https://steamcommunity.com/sharedfiles/filedetails/?id=${entry.filename}`
           }
-          entry.display = entry.workshop && !entry.workshop.deleted ? entry.workshop.title : entry.filename
           return entry
         })
         this.ready = true
-      })
+        return true
+      }
+      return false
+    },
+    closePreview() {
+      this.prefetch = null
+      this.$router.back()
     },
     formatSize(bytes, si=false, dp=1) {
       const thresh = si ? 1000 : 1024;
@@ -111,8 +138,16 @@ export default {
       return `${date.toLocaleDateString()} at ${date.toLocaleTimeString()}`
     }
   },
-  created() {
-    this.fetchVPKS()
+  async created() {
+    await this.fetchVPKS()
+    if(this.$route.params.id) {
+      for(const vpk of this.vpks) {
+        if(vpk.filename === this.$route.params.id) {
+          this.prefetch = vpk.workshop
+          break
+        }
+      }
+    }
   }
 }
 
