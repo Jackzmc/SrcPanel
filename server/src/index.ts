@@ -11,8 +11,8 @@ dotenv.config()
 
 const MySQLStore = MySQLSession(FastifySession)
 
-import ServerManager from './modules/ServerManager.js'
-new ServerManager()
+// import ServerManager from './modules/ServerManager.js'
+// new ServerManager()
 
 const app = Fastify({
     trustProxy: process.env.NODE_ENV === "production",
