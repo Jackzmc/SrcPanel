@@ -1,0 +1,42 @@
+{
+    "servers": [
+        {
+            // Optional id for the server, used in api calls and in the url /servers/:id
+            // If not provided, will be created from name1
+            "id": "my-custom-id",
+            // Required: Display name for a server
+            "name": "My server 1",
+            // Required: The url of the server
+            "ip": "127.0.0.1:27015",
+            "rcon": {
+                "password": {
+                    // One of these is needed, env will overwrite text
+                    // Text: Plain text raw password
+                    "text": "my-plaintext-password",
+                    // The name of the environmental variable that contains the password
+                    "env": "MY_ENV_THAT_HAS_PASSWORD"
+                },
+                // The command to use to exit, default is 'exit'
+                // Won't be used if systemd is configured
+                "exitCommand": "exit"
+            },
+            // Optional systemd configuration
+            /*"systemd": {
+                // If systemd is a user service
+                "isUser": true, 
+                // If server is with systemd, a service name to stop or start it
+                "serviceName": "my-server-service"
+            }*/
+        }
+    ],
+    // Optional list of addon shares
+    "addons": {
+        // Name of the addon share
+        "addon-share-1": {
+            // The folder where the *.vpk files are located
+            "folderLocation": "/home/steam/l4d2/left4dead2/addons",
+            // Optional, a list of folderpaths where all added vpk files should be symlinked into
+            "symlinkDestinations": []
+        }
+    }
+}
