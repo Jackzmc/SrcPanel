@@ -62,7 +62,14 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 SET executor = :executor, reason = :reason, flags = :flags, 
                 public_message = :public_message, expires = :expires 
                 WHERE steamid = :steamid`,
-                ban
+                {
+                    executor: ban.executor,
+                    reason: ban.reason,
+                    flags: ban.flags,
+                    public_message: ban.public_message,
+                    expires: ban.expires,
+                    steamid: ban.steamid
+                }
             )
 
             if(req.body.flags & 2 && ~existing[0].flags & 2) {
