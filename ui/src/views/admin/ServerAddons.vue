@@ -2,49 +2,52 @@
 <div>
   <div class="container" v-if="ready">
     <div class="columns">
-      <div :class="['column', {'is-8': prefetch}]">
-        <div class="content">
-          <b>Listing {{vpks.length}} workshop items - Click a name to view information</b>
-          <table class="table is-striped">
-            <thead>
-              <tr>
-                <th></th>
-                <th><input type="text" class="input" placeholder="Search" v-model="search" /></th>
-                <th></th>
-              </tr>
-              <tr>
-                <th>Filename / WorkshopID</th>
-                <th>Name</th>
-                <th>File Size</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="vpk in filteredVPKs" :key="vpk.filename">
-                <td>
-                  <a :href="vpk.url" v-if="vpk.workshop">{{vpk.filename}}</a>
-                  <span v-else>{{vpk.filename}}</span>
-                </td>
-                <td>
-                  <a v-if="vpk.workshop" @click="preview(vpk)">{{vpk.workshop.title}}</a>
-                </td>
-                <td>
-                  <span v-if="vpk.workshop">{{formatSize(vpk.workshop.filesize)}}</span>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+      <div :class="['column', {'is-8': prefetch !== null}]">
+        <b>Listing {{vpks.length}} workshop items - Click a name to view information</b>
+        <table class="table is-striped">
+          <thead>
+            <tr>
+              <th></th>
+              <th><input type="text" class="input" placeholder="Search" v-model="search" /></th>
+            </tr>
+            <tr>
+              <th>Filename / WorkshopID</th>
+              <th>Name</th>
+              <th>File Size</th>
+              <th>Last Updated</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="vpk in filteredVPKs" :key="vpk.filename">
+              <td>
+                <span>{{vpk.filename}}</span>
+                <span v-if="vpk.workshop">&nbsp;<a :href="vpk.workshop.url" >(workshop)</a></span>
+              </td>
+              <td>
+                <a v-if="vpk.workshop" @click="preview(vpk)">{{vpk.workshop.title}}</a>
+              </td>
+              <td>
+                <span v-if="vpk.workshop">{{formatSize(vpk.workshop.filesize)}}</span>
+              </td>
+              <td>
+                <span v-if="vpk.workshop">{{formatTime(vpk.workshop.lastUpdated)}}</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
       <div class="column" v-if="prefetch">
         <template >
           <a class="button" @click="closePreview">⟵</a>
           <br><br>
           <img :src="prefetch.previewUrl" />
-          <h4 class='title is-4'>
-            <a :href="prefetch.fileUrl">{{prefetch.title}}</a>
-          </h4>
+          <h4 class='title is-4'>{{prefetch.title}}</h4>
           <p class="subtitle is-6">{{formatSize(prefetch.filesize)}} • Updated {{ formatTime(prefetch.lastUpdated) }}</p>
-          <p>{{prefetch.description}}</p>
+          <div class="buttons">
+            <a target="_blank" :href="prefetch.fileUrl" class="button">Download</a>
+            <a target="_blank" :href="prefetch.url" class="button is-info">View on steam workshop</a>
+          </div>
+          <p style="white-space: pre-wrap" class="content is-small" v-html="parsedDescription" />
         </template>
       </div>
     </div>
@@ -81,6 +84,22 @@ export default {
       return this.vpks.filter(vpk => {
         return vpk.filename.toLowerCase().includes(query) || (vpk.workshop && vpk.workshop.title.toLowerCase().includes(query))
       })
+    },
+
+    parsedDescription() {
+      if(!this.prefetch) return
+      return this.prefetch.description
+        .replace(/\[b\]/gi, '<b>')
+        .replace(/\[u\]/gi, '<u>')
+        .replace(/\[i\]/gi, '<i>')
+        .replace(/\[hr\]/gi, '<hr>')
+        .replace(/\[img\](.*)\[\/img\]/gi, '<img src="$1" />')
+        .replace(/\[h(\d)\]/gi, '<h$1>')
+        .replace(/\[url=(.*)\]/gi, '<a href="$1">')
+        .replace(/\[list]/gi, '<ul>')
+        .replace(/\[\/list]/gi, '</ul>')
+        .replace(/\[\*\](.*)/gi, '<li>$1</li>')
+        .replace(/\[\/([a-zA-Z0-9]+)\]/gi, '</$1>')
     }
   },
   methods: {
@@ -99,7 +118,7 @@ export default {
         this.vpks = json.addons.map(entry => {
           if(entry.workshop) {
             if(entry.workshop.deleted) entry.workshop = null
-            else entry.url = `https://steamcommunity.com/sharedfiles/filedetails/?id=${entry.filename}`
+            else entry.workshop.url = `https://steamcommunity.com/sharedfiles/filedetails/?id=${entry.filename}`
           }
           return entry
         })
@@ -110,7 +129,7 @@ export default {
     },
     closePreview() {
       this.prefetch = null
-      this.$router.back()
+      this.$router.push('/admin/addons')
     },
     formatSize(bytes, si=false, dp=1) {
       const thresh = si ? 1000 : 1024;
