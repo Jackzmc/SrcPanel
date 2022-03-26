@@ -11,6 +11,9 @@ dotenv.config()
 
 const MySQLStore = MySQLSession(FastifySession)
 
+import ServerManager from './modules/ServerManager.js'
+new ServerManager()
+
 const app = Fastify({
     trustProxy: process.env.NODE_ENV === "production",
     logger: {
@@ -92,7 +95,7 @@ app.register(import('./middlewares/database.js'))
     app.register(import('./routes/auth/index.js'), { prefix: '/api/auth' })
     app.register(import('./routes/auth/steam.js'), { prefix: '/api/auth/steam' })
         
-    app.register(import('./routes/privileged/bans.js'), { prefix: '/api/admin/bans/' })
+    app.register(import('./routes/privileged/bans.js'), { prefix: '/api/bans/' })
     app.register(import('./routes/privileged/notes.js'), { prefix: '/api/notes/' })
     app.register(import('./routes/privileged/logs.js'), { prefix: '/api/logs/' })
     app.register(import('./routes/privileged/admins.js'), { prefix: '/api/admins/' })
@@ -104,10 +107,10 @@ app.register(import('./middlewares/database.js'))
 
     const start = async () => {
         try {
-        await app.listen(process.env.WEB_PORT || 8081)
+            await app.listen(process.env.WEB_PORT || 8081)
         } catch (err) {
-        app.log.error(err)
-        process.exit(1)
+            app.log.error(err)
+            process.exit(1)
         }
     }
     start()
