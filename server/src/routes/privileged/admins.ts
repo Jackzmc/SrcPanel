@@ -152,7 +152,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
                 const id = await fastify.authmngr.addAdmin({
                     authtype: "steam",
-                    identity: steamid.getSteam2RenderedID(),
+                    identity: steamid.getSteam2RenderedID(true),
                     password: null,
                     name: "",
                     immunity,

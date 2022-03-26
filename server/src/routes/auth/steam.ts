@@ -63,7 +63,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                         const admin = fastify.authmngr.getAdmin(steamid)
                         if(admin) {
                             req.session.user = {
-                                steamid: steamid.getSteam2RenderedID(),
+                                steamid: steamid.getSteam2RenderedID(true),
                                 accountid: steamid.accountid.toString(),
                                 name: details[0].personaname,
                                 profileurl: details[0].profileurl,
@@ -78,7 +78,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
                             if(req.query.return_uri) {
                                 const redirectUri = process.env.STEAM_REDIRECT_URI || "http://localhost:8080"
-                                reply.redirect(`${redirectUri}${req.query.return_uri}`)
+                                return reply.redirect(`${redirectUri}${req.query.return_uri}`)
                             } else {
                                 return {
                                     user: req.session.user,

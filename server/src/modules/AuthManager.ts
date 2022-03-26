@@ -155,7 +155,7 @@ export default class AuthManager {
     }
 
     public isAdmin(steamid: SteamID) {
-        return this.admins[steamid.getSteam2RenderedID()] !== null && this.admins[steamid.getSteam2RenderedID()] !== undefined
+        return this.admins[steamid.getSteam2RenderedID(true)] !== null && this.admins[steamid.getSteam2RenderedID(true)] !== undefined
     }
 
     public getAdmin(steamid: SteamID) {
