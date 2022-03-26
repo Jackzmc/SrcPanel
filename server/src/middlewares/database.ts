@@ -9,17 +9,16 @@ async function db(fastify: FastifyInstance, opts) {
         host:     process.env.MYSQL_HOST   || 'localhost', 
         database: process.env.MYSQL_DB,
         user:     process.env.MYSQL_USER, 
-        password: process.env.MYSQL_PASSWORD
+        password: process.env.MYSQL_PASSWORD,
+        namedPlaceholders: true
     })
     const admindb = await mysql.createConnection({
         host:     process.env.MYSQL_HOST   || 'localhost', 
         database: process.env.MYSQL_ADMINS_DB,
         user:     process.env.MYSQL_USER, 
-        password: process.env.MYSQL_PASSWORD
+        password: process.env.MYSQL_PASSWORD,
+        namedPlaceholders: true
     })
-
-    const conn = await db.getConnection()
-    conn.config.namedPlaceholders = true
 
     const authmanager = new AuthManager(admindb, db)
     fastify.decorate('authmngr', authmanager)
