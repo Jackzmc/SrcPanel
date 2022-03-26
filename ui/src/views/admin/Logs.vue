@@ -229,14 +229,17 @@ const ADMINCHAT_REGEX = /triggered sm_say \(text (.*)\)/
 
 import Modal from '@/components/Modal'
 
+const DEFAULT_TYPES = ["ACTION", "CHAT", "INFO", "STATE","WEB"]
+const DEFAULT_SERVERS = ["improved", "reserved"]
+
 export default {
   props: ['userdata'],
   components: { Pagination, Modal },
   FILTERS: {
     servers: [
-      "improved", "reserved", "public1", "public2", "public3", "public4", "public5", "public6", "public7", "public8", "unknown"
+      "improved", "reserved", "public1", "public2", "public3", "public4", "public5", "public6", "public7", "public8", "unknown", "web"
     ],
-    types: [ "ACTION", "CHAT", "INFO", "STATE", "QUIT", "JOIN" ],
+    types: [ "ACTION", "CHAT", "INFO", "STATE", "QUIT", "JOIN", "WEB"],
   },
   TYPE_COLORS: {
     ACTION: "is-info",
@@ -259,8 +262,8 @@ export default {
       data: [],
       count: 0,
       filters: {
-        servers: ["improved", "reserved"],
-        types: ["ACTION", "CHAT", "INFO", "STATE"],
+        servers: DEFAULT_SERVERS,
+        types: DEFAULT_TYPES,
         client: null,
         target: null
       },
@@ -364,8 +367,8 @@ export default {
   },
   methods: {
     setDefaults() {
-      this.filters.servers = ["improved", "reserved"]
-      this.filters.types = ["ACTION", "CHAT", "INFO", "STATE"]
+      this.filters.servers = DEFAULT_SERVERS
+      this.filters.types = DEFAULT_TYPES
       this.filters.client = null
       this.filters.target = null
       this.search.message = null

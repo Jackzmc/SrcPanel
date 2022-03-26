@@ -47,7 +47,7 @@ export default {
       this.reloadPage()
     },
     async getAuth() {
-      const response = await fetch(`../api/auth/profile`, {
+      const response = await fetch(`/api/auth/profile`, {
         credentials: 'include'
       })
       if(response.ok) {

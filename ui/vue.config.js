@@ -7,7 +7,7 @@ module.exports = {
     disableHostCheck: true,
     proxy: {
       '^/api': {
-        target: process.env.VUE_APP_API_URL,
+        target: process.env.VUE_APP_REALM,
         changeOrigin: true
       }
     }

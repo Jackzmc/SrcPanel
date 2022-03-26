@@ -48,7 +48,7 @@
           <div class="column is-8">
             <div class="field">
               <label class="label">Banned By</label>
-              <input v-if="executorEdit.active" v-model="executorEdit.edit" class="input" type="text" @blur='onExEditBlur' />
+              <input v-if="executorEdit.active" v-model="executorEdit.edit.id" class="input" type="text" @blur='onExEditBlur' />
               <span v-else @click='executorEdit.active = true'>
                 <p>{{ban.executor.name}}</p>
                 ({{ban.executor.id}})
@@ -59,7 +59,7 @@
             <div class="field">
               <label class="label">Timestamp</label>
               <p>{{formatTime(ban.timestamp)}}</p>
-              <em>about {{ban.relDate}}</em>
+              <em>about {{relDate}}</em>
             </div>
           </div>
 
@@ -250,9 +250,9 @@
 <script>
 import SteamID from 'steamid'
 export default {
-  props: ['ban', 'auth'],
   data() {
     return {
+      ban: null,
       tab: 0,
       edited: null,
       error: null,
@@ -280,7 +280,7 @@ export default {
   watch: {
     edited: {
       handler(val) {
-        if(this.changed) return
+        if(this.changed || !this.ban) return
         this.changed = this.ban.reason !== val.reason
           || this.ban.publicReason !== val.publicReason
           || this.ban.executor.id !== this.executorEdit.edit.id
@@ -289,9 +289,6 @@ export default {
       },
       deep: true
     },
-    ban() {
-      this.init()
-    }
   },
   created() {
     this.init()
@@ -299,13 +296,23 @@ export default {
   computed: {
     steamid64() {
       if(!this.ban) return null
-      return new SteamID(this.ban.steamid).getSteamID64()
+      return new SteamID(this.ban.client.id).getSteamID64()
+    },
+    relDate() {
+      return this.ban.timestamp ? getRelDate(this.ban.timestamp*1000) : null
     }
   },
   methods: {
-    init() {
+    async init() {
       this.error = null
-      if(this.ban) {
+      const response = await fetch(`/api/bans/${this.$route.params.id}`)
+      if(response.ok) {
+        const json = await response.json()
+        if(json.bans.length === 0) {
+          console.error('No bans were found for id?')
+          return
+        }
+        this.ban = json.bans[0]
         this.edited = Object.assign({}, this.ban)
         this.edited.expires = 'keep'
         this.flags.original = []
@@ -371,7 +378,7 @@ export default {
       }
     },
     async fetchInfo() {
-      const response = await fetch(`https://stats.jackz.me/api/user/${this.ban.steamid}`)
+      const response = await fetch(`https://stats.jackz.me/api/user/${this.ban.client.id}`)
       if(response.ok) {
         const json = await response.json()
         this.info = json.user
@@ -439,9 +446,9 @@ export default {
         },
         credentials: 'include',
         body: JSON.stringify({
-          steamid: this.edited.steamid,
+          steamid: this.edited.client.id,
           reason: this.edited.reason,
-          executor: this.executorEdit.edit,
+          executor: this.executorEdit.edit.id,
           public_message: this.edited.public_message,
           expires,
           flags
@@ -464,8 +471,18 @@ export default {
     },
     cancel() {
       this.$emit('edit', null)
-    }
+    },
   },
+}
+
+function getRelDate(time) {
+  const date = new Date(time || ""),
+    diff = (((new Date()).getTime() - date.getTime()) / 1000),
+    day_diff = Math.floor(diff / 86400);
+  if (isNaN(day_diff) || day_diff < 0 || day_diff >= 31) return "<invalid date>"
+
+  return day_diff == 0 && (
+  diff < 60 && "just now" || diff < 120 && "1 minute ago" || diff < 3600 && Math.floor(diff / 60) + " minutes ago" || diff < 7200 && "1 hour ago" || diff < 86400 && Math.floor(diff / 3600) + " hours ago") || day_diff == 1 && "Yesterday" || day_diff < 7 && day_diff + " days ago" || day_diff < 31 && Math.ceil(day_diff / 7) + " weeks ago";
 }
 
 function getExpires(edited, ban) {

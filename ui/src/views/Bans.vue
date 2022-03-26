@@ -1,6 +1,7 @@
 <template>
 <div>
-  <BanEditModal v-if="edit.banIndex !== null" :ban="edit.data" @edit="onEdit" :userdata="userdata" />
+  <router-view :ban="edit.data" @edit="onEdit" :userdata="userdata" />
+  <!-- <BanEditModal v-if="edit.banIndex !== null" :ban="edit.data" @edit="onEdit" :userdata="userdata" /> -->
   <div class="container is-fluid">
     <div class="columns">
       <div class="column">
@@ -52,7 +53,7 @@
             {{ban.reason}}
           </td>
           <td>
-            {{ban.pubicReason}}
+            {{ban.publicReason}}
           </td>
           <td>
             <div class="tags" v-html="getBanFlags(ban)"></div>
@@ -65,7 +66,7 @@
           <td :data-tooltip="formatDate(ban.timestamp)">{{ban.relDate}}</td>
           <td v-if="userdata">
             <div class="buttons">
-              <a class="button is-info is-small" @click='startEdit(ban, i)'>View</a>
+              <a class="button is-info is-small" @click="startEdit(ban, i)">View</a>
             </div>
           </td>
         </tr>
@@ -79,13 +80,11 @@
 
 <script>
 import Sugar from 'sugar'
-import BanEditModal from '@/components/modals/BanEditModal'
 
 const DISCORD_SOURCE_REGEX = new RegExp(/([^\n]+#\d{4})\s\((\d+)\)/)
 const AUTO_REFRESH_INTERVAL = 1000 * 60 * 15
 
 export default {
-  components: { BanEditModal },
   props: ['userdata'],
   data() {
     return {
@@ -118,6 +117,7 @@ export default {
         this.$set(this.bans, this.edit.banIndex, edit)
       this.edit.data = null
       this.edit.banIndex = 0
+      this.$router.back()
     },
     getBanFlags(ban) {
       let str = ""
@@ -130,6 +130,7 @@ export default {
     startEdit(ban, index) {
       this.edit.banIndex = index
       this.edit.data = ban
+      this.$router.push(`/bans/edit/${ban.id}`)
     },
     getRelDate(time) {
       const date = new Date((time || "").toString().replace(/-/g, "/").replace(/[TZ]/g, " ")),
