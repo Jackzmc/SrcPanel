@@ -98,7 +98,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             const fetchStart = Date.now()
 
             const [bans] = await db.execute<RowDataPacket[]>(
-                `SELECT id, public_message, bans.steamid, bans.executor, bans.reason, expires, expired, timestamp, u1.last_alias, u1.country, u2.last_alias AS executor_name
+                `SELECT times_tried, id, public_message, bans.steamid, bans.executor, bans.reason, expires, expired, timestamp, u1.last_alias, u1.country, u2.last_alias AS executor_name
                 FROM bans 
                 LEFT JOIN stats_users AS u1 ON bans.steamid = u1.steamid 
                 LEFT JOIN stats_users AS u2 ON bans.executor = u2.steamid 
@@ -152,7 +152,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                     client: ban.client,
                     reason: authorized ? ban.reason: undefined,
                     flags: ban.flags,
-                    timestamp: ban.timestamp,
+                    timestamp: Number(ban.timestamp),
                     publicReason: ban.public_message,
                     executor: ban.executor,
                     expires: ban.expires,
@@ -211,9 +211,12 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         meta.fetchTime = Date.now() - profilerStart
         profilerStart = Date.now()
 
+        // FIXME: Some cache values are leaking into the wrong ids
+
         const bulkNameFetchBuffer: { steamid: string, steamidc: SteamID, index: number }[] = []
         const bans = (rows as RowDataPacket[])
         const redisBuffer: Record<number, string> = {}
+
 
         for(let i = 0; i < bans.length; i++) {
             let ban = bans[i]
@@ -226,7 +229,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 ban.client.name = ban.last_alias
                 ban.client.nameResolver = "stats"
             } else {
-                redisBuffer[i.toString()] = `steamname.${ban.steamid}`
+                //redisBuffer[i.toString()] = `steamname.${ban.steamid}`
             }
 
             ban.executor = {
@@ -239,7 +242,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         meta.initParse = Date.now() - profilerStart
         profilerStart = Date.now()
 
-        const aliases = await cache.mGet(Object.values(redisBuffer))
+        /*const aliases = await cache.mGet(Object.values(redisBuffer))
         for(const key in aliases) {
             const alias = aliases[key]
             const ban = bans[key]
@@ -253,7 +256,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                     index: Number(key)
                 })
             }
-        }
+        }*/
 
         meta.cacheResolve = Date.now() - profilerStart
         profilerStart = Date.now()
