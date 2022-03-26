@@ -50,14 +50,12 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
         if(req.query.servers) {
             const servers = req.query.servers.split(",")
-            console.log('servers', servers.length, servers)
             conditions.push(`server IN (${generateParams(servers.length)})`)
             data = [ ...data, ...servers ]
             countData = [ ...countData, ...servers ]
         }
         if(req.query.types) {
             const types = req.query.types.split(",")
-            console.log('types', types.length, types)
             conditions.push(`type IN (${generateParams(types.length)})`)
             data = [ ...data, ...types ]
             countData = [ ...countData, ...types ]
