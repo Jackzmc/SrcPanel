@@ -11,34 +11,32 @@
         <tbody>
             <tr v-for="server in servers" :key="server.id">
                 <td>
-                    <a :href="'steam://connect/lgs.jackz.me:' + server.meta.port">
+                    <a :href="'steam://connect/lgs.jackz.me:' + server.port">
                       <b
                         :data-tooltip="getServerMessage(server)"
                         :class="getServerClasses(server)"
                       >
-                        {{server.meta.name}}
+                        {{server.name}}
                       </b>
                     </a>
-                    <span v-if='server.id === "Left_4_Dead_2_Improved"' class='is-size-5'><b>***</b></span>
-                    <span v-if='server.id === "Left_4_Dead_2_Extra_Players_Public"' class='is-size-5'><b>**</b></span>
-                    <span v-else-if='server.id.startsWith("Left_4_Dead_2_Public")' class='is-size-5'><b>*</b></span>
+                    <span v-if="server.tags.includes('5+')" class='is-size-5'><b>**</b></span>
+                    <span v-if="server.tags.includes('customs')" class='is-size-5'><b>*</b></span>
                 </td>
                 <td class="has-text-centered">
                   <span
-                    v-if="server.status === 'online'"
-                    :data-tooltip="server.players.online > 0 ? server.players.sample.join('\n') : null"
+                    v-if="server.status.online"
                   >
-                    {{server.players.online}} / {{server.players.max}}
+                    {{server.status.data.players.length}} / {{server.status.data.maxplayers}}
                   </span>
                 </td>
                 <td>
-                  <p @click='copyCommand' :class="{'has-text-grey': server.status !== 'online'}">
-                    connect {{$CONNECT_IP}}:{{server.meta.port}}
+                  <p @click='copyCommand' :class="{'has-text-grey': !server.status.online}">
+                    connect {{server.domain}}:{{server.port}}
                   </p>
                 </td>
                 <td>
-                  <p @click='copyCommand' :class="{'has-text-grey': server.status !== 'online'}">
-                    mm_dedicated_force_servers {{$CONNECT_IP}}:{{server.meta.port}}
+                  <p @click='copyCommand' :class="{'has-text-grey': !server.status.online}">
+                    mm_dedicated_force_servers {{server.ip}}:{{server.port}}
                   </p>
                 </td>
             </tr>
@@ -50,7 +48,7 @@
 export default {
   data() {
     return {
-      servers: {},
+      servers: [],
       refreshTimer: null
     }
   },
@@ -68,10 +66,10 @@ export default {
       }
     },
     getServerClasses(server) {
-      const classes = ['has-tooltip-arrow']
+      const classes = ['has-tooltip-arrow', "has-tooltip-right"]
 
-      if(server.status === 'online') {
-        if(server.players.online == 0) {
+      if(server.status.online) {
+        if(server.status.data.players.length == 0) {
           classes.push('has-text-success')
           classes.push('has-tooltip-success')
         } else {
@@ -86,23 +84,21 @@ export default {
       return classes
     },
     getServerMessage(server) {
-      if(server.status === 'online')
-        return server.players.online == 0
+      if(server.status.online)
+        return server.status.data.players.length  == 0
           ? 'Server is currently online & empty. Click to join'
           : 'Server has players online. Click to join.'
       else return 'Server is offline, unresponsive, or unreachable'
     },
     refreshServers() {
       this.$emit('refresh', 'start')
-      fetch('https://servers.jackz.me/api/gameservers?group=l4d2')
+      fetch('/api/servers')
       .then(response => {
         if(response.ok) return response.json()
         else console.error('Failure getting servers', response)
       })
       .then(json => {
-          for(const server of json.servers) {
-            this.$set(this.servers, server.meta.id, server)
-          }
+        this.servers = json
       })
       .finally(() => {
         this.$emit('refresh', 'stop')
@@ -110,15 +106,10 @@ export default {
     }
   },
   created() {
-  },
-  activated() {
     this.refreshTimer = setInterval(() => {
       this.refreshServers()
     }, 1000 * 60 * 1)
     this.refreshServers()
-  },
-  deactivated() {
-    clearInterval(this.refreshTimer)
   },
 }
 </script>
