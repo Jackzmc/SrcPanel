@@ -1,4 +1,4 @@
-import Fastify from 'fastify'
+import Fastify, { FastifyInstance } from 'fastify'
 import FastifySession from '@fastify/session'
 import FastifyCookie from 'fastify-cookie'
 import MySQLSession from 'express-mysql-session'
@@ -7,12 +7,18 @@ import dotenv from 'dotenv'
 import { RedisClientType } from '@node-redis/client';
 import SteamAPI from './modules/steam.js'
 import AuthManager, { AdminPermissions } from './modules/AuthManager';
+import ServerManager from './modules/ServerManager.js';
+import { readdir } from 'fs/promises';
+import path from 'path'
 dotenv.config()
 
-const MySQLStore = MySQLSession(FastifySession)
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+import { FastifyPluginOptions } from 'fastify';
 
-// import ServerManager from './modules/ServerManager.js'
-// new ServerManager()
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+const MySQLStore = MySQLSession(FastifySession)
 
 const app = Fastify({
     trustProxy: process.env.NODE_ENV === "production",
@@ -34,7 +40,8 @@ declare module 'fastify' {
     db: Pool;
     cache: RedisClientType,
     steam: SteamAPI,
-    authmngr: AuthManager
+    authmngr: AuthManager,
+    servers: ServerManager
   }
   interface Session {
     user: {
@@ -52,7 +59,7 @@ declare module 'fastify' {
 }
 
 app.register(import('./middlewares/database.js'))
-.then(() => {
+.then(async() => {
     app.register(FastifyCookie)
     app.register(FastifySession, { 
         secret: process.env.SESSION_SECRET,
@@ -65,7 +72,7 @@ app.register(import('./middlewares/database.js'))
         }, app.db),
         saveUninitialized: false
     })
-    
+
 
     const CORS_WHITELIST = process.env.CORS_WHITELIST ? process.env.CORS_WHITELIST.split(",") : [] 
 
@@ -92,27 +99,58 @@ app.register(import('./middlewares/database.js'))
     app.register(import('./middlewares/redisCache.js'))
     app.register(import('./middlewares/steam.js'))
 
-    app.register(import('./routes/auth/index.js'), { prefix: '/api/auth' })
-    app.register(import('./routes/auth/steam.js'), { prefix: '/api/auth/steam' })
-        
-    app.register(import('./routes/privileged/bans.js'), { prefix: '/api/bans/' })
-    app.register(import('./routes/privileged/notes.js'), { prefix: '/api/notes/' })
-    app.register(import('./routes/privileged/logs.js'), { prefix: '/api/logs/' })
-    app.register(import('./routes/privileged/admins.js'), { prefix: '/api/admins/' })
 
-    app.register(import('./routes/unprivileged/bans.js'), { prefix: '/api/bans' })
-    app.register(import('./routes/unprivileged/notes.js'), { prefix: '/api/notes' })
-    app.register(import('./routes/unprivileged/admins.js'), { prefix: '/api/admins' })
-    app.register(import('./routes/unprivileged/index.js'), { prefix: '/api/' })
+    const mainPrefix = `/api/`
 
-    const start = async () => {
-        try {
-            await app.listen(process.env.WEB_PORT || 8081)
-        } catch (err) {
-            app.log.error(err)
-            process.exit(1)
+    async function loadRoutes(rootPrefix: string = "/", folderPath?: string) {
+        if(!folderPath) folderPath = path.join(__dirname, 'routes')
+        const dirents = await readdir(folderPath, { withFileTypes: true })
+
+        for(const dirent of dirents) {
+            if(dirent.isDirectory()) {
+                let prefix: string;
+                let requiresAuth = false
+                if(dirent.name[0] === "!") {
+                    prefix = rootPrefix
+                    if(dirent.name[1] === "!") {
+                        requiresAuth = true
+                        app.register(async(fastify: FastifyInstance, opts: FastifyPluginOptions) => {
+                            fastify.addHook('preHandler', async(req, reply) => {
+                                await fastify.authmngr.verify(req, reply)
+                            })
+                            await loadRoutes(prefix, path.join(folderPath, dirent.name))
+                        })
+                        continue
+                    }
+                } else {
+                    prefix =  `${rootPrefix}${dirent.name}/`
+                }
+
+                await loadRoutes(prefix, path.join(folderPath, dirent.name))
+                
+            } else if(dirent.isFile()) {
+                const [,name,ext] = dirent.name.match(/^(.+)\.(.+)$/)
+                if(ext === "js") {
+                    const prefix = (name === "index") ? rootPrefix : `${rootPrefix}${name}`
+                    try {
+                        app.register(import(`file://${path.join(folderPath, dirent.name)}`), { prefix })
+                    } catch(err) {
+                        app.log.fatal(`Could not load route ${name}. prefix=${prefix}\n${err.stack}`)
+                        process.exit(1)
+                    }
+                }
+            }
         }
+
     }
-    start()
+
+    loadRoutes(mainPrefix, path.join(__dirname, 'routes'))
+
+    try {
+        await app.listen(process.env.WEB_PORT || 8081)
+    } catch (err) {
+        app.log.error(err)
+        process.exit(1)
+    }
 })
 
