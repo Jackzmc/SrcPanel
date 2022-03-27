@@ -1,7 +1,13 @@
 <template>
 <div>
   <nav class="navbar is-info is-fixed-top" role="navigation" aria-label="main navigation">
-    <div class="navbar-menu">
+    <a role="button" class="navbar-burger" data-target="navMenu" aria-label="menu" aria-expanded="false">
+      <span aria-hidden="true"></span>
+      <span aria-hidden="true"></span>
+      <span aria-hidden="true"></span>
+    </a>
+
+    <div class="navbar-menu"  id="navMenu">
       <div class="navbar-start">
         <router-link to='/' class="navbar-item" tag="a">
           Overview
@@ -95,6 +101,23 @@
 </template>
 
 <script>
+
+// Bulma nav code
+document.addEventListener('DOMContentLoaded', () => {
+  const $navbarBurgers = Array.prototype.slice.call(document.querySelectorAll('.navbar-burger'), 0);
+  if ($navbarBurgers.length > 0) {
+    $navbarBurgers.forEach( el => {
+      el.addEventListener('click', () => {
+        const target = el.dataset.target;
+        const $target = document.getElementById(target);
+        el.classList.toggle('is-active');
+        $target.classList.toggle('is-active');
+      });
+    });
+  }
+});
+
+
 import LoginButton from '@/components/LoginButton'
 
 export default {
