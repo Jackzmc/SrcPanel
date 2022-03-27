@@ -247,7 +247,8 @@ export default {
     STATE: "is-primary",
     QUIT: "is-danger",
     JOIN: "is-success",
-    INFO: "is-link"
+    INFO: "is-link",
+    WEB: "is-dark"
   },
   SERVER_COLORS: {
     improved: "is-success",
