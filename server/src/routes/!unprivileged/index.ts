@@ -1,8 +1,8 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
 import { OkPacket, RowDataPacket } from 'mysql2';
 import { Static, Type } from '@sinclair/typebox'
-import { ACTIVITY_LOG_TABLE_NAME } from '../privileged/logs.js';
-import { generateParams } from '../privileged/logs.js';
+import { ACTIVITY_LOG_TABLE_NAME } from '../!!privileged/logs.js';
+import { generateParams } from '../!!privileged/logs.js';
 
 const LimitedLogQuery = Type.Object({
     servers: Type.Optional(Type.String()),
@@ -26,6 +26,10 @@ const GRAPH_WHITELIST = {
 
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
+    fastify.get('/servers', async(req, reply) => {
+        return fastify.servers.getAll()
+    })
+
     fastify.get('/graph', async(req: FastifyRequest<{Querystring: LimitedLogQueryType}>, reply) => {
         const searchMessage = req.query.searchMessage ? `%${req.query.searchMessage}%` : (req.query.search_message ? `%${req.query.search_message}%` : null)
 
