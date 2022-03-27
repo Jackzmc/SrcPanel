@@ -2,41 +2,8 @@ import {
   readFileSync
 } from 'fs'
 import CommentJson from 'comment-json'
-import Gamedig from 'gamedig'
 import DNS from 'dns'
-
-interface Server {
-  id ? : string;
-  name: string;
-  domain ? : string;
-  ip: string,
-  port: number,
-  type: string,
-  rcon ? : {
-    password: {
-      text ? : string;
-      env ? : string;
-    };
-    exitCommand ? : string;
-    requestExitCommand ? : string;
-  }
-  systemd ? : {
-    isUser: boolean;
-    serviceName: string;
-  },
-  tags: string[],
-  status: ServerStatus
-}
-
-interface ServerStatus {
-  data?: {
-    players: string[],
-    maxplayers: number,
-    map: string,
-    gamemode: string,
-  },
-  online: boolean
-}
+import Server, { ConfigServerData } from './Server.js'
 
 export default class ServerManager {
   private servers: Record<string, Server> = {}
@@ -51,33 +18,15 @@ export default class ServerManager {
   }
 
   public getAll() {
-    return Object.values(this.servers)
+    return Object.values(this.servers).sort((a,b) => a.port - b.port)
+  }
+
+  public get(key: string) {
+    return this.servers[key.toLowerCase()]
   }
 
   private async refresh() {
-    for(let server of Object.values(this.servers)) {
-      try {
-        const state = await Gamedig.query({
-          type: server.type as Gamedig.Type,
-          host: server.ip,
-          port: server.port,
-          givenPortOnly: true,
-          maxAttempts: 1,
-          socketTimeout: 3000,
-          attemptTimeout: 5000
-        })
-        server.status.data = {
-          players: state.players.map(p => p.name),
-          maxplayers: state.maxplayers,
-          map: state.map,
-          gamemode: (state.raw as any).tags[0]
-        }
-        server.status.online = true
-      } catch(err) {
-        server.status.data = null
-        server.status.online = false
-      }
-    }
+    await Promise.allSettled(Object.values(this.servers).map(server => server.refresh()))
   }
 
   private async load() {
@@ -87,7 +36,8 @@ export default class ServerManager {
     this.refreshInterval = 1000 * (config['refreshIntervalSeconds'] ?? 60)
 
     const serverPromises = []
-    for (const server of config['servers']) {
+    let i = 0
+    for (const server of config['servers'] as ConfigServerData[]) {
       if(!server.name) {
         console.warn(`Server ${server.id ?? server} has no name`)
       } else if(!server.type) {
@@ -95,10 +45,9 @@ export default class ServerManager {
       } else if(!server.ip) {
         console.warn(`Server ${server.name} has no ip`)
       } else {
-        const id = server.id ?? server.name.toLowerCase().replace(/\s/g, '_').replace(/[^a-z0-9_]/g, '')
+        const id = server.id?.toLowerCase() ?? server.name.toLowerCase().replace(/\s/g, '_').replace(/[^a-z0-9_]/g, '')
         const [, host, port] = server.ip.match(/([a-zA-Z0-9.]+):?(\d*)/)
         serverPromises.push(new Promise((resolve, reject) => {
-
           DNS.lookup(host, {
             verbatim: false
           }, (err, address, family) => {
@@ -107,25 +56,40 @@ export default class ServerManager {
               return reject(err)
             }
 
-            this.servers[id] = {
+            const tags = server.tags ?? []
+            if(server.systemd) tags.push('systemd')
+            if(server.rcon) tags.push('rcon')
+
+            let rconPassword = server.rcon?.password?.text
+            if(server.rcon && server.rcon.password.env) {
+              rconPassword = process.env[server.rcon.password.env]
+            }
+
+            this.servers[id] = new Server({
               id,
               name: server.name,
               domain: host,
               port: Number(port) ?? 27015,
               ip: address,
               type: server.type,
-              tags: server.tags ?? [],
+              tags: tags,
+              systemd: server.systemd,
+              rcon: {
+                password: rconPassword,
+                exitCommand: server.rcon?.exitCommand || "exit",
+                requestExitCommand: server.rcon?.requestExitCommand || "exit"
+              },
               status: {
                 online: false,
                 data: null
               }
-            }
+            })
             resolve(true)
           })
         }))
       }
     }
+
     await Promise.allSettled(serverPromises)
-    console.log(this.servers)
   }
 }

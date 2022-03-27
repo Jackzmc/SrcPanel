@@ -3,6 +3,7 @@ import { OkPacket, RowDataPacket } from 'mysql2';
 import { Static, Type } from '@sinclair/typebox'
 import { ACTIVITY_LOG_TABLE_NAME } from '../!!privileged/logs.js';
 import { generateParams } from '../!!privileged/logs.js';
+import { ServerStatus } from '../../modules/servers/Server.js';
 
 const LimitedLogQuery = Type.Object({
     servers: Type.Optional(Type.String()),
@@ -25,9 +26,30 @@ const GRAPH_WHITELIST = {
 };
 
 
-export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
-    fastify.get('/servers', async(req, reply) => {
-        return fastify.servers.getAll()
+interface DisplayedServer {
+    id?: string;
+    name: string;
+    domain ? : string;
+    ip: string,
+    port: number,
+    type: string,
+    tags: Readonly<string[]>,
+    status: ServerStatus
+}
+export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions)  {
+    fastify.get('/servers', async(req, reply): Promise<DisplayedServer[]> =>  {
+        return fastify.servers.getAll().map(server => {
+            return {
+                name: server.name,
+                ip: server.ip,
+                port: server.port,
+                type: server.type,
+                tags: server.tags,
+                domain: server.domain,
+                id: server.id,
+                status: server.status
+            }
+        })
     })
 
     fastify.get('/graph', async(req: FastifyRequest<{Querystring: LimitedLogQueryType}>, reply) => {

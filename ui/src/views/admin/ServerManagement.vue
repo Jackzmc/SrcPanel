@@ -1,8 +1,5 @@
 <template>
 <div class="container">
-  <div class="title is-4 has-text-danger box">
-    <strong>Notice: </strong> Server control is currently not available at this time.
-  </div>
   <div class="columns">
     <div class="column is-8">
       <p :class='message.type' v-if="message" v-html="message.content"></p>
@@ -18,24 +15,25 @@
           <tbody>
             <tr v-for="server in servers" :key="server.id">
               <td class="is-size-5">
-                <a :href="'steam://connect/lgs.jackz.me:' + server.meta.port">
-                  <b :data-tooltip="getServerMessage(server)" :class="getServerClasses(server)" >{{server.meta.name}}</b>
+                <a :href="'steam://connect/' + server.domain + ':' + server.port">
+                  <b :data-tooltip="getServerMessage(server)" :class="getServerClasses(server)" >{{server.name}}</b>
                 </a>
-                <span v-if='server.id === "Left_4_Dead_2_Improved"' class='is-size-5'><b>***</b></span>
-                <span v-if='server.id === "Left_4_Dead_2_Extra_Players_Public"' class='is-size-5'><b>**</b></span>
-                <span v-else-if='server.id.startsWith("Left_4_Dead_2_Public")' class='is-size-5'><b>*</b></span>
+                <span v-if="server.tags.includes('5+')" class='is-size-5'><b>**</b></span>
+                    <span v-if="server.tags.includes('customs')" class='is-size-5'><b>*</b></span>
               </td>
-              <td><span v-if="server.status === 'online'">{{server.players.online}} / {{server.players.max}}</span></td>
+              <td><span v-if="server.status.online">{{server.status.data.players.length}} / {{server.status.data.maxplayers}}</span></td>
               <td>
-                <div class="buttons" v-if="server.meta.host === 'lgs.jackz.me'">
-                  <template v-if="server.status === 'online'">
-                    <a @click="processAction(server, 'request')" class="button is-dark">Request Restart</a>
-                    <a @click="processAction(server, 'restart')" class="button is-warning" v-if="shiftPressed">Force Restart</a>
+                <div class="buttons">
+                  <template v-if="server.status.online">
+                    <template v-if="server.tags.includes('rcon')">
+                      <a @click="processAction(server, 'stop')" class="button is-dark">Request Restart</a>
+                      <a @click="processAction(server, 'stop?force=1')" class="button is-warning" v-if="shiftPressed">Force Restart</a>
+                    </template>
                   </template>
-                  <template v-else-if="server.meta.name.includes('Public')">
-                    <a @click="processAction(server, 'start')" v-if="!starting[server.meta.port]" class="button is-success">Start Server</a>
+                  <template v-else-if="server.tags.includes('systemd')">
+                    <a @click="processAction(server, 'start')" v-if="!starting[server.port]" class="button is-success">Start Server</a>
                   </template>
-                  <a @click="processAction(server, 'update')" class="button is-info">Update</a>
+                  <!-- <a @click="processAction(server, 'update')" class="button is-info">Update</a> -->
                 </div>
               </td>
             </tr>
@@ -63,7 +61,7 @@
 export default {
   data() {
     return {
-      servers: {},
+      servers: [],
       shiftPressed: false,
       message: {
         content: null,
@@ -88,19 +86,20 @@ export default {
           this.$set(this.starting, server.meta.port, false);
         }, 1000 * 30)
       }
-      fetch(`https://api.lgs.jackz.me/internal/call-rcon.php?method=${type}&port=${server.meta.port}&key=${this.$SCRIPT_KEY}`, {
+      fetch(`/api/servers/${server.id}/${type}`, {
+        method: 'POST',
         credentials: 'include'
       })
       .then(async(response) => {
         if(response.ok ) {
           const json = await response.json()
           if(json.error) {
-            return this.sendMessage('error', `<b>Server returned error</b><br>${json.error}`)
+            return this.sendMessage('error', `<b>Server returned error</b><br>${json.message}`)
           }
-          if(json.stdout[0].includes("players online")) {
+          if(json.response.includes("players online")) {
             this.sendMessage('error', 'Cannot restart server: There are players online')
           }else{
-           this.sendMessage('success', json.stdout[0])
+           this.sendMessage('success', json.response)
           }
         }else{
           this.sendMessage('error', `<b>Server returned error</b><br>${response.statusText}`)
@@ -113,8 +112,8 @@ export default {
     getServerClasses(server) {
       const classes = ['has-tooltip-arrow']
 
-      if(server.status === 'online') {
-        if(server.players.online == 0) {
+      if(server.status.online) {
+        if(server.status.data.players.length == 0) {
           classes.push('has-text-success')
           classes.push('has-tooltip-success')
         } else {
@@ -128,22 +127,20 @@ export default {
       return classes
     },
     getServerMessage(server) {
-      if(server.status === 'online') return server.players.online == 0 ? 'Server is currently online & empty. Click to join' : 'Server has players online. Click to join.'
-      else return 'Server is offline'
+      if(server.status.online) return server.status.data.players.list == 0 ? 'Server is currently online & empty. Click to join' : 'Server has players online. Click to join.'
+      else return 'Server is offline or unreachable'
       //
       return
     },
     refreshServers() {
       this.$emit('refresh', 'start')
-      fetch('https://servers.jackz.me/api/gameservers?group=l4d2')
+      fetch('/api/servers')
       .then(response => {
         if(response.ok) return response.json()
         else console.error('Failure getting servers', response)
       })
       .then(json => {
-        for(const server of json.servers) {
-          this.$set(this.servers, server.meta.id, server)
-        }
+        this.servers = json
       })
       .finally(() => {
         this.$emit('refresh', 'stop')
@@ -152,7 +149,7 @@ export default {
   },
   activated() {
     this.refreshTimer = setInterval(() => {
-      this.refreshServers()
+      // this.refreshServers()
     }, 1000 * 60 * 1)
   },
   deactivated() {

@@ -39,10 +39,6 @@ const WS_ITEMID_REGEX = new RegExp(/(\d+).vpk/)
 
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
-    fastify.addHook('preHandler', async(req, reply) => {
-        await fastify.authmngr.verify(req, reply)
-    })
-
     fastify.get('/discord', (req, reply) => {
         if(!process.env.DISCORD_INVITE_URI)
             reply.send("No discord invite link was set, sorry.")

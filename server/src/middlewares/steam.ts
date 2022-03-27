@@ -1,6 +1,6 @@
 import { FastifyInstance } from 'fastify';
 import FastifyPlugin from 'fastify-plugin'
-import ServerManager from '../modules/ServerManager.js';
+import ServerManager from '../modules/servers/ServerManager.js';
 
 import SteamAPI from '../modules/steam.js'
 

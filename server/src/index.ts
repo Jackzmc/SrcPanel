@@ -7,7 +7,7 @@ import dotenv from 'dotenv'
 import { RedisClientType } from '@node-redis/client';
 import SteamAPI from './modules/steam.js'
 import AuthManager, { AdminPermissions } from './modules/AuthManager';
-import ServerManager from './modules/ServerManager.js';
+import ServerManager from './modules/servers/ServerManager.js';
 import { readdir } from 'fs/promises';
 import path from 'path'
 dotenv.config()
