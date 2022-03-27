@@ -449,7 +449,7 @@ export default {
           steamid: this.edited.client.id,
           reason: this.edited.reason,
           executor: this.executorEdit.edit.id,
-          public_message: this.edited.public_message,
+          public_message: this.edited.publicReason,
           expires,
           flags
         })
