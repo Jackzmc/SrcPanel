@@ -1,4 +1,5 @@
 {
+    "refreshIntervalSeconds": 60,
     "servers": [
         {
             // Optional id for the server, used in api calls and in the url /servers/:id
@@ -6,8 +7,11 @@
             "id": "my-custom-id",
             // Required: Display name for a server
             "name": "My server 1",
+            // The type of game, see list at https://www.npmjs.com/package/gamedig
+            "type": "left4dead2",
             // Required: The url of the server
             "ip": "127.0.0.1:27015",
+
             "rcon": {
                 "password": {
                     // One of these is needed, env will overwrite text
@@ -18,8 +22,12 @@
                 },
                 // The command to use to exit, default is 'exit'
                 // Won't be used if systemd is configured
-                "exitCommand": "exit"
+                "exitCommand": "exit",
+                // Request to restart command, optional or exit
+                "requestExitCommand": "exit"
             },
+            // Any custom tags, to be passed to any api clients
+            "tags": []
             // Optional systemd configuration
             /*"systemd": {
                 // If systemd is a user service
