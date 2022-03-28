@@ -36,13 +36,6 @@ export default {
       userdata: null
     }
   },
-  watch: {
-    $route() {
-      if(this.$route.meta.authRequired && !this.userdata) {
-        this.$router.push('/login-required?return=' + this.$route.fullPath)
-      }
-    }
-  },
   methods: {
     reloadPage() {
       if (!this.updateInfo.registration || !this.updateInfo.registration.waiting) return
@@ -64,6 +57,10 @@ export default {
           permissions: json.permissions
         }
         console.log('Authorized: Hello', json.user.name)
+      } else {
+        if(this.$route.meta.authRequired && !this.userdata) {
+          this.$router.push('/login-required?return=' + this.$route.fullPath)
+        }
       }
     },
     onLogout() {
