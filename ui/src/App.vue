@@ -38,7 +38,7 @@ export default {
   },
   watch: {
     $route() {
-      if(this.$route.meta.authRequired && !this.userData) {
+      if(this.$route.meta.authRequired && !this.userdata) {
         this.$router.push('/login-required?return=' + this.$route.fullPath)
       }
     }
