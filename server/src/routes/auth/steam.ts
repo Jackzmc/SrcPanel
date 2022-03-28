@@ -86,10 +86,15 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                                 }
                             }
                         } else {
-                            return reply.code(401).send({
-                                error: 'UNAUTHORIZED',
-                                message: 'Account is not authorized'
-                            })
+                            if(req.query.return_uri) {
+                                const redirectUri = process.env.STEAM_REDIRECT_URI || "http://localhost:8080"
+                                return reply.redirect(`${redirectUri}/login-required?type=1`)
+                            } else {
+                                return reply.code(401).send({
+                                    error: 'UNAUTHORIZED',
+                                    message: 'Account is not authorized'
+                                })
+                            }
                         }
                     } else {
                         return reply.code(500).send({

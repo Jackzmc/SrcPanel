@@ -86,7 +86,7 @@ export default class Server {
           })
           client.on('end', () => this.rcon.connected = false)
           client.on('error', (err) => {
-            console.log(`[Server::${this._id}]`, err)
+            console.warn(`[Warn] [Server::${this._id}]`, err.code ?? err.message)
             this.rcon.connected = false
           })
           this.rcon = {
