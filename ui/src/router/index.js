@@ -138,6 +138,13 @@ const routes = [
       description: null,
       authRequired: true
     }
+  },
+  {
+    path: '/login-required',
+    component: () => import(/* webpackChunkName: 'misc' */ '../views/Unauthorized.vue'),
+    meta: {
+      hideHero: true
+    }
   }
 ]
 

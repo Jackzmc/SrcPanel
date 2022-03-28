@@ -36,6 +36,13 @@ export default {
       userdata: null
     }
   },
+  watch: {
+    $route() {
+      if(this.$route.meta.authRequired && !this.userData) {
+        this.$router.push('/login-required?return=' + this.$route.fullPath)
+      }
+    }
+  },
   methods: {
     reloadPage() {
       if (!this.updateInfo.registration || !this.updateInfo.registration.waiting) return
