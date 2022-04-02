@@ -508,14 +508,14 @@ export default {
     if(params.has('page')) {
       this.page = parseInt(params.get('page'))
     }
-    if(this.userdata) {
-      setInterval(() => {
-        this.getData()
-      }, REFRESH_INTERVAL_MS)
-      this.getData()
-    }
 
   },
+  mounted() {
+    setInterval(() => {
+      this.getData()
+    }, REFRESH_INTERVAL_MS)
+    this.getData()
+  }
 }
 
 </script>

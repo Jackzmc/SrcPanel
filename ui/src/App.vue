@@ -47,6 +47,10 @@ export default {
       this.reloadPage()
     },
     async getAuth() {
+      if(window.sessionStorage.getItem('srcds_userdata')) {
+        this.userdata = JSON.parse(window.sessionStorage.getItem('srcds_userdata'))
+      }
+
       const response = await fetch(`/api/auth/profile`, {
         credentials: 'include'
       })
@@ -56,8 +60,10 @@ export default {
           user: json.user,
           permissions: json.permissions
         }
+        window.sessionStorage.setItem('srcds_userdata', JSON.stringify(this.userdata))
         console.log('Authorized: Hello', json.user.name)
       } else {
+        window.sessionStorage.removeItem('srcds_userdata')
         if(this.$route.meta.authRequired && !this.userdata) {
           this.$router.push('/login-required?return=' + this.$route.fullPath)
         }
