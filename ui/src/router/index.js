@@ -134,7 +134,7 @@ const routes = [
     path: '/admin/logs',
     component: () => import(/* webpackChunkName: 'logs' */ '../views/admin/Logs.vue'),
     meta: {
-      name: 'Audit & Activity Logs',
+      title: 'Audit & Activity Logs',
       description: 'View all activity inside and outside the game',
       authRequired: true
     }
