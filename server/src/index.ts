@@ -64,7 +64,7 @@ app.register(import('./middlewares/database.js'))
     app.register(FastifySession, { 
         secret: process.env.SESSION_SECRET,
         cookieName: 'srcds-sessid',
-        cookie: { secure: process.env.NODE_ENV === "production" },
+        cookie: { secure: process.env.NODE_ENV === "production", maxAge: 1.21e+9 },
         store: new MySQLStore({
           schema: {
               tableName: 'dash_sessions',
