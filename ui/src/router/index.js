@@ -73,7 +73,7 @@ const routes = [
     children: [
       {
         path: 'edit/:id',
-        component: () => import(/* webpackChunkName: 'bans' */ '../components/modals/BanEditModal.vue'),
+        component: () => import(/* webpackChunkName: 'bans' */ '../components/modals/EditBanModal.vue'),
         hideHero: true,
       }
     ]
@@ -110,7 +110,25 @@ const routes = [
       title: 'Player Management',
       description: 'View all players and manage them, all in one place',
       authRequired: true
-    }
+    },
+    children: [
+      {
+        path: ':id/add-ban',
+        component: () => import(/* webpackChunkName: 'players' */ '../components/modals/AddBanModal.vue'),
+        meta: {
+          title: 'Ban Player',
+          authRequired: true
+        }
+      },
+      {
+        path: ':id/add-admin',
+        // component: () => import(/* webpackChunkName: 'players' */ '../components/modals/AddAdminModal.vue'),
+        meta: {
+          title: 'Add Admin Player',
+          authRequired: true
+        }
+      }
+    ]
   },
   {
     path: '/admin/logs',

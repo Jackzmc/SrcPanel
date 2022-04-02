@@ -21,6 +21,9 @@ export default {
   created() {
     const params = new URLSearchParams(window.location.search);
     if(params.has('type')) this.type = Number(params.get('type'))
+    if(this.userdata && this.type == 0) {
+      this.$router.push(params.get('return'))
+    }
   }
 }
 </script>
