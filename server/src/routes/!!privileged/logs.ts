@@ -41,7 +41,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
         const conditions = []
         let data = [], countData = []
-        let limit = req.query.limit || 50
+        let limit = Number(req.query.limit) || 50
         if(limit <= 0) limit = 50
 
         let page = req.params.page
@@ -86,12 +86,12 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             countData.push(searchMessage)
         }
 
-        const aroundId = req.query.aroundId || req.query.search_id
+        const aroundId = Number(req.query.aroundId || req.query.search_id)
         if(aroundId) {
             const min = aroundId - limit
             const max = aroundId + limit
             limit *= 2
-            conditions.push(`id >= ? <= ?`)
+            conditions.push(`id >= ? AND id <= ?`)
             data = [ ...data, min, max ]
             countData = [ ...countData, min, max ]
         }
