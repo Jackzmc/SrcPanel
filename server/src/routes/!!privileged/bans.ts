@@ -13,7 +13,18 @@ const PUTBanBody = Type.Object({
     expires: Type.Optional(Type.String()),
     public_message: Type.Optional(Type.String()),
 })
+
 type PUTBanBodyType = Static<typeof PUTBanBody>;
+
+const POSTBanBody = Type.Object({
+    executor: Type.Optional(Type.String()),
+    reason: Type.Optional(Type.String()),
+    flags: Type.Optional(Type.Integer()),
+    expires: Type.Optional(Type.String()),
+    public_message: Type.Optional(Type.String()),
+})
+
+type POSTBanBodyType = Static<typeof POSTBanBody>;
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
     fastify.route({
@@ -78,6 +89,68 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
             return {
                 changes: ok.affectedRows
+            }
+        }
+    })
+
+    fastify.route({
+        url: '/:steamid', 
+        method: 'POST',
+        schema: {
+            response: {
+                200: {
+                    type: 'object',
+                    properties: {
+                        changes: { type: 'number' },
+                    }
+                }
+            },
+            params: {
+                steamid: {
+                    type: "string"
+                }
+            }
+        },
+        async handler(req: FastifyRequest<{ Body: POSTBanBodyType, Params: { steamid: string } }>, reply) {
+            const [existing] = await fastify.db.execute<RowDataPacket[]>(`
+                SELECT * FROM bans WHERE steamid = ?`,
+                [req.params.steamid]
+            )
+
+            if(existing.length > 0) {
+                for(const ban of existing) {
+                    if(~ban.flags & 2) {
+                        return reply.code(409).send({
+                            error: 'BAN_EXISTS',
+                            message: `User was already banned on non-suspended ban #${ban.id}`,
+                            statusCode: 409
+                        })
+                    }
+                }
+            }
+
+            const ban = {
+                ...req.body,
+                steamid: req.params.steamid,
+            }
+
+            const [ok] = await fastify.db.execute<OkPacket>(`
+                INSERT INTO bans (steamid, executor, reason, flags, public_message, expires, timestamp) 
+                VALUES (:steamid, :executor, :reason, :flags, :public_message, :expires, UNIX_TIMESTAMP())`,
+                {
+                    executor: ban.executor,
+                    reason: ban.reason,
+                    flags: ban.flags,
+                    public_message: ban.public_message,
+                    expires: ban.expires,
+                    steamid: ban.steamid
+                }
+            )
+
+            fastify.authmngr.log.addWebEntry(req.session.user.steamid, 'ADD_BAN', `Add ban #${ok.insertId} for ${ban.steamid}`)
+
+            return {
+                banId: ok.insertId
             }
         }
     })
