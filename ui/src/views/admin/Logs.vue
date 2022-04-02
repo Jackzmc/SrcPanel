@@ -223,6 +223,8 @@
 import Pagination from '@/components/pagination'
 import Debounce from '@/js/debounce.js'
 
+const REFRESH_INTERVAL_MS = 1000 * 60 * 2
+
 const FULLNAME_REGEX = /"([^"<>]+)<\d+><(STEAM_\d:\d:\d+|Console|BOT)><(Console)?>"/g
 const USER_REGEX = /^(STEAM_\d:\d:\d+|Server|CONSOLE|Smoker|Boomer|Charger|Jockey|Hunter|Spitter|Tank|Witch)$/
 const ADMINCHAT_REGEX = /triggered sm_say \(text (.*)\)/
@@ -231,6 +233,7 @@ import Modal from '@/components/Modal'
 
 const DEFAULT_TYPES = ["ACTION", "CHAT", "INFO", "STATE","WEB"]
 const DEFAULT_SERVERS = ["improved", "reserved"]
+
 
 export default {
   props: ['userdata'],
@@ -506,8 +509,12 @@ export default {
       this.page = parseInt(params.get('page'))
     }
     if(this.userdata) {
+      setInterval(() => {
+        this.getData()
+      }, REFRESH_INTERVAL_MS)
       this.getData()
     }
+
   },
 }
 
