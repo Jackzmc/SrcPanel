@@ -366,7 +366,7 @@ export default {
       this.page = 1
       if(this.userdata)
         this.fetchDebounce()
-      window.history.pushState("", "", `?page=${this.page}${this.query}#logs`);
+      window.history.pushState("", "", `?page=${this.page}${this.query}`);
     }
   },
   methods: {
