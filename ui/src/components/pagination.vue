@@ -25,7 +25,7 @@
         <span class="pagination-ellipsis">&hellip;</span>
       </li>
       <li>
-        <a class="pagination-link" @click="setPage(maxPages)">{{maxPages}}</a>
+        <a class="pagination-link" @click="setPage(maxPages)">{{maxPages.toLocaleString()}}</a>
       </li>
       </template>
     </ul>

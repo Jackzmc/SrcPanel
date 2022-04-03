@@ -1,7 +1,7 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
 import { OkPacket, RowDataPacket } from 'mysql2';
 import { Static, Type } from '@sinclair/typebox'
-import { ADMINS_DB } from '../!unprivileged/admins.js';
+import { ADMINS_DB } from '../!!privileged/admins.js';
 
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {

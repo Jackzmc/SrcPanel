@@ -29,22 +29,25 @@
         </table>
       </div>
       <div class="column is-3">
-        <h4 class="title is-4 has-text-centered">Admins</h4>
-        <p><b>Admin CC Bypass</b> is anti-rush bypass</p>
-        <table class="table is-fullwidth">
-          <thead>
-            <tr>
-              <th>SteamID</th>
-              <th>Note</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="admin in admins" :key="admin.id">
-              <td><a :href="getStatURL(admin.steamid)">{{admin.steamid}}</a></td>
-              <td>{{admin.name || admin.comment}}</td>
-            </tr>
-          </tbody>
-        </table>
+        <template v-if="userdata">
+          <h4 class="title is-4 has-text-centered">Admins</h4>
+          <p><b>Admin CC Bypass</b> is anti-rush bypass</p>
+          <table class="table is-fullwidth">
+            <thead>
+              <tr>
+                <th>SteamID</th>
+                <th>Note</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="admin in admins" :key="admin.id">
+                <td><a :href="getStatURL(admin.steamid)">{{admin.steamid}}</a></td>
+                <td>{{admin.name || admin.comment}}</td>
+              </tr>
+            </tbody>
+          </table>
+        </template>
+        <p v-else class="has-text-centered"><br><br>Login to view the admins</p>
       </div>
     </div>
   </div>
@@ -52,6 +55,7 @@
 
 <script>
 export default {
+  props: ['userdata'],
   data() {
     return {
       notes: [],
@@ -60,7 +64,11 @@ export default {
   },
   created() {
     this.fetchNotes()
-    this.fetchAdmins()
+  },
+  mounted() {
+    if(this.userdata) {
+      this.fetchAdmins()
+    }
   },
   methods: {
     fetchNotes() {
