@@ -17,13 +17,29 @@
 <div>
   <div class="container">
     <div class="columns">
-      <div class="column is-9">
+      <div class="column is-3">
         <p class="title is-3">Server Logs</p>
         <p class="subtitle is-4">
           {{count.toLocaleString()}} log entries
           <em v-if="query != ''">(filtered)</em>
         </p>
       </div>
+      <div class="column is-6">
+<label class="label">
+          Enabled Types
+          <a class="is-inline" @click="filters['types'] = []">(Clear)</a>&nbsp;
+          <a @click="filters['types'] = $options.FILTERS['types']">(Select All)</a>
+        </label>
+        <div class="buttons">
+          <a
+            v-for="key in $options.FILTERS.types" :key="key"
+            :class="['button', 'is-small', typeColors[key]]"
+            @click="toggleList('types', key)"
+          >
+            {{key}}
+          </a>
+        </div>
+        </div>
       <div class="column is-2">
         <label class="label">Find Messages Around ID</label>
         <div class="field has-addons">
@@ -61,20 +77,6 @@
             v-for="key in $options.FILTERS.servers" :key="key"
             :class="['button', 'is-small', serverColors[key]]"
             @click="toggleList('servers', key)"
-          >
-            {{key}}
-          </a>
-        </div>
-        <label class="label">
-          Enabled Types
-          <a class="is-inline" @click="filters['types'] = []">(Clear)</a>&nbsp;
-          <a @click="filters['types'] = $options.FILTERS['types']">(Select All)</a>
-        </label>
-        <div class="buttons">
-          <a
-            v-for="key in $options.FILTERS.types" :key="key"
-            :class="['button', 'is-small', typeColors[key]]"
-            @click="toggleList('types', key)"
           >
             {{key}}
           </a>
@@ -144,7 +146,7 @@
     </div>
   </div>
   <hr>
-  <div class="container">
+  <div class="container" v-if="!search.id">
     <p v-if="loading == 1" class="subtitle is-3 has-text-centered">Loading...</p>
     <Pagination v-else-if="isFilterTargetValid||!filters.target||filters.target==''" :page="page" :count="count" :limit="limit" @page="setPage" />
     <p v-else class="has-text-danger">Invalid filter target</p>
@@ -155,15 +157,13 @@
       <thead>
         <tr>
           <th style="width:0" v-if="debugView||showIds">ID</th>
-          <th style="width:0" data-tooltip="The server the action was recorded on" class="has-tooltip-right">Server</th>
           <th style="width:0" data-tooltip="The type of action that occurred">Type</th>
-          <th style="width:0" data-tooltip="Who caused the action to occur. May not exist">Activator</th>
+          <th style="width:0">Timestamp</th>
           <th>
               <label class="label is-inline-block">Message</label>&nbsp;&nbsp;
-              <input class="input is-inline is-small is-rounded" v-model="search.message" style="width:50%" placeholder="Filter" />
+              <input class="input is-inline is-small is-rounded" v-model="search.message" style="width:50%" placeholder="Search for a message" />
           </th>
-          <th v-if="isTargetColumnVisible" style="width:0" data-tooltip="Who the action was against. May not exist">Target</th>
-          <th style="width:0">Date</th>
+          <th style="width:0" data-tooltip="The server the action was recorded on" class="has-tooltip-right">Server</th>
         </tr>
       </thead>
       <tbody>
@@ -172,42 +172,29 @@
             <a data-tooltip="Click to view all messages around this entry" class="has-tooltip-right" @click="searchID(log.id)">{{ log.id }}</a>
           </td>
           <td class="nowrap">
-            <span v-if="log.server" :class="['tag', $options.SERVER_COLORS[log.server]]">{{ log.server }}</span>
-          </td>
-          <td class="nowrap">
             <span :class="['tag', $options.TYPE_COLORS[log.type]]">{{ log.type }}</span>
           </td>
-          <td class="nowrap">
-            <b>
-            <component
-              :is="log.client.hasStats?'a':'span'"
-              @click.ctrl="openStatsProfile(log.client.steamid)"
-              @click="setUserFilter('client', log.client.steamid)"
-              :data-tooltip="log.client.steamid + '\n\nClick to only see entries from this activator.' + (log.client.hasStats?'\nCtrl + Click to view stats profile':'')"
-            >
-              {{ log.client.name }}
-            </component>
-            </b>
-          </td>
-          <td v-html="log.message"></td>
-          <td class="nowrap" v-if="isTargetColumnVisible">
-            <component
-              :is="log.target.hasStats ? 'a' : 'span'"
-              @click.ctrl="openStatsProfile(log.target.steamid)"
-              @click.exact="setUserFilter('target', log.target.steamid)"
-              :data-tooltip="log.target.steamid + '\n\nClick to only see entries from this target.' + (log.target.hasStats?'\nCtrl + Click to view stats profile':'')"
-            >
-              {{ log.target.name }}
-            </component>
-          </td>
           <td class="nowrap">{{ log.timestamp }}</td>
+          <td>
+            <b>
+              <LogClientTarget :type="log.client.steamid?'client':'target'" :user="log.client.steamid?log.client:log.target" @set-filter="setUserFilter" />
+              <span v-if="log.type === 'CHAT'">:&nbsp;</span>
+            </b>
+            <span v-html="log.message" />
+            <b v-if="log.type !== 'CHAT' && log.client.steamid">
+              <LogClientTarget type="target" :user="log.target" @set-filter="setUserFilter" />
+            </b>
+        </td>
+          <td class="nowrap">
+            <span v-if="log.server" :class="['tag', $options.SERVER_COLORS[log.server]]">{{ log.server }}</span>
+          </td>
         </tr>
       </tbody>
     </table>
   </div>
   <br>
   <div class="container" v-if="!loading">
-    <Pagination :page="page" :count="count" :limit="limit" @page="setPage" />
+    <Pagination v-if="!search.id" :page="page" :count="count" :limit="limit" @page="setPage" />
     <a @click="toggleDebug" v-if="debugView"><em>(click to disable debug view)</em></a>
     <a @click="toggleDebug" v-else><em>(click to enable debug view)</em></a>
     <span v-if="debugView">
@@ -222,6 +209,7 @@
 <script>
 import Pagination from '@/components/pagination'
 import Debounce from '@/js/debounce.js'
+import LogClientTarget from '@/components/LogClientTarget.vue'
 
 const REFRESH_INTERVAL_MS = 1000 * 60 * 2
 
@@ -237,7 +225,11 @@ const DEFAULT_SERVERS = ["improved", "reserved"]
 
 export default {
   props: ['userdata'],
-  components: { Pagination, Modal },
+  components: {
+    Pagination,
+    Modal,
+    LogClientTarget
+  },
   FILTERS: {
     servers: [
       "improved", "reserved", "public1", "public2", "public3", "public4", "public5", "public6", "public7", "public8", "unknown", "web"
@@ -437,11 +429,15 @@ export default {
             if(log.target.steamid && log.target.steamid.startsWith("STEAM_") &&  !this.history.targets.some(c => c.steamid == log.target.steamid)) this.history.targets.push(log.target)
 
             if(!this.debugView && log.message) {
-              log.message = log.message.replace(FULLNAME_REGEX, (m, p1) => p1)
-              const adminChatMatch = log.message.match(ADMINCHAT_REGEX)
-              if(adminChatMatch) {
-                log.message = `<span class='tag is-warning' data-tooltip='Message was sent in admin chat'>${adminChatMatch[1]}</span>`
-                log.type = "CHAT"
+              log.message = log.message.replace(FULLNAME_REGEX, '')
+              if(log.type === "ACTION") {
+                const adminChatMatch = log.message.match(ADMINCHAT_REGEX)
+                if(adminChatMatch) {
+                  log.message = `<span class='tag is-warning' data-tooltip='Message was sent in admin chat'>${adminChatMatch[1]}</span>`
+                  log.type = "CHAT"
+                }
+              } else if(log.type === "CHAT") {
+                log.message = `<span class='tag'>${log.message}</span>`
               }
             }
           })
