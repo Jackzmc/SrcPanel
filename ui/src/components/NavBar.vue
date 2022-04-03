@@ -74,7 +74,6 @@
       <div class="navbar-end">
         <div class="navbar-item">
           <span v-if="updateInfo.updating">Updating...</span>
-          <span v-else :data-tooltip="updateTooltip" class="has-tooltip-bottom">Up-to-date</span>
         </div>
         <div v-if="userdata" class="navbar-item has-dropdown is-hoverable " >
           <a class="navbar-link">
@@ -82,6 +81,12 @@
             <span>{{userdata.user.name}}</span>
           </a>
           <div class="navbar-dropdown is-right">
+            <a class="navbar-item">
+              <span v-if="!updateInfo.updating" :data-tooltip="updateTooltip" class="has-tooltip-bottom">
+                UI Version Info
+              </span>
+            </a>
+            <hr class="navbar-divider">
             <router-link class="navbar-item" to="/user/settings">
               Settings
             </router-link>
@@ -128,8 +133,12 @@ export default {
       if(!this.userdata) return ''
       return `https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/79/${this.userdata.user.avatarhash}.jpg`
     },
+    updateDate() {
+      return new Date(Number(this.$LAST_UPDATED))
+    },
     updateTooltip() {
-      return `Updated ${this.$LAST_UPDATED}`
+      const date = this.updateDate
+      return `${date.toLocaleDateString()} at ${date.toLocaleTimeString()}`
     }
   },
   methods: {

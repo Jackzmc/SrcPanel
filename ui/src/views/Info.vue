@@ -31,7 +31,6 @@
       <div class="column is-3">
         <template v-if="userdata">
           <h4 class="title is-4 has-text-centered">Admins</h4>
-          <p><b>Admin CC Bypass</b> is anti-rush bypass</p>
           <table class="table is-fullwidth">
             <thead>
               <tr>

@@ -1,5 +1,5 @@
 const date = new Date()
-process.env.VUE_APP_BUILD_DATE = `${date.toLocaleDateString()} at ${date.toLocaleTimeString()}`
+process.env.VUE_APP_BUILD_DATE = Date.now()
 
 module.exports = {
   publicPath: process.env.PUBLIC_PATH || '/',
