@@ -100,5 +100,9 @@
         "cvar": "l4d2_extraitems_splittank_chance <0.0 - 1.0:float>",
         "description": "The chance a tank will split (Only applies in non finale, and when >= 7 players",
         "default": 3
+    },
+    {
+        "cvar": "l4d2_honk_mode <0/1/2:int>",
+        "description": "Will activate honk mode - includes live counter. 0=OFF, 1=At 40%, 2=Randomly changing percent"
     }
 ]

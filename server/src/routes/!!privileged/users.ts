@@ -7,7 +7,7 @@ import { ADMINS_DB } from '../!!privileged/admins.js';
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
     fastify.get('/search/:query', async(req: FastifyRequest<{Params: { query: string }}>, reply) => {
         const query = `%${req.params.query}%`
-        const [rows] = await fastify.db.execute(
+        const [rows] = await fastify.db.execute<RowDataPacket[]>(
             `SELECT
             (SELECT COUNT(*) FROM notes WHERE notes.steamid = stats_users.steamid) as notesCount,
             (SELECT COUNT(*) FROM bans WHERE bans.steamid = stats_users.steamid) as bansCount,
@@ -20,7 +20,12 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             { query }
         )
         return {
-            users: rows
+            users: rows.map(row => {
+                return {
+                    ...row,
+                    country: row.country.length > 0 ? row.country : null 
+                }
+            })
         }
     })
 
@@ -36,7 +41,10 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             [ req.params.steamid ]
         )
         return {
-            user: rows.length > 0 ? rows[0] : null
+            user: rows.length > 0 ? {
+                ...rows[0],
+                country: rows[0].country.length > 0 ? rows[0].country : null
+            } : null
         }
     })
 
