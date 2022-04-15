@@ -19,8 +19,10 @@
                         {{server.name}}
                       </b>
                     </a>
-                    <span v-if="server.tags.includes('5+')" class='is-size-5'><b>**</b></span>
-                    <span v-if="server.tags.includes('customs')" class='is-size-5'><b>*</b></span>
+                    <span class="tags">
+                      <span class="tag" v-if="server.tags.includes('5+')">5+</span>
+                      <span class="tag" v-if="server.tags.includes('customs')">Custom Maps</span>
+                    </span>
                 </td>
                 <td class="has-text-centered">
                   <span
