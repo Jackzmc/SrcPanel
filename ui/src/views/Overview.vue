@@ -4,9 +4,6 @@
       <div class="column is-8">
           <Servers @refresh="onServerRefresh" />
           <p class="is-inline is-pulled-right" style="margin-right: 90px">List refreshing in {{countdown}} seconds</p>
-          <em>* Server supports custom maps</em><br>
-          <em>** Server supports 5+ players</em><br>
-          <em>*** Server supports custom maps AND 5+ players</em>
       </div>
       <div class="column">
           <div class="content">

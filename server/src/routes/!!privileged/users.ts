@@ -5,6 +5,38 @@ import { ADMINS_DB } from '../!!privileged/admins.js';
 
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
+    fastify.get('/recent/:server?', async(req: FastifyRequest<{Params: { server?: string }, Querystring: { limit?: number }}>, reply) => {
+        let limit = req.query.limit ?? 20
+        if(limit < 0 || limit > 100) limit = 20
+        let server = req.params.server || null
+        if(server === "all") server = null
+        const start = Date.now()
+        const [rows] = await fastify.db.execute<RowDataPacket[]>(
+            `SELECT 
+                (SELECT COUNT(*) FROM notes WHERE notes.steamid = client) as notesCount,
+                (SELECT COUNT(*) FROM bans WHERE bans.steamid = client) as bansCount,
+                (SELECT COUNT(*) FROM ${ADMINS_DB}.sm_admins WHERE ${ADMINS_DB}.sm_admins.identity = client) as isAdmin,
+                last_alias as name, country, timestamp as lastJoinDate, created_date as firstJoinDate,
+                server,
+                client as steamid
+            FROM activity_log
+            LEFT JOIN stats_users ON client = stats_users.steamid
+            WHERE
+                TYPE = 'QUIT' AND server = IFNULL(?,server)
+            ORDER BY activity_log.timestamp DESC
+            LIMIT ?`, 
+            [server, limit]
+        )
+
+        return {
+            meta: {
+                queryTimeSec: Date.now() - start
+            },
+            users: rows
+        }
+    })
+
+
     fastify.get('/search/:query', async(req: FastifyRequest<{Params: { query: string }}>, reply) => {
         const query = `%${req.params.query}%`
         const [rows] = await fastify.db.execute<RowDataPacket[]>(

@@ -25,7 +25,18 @@ type LogQueryType = Static<typeof LogQuery>
 
 export const ACTIVITY_LOG_TABLE_NAME = 'activity_log'
 
+let logServerCache = []
+
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
+    const [rows] = await fastify.db.query<RowDataPacket[]>("SELECT DISTINCT server FROM activity_log")
+    logServerCache = rows.map(row => row.server)
+
+    fastify.get('/servers', async(req, reply) => {
+        return {
+            servers: logServerCache
+        }
+    })
+
     fastify.get('/:page?', async(req: FastifyRequest<{ Querystring: LogQueryType, Params: { page?: number } }>, reply) => {
         const searchMessage = req.query.searchMessage ? `%${req.query.searchMessage}%` : (req.query.search_message ? `%${req.query.search_message}%` : null)
 
