@@ -47,7 +47,11 @@
 
 <script>
 export default {
-  props: ['users', 'userdata', 'hasManual'],
+  props: {
+    users: Array,
+    userdata: Object,
+    hasManual: Boolean,
+  },
   data() {
     return {
       selectedId: null,

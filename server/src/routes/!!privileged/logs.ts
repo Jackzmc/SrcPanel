@@ -29,7 +29,7 @@ let logServerCache = []
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
     const [rows] = await fastify.db.query<RowDataPacket[]>("SELECT DISTINCT server FROM activity_log")
-    logServerCache = rows.map(row => row.server)
+    logServerCache = rows.filter(row => row.server !== "web").map(row => row.server)
 
     fastify.get('/servers', async(req, reply) => {
         return {

@@ -22,10 +22,10 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             FROM activity_log
             LEFT JOIN stats_users ON client = stats_users.steamid
             WHERE
-                TYPE = 'QUIT' AND server = IFNULL(?,server)
+                TYPE = 'QUIT' AND server = IFNULL(?,server) AND client != ?
             ORDER BY activity_log.timestamp DESC
             LIMIT ?`, 
-            [server, limit]
+            [server, req.session.user.steamid, limit]
         )
 
         return {

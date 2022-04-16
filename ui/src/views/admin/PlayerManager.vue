@@ -17,6 +17,7 @@
           </option>
         </select>
       </div>
+      &nbsp;<a class="button is-info" @click="getRecentPlayers">Refresh</a>
       <UserSelection :userdata="userdata" :users="recentPlayers.list" @select="onUserSelected" @manual="onManualSelected" />
     </template>
     <template v-else-if="tabIndex == 1">
@@ -57,6 +58,7 @@ export default {
         func: null
       },
       recentPlayers: {
+        loading: false,
         list: [],
         server: null
       },
@@ -113,7 +115,9 @@ export default {
       return date.toLocaleString()
     },
     async getRecentPlayers() {
+      this.recentPlayers.loading = true
       const resp = await fetch(`/api/users/recent/${this.recentPlayers.server||''}?limit=10`)
+      this.recentPlayers.loading = false
       if(resp.ok) {
         const json = await resp.json()
 
