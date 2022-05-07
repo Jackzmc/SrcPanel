@@ -9,6 +9,9 @@ Vue.component('vue-skeleton-loader', VueSkeletonLoader);
 import '@/assets/main.scss'
 import '@creativebulma/bulma-tooltip/dist/bulma-tooltip.min.css'
 
+// import 'bulma-extension/bulma-extension'
+
+
 /*import { library } from '@fortawesome/fontawesome-svg-core'
 import { faUser, faFont, faCircle, faInfo } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'

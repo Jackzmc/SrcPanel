@@ -17,6 +17,7 @@ interface AddAdmin {
 
 export interface AdminPermissions {
     immunityLevel: number
+    flags?: string,
     web: {
         role: number,
         flags: number
@@ -28,7 +29,6 @@ interface Admin {
     authtype: "steam" | "name" | "ip",
     identity: string,
     password: string | null,
-    flags?: string,
     name: string,
 
     permissions: AdminPermissions
@@ -59,7 +59,8 @@ export enum WebRole {
 }
 
 export enum WebPermission {
-    RconAccess = 1 << 3
+    RconAccess = 1 << 1,
+    ManageAdmins = 1 << 2,
 }
 
 export default class AuthManager {
@@ -208,10 +209,10 @@ export default class AuthManager {
                     authtype: row.authtype,
                     identity: row.identity,
                     password: row.password,
-                    flags: row.flags,
                     name: row.name,
                     permissions: {
                         immunityLevel: row.immunity,
+                        flags: row.flags,
                         web: {
                             role: row.web_role || 0,
                             flags: row.web_flags || 0
