@@ -2,6 +2,7 @@
   "name": "server",
   "version": "1.0.0",
   "main": "index.js",
+  "types": "fastify.d.ts",
   "license": "MIT",
   "dependencies": {
     "@fastify/session": "^6.5.0",

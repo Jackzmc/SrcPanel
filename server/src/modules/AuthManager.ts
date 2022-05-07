@@ -3,6 +3,7 @@ import QuickLRU from 'quick-lru'
 import SteamID from 'steamid'
 import { FastifyReply, FastifyRequest } from 'fastify';
 import ActivityLog from "./ActivityLog.js";
+import { AdminPermissions } from '../../../common-types/User';
 
 interface AddAdmin {
     id?: number,
@@ -13,15 +14,6 @@ interface AddAdmin {
     name: string,
     immunity: number,
     groupIds?: string[]
-}
-
-export interface AdminPermissions {
-    immunityLevel: number
-    flags?: string,
-    web: {
-        role: number,
-        flags: number
-    }
 }
 
 interface Admin {
@@ -51,17 +43,6 @@ interface APIKey {
     lastUsed: number
 }
 
-export enum WebRole {
-    None = 0,
-    ReadOnly = 1,
-    ReadWrite = 2,
-    Admin = 3,
-}
-
-export enum WebPermission {
-    RconAccess = 1 << 1,
-    ManageAdmins = 1 << 2,
-}
 
 export default class AuthManager {
     private connection: Connection

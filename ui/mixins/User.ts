@@ -1,3 +1,7 @@
+export interface UserData {
+
+}
+
 export default class User {
   #userdata = null
   constructor(userdata) {

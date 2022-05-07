@@ -6,7 +6,7 @@ import { Pool } from 'mysql2/promise';
 import dotenv from 'dotenv'
 import { RedisClientType } from '@node-redis/client';
 import SteamAPI from './modules/steam.js'
-import AuthManager, { AdminPermissions } from './modules/AuthManager';
+import AuthManager from './modules/AuthManager';
 import ServerManager from './modules/servers/ServerManager.js';
 import { readdir } from 'fs/promises';
 import path from 'path'
@@ -35,6 +35,7 @@ const app = Fastify({
       }
 })
 
+import { Session as CustomSession } from '../../common-types/User.js'
 declare module 'fastify' {
   export interface FastifyInstance {
     db: Pool;
@@ -43,19 +44,8 @@ declare module 'fastify' {
     authmngr: AuthManager,
     servers: ServerManager
   }
-  interface Session {
-    user: {
-      steamid: string,
-      accountid: string,
-      name:  string,
-      profileurl: string,
-      avatarhash: string,
-    },
-    permissions: AdminPermissions
-    ip: string,
-    loginTime: number,
-    countryCode: string
-  }
+  // I dont know how to do this properly, its a fucking pain
+  interface Session extends CustomSession {}
 }
 
 app.register(import('./middlewares/database.js'))
