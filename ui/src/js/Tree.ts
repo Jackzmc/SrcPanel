@@ -1,5 +1,10 @@
 export class TreeNode {
-  constructor(key, value = key, parent = null) {
+  key: any;
+  value: any;
+  parent: null;
+  children: never[];
+
+  constructor(key: any, value = key, parent = null) {
     this.key = key;
     this.value = value;
     this.parent = parent;
@@ -16,30 +21,32 @@ export class TreeNode {
 }
 
 export class Tree {
-  constructor(key, value = key) {
+  private root: TreeNode
+
+  constructor(key: any, value = key) {
     this.root = new TreeNode(key, value);
   }
 
-  *preOrderTraversal(node = this.root) {
+  *preOrderTraversal(node = this.root): any {
     yield node;
     if (node.children.length) {
-      for (let child of node.children) {
+      for (const child of node.children) {
         yield* this.preOrderTraversal(child);
       }
     }
   }
 
-  *postOrderTraversal(node = this.root) {
+  *postOrderTraversal(node = this.root): any {
     if (node.children.length) {
-      for (let child of node.children) {
+      for (const child of node.children) {
         yield* this.postOrderTraversal(child);
       }
     }
     yield node;
   }
 
-  insert(parentNodeKey, key, value = key) {
-    for (let node of this.preOrderTraversal()) {
+  insert(parentNodeKey: any, key: any, value = key) {
+    for (const node of this.preOrderTraversal()) {
       if (node.key === parentNodeKey) {
         const newNode = new TreeNode(key, value, node)
         node.children.push(newNode);
@@ -49,9 +56,9 @@ export class Tree {
     return null;
   }
 
-  remove(key) {
-    for (let node of this.preOrderTraversal()) {
-      const filtered = node.children.filter(c => c.key !== key);
+  remove(key: any) {
+    for (const node of this.preOrderTraversal()) {
+      const filtered = node.children.filter((c: TreeNode) => c.key !== key);
       if (filtered.length !== node.children.length) {
         node.children = filtered;
         return true;
@@ -60,8 +67,8 @@ export class Tree {
     return false;
   }
 
-  find(key) {
-    for (let node of this.preOrderTraversal()) {
+  find(key: any) {
+    for (const node of this.preOrderTraversal()) {
       if (node.key === key) return node;
     }
     return undefined;

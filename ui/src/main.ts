@@ -1,6 +1,7 @@
 import Vue from 'vue'
 import App from './App.vue'
 import './registerServiceWorker'
+//@ts-ignore next-line
 import VueSkeletonLoader from 'skeleton-loader-vue';
 import router from './router'
 

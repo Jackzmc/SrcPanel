@@ -41,7 +41,7 @@
 import UserSelection from '@/components/UserSelection'
 
 // Keep track and open gui for each ban
-import Debounce from '@/js/debounce.js'
+import Debounce from '@/js/debounce'
 
 export default {
   components: {

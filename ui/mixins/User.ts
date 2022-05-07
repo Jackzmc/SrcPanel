@@ -4,6 +4,8 @@ export default class User {
     this.#userdata = userdata
   }
 
-  hasWebPerm(permNumber: )
+  hasWebPerm(permNumber) {
+
+  }
 
 }

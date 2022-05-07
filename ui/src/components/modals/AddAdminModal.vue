@@ -7,7 +7,7 @@
         <p v-else>Loading...</p>
         &nbsp;&nbsp;
       </header>
-      <section class="modal-card-body" v-if="user&&userdata.permissions.web.">
+      <section class="modal-card-body" v-if="user">
         <div class="field">
           <label class="label">Playtime</label>
           <span>

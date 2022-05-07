@@ -1,4 +1,4 @@
-export function parseType(type) {
+export function parseType(type: string) {
   switch(type) {
     case "int":
     case "integer":
@@ -22,7 +22,7 @@ export function parseType(type) {
   return type + " value"
 }
 
-export function formatParameters({parameters, defaultValue, args}) {
+export function formatParameters({parameters, defaultValue, args}: any) {
   const chars = parameters.split('')
   let lastChar = null, hasType = false, letters = "", string = "", type = ""
 

@@ -16,7 +16,7 @@
 
 <script>
 import Marked from 'marked'
-import { Tree, TreeNode } from '@/js/tree.js'
+import { Tree, TreeNode } from '@/js/Tree'
 import SectionRoot from '@/components/sections/SectionRoot.vue'
 
 export default {

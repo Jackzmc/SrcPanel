@@ -208,7 +208,7 @@
 
 <script>
 import Pagination from '@/components/pagination'
-import Debounce from '@/js/debounce.js'
+import Debounce from '@/js/debounce'
 import LogClientTarget from '@/components/LogClientTarget.vue'
 
 const REFRESH_INTERVAL_MS = 1000 * 60 * 2
