@@ -68,8 +68,13 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 const MIN_HOURS_PLAYTIME = 10
+import User from '@/js/User.ts'
+
+enum Test {
+
+}
 
 const FLAGS = {
   'a': 'Reserved Slot',
@@ -95,7 +100,9 @@ const FLAGS = {
 }
 
 import SteamID from 'steamid'
-export default {
+import Vue from 'vue'
+
+const Component = Vue.extend({
   FLAGS,
   MIN_HOURS_PLAYTIME,
   name: 'AddAdminModal',
@@ -137,33 +144,6 @@ export default {
     }
   },
   methods: {
-    async init() {
-      this.error = null
-      this.loading = true
-      const response = await fetch(`/api/users/${this.$route.params.id}`)
-      this.loading = false
-      if(response.ok) {
-        const json = await response.json()
-        if(!json.user) {
-          console.error('No users were found for id?')
-          return
-        }
-        this.user = json.user
-      }
-    },
-    async fetchStats() {
-      this.loading = true
-      const response = await fetch(`https://stats.jackz.me/api/user/${this.$route.params.id}`)
-      this.loading = false
-      if(response.ok) {
-        const json = await response.json()
-        if(json.user) {
-          this.stats = json.user
-        } else {
-          console.error('No stats found for user')
-        }
-      }
-    },
     save() {
       if(this.cantAddAdmin) {
         alert(`Cannot add admin for the following reasons:\n* ${this.noAddReasons.join('\n *')}`)
@@ -175,9 +155,9 @@ export default {
       this.$router.back()
     }
   },
-  mounted() {
-    this.init()
-    this.fetchStats()
+  async mounted() {
+    this.user = User.fetch(this.$route.params.id)
+    this.stats = User.getStats(this.$route.params.id)
   }
-}
+})
 </script>
