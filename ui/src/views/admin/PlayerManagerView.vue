@@ -30,7 +30,7 @@
       <UserSelection has-manual :userdata="userdata" :users="users" @select="onUserSelected" @manual="onManualSelected" />
     </template>
     <div class="buttons">
-      <a class="button is-primary" @click="addBan" :disabled="!selectedId || (selectedId === '_custom' && !manualInput)">Add Ban</a>
+      <a class="button is-primary" @click="addBan" :disabled="addBanDisableReason" :data-tooltip="addBanDisableReason">Add Ban</a>
       <a class="button is-warning" @click="addAdmin" v-if="hasCreateAdminPerms" :disabled="addAdminDisableReason" :data-tooltip="addAdminDisableReason">Add Admin</a>
     </div>
   </div>
@@ -88,9 +88,15 @@ const hasCreateAdminPerms = computed(() => {
   return privUser.immunityLevel > 0 && privUser.hasWebPerm(WebPermission.ManageAdmins)
 })
 const addAdminDisableReason = computed(() => {
+  //!selectedId || (selectedId === '_custom' && !manualInput)
   if(!selectedId.value) return 'No player selected'
   if(selectedId.value === '_custom') return 'Cannot add an unknown player as admin'
   if(selectedRecentUser.value?.isAdmin) return 'Selected player is already an admin'
+  return null
+})
+const addBanDisableReason = computed(() => {
+  if(!selectedId.value || (selectedId.value === '_custom' && !manualInput.value)) return 'No player selected'
+  if(selectedRecentUser.value?.isAdmin) return 'Selected player is an admin'
   return null
 })
 function setTab(index: number) {
