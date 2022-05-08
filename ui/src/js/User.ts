@@ -1,4 +1,15 @@
 import { Session, WebPermission, WebRole } from '../../../common-types/User';
+
+export interface PlayerData {
+  isAdmin: boolean,
+  steamid: string,
+  name: string,
+  country: string,
+  lastJoinDate: number
+  firstJoinDate: number
+}
+
+
 export default class User {
   private data: Session
 
@@ -10,7 +21,7 @@ export default class User {
         return new User(json.user)
       } else {
         console.error('No users were found for id?')
-        return null
+        return undefined
       }
     }
     throw new Error(`${response.status} ${response.statusText}: ${await response.text()}`)
@@ -24,7 +35,7 @@ export default class User {
         return json.user as Record<string, string|number>
       } else {
         console.error('No stats found for user')
-        return null
+        return undefined
       }
     }
     throw new Error(`${response.status} ${response.statusText}: ${await response.text()}`)
@@ -35,6 +46,7 @@ export default class User {
   }
 
   constructor(session: Session) {
+    if(!session) throw new Error("Session is empty")
     this.data = session
   }
 
@@ -44,6 +56,27 @@ export default class User {
 
   get webRole(): WebRole {
     return this.data.permissions.web.role
+  }
+
+  get name() {
+    return this.data.user.name
+  }
+
+  get id() {
+    return this.data.user.steamid
+  }
+
+  get permissions() {
+    return this.data.permissions
+  }
+
+  get flags() {
+    console.log(this.data)
+    return this.data.permissions.flags
+  }
+
+  get immunityLevel() {
+    return this.data.permissions.immunityLevel
   }
 
 }

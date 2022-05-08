@@ -31,4 +31,4 @@ export interface Session {
     ip: string,
     loginTime: number,
     countryCode: string
-  }
+}

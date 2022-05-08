@@ -68,13 +68,11 @@
   </div>
 </template>
 
-<script lang="ts">
+<script>
 const MIN_HOURS_PLAYTIME = 10
+import Vue from 'vue'
 import User from '@/js/User.ts'
 
-enum Test {
-
-}
 
 const FLAGS = {
   'a': 'Reserved Slot',
@@ -100,11 +98,11 @@ const FLAGS = {
 }
 
 import SteamID from 'steamid'
-import Vue from 'vue'
 
-const Component = Vue.extend({
-  FLAGS,
-  MIN_HOURS_PLAYTIME,
+
+export default {
+  // FLAGS,
+  // MIN_HOURS_PLAYTIME,
   name: 'AddAdminModal',
   props: ['userdata'],
   data() {
@@ -159,5 +157,5 @@ const Component = Vue.extend({
     this.user = User.fetch(this.$route.params.id)
     this.stats = User.getStats(this.$route.params.id)
   }
-})
+}
 </script>
