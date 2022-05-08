@@ -3,12 +3,14 @@ import { OkPacket, RowDataPacket } from 'mysql2';
 import { Static, Type } from '@sinclair/typebox'
 import SteamID from 'steamid';
 import fs from 'fs/promises'
+import { WebPermission } from '../../../../common-types/User.js';
 
 const POSTAdmin = Type.Object({
     immunityLevel: Type.Number(),
     flags: Type.String(),
     groupsIds: Type.Optional(Type.String()),
-    webPermissions: Type.Optional(Type.Number())
+    webPermissions: Type.Optional(Type.Number()),
+    name: Type.Optional(Type.String())
 })
 
 type POSTAdminType = Static<typeof POSTAdmin>
@@ -31,6 +33,13 @@ interface AddonChildListEntry {
     }
 }
 
+export interface AdminGroup {
+    id: number,
+    flags: string,
+    name: string,
+    immunityLevel: number
+}
+
 const ADDONS_FOLDER = process.env.ADDONS_FOLDER
 export const MAIN_DB = process.env.MYSQL_DB ? `\`${process.env.MYSQL_DB}\`` : null
 export const ADMINS_DB = process.env.MYSQL_ADMINS_DB ? `\`${process.env.MYSQL_ADMINS_DB}\`` : null
@@ -51,6 +60,31 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
         return {
             admins: rows
+        }
+    })
+
+    fastify.get('/groups', async(req, reply) => {
+        const [rows] = await fastify.db.execute<RowDataPacket[]>(
+            `SELECT * FROM ${ADMINS_DB}.sm_groups WHERE immunity_level < ?`,
+            [req.session.permissions.immunityLevel]
+        )
+        const hasRoot = req.session.permissions.flags.includes('z')
+        return {
+            groups: rows
+                .filter(row => {
+                    if(hasRoot) return true
+                    const flags: string[] = row.flags.split()
+                    // test if every flag in flags is in my flags
+                    return flags.every((flag: string) => req.session.permissions.flags.includes(flag))
+                })
+                .map(row => {
+                    return {
+                        id: row.id,
+                        flags: row.flags,
+                        name: row.name,
+                        immunityLevel: row.immunity_level
+                    } as unknown as AdminGroup
+                }) as AdminGroup[]
         }
     })
 
@@ -147,44 +181,51 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         Params: { steamid: string },
         Querystring: POSTAdminType
     }>, reply) => {
-        const steamid = new SteamID(req.params.steamid)
-        if(steamid.isValid()) {
-            if(!fastify.authmngr.isAdmin(steamid)) {
-                let immunity = req.query.immunityLevel || 0
-                if(immunity < 0) immunity = 0
+        if(req.session.permissions.web.flags & WebPermission.ManageAdmins) {
+            const steamid = new SteamID(req.params.steamid)
+            if(steamid.isValid()) {
+                if(!fastify.authmngr.isAdmin(steamid)) {
+                    let immunity = req.query.immunityLevel || 0
+                    if(immunity < 0) immunity = 0
 
-                if(immunity > req.session.permissions.immunityLevel) {
-                    reply.code(403).send({
-                        error: 'INVALID_IMMUNITY',
-                        message: 'You can only add admins to an immunity level at or below yours',
-                        statusCode: 403
+                    if(immunity > req.session.permissions.immunityLevel) {
+                        reply.code(403).send({
+                            error: 'INVALID_IMMUNITY',
+                            message: 'You can only add admins to an immunity level at or below yours',
+                            statusCode: 403
+                        })
+                    }
+
+                    const id = await fastify.authmngr.addAdmin({
+                        authtype: "steam",
+                        identity: steamid.getSteam2RenderedID(true),
+                        password: null,
+                        name: req.query.name || "",
+                        immunity,
+                        flags: req.query.flags,
+                    
+                        groupIds: req.query.groupsIds ? req.query.groupsIds.split(",") : []
+                    })
+
+                    return {
+                        adminId: id
+                    }
+                } else {
+                    return reply.code(409).send({
+                        error: 'ADMIN_EXISTS',
+                        message: "An admin account already exist with that steamid"
                     })
                 }
-
-                const id = await fastify.authmngr.addAdmin({
-                    authtype: "steam",
-                    identity: steamid.getSteam2RenderedID(true),
-                    password: null,
-                    name: "",
-                    immunity,
-                    flags: req.query.flags,
-                
-                    groupIds: req.query.groupsIds ? req.query.groupsIds.split(",") : []
-                })
-
-                return {
-                    adminId: id
-                }
             } else {
-                return reply.code(409).send({
-                    error: 'ADMIN_EXISTS',
-                    message: "An admin account already exist with that steamid"
+                return reply.code(400).send({
+                    error: "INVALID_STEAMID",
+                    message: "The steamid is invalid"
                 })
             }
         } else {
-            return reply.code(400).send({
-                error: "INVALID_STEAMID",
-                message: "The steamid is invalid"
+            return reply.code(401).send({
+                error: "UNAUTHORIZED",
+                message: "You do not have permission to manage admins"
             })
         }
     })  

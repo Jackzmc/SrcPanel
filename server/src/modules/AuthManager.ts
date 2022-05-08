@@ -95,7 +95,7 @@ export default class AuthManager {
         // TODO: Add group support
 
         const [ok] = await this.connection.execute<OkPacket>(
-            `INSERT INTO \`l4d2-admins\` (\`authtype\`, \`identity\`, \`password\`, \`flags\`, \`name\`, \`immunity\`) VALUES (:authtype, :identity, :password, :flags, :name, :immunity)`,
+            `INSERT INTO sm_admins (\`authtype\`, \`identity\`, \`password\`, \`flags\`, \`name\`, \`immunity\`) VALUES (:authtype, :identity, :password, :flags, :name, :immunity)`,
             {
                 authtype: admin.authtype || "steam",
                 identity: admin.identity,

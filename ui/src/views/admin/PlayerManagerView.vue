@@ -56,7 +56,7 @@ const privUser = new PrivilegedUser(props.userdata)
 // TODO: Disable add admin when selected is admin
 
 let tabIndex = ref(0)
-let users = ref([])
+let users = ref<PlayerData[]>([])
 let search = ref({
   query: '',
   func: () => {},
@@ -79,7 +79,10 @@ const selectedIdSteamID = computed(() => {
 })
 const selectedRecentUser = computed(() => {
   if(!selectedId.value) return
-  return recentPlayers.value.list.find(rp => rp.steamid == selectedId.value)
+  if(tabIndex.value == 0)
+    return recentPlayers.value.list.find(rp => rp.steamid == selectedId.value)
+  else
+    return users.value.find(user => user.steamid == selectedId.value)
 })
 const hasCreateAdminPerms = computed(() => {
   return privUser.immunityLevel > 0 && privUser.hasWebPerm(WebPermission.ManageAdmins)
