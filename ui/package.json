@@ -26,7 +26,7 @@
     "vue": "^3.1.0-0",
     "vue-class-component": "^7.2.3",
     "vue-property-decorator": "^8.4.1",
-    "vue-router": "4"
+    "vue-router": "^4.0.13"
   },
   "devDependencies": {
     "@creativebulma/bulma-tooltip": "^1.2.0",
@@ -66,7 +66,8 @@
       "parser": "@typescript-eslint/parser"
     },
     "rules": {
-      "vue/multi-word-component-names": "off"
+      "vue/multi-word-component-names": "off",
+      "semi": "off"
     }
   },
   "browserslist": [

@@ -13,7 +13,7 @@
           <span>
             <p v-if="stats">{{playtime}} hours</p>
             <em v-else>(no recorded statistics found)</em>
-            <p class="help has-text-danger" v-if="hoursPlayed < 1">Does not meet the minimum amount of {{$options.MIN_HOURS_PLAYTIME}} hours played</p>
+            <p class="help has-text-danger" v-if="hoursPlayed < MIN_HOURS_PLAYTIME">Does not meet the minimum amount of {{MIN_HOURS_PLAYTIME}} hours played</p>
           </span>
         </div>
         <div class="field">
@@ -23,10 +23,10 @@
               type="number"
               class="input"
               v-model="form.immunity"
-              min="0" :max="userdata.permissions.immunityLevel - 1"
+              min="0" :max="privUser.immunityLevel - 1"
             />
           </div>
-          <p class="help has-text-danger" v-if="form.immunity >= userdata.permissions.immunityLevel">The maximum immunity level you can apply is {{userdata.permissions.immunityLevel - 1}}</p>
+          <p class="help has-text-danger" v-if="form.immunity >= privUser.immunityLevel">The maximum immunity level you can apply is {{userdata.permissions.immunityLevel - 1}}</p>
         </div>
         <h6 class="title is-6">Flags</h6>
         <p class="subtitle is-6">Only flags you have access to can be added</p>
@@ -42,7 +42,7 @@
           >
           <label>Root (All Permissions)</label>
         </div>
-        <div class="field" v-for="(name, flag) in $options.FLAGS" :key="flag">
+        <div class="field" v-for="(name, flag) in FLAGS" :key="flag">
           <input
             :id="flag"
             type="checkbox"
@@ -57,22 +57,28 @@
       </section>
       <footer class="modal-card-foot">
         <button
-          :class="['button','has-tooltip-top', 'is-success',{'is-loading': loading}]"
+          :class="['button','has-tooltip-top', 'is-success',{'is-loading': !user}]"
           :disabled="cantAddAdmin"
           @click="save"
         >Add Admin</button>
-        <button :class="['button',{'is-loading': loading}]" @click="cancel">Cancel</button>
+        <button :class="['button',{'is-loading': !user}]" @click="cancel">Cancel</button>
         <p class="has-text-danger" v-if="error">{{error}}</p>
       </footer>
     </div>
   </div>
 </template>
 
-<script lang="ts">
-const MIN_HOURS_PLAYTIME = 10
-import Vue from 'vue'
-import { User, PrivilegedUser } from '@/js/User.ts'
+<script setup lang="ts">
+import { ref, onMounted, computed } from 'vue'
+import { User, PrivilegedUser, PlayerData } from '@/js/User'
+import { useRouter, useRoute } from 'vue-router'
+import SteamID from 'steamid'
+import { Session, WebPermission, WebRole } from '../../../../common-types/User';
 
+const MIN_HOURS_PLAYTIME = 10
+
+const router = useRouter()
+const route = useRoute()
 
 const FLAGS = {
   'a': 'Reserved Slot',
@@ -97,69 +103,55 @@ const FLAGS = {
   't': 'Custom 6',
 }
 
-import SteamID from 'steamid'
+const props = defineProps<{
+  userdata: Session
+}>()
 
-import { Session, WebPermission, WebRole } from '../../../../common-types/User.ts';
+let user = ref<PlayerData|null>()
+const privUser = new PrivilegedUser(props.userdata)
+let form = ref({
+  immunity: 0,
+  flags: [],
+})
+let stats = ref<Record<string, string|number>|null>()
+let error = ref("")
 
-export default {
-  FLAGS,
-  MIN_HOURS_PLAYTIME,
-  name: 'AddAdminModal',
-  props: ['userdata'],
-  data() {
-    return {
-      user: null,
-      privUser: null,
-      form: {
-        flags: [],
-        immunity: 0
-      },
-      stats: null,
-      loading: false,
-      error: null
-    }
-  },
-  computed: {
-    hasRoot() {
-      console.log(this.privUser.flags)
-      return this.privUser.flags.includes('z')
-    },
-    hoursPlayed() {
-      if(!this.stats) return
-      return Math.round(this.stats.minutes_played / 60)
-    },
-    playtime() {
-      if(!this.stats) return
-      if(this.hoursPlayed > 0) return this.hoursPlayed
-      return "< 0"
-    },
-    noAddReasons() {
-      const msgs = []
-      if(this.hoursPlayed < MIN_HOURS_PLAYTIME) {
-        msgs.push(`A minimum of ${MIN_HOURS_PLAYTIME} hours of playtime is required.`)
-      }
-      return msgs
-    },
-    cantAddAdmin() {
-      return this.noAddReasons.length > 0
-    }
-  },
-  methods: {
-    save() {
-      if(this.cantAddAdmin) {
-        alert(`Cannot add admin for the following reasons:\n* ${this.noAddReasons.join('\n *')}`)
-      } else {
+const hasRoot = computed(() => {
+  return privUser.flags?.includes('z')
+})
+const hoursPlayed = computed(() => {
+  if(!stats) return 0
+  return Math.round(stats.value?.minutes_played as number / 60)
+})
+const playtime = computed(() => {
+  if(!stats) return
+  if(hoursPlayed.value > 0) return hoursPlayed
+  return "< 0"
+})
+const noAddReasons = computed(() => {
+  const msgs = []
+  if(hoursPlayed.value < MIN_HOURS_PLAYTIME) {
+    msgs.push(`A minimum of ${MIN_HOURS_PLAYTIME} hours of playtime is required.`)
+  }
+  return msgs
+})
+const cantAddAdmin = computed(() => {
+  return noAddReasons.value.length > 0
+})
 
-      }
-    },
-    cancel() {
-      this.$router.back()
-    }
-  },
-  async mounted() {
-    this.user = await User.fetch(this.$route.params.id)
-    this.privUser = new PrivilegedUser(this.userdata)
-    this.stats = await User.getStats(this.$route.params.id)
+function save() {
+  if(cantAddAdmin) {
+    alert(`Cannot add admin for the following reasons:\n* ${noAddReasons.value.join('\n *')}`)
+  } else {
+
   }
 }
+function cancel() {
+  router.push('/admin/players')
+}
+
+onMounted(async() => {
+  user.value = await User.fetch(route.params.id as string)
+  stats.value = await User.getStats(route.params.id as string)
+})
 </script>

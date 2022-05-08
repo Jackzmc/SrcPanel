@@ -114,7 +114,7 @@ const routes = [
   {
     name: 'admin-players',
     path: '/admin/players',
-    component: () => import(/* webpackChunkName: 'players' */ '../views/admin/PlayerView.vue'),
+    component: () => import(/* webpackChunkName: 'players' */ '../views/admin/PlayerManagerView.vue'),
     meta: {
       title: 'Player Management',
       description: 'View all players and manage them, all in one place',

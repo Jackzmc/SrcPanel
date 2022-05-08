@@ -31,13 +31,14 @@
     </template>
     <div class="buttons">
       <a class="button is-primary" @click="addBan" :disabled="!selectedId || (selectedId === '_custom' && !manualInput)">Add Ban</a>
-      <a class="button is-warning" @click="addAdmin" v-if="hasCreateAdminPerms" :disabled="isAddAdminDisabled" :data-tooltip="isAddAdminDisabled?'Cannot add an unknown player as admin':null">Add Admin</a>
+      <a class="button is-warning" @click="addAdmin" v-if="hasCreateAdminPerms" :disabled="addAdminDisableReason" :data-tooltip="addAdminDisableReason">Add Admin</a>
     </div>
   </div>
 </div>
 </template>
 
 <script>
+// TODO: Disable add admin when selected is admin
 import UserSelection from '@/components/UserSelection'
 
 // Keep track and open gui for each ban
@@ -74,11 +75,18 @@ export default {
     selectedIdSteamID() {
       return this.manualInput ?? this.selectedId
     },
+    selectedRecentUser() {
+      if(!this.selectedId) return
+      return this.recentPlayers.list.find(rp => rp.steamid == this.selectedId)
+    },
     hasCreateAdminPerms() {
       return this.userdata?.permissions.immunityLevel > 0 && this.userdata?.permissions.web.role > 1
     },
-    isAddAdminDisabled() {
-      return !this.selectedId || this.selectedId === '_custom'
+    addAdminDisableReason() {
+      if(!this.selectedId) return 'No player selected'
+      if(this.selectedId === '_custom') return 'Cannot add an unknown player as admin'
+      if( this.selectedRecentUser?.isAdmin === 1) return 'Selected player is already an admin'
+      return null
     }
   },
   methods: {

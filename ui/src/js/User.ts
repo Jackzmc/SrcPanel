@@ -1,4 +1,5 @@
-import { Session, WebPermission, WebRole } from '../../../common-types/User';
+import { WebPermission, WebRole } from '../../../common-types/User';
+import type  { Session } from '../../../common-types/User';
 
 export interface PlayerData {
   isAdmin: boolean,
