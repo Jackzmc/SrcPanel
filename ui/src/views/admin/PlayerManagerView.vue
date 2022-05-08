@@ -37,126 +37,125 @@
 </div>
 </template>
 
-<script>
-// TODO: Disable add admin when selected is admin
-import UserSelection from '@/components/UserSelection'
-
+<script setup lang="ts">
+import { ref, onBeforeMount, computed } from 'vue'
+import { User, PrivilegedUser, PlayerData } from '@/js/User'
+import { useRouter, useRoute } from 'vue-router'
+import { Session, WebPermission } from '../../../../common-types/User';
+import UserSelection from '@/components/UserSelection.vue'
 // Keep track and open gui for each ban
 import Debounce from '@/js/debounce'
 
-export default {
-  components: {
-    UserSelection,
-  },
-  props: ['userdata'],
-  data() {
-    return {
-      tabIndex: 0,
-      users: [],
-      userSearch: null,
-      search: {
-        query: null,
-        func: null
-      },
-      recentPlayers: {
-        loading: false,
-        list: [],
-        server: null
-      },
-      manualInput: null,
-      selectedId: null,
-      servers: []
-    }
-  },
-  computed: {
-    isManualInputEntered() {
-      return this.manualInput != null && this.manualInput.length > 0
-    },
-    selectedIdSteamID() {
-      return this.manualInput ?? this.selectedId
-    },
-    selectedRecentUser() {
-      if(!this.selectedId) return
-      return this.recentPlayers.list.find(rp => rp.steamid == this.selectedId)
-    },
-    hasCreateAdminPerms() {
-      return this.userdata?.permissions.immunityLevel > 0 && this.userdata?.permissions.web.role > 1
-    },
-    addAdminDisableReason() {
-      if(!this.selectedId) return 'No player selected'
-      if(this.selectedId === '_custom') return 'Cannot add an unknown player as admin'
-      if( this.selectedRecentUser?.isAdmin === 1) return 'Selected player is already an admin'
-      return null
-    }
-  },
-  methods: {
-    setTab(index) {
-      this.tabIndex = index
-      this.manualInput = null
-      this.selectedId = null
-    },
-    onUserSelected(id) {
-      this.selectedId = id
-    },
-    onManualSelected(id) {
-      this.manualInput = id
-      this.selectedId = "_custom"
-    },
-    addBan() {
-      if(!this.selectedIdSteamID) return alert("No steamID selectedId")
-      this.$router.push(`/admin/players/${this.selectedIdSteamID}/add-ban`)
-    },
-    addAdmin() {
-      if(!this.selectedIdSteamID) return alert("No steamID selectedId")
-      this.$router.push(`/admin/players/${this.selectedIdSteamID}/add-admin`)
-    },
-    async searchUser() {
-      this.selectedId = null
-      const response = await fetch(`/api/users/search/${this.search.query}`)
-      if(response.ok) {
-        const json = await response.json()
-        this.users = json.users
-      }
-    },
-    formatDate(time) {
-      const date = new Date(time*1000)
-      return date.toLocaleString()
-    },
-    async getRecentPlayers() {
-      this.recentPlayers.loading = true
-      const resp = await fetch(`/api/users/recent/${this.recentPlayers.server||''}?limit=10`)
-      this.recentPlayers.loading = false
-      if(resp.ok) {
-        const json = await resp.json()
+const router = useRouter()
+const route = useRoute()
+const props = defineProps<{
+  userdata: Session
+}>()
+const privUser = new PrivilegedUser(props.userdata)
 
-        this.recentPlayers.list = []
+// TODO: Disable add admin when selected is admin
 
-        for(const user of json.users) {
-          let existing = false
-          for(const recUser of this.recentPlayers.list) {
-            if(recUser.steamid === user.steamid) {
-              existing = true
-              break
-            }
-          }
-          if(!existing) {
-            this.recentPlayers.list.push(user)
-          }
-        }
-      }
-    },
-    async getServerTypes() {
-      const resp = await fetch(`/api/logs/servers`)
-      if(resp.ok) {
-        const json = await resp.json()
-        this.servers = json.servers
-      }
-    }
-  },
-  created() {
-    this.search.func = Debounce(this.searchUser, 400)
-    this.getServerTypes()
-    this.getRecentPlayers()
+let tabIndex = ref(0)
+let users = ref([])
+let search = ref({
+  query: '',
+  func: () => {},
+})
+let recentPlayers = ref<{server: string|null, list: PlayerData[], loading: boolean}>
+({
+  server: null,
+  list: [],
+  loading: false
+})
+let manualInput = ref<string>()
+let selectedId = ref<string>()
+let servers = ref([])
+
+const isManualInputEntered = computed(() => {
+  return manualInput.value != null && manualInput.value.length > 0
+})
+const selectedIdSteamID = computed(() => {
+  return manualInput.value ?? selectedId.value
+})
+const selectedRecentUser = computed(() => {
+  if(!selectedId.value) return
+  return recentPlayers.value.list.find(rp => rp.steamid == selectedId.value)
+})
+const hasCreateAdminPerms = computed(() => {
+  return privUser.immunityLevel > 0 && privUser.hasWebPerm(WebPermission.ManageAdmins)
+})
+const addAdminDisableReason = computed(() => {
+  if(!selectedId.value) return 'No player selected'
+  if(selectedId.value === '_custom') return 'Cannot add an unknown player as admin'
+  if(selectedRecentUser.value?.isAdmin) return 'Selected player is already an admin'
+  return null
+})
+function setTab(index: number) {
+  tabIndex.value = index
+  manualInput.value = undefined
+  selectedId.value = undefined
+}
+function onUserSelected(id: string) {
+  selectedId.value = id
+}
+function onManualSelected(id: string) {
+  manualInput.value = id
+  selectedId.value = "_custom"
+}
+function addBan() {
+  if(!selectedIdSteamID.value) return alert("No steamID selectedId")
+  router.push(`/admin/players/${selectedIdSteamID.value}/add-ban`)
+}
+function addAdmin() {
+  if(!selectedIdSteamID.value) return alert("No steamID selectedId")
+  router.push(`/admin/players/${selectedIdSteamID.value}/add-admin`)
+}
+async function searchUser() {
+  selectedId.value = undefined
+  const response = await fetch(`/api/users/search/${search.value.query}`)
+  if(response.ok) {
+    const json = await response.json()
+    users.value = json.users
   }
 }
+function formatDate(time:number) {
+  const date = new Date(time*1000)
+  return date.toLocaleString()
+}
+async function getRecentPlayers() {
+  recentPlayers.value.loading = true
+  const resp = await fetch(`/api/users/recent/${recentPlayers.value.server||''}?limit=10`)
+  recentPlayers.value.loading = false
+  if(resp.ok) {
+    const json = await resp.json()
+
+    recentPlayers.value.list = []
+
+    for(const user of json.users) {
+      let existing = false
+      for(const recUser of recentPlayers.value.list) {
+        if(recUser.steamid === user.steamid) {
+          existing = true
+          break
+        }
+      }
+      if(!existing) {
+        recentPlayers.value.list.push(user)
+      }
+    }
+  }
+}
+async function getServerTypes() {
+  const resp = await fetch(`/api/logs/servers`)
+  if(resp.ok) {
+    const json = await resp.json()
+    servers.value = json.servers
+  }
+}
+
+onBeforeMount(() => {
+  search.value.func = Debounce(searchUser, 400)
+  getServerTypes()
+  getRecentPlayers()
+})
 </script>

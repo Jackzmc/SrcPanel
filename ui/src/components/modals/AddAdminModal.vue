@@ -76,10 +76,6 @@ import SteamID from 'steamid'
 import { Session, WebPermission, WebRole } from '../../../../common-types/User';
 
 const MIN_HOURS_PLAYTIME = 10
-
-const router = useRouter()
-const route = useRoute()
-
 const FLAGS = {
   'a': 'Reserved Slot',
   'b': 'Generic Admin',
@@ -103,9 +99,12 @@ const FLAGS = {
   't': 'Custom 6',
 }
 
+const router = useRouter()
+const route = useRoute()
 const props = defineProps<{
   userdata: Session
 }>()
+
 
 let user = ref<PlayerData|null>()
 const privUser = new PrivilegedUser(props.userdata)
