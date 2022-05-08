@@ -15,7 +15,9 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             `SELECT 
                 (SELECT COUNT(*) FROM notes WHERE notes.steamid = client) as notesCount,
                 (SELECT COUNT(*) FROM bans WHERE bans.steamid = client) as bansCount,
-                (SELECT COUNT(*) FROM ${ADMINS_DB}.sm_admins WHERE ${ADMINS_DB}.sm_admins.identity = client) as isAdmin,
+                (SELECT COUNT(*) FROM ${ADMINS_DB}.sm_admins 
+                    WHERE SUBSTRING(${ADMINS_DB}.sm_admins.identity,11) = SUBSTRING(client, 11)
+                ) as isAdmin,
                 last_alias as name, country, timestamp as lastJoinDate, created_date as firstJoinDate,
                 server,
                 client as steamid

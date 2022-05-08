@@ -1,7 +1,7 @@
 import {
   readFileSync
 } from 'fs'
-import CommentJson from 'comment-json'
+import Json5 from 'json5'
 import DNS from 'dns'
 import Server, { ConfigServerData } from './Server.js'
 
@@ -31,7 +31,7 @@ export default class ServerManager {
 
   private async load() {
     const content = readFileSync('./config/config.json', 'utf-8')
-    const config = CommentJson.parse(content, null, true)
+    const config = Json5.parse(content)
 
     this.refreshInterval = 1000 * (config['refreshIntervalSeconds'] ?? 60)
 
