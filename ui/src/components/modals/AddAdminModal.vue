@@ -49,7 +49,7 @@
             :value="flag"
             class="is-checkradio has-tooltip-right"
             v-model="form.flags"
-            :disabled="!hasRoot && userdata.permissions.flags.indexOf(flag) === -1"
+            :disabled="!hasRoot && privUser.flags.indexOf(flag) === -1"
             data-tooltip="Only superadmins have permission to add other root users"
           >
           <label :for="flag">{{name}}</label>
@@ -68,10 +68,10 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 const MIN_HOURS_PLAYTIME = 10
 import Vue from 'vue'
-import User from '@/js/User.ts'
+import { User, PrivilegedUser } from '@/js/User.ts'
 
 
 const FLAGS = {
@@ -99,15 +99,17 @@ const FLAGS = {
 
 import SteamID from 'steamid'
 
+import { Session, WebPermission, WebRole } from '../../../../common-types/User.ts';
 
 export default {
-  // FLAGS,
-  // MIN_HOURS_PLAYTIME,
+  FLAGS,
+  MIN_HOURS_PLAYTIME,
   name: 'AddAdminModal',
   props: ['userdata'],
   data() {
     return {
       user: null,
+      privUser: null,
       form: {
         flags: [],
         immunity: 0
@@ -119,7 +121,8 @@ export default {
   },
   computed: {
     hasRoot() {
-      return this.userdata.permissions.flags.includes('z')
+      console.log(this.privUser.flags)
+      return this.privUser.flags.includes('z')
     },
     hoursPlayed() {
       if(!this.stats) return
@@ -154,8 +157,9 @@ export default {
     }
   },
   async mounted() {
-    this.user = User.fetch(this.$route.params.id)
-    this.stats = User.getStats(this.$route.params.id)
+    this.user = await User.fetch(this.$route.params.id)
+    this.privUser = new PrivilegedUser(this.userdata)
+    this.stats = await User.getStats(this.$route.params.id)
   }
 }
 </script>

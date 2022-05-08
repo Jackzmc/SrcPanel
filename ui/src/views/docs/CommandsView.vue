@@ -62,7 +62,7 @@
             <p>
               <b>Parameter Info</b>
               <ul>
-                  <li>Parameters are separated by spaces. Use "quotes to surround a word".
+                  <li>Parameters are separated by spaces. Use "quotes to surround a word".</li>
                   <li><b class="tag is-link">&lt;&gt;</b> indictates the argument is <u>required.</u></li>
                   <li><b class="tag is-secondary">[&nbsp;]</b> indictates the argument is optional.</li>
                   <li>Do not include the <b class="tag is-link">&lt; &gt;</b> or <b class="tag is-secondary">[ ]</b> as its only to indicate if a value is optional or not.</li>

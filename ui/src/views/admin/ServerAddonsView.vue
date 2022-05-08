@@ -37,18 +37,16 @@
         </table>
       </div>
       <div class="column" v-if="prefetch">
-        <template >
-          <a class="button" @click="closePreview">⟵</a>
-          <br><br>
-          <img :src="prefetch.previewUrl" />
-          <h4 class='title is-4'>{{prefetch.title}}</h4>
-          <p class="subtitle is-6">{{formatSize(prefetch.filesize)}} • Updated {{ formatTime(prefetch.lastUpdated) }}</p>
-          <div class="buttons">
-            <a target="_blank" :href="prefetch.fileUrl" class="button">Download</a>
-            <a target="_blank" :href="prefetch.url" class="button is-info">View on steam workshop</a>
-          </div>
-          <p style="white-space: pre-wrap" class="content is-small" v-html="parsedDescription" />
-        </template>
+        <a class="button" @click="closePreview">⟵</a>
+        <br><br>
+        <img :src="prefetch.previewUrl" />
+        <h4 class='title is-4'>{{prefetch.title}}</h4>
+        <p class="subtitle is-6">{{formatSize(prefetch.filesize)}} • Updated {{ formatTime(prefetch.lastUpdated) }}</p>
+        <div class="buttons">
+          <a target="_blank" :href="prefetch.fileUrl" class="button">Download</a>
+          <a target="_blank" :href="prefetch.url" class="button is-info">View on steam workshop</a>
+        </div>
+        <p style="white-space: pre-wrap" class="content is-small" v-html="parsedDescription" />
       </div>
     </div>
   </div>

@@ -39,15 +39,12 @@
             <em class='has-text-info'>{{ban.client.id}}</em>
           </td>
           <td>
-            <template>
-              <b v-if="ban.executor.name" :data-tooltip="ban.executor.id">{{ban.executor.name}} </b>
-              <template v-else>
-                <em v-if="ban.executor.name" class='has-text-info'>{{ban.executor.name}}</em>
-                <em v-else>{{ban.executor.id}}</em>
-              </template>
-              <p class='has-text-info' v-if="ban.executor.source"><em>via {{ban.executor.source}}</em></p>
+            <b v-if="ban.executor.name" :data-tooltip="ban.executor.id">{{ban.executor.name}} </b>
+            <template v-else>
+              <em v-if="ban.executor.name" class='has-text-info'>{{ban.executor.name}}</em>
+              <em v-else>{{ban.executor.id}}</em>
             </template>
-
+            <p class='has-text-info' v-if="ban.executor.source"><em>via {{ban.executor.source}}</em></p>
           </td>
           <td v-if="userdata">
             {{ban.reason}}

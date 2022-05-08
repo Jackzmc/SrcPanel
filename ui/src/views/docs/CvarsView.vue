@@ -41,7 +41,6 @@
               If value is not specified, it will instead show you the value of the cvar
             </p>
             <p><b>Example</b> /cvar l4d2_population_clowns 1.0 – This will make it a 100% chance it spawns clown zombies</p>
-            <p>
             <br>
             <p>
               <em>Nerd shit: Cvars can take three types of inputs: floats, integers, and strings. Booleans are represented by 0 or 1 but using the sm_cvar command allows you to input anything, and this can do unknown behavior.

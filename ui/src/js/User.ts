@@ -9,19 +9,16 @@ export interface PlayerData {
   firstJoinDate: number
 }
 
-
-export default class User {
-  private data: Session
-
-  static async fetch(id: string) {
+export class User {
+  static async fetch(id: string): Promise<PlayerData|null> {
     const response = await fetch(`/api/users/${id}`)
     if(response.ok) {
       const json = await response.json()
       if(json.user) {
-        return new User(json.user)
+        return json.user
       } else {
         console.error('No users were found for id?')
-        return undefined
+        return null
       }
     }
     throw new Error(`${response.status} ${response.statusText}: ${await response.text()}`)
@@ -35,15 +32,15 @@ export default class User {
         return json.user as Record<string, string|number>
       } else {
         console.error('No stats found for user')
-        return undefined
+        return null
       }
     }
     throw new Error(`${response.status} ${response.statusText}: ${await response.text()}`)
   }
+}
 
-  async getStats() {
-    return User.getStats(this.data.user.steamid)
-  }
+export class PrivilegedUser {
+  private data: Session
 
   constructor(session: Session) {
     if(!session) throw new Error("Session is empty")
@@ -71,7 +68,6 @@ export default class User {
   }
 
   get flags() {
-    console.log(this.data)
     return this.data.permissions.flags
   }
 

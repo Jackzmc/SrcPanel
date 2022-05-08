@@ -4,13 +4,30 @@ process.env.VUE_APP_BUILD_DATE = Date.now()
 module.exports = {
   publicPath: process.env.PUBLIC_PATH || '/',
   devServer: {
-    disableHostCheck: true,
+    allowedHosts: "all",
     proxy: {
       '^/api': {
         target: process.env.VUE_APP_REALM,
         changeOrigin: true
       }
     }
+  },
+  chainWebpack: config => {
+    config.resolve.alias.set('vue', '@vue/compat')
+
+    config.module
+      .rule('vue')
+      .use('vue-loader')
+      .tap(options => {
+        return {
+          ...options,
+          compilerOptions: {
+            compatConfig: {
+              MODE: 2
+            }
+          }
+        }
+      })
   },
   pwa: {
     manifestOptions: {
