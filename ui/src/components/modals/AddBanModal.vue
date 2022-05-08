@@ -50,7 +50,7 @@
             <textarea
               v-model="ban.privateReason"
               class="textarea has-fixed-size"
-              placeholder="Enter a reason for this ban (only shown to admins)"
+              placeholder="Enter a reason for ban (only shown to admins)"
               maxlength="128"
               rows=1
               ></textarea>
@@ -62,7 +62,7 @@
             <textarea
               v-model="ban.publicReason"
               class="textarea has-fixed-size"
-              placeholder="Enter a reason for this ban (shown to target)"
+              placeholder="Enter a reason for ban (shown to target)"
               maxlength="250"
               rows=1
               ></textarea>
@@ -137,129 +137,129 @@
   </div>
 </template>
 
-<script>
-import SteamID from 'steamid'
-export default {
-  name: 'AddBanModal',
-  props: ['userdata'],
-  data() {
-    return {
-      tab: 0,
-      ban: {
-        client: {
-          id: null,
-          name: null
-        },
-        publicReason: null,
-        privateReason: null,
-        expires: null,
-        flags: []
-      },
-      error: null,
-      loading: false,
-      notes: {
-        list: [],
-        state: 0
-      },
-      user: null
+<script setup lang="ts">
+import { ref, onMounted, computed } from 'vue'
+import { User, PrivilegedUser, PlayerData } from '@/js/User'
+import { useRouter, useRoute } from 'vue-router'
+import { Session, WebPermission, WebRole } from '../../../../common-types/User';
+
+const router = useRouter()
+const route = useRoute()
+const props = defineProps<{
+  userdata: Session
+}>()
+
+
+let tab = ref(0)
+let ban = ref({
+  client: {
+    id: undefined,
+    name: undefined
+  },
+  publicReason: undefined,
+  privateReason: undefined,
+  expires: undefined,
+  flags: []
+})
+let error = ref<string>()
+let loading = ref(false)
+let notes = ref<{
+  state: number, list: any[]}
+>({
+  state: 0,
+  list: []
+})
+let user = ref<PlayerData>()
+const privUser = new PrivilegedUser(props.userdata)
+
+const expiresTimestamp = computed(() => {
+  if(!ban.value.expires) return null
+  const baseDate = new Date().valueOf()
+  if(ban.value.expires === "1hour") {
+    return (baseDate  + 3.6e+6) / 1000
+  }else if(ban.value.expires === "1day") {
+    return (baseDate  + 8.64e+7) / 1000
+  }else if(ban.value.expires === "1week") {
+    return (baseDate  + 6.048e+8) / 1000
+  } else if(ban.value.expires === "1month") {
+    return (baseDate  + 2629800000) / 1000
+  } else if(ban.value.expires === "1year") {
+    return (baseDate + 3.156e+10) / 1000
+  } else {
+    alert('Could not save unknown value: ' + ban.value.expires)
+    return null
+  }
+})
+function setTab(index: number) {
+  tab.value = index
+  switch(index) {
+    case 2: {
+      if(notes.value.state === 0 && user.value) fetchNotes()
+      break
     }
-  },
-  mounted() {
-    this.init()
-  },
-  computed: {
-    expiresTimestamp() {
-      if(!this.ban.expires) return null
-      const baseDate = new Date().valueOf()
-      if(this.ban.expires === "1hour") {
-        return (baseDate  + 3.6e+6) / 1000
-      }else if(this.ban.expires === "1day") {
-        return (baseDate  + 8.64e+7) / 1000
-      }else if(this.ban.expires === "1week") {
-        return (baseDate  + 6.048e+8) / 1000
-      } else if(this.ban.expires === "1month") {
-        return (baseDate  + 2629800000) / 1000
-      } else if(this.ban.expires === "1year") {
-        return (baseDate + 3.156e+10) / 1000
-      } else {
-        alert('Could not save unknown value: ' + this.ban.expires)
-        return null
-      }
-    }
-  },
-  methods: {
-    async init() {
-      this.error = null
-      const response = await fetch(`/api/users/${this.$route.params.id}`)
-      if(response.ok) {
-        const json = await response.json()
-        if(!json.user) {
-          console.error('No users were found for id?')
-          return
-        }
-        this.user = json.user
-        this.setTab(0)
-      }
-    },
-    setTab(index) {
-      this.tab = index
-      switch(index) {
-        case 2: {
-          if(this.notes.state === 0) this.fetchNotes()
-          break
-        }
-      }
-    },
-    async fetchNotes() {
-      const response = await fetch(`/api/notes/user/${this.user.id}`)
-      if(response.ok) {
-          const json = await response.json()
-          this.notes.list = json.notes
-          this.notes.state = 1
-      } else {
-        this.notes.state = 2
-        alert("Could not fetch notes: " + await response.text())
-        return null
-      }
-    },
-    formatTime(time) {
-      const date = time ? new Date(time*1000) : new Date()
-      return `${date.toLocaleDateString()} at ${date.toLocaleTimeString()}`
-    },
-    save() {
-      this.loading = true
-      fetch(`/api/bans/${this.user.steamid}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({
-          steamid: this.ban.client.id,
-          reason: this.ban.privateReason,
-          executor: this.userdata.user.steamid,
-          public_message: this.ban.publicReason,
-          expires: this.expiresTimestamp,
-          flags: this.ban.flags.reduce((pv, cv) => pv + Number(cv), 0)
-        })
-      })
-      .then(async(response) => {
-        if(response.ok) {
-          const json = await response.json()
-          this.$router.push(`/bans/edit/${json.banId}`)
-          this.cancel()
-        } else
-          this.error = (await response.json()).error
-        this.loading = false
-      })
-      .catch(err => {
-        this.error = err.message
-        this.loading = false
-      })
-    },
-    cancel() {
-      this.$router.back()
-    },
-  },
+  }
 }
+async function fetchNotes() {
+  const response = await fetch(`/api/notes/user/${user.value!.steamid}`)
+  if(response.ok) {
+      const json = await response.json()
+      notes.value.list = json.notes
+      notes.value.state = 1
+  } else {
+    notes.value.state = 2
+    alert("Could not fetch notes: " + await response.text())
+    return null
+  }
+}
+async function formatTime(time?: number | null) {
+  const date = time ? new Date(time*1000) : new Date()
+  return `${date.toLocaleDateString()} at ${date.toLocaleTimeString()}`
+}
+async function save() {
+  loading.value = true
+  fetch(`/api/bans/${user.value!.steamid}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+    body: JSON.stringify({
+      steamid: ban.value.client.id,
+      reason: ban.value.privateReason,
+      executor: privUser.id,
+      public_message: ban.value.publicReason,
+      expires: expiresTimestamp.value!,
+      flags: ban.value.flags.reduce((pv, cv) => pv + Number(cv), 0)
+    })
+  })
+  .then(async(response) => {
+    if(response.ok) {
+      const json = await response.json()
+      router.push(`/bans/edit/${json.banId}`)
+      cancel()
+    } else
+      error.value = (await response.json()).error
+    loading.value = false
+  })
+  .catch(err => {
+    error.value = err.message
+    loading.value = false
+  })
+}
+function cancel() {
+  router.back()
+}
+onMounted(async() => {
+  error.value = undefined
+  const response = await fetch(`/api/users/${route.params.id}`)
+  if(response.ok) {
+    const json = await response.json()
+    if(!json.user) {
+      console.error('No users were found for id?')
+      return
+    }
+    user.value = json.user
+    setTab(0)
+  }
+})
 </script>
