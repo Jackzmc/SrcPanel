@@ -2,6 +2,7 @@ import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
 import { OkPacket, RowDataPacket } from 'mysql2';
 import { Static, Type } from '@sinclair/typebox'
 import { ADMINS_DB } from '../!!privileged/admins.js';
+import SteamID from 'steamid';
 
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
@@ -45,7 +46,9 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             `SELECT
             (SELECT COUNT(*) FROM notes WHERE notes.steamid = stats_users.steamid) as notesCount,
             (SELECT COUNT(*) FROM bans WHERE bans.steamid = stats_users.steamid) as bansCount,
-            (SELECT COUNT(*) FROM ${ADMINS_DB}.sm_admins WHERE ${ADMINS_DB}.sm_admins.identity = stats_users.steamid) as isAdmin,
+            (SELECT COUNT(*) FROM ${ADMINS_DB}.sm_admins 
+                WHERE SUBSTRING(${ADMINS_DB}.sm_admins.identity,11) = SUBSTRING(steamid, 11)
+            ) as isAdmin,
             steamid, last_alias as name, country, last_join_date as lastJoinDate, created_date as firstJoinDate
             FROM stats_users
             WHERE steamid LIKE :query or last_alias LIKE :query
@@ -63,7 +66,12 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
     })
 
-    fastify.get('/:steamid', async(req: FastifyRequest<{Params: { steamid: string }}>, reply) => {
+    fastify.get('/:steamid', async(req: FastifyRequest<{
+        Params: { steamid: string }, 
+        Querystring: {
+            include?: string,
+        }
+    }>, reply) => {
         const [rows] = await fastify.db.execute<RowDataPacket[]>(
             `SELECT
             (SELECT COUNT(*) FROM notes WHERE notes.steamid = stats_users.steamid) as notesCount,
@@ -74,11 +82,17 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             WHERE steamid = ?`, 
             [ req.params.steamid ]
         )
+        let adminData = undefined
+        if(req.query.include === "admin") {
+            adminData = fastify.authmngr.getAdmin(new SteamID(req.params.steamid))
+            if(adminData) delete adminData.password
+        }
         return {
             user: rows.length > 0 ? {
                 ...rows[0],
                 country: rows[0].country.length > 0 ? rows[0].country : null
-            } : null
+            } : null,
+            adminData
         }
     })
 

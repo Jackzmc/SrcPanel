@@ -3,7 +3,7 @@ import QuickLRU from 'quick-lru'
 import SteamID from 'steamid'
 import { FastifyReply, FastifyRequest } from 'fastify';
 import ActivityLog from "./ActivityLog.js";
-import { AdminPermissions } from '../../../common-types/User';
+import { AdminPermissions, AdminData, AdminGroup } from '../../../common-types/User';
 
 interface AddAdmin {
     id?: number,
@@ -14,25 +14,6 @@ interface AddAdmin {
     name: string,
     immunity: number,
     groupIds?: string[]
-}
-
-interface Admin {
-    id?: number,
-    authtype: "steam" | "name" | "ip",
-    identity: string,
-    password: string | null,
-    name: string,
-
-    permissions: AdminPermissions
-
-    groups: Group[]
-}
-
-interface Group {
-    id: number,
-    flags: string,
-    name: string,
-    immunity: 0
 }
 
 interface APIKey {
@@ -46,7 +27,7 @@ interface APIKey {
 
 export default class AuthManager {
     private connection: Connection
-    private admins: Record<string, Admin>
+    private admins: Record<string, AdminData> = {}
     private apikeysCache: QuickLRU<string, APIKey>
     private actLog: ActivityLog
 
@@ -162,7 +143,7 @@ export default class AuthManager {
     }
 
     public async fetchAdmins() { 
-        const admins: Record<string, Admin> = {}, groups: Record<number, Group> = {}
+        const admins: Record<string, AdminData> = {}, groups: Record<number, AdminGroup> = {}
         const [rows] = await this.connection.execute(`
             SELECT sm_admins.*, sag.group_id as sg_id, sg.name as sg_name, sg.immunity_level as sg_immunity, sg.flags as sg_flags, 
             dash.flags as web_flags, dash.role as web_role

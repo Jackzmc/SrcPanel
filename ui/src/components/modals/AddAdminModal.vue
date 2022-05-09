@@ -26,15 +26,16 @@
               min="0" :max="privUser.immunityLevel - 1"
             />
           </div>
-          <p class="help has-text-danger" v-if="form.immunity >= privUser.immunityLevel">The maximum immunity level you can apply is {{userdata.permissions.immunityLevel - 1}}</p>
+          <p class="help has-text-danger" v-if="form.immunity >= privUser.immunityLevel">The maximum immunity level you can apply is {{userdata.permissions.immunityLevel - 1}}, which is below yours ({{userdata.permissions.immunityLevel}})</p>
         </div>
         <div class="tabs">
           <ul>
-            <li :class="{'is-active': tabIndex == 1}" @click="setTab(1)"><a>Permission Groups</a></li>
-            <li :class="{'is-active': tabIndex == 0}" @click="setTab(0)"><a>Manual Flags</a></li>
+            <li :class="{'is-active': tabIndex == Tab.Groups}" @click="setTab(Tab.Groups)"><a>Permission Groups</a></li>
+            <li :class="{'is-active': tabIndex == Tab.Manual}" @click="setTab(Tab.Manual)"><a>Manual Flags</a></li>
+            <li :class="{'is-active': tabIndex == Tab.Web}" @click="setTab(Tab.Web)"><a>Web Permissions</a></li>
           </ul>
         </div>
-        <template v-if="tabIndex == 0">
+        <template v-if="tabIndex == Tab.Manual">
           <h6 class="title is-6">Flags</h6>
           <p class="subtitle is-6">Only flags you have access to can be added</p>
           <div class="field">
@@ -56,12 +57,12 @@
               :value="flag"
               class="is-checkradio has-tooltip-right"
               v-model="form.flags"
-              :disabled="!hasRoot && privUser.flags.indexOf(flag) === -1"
+              :disabled="!canEdit || !hasRoot && privUser.flags.indexOf(flag) === -1"
             >
             <label :for="flag">{{name}}</label>
           </div>
         </template>
-        <template v-else-if="tabIndex == 1">
+        <template v-else-if="tabIndex == Tab.Groups">
           <table class="table is-fullwidth">
             <thead>
               <tr>
@@ -85,13 +86,14 @@
                       type="checkbox"
                       :value="group.id"
                       class="is-checkradio is-medium is-info"
+                      :disabled="!canEdit"
                       v-model="selectedGroups"
                     >
                     <label :for="'group.'+group.id.toString()"></label>
                   </td>
                   <td>{{group.name}}</td>
                   <td>{{group.flags}}</td>
-                  <td>{{group.immunityLevel}}</td>
+                  <td>{{group.immunity}}</td>
                 </tr>
                 <tr v-if="expandedGroup?.id == group.id" style="width:100%">
                   <td colspan="4">
@@ -102,6 +104,21 @@
             </tbody>
           </table>
         </template>
+        <template v-else-if="tabIndex == Tab.Web">
+          <h6 class="title is-6">Web Flags</h6>
+          <p class="subtitle is-6">Only flags you have access to can be added</p>
+          <div class="field" v-for="(name, flag) in WEB_FLAGS" :key="flag">
+            <input
+              :id="'flag.' + flag"
+              type="checkbox"
+              :value="flag"
+              class="is-checkradio has-tooltip-right"
+              v-model="form.webFlags"
+              :disabled="!canEdit || !hasRoot && !privUser.hasWebPerm(flag)"
+            >
+            <label :for="'flag.' + flag">{{name}}</label>
+          </div>
+        </template>
         <article class="message is-warning" v-if="noPermsGiven">
           <div class="message-body">
             <b>Warning: </b>User has not been granted any permissions.
@@ -110,12 +127,18 @@
         </article>
       </section>
       <footer class="modal-card-foot">
-        <button
-          :class="['button','has-tooltip-top', 'is-success',{'is-loading': !user}]"
-          :disabled="cantAddAdmin"
-          @click="save"
-        >Add Admin</button>
-        <button :class="['button',{'is-loading': !user}]" @click="cancel">Cancel</button>
+        <template v-if="canEdit">
+          <button
+            :class="['button','has-tooltip-top', 'is-success',{'is-loading': !user}]"
+            :disabled="cantAddAdmin"
+            @click="save"
+          >Save</button>
+          <button :class="['button',{'is-loading': !user}]" @click="cancel">Cancel</button>
+        </template>
+        <template v-else>
+          <button class="button" @click="cancel">Close</button>
+          <p class="has-text-danger">User is immune to you, you cannot edit.</p>
+        </template>
         <p class="has-text-danger" v-if="error">{{error}}</p>
       </footer>
     </div>
@@ -127,34 +150,17 @@ import { ref, onMounted, computed } from 'vue'
 import { User, PrivilegedUser, PlayerData } from '@/js/User'
 import { useRouter, useRoute } from 'vue-router'
 import SteamID from 'steamid'
-import { Session, WebPermission, WebRole } from '../../../../common-types/User';
-import { AdminGroup } from '../../../../server/src/routes/!!privileged/admins';
+import { Session, WebPermission, WebRole, FLAGS, WEB_FLAGS, AdminData, AdminGroup } from '../../../../common-types/User';
 import FlagList from '@/components/FlagList.vue'
+import { convertBitsArrayToInt, convertIntToBitsArray, } from '../../js/User';
 
-const MIN_HOURS_PLAYTIME = 10
-const FLAGS = {
-  'a': 'Reserved Slot',
-  'b': 'Generic Admin',
-  'c': 'Kick',
-  'd': 'Ban',
-  'e': 'Unban',
-  'f': 'Slay/harm others',
-  'g': 'Change the map',
-  'h': 'Change cvar rules',
-  'i': 'Execute custom config files',
-  'j': 'Use admin chat',
-  'k': 'Start a generic vote',
-  // 'l': 'Set a password on the server',
-  'm': 'Ingame rcon access',
-  'n': 'Enable sv_cheats or use cheat commands',
-  'o': 'Custom 1',
-  'p': 'Custom 2',
-  'q': 'Custom 3',
-  'r': 'Custom 4',
-  's': 'Custom 5',
-  't': 'Custom 6',
+enum Tab {
+  Groups,
+  Manual,
+  Web
 }
 
+const MIN_HOURS_PLAYTIME = 10
 const router = useRouter()
 const route = useRoute()
 const props = defineProps<{
@@ -163,17 +169,29 @@ const props = defineProps<{
 const privUser = new PrivilegedUser(props.userdata)
 
 let user = ref<PlayerData|null>()
+let isAdmin = ref(false)
 let groups = ref<AdminGroup[]>([])
-let tabIndex = ref(1)
-let form = ref({
+let tabIndex = ref<Tab>(Tab.Groups)
+let form = ref<{
+  immunity: number,
+  flags: string[],
+  webFlags: number[]
+}>({
   immunity: 0,
   flags: [],
+  webFlags: []
 })
 let stats = ref<Record<string, string|number>|null>()
 let error = ref("")
 let loading = ref(false)
 let expandedGroup = ref<AdminGroup>()
-let selectedGroups = ref<AdminGroup[]>([])
+let selectedGroups = ref<number[]>([])
+
+
+const canEdit = computed(() => {
+  if(isAdmin.value && form.value.immunity >= privUser.immunityLevel) return false
+  return true
+})
 
 const hasRoot = computed(() => {
   return privUser.flags?.includes('z')
@@ -195,15 +213,15 @@ const noAddReasons = computed(() => {
   return msgs
 })
 const cantAddAdmin = computed(() => {
-  return noAddReasons.value.length > 0
+  return noAddReasons.value.length > 0 || !canEdit.value
 })
 
 const noPermsGiven = computed(() => {
-  return form.value.flags.length === 0 && selectedGroups.value.length === 0
+  return form.value.flags.length === 0 && selectedGroups.value.length === 0 && form.value.webFlags.length === 0
 })
 
 
-function setTab(index: number) {
+function setTab(index: Tab) {
   tabIndex.value = index
 }
 function expandGroup(id: number) {
@@ -225,12 +243,12 @@ async function save() {
   } else {
     loading.value = true
     const response = await fetch(`/api/admins/${user.value?.steamid}`, {
-      method: 'POST',
+      method: isAdmin ? 'PUT': 'POST',
       body: JSON.stringify({
         immunityLevel: form.value.immunity,
         flags: form.value.flags.join(''),
-        groupsIds: selectedGroups.value.map(group => group.id).join(','),
-        webPermissions: 0,
+        groupsIds: selectedGroups.value.join(','),
+        webPermissions: convertBitsArrayToInt(form.value.webFlags),
         name: user.value?.name
       } as POSTAdminAPI)
     })
@@ -258,7 +276,15 @@ async function getGroups(): Promise<AdminGroup[]> {
 }
 
 onMounted(async() => {
-  user.value = await User.fetch(route.params.id as string)
+  const player = await User.fetch(route.params.id as string, true)
+  user.value = player?.user
+  if(player?.adminData) {
+    isAdmin.value = true
+    form.value.flags = player.adminData.permissions.flags?.split("") || []
+    form.value.webFlags = convertIntToBitsArray(player.adminData.permissions.web.flags || 0)
+    form.value.immunity = player.adminData.permissions.immunityLevel || 0
+    selectedGroups.value = player.adminData.groups?.map(group => group.id) || []
+  }
   stats.value = await User.getStats(route.params.id as string)
   groups.value = await getGroups()
 })

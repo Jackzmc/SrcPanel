@@ -131,11 +131,11 @@ const routes = [
         }
       },
       {
-        name: 'admin-players-add-admin',
-        path: ':id/add-admin',
+        name: 'admin-players-manage-admin',
+        path: ':id/manage-admin',
         component: () => import(/* webpackChunkName: 'players' */ '../components/modals/AddAdminModal.vue'),
         meta: {
-          title: 'Add Admin Player',
+          title: 'Manage Admin Player',
           authRequired: true
         }
       }

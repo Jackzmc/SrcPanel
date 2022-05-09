@@ -31,7 +31,7 @@
     </template>
     <div class="buttons">
       <a class="button is-primary" @click="addBan" :disabled="addBanDisableReason" :data-tooltip="addBanDisableReason">Add Ban</a>
-      <a class="button is-warning" @click="addAdmin" v-if="hasCreateAdminPerms" :disabled="addAdminDisableReason" :data-tooltip="addAdminDisableReason">Add Admin</a>
+      <a class="button is-warning" @click="addAdmin" v-if="hasCreateAdminPerms" :disabled="addAdminDisableReason" :data-tooltip="addAdminDisableReason">{{adminButton}}</a>
     </div>
   </div>
 </div>
@@ -77,7 +77,7 @@ const isManualInputEntered = computed(() => {
 const selectedIdSteamID = computed(() => {
   return manualInput.value ?? selectedId.value
 })
-const selectedRecentUser = computed(() => {
+const selectedUser = computed(() => {
   if(!selectedId.value) return
   if(tabIndex.value == 0)
     return recentPlayers.value.list.find(rp => rp.steamid == selectedId.value)
@@ -90,13 +90,17 @@ const hasCreateAdminPerms = computed(() => {
 const addAdminDisableReason = computed(() => {
   //!selectedId || (selectedId === '_custom' && !manualInput)
   if(!selectedId.value) return 'No player selected'
-  if(selectedId.value === '_custom') return 'Cannot add an unknown player as admin'
-  if(selectedRecentUser.value?.isAdmin) return 'Selected player is already an admin'
+  // if(selectedId.value === '_custom') return 'Cannot add an unknown player as admin'
+  // if(selectedRecentUser.value?.isAdmin) return 'Selected player is already an admin'
   return null
+})
+const adminButton = computed(() => {
+  if(selectedUser.value?.isAdmin) return "Edit Admin"
+  return "Add Admin"
 })
 const addBanDisableReason = computed(() => {
   if(!selectedId.value || (selectedId.value === '_custom' && !manualInput.value)) return 'No player selected'
-  if(selectedRecentUser.value?.isAdmin) return 'Selected player is an admin'
+  if(selectedUser.value?.isAdmin) return 'Selected player is an admin'
   return null
 })
 function setTab(index: number) {
@@ -117,7 +121,7 @@ function addBan() {
 }
 function addAdmin() {
   if(!selectedIdSteamID.value) return alert("No steamID selectedId")
-  router.push(`/admin/players/${selectedIdSteamID.value}/add-admin`)
+  router.push(`/admin/players/${selectedIdSteamID.value}/manage-admin`)
 }
 async function searchUser() {
   selectedId.value = undefined

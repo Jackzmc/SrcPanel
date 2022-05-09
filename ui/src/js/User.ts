@@ -1,4 +1,4 @@
-import { WebPermission, WebRole } from '../../../common-types/User';
+import { AdminData, WebPermission, WebRole } from '../../../common-types/User';
 import type  { Session } from '../../../common-types/User';
 
 export interface PlayerData {
@@ -7,16 +7,39 @@ export interface PlayerData {
   name: string,
   country: string,
   lastJoinDate: number
-  firstJoinDate: number
+  firstJoinDate: number,
+}
+export interface PlayerResponse {
+  user: PlayerData,
+  adminData?: AdminData
+}
+
+export function convertBitsArrayToInt(bits: number[]) {
+  return bits.reduce((pv, cv) => pv + Number(cv), 0)
+}
+
+export function convertIntToBitsArray(number: number, maxBitValue: number = 64) {
+  const flags = []
+  let i = 0
+  while(true) {
+    const power = 1 << i
+    if(power > maxBitValue) break
+    if(number & power) flags.push(power)
+    i++
+  }
+  return flags
 }
 
 export class User {
-  static async fetch(id: string): Promise<PlayerData|null> {
-    const response = await fetch(`/api/users/${id}`)
+  static async fetch(id: string, includeAdminData = false): Promise<PlayerResponse|null> {
+    const response = await fetch(`/api/users/${id}?include=${includeAdminData?'admin':''}`)
     if(response.ok) {
       const json = await response.json()
       if(json.user) {
-        return json.user
+        return {
+          user: json.user,
+          adminData: json.adminData
+        }
       } else {
         console.error('No users were found for id?')
         return null
@@ -49,6 +72,7 @@ export class PrivilegedUser {
   }
 
   hasWebPerm(webPerm: WebPermission): boolean {
+    if(this.data.permissions.web.flags & WebPermission.FullPermission) return true
     return (this.data.permissions.web.flags & webPerm) !== 0
   }
 

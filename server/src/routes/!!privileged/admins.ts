@@ -3,7 +3,7 @@ import { OkPacket, RowDataPacket } from 'mysql2';
 import { Static, Type } from '@sinclair/typebox'
 import SteamID from 'steamid';
 import fs from 'fs/promises'
-import { WebPermission } from '../../../../common-types/User.js';
+import { AdminGroup, WebPermission } from '../../../../common-types/User.js';
 
 const POSTAdmin = Type.Object({
     immunityLevel: Type.Number(),
@@ -13,7 +13,17 @@ const POSTAdmin = Type.Object({
     name: Type.Optional(Type.String())
 })
 
+
+const PUTAdmin = Type.Object({
+    immunityLevel: Type.Optional(Type.Number()),
+    flags: Type.Optional(Type.String()),
+    groupsIds: Type.Optional(Type.String()),
+    webPermissions: Type.Optional(Type.Number()),
+    name: Type.Optional(Type.String())
+})
+
 type POSTAdminType = Static<typeof POSTAdmin>
+type PUTAdminType = Static<typeof PUTAdmin>
 
 interface AddonListEntry {
     filename: string,
@@ -31,13 +41,6 @@ interface AddonChildListEntry {
         title: string,
         filesize: number,
     }
-}
-
-export interface AdminGroup {
-    id: number,
-    flags: string,
-    name: string,
-    immunityLevel: number
 }
 
 const ADDONS_FOLDER = process.env.ADDONS_FOLDER
@@ -82,7 +85,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                         id: row.id,
                         flags: row.flags,
                         name: row.name,
-                        immunityLevel: row.immunity_level
+                        immunity: row.immunity_level
                     } as unknown as AdminGroup
                 }) as AdminGroup[]
         }
@@ -177,15 +180,22 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
     })
 
+    fastify.put('/:steamid',  async(req: FastifyRequest<{
+        Params: { steamid: string },
+        Body: PUTAdminType
+    }>, reply) => {
+
+    })
+
     fastify.post('/:steamid', async(req: FastifyRequest<{
         Params: { steamid: string },
-        Querystring: POSTAdminType
+        Body: POSTAdminType
     }>, reply) => {
         if(req.session.permissions.web.flags & WebPermission.ManageAdmins) {
             const steamid = new SteamID(req.params.steamid)
             if(steamid.isValid()) {
                 if(!fastify.authmngr.isAdmin(steamid)) {
-                    let immunity = req.query.immunityLevel || 0
+                    let immunity = req.body.immunityLevel || 0
                     if(immunity < 0) immunity = 0
 
                     if(immunity > req.session.permissions.immunityLevel) {
@@ -200,11 +210,11 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                         authtype: "steam",
                         identity: steamid.getSteam2RenderedID(true),
                         password: null,
-                        name: req.query.name || "",
+                        name: req.body.name || "",
                         immunity,
-                        flags: req.query.flags,
+                        flags: req.body.flags,
                     
-                        groupIds: req.query.groupsIds ? req.query.groupsIds.split(",") : []
+                        groupIds: req.body.groupsIds ? req.body.groupsIds.split(",") : []
                     })
 
                     return {
