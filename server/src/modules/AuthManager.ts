@@ -209,6 +209,7 @@ export default class AuthManager {
 
     public async fetchAdmins() { 
         const admins: Record<string, AdminData> = {}, groups: Record<number, AdminGroup> = {}
+        // TODO: Update to support multiple groups
         const [rows] = await this.connection.execute(`
             SELECT sm_admins.*, sag.group_id as sg_id, sg.name as sg_name, sg.immunity_level as sg_immunity, sg.flags as sg_flags, 
             dash.flags as web_flags, dash.role as web_role
@@ -220,6 +221,9 @@ export default class AuthManager {
 
 
         for(const row of rows as RowDataPacket[]) {
+            let highestImmunity = 0
+            let flags = ''
+
             if(row.sg_id && !groups[row.sg_id]) {
                 groups[row.sg_id] = {
                     id: row.sg_id,
@@ -227,6 +231,15 @@ export default class AuthManager {
                     name: row.sg_name,
                     immunity: row.sg_immunity
                 }
+                if(row.sg_immunity > highestImmunity) highestImmunity = row.sg_immunity
+                for(const flag of flags) {
+                    if(!flags.includes(flag)) flags += flag
+                }
+            }
+
+            if(row.immunity > highestImmunity) highestImmunity = row.immunity
+            for(const flag of row.flags) {
+                if(!flags.includes(flag)) flags += flag
             }
 
             const key = new SteamID(row.identity).accountid.toString()
@@ -238,8 +251,8 @@ export default class AuthManager {
                     password: row.password,
                     name: row.name,
                     permissions: {
-                        immunityLevel: row.immunity,
-                        flags: row.flags,
+                        immunityLevel: highestImmunity,
+                        flags,
                         web: {
                             role: row.web_role || 0,
                             flags: row.web_flags || 0
