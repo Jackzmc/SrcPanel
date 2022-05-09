@@ -104,7 +104,7 @@ export default class AuthManager {
                 )
             } else {
                 await this.connection.execute<OkPacket>(
-                    `INSERT INTO dash_perms (steamid, role, flags) VALUES (?, ${WebRole.ReadWrite}, ?) ON DUPLICATE KEY UPDATE`,
+                    `INSERT INTO dash_perms (steamid, role, flags) VALUES (?, ${WebRole.ReadWrite}, ?)`,
                     [rows[0].identity, webPerms]
                 )
             }
