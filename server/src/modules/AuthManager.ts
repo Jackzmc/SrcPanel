@@ -224,15 +224,17 @@ export default class AuthManager {
             let highestImmunity = 0
             let flags = ''
 
-            if(row.sg_id && !groups[row.sg_id]) {
-                groups[row.sg_id] = {
-                    id: row.sg_id,
-                    flags: row.sg_flags,
-                    name: row.sg_name,
-                    immunity: row.sg_immunity
+            if(row.sg_id) {
+                if(!groups[row.sg_id]) {
+                    groups[row.sg_id] = {
+                        id: row.sg_id,
+                        flags: row.sg_flags,
+                        name: row.sg_name,
+                        immunity: row.sg_immunity
+                    }
                 }
                 if(row.sg_immunity > highestImmunity) highestImmunity = row.sg_immunity
-                for(const flag of flags) {
+                for(const flag of row.sg_flags) {
                     if(!flags.includes(flag)) flags += flag
                 }
             }
@@ -253,6 +255,10 @@ export default class AuthManager {
                     permissions: {
                         immunityLevel: highestImmunity,
                         flags,
+                        manual: {
+                            immunityLevel: row.immunity,
+                            flags: row.flags
+                        },
                         web: {
                             role: row.web_role || 0,
                             flags: row.web_flags || 0
