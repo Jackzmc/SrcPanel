@@ -26,6 +26,10 @@ export interface AdminPermissions {
     web: {
         role: number,
         flags: number
+    },
+    manual: {
+        immunityLevel: number,
+        flags: string
     }
 }
 

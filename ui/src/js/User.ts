@@ -100,4 +100,8 @@ export class PrivilegedUser {
     return this.data.permissions.immunityLevel
   }
 
+  get manual() {
+    return this.data.permissions.manual
+  }
+
 }
