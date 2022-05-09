@@ -2,8 +2,8 @@
 <div>
   <router-view v-if="userdata" :userdata="userdata" />
   <div class="container" v-if="userdata">
-    <Tabs inner-wrapper-class="tabs is-large">
-      <Tab name="Recently Played With">
+    <Tabs inner-wrapper-class="tabs is-large" @changed="setTab">
+      <Tab name="Recently Played With" id="recent">
         <h4 class="title is-4">Recently Played From</h4>
         <div class="level">
           <div class="level-left">
@@ -26,7 +26,7 @@
         </div>
         <UserSelection :userdata="userdata" :users="recentPlayers.list" @select="onUserSelected" @manual="onManualSelected" />
       </Tab>
-      <Tab name="Search for a User">
+      <Tab name="Search for a User" id="search">
         <div class="field">
         <label class="label">Search for a player (SteamID2 or name)</label>
         <div class="control">
@@ -35,7 +35,7 @@
       </div>
       <UserSelection has-manual :userdata="userdata" :users="users" @select="onUserSelected" @manual="onManualSelected" />
       </Tab>
-      <Tab name="Admins">
+      <Tab name="Admins" id="admins">
         WIP
       </Tab>
     </Tabs>
@@ -68,9 +68,7 @@ const props = defineProps<{
 }>()
 const privUser = new PrivilegedUser(props.userdata)
 
-// TODO: Disable add admin when selected is admin
-
-let tabIndex = ref(0)
+let selectedTabId = ref("recent")
 let users = ref<PlayerData[]>([])
 let search = ref({
   query: '',
@@ -94,10 +92,12 @@ const selectedIdSteamID = computed(() => {
 })
 const selectedUser = computed(() => {
   if(!selectedId.value) return
-  if(tabIndex.value == 0)
+  if(selectedTabId.value === "recent")
     return recentPlayers.value.list.find(rp => rp.steamid == selectedId.value)
-  else
+  else if(selectedTabId.value === "search")
     return users.value.find(user => user.steamid == selectedId.value)
+  else
+    return undefined
 })
 const hasCreateAdminPerms = computed(() => {
   return privUser.immunityLevel > 0 && privUser.hasWebPerm(WebPermission.ManageAdmins)
@@ -121,8 +121,8 @@ const addBanDisableReason = computed(() => {
   if(selectedUser.value?.isAdmin) return 'Selected player is an admin'
   return null
 })
-function setTab(index: number) {
-  tabIndex.value = index
+function setTab(tab: any) {
+  selectedTabId.value = tab.tab.computedId
   manualInput.value = undefined
   selectedId.value = undefined
 }
