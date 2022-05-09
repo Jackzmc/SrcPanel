@@ -5,14 +5,25 @@
     <Tabs inner-wrapper-class="tabs is-large">
       <Tab name="Recently Played With">
         <h4 class="title is-4">Recently Played From</h4>
-        <div class="select">
-          <select @change="getRecentPlayers" v-model="recentPlayers.server">
-            <option v-for="server in servers" :key="server" :value="server">
-              {{ server || "All Servers" }}
-            </option>
-          </select>
+        <div class="level">
+          <div class="level-left">
+            <div class="level-item">
+              <div class="select">
+                <select @change="getRecentPlayers" v-model="recentPlayers.server">
+                  <option v-for="server in servers" :key="server" :value="server">
+                    {{ server || "All Servers" }}
+                  </option>
+                </select>
+              </div>
+            </div>
+            <div class="level-item">
+              <a class="button is-info" @click="getRecentPlayers">Refresh</a>
+            </div>
+            <div class="level-item">
+              <em>auto refreshing every {{AUTO_REFRESH_INTERVAL_MINUTES}} minutes</em>
+            </div>
+          </div>
         </div>
-        &nbsp;<a class="button is-info" @click="getRecentPlayers">Refresh</a>
         <UserSelection :userdata="userdata" :users="recentPlayers.list" @select="onUserSelected" @manual="onManualSelected" />
       </Tab>
       <Tab name="Search for a User">
@@ -29,9 +40,9 @@
       </Tab>
     </Tabs>
     <br>
-    <div class="buttons">
-      <a class="button is-primary" @click="addBan" :disabled="addBanDisableReason" :data-tooltip="addBanDisableReason">Add Ban</a>
-      <a class="button is-warning" @click="addAdmin" v-if="hasCreateAdminPerms" :disabled="addAdminDisableReason" :data-tooltip="addAdminDisableReason">{{adminButton}}</a>
+    <div class="buttons" v-if="selectedUser">
+      <a class="button is-danger" @click="addBan" v-if="!addBanDisableReason">Ban</a>
+      <a class="button is-warning" @click="addAdmin" v-if="hasCreateAdminPerms&&!addAdminDisableReason"  :data-tooltip="addAdminDisableReason">{{adminButton}}</a>
     </div>
   </div>
 </div>
@@ -43,9 +54,12 @@ import { User, PrivilegedUser, PlayerData } from '@/js/User'
 import { useRouter, useRoute } from 'vue-router'
 import { Session, WebPermission } from '../../../../common-types/User';
 import UserSelection from '@/components/UserSelection.vue'
+// @ts-ignore
 import {Tabs, Tab} from 'vue3-tabs-component';
 // Keep track and open gui for each ban
 import Debounce from '@/js/debounce'
+
+const AUTO_REFRESH_INTERVAL_MINUTES = 2
 
 const router = useRouter()
 const route = useRoute()
@@ -96,8 +110,11 @@ const addAdminDisableReason = computed(() => {
   return null
 })
 const adminButton = computed(() => {
-  if(selectedUser.value?.isAdmin) return "Edit Admin"
-  return "Add Admin"
+  if(selectedUser.value) {
+    if(selectedUser.value?.isAdmin) return "Edit Admin"
+    else return "Make Admin"
+  }
+  return "Add / Edit Admin"
 })
 const addBanDisableReason = computed(() => {
   if(!selectedId.value || (selectedId.value === '_custom' && !manualInput.value)) return 'No player selected'
@@ -171,5 +188,8 @@ onBeforeMount(() => {
   search.value.func = Debounce(searchUser, 400)
   getServerTypes()
   getRecentPlayers()
+  setInterval(() => {
+    getRecentPlayers()
+  }, 1000 * 60 * AUTO_REFRESH_INTERVAL_MINUTES)
 })
 </script>

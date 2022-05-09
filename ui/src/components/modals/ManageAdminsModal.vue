@@ -63,10 +63,10 @@
           </div>
         </template>
         <template v-else-if="tabIndex == Tab.Groups">
-          <table class="table is-fullwidth">
+          <table class="table">
             <thead>
               <tr>
-                <th></th>
+                <th style="width:8em"></th>
                 <th>Name</th>
                 <th>Flags</th>
                 <th>Immunity Level</th>
@@ -76,7 +76,7 @@
               <template v-for="group in groups" :key="group.id">
                 <tr>
                   <td>
-                    <a @click="expandGroup(group.id)" class="button is-small">
+                    <a @click="expandGroup(group.id)" class="button is-small" data-tooltip="View group flags">
                       <template v-if="expandedGroup?.id == group.id">⮟</template>
                       <template v-else>⮞</template>
                     </a>
