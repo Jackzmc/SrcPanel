@@ -286,8 +286,8 @@ onMounted(async() => {
     isAdmin.value = true
     form.value.flags = player.adminData.permissions.flags?.split("") || []
     form.value.webFlags = convertIntToBitsArray(player.adminData.permissions.web.flags || 0)
+    console.log(player.adminData.permissions.web.flags, convertIntToBitsArray(player.adminData.permissions.web.flags))
     form.value.immunity = player.adminData.permissions.immunityLevel || 0
-    console.log(player.adminData.groups)
     selectedGroupsIds.value = player.adminData.groups?.map(group => group.id) || []
   }
   stats.value = await User.getStats(route.params.id as string)

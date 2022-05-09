@@ -3,7 +3,7 @@ import QuickLRU from 'quick-lru'
 import SteamID from 'steamid'
 import { FastifyReply, FastifyRequest } from 'fastify';
 import ActivityLog from "./ActivityLog.js";
-import { AdminPermissions, AdminData, AdminGroup } from '../../../common-types/User';
+import { AdminPermissions, AdminData, AdminGroup, WebRole } from '../../../common-types/User.js';
 
 interface AddAdmin {
     authtype: "steam" | "name" | "ip",
@@ -76,7 +76,7 @@ export default class AuthManager {
         return rows.length > 0 ? rows[0].id : null
     }
 
-    public async editAdmin(id: number, data: Partial<AddAdmin>) {
+    public async editAdmin(id: number, data: Partial<AddAdmin>, webPerms?: number) {
         const [rows] = await this.connection.execute<RowDataPacket[]>(`SELECT * FROM sm_admins WHERE id = ?`, [id])
         if(rows.length == 0) throw new Error("No admin with specified id exists")
         let newAdminData = rows[0]
@@ -90,6 +90,25 @@ export default class AuthManager {
             "UPDATE sm_admins SET flags = ?, name = ?, immunity = ?, password = ?, authtype = ? WHERE id = ?", 
             [newAdminData.flags, newAdminData.name, newAdminData.immunity, newAdminData.password, newAdminData.authtype, id]
         )
+
+        if(webPerms) {
+            const [exists] = await this.connection.execute<RowDataPacket[]>(
+                "SELECT * FROM dash_perms WHERE steamid = ?", 
+                [rows[0].identity]
+            )
+
+            if(exists.length > 0) {
+                await this.connection.execute<OkPacket>(
+                    `UPDATE dash_perms SET flags = ? WHERE steamid = ?`,
+                    [webPerms, rows[0].identity]
+                )
+            } else {
+                await this.connection.execute<OkPacket>(
+                    `INSERT INTO dash_perms (steamid, role, flags) VALUES (?, ${WebRole.ReadWrite}, ?) ON DUPLICATE KEY UPDATE`,
+                    [rows[0].identity, webPerms]
+                )
+            }
+        }
 
         // If a change in groups
         if(data.groupIds) {
@@ -108,6 +127,7 @@ export default class AuthManager {
             }
         }
 
+        await this.fetchAdmins()
     }
 
     public async addAdmin(admin: AddAdmin, webPermissions?: number, webFlags?: number) {
@@ -195,8 +215,9 @@ export default class AuthManager {
             FROM sm_admins
             LEFT JOIN sm_admins_groups sag on sm_admins.id = sag.admin_id
             LEFT JOIN sm_groups sg on sg.id = sag.group_id
-            LEFT JOIN dash_perms AS dash on dash.steamid = sm_admins.identity`
+            LEFT JOIN dash_perms AS dash on SUBSTRING(dash.steamid,11) = SUBSTRING(sm_admins.identity,11)`
         )
+
 
         for(const row of rows as RowDataPacket[]) {
             if(row.sg_id && !groups[row.sg_id]) {

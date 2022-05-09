@@ -216,7 +216,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                         flags: req.body.flags,
                     
                         groupIds: req.body.groupsIds ? req.body.groupsIds.split(',') : []
-                    })
+                    }, req.body.webPermissions)
 
                     return {
                         adminId: id
