@@ -184,7 +184,61 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         Params: { steamid: string },
         Body: PUTAdminType
     }>, reply) => {
+        if(req.session.permissions.web.flags & WebPermission.ManageAdmins) {
+            const steamid = new SteamID(req.params.steamid)
+            if(steamid.isValid()) {
+                if(fastify.authmngr.isAdmin(steamid)) {
+                    let immunity = req.body.immunityLevel
+                    if(immunity && immunity < 0) immunity = 0
 
+                    if(immunity >= req.session.permissions.immunityLevel) {
+                        reply.code(403).send({
+                            error: 'INVALID_IMMUNITY',
+                            message: 'Cannot edit an admin at or above your immunity level',
+                            statusCode: 403
+                        })
+                    }
+
+                    const id = await fastify.authmngr.findId(req.params.steamid)
+                    if(!id) {
+                        return reply.code(404).send({
+                            error: 'ADMIN_ID_DOES_NOT_EXIST',
+                            message: "No admin exists with that id"
+                        })
+                    }
+
+                    await fastify.authmngr.editAdmin(id, {
+                        authtype: "steam",
+                        identity: steamid.getSteam2RenderedID(true),
+                        password: null,
+                        name: req.body.name || "",
+                        immunity,
+                        flags: req.body.flags,
+                    
+                        groupIds: req.body.groupsIds ? req.body.groupsIds.split(',') : []
+                    })
+
+                    return {
+                        adminId: id
+                    }
+                } else {
+                    return reply.code(404).send({
+                        error: 'ADMIN_DOES_NOT_EXIST',
+                        message: "No admin exists with that steamid"
+                    })
+                }
+            } else {
+                return reply.code(400).send({
+                    error: "INVALID_STEAMID",
+                    message: "The steamid is invalid"
+                })
+            }
+        } else {
+            return reply.code(401).send({
+                error: "UNAUTHORIZED",
+                message: "You do not have permission to manage admins"
+            })
+        }
     })
 
     fastify.post('/:steamid', async(req: FastifyRequest<{
@@ -214,8 +268,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                         immunity,
                         flags: req.body.flags,
                     
-                        groupIds: req.body.groupsIds ? req.body.groupsIds.split(",") : []
-                    })
+                        groupIds: req.body.groupsIds ? req.body.groupsIds.split(',') : []
+                    }, req.body.webPermissions)
 
                     return {
                         adminId: id

@@ -6,7 +6,6 @@ import ActivityLog from "./ActivityLog.js";
 import { AdminPermissions, AdminData, AdminGroup } from '../../../common-types/User';
 
 interface AddAdmin {
-    id?: number,
     authtype: "steam" | "name" | "ip",
     identity: string,
     flags?: string,
@@ -72,6 +71,45 @@ export default class AuthManager {
         return authorized
     }
 
+    public async findId(query: string) {
+        const [rows] = await this.connection.execute<RowDataPacket[]>(`SELECT id FROM sm_admins WHERE SUBSTRING(identity,11) = SUBSTRING(?,11)`, [query])
+        return rows.length > 0 ? rows[0].id : null
+    }
+
+    public async editAdmin(id: number, data: Partial<AddAdmin>) {
+        const [rows] = await this.connection.execute<RowDataPacket[]>(`SELECT * FROM sm_admins WHERE id = ?`, [id])
+        if(rows.length == 0) throw new Error("No admin with specified id exists")
+        let newAdminData = rows[0]
+
+        for(const key in data) {
+            if(data[key]) {
+                newAdminData[key] = data[key]
+            }
+        }
+        await this.connection.query<OkPacket>(
+            "UPDATE sm_admins SET flags = ?, name = ?, immunity = ?, password = ?, authtype = ? WHERE id = ?", 
+            [newAdminData.flags, newAdminData.name, newAdminData.immunity, newAdminData.password, newAdminData.authtype, id]
+        )
+
+        // If a change in groups
+        if(data.groupIds) {
+            console.log('group', data.groupIds)
+            // We don't know how many groups there are, easier to nuke them all and re-add
+            await this.connection.query<OkPacket>(
+                "DELETE FROM sm_admins_groups WHERE admin_id = ?", 
+                [id]
+            )
+            for(const groupId of data.groupIds) {
+                console.log('adding group', id, groupId)
+                await this.connection.execute(
+                    "INSERT INTO sm_admins_groups (admin_id, group_id, inherit_order) VALUES (?, ?, 0)",
+                    [id, groupId]
+                )
+            }
+        }
+
+    }
+
     public async addAdmin(admin: AddAdmin, webPermissions?: number, webFlags?: number) {
         // TODO: Add group support
 
@@ -87,6 +125,8 @@ export default class AuthManager {
             }
         )
 
+        const id = ok.insertId
+
         if(webPermissions) {
             await this.connection.execute(
                 "INSERT INTO dash_perms (steamid, permissions, flags) VALUES (:steamid, :permissions, :flags)",
@@ -99,26 +139,31 @@ export default class AuthManager {
             )
         }
 
-        this.admins[admin.identity] = {
-            password: "",
-            authtype: admin.authtype || "steam",
-            ...admin,
-            permissions: {
-                immunityLevel: admin.immunity,
-                web: {
-                    role: webPermissions || 0,
-                    flags: webFlags || 0
-                }
-            },
-            groups: []
+        const groups = []
+
+        if(admin.groupIds) {
+            for(const groupId of admin.groupIds) {
+                await this.connection.execute(
+                    "INSERT INTO sm_admins_groups (admin_id, group_id, inherit_order) VALUES (:admin_id, :group_id, 0)",
+                    [id, groupId]
+                )
+                groups.push({
+                    id: groupId,
+                    inheritOrder: 0
+                    
+                })
+            }
         }
 
+        // TODO: Refactor so full refresh not needed
+        await this.fetchAdmins()
 
-        return ok.insertId
+        return id
     }
 
     public isAdmin(steamid: SteamID) {
-        return this.admins[steamid.getSteam2RenderedID(true)] !== null && this.admins[steamid.getSteam2RenderedID(true)] !== undefined
+        const id = steamid.accountid.toString()
+        return this.admins[id] !== null && this.admins[id] !== undefined
     }
 
     public getAdmin(steamid: SteamID) {
@@ -153,9 +198,8 @@ export default class AuthManager {
             LEFT JOIN dash_perms AS dash on dash.steamid = sm_admins.identity`
         )
 
-
         for(const row of rows as RowDataPacket[]) {
-            if(!groups[row.sg_id]) {
+            if(row.sg_id && !groups[row.sg_id]) {
                 groups[row.sg_id] = {
                     id: row.sg_id,
                     flags: row.sg_flags,
@@ -180,9 +224,9 @@ export default class AuthManager {
                             flags: row.web_flags || 0
                         }
                     },
-                    groups: [groups[row.sg_id]]
+                    groups: row.sg_id ? [groups[row.sg_id]] : []
                 }
-            } else { 
+            } else if(row.sg_id) { 
                 admins[key].groups.push(groups[row.sg_id])
             }
         }

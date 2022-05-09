@@ -87,7 +87,7 @@
                       :value="group.id"
                       class="is-checkradio is-medium is-info"
                       :disabled="!canEdit"
-                      v-model="selectedGroups"
+                      v-model="selectedGroupsIds"
                     >
                     <label :for="'group.'+group.id.toString()"></label>
                   </td>
@@ -185,7 +185,7 @@ let stats = ref<Record<string, string|number>|null>()
 let error = ref("")
 let loading = ref(false)
 let expandedGroup = ref<AdminGroup>()
-let selectedGroups = ref<number[]>([])
+let selectedGroupsIds = ref<number[]>([])
 
 
 const canEdit = computed(() => {
@@ -217,7 +217,7 @@ const cantAddAdmin = computed(() => {
 })
 
 const noPermsGiven = computed(() => {
-  return form.value.flags.length === 0 && selectedGroups.value.length === 0 && form.value.webFlags.length === 0
+  return form.value.flags.length === 0 && selectedGroupsIds.value.length === 0 && form.value.webFlags.length === 0
 })
 
 
@@ -238,16 +238,20 @@ interface POSTAdminAPI {
   webPermissions: number
 }
 async function save() {
+  error.value = ''
   if(cantAddAdmin.value) {
     alert(`Cannot add admin for the following reasons:\n* ${noAddReasons.value.join('\n *')}`)
   } else {
     loading.value = true
     const response = await fetch(`/api/admins/${user.value?.steamid}`, {
       method: isAdmin ? 'PUT': 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
       body: JSON.stringify({
         immunityLevel: form.value.immunity,
         flags: form.value.flags.join(''),
-        groupsIds: selectedGroups.value.join(','),
+        groupsIds: selectedGroupsIds.value.join(','),
         webPermissions: convertBitsArrayToInt(form.value.webFlags),
         name: user.value?.name
       } as POSTAdminAPI)
@@ -283,7 +287,8 @@ onMounted(async() => {
     form.value.flags = player.adminData.permissions.flags?.split("") || []
     form.value.webFlags = convertIntToBitsArray(player.adminData.permissions.web.flags || 0)
     form.value.immunity = player.adminData.permissions.immunityLevel || 0
-    selectedGroups.value = player.adminData.groups?.map(group => group.id) || []
+    console.log(player.adminData.groups)
+    selectedGroupsIds.value = player.adminData.groups?.map(group => group.id) || []
   }
   stats.value = await User.getStats(route.params.id as string)
   groups.value = await getGroups()
