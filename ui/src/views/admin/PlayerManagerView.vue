@@ -2,33 +2,33 @@
 <div>
   <router-view v-if="userdata" :userdata="userdata" />
   <div class="container" v-if="userdata">
-    <div class="tabs is-large">
-      <ul>
-        <li :class="{'is-active': tabIndex == 0}"><a @click="setTab(0)">Recently Played With</a></li>
-        <li :class="{'is-active': tabIndex == 1}"><a @click="setTab(1)">Search for a User</a></li>
-      </ul>
-    </div>
-    <template v-if="tabIndex == 0">
-      <h4 class="title is-4">Recently Played From</h4>
-      <div class="select">
-        <select @change="getRecentPlayers" v-model="recentPlayers.server">
-          <option v-for="server in servers" :key="server" :value="server">
-            {{ server || "All Servers" }}
-          </option>
-        </select>
-      </div>
-      &nbsp;<a class="button is-info" @click="getRecentPlayers">Refresh</a>
-      <UserSelection :userdata="userdata" :users="recentPlayers.list" @select="onUserSelected" @manual="onManualSelected" />
-    </template>
-    <template v-else-if="tabIndex == 1">
-      <div class="field">
+    <Tabs inner-wrapper-class="tabs is-large">
+      <Tab name="Recently Played With">
+        <h4 class="title is-4">Recently Played From</h4>
+        <div class="select">
+          <select @change="getRecentPlayers" v-model="recentPlayers.server">
+            <option v-for="server in servers" :key="server" :value="server">
+              {{ server || "All Servers" }}
+            </option>
+          </select>
+        </div>
+        &nbsp;<a class="button is-info" @click="getRecentPlayers">Refresh</a>
+        <UserSelection :userdata="userdata" :users="recentPlayers.list" @select="onUserSelected" @manual="onManualSelected" />
+      </Tab>
+      <Tab name="Search for a User">
+        <div class="field">
         <label class="label">Search for a player (SteamID2 or name)</label>
         <div class="control">
           <input v-model="search.query" @input="search.func" class="input" type="text" placeholder="STEAM_1:1:####### or a name">
         </div>
       </div>
       <UserSelection has-manual :userdata="userdata" :users="users" @select="onUserSelected" @manual="onManualSelected" />
-    </template>
+      </Tab>
+      <Tab name="Admins">
+        WIP
+      </Tab>
+    </Tabs>
+    <br>
     <div class="buttons">
       <a class="button is-primary" @click="addBan" :disabled="addBanDisableReason" :data-tooltip="addBanDisableReason">Add Ban</a>
       <a class="button is-warning" @click="addAdmin" v-if="hasCreateAdminPerms" :disabled="addAdminDisableReason" :data-tooltip="addAdminDisableReason">{{adminButton}}</a>
@@ -43,6 +43,7 @@ import { User, PrivilegedUser, PlayerData } from '@/js/User'
 import { useRouter, useRoute } from 'vue-router'
 import { Session, WebPermission } from '../../../../common-types/User';
 import UserSelection from '@/components/UserSelection.vue'
+import {Tabs, Tab} from 'vue3-tabs-component';
 // Keep track and open gui for each ban
 import Debounce from '@/js/debounce'
 

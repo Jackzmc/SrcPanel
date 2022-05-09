@@ -133,7 +133,7 @@ const routes = [
       {
         name: 'admin-players-manage-admin',
         path: ':id/manage-admin',
-        component: () => import(/* webpackChunkName: 'players' */ '../components/modals/AddAdminModal.vue'),
+        component: () => import(/* webpackChunkName: 'players' */ '../components/modals/ManageAdminsModal.vue'),
         meta: {
           title: 'Manage Admin Player',
           authRequired: true
