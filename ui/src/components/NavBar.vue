@@ -106,7 +106,7 @@
 </template>
 
 <script setup lang="ts">
-import { defineProps, inject, computed } from 'vue';
+import { inject, computed } from 'vue';
 import LoginButton from '@/components/LoginButton.vue'
 import { useRoute, useRouter } from 'vue-router';
 // Bulma nav code

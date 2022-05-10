@@ -7,8 +7,9 @@
         <p v-else>Loading...</p>
         &nbsp;&nbsp;
       </header>
-      <section class="modal-card-body" v-if="user">
-        <div class="level">
+      <section class="modal-card-body" v-if="stats">
+        <p class="has-text-centered my-5" v-if="loading.stats">Fetching player statistics...</p>
+        <div class="level" v-else>
           <div class="level-item has-text-centered">
             <div class="field">
               <label class="label">Playtime</label>
@@ -84,7 +85,8 @@
         </div>
         <Tabs inner-wrapper-class="tabs" :options="{useUrlFragment:false}">
            <Tab name="Admin Groups">
-            <table class="table">
+            <p class="has-text-centered my-5" v-if="loading.groups">Fetching available admin groups... Please wait</p>
+            <table class="table" v-else>
               <thead>
                 <tr>
                   <th style="width:8em"></th>
@@ -241,7 +243,10 @@ let form = ref<{
 })
 let stats = ref<Record<string, string|number>|null>()
 let error = ref("")
-let loading = ref(false)
+let loading = ref({
+  stats: true,
+  groups: true
+})
 let expandedGroup = ref<AdminGroup>()
 let selectedGroupsIds = ref<number[]>([])
 
@@ -300,7 +305,6 @@ async function save() {
   if(cantAddAdmin.value) {
     alert(`Cannot add admin for the following reasons:\n* ${noAddReasons.value.join('\n *')}`)
   } else {
-    loading.value = true
     const response = await fetch(`/api/admins/${user.value?.steamid}`, {
       method: adminData.value ? 'PUT': 'POST',
       headers: {
@@ -314,7 +318,6 @@ async function save() {
         name: user.value?.name
       } as POSTAdminAPI)
     })
-    loading.value = false
     if(response.ok) {
       alert("Success")
       router.push('/admin/players')
@@ -329,7 +332,9 @@ function cancel() {
 }
 
 async function getGroups(): Promise<AdminGroup[]> {
+  loading.value.groups = true
   const res = await fetch('/api/admins/groups')
+  loading.value.groups = false
   if(res.ok) {
     return (await res.json()).groups
   } else {
@@ -347,7 +352,11 @@ onMounted(async() => {
     form.value.immunity = player.adminData.permissions.base.immunityLevel || 0
     selectedGroupsIds.value = player.adminData.groups?.map(group => group.id) || []
   }
+
+  loading.value.stats = true
   stats.value = await User.getStats(route.params.id as string)
+  loading.value.stats = false
+
   groups.value = await getGroups()
 })
 </script>
