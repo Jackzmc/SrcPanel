@@ -55,7 +55,15 @@
             </div>
           </div>
         </div>
-        <div class="level">
+        <div class="level" v-if="adminData">
+          <div class="level-item has-text-centered">
+            <div class="field">
+              <label class="label">Admin Id</label>
+              <span>
+                {{adminData?.id}}
+              </span>
+            </div>
+          </div>
           <div class="level-item has-text-centered">
             <div class="field">
               <label class="label">Computed Immunity</label>
@@ -336,7 +344,6 @@ onMounted(async() => {
     adminData.value = player.adminData
     form.value.flags = player.adminData.permissions.manual.flags?.split("") || []
     form.value.webFlags = convertIntToBitsArray(player.adminData.permissions.web.flags || 0)
-    console.log(player.adminData.permissions.web.flags, convertIntToBitsArray(player.adminData.permissions.web.flags))
     form.value.immunity = player.adminData.permissions.manual.immunityLevel || 0
     selectedGroupsIds.value = player.adminData.groups?.map(group => group.id) || []
   }

@@ -135,7 +135,6 @@ export default {
     fetch('../data/ftt.json')
     .then(response => response.json())
     .then(trolls => {
-      console.log(trolls)
       this.trolls = trolls
       this.combos = trolls._Combos_
       delete this.trolls._Combos_
