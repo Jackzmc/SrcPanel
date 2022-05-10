@@ -112,14 +112,12 @@ export default class AuthManager {
 
         // If a change in groups
         if(data.groupIds) {
-            console.log('group', data.groupIds)
             // We don't know how many groups there are, easier to nuke them all and re-add
             await this.connection.query<OkPacket>(
                 "DELETE FROM sm_admins_groups WHERE admin_id = ?", 
                 [id]
             )
             for(const groupId of data.groupIds) {
-                console.log('adding group', id, groupId)
                 await this.connection.execute(
                     "INSERT INTO sm_admins_groups (admin_id, group_id, inherit_order) VALUES (?, ?, 0)",
                     [id, groupId]
@@ -209,7 +207,6 @@ export default class AuthManager {
 
     public async fetchAdmins() { 
         const admins: Record<string, AdminData> = {}, groups: Record<number, AdminGroup> = {}
-        // TODO: Update to support multiple groups
         const [rows] = await this.connection.execute(`
             SELECT sm_admins.*, sag.group_id as sg_id, sg.name as sg_name, sg.immunity_level as sg_immunity, sg.flags as sg_flags, 
             dash.flags as web_flags, dash.role as web_role
@@ -219,32 +216,19 @@ export default class AuthManager {
             LEFT JOIN dash_perms AS dash on SUBSTRING(dash.steamid,11) = SUBSTRING(sm_admins.identity,11)`
         )
 
+        let highestImmunity = 0
+        let flags = ''
 
         for(const row of rows as RowDataPacket[]) {
-            let highestImmunity = 0
-            let flags = ''
-
-            if(row.sg_id) {
-                if(!groups[row.sg_id]) {
-                    groups[row.sg_id] = {
-                        id: row.sg_id,
-                        flags: row.sg_flags,
-                        name: row.sg_name,
-                        immunity: row.sg_immunity
-                    }
-                }
-                if(row.sg_immunity > highestImmunity) highestImmunity = row.sg_immunity
-                for(const flag of row.sg_flags) {
+            // Add initial set of flags and immunity
+            if(row.immunity > highestImmunity) highestImmunity = row.immunity
+            if(flags === '') { // Only run on first row
+                for(const flag of row.flags) {
                     if(!flags.includes(flag)) flags += flag
                 }
             }
-
-            if(row.immunity > highestImmunity) highestImmunity = row.immunity
-            for(const flag of row.flags) {
-                if(!flags.includes(flag)) flags += flag
-            }
-
             const key = new SteamID(row.identity).accountid.toString()
+            // Add the admin to the admin list
             if(!admins[key]) {
                 admins[key] = {
                     id: row.id,
@@ -264,10 +248,27 @@ export default class AuthManager {
                             flags: row.web_flags || 0
                         }
                     },
-                    groups: row.sg_id ? [groups[row.sg_id]] : []
+                    groups: []
                 }
-            } else if(row.sg_id) { 
+            }
+
+            // If a group is set
+            if(row.sg_id) {
+                // If group not cached, add it to list
+                if(!groups[row.sg_id]) {
+                    groups[row.sg_id] = {
+                        id: row.sg_id,
+                        flags: row.sg_flags,
+                        name: row.sg_name,
+                        immunity: row.sg_immunity
+                    }
+                }
                 admins[key].groups.push(groups[row.sg_id])
+                // Merge immunity & flags
+                if(row.sg_immunity > highestImmunity) highestImmunity = row.sg_immunity
+                for(const flag of row.sg_flags) {
+                    if(!flags.includes(flag)) flags += flag
+                }
             }
         }
 

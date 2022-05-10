@@ -20,19 +20,6 @@ export const WEB_FLAGS: Record<WebPermission, string> = {
     [WebPermission.FullPermission]: 'Full Permission / Super-admin'
 }
 
-export interface AdminPermissions {
-    immunityLevel: number
-    flags?: string,
-    web: {
-        role: number,
-        flags: number
-    },
-    manual: {
-        immunityLevel: number,
-        flags: string
-    }
-}
-
 export interface Session {
     user: {
       steamid: string,
@@ -87,4 +74,17 @@ export interface AdminGroup {
     flags: string,
     name: string,
     immunity: 0
+}
+
+export interface AdminPermissions {
+    immunityLevel: number
+    flags: string,
+    web: {
+        role: number,
+        flags: number
+    },
+    manual: {
+        immunityLevel: number,
+        flags: string
+    }
 }
