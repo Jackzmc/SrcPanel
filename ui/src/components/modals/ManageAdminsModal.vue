@@ -25,7 +25,7 @@
               <label class="label">First Joined</label>
               <span>
                 <p v-if="stats">
-                  <template v-if="stats.first_join_date">{{formatTime(stats.first_join_date)}}</template>
+                  <template v-if="stats.created_date">{{formatTime(stats.created_date)}}</template>
                   <em v-else>unknown</em>
                 </p>
                 <em v-else>(no recorded statistics found)</em>
