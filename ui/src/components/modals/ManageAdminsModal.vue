@@ -110,7 +110,7 @@
                         :value="group.id"
                         class="is-checkradio is-medium is-info"
                         :disabled="!canEdit"
-                        v-model="selectedGroupsIds"
+                        v-model="selectedgroupIds"
                       >
                       <label :for="'group.'+group.id.toString()"></label>
                     </td>
@@ -248,7 +248,7 @@ let loading = ref({
   groups: true
 })
 let expandedGroup = ref<AdminGroup>()
-let selectedGroupsIds = ref<number[]>([])
+let selectedgroupIds = ref<number[]>([])
 
 const canEdit = computed(() => {
   if(adminData.value && form.value.immunity >= privUser.immunityLevel) return false
@@ -279,7 +279,7 @@ const cantAddAdmin = computed(() => {
 })
 
 const noPermsGiven = computed(() => {
-  return form.value.flags.length === 0 && selectedGroupsIds.value.length === 0 && form.value.webFlags.length === 0
+  return form.value.flags.length === 0 && selectedgroupIds.value.length === 0 && form.value.webFlags.length === 0
 })
 
 
@@ -297,7 +297,7 @@ function expandGroup(id: number) {
 interface POSTAdminAPI {
   immunityLevel: number,
   flags: string,
-  groupsIds: string,
+  groupIds: string,
   webPermissions: number
 }
 async function save() {
@@ -313,7 +313,7 @@ async function save() {
       body: JSON.stringify({
         immunityLevel: form.value.immunity,
         flags: form.value.flags.join(''),
-        groupsIds: selectedGroupsIds.value.join(','),
+        groupIds: selectedgroupIds.value.join(','),
         webPermissions: convertBitsArrayToInt(form.value.webFlags),
         name: user.value?.name
       } as POSTAdminAPI)
@@ -350,7 +350,7 @@ onMounted(async() => {
     form.value.flags = player.adminData.permissions.base.flags?.split("") || []
     form.value.webFlags = convertIntToBitsArray(player.adminData.permissions.web.flags || 0)
     form.value.immunity = player.adminData.permissions.base.immunityLevel || 0
-    selectedGroupsIds.value = player.adminData.groups?.map(group => group.id) || []
+    selectedgroupIds.value = player.adminData.groups?.map(group => group.id) || []
   }
 
   loading.value.stats = true

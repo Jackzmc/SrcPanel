@@ -8,7 +8,7 @@ import { AdminGroup, WebPermission } from '../../../../common-types/User.js';
 const POSTAdmin = Type.Object({
     immunityLevel: Type.Number(),
     flags: Type.String(),
-    groupsIds: Type.Optional(Type.String()),
+    groupIds: Type.Optional(Type.String()),
     webPermissions: Type.Optional(Type.Number()),
     name: Type.Optional(Type.String())
 })
@@ -17,7 +17,7 @@ const POSTAdmin = Type.Object({
 const PUTAdmin = Type.Object({
     immunityLevel: Type.Optional(Type.Number()),
     flags: Type.Optional(Type.String()),
-    groupsIds: Type.Optional(Type.String()),
+    groupIds: Type.Optional(Type.String()),
     webPermissions: Type.Optional(Type.Number()),
     name: Type.Optional(Type.String())
 })
@@ -187,7 +187,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         if(req.session.permissions.web.flags & WebPermission.ManageAdmins) {
             const steamid = new SteamID(req.params.steamid)
             if(steamid.isValid()) {
-                if(fastify.authmngr.isAdmin(steamid)) {
+                const admin = fastify.authmngr.getAdmin(steamid)
+                if(admin) {
                     let immunity = req.body.immunityLevel
                     if(immunity && immunity < 0) immunity = 0
 
@@ -199,15 +200,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                         })
                     }
 
-                    const id = await fastify.authmngr.findId(req.params.steamid)
-                    if(!id) {
-                        return reply.code(404).send({
-                            error: 'ADMIN_ID_DOES_NOT_EXIST',
-                            message: "No admin exists with that id"
-                        })
-                    }
-
-                    await fastify.authmngr.editAdmin(id, {
+                    const newAdmin = await fastify.authmngr.editAdmin(admin.id, {
                         authtype: "steam",
                         identity: steamid.getSteam2RenderedID(true),
                         password: null,
@@ -215,11 +208,17 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                         immunity,
                         flags: req.body.flags,
                     
-                        groupIds: req.body.groupsIds ? req.body.groupsIds.split(',') : []
+                        groupIds: req.body.groupIds ? req.body.groupIds.split(',') : []
                     }, req.body.webPermissions)
 
+                    await fastify.authmngr.log.addWebEntry(req.session.user.steamid, 'ADMIN_EDIT', `Changed permissions for admin id #${admin.id}`)
+
                     return {
-                        adminId: id
+                        meta: {
+                            steamid: admin.identity,
+                            adminId: admin.id
+                        },
+                        changes: newAdmin
                     }
                 } else {
                     return reply.code(404).send({
@@ -268,8 +267,11 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                         immunity,
                         flags: req.body.flags,
                     
-                        groupIds: req.body.groupsIds ? req.body.groupsIds.split(',') : []
+                        groupIds: req.body.groupIds ? req.body.groupIds.split(',') : []
                     }, req.body.webPermissions)
+
+                    await fastify.authmngr.log.addWebEntry(req.session.user.steamid, 'ADMIN_ADD', `Added new admin with id #${id}. Immunity: ${immunity}, flags: ${req.body.flags}, groups: ${req.body.groupIds ?? '<none>'}`)
+
 
                     return {
                         adminId: id
