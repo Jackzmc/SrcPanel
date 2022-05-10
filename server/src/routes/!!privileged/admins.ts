@@ -172,6 +172,45 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
     })
 
+    fastify.delete('/:steamid', async(req: FastifyRequest<{
+        Params: { steamid: string }
+    }>, reply) => {
+        if(req.session.permissions.web.flags & WebPermission.ManageAdmins) {
+            const steamid = new SteamID(req.params.steamid)
+            if(steamid.isValid()) {
+                const admin = fastify.authmngr.getAdmin(steamid)
+                if(admin) {
+                    if(admin.permissions.immunityLevel >= req.session.permissions.immunityLevel) {
+                        reply.code(403).send({
+                            error: 'INVALID_IMMUNITY',
+                            message: "Cannot revoke an admin who's immune to you",
+                            statusCode: 403
+                        })
+                    }
+
+                    await fastify.authmngr.revokeAdmin(admin.id)
+
+                    await fastify.authmngr.log.addWebEntry(req.session.user.steamid, 'ADMIN_DELETE', `Deleted admin #${admin.id} with steamid ${admin.identity}`)
+
+
+                    reply.send({
+                        success: true
+                    })
+                }
+            } else {
+                return reply.code(400).send({
+                    error: "INVALID_STEAMID",
+                    message: "The steamid is invalid"
+                })
+            }
+        } else {
+            return reply.code(401).send({
+                error: "UNAUTHORIZED",
+                message: "You do not have permission to manage admins"
+            })
+        }
+    })
+
     fastify.put('/:steamid',  async(req: FastifyRequest<{
         Params: { steamid: string },
         Body: PUTAdminType
@@ -184,10 +223,16 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                     let immunity = req.body.immunityLevel
                     if(immunity && immunity < 0) immunity = 0
 
-                    if(immunity >= req.session.permissions.immunityLevel) {
+                    if(admin.permissions.immunityLevel >= req.session.permissions.immunityLevel) {
                         reply.code(403).send({
                             error: 'INVALID_IMMUNITY',
                             message: 'Cannot edit an admin at or above your immunity level',
+                            statusCode: 403
+                        })
+                    } else if(immunity >= req.session.permissions.immunityLevel) {
+                        reply.code(403).send({
+                            error: 'INVALID_IMMUNITY',
+                            message: "Cannot set an admin's immunity to a level higher than your own",
                             statusCode: 403
                         })
                     }

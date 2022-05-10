@@ -82,6 +82,22 @@ export default class AuthManager {
         return this.admins[steamid.accountid.toString()]
     }
 
+    public getAdminById(id: number) {
+        for(const steamid in this.admins) {
+            if(this.admins[steamid].id === id) return this.admins[steamid]
+        }
+        return null
+    }
+
+    public async revokeAdmin(id: number) {
+        await this.connection.execute<OkPacket>("DELETE FROM sm_admins WHERE id = ?", [id])
+        await this.connection.execute<OkPacket>("DELETE FROM sm_admins_groups WHERE admin_id = ?", [id])
+        // possibly make optional:
+        const steamid = this.getAdminById(id)
+        if(steamid)
+            await this.connection.execute<OkPacket>("DELETE FROM dash_perms WHERE steamid = ?", [steamid])
+    }
+
     public async editAdmin(id: number, data: Partial<AddAdmin>, webPerms?: number) {
         const [rows] = await this.connection.execute<RowDataPacket[]>(`SELECT * FROM sm_admins WHERE id = ?`, [id])
         if(rows.length == 0) throw new Error("No admin with specified id exists")

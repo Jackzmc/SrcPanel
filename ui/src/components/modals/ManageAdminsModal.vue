@@ -19,7 +19,7 @@
                   <b
                     v-if="hoursPlayed < MIN_HOURS_PLAYTIME"
                     class="has-text-danger has-tooltip-right has-tooltip-danger"
-                    :data-tooltip="`Policy requires a minimum of ${MIN_HOURS_PLAYTIME} hours of playtime.`"
+                    :data-tooltip="POLICY_MSG_MIN_HOURS_OF_PLAYTIME"
                   >(!) </b>
                 </p>
                 <em v-else>(no recorded statistics found)</em>
@@ -187,14 +187,22 @@
               <label :for="'flag.' + flag">{{name}}</label>
             </div>
           </Tab>
+          <Tab name="Danger">
+            <div class="field">
+              <div class="control">
+                <a class="button is-danger" @click='revoke'>Revoke Admin</a>
+              </div>
+              <p class="help has-text-danger">This will remove all admin privileges, for the web and in-game.</p>
+            </div>
+          </Tab>
         </Tabs>
         <br>
         <!-- TODO: Add a computed policy system -->
-        <article class="message is-danger" v-if="hoursPlayed < MIN_HOURS_PLAYTIME">
+        <article class="message is-danger" v-if="policyFailures.length > 0">
           <div class="message-body content">
             <b>Player cannot be made an admin due to the following reasons:</b>
             <ul>
-              <li>Policy requires a minium of {{MIN_HOURS_PLAYTIME}} hours of playtime</li>
+              <li v-for="policy in policyFailures" :key="policy">{{policy}}</li>
             </ul>
           </div>
         </article>
@@ -237,6 +245,7 @@ import { Tab, Tabs } from 'vue3-tabs-component'
 
 
 const MIN_HOURS_PLAYTIME = 10
+const POLICY_MSG_MIN_HOURS_OF_PLAYTIME = `Policy requires a minimum of ${MIN_HOURS_PLAYTIME} hours of playtime`
 const router = useRouter()
 const route = useRoute()
 const props = defineProps<{
@@ -271,6 +280,13 @@ const canEdit = computed(() => {
   return true
 })
 
+const policyFailures = computed(() => {
+  const failures: string[] = []
+  if(adminData.value) return failures
+
+  if(hoursPlayed.value < MIN_HOURS_PLAYTIME) failures.push(POLICY_MSG_MIN_HOURS_OF_PLAYTIME)
+  return failures
+})
 const hasRoot = computed(() => {
   return privUser.flags?.includes('z')
 })
@@ -315,6 +331,23 @@ interface POSTAdminAPI {
   flags: string,
   groupIds: string,
   webPermissions: number
+}
+async function revoke() {
+  if(window.confirm(`Are you sure you want to revoke ${user.value?.name}'s admin privileges? They will no longer be able to use any admin commands, see admin chat, or view any administration pages online.`)) {
+    const response = await fetch(`/api/admins/${user.value?.steamid}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include'
+    })
+    if(response.ok) {
+      alert(`Revoked admin privileges for ${user.value?.name}`)
+      cancel()
+    } else {
+      alert(`Failed to revoke admin privileges for ${await response.text()}`)
+    }
+  }
 }
 async function save() {
   error.value = ''

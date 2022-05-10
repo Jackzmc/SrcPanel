@@ -213,7 +213,8 @@ onBeforeMount(() => {
   getServerTypes()
   getRecentPlayers()
   setInterval(() => {
-    getRecentPlayers()
+    if(route.name == "admin-players")
+      getRecentPlayers()
   }, 1000 * 60 * AUTO_REFRESH_INTERVAL_MINUTES)
 })
 </script>
