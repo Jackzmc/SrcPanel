@@ -83,7 +83,7 @@ export interface AdminPermissions {
         role: number,
         flags: number
     },
-    manual: {
+    base: {
         immunityLevel: number,
         flags: string
     }

@@ -239,7 +239,7 @@ export default class AuthManager {
                     permissions: {
                         immunityLevel: highestImmunity,
                         flags,
-                        manual: {
+                        base: {
                             immunityLevel: row.immunity,
                             flags: row.flags
                         },

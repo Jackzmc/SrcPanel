@@ -66,7 +66,7 @@
           </div>
           <div class="level-item has-text-centered">
             <div class="field">
-              <label class="label">Computed Immunity</label>
+              <label class="label">Immunity</label>
               <span>
                 {{adminData?.permissions.immunityLevel || 0}}
               </span>
@@ -125,9 +125,9 @@
               </tbody>
             </table>
           </Tab>
-          <Tab name="Manual">
+          <Tab name="Base Permissions">
             <div class="field">
-              <label class="label">Immunity</label>
+              <label class="label">Base Immunity</label>
               <div class="control">
                 <input
                   type="number"
@@ -138,7 +138,7 @@
               </div>
               <p class="help has-text-danger" v-if="form.immunity >= privUser.immunityLevel">The maximum immunity level you can apply is {{userdata.permissions.immunityLevel - 1}}, which is below yours ({{userdata.permissions.immunityLevel}})</p>
             </div>
-            <h6 class="title is-6">Flags</h6>
+            <h6 class="title is-6">Base Flags</h6>
             <p class="subtitle is-6">Only flags you have access to can be added</p>
             <div class="field">
               <input
@@ -165,8 +165,8 @@
             </div>
           </Tab>
           <Tab name="Web">
-            <h6 class="title is-6">Web Flags</h6>
-            <p class="subtitle is-6">Only flags you have access to can be added</p>
+            <h6 class="title is-6">Web Permissions</h6>
+            <p class="subtitle is-6">Only permissions you have access to can be added</p>
             <div class="field" v-for="(name, flag) in WEB_FLAGS" :key="flag">
               <input
                 :id="'flag.' + flag"
@@ -342,9 +342,9 @@ onMounted(async() => {
   user.value = player?.user
   if(player?.adminData) {
     adminData.value = player.adminData
-    form.value.flags = player.adminData.permissions.manual.flags?.split("") || []
+    form.value.flags = player.adminData.permissions.base.flags?.split("") || []
     form.value.webFlags = convertIntToBitsArray(player.adminData.permissions.web.flags || 0)
-    form.value.immunity = player.adminData.permissions.manual.immunityLevel || 0
+    form.value.immunity = player.adminData.permissions.base.immunityLevel || 0
     selectedGroupsIds.value = player.adminData.groups?.map(group => group.id) || []
   }
   stats.value = await User.getStats(route.params.id as string)
