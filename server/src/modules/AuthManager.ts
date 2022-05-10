@@ -4,6 +4,7 @@ import SteamID from 'steamid'
 import { FastifyReply, FastifyRequest } from 'fastify';
 import ActivityLog from "./ActivityLog.js";
 import { AdminPermissions, AdminData, AdminGroup, WebRole } from '../../../common-types/User.js';
+import { ReadableAdminData } from '../../../common-types/User';
 
 interface AddAdmin {
     authtype: "steam" | "name" | "ip",
@@ -202,10 +203,12 @@ export default class AuthManager {
 
     public async fetchAdmins() { 
         const admins: Record<string, AdminData> = {}, groups: Record<string, AdminGroup> = {}
+        // TODO: Remove first LEFT JOIN stats_users, see #2
         const [rows] = await this.connection.execute(`
-            SELECT sm_admins.*, sag.group_id as sg_id, sg.name as sg_name, sg.immunity_level as sg_immunity, sg.flags as sg_flags, 
+            SELECT sm_admins.*, sag.group_id as sg_id, sg.name as sg_name, sg.immunity_level as sg_immunity, sg.flags as sg_flags, left4dead2.stats_users.last_alias as name,
             dash.flags as web_flags, dash.role as web_role
             FROM sm_admins
+            LEFT JOIN left4dead2.stats_users ON SUBSTRING(sm_admins.identity,11) = SUBSTRING(left4dead2.stats_users.steamid, 11)
             LEFT JOIN sm_admins_groups sag on sm_admins.id = sag.admin_id
             LEFT JOIN sm_groups sg on sg.id = sag.group_id
             LEFT JOIN dash_perms AS dash on SUBSTRING(dash.steamid,11) = SUBSTRING(sm_admins.identity,11)`
@@ -278,6 +281,20 @@ export default class AuthManager {
 
         this.admins = admins
         this.groups = groups
+    }
+
+    public getAdmins(fullAdmin: boolean = false) {
+        if(fullAdmin) return Object.values(this.admins)
+        else return Object.values(this.admins)
+            .map(admin => {
+                return {
+                    id: admin.id,
+                    steamid: admin.identity,
+                    name: admin.name,
+                    permissions: admin.permissions,
+                    groups: admin.groups
+                }
+            }) as ReadableAdminData[]
     }
 
 }

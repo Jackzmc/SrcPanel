@@ -21,17 +21,19 @@ export const WEB_FLAGS: Record<WebPermission, string> = {
 }
 
 export interface Session {
-    user: {
-      steamid: string,
-      accountid: string,
-      name:  string,
-      profileurl: string,
-      avatarhash: string,
-    },
+    user: SessionUser,
     permissions: AdminPermissions
     ip: string,
     loginTime: number,
     countryCode: string
+}
+
+export interface SessionUser {
+    steamid: string,
+    accountid: string,
+    name:  string,
+    profileurl: string,
+    avatarhash: string,
 }
 
 export const FLAGS = {
@@ -66,6 +68,14 @@ export interface AdminData {
 
     permissions: AdminPermissions
 
+    groups: AdminGroup[]
+}
+
+export interface ReadableAdminData {
+    id: number,
+    steamid: string,
+    name: string,
+    permissions: AdminPermissions
     groups: AdminGroup[]
 }
 
