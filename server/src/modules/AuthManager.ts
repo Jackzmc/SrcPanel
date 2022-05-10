@@ -216,18 +216,26 @@ export default class AuthManager {
             LEFT JOIN dash_perms AS dash on SUBSTRING(dash.steamid,11) = SUBSTRING(sm_admins.identity,11)`
         )
 
-        let highestImmunity = 0
-        let flags = ''
+        let lastId = null
+        let highestImmunity = 0, flags = ''
 
+        // Loops every admin. If an admin is more than one group, there will be multiple rows related to them
         for(const row of rows as RowDataPacket[]) {
             // Add initial set of flags and immunity
+            const key = new SteamID(row.identity).accountid.toString()
+            // Reset merge data on a new user
+            if(lastId !== key) {
+                highestImmunity = 0
+                flags = ''
+            }
+
             if(row.immunity > highestImmunity) highestImmunity = row.immunity
             if(flags === '') { // Only run on first row
                 for(const flag of row.flags) {
                     if(!flags.includes(flag)) flags += flag
                 }
             }
-            const key = new SteamID(row.identity).accountid.toString()
+            
             // Add the admin to the admin list
             if(!admins[key]) {
                 admins[key] = {
