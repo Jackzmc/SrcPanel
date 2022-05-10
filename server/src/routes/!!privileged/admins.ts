@@ -71,14 +71,14 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             `SELECT * FROM ${ADMINS_DB}.sm_groups WHERE immunity_level < ?`,
             [req.session.permissions.immunityLevel]
         )
-        const hasRoot = req.session.permissions.flags.includes('z')
+        const hasRoot = req.session.permissions.flags?.includes('z')
         return {
             groups: rows
                 .filter(row => {
                     if(hasRoot) return true
                     const flags: string[] = row.flags.split()
                     // test if every flag in flags is in my flags
-                    return flags.every((flag: string) => req.session.permissions.flags.includes(flag))
+                    return flags.every((flag: string) => req.session.permissions.flags?.includes(flag))
                 })
                 .map(row => {
                     return {
