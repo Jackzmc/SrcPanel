@@ -27,6 +27,7 @@ interface APIKey {
 export default class AuthManager {
     private connection: Connection
     private admins: Record<string, AdminData> = {}
+    private groups: Record<number, AdminGroup> = {}
     private apikeysCache: QuickLRU<string, APIKey>
     private actLog: ActivityLog
 
@@ -70,10 +71,14 @@ export default class AuthManager {
     
         return authorized
     }
+    
+    public isAdmin(steamid: SteamID) {
+        const id = steamid.accountid.toString()
+        return this.admins[id] !== null && this.admins[id] !== undefined
+    }
 
-    public async findId(query: string) {
-        const [rows] = await this.connection.execute<RowDataPacket[]>(`SELECT id FROM sm_admins WHERE SUBSTRING(identity,11) = SUBSTRING(?,11)`, [query])
-        return rows.length > 0 ? rows[0].id : null
+    public getAdmin(steamid: SteamID) {
+        return this.admins[steamid.accountid.toString()]
     }
 
     public async editAdmin(id: number, data: Partial<AddAdmin>, webPerms?: number) {
@@ -126,6 +131,11 @@ export default class AuthManager {
         }
 
         await this.fetchAdmins()
+
+        return {
+            admin: newAdminData,
+            webPerms
+        }
     }
 
     public async addAdmin(admin: AddAdmin, webPermissions?: number, webFlags?: number) {
@@ -157,19 +167,13 @@ export default class AuthManager {
             )
         }
 
-        const groups = []
-
         if(admin.groupIds) {
             for(const groupId of admin.groupIds) {
+                // Currently silently ignores if group does not exist. This should be changed.
                 await this.connection.execute(
                     "INSERT INTO sm_admins_groups (admin_id, group_id, inherit_order) VALUES (:admin_id, :group_id, 0)",
                     [id, groupId]
                 )
-                groups.push({
-                    id: groupId,
-                    inheritOrder: 0
-                    
-                })
             }
         }
 
@@ -177,15 +181,6 @@ export default class AuthManager {
         await this.fetchAdmins()
 
         return id
-    }
-
-    public isAdmin(steamid: SteamID) {
-        const id = steamid.accountid.toString()
-        return this.admins[id] !== null && this.admins[id] !== undefined
-    }
-
-    public getAdmin(steamid: SteamID) {
-        return this.admins[steamid.accountid.toString()]
     }
 
     public async getAPIKey(uuid: string) {
@@ -206,7 +201,7 @@ export default class AuthManager {
     }
 
     public async fetchAdmins() { 
-        const admins: Record<string, AdminData> = {}, groups: Record<number, AdminGroup> = {}
+        const admins: Record<string, AdminData> = {}, groups: Record<string, AdminGroup> = {}
         const [rows] = await this.connection.execute(`
             SELECT sm_admins.*, sag.group_id as sg_id, sg.name as sg_name, sg.immunity_level as sg_immunity, sg.flags as sg_flags, 
             dash.flags as web_flags, dash.role as web_role
@@ -261,17 +256,18 @@ export default class AuthManager {
             }
 
             // If a group is set
-            if(row.sg_id) {
+            const groupId = row.sg_id?.toString()
+            if(groupId) {
                 // If group not cached, add it to list
-                if(!groups[row.sg_id]) {
-                    groups[row.sg_id] = {
-                        id: row.sg_id,
+                if(!groups[groupId]) {
+                    groups[groupId] = {
+                        id: groupId,
                         flags: row.sg_flags,
                         name: row.sg_name,
                         immunity: row.sg_immunity
                     }
                 }
-                admins[key].groups.push(groups[row.sg_id])
+                admins[key].groups.push(groups[groupId])
                 // Merge immunity & flags
                 if(row.sg_immunity > highestImmunity) highestImmunity = row.sg_immunity
                 for(const flag of row.sg_flags) {
@@ -281,6 +277,7 @@ export default class AuthManager {
         }
 
         this.admins = admins
+        this.groups = groups
     }
 
 }
