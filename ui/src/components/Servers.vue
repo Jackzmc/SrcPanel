@@ -109,6 +109,7 @@ export default {
   },
   created() {
     this.refreshTimer = setInterval(() => {
+      if(route.name === "")
       this.refreshServers()
     }, 1000 * 60 * 1)
     this.refreshServers()

@@ -148,9 +148,6 @@ export default {
     }
   },
   activated() {
-    this.refreshTimer = setInterval(() => {
-      // this.refreshServers()
-    }, 1000 * 60 * 1)
   },
   deactivated() {
     clearInterval(this.refreshTimer)

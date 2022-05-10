@@ -8,6 +8,8 @@ export interface PlayerData {
   country: string,
   lastJoinDate: number
   firstJoinDate: number,
+  bansCount: number,
+  notesCount: number
 }
 export interface PlayerResponse {
   user: PlayerData,

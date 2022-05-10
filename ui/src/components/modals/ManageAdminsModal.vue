@@ -40,12 +40,15 @@
           </div>
           <div class="level-item has-text-centered">
             <div class="field">
-              <label class="label">Last Joined</label>
+              <label class="label">Last Online</label>
               <span>
-                <p v-if="stats">
-                  <template v-if="stats.last_join_date">{{formatTime(stats.last_join_date)}}</template>
+                <template v-if="stats">
+                  <p v-if="stats.last_join_date">
+                    {{formatTime(stats.last_join_date)}}
+                  </p>
                   <em v-else>never</em>
-                </p>
+                  <p>5 hours ago</p>
+                </template>
                 <em v-else>(no recorded statistics found)</em>
               </span>
             </div>
@@ -224,7 +227,6 @@
         </template>
         <template v-else>
           <button class="button" @click="cancel">Close</button>
-          <p class="has-text-danger">User is immune to you, you cannot edit.</p>
         </template>
         <p class="has-text-danger" v-if="error">{{error}}</p>
       </footer>
@@ -277,6 +279,7 @@ let selectedgroupIds = ref<number[]>([])
 
 const canEdit = computed(() => {
   if(adminData.value && form.value.immunity >= privUser.immunityLevel) return false
+  if(policyFailures.value.length > 0) return false
   return true
 })
 
@@ -285,6 +288,7 @@ const policyFailures = computed(() => {
   if(adminData.value) return failures
 
   if(hoursPlayed.value < MIN_HOURS_PLAYTIME) failures.push(POLICY_MSG_MIN_HOURS_OF_PLAYTIME)
+  if(user.value?.bansCount || 0 > 0) failures.push('Player cannot have been banned at any point.')
   return failures
 })
 const hasRoot = computed(() => {
