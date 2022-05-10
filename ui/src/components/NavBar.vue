@@ -77,7 +77,7 @@
         </div>
         <div v-if="userdata" class="navbar-item has-dropdown is-hoverable " >
           <a class="navbar-link">
-            <img class="mx-2" :src="avatarurl" />
+            <img class="mx-2" :src="avatarUrl" />
             <span>{{userdata.user.name}}</span>
           </a>
           <div class="navbar-dropdown is-right">
@@ -105,8 +105,10 @@
 </div>
 </template>
 
-<script>
-
+<script setup lang="ts">
+import { defineProps, inject, computed } from 'vue';
+import LoginButton from '@/components/LoginButton.vue'
+import { useRoute, useRouter } from 'vue-router';
 // Bulma nav code
 document.addEventListener('DOMContentLoaded', () => {
   const $navbarBurgers = Array.prototype.slice.call(document.querySelectorAll('.navbar-burger'), 0);
@@ -116,41 +118,40 @@ document.addEventListener('DOMContentLoaded', () => {
         const target = el.dataset.target;
         const $target = document.getElementById(target);
         el.classList.toggle('is-active');
-        $target.classList.toggle('is-active');
+        $target!.classList.toggle('is-active');
       });
     });
   }
 });
 
+const router = useRouter()
+const route = useRoute()
+const emit = defineEmits(['logout'])
 
-import LoginButton from '@/components/LoginButton'
+const LAST_UPDATED = new Date(Number(inject('LAST_UPDATED')))
 
-export default {
-  props: ['userdata', 'updateInfo'],
-  components: { LoginButton },
-  computed: {
-    avatarurl() {
-      if(!this.userdata) return ''
-      return `https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/79/${this.userdata.user.avatarhash}.jpg`
-    },
-    updateDate() {
-      return new Date(Number(this.$LAST_UPDATED))
-    },
-    updateTooltip() {
-      const date = this.updateDate
-      return `${date.toLocaleDateString()} at ${date.toLocaleTimeString()}`
+const props = defineProps([
+  'userdata',
+  'updateInfo'
+])
+
+const avatarUrl = computed(() => {
+  if(!props.userdata) return ''
+  return `https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/79/${props.userdata.user.avatarhash}.jpg`
+})
+
+const updateTooltip = computed(() => {
+  return `${LAST_UPDATED.toLocaleDateString()} at ${LAST_UPDATED.toLocaleTimeString()}`
+})
+
+
+async function logout() {
+  const res = await fetch('/api/auth/logout')
+  if(res.ok) {
+    emit('logout')
+    if(route.meta.authRequired) {
+      router.push('/')
     }
-  },
-  methods: {
-    async logout() {
-      const res = await fetch('/api/auth/logout')
-      if(res.ok) {
-        this.$emit('logout')
-        if(this.$route.meta.authRequired) {
-          this.$router.push('/')
-        }
-      }
-    },
   }
 }
 </script>

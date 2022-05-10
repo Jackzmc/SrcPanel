@@ -27,9 +27,6 @@ app.mount('#app')
 app.component('vue-skeleton-loader', VueSkeletonLoader);
 
 
-app.provide("$LAST_UPDATED", process.env.VUE_APP_BUILD_DATE)
-app.provide("$CONNECT_IP", process.env.VUE_APP_SERVER_IP)
-app.provide("$SCRIPT_KEY", process.env.VUE_APP_SCRIPT_KEY)
-app.provide("$GRAPH_KEY", process.env.VUE_APP_GRAPH_KEY)
-app.provide("$API_URL", process.env.VUE_APP_API_URL)
-app.provide("$REALM", process.env.VUE_APP_REALM)
+app.provide("LAST_UPDATED", process.env.VUE_APP_BUILD_DATE)
+app.provide("API_URL", process.env.VUE_APP_API_URL)
+app.provide("REALM", process.env.VUE_APP_REALM)
