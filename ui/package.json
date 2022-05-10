@@ -27,7 +27,7 @@
     "vue-class-component": "^7.2.3",
     "vue-property-decorator": "^8.4.1",
     "vue-router": "^4.0.13",
-    "vue3-tabs-component": "https://github.com/Jackzmc/vue3-tabs-component"
+    "vue3-tabs-component": "jackzmc/vue3-tabs-component"
   },
   "devDependencies": {
     "@creativebulma/bulma-tooltip": "^1.2.0",

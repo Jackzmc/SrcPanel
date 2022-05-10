@@ -21,62 +21,69 @@
   </div>
 </template>
 
-<script>
-import NavBar from '@/components/NavBar'
+<script setup lang="ts">
+import { onBeforeMount, ref } from 'vue'
+import NavBar from '@/components/NavBar.vue'
+import { AdminPermissions, Session } from '../../common-types/User.js';
+import { useRoute, useRouter } from 'vue-router';
+import { SessionUser } from '../../common-types/User';
 
-export default {
-  name: 'App',
-  components: { NavBar },
-  data() {
-    return {
-      updateInfo: {
-        registration: null,
-        updating: false
-      },
-      userdata: null
-    }
-  },
-  methods: {
-    reloadPage() {
-      if (!this.updateInfo.registration || !this.updateInfo.registration.waiting) return
-      this.updateInfo.registration.waiting.postMessage({ type: 'SKIP_WAITING' })
-      window.location.reload()
-    },
-    updateAvailable(event) {
-      this.updateInfo.registration = event.detail
-      this.reloadPage()
-    },
-    async getAuth() {
-      if(window.sessionStorage.getItem('srcds_userdata')) {
-        this.userdata = JSON.parse(window.sessionStorage.getItem('srcds_userdata'))
-      }
+const route = useRoute()
+const router = useRouter()
 
-      const response = await fetch(`/api/auth/profile`, {
-        credentials: 'include'
-      })
-      if(response.ok) {
-        const json = await response.json()
-        this.userdata = {
-          user: json.user,
-          permissions: json.permissions
-        }
-        window.sessionStorage.setItem('srcds_userdata', JSON.stringify(this.userdata))
-        console.log('Authorized: Hello', json.user.name)
-      } else {
-        window.sessionStorage.removeItem('srcds_userdata')
-        if(this.$route.meta.authRequired && !this.userdata) {
-          this.$router.push('/login-required?return=' + this.$route.fullPath)
-        }
-      }
-    },
-    onLogout() {
-      this.userdata = null
+let updateInfo = ref<{
+  registration?: any,
+  updating: boolean
+}>({updating: false})
+
+interface UserData {
+  user: SessionUser,
+  permissions: AdminPermissions
+}
+
+let userdata = ref<UserData|null>()
+
+function reloadPage() {
+  if (!updateInfo.value.registration || !updateInfo.value.registration.waiting) return
+  updateInfo.value.registration.waiting.postMessage({ type: 'SKIP_WAITING' })
+  window.location.reload()
+}
+function updateAvailable(event: any) {
+  updateInfo.value.registration = event.detail
+  reloadPage()
+}
+async function getAuth() {
+  const userData = window.sessionStorage.getItem('srcds_userdata')
+  if(userData) {
+    userdata.value = JSON.parse(userData)
+  }
+
+  const response = await fetch(`/api/auth/profile`, {
+    credentials: 'include'
+  })
+  if(response.ok) {
+    const json = await response.json()
+    userdata.value = {
+      user: json.user,
+      permissions: json.permissions
     }
-  },
-  async created() {
-    document.addEventListener('swUpdated', this.updateAvailable, { once: true })
-    document.addEventListener('swUpdating', () => this.updateInfo.updating = true, { once: true })
-    await this.getAuth()
+    window.sessionStorage.setItem('srcds_userdata', JSON.stringify(userdata.value))
+    console.log('Authorized: Hello', json.user.name)
+  } else {
+    window.sessionStorage.removeItem('srcds_userdata')
+    if(route.meta.authRequired && !userdata) {
+      router.push('/login-required?return=' + route.fullPath)
+    }
   }
 }
+
+function onLogout() {
+  userdata.value = undefined
+}
+
+onBeforeMount(async() => {
+  document.addEventListener('swUpdated', updateAvailable, { once: true })
+  document.addEventListener('swUpdating', () => updateInfo.value.updating = true, { once: true })
+  await getAuth()
+})
 </script>

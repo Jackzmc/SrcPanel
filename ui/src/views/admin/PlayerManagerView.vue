@@ -35,8 +35,28 @@
       </div>
       <UserSelection has-manual :userdata="userdata" :users="users" @select="onUserSelected" @manual="onManualSelected" />
       </Tab>
-      <Tab name="Admins" id="admins">
-        WIP
+      <Tab name="Big boi table" id="admins" v-if="privUser.hasWebPerm(WebPermission.ManageAdmins)" @selected="fetchAdmins">
+        <p>Coming soon, view all users with filters, search, and other spooky shit</p>
+        <p>also if you actually read this, i'm surprised, you logged in and viewed this page, and this specific tab... you deserve a cookie</p>
+        <p>also yeah the buttons dont work. not my fault</p>
+        <table class="table">
+          <thead>
+            <tr>
+              <th></th>
+              <th>Id</th>
+              <th>SteamID</th>
+              <th>Name</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="admin in admins" :key="admin.id">
+              <td><a class="button is-small" @click='manualInput = admin.steamid'>view</a></td>
+              <td>{{ admin.id }}</td>
+              <td>{{ admin.steamid }}</td>
+              <td>{{ admin.name }}</td>
+            </tr>
+          </tbody>
+        </table>
       </Tab>
     </Tabs>
     <br>
@@ -52,7 +72,7 @@
 import { ref, onBeforeMount, computed } from 'vue'
 import { User, PrivilegedUser, PlayerData } from '@/js/User'
 import { useRouter, useRoute } from 'vue-router'
-import { Session, WebPermission } from '../../../../common-types/User';
+import { Session, WebPermission, ReadableAdminData } from '../../../../common-types/User';
 import UserSelection from '@/components/UserSelection.vue'
 // @ts-ignore
 import {Tabs, Tab} from 'vue3-tabs-component';
@@ -83,6 +103,7 @@ let recentPlayers = ref<{server: string|null, list: PlayerData[], loading: boole
 let manualInput = ref<string>()
 let selectedId = ref<string>()
 let servers = ref([])
+let admins = ref<ReadableAdminData[]>([])
 
 const isManualInputEntered = computed(() => {
   return manualInput.value != null && manualInput.value.length > 0
@@ -149,9 +170,12 @@ async function searchUser() {
     users.value = json.users
   }
 }
-function formatDate(time:number) {
-  const date = new Date(time*1000)
-  return date.toLocaleString()
+async function fetchAdmins() {
+  const response = await fetch('/api/admins')
+  if(response.ok) {
+    const json = await response.json()
+    admins.value = json.admins
+  }
 }
 async function getRecentPlayers() {
   recentPlayers.value.loading = true

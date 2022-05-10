@@ -14,9 +14,15 @@
             <div class="field">
               <label class="label">Playtime</label>
               <span>
-                <p v-if="stats">{{playtime}} hours</p>
+                <p v-if="stats">
+                  {{playtime}} hours
+                  <b
+                    v-if="hoursPlayed < MIN_HOURS_PLAYTIME"
+                    class="has-text-danger has-tooltip-right has-tooltip-danger"
+                    :data-tooltip="`Policy requires a minimum of ${MIN_HOURS_PLAYTIME} hours of playtime.`"
+                  >(!) </b>
+                </p>
                 <em v-else>(no recorded statistics found)</em>
-                <p class="help has-text-danger" v-if="hoursPlayed < MIN_HOURS_PLAYTIME">Does not meet the minimum amount of {{MIN_HOURS_PLAYTIME}} hours played</p>
               </span>
             </div>
           </div>
@@ -182,10 +188,20 @@
             </div>
           </Tab>
         </Tabs>
+        <br>
+        <!-- TODO: Add a computed policy system -->
+        <article class="message is-danger" v-if="hoursPlayed < MIN_HOURS_PLAYTIME">
+          <div class="message-body content">
+            <b>Player cannot be made an admin due to the following reasons:</b>
+            <ul>
+              <li>Policy requires a minium of {{MIN_HOURS_PLAYTIME}} hours of playtime</li>
+            </ul>
+          </div>
+        </article>
         <article class="message is-warning" v-if="noPermsGiven">
           <div class="message-body">
-            <b>Warning: </b>User has not been granted any permissions.
-            Apply a group or manually apply flags.
+            <p><b>Warning: </b>No permissions has been granted to the user. The user's access will be very restricted.</p>
+            <p>Apply a permission group, apply some base permissions, or some web permissions.</p>
           </div>
         </article>
       </section>
