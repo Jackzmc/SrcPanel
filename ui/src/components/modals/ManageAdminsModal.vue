@@ -294,7 +294,7 @@ async function save() {
   } else {
     loading.value = true
     const response = await fetch(`/api/admins/${user.value?.steamid}`, {
-      method: isAdmin ? 'PUT': 'POST',
+      method: adminData.value ? 'PUT': 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
