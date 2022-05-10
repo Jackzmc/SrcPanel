@@ -93,7 +93,7 @@ export class PrivilegedUser {
   }
 
   get flags() {
-    return this.data.permissions.flags
+    return this.data.permissions.flags || ''
   }
 
   get immunityLevel() {
