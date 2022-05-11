@@ -58,7 +58,7 @@
               <label class="label has-tooltip-left" data-tooltip="The percentage of friendly fire compared to damage dealt">FF %</label>
               <span>
                 <p v-if="stats">
-                  {{(stats.survivor_ff / stats.survivor_damage_give * 100).toFixed(1)}}
+                  {{(stats.survivor_ff as number / (stats.survivor_damage_give as number) * 100).toFixed(1)}}
                 </p>
                 <em v-else>(no recorded statistics found)</em>
               </span>
@@ -319,8 +319,8 @@ const noPermsGiven = computed(() => {
 })
 
 
-function formatTime(time: number) {
-  const date = new Date(time*1000)
+function formatTime(time: number | string) {
+  const date = new Date(Number(time)*1000)
   return date.toLocaleDateString()
 }
 function expandGroup(id: number) {
