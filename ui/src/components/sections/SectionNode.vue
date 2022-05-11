@@ -10,7 +10,7 @@
 <script setup lang="ts">
 import SectionNode from '@/components/sections/SectionNode.vue'
 import { TreeNode } from '@/js/Tree.js';
-import { ref, watch, computed, onBeforeMount, onMounted, defineEmits } from 'vue'
+import { ref, watch, computed, onBeforeMount, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 const emit = defineEmits([])

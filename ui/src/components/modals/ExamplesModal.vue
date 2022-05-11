@@ -22,7 +22,7 @@
 
 <script setup lang="ts">
 import Modal from '@/components/Modal.vue'
-import { ref, watch, computed, onBeforeMount, onMounted, defineEmits } from 'vue'
+import { ref, watch, computed, onBeforeMount, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 const emit = defineEmits(['close'])
@@ -39,7 +39,7 @@ const props = defineProps({
 
 
 const active = computed(() => {
-  return props.data && props.data.name !== null && props.data.name !== undefined
+  return (props.data && props.data.name !== null && props.data.name !== undefined) as boolean
 })
 
 function format(input: string) {
