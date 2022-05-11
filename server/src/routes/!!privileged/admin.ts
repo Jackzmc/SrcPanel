@@ -6,8 +6,8 @@ import { unlink } from 'fs/promises';
 import path from 'path'
 const execPromise = util.promisify(exec);
 
-type UpdateState = "ACTIVE" | "GIT_PULL" | "UNLINK_NODE_MODULES" | "TSC" | "RESTARTING"
-let updateState: UpdateState = "ACTIVE"
+export type UpdateState = "NORMAL" | "GIT_PULL" | "UNLINK_NODE_MODULES" | "TSC" | "RESTARTING"
+let updateState: UpdateState = "NORMAL"
 
 export interface HealthReport {
     currentState: UpdateState,
@@ -38,7 +38,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     fastify.all('/update', async(req, reply) => {
         if(req.session.permissions.web.flags & WebPermission.FullPermission) {
             
-            if(updateState === "ACTIVE") {
+            if(updateState === "NORMAL") {
                 let response = { stdout: "", stderr: "" }
 
                 async function doState(state: UpdateState, promise: Promise<any>) {
@@ -52,7 +52,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                     const timeGitPull = await doState("GIT_PULL", execPromise('git pull'))
                     let timeRmNodeModules = null
                     if(response.stdout.includes("Already up to date.")) {
-                        updateState = "ACTIVE"
+                        updateState = "NORMAL"
                         return reply.status(200).send({
                             success: false,
                             reason: 'UP_TO_DATE',
@@ -89,7 +89,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                         stderr: err.stderr,
                         state: updateState
                     })
-                    updateState = "ACTIVE"
+                    updateState = "NORMAL"
                 }
             } else {
                 reply.code(409).send({

@@ -14,7 +14,7 @@
         <p><b>Uptime: </b> {{ Math.round(serverHealth.uptime / 60) }} minutes</p>
         <p><b>Node.JS Version: </b> {{serverHealth?.versions?.node}}</p>
         <br>
-        <a :disabled="updateStatus.state !== 'ACTIVE'" :class="['button', {'is-loading': updateStatus.state === 'CHECKING'}]" @click="updateServer">Update Server</a>
+        <a :disabled="updateStatus.state !== 'NORMAL'" :class="['button', {'is-loading': updateStatus.state === 'CHECKING'}]" @click="updateServer">Update Server</a>
         <p class="has-text-danger" v-if="updateStatus.error">{{updateStatus.error}}</p>
         <p class="has-text-info" v-else-if="updateStatus.upToDate">Server is already up to date.</p>
         <p class="has-text-success" v-else-if="updateStatus.state === 'SUCCESS'">Server has been updated successfully.</p>
@@ -56,7 +56,7 @@ import { PrivilegedUser } from '@/js/User';
 import { Session, WebPermission, WEB_FLAGS } from '../../../../common-types/User';
 import { onBeforeMount } from 'vue';
 import { computed, ref } from 'vue';
-import { HealthReport } from '../../../../server/src/routes/!!privileged/admin';
+import { HealthReport, UpdateState } from '../../../../server/src/routes/!!privileged/admin';
 
 const emit = defineEmits(['close'])
 const POLL_SERVER_HEALTH_INTERVAL = 1000 * 60 * 0.5
@@ -76,11 +76,11 @@ let serverHealth = ref<Partial<HealthReport>>({})
 let sessions = ref<SessionQuery[]>([])
 let currentSessionId = ref<number>()
 let updateStatus = ref<{
-  state: string,
+  state: UpdateState | "CHECKING" | "SUCCESS",
   error?: string,
   upToDate?: boolean
 }>({
-  state: "ACTIVE",
+  state: "NORMAL",
 })
 
 const webPerms = computed(() => {
@@ -121,7 +121,7 @@ async function updateServer() {
   }
   setTimeout(() => {
     updateStatus.value = {
-      state: "ACTIVE"
+      state: "NORMAL"
     }
   }, 1000 * 5)
 }
