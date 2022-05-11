@@ -7,26 +7,23 @@
 </li>
 </template>
 
-<script type="text/javascript">
-
+<script setup lang="ts">
 import SectionNode from '@/components/sections/SectionNode.vue'
+import { TreeNode } from '@/js/Tree.js';
+import { ref, watch, computed, onBeforeMount, onMounted, defineEmits } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 
-export default {
-  components: {
-    SectionNode
-  },
-  name: "SectionNode",
-  props: {
-    node: Object
-  },
-  methods: {
-    gotoHeader() {
-      const element = document.getElementById(this.node.key)
-      if(element) element.scrollIntoView()
-      else console.warn(`Element not found: ${this.node.key}`)
-    }
-  }
-};
+const emit = defineEmits([])
+const route = useRoute()
+const router = useRouter()
+const props = defineProps<{
+  node: TreeNode
+}>()
 
+function gotoHeader() {
+  const element = document.getElementById(props.node.key!)
+  if(element) element.scrollIntoView()
+  else console.warn(`Element not found: ${props.node.key!}`)
+}
 </script>
 

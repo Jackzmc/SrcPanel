@@ -4,19 +4,14 @@
 </ul>
 </template>
 
-<script type="text/javascript">
+<script setup lang="ts">
 
 import SectionNode from '@/components/sections/SectionNode.vue'
+import { TreeNode } from '@/js/Tree.js';
 
-export default {
-  components: {
-    SectionNode
-  },
-  name: "SectionRoot",
-  props: {
-    node: Object
-  }
-};
+const props = defineProps<{
+  node: TreeNode
+}>()
 
 </script>
 

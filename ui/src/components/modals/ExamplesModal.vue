@@ -20,34 +20,35 @@
 </Modal>
 </template>
 
-<script>
-import Modal from '@/components/Modal'
+<script setup lang="ts">
+import Modal from '@/components/Modal.vue'
+import { ref, watch, computed, onBeforeMount, onMounted, defineEmits } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 
-export default {
-  components: {
-    Modal
+const emit = defineEmits(['close'])
+
+const route = useRoute()
+const router = useRouter()
+
+const props = defineProps({
+  data: {
+    type: Object
   },
-  props: {
-    data: {
-      type: Object
-    },
-    prefix: String
-  },
-  methods: {
-    format(input) {
-      return input
-        .replace(/%cmd%/, this.prefix + this.data.name)
-        .replace(/%name%/, this.data.name)
-        .replace(/%prefix%/, this.prefix)
-    },
-    close() {
-      this.$emit('close')
-    }
-  },
-  computed: {
-    active() {
-      return this.data && this.data.name !== null && this.data.name !== undefined
-    }
-  }
+  prefix: String
+})
+
+
+const active = computed(() => {
+  return props.data && props.data.name !== null && props.data.name !== undefined
+})
+
+function format(input: string) {
+  return input
+    .replace(/%cmd%/, props.prefix + props.data?.name)
+    .replace(/%name%/, props.data?.name)
+    .replace(/%prefix%/, props.prefix!)
+}
+function close() {
+  emit('close')
 }
 </script>

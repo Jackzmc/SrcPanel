@@ -46,75 +46,83 @@
     </table>
 </template>
 
-<script>
-export default {
-  data() {
-    return {
-      servers: [],
-      refreshTimer: null
-    }
-  },
-  methods: {
-    copyCommand(event) {
-      if (document.selection) { // IE
-        const range = document.body.createTextRange();
-        range.moveToElementText(event.target);
-        range.select();
-      } else if (window.getSelection) {
-        const range = document.createRange();
-        range.selectNode(event.target);
-        window.getSelection().removeAllRanges();
-        window.getSelection().addRange(range);
-      }
-    },
-    getServerClasses(server) {
-      const classes = ['has-tooltip-arrow', "has-tooltip-right"]
+<script setup lang="ts">
+import { ref, watch, computed, onBeforeMount, onMounted, defineEmits } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 
-      if(server.status.online) {
-        if(server.status.data.players.length == 0) {
-          classes.push('has-text-success')
-          classes.push('has-tooltip-success')
-        } else {
-          classes.push('')
-          classes.push('has-tooltip-info')
-        }
-      } else {
-        classes.push('has-text-danger')
-        classes.push('has-tooltip-danger')
-      }
+const emit = defineEmits(['refresh'])
+const route = useRoute()
+const router = useRouter()
 
-      return classes
-    },
-    getServerMessage(server) {
-      if(server.status.online)
-        return server.status.data.players.length  == 0
-          ? 'Server is currently online & empty. Click to join'
-          : 'Server has players online. Click to join.'
-      else return 'Server is offline, unresponsive, or unreachable'
-    },
-    refreshServers() {
-      this.$emit('refresh', 'start')
-      fetch('/api/servers')
-      .then(response => {
-        if(response.ok) return response.json()
-        else console.error('Failure getting servers', response)
-      })
-      .then(json => {
-        this.servers = json
-      })
-      .finally(() => {
-        this.$emit('refresh', 'stop')
-      })
-    }
-  },
-  created() {
-    this.refreshTimer = setInterval(() => {
-      if(route.name === "")
-      this.refreshServers()
-    }, 1000 * 60 * 1)
-    this.refreshServers()
-  },
+// TODO: Add server typedef
+
+let servers = ref<any[]>([])
+let refreshTimer = ref<number>()
+
+function copyCommand(event: any) {
+  //@ts-ignore
+  if (document.selection) { // IE
+    //@ts-ignore
+    const range = document.body.createTextRange();
+    range.moveToElementText(event.target);
+    range.select();
+  } else if (window.getSelection) {
+    const range = document.createRange();
+    range.selectNode(event.target);
+    //@ts-ignore
+    window.getSelection().removeAllRanges();
+    //@ts-ignore
+    window.getSelection().addRange(range);
+  }
 }
+function getServerClasses(server: any) {
+  const classes = ['has-tooltip-arrow', "has-tooltip-right"]
+
+  if(server.status.online) {
+    if(server.status.data.players.length == 0) {
+      classes.push('has-text-success')
+      classes.push('has-tooltip-success')
+    } else {
+      classes.push('')
+      classes.push('has-tooltip-info')
+    }
+  } else {
+    classes.push('has-text-danger')
+    classes.push('has-tooltip-danger')
+  }
+
+  return classes
+}
+function getServerMessage(server: any) {
+  if(server.status.online)
+    return server.status.data.players.length  == 0
+      ? 'Server is currently online & empty. Click to join'
+      : 'Server has players online. Click to join.'
+  else return 'Server is offline, unresponsive, or unreachable'
+}
+function refreshServers() {
+  emit('refresh', 'start')
+
+  fetch('/api/servers')
+  .then(response => {
+    if(response.ok) return response.json()
+    else console.error('Failure getting servers', response)
+  })
+  .then(json => {
+    servers.value = json
+  })
+  .finally(() => {
+    emit('refresh', 'stop')
+  })
+}
+
+onBeforeMount(() => {
+  refreshTimer.value = setInterval(() => {
+    if(route.name === "")
+    refreshServers()
+  }, 1000 * 60 * 1)
+  refreshServers()
+})
 </script>
 
 <style>

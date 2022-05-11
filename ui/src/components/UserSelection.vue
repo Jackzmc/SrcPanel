@@ -45,35 +45,33 @@
   </table>
 </template>
 
-<script>
-export default {
-  props: {
-    users: Array,
-    userdata: Object,
-    hasManual: Boolean,
-  },
-  data() {
-    return {
-      selectedId: null,
-      manualInput: null,
-      isAddAdminDisabled: false,
-    }
-  },
-  watch: {
-    selectedId(){
-      if(this.selectedId !== "_custom")
-        this.$emit('select', this.selectedId)
-    },
-    manualInput() {
-      if(this.selectedId === "_custom")
-        this.$emit('manual', this.manualInput)
-    }
-  },
-  methods: {
-    formatDate(timestamp) {
-      const date = new Date(timestamp * 1000)
-      return date.toLocaleDateString()
-    },
-  },
+<script setup lang="ts">
+import { ref, watch, computed, onBeforeMount, onMounted, defineEmits } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+
+const emit = defineEmits(['select', 'manual'])
+const props = defineProps<{
+  users: any[],
+  userdata: any,
+  hasManual: boolean
+}>()
+let selectedId = ref(null)
+let manualInput = ref(null)
+let isAddAdminDisabled = ref(false)
+
+watch(selectedId, (value) => {
+  if(value !== "_custom")
+    emit('select', value)
+})
+watch(manualInput, (value) => {
+  if(selectedId.value === "_custom")
+    emit('manual', value)
+})
+
+
+
+function formatDate(timestamp: number) {
+  const date = new Date(timestamp * 1000)
+  return date.toLocaleDateString()
 }
 </script>

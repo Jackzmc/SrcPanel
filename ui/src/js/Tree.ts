@@ -2,7 +2,7 @@ export class TreeNode {
   key: any;
   value: any;
   parent: null;
-  children: never[];
+  children: TreeNode[];
 
   constructor(key: any, value = key, parent = null) {
     this.key = key;

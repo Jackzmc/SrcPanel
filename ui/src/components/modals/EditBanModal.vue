@@ -247,235 +247,232 @@
   </div>
 </template>
 
-<script>
-import SteamID from 'steamid'
-export default {
-  data() {
-    return {
-      ban: null,
-      tab: 0,
-      edited: null,
-      error: null,
-      changed: false,
-      flags: {
-        original: [],
-        edited: []
-      },
-      loading: false,
-      appeals: {
-        list: [],
-        state: 0
-      },
-      notes: {
-        list: [],
-        state: 0
-      },
-      executorEdit: {
-        active: false,
-        edit: null
-      },
-      info: null
-    }
-  },
-  watch: {
-    edited: {
-      handler(val) {
-        if(this.changed || !this.ban) return
-        this.changed = this.ban.reason !== val.reason
-          || this.ban.publicReason !== val.publicReason
-          || this.ban.executor.id !== this.executorEdit.edit.id
-          || this.flags.original.length !== this.flags.edited.length
-          || val.expires !== "keep"
-      },
-      deep: true
-    },
-  },
-  created() {
-    this.init()
-  },
-  computed: {
-    steamid64() {
-      if(!this.ban) return null
-      return new SteamID(this.ban.client.id).getSteamID64()
-    },
-    relDate() {
-      return this.ban.timestamp ? getRelDate(this.ban.timestamp*1000) : null
-    }
-  },
-  methods: {
-    async init() {
-      this.error = null
-      const response = await fetch(`/api/bans/${this.$route.params.id}`)
-      if(response.ok) {
-        const json = await response.json()
-        if(json.bans.length === 0) {
-          console.error('No bans were found for id?')
-          return
-        }
-        this.ban = json.bans[0]
-        this.edited = Object.assign({}, this.ban)
-        this.edited.expires = 'keep'
-        this.flags.original = []
-        for(const i of [1,2,4]) {
-          if(this.ban.flags & i) this.flags.original.push(i.toString())
-        }
-        this.executorEdit.edit = this.ban.executor
-        this.flags.edited = [...this.flags.original]
-        this.appeals.list = []
-        this.appeals.state = 0
-        this.changed = false
-        this.info = null
-        this.setTab(0)
+<script setup lang="ts">
+import SteamID from 'steamid';
+import { computed, onBeforeMount, ref, watch } from 'vue'
+import { useRoute } from 'vue-router';
+
+const route = useRoute()
+const emit = defineEmits(['edit'])
+
+let ban = ref<any>(null)
+let tab = ref(0)
+let edited = ref<any>(null)
+let error = ref<string>()
+let changed = ref(false)
+let flags = ref<{original: any[], edited: any[]}>({
+  original: [],
+  edited: []
+})
+let loading = ref(false)
+let appeals = ref<{list: any[], state: number}>({
+  list: [],
+  state: 0
+})
+let notes = ref<{list: any[], state: number}>({
+  list: [],
+  state: 0
+})
+let executorEdit = ref<{active: boolean, edit: any}>({
+  active: false,
+  edit: null
+})
+let info = ref<any>(null)
+
+watch(edited, (val) => {
+  if(changed.value || !val) return
+  changed.value = ban.value.reason !== val.reason
+    || ban.value.publicReason !== val.publicReason
+    || ban.value.executor.id !== executorEdit.value.edit.id
+    || flags.value.original.length !== flags.value.edited.length
+    || val.expires !== "keep"
+  })
+
+const steamid64 = computed(() => {
+  if(!ban.value) return null
+  return new SteamID(ban.value.client.id).getSteamID64()
+})
+const relDate = computed(() => {
+  return ban.value.timestamp ? getRelDate(ban.value.timestamp*1000) : null
+})
+
+async function init() {
+  error.value = undefined
+  const response = await fetch(`/api/bans/${route.params.id}`)
+  if(response.ok) {
+      const json = await response.json()
+      if(json.bans.length === 0) {
+        console.error('No bans were found for id?')
+        return
       }
-    },
-    onExEditBlur() {
-      if(this.ban.executor.id === this.executorEdit.edit.id) {
-        this.executorEdit.active = false
+      ban.value = json.bans[0]
+      edited.value = Object.assign({}, ban.value)
+      edited.value.expires = 'keep'
+      flags.value.original = []
+      for(const i of [1,2,4]) {
+        if(ban.value.flags & i) flags.value.original.push(i.toString())
       }
-    },
-    async setAppealState(appeal, approved) {
-      this.loading = true
-      let rejectReason
-      if(!approved) {
-        rejectReason = prompt("Enter the reason for rejecting:")
-        if(!rejectReason) return
-      }
-      const state = approved ? 1 : 2
-      let query = `?id=${appeal.id}&state=${state}`
-      if(rejectReason) query += `&reject_reason=${rejectReason}`
-      const response = await fetch(`https://jackz.me/l4d2/appeal/appeal.php${query}`, {
-        method: 'PUT',
-      })
-      if(response.ok) {
-        this.loading = false
-        this.fetchAppeals()
-        if(approved) {
-          this.edited.flags |= 2
-          this.flags.edited.push(2)
-        }
-      } else {
-        this.appeals.state = 2
-        alert("Could not update the status of the appeal: " + await response.text())
-        return null
-      }
-    },
-    setTab(index) {
-      this.tab = index
-      switch(index) {
-        case 1: {
-          if(this.ban.appeals == 0) this.appeals.state = 1
-          else if(this.appeals.state === 0) this.fetchAppeals()
-          break
-        }
-        case 2: {
-          if(this.ban.notes == 0) this.notes.state = 1
-          else if(this.notes.state === 0) this.fetchNotes()
-          break
-        }
-        case 3: {
-          if(!this.info) this.fetchInfo()
-        }
-      }
-    },
-    async fetchInfo() {
-      const response = await fetch(`https://stats.jackz.me/api/user/${this.ban.client.id}`)
-      if(response.ok) {
-        const json = await response.json()
-        this.info = json.user
-      } else {
-        alert("Could not fetch user statistics: " + await response.text())
-      }
-    },
-    async fetchAppeals() {
-      const response = await fetch(`https://jackz.me/l4d2/appeal/appeal.php?id=${this.ban.id}`)
-      if(response.ok) {
-          const json = await response.json()
-          this.appeals.list = json.appeals
-          this.appeals.state = 1
-      } else {
-        this.appeals.state = 2
-        alert("Could not fetch appeals: " + await response.text())
-        return null
-      }
-    },
-    async fetchNotes() {
-      const response = await fetch(`/api/notes/user/${this.ban.client.id}`)
-      if(response.ok) {
-          const json = await response.json()
-          this.notes.list = json.notes
-          this.notes.state = 1
-      } else {
-        this.notes.state = 2
-        alert("Could not fetch notes: " + await response.text())
-        return null
-      }
-    },
-    formatTime(time) {
-      const date = new Date(time*1000)
-      return `${date.toLocaleDateString()} at ${date.toLocaleTimeString()}`
-    },
-    deleteBan() {
-      if(window.confirm("Are you sure you want to remove this ban from the records? This should only be done if mistakes were made when banning them. Recommend to suspend the ban instead.")) {
-        fetch(`/api/bans/${ban.steamid}`, {
-          method: 'DELETE',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          credentials: 'include'
-        })
-        .then(async(response) => {
-          if(response.ok) {
-            this.cancel()
-            alert("Ban was successfully removed")
-          } else
-            this.error = await response.text()
-        })
-        .catch(err => {
-          this.error = err.message
-        })
-      }
-    },
-    save() {
-      this.loading = true
-      const expires = getExpires(this.edited, this.ban)
-      const flags = this.flags.edited.reduce((pv, cv) => pv + Number(cv), 0)
-      fetch(`/api/bans/${this.ban.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({
-          steamid: this.edited.client.id,
-          reason: this.edited.reason,
-          executor: this.executorEdit.edit.id,
-          public_message: this.edited.publicReason,
-          expires,
-          flags
-        })
-      })
-      .then(async(response) => {
-        if(response.ok)
-          this.$emit('edit', {
-            ...this.edited,
-            flags
-          })
-        else
-          this.error = (await response.json()).error
-        this.loading = false
-      })
-      .catch(err => {
-        this.error = err.message
-        this.loading = false
-      })
-    },
-    cancel() {
-      this.$emit('edit', null)
-    },
-  },
+      executorEdit.value.edit = ban.value.executor
+      flags.value.edited = [...flags.value.original]
+      appeals.value.list = []
+      appeals.value.state = 0
+      changed.value = false
+      info.value = null
+      setTab(0)
+  }
 }
 
-function getRelDate(time) {
+function onExEditBlur() {
+  if(ban.value.executor.id === executorEdit.value.edit.id) {
+    executorEdit.value.active = false
+  }
+}
+async function setAppealState(appeal: any, approved: boolean) {
+  loading.value = true
+  let rejectReason
+  if(!approved) {
+    rejectReason = prompt("Enter the reason for rejecting:")
+    if(!rejectReason) return
+  }
+  const state = approved ? 1 : 2
+  let query = `?id=${appeal.id}&state=${state}`
+  if(rejectReason) query += `&reject_reason=${rejectReason}`
+  const response = await fetch(`https://jackz.me/l4d2/appeal/appeal.php${query}`, {
+    method: 'PUT',
+  })
+  if(response.ok) {
+    loading.value = false
+    fetchAppeals()
+    if(approved) {
+      edited.value.flags |= 2
+      flags.value.edited.push(2)
+    }
+  } else {
+    appeals.value.state = 2
+    alert("Could not update the status of the appeal: " + await response.text())
+    return null
+  }
+}
+
+function setTab(index: number) {
+  tab.value = index
+  switch(index) {
+    case 1: {
+      if(ban.value.appeals == 0) appeals.value.state = 1
+      else if(appeals.value.state === 0) fetchAppeals()
+      break
+    }
+    case 2: {
+      if(ban.value.notes == 0) notes.value.state = 1
+      else if(notes.value.state === 0) fetchNotes()
+      break
+    }
+    case 3: {
+      if(!info.value) fetchInfo()
+    }
+  }
+}
+async function fetchInfo() {
+  const response = await fetch(`https://stats.jackz.me/api/user/${ban.value.client.id}`)
+  if(response.ok) {
+    const json = await response.json()
+    info.value = json.user
+  } else {
+    alert("Could not fetch user statistics: " + await response.text())
+  }
+}
+async function fetchAppeals() {
+  const response = await fetch(`https://jackz.me/l4d2/appeal/appeal.php?id=${ban.value.id}`)
+  if(response.ok) {
+      const json = await response.json()
+      appeals.value.list = json.appeals
+      appeals.value.state = 1
+  } else {
+    appeals.value.state = 2
+    alert("Could not fetch appeals: " + await response.text())
+    return null
+  }
+}
+async function fetchNotes() {
+  const response = await fetch(`/api/notes/user/${ban.value.client.id}`)
+  if(response.ok) {
+      const json = await response.json()
+      notes.value.list = json.notes
+      notes.value.state = 1
+  } else {
+    notes.value.state = 2
+    alert("Could not fetch notes: " + await response.text())
+    return null
+  }
+}
+function formatTime(time: number) {
+  const date = new Date(time*1000)
+  return `${date.toLocaleDateString()} at ${date.toLocaleTimeString()}`
+}
+function deleteBan() {
+  if(window.confirm("Are you sure you want to remove this ban from the records? This should only be done if mistakes were made when banning them. Recommend to suspend the ban instead.")) {
+    fetch(`/api/bans/${ban.steamid}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include'
+    })
+    .then(async(response) => {
+      if(response.ok) {
+        cancel()
+        alert("Ban was successfully removed")
+      } else
+        error.value = await response.text()
+    })
+    .catch(err => {
+      error.value = err.message
+    })
+  }
+}
+function save() {
+  loading.value = true
+  const expires = getExpires(edited.value, ban.value)
+  const _flags = flags.value.edited.reduce((pv, cv) => pv + Number(cv), 0)
+  fetch(`/api/bans/${ban.value.id}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+    body: JSON.stringify({
+      steamid: edited.value.client.id,
+      reason: edited.value.reason,
+      executor: executorEdit.value.edit.id,
+      public_message: edited.value.publicReason,
+      expires,
+      flags: _flags
+    })
+  })
+  .then(async(response) => {
+    if(response.ok)
+      emit('edit', {
+        ...edited.value,
+        flags
+      })
+    else
+      error.value = (await response.json()).error
+    loading.value = false
+  })
+  .catch(err => {
+    error.value = err.message
+    loading.value = false
+  })
+}
+function cancel() {
+  emit('edit', null)
+}
+
+onBeforeMount(() => {
+  init()
+})
+
+function getRelDate(time: number) {
   const date = new Date(time || ""),
     diff = (((new Date()).getTime() - date.getTime()) / 1000),
     day_diff = Math.floor(diff / 86400);
@@ -485,7 +482,7 @@ function getRelDate(time) {
   diff < 60 && "just now" || diff < 120 && "1 minute ago" || diff < 3600 && Math.floor(diff / 60) + " minutes ago" || diff < 7200 && "1 hour ago" || diff < 86400 && Math.floor(diff / 3600) + " hours ago") || day_diff == 1 && "Yesterday" || day_diff < 7 && day_diff + " days ago" || day_diff < 31 && Math.ceil(day_diff / 7) + " weeks ago";
 }
 
-function getExpires(edited, ban) {
+function getExpires(edited: any, ban: any) {
   const baseDate = new Date().valueOf()
 
   if(edited.expires === "keep") return null

@@ -32,30 +32,35 @@
   </nav>
 </template>
 
-<script>
-export default {
-  props: {
-    page: Number,
-    count: Number,
-    limit: Number
-  },
-  computed: {
-    prevPage() {
-      const page = this.page - 1
-      return (page == 0) ? null : page
-    },
-    nextPage() {
-      const page = this.page + 1
-      return (page > this.maxPages) ? null : page
-    },
-    maxPages() {
-      return Math.ceil(this.count / this.limit)
-    }
-  },
-  methods: {
-    setPage(page) {
-      this.$emit('page', page)
-    },
-  }
+<script setup lang="ts">
+import { ref, watch, computed, onBeforeMount, onMounted, defineEmits } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+
+const emit = defineEmits(['page'])
+
+const route = useRoute()
+const router = useRouter()
+const props = defineProps<{
+  page: number,
+  count: number,
+  limit: number
+}>()
+
+
+const prevPage = computed(() => {
+  const page = props.page - 1
+  return (page == 0) ? null : page
+})
+const nextPage = computed(() => {
+  const page = props.page + 1
+  return (page > maxPages.value) ? null : page
+})
+const maxPages = computed(() => {
+  return Math.ceil(props.count / props.limit)
+})
+
+function setPage(page: number | null) {
+  if(page) emit('page', page)
 }
+
 </script>
