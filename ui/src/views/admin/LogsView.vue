@@ -1,16 +1,16 @@
 <template>
 <div>
-<Modal :active="modal.message !== null" v-if="modal.message" :closable="false">
+<Modal :active="modal.message !== undefined" v-if="modal.message" :closable="false">
   <div class="modal-card">
     <header class="modal-card-head">
       <p class="modal-card-title"><b>Error</b></p>
-      <button class="delete" aria-label="close" @click='modal.message = null'></button>
+      <button class="delete" aria-label="close" @click='modal.message = undefined'></button>
     </header>
     <section class="modal-card-body">
       {{modal.message}}
     </section>
     <footer class="modal-card-foot">
-      <button class="button is-success" aria-label="close" @click='modal.message = null'>Close</button>
+      <button class="button is-success" aria-label="close" @click='modal.message = undefined'>Close</button>
     </footer>
   </div>
 </Modal>
@@ -28,11 +28,11 @@
 <label class="label">
           Enabled Types
           <a class="is-inline" @click="filters['types'] = []">(Clear)</a>&nbsp;
-          <a @click="filters['types'] = $options.FILTERS['types']">(Select All)</a>
+          <a @click="filters['types'] = FILTERS['types']">(Select All)</a>
         </label>
         <div class="buttons">
           <a
-            v-for="key in $options.FILTERS.types" :key="key"
+            v-for="key in FILTERS.types" :key="key"
             :class="['button', 'is-small', typeColors[key]]"
             @click="toggleList('types', key)"
           >
@@ -47,7 +47,7 @@
             <input type="text" class="input" v-model="search.id" placeholder="######" />
           </div>
           <div class="control">
-            <a class="button is-secondary" @click="search.id = null">
+            <a class="button is-secondary" @click="search.id = undefined">
               x
             </a>
           </div>
@@ -69,12 +69,12 @@
         <label class="label">
           Enabled Servers
           <a class="is-inline" @click="filters['servers'] = ['unknown']">(Clear)</a>&nbsp;
-          <a @click="filters['servers'] = $options.FILTERS['servers']">(Select All)</a>
+          <a @click="filters['servers'] = FILTERS['servers']">(Select All)</a>
         </label>
 
         <div class="buttons">
           <a
-            v-for="key in $options.FILTERS.servers" :key="key"
+            v-for="key in FILTERS.servers" :key="key"
             :class="['button', 'is-small', serverColors[key]]"
             @click="toggleList('servers', key)"
           >
@@ -172,7 +172,7 @@
             <a data-tooltip="Click to view all messages around this entry" class="has-tooltip-right" @click="searchID(log.id)">{{ log.id }}</a>
           </td>
           <td class="nowrap">
-            <span :class="['tag', $options.TYPE_COLORS[log.type]]">{{ log.type }}</span>
+            <span :class="['tag', TYPE_COLORS[log.type]]">{{ log.type }}</span>
           </td>
           <td class="nowrap">{{ log.timestamp }}</td>
           <td>
@@ -186,7 +186,7 @@
             </b>
         </td>
           <td class="nowrap">
-            <span v-if="log.server" :class="['tag', $options.SERVER_COLORS[log.server]]">{{ log.server }}</span>
+            <span v-if="log.server" :class="['tag', SERVER_COLORS[log.server]]">{{ log.server }}</span>
           </td>
         </tr>
       </tbody>
@@ -206,10 +206,18 @@
 </div>
 </template>
 
-<script>
-import Pagination from '@/components/pagination'
+<script setup lang="ts">
+import Pagination from '@/components/pagination.vue'
 import Debounce from '@/js/debounce'
 import LogClientTarget from '@/components/LogClientTarget.vue'
+import Modal from '@/components/Modal.vue'
+import { Session } from '../../../../common-types/User';
+import { ref, watch, computed, onBeforeMount, onMounted, defineEmits, Ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+
+const emit = defineEmits([])
+const route = useRoute()
+const router = useRouter()
 
 const REFRESH_INTERVAL_MS = 1000 * 60 * 2
 
@@ -217,302 +225,306 @@ const FULLNAME_REGEX = /"([^"<>]+)<\d+><(STEAM_\d:\d:\d+|Console|BOT)><(Console)
 const USER_REGEX = /^(STEAM_\d:\d:\d+|Server|CONSOLE|Smoker|Boomer|Charger|Jockey|Hunter|Spitter|Tank|Witch)$/
 const ADMINCHAT_REGEX = /triggered sm_say \(text (.*)\)/
 
-import Modal from '@/components/Modal'
-
 const DEFAULT_TYPES = ["ACTION", "CHAT", "INFO", "STATE","WEB"]
 const DEFAULT_SERVERS = ["improved", "reserved"]
 
+const TYPE_COLORS: Record<string, string> = {
+  ACTION: "is-info",
+  CHAT: "is-secondary",
+  STATE: "is-primary",
+  QUIT: "is-danger",
+  JOIN: "is-success",
+  INFO: "is-link",
+  WEB: "is-dark"
+}
+const SERVER_COLORS: Record<string, string> = {
+  improved: "is-success",
+  reserved: "is-dark",
+}
 
-export default {
-  props: ['userdata'],
-  components: {
-    Pagination,
-    Modal,
-    LogClientTarget
-  },
-  FILTERS: {
-    servers: [
-      "improved", "reserved", "public1", "public2", "public3", "public4", "public5", "public6", "public7", "public8", "unknown", "web"
-    ],
-    types: [ "ACTION", "CHAT", "INFO", "STATE", "QUIT", "JOIN", "WEB"],
-  },
-  TYPE_COLORS: {
-    ACTION: "is-info",
-    CHAT: "is-secondary",
-    STATE: "is-primary",
-    QUIT: "is-danger",
-    JOIN: "is-success",
-    INFO: "is-link",
-    WEB: "is-dark"
-  },
-  SERVER_COLORS: {
-    improved: "is-success",
-    reserved: "is-dark",
-  },
-  data() {
-    return {
-      modal: {
-        message: null
-      },
-      loading: 1,
-      data: [],
-      count: 0,
-      filters: {
-        servers: DEFAULT_SERVERS,
-        types: DEFAULT_TYPES,
-        client: null,
-        target: null
-      },
-      search: {
-        message: null,
-        id: null
-      },
-      history: {
-        activators: [],
-        targets: [],
-      },
-      page: 1,
-      limit: 20,
-      fetchDebounce: null,
-      debugView: false,
-      showIds: false
+const props = defineProps<{
+  userdata: Session
+}>()
+
+const FILTERS = {
+  servers: [
+    "improved", "reserved", "public1", "public2", "public3", "public4", "public5", "public6", "public7", "public8", "unknown", "web"
+  ],
+  types: [ "ACTION", "CHAT", "INFO", "STATE", "QUIT", "JOIN", "WEB"],
+}
+
+let modal = ref<{message?: string}>({message: undefined})
+let loading = ref(1)
+let data = ref<any[]>([])
+let count = ref(0)
+let filters = ref<{
+  servers: string[], types: string[], client: string|null, target: string|null}>
+({
+  servers: DEFAULT_SERVERS,
+  types: DEFAULT_TYPES,
+  client: null,
+  target: null
+})
+let search = ref<{message?: string, id?: string}>({ message: undefined, id: undefined })
+let history = ref<{
+  activators: any[], targets: any[]
+}>({
+  activators: [],
+  targets: []
+})
+let page = ref(1)
+let limit = ref(20)
+let fetchDebounce = ref<Function>()
+let debugView = ref(false)
+let showIds = ref(false)
+
+
+const isFilterTargetValid = computed(() => {
+  return filters.value.target && USER_REGEX.test(filters.value.target as string)
+})
+const isFilterClientValid = computed(() => {
+  return filters.value.client && USER_REGEX.test(filters.value.client as string)
+})
+
+const filterTargetClass = computed(() => {
+  let value = filters.value.target ? (isFilterTargetValid.value ? "is-success" : "is-danger") : ""
+  return [
+    'input',
+    value
+  ]
+})
+const filterTargetName = computed(() => {
+  const result = history.value.targets.find(t => t.steamid === filters.value.target)
+  return result ? result.name : null
+})
+
+const filterClientClass = computed(() => {
+  let value = filters.value.client ? (isFilterClientValid.value ? "is-success" : "is-danger") : ""
+  return [
+    'input',
+    value
+  ]
+})
+const filterClientName = computed(() => {
+  const result = history.value.activators.find(t => t.steamid === filters.value.client)
+  return result ? result.name : null
+})
+const serverColors = computed(() => {
+  let obj: Record<string, string> = {}
+  for(const server of FILTERS.servers) {
+    obj[server] = filters.value.servers.includes(server) ? SERVER_COLORS[server] : 'is-light'
+  }
+  return obj
+})
+const typeColors = computed(() => {
+  let obj: Record<string, string> = {}
+  for(const type of FILTERS.types) {
+    obj[type] = filters.value.types.includes(type) ? TYPE_COLORS[type] : 'is-light'
+  }
+  return obj
+})
+const filteredData = computed(() => {
+  if(!search.value.message) return data.value
+  return data.value
+})
+const query = computed(() => {
+  //todo: search
+  let query = ""
+  if(!isFilterTargetValid.value&&filters.value.target) return query
+  for(const filterName in filters.value) {
+    const value = (filters.value as Record<string, any>)[filterName]
+    if(value) {
+      if(Array.isArray(value)) {
+        if(value.length > 0 )
+          query += `&${filterName}=${value.join(",")}`
+      } else {
+        query += `&${filterName}=${value}`
+      }
     }
-  },
-  computed: {
-    isFilterTargetValid() {
-      return USER_REGEX.test(this.filters.target)
-    },
-    filterTargetClass() {
-      let value = this.filters.target ? (this.isFilterTargetValid ? "is-success" : "is-danger") : ""
-      return [
-        'input',
-        value
-      ]
-    },
-    filterTargetName() {
-      const result = this.history.targets.find(t => t.steamid === this.filters.target)
-      return result ? result.name : null
-    },
-    isFilterClientValid() {
-      return USER_REGEX.test(this.filters.client)
-    },
-    filterClientClass() {
-      let value = this.filters.client ? (this.isFilterClientValid ? "is-success" : "is-danger") : ""
-      return [
-        'input',
-        value
-      ]
-    },
-    filterClientName() {
-      const result = this.history.activators.find(t => t.steamid === this.filters.client)
-      return result ? result.name : null
-    },
-    serverColors() {
-      let obj = {}
-      for(const server of this.$options.FILTERS.servers) {
-        obj[server] = this.filters.servers.includes(server) ? this.$options.SERVER_COLORS[server] : 'is-light'
-      }
-      return obj
-    },
-    typeColors() {
-      let obj = {}
-      for(const type of this.$options.FILTERS.types) {
-        obj[type] = this.filters.types.includes(type) ? this.$options.TYPE_COLORS[type] : 'is-light'
-      }
-      return obj
-    },
-    filteredData() {
-      if(!this.search.message) return this.data
-      return this.data
-    },
-    query() {
-      //todo: search
-      let query = ""
-      if(!this.isFilterTargetValid&&this.filters.target) return query
-      for(const filter in this.filters) {
-        if(this.filters[filter]) {
-          if(Array.isArray(this.filters[filter])) {
-            if(this.filters[filter].length > 0 )
-              query += `&${filter}=${this.filters[filter].join(",")}`
-          } else {
-            query += `&${filter}=${this.filters[filter]}`
+  }
+  for(const searchKey in search.value) {
+    const value = (search.value as Record<string, string>)[searchKey]
+    if(value) {
+      query += `&search_${searchKey}=${value}`
+    }
+  }
+  return query.length > 0 ? query : ""
+})
+
+const isTargetColumnVisible = computed(() => {
+  for(const key in data.value) {
+    if(data.value[key]['target']['steamid']) return true
+  }
+  return false
+})
+
+function setDefaults() {
+  filters.value.servers = DEFAULT_SERVERS
+  filters.value.types = DEFAULT_TYPES
+  filters.value.client = null
+  filters.value.target = null
+  search.value.message = undefined
+  search.value.id = undefined
+  page.value = 1
+}
+function searchID(id: string) {
+  search.value.id = id;
+  search.value.message = undefined
+  getData()
+}
+function toggleList(listName: string, element: unknown) {
+  const value = (filters.value as Record<string, any>)[listName]
+  const index = value.findIndex((e: unknown) => e == element)
+  if(index > -1) {
+    value.splice(index, 1)
+  } else {
+    value.push(element)
+  }
+  getData()
+}
+
+function toggleDebug() {
+  debugView.value = !debugView.value
+  getData()
+}
+function onBtnRefresh() {
+  loading.value = 2
+  getData()
+}
+
+function formatFilter(id: string) {
+  return id[0].toUpperCase() + id.slice(1)
+}
+function setPage(pageNum: number) {
+  page.value = pageNum
+  getData()
+}
+function setUserFilter(type: string, id: string) {
+  // @ts-ignore
+  filters.value[type] = id
+}
+function openStatsProfile(id: string) {
+  window.open(getStatProfile(id))
+}
+async function getData() {
+  try {
+    const response = await fetch(`/api/logs/${page.value}?limit=${limit.value}${query.value}`, { credentials: 'include' })
+    if(response.ok && response.status == 200) {
+      const json = await response.json()
+      loading.value = 0
+      count.value = json.totalCount
+      json.logs.forEach((log: any) => {
+        log.timestamp = formatDate(log.timestamp)
+        log.client = {
+          steamid: log.client,
+          name: log.clientName || log.client,
+          hasStats: !!log.clientName,
+        }
+        log.target = {
+          steamid: log.target,
+          name: log.targetName || log.target,
+          hasStats: !!log.targetName,
+        }
+        if(log.type == "ACTION" && log.client.steamid && log.client.steamid.startsWith("STEAM_") && !history.value.activators.some(c => c.steamid == log.client.steamid)) history.value.activators.push(log.client)
+        if(log.target.steamid && log.target.steamid.startsWith("STEAM_") &&  !history.value.targets.some(c => c.steamid == log.target.steamid)) history.value.targets.push(log.target)
+
+        if(!debugView.value && log.message) {
+          log.message = log.message.replace(FULLNAME_REGEX, '')
+          if(log.type === "ACTION") {
+            const adminChatMatch = log.message.match(ADMINCHAT_REGEX)
+            if(adminChatMatch) {
+              log.message = `<span class='tag is-warning' data-tooltip='Message was sent in admin chat'>${adminChatMatch[1]}</span>`
+              log.type = "CHAT"
+            }
+          } else if(log.type === "CHAT") {
+            log.message = `<span class='tag'>${log.message}</span>`
           }
         }
-      }
-      for(const search in this.search) {
-        if(this.search[search]) {
-          query += `&search_${search}=${this.search[search]}`
-        }
-      }
-      return query.length > 0 ? query : ""
-    },
-    isTargetColumnVisible() {
-      for(const data in this.data) {
-        if(this.data[data]['target']['steamid']) return true
-      }
+      })
+      data.value = json.logs
+      window.localStorage.setItem('l4d2admin_data', JSON.stringify({
+        history: history.value
+      }))
+      return true
+    } else {
+      loading.value = 0
+      alert("Server error while fetching logs: " + response.statusText)
       return false
     }
-  },
-  watch: {
-    query() {
-      this.page = 1
-      if(this.userdata)
-        this.fetchDebounce()
-      window.history.pushState("", "", `?page=${this.page}${this.query}`);
-    }
-  },
-  methods: {
-    setDefaults() {
-      this.filters.servers = DEFAULT_SERVERS
-      this.filters.types = DEFAULT_TYPES
-      this.filters.client = null
-      this.filters.target = null
-      this.search.message = null
-      this.search.id = null
-      this.page = 1
-    },
-    searchID(id) {
-      this.search.id = id;
-      this.search.message = null
-      this.getData()
-    },
-    toggleList(listName, element) {
-      const index = this.filters[listName].findIndex(e => e == element)
-      if(index > -1) {
-        this.filters[listName].splice(index, 1)
-      } else {
-        this.filters[listName].push(element)
-      }
-      this.getData()
-    },
-    toggleDebug() {
-      this.debugView = !this.debugView
-      this.getData()
-    },
-    onBtnRefresh() {
-      this.loading = 2
-      this.getData()
-    },
-    formatFilter(id) {
-      return id[0].toUpperCase() + id.slice(1)
-    },
-    setPage(page) {
-      this.page = page
-      this.getData()
-    },
-    setUserFilter(type, id) {
-      this.filters[type] = id
-    },
-    openStatsProfile(id) {
-      window.open(`https://stats.jackz.me/user/${id}/overview`)
-    },
-    async getData() {
-      try {
-        const response = await fetch(`/api/logs/${this.page}?limit=${this.limit}${this.query}`, { credentials: 'include' })
-        if(response.ok && response.status == 200) {
-          const json = await response.json()
-          this.loading = false
-          this.count = json.totalCount
-          json.logs.forEach(log => {
-            log.timestamp = this.formatDate(log.timestamp)
-            log.client = {
-              steamid: log.client,
-              name: log.clientName || log.client,
-              hasStats: !!log.clientName,
-            }
-            log.target = {
-              steamid: log.target,
-              name: log.targetName || log.target,
-              hasStats: !!log.targetName,
-            }
-            if(log.type == "ACTION" && log.client.steamid && log.client.steamid.startsWith("STEAM_") && !this.history.activators.some(c => c.steamid == log.client.steamid)) this.history.activators.push(log.client)
-            if(log.target.steamid && log.target.steamid.startsWith("STEAM_") &&  !this.history.targets.some(c => c.steamid == log.target.steamid)) this.history.targets.push(log.target)
+  } catch(err: any) {
+    loading.value = 0
+    alert("Error while fetching logs: " + err.message)
+    return false
+  }
+}
+function formatDate(timestamp: number) {
+  const d = new Date(timestamp * 1000)
+  return d.toLocaleDateString() + ' ' + d.toLocaleTimeString()
+}
+function getStatProfile(id: string) {
+  return `https://stats.jackz.me/user/${id}/overview`
+}
+function addToHistory(steamid: string, list: string) {
+  //@ts-ignore
+  if(!steamid || !list || !history.value[list]) return false
+  //@ts-ignore
+  if(!history.value[list][steamid]) {
+  //@ts-ignore
+    history.value[list][steamid] = 0
+  }
+  //@ts-ignore
+  history.value[list][steamid]++
+}
 
-            if(!this.debugView && log.message) {
-              log.message = log.message.replace(FULLNAME_REGEX, '')
-              if(log.type === "ACTION") {
-                const adminChatMatch = log.message.match(ADMINCHAT_REGEX)
-                if(adminChatMatch) {
-                  log.message = `<span class='tag is-warning' data-tooltip='Message was sent in admin chat'>${adminChatMatch[1]}</span>`
-                  log.type = "CHAT"
-                }
-              } else if(log.type === "CHAT") {
-                log.message = `<span class='tag'>${log.message}</span>`
-              }
-            }
-          })
-          this.data = json.logs
-          window.localStorage.setItem('l4d2admin_data', JSON.stringify({
-            history: this.history
-          }))
-          return true
-        } else {
-          this.loading = false
-          alert("Server error while fetching logs: " + response.statusText)
-          return false
-        }
-      } catch(err) {
-        this.loading = false
-        alert("Error while fetching logs: " + err.message)
-        return false
-      }
-    },
-    formatDate(timestamp) {
-      const d = new Date(timestamp * 1000)
-      return d.toLocaleDateString() + ' ' + d.toLocaleTimeString()
-    },
-    getStatProfile(id) {
-      return `https://stats.jackz.me/user/${id}/overview`
-    },
-    addToHistory(steamid, list) {
-      if(!steamid || !list || !this.history[list]) return false
-      if(!this.history[list][steamid]) {
-        this.history[list][steamid] = 0
-      }
-      this.history[list][steamid]++
-    }
-  },
-  created() {
+onBeforeMount(() => {
     if(window.localStorage['l4d2admin_data']) {
-      this.history = JSON.parse(window.localStorage['l4d2admin_data']).history
+      history.value = JSON.parse(window.localStorage['l4d2admin_data']).history
     }
 
-    this.fetchDebounce = Debounce(this.getData, 500)
-    for(const filter in this.$options.FILTERS) {
-      if(!this.filters[filter])
-        this.$set(this.filters, filter, [])
+    fetchDebounce.value = Debounce(getData, 500)
+    for(const filter in FILTERS) {
+      //@ts-ignore
+      if(!filters.value[filter])
+      //@ts-ignore
+        filters.value[filter] = []
     }
     const params = new URLSearchParams(window.location.search);
     if(params.has('types')) {
-      this.filters.types = params.get('types').split(",")
+      filters.value.types = params.get('types')?.split(",") || []
     }
     if(params.has('servers')) {
-      this.filters.servers = params.get('servers').split(",")
+      filters.value.servers = params.get('servers')?.split(",") || []
     }
     if(params.has('target')) {
-      this.filters.target = params.get('target')
+      filters.value.target = params.get('target')
     }
     if(params.has('client') || params.has('activator')) {
-      this.filters.client = params.get('client') ?? params.get('activator')
+      filters.value.client = params.get('client') ?? params.get('activator')
     }
     if(params.has('search_id')) {
-      this.search.id = params.get('search_id')
+      search.value.id = params.get('search_id') || undefined
     }
     if(params.has('search_message')) {
-      this.search.message = params.get('search_message')
+      search.value.message = params.get('search_message') || undefined
     }
     if(params.has('page')) {
-      this.page = parseInt(params.get('page'))
+      page.value = parseInt(params.get('page') || "0")
     }
+})
 
-  },
-  mounted() {
+onMounted(() => {
     setInterval(() => {
-      this.getData()
+      getData()
     }, REFRESH_INTERVAL_MS)
-    this.getData()
-  }
-}
+    getData()
+})
+
+watch(query, (value) => {
+  page.value = 1
+  if(props.userdata && fetchDebounce.value)
+    fetchDebounce.value()
+  window.history.pushState("", "", `?page=${page.value}${value}`);
+})
 
 </script>
 
