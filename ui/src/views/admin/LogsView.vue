@@ -228,7 +228,9 @@ const ADMINCHAT_REGEX = /triggered sm_say \(text (.*)\)/
 const DEFAULT_TYPES = ["ACTION", "CHAT", "INFO", "STATE","WEB"]
 const DEFAULT_SERVERS = ["improved", "reserved"]
 
-const TYPE_COLORS: Record<string, string> = {
+type Dictionary<K extends string, T> = Partial<Record<K, T>>
+
+const TYPE_COLORS: Dictionary<string, string> = {
   ACTION: "is-info",
   CHAT: "is-secondary",
   STATE: "is-primary",
@@ -237,7 +239,7 @@ const TYPE_COLORS: Record<string, string> = {
   INFO: "is-link",
   WEB: "is-dark"
 }
-const SERVER_COLORS: Record<string, string> = {
+const SERVER_COLORS: Dictionary<string, string> = {
   improved: "is-success",
   reserved: "is-dark",
 }
@@ -257,7 +259,7 @@ let modal = ref<{message?: string}>({message: undefined})
 let loading = ref(1)
 let data = ref<any[]>([])
 let count = ref(0)
-let filters = ref<{
+let filters: Ref<Dictionary<string, string[]|string|null>> = ref<{
   servers: string[], types: string[], client: string|null, target: string|null}>
 ({
   servers: DEFAULT_SERVERS,
@@ -310,16 +312,16 @@ const filterClientName = computed(() => {
   return result ? result.name : null
 })
 const serverColors = computed(() => {
-  let obj: Record<string, string> = {}
+  let obj: Dictionary<string, string> = {}
   for(const server of FILTERS.servers) {
-    obj[server] = filters.value.servers.includes(server) ? SERVER_COLORS[server] : 'is-light'
+    obj[server] = filters.value.servers!.includes(server) ? SERVER_COLORS[server] : 'is-light'
   }
   return obj
 })
 const typeColors = computed(() => {
-  let obj: Record<string, string> = {}
+  let obj: Dictionary<string, string> = {}
   for(const type of FILTERS.types) {
-    obj[type] = filters.value.types.includes(type) ? TYPE_COLORS[type] : 'is-light'
+    obj[type] = filters.value.types!.includes(type) ? TYPE_COLORS[type] : 'is-light'
   }
   return obj
 })
@@ -332,7 +334,7 @@ const query = computed(() => {
   let query = ""
   if(!isFilterTargetValid.value&&filters.value.target) return query
   for(const filterName in filters.value) {
-    const value = (filters.value as Record<string, any>)[filterName]
+    const value = filters.value[filterName]
     if(value) {
       if(Array.isArray(value)) {
         if(value.length > 0 )

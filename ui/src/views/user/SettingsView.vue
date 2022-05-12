@@ -11,7 +11,7 @@
       <div class="column" v-if="privUser.hasWebPerm(WebPermission.FullPermission)">
         <h4 class="title is-4">Admin Panel Control</h4>
         <p><b>State: </b> {{ serverHealth.currentState }}</p>
-        <p><b>Uptime: </b> {{ Math.round(serverHealth.uptime / 60) }} minutes</p>
+        <p><b>Uptime: </b> {{ uptime }}</p>
         <p><b>Node.JS Version: </b> {{serverHealth?.versions?.node}}</p>
         <br>
         <a :disabled="updateStatus.state !== 'NORMAL'" :class="['button', {'is-loading': updateStatus.state === 'CHECKING'}]" @click="updateServer">Update Server</a>
@@ -81,6 +81,17 @@ let updateStatus = ref<{
   upToDate?: boolean
 }>({
   state: "NORMAL",
+})
+
+const uptime = computed(() => {
+  const minutes = serverHealth.value.uptime ?? 0 / 60
+  if(minutes < 1.0) return "< 1 minute"
+  else if(minutes > 60) {
+    const hours = minutes / 60
+    if(hours > 24) return `${Math.round(hours / 24)} days`
+    else return `${hours.toFixed(1)} hours`
+  }
+  else return `${minutes.toFixed(1)} minutes`
 })
 
 const webPerms = computed(() => {
@@ -163,6 +174,7 @@ async function fetchServerHealth() {
 onBeforeMount(() => {
   fetchSessions()
   if(privUser.hasWebPerm(WebPermission.FullPermission)) {
+    fetchServerHealth()
     setInterval(fetchServerHealth, POLL_SERVER_HEALTH_INTERVAL)
   }
 })
