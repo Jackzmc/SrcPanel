@@ -104,5 +104,10 @@
     {
         "cvar": "l4d2_honk_mode <0/1/2:int>",
         "description": "Will activate honk mode - includes live counter. 0=OFF, 1=At 40%, 2=Randomly changing percent"
+    },
+    {
+        "cvar": "sm_player_limit <0-Infinity:int>",
+        "description": "Sets the player limit. 0 = default limit, default.",
+        "default": 0
     }
 ]
