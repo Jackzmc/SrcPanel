@@ -57,111 +57,104 @@
 </div>
 </template>
 
-<script>
-export default {
-  data() {
-    return {
-      servers: [],
-      shiftPressed: false,
-      message: {
-        content: null,
-        type: null
-      },
-      starting: [],
-      refreshTimer: null
-    }
-  },
-  methods: {
-    sendMessage(type, content) {
-      this.message = {
-        type: type === "error" ? "has-text-danger" : type === "success" ? "has-text-success" : type,
-        content: content
-      }
-      setTimeout(() => this.message = null, 8000)
-    },
-    processAction(server, type) {
-      if(type === "start") {
-        this.$set(this.starting, server.meta.port, true);
-        setTimeout(() => {
-          this.$set(this.starting, server.meta.port, false);
-        }, 1000 * 30)
-      }
-      fetch(`/api/servers/${server.id}/${type}`, {
-        method: 'POST',
-        credentials: 'include'
-      })
-      .then(async(response) => {
-        if(response.ok ) {
-          const json = await response.json()
-          if(json.error) {
-            return this.sendMessage('error', `<b>Server returned error</b><br>${json.message}`)
-          }
-          if(json.response.includes("players online")) {
-            this.sendMessage('error', 'Cannot restart server: There are players online')
-          }else{
-           this.sendMessage('success', json.response)
-          }
-        }else{
-          this.sendMessage('error', `<b>Server returned error</b><br>${response.statusText}`)
-        }
-      })
-      .catch(err => {
-        this.sendMessage('error', `${err.message}`)
-      })
-    },
-    getServerClasses(server) {
-      const classes = ['has-tooltip-arrow']
+<script setup lang="ts">
+import { ref, watch, computed, onBeforeMount, onMounted, onDeactivated } from 'vue'
 
-      if(server.status.online) {
-        if(server.status.data.players.length == 0) {
-          classes.push('has-text-success')
-          classes.push('has-tooltip-success')
-        } else {
-          classes.push('has-tooltip-warning')
-        }
-      } else {
-        classes.push('has-text-danger')
-        classes.push('has-tooltip-danger')
-      }
+const emit = defineEmits(['refresh'])
 
-      return classes
-    },
-    getServerMessage(server) {
-      if(server.status.online) return server.status.data.players.list == 0 ? 'Server is currently online & empty. Click to join' : 'Server has players online. Click to join.'
-      else return 'Server is offline or unreachable'
-      //
-      return
-    },
-    refreshServers() {
-      this.$emit('refresh', 'start')
-      fetch('/api/servers')
-      .then(response => {
-        if(response.ok) return response.json()
-        else console.error('Failure getting servers', response)
-      })
-      .then(json => {
-        this.servers = json
-      })
-      .finally(() => {
-        this.$emit('refresh', 'stop')
-      })
-    }
-  },
-  activated() {
-  },
-  deactivated() {
-    clearInterval(this.refreshTimer)
-  },
-  created() {
-    this.refreshServers()
+let servers = ref<any[]>([])
+let shiftPressed = ref(false)
+let message = ref<{content?: string, type?: string}>()
 
+let starting = ref<Record<string, boolean>>({})
+let refreshTimer = ref<number>()
 
-    document.onkeydown = (e) => {
-      this.shiftPressed = !!e.shiftKey
-    }
-    document.onkeyup = (e) => {
-      this.shiftPressed = !!e.shiftKey
-    }
+function sendMessage(type: string, content: string) {
+  message.value = {
+    type: type === "error" ? "has-text-danger" : type === "success" ? "has-text-success" : type,
+    content: content
   }
+  setTimeout(() => message.value = undefined, 8000)
 }
+function processAction(server: any, type: string) {
+  if(type === "start") {
+    starting.value[server.meta.port] = true
+    setTimeout(() => {
+      starting.value[server.meta.port] = false
+    }, 1000 * 30)
+  }
+  fetch(`/api/servers/${server.id}/${type}`, {
+    method: 'POST',
+    credentials: 'include'
+  })
+  .then(async(response) => {
+    if(response.ok ) {
+      const json = await response.json()
+      if(json.error) {
+        return sendMessage('error', `<b>Server returned error</b><br>${json.message}`)
+      }
+      if(json.response.includes("players online")) {
+        sendMessage('error', 'Cannot restart server: There are players online')
+      }else{
+        sendMessage('success', json.response)
+      }
+    }else{
+      sendMessage('error', `<b>Server returned error</b><br>${response.statusText}`)
+    }
+  })
+  .catch(err => {
+    sendMessage('error', `${err.message}`)
+  })
+}
+function getServerClasses(server: any) {
+  const classes = ['has-tooltip-arrow']
+
+  if(server.status.online) {
+    if(server.status.data.players.length == 0) {
+      classes.push('has-text-success')
+      classes.push('has-tooltip-success')
+    } else {
+      classes.push('has-tooltip-warning')
+    }
+  } else {
+    classes.push('has-text-danger')
+    classes.push('has-tooltip-danger')
+  }
+
+  return classes
+}
+function getServerMessage(server: any) {
+  if(server.status.online) return server.status.data.players.list == 0 ? 'Server is currently online & empty. Click to join' : 'Server has players online. Click to join.'
+  else return 'Server is offline or unreachable'
+  //
+  return
+}
+function refreshServers() {
+  emit('refresh', 'start')
+  fetch('/api/servers')
+  .then(response => {
+    if(response.ok) return response.json()
+    else console.error('Failure getting servers', response)
+  })
+  .then(json => {
+    servers.value = json
+  })
+  .finally(() => {
+    emit('refresh', 'stop')
+  })
+}
+
+onDeactivated(() => {
+  clearInterval(refreshTimer.value)
+})
+
+onBeforeMount(() => {
+  refreshServers()
+  document.onkeydown = (e) => {
+    shiftPressed.value = !!e.shiftKey
+  }
+  document.onkeyup = (e) => {
+    shiftPressed.value = !!e.shiftKey
+  }
+})
 </script>
