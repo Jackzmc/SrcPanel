@@ -44,6 +44,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 async function doState(state: UpdateState, promise: Promise<any>) {
                     const startTime = Date.now()
                     updateState = state
+                    req.log.info(`Updater: starting stage ${state}`)
                     response = await promise
                     return Date.now() - startTime
                 }
