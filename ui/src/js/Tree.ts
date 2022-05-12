@@ -1,7 +1,7 @@
 export class TreeNode {
   key: any;
   value: any;
-  parent: null;
+  parent: TreeNode | null;
   children: TreeNode[];
 
   constructor(key: any, value = key, parent = null) {
@@ -21,7 +21,7 @@ export class TreeNode {
 }
 
 export class Tree {
-  private root: TreeNode
+  public root: TreeNode
 
   constructor(key: any, value = key) {
     this.root = new TreeNode(key, value);

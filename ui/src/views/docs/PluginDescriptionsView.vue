@@ -14,49 +14,42 @@
   </div>
 </template>
 
-<script>
+<script setup lang="ts">
+//@ts-ignore
 import Marked from 'marked'
 import { Tree, TreeNode } from '@/js/Tree'
-import SectionRoot from '@/components/sections/SectionRoot.vue'
+import { ref, onBeforeMount, inject } from 'vue'
 
-export default {
-  components: {
-    SectionRoot
-  },
-  data() {
-    return {
-      html: null,
-      headersTree: null
-    }
-  },
-  created() {
-    fetch('../data/plugins.md?timestamp=' + this.$LAST_UPDATED)
-    .then(response => {
-      if(response.ok)
-        return response.text()
-      else
-        this.html = "<p class='has-text-danger'>Could not fetch information.</p>"
-    })
-    .then(text => {
-      this.html = Marked(text)
-      const tree = new Tree(0, 0)
-      let lastNode
-      for (const [,level,name] of this.html.matchAll(/h(\d) id="(.+)"/g)) {
-        level = Number(level)
-        let newNode;
-        if(lastNode && level > lastNode.value) {
-          newNode = tree.insert(lastNode.key, name, level)
-        } else if(lastNode && level === lastNode.value) {
-          newNode = tree.insert(lastNode.parent.key, name, level)
-        } else {
-          newNode = tree.insert(0, name, level)
-        }
-        lastNode = newNode
+const LAST_UPDATED = inject('LAST_UPDATED')
+
+let html = ref<string>()
+let headersTree = ref<Tree>()
+
+onBeforeMount(() => {
+  fetch(`../data/plugins.md?t=${LAST_UPDATED}`)
+  .then(response => {
+    if(response.ok)
+      return response.text()
+    else
+      html.value = "<p class='has-text-danger'>Could not fetch information.</p>"
+  })
+  .then(text => {
+    html.value = Marked(text)
+    const tree = new Tree(0, 0)
+    let lastNode
+    for (let [,level,name] of html.value!.matchAll(/h(\d) id="(.+)"/g) as any) {
+      level = Number(level)
+      let newNode;
+      if(lastNode && level > lastNode.value) {
+        newNode = tree.insert(lastNode.key, name, level)
+      } else if(lastNode && level === lastNode.value) {
+        newNode = tree.insert(lastNode.parent!.key, name, level)
+      } else {
+        newNode = tree.insert(0, name, level)
       }
-      this.headersTree = tree
-    })
-  }
-}
-
-function recurseDown(){}
+      lastNode = newNode
+    }
+    headersTree.value = tree
+  })
+})
 </script>
