@@ -130,7 +130,9 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
 
         const WSResolverBuffer = []
-        const cacheResults = await fastify.cache.mGet(cacheBufferKeys)
+        
+        // Because redis errors on empty array. which is fucking stupid but alright
+        const cacheResults = cacheBufferKeys.length > 0 ? await fastify.cache.mGet(cacheBufferKeys) : []
         for(let i = 0; i < cacheResults.length; i++) {
             const result = null//cacheResults[i]
             if(result) {
