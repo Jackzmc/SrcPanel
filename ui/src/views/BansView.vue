@@ -75,121 +75,117 @@
 </div>
 </template>
 
-<script>
+<script setup lang="ts">
+import { ref, watch, computed, onBeforeMount, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import Sugar from 'sugar'
 
 const DISCORD_SOURCE_REGEX = new RegExp(/([^\n]+#\d{4})\s\((\d+)\)/)
 const AUTO_REFRESH_INTERVAL = 1000 * 60 * 15
 
-export default {
-  props: ['userdata'],
-  data() {
-    return {
-      loading: true,
-      error: null,
-      ban_error: null,
-      bans: [],
-      edit: {
-        data: null,
-        banIndex: null,
-      },
-      shiftPressed: false,
-      showExpired: false,
-      showOnlyAppeals: false
-    }
-  },
-  computed: {
-    filteredBans() {
-      return this.bans.filter(ban => {
-        if(!this.showExpired && ban.expired) return false
-        if(this.showOnlyAppeals && ban.appealsCount == 0) return false
-        return true
+const emit = defineEmits([])
+const router = useRouter()
+const props = defineProps([
+  "userdata"
+])
+
+let loading = ref(true)
+let error = ref<string>()
+let ban_error = ref<string>()
+let bans = ref<any[]>([])
+let edit = ref<{data?: any, banIndex?: number}>({})
+let shiftPressed = ref(false)
+let showExpired = ref(false)
+let showOnlyAppeals = ref(false)
+
+
+const filteredBans = computed(() => {
+  return bans.value.filter(ban => {
+    if(!showExpired.value && ban.expired) return false
+    if(showOnlyAppeals.value && ban.appealsCount == 0) return false
+    return true
+  })
+})
+
+function onEdit(inEdit: any) {
+  // TODO: Figure out why it replaces wrong idnex
+  if(edit.value.banIndex)
+    bans.value[edit.value.banIndex] = inEdit
+  edit.value.data = null
+  edit.value.banIndex = 0
+  router.back()
+}
+function getBanFlags(ban: any) {
+  let str = ""
+  if(ban.flags & 1) str += `<span class='tag' data-tooltip='Player is IP banned'>IP</span>`
+  if(ban.flags & 2) str += `<span class='tag is-warning' data-tooltip='Ban is no longer in effect'>S</span>`
+  if(ban.appealsCount > 0) str += `<span class='tag is-success' data-tooltip="Has ban appeal(s)">A</span>`
+  if(ban.notesCount > 0) str += `<span class='tag is-dark' data-tooltip="Has note(s) attached">N</span>`
+  return str
+}
+function startEdit(ban: any, index: number) {
+  edit.value.banIndex = index
+  edit.value.data = ban
+  router.push(`/bans/edit/${ban.id}`)
+}
+function getRelDate(time: number) {
+  const date = new Date((time || "").toString().replace(/-/g, "/").replace(/[TZ]/g, " ")),
+    diff = (((new Date()).getTime() - date.getTime()) / 1000),
+    day_diff = Math.floor(diff / 86400);
+
+  if (isNaN(day_diff) || day_diff < 0 || day_diff >= 31) return;
+
+  return day_diff == 0 && (
+  diff < 60 && "just now" || diff < 120 && "1 minute ago" || diff < 3600 && Math.floor(diff / 60) + " minutes ago" || diff < 7200 && "1 hour ago" || diff < 86400 && Math.floor(diff / 3600) + " hours ago") || day_diff == 1
+&& "Yesterday" || day_diff < 7 && day_diff + " days ago" || day_diff < 31 && Math.ceil(day_diff / 7) + " weeks ago";
+}
+function formatDate(timestamp: number) {
+  const date = new Date(timestamp * 1000)
+  return `${date.toLocaleDateString()} at ${date.toLocaleTimeString()}`
+}
+function fetchBans() {
+  fetch('/api/bans', { credentials: 'include' })
+    .then(response => {
+      if(response.ok)
+        return response.json()
+      else
+        error.value = response.statusText
+    })
+    .then(result => {
+      if(result.error) {
+        return ban_error.value = result.message || result.error
+      }
+      bans.value = result.bans.map((ban: any) => {
+        const relDate = new Sugar.Date(ban.timestamp*1000).relative()
+        const discordBanMatch = ban.executor.id.match(DISCORD_SOURCE_REGEX)
+        if(discordBanMatch && discordBanMatch.length == 3) {
+          ban.executor.id = discordBanMatch[2]
+          ban.executor.name = discordBanMatch[1]
+          ban.executor.source = "discord"
+        }
+        if(ban.executor.id === "CONSOLE") ban.executor.id = '[Automatic]'
+        return {
+          ...ban,
+          relDate,
+        }
       })
-    }
-  },
-  methods: {
-    onEdit(edit) {
-      // TODO: Figure out why it replaces wrong idnex
-      if(edit)
-        this.$set(this.bans, this.edit.banIndex, edit)
-      this.edit.data = null
-      this.edit.banIndex = 0
-      this.$router.back()
-    },
-    getBanFlags(ban) {
-      let str = ""
-      if(ban.flags & 1) str += `<span class='tag' data-tooltip='Player is IP banned'>IP</span>`
-      if(ban.flags & 2) str += `<span class='tag is-warning' data-tooltip='Ban is no longer in effect'>S</span>`
-      if(ban.appealsCount > 0) str += `<span class='tag is-success' data-tooltip="Has ban appeal(s)">A</span>`
-      if(ban.notesCount > 0) str += `<span class='tag is-dark' data-tooltip="Has note(s) attached">N</span>`
-      return str
-    },
-    startEdit(ban, index) {
-      this.edit.banIndex = index
-      this.edit.data = ban
-      this.$router.push(`/bans/edit/${ban.id}`)
-    },
-    getRelDate(time) {
-      const date = new Date((time || "").toString().replace(/-/g, "/").replace(/[TZ]/g, " ")),
-        diff = (((new Date()).getTime() - date.getTime()) / 1000),
-        day_diff = Math.floor(diff / 86400);
-
-      if (isNaN(day_diff) || day_diff < 0 || day_diff >= 31) return;
-
-      return day_diff == 0 && (
-      diff < 60 && "just now" || diff < 120 && "1 minute ago" || diff < 3600 && Math.floor(diff / 60) + " minutes ago" || diff < 7200 && "1 hour ago" || diff < 86400 && Math.floor(diff / 3600) + " hours ago") || day_diff == 1 && "Yesterday" || day_diff < 7 && day_diff + " days ago" || day_diff < 31 && Math.ceil(day_diff / 7) + " weeks ago";
-    },
-    formatDate(timestamp) {
-      const date = new Date(timestamp * 1000)
-      return `${date.toLocaleDateString()} at ${date.toLocaleTimeString()}`
-    },
-    fetchBans() {
-      fetch('/api/bans', { credentials: 'include' })
-        .then(response => {
-          if(response.ok)
-            return response.json()
-          else
-            this.error = response.statusText
-        })
-        .then(result => {
-          if(result.error) {
-            return this.ban_error = result.message || result.error
-          }
-          this.bans = result.bans.map(ban => {
-            const relDate = new Sugar.Date(ban.timestamp*1000).relative()
-            const discordBanMatch = ban.executor.id.match(DISCORD_SOURCE_REGEX)
-            if(discordBanMatch && discordBanMatch.length == 3) {
-              ban.executor.id = discordBanMatch[2]
-              ban.executor.name = discordBanMatch[1]
-              ban.executor.source = "discord"
-            }
-            if(ban.executor.id === "CONSOLE") ban.executor.id = '[Automatic]'
-            return {
-              ...ban,
-              relDate,
-            }
-          })
-        })
-        .catch(err => {
-            console.error('Could not fetch bans, network error.', err)
-        })
-        .finally(() => this.loading = false)
-    }
-  },
-  created() {
-    document.onkeydown = (e) => {
-      this.shiftPressed = !!e.shiftKey
-    }
-    document.onkeyup = (e) => {
-      this.shiftPressed = !!e.shiftKey
-    }
-
-    this.fetchBans()
-    setInterval(() => {
-      this.fetchBans()
-    }, AUTO_REFRESH_INTERVAL)
-
-  }
+    })
+    .catch(err => {
+        console.error('Could not fetch bans, network error.', err)
+    })
+    .finally(() => loading.value = false)
 }
 
+onMounted(() => {
+  document.onkeydown = (e) => {
+    shiftPressed.value = !!e.shiftKey
+  }
+  document.onkeyup = (e) => {
+    shiftPressed.value = !!e.shiftKey
+  }
+  fetchBans()
+  setInterval(() => {
+    fetchBans()
+  }, AUTO_REFRESH_INTERVAL)
+})
 </script>

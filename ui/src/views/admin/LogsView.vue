@@ -212,7 +212,7 @@ import Debounce from '@/js/debounce'
 import LogClientTarget from '@/components/LogClientTarget.vue'
 import Modal from '@/components/Modal.vue'
 import { Session } from '../../../../common-types/User';
-import { ref, watch, computed, onBeforeMount, onMounted, defineEmits, Ref } from 'vue'
+import { ref, watch, computed, onBeforeMount, onMounted, Ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 const emit = defineEmits([])

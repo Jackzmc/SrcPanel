@@ -57,115 +57,112 @@
 </div>
 </template>
 
-<script>
+<script setup lang="ts">
+import { ref, watch, computed, onBeforeMount, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 
-export default {
-  data() {
-    return {
-      vpks: [],
-      ready: false,
-      error: false,
-      itemid: null,
-      search: null,
-      prefetch: null
-    }
-  },
-  computed: {
-    isDownloadable() {
-      return this.itemid && this.prefetch.result && this.prefetch.lastValid === this.itemid && !this.prefetch.error
-    },
-    filteredVPKs() {
-      if (!this.search) {
-        return this.vpks
+const emit = defineEmits([])
+const route = useRoute()
+const router = useRouter()
+
+let vpks = ref<any[]>([])
+let ready = ref(false)
+let itemid = ref<any>()
+let search = ref<any>()
+let prefetch = ref<any>()
+
+
+const isDownloadable = computed(() => {
+  return itemid.value && prefetch.value.result && prefetch.value.lastValid === itemid.value && !prefetch.value.error
+})
+const filteredVPKs = computed(() => {
+  if (!search.value) {
+    return vpks.value
+  }
+  const query = search.value.toLowerCase()
+  return vpks.value.filter(vpk => {
+    return vpk.filename.toLowerCase().includes(query) || (vpk.workshop && vpk.workshop.title.toLowerCase().includes(query))
+  })
+})
+const parsedDescription = computed(() => {
+  if(!prefetch.value) return
+  return prefetch.value.description
+    .replace(/\[b\]/gi, '<b>')
+    .replace(/\[u\]/gi, '<u>')
+    .replace(/\[i\]/gi, '<i>')
+    .replace(/\[hr\]/gi, '<hr>')
+    .replace(/\[img\](.*)\[\/img\]/gi, '<img src="$1" />')
+    .replace(/\[h(\d)\]/gi, '<h$1>')
+    .replace(/\[url=(.*)\]/gi, '<a href="$1">')
+    .replace(/\[list]/gi, '<ul>')
+    .replace(/\[\/list]/gi, '</ul>')
+    .replace(/\[\*\](.*)/gi, '<li>$1</li>')
+    .replace(/\[\/([a-zA-Z0-9]+)\]/gi, '</$1>')
+})
+
+function submitKey() {
+  fetchVPKS()
+}
+
+function preview(entry: any) {
+  router.push(`/admin/addons/${entry.filename}`)
+  prefetch.value = entry.workshop
+}
+async function fetchVPKS() {
+  const response = await fetch(`/api/admins/addons`)
+  if(response.ok) {
+    const json = await response.json()
+    vpks.value = json.addons.map((entry: any) => {
+      if(entry.workshop) {
+        if(entry.workshop.deleted) entry.workshop = null
+        else entry.workshop.url = `https://steamcommunity.com/sharedfiles/filedetails/?id=${entry.filename}`
       }
-      const query = this.search.toLowerCase()
-      return this.vpks.filter(vpk => {
-        return vpk.filename.toLowerCase().includes(query) || (vpk.workshop && vpk.workshop.title.toLowerCase().includes(query))
-      })
-    },
+      return entry
+    })
+    ready.value = true
+    return true
+  }
+  return false
+}
 
-    parsedDescription() {
-      if(!this.prefetch) return
-      return this.prefetch.description
-        .replace(/\[b\]/gi, '<b>')
-        .replace(/\[u\]/gi, '<u>')
-        .replace(/\[i\]/gi, '<i>')
-        .replace(/\[hr\]/gi, '<hr>')
-        .replace(/\[img\](.*)\[\/img\]/gi, '<img src="$1" />')
-        .replace(/\[h(\d)\]/gi, '<h$1>')
-        .replace(/\[url=(.*)\]/gi, '<a href="$1">')
-        .replace(/\[list]/gi, '<ul>')
-        .replace(/\[\/list]/gi, '</ul>')
-        .replace(/\[\*\](.*)/gi, '<li>$1</li>')
-        .replace(/\[\/([a-zA-Z0-9]+)\]/gi, '</$1>')
-    }
-  },
-  methods: {
-    submitKey() {
-      this.fetchVPKS()
-    },
-    preview(entry) {
-      this.$router.push(`/admin/addons/${entry.filename}`)
-      this.prefetch = entry.workshop
-    },
+function closePreview() {
+  prefetch.value = undefined
+  router.push('/admin/addons')
+}
+function formatSize(bytes: number, si = false, dp = 1) {
+  const thresh = si ? 1000 : 1024;
 
-    async fetchVPKS() {
-      const response = await fetch(`/api/admins/addons`)
-      if(response.ok) {
-        const json = await response.json()
-        this.vpks = json.addons.map(entry => {
-          if(entry.workshop) {
-            if(entry.workshop.deleted) entry.workshop = null
-            else entry.workshop.url = `https://steamcommunity.com/sharedfiles/filedetails/?id=${entry.filename}`
-          }
-          return entry
-        })
-        this.ready = true
-        return true
-      }
-      return false
-    },
-    closePreview() {
-      this.prefetch = null
-      this.$router.push('/admin/addons')
-    },
-    formatSize(bytes, si=false, dp=1) {
-      const thresh = si ? 1000 : 1024;
+  if (Math.abs(bytes) < thresh) {
+    return bytes + ' B';
+  }
 
-      if (Math.abs(bytes) < thresh) {
-        return bytes + ' B';
-      }
+  const units = si
+    ? ['kB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
+    : ['KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB', 'ZiB', 'YiB'];
+  let u = -1;
+  const r = 10**dp;
 
-      const units = si
-        ? ['kB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
-        : ['KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB', 'ZiB', 'YiB'];
-      let u = -1;
-      const r = 10**dp;
+  do {
+    bytes /= thresh;
+    ++u;
+  } while (Math.round(Math.abs(bytes) * r) / r >= thresh && u < units.length - 1);
 
-      do {
-        bytes /= thresh;
-        ++u;
-      } while (Math.round(Math.abs(bytes) * r) / r >= thresh && u < units.length - 1);
+  return bytes.toFixed(dp) + ' ' + units[u];
+}
+function formatTime(time: number) {
+  const date = new Date(time*1000)
+  return `${date.toLocaleDateString()} at ${date.toLocaleTimeString()}`
+}
 
-
-      return bytes.toFixed(dp) + ' ' + units[u];
-    },
-    formatTime(time) {
-      const date = new Date(time*1000)
-      return `${date.toLocaleDateString()} at ${date.toLocaleTimeString()}`
-    }
-  },
-  async created() {
-    await this.fetchVPKS()
-    if(this.$route.params.id) {
-      for(const vpk of this.vpks) {
-        if(vpk.filename === this.$route.params.id) {
-          this.prefetch = vpk.workshop
-          break
-        }
+onBeforeMount(async() => {
+  await fetchVPKS()
+  if(route.params.id) {
+    for(const vpk of vpks.value) {
+      if(vpk.filename === route.params.id) {
+        prefetch.value = vpk.workshop
+        break
       }
     }
   }
-}
-
+})
 </script>
