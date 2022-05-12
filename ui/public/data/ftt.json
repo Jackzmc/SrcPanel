@@ -52,7 +52,7 @@
             "name": "Amazon Special Delivery",
             "description": "Choose multiple combinations of specials to spawn at once.",
             "modes": ["instant"],
-            "flags": [
+            "prompts": [
                 { "flags": ["(All specials)"], "multi": true },
                 { "flags": ["Spawn On Face", "Spawn Near"], "multi": false }
             ]
@@ -74,7 +74,7 @@
         },
         {
             "name": "Spicy Gas",
-            "description": "Gascans player picks up just ignite. Magic.",
+            "description": "Gascans, propane/oxygen tanks players pick up just ignite. Crazy.",
             "modes": ["constant"],
             "prompts": [
                 { "flags": ["Always", "Sometimes", "Rare"], "multiple": false }
@@ -214,7 +214,7 @@
             "modes": ["instant"]
         },
         {
-            "name": "Stagger",
+            "name": "Slippery Shoes",
             "description": "Periodically stumbles around",
             "modes": ["constant"],
             "prompts": [
