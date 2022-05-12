@@ -26,13 +26,13 @@ interface APIKey {
 
 
 export default class AuthManager {
-    private connection: Connection
+    private connection: Pool
     private admins: Record<string, AdminData> = {}
     private groups: Record<number, AdminGroup> = {}
     private apikeysCache: QuickLRU<string, APIKey>
     private actLog: ActivityLog
 
-    constructor(connection: Connection, pool: Pool) {
+    constructor(connection: Pool, pool: Pool) {
         this.apikeysCache = new QuickLRU<string, APIKey>({ maxSize: 100 });
         this.connection = connection
         this.actLog = new ActivityLog(pool)

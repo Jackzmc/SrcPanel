@@ -12,7 +12,7 @@ async function db(fastify: FastifyInstance, opts) {
         password: process.env.MYSQL_PASSWORD,
         namedPlaceholders: true
     })
-    const admindb = await mysql.createConnection({
+    const admindb = await mysql.createPool({
         host:     process.env.MYSQL_HOST   || 'localhost', 
         database: process.env.MYSQL_ADMINS_DB,
         user:     process.env.MYSQL_USER, 
