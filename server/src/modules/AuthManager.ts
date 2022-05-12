@@ -244,10 +244,8 @@ export default class AuthManager {
             }
 
             if(row.immunity > highestImmunity) highestImmunity = row.immunity
-            if(flags === '') { // Only run on first row
-                for(const flag of row.flags) {
-                    if(!flags.includes(flag)) flags += flag
-                }
+            for(const flag of row.flags) {
+                if(!flags.includes(flag)) flags += flag
             }
             
             // Add the admin to the admin list
@@ -293,7 +291,10 @@ export default class AuthManager {
                     if(!flags.includes(flag)) flags += flag
                 }
             }
+
+            admins[key].permissions.flags = flags
         }
+
 
         this.admins = admins
         this.groups = groups
