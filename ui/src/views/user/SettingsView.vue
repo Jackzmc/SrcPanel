@@ -128,7 +128,7 @@ async function updateServer() {
       updateStatus.value.upToDate = true
     }
   } else {
-    updateStatus.value.error = json.error
+    updateStatus.value.error = json.message
   }
   setTimeout(() => {
     updateStatus.value = {

@@ -2,7 +2,7 @@ import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
 import util from 'util'
 import { exec, PromiseWithChild } from 'child_process';
 import { WebPermission } from '../../../../common-types/User.js';
-import { unlink } from 'fs/promises';
+import { rm, unlink } from 'fs/promises';
 import path from 'path'
 const execPromise = util.promisify(exec);
 
@@ -64,7 +64,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                     if(process.env.NODE_ENV === "production") {
                         timeRmNodeModules = await doState(
                             "UNLINK_NODE_MODULES", 
-                            unlink(path.join(process.cwd(), 'node_modules'))
+                            rm(path.join(process.cwd(), 'node_modules'), { recursive: true, force: true})
                         )
                     }
                     const timeTsc = await doState("TSC", execPromise('tsc'))
