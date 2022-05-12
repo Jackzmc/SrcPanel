@@ -10,20 +10,23 @@
 </div>
 </template>
 
-<script>
-export default {
-  props: ['userdata'],
-  data() {
-    return {
-      type: 0
-    }
-  },
-  created() {
-    const params = new URLSearchParams(window.location.search);
-    if(params.has('type')) this.type = Number(params.get('type'))
-    if(this.userdata && this.type == 0) {
-      this.$router.push(params.get('return'))
-    }
+<script setup lang="ts">
+import { ref, onBeforeMount } from 'vue'
+import { useRouter } from 'vue-router';
+import { Session } from '../../../common-types/User.js';
+
+const router = useRouter()
+const props = defineProps<{
+  userdata: Session
+}>()
+
+let type = ref(0)
+
+onBeforeMount(() => {
+  const params = new URLSearchParams(window.location.search);
+  if(params.has('type')) type.value = Number(params.get('type'))
+  if(props.userdata && type.value == 0) {
+    router.push(params.get('return') || '/')
   }
-}
+})
 </script>

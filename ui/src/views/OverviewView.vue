@@ -38,39 +38,27 @@
 </div>
 </template>
 
-<script>
+<script setup lang="ts">
+import { ref } from 'vue'
 import Servers from '../components/Servers.vue'
 
-export default {
-  components: {
-    Servers
-  },
-  data() {
-    return {
-      countdown: 0,
-      interval: null
-    }
-  },
-  methods: {
-    onServerRefresh(mode) {
-      if(mode == 'start') {
-        this.countdown = "Refreshing..."
-      }else{
-        this.countdown = 60 * 1;
-        this.startCountdown()
-      }
-    },
-    startCountdown() {
-      clearInterval(this.interval)
-      this.interval = setInterval(() => {
-        if(--this.countdown == 0) {
-          clearInterval(this.interval)
-        }
-      }, 1000)
-    }
-  },
-  created() {
+let countdown = ref<string|number>(0)
+let interval = ref<number>()
 
+function onServerRefresh(mode: string) {
+  if(mode == 'start') {
+    countdown.value = "Refreshing..."
+  }else{
+    countdown.value = 60 * 1;
+    startCountdown()
   }
+}
+function startCountdown() {
+  clearInterval(interval.value)
+  interval.value = setInterval(() => {
+    if(--(countdown.value as number) == 0) {
+      clearInterval(interval.value)
+    }
+  }, 1000)
 }
 </script>

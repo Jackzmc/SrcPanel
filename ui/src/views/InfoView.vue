@@ -1,3 +1,4 @@
+import { Session } from '../../../common-types/User';
 <template>
   <div class="container is-fullwidth is-fluid">
     <div class="columns">
@@ -52,41 +53,41 @@
   </div>
 </template>
 
-<script>
-export default {
-  props: ['userdata'],
-  data() {
-    return {
-      notes: [],
-      admins: []
-    }
-  },
-  created() {
-    this.fetchNotes()
-  },
-  mounted() {
-    if(this.userdata) {
-      this.fetchAdmins()
-    }
-  },
-  methods: {
-    fetchNotes() {
-      fetch('/api/notes')
-        .then(response => response.json())
-        .then(result => {
-          this.notes = result.notes
-        })
-    },
-    fetchAdmins() {
-      fetch('/api/admins')
-        .then(response => response.json())
-        .then(json => {
-          this.admins = json.admins
-        })
-    },
-    getStatURL(steamid) {
-      return `https://stats.jackz.me/user/${steamid}`
-    }
-  }
+<script setup lang="ts">
+import { ref, onBeforeMount, onMounted } from 'vue'
+import { Session } from '../../../common-types/User.js';
+
+const props = defineProps<{
+  userdata: Session
+}>()
+
+let notes = ref<any[]>([])
+let admins = ref<any[]>([])
+
+onBeforeMount(() => {
+  fetchNotes()
+})
+
+onMounted(() => {
+  if(props.userdata) fetchAdmins()
+})
+
+function fetchNotes() {
+  fetch('/api/notes')
+    .then(response => response.json())
+    .then(result => {
+      notes.value = result.notes
+    })
+}
+function fetchAdmins() {
+  fetch('/api/admins')
+    .then(response => response.json())
+    .then(json => {
+      admins.value = json.admins
+    })
+}
+
+function getStatURL(steamid: string) {
+  return `https://stats.jackz.me/user/${steamid}`
 }
 </script>
