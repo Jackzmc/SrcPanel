@@ -293,6 +293,7 @@ export default class AuthManager {
             }
 
             admins[key].permissions.flags = flags
+            admins[key].permissions.immunityLevel = highestImmunity
         }
 
 
