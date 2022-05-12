@@ -1,12 +1,12 @@
 <template>
 <div class="container">
   <div :class="['modal', {'is-active': modal.content}]">
-    <div class="modal-background" @click="modal.content = null"></div>
+    <div class="modal-background" @click="modal.content = undefined"></div>
     <div class="modal-content">
       <div class="box">
         <h3 class="title is-3">
           Flags for {{modal.troll}}
-          <button class="delete is-inline is-pulled-right" aria-label="close" @click="modal.content = null"></button>
+          <button class="delete is-inline is-pulled-right" aria-label="close" @click="modal.content = undefined"></button>
         </h3>
         <hr>
         <div class="content" v-html="modal.content" />
@@ -29,10 +29,10 @@
           The number index of the troll, for current version will no longer work. But none of y'all use it anyway, so why do I even bother putting this here. I don't know, but hey incase I have a case of brain damage I might see this and remember this.
         </div>
       </div>
-      <div v-for="(trolls, category) in trolls" :key="category">
+      <div v-for="(list, category) in trolls" :key="category">
         <h4 class="title is-4">{{category}}</h4>
         <ul>
-            <li v-for="(troll, i) in trolls" :key="troll.name" >
+            <li v-for="(troll, i) in list" :key="troll.name" >
                 <p>
                   <component :is="troll.prompts ? 'a' : 'span'"
                     :class="['has-text-link','has-tooltip-right',{'has-text-weight-bold': troll.prompts}]"
@@ -84,66 +84,63 @@
 </div>
 </template>
 
-<script>
-export default {
-  data() {
-    return {
-      trolls: {},
-      combos: {},
-      modal: {
-        content: null,
-        troll: null
-      }
+<script setup lang="ts">
+import { ref, watch, computed, onBeforeMount, onMounted, inject } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+
+const LAST_UPDATED = inject('LAST_UPDATED')
+
+let trolls = ref<Record<string,any>>({})
+let combos = ref<Record<string,any>>({})
+let modal = ref<{content?: string, troll?: any}>({})
+
+
+function getTooltip(troll: any) {
+  const modes = troll.modes.map((v: any) => `runs ${v}ly`).join("\n-or-\n")
+
+  const flags = troll.prompts ? `\n\nClick to view flags` : ''
+  return `${modes}${flags}`
+}
+
+function showFlags(troll: any) {
+  if(!troll.prompts) return
+  modal.value.troll = troll.name
+  modal.value.content = troll.prompts.map((prompt: any, i: number) => {
+    let text = `<div class='columns'><div class='column'><h5>Prompt ${i+1}</b> `
+    if(prompt.multiple)
+      text += `(any combination)`
+    else
+      text += `(single choice)`
+    text += `</h5>`
+
+    text += `<ul>
+    ${prompt.flags.map((flag: string) => `<li>${flag}</li>`).join("")}
+    </ul></div>`
+    if(prompt.conditions) {
+      text += `<div class='column'><p class='subtitle is-5'>Requires Flags: </p>`
+      text += `<ul>
+      ${prompt.conditions.map((flag: string) => `<li>${flag}</li>`).join("")}
+      </ul></div>`
     }
-  },
-  computed: {
+    text += `</div>`
+    return text
+  }).join("")
 
-  },
-  methods: {
-    getTooltip(troll) {
-      const modes = troll.modes.map(v => `runs ${v}ly`).join("\n-or-\n")
+}
 
-      const flags = troll.prompts ? `\n\nClick to view flags` : ''
-      return `${modes}${flags}`
-    },
-    showFlags(troll) {
-      if(!troll.prompts) return
-      this.modal.troll = troll.name
-      this.modal.content = troll.prompts.map((prompt, i) => {
-        let text = `<div class='columns'><div class='column'><h5>Prompt ${i+1}</b> `
-        if(prompt.multiple)
-          text += `(any combination)`
-        else
-          text += `(single choice)`
-        text += `</h5>`
-
-        text += `<ul>
-        ${prompt.flags.map(flag => `<li>${flag}</li>`).join("")}
-        </ul></div>`
-        if(prompt.conditions) {
-          text += `<div class='column'><p class='subtitle is-5'>Requires Flags: </p>`
-          text += `<ul>
-          ${prompt.conditions.map(flag => `<li>${flag}</li>`).join("")}
-          </ul></div>`
-        }
-        text += `</div>`
-        return text
-      }).join("")
-    }
-  },
-  created() {
-    fetch('../data/ftt.json')
+onBeforeMount(() => {
+    fetch(`../data/ftt.json?t=${LAST_UPDATED}`)
     .then(response => response.json())
-    .then(trolls => {
-      this.trolls = trolls
-      this.combos = trolls._Combos_
-      delete this.trolls._Combos_
+    .then(json => {
+      trolls.value = json
+      combos.value = json._Combos_
+      delete trolls.value._Combos_
     })
     .catch(err => {
         console.error('Could not fetch trolls, network error.', err)
     })
-  }
-}
+
+})
 </script>
 
 <style scoped>

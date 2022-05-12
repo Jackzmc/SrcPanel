@@ -6,13 +6,13 @@
               <li v-for="cvar in cvars" :key="cvar.cvar">
                 <b class="is-size-5">
                   <component
-                      @click='showExamples(cvar)'
-                      :is="cvar.examples && cvar.examples.length > 0 ? 'a' : 'span'"
-                      class="is-size-5 has-tooltip-success"
-                      :data-tooltip="cvar.examples && cvar.examples.length > 0 ? 'Click to view examples' : null"
-                    >
-                      {{cvar.name}}
-                    </component>
+                    @click='showExamples(cvar)'
+                    :is="cvar.examples && cvar.examples.length > 0 ? 'a' : 'span'"
+                    class="is-size-5 has-tooltip-success"
+                    :data-tooltip="cvar.examples && cvar.examples.length > 0 ? 'Click to view examples' : null"
+                  >
+                    {{cvar.name}}
+                  </component>&nbsp;
                   <span v-html="formatParameters(cvar)" />
                 </b>
                  - {{cvar.description}}
@@ -51,47 +51,36 @@
 </div>
 </template>
 
-<script>
+<script setup lang="ts">
+import { ref, computed, onMounted, inject } from 'vue'
 import { formatParameters } from '@/js/util'
 
-export default {
-  data() {
-    return {
-     cvars: []
-    }
-  },
+const LAST_UPDATED = inject('LAST_UPDATED')
 
-  computed: {
-    prefix() {
-        if(this.commandViewmode === 'console') return "sm_"
-        else if(this.commandViewmode === 'public') return "!"
-        else if(this.commandViewmode === 'private') return "/"
-        return "<INVALID_MODE>"
-    }
-  },
-  methods: {
-    formatParameters,
-    getParameters(cvar) {
-      return cvar.split(' ').slice(1).join("")
-    },
-    showExamples(cmd) {
-     this.selected = cmd
-    }
-  },
-  created() {
-    fetch('../data/cvars.json')
-    .then(response => response.json())
-    .then(cvars => {
-      for(let cvar of cvars) {
-        const split = cvar.cvar.trim().split(' ')
-        cvar.name = split.shift()
-        cvar.parameters = split.join(" ")
-        this.cvars.push(cvar)
-      }
-    })
-    .catch(err => {
-        console.error('Could not fetch commands, network error.', err)
-    })
-  }
+let cvars = ref<any[]>([])
+let selected = ref<any>()
+
+function getParameters(cvar: string) {
+  return cvar.split(' ').slice(1).join("")
 }
+
+function showExamples(cvar: any) {
+  selected.value = cvar
+}
+
+onMounted(() => {
+  fetch(`../data/cvars.json?t=${LAST_UPDATED}`)
+  .then(response => response.json())
+  .then(json => {
+    for(let cvar of json) {
+      const split = cvar.cvar.trim().split(' ')
+      cvar.name = split.shift()
+      cvar.parameters = split.join(" ")
+      cvars.value.push(cvar)
+    }
+  })
+  .catch(err => {
+      console.error('Could not fetch commands, network error.', err)
+  })
+})
 </script>

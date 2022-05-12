@@ -23,7 +23,7 @@
                                 :data-tooltip="cmd.examples && cmd.examples.length > 0 ? 'Click to view examples' : null"
                               >
                                 {{prefix}}{{cmd.name}}
-                              </component>
+                              </component>&nbsp;
                               <span v-html="formatParameters(cmd)" class="is-size-5"></span>
                             </b>
                              - {{cmd.description}}
@@ -90,61 +90,58 @@
 </div>
 </template>
 
-<script>
+<script setup lang="ts">
 import { formatParameters } from '@/js/util'
-import ExamplesModal from '@/components/modals/ExamplesModal'
+import ExamplesModal from '@/components/modals/ExamplesModal.vue'
+import { ref, watch, computed, onBeforeMount, onMounted, inject } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 
-export default {
-  components: {
-    ExamplesModal
-  },
-  data() {
-      return {
-          commandViewmode: 'private',
-          groups: {},
-          loading: true,
-          selected: null
-      }
-  },
-  computed: {
-    prefix() {
-        if(this.commandViewmode === 'console') return "sm_"
-        else if(this.commandViewmode === 'public') return "!"
-        else if(this.commandViewmode === 'private') return "/"
-        return "<INVALID_MODE>"
-    }
-  },
-  methods: {
-    formatParameters,
-    showExamples(cmd) {
-     this.selected = cmd
-    }
-  },
-  created() {
-    fetch('../data/commands.json')
-    .then(response => response.json())
-    .then(groups => {
-      for(const group in groups) {
-        const commands = []
-        for(let command of groups[group].commands) {
-          const split = command.command.trim().split(' ')
-          command.name = split.shift()
-          command.parameters = split.join(" ")
-          delete command.command
-          commands.push(command)
-        }
-        this.$set(this.groups, group, {
-            name: groups[group].name,
-            list: commands
-        })
-      }
-    })
-    .catch(err => {
-        console.error('Could not fetch commands, network error.', err)
-    })
-    .finally(() => this.loading = false)
-  }
+const LAST_UPDATED = inject('LAST_UPDATED')
+
+let commandViewmode = ref('private')
+let groups = ref<Record<string, any>>({})
+let loading = ref(true)
+let selected = ref<any>()
+
+const prefix = computed(() => {
+  if(commandViewmode.value === 'console') return "sm_"
+  else if(commandViewmode.value === 'public') return "!"
+  else if(commandViewmode.value === 'private') return "/"
+  return "<INVALID_MODE>"
+})
+
+function showExamples(cmd: any) {
+  selected.value = cmd
 }
+
+onMounted(async () => {
+  loading.value = true
+  try {
+    const response = await fetch(`../data/commands.json?t=${LAST_UPDATED}`)
+    const json = await response.json()
+
+
+    for(const group in json) {
+      const commands = []
+      for(let command of json[group].commands) {
+        const split = command.command.trim().split(' ')
+        command.name = split.shift()
+        command.parameters = split.join(" ")
+        delete command.command
+        commands.push(command)
+      }
+      groups.value[group] = {
+        name: json[group].name,
+        list: commands
+      }
+    }
+  } catch(err) {
+    console.error('Could not fetch commands, network error.', err)
+  } finally {
+    loading.value = false
+  }
+})
+
 </script>
 
 <style scoped>
