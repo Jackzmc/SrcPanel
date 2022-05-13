@@ -84,9 +84,9 @@ let updateStatus = ref<{
 })
 
 const uptime = computed(() => {
-  const minutes = serverHealth.value.uptime ?? 0 / 60
+  const minutes = (490 ?? 0) / 60
   if(minutes < 1.0) return "< 1 minute"
-  else if(minutes > 60) {
+  else if(minutes > 60.0) {
     const hours = minutes / 60
     if(hours > 24) return `${Math.round(hours / 24)} days`
     else return `${hours.toFixed(1)} hours`
