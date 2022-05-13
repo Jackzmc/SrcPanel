@@ -57,7 +57,7 @@
           </td>
           <td>
             <span v-if="ban.expired" class="has-text-danger">Expired</span>
-            <span v-else>{{getRelDate(ban.expires) || 'Never'}}</span>
+            <span v-else>{{formatDaysAgo(ban.expires) || 'Never'}}</span>
           </td>
           <td>{{ban.joinAttempts}}</td>
           <td :data-tooltip="formatDate(ban.timestamp)">{{ban.relDate}}</td>
@@ -128,16 +128,12 @@ function startEdit(ban: any, index: number) {
   edit.value.data = ban
   router.push(`/bans/edit/${ban.id}`)
 }
-function getRelDate(time: number) {
-  const date = new Date((time || "").toString().replace(/-/g, "/").replace(/[TZ]/g, " ")),
-    diff = (((new Date()).getTime() - date.getTime()) / 1000),
-    day_diff = Math.floor(diff / 86400);
-
-  if (isNaN(day_diff) || day_diff < 0 || day_diff >= 31) return;
-
-  return day_diff == 0 && (
-  diff < 60 && "just now" || diff < 120 && "1 minute ago" || diff < 3600 && Math.floor(diff / 60) + " minutes ago" || diff < 7200 && "1 hour ago" || diff < 86400 && Math.floor(diff / 3600) + " hours ago") || day_diff == 1
-&& "Yesterday" || day_diff < 7 && day_diff + " days ago" || day_diff < 31 && Math.ceil(day_diff / 7) + " weeks ago";
+function formatDaysAgo(value?: number, locale?: string) {
+  if(!value) return
+  const date = new Date(value*1000);
+  const deltaDays = (date.getTime() - Date.now()) / (1000 * 3600 * 24);
+  const formatter = new Intl.RelativeTimeFormat(locale);
+  return formatter.format(Math.round(deltaDays), 'days');
 }
 function formatDate(timestamp: number) {
   const date = new Date(timestamp * 1000)

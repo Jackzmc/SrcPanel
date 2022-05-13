@@ -236,7 +236,7 @@
 
       </section>
       <footer class="modal-card-foot" v-if="tab == 0">
-        <button :disabled="!changed" :class="['button','is-success',{'is-loading': loading, 'disabled': !changed}]" @click="save">Save changes</button>
+        <button :disabled="!hasChanged" :class="['button','is-success',{'is-loading': loading}]" @click="save">Save changes</button>
         <button :class="['button',{'is-loading': loading}]" @click="cancel">Cancel</button>
         <p class="has-text-danger" v-if="error">{{error}}</p>
       </footer>
@@ -278,6 +278,14 @@ let executorEdit = ref<{active: boolean, edit: any}>({
   edit: null
 })
 let info = ref<any>(null)
+
+const hasChanged = computed(() => {
+  return edited.value && ban.value.reason !== edited.value.reason
+    || ban.value.publicReason !== edited.value.publicReason
+    || ban.value.executor.id !== executorEdit.value.edit.id
+    || flags.value.original.length !== flags.value.edited.length
+    || edited.value.expires !== "keep"
+})
 
 watch(edited, (val) => {
   if(changed.value || !val) return
@@ -483,18 +491,18 @@ function getRelDate(time: number) {
 }
 
 function getExpires(edited: any, ban: any) {
-  const baseDate = new Date().valueOf()
+  const baseDate = Date.now() / 1000
 
   if(edited.expires === "keep") return null
   else if(edited.expires === "never") return "never"
   else if(edited.expires === "1hour") {
-    return (baseDate + 3.6e+6) / 1000
+    return baseDate + 3600
   }else if(edited.expires === "1day") {
-    return (baseDate + 8.64e+7) / 1000
+    return baseDate + 86400
   }else if(edited.expires === "1week") {
-    return (baseDate + 6.048e+8) / 1000
+    return baseDate + 604800
   } else if(edited.expires === "1month") {
-    return (baseDate + 2629800000) / 1000
+    return baseDate + 2.628e+6
   } else {
     alert('Could not save unknown value: ' + edited.expires)
     return null
