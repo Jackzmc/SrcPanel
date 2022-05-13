@@ -53,10 +53,10 @@ const emit = defineEmits(['select', 'manual'])
 const props = defineProps<{
   users: any[],
   userdata: any,
-  hasManual: boolean
+  hasManual?: boolean
 }>()
-let selectedId = ref(null)
-let manualInput = ref(null)
+let selectedId = ref<any>()
+let manualInput = ref<any>()
 let isAddAdminDisabled = ref(false)
 
 watch(selectedId, (value) => {

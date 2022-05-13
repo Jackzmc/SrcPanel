@@ -36,9 +36,6 @@
       <UserSelection has-manual :userdata="userdata" :users="users" @select="onUserSelected" @manual="onManualSelected" />
       </Tab>
       <Tab name="Big boi table" id="admins" v-if="privUser.hasWebPerm(WebPermission.ManageAdmins)" @selected="fetchAdmins">
-        <p>Coming soon, view all users with filters, search, and other spooky shit</p>
-        <p>also if you actually read this, i'm surprised, you logged in and viewed this page, and this specific tab... you deserve a cookie</p>
-        <p>also yeah the buttons dont work. not my fault</p>
         <table class="table">
           <thead>
             <tr>
@@ -50,7 +47,9 @@
           </thead>
           <tbody>
             <tr v-for="admin in admins" :key="admin.id">
-              <td><a class="button is-small" @click='manualInput = admin.steamid'>view</a></td>
+              <td>
+                <input v-if="admin.steamid !== userdata.user.steamid" type="radio" v-model="selectedId" :value="admin.steamid">
+              </td>
               <td>{{ admin.id }}</td>
               <td>{{ admin.steamid }}</td>
               <td>{{ admin.name }}</td>
@@ -60,11 +59,18 @@
       </Tab>
     </Tabs>
     <br>
-    <div class="buttons" v-if="selectedUser">
-      <a class="button is-danger" @click="addBan" v-if="!addBanDisableReason">Ban</a>
-      <a class="button is-warning" @click="addAdmin" v-if="hasCreateAdminPerms&&!addAdminDisableReason"  :data-tooltip="addAdminDisableReason">{{adminButton}}</a>
-    </div>
   </div>
+  <br><br>
+  <nav class="navbar is-fixed-bottom is-dark"  v-if="selectedUser">
+    <div class="navbar-menu" style="margin-left: 5em">
+      <div class="navbar-item" v-if="!addBanDisableReason">
+        <a class="button is-danger" @click="addBan" >Ban</a>
+      </div>
+      <div class="navbar-item" v-if="hasCreateAdminPerms&&!addAdminDisableReason">
+        <a class="button is-warning" @click="addAdmin"   :data-tooltip="addAdminDisableReason">{{adminButton}}</a>
+      </div>
+    </div>
+  </nav>
 </div>
 </template>
 
@@ -74,6 +80,7 @@ import { User, PrivilegedUser, PlayerData } from '@/js/User'
 import { useRouter, useRoute } from 'vue-router'
 import { Session, WebPermission, ReadableAdminData } from '../../../../common-types/User';
 import UserSelection from '@/components/UserSelection.vue'
+import PlayerManager from '@/components/PlayerManager.vue'
 // @ts-ignore
 import {Tabs, Tab} from 'vue3-tabs-component';
 // Keep track and open gui for each ban
@@ -117,8 +124,16 @@ const selectedUser = computed(() => {
     return recentPlayers.value.list.find(rp => rp.steamid == selectedId.value)
   else if(selectedTabId.value === "search")
     return users.value.find(user => user.steamid == selectedId.value)
-  else
-    return undefined
+  else if(selectedTabId.value === "admins") {
+    const admin = admins.value.find((user: ReadableAdminData) => user.steamid == selectedId.value)
+    if(admin) {
+      return {
+        ...admin,
+        isAdmin: true
+      }
+    }
+  }
+  return undefined
 })
 const hasCreateAdminPerms = computed(() => {
   return privUser.immunityLevel > 0 && privUser.hasWebPerm(WebPermission.ManageAdmins)
@@ -132,14 +147,14 @@ const addAdminDisableReason = computed(() => {
 })
 const adminButton = computed(() => {
   if(selectedUser.value) {
-    if(selectedUser.value?.isAdmin) return "Edit Admin"
+    if('isAdmin' in selectedUser.value && selectedUser.value?.isAdmin) return "Edit Admin"
     else return "Make Admin"
   }
   return "Add / Edit Admin"
 })
 const addBanDisableReason = computed(() => {
   if(!selectedId.value || (selectedId.value === '_custom' && !manualInput.value)) return 'No player selected'
-  if(selectedUser.value?.isAdmin) return 'Selected player is an admin'
+  if('isAdmin' in selectedUser.value! && selectedUser.value?.isAdmin) return 'Selected player is an admin'
   return null
 })
 function setTab(tab: any) {
@@ -167,7 +182,7 @@ async function searchUser() {
   const response = await fetch(`/api/users/search/${search.value.query}`)
   if(response.ok) {
     const json = await response.json()
-    users.value = json.users
+    users.value = json.users as ReadableAdminData[]
   }
 }
 async function fetchAdmins() {

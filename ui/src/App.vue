@@ -18,15 +18,25 @@
 
     <br>
     <router-view :userdata="userdata"></router-view>
+    <footer class="footer">
+      <div class="content has-text-centered">
+        L4D2 Admin Dashboard - Updated {{lastUpdated}}
+      </div>
+    </footer>
   </div>
 </template>
 
 <script setup lang="ts">
-import { onBeforeMount, ref } from 'vue'
+import { onBeforeMount, ref, inject, computed } from 'vue'
 import NavBar from '@/components/NavBar.vue'
 import { AdminPermissions, Session } from '../../common-types/User.js';
 import { useRoute, useRouter } from 'vue-router';
 import { SessionUser } from '../../common-types/User';
+
+const LAST_UPDATED = Number(inject('LAST_UPDATED'))
+const lastUpdated = computed(() => {
+  return new Date(LAST_UPDATED).toLocaleString()
+})
 
 const route = useRoute()
 const router = useRouter()

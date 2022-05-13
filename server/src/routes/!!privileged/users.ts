@@ -79,7 +79,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             (SELECT COUNT(*) FROM ${ADMINS_DB}.sm_admins WHERE ${ADMINS_DB}.sm_admins.identity = stats_users.steamid) as isAdmin,
             steamid, last_alias as name, country, last_join_date as lastJoinDate, created_date as firstJoinDate
             FROM stats_users
-            WHERE steamid = ?`, 
+            WHERE SUBSTRING(steamid,11) = SUBSTRING(?, 11)`, 
             [ req.params.steamid ]
         )
         let adminData = undefined
