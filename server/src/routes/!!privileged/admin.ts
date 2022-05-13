@@ -85,9 +85,9 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                     process.exit()
                 } catch(err) {
                     reply.code(500).send({
+                        ...response,
                         error: "UPDATE_ERROR",
                         message: err.message,
-                        stderr: err.stderr,
                         state: updateState
                     })
                     updateState = "NORMAL"
