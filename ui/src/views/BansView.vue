@@ -79,6 +79,7 @@
 import { ref, watch, computed, onBeforeMount, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import Sugar from 'sugar'
+import { ListAPIBan } from '../../../server/src/routes/!unprivileged/bans';
 
 const DISCORD_SOURCE_REGEX = new RegExp(/([^\n]+#\d{4})\s\((\d+)\)/)
 const AUTO_REFRESH_INTERVAL = 1000 * 60 * 15
@@ -89,11 +90,15 @@ const props = defineProps([
   "userdata"
 ])
 
+interface Ban extends ListAPIBan {
+  relDate?: string
+}
+
 let loading = ref(true)
 let error = ref<string>()
 let ban_error = ref<string>()
-let bans = ref<any[]>([])
-let edit = ref<{data?: any, banIndex?: number}>({})
+let bans = ref<Ban[]>([])
+let edit = ref<{data?: Ban, banIndex?: number}>({})
 let shiftPressed = ref(false)
 let showExpired = ref(false)
 let showOnlyAppeals = ref(false)
@@ -107,15 +112,15 @@ const filteredBans = computed(() => {
   })
 })
 
-function onEdit(inEdit: any) {
+function onEdit(inEdit: Ban) {
   // TODO: Figure out why it replaces wrong idnex
   if(edit.value.banIndex)
     bans.value[edit.value.banIndex] = inEdit
-  edit.value.data = null
+  edit.value.data = undefined
   edit.value.banIndex = 0
   router.back()
 }
-function getBanFlags(ban: any) {
+function getBanFlags(ban: Ban) {
   let str = ""
   if(ban.flags & 1) str += `<span class='tag' data-tooltip='Player is IP banned'>IP</span>`
   if(ban.flags & 2) str += `<span class='tag is-warning' data-tooltip='Ban is no longer in effect'>S</span>`
@@ -123,7 +128,7 @@ function getBanFlags(ban: any) {
   if(ban.notesCount > 0) str += `<span class='tag is-dark' data-tooltip="Has note(s) attached">N</span>`
   return str
 }
-function startEdit(ban: any, index: number) {
+function startEdit(ban: Ban, index: number) {
   edit.value.banIndex = index
   edit.value.data = ban
   router.push(`/bans/edit/${ban.id}`)
@@ -151,7 +156,7 @@ function fetchBans() {
       if(result.error) {
         return ban_error.value = result.message || result.error
       }
-      bans.value = result.bans.map((ban: any) => {
+      bans.value = result.bans.map((ban: Ban) => {
         const relDate = new Sugar.Date(ban.timestamp*1000).relative()
         const discordBanMatch = ban.executor.id.match(DISCORD_SOURCE_REGEX)
         if(discordBanMatch && discordBanMatch.length == 3) {

@@ -24,25 +24,38 @@ enum APIBanFlags {
     Suspended = 2
 }
 
-interface APIBan {
+export interface APIBanPlayer {
+    id: string,
+    name: string,
+    nameResolver?: "stats" | "steam-cache" | "steam" | "unknown",
+    source?: string
+}
+
+export interface FullAPIBanPlayer extends APIBanPlayer {
+    country: string
+}
+
+export interface BaseAPIBan {
     id: number,
-    client: {
-        id: string,
-        name: string,
-        nameResolver?: "stats" | "steam-cache" | "steam" | "unknown"
-    },
+    client: APIBanPlayer
     reason?: string,
     publicReason: string,
     flags: number,
     timestamp: number,
-    executor: {
-        id: string,
-        name: string,
-        nameResolver?: "stats" | "steam-cache" | "steam" | "unknown"
-    },
+    executor: APIBanPlayer
     expires: number,
     expired: boolean,
     joinAttempts: number
+}
+
+export interface FullAPIBan extends BaseAPIBan {
+    client: FullAPIBanPlayer
+    ip?: string
+}
+
+export interface ListAPIBan extends BaseAPIBan {
+    notesCount: number,
+    appealsCount: number
 }
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
@@ -98,7 +111,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             const fetchStart = Date.now()
 
             const [bans] = await db.execute<RowDataPacket[]>(
-                `SELECT times_tried, id, public_message, bans.steamid, bans.executor, bans.reason, expires, expired, timestamp, u1.last_alias, u1.country, u2.last_alias AS executor_name
+                `SELECT times_tried, id, public_message, bans.steamid, bans.executor, bans.reason, expires, expired, timestamp, u1.last_alias, u1.country, u2.last_alias AS executor_name, ip
                 FROM bans 
                 LEFT JOIN stats_users AS u1 ON bans.steamid = u1.steamid 
                 LEFT JOIN stats_users AS u2 ON bans.executor = u2.steamid 
@@ -108,7 +121,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
             const fetchTime = Date.now() - fetchStart
 
-            const apiBans = []
+            const apiBans: FullAPIBan[] = []
 
             const parseStart = Date.now()
 
@@ -158,6 +171,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                     expires: ban.expires,
                     expired: ban.expired,
                     joinAttempts: ban.times_tried,
+                    ip: ban.ip,
                 })
             }
 
@@ -180,7 +194,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
     })
 
-    fastify.get('/', async(req, reply): Promise<{ meta: Record<string, number>, bans: APIBan[] }> => {
+    fastify.get('/', async(req, reply): Promise<{ meta: Record<string, number>, bans: ListAPIBan[] }> => {
         const authorized = await fastify.authmngr.isAuthorized(req)
 
         let profilerStart = Date.now()

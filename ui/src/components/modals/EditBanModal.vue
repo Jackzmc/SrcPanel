@@ -32,7 +32,7 @@
           <div class="column">
             <div class="field">
               <label class="label">Country</label>
-              <p v-if="ban.country">{{ban.country}}</p>
+              <p v-if="ban.client.country">{{ban.client.country}}</p>
               <em v-else>unknown</em>
             </div>
           </div>
@@ -48,7 +48,7 @@
           <div class="column is-8">
             <div class="field">
               <label class="label">Banned By</label>
-              <input v-if="executorEdit.active" v-model="executorEdit.edit.id" class="input" type="text" @blur='onExEditBlur' />
+              <input v-if="executorEdit.active" v-model="executorEdit.edit!.id" class="input" type="text" @blur='onExEditBlur' />
               <span v-else @click='executorEdit.active = true'>
                 <p>{{ban.executor.name}}</p>
                 ({{ban.executor.id}})
@@ -96,7 +96,7 @@
               <label class="label">Flags</label>
               <div class="control">
                 <div class="select is-multiple">
-                  <select multiple size="2" v-model="flags.edited" @change="changed = true">
+                  <select multiple size="2" v-model="flags.edited">
                     <option value="1">IP Banned</option>
                     <option value="2">Suspended</option>
                   </select>
@@ -228,9 +228,9 @@
         <br>
 
         <ul class="content is-medium">
-          <li><a :href="'https://stats.jackz.me/user/' + ban.steamid" target="_blank">Stats Profile</a></li>
+          <li><a :href="'https://stats.jackz.me/user/' + ban.client.id" target="_blank">Stats Profile</a></li>
           <li><a :href="'https://steamcommunity.com/profiles/' + steamid64" target="_blank">Steam Profile</a></li>
-          <li><a :href="'?client=' + ban.steamid + '#logs'" target="_blank">View Logs</a></li>
+          <li><a :href="'?client=' + ban.client.id + '#logs'" target="_blank">View Logs</a></li>
         </ul>
       </template>
 
@@ -248,19 +248,20 @@
 </template>
 
 <script setup lang="ts">
+import { convertIntToBitsArray } from '@/js/User';
 import SteamID from 'steamid';
 import { computed, onBeforeMount, ref, watch } from 'vue'
 import { useRoute } from 'vue-router';
+import { FullAPIBan, FullAPIBanPlayer } from '../../../../server/src/routes/!unprivileged/bans';
 
 const route = useRoute()
 const emit = defineEmits(['edit'])
 
-let ban = ref<any>(null)
+let ban = ref<FullAPIBan>()
 let tab = ref(0)
-let edited = ref<any>(null)
+let edited = ref()
 let error = ref<string>()
-let changed = ref(false)
-let flags = ref<{original: any[], edited: any[]}>({
+let flags = ref<{original: number[], edited: number[]}>({
   original: [],
   edited: []
 })
@@ -273,65 +274,55 @@ let notes = ref<{list: any[], state: number}>({
   list: [],
   state: 0
 })
-let executorEdit = ref<{active: boolean, edit: any}>({
+let executorEdit = ref<{active: boolean, edit?: Partial<FullAPIBanPlayer>}>({
   active: false,
-  edit: null
+  edit: undefined
 })
 let info = ref<any>(null)
 
 const hasChanged = computed(() => {
-  return edited.value && ban.value.reason !== edited.value.reason
+  if(!ban.value || !edited.value) return false
+  return ban.value.reason !== edited.value.reason
     || ban.value.publicReason !== edited.value.publicReason
+    //@ts-ignore seriously fuck off ts
     || ban.value.executor.id !== executorEdit.value.edit.id
     || flags.value.original.length !== flags.value.edited.length
     || edited.value.expires !== "keep"
 })
-
-watch(edited, (val) => {
-  if(changed.value || !val) return
-  changed.value = ban.value.reason !== val.reason
-    || ban.value.publicReason !== val.publicReason
-    || ban.value.executor.id !== executorEdit.value.edit.id
-    || flags.value.original.length !== flags.value.edited.length
-    || val.expires !== "keep"
-  })
 
 const steamid64 = computed(() => {
   if(!ban.value) return null
   return new SteamID(ban.value.client.id).getSteamID64()
 })
 const relDate = computed(() => {
-  return ban.value.timestamp ? getRelDate(ban.value.timestamp*1000) : null
+  return ban.value?.timestamp ? getRelDate(ban.value.timestamp*1000) : null
 })
 
 async function init() {
   error.value = undefined
   const response = await fetch(`/api/bans/${route.params.id}`)
   if(response.ok) {
-      const json = await response.json()
+      const json = await response.json() as {bans: FullAPIBan[]}
       if(json.bans.length === 0) {
         console.error('No bans were found for id?')
         return
       }
-      ban.value = json.bans[0]
+      //@ts-ignore it's ridiculous that typescript errors on this equality
+      ban.value = json.bans.find(ban => ban.id == route.params.id)
       edited.value = Object.assign({}, ban.value)
       edited.value.expires = 'keep'
-      flags.value.original = []
-      for(const i of [1,2,4]) {
-        if(ban.value.flags & i) flags.value.original.push(i.toString())
-      }
-      executorEdit.value.edit = ban.value.executor
+      flags.value.original = convertIntToBitsArray(ban.value!.flags, 4)
+      executorEdit.value.edit = ban.value!.executor
       flags.value.edited = [...flags.value.original]
       appeals.value.list = []
       appeals.value.state = 0
-      changed.value = false
       info.value = null
       setTab(0)
   }
 }
 
 function onExEditBlur() {
-  if(ban.value.executor.id === executorEdit.value.edit.id) {
+  if(ban.value?.executor.id === executorEdit.value.edit?.id) {
     executorEdit.value.active = false
   }
 }
@@ -366,13 +357,11 @@ function setTab(index: number) {
   tab.value = index
   switch(index) {
     case 1: {
-      if(ban.value.appeals == 0) appeals.value.state = 1
-      else if(appeals.value.state === 0) fetchAppeals()
+      if(appeals.value.state === 0) fetchAppeals()
       break
     }
     case 2: {
-      if(ban.value.notes == 0) notes.value.state = 1
-      else if(notes.value.state === 0) fetchNotes()
+      if(notes.value.state === 0) fetchNotes()
       break
     }
     case 3: {
@@ -381,7 +370,7 @@ function setTab(index: number) {
   }
 }
 async function fetchInfo() {
-  const response = await fetch(`https://stats.jackz.me/api/user/${ban.value.client.id}`)
+  const response = await fetch(`https://stats.jackz.me/api/user/${ban.value!.client.id}`)
   if(response.ok) {
     const json = await response.json()
     info.value = json.user
@@ -390,7 +379,7 @@ async function fetchInfo() {
   }
 }
 async function fetchAppeals() {
-  const response = await fetch(`https://jackz.me/l4d2/appeal/appeal.php?id=${ban.value.id}`)
+  const response = await fetch(`https://jackz.me/l4d2/appeal/appeal.php?id=${ban.value!.id}`)
   if(response.ok) {
       const json = await response.json()
       appeals.value.list = json.appeals
@@ -402,7 +391,7 @@ async function fetchAppeals() {
   }
 }
 async function fetchNotes() {
-  const response = await fetch(`/api/notes/user/${ban.value.client.id}`)
+  const response = await fetch(`/api/notes/user/${ban.value!.client.id}`)
   if(response.ok) {
       const json = await response.json()
       notes.value.list = json.notes
@@ -419,7 +408,7 @@ function formatTime(time: number) {
 }
 function deleteBan() {
   if(window.confirm("Are you sure you want to remove this ban from the records? This should only be done if mistakes were made when banning them. Recommend to suspend the ban instead.")) {
-    fetch(`/api/bans/${ban.steamid}`, {
+    fetch(`/api/bans/${ban.value!.client.id}`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
@@ -440,9 +429,9 @@ function deleteBan() {
 }
 function save() {
   loading.value = true
-  const expires = getExpires(edited.value, ban.value)
+  const expires = getExpires(edited.value)
   const _flags = flags.value.edited.reduce((pv, cv) => pv + Number(cv), 0)
-  fetch(`/api/bans/${ban.value.id}`, {
+  fetch(`/api/bans/${ban.value!.client.id}`, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
@@ -451,7 +440,7 @@ function save() {
     body: JSON.stringify({
       steamid: edited.value.client.id,
       reason: edited.value.reason,
-      executor: executorEdit.value.edit.id,
+      executor: executorEdit.value.edit?.id,
       public_message: edited.value.publicReason,
       expires,
       flags: _flags
@@ -490,7 +479,7 @@ function getRelDate(time: number) {
   diff < 60 && "just now" || diff < 120 && "1 minute ago" || diff < 3600 && Math.floor(diff / 60) + " minutes ago" || diff < 7200 && "1 hour ago" || diff < 86400 && Math.floor(diff / 3600) + " hours ago") || day_diff == 1 && "Yesterday" || day_diff < 7 && day_diff + " days ago" || day_diff < 31 && Math.ceil(day_diff / 7) + " weeks ago";
 }
 
-function getExpires(edited: any, ban: any) {
+function getExpires(edited: FullAPIBan | { expires: string | number }) {
   const baseDate = Date.now() / 1000
 
   if(edited.expires === "keep") return null
