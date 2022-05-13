@@ -14,7 +14,11 @@
         <p><b>Uptime: </b> {{ uptime }}</p>
         <p><b>Node.JS Version: </b> {{serverHealth?.versions?.node}}</p>
         <br>
-        <a :disabled="updateStatus.state !== 'NORMAL'" :class="['button', {'is-loading': updateStatus.state === 'CHECKING'}]" @click="updateServer">Update Server</a>
+        <a
+          :disabled="canUpdate"
+          :class="['button', {'is-loading': updateStatus.state === 'CHECKING'}]"
+          @click="updateServer"
+        >Update Server</a>
         <p class="has-text-danger" v-if="updateStatus.error">{{updateStatus.error}}</p>
         <p class="has-text-info" v-else-if="updateStatus.upToDate">Server is already up to date.</p>
         <p class="has-text-success" v-else-if="updateStatus.state === 'SUCCESS'">Server has been updated successfully.</p>
@@ -83,6 +87,9 @@ let updateStatus = ref<{
   state: "NORMAL",
 })
 
+const canUpdate = computed(() => {
+  return updateStatus.value.state !== "NORMAL" || undefined
+})
 const uptime = computed(() => {
   const minutes = (serverHealth.value.uptime ?? 0) / 60
   if(minutes < 1.0) return "< 1 minute"

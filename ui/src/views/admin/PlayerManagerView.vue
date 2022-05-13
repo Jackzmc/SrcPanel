@@ -182,14 +182,14 @@ async function searchUser() {
   const response = await fetch(`/api/users/search/${search.value.query}`)
   if(response.ok) {
     const json = await response.json()
-    users.value = json.users as ReadableAdminData[]
+    users.value = json.users
   }
 }
 async function fetchAdmins() {
   const response = await fetch('/api/admins')
   if(response.ok) {
     const json = await response.json()
-    admins.value = json.admins
+    admins.value = json.admins as ReadableAdminData[]
   }
 }
 async function getRecentPlayers() {
