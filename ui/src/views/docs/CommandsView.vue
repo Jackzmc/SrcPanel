@@ -3,12 +3,6 @@
     <ExamplesModal :data="selected" :prefix="prefix" @close='selected = null' />
     <div class="columns is-variable is-6">
         <div class="column is-7 content">
-            <template v-if="loading">
-              <span v-for="i in 20" :key="i" >
-                <vue-skeleton-loader :width="700" :height="40" animation="fade" />
-                <br>
-              </span>
-            </template>
             <span v-for="(group, id) in groups" :key="id">
                 <h5 class='title is-5'>{{group.name}}</h5>
                 <ul class="is-unstyled">

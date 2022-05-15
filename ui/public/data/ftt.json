@@ -49,6 +49,14 @@
             "modes": ["instant"]
         },
         {
+            "name": "Sticky Goo",
+            "description": "Slows the player down in goo",
+            "modes": ["constant"],
+            "prompts": [
+                { "flags": ["60% Movement Speed", "30% Movement Speed", "0% Movement Speed"], "multi": false }
+            ]
+        },
+        {
             "name": "Amazon Special Delivery",
             "description": "Choose multiple combinations of specials to spawn at once.",
             "modes": ["instant"],
@@ -56,6 +64,10 @@
                 { "flags": ["(All specials)"], "multi": true },
                 { "flags": ["Spawn On Face", "Spawn Near"], "multi": false }
             ]
+        },
+        {
+            "name": "Instant Commons",
+            "description": "Spawns 30 zombies directly behind player and swarms them."
         }
     ],
     "Items": [
@@ -248,6 +260,14 @@
             "name": "CameTooEarly",
             "description": "When they shoot, random chance they empty whole clip",
             "modes": ["constant"]
+        },
+        {
+            "name": "Car Splat",
+            "description": "Smash a player with a car",
+            "modes": ["instant"],
+            "prompts": [
+                { "flags": ["On Top", "Into"], "multi": false}
+            ] 
         }
     ],
     "_Combos_": {

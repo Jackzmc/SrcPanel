@@ -1,4 +1,3 @@
-const date = new Date()
 process.env.VUE_APP_BUILD_DATE = Date.now()
 
 module.exports = {

@@ -95,7 +95,11 @@ let modal = ref<{content?: string, troll?: any}>({})
 
 
 function getTooltip(troll: any) {
-  const modes = troll.modes.map((v: any) => `runs ${v}ly`).join("\n-or-\n")
+  let modes = ''
+  if(troll.modes)
+    modes = troll.modes.map((v: any) => `runs ${v}ly`).join("\n-or-\n")
+  else
+    console.warn("No modes found for", troll.name)
 
   const flags = troll.prompts ? `\n\nClick to view flags` : ''
   return `${modes}${flags}`

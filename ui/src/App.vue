@@ -33,9 +33,9 @@ import { AdminPermissions, Session } from '../../common-types/User.js';
 import { useRoute, useRouter } from 'vue-router';
 import { SessionUser } from '../../common-types/User';
 
-const LAST_UPDATED = Number(inject('LAST_UPDATED'))
+const LAST_UPDATED = new Date(Number(inject('LAST_UPDATED')))
 const lastUpdated = computed(() => {
-  return new Date(LAST_UPDATED).toLocaleString()
+  return LAST_UPDATED.toLocaleString()
 })
 
 const route = useRoute()
