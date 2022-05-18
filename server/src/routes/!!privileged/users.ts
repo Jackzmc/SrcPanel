@@ -74,8 +74,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     }>, reply) => {
         const [rows] = await fastify.db.execute<RowDataPacket[]>(
             `SELECT
-            (SELECT COUNT(*) FROM notes WHERE notes.steamid = stats_users.steamid) as notesCount,
-            (SELECT COUNT(*) FROM bans WHERE bans.steamid = stats_users.steamid) as bansCount,
+            (SELECT COUNT(*) FROM notes WHERE SUBSTRING(notes.steamid,11) = SUBSTRING(stats_users.steamid,11)) as notesCount,
+            (SELECT COUNT(*) FROM bans WHERE SUBSTRING(bans.steamid,11) = SUBSTRING(stats_users.steamid,11) ) as bansCount,
             (SELECT COUNT(*) FROM ${ADMINS_DB}.sm_admins WHERE ${ADMINS_DB}.sm_admins.identity = stats_users.steamid) as isAdmin,
             steamid, last_alias as name, country, last_join_date as lastJoinDate, created_date as firstJoinDate
             FROM stats_users
