@@ -57,15 +57,6 @@
             ]
         },
         {
-            "name": "Amazon Special Delivery",
-            "description": "Choose multiple combinations of specials to spawn at once.",
-            "modes": ["instant"],
-            "prompts": [
-                { "flags": ["(All specials)"], "multi": true },
-                { "flags": ["Spawn On Face", "Spawn Near"], "multi": false }
-            ]
-        },
-        {
             "name": "Instant Commons",
             "description": "Spawns 30 zombies directly behind player and swarms them."
         }

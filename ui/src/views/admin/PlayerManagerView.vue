@@ -35,7 +35,7 @@
       </div>
       <UserSelection has-manual :userdata="userdata" :users="users" @select="onUserSelected" @manual="onManualSelected" />
       </Tab>
-      <Tab name="Big boi table" id="admins" v-if="privUser.hasWebPerm(WebPermission.ManageAdmins)" @selected="fetchAdmins">
+      <Tab name="Admins" id="admins" v-if="privUser.hasWebPerm(WebPermission.ManageAdmins)" @selected="fetchAdmins">
         <table class="table">
           <thead>
             <tr>
