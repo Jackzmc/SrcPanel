@@ -1,6 +1,6 @@
 <template>
 <ul v-if="node.children.length > 0">
-    <SectionNode v-for="child in node.children" :key="child.key" :node="child" />
+    <SectionNode v-for="child in props.node.children" :key="child.key" :node="child" />
 </ul>
 </template>
 

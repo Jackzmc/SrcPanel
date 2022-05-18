@@ -1,8 +1,8 @@
 <template>
-<li :key="node.key">
-    <a @click='gotoHeader'>{{node.key}}</a>
-    <ul v-if="node.children.length > 0">
-        <SectionNode v-for="child in node.children" :key="child.key" :node="child" />
+<li :key="props.node.key">
+    <a @click='gotoHeader'>{{props.node.key}}</a>
+    <ul v-if="props.node.children.length > 0">
+        <SectionNode v-for="child in props.node.children" :key="child.key" :node="child" />
     </ul>
 </li>
 </template>
@@ -10,12 +10,7 @@
 <script setup lang="ts">
 import SectionNode from '@/components/sections/SectionNode.vue'
 import { TreeNode } from '@/js/Tree.js';
-import { ref, watch, computed, onBeforeMount, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
 
-const emit = defineEmits([])
-const route = useRoute()
-const router = useRouter()
 const props = defineProps<{
   node: TreeNode
 }>()

@@ -19,6 +19,7 @@
 import Marked from 'marked'
 import { Tree, TreeNode } from '@/js/Tree'
 import { ref, onBeforeMount, inject } from 'vue'
+import SectionRoot from '@/components/sections/SectionRoot.vue'
 
 const LAST_UPDATED = inject('LAST_UPDATED')
 
@@ -36,10 +37,10 @@ onBeforeMount(() => {
   .then(text => {
     html.value = Marked(text)
     const tree = new Tree(0, 0)
-    let lastNode
-    for (let [,level,name] of html.value!.matchAll(/h(\d) id="(.+)"/g) as any) {
-      level = Number(level)
-      let newNode;
+    let lastNode: TreeNode | null = null
+    for (let [,rawLevel,name] of html.value!.matchAll(/h(\d) id="(.+)"/g) as any) {
+      const level = Number(rawLevel)
+      let newNode: TreeNode | null = null;
       if(lastNode && level > lastNode.value) {
         newNode = tree.insert(lastNode.key, name, level)
       } else if(lastNode && level === lastNode.value) {
