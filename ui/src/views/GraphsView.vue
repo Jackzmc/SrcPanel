@@ -156,7 +156,7 @@ async function fetchSlaps() {
   });
 }
 async function fetchStates() {
-  const response = await fetch('/api/graph&types=STATE&timestampOnly=1')
+  const response = await fetch('/api/graph?types=STATE&timestampOnly=1')
   const json = await response.json()
   const incaps: Record<string, number> = {}
   const deaths: Record<string, number> = {}
@@ -389,8 +389,7 @@ onBeforeMount(() => {
     fetchStates(),
     fetchTrolls(),
     fetchSlaps(),
-    fetchPlaytime()
-  ])
+  ]).then(() => fetchPlaytime())
 })
 
 </script>
