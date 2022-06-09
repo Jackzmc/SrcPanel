@@ -408,7 +408,7 @@ function formatTime(time: number) {
 }
 function deleteBan() {
   if(window.confirm("Are you sure you want to remove this ban from the records? This should only be done if mistakes were made when banning them. Recommend to suspend the ban instead.")) {
-    fetch(`/api/bans/${ban.value!.client.id}`, {
+    fetch(`/api/bans/${route.params.id}`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
@@ -431,7 +431,7 @@ function save() {
   loading.value = true
   const expires = getExpires(edited.value)
   const _flags = flags.value.edited.reduce((pv, cv) => pv + Number(cv), 0)
-  fetch(`/api/bans/${ban.value!.client.id}`, {
+  fetch(`/api/bans/${route.params.id}`, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
