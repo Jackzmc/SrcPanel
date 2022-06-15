@@ -84,10 +84,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, computed, onBeforeMount, onMounted, inject } from 'vue'
+import { ref, onBeforeMount } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
-const LAST_UPDATED = inject('LAST_UPDATED')
+const LAST_UPDATED = new Date(Number(process.env.VUE_APP_BUILD_DATE))
 
 let trolls = ref<Record<string,any>>({})
 let combos = ref<Record<string,any>>({})

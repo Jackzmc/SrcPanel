@@ -108,7 +108,7 @@
 </template>
 
 <script setup lang="ts">
-import { inject, computed } from 'vue';
+import { computed } from 'vue';
 import LoginButton from '@/components/LoginButton.vue'
 import { useRoute, useRouter } from 'vue-router';
 // Bulma nav code
@@ -130,7 +130,7 @@ const router = useRouter()
 const route = useRoute()
 const emit = defineEmits(['logout'])
 
-const LAST_UPDATED = new Date(Number(inject('LAST_UPDATED')))
+const LAST_UPDATED = new Date(Number(process.env.VUE_APP_BUILD_DATE))
 
 const props = defineProps([
   'userdata',

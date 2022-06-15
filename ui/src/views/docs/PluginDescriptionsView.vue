@@ -18,10 +18,10 @@
 //@ts-ignore
 import Marked from 'marked'
 import { Tree, TreeNode } from '@/js/Tree'
-import { ref, onBeforeMount, inject } from 'vue'
+import { ref, onBeforeMount } from 'vue'
 import SectionRoot from '@/components/sections/SectionRoot.vue'
 
-const LAST_UPDATED = inject('LAST_UPDATED')
+const LAST_UPDATED = new Date(Number(process.env.VUE_APP_BUILD_DATE))
 
 let html = ref<string>()
 let headersTree = ref<Tree>()

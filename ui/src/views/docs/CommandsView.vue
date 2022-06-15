@@ -87,10 +87,9 @@
 <script setup lang="ts">
 import { formatParameters } from '@/js/util'
 import ExamplesModal from '@/components/modals/ExamplesModal.vue'
-import { ref, watch, computed, onBeforeMount, onMounted, inject } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { ref, computed, onMounted } from 'vue'
 
-const LAST_UPDATED = inject('LAST_UPDATED')
+const LAST_UPDATED = new Date(Number(process.env.VUE_APP_BUILD_DATE))
 
 let commandViewmode = ref('private')
 let groups = ref<Record<string, any>>({})

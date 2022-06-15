@@ -18,7 +18,8 @@ interface OpenIDQuery {
     'openid.signed': string,
     'openid.error'?: string
     'openid.sig': string,
-    'return_uri': string
+    'return_uri': string,
+    'F_U_STEAM': string
 }
 
 
@@ -102,13 +103,26 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                             message: 'Could not get user details from Steam API'
                         })
                     }
+                } else {
+                    return reply.code(401).send({
+                        error: 'Unauthorized',
+                        message: 'Could not validate user',
+                        debug: {
+                            query: req.query,
+                            params: params.toString(),
+                            raw: text
+                        }
+                    })
                 }
             }
 
             return reply.code(401).send({
                 error: 'Unauthorized',
-                message: 'Could not validate user',
-                debug: req.query
+                message: 'Could not validate user due to error',
+                debug: {
+                    query: req.query,
+                    error: validateRes.statusText
+                }
             })
         }
     })

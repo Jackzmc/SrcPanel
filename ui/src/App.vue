@@ -27,13 +27,13 @@
 </template>
 
 <script setup lang="ts">
-import { onBeforeMount, ref, inject, computed } from 'vue'
+import { onBeforeMount, ref, computed } from 'vue'
 import NavBar from '@/components/NavBar.vue'
-import { AdminPermissions, Session } from '../../common-types/User.js';
+import { AdminPermissions } from '../../common-types/User.js';
 import { useRoute, useRouter } from 'vue-router';
 import { SessionUser } from '../../common-types/User';
 
-const LAST_UPDATED = new Date(Number(inject('LAST_UPDATED')))
+const LAST_UPDATED = new Date(Number(process.env.VUE_APP_BUILD_DATE))
 const lastUpdated = computed(() => {
   return LAST_UPDATED.toLocaleString()
 })

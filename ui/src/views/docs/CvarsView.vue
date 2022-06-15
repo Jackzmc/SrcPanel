@@ -52,10 +52,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, inject } from 'vue'
+import { ref, onMounted} from 'vue'
 import { formatParameters } from '@/js/util'
 
-const LAST_UPDATED = inject('LAST_UPDATED')
+const LAST_UPDATED = new Date(Number(process.env.VUE_APP_BUILD_DATE))
 
 let cvars = ref<any[]>([])
 let selected = ref<any>()

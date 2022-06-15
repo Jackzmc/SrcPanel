@@ -13,7 +13,3 @@ const app = createApp(App)
 
 app.mount('#app')
 app.component('vue-skeleton-loader', VueSkeletonLoader);
-
-app.provide("LAST_UPDATED", process.env.VUE_APP_BUILD_DATE)
-app.provide("API_URL", process.env.VUE_APP_API_URL)
-app.provide("REALM", process.env.VUE_APP_REALM)
