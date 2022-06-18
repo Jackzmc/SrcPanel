@@ -6,7 +6,7 @@ import mysql from 'mysql2/promise'
 
 async function db(fastify: FastifyInstance, opts) {
     const db = mysql.createPool({
-        socketPath: process.env.MSQL_SOCKET_PATH,
+        socketPath: process.env.MYSQL_SOCKET_PATH,
         host:     process.env.MYSQL_HOST   || 'localhost', 
         database: process.env.MYSQL_DB,
         user:     process.env.MYSQL_USER, 
@@ -14,7 +14,7 @@ async function db(fastify: FastifyInstance, opts) {
         namedPlaceholders: true
     })
     const admindb = await mysql.createPool({
-        socketPath: process.env.MSQL_SOCKET_PATH,
+        socketPath: process.env.MYSQL_SOCKET_PATH,
         host:     process.env.MYSQL_HOST   || 'localhost', 
         database: process.env.MYSQL_ADMINS_DB,
         user:     process.env.MYSQL_USER, 
