@@ -11,7 +11,7 @@
         <tbody>
             <tr v-for="server in servers" :key="server.id">
                 <td>
-                    <a :href="'steam://connect/:' + server.ip + '/' + server.port">
+                    <a :href="'steam://connect/' + server.ip + '/' + server.port">
                       <b
                         :data-tooltip="getServerMessage(server)"
                         :class="getServerClasses(server)"
