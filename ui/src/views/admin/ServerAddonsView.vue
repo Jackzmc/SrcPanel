@@ -2,9 +2,9 @@
 <div>
   <div class="container" v-if="ready">
     <div class="columns">
-      <div :class="['column', {'is-8': prefetch !== null}]">
+      <div :class="['column', {'is-8': prefetch !== undefined}]">
         <b>Listing {{vpks.length}} workshop items - Click a name to view information</b>
-        <table class="table is-striped">
+        <table class="table is-striped is-fullwidth">
           <thead>
             <tr>
               <th></th>
@@ -20,7 +20,7 @@
           <tbody>
             <tr v-for="vpk in filteredVPKs" :key="vpk.filename">
               <td>
-                <span>{{vpk.filename}}</span>
+                <span>{{vpk.filename}}.vpk</span>
                 <span v-if="vpk.workshop">&nbsp;<a :href="vpk.workshop.url" >(workshop)</a></span>
               </td>
               <td>
@@ -50,10 +50,15 @@
       </div>
     </div>
   </div>
+  <div v-else-if="error">
+    <p class="title is-4 has-text-centered has-text-danger">Failed to load addons list</p>
+    <p class="subtitle is-6 has-text-centered has-text-danger">{{error}}</p>
+  </div>
   <div v-else>
     <p class="title is-4 has-text-centered">Fetching addons...</p>
     <p class="subtitle is-6 has-text-centered">This could take a bit</p>
   </div>
+  <br>
 </div>
 </template>
 
@@ -70,6 +75,7 @@ let ready = ref(false)
 let itemid = ref<any>()
 let search = ref<any>()
 let prefetch = ref<any>()
+let error = ref<string>()
 
 
 const isDownloadable = computed(() => {
@@ -109,20 +115,25 @@ function preview(entry: any) {
   prefetch.value = entry.workshop
 }
 async function fetchVPKS() {
-  const response = await fetch(`/api/admins/addons`)
-  if(response.ok) {
-    const json = await response.json()
-    vpks.value = json.addons.map((entry: any) => {
-      if(entry.workshop) {
-        if(entry.workshop.deleted) entry.workshop = null
-        else entry.workshop.url = `https://steamcommunity.com/sharedfiles/filedetails/?id=${entry.filename}`
-      }
-      return entry
-    })
-    ready.value = true
-    return true
+  error.value = undefined
+  try {
+    const response = await fetch(`/api/admins/addons`)
+    if(response.ok) {
+      const json = await response.json()
+      vpks.value = json.addons.map((entry: any) => {
+        if(entry.workshop) {
+          if(entry.workshop.deleted) entry.workshop = null
+          else entry.workshop.url = `https://steamcommunity.com/sharedfiles/filedetails/?id=${entry.filename}`
+        }
+        return entry
+      })
+      ready.value = true
+    } else {
+      error.value = response.statusText
+    }
+  } catch(err: any) {
+    error.value = err.message
   }
-  return false
 }
 
 function closePreview() {

@@ -42,9 +42,11 @@
         // Name of the addon share
         "addon-share-1": {
             // The folder where the *.vpk files are located
-            "folderLocation": "/home/steam/l4d2/left4dead2/addons",
-            // Optional, a list of folderpaths where all added vpk files should be symlinked into
-            "symlinkDestinations": []
+            "sourceFolder": "/home/steam/content",
+            // List of destinations with a name to be referenced
+            "destinations": {
+                "Server1": "/home/steam/myserver-1/addons/"
+            }
         }
     }
 }

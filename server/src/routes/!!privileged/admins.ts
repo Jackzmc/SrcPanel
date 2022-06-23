@@ -32,7 +32,8 @@ interface AddonListEntry {
         title: string,
         filesize: number,
         // children: AddonChildListEntry[]
-    }
+    }, 
+    shares: Record<string, Record<string, boolean> | undefined>
 }
 
 interface AddonChildListEntry {
@@ -40,7 +41,7 @@ interface AddonChildListEntry {
     workshop?: {
         title: string,
         filesize: number,
-    }
+    },
 }
 
 const ADDONS_FOLDER = process.env.ADDONS_FOLDER
@@ -90,7 +91,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             reply.redirect(301, process.env.DISCORD_INVITE_URI)
     })
 
-    fastify.get('/addons', async(req, reply) => {
+    fastify.get('/addons', async(req, reply): Promise<{addons: AddonChildListEntry[]}> => {
         const dirents = await fs.readdir(ADDONS_FOLDER, { withFileTypes: true }) 
         /*
             Fetch all files in directory
@@ -124,6 +125,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 } else {
                     results.push({
                         filename: dirent.name.slice(0, -4),
+                        shares: {}
                     })
                 }
             }
@@ -138,7 +140,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             if(result) {
                 results.push({
                     filename: cacheBufferIds[i],
-                    workshop: JSON.parse(result)
+                    workshop: JSON.parse(result),
+                    shares: await fastify.servers.getAddonInfo(cacheBufferIds[i])
                 })
             } else {
                 WSResolverBuffer.push(cacheBufferIds[i])
@@ -160,6 +163,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
                 results.push({
                     filename: WSResolverBuffer[i],
+                    shares: await fastify.servers.getAddonInfo(WSResolverBuffer[i]),
                     workshop
                 })
 

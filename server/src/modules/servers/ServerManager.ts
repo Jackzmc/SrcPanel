@@ -1,13 +1,20 @@
-import {
-  readFileSync
-} from 'fs'
+import { readFileSync } from 'fs'
+import { stat } from 'fs/promises'
 import Json5 from 'json5'
 import DNS from 'dns'
 import Server, { ConfigServerData } from './Server.js'
+import path from 'path'
+
+export interface AddonShare {
+  srcFolder: string;
+  destinations: string[]
+  name: string
+}
 
 export default class ServerManager {
   private servers: Record<string, Server> = {}
   private refreshInterval: number
+  private addonShares: AddonShare[] = []
 
   constructor() {
     this.load()
@@ -29,9 +36,48 @@ export default class ServerManager {
     await Promise.allSettled(Object.values(this.servers).map(server => server.refresh()))
   }
 
+  public async getAddonInfo(filename: string) {
+    let states: Record<string, Record<string, boolean> | undefined> = {}
+    for(const share of this.addonShares) {
+      if(await this.doesFileExist(share.srcFolder, filename)) {
+        states[share.name] = {}
+        for(const [destKey, destPath] of share.destinations) {
+          states[share.name][destKey] = await this.doesFileExist(destPath, filename)
+        }
+      } else {
+        states[share.name] = undefined
+      }
+    }
+    return states
+  }
+
+  private async doesFileExist(folder: string, file: string) {
+    try {
+      await stat(path.join(folder, file))
+      return true
+    } catch(err) {
+      if(err.code === "ENOENT") {
+        return false
+      } else 
+        throw err
+    }
+  } 
+
   private async load() {
     const content = readFileSync('./config/config.json', 'utf-8')
     const config = Json5.parse(content)
+    for(const key in config.addons) {
+      try {
+        await stat(config.addons[key].folderLocation)
+        this.addonShares.push({
+          name: key,
+          srcFolder: config.addons[key].folderLocation,
+          destinations: config.addons[key].symlinkDestinations
+        })
+      } catch(err) {
+        console.warn(`Addon Share Directory "${key}" returned error: ${err}`)
+      }
+    }
 
     this.refreshInterval = 1000 * (config['refreshIntervalSeconds'] ?? 60)
 
