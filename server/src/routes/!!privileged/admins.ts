@@ -172,7 +172,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                     await fastify.cache.set(`workshop.${wsDetails[i].publishedfileid}`, JSON.stringify(workshop))
                 }
             } catch(err) {
-                fastify.log.error("Error resolving WSResolverBuffer, getItemDetails errored: ", err)
+                fastify.log.error("Error resolving WSResolverBuffer, getItemDetails errored: " + err)
             }
         }
         return {
