@@ -67,15 +67,16 @@ export default class ServerManager {
     const content = readFileSync('./config/config.json', 'utf-8')
     const config = Json5.parse(content)
     for(const key in config.addons) {
-      if(!config.addons[key].sourceFolder || !config.addons[key].destinations) {
-        console.warn(`Skipping addon share \"${key}\" due to missing folders`)
+      if(!config.addons[key].sourceFolder) {
+        console.warn(`Skipping addon share \"${key}\": Missing property 'sourceFolder' in config`)
+        continue
       }
       try {
         await stat(config.addons[key].sourceFolder)
         this.addonShares.push({
           name: key,
           srcFolder: config.addons[key].sourceFolder,
-          destinations: config.addons[key].destinations
+          destinations: config.addons[key].destinations || []
         })
       } catch(err) {
         console.warn(`Addon Share Directory "${key}" returned error: ${err}`)
