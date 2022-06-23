@@ -118,8 +118,8 @@ async function fetchVPKS() {
   error.value = undefined
   try {
     const response = await fetch(`/api/admins/addons`)
+    const json = await response.json()
     if(response.ok) {
-      const json = await response.json()
       vpks.value = json.addons.map((entry: any) => {
         if(entry.workshop) {
           if(entry.workshop.deleted) entry.workshop = null
@@ -129,10 +129,10 @@ async function fetchVPKS() {
       })
       ready.value = true
     } else {
-      error.value = response.statusText
+      error.value = json.error ? `${json.error}: ${json.message}` : response.statusText
     }
   } catch(err: any) {
-    error.value = err.message
+    error.value = err.message || err
   }
 }
 
