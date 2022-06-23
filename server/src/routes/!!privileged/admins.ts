@@ -91,26 +91,26 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             reply.redirect(301, process.env.DISCORD_INVITE_URI)
     })
 
+    /*
+        Fetch all files in directory
+        For every entry:
+            If entry has workshop item:
+                Put in redis cache queue for `workshop[itemid]`
+            else:
+                Put in result array
+        If redis cache queue is not empty:
+            Fetch all items in redis cache queue and map to result array
+        Somehow, if item not in redis cache results:
+            For very item in cache result array:
+                Put item in resolve buffer
+            If any item in resolve buffer:
+                Resolve details
+                For every item in resolve results array:
+                    Push in cache (no buffer, should only be bad performance for first bulk )
+                    Put item in result array
+    */
     fastify.get('/addons', async(req, reply): Promise<{addons: AddonChildListEntry[]}> => {
         const dirents = await fs.readdir(ADDONS_FOLDER, { withFileTypes: true }) 
-        /*
-            Fetch all files in directory
-            For every entry:
-                If entry has workshop item:
-                    Put in redis cache queue for `workshop[itemid]`
-                else:
-                    Put in result array
-            If redis cache queue is not empty:
-                Fetch all items in redis cache queue and map to result array
-            Somehow, if item not in redis cache results:
-                For very item in cache result array:
-                    Put item in resolve buffer
-                If any item in resolve buffer:
-                    Resolve details
-                    For every item in resolve results array:
-                        Push in cache (no buffer, should only be bad performance for first bulk )
-                        Put item in result array
-        */
 
         const results: AddonListEntry[] = []
         const cacheBufferKeys = []
@@ -149,29 +149,32 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
 
         if(WSResolverBuffer.length > 0) {
-            const wsDetails = await fastify.steam.getItemDetails(WSResolverBuffer)
-            for(let i = 0; i < wsDetails.length; i++) {
-                const workshop = {
-                    deleted: wsDetails[i].title === undefined,
-                    title: wsDetails[i].title,
-                    filesize: wsDetails[i].file_size,
-                    fileUrl: wsDetails[i].file_url,
-                    previewUrl: wsDetails[i].preview_url,
-                    description: wsDetails[i].description,
-                    lastUpdated: wsDetails[i].time_updated
+            try {
+                const wsDetails = await fastify.steam.getItemDetails(WSResolverBuffer)
+                for(let i = 0; i < wsDetails.length; i++) {
+                    const workshop = {
+                        deleted: wsDetails[i].title === undefined,
+                        title: wsDetails[i].title,
+                        filesize: wsDetails[i].file_size,
+                        fileUrl: wsDetails[i].file_url,
+                        previewUrl: wsDetails[i].preview_url,
+                        description: wsDetails[i].description,
+                        lastUpdated: wsDetails[i].time_updated
+                    }
+
+                    results.push({
+                        filename: WSResolverBuffer[i],
+                        shares: await fastify.servers.getAddonInfo(`${WSResolverBuffer[i]}.vpk`),
+                        workshop
+                    })
+
+                    // This will be slow, but should only run once or twice
+                    await fastify.cache.set(`workshop.${wsDetails[i].publishedfileid}`, JSON.stringify(workshop))
                 }
-
-                results.push({
-                    filename: WSResolverBuffer[i],
-                    shares: await fastify.servers.getAddonInfo(`${WSResolverBuffer[i]}.vpk`),
-                    workshop
-                })
-
-                // This will be slow, but should only run once or twice
-                await fastify.cache.set(`workshop.${wsDetails[i].publishedfileid}`, JSON.stringify(workshop))
+            } catch(err) {
+                fastify.log.error("Error resolving WSResolverBuffer, getItemDetails errored: ", err)
             }
         }
-
         return {
             addons: results
         }

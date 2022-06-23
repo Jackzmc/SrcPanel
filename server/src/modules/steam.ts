@@ -66,7 +66,7 @@ export default class SteamAPI {
             if(json)
                 return json['response']['publishedfiledetails'];
         }
-        return null
+        throw `${response.statusText}: ${await response.text()}`
     }
 
     downloadItem(item: WorkshopItem, destination: string, filenameTemplate: string = "%ID%.vpk"): Promise<number> {
