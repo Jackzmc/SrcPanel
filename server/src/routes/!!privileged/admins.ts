@@ -125,7 +125,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 } else {
                     results.push({
                         filename: dirent.name.slice(0, -4),
-                        shares: {}
+                        shares: await fastify.servers.getAddonInfo(dirent.name)
                     })
                 }
             }
@@ -141,7 +141,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 results.push({
                     filename: cacheBufferIds[i],
                     workshop: JSON.parse(result),
-                    shares: await fastify.servers.getAddonInfo(cacheBufferIds[i])
+                    shares: await fastify.servers.getAddonInfo(`${cacheBufferIds[i]}.vpk`)
                 })
             } else {
                 WSResolverBuffer.push(cacheBufferIds[i])
@@ -163,7 +163,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
                 results.push({
                     filename: WSResolverBuffer[i],
-                    shares: await fastify.servers.getAddonInfo(WSResolverBuffer[i]),
+                    shares: await fastify.servers.getAddonInfo(`${WSResolverBuffer[i]}.vpk`),
                     workshop
                 })
 
