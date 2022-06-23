@@ -73,11 +73,13 @@ export default class ServerManager {
       }
       try {
         await stat(config.addons[key].sourceFolder)
+        const destinations = config.addons[key].destinations || []
         this.addonShares.push({
           name: key,
           srcFolder: config.addons[key].sourceFolder,
-          destinations: config.addons[key].destinations || []
+          destinations
         })
+        console.info(`Loaded addon share "${key}"`)
       } catch(err) {
         console.warn(`Addon Share Directory "${key}" returned error: ${err}`)
       }
