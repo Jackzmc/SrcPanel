@@ -11,26 +11,38 @@
               <th><input type="text" class="input" placeholder="Search" v-model="search" /></th>
             </tr>
             <tr>
-              <th>Filename / WorkshopID</th>
+              <th style="width:0">Workshop</th>
               <th>Name</th>
               <th>File Size</th>
               <th>Last Updated</th>
+              <th v-for="dest in shareServers" :key="dest">
+                {{ dest }}
+              </th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="vpk in filteredVPKs" :key="vpk.filename">
               <td>
-                <span>{{vpk.filename}}.vpk</span>
-                <span v-if="vpk.workshop">&nbsp;<a :href="vpk.workshop.url" >(workshop)</a></span>
+                <a v-if="vpk.workshop" :href="vpk.workshop.url" class="button is-small">Workshop</a>
               </td>
               <td>
                 <a v-if="vpk.workshop" @click="preview(vpk)">{{vpk.workshop.title}}</a>
+                <span v-else>{{vpk.filename}}.vpk</span>
               </td>
               <td>
                 <span v-if="vpk.workshop">{{formatSize(vpk.workshop.filesize)}}</span>
               </td>
               <td>
                 <span v-if="vpk.workshop">{{formatTime(vpk.workshop.lastUpdated)}}</span>
+              </td>
+              <td v-for="dest in shareServers" :key="dest">
+                <em v-if="!vpk.shareInfo">(n/a)</em>
+                <span v-else-if="vpk.shareInfo[dest]" data-tooltip="Installed">
+                  ✔️
+                </span>
+                <span v-else data-tooltip="Not installed">
+                  ❌
+                </span>
               </td>
             </tr>
           </tbody>
@@ -77,6 +89,7 @@ let search = ref<any>()
 let prefetch = ref<any>()
 let error = ref<string>()
 
+let shareServers = ref([])
 
 const isDownloadable = computed(() => {
   return itemid.value && prefetch.value.result && prefetch.value.lastValid === itemid.value && !prefetch.value.error
@@ -116,10 +129,12 @@ function preview(entry: any) {
 }
 async function fetchVPKS() {
   error.value = undefined
+  shareServers.value = []
   try {
     const response = await fetch(`/api/admins/addons`)
     const json = await response.json()
     if(response.ok) {
+      shareServers.value = json.shareDestinations
       vpks.value = json.addons.map((entry: any) => {
         if(entry.workshop) {
           if(entry.workshop.deleted) entry.workshop = null

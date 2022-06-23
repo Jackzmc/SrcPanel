@@ -33,7 +33,7 @@ interface AddonListEntry {
         filesize: number,
         // children: AddonChildListEntry[]
     }, 
-    shares: Record<string, Record<string, boolean> | undefined>
+    shareInfo: Record<string, boolean>
 }
 
 interface AddonChildListEntry {
@@ -44,7 +44,6 @@ interface AddonChildListEntry {
     },
 }
 
-const ADDONS_FOLDER = process.env.ADDONS_FOLDER
 export const MAIN_DB = process.env.MYSQL_DB ? `\`${process.env.MYSQL_DB}\`` : null
 export const ADMINS_DB = process.env.MYSQL_ADMINS_DB ? `\`${process.env.MYSQL_ADMINS_DB}\`` : null
 
@@ -109,8 +108,16 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                     Push in cache (no buffer, should only be bad performance for first bulk )
                     Put item in result array
     */
-    fastify.get('/addons', async(req, reply): Promise<{addons: AddonChildListEntry[]}> => {
-        const dirents = await fs.readdir(ADDONS_FOLDER, { withFileTypes: true }) 
+    fastify.get('/addons/:share-id?', async(req: FastifyRequest<{Params: {'share-id'?: string}}>, reply) => {
+        const shareId = req.params['share-id'] || fastify.servers.defaultShare;
+        const share = fastify.servers.getShare(shareId)
+        if(!share) {
+            return reply.status(404).send({
+                error: "Share Not Found", 
+                message: `No share with id \"${shareId.toLowerCase()}\" could be found. Share may be available, incorrecty configured or does not exist`   
+            })
+        }
+        const dirents = await fs.readdir(share.sourceFolder, { withFileTypes: true }) 
 
         const results: AddonListEntry[] = []
         const cacheBufferKeys = []
@@ -125,7 +132,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 } else {
                     results.push({
                         filename: dirent.name.slice(0, -4),
-                        shares: await fastify.servers.getAddonInfo(dirent.name)
+                        shareInfo: await fastify.servers.getAddonInfo(shareId, dirent.name)
                     })
                 }
             }
@@ -141,7 +148,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 results.push({
                     filename: cacheBufferIds[i],
                     workshop: JSON.parse(result),
-                    shares: await fastify.servers.getAddonInfo(`${cacheBufferIds[i]}.vpk`)
+                    shareInfo: await fastify.servers.getAddonInfo(shareId, `${cacheBufferIds[i]}.vpk`)
                 })
             } else {
                 WSResolverBuffer.push(cacheBufferIds[i])
@@ -164,7 +171,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
                     results.push({
                         filename: WSResolverBuffer[i],
-                        shares: await fastify.servers.getAddonInfo(`${WSResolverBuffer[i]}.vpk`),
+                        shareInfo: await fastify.servers.getAddonInfo(shareId, `${WSResolverBuffer[i]}.vpk`),
                         workshop
                     })
 
@@ -176,7 +183,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             }
         }
         return {
-            addons: results
+            addons: results,
+            shareDestinations: Object.keys(share.destinations)
         }
 
     })

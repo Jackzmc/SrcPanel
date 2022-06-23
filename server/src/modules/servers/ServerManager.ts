@@ -14,7 +14,8 @@ export interface AddonShare {
 export default class ServerManager {
   private servers: Record<string, Server> = {}
   private refreshInterval: number
-  private addonShares: AddonShare[] = []
+  private addonShares: Record<string, AddonShare> = {}
+  private _defaultShare: string
 
   constructor() {
     this.load()
@@ -36,16 +37,25 @@ export default class ServerManager {
     await Promise.allSettled(Object.values(this.servers).map(server => server.refresh()))
   }
 
-  public async getAddonInfo(filename: string) {
-    let states: Record<string, Record<string, boolean> | undefined> = {}
-    for(const share of this.addonShares) {
-      if(share.destinations && await this.doesFileExist(share.sourceFolder, filename)) {
-        states[share.name] = {}
-        for(const [destKey, destPath] of Object.entries(share.destinations)) {
-          states[share.name][destKey] = await this.doesFileExist(destPath, filename)
-        }
-      } else {
-        states[share.name] = undefined
+  public get defaultShare() {
+    return this._defaultShare
+  }
+
+  public hasShare(shareId: string) {
+    return this.addonShares[shareId.toLowerCase()] != undefined
+  }
+
+  public getShare(shareId: string) {
+    return this.addonShares[shareId.toLowerCase()]
+  }
+
+  public async getAddonInfo(shareId: string, filename: string) {
+    const share = this.addonShares[shareId.toLowerCase()]
+    if(!share) return undefined
+    let states: Record<string, boolean> = {}
+    if(share.destinations && await this.doesFileExist(share.sourceFolder, filename)) {
+      for(const [destKey, destPath] of Object.entries(share.destinations)) {
+        states[destKey] = await this.doesFileExist(destPath, filename)
       }
     }
     return states
@@ -74,11 +84,14 @@ export default class ServerManager {
       try {
         await stat(config.addons[key].sourceFolder)
         const destinations = config.addons[key].destinations || []
-        this.addonShares.push({
+        this.addonShares[key.toLowerCase()] = ({
           name: key,
           sourceFolder: config.addons[key].sourceFolder,
           destinations
         })
+        if(config.addons[key].default) {
+          this._defaultShare = key
+        }
         console.info(`Loaded addon share "${key}"`)
       } catch(err) {
         console.warn(`Addon Share Directory "${key}" returned error: ${err}`)

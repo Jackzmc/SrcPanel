@@ -46,7 +46,8 @@
             // List of destinations with a name to be referenced
             "destinations": {
                 "Server1": "/home/steam/myserver-1/addons/"
-            }
+            },
+            "default": true
         }
     }
 }
