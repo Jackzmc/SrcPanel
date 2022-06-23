@@ -11,8 +11,8 @@
               <th><input type="text" class="input" placeholder="Search" v-model="search" /></th>
             </tr>
             <tr>
+              <th >File Name or Workshop Name</th>
               <th style="width:0">Workshop</th>
-              <th>Name</th>
               <th>File Size</th>
               <th>Last Updated</th>
               <th v-for="dest in shareServers" :key="dest" class="has-text-centered" style="width:0">
@@ -23,11 +23,11 @@
           <tbody>
             <tr v-for="vpk in filteredVPKs" :key="vpk.filename">
               <td>
-                <a v-if="vpk.workshop" :href="vpk.workshop.url" class="button is-small">Workshop</a>
+                <a v-if="vpk.workshop" @click="preview(vpk)" :data-tooltip="'Filename: '+ vpk.filename">{{vpk.workshop.title}}</a>
+                <span v-else>{{vpk.filename}}.vpk</span>
               </td>
               <td>
-                <a v-if="vpk.workshop" @click="preview(vpk)">{{vpk.workshop.title}}</a>
-                <span v-else>{{vpk.filename}}.vpk</span>
+                <a v-if="vpk.workshop" :href="vpk.workshop.url" class="button is-small">Workshop</a>
               </td>
               <td>
                 <span v-if="vpk.workshop">{{formatSize(vpk.workshop.filesize, true, 0)}}</span>
