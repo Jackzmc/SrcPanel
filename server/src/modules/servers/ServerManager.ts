@@ -41,7 +41,7 @@ export default class ServerManager {
     for(const share of this.addonShares) {
       if(share.destinations && await this.doesFileExist(share.sourceFolder, filename)) {
         states[share.name] = {}
-        for(const [destKey, destPath] of share.destinations) {
+        for(const [destKey, destPath] of Object.entries(share.destinations)) {
           states[share.name][destKey] = await this.doesFileExist(destPath, filename)
         }
       } else {
