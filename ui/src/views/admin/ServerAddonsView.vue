@@ -15,7 +15,7 @@
               <th>Name</th>
               <th>File Size</th>
               <th>Last Updated</th>
-              <th v-for="dest in shareServers" :key="dest">
+              <th v-for="dest in shareServers" :key="dest" class="has-text-centered" style="width:0">
                 {{ dest }}
               </th>
             </tr>
@@ -30,19 +30,19 @@
                 <span v-else>{{vpk.filename}}.vpk</span>
               </td>
               <td>
-                <span v-if="vpk.workshop">{{formatSize(vpk.workshop.filesize)}}</span>
+                <span v-if="vpk.workshop">{{formatSize(vpk.workshop.filesize, true, 0)}}</span>
               </td>
               <td>
                 <span v-if="vpk.workshop">{{formatTime(vpk.workshop.lastUpdated)}}</span>
               </td>
-              <td v-for="dest in shareServers" :key="dest">
+              <td v-for="(dest, i) in shareServers" :key="dest" :class="['has-text-centered', {'column-separator': i == 0 }]">
                 <em v-if="!vpk.shareInfo">(n/a)</em>
-                <span v-else-if="vpk.shareInfo[dest]" data-tooltip="Installed">
+                <a @click="uninstallAddon(vpk, dest)" v-else-if="vpk.shareInfo[dest]" data-tooltip="Installed. Click to uninstall">
                   ✔️
-                </span>
-                <span v-else data-tooltip="Not installed">
+                </a>
+                <a @click="installAddon(vpk, dest)" v-else data-tooltip="Not installed. Click to install">
                   ❌
-                </span>
+                </a>
               </td>
             </tr>
           </tbody>
@@ -89,6 +89,8 @@ let search = ref<any>()
 let prefetch = ref<any>()
 let error = ref<string>()
 
+let share = ref<string>("default")
+
 let shareServers = ref([])
 
 const isDownloadable = computed(() => {
@@ -131,7 +133,7 @@ async function fetchVPKS() {
   error.value = undefined
   shareServers.value = []
   try {
-    const response = await fetch(`/api/admins/addons`)
+    const response = await fetch(`/api/shares/default/addons`)
     const json = await response.json()
     if(response.ok) {
       shareServers.value = json.shareDestinations
@@ -173,11 +175,53 @@ function formatSize(bytes: number, si = false, dp = 1) {
     ++u;
   } while (Math.round(Math.abs(bytes) * r) / r >= thresh && u < units.length - 1);
 
-  return bytes.toFixed(dp) + ' ' + units[u];
+  return (dp > 0 ? bytes.toFixed(dp) : Math.round(bytes)) + ' ' + units[u];
 }
 function formatTime(time: number) {
   const date = new Date(time*1000)
   return `${date.toLocaleDateString()} at ${date.toLocaleTimeString()}`
+}
+
+async function installAddon(vpk: any, destKey: string) {
+  try {
+    const response = await fetch(`/api/shares/default/addons/${vpk.filename}.vpk/install/${destKey}`, { method: 'POST' })
+    const json = await response.json()
+    if(response.ok) {
+      // alert("Addon is now installed")
+      for(const vpk2 of vpks.value) {
+        if(vpk2.filename === vpk.filename) {
+          vpk2.shareInfo[destKey] = true
+          return
+        }
+      }
+      console.warn("installAddon called with addon that is not downloaded")
+    } else {
+      alert(json.error ? `${json.error}: ${json.message}` : response.statusText)
+    }
+  } catch(err: any) {
+    alert(err.message || err)
+  }
+}
+
+async function uninstallAddon(vpk: any, destKey: string) {
+  try {
+    const response = await fetch(`/api/shares/default/addons/${vpk.filename}.vpk/uninstall/${destKey}`, { method: 'POST' })
+    const json = await response.json()
+    if(response.ok) {
+      // alert("Addon is now removed")
+      for(const vpk2 of vpks.value) {
+        if(vpk2.filename === vpk.filename) {
+          vpk2.shareInfo[destKey] = false
+          return
+        }
+      }
+      console.warn("unInstallAddon called with addon that is not downloaded")
+    } else {
+      alert(json.error ? `${json.error}: ${json.message}` : response.statusText)
+    }
+  } catch(err: any) {
+    alert(err.message || err)
+  }
 }
 
 onBeforeMount(async() => {
@@ -192,3 +236,9 @@ onBeforeMount(async() => {
   }
 })
 </script>
+
+<style>
+.column-separator {
+  border-left: solid 1px!important;
+}
+</style>

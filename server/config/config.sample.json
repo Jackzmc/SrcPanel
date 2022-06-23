@@ -40,14 +40,13 @@
     // Optional list of addon shares
     "addons": {
         // Name of the addon share
-        "addon-share-1": {
+        "default": {
             // The folder where the *.vpk files are located
             "sourceFolder": "/home/steam/content",
             // List of destinations with a name to be referenced
             "destinations": {
                 "Server1": "/home/steam/myserver-1/addons/"
-            },
-            "default": true
+            }
         }
     }
 }
