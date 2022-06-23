@@ -6,7 +6,7 @@ import Server, { ConfigServerData } from './Server.js'
 import path from 'path'
 
 export interface AddonShare {
-  srcFolder: string;
+  sourceFolder: string;
   destinations: string[]
   name: string
 }
@@ -39,7 +39,7 @@ export default class ServerManager {
   public async getAddonInfo(filename: string) {
     let states: Record<string, Record<string, boolean> | undefined> = {}
     for(const share of this.addonShares) {
-      if(await this.doesFileExist(share.srcFolder, filename)) {
+      if(share.destinations && await this.doesFileExist(share.sourceFolder, filename)) {
         states[share.name] = {}
         for(const [destKey, destPath] of share.destinations) {
           states[share.name][destKey] = await this.doesFileExist(destPath, filename)
@@ -76,7 +76,7 @@ export default class ServerManager {
         const destinations = config.addons[key].destinations || []
         this.addonShares.push({
           name: key,
-          srcFolder: config.addons[key].sourceFolder,
+          sourceFolder: config.addons[key].sourceFolder,
           destinations
         })
         console.info(`Loaded addon share "${key}"`)
