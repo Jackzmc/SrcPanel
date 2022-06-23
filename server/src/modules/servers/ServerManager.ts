@@ -71,7 +71,7 @@ export default class ServerManager {
         console.warn(`Skipping addon share \"${key}\" due to missing folders`)
       }
       try {
-        await stat(config.addons[key].folderLocation)
+        await stat(config.addons[key].sourceFolder)
         this.addonShares.push({
           name: key,
           srcFolder: config.addons[key].sourceFolder,
