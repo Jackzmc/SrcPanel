@@ -3,11 +3,11 @@
   <div class="container" v-if="ready">
     <div class="columns">
       <div :class="['column', {'is-8': prefetch !== undefined}]">
-        <b>Listing {{vpks.length}} workshop items - Click a name to view information</b>
+        <h5 class="title is-5">Listing {{vpks.length}} addons - Click a name to view information</h5>
+        <p class="subtitle">Download addons by submitting a workshop link in #maps</p>
         <table class="table is-striped is-fullwidth">
           <thead>
             <tr>
-              <th></th>
               <th><input type="text" class="input" placeholder="Search" v-model="search" /></th>
             </tr>
             <tr>
@@ -16,14 +16,16 @@
               <th>File Size</th>
               <th>Last Updated</th>
               <th v-for="dest in shareServers" :key="dest" class="has-text-centered" style="width:0">
-                {{ dest }}
+                <a @click="setSort('shareInfo', dest)">{{ dest }}
+                  <span v-if="sort?.id === dest">{{sortSymbol}}</span>
+                </a>
               </th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="vpk in filteredVPKs" :key="vpk.filename">
               <td>
-                <a v-if="vpk.workshop" @click="preview(vpk)" :data-tooltip="'Filename: '+ vpk.filename">{{vpk.workshop.title}}</a>
+                <a v-if="vpk.workshop" @click="preview(vpk)" :data-tooltip="'Filename: '+ vpk.filename + '.vpk'">{{vpk.workshop.title}}</a>
                 <span v-else>{{vpk.filename}}.vpk</span>
               </td>
               <td>
@@ -31,9 +33,11 @@
               </td>
               <td>
                 <span v-if="vpk.workshop">{{formatSize(vpk.workshop.filesize, true, 0)}}</span>
+                <span v-else>{{formatSize(vpk.filesize, true, 0)}}</span>
               </td>
               <td>
                 <span v-if="vpk.workshop">{{formatTime(vpk.workshop.lastUpdated)}}</span>
+                <span v-else>{{formatTime(vpk.lastModified)}}</span>
               </td>
               <td v-for="(dest, i) in shareServers" :key="dest" :class="['has-text-centered', {'column-separator': i == 0 }]">
                 <em v-if="!vpk.shareInfo">(n/a)</em>
@@ -88,6 +92,12 @@ let itemid = ref<any>()
 let search = ref<any>()
 let prefetch = ref<any>()
 let error = ref<string>()
+let showOnlyDest = ref<string>()
+let sort = ref<{
+  column: string,
+  id?: string,
+  descending: boolean
+} | undefined>()
 
 let share = ref<string>("default")
 
@@ -96,13 +106,42 @@ let shareServers = ref([])
 const isDownloadable = computed(() => {
   return itemid.value && prefetch.value.result && prefetch.value.lastValid === itemid.value && !prefetch.value.error
 })
-const filteredVPKs = computed(() => {
-  if (!search.value) {
-    return vpks.value
+const sortSymbol = computed(() => {
+  if(!sort.value) return ''
+  else if(sort.value.descending) return '(↓)'
+  else return '(↑)'
+})
+function setSort(column: string, id?: string) {
+  if(sort.value && !sort.value.descending) sort.value = undefined
+  else if(sort.value) {
+    sort.value.descending = false
+  } else {
+    sort.value = {
+      column,
+      id,
+      descending: true
+    }
   }
-  const query = search.value.toLowerCase()
-  return vpks.value.filter(vpk => {
-    return vpk.filename.toLowerCase().includes(query) || (vpk.workshop && vpk.workshop.title.toLowerCase().includes(query))
+}
+const filteredVPKs = computed(() => {
+  const query = search.value?.toLowerCase()
+  return vpks.value
+  .filter(vpk => {
+    return (!query || (
+      vpk.filename.toLowerCase().includes(query) ||
+        (vpk.workshop && vpk.workshop.title.toLowerCase().includes(query)
+      )
+    ))
+  })
+  .sort((a,b) => {
+    if(!sort.value) return 0
+    if(sort.value.descending) {
+      if(sort.value.id) return b[sort.value.column][sort.value.id] - a[sort.value.column][sort.value.id]
+      else return b[sort.value.column] - a[sort.value.column]
+    } else {
+      if(sort.value.id) return a[sort.value.column][sort.value.id] - b[sort.value.column][sort.value.id]
+      else return a[sort.value.column] - b[sort.value.column]
+    }
   })
 })
 const parsedDescription = computed(() => {

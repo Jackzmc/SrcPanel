@@ -10,8 +10,11 @@ interface AddonListEntry {
         deleted: boolean
         title: string,
         filesize: number,
+        lastUpdated: number
         // children: AddonChildListEntry[]
     }, 
+    filesize?: number,
+    lastModified?: number
     shareInfo: Record<string, boolean>
 }
 
@@ -155,8 +158,11 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                     cacheBufferKeys.push(`workshop.${match[1]}`)
                     cacheBufferIds.push(match[1])
                 } else {
+                    const stat = await fs.stat(path.join(share.sourceFolder, dirent.name))
                     results.push({
                         filename: dirent.name.slice(0, -4),
+                        filesize: stat.size,
+                        lastModified: Math.round(stat.mtime.getTime() / 1000),
                         shareInfo: await fastify.servers.getAddonInfo(shareId, dirent.name)
                     })
                 }
