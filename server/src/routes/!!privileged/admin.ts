@@ -84,8 +84,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                     await fastify.close()
                     process.exit()
                 } catch(err) {
-                    fastify.log.error(`Update failure on state: ${updateState}`, err.stack)
-                    fastify.log.error(response?.stderr, response?.stdout)
+                    fastify.log.error(`Update failure on state: ${updateState}: ` + err.stack)
+                    fastify.log.error(response)
                     reply.code(500).send({
                         ...response,
                         error: "UPDATE_ERROR",
