@@ -135,6 +135,7 @@ const filteredVPKs = computed(() => {
   })
   .sort((a,b) => {
     if(!sort.value) return 0
+    if(!b[sort.value.column] || !a[sort.value.column]) return -1
     if(sort.value.descending) {
       if(sort.value.id) return b[sort.value.column][sort.value.id] - a[sort.value.column][sort.value.id]
       else return b[sort.value.column] - a[sort.value.column]
