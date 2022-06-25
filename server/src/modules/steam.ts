@@ -68,14 +68,14 @@ export default class SteamAPI {
         throw new Error(`${response.statusText}: ${await response.text()}`)
     }
 
-    downloadItem(item: WorkshopItem, destination: string, filenameTemplate: string = "%ID%.vpk"): Promise<number> {
+    static downloadItem(item: WorkshopItem, destination: string, requestOptions?: any, filenameTemplate: string = "%ID%.vpk"): Promise<number> {
         return new Promise((resolve, reject) => {
             const filename = filenameTemplate
                 .replace(/%ID%/, item.publishedfileid)
                 .replace(/%TITLE%/, item.title)
             const filepath = path.join(destination, filename)
             const file = createWriteStream(filepath)
-            https.get(item.file_url, (response) => {
+            https.get(item.file_url, requestOptions, (response) => {
                 file.on('finish', () => {
                     file.close(() => {
                         resolve(file.bytesWritten)

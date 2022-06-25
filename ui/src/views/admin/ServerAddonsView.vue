@@ -1,14 +1,56 @@
 <template>
 <div>
+  <DownloadAddonModal v-if="showDownloadModal" :share="shareInfo" @close="showDownloadModal = false" />
   <div class="container" v-if="ready">
+    <div class="level">
+      <div class="level-left">
+        <div class="level-item">
+          <h5 class="title is-5">Listing {{vpks.length}} addons - Click a name to view information</h5>
+        </div>
+      </div>
+      <div class="level-right">
+        <div class="level-item">
+          <div class="field">
+            <label class="label">Share</label>
+            <div class="control">
+              <div class="select">
+                <select v-model="share">
+                  <option v-for="share in shares" :key="share" :value="share">
+                    {{share}}
+                  </option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="level-item">
+          <div class="field">
+            <label class="label">&nbsp;</label>
+            <div class="control">
+              <a class="button is-success is-fullwidth" @click="showDownloadModal = true">Add Addon</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p>
+      Click on an addon to view it's workshop information.
+    </p>
+    <p>
+      Download addons by sending a link in the #maps channel
+    </p>
+    <br>
     <div class="columns">
       <div :class="['column', {'is-8': prefetch !== undefined}]">
-        <h5 class="title is-5">Listing {{vpks.length}} addons - Click a name to view information</h5>
-        <p class="subtitle">Download addons by submitting a workshop link in #maps</p>
+
         <table class="table is-striped is-fullwidth">
           <thead>
             <tr>
               <th><input type="text" class="input" placeholder="Search" v-model="search" /></th>
+              <th />
+              <th />
+              <th />
+              <th v-for="dest in shareServers" :key="dest" />
             </tr>
             <tr>
               <th >File Name or Workshop Name</th>
@@ -80,6 +122,7 @@
 
 <script setup lang="ts">
 import { ref, watch, computed, onBeforeMount, onMounted } from 'vue'
+import DownloadAddonModal from '@/components/modals/DownloadAddonModal.vue'
 import { useRoute, useRouter } from 'vue-router'
 
 const emit = defineEmits([])
@@ -100,9 +143,17 @@ let sort = ref<{
 } | undefined>()
 
 let share = ref<string>("default")
-
+let shares = ref<string[]>(["default"])
 let shareServers = ref([])
 
+let showDownloadModal = ref(false)
+
+const shareInfo = computed(() => {
+  return {
+    name: share.value,
+    destinations: shareServers.value
+  }
+})
 const isDownloadable = computed(() => {
   return itemid.value && prefetch.value.result && prefetch.value.lastValid === itemid.value && !prefetch.value.error
 })
@@ -168,6 +219,21 @@ function submitKey() {
 function preview(entry: any) {
   router.push(`/admin/addons/${entry.filename}`)
   prefetch.value = entry.workshop
+}
+async function fetchShares() {
+  error.value = undefined
+  shares.value = []
+  try {
+    const response = await fetch(`/api/shares`)
+    const json = await response.json()
+    if(response.ok) {
+      shares.value = json.shares
+    } else {
+      error.value = json.error ? `${json.error}: ${json.message}` : response.statusText
+    }
+  } catch(err: any) {
+    error.value = err.message || err
+  }
 }
 async function fetchVPKS() {
   error.value = undefined
@@ -265,7 +331,10 @@ async function uninstallAddon(vpk: any, destKey: string) {
 }
 
 onBeforeMount(async() => {
-  await fetchVPKS()
+  Promise.allSettled([
+    fetchShares(),
+    fetchVPKS()
+  ])
   if(route.params.id) {
     for(const vpk of vpks.value) {
       if(vpk.filename === route.params.id) {

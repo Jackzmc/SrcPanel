@@ -46,7 +46,7 @@
           </a>
           <div class="navbar-dropdown is-left">
             <router-link to="/admin/addons" class="navbar-item">
-              Maps / Addons
+              Addons / Maps
             </router-link>
             <router-link to="/admin/servers" class="navbar-item">
               Server Management

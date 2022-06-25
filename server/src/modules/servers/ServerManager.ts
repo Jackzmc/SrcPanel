@@ -4,17 +4,14 @@ import Json5 from 'json5'
 import DNS from 'dns'
 import Server, { ConfigServerData } from './Server.js'
 import path from 'path'
+import Share, { ShareInfo } from '../Share.js';
 
-export interface AddonShare {
-  sourceFolder: string;
-  destinations: string[]
-  name: string
-}
+
 
 export default class ServerManager {
   private servers: Record<string, Server> = {}
   private refreshInterval: number
-  private addonShares: Record<string, AddonShare> = {}
+  private addonShares: Record<string, Share> = {}
 
   constructor() {
     this.load()
@@ -48,49 +45,22 @@ export default class ServerManager {
     return Object.keys(this.addonShares)
   }
 
-  public async getAddonInfo(shareId: string, filename: string) {
-    const share = this.addonShares[shareId.toLowerCase()]
-    if(!share) throw new Error(`Share ("${shareId}") does not exist`)
-    if(await this.doesFileExist(share.sourceFolder, filename)) {
-      let states: Record<string, boolean> = {}
-      if(share.destinations) {
-        for(const [destKey, destPath] of Object.entries(share.destinations)) {
-          states[destKey] = await this.doesFileExist(destPath, filename)
-        }
-      }
-      return states
-    } else {
-      return undefined
-    }
-    
-  }
-
-  private async doesFileExist(folder: string, file: string) {
-    try {
-      await stat(path.join(folder, file))
-      return true
-    } catch(err) {
-      if(err.code === "ENOENT") {
-        return false
-      } else 
-        throw err
-    }
-  } 
-
   private async load() {
     const content = readFileSync('./config/config.json', 'utf-8')
     const config = Json5.parse(content)
     for(const key in config.addons) {
-      if(!config.addons[key].sourceFolder) {
+      const data = config.addons[key] as Partial<ShareInfo>
+      if(!data.sourceFolder) {
         console.warn(`Skipping addon share \"${key}\": Missing property 'sourceFolder' in config`)
         continue
       }
+
       try {
-        await stat(config.addons[key].sourceFolder)
-        const destinations = config.addons[key].destinations || []
-        this.addonShares[key.toLowerCase()] = ({
+        await stat(data.sourceFolder)
+        const destinations = data.destinations || {}
+        this.addonShares[key.toLowerCase()] = new Share({
           name: key,
-          sourceFolder: config.addons[key].sourceFolder,
+          sourceFolder: data.sourceFolder,
           destinations
         })
         console.info(`Loaded addon share "${key}"`)
@@ -98,6 +68,7 @@ export default class ServerManager {
         console.warn(`Addon Share Directory "${key}" returned error: ${err}`)
       }
     }
+
     if(!config.addons["default"]) {
       console.warn("Warn: No default addon share found (no key named \"default\")")
     }

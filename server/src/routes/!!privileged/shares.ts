@@ -1,6 +1,9 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
 import fs from 'fs/promises'
 import path from 'path'
+import { exec } from 'child_process'
+import { WorkshopItem } from '../../modules/steam.js';
+
 
 const WS_ITEMID_REGEX = new RegExp(/(\d+).vpk/)
 
@@ -25,24 +28,28 @@ interface AddonChildListEntry {
         filesize: number,
     },
 }
+import ServerSideEventHandler from 'fastify-sse'
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions)  {
+
+
+
     fastify.get('/', async(req, reply) => {
         return {
             shares: fastify.servers.shares
         }
     })
 
-    fastify.get('/:shareid', async(req: FastifyRequest<{Params: {'shareid'?: string}}>, reply) => {
-        const shareId = req.params['shareid']
+    fastify.get('/:shareId', async(req: FastifyRequest<{Params: {shareId?: string}}>, reply) => {
+        const shareId = req.params.shareId
         const share = fastify.servers.getShare(shareId)
         return {
             share
         }
     })
 
-    fastify.get('/:shareid/addons/:filename', async(req: FastifyRequest<{Params: {'shareid': string, filename: string}}>, reply) => {
-        const shareId = req.params['shareid']
+    fastify.get('/:shareId/addons/:filename', async(req: FastifyRequest<{Params: {shareId: string, filename: string}}>, reply) => {
+        const shareId = req.params.shareId
         const share = fastify.servers.getShare(shareId)
         if(!share) {
             return reply.status(404).send({
@@ -51,34 +58,123 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             })
         }
         return {
-           destinations: await fastify.servers.getAddonInfo(shareId, req.params.filename)
+           destinations: await share.getAddonInfo(req.params.filename)
         }
     })
 
-    fastify.post('/:shareid/addons/:filename/install/:destkey', async(req: FastifyRequest<{Params: {'shareid': string, filename: string, destkey: string}}>, reply) => {
-        const shareId = req.params['shareid']
+    fastify.get('/:shareId/addons/:workshopId/download', async(req: FastifyRequest<{
+        Params: {shareId: string, workshopId: string},
+        Querystring: {'destinations'?: string, force?: boolean, sse?: boolean }
+    }>, reply) => {
+        const useSSE = req.query.sse
+        if(useSSE) {
+            reply.raw.writeHead(200, {
+                'Cache-Control': 'no-cache,no-transform',
+                'Content-Type': 'text/event-stream',
+                'Connection': 'keep-alive'
+            });
+            reply.raw.flushHeaders()
+            reply.raw.write('retry: 10000\n\n')
+        }
+        const share = fastify.servers.getShare(req.params.shareId)
+        if(!share) {
+            const payload = {
+                error: "Share Not Found", 
+                message: `No share with id \"${req.params.shareId.toLowerCase()}\" could be found. Share may be available, incorrecty configured or does not exist`   
+            }
+            useSSE ? reply.raw.write(`data: ${JSON.stringify(payload)}\n\n`) : reply.status(404).send(payload)
+        } else if(!req.query.force && await share.isInstalled(`${req.params.workshopId}.vpk`)) {
+            const payload = {
+                code: 'FILE_EXISTS',
+                error: "File exists",
+                message: "The addon is already downloaded. Provide ?force to force download."
+            }
+            useSSE ? reply.raw.write(`data: ${JSON.stringify(payload)}\n\n`) : reply.status(409).send(payload)
+        } else {
+            try {
+                if(useSSE) reply.raw.write(`data: {"state": "FETCH_INFO", "message": "Fetching information from steam"}\n\n`)
+                const children = await fastify.steam.getCollectionChildren(req.params.workshopId)
+                let details: WorkshopItem[] = []
+                if(!children) {
+                    details = await fastify.steam.getItemDetails([req.params.workshopId])
+                } else {
+                    details = await fastify.steam.getItemDetails(children)
+                }
+
+                for(const detail of details) {
+                    if(useSSE) reply.raw.write(`data: {"state": "DOWNLOADING", "entry": ${detail.publishedfileid}, "message": "Downloading "${detail.title}" (${detail.publishedfileid})"\n\n`)
+                    await share.steamDownload(detail)
+                }
+
+                if(useSSE) reply.raw.write(`data: {"state": "INSTALLING", "message": "Installing addons to destinations"}\n\n`)
+
+                let destResults: Record<string, Record<string, {result: "success" | "error", error?: string }>> = undefined
+                if(req.query.destinations) {
+                    destResults = {}
+                    const dests = req.query.destinations.split(",")
+                    for(const destKey of dests) {
+                        destResults[destKey] = {}
+                        for(const detail of details) {
+                            try {
+                                const filename = `${detail.publishedfileid}.vpk`
+                                await share.install(filename, destKey)
+                                destResults[destKey][detail.publishedfileid].result = "success"
+                            } catch(err) {
+                                if(useSSE) reply.raw.write(`data: {"state": "INSTALLING", "message": "Install failed for ${destKey}/${detail.publishedfileid}"}\n\n`)
+                                destResults[destKey][detail.publishedfileid] = {
+                                    result: "error",
+                                    error: err.message
+                                }
+                            }
+
+                        }
+                    }
+                }
+
+                if(!useSSE) {
+                    return {
+                        results: destResults
+                    }
+                }
+            } catch(error) {
+                const payload = {
+                    code: 'STEAM_ERROR',
+                    error,
+                    message: "An error occurred while fetching info or downloading the addon",
+                }
+                useSSE ? reply.raw.write(`data: ${JSON.stringify(payload)}`) : reply.status(500).send(payload)
+            }
+        }
+        if(useSSE) {
+            reply.raw.write(`data: {"state": "COMPLETE"}\n\n`)
+            // Let the client terminate the connection:
+            reply.hijack()
+            // Timeout if they haven't killed it
+            setTimeout(() => reply.raw.end(), 10000)
+        }
+    })
+
+    fastify.post('/:shareId/addons/:filename/install/:destkey', async(req: FastifyRequest<{Params: {shareId: string, filename: string, destKey: string}}>, reply) => {
+        const shareId = req.params.shareId
         const share = fastify.servers.getShare(shareId)
         if(!share) {
             return reply.status(404).send({
                 error: "Share Not Found", 
                 message: `No share with id \"${shareId.toLowerCase()}\" could be found. Share may be available, incorrecty configured or does not exist`   
             })
-        } else if(!share.destinations[req.params.destkey]) {
+        } else if(!share.destinations[req.params.destKey]) {
             return reply.status(404).send({
                 error: "Share Destination Not Found", 
-                message: `Share does not have a destination of id \"${req.params.destkey}\".`   
+                message: `Share does not have a destination of id \"${req.params.destKey}\".`   
             })
         }
         // Verify that the filename exists in the src:
-        let addonInfo = await fastify.servers.getAddonInfo(shareId, req.params.filename)
+        let addonInfo = await share.getAddonInfo(req.params.filename)
         if(addonInfo) {
             try {
-                const ln = `ln -sv "${share.sourceFolder}"/${req.params.filename}"${share.destinations[req.params.destkey]}"`
-                fastify.log.debug(ln)
-                await execPromise(`ln -sv "${share.sourceFolder}"/${req.params.filename} "${share.destinations[req.params.destkey]}"`)
-                addonInfo[req.params.destkey] = true
+                await share.install(req.params.filename, req.params.destKey)
+                addonInfo[req.params.destKey] = true
                 return {
-                    success: true,
                     addonInfo
                 }
             } catch(err) {
@@ -97,28 +193,27 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     })
 
     // Might be smarter to merge this with install
-    fastify.post('/:shareid/addons/:filename/uninstall/:destkey', async(req: FastifyRequest<{Params: {'shareid': string, filename: string, destkey: string}}>, reply) => {
-        const shareId = req.params['shareid']
+    fastify.post('/:shareId/addons/:filename/uninstall/:destkey', async(req: FastifyRequest<{Params: {shareId: string, filename: string, destKey: string}}>, reply) => {
+        const shareId = req.params.shareId
         const share = fastify.servers.getShare(shareId)
         if(!share) {
             return reply.status(404).send({
                 error: "Share Not Found", 
                 message: `No share with id \"${shareId.toLowerCase()}\" could be found. Share may be available, incorrecty configured or does not exist`   
             })
-        } else if(!share.destinations[req.params.destkey]) {
+        } else if(!share.destinations[req.params.destKey]) {
             return reply.status(404).send({
                 error: "Share Destination Not Found", 
-                message: `Share does not have a destination of id \"${req.params.destkey}\".`   
+                message: `Share does not have a destination of id \"${req.params.destKey}\".`   
             })
         }
         // Verify that the filename exists in the src:
-        let addonInfo = await fastify.servers.getAddonInfo(shareId, req.params.filename)
+        let addonInfo = await share.getAddonInfo(req.params.filename)
         if(addonInfo) {
             try {
-                await fs.unlink(path.join(share.destinations[req.params.destkey], req.params.filename))
-                addonInfo[req.params.destkey] = false
+                await share.uninstall(req.params.filename, req.params.destKey)
+                addonInfo[req.params.destKey] = true
                 return {
-                    success: true,
                     addonInfo
                 }
             } catch(err) {
@@ -136,8 +231,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
     })
 
-    fastify.get('/:shareid/addons', async(req: FastifyRequest<{Params: {'shareid'?: string}}>, reply) => {
-        const shareId = req.params['shareid']
+    fastify.get('/:shareId/addons', async(req: FastifyRequest<{Params: {shareId?: string}}>, reply) => {
+        const shareId = req.params.shareId
         const share = fastify.servers.getShare(shareId)
         if(!share) {
             return reply.status(404).send({
@@ -163,7 +258,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                         filename: dirent.name.slice(0, -4),
                         filesize: stat.size,
                         lastModified: Math.round(stat.mtime.getTime() / 1000),
-                        shareInfo: await fastify.servers.getAddonInfo(shareId, dirent.name)
+                        shareInfo: await share.getAddonInfo(dirent.name)
                     })
                 }
             }
@@ -179,7 +274,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 results.push({
                     filename: cacheBufferIds[i],
                     workshop: JSON.parse(result),
-                    shareInfo: await fastify.servers.getAddonInfo(shareId, `${cacheBufferIds[i]}.vpk`)
+                    shareInfo: await share.getAddonInfo(`${cacheBufferIds[i]}.vpk`)
                 })
             } else {
                 WSResolverBuffer.push(cacheBufferIds[i])
@@ -202,7 +297,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
                     results.push({
                         filename: WSResolverBuffer[i],
-                        shareInfo: await fastify.servers.getAddonInfo(shareId, `${WSResolverBuffer[i]}.vpk`),
+                        shareInfo: await share.getAddonInfo(`${WSResolverBuffer[i]}.vpk`),
                         workshop
                     })
 
@@ -220,8 +315,6 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
     })
 }
-
-import { exec } from 'child_process'
 
 async function execPromise(command: string): Promise<string> {
     return new Promise(function(resolve, reject) {

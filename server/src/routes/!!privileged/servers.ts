@@ -22,7 +22,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         if(!server.hasSystemd) {
             return reply.code(400).send({
                 error: "NO_SYSTEMD",
-                message: "Server does not have systemd to start up the server"
+                message: "Server has no valid configuration for automatic state management."
             })
         }
         try {
