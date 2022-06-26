@@ -57,7 +57,7 @@
             },
             {
                 "command": "respawn <player(s):players>",
-                "description": "Respawns the player at wherever you are looking. "
+                "description": "Respawns the player at wherever you are looking. NOTE: WILL RESPAWN ALIVE PLAYERS, wiping all their items"
             },
             {
                 "command": "model <survivor_name:string> [player(s):players] [keep:string]",
@@ -255,6 +255,10 @@
             {
                 "command": "l4dd_unreserve",
                 "description": "Removes the lobby reservation, which allows extra players to join (on improved+)"
+            },
+            {
+                "command": "sm_settings",
+                "description": "Opens a menu to select clientside options, such as disallowing being a player hat"
             }
         ]
     }
