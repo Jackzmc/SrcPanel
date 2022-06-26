@@ -107,7 +107,7 @@
         },
         {
             "name": "UziRules / AWP Smells",
-            "description": "Picking up a weapon gives them a UZI instead",
+            "description": "Picking up a weapon gives them a UZI or AWP instead",
             "modes": ["constant"],
             "prompts": [
                 {
@@ -130,9 +130,15 @@
               ]
         },
         {
-            "name": "Half Primary Ammo",
-            "description": "Cuts their primary reserve ammo in half",
+            "name": "Randomize Clip Ammo",
+            "description": "Randomly changes their clip ammo downwards",
             "modes": ["instant"]
+        },
+        {
+            "name": "Nerf Gun",
+            "description": "Makes all damage dealt by player 0",
+            "modes": ["constant"],
+            "subnotes": []
         }
     ],
     "Chat": [
@@ -268,12 +274,6 @@
                 "Percentage affected by sm_ftt_shove_fail_chance cvar (default: 50%)",
                 "Will still visually shove survivors, but will not affect them"
             ]
-        },
-        {
-            "name": "Nerf Gun",
-            "description": "Makes all damage dealt by player 0",
-            "modes": ["constant"],
-            "subnotes": []
         },
         {
             "name": "Car Splat",
