@@ -28,8 +28,6 @@ interface AddonChildListEntry {
         filesize: number,
     },
 }
-import ServerSideEventHandler from 'fastify-sse'
-
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions)  {
 
 

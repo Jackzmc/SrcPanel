@@ -57,8 +57,25 @@
             ]
         },
         {
+            "name": "Vocalize Specials",
+            "description": "Spawns whatever special they  vocalize",
+            "modes": ["instant"],
+            "prompts": [
+                {
+                    "flags": ["Mute Vocalization", "Do not mute"]
+                }
+            ]
+        },
+        {
             "name": "Instant Commons",
-            "description": "Spawns 30 zombies directly behind player and swarms them."
+            "description": "Spawns 30 zombies directly behind player and swarms them.",
+            "modes": ["instant", "constant"],
+            "prompts": [
+                {
+                    "flags": ["In Back", "In front"],
+                    "multi": false
+                }
+            ]
         }
     ],
     "Items": [
@@ -199,7 +216,13 @@
         {
             "name": "Slow Speed",
             "description": "Sets player speed to 0.8x of normal speed",
-            "modes": ["constant"]
+            "modes": ["constant"],
+            "prompts": [
+                {
+                  "flags": ["60% Movement Speed", "30% Movement Speed", "0% Movement Speed"],
+                  "multi": false
+                }
+              ]
         },
         {
             "name": "Higher Gravity",
@@ -237,7 +260,6 @@
                 "Use \"Throw It All\" to throw their items"
             ]
         },
-        
         {
             "name": "No Shove",
             "description": "Prevents a player from shoving",
@@ -248,9 +270,10 @@
             ]
         },
         {
-            "name": "CameTooEarly",
-            "description": "When they shoot, random chance they empty whole clip",
-            "modes": ["constant"]
+            "name": "Nerf Gun",
+            "description": "Makes all damage dealt by player 0",
+            "modes": ["constant"],
+            "subnotes": []
         },
         {
             "name": "Car Splat",
@@ -259,6 +282,11 @@
             "prompts": [
                 { "flags": ["On Top", "Into"], "multi": false}
             ] 
+        },
+        {
+            "name": "CameTooEarly",
+            "description": "When they shoot, random chance they empty whole clip",
+            "modes": ["constant"]
         }
     ],
     "_Combos_": {
