@@ -119,6 +119,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                                 destResults[destKey][detail.publishedfileid].result = "success"
                             } catch(err) {
                                 if(useSSE) reply.raw.write(`data: {"state": "INSTALLING", "message": "Install failed for ${destKey}/${detail.publishedfileid}"}\n\n`)
+                                console.warn(`[ShareInstaller] Install fail for  ${destKey}/${detail.publishedfileid}: `, err)
                                 destResults[destKey][detail.publishedfileid] = {
                                     result: "error",
                                     error: err.message
