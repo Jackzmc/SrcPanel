@@ -6,7 +6,7 @@ import { rm, unlink } from 'fs/promises';
 import path from 'path'
 const execPromise = util.promisify(exec);
 
-export type UpdateState = "NORMAL" | "GIT_PULL" | "UNLINK_NODE_MODULES" | "TSC" | "RESTARTING"
+export type UpdateState = "NORMAL" | "GIT_PULL" | "UNLINK_NODE_MODULES" | "PACKAGES_INSTALL" | "TSC" | "RESTARTING"
 let updateState: UpdateState = "NORMAL"
 
 export interface HealthReport {
@@ -67,7 +67,14 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                             rm(path.join(process.cwd(), 'node_modules'), { recursive: true, force: true})
                         )
                     }
-                    const timeTsc = await doState("TSC", execPromise('rm -rf dist; tsc'))
+
+                    const timePackagesInstall = await doState("PACKAGES_INSTALL", execPromise("yarn --frozen-lockfile", {
+                        cwd: process.cwd()
+                    }))
+
+                    const timeTsc = await doState("TSC", execPromise('rm -rf dist; tsc', {
+                        cwd: process.cwd()
+                    }))
 
                     updateState = "RESTARTING"
 
@@ -76,6 +83,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                         meta: {
                             timeGitPull,
                             timeRmNodeModules,
+                            timePackagesInstall,
                             timeTsc,
                             timeTotal: timeGitPull + timeRmNodeModules + timeTsc
                         }
