@@ -67,7 +67,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                             rm(path.join(process.cwd(), 'node_modules'), { recursive: true, force: true})
                         )
                     }
-                    const timeTsc = await doState("TSC", execPromise('tsc'))
+                    const timeTsc = await doState("TSC", execPromise('rm -rf dist; tsc'))
 
                     updateState = "RESTARTING"
 
