@@ -153,7 +153,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
     })
 
-    fastify.post('/:shareId/addons/:filename/install/:destkey', async(req: FastifyRequest<{Params: {shareId: string, filename: string, destKey: string}}>, reply) => {
+    fastify.post('/:shareId/addons/:filename/install/:destKey', async(req: FastifyRequest<{Params: {shareId: string, filename: string, destKey: string}}>, reply) => {
         const shareId = req.params.shareId
         const share = fastify.servers.getShare(shareId)
         if(!share) {
@@ -192,7 +192,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     })
 
     // Might be smarter to merge this with install
-    fastify.post('/:shareId/addons/:filename/uninstall/:destkey', async(req: FastifyRequest<{Params: {shareId: string, filename: string, destKey: string}}>, reply) => {
+    fastify.post('/:shareId/addons/:filename/uninstall/:destKey', async(req: FastifyRequest<{Params: {shareId: string, filename: string, destKey: string}}>, reply) => {
         const shareId = req.params.shareId
         const share = fastify.servers.getShare(shareId)
         if(!share) {
