@@ -70,7 +70,7 @@
                 <span v-if="sort?.id === 'lastUpdated'">{{sortSymbol}}</span>
               </a></th>
               <th v-for="dest in shareServers" :key="dest" class="has-text-centered" style="width:0">
-                <a @click="setSort('shareInfo', dest)">{{ dest }}
+                <a @click="setSort(dest, 'shareInfo')">{{ dest }}
                   <span v-if="sort?.id === dest">{{sortSymbol}}</span>
                 </a>
               </th>
@@ -138,12 +138,10 @@ import DownloadAddonModal from '@/components/modals/DownloadAddonModal.vue'
 import { useRoute, useRouter } from 'vue-router'
 
 const SORT_NAME = (a: any, b: any) => {
-  console.log((a.workshop?.title ?? a.filename).localeCompare(b.workshop?.title ?? b.filename))
   return (a.workshop?.title ?? a.filename).localeCompare(b.workshop?.title ?? b.filename)
 }
 const SORT_FILE_SIZE = (a: any, b: any) => {
-  if(!a.workshop || !b.workshop) return 0
-  return a.workshop.filesize - b.workshop.filesize
+  return (a.filesize ?? a.workshop.filesize) - (b.filesize ?? b.workshop.filesize)
 }
 const SORT_WORKSHOP = (a: any, b: any) => {
   if(a.workshop && !b.workshop) return 1
@@ -191,20 +189,11 @@ const sortSymbol = computed(() => {
   else if(sort.value.descending) return '(↓)'
   else return '(↑)'
 })
-function setSort(column: string, id: string) {
-  if(sort.value && !sort.value.descending) sort.value = undefined
-  else if(sort.value) {
-    sort.value.descending = false
-  } else {
-    sort.value = {
-      id,
-      func: (a: any, b: any) => {
-        if(id) return a[column][id] - b[column][id]
-        else return a[column] - b[column]
-      },
-      descending: true
-    }
-  }
+function setSort(id: string, column: string) {
+  setSortFunc(id, (a: any, b: any) => {
+    if(id) return a[column][id] - b[column][id]
+    else return a[column] - b[column]
+  })
 }
 function setSortFunc(id: string, sortFunc: Function) {
   if(sort.value && (!sort.value.descending || sort.value.id != id)) sort.value = undefined
