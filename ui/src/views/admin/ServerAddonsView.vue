@@ -154,6 +154,7 @@ const SORT_LAST_UPDATED = (a: any, b: any) => {
 const route = useRoute()
 const router = useRouter()
 
+
 let vpks = ref<any[]>([])
 let ready = ref(false)
 let itemid = ref<any>()
@@ -190,8 +191,7 @@ const sortSymbol = computed(() => {
 })
 function setSort(id: string, column: string) {
   setSortFunc(id, (a: any, b: any) => {
-    if(!a[column] && b[column]) return 1
-    if(a[column] && !b[column]) return -1
+    if(!a[column] || !b[column]) return 0
     return a[column][id] - b[column][id]
   })
 }
@@ -247,10 +247,6 @@ const parsedDescription = computed(() => {
     .replace(/\[\*\](.*)/gi, '<li>$1</li>')
     .replace(/\[\/([a-zA-Z0-9]+)\]/gi, '</$1>')
 })
-
-function submitKey() {
-  fetchVPKS()
-}
 
 function preview(entry: any) {
   router.push(`/admin/addons/${entry.filename}`)
