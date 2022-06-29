@@ -47,13 +47,13 @@
           <thead>
             <tr>
               <th><input type="text" class="input" placeholder="Search" v-model="search" /></th>
-              <th />
-              <th />
-              <th />
+              <th></th>
+              <th data-tooltip="Total file size of all addons">{{ formatSize(totalFileSize, true, 0) }}</th>
+              <th></th>
               <th v-for="dest in shareServers" :key="dest" />
             </tr>
             <tr>
-              <th >File Name or Workshop Name</th>
+              <th >File / Workshop Name </th>
               <th style="width:0">Workshop</th>
               <th>File Size</th>
               <th>Last Updated</th>
@@ -145,6 +145,7 @@ let sort = ref<{
 let share = ref<string>("default")
 let shares = ref<string[]>(["default"])
 let shareServers = ref([])
+let totalFileSize = ref(0)
 
 let showDownloadModal = ref(false)
 
@@ -247,6 +248,7 @@ async function fetchVPKS() {
         if(entry.workshop) {
           if(entry.workshop.deleted) entry.workshop = null
           else entry.workshop.url = `https://steamcommunity.com/sharedfiles/filedetails/?id=${entry.filename}`
+          totalFileSize.value += entry.workshop.filesize
         }
         return entry
       })
