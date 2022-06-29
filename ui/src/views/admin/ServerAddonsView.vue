@@ -53,10 +53,22 @@
               <th v-for="dest in shareServers" :key="dest" />
             </tr>
             <tr>
-              <th >File / Workshop Name </th>
-              <th style="width:0">Workshop</th>
-              <th>File Size</th>
-              <th>Last Updated</th>
+              <th><a @click="setSortFunc('filename', SORT_NAME)">
+                File / Workshop Name
+                <span v-if="sort?.id === 'filename'">{{sortSymbol}}</span>
+              </a></th>
+              <th style="width:0"><a @click="setSortFunc('isWorkshop', SORT_WORKSHOP)">
+                Workshop
+                <span v-if="sort?.id === 'isWorkshop'">{{sortSymbol}}</span>
+              </a></th>
+              <th><a @click="setSortFunc('filesize', SORT_FILE_SIZE)">
+                File Size
+                <span v-if="sort?.id === 'filesize'">{{sortSymbol}}</span>
+              </a></th>
+              <th><a @click="setSortFunc('lastUpdated', SORT_LAST_UPDATED)">
+                Last Updated
+                <span v-if="sort?.id === 'lastUpdated'">{{sortSymbol}}</span>
+              </a></th>
               <th v-for="dest in shareServers" :key="dest" class="has-text-centered" style="width:0">
                 <a @click="setSort('shareInfo', dest)">{{ dest }}
                   <span v-if="sort?.id === dest">{{sortSymbol}}</span>
@@ -125,6 +137,22 @@ import { ref, watch, computed, onBeforeMount, onMounted } from 'vue'
 import DownloadAddonModal from '@/components/modals/DownloadAddonModal.vue'
 import { useRoute, useRouter } from 'vue-router'
 
+const SORT_NAME = (a: any, b: any) => {
+  console.log((a.workshop?.title ?? a.filename).localeCompare(b.workshop?.title ?? b.filename))
+  return (a.workshop?.title ?? a.filename).localeCompare(b.workshop?.title ?? b.filename)
+}
+const SORT_FILE_SIZE = (a: any, b: any) => {
+  if(!a.workshop || !b.workshop) return 0
+  return a.workshop.filesize - b.workshop.filesize
+}
+const SORT_WORKSHOP = (a: any, b: any) => {
+  if(a.workshop && !b.workshop) return 1
+  else if(!a.workshop && b.workshop) return -1
+  return 0
+}
+const SORT_LAST_UPDATED = (a: any, b: any) => {
+  return (a.lastModified ?? a.workshop.lastUpdated) - (b.lastModified ?? b.workshop.lastUpdated)
+}
 const emit = defineEmits([])
 const route = useRoute()
 const router = useRouter()
@@ -137,8 +165,8 @@ let prefetch = ref<any>()
 let error = ref<string>()
 let showOnlyDest = ref<string>()
 let sort = ref<{
-  column: string,
-  id?: string,
+  id: string,
+  func: Function,
   descending: boolean
 } | undefined>()
 
@@ -163,13 +191,28 @@ const sortSymbol = computed(() => {
   else if(sort.value.descending) return '(↓)'
   else return '(↑)'
 })
-function setSort(column: string, id?: string) {
+function setSort(column: string, id: string) {
   if(sort.value && !sort.value.descending) sort.value = undefined
   else if(sort.value) {
     sort.value.descending = false
   } else {
     sort.value = {
-      column,
+      id,
+      func: (a: any, b: any) => {
+        if(id) return a[column][id] - b[column][id]
+        else return a[column] - b[column]
+      },
+      descending: true
+    }
+  }
+}
+function setSortFunc(id: string, sortFunc: Function) {
+  if(sort.value && !sort.value.descending) sort.value = undefined
+  else if(sort.value) {
+    sort.value.descending = false
+  } else {
+    sort.value = {
+      func: sortFunc,
       id,
       descending: true
     }
@@ -177,6 +220,19 @@ function setSort(column: string, id?: string) {
 }
 const filteredVPKs = computed(() => {
   const query = search.value?.toLowerCase()
+  let _sort = (a: any, b: any) => { return 0 }
+  if(sort.value) {
+    _sort = (a: any, b: any) => {
+      const { id, descending, func } = sort.value! as { column: string, id: string, descending: boolean, func: Function }
+      if(descending) {
+        return func(b, a)
+      } else {
+        return func(a, b)
+      }
+    }
+  }
+
+
   return vpks.value
   .filter(vpk => {
     return (!query || (
@@ -185,17 +241,7 @@ const filteredVPKs = computed(() => {
       )
     ))
   })
-  .sort((a,b) => {
-    if(!sort.value) return 0
-    if(!b[sort.value.column] || !a[sort.value.column]) return -1
-    if(sort.value.descending) {
-      if(sort.value.id) return b[sort.value.column][sort.value.id] - a[sort.value.column][sort.value.id]
-      else return b[sort.value.column] - a[sort.value.column]
-    } else {
-      if(sort.value.id) return a[sort.value.column][sort.value.id] - b[sort.value.column][sort.value.id]
-      else return a[sort.value.column] - b[sort.value.column]
-    }
-  })
+  .sort(_sort)
 })
 const parsedDescription = computed(() => {
   if(!prefetch.value) return
