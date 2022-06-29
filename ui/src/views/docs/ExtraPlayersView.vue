@@ -3,7 +3,7 @@
   <div class="columns">
     <div class="column is-8">
       <div class="content">
-        <p>Only the main server (“Improved”) supports more than 4 players for campaign. By default, up to 12 people can join, first 4 by lobby, the rest by direct connection (the “connect lgs.jackz.me” command).</p>
+        <p>Only the main server (“Improved”) supports more than 4 players for campaign. By default, up to 12 people can join, first 4 by lobby, the rest by direct connection (the “connect l4d2.jackz.me” command).</p>
         <p>If you want to make it easier you can set up an 8 player lobby using this addon & then follow steps:
         <a href="https://steamcommunity.com/sharedfiles/filedetails/?id=2276071285">https://steamcommunity.com/sharedfiles/filedetails/?id=2276071285</a>
         </p>
@@ -15,7 +15,7 @@
                 <em>This makes it so that only you need download the addon to play</em>
             </li>
             <li>Set the server the lobby connects to by typing this in console:</li>
-            <li>mm_dedicated_force_servers 45.33.30.87</li>
+            <li>mm_dedicated_force_servers 74.91.114.239</li>
         </ol>
         <p>You can even have two separate lobbies of 8 and 8 connect and they will merge into the server!</p>
         <article class="message is-warning">
