@@ -151,7 +151,6 @@ const SORT_WORKSHOP = (a: any, b: any) => {
 const SORT_LAST_UPDATED = (a: any, b: any) => {
   return (a.lastModified ?? a.workshop.lastUpdated) - (b.lastModified ?? b.workshop.lastUpdated)
 }
-const emit = defineEmits([])
 const route = useRoute()
 const router = useRouter()
 
@@ -191,8 +190,9 @@ const sortSymbol = computed(() => {
 })
 function setSort(id: string, column: string) {
   setSortFunc(id, (a: any, b: any) => {
-    if(id) return a[column][id] - b[column][id]
-    else return a[column] - b[column]
+    if(!a[column] && b[column]) return 1
+    if(a[column] && !b[column]) return -1
+    return a[column][id] - b[column][id]
   })
 }
 function setSortFunc(id: string, sortFunc: Function) {
