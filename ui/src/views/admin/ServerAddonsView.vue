@@ -207,7 +207,7 @@ function setSort(column: string, id: string) {
   }
 }
 function setSortFunc(id: string, sortFunc: Function) {
-  if(sort.value && !sort.value.descending) sort.value = undefined
+  if(sort.value && (!sort.value.descending || sort.value.id != id)) sort.value = undefined
   else if(sort.value) {
     sort.value.descending = false
   } else {
