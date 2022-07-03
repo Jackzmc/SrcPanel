@@ -5,7 +5,7 @@
       <p class="modal-card-title">Install Addon
         <span class="tag is-info has-tooltip-bottom is-pulled-right mr-2 is-rounded" data-tooltip="The target share">{{props.share.name}}</span>
       </p>
-      <button class="delete" aria-label="close" @click='close'></button>
+      <button v-if="downloadingState == 0" class="delete" aria-label="close" @click='close'></button>
     </header>
     <section class="modal-card-body" v-if="downloadingState == 0">
       <div class="field">
