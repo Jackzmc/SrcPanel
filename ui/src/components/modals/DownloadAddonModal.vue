@@ -55,7 +55,7 @@ import Modal from '@/components/Modal.vue'
 import { computed,ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
-const WORKSHOP_LINK_REGEX = new RegExp(/https:\/\/steamcommunity\.com\/sharedfiles\/filedetails\/\?id=(\d*)/)
+const WORKSHOP_LINK_REGEX = new RegExp(/https:\/\/steamcommunity\.com\/(sharedfiles|workshop)\/filedetails\/\?id=(\d*)/)
 
 const emit = defineEmits(['close'])
 const props = defineProps<{
@@ -70,7 +70,7 @@ let updateDone = ref(false)
 
 function verifyLink(test: any) {
   const match = test.target.value.match(WORKSHOP_LINK_REGEX)
-  if(match) workshopId.value = match[1]
+  if(match) workshopId.value = match[2]
 }
 
 const route = useRoute()
