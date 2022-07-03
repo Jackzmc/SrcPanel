@@ -113,18 +113,15 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                     for(const destKey of dests) {
                         destResults[destKey] = {}
                         for(const detail of details) {
-                            if(!detail) {
-                                console.warn(`[ShareInstaller] Install fail for  ${destKey}: ${detail}`)
-                                if(useSSE) reply.raw.write(`data: {"state": "INSTALLING", "message": "Install failed for ${destKey}, undefined details"\n\n`)
-                                continue
-                            }
                             try {
                                 const filename = `${detail.publishedfileid}.vpk`
                                 await share.install(filename, destKey)
-                                destResults[destKey][detail.publishedfileid].result = "success"
+                                destResults[destKey][detail.publishedfileid] = { 
+                                    result: "success"
+                                }
                             } catch(err) {
                                 if(useSSE) reply.raw.write(`data: {"state": "INSTALLING", "message": "Failed to install ${detail.publishedfileid} for ${destKey}"\n\n`)
-                                console.warn(`[ShareInstaller] Install fail for  ${destKey}/${detail.publishedfileid}: `, err)
+                                console.warn(`[ShareInstaller] Install fail for ${destKey}/${detail.publishedfileid}: `, err)
                                 destResults[destKey][detail.publishedfileid] = {
                                     result: "error",
                                     error: err.message

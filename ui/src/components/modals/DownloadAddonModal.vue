@@ -108,7 +108,7 @@ function startDownload(force = false) {
         sse.close()
         downloadLog.value.push({
           state: "DONE",
-          message: `Took ${Math.round((Date.now() - start) / 1000)} seconds`
+          message: `Took ${Math.round((Date.now() - start) / 1000)} seconds. Map will not be playable until the server(s) have restarted. You can restart servers from the 'Server Management' page.`
         })
         if(!showForceDownload.value || force) updateDone.value = true
       } else {
