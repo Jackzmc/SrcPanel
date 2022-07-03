@@ -82,7 +82,7 @@ function startDownload(force = false) {
   downloadingState.value = force ? 2 : 1
   downloadLog.value = []
   const start = Date.now()
-  const sse = new EventSource(`/api/shares/${props.share.name}/addons/${workshopId.value}/download?destinations=${installDestinations.value.join(',')}&sse=1&` + (force ? '&force=1' : ''))
+  const sse = new EventSource(`/api/shares/${props.share.name}/addons/${workshopId.value}/download?destinations=${installDestinations.value.join(',')}&sse=1` + (force ? '&force=1' : ''))
   // Don't care about see.onerror, will trigger when server closes
   sse.onerror = () => {
     downloadLog.value.push({
