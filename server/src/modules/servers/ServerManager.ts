@@ -4,7 +4,7 @@ import Json5 from 'json5'
 import DNS from 'dns'
 import Server, { ConfigServerData } from './Server.js'
 import path from 'path'
-import Share, { ShareInfo } from '../Share.js';
+import Share, { ShareDestination, ShareInfo } from '../Share.js';
 
 
 
@@ -45,19 +45,38 @@ export default class ServerManager {
     return Object.keys(this.addonShares)
   }
 
-  private async load() {
-    const content = readFileSync('./config/config.json', 'utf-8')
-    const config = Json5.parse(content)
+  private async loadShares(config: any) {
     for(const key in config.addons) {
       const data = config.addons[key] as Partial<ShareInfo>
       if(!data.sourceFolder) {
-        console.warn(`Skipping addon share \"${key}\": Missing property 'sourceFolder' in config`)
+        console.warn(`[Warn] Skipping addon share \"${key}\": Missing property 'sourceFolder' in config`)
         continue
       }
 
       try {
         await stat(data.sourceFolder)
-        const destinations = data.destinations || {}
+        const destinations = data.destinations as ShareDestination[] || []
+        for(let dest of Object.values(destinations)) {
+          try {
+            await stat(dest.path)
+            if(dest.serverIds) {
+              const serverIds = []
+              for(const id of dest.serverIds) {
+                const _id = id.toLowerCase()
+                if(this.servers[_id]) {
+                  serverIds.push(_id)
+                } else {
+                  console.warn(`[Warn] Addon Share "${key}" destination "${dest.id}" includes non existent server id: "${_id}"; skipping`)
+                }
+              }
+              dest.serverIds = serverIds
+            }
+          } catch(err) {
+            console.warn(`[Warn] Addon Share "${key}" destination "${dest.id}" path is invalid: "${dest.path}"`, err)
+          }
+          
+        }
+
         this.addonShares[key.toLowerCase()] = new Share({
           name: key,
           sourceFolder: data.sourceFolder,
@@ -72,6 +91,11 @@ export default class ServerManager {
     if(!config.addons["default"]) {
       console.warn("Warn: No default addon share found (no key named \"default\")")
     }
+  }
+
+  private async load() {
+    const content = readFileSync('./config/config.json', 'utf-8')
+    const config = Json5.parse(content)
 
     this.refreshInterval = 1000 * (config['refreshIntervalSeconds'] ?? 60)
 
@@ -131,5 +155,7 @@ export default class ServerManager {
     }
 
     await Promise.allSettled(serverPromises)
+
+    await this.loadShares(config)
   }
 }

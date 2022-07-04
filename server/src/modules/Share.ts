@@ -5,30 +5,38 @@ import { exec } from 'child_process'
 
 const DOWNLOAD_TIMEOUT = 1000 * 60 * 3
 
+export interface ShareDestination {
+    id: string,
+    name?: string,
+    serverIds?: string[],
+    path: string
+}
 
 export interface ShareInfo {
     sourceFolder: string;
-    destinations: Record<string, string>
+    destinations: ShareDestination[]
     name: string
   }
 
 export default class Share {
     public name: string
     public sourceFolder: string
-    public destinations: Record<string, string> = {}
+    public destinations: Record<string, ShareDestination> = {}
 
     constructor(shareInfo: ShareInfo) {
         this.name = shareInfo.name,
-        this.sourceFolder = shareInfo.sourceFolder,
-        this.destinations = shareInfo.destinations || {}
+        this.sourceFolder = shareInfo.sourceFolder
+        for(const dest of shareInfo.destinations) {
+            this.destinations[dest.id] = dest
+        }
     }
 
     public async getAddonInfo(filename: string) {
         if(await this.doesFileExist(this.sourceFolder, filename)) {
           let states: Record<string, boolean> = {}
           if(this.destinations) {
-            for(const [destKey, destPath] of Object.entries(this.destinations)) {
-              states[destKey] = await this.doesFileExist(destPath, filename)
+            for(const dest of Object.values(this.destinations)) {
+              states[dest.id] = await this.doesFileExist(dest.path, filename)
             }
           }
           return states
@@ -58,14 +66,14 @@ export default class Share {
     }
 
     public async uninstall(filename: string, destinationKey: string) {
-        const destPath = this.destinations[destinationKey]
-        if(!destPath) throw new Error(`Destination "${destinationKey}" does not exist`)
+        const dest = this.destinations[destinationKey]
+        if(!dest) throw new Error(`Destination "${destinationKey}" does not exist`)
         
         if(!this.doesFileExist(this.sourceFolder, filename)) {
             throw new Error(`File \"${filename}\" does not exist in ${this.sourceFolder}`)
         }
 
-        await unlink(path.join(destPath, filename))
+        await unlink(path.join(dest.path, filename))
     }
 
     private async doesFileExist(folder: string, file: string) {

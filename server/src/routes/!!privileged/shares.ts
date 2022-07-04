@@ -46,7 +46,108 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
     })
 
+
+    fastify.get('/:shareId/addons', async(req: FastifyRequest<{Params: {shareId?: string}}>, reply) => {
+        const shareId = req.params.shareId
+        const share = fastify.servers.getShare(shareId)
+        if(!share) {
+            return reply.status(404).send({
+                error: "Share Not Found", 
+                message: `No share with id \"${shareId.toLowerCase()}\" could be found. Share may be available, incorrecty configured or does not exist`   
+            })
+        }
+        const dirents = await fs.readdir(share.sourceFolder, { withFileTypes: true }) 
+
+        const results: AddonListEntry[] = []
+        const cacheBufferKeys = []
+        const cacheBufferIds = []
+
+        for(const dirent of dirents) {
+            if(dirent.isFile() && dirent.name.endsWith(".vpk")) {
+                const match = dirent.name.match(WS_ITEMID_REGEX)
+                if(match && match.length == 2) {
+                    cacheBufferKeys.push(`workshop.${match[1]}`)
+                    cacheBufferIds.push(match[1])
+                } else {
+                    const stat = await fs.stat(path.join(share.sourceFolder, dirent.name))
+                    results.push({
+                        filename: dirent.name.slice(0, -4),
+                        filesize: stat.size,
+                        lastModified: Math.round(stat.mtime.getTime() / 1000),
+                        shareInfo: await share.getAddonInfo(dirent.name)
+                    })
+                }
+            }
+        }
+
+        const WSResolverBuffer = []
+        
+        // Because redis errors on empty array. which is fucking stupid but alright
+        const cacheResults = cacheBufferKeys.length > 0 ? await fastify.cache.mGet(cacheBufferKeys) : []
+        for(let i = 0; i < cacheResults.length; i++) {
+            const result = null//cacheResults[i]
+            if(result) {
+                results.push({
+                    filename: cacheBufferIds[i],
+                    workshop: JSON.parse(result),
+                    shareInfo: await share.getAddonInfo(`${cacheBufferIds[i]}.vpk`)
+                })
+            } else {
+                WSResolverBuffer.push(cacheBufferIds[i])
+            }
+        }
+
+        if(WSResolverBuffer.length > 0) {
+            try {
+                const wsDetails = await fastify.steam.getItemDetails(WSResolverBuffer)
+                for(let i = 0; i < wsDetails.length; i++) {
+                    const workshop = {
+                        deleted: wsDetails[i].title === undefined,
+                        title: wsDetails[i].title,
+                        filesize: wsDetails[i].file_size,
+                        fileUrl: wsDetails[i].file_url,
+                        previewUrl: wsDetails[i].preview_url,
+                        description: wsDetails[i].description,
+                        lastUpdated: wsDetails[i].time_updated
+                    }
+
+                    results.push({
+                        filename: WSResolverBuffer[i],
+                        shareInfo: await share.getAddonInfo(`${WSResolverBuffer[i]}.vpk`),
+                        workshop
+                    })
+
+                    // This will be slow, but should only run once or twice
+                    await fastify.cache.set(`workshop.${wsDetails[i].publishedfileid}`, JSON.stringify(workshop))
+                }
+            } catch(err) {
+                fastify.log.error("Error resolving WSResolverBuffer, getItemDetails errored: " + err)
+            }
+        }
+        return {
+            addons: results,
+            shareInfo: {
+                id: share.name,
+                destinations: Object.values(share.destinations)
+                    .map(dest => {
+                        return {
+                            id: dest.id,
+                            name: dest.name,
+                            serverIds: dest.serverIds
+                        }
+                    })
+            }
+        }
+
+    })
+
     fastify.get('/:shareId/addons/:filename', async(req: FastifyRequest<{Params: {shareId: string, filename: string}}>, reply) => {
+        if(!req.params.filename) {
+            return reply.status(401).send({
+                error: "No filename provided", 
+                message: `Filename is blank`   
+            })
+        }
         const shareId = req.params.shareId
         const share = fastify.servers.getShare(shareId)
         if(!share) {
@@ -230,90 +331,6 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 message: `Share does not have a downloaded filename \"${req.params.filename}\".`   
             })
         }
-    })
-
-    fastify.get('/:shareId/addons', async(req: FastifyRequest<{Params: {shareId?: string}}>, reply) => {
-        const shareId = req.params.shareId
-        const share = fastify.servers.getShare(shareId)
-        if(!share) {
-            return reply.status(404).send({
-                error: "Share Not Found", 
-                message: `No share with id \"${shareId.toLowerCase()}\" could be found. Share may be available, incorrecty configured or does not exist`   
-            })
-        }
-        const dirents = await fs.readdir(share.sourceFolder, { withFileTypes: true }) 
-
-        const results: AddonListEntry[] = []
-        const cacheBufferKeys = []
-        const cacheBufferIds = []
-
-        for(const dirent of dirents) {
-            if(dirent.isFile() && dirent.name.endsWith(".vpk")) {
-                const match = dirent.name.match(WS_ITEMID_REGEX)
-                if(match && match.length == 2) {
-                    cacheBufferKeys.push(`workshop.${match[1]}`)
-                    cacheBufferIds.push(match[1])
-                } else {
-                    const stat = await fs.stat(path.join(share.sourceFolder, dirent.name))
-                    results.push({
-                        filename: dirent.name.slice(0, -4),
-                        filesize: stat.size,
-                        lastModified: Math.round(stat.mtime.getTime() / 1000),
-                        shareInfo: await share.getAddonInfo(dirent.name)
-                    })
-                }
-            }
-        }
-
-        const WSResolverBuffer = []
-        
-        // Because redis errors on empty array. which is fucking stupid but alright
-        const cacheResults = cacheBufferKeys.length > 0 ? await fastify.cache.mGet(cacheBufferKeys) : []
-        for(let i = 0; i < cacheResults.length; i++) {
-            const result = null//cacheResults[i]
-            if(result) {
-                results.push({
-                    filename: cacheBufferIds[i],
-                    workshop: JSON.parse(result),
-                    shareInfo: await share.getAddonInfo(`${cacheBufferIds[i]}.vpk`)
-                })
-            } else {
-                WSResolverBuffer.push(cacheBufferIds[i])
-            }
-        }
-
-        if(WSResolverBuffer.length > 0) {
-            try {
-                const wsDetails = await fastify.steam.getItemDetails(WSResolverBuffer)
-                for(let i = 0; i < wsDetails.length; i++) {
-                    const workshop = {
-                        deleted: wsDetails[i].title === undefined,
-                        title: wsDetails[i].title,
-                        filesize: wsDetails[i].file_size,
-                        fileUrl: wsDetails[i].file_url,
-                        previewUrl: wsDetails[i].preview_url,
-                        description: wsDetails[i].description,
-                        lastUpdated: wsDetails[i].time_updated
-                    }
-
-                    results.push({
-                        filename: WSResolverBuffer[i],
-                        shareInfo: await share.getAddonInfo(`${WSResolverBuffer[i]}.vpk`),
-                        workshop
-                    })
-
-                    // This will be slow, but should only run once or twice
-                    await fastify.cache.set(`workshop.${wsDetails[i].publishedfileid}`, JSON.stringify(workshop))
-                }
-            } catch(err) {
-                fastify.log.error("Error resolving WSResolverBuffer, getItemDetails errored: " + err)
-            }
-        }
-        return {
-            addons: results,
-            shareDestinations: Object.keys(share.destinations)
-        }
-
     })
 }
 
