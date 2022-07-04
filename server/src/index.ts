@@ -23,13 +23,14 @@ const MySQLStore = MySQLSession(FastifySession)
 const app = Fastify({
     trustProxy: process.env.NODE_ENV === "production",
     logger: {
-        prettyPrint:
-            process.env.NODE_ENV !== 'production'
+        transport: process.env.NODE_ENV !== 'production'
             ? {
-                translateTime: 'HH:MM:ss Z',
-                ignore: 'pid,hostname'
-              }
-            : false,
+                target: 'pino-pretty',
+                options: {
+                    translateTime: 'HH:MM:ss Z',
+                    ignore: 'pid,hostname'
+                }
+            } : undefined,
         level: process.env.FASTIFY_DEBUG_LEVEL || 
             (process.env.NODE_ENV !== "production" ? 'debug' : 'error')
       }
@@ -48,6 +49,8 @@ declare module 'fastify' {
   interface Session extends CustomSession {}
 }
 
+import FastifySwagger from '@fastify/swagger'
+
 app.register(import('./middlewares/database.js'))
 .then(async() => {
     app.register(FastifyCookie)
@@ -62,6 +65,8 @@ app.register(import('./middlewares/database.js'))
         }, app.db),
         saveUninitialized: false
     })
+
+    await setupSwagger()
 
 
     const CORS_WHITELIST = process.env.CORS_WHITELIST ? process.env.CORS_WHITELIST.split(",") : [] 
@@ -134,13 +139,62 @@ app.register(import('./middlewares/database.js'))
 
     }
 
-    loadRoutes(mainPrefix, path.join(__dirname, 'routes'))
+    await loadRoutes(mainPrefix, path.join(__dirname, 'routes'))
 
     try {
-        await app.listen(process.env.WEB_PORT || 8081)
+        await app.listen({
+            port: Number(process.env.WEB_PORT) || 8081
+        })
     } catch (err) {
         app.log.error(err)
         process.exit(1)
     }
+
+  
+      
 })
 
+async function setupSwagger() {
+    await app.register(FastifySwagger, {
+        routePrefix: '/api-docs',
+        swagger: {
+          info: {
+            title: 'Test swagger',
+            description: 'Testing the Fastify swagger API',
+            version: '0.1.0'
+          },
+          externalDocs: {
+            url: 'https://swagger.io',
+            description: 'Find more info here'
+          },
+          host: 'localhost',
+          schemes: ['http'],
+          consumes: ['application/json'],
+          produces: ['application/json'],
+          definitions: {
+            steamid: {
+                type: 'string',
+            }
+          },
+          securityDefinitions: {
+            apiKey: {
+              type: 'apiKey',
+              name: 'X-APIKEY',
+              in: 'header'
+            }
+          },
+        },
+        exposeRoute: true,
+        hideUntagged: false,
+        uiConfig: {
+          docExpansion: 'full',
+          deepLinking: false
+        },
+        uiHooks: {
+          onRequest: function (request, reply, next) { next() },
+          preHandler: function (request, reply, next) { next() }
+        },
+        staticCSP: true,
+        transformStaticCSP: (header) => header,
+    })
+} 

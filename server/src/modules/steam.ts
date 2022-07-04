@@ -22,7 +22,6 @@ export default class SteamAPI {
         for(const entry of json.apps) {
             if(entry.name != '') this.appMap[entry.appid.toString()] = entry.name
         }
-        console.log('e', this.appMap[550])
     }
 
     async getAppName(id: number) {

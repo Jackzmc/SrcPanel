@@ -22,83 +22,41 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
     })
 
-    fastify.route({
-        url: '/user/:steamid', 
-        method: 'GET',
-        schema: {
-            params: {
-                id: {
-                    steamid: 'string'
-                }
-            },
-            response: {
-                200: {
-                    type: 'object',
-                    properties: {
-                        notes: { type: ['array'] }
-                    }
-                }
-            }
-        },
-        async handler(req: FastifyRequest<{ 
-            Params: { steamid: string }
-        }>, reply) {
-            const [notes] = await fastify.db.execute<RowDataPacket[]>(
-                `SELECT notes.*, u.last_alias as user, e.last_alias as executor, !b.expired as banned 
-                FROM notes 
-                LEFT JOIN stats_users as u ON notes.steamid = u.steamid 
-                LEFT JOIN stats_users as e ON notes.markedBy = e.steamid 
-                LEFT JOIN bans as b ON notes.steamid = b.steamid 
-                WHERE notes.steamid = ?
-                ORDER BY notes.id DESC`,
-                [req.params.steamid]
-            )
+    fastify.get('/user/:steamid', async (req: FastifyRequest<{ Params: { steamid: string } }>, reply) => {
+        const [notes] = await fastify.db.execute<RowDataPacket[]>(
+            `SELECT notes.*, u.last_alias as user, e.last_alias as executor, !b.expired as banned 
+            FROM notes 
+            LEFT JOIN stats_users as u ON notes.steamid = u.steamid 
+            LEFT JOIN stats_users as e ON notes.markedBy = e.steamid 
+            LEFT JOIN bans as b ON notes.steamid = b.steamid 
+            WHERE notes.steamid = ?
+            ORDER BY notes.id DESC`,
+            [req.params.steamid]
+        )
 
-            return {
-                notes: notes.map(note => {
-                    return formatNote(note)
-                })
-            }
-        }
+        return reply.send({
+            notes: notes.map(note => {
+                return formatNote(note)
+            })
+        })
     })
 
-    fastify.route({
-        url: '/admins/:steamid', 
-        method: 'GET',
-        schema: {
-            params: {
-                id: {
-                    steamid: 'string'
-                }
-            },
-            response: {
-                200: {
-                    type: 'object',
-                    properties: {
-                        notes: { type: ['array'] }
-                    }
-                }
-            }
-        },
-        async handler(req: FastifyRequest<{ 
-            Params: { steamid: string }
-        }>, reply) {
-            const [notes] = await fastify.db.execute<RowDataPacket[]>(
-                `SELECT notes.*, u.last_alias as user, e.last_alias as executor, !b.expired as banned 
-                FROM notes 
-                LEFT JOIN stats_users as u ON notes.steamid = u.steamid 
-                LEFT JOIN stats_users as e ON notes.markedBy = e.steamid 
-                LEFT JOIN bans as b ON notes.steamid = b.steamid 
-                WHERE notes.markedBy = ?
-                ORDER BY notes.id DESC`,
-                [req.params.steamid]
-            )
+    fastify.get('/admins/:steamid', async (req: FastifyRequest<{ Params: { steamid: string } }>, reply) => {
+        const [notes] = await fastify.db.execute<RowDataPacket[]>(
+            `SELECT notes.*, u.last_alias as user, e.last_alias as executor, !b.expired as banned 
+            FROM notes 
+            LEFT JOIN stats_users as u ON notes.steamid = u.steamid 
+            LEFT JOIN stats_users as e ON notes.markedBy = e.steamid 
+            LEFT JOIN bans as b ON notes.steamid = b.steamid 
+            WHERE notes.markedBy = ?
+            ORDER BY notes.id DESC`,
+            [req.params.steamid]
+        )
 
-            return {
-                notes: notes.map(note => {
-                    return formatNote(note)
-                })
-            }
+        return {
+            notes: notes.map(note => {
+                return formatNote(note)
+            })
         }
     })
 
