@@ -1,5 +1,5 @@
 <template>
-<Modal active :closable="false">
+<Modal active :closable="downloadingState == 0">
   <div class="modal-card">
     <header class="modal-card-head">
       <p class="modal-card-title">Install Addon
