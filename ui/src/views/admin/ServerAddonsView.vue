@@ -27,7 +27,7 @@
           <div class="field">
             <label class="label">&nbsp;</label>
             <div class="control">
-              <a class="button is-success is-fullwidth" @click="showDownloadModal = true">Add Addon</a>
+              <a class="button is-success is-fullwidth" @click="showDownloadModal = true">Add Workshop Addon</a>
             </div>
           </div>
         </div>
@@ -37,7 +37,7 @@
       Click on an addon to view it's workshop information.
     </p>
     <p>
-      Download addons by sending a link in the #maps channel
+      Optionally download addons by sending a link in the #maps channel
     </p>
     <br>
     <div class="columns">
@@ -50,7 +50,7 @@
               <th></th>
               <th data-tooltip="Total file size of all addons">{{ formatSize(totalFileSize, true, 0) }}</th>
               <th></th>
-              <template v-if="shareInfo">
+              <template v-if="shareInfo&&!prefetch">
                 <th v-for="dest in shareInfo.destinations" :key="dest" />
               </template>
             </tr>
@@ -71,7 +71,7 @@
                 Last Updated
                 <span v-if="sort?.id === 'lastUpdated'">{{sortSymbol}}</span>
               </a></th>
-              <template v-if="shareInfo">
+              <template v-if="shareInfo&&!prefetch">
                 <th v-for="dest in shareInfo.destinations" :key="dest" class="has-text-centered" style="width:0">
                   <a @click="setSort(dest, 'shareInfo')">{{ dest.name || dest.id }}
                     <span v-if="sort?.id === dest">{{sortSymbol}}</span>
@@ -97,7 +97,7 @@
                 <span v-if="vpk.workshop">{{formatTime(vpk.workshop.lastUpdated)}}</span>
                 <span v-else>{{formatTime(vpk.lastModified)}}</span>
               </td>
-              <template v-if="shareInfo">
+              <template v-if="shareInfo&&!prefetch">
                 <td v-for="(dest, i) in shareInfo.destinations" :key="dest" :class="['has-text-centered', {'column-separator': i == 0 }]">
                   <em v-if="!vpk.shareInfo" data-tooltip="Could not determine share information">?</em>
                   <a @click="uninstallAddon(vpk, dest)" v-else-if="vpk.shareInfo[dest]" data-tooltip="Installed. Click to uninstall">

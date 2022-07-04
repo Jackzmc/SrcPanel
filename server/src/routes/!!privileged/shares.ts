@@ -28,8 +28,20 @@ interface AddonChildListEntry {
         filesize: number,
     },
 }
+
+
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions)  {
 
+    fastify.get('/workshop/:publishedfileid/details', async(req: FastifyRequest<{Params: { publishedfileid: string }}>, reply) => {
+        const results = await fastify.steam.getItemDetails([req.params.publishedfileid])
+        if(results.length == 0) return { result: null }
+        return {
+            result: {
+                ...results[0],
+                consumer_app_title: await fastify.steam.getAppName(results[0].consumer_app_id)
+            }
+        }
+    })
 
 
     fastify.get('/', async(req, reply) => {

@@ -2,16 +2,32 @@ import SteamID from 'steamid'
 import fetch from 'node-fetch'
 import path from 'path';
 import  { createWriteStream } from 'fs';
+import { readFile } from 'fs/promises'
 import https from 'https';
 import { unlink } from 'fs/promises';
 
 export default class SteamAPI {
     private apikey: string
     private userAgent: string
+    private appMap: Record<string, string>
 
     constructor(apikey?: string, userAgent?: string) {
         this.apikey = apikey ?? process.env.STEAM_WEB_APIKEY
         this.userAgent = userAgent || "SrcdsDash-API-Client"
+    }
+
+    public async loadAppIdFile(path: string) {
+        const json = JSON.parse(await readFile(path, 'utf-8'))
+        this.appMap = {}
+        for(const entry of json.apps) {
+            if(entry.name != '') this.appMap[entry.appid.toString()] = entry.name
+        }
+        console.log('e', this.appMap[550])
+    }
+
+    async getAppName(id: number) {
+        if(!this.appMap) throw new Error("App map is not initialized, use loadAppIdFile(path_to_db_file) to initalize")
+        return this.appMap[id.toString()]
     }
 
     async getUserDetails(steamids: SteamID[]): Promise<SteamUserDetails[]> {

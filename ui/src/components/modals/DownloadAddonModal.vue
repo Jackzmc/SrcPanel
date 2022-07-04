@@ -2,7 +2,7 @@
 <Modal active :closable="downloadingState == 0">
   <div class="modal-card">
     <header class="modal-card-head">
-      <p class="modal-card-title">Install Addon
+      <p class="modal-card-title">Install Workshop Addon
         <span class="tag is-info has-tooltip-bottom is-pulled-right mr-2 is-rounded" data-tooltip="The target share">{{props.share.id}}</span>
       </p>
       <button v-if="downloadingState == 0" class="delete" aria-label="close" @click='close'></button>
@@ -15,9 +15,21 @@
           <p class="help has-text-danger" v-if="!workshopId">
             Not a valid workshop link
           </p>
-          <p class="help has-text-info" v-else>ID: {{workshopId}}</p>
         </div>
       </div>
+      <template v-if="workshopDetails">
+      <br>
+        <h4 class="title is-4" >
+          {{workshopDetails.title}}
+          <span data-tooltip="Workshop Id" class="tag is-dark">{{ workshopId }}</span>
+        </h4>
+        <p class="subtitle is-6"><b>Game: </b>
+          <a :href="'https://store.steampowered.com/app/' + workshopDetails.consumer_app_id">
+            {{workshopDetails.consumer_app_title}}
+          </a>
+        </p>
+        <hr>
+      </template>
       <div class="field">
         <label class="label">Install Destinations</label>
         <div class="field" v-for="dest in props.share.destinations" :key="dest.id">
@@ -59,19 +71,24 @@
       >
         Redownload
       </button>
-      <button v-else
-        :class="['button','is-info', {'is-loading': downloadingState == 1}]"
-        :disabled="downloadingState == 1 || !workshopId || installDestinations.length == 0"
-        @click="startDownload(false)"
-      >
-        Download
-      </button>
+      <template v-else>
+        <button :class="['button','is-info', {'is-loading': downloadingState == 1}]"
+          :disabled="downloadingState == 1 || !workshopId || installDestinations.length == 0"
+          @click="startDownload(false)"
+        >
+          Download
+        </button>
+        <button class="button" @click="close">
+          Cancel
+        </button>
+      </template>
     </footer>
   </div>
 </Modal>
 </template>
 
 <script setup lang="ts">
+// TODO: Resolve workshop id, show appid and title of item
 import Modal from '@/components/Modal.vue'
 import { computed,ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
@@ -83,15 +100,29 @@ const props = defineProps<{
   share: any
 }>()
 let workshopId = ref<string>("")
+let workshopDetails = ref()
 let downloadingState = ref(0) // 0: not downloading, 1 : downloading normal, 2 : downloading forced, 3: restarting servers
 let installDestinations = ref([])
 let downloadLog = ref<{state: string, message: string, error?: boolean}[]>([])
 let showForceDownload = ref(false)
 let updateDone = ref(false)
 
-function verifyLink(test: any) {
+async function verifyLink(test: any) {
   const match = test.target.value.match(WORKSHOP_LINK_REGEX)
-  if(match) workshopId.value = match[2]
+  if(match) {
+    workshopId.value = match[2]
+    workshopDetails.value = await getSteamWSDetails(workshopId.value)
+  }
+}
+
+async function getSteamWSDetails(id: string) {
+  const response = await fetch(`/api/shares/workshop/${id}/details`)
+  if(response.ok) {
+    const json = await response.json()
+    return json.result
+  } else {
+    throw new Error(`${response.statusText}: ${await response.text()}`)
+  }
 }
 
 // TODO: use router-view for /admin/addons/add
@@ -122,7 +153,9 @@ async function restartServers() {
 }
 
 async function restartServer(id: string) {
-  const response = await fetch(`/api/servers/${id}/restart`)
+  const response = await fetch(`/api/servers/${id}/restart`, {
+    method: 'POST'
+  })
   return response.ok
 }
 
