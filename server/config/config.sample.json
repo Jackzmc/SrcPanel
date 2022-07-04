@@ -43,6 +43,8 @@
         "default": {
             // The folder where the *.vpk files are located
             "sourceFolder": "/home/steam/content",
+            // The appid this share is for. Optional. Used for limiting downloads so other game addons can't be installed to it
+            "appid": 550,
             // List of destinations
             "destinations": [
                 {

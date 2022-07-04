@@ -54,7 +54,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         const shareId = req.params.shareId
         const share = fastify.servers.getShare(shareId)
         return {
-            share
+            ...share,
+            appTitle: (share.appId ? await fastify.steam.getAppName(share.appId) : null)
         }
     })
 
@@ -140,6 +141,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             addons: results,
             shareInfo: {
                 id: share.name,
+                appId: share.appId,
+                appTitle: (share.appId ? await fastify.steam.getAppName(share.appId) : null),
                 destinations: Object.values(share.destinations)
                     .map(dest => {
                         return {

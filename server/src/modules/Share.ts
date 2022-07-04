@@ -14,7 +14,8 @@ export interface ShareDestination {
 
 export interface ShareInfo {
     sourceFolder: string;
-    destinations: ShareDestination[]
+    destinations: ShareDestination[],
+    appid?: number,
     name: string
   }
 
@@ -22,10 +23,12 @@ export default class Share {
     public name: string
     public sourceFolder: string
     public destinations: Record<string, ShareDestination> = {}
+    public appId?: number
 
     constructor(shareInfo: ShareInfo) {
         this.name = shareInfo.name,
         this.sourceFolder = shareInfo.sourceFolder
+        this.appId = shareInfo.appid
         for(const dest of shareInfo.destinations) {
             this.destinations[dest.id] = dest
         }

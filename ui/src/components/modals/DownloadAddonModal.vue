@@ -23,14 +23,22 @@
           {{workshopDetails.title}}
           <span data-tooltip="Workshop Id" class="tag is-dark">{{ workshopId }}</span>
         </h4>
-        <p class="subtitle is-6"><b>Game: </b>
+        <p class="subtitle is-6" v-if="isAddonValid"><b>Game: </b>
           <a :href="'https://store.steampowered.com/app/' + workshopDetails.consumer_app_id">
             {{workshopDetails.consumer_app_title}}
           </a>
         </p>
+        <p class="subtitle is-6 has-text-danger" v-else>
+          Addon is for <b><a :href="'https://store.steampowered.com/app/' + workshopDetails.consumer_app_id">
+            {{workshopDetails.consumer_app_title}}
+          </a></b>, but only addons for <b><a :href="'https://store.steampowered.com/app/' + props.share.appId">
+            {{props.share.appTitle}}
+          </a></b> are allowed
+        </p>
+
         <hr>
       </template>
-      <div class="field">
+      <div class="field" v-if="isAddonValid">
         <label class="label">Install Destinations</label>
         <div class="field" v-for="dest in props.share.destinations" :key="dest.id">
           <input
@@ -56,11 +64,11 @@
       </div>
     </section>
     <footer class="modal-card-foot">
-      <template v-if="updateDone">
+      <template v-if="updateDone||!isAddonValid">
         <button class="button is-success" @click="close">
           Close
         </button>
-        <button @click="restartServers" :class="['button','is-info', {'is-loading': downloadingState == 3}]">
+        <button v-if="isAddonValid" @click="restartServers" :class="['button','is-info', {'is-loading': downloadingState == 3}]">
           Restart Servers
         </button>
       </template>
@@ -106,6 +114,12 @@ let installDestinations = ref([])
 let downloadLog = ref<{state: string, message: string, error?: boolean}[]>([])
 let showForceDownload = ref(false)
 let updateDone = ref(false)
+
+const isAddonValid = computed(() => {
+  if(!workshopId.value) return false
+  console.log(workshopDetails.value.consumer_app_id,  props.share.appId,  props.share.appId )
+  return workshopDetails.value?.consumer_app_id == props.share.appId
+})
 
 async function verifyLink(test: any) {
   const match = test.target.value.match(WORKSHOP_LINK_REGEX)

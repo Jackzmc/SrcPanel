@@ -80,6 +80,7 @@ export default class ServerManager {
         this.addonShares[key.toLowerCase()] = new Share({
           name: key,
           sourceFolder: data.sourceFolder,
+          appid: data.appid,
           destinations
         })
         console.info(`Loaded addon share "${key}"`)
