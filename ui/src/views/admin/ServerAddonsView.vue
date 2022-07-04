@@ -14,7 +14,7 @@
             <label class="label">Share</label>
             <div class="control">
               <div class="select">
-                <select v-model="share">
+                <select v-model="selectedShare">
                   <option v-for="share in shares" :key="share" :value="share">
                     {{share}}
                   </option>
@@ -50,7 +50,9 @@
               <th></th>
               <th data-tooltip="Total file size of all addons">{{ formatSize(totalFileSize, true, 0) }}</th>
               <th></th>
-              <th v-for="dest in shareServers" :key="dest" />
+              <template v-if="shareInfo">
+                <th v-for="dest in shareInfo.destinations" :key="dest" />
+              </template>
             </tr>
             <tr>
               <th><a @click="setSortFunc('filename', SORT_NAME)">
@@ -69,11 +71,13 @@
                 Last Updated
                 <span v-if="sort?.id === 'lastUpdated'">{{sortSymbol}}</span>
               </a></th>
-              <th v-for="dest in shareServers" :key="dest" class="has-text-centered" style="width:0">
-                <a @click="setSort(dest, 'shareInfo')">{{ dest }}
-                  <span v-if="sort?.id === dest">{{sortSymbol}}</span>
-                </a>
-              </th>
+              <template v-if="shareInfo">
+                <th v-for="dest in shareInfo.destinations" :key="dest" class="has-text-centered" style="width:0">
+                  <a @click="setSort(dest, 'shareInfo')">{{ dest.name || dest.id }}
+                    <span v-if="sort?.id === dest">{{sortSymbol}}</span>
+                  </a>
+                </th>
+              </template>
             </tr>
           </thead>
           <tbody>
@@ -93,15 +97,17 @@
                 <span v-if="vpk.workshop">{{formatTime(vpk.workshop.lastUpdated)}}</span>
                 <span v-else>{{formatTime(vpk.lastModified)}}</span>
               </td>
-              <td v-for="(dest, i) in shareServers" :key="dest" :class="['has-text-centered', {'column-separator': i == 0 }]">
-                <em v-if="!vpk.shareInfo" data-tooltip="Could not determine share information">?</em>
-                <a @click="uninstallAddon(vpk, dest)" v-else-if="vpk.shareInfo[dest]" data-tooltip="Installed. Click to uninstall">
-                  ✔️
-                </a>
-                <a @click="installAddon(vpk, dest)" v-else data-tooltip="Not installed. Click to install">
-                  ❌
-                </a>
-              </td>
+              <template v-if="shareInfo">
+                <td v-for="(dest, i) in shareInfo.destinations" :key="dest" :class="['has-text-centered', {'column-separator': i == 0 }]">
+                  <em v-if="!vpk.shareInfo" data-tooltip="Could not determine share information">?</em>
+                  <a @click="uninstallAddon(vpk, dest)" v-else-if="vpk.shareInfo[dest]" data-tooltip="Installed. Click to uninstall">
+                    ✔️
+                  </a>
+                  <a @click="installAddon(vpk, dest)" v-else data-tooltip="Not installed. Click to install">
+                    ❌
+                  </a>
+                </td>
+              </template>
             </tr>
           </tbody>
         </table>
@@ -125,8 +131,8 @@
     <p class="subtitle is-6 has-text-centered has-text-danger">{{error}}</p>
   </div>
   <div v-else>
-    <p class="title is-4 has-text-centered">Fetching addons...</p>
-    <p class="subtitle is-6 has-text-centered">This could take a bit</p>
+    <p class="title is-2 has-text-centered">Fetching addons...</p>
+    <p class="subtitle is-4 has-text-centered">This may take some time, please wait...</p>
   </div>
   <br>
 </div>
@@ -168,19 +174,13 @@ let sort = ref<{
   descending: boolean
 } | undefined>()
 
-let share = ref<string>("default")
+let selectedShare = ref<string>("default")
 let shares = ref<string[]>(["default"])
-let shareServers = ref([])
+let shareInfo = ref()
 let totalFileSize = ref(0)
 
 let showDownloadModal = ref(false)
 
-const shareInfo = computed(() => {
-  return {
-    name: share.value,
-    destinations: shareServers.value
-  }
-})
 const isDownloadable = computed(() => {
   return itemid.value && prefetch.value.result && prefetch.value.lastValid === itemid.value && !prefetch.value.error
 })
@@ -269,12 +269,12 @@ async function fetchShares() {
 }
 async function fetchVPKS() {
   error.value = undefined
-  shareServers.value = []
+  shareInfo.value = undefined
   try {
     const response = await fetch(`/api/shares/default/addons`)
     const json = await response.json()
     if(response.ok) {
-      shareServers.value = json.shareDestinations
+      shareInfo.value = json.shareInfo
       vpks.value = json.addons.map((entry: any) => {
         if(entry.workshop) {
           if(entry.workshop.deleted) entry.workshop = null

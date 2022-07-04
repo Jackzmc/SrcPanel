@@ -3,7 +3,7 @@
   <div class="modal-card">
     <header class="modal-card-head">
       <p class="modal-card-title">Install Addon
-        <span class="tag is-info has-tooltip-bottom is-pulled-right mr-2 is-rounded" data-tooltip="The target share">{{props.share.name}}</span>
+        <span class="tag is-info has-tooltip-bottom is-pulled-right mr-2 is-rounded" data-tooltip="The target share">{{props.share.id}}</span>
       </p>
       <button v-if="downloadingState == 0" class="delete" aria-label="close" @click='close'></button>
     </header>
@@ -19,18 +19,20 @@
         </div>
       </div>
       <div class="field">
-        <label class="label">Install To</label>
-        <div class="control">
-          <div class="select is-multiple">
-            <select multiple v-model="installDestinations" class="input">
-              <option v-for="dest in props.share.destinations" :key="dest">
-                {{dest}}
-              </option>
-            </select>
-            <p class="help has-text-danger" v-if="installDestinations.length == 0">
-              At least one destination is needed
-            </p>
-          </div>
+        <label class="label">Install Destinations</label>
+        <div class="field" v-for="dest in props.share.destinations" :key="dest.id">
+          <input
+            :id="dest.id"
+            type="checkbox"
+            :value="dest.id"
+            class="is-checkradio has-tooltip-right"
+            v-model="installDestinations"
+          >
+          <label :for="dest.id">
+            <span v-if="dest.name"><b>{{dest.name}}</b> (<em>{{dest.id}}</em>)</span>
+            <span v-else>{{dest.id}}</span>
+            &nbsp;<span class="tag is-info has-tooltip-right is-small is-rounded" data-tooltip="Number of servers that share this destination">{{dest.serverIds?.length ?? 0}} Servers</span>
+          </label>
         </div>
       </div>
     </section>
@@ -42,9 +44,28 @@
       </div>
     </section>
     <footer class="modal-card-foot">
-      <button v-if="updateDone" class="button is-success" @click="close">Close</button>
-      <button v-else-if="showForceDownload" :class="['button','is-info', {'is-loading': downloadingState == 2}]" :disabled="downloadingState == 2|| !workshopId || installDestinations.length == 0" @click="startDownload(true)">Redownload</button>
-      <button v-else :class="['button','is-info', {'is-loading': downloadingState == 1}]" :disabled="downloadingState == 1 || !workshopId || installDestinations.length == 0" @click="startDownload(false)">Download</button>
+      <template v-if="updateDone">
+        <button class="button is-success" @click="close">
+          Close
+        </button>
+        <button @click="restartServers" :class="['button','is-info', {'is-loading': downloadingState == 3}]">
+          Restart Servers
+        </button>
+      </template>
+      <button v-else-if="showForceDownload"
+        :class="['button','is-info', {'is-loading': downloadingState == 2}]"
+        :disabled="downloadingState == 2|| !workshopId || installDestinations.length == 0"
+        @click="startDownload(true)"
+      >
+        Redownload
+      </button>
+      <button v-else
+        :class="['button','is-info', {'is-loading': downloadingState == 1}]"
+        :disabled="downloadingState == 1 || !workshopId || installDestinations.length == 0"
+        @click="startDownload(false)"
+      >
+        Download
+      </button>
     </footer>
   </div>
 </Modal>
@@ -62,7 +83,7 @@ const props = defineProps<{
   share: any
 }>()
 let workshopId = ref<string>("")
-let downloadingState = ref(0) // 0: not downloading, 1 : downloading normal, 2 : downloading forced
+let downloadingState = ref(0) // 0: not downloading, 1 : downloading normal, 2 : downloading forced, 3: restarting servers
 let installDestinations = ref([])
 let downloadLog = ref<{state: string, message: string, error?: boolean}[]>([])
 let showForceDownload = ref(false)
@@ -73,10 +94,37 @@ function verifyLink(test: any) {
   if(match) workshopId.value = match[2]
 }
 
+// TODO: use router-view for /admin/addons/add
 const route = useRoute()
 const router = useRouter()
 
+async function restartServers() {
+  downloadingState.value = 3
+  let totalRejectedCount = 0
+  for(const destId of installDestinations.value) {
+    const destInfo = props.share.destinations[destId]
+    if(destInfo.serverIds) {
+      const results = await Promise.allSettled(destInfo.serverIds.map((serverId: string) => restartServer(serverId)))
+      const rejectedCount = results.reduce((pv, result) => {
+        if(result.status === "rejected") return pv++
+        return pv
+      }, 0)
+      if(rejectedCount > 0) {
+        console.error(`${destInfo.id}: ${rejectedCount} / ${destInfo.serverIds.length} servers failed to restart`)
+      }
+      totalRejectedCount += rejectedCount
+    }
+  }
+  if(totalRejectedCount > 0) {
+    alert(`${totalRejectedCount} servers failed to restart, see console for details`)
+  }
+  downloadingState.value = 0
+}
 
+async function restartServer(id: string) {
+  const response = await fetch(`/api/servers/${id}/restart`)
+  return response.ok
+}
 
 function startDownload(force = false) {
   downloadingState.value = force ? 2 : 1
