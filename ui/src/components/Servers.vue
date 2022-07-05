@@ -47,17 +47,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, computed, onBeforeMount, onMounted } from 'vue'
+import { ref, watch, computed, onBeforeMount, onBeforeUnmount } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
-const emit = defineEmits(['refresh'])
-const route = useRoute()
-const router = useRouter()
+const REFRESH_INTERVAL = 1000 * 10
 
-// TODO: Add server typedef
+const emit = defineEmits(['refresh'])
 
 let servers = ref<any[]>([])
-let refreshTimer = ref<number>()
+let refreshTimer = ref<ReturnType<typeof setInterval>>()
 
 function copyCommand(event: any) {
   //@ts-ignore
@@ -101,7 +99,9 @@ function getServerMessage(server: any) {
   else return 'Server is offline, unresponsive, or unreachable'
 }
 function refreshServers() {
-  emit('refresh', 'start')
+  emit('refresh', {
+    state: 'start',
+  })
 
   fetch('/api/servers')
   .then(response => {
@@ -112,17 +112,24 @@ function refreshServers() {
     servers.value = json
   })
   .finally(() => {
-    emit('refresh', 'stop')
+    emit('refresh', {
+      state: 'stop',
+      interval: REFRESH_INTERVAL
+    })
   })
 }
 
 onBeforeMount(() => {
   refreshTimer.value = setInterval(() => {
-    if(route.name === "")
     refreshServers()
-  }, 1000 * 60 * 1)
+  }, REFRESH_INTERVAL)
   refreshServers()
 })
+
+onBeforeUnmount(() => {
+  clearInterval(refreshTimer.value as unknown as number)
+})
+
 </script>
 
 <style>

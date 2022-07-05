@@ -3,7 +3,7 @@
     <div class="columns is-multiline is-variable is-6">
       <div class="column is-8">
           <Servers @refresh="onServerRefresh" />
-          <p class="is-inline is-pulled-right" style="margin-right: 90px">List refreshing in {{countdown}} seconds</p>
+          <p class="is-inline is-pulled-right" style="margin-right: 90px">{{countdownText}}</p>
       </div>
       <div class="column">
           <div class="content">
@@ -42,23 +42,28 @@
 import { ref } from 'vue'
 import Servers from '../components/Servers.vue'
 
-let countdown = ref<string|number>(0)
-let interval = ref<number>()
+let countdown = ref<number>(0)
+let interval = ref<ReturnType<typeof setInterval>>()
 
-function onServerRefresh(mode: string) {
-  if(mode == 'start') {
-    countdown.value = "Refreshing..."
-  }else{
-    countdown.value = 60 * 1;
+let countdownText = ref()
+
+function onServerRefresh(payload: { state: string, interval?: number }) {
+  if(payload.state == 'start') {
+    countdownText.value = "Refreshing..."
+    countdown.value = 0
+  } else {
+    countdown.value = (payload.interval ?? 60) / 1000
     startCountdown()
   }
 }
 function startCountdown() {
-  clearInterval(interval.value)
+  clearInterval(interval.value as unknown as number)
   interval.value = setInterval(() => {
-    if(--(countdown.value as number) == 0) {
-      clearInterval(interval.value)
+    if(--(countdown.value) <= 0) {
+      clearInterval(interval.value as unknown as number)
+      countdown.value = 0
     }
+    countdownText.value = `refreshing in ${countdown.value} seconds`
   }, 1000)
 }
 </script>
