@@ -57,6 +57,9 @@
       </div>
     </section>
     <section class="modal-card-body" v-else>
+      <p class="has-text-centered" v-if="downloadLog.length == 0">
+        Update in progress, this might take a while...
+      </p>
       <div class="content">
         <p v-for="(entry, i) in downloadLog" :key="i">
           <span :class="['tag',{'is-link': !entry.error, 'is-danger': entry.error}]">{{entry.state}}</span> {{entry.message}}
@@ -177,7 +180,7 @@ function startDownload(force = false) {
   downloadingState.value = force ? 2 : 1
   downloadLog.value = []
   const start = Date.now()
-  const sse = new EventSource(`/api/shares/${props.share.name}/addons/${workshopId.value}/download?destinations=${installDestinations.value.join(',')}&sse=1` + (force ? '&force=1' : ''))
+  const sse = new EventSource(`/api/shares/${props.share.id}/addons/${workshopId.value}/download?destinations=${installDestinations.value.join(',')}&sse=1` + (force ? '&force=1' : ''))
   // Don't care about see.onerror, will trigger when server closes
   sse.onerror = () => {
     downloadLog.value.push({
