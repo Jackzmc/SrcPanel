@@ -3,11 +3,27 @@ import FastifyPlugin from 'fastify-plugin'
 import AuthManager from '../modules/AuthManager.js';
 
 import mysql from 'mysql2/promise'
-import sqlite from 'sqlite'
+import { open } from 'sqlite'
 import sqlite3 from 'sqlite3'
 import { mkdir } from 'fs/promises'
 import UserManager from '../modules/users/UserManager.js';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+import ServerManager from '../modules/servers/ServerManager.js';
+import SteamAPI from '../modules/steam.js'
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
 async function db(fastify: FastifyInstance) {
+    const DATA_FOLDER = join(__dirname, '/../../../../data')
+    try {
+        await mkdir(DATA_FOLDER)
+    } catch(_) { }
+    
+    const steam = new SteamAPI()
+    await steam.loadAppIdFile('assets/steam_appids.json')
+
     const db = mysql.createPool({
         socketPath: process.env.MYSQL_SOCKET_PATH,
         host:       process.env.MYSQL_HOST,
@@ -24,18 +40,14 @@ async function db(fastify: FastifyInstance) {
         password:   process.env.MYSQL_ADMINS_PASSWORD    || process.env.MYSQL_PASSWORD,
         namedPlaceholders: true
     })
-    try {
-    await mkdir('../../data/')
-    } catch(_) { }
-    const userDb = await sqlite.open({
-        filename: '../../data/name_cache.db',
-        driver: sqlite3.Database
-    })
-    const usermanager = new UserManager(userDb)
-    fastify.decorate('users', usermanager)
-    const authmanager = new AuthManager(admindb, db)
-    fastify.decorate('authmngr', authmanager)
+
+    const userManager = new UserManager(db, steam)
+    const authManager = new AuthManager(admindb, db)
+    fastify.decorate('users', userManager)
+    fastify.decorate('authmngr', authManager)
     fastify.decorate('db', db)
+    fastify.decorate('steam', steam)
+    fastify.decorate('servers', new ServerManager(steam, DATA_FOLDER))
 }
 
 export default FastifyPlugin(db)

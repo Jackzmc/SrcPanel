@@ -1,19 +1,25 @@
 import { readFileSync } from 'fs'
-import { stat } from 'fs/promises'
+import { mkdir, stat } from 'fs/promises'
 import Json5 from 'json5'
 import DNS from 'dns'
 import Server, { ConfigServerData } from './Server.js'
-import path from 'path'
 import Share, { ShareDestination, ShareInfo } from '../Share.js';
-
-
+import { join } from 'path';
+import { open } from 'sqlite'
+import sqlite3 from 'sqlite3'
+import SteamAPI from '../steam.js'
 
 export default class ServerManager {
   private servers: Record<string, Server> = {}
   private refreshInterval: number
   private addonShares: Record<string, Share> = {}
 
-  constructor() {
+  private dataDir: string;
+  private steam: SteamAPI
+
+  constructor(steam: SteamAPI, dataDir: string) {
+    this.steam = steam
+    this.dataDir = dataDir
     this.load()
       .then(() => {
         this.refresh()
@@ -46,6 +52,10 @@ export default class ServerManager {
   }
 
   private async loadShares(config: any) {
+    try {
+      await mkdir(join(this.dataDir, "shares"))
+    } catch(_) {}
+
     for(const key in config.addons) {
       const data = config.addons[key] as Partial<ShareInfo>
       if(!data.sourceFolder) {
@@ -77,7 +87,11 @@ export default class ServerManager {
           
         }
 
-        this.addonShares[key.toLowerCase()] = new Share({
+        const db = await open({
+          filename: join(this.dataDir, `shares/${key.toLowerCase()}_addons_cache.db`),
+          driver: sqlite3.Database
+        })
+        this.addonShares[key.toLowerCase()] = new Share(db, this.steam, {
           name: key,
           sourceFolder: data.sourceFolder,
           appid: data.appid,

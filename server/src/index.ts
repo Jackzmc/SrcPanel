@@ -53,7 +53,7 @@ declare module 'fastify' {
 
 import FastifySwagger from '@fastify/swagger'
 
-app.register(import('./middlewares/database.js'))
+app.register(import('./middlewares/managers.js'))
 .then(async() => {
     app.register(FastifyCookie)
     app.register(FastifySession, { 
@@ -94,7 +94,6 @@ app.register(import('./middlewares/database.js'))
     )
 
     app.register(import('./middlewares/redisCache.js'))
-    app.register(import('./middlewares/steam.js'))
 
 
     const mainPrefix = `/api/`

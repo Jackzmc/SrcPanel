@@ -99,11 +99,11 @@
               </td>
               <template v-if="shareInfo&&!prefetch">
                 <td v-for="(dest, i) in shareInfo.destinations" :key="dest.id" :class="['has-text-centered', {'column-separator': i == 0 }]">
-                  <em v-if="!vpk.shareInfo" data-tooltip="Could not determine share information">?</em>
-                  <a @click="uninstallAddon(vpk, dest.id)" v-else-if="vpk.shareInfo[dest.id]" data-tooltip="Installed. Click to uninstall">
+                  <em v-if="!vpk.installInfo" data-tooltip="Could not determine share install information">?</em>
+                  <a @click="installAddon(vpk, dest.id, 'install')" v-else-if="vpk.installInfo[dest.id]" data-tooltip="Installed. Click to uninstall">
                     ✔️
                   </a>
-                  <a @click="installAddon(vpk, dest.id)" v-else data-tooltip="Not installed. Click to install">
+                  <a @click="installAddon(vpk, dest.id, 'uninstall')" v-else data-tooltip="Not installed. Click to install">
                     ❌
                   </a>
                 </td>
@@ -321,40 +321,19 @@ function formatTime(time: number) {
   return `${date.toLocaleDateString()} at ${date.toLocaleTimeString()}`
 }
 
-async function installAddon(vpk: any, destKey: string) {
+async function installAddon(vpk: any, destKey: string, mode: "install" | "uninstall") {
   try {
-    const response = await fetch(`/api/shares/${selectedShare.value}/addons/${vpk.filename}.vpk/install/${destKey}`, { method: 'POST' })
+    const response = await fetch(`/api/shares/${selectedShare.value}/addons/${vpk.filename}.vpk/${mode}/${destKey}`, { method: 'POST' })
     const json = await response.json()
     if(response.ok) {
       // Update local copy
       for(const vpk2 of vpks.value) {
         if(vpk2.filename === vpk.filename) {
-          vpk2.shareInfo[destKey] = true
+          vpk2.installInfo[destKey] = (mode == "install")
           return
         }
       }
-      console.warn("installAddon called with addon that is not downloaded")
-    } else {
-      alert(json.error ? `${json.error}: ${json.message}` : response.statusText)
-    }
-  } catch(err: any) {
-    alert(err.message || err)
-  }
-}
-
-async function uninstallAddon(vpk: any, destKey: string) {
-  try {
-    const response = await fetch(`/api/shares/${selectedShare.value}/addons/${vpk.filename}.vpk/uninstall/${destKey}`, { method: 'POST' })
-    const json = await response.json()
-    if(response.ok) {
-      // alert("Addon is now removed")
-      for(const vpk2 of vpks.value) {
-        if(vpk2.filename === vpk.filename) {
-          vpk2.shareInfo[destKey] = false
-          return
-        }
-      }
-      console.warn("unInstallAddon called with addon that is not downloaded")
+      console.warn("installAddon called with addon that is not downloaded", { vpk, destKey, mode })
     } else {
       alert(json.error ? `${json.error}: ${json.message}` : response.statusText)
     }
