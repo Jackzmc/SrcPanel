@@ -95,7 +95,7 @@ export default class Share {
                             ...fsinfo,
                             installInfo: await this.getInstallInfo(dirent.name)
                         })
-                        await this.addCacheEntry(dirent.name, fsinfo)
+                        await this.addAddonEntry(dirent.name, fsinfo)
                     }
                 }
             }
@@ -122,22 +122,21 @@ export default class Share {
                     workshop
                 })
 
-                // This will be slow, but should only run once or twice
-                await this.addCacheEntry(filename, null, workshop)
+                await this.addAddonEntry(filename, null, workshop)
             }
         } 
 
         return results
     }
 
-    private async addCacheEntry(filename: string, fsInfo?: { filesize: number, lastModified: number }, workshop?: AddonWorkshopInfo) {
+    private async addAddonEntry(filename: string, fsInfo?: { filesize: number, lastModified: number }, workshop?: AddonWorkshopInfo) {
         try {
             if(fsInfo)
                 await this.db.run(SQL`INSERT INTO addoncache (filename, filesize, lastModified) VALUES (${filename}, ${fsInfo.filesize}, ${fsInfo.lastModified})`)
             else
                 await this.db.run(SQL`INSERT INTO addoncache (filename, ws_info) VALUES (${filename}, ${JSON.stringify(workshop)})`)
         } catch(err) {
-            console.error(`Failed to add cache entry for ${filename}`, { fsInfo, workshop: workshop !== undefined }, err)
+            console.error(`addAddonEntry failed for "${filename}"`, { fsInfo: fsInfo !== null, workshop: workshop !== undefined }, err)
         }
     }
 
