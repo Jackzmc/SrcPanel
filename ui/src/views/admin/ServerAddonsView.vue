@@ -83,7 +83,7 @@
           <tbody>
             <tr v-for="vpk in filteredVPKs" :key="vpk.filename">
               <td>
-                <a v-if="vpk.workshop" @click="preview(vpk)" :data-tooltip="'Filename: '+ vpk.filename + '.vpk'">{{vpk.workshop.title}}</a>
+                <a v-if="vpk.workshop" @click="preview(vpk)" :data-tooltip="'Filename: ' + vpk.filename">{{vpk.workshop.title}}</a>
                 <span v-else>{{vpk.filename}}.vpk</span>
               </td>
               <td>
@@ -278,7 +278,7 @@ async function fetchVPKS() {
       vpks.value = json.addons.map((entry: any) => {
         if(entry.workshop) {
           if(entry.workshop.deleted) entry.workshop = null
-          else entry.workshop.url = `https://steamcommunity.com/sharedfiles/filedetails/?id=${entry.filename}`
+          else entry.workshop.url = `https://steamcommunity.com/sharedfiles/filedetails/?id=${entry.filename.slice(0, -4)}`
           totalFileSize.value += entry.workshop.filesize
         }
         return entry
