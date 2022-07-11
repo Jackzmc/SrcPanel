@@ -105,7 +105,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             })
         }
         return {
-           destinations: await share.getAddonInfo(req.params.filename)
+           addonInfo: await share.getAddonInfo(req.params.filename)
         }
     })
 
