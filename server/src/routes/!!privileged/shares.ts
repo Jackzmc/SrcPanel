@@ -185,7 +185,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             reply.raw.writeHead(200, {
                 'Cache-Control': 'no-cache,no-transform',
                 'Content-Type': 'text/event-stream',
-                'Connection': 'keep-alive'
+                'Connection': 'keep-alive',
+                'X-Accel-Buffering': 'no'
             });
             reply.raw.flushHeaders()
             reply.raw.write('retry: 10000\n\n')
