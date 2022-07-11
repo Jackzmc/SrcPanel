@@ -98,12 +98,12 @@
                 <span v-else>{{formatTime(vpk.lastModified)}}</span>
               </td>
               <template v-if="shareInfo&&!prefetch">
-                <td v-for="(dest, i) in shareInfo.destinations" :key="dest" :class="['has-text-centered', {'column-separator': i == 0 }]">
+                <td v-for="(dest, i) in shareInfo.destinations" :key="dest.id" :class="['has-text-centered', {'column-separator': i == 0 }]">
                   <em v-if="!vpk.shareInfo" data-tooltip="Could not determine share information">?</em>
-                  <a @click="uninstallAddon(vpk, dest)" v-else-if="vpk.shareInfo.destinations.find((d: any) => d.id == dest)" data-tooltip="Installed. Click to uninstall">
+                  <a @click="uninstallAddon(vpk, dest.id)" v-else-if="vpk.shareInfo[dest.id]" data-tooltip="Installed. Click to uninstall">
                     ✔️
                   </a>
-                  <a @click="installAddon(vpk, dest)" v-else data-tooltip="Not installed. Click to install">
+                  <a @click="installAddon(vpk, dest.id)" v-else data-tooltip="Not installed. Click to install">
                     ❌
                   </a>
                 </td>
@@ -271,7 +271,7 @@ async function fetchVPKS() {
   error.value = undefined
   shareInfo.value = undefined
   try {
-    const response = await fetch(`/api/shares/default/addons`)
+    const response = await fetch(`/api/shares/${selectedShare.value}/addons`)
     const json = await response.json()
     if(response.ok) {
       shareInfo.value = json.shareInfo
@@ -323,10 +323,10 @@ function formatTime(time: number) {
 
 async function installAddon(vpk: any, destKey: string) {
   try {
-    const response = await fetch(`/api/shares/default/addons/${vpk.filename}.vpk/install/${destKey}`, { method: 'POST' })
+    const response = await fetch(`/api/shares/${selectedShare.value}/addons/${vpk.filename}.vpk/install/${destKey}`, { method: 'POST' })
     const json = await response.json()
     if(response.ok) {
-      // alert("Addon is now installed")
+      // Update local copy
       for(const vpk2 of vpks.value) {
         if(vpk2.filename === vpk.filename) {
           vpk2.shareInfo[destKey] = true
@@ -344,7 +344,7 @@ async function installAddon(vpk: any, destKey: string) {
 
 async function uninstallAddon(vpk: any, destKey: string) {
   try {
-    const response = await fetch(`/api/shares/default/addons/${vpk.filename}.vpk/uninstall/${destKey}`, { method: 'POST' })
+    const response = await fetch(`/api/shares/${selectedShare.value}/addons/${vpk.filename}.vpk/uninstall/${destKey}`, { method: 'POST' })
     const json = await response.json()
     if(response.ok) {
       // alert("Addon is now removed")
