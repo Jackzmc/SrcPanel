@@ -105,7 +105,7 @@ export default class Share {
             const slice = steamResolveQueue.splice(0, 100)
             const wsDetails = await this.steam.getItemDetails(slice)
             for(let i = 0; i < wsDetails.length; i++) {
-                const filename = `${slice[i]}.vpk`
+                const filename = `${wsDetails[i].publishedfileid || slice[i]}.vpk`
                 const workshop = {
                     deleted: wsDetails[i].title === undefined,
                     title: wsDetails[i].title,
