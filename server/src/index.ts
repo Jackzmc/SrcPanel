@@ -8,6 +8,7 @@ import { RedisClientType } from '@node-redis/client';
 import SteamAPI from './modules/steam.js'
 import AuthManager from './modules/AuthManager';
 import ServerManager from './modules/servers/ServerManager.js';
+import UserManager from './modules/users/UserManager.js';
 import { readdir } from 'fs/promises';
 import path from 'path'
 dotenv.config()
@@ -43,7 +44,8 @@ declare module 'fastify' {
     cache: RedisClientType,
     steam: SteamAPI,
     authmngr: AuthManager,
-    servers: ServerManager
+    servers: ServerManager,
+    users: UserManager
   }
   // I dont know how to do this properly, its a fucking pain
   interface Session extends CustomSession {}
