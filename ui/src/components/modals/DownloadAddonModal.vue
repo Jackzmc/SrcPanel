@@ -116,8 +116,8 @@ let showForceDownload = ref(false)
 let updateDone = ref(false)
 
 const isAddonValid = computed(() => {
-  if(!workshopId.value) return false
-  console.log(workshopDetails.value.consumer_app_id,  props.share.appId,  props.share.appId )
+  if(!props.share.appId) return true // Allow all if no appid is set
+  if(!workshopId.value) return false // If no file found, dont check
   return workshopDetails.value?.consumer_app_id == props.share.appId
 })
 
