@@ -131,10 +131,14 @@ export default class Share {
     }
 
     private async addCacheEntry(filename: string, fsInfo?: { filesize: number, lastModified: number }, workshop?: AddonWorkshopInfo) {
-        if(fsInfo)
-            await this.db.run(SQL`INSERT INTO addoncache (filename, filesize, lastModified) VALUES (${filename}, ${fsInfo.filesize}, ${fsInfo.lastModified})`)
-        else
-            await this.db.run(SQL`INSERT INTO addoncache (filename, ws_info) VALUES (${filename}, ${JSON.stringify(workshop)})`)
+        try {
+            if(fsInfo)
+                await this.db.run(SQL`INSERT INTO addoncache (filename, filesize, lastModified) VALUES (${filename}, ${fsInfo.filesize}, ${fsInfo.lastModified})`)
+            else
+                await this.db.run(SQL`INSERT INTO addoncache (filename, ws_info) VALUES (${filename}, ${JSON.stringify(workshop)})`)
+        } catch(err) {
+            console.error(`Failed to add cache entry for ${filename}`, { fsInfo, workshop: workshop !== undefined }, err)
+        }
     }
 
     public async getAddonInfo(filename: string): Promise<AddonInfo | undefined> {
