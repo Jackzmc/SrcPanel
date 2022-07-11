@@ -194,6 +194,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         if(!share) {
             const payload = {
                 error: "Share Not Found", 
+                code: "SHARE_NOT_FOUND",
                 message: `No share with id \"${req.params.shareId.toLowerCase()}\" could be found. Share may be available, incorrecty configured or does not exist`   
             }
             useSSE ? reply.raw.write(`data: ${JSON.stringify(payload)}\n\n`) : reply.status(404).send(payload)
