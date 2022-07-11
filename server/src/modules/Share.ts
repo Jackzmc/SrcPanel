@@ -40,7 +40,7 @@ export interface AddonWorkshopInfo {
     lastUpdated: number
 }
 
-const WS_ITEMID_REGEX = new RegExp(/(\d+).vpk/)
+const WS_ITEMID_REGEX = new RegExp(/^(\d+).vpk$/)
 
 export default class Share {
     public name: string
