@@ -58,14 +58,14 @@ export default class Share {
     }
 
     public async install(filename: string, destinationKey: string) {
-        const destPath = this.destinations[destinationKey]
-        if(!destPath) throw new Error(`Destination "${destinationKey}" does not exist`)
+        const dest = this.destinations[destinationKey]
+        if(!dest) throw new Error(`Destination "${destinationKey}" does not exist`)
         
         if(!this.doesFileExist(this.sourceFolder, filename)) {
             throw new Error(`File \"${filename}\" does not exist in ${this.sourceFolder}`)
         }
 
-        await execPromise(`ln -sv "${this.sourceFolder}"/${filename} "${destPath}"`)
+        await execPromise(`ln -sv "${this.sourceFolder}"/${filename} "${dest.path}"`)
     }
 
     public async uninstall(filename: string, destinationKey: string) {
