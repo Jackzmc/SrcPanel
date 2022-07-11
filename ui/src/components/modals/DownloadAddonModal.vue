@@ -150,7 +150,7 @@ async function restartServers() {
   downloadingState.value = 3
   let totalRejectedCount = 0
   for(const destId of installDestinations.value) {
-    const destInfo = props.share.destinations[destId]
+    const destInfo = props.share.destinations.find((dest: any) => dest.id == destId)
     if(destInfo.serverIds) {
       const results = await Promise.allSettled(destInfo.serverIds.map((serverId: string) => restartServer(serverId)))
       const rejectedCount = results.reduce((pv, result) => {
