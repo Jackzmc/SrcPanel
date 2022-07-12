@@ -200,8 +200,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         let profilerStart = Date.now()
         let meta: Record<string, number> = {}
 
-        const [rows] = await db.execute(`
-            SELECT u1.last_alias,
+        const [bans] = await db.execute<RowDataPacket[]>(`
+            SELECT u1.last_alias, names.name as resolved_name,
                 bans.id,
                 bans.steamid,
                 bans.reason,
@@ -218,6 +218,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             FROM bans
                 LEFT JOIN stats_users as u1 on bans.steamid = u1.steamid
                 LEFT JOIN stats_users as u2 on bans.executor = u2.steamid
+                LEFT JOIN user_names as names on SUBSTRING(bans.steamid, 11) = names.steamid
             ORDER BY bans.timestamp DESC`, 
             []
         )
@@ -225,25 +226,26 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         meta.fetchTime = Date.now() - profilerStart
         profilerStart = Date.now()
 
-        // FIXME: Some cache values are leaking into the wrong ids
-
-        const bulkNameFetchBuffer: { steamid: string, steamidc: SteamID, index: number }[] = []
-        const bans = (rows as RowDataPacket[])
-        const redisBuffer: Record<number, string> = {}
-
+        const bulkNameSteamIds: SteamID[] = []
 
         for(let i = 0; i < bans.length; i++) {
             let ban = bans[i]
+            const steamid = new SteamID(ban.steamid)
             ban.client = {
                 id: ban.steamid,
+                accountid: ban.steamid.slice(10),
                 nameResolver: "none"
             }
 
             if(ban.last_alias) {
                 ban.client.name = ban.last_alias
                 ban.client.nameResolver = "stats"
+            } else if(ban.resolved_name) {
+                ban.client.name = ban.resolved_name
+                ban.client.nameResolver = "name_db"
             } else {
-                //redisBuffer[i.toString()] = `steamname.${ban.steamid}`
+                // Optimize by having count of steamids so we can break in resolver quicker
+                bulkNameSteamIds.push(steamid)
             }
 
             ban.executor = {
@@ -256,36 +258,26 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         meta.initParse = Date.now() - profilerStart
         profilerStart = Date.now()
 
-        /*const aliases = await cache.mGet(Object.values(redisBuffer))
-        for(const key in aliases) {
-            const alias = aliases[key]
-            const ban = bans[key]
-            if(alias) {
-                bans[key].client.name = alias
-                bans[key].client.nameResolver = "steam-cache"
-            } else if(bulkNameFetchBuffer.length < 100) {
-                bulkNameFetchBuffer.push({
-                    steamid: ban.steamid,
-                    steamidc: new SteamID(ban.steamid),
-                    index: Number(key)
-                })
-            }
-        }*/
+        while(bulkNameSteamIds.length > 0) {
+            const sliceSteamids = bulkNameSteamIds.splice(0, 100)
+            // This does not return in the order of sliceSteamids!!
+            const resolvedNames = await fastify.steam.getUserDetails(sliceSteamids)
+            for(const resolvedName of resolvedNames) {
+                // Stupid but i dont care
+                const accountid = new SteamID(resolvedName.steamid).getSteam2RenderedID().slice(10)
+                // VERY bad, but should only run on limited amounts
+                for(let ban of bans) {
+                    if(ban.client.accountid == accountid) {
+                        ban.client.name = resolvedName.personaname
+                        ban.client.nameResolver = "steam"
+                    }
+                }
 
-        meta.cacheResolve = Date.now() - profilerStart
-        profilerStart = Date.now()
-
-        if(bulkNameFetchBuffer.length > 0) {
-            const steamNames = await fastify.steam.getUserDetails(bulkNameFetchBuffer.map(b => b.steamidc))
-            for(let i = 0; i < steamNames.length; i++) {
-                const banIndex = bulkNameFetchBuffer[i].index
-                bans[banIndex].name = steamNames[i].personaname,
-                bans[banIndex].nameResolver = "steam"
-
-                await cache.set(
-                    `steamname.${bulkNameFetchBuffer[i].steamid}`, 
-                    steamNames[i].personaname
-                )
+                try {
+                    await db.execute("INSERT INTO user_names (steamid, name) VALUES (?, ?)", [accountid, resolvedName.personaname])
+                } catch(err) {
+                    console.warn(`Warn: Could not insert resolved name (${accountid}, name ${resolvedName.personaname}):`, err.sqlMessage)
+                }
             }
         }
 
