@@ -100,10 +100,10 @@
               <template v-if="shareInfo&&!prefetch">
                 <td v-for="(dest, i) in shareInfo.destinations" :key="dest.id" :class="['has-text-centered', {'column-separator': i == 0 }]">
                   <em v-if="!vpk.installInfo" data-tooltip="Could not determine share install information">?</em>
-                  <a @click="installAddon(vpk, dest.id, 'install')" v-else-if="vpk.installInfo[dest.id]" data-tooltip="Installed. Click to uninstall">
+                  <a @click="installAddon(vpk, dest.id, 'uninstall')" v-else-if="vpk.installInfo[dest.id]" data-tooltip="Installed. Click to uninstall">
                     ✔️
                   </a>
-                  <a @click="installAddon(vpk, dest.id, 'uninstall')" v-else data-tooltip="Not installed. Click to install">
+                  <a @click="installAddon(vpk, dest.id, 'install')" v-else data-tooltip="Not installed. Click to install">
                     ❌
                   </a>
                 </td>
