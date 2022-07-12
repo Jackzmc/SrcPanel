@@ -3,7 +3,7 @@ import QuickLRU from 'quick-lru'
 import SteamID from 'steamid'
 import { FastifyReply, FastifyRequest } from 'fastify';
 import ActivityLog from "./ActivityLog.js";
-import { AdminPermissions, AdminData, AdminGroup, WebRole } from '../../../common-types/User.js';
+import { AdminPermissions, AdminData, AdminGroup, WebRole, WebPermission } from '../../../common-types/User.js';
 import { ReadableAdminData } from '../../../common-types/User';
 
 interface AddAdmin {
@@ -71,6 +71,10 @@ export default class AuthManager {
         }
     
         return authorized
+    }
+
+    hasPermission(req: FastifyRequest, permission: WebPermission): boolean {
+        return (req.session.permissions.web.flags & permission) > 0
     }
     
     public isAdmin(steamid: SteamID) {

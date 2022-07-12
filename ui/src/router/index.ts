@@ -152,6 +152,16 @@ const routes = [
     }
   },
   {
+    name: 'admin-server-view',
+    path: '/admin/servers/:id',
+    component: () => import(/* webpackChunkName: 'servers' */ '../views/admin/ServerView.vue'),
+    meta: {
+      title: 'Server View',
+      authRequired: true,
+      hideHero: true
+    },
+  },
+  {
     name: 'admin-servers',
     path: '/admin/servers',
     component: () => import(/* webpackChunkName: 'servers' */ '../views/admin/ServerManagementView.vue'),
@@ -159,7 +169,7 @@ const routes = [
       title: 'Server Management',
       description: 'View all the servers and manage them, all in one place',
       authRequired: true
-    }
+    },
   },
   {
     name: 'admin-settings',

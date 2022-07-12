@@ -1,34 +1,63 @@
 import Gamedig from 'gamedig';
 import { Rcon } from 'rcon-client';
+import { readdir } from 'fs/promises'
+import { join } from 'path'
+
+const HIDDEN_CONFIG_FILES = [
+  "360controller.cfg",
+  "addonconfig.cfg",
+  "config_default.cfg",
+  "lowend.cfg",
+  "listenserver.cfg",
+  "listenserver360.cfg",
+  "modsettings.cfg",
+  "perf.cfg",
+  "screenshots.cfg",
+  "screenshots_undo.cfg",
+  "skill1.cfg",
+  "splitscreen_off.cfg",
+  "splitscreen_on.cfg",
+  "test_end.cfg",
+  "test_start.cfg",
+  "undo360controller.cfg",
+  "joy_preset_1.cfg",
+  "joy_preset_2.cfg",
+  "joy_preset_3.cfg",
+  "joy_preset_4.cfg",
+]
+
+const VALID_CONFIG_EXTS = ["cfg", "toml"]
 
 export interface BaseServerData {
-    id ? : string;
-    name: string;
-    domain ? : string;
-    ip: string,
-    port: number,
-    type: string,
-    systemd ? : {
-      isUser: boolean;
-      serviceName: string;
-    },
-    tags: string[],
-    status: ServerStatus
+  id ? : string;
+  name: string;
+  domain ? : string;
+  ip: string,
+  port: number,
+  type: string,
+  cfgDirectory?: string,
+  activityId?: string,
+  systemd ? : {
+    isUser: boolean;
+    serviceName: string;
+  },
+  tags: string[],
+  status: ServerStatus
 }
 
 export interface ConfigServerData extends BaseServerData {
-    rcon ? : {
-        password: {
-          text ? : string;
-          env ? : string;
-        };
-        exitCommand ? : string;
-        requestExitCommand ? : string;
-    },
-    systemd ? : {
+  rcon ? : {
+      password: {
+        text ? : string;
+        env ? : string;
+      };
+      exitCommand ? : string;
+      requestExitCommand ? : string;
+  },
+  systemd ? : {
     isUser: boolean;
     serviceName: string;
-    },
+  },
 }
 
 export interface ServerData extends BaseServerData {
@@ -39,24 +68,30 @@ export interface ServerData extends BaseServerData {
     }
 }
   
-  export interface ServerStatus {
-    data?: {
-      players: string[],
-      maxplayers: number,
-      map: string,
-      gamemode: string,
-    },
-    online: boolean
-  }
+export interface ServerStatus {
+  data?: {
+    players: string[],
+    maxplayers: number,
+    map: string,
+    gamemode: string,
+  },
+  online: boolean
+}
+
+export interface ServerInfo {
+  id?: string,
+  name: string,
+  domain?: string,
+  port: number,
+  type: string,
+  ip: string,
+}
 
 export default class Server { 
+    private _info: ServerInfo
     private _status: ServerStatus
-    private _id ? : string;
-    private _name: string;
-    private _domain ? : string;
-    private _ip: string;
-    private _port: number;
-    private _type: string ;
+    private _cfgDir: string;
+    private _actid: string
     private rcon?: {
       password: string,
       exitCommand: string
@@ -71,22 +106,26 @@ export default class Server {
     public tags: Readonly<string[]>;
 
     constructor(server: ServerData) {
-        this._id = server.id
-        this._name = server.name
-        this._domain = server.domain
-        this._ip = server.ip
-        this._port = server.port
-        this._type = server.type
+        this._info = {
+          id: server.id,
+          name: server.name,
+          domain: server.domain,
+          ip: server.ip,
+          port: server.port,
+          type: server.type,
+        }
+        this._cfgDir = server.cfgDirectory
+        this._actid = server.activityId
         if(server.rcon) {
           const client = new Rcon({
-            host: this._ip, port: this._port, password: server.rcon.password
+            host: this._info.ip, port: this._info.port, password: server.rcon.password
           })
           client.on('connect', () => {
             this.rcon.connected = true
           })
           client.on('end', () => this.rcon.connected = false)
           client.on('error', (err) => {
-            console.warn(`[Warn] [Server::${this._id}]`, err.code ?? err.message)
+            console.warn(`[Warn] [Server::${this._info.id}]`, err.code ?? err.message)
             this.rcon.connected = false
           })
           this.rcon = {
@@ -100,18 +139,70 @@ export default class Server {
         this._status = { data: null, online: false }
     }
 
-    public get id() { return this._id }
-    public get name() { return this._name }
-    public get domain() { return this._domain }
-    public get ip() { return this._ip }
-    public get port() { return this._port }
-    public get type() { return this._type }
+    public get id() { return this._info.id }
+    public get name() { return this._info.name }
+    public get domain() { return this._info.domain }
+    public get ip() { return this._info.ip }
+    public get port() { return this._info.port }
+    public get type() { return this._info.type }
+    public get configDir() { return this._cfgDir }
+
+    public get info() { 
+      return {
+        ...this._info,
+        features: this.features,
+        tags: this.tags
+      } 
+    }
 
     public get status(): ServerStatus { return this._status }
 
     public get hasRcon() { return this.rcon !== null }
     public get hasSystemd() { return this.systemd !== null }
+    public get hasConfigs() { return this._cfgDir !== null && this._cfgDir !== undefined}
 
+    public get features() {
+      const arr = []
+      if(this.rcon) arr.push("rcon")
+      if(this.systemd) arr.push("systemd")
+      if(this._cfgDir) arr.push("configs")
+      return arr
+    }
+
+    public get activityLogId() { return this._actid }
+
+    // Fetches all config, including one level nested
+    public async getConfigFiles(showHidden = false) {
+      if(!this._cfgDir) return
+      return await this._recurseConfig(this._cfgDir, showHidden)
+    }
+
+    private async _recurseConfig(path: string, showHidden: boolean, parent = "") {
+      const dirents = await readdir(path, { withFileTypes: true })
+      const files = []
+      for(const dirent of dirents) {
+        const filepath = `${parent}${dirent.name}`
+        if(dirent.isDirectory()) {
+          files.push(...await this._recurseConfig(join(path, dirent.name), showHidden, `${filepath}/`))
+        } else if(dirent.isFile()) {
+          if(!showHidden) {
+            let skip = false
+            for(const hidden of HIDDEN_CONFIG_FILES) {
+              if(dirent.name == hidden) {
+                skip = true
+                break
+              }
+            }
+            if(skip) continue
+          }
+          const ext = dirent.name.split(".").pop()
+          if(VALID_CONFIG_EXTS.includes(ext)) {
+            files.push(filepath)
+          }
+        }
+      }
+      return files
+    }
 
     private async rconConnect() {
       if(!this.rcon.connected) {
@@ -142,16 +233,18 @@ export default class Server {
     public async refresh() {
         try {
             const state = await Gamedig.query({
-              type: this.type as Gamedig.Type,
-              host: this.ip,
-              port: this.port,
+              type: this._info.type as Gamedig.Type,
+              host: this._info.ip,
+              port: this._info.port,
               givenPortOnly: true,
               maxAttempts: 1,
               socketTimeout: 3000,
               attemptTimeout: 5000
             })
             this._status.data = {
-              players: state.players.map(p => p.name),
+              players: state.players
+                .filter(p => p.name.length > 0) // Some names are just "", assumingly bots?
+                .map(p => p.name),
               maxplayers: state.maxplayers,
               map: state.map,
               gamemode: (state.raw as any).tags[0]

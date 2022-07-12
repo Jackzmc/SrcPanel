@@ -7,36 +7,60 @@
       <table class="table is-fullwidth">
           <thead>
               <tr>
+                  <th></th>
                   <th>Name</th>
                   <th>Players</th>
+                  <th></th>
                   <th>Actions</th>
               </tr>
           </thead>
           <tbody>
-            <tr v-for="server in servers" :key="server.id">
-              <td class="is-size-5">
-                <a :href="'steam://connect/' + server.domain + ':' + server.port">
-                  <b :data-tooltip="getServerMessage(server)" :class="getServerClasses(server)" >{{server.name}}</b>
-                </a>
-                <span v-if="server.tags.includes('5+')" class='is-size-5'><b>**</b></span>
-                    <span v-if="server.tags.includes('customs')" class='is-size-5'><b>*</b></span>
-              </td>
-              <td><span v-if="server.status.online">{{server.status.data.players.length}} / {{server.status.data.maxplayers}}</span></td>
-              <td>
-                <div class="buttons">
-                  <template v-if="server.status.online">
-                    <template v-if="server.tags.includes('rcon')">
-                      <a @click="processAction(server, 'stop')" class="button is-dark">Request Restart</a>
-                      <a @click="processAction(server, 'stop?force=1')" class="button is-warning" v-if="shiftPressed">Force Restart</a>
+            <template v-for="server in servers" :key="server.id">
+              <tr>
+                <td style="width:0" @click="selectServer(server)">
+                  <a class="button">&lt;</a>
+                </td>
+                <td class="is-size-5">
+                  <a :href="'steam://connect/' + server.domain + ':' + server.port">
+                    <b :data-tooltip="getServerMessage(server)" :class="getServerClasses(server)" >{{server.name}}</b>
+                  </a>
+                  <span v-if="server.tags.includes('5+')" class='is-size-5'><b>**</b></span>
+                      <span v-if="server.tags.includes('customs')" class='is-size-5'><b>*</b></span>
+                </td>
+                <td><span v-if="server.status.online">{{server.status.data.players.length}} / {{server.status.data.maxplayers}}</span></td>
+                <td>
+                  <div class="buttons">
+                    <a class="button is-info">Configs</a>
+                    <a class="button is-black">Console</a>
+                  </div>
+                </td>
+                <td>
+                  <div class="buttons">
+                    <template v-if="server.status.online">
+                      <template v-if="server.tags.includes('rcon')">
+                        <a @click="processAction(server, 'stop')" class="button is-dark">Request Restart</a>
+                        <a @click="processAction(server, 'stop?force=1')" class="button is-warning" v-if="shiftPressed">Force Restart</a>
+                      </template>
                     </template>
-                  </template>
-                  <template v-else-if="server.tags.includes('systemd')">
-                    <a @click="processAction(server, 'start')" v-if="!starting[server.port]" class="button is-success">Start Server</a>
-                  </template>
-                  <!-- <a @click="processAction(server, 'update')" class="button is-info">Update</a> -->
-                </div>
-              </td>
-            </tr>
+                    <template v-else-if="server.tags.includes('systemd')">
+                      <a @click="processAction(server, 'start')" v-if="!starting[server.port]" class="button is-success">Start Server</a>
+                    </template>
+                    <!-- <a @click="processAction(server, 'update')" class="button is-info">Update</a> -->
+                  </div>
+                </td>
+              </tr>
+              <table v-if="selectedServer && selectedServer.id == server.id" class="table is-fullwidth">
+                <tr>
+                  <td>
+                    {{ selectedServer }}
+                    <div class="buttons">
+                      <a class="button is-info">Configs</a>
+                      <a class="button is-black">Console</a>
+                    </div>
+                  </td>
+                </tr>
+              </table>
+            </template>
           </tbody>
       </table>
       <em>* Server supports custom maps</em><br>
@@ -59,16 +83,29 @@
 
 <script setup lang="ts">
 import { ref, watch, computed, onBeforeMount, onMounted, onDeactivated } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
+
+const router = useRouter()
+const route = useRoute()
 
 const emit = defineEmits(['refresh'])
 
 let servers = ref<any[]>([])
 let shiftPressed = ref(false)
 let message = ref<{content?: string, type?: string}>()
+let selectedServer = ref()
 
 let starting = ref<Record<string, boolean>>({})
 let refreshTimer = ref<number>()
 
+function selectServer(server: any) {
+  router.push({
+    name: 'admin-server-view',
+    params: {
+      id: server.id
+    }
+  })
+}
 function sendMessage(type: string, content: string) {
   message.value = {
     type: type === "error" ? "has-text-danger" : type === "success" ? "has-text-success" : type,

@@ -10,6 +10,9 @@ export enum WebPermission {
     ManageAdmins = 1 << 2,
     CanWrite = 1 << 3,
     FullPermission = 1 << 4,
+    ConfigRead = 1 << 5,
+    ConfigWrite = 1 << 6,
+    ConfigRawView = 1 << 7,
 }
 
   
@@ -17,7 +20,10 @@ export const WEB_FLAGS: Record<WebPermission, string> = {
     [WebPermission.RconAccess]: 'RCON Access',
     [WebPermission.ManageAdmins]: 'Manage Admins',
     [WebPermission.CanWrite]: 'Can Add / Modify / Delete',
-    [WebPermission.FullPermission]: 'Full Permission / Super-admin'
+    [WebPermission.FullPermission]: 'Full Permission / Super-admin',
+    [WebPermission.ConfigRead]: 'Read Config Files',
+    [WebPermission.ConfigWrite]: 'Edit Config Files',
+    [WebPermission.ConfigRawView]: 'Can view unfiltered config files'
 }
 
 export interface Session {

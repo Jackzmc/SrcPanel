@@ -12,6 +12,11 @@
             // Required: The url of the server
             "ip": "127.0.0.1:27015",
 
+            // The directory where the server configs are stored. Will scan for subfolder files as well.
+            "cfgDirectory": "/home/steam/l4d2/left4dead2/cfg/",
+
+            "activityId": "myserver",
+
             "rcon": {
                 "password": {
                     // One of these is needed, env will overwrite text

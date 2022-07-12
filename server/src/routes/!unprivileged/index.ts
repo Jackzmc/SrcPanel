@@ -26,9 +26,7 @@ const GRAPH_WHITELIST = {
 };
 
 
-interface DisplayedServer {
-    id?: string;
-    name: string;
+interface DisplayedServer extends CompactDisplayedServer {
     domain ? : string;
     ip: string,
     port: number,
@@ -36,8 +34,20 @@ interface DisplayedServer {
     tags: Readonly<string[]>,
     status: ServerStatus
 }
+interface CompactDisplayedServer {
+    id: string,
+    name: string
+}
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions)  {
-    fastify.get('/servers', async(req, reply): Promise<DisplayedServer[]> =>  {
+    fastify.get('/servers', async(req: FastifyRequest<{Querystring: {'compact'?: boolean}}>, reply): Promise<CompactDisplayedServer[] | DisplayedServer[]> =>  {
+        if(req.query.compact) {
+            return fastify.servers.getAll().map(server => {
+                return { 
+                    id: server.id,
+                    name: server.name,
+                }
+            })
+        }
         return fastify.servers.getAll().map(server => {
             return {
                 name: server.name,

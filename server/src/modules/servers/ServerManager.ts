@@ -152,6 +152,8 @@ export default class ServerManager {
               ip: address,
               type: server.type,
               tags: tags,
+              cfgDirectory: server.cfgDirectory,
+              activityId: server.activityId,
               systemd: server.systemd,
               rcon: {
                 password: rconPassword,
