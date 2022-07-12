@@ -84,7 +84,7 @@
             <tr v-for="vpk in filteredVPKs" :key="vpk.filename">
               <td>
                 <a v-if="vpk.workshop" @click="preview(vpk)" :data-tooltip="'Filename: ' + vpk.filename">{{vpk.workshop.title}}</a>
-                <span v-else>{{vpk.filename}}.vpk</span>
+                <span v-else>{{vpk.filename}}</span>
               </td>
               <td>
                 <a v-if="vpk.workshop" :href="vpk.workshop.url" class="button is-small">Workshop</a>
@@ -323,7 +323,7 @@ function formatTime(time: number) {
 
 async function installAddon(vpk: any, destKey: string, mode: "install" | "uninstall") {
   try {
-    const response = await fetch(`/api/shares/${selectedShare.value}/addons/${vpk.filename}.vpk/${mode}/${destKey}`, { method: 'POST' })
+    const response = await fetch(`/api/shares/${selectedShare.value}/addons/${vpk.filename}/${mode}/${destKey}`, { method: 'POST' })
     const json = await response.json()
     if(response.ok) {
       // Update local copy
