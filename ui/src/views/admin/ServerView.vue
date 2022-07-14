@@ -19,7 +19,7 @@
         </ul>
       </div>
       <template v-if="tab == 'overview'">
-        <template v-if="status">
+        <template v-if="status && status.online">
           <div class="columns">
             <div class="column">
               <h5 class="title is-5">Map</h5>
@@ -43,7 +43,9 @@
           <br>
           </template>
         </template>
+        <p v-else-if="status && !status.online" class="has-text-centered has-text-danger subtitle is-4">Server is offline or unreachable</p>
         <p class="has-text-centered subtitle is-4" v-else>Waiting for server status...</p>
+        <br>
       </template>
       <template v-else-if="tab == 'configs'">
         <ul v-if="cfg.selected">
