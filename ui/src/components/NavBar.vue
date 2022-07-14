@@ -49,7 +49,7 @@
               Addons / Maps
             </router-link>
             <router-link to="/admin/servers" class="navbar-item">
-              Server Management
+              Servers
             </router-link>
             <router-link to="/admin/logs" class="navbar-item">
               Audit & Activity Log

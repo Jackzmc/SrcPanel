@@ -7,18 +7,19 @@
       <table class="table is-fullwidth">
           <thead>
               <tr>
-                  <th></th>
+                  <th style="width:0"></th>
                   <th>Name</th>
                   <th>Players</th>
-                  <th></th>
                   <th>Actions</th>
               </tr>
           </thead>
           <tbody>
             <template v-for="server in servers" :key="server.id">
               <tr>
-                <td style="width:0" @click="selectServer(server)">
-                  <a class="button">&lt;</a>
+                <td>
+                  <div class="buttons">
+                    <a class="button is-info" @click='selectServer(server)'>View</a>
+                  </div>
                 </td>
                 <td class="is-size-5">
                   <a :href="'steam://connect/' + server.domain + ':' + server.port">
@@ -28,12 +29,6 @@
                       <span v-if="server.tags.includes('customs')" class='is-size-5'><b>*</b></span>
                 </td>
                 <td><span v-if="server.status.online">{{server.status.data.players.length}} / {{server.status.data.maxplayers}}</span></td>
-                <td>
-                  <div class="buttons">
-                    <a class="button is-info">Configs</a>
-                    <a class="button is-black">Console</a>
-                  </div>
-                </td>
                 <td>
                   <div class="buttons">
                     <template v-if="server.status.online">
