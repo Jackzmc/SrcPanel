@@ -38,7 +38,7 @@
     <tfoot v-if="hasManual">
       <tr>
         <td><input type="radio" v-model="selectedId" value="_custom"></td>
-        <td><input type="text" class="input" v-model="manualInput" placeholder="STEAM_1:1:" /></td>
+        <td><input @focus="selectedId = '_custom'" type="text" class="input" v-model="manualInput" placeholder="STEAM_1:1:" /></td>
         <td><b>Manual Input</b></td>
       </tr>
     </tfoot>
@@ -64,7 +64,7 @@ watch(selectedId, (value) => {
     emit('select', value)
 })
 watch(manualInput, (value) => {
-  if(selectedId.value === "_custom")
+  // if(selectedId.value === "_custom")
     emit('manual', value)
 })
 

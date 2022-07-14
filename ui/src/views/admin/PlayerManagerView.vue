@@ -80,13 +80,13 @@ import { User, PrivilegedUser, PlayerData } from '@/js/User'
 import { useRouter, useRoute } from 'vue-router'
 import { Session, WebPermission, ReadableAdminData } from '../../../../common-types/User';
 import UserSelection from '@/components/UserSelection.vue'
-import PlayerManager from '@/components/PlayerManager.vue'
 // @ts-ignore
 import {Tabs, Tab} from 'vue3-tabs-component';
 // Keep track and open gui for each ban
 import Debounce from '@/js/debounce'
 
 const AUTO_REFRESH_INTERVAL_MINUTES = 2
+const RECENT_LIMIT = 15
 
 const router = useRouter()
 const route = useRoute()
@@ -164,10 +164,13 @@ function setTab(tab: any) {
 }
 function onUserSelected(id: string) {
   selectedId.value = id
+  manualInput.value = undefined
+  search.value.func()
 }
 function onManualSelected(id: string) {
   manualInput.value = id
   selectedId.value = "_custom"
+  search.value.func()
 }
 function addBan() {
   if(!selectedIdSteamID.value) return alert("No steamID selectedId")
@@ -179,7 +182,7 @@ function addAdmin() {
 }
 async function searchUser() {
   selectedId.value = undefined
-  const response = await fetch(`/api/users/search/${search.value.query}`)
+  const response = await fetch(`/api/users/search/${manualInput.value ?? search.value.query}`)
   if(response.ok) {
     const json = await response.json()
     users.value = json.users
@@ -194,7 +197,7 @@ async function fetchAdmins() {
 }
 async function getRecentPlayers() {
   recentPlayers.value.loading = true
-  const resp = await fetch(`/api/users/recent/${recentPlayers.value.server||''}?limit=10`)
+  const resp = await fetch(`/api/users/recent/${recentPlayers.value.server||''}?limit=${RECENT_LIMIT}`)
   recentPlayers.value.loading = false
   if(resp.ok) {
     const json = await resp.json()

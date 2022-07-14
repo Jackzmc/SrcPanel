@@ -86,7 +86,6 @@ export default class ServerManager {
           }
           
         }
-
         const db = await open({
           filename: join(this.dataDir, `shares/${key.toLowerCase()}_addons_cache.db`),
           driver: sqlite3.Database
@@ -173,6 +172,7 @@ export default class ServerManager {
 
     await Promise.allSettled(serverPromises)
 
+    console.log('Loaded servers, now loading shares')
     await this.loadShares(config)
   }
 }
