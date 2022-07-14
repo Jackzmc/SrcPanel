@@ -1,11 +1,17 @@
 <template>
-<nav class="container" v-if="server">
+<div>
+<nav class="container mb-5" v-if="server">
   <div class="columns">
     <div class="column is-8">
       <router-link to="/admin/servers" class="button is-small">🠐 back to servers</router-link>
       <h3 class="title is-3">
         {{server.info.name}}
-        <span class="tag is-pulled-right inline is-info">{{server.info.id}}</span>
+        <div class="tags is-pulled-right inline">
+          <span class="tag is-success  is-medium" v-if="status && status.online">Online</span>
+          <span class="tag is-danger  is-medium" v-else-if="status && !status.online">Offline</span>
+          <span class="tag  is-medium" v-else>Unknown</span>
+          <span data-tooltip="Server ID" class="tag is-info  is-medium">{{server.info.id}}</span>
+        </div>
       </h3>
       <h4 class="subtitle is-4">{{server.info.domain}}:{{server.info.port}}</h4>
       <div class="tags">
@@ -14,7 +20,7 @@
       <div class="tabs">
         <ul>
           <li v-for="(data, id) in TABS" :key="id" :class="tabClass(id)">
-            <a v-if="!data.flag || privUser.hasWebPerm(data.flag)" @click="setTab(id)">{{data.name}}</a>
+            <a v-if="(!data.flag || privUser.hasWebPerm(data.flag)) && (data.enabled == undefined || data.enabled())" @click="setTab(id)">{{data.name}}</a>
           </li>
         </ul>
       </div>
@@ -92,11 +98,14 @@
       </template>
       <template v-else-if="tab === 'configs'">
         <h5 class="title is-5">Config Files</h5>
-        <FolderBrower @select="onCfgChosen" :paths="server.configs" />
+        <FolderBrower v-if="server.configs" @select="onCfgChosen" :paths="server.configs" />
+        <p v-else>Server has no configs setup</p>
       </template>
     </div>
   </div>
 </nav>
+<br>
+</div>
 </template>
 
 <script setup lang="ts">
@@ -116,13 +125,16 @@ const privUser = new PrivilegedUser(props.userdata)
 const route = useRoute()
 const router = useRouter()
 
-const TABS: Record<string, { name: string, flag?: WebPermission }> = {
+const TABS: Record<string, { name: string, flag?: WebPermission, enabled?: Function }> = {
   overview: {
     name: "Overview",
   },
   configs: {
     name: "Configs",
-    flag: WebPermission.ConfigRead
+    flag: WebPermission.ConfigRead,
+    enabled: () => {
+      return server.value && server.value.configs
+    }
   },
   activity: {
     name: "Activity Log"
@@ -160,6 +172,9 @@ async function onSelectNewServer(event: any) {
   await router.push(`/admin/servers/${event.target.value}`)
   server.value = undefined
   await fetchServerInfo()
+  if(tab.value === 'configs' && !server.value.configs) {
+    tab.value = 'overview'
+  }
   await fetchServerStatus()
 }
 async function fetchServerInfo() {
