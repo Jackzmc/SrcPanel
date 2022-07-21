@@ -109,5 +109,10 @@
         "cvar": "sm_player_limit <0-Infinity:int>",
         "description": "Sets the player limit. 0 = default limit, default.",
         "default": 0
+    },
+    {
+        "cvar": "scuffle_enabled <0/1:bool>",
+        "default": 1,
+        "description": "Only available on main server and on by default. 0 to disable self revive"
     }
 ]

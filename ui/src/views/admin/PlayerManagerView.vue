@@ -181,7 +181,6 @@ function addAdmin() {
   router.push(`/admin/players/${selectedIdSteamID.value}/manage-admin`)
 }
 async function searchUser() {
-  selectedId.value = undefined
   const response = await fetch(`/api/users/search/${manualInput.value ?? search.value.query}`)
   if(response.ok) {
     const json = await response.json()
