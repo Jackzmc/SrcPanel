@@ -76,6 +76,44 @@
                     "multi": false
                 }
             ]
+        },
+        {
+            "name": "Smart Charge",
+            "description": "Waits until the player is alone and has no obstructions and then charges",
+            "modes": ["constant"],
+            "prompts": [
+                {
+                    "flags": ["15 seconds", "30 seconds", "1 minute", "5 minutes"],
+                    "multi": false
+                }
+            ]
+        }
+    ],
+    "Projectiles": [
+        {
+            "name": "Rock Dropper",
+            "description": "Drops a rock on their head.",
+            "modes": ["instant"]
+        },
+        {
+            "name": "Car Splat",
+            "description": "Smash a player with a car",
+            "modes": ["instant"],
+            "prompts": [
+                { "flags": ["On Top", "Into"], "multi": false}
+            ] 
+        },        {
+            "name": "Bad Throw",
+            "description": "Player drops throwables on throw, and biles/molotovs themselves",
+            "modes": ["constant"],
+            "prompts": [
+              { "flags": ["Bile", "Molotov", "Pipebomb"], "multiple": true }
+            ]
+        },
+        {
+            "name": "Molotov Bath",
+            "description": "Drops a molotov at their feet. Checks if safe to do so.",
+            "modes": ["instant"]
         }
     ],
     "Items": [
@@ -83,14 +121,6 @@
             "name": "Throw It All",
             "description": "Player throws their item(s) periodically to a nearby player",
             "modes": ["instant"]
-        },
-        {
-            "name": "Bad Throw",
-            "description": "Player drops throwables on throw, and biles/molotovs themselves",
-            "modes": ["constant"],
-            "prompts": [
-              { "flags": ["Bile", "Molotov", "Pipebomb"], "multiple": true }
-            ]
         },
         {
             "name": "Spicy Gas",
@@ -139,6 +169,11 @@
             "description": "Makes all damage dealt by player 0",
             "modes": ["constant"],
             "subnotes": []
+        }, 
+        {
+            "name": "CameTooEarly",
+            "description": "When they shoot, random chance they empty whole clip",
+            "modes": ["constant"]
         }
     ],
     "Chat": [
@@ -216,6 +251,22 @@
                 "multi": false
               }
             ]
+        },
+        {
+            "name": "Dep Bots",
+            "description": "Makes bots heal a player, at any cost.",
+            "modes": ["constant"],
+            "prompts": [
+                { 
+                    "flags": ["Do not spawn extra", "Spawn extra bots (broken)"]
+                },
+                {
+                    "flags": ["1", "2", "3", "4", "5"]
+                },
+                {
+                    "flags": ["Until Healed / Map Change", "15 seconds", "30 seconds", "1 minute", "5 minutes"]
+                }
+            ]
         }
     ],
     "Movement": [
@@ -274,19 +325,6 @@
                 "Percentage affected by sm_ftt_shove_fail_chance cvar (default: 50%)",
                 "Will still visually shove survivors, but will not affect them"
             ]
-        },
-        {
-            "name": "Car Splat",
-            "description": "Smash a player with a car",
-            "modes": ["instant"],
-            "prompts": [
-                { "flags": ["On Top", "Into"], "multi": false}
-            ] 
-        },
-        {
-            "name": "CameTooEarly",
-            "description": "When they shoot, random chance they empty whole clip",
-            "modes": ["constant"]
         }
     ],
     "_Combos_": {
