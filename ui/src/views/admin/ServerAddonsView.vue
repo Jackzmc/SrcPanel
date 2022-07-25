@@ -175,6 +175,7 @@ let sort = ref<{
 } | undefined>()
 
 let selectedShare = ref<string>("default")
+watch(() => selectedShare.value, fetchVPKS)
 let shares = ref<string[]>(["default"])
 let shareInfo = ref()
 let totalFileSize = ref(0)
@@ -277,6 +278,7 @@ async function fetchShares() {
 async function fetchVPKS() {
   error.value = undefined
   shareInfo.value = undefined
+  vpks.value = []
   try {
     const response = await fetch(`/api/shares/${selectedShare.value}/addons`)
     const json = await response.json()
