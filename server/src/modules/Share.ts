@@ -108,7 +108,11 @@ export default class Share {
         const steamResolveQueue: string[] = [] // Array of workshop ids
         const results: AddonInfo[] = []
         for(const dirent of dirents) {
-            if(dirent.isFile() && dirent.name.endsWith(".vpk")) {
+            if(dirent.isFile()) {
+                // Only fetch the specified extenstions
+                const ext = dirent.name.split(".").pop()
+                if(this.validExts && !this.validExts.includes(ext)) continue
+
                 const addonInfo = await this.getAddonInfo(dirent.name)
                 if(addonInfo) {
                     results.push(addonInfo)
@@ -202,13 +206,17 @@ export default class Share {
         
     }
 
-    public async getInstalledFiles(ext = "vpk") {
+    public async getInstalledFiles() {
         const files = await readdir(this.sourceFolder)
-        return files.filter(file => file.endsWith(ext))
+        if(!this.validExts) return files
+        return files.filter(filename => {
+            const ext = filename.split(",").pop()
+            return this.validExts.includes(ext)
+        })
     }
 
-    public async isInstalled(filename: string) {
-        return (await this.getInstalledFiles()).find(file => file === filename)
+    public async isInstalled(query: string) {
+        return (await this.getInstalledFiles()).find(filename => filename === query)
     }
 
     public async install(filename: string, destinationKey: string) {
