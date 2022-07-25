@@ -48,7 +48,7 @@
             <tr>
               <th><input type="text" class="input" placeholder="Search" v-model="search" /></th>
               <th></th>
-              <th data-tooltip="Total file size of all addons">{{ formatSize(totalFileSize, true, 0) }}</th>
+              <th data-tooltip="Total file size of all addons">{{ formatSize(computedTotalFileSize, true, 0) }}</th>
               <th></th>
               <template v-if="shareInfo&&!prefetch">
                 <th v-for="dest in shareInfo.destinations" :key="dest" />
@@ -178,6 +178,13 @@ let selectedShare = ref<string>("default")
 let shares = ref<string[]>(["default"])
 let shareInfo = ref()
 let totalFileSize = ref(0)
+const computedTotalFileSize = computed(() => {
+  let size = 0
+  for(const entry of filteredVPKs.value) {
+    size += (entry.workshop ? entry.workshop.filesize : entry.filesize )
+  }
+  return size
+})
 
 let showDownloadModal = ref(false)
 
@@ -223,14 +230,14 @@ const filteredVPKs = computed(() => {
 
 
   return vpks.value
-  .filter(vpk => {
-    return (!query || (
-      vpk.filename.toLowerCase().includes(query) ||
-        (vpk.workshop && vpk.workshop.title.toLowerCase().includes(query)
-      )
-    ))
-  })
-  .sort(_sort)
+    .filter(vpk => {
+      return (!query || (
+        vpk.filename.toLowerCase().includes(query) ||
+          (vpk.workshop && vpk.workshop.title.toLowerCase().includes(query)
+        )
+      ))
+    })
+    .sort(_sort)
 })
 const parsedDescription = computed(() => {
   if(!prefetch.value) return
