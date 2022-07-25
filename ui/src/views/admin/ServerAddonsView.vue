@@ -26,8 +26,8 @@
         <div class="level-item">
           <div class="field">
             <label class="label">&nbsp;</label>
-            <div class="control">
-              <a class="button is-success is-fullwidth" @click="showDownloadModal = true">Add Workshop Addon</a>
+            <div class="control" v-if="shareInfo && shareInfo.downloadSources.length > 0">
+              <a v-if="shareInfo.downloadSources.includes('steam_workshop')" class="button is-success is-fullwidth" @click="showDownloadModal = true">Add Workshop Addon</a>
             </div>
           </div>
         </div>
