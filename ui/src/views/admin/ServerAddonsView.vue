@@ -5,7 +5,7 @@
     <div class="level">
       <div class="level-left">
         <div class="level-item">
-          <h5 class="title is-5">Listing {{vpks.length}} addons - Click a name to view information</h5>
+          <h5 class="title is-5">Viewing {{filteredVPKs.length}} addons - Click a name to view information</h5>
         </div>
       </div>
       <div class="level-right">
@@ -276,6 +276,7 @@ async function fetchVPKS() {
   shareInfo.value = undefined
   vpks.value = []
   hasAnyWorkshop.value = false
+  totalFileSize.value = 0
   try {
     const response = await fetch(`/api/shares/${selectedShare.value}/addons`)
     const json = await response.json()
