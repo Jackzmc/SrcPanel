@@ -90,12 +90,7 @@ export default class ServerManager {
           filename: join(this.dataDir, `shares/${key.toLowerCase()}_addons_cache.db`),
           driver: sqlite3.Database
         })
-        this.addonShares[key.toLowerCase()] = new Share(db, this.steam, {
-          name: key,
-          sourceFolder: data.sourceFolder,
-          appid: data.appid,
-          destinations
-        })
+        this.addonShares[key.toLowerCase()] = new Share(db, this.steam, data)
         console.info(`Loaded addon share "${key}"`)
       } catch(err) {
         console.warn(`Addon Share Directory "${key}" returned error: ${err}`)

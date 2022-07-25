@@ -5,7 +5,6 @@ import { exec } from 'child_process'
 import sqlite3 from 'sqlite3'
 import sqlite from 'sqlite'
 import SQL from 'sql-template-strings';
-import { resourceLimits } from 'worker_threads';
 
 const DOWNLOAD_TIMEOUT = 1000 * 60 * 3
 
@@ -20,7 +19,9 @@ export interface ShareInfo {
     sourceFolder: string;
     destinations: ShareDestination[],
     appid?: number,
-    name: string
+    name: string,
+    fileExts?: string[],
+    downloadSources?: Record<string, boolean>
 }
 
 export interface AddonInfo {
@@ -40,6 +41,10 @@ export interface AddonWorkshopInfo {
     lastUpdated: number
 }
 
+export const DOWNLOAD_SOURCES = ["steam_workshop"] as const
+
+export type DownloadSource = typeof DOWNLOAD_SOURCES
+
 const WS_ITEMID_REGEX = new RegExp(/^(\d+).vpk$/)
 
 export default class Share {
@@ -50,12 +55,17 @@ export default class Share {
     private db: sqlite.Database<sqlite3.Database, sqlite3.Statement>
     private steam: SteamAPI
 
-    constructor(db: sqlite.Database<sqlite3.Database, sqlite3.Statement>, steam: SteamAPI, shareInfo: ShareInfo) {
+    private validExts?: string[]
+    private downloadSources: DownloadSource[] = []
+
+    constructor(db: sqlite.Database<sqlite3.Database, sqlite3.Statement>, steam: SteamAPI, shareInfo: Partial<ShareInfo>) {
         this.db = db
         this.steam = steam
         this.name = shareInfo.name,
         this.sourceFolder = shareInfo.sourceFolder
         this.appId = shareInfo.appid
+        this._parseDownloadSources(shareInfo.downloadSources)
+        this.validExts = shareInfo.fileExts
         for(const dest of shareInfo.destinations) {
             this.destinations[dest.id] = dest
         }
@@ -66,6 +76,31 @@ export default class Share {
             ws_info TEXT,
             PRIMARY KEY (filename)
         );`)
+    }
+
+    private _parseDownloadSources(downloadSources?: Record<string, boolean>) {
+        if(downloadSources) {
+            for(const [src, enabled] of Object.entries(downloadSources)) {
+                if((DOWNLOAD_SOURCES as ReadonlyArray<string>).includes(src)) {
+                    if(enabled)
+                        this.downloadSources.push(src as unknown as DownloadSource) 
+                } else {
+                    console.log(`Share/${this.name}: Unknown download source ${src}`)
+                }
+            }
+        }
+    }
+
+    public isExtAllowed(ext: string) {
+        return this.validExts === undefined || this.validExts.includes(ext)
+    }
+
+    public get sources() {
+        return [...this.downloadSources]
+    }
+
+    public get exts() {
+        return this.validExts ? [...this.validExts] : null
     }
 
     public async getAddons() {

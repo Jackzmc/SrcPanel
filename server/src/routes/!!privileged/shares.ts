@@ -54,7 +54,12 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         const shareId = req.params.shareId
         const share = fastify.servers.getShare(shareId)
         return {
-            ...share,
+            name: share.name,
+            sourceFolder: share.sourceFolder,
+            destinations: share.destinations,
+            appId: share.appId,
+            validExtenstions: share.exts,
+            installSources: share.sources,
             appTitle: (share.appId ? await fastify.steam.getAppName(share.appId) : null)
         }
     })
@@ -83,7 +88,9 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                             name: dest.name,
                             serverIds: dest.serverIds
                         }
-                    })
+                    }),
+                validExts: share.exts,
+                installSources: share.sources
             }
         }
 
