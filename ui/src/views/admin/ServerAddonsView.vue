@@ -56,10 +56,10 @@
             </tr>
             <tr>
               <th><a @click="setSortFunc('filename', SORT_NAME)">
-                File / Workshop Name
+                File <span v-if="hasAnyWorkshop">/ Workshop </span>Name
                 <span v-if="sort?.id === 'filename'">{{sortSymbol}}</span>
               </a></th>
-              <th style="width:0"><a @click="setSortFunc('isWorkshop', SORT_WORKSHOP)">
+              <th v-if="hasAnyWorkshop" style="width:0"><a @click="setSortFunc('isWorkshop', SORT_WORKSHOP)">
                 Workshop
                 <span v-if="sort?.id === 'isWorkshop'">{{sortSymbol}}</span>
               </a></th>
@@ -86,7 +86,7 @@
                 <a v-if="vpk.workshop" @click="preview(vpk)" :data-tooltip="'Filename: ' + vpk.filename">{{vpk.workshop.title}}</a>
                 <span v-else>{{vpk.filename}}</span>
               </td>
-              <td>
+              <td v-if="hasAnyWorkshop">
                 <a v-if="vpk.workshop" :href="vpk.workshop.url" class="button is-small">Workshop</a>
               </td>
               <td>
@@ -163,11 +163,10 @@ const router = useRouter()
 
 let vpks = ref<any[]>([])
 let ready = ref(false)
-let itemid = ref<any>()
 let search = ref<any>()
 let prefetch = ref<any>()
 let error = ref<string>()
-let showOnlyDest = ref<string>()
+let hasAnyWorkshop = ref(false)
 let sort = ref<{
   id: string,
   func: Function,
@@ -180,6 +179,7 @@ let shares = ref<string[]>(["default"])
 let shareInfo = ref()
 let totalFileSize = ref(0)
 const computedTotalFileSize = computed(() => {
+  if(!search.value) return totalFileSize.value
   let size = 0
   for(const entry of filteredVPKs.value) {
     size += (entry.workshop ? entry.workshop.filesize : entry.filesize )
@@ -188,10 +188,6 @@ const computedTotalFileSize = computed(() => {
 })
 
 let showDownloadModal = ref(false)
-
-const isDownloadable = computed(() => {
-  return itemid.value && prefetch.value.result && prefetch.value.lastValid === itemid.value && !prefetch.value.error
-})
 const sortSymbol = computed(() => {
   if(!sort.value) return ''
   else if(sort.value.descending) return '(↓)'
@@ -279,6 +275,7 @@ async function fetchVPKS() {
   error.value = undefined
   shareInfo.value = undefined
   vpks.value = []
+  hasAnyWorkshop.value = false
   try {
     const response = await fetch(`/api/shares/${selectedShare.value}/addons`)
     const json = await response.json()
@@ -286,6 +283,7 @@ async function fetchVPKS() {
       shareInfo.value = json.shareInfo
       vpks.value = json.addons.map((entry: any) => {
         if(entry.workshop) {
+          hasAnyWorkshop.value = true
           if(entry.workshop.deleted) entry.workshop = null
           else entry.workshop.url = `https://steamcommunity.com/sharedfiles/filedetails/?id=${entry.filename.slice(0, -4)}`
           totalFileSize.value += entry.workshop.filesize
