@@ -16,6 +16,7 @@ export interface ShareDestination {
 }
 
 export interface ShareInfo {
+    id: string,
     sourceFolder: string;
     destinations: ShareDestination[],
     appid?: number,
@@ -48,6 +49,7 @@ export type DownloadSource = typeof DOWNLOAD_SOURCES
 const WS_ITEMID_REGEX = new RegExp(/^(\d+).vpk$/)
 
 export default class Share {
+    public id: string
     public name: string
     public sourceFolder: string
     public destinations: Record<string, ShareDestination> = {}
@@ -59,6 +61,7 @@ export default class Share {
     private downloadSources: DownloadSource[] = []
 
     constructor(db: sqlite.Database<sqlite3.Database, sqlite3.Statement>, steam: SteamAPI, shareInfo: Partial<ShareInfo>) {
+        this.id = shareInfo.id
         this.db = db
         this.steam = steam
         this.name = shareInfo.name,

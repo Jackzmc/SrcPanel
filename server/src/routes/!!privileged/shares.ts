@@ -54,6 +54,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         const shareId = req.params.shareId
         const share = fastify.servers.getShare(shareId)
         return {
+            id: share.id,
             name: share.name,
             sourceFolder: share.sourceFolder,
             destinations: share.destinations,
@@ -74,11 +75,11 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 message: `No share with id \"${shareId.toLowerCase()}\" could be found. Share may be available, incorrecty configured or does not exist`   
             })
         }
-        
         return {
             addons: await share.getAddons(),
             shareInfo: {
-                id: share.name,
+                id: share.id,
+                name: share.name,
                 appId: share.appId,
                 appTitle: (share.appId ? await fastify.steam.getAppName(share.appId) : null),
                 destinations: Object.values(share.destinations)

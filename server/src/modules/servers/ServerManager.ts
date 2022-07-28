@@ -58,6 +58,7 @@ export default class ServerManager {
 
     for(const key in config.addons) {
       const data = config.addons[key] as Partial<ShareInfo>
+      data.id = key
       if(!data.sourceFolder) {
         console.warn(`[Warn] Skipping addon share \"${key}\": Missing property 'sourceFolder' in config`)
         continue
