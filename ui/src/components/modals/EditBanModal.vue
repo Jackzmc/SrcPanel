@@ -483,7 +483,7 @@ function getExpires(edited: FullAPIBan | { expires: string | number }) {
   const baseDate = Date.now() / 1000
 
   if(edited.expires === "keep") return null
-  else if(edited.expires === "never") return "never"
+  else if(edited.expires === "never") return 0
   else if(edited.expires === "1hour") {
     return baseDate + 3600
   }else if(edited.expires === "1day") {
