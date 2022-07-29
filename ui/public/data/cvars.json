@@ -114,5 +114,15 @@
         "cvar": "scuffle_enabled <0/1:bool>",
         "default": 1,
         "description": "Only available on main server and on by default. 0 to disable self revive"
+    },
+    {
+        "cvar": "sm_hats_enabled <0/1/2:int>",
+        "default": 1,
+        "description": "Enables hats. 0 = OFF, 1 = Admins Only, 2 = Anyone"
+    },
+    {
+        "cvar": "l4d2_extraitems_hudstate <0/1/2:int>",
+        "default": 1,
+        "description": "Controls the 5+ hud. 0: OFF, 1: Only when 6+ players, 2: Always"
     }
 ]
