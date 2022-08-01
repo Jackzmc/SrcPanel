@@ -20,7 +20,6 @@
     "openid": "^2.0.10",
     "quick-lru": "^6.1.0",
     "rcon-client": "^4.2.3",
-    "redis": "^4.0.4",
     "sql-template-strings": "^2.2.2",
     "sqlite": "^4.1.1",
     "sqlite3": "^5.0.8",

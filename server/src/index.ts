@@ -4,7 +4,6 @@ import FastifyCookie from 'fastify-cookie'
 import MySQLSession from 'express-mysql-session'
 import { Pool } from 'mysql2/promise';
 import dotenv from 'dotenv'
-import { RedisClientType } from '@node-redis/client';
 import SteamAPI from './modules/steam.js'
 import AuthManager from './modules/AuthManager';
 import ServerManager from './modules/servers/ServerManager.js';
@@ -41,7 +40,6 @@ import { Session as CustomSession } from '../../common-types/User.js'
 declare module 'fastify' {
   export interface FastifyInstance {
     db: Pool;
-    cache: RedisClientType,
     steam: SteamAPI,
     authmngr: AuthManager,
     servers: ServerManager,
@@ -92,8 +90,6 @@ app.register(import('./middlewares/managers.js'))
             }
         }
     )
-
-    app.register(import('./middlewares/redisCache.js'))
 
 
     const mainPrefix = `/api/`
