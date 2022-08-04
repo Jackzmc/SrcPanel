@@ -193,10 +193,13 @@ async function fetchServerInfo() {
     if(response.ok) {
       server.value = json
     } else {
-      error.value = json.message || json.error || json
+      const msg = json.message || json.error || json
+      error.value = msg
+      throw new Error('Server returned: ', msg)
     }
   } catch(err: any) {
     error.value = `${response.statusText}: ${err.message}`
+    throw err
   }
 }
 async function fetchServerStatus() {
