@@ -112,7 +112,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             const fetchStart = Date.now()
 
             const [bans] = await db.execute<RowDataPacket[]>(
-                `SELECT times_tried, id, public_message, bans.steamid, bans.executor, bans.reason, expires, expired, timestamp, u1.last_alias, names.name as resolved_name u1.country, u2.last_alias AS executor_name, ip
+                `SELECT times_tried, id, public_message, bans.steamid, bans.executor, bans.reason, expires, expired, timestamp, u1.last_alias, names.name as resolved_name, u1.country, u2.last_alias AS executor_name, ip
                 FROM bans 
                 LEFT JOIN stats_users AS u1 ON bans.steamid = u1.steamid 
                 LEFT JOIN stats_users AS u2 ON bans.executor = u2.steamid 
