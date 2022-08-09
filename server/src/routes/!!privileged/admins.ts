@@ -88,26 +88,6 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             reply.redirect(301, process.env.DISCORD_INVITE_URI)
     })
 
-    /*
-        Fetch all files in directory
-        For every entry:
-            If entry has workshop item:
-                Put in redis cache queue for `workshop[itemid]`
-            else:
-                Put in result array
-        If redis cache queue is not empty:
-            Fetch all items in redis cache queue and map to result array
-        Somehow, if item not in redis cache results:
-            For very item in cache result array:
-                Put item in resolve buffer
-            If any item in resolve buffer:
-                Resolve details
-                For every item in resolve results array:
-                    Push in cache (no buffer, should only be bad performance for first bulk )
-                    Put item in result array
-    */
-    
-
     fastify.delete('/:steamid', async(req: FastifyRequest<{
         Params: { steamid: string }
     }>, reply) => {

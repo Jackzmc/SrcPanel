@@ -59,48 +59,55 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 if(text.includes('is_valid:true')) {
                     const pieces = req.query['openid.identity'].split('/')
                     const steamid = new SteamID(pieces[pieces.length - 1])
-                    const details = await fastify.steam.getUserDetails([steamid])
-                    if(details && details.length > 0) {
-                        const admin = fastify.authmngr.getAdmin(steamid)
-                        if(admin) {
-                            req.session.user = {
-                                steamid: steamid.getSteam2RenderedID(true),
-                                accountid: steamid.accountid.toString(),
-                                name: details[0].personaname,
-                                profileurl: details[0].profileurl,
-                                avatarhash: details[0].avatarhash
-                            }
+                    try {
+                        const details = await fastify.steam.getUserDetails([steamid])
+                        if(details.length > 0) {
+                            const admin = fastify.authmngr.getAdmin(steamid)
+                            if(admin) {
+                                req.session.user = {
+                                    steamid: steamid.getSteam2RenderedID(true),
+                                    accountid: steamid.accountid.toString(),
+                                    name: details[0].personaname,
+                                    profileurl: details[0].profileurl,
+                                    avatarhash: details[0].avatarhash
+                                }
 
-                            req.session.ip = req.ip
-                            req.session.countryCode = (await FastGeoip.lookup(req.ip)).country
-                            req.session.loginTime = Date.now()
+                                req.session.ip = req.ip
+                                req.session.countryCode = (await FastGeoip.lookup(req.ip)).country
+                                req.session.loginTime = Date.now()
 
-                            req.session.permissions = admin.permissions
+                                req.session.permissions = admin.permissions
 
-                            if(req.query.return_uri) {
-                                const redirectUri = process.env.STEAM_REDIRECT_URI || "http://localhost:8080"
-                                return reply.redirect(`${redirectUri}${req.query.return_uri}`)
+                                if(req.query.return_uri) {
+                                    const redirectUri = process.env.STEAM_REDIRECT_URI || "http://localhost:8080"
+                                    return reply.redirect(`${redirectUri}${req.query.return_uri}`)
+                                } else {
+                                    return {
+                                        user: req.session.user,
+                                        permissions: req.session.permissions
+                                    }
+                                }
                             } else {
-                                return {
-                                    user: req.session.user,
-                                    permissions: req.session.permissions
+                                if(req.query.return_uri) {
+                                    const redirectUri = process.env.STEAM_REDIRECT_URI || "http://localhost:8080"
+                                    return reply.redirect(`${redirectUri}/login-required?type=1`)
+                                } else {
+                                    return reply.code(401).send({
+                                        error: 'UNAUTHORIZED',
+                                        message: 'Account is not authorized'
+                                    })
                                 }
                             }
                         } else {
-                            if(req.query.return_uri) {
-                                const redirectUri = process.env.STEAM_REDIRECT_URI || "http://localhost:8080"
-                                return reply.redirect(`${redirectUri}/login-required?type=1`)
-                            } else {
-                                return reply.code(401).send({
-                                    error: 'UNAUTHORIZED',
-                                    message: 'Account is not authorized'
-                                })
-                            }
+                            return reply.code(500).send({
+                                error: 'STEAM_API_ERROR',
+                                message: 'Could not find user',
+                            })
                         }
-                    } else {
+                    } catch(err) {
                         return reply.code(500).send({
                             error: 'STEAM_API_ERROR',
-                            message: 'Could not get user details from Steam API'
+                            message: 'Could not get user details from Steam API: ' + err.message,
                         })
                     }
                 } else {

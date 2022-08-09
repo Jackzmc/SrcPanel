@@ -27,7 +27,7 @@ enum APIBanFlags {
 export interface APIBanPlayer {
     id: string,
     name: string,
-    nameResolver?: "stats" | "steam-cache" | "steam" | "unknown",
+    nameResolver?: "stats" | "name_db" | "unknown",
     source?: string
 }
 
@@ -62,7 +62,6 @@ const NAME_INVALID_CHAR_REPLACE = new RegExp(/[\0-\x1F\x7F-\x9F\xAD\u0378\u0379\
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
     const db = fastify.db
-    const cache = fastify.cache
 
     
     fastify.get('/stats', async(req, reply) => {
@@ -113,10 +112,11 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             const fetchStart = Date.now()
 
             const [bans] = await db.execute<RowDataPacket[]>(
-                `SELECT times_tried, id, public_message, bans.steamid, bans.executor, bans.reason, expires, expired, timestamp, u1.last_alias, u1.country, u2.last_alias AS executor_name, ip
+                `SELECT times_tried, id, public_message, bans.steamid, bans.executor, bans.reason, expires, expired, timestamp, u1.last_alias, names.name as resolved_name u1.country, u2.last_alias AS executor_name, ip
                 FROM bans 
                 LEFT JOIN stats_users AS u1 ON bans.steamid = u1.steamid 
                 LEFT JOIN stats_users AS u2 ON bans.executor = u2.steamid 
+                LEFT JOIN user_names as names on SUBSTRING(bans.steamid, 11) = names.steamid
                 WHERE bans.id = ? or bans.steamid = ?`,
                 [id, id]
             )
@@ -127,7 +127,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
             const parseStart = Date.now()
 
-            for(const ban of bans) {
+            for(let ban of bans) {
                 if(!authorized) delete ban.reason
                 
                 if(ban.last_alias) {
@@ -136,19 +136,27 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                         name: ban.last_alias,
                         nameResolver: "stats"
                     }
+                } else if(ban.resolved_name) {
+                    ban.client = {
+                        id: ban.steamid,
+                        name: ban.resolved_name,
+                        nameResolver: "name_db"
+                    }
                 } else {
-                    const alias = await cache.get(`steamname.${ban.steamid}`)
-                    if(alias) {
+                    const steamid = new SteamID(ban.steamid)
+                    const resolvedNames = await fastify.steam.getUserDetails([steamid])
+                    const name = resolvedNames[0].personaname.replace(NAME_INVALID_CHAR_REPLACE, '�')
+                    if(resolvedNames.length > 0) {
                         ban.client = {
                             id: ban.steamid,
-                            name: alias,
-                            nameResolver: "steam-cache"
+                            name,
+                            nameResolver: "name_db"
                         }
-                    } else { 
-                        ban.client = {
-                            id: ban.steamid,
-                            name: null,
-                            nameResolver: "none"
+                        const accountid = steamid.getSteam2RenderedID().slice(10)
+                        try {
+                            await db.execute("INSERT INTO user_names (steamid, name) VALUES (?, ?)", [accountid, name])
+                        } catch(err) {
+                            console.warn(`Warn: Could not insert resolved name (${accountid}, name ${name}):`, err.sqlMessage)
                         }
                     }
                 }

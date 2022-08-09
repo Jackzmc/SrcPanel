@@ -1,5 +1,12 @@
 <template>
 <div>
+<div class="box" v-if="error">
+  <h4 class="title is-4 has-text-centered">Could not acquire server information</h4>
+  <h4 class="subtitle is-4  has-text-centered">Server returned an error</h4>
+  <p class="has-text-centered has-text-danger">
+    {{error}}
+  </p>
+</div>
 <nav class="container mb-5" v-if="server">
   <div class="columns">
     <div class="column is-8">
@@ -149,6 +156,7 @@ let tab = ref("overview")
 let cfg = ref<{
   selected?: string, raw?: string, json?: any}
 >({})
+let error = ref<string>()
 
 function setTab(name: string) {
   tab.value = name
@@ -178,9 +186,20 @@ async function onSelectNewServer(event: any) {
   await fetchServerStatus()
 }
 async function fetchServerInfo() {
+  error.value = undefined
   const response = await fetch(`/api/servers/${route.params.id}`)
-  if(response.ok) {
-    server.value = await response.json()
+  try {
+    const json = await response.json()
+    if(response.ok) {
+      server.value = json
+    } else {
+      const msg = json.message || json.error || json
+      error.value = msg
+      throw new Error('Server returned: ', msg)
+    }
+  } catch(err: any) {
+    error.value = `${response.statusText}: ${err.message}`
+    throw err
   }
 }
 async function fetchServerStatus() {

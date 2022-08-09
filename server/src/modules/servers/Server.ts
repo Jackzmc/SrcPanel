@@ -1,7 +1,8 @@
 import Gamedig from 'gamedig';
 import { Rcon } from 'rcon-client';
 import { readdir } from 'fs/promises'
-import { join } from 'path'
+import { join, resolve } from 'path'
+import { statSync } from 'fs';
 
 const HIDDEN_CONFIG_FILES = [
   "360controller.cfg",
@@ -114,7 +115,14 @@ export default class Server {
           port: server.port,
           type: server.type,
         }
-        this._cfgDir = server.cfgDirectory
+        if(server.cfgDirectory) {
+          this._cfgDir = resolve(server.cfgDirectory)
+          try {
+            statSync(this._cfgDir)
+          } catch(err) {
+            console.error(`Error: Could not access config directory for server \"${server.id}\":`, err)
+          }
+        }
         this._actid = server.activityId
         if(server.rcon) {
           const client = new Rcon({
