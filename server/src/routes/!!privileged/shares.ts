@@ -161,7 +161,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 }
 
                 for(const detail of details) {
-                    if(useSSE) reply.raw.write(`data: {"state": "DOWNLOADING", "entry": ${detail.publishedfileid}, "message": "Downloading "${detail.title}" (${detail.publishedfileid})"\n\n`)
+                    if(useSSE) reply.raw.write(`data: {"state": "DOWNLOADING", "entry": ${detail.publishedfileid}, "message": "Downloading \"${detail.title}\" (${detail.publishedfileid})"}\n\n`)
                     await share.steamDownload(detail)
                 }
 
