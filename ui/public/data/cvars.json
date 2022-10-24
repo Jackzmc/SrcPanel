@@ -124,5 +124,10 @@
         "cvar": "l4d2_extraitems_hudstate <0/1/2:int>",
         "default": 1,
         "description": "Controls the 5+ hud. 0: OFF, 1: Only when 6+ players, 2: Always"
+    },
+    {
+        "cvar": "l4d_barricade_allow  <0/1:bool>",
+        "default": 0,
+        "description": "Allows barricading doors and windows. Off by default, 1 to enable"
     }
 ]

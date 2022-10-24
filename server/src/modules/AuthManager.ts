@@ -192,7 +192,7 @@ export default class AuthManager {
             for(const groupId of admin.groupIds) {
                 // Currently silently ignores if group does not exist. This should be changed.
                 await this.connection.execute(
-                    "INSERT INTO sm_admins_groups (admin_id, group_id, inherit_order) VALUES (:admin_id, :group_id, 0)",
+                    "INSERT INTO sm_admins_groups (admin_id, group_id, inherit_order) VALUES (?, ?, 0)",
                     [id, groupId]
                 )
             }
