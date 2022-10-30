@@ -62,7 +62,7 @@
       </p>
       <div class="content">
         <p v-for="(entry, i) in downloadLog" :key="i">
-          <span :class="['tag',{'is-link': !entry.error, 'is-danger': entry.error}]">{{entry.state}}</span><span v-html="entry.message" />
+          <span :class="['tag',{'is-link': !entry.error, 'is-danger': entry.error}]">{{entry.state}}</span> <span v-html="entry.message" />
         </p>
       </div>
     </section>
