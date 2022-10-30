@@ -160,12 +160,29 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                     details = await fastify.steam.getItemDetails(children)
                 }
 
-                for(const detail of details) {
-                    if(useSSE) reply.raw.write(`data: {"state": "DOWNLOADING", "entry": ${detail.publishedfileid}, "message": "Downloading \\"${detail.title}\\" (${detail.publishedfileid})"}\n\n`)
-                    await share.steamDownload(detail)
-                }
+                const downloadPromises = details.map(detail => {
+                    return new Promise(async(resolve) => {
+                        if(useSSE) {
+                            reply.raw.write(`data: ${JSON.stringify({
+                                state: "DOWNLOADING",
+                                entry: detail.publishedfileid,
+                                message: `Downloading <a href="https://steamcommunity.com/sharedfiles/filedetails/?id=${detail.publishedfileid}"><b>${detail.title}</b></a>`
+                            })}\n\n`)
+                        }
+                        await share.steamDownload(detail)
+                        if(useSSE) reply.raw.write(`data: ${JSON.stringify({
+                            state: "DOWNLOADING",
+                            entry: detail.publishedfileid,
+                            message: `Downloaded <a href="https://steamcommunity.com/sharedfiles/filedetails/?id=${detail.publishedfileid}"><b>${detail.title}</b></a> (${humanFileSize(detail.file_size)})`
+                        })}\n\n`)
+                        resolve(true)
+                    })
+                })
 
-                if(useSSE) reply.raw.write(`data: {"state": "INSTALLING", "message": "Installing addons to destinations"}\n\n`)
+                await Promise.allSettled(downloadPromises)
+                
+
+                if(useSSE) reply.raw.write(`data: {"state": "INSTALLING", "message": "Installing addons to specified destinations"}\n\n`)
 
                 let destResults: Record<string, Record<string, {result: "success" | "error", error?: string }>> = undefined
                 if(req.query.destinations) {
@@ -305,3 +322,25 @@ async function execPromise(command: string): Promise<string> {
         });
     });
 }
+
+function humanFileSize(bytes: number, si=false, dp=1) {
+    const thresh = si ? 1000 : 1024;
+  
+    if (Math.abs(bytes) < thresh) {
+      return bytes + ' B';
+    }
+  
+    const units = si 
+      ? ['kB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'] 
+      : ['KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB', 'ZiB', 'YiB'];
+    let u = -1;
+    const r = 10**dp;
+  
+    do {
+      bytes /= thresh;
+      ++u;
+    } while (Math.round(Math.abs(bytes) * r) / r >= thresh && u < units.length - 1);
+  
+  
+    return bytes.toFixed(dp) + ' ' + units[u];
+  }
