@@ -129,5 +129,10 @@
         "cvar": "l4d_barricade_allow  <0/1:bool>",
         "default": 0,
         "description": "Allows barricading doors and windows. Off by default, 1 to enable"
+    },
+    {
+        "cvar": "l4d2_tk_auto_ff_activate_types <0/1/2/3:int>",
+        "default": 2,
+        "description": "Determines what damage types triggers auto reverse ff. Add bits together. 0 = Direct only, 1 = Admin Damage, 2 = Blast Damage, 3 = Fire Damage "
     }
 ]
