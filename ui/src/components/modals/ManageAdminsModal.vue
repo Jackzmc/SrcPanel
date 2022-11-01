@@ -4,10 +4,18 @@
     <div class="modal-card">
       <header class="modal-card-head">
         <p class="modal-card-title" v-if="user"><b>{{user.name}}</b> <span class="is-pulled-right">{{user.steamid}}</span></p>
+        <b v-else-if="fetchError">An error ocurred</b>
         <p v-else>Loading...</p>
         &nbsp;&nbsp;
       </header>
-      <section class="modal-card-body" v-if="stats">
+      <section class="modal-card-body" v-if="fetchError">
+        <article class="message is-danger">
+          <div class="message-body">
+            {{fetchError}}
+          </div>
+        </article>
+      </section>
+      <section class="modal-card-body" v-else-if="stats">
         <p class="has-text-centered my-5" v-if="loading.stats">Fetching player statistics...</p>
         <div class="level" v-else>
           <div class="level-item has-text-centered">
@@ -217,7 +225,11 @@
         </article>
       </section>
       <footer class="modal-card-foot">
-        <template v-if="canEdit">
+        <template v-if="fetchError">
+          <button class="button is-info" @click="cancel">Close</button>
+          <button class="button is-secondary" @click="loadData">Retry</button>
+        </template>
+        <template v-else-if="canEdit">
           <button
             :class="['button','has-tooltip-top', 'is-success',{'is-loading': !user}]"
             :disabled="cantAddAdmin"
@@ -270,6 +282,7 @@ let form = ref<{
 })
 let stats = ref<Record<string, string|number>|null>()
 let error = ref("")
+let fetchError = ref("")
 let loading = ref({
   stats: true,
   groups: true
@@ -395,21 +408,38 @@ async function getGroups(): Promise<AdminGroup[]> {
   }
 }
 
-onMounted(async() => {
-  const player = await User.fetch(route.params.id as string, true)
-  user.value = player?.user
-  if(player?.adminData) {
-    adminData.value = player.adminData
-    form.value.flags = player.adminData.permissions.base.flags?.split("") || []
-    form.value.webFlags = convertIntToBitsArray(player.adminData.permissions.web.flags || 0)
-    form.value.immunity = player.adminData.permissions.base.immunityLevel || 0
-    selectedgroupIds.value = player.adminData.groups?.map(group => group.id) || []
+async function loadData() {
+  user.value = undefined
+  fetchError.value = ""
+  error.value = ""
+  try {
+    const player = await User.fetch(route.params.id as string, true)
+    user.value = player?.user
+    if(player?.adminData) {
+      adminData.value = player.adminData
+      form.value.flags = player.adminData.permissions.base.flags?.split("") || []
+      form.value.webFlags = convertIntToBitsArray(player.adminData.permissions.web.flags || 0)
+      form.value.immunity = player.adminData.permissions.base.immunityLevel || 0
+      selectedgroupIds.value = player.adminData.groups?.map(group => group.id) || []
+    }
+
+    loading.value.stats = true
+    try {
+      stats.value = await User.getStats(route.params.id as string)
+    } catch(err) {
+      console.error(`Failed to fetch statistics for user:`, err)
+      error.value = (err as Error).message
+    } finally {
+      loading.value.stats = false
+    }
+
+    groups.value = await getGroups()
+  } catch(err) {
+    console.error(`Failed to fetch user information:`, err)
+    fetchError.value = (err as Error).message
   }
-
-  loading.value.stats = true
-  stats.value = await User.getStats(route.params.id as string)
-  loading.value.stats = false
-
-  groups.value = await getGroups()
+}
+onMounted(async() => {
+  loadData()
 })
 </script>
