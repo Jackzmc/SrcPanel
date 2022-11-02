@@ -58,6 +58,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         let page = req.params.page
         if(page < 0) page = 0
 
+        // conditions.push(`id > ${limit * page}`)
 
         if(req.query.servers) {
             const servers = req.query.servers.split(",")

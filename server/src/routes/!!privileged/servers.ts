@@ -254,6 +254,32 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
     })
 
+    fastify.post('/:id/unreserve', async(req: FastifyRequest<{Querystring: { force?: boolean }, Params: { id: 'string'} }>, reply) => {
+        const server = fastify.servers.get(req.params.id)
+        if(!server) {
+            return reply.code(404).send({
+                error: "SERVER_NOT_FOUND",
+                message: "Server not found"
+            })
+        }
+        if(!server.hasRcon) {
+            return reply.code(400).send({
+                error: "NO_RCON",
+                message: "Server does not have rcon setup"
+            })
+        }
+        try {
+            return { response: await server.sendCommand("sm_unreserve") }
+        } catch(err) {
+            console.log('error', err)
+            return reply.code(500).send({
+                error: "SERVER_ERROR",
+                message: "Server returned an error: " + err.message,
+                code: 500
+            })
+        }
+    })
+
 
     fastify.post('/:id/create', async(req: FastifyRequest<{Params: { id: 'string'} }>, reply) => {
         reply.code(501).send()
