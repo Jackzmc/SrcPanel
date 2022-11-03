@@ -34,12 +34,12 @@
                     <template v-if="server.status.online">
                       <template v-if="server.tags.includes('rcon')">
                         <a @click="processAction(server, 'stop')" class="button is-dark">Request Restart</a>
+                        <a @click="processAction(server, 'unreserve')" class="button is-dark">Unreserve</a>
                         <a @click="processAction(server, 'stop?force=1')" class="button is-warning" v-if="shiftPressed">Force Restart</a>
                       </template>
                     </template>
                     <template v-else-if="server.tags.includes('systemd')">
                       <a @click="processAction(server, 'start')" v-if="!starting[server.port]" class="button is-success">Start Server</a>
-                      <a @click="processAction(server, 'unreserve')" class="button is-dark">Unreserve</a>
                     </template>
                     <!-- <a @click="processAction(server, 'update')" class="button is-info">Update</a> -->
                   </div>
