@@ -78,6 +78,7 @@
         Tank Magnet, Special Magnet, and Swarm
     <p>If you want to just one command to punish the user using the auto punishment modes, simply type:
     <b>sm_ftc</b> – Activates auto punishment on the last person to start a crescendo</p>
+    <br>
   </div>
   <br>
 </div>

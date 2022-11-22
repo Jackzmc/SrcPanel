@@ -38,6 +38,9 @@
             <router-link to="/docs/plugins" class="navbar-item">
               Plugin Development Info
             </router-link>
+            <router-link to="/docs/notes" class="navbar-item">
+              Player Notes
+            </router-link>
           </div>
         </div>
         <div class="navbar-item has-dropdown is-hoverable" v-if="userdata">

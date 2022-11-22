@@ -1,0 +1,8 @@
+{
+    "actions": {
+        "@fta.Troll_Name": "Applies a troll, with all spaces in the troll name being replaced with underscores<br>(<code>Vomit Player</code> -> <code>Vomit_Player</code>)",
+        "@fta.Troll_Name.Flags": "The same as above, but with a specified numerical flag(s) value(s). This is an advanced feature, but can apply certain settings to a troll as well.",
+        "@ignore.rff": "Makes the player automatically ignored for automatic reverse friendly fire damage.",
+        "@ignore.tk": "Makes the player ignored for automatic teamkiller detection."
+    }
+}

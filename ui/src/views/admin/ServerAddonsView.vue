@@ -37,8 +37,10 @@
       Click on an addon to view it's workshop information.
     </p>
     <p>
-      Optionally download addons by sending a link in the #maps channel
+      X means map is not installed on server. Checkmark means it is.
+      Click on the icon to toggle it between being disabled and enabled
     </p>
+    <p>After downloading new maps or installing (toggling) a map, the server has to be restarted for it to load. <router-link to="/admin/servers/">Click here to view servers page</router-link></p>
     <br>
     <div class="columns">
       <div :class="['column', {'is-8': prefetch !== undefined}]">

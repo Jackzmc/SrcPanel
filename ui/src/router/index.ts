@@ -67,6 +67,15 @@ const routes = [
     }
   },
   {
+    name: 'docs-notes',
+    path: '/docs/notes',
+    component: () => import(/* webpackChunkName: 'ftt' */ '../views/docs/NotesView.vue'),
+    meta: {
+      title: "Player Notes",
+      description: ""
+    }
+  },
+  {
     name: 'bans',
     path: '/bans',
     component: () => import(/* webpackChunkName: 'bans' */ '../views/BansView.vue'),

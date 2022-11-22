@@ -67,13 +67,13 @@
             <h4 class="title is-4">Examples</h4>
             <ol>
                 <li><b class="tag is-link">user</b> means a required user while <b class="tag is-secondary">user</b> means an optional user.</li>
-                <li>I want to kick jackz, the command is {{prefix}}kick &lt;player&gt; [reason], I don’t need to input a reason so I will just type in: {{prefix}}kick jackz</li>
+                <li>I want to kick jackz, the command is <code>{{prefix}}kick &lt;player&gt; [reason]</code>, I don’t need to input a reason so I will just type in: <code>{{prefix}}kick jackz</code></li>
                 <li><p>
                     I want to respawn disgruntled pea, the problem is that he has a space in his name. You can either:
                     <ol type="a">
                       <li>Surround his name with quotes, “Disgruntled pea”</li>
                       <li>Only mention part of his name (disgruntled, or pea):
-                        <br>/respawn “disgruntled pea” or /respawn disgruntled or even /respawn pea
+                        <br><code>/respawn “disgruntled pea”</code> or <code>/respawn disgruntled</code> or even <code>/respawn pea</code>
                       </li>
                     </ol>
                     <br>
