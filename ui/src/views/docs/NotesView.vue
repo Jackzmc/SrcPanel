@@ -2,7 +2,7 @@
   <div class="container content" style="width:50%">
     <h4 class="title is-4 mb-2">About</h4>
     <p>
-      Admins may leave small notes on a player, which all admins will see when said player connects. This is a useful feature to tell other admins when a good player joins, questionable player, or just bad player joins.
+      Admins may leave small notes on a player, which all admins will see when said player connects. This is a useful feature to tell other admins when a good player, a questionable player, or just bad player joins.
     </p>
     <h5 class="title is-5 mb-2">Usage</h5>
     There are two ways to add a note for a player:
