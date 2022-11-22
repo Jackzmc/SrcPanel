@@ -28,8 +28,8 @@
     <ul>
       <li v-for="action in actions" :key="action.id">
         @<b>{{action.action}}</b>
-        <template v-if="action.key">.<b class="has-text-info">{{action.key}}</b>
-          <template v-if="action.value">.<b class="has-text-success">{{action.value}}</b>
+        <template v-if="action.key">.<b :class="{'has-text-info': action.keyIsVar}">{{action.key}}</b>
+          <template v-if="action.value">.<b :class="{'has-text-success': action.valueIsVar}">{{action.value}}</b>
           </template>
         </template> - <span v-html="action.description" />
       </li>
@@ -47,12 +47,23 @@ let actions = ref<Record<string,any>>([])
 function parseActions(actionsList: Record<string, any>) {
   for(const [id, description] of Object.entries(actionsList)) {
     let [action, key, value] = id.split(".")
+    let keyIsVar = false, valueIsVar = false 
+    if(key && key.startsWith("$")) {
+      key = key.slice(1)
+      keyIsVar = true
+    }
+    if(value && value.startsWith("$")) {
+      value = value.slice(1)
+      valueIsVar = true
+    }
     const data = {
       id,
       description,
       action: action.slice(1),
       key,
-      value
+      value,
+      keyIsVar,
+      valueIsVar
     }
     actions.value.push(data)
   }
