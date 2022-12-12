@@ -134,5 +134,15 @@
         "cvar": "l4d2_tk_auto_ff_activate_types <0/1/2/3:int>",
         "default": 2,
         "description": "Determines what damage types triggers auto reverse ff. Add bits together. 0 = Direct only, 1 = Admin Damage, 2 = Blast Damage, 3 = Fire Damage "
+    },
+    {
+        "cvar": "turret_auto_damage <0-Infinity:int>",
+        "default": 50,
+        "description": "The amount of damage an auto turret does."
+    },
+    {
+        "cvar": "turret_manual_damage <0-Infinity:int>",
+        "default": 100,
+        "description": "The amount of damage an manual turret does."
     }
 ]
