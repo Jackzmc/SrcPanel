@@ -28,7 +28,13 @@ export default class ServerManager {
   }
 
   public getAll() {
-    return Object.values(this.servers).sort((a,b) => a.port - b.port)
+    return Object.values(this.servers)
+      .sort((a,b) => {
+        if(b.sortOrder != undefined && a.sortOrder != undefined) return a.sortOrder - b.sortOrder
+        else if(b.sortOrder && !a.sortOrder) return 1
+        else if(!b.sortOrder && a.sortOrder) return -1
+        else return a.port - b.port
+      })
   }
 
   public get(key: string) {
@@ -158,7 +164,8 @@ export default class ServerManager {
               status: {
                 online: false,
                 data: null
-              }
+              },
+              sortOrder: server.sortOrder
             })
             resolve(true)
           })
