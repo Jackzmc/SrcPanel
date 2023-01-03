@@ -1,7 +1,7 @@
 <template>
-<div class="container">
-    <div class="columns is-multiline is-variable is-6">
-      <div class="column is-8">
+<div class="container is-fullwidth">
+    <div class="columns is-multiline is-variable is-1">
+      <div class="column is-9">
           <Servers @refresh="onServerRefresh" />
           <p class="is-inline is-pulled-right" style="margin-right: 90px">{{countdownText}}</p>
       </div>
@@ -11,7 +11,7 @@
             <ol>
                 <li>Go to your options, then keyboard/mouse</li>
                 <li>Enable the option 'Allow Developer Console'</li>
-                <li>Open the console with the tilda key (<b>`</b> or <b>~</b>, left of '1')</li>
+                <li>Open the console with the tilda key (<code>`</code> or <code>~</code>, left of the <code>1</code>)</li>
             </ol>
             <h5>Server Notes</h5>
             <ol>
@@ -28,8 +28,8 @@
             </ul>
             <h5>Joining a 5+ server when its full</h5>
             <p>
-              If people are playing on a 5+ compatible server and there is already 4 players, you can join still!
-              Use the 'connect ...' command on the left for the server to join, exactly as it is shown
+              If there is 4 people on a 5+ server, you can still join:
+              Use the <code>connect <b>ip_address</b></code> command shown on the server entries to join
             </p>
             <p>If you get kicked because it's full, wait a few seconds for people to finish joining, or you maybe be trying to join a non 5+ server.</p>
           </div>
