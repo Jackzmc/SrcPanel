@@ -217,7 +217,7 @@ export default class Server {
     }
 
     private async rconConnect() {
-      if(!this.rcon.connected) {
+      if(!this.rcon.connected || !this.rcon.client.authenticated) {
         await this.rcon.client.connect()
       }
     }
@@ -228,16 +228,12 @@ export default class Server {
 
     public async stop(force: boolean) {
       if(!this.hasRcon) throw new Error("No rcon config is setup")
-      await this.rconConnect()
       return await this.sendCommand(force ? this.rcon.exitCommand : this.rcon.requestExitCommand)
     }
 
     public async sendCommand(cmd: string) {
-      if(this.rcon.client.authenticated) {
-        return await this.rcon.client.send(cmd)
-      } else {
-        throw new Error("Rcon not connected")
-      }
+      await this.rconConnect()
+      return await this.rcon.client.send(cmd)
     }
 
 
