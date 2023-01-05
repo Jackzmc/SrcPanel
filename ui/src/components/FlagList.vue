@@ -20,7 +20,7 @@
       v-model="editedFlags"
       :disabled="!hasRoot && privUser.flags.indexOf(flag) === -1"
     >
-    <label :for="flag">{{name}}</label>
+    <label :for="flag">{{name}} <span class="tag">{{flag}}</span></label>
   </div>
 </div>
 </template>
