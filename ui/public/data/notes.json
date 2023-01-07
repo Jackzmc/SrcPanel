@@ -1,7 +1,7 @@
 {
     "actions": {
         "@fta.$Troll_Name": "Applies a troll, use underscores for the troll name as they will be replaced with spaces<br>(<code>Vomit Player</code> -> <code>Vomit_Player</code>)",
-        "@fta.$Troll_Name.$Flags": "The same as above, but with a specified numerical flag(s) value(s). This is an advanced feature, but can apply certain settings to a troll as well.",
+        "@fta.$Troll_Name.$Flags": "The same as above, but with a specified numerical flag(s) value(s). This is an advanced feature which can apply certain settings to a troll as well.",
         "@ignore.rff": "Makes the player automatically ignored for automatic reverse friendly fire damage.",
         "@ignore.tk": "Makes the player ignored for automatic teamkiller detection.",
         "@slap.$Delay": "Slaps the player, with a specified delay in seconds"

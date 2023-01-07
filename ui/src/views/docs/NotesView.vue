@@ -2,7 +2,7 @@
   <div class="container content" style="width:50%">
     <h4 class="title is-4 mb-2">About</h4>
     <p>
-      Admins may leave small notes on a player, which all admins will see when said player connects. This is a useful feature to tell other admins when a good player joins, questionable player, or just bad player joins.
+      Admins may leave small notes on a player, which all admins will see when said player connects. This is a useful feature to let other admins what to expect when people join such as trolls, newer players, friends, or good players.
     </p>
     <h5 class="title is-5 mb-2">Usage</h5>
     There are two ways to add a note for a player:
@@ -15,9 +15,9 @@
       <li><b class="has-text-info">Disconnected: </b> <code>/notedisconnected</code>, select the player's name, and then enter the note in chat.</li>
     </ul>
     <hr>
-    <h4 class="title is-4 mb-2" id="actions">Note Actions</h4>
+    <h4 class="title is-4 mb-2" id="actions">Note Actions <span class="tag is-info">New</span></h4>
     <p>
-      A new feature that's been added is the ability to add automatic actions that will apply when the player joins. This can do things such as automatically muting the player from voice, or trolling them.
+      A new feature that's been added is the ability to add automatic actions that will apply when the player joins. This can do things such as automatically muting the player (from voice chat or vocalizing), trolling them, or disabling automatic systems (auto reverse ff, teamkiller detection).
     </p>
     <p>
       These actions must be the only content in the note, and must take the form of <code>@action.key.value</code>.<br>The key and value fields are completely optional, but the <b>action field is required</b>.
