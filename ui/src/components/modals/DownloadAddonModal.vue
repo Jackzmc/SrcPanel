@@ -103,6 +103,10 @@
 import Modal from '@/components/Modal.vue'
 import { computed,ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useNotification } from "@kyvg/vue3-notification";
+
+const { notify }  = useNotification()
+
 
 const WORKSHOP_LINK_REGEX = new RegExp(/https:\/\/steamcommunity\.com\/(sharedfiles|workshop)\/filedetails\/\?id=(\d*)/)
 
@@ -148,32 +152,48 @@ const router = useRouter()
 
 async function restartServers() {
   downloadingState.value = 3
-  let totalRejectedCount = 0
+  let count = {
+    total: 0,
+    success: 0,
+    rejected: 0
+  }
   for(const destId of installDestinations.value) {
     const destInfo = props.share.destinations.find((dest: any) => dest.id == destId)
     if(destInfo.serverIds) {
-      const results = await Promise.allSettled(destInfo.serverIds.map((serverId: string) => restartServer(serverId)))
+      const promises = destInfo.serverIds.map((serverId: string) => restartServer(serverId))
+      const results = await Promise.allSettled(promises)
       const rejectedCount = results.reduce((pv, result) => {
-        if(result.status === "rejected") return pv++
+        if(result.status === "rejected") ++pv
         return pv
       }, 0)
       if(rejectedCount > 0) {
-        console.error(`${destInfo.id}: ${rejectedCount} / ${destInfo.serverIds.length} servers failed to restart`)
+        console.error(`${destInfo.id}: ${rejectedCount} / ${promises.length} servers failed to restart`)
       }
-      totalRejectedCount += rejectedCount
+      count.total += promises.length
+      count.success += promises.length - rejectedCount
+      count.rejected += rejectedCount
     }
   }
-  if(totalRejectedCount > 0) {
-    alert(`${totalRejectedCount} servers failed to restart, see console for details`)
-  }
+
+  let msg = `${count.success} / ${count.total} servers restarted`
+  if(count.rejected > 0) msg += "<br>See the console for more information"
+
+  notify({
+    type: count.rejected > 0 ? "error" : "success",
+    title: "Server Restarted",
+    text: msg,
+  })
+  emit('close')
   downloadingState.value = 0
+
 }
 
 async function restartServer(id: string) {
   const response = await fetch(`/api/servers/${id}/restart`, {
     method: 'POST'
   })
-  return response.ok
+  if(response.ok) return true
+  throw new Error(`Server returned ${response.status} ${response.statusText} for ${id}`)
 }
 
 function startDownload(force = false) {
@@ -206,7 +226,7 @@ function startDownload(force = false) {
         sse.close()
         downloadLog.value.push({
           state: "DONE",
-          message: `Took ${Math.round((Date.now() - start) / 1000)} seconds. Map will not be playable until the server(s) have restarted. You can restart servers from the 'Server Management' page.`
+          message: `Took ${Math.round((Date.now() - start) / 1000)} seconds. Map will not be playable until the server(s) have restarted. You can restart individaul servers from the 'Server Management' page.`
         })
         if(!showForceDownload.value || force) updateDone.value = true
       } else {

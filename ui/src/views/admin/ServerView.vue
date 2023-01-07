@@ -36,25 +36,23 @@
           <div class="columns">
             <div class="column">
               <h5 class="title is-5">Map</h5>
-              <p>{{status.data.map}}</p>
+              <p :data-tooltip="status.data.map" v-html="formatMap(status.data.map)"></p>
             </div>
             <div class="column">
               <h5 class="title is-5">Gamemode</h5>
-              <p>{{status.data.gamemode}}</p>
+              <p :data-tooltip="status.data.gamemode">{{formatGamemode(status.data.gamemode)}}</p>
             </div>
           </div>
           <h5 class="title is-5">Online Players ({{status.data.players.length}} / {{status.data.maxplayers}})</h5>
-          <template>
-            <div class="content"  v-if="status.data.players.length > 0">
-              <ul>
-                <li v-for="player in status.data.players" :key="player">
-                  {{player}}
-                </li>
-              </ul>
-            </div>
-            <p class="my-2" v-else>No players are online</p>
+          <div class="content" v-if="status.data.players.length > 0">
+            <ul>
+              <li v-for="player in status.data.players" :key="player">
+                {{player}}
+              </li>
+            </ul>
+          </div>
+          <p class="my-2" v-else>No players are online</p>
           <br>
-          </template>
         </template>
         <p v-else-if="status && !status.online" class="has-text-centered has-text-danger subtitle is-4">Server is offline or unreachable</p>
         <p class="has-text-centered subtitle is-4" v-else>Waiting for server status...</p>
@@ -217,6 +215,45 @@ async function fetchServersCompact() {
     servers.value = json
   }
 }
+
+function formatMap(mapId: string) {
+  const match = mapId.match(/c(\d{1,2})m(\d)_(.*)/)
+  console.log(match)
+  if(match && match.length == 4) {
+    return `<b>${OfficialCampaignNames[Number(match[1]) - 1]}:</b> Chapter ${match[2]} ${match[3]}`
+  }
+  return mapId;
+}
+
+function formatGamemode(gamemode: string) {
+  let output = Gamemodes[gamemode];
+  if(!output) {
+    output = output.charAt(0).toUpperCase() + output.slice(1)
+  }
+  return output
+}
+
+const Gamemodes: Record<string, string> = {
+  "coop": "Campaign",
+}
+
+const OfficialCampaignNames = [
+  "Dead Center",
+  "Dark Carnival",
+  "Swamp Fever",
+  "Hard Rain",
+  "The Parish",
+  "The Passing",
+  "The Sacrifice",
+  "No Mercy",
+  "Crash Course",
+  "Death Toll",
+  "Dead Air",
+  "Blood Harvest",
+  "Cold Stream",
+  "The Last Stand"
+]
+
 onBeforeMount(async() => {
   await fetchServerInfo()
   await fetchServerStatus()

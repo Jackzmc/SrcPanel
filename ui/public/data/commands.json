@@ -257,7 +257,7 @@
                 "description": "Removes the lobby reservation, which allows extra players to join (on improved+)"
             },
             {
-                "command": "sm_settings",
+                "command": "settings",
                 "description": "Opens a menu to select clientside options, such as disallowing being a player hat"
             }
         ]

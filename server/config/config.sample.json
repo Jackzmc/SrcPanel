@@ -16,6 +16,9 @@
             "cfgDirectory": "/home/steam/l4d2/left4dead2/cfg/",
 
             "activityId": "myserver",
+            
+            // An ascending number (smallest first) that determines its order in lists.
+            "sortOrder": 0,
 
             "rcon": {
                 "password": {

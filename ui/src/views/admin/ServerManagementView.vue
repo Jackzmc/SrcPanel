@@ -72,6 +72,7 @@
       <p>Updating does not show any progress, just have to wait and hope its updated.</p>
       <b>Start</b> will start the service if the server is currently not running. Check in 1-2 minutes to see if the server goes online.
       <p>Improved and vanilla do not support this, as they are managed differently</p>
+      <b>Unreserve</b> will remove the lobby reservation which allows others to join a 5+ game before the reservation is automatically removed (so when people are still loading in)
     </div>
   </div>
 </div>

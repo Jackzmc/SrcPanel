@@ -38,6 +38,7 @@ export interface BaseServerData {
   type: string,
   cfgDirectory?: string,
   activityId?: string,
+  sortOrder?: number,
   systemd ? : {
     isUser: boolean;
     serviceName: string;
@@ -93,6 +94,7 @@ export default class Server {
     private _status: ServerStatus
     private _cfgDir: string;
     private _actid: string
+    private _sortOrder: number
     private rcon?: {
       password: string,
       exitCommand: string
@@ -115,6 +117,7 @@ export default class Server {
           port: server.port,
           type: server.type,
         }
+        this._sortOrder = server.sortOrder
         if(server.cfgDirectory) {
           this._cfgDir = resolve(server.cfgDirectory)
           try {
@@ -154,6 +157,7 @@ export default class Server {
     public get port() { return this._info.port }
     public get type() { return this._info.type }
     public get configDir() { return this._cfgDir }
+    public get sortOrder() { return this._sortOrder }
 
     public get info() { 
       return {
@@ -213,7 +217,7 @@ export default class Server {
     }
 
     private async rconConnect() {
-      if(!this.rcon.connected) {
+      if(!this.rcon.connected || !this.rcon.client.authenticated) {
         await this.rcon.client.connect()
       }
     }
@@ -224,16 +228,12 @@ export default class Server {
 
     public async stop(force: boolean) {
       if(!this.hasRcon) throw new Error("No rcon config is setup")
-      await this.rconConnect()
       return await this.sendCommand(force ? this.rcon.exitCommand : this.rcon.requestExitCommand)
     }
 
     public async sendCommand(cmd: string) {
-      if(this.rcon.client.authenticated) {
-        return await this.rcon.client.send(cmd)
-      } else {
-        throw new Error("Rcon not connected")
-      }
+      await this.rconConnect()
+      return await this.rcon.client.send(cmd)
     }
 
 
