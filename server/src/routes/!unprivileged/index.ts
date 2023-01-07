@@ -4,6 +4,15 @@ import { Static, Type } from '@sinclair/typebox'
 import { ACTIVITY_LOG_TABLE_NAME } from '../!!privileged/logs.js';
 import { generateParams } from '../!!privileged/logs.js';
 import { ServerStatus } from '../../modules/servers/Server.js';
+import { readFileSync } from 'fs';
+const data = JSON.parse(readFileSync('assets/data.json', 'utf-8'))
+import Sentiment from 'sentiment'
+
+
+const sentiment = new Sentiment();
+const analyzeOptions = {
+  extras: data.sentimentWords
+};
 
 const LimitedLogQuery = Type.Object({
     servers: Type.Optional(Type.String()),
@@ -39,6 +48,51 @@ interface CompactDisplayedServer {
     name: string
 }
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions)  {
+    fastify.get('/analyze/:steamid', async(req: FastifyRequest<{Params: { 'steamid': string }}>, reply) => {
+        const [notes] = await fastify.db.execute<RowDataPacket[]>(
+            `SELECT notes.*, u.last_alias as user, e.last_alias as executor, !b.expired as banned 
+            FROM notes 
+            LEFT JOIN stats_users as u ON notes.steamid = u.steamid 
+            LEFT JOIN stats_users as e ON notes.markedBy = e.steamid 
+            LEFT JOIN bans as b ON notes.steamid = b.steamid 
+            WHERE notes.steamid = ?
+            ORDER BY notes.id DESC`,
+            [req.params.steamid]
+        )
+
+        if(notes.length == 0) return reply.status(404).send({
+            error: "USER_NOT_FOUND",
+            message: "Could not find user"
+        })
+
+        let ratings = 0, totalRatings = 0
+
+        for(const note of notes) {
+            const rating = computeRating(note.content)
+            if(rating.value == 0) continue;
+            ratings += rating.value
+            totalRatings++
+        }
+
+        ratings = ratings / totalRatings
+
+        let key: string = null
+        if(ratings >= 2) key = "positive" 
+        else if(ratings <= -2) key = "negative"
+        else if(ratings > 0.1 || ratings < 0.1) key = "neutral"
+
+        return reply.send({
+            client: {
+                id: notes[0].steamid,
+                name: notes[0].user
+            },
+            rating: {
+                key,
+                value: ratings
+            }
+        })
+    })
+
     fastify.get('/servers', async(req: FastifyRequest<{Querystring: {'compact'?: boolean}}>, reply): Promise<CompactDisplayedServer[] | DisplayedServer[]> =>  {
         if(req.query.compact) {
             return fastify.servers.getAll().map(server => {
@@ -133,4 +187,12 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
     })
 
+}
+
+function computeRating(content: string) {
+    content = content.toLowerCase()
+      .replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,"")
+      .replace(/\s{2,}/g," ");
+    const { score } = sentiment.analyze(content, analyzeOptions)
+    return { value: score }
 }

@@ -19,6 +19,7 @@
     "highcharts": "^9.3.2",
     "marked": "^2.0.3",
     "register-service-worker": "^1.7.1",
+    "sentiment": "^5.0.2",
     "skeleton-loader-vue": "^1.0.10",
     "steamid": "^2.0.0",
     "sugar": "^2.0.6",
@@ -30,6 +31,7 @@
   },
   "devDependencies": {
     "@creativebulma/bulma-tooltip": "^1.2.0",
+    "@types/sentiment": "^5.0.1",
     "@types/steamid": "^2.0.1",
     "@typescript-eslint/eslint-plugin": "^5.4.0",
     "@typescript-eslint/parser": "^5.4.0",

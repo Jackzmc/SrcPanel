@@ -1696,6 +1696,11 @@
   resolved "https://registry.yarnpkg.com/@types/retry/-/retry-0.12.0.tgz#2b35eccfcee7d38cd72ad99232fbd58bffb3c84d"
   integrity sha512-wWKOClTTiizcZhXnPY4wikVAwmdYHp8q6DmC+EJUzAMsycb7HB32Kh9RN4+0gExjmPmZSAQjgURXIGATPegAvA==
 
+"@types/sentiment@^5.0.1":
+  version "5.0.1"
+  resolved "https://registry.yarnpkg.com/@types/sentiment/-/sentiment-5.0.1.tgz#b64e2dcb107b603a617217d2b45bfda63262ca09"
+  integrity sha512-EDqF8DFWaVVlEUZ35y+4B3dxI7JCKj0l35umQzi1NksqEihFexvGiMTE7Jd/R7Ottc0eicfgjskWkuBcDQRuuQ==
+
 "@types/serve-index@^1.9.1":
   version "1.9.1"
   resolved "https://registry.yarnpkg.com/@types/serve-index/-/serve-index-1.9.1.tgz#1b5e85370a192c01ec6cec4735cf2917337a6278"
@@ -7977,6 +7982,11 @@ send@0.18.0:
     on-finished "2.4.1"
     range-parser "~1.2.1"
     statuses "2.0.1"
+
+sentiment@^5.0.2:
+  version "5.0.2"
+  resolved "https://registry.yarnpkg.com/sentiment/-/sentiment-5.0.2.tgz#01e4396d9b5b17b1176f16c9d1a8be87b16cc1d6"
+  integrity sha512-ZeC3y0JsOYTdwujt5uOd7ILJNilbgFzUtg/LEG4wUv43LayFNLZ28ec8+Su+h3saHlJmIwYxBzfDHHZuiMA15g==
 
 serialize-javascript@^4.0.0:
   version "4.0.0"

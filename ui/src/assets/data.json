@@ -1,0 +1,20 @@
+{
+    "sentimentWords": {
+        "ok": 1,
+        "meh": -1,
+        "decent": 3,
+        "nooby": -1,
+        "rusher": -3,
+        "rushes": -3,
+        "rushed": -3,
+        "burned": -2,
+        "tried": -1,
+        "threw": -2,
+        "teamkill": -5,
+        "teamkiller": -5,
+        "tk": -5,
+        "tker": -5,
+        "teamplayer": 4,
+        "insufferable": -5
+    }
+}
