@@ -120,6 +120,7 @@ onMounted(async () => {
         const split = command.command.trim().split(' ')
         command.name = split.shift()
         command.parameters = split.join(" ")
+        
         delete command.command
         commands.push(command)
       }

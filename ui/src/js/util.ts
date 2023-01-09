@@ -22,9 +22,17 @@ export function parseType(type: string) {
   return type + " value"
 }
 
+enum ParseNode {
+  None,
+  Type,
+  DefaultValue
+}
+
 export function formatParameters({parameters, defaultValue, args}: any) {
   const chars = parameters.split('')
-  let lastChar = null, hasType = false, letters = "", string = "", type = ""
+  let mode = ParseNode.None
+  let lastChar = null, letters = "", string = "", type = ""
+
 
   for(const char of chars) {
     if(char === '<') {
@@ -33,11 +41,15 @@ export function formatParameters({parameters, defaultValue, args}: any) {
       lastChar = ']'
     }else if(char === lastChar) {
       const isRequired = char === '>'
+      if(mode == ParseNode.DefaultValue) defaultValue += '"'
       let tooltip = "";
+      
       if(type.length > 0)
         tooltip = `Accepts a(n) ${isRequired?'':'optional '}${parseType(type)}.`
-      if(defaultValue !== undefined && defaultValue !== null)
+      if(defaultValue !== undefined && defaultValue !== null) {
+        defaultValue = defaultValue.toString().replace(/"/g, '&quot;')
         tooltip += ` Default value is ${defaultValue}`
+      }
       if(args && args[letters]) {
         if(args[letters].allowed_values)
           if(Array.isArray(args[letters].allowed_values))
@@ -54,13 +66,19 @@ export function formatParameters({parameters, defaultValue, args}: any) {
       letters = ''
       tooltip = ""
       type = ""
-      hasType = false
-    }else if(lastChar)
+      if(mode == ParseNode.DefaultValue) defaultValue = null
+      mode = ParseNode.None
+    } else if(lastChar)
       if(char == ':') {
-        hasType = true
-      }else if(hasType) {
+        mode = ParseNode.Type
+      } else if((defaultValue === undefined || defaultValue === null) && char == '=') {
+        mode = ParseNode.DefaultValue
+        defaultValue = "\""
+      } else if(mode == ParseNode.Type) {
         type += char
-      }else{
+      } else if(mode == ParseNode.DefaultValue) {
+        defaultValue += char
+      } else{
         letters += char
       }
     else

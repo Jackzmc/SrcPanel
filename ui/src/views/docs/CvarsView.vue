@@ -76,6 +76,14 @@ onMounted(() => {
       const split = cvar.cvar.trim().split(' ')
       cvar.name = split.shift()
       cvar.parameters = split.join(" ")
+      cvar.defaultValue = cvar.default
+      if(cvar.default !== null && cvar.default !== undefined) {
+        if(typeof(cvar.default) === "string") {
+          cvar.defaultValue = `"${cvar.default}"`
+        } else
+          cvar.defaultValue = cvar.default
+      }
+      delete cvar.default
       cvars.value.push(cvar)
     }
   })

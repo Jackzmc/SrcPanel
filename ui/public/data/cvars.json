@@ -66,7 +66,7 @@
     {
         "cvar": "l4d_force_survivorset <0/1/2:int>",
         "description": "Sets the survivor set. Allows l4d2 characters in l4d1 if set to 2",
-        "default": "0"
+        "default": 0
     },
     {
         "cvar": "sm_ftt_badthrow_fail_chance <0.0 - 1.0:float>",

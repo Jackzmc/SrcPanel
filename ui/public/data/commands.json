@@ -57,7 +57,8 @@
             },
             {
                 "command": "respawn <player(s):players>",
-                "description": "Respawns the player at wherever you are looking. NOTE: WILL RESPAWN ALIVE PLAYERS, wiping all their items"
+                "description": "Respawns the player at wherever you are looking.",
+                "note": "Will respawn (& reset) alive players!!! Will reset their inventory and health"
             },
             {
                 "command": "model <survivor_name:string> [player(s):players] [keep:string]",
@@ -88,7 +89,7 @@
             {
                 "command": "kick <player(s):players> [reason message:string]",
                 "description": "Kicks the player(s) for the specified optional reason.",
-                "note": "It will delete and recreate their character, resulting in 100 health and no items."
+                "note": "On 5+ servers, it may cause their bot to reset with full health and no items"
             },
             {
                 "command": "bandisconnected",
@@ -119,7 +120,7 @@
                 "description": "Kicks a player with a predefined message of \"Sorry, this server is reserved\" and indicates to others you kicked them to free a slot."
             },
             {
-                "command": "review <player>",
+                "command": "review [player]",
                 "description": "Shows information about friendly fire, auto rff, immunity status, and more of a player."
             }
         ]
@@ -140,14 +141,14 @@
                 ]
             },
             {
-                "command": "insta <player(s):players> [special:string] ",
+                "command": "insta <player(s):players> [special:string]",
                 "description": "Will spawn specified special near the specified player, with target only on them. Defaults to jockey if no special specified.",
                 "examples": [
                     "%cmd% insta pea jockey - Spawns a jockey near pea"
                 ]
             },
             {
-                "command": "inface <player(s):players> [special:string] ",
+                "command": "inface <player(s):players> [special:string=jockey]",
                 "description": "Will spawn specified special as close as possible to them. Basically on top",
                 "examples": [
                     "%cmd% insta pea jockey - Spawns a jockey on pea"
