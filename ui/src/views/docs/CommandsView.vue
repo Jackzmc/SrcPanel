@@ -36,14 +36,13 @@
         </div>
         <div class="column content">
             <label for="cmdViewmode" class="is-size-4"><b>I want to enter commands via </b></label>
-            <div class="select is-info ">
+            <div class="select is-info">
                 <select name="cmdViewmode" id="cmdViewmode"  v-model="commandViewmode">
-                    <option value="console">Console</option>
-                    <option value="private">Chat privately</option>
-                    <option value="public">Chat publicly</option>
+                    <option value="console">console</option>
+                    <option value="private">chat privately</option>
+                    <option value="public">chat publicly</option>
                 </select>
             </div>
-            <hr>
             <p>
                 There are three (3) ways to input commands:
                 <ol>
@@ -52,13 +51,13 @@
                     <li>Via chat privately by using <b>/</b> (forward slash) <b class='tag is-dark'>Recommended</b> </li>
                 </ol>
             </p>
-            <p>Commands highlighted in <b class="has-text-link">blue</b> have examples, click to view the examples.</p>
+            <p class="notification is-dark">Commands highlighted in <b class="has-text-link">blue</b> have examples, click to view the examples.</p>
             <p>
               <b>Parameter Info</b>
               <ul>
-                  <li>Parameters are separated by spaces. Use "quotes to surround a word".</li>
+                  <li>Parameters are separated by spaces. If you want to have spaces for a parameter, surround it with "quotes around the word".</li>
                   <li><b class="tag is-link">&lt;&gt;</b> indictates the argument is <u>required.</u></li>
-                  <li><b class="tag is-secondary">[&nbsp;]</b> indictates the argument is optional.</li>
+                  <li><b class="tag is-secondary">[&nbsp;]</b> indictates the argument is <em>optional</em>.</li>
                   <li>Do not include the <b class="tag is-link">&lt; &gt;</b> or <b class="tag is-secondary">[ ]</b> as its only to indicate if a value is optional or not.</li>
               </ul>
               For player selection purposes, you do not need to input their FULL name, just enough to make it only select a player (‘ja’ for jackz, as a jockey could exist, and it wouldn’t know if you wanted jockey or jackz)

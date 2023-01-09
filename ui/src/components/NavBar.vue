@@ -36,7 +36,7 @@
               5+ Player
             </router-link>
             <router-link to="/docs/plugins" class="navbar-item">
-              Plugin Development Info
+              Server Plugin Information
             </router-link>
             <router-link to="/docs/notes" class="navbar-item">
               Player Notes
@@ -70,7 +70,7 @@
           Bans
         </router-link>
         <router-link to="/info" class="navbar-item">
-          Info
+          Player Notes
         </router-link>
         <router-link to="/graphs" class="navbar-item">
           Graphs
