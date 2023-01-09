@@ -7,12 +7,12 @@
     <h5 class="title is-5 mb-2">Usage</h5>
     There are two ways to add a note for a player:
     <ul>
-      <li><b class="has-text-info">Still connected: </b><code>/note &lt;player name&gt; "note in quotes"</code></li>
+      <li><b class="has-text-info">Still connected: </b><code>/note player_name "your note in quotes"</code></li>
         <ol>
           <li><b>Tip:</b> You don't need to enter their full name, just enough characters to uniquely target them.</li>
           <li><b>Tip:</b> You can put the player's name in spaces as well, ex: "disgruntled pea"</li>
         </ol>
-      <li><b class="has-text-info">Disconnected: </b> <code>/notedisconnected</code>, select the player's name, and then enter the note in chat.</li>
+      <li><b class="has-text-info">Disconnected: </b> <code>/notedisconnected</code>, select the player's name, and then send a chat message to create the note message.</li>
     </ul>
     <hr>
     <h4 class="title is-4 mb-2" id="actions">Note Actions <span class="tag is-info">New</span></h4>
@@ -47,6 +47,7 @@ let actions = ref<Record<string,any>>([])
 function parseActions(actionsList: Record<string, any>) {
   for(const [id, description] of Object.entries(actionsList)) {
     let [action, key, value] = id.split(".")
+    // Determine if the documented key or value is a variable (multiple user inputs, store.<store name>) or a fixed point (store.store_a)
     let keyIsVar = false, valueIsVar = false 
     if(key && key.startsWith("$")) {
       key = key.slice(1)
