@@ -49,6 +49,8 @@ interface CompactDisplayedServer {
 }
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions)  {
     fastify.get('/analyze/:steamid', async(req: FastifyRequest<{Params: { 'steamid': string }}>, reply) => {
+
+
         const [notes] = await fastify.db.execute<RowDataPacket[]>(
             `SELECT notes.*, u.last_alias as user, e.last_alias as executor, !b.expired as banned 
             FROM notes 
@@ -61,7 +63,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         )
 
         let ratings = 0, key: string = null
-        if(notes.length > 0) {
+        if(notes.length > 0 && !fastify.authmngr.isAdmin(req.params.steamid)) {
             let totalRatings = 0
 
             for(const note of notes) {
