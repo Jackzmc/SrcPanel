@@ -60,26 +60,24 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             [req.params.steamid]
         )
 
-        if(notes.length == 0) return reply.status(404).send({
-            error: "USER_NOT_FOUND",
-            message: "Could not find user"
-        })
+        let ratings = 0, key: string = null
+        if(notes.length > 0) {
+            let totalRatings = 0
 
-        let ratings = 0, totalRatings = 0
+            for(const note of notes) {
+                const rating = computeRating(note.content)
+                if(rating.value == 0) continue;
+                ratings += rating.value
+                totalRatings++
+            }
 
-        for(const note of notes) {
-            const rating = computeRating(note.content)
-            if(rating.value == 0) continue;
-            ratings += rating.value
-            totalRatings++
+            ratings = ratings / totalRatings
+
+            if(ratings >= 2) key = "positive" 
+            else if(ratings <= -2) key = "negative"
+            else if(ratings > 0.1 || ratings < 0.1) key = "neutral"
+
         }
-
-        ratings = ratings / totalRatings
-
-        let key: string = null
-        if(ratings >= 2) key = "positive" 
-        else if(ratings <= -2) key = "negative"
-        else if(ratings > 0.1 || ratings < 0.1) key = "neutral"
 
         return reply.send({
             client: {
