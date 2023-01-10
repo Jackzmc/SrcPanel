@@ -7,6 +7,7 @@ import { ServerStatus } from '../../modules/servers/Server.js';
 import { readFileSync } from 'fs';
 const data = JSON.parse(readFileSync('assets/data.json', 'utf-8'))
 import Sentiment from 'sentiment'
+import SteamID from 'steamid';
 
 
 const sentiment = new Sentiment();
@@ -63,7 +64,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         )
 
         let ratings = 0, key: string = null
-        if(notes.length > 0 && !fastify.authmngr.isAdmin(req.params.steamid)) {
+        if(notes.length > 0 && !fastify.authmngr.isAdmin(new SteamID(req.params.steamid))) {
             let totalRatings = 0
 
             for(const note of notes) {
