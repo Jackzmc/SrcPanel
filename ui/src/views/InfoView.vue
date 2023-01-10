@@ -3,6 +3,9 @@
     <div class="columns">
       <div class="column">
         <h4 class="title is-4 has-text-centered">Notes</h4>
+        <p class="subtitle is-=6">
+          The ID column shows the id of the note, with the rating of the note's message.
+        </p>
         <table class="table is-fullwidth">
           <thead>
             <tr>
@@ -47,8 +50,8 @@
                 <div class="tags">
                   <span v-if="note.actionData" class="tag is-success" data-tooltip="Has an automatic action">Action</span>
                   <span v-if="note.banned" class="tag is-danger">Banned</span>
-                  <span v-if="note.isAdmin" class="tag is-warning">Admin</span>
-                  <span v-if="note.client.id == note.markedBy.id" class="tag is-secondary" data-tooltip="Self-marked">Self-marked</span>
+                  <span v-if="note.client.id == note.markedBy.id" class="tag is-secondary" data-tooltip="Note creator added note to themselves">Self-marked</span>
+                  <span v-else-if="note.client.isAdmin" class="tag is-secondary" data-tooltip="This note was added to an admin">Admin</span>
                 </div>
               </td>
             </tr>
@@ -130,7 +133,7 @@ function computeRating(content: string) {
     .replace(/\s{2,}/g," ");
   const { score } = sentiment.analyze(content, analyzeOptions)
   let key = null
-  if(score >= 2) key = "positive" 
+  if(score >= 2) key = "positive"
   else if(score <= -2) key = "negative"
   else if(score != 0) key = "neutral"
   return { key, value: score }

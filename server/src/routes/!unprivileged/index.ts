@@ -53,7 +53,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
 
         const [notes] = await fastify.db.execute<RowDataPacket[]>(
-            `SELECT notes.*, u.last_alias as user, e.last_alias as executor, !b.expired as banned 
+            `SELECT notes.*, u.last_alias as user, e.last_alias as executor, !b.expired as banned
             FROM notes 
             LEFT JOIN stats_users as u ON notes.steamid = u.steamid 
             LEFT JOIN stats_users as e ON notes.markedBy = e.steamid 
@@ -85,7 +85,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         return reply.send({
             client: {
                 id: notes[0].steamid,
-                name: notes[0].user
+                name: notes[0].user,
             },
             rating: {
                 key,

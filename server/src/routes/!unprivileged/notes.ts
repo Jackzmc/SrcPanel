@@ -1,12 +1,14 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
 import { OkPacket, RowDataPacket } from 'mysql2';
 import { Static, Type } from '@sinclair/typebox'
+import { ADMINS_DB } from '../../routes/!!privileged/admins.js';
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
     
     fastify.get('/', async(req: FastifyRequest<{ Params: { id: string }}>, reply) => {
         const [notes] = await fastify.db.execute<RowDataPacket[]>(
-            `SELECT notes.*, u.last_alias as user, e.last_alias as executor, !b.expired as banned 
+            `SELECT notes.*, u.last_alias as user, e.last_alias as executor, !b.expired as banned,
+            (SELECT COUNT(*) FROM ${ADMINS_DB}.sm_admins WHERE ${ADMINS_DB}.sm_admins.identity = u.steamid) as targetIsAdmin
             FROM notes 
             LEFT JOIN stats_users as u ON notes.steamid = u.steamid 
             LEFT JOIN stats_users as e ON notes.markedBy = e.steamid 
@@ -105,6 +107,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             client: {
                 id: note.steamid,
                 name: note.user,
+                isAdmin: note.targetIsAdmin == 1
             },
             markedBy: {
                 id: note.markedBy,
