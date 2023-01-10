@@ -149,7 +149,6 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                     })
                 }
             }
-            console.log('types', types.length, types)
             conditions.push(`type IN (${generateParams(types.length)})`)
             data = [ ...data, ...types ]
         }
