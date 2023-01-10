@@ -10,6 +10,7 @@ import ServerManager from './modules/servers/ServerManager.js';
 import UserManager from './modules/users/UserManager.js';
 import { readdir } from 'fs/promises';
 import path from 'path'
+import cors from '@fastify/cors'
 dotenv.config()
 
 import { dirname } from 'path';
@@ -51,6 +52,12 @@ declare module 'fastify' {
 
 import FastifySwagger from '@fastify/swagger'
 
+const CORS_WHITELIST = process.env.CORS_WHITELIST ? process.env.CORS_WHITELIST.split(",") : [] 
+app.register(cors, {
+    origin: CORS_WHITELIST,
+    methods: ["GET","POST","PATCH","UPDATE","DELETE"]
+})
+
 app.register(import('./middlewares/managers.js'))
 .then(async() => {
     app.register(FastifyCookie)
@@ -69,7 +76,7 @@ app.register(import('./middlewares/managers.js'))
     await setupSwagger()
 
 
-    const CORS_WHITELIST = process.env.CORS_WHITELIST ? process.env.CORS_WHITELIST.split(",") : [] 
+   
 
     app.addHook('preHandler', (request, reply, next) => {
         if(!request.headers.origin || CORS_WHITELIST.includes(request.headers.origin)) {
