@@ -108,7 +108,7 @@ function fetchNotes() {
       notes.value = result.notes.map((note: any) => {
         note.content = note.content.trim()
         note.class = ["tag"]
-        if(note.content.startsWith("$")) {
+        if(note.content.startsWith("@")) {
           note.actionData = note.content.slice(1).split(".")
         }
         note.rating = computeRating(note.content)
