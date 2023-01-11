@@ -7,28 +7,32 @@
                 <h5 class='title is-5'>{{group.name}}</h5>
                 <ul class="is-unstyled">
                     <li v-for="cmd in group.list" :key="cmd.command">
-                      <dl>
-                        <dt><template v-if="!cmd.consoleOnly || commandViewmode == 'console'">
-                            <b>
+                      <dl v-if="cmd.hasPermission || showLockedCommands">
+                        <dt
+                          v-if="!cmd.consoleOnly || commandViewmode == 'console'"
+                          :class="{'has-text-grey': !cmd.hasPermission}"
+                          :data-tooltip="cmd.hasPermission ? null : 'You do not have access to this command.'"
+                          class="has-tooltip-danger has-tooltip-top"
+                          >
+                            <component
+                              :is="cmd.hasPermission ? 'b' : 'p'"
+                            >
                               <component
                                 @click='showExamples(cmd)'
-                                :is="cmd.examples && cmd.examples.length > 0 ? 'a' : 'span'"
+                                :is="(cmd.hasPermission && cmd.examples && cmd.examples.length > 0) ? 'a' : 'span'"
                                 class="is-size-5 has-tooltip-success"
                                 :data-tooltip="cmd.examples && cmd.examples.length > 0 ? 'Click to view examples' : null"
                               >
-                                {{prefix}}{{cmd.name}}
+                                <span v-if="!cmd.hidePrefix">{{prefix}}</span>{{cmd.name}}
                               </component>&nbsp;
                               <span v-html="formatParameters(cmd)" class="is-size-5"></span>
-                            </b>
+                            </component>
                              - {{cmd.description}}
-                        </template>
                         </dt>
-                        <template v-if="cmd.note">
-                          <dd>
-                              <em><span class="tag is-warning"><b>Note</b></span> {{cmd.note}}</em>
-                          </dd>
-                        </template>
-                        </dl>
+                        <dd v-if="cmd.note">
+                            <em :class="{'has-text-grey': !cmd.hasPermission}"><span class="tag is-warning"><b>Note</b></span> {{cmd.note}}</em>
+                        </dd>
+                      </dl>
                     </li>
                 </ul>
                 <hr>
@@ -43,6 +47,11 @@
                     <option value="public">chat publicly</option>
                 </select>
             </div>
+            <div class="field has-tooltip-left" data-tooltip="Show all commands, even if you don't have access to them">
+              <input class="is-checkradio" id="showlocked" type="checkbox" name="showlocked" value="locked" v-model="hideNoPermissionCommands">
+              <label for="showlocked" >Show Locked Commands</label>
+            </div>
+            <br>
             <p>
                 There are three (3) ways to input commands:
                 <ol>
@@ -87,19 +96,31 @@
 import { formatParameters } from '@/js/util'
 import ExamplesModal from '@/components/modals/ExamplesModal.vue'
 import { ref, computed, onMounted } from 'vue'
+import { PrivilegedUser } from '../../js/User';
+import { Session } from '../../../../common-types/User';
 
 const LAST_UPDATED = new Date(Number(process.env.VUE_APP_BUILD_DATE))
+
+const props = defineProps<{
+  userdata: Session,
+}>()
+const privUser = new PrivilegedUser(props.userdata)
 
 let commandViewmode = ref('private')
 let groups = ref<Record<string, any>>({})
 let loading = ref(true)
 let selected = ref<any>()
+let hideNoPermissionCommands = ref<string[]>([])
 
 const prefix = computed(() => {
   if(commandViewmode.value === 'console') return "sm_"
   else if(commandViewmode.value === 'public') return "!"
   else if(commandViewmode.value === 'private') return "/"
   return "<INVALID_MODE>"
+})
+
+const showLockedCommands = computed(() => {
+  return hideNoPermissionCommands.value.length > 0
 })
 
 function showExamples(cmd: any) {
@@ -119,7 +140,8 @@ onMounted(async () => {
         const split = command.command.trim().split(' ')
         command.name = split.shift()
         command.parameters = split.join(" ")
-        
+        command.hasPermission = command.perm !== null && command.perm !== undefined ? privUser.hasFlag(command.perm) : true
+
         delete command.command
         commands.push(command)
       }

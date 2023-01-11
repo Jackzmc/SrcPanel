@@ -4,31 +4,33 @@
         "commands": [
             {
                 "command": "fta [player:player] [category:string]",
-                "description": "Will apply a troll mode (See 'Feed The Trolls') to a player, shows a menu of options. Both player and category are optional. Will jump to category and player respectively."
+                "description": "Will apply a troll mode (See 'Feed The Trolls') to a player, shows a menu of options. Both player and category are optional. Will jump to category and player respectively.",
+                "perm": "c"
             },
             {
                 "command": "ftr <player(s):players>",
-                "description": "Will reset all troll modes on a player"
+                "description": "Will reset all troll modes on a player",
+                "perm": "b"
             },
             {
                 "command": "ftl [player:player]",
-                "description": "Will list all users & the modes that are applied on them. If a player is provided, more details are shown such the names of the enabled flag(s)"
+                "description": "Will list all users & the modes that are applied on them. If a player is provided, more details are shown such the names of the enabled flag(s)",
+                "perm": "b"
             },
             {
                 "command": "ftt",
-                "description": "Shows all the feedthetrolls commands incase you forget in game."
-            },
-            {
-                "command": "fth",
-                "description": "Will list all the modes & the descriptions (see 'Feed The Trolls' for a list)"
+                "description": "Shows all the feedthetrolls commands incase you forget in game.",
+                "perm": "b"
             },
             {
                 "command": "ftc",
-                "description": "Activates manual auto punishment on the last person to start a crescendo"
+                "description": "Activates manual auto punishment on the last person to start a crescendo",
+                "perm": "c"
             },
             {
                 "command": "mark <player(s):players>",
-                "description": "Marks the player to be banned when they leave, and prevents any friendly fire. Run again to unmark."
+                "description": "Marks the player to be banned when they leave, and prevents any friendly fire. Run again to unmark.",
+                "perm": "c"
             }
         ]
     },
@@ -37,28 +39,39 @@
         "commands": [
             {
                 "command": "vomitplayer <player(s):players>",
-                "description": "Not as subtle as swarming a player, will just blind them like they got boomed on, and attract commons to them obviously"
+                "description": "Not as subtle as swarming a player, will just blind them like they got boomed on, and attract commons to them obviously",
+                "perm": "e"
             },
             {
                 "command": "sethpplayer <player(s):players> <health:int>",
-                "description": "Sets the player’s permanent health to this amount. < 0 will give them insane amount of health, 100 can give them extra as temporary health is added on."
+                "description": "Sets the player’s permanent health to this amount. < 0 will give them insane amount of health, 100 can give them extra as temporary health is added on.",
+                "perm": "e"
             },
             {
                 "command": "slay <player(s):players>",
-                "description": "Kills the given player(s)"
+                "description": "Kills the given player(s)",
+                "perm": "f"
+            },
+            {
+                "command": "stagger <player(s):players>",
+                "description": "Staggers the given player(s)",
+                "perm": "c"
             },
             {
                 "command": "charge <player(s):players>",
-                "description": "Make the player get shoved like a charger charged them"
+                "description": "Make the player get shoved like a charger charged them",
+                "perm": "e"
             },
             {
                 "command": "slap <player(s):players> [health:int]",
-                "description": "Slaps the player around, optionally dealing damage"
+                "description": "Slaps the player around, optionally dealing damage",
+                "perm": "f"
             },
             {
                 "command": "respawn <player(s):players>",
                 "description": "Respawns the player at wherever you are looking.",
-                "note": "Will respawn (& reset) alive players!!! Will reset their inventory and health"
+                "note": "Will respawn (& reset) alive players!!! Will reset their inventory and health",
+                "perm": "n"
             },
             {
                 "command": "model <survivor_name:string> [player(s):players] [keep:string]",
@@ -70,7 +83,8 @@
                 },
                 "examples": [
                     "%cmd% grace rochelle - Sets the player's model that has the name 'grace' to rochelle"
-                ]
+                ],
+                "perm": "c"
             }
         ]
     },
@@ -84,28 +98,34 @@
                     "minutes=0": {
                         "allowed_values": ">= 0"
                     }
-                }
+                },
+                "perm": "d"
             },
             {
                 "command": "kick <player(s):players> [reason message:string]",
                 "description": "Kicks the player(s) for the specified optional reason.",
-                "note": "On 5+ servers, it may cause their bot to reset with full health and no items"
+                "note": "On 5+ servers, it may cause their bot to reset with full health and no items",
+                "perm": "c"
             },
             {
                 "command": "bandisconnected",
-                "description": "Will open a menu with a list of disconnected players. Select a player to activate a ban on them. Just permanently ban them if they are for sure troll and not a noob."
+                "description": "Will open a menu with a list of disconnected players. Select a player to activate a ban on them. Just permanently ban them if they are for sure troll and not a noob.",
+                "perm": "d"
             },
             {
                 "command": "ignore <player(s):players> <tk/rff:string>",
-                "description": "Will make the player immune to being banned for friendly fire or auto reverse ff. (Only lasts one session, will clear any pending bans)"
+                "description": "Will make the player immune to being banned for friendly fire or auto reverse ff. (Only lasts one session, will clear any pending bans)",
+                "perm": "c"
             },
             {
                 "command": "mute <player(s):players>",
-                "description": "Mutes them from voice chat, resets on map change. Use 'Voice Mute' troll for persistance"
+                "description": "Mutes them from voice chat, resets on map change. Use 'Voice Mute' troll for persistance",
+                "perm": "j"
             },
             {
                 "command": "gag <player(s):players>",
-                "description": "Mutes them from text chat"
+                "description": "Mutes them from text chat",
+                "perm": "j"
             },
             {
                 "command": "vgag <player(s):players>",
@@ -113,15 +133,23 @@
             },
             {
                 "command": "perms [public/notify/admins/private]",
-                "description": "Sets the server's permission level. It will kick players with \"Server is Reserved\" when they join if in admins-only or private. Notify will only notify all players when a player is connecting."
+                "description": "Sets the server's permission level. It will kick players with \"Server is Reserved\" when they join if in admins-only or private. Notify will only notify all players when a player is connecting.",
+                "perm": "c"
             },
             {
                 "command": "free <player>",
-                "description": "Kicks a player with a predefined message of \"Sorry, this server is reserved\" and indicates to others you kicked them to free a slot."
+                "description": "Kicks a player with a predefined message of \"Sorry, this server is reserved\" and indicates to others you kicked them to free a slot.",
+                "perm": "c"
             },
             {
                 "command": "review [player]",
-                "description": "Shows information about friendly fire, auto rff, immunity status, and more of a player."
+                "description": "Shows information about friendly fire, auto rff, immunity status, and more of a player.",
+                "perm": "c"
+            },
+            {
+                "command": "rename <player:player> <new name:string>",
+                "description": "Renames the specified player, resets the next chapter",
+                "perm": "f"
             }
         ]
     },
@@ -138,21 +166,24 @@
                 },
                 "examples": [
                     "%cmd% smoker 5 - Spawns 5 smokers in the area"
-                ]
+                ],
+                "perm": "n"
             },
             {
                 "command": "insta <player(s):players> [special:string]",
                 "description": "Will spawn specified special near the specified player, with target only on them. Defaults to jockey if no special specified.",
                 "examples": [
                     "%cmd% insta pea jockey - Spawns a jockey near pea"
-                ]
+                ],
+                "perm": "c"
             },
             {
                 "command": "inface <player(s):players> [special:string=jockey]",
                 "description": "Will spawn specified special as close as possible to them. Basically on top",
                 "examples": [
                     "%cmd% insta pea jockey - Spawns a jockey on pea"
-                ]
+                ],
+                "perm": "c"
             },
             {
                 "command": "forcecursor <special:string> [amount:int] ",
@@ -161,19 +192,23 @@
                     "amount": {
                         "allowed_values": ">= 0"
                     }
-                }
+                },
+                "perm": "n"
             },
             {
                 "command": "forcemenu",
-                "description": "Shows GUI of specials to spawn bypassing director limits"
+                "description": "Shows GUI of specials to spawn bypassing director limits",
+                "perm": "n"
             },
             {
                 "command": "cursormenu",
-                "description": "Shows GUI of specials to spawn at your cursor"
+                "description": "Shows GUI of specials to spawn at your cursor",
+                "perm": "n"
             },
             {
                 "command": "witch_attack <player:player>",
-                "description": "Makes all witches attack the victim"
+                "description": "Makes all witches attack the victim",
+                "perm": "d"
             }
         ]
     },
@@ -182,7 +217,8 @@
         "commands": [
             {
                 "command": "respawn_all",
-                "description": "Will make all dead players respawn at the next available respawn closet. It won’t work for already opened rooms, even if door is closed. "
+                "description": "Will make all dead players respawn at the next available respawn closet. It won’t work for already opened rooms, even if door is closed. ",
+                "perm": "n"
             },
             {
                 "command": "forcespecial <special:string> [amount:int] ",
@@ -191,11 +227,13 @@
                     "amount": {
                         "allowed_values": ">= 0"
                     }
-                }
+                },
+                "perm": "n"
             },
             {
                 "command": "panic",
-                "description": "Forces a panic event, can be used in addition to swarm or vomitplayer commands."
+                "description": "Forces a panic event, can be used in addition to swarm or vomitplayer commands.",
+                "perm": "e"
             },
             {
                 "command": "spawnweapon <weapon:string> [amount:int]",
@@ -211,7 +249,8 @@
                     "<b>Spawns a bile</b> %cmd% vomitjar",
                     "<b>Spawn adrendaline: </b> %cmd% adrendaline",
                     "Discover item ids by googling l4d2 item ids, or by typing give in console, then whatever autocompletes put into sm_give (give != sm_give)"
-                ]
+                ],
+                "perm": "n"
             },
             {
                 "command": "give <weapon:string>",
@@ -222,7 +261,8 @@
                     "<b>Spawns a bile</b> %cmd% bile",
                     "<b>Spawn adrendaline: </b> %cmd% adr",
                     "Discover item ids by googling l4d2 item ids, or by typing give in console, then whatever autocompletes put into sm_give (give != sm_give)"
-                ]
+                ],
+                "perm": "n"
             },
             {
                 "command": "populations",
@@ -236,26 +276,31 @@
             },
             {
                 "command": "execcfg honks.cfg",
-                "description": "Sets up honks (sets population to 40%, sets the max shove timeout up)"
+                "description": "Sets up honks (sets population to 40%, sets the max shove timeout up)",
+                "perm": "i"
             },
             {
                 "command": "playsound <player(s):players> <soundpath:string>",
                 "description": "Plays the specified soundpath to specified player(s). Automatically stops last sound",
                 "examples": [
                     "To play <b>mariokartmusic.mp3</b>: %cmd% jackz custom/mariokartmusic.mp3"
-                ]
+                ],
+                "perm": "c"
             },
             {
                 "command": "stopsound <player(s):players> [soundpath:string]",
-                "description": "Stops the soundpath for the selected player(s). If blank will stop last played sound"
+                "description": "Stops the soundpath for the selected player(s). If blank will stop last played sound",
+                "perm": "c"
             },
             {
                 "command": "swap <player:player> [player:player]",
-                "description": "Swaps the two players' locations. If second player not filled in, it will be yourself."
+                "description": "Swaps the two players' locations. If second player not filled in, it will be yourself.",
+                "perm": "c"
             },
             {
-                "command": "l4dd_unreserve",
-                "description": "Removes the lobby reservation, which allows extra players to join (on improved+)"
+                "command": "sm_unreserve",
+                "description": "Removes the lobby reservation, which allows extra players to join (on improved+)",
+                "perm": "d"
             },
             {
                 "command": "settings",

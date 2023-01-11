@@ -78,6 +78,11 @@ export class PrivilegedUser {
     return (this.data.permissions.web.flags & webPerm) !== 0
   }
 
+  hasFlag(flag: string) : boolean {
+    const flags = this.flags
+    return flags.includes("z") || flags.includes(flag)
+  }
+
   get webRole(): WebRole {
     return this.data.permissions.web.role
   }
