@@ -226,7 +226,7 @@ const USER_REGEX = /^(STEAM_\d:\d:\d+|Server|CONSOLE|Smoker|Boomer|Charger|Jocke
 const ADMINCHAT_REGEX = /triggered sm_say \(text (.*)\)/
 
 const DEFAULT_TYPES = ["ACTION", "CHAT", "INFO", "STATE","WEB"]
-const DEFAULT_SERVERS = ["improved", "reserved"]
+const DEFAULT_SERVERS = ["main", "reserved"]
 
 type Dictionary<K extends string, T> = Partial<Record<K, T>>
 
@@ -240,7 +240,7 @@ const TYPE_COLORS: Dictionary<string, string> = {
   WEB: "is-dark"
 }
 const SERVER_COLORS: Dictionary<string, string> = {
-  improved: "is-success",
+  main: "is-success",
   reserved: "is-dark",
 }
 
@@ -250,7 +250,7 @@ const props = defineProps<{
 
 const FILTERS = {
   servers: [
-    "improved", "reserved", "public1", "public2", "public3", "public4", "public5", "public6", "public7", "public8", "unknown", "web"
+    "main", "reserved", "public1", "public2", "public3", "public4", "public5", "public6", "public7", "public8", "unknown", "web"
   ],
   types: [ "ACTION", "CHAT", "INFO", "STATE", "QUIT", "JOIN", "WEB"],
 }
