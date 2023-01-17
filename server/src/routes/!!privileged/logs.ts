@@ -145,7 +145,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             })
         }
 
-        const [rows] = await fastify.db.query<RowDataPacket[]>("SELECT id, message FROM activity_log WHERE id = ?", [ req.params.id ])
+        const [rows] = await fastify.db.query<RowDataPacket[]>("SELECT id, message, type, client FROM activity_log WHERE id = ?", [ req.params.id ])
         if(rows.length == 0) {
             return reply.code(404).send({
                 error: "NOT_FOUND",
@@ -153,11 +153,25 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             })
         }
 
-        fastify.log.info(`${req.session.user.steamid} has redacted message ${rows[0].message}`)
+        if(rows[0].type === "CHAT" || (rows[0].type === "ACTION" && rows[0].message.includes("sm_chat"))) {
+            if(rows[0].client === req.session.user.steamid) {
+                fastify.log.info(`${req.session.user.steamid} has redacted message ${rows[0].message}`)
 
-        await fastify.db.query("UPDATE activity_log SET message = '[redacted]' WHERE id = ?", [ rows[0].id ])
-
-        return reply.code(204).send()
+                await fastify.db.query("UPDATE activity_log SET message = '[redacted]' WHERE id = ?", [ rows[0].id ])
+        
+                return reply.code(204).send()
+            } else {
+                return reply.code(401).send({
+                    error: "INVALID_REDACT_USER",
+                    message: "You can only redact your own messages"
+                })
+            }
+        } else {
+            return reply.code(401).send({
+                error: "INVALID_REDACT_TYPE",
+                message: "You can only redact chat messages"
+            })
+        }
     })
 }
 
