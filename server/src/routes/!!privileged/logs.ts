@@ -136,6 +136,29 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
         
     })
+
+    fastify.post("/:id/redact", async(req: FastifyRequest<{Params: {id: 'string'}}>, reply) => {
+        if(!req.params.id) {
+            return reply.code(404).send({
+                error: "NOT_FOUND",
+                message: `Could not find log id ${req.params.id}`
+            })
+        }
+
+        const [rows] = await fastify.db.query<RowDataPacket[]>("SELECT id, message FROM activity_log WHERE id = ?", [ req.params.id ])
+        if(rows.length == 0) {
+            return reply.code(404).send({
+                error: "NOT_FOUND",
+                message: `Could not find log id ${req.params.id}`
+            })
+        }
+
+        fastify.log.info(`${req.session.user.steamid} has redacted message ${rows[0].message}`)
+
+        await fastify.db.query("UPDATE activity_log SET message = '[redacted]' WHERE id = ?", [ rows[0].id ])
+
+        return reply.code(204).send()
+    })
 }
 
 export function generateParams(length: number) {

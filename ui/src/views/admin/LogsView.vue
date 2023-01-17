@@ -167,9 +167,13 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-for="log in filteredData" :key="log.id" :class="search.id==log.id?['has-background-primary']:[]">
+        <tr v-for="log in filteredData" :key="log.id" :class="search.id==log.id?['has-background-primary']:[]" @mouseover="hoverId = log.id">
           <td v-if="debugView||showIds" class="nowrap">
-            <a data-tooltip="Click to view all messages around this entry" class="has-tooltip-right" @click="searchID(log.id)">{{ log.id }}</a>
+            <a
+              data-tooltip="Click to view all messages around this entry"
+              class="has-tooltip-right"
+              @click="searchID(log.id)"
+            >{{ log.id }}</a>
           </td>
           <td class="nowrap">
             <span :class="['tag', TYPE_COLORS[log.type]]">{{ log.type }}</span>
@@ -180,10 +184,16 @@
               <LogClientTarget :type="log.client.steamid?'client':'target'" :user="log.client.steamid?log.client:log.target" @set-filter="setUserFilter" />
               <span v-if="log.type === 'CHAT'">:&nbsp;</span>
             </b>
-            <span v-html="log.message" />
+            <span v-if="log.redacted"><em>[user has redacted message]</em></span>
+            <span v-else v-html="log.message" />
             <b v-if="log.type !== 'CHAT' && log.client.steamid">
               <LogClientTarget type="target" :user="log.target" @set-filter="setUserFilter" />
             </b>
+            <a v-if="!log.redacted && hoverId == log.id && log.type === 'CHAT' && log.client.steamid === userdata.user.steamid"
+              data-tooltip="Redact your own message"
+              class="has-text-danger"
+              @click="redactID(log.id)"
+            >(redact)</a>
         </td>
           <td class="nowrap">
             <span v-if="log.server" :class="['tag', SERVER_COLORS[log.server]]">{{ log.server }}</span>
@@ -214,6 +224,7 @@ import Modal from '@/components/Modal.vue'
 import { Session } from '../../../../common-types/User';
 import { ref, watch, computed, onBeforeMount, onMounted, Ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useNotification } from "@kyvg/vue3-notification";
 
 const emit = defineEmits([])
 const route = useRoute()
@@ -244,6 +255,8 @@ const SERVER_COLORS: Dictionary<string, string> = {
   reserved: "is-dark",
 }
 
+const { notify }  = useNotification()
+
 const props = defineProps<{
   userdata: Session
 }>()
@@ -255,6 +268,7 @@ const FILTERS = {
   types: [ "ACTION", "CHAT", "INFO", "STATE", "QUIT", "JOIN", "WEB"],
 }
 
+let hoverId = ref("")
 let modal = ref<{message?: string}>({message: undefined})
 let loading = ref(1)
 let data = ref<any[]>([])
@@ -275,11 +289,10 @@ let history = ref<{
   targets: []
 })
 let page = ref(1)
-let limit = ref(20)
+let limit = ref(30)
 let fetchDebounce = ref<Function>()
 let debugView = ref(false)
 let showIds = ref(false)
-
 
 const isFilterTargetValid = computed(() => {
   return filters.value.target && USER_REGEX.test(filters.value.target as string)
@@ -374,6 +387,29 @@ function searchID(id: string) {
   search.value.message = undefined
   getData()
 }
+async function redactID(id: string) {
+  hoverId.value = ""
+  let log = data.value.find(log => log.id === id)
+  if(!log) {
+    alert("Could not find log for " + id)
+  }
+  const response = await fetch(`/api/logs/${id}/redact`, { method: 'POST', credentials: 'include' })
+  if(response.ok && response.status === 204) {
+    log.message = "[redacted]"
+    log.redacted = true
+    notify({
+      type: "success",
+      text: `Redacted #${id}`,
+    })
+  } else {
+    const json = await response.json()
+    notify({
+      type: "error",
+      text: json.message,
+      title: `Failed to redact: ${response.statusText}`
+    })
+  }
+}
 function toggleList(listName: string, element: unknown) {
   const value = (filters.value as Record<string, any>)[listName]
   const index = value.findIndex((e: unknown) => e == element)
@@ -429,6 +465,9 @@ async function getData() {
         }
         if(log.type == "ACTION" && log.client.steamid && log.client.steamid.startsWith("STEAM_") && !history.value.activators.some(c => c.steamid == log.client.steamid)) history.value.activators.push(log.client)
         if(log.target.steamid && log.target.steamid.startsWith("STEAM_") &&  !history.value.targets.some(c => c.steamid == log.target.steamid)) history.value.targets.push(log.target)
+
+        if(log.message === "[redacted]")
+          log.redacted = true
 
         if(!debugView.value && log.message) {
           log.message = log.message.replace(FULLNAME_REGEX, '')
