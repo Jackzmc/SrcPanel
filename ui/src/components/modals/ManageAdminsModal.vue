@@ -166,7 +166,7 @@
                 value="z"
                 class="is-checkradio"
                 v-model="form.flags"
-                disabled
+                :disabled="!hasRoot"
                 data-tooltip="Only superadmins have permission to add other root users"
               >
               <label>Root (All Permissions)</label>

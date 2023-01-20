@@ -17,7 +17,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="note in notes" :key="note.id">
+            <tr v-for="note in filteredNotes" :key="note.id">
               <td class="has-tooltip-right" :data-tooltip="'Rating: ' + note.rating.value">
                 <span :class="note.class">{{note.id}}</span>
               </td>
@@ -62,18 +62,21 @@
         <div class="message is-warning">
           <div class="message-body">
             <b>Looking for Admins?</b>
-            <p>You can find the admins list in the <b><router-link to="/admin/players">Player Management</router-link></b> panel</p>
+            <p>You can find the admins list in the <b><router-link to="/admin/players#admins">Player Management</router-link></b> panel</p>
           </div>
         </div>
         <h4 class="title is-4">Search By User</h4>
-        <input class="input" />
+        <input class="input" v-model="search.user" />
+        <br><br>
+        <h4 class="title is-4">Search Note Message</h4>
+        <input class="input" v-model="search.content" />
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onBeforeMount, onMounted } from 'vue'
+import { ref, onBeforeMount, onMounted, computed } from 'vue'
 import { Session } from '../../../common-types/User.js';
 import data from '@/assets/data.json'
 import Sentiment from 'sentiment'
@@ -88,6 +91,7 @@ const props = defineProps<{
 
 let notes = ref<any[]>([])
 let admins = ref<any[]>([])
+let search = ref<{ user: string, content: string }>({ user: "", content: "" })
 
 onBeforeMount(() => {
   fetchNotes()
@@ -100,6 +104,29 @@ onMounted(() => {
 const POSITIVE_WORDS = ["good", "great", "decent", "amazing", "helpful", "yes"]
 const CAUTION_WORDS = ["ok", "alright", "noob", "new", "noobs", "no", "burned", "dumb", "suspicious", "nooby", "tried", "threw", "tossed", "waste", "waster", "meh"]
 const NEGATIVE_WORDS = ["troll", "teamkiller", "tk", "tker", "bad", "stupid", "annoying", "lit", "sucks", "unhelpful", "spam", "rushes", "rusher", "dick", "asshole", "cunt"]
+
+const filteredNotes = computed(() => {
+  let filtered = notes.value
+  if(search.value.user != '') {
+    let query = search.value.user.toLowerCase()
+    let onlyMarkedBy = query.startsWith("$")
+    if(onlyMarkedBy) {
+      query = query.slice(1)
+    }
+
+    filtered = filtered.filter(note => {
+      return (!onlyMarkedBy && (note.client.id.includes(query) || note.client.name?.toLowerCase().includes(query)))
+        || note.markedBy.id.includes(query) || note.markedBy.name?.toLowerCase().includes(query)
+    })
+  }
+
+  if(search.value.content != '') {
+    const query = search.value.content.toLowerCase()
+    filtered = filtered.filter(note => note.content.toLowerCase().includes(query))
+  }
+
+  return filtered.sort((a,b) => b.id - a.id)
+})
 
 function fetchNotes() {
   fetch('/api/notes')
