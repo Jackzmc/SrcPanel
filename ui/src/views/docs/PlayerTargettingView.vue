@@ -25,10 +25,8 @@
       In the case that a user has a nickname that you cannot type yourself (like McJane's), you can target them by their user ID.
     </p>
     <p>You can find their userID by typing in your console <b>status</b>. This will result in this ugly output:</p>
-    <pre>
-      # userid name uniqueid connected ping loss state rate
-      # 20 1 "Jackz ❤" STEAM_1:0:49243767 36:45 97 0 active 20000
-    </pre>
+    <pre># userid name uniqueid connected ping loss state rate
+# 20 1 "Jackz ❤" STEAM_1:0:49243767 36:45 97 0 active 20000</pre>
     <p>
       The <b>first number</b> is their user id. To use it, simply use <b>#NUMBERHERE</b> <em>(ex #20)</em> in replacement of their name. User ID won't change until the user themselves actually disconnect, and so in my example I would use: <b>sm_slay #20</b>
     </p>

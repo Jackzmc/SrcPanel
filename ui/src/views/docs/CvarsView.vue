@@ -2,8 +2,14 @@
 <div class="container">
     <div class="columns is-variable is-6">
         <div class="column is-7">
+          <div class="field">
+            <label class="label">Search</label>
+            <div class="control">
+              <input v-model="searchQuery" class="input" style="width:50%" type="text" placeholder="Search for a cvar">
+            </div>
+          </div>
             <ul>
-              <li v-for="cvar in cvars" :key="cvar.cvar">
+              <li v-for="cvar in filteredCvars" :key="cvar.cvar">
                 <b class="is-size-5">
                   <component
                     @click='showExamples(cvar)'
@@ -52,13 +58,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted} from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { formatParameters } from '@/js/util'
 
 const LAST_UPDATED = new Date(Number(process.env.VUE_APP_BUILD_DATE))
 
 let cvars = ref<any[]>([])
 let selected = ref<any>()
+let searchQuery = ref("")
 
 function getParameters(cvar: string) {
   return cvar.split(' ').slice(1).join("")
@@ -67,6 +74,15 @@ function getParameters(cvar: string) {
 function showExamples(cvar: any) {
   selected.value = cvar
 }
+
+const filteredCvars = computed(() => {
+  let filtered = cvars.value
+  if(searchQuery.value != "") {
+    const query = searchQuery.value.toLowerCase()
+    filtered = filtered.filter(cvar => cvar.name.toLowerCase().includes(query) || cvar.description.toLowerCase().includes(query))
+  }
+  return filtered
+})
 
 onMounted(() => {
   fetch(`../data/cvars.json?t=${LAST_UPDATED}`)

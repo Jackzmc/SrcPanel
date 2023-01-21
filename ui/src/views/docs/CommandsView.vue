@@ -3,7 +3,13 @@
     <ExamplesModal :data="selected" :prefix="prefix" @close='selected = null' />
     <div class="columns is-variable is-6">
         <div class="column is-7 content">
-            <span v-for="(group, id) in groups" :key="id">
+            <div class="field">
+              <label class="label">Search</label>
+              <div class="control">
+                <input v-model="searchQuery" class="input" style="width:50%" type="text" placeholder="Search for a command">
+              </div>
+            </div>
+            <span v-for="(group, id) in filteredGroups" :key="id">
                 <h5 class='title is-5'>{{group.name}}</h5>
                 <ul class="is-unstyled">
                     <li v-for="cmd in group.list" :key="cmd.command">
@@ -49,7 +55,7 @@
             </div>
             <div class="field has-tooltip-left" data-tooltip="Show all commands, even if you don't have access to them">
               <input class="is-checkradio" id="showlocked" type="checkbox" name="showlocked" value="locked" v-model="hideNoPermissionCommands">
-              <label for="showlocked" >Show Locked Commands</label>
+              <label for="showlocked" >Show All Commands</label>
             </div>
             <br>
             <p>
@@ -106,6 +112,7 @@ const props = defineProps<{
 }>()
 const privUser = new PrivilegedUser(props.userdata)
 
+let searchQuery = ref("")
 let commandViewmode = ref('private')
 let groups = ref<Record<string, any>>({})
 let loading = ref(true)
@@ -117,6 +124,25 @@ const prefix = computed(() => {
   else if(commandViewmode.value === 'public') return "!"
   else if(commandViewmode.value === 'private') return "/"
   return "<INVALID_MODE>"
+})
+
+const filteredGroups = computed(() => {
+  if(searchQuery.value != "") {
+    let result: Record<string, any> = {}
+    const query = searchQuery.value.toLowerCase()
+    for(const [key, group] of Object.entries(groups.value)) {
+      const items = group.list.filter((command: any) => command.name.toLowerCase().includes(query) ||  command.description.toLowerCase().includes(query))
+      if(items.length > 0) {
+        result[key] = {
+          name: group.name,
+          list: items
+        }
+      }
+    }
+    return result
+  } else {
+    return groups.value
+  }
 })
 
 const showLockedCommands = computed(() => {

@@ -51,7 +51,7 @@ export const ADMINS_DB = process.env.MYSQL_ADMINS_DB ? `\`${process.env.MYSQL_AD
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
     fastify.get('/', async(req, res) => {
         const admins = fastify.authmngr.getAdmins()
-            .sort((a:AdminData|ReadableAdminData ,b: AdminData|ReadableAdminData) => {
+            .sort((a:AdminData|ReadableAdminData, b: AdminData|ReadableAdminData) => {
                 const diff = b.permissions.immunityLevel - a.permissions.immunityLevel
                 if(diff != 0) return diff
                 return a.name.localeCompare(b.name)
