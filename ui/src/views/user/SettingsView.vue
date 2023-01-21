@@ -1,18 +1,36 @@
 <template>
-<div class="container" style="width:50%" v-if="userdata">
+<div class="container" style="width:60%" v-if="userdata">
   <div class="mb-6" >
     <div class="columns">
-      <div class="column is-8">
-        <h4 class="title is-4">Info</h4>
-        <p class="is-6"><b>Immunity Level: </b> {{privUser.immunityLevel}}</p>
-        <p class="is-6"><b>Web Role: </b> {{webRole}}</p>
-        <p class="is-6"><b>Web Flags: </b> {{webPerms}}</p>
+      <div class="column is-8 content">
+        <nav class="level">
+          <div class="level-item has-text-centered">
+            <div>
+              <p class="heading">Web Role</p>
+              <p class="title">{{ webRole }}</p>
+            </div>
+          </div>
+          <div class="level-item has-text-centered" data-tooltip="This determines how high your permission is. Admins with a level below you cannot affect you">
+            <div>
+              <p class="heading">Immunity Level</p>
+              <p class="title">{{ privUser.immunityLevel }}</p>
+            </div>
+          </div>
+        </nav>
+        <div data-tooltip="These are the permissions you have on this admin panel">
+          <p class="is-6"><b>Access Permissions: </b></p>
+          <ul>
+            <li v-for="perm in webPerms" :key="perm">
+              {{ perm }}
+            </li>
+          </ul>
+        </div>
       </div>
       <div class="column" v-if="privUser.hasWebPerm(WebPermission.FullPermission)">
         <h4 class="title is-4">Admin Panel Control</h4>
-        <p><b>State: </b> {{ serverHealth.currentState }}</p>
-        <p><b>Uptime: </b> {{ uptime }}</p>
-        <p><b>Node.JS Version: </b> {{serverHealth?.versions?.node}}</p>
+        <p>{{ serverHealth.currentState }}</p>
+        <p>{{ uptime }} uptime</p>
+        <p>Node.JS Version {{serverHealth?.versions?.node}}</p>
         <br>
         <a
           :disabled="canUpdate"
@@ -41,7 +59,8 @@
       </thead>
       <tbody>
         <tr v-for="(session, i) in sessions" :key="session.id">
-          <td>{{formatCountry(session.countryCode)}}</td>
+          <td v-if="session.ip != '127.0.0.1'">{{formatCountry(session.countryCode)}}</td>
+          <td v-else><em>(dev)</em></td>
           <td>{{session.ip}}</td>
           <td>{{formatTime(session.lastLogin)}}</td>
           <td>
@@ -109,7 +128,7 @@ const webPerms = computed(() => {
       perms.push(WEB_FLAGS[webPerm])
     }
   }
-  return perms.join(", ")
+  return perms
 })
 const webRole = computed(() => {
   if(!privUser) return ''
