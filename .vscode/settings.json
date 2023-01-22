@@ -1,0 +1,20 @@
+{
+    "restoreTerminals.terminals": [
+        {
+            "splitTerminals": [
+                {
+                    "name": "server",
+                    "commands": ["cd server", "yarn dev"]
+                },
+            ]
+        },
+        {
+            "splitTerminals": [
+                {
+                    "name": "ui",
+                    "commands": ["cd ui", "yarn serve"]
+                }
+            ]
+        }
+    ]
+}

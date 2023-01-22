@@ -31,7 +31,7 @@ import { useRoute, useRouter } from 'vue-router'
 //@ts-ignore
 import Chart from 'highcharts/es-modules/Core/Chart/Chart.js';
 //@ts-ignore
-import LineSeries from 'highcharts/es-modules/Series/Line/LineSeries.js';
+import 'highcharts/es-modules/Series/Line/LineSeries.js';
 //@ts-ignore
 import ColumnSeries from 'highcharts/es-modules/Series/Column/ColumnSeries.js';
 //@ts-ignore

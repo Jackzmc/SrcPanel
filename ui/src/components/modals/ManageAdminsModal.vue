@@ -15,9 +15,15 @@
           </div>
         </article>
       </section>
-      <section class="modal-card-body" v-else-if="stats">
-        <p class="has-text-centered my-5" v-if="loading.stats">Fetching player statistics...</p>
-        <div class="level" v-else>
+      <section class="modal-card-body" v-else-if="!loading.user">
+        <div class="level">
+          <div class="level-item has-text-centered" v-if="loading.stats">
+            <div class="field">
+              <label class="label">Loading Player Statistics</label>
+              <img src="@/assets/loader.gif" style="height:64px" />
+            </div>
+          </div>
+          <template v-else>
           <div class="level-item has-text-centered">
             <div class="field">
               <label class="label">Playtime</label>
@@ -72,6 +78,7 @@
               </span>
             </div>
           </div>
+          </template>
         </div>
         <div class="level" v-if="adminData">
           <div class="level-item has-text-centered">
@@ -102,7 +109,10 @@
         </div>
         <Tabs inner-wrapper-class="tabs" :options="{useUrlFragment:false}">
            <Tab name="Admin Groups">
-            <p class="has-text-centered my-5" v-if="loading.groups">Fetching available admin groups... Please wait</p>
+            <div class="has-text-centered" v-if="loading.groups">
+              <p>Fetching admin groups...</p>
+              <img src="@/assets/loader.gif" style="height:128px" />
+            </div>
             <table class="table" v-else>
               <thead>
                 <tr>
@@ -224,6 +234,9 @@
           </div>
         </article>
       </section>
+      <section class="modal-card-body has-text-centered" v-else>
+        <img src="@/assets/loader.gif" />
+      </section>
       <footer class="modal-card-foot">
         <template v-if="fetchError">
           <button class="button is-info" @click="cancel">Close</button>
@@ -285,7 +298,8 @@ let error = ref("")
 let fetchError = ref("")
 let loading = ref({
   stats: true,
-  groups: true
+  groups: true,
+  user: true,
 })
 let expandedGroup = ref<AdminGroup>()
 let selectedgroupIds = ref<number[]>([])
@@ -413,6 +427,7 @@ async function loadData() {
   fetchError.value = ""
   error.value = ""
   try {
+    loading.value.user = true
     const player = await User.fetch(route.params.id as string, true)
     user.value = player?.user
     if(player?.adminData) {
@@ -422,6 +437,7 @@ async function loadData() {
       form.value.immunity = player.adminData.permissions.base.immunityLevel || 0
       selectedgroupIds.value = player.adminData.groups?.map(group => group.id) || []
     }
+    loading.value.user = false
 
     loading.value.stats = true
     try {

@@ -5,7 +5,7 @@
     <br>
     <br v-if="$route.meta.hideHero">
 
-    <section  v-else class="hero is-info has-text-centered">
+    <section v-else class="hero is-info has-text-centered">
       <div class="hero-body">
         <p class="title" >
           {{ $route.meta.title }}
