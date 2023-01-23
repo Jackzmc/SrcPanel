@@ -53,8 +53,8 @@
                     <option value="public">chat publicly</option>
                 </select>
             </div>
-            <div class="field has-tooltip-left" data-tooltip="Show all commands, even if you don't have access to them">
-              <input class="is-checkradio" id="showlocked" type="checkbox" name="showlocked" value="locked" v-model="hideNoPermissionCommands">
+            <div class="field has-tooltip-left" :data-tooltip="isLoggedIn ? 'Show all commands, even if you don\'t have access to them' : 'Login to filter commands you have access to'">
+              <input class="is-checkradio disabled" id="showlocked" type="checkbox" name="showlocked" value="locked" v-model="hideNoPermissionCommands" :disabled="!isLoggedIn">
               <label for="showlocked" >Show All Commands</label>
             </div>
             <br>
@@ -110,7 +110,8 @@ const LAST_UPDATED = new Date(Number(process.env.VUE_APP_BUILD_DATE))
 const props = defineProps<{
   userdata: Session,
 }>()
-const privUser = new PrivilegedUser(props.userdata)
+const privUser = props.userdata ? new PrivilegedUser(props.userdata) : null
+const isLoggedIn = privUser != null
 
 let searchQuery = ref("")
 let commandViewmode = ref('private')
@@ -166,7 +167,7 @@ onMounted(async () => {
         const split = command.command.trim().split(' ')
         command.name = split.shift()
         command.parameters = split.join(" ")
-        command.hasPermission = command.perm !== null && command.perm !== undefined ? privUser.hasFlag(command.perm) : true
+        command.hasPermission = !isLoggedIn || (command.perm !== null && command.perm !== undefined ? privUser.hasFlag(command.perm) : true)
 
         delete command.command
         commands.push(command)
