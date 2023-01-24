@@ -56,7 +56,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         if(limit <= 0) limit = 50
 
         let page = req.params.page
-        if(page < 0) page = 0
+        if(page === null || page === undefined || page < 0) page = 1
 
         // conditions.push(`id > ${limit * page}`)
 
@@ -122,7 +122,6 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
         const [logs] = await fastify.db.query(query, data)
         const [count] = await fastify.db.query(countQuery, countData)
-        
 
         return {
             logs,
