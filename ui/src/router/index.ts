@@ -207,6 +207,12 @@ const router = createRouter({
   linkExactActiveClass: "is-active"
 })
 
+router.beforeEach((to, from) => {
+  if(to.meta.authRequired && window.sessionStorage.getItem("srcds_userdata") == null) {
+    return "/login-required?return=" + encodeURIComponent(to.fullPath)
+  }
+})
+
 router.afterEach((to, from) => {
   document.title = to.meta?.title ? `${to.meta.title} - ${DEFAULT_TITLE}` : DEFAULT_TITLE
 })
