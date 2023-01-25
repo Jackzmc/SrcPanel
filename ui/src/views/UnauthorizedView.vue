@@ -11,7 +11,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onBeforeMount } from 'vue'
+import { ref, onBeforeMount, watch } from 'vue'
 import { useRouter } from 'vue-router';
 import { Session } from '../../../common-types/User.js';
 
@@ -20,13 +20,17 @@ const props = defineProps<{
   userdata: Session
 }>()
 
-let type = ref(0)
 
-onBeforeMount(() => {
+function onIsLoggedIn() {
   const params = new URLSearchParams(window.location.search);
   if(params.has('type')) type.value = Number(params.get('type'))
   if(props.userdata && type.value == 0) {
     router.push(params.get('return') || '/')
   }
-})
+}
+
+let type = ref(0)
+
+watch(props.userdata, onIsLoggedIn)
+onBeforeMount(onIsLoggedIn)
 </script>
