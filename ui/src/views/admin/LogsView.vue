@@ -252,38 +252,7 @@
                 <span :class="['tag', TYPE_COLORS[log.type]]">{{ log.type }}</span>
               </td>
               <td class="nowrap">{{ log.timestamp }}</td>
-              <LogMessage :log="log" />
-              <td>
-                <b>
-                  <LogClientTarget
-                    :type="log.client.steamid ? 'client' : 'target'"
-                    :user="log.client.steamid ? log.client : log.target"
-                    @set-filter="setUserFilter"
-                  />
-                  <span v-if="log.type === 'CHAT'">:&nbsp;</span>
-                </b>
-                <span v-if="log.redacted"><em>[user has redacted message]</em></span>
-                <span v-else v-html="log.message" />
-                <b v-if="log.type !== 'CHAT' && log.client.steamid">
-                  <LogClientTarget
-                    type="target"
-                    :user="log.target"
-                    @set-filter="setUserFilter"
-                  />
-                </b>
-                <a
-                  v-if="
-                    !log.redacted &&
-                    hoverId == log.id &&
-                    log.type === 'CHAT' &&
-                    log.client.steamid === userdata.user.steamid
-                  "
-                  data-tooltip="Redact your own message"
-                  class="has-text-danger"
-                  @click="redactID(log.id)"
-                  >(redact)</a
-                >
-              </td>
+              <LogMessage :log="log" :hover-id="hoverId" :userdata="userdata" @set-filter="setUserFilter" @redact-id="redactID" />
               <td class="nowrap">
                 <span v-if="log.server" :class="['tag', SERVER_COLORS[log.server]]">{{
                   log.server
@@ -554,19 +523,12 @@ function onBtnRefresh() {
   getData();
 }
 
-function formatFilter(id: string) {
-  return id[0].toUpperCase() + id.slice(1);
-}
 function setPage(pageNum: number) {
   page.value = pageNum;
   getData();
 }
 function setUserFilter(type: string, id: string) {
-  // @ts-ignore
   filters.value[type] = id;
-}
-function openStatsProfile(id: string) {
-  window.open(getStatProfile(id));
 }
 async function getData() {
   try {
@@ -605,13 +567,13 @@ async function getData() {
         )
           history.value.targets.push(log.target);
 
-        if (log.client.steamid && log.message && log.message[0] != " ") {
-          log.message = " " + log.message;
-        }
+        // if (log.client.steamid && log.message && log.message[0] != " ") {
+        //   log.message = " " + log.message;
+        // }
         if (log.message === "[redacted]") log.redacted = true;
 
         if (!debugView.value && log.message) {
-          log.message = log.message.replace(FULLNAME_REGEX, "");
+          // log.message = log.message.replace(FULLNAME_REGEX, "");
           if (log.type === "ACTION") {
             const adminChatMatch = log.message.match(ADMINCHAT_REGEX);
             if (adminChatMatch) {

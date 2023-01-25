@@ -1,8 +1,8 @@
 <template>
   <component
     :is="user.hasStats ? 'a' : 'span'"
-    @click.ctrl="openStatsProfile(user.steamid)"
-    @click="setUserFilter(user.steamid)"
+    @click.ctrl="openStatsProfile"
+    @click="setUserFilter"
     :data-tooltip="tooltip"
   >
     {{ user.name }}
@@ -32,10 +32,10 @@ const tooltip = computed(() => {
   return output;
 });
 
-function openStatsProfile(id: string) {
-  window.open(`https://stats.jackz.me/user/${id}/overview`);
+function openStatsProfile() {
+  window.open(`https://stats.jackz.me/user/${props.user.id}/overview`);
 }
-function setUserFilter(steamid: string) {
-  emit("set-filter", { type: props.type.value, steamid });
+function setUserFilter() {
+  emit("set-filter", props.type, props.user.steamid);
 }
 </script>
