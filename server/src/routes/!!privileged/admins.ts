@@ -229,7 +229,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                         groupIds: req.body.groupIds ? req.body.groupIds.split(',') : []
                     }, req.body.webPermissions)
 
-                    await fastify.authmngr.log.addWebEntry(req.session.user.steamid, 'ADMIN_ADD', `Added new admin with id #${id}. Immunity: ${immunity}, flags: ${req.body.flags}, groups: ${req.body.groupIds ?? '<none>'}`)
+                    await fastify.authmngr.log.addWebEntry(req.session.user.steamid, 'ADMIN_ADD', `Added new admin with id #${id} (${req.params.steamid}). Immunity: ${immunity}, flags: "${req.body.flags}", groups: ${req.body.groupIds ?? '<none>'}`)
 
 
                     return {

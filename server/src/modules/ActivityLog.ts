@@ -38,7 +38,7 @@ export default class ActivityLog {
             `INSERT INTO activity_log (server, type, client, target, message, timestamp) VALUES ('web', 'WEB', :client, NULL, :message, UNIX_TIMESTAMP())`,
             {
                 client: steamid, 
-                message: message ? `${type.toUpperCase()}: ${message}` : type.toUpperCase()
+                message: message ? ` ${type.toUpperCase()}: ${message}` : type.toUpperCase()
             }
         )
 
