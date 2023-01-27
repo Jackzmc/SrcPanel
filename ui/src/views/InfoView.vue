@@ -1,7 +1,7 @@
 <template>
   <div class="container is-fullwidth is-fluid">
     <div class="columns">
-      <div class="column">
+      <div class="column" v-if="notes">
         <h4 class="title is-4 has-text-centered">Notes</h4>
         <p class="subtitle is-=6">
           The ID column shows the id of the note, with the rating of the note's message.
@@ -58,6 +58,12 @@
           </tbody>
         </table>
       </div>
+      <div class="column" v-else-if="fetchError">
+        <p class="my-5 is-size-2 has-text-centered has-text-danger">{{ fetchError }}</p>
+      </div>
+      <div class="column" v-else>
+        <p class="my-5 is-size-2 has-text-centered">Fetching notes...</p>
+      </div>
       <div class="column is-3">
         <div class="message is-warning">
           <div class="message-body">
@@ -89,7 +95,8 @@ const props = defineProps<{
   userdata: Session
 }>()
 
-let notes = ref<any[]>([])
+let fetchError = ref<string|undefined>(undefined)
+let notes = ref<any[] | undefined>(undefined)
 let admins = ref<any[]>([])
 let search = ref<{ user: string, content: string }>({ user: "", content: "" })
 
@@ -128,11 +135,13 @@ const filteredNotes = computed(() => {
   return filtered.sort((a,b) => b.id - a.id)
 })
 
-function fetchNotes() {
-  fetch('/api/notes')
-    .then(response => response.json())
-    .then(result => {
-      notes.value = result.notes.map((note: any) => {
+async function fetchNotes() {
+  notes.value = undefined
+  try {
+    const response = await fetch('/api/notes')
+    const json = await response.json()
+    if(response.ok) {
+      notes.value = json.notes.map((note: any) => {
         note.content = note.content.trim()
         note.class = ["tag"]
         if(note.content.startsWith("@")) {
@@ -151,7 +160,12 @@ function fetchNotes() {
         }
         return note
       })
-    })
+    } else {
+      fetchError.value = json.message
+    }
+  } catch(err) {
+    fetchError.value = err.message
+  }
 }
 
 function computeRating(content: string) {
