@@ -28,6 +28,7 @@ const HIDDEN_CONFIG_FILES = [
 ]
 
 const VALID_CONFIG_EXTS = ["cfg", "toml"]
+const MIN_REFRESH_TIME = 2000
 
 export interface BaseServerData {
   id ? : string;
@@ -89,12 +90,15 @@ export interface ServerInfo {
   ip: string,
 }
 
+const sleep = time => new Promise(res => setTimeout(res, time));
+
 export default class Server { 
     private _info: ServerInfo
     private _status: ServerStatus
     private _cfgDir: string;
     private _actid: string
     private _sortOrder: number
+    private lastRefresh: number
     private rcon?: {
       password: string,
       exitCommand: string
@@ -231,14 +235,25 @@ export default class Server {
       return await this.sendCommand(force ? this.rcon.exitCommand : this.rcon.requestExitCommand)
     }
 
+    public async stopWait(force: boolean, timeoutSeconds = 10_000) {
+      if(!this.hasRcon) throw new Error("No rcon config is setup")
+      await this.sendCommand(force ? this.rcon.exitCommand : this.rcon.requestExitCommand)
+      while(this.rcon.connected && timeoutSeconds > 0) {
+        timeoutSeconds -= 1000
+        await sleep(1000)
+      }
+      return timeoutSeconds > 0
+    }
+
     public async sendCommand(cmd: string) {
       await this.rconConnect()
       return await this.rcon.client.send(cmd)
     }
 
-
-
     public async refresh() {
+        const now = Date.now()
+        if(now - this.lastRefresh > MIN_REFRESH_TIME) return
+        this.lastRefresh = now
         try {
             const state = await Gamedig.query({
               type: this._info.type as Gamedig.Type,
