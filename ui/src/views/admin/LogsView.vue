@@ -294,6 +294,7 @@ import { ref, watch, computed, onBeforeMount, onMounted, Ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useNotification } from "@kyvg/vue3-notification";
 import LogMessage from "@/components/LogMessage.vue";
+import { parseLog } from '../../js/util';
 
 const emit = defineEmits([]);
 const route = useRoute();
@@ -541,49 +542,7 @@ async function getData() {
       loading.value = 0;
       count.value = json.totalCount;
       json.logs.forEach((log: any) => {
-        log.messageRaw = log.message.slice(0)
-        log.timestamp = formatDate(log.timestamp);
-        log.client = {
-          steamid: log.client,
-          name: log.clientName || log.client,
-          hasStats: !!log.clientName,
-        };
-        log.target = {
-          steamid: log.target,
-          name: log.targetName || log.target,
-          hasStats: !!log.targetName,
-        };
-        if (
-          log.type == "ACTION" &&
-          log.client.steamid &&
-          log.client.steamid.startsWith("STEAM_") &&
-          !history.value.activators.some((c) => c.steamid == log.client.steamid)
-        )
-          history.value.activators.push(log.client);
-        if (
-          log.target.steamid &&
-          log.target.steamid.startsWith("STEAM_") &&
-          !history.value.targets.some((c) => c.steamid == log.target.steamid)
-        )
-          history.value.targets.push(log.target);
-
-        // if (log.client.steamid && log.message && log.message[0] != " ") {
-        //   log.message = " " + log.message;
-        // }
-        if (log.message === "[redacted]") log.redacted = true;
-
-        if (!debugView.value && log.message) {
-          // log.message = log.message.replace(FULLNAME_REGEX, "");
-          if (log.type === "ACTION") {
-            const adminChatMatch = log.message.match(ADMINCHAT_REGEX);
-            if (adminChatMatch) {
-              log.message = `<span class='tag is-warning' data-tooltip='Message was sent in admin chat'>${adminChatMatch[1]}</span>`;
-              log.type = "CHAT";
-            }
-          } else if (log.type === "CHAT") {
-            log.message = `<span class='tag'>${log.message}</span>`;
-          }
-        }
+        log = parseLog(log, history.value, debugView.value)
       });
       data.value = json.logs;
       window.localStorage.setItem(
@@ -604,10 +563,7 @@ async function getData() {
     return false;
   }
 }
-function formatDate(timestamp: number) {
-  const d = new Date(timestamp * 1000);
-  return d.toLocaleDateString() + " " + d.toLocaleTimeString();
-}
+
 function getStatProfile(id: string) {
   return `https://stats.jackz.me/user/${id}/overview`;
 }
@@ -671,6 +627,7 @@ watch(query, (value) => {
   if (props.userdata && fetchDebounce.value) fetchDebounce.value();
   window.history.pushState("", "", `?page=${page.value}${value}`);
 });
+
 </script>
 
 <style>

@@ -52,21 +52,13 @@ const messagePieces = computed(() => {
   for (let i = 0; i < 2; i++) {
     const match = props.log.message.slice(index).match(FULLNAME_REGEX);
     if (match) {
-      if(props.log.id === 1291722) console.log(
-        props.log.id,
-        "got match",
-        match[0],
-        `${match.index}-${match[0].length}`
-      );
       let prevSlice = props.log.message.slice(index, index + match.index)
       if(prevSlice[0] !== " ") prevSlice = " " + prevSlice
-      if(props.log.id === 1291722) console.log(props.log.id, "oldStr:", prevSlice, `${index} - ${match.index}`);
       pieces.push({
         content: prevSlice
       });
 
       const [, name, steamid] = match
-      if(props.log.id === 1291722) console.log({ name, steamid, client: Object.assign({}, props.log.client) })
 
       let type, user
       if(steamid === "BOT" && name === props.log.client.steamid || props.log.client.steamid && props.log.client.steamid === steamid) {
@@ -89,7 +81,7 @@ const messagePieces = computed(() => {
       break;
     }
   }
-  pieces.push({ content: props.log.messageRaw.slice(index)});
+  pieces.push({ content: props.log.message.slice(index)});
   return pieces;
 });
 
