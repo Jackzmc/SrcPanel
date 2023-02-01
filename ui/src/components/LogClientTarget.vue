@@ -33,7 +33,7 @@ const tooltip = computed(() => {
 });
 
 function openStatsProfile() {
-  window.open(`https://stats.jackz.me/user/${props.user.id}/overview`);
+  window.open(`https://stats.jackz.me/user/${props.user.steamid}/overview`);
 }
 function setUserFilter() {
   emit("set-filter", props.type, props.user.steamid);
