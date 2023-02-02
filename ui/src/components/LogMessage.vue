@@ -1,32 +1,32 @@
 <template>
   <td>
-    <template v-if="props.log.type === 'CHAT'">
-      <b v-if="props.log.type === 'CHAT'" ><LogClientTarget :user="props.log.client" type="client" @set-filter="setFilter" />: </b>
-      <span v-html="props.log.message" />
-    </template>
-    <template v-else>
-      <b v-if="LPieceCount == 0 && props.log.client.steamid"><LogClientTarget :user="props.log.client" type="client" @set-filter="setFilter" /></b>
-      <b v-else-if="LPieceCount == 0 && !props.log.client.steamid && props.log.target.steamid"><LogClientTarget type="target" :user="props.log.target" @set-filter="setFilter" /></b>
-      <template v-for="m in messagePieces" :key="m">
-        <b v-if="m.LMatch">
-          <LogClientTarget v-if="m.user" :user="m.user" :type="m.type" @set-filter="setFilter" />
-        </b>
-        <span v-else>{{ m.content }}</span>
-        <!-- <component :is="m.LMatch ? 'b' : 'span'">{{ m.content }}</component> -->
+      <template v-if="props.log.type === 'CHAT'">
+        <b v-if="props.log.type === 'CHAT'" ><LogClientTarget :user="props.log.client" type="client" @set-filter="setFilter" />: </b>
+        <span v-html="props.log.message" />
       </template>
-    </template>
-    <a
-      v-if="
-        !props.log.redacted &&
-        props.hoverId == props.log.id &&
-        props.log.type === 'CHAT' &&
-        props.log.client.steamid === userdata.user.steamid
-      "
-      data-tooltip="Redact your own message"
-      class="has-text-danger"
-      @click="redactID(log.id)"
-      >(redact)</a
-    >
+      <template v-else>
+        <b v-if="LPieceCount == 0 && props.log.client.steamid"><LogClientTarget :user="props.log.client" type="client" @set-filter="setFilter" /></b>
+        <b v-else-if="LPieceCount == 0 && !props.log.client.steamid && props.log.target.steamid"><LogClientTarget type="target" :user="props.log.target" @set-filter="setFilter" /></b>
+        <template v-for="m in messagePieces" :key="m">
+          <b v-if="m.LMatch">
+            <LogClientTarget v-if="m.user" :user="m.user" :type="m.type" @set-filter="setFilter" />
+          </b>
+          <span v-else>{{ m.content }}</span>
+          <!-- <component :is="m.LMatch ? 'b' : 'span'">{{ m.content }}</component> -->
+        </template>
+      </template>
+      <a
+        v-if="
+          !props.log.redacted &&
+          props.hoverId == props.log.id &&
+          props.log.type === 'CHAT' &&
+          props.log.client.steamid === userdata.user.steamid
+        "
+        data-tooltip="Redact your own message"
+        class="has-text-danger"
+        @click="redactID(log.id)"
+        >(redact)</a
+      >
   </td>
 </template>
 
@@ -47,26 +47,20 @@ function redactID(id: number) {
 
 const FULLNAME_REGEX = /"([^"<>]+)<\d+><(STEAM_\d:\d:\d+|Console|BOT)><(Console)?>"/;
 const messagePieces = computed(() => {
+  if(!props.log.message) return []
+
   const pieces = [];
   let index = 0;
   for (let i = 0; i < 2; i++) {
     const match = props.log.message.slice(index).match(FULLNAME_REGEX);
     if (match) {
-      if(props.log.id === 1291722) console.log(
-        props.log.id,
-        "got match",
-        match[0],
-        `${match.index}-${match[0].length}`
-      );
       let prevSlice = props.log.message.slice(index, index + match.index)
       if(prevSlice[0] !== " ") prevSlice = " " + prevSlice
-      if(props.log.id === 1291722) console.log(props.log.id, "oldStr:", prevSlice, `${index} - ${match.index}`);
       pieces.push({
         content: prevSlice
       });
 
       const [, name, steamid] = match
-      if(props.log.id === 1291722) console.log({ name, steamid, client: Object.assign({}, props.log.client) })
 
       let type, user
       if(steamid === "BOT" && name === props.log.client.steamid || props.log.client.steamid && props.log.client.steamid === steamid) {
@@ -89,7 +83,7 @@ const messagePieces = computed(() => {
       break;
     }
   }
-  pieces.push({ content: props.log.messageRaw.slice(index)});
+  pieces.push({ content: props.log.message.slice(index)});
   return pieces;
 });
 

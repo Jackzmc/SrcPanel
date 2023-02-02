@@ -43,7 +43,7 @@ export function formatParameters({parameters, defaultValue, args}: any) {
       const isRequired = char === '>'
       if(mode == ParseNode.DefaultValue) defaultValue += '"'
       let tooltip = "";
-      
+
       if(type.length > 0)
         tooltip = `Accepts a(n) ${isRequired?'':'optional '}${parseType(type)}.`
       if(defaultValue !== undefined && defaultValue !== null) {
@@ -85,4 +85,56 @@ export function formatParameters({parameters, defaultValue, args}: any) {
       string += char
   }
   return string
+}
+
+export function formatDate(timestamp: number) {
+  const d = new Date(timestamp * 1000);
+  return d.toLocaleDateString() + " " + d.toLocaleTimeString();
+}
+const ADMINCHAT_REGEX = /triggered sm_say \(text (.*)\)/;
+export function parseLog(log: any, history: {activators: any[], targets: any[] } = { activators: [], targets: [] }, debug = false) {
+  log.timestampRaw = log.timestamp
+  log.timestamp = formatDate(log.timestamp);
+  log.client = {
+    steamid: log.client,
+    name: log.clientName || log.client,
+    hasStats: !!log.clientName,
+  };
+  log.target = {
+    steamid: log.target,
+    name: log.targetName || log.target,
+    hasStats: !!log.targetName,
+  };
+  if (
+    log.type == "ACTION" &&
+    log.client.steamid &&
+    log.client.steamid.startsWith("STEAM_") &&
+    !history.activators.some((c) => c.steamid == log.client.steamid)
+  )
+    history.activators.push(log.client);
+  if (
+    log.target.steamid &&
+    log.target.steamid.startsWith("STEAM_") &&
+    !history.targets.some((c) => c.steamid == log.target.steamid)
+  )
+    history.targets.push(log.target);
+
+  // if (log.client.steamid && log.message && log.message[0] != " ") {
+  //   log.message = " " + log.message;
+  // }
+  if (log.message === "[redacted]") log.redacted = true;
+
+  if (!debug && log.message) {
+    // log.message = log.message.replace(FULLNAME_REGEX, "");
+    if (log.type === "ACTION") {
+      const adminChatMatch = log.message.match(ADMINCHAT_REGEX);
+      if (adminChatMatch) {
+        log.message = `<span class='tag is-warning' data-tooltip='Message was sent in admin chat'>${adminChatMatch[1]}</span>`;
+        log.type = "CHAT";
+      }
+    } else if (log.type === "CHAT") {
+      log.message = `<span class='tag'>${log.message}</span>`;
+    }
+  }
+  return log
 }

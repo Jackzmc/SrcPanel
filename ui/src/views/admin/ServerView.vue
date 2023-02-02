@@ -94,8 +94,8 @@
           <tbody>
             <tr v-for="activity in activities" :key="activity.id">
               <td>{{activity.type}}</td>
-              <td>{{activity.message}}</td>
-              <td>{{ new Date(activity.timestamp * 1000).toLocaleDateString()}}</td>
+              <LogMessage :log="activity" :userdata="userdata" />
+              <td>{{ new Date(activity.timestampRaw * 1000).toLocaleTimeString()}}</td>
             </tr>
           </tbody>
         </table>
@@ -119,6 +119,8 @@ import { onBeforeMount, ref } from 'vue'
 import FolderBrower from'@/components/FolderBrowser.vue'
 import { Session, WebPermission } from '../../../../common-types/User';
 import { PrivilegedUser } from '@/js/User';
+import { parseLog } from '../../js/util';
+import LogMessage from "@/components/LogMessage.vue";
 
 const REFRESH_INTERVAL = 1000 * 60
 
@@ -140,9 +142,6 @@ const TABS: Record<string, { name: string, flag?: WebPermission, enabled?: Funct
     enabled: () => {
       return server.value && server.value.configs
     }
-  },
-  activity: {
-    name: "Activity Log"
   }
 }
 
@@ -205,7 +204,7 @@ async function fetchServerStatus() {
   if(response.ok) {
     const json = await response.json()
     status.value = json.status
-    activities.value = json.recentActivities
+    activities.value = json.recentActivities.map((act: any) => parseLog(act))
   }
 }
 async function fetchServersCompact() {
@@ -218,7 +217,6 @@ async function fetchServersCompact() {
 
 function formatMap(mapId: string) {
   const match = mapId.match(/c(\d{1,2})m(\d)_(.*)/)
-  console.log(match)
   if(match && match.length == 4) {
     return `<b>${OfficialCampaignNames[Number(match[1]) - 1]}:</b> Chapter ${match[2]} ${match[3]}`
   }

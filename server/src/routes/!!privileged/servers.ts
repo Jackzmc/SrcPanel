@@ -123,9 +123,10 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
         let recentActivities = null
         if(server.activityLogId) {
-            const [rows] = await fastify.db.execute<RowDataPacket[]>("SELECT * FROM activity_log WHERE server = ? ORDER BY id DESC LIMIT 5 ", [server.activityLogId])
+            const [rows] = await fastify.db.execute<RowDataPacket[]>("SELECT *, s1.last_alias as clientName, s2.last_alias as targetName FROM activity_log LEFT JOIN stats_users as s1 ON s1.steamid = client LEFT JOIN stats_users as s2 ON s2.steamid = target WHERE server = ? ORDER BY id DESC LIMIT 5 ", [server.activityLogId])
             recentActivities = rows
         }
+        await server.refresh()
         return {
             recentActivities, 
             status: server.status
@@ -228,7 +229,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
     })
 
-    fastify.post('/:id/restart', async(req: FastifyRequest<{Querystring: { force?: boolean }, Params: { id: 'string'} }>, reply) => {
+    fastify.post('/:id/restart', async(req: FastifyRequest<{Querystring: { force?: boolean, sse?: boolean }, Params: { id: 'string'} }>, reply) => {
         const server = fastify.servers.get(req.params.id)
         if(!server) {
             return reply.code(404).send({
@@ -252,6 +253,69 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 code: 500
             })
         }
+    })
+    fastify.post('/:id/restart/sse', async(req: FastifyRequest<{Querystring: { force?: boolean }, Params: { id: 'string'} }>, reply) => {
+        reply.raw.writeHead(200, {
+            'Cache-Control': 'no-cache,no-transform',
+            'Content-Type': 'text/event-stream',
+            'Connection': 'keep-alive',
+            'X-Accel-Buffering': 'no'
+        });
+        function send(msg: any) {
+            reply.raw.write(`data: ${JSON.stringify(msg)}\n\n`)
+        }
+        reply.raw.flushHeaders()
+        reply.raw.write('retry: 10000\n\n')
+        const server = fastify.servers.get(req.params.id)
+        if(!server) {
+            send({
+                error: "Server Not Found", 
+                code: "SERVER_NOT_FOUND",
+            })
+        }
+        if(!server.hasRcon) {
+            send({
+                error: "NO_RCON",
+                message: "Server does not have rcon setup"
+            })
+        }
+        try {
+            send({ response: await server.stop(req.query.force) })
+            let timeout = 30_000
+            let waitingState = 1
+            while(timeout > 0 && waitingState != 0) {
+                await server.refresh()
+                if(waitingState == 1 && !server.status.online) {
+                    // Wait for server to go offline
+                    send({ state: server.status.online, waitingState })
+                    waitingState = 2
+                } else if(waitingState == 2 && server.status.online) {
+                    // Now server went offline, wait for it to go online
+                    send({ state: server.status.online, waitingState })
+                    waitingState = 0
+                }
+                timeout -= 1000
+                await sleep(1000)
+            }
+            if(timeout > 0)
+                send({ success: true })
+            else
+                send({ 
+                    code: "RESTART_CHECK_TIMEOUT",
+                    error: "Restart Check Time out",
+                    message: "Timed out while waiting for server to restart"
+                })
+        } catch(err) {
+            console.log('error', err)
+            reply.code(500).send({
+                error: "SERVER_ERROR",
+                message: "Server returned an error: " + err.message,
+                code: 500
+            })
+        }
+        reply.hijack()
+        // Timeout if they haven't killed it
+        setTimeout(() => reply.raw.end(), 60_000)
     })
 
     fastify.post('/:id/unreserve', async(req: FastifyRequest<{Params: { id: 'string'} }>, reply) => {
@@ -285,3 +349,5 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         reply.code(501).send()
     })
 }
+
+const sleep = time => new Promise(res => setTimeout(res, time));
