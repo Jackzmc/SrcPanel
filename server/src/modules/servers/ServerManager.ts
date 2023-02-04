@@ -23,7 +23,7 @@ export default class ServerManager {
     this.load()
       .then(() => {
         this.refresh()
-        // setInterval(() => this.refresh(), this.refreshInterval)
+        setInterval(() => this.refresh(), this.refreshInterval)
       })
   }
 
