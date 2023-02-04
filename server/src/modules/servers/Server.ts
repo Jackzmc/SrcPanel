@@ -28,7 +28,7 @@ const HIDDEN_CONFIG_FILES = [
 ]
 
 const VALID_CONFIG_EXTS = ["cfg", "toml"]
-const MIN_REFRESH_TIME = 2000
+const MIN_REFRESH_TIME = 5000
 
 export interface BaseServerData {
   id ? : string;
