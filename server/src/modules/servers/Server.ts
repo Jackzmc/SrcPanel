@@ -252,7 +252,7 @@ export default class Server {
 
     public async refresh() {
         const now = Date.now()
-        if(now - this.lastRefresh > MIN_REFRESH_TIME) return
+        if(now - this.lastRefresh < MIN_REFRESH_TIME) return
         this.lastRefresh = now
         try {
             const state = await Gamedig.query({
