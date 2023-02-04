@@ -52,8 +52,12 @@ The algorithm for detecting if the button should be pressable or not is as follo
     `activator flow - average <= threshold`
 4. If the % of survivors that are far is less than or equal to a percent threshold (30%), allow
    `players / totalPlayers <= percentThreshold`
+
+Sadly, althrough this works great at preventing rushers, it also has its own issues that are hard to fix:
+* Sometimes the buttons are far from the team, but should still be pressable (swamp fever finale, or death toll 4th chapter van button)
+* Sometimes, depending if a map doesn't play the mob sound affect, the ending button is blocked from being pressed, which is not ideal
   
-## Extra Player Tools
+## Extra Player Items
 
 This plugin provides extra items for a game of 5+ players or more. This includes providing extra health kits in saferooms and extra items outside of the room.
 
@@ -63,7 +67,7 @@ This feature has gone through multiple iterations to figure out the best and mos
 
 * Real survivor player count is all in game survivors (including idle) that are not bots
 
-1. A player enters a saferoom, this computes the total real player survivor count. At a minimum the amount of extra kits provided will be this value, but bonus kits can be given depending on the team's average health.
+1. A player enters a saferoom, this computes the total real player survivor count. At a minimum the amount of extra kits provided will be this value, but bonus kits can be given depending on the team's average health, to compensate for the increased 5+ difficulty players might not be used to.
    1. If the average team health is less than or equal to 30, 100% more kits are given
    2. If the average team health is less than or equal to 50, 50% more kits are given.
 2. When a first aid kit is picked up and the player is in the saferoom, the event is cancelled and a new kit is given to them instead
@@ -86,6 +90,12 @@ Then each item in the cabinet is constantly looped and its item count increased 
 This took a bit to figure out how to accurately check the saferoom door, as you can find all saferoom doors but you cannot easily find out if it is the beginning or ending saferoom.
 
 The plugin checks all `prop_door_rotating_checkpoint` and find the first door with the `m_bLocked` property set to 1 (the door is locked). It then will keep that door locked until either a timer expires or when a percentage of players has loaded in.
+
+### First Spawning
+
+On first spawn, another feature is to give the incoming player's a random weapon. The system scans every player's weapon and filters them into a list of tier 2 weapons or tier 1 weapons, ignoring any tier 3 weapons. Then, if there is any tier 2 weapons, a random item is given to the incoming player, if not, then the tier 1 list is used.
+
+Now giving the items has been difficult and I've gone back and forth between using the `give wpnName` command and `GivePlayerWeapon(client, "wpnName")` method, but I think the issues are fixed that I found that there is a conflict from ABM's auto giving of items I forgot about. 
 
 ### Extra Tanks
 
