@@ -84,8 +84,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
         return reply.send({
             client: {
-                id: notes[0].steamid,
-                name: notes[0].user,
+                id: req.params.steamid,
+                name: notes.length > 0 ? notes[0].user : null,
             },
             rating: {
                 key,
