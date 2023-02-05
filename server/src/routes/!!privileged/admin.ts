@@ -6,7 +6,7 @@ import { rm, unlink } from 'fs/promises';
 import path from 'path'
 const execPromise = util.promisify(exec);
 
-export type UpdateState = "NORMAL" | "GIT_PULL" | "UNLINK_NODE_MODULES" | "PACKAGES_INSTALL" | "TSC" | "RESTARTING"
+export type UpdateState = "NORMAL" | "GIT_PULL" | "UNLINK_NODE_MODULES" | "PACKAGES_INSTALL" | "TSC" | "RESTARTING" | "CLEANUP_OLD_BUILD"
 let updateState: UpdateState = "NORMAL"
 
 export interface HealthReport {
@@ -72,7 +72,9 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                         cwd: process.cwd()
                     }))
 
-                    const timeTsc = await doState("TSC", execPromise('rm -rf dist; tsc', {
+                    doState("CLEANUP_OLD_BUILD", rm(path.join(process.cwd(), 'dist'), { recursive: true, force: true}))
+
+                    const timeTsc = await doState("TSC", execPromise('tsc', {
                         cwd: process.cwd()
                     }))
 
