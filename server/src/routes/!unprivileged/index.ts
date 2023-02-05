@@ -94,29 +94,30 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         })
     })
 
-    fastify.get('/servers', async(req: FastifyRequest<{Querystring: {'compact'?: boolean}}>, reply): Promise<CompactDisplayedServer[] | DisplayedServer[]> =>  {
+    fastify.get('/servers', async(req: FastifyRequest<{Querystring: {'compact'?: boolean}}>, reply) =>  {
         const servers = fastify.servers.getAll()
-        fastify.servers.refresh()
         if(req.query.compact) {
-            return servers.map(server => {
+            reply.send(servers.map(server => {
                 return { 
                     id: server.id,
                     name: server.name,
                 }
-            })
+            }))
+        } else {
+            reply.send(servers.map(server => {
+                return {
+                    name: server.name,
+                    ip: server.ip,
+                    port: server.port,
+                    type: server.type,
+                    tags: server.tags,
+                    domain: server.domain,
+                    id: server.id,
+                    status: server.status
+                }
+            }))
         }
-        return servers.map(server => {
-            return {
-                name: server.name,
-                ip: server.ip,
-                port: server.port,
-                type: server.type,
-                tags: server.tags,
-                domain: server.domain,
-                id: server.id,
-                status: server.status
-            }
-        })
+        await fastify.servers.refresh()
     })
 
     fastify.get('/graph', async(req: FastifyRequest<{Querystring: LimitedLogQueryType}>, reply) => {
