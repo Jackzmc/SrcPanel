@@ -1,5 +1,8 @@
 {
-    "refreshIntervalSeconds": 60,
+    // Controls the refresh interval of the server. When no clients are detected, longRefresh is used.
+    // When there is active clients, the shortRefresh timer is activated
+    "longRefreshIntervalSeconds": 600,
+    "shortRefreshIntervalSeconds": 30,
     "servers": [
         {
             // Optional id for the server, used in api calls and in the url /servers/:id

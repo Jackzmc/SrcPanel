@@ -117,7 +117,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 }
             }))
         }
-        await fastify.servers.refresh()
+        fastify.servers.resetInactivity()
     })
 
     fastify.get('/graph', async(req: FastifyRequest<{Querystring: LimitedLogQueryType}>, reply) => {
