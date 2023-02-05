@@ -94,7 +94,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         })
     })
 
-    fastify.get('/servers', async(req: FastifyRequest<{Querystring: {'compact'?: boolean}}>, reply) =>  {
+    fastify.get('/servers', (req: FastifyRequest<{Querystring: {'compact'?: boolean}}>, reply) =>  {
         const servers = fastify.servers.getAll()
         if(req.query.compact) {
             reply.send(servers.map(server => {

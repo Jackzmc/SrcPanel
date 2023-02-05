@@ -65,14 +65,14 @@ export default class ServerManager {
     this.refreshTimeout = setTimeout(() => {
       // Switch the timer from short -> long
       clearInterval(this.refreshTimer)
-      this.refreshTimer = setInterval(this.refresh, this.longRefreshInterval)
+      this.refreshTimer = setInterval(() => this.refresh(), this.longRefreshInterval)
       this.refreshTimeout = null
     }, SHORT_REFRESH_TIMEOUT)
 
     // Switch the timer from long -> short
     if(!inShortRefresh) {
       clearInterval(this.refreshTimer)
-      this.refreshTimer = setInterval(this.refresh, this.shortRefreshInterval)
+      this.refreshTimer = setInterval(() => this.refresh(), this.shortRefreshInterval)
       // Trigger a refresh now, to reduce stale data
       this.refresh()
     }
