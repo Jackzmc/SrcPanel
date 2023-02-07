@@ -5,7 +5,7 @@ import SteamID from 'steamid'
 import { WebPermission } from '../../../../common-types/User.js';
 import { join } from 'path';
 import { readFile } from 'fs/promises';
-
+    
 const COMMENT_LINE_REGEX = new RegExp(/^\s*(\/\/|#)/)
 const HIDDEN_COMMANDS = [
     "rcon_password"
@@ -26,6 +26,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 message: "Server not found"
             })
         }
+
+        await server.refresh()
 
         const configs = fastify.authmngr.hasPermission(req, WebPermission.ConfigRead) ? await server.getConfigFiles() : undefined
 

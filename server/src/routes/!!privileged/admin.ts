@@ -4,9 +4,9 @@ import { exec, PromiseWithChild } from 'child_process';
 import { WebPermission } from '../../../../common-types/User.js';
 import { rm, unlink } from 'fs/promises';
 import path from 'path'
-const execPromise = util.promisify(exec);
+// const execPromise = util.promisify(exec);
 
-export type UpdateState = "NORMAL" | "GIT_PULL" | "UNLINK_NODE_MODULES" | "PACKAGES_INSTALL" | "TSC" | "RESTARTING"
+export type UpdateState = "NORMAL" | "GIT_PULL" | "UNLINK_NODE_MODULES" | "PACKAGES_INSTALL" | "TSC" | "RESTARTING" | "CLEANUP_OLD_BUILD"
 let updateState: UpdateState = "NORMAL"
 
 export interface HealthReport {
@@ -44,7 +44,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 async function doState(state: UpdateState, promise: Promise<any>) {
                     const startTime = Date.now()
                     updateState = state
-                    req.log.info(`Updater: starting stage ${state}`)
+                    fastify.log.info(`Updater: starting stage ${state}`)
                     response = await promise
                     return Date.now() - startTime
                 }
@@ -68,13 +68,11 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                         )
                     }
 
-                    const timePackagesInstall = await doState("PACKAGES_INSTALL", execPromise("yarn --frozen-lockfile", {
-                        cwd: process.cwd()
-                    }))
+                    const timePackagesInstall = await doState("PACKAGES_INSTALL", execPromise("yarn --frozen-lockfile"))
 
-                    const timeTsc = await doState("TSC", execPromise('rm -rf dist; tsc', {
-                        cwd: process.cwd()
-                    }))
+                    doState("CLEANUP_OLD_BUILD", rm(path.join(process.cwd(), 'dist'), { recursive: true, force: true}))
+
+                    const timeTsc = await doState("TSC", execPromise('tsc'))
 
                     updateState = "RESTARTING"
 
@@ -116,4 +114,23 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             })
         }
     })
+}
+
+/**
+ * Executes a shell command and return it as a Promise.
+ * @param cmd {string}
+ * @return {Promise<string>}
+ */
+function execPromise(cmd: string): Promise<{ stdout: string, stderr: string }> {
+    return new Promise((resolve, reject) => {
+        exec(cmd, { cwd: process.cwd() }, (error, stdout, stderr) => {
+        if (error) {
+            console.warn(error);
+        }
+            resolve({
+                stdout,
+                stderr
+            });
+        });
+    });
 }

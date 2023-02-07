@@ -28,7 +28,7 @@ const HIDDEN_CONFIG_FILES = [
 ]
 
 const VALID_CONFIG_EXTS = ["cfg", "toml"]
-const MIN_REFRESH_TIME = 2000
+const MIN_REFRESH_TIME = 5000
 
 export interface BaseServerData {
   id ? : string;
@@ -252,7 +252,7 @@ export default class Server {
 
     public async refresh() {
         const now = Date.now()
-        if(now - this.lastRefresh > MIN_REFRESH_TIME) return
+        if(now - this.lastRefresh < MIN_REFRESH_TIME) return
         this.lastRefresh = now
         try {
             const state = await Gamedig.query({

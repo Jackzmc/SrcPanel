@@ -9,13 +9,20 @@ import { open } from 'sqlite'
 import sqlite3 from 'sqlite3'
 import SteamAPI from '../steam.js'
 
+// How long after no status requests to switch from short to long refresh
+const SHORT_REFRESH_TIMEOUT = 1000 * 60
+
 export default class ServerManager {
   private servers: Record<string, Server> = {}
-  private refreshInterval: number
   private addonShares: Record<string, Share> = {}
 
   private dataDir: string;
   private steam: SteamAPI
+
+  private shortRefreshInterval: number
+  private longRefreshInterval: number
+  private refreshTimer: NodeJS.Timer
+  private refreshTimeout: NodeJS.Timer = null
 
   constructor(steam: SteamAPI, dataDir: string) {
     this.steam = steam
@@ -23,7 +30,7 @@ export default class ServerManager {
     this.load()
       .then(() => {
         this.refresh()
-        // setInterval(() => this.refresh(), this.refreshInterval)
+        this.refreshTimer = setInterval(() => this.refresh(), this.longRefreshInterval)
       })
   }
 
@@ -37,12 +44,38 @@ export default class ServerManager {
       })
   }
 
+  get HasViewers() {
+    return this.refreshTimeout != null
+  }
+
   public get(key: string) {
     return this.servers[key.toLowerCase()]
   }
 
   public async refresh() {
     await Promise.allSettled(Object.values(this.servers).map(server => server.refresh()))
+  }
+
+  public resetInactivity() {
+    const inShortRefresh = this.refreshTimeout != null
+    // Kill the inactivity timeout if there was a request
+    if(inShortRefresh) {
+      clearTimeout(this.refreshTimeout)
+    }
+    this.refreshTimeout = setTimeout(() => {
+      // Switch the timer from short -> long
+      clearInterval(this.refreshTimer)
+      this.refreshTimer = setInterval(() => this.refresh(), this.longRefreshInterval)
+      this.refreshTimeout = null
+    }, SHORT_REFRESH_TIMEOUT)
+
+    // Switch the timer from long -> short
+    if(!inShortRefresh) {
+      clearInterval(this.refreshTimer)
+      this.refreshTimer = setInterval(() => this.refresh(), this.shortRefreshInterval)
+      // Trigger a refresh now, to reduce stale data
+      this.refresh()
+    }
   }
 
   public hasShare(shareId: string) {
@@ -113,7 +146,8 @@ export default class ServerManager {
     const content = readFileSync('./config/config.json', 'utf-8')
     const config = Json5.parse(content)
 
-    this.refreshInterval = 1000 * (config['refreshIntervalSeconds'] ?? 60)
+    this.shortRefreshInterval = 1000 * (config['shortRefreshIntervalSeconds'] ?? 60)
+    this.longRefreshInterval = 1000 * (config['longRefreshIntervalSeconds'] ?? 60)
 
     const serverPromises = []
     let i = 0
