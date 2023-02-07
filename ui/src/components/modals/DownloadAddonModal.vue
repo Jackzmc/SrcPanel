@@ -118,7 +118,7 @@ let link = ref()
 let workshopId = ref<string>("")
 let workshopDetails = ref()
 let downloadingState = ref(0) // 0: not downloading, 1 : downloading normal, 2 : downloading forced, 3: restarting servers
-let installDestinations = ref([])
+let installDestinations = ref<string[]>([])
 let downloadLog = ref<{state: string, message: string, error?: boolean}[]>([])
 let showForceDownload = ref(false)
 let updateDone = ref(false)
@@ -248,5 +248,9 @@ function close() {
 
 onBeforeMount(() => {
   link.value = route.query.url
+  if(route.query.dests) {
+    const dests = route.query.dests.toString().split(",")
+    installDestinations.value = dests
+  }
 })
 </script>
