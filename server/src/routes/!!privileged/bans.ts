@@ -6,7 +6,7 @@ import SteamID from 'steamid'
 const STEAM_WEB_APIKEY = process.env.STEAM_WEB_APIKEY
 
 const PUTBanBody = Type.Object({
-    steamid: Type.Optional(Type.String()),
+    steamid: Type.String(),
     executor: Type.Optional(Type.String()),
     reason: Type.Optional(Type.String()),
     flags: Type.Optional(Type.Integer()),
@@ -112,6 +112,10 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             }
         },
         async handler(req: FastifyRequest<{ Body: POSTBanBodyType, Params: { steamid: string } }>, reply) {
+            if(!req.body.executor) {
+                req.body.executor = req.session.user.steamid
+            }
+
             const [existing] = await fastify.db.execute<RowDataPacket[]>(`
                 SELECT * FROM bans WHERE steamid = ?`,
                 [req.params.steamid]
