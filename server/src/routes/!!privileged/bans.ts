@@ -154,7 +154,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             fastify.authmngr.log.addWebEntry(req.session.user.steamid, 'BAN_ADD', `Add ban #${ok.insertId} for ${ban.steamid}`)
 
             return {
-                banId: ok.insertId
+                banId: ok.insertId,
+                success: true
             }
         }
     })

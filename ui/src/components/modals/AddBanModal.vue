@@ -89,7 +89,7 @@
               <div class="control">
                 <div class="select">
                   <select v-model="ban.expires">
-                    <option :value="null">Never</option>
+                    <option value="never">Never</option>
                     <option value="1hour">1 Hour</option>
                     <option value="1day">1 Day</option>
                     <option value="1day">1 Day</option>
@@ -99,7 +99,7 @@
                   </select>
                 </div>
               </div>
-              <p class="help" v-if="ban.expires">Will expire on {{formatTime(expiresTimestamp)}}</p>
+              <p class="help" v-if="ban.expires !== 'never'">Will expire on {{formatTime(expiresTimestamp)}}</p>
               <p class="help" v-else>Ban will not expire.</p>
             </div>
           </div>
@@ -158,7 +158,7 @@ let ban = ref({
   },
   publicReason: undefined,
   privateReason: undefined,
-  expires: null,
+  expires: "never",
   flags: []
 })
 let error = ref<string>()
@@ -173,7 +173,7 @@ let user = ref<PlayerData>()
 const privUser = new PrivilegedUser(props.userdata)
 
 const expiresTimestamp = computed(() => {
-  if(!ban.value.expires) return null
+  if(ban.value.expires === "never") return null
   const baseDate = new Date().valueOf()
   if(ban.value.expires === "1hour") {
     return (baseDate  + 3.6e+6) / 1000
@@ -211,7 +211,7 @@ async function fetchNotes() {
     return null
   }
 }
-async function formatTime(time?: number | null) {
+function formatTime(time?: number | null) {
   const date = time ? new Date(time*1000) : new Date()
   return `${date.toLocaleDateString()} at ${date.toLocaleTimeString()}`
 }
