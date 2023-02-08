@@ -158,7 +158,7 @@ let ban = ref({
   },
   publicReason: undefined,
   privateReason: undefined,
-  expires: undefined,
+  expires: null,
   flags: []
 })
 let error = ref<string>()
