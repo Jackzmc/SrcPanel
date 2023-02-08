@@ -173,7 +173,7 @@ let user = ref<PlayerData>()
 const privUser = new PrivilegedUser(props.userdata)
 
 const expiresTimestamp = computed(() => {
-  if(ban.value.expires === "never") return null
+  if(ban.value.expires === "never") return 0
   const baseDate = new Date().valueOf()
   if(ban.value.expires === "1hour") {
     return (baseDate  + 3.6e+6) / 1000
@@ -187,7 +187,7 @@ const expiresTimestamp = computed(() => {
     return (baseDate + 3.156e+10) / 1000
   } else {
     alert('Could not save unknown value: ' + ban.value.expires)
-    return null
+    return 0
   }
 })
 function setTab(index: number) {
