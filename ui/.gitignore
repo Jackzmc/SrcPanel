@@ -23,5 +23,5 @@ pnpm-debug.log*
 *.sw?
 
 
-build.bat
-build.sh
+*.bat
+*.sh
