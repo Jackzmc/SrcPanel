@@ -139,10 +139,10 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 VALUES (:steamid, :executor, :reason, :flags, :public_message, :expires, UNIX_TIMESTAMP())`,
                 {
                     executor: ban.executor,
-                    reason: ban.reason,
-                    flags: ban.flags,
-                    public_message: ban.public_message,
-                    expires: ban.expires,
+                    reason: ban.reason ?? null,
+                    flags: ban.flags ?? 0,
+                    public_message: ban.public_message ?? null,
+                    expires: ban.expires ?? 0,
                     steamid: ban.steamid
                 }
             )

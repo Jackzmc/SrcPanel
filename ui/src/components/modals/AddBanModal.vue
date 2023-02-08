@@ -217,34 +217,34 @@ async function formatTime(time?: number | null) {
 }
 async function save() {
   loading.value = true
-  fetch(`/api/bans/${user.value!.steamid}`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    credentials: 'include',
-    body: JSON.stringify({
-      steamid: ban.value.client.id,
-      reason: ban.value.privateReason,
-      executor: privUser.id,
-      public_message: ban.value.publicReason,
-      expires: expiresTimestamp.value!,
-      flags: ban.value.flags.reduce((pv, cv) => pv + Number(cv), 0)
+  try {
+    const response = await fetch(`/api/bans/${user.value!.steamid}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify({
+        steamid: ban.value.client.id,
+        reason: ban.value.privateReason,
+        executor: privUser.id,
+        public_message: ban.value.publicReason,
+        expires: expiresTimestamp.value!,
+        flags: ban.value.flags.reduce((pv, cv) => pv + Number(cv), 0)
+      })
     })
-  })
-  .then(async(response) => {
     if(response.ok) {
       const json = await response.json()
       router.push(`/bans/edit/${json.banId}`)
       cancel()
-    } else
+    } else {
       error.value = (await response.json()).error
+    }
     loading.value = false
-  })
-  .catch(err => {
+  } catch(err: any) {
     error.value = err.message
     loading.value = false
-  })
+  }
 }
 function cancel() {
   router.back()
