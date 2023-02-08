@@ -48,9 +48,13 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                     response = await promise
                     return Date.now() - startTime
                 }
+                async function doExec(state: UpdateState, command: string) {
+                    console.log("running:", command)
+                    return doState(state, execPromise(command))
+                }
 
                 try {
-                    const timeGitPull = await doState("GIT_PULL", execPromise('git pull'))
+                    const timeGitPull = await doExec("GIT_PULL", 'git pull')
                     let timeRmNodeModules = null
                     if(response.stdout.includes("Already up to date.")) {
                         updateState = "NORMAL"
@@ -68,23 +72,27 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                         )
                     }
 
-                    const timePackagesInstall = await doState("PACKAGES_INSTALL", execPromise("yarn --frozen-lockfile"))
+                    const timePackagesInstall = await doExec("PACKAGES_INSTALL", "yarn install --frozen-lockfile")
 
                     doState("CLEANUP_OLD_BUILD", rm(path.join(process.cwd(), 'dist'), { recursive: true, force: true}))
 
-                    const timeTsc = await doState("TSC", execPromise('tsc'))
+                    const timeTsc = await doExec("TSC", 'tsc')
 
                     updateState = "RESTARTING"
 
+                    const timeMeta = {
+                        timeGitPull,
+                        timeRmNodeModules,
+                        timePackagesInstall,
+                        timeTsc,
+                        timeTotal: timeGitPull + timeRmNodeModules + timeTsc
+                    }
+
+                    console.log(timeMeta)
+
                     await reply.send({
                         success: true,
-                        meta: {
-                            timeGitPull,
-                            timeRmNodeModules,
-                            timePackagesInstall,
-                            timeTsc,
-                            timeTotal: timeGitPull + timeRmNodeModules + timeTsc
-                        }
+                        meta: timeMeta
                     })
 
                     await fastify.close()
