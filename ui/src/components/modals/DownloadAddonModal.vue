@@ -11,7 +11,7 @@
       <div class="field">
         <label class="label">Enter a workshop link</label>
         <div class="control">
-          <input class="input" type="text" @input="verifyLink" />
+          <input class="input" type="text" v-model="link" @input="verifyLink" />
           <p class="help has-text-danger" v-if="!workshopId">
             Not a valid workshop link
           </p>
@@ -101,7 +101,7 @@
 <script setup lang="ts">
 // TODO: Resolve workshop id, show appid and title of item
 import Modal from '@/components/Modal.vue'
-import { computed,ref } from 'vue'
+import { computed, ref, onBeforeMount } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useNotification } from "@kyvg/vue3-notification";
 
@@ -114,10 +114,11 @@ const emit = defineEmits(['close'])
 const props = defineProps<{
   share: any
 }>()
+let link = ref()
 let workshopId = ref<string>("")
 let workshopDetails = ref()
 let downloadingState = ref(0) // 0: not downloading, 1 : downloading normal, 2 : downloading forced, 3: restarting servers
-let installDestinations = ref([])
+let installDestinations = ref<string[]>([])
 let downloadLog = ref<{state: string, message: string, error?: boolean}[]>([])
 let showForceDownload = ref(false)
 let updateDone = ref(false)
@@ -244,4 +245,12 @@ function startDownload(force = false) {
 function close() {
   emit('close')
 }
+
+onBeforeMount(() => {
+  link.value = route.query.url
+  if(route.query.dests) {
+    const dests = route.query.dests.toString().split(",")
+    installDestinations.value = dests
+  }
+})
 </script>

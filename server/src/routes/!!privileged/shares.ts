@@ -74,7 +74,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         if(!share) {
             return reply.status(404).send({
                 error: "Share Not Found", 
-                message: `No share with id \"${shareId.toLowerCase()}\" could be found. Share may be available, incorrecty configured or does not exist`   
+                message: `No share with id \"${shareId.toLowerCase()}\" could be found. Share may be unavailable, incorrecty configured or does not exist`   
             })
         }
         return {
@@ -111,7 +111,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         if(!share) {
             return reply.status(404).send({
                 error: "Share Not Found", 
-                message: `No share with id \"${shareId.toLowerCase()}\" could be found. Share may be available, incorrecty configured or does not exist`   
+                message: `No share with id \"${shareId.toLowerCase()}\" could be found. Share may be unavailable, incorrecty configured or does not exist`   
             })
         }
         return {
@@ -139,7 +139,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             const payload = {
                 error: "Share Not Found", 
                 code: "SHARE_NOT_FOUND",
-                message: `No share with id \"${req.params.shareId.toLowerCase()}\" could be found. Share may be available, incorrecty configured or does not exist`   
+                message: `No share with id \"${req.params.shareId.toLowerCase()}\" could be found. Share may be unavailable, incorrecty configured or does not exist`   
             }
             useSSE ? reply.raw.write(`data: ${JSON.stringify(payload)}\n\n`) : reply.status(404).send(payload)
         } else if(!req.query.force && await share.isInstalled(`${req.params.workshopId}.vpk`)) {
@@ -239,7 +239,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         if(!share) {
             return reply.status(404).send({
                 error: "Share Not Found", 
-                message: `No share with id \"${shareId.toLowerCase()}\" could be found. Share may be available, incorrecty configured or does not exist`   
+                message: `No share with id \"${shareId.toLowerCase()}\" could be found. Share may be unavailable, incorrecty configured or does not exist`   
             })
         } else if(!share.destinations[req.params.destKey]) {
             return reply.status(404).send({
@@ -278,7 +278,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         if(!share) {
             return reply.status(404).send({
                 error: "Share Not Found", 
-                message: `No share with id \"${shareId.toLowerCase()}\" could be found. Share may be available, incorrecty configured or does not exist`   
+                message: `No share with id \"${shareId.toLowerCase()}\" could be found. Share may be unavailable, incorrecty configured or does not exist`   
             })
         } else if(!share.destinations[req.params.destKey]) {
             return reply.status(404).send({

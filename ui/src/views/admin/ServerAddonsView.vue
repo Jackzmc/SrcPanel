@@ -1,6 +1,6 @@
 <template>
 <div>
-  <DownloadAddonModal v-if="showDownloadModal" :share="shareInfo" @close="showDownloadModal = false" />
+  <DownloadAddonModal v-if="showDownloadModal" :share="shareInfo" @close="showDownloadModal = false"/>
   <div class="container" v-if="ready">
     <div class="level">
       <div class="level-left">
@@ -353,10 +353,17 @@ async function installAddon(vpk: any, destKey: string, mode: "install" | "uninst
 }
 
 onBeforeMount(async() => {
-  Promise.allSettled([
-    fetchShares(),
-    fetchVPKS()
-  ])
+  await fetchShares()
+  if(route.query.share) {
+    const share = route.query.share.toString()
+    if(shares.value.includes(share)) {
+      selectedShare.value = share.toString()
+    } else {
+      error.value = `No shares with the id "${share}" were found` 
+      return
+    }
+  }
+  await fetchVPKS()
   if(route.params.id) {
     for(const vpk of vpks.value) {
       if(vpk.filename === route.params.id) {
@@ -364,6 +371,9 @@ onBeforeMount(async() => {
         break
       }
     }
+  }
+  if(route.query.url && shareInfo.value.downloadSources.includes("steam_workshop")) {
+    showDownloadModal.value = true
   }
 })
 </script>

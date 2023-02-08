@@ -184,7 +184,7 @@ export default class Share {
 
     public async getAddonInfo(filename: string): Promise<AddonInfo | undefined> {
         const info = await this.db.get(SQL`SELECT * FROM addoncache WHERE filename = ${filename}`)
-        if(!info) return
+        if(!info) return null
         return {
             filename: info.filename,
             filesize: info.filesize,

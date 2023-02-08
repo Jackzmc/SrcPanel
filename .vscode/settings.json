@@ -12,7 +12,7 @@
             "splitTerminals": [
                 {
                     "name": "ui",
-                    "commands": ["cd ui", "yarn serve"]
+                    "commands": ["cd ui", "nvm use 14", "yarn serve"]
                 }
             ]
         }
