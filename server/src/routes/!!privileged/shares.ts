@@ -175,6 +175,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                             entry: detail.publishedfileid,
                             message: `Downloaded <a href="https://steamcommunity.com/sharedfiles/filedetails/?id=${detail.publishedfileid}"><b>${detail.title}</b></a> (${humanFileSize(detail.file_size)})`
                         })}\n\n`)
+                        await fastify.authmngr.log.addWebEntry(req.session.user.steamid, "ADDON_DOWNLOAD", `Downloaded addon "${detail.title}" (${detail.publishedfileid}, ${humanFileSize(detail.file_size)})`)
                         resolve(true)
                     })
                 })
@@ -194,6 +195,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                             try {
                                 const filename = `${detail.publishedfileid}.vpk`
                                 await share.install(filename, destKey)
+                                await fastify.authmngr.log.addWebEntry(req.session.user.steamid, "ADDON_INSTALL", `Installed addon "${detail.title}" (${detail.publishedfileid}) to ${destKey}`)
                                 destResults[destKey][detail.publishedfileid] = { 
                                     result: "success"
                                 }
@@ -252,6 +254,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         if(addonInfo) {
             try {
                 await share.install(req.params.filename, req.params.destKey)
+                await fastify.authmngr.log.addWebEntry(req.session.user.steamid, "ADDON_INSTALL", `Install addon "${addonInfo.filename}" to ${req.params.destKey}`)
                 addonInfo[req.params.destKey] = true
                 return {
                     addonInfo
