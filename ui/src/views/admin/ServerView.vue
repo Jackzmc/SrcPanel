@@ -67,6 +67,14 @@
         </ul>
         <p class="has-text-centered subtitle is-4" v-else>Select a config file on the right to view</p>
       </template>
+      <template v-else-if="tab == 'actions'">
+        <div class="buttons">
+          <a @click="processAction(server, 'stop')" class="button is-dark">Request Restart</a>
+          <a @click="processAction(server, 'unreserve')" class="button is-dark">Unreserve</a>
+          <a @click="processAction(server, 'stop?force=1')" class="button is-warning">Force Restart</a>
+          <a v-if="server.info.tags.includes('systemd')" @click="processAction(server, 'start')" class="button is-success">Start Server</a>
+        </div>
+      </template>
     </div>
 
     <div class="column">
@@ -121,9 +129,12 @@ import { Session, WebPermission } from '../../../../common-types/User';
 import { PrivilegedUser } from '@/js/User';
 import { parseLog } from '../../js/util';
 import LogMessage from "@/components/LogMessage.vue";
+import { useNotification } from "@kyvg/vue3-notification";
+
 
 const REFRESH_INTERVAL = 1000 * 60
 
+const { notify } = useNotification();
 const props = defineProps<{
   userdata: Session
 }>()
@@ -142,9 +153,13 @@ const TABS: Record<string, { name: string, flag?: WebPermission, enabled?: Funct
     enabled: () => {
       return server.value && server.value.configs
     }
+  },
+  actions: {
+    name: "Actions"
   }
 }
 
+let starting = ref(false)
 let server = ref()
 let servers = ref()
 let status = ref()
@@ -213,6 +228,37 @@ async function fetchServersCompact() {
     const json = await response.json()
     servers.value = json
   }
+}
+
+function processAction(server: any, type: string) {
+  if(type === "start") {
+    starting.value = true
+    setTimeout(() => {
+      starting.value = false
+    }, 1000 * 30)
+  }
+  fetch(`/api/servers/${server.id}/${type}`, {
+    method: 'POST',
+    credentials: 'include'
+  })
+  .then(async(response) => {
+    if(response.ok ) {
+      const json = await response.json()
+      if(json.error) {
+        return notify({ type: 'error', text: `<b>Server returned error</b><br>${json.message}` })
+      }
+      if(json.response.includes("players online")) {
+        notify({ type: 'error', text: 'Cannot restart server: There are players online'})
+      }else{
+        notify({ type: 'sucess', text: json.response})
+      }
+    }else{
+      notify({ type: 'error', text: `<b>Server returned error</b><br>${response.statusText}`})
+    }
+  })
+  .catch(err => {
+    notify({ type: 'error', text: `${err.message}`})
+  })
 }
 
 function formatMap(mapId: string) {
