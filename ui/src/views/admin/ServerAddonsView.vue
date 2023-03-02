@@ -1,11 +1,12 @@
 <template>
 <div>
   <DownloadAddonModal v-if="showDownloadModal" :share="shareInfo" @close="showDownloadModal = false"/>
+  <AddonInfoModal v-if="showAddonModal" :share="shareInfo" :addon="prefetch" @close="closePreview" />
   <div class="container" v-if="ready">
     <div class="level">
       <div class="level-left">
         <div class="level-item">
-          <h5 class="title is-5">Viewing {{filteredVPKs.length}} addons - Click a name to view information</h5>
+          <h5 class="title is-4">Viewing {{filteredVPKs.length}} addons</h5>
         </div>
       </div>
       <div class="level-right">
@@ -33,17 +34,10 @@
         </div>
       </div>
     </div>
-    <p>
-      Click on an addon to view it's workshop information.
-    </p>
-    <p>
-      X means map is not installed on server. Checkmark means it is.
-      Click on the icon to toggle it between being disabled and enabled
-    </p>
-    <p>After downloading new maps or installing (toggling) a map, the server has to be restarted for it to load. <router-link to="/admin/servers/">Click here to view servers page</router-link></p>
+    <p class="subtitle is-4" style="width:60%">Click on any addon to view additional info and to (un)install it from servers. <router-link to="/admin/servers/">Click here to view servers page</router-link></p>
     <br>
     <div class="columns">
-      <div :class="['column', {'is-8': prefetch !== undefined}]">
+      <div class="column">
 
         <table class="table is-striped is-fullwidth">
           <thead>
@@ -52,9 +46,7 @@
               <th></th>
               <th data-tooltip="Total file size of all addons">{{ formatSize(computedTotalFileSize, true, 0) }}</th>
               <th></th>
-              <template v-if="shareInfo&&!prefetch">
-                <th v-for="dest in shareInfo.destinations" :key="dest" />
-              </template>
+              <th></th>
             </tr>
             <tr>
               <th><a @click="setSortFunc('filename', SORT_NAME)">
@@ -73,20 +65,19 @@
                 Last Updated
                 <span v-if="sort?.id === 'lastUpdated'">{{sortSymbol}}</span>
               </a></th>
-              <template v-if="shareInfo&&!prefetch">
-                <th v-for="dest in shareInfo.destinations" :key="dest" class="has-text-centered" style="width:0">
-                  <a @click="setSort(dest, 'shareInfo')">{{ dest.name || dest.id }}
-                    <span v-if="sort?.id === dest">{{sortSymbol}}</span>
-                  </a>
-                </th>
-              </template>
+              <th><a @click="setSortFunc('downloaded', SORT_DOWNLOADED)">
+                Downloaded
+                <span v-if="sort?.id === 'downloaded'">{{sortSymbol}}</span>
+              </a></th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="vpk in filteredVPKs" :key="vpk.filename">
               <td>
-                <a v-if="vpk.workshop" @click="preview(vpk)" :data-tooltip="'Filename: ' + vpk.filename">{{vpk.workshop.title}}</a>
-                <span v-else>{{vpk.filename}}</span>
+                <a v-if="vpk.workshop" class="has-text-info" @click="preview(vpk)" :data-tooltip="'Filename: ' + vpk.filename">
+                  <b>{{vpk.workshop.title}}</b>
+                </a>
+                <a  @click="preview(vpk)" v-else>{{vpk.filename}}</a>
               </td>
               <td v-if="hasAnyWorkshop">
                 <a v-if="vpk.workshop" :href="vpk.workshop.url" class="button is-small">Workshop</a>
@@ -99,32 +90,12 @@
                 <span v-if="vpk.workshop">{{formatTime(vpk.workshop.lastUpdated)}}</span>
                 <span v-else>{{formatTime(vpk.lastModified)}}</span>
               </td>
-              <template v-if="shareInfo&&!prefetch">
-                <td v-for="(dest, i) in shareInfo.destinations" :key="dest.id" :class="['has-text-centered', {'column-separator': i == 0 }]">
-                  <em v-if="!vpk.installInfo" data-tooltip="Could not determine share install information">?</em>
-                  <a @click="installAddon(vpk, dest.id, 'uninstall')" v-else-if="vpk.installInfo[dest.id]" data-tooltip="Installed. Click to uninstall">
-                    ✔️
-                  </a>
-                  <a @click="installAddon(vpk, dest.id, 'install')" v-else data-tooltip="Not installed. Click to install">
-                    ❌
-                  </a>
-                </td>
-              </template>
+              <td>
+                <span>{{formatTime(vpk.downloaded)}}</span>
+              </td>
             </tr>
           </tbody>
         </table>
-      </div>
-      <div class="column" v-if="prefetch">
-        <a class="button" @click="closePreview">⟵</a>
-        <br><br>
-        <img :src="prefetch.previewUrl" />
-        <h4 class='title is-4'>{{prefetch.title}}</h4>
-        <p class="subtitle is-6">{{formatSize(prefetch.filesize)}} • Updated {{ formatTime(prefetch.lastUpdated) }}</p>
-        <div class="buttons">
-          <a target="_blank" :href="prefetch.fileUrl"  data-tooltip="Direct download" class="button">Download</a>
-          <a target="_blank" :href="prefetch.url" class="button is-info">View on steam workshop</a>
-        </div>
-        <p style="white-space: pre-wrap" class="content is-small" v-html="parsedDescription" />
       </div>
     </div>
   </div>
@@ -143,6 +114,7 @@
 <script setup lang="ts">
 import { ref, watch, computed, onBeforeMount, onMounted } from 'vue'
 import DownloadAddonModal from '@/components/modals/DownloadAddonModal.vue'
+import AddonInfoModal from '@/components/modals/AddonInfoModal.vue'
 import { useRoute, useRouter } from 'vue-router'
 
 const SORT_NAME = (a: any, b: any) => {
@@ -158,6 +130,9 @@ const SORT_WORKSHOP = (a: any, b: any) => {
 }
 const SORT_LAST_UPDATED = (a: any, b: any) => {
   return (a.lastModified ?? a.workshop.lastUpdated) - (b.lastModified ?? b.workshop.lastUpdated)
+}
+const SORT_DOWNLOADED = (a: any, b: any) => {
+  return (a.downloaded) - (b.downloaded)
 }
 const route = useRoute()
 const router = useRouter()
@@ -190,6 +165,7 @@ const computedTotalFileSize = computed(() => {
 })
 
 let showDownloadModal = ref(false)
+let showAddonModal = ref(false)
 const sortSymbol = computed(() => {
   if(!sort.value) return ''
   else if(sort.value.descending) return '(↓)'
@@ -238,25 +214,16 @@ const filteredVPKs = computed(() => {
     })
     .sort(_sort)
 })
-const parsedDescription = computed(() => {
-  if(!prefetch.value) return
-  return prefetch.value.description
-    .replace(/\[b\]/gi, '<b>')
-    .replace(/\[u\]/gi, '<u>')
-    .replace(/\[i\]/gi, '<i>')
-    .replace(/\[hr\]/gi, '<hr>')
-    .replace(/\[img\](.*)\[\/img\]/gi, '<img src="$1" />')
-    .replace(/\[h(\d)\]/gi, '<h$1>')
-    .replace(/\[url=(.*)\]/gi, '<a href="$1">')
-    .replace(/\[list]/gi, '<ul>')
-    .replace(/\[\/list]/gi, '</ul>')
-    .replace(/\[\*\](.*)/gi, '<li>$1</li>')
-    .replace(/\[\/([a-zA-Z0-9]+)\]/gi, '</$1>')
-})
 
 function preview(entry: any) {
-  router.push(`/admin/addons/${entry.filename}`)
-  prefetch.value = entry.workshop
+  router.push(`/admin/addons/${selectedShare.value}/${entry.filename}`)
+  prefetch.value = entry
+  showAddonModal.value = true
+}
+function closePreview(entry: any) {
+  router.push(`/admin/addons/${selectedShare.value}`)
+  prefetch.value = null
+  showAddonModal.value = false
 }
 async function fetchShares() {
   error.value = undefined
@@ -305,10 +272,6 @@ async function fetchVPKS() {
   }
 }
 
-function closePreview() {
-  prefetch.value = undefined
-  router.push('/admin/addons')
-}
 function formatSize(bytes: number, si = false, dp = 1) {
   const thresh = si ? 1000 : 1024;
 
@@ -367,10 +330,11 @@ onBeforeMount(async() => {
     }
   }
   await fetchVPKS()
-  if(route.params.id) {
+  if(route.params.addon) {
     for(const vpk of vpks.value) {
-      if(vpk.filename === route.params.id) {
-        prefetch.value = vpk.workshop
+      if(vpk.filename === route.params.addon) {
+        prefetch.value = vpk
+        showAddonModal.value = true
         break
       }
     }

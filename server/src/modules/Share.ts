@@ -34,6 +34,7 @@ export interface AddonInfo {
     installInfo: Record<string, boolean>
 }
 export interface AddonWorkshopInfo {
+    publishedfileid: number
     deleted: boolean,
     title: string,
     filesize: number,
@@ -163,7 +164,8 @@ export default class Share {
                     fileUrl: wsDetails[i].file_url,
                     previewUrl: wsDetails[i].preview_url,
                     description: wsDetails[i].description,
-                    lastUpdated: wsDetails[i].time_updated
+                    lastUpdated: wsDetails[i].time_updated,
+                    publishedfileid: Number(wsDetails[i].publishedfileid)
                 }
 
                 results.push({
