@@ -31,6 +31,7 @@ export default class SteamAPI {
     }
 
     async getAppName(id: number) {
+        if(!id) throw new Error("App id is null: " + id)
         if(!this.appMap) throw new Error("App map is not initialized, use loadAppIdFile(path_to_db_file) to initalize")
         return this.appMap[id.toString()]
     }

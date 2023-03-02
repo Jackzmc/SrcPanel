@@ -38,7 +38,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         return {
             result: {
                 ...results[0],
-                consumer_app_title: await fastify.steam.getAppName(results[0].consumer_app_id)
+                consumer_app_title: results[0].consumer_app_id ? await fastify.steam.getAppName(results[0].consumer_app_id) : null
             }
         }
     })
