@@ -287,8 +287,11 @@ async function fetchVPKS() {
       vpks.value = json.addons.map((entry: any) => {
         if(entry.workshop) {
           hasAnyWorkshop.value = true
-          if(entry.workshop.deleted) entry.workshop = null
-          else entry.workshop.url = `https://steamcommunity.com/sharedfiles/filedetails/?id=${entry.filename.slice(0, -4)}`
+          if(entry.workshop.deleted) {
+            entry.workshop = null
+            return entry
+          }
+          entry.workshop.url = `https://steamcommunity.com/sharedfiles/filedetails/?id=${entry.filename.slice(0, -4)}`
           totalFileSize.value += entry.workshop.filesize
         }
         return entry
@@ -359,7 +362,7 @@ onBeforeMount(async() => {
     if(shares.value.includes(share)) {
       selectedShare.value = share.toString()
     } else {
-      error.value = `No shares with the id "${share}" were found` 
+      error.value = `No shares with the id "${share}" were found`
       return
     }
   }
