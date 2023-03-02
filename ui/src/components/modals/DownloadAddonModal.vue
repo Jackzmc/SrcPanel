@@ -216,11 +216,12 @@ function startDownload(force = false) {
       const payload = JSON.parse(event.data)
       if(payload.error) {
         if(payload.code === "FILE_EXISTS") {
+          sse.close()
           showForceDownload.value = true
         }
         downloadLog.value.push({
           state: payload.state || payload.code,
-          message: payload.message,
+          message: "Addon already is downloaded, press Redownload to download a fresh version",
           error: true
         })
       } else if(payload.state === "COMPLETE") {
