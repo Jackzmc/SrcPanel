@@ -146,7 +146,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             const payload = {
                 code: 'FILE_EXISTS',
                 error: "File exists",
-                message: "The addon is already downloaded. Provide ?force to force download."
+                message: "The addon is already downloaded. " + (useSSE ? "Use Download to redownload" : "Provide ?force to force download.")
             }
             useSSE ? reply.raw.write(`data: ${JSON.stringify(payload)}\n\n`) : reply.status(409).send(payload)
         } else {
