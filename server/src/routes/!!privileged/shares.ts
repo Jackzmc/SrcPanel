@@ -123,6 +123,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         Params: {shareId: string, workshopId: string},
         Querystring: {'destinations'?: string, force?: boolean, sse?: boolean }
     }>, reply) => {
+        let allowDownload = true
         const useSSE = req.query.sse
         if(useSSE) {
             reply.raw.writeHead(200, {
@@ -143,13 +144,28 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             }
             useSSE ? reply.raw.write(`data: ${JSON.stringify(payload)}\n\n`) : reply.status(404).send(payload)
         } else if(!req.query.force && await share.isInstalled(`${req.params.workshopId}.vpk`)) {
-            const payload = {
-                code: 'FILE_EXISTS',
-                error: "File exists",
-                message: "The addon is already downloaded. " + (useSSE ? "Use Download to redownload" : "Provide ?force to force download.")
+            const addonInfo = await share.getAddonInfo(`${req.params.workshopId}.vpk`)
+            if(addonInfo.workshop) {
+                const latestWs = await fastify.steam.getItemDetails([req.params.workshopId])
+                if(latestWs[0].time_updated == addonInfo.lastModified) {
+                    // File is the same - ask for redownload
+                    allowDownload = false
+                }
+
+            } else {
+                // Ask for confirm to redownload if it's not a workshop item
+                allowDownload = false
             }
-            useSSE ? reply.raw.write(`data: ${JSON.stringify(payload)}\n\n`) : reply.status(409).send(payload)
-        } else {
+
+            if(!allowDownload) {
+                const payload = {
+                    code: 'FILE_EXISTS',
+                    error: "File exists",
+                    message: "The addon is already downloaded. " + (useSSE ? "Use Download to redownload" : "Provide ?force to force download.")
+                }
+                useSSE ? reply.raw.write(`data: ${JSON.stringify(payload)}\n\n`) : reply.status(409).send(payload)
+            }
+        } else if(allowDownload) {
             try {
                 if(useSSE) reply.raw.write(`data: {"state": "FETCH_INFO", "message": "Fetching information from steam"}\n\n`)
                 const children = await fastify.steam.getCollectionChildren(req.params.workshopId)
