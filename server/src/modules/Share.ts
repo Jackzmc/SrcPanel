@@ -213,13 +213,14 @@ export default class Share {
         const files = await readdir(this.sourceFolder)
         if(!this.validExts) return files
         return files.filter(filename => {
-            const ext = filename.split(",").pop()
+            const ext = filename.split(".").pop()
             return this.validExts.includes(ext)
         })
     }
 
     public async isInstalled(query: string) {
-        return (await this.getInstalledFiles()).find(filename => filename === query)
+        return (await this.getInstalledFiles())
+            .find(filename => filename === query)
     }
 
     public async install(filename: string, destinationKey: string) {
