@@ -28,6 +28,7 @@ export interface ShareInfo {
 export interface AddonInfo {
     filename: string,
     filesize?: number,
+    downloaded?: number
     lastModified?: number,
     workshop?: AddonWorkshopInfo,
     installInfo: Record<string, boolean>
@@ -40,6 +41,13 @@ export interface AddonWorkshopInfo {
     previewUrl: string,
     description: string,
     lastUpdated: number
+}
+
+interface AddonInstallInfo {
+    states: Record<string, boolean>, 
+    created: number,
+    modified: number,
+    size: number
 }
 
 export const DOWNLOAD_SOURCES = ["steam_workshop"] as const
@@ -135,7 +143,7 @@ export default class Share {
                         results.push({
                             filename: dirent.name,
                             ...fsinfo,
-                            installInfo: await this.getInstallInfo(dirent.name)
+                            installInfo: (await this.getInstallInfo(dirent.name)).states
                         })
                         await this.addAddonEntry(dirent.name, fsinfo)
                     }
@@ -160,7 +168,7 @@ export default class Share {
 
                 results.push({
                     filename,
-                    installInfo: await this.getInstallInfo(filename),
+                    installInfo: (await this.getInstallInfo(filename)).states,
                     workshop
                 })
 
@@ -185,25 +193,33 @@ export default class Share {
     public async getAddonInfo(filename: string): Promise<AddonInfo | undefined> {
         const info = await this.db.get(SQL`SELECT * FROM addoncache WHERE filename = ${filename}`)
         if(!info) return null
+        const installInfo = await this.getInstallInfo(filename)
         return {
             filename: info.filename,
-            filesize: info.filesize,
-            lastModified: info.lastModified,
+            filesize: info.filesize ?? installInfo.size,
+            lastModified: info.lastModified ?? installInfo.modified,
+            downloaded: installInfo.created,
             workshop: info.ws_info ? JSON.parse(info.ws_info) as AddonWorkshopInfo : undefined,
-            installInfo: await this.getInstallInfo(filename)
+            installInfo: installInfo.states
         }
     }
 
 
     public async getInstallInfo(filename: string) {
-        if(await this.doesFileExist(this.sourceFolder, filename)) {
-          let states: Record<string, boolean> = {}
-          if(this.destinations) {
-            for(const dest of Object.values(this.destinations)) {
-              states[dest.id] = await this.doesFileExist(dest.path, filename)
+        const statInfo = await this.doesFileExist(this.sourceFolder, filename)
+        if(statInfo) {
+            let states: Record<string, boolean> = {}
+            if(this.destinations) {
+                for(const dest of Object.values(this.destinations)) {
+                states[dest.id] = await this.doesFileExist(dest.path, filename) !== null
+                }
             }
-          }
-          return states
+            return { 
+                states, 
+                created: Math.ceil(statInfo.birthtimeMs / 1000),
+                modified: Math.ceil(statInfo.mtimeMs / 1000),
+                size: statInfo.size
+            }
         }
         return undefined
         
@@ -247,11 +263,10 @@ export default class Share {
 
     private async doesFileExist(folder: string, file: string) {
         try {
-          await stat(path.join(folder, file))
-          return true
+          return await stat(path.join(folder, file))
         } catch(err) {
           if(err.code === "ENOENT") {
-            return false
+            return null
           } else 
             throw err
         }
