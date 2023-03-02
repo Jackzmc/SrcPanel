@@ -16,6 +16,12 @@
         <div class="field is-grouped is-grouped-multiline">
           <div class="control">
             <div class="tags has-addons">
+              <span class="tag is-dark">Filename</span>
+              <span class="tag is-info">{{props.addon.filename}}</span>
+            </div>
+          </div>
+          <div class="control">
+            <div class="tags has-addons">
               <span class="tag is-dark">File Size</span>
               <span class="tag is-info">{{formatSize(props.addon.workshop?.filesize ?? props.addon.filesize)}}</span>
             </div>
@@ -49,13 +55,15 @@
             </div>
           </div>
         </div>
-        <h5 class="title is-5">Description</h5>
-        <article class="message">
-          <div class="message-body">
-            <span style="white-space: pre-wrap" v-html="parsedDescription" />
-          </div>
-        </article>
-        <a v-if="props.addon.workshop" target="_blank" :href="props.addon.workshop.fileUrl"  data-tooltip="Direct download" class="button">Download Addon Directly</a>
+        <template v-if="props.addon.workshop">
+          <h5 class="title is-5">Description</h5>
+          <article class="message">
+            <div class="message-body content is-size-7">
+              <span style="white-space: pre-wrap" v-html="parsedDescription" />
+            </div>
+          </article>
+          <a target="_blank" :href="props.addon.workshop.fileUrl"  data-tooltip="Direct download" class="button is-small">Download Addon File</a>
+        </template>
       </section>
       <footer class="modal-card-foot">
         <button class="button is-success" @click="close">
@@ -154,7 +162,7 @@ async function restartServer(id: string) {
 }
 
 const parsedDescription = computed(() => {
-  return props.addon.workshop.description
+  return props.addon.workshop?.description
     .replace(/\[b\]/gi, '<b>')
     .replace(/\[u\]/gi, '<u>')
     .replace(/\[i\]/gi, '<i>')
