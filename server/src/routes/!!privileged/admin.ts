@@ -37,7 +37,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
     fastify.all('/update', async(req, reply) => {
         if(req.session.permissions.web.flags & WebPermission.FullPermission) {
-            
+            console.log('cwd', process.cwd())
             if(updateState === "NORMAL") {
                 let response = { stdout: "", stderr: "" }
 
@@ -49,7 +49,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                     return Date.now() - startTime
                 }
                 async function doExec(state: UpdateState, command: string) {
-                    console.log("running:", command)
+                    console.log(`running: [${state}] ${command}`)
                     return doState(state, execPromise(command))
                 }
 
@@ -72,7 +72,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                         )
                     }
 
-                    const timePackagesInstall = await doExec("PACKAGES_INSTALL", "yarn install --frozen-lockfile")
+                    const timePackagesInstall = await doExec("PACKAGES_INSTALL", "yarn install")
 
                     doState("CLEANUP_OLD_BUILD", rm(path.join(process.cwd(), 'dist'), { recursive: true, force: true}))
 
