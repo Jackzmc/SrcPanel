@@ -209,7 +209,7 @@ export default class ServerManager {
 
     await Promise.allSettled(serverPromises)
 
-    console.log('Loaded servers, now loading shares')
+    console.log(`Loaded ${Object.keys(this.servers).length} servers, now loading shares...`)
     await this.loadShares(config)
   }
 }
