@@ -58,10 +58,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
     })
 
-    fastify.get('/logout', (req, reply) => {
-        req.destroySession((err) => {
-            if(err) throw err
-            reply.code(204).send()
-        })
+    fastify.get('/logout', async (req, reply) => {
+        await req.session.destroy()
+        reply.code(204).send()
     })
 }

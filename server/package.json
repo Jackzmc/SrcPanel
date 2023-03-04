@@ -25,19 +25,17 @@
     "sql-template-strings": "^2.2.2",
     "sqlite": "^4.1.1",
     "sqlite3": "^5.0.8",
-    "steamid": "^2.0.0"
+    "steamid": "^2.0.0",
+    "@fastify/swagger": "^7.4.1",
+    "@types/gamedig": "^3.0.2",
+    "@types/node": "^18.11.19",
+    "@types/steamid": "^2.0.1",
+    "pino-pretty": "^8.1.0"
   },
   "type": "module",
   "scripts": {
     "start": "tsc && node dist/server/src/index.js",
     "clean": "rm -r dist && tsc",
     "dev": "nodemon -e ts --exec \"yarn start || exit 1\""
-  },
-  "devDependencies": {
-    "@fastify/swagger": "^7.4.1",
-    "@types/gamedig": "^3.0.2",
-    "@types/node": "^18.11.19",
-    "@types/steamid": "^2.0.1",
-    "pino-pretty": "^8.1.0"
   }
 }
