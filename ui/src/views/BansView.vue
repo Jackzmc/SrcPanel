@@ -33,7 +33,7 @@
         <th v-if="userdata">Action</th>
       </thead>
       <tbody>
-        <tr v-for="(ban, i) in filteredBans" :key="ban.id" :class="{'has-text-grey-light': ban.expired}">
+        <tr v-for="(ban) in filteredBans" :key="ban.id" :class="{'has-text-grey-light': ban.expired}">
           <td>
             <b v-if="ban.client.name">{{ban.client.name}}<br></b>
             <em class='has-text-info'>{{ban.client.id}}</em>
@@ -63,7 +63,8 @@
           <td :data-tooltip="formatDate(ban.timestamp)">{{ban.relDate}}</td>
           <td v-if="userdata">
             <div class="buttons">
-              <a class="button is-info is-small" @click="startEdit(ban, i)">View</a>
+              <router-link class="button is-info is-small" :to="{name: 'manage-user-bans', params: { id: ban.client.id, banid: ban.id }, query: { returnTo: 'bans'}}">View</router-link>
+              <!-- <a class="button is-info is-small" @click="startEdit(ban, i)">View</a> -->
             </div>
           </td>
         </tr>
@@ -79,7 +80,7 @@
 import { ref, watch, computed, onBeforeMount, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import Sugar from 'sugar'
-import { ListAPIBan } from '../../../server/src/routes/!unprivileged/bans';
+import { ListAPIBan } from '../../../common-types/Ban.js';
 
 const DISCORD_SOURCE_REGEX = new RegExp(/([^\n]+#\d{4})\s\((\d+)\)/)
 const AUTO_REFRESH_INTERVAL = 1000 * 60 * 15
@@ -131,7 +132,13 @@ function getBanFlags(ban: Ban) {
 function startEdit(ban: Ban, index: number) {
   edit.value.banIndex = index
   edit.value.data = ban
-  router.push(`/bans/edit/${ban.id}`)
+  router.push({
+    name: "manage-users-bans",
+    params: {
+      id: ban.client.id,
+      banid: ban.id
+    }
+  })
 }
 function formatDaysAgo(value?: number, locale?: string) {
   if(!value) return

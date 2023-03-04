@@ -39,7 +39,7 @@
             </router-link>
             <router-link :disabled="fetchError" :to="{ name: 'manage-user-bans' }" v-slot="{ href, navigate, isActive }" custom>
               <li :class="{'is-active': isActive }">
-                <a :href="href" @click="navigate">Bans ({{ user?.bansCount }})</a>
+                <a :href="href" @click="navigate">Bans&nbsp;<span :class="{'has-text-danger': user?.bansCount > 0 }">({{ user?.bansCount }})</span></a>
               </li>
             </router-link>
           </ul>
@@ -71,7 +71,6 @@ import { notify } from '@kyvg/vue3-notification';
 
 const router = useRouter()
 const route = useRoute()
-const emit = defineEmits(["close"])
 const props = defineProps<{
   userdata: Session
 }>()
@@ -80,10 +79,14 @@ const privUser = new PrivilegedUser(props.userdata)
 let user = ref<PlayerData>()
 let userAdminData = ref<AdminData>()
 let fetchError = ref<string>()
+let returnTo = ref<string>()
 
 
 function close() {
-  router.push(`/admin/players/`)
+  if(returnTo.value) {
+    router.push(`/${returnTo.value}`)
+  } else
+    router.push(`/admin/players/`)
 }
 
 async function getUser() {
@@ -128,5 +131,6 @@ onBeforeMount(async () => {
     }
   });
   await getUser()
+  returnTo.value = route.query.returnTo?.toString()
 })
 </script>

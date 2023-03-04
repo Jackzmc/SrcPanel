@@ -19,10 +19,12 @@
         <input v-if="user.steamid !== userdata.user.steamid" type="radio" v-model="selectedId" :value="user.steamid">
       </td>
       <td>
-        <b>{{user.name}}</b>
-        <span v-if="user.isAdmin" class="tag is-info ml-1">Admin</span>
+        <router-link :to="{ name: 'manage-user', params: { id: user.steamid }}">
+          <b>{{user.name}}</b>
+          <span v-if="user.isAdmin" class="tag is-info ml-1">Admin</span>
+        </router-link>
       </td>
-      <td><a :href="'https://stats.jackz.me/user/' + user.steamid">{{user.steamid}}</a></td>
+      <td data-tooltip="View user's stats profile"><a :href="'https://stats.jackz.me/user/' + user.steamid">{{user.steamid}}</a></td>
       <td>{{user.country}}</td>
       <td>
         <span :class="{'has-text-grey': user.bansCount == 0}">{{user.bansCount}}</span>
