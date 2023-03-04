@@ -1,8 +1,8 @@
 <template>
 <div>
-  <router-view v-if="userdata" :userdata="userdata" />
-  <div class="container" v-if="userdata">
-    <Tabs inner-wrapper-class="tabs is-large" @changed="setTab">
+  <router-view :userdata="userdata" />
+  <div class="container">
+    <Tabs inner-wrapper-class="tabs is-large" @changed="setTab" :options="{useUrlFragment:false}">
       <Tab name="Recently Played With" id="recent">
         <h4 class="title is-4">Recently Played From</h4>
         <div class="level">
@@ -63,6 +63,9 @@
   <br><br>
   <nav class="navbar is-fixed-bottom is-dark"  v-if="selectedUser">
     <div class="navbar-menu" style="margin-left: 5em">
+      <div class="navbar-item">
+        <a class="button is-primary" @click="manageUser" data-tooltip="New all in one tool to manage users">Manage (Beta)</a>
+      </div>
       <div class="navbar-item" v-if="!addBanDisableReason">
         <a class="button is-danger" @click="addBan" >Ban</a>
       </div>
@@ -179,6 +182,10 @@ function addBan() {
 function addAdmin() {
   if(!selectedIdSteamID.value) return alert("No steamID selectedId")
   router.push(`/admin/players/${selectedIdSteamID.value}/manage-admin`)
+}
+function manageUser() {
+  if(!selectedIdSteamID.value) return alert("No steamID selectedId")
+  router.push(`/admin/players/${selectedIdSteamID.value}`)
 }
 async function searchUser() {
   const response = await fetch(`/api/users/search/${manualInput.value ?? search.value.query}`)

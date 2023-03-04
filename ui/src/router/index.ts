@@ -131,6 +131,44 @@ const routes = [
     },
     children: [
       {
+        name: 'manage-user',
+        path: ':id',
+        component: () => import(/* webpackChunkName: 'manage-user' */ '../components/modals/manage-user/ManageUserModal.vue'),
+        meta: {
+          title: 'Manage User',
+          authRequired: true
+        },
+        children: [
+          {
+            name: 'manage-user-admin',
+            path: 'manage-admin',
+            component: () => import(/* webpackChunkName: 'manage-user' */ '../components/modals/manage-user/ManageAdmin.vue'),
+            meta: {
+              title: 'Manage Admin',
+              authRequired: true
+            }
+          },
+          {
+            name: 'manage-user-bans',
+            path: 'bans/:banid?',
+            component: () => import(/* webpackChunkName: 'manage-user' */ '../components/modals/manage-user/ManageBans.vue'),
+            meta: {
+              title: 'Edit Player Bans',
+              authRequired: true
+            }
+          },
+          {
+            name: 'manage-user-notes',
+            path: 'notes',
+            component: () => import(/* webpackChunkName: 'manage-user' */ '../components/modals/manage-user/ManageNotes.vue'),
+            meta: {
+              title: 'Edit Notes',
+              authRequired: true
+            }
+          },
+        ]
+      },
+      {
         name: 'admin-players-add-ban',
         path: ':id/add-ban',
         component: () => import(/* webpackChunkName: 'players' */ '../components/modals/AddBanModal.vue'),
@@ -139,6 +177,7 @@ const routes = [
           authRequired: true
         }
       },
+
       {
         name: 'admin-players-manage-admin',
         path: ':id/manage-admin',

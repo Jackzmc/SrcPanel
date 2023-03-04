@@ -2,6 +2,7 @@ import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
 import { OkPacket, RowDataPacket } from 'mysql2';
 import { Static, Type } from '@sinclair/typebox'
 import SteamID from 'steamid'
+import { FullAPIBan } from '../../../../common-types/Ban.js';
 
 const STEAM_WEB_APIKEY = process.env.STEAM_WEB_APIKEY
 
@@ -208,4 +209,5 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             }
         }
     })
+
 }
