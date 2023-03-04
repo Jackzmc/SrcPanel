@@ -16,7 +16,7 @@
 
 <script setup lang="ts">
 //@ts-ignore
-import Marked from 'marked'
+import { marked } from 'marked'
 import { Tree, TreeNode } from '@/js/Tree'
 import { ref, onBeforeMount } from 'vue'
 import SectionRoot from '@/components/sections/SectionRoot.vue'
@@ -35,7 +35,7 @@ onBeforeMount(() => {
       html.value = "<p class='has-text-danger'>Could not fetch information.</p>"
   })
   .then(text => {
-    html.value = Marked(text)
+    html.value = marked(text)
     const tree = new Tree(0, 0)
     let lastNode: TreeNode | null = null
     for (let [,rawLevel,name] of html.value!.matchAll(/h(\d) id="(.+)"/g) as any) {
