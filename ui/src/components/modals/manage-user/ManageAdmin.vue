@@ -28,10 +28,13 @@
       <div class="field">
         <label class="label">First Joined</label>
         <span>
-          <p v-if="stats">
-            <template v-if="stats.created_date">{{formatTime(stats.created_date)}}</template>
-            <em v-else>unknown</em>
-          </p>
+          <template v-if="stats">
+            <p v-if="stats.created_date">
+              {{formatTime(stats.created_date)}}
+            </p>
+            <em v-else>never</em>
+            <p>{{ getRelDate(Number(stats.created_date)) }}</p>
+          </template>
           <em v-else>(no recorded statistics found)</em>
         </span>
       </div>
@@ -45,7 +48,7 @@
               {{formatTime(stats.last_join_date)}}
             </p>
             <em v-else>never</em>
-            <p>5 hours ago</p>
+            <p>{{ getRelDate(Number(stats.last_join_date)) }}</p>
           </template>
           <em v-else>(no recorded statistics found)</em>
         </span>
@@ -240,6 +243,7 @@ import { convertBitsArrayToInt, convertIntToBitsArray, } from '@/js/User';
 // @ts-ignore
 import { Tab, Tabs } from 'vue3-tabs-component'
 import { notify } from '@kyvg/vue3-notification';
+import { getRelDate } from '@/js/util';
 
 
 const MIN_HOURS_PLAYTIME = 10

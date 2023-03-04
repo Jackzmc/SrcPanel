@@ -25,7 +25,11 @@
             </router-link>
             <router-link :disabled="fetchError" :to="{ name: 'manage-user-admin' }" v-slot="{ href, navigate, isExactActive }" custom>
               <li :class="{'is-active': isExactActive}">
-                <a :href="href" @click="navigate">Privileges</a>
+                <a :href="href" @click="navigate">
+                  Privileges&nbsp;
+                  <span v-if="userAdminData" class="tag is-info">Admin</span>
+                  <span v-else class="tag is-secondary">None</span>
+                </a>
               </li>
             </router-link>
             <router-link :disabled="fetchError" :to="{ name: 'manage-user-notes' }" v-slot="{ href, navigate, isExactActive }" custom>
@@ -94,6 +98,7 @@ async function getUser() {
           text: json.message
         })
         fetchError.value = "Unknown User"
+        return
       }
       userAdminData.value = json.adminData
       user.value = json.user
