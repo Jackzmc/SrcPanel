@@ -99,6 +99,7 @@ export default class Server {
     private _actid: string
     private _sortOrder: number
     private lastRefresh: number
+    private _cvars: Record<string, string>
     private rcon?: {
       password: string,
       exitCommand: string
@@ -186,6 +187,7 @@ export default class Server {
     }
 
     public get activityLogId() { return this._actid }
+    public get cvars() { return this._cvars }
 
     // Fetches all config, including one level nested
     public async getConfigFiles(showHidden = false) {
@@ -250,9 +252,26 @@ export default class Server {
       return await this.rcon.client.send(cmd)
     }
 
-    public async refresh() {
+    public async getStats() {
+      const statusResponse = await this.sendCommand("stats")
+      const lines = statusResponse.split("\n")
+      if(lines.length == 3) { // 3rd line is empty
+        const data = lines[1].trim().split(/[\s,]+/g)
+        return { 
+          cpu: Number(data[0]), 
+          bandwidth: { in: Number(data[1]), out: Number(data[2]) }, 
+          uptime: Number(data[3]), 
+          users: Number(data[4]), 
+          fps: Number(data[5])
+        }
+      } else {
+        return null
+      }
+    }
+
+    public async refresh(force = false, includeRules = false) {
         const now = Date.now()
-        if(now - this.lastRefresh < MIN_REFRESH_TIME) return
+        if(!force && now - this.lastRefresh < MIN_REFRESH_TIME) return
         this.lastRefresh = now
         try {
             const state = await Gamedig.query({
@@ -262,8 +281,12 @@ export default class Server {
               givenPortOnly: true,
               maxAttempts: 1,
               socketTimeout: 3000,
-              attemptTimeout: 5000
+              attemptTimeout: 5000,
+              requestRules: includeRules
             })
+            if(includeRules && (state.raw as any).rules) {
+              this._cvars = (state.raw as any).rules
+            }
             this._status.data = {
               players: state.players
                 .filter(p => p.name.length > 0) // Some names are just "", assumingly bots?
@@ -273,6 +296,9 @@ export default class Server {
               gamemode: (state.raw as any).tags[0]
             }
             this._status.online = true
+            return {
+              cvars: this._cvars
+            }
         } catch(err) {
             this._status.data = null
             this._status.online = false

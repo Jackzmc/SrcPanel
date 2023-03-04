@@ -3,19 +3,20 @@
         {
             "splitTerminals": [
                 {
-                    "name": "server",
-                    "commands": ["cd server", "yarn dev"]
-                },
+                    "name": "ui",
+                    "commands": ["cd ui", "nvm use 14", "yarn serve"]
+                }
             ]
         },
         {
             "splitTerminals": [
                 {
-                    "name": "ui",
-                    "commands": ["cd ui", "nvm use 14", "yarn serve"]
-                }
+                    "name": "server",
+                    "commands": ["cd server", "yarn dev"]
+                },
             ]
         }
     ],
-    "vue3snippets.enable-compile-vue-file-on-did-save-code": false
+    "vue3snippets.enable-compile-vue-file-on-did-save-code": false,
+    "cmake.configureOnOpen": false
 }

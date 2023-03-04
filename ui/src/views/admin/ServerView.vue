@@ -43,15 +43,25 @@
               <p :data-tooltip="status.data.gamemode">{{formatGamemode(status.data.gamemode)}}</p>
             </div>
           </div>
-          <h5 class="title is-5">Online Players ({{status.data.players.length}} / {{status.data.maxplayers}})</h5>
-          <div class="content" v-if="status.data.players.length > 0">
-            <ul>
-              <li v-for="player in status.data.players" :key="player">
-                {{player}}
-              </li>
-            </ul>
+          <div class="columns">
+            <div class="column">
+              <h5 class="title is-5">Online Players ({{status.data.players.length}} / {{status.data.maxplayers}})</h5>
+              <div class="content" v-if="status.data.players.length > 0">
+                <ul>
+                  <li v-for="player in status.data.players" :key="player">
+                    {{player}}
+                  </li>
+                </ul>
+              </div>
+              <p class="my-2" v-else>No players are online</p>
+            </div>
+            <div class="column">
+              <h5 class="title is-5">Uptime</h5>
+              <p v-if="stats">{{ formatUptime(stats.uptime) }}</p>
+              <em v-else>no stats available</em>
+            </div>
           </div>
-          <p class="my-2" v-else>No players are online</p>
+
           <br>
         </template>
         <p v-else-if="status && !status.online" class="has-text-centered has-text-danger subtitle is-4">Server is offline or unreachable</p>
@@ -127,7 +137,7 @@ import { onBeforeMount, ref } from 'vue'
 import FolderBrower from'@/components/FolderBrowser.vue'
 import { Session, WebPermission } from '../../../../common-types/User';
 import { PrivilegedUser } from '@/js/User';
-import { parseLog } from '../../js/util';
+import { parseLog, getRelDate } from '../../js/util';
 import LogMessage from "@/components/LogMessage.vue";
 import { useNotification } from "@kyvg/vue3-notification";
 
@@ -163,6 +173,7 @@ let starting = ref(false)
 let server = ref()
 let servers = ref()
 let status = ref()
+let stats = ref()
 let activities = ref()
 let tab = ref("overview")
 let cfg = ref<{
@@ -219,7 +230,8 @@ async function fetchServerStatus() {
   if(response.ok) {
     const json = await response.json()
     status.value = json.status
-    activities.value = json.recentActivities.map((act: any) => parseLog(act))
+    stats.value = json.stats
+    activities.value = json.recentActivities?.map((act: any) => parseLog(act))
   }
 }
 async function fetchServersCompact() {
@@ -275,6 +287,13 @@ function formatGamemode(gamemode: string) {
     output = output.charAt(0).toUpperCase() + output.slice(1)
   }
   return output
+}
+function formatUptime(minutes: number) {
+  const hours = Math.round(minutes / 60)
+  if(hours < 1) return `${minutes} minutes`
+  const days = Math.round(hours / 24)
+  if(days < 1) return `${hours} hours`
+  return `${days} days`
 }
 
 const Gamemodes: Record<string, string> = {
