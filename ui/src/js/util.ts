@@ -1,3 +1,5 @@
+import { formatRelative } from "date-fns"
+
 export function parseType(type: string) {
   switch(type) {
     case "int":
@@ -87,9 +89,22 @@ export function formatParameters({parameters, defaultValue, args}: any) {
   return string
 }
 
-export function formatDate(timestamp: number) {
-  const d = new Date(timestamp * 1000);
+export function formatDate(timestamp?: number) {
+  const d = timestamp ? new Date(timestamp * 1000) : new Date();
   return d.toLocaleDateString() + " " + d.toLocaleTimeString();
+}
+export function getRelDate(timestamp: number) {
+  const date = timestamp ? new Date(timestamp * 1000) : new Date();
+  const secondsDiff = ((Date.now() - date.getTime()) / 1000);
+  const dayDiff = Math.floor(secondsDiff / 86400);
+  const monthsDiff = Math.round(dayDiff / 30)
+  const yearsDiff = Math.round(monthsDiff / 12)
+  if(yearsDiff > 0) return `${yearsDiff} year${yearsDiff == 1 ? "" : "s"} ago`
+  if(monthsDiff > 0) return `${monthsDiff} month${monthsDiff == 1 ? "" : "s"} ago`
+  if (isNaN(dayDiff) || dayDiff < 0 || dayDiff >= 31) return "<invalid date>"
+
+  return dayDiff == 0 && (
+    secondsDiff < 60 && "just now" || secondsDiff < 120 && "1 minute ago" || secondsDiff < 3600 && Math.floor(secondsDiff / 60) + " minutes ago" || secondsDiff < 7200 && "1 hour ago" || secondsDiff < 86400 && Math.floor(secondsDiff / 3600) + " hours ago") || dayDiff == 1 && "yesterday" || dayDiff < 7 && dayDiff + " days ago" || dayDiff < 31 && Math.ceil(dayDiff / 7) + " weeks ago";
 }
 const ADMINCHAT_REGEX = /triggered sm_say \(text (.*)\)/;
 export function parseLog(log: any, history: {activators: any[], targets: any[] } = { activators: [], targets: [] }, debug = false) {

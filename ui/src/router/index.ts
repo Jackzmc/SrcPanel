@@ -138,10 +138,20 @@ const routes = [
           title: 'Manage User',
           authRequired: true
         },
+        redirect: { name: 'manage-user-overview' },
         children: [
           {
+            name: 'manage-user-overview',
+            path: '',
+            component: () => import(/* webpackChunkName: 'manage-user' */ '../components/modals/manage-user/ManageOverview.vue'),
+            meta: {
+              title: 'User',
+              authRequired: true
+            }
+          },
+          {
             name: 'manage-user-admin',
-            path: 'manage-admin',
+            path: 'privileges',
             component: () => import(/* webpackChunkName: 'manage-user' */ '../components/modals/manage-user/ManageAdmin.vue'),
             meta: {
               title: 'Manage Admin',

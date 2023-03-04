@@ -6,7 +6,7 @@
         <a>#{{ userBan.id }}&nbsp;<span class="tag is-info" v-if="userBan.activeAppeal">Appeal</span></a>
       </li>
       <li :class="{'is-active': isNewBan }" @click="selectBan()" v-if="!userAdminData"><a>Add Ban</a></li>
-      <li :class="{'is-active': showAppeals }" @click="showAppealsList"><a>Appeals ({{ appeals.length }})</a></li>
+      <li :class="{'is-active': showAppeals }" @click="showAppealsList" v-if="bans.length > 0"><a>Appeals ({{ appeals.length }})</a></li>
     </ul>
   </div>
   <Teleport to="#manage-user-footer">
@@ -24,7 +24,7 @@
           <span class="tag is-dark has-tooltip-right" data-tooltip="IP Address that submitted appeal" v-if="appeal.ip">{{ appeal.ip }}</span>
           <span :class="['tag', { 'is-success': appeal.state == 1, 'is-danger': appeal.state == 2, 'is-info': appeal.state == 0}]">{{ getAppealState(appeal.state) }}</span>
         </div>
-        <span class="is-pulled-right is-inline"> {{ formatTime(appeal.created)}}</span>
+        <span class="is-pulled-right is-inline"> {{ formatDate(appeal.created)}}</span>
         <div class="content">
           {{ appeal.message }}
 
@@ -43,7 +43,7 @@
       <div class="message-body">
         <h6 class="title is-6">
           User wishes to appeal this ban:
-          <span class="is-pulled-right has-text-weight-normal">{{ formatTime(ban.activeAppeal.created) }}</span>
+          <span class="is-pulled-right has-text-weight-normal">{{ formatDate(ban.activeAppeal.created) }}</span>
         </h6>
 
         {{ban.activeAppeal.message}}
@@ -104,9 +104,9 @@
       <div class="column">
         <div class="field">
           <label class="label">Timestamp</label>
-          <p v-if="isNewBan">{{ formatTime() }}</p>
+          <p v-if="isNewBan">{{ formatDate() }}</p>
           <template v-else>
-            <p>{{formatTime(ban.timestamp)}}</p>
+            <p>{{formatDate(ban.timestamp)}}</p>
             <em>about {{relDate}}</em>
           </template>
         </div>
@@ -170,7 +170,7 @@
             </div>
           </div>
           <p class="help has-text-danger" v-if="ban.expired">Ban is currently expired</p>
-          <p class="help" v-else-if="ban.expires">Will expire on {{formatTime(ban.expires)}}</p>
+          <p class="help" v-else-if="ban.expires">Will expire on {{formatDate(ban.expires)}}</p>
           <p class="help" v-else>Ban will never expire</p>
         </div>
       </div>
@@ -199,6 +199,7 @@ import { Session, WebPermission, WebRole, AdminData } from '../../../../../commo
 import { notify } from '@kyvg/vue3-notification';
 // TOOD: fix
 import { FullAPIBan, FullAPIBanPlayer, APIBanFlags, BanAppeal, BanAppealState } from '../../../../../common-types/Ban';
+import { formatDate, getRelDate } from '../../../js/util';
 
 const router = useRouter()
 const route = useRoute()
@@ -266,7 +267,7 @@ function calculateExpires(value: string) {
 
 const relDate = computed(() => {
   if(!ban.value) return
-  return ban.value?.timestamp ? getRelDate(ban.value.timestamp * 1000) : null
+  return ban.value?.timestamp ? getRelDate(ban.value.timestamp) : null
 })
 
 function selectBan(selectedBan?: FullAPIBan) {
@@ -496,19 +497,6 @@ function getAppealState(state: number) {
     case BanAppealState.Rejected:
       return "Rejected"
   }
-}
-function getRelDate(time: number) {
-  const date = new Date(time || ""),
-    diff = (((new Date()).getTime() - date.getTime()) / 1000),
-    day_diff = Math.floor(diff / 86400);
-  if (isNaN(day_diff) || day_diff < 0 || day_diff >= 31) return "<invalid date>"
-
-  return day_diff == 0 && (
-  diff < 60 && "just now" || diff < 120 && "1 minute ago" || diff < 3600 && Math.floor(diff / 60) + " minutes ago" || diff < 7200 && "1 hour ago" || diff < 86400 && Math.floor(diff / 3600) + " hours ago") || day_diff == 1 && "yesterday" || day_diff < 7 && day_diff + " days ago" || day_diff < 31 && Math.ceil(day_diff / 7) + " weeks ago";
-}
-function formatTime(time?: number | null) {
-  const date = time ? new Date(time*1000) : new Date()
-  return `${date.toLocaleDateString()} at ${date.toLocaleTimeString()}`
 }
 
 onMounted(async() => {

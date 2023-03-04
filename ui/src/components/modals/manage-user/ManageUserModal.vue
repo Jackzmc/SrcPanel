@@ -18,7 +18,7 @@
       <section class="modal-card-body" v-else-if="user">
         <div class="tabs is-fullwidth is-boxed is-centered">
           <ul>
-            <router-link :disabled="fetchError" :to="{ name: 'manage-user' }" v-slot="{ href, navigate, isExactActive }" custom>
+            <router-link :disabled="fetchError" :to="{ name: 'manage-user-overview' }" v-slot="{ href, navigate, isExactActive }" custom>
               <li :class="{'is-active': isExactActive}">
                 <a :href="href" @click="navigate">Overview</a>
               </li>
