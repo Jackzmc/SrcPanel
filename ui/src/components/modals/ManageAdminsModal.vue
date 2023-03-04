@@ -163,6 +163,7 @@
                   class="input"
                   v-model="form.immunity"
                   min="0" :max="privUser.immunityLevel - 1"
+                  :disabled="!canEdit"
                 />
               </div>
               <p class="help has-text-danger" v-if="form.immunity >= privUser.immunityLevel">The maximum immunity level you can apply is {{userdata.permissions.immunityLevel - 1}}, which is below yours ({{userdata.permissions.immunityLevel}})</p>
@@ -208,7 +209,7 @@
               <label :for="'flag.' + flag">{{name}}</label>
             </div>
           </Tab>
-          <Tab name="Danger">
+          <Tab name="Danger" v-if="adminData">
             <div class="field">
               <div class="control">
                 <a class="button is-danger" @click='revoke'>Revoke Admin</a>

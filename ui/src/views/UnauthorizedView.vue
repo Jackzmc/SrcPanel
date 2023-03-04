@@ -31,6 +31,6 @@ function onIsLoggedIn() {
 
 let type = ref(0)
 
-watch(props.userdata, onIsLoggedIn)
+watch(() => props.userdata, onIsLoggedIn)
 onBeforeMount(onIsLoggedIn)
 </script>

@@ -216,25 +216,32 @@ function startDownload(force = false) {
       const payload = JSON.parse(event.data)
       if(payload.error) {
         if(payload.code === "FILE_EXISTS") {
+          console.debug("File already exist, asking for confirmation")
           sse.close()
           showForceDownload.value = true
+          downloadLog.value.push({
+            state: payload.state || payload.code,
+            message: "Addon already is downloaded, press redownload to download a fresh version",
+            error: true
+          })
+        } else {
+          downloadLog.value.push({
+            state: payload.state || payload.code,
+            message: payload.message,
+            error: true
+          })
         }
-        downloadLog.value.push({
-          state: payload.state || payload.code,
-          message: "Addon already is downloaded, press Redownload to download a fresh version",
-          error: true
-        })
       } else if(payload.state === "COMPLETE") {
         sse.close()
         downloadLog.value.push({
           state: "DONE",
-          message: `Took ${Math.round((Date.now() - start) / 1000)} seconds. Map will not be playable until the server(s) have restarted. You can restart individaul servers from the 'Server Management' page.`
+          message: `Took ${Math.round((Date.now() - start) / 1000)} seconds. Map will not be playable until the server(s) have restarted. You can restart individual servers from the 'Server Management' page.`
         })
         if(!showForceDownload.value || force) updateDone.value = true
       } else {
         downloadLog.value.push({
           state: payload.state || payload.code,
-          message: payload.message
+          message: payload.message,
         })
       }
     } catch(err) {
@@ -244,7 +251,7 @@ function startDownload(force = false) {
 }
 
 function close() {
-  emit('close')
+  emit('close', updateDone.value)
 }
 
 onBeforeMount(() => {

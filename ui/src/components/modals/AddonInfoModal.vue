@@ -5,11 +5,12 @@
         <p class="modal-card-title">Addon Info
           <span class="tag is-info has-tooltip-bottom is-pulled-right mr-2 is-rounded" data-tooltip="The target share">{{props.share.id}}</span>
         </p>
-        <button class="delete" aria-label="close" @click='close'></button>
+        <button class="delete" aria-label="close" @click='close(false)'></button>
       </header>
       <section class="modal-card-body">
         <template v-if="props.addon.workshop">
-          <img :src="props.addon.workshop.previewUrl" />
+          <img alt="The workshop addon's uploaded image preview" :src="props.addon.workshop.previewUrl" @load="previewImageLoaded = true" />
+          <img v-if="!previewImageLoaded" src="@/assets/loader.gif" />
           <br><br>
         </template>
         <h4 class='title is-4'>{{props.addon.workshop ? props.addon.workshop.title : props.addon.filename}} </h4>
@@ -66,11 +67,12 @@
         </template>
       </section>
       <footer class="modal-card-foot">
-        <button class="button is-success" @click="close">
+        <button class="button" @click="close(false)">
           Close
         </button>
         <a v-if="pendingRestarts.length > 0" class="button is-info" data-tooltip="Server must be restarted to apply changes" @click='restartServers'>Restart Servers</a>
         <a v-if="props.addon.workshop" target="_blank" :href="props.addon.workshop.url" class="button is-info" data-tooltip="View the steam workshop page">Steam Workshop</a>
+        <a class="button is-danger" data-tooltip="Uninstall from all servers and delete the file" @click="deleteAddon">Delete</a>
       </footer>
     </div>
   </Modal>
@@ -87,6 +89,7 @@ const props = defineProps({
   addon: null,
   share: null
 })
+let previewImageLoaded = ref(false)
 let pendingRestarts = ref<string[]>([])
 let installInfo = ref<Record<string, boolean>>(props.addon.installInfo)
 
@@ -176,8 +179,40 @@ const parsedDescription = computed(() => {
     .replace(/\[\/([a-zA-Z0-9]+)\]/gi, '</$1>')
 })
 
-function close() {
-  emit('close')
+async function deleteAddon() {
+  if(window.confirm("Are you sure you want to delete this addon? This will be be uninstalled from all servers and its file will be deleted.")) {
+    try {
+      const response = await fetch(`/api/shares/${props.share.id}/addons/${props.addon.filename}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      })
+
+      if(response.ok) {
+        notify({
+          type: 'success',
+          text: 'Addon deleted'
+        })
+        close(true)
+      } else {
+        const json = await response.json()
+        notify({
+          type: 'error',
+          text: json.message
+        })
+      }
+
+    } catch(err: any) {
+      console.error("Faield to delete addon: " + err)
+      notify({
+        type: 'error',
+        text: err.message
+      })
+    }
+  }
+}
+
+function close(requestRefresh = false) {
+  emit('close', requestRefresh)
 }
 
 function formatSize(bytes: number, si = false, dp = 1) {

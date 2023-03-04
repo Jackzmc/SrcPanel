@@ -1,6 +1,6 @@
 import Fastify, { FastifyInstance } from 'fastify'
 import FastifySession from '@fastify/session'
-import FastifyCookie from 'fastify-cookie'
+import FastifyCookie from '@fastify/cookie'
 import MySQLSession from 'express-mysql-session'
 import { Pool } from 'mysql2/promise';
 import dotenv from 'dotenv'
@@ -84,19 +84,6 @@ app.register(import('./middlewares/managers.js'))
         }
         return next()
     })
-
-    app.addContentTypeParser('application/json', 
-        { parseAs: 'string' }, 
-        function (req, body, done) {
-            try {
-                const json = JSON.parse(body.toString())
-                done(null, json)
-            } catch (err) {
-                err.statusCode = 400
-                done(err, undefined)
-            }
-        }
-    )
 
 
     const mainPrefix = `/api/`

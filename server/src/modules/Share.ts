@@ -1,4 +1,4 @@
-import { stat, readdir, unlink } from 'fs/promises';
+import { stat, readdir, unlink, symlink } from 'fs/promises';
 import path from 'path'
 import SteamAPI, { WorkshopItem } from './steam.js';
 import { exec } from 'child_process'
@@ -157,17 +157,7 @@ export default class Share {
             const wsDetails = await this.steam.getItemDetails(slice)
             for(let i = 0; i < wsDetails.length; i++) {
                 const filename = `${wsDetails[i].publishedfileid || slice[i]}.vpk`
-                const workshop = {
-                    deleted: wsDetails[i].title === undefined,
-                    title: wsDetails[i].title,
-                    filesize: wsDetails[i].file_size,
-                    fileUrl: wsDetails[i].file_url,
-                    previewUrl: wsDetails[i].preview_url,
-                    description: wsDetails[i].description,
-                    lastUpdated: wsDetails[i].time_updated,
-                    publishedfileid: Number(wsDetails[i].publishedfileid)
-                }
-
+                const workshop = Share.serializeWorkshopItem(wsDetails[i])
                 results.push({
                     filename,
                     installInfo: (await this.getInstallInfo(filename)).states,
@@ -181,6 +171,19 @@ export default class Share {
         return results
     }
 
+    private static serializeWorkshopItem(item: WorkshopItem): AddonWorkshopInfo {
+        return {
+            deleted: item.title === undefined,
+            title: item.title,
+            filesize: item.file_size,
+            fileUrl: item.file_url,
+            previewUrl: item.preview_url,
+            description: item.description,
+            lastUpdated: item.time_updated,
+            publishedfileid: Number(item.publishedfileid)
+        }
+    }
+
     private async addAddonEntry(filename: string, fsInfo?: { filesize: number, lastModified: number }, workshop?: AddonWorkshopInfo) {
         try {
             if(fsInfo)
@@ -190,6 +193,9 @@ export default class Share {
         } catch(err) {
             console.error(`addAddonEntry failed for "${filename}"`, { fsInfo: fsInfo !== null, workshop: workshop !== undefined }, err)
         }
+    }
+    private async removeAddonEntry(filename: string) {
+        await this.db.run(SQL`DELETE FROM addoncache WHERE filename = ${filename}`)
     }
 
     public async getAddonInfo(filename: string): Promise<AddonInfo | undefined> {
@@ -206,6 +212,16 @@ export default class Share {
         }
     }
 
+    public async deleteAddon(filename: string) {
+        // Uninstall from all destinations
+        await Promise.all(Object.keys(this.destinations)
+            .map(destKey => this.uninstall(filename, destKey))
+        )
+        // Delete the source file
+        await unlink(path.join(this.sourceFolder, filename))
+        // Remove cache from database
+        await this.db.exec(SQL`DELETE FROM addoncache WHERE filename = ${filename}`)
+    }
 
     public async getInstallInfo(filename: string) {
         const statInfo = await this.doesFileExist(this.sourceFolder, filename)
@@ -248,8 +264,14 @@ export default class Share {
         if(!this.doesFileExist(this.sourceFolder, filename)) {
             throw new Error(`File \"${filename}\" does not exist in ${this.sourceFolder}`)
         }
-
-        await execPromise(`ln -sv "${this.sourceFolder}"/${filename} "${dest.path}"`)
+        try {
+            await symlink(path.join(this.sourceFolder, filename), path.join(dest.path, filename))
+        } catch(err) {
+            // Ignore already installed
+            if(err.code == "EEXIST")
+                return
+            throw err
+        }
     }
 
     public async uninstall(filename: string, destinationKey: string) {
@@ -276,10 +298,19 @@ export default class Share {
 
       
     public async steamDownload(item: WorkshopItem) {
+        const filename = `${item.publishedfileid}.vpk`
+        // Remove item from cache, so we can update it
+        await this.removeAddonEntry(filename)
+
         const bytes = await SteamAPI.downloadItem(item, this.sourceFolder, { timeout: DOWNLOAD_TIMEOUT })
         if(bytes != item.file_size) {
             throw new Error(`Downloaded size mismatch (downloaded ${bytes} bytes, expected ${item.file_size} bytes)`)
         }
+        // Update the cache
+        await this.addAddonEntry(filename, {
+            filesize: item.file_size,
+            lastModified: item.time_updated
+        }, Share.serializeWorkshopItem(item))
         return true
     }
 }

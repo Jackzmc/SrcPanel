@@ -410,9 +410,6 @@ function deleteBan() {
   if(window.confirm("Are you sure you want to remove this ban from the records? This should only be done if mistakes were made when banning them. Recommend to suspend the ban instead.")) {
     fetch(`/api/bans/${route.params.id}`, {
       method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json',
-      },
       credentials: 'include'
     })
     .then(async(response) => {

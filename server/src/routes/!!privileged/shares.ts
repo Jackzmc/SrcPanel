@@ -119,12 +119,39 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
     })
 
+    fastify.delete('/:shareId/addons/:filename', async(req: FastifyRequest<{Params: {shareId: string, filename: string}}>, reply) => {
+        if(!req.params.filename) {
+            return reply.status(401).send({
+                error: "No filename provided", 
+                message: `Filename is blank`   
+            })
+        }
+        const shareId = req.params.shareId
+        const share = fastify.servers.getShare(shareId)
+        if(!share) {
+            return reply.status(404).send({
+                error: "Share Not Found", 
+                message: `No share with id \"${shareId.toLowerCase()}\" could be found. Share may be unavailable, incorrecty configured or does not exist`   
+            })
+        }
+        // await share.deleteAddon(req.params.filename)
+        return reply.status(204).send()
+    })
+
     fastify.get('/:shareId/addons/:workshopId/download', async(req: FastifyRequest<{
         Params: {shareId: string, workshopId: string},
         Querystring: {'destinations'?: string, force?: boolean, sse?: boolean }
     }>, reply) => {
         let allowDownload = true
         const useSSE = req.query.sse
+        function sendSSE(payload: any) {
+            if(!useSSE) return
+            return reply.raw.write(`data: ${JSON.stringify(payload)}\n\n`)
+        }
+        async function send(payload: any, statusCode: number) {
+            if(useSSE) return sendSSE(payload)
+            else return await reply.status(statusCode).send(payload)
+        }
         if(useSSE) {
             reply.raw.writeHead(200, {
                 'Cache-Control': 'no-cache,no-transform',
@@ -142,7 +169,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 code: "SHARE_NOT_FOUND",
                 message: `No share with id \"${req.params.shareId.toLowerCase()}\" could be found. Share may be unavailable, incorrecty configured or does not exist`   
             }
-            useSSE ? reply.raw.write(`data: ${JSON.stringify(payload)}\n\n`) : reply.status(404).send(payload)
+            await send(payload, 404)
         } else if(!req.query.force && await share.isInstalled(`${req.params.workshopId}.vpk`)) {
             const addonInfo = await share.getAddonInfo(`${req.params.workshopId}.vpk`)
             if(addonInfo.workshop) {
@@ -150,8 +177,13 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 if(latestWs[0].time_updated == addonInfo.lastModified) {
                     // File is the same - ask for redownload
                     allowDownload = false
+                    
+                } else {
+                    sendSSE({
+                        code: 'NOTICE',
+                        message: `Addon already installed but our version is out of date, updating...`
+                    })
                 }
-
             } else {
                 // Ask for confirm to redownload if it's not a workshop item
                 allowDownload = false
@@ -163,11 +195,12 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                     error: "File exists",
                     message: "The addon is already downloaded. " + (useSSE ? "Use Download to redownload" : "Provide ?force to force download.")
                 }
-                useSSE ? reply.raw.write(`data: ${JSON.stringify(payload)}\n\n`) : reply.status(409).send(payload)
+                await send(payload, 409)
             }
-        } else if(allowDownload) {
+        } 
+        if(allowDownload) {
             try {
-                if(useSSE) reply.raw.write(`data: {"state": "FETCH_INFO", "message": "Fetching information from steam"}\n\n`)
+                sendSSE({state: "FETCH_INFO", message: "Fetching information from steam"})
                 const children = await fastify.steam.getCollectionChildren(req.params.workshopId)
                 let details: WorkshopItem[] = []
                 if(!children) {
@@ -178,19 +211,17 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
                 const downloadPromises = details.map(detail => {
                     return new Promise(async(resolve) => {
-                        if(useSSE) {
-                            reply.raw.write(`data: ${JSON.stringify({
-                                state: "DOWNLOADING",
-                                entry: detail.publishedfileid,
-                                message: `Downloading <a href="https://steamcommunity.com/sharedfiles/filedetails/?id=${detail.publishedfileid}"><b>${detail.title}</b></a>`
-                            })}\n\n`)
-                        }
+                        sendSSE({
+                            state: "DOWNLOADING",
+                            entry: detail.publishedfileid,
+                            message: `Downloading <a href="https://steamcommunity.com/sharedfiles/filedetails/?id=${detail.publishedfileid}"><b>${detail.title}</b></a>`
+                        })
                         await share.steamDownload(detail)
-                        if(useSSE) reply.raw.write(`data: ${JSON.stringify({
+                        sendSSE({
                             state: "DOWNLOADING",
                             entry: detail.publishedfileid,
                             message: `Downloaded <a href="https://steamcommunity.com/sharedfiles/filedetails/?id=${detail.publishedfileid}"><b>${detail.title}</b></a> (${humanFileSize(detail.file_size)})`
-                        })}\n\n`)
+                        })
                         await fastify.authmngr.log.addWebEntry(req.session.user.steamid, "ADDON_DOWNLOAD", `Downloaded addon "${detail.title}" (${detail.publishedfileid}, ${humanFileSize(detail.file_size)})`)
                         resolve(true)
                     })
@@ -199,7 +230,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 await Promise.allSettled(downloadPromises)
                 
 
-                if(useSSE) reply.raw.write(`data: {"state": "INSTALLING", "message": "Installing addons to specified destinations"}\n\n`)
+                sendSSE({ state: "INSTALLING", message: "Installing addons to specified destinations" })
 
                 let destResults: Record<string, Record<string, {result: "success" | "error", error?: string }>> = undefined
                 if(req.query.destinations) {
@@ -216,8 +247,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                                     result: "success"
                                 }
                             } catch(err) {
-                                if(useSSE) reply.raw.write(`data: {"state": "INSTALLING", "message": "Failed to install ${detail.publishedfileid} for ${destKey}"\n\n`)
-                                console.warn(`[ShareInstaller] Install fail for ${destKey}/${detail.publishedfileid}: `, err)
+                                sendSSE({state: "INSTALLING", message: `${err.code}: Failed to install ${detail.publishedfileid} for ${destKey}`, error: true })
+                                console.warn(`[ShareInstaller] Install failed for ${destKey}/${detail.publishedfileid}: `, err)
                                 destResults[destKey][detail.publishedfileid] = {
                                     result: "error",
                                     error: err.message
@@ -239,7 +270,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                     error,
                     message: "An error occurred while fetching info or downloading the addon",
                 }
-                useSSE ? reply.raw.write(`data: ${JSON.stringify(payload)}`) : reply.status(500).send(payload)
+                await send(payload, 500)
             }
         }
         if(useSSE) {

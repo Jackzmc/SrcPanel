@@ -1,6 +1,6 @@
 <template>
 <div>
-  <DownloadAddonModal v-if="showDownloadModal" :share="shareInfo" @close="showDownloadModal = false"/>
+  <DownloadAddonModal v-if="showDownloadModal" :share="shareInfo" @close="onDownloadModalClosed"/>
   <AddonInfoModal v-if="showAddonModal" :share="shareInfo" :addon="prefetch" @close="closePreview" />
   <div class="container" v-if="ready">
     <div class="level">
@@ -80,7 +80,7 @@
                 <a  @click="preview(vpk)" v-else>{{vpk.filename}}</a>
               </td>
               <td v-if="hasAnyWorkshop">
-                <a v-if="vpk.workshop" :href="vpk.workshop.url" class="button is-small">Workshop</a>
+                <a v-if="vpk.workshop" :href="vpk.workshop.url" class="button is-small" target="_blank">Workshop</a>
               </td>
               <td>
                 <span v-if="vpk.workshop">{{formatSize(vpk.workshop.filesize, true, 0)}}</span>
@@ -220,10 +220,19 @@ function preview(entry: any) {
   prefetch.value = entry
   showAddonModal.value = true
 }
-function closePreview(entry: any) {
+function closePreview(removeEntry: boolean) {
+  if(removeEntry) {
+    const index = vpks.value.findIndex(vpk => vpk.filename === prefetch.value.filename)
+    vpks.value.splice(index, 1)
+  }
   router.push(`/admin/addons/${selectedShare.value}`)
   prefetch.value = null
   showAddonModal.value = false
+}
+
+async function onDownloadModalClosed(requestRefresh: boolean) {
+  showDownloadModal.value = false
+  await fetchVPKS()
 }
 async function fetchShares() {
   error.value = undefined
@@ -295,27 +304,6 @@ function formatSize(bytes: number, si = false, dp = 1) {
 function formatTime(time: number) {
   const date = new Date(time*1000)
   return `${date.toLocaleDateString()} at ${date.toLocaleTimeString()}`
-}
-
-async function installAddon(vpk: any, destKey: string, mode: "install" | "uninstall") {
-  try {
-    const response = await fetch(`/api/shares/${selectedShare.value}/addons/${vpk.filename}/${mode}/${destKey}`, { method: 'POST' })
-    const json = await response.json()
-    if(response.ok) {
-      // Update local copy
-      for(const vpk2 of vpks.value) {
-        if(vpk2.filename === vpk.filename) {
-          vpk2.installInfo[destKey] = (mode == "install")
-          return
-        }
-      }
-      console.warn("installAddon called with addon that is not downloaded", { vpk, destKey, mode })
-    } else {
-      alert(json.error ? `${json.error}: ${json.message}` : response.statusText)
-    }
-  } catch(err: any) {
-    alert(err.message || err)
-  }
 }
 
 onBeforeMount(async() => {
