@@ -180,6 +180,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 const payload = {
                     code: 'FILE_EXISTS',
                     error: "File exists",
+                    filename: addonInfo.filename,
                     message: "The addon is already downloaded. " + (useSSE ? "Use Download to redownload" : "Provide ?force to force download.")
                 }
                 await send(payload, 409)

@@ -161,7 +161,7 @@ const SORT_WORKSHOP = (a: any, b: any) => {
   return 0
 }
 const SORT_LAST_UPDATED = (a: any, b: any) => {
-  return (a.lastModified ?? a.workshop.lastUpdated) - (b.lastModified ?? b.workshop.lastUpdated)
+  return (a.workshop?.lastUpdated ?? a.lastModified) - (b.workshop?.lastUpdated ?? b.lastModified)
 }
 const SORT_DOWNLOADED = (a: any, b: any) => {
   return (a.downloaded) - (b.downloaded)

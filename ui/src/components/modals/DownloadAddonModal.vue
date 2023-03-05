@@ -62,7 +62,11 @@
       </p>
       <div class="content">
         <p v-for="(entry, i) in downloadLog" :key="i">
-          <span :class="['tag',{'is-link': !entry.error, 'is-danger': entry.error, 'is-success': entry.success}]">{{entry.state}}</span> <span v-html="entry.message" />
+          <span :class="['tag',{'is-link': !entry.error, 'is-danger': entry.error, 'is-success': entry.success}]">
+            {{entry.state}}
+          </span>
+          <span v-html="entry.message" />
+          <router-link :to="'/admin/addons/' + share.id + '/' + entry.filename">View existing addon</router-link>
         </p>
       </div>
     </section>
@@ -119,7 +123,7 @@ let workshopId = ref<string>("")
 let workshopDetails = ref()
 let downloadingState = ref(0) // 0: not downloading, 1 : downloading normal, 2 : downloading forced, 3: restarting servers
 let installDestinations = ref<string[]>([])
-let downloadLog = ref<{state: string, message: string, error?: boolean, success?: boolean}[]>([])
+let downloadLog = ref<{state: string, message: string, error?: boolean, success?: boolean, filename?: string}[]>([])
 let showForceDownload = ref(false)
 let updateDone = ref(false)
 
@@ -221,6 +225,7 @@ function startDownload(force = false) {
           showForceDownload.value = true
           downloadLog.value.push({
             state: payload.state || payload.code,
+            filename: payload.filename,
             message: "Addon already is downloaded, press redownload to download a fresh version",
             error: true
           })
