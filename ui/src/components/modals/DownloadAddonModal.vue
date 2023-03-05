@@ -5,7 +5,7 @@
       <p class="modal-card-title">Install Workshop Addon
         <span class="tag is-info has-tooltip-bottom is-pulled-right mr-2 is-rounded" data-tooltip="The target share">{{props.share.id}}</span>
       </p>
-      <button v-if="downloadingState == 0" class="delete" aria-label="close" @click='close'></button>
+      <button v-if="downloadingState == 0 || showForceDownload" class="delete" aria-label="close" @click='close'></button>
     </header>
     <section class="modal-card-body" v-if="downloadingState == 0">
       <div class="field">
@@ -62,11 +62,11 @@
       </p>
       <div class="content">
         <p v-for="(entry, i) in downloadLog" :key="i">
-          <span :class="['tag',{'is-link': !entry.error, 'is-danger': entry.error, 'is-success': entry.success}]">
+          <span :class="['tag',{'is-link': !entry.error&&!entry.success, 'is-danger': entry.error, 'is-success': entry.success}]">
             {{entry.state}}
-          </span>
+          </span>&nbsp;
           <span v-html="entry.message" />
-          <router-link :to="'/admin/addons/' + share.id + '/' + entry.filename">View existing addon</router-link>
+          <router-link v-if="showForceDownload" :to="'/admin/addons/' + share.id + '/' + entry.filename">View existing addon</router-link>
         </p>
       </div>
     </section>
@@ -79,13 +79,18 @@
           Restart Servers
         </button>
       </template>
-      <button v-else-if="showForceDownload"
-        :class="['button','is-info', {'is-loading': downloadingState == 2}]"
-        :disabled="downloadingState == 2|| !workshopId || installDestinations.length == 0"
-        @click="startDownload(true)"
-      >
-        Redownload
-      </button>
+      <template v-else-if="showForceDownload">
+        <button
+          :class="['button','is-info', {'is-loading': downloadingState == 2}]"
+          :disabled="downloadingState == 2|| !workshopId || installDestinations.length == 0"
+          @click="startDownload(true)"
+        >
+          Redownload
+        </button>
+        <button class="button" @click="close">
+            Cancel
+          </button>
+      </template>
       <template v-else>
         <button :class="['button','is-info', {'is-loading': downloadingState == 1}]"
           :disabled="downloadingState == 1 || !workshopId || installDestinations.length == 0"

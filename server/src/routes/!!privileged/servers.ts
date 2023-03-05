@@ -153,6 +153,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
         try {
             await server.start()
+            reply.status(204).send()
         } catch(err) {
             return reply.code(500).send({
                 error: "SERVER_ERROR",
@@ -186,6 +187,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
         try {
             await server.sendCommand(req.body)
+            reply.status(204).send()
         } catch(err) {
             return reply.code(500).send({
                 error: "SERVER_ERROR",
@@ -223,6 +225,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                     })
                 }
             }
+            reply.status(204).send()
         } catch(err) {
             console.log('error', err)
             return reply.code(500).send({
