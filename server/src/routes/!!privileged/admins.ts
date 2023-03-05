@@ -4,6 +4,7 @@ import { Static, Type } from '@sinclair/typebox'
 import SteamID from 'steamid';
 import { AdminGroup, WebPermission } from '../../../../common-types/User.js';
 import { AdminData, ReadableAdminData } from '../../../../common-types/User';
+import { APIBanFlags } from '../../../../common-types/Ban.js';
 
 const POSTAdmin = Type.Object({
     immunityLevel: Type.Number(),
@@ -206,12 +207,23 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         if(req.session.permissions.web.flags & WebPermission.ManageAdmins) {
             const steamid = new SteamID(req.params.steamid)
             if(steamid.isValid()) {
+                const [existing] = await fastify.db.execute<RowDataPacket[]>(`
+                    SELECT * FROM bans WHERE steamid = ? AND ~FLAGS & ${APIBanFlags.Suspended}`,
+                    [req.params.steamid]
+                )
+                if(existing.length > 0) {
+                    return reply.code(403).send({
+                        error: 'POLICY_ERROR',
+                        message: 'Cannot give privileges to a user who has any active bans',
+                        statusCode: 403
+                    })
+                }
                 if(!fastify.authmngr.isAdmin(steamid)) {
                     let immunity = req.body.immunityLevel || 0
                     if(immunity < 0) immunity = 0
 
                     if(immunity > req.session.permissions.immunityLevel) {
-                        reply.code(403).send({
+                        return reply.code(403).send({
                             error: 'INVALID_IMMUNITY',
                             message: 'You can only add admins to an immunity level at or below yours',
                             statusCode: 403

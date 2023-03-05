@@ -2,7 +2,7 @@ import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
 import { OkPacket, RowDataPacket } from 'mysql2';
 import { Static, Type } from '@sinclair/typebox'
 import SteamID from 'steamid'
-import { FullAPIBan } from '../../../../common-types/Ban.js';
+import { FullAPIBan, APIBanFlags } from '../../../../common-types/Ban.js';
 
 const STEAM_WEB_APIKEY = process.env.STEAM_WEB_APIKEY
 
@@ -80,9 +80,9 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 }
             )
 
-            if(req.body.flags & 2 && ~existing[0].flags & 2) {
+            if(req.body.flags & APIBanFlags.Suspended && ~existing[0].flags & APIBanFlags.Suspended) {
                 fastify.authmngr.log.addWebEntry(req.session.user.steamid, 'BAN_EDIT', `Suspended ban #${existing[0].id}`)
-            } else if(~req.body.flags & 2 && existing[0].flags & 2) {
+            } else if(~req.body.flags & APIBanFlags.Suspended && existing[0].flags & APIBanFlags.Suspended) {
                 fastify.authmngr.log.addWebEntry(req.session.user.steamid, 'BAN_EDIT', `Resumed ban #${existing[0].id}`)
             } else {
                 fastify.authmngr.log.addWebEntry(req.session.user.steamid, 'BAN_EDIT', `Edited ban #${existing[0].id} details`)
@@ -116,6 +116,19 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             if(!req.body.executor) {
                 req.body.executor = req.session.user.steamid
             }
+            const steamid = new SteamID(req.params.steamid)
+            if(!steamid.isValid()) {
+                return reply.status(400).send({
+                    error: "INVALID_STEAMID",
+                    message: "The steamid is invalid"
+                })
+            }
+            if(this.authmngr.isAdmin(steamid)) {
+                return reply.status(403).send({
+                    error: "IS_ADMIN",
+                    message: "Cannot ban a user with privileges, revoke the privileges first"
+                })
+            }
 
             const [existing] = await fastify.db.execute<RowDataPacket[]>(`
                 SELECT * FROM bans WHERE steamid = ?`,
@@ -124,7 +137,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
             if(existing.length > 0) {
                 for(const ban of existing) {
-                    if(~ban.flags & 2) {
+                    if(~ban.flags & APIBanFlags.Suspended) {
                         return reply.code(409).send({
                             error: 'BAN_EXISTS',
                             message: `User was already banned on non-suspended ban #${ban.id}`,
