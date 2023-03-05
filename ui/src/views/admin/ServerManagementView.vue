@@ -123,6 +123,12 @@ function processAction(server: any, type: string) {
   })
   .then(async(response) => {
     if(response.ok ) {
+      // there is no json body:
+      if(response.status === 204) {
+        sendMessage('success', 'Access completed succesfully')
+        return
+      }
+
       const json = await response.json()
       if(json.error) {
         return sendMessage('error', `<b>Server returned error</b><br>${json.message}`)
