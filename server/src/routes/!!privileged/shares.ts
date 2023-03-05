@@ -7,26 +7,12 @@ import { WorkshopItem } from '../../modules/steam.js';
 
 const WS_ITEMID_REGEX = new RegExp(/(\d+).vpk/)
 
-interface AddonListEntry {
-    filename: string,
-    workshop?: {
-        deleted: boolean
-        title: string,
-        filesize: number,
-        lastUpdated: number
-        // children: AddonChildListEntry[]
-    }, 
-    filesize?: number,
-    lastModified?: number
-    shareInfo: Record<string, boolean>
+export interface ChildWorkshopItem extends WorkshopItem {
+    collection?: WorkshopCollectionInfo
 }
-
-interface AddonChildListEntry {
-    filename: string,
-    workshop?: {
-        title: string,
-        filesize: number,
-    },
+export interface WorkshopCollectionInfo {
+    id: string,
+    name: string
 }
 
 
@@ -171,6 +157,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             }
             await send(payload, 404)
         } else if(!req.query.force && await share.isInstalled(`${req.params.workshopId}.vpk`)) {
+            // This doesn't run when it is a collection, as collections themselves are not installed
             const addonInfo = await share.getAddonInfo(`${req.params.workshopId}.vpk`)
             if(addonInfo.workshop) {
                 const latestWs = await fastify.steam.getItemDetails([req.params.workshopId])
@@ -202,11 +189,19 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             try {
                 sendSSE({state: "FETCH_INFO", message: "Fetching information from steam"})
                 const children = await fastify.steam.getCollectionChildren(req.params.workshopId)
-                let details: WorkshopItem[] = []
+                let details: (ChildWorkshopItem)[] = []
+                const [parentItem] = await fastify.steam.getItemDetails([req.params.workshopId])
                 if(!children) {
-                    details = await fastify.steam.getItemDetails([req.params.workshopId])
+                    details.push(parentItem)
                 } else {
                     details = await fastify.steam.getItemDetails(children)
+                    console.debug('got collection children', parentItem.title)
+                    details.map(detail => {
+                        detail.collection = {
+                            id: parentItem.publishedfileid,
+                            name: parentItem.title
+                        }
+                    })
                 }
 
                 const downloadPromises = details.map(detail => {
@@ -218,7 +213,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                         })
                         await share.steamDownload(detail)
                         sendSSE({
-                            state: "DOWNLOADING",
+                            state: "DOWNLOADED",
                             entry: detail.publishedfileid,
                             message: `Downloaded <a href="https://steamcommunity.com/sharedfiles/filedetails/?id=${detail.publishedfileid}"><b>${detail.title}</b></a> (${humanFileSize(detail.file_size)})`
                         })

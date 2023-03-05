@@ -62,7 +62,7 @@
       </p>
       <div class="content">
         <p v-for="(entry, i) in downloadLog" :key="i">
-          <span :class="['tag',{'is-link': !entry.error, 'is-danger': entry.error}]">{{entry.state}}</span> <span v-html="entry.message" />
+          <span :class="['tag',{'is-link': !entry.error, 'is-danger': entry.error, 'is-success': entry.success}]">{{entry.state}}</span> <span v-html="entry.message" />
         </p>
       </div>
     </section>
@@ -119,7 +119,7 @@ let workshopId = ref<string>("")
 let workshopDetails = ref()
 let downloadingState = ref(0) // 0: not downloading, 1 : downloading normal, 2 : downloading forced, 3: restarting servers
 let installDestinations = ref<string[]>([])
-let downloadLog = ref<{state: string, message: string, error?: boolean}[]>([])
+let downloadLog = ref<{state: string, message: string, error?: boolean, success?: boolean}[]>([])
 let showForceDownload = ref(false)
 let updateDone = ref(false)
 
@@ -242,6 +242,7 @@ function startDownload(force = false) {
         downloadLog.value.push({
           state: payload.state || payload.code,
           message: payload.message,
+          success: payload.state == "SUCCESS"
         })
       }
     } catch(err) {

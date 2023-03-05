@@ -72,28 +72,58 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="vpk in filteredVPKs" :key="vpk.filename">
-              <td>
-                <a v-if="vpk.workshop" class="has-text-info" @click="preview(vpk)" :data-tooltip="'Filename: ' + vpk.filename">
-                  <b>{{vpk.workshop.title}}</b>
-                </a>
-                <a  @click="preview(vpk)" v-else>{{vpk.filename}}</a>
-              </td>
-              <td v-if="hasAnyWorkshop">
-                <a v-if="vpk.workshop" :href="vpk.workshop.url" class="button is-small" target="_blank">Workshop</a>
-              </td>
-              <td>
-                <span v-if="vpk.workshop">{{formatSize(vpk.workshop.filesize, true, 0)}}</span>
-                <span v-else>{{formatSize(vpk.filesize, true, 0)}}</span>
-              </td>
-              <td>
-                <span v-if="vpk.workshop">{{formatTime(vpk.workshop.lastUpdated)}}</span>
-                <span v-else>{{formatTime(vpk.lastModified)}}</span>
-              </td>
-              <td>
-                <span>{{formatTime(vpk.downloaded)}}</span>
-              </td>
-            </tr>
+            <template v-for="vpk in filteredVPKs" :key="vpk.filename ?? vpk.collection.id">
+              <tr>
+                <td>
+                  <b v-if="vpk.collection"  @click="preview(vpk)">{{vpk.collection.name}} <span class="tag is-info">Collection</span></b>
+                  <a v-else-if="vpk.workshop" class="has-text-info" @click="preview(vpk)" :data-tooltip="getTooltip(vpk)">
+                    <b>{{vpk.workshop.title}}</b>
+                  </a>
+                  <a @click="preview(vpk)" v-else>{{vpk.filename}}</a>
+                </td>
+                <td v-if="hasAnyWorkshop">
+                  <a v-if="vpk.workshop" :href="vpk.workshop.url" class="button is-small" target="_blank">Workshop</a>
+                  <a v-else-if="vpk.collection" :href="'https://steamcommunity.com/workshop/filedetails/?id=' + vpk.collection.id" class="button is-small" target="_blank">Workshop</a>
+                </td>
+                <td :colspan="vpk.collection ? 3 : 1">
+                  <span v-if="vpk.workshop">{{formatSize(vpk.workshop.filesize, true, 0)}}</span>
+                  <span v-else>{{formatSize(vpk.filesize, true, 0)}}</span>
+                </td>
+                <template v-if="!vpk.collection">
+                <td>
+                  <span v-if="vpk.workshop">{{formatTime(vpk.workshop.lastUpdated)}}</span>
+                  <span v-else>{{formatTime(vpk.lastModified)}}</span>
+                </td>
+                <td>
+                  <span>{{formatTime(vpk.downloaded)}}</span>
+                </td>
+                </template>
+              </tr>
+              <template v-if="vpk.collection">
+                <tr v-for="child in vpk.children" :key="child.filename">
+                  <td>
+                    <a v-if="child.workshop" class="has-text-info ml-5" @click="preview(child)" :data-tooltip="getTooltip(child)">
+                      <b>{{child.workshop.title}}</b>
+                    </a>
+                    <a @click="preview(child)" v-else class="ml-5">{{child.filename}}</a>
+                  </td>
+                  <td v-if="hasAnyWorkshop">
+                    <a v-if="child.workshop" :href="child.workshop.url" class="button is-small" target="_blank">Workshop</a>
+                  </td>
+                  <td>
+                    <span v-if="child.workshop">{{formatSize(child.workshop.filesize, true, 0)}}</span>
+                    <span v-else>{{formatSize(child.filesize, true, 0)}}</span>
+                  </td>
+                  <td>
+                    <span v-if="child.workshop">{{formatTime(child.workshop.lastUpdated)}}</span>
+                    <span v-else>{{formatTime(child.lastModified)}}</span>
+                  </td>
+                  <td>
+                    <span>{{formatTime(child.downloaded)}}</span>
+                  </td>
+                </tr>
+              </template>
+            </template>
           </tbody>
         </table>
       </div>
@@ -116,6 +146,8 @@ import { ref, watch, computed, onBeforeMount, onMounted } from 'vue'
 import DownloadAddonModal from '@/components/modals/DownloadAddonModal.vue'
 import AddonInfoModal from '@/components/modals/AddonInfoModal.vue'
 import { useRoute, useRouter } from 'vue-router'
+import { WorkshopItem } from '../../../../server/src/modules/steam';
+import { AddonInfo } from '../../../../server/src/modules/Share';
 
 const SORT_NAME = (a: any, b: any) => {
   return (a.workshop?.title ?? a.filename).localeCompare(b.workshop?.title ?? b.filename)
@@ -194,6 +226,10 @@ const filteredVPKs = computed(() => {
   let _sort = (a: any, b: any) => { return 0 }
   if(sort.value) {
     _sort = (a: any, b: any) => {
+      // Use the collection's first child for sorting
+      if(a.collection && a.children.length > 0) a = a.children[0]
+      if(b.collection && b.children.length > 0) b = b.children[0]
+
       const { id, descending, func } = sort.value! as { column: string, id: string, descending: boolean, func: Function }
       if(descending) {
         return func(b, a)
@@ -206,11 +242,15 @@ const filteredVPKs = computed(() => {
 
   return vpks.value
     .filter(vpk => {
-      return (!query || (
-        vpk.filename.toLowerCase().includes(query) ||
-          (vpk.workshop && vpk.workshop.title.toLowerCase().includes(query)
-        )
-      ))
+      if(!query) return true
+      // Search the collection's name and it's children instead:
+      if(vpk.collection) {
+        return vpk.collection.name.toLowerCase().includes(query)
+        || vpk.children.some((child: any) => child.filename.toLowerCase().includes(query) || (child.workshop && child.workshop.title.toLowerCase().includes(query)))
+      }
+      return (vpk.filename.toLowerCase().includes(query)
+        || (vpk.workshop && vpk.workshop.title.toLowerCase().includes(query))
+      )
     })
     .sort(_sort)
 })
@@ -228,6 +268,11 @@ function closePreview(removeEntry: boolean) {
   router.push(`/admin/addons/${selectedShare.value}`)
   prefetch.value = null
   showAddonModal.value = false
+}
+
+function getTooltip(addon: AddonInfo) {
+  const installedOn = Object.entries(addon.installInfo).filter(([key, value]) => value).map(([key]) => key).join("\n\t")
+  return `Filename: ${addon.filename}\nInstalled on:\n\t${installedOn}`
 }
 
 async function onDownloadModalClosed(requestRefresh: boolean) {

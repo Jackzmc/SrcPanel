@@ -5,6 +5,7 @@ import { exec } from 'child_process'
 import sqlite3 from 'sqlite3'
 import sqlite from 'sqlite'
 import SQL from 'sql-template-strings';
+import { ChildWorkshopItem, WorkshopCollectionInfo } from '../routes/!!privileged/shares.js';
 
 const DOWNLOAD_TIMEOUT = 1000 * 60 * 3
 
@@ -31,7 +32,13 @@ export interface AddonInfo {
     downloaded?: number
     lastModified?: number,
     workshop?: AddonWorkshopInfo,
-    installInfo: Record<string, boolean>
+    installInfo: Record<string, boolean>,
+    collection?: WorkshopCollectionInfo
+}
+
+export interface AddonCollectionInfo {
+    collection: WorkshopCollectionInfo, 
+    children: AddonInfo[]
 }
 export interface AddonWorkshopInfo {
     publishedfileid: number
@@ -88,6 +95,8 @@ export default class Share {
             ws_info TEXT,
             PRIMARY KEY (filename)
         );`)
+        db.exec(SQL`ALTER TABLE addoncache ADD COLUMN collection_id VARCHAR(64)`).catch(() => {})
+        db.exec(SQL`ALTER TABLE addoncache ADD COLUMN collection_name VARCHAR(128)`).catch(() => {})
     }
 
     private _parseDownloadSources(downloadSources?: Record<string, boolean>) {
@@ -118,15 +127,25 @@ export default class Share {
     public async getAddons() {
         const dirents = await readdir(this.sourceFolder, { withFileTypes: true }) 
         const steamResolveQueue: string[] = [] // Array of workshop ids
-        const results: AddonInfo[] = []
+        const results: (AddonInfo|AddonCollectionInfo)[] = []
+        let collections: Record<string, AddonCollectionInfo> = {}
         for(const dirent of dirents) {
             if(dirent.isFile()) {
                 // Only fetch the specified extenstions
                 const ext = dirent.name.split(".").pop()
                 if(this.validExts && !this.validExts.includes(ext)) continue
 
+
                 const addonInfo = await this.getAddonInfo(dirent.name)
                 if(addonInfo) {
+                    if(addonInfo.collection) {
+                        if(!collections[addonInfo.collection.id]) collections[addonInfo.collection.id] = { 
+                            collection: addonInfo.collection,
+                            children: []
+                        }
+                        collections[addonInfo.collection.id].children.push(addonInfo)
+                        delete addonInfo.collection
+                    }
                     results.push(addonInfo)
                 } else {
                     const match = dirent.name.match(WS_ITEMID_REGEX)
@@ -150,6 +169,13 @@ export default class Share {
                     }
                 }
             }
+        }
+
+        for(const collection of Object.values(collections)) {
+            results.push({
+                ...collection,
+                filesize: collection.children.reduce((pv, child) => pv + child.filesize, 0)
+            })
         }
 
         while(steamResolveQueue.length > 0) {
@@ -184,12 +210,17 @@ export default class Share {
         }
     }
 
-    private async addAddonEntry(filename: string, fsInfo?: { filesize: number, lastModified: number }, workshop?: AddonWorkshopInfo) {
+    private async addAddonEntry(filename: string, fsInfo?: { filesize: number, lastModified: number }, workshop?: AddonWorkshopInfo, collection?: WorkshopCollectionInfo) {
         try {
-            if(fsInfo)
-                await this.db.run(SQL`INSERT INTO addoncache (filename, filesize, lastModified) VALUES (${filename}, ${fsInfo.filesize}, ${fsInfo.lastModified})`)
-            else
-                await this.db.run(SQL`INSERT INTO addoncache (filename, ws_info) VALUES (${filename}, ${JSON.stringify(workshop)})`)
+            await this.db.run(
+                SQL`INSERT INTO addoncache 
+                    (filename, filesize, lastModified, ws_info, collection_id, collection_name) 
+                    VALUES(${filename}, ${fsInfo?.filesize}, ${fsInfo?.lastModified}, ${workshop ? JSON.stringify(workshop) : null}, ${collection?.id}, ${collection?.name})`
+            )
+            // if(fsInfo)
+            //     await this.db.run(SQL`INSERT INTO addoncache (filename, filesize, lastModified) VALUES (${filename}, ${fsInfo.filesize}, ${fsInfo.lastModified})`)
+            // else
+            //     await this.db.run(SQL`INSERT INTO addoncache (filename, ws_info) VALUES (${filename}, ${JSON.stringify(workshop)})`)
         } catch(err) {
             console.error(`addAddonEntry failed for "${filename}"`, { fsInfo: fsInfo !== null, workshop: workshop !== undefined }, err)
         }
@@ -208,7 +239,11 @@ export default class Share {
             lastModified: info.lastModified ?? installInfo.modified,
             downloaded: installInfo.created,
             workshop: info.ws_info ? JSON.parse(info.ws_info) as AddonWorkshopInfo : undefined,
-            installInfo: installInfo.states
+            installInfo: installInfo.states,
+            collection: info.collection_id ? {
+                id: info.collection_id,
+                name: info.collection_name
+            } : null
         }
     }
 
@@ -297,7 +332,7 @@ export default class Share {
     } 
 
       
-    public async steamDownload(item: WorkshopItem) {
+    public async steamDownload(item: ChildWorkshopItem) {
         const filename = `${item.publishedfileid}.vpk`
         // Remove item from cache, so we can update it
         await this.removeAddonEntry(filename)
@@ -306,11 +341,12 @@ export default class Share {
         if(bytes != item.file_size) {
             throw new Error(`Downloaded size mismatch (downloaded ${bytes} bytes, expected ${item.file_size} bytes)`)
         }
+
         // Update the cache
         await this.addAddonEntry(filename, {
             filesize: item.file_size,
             lastModified: item.time_updated
-        }, Share.serializeWorkshopItem(item))
+        }, Share.serializeWorkshopItem(item), item.collection)
         return true
     }
 }
