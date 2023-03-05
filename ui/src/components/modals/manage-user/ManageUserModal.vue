@@ -84,7 +84,7 @@ let returnTo = ref<string>()
 
 function close() {
   if(returnTo.value) {
-    router.push(`/${returnTo.value}`)
+    router.push(returnTo.value)
   } else
     router.push(`/admin/players/`)
 }
@@ -131,6 +131,6 @@ onBeforeMount(async () => {
     }
   });
   await getUser()
-  returnTo.value = route.query.returnTo?.toString()
+  if(route.query.returnTo) returnTo.value = decodeURIComponent(route.query.returnTo.toString())
 })
 </script>

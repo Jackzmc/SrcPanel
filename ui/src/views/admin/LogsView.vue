@@ -625,8 +625,30 @@ onMounted(() => {
 watch(query, (value) => {
   page.value = 1;
   if (props.userdata && fetchDebounce.value) fetchDebounce.value();
-  window.history.pushState("", "", `?page=${page.value}${value}`);
+  setQuery()
 });
+
+function setQuery() {
+  let query: Record<string, string> = {}
+  if (!isFilterTargetValid.value && filters.value.target) return
+  for (const filterName in filters.value) {
+    const value = filters.value[filterName];
+    if (value) {
+      if (Array.isArray(value) && value.length > 0) {
+        query[filterName] = value.join(",")
+      } else {
+        query[filterName] = value as string
+      }
+    }
+  }
+  for (const searchKey in search.value) {
+    const value = (search.value as Record<string, string>)[searchKey];
+    if (value) {
+      query[`search_${searchKey}`] = value
+    }
+  }
+  router.push({ query })
+}
 
 </script>
 

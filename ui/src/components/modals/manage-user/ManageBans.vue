@@ -505,7 +505,7 @@ onMounted(async() => {
     if(route.params.banid == "appeals") return showAppealsList()
     const ban = bans.value.find(ban => ban.id === Number(route.params.banid))
     if(ban) return selectBan(ban)
-  }
-  selectBan()
+  } else if(!props.userAdminData)
+    selectBan()
 })
 </script>

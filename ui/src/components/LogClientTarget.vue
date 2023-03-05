@@ -1,12 +1,11 @@
 <template>
-  <component
-    :is="user.hasStats ? 'a' : 'span'"
+  <a
     @click.ctrl="openStatsProfile"
-    @click="setUserFilter"
+    @click.exact="setUserFilter"
     :data-tooltip="tooltip"
   >
     {{ user.name }}
-  </component>
+  </a>
 </template>
 
 <script setup lang="ts">
@@ -33,7 +32,16 @@ const tooltip = computed(() => {
 });
 
 function openStatsProfile() {
-  window.open(`https://stats.jackz.me/user/${props.user.steamid}/overview`);
+  router.push({
+    name: "manage-user",
+    params: {
+      id: props.user.steamid,
+    },
+    query: {
+      returnTo: route.fullPath
+    }
+  })
+  // window.open(`https://stats.jackz.me/user/${props.user.steamid}/overview`);
 }
 function setUserFilter() {
   emit("set-filter", props.type, props.user.steamid);

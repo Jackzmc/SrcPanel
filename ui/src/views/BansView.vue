@@ -63,7 +63,7 @@
           <td :data-tooltip="formatDate(ban.timestamp)">{{ban.relDate}}</td>
           <td v-if="userdata">
             <div class="buttons">
-              <router-link class="button is-info is-small" :to="{name: 'manage-user-bans', params: { id: ban.client.id, banid: ban.id }, query: { returnTo: 'bans'}}">View</router-link>
+              <router-link class="button is-info is-small" :to="{name: 'manage-user-bans', params: { id: ban.client.id, banid: ban.id }, query: { returnTo: $route.fullPath }}">View</router-link>
               <!-- <a class="button is-info is-small" @click="startEdit(ban, i)">View</a> -->
             </div>
           </td>

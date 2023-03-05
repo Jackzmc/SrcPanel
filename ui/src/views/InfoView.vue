@@ -21,8 +21,8 @@
               <td class="has-tooltip-right" :data-tooltip="'Rating: ' + note.rating.value">
                 <span :class="note.class">{{note.id}}</span>
               </td>
-              <td><a :data-tooltip="note.client.id" :href="getStatURL(note.client.id)" :class="{'has-text-danger': note.banned}">{{note.client.name ?? note.client.id}}</a></td>
-              <td><a :data-tooltip="note.markedBy.id" :href="getStatURL(note.markedBy.id)">{{note.markedBy.name}}</a></td>
+              <td><router-link :data-tooltip="note.client.id" :to="{ name: 'manage-user', params: { id: note.client.id }, query: { returnTo: 'info'}}" :class="{'has-text-danger': note.banned}">{{note.client.name ?? note.client.id}}</router-link></td>
+              <td><router-link :data-tooltip="note.markedBy.id" :to="{ name: 'manage-user', params: { id: note.client.id }, query: { returnTo: 'info'}}">{{note.markedBy.name}}</router-link></td>
               <td v-if="note.actionData">
                 <div class="field is-horizontal is-grouped is-grouped-multiline">
                   <div class="control">
