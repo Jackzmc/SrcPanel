@@ -125,7 +125,7 @@ function processAction(server: any, type: string) {
     if(response.ok ) {
       // there is no json body:
       if(response.status === 204) {
-        sendMessage('success', 'Access completed succesfully')
+        sendMessage('success', `Action ${type} completed succesfully`)
         return
       }
 
