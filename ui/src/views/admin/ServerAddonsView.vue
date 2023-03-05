@@ -274,7 +274,10 @@ function closePreview(removeEntry: boolean) {
 
 function getTooltip(addon: any) {
   // const installedOn = Object.entries(addon.installInfo).filter(([key, value]) => value).map(([key]) => key).join("\n\t")
-  if(addon.enabledOn.length > 0) {
+  if(!addon.enabledOn) {
+    console.warn('missing enabledOn', { ... addon })
+  }
+  if(addon.enabledOn?.length > 0) {
     return `Filename: ${addon.filename}\nEnabled on:\n\t${addon.enabledOn.join("\n\t")}`
   } else {
     return `Filename: ${addon.filename}\nNot enabled on any servers`
@@ -312,6 +315,14 @@ async function fetchVPKS() {
     if(response.ok) {
       shareInfo.value = json.shareInfo
       vpks.value = json.addons.map((entry: any) => {
+        if(entry.collection) {
+          for(let child of entry.children) {
+            child.enabledOn = child.installInfo ? Object.entries(child.installInfo).filter(([key, value]) => value).map(([key]) => key) : []
+          }
+        } else {
+          entry.enabledOn = Object.entries(entry.installInfo).filter(([key, value]) => value).map(([key]) => key)
+        }
+
         if(entry.workshop) {
           hasAnyWorkshop.value = true
           if(entry.workshop.deleted) {
@@ -321,12 +332,6 @@ async function fetchVPKS() {
           entry.workshop.url = `https://steamcommunity.com/sharedfiles/filedetails/?id=${entry.filename.slice(0, -4)}`
           totalFileSize.value += entry.workshop.filesize
         }
-        if(entry.collection) {
-          for(let child of entry.children) {
-            child.enabledOn = child.installInfo ? Object.entries(child.installInfo).filter(([key, value]) => value).map(([key]) => key) : []
-          }
-        } else
-          entry.enabledOn = Object.entries(entry.installInfo).filter(([key, value]) => value).map(([key]) => key)
         return entry
       })
       ready.value = true

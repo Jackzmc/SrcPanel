@@ -194,7 +194,7 @@ async function deleteAddon() {
       if(response.ok) {
         notify({
           type: 'success',
-          text: `Deleted ${props.addon.title}`
+          text: `Deleted ${addonName}`
         })
         close(true)
       } else {
