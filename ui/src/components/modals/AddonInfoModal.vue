@@ -13,7 +13,7 @@
           <img v-if="!previewImageLoaded" src="@/assets/loader.gif" />
           <br><br>
         </template>
-        <h4 class='title is-4'>{{props.addon.workshop ? props.addon.workshop.title : props.addon.filename}} </h4>
+        <h4 class='title is-4'>{{ addonName }} </h4>
         <div class="field is-grouped is-grouped-multiline">
           <div class="control">
             <div class="tags has-addons">
@@ -45,14 +45,14 @@
             </div>
           </div>
         </div>
-        <h5 class="title is-5">Installed To:</h5>
-        <p class="subtitle is-6">Click any tag to install or uninstall from the destination. The server must be restarted for the changes to apply.</p>
+        <h5 class="title is-5">Servers</h5>
+        <p class="subtitle is-6">Click any tag to enable or disable it from the server. The server must be restarted for the changes to apply.</p>
         <div class="field is-grouped is-grouped-multiline">
           <div class="control" v-for="(installed, dest) in installInfo" :key="dest">
             <div class="tags has-addons">
               <span class="tag is-dark">{{ dest }}</span>
-              <a class="tag is-success" v-if="installed" @click="installAddon(dest, 'uninstall')">Installed</a>
-              <a class="tag is-danger" v-else @click="installAddon(dest, 'install')">Not Installed</a>
+              <a class="tag is-success" v-if="installed" @click="installAddon(dest, 'uninstall')" data-tooltip="Click here to disable">Enabled</a>
+              <a class="tag is-danger" v-else @click="installAddon(dest, 'install')" data-tooltip="Click here to enable">Disabled</a>
             </div>
           </div>
         </div>
@@ -104,7 +104,7 @@ async function installAddon(destKey: string, mode: "install" | "uninstall") {
         pendingRestarts.value.push(destKey)
       notify({
         type: "success",
-        text: mode == "install" ? `Installed addon to ${destKey}` : `Uninstalled addon from ${destKey}`
+        text: mode == "install" ? `Enabled ${addonName.value} on ${destKey}` : `Disabled ${addonName.value} on ${destKey}`
       })
     } else {
       notify({
@@ -164,6 +164,10 @@ async function restartServer(id: string) {
   throw new Error(`Server returned ${response.status} ${response.statusText} for ${id}`)
 }
 
+const addonName = computed(() => {
+  return props.addon.workshop ? props.addon.workshop.title : props.addon.filename
+})
+
 const parsedDescription = computed(() => {
   return props.addon.workshop?.description
     .replace(/\[b\]/gi, '<b>')
@@ -190,7 +194,7 @@ async function deleteAddon() {
       if(response.ok) {
         notify({
           type: 'success',
-          text: 'Addon deleted'
+          text: `Deleted ${props.addon.title}`
         })
         close(true)
       } else {

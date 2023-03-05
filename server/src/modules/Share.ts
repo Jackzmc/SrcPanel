@@ -213,7 +213,7 @@ export default class Share {
     private async addAddonEntry(filename: string, fsInfo?: { filesize: number, lastModified: number }, workshop?: AddonWorkshopInfo, collection?: WorkshopCollectionInfo) {
         try {
             await this.db.run(
-                SQL`INSERT INTO addoncache 
+                SQL`REPLACE INTO addoncache 
                     (filename, filesize, lastModified, ws_info, collection_id, collection_name) 
                     VALUES(${filename}, ${fsInfo?.filesize}, ${fsInfo?.lastModified}, ${workshop ? JSON.stringify(workshop) : null}, ${collection?.id}, ${collection?.name})`
             )
@@ -224,9 +224,6 @@ export default class Share {
         } catch(err) {
             console.error(`addAddonEntry failed for "${filename}"`, { fsInfo: fsInfo !== null, workshop: workshop !== undefined }, err)
         }
-    }
-    private async removeAddonEntry(filename: string) {
-        await this.db.run(SQL`DELETE FROM addoncache WHERE filename = ${filename}`)
     }
 
     public async getAddonInfo(filename: string): Promise<AddonInfo | undefined> {
@@ -334,8 +331,6 @@ export default class Share {
       
     public async steamDownload(item: ChildWorkshopItem) {
         const filename = `${item.publishedfileid}.vpk`
-        // Remove item from cache, so we can update it
-        await this.removeAddonEntry(filename)
 
         const bytes = await SteamAPI.downloadItem(item, this.sourceFolder, { timeout: DOWNLOAD_TIMEOUT })
         if(bytes != item.file_size) {

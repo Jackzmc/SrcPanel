@@ -79,7 +79,8 @@
                   <a v-else-if="vpk.workshop" class="has-text-info" @click="preview(vpk)" :data-tooltip="getTooltip(vpk)">
                     <b>{{vpk.workshop.title}}</b>
                   </a>
-                  <a @click="preview(vpk)" v-else>{{vpk.filename}}</a>
+                  <a @click="preview(vpk)" v-else :data-tooltip="getTooltip(vpk)">{{vpk.filename}}</a>
+                  &nbsp;<span class="tag" v-if="!vpk.collection" data-tooltip="Number of servers the addon is installed on">{{ vpk.enabledOn.length }} servers</span>
                 </td>
                 <td v-if="hasAnyWorkshop">
                   <a v-if="vpk.workshop" :href="vpk.workshop.url" class="button is-small" target="_blank">Workshop</a>
@@ -105,7 +106,8 @@
                     <a v-if="child.workshop" class="has-text-info ml-5" @click="preview(child)" :data-tooltip="getTooltip(child)">
                       <b>{{child.workshop.title}}</b>
                     </a>
-                    <a @click="preview(child)" v-else class="ml-5">{{child.filename}}</a>
+                    <a @click="preview(child)" v-else class="ml-5" :data-tooltip="getTooltip(child)">{{child.filename}}</a>
+                    &nbsp;<span class="tag" data-tooltip="Number of servers the addon is installed on">{{ child.enabledOn.length }} servers</span>
                   </td>
                   <td v-if="hasAnyWorkshop">
                     <a v-if="child.workshop" :href="child.workshop.url" class="button is-small" target="_blank">Workshop</a>
@@ -270,9 +272,13 @@ function closePreview(removeEntry: boolean) {
   showAddonModal.value = false
 }
 
-function getTooltip(addon: AddonInfo) {
-  const installedOn = Object.entries(addon.installInfo).filter(([key, value]) => value).map(([key]) => key).join("\n\t")
-  return `Filename: ${addon.filename}\nInstalled on:\n\t${installedOn}`
+function getTooltip(addon: any) {
+  // const installedOn = Object.entries(addon.installInfo).filter(([key, value]) => value).map(([key]) => key).join("\n\t")
+  if(addon.enabledOn.length > 0) {
+    return `Filename: ${addon.filename}\nEnabled on:\n\t${addon.enabledOn.join("\n\t")}`
+  } else {
+    return `Filename: ${addon.filename}\nNot enabled on any servers`
+  }
 }
 
 async function onDownloadModalClosed(requestRefresh: boolean) {
@@ -315,6 +321,12 @@ async function fetchVPKS() {
           entry.workshop.url = `https://steamcommunity.com/sharedfiles/filedetails/?id=${entry.filename.slice(0, -4)}`
           totalFileSize.value += entry.workshop.filesize
         }
+        if(entry.collection) {
+          for(let child of entry.children) {
+            child.enabledOn = child.installInfo ? Object.entries(child.installInfo).filter(([key, value]) => value).map(([key]) => key) : []
+          }
+        } else
+          entry.enabledOn = Object.entries(entry.installInfo).filter(([key, value]) => value).map(([key]) => key)
         return entry
       })
       ready.value = true

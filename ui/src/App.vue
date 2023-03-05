@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <notifications position="top center" :duration=5000 />
+    <Notifications position="top center" :duration=5000 />
     <NavBar :userdata="userdata" @logout="onLogout" :update-info="updateInfo" />
     <br>
     <br v-if="$route.meta.hideHero">
@@ -33,6 +33,7 @@ import NavBar from '@/components/NavBar.vue'
 import { AdminPermissions } from '../../common-types/User.js';
 import { useRoute, useRouter } from 'vue-router';
 import { SessionUser } from '../../common-types/User';
+
 
 
 const LAST_UPDATED = new Date(Number(process.env.VUE_APP_BUILD_DATE))
