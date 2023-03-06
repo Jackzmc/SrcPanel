@@ -25,6 +25,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 ],
                 properties: {
                     content: { type: 'string' },
+                    markedBy: { type: 'string' },
                 }
             },
             response: {
@@ -62,7 +63,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 note
             )
 
-            fastify.authmngr.log.addWebEntry(req.session.user.steamid, 'NOTE_DELETE', `Updated note ${note.id} for ${existing[0].steamid}`)
+            fastify.authmngr.log.addWebEntry(req.session.user.steamid, 'NOTE_EDIT', `Updated note ${note.id} for ${existing[0].steamid}`)
 
             return {
                 changes: ok.affectedRows

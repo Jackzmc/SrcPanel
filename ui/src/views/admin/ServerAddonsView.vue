@@ -76,10 +76,10 @@
               <tr>
                 <td>
                   <b v-if="vpk.collection"  @click="preview(vpk)">{{vpk.collection.name}} <span class="tag is-info">Collection</span></b>
-                  <a v-else-if="vpk.workshop" class="has-text-info" @click="preview(vpk)" :data-tooltip="getTooltip(vpk)">
+                  <a :class="{'has-text-weight-light': vpk.enabledOn.length == 0, 'has-text-info': true }" v-else-if="vpk.workshop" @click="preview(vpk)" :data-tooltip="getTooltip(vpk)">
                     <b>{{vpk.workshop.title}}</b>
                   </a>
-                  <a @click="preview(vpk)" v-else :data-tooltip="getTooltip(vpk)">{{vpk.filename}}</a>
+                  <a :class="{'has-text-weight-light': vpk.enabledOn.length == 0 }" @click="preview(vpk)" v-else :data-tooltip="getTooltip(vpk)">{{vpk.filename}}</a>
                   &nbsp;<span class="tag" v-if="!vpk.collection" data-tooltip="Number of servers the addon is installed on">{{ vpk.enabledOn.length }} servers</span>
                 </td>
                 <td v-if="hasAnyWorkshop">
