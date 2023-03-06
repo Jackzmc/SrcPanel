@@ -1,3 +1,5 @@
+import User from "../server/src/modules/users/User.js"
+
 export enum WebRole {
     None = 0,
     ReadOnly = 1,
@@ -28,6 +30,7 @@ export const WEB_FLAGS: Record<WebPermission, string> = {
 
 export interface Session {
     user: SessionUser,
+    user2: User,
     permissions: AdminPermissions
     ip: string,
     loginTime: number,

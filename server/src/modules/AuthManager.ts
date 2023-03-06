@@ -5,6 +5,7 @@ import { FastifyReply, FastifyRequest } from 'fastify';
 import ActivityLog from "./ActivityLog.js";
 import { AdminPermissions, AdminData, AdminGroup, WebRole, WebPermission } from '../../../common-types/User.js';
 import { ReadableAdminData } from '../../../common-types/User';
+import { UserPrivileges } from "./users/User.js";
 
 interface AddAdmin {
     authtype: "steam" | "name" | "ip",
@@ -91,6 +92,11 @@ export default class AuthManager {
             if(this.admins[steamid].id === id) return this.admins[steamid]
         }
         return null
+    }
+
+    public async getPrivileges(steamid: SteamID): Promise<UserPrivileges> {
+        const id = steamid.accountid.toString()
+        return { }
     }
 
     public async revokeAdmin(id: number) {
