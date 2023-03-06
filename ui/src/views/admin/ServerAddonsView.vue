@@ -83,7 +83,10 @@
                   &nbsp;<span class="tag" v-if="!vpk.collection" data-tooltip="Number of servers the addon is installed on">{{ vpk.enabledOn.length }} servers</span>
                 </td>
                 <td v-if="hasAnyWorkshop">
-                  <a v-if="vpk.workshop" :href="vpk.workshop.url" class="button is-small" target="_blank">Workshop</a>
+                  <template v-if="vpk.workshop">
+                    <span class="has-text-danger" v-if="vpk.workshop.delete" data-tooltip="Item has been deleted or private">Deleted</span>
+                    <a v-else :href="vpk.workshop.url" class="button is-small" target="_blank">Workshop</a>
+                  </template>
                   <a v-else-if="vpk.collection" :href="'https://steamcommunity.com/workshop/filedetails/?id=' + vpk.collection.id" class="button is-small" target="_blank">Workshop</a>
                 </td>
                 <td :colspan="vpk.collection ? 3 : 1">

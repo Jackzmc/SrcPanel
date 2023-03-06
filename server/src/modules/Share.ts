@@ -95,8 +95,6 @@ export default class Share {
             ws_info TEXT,
             PRIMARY KEY (filename)
         );`)
-        db.exec(SQL`ALTER TABLE addoncache ADD COLUMN collection_id VARCHAR(64)`).catch(() => {})
-        db.exec(SQL`ALTER TABLE addoncache ADD COLUMN collection_name VARCHAR(128)`).catch(() => {})
     }
 
     private _parseDownloadSources(downloadSources?: Record<string, boolean>) {
@@ -212,6 +210,7 @@ export default class Share {
 
     private async addAddonEntry(filename: string, fsInfo?: { filesize: number, lastModified: number }, workshop?: AddonWorkshopInfo, collection?: WorkshopCollectionInfo) {
         try {
+            console.debug(`adding \"${filename}\" [fs=${fsInfo != null}] [workshop=${workshop != null}] [collection=${collection != null}]`)
             await this.db.run(
                 SQL`REPLACE INTO addoncache 
                     (filename, filesize, lastModified, ws_info, collection_id, collection_name) 
