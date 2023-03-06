@@ -3,6 +3,7 @@ import { OkPacket, RowDataPacket } from 'mysql2';
 import { Static, Type } from '@sinclair/typebox'
 import { ADMINS_DB } from '../../routes/!!privileged/admins.js';
 
+
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
     
     fastify.get('/', async(req: FastifyRequest<{ Params: { id: string }}>, reply) => {
@@ -100,7 +101,11 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
     })
 
-    function formatNote(note) {
+    function formatNote(note): Note {
+        let action = null
+        if(note.content.startsWith("@")) {
+            action = note.content.slice(1).split(".")
+        }
         return {
             id: note.id,
             content: note.content,
@@ -113,7 +118,22 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 id: note.markedBy,
                 name: note.executor
             },
-            banned: note.banned == 1
+            banned: note.banned == 1,
+            action
         }
     }
+}
+
+export interface Note {
+    id: number,
+    content: string,
+    client: NoteUser,
+    markedBy: NoteUser,
+    banned: boolean
+    action?: string[]
+}
+export interface NoteUser {
+    id: string,
+    name?: string,
+    isAdmin?: boolean
 }

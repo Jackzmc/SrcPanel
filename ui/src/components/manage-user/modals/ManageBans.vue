@@ -199,7 +199,7 @@ import { Session, WebPermission, WebRole, AdminData } from '../../../../../commo
 import { notify } from '@kyvg/vue3-notification';
 // TOOD: fix
 import { FullAPIBan, FullAPIBanPlayer, APIBanFlags, BanAppeal, BanAppealState } from '../../../../../common-types/Ban';
-import { formatDate, getRelDate } from '../../../js/util';
+import { formatDate, getRelDate } from '@/js/util';
 
 const router = useRouter()
 const route = useRoute()

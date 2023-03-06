@@ -24,7 +24,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                     'id'
                 ],
                 properties: {
-                    id: { type: 'number' },
+                    content: { type: 'string' },
                 }
             },
             response: {

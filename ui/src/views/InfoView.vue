@@ -21,34 +21,21 @@
               <td class="has-tooltip-right" :data-tooltip="'Rating: ' + note.rating.value">
                 <span :class="note.class">{{note.id}}</span>
               </td>
-              <td><router-link :data-tooltip="note.client.id" :to="{ name: 'manage-user', params: { id: note.client.id }, query: { returnTo: 'info'}}" :class="{'has-text-danger': note.banned}">{{note.client.name ?? note.client.id}}</router-link></td>
-              <td><router-link :data-tooltip="note.markedBy.id" :to="{ name: 'manage-user', params: { id: note.client.id }, query: { returnTo: 'info'}}">{{note.markedBy.name}}</router-link></td>
-              <td v-if="note.actionData">
-                <div class="field is-horizontal is-grouped is-grouped-multiline">
-                  <div class="control">
-                    <div class="tags has-addons">
-                      <span class="tag is-dark">Action</span>
-                      <span class="tag is-secondary">{{note.actionData[0]}}</span>
-                    </div>
-                  </div>
-                  <div class="control">
-                    <div class="tags has-addons" v-if="note.actionData[1]">
-                      <span class="tag is-info">Key</span>
-                      <span class="tag is-secondary">{{note.actionData[1]}}</span>
-                    </div>
-                  </div>
-                  <div class="control">
-                    <div class="tags has-addons" v-if="note.actionData[2]">
-                      <span class="tag is-success">Value</span>
-                      <span class="tag is-secondary">{{note.actionData[2]}}</span>
-                    </div>
-                  </div>
-                </div>
+              <td>
+                <router-link :data-tooltip="note.client.id" :to="{ name: 'manage-user', params: { id: note.client.id }, query: { returnTo: $route.fullPath }}" :class="{'has-text-danger': note.banned}">
+                  {{note.client.name ?? note.client.id}}
+                </router-link>
               </td>
+              <td>
+                <router-link :data-tooltip="note.markedBy.id" :to="{ name: 'manage-user', params: { id: note.markedBy.id }, query: { returnTo: $route.fullPath }}">
+                {{note.markedBy.name}}
+                </router-link>
+              </td>
+              <ActionNote :action="note.action" v-if="note.action"/>
               <td v-else>{{note.content}}</td>
               <td>
                 <div class="tags">
-                  <span v-if="note.actionData" class="tag is-success" data-tooltip="Has an automatic action">Action</span>
+                  <span v-if="note.action" class="tag is-success" data-tooltip="Has an automatic action">Action</span>
                   <span v-if="note.banned" class="tag is-danger">Banned</span>
                   <span v-if="note.client.id == note.markedBy.id" class="tag is-secondary" data-tooltip="Note creator added note to themselves">Self-marked</span>
                   <span v-else-if="note.client.isAdmin" class="tag is-secondary" data-tooltip="This note was added to an admin">Admin</span>
@@ -83,6 +70,7 @@
 
 <script setup lang="ts">
 import { ref, onBeforeMount, onMounted, computed } from 'vue'
+import ActionNote from '@/components/ActionNote.vue'
 import { Session } from '../../../common-types/User.js';
 import data from '@/assets/data.json'
 import Sentiment from 'sentiment'
@@ -144,9 +132,6 @@ async function fetchNotes() {
       notes.value = json.notes.map((note: any) => {
         note.content = note.content.trim()
         note.class = ["tag"]
-        if(note.content.startsWith("@")) {
-          note.actionData = note.content.slice(1).split(".")
-        }
         note.rating = computeRating(note.content)
         if(note.rating) {
           if(note.rating.key === "positive") note.class.push("is-success")

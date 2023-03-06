@@ -28,23 +28,21 @@
       <p><a @click="startNewNote">Add a new note</a></p>
       <br>
     </div>
-    <div class="notification" v-for="note in notes" :key="note.id">
-        <h6 class="title is-6">{{note.markedBy.name}}: <em class="has-text-weight-normal">({{note.markedBy.id}})</em> <span class="is-pulled-right is-inline" data-tooltip="Note ID">#{{ note.id }}</span></h6>
-        <div class="content">
-          {{ note.content }}
-        </div>
-    </div>
+    <NoteComponent v-for="(note, i) in notes" :key="note.id" :note="note" @deleted="notes.splice(i, 1)" />
     <p v-if="notes.length > 0"><a @click="startNewNote" class="button is-info">Add a new note</a></p>
   </template>
 </section>
 </template>
 
 <script setup lang="ts">
+import { Note } from '../../../../../server/src/routes/!unprivileged/notes'
 import { ref, onBeforeMount } from 'vue';
-import { PlayerData } from '../../../js/User';
+import NoteComponent from '@/components/manage-user/Note.vue'
+import { PlayerData } from '@/js/User';
 import { notify } from '@kyvg/vue3-notification';
+import ActionNote from '@/components/ActionNote.vue'
 
-let notes = ref<any[]>([])
+let notes = ref<Note[]>([])
 let loading = ref(false)
 let newNote = ref()
 

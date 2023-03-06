@@ -133,7 +133,7 @@ const routes = [
       {
         name: 'manage-user',
         path: ':id',
-        component: () => import(/* webpackChunkName: 'manage-user' */ '../components/modals/manage-user/ManageUserModal.vue'),
+        component: () => import(/* webpackChunkName: 'manage-user' */ '../components/manage-user/modals/ManageUserModal.vue'),
         meta: {
           title: 'Manage User',
           authRequired: true
@@ -143,7 +143,7 @@ const routes = [
           {
             name: 'manage-user-overview',
             path: '',
-            component: () => import(/* webpackChunkName: 'manage-user' */ '../components/modals/manage-user/ManageOverview.vue'),
+            component: () => import(/* webpackChunkName: 'manage-user' */ '../components/manage-user/modals/ManageOverview.vue'),
             meta: {
               title: 'User',
               authRequired: true
@@ -152,7 +152,7 @@ const routes = [
           {
             name: 'manage-user-admin',
             path: 'privileges',
-            component: () => import(/* webpackChunkName: 'manage-user' */ '../components/modals/manage-user/ManageAdmin.vue'),
+            component: () => import(/* webpackChunkName: 'manage-user' */ '../components/manage-user/modals/ManageAdmin.vue'),
             meta: {
               title: 'Manage Admin',
               authRequired: true
@@ -161,7 +161,7 @@ const routes = [
           {
             name: 'manage-user-bans',
             path: 'bans/:banid?',
-            component: () => import(/* webpackChunkName: 'manage-user' */ '../components/modals/manage-user/ManageBans.vue'),
+            component: () => import(/* webpackChunkName: 'manage-user' */ '../components/manage-user/modals/ManageBans.vue'),
             meta: {
               title: 'Edit Player Bans',
               authRequired: true
@@ -170,7 +170,7 @@ const routes = [
           {
             name: 'manage-user-notes',
             path: 'notes',
-            component: () => import(/* webpackChunkName: 'manage-user' */ '../components/modals/manage-user/ManageNotes.vue'),
+            component: () => import(/* webpackChunkName: 'manage-user' */ '../components/manage-user/modals/ManageNotes.vue'),
             meta: {
               title: 'Edit Notes',
               authRequired: true
