@@ -192,6 +192,27 @@
       </div>
     </Tab>
     <Tab name="Web">
+      <h6 class="title is-6">Web Privileges</h6>
+      <div class="field is-horizontal" v-for="(priv, service) in privileges" :key="service">
+        <div class="field-label">
+          <label class="label">{{ service }}</label>
+        </div>
+        <div class="field-body">
+          <div class="field is-narrow">
+            <div class="control">
+              <label class="radio" :for="service + '.none'">
+                <input type="radio" v-model="form.privileges[service]" :value="null" :id="service + '.none'"/>
+                None
+              </label>
+              <label class="radio" :for="service + '.' + priv" v-for="(priv, value) in PrivilegeNames" :key="priv">
+                <input type="radio"  v-model="form.privileges[service]" :value="value" :id="service + '.' + priv" />
+                {{ priv }}
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+      <br>
       <h6 class="title is-6">Web Permissions <span class="tag" data-tooltip="Will be replaced with a new permission system">Legacy</span> </h6>
       <p class="subtitle is-6">Only permissions you have access to can be added</p>
       <div class="field" v-for="(name, flag) in WEB_FLAGS" :key="flag">
@@ -237,6 +258,10 @@
       :disabled="cantAddAdmin || !canEdit"
       @click="save"
     >{{ props.userAdminData ? 'Save' : 'Add Admin' }}</button>
+    <button
+      class="button"
+      @click="reset"
+    >Reset</button>
   </Teleport>
 </section>
 
@@ -248,7 +273,7 @@ import { User, PrivilegedUser, PlayerData } from '@/js/User'
 import { useRouter, useRoute } from 'vue-router'
 import SteamID from 'steamid'
 import { SessionData, FLAGS, WEB_FLAGS, AdminData, AdminGroup } from '../../../../../common-types/User';
-import { Action, Service } from '../../../../../common-types/Privileges';
+import { Action, Service, UserPrivileges, ServicePrivilege } from '../../../../../common-types/Privileges';
 import FlagList from '@/components/FlagList.vue'
 import { convertBitsArrayToInt, convertIntToBitsArray, } from '@/js/User';
 // @ts-ignore
@@ -256,7 +281,7 @@ import { Tab, Tabs } from 'vue3-tabs-component'
 import { notify } from '@kyvg/vue3-notification';
 import { getRelDate } from '@/js/util';
 
-
+const PrivilegeNames: string[] = Object.values(ServicePrivilege).filter(item => isNaN(Number(item))) as string[]
 const MIN_HOURS_PLAYTIME = 10
 const POLICY_MSG_MIN_HOURS_OF_PLAYTIME = `Policy requires a minimum of ${MIN_HOURS_PLAYTIME} hours of playtime`
 const router = useRouter()
@@ -268,17 +293,44 @@ const props = defineProps<{
   privUser: PrivilegedUser
 }>()
 
+const privileges = computed(() => {
+  let privs: Partial<Record<Service, string|null>> = {}
+  for(const service of Object.values(Service)) {
+    if(!service) continue
+    const priv = props.privUser.getPrivilege(service)
+    privs[service] = priv?.toString() ?? null
+  }
+  return privs as Record<Service, string | null>
+})
+
+
 let groups = ref<AdminGroup[]>([])
 // let tabIndex = ref<Tab>(Tab.Groups)
 let form = ref<{
   immunity: number,
   flags: string[],
-  webFlags: number[]
+  webFlags: number[],
+  privileges: Record<Service, string | null>
 }>({
   immunity: 0,
   flags: [],
-  webFlags: []
+  webFlags: [],
+  privileges: { ... privileges.value }
 })
+function reset() {
+  form.value = {
+    flags: props.userAdminData.permissions.base.flags?.split("") || [],
+    webFlags: convertIntToBitsArray(props.userAdminData.permissions.web.flags || 0),
+    immunity: props.userAdminData.permissions.base.immunityLevel || 0,
+    privileges: { ... privileges.value }
+  }
+  form.value = {
+    immunity: 0,
+    flags: [],
+    webFlags: [],
+    privileges: { ... privileges.value}
+  }
+}
 let stats = ref<Record<string, string|number>|null>()
 let error = ref("")
 let fetchError = ref("")
@@ -386,6 +438,12 @@ async function save() {
     alert(`Cannot add admin for the following reasons:\n* ${noAddReasons.value.join('\n *')}`)
   } else {
     loading.value.save = true;
+    let privileges: Record<string, number> = {}
+    for(const [service, priv] of Object.entries(form.value.privileges)) {
+      if(priv != props.privUser.getPrivilegeById(service)) {
+        privileges[service] = Number(priv)
+      }
+    }
     const response = await fetch(`/api/admins/${props.user?.steamid}`, {
       method: props.userAdminData ? 'PUT': 'POST',
       headers: {
@@ -396,7 +454,8 @@ async function save() {
         flags: form.value.flags.join(''),
         groupIds: selectedgroupIds.value.join(','),
         webPermissions: convertBitsArrayToInt(form.value.webFlags),
-        name: props.user?.name
+        name: props.user?.name,
+        privileges
       } as POSTAdminAPI)
     })
     if(response.ok) {
@@ -436,9 +495,7 @@ async function loadData() {
   fetchError.value = ""
   error.value = ""
   if(props.userAdminData) {
-    form.value.flags = props.userAdminData.permissions.base.flags?.split("") || []
-    form.value.webFlags = convertIntToBitsArray(props.userAdminData.permissions.web.flags || 0)
-    form.value.immunity = props.userAdminData.permissions.base.immunityLevel || 0
+    reset()
     selectedgroupIds.value = props.userAdminData.groups?.map(group => group.id) || []
   }
   try {

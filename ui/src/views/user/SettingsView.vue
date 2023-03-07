@@ -83,6 +83,7 @@
     <table class="table is-table is-striped is-hoverable  is-fullwidth">
       <thead>
         <tr>
+          <th>Session ID</th>
           <th>Country</th>
           <th>IP</th>
           <th>Created</th>
@@ -91,6 +92,7 @@
       </thead>
       <tbody>
         <tr v-for="(session, i) in sessions" :key="session.id">
+          <td>{{ session.id.substring(0, 8) }}</td>
           <td v-if="session.ip != '127.0.0.1'">{{formatCountry(session.countryCode)}}</td>
           <td v-else><em>(dev)</em></td>
           <td>{{session.ip}}</td>
@@ -118,7 +120,7 @@ const emit = defineEmits(['close'])
 const POLL_SERVER_HEALTH_INTERVAL = 1000 * 60 * 0.5
 
 interface SessionQuery extends SessionData {
-  id: number,
+  id: string,
   lastLogin: number,
   privileges: UserPrivileges
 }
@@ -131,7 +133,7 @@ const privUser = new PrivilegedUser(props.userdata)
 
 let serverHealth = ref<Partial<HealthReport>>({})
 let sessions = ref<SessionQuery[]>([])
-let currentSessionId = ref<number>()
+let currentSessionId = ref<string>()
 let updateStatus = ref<{
   state: UpdateState | "CHECKING" | "SUCCESS",
   error?: string,
@@ -208,7 +210,7 @@ async function fetchSessions() {
     sessions.value = json.sessions
   }
 }
-async function revokeSession(id: number, i: number) {
+async function revokeSession(id: string, i: number) {
   const response = await fetch(`/api/auth/sessions/${id}`, { method: 'DELETE' })
   if(response.status == 204) {
     sessions.value.splice(i, 1)

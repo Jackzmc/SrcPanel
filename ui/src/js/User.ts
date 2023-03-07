@@ -99,6 +99,9 @@ export class PrivilegedUser {
   getPrivilege(service: Service): ServicePrivilege | null {
     return this.privileges[service] ?? null
   }
+  getPrivilegeById(service: string): ServicePrivilege | null {
+    return this.privileges[service as Service] ?? null
+  }
 
   canPerformAction(service: Service, action: Action, userSteamid?: string) : boolean {
     let hasPerm = this.hasPrivilege(service, ActionRequiredPrivilege[action])

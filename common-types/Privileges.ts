@@ -1,9 +1,9 @@
 // The privilege the user has access to for a given service
-export const enum ServicePrivilege {
+export enum ServicePrivilege {
     View = 0, // Allow a user to view the service
     Edit = 1, // Allows the user to edit their own entries, or add their own entry
-    Delete = 3, // Allows the user to delete their entries
-    Manage = 4, // Allows the user to manage (edit, delete) other entries, not created by them
+    Delete = 2, // Allows the user to delete their entries
+    Manage = 3, // Allows the user to manage (edit, delete) other entries, not created by them
 }
 // The string id of the privilege
 export const ServicePrivilegeKeys = {
@@ -49,4 +49,4 @@ export interface SteamInfo {
     avatarhash: string
 }
 
-export type UserPrivileges = Partial<Record<Service, ServicePrivilege>>
+export type UserPrivileges = Partial<Record<Service, ServicePrivilege | null>>
