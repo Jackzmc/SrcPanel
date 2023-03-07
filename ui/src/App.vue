@@ -1,7 +1,7 @@
 <template>
   <div id="app">
     <Notifications position="top center" :duration=5000 />
-    <NavBar :userdata="userdata" @logout="onLogout" :update-info="updateInfo" />
+    <NavBar v-if="!$route.meta.hideNav" :userdata="userdata" @logout="onLogout" :update-info="updateInfo" />
     <br>
     <br v-if="$route.meta.hideHero">
 
@@ -32,6 +32,7 @@ import { onBeforeMount, ref, computed } from 'vue'
 import NavBar from '@/components/NavBar.vue'
 import { useRoute, useRouter } from 'vue-router';
 import { UserData } from '@/js/User.js'
+import { notify } from '@kyvg/vue3-notification';
 
 
 
@@ -77,10 +78,33 @@ async function getAuth() {
     }
     window.sessionStorage.setItem('srcds_userdata', JSON.stringify(userdata.value))
     console.log('Authorized: Hello', json.user.name)
-  } else {
+  } else if(response.status == 401) {
     window.sessionStorage.removeItem('srcds_userdata')
     if(route.meta.authRequired && !userdata) {
-      router.push('/login-required?return=' + route.fullPath)
+      router.push({
+        name: 'authrequired',
+        query: {
+          return: route.fullPath
+        }
+      })
+    }
+  } else {
+    const body = await response.text()
+    console.error(`Error while authenticating with server: ${body}`)
+    notify({
+      type: 'error',
+      title: 'Could not authenticate with server:',
+      duration: 10000,
+      text: response.statusText
+    })
+    if(route.meta.authRequired) {
+      router.push({
+        name: 'errorview',
+        query: {
+          return: route.fullPath,
+          error: response.statusText
+        }
+      })
     }
   }
 }

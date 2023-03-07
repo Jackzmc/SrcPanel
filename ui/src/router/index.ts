@@ -246,6 +246,15 @@ const routes = [
     meta: {
       hideHero: true
     }
+  },
+  {
+    name: 'errorview',
+    path: '/error',
+    component: () => import(/* webpackChunkName: 'misc' */ '../views/ErrorView.vue'),
+    meta: {
+      hideHero: true,
+      hideNav: true
+    }
   }
 ]
 
