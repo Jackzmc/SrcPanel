@@ -1,5 +1,15 @@
 <template>
 <section>
+  <article class="message is-danger" v-if="!canEdit">
+    <div class="message-body">
+      <b>Cannot Edit: </b>
+      <div class="content">
+        <ul v-for="(reason, i) in noEditReasons" :key="i">
+          <li>{{ reason }}</li>
+        </ul>
+      </div>
+    </div>
+  </article>
   <div class="level">
     <div class="level-item has-text-centered" v-if="loading.stats">
       <div class="field">
@@ -182,7 +192,7 @@
       </div>
     </Tab>
     <Tab name="Web">
-      <h6 class="title is-6">Web Permissions</h6>
+      <h6 class="title is-6">Web Permissions <span class="tag" data-tooltip="Will be replaced with a new permission system">Legacy</span> </h6>
       <p class="subtitle is-6">Only permissions you have access to can be added</p>
       <div class="field" v-for="(name, flag) in WEB_FLAGS" :key="flag">
         <input
@@ -237,7 +247,8 @@ import { ref, onMounted, computed } from 'vue'
 import { User, PrivilegedUser, PlayerData } from '@/js/User'
 import { useRouter, useRoute } from 'vue-router'
 import SteamID from 'steamid'
-import { Session, WebPermission, WebRole, FLAGS, WEB_FLAGS, AdminData, AdminGroup } from '../../../../../common-types/User';
+import { SessionData, FLAGS, WEB_FLAGS, AdminData, AdminGroup } from '../../../../../common-types/User';
+import { Action, Service } from '../../../../../common-types/Privileges';
 import FlagList from '@/components/FlagList.vue'
 import { convertBitsArrayToInt, convertIntToBitsArray, } from '@/js/User';
 // @ts-ignore
@@ -253,7 +264,7 @@ const route = useRoute()
 const props = defineProps<{
   userAdminData: AdminData,
   user: PlayerData,
-  userdata: Session,
+  userdata: SessionData,
   privUser: PrivilegedUser
 }>()
 
@@ -279,11 +290,16 @@ let loading = ref({
 let expandedGroup = ref<AdminGroup>()
 let selectedgroupIds = ref<number[]>([])
 
+const noEditReasons = computed(() => {
+  const reasons = []
+  if(!props.privUser.canPerformAction(Service.Admins, Action.Edit, props.user.steamid)) reasons.push("You lack the privileges to edit privileges")
+  if(props.privUser.id == props.user.steamid) reasons.push("Cannot edit your own profile") // Disable editing ourself
+  if(props.userAdminData && form.value.immunity >= props.privUser.immunityLevel) reasons.push("You lack the access to edit this user")
+  if(policyFailures.value.length > 0) reasons.push(...policyFailures.value)
+  return reasons
+})
 const canEdit = computed(() => {
-  if(loading.value.save || loading.value.groups || loading.value.stats) return false
-  if(props.userAdminData && form.value.immunity >= props.privUser.immunityLevel) return false
-  if(policyFailures.value.length > 0) return false
-  return true
+  return noEditReasons.value.length == 0
 })
 
 const policyFailures = computed(() => {

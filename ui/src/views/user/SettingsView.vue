@@ -6,24 +6,56 @@
         <nav class="level">
           <div class="level-item has-text-centered">
             <div>
-              <p class="heading">Web Role</p>
-              <p class="title">{{ webRole }}</p>
+              <p class="heading">
+                Web Role
+                  <span class="tag" data-tooltip="This is a legacy permission system and will be removed soon">Legacy</span>
+              </p>
+              <p class="title">{{ webRole }} </p>
             </div>
           </div>
           <div class="level-item has-text-centered" data-tooltip="This determines how high your permission is. Admins with a level below you cannot affect you">
             <div>
-              <p class="heading">Immunity Level</p>
+              <p class="heading">
+              Immunity Level
+              <span class="tag" data-tooltip="This is a legacy permission system and will be removed soon">Legacy</span>
+              </p>
               <p class="title">{{ privUser.immunityLevel }}</p>
             </div>
           </div>
         </nav>
-        <div data-tooltip="These are the permissions you have on this admin panel">
-          <p class="is-6"><b>Access Permissions: </b></p>
-          <ul>
-            <li v-for="perm in webPerms" :key="perm">
-              {{ perm }}
-            </li>
-          </ul>
+        <div class="columns">
+          <div class="column">
+            <div data-tooltip="These are the permissions you have on this admin panel">
+              <p class="is-6"><b>Access Permissions: <span class="tag" data-tooltip="This is a legacy permission system and will be removed soon">Legacy</span></b></p>
+              <ul>
+                <li v-for="perm in webPerms" :key="perm">
+                  {{ perm }}
+                </li>
+              </ul>
+            </div>
+          </div>
+          <div class="column">
+            <div>
+              <p class="is-6"><b>Privileges: </b></p>
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Service</th>
+                    <th>Privilege</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="(priv, service) in privUser.privileges" :key="service">
+                    <td>{{ service }}</td>
+                    <td>{{ formatPrivilege(priv!) }}</td>
+                  </tr>
+                </tbody>
+              </table>
+              <p v-if="Object.keys(privUser.privileges).length == 0" class="my-5">
+                <em>You have no privileges :(</em>
+              </p>
+            </div>
+          </div>
         </div>
       </div>
       <div class="column" v-if="privUser.hasWebPerm(WebPermission.FullPermission)">
@@ -76,22 +108,24 @@
 
 <script setup lang="ts">
 import { PrivilegedUser } from '@/js/User';
-import { Session, WebPermission, WEB_FLAGS } from '../../../../common-types/User';
+import { SessionData, WebPermission, WEB_FLAGS } from '../../../../common-types/User';
 import { onBeforeMount } from 'vue';
 import { computed, ref } from 'vue';
 import { HealthReport, UpdateState } from '../../../../server/src/routes/!!privileged/admin';
+import { ServicePrivilege, UserPrivileges, ServicePrivilegeKeys } from '../../../../common-types/Privileges';
 
 const emit = defineEmits(['close'])
 const POLL_SERVER_HEALTH_INTERVAL = 1000 * 60 * 0.5
 
-interface SessionQuery extends Session {
+interface SessionQuery extends SessionData {
   id: number,
-  lastLogin: number
+  lastLogin: number,
+  privileges: UserPrivileges
 }
 
 const intl = new Intl.DisplayNames(['en'], {type: 'region'})
 const props = defineProps<{
-  userdata: Session
+  userdata: SessionData
 }>()
 const privUser = new PrivilegedUser(props.userdata)
 
@@ -181,6 +215,9 @@ async function revokeSession(id: number, i: number) {
   } else {
     alert('Failed to revoke session: ' + (await response.json()).message)
   }
+}
+function formatPrivilege(privilege: ServicePrivilege) {
+  return ServicePrivilegeKeys[privilege] ?? "Invalid"
 }
 function formatTime(s: number) {
   const d = new Date(s)

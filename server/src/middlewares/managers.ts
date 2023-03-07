@@ -12,6 +12,7 @@ import { fileURLToPath } from 'url';
 
 import ServerManager from '../modules/servers/ServerManager.js';
 import SteamAPI from '../modules/steam.js'
+import User from '../modules/users/User.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -48,6 +49,12 @@ async function db(fastify: FastifyInstance) {
     fastify.decorate('db', db)
     fastify.decorate('steam', steam)
     fastify.decorate('servers', new ServerManager(steam, DATA_FOLDER))
+    fastify.addHook('preHandler', (req, reply, done) => {
+        if(req.session && req.session.user) {
+            req.user = new User(authManager, req.session.user, req.session.privileges)
+        }
+        done()
+    })
 }
 
 export default FastifyPlugin(db)

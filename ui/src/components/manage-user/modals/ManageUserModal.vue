@@ -18,26 +18,26 @@
       <section class="modal-card-body" v-else-if="user">
         <div class="tabs is-fullwidth is-boxed is-centered">
           <ul>
-            <router-link :disabled="fetchError" :to="{ name: 'manage-user-overview' }" v-slot="{ href, navigate, isExactActive }" custom>
+            <router-link :to="{ name: 'manage-user-overview' }" v-slot="{ href, navigate, isExactActive }" custom>
               <li :class="{'is-active': isExactActive}">
                 <a :href="href" @click="navigate">Overview</a>
               </li>
             </router-link>
-            <router-link :disabled="fetchError" :to="{ name: 'manage-user-admin' }" v-slot="{ href, navigate, isExactActive }" custom>
-              <li :class="{'is-active': isExactActive}">
-                <a :href="href" @click="navigate">
+            <router-link v-if="privUser.canPerformAction(Service.Admins, Action.View)" :to="{ name: 'manage-user-admin' }" v-slot="{ href, navigate, isExactActive }" custom>
+              <li :class="{'is-active': isExactActive, 'has-text-grey-dark': true }">
+                <a :href="href" @click="navigate" disabled>
                   Privileges&nbsp;
                   <span v-if="userAdminData" class="tag is-info">Admin</span>
                   <span v-else class="tag is-secondary">None</span>
                 </a>
               </li>
             </router-link>
-            <router-link :disabled="fetchError" :to="{ name: 'manage-user-notes' }" v-slot="{ href, navigate, isExactActive }" custom>
+            <router-link v-if="privUser.canPerformAction(Service.Notes, Action.View)" :to="{ name: 'manage-user-notes' }" v-slot="{ href, navigate, isExactActive }" custom>
               <li :class="{'is-active': isExactActive}">
                 <a :href="href" @click="navigate">Notes ({{ user?.notesCount ?? 0 }})</a>
               </li>
             </router-link>
-            <router-link :disabled="fetchError" :to="{ name: 'manage-user-bans' }" v-slot="{ href, navigate, isActive }" custom>
+            <router-link v-if="privUser.canPerformAction(Service.Bans, Action.View)" :to="{ name: 'manage-user-bans' }" v-slot="{ href, navigate, isActive }" custom>
               <li :class="{'is-active': isActive }">
                 <a :href="href" @click="navigate">Bans&nbsp;<span :class="{'has-text-danger': user?.bansCount > 0 }">({{ user?.bansCount }})</span></a>
               </li>
@@ -64,7 +64,8 @@
 import { ref, onMounted, computed, onBeforeMount } from 'vue';
 import { User, PrivilegedUser, PlayerData } from '@/js/User'
 import { useRouter, useRoute } from 'vue-router'
-import { Session, WebPermission, WebRole, FLAGS, WEB_FLAGS, AdminData, AdminGroup } from '../../../../../../common-types/User';
+import { SessionData, AdminData } from '../../../../../common-types/User';
+import { Action, Service } from '../../../../../common-types/Privileges';
 // @ts-ignore
 import { Tab, Tabs } from 'vue3-tabs-component'
 import { notify } from '@kyvg/vue3-notification';
@@ -72,7 +73,7 @@ import { notify } from '@kyvg/vue3-notification';
 const router = useRouter()
 const route = useRoute()
 const props = defineProps<{
-  userdata: Session
+  userdata: SessionData
 }>()
 const privUser = new PrivilegedUser(props.userdata)
 

@@ -2,7 +2,8 @@ import { FastifyInstance, FastifyPluginOptions, FastifyReply, FastifyRequest } f
 import SteamID from 'steamid'
 import fetch from 'node-fetch'
 import FastGeoip from 'fast-geoip'
-import User, { SteamInfo } from '../../modules/users/User.js';
+import User from '../../modules/users/User.js';
+import { SteamInfo } from '../../../../common-types/Privileges.js';
 
 const STEAM_WEB_APIKEY = process.env.STEAM_WEB_APIKEY
 
@@ -72,9 +73,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                                     profileurl: details[0].profileurl,
                                     avatarhash: details[0].avatarhash
                                 }
-                                const adminData = this.authmngr.getAdmin(steamid)
-                                const privileges = await this.authmngr.getPrivileges(steamid)
-                                req.session.user2 = new User(fastify, steamInfo, adminData, privileges);
+                                req.session.privileges = await this.authmngr.getPrivileges(steamid)
                                 req.session.user = steamInfo
 
                                 req.session.ip = req.ip

@@ -1,5 +1,6 @@
-import { AdminData, WebPermission, WebRole } from '../../../common-types/User';
-import type  { Session } from '../../../common-types/User';
+import { AdminData, SessionUser, WebPermission, WebRole, AdminPermissions } from '../../../common-types/User';
+import type  { SessionData } from '../../../common-types/User';
+import { UserPrivileges, ActionRequiredPrivilege, ServicePrivilege, Service, Action, ServiceSupportedActions, ServicePrivilegeKeys } from '../../../common-types/Privileges';
 
 export interface PlayerData {
   isAdmin: boolean,
@@ -14,6 +15,12 @@ export interface PlayerData {
 export interface PlayerResponse {
   user: PlayerData,
   adminData?: AdminData
+}
+
+export interface UserData {
+  user: SessionUser,
+  permissions: AdminPermissions,
+  privileges?: UserPrivileges
 }
 
 export function convertBitsArrayToInt(bits: number[]) {
@@ -66,9 +73,9 @@ export class User {
 }
 
 export class PrivilegedUser {
-  private data: Session
+  private data: UserData
 
-  constructor(session: Session) {
+  constructor(session: UserData) {
     if(!session) throw new Error("Session is empty")
     this.data = session
   }
@@ -83,8 +90,33 @@ export class PrivilegedUser {
     return flags.includes("z") || flags.includes(flag)
   }
 
+  hasPrivilege(service: Service, privilege: ServicePrivilege) : boolean {
+    if(!ServiceSupportedActions[service].includes(privilege)) console.warn(`[Privileges] <User>.hasPrivilege() called on service ${service} with invalid privilege (service does not support ${ServicePrivilegeKeys[privilege]})`)
+    return this.privileges[service] as number >= privilege
+  }
+
+  getPrivilege(service: Service): ServicePrivilege | null {
+    return this.privileges[service] ?? null
+  }
+
+  canPerformAction(service: Service, action: Action, userSteamid?: string) : boolean {
+    let hasPerm = this.hasPrivilege(service, ActionRequiredPrivilege[action])
+    // Check if they have manage permission
+    if(userSteamid && userSteamid !== this.id) {
+      hasPerm = hasPerm && this.hasPrivilege(service, ServicePrivilege.Manage)
+      // console.debug(`[permcheck] ${service}.${action}: ${hasPerm} | user: ${userSteamid}`)
+      return hasPerm
+    }
+    // console.debug(`[permcheck] ${service}.${action}: ${hasPerm}`)
+    return hasPerm
+  }
+
   get webRole(): WebRole {
     return this.data.permissions.web.role
+  }
+
+  get privileges(): UserPrivileges {
+    return this.data.privileges ?? {}
   }
 
   get name() {

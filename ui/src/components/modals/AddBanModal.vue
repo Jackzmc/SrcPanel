@@ -141,12 +141,12 @@
 import { ref, onMounted, computed } from 'vue'
 import { User, PrivilegedUser, PlayerData } from '@/js/User'
 import { useRouter, useRoute } from 'vue-router'
-import { Session, WebPermission, WebRole } from '../../../../common-types/User';
+import { SessionData, WebPermission, WebRole } from '../../../../common-types/User';
 
 const router = useRouter()
 const route = useRoute()
 const props = defineProps<{
-  userdata: Session
+  userdata: SessionData
 }>()
 
 

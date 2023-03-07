@@ -5,7 +5,7 @@
       <li v-for="userBan in bans" :key="userBan.id" :class="{'is-active': ban && ban.id === userBan.id}" @click="selectBan(userBan)">
         <a>#{{ userBan.id }}&nbsp;<span class="tag is-info" v-if="userBan.activeAppeal">Appeal</span></a>
       </li>
-      <li :class="{'is-active': isNewBan }" @click="selectBan()" v-if="!userAdminData"><a>Add Ban</a></li>
+      <li :class="{'is-active': isNewBan }" @click="selectBan()" v-if="canAddBan"><a>Add Ban</a></li>
       <li :class="{'is-active': showAppeals }" @click="showAppealsList" v-if="bans.length > 0"><a>Appeals ({{ appeals.length }})</a></li>
     </ul>
   </div>
@@ -185,9 +185,10 @@
       </div>
     </div>
   </template>
-  <template v-else>
-    <p class="has-text-centered my-6">User has no bans on record</p>
-  </template>
+  <div v-else class="has-text-centered my-6">
+    <p>User has no bans on record</p>
+    <p v-if="!canAddBan" class="has-text-danger">You lack the permission to add a ban</p>
+  </div>
 </section>
 </template>
 
@@ -195,18 +196,20 @@
 import { ref, onMounted, computed, watch } from 'vue'
 import { User, PrivilegedUser, PlayerData } from '@/js/User'
 import { useRouter, useRoute } from 'vue-router'
-import { Session, WebPermission, WebRole, AdminData } from '../../../../../common-types/User';
+import { SessionData, WebPermission, WebRole, AdminData } from '../../../../../common-types/User';
 import { notify } from '@kyvg/vue3-notification';
 // TOOD: fix
 import { FullAPIBan, FullAPIBanPlayer, APIBanFlags, BanAppeal, BanAppealState } from '../../../../../common-types/Ban';
 import { formatDate, getRelDate } from '@/js/util';
+import { Service, Action } from '../../../../../common-types/Privileges';
 
 const router = useRouter()
 const route = useRoute()
 const props = defineProps<{
-  userdata: Session,
+  userdata: SessionData,
   userAdminData: AdminData,
-  user: PlayerData
+  user: PlayerData,
+  privUser: PrivilegedUser,
 }>()
 
 
@@ -238,7 +241,6 @@ interface BanRecord extends FullAPIBan { activeAppeal?: BanAppeal }
 let loading = ref(false)
 let showAppeals = ref(false)
 let bans = ref<BanRecord[]>([])
-const privUser = new PrivilegedUser(props.userdata)
 
 watch(() => edited.value.expires, (value) => {
   if(!ban.value) return
@@ -264,6 +266,10 @@ function calculateExpires(value: string) {
     return banOriginalExpires.value
   }
 }
+
+const canAddBan = computed(() => {
+  return !props.userAdminData && props.privUser.canPerformAction(Service.Bans, Action.Create)
+})
 
 const relDate = computed(() => {
   if(!ban.value) return
@@ -439,7 +445,7 @@ async function answerAppeal(id: number, approve: boolean) {
       let appeal = appeals.value.find(appeal => appeal.id == id)
       if(appeal) {
         appeal.reject_reason = reason
-        appeal.rejecter_id = privUser.id
+        appeal.rejecter_id = props.privUser.id
         appeal.state = approve ? BanAppealState.Accepted : BanAppealState.Rejected
       }
     } else {

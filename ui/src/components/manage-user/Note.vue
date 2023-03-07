@@ -22,24 +22,32 @@
         <a class="button is-danger is-small is-outlined" @click="deleteNote">Delete</a>
     </div>
     <div class="buttons" v-else>
-        <a class="button is-small is-outlined" @click="startEdit">Edit</a>
+        <a class="button is-small is-outlined has-tooltip-right has-tooltip-danger" @click="startEdit" :disabled="canEdit ? undefined : true" :data-tooltip="canEdit ? null : 'You do not have permission to edit other user\'s notes'">Edit</a>
     </div>
 </div>
 </template>
 
 <script setup lang="ts">
 import { notify } from '@kyvg/vue3-notification';
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
+import { Service, Action } from '../../../../common-types/Privileges';
 import { Note } from '../../../../server/src/routes/!unprivileged/notes'
+import { PrivilegedUser } from '../../js/User';
+import ActionNote from '@/components/ActionNote.vue'
 const emit = defineEmits(["deleted"])
 const props = defineProps<{
-    note: Note
+  note: Note,
+  privUser: PrivilegedUser
 }>()
 
 interface EditedNote {
   content: string,
   markedBy: string
 }
+
+const canEdit = computed(() => {
+  return props.privUser.canPerformAction(Service.Notes, Action.Edit, props.note.markedBy.id)
+})
 
 let edit = ref<EditedNote>()
 

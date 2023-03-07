@@ -5,7 +5,7 @@ import { FastifyReply, FastifyRequest } from 'fastify';
 import ActivityLog from "./ActivityLog.js";
 import { AdminPermissions, AdminData, AdminGroup, WebRole, WebPermission } from '../../../common-types/User.js';
 import { ReadableAdminData } from '../../../common-types/User';
-import { UserPrivileges } from "./users/User.js";
+import { Service, ServicePrivilege, ServicePrivilegeKeys, UserPrivileges } from  '../../../common-types/Privileges.js';
 
 interface AddAdmin {
     authtype: "steam" | "name" | "ip",
@@ -95,8 +95,36 @@ export default class AuthManager {
     }
 
     public async getPrivileges(steamid: SteamID): Promise<UserPrivileges> {
-        const id = steamid.accountid.toString()
-        return { }
+        const admin = this.getAdmin(steamid)
+        if(!admin) return null
+        const [rows] = await this.connection.execute<RowDataPacket[]>(
+            "SELECT service, privilege FROM dash_privileges WHERE SUBSTRING(steamid, 11) = SUBSTRING(?, 11)",
+            [admin.identity]
+        )
+        let privs: UserPrivileges = {}
+        for(const row of rows) {
+            privs[row.service as Service] = row.privilege as ServicePrivilege
+        }
+        return privs
+    }
+
+    // If privilege is undefined, it will be ignored, if a privilege is null, it will be revoked
+    public async setPrivileges(steamid: SteamID, privileges: UserPrivileges) {
+        const admin = this.getAdmin(steamid)
+        if(!admin) return null
+        for(const [service, priv] of Object.entries(privileges)) {
+            if(priv == null) {
+                await this.connection.execute(
+                    "DELETE FROM dash_privileges WHERE steamid = ? AND service = ?",
+                    [admin.identity, ServicePrivilegeKeys[service]]
+                )
+            } else {
+                await this.connection.execute(
+                    "INSERT INTO dash_privileges (steamid, service, privilege) VALUES(?, ?, ?) ON DUPLICATE KEY UPDATE privilege = ?",
+                    [admin.identity, ServicePrivilegeKeys[service], priv, priv]
+                )
+            }
+        }
     }
 
     public async revokeAdmin(id: number) {
@@ -106,6 +134,7 @@ export default class AuthManager {
         const steamid = this.getAdminById(id)
         if(steamid)
             await this.connection.execute<OkPacket>("DELETE FROM dash_perms WHERE steamid = ?", [steamid])
+            delete this.admins[id]
     }
 
     public async editAdmin(id: number, data: Partial<AddAdmin>, webPerms?: number) {

@@ -81,7 +81,7 @@
 import { ref, onBeforeMount, computed } from 'vue'
 import { User, PrivilegedUser, PlayerData } from '@/js/User'
 import { useRouter, useRoute } from 'vue-router'
-import { Session, WebPermission, ReadableAdminData } from '../../../../common-types/User';
+import { SessionData, WebPermission, ReadableAdminData } from '../../../../common-types/User';
 import UserSelection from '@/components/UserSelection.vue'
 // @ts-ignore
 import {Tabs, Tab} from 'vue3-tabs-component';
@@ -94,7 +94,7 @@ const RECENT_LIMIT = 15
 const router = useRouter()
 const route = useRoute()
 const props = defineProps<{
-  userdata: Session
+  userdata: SessionData
 }>()
 const privUser = new PrivilegedUser(props.userdata)
 

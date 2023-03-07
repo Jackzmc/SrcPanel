@@ -13,7 +13,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     fastify.get('/profile', async(req, reply) => {
         return {
             user: req.session.user,
-            permissions: req.session.permissions
+            permissions: req.session.permissions,
+            privileges: req.session.privileges ?? {} // Old sessions
         }
     })
 

@@ -37,14 +37,21 @@ const app = Fastify({
       }
 })
 
-import { Session as CustomSession } from '../../common-types/User.js'
+import { SessionData } from '../../common-types/User.js'
+import User from './modules/users/User.js';
+interface CustomSession extends SessionData {
+} 
+
 declare module 'fastify' {
   export interface FastifyInstance {
     db: Pool;
     steam: SteamAPI,
     authmngr: AuthManager,
     servers: ServerManager,
-    users: UserManager
+    users: UserManager,
+  }
+  export interface FastifyRequest {
+    user?: User
   }
   // I dont know how to do this properly, its a fucking pain
   interface Session extends CustomSession {}

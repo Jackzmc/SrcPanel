@@ -88,10 +88,13 @@
           <div class="navbar-dropdown is-right">
             <a class="navbar-item">
               <span v-if="!updateInfo.updating" :data-tooltip="updateTooltip" class="has-tooltip-bottom">
-                UI Version Info
+                UI Build Info <em>(hover)</em>
               </span>
             </a>
             <hr class="navbar-divider">
+            <router-link class="navbar-item" :to="{ name: 'manage-user', params: { id: userdata.user.steamid }, query: { returnTo: $route.fullPath }}">
+              Profile
+            </router-link>
             <router-link class="navbar-item" to="/user/settings">
               Settings
             </router-link>
@@ -114,6 +117,8 @@
 import { computed } from 'vue';
 import LoginButton from '@/components/LoginButton.vue'
 import { useRoute, useRouter } from 'vue-router';
+import { json } from 'stream/consumers';
+import { notify } from '@kyvg/vue3-notification';
 // Bulma nav code
 document.addEventListener('DOMContentLoaded', () => {
   const $navbarBurgers = Array.prototype.slice.call(document.querySelectorAll('.navbar-burger'), 0);
@@ -151,12 +156,27 @@ const updateTooltip = computed(() => {
 
 
 async function logout() {
-  const res = await fetch('/api/auth/logout')
-  if(res.ok) {
-    emit('logout')
-    if(route.meta.authRequired) {
-      router.push('/')
+  try {
+    const res = await fetch('/api/auth/logout')
+    if(res.ok) {
+      emit('logout')
+      if(route.meta.authRequired) {
+        router.push('/')
+      }
+    } else {
+      const json = await res.json()
+      notify({
+        type: "error",
+        title: "Logout Failed",
+        text: json.message
+      })
     }
+  } catch(err: any) {
+    notify({
+      type: "error",
+      title: "Logout Failed",
+      text: err.message
+    })
   }
 }
 </script>

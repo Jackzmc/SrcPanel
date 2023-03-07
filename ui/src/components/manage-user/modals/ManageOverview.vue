@@ -12,7 +12,7 @@
           <label class="label">Playtime</label>
           <span>
             <p v-if="info">
-              {{playtime}} hours
+              {{playtime.toLocaleString()}} hours
             </p>
             <em v-else>(no recorded statistics found)</em>
           </span>
@@ -55,19 +55,19 @@
       <div class="level-item has-text-centered">
         <div class="field">
           <label class="label">Friendly Fires</label>
-          <span>{{info.survivor_ff}}</span>
+          <span>{{info.survivor_ff.toLocaleString()}}</span>
         </div>
       </div>
       <div class="level-item has-text-centered">
         <div class="field">
           <label class="label" data-tooltip="Self heals compared to healing other players">Heal Ratio</label>
-          <span>{{info.heal_self }} : {{ info.heal_others }}</span>
+          <span>{{info.heal_self.toLocaleString() }} : {{ info.heal_others.toLocaleString() }}</span>
         </div>
       </div>
       <div class="level-item has-text-centered">
         <div class="field">
           <label class="label">Team kills</label>
-          <span>{{info.ff_kills}}</span>
+          <span>{{info.ff_kills.toLocaleString()}}</span>
         </div>
       </div>
     </div>
@@ -87,7 +87,7 @@
 import { ref, onMounted, computed, watch, onBeforeMount } from 'vue';
 import { User, PrivilegedUser, PlayerData } from '@/js/User'
 import { useRouter, useRoute } from 'vue-router'
-import { Session, WebPermission, WebRole, AdminData } from '../../../../../../common-types/User';
+import { SessionData, WebPermission, WebRole, AdminData } from '../../../../../common-types/User';
 import { notify } from '@kyvg/vue3-notification';
 import SteamID from 'steamid';
 import { formatDate, getRelDate } from '@/js/util';
@@ -95,7 +95,7 @@ import { formatDate, getRelDate } from '@/js/util';
 const router = useRouter()
 const route = useRoute()
 const props = defineProps<{
-  userdata: Session,
+  userdata: SessionData,
   userAdminData: AdminData,
   user: PlayerData
 }>()

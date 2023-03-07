@@ -108,7 +108,7 @@ import { Session } from '../../../../common-types/User';
 const LAST_UPDATED = new Date(Number(process.env.VUE_APP_BUILD_DATE))
 
 const props = defineProps<{
-  userdata: Session,
+  userdata: SessionData,
 }>()
 const privUser = props.userdata ? new PrivilegedUser(props.userdata) : null
 const isLoggedIn = privUser != null

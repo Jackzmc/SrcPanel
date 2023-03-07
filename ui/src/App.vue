@@ -30,9 +30,8 @@
 <script setup lang="ts">
 import { onBeforeMount, ref, computed } from 'vue'
 import NavBar from '@/components/NavBar.vue'
-import { AdminPermissions } from '../../common-types/User.js';
 import { useRoute, useRouter } from 'vue-router';
-import { SessionUser } from '../../common-types/User';
+import { UserData } from '@/js/User.js'
 
 
 
@@ -48,11 +47,6 @@ let updateInfo = ref<{
   registration?: any,
   updating: boolean
 }>({updating: false})
-
-interface UserData {
-  user: SessionUser,
-  permissions: AdminPermissions
-}
 
 let userdata = ref<UserData|null>()
 
@@ -78,7 +72,8 @@ async function getAuth() {
     const json = await response.json()
     userdata.value = {
       user: json.user,
-      permissions: json.permissions
+      permissions: json.permissions,
+      privileges: json.privileges
     }
     window.sessionStorage.setItem('srcds_userdata', JSON.stringify(userdata.value))
     console.log('Authorized: Hello', json.user.name)

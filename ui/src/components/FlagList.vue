@@ -30,7 +30,7 @@ import { ref, onMounted, computed, watch } from 'vue'
 import { User, PrivilegedUser, PlayerData } from '@/js/User'
 import { useRouter, useRoute } from 'vue-router'
 import SteamID from 'steamid'
-import { Session, WebPermission, WebRole } from '../../../common-types/User';
+import { SessionData, WebPermission, WebRole } from '../../../common-types/User';
 
 // TODO: Move to common
 const FLAGS: Record<string,string> = {
@@ -57,7 +57,7 @@ const FLAGS: Record<string,string> = {
 }
 
 const props = defineProps<{
-  userdata: Session,
+  userdata: SessionData,
   flags: string,
   editable?: boolean,
   onlyActive?: boolean

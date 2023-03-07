@@ -264,8 +264,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { User, PrivilegedUser, PlayerData } from '@/js/User'
 import { useRouter, useRoute } from 'vue-router'
-import SteamID from 'steamid'
-import { Session, WebPermission, WebRole, FLAGS, WEB_FLAGS, AdminData, AdminGroup } from '../../../../common-types/User';
+import { SessionData, FLAGS, WEB_FLAGS, AdminData, AdminGroup } from '../../../../common-types/User';
 import FlagList from '@/components/FlagList.vue'
 import { convertBitsArrayToInt, convertIntToBitsArray, } from '../../js/User';
 // @ts-ignore
@@ -277,7 +276,7 @@ const POLICY_MSG_MIN_HOURS_OF_PLAYTIME = `Policy requires a minimum of ${MIN_HOU
 const router = useRouter()
 const route = useRoute()
 const props = defineProps<{
-  userdata: Session
+  userdata: SessionData
 }>()
 const privUser = new PrivilegedUser(props.userdata)
 
@@ -306,6 +305,7 @@ let expandedGroup = ref<AdminGroup>()
 let selectedgroupIds = ref<number[]>([])
 
 const canEdit = computed(() => {
+  if(user.value?.steamid == privUser.id) return false
   if(adminData.value && form.value.immunity >= privUser.immunityLevel) return false
   if(policyFailures.value.length > 0) return false
   return true

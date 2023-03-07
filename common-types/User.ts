@@ -1,4 +1,4 @@
-import User from "../server/src/modules/users/User.js"
+import { UserPrivileges } from "./Privileges.js"
 
 export enum WebRole {
     None = 0,
@@ -28,13 +28,13 @@ export const WEB_FLAGS: Record<WebPermission, string> = {
     [WebPermission.ConfigRawView]: 'Can view unfiltered config files'
 }
 
-export interface Session {
+export interface SessionData {
     user: SessionUser,
-    user2: User,
     permissions: AdminPermissions
     ip: string,
     loginTime: number,
     countryCode: string
+    privileges: UserPrivileges
 }
 
 export interface SessionUser {
