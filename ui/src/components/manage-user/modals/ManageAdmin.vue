@@ -204,9 +204,9 @@
                 <input type="radio" v-model="form.privileges[service]" :value="null" :id="service + '.none'"/>
                 None
               </label>
-              <label class="radio" :for="service + '.' + priv" v-for="(priv, value) in PrivilegeNames" :key="priv">
-                <input type="radio"  v-model="form.privileges[service]" :value="value" :id="service + '.' + priv" />
-                {{ priv }}
+              <label class="radio" :for="service + '.' + priv" v-for="priv in ServiceSupportedActions[service]" :key="priv">
+                <input type="radio"  v-model="form.privileges[service]" :value="priv" :id="service + '.' + priv" />
+                {{ ServicePrivilegeKeys[priv] }}
               </label>
             </div>
           </div>
@@ -273,7 +273,7 @@ import { User, PrivilegedUser, PlayerData } from '@/js/User'
 import { useRouter, useRoute } from 'vue-router'
 import SteamID from 'steamid'
 import { SessionData, FLAGS, WEB_FLAGS, AdminData, AdminGroup } from '../../../../../common-types/User';
-import { Action, Service, UserPrivileges, ServicePrivilege } from '../../../../../common-types/Privileges';
+import { Action, Service, UserPrivileges, ServicePrivilege, ServiceSupportedActions, ServicePrivilegeKeys } from '../../../../../common-types/Privileges';
 import FlagList from '@/components/FlagList.vue'
 import { convertBitsArrayToInt, convertIntToBitsArray, } from '@/js/User';
 // @ts-ignore
