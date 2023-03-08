@@ -201,11 +201,11 @@
           <div class="field is-narrow">
             <div class="control">
               <label class="radio" :for="service + '.none'">
-                <input type="radio" v-model="form.privileges[service]" :value="null" :id="service + '.none'"/>
+                <input :disabled="!canEdit" type="radio" v-model="form.privileges[service]" :value="null" :id="service + '.none'"/>
                 None
               </label>
               <label class="radio" :for="service + '.' + priv" v-for="priv in ServiceSupportedActions[service]" :key="priv">
-                <input type="radio"  v-model="form.privileges[service]" :value="priv" :id="service + '.' + priv" />
+                <input :disabled="!canEdit" type="radio"  v-model="form.privileges[service]" :value="priv" :id="service + '.' + priv" />
                 {{ ServicePrivilegeKeys[priv] }}
               </label>
             </div>
