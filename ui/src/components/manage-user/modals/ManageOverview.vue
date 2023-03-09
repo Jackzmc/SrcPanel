@@ -3,6 +3,7 @@
   <div class="container has-text-centered" v-if="!info">
     <br>
     <p>Fetching player statistics... please wait</p>
+    <p class="has-text-danger" v-if="statsFailure">{{ statsFailure }}</p>
     <br>
   </div>
   <template v-else>
@@ -100,6 +101,8 @@ const props = defineProps<{
   user: PlayerData
 }>()
 
+let statsFailure = ref<string|undefined>()
+
 
 let info = ref<any>()
 const steamid64 = computed(() => {
@@ -118,13 +121,15 @@ async function fetchInfo() {
     if(response.ok) {
       info.value = json.user
     } else {
+      statsFailure.value = json.message ?? json.error
       notify({
         type: "error",
         title: 'Could Not Fetch User Info',
-        text: json.message
+        text: json.message ?? json.error
       })
     }
   } catch(err: any) {
+    statsFailure.value = err.message
     notify({
       type: "error",
       title: 'Could Not Fetch User Info',

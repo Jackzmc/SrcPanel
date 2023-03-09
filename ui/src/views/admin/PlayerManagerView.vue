@@ -47,8 +47,12 @@
           <tbody>
             <tr v-for="admin in admins" :key="admin.id">
               <td>{{ admin.id }}</td>
-              <td data-tooltip="View stats profile">{{ admin.steamid }}</td>
-              <td>{{ admin.name }}</td>
+              <td>{{ admin.steamid }}</td>
+              <td>
+                <router-link :to="{name:'manage-user',params:{id:admin.steamid},query:{returnTo:$route.fullPath}}">
+                  {{ admin.name }}
+                </router-link>
+              </td>
             </tr>
           </tbody>
         </table>
@@ -98,12 +102,6 @@ let selectedId = ref<string>()
 let servers = ref([])
 let admins = ref<ReadableAdminData[]>([])
 
-const isManualInputEntered = computed(() => {
-  return manualInput.value != null && manualInput.value.length > 0
-})
-const selectedIdSteamID = computed(() => {
-  return manualInput.value ?? selectedId.value
-})
 function setTab(tab: any) {
   selectedTabId.value = tab.tab.computedId
   manualInput.value = undefined
