@@ -39,7 +39,6 @@
         <table class="table">
           <thead>
             <tr>
-              <th></th>
               <th>Id</th>
               <th>SteamID</th>
               <th>Name</th>
@@ -47,9 +46,6 @@
           </thead>
           <tbody>
             <tr v-for="admin in admins" :key="admin.id">
-              <td>
-                <input v-if="admin.steamid !== userdata.user.steamid" type="radio" v-model="selectedId" :value="admin.steamid">
-              </td>
               <td>{{ admin.id }}</td>
               <td data-tooltip="View stats profile">{{ admin.steamid }}</td>
               <td>{{ admin.name }}</td>
@@ -61,19 +57,6 @@
     <br>
   </div>
   <br><br>
-  <nav class="navbar is-fixed-bottom is-dark"  v-if="selectedUser">
-    <div class="navbar-menu" style="margin-left: 5em">
-      <div class="navbar-item">
-        <a class="button is-primary" @click="manageUser" data-tooltip="New all in one tool to manage users">Manage (Beta)</a>
-      </div>
-      <div class="navbar-item" v-if="!addBanDisableReason">
-        <a class="button is-danger" @click="addBan" >Ban</a>
-      </div>
-      <div class="navbar-item" v-if="hasCreateAdminPerms&&!addAdminDisableReason">
-        <a class="button is-warning" @click="addAdmin"   :data-tooltip="addAdminDisableReason">{{adminButton}}</a>
-      </div>
-    </div>
-  </nav>
 </div>
 </template>
 
@@ -121,45 +104,6 @@ const isManualInputEntered = computed(() => {
 const selectedIdSteamID = computed(() => {
   return manualInput.value ?? selectedId.value
 })
-const selectedUser = computed(() => {
-  if(!selectedId.value) return
-  if(selectedTabId.value === "recent")
-    return recentPlayers.value.list.find(rp => rp.steamid == selectedId.value)
-  else if(selectedTabId.value === "search")
-    return users.value.find(user => user.steamid == selectedId.value)
-  else if(selectedTabId.value === "admins") {
-    const admin = admins.value.find((user: ReadableAdminData) => user.steamid == selectedId.value)
-    if(admin) {
-      return {
-        ...admin,
-        isAdmin: true
-      }
-    }
-  }
-  return undefined
-})
-const hasCreateAdminPerms = computed(() => {
-  return privUser.immunityLevel > 0 && privUser.hasWebPerm(WebPermission.ManageAdmins)
-})
-const addAdminDisableReason = computed(() => {
-  //!selectedId || (selectedId === '_custom' && !manualInput)
-  if(!selectedId.value) return 'No player selected'
-  // if(selectedId.value === '_custom') return 'Cannot add an unknown player as admin'
-  // if(selectedRecentUser.value?.isAdmin) return 'Selected player is already an admin'
-  return null
-})
-const adminButton = computed(() => {
-  if(selectedUser.value) {
-    if('isAdmin' in selectedUser.value && selectedUser.value?.isAdmin) return "Edit Admin"
-    else return "Make Admin"
-  }
-  return "Add / Edit Admin"
-})
-const addBanDisableReason = computed(() => {
-  if(!selectedId.value || (selectedId.value === '_custom' && !manualInput.value)) return 'No player selected'
-  if('isAdmin' in selectedUser.value! && selectedUser.value?.isAdmin) return 'Selected player is an admin'
-  return null
-})
 function setTab(tab: any) {
   selectedTabId.value = tab.tab.computedId
   manualInput.value = undefined
@@ -174,18 +118,6 @@ function onManualSelected(id: string) {
   manualInput.value = id
   selectedId.value = "_custom"
   search.value.func()
-}
-function addBan() {
-  if(!selectedIdSteamID.value) return alert("No steamID selectedId")
-  router.push(`/admin/players/${selectedIdSteamID.value}/add-ban`)
-}
-function addAdmin() {
-  if(!selectedIdSteamID.value) return alert("No steamID selectedId")
-  router.push(`/admin/players/${selectedIdSteamID.value}/manage-admin`)
-}
-function manageUser() {
-  if(!selectedIdSteamID.value) return alert("No steamID selectedId")
-  router.push(`/admin/players/${selectedIdSteamID.value}`)
 }
 async function searchUser() {
   const response = await fetch(`/api/users/search/${manualInput.value ?? search.value.query}`)

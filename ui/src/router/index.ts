@@ -177,25 +177,6 @@ const routes = [
             }
           },
         ]
-      },
-      {
-        name: 'admin-players-add-ban',
-        path: ':id/add-ban',
-        component: () => import(/* webpackChunkName: 'players' */ '../components/modals/AddBanModal.vue'),
-        meta: {
-          title: 'Ban Player',
-          authRequired: true
-        }
-      },
-
-      {
-        name: 'admin-players-manage-admin',
-        path: ':id/manage-admin',
-        component: () => import(/* webpackChunkName: 'players' */ '../components/modals/ManageAdminsModal.vue'),
-        meta: {
-          title: 'Manage Admin Player',
-          authRequired: true
-        }
       }
     ]
   },
