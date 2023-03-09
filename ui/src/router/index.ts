@@ -82,15 +82,7 @@ const routes = [
     meta: {
       title: 'Bans',
       hideHero: true,
-    },
-    children: [
-      {
-        name: 'bans-edit',
-        path: 'edit/:id',
-        component: () => import(/* webpackChunkName: 'bans' */ '../components/modals/EditBanModal.vue'),
-        hideHero: true,
-      }
-    ]
+    }
   },
   {
     name: 'info',
