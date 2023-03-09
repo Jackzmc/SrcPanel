@@ -91,7 +91,9 @@ export function formatParameters({parameters, defaultValue, args}: any) {
 
 export function formatDate(timestamp?: number) {
   const d = timestamp ? new Date(timestamp * 1000) : new Date();
-  return d.toLocaleDateString() + " " + d.toLocaleTimeString();
+  return d.toLocaleDateString() + " at " + d.toLocaleTimeString(undefined, {
+    timeStyle: "short"
+  });
 }
 export function getRelDate(timestamp: number) {
   const date = timestamp ? new Date(timestamp * 1000) : new Date();
