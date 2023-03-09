@@ -60,7 +60,10 @@
             <span v-else>{{formatDaysAgo(ban.expires) || 'Never'}}</span>
           </td>
           <td>{{ban.joinAttempts}}</td>
-          <td :data-tooltip="formatDate(ban.timestamp)">{{ban.relDate}}</td>
+          <td :data-tooltip="formatDate(ban.timestamp)">
+            <p>{{ban.relDate}}</p>
+            <p class="has-text-grey">{{ new Date(ban.timestamp * 1000).toLocaleDateString() }}</p>
+          </td>
           <td v-if="userdata">
             <div class="buttons">
               <router-link class="button is-info is-small" :to="{name: 'manage-user-bans', params: { id: ban.client.id, banid: ban.id }, query: { returnTo: $route.fullPath }}">View</router-link>
@@ -81,6 +84,7 @@ import { ref, watch, computed, onBeforeMount, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import Sugar from 'sugar'
 import { ListAPIBan } from '../../../common-types/Ban.js';
+import { formatDate } from '@/js/util'
 
 const DISCORD_SOURCE_REGEX = new RegExp(/([^\n]+#\d{4})\s\((\d+)\)/)
 const AUTO_REFRESH_INTERVAL = 1000 * 60 * 15
@@ -146,10 +150,6 @@ function formatDaysAgo(value?: number, locale?: string) {
   const deltaDays = (date.getTime() - Date.now()) / (1000 * 3600 * 24);
   const formatter = new Intl.RelativeTimeFormat(locale);
   return formatter.format(Math.round(deltaDays), 'days');
-}
-function formatDate(timestamp: number) {
-  const date = new Date(timestamp * 1000)
-  return `${date.toLocaleDateString()} at ${date.toLocaleTimeString()}`
 }
 function fetchBans() {
   fetch('/api/bans', { credentials: 'include' })

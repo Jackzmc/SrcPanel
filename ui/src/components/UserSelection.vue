@@ -46,6 +46,7 @@
 <script setup lang="ts">
 import { ref, watch, computed, onBeforeMount, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { formatDate } from "@/js/util"
 
 const emit = defineEmits(['select', 'manual'])
 const props = defineProps<{
@@ -68,8 +69,4 @@ watch(manualInput, (value) => {
 
 
 
-function formatDate(timestamp: number) {
-  const date = new Date(timestamp * 1000)
-  return date.toLocaleDateString()
-}
 </script>

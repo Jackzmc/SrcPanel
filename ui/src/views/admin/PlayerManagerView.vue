@@ -2,7 +2,7 @@
 <div>
   <router-view :userdata="userdata" />
   <div class="container">
-    <Tabs inner-wrapper-class="tabs is-large" @changed="setTab" >
+    <Tabs inner-wrapper-class="tabs is-large" @changed="setTab"  >
       <Tab name="Recently Played With" id="recent">
         <h4 class="title is-4">Recently Played From</h4>
         <div class="level">
