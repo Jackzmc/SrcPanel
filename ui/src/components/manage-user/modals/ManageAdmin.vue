@@ -10,14 +10,15 @@
       </div>
     </div>
   </article>
-  <div class="level">
-    <div class="level-item has-text-centered" v-if="loading.stats">
+  <div class="level" v-if="userAdminData">
+    <div class="level-item has-text-centered">
       <div class="field">
-        <label class="label">Loading Player Statistics</label>
-        <img src="@/assets/loader.gif" style="height:64px" />
+        <label class="label">Admin Id</label>
+        <span>
+          {{userAdminData.id}}
+        </span>
       </div>
     </div>
-    <template v-else>
     <div class="level-item has-text-centered">
       <div class="field">
         <label class="label">Playtime</label>
@@ -31,58 +32,6 @@
             >(!) </b>
           </p>
           <em v-else>(no recorded statistics found)</em>
-        </span>
-      </div>
-    </div>
-    <div class="level-item has-text-centered">
-      <div class="field">
-        <label class="label">First Joined</label>
-        <span>
-          <template v-if="stats">
-            <p v-if="stats.created_date">
-              {{formatTime(stats.created_date)}}
-            </p>
-            <em v-else>never</em>
-            <p>{{ getRelDate(Number(stats.created_date)) }}</p>
-          </template>
-          <em v-else>(no recorded statistics found)</em>
-        </span>
-      </div>
-    </div>
-    <div class="level-item has-text-centered">
-      <div class="field">
-        <label class="label">Last Online</label>
-        <span>
-          <template v-if="stats">
-            <p v-if="stats.last_join_date">
-              {{formatTime(stats.last_join_date)}}
-            </p>
-            <em v-else>never</em>
-            <p>{{ getRelDate(Number(stats.last_join_date)) }}</p>
-          </template>
-          <em v-else>(no recorded statistics found)</em>
-        </span>
-      </div>
-    </div>
-    <div class="level-item has-text-centered">
-      <div class="field">
-        <label class="label has-tooltip-left" data-tooltip="The percentage of friendly fire compared to damage dealt">FF %</label>
-        <span>
-          <p v-if="stats">
-            {{(stats.survivor_ff as number / (stats.survivor_damage_give as number) * 100).toFixed(1)}}
-          </p>
-          <em v-else>(no recorded statistics found)</em>
-        </span>
-      </div>
-    </div>
-    </template>
-  </div>
-  <div class="level" v-if="userAdminData">
-    <div class="level-item has-text-centered">
-      <div class="field">
-        <label class="label">Admin Id</label>
-        <span>
-          {{userAdminData.id}}
         </span>
       </div>
     </div>
@@ -324,12 +273,12 @@ function reset() {
     immunity: props.userAdminData.permissions.base.immunityLevel || 0,
     privileges: { ... privileges.value }
   }
-  form.value = {
-    immunity: 0,
-    flags: [],
-    webFlags: [],
-    privileges: { ... privileges.value}
-  }
+  // form.value = {
+  //   immunity: 0,
+  //   flags: [],
+  //   webFlags: [],
+  //   privileges: { ... privileges.value}
+  // }
 }
 let stats = ref<Record<string, string|number>|null>()
 let error = ref("")
@@ -371,7 +320,7 @@ const hoursPlayed = computed(() => {
 })
 const playtime = computed(() => {
   if(!stats) return
-  if(hoursPlayed.value > 0) return hoursPlayed
+  if(hoursPlayed.value > 0) return hoursPlayed.value.toLocaleString()
   return "< 0"
 })
 const noAddReasons = computed(() => {
@@ -386,7 +335,7 @@ const cantAddAdmin = computed(() => {
 })
 
 const noPermsGiven = computed(() => {
-  return form.value.flags.length === 0 && selectedgroupIds.value.length === 0 && form.value.webFlags.length === 0
+  return form.value.flags.length === 0 && selectedgroupIds.value.length === 0 && form.value.webFlags  .length === 0
 })
 
 

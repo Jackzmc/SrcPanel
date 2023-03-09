@@ -2,7 +2,6 @@
   <table class="table is-striped is-fullwidth">
     <thead>
       <tr>
-        <th></th>
         <th>Name</th>
         <th>SteamID</th>
         <th>Country</th>
@@ -15,9 +14,6 @@
     </thead>
     <tbody>
     <tr v-for="user in users" :key="user.steamid">
-      <td>
-        <input v-if="user.steamid !== userdata.user.steamid" type="radio" v-model="selectedId" :value="user.steamid">
-      </td>
       <td>
         <router-link :to="{ name: 'manage-user', params: { id: user.steamid }}">
           <b>{{user.name}}</b>

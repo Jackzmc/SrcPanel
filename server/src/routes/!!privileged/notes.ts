@@ -4,7 +4,6 @@ import { Static, Type } from '@sinclair/typebox'
 
 const PUTNotes = Type.Object({
     id: Type.Integer(),
-    // steamid: Type.String(),
     markedBy: Type.String(),
     content: Type.String(),
 });

@@ -1,4 +1,4 @@
-import { UserPrivileges } from "./Privileges.js"
+import { Service, ServicePrivilege, UserPrivileges } from "./Privileges.js"
 
 export enum WebRole {
     None = 0,
@@ -74,7 +74,6 @@ export interface AdminData {
     identity: string,
     password: string | null,
     name: string,
-
     permissions: AdminPermissions
 
     groups: AdminGroup[]
@@ -99,6 +98,7 @@ export interface AdminPermissions {
     immunityLevel: number
     flags: string,
     web: {
+        privileges: Record<Service, ServicePrivilege>
         role: number,
         flags: number
     },
