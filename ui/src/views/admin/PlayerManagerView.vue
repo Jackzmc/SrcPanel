@@ -2,7 +2,7 @@
 <div>
   <router-view :userdata="userdata" />
   <div class="container">
-    <Tabs inner-wrapper-class="tabs is-large" @changed="setTab"  >
+    <Tabs inner-wrapper-class="tabs is-large" @changed="setTab" :dummy="Date.now()">
       <Tab name="Recently Played With" id="recent">
         <h4 class="title is-4">Recently Played From</h4>
         <div class="level">
@@ -24,7 +24,7 @@
             </div>
           </div>
         </div>
-        <UserSelection :userdata="userdata" :users="recentPlayers.list" @select="onUserSelected" @manual="onManualSelected" />
+        <UserSelection :userdata="userdata" :users="recentPlayers.list" @manual="onManualSelected" />
       </Tab>
       <Tab name="Search for a User" id="search">
         <div class="field">
@@ -33,7 +33,7 @@
           <input v-model="search.query" @input="search.func" class="input" type="text" placeholder="STEAM_1:1:####### or a name">
         </div>
       </div>
-      <UserSelection has-manual :userdata="userdata" :users="users" @select="onUserSelected" @manual="onManualSelected" />
+      <UserSelection has-manual :userdata="userdata" :users="users" @manual="onManualSelected" />
       </Tab>
       <Tab name="Admins" id="admins" v-if="privUser.hasWebPerm(WebPermission.ManageAdmins)" @selected="fetchAdmins">
         <table class="table">

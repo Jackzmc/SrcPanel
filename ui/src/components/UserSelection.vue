@@ -33,13 +33,6 @@
       <td v-if="!hasManual">{{user.server}}</td>
     </tr>
     </tbody>
-    <tfoot v-if="hasManual">
-      <tr>
-        <td><input type="radio" v-model="selectedId" value="_custom"></td>
-        <td><input @focus="selectedId = '_custom'" type="text" class="input" v-model="manualInput" placeholder="STEAM_1:1:" /></td>
-        <td><b>Manual Input</b></td>
-      </tr>
-    </tfoot>
   </table>
 </template>
 
