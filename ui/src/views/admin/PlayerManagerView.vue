@@ -74,6 +74,7 @@ import UserSelection from '@/components/UserSelection.vue'
 import {Tabs, Tab} from 'vue3-tabs-component';
 // Keep track and open gui for each ban
 import Debounce from '@/js/debounce'
+import { request } from '@/js/util';
 
 const AUTO_REFRESH_INTERVAL_MINUTES = 2
 const RECENT_LIMIT = 15
@@ -118,24 +119,24 @@ function onManualSelected(id: string) {
   search.value.func()
 }
 async function searchUser() {
-  const response = await fetch(`/api/users/search/${manualInput.value ?? search.value.query}`)
-  if(response.ok) {
+  const response = await request(`/api/users/search/${manualInput.value ?? search.value.query}`)
+  if(response?.ok) {
     const json = await response.json()
     users.value = json.users
   }
 }
 async function fetchAdmins() {
-  const response = await fetch('/api/admins')
-  if(response.ok) {
+  const response = await request('/api/admins')
+  if(response?.ok) {
     const json = await response.json()
     admins.value = json.admins as ReadableAdminData[]
   }
 }
 async function getRecentPlayers() {
   recentPlayers.value.loading = true
-  const resp = await fetch(`/api/users/recent/${recentPlayers.value.server||''}?limit=${RECENT_LIMIT}`)
+  const resp = await request(`/api/users/recent/${recentPlayers.value.server||''}?limit=${RECENT_LIMIT}`)
   recentPlayers.value.loading = false
-  if(resp.ok) {
+  if(resp?.ok) {
     const json = await resp.json()
 
     recentPlayers.value.list = []
@@ -155,8 +156,8 @@ async function getRecentPlayers() {
   }
 }
 async function getServerTypes() {
-  const resp = await fetch(`/api/logs/servers`)
-  if(resp.ok) {
+  const resp = await request(`/api/logs/servers`)
+  if(resp?.ok) {
     const json = await resp.json()
     servers.value = json.servers
   }

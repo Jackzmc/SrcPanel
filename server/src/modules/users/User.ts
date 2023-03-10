@@ -1,5 +1,4 @@
 import { AdminData } from '../../../../common-types/User';
-import SteamID from 'steamid';
 import { SteamInfo, UserPrivileges, Service, ServicePrivilege, ActionRequiredPrivilege, Action } from '../../../../common-types/Privileges.js';
 import AuthManager from '../AuthManager.js';
 
@@ -7,23 +6,18 @@ export default class User {
     private steamInfo: SteamInfo
     private adminData?: AdminData
     private authmngr: AuthManager
-    private _steamid: SteamID
 
     private _privileges: UserPrivileges
 
     constructor(_authmngr: AuthManager, _steamInfo: SteamInfo, _privileges: UserPrivileges) {
-        this._steamid = new SteamID(_steamInfo.steamid)
         this.authmngr = _authmngr;
         this.steamInfo = _steamInfo;
-        this.adminData = _authmngr.getAdmin(this._steamid)
+        this.adminData = _authmngr.getAdmin(this.steamInfo.steamid)
         this._privileges = _privileges;
     }
 
     get steamid64() {
         return this.steamInfo.steamid
-    }
-    get steamid() {
-        return this._steamid
     }
 
     get isAdmin() {
@@ -35,7 +29,7 @@ export default class User {
     }
 
     async grantPrivilege(service: Service, privilege: ServicePrivilege) {
-        await this.authmngr.setPrivileges(this._steamid, { [service]: privilege })
+        await this.authmngr.setPrivileges(this.steamInfo.steamid, { [service]: privilege })
         this._privileges[service] = privilege
     }
 

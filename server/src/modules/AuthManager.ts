@@ -1,6 +1,5 @@
 import { Connection, Pool, RowDataPacket, OkPacket } from "mysql2/promise";
 import QuickLRU from 'quick-lru'
-import SteamID from 'steamid'
 import { FastifyReply, FastifyRequest } from 'fastify';
 import ActivityLog from "./ActivityLog.js";
 import { AdminPermissions, AdminData, AdminGroup, WebRole, WebPermission } from '../../../common-types/User.js';
@@ -79,28 +78,22 @@ export default class AuthManager {
         return (req.session.permissions.web.flags & permission) > 0
     }
     
-    public isAdmin(steamid: SteamID) {
-        const id = steamid.accountid.toString()
-        return this.admins[id] !== null && this.admins[id] !== undefined
+    public isAdmin(steamid64: string) {
+        return this.getAdmin(steamid64) != undefined
     }
 
-    public getAdmin(steamid: SteamID) {
-        return this.admins[steamid.accountid.toString()]
+    public getAdmin(steamid64: string) {
+        return this.admins[steamid64.slice(10)]
     }
 
     public getAdminById(id: number) {
-        for(const steamid in this.admins) {
-            if(this.admins[steamid].id === id) return this.admins[steamid]
-        }
-        return null
+        return Object.values(this.admins).find(admin => admin.id === id)
     }
 
-    public async getPrivileges(steamid: SteamID): Promise<UserPrivileges> {
-        const admin = this.getAdmin(steamid)
-        if(!admin) return null
+    public async getPrivileges(steamid64: string): Promise<UserPrivileges> {
         const [rows] = await this.connection.execute<RowDataPacket[]>(
             "SELECT service, privilege FROM dash_privileges WHERE SUBSTRING(steamid, 11) = SUBSTRING(?, 11)",
-            [admin.identity]
+            [steamid64]
         )
         let privs: UserPrivileges = {}
         for(const row of rows) {
@@ -110,35 +103,17 @@ export default class AuthManager {
     }
 
     // If privilege is undefined, it will be ignored, if a privilege is null, it will be revoked
-    public async setPrivileges(steamid: SteamID, privileges: UserPrivileges) {
-        const admin = this.getAdmin(steamid)
-        if(!admin) return null
+    public async setPrivileges(steamid64: string, privileges: UserPrivileges) {
         for(const [service, priv] of Object.entries(privileges)) {
-            if(priv == null) {
+            if(priv === null) {
                 await this.connection.execute(
-                    "DELETE FROM dash_privileges WHERE steamid = ? AND service = ?",
-                    [admin.identity, ServicePrivilegeKeys[service]]
+                    "DELETE FROM dash_privileges WHERE SUBSTRING(steamid, 11) = SUBSTRING(?, 11) AND service = ?",
+                    [steamid64, service]
                 )
             } else {
                 await this.connection.execute(
                     "INSERT INTO dash_privileges (steamid, service, privilege) VALUES(?, ?, ?) ON DUPLICATE KEY UPDATE privilege = ?",
-                    [admin.identity, ServicePrivilegeKeys[service], priv, priv]
-                )
-            }
-        }
-    }
-
-    public async setPrivilegesSteamid(steamid64: string, privileges: UserPrivileges) {
-        for(const [service, priv] of Object.entries(privileges)) {
-            if(priv == null) {
-                await this.connection.execute(
-                    "DELETE FROM dash_privileges WHERE steamid = ? AND service = ?",
-                    [steamid64, ServicePrivilegeKeys[service]]
-                )
-            } else {
-                await this.connection.execute(
-                    "INSERT INTO dash_privileges (steamid, service, privilege) VALUES(?, ?, ?) ON DUPLICATE KEY UPDATE privilege = ?",
-                    [steamid64, ServicePrivilegeKeys[service], priv, priv]
+                    [steamid64, service, priv, priv]
                 )
             }
         }
@@ -150,7 +125,7 @@ export default class AuthManager {
         // possibly make optional:
         const steamid = this.getAdminById(id)
         if(steamid)
-            await this.connection.execute<OkPacket>("DELETE FROM dash_perms WHERE steamid = ?", [steamid])
+            await this.connection.execute<OkPacket>("DELETE FROM dash_perms WHERE SUBSTRING(steamid, 1!) = SUBSTRING(?, 11)", [steamid])
             delete this.admins[id]
     }
 
@@ -170,12 +145,12 @@ export default class AuthManager {
         )
 
         if(data.privileges) {
-            await this.setPrivilegesSteamid(rows[0].identity, data.privileges)
+            await this.setPrivileges(rows[0].identity, data.privileges)
         }
 
         if(webPerms) {
             const [exists] = await this.connection.execute<RowDataPacket[]>(
-                "SELECT * FROM dash_perms WHERE steamid = ?", 
+                "SELECT * FROM dash_perms WHERE SUBSTRING(steamid, 11) = SUBSTRING(?, 11)", 
                 [rows[0].identity]
             )
 
@@ -245,7 +220,7 @@ export default class AuthManager {
         }
 
         if(admin.privileges) {
-            await this.setPrivilegesSteamid(admin.identity, admin.privileges)
+            await this.setPrivileges(admin.identity, admin.privileges)
         }
 
         if(admin.groupIds) {
@@ -300,8 +275,7 @@ export default class AuthManager {
         // Loops every admin. If an admin is more than one group, there will be multiple rows related to them
         for(const row of rows as RowDataPacket[]) {
             // Add initial set of flags and immunity
-            const steamid = new SteamID(row.identity)
-            const key = steamid.accountid.toString()
+            const key = row.identity.slice(10)
             // Reset merge data on a new user
             if(lastId !== key) {
                 highestImmunity = 0
@@ -329,7 +303,7 @@ export default class AuthManager {
                             flags: row.flags
                         },
                         web: {
-                            privileges: await this.getPrivileges(steamid),
+                            privileges: await this.getPrivileges(key),
                             role: row.web_role || 0,
                             flags: row.web_flags || 0
                         }

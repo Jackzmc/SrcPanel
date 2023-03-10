@@ -17,4 +17,5 @@ const route = useRoute()
 const returnTo = computed(() => {
   return route.query.return as string
 })
+
 </script>

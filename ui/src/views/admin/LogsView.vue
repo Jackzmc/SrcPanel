@@ -289,11 +289,12 @@ import Pagination from "@/components/pagination.vue";
 import Debounce from "@/js/debounce";
 import LogClientTarget from "@/components/LogClientTarget.vue";
 import Modal from "@/components/Modal.vue";
-import { Session } from "../../../../common-types/User";
+import { SessionData } from "../../../../common-types/User";
 import { ref, watch, computed, onBeforeMount, onMounted, Ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useNotification } from "@kyvg/vue3-notification";
 import LogMessage from "@/components/LogMessage.vue";
+import { request } from '@/js/util';
 import { parseLog } from '../../js/util';
 
 const emit = defineEmits([]);
@@ -308,6 +309,7 @@ const ADMINCHAT_REGEX = /triggered sm_say \(text (.*)\)/;
 
 const DEFAULT_TYPES = ["ACTION", "CHAT", "INFO", "STATE", "WEB"];
 const DEFAULT_SERVERS = ["main", "reserved", "web"];
+
 
 type Dictionary<K extends string, T> = Partial<Record<K, T>>;
 
@@ -328,7 +330,7 @@ const SERVER_COLORS: Dictionary<string, string> = {
 const { notify } = useNotification();
 
 const props = defineProps<{
-  userdata: Session;
+  userdata: SessionData
 }>();
 
 const FILTERS = {
@@ -484,23 +486,17 @@ async function redactID(id: string) {
   if (!log) {
     alert("Could not find log for " + id);
   }
-  const response = await fetch(`/api/logs/${id}/redact`, {
+  const response = await request(`/api/logs/${id}/redact`, {
     method: "POST",
     credentials: "include",
-  });
-  if (response.ok && response.status === 204) {
+  }, { title: "Failed to redact" });
+
+  if (response?.ok) {
     log.message = "[redacted]";
     log.redacted = true;
     notify({
       type: "success",
       text: `Redacted #${id}`,
-    });
-  } else {
-    const json = await response.json();
-    notify({
-      type: "error",
-      text: json.message,
-      title: `Failed to redact: ${response.statusText}`,
     });
   }
 }
@@ -533,11 +529,11 @@ function setUserFilter(type: string, id: string) {
 }
 async function getData() {
   try {
-    const response = await fetch(
+    const response = await request(
       `/api/logs/${page.value}?limit=${limit.value}${query.value}`,
       { credentials: "include" }
     );
-    if (response.ok && response.status == 200) {
+    if (response?.ok) {
       const json = await response.json();
       loading.value = 0;
       count.value = json.totalCount;
@@ -552,33 +548,12 @@ async function getData() {
         })
       );
       return true;
-    } else {
-      loading.value = 0;
-      alert("Server error while fetching logs: " + response.statusText);
-      return false;
     }
   } catch (err: any) {
     loading.value = 0;
-    alert("Error while fetching logs: " + err.message);
-    return false;
+    throw err
   }
 }
-
-function getStatProfile(id: string) {
-  return `https://stats.jackz.me/user/${id}/overview`;
-}
-function addToHistory(steamid: string, list: string) {
-  //@ts-ignore
-  if (!steamid || !list || !history.value[list]) return false;
-  //@ts-ignore
-  if (!history.value[list][steamid]) {
-    //@ts-ignore
-    history.value[list][steamid] = 0;
-  }
-  //@ts-ignore
-  history.value[list][steamid]++;
-}
-
 onBeforeMount(() => {
   if (window.localStorage["l4d2admin_data"]) {
     history.value = JSON.parse(window.localStorage["l4d2admin_data"]).history;

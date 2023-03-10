@@ -88,6 +88,12 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             include?: string,
         }
     }>, reply) => {
+        if(!req.params.steamid || req.params.steamid.length < 10) {
+            return reply.status(400).send({
+                error: "INVALID_STEAMID",
+                message: "Provided steamid is invalid"
+            })
+        }
         const [rows] = await fastify.db.execute<RowDataPacket[]>(
             `SELECT
             (SELECT COUNT(*) FROM notes WHERE SUBSTRING(notes.steamid,11) = SUBSTRING(stats_users.steamid,11)) as notesCount,
@@ -100,7 +106,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         )
         let adminData = undefined
         if(req.query.include === "admin") {
-            adminData = fastify.authmngr.getAdmin(new SteamID(req.params.steamid))
+            adminData = fastify.authmngr.getAdmin(req.params.steamid)
             if(adminData) delete adminData.password
         }
         return {

@@ -1,3 +1,4 @@
+import { notify, NotificationsOptions } from "@kyvg/vue3-notification"
 import { formatRelative } from "date-fns"
 
 export function parseType(type: string) {
@@ -87,6 +88,39 @@ export function formatParameters({parameters, defaultValue, args}: any) {
       string += char
   }
   return string
+}
+
+export async function request(url: RequestInfo, options?: RequestInit, errOptions: Partial<NotificationsOptions> = {}): Promise<Response|null> {
+  try {
+    const response = await fetch(url, options)
+    if(response.ok) {
+      return response
+    } else if(response.headers.get("content-type")?.includes("application/json")) {
+      const json = await response.json()
+      notify({
+        type: "error",
+        text: json.message ?? json.error,
+        ...errOptions
+      })
+      console.error(`${url} returned an error:\n${json}`)
+    } else {
+      const text = await response.text()
+      notify({
+        type: "error",
+        text,
+        ...errOptions
+      })
+      console.error(`${url} returned an error:\n${text}`)
+    }
+    return response
+  } catch(err: any) {
+    notify({
+      type: "error",
+      text: err.message,
+    })
+    console.error(`an error occurred accessing ${url}: ${err}`)
+    return null
+  }
 }
 
 export function formatDate(timestamp?: number) {

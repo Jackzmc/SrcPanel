@@ -71,7 +71,7 @@
 <script setup lang="ts">
 import { ref, onBeforeMount, onMounted, computed } from 'vue'
 import ActionNote from '@/components/ActionNote.vue'
-import { Session } from '../../../common-types/User.js';
+import { SessionData } from '../../../common-types/User.js';
 import data from '@/assets/data.json'
 import Sentiment from 'sentiment'
 const sentiment = new Sentiment();
@@ -80,7 +80,7 @@ const analyzeOptions = {
 };
 
 const props = defineProps<{
-  userdata: Session
+  userdata: SessionData
 }>()
 
 let fetchError = ref<string|undefined>(undefined)
@@ -101,6 +101,7 @@ const CAUTION_WORDS = ["ok", "alright", "noob", "new", "noobs", "no", "burned", 
 const NEGATIVE_WORDS = ["troll", "teamkiller", "tk", "tker", "bad", "stupid", "annoying", "lit", "sucks", "unhelpful", "spam", "rushes", "rusher", "dick", "asshole", "cunt"]
 
 const filteredNotes = computed(() => {
+  if(!notes.value) return []
   let filtered = notes.value
   if(search.value.user != '') {
     let query = search.value.user.toLowerCase()
@@ -148,7 +149,7 @@ async function fetchNotes() {
     } else {
       fetchError.value = json.message
     }
-  } catch(err) {
+  } catch(err: any) {
     fetchError.value = err.message
   }
 }

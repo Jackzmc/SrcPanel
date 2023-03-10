@@ -101,8 +101,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         Params: { steamid: string }
     }>, reply) => {
         if(req.session.permissions.web.flags & WebPermission.ManageAdmins) {
-            const steamid = new SteamID(req.params.steamid)
-            if(steamid.isValid()) {
+            if(req.params.steamid.length > 10) {
+                const steamid = req.params.steamid.slice(10)
                 const admin = fastify.authmngr.getAdmin(steamid)
                 if(admin) {
                     if(admin.permissions.immunityLevel >= req.session.permissions.immunityLevel) {
@@ -141,9 +141,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         Body: PUTAdminType
     }>, reply) => {
         if(req.session.permissions.web.flags & WebPermission.ManageAdmins) {
-            const steamid = new SteamID(req.params.steamid)
-            if(steamid.isValid()) {
-                const admin = fastify.authmngr.getAdmin(steamid)
+            if(req.params.steamid.length > 10) {
+                const admin = fastify.authmngr.getAdmin(req.params.steamid)
                 if(admin) {
                     let immunity = req.body.immunityLevel
                     if(immunity && immunity < 0) immunity = 0
@@ -164,7 +163,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
                     const newAdmin = await fastify.authmngr.editAdmin(admin.id, {
                         authtype: "steam",
-                        identity: steamid.getSteam2RenderedID(true),
+                        identity: req.params.steamid,
                         password: null,
                         name: req.body.name || "",
                         immunity,
@@ -207,11 +206,11 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         Body: POSTAdminType
     }>, reply) => {
         if(req.session.permissions.web.flags & WebPermission.ManageAdmins) {
-            const steamid = new SteamID(req.params.steamid)
-            if(steamid.isValid()) {
+            if(req.params.steamid.length > 10) {
+                const steamid = req.params.steamid.slice(10)
                 const [existing] = await fastify.db.execute<RowDataPacket[]>(`
-                    SELECT * FROM bans WHERE steamid = ? AND ~FLAGS & ${APIBanFlags.Suspended}`,
-                    [req.params.steamid]
+                    SELECT * FROM bans WHERE SUBSTRING(steamid, 11) = ? AND ~FLAGS & ${APIBanFlags.Suspended}`,
+                    [steamid]
                 )
                 if(existing.length > 0) {
                     return reply.code(403).send({
@@ -234,7 +233,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
                     const id = await fastify.authmngr.addAdmin({
                         authtype: "steam",
-                        identity: steamid.getSteam2RenderedID(true),
+                        identity: `STEAM_1:0:${steamid}`,
                         password: null,
                         name: req.body.name || "",
                         immunity,

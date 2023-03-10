@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <Notifications position="top center" :duration=5000 />
+    <Notifications position="top center" :duration=7000 />
     <NavBar v-if="!$route.meta.hideNav" :userdata="userdata" @logout="onLogout" :update-info="updateInfo" />
     <br>
     <br v-if="$route.meta.hideHero">

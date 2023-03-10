@@ -206,7 +206,7 @@
       :class="['button','has-tooltip-top', 'is-success',{'is-loading': loading.save}]"
       :disabled="cantAddAdmin || !canEdit"
       @click="save"
-    >{{ props.userAdminData ? 'Save' : 'Add Admin' }}</button>
+    >{{ props.userAdminData ? 'Save Changes' : 'Add Admin' }}</button>
     <button
       class="button"
       @click="reset"
@@ -228,7 +228,7 @@ import { convertBitsArrayToInt, convertIntToBitsArray, } from '@/js/User';
 // @ts-ignore
 import { Tab, Tabs } from 'vue3-tabs-component'
 import { notify } from '@kyvg/vue3-notification';
-import { getRelDate } from '@/js/util';
+import { getRelDate, request } from '@/js/util';
 
 const PrivilegeNames: string[] = Object.values(ServicePrivilege).filter(item => isNaN(Number(item))) as string[]
 const MIN_HOURS_PLAYTIME = 10
@@ -281,7 +281,6 @@ function reset() {
   // }
 }
 let stats = ref<Record<string, string|number>|null>()
-let error = ref("")
 let fetchError = ref("")
 let loading = ref({
   stats: true,
@@ -358,31 +357,23 @@ interface POSTAdminAPI {
 }
 async function revoke() {
   if(window.confirm(`Are you sure you want to revoke ${props.user?.name}'s admin privileges? They will no longer be able to use any admin commands, see admin chat, or view any administration pages online.`)) {
-    const response = await fetch(`/api/admins/${props.user?.steamid}`, {
+    const response = await request(`/api/admins/${props.user?.steamid}`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
       },
       credentials: 'include'
-    })
-    if(response.ok) {
+    }, { title: "Revoke Admin Failed"})
+    if(response?.ok) {
       notify({
         type: "success",
         text: `Revoked ${props.user.name}'s admin privileges`
       })
       cancel()
-    } else {
-      const json = await response.json()
-      notify({
-        type: "error",
-        title: "Revoke Admin Failed",
-        text: json.message
-      })
     }
   }
 }
 async function save() {
-  error.value = '';
   if(cantAddAdmin.value) {
     alert(`Cannot add admin for the following reasons:\n* ${noAddReasons.value.join('\n *')}`)
   } else {
@@ -393,7 +384,7 @@ async function save() {
         privileges[service] = Number(priv)
       }
     }
-    const response = await fetch(`/api/admins/${props.user?.steamid}`, {
+    const response = await request(`/api/admins/${props.user?.steamid}`, {
       method: props.userAdminData ? 'PUT': 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -406,20 +397,13 @@ async function save() {
         name: props.user?.name,
         privileges
       } as POSTAdminAPI)
-    })
-    if(response.ok) {
+    }, { title: "Save Admin Failed" })
+
+    if(response?.ok) {
       notify({
         type: "success",
         text: "Saved admin successfully"
       })
-    } else {
-      const json = await response.json()
-      notify({
-        type: "error",
-        title: "Save Admin Failed",
-        text: json.message
-      })
-      error.value = `${response.statusText} ${json.message}`
     }
   }
   loading.value.save = false
@@ -431,9 +415,9 @@ function cancel() {
 
 async function getGroups(): Promise<AdminGroup[]> {
   loading.value.groups = true
-  const res = await fetch('/api/admins/groups')
+  const res = await request('/api/admins/groups')
   loading.value.groups = false
-  if(res.ok) {
+  if(res?.ok) {
     return (await res.json()).groups
   } else {
     return []
@@ -442,7 +426,6 @@ async function getGroups(): Promise<AdminGroup[]> {
 
 async function loadData() {
   fetchError.value = ""
-  error.value = ""
   if(props.userAdminData) {
     reset()
     selectedgroupIds.value = props.userAdminData.groups?.map(group => group.id) || []
@@ -453,7 +436,6 @@ async function loadData() {
       stats.value = await User.getStats(route.params.id as string)
     } catch(err) {
       console.error(`Failed to fetch statistics for user:`, err)
-      error.value = (err as Error).message
     } finally {
       loading.value.stats = false
     }

@@ -115,6 +115,7 @@ import { onBeforeMount } from 'vue';
 import { computed, ref } from 'vue';
 import { HealthReport, UpdateState } from '../../../../server/src/routes/!!privileged/admin';
 import { ServicePrivilege, UserPrivileges, ServicePrivilegeKeys } from '../../../../common-types/Privileges';
+import { request } from '@/js/util';
 
 const emit = defineEmits(['close'])
 const POLL_SERVER_HEALTH_INTERVAL = 1000 * 60 * 0.5
@@ -182,15 +183,16 @@ async function updateServer() {
   updateStatus.value = {
     state: "CHECKING"
   }
-  const response = await fetch('/api/admin/update')
-  const json = await response.json()
-  if(response.ok) {
+  const response = await request('/api/admin/update')
+  if(response?.ok) {
+    const json = await response.json()
     updateStatus.value.state = "SUCCESS"
     if(!json.success) {
       updateStatus.value.upToDate = true
     }
   } else {
-    updateStatus.value.error = json.message
+    const json = await response?.json()
+    updateStatus.value.error = json?.message
   }
   setTimeout(() => {
     updateStatus.value = {
@@ -199,23 +201,18 @@ async function updateServer() {
   }, 1000 * 5)
 }
 
-function close() {
-  emit('close')
-}
 async function fetchSessions() {
-  const response = await fetch('/api/auth/sessions')
-  if(response.ok) {
+  const response = await request('/api/auth/sessions')
+  if(response?.ok) {
     const json = await response.json()
     currentSessionId.value = json.currentSessionId
     sessions.value = json.sessions
   }
 }
 async function revokeSession(id: string, i: number) {
-  const response = await fetch(`/api/auth/sessions/${id}`, { method: 'DELETE' })
-  if(response.status == 204) {
+  const response = await request(`/api/auth/sessions/${id}`, { method: 'DELETE' }, { title: "Revoking Session"})
+  if(response?.status == 204) {
     sessions.value.splice(i, 1)
-  } else {
-    alert('Failed to revoke session: ' + (await response.json()).message)
   }
 }
 function formatPrivilege(privilege: ServicePrivilege) {

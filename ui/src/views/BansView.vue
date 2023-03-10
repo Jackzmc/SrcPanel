@@ -84,7 +84,7 @@ import { ref, watch, computed, onBeforeMount, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import Sugar from 'sugar'
 import { ListAPIBan } from '../../../common-types/Ban.js';
-import { formatDate } from '@/js/util'
+import { formatDate, request } from '@/js/util'
 
 const DISCORD_SOURCE_REGEX = new RegExp(/([^\n]+#\d{4})\s\((\d+)\)/)
 const AUTO_REFRESH_INTERVAL = 1000 * 60 * 15
@@ -151,37 +151,31 @@ function formatDaysAgo(value?: number, locale?: string) {
   const formatter = new Intl.RelativeTimeFormat(locale);
   return formatter.format(Math.round(deltaDays), 'days');
 }
-function fetchBans() {
-  fetch('/api/bans', { credentials: 'include' })
-    .then(response => {
-      if(response.ok)
-        return response.json()
-      else
-        error.value = response.statusText
-    })
-    .then(result => {
-      if(result.error) {
-        return ban_error.value = result.message || result.error
+async function fetchBans() {
+  const response = await request('/api/bans', { credentials: 'include' })
+  loading.value = false
+  if(response?.ok) {
+    const json = await response.json()
+    if(json.error) {
+      return ban_error.value = json.message || json.error
+    }
+    bans.value = json.bans.map((ban: Ban) => {
+      const relDate = new Sugar.Date(ban.timestamp*1000).relative()
+      const discordBanMatch = ban.executor.id.match(DISCORD_SOURCE_REGEX)
+      if(discordBanMatch && discordBanMatch.length == 3) {
+        ban.executor.id = discordBanMatch[2]
+        ban.executor.name = discordBanMatch[1]
+        ban.executor.source = "discord"
       }
-      bans.value = result.bans.map((ban: Ban) => {
-        const relDate = new Sugar.Date(ban.timestamp*1000).relative()
-        const discordBanMatch = ban.executor.id.match(DISCORD_SOURCE_REGEX)
-        if(discordBanMatch && discordBanMatch.length == 3) {
-          ban.executor.id = discordBanMatch[2]
-          ban.executor.name = discordBanMatch[1]
-          ban.executor.source = "discord"
-        }
-        if(ban.executor.id === "CONSOLE") ban.executor.id = '[Automatic]'
-        return {
-          ...ban,
-          relDate,
-        }
-      })
+      if(ban.executor.id === "CONSOLE") ban.executor.id = '[Automatic]'
+      return {
+        ...ban,
+        relDate,
+      }
     })
-    .catch(err => {
-        console.error('Could not fetch bans, network error.', err)
-    })
-    .finally(() => loading.value = false)
+  } else if(response) {
+    error.value = (await response.json()).message
+  }
 }
 
 onMounted(() => {

@@ -37,7 +37,7 @@ export const ActionRequiredPrivilege: Record<Action, ServicePrivilege> = {
 // Controls what actions the service supports
 export const ServiceSupportedActions: Record<Service, ServicePrivilege[]> = {
     [Service.Notes]: [ ServicePrivilege.View, ServicePrivilege.Edit, ServicePrivilege.Manage ],
-    [Service.Bans]: [ ServicePrivilege.View, ServicePrivilege.Edit, ServicePrivilege.Manage, ServicePrivilege.Delete ],
+    [Service.Bans]: [ ServicePrivilege.View, ServicePrivilege.Edit, ServicePrivilege.Delete, ServicePrivilege.Manage],
     [Service.Admins]: [ ServicePrivilege.View, ServicePrivilege.Manage ]
 } 
 

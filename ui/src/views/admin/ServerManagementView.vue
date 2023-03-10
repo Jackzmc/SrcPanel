@@ -79,6 +79,7 @@
 </template>
 
 <script setup lang="ts">
+import { request } from '@/js/util';
 import { ref, watch, computed, onBeforeMount, onMounted, onDeactivated } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 
@@ -169,8 +170,13 @@ function getServerMessage(server: any) {
   //
   return
 }
-function refreshServers() {
+async function refreshServers() {
   emit('refresh', 'start')
+  const response = await request('/api/servers')
+  if(response?.ok) {
+    servers.value = await response.json()
+  }
+
   fetch('/api/servers')
   .then(response => {
     if(response.ok) return response.json()
