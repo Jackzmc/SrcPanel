@@ -16,9 +16,9 @@
       </div>
     </section>
 
-
     <br>
     <router-view :userdata="userdata"></router-view>
+
     <footer class="footer">
       <div class="content has-text-centered">
         L4D2 Admin Dashboard - Updated {{lastUpdated}}

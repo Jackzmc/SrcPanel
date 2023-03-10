@@ -215,7 +215,7 @@ const routes = [
   {
     name: 'authrequired',
     path: '/login-required',
-    component: () => import(/* webpackChunkName: 'misc' */ '../views/UnauthorizedView.vue'),
+    component: () => import(/* webpackChunkName: 'errors' */ '../views/UnauthorizedView.vue'),
     meta: {
       hideHero: true
     }
@@ -223,10 +223,21 @@ const routes = [
   {
     name: 'errorview',
     path: '/error',
-    component: () => import(/* webpackChunkName: 'misc' */ '../views/ErrorView.vue'),
+    component: () => import(/* webpackChunkName: 'errors' */ '../views/ErrorView.vue'),
     meta: {
       hideHero: true,
       hideNav: true
+    }
+  },
+  {
+    name: "404",
+    path: '/:path(.*)*',
+    component: () => import(/* webpackChunkName: 'errors' */ '../views/ErrorView.vue'),
+    meta: {
+      status: 404,
+      hideHero: false,
+      title: '404 Not Found',
+      description: "The requested resource could not be found"
     }
   }
 ]

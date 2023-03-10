@@ -99,7 +99,7 @@
           <td>{{formatTime(session.lastLogin)}}</td>
           <td>
             <b v-if="currentSessionId == session.id">Current Session</b>
-            <button v-else class="button is-danger" @click="revokeSession(session.id, i)">Revoke</button>
+            <button v-else class="button is-danger is-small" @click="revokeSession(session.id, i)">Revoke</button>
           </td>
         </tr>
       </tbody>
