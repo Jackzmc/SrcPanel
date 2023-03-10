@@ -116,6 +116,7 @@ import { computed, ref } from 'vue';
 import { HealthReport, UpdateState } from '../../../../server/src/routes/!!privileged/admin';
 import { ServicePrivilege, UserPrivileges, ServicePrivilegeKeys } from '../../../../common-types/Privileges';
 import { request } from '@/js/util';
+import { notify } from '@kyvg/vue3-notification';
 
 const emit = defineEmits(['close'])
 const POLL_SERVER_HEALTH_INTERVAL = 1000 * 60 * 0.5
@@ -190,6 +191,11 @@ async function updateServer() {
     if(!json.success) {
       updateStatus.value.upToDate = true
     }
+    notify({
+      type: "success",
+      text: "Update was successful",
+      duration: -1
+    })
   } else {
     const json = await response?.json()
     updateStatus.value.error = json?.message
