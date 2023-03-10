@@ -77,18 +77,26 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                     if(COMMENT_LINE_REGEX.test(line) || line.trim() == "") continue
                     const split = line.split(/\s/)
                     if(split.length > 1) {
-                        const command = split[0]
+                        const command = split.shift()
                         if(HIDDEN_COMMANDS.includes(command)) {
                             records.push({
                                 command,
                                 value: '**HIDDEN**'
                             })
-                        } else {
-                            records.push({ 
-                                command,
-                                value: split.slice(1).join(" ").trim()
-                            })
+                            continue
                         }
+                        let cvar = null
+                        if(command === "sm_cvar" && split.length > 2) {
+                            cvar = split.shift()
+                        }
+                        const value = split.join(" ").trim()
+                        records.push({ 
+                            command,
+                            value,
+                            cvar,
+                            type: isNaN(Number(value)) ? "string" : "number" //value.startsWith('"') && value.endsWith('"') ? 'string' : 'number'
+                        })
+                        
                     }
                 }
                 return records

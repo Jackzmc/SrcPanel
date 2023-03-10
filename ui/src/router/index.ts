@@ -184,7 +184,7 @@ const routes = [
   },
   {
     name: 'admin-server-view',
-    path: '/admin/servers/:id',
+    path: '/admin/servers/:id/:tab?',
     component: () => import(/* webpackChunkName: 'servers' */ '../views/admin/ServerView.vue'),
     meta: {
       title: 'Server View',

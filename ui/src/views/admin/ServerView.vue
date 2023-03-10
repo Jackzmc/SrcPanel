@@ -26,12 +26,17 @@
       </div>
       <div class="tabs">
         <ul>
-          <li v-for="(data, id) in TABS" :key="id" :class="tabClass(id)">
-            <a v-if="(!data.flag || privUser.hasWebPerm(data.flag)) && (data.enabled == undefined || data.enabled())" @click="setTab(id)">{{data.name}}</a>
+          <li v-for="(data, id) in TABS" :key="id"  :class="{'is-active': tab === id}">
+            <router-link
+              :to="{params:{tab: id}}"
+              v-if="(!data.flag || privUser.hasWebPerm(data.flag)) && (data.enabled == undefined || data.enabled())"
+            >
+              {{data.name}}
+            </router-link>
           </li>
         </ul>
       </div>
-      <template v-if="tab == 'overview'">
+      <template v-if="tab === 'overview'">
         <template v-if="status && status.online">
           <div class="columns">
             <div class="column">
@@ -72,16 +77,16 @@
         <p class="has-text-centered subtitle is-4 my-6" v-else>Waiting for server status...</p>
         <br>
       </template>
-      <template v-else-if="tab == 'configs'">
-        <ul v-if="cfg.selected">
-          <li v-for="entry in cfg.json" :key="entry.command">
-            <b>{{entry.command}}</b>
-            {{entry.value}}
-          </li>
-        </ul>
-        <p class="has-text-centered subtitle is-4" v-else>Select a config file on the right to view</p>
+      <template v-else-if="tab === 'configs'">
+        <template v-if="cfg.selected">
+          <pre v-if="cfg.json" class="box" spellcheck="false"><template v-for="entry in cfg.json" :key="entry.command"><span class="has-text-dark">{{entry.cvar ?? entry.command}}</span> <span :class="{'config-string': entry.type === 'string', 'has-text-info': entry.type === 'number'}">{{entry.value}}</span><br></template></pre>
+          <pre class="box" v-if="cfg.raw">
+            {{ cfg.raw }}
+          </pre>
+        </template>
+        <p class="has-text-centered subtitle is-5 my-6" v-else>Select a config file on the right to view its content</p>
       </template>
-      <template v-else-if="tab == 'actions'">
+      <template v-else-if="tab === 'actions'">
         <div class="buttons">
           <template v-if="status?.online">
           <a @click="processAction(server, 'stop')" class="button is-dark">Request Restart</a>
@@ -139,7 +144,7 @@
 
 <script setup lang="ts">
 import { useRoute, useRouter } from 'vue-router'
-import { onBeforeMount, ref } from 'vue'
+import { onBeforeMount, ref, computed } from 'vue'
 import FolderBrower from'@/components/FolderBrowser.vue'
 import { SessionData, WebPermission } from '../../../../common-types/User';
 import { PrivilegedUser } from '@/js/User';
@@ -181,23 +186,21 @@ let servers = ref()
 let status = ref()
 let stats = ref()
 let activities = ref()
-let tab = ref("overview")
 let cfg = ref<{
   selected?: string, raw?: string, json?: any}
 >({})
 let error = ref<string>()
 
-function setTab(name: string) {
-  tab.value = name
-}
-function tabClass(name: string) {
-  return tab.value == name ? 'is-active' : ''
-}
+const tab = computed(() => {
+  return route.params.tab.length > 0 ? route.params.tab : "overview"
+})
 
 async function onCfgChosen(data: { file: string, folder?: string }, raw = false) {
   cfg.value.selected = data.folder ? `${data.folder}/${data.file}` : data.file
   const response = await fetch(`/api/servers/${route.params.id}/configs?path=${cfg.value.selected}${raw?'&raw=1':''}`)
   if(response.ok) {
+    cfg.value.json = undefined
+    cfg.value.raw = undefined
     if(raw)
       cfg.value.raw = await response.text()
     else
@@ -206,12 +209,9 @@ async function onCfgChosen(data: { file: string, folder?: string }, raw = false)
 }
 
 async function onSelectNewServer(event: any) {
-  await router.push(`/admin/servers/${event.target.value}`)
+  await router.push({ name: 'admin-server-view', params: { tab: 'overview', id: event.target.value }})
   server.value = undefined
   await fetchServerInfo()
-  if(tab.value === 'configs' && !server.value.configs) {
-    tab.value = 'overview'
-  }
   await fetchServerStatus()
 }
 async function fetchServerInfo() {
@@ -331,6 +331,10 @@ onBeforeMount(async() => {
   await fetchServersCompact()
   setInterval(fetchServerStatus, REFRESH_INTERVAL)
 })
-
-
 </script>
+
+<style>
+.config-string {
+  color: #628503
+}
+</style>
