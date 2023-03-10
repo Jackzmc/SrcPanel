@@ -204,7 +204,7 @@ async function updateServer() {
     updateStatus.value = {
       state: "NORMAL"
     }
-  }, 1000 * 5)
+  }, 1000 * 7)
 }
 
 async function fetchSessions() {

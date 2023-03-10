@@ -1,5 +1,5 @@
 <template>
-<div class="container">
+<div class="container is-fluid">
   <div class="columns">
     <div class="column is-8">
       <p :class='message.type' v-if="message" v-html="message.content"></p>
@@ -7,7 +7,6 @@
       <table class="table is-fullwidth">
           <thead>
               <tr>
-                  <th style="width:0"></th>
                   <th>Name</th>
                   <th>Players</th>
                   <th>Actions</th>
@@ -16,17 +15,15 @@
           <tbody>
             <template v-for="server in servers" :key="server.id">
               <tr>
-                <td>
-                  <div class="buttons">
-                    <a class="button is-info" @click='selectServer(server)'>View</a>
+                <td :class="{'is-size-5': server.status.online, 'is-size-6': !server.status.online}">
+                  <router-link :to="{name: 'admin-server-view', params: { id: server.id }}" data-tooltip="Click here to manage server">
+                    <b :class="getServerClasses(server)" >{{server.name}}</b>
+                  </router-link>
+                  <div class="tags">
+                    <div class="tag" v-for="tag in server.tags" :key="tag">
+                      {{ tag }}
+                    </div>
                   </div>
-                </td>
-                <td class="is-size-5">
-                  <a :href="'steam://connect/' + server.domain + ':' + server.port">
-                    <b :data-tooltip="getServerMessage(server)" :class="getServerClasses(server)" >{{server.name}}</b>
-                  </a>
-                  <span v-if="server.tags.includes('5+')" class='is-size-5'><b>**</b></span>
-                      <span v-if="server.tags.includes('customs')" class='is-size-5'><b>*</b></span>
                 </td>
                 <td><span v-if="server.status.online">{{server.status.data.players.length}} / {{server.status.data.maxplayers}}</span></td>
                 <td>
@@ -59,9 +56,6 @@
             </template>
           </tbody>
       </table>
-      <em>* Server supports custom maps</em><br>
-      <em>** Server supports 5+ players</em><br>
-      <em>*** Server supports custom maps AND 5+ players</em>
     </div>
     <div class="column">
       <b>Request Restart</b> will restart the server if its empty
@@ -96,14 +90,6 @@ let selectedServer = ref()
 let starting = ref<Record<string, boolean>>({})
 let refreshTimer = ref<number>()
 
-function selectServer(server: any) {
-  router.push({
-    name: 'admin-server-view',
-    params: {
-      id: server.id
-    }
-  })
-}
 function sendMessage(type: string, content: string) {
   message.value = {
     type: type === "error" ? "has-text-danger" : type === "success" ? "has-text-success" : type,

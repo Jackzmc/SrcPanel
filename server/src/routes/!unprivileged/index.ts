@@ -64,7 +64,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         )
 
         let ratings = 0, key: string = null
-        if(notes.length > 0 && !fastify.authmngr.isAdmin(new SteamID(req.params.steamid))) {
+        if(notes.length > 0 && !fastify.authmngr.isAdmin(req.params.steamid)) {
             let totalRatings = 0
 
             for(const note of notes) {

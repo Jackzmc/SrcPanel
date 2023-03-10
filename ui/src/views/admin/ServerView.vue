@@ -65,7 +65,8 @@
           <br>
         </template>
         <p v-else-if="status && !status.online" class="has-text-centered has-text-danger subtitle is-4">Server is offline or unreachable</p>
-        <p class="has-text-centered subtitle is-4" v-else>Waiting for server status...</p>
+        <p class="has-text-centered subtitle is-4 my-6 has-text-danger" v-else-if="status && status.error">{{  status.error }}</p>
+        <p class="has-text-centered subtitle is-4 my-6" v-else>Waiting for server status...</p>
         <br>
       </template>
       <template v-else-if="tab == 'configs'">
@@ -137,7 +138,7 @@ import { onBeforeMount, ref } from 'vue'
 import FolderBrower from'@/components/FolderBrowser.vue'
 import { SessionData, WebPermission } from '../../../../common-types/User';
 import { PrivilegedUser } from '@/js/User';
-import { parseLog, getRelDate } from '../../js/util';
+import { parseLog, getRelDate, request } from '@/js/util';
 import LogMessage from "@/components/LogMessage.vue";
 import { useNotification } from "@kyvg/vue3-notification";
 
@@ -227,16 +228,18 @@ async function fetchServerInfo() {
 }
 async function fetchServerStatus() {
   const response = await fetch(`/api/servers/${route.params.id}/status`)
+  const json = await response.json()
   if(response.ok) {
-    const json = await response.json()
     status.value = json.status
     stats.value = json.stats
     activities.value = json.recentActivities?.map((act: any) => parseLog(act))
+  } else {
+    status.value = { error: json.message }
   }
 }
 async function fetchServersCompact() {
-  const response = await fetch(`/api/servers?compact=1`)
-  if(response.ok) {
+  const response = await request(`/api/servers?compact=1`)
+  if(response?.ok) {
     const json = await response.json()
     servers.value = json
   }

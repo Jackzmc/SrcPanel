@@ -131,7 +131,6 @@ export default class Server {
             console.error(`Error: Could not access config directory for server \"${server.id}\":`, err)
           }
         }
-        this._actid = server.activityId
         if(server.rcon) {
           const client = new Rcon({
             host: this._info.ip, port: this._info.port, password: server.rcon.password
