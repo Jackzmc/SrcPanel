@@ -243,13 +243,13 @@ const props = defineProps<{
 }>()
 
 const privileges = computed(() => {
-  let privs: Partial<Record<Service, string|null>> = {}
+  let privs: Partial<Record<Service, number|null>> = {}
   for(const service of Object.values(Service)) {
-    if(!service) continue
     const priv = props.userAdminData.permissions.web.privileges[service]
-    privs[service] = priv?.toString() ?? null
+    privs[service] = priv ?? null
   }
-  return privs as Record<Service, string | null>
+  console.log(privs)
+  return privs as Record<Service, number | null>
 })
 
 
@@ -259,19 +259,19 @@ let form = ref<{
   immunity: number,
   flags: string[],
   webFlags: number[],
-  privileges: Record<Service, string | null>
+  privileges: Record<Service, number | null>
 }>({
   immunity: 0,
   flags: [],
   webFlags: [],
-  privileges: { ... privileges.value }
+  privileges: privileges.value
 })
 function reset() {
   form.value = {
     flags: props.userAdminData.permissions.base.flags?.split("") || [],
     webFlags: convertIntToBitsArray(props.userAdminData.permissions.web.flags || 0),
     immunity: props.userAdminData.permissions.base.immunityLevel || 0,
-    privileges: { ... privileges.value }
+    privileges: privileges.value
   }
   // form.value = {
   //   immunity: 0,
@@ -380,7 +380,7 @@ async function save() {
     loading.value.save = true;
     let privileges: Record<string, number> = {}
     for(const [service, priv] of Object.entries(form.value.privileges)) {
-      if(priv != props.privUser.getPrivilegeById(service)) {
+      if(priv != props.userAdminData.permissions.web.privileges[service as Service]) {
         privileges[service] = Number(priv)
       }
     }
