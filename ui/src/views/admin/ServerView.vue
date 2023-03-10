@@ -64,7 +64,10 @@
 
           <br>
         </template>
-        <p v-else-if="status && !status.online" class="has-text-centered has-text-danger subtitle is-4">Server is offline or unreachable</p>
+        <div class="notification is-danger has-text-centered" v-else-if="status && !status.online">
+          The server is offline or is unreachable.
+        </div>
+        <!-- <p v-else-if="status && !status.online" class="has-text-centered has-text-danger subtitle is-4">Server is offline or unreachable</p> -->
         <p class="has-text-centered subtitle is-4 my-6 has-text-danger" v-else-if="status && status.error">{{  status.error }}</p>
         <p class="has-text-centered subtitle is-4 my-6" v-else>Waiting for server status...</p>
         <br>
@@ -80,27 +83,29 @@
       </template>
       <template v-else-if="tab == 'actions'">
         <div class="buttons">
+          <template v-if="status?.online">
           <a @click="processAction(server, 'stop')" class="button is-dark">Request Restart</a>
           <a @click="processAction(server, 'unreserve')" class="button is-dark">Unreserve</a>
           <a @click="processAction(server, 'stop?force=1')" class="button is-warning">Force Restart</a>
+          </template>
           <a v-if="server.info.tags.includes('systemd')" @click="processAction(server, 'start')" class="button is-success">Start Server</a>
         </div>
       </template>
     </div>
 
     <div class="column">
-      <div class="field" v-if="servers">
+      <div class="field">
         <label class="label">View another server:&nbsp;</label>
         <div class="select">
           <select @change="onSelectNewServer">
+            <option default v-if="!servers">Loading servers...</option>
             <option v-for="server2 in servers" :key="server2.id" :value="server2.id" :selected="server2.id == server.info.id">
               {{server2.name}}
             </option>
           </select>
         </div>
       </div>
-      <p class="my-2" v-else>Fetching servers...</p>
-      <template v-if="tab === 'overview'">
+      <div class="box" v-if="tab === 'overview'">
         <h4 class="title is-4">Recent Activity</h4>
         <table v-if="activities" class="table">
           <thead>
@@ -119,12 +124,12 @@
           </tbody>
         </table>
         <p v-else class="has-text-centered">Server has no activity logs setup</p>
-      </template>
-      <template v-else-if="tab === 'configs'">
+      </div>
+      <div v-else-if="tab === 'configs'" class="box">
         <h5 class="title is-5">Config Files</h5>
         <FolderBrower v-if="server.configs" @select="onCfgChosen" :paths="server.configs" />
         <p v-else>Server has no configs setup</p>
-      </template>
+      </div>
     </div>
   </div>
 </nav>

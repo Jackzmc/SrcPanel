@@ -2,9 +2,10 @@
 <aside class="menu my-1">
   <template v-for="(data, folder) in folders" :key="folder">
     <p class="menu-label my-1">
-      <a @click="data.active = !data.active">{{folder}}/</a>
+      <a :class="{'has-text-black': !data.active, 'has-text-light': data.active, 'is-link': data.active, tag: true}" @click="data.active = !data.active">{{folder}}/</a>
     </p>
     <ul class="menu-list my-1" v-if="data.active">
+      <li v-if="data.files.length === 0"><a class="has-text-black has-text-centered" disabled><em>Directory is empty</em></a></li>
       <li v-for="file in data.files" :key="file">
         <a @click="emit('select', { file, folder })">{{file}}</a>
       </li>
