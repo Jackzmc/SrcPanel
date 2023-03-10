@@ -303,7 +303,7 @@ export default class AuthManager {
                             flags: row.flags
                         },
                         web: {
-                            privileges: await this.getPrivileges(key),
+                            privileges: await this.getPrivileges(row.identity),
                             role: row.web_role || 0,
                             flags: row.web_flags || 0
                         }
