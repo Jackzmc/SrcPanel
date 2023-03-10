@@ -14,6 +14,7 @@ interface AddAdmin {
     password?: string,
     name: string,
     immunity: number,
+    privileges: Partial<Record<Service, ServicePrivilege>>
     groupIds?: string[]
 }
 
@@ -127,6 +128,22 @@ export default class AuthManager {
         }
     }
 
+    public async setPrivilegesSteamid(steamid64: string, privileges: UserPrivileges) {
+        for(const [service, priv] of Object.entries(privileges)) {
+            if(priv == null) {
+                await this.connection.execute(
+                    "DELETE FROM dash_privileges WHERE steamid = ? AND service = ?",
+                    [steamid64, ServicePrivilegeKeys[service]]
+                )
+            } else {
+                await this.connection.execute(
+                    "INSERT INTO dash_privileges (steamid, service, privilege) VALUES(?, ?, ?) ON DUPLICATE KEY UPDATE privilege = ?",
+                    [steamid64, ServicePrivilegeKeys[service], priv, priv]
+                )
+            }
+        }
+    }
+
     public async revokeAdmin(id: number) {
         await this.connection.execute<OkPacket>("DELETE FROM sm_admins WHERE id = ?", [id])
         await this.connection.execute<OkPacket>("DELETE FROM sm_admins_groups WHERE admin_id = ?", [id])
@@ -151,6 +168,10 @@ export default class AuthManager {
             "UPDATE sm_admins SET flags = ?, name = ?, immunity = ?, password = ?, authtype = ? WHERE id = ?", 
             [newAdminData.flags, newAdminData.name, newAdminData.immunity, newAdminData.password, newAdminData.authtype, id]
         )
+
+        if(data.privileges) {
+            await this.setPrivilegesSteamid(rows[0].identity, data.privileges)
+        }
 
         if(webPerms) {
             const [exists] = await this.connection.execute<RowDataPacket[]>(
@@ -223,6 +244,10 @@ export default class AuthManager {
             )
         }
 
+        if(admin.privileges) {
+            await this.setPrivilegesSteamid(admin.identity, admin.privileges)
+        }
+
         if(admin.groupIds) {
             for(const groupId of admin.groupIds) {
                 // Currently silently ignores if group does not exist. This should be changed.
@@ -275,7 +300,8 @@ export default class AuthManager {
         // Loops every admin. If an admin is more than one group, there will be multiple rows related to them
         for(const row of rows as RowDataPacket[]) {
             // Add initial set of flags and immunity
-            const key = new SteamID(row.identity).accountid.toString()
+            const steamid = new SteamID(row.identity)
+            const key = steamid.accountid.toString()
             // Reset merge data on a new user
             if(lastId !== key) {
                 highestImmunity = 0
@@ -303,6 +329,7 @@ export default class AuthManager {
                             flags: row.flags
                         },
                         web: {
+                            privileges: await this.getPrivileges(steamid),
                             role: row.web_role || 0,
                             flags: row.web_flags || 0
                         }

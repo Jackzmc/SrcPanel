@@ -246,7 +246,7 @@ const privileges = computed(() => {
   let privs: Partial<Record<Service, string|null>> = {}
   for(const service of Object.values(Service)) {
     if(!service) continue
-    const priv = props.privUser.getPrivilege(service)
+    const priv = props.userAdminData.permissions.web.privileges[service]
     privs[service] = priv?.toString() ?? null
   }
   return privs as Record<Service, string | null>

@@ -98,7 +98,7 @@ export interface AdminPermissions {
     immunityLevel: number
     flags: string,
     web: {
-        privileges: Record<Service, ServicePrivilege>
+        privileges: Partial<Record<Service, ServicePrivilege>>
         role: number,
         flags: number
     },

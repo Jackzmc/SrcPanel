@@ -11,7 +11,8 @@ const POSTAdmin = Type.Object({
     flags: Type.String(),
     groupIds: Type.Optional(Type.String()),
     webPermissions: Type.Optional(Type.Number()),
-    name: Type.Optional(Type.String())
+    name: Type.Optional(Type.String()),
+    privileges: Type.Optional(Type.Record(Type.String(), Type.Number())),
 })
 
 
@@ -20,6 +21,7 @@ const PUTAdmin = Type.Object({
     flags: Type.Optional(Type.String()),
     groupIds: Type.Optional(Type.String()),
     webPermissions: Type.Optional(Type.Number()),
+    privileges: Type.Optional(Type.Record(Type.String(), Type.Number())),
     name: Type.Optional(Type.String())
 })
 
@@ -167,7 +169,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                         name: req.body.name || "",
                         immunity,
                         flags: req.body.flags,
-                    
+                        privileges: req.body.privileges,
                         groupIds: req.body.groupIds ? req.body.groupIds.split(',') : []
                     }, req.body.webPermissions)
 
@@ -237,7 +239,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                         name: req.body.name || "",
                         immunity,
                         flags: req.body.flags,
-                    
+                        privileges: req.body.privileges,
                         groupIds: req.body.groupIds ? req.body.groupIds.split(',') : []
                     }, req.body.webPermissions)
 
