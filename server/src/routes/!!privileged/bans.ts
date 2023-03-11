@@ -3,6 +3,7 @@ import { OkPacket, RowDataPacket } from 'mysql2';
 import { Static, Type } from '@sinclair/typebox'
 import SteamID from 'steamid'
 import { FullAPIBan, APIBanFlags } from '../../../../common-types/Ban.js';
+import { replaceObject } from '../../util.js';
 
 const STEAM_WEB_APIKEY = process.env.STEAM_WEB_APIKEY
 
@@ -60,10 +61,9 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 })
             }
 
-            const ban = {
-                ...existing[0],
-                ...req.body
-            }
+
+
+            const ban = replaceObject<any>(existing[0], req.body)
 
             const [ok] = await fastify.db.execute<OkPacket>(`
                 UPDATE bans 
@@ -89,6 +89,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             }
 
             return {
+                banId: ban.id,
                 changes: ok.affectedRows
             }
         }
@@ -116,14 +117,13 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             if(!req.body.executor) {
                 req.body.executor = req.session.user.steamid
             }
-            const steamid = new SteamID(req.params.steamid)
-            if(!steamid.isValid()) {
+            if(req.params.steamid.length < 10) {
                 return reply.status(400).send({
                     error: "INVALID_STEAMID",
                     message: "The steamid is invalid"
                 })
             }
-            if(this.authmngr.isAdmin(steamid)) {
+            if(this.authmngr.isAdmin(req.params.steamid)) {
                 return reply.status(403).send({
                     error: "IS_ADMIN",
                     message: "Cannot ban a user with privileges, revoke the privileges first"

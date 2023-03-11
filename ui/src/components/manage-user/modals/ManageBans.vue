@@ -55,8 +55,8 @@
         </div>
       </div>
     </article>
-    <div class="columns is-multiline">
-      <div class="column is-2" v-if="!isNewBan">
+    <div class="columns is-multiline is-centered">
+      <div class="column" v-if="!isNewBan">
         <div class="field">
           <label class="label">ID</label>
           <p>{{ban.id}}</p>
@@ -69,6 +69,12 @@
           <em v-else>(no ip recorded)</em>
         </div>
       </div>
+      <div class="column" v-if="!isNewBan">
+        <div class="field">
+          <label class="label">Join Attempts</label>
+          <p>{{ban.joinAttempts}}</p>
+        </div>
+      </div>
       <div class="column">
         <div class="field">
           <label class="label">Country</label>
@@ -76,16 +82,10 @@
           <em v-else>unknown</em>
         </div>
       </div>
-      <div class="column" v-if="!isNewBan">
-        <div class="field">
-          <label class="label">Join Attempts</label>
-          <p>{{ban.joinAttempts}}</p>
-        </div>
-      </div>
     </div>
 
     <div class="columns">
-      <div class="column is-8">
+      <div class="column">
         <div class="field">
           <label class="label">Banned By</label>
           <span v-if="isNewBan">
@@ -101,6 +101,7 @@
           </template>
         </div>
       </div>
+
       <div class="column">
         <div class="field">
           <label class="label">Timestamp</label>
@@ -112,47 +113,6 @@
         </div>
       </div>
 
-    </div>
-
-    <div class="field">
-      <label class="label">Private Reason</label>
-      <div class="control">
-        <textarea
-          v-model="ban.reason"
-          class="textarea has-fixed-size"
-          placeholder="Enter a reason for this ban (only shown to admins)"
-          maxlength="128"
-          rows=1
-          ></textarea>
-      </div>
-    </div>
-    <div class="field">
-      <label class="label">Shown Reason</label>
-      <div class="control">
-        <textarea
-          v-model="edited.publicReason"
-          class="textarea has-fixed-size"
-          placeholder="Enter a reason for this ban (shown to banned user)"
-          maxlength="250"
-          rows=1
-          ></textarea>
-      </div>
-      <p class="help">If no public reason is given, it will default to the private reason</p>
-    </div>
-    <div class="columns">
-      <div class="column">
-        <div class="field">
-          <label class="label">Flags</label>
-          <div class="control">
-            <div class="select is-multiple">
-              <select multiple size="2" v-model="edited.flags">
-                <option value="1">IP Banned</option>
-                <option value="2">Suspended</option>
-              </select>
-            </div>
-          </div>
-        </div>
-      </div>
       <div class="column">
         <div class="field">
           <label class="label">Expires</label>
@@ -174,7 +134,47 @@
           <p class="help" v-else>Ban will never expire</p>
         </div>
       </div>
-      <div class="column" v-if="!isNewBan">
+
+    </div>
+
+    <div class="field">
+      <label class="label">Private Reason</label>
+      <div class="control">
+        <textarea
+          v-model="ban.reason"
+          class="textarea has-fixed-size"
+          placeholder="Enter a reason for this ban (only shown to admins)"
+          maxlength="128"
+          rows=1
+          ></textarea>
+      </div>
+    </div>
+    <div class="field">
+      <label class="label">Shown Reason (optional)</label>
+      <div class="control">
+        <textarea
+          v-model="edited.publicReason"
+          class="textarea has-fixed-size"
+          placeholder="Enter a reason for this ban (shown to banned user)"
+          maxlength="250"
+          rows=1
+          ></textarea>
+      </div>
+      <p class="help">If no public reason is given, it will default to the private reason</p>
+    </div>
+    <div class="columns">
+      <div class="column">
+        <div class="field">
+          <label class="label">Flags</label>
+          <div class="buttons">
+            <div class="button is-warning" v-if="edited.flags & APIBanFlags.Suspended" @click="toggleFlag(APIBanFlags.Suspended)" data-tooltip="Click to resume this ban">Suspended</div>
+            <div class="button is-outlined" v-else @click="toggleFlag(APIBanFlags.Suspended)" data-tooltip="Click to suspend this ban">Suspend</div>
+            <div class="button is-info" v-if="edited.flags & APIBanFlags.IPBan" @click="toggleFlag(APIBanFlags.IPBan)" data-tooltip="Click to disable the ip ban">IP Banned</div>
+            <div class="button is-outlined" v-else @click="toggleFlag(APIBanFlags.IPBan)" data-tooltip="Click to enable ip ban">IP Ban</div>
+          </div>
+        </div>
+      </div>
+      <div class="column is-5" v-if="!isNewBan">
         <div class="field">
           <label class="label">Danger Zone</label>
           <div class="control">
@@ -220,8 +220,8 @@ let edited = ref<{
   publicReason?: string,
   expires: string,
   executorId?: string
-  flags: string[]
-}>({ expires: "never", flags: [] })
+  flags: number
+}>({ expires: "keep", flags: 0 })
 let appeals = ref<BanAppeal[]>([])
 
 let isNewBan = ref(false)
@@ -235,6 +235,10 @@ let isNewBan = ref(false)
 //   expires: "never",
 //   flags: []
 // })
+
+function toggleFlag(flag: APIBanFlags) {
+  edited.value.flags ^= flag
+}
 
 interface BanRecord extends FullAPIBan { activeAppeal?: BanAppeal }
 
@@ -299,8 +303,8 @@ function selectBan(selectedBan?: FullAPIBan) {
       publicReason: "",
       reason: "",
       executorId: undefined,
-      expires: "never",
-      flags: []
+      expires: "keep",
+      flags: 0
     }
   } else {
     router.push({
@@ -310,21 +314,12 @@ function selectBan(selectedBan?: FullAPIBan) {
     })
     ban.value = selectedBan
     banOriginalExpires.value = selectedBan.expires
-    const flags = []
-    for(const flagValue in APIBanFlags) {
-      const number = parseInt(flagValue)
-      if(!isNaN(number)) {
-        if(selectedBan.flags & number) {
-          flags.push(flagValue)
-        }
-      }
-    }
     edited.value = {
       publicReason: selectedBan.publicReason,
       reason: selectedBan.reason,
       executorId: undefined,
-      expires: "never",
-      flags
+      expires: "keep",
+      flags: selectedBan.flags
     }
     isNewBan.value = false
   }
@@ -353,12 +348,18 @@ async function save() {
   loading.value = true
   try {
     const response = await fetch(`/api/bans/${ban.value.id}`, {
-      method: 'POST',
+      method: isNewBan.value ? 'POST' : 'PUT',
       headers: {
         'Content-Type': 'application/json',
       },
       credentials: 'include',
-      body: ""
+      body: JSON.stringify({
+        executor: edited.value.executorId,
+        reason: edited.value.reason,
+        flags: edited.value.flags,
+        public_reason: edited.value.publicReason,
+        expires: ban.value.expires
+      })
     })
     const json = await response.json()
     if(response.ok) {
@@ -386,7 +387,7 @@ async function save() {
 }
 async function deleteBan() {
   if(!ban.value) return
-  if(window.confirm("Are you sure you want to remove this ban from the records? This should only be done if mistakes were made when banning them. Recommend to suspend the ban instead.")) {
+  if(window.confirm("Are you sure you want to remove this ban from the records? This should only be done if the ban was a mistake. It is recommend to suspend the ban instead.")) {
     try {
       const response = await fetch(`/api/bans/${ban.value.id}`, {
         method: 'DELETE',

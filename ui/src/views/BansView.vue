@@ -3,6 +3,7 @@
   <div class="columns">
     <div class="column">
       <p class="subtitle is-4">Viewing {{filteredBans.length}} bans</p>
+      <p class="subtitle is-6">Click a user's name to view more detailed ban information</p>
       <p class="has-text-danger" v-if="ban_error">{{ban_error}}</p>
     </div>
     <div class="column is-2">
@@ -37,6 +38,7 @@
               class="is-small"
               :to="{name: 'manage-user-bans', params: { id: ban.client.id, banid: ban.id }, query: { returnTo: $route.fullPath }}"
             ><component :is="ban.flags & APIBanFlags.Suspended ? 'span' : 'b'">{{ ban.client.name }}</component></router-link>
+            <em v-else>(unknown name)</em>
           </p>
           <router-link
             class="is-small has-text-black"

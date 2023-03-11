@@ -125,6 +125,8 @@ async function getUser() {
 }
 
 onBeforeMount(async () => {
+  if(route.query.returnTo) returnTo.value = decodeURIComponent(route.query.returnTo.toString())
+  if(route.query.returnTo) router.push({ query: { returnTo: route.query.returnTo.toString() }})
   document.addEventListener('keydown', (event) => {
     const e = event || window.event;
     if(e.key == "Escape") {
@@ -132,6 +134,5 @@ onBeforeMount(async () => {
     }
   });
   await getUser()
-  if(route.query.returnTo) returnTo.value = decodeURIComponent(route.query.returnTo.toString())
 })
 </script>
