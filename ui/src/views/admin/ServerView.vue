@@ -42,17 +42,17 @@
         <template v-if="status && status.online">
           <div class="columns">
             <div class="column">
-              <h5 class="title is-5">Map</h5>
+              <h5 class="title is-5 is-underlined">Map</h5>
               <p :data-tooltip="status.data.map" v-html="formatMap(status.data.map)"></p>
             </div>
             <div class="column">
-              <h5 class="title is-5">Gamemode</h5>
+              <h5 class="title is-5 is-underlined">Gamemode</h5>
               <p :data-tooltip="status.data.gamemode">{{formatGamemode(status.data.gamemode)}}</p>
             </div>
           </div>
           <div class="columns">
             <div class="column">
-              <h5 class="title is-5">Online Players ({{status.data.players.length}} / {{status.data.maxplayers}})</h5>
+              <h5 class="title is-5 is-underlined">Online Players ({{status.data.players.length}} / {{status.data.maxplayers}})</h5>
               <div class="content" v-if="status.data.players.length > 0">
                 <ul>
                   <li v-for="player in status.data.players" :key="player">
@@ -60,12 +60,12 @@
                   </li>
                 </ul>
               </div>
-              <p class="my-2" v-else>No players are online</p>
+              <em class="my-2" v-else>no players are online</em>
             </div>
             <div class="column">
-              <h5 class="title is-5">Uptime</h5>
+              <h5 class="title is-5 is-underlined">Uptime</h5>
               <p v-if="stats">{{ formatUptime(stats.uptime) }}</p>
-              <em v-else>no stats available</em>
+              <em v-else>no information available</em>
             </div>
           </div>
 
@@ -78,9 +78,12 @@
         <p class="has-text-centered subtitle is-4 my-6 has-text-danger" v-else-if="status && status.error">{{  status.error }}</p>
         <p class="has-text-centered subtitle is-4 my-6" v-else>Waiting for server status...</p>
         <br>
-        <VueApexCharts :series='series' :options="options" ref="chart" type="line" />
+        <VueApexCharts :series='series' :options="options" type="line" />
+        <VueApexCharts :series='series2' :options="options2" type="line" />
+
       </div>
       <div v-else-if="tab === 'configs'" class="box">
+        <p class="has-text-centered my-6 is-size-5" v-if="cfg.loading">Loading...</p>
         <template v-if="cfg.selected">
           <pre v-if="cfg.json" class="box" spellcheck="false"><template v-for="entry in cfg.json" :key="entry.command"><span class="has-text-dark">{{entry.cvar ?? entry.command}}</span> <span :class="{'config-string': entry.type === 'string', 'has-text-info': entry.type === 'number'}">{{entry.value}}</span><br></template></pre>
           <pre class="box" v-if="cfg.raw">
@@ -114,7 +117,7 @@
         </div>
       </div>
       <div class="box" v-if="tab === 'overview'">
-        <h4 class="title is-4">Recent Activity</h4>
+        <h4 class="title is-5">Recent Activity</h4>
         <table v-if="activities" class="table">
           <thead>
             <tr>
@@ -157,8 +160,30 @@ import { useNotification } from "@kyvg/vue3-notification";
 import VueApexCharts from 'vue3-apexcharts'
 
 let series = ref<any[]>([])
-let chart = ref()
+let series2 = ref<any[]>([])
 const options = {
+  chart: {
+    zoom: {
+      enabled: true,
+      type: 'x',
+      autoScaleYaxis: true
+    },
+
+  },
+  title: {
+    text: "Online Players",
+    align: 'left'
+  },
+  yaxis: {
+    type: "numeric",
+    title: "Players Online"
+  },
+  xaxis: {
+    type: "datetime",
+    datetimeUTC: false
+  }
+}
+const options2 = {
   chart: {
     zoom: {
       enabled: true,
@@ -173,7 +198,15 @@ const options = {
   },
   yaxis: {
     type: "numeric",
-    title: "Players"
+    title: "Players",
+    labels: {
+      formatter: function (val: any) {
+        return val.toFixed(0);
+      }
+    },
+  },
+  stroke: {
+    curve: 'stepline',
   },
   xaxis: {
     type: "datetime",
@@ -214,8 +247,8 @@ let status = ref()
 let stats = ref()
 let activities = ref()
 let cfg = ref<{
-  selected?: string, raw?: string, json?: any}
->({})
+  selected?: string, raw?: string, json?: any, loading: boolean }
+>({ loading: false })
 let error = ref<string>()
 
 const tab = computed(() => {
@@ -224,7 +257,9 @@ const tab = computed(() => {
 
 async function onCfgChosen(data: { file: string, folder?: string }, raw = false) {
   cfg.value.selected = data.folder ? `${data.folder}/${data.file}` : data.file
+  cfg.value.loading = true
   const response = await fetch(`/api/servers/${route.params.id}/configs?path=${cfg.value.selected}${raw?'&raw=1':''}`)
+  cfg.value.loading = false
   if(response.ok) {
     cfg.value.json = undefined
     cfg.value.raw = undefined
@@ -248,12 +283,12 @@ async function fetchServerInfo() {
     const json = await response.json()
     if(response.ok) {
       server.value = json
-      // series.value = [{
-      //   name: "Joins",
-      //   data: json.playerCounts.map((count: any) => {
-      //     return { x: new Date(count.timestamp*1000), y: count.count }
-      //   })
-      // }]
+      series2.value = [{
+        name: "Players",
+        data: json.playerCounts.map((count: any) => {
+          return { x: new Date(count.timestamp*1000), y: count.count }
+        })
+      }]
       series.value = [{
         name: "Player Joins",
         data: json.test.map((row: any) => {
@@ -323,7 +358,7 @@ function processAction(server: any, type: string) {
 function formatMap(mapId: string) {
   const match = mapId.match(/c(\d{1,2})m(\d)_(.*)/)
   if(match && match.length == 4) {
-    return `<b>${OfficialCampaignNames[Number(match[1]) - 1]}:</b> Chapter ${match[2]} ${match[3]}`
+    return `<p class="title is-6">${OfficialCampaignNames[Number(match[1]) - 1]}</p><p class="subtitle is-6">Chapter ${match[2]} "${match[3]}"</p>`
   }
   return mapId;
 }

@@ -51,7 +51,7 @@
                   </tr>
                 </tbody>
               </table>
-              <p v-if="Object.keys(privUser.privileges).length == 0" class="my-5">
+              <p v-if="Object.keys(privUser.privileges).length === 0" class="my-5">
                 <em>You have no privileges :(</em>
               </p>
             </div>
@@ -93,12 +93,12 @@
       <tbody>
         <tr v-for="(session, i) in sessions" :key="session.id">
           <td>{{ session.id.substring(0, 8) }}</td>
-          <td v-if="session.ip != '127.0.0.1'">{{formatCountry(session.countryCode)}}</td>
+          <td v-if="session.ip !== '127.0.0.1'">{{formatCountry(session.countryCode)}}</td>
           <td v-else><em>(dev)</em></td>
           <td>{{session.ip}}</td>
           <td>{{formatTime(session.lastLogin)}}</td>
           <td>
-            <b v-if="currentSessionId == session.id">Current Session</b>
+            <b v-if="currentSessionId === session.id">Current Session</b>
             <button v-else class="button is-danger is-small" @click="revokeSession(session.id, i)">Revoke</button>
           </td>
         </tr>

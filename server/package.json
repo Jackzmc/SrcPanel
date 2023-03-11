@@ -37,5 +37,6 @@
     "start": "tsc && node dist/server/src/index.js",
     "clean": "rm -r dist && tsc",
     "dev": "nodemon -e ts --exec \"yarn start || exit 1\""
-  }
+  },
+  "devDependencies": {}
 }

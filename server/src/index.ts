@@ -29,7 +29,7 @@ const app = Fastify({
                 target: 'pino-pretty',
                 options: {
                     translateTime: 'HH:MM:ss Z',
-                    ignore: 'pid,hostname'
+                    ignore: 'pid,hostname',
                 }
             } : undefined,
         level: process.env.FASTIFY_DEBUG_LEVEL || 
