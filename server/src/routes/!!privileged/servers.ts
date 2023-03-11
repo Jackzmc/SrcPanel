@@ -27,11 +27,18 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             })
         }
 
+        const [test] = await fastify.db.execute(
+            "SELECT server, type, timestamp, COUNT(*) as count FROM activity_log WHERE server = ?  AND type = 'JOIN'AND FROM_UNIXTIME(timestamp) >= (NOW() - INTERVAL 1 MONTH) GROUP BY DATE(FROM_UNIXTIME(timestamp)), HOUR(FROM_UNIXTIME(timestamp)) order by timestamp DESC",
+            [server.activityLogId]
+        )
+
         const configs = fastify.authmngr.hasPermission(req, WebPermission.ConfigRead) ? await server.getConfigFiles() : undefined
 
         return {
             info: server.info,
             cvars: server.cvars,
+            playerCounts: server.playerCounts,
+            test,
             configs
         }
     })

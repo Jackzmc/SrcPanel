@@ -91,6 +91,12 @@ export interface ServerInfo {
 }
 
 const sleep = time => new Promise(res => setTimeout(res, time));
+const MAX_PLAYER_STATS = 100
+
+interface PlayerStats {
+  timestamp: number,
+  count: number
+}
 
 export default class Server { 
     private _info: ServerInfo
@@ -112,6 +118,8 @@ export default class Server {
       serviceName: string;
     } = null;
     public tags: Readonly<string[]>;
+    
+    public playerCounts: PlayerStats[] = [] 
 
     constructor(server: ServerData) {
         this._info = {
@@ -122,6 +130,7 @@ export default class Server {
           port: server.port,
           type: server.type,
         }
+        this._actid = server.activityId
         this._sortOrder = server.sortOrder
         if(server.cfgDirectory) {
           this._cfgDir = resolve(server.cfgDirectory)
@@ -185,7 +194,7 @@ export default class Server {
       return arr
     }
 
-    public get activityLogId() { return this._actid }
+    public get activityLogId() {  return this._actid }
     public get cvars() { return this._cvars }
 
     // Fetches all config, including one level nested
@@ -294,6 +303,11 @@ export default class Server {
               map: state.map,
               gamemode: (state.raw as any).tags[0]
             }
+            this.playerCounts.push({
+              timestamp: Math.floor(Date.now() / 1000),
+              count: state.players.length
+            })
+            if(this.playerCounts.length > MAX_PLAYER_STATS) this.playerCounts.shift()
             this._status.online = true
             return {
               cvars: this._cvars

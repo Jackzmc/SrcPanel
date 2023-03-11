@@ -16,7 +16,7 @@
             <template v-for="server in servers" :key="server.id">
               <tr>
                 <td :class="{'is-size-5': server.status.online, 'is-size-6': !server.status.online}">
-                  <router-link :to="{name: 'admin-server-view', params: { id: server.id }}" data-tooltip="Click here to manage server">
+                  <router-link :to="{name: 'admin-server-view', params: { id: server.id, tab: 'overview' }}" data-tooltip="Click here to manage server">
                     <b :class="getServerClasses(server)" >{{server.name}}</b>
                   </router-link>
                   <div class="tags">

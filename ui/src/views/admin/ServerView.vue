@@ -1,16 +1,17 @@
 <template>
 <div>
-<div class="box" v-if="error">
+<div class="notification is-danger" v-if="error">
   <h4 class="title is-4 has-text-centered">Could not acquire server information</h4>
   <h4 class="subtitle is-4  has-text-centered">Server returned an error</h4>
-  <p class="has-text-centered has-text-danger">
+  <p class="has-text-centered ">
     {{error}}
   </p>
 </div>
-<nav class="container mb-5" v-if="server">
+<nav class="container mb-3" v-if="server">
   <div class="columns">
     <div class="column is-8">
-      <router-link to="/admin/servers" class="button is-small">🠐 back to servers</router-link>
+      <router-link to="/admin/servers" class="button is-small">🠐 back to servers list</router-link><br><br>
+      <div class="box">
       <h3 class="title is-3">
         {{server.info.name}}
         <div class="tags is-pulled-right inline">
@@ -24,7 +25,8 @@
       <div class="tags">
         <span v-for="tag in server.info.tags" :key="tag" class="tag is-dark">{{tag}}</span>
       </div>
-      <div class="tabs">
+      </div>
+      <div class="tabs is-large">
         <ul>
           <li v-for="(data, id) in TABS" :key="id"  :class="{'is-active': tab === id}">
             <router-link
@@ -36,7 +38,7 @@
           </li>
         </ul>
       </div>
-      <template v-if="tab === 'overview'">
+      <div v-if="tab === 'overview'" class="box">
         <template v-if="status && status.online">
           <div class="columns">
             <div class="column">
@@ -76,8 +78,9 @@
         <p class="has-text-centered subtitle is-4 my-6 has-text-danger" v-else-if="status && status.error">{{  status.error }}</p>
         <p class="has-text-centered subtitle is-4 my-6" v-else>Waiting for server status...</p>
         <br>
-      </template>
-      <template v-else-if="tab === 'configs'">
+        <VueApexCharts :series='series' :options="options" ref="chart" type="line" />
+      </div>
+      <div v-else-if="tab === 'configs'" class="box">
         <template v-if="cfg.selected">
           <pre v-if="cfg.json" class="box" spellcheck="false"><template v-for="entry in cfg.json" :key="entry.command"><span class="has-text-dark">{{entry.cvar ?? entry.command}}</span> <span :class="{'config-string': entry.type === 'string', 'has-text-info': entry.type === 'number'}">{{entry.value}}</span><br></template></pre>
           <pre class="box" v-if="cfg.raw">
@@ -85,8 +88,8 @@
           </pre>
         </template>
         <p class="has-text-centered subtitle is-5 my-6" v-else>Select a config file on the right to view its content</p>
-      </template>
-      <template v-else-if="tab === 'actions'">
+      </div>
+      <div v-else-if="tab === 'actions'" class="box">
         <div class="buttons">
           <template v-if="status?.online">
           <a @click="processAction(server, 'stop')" class="button is-dark">Request Restart</a>
@@ -95,7 +98,7 @@
           </template>
           <a v-if="server.info.tags.includes('systemd')" @click="processAction(server, 'start')" class="button is-success">Start Server</a>
         </div>
-      </template>
+      </div>
     </div>
 
     <div class="column">
@@ -151,8 +154,32 @@ import { PrivilegedUser } from '@/js/User';
 import { parseLog, getRelDate, request } from '@/js/util';
 import LogMessage from "@/components/LogMessage.vue";
 import { useNotification } from "@kyvg/vue3-notification";
+import VueApexCharts from 'vue3-apexcharts'
 
+let series = ref<any[]>([])
+let chart = ref()
+const options = {
+  chart: {
+    zoom: {
+      enabled: true,
+      type: 'x',
+      autoScaleYaxis: true
+    },
 
+  },
+  title: {
+    text: "Player Joins",
+    align: 'left'
+  },
+  yaxis: {
+    type: "numeric",
+    title: "Players"
+  },
+  xaxis: {
+    type: "datetime",
+    datetimeUTC: false
+  }
+}
 const REFRESH_INTERVAL = 1000 * 60
 
 const { notify } = useNotification();
@@ -221,6 +248,18 @@ async function fetchServerInfo() {
     const json = await response.json()
     if(response.ok) {
       server.value = json
+      // series.value = [{
+      //   name: "Joins",
+      //   data: json.playerCounts.map((count: any) => {
+      //     return { x: new Date(count.timestamp*1000), y: count.count }
+      //   })
+      // }]
+      series.value = [{
+        name: "Player Joins",
+        data: json.test.map((row: any) => {
+          return { x: new Date(row.timestamp*1000), y: row.count }
+        })
+      }]
     } else {
       const msg = json.message || json.error || json
       error.value = msg
