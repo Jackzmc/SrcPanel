@@ -17,11 +17,20 @@
     </section>
 
     <br>
-    <div style="background-color: #fafafa !important">
+    <router-view :userdata="userdata"></router-view>
+
+    <footer class="footer">
+      <div class="content has-text-centered">
+        L4D2 Admin Dashboard - Updated {{lastUpdated}}
+      </div>
+    </footer>
+    <!-- <div style="background-color: #fafafa !important">
     <router-view :userdata="userdata"></router-view>
     </div>
 
+    <footer class="footer">
 
+    </footer> -->
   </div>
 </template>
 
