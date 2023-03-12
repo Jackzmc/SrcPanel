@@ -115,6 +115,7 @@ const routes = [
   {
     name: 'admin-players',
     path: '/admin/players',
+    alias: '/admin/users',
     component: () => import(/* webpackChunkName: 'players' */ '../views/admin/PlayerManagerView.vue'),
     meta: {
       title: 'Player Management',
@@ -135,9 +136,9 @@ const routes = [
           {
             name: 'manage-user-overview',
             path: '',
+            alias: 'overview',
             component: () => import(/* webpackChunkName: 'manage-user' */ '../components/manage-user/modals/ManageOverview.vue'),
             meta: {
-              title: 'User',
               authRequired: true
             }
           },
@@ -146,7 +147,6 @@ const routes = [
             path: 'privileges',
             component: () => import(/* webpackChunkName: 'manage-user' */ '../components/manage-user/modals/ManageAdmin.vue'),
             meta: {
-              title: 'Manage Admin',
               authRequired: true
             }
           },
@@ -155,7 +155,6 @@ const routes = [
             path: 'bans/:banid?',
             component: () => import(/* webpackChunkName: 'manage-user' */ '../components/manage-user/modals/ManageBans.vue'),
             meta: {
-              title: 'Edit Player Bans',
               authRequired: true
             }
           },
@@ -164,7 +163,6 @@ const routes = [
             path: 'notes',
             component: () => import(/* webpackChunkName: 'manage-user' */ '../components/manage-user/modals/ManageNotes.vue'),
             meta: {
-              title: 'Edit Notes',
               authRequired: true
             }
           },

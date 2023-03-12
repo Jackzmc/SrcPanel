@@ -1,6 +1,6 @@
 <template>
 <section>
-  <article class="message is-danger" v-if="!canEdit">
+  <article class="message is-danger" v-if="!canEdit && props.userAdminData">
     <div class="message-body">
       <b>Cannot Edit: </b>
       <div class="content">
@@ -10,8 +10,8 @@
       </div>
     </div>
   </article>
-  <div class="level" v-if="userAdminData">
-    <div class="level-item has-text-centered">
+  <div class="level">
+    <div class="level-item has-text-centered" v-if="userAdminData">
       <div class="field">
         <label class="label">Admin Id</label>
         <span>
@@ -27,7 +27,7 @@
             {{playtime}} hours
             <b
               v-if="hoursPlayed < MIN_HOURS_PLAYTIME"
-              class="has-text-danger has-tooltip-right has-tooltip-danger"
+              class="has-text-danger has-tooltip-bottom has-tooltip-danger"
               :data-tooltip="POLICY_MSG_MIN_HOURS_OF_PLAYTIME"
             >(!) </b>
           </p>
@@ -35,7 +35,7 @@
         </span>
       </div>
     </div>
-    <div class="level-item has-text-centered">
+    <div class="level-item has-text-centered" v-if="userAdminData">
       <div class="field">
         <label class="label">Immunity</label>
         <span>
@@ -43,7 +43,7 @@
         </span>
       </div>
     </div>
-    <div class="level-item has-text-centered">
+    <div class="level-item has-text-centered" v-if="userAdminData">
       <div class="field">
         <label class="label">Flags</label>
         <span v-if="userAdminData.permissions.flags.length > 0">
@@ -206,7 +206,7 @@
       :class="['button','has-tooltip-top', 'is-success',{'is-loading': loading.save}]"
       :disabled="cantAddAdmin || !canEdit"
       @click="save"
-    >{{ props.userAdminData ? 'Save Changes' : 'Add Admin' }}</button>
+    >{{ props.userAdminData ? 'Save Changes' : 'Grant Admin Privileges' }}</button>
     <button
       class="button"
       @click="reset"
@@ -245,12 +245,12 @@ const props = defineProps<{
 const privileges = computed(() => {
   let privs: Partial<Record<Service, number|null>> = {}
   for(const service of Object.values(Service)) {
-    const priv = props.userAdminData.permissions.web.privileges[service]
+    const priv = props.userAdminData?.permissions.web.privileges[service]
     privs[service] = priv ?? null
   }
-  console.log(privs)
   return privs as Record<Service, number | null>
 })
+
 
 
 let groups = ref<AdminGroup[]>([])
@@ -259,12 +259,12 @@ let form = ref<{
   immunity: number,
   flags: string[],
   webFlags: number[],
-  privileges: Record<Service, number | null>
+  privileges: Partial<Record<Service, number | null>>
 }>({
   immunity: 0,
   flags: [],
   webFlags: [],
-  privileges: privileges.value
+  privileges: {}
 })
 function reset() {
   form.value = {
@@ -380,7 +380,7 @@ async function save() {
     loading.value.save = true;
     let privileges: Record<string, number> = {}
     for(const [service, priv] of Object.entries(form.value.privileges)) {
-      if(priv != props.userAdminData.permissions.web.privileges[service as Service]) {
+      if(!props.userAdminData || priv != props.userAdminData.permissions.web.privileges[service as Service]) {
         privileges[service] = Number(priv)
       }
     }
