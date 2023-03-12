@@ -8,7 +8,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     
     fastify.get('/', async(req: FastifyRequest<{ Params: { id: string }}>, reply) => {
         const [notes] = await fastify.db.execute<RowDataPacket[]>(
-            `SELECT notes.*, u.last_alias as user, e.last_alias as executor, !b.expired as banned,
+            `SELECT DISTINCT notes.id, notes.steamid, notes.markedBy, notes.content, u.last_alias as user, e.last_alias as executor, !b.expired as banned,
             (SELECT COUNT(*) FROM ${ADMINS_DB}.sm_admins WHERE ${ADMINS_DB}.sm_admins.identity = u.steamid) as targetIsAdmin
             FROM notes 
             LEFT JOIN stats_users as u ON notes.steamid = u.steamid 

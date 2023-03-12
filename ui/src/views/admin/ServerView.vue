@@ -171,12 +171,12 @@ const options = {
 
   },
   title: {
-    text: "Online Players",
+    text: "Player Joins",
     align: 'left'
   },
   yaxis: {
     type: "numeric",
-    title: "Players Online"
+    title: "Joins"
   },
   xaxis: {
     type: "datetime",
@@ -193,7 +193,7 @@ const options2 = {
 
   },
   title: {
-    text: "Player Joins",
+    text: "Online Players",
     align: 'left'
   },
   yaxis: {
