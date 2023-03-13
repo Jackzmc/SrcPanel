@@ -3,8 +3,6 @@ import FastifyPlugin from 'fastify-plugin'
 import AuthManager from '../modules/AuthManager.js';
 
 import mysql from 'mysql2/promise'
-import { open } from 'sqlite'
-import sqlite3 from 'sqlite3'
 import { mkdir } from 'fs/promises'
 import UserManager from '../modules/users/UserManager.js';
 import { join, dirname } from 'path';

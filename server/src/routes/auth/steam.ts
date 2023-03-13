@@ -99,7 +99,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                                 } else {
                                     return reply.code(401).send({
                                         error: 'UNAUTHORIZED',
-                                        message: 'Account is not authorized'
+                                        message: 'Account has not been granted admin privileges.'
                                     })
                                 }
                             }
@@ -117,8 +117,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                     }
                 } else {
                     return reply.code(401).send({
-                        error: 'Unauthorized',
-                        message: 'Could not validate user',
+                        error: 'VALIDATE_ERROR',
+                        message: 'Could not validate user due to steam api response error',
                         debug: {
                             query: req.query,
                             params: params.toString(),
@@ -129,8 +129,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             }
 
             return reply.code(401).send({
-                error: 'Unauthorized',
-                message: 'Could not validate user due to error',
+                error: 'VALIDATE_ERROR',
+                message: 'Could not validate user due to steam api error',
                 debug: {
                     query: req.query,
                     error: validateRes.statusText

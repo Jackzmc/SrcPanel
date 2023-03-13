@@ -82,7 +82,7 @@ const routes = [
     meta: {
       title: 'Bans',
       hideHero: true,
-    }
+    },
   },
   {
     name: 'info',
