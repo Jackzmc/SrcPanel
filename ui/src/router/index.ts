@@ -103,14 +103,36 @@ const routes = [
     }
   },
   {
+    path: '/admin/addons',
+    redirect: '/admin/addons/default'
+  },
+  {
     name: 'admin-addons',
-    path: '/admin/addons/:share?/:addon?',
-    component: () => import(/* webpackChunkName: 'maps' */ '../views/admin/ServerAddonsView.vue'),
+    path: '/admin/addons/:shareId',
+    // redirect: '/admin/addons/default',
+    component: () => import(/* webpackChunkName: 'shares' */ '../views/admin/ServerAddonsView.vue'),
     meta: {
       title: 'Addons / Maps',
       description: 'View all the installed custom maps (and some non-map addons)',
       authRequired: true
-    }
+    },
+    children: [
+      {
+        name: "upload-addon",
+        path: 'upload',
+        component: () => import(/* webpackChunkName: 'shares' */ '../components/addons/modals/UploadModal.vue')
+      },
+      {
+        name: "workshop-download",
+        path: 'workshop-download/:url?',
+        component: () => import(/* webpackChunkName: 'shares' */ '../components/addons/modals/WorkshopDownloadModal.vue')
+      },
+      {
+        name: "addon-info",
+        path: ':addon',
+        component: () => import(/* webpackChunkName: 'shares' */ '../components/addons/modals/AddonInfoModal.vue')
+      }
+    ]
   },
   {
     name: 'admin-players',

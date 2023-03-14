@@ -58,7 +58,7 @@ interface AddonInstallInfo {
     size: number
 }
 
-export const DOWNLOAD_SOURCES = ["steam_workshop"] as const
+export const DOWNLOAD_SOURCES = ["steam_workshop", "direct"] as const
 
 export type DownloadSource = typeof DOWNLOAD_SOURCES
 
@@ -80,7 +80,7 @@ export default class Share {
         this.id = shareInfo.id
         this.db = db
         this.steam = steam
-        this.name = shareInfo.name,
+        this.name = shareInfo.name ?? shareInfo.id,
         this.sourceFolder = shareInfo.sourceFolder
         this.appId = shareInfo.appid
         this._parseDownloadSources(shareInfo.downloadSources)

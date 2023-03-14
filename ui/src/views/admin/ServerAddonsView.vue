@@ -1,7 +1,6 @@
 <template>
 <div>
-  <DownloadAddonModal v-if="showDownloadModal" :share="shareInfo" @close="onDownloadModalClosed"/>
-  <AddonInfoModal v-if="showAddonModal" :share="shareInfo" :addon="prefetch" @close="closePreview" />
+  <router-view :share="shareInfo" :addon="prefetch" @close="onChildClose"></router-view>
   <div class="container" v-if="ready">
     <div class="level">
       <div class="level-left">
@@ -24,14 +23,26 @@
             </div>
           </div>
         </div>
-        <div class="level-item">
+        <template  v-if="shareInfo && shareInfo.downloadSources.length > 0">
+        <div class="level-item" v-if="shareInfo.downloadSources.includes('steam_workshop')">
           <div class="field">
             <label class="label">&nbsp;</label>
-            <div class="control" v-if="shareInfo && shareInfo.downloadSources.length > 0">
-              <a v-if="shareInfo.downloadSources.includes('steam_workshop')" class="button is-success is-fullwidth" @click="showDownloadModal = true">Add Workshop Addon</a>
+            <div class="control">
+              <router-link :to="{ name: 'workshop-download'}" class="button is-info is-fullwidth">Add Workshop Addon</router-link>
+              <!-- <a  class="button is-info is-fullwidth" @click="showDownloadModal = true">Add Workshop Addon</a> -->
             </div>
           </div>
         </div>
+        <div class="level-item" v-if="shareInfo.downloadSources.includes('direct')" >
+          <div class="field">
+            <label class="label">&nbsp;</label>
+            <div class="control">
+              <router-link :to="{ name: 'upload-addon' }" class="button is-info is-fullwidth">Upload Addon</router-link>
+              <!-- <a class="button is-info is-fullwidth" @click="showDownloadModal = true">Upload Addon</a> -->
+            </div>
+          </div>
+        </div>
+        </template>
       </div>
     </div>
     <p class="subtitle is-4" style="width:60%">Click on any addon to view additional info and to (un)install it from servers. <router-link to="/admin/servers/">Click here to view servers page</router-link></p>
@@ -76,9 +87,6 @@
               <tr>
                 <td>
                   <b v-if="vpk.collection"  @click="preview(vpk)">{{vpk.collection.name}} <span class="tag is-info">Collection</span></b>
-                  <a :class="{'has-text-weight-light': vpk.enabledOn.length == 0, 'has-text-info': true }" v-else-if="vpk.workshop" @click="preview(vpk)" :data-tooltip="getTooltip(vpk)">
-                    <b>{{vpk.workshop.title}}</b>
-                  </a>
                   <a :class="{'has-text-weight-light': vpk.enabledOn.length == 0 }" @click="preview(vpk)" v-else :data-tooltip="getTooltip(vpk)">{{vpk.filename}}</a>
                   &nbsp;<span class="tag" v-if="!vpk.collection" data-tooltip="Number of servers the addon is installed on">{{ vpk.enabledOn.length }} servers</span>
                 </td>
@@ -261,9 +269,14 @@ const filteredVPKs = computed(() => {
 })
 
 function preview(entry: any) {
-  router.push(`/admin/addons/${selectedShare.value}/${entry.filename}`)
   prefetch.value = entry
-  showAddonModal.value = true
+  router.push({
+    name: "addon-info",
+    params: {
+      share: selectedShare.value,
+      addon: entry.filename
+    }
+  })
 }
 function closePreview(removeEntry: boolean) {
   if(removeEntry) {
@@ -287,9 +300,10 @@ function getTooltip(addon: any) {
   }
 }
 
-async function onDownloadModalClosed(requestRefresh: boolean) {
-  showDownloadModal.value = false
-  await fetchVPKS()
+async function onChildClose(requestRefresh: boolean) {
+  router.back()
+  if(requestRefresh)
+    await fetchVPKS()
 }
 async function fetchShares() {
   error.value = undefined
