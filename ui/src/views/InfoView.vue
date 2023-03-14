@@ -2,10 +2,14 @@
   <div class="container is-fullwidth is-fluid">
     <div class="columns">
       <div class="column" v-if="notes">
-        <h4 class="title is-4 has-text-centered">Notes</h4>
+        <h3 class="title is-3">
+          Showing <input type="number" class="input" min=20 max=1000 step=10 style="width:7%" v-model="limit" @blur="changeLimit" /> / {{ notesCount.toLocaleString() }} Notes
+        </h3>
         <p class="subtitle is-=6">
           The ID column shows the id of the note, with the rating of the note's message.
         </p>
+        <Pagination :page="page" :limit="limit" :count="notesCount" @page="setPage"></pagination>  
+
         <table class="table is-fullwidth">
           <thead>
             <tr>
@@ -44,6 +48,7 @@
             </tr>
           </tbody>
         </table>
+        <Pagination :page="page" :limit="limit" :count="notesCount" @page="setPage"></pagination>  
       </div>
       <div class="column" v-else-if="fetchError">
         <p class="my-5 is-size-2 has-text-centered has-text-danger">{{ fetchError }}</p>
@@ -71,6 +76,7 @@
 <script setup lang="ts">
 import { ref, onBeforeMount, onMounted, computed } from 'vue'
 import ActionNote from '@/components/ActionNote.vue'
+import Pagination from '@/components/Pagination.vue'
 import { SessionData } from '../../../common-types/User.js';
 import data from '@/assets/data.json'
 import Sentiment from 'sentiment'
@@ -83,18 +89,24 @@ const props = defineProps<{
   userdata: SessionData
 }>()
 
+let page = ref(1)
+let limit = ref(40)
+let notesCount = ref(0)
 let fetchError = ref<string|undefined>(undefined)
 let notes = ref<any[] | undefined>(undefined)
 let admins = ref<any[]>([])
 let search = ref<{ user: string, content: string }>({ user: "", content: "" })
 
-onBeforeMount(() => {
+function setPage(value: number) {
+  page.value = value
   fetchNotes()
-})
-
-onMounted(() => {
-  if(props.userdata) fetchAdmins()
-})
+}
+function changeLimit() {
+  if(limit.value < 20) limit.value = 20
+  else if(limit.value > 1000) limit.value = 1000
+  page.value = 1
+  fetchNotes()
+}
 
 const POSITIVE_WORDS = ["good", "great", "decent", "amazing", "helpful", "yes"]
 const CAUTION_WORDS = ["ok", "alright", "noob", "new", "noobs", "no", "burned", "dumb", "suspicious", "nooby", "tried", "threw", "tossed", "waste", "waster", "meh"]
@@ -127,9 +139,10 @@ const filteredNotes = computed(() => {
 async function fetchNotes() {
   notes.value = undefined
   try {
-    const response = await fetch('/api/notes')
+    const response = await fetch(`/api/notes?page=${page.value}&limit=${limit.value}`)
     const json = await response.json()
     if(response.ok) {
+      notesCount.value = json.totalNotes
       notes.value = json.notes.map((note: any) => {
         note.content = note.content.trim()
         note.class = ["tag"]
@@ -197,8 +210,11 @@ function fetchAdmins() {
       admins.value = json.admins
     })
 }
+onBeforeMount(() => {
+  fetchNotes()
+})
 
-function getStatURL(steamid: string) {
-  return `https://stats.jackz.me/user/${steamid}`
-}
+onMounted(() => {
+  if(props.userdata) fetchAdmins()
+})
 </script>

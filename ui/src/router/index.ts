@@ -85,12 +85,13 @@ const routes = [
     },
   },
   {
-    name: 'info',
-    path: '/info',
+    name: 'notes',
+    path: '/notes',
+    alias: '/info',
     component: () => import(/* webpackChunkName: 'info' */ '../views/InfoView.vue'),
     meta: {
-      title: 'Info',
-      description: 'View player notes and admins'
+      title: 'Notes',
+      description: 'View all player notes'
     }
   },
   {
