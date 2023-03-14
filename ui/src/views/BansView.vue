@@ -1,5 +1,5 @@
 <template>
-<div class="container ">
+<div class="container is-fluid">
   <div class="columns">
     <div class="column">
       <p class="subtitle is-4">Viewing <input type="number" class="input" min=20 max=1000 step=10 style="width:8%" v-model="limit" @blur="changeLimit" /> / {{bansCount.toLocaleString()}} bans</p>
