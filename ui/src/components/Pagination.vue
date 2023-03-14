@@ -38,8 +38,6 @@ import { useRoute, useRouter } from 'vue-router'
 
 const emit = defineEmits(['page'])
 
-const route = useRoute()
-const router = useRouter()
 const props = defineProps<{
   page: number,
   count: number,

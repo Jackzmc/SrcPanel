@@ -285,7 +285,7 @@
 </template>
 
 <script setup lang="ts">
-import Pagination from "@/components/pagination.vue";
+import Pagination from "@/components/Pagination.vue";
 import Debounce from "@/js/debounce";
 import LogClientTarget from "@/components/LogClientTarget.vue";
 import Modal from "@/components/Modal.vue";

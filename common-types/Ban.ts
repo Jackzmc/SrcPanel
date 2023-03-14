@@ -1,6 +1,7 @@
 export enum APIBanFlags {
     IPBan = 1,
-    Suspended = 2
+    Suspended = 2,
+    AppealBanned = 4
 }
 
 export interface APIBanPlayer {
