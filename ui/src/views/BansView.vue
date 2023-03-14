@@ -7,14 +7,14 @@
       <p class="has-text-danger" v-if="ban_error">{{ban_error}}</p>
     </div>
     <div class="column is-2">
-      <label class="checkbox">
-        <input type="checkbox" class="checkbox" v-model="showOnlyAppeals" />
-        Only Appeals
-      </label>
-      <label class="checkbox">
-        <input type="checkbox" class="checkbox" v-model="showExpired" @change="fetchBans(true)" />
-        Show Expired Bans
-      </label>
+      <div class="field">
+        <input id="onlyAppealsButton" type="checkbox" class="switch" v-model="showOnlyAppeals">
+        <label for="onlyAppealsButton">Only Appeals</label>
+      </div>
+      <div class="field">
+        <input id="showExpiredButton" type="checkbox" class="switch is-danger" v-model="showExpired" @change="fetchBans(true)">
+        <label for="showExpiredButton">Show Expired Bans</label>
+      </div>
     </div>
   </div>
 
@@ -94,6 +94,7 @@ import { ListAPIBan } from '../../../common-types/Ban.js';
 import { formatDate, request } from '@/js/util'
 import { APIBanFlags } from '../../../common-types/Ban';
 import Pagination from '@/components/Pagination.vue'
+import 'bulma-switch'
 
 const DISCORD_SOURCE_REGEX = new RegExp(/([^\n]+#\d{4})\s\((\d+)\)/)
 const AUTO_REFRESH_INTERVAL = 1000 * 60 * 15
@@ -121,8 +122,7 @@ let showOnlyAppeals = ref(false)
 
 const filteredBans = computed(() => {
   return bans.value.filter(ban => {
-    if(!showExpired.value && ban.expired) return false
-    if(showOnlyAppeals.value && ban.appealsCount == 0) return false
+    if(showOnlyAppeals.value && ban.appealsCount === 0) return false
     return true
   })
 })
