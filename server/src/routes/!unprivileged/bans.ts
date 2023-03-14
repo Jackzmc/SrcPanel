@@ -180,7 +180,6 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             SELECT COUNT(*) as count FROM bans
             ${req.query.include !== "expired" ? 'WHERE bans.expired = 0' : ''}
         `)
-        console.log('count', bansCount)
 
         const [bans] = await fastify.db.execute<RowDataPacket[]>(`
             SELECT u1.last_alias, names.name as resolved_name,
