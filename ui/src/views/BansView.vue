@@ -2,7 +2,7 @@
 <div class="container ">
   <div class="columns">
     <div class="column">
-      <p class="subtitle is-4">Viewing {{filteredBans.length}} bans</p>
+      <p class="subtitle is-4">Viewing <input type="number" class="input" min=20 max=1000 step=10 style="width:8%" v-model="limit" @blur="changeLimit" /> / {{bansCount.toLocaleString()}} bans</p>
       <p class="subtitle is-6">Click a user's name to view more detailed ban information</p>
       <p class="has-text-danger" v-if="ban_error">{{ban_error}}</p>
     </div>
@@ -12,12 +12,13 @@
         Only Appeals
       </label>
       <label class="checkbox">
-        <input type="checkbox" class="checkbox" v-model="showExpired" />
+        <input type="checkbox" class="checkbox" v-model="showExpired" @change="fetchBans(true)" />
         Show Expired Bans
       </label>
     </div>
   </div>
 
+  <Pagination :page="page" :limit="limit" :count="bansCount" @page="setPage"></pagination>  
   <table class="table is-fullwidth" v-if="!loading&&!error">
     <thead>
       <th style="width:0">Player</th>
@@ -81,6 +82,7 @@
   </table>
   <p class="has-text-centered has-text-danger title is-3" v-else-if="error">{{error}}</p>
   <p class="has-text-centered title is-2" v-else><br>Fetching bans...</p>
+  <Pagination :page="page" :limit="limit" :count="bansCount" @page="setPage"></pagination>  
 </div>
 </template>
 
@@ -91,6 +93,7 @@ import Sugar from 'sugar'
 import { ListAPIBan } from '../../../common-types/Ban.js';
 import { formatDate, request } from '@/js/util'
 import { APIBanFlags } from '../../../common-types/Ban';
+import Pagination from '@/components/Pagination.vue'
 
 const DISCORD_SOURCE_REGEX = new RegExp(/([^\n]+#\d{4})\s\((\d+)\)/)
 const AUTO_REFRESH_INTERVAL = 1000 * 60 * 15
@@ -105,6 +108,9 @@ interface Ban extends ListAPIBan {
   relDate?: string
 }
 
+let limit = ref(100)
+let bansCount = ref(0)
+let page = ref(1)
 let loading = ref(true)
 let error = ref<string>()
 let ban_error = ref<string>()
@@ -136,14 +142,26 @@ function formatDaysAgo(value?: number, locale?: string) {
   const formatter = new Intl.RelativeTimeFormat(locale);
   return formatter.format(Math.round(deltaDays), 'days');
 }
-async function fetchBans() {
-  const response = await request('/api/bans', { credentials: 'include' })
+function setPage(value: number) {
+  page.value = value
+  fetchBans()
+}
+function changeLimit() {
+  if(limit.value < 20) limit.value = 20
+  else if(limit.value > 1000) limit.value = 1000
+  fetchBans(true)
+}
+async function fetchBans(resetPage = false) {
+  if(resetPage) page.value = 1
+  let include = showExpired.value ? "&include=expired" : ""
+  const response = await request(`/api/bans?page=${page.value}${include}&limit=${limit.value}`, { credentials: 'include' })
   loading.value = false
   if(response?.ok) {
     const json = await response.json()
     if(json.error) {
       return ban_error.value = json.message || json.error
     }
+    bansCount.value = json.totalBans;
     bans.value = json.bans.map((ban: Ban) => {
       const relDate = new Sugar.Date(ban.timestamp*1000).relative()
       const discordBanMatch = ban.executor.id.match(DISCORD_SOURCE_REGEX)

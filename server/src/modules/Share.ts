@@ -58,7 +58,7 @@ interface AddonInstallInfo {
     size: number
 }
 
-export const DOWNLOAD_SOURCES = ["steam_workshop"] as const
+export const DOWNLOAD_SOURCES = ["steam_workshop", "direct"] as const
 
 export type DownloadSource = typeof DOWNLOAD_SOURCES
 

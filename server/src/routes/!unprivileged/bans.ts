@@ -158,11 +158,29 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
     })
 
-    fastify.get('/', async(req, reply): Promise<{ meta: Record<string, number>, bans: ListAPIBan[] }> => {
+    fastify.get('/', async(req: FastifyRequest<{Querystring:{ limit?:number, page?: number, include: string }}>, reply): Promise<{ meta: Record<string, number>, bans: ListAPIBan[], totalBans: number }> => {
+        
         const authorized = await fastify.authmngr.isAuthorized(req)
+        let page = Number(req.query.page)
+        if(!page || page < 0) page = 1
+
+        let limit = Number(req.query.limit)
+        if(!limit || limit < 1) limit = 100
 
         let profilerStart = Date.now()
-        let meta: Record<string, number> = {}
+        let meta: Record<string, number> = {
+            page,
+            limit
+        }
+
+        const offset = (page - 1) * limit;
+        meta.offset = offset
+
+        const [bansCount] = await fastify.db.execute<RowDataPacket[]>(`
+            SELECT COUNT(*) as count FROM bans
+            ${req.query.include !== "expired" ? 'WHERE bans.expired = 0' : ''}
+        `)
+        console.log('count', bansCount)
 
         const [bans] = await fastify.db.execute<RowDataPacket[]>(`
             SELECT u1.last_alias, names.name as resolved_name,
@@ -183,8 +201,9 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 LEFT JOIN stats_users as u1 on bans.steamid = u1.steamid
                 LEFT JOIN stats_users as u2 on bans.executor = u2.steamid
                 LEFT JOIN user_names as names on SUBSTRING(bans.steamid, 11) = names.steamid
-            ORDER BY bans.timestamp DESC`, 
-            []
+            ${req.query.include !== "expired" ? 'WHERE bans.expired = 0' : ''}
+            ORDER BY bans.timestamp DESC LIMIT ?, ?`, 
+            [offset, limit]
         )
 
         meta.fetchTime = Date.now() - profilerStart
@@ -252,6 +271,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
         return {
             meta,
+            totalBans: bansCount[0].count,
             bans: bans.map(row => {
                 return {
                     meta: row.meta,
