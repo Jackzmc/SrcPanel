@@ -17,7 +17,9 @@ export const ServicePrivilegeKeys = {
 export enum Service {
     Notes = "notes",
     Bans = "bans",
-    Admins = "admins"
+    Admins = "admins",
+    Addons = "addons",
+    AddonsUpload = "addons.upload"
 }
 
 // The action that is being done, for logging, and what privilege it requires
@@ -38,7 +40,9 @@ export const ActionRequiredPrivilege: Record<Action, ServicePrivilege> = {
 export const ServiceSupportedActions: Record<Service, ServicePrivilege[]> = {
     [Service.Notes]: [ ServicePrivilege.View, ServicePrivilege.Edit, ServicePrivilege.Manage ],
     [Service.Bans]: [ ServicePrivilege.View, ServicePrivilege.Edit, ServicePrivilege.Delete, ServicePrivilege.Manage],
-    [Service.Admins]: [ ServicePrivilege.View, ServicePrivilege.Manage ]
+    [Service.Admins]: [ ServicePrivilege.View, ServicePrivilege.Manage ],
+    [Service.Addons]: [ ServicePrivilege.View, ServicePrivilege.Edit, ServicePrivilege.Delete ],
+    [Service.AddonsUpload]: [ ServicePrivilege.Edit ]
 } 
 
 export interface SteamInfo {

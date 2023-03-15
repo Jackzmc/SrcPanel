@@ -1,4 +1,5 @@
 import { stat, readdir, unlink, symlink } from 'fs/promises';
+import { createWriteStream } from 'fs'
 import path from 'path'
 import SteamAPI, { WorkshopItem } from './steam.js';
 import { exec } from 'child_process'
@@ -120,6 +121,10 @@ export default class Share {
 
     public get exts() {
         return this.validExts ? [...this.validExts] : null
+    }
+
+    public createUploadStream(filename: string) {
+        return createWriteStream(path.join(this.sourceFolder, path.normalize(filename)))
     }
 
     public async getAddons() {

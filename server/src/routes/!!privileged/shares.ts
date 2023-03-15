@@ -1,11 +1,13 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
-import fs from 'fs/promises'
-import path from 'path'
 import { exec } from 'child_process'
 import { WorkshopItem } from '../../modules/steam.js';
+import FastifyMultipart from '@fastify/multipart'
+import { pipeline } from 'stream'
+import { promisify } from 'util'
+import { Action, Service } from '../../../../common-types/Privileges.js';
+const pump = promisify(pipeline)
 
-
-const WS_ITEMID_REGEX = new RegExp(/(\d+).vpk/)
+const VALID_FILENAME_REGEX = new RegExp(/[a-z0-9_\- \.]+/i)
 
 export interface ChildWorkshopItem extends WorkshopItem {
     collection?: WorkshopCollectionInfo
@@ -17,6 +19,9 @@ export interface WorkshopCollectionInfo {
 
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions)  {
+
+    fastify.register(FastifyMultipart)
+
 
     fastify.get('/workshop/:publishedfileid/details', async(req: FastifyRequest<{Params: { publishedfileid: string }}>, reply) => {
         const results = await fastify.steam.getItemDetails([req.params.publishedfileid])
@@ -103,6 +108,42 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         return {
            addonInfo: await share.getAddonInfo(req.params.filename)
         }
+    })
+
+    fastify.post('/:shareId/addons/upload',  async(req: FastifyRequest<{Params: {shareId: string}}>, reply) => {
+        const shareId = req.params.shareId
+        const share = fastify.servers.getShare(shareId)
+        if(!share) {
+            return reply.status(404).send({
+                error: "Share Not Found", 
+                message: `No share with id \"${shareId.toLowerCase()}\" could be found. Share may be unavailable, incorrecty configured or does not exist`   
+            })
+        }
+
+        const parts = req.files()
+        for await (const part of parts) {
+            const ext = part.filename.split(".").pop()
+            if(!share.exts.includes(ext)) {
+                return reply.status(400).send({
+                    error: "TYPE_NOT_ALLOWED",
+                    message: "The file type is not allowed for this share"
+                })  
+            }
+            if(!VALID_FILENAME_REGEX.test(part.filename)) {
+                return reply.status(400).send({
+                    error: "INVALID_FILENAME",
+                    message: `The filename must match the pattern /${VALID_FILENAME_REGEX.source}/`
+                })  
+            }
+            await pump (part.file, share.createUploadStream(part.filename))
+            req.user.logAction(Service.AddonsUpload, Action.Edit, `uploaded addon \"${part.filename}\"`)
+            if (part.file.truncated) {
+                console.warn(`${part.filename} is truncated, clearing downloaded piece`)
+                await share.deleteAddon(part.filename)
+                reply.send(new fastify.multipartErrors.FilesLimitError());    
+            }
+        }
+        reply.send()
     })
 
     fastify.delete('/:shareId/addons/:filename', async(req: FastifyRequest<{Params: {shareId: string, filename: string}}>, reply) => {

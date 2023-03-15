@@ -16,10 +16,28 @@
               Choose an addon
             </span>
           </span>
-          <span class="file-name" v-if="file">
-            {{ file.name }}
+          <span class="file-name" v-if="filename">
+            {{ filename }}
           </span>
         </label>
+      </div>
+      <br>
+      <div class="field" v-if="filename">
+        <label class="label">Install Destinations</label>
+        <div class="field" v-for="dest in props.share.destinations" :key="dest.id">
+          <input
+            :id="dest.id"
+            type="checkbox"
+            :value="dest.id"
+            class="is-checkradio has-tooltip-right"
+            v-model="installDestinations"
+          >
+          <label :for="dest.id">
+            <span v-if="dest.name"><b>{{dest.name}}</b> (<em>{{dest.id}}</em>)</span>
+            <span v-else>{{dest.id}}</span>
+            &nbsp;<span class="tag is-info has-tooltip-right is-small is-rounded" data-tooltip="Number of servers that share this destination">{{dest.serverIds?.length ?? 0}} Servers</span>
+          </label>
+        </div>
       </div>
     </section>
     <footer class="modal-card-foot">
@@ -30,7 +48,7 @@
       </template>
       <template v-else>
         <button :class="['button','is-info', {'is-loading': uploadState == 1}]"
-          :disabled="!file || installDestinations.length == 0"
+          :disabled="!filename || installDestinations.length == 0"
           @click="startUpload()"
         >
           Upload
@@ -50,7 +68,7 @@ import Modal from '@/components/Modal.vue'
 import { computed, ref, onBeforeMount } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useNotification } from "@kyvg/vue3-notification";
-import { fi } from 'date-fns/locale';
+import { request } from '@/js/util';
 
 const { notify }  = useNotification()
 
@@ -65,16 +83,14 @@ const props = defineProps<{
 let installDestinations = ref<string[]>([])
 let uploadState = ref(0)
 let filePicker = ref()
-const file = computed(() => {
-  if(!filePicker.value) return
-  return filePicker.value.files[0]
-})
+let filename = ref()
 
 // TODO: use router-view for /admin/addons/add
 const route = useRoute()
 const router = useRouter()
 
 function onFileUploaded() {
+  filename.value = filePicker.value.files[0].name
   console.log(filePicker.value.files)
 }
 
@@ -115,14 +131,29 @@ async function restartServers() {
 }
 
 async function restartServer(id: string) {
-  const response = await fetch(`/api/servers/${id}/restart`, {
+  const response = await request(`/api/servers/${id}/restart`, {
     method: 'POST'
   })
-  if(response.ok) return true
-  throw new Error(`Server returned ${response.status} ${response.statusText} for ${id}`)
+  if(response?.ok) return true
 }
 
-function startUpload() {
+async function startUpload() {
+  uploadState.value = 1
+  const formData = new FormData()
+  formData.append("files[]", filePicker.value.files[0])
+  const response = await request(`/api/shares/${props.share.id}/addons/upload`, {
+    method: 'POST',
+    body: formData
+  })
+  if(response?.ok) {
+    uploadState.value = 2
+    notify({
+      type: "success",
+      text: `Uploaded \"${filename.value}\"`
+    })
+  } else {
+    uploadState.value = 0
+  }
 }
 
 function close() {
