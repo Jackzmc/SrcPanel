@@ -318,7 +318,12 @@ export default class Share {
             throw new Error(`File \"${filename}\" does not exist in ${this.sourceFolder}`)
         }
 
-        await unlink(path.join(dest.path, filename))
+        try {
+            await unlink(path.join(dest.path, filename))
+        } catch(err) {
+            // Do not fail if its not installed already, just ignore
+            if(err.code !== "ENOENT") throw err
+        }
     }
 
     private async doesFileExist(folder: string, file: string) {
