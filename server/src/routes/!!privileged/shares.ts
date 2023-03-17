@@ -161,7 +161,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 message: `No share with id \"${shareId.toLowerCase()}\" could be found. Share may be unavailable, incorrecty configured or does not exist`   
             })
         }
-        // await share.deleteAddon(req.params.filename)
+        await share.deleteAddon(req.params.filename)
         return reply.status(204).send()
     })
 
