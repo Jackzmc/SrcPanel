@@ -88,7 +88,9 @@
               <tr>
                 <td>
                   <b v-if="vpk.collection"  @click="preview(vpk)">{{vpk.collection.name}}&nbsp;<span class="tag is-dark is-pulled-right">Collection</span></b>
-                  <a :class="{'has-text-weight-light': vpk.enabledOn.length == 0 }" @click="preview(vpk)" v-else :data-tooltip="getTooltip(vpk)">{{vpk.filename}}</a>
+                  <a :class="{'has-text-weight-light': vpk.enabledOn.length == 0 }" @click="preview(vpk)" v-else :data-tooltip="getTooltip(vpk)">
+                    {{vpk.workshop ? vpk.workshop.title : vpk.filename}}
+                  </a>
                   &nbsp;
                   <span class="tags is-inline is-pulled-right" v-if="!vpk.collection">
                     <span class="tag is-info" v-for="server in vpk.enabledOn" :key="server">
