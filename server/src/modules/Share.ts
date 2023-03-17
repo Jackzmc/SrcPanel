@@ -148,6 +148,8 @@ export default class Share {
                         }
                         collections[addonInfo.collection.id].children.push(addonInfo)
                         delete addonInfo.collection
+                    } else {
+                        results.push(addonInfo)
                     }
                 } else {
                     const match = dirent.name.match(WS_ITEMID_REGEX)
