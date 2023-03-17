@@ -194,7 +194,7 @@ async function deleteAddon() {
       if(response.ok) {
         notify({
           type: 'success',
-          text: `Deleted ${addonName}`
+          text: `Deleted ${addonName.value}`
         })
         close(true)
       } else {
