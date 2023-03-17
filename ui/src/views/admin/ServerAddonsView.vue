@@ -93,7 +93,7 @@
                   </a>
                   &nbsp;
                   <span class="tags is-inline is-pulled-right" v-if="!vpk.collection">
-                    <span class="tag is-info" v-for="server in vpk.enabledOn" :key="server">
+                    <span class="tag is-rounded is-info" v-for="server in vpk.enabledOn" :key="server">
                       {{ server }}
                     </span>
                   </span>
@@ -128,13 +128,13 @@
                     </a>
                     <a @click="preview(child)" v-else class="ml-5" :data-tooltip="getTooltip(child)">{{child.filename}}</a>
                     <span class="tags is-inline is-pulled-right" v-if="!child.collection">
-                      <span class="tag is-info" v-for="server in child.enabledOn" :key="server">
+                      <span class="tag is-info is-rounded" v-for="server in child.enabledOn" :key="server">
                         {{ server }}
                       </span>
                     </span>
                   </td>
                   <td v-if="hasAnyWorkshop">
-                    <a v-if="child.workshop" :href="child.workshop.url" class="button is-small" target="_blank">Workshop</a>
+                    <a v-if="child.workshop" :href="child.workshop.url" class="button is-small" target="_blank" data-tooltip="Open a new tab to the workshop entry page">Workshop</a>
                   </td>
                   <td>
                     <span v-if="child.workshop">{{formatSize(child.workshop.filesize, true, 0)}}</span>
