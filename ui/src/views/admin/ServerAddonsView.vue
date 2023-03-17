@@ -63,6 +63,7 @@
               <th><a @click="setSortFunc('filename', SORT_NAME)">
                 File <span v-if="hasAnyWorkshop">/ Workshop </span>Name
                 <span v-if="sort?.id === 'filename'">{{sortSymbol}}</span>
+                <span class="is-pulled-right">Enabled On</span>
               </a></th>
               <th v-if="hasAnyWorkshop" style="width:0"><a @click="setSortFunc('isWorkshop', SORT_WORKSHOP)">
                 Workshop
@@ -86,9 +87,15 @@
             <template v-for="vpk in filteredVPKs" :key="vpk.filename ?? vpk.collection.id">
               <tr>
                 <td>
-                  <b v-if="vpk.collection"  @click="preview(vpk)">{{vpk.collection.name}} <span class="tag is-info">Collection</span></b>
+                  <b v-if="vpk.collection"  @click="preview(vpk)">{{vpk.collection.name}}&nbsp;<span class="tag is-dark is-pulled-right">Collection</span></b>
                   <a :class="{'has-text-weight-light': vpk.enabledOn.length == 0 }" @click="preview(vpk)" v-else :data-tooltip="getTooltip(vpk)">{{vpk.filename}}</a>
-                  &nbsp;<span class="tag" v-if="!vpk.collection" data-tooltip="Number of servers the addon is installed on">{{ vpk.enabledOn.length }} servers</span>
+                  &nbsp;
+                  <span class="tags is-inline is-pulled-right" v-if="!vpk.collection">
+                    <span class="tag is-info" v-for="server in vpk.enabledOn" :key="server">
+                      {{ server }}
+                    </span>
+                  </span>
+                  <!-- <span class="tag" v-if="!vpk.collection" data-tooltip="Number of servers the addon is installed on">{{ vpk.enabledOn.length }} servers</span> -->
                 </td>
                 <td v-if="hasAnyWorkshop">
                   <template v-if="vpk.workshop">
@@ -118,7 +125,11 @@
                       <b>{{child.workshop.title}}</b>
                     </a>
                     <a @click="preview(child)" v-else class="ml-5" :data-tooltip="getTooltip(child)">{{child.filename}}</a>
-                    &nbsp;<span class="tag" data-tooltip="Number of servers the addon is installed on">{{ child.enabledOn.length }} servers</span>
+                    <span class="tags is-inline is-pulled-right" v-if="!child.collection">
+                      <span class="tag is-info" v-for="server in child.enabledOn" :key="server">
+                        {{ server }}
+                      </span>
+                    </span>
                   </td>
                   <td v-if="hasAnyWorkshop">
                     <a v-if="child.workshop" :href="child.workshop.url" class="button is-small" target="_blank">Workshop</a>
