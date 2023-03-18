@@ -6,7 +6,7 @@ export enum ServicePrivilege {
     Manage = 3, // Allows the user to manage (edit, delete) other entries, not created by them
 }
 // The string id of the privilege
-export const ServicePrivilegeKeys = {
+export const ServicePrivilegeKeys: Record<ServicePrivilege, string> = {
     [ServicePrivilege.View]: "view",
     [ServicePrivilege.Edit]: "edit",
     [ServicePrivilege.Delete]: "delete",
@@ -21,6 +21,15 @@ export enum Service {
     Addons = "addons",
     AddonsUpload = "addons.upload",
     PanelAdmin = "panel"
+}
+
+export const ServiceDescriptions: Record<Service, string> = {
+    [Service.Notes]: "Player notes",
+    [Service.Bans]: "Player bans",
+    [Service.Admins]: "Controls editing admins",
+    [Service.Addons]: "Controls viewing and changing addons",
+    [Service.AddonsUpload]: "Controls uploading new addons",
+    [Service.PanelAdmin]: "Controls managing the admin panel"
 }
 
 // The action that is being done, for logging, and what privilege it requires

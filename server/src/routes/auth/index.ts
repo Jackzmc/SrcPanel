@@ -12,7 +12,6 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         return {
             user: req.session.user,
             permissions: req.session.permissions,
-            privileges: req.session.privileges ?? {} // Old sessions
         }
     })
 

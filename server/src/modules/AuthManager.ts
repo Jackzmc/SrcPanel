@@ -257,9 +257,11 @@ export default class AuthManager {
     }
 
     public async fetchAdmins() { 
+        console.info("Fetching admins...")
+        console.time("fetchAdmins")
         const admins: Record<string, AdminData> = {}, groups: Record<string, AdminGroup> = {}
         // TODO: Remove first LEFT JOIN stats_users, see #2
-        const [rows] = await this.connection.execute(`
+        const [rows] = await this.connection.execute<RowDataPacket[]>(`
             SELECT sm_admins.*, sag.group_id as sg_id, sg.name as sg_name, sg.immunity_level as sg_immunity, sg.flags as sg_flags, left4dead2.stats_users.last_alias as name,
             dash.flags as web_flags, dash.role as web_role
             FROM sm_admins
@@ -273,7 +275,7 @@ export default class AuthManager {
         let highestImmunity = 0, flags = ''
 
         // Loops every admin. If an admin is more than one group, there will be multiple rows related to them
-        for(const row of rows as RowDataPacket[]) {
+        for(const row of rows) {
             // Add initial set of flags and immunity
             const key = row.identity.slice(10)
             // Reset merge data on a new user
@@ -289,6 +291,7 @@ export default class AuthManager {
             
             // Add the admin to the admin list
             if(!admins[key]) {
+                const privileges = await this.getPrivileges(row.identity)
                 admins[key] = {
                     id: row.id,
                     authtype: row.authtype,
@@ -298,12 +301,13 @@ export default class AuthManager {
                     permissions: {
                         immunityLevel: highestImmunity,
                         flags,
+                        privileges,
                         base: {
                             immunityLevel: row.immunity,
-                            flags: row.flags
+                            flags: row.flags,
+                            privileges
                         },
                         web: {
-                            privileges: await this.getPrivileges(row.identity),
                             role: row.web_role || 0,
                             flags: row.web_flags || 0
                         }
@@ -325,7 +329,17 @@ export default class AuthManager {
                         privileges: {}
                     }
                 }
-                // TODO: privileges
+
+                const [privRows] = await this.connection.execute<RowDataPacket[]>("SELECT service, privilege FROM sm_group_privileges WHERE group_id = ?", [ groupId])
+                for(const privRow of privRows) {
+                    groups[groupId].privileges[privRow.service] = privRow.privilege
+                    // Set .permissions.privileges to be the highest of base + group
+                    console.log(row.id, privRow.service, privRow.privilege, admins[key].permissions.privileges[privRow.service])
+                    if(!admins[key].permissions.privileges[privRow.service] || privRow.privilege > admins[key].permissions.privileges[privRow.service]) {
+                        admins[key].permissions.privileges[privRow.service] = privRow.privilege
+                    }
+                }
+
                 admins[key].groups.push(groups[groupId])
                 // Merge immunity & flags
                 if(row.sg_immunity > highestImmunity) highestImmunity = row.sg_immunity
@@ -341,6 +355,8 @@ export default class AuthManager {
 
         this.admins = admins
         this.groups = groups
+        console.info(`Fetched ${Object.keys(admins).length} admins and ${Object.keys(groups).length} groups`)
+        console.timeEnd("fetchAdmins")
     }
 
     public getAdmins(fullAdmin: boolean = false) {
@@ -355,6 +371,10 @@ export default class AuthManager {
                     groups: admin.groups
                 }
             }) as ReadableAdminData[]
+    }
+
+    get Groups() {
+        return Object.values(this.groups)
     }
 
 }

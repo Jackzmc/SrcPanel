@@ -74,14 +74,13 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                                     profileurl: details[0].profileurl,
                                     avatarhash: details[0].avatarhash
                                 }
-                                req.session.privileges = await this.authmngr.getPrivileges(steamid64)
                                 req.session.user = steamInfo
+                                req.session.permissions = admin.permissions
 
                                 req.session.ip = req.ip
                                 req.session.countryCode = (await FastGeoip.lookup(req.ip)).country
                                 req.session.loginTime = Date.now()
 
-                                req.session.permissions = admin.permissions
 
                                 if(req.query.return_uri) {
                                     const redirectUri = process.env.STEAM_REDIRECT_URI || "http://localhost:8080"

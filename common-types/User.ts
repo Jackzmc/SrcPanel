@@ -36,7 +36,6 @@ export interface SessionData extends UserData {
 export interface UserData {
     user: SessionUser,
     permissions: AdminPermissions
-    privileges: UserPrivileges
 }
 
 export interface SessionUser {
@@ -104,13 +103,14 @@ export interface APIAdminGroup extends AdminGroup {
 export interface AdminPermissions {
     immunityLevel: number
     flags: string,
-    web: {
-        privileges: Partial<Record<Service, ServicePrivilege>>
+    privileges: UserPrivileges,
+    web: { // TODO: REMOVE ME LEGACY
         role: number,
         flags: number
     },
     base: {
         immunityLevel: number,
-        flags: string
+        flags: string,
+        privileges: UserPrivileges
     }
 }

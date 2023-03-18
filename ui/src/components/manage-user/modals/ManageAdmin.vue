@@ -54,7 +54,21 @@
     </div>
   </div>
   <Tabs inner-wrapper-class="tabs" :options="{useUrlFragment:false}">
-      <Tab name="Groups">
+    <Tab name="Overview">
+      <div class="columns">
+        <div class="column">
+          <h6 class="title is-6">Game Flags</h6>
+          <FlagList :userdata="userdata" :flags="userAdminData.permissions.flags" only-active />
+        </div>
+        <div class="column">
+          <h6 class="title is-6">Web Privileges</h6>
+          <div v-for="(priv, service) in userAdminData.permissions.privileges" :key="service">
+            <b>{{ service }}</b>:&nbsp;<span v-if="priv != undefined">{{ PrivilegeNames[priv] }}</span><em v-else>(no privileges)</em>
+          </div>
+        </div>
+      </div>
+    </Tab>
+    <Tab name="Groups">
       <div class="has-text-centered" v-if="loading.groups">
         <p>Fetching admin groups...</p>
         <img src="@/assets/loader.gif" style="height:128px" />
@@ -82,12 +96,12 @@
                   type="checkbox"
                   :value="group.id"
                   class="is-checkradio is-medium is-info"
-                  disabled
+                  :disabled="!canEdit"
                   v-model="selectedgroupIds"
                 >
                 <label :for="'group.'+group.id.toString()"></label>
               </td>
-              <td>{{group.name}}</td>
+              <td :data-tooltip="'Group #' + group.id">{{group.name}}</td>
               <td>{{group.flags}}</td>
               <td>{{group.immunity}}</td>
             </tr>
@@ -102,7 +116,7 @@
                 <div class="box">
                   <h6 class="title is-6">Web Privileges</h6>
                   <div v-for="(priv, service) in expandedGroup.privileges" :key="service">
-                    <b>{{ service }}</b>:&nbsp;<span v-if="priv">{{ PrivilegeNames[priv] }}</span><em v-else>(no privileges)</em>
+                    <b>{{ service }}</b>:&nbsp;<span v-if="priv != undefined">{{ PrivilegeNames[priv] }}</span><em v-else>(no privileges)</em>
                   </div>
                 </div>
               </td>
@@ -111,7 +125,7 @@
         </tbody>
       </table>
     </Tab>
-    <Tab name="Override Permissions">
+    <Tab name="Base Permissions">
       <div class="field">
         <label class="label">Base Immunity</label>
         <div class="control">
@@ -124,7 +138,37 @@
           />
         </div>
         <p class="help has-text-danger" v-if="form.immunity >= privUser.immunityLevel">The maximum immunity level you can apply is {{userdata.permissions.immunityLevel - 1}}, which is below yours ({{userdata.permissions.immunityLevel}})</p>
+        <p class="help has-text-info" v-else>The higher value between the immunity of every group and this value is chosen as user's immunity</p>
       </div>
+      <label class="label">Web Privileges</label>
+      <p class="subtitle is-6">These control what services the user can use on this admin panel. The highest value between these values and whatever group privileges are given is chosen.</p>
+      <div class="field is-horizontal" v-for="(priv, service) in privileges" :key="service">
+        <div class="field-label">
+          <label class="label has-tooltip-right has-tooltip-info" :data-tooltip="ServiceDescriptions[service]">{{ service }}</label>
+        </div>
+        <div class="field-body">
+          <div class="field is-narrow">
+            <div class="control">
+              <label class="radio" :for="service + '.none'">
+                <input :disabled="!canEdit" type="radio" v-model="form.privileges[service]" :value="null" :id="service + '.none'"/>
+                None
+              </label>
+              <label class="radio has-tooltip-danger" :for="service + '.' + priv" v-for="priv in ServiceSupportedActions[service]" :key="priv" :data-tooltip="canApplyPrivilege(service, priv) ? null : 'You do not have this privilege'"  >
+                <input 
+                  :disabled="!canApplyPrivilege(service, priv)" 
+                  type="radio"
+                  v-model="form.privileges[service]" 
+                  :value="priv" 
+                  :id="service + '.' + priv" 
+                  
+                />
+                {{ ServicePrivilegeKeys[priv] }}
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+      <br>
       <h6 class="title is-6">Base Flags</h6>
       <p class="subtitle is-6">Only flags you have access to can be added</p>
       <div class="field">
@@ -149,42 +193,6 @@
           :disabled="!canEdit || !hasRoot && privUser.flags.indexOf(flag) === -1"
         >
         <label :for="flag">{{name}}  <span class="tag">{{flag}}</span></label>
-      </div>
-    </Tab>
-    <Tab name="Web">
-      <h6 class="title is-6">Web Privileges</h6>
-      <div class="field is-horizontal" v-for="(priv, service) in privileges" :key="service">
-        <div class="field-label">
-          <label class="label">{{ service }}</label>
-        </div>
-        <div class="field-body">
-          <div class="field is-narrow">
-            <div class="control">
-              <label class="radio" :for="service + '.none'">
-                <input :disabled="!canEdit" type="radio" v-model="form.privileges[service]" :value="null" :id="service + '.none'"/>
-                None
-              </label>
-              <label class="radio" :for="service + '.' + priv" v-for="priv in ServiceSupportedActions[service]" :key="priv">
-                <input :disabled="!canEdit" type="radio"  v-model="form.privileges[service]" :value="priv" :id="service + '.' + priv" />
-                {{ ServicePrivilegeKeys[priv] }}
-              </label>
-            </div>
-          </div>
-        </div>
-      </div>
-      <br>
-      <h6 class="title is-6">Web Permissions <span class="tag" data-tooltip="Will be replaced with a new permission system">Legacy</span> </h6>
-      <p class="subtitle is-6">Only permissions you have access to can be added</p>
-      <div class="field" v-for="(name, flag) in WEB_FLAGS" :key="flag">
-        <input
-          :id="'flag.' + flag"
-          type="checkbox"
-          :value="flag"
-          class="is-checkradio has-tooltip-right"
-          v-model="form.webFlags"
-          :disabled="!canEdit || !hasRoot && !privUser.hasWebPerm(flag)"
-        >
-        <label :for="'flag.' + flag">{{name}}</label>
       </div>
     </Tab>
     <Tab name="Danger" v-if="userAdminData">
@@ -233,7 +241,7 @@ import { User, PrivilegedUser, PlayerData } from '@/js/User'
 import { useRouter, useRoute } from 'vue-router'
 import SteamID from 'steamid'
 import { UserData, FLAGS, WEB_FLAGS, AdminData, AdminGroup } from '../../../../../common-types/User';
-import { Action, Service, UserPrivileges, ServicePrivilege, ServiceSupportedActions, ServicePrivilegeKeys } from '../../../../../common-types/Privileges';
+import { Action, Service, UserPrivileges, ServicePrivilege, ServiceSupportedActions, ServicePrivilegeKeys, ServiceDescriptions } from '../../../../../common-types/Privileges';
 import FlagList from '@/components/FlagList.vue'
 import { convertBitsArrayToInt, convertIntToBitsArray, } from '@/js/User';
 // @ts-ignore
@@ -256,7 +264,7 @@ const props = defineProps<{
 const privileges = computed(() => {
   let privs: Partial<Record<Service, number|null>> = {}
   for(const service of Object.values(Service)) {
-    const priv = props.userAdminData?.permissions.web.privileges[service]
+    const priv = props.userAdminData?.permissions.privileges[service]
     privs[service] = priv ?? null
   }
   return privs as Record<Service, number | null>
@@ -290,6 +298,10 @@ function reset() {
   //   webFlags: [],
   //   privileges: { ... privileges.value}
   // }
+}
+function canApplyPrivilege(service: Service, privilege: ServicePrivilege) {
+  if(!canEdit.value) return false
+  return props.privUser.hasPrivilege(service, privilege)
 }
 let stats = ref<Record<string, string|number>|null>()
 let fetchError = ref("")
@@ -391,7 +403,7 @@ async function save() {
     loading.value.save = true;
     let privileges: Record<string, number> = {}
     for(const [service, priv] of Object.entries(form.value.privileges)) {
-      if(!props.userAdminData || priv != props.userAdminData.permissions.web.privileges[service as Service]) {
+      if(!props.userAdminData || priv != props.userAdminData.permissions.privileges[service as Service]) {
         privileges[service] = Number(priv)
       }
     }

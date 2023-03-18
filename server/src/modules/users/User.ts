@@ -22,12 +22,9 @@ export default class User {
         return this.adminData != null
     }
 
+    // Make a copy
     get privileges() {
-        return { ... this.userdata.privileges }
-    }
-
-    private get privs() {
-        return this.userdata.privileges
+        return { ... this.userdata.permissions.privileges }
     }
 
     get immunity() {
@@ -56,11 +53,11 @@ export default class User {
 
     async grantPrivilege(service: Service, privilege: ServicePrivilege) {
         await this.authmngr.setPrivileges(this.steamid64, { [service]: privilege })
-        this.privs[service] = privilege
+        this.userdata.permissions.privileges[service] = privilege
     }
 
     hasPrivilege(service: Service, type: ServicePrivilege) : boolean {
-        return this.privs[service] === type
+        return this.userdata.permissions.privileges[service] === type
     }
 
     canPerformAction(service: Service, action: Action) : boolean {
@@ -68,7 +65,7 @@ export default class User {
     }
 
     getPrivilege(service: Service) {
-        return this.privs[service]
+        return this.userdata.permissions.privileges[service]
     }
 
     async logAction(service: Service, action: Action, message?: string) {

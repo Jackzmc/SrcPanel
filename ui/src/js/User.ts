@@ -119,7 +119,7 @@ export class PrivilegedUser {
   }
 
   get privileges(): UserPrivileges {
-    return this.data.privileges ?? {}
+    return this.permissions.privileges ?? {}
   }
 
   get name() {

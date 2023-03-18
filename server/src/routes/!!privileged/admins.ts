@@ -66,34 +66,24 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     })
 
     fastify.get('/groups', async(req, reply) => {
-        const [rows] = await fastify.db.execute<RowDataPacket[]>(
-            `SELECT * FROM ${ADMINS_DB}.sm_groups LEFT JOIN ${ADMINS_DB}.sm_group_privileges as gp ON gp.group_id = sm_groups.id WHERE immunity_level < ?`,
-            [req.session.permissions.immunityLevel]
-        )
-        const hasRoot = req.user.hasRoot
-        const groups: Record<number, APIAdminGroup> = {}
-        for(const row of rows) {
-            let canApply = hasRoot
-            if(!hasRoot) {
-                const flags: string[] = row.flags.split()
-                // test if every flag in flags is in my flags
-                canApply = flags.every((flag: string) => req.user.flags.includes(flag))
-            }
+        const hasRoot = req.user.hasRoot;
+        const groups = fastify.authmngr.Groups
+            .map(group => {
+                let canApply = group.immunity < req.user.immunity && hasRoot
+                if(!hasRoot) {
+                    const flags: string[] = group.flags.split('')
+                    // test if every flag in flags is in my flags
+                    canApply = flags.every((flag: string) => req.user.flags.includes(flag))
+                }
 
-            if(!groups[row.id]) groups[row.id] = {
-                id: row.id,
-                flags: row.flags,
-                name: row.name,
-                immunity: row.immunity_level,
-                privileges: {},
-                canApply
-            }
-            if(row.service) {
-                groups[row.id].privileges[row.service] = row.privilege
-            }
-        }
+                return {
+                    ...group,
+                    canApply
+                }
+            })
+            .sort(group => group.id)
         return {
-            groups: Object.values(groups).sort(group => group.id)
+            groups
         }
     })
 
