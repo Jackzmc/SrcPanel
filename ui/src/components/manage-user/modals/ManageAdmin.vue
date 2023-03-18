@@ -221,7 +221,7 @@ import { ref, onMounted, computed } from 'vue'
 import { User, PrivilegedUser, PlayerData } from '@/js/User'
 import { useRouter, useRoute } from 'vue-router'
 import SteamID from 'steamid'
-import { SessionData, FLAGS, WEB_FLAGS, AdminData, AdminGroup } from '../../../../../common-types/User';
+import { UserData, FLAGS, WEB_FLAGS, AdminData, AdminGroup } from '../../../../../common-types/User';
 import { Action, Service, UserPrivileges, ServicePrivilege, ServiceSupportedActions, ServicePrivilegeKeys } from '../../../../../common-types/Privileges';
 import FlagList from '@/components/FlagList.vue'
 import { convertBitsArrayToInt, convertIntToBitsArray, } from '@/js/User';
@@ -238,7 +238,7 @@ const route = useRoute()
 const props = defineProps<{
   userAdminData: AdminData,
   user: PlayerData,
-  userdata: SessionData,
+  userdata: UserData,
   privUser: PrivilegedUser
 }>()
 

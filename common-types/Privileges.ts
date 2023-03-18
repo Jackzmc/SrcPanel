@@ -19,7 +19,8 @@ export enum Service {
     Bans = "bans",
     Admins = "admins",
     Addons = "addons",
-    AddonsUpload = "addons.upload"
+    AddonsUpload = "addons.upload",
+    PanelAdmin = "panel"
 }
 
 // The action that is being done, for logging, and what privilege it requires
@@ -42,7 +43,8 @@ export const ServiceSupportedActions: Record<Service, ServicePrivilege[]> = {
     [Service.Bans]: [ ServicePrivilege.View, ServicePrivilege.Edit, ServicePrivilege.Delete, ServicePrivilege.Manage],
     [Service.Admins]: [ ServicePrivilege.View, ServicePrivilege.Manage ],
     [Service.Addons]: [ ServicePrivilege.View, ServicePrivilege.Edit, ServicePrivilege.Delete ],
-    [Service.AddonsUpload]: [ ServicePrivilege.Edit ]
+    [Service.AddonsUpload]: [ ServicePrivilege.Edit ],
+    [Service.PanelAdmin]: [ ServicePrivilege.View, ServicePrivilege.Edit ]
 } 
 
 export interface SteamInfo {

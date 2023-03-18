@@ -13,11 +13,11 @@
 <script setup lang="ts">
 import { ref, onBeforeMount, watch } from 'vue'
 import { useRouter } from 'vue-router';
-import { SessionData } from '../../../common-types/User.js';
+import { UserData } from '../../../common-types/User.js';
 
 const router = useRouter()
 const props = defineProps<{
-  userdata: SessionData
+  userdata: UserData
 }>()
 
 

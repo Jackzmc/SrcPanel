@@ -1,7 +1,7 @@
 <template>
   <div id="app">
     <Notifications position="top center" :duration=7000 />
-    <NavBar v-if="!$route.meta.hideNav" :userdata="userdata" @logout="onLogout" :update-info="updateInfo" />
+    <NavBar v-if="!$route.meta.hideNav" :userdata="userdata" @logout="onLogout" :update-info="updateInfo" :priv-user="privUser" />
     <br>
     <br v-if="$route.meta.hideHero">
 
@@ -17,7 +17,7 @@
     </section>
 
     <br>
-    <router-view :userdata="userdata"></router-view>
+    <router-view :userdata="userdata" :priv-user="privUser"></router-view>
 
     <footer class="footer">
       <div class="content has-text-centered">
@@ -38,8 +38,9 @@
 import { onBeforeMount, ref, computed } from 'vue'
 import NavBar from '@/components/NavBar.vue'
 import { useRoute, useRouter } from 'vue-router';
-import { UserData } from '@/js/User.js'
+import { PrivilegedUser} from '@/js/User'
 import { notify } from '@kyvg/vue3-notification';
+import { UserData } from '../../common-types/User';
 
 
 
@@ -56,7 +57,8 @@ let updateInfo = ref<{
   updating: boolean
 }>({updating: false})
 
-let userdata = ref<UserData|null>()
+let userdata = ref<UserData>()
+let privUser = ref()
 
 function reloadPage() {
   if (!updateInfo.value.registration || !updateInfo.value.registration.waiting) return
@@ -71,6 +73,8 @@ async function getAuth() {
   const userData = window.sessionStorage.getItem('srcds_userdata')
   if(userData) {
     userdata.value = JSON.parse(userData)
+    if(userdata.value)
+      privUser.value = new PrivilegedUser(userdata.value)
   }
 
   const response = await fetch(`/api/auth/profile`, {
@@ -83,6 +87,7 @@ async function getAuth() {
       permissions: json.permissions,
       privileges: json.privileges
     }
+    privUser.value = new PrivilegedUser(userdata.value)
     window.sessionStorage.setItem('srcds_userdata', JSON.stringify(userdata.value))
     console.log('Authorized: Hello', json.user.name)
   } else if(response.status == 401) {

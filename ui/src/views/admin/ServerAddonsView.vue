@@ -169,11 +169,7 @@
 
 <script setup lang="ts">
 import { ref, watch, computed, onBeforeMount, onMounted } from 'vue'
-import DownloadAddonModal from '@/components/modals/DownloadAddonModal.vue'
-import AddonInfoModal from '@/components/modals/AddonInfoModal.vue'
 import { useRoute, useRouter } from 'vue-router'
-import { WorkshopItem } from '../../../../server/src/modules/steam';
-import { AddonInfo } from '../../../../server/src/modules/Share';
 
 const SORT_NAME = (a: any, b: any) => {
   return (a.workshop?.title ?? a.filename).localeCompare(b.workshop?.title ?? b.filename)

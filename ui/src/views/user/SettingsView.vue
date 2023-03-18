@@ -17,7 +17,6 @@
             <div>
               <p class="heading">
               Immunity Level
-              <span class="tag" data-tooltip="This is a legacy permission system and will be removed soon">Legacy</span>
               </p>
               <p class="title">{{ privUser.immunityLevel }}</p>
             </div>
@@ -34,49 +33,13 @@
               </ul>
             </div>
           </div>
-          <div class="column">
-            <div>
-              <p class="is-6"><b>Privileges: </b></p>
-              <table class="table">
-                <thead>
-                  <tr>
-                    <th>Service</th>
-                    <th>Privilege</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr v-for="(priv, service) in privUser.privileges" :key="service">
-                    <td>{{ service }}</td>
-                    <td>{{ formatPrivilege(priv!) }}</td>
-                  </tr>
-                </tbody>
-              </table>
-              <p v-if="Object.keys(privUser.privileges).length === 0" class="my-5">
-                <em>You have no privileges :(</em>
-              </p>
-            </div>
-          </div>
         </div>
-      </div>
-      <div class="column" v-if="privUser.hasWebPerm(WebPermission.FullPermission)">
-        <h4 class="title is-4">Admin Panel Control</h4>
-        <p>{{ serverHealth.currentState }}</p>
-        <p>{{ uptime }} uptime</p>
-        <p>Node.JS Version {{serverHealth?.versions?.node}}</p>
-        <br>
-        <a
-          :disabled="canUpdate"
-          :class="['button', {'is-loading': updateStatus.state === 'CHECKING'}]"
-          @click="updateServer"
-        >Update Server</a>
-        <p class="has-text-danger" v-if="updateStatus.error">{{updateStatus.error}}</p>
-        <p class="has-text-info" v-else-if="updateStatus.upToDate">Server is already up to date.</p>
-        <p class="has-text-success" v-else-if="updateStatus.state === 'SUCCESS'">Server has been updated successfully.</p>
       </div>
     </div>
   </div>
   <div class="mb-6" >
     <h4 class="title is-4">Preferences</h4>
+    <em class=" my-6">There's nothing here.</em>
   </div>
   <div>
     <h4 class="title is-4">Active Sessions</h4>
@@ -110,7 +73,7 @@
 
 <script setup lang="ts">
 import { PrivilegedUser } from '@/js/User';
-import { SessionData, WebPermission, WEB_FLAGS } from '../../../../common-types/User';
+import { SessionData, UserData, WebPermission, WEB_FLAGS } from '../../../../common-types/User';
 import { onBeforeMount } from 'vue';
 import { computed, ref } from 'vue';
 import { HealthReport, UpdateState } from '../../../../server/src/routes/!!privileged/admin';
@@ -119,44 +82,23 @@ import { request } from '@/js/util';
 import { notify } from '@kyvg/vue3-notification';
 
 const emit = defineEmits(['close'])
-const POLL_SERVER_HEALTH_INTERVAL = 1000 * 60 * 0.5
 
-interface SessionQuery extends SessionData {
+interface SessionQuery extends UserData {
   id: string,
+  countryCode: string,
+  ip: string,
   lastLogin: number,
   privileges: UserPrivileges
 }
 
 const intl = new Intl.DisplayNames(['en'], {type: 'region'})
 const props = defineProps<{
-  userdata: SessionData
+  userdata: UserData
 }>()
 const privUser = new PrivilegedUser(props.userdata)
 
-let serverHealth = ref<Partial<HealthReport>>({})
 let sessions = ref<SessionQuery[]>([])
 let currentSessionId = ref<string>()
-let updateStatus = ref<{
-  state: UpdateState | "CHECKING" | "SUCCESS",
-  error?: string,
-  upToDate?: boolean
-}>({
-  state: "NORMAL",
-})
-
-const canUpdate = computed(() => {
-  return updateStatus.value.state !== "NORMAL" || undefined
-})
-const uptime = computed(() => {
-  const minutes = (serverHealth.value.uptime ?? 0) / 60
-  if(minutes < 1.0) return "< 1 minute"
-  else if(minutes > 60.0) {
-    const hours = minutes / 60
-    if(hours > 24) return `${Math.round(hours / 24)} days`
-    else return `${hours.toFixed(1)} hours`
-  }
-  else return `${minutes.toFixed(1)} minutes`
-})
 
 const webPerms = computed(() => {
   if(!privUser) return ''
@@ -180,33 +122,6 @@ const webRole = computed(() => {
   }
 })
 
-async function updateServer() {
-  updateStatus.value = {
-    state: "CHECKING"
-  }
-  const response = await request('/api/admin/update')
-  if(response?.ok) {
-    const json = await response.json()
-    updateStatus.value.state = "SUCCESS"
-    if(!json.success) {
-      updateStatus.value.upToDate = true
-    }
-    notify({
-      type: "success",
-      text: "Update was successful",
-      duration: -1
-    })
-  } else {
-    const json = await response?.json()
-    updateStatus.value.error = json?.message
-  }
-  setTimeout(() => {
-    updateStatus.value = {
-      state: "NORMAL"
-    }
-  }, 1000 * 7)
-}
-
 async function fetchSessions() {
   const response = await request('/api/auth/sessions')
   if(response?.ok) {
@@ -221,9 +136,6 @@ async function revokeSession(id: string, i: number) {
     sessions.value.splice(i, 1)
   }
 }
-function formatPrivilege(privilege: ServicePrivilege) {
-  return ServicePrivilegeKeys[privilege] ?? "Invalid"
-}
 function formatTime(s: number) {
   const d = new Date(s)
   return d.toLocaleString()
@@ -232,18 +144,9 @@ function formatCountry(code: string) {
   return intl.of(code)
 }
 
-async function fetchServerHealth() {
-  const response = await fetch('/api/admin/health')
-  if(response.ok) {
-    serverHealth.value = await response.json()
-  }
-}
+
 
 onBeforeMount(() => {
   fetchSessions()
-  if(privUser.hasWebPerm(WebPermission.FullPermission)) {
-    fetchServerHealth()
-    setInterval(fetchServerHealth, POLL_SERVER_HEALTH_INTERVAL)
-  }
 })
 </script>

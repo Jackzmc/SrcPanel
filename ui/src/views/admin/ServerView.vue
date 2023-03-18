@@ -152,7 +152,7 @@
 import { useRoute, useRouter } from 'vue-router'
 import { onBeforeMount, ref, computed } from 'vue'
 import FolderBrower from'@/components/FolderBrowser.vue'
-import { SessionData, WebPermission } from '../../../../common-types/User';
+import { UserData, WebPermission } from '../../../../common-types/User';
 import { PrivilegedUser } from '@/js/User';
 import { parseLog, getRelDate, request } from '@/js/util';
 import LogMessage from "@/components/LogMessage.vue";
@@ -217,7 +217,7 @@ const REFRESH_INTERVAL = 1000 * 60
 
 const { notify } = useNotification();
 const props = defineProps<{
-  userdata: SessionData
+  userdata: UserData
 }>()
 const privUser = new PrivilegedUser(props.userdata)
 

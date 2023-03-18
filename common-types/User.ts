@@ -28,12 +28,14 @@ export const WEB_FLAGS: Record<WebPermission, string> = {
     [WebPermission.ConfigRawView]: 'Can view unfiltered config files'
 }
 
-export interface SessionData {
-    user: SessionUser,
-    permissions: AdminPermissions
+export interface SessionData extends UserData {
     ip: string,
     loginTime: number,
     countryCode: string
+}
+export interface UserData {
+    user: SessionUser,
+    permissions: AdminPermissions
     privileges: UserPrivileges
 }
 

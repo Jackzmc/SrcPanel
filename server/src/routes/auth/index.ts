@@ -1,8 +1,6 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyReply, FastifyRequest } from 'fastify';
-import SteamID from 'steamid'
-import fetch from 'node-fetch'
-import FastGeoip from 'fast-geoip'
-import { OkPacket, RowDataPacket } from 'mysql2';
+import { RowDataPacket } from 'mysql2';
+import { UserData } from '../../../../common-types/User';
 
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
@@ -10,7 +8,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         await fastify.authmngr.verify(req, reply)
     })
     
-    fastify.get('/profile', async(req, reply) => {
+    fastify.get('/profile', async(req, reply): Promise<UserData> => {
         return {
             user: req.session.user,
             permissions: req.session.permissions,

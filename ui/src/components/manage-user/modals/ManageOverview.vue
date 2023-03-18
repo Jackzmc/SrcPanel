@@ -88,7 +88,7 @@
 import { ref, onMounted, computed, watch, onBeforeMount } from 'vue';
 import { User, PrivilegedUser, PlayerData } from '@/js/User'
 import { useRouter, useRoute } from 'vue-router'
-import { SessionData, WebPermission, WebRole, AdminData } from '../../../../../common-types/User';
+import { UserData, WebPermission, WebRole, AdminData } from '../../../../../common-types/User';
 import { notify } from '@kyvg/vue3-notification';
 import SteamID from 'steamid';
 import { formatDate, getRelDate } from '@/js/util';
@@ -96,7 +96,7 @@ import { formatDate, getRelDate } from '@/js/util';
 const router = useRouter()
 const route = useRoute()
 const props = defineProps<{
-  userdata: SessionData,
+  userdata: UserData,
   userAdminData: AdminData,
   user: PlayerData
 }>()

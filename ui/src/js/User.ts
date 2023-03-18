@@ -1,5 +1,5 @@
 import { AdminData, SessionUser, WebPermission, WebRole, AdminPermissions } from '../../../common-types/User';
-import type  { SessionData } from '../../../common-types/User';
+import type  { UserData } from '../../../common-types/User';
 import { UserPrivileges, ActionRequiredPrivilege, ServicePrivilege, Service, Action, ServiceSupportedActions, ServicePrivilegeKeys } from '../../../common-types/Privileges';
 
 export interface PlayerData {
@@ -17,11 +17,6 @@ export interface PlayerResponse {
   adminData?: AdminData
 }
 
-export interface UserData {
-  user: SessionUser,
-  permissions: AdminPermissions,
-  privileges?: UserPrivileges
-}
 
 export function convertBitsArrayToInt(bits: number[]) {
   return bits.reduce((pv, cv) => pv + Number(cv), 0)

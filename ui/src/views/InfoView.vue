@@ -77,7 +77,7 @@
 import { ref, onBeforeMount, onMounted, computed } from 'vue'
 import ActionNote from '@/components/ActionNote.vue'
 import Pagination from '@/components/Pagination.vue'
-import { SessionData } from '../../../common-types/User.js';
+import { UserData } from '../../../common-types/User.js';
 import data from '@/assets/data.json'
 import Sentiment from 'sentiment'
 const sentiment = new Sentiment();
@@ -86,7 +86,7 @@ const analyzeOptions = {
 };
 
 const props = defineProps<{
-  userdata: SessionData
+  userdata: UserData
 }>()
 
 let page = ref(1)

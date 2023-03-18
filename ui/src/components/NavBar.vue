@@ -1,5 +1,6 @@
 <template>
 <div>
+  <UserSettingsModal v-if="showSettings&&userdata&&privUser" :userdata="userdata" :priv-user="privUser" @close="showSettings = false" />
   <nav class="navbar is-info is-fixed-top" role="navigation" aria-label="main navigation">
     <div class="navbar-brand">
       <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" data-target="navMenu">
@@ -95,8 +96,11 @@
             <router-link class="navbar-item" :to="{ name: 'manage-user', params: { id: userdata.user.steamid }, query: { returnTo: $route.fullPath }}">
               Profile
             </router-link>
-            <router-link class="navbar-item" to="/user/settings">
-              Settings
+            <a class="navbar-item" @click="showSettings = !showSettings">
+              User Settings
+            </a>
+            <router-link class="navbar-item" to="/panel/dashboard" v-if="privUser?.canPerformAction(Service.PanelAdmin, Action.View)">
+              Panel Administration
             </router-link>
             <hr class="navbar-divider">
             <a class="navbar-item has-text-danger" @click="logout">
@@ -114,11 +118,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import LoginButton from '@/components/LoginButton.vue'
 import { useRoute, useRouter } from 'vue-router';
-import { json } from 'stream/consumers';
 import { notify } from '@kyvg/vue3-notification';
+import { PrivilegedUser } from '@/js/User';
+import { UserData } from '../../../common-types/User';
+import { Service, Action } from '../../../common-types/Privileges';
+import UserSettingsModal from './modals/UserSettingsModal.vue';
 // Bulma nav code
 document.addEventListener('DOMContentLoaded', () => {
   const $navbarBurgers = Array.prototype.slice.call(document.querySelectorAll('.navbar-burger'), 0);
@@ -140,10 +147,13 @@ const emit = defineEmits(['logout'])
 
 const LAST_UPDATED = new Date(Number(process.env.VUE_APP_BUILD_DATE))
 
-const props = defineProps([
-  'userdata',
-  'updateInfo'
-])
+const props = defineProps<{
+  userdata?: UserData,
+  privUser?: PrivilegedUser,
+  updateInfo: any
+}>()
+
+let showSettings = ref(false)
 
 const avatarUrl = computed(() => {
   if(!props.userdata) return ''

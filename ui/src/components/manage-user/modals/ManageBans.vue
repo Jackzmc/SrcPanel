@@ -196,7 +196,7 @@
 import { ref, onMounted, computed, watch } from 'vue'
 import { User, PrivilegedUser, PlayerData } from '@/js/User'
 import { useRouter, useRoute } from 'vue-router'
-import { SessionData, WebPermission, WebRole, AdminData } from '../../../../../common-types/User';
+import { UserData, WebPermission, WebRole, AdminData } from '../../../../../common-types/User';
 import { notify } from '@kyvg/vue3-notification';
 // TOOD: fix
 import { FullAPIBan, FullAPIBanPlayer, APIBanFlags, BanAppeal, BanAppealState } from '../../../../../common-types/Ban';
@@ -206,7 +206,7 @@ import { Service, Action } from '../../../../../common-types/Privileges';
 const router = useRouter()
 const route = useRoute()
 const props = defineProps<{
-  userdata: SessionData,
+  userdata: UserData,
   userAdminData: AdminData,
   user: PlayerData,
   privUser: PrivilegedUser,
