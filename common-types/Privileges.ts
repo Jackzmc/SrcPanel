@@ -23,6 +23,19 @@ export enum Service {
     PanelAdmin = "panel"
 }
 
+const Services = {
+    notes: {
+        name: "Notes",
+        description: "Player notes",
+        privileges: ServicePrivilege.View | ServicePrivilege.Edit | ServicePrivilege.Manage
+    },
+    bans: {
+        name: "Bans",
+        description: "Player bans",
+        privileges: ServicePrivilege.View | ServicePrivilege.Edit | ServicePrivilege.Delete | ServicePrivilege.Manage
+    }
+}
+
 export const ServiceDescriptions: Record<Service, string> = {
     [Service.Notes]: "Player notes",
     [Service.Bans]: "Player bans",
