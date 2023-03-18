@@ -75,6 +75,10 @@ export class PrivilegedUser {
     this.data = session
   }
 
+  equals(id: string) {
+    return this.id.substring(10) === id.substring(10)
+  }
+
   hasWebPerm(webPerm: WebPermission): boolean {
     if(this.data.permissions.web.flags & WebPermission.FullPermission) return true
     return (this.data.permissions.web.flags & webPerm) !== 0

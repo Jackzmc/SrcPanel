@@ -37,7 +37,7 @@
     </div>
     <div class="level-item has-text-centered" v-if="userAdminData">
       <div class="field">
-        <label class="label">Immunity</label>
+        <label class="label" data-tooltip="You can only affect admins under your immunity level">Immunity</label>
         <span>
           {{userAdminData.permissions.immunityLevel || 0}}
         </span>
@@ -54,12 +54,12 @@
     </div>
   </div>
   <Tabs inner-wrapper-class="tabs" :options="{useUrlFragment:false}">
-      <Tab name="Admin Groups">
+      <Tab name="Groups">
       <div class="has-text-centered" v-if="loading.groups">
         <p>Fetching admin groups...</p>
         <img src="@/assets/loader.gif" style="height:128px" />
       </div>
-      <table class="table" v-else>
+      <table class="table is-fullwidth" v-else>
         <thead>
           <tr>
             <th style="width:8em"></th>
@@ -72,7 +72,7 @@
           <template v-for="group in groups" :key="group.id">
             <tr>
               <td>
-                <a @click="expandGroup(group.id)" class="button is-small" data-tooltip="View group flags">
+                <a @click="expandGroup(group.id)" class="button is-small has-tooltip-right" data-tooltip="View group flags & privileges">
                   <template v-if="expandedGroup?.id == group.id">⮟</template>
                   <template v-else>⮞</template>
                 </a>
@@ -82,7 +82,7 @@
                   type="checkbox"
                   :value="group.id"
                   class="is-checkradio is-medium is-info"
-                  :disabled="!canEdit"
+                  disabled
                   v-model="selectedgroupIds"
                 >
                 <label :for="'group.'+group.id.toString()"></label>
@@ -91,9 +91,20 @@
               <td>{{group.flags}}</td>
               <td>{{group.immunity}}</td>
             </tr>
-            <tr v-if="expandedGroup?.id == group.id" style="width:100%">
-              <td colspan="4">
-                <FlagList :userdata="userdata" :flags="group.flags" only-active />
+            <tr v-if="expandedGroup?.id == group.id" style="width:100%" class="has-background-light">
+              <td colspan="2">
+                <div class="box">
+                  <h6 class="title is-6">Game Flags</h6>
+                  <FlagList :userdata="userdata" :flags="group.flags" only-active />
+                </div>
+              </td>
+              <td colspan="2">
+                <div class="box">
+                  <h6 class="title is-6">Web Privileges</h6>
+                  <div v-for="(priv, service) in expandedGroup.privileges" :key="service">
+                    <b>{{ service }}</b>:&nbsp;<span v-if="priv">{{ PrivilegeNames[priv] }}</span><em v-else>(no privileges)</em>
+                  </div>
+                </div>
               </td>
             </tr>
           </template>
@@ -291,9 +302,9 @@ let expandedGroup = ref<AdminGroup>()
 let selectedgroupIds = ref<number[]>([])
 
 const noEditReasons = computed(() => {
+  if(props.privUser.equals(props.user.steamid)) return ["Cannot edit your own profile"] // Disable editing ourself
   const reasons = []
   if(!props.privUser.canPerformAction(Service.Admins, Action.Edit, props.user.steamid)) reasons.push("You lack the privileges to edit privileges")
-  if(props.privUser.id == props.user.steamid) reasons.push("Cannot edit your own profile") // Disable editing ourself
   if(props.userAdminData && form.value.immunity >= props.privUser.immunityLevel) reasons.push("You lack the access to edit this user")
   if(policyFailures.value.length > 0) reasons.push(...policyFailures.value)
   return reasons

@@ -321,9 +321,11 @@ export default class AuthManager {
                         id: groupId,
                         flags: row.sg_flags,
                         name: row.sg_name,
-                        immunity: row.sg_immunity
+                        immunity: row.sg_immunity,
+                        privileges: {}
                     }
                 }
+                // TODO: privileges
                 admins[key].groups.push(groups[groupId])
                 // Merge immunity & flags
                 if(row.sg_immunity > highestImmunity) highestImmunity = row.sg_immunity

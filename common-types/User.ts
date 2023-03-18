@@ -1,4 +1,4 @@
-import { Service, ServicePrivilege, UserPrivileges } from "./Privileges.js"
+import { Action, Service, ServicePrivilege, UserPrivileges } from "./Privileges.js"
 
 export enum WebRole {
     None = 0,
@@ -93,7 +93,12 @@ export interface AdminGroup {
     id: number,
     flags: string,
     name: string,
-    immunity: 0
+    immunity: 0,
+    privileges: Partial<Record<Service, ServicePrivilege>>,
+}
+
+export interface APIAdminGroup extends AdminGroup {
+    canApply: boolean
 }
 
 export interface AdminPermissions {

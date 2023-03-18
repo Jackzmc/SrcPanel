@@ -2,7 +2,7 @@ import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
 import { OkPacket, RowDataPacket } from 'mysql2';
 import { Static, Type } from '@sinclair/typebox'
 import SteamID from 'steamid';
-import { AdminGroup, WebPermission } from '../../../../common-types/User.js';
+import { AdminGroup, APIAdminGroup, WebPermission } from '../../../../common-types/User.js';
 import { AdminData, ReadableAdminData } from '../../../../common-types/User';
 import { APIBanFlags } from '../../../../common-types/Ban.js';
 
@@ -67,26 +67,33 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
     fastify.get('/groups', async(req, reply) => {
         const [rows] = await fastify.db.execute<RowDataPacket[]>(
-            `SELECT * FROM ${ADMINS_DB}.sm_groups WHERE immunity_level < ?`,
+            `SELECT * FROM ${ADMINS_DB}.sm_groups LEFT JOIN ${ADMINS_DB}.sm_group_privileges as gp ON gp.group_id = sm_groups.id WHERE immunity_level < ?`,
             [req.session.permissions.immunityLevel]
         )
-        const hasRoot = req.session.permissions.flags?.includes('z')
+        const hasRoot = req.user.hasRoot
+        const groups: Record<number, APIAdminGroup> = {}
+        for(const row of rows) {
+            let canApply = hasRoot
+            if(!hasRoot) {
+                const flags: string[] = row.flags.split()
+                // test if every flag in flags is in my flags
+                canApply = flags.every((flag: string) => req.user.flags.includes(flag))
+            }
+
+            if(!groups[row.id]) groups[row.id] = {
+                id: row.id,
+                flags: row.flags,
+                name: row.name,
+                immunity: row.immunity_level,
+                privileges: {},
+                canApply
+            }
+            if(row.service) {
+                groups[row.id].privileges[row.service] = row.privilege
+            }
+        }
         return {
-            groups: rows
-                .filter(row => {
-                    if(hasRoot) return true
-                    const flags: string[] = row.flags.split()
-                    // test if every flag in flags is in my flags
-                    return flags.every((flag: string) => req.session.permissions.flags?.includes(flag))
-                })
-                .map(row => {
-                    return {
-                        id: row.id,
-                        flags: row.flags,
-                        name: row.name,
-                        immunity: row.immunity_level
-                    } as unknown as AdminGroup
-                }) as AdminGroup[]
+            groups: Object.values(groups).sort(group => group.id)
         }
     })
 
