@@ -334,7 +334,6 @@ export default class AuthManager {
                 for(const privRow of privRows) {
                     groups[groupId].privileges[privRow.service] = privRow.privilege
                     // Set .permissions.privileges to be the highest of base + group
-                    console.log(row.id, privRow.service, privRow.privilege, admins[key].permissions.privileges[privRow.service])
                     if(!admins[key].permissions.privileges[privRow.service] || privRow.privilege > admins[key].permissions.privileges[privRow.service]) {
                         admins[key].permissions.privileges[privRow.service] = privRow.privilege
                     }
