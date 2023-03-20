@@ -11,6 +11,7 @@ import { fileURLToPath } from 'url';
 import ServerManager from '../modules/servers/ServerManager.js';
 import SteamAPI from '../modules/steam.js'
 import User from '../modules/users/User.js';
+import ConfigManager from '../modules/ConfigManager.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -42,11 +43,14 @@ async function db(fastify: FastifyInstance) {
 
     const userManager = new UserManager(db, steam)
     const authManager = new AuthManager(admindb, db)
+    const configManager = new ConfigManager()
+        await configManager.Load(DATA_FOLDER)
     fastify.decorate('users', userManager)
     fastify.decorate('authmngr', authManager)
     fastify.decorate('db', db)
     fastify.decorate('steam', steam)
     fastify.decorate('servers', new ServerManager(steam, DATA_FOLDER))
+    fastify.decorate('config', configManager)
     fastify.addHook('preHandler', (req, reply, done) => {
         if(req.session && req.session.user) {
             req.user = new User(authManager, req.session)

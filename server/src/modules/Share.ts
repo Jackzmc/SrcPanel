@@ -59,6 +59,11 @@ interface AddonInstallInfo {
     size: number
 }
 
+export const enum DownloadSourceE {
+    DirectUpload = 1,
+    SteamWorkshop = 2
+}
+
 export const DOWNLOAD_SOURCES = ["steam_workshop", "direct"] as const
 
 export type DownloadSource = typeof DOWNLOAD_SOURCES

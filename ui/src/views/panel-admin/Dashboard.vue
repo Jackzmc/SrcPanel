@@ -17,11 +17,17 @@
             <p class="has-text-info" v-else-if="updateStatus.upToDate">Server is already up to date.</p>
             <p class="has-text-success" v-else-if="updateStatus.state === 'SUCCESS'">Server has been updated successfully.</p>
         </div>
+        <div class="column is-2">
+          <Field label="Discord Invite Code">
+            <input type="text" class="input">
+          </Field>
+        </div>
     </div>
 </div>
 </template>
 
 <script setup lang="ts">
+import Field from "@/components/Field.vue";
 import { PrivilegedUser } from "@/js/User";
 import { request } from "@/js/util";
 import { notify } from "@kyvg/vue3-notification";
