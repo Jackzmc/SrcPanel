@@ -82,11 +82,7 @@ async function getAuth() {
   })
   if(response.ok) {
     const json = await response.json()
-    userdata.value = {
-      user: json.user,
-      permissions: json.permissions,
-      privileges: json.privileges
-    }
+    userdata.value = json as UserData
     privUser.value = new PrivilegedUser(userdata.value)
     window.sessionStorage.setItem('srcds_userdata', JSON.stringify(userdata.value))
     console.log('Authorized: Hello', json.user.name)

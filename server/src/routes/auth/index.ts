@@ -1,6 +1,7 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyReply, FastifyRequest } from 'fastify';
 import { RowDataPacket } from 'mysql2';
 import { UserData } from '../../../../common-types/User';
+import { SESSION_VERSION } from './steam.js';
 
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
@@ -12,6 +13,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         return {
             user: req.session.user,
             permissions: req.session.permissions,
+            isSessionOld: req.session.version !== SESSION_VERSION
         }
     })
 

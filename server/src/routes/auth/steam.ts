@@ -5,7 +5,8 @@ import FastGeoip from 'fast-geoip'
 import User from '../../modules/users/User.js';
 import { SteamInfo } from '../../../../common-types/Privileges.js';
 
-const STEAM_WEB_APIKEY = process.env.STEAM_WEB_APIKEY
+export const SESSION_VERSION = "2.0"
+
 
 interface OpenIDQuery {
     'openid.ns': string,
@@ -80,6 +81,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                                 req.session.ip = req.ip
                                 req.session.countryCode = (await FastGeoip.lookup(req.ip)).country
                                 req.session.loginTime = Date.now()
+                                req.session.version = SESSION_VERSION
 
 
                                 if(req.query.return_uri) {

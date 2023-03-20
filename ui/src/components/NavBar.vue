@@ -103,6 +103,9 @@
               Panel Administration
             </router-link>
             <hr class="navbar-divider">
+            <p class="navbar-item" v-if="userdata.isSessionOld">
+              Session is outdated, please relogin
+            </p>
             <a class="navbar-item has-text-danger" @click="logout">
               Logout
             </a>
