@@ -21,6 +21,25 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             keys: kv
         }
     })
+
+    fastify.get('/shares', async (req, reply) => {
+        const shares = fastify.servers.shares.map(shareId => {
+            const share = fastify.servers.getShare(shareId)
+            return {
+                id: shareId,
+                name: share.name,
+                sourceFolder: share.sourceFolder,
+                destinations: share.destinations,
+                appId: share.appId,
+                validExtensions: share.exts,
+                installSources: share.sources,
+            }
+        })
+        return {
+            shares
+        }
+    })
+
     fastify.post('/kv', async (req, reply) => {
         if(req.headers['content-type']?.toLowerCase() !== "application/json") {
             return reply.status(400).send({
