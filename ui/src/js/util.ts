@@ -142,6 +142,10 @@ export function getRelDate(timestamp: number) {
   return dayDiff == 0 && (
     secondsDiff < 60 && "just now" || secondsDiff < 120 && "1 minute ago" || secondsDiff < 3600 && Math.floor(secondsDiff / 60) + " minutes ago" || secondsDiff < 7200 && "1 hour ago" || secondsDiff < 86400 && Math.floor(secondsDiff / 3600) + " hours ago") || dayDiff == 1 && "yesterday" || dayDiff < 7 && dayDiff + " days ago" || dayDiff < 31 && Math.ceil(dayDiff / 7) + " weeks ago";
 }
+
+export function convertSnakeToHuman(input: string) {
+  return input.replace(/^_*(.)|_+(.)/g, (s, c, d) => c ? c.toUpperCase() : ' ' + d.toUpperCase())
+}
 const ADMINCHAT_REGEX = /triggered sm_say \(text (.*)\)/;
 export function parseLog(log: any, history: {activators: any[], targets: any[] } = { activators: [], targets: [] }, debug = false) {
   log.timestampRaw = log.timestamp

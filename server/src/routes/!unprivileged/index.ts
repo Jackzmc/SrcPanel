@@ -189,6 +189,13 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             logs,
         }
     })
+    
+    fastify.get('/meta', async(req, reply) => {
+        return {
+            servers: await fastify.config.GetServers(),
+            settings: await fastify.config.GetPublicKeyvalues()
+        }
+    })
 
 }
 

@@ -39,6 +39,7 @@ const app = Fastify({
 
 import { SessionData } from '../../common-types/User.js'
 import User from './modules/users/User.js';
+import ConfigManager from './modules/ConfigManager.js';
 interface CustomSession extends SessionData {
 } 
 
@@ -49,6 +50,7 @@ declare module 'fastify' {
     authmngr: AuthManager,
     servers: ServerManager,
     users: UserManager,
+    config: ConfigManager
   }
   export interface FastifyRequest {
     user?: User
