@@ -54,7 +54,7 @@
     </div>
   </div>
   <Tabs inner-wrapper-class="tabs" :options="{useUrlFragment:false}">
-    <Tab name="Overview">
+    <Tab name="Overview" v-if="userAdminData">
       <div class="columns">
         <div class="column">
           <h6 class="title is-6">Game Flags</h6>
@@ -154,13 +154,13 @@
                 None
               </label>
               <label class="radio has-tooltip-danger" :for="service + '.' + priv" v-for="priv in ServiceSupportedActions[service]" :key="priv" :data-tooltip="canApplyPrivilege(service, priv) ? null : 'You do not have this privilege'"  >
-                <input 
-                  :disabled="!canApplyPrivilege(service, priv)" 
+                <input
+                  :disabled="!canApplyPrivilege(service, priv)"
                   type="radio"
-                  v-model="form.privileges[service]" 
-                  :value="priv" 
-                  :id="service + '.' + priv" 
-                  
+                  v-model="form.privileges[service]"
+                  :value="priv"
+                  :id="service + '.' + priv"
+
                 />
                 {{ ServicePrivilegeKeys[priv] }}
               </label>
@@ -287,9 +287,9 @@ let form = ref<{
 })
 function reset() {
   form.value = {
-    flags: props.userAdminData.permissions.base.flags?.split("") || [],
+    flags: props.userAdminData?.permissions.base.flags?.split("") || [],
     webFlags: convertIntToBitsArray(props.userAdminData.permissions.web.flags || 0),
-    immunity: props.userAdminData.permissions.base.immunityLevel || 0,
+    immunity: props.userAdminData?.permissions.base.immunityLevel || 0,
     privileges: privileges.value
   }
   // form.value = {

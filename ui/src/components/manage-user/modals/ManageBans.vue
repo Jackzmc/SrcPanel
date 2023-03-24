@@ -347,7 +347,7 @@ async function save() {
   if(!ban.value) return
   loading.value = true
   try {
-    const response = await fetch(`/api/bans/${ban.value.id}`, {
+    const response = await fetch(`/api/bans/${isNewBan.value ? props.user.steamid : ban.value.id}`, {
       method: isNewBan.value ? 'POST' : 'PUT',
       headers: {
         'Content-Type': 'application/json',

@@ -75,9 +75,11 @@ import {Tabs, Tab} from 'vue3-tabs-component';
 // Keep track and open gui for each ban
 import Debounce from '@/js/debounce'
 import { request } from '@/js/util';
+import SteamID from 'steamid';
 
 const AUTO_REFRESH_INTERVAL_MINUTES = 2
 const RECENT_LIMIT = 15
+const STEAM_PROFILE_URL_REGEX = new RegExp(/https?:\/\/steamcommunity.com\/profiles\/(\d+)/)
 
 const router = useRouter()
 const route = useRoute()
@@ -119,7 +121,14 @@ function onManualSelected(id: string) {
   search.value.func()
 }
 async function searchUser() {
-  const response = await request(`/api/users/search/${manualInput.value ?? search.value.query}`)
+  let query = manualInput.value ?? search.value.query
+  const profileMatch = query.match(STEAM_PROFILE_URL_REGEX)
+  if(profileMatch && profileMatch.length > 1) {
+    const steam2 = new SteamID(profileMatch[1]).getSteam2RenderedID()
+    query = steam2
+  }
+
+  const response = await request(`/api/users/search/${query}`)
   if(response?.ok) {
     const json = await response.json()
     users.value = json.users
