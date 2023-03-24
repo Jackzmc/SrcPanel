@@ -5,9 +5,11 @@ import { ADMINS_DB } from '../!!privileged/admins.js';
 import SteamID from 'steamid';
 import { BanAppeal, FullAPIBan } from '../../../../common-types/Ban.js';
 import { NAME_INVALID_CHAR_REPLACE } from '../../routes/!unprivileged/bans.js';
+import { SteamUserDetails } from '../../modules/steam';
 
 
 const RECENT_DEFAULT_LIMIT = 25
+const STEAM_ID_REGEX = new RegExp(/STEAM_\d:\d:\d+/)
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
     fastify.get('/recent/:server?', async(req: FastifyRequest<{Params: { server?: string }, Querystring: { limit?: number }}>, reply) => {
@@ -72,11 +74,30 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             LIMIT 10`, 
             { query, fuzzyQuery }
         )
+
+        if(STEAM_ID_REGEX.test(req.params.query) && rows.length === 0) {
+            const steamid = new SteamID(req.params.query)
+            const userInfos = await fastify.steam.getUserDetails([steamid])
+            if(userInfos.length > 0) {
+                const userInfo = userInfos[0]
+                rows.push({
+                    steamid: steamid.getSteam2RenderedID(),
+                    name: userInfo.personaname,
+                    country: null,
+                    lastJoinDate: null,
+                    firstJoinDate: null,
+                    notesCount: 0,
+                    bansCount: 0,
+                    isAdmin: false
+                } as RowDataPacket)
+            }
+        }
+
         return {
             users: rows.map(row => {
                 return {
                     ...row,
-                    country: row.country.length > 0 ? row.country : null 
+                    country: row.country?.length > 0 ? row.country : null 
                 }
             })
         }
@@ -104,15 +125,35 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             WHERE SUBSTRING(steamid,11) = SUBSTRING(?, 11)`, 
             [ req.params.steamid ]
         )
+        
+        if(STEAM_ID_REGEX.test(req.params.steamid) && rows.length === 0) {
+            const steamid = new SteamID(req.params.steamid)
+            const userInfos = await fastify.steam.getUserDetails([steamid])
+            if(userInfos.length > 0) {
+                const userInfo = userInfos[0]
+                rows.push({
+                    steamid: steamid.getSteam2RenderedID(),
+                    name: userInfo.personaname,
+                    country: null,
+                    lastJoinDate: null,
+                    firstJoinDate: null,
+                    notesCount: 0,
+                    bansCount: 0,
+                    isAdmin: false
+                } as RowDataPacket)
+            }
+        }
+
         let adminData = undefined
         if(req.query.include === "admin") {
             adminData = fastify.authmngr.getAdmin(req.params.steamid)
             if(adminData) delete adminData.password
         }
+
         return {
             user: rows.length > 0 ? {
                 ...rows[0],
-                country: rows[0].country.length > 0 ? rows[0].country : null
+                country: rows[0].country?.length > 0 ? rows[0].country : null
             } : null,
             adminData
         }

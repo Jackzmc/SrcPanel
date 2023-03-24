@@ -7,8 +7,8 @@
         <th>Country</th>
         <th>Bans</th>
         <th>Notes</th>
-        <th>Last Joined</th>
         <th>First Joined</th>
+        <th>Last Joined</th>
         <th v-if="!hasManual">Server</th>
       </tr>
     </thead>
@@ -21,15 +21,15 @@
         </router-link>
       </td>
       <td data-tooltip="View user's stats profile"><a :href="'https://stats.jackz.me/user/' + user.steamid">{{user.steamid}}</a></td>
-      <td>{{user.country}}</td>
+      <td><span v-if="user.country">{{user.country}}</span><em v-else>(unknown)</em></td>
       <td>
         <span :class="{'has-text-grey': user.bansCount == 0}">{{user.bansCount}}</span>
       </td>
       <td>
         <span :class="{'has-text-grey': user.notesCount == 0}">{{user.notesCount}}</span>
       </td>
-      <td>{{formatDate(user.lastJoinDate)}}</td>
-      <td>{{formatDate(user.firstJoinDate)}}</td>
+      <td><span v-if="user.firstJoinDate">{{formatDate(user.firstJoinDate)}}</span><em v-else>(user has not joined)</em></td>
+      <td><span v-if="user.lastJoinDate">{{formatDate(user.lastJoinDate)}}</span><em v-else>(user has not joined)</em></td>
       <td v-if="!hasManual">{{user.server}}</td>
     </tr>
     </tbody>

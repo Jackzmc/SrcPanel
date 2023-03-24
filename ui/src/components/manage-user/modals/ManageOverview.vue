@@ -2,8 +2,8 @@
 <section>
   <div class="container has-text-centered" v-if="!info">
     <br>
-    <p>Fetching player statistics... please wait</p>
     <p class="has-text-danger" v-if="statsFailure">{{ statsFailure }}</p>
+    <p v-else>Fetching player statistics... please wait</p>
     <br>
   </div>
   <template v-else>
@@ -120,6 +120,9 @@ async function fetchInfo() {
     const json = await response.json()
     if(response.ok) {
       info.value = json.user
+      if(json.not_found) {
+        statsFailure.value = "No statistics found for user"
+      }
     } else {
       statsFailure.value = json.message ?? json.error
       notify({

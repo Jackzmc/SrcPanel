@@ -5,6 +5,7 @@
       <header class="modal-card-head">
         <p class="modal-card-title" v-if="user">
           <b>{{user.name}}</b> <span class="is-pulled-right">{{user.steamid}}</span></p>
+        <p v-else-if="fetchError" class="modal-card-title has-text-danger">Error</p>
         <p v-else>Loading...</p>
         &nbsp;&nbsp;
       </header>
@@ -91,6 +92,7 @@ function close() {
 }
 
 async function getUser() {
+  fetchError.value = undefined
   try {
     const response = await fetch(`/api/users/${route.params.id}?include=admin`)
     const json = await response.json()
