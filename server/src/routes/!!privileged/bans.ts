@@ -95,82 +95,63 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
     })
 
-    fastify.route({
-        url: '/:steamid', 
-        method: 'POST',
-        schema: {
-            response: {
-                200: {
-                    type: 'object',
-                    properties: {
-                        changes: { type: 'number' },
-                    }
-                }
-            },
-            params: {
-                steamid: {
-                    type: "string"
-                }
-            }
-        },
-        async handler(req: FastifyRequest<{ Body: POSTBanBodyType, Params: { steamid: string } }>, reply) {
-            if(!req.body.executor) {
-                req.body.executor = req.session.user.steamid
-            }
-            if(req.params.steamid.length < 10) {
-                return reply.status(400).send({
-                    error: "INVALID_STEAMID",
-                    message: "The steamid is invalid"
-                })
-            }
-            if(this.authmngr.isAdmin(req.params.steamid)) {
-                return reply.status(403).send({
-                    error: "IS_ADMIN",
-                    message: "Cannot ban a user with privileges, revoke the privileges first"
-                })
-            }
+    fastify.post(':/steamid', async(req: FastifyRequest<{ Body: POSTBanBodyType, Params: { steamid: string } }>, reply) => {
+        if(!req.body.executor) {
+            req.body.executor = req.session.user.steamid
+        }
+        if(req.params.steamid.length < 10) {
+            return reply.status(400).send({
+                error: "INVALID_STEAMID",
+                message: "The steamid is invalid"
+            })
+        }
+        if(this.authmngr.isAdmin(req.params.steamid)) {
+            return reply.status(403).send({
+                error: "IS_ADMIN",
+                message: "Cannot ban a user with privileges, revoke the privileges first"
+            })
+        }
 
-            const [existing] = await fastify.db.execute<RowDataPacket[]>(`
-                SELECT * FROM bans WHERE steamid = ?`,
-                [req.params.steamid]
-            )
+        const [existing] = await fastify.db.execute<RowDataPacket[]>(`
+            SELECT * FROM bans WHERE steamid = ?`,
+            [req.params.steamid]
+        )
 
-            if(existing.length > 0) {
-                for(const ban of existing) {
-                    if(~ban.flags & APIBanFlags.Suspended) {
-                        return reply.code(409).send({
-                            error: 'BAN_EXISTS',
-                            message: `User was already banned on non-suspended ban #${ban.id}`,
-                            statusCode: 409
-                        })
-                    }
+        if(existing.length > 0) {
+            for(const ban of existing) {
+                if(~ban.flags & APIBanFlags.Suspended) {
+                    return reply.code(409).send({
+                        error: 'BAN_EXISTS',
+                        message: `User was already banned on non-suspended ban #${ban.id}`,
+                        statusCode: 409
+                    })
                 }
             }
+        }
 
-            const ban = {
-                ...req.body,
-                steamid: req.params.steamid,
+        const ban = {
+            ...req.body,
+            steamid: req.params.steamid,
+        }
+
+        const [ok] = await fastify.db.execute<OkPacket>(`
+            INSERT INTO bans (steamid, executor, reason, flags, public_message, expires, timestamp) 
+            VALUES (:steamid, :executor, :reason, :flags, :public_message, :expires, UNIX_TIMESTAMP())`,
+            {
+                executor: ban.executor,
+                reason: ban.reason ?? null,
+                flags: ban.flags ?? 0,
+                public_message: ban.public_message ?? null,
+                expires: ban.expires ?? 0,
+                steamid: ban.steamid
             }
+        )
 
-            const [ok] = await fastify.db.execute<OkPacket>(`
-                INSERT INTO bans (steamid, executor, reason, flags, public_message, expires, timestamp) 
-                VALUES (:steamid, :executor, :reason, :flags, :public_message, :expires, UNIX_TIMESTAMP())`,
-                {
-                    executor: ban.executor,
-                    reason: ban.reason ?? null,
-                    flags: ban.flags ?? 0,
-                    public_message: ban.public_message ?? null,
-                    expires: ban.expires ?? 0,
-                    steamid: ban.steamid
-                }
-            )
+        await fastify.authmngr.log.addWebEntry(req.session.user.steamid, 'BAN_ADD', `Add ban #${ok.insertId} for ${ban.steamid}`)
 
-            await fastify.authmngr.log.addWebEntry(req.session.user.steamid, 'BAN_ADD', `Add ban #${ok.insertId} for ${ban.steamid}`)
-
-            return {
-                banId: ok.insertId,
-                success: true
-            }
+        return {
+            banId: ok.insertId,
+            success: true
         }
     })
 
