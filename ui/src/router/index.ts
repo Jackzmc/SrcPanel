@@ -194,12 +194,23 @@ const routes = [
     ]
   },
   {
-    name: 'admin-logs',
-    path: '/admin/logs',
-    component: () => import(/* webpackChunkName: 'logs' */ '../views/admin/LogsView.vue'),
+    name: 'logs-activity',
+    path: '/admin/activity',
+    alias: '/admin/logs',
+    component: () => import(/* webpackChunkName: 'logs' */ '../views/admin/ActivityLogsView.vue'),
     meta: {
-      title: 'Audit & Activity Logs',
-      description: 'View all activity inside and outside the game',
+      title: 'Activity Logs',
+      description: 'View all activity inside the game',
+      authRequired: true
+    }
+  },
+  {
+    name: 'logs-audit',
+    path: '/admin/audit',
+    component: () => import(/* webpackChunkName: 'logs' */ '../views/admin/AuditLogsView.vue'),
+    meta: {
+      title: 'Audit Logs',
+      description: 'View all actions outside the game',
       authRequired: true
     }
   },

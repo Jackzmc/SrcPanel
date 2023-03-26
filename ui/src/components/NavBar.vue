@@ -55,8 +55,11 @@
             <router-link to="/admin/servers" class="navbar-item">
               Servers
             </router-link>
-            <router-link to="/admin/logs" class="navbar-item">
-              Audit & Activity Log
+            <router-link to="/admin/activity" class="navbar-item">
+              Activity Log
+            </router-link>
+            <router-link to="/admin/audit" class="navbar-item">
+              Audit Log
             </router-link>
             <router-link to="/admin/players" class="navbar-item">
               Player Management
