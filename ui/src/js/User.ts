@@ -146,4 +146,8 @@ export class PrivilegedUser {
     return this.data.permissions.base
   }
 
+  get avatarUrl() {
+    return `https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/79/${this.data.user.avatarhash}.jpg`
+  }
+
 }
