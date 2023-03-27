@@ -5,6 +5,7 @@ import  { createWriteStream } from 'fs';
 import { readFile } from 'fs/promises'
 import https from 'https';
 import { unlink } from 'fs/promises';
+import { WorkshopItem, SteamUserDetails } from '../../../common-types/Share.js'
 
 export default class SteamAPI {
     private apikey: string
@@ -113,46 +114,4 @@ export default class SteamAPI {
         })
     }
 
-}
-
-export interface SteamUserDetails {
-    steamid: string;
-    communityvisibilitystate: number;
-    profilestate: number;
-    personaname: string;
-    profileurl: string;
-    avatar: string;
-    avatarmedium: string;
-    avatarfull: string;
-    avatarhash: string;
-    lastlogoff: number;
-    personastate: number;
-    primaryclanid: string;
-    timecreated: number;
-    personastateflags: number;
-    loccountrycode: string;
-    locstatecode: string;
-}
-
-export interface WorkshopItem {
-    result: number,
-    publishedfileid: string,
-    creator: string,
-    creator_app_id: number,
-    consumer_app_id: number,
-    filename: string,
-    file_size: number,
-    file_url: string,
-    preview_url: string,
-    hcontent_preview: string,
-    title: string,
-    description: string,
-    time_created: number,
-    time_updated: number,
-    subscriptions: number,
-    favorited: number,
-    views: number,
-    tags: {
-        tag: string
-    }[]
 }

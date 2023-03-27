@@ -2,7 +2,7 @@
 <section class="modal-card-body">
   <div class="container has-text-centered" v-if="loading">
     <br>
-    <p>Fetching notes... please wait</p>
+    <Icon icon="spinner" spin>Fetching notes... please wait</Icon>
     <br>
   </div>
   <template v-else-if="newNote">

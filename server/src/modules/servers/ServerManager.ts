@@ -3,11 +3,12 @@ import { mkdir, stat } from 'fs/promises'
 import Json5 from 'json5'
 import DNS from 'dns'
 import Server, { ConfigServerData } from './Server.js'
-import Share, { ShareDestination, ShareInfo } from '../Share.js';
+import Share from '../Share.js';
 import { join } from 'path';
 import { open } from 'sqlite'
 import sqlite3 from 'sqlite3'
 import SteamAPI from '../steam.js'
+import { ShareDestination, ShareInfo } from '../../../../common-types/Share.js'
 
 // How long after no status requests to switch from short to long refresh
 const SHORT_REFRESH_TIMEOUT = 1000 * 60

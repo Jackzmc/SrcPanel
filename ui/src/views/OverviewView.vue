@@ -3,7 +3,10 @@
     <div class="columns is-multiline is-variable is-1">
       <div class="column is-9">
           <Servers @refresh="onServerRefresh" />
-          <p class="is-inline is-pulled-right" style="margin-right: 90px">{{countdownText}}</p>
+          <p class="is-inline is-pulled-right" style="margin-right: 90px">
+            <em v-if="countdownText">{{countdownText}}</em>
+            <Icon icon="spinner" v-else spin />
+          </p>
       </div>
       <div class="column">
           <div class="content">
@@ -49,7 +52,7 @@ let countdownText = ref()
 
 function onServerRefresh(payload: { state: string, interval?: number }) {
   if(payload.state == 'start') {
-    countdownText.value = "Refreshing..."
+    countdownText.value = undefined
     countdown.value = 0
   } else {
     countdown.value = (payload.interval ?? 60) / 1000

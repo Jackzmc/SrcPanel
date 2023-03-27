@@ -1,21 +1,13 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
 import { exec } from 'child_process'
-import { WorkshopItem } from '../../modules/steam.js';
 import FastifyMultipart from '@fastify/multipart'
 import { pipeline } from 'stream'
 import { promisify } from 'util'
 import { Action, Service } from '../../../../common-types/Privileges.js';
+import { ChildWorkshopItem } from '../../../../common-types/Share.js';
 const pump = promisify(pipeline)
 
 const VALID_FILENAME_REGEX = new RegExp(/[a-z0-9_\- \.]+/i)
-
-export interface ChildWorkshopItem extends WorkshopItem {
-    collection?: WorkshopCollectionInfo
-}
-export interface WorkshopCollectionInfo {
-    id: string,
-    name: string
-}
 
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions)  {

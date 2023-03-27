@@ -93,7 +93,7 @@
             <img class="mx-2" :src="avatarUrl" />
             <span>{{userdata.user.name}}</span>
           </a>
-          <div class="navbar-dropdown is-right">
+          <div class="navbar-dropdown is-right" style="width:140%">
             <a class="navbar-item">
               <Icon icon="fa-circle-info" :data-tooltip="updateTooltip" class="has-tooltip-bottom">
                 <template v-if="updateInfo.updating">UI is being updated</template>

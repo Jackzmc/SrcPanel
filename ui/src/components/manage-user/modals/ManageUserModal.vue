@@ -6,7 +6,7 @@
         <p class="modal-card-title" v-if="user">
           <b>{{user.name}}</b> <span class="is-pulled-right">{{user.steamid}}</span></p>
         <p v-else-if="fetchError" class="modal-card-title has-text-danger">Error</p>
-        <p v-else>Loading...</p>
+        <Icon icon="spinner" v-else spin>Fetching user...</Icon>
         &nbsp;&nbsp;
       </header>
       <section class="modal-card-body" v-if="fetchError">

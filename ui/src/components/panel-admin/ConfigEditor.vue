@@ -62,6 +62,7 @@ watch(() => keyvalues.value, () => {
       return canSave.value = true
     }
   }
+  canSaveTooltip.value = "No changes were made"
   return canSave.value = false
 }, { deep: true })
 
@@ -92,7 +93,7 @@ function validateKeyvalue(key: string) {
 }
 
 async function saveKeyvalue() {
-  if(!keyvalues.value) return
+  if(!keyvalues.value || !canSave.value) return
   const keys = keyvalues.value
   let kv: Partial<Record<string, string | null>> = {}
   for(const [key, data] of Object.entries(keys)) {
