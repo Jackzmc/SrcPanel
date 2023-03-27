@@ -7,7 +7,9 @@
     <input type="hidden" name="openid.claimed_id" value="http://specs.openid.net/auth/2.0/identifier_select">
     <input type="hidden" name="openid.ns" value="http://specs.openid.net/auth/2.0">
 
-    <button type="submit" class="button is-dark is-small">Login with Steam</button>
+    <button type="submit" class="button is-dark">
+      <Icon icon="fab fa-steam">Login with Steam</Icon>
+    </button>
   </form>
 </template>
 

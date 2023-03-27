@@ -15,16 +15,16 @@
         <router-link to='/' class="navbar-item" tag="a">
           Overview
         </router-link>
-        <div class="navbar-item has-dropdown is-hoverable " >
+        <div class="navbar-item has-dropdown is-hoverable" >
           <a class="navbar-link">
-            Documentation
+            <Icon icon="info-circle">Documentation</Icon>
           </a>
           <div class="navbar-dropdown is-left">
             <router-link to="/docs/commands" class="navbar-item">
-              Commands
+              <Icon icon="fa-regular fa-circle">Commands</Icon>
             </router-link>
             <router-link to="/docs/cvars" class="navbar-item">
-              Cvars
+              <Icon icon="wrench">Cvars</Icon>
             </router-link>
             <hr class="navbar-divider">
             <router-link to="/docs/ftt" class="navbar-item">
@@ -46,43 +46,47 @@
         </div>
         <div class="navbar-item has-dropdown is-hoverable" v-if="userdata">
           <a class="navbar-link">
-            Administration
+            <Icon icon="toolbox">Administration</Icon>
           </a>
-          <div class="navbar-dropdown is-left">
+          <div class="navbar-dropdown is-left" style="width:140%">
             <router-link to="/admin/addons" class="navbar-item">
-              Addons / Maps
+              <Icon icon="fa-puzzle-piece">Addons / Maps</Icon>
             </router-link>
             <router-link to="/admin/servers" class="navbar-item">
-              Servers
+              <Icon icon="fa-server">Servers</Icon>
             </router-link>
             <router-link to="/admin/activity" class="navbar-item">
-              Activity Log
+              <Icon icon="list">Activity Log</Icon>
             </router-link>
             <router-link to="/admin/audit" class="navbar-item">
-              Audit Log
+              <Icon icon="list">Audit Log</Icon>
             </router-link>
             <router-link to="/admin/players" class="navbar-item">
-              Player Management
+              <Icon icon="users-gear">Manage Players</Icon>
             </router-link>
             <hr class="navbar-divider">
             <div class="navbar-item">
-              <a href="/api/admins/discord" class="button" style="background-color: #5865F2; color: white">Join the Discord</a>
+              <a href="/api/admins/discord" class="button" style="background-color: #5865F2; color: white">
+                <Icon icon="fab fa-discord">Join the Discord</Icon>
+              </a>
             </div>
           </div>
         </div>
         <router-link to="/bans" class="navbar-item">
-          Bans
+          <Icon icon="fa-user-slash">Bans</Icon>
         </router-link>
         <router-link to="/info" class="navbar-item">
-          Player Notes
+          <Icon icon="fa-note-sticky">Player Notes</Icon>
         </router-link>
         <router-link to="/graphs" class="navbar-item">
-          Graphs
+          <Icon icon="fa-chart-simple">Graphs</Icon>
         </router-link>
       </div>
       <div class="navbar-end">
-        <div class="navbar-item">
-          <span v-if="updateInfo.updating">Updating...</span>
+        <div class="navbar-item" v-if="updateInfo.updating">
+          <Icon icon="fa-solid fa-spinner" spin>
+            <span class="ml-2">Updating UI...</span>
+          </Icon>
         </div>
         <div v-if="userdata" class="navbar-item has-dropdown is-hoverable " >
           <a class="navbar-link">
@@ -91,26 +95,30 @@
           </a>
           <div class="navbar-dropdown is-right">
             <a class="navbar-item">
-              <span v-if="!updateInfo.updating" :data-tooltip="updateTooltip" class="has-tooltip-bottom">
-                UI Build Info <em>(hover)</em>
-              </span>
+              <Icon icon="fa-circle-info" :data-tooltip="updateTooltip" class="has-tooltip-bottom">
+                <template v-if="updateInfo.updating">UI is being updated</template>
+                <template v-else>UI Build Info <em>(hover)</em></template>
+              </Icon>
             </a>
             <hr class="navbar-divider">
             <router-link class="navbar-item" :to="{ name: 'manage-user', params: { id: userdata.user.steamid }, query: { returnTo: $route.fullPath }}">
-              Profile
+              <Icon icon="fa-user" text="Profile" />
             </router-link>
             <a class="navbar-item" @click="showSettings = !showSettings">
-              User Settings
+              <Icon icon="fa-gear" text="User Settings" />
             </a>
             <router-link class="navbar-item" to="/panel/dashboard" v-if="privUser?.canPerformAction(Service.PanelAdmin, Action.View)">
-              Panel Administration
+              <Icon icon="fa-sitemap" text="Panel Administration" />
             </router-link>
             <hr class="navbar-divider">
             <p class="navbar-item" v-if="userdata.isSessionOld">
-              Session is outdated, please relogin
+              <span class="tag is-warning">
+                <Icon icon="fa-exclamation-triangle" icon-class="mr-2" />
+                Outdated session, please relogin
+              </span>
             </p>
             <a class="navbar-item has-text-danger" @click="logout">
-              Logout
+              <Icon icon="fa-arrow-right-from-bracket">Logout</Icon>
             </a>
           </div>
         </div>
@@ -124,7 +132,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, ref, onMounted } from 'vue';
 import LoginButton from '@/components/LoginButton.vue'
 import { useRoute, useRouter } from 'vue-router';
 import { notify } from '@kyvg/vue3-notification';
@@ -133,19 +141,24 @@ import { UserData } from '../../../common-types/User';
 import { Service, Action } from '../../../common-types/Privileges';
 import UserSettingsModal from './modals/UserSettingsModal.vue';
 // Bulma nav code
-document.addEventListener('DOMContentLoaded', () => {
+onMounted(() => {
   const $navbarBurgers = Array.prototype.slice.call(document.querySelectorAll('.navbar-burger'), 0);
-  if ($navbarBurgers.length > 0) {
-    $navbarBurgers.forEach( el => {
-      el.addEventListener('click', () => {
-        const target = el.dataset.target;
-        const $target = document.getElementById(target);
-        el.classList.toggle('is-active');
-        $target!.classList.toggle('is-active');
-      });
+
+  // Add a click event on each of them
+  $navbarBurgers.forEach( el => {
+    el.addEventListener('click', () => {
+
+      // Get the target from the "data-target" attribute
+      const target = el.dataset.target;
+      const $target = document.getElementById(target);
+
+      // Toggle the "is-active" class on both the "navbar-burger" and the "navbar-menu"
+      el.classList.toggle('is-active');
+      $target!.classList.toggle('is-active');
+
     });
-  }
-});
+  });
+})
 
 const router = useRouter()
 const route = useRoute()

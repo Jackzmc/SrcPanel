@@ -2,8 +2,8 @@
 <span>
   <a class="has-text-weight-bold has-custom-tooltip" @click="active = !active">{{ props.user.name }}</a>
   <div :class="['custom-tooltip','box','has-background-dark',{'active': active}]" >
-    <figure class="image is-48x48 is-inline-block mr-3">
-      <img :src="props.user.avatarUrl">
+    <figure class="image is-48x48 is-inline-block mr-3 is-round">
+      <img class="is-rounded" :src="props.user.avatarUrl">
     </figure>
     <div class="is-inline-block">
       <p class="title is-5 has-text-info">{{ props.user.name }}</p>

@@ -21,13 +21,15 @@
           <ul>
             <router-link :to="{ name: 'manage-user-overview' }" v-slot="{ href, navigate, isExactActive }" custom>
               <li :class="{'is-active': isExactActive}">
-                <a :href="href" @click="navigate">Overview</a>
+                <a :href="href" @click="navigate">
+                  <Icon icon="fa-info-circle">Overview</Icon>
+                </a>
               </li>
             </router-link>
             <router-link v-if="privUser.canPerformAction(Service.Admins, Action.View)" :to="{ name: 'manage-user-admin' }" v-slot="{ href, navigate, isExactActive }" custom>
               <li :class="{'is-active': isExactActive, 'has-text-grey-dark': true }">
                 <a :href="href" @click="navigate" disabled>
-                  Privileges&nbsp;
+                  <Icon :icon="userAdminData ? 'fa-user-pen' : 'fa-user-plus'">Privileges&nbsp;</Icon>
                   <span v-if="userAdminData" class="tag is-info">Admin</span>
                   <span v-else class="tag is-secondary">None</span>
                 </a>
@@ -35,12 +37,18 @@
             </router-link>
             <router-link v-if="privUser.canPerformAction(Service.Notes, Action.View)" :to="{ name: 'manage-user-notes' }" v-slot="{ href, navigate, isExactActive }" custom>
               <li :class="{'is-active': isExactActive}">
-                <a :href="href" @click="navigate">Notes ({{ user?.notesCount ?? 0 }})</a>
+                <a :href="href" @click="navigate">
+                  <Icon icon="fa-note-sticky">Notes ({{ user?.notesCount ?? 0 }})</Icon>
+                </a>
               </li>
             </router-link>
             <router-link v-if="privUser.canPerformAction(Service.Bans, Action.View)" :to="{ name: 'manage-user-bans' }" v-slot="{ href, navigate, isActive }" custom>
               <li :class="{'is-active': isActive }">
-                <a :href="href" @click="navigate">Bans&nbsp;<span :class="{'has-text-danger': user?.bansCount > 0 }">({{ user?.bansCount }})</span></a>
+                <a :href="href" @click="navigate">
+                  <Icon icon="fa-user-slash">
+                    Bans&nbsp;<span :class="{'has-text-danger': user?.bansCount > 0 }">({{ user?.bansCount }})</span>
+                  </Icon>
+                </a>
               </li>
             </router-link>
           </ul>
@@ -55,7 +63,9 @@
           <button class="button is-info" @click="close">Close</button>
           <button class="button is-secondary" @click="getUser">Retry</button>
         </template>
-        <button class="button" @click="close">Close</button>
+        <button class="button" @click="close">
+          <Icon icon="close">Close</Icon>
+        </button>
       </footer>
     </div>
   </div>

@@ -28,7 +28,9 @@
           <div class="field">
             <label class="label">&nbsp;</label>
             <div class="control">
-              <router-link :to="{ name: 'workshop-download'}" class="button is-info is-fullwidth">Add Workshop Addon</router-link>
+              <router-link :to="{ name: 'workshop-download'}" class="button is-info is-fullwidth">
+                <Icon icon="fa-plus">Workshop Addon</Icon>
+              </router-link>
               <!-- <a  class="button is-info is-fullwidth" @click="showDownloadModal = true">Add Workshop Addon</a> -->
             </div>
           </div>
@@ -37,7 +39,9 @@
           <div class="field">
             <label class="label">&nbsp;</label>
             <div class="control">
-              <router-link :to="{ name: 'upload-addon' }" class="button is-info is-fullwidth">Upload Addon</router-link>
+              <router-link :to="{ name: 'upload-addon' }" class="button is-info is-fullwidth">
+                <Icon icon="fa-upload">Upload</Icon>
+              </router-link>
               <!-- <a class="button is-info is-fullwidth" @click="showDownloadModal = true">Upload Addon</a> -->
             </div>
           </div>

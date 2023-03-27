@@ -8,45 +8,54 @@
   </article>
   <div class="columns">
     <div class="column is-8 box">
-      <div class="list has-visible-pointer-controls">
-        <div class="list-item" v-for="entry in entries" :key="entry.id">
-          <div class="list-item-image">
-            <figure class="image is-48x48">
-              <img class="is-rounded" :src="entry.activator.avatarUrl">
-            </figure>
-          </div>
-
-          <div class="list-item-content">
-            <div class="list-item-title">
-              {{ new Date(entry.timestamp).toLocaleDateString() }} at {{ new Date(entry.timestamp).toLocaleTimeString() }}
-              <span class="ml-2 has-text-grey is-inline subtitle is-6">{{ getRelDate(entry.timestamp / 1000) }}</span>
+      <div class="list has-visible-pointer-controls has-hoverable-list-items">
+        <template v-for="entry in entries" :key="entry.id">
+          <div class="list-item">
+            <div class="list-item-image">
+              <figure class="image is-48x48">
+                <img class="is-rounded" :src="entry.activator.avatarUrl">
+              </figure>
             </div>
-            <div class="list-item-description">
-              <UserComponent :user="entry.activator" is-admin />
-              {{entry.message}}
-              <span v-html='entry._html' />
-              <UserComponent :user="entry.target"/>
-              {{ entry._message2 }}
+
+            <div class="list-item-content">
+              <div class="list-item-title">
+                {{ new Date(entry.timestamp).toLocaleDateString() }} at {{ new Date(entry.timestamp).toLocaleTimeString(undefined, { timeStyle: 'short' }) }}
+                <span class="ml-2 has-text-grey-light is-inline subtitle is-6">{{ getRelDate(entry.timestamp / 1000) }}</span>
+                <span class="tags is-pulled-right">
+                  <span class="tag is-pulled-right is-info">Action</span>
+                  <span class="tag is-pulled-right is-dark">reserved</span>
+                </span>
               </div>
-          </div>
+              <div class="list-item-description">
+                <UserComponent :user="entry.activator" is-admin />
+                {{entry.message}}
+                <span v-html='entry._html' />
+                <UserComponent v-if="entry.target" :user="entry.target"/>
+                {{ entry._message2 }}
+                </div>
+            </div>
 
-          <div class="list-item-controls">
-            <div class="buttons is-right">
-              <button class="button">
-                <span class="icon is-small">
-                  <i class="fas fa-edit"></i>
-                </span>
-                <span>Edit</span>
-              </button>
-
-              <button class="button">
-                <span class="icon is-small">
-                  <i class="fas fa-ellipsis-h"></i>
-                </span>
-              </button>
+            <div class="list-item-controls">
+              <div class="buttons is-right">
+                <!-- <button :class="['button', {'is-info': entry.showDetails, 'is-outlined': entry.showDetails }]">
+                  <span @click="entry.showDetails = !entry.showDetails">Details</span>
+                </button> -->
+                <button class="button is-inverted is-outlined is-black" @click="entry.showDetails = !entry.showDetails">
+                  <Icon icon-class="is-small has-text-black" :icon="entry.showDetails ? 'fa-chevron-up' : 'fa-chevron-down'" />
+                </button>
+              </div>
             </div>
           </div>
-        </div>
+          <div class="list-item  px-0 mx-0 my-0 py-0" v-if="entry.showDetails">
+
+            <div class="list-item-content">
+              <div class="notification is-dark">
+                <p><b>Id:</b> #{{ entry.id }}</p>
+                <p><b>Server: </b><span class="tag is-info">reserved</span></p>
+              </div>
+            </div>
+          </div>
+        </template>
       </div>
     </div>
   </div>
@@ -72,10 +81,12 @@ const props = defineProps<{
   privUser: PrivilegedUser
 }>();
 
+let expandedId = ref()
 let page = ref(1);
 let limit = ref(30);
 let entries = ref([
   {
+    showDetails: false,
     id: 1,
     activator: {
       name: "Jackzie ❤",
@@ -91,6 +102,7 @@ let entries = ref([
     timestamp: Date.now()
   },
   {
+    showDetails: false,
     id: 2,
     activator: {
       name: "Jackzie ❤",
@@ -106,7 +118,8 @@ let entries = ref([
     timestamp: Date.now() - 500000
   },
   {
-    id: 2,
+    showDetails: false,
+    id: 3,
     activator: {
       name: "Ashley Golix ❤",
       steamid: "STEAM_1:0:530680608",
@@ -122,7 +135,19 @@ let entries = ref([
     timestamp: Date.now() - 90000000
   },
   {
-    id: 2,
+    showDetails: false,
+    id: 4,
+    activator: {
+      name: "Jackzie ❤",
+      steamid: "STEAM_1:0:49243767",
+      avatarUrl: "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/79/672f1a349cdeb1273ec566bb40c126bb73d86d3e.jpg"
+    },
+    _html: "updated the admin panel",
+    timestamp: Date.now() - 2590000000
+  },
+  {
+    showDetails: false,
+    id: 4,
     activator: {
       name: "Jackzie ❤",
       steamid: "STEAM_1:0:49243767",
