@@ -1,68 +1,15 @@
 import { stat, readdir, unlink, symlink } from 'fs/promises';
 import { createWriteStream } from 'fs'
 import path from 'path'
-import SteamAPI, { WorkshopItem } from './steam.js';
+import SteamAPI from './steam.js';
+import { AddonCollectionInfo, AddonInfo, AddonWorkshopInfo, ChildWorkshopItem, ShareDestination, ShareInfo, WorkshopCollectionInfo, WorkshopItem } from '../../../common-types/Share.js'
 import { exec } from 'child_process'
 import sqlite3 from 'sqlite3'
 import sqlite from 'sqlite'
 import SQL from 'sql-template-strings';
-import { ChildWorkshopItem, WorkshopCollectionInfo } from '../routes/!!privileged/shares.js';
 
 const DOWNLOAD_TIMEOUT = 1000 * 60 * 3
 
-export interface ShareDestination {
-    id: string,
-    name?: string,
-    serverIds?: string[],
-    path: string
-}
-
-export interface ShareInfo {
-    id: string,
-    sourceFolder: string;
-    destinations: ShareDestination[],
-    appid?: number,
-    name: string,
-    fileExts?: string[],
-    downloadSources?: Record<string, boolean>
-}
-
-export interface AddonInfo {
-    filename: string,
-    filesize?: number,
-    downloaded?: number
-    lastModified?: number,
-    workshop?: AddonWorkshopInfo,
-    installInfo: Record<string, boolean>,
-    collection?: WorkshopCollectionInfo
-}
-
-export interface AddonCollectionInfo {
-    collection: WorkshopCollectionInfo, 
-    children: AddonInfo[]
-}
-export interface AddonWorkshopInfo {
-    publishedfileid: number
-    deleted: boolean,
-    title: string,
-    filesize: number,
-    fileUrl: string,
-    previewUrl: string,
-    description: string,
-    lastUpdated: number
-}
-
-interface AddonInstallInfo {
-    states: Record<string, boolean>, 
-    created: number,
-    modified: number,
-    size: number
-}
-
-export const enum DownloadSourceE {
-    DirectUpload = 1,
-    SteamWorkshop = 2
-}
 
 export const DOWNLOAD_SOURCES = ["steam_workshop", "direct"] as const
 

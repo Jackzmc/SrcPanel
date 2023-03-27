@@ -23,18 +23,19 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     })
 
     fastify.get('/shares', async (req, reply) => {
-        const shares = fastify.servers.shares.map(shareId => {
-            const share = fastify.servers.getShare(shareId)
-            return {
-                id: shareId,
-                name: share.name,
-                sourceFolder: share.sourceFolder,
-                destinations: share.destinations,
-                appId: share.appId,
-                validExtensions: share.exts,
-                installSources: share.sources,
-            }
-        })
+        const shares = await fastify.config.GetShares()
+        // const shares = fastify.servers.shares.map(shareId => {
+        //     const share = fastify.servers.getShare(shareId)
+        //     return {
+        //         id: shareId,
+        //         name: share.name,
+        //         sourceFolder: share.sourceFolder,
+        //         destinations: share.destinations,
+        //         appId: share.appId,
+        //         validExtensions: share.exts,
+        //         installSources: share.sources,
+        //     }
+        // })
         return {
             shares
         }

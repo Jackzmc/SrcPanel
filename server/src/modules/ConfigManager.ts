@@ -2,7 +2,6 @@ import sqlite3 from 'sqlite3'
 import sqlite, { open } from 'sqlite'
 import SQL from 'sql-template-strings';
 import { join } from 'path';
-import { DownloadSourceE } from './Share';
 
 export interface KeyConfig {
     public?: boolean,
@@ -52,6 +51,7 @@ export default class ConfigManager {
             id       varchar(32) not null,
             name     tinytext    null,
             path     tinytext    not null,
+            server_ids smalltext null,
             constraint share_dests_pk
                 primary key (id),
             constraint share_dests_shares_id_fk
@@ -83,17 +83,19 @@ export default class ConfigManager {
     public async RefreshShares() {
         const shares = await this.db.all<any[]>(SQL`SELECT * FROM shares`)
         const dests = await this.db.all<any[]>(SQL`SELECT * FROM share_dests`)
-        
-        return shares.map((share: any) => {
+
+        this._shares = shares.map((share: any) => {
             let destinations = {}
             for(const dest of dests) {
                 if(dest.share_id === share.id) {
                     destinations[dest.id] = {
                         name: dest.name,
-                        path: dest.path
+                        path: dest.path,
+                        serverIds: dest.server_ids?.split(",") ?? []
                     }
                 }
             }
+
             return {
                 id: share.id,
                 name: share.name,
@@ -102,7 +104,7 @@ export default class ConfigManager {
                 allowedExts: share.valid_exts?.split(',') ?? [],
                 downloadSources: share.download_sources,
                 destinations
-            }
+            } as ShareData
         })
     }
 
@@ -132,19 +134,4 @@ export default class ConfigManager {
     private async deleteKV(key: Keyvalue) {
         await this.db.run(SQL`DELETE FROM keyvalues WHERE key = ${key}`)
     }
-}
-
-interface ShareData {
-    id: string,
-    name?: string,
-    sourceFolder: string,
-    steamAppid?: number,
-    allowedExts: string[],
-    downloadSources: DownloadSourceE,
-    destinations: Record<string, ShareDestData>
-}
-
-interface ShareDestData {
-    name?: string,
-    path: string
 }

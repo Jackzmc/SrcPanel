@@ -5,7 +5,7 @@ import { ADMINS_DB } from '../!!privileged/admins.js';
 import SteamID from 'steamid';
 import { BanAppeal, FullAPIBan } from '../../../../common-types/Ban.js';
 import { NAME_INVALID_CHAR_REPLACE } from '../../routes/!unprivileged/bans.js';
-import { SteamUserDetails } from '../../modules/steam';
+import { SteamUserDetails } from '../../../../common-types/Share.js';
 
 
 const RECENT_DEFAULT_LIMIT = 25

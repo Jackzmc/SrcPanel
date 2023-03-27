@@ -4,7 +4,7 @@
             "splitTerminals": [
                 {
                     "name": "ui",
-                    "commands": ["cd ui", "yarn serve"]
+                    "commands": ["cd ui", "yarn", "yarn serve"]
                 }
             ]
         },
@@ -12,7 +12,7 @@
             "splitTerminals": [
                 {
                     "name": "server",
-                    "commands": ["cd server", "yarn dev"]
+                    "commands": ["cd server", "yarn", "yarn dev"]
                 },
             ]
         }
