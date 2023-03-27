@@ -18,9 +18,6 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             body: {
                 type: 'object',
                 additionalProperties: false,
-                required: [
-                    'id'
-                ],
                 properties: {
                     content: { type: 'string' },
                     markedBy: { type: 'string' },
