@@ -325,6 +325,17 @@
                 "Percentage affected by sm_ftt_shove_fail_chance cvar (default: 50%)",
                 "Will still visually shove survivors, but will not affect them"
             ]
+        },
+        {
+            "name": "No Button Touchie",
+            "description": "Prevents a player from pressing any buttons (elevator, horde, etc)",
+            "modes": ["constant"],
+            "prompts": [
+                { 
+                    "flags": ["Prevent Use", "Vomit On Use", "Slay On Use", "Slap On Use", "0.8x Movement Speed"],
+                    "multi": true
+                }
+            ]
         }
     ],
     "_Combos_": {
@@ -332,6 +343,16 @@
             "Special Magnet",
             "Tank Magnet",
             "Witch Magnet"
+        ],
+        "Rush Stopper": [
+            "Special Magnet",
+            "Tank Magnet",
+            "Witch Magnet",
+            "No Button Touchie (Vomit+Slow+Prevent)",
+            "Instant Commons (Back)",
+            "Vomit Player",
+            "Slow Speed (0.8x)",
+            "Dull Melee (50%)"
         ],
         "Tank Run Noob": [
             "Slow Speed",

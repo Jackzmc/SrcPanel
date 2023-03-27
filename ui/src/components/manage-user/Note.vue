@@ -3,9 +3,25 @@
     <h6 class="title is-6" v-if="edit">
       <label class="label">Marked By:</label>
       <input type="text" class="input" style="width:50%" v-model="edit.markedBy" />
-      <span class="is-pulled-right is-inline" data-tooltip="Note ID">#{{ note.id }}</span>
+      <div class="is-pulled-right is-inline">
+        <a class="button is-small is-outlined is-danger mr-2"><Icon button icon="fa-trash" data-tooltip="Delete this note" @click="deleteNote" /></a>
+        <span data-tooltip="Note ID">
+          #{{ note.id }}
+        </span>
+      </div>
     </h6>
-    <h6 class="title is-6" v-else>{{note.markedBy.name}}: <em class="has-text-weight-normal">({{note.markedBy.id}})</em> <span class="is-pulled-right is-inline" data-tooltip="Note ID">#{{ note.id }}</span></h6>
+    <h6 class="title is-6" v-else>
+      {{note.markedBy.name}}:
+      &nbsp;<em class="has-text-weight-normal">
+        ({{note.markedBy.id}})
+      </em>
+      <div class="is-pulled-right is-inline">
+        <a @click="startEdit"><Icon icon="fa-edit"></Icon></a>
+        <span data-tooltip="Note ID">
+          #{{ note.id }}
+        </span>
+      </div>
+      </h6>
     <div class="content">
         <template v-if="edit">
           <label class="label">Content:</label>
@@ -17,12 +33,8 @@
         </template>
     </div>
     <div class="buttons" v-if="edit">
-        <a class="button is-success is-small" @click="saveNote">Save</a>
-        <a class="button is-small is-outlined" @click="edit = undefined">Cancel</a>
-        <a class="button is-danger is-small is-outlined" @click="deleteNote">Delete</a>
-    </div>
-    <div class="buttons" v-else>
-        <a class="button is-small is-outlined has-tooltip-right has-tooltip-danger" @click="startEdit" :disabled="canEdit ? undefined : true" :data-tooltip="canEdit ? null : 'You do not have permission to edit other user\'s notes'">Edit</a>
+        <a class="button is-success is-small" @click="saveNote"><Icon button icon-class="is-small" icon="fa-check">Save</Icon></a>
+        <a class="button is-small is-outlined" @click="edit = undefined"><Icon button icon="times">Cancel</Icon></a>
     </div>
 </div>
 </template>
@@ -50,6 +62,7 @@ const canEdit = computed(() => {
 })
 
 let edit = ref<EditedNote>()
+let loading = ref(false)
 
 function startEdit() {
   edit.value = {
@@ -59,37 +72,42 @@ function startEdit() {
 }
 
 async function saveNote() {
-    try {
-        const response = await fetch(`/api/notes/${props.note.id}`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(edit.value)
-        })
-        if(response.ok) {
-            notify({
-                type: "success",
-                text: `Edited note #${props.note.id}`
-            })
-        } else {
-            const json = await response.json()
-            notify({
-                type: "error",
-                title: `Failed to edit note #${props.note.id}`,
-                text: json.message
-            })
-        }
-    } catch(err: any) {
-        notify({
-            type: "error",
-            title: `Failed to edit note #${props.note.id}`,
-            text: err.message
-        })
-    }
+  loading.value = true
+  try {
+      const response = await fetch(`/api/notes/${props.note.id}`, {
+          method: 'PUT',
+          headers: {
+              'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(edit.value)
+      })
+      if(response.ok) {
+          notify({
+              type: "success",
+              text: `Edited note #${props.note.id}`
+          })
+          edit.value = undefined
+      } else {
+          const json = await response.json()
+          notify({
+              type: "error",
+              title: `Failed to edit note #${props.note.id}`,
+              text: json.message
+          })
+      }
+  } catch(err: any) {
+      notify({
+          type: "error",
+          title: `Failed to edit note #${props.note.id}`,
+          text: err.message
+      })
+  } finally {
+    loading.value = false
+  }
 }
 async function deleteNote() {
     if(window.confirm("Are you sure you want to delete this note?")) {
+      loading.value = true
         try {
             const response = await fetch(`/api/notes/${props.note.id}`, { method: 'DELETE' })
             if(response.ok) {
@@ -112,6 +130,8 @@ async function deleteNote() {
                 title: `Failed to delete note #${props.note.id}`,
                 text: err.message
             })
+        } finally {
+          loading.value = false
         }
     }
 }
