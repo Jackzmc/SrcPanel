@@ -54,7 +54,7 @@
         <p class="my-5 is-size-2 has-text-centered has-text-danger">{{ fetchError }}</p>
       </div>
       <div class="column" v-else>
-        <p class="my-5 is-size-2 has-text-centered">Fetching notes...</p>
+        <p class="my-5 is-size-2 has-text-centered"><Icon icon="spinner" spin icon-class="mr-4">Fetching notes</Icon></p>
       </div>
       <div class="column is-3">
         <div class="message is-warning">

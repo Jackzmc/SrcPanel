@@ -81,7 +81,9 @@
     </tbody>
   </table>
   <p class="has-text-centered has-text-danger title is-3" v-else-if="error">{{error}}</p>
-  <p class="has-text-centered title is-2" v-else><br>Fetching bans...</p>
+  <p class="has-text-centered subtitle is-3" v-else><br>
+    <Icon icon="spinner" spin icon-class="mr-4"> Fetching bans</Icon>
+  </p>
   <Pagination :page="page" :limit="limit" :count="bansCount" @page="setPage"></pagination>  
 </div>
 </template>

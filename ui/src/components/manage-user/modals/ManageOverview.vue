@@ -3,7 +3,7 @@
   <div class="container has-text-centered" v-if="!info">
     <br>
     <p class="has-text-danger" v-if="statsFailure">{{ statsFailure }}</p>
-    <p v-else>Fetching player statistics... please wait</p>
+    <Icon icon="spinner" spin v-else>Fetching player statistics... please wait</Icon>
     <br>
   </div>
   <template v-else>
