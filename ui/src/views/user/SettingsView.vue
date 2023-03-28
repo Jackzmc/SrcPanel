@@ -38,8 +38,7 @@
     </div>
   </div>
   <div class="mb-6" >
-    <h4 class="title is-4">Preferences</h4>
-    <em class=" my-6">There's nothing here.</em>
+
   </div>
   <div>
     <h4 class="title is-4">Active Sessions</h4>
