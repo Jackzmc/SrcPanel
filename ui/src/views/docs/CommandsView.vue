@@ -3,12 +3,9 @@
     <ExamplesModal :data="selected" :prefix="prefix" @close='selected = null' />
     <div class="columns is-variable is-6">
         <div class="column is-7 content">
-            <div class="field">
-              <label class="label">Search</label>
-              <div class="control">
-                <input v-model="searchQuery" class="input" style="width:50%" type="text" placeholder="Search for a command">
-              </div>
-            </div>
+            <Field label="Search" icon-left="search">
+              <input v-model="searchQuery" class="input" style="width:50%" type="text" placeholder="Search for a command">
+            </Field>
             <span v-for="(group, id) in filteredGroups" :key="id">
                 <h5 class='title is-5'>{{group.name}}</h5>
                 <ul class="is-unstyled">
@@ -103,7 +100,8 @@ import { formatParameters } from '@/js/util'
 import ExamplesModal from '@/components/modals/ExamplesModal.vue'
 import { ref, computed, onMounted } from 'vue'
 import { PrivilegedUser } from '../../js/User';
-import { Session } from '../../../../common-types/User';
+import { UserData } from '../../../../common-types/User';
+import Field from '@/components/Field.vue'
 
 const LAST_UPDATED = new Date(Number(process.env.VUE_APP_BUILD_DATE))
 
