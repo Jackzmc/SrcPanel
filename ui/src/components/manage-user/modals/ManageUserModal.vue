@@ -60,19 +60,19 @@
       </section>
       <footer class="modal-card-foot" id="manage-user-footer">
         <template v-if="fetchError">
-          <button class="button is-info" @click="close">Close</button>
+          <router-link class="button is-info" :to="routerHref">Close</router-link>
           <button class="button is-secondary" @click="getUser">Retry</button>
         </template>
-        <button class="button" @click="close">
+        <router-link class="button" :to="routerHref">
           <Icon icon="close">Close</Icon>
-        </button>
+        </router-link>
       </footer>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed, onBeforeMount } from 'vue';
+import { ref, onMounted, computed, onBeforeMount, watch, onBeforeUnmount } from 'vue';
 import { User, PrivilegedUser, PlayerData } from '@/js/User'
 import { useRouter, useRoute } from 'vue-router'
 import { UserData, AdminData } from '../../../../../common-types/User';
@@ -93,15 +93,12 @@ let userAdminData = ref<AdminData>()
 let fetchError = ref<string>()
 let returnTo = ref<string>()
 
-
-function close() {
-  if(returnTo.value) {
-    router.push(returnTo.value)
-  } else
-    router.push(`/admin/players/`)
-}
+const routerHref = computed(() => {
+  return returnTo.value ?? '/admin/players'
+})
 
 async function getUser() {
+  user.value = undefined
   fetchError.value = undefined
   try {
     const response = await fetch(`/api/users/${route.params.id}?include=admin`)
@@ -136,15 +133,29 @@ async function getUser() {
   }
 }
 
-onBeforeMount(async () => {
-  if(route.query.returnTo) returnTo.value = decodeURIComponent(route.query.returnTo.toString())
-  if(route.query.returnTo) router.push({ query: { returnTo: route.query.returnTo.toString() }})
-  document.addEventListener('keydown', (event) => {
-    const e = event || window.event;
+function closeModal(event: KeyboardEvent) {
+  const e = event || window.event;
     if(e.key == "Escape") {
       close()
     }
-  });
+}
+
+onBeforeMount(async () => {
+  if(route.query.returnTo) returnTo.value = decodeURIComponent(route.query.returnTo.toString())
+  if(route.query.returnTo) router.push({ query: { returnTo: route.query.returnTo.toString() }})
+  document.addEventListener('keydown', closeModal)
+  await getUser()
+})
+onBeforeUnmount(() => {
+  document.removeEventListener('keydown', closeModal)
+}),
+
+
+
+watch(() => route.params.id, async (value) => {
+  if(!value) return
+  if(route.query.returnTo) returnTo.value = decodeURIComponent(route.query.returnTo.toString())
+  if(route.query.returnTo) router.push({ query: { returnTo: route.query.returnTo.toString() }})
   await getUser()
 })
 </script>

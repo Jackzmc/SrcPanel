@@ -16,7 +16,7 @@ const props = defineProps<{
   text?: string,
   iconClass?: string,
   spin?: boolean,
-  button: true,
+  button?: boolean,
   rotate?: 90 | 180 | 270 | "90" | "180" | "270" | undefined,
   size?: "2xs" | "xs" | "sm" | "lg" | "xl" | "2xl" | "1x" | "2x" | "3x" | "4x" | "5x" | "6x" | "7x" | "8x" | "9x" | "10x" | undefined
 }>()

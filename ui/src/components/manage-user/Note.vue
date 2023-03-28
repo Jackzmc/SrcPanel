@@ -1,43 +1,62 @@
 <template>
-<div class="notification" >
-    <h6 class="title is-6" v-if="edit">
-      <label class="label">Marked By:</label>
-      <input type="text" class="input" style="width:50%" v-model="edit.markedBy" />
-      <div class="is-pulled-right is-inline">
-        <a class="button is-small is-outlined is-danger mr-2"><Icon button icon="fa-trash" data-tooltip="Delete this note" @click="deleteNote" /></a>
-        <span data-tooltip="Note ID">
-          #{{ note.id }}
-        </span>
-      </div>
-    </h6>
-    <h6 class="title is-6" v-else>
-      {{note.markedBy.name}}:
-      &nbsp;<em class="has-text-weight-normal">
-        ({{note.markedBy.id}})
-      </em>
-      <div class="is-pulled-right is-inline">
-        <a @click="startEdit"><Icon icon="fa-edit"></Icon></a>
-        <span data-tooltip="Note ID">
-          #{{ note.id }}
-        </span>
-      </div>
-      </h6>
-    <div class="content">
-        <template v-if="edit">
-          <label class="label">Content:</label>
-          <input type="text" class="input" v-model="edit.content" />
-        </template>
-        <template v-else>
-            <ActionNote v-if="note.action" :action="note.action" secondary-color="is-white"  />
-            <span v-else>{{ note.content }}</span>
-        </template>
+<div class="list-item">
+  <!-- <div class="list-item-image">
+    <figure class="image is-48x48">
+      <img class="is-rounded" :src="entry.activator.avatarUrl">
+    </figure>
+  </div> -->
+
+  <div class="list-item-content">
+    <div class="list-item-title">
+      <template v-if="edit">
+        <label class="label">Marked By:</label>
+        <input type="text" class="input" style="width:50%" v-model="edit.markedBy" />
+      </template>
+      <span v-else>
+        <router-link :to="routeHref">
+          {{ note.markedBy.name }}:
+        </router-link>
+        <span class="ml-2 has-text-grey-light is-inline subtitle is-6">{{ note.markedBy.id }}</span>
+        <span class="tag is-pulled-right is-info">#{{note.id}}</span>
+      </span>
     </div>
-    <div class="buttons" v-if="edit">
-        <a class="button is-success is-small" @click="saveNote"><Icon button icon-class="is-small" icon="fa-check">Save</Icon></a>
-        <a class="button is-small is-outlined" @click="edit = undefined"><Icon button icon="times">Cancel</Icon></a>
+    <div class="list-item-description has-text-black">
+      <template v-if="edit">
+        <label class="label">Content:</label>
+        <input type="text" class="input" v-model="edit.content" />
+      </template>
+      <template v-else-if="canEdit">
+        {{ note.content }}
+      </template>
+      </div>
+  </div>
+
+  <div class="list-item-controls">
+    <div class="buttons is-right">
+      <!-- <button :class="['button', {'is-info': entry.showDetails, 'is-outlined': entry.showDetails }]">
+        <span @click="entry.showDetails = !entry.showDetails">Details</span>
+      </button> -->
+      <span v-if="edit">
+        <button class="button is-inverted is-success has-tooltip-success" @click="saveNote" data-tooltip="Save changes" >
+          <Icon icon-class="is-small" icon="check"/>
+        </button>
+        <button class="button is-inverted is-black" @click="edit = undefined" data-tooltip="Discard changes" >
+          <Icon icon-class="is-small" icon="times"/>
+        </button>
+        <button class="button  is-inverted is-danger has-tooltip-danger" @click="deleteNote" data-tooltip="Delete note">
+          <Icon icon-class="is-small" icon="trash"/>
+        </button>
+      </span>
+      <template v-else>
+        <button class="button is-inverted is-outlined is-black" @click="startEdit">
+          <Icon icon-class="is-small has-text-black" icon="edit" />
+        </button>
+      </template>
     </div>
+  </div>
 </div>
 </template>
+<style src="../../../node_modules/bulma-list/css/bulma-list.css"></style>
 
 <script setup lang="ts">
 import { notify } from '@kyvg/vue3-notification';
@@ -45,7 +64,8 @@ import { ref, computed } from 'vue';
 import { Service, Action } from '../../../../common-types/Privileges';
 import { Note } from '../../../../server/src/routes/!unprivileged/notes'
 import { PrivilegedUser } from '../../js/User';
-import ActionNote from '@/components/ActionNote.vue'
+import { useRoute } from 'vue-router';
+const route = useRoute()
 const emit = defineEmits(["deleted"])
 const props = defineProps<{
   note: Note,
@@ -59,6 +79,11 @@ interface EditedNote {
 
 const canEdit = computed(() => {
   return props.privUser.canPerformAction(Service.Notes, Action.Edit, props.note.markedBy.id)
+})
+
+const routeHref = computed(() => {
+  if(props.note.markedBy.id === props.note.client.id) return '#'
+  return { name: 'manage-user', params: { id: props.note.markedBy.id }, query: { returnTo: route.fullPath }}
 })
 
 let edit = ref<EditedNote>()
