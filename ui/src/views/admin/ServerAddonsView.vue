@@ -1,6 +1,6 @@
 <template>
 <div>
-  <router-view :share="shareInfo" :addon="prefetch" @close="onChildClose"></router-view>
+  <router-view :share="shareInfo" :addon="prefetch" @close="onChildClose" v-if="prefetch"></router-view>
   <div class="container" v-if="ready">
     <div class="level">
       <div class="level-left">
@@ -286,7 +286,7 @@ function preview(entry: any) {
   router.push({
     name: "addon-info",
     params: {
-      share: selectedShare.value,
+      shareId: selectedShare.value,
       addon: entry.filename
     }
   })
@@ -314,7 +314,7 @@ function getTooltip(addon: any) {
 }
 
 async function onChildClose(requestRefresh: boolean) {
-  router.back()
+  router.push({ name: "admin-addons" })
   if(requestRefresh)
     await fetchVPKS()
 }

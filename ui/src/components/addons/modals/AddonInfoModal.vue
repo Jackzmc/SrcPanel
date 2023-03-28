@@ -10,7 +10,7 @@
       <section class="modal-card-body">
         <template v-if="props.addon.workshop">
           <img alt="The workshop addon's uploaded image preview" :src="props.addon.workshop.previewUrl" @load="previewImageLoaded = true" />
-          <img v-if="!previewImageLoaded" src="@/assets/loader.gif" />
+          <img v-if="!previewImageLoaded" src="@/assets/WorkshopImageFallback.svg" />
           <br><br>
         </template>
         <h4 class='title is-4'>{{ addonName }} </h4>
