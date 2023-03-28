@@ -1,5 +1,5 @@
 <template>
-  <span :class="button ? undefined : 'icon-text'">
+  <span :class="(button ? ' ' : 'icon-text ') + (containerClass ?? '')">
     <span :class="'icon ' + (iconClass ?? '')">
       <FontAwesomeIcon :icon="icon" :spin="spin" :rotation="rotate" :size="size" />
     </span>
@@ -14,6 +14,7 @@ import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 const props = defineProps<{
   icon: string,
   text?: string,
+  containerClass?: string
   iconClass?: string,
   spin?: boolean,
   button?: boolean,
