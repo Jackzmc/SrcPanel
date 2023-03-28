@@ -1,14 +1,14 @@
 <template>
 <div class="container is-fullwidth">
     <div class="columns is-multiline is-variable is-1">
-      <div class="column is-9">
+      <div class="column is-">
           <Servers @refresh="onServerRefresh" />
           <p class="is-inline is-pulled-right" style="margin-right: 90px">
             <em v-if="countdownText">{{countdownText}}</em>
             <Icon icon="spinner" v-else spin />
           </p>
       </div>
-      <div class="column">
+      <div class="column is-offset-1">
           <div class="content">
             <h6>How to enable & open the developer console?</h6>
             <ol>
