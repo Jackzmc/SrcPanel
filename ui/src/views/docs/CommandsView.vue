@@ -8,7 +8,7 @@
             </Field>
             <span v-for="(group, id) in filteredGroups" :key="id">
                 <h5 class='title is-5'>{{group.name}}</h5>
-                <p class="has-text-centered is-size-6" v-if="!showLockedCommands && group.list.filter(cmd => cmd.hasPermission).length === 0">
+                <p class="has-text-centered is-size-6" v-if="!showLockedCommands && group.list.filter((cmd: any) => cmd.hasPermission).length === 0">
                   You do not have access to any commands in this category
                 </p>
                 <ul class="is-unstyled">

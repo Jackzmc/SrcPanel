@@ -17,7 +17,7 @@
               </div>
             </div>
             <div class="level-item">
-              <a class="button is-info" @click="getRecentPlayers">Refresh</a>
+              <a :class="['button','is-info',{'is-loading': recentPlayers.loading}]" @click="getRecentPlayers" >Refresh</a>
             </div>
             <div class="level-item">
               <em>auto refreshing every {{AUTO_REFRESH_INTERVAL_MINUTES}} minutes</em>
@@ -27,32 +27,31 @@
         <UserSelection :userdata="userdata" :users="recentPlayers.list" @manual="onManualSelected" />
       </Tab>
       <Tab name="Search for a User" id="search">
-        <div class="field">
-        <label class="label">Search for a player (SteamID2 or name)</label>
-        <div class="control">
+        <Field label="Search for a player (SteamID2 or name)" :icon-left="loading ? 'spinner' : 'search'" :icon-left-spin="loading">
           <input v-model="search.query" @input="search.func" class="input" type="text" placeholder="STEAM_1:1:####### or a name">
-        </div>
-      </div>
-      <UserSelection has-manual :userdata="userdata" :users="users" @manual="onManualSelected" />
+        </Field>
+        <UserSelection has-manual :userdata="userdata" :users="users" @manual="onManualSelected" />
+        <p class="has-text-centered my-6 is-size-5" v-if="!search.query">Enter a search query</p>
+        <p class="has-text-centered my-6 is-size-5" v-else-if="users.length === 0">No players found</p>
       </Tab>
       <Tab name="Admins" id="admins" v-if="privUser.hasWebPerm(WebPermission.ManageAdmins)" @selected="fetchAdmins">
         <table class="table">
           <thead>
             <tr>
               <th>Id</th>
-              <th>SteamID</th>
               <th>Name</th>
+              <th>SteamID</th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="admin in admins" :key="admin.id">
               <td>{{ admin.id }}</td>
-              <td>{{ admin.steamid }}</td>
               <td>
                 <router-link :to="{name:'manage-user',params:{id:admin.steamid},query:{returnTo:$route.fullPath}}">
                   {{ admin.name }}
                 </router-link>
               </td>
+              <td>{{ admin.steamid }}</td>
             </tr>
           </tbody>
         </table>
@@ -76,6 +75,7 @@ import {Tabs, Tab} from 'vue3-tabs-component';
 import Debounce from '@/js/debounce'
 import { request } from '@/js/util';
 import SteamID from 'steamid';
+import Field from '@/components/Field.vue'
 
 const AUTO_REFRESH_INTERVAL_MINUTES = 2
 const RECENT_LIMIT = 15
@@ -104,6 +104,7 @@ let manualInput = ref<string>()
 let selectedId = ref<string>()
 let servers = ref([])
 let admins = ref<ReadableAdminData[]>([])
+let loading = ref(false)
 
 function setTab(tab: any) {
   selectedTabId.value = tab.tab.computedId
@@ -121,7 +122,11 @@ function onManualSelected(id: string) {
   search.value.func()
 }
 async function searchUser() {
+  users.value = []
   let query = manualInput.value ?? search.value.query
+  if(query == "") return
+
+  loading.value = true
   const profileMatch = query.match(STEAM_PROFILE_URL_REGEX)
   if(profileMatch && profileMatch.length > 1) {
     const steam2 = new SteamID(profileMatch[1]).getSteam2RenderedID()
@@ -129,6 +134,7 @@ async function searchUser() {
   }
 
   const response = await request(`/api/users/search/${query}`)
+  loading.value = false
   if(response?.ok) {
     const json = await response.json()
     users.value = json.users

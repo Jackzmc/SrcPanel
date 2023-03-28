@@ -51,8 +51,10 @@
             v-if="ban.executor.name"
             class="is-small has-text-black"
             :data-tooltip="ban.executor.id"
-            :to="{name: 'manage-user-bans', params: { id: ban.client.id, banid: ban.id }, query: { returnTo: $route.fullPath }}"
-          ><b>{{ ban.executor.name }}</b></router-link>
+            :to="ban.executor.source ? '#' : {name: 'manage-user-bans', params: { id: ban.executor.id, banid: ban.id }, query: { returnTo: $route.fullPath }}"
+          >
+            <b>{{ ban.executor.name }}</b>
+          </router-link>
           <template v-else>
             <em v-if="ban.executor.name" class='has-text-info'>{{ban.executor.name}}</em>
             <em v-else>{{ban.executor.id}}</em>
