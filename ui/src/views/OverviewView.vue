@@ -8,7 +8,7 @@
             <Icon icon="spinner" v-else spin />
           </p>
       </div>
-      <div class="column is-offset-1">
+      <div class="column is-offset-1 is-3">
           <div class="content">
             <h6>How to enable & open the developer console?</h6>
             <ol>
