@@ -65,24 +65,11 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                     try {
                         const details = await fastify.steam.getUserDetails([steamid])
                         if(details.length > 0) {
+
                             const steamid64 = steamid.getSteam2RenderedID()
                             const admin = fastify.authmngr.getAdmin(steamid64)
                             if(admin) {
-                                const steamInfo: SteamInfo = {
-                                    steamid: steamid64,
-                                    accountid: steamid.accountid.toString(),
-                                    name: details[0].personaname,
-                                    profileurl: details[0].profileurl,
-                                    avatarhash: details[0].avatarhash
-                                }
-                                req.session.user = steamInfo
-                                req.session.permissions = admin.permissions
-
-                                req.session.ip = req.ip
-                                req.session.countryCode = (await FastGeoip.lookup(req.ip)).country
-                                req.session.loginTime = Date.now()
-                                req.session.version = SESSION_VERSION
-
+                                await fastify.authmngr.loginUser(req, details[0], admin)
 
                                 if(req.query.return_uri) {
                                     const redirectUri = process.env.STEAM_REDIRECT_URI || "http://localhost:8080"

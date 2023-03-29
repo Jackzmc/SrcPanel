@@ -4,7 +4,11 @@ import { FastifyReply, FastifyRequest } from 'fastify';
 import ActivityLog from "./ActivityLog.js";
 import { AdminPermissions, AdminData, AdminGroup, WebRole, WebPermission, OauthProvider } from '../../../common-types/User.js';
 import { ReadableAdminData, UserOauthProviders } from '../../../common-types/User';
-import { Service, ServicePrivilege, ServicePrivilegeKeys, UserPrivileges } from  '../../../common-types/Privileges.js';
+import { Service, ServicePrivilege, ServicePrivilegeKeys, SteamInfo, UserPrivileges } from  '../../../common-types/Privileges.js';
+import { SteamUserDetails } from '../../../common-types/Share';
+import SteamID from "steamid";
+import FastGeoip from 'fast-geoip';
+import { SESSION_VERSION } from '../routes/auth/steam.js';
 
 interface AddAdmin {
     authtype: "steam" | "name" | "ip",
@@ -410,11 +414,40 @@ export default class AuthManager {
             "SELECT provider, provider_id FROM dash_providers WHERE SUBSTRING(steamid, 11) = SUBSTRING(?, 11)",
             [ steamid ]
         )
-        console.log(providers)
         let result = {}
         for(const row of providers) {
             result[row.provider] = row.provider_id
         }
         return result
     }
+
+    public async getUserByProvider(provider: OauthProvider, id: string) {
+        const [rows] = await this.db.execute<RowDataPacket[]>(
+            "SELECT steamid FROM dash_providers WHERE provider = ? and provider_id = ?", 
+            [provider, id]
+        )
+
+        if(rows.length > 0) {
+            return this.getAdmin(rows[0].steamid)
+        }
+        return null
+    }
+    
+    public async loginUser(req: FastifyRequest, steamDetails: SteamUserDetails, admin: AdminData) {
+        const steamInfo: SteamInfo = {
+            steamid: admin.identity,
+            accountid: new SteamID(admin.identity).accountid.toString(),
+            name: steamDetails.personaname,
+            profileurl: steamDetails.profileurl,
+            avatarhash: steamDetails.avatarhash
+        }
+        req.session.user = steamInfo
+        req.session.permissions = admin.permissions
+
+        req.session.ip = req.ip
+        req.session.countryCode = (await FastGeoip.lookup(req.ip))?.country
+        req.session.loginTime = Date.now()
+        req.session.version = SESSION_VERSION
+    }
+
 }
