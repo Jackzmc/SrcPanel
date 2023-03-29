@@ -17,7 +17,7 @@
             <p class="has-text-info" v-else-if="updateStatus.upToDate">Server is already up to date.</p>
             <p class="has-text-success" v-else-if="updateStatus.state === 'SUCCESS'">Server has been updated successfully.</p>
         </div>
-        <div class="column">
+        <div class="column is-5">
           <ConfigEditor />
         </div>
     </div>

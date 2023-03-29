@@ -2,7 +2,7 @@
 <div>
   <h4 class="title is-4">Panel Settings</h4>
   <p class="my-6" v-if="!keyvalues">Fetching panel settings...</p>
-  <table v-if="keyvalues" class="table">
+  <table v-if="keyvalues" class="table is-fullwidth">
     <thead>
       <tr>
         <th>Key</th>
@@ -10,7 +10,7 @@
       </tr>
     </thead>
     <tbody>
-      <tr v-for="(data, key) of keyvalues" :key="key">
+      <tr v-for="(data, key) of keyvalues" :key="key" @mouseenter="keyvalues![key].focused = true" @mouseleave="keyvalues![key].focused = false">
         <td>
           {{ data.name ?? convertSnakeToHuman(key) }}
           <span class="tags">
@@ -19,8 +19,9 @@
           </span>
         </td>
         <td>
-          <Field  :error="keyvalues[key].error" :success="keyvalues[key].success">
-            <input type="text" :class="['input',{'is-danger': keyvalues[key].error}]" v-model="keyvalues[key].formValue" @input="validateKeyvalue(key)">
+          <Field :error="keyvalues[key].error" :success="keyvalues[key].success" >
+            <input type="text" :class="['input',{'is-danger': keyvalues[key].error}]" v-model="keyvalues[key].formValue" @input="validateKeyvalue(key)" v-if="!keyvalues[key].sensitive || keyvalues[key].focused">
+            <em v-else class="is-size-6">hidden, hover to see</em>
           </Field>
         </td>
       </tr>
@@ -44,7 +45,8 @@ const URL_REGEX = new RegExp(/^https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256
 interface KeyvaluesFormData extends ApiPanelConfig {
   formValue: string,
   error?: string,
-  success?: string
+  success?: string,
+  focused: boolean
 }
 
 let keyvalues = ref<Record<Keyvalue, KeyvaluesFormData>>()
@@ -85,7 +87,13 @@ function validateKeyvalue(key: string) {
       }
       break;
     case "url":
-      if(!URL_REGEX.test(data.formValue)) {
+      try {
+        const url = new URL(data.formValue);
+        if(url.protocol !== "http:" && url.protocol !== "https:")
+          data.error = "URL must begin with http(s)://"
+        else if(data.formValue.endsWith("/"))
+          data.error = "URL cannot end with trailing slash /"
+      } catch(err) {
         data.error = "URL is not valid"
       }
       break;
@@ -128,6 +136,7 @@ async function fetchPanelConfigs() {
     for(const [key, data] of Object.entries(keys)) {
       obj[key as Keyvalue] = {
         ...data,
+        focused: false,
         formValue: data.value,
       }
     }
