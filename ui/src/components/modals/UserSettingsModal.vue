@@ -44,7 +44,10 @@
           </Tab>
           <Tab name="Connections">
             <h4 class="title is-4">Connections</h4>
-            <a target="_blank" href="/api/auth/discord/link" class="button has-text-white" style="background-color:#5865F2">
+            <a v-if="userdata.providers.discord" target="_blank" href="/api/auth/discord/revoke" class="button has-text-white" style="background-color:#5865F2">
+              <Icon icon="fab fa-discord">Unlink Discord Account</Icon>
+            </a>
+            <a v-else target="_blank" href="/api/auth/discord/link" class="button has-text-white" style="background-color:#5865F2">
               <Icon icon="fab fa-discord">Link Discord Account</Icon>
             </a>
           </Tab>

@@ -13,7 +13,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         return {
             user: req.session.user,
             permissions: req.session.permissions,
-            isSessionOld: req.session.version !== SESSION_VERSION
+            isSessionOld: req.session.version !== SESSION_VERSION,
+            providers: await req.user.getProviders()
         }
     })
 
@@ -24,7 +25,6 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             WHERE session_id = ? AND JSON_UNQUOTE(JSON_EXTRACT(data, '$.user.accountid')) = ?`,
             [req.params.id, req.session.user.accountid]
         )
-            console.log(req.params.id, req.session.user.accountid, sessions)
         if(sessions.length == 0) {
             reply.code(404).send({
                 error: 'NO_SESSION',
@@ -39,13 +39,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     })
 
     fastify.get('/sessions', async(req, reply) => {
-        const [sessions] = await fastify.db.execute<RowDataPacket[]>(`
-            SELECT session_id AS id, JSON_UNQUOTE(JSON_EXTRACT(data,'$.ip')) as ip, JSON_UNQUOTE(JSON_EXTRACT(data, '$.countryCode')) as countryCode, JSON_UNQUOTE(JSON_EXTRACT(data, '$.loginTime')) as lastLogin
-            FROM dash_sessions 
-            WHERE JSON_EXTRACT(data, '$.user.accountid') = ?`,
-            [req.session.user.accountid]
-        )
-
+        const sessions = await req.user.getSessions()
 
         return { 
             sessions: sessions.map(session => { 

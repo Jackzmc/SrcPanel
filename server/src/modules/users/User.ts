@@ -1,4 +1,4 @@
-import { AdminData, SessionData, SessionUser } from '../../../../common-types/User';
+import { AdminData, OauthProvider, SessionData, SessionUser } from '../../../../common-types/User';
 import { SteamInfo, UserPrivileges, Service, ServicePrivilege, ActionRequiredPrivilege, Action } from '../../../../common-types/Privileges.js';
 import AuthManager from '../AuthManager.js';
 import { Session } from 'fastify';
@@ -72,4 +72,19 @@ export default class User {
         return await this.authmngr.log.addWebEntry(this.steamid64, `${service}.${action}`, message)
     }
 
+    async addProvider(provider: OauthProvider, id: string, refreshToken?: string) {
+        return await this.authmngr.setProvider(this.steamid64, provider, id, refreshToken)
+    }
+
+    async removeProvider(provider: OauthProvider) {
+        return await this.authmngr.setProvider(this.steamid64, provider, null)
+    }
+
+    getProviders() {
+        return this.authmngr.getProviders(this.steamid64)
+    }
+
+    async getSessions() {
+        return await this.authmngr.getSessions(this.steamid64)
+    }
 }
