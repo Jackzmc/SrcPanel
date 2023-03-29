@@ -122,9 +122,14 @@
             </a>
           </div>
         </div>
-        <div class="navbar-item" v-else>
-          <LoginButton />
+        <template v-else>
+        <div class="navbar-item">
+          <DiscordLoginButton />
         </div>
+        <div class="navbar-item">
+          <SteamLoginButton />
+        </div>
+        </template>
       </div>
     </div>
   </nav>
@@ -133,7 +138,8 @@
 
 <script setup lang="ts">
 import { computed, ref, onMounted } from 'vue';
-import LoginButton from '@/components/LoginButton.vue'
+import SteamLoginButton from '@/components/SteamLoginButton.vue'
+import DiscordLoginButton from '@/components/DiscordLoginButton.vue'
 import { useRoute, useRouter } from 'vue-router';
 import { notify } from '@kyvg/vue3-notification';
 import { PrivilegedUser } from '@/js/User';
