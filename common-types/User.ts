@@ -31,6 +31,7 @@ export const WEB_FLAGS: Record<WebPermission, string> = {
 export interface SessionData extends BaseSession {
     ip: string,
     loginTime: number,
+    lastActive: number,
     countryCode: string,
     version?: string
 }

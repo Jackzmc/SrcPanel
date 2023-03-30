@@ -79,6 +79,8 @@ export default class AuthManager {
                 statusCode: 401
             })
         }
+
+        req.session.lastActive = Math.round(Date.now() / 1000)
     
         return authorized
     }
