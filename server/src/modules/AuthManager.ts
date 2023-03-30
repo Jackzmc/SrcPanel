@@ -402,14 +402,12 @@ export default class AuthManager {
     }
 
     public async getSessions(steamid: string) {
-        console.log(steamid)
         const [sessions] = await this.dbna.execute<RowDataPacket[]>(`
             SELECT session_id AS id, JSON_UNQUOTE(JSON_EXTRACT(data,'$.ip')) as ip, JSON_UNQUOTE(JSON_EXTRACT(data, '$.countryCode')) as countryCode, JSON_UNQUOTE(JSON_EXTRACT(data, '$.loginTime')) as lastLogin
             FROM dash_sessions 
             WHERE SUBSTRING(JSON_UNQUOTE(JSON_EXTRACT(data, '$.user.steamid')), 11) = SUBSTRING(?, 11)`,
             [steamid]
         )
-        console.log(sessions)
         return sessions
     }
 
@@ -469,6 +467,7 @@ export default class AuthManager {
         req.session.ip = req.ip
         req.session.countryCode = (await FastGeoip.lookup(req.ip))?.country
         req.session.loginTime = Math.round(Date.now() / 1000)
+        req.session.lastActive = req.session.loginTime
         req.session.version = SESSION_VERSION
     }
 

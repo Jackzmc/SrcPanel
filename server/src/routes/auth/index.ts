@@ -1,6 +1,6 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyReply, FastifyRequest } from 'fastify';
 import { RowDataPacket } from 'mysql2';
-import { UserData } from '../../../../common-types/User';
+import { SessionData, UserData } from '../../../../common-types/User';
 import { SESSION_VERSION } from './steam.js';
 
 
@@ -14,7 +14,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             user: req.session.user,
             permissions: req.session.permissions,
             isSessionOld: req.session.version !== SESSION_VERSION,
-            providers: await req.user.getProviders()
+            providers: await req.user.getProviders(),
         }
     })
 
@@ -43,10 +43,14 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
         return { 
             sessions: sessions.map(session => { 
-                return {
-                    ...session, 
-                    lastLogin: Number(session.lastLogin)
+                const data: SessionData = {
+                    id: session.id.substring(0, 4),
+                    ip: session.ip,
+                    loginTime: session.loginTime,
+                    lastActive: session.lastActive,
+                    countryCode: session.countryCode
                 }
+                return data
             }), 
             currentSessionId: req.session.sessionId 
         }

@@ -12,22 +12,31 @@
             <table class="table is-table is-striped is-hoverable is-fullwidth">
               <thead>
                 <tr>
-                  <th>Session ID</th>
-                  <th>Country</th>
-                  <th>IP</th>
+                  <th>ID</th>
+                  <th>Location</th>
                   <th>Created</th>
+                  <th>Last Active</th>
                   <th></th>
                 </tr>
               </thead>
               <tbody>
                 <tr v-for="(session, i) in sessions" :key="session.id">
-                  <td>{{ session.id.substring(0, 8) }}</td>
-                  <td v-if="session.ip !== '127.0.0.1'">
-                    {{ formatCountry(session.countryCode) }}
+                  <td>{{ session.id }}</td>
+                  <td>
+                    <span v-if="session.ip !== '127.0.0.1'">{{ formatCountry(session.countryCode) }}</span><em v-else>(dev)</em>
+                    <br>
+                    {{ session.ip }}
                   </td>
-                  <td v-else><em>(dev)</em></td>
-                  <td>{{ session.ip }}</td>
-                  <td>{{ formatDate(session.lastLogin) }}</td>
+                  <td>
+                    {{ formatDate(session.loginTime) }}
+                    <br>
+                    {{ getRelDate(session.loginTime) }}
+                  </td>
+                  <td>
+                    {{ formatDate(session.loginTime, true) }}
+                    <br>
+                    {{ getRelDate(session.lastActive) }}
+                  </td>
                   <td>
                     <b v-if="currentSessionId === session.id">Current Session</b>
                     <button
@@ -74,13 +83,13 @@
 <script setup lang="ts">
 import Modal from "@/components/Modal.vue";
 import { PrivilegedUser } from "@/js/User";
-import { formatDate, request } from "@/js/util";
+import { formatDate, getRelDate, request } from "@/js/util";
 import { ref, watch, computed, onBeforeMount, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 // @ts-ignore
 import { Tab, Tabs } from "vue3-tabs-component";
 import { UserPrivileges } from "../../../../common-types/Privileges";
-import { UserData, OauthProvider } from '../../../../common-types/User';
+import { UserData, OauthProvider, SessionData } from '../../../../common-types/User';
 import OauthProviderCard from "@/components/OauthProviderCard.vue";
 
 const emit = defineEmits(["close"]);
@@ -93,17 +102,9 @@ const props = defineProps<{
   privUser: PrivilegedUser;
 }>();
 
-interface SessionQuery extends UserData {
-  id: string;
-  countryCode: string;
-  ip: string;
-  lastLogin: number;
-  privileges: UserPrivileges;
-}
-
 const intl = new Intl.DisplayNames(["en"], { type: "region" });
 
-let sessions = ref<SessionQuery[]>([]);
+let sessions = ref<SessionData[]>([]);
 let currentSessionId = ref<string>();
 
 async function fetchSessions() {

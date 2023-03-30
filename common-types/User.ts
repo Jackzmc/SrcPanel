@@ -28,7 +28,8 @@ export const WEB_FLAGS: Record<WebPermission, string> = {
     [WebPermission.ConfigRawView]: 'Can view unfiltered config files'
 }
 
-export interface SessionData extends BaseSession {
+export interface SessionData {
+    id: string,
     ip: string,
     loginTime: number,
     lastActive: number,
@@ -38,6 +39,9 @@ export interface SessionData extends BaseSession {
 interface BaseSession {
     user: SessionUser,
     permissions: AdminPermissions,
+}
+export interface CustomFastifySession extends BaseSession, SessionData {
+
 }
 export interface UserData extends BaseSession {
     isSessionOld: boolean,

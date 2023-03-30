@@ -123,8 +123,9 @@ export async function request(url: RequestInfo, options?: RequestInit, errOption
   }
 }
 
-export function formatDate(timestamp?: number) {
+export function formatDate(timestamp?: number, onlyDate = false) {
   const d = timestamp ? new Date(timestamp * 1000) : new Date();
+  if(onlyDate) return d.toLocaleDateString()
   return d.toLocaleDateString() + " at " + d.toLocaleTimeString(undefined, {
     timeStyle: "short"
   });
