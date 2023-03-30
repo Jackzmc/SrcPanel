@@ -8,7 +8,12 @@
       <section class="modal-card-body">
         <Tabs inner-wrapper-class="tabs" :options="{ useUrlFragment: false }">
           <Tab name="Sessions">
-            <h4 class="title is-4">Active Sessions</h4>
+            <h4 class="title is-4">
+              Active Sessions
+              <a :class="['button','is-info','is-small','is-pulled-right',{'is-loading': loading}]" @click="fetchSessions">
+                <Icon icon="sync" button :spin="loading">Refresh</Icon>
+              </a>
+            </h4>
             <table class="table is-table is-striped is-hoverable is-fullwidth">
               <thead>
                 <tr>
@@ -83,7 +88,7 @@
 <script setup lang="ts">
 import Modal from "@/components/Modal.vue";
 import { PrivilegedUser } from "@/js/User";
-import { formatDate, getRelDate, request } from "@/js/util";
+import { formatDate, getRelDate, request, sleep } from "@/js/util";
 import { ref, watch, computed, onBeforeMount, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 // @ts-ignore
@@ -104,11 +109,14 @@ const props = defineProps<{
 
 const intl = new Intl.DisplayNames(["en"], { type: "region" });
 
+let loading = ref(false)
 let sessions = ref<SessionData[]>([]);
 let currentSessionId = ref<string>();
 
 async function fetchSessions() {
+  loading.value = true
   const response = await request("/api/auth/sessions");
+  loading.value = false
   if (response?.ok) {
     const json = await response.json();
     currentSessionId.value = json.currentSessionId;
