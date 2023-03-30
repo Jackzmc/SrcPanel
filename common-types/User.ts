@@ -53,7 +53,12 @@ export interface OauthTokenResponse {
     scope: string;
 }
 
-export type UserOauthProviders = Partial<Record<OauthProvider, string>>
+export interface OauthProviderData {
+    id: string,
+    username?: string,
+    avatarUrl?: string
+}
+export type UserOauthProviders = Partial<Record<OauthProvider, OauthProviderData>>
 
 export interface SessionUser {
     steamid: string,

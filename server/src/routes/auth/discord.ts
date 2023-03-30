@@ -123,7 +123,11 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
             if(jwt.payload.pub) {
                 
-                await req.user.addProvider("discord", userJson.id, tokenJson.refresh_token)
+                await req.user.addProvider("discord", {
+                    id: userJson.id,
+                    username: `${userJson.username}#${userJson.discriminator}`,
+                    avatarUrl: `https://cdn.discordapp.com/avatars/${userJson.id}/${userJson.avatar}.png`
+                }, tokenJson.refresh_token)
 
                 return reply.send("<h1>Discord is now linked, you can close this page</h1>")
             } else {

@@ -43,13 +43,21 @@
             </table>
           </Tab>
           <Tab name="Connections">
+
             <h4 class="title is-4">Connections</h4>
-            <a v-if="userdata.providers.discord" target="_blank" href="/api/auth/discord/revoke" class="button has-text-white" style="background-color:#5865F2">
-              <Icon icon="fab fa-discord">Unlink Discord Account</Icon>
-            </a>
-            <a v-else target="_blank" href="/api/auth/discord/link" class="button has-text-white" style="background-color:#5865F2">
-              <Icon icon="fab fa-discord">Link Discord Account</Icon>
-            </a>
+            <div class="list has-visible-pointer-controls">
+              <OauthProviderCard provider="Steam" provider-image-src="/img/providers/steam.png" :data="{id: props.privUser.id, username: props.privUser.name}">
+                Cannot unlink
+              </OauthProviderCard>
+              <OauthProviderCard provider="Discord" provider-image-src="/img/providers/discord.svg" v-slot="slotProps" :data="userdata.providers.discord">
+                <a v-if="slotProps.data" target="_blank" href="/api/auth/discord/revoke" class="button has-text-white" style="background-color:#5865F2">
+                  <Icon icon="fab fa-discord">Unlink Discord Account</Icon>
+                </a>
+                <a v-else target="_blank" href="/api/auth/discord/link" class="button has-text-white" style="background-color:#5865F2">
+                  <Icon icon="fab fa-discord">Link Discord Account</Icon>
+                </a>
+              </OauthProviderCard>
+            </div>
           </Tab>
         </Tabs>
       </section>
@@ -60,6 +68,9 @@
   </Modal>
 </template>
 
+<style src="../../../node_modules/bulma-list/css/bulma-list.css"></style>
+
+
 <script setup lang="ts">
 import Modal from "@/components/Modal.vue";
 import { PrivilegedUser } from "@/js/User";
@@ -69,7 +80,8 @@ import { useRoute, useRouter } from "vue-router";
 // @ts-ignore
 import { Tab, Tabs } from "vue3-tabs-component";
 import { UserPrivileges } from "../../../../common-types/Privileges";
-import { UserData } from "../../../../common-types/User";
+import { UserData, OauthProvider } from '../../../../common-types/User';
+import OauthProviderCard from "@/components/OauthProviderCard.vue";
 
 const emit = defineEmits(["close"]);
 

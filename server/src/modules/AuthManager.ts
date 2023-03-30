@@ -3,7 +3,7 @@ import QuickLRU from 'quick-lru'
 import { FastifyReply, FastifyRequest } from 'fastify';
 import ActivityLog from "./ActivityLog.js";
 import { AdminPermissions, AdminData, AdminGroup, WebRole, WebPermission, OauthProvider } from '../../../common-types/User.js';
-import { ReadableAdminData, UserOauthProviders } from '../../../common-types/User';
+import { ReadableAdminData, UserOauthProviders, OauthProviderData } from '../../../common-types/User';
 import { Service, ServicePrivilege, ServicePrivilegeKeys, SteamInfo, UserPrivileges } from  '../../../common-types/Privileges.js';
 import { SteamUserDetails } from '../../../common-types/Share';
 import SteamID from "steamid";
@@ -382,16 +382,16 @@ export default class AuthManager {
         return Object.values(this.groups)
     }
 
-    public async setProvider(steamid: string, providerName: OauthProvider, providerId: string, refreshToken: string = null) {
-        if(providerId === null) {
+    public async setProvider(steamid: string, provider: OauthProvider, providerData: OauthProviderData, refreshToken: string = null) {
+        if(providerData === null) {
             return await this.db.query<OkPacket>(
                 "DELETE FROM dash_providers WHERE steamid = ? AND provider = ?",
-                [ steamid, providerName ]
+                [ steamid, provider ]
             )
         } else {
             return await this.db.query<OkPacket>(
-                "INSERT INTO dash_providers (steamid, provider, provider_id, refresh_token) VALUES (?, ?, ?, ?)",
-                [ steamid, providerName, providerId, refreshToken ]
+                "INSERT INTO dash_providers (steamid, provider, provider_id, username, avatar_url, refresh_token) VALUES (?, ?, ?, ?, ?, ?)",
+                [ steamid, provider, providerData.id, providerData.username, providerData.avatarUrl, refreshToken ]
             )
         }
     }
@@ -411,12 +411,17 @@ export default class AuthManager {
     // Gets all providers with their id for that provider (discord: <discord_id>)
     public async getProviders(steamid: string): Promise<UserOauthProviders> {
         const [providers] = await this.db.query<RowDataPacket[]>(
-            "SELECT provider, provider_id FROM dash_providers WHERE SUBSTRING(steamid, 11) = SUBSTRING(?, 11)",
+            "SELECT provider, provider_id, username, avatar_url FROM dash_providers WHERE SUBSTRING(steamid, 11) = SUBSTRING(?, 11)",
             [ steamid ]
         )
-        let result = {}
+        let result: UserOauthProviders = {}
         for(const row of providers) {
-            result[row.provider] = row.provider_id
+            const data: OauthProviderData = {
+                id: row.provider_id,
+                username: row.username,
+                avatarUrl: row.avatar_url
+            }
+            result[row.provider] = data
         }
         return result
     }
