@@ -51,7 +51,7 @@
             v-if="ban.executor.name"
             class="is-small has-text-black"
             :data-tooltip="ban.executor.id"
-            :to="ban.executor.source ? '#' : {name: 'manage-user-bans', params: { id: ban.executor.id, banid: ban.id }, query: { returnTo: $route.fullPath }}"
+            :to="ban.executor.provider === 'steam' ? '#' : {name: 'manage-user-bans', params: { id: ban.executor.id, banid: ban.id }, query: { returnTo: $route.fullPath }}"
           >
             <b>{{ ban.executor.name }}</b>
           </router-link>
@@ -59,7 +59,7 @@
             <em v-if="ban.executor.name" class='has-text-info'>{{ban.executor.name}}</em>
             <em v-else>{{ban.executor.id}}</em>
           </template>
-          <p class='has-text-info' v-if="ban.executor.source"><em>via {{ban.executor.source}}</em></p>
+          <p class='has-text-info' v-if="ban.executor.provider && ban.executor.provider !== 'steam'"><em>via {{ban.executor.provider}}</em></p>
         </td>
         <td v-if="userdata">
           {{ban.reason}}
@@ -110,7 +110,7 @@ const props = defineProps({
   userdata: null
 })
 interface Ban extends ListAPIBan {
-  relDate?: string
+  relDate?: string,
 }
 
 let limit = ref(100)
@@ -178,7 +178,8 @@ async function fetchBans(resetPage = false) {
       if(discordBanMatch && discordBanMatch.length == 3) {
         ban.executor.id = discordBanMatch[2]
         ban.executor.name = discordBanMatch[1]
-        ban.executor.source = "discord"
+        ban.executor.nameResolver = "provider"
+        ban.executor.provider = "discord"
       }
       if(ban.executor.id === "CONSOLE") ban.executor.id = '[Automatic]'
       return {

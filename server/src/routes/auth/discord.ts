@@ -132,7 +132,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 return reply.send("<h1>Discord is now linked, you can close this page</h1>")
             } else {
                 // User is logging in to their account via discord
-                const admin = await fastify.authmngr.getUserByProvider("discord", userJson.id)
+                const admin = await fastify.authmngr.getAdminByProvider("discord", userJson.id)
                 if(!admin) return reply.send("<h1>You must link your discord account to your admin panel account first</h1>")
                 const details = await fastify.steam.getUserDetails([ new SteamID(admin.identity) ])
                 if(details.length > 0) {

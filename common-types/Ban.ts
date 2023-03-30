@@ -7,8 +7,8 @@ export enum APIBanFlags {
 export interface APIBanPlayer {
     id: string,
     name?: string,
-    nameResolver?: "stats" | "name_db" | "unknown",
-    source?: string
+    nameResolver?: "stats" | "name_db" | "unknown" | "provider",
+    provider?: string
 }
 
 export interface FullAPIBanPlayer extends APIBanPlayer {

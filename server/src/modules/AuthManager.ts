@@ -37,8 +37,11 @@ export default class AuthManager {
     private groups: Record<number, AdminGroup> = {}
     private apikeysCache: QuickLRU<string, APIKey>
     private actLog: ActivityLog
+    // Caches the resolved name of a ban source such as discord:DISCORD_ID
+    private providerNameCache: Map<string, string>
 
     constructor(adminDatabase: Pool, sessionDatabase: Pool) {
+        this.providerNameCache = new Map()
         this.apikeysCache = new QuickLRU<string, APIKey>({ maxSize: 100 });
         this.db = adminDatabase
         this.dbna = sessionDatabase
@@ -426,7 +429,7 @@ export default class AuthManager {
         return result
     }
 
-    public async getUserByProvider(provider: OauthProvider, id: string) {
+    public async getAdminByProvider(provider: OauthProvider, id: string) {
         const [rows] = await this.db.execute<RowDataPacket[]>(
             "SELECT steamid FROM dash_providers WHERE provider = ? and provider_id = ?", 
             [provider, id]
@@ -436,6 +439,18 @@ export default class AuthManager {
             return this.getAdmin(rows[0].steamid)
         }
         return null
+    }
+
+    public async getNameFromProvider(provider: OauthProvider, providerId: string): Promise<string> {
+        const cached = this.providerNameCache.get(`${provider}:${providerId}`)
+        if(cached) return cached
+        const [rows] = await this.db.query<RowDataPacket[]>(
+            "SELECT username FROM dash_providers WHERE provider_id = ? AND provider = ?",
+            [ providerId, provider ]
+        )
+        if(rows.length === 0) return null
+        this.providerNameCache.set(`${provider}:${providerId}`, rows[0].username)
+        return rows[0].username
     }
     
     public async loginUser(req: FastifyRequest, steamDetails: SteamUserDetails, admin: AdminData) {
