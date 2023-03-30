@@ -3,12 +3,13 @@
     <div class="columns">
       <div class="column" v-if="notes">
         <h3 class="title is-3">
-          Showing <input type="number" class="input" min=20 max=1000 step=10 style="width:7%" v-model="limit" @blur="changeLimit" /> / {{ notesCount.toLocaleString() }} Notes
+          Showing <input type="number" class="input" min=20 max=1000 step=10 style="width:7%" v-model="limit" @blur="changeLimit" /> / {{ totalNotesCount.toLocaleString() }} Notes
+          <em class="subtitle is-4" v-if="hasSearchQuery">({{ notesCount }} filtered)</em>
         </h3>
         <p class="subtitle is-=6">
           The ID column shows the id of the note, with the rating of the note's message.
         </p>
-        <Pagination :page="page" :limit="limit" :count="notesCount" @page="setPage"></pagination>  
+        <Pagination :page="page" :limit="limit" :count="notesCount" @page="setPage"></pagination>
 
         <table class="table is-fullwidth">
           <thead>
@@ -48,7 +49,7 @@
             </tr>
           </tbody>
         </table>
-        <Pagination :page="page" :limit="limit" :count="notesCount" @page="setPage"></pagination>  
+        <Pagination :page="page" :limit="limit" :count="notesCount" @page="setPage"></pagination>
       </div>
       <div class="column" v-else-if="fetchError">
         <p class="my-5 is-size-2 has-text-centered has-text-danger">{{ fetchError }}</p>
@@ -63,11 +64,12 @@
             <p>You can find the admins list in the <b><router-link to="/admin/players#admins">Player Management</router-link></b> panel</p>
           </div>
         </div>
-        <h4 class="title is-4">Search By User</h4>
-        <input class="input" v-model="search.user" />
-        <br><br>
-        <h4 class="title is-4">Search Note Message</h4>
-        <input class="input" v-model="search.content" />
+        <Field icon-left="fa-user" label="Search By User">
+          <input class="input" v-model="search.user" />
+        </Field>
+        <Field icon-left="fa-message" label="Search Note Message">
+          <input class="input" v-model="search.content" />
+        </Field>
       </div>
     </div>
   </div>
@@ -77,6 +79,7 @@
 import { ref, onBeforeMount, onMounted, computed } from 'vue'
 import ActionNote from '@/components/ActionNote.vue'
 import Pagination from '@/components/Pagination.vue'
+import Field from '@/components/Field.vue'
 import { UserData } from '../../../common-types/User.js';
 import data from '@/assets/data.json'
 import Sentiment from 'sentiment'
@@ -91,7 +94,7 @@ const props = defineProps<{
 
 let page = ref(1)
 let limit = ref(40)
-let notesCount = ref(0)
+let totalNotesCount = ref(0)
 let fetchError = ref<string|undefined>(undefined)
 let notes = ref<any[] | undefined>(undefined)
 let admins = ref<any[]>([])
@@ -108,12 +111,21 @@ function changeLimit() {
   fetchNotes()
 }
 
+const hasSearchQuery = computed(() => {
+  return search.value.user || search.value.content
+})
+const notesCount = computed(() => {
+  if(hasSearchQuery) return filteredNotes.value.length
+  else return totalNotesCount.value
+})
+
 const POSITIVE_WORDS = ["good", "great", "decent", "amazing", "helpful", "yes"]
 const CAUTION_WORDS = ["ok", "alright", "noob", "new", "noobs", "no", "burned", "dumb", "suspicious", "nooby", "tried", "threw", "tossed", "waste", "waster", "meh"]
 const NEGATIVE_WORDS = ["troll", "teamkiller", "tk", "tker", "bad", "stupid", "annoying", "lit", "sucks", "unhelpful", "spam", "rushes", "rusher", "dick", "asshole", "cunt"]
 
 const filteredNotes = computed(() => {
   if(!notes.value) return []
+  if(!hasSearchQuery) return notes.value
   let filtered = notes.value
   if(search.value.user != '') {
     let query = search.value.user.toLowerCase()
@@ -142,7 +154,7 @@ async function fetchNotes() {
     const response = await fetch(`/api/notes?page=${page.value}&limit=${limit.value}`)
     const json = await response.json()
     if(response.ok) {
-      notesCount.value = json.totalNotes
+      totalNotesCount.value = json.totalNotes
       notes.value = json.notes.map((note: any) => {
         note.content = note.content.trim()
         note.class = ["tag"]

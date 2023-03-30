@@ -37,6 +37,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 200: {
                     type: 'object',
                     properties: {
+                        banId: { type: 'number' },
                         changes: { type: 'number' },
                     }
                 }
@@ -61,22 +62,20 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 })
             }
 
-
-
             const ban = replaceObject<any>(existing[0], req.body)
 
             const [ok] = await fastify.db.execute<OkPacket>(`
                 UPDATE bans 
                 SET executor = :executor, reason = :reason, flags = :flags, 
                 public_message = :public_message, expires = :expires 
-                WHERE steamid = :steamid`,
+                WHERE id = :id`,
                 {
                     executor: ban.executor,
                     reason: ban.reason,
                     flags: ban.flags,
                     public_message: ban.public_message,
                     expires: ban.expires,
-                    steamid: ban.steamid
+                    id: req.params.id
                 }
             )
 

@@ -2,28 +2,25 @@
 <div class="container">
     <div class="columns is-variable is-6">
         <div class="column is-7">
-          <div class="field">
-            <label class="label">Search</label>
-            <div class="control">
+          <Field label="Search" icon-left="search">
               <input v-model="searchQuery" class="input" style="width:50%" type="text" placeholder="Search for a cvar">
-            </div>
-          </div>
-            <ul>
-              <li v-for="cvar in filteredCvars" :key="cvar.cvar">
-                <b class="is-size-5">
-                  <component
-                    @click='showExamples(cvar)'
-                    :is="cvar.examples && cvar.examples.length > 0 ? 'a' : 'span'"
-                    class="is-size-5 has-tooltip-success"
-                    :data-tooltip="cvar.examples && cvar.examples.length > 0 ? 'Click to view examples' : null"
-                  >
-                    {{cvar.name}}
-                  </component>&nbsp;
-                  <span v-html="formatParameters(cvar)" />
-                </b>
-                 - {{cvar.description}}
-              </li>
-            </ul>
+            </Field>
+          <ul>
+            <li v-for="cvar in filteredCvars" :key="cvar.cvar">
+              <b class="is-size-5">
+                <component
+                  @click='showExamples(cvar)'
+                  :is="cvar.examples && cvar.examples.length > 0 ? 'a' : 'span'"
+                  class="is-size-5 has-tooltip-success"
+                  :data-tooltip="cvar.examples && cvar.examples.length > 0 ? 'Click to view examples' : null"
+                >
+                  {{cvar.name}}
+                </component>&nbsp;
+                <span v-html="formatParameters(cvar)" />
+              </b>
+                - {{cvar.description}}
+            </li>
+          </ul>
         </div>
         <div class="column content">
             <p>
@@ -60,6 +57,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { formatParameters } from '@/js/util'
+import Field from '@/components/Field.vue'
 
 const LAST_UPDATED = new Date(Number(process.env.VUE_APP_BUILD_DATE))
 

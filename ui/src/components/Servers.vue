@@ -1,65 +1,61 @@
 <template>
-    <table class="table is-bordered">
-        <thead>
-            <tr>
-                <th>Name</th>
-                <th>Players</th>
-                <th>Direct Connect Command</th>
-                <th>Create Lobby Command</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr v-for="server in servers" :key="server.id">
-                <td>
-                    <a :href="'steam://connect/' + server.ip + '/' + server.port">
-                      <b
-                        :data-tooltip="getServerMessage(server)"
-                        :class="getServerClasses(server)"
-                      >
-                        {{server.name}}
-                      </b>
-                    </a>
-                    <span class="tags">
-                      <span class="tag" v-if="server.tags.includes('5+')">5+</span>
-                      <span class="tag" v-if="server.tags.includes('customs')">Custom Maps</span>
-                    </span>
-                </td>
-                <td class="has-text-centered">
-                  <span
-                    v-if="server.status.online"
-                  >
-                    {{server.status.data.players.length}} / {{server.status.data.maxplayers}}
-                  </span>
-                </td>
-                <td>
-                  <p @click='copyCommand' :class="{'has-text-grey': !server.status.online}">
-                    connect {{server.domain}}:{{server.port}}
-                  </p>
-                </td>
-                <td>
-                  <p @click='copyCommand' :class="{'has-text-grey': !server.status.online}">
-                    mm_dedicated_force_servers {{server.ip}}:{{server.port}}
-                  </p>
-                </td>
-            </tr>
-        </tbody>
-    </table>
+  <table class="table is-bordered is-fullwidth">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Players</th>
+        <th>Direct Connect Command</th>
+        <th>Create Lobby Command</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr v-for="server in servers" :key="server.id">
+        <td>
+          <a :href="'steam://connect/' + server.ip + '/' + server.port">
+            <b :data-tooltip="getServerMessage(server)" :class="getServerClasses(server)">
+              {{ server.name }}
+            </b>
+          </a>
+          <span class="tags">
+            <span class="tag" v-if="server.tags.includes('5+')">5+</span>
+            <span class="tag" v-if="server.tags.includes('customs')">Custom Maps</span>
+          </span>
+        </td>
+        <td class="has-text-centered">
+          <span v-if="server.status.online">
+            {{ server.status.data.players.length }} / {{ server.status.data.maxplayers }}
+          </span>
+        </td>
+        <td>
+          <p @click="copyCommand" :class="{ 'has-text-grey': !server.status.online }">
+            connect {{ server.domain }}:{{ server.port }}
+          </p>
+        </td>
+        <td>
+          <p @click="copyCommand" :class="{ 'has-text-grey': !server.status.online }">
+            mm_dedicated_force_servers {{ server.ip }}:{{ server.port }}
+          </p>
+        </td>
+      </tr>
+    </tbody>
+  </table>
 </template>
 
 <script setup lang="ts">
-import { ref, watch, computed, onBeforeMount, onBeforeUnmount } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { ref, watch, computed, onBeforeMount, onBeforeUnmount } from "vue";
+import { useRoute, useRouter } from "vue-router";
 
-const REFRESH_INTERVAL = 1000 * 10
+const REFRESH_INTERVAL = 1000 * 10;
 
-const emit = defineEmits(['refresh'])
+const emit = defineEmits(["refresh"]);
 
-let servers = ref<any[]>([])
-let refreshTimer = ref<ReturnType<typeof setInterval>>()
+let servers = ref<any[]>([]);
+let refreshTimer = ref<ReturnType<typeof setInterval>>();
 
 function copyCommand(event: any) {
   //@ts-ignore
-  if (document.selection) { // IE
+  if (document.selection) {
+    // IE
     //@ts-ignore
     const range = document.body.createTextRange();
     range.moveToElementText(event.target);
@@ -74,66 +70,64 @@ function copyCommand(event: any) {
   }
 }
 function getServerClasses(server: any) {
-  const classes = ['has-tooltip-arrow', "has-tooltip-right"]
+  const classes = ["has-tooltip-arrow", "has-tooltip-right"];
 
-  if(server.status.online) {
-    if(server.status.data.players.length == 0) {
-      classes.push('has-text-success')
-      classes.push('has-tooltip-success')
+  if (server.status.online) {
+    if (server.status.data.players.length == 0) {
+      classes.push("has-text-success");
+      classes.push("has-tooltip-success");
     } else {
-      classes.push('')
-      classes.push('has-tooltip-info')
+      classes.push("");
+      classes.push("has-tooltip-info");
     }
   } else {
-    classes.push('has-text-danger')
-    classes.push('has-tooltip-danger')
+    classes.push("has-text-danger");
+    classes.push("has-tooltip-danger");
   }
 
-  return classes
+  return classes;
 }
 function getServerMessage(server: any) {
-  if(server.status.online)
-    return server.status.data.players.length  == 0
-      ? 'Server is currently online & empty. Click to join'
-      : 'Server has players online. Click to join.'
-  else return 'Server is offline, unresponsive, or unreachable'
+  if (server.status.online)
+    return server.status.data.players.length == 0
+      ? "Server is currently online & empty. Click to join"
+      : "Server has players online. Click to join.";
+  else return "Server is offline, unresponsive, or unreachable";
 }
 function refreshServers() {
-  emit('refresh', {
-    state: 'start',
-  })
+  emit("refresh", {
+    state: "start",
+  });
 
-  fetch('/api/servers')
-  .then(response => {
-    if(response.ok) return response.json()
-    else console.error('Failure getting servers', response)
-  })
-  .then(json => {
-    servers.value = json
-  })
-  .finally(() => {
-    emit('refresh', {
-      state: 'stop',
-      interval: REFRESH_INTERVAL
+  fetch("/api/servers")
+    .then((response) => {
+      if (response.ok) return response.json();
+      else console.error("Failure getting servers", response);
     })
-  })
+    .then((json) => {
+      servers.value = json;
+    })
+    .finally(() => {
+      emit("refresh", {
+        state: "stop",
+        interval: REFRESH_INTERVAL,
+      });
+    });
 }
 
 onBeforeMount(() => {
   refreshTimer.value = setInterval(() => {
-    refreshServers()
-  }, REFRESH_INTERVAL)
-  refreshServers()
-})
+    refreshServers();
+  }, REFRESH_INTERVAL);
+  refreshServers();
+});
 
 onBeforeUnmount(() => {
-  clearInterval(refreshTimer.value as unknown as number)
-})
-
+  clearInterval((refreshTimer.value as unknown) as number);
+});
 </script>
 
 <style>
-
 #lastUpdate {
   position: fixed;
   top: 0;
@@ -142,6 +136,6 @@ onBeforeUnmount(() => {
 }
 
 b.warn {
-  color: #b79613 !important
+  color: #b79613 !important;
 }
 </style>

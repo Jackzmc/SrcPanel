@@ -62,9 +62,7 @@
 </div>
 </template>
 
-<style type="sass">
-@import "../../../node_modules/bulma-list/css/bulma-list.css";
-</style>
+<style src="../../../node_modules/bulma-list/css/bulma-list.css" />
 
 <script setup lang="ts">
 import { UserData } from '../../../../common-types/User.js';

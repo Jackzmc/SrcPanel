@@ -15,7 +15,7 @@
     <div class="field is-grouped">
       <div class="control">
         <a class="button is-primary" @click="addNote" v-if="canAddNote">Add Note</a>
-        <span class="has-text-danger">Something went wrong, you don't have access to create notes</span>
+        <span class="has-text-danger" v-else>Something went wrong, you don't have access to create notes</span>
       </div>
       <div class="control">
         <button class="button is-link is-light" @click='newNote = undefined'>Cancel</button>
@@ -30,9 +30,14 @@
       <p v-else class="has-text-danger">You lack the permissions to add notes</p>
       <br>
     </div>
-    <NoteComponent v-for="(note, i) in notes" :key="note.id" :note="note" :priv-user="privUser" @deleted="notes.splice(i, 1)" />
-    <p v-if="notes.length > 0"><a :disabled="!canAddNote" @click="startNewNote" class="button is-info">Add a new note</a></p>
-    <p class="has-text-danger" v-if="!canAddNote">You do not have the permission to add notes</p>
+    <div class="mb-5">
+      <p v-if="notes.length > 0"><a class="button" :disabled="canAddNote ? undefined : true" @click="startNewNote"><Icon icon-class="has-text-success" icon="fa-note-sticky" button>New Note</Icon></a></p>
+      <p class="has-text-danger" v-if="!canAddNote">You do not have the permission to add notes</p>
+    </div>
+    <div class="list has-visible-pointer-controls has-hoverable-list-items">
+      <NoteComponent v-for="(note, i) in notes" :key="note.id" :note="note" :priv-user="privUser" @deleted="notes.splice(i, 1)" />
+    </div>
+    <br>
   </template>
 </section>
 </template>

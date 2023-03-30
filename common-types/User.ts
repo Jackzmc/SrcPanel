@@ -39,8 +39,26 @@ interface BaseSession {
     permissions: AdminPermissions,
 }
 export interface UserData extends BaseSession {
-    isSessionOld: boolean
+    isSessionOld: boolean,
+    providers: UserOauthProviders
 }
+
+export type OauthProvider = "discord"
+
+export interface OauthTokenResponse {
+    access_token: string;
+    token_type: string;
+    expires_in: number;
+    refresh_token: string;
+    scope: string;
+}
+
+export interface OauthProviderData {
+    id: string,
+    username?: string,
+    avatarUrl?: string
+}
+export type UserOauthProviders = Partial<Record<OauthProvider, OauthProviderData>>
 
 export interface SessionUser {
     steamid: string,

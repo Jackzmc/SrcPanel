@@ -3,14 +3,14 @@
     <ExamplesModal :data="selected" :prefix="prefix" @close='selected = null' />
     <div class="columns is-variable is-6">
         <div class="column is-7 content">
-            <div class="field">
-              <label class="label">Search</label>
-              <div class="control">
-                <input v-model="searchQuery" class="input" style="width:50%" type="text" placeholder="Search for a command">
-              </div>
-            </div>
+            <Field label="Search" icon-left="search">
+              <input v-model="searchQuery" class="input" style="width:50%" type="text" placeholder="Search for a command">
+            </Field>
             <span v-for="(group, id) in filteredGroups" :key="id">
                 <h5 class='title is-5'>{{group.name}}</h5>
+                <p class="has-text-centered is-size-6" v-if="!showLockedCommands && group.list.filter((cmd: any) => cmd.hasPermission).length === 0">
+                  You do not have access to any commands in this category
+                </p>
                 <ul class="is-unstyled">
                     <li v-for="cmd in group.list" :key="cmd.command">
                       <dl v-if="cmd.hasPermission || showLockedCommands">
@@ -29,7 +29,9 @@
                                 class="is-size-5 has-tooltip-success"
                                 :data-tooltip="cmd.examples && cmd.examples.length > 0 ? 'Click to view examples' : null"
                               >
-                                <span v-if="!cmd.hidePrefix">{{prefix}}</span>{{cmd.name}}
+                              <Icon v-if="!cmd.hasPermission" icon="fa-lock" size="xs" container-class="has-tooltip-right has-tooltip-danger" button data-tooltip="You lack the permission for this command">
+                              </Icon>
+                              <template v-if="!cmd.hidePrefix">{{prefix}}</template>{{cmd.name}}
                               </component>&nbsp;
                               <span v-html="formatParameters(cmd)" class="is-size-5"></span>
                             </component>
@@ -67,32 +69,35 @@
                 </ol>
             </p>
             <p class="notification is-dark">Commands highlighted in <b class="has-text-link">blue</b> have examples, click to view the examples.</p>
-            <p>
-              <b>Parameter Info</b>
+            <div class="box">
+              <h5 class="title is-5">Parameter Info</h5>
               <ul>
                   <li>Parameters are separated by spaces. If you want to have spaces for a parameter, surround it with "quotes around the word".</li>
                   <li><b class="tag is-link">&lt;&gt;</b> indictates the argument is <u>required.</u></li>
                   <li><b class="tag is-secondary">[&nbsp;]</b> indictates the argument is <em>optional</em>.</li>
                   <li>Do not include the <b class="tag is-link">&lt; &gt;</b> or <b class="tag is-secondary">[ ]</b> as its only to indicate if a value is optional or not.</li>
               </ul>
-              For player selection purposes, you do not need to input their FULL name, just enough to make it only select a player (‘ja’ for jackz, as a jockey could exist, and it wouldn’t know if you wanted jockey or jackz)
-            </p>
-            <br>
-            <h4 class="title is-4">Examples</h4>
-            <ol>
-                <li><b class="tag is-link">user</b> means a required user while <b class="tag is-secondary">user</b> means an optional user.</li>
-                <li>I want to kick jackz, the command is <code>{{prefix}}kick &lt;player&gt; [reason]</code>, I don’t need to input a reason so I will just type in: <code>{{prefix}}kick jackz</code></li>
-                <li><p>
-                    I want to respawn disgruntled pea, the problem is that he has a space in his name. You can either:
-                    <ol type="a">
-                      <li>Surround his name with quotes, “Disgruntled pea”</li>
-                      <li>Only mention part of his name (disgruntled, or pea):
-                        <br><code>/respawn “disgruntled pea”</code> or <code>/respawn disgruntled</code> or even <code>/respawn pea</code>
-                      </li>
-                    </ol>
-                    <br>
-                </p></li>
-            </ol>
+              <p>
+                For player selection purposes, you do not need to input their FULL name, just enough to make it only select a player (‘ja’ for jackz, as a jockey could exist, and it wouldn’t know if you wanted jockey or jackz)
+              </p>
+            </div>
+            <div class="box">
+              <h5 class="title is-5">Examples</h5>
+              <ol>
+                  <li><b class="tag is-link">user</b> means a required user while <b class="tag is-secondary">user</b> means an optional user.</li>
+                  <li>I want to kick jackz, the command is <code>{{prefix}}kick &lt;player&gt; [reason]</code>, I don’t need to input a reason so I will just type in: <code>{{prefix}}kick jackz</code></li>
+                  <li><p>
+                      I want to respawn disgruntled pea, the problem is that he has a space in his name. You can either:
+                      <ol type="a">
+                        <li>Surround his name with quotes, “Disgruntled pea”</li>
+                        <li>Only mention part of his name (disgruntled, or pea):
+                          <br><code>/respawn “disgruntled pea”</code> or <code>/respawn disgruntled</code> or even <code>/respawn pea</code>
+                        </li>
+                      </ol>
+                      <br>
+                  </p></li>
+              </ol>
+            </div>
         </div>
     </div>
 </div>
@@ -103,15 +108,16 @@ import { formatParameters } from '@/js/util'
 import ExamplesModal from '@/components/modals/ExamplesModal.vue'
 import { ref, computed, onMounted } from 'vue'
 import { PrivilegedUser } from '../../js/User';
-import { Session } from '../../../../common-types/User';
+import { UserData } from '../../../../common-types/User';
+import Field from '@/components/Field.vue'
 
 const LAST_UPDATED = new Date(Number(process.env.VUE_APP_BUILD_DATE))
 
 const props = defineProps<{
   userdata: UserData,
+  privUser: PrivilegedUser
 }>()
-const privUser = props.userdata ? new PrivilegedUser(props.userdata) : null
-const isLoggedIn = privUser != null
+const isLoggedIn = computed(() => props.privUser != null)
 
 let searchQuery = ref("")
 let commandViewmode = ref('private')
@@ -167,7 +173,7 @@ onMounted(async () => {
         const split = command.command.trim().split(' ')
         command.name = split.shift()
         command.parameters = split.join(" ")
-        command.hasPermission = !isLoggedIn || (command.perm !== null && command.perm !== undefined ? privUser.hasFlag(command.perm) : true)
+        command.hasPermission = !isLoggedIn.value || (command.perm != undefined ? props.privUser.hasFlag(command.perm) : true)
 
         delete command.command
         commands.push(command)

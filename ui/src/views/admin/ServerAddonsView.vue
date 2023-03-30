@@ -1,6 +1,6 @@
 <template>
 <div>
-  <router-view :share="shareInfo" :addon="prefetch" @close="onChildClose"></router-view>
+  <router-view :share="shareInfo" :addon="prefetch" @close="onChildClose" v-if="prefetch"></router-view>
   <div class="container" v-if="ready">
     <div class="level">
       <div class="level-left">
@@ -10,18 +10,15 @@
       </div>
       <div class="level-right">
         <div class="level-item">
-          <div class="field">
-            <label class="label">Share</label>
-            <div class="control">
-              <div class="select">
-                <select v-model="selectedShare">
-                  <option v-for="share in shares" :key="share" :value="share">
-                    {{share}}
-                  </option>
-                </select>
-              </div>
+          <Field label="Share" icon-left="folder">
+            <div class="select">
+              <select v-model="selectedShare">
+                <option v-for="share in shares" :key="share" :value="share">
+                  {{share}}
+                </option>
+              </select>
             </div>
-          </div>
+          </Field>
         </div>
         <template  v-if="shareInfo && shareInfo.downloadSources.length > 0">
         <div class="level-item" v-if="shareInfo.downloadSources.includes('steam_workshop')">
@@ -57,7 +54,11 @@
         <table class="table is-striped is-fullwidth">
           <thead>
             <tr>
-              <th><input type="text" class="input" placeholder="Search" v-model="search" /></th>
+              <th>
+                <Field icon-left="search">
+                  <input type="text" class="input" placeholder="Search" v-model="search" />
+                </Field>
+              </th>
               <th></th>
               <th data-tooltip="Total file size of all addons">{{ formatSize(computedTotalFileSize, true, 0) }}</th>
               <th></th>
@@ -82,7 +83,7 @@
                 <span v-if="sort?.id === 'lastUpdated'">{{sortSymbol}}</span>
               </a></th>
               <th><a @click="setSortFunc('downloaded', SORT_DOWNLOADED)">
-                Downloaded
+                <Icon icon="fa-download">Downloaded</Icon>
                 <span v-if="sort?.id === 'downloaded'">{{sortSymbol}}</span>
               </a></th>
             </tr>
@@ -106,9 +107,13 @@
                 <td v-if="hasAnyWorkshop">
                   <template v-if="vpk.workshop">
                     <span class="has-text-danger" v-if="vpk.workshop.delete" data-tooltip="Item has been deleted or private">Deleted</span>
-                    <a v-else :href="vpk.workshop.url" class="button is-small" target="_blank">Workshop</a>
+                    <a v-else :href="vpk.workshop.url" class="button is-small" target="_blank"  data-tooltip="Open a new tab to the workshop entry page">
+                      <Icon icon="fab fa-steam" button>Workshop</Icon>
+                    </a>
                   </template>
-                  <a v-else-if="vpk.collection" :href="'https://steamcommunity.com/workshop/filedetails/?id=' + vpk.collection.id" class="button is-small" target="_blank">Workshop</a>
+                  <a v-else-if="vpk.collection" :href="'https://steamcommunity.com/workshop/filedetails/?id=' + vpk.collection.id" class="button is-small" target="_blank"  data-tooltip="Open a new tab to the workshop entry page">
+                    <Icon icon="fab fa-steam" button>Workshop</Icon>
+                  </a>
                 </td>
                 <td :colspan="vpk.collection ? 3 : 1">
                   <span v-if="vpk.workshop">{{formatSize(vpk.workshop.filesize, true, 0)}}</span>
@@ -138,7 +143,9 @@
                     </span>
                   </td>
                   <td v-if="hasAnyWorkshop">
-                    <a v-if="child.workshop" :href="child.workshop.url" class="button is-small" target="_blank" data-tooltip="Open a new tab to the workshop entry page">Workshop</a>
+                    <a v-if="child.workshop" :href="child.workshop.url" class="button is-small" target="_blank" data-tooltip="Open a new tab to the workshop entry page">
+                      <Icon icon="fab fa-steam" button>Workshop</Icon>
+                    </a>
                   </td>
                   <td>
                     <span v-if="child.workshop">{{formatSize(child.workshop.filesize, true, 0)}}</span>
@@ -174,6 +181,7 @@
 <script setup lang="ts">
 import { ref, watch, computed, onBeforeMount, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import Field from '@/components/Field.vue'
 
 const SORT_NAME = (a: any, b: any) => {
   return (a.workshop?.title ?? a.filename).localeCompare(b.workshop?.title ?? b.filename)
@@ -286,7 +294,7 @@ function preview(entry: any) {
   router.push({
     name: "addon-info",
     params: {
-      share: selectedShare.value,
+      shareId: selectedShare.value,
       addon: entry.filename
     }
   })
@@ -314,7 +322,7 @@ function getTooltip(addon: any) {
 }
 
 async function onChildClose(requestRefresh: boolean) {
-  router.back()
+  router.push({ name: "admin-addons" })
   if(requestRefresh)
     await fetchVPKS()
 }

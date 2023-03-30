@@ -84,9 +84,9 @@ export class PrivilegedUser {
     return (this.data.permissions.web.flags & webPerm) !== 0
   }
 
-  hasFlag(flag: string) : boolean {
+  hasFlag(flag: string, ignoreRoot: boolean = false) : boolean {
     const flags = this.flags
-    return flags.includes("z") || flags.includes(flag)
+    return (!ignoreRoot && flags.includes("z")) || flags.includes(flag)
   }
 
   hasPrivilege(service: Service, privilege: ServicePrivilege) : boolean {

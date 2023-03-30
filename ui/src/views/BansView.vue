@@ -2,7 +2,7 @@
 <div class="container is-fluid">
   <div class="columns">
     <div class="column">
-      <p class="subtitle is-4">Viewing <input type="number" class="input" min=20 max=1000 step=10 style="width:8%" v-model="limit" @blur="changeLimit" /> / {{bansCount.toLocaleString()}} bans</p>
+      <p class="subtitle is-4">Viewing <input type="number" class="input" min=20 max=1000 step=10 style="width:8%" v-model="limit" @blur="changeLimit" /> / {{totalBansCount.toLocaleString()}} bans</p>
       <p class="subtitle is-6">Click a user's name to view more detailed ban information</p>
       <p class="has-text-danger" v-if="ban_error">{{ban_error}}</p>
     </div>
@@ -18,7 +18,7 @@
     </div>
   </div>
 
-  <Pagination :page="page" :limit="limit" :count="bansCount" @page="setPage"></pagination>  
+  <Pagination :page="page" :limit="limit" :count="bansCount" @page="setPage"></pagination>
   <table class="table is-fullwidth" v-if="!loading&&!error">
     <thead>
       <th style="width:0">Player</th>
@@ -51,13 +51,15 @@
             v-if="ban.executor.name"
             class="is-small has-text-black"
             :data-tooltip="ban.executor.id"
-            :to="{name: 'manage-user-bans', params: { id: ban.client.id, banid: ban.id }, query: { returnTo: $route.fullPath }}"
-          ><b>{{ ban.executor.name }}</b></router-link>
+            :to="ban.executor.provider === 'steam' ? '#' : {name: 'manage-user-bans', params: { id: ban.executor.id, banid: ban.id }, query: { returnTo: $route.fullPath }}"
+          >
+            <b>{{ ban.executor.name }}</b>
+          </router-link>
           <template v-else>
             <em v-if="ban.executor.name" class='has-text-info'>{{ban.executor.name}}</em>
             <em v-else>{{ban.executor.id}}</em>
           </template>
-          <p class='has-text-info' v-if="ban.executor.source"><em>via {{ban.executor.source}}</em></p>
+          <p class='has-text-info' v-if="ban.executor.provider && ban.executor.provider !== 'steam'"><em>via {{ban.executor.provider}}</em></p>
         </td>
         <td v-if="userdata">
           {{ban.reason}}
@@ -84,7 +86,7 @@
   <p class="has-text-centered subtitle is-3" v-else><br>
     <Icon icon="spinner" spin icon-class="mr-4"> Fetching bans</Icon>
   </p>
-  <Pagination :page="page" :limit="limit" :count="bansCount" @page="setPage"></pagination>  
+  <Pagination :page="page" :limit="limit" :count="bansCount" @page="setPage"></pagination>
 </div>
 </template>
 
@@ -108,11 +110,11 @@ const props = defineProps({
   userdata: null
 })
 interface Ban extends ListAPIBan {
-  relDate?: string
+  relDate?: string,
 }
 
 let limit = ref(100)
-let bansCount = ref(0)
+let totalBansCount = ref(0)
 let page = ref(1)
 let loading = ref(true)
 let error = ref<string>()
@@ -122,6 +124,12 @@ let shiftPressed = ref(false)
 let showExpired = ref(false)
 let showOnlyAppeals = ref(false)
 
+const bansCount = computed(() => {
+  return hasFilter.value ? filteredBans.value.length : totalBansCount.value
+})
+const hasFilter = computed(() => {
+  return showOnlyAppeals.value === true
+})
 const filteredBans = computed(() => {
   return bans.value.filter(ban => {
     if(showOnlyAppeals.value && ban.appealsCount === 0) return false
@@ -163,14 +171,15 @@ async function fetchBans(resetPage = false) {
     if(json.error) {
       return ban_error.value = json.message || json.error
     }
-    bansCount.value = json.totalBans;
+    totalBansCount.value = json.totalBans;
     bans.value = json.bans.map((ban: Ban) => {
       const relDate = new Sugar.Date(ban.timestamp*1000).relative()
       const discordBanMatch = ban.executor.id.match(DISCORD_SOURCE_REGEX)
       if(discordBanMatch && discordBanMatch.length == 3) {
         ban.executor.id = discordBanMatch[2]
         ban.executor.name = discordBanMatch[1]
-        ban.executor.source = "discord"
+        ban.executor.nameResolver = "provider"
+        ban.executor.provider = "discord"
       }
       if(ban.executor.id === "CONSOLE") ban.executor.id = '[Automatic]'
       return {

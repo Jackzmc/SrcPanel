@@ -141,7 +141,7 @@
       <label class="label">Private Reason</label>
       <div class="control">
         <textarea
-          v-model="ban.reason"
+          v-model="edited.reason"
           class="textarea has-fixed-size"
           placeholder="Enter a reason for this ban (only shown to admins)"
           maxlength="128"
@@ -365,7 +365,7 @@ async function save() {
     if(response.ok) {
       notify({
         type: "success",
-        text: isNewBan.value ? `Created new ban #${json.banId}` : `Edited ban ${json.banId}`
+        text: isNewBan.value ? `Created new ban #${json.banId}` : `Edited ban #${json.banId}`
       })
       close()
     } else {

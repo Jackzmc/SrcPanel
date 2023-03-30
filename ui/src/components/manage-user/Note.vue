@@ -1,31 +1,62 @@
 <template>
-<div class="notification" >
-    <h6 class="title is-6" v-if="edit">
-      <label class="label">Marked By:</label>
-      <input type="text" class="input" style="width:50%" v-model="edit.markedBy" />
-      <span class="is-pulled-right is-inline" data-tooltip="Note ID">#{{ note.id }}</span>
-    </h6>
-    <h6 class="title is-6" v-else>{{note.markedBy.name}}: <em class="has-text-weight-normal">({{note.markedBy.id}})</em> <span class="is-pulled-right is-inline" data-tooltip="Note ID">#{{ note.id }}</span></h6>
-    <div class="content">
-        <template v-if="edit">
-          <label class="label">Content:</label>
-          <input type="text" class="input" v-model="edit.content" />
-        </template>
-        <template v-else>
-            <ActionNote v-if="note.action" :action="note.action" secondary-color="is-white"  />
-            <span v-else>{{ note.content }}</span>
-        </template>
+<div class="list-item">
+  <!-- <div class="list-item-image">
+    <figure class="image is-48x48">
+      <img class="is-rounded" :src="entry.activator.avatarUrl">
+    </figure>
+  </div> -->
+
+  <div class="list-item-content">
+    <div class="list-item-title">
+      <template v-if="edit">
+        <label class="label">Marked By:</label>
+        <input type="text" class="input" style="width:50%" v-model="edit.markedBy" />
+      </template>
+      <span v-else>
+        <router-link :to="routeHref">
+          {{ note.markedBy.name }}:
+        </router-link>
+        <span class="ml-2 has-text-grey-light is-inline subtitle is-6">{{ note.markedBy.id }}</span>
+        <span class="tag is-pulled-right is-info">#{{note.id}}</span>
+      </span>
     </div>
-    <div class="buttons" v-if="edit">
-        <a class="button is-success is-small" @click="saveNote">Save</a>
-        <a class="button is-small is-outlined" @click="edit = undefined">Cancel</a>
-        <a class="button is-danger is-small is-outlined" @click="deleteNote">Delete</a>
+    <div class="list-item-description has-text-black">
+      <template v-if="edit">
+        <label class="label">Content:</label>
+        <input type="text" class="input" v-model="edit.content" />
+      </template>
+      <template v-else-if="canEdit">
+        {{ note.content }}
+      </template>
+      </div>
+  </div>
+
+  <div class="list-item-controls">
+    <div class="buttons is-right">
+      <!-- <button :class="['button', {'is-info': entry.showDetails, 'is-outlined': entry.showDetails }]">
+        <span @click="entry.showDetails = !entry.showDetails">Details</span>
+      </button> -->
+      <span v-if="edit">
+        <button class="button is-inverted is-success has-tooltip-success" @click="saveNote" data-tooltip="Save changes" >
+          <Icon icon-class="is-small" icon="check"/>
+        </button>
+        <button class="button is-inverted is-black" @click="edit = undefined" data-tooltip="Discard changes" >
+          <Icon icon-class="is-small" icon="times"/>
+        </button>
+        <button class="button  is-inverted is-danger has-tooltip-danger" @click="deleteNote" data-tooltip="Delete note">
+          <Icon icon-class="is-small" icon="trash"/>
+        </button>
+      </span>
+      <template v-else>
+        <button class="button is-inverted is-outlined is-black" @click="startEdit">
+          <Icon icon-class="is-small has-text-black" icon="edit" />
+        </button>
+      </template>
     </div>
-    <div class="buttons" v-else>
-        <a class="button is-small is-outlined has-tooltip-right has-tooltip-danger" @click="startEdit" :disabled="canEdit ? undefined : true" :data-tooltip="canEdit ? null : 'You do not have permission to edit other user\'s notes'">Edit</a>
-    </div>
+  </div>
 </div>
 </template>
+<style src="../../../node_modules/bulma-list/css/bulma-list.css"></style>
 
 <script setup lang="ts">
 import { notify } from '@kyvg/vue3-notification';
@@ -33,7 +64,8 @@ import { ref, computed } from 'vue';
 import { Service, Action } from '../../../../common-types/Privileges';
 import { Note } from '../../../../server/src/routes/!unprivileged/notes'
 import { PrivilegedUser } from '../../js/User';
-import ActionNote from '@/components/ActionNote.vue'
+import { useRoute } from 'vue-router';
+const route = useRoute()
 const emit = defineEmits(["deleted"])
 const props = defineProps<{
   note: Note,
@@ -49,7 +81,13 @@ const canEdit = computed(() => {
   return props.privUser.canPerformAction(Service.Notes, Action.Edit, props.note.markedBy.id)
 })
 
+const routeHref = computed(() => {
+  if(props.note.markedBy.id === props.note.client.id) return '#'
+  return { name: 'manage-user', params: { id: props.note.markedBy.id }, query: { returnTo: route.fullPath }}
+})
+
 let edit = ref<EditedNote>()
+let loading = ref(false)
 
 function startEdit() {
   edit.value = {
@@ -59,37 +97,42 @@ function startEdit() {
 }
 
 async function saveNote() {
-    try {
-        const response = await fetch(`/api/notes/${props.note.id}`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(edit.value)
-        })
-        if(response.ok) {
-            notify({
-                type: "success",
-                text: `Edited note #${props.note.id}`
-            })
-        } else {
-            const json = await response.json()
-            notify({
-                type: "error",
-                title: `Failed to edit note #${props.note.id}`,
-                text: json.message
-            })
-        }
-    } catch(err: any) {
-        notify({
-            type: "error",
-            title: `Failed to edit note #${props.note.id}`,
-            text: err.message
-        })
-    }
+  loading.value = true
+  try {
+      const response = await fetch(`/api/notes/${props.note.id}`, {
+          method: 'PUT',
+          headers: {
+              'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(edit.value)
+      })
+      if(response.ok) {
+          notify({
+              type: "success",
+              text: `Edited note #${props.note.id}`
+          })
+          edit.value = undefined
+      } else {
+          const json = await response.json()
+          notify({
+              type: "error",
+              title: `Failed to edit note #${props.note.id}`,
+              text: json.message
+          })
+      }
+  } catch(err: any) {
+      notify({
+          type: "error",
+          title: `Failed to edit note #${props.note.id}`,
+          text: err.message
+      })
+  } finally {
+    loading.value = false
+  }
 }
 async function deleteNote() {
     if(window.confirm("Are you sure you want to delete this note?")) {
+      loading.value = true
         try {
             const response = await fetch(`/api/notes/${props.note.id}`, { method: 'DELETE' })
             if(response.ok) {
@@ -112,6 +155,8 @@ async function deleteNote() {
                 title: `Failed to delete note #${props.note.id}`,
                 text: err.message
             })
+        } finally {
+          loading.value = false
         }
     }
 }

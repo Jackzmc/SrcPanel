@@ -3,7 +3,6 @@ import { OkPacket, RowDataPacket } from 'mysql2';
 import { Static, Type } from '@sinclair/typebox'
 
 const PUTNotes = Type.Object({
-    id: Type.Integer(),
     markedBy: Type.String(),
     content: Type.String(),
 });
@@ -19,9 +18,6 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             body: {
                 type: 'object',
                 additionalProperties: false,
-                required: [
-                    'id'
-                ],
                 properties: {
                     content: { type: 'string' },
                     markedBy: { type: 'string' },
@@ -36,10 +32,10 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 }
             }
         },
-        async handler(req: FastifyRequest<{ Body: PUTNotesType }>, reply) {
+        async handler(req: FastifyRequest<{ Body: PUTNotesType, Params: { id: string } }>, reply) {
             const [existing] = await fastify.db.execute<RowDataPacket[]>(`
                 SELECT * FROM notes WHERE id = ?`,
-                [req.body.id]
+                [req.params.id]
             )
 
             if(existing.length === 0) {
@@ -62,7 +58,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 note
             )
 
-            fastify.authmngr.log.addWebEntry(req.session.user.steamid, 'NOTE_EDIT', `Updated note ${note.id} for ${existing[0].steamid}`)
+            fastify.authmngr.log.addWebEntry(req.session.user.steamid, 'NOTE_EDIT', `Updated note ${req.params.id} for ${existing[0].steamid}`)
 
             return {
                 changes: ok.affectedRows

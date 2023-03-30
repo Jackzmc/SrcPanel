@@ -24,11 +24,6 @@
         <br>Use the <b>fta</b> command to apply one of these trolls:
         <br>
       </p>
-      <div class="message is-warning is-small">
-        <div class="message-body">
-          The number index of the troll, for current version will no longer work. But none of y'all use it anyway, so why do I even bother putting this here. I don't know, but hey incase I have a case of brain damage I might see this and remember this.
-        </div>
-      </div>
       <div v-for="(list, category) in trolls" :key="category">
         <h4 class="title is-4">{{category}}</h4>
         <ul>
@@ -54,17 +49,18 @@
         <br>
       </div>
     </div>
-    <div class="column is-3">
-      <h2 class="title is-2 has-text-centered">Troll Combos</h2>
+    <div class="column is-4 has-text-right">
+      <h2 class="title is-2">Troll Combos</h2>
       <p class="subtitle">These combos will apply multiple trolls at once for your convienence.</p>
       <p class="subtitle">Use the <b>ftc</b> command to apply these combinations.</p>
-      <div v-for="(trolls, combo) in combos" :key="combo" class="content">
+      <div v-for="(trolls, combo) in combos" :key="combo">
         <h5 class="title is-5">{{combo}}</h5>
         <ul>
           <li v-for="(trollName) in trolls" :key="trollName" >
-            <p>{{trollName}}</p>
+            <p><a class='has-tooltip-left' :data-tooltip="getComboTooltip(trollName)">{{trollName}}</a></p>
           </li>
         </ul>
+        <br>
       </div>
     </div>
   </div>
@@ -104,6 +100,23 @@ function getTooltip(troll: any) {
 
   const flags = troll.prompts ? `\n\nClick to view flags` : ''
   return `${modes}${flags}`
+}
+
+function getComboTooltip(trollName: string) {
+  const troll = getTroll(trollName.toLowerCase())
+  if(!troll) return undefined
+  return `${trollName}\n${troll.description}`
+}
+
+function getTroll(trollName: string) {
+  for(const combo of Object.values(trolls.value)) {
+    for(const troll of combo) {
+      if(trollName.startsWith(troll.name.toLowerCase())) {
+        return troll
+      }
+    }
+  }
+  return null
 }
 
 function showFlags(troll: any) {
