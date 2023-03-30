@@ -61,7 +61,7 @@ let userdata = ref<UserData>()
 let privUser = ref()
 
 function reloadPage() {
-  if (!updateInfo.value.registration || !updateInfo.value.registration.waiting) return
+  if (!updateInfo.value.registration || !updateInfo.value.registration.waiting) return console.warn("reloadPage() called when no sw update")
   updateInfo.value.registration.waiting.postMessage({ type: 'SKIP_WAITING' })
   window.location.reload()
 }
