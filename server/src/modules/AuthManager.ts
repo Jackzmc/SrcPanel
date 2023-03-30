@@ -2,7 +2,7 @@ import { Connection, Pool, RowDataPacket, OkPacket } from "mysql2/promise";
 import QuickLRU from 'quick-lru'
 import { FastifyReply, FastifyRequest } from 'fastify';
 import ActivityLog from "./ActivityLog.js";
-import { AdminPermissions, AdminData, AdminGroup, WebRole, WebPermission, OauthProvider } from '../../../common-types/User.js';
+import { AdminPermissions, AdminData, AdminGroup, WebRole, WebPermission, OauthProvider, SessionData } from '../../../common-types/User.js';
 import { ReadableAdminData, UserOauthProviders, OauthProviderData } from '../../../common-types/User';
 import { Service, ServicePrivilege, ServicePrivilegeKeys, SteamInfo, UserPrivileges } from  '../../../common-types/Privileges.js';
 import { SteamUserDetails } from '../../../common-types/Share';
@@ -401,14 +401,14 @@ export default class AuthManager {
         }
     }
 
-    public async getSessions(steamid: string) {
+    public async getSessions(steamid: string): Promise<SessionData[]> {
         const [sessions] = await this.dbna.execute<RowDataPacket[]>(`
-            SELECT session_id AS id, JSON_UNQUOTE(JSON_EXTRACT(data,'$.ip')) as ip, JSON_UNQUOTE(JSON_EXTRACT(data, '$.countryCode')) as countryCode, JSON_UNQUOTE(JSON_EXTRACT(data, '$.loginTime')) as lastLogin
+            SELECT session_id AS id, JSON_UNQUOTE(JSON_EXTRACT(data,'$.ip')) as ip, JSON_UNQUOTE(JSON_EXTRACT(data, '$.countryCode')) as countryCode, CAST(JSON_UNQUOTE(JSON_EXTRACT(data, '$.loginTime')) AS UNSIGNED) as loginTime, CAST((JSON_EXTRACT(data, '$.lastActive')) AS UNSIGNED) as lastActive
             FROM dash_sessions 
             WHERE SUBSTRING(JSON_UNQUOTE(JSON_EXTRACT(data, '$.user.steamid')), 11) = SUBSTRING(?, 11)`,
             [steamid]
         )
-        return sessions
+        return sessions as SessionData[]
     }
 
     // Gets all providers with their id for that provider (discord: <discord_id>)
@@ -467,7 +467,7 @@ export default class AuthManager {
         req.session.ip = req.ip
         req.session.countryCode = (await FastGeoip.lookup(req.ip))?.country
         req.session.loginTime = Math.round(Date.now() / 1000)
-        req.session.lastActive = req.session.loginTime
+        req.session.lastActive = Math.round(Date.now() / 1000)
         req.session.version = SESSION_VERSION
     }
 

@@ -48,11 +48,11 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                     ip: session.ip,
                     loginTime: session.loginTime,
                     lastActive: session.lastActive,
-                    countryCode: session.countryCode
+                    countryCode: session.countryCode,
                 }
                 return data
             }), 
-            currentSessionId: req.session.sessionId 
+            currentSessionId: req.session.sessionId.substring(0, 4)
         }
     })
 

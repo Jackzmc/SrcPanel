@@ -195,6 +195,10 @@ async function logout() {
     const res = await fetch('/api/auth/logout')
     if(res.ok) {
       emit('logout')
+      notify({
+        type: "success",
+        text: "You have been logged out successfully"
+      })
       if(route.meta.authRequired) {
         router.push('/')
       }

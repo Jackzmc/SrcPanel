@@ -194,3 +194,5 @@ export function parseLog(log: any, history: {activators: any[], targets: any[] }
   }
   return log
 }
+
+export const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
