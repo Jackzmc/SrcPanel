@@ -466,7 +466,7 @@ export default class AuthManager {
 
         req.session.ip = req.ip
         req.session.countryCode = (await FastGeoip.lookup(req.ip))?.country
-        req.session.loginTime = Date.now()
+        req.session.loginTime = Math.round(Date.now() / 1000)
         req.session.version = SESSION_VERSION
     }
 
