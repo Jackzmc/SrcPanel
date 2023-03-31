@@ -24,12 +24,24 @@ const LogQuery = Type.Object({
 type LogQueryType = Static<typeof LogQuery>
 
 export const ACTIVITY_LOG_TABLE_NAME = 'activity_log'
+const LOG_TOTAL_ROW_CACHE_TIME = 30_000 //ms
 
 let logServerCache = []
+let totalRows = 0
+let totalRowsLastFetch: number = null
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
-    const [rows] = await fastify.db.query<RowDataPacket[]>("SELECT DISTINCT server FROM activity_log")
+    const [rows] = await fastify.db.query<RowDataPacket[]>(`SELECT DISTINCT server FROM ${ACTIVITY_LOG_TABLE_NAME}`)
     logServerCache = rows.filter(row => row.server !== "web").map(row => row.server)
+
+    async function getTotalRows() {
+        if(Date.now() - totalRowsLastFetch > LOG_TOTAL_ROW_CACHE_TIME || totalRowsLastFetch === null) {
+            const [c] = await fastify.db.execute<RowDataPacket[]>(`SELECT COUNT(*) AS count from ${ACTIVITY_LOG_TABLE_NAME}`)
+            totalRows = c[0].count
+            totalRowsLastFetch = Date.now()
+        }
+        return totalRows
+    }
 
     fastify.get('/servers', async(req, reply) => {
         return {
@@ -44,11 +56,19 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         let query: string;
 
         if(req.query.timestampOnly) {
-            query = `SELECT timestamp, message FROM ${ACTIVITY_LOG_TABLE_NAME} `
+            query = `SELECT timestamp, message FROM ${ACTIVITY_LOG_TABLE_NAME} l`
         } else {
-            query = `SELECT id, timestamp, server, type, client, target, message, s1.last_alias as clientName, s2.last_alias as targetName FROM activity_log LEFT JOIN stats_users as s1 ON s1.steamid = client LEFT JOIN stats_users as s2 ON s2.steamid = target `
+            // We don't need to also fetch usernames from user_names as if there is a log entry they should always have an entry in statistics 
+            query = `SELECT id, timestamp, server, type, client, target, message, metadata,
+                s1.last_alias as clientName, s2.last_alias as targetName,
+                u1.avatar_hash as clientAvatar, u2.avatar_hash as targetAvatar
+                FROM activity_log l
+                LEFT JOIN stats_users as s1 ON s1.steamid = client 
+                LEFT JOIN stats_users as s2 ON s2.steamid = target 
+                LEFT JOIN user_names u1 ON u1.steamid LIKE SUBSTRING(l.client, 11) 
+                LEFT JOIN user_names u2 ON u2.steamid LIKE SUBSTRING(l.target, 11) 
+            `
         }
-
 
         const conditions = []
         let data = [], countData = []
@@ -58,7 +78,10 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         let page = Number(req.params.page) || 1
         if(page <= 0) page = 1
 
-        // conditions.push(`id > ${limit * page}`)
+        const totalRows = await getTotalRows()
+        // Optimize query by calculating the minimum id based on totalRows
+        const minId = totalRows - (limit * page)
+        conditions.push(`id > ${minId}`)
 
         if(req.query.servers) {
             const servers = req.query.servers.split(",")
@@ -107,7 +130,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             data = [ ...data, min, max ]
             countData = [ ...countData, min, max ]
         }
-
+        
         if(conditions.length > 0) {
             query += `WHERE ${conditions.join(' AND ')} `
             countQuery += `WHERE ${conditions.join(' AND ')} `
@@ -120,8 +143,15 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             data = [...data, Number(limit), (page * limit) - limit]
         }
 
-        const [logs] = await fastify.db.query(query, data)
-        const [count] = await fastify.db.query(countQuery, countData)
+        console.log(query, '\n', countQuery)
+        console.time(`fetch${req.id}`)
+        const [[logs], [count]] = await Promise.all([
+            fastify.db.execute(query, data),
+            fastify.db.execute(countQuery, countData)
+        ])
+        console.timeEnd(`fetch${req.id}`)
+        // const [logs] = await fastify.db.query(query, data)
+        // const [count] = await fastify.db.query(countQuery, countData)
 
         return {
             logs,
