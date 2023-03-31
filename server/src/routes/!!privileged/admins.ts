@@ -5,6 +5,8 @@ import SteamID from 'steamid';
 import { AdminGroup, APIAdminGroup, WebPermission } from '../../../../common-types/User.js';
 import { AdminData, ReadableAdminData } from '../../../../common-types/User';
 import { APIBanFlags } from '../../../../common-types/Ban.js';
+import { Action, Service } from '../../../../common-types/Privileges.js';
+import { computeChanges } from '../../util.js';
 
 const POSTAdmin = Type.Object({
     immunityLevel: Type.Number(),
@@ -113,7 +115,13 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
                     await fastify.authmngr.revokeAdmin(admin.id)
 
-                    await fastify.authmngr.log.addWebEntry(req.session.user.steamid, 'ADMIN_DELETE', `Deleted admin #${admin.id} with steamid ${admin.identity}`)
+                    await req.user.log(admin.identity, `%client% revoked admin privileges #${admin.id} for %target%`, {
+                        service: Service.Admins,
+                        action: Action.Delete,
+                        metadata: {
+                            id: admin.id,
+                        }
+                    })
 
 
                     reply.send({
@@ -159,8 +167,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                         })
                     }
 
-                    const newAdmin = await fastify.authmngr.editAdmin(admin.id, {
-                        authtype: "steam",
+                    const newAdminData = {
+                        authtype: "steam" as "steam",
                         identity: req.params.steamid,
                         password: null,
                         name: req.body.name || "",
@@ -168,9 +176,17 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                         flags: req.body.flags,
                         privileges: req.body.privileges,
                         groupIds: req.body.groupIds ? req.body.groupIds.split(',') : []
-                    }, req.body.webPermissions)
+                    }
+                    const newAdmin = await fastify.authmngr.editAdmin(admin.id, newAdminData, req.body.webPermissions)
 
-                    await fastify.authmngr.log.addWebEntry(req.session.user.steamid, 'ADMIN_EDIT', `Changed permissions for admin id #${admin.id}`)
+                    await req.user.log(admin.identity, `%client% edited admin privileges #${admin.id} for %target%`, {
+                        service: Service.Admins,
+                        action: Action.Edit,
+                        metadata: {
+                            id: admin.id,
+                            ...computeChanges<any>(admin, newAdminData)
+                        }
+                    })
 
                     return {
                         meta: {
@@ -229,19 +245,29 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                         })
                     }
 
+                    const groupIds = req.body.groupIds ? req.body.groupIds.split(',') : []
                     const id = await fastify.authmngr.addAdmin({
-                        authtype: "steam",
+                        authtype: "steam" as "steam",
                         identity: `STEAM_1:0:${steamid}`,
                         password: null,
                         name: req.body.name || "",
                         immunity,
                         flags: req.body.flags,
                         privileges: req.body.privileges,
-                        groupIds: req.body.groupIds ? req.body.groupIds.split(',') : []
+                        groupIds
                     }, req.body.webPermissions)
 
-                    await fastify.authmngr.log.addWebEntry(req.session.user.steamid, 'ADMIN_ADD', `Added new admin with id #${id} (${req.params.steamid}). Immunity: ${immunity}, flags: "${req.body.flags}", groups: ${req.body.groupIds ?? '<none>'}`)
-
+                    await req.user.log(req.params.steamid, `%client% added new admin #${id} for %target%`, {
+                        service: Service.Admins,
+                        action: Action.Edit,
+                        metadata: {
+                            id,
+                            immunity,
+                            flags: req.body.flags,
+                            privileges: req.body.privileges,
+                            groupIds,
+                        }
+                    })
 
                     return {
                         adminId: id

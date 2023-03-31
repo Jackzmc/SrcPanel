@@ -55,7 +55,7 @@
                 <p><b>Server: </b><span class="tag is-info">reserved</span></p>
                 <template v-if="entry.metadata">
                   <p><b>Metadata: </b></p>
-                  <pre>{{ JSON.stringify(JSON.parse(entry.metadata), null, 2) }}</pre>
+                  <pre class="px-1 py-1 box"><code>{{ JSON.stringify(JSON.parse(entry.metadata), null, 2) }}</code></pre>
                 </template>
               </div>
             </div>

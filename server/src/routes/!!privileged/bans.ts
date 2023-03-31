@@ -3,7 +3,8 @@ import { OkPacket, RowDataPacket } from 'mysql2';
 import { Static, Type } from '@sinclair/typebox'
 import SteamID from 'steamid'
 import { FullAPIBan, APIBanFlags } from '../../../../common-types/Ban.js';
-import { replaceObject } from '../../util.js';
+import { computeChanges, replaceObject } from '../../util.js';
+import { Action, Service } from '../../../../common-types/Privileges.js';
 
 const STEAM_WEB_APIKEY = process.env.STEAM_WEB_APIKEY
 
@@ -78,13 +79,21 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                     id: req.params.id
                 }
             )
+            const logPayload = {
+                service: Service.Bans,
+                action: Action.Edit,
+                metadata: {
+                    id: existing[0].id,
+                    ...computeChanges<any>(existing[0], req.body)
+                }
+            }
 
             if(req.body.flags & APIBanFlags.Suspended && ~existing[0].flags & APIBanFlags.Suspended) {
-                fastify.authmngr.log.addWebEntry(req.session.user.steamid, 'BAN_EDIT', `Suspended ban #${existing[0].id}`)
+                await req.user.log(existing[0].steamid, `%client% suspended ban #${req.params.id} for %target%`, logPayload)
             } else if(~req.body.flags & APIBanFlags.Suspended && existing[0].flags & APIBanFlags.Suspended) {
-                fastify.authmngr.log.addWebEntry(req.session.user.steamid, 'BAN_EDIT', `Resumed ban #${existing[0].id}`)
+                await req.user.log(existing[0].steamid, `%client% reinstate ban #${req.params.id} for %target%`, logPayload)
             } else {
-                fastify.authmngr.log.addWebEntry(req.session.user.steamid, 'BAN_EDIT', `Edited ban #${existing[0].id} details`)
+                await req.user.log(existing[0].steamid, `%client% edited ban #${req.params.id}'s details for %target%`, logPayload)
             }
 
             return {
@@ -146,7 +155,14 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             }
         )
 
-        await fastify.authmngr.log.addWebEntry(req.session.user.steamid, 'BAN_ADD', `Add ban #${ok.insertId} for ${ban.steamid}`)
+        await req.user.log(req.params.steamid, `%client% banned user %target%`, {
+            service: Service.Bans,
+            action: Action.Create,
+            metadata: {
+                id: ok.insertId, 
+                ...req.body
+            }
+        })
 
         return {
             banId: ok.insertId,
@@ -194,7 +210,13 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 [req.params.id]
             )
 
-            fastify.authmngr.log.addWebEntry(req.session.user.steamid, 'BAN_DELETE', `Deleted ban #${existing[0].id} for ${existing[0].steamid}`)
+            await req.user.log(existing[0].steamid, `%client% removed ban #${existing[0].id} for %target%`, {
+                service: Service.Bans,
+                action: Action.Delete,
+                metadata: {
+                    id: existing[0].id, 
+                }
+            })
 
             return {
                 changes: ok.affectedRows,

@@ -143,13 +143,10 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             data = [...data, Number(limit), (page * limit) - limit]
         }
 
-        console.log(query, '\n', countQuery)
-        console.time(`fetch${req.id}`)
         const [[logs], [count]] = await Promise.all([
             fastify.db.execute(query, data),
             fastify.db.execute(countQuery, countData)
         ])
-        console.timeEnd(`fetch${req.id}`)
         // const [logs] = await fastify.db.query(query, data)
         // const [count] = await fastify.db.query(countQuery, countData)
 

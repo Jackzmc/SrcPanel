@@ -88,10 +88,6 @@ export default class User {
         return this.adminData.permissions.privileges[service]
     }
 
-    async logAction(service: Service, action: Action, message?: string) {
-        return await this.authmngr.log.addWebEntry(this.steamid64, `${service}.${action}`, message)
-    }
-
     async log(targetUser: User | string | null, message: string, payload?: LogData) {
         let user: User = null
         if(targetUser != null) {

@@ -65,11 +65,11 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 service: Service.Notes,
                 action: Action.Edit,
                 metadata: {
+                    id: note.id,
                     content: req.body.content,
                     markedBy: req.body.markedBy
                 }
             })
-            // fastify.authmngr.log.addWebEntry(req.session.user.steamid, 'NOTE_EDIT', `Updated note ${req.params.id} for ${existing[0].steamid}`)
 
             return {
                 changes: ok.affectedRows
@@ -120,9 +120,10 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             await req.user.log(existing[0].client, `%client% deleted note #${req.params.id} for %target%`, {
                 service: Service.Notes,
                 action: Action.Delete,
+                metadata: {
+                    id: req.params.id
+                }
             })
-            // fastify.authmngr.log.addWebEntry(req.session.user.steamid, 'NOTE_DELETE', `Deleted note ${req.params.id} for ${existing[0].steamid}`)
-
 
             return {
                 changes: ok.affectedRows,

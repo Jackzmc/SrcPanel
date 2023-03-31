@@ -35,18 +35,6 @@ export default class ActivityLog {
         this.db = db
     }
 
-    async addWebEntry(steamid: string, type: string, message?: string) {
-        const [r] = await this.db.execute<OkPacket>(
-            `INSERT INTO activity_log (server, type, client, target, message, timestamp) VALUES ('web', 'WEB', :client, NULL, :message, UNIX_TIMESTAMP())`,
-            {
-                client: steamid, 
-                message: message ? ` ${type.toUpperCase()}: ${message}` : type.toUpperCase()
-            }
-        )
-
-        return r.affectedRows > 0
-    }
-
     //"Tank<146><BOT><>"
     //"soap suds<37><STEAM_1:1:223885525><>"
     async logWeb(activator: User, target?: User, message?: string, payload?: LogData) {

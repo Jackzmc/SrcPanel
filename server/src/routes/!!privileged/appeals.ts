@@ -3,6 +3,7 @@ import { OkPacket, RowDataPacket } from 'mysql2';
 import { Static, Type } from '@sinclair/typebox'
 import SteamID from 'steamid'
 import { APIBanFlags, BanAppealState } from '../../../../common-types/Ban.js';
+import { Action, Service } from '../../../../common-types/Privileges.js';
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
     fastify.post('/:appealid/approve', async(req: FastifyRequest<{Params: { appealid: string }}>, reply) => {
@@ -17,7 +18,13 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             [ BanAppealState.Accepted ]
         )
 
-        await fastify.authmngr.log.addWebEntry(req.session.user.steamid, "APPEAL_ACCEPT", `approved appeal ${req.params.appealid}`)
+        await req.user.log(null, `approved appeal #${req.params.appealid}`, {
+            service: Service.Bans,
+            action: Action.Edit,
+            metadata: {
+                id: req.params.appealid
+            }
+        })
 
         return reply.status(204).send()
     })
@@ -33,9 +40,15 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             "UPDATE ban_appeals SET state = ?, reject_reason = ?, rejecter_id = ? WHERE id = ?",
             [ BanAppealState.Rejected, req.query.reason, req.session.user.steamid, req.params.appealid]
         )
-        console.log( [ BanAppealState.Rejected, req.query.reason, req.session.user.steamid, req.params.appealid])
 
-        await fastify.authmngr.log.addWebEntry(req.session.user.steamid, "APPEAL_REJECT", `rejected appeal ${req.params.appealid} for: \"${req.query.reason}\"`)
+        await req.user.log(null, `rejected appeal #${req.params.appealid} for \"${req.query.reason}\"`, {
+            service: Service.Bans,
+            action: Action.Edit,
+            metadata: {
+                id: req.params.appealid,
+                reason: req.query.reason
+            }
+        })
 
         return reply.status(204).send()
     })

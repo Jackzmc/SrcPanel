@@ -128,7 +128,13 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 })  
             }
             await pump (part.file, share.createUploadStream(part.filename))
-            req.user.logAction(Service.AddonsUpload, Action.Edit, `uploaded addon \"${part.filename}\"`)
+            await req.user.log(null, `uploaded addon \"${part.filename}\"`, {
+                service: Service.AddonsUpload,
+                action: Action.Edit,
+                metadata: {
+                    filename: part.filename
+                }
+            })
             if (part.file.truncated) {
                 console.warn(`${part.filename} is truncated, clearing downloaded piece`)
                 await share.deleteAddon(part.filename)
@@ -154,6 +160,13 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             })
         }
         await share.deleteAddon(req.params.filename)
+        await req.user.log(null, `deleted addon \"${req.params.filename}\"`, {
+            service: Service.AddonsUpload,
+            action: Action.Edit,
+            metadata: {
+                filename: req.params.filename
+            }
+        })
         return reply.status(204).send()
     })
 
@@ -251,7 +264,18 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                             entry: detail.publishedfileid,
                             message: `Downloaded <a href="https://steamcommunity.com/sharedfiles/filedetails/?id=${detail.publishedfileid}"><b>${detail.title}</b></a> (${humanFileSize(detail.file_size)})`
                         })
-                        await fastify.authmngr.log.addWebEntry(req.session.user.steamid, "ADDON_DOWNLOAD", `Downloaded addon "${detail.title}" (${detail.publishedfileid}, ${humanFileSize(detail.file_size)})`)
+                        await req.user.log(null, `downloaded workshop addon \"${detail.title}\" (${detail.publishedfileid})`, {
+                            service: Service.Addons,
+                            action: Action.Edit,
+                            metadata: {
+                                type: "workshop",
+                                share: share.id,
+                                server: null,
+                                filename: detail.publishedfileid + ".vpk",
+                                title: detail.title,
+                                size: detail.file_size
+                            }
+                        })
                         resolve(true)
                     })
                 })
@@ -271,10 +295,18 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                             try {
                                 const filename = `${detail.publishedfileid}.vpk`
                                 await share.install(filename, destKey)
-                                await fastify.authmngr.log.addWebEntry(req.session.user.steamid, "ADDON_INSTALL", `Installed addon "${detail.title}" (${detail.publishedfileid}) to ${destKey}`)
                                 destResults[destKey][detail.publishedfileid] = { 
                                     result: "success"
                                 }
+                                await req.user.log(null, `enabled addon ${detail.publishedfileid} for ${destKey}`, {
+                                    service: Service.Addons,
+                                    action: Action.Edit,
+                                    metadata: {
+                                        share: share.id,
+                                        server: destKey,
+                                        filename: filename
+                                    }
+                                })
                             } catch(err) {
                                 sendSSE({state: "INSTALLING", message: `${err.code}: Failed to install ${detail.publishedfileid} for ${destKey}`, error: true })
                                 console.warn(`[ShareInstaller] Install failed for ${destKey}/${detail.publishedfileid}: `, err)
@@ -330,7 +362,15 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         if(addonInfo) {
             try {
                 await share.install(req.params.filename, req.params.destKey)
-                await fastify.authmngr.log.addWebEntry(req.session.user.steamid, "ADDON_INSTALL", `Install addon "${addonInfo.filename}" to ${req.params.destKey}`)
+                await req.user.log(null, `enabled addon ${addonInfo.filename} for ${req.params.destKey}`, {
+                    service: Service.Addons,
+                    action: Action.Edit,
+                    metadata: {
+                        share: share.id,
+                        server: req.params.destKey,
+                        filename: addonInfo.filename
+                    }
+                })
                 addonInfo[req.params.destKey] = true
                 return {
                     addonInfo
@@ -370,7 +410,16 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         if(addonInfo) {
             try {
                 await share.uninstall(req.params.filename, req.params.destKey)
-                addonInfo[req.params.destKey] = true
+                await req.user.log(null, `disabled addon ${addonInfo.filename} for ${req.params.destKey}`, {
+                    service: Service.Addons,
+                    action: Action.Edit,
+                    metadata: {
+                        share: share.id,
+                        server: req.params.destKey,
+                        filename: addonInfo.filename
+                    }
+                })
+                addonInfo[req.params.destKey] = false
                 return {
                     addonInfo
                 }
