@@ -7,10 +7,10 @@ export enum ServicePrivilege {
 }
 // The string id of the privilege
 export const ServicePrivilegeKeys: Record<ServicePrivilege, string> = {
-    [ServicePrivilege.View]: "view",
-    [ServicePrivilege.Edit]: "edit",
-    [ServicePrivilege.Delete]: "delete",
-    [ServicePrivilege.Manage]: "manage",
+    [ServicePrivilege.View]: "View",
+    [ServicePrivilege.Edit]: "Edit",
+    [ServicePrivilege.Delete]: "Delete",
+    [ServicePrivilege.Manage]: "Manage",
 }
 
 // The list of services

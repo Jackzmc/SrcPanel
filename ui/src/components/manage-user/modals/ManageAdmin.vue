@@ -149,21 +149,21 @@
         <div class="field-body">
           <div class="field is-narrow">
             <div class="control">
-              <label class="radio" :for="service + '.none'">
-                <input :disabled="!canEdit" type="radio" v-model="form.privileges[service]" :value="null" :id="service + '.none'"/>
-                None
-              </label>
-              <label class="radio has-tooltip-danger" :for="service + '.' + priv" v-for="priv in ServiceSupportedActions[service]" :key="priv" :data-tooltip="canApplyPrivilege(service, priv) ? null : 'You do not have this privilege'"  >
-                <input
-                  :disabled="!canApplyPrivilege(service, priv)"
-                  type="radio"
-                  v-model="form.privileges[service]"
-                  :value="priv"
-                  :id="service + '.' + priv"
-
-                />
-                {{ ServicePrivilegeKeys[priv] }}
-              </label>
+              <div class="buttons has-addons">
+                <button
+                  :class="['button','is-small',{'is-info': form.privileges[service] == undefined}]"
+                  @click="form.privileges[service] = null"
+                >
+                  None
+                </button>
+                <button v-for="priv in ServiceSupportedActions[service]" :key="priv"
+                  :class="['button','is-small',{'is-info': form.privileges[service] == priv}]"
+                  :data-tooltip="canApplyPrivilege(service, priv) ? null : 'You do not have this privilege'"
+                  @click="form.privileges[service] = priv"
+                >
+                  {{ ServicePrivilegeKeys[priv] }}
+                </button>
+              </div>
             </div>
           </div>
         </div>
