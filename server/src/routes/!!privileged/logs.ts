@@ -55,8 +55,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         let limit = Number(req.query.limit) || 50
         if(limit <= 0) limit = 50
 
-        let page = req.params.page
-        if(page === null || page === undefined || page < 0) page = 1
+        let page = Number(req.params.page) || 1
+        if(page <= 0) page = 1
 
         // conditions.push(`id > ${limit * page}`)
 
@@ -115,6 +115,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
         query += `ORDER BY id ${req.query.orderByAscending ? 'ASC' : 'DESC'} `
 
+        console.log({ limit, page })
         if(!req.query.fetchAll) {
             query += `LIMIT ? OFFSET ?`
             data = [...data, Number(limit), (page * limit) - limit]
