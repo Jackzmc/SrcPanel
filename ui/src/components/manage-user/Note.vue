@@ -66,7 +66,7 @@ import { Note } from '../../../../server/src/routes/!unprivileged/notes'
 import { PrivilegedUser } from '../../js/User';
 import { useRoute } from 'vue-router';
 const route = useRoute()
-const emit = defineEmits(["deleted"])
+const emit = defineEmits(["deleted", "change"])
 const props = defineProps<{
   note: Note,
   privUser: PrivilegedUser
@@ -97,6 +97,7 @@ function startEdit() {
 }
 
 async function saveNote() {
+  if(!edit.value) return console.error("saveNote called when not in edit mode")
   loading.value = true
   try {
       const response = await fetch(`/api/notes/${props.note.id}`, {
@@ -111,6 +112,7 @@ async function saveNote() {
               type: "success",
               text: `Edited note #${props.note.id}`
           })
+          emit('change', { id: props.note.id, content: edit.value.content, markedBy: edit.value.markedBy })
           edit.value = undefined
       } else {
           const json = await response.json()

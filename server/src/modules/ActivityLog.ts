@@ -1,4 +1,6 @@
 import { Pool, OkPacket } from "mysql2/promise";
+import User, { LogData } from "./users/User.js";
+import { LogPropertiesType } from './users/User';
 
 interface LogEntry {
     id: number,
@@ -39,6 +41,34 @@ export default class ActivityLog {
             {
                 client: steamid, 
                 message: message ? ` ${type.toUpperCase()}: ${message}` : type.toUpperCase()
+            }
+        )
+
+        return r.affectedRows > 0
+    }
+
+    //"Tank<146><BOT><>"
+    //"soap suds<37><STEAM_1:1:223885525><>"
+    async logWeb(activator: User, target?: User, message?: string, payload?: LogData) {
+        let msg = null
+        if(message) {
+            msg = (message || "")
+                .replace(/%client%/g, `"Activator"<0><${activator.steamid64}><>"`)
+            if(target) msg = msg.replace(/%target%/g, `"Target"<0><${target.steamid64}><>"`)
+        }
+
+        let type = null
+        if('type' in payload) type = payload.type
+        else if('service' in payload) type = `${payload.service}.${payload.action}`
+
+
+        const [r] = await this.db.execute<OkPacket>(
+            `INSERT INTO activity_log (server, type, client, target, message, timestamp) VALUES ('web', :type, :client, :target, :msg, UNIX_TIMESTAMP())`,
+            {
+                client: activator.steamid64,
+                target: target ? target.steamid64 : null,
+                msg,
+                type
             }
         )
 

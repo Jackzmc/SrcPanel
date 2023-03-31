@@ -94,6 +94,7 @@ export default class AuthManager {
     }
 
     public getAdmin(steamid64: string) {
+        if(!steamid64) throw new Error("steamid64 is not defined")
         return this.admins[steamid64.slice(10)]
     }
 
@@ -115,6 +116,7 @@ export default class AuthManager {
 
     // If privilege is undefined, it will be ignored, if a privilege is null, it will be revoked
     public async setPrivileges(steamid64: string, privileges: UserPrivileges) {
+        let user = this.getAdmin(steamid64)
         for(const [service, priv] of Object.entries(privileges)) {
             if(priv === null) {
                 await this.db.execute(
@@ -127,6 +129,7 @@ export default class AuthManager {
                     [steamid64, service, priv, priv]
                 )
             }
+            user.permissions.base.privileges[service] = priv
         }
     }
 

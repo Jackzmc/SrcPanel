@@ -3,19 +3,31 @@ import { SteamInfo, UserPrivileges, Service, ServicePrivilege, ActionRequiredPri
 import AuthManager from '../AuthManager.js';
 import { Session } from 'fastify';
 
+export interface LogProperties {
+    targetUser?: string,
+    metadata?: Record<string, any>
+}
+
+export interface LogPropertiesType extends LogProperties {
+    type: string
+}
+export interface LogPropertiesServiceAction extends LogProperties {
+    service: Service,
+    action: Action
+}
+
+export type LogData = LogPropertiesType | LogPropertiesServiceAction
+
 export default class User {
     private adminData?: AdminData
     private authmngr: AuthManager
-    private userdata: Session
 
-    constructor(_authmngr: AuthManager, userdata: Session) {
+    public steamid64: string
+
+    constructor(_authmngr: AuthManager, steamid64: string) {
         this.authmngr = _authmngr;
-        this.userdata = userdata
-        this.adminData = _authmngr.getAdmin(userdata.user.steamid)
-    }
-
-    get steamid64() {
-        return this.userdata.user.steamid
+        this.steamid64 = steamid64
+        this.adminData = _authmngr.getAdmin(steamid64)
     }
 
     get isAdmin() {
@@ -24,52 +36,70 @@ export default class User {
 
     // Make a copy
     get privileges() {
-        return { ... this.userdata.permissions.privileges }
+        if(!this.isAdmin) return null
+        return { ...this.adminData.permissions.privileges }
     }
 
     get immunity() {
-        return this.userdata.permissions.immunityLevel
+        if(!this.isAdmin) return null
+        return this.adminData.permissions.immunityLevel
     }
 
     get baseImmunity() {
-        return this.userdata.permissions.base.immunityLevel
+        if(!this.isAdmin) return null
+        return this.adminData.permissions.base.immunityLevel
     }
 
     get hasRoot() {
-        return this.userdata.permissions.flags.includes('z')
+        if(!this.isAdmin) return null
+        return this.adminData.permissions.flags.includes('z')
     }
 
     get baseFlags() {
-        return this.userdata.permissions.base.flags
+        if(!this.isAdmin) return null
+        return this.adminData.permissions.base.flags
     }
 
     get flags() {
-        return this.userdata.permissions.flags
+        if(!this.isAdmin) return null
+        return this.adminData.permissions.flags
     }
 
-    get ip() {
-        return this.userdata.ip
-    }
+    // get ip() {
+    //     return this.
+    // }
 
     async grantPrivilege(service: Service, privilege: ServicePrivilege) {
         await this.authmngr.setPrivileges(this.steamid64, { [service]: privilege })
-        this.userdata.permissions.privileges[service] = privilege
     }
 
     hasPrivilege(service: Service, type: ServicePrivilege) : boolean {
-        return this.userdata.permissions.privileges[service] === type
+        if(!this.isAdmin) return false
+        return this.adminData.permissions.privileges[service] === type
     }
 
     canPerformAction(service: Service, action: Action) : boolean {
+        if(!this.isAdmin) return false
         return this.hasPrivilege(service, ActionRequiredPrivilege[action])
     }
 
     getPrivilege(service: Service) {
-        return this.userdata.permissions.privileges[service]
+        if(!this.isAdmin) return null
+        return this.adminData.permissions.privileges[service]
     }
 
     async logAction(service: Service, action: Action, message?: string) {
         return await this.authmngr.log.addWebEntry(this.steamid64, `${service}.${action}`, message)
+    }
+
+    async log(targetUser: User | string | null, message: string, payload?: LogData) {
+        let user: User = null
+        if(targetUser != null) {
+            console.log('tg', targetUser)
+            if(targetUser instanceof User) user = targetUser
+            else user = new User(this.authmngr, targetUser) 
+        }
+        await this.authmngr.log.logWeb(this, user, message, payload)
     }
 
     async addProvider(provider: OauthProvider, providerData: OauthProviderData, refreshToken?: string) {

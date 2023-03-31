@@ -53,7 +53,7 @@ async function db(fastify: FastifyInstance) {
     fastify.decorate('config', configManager)
     fastify.addHook('preHandler', (req, reply, done) => {
         if(req.session && req.session.user) {
-            req.user = new User(authManager, req.session)
+            req.user = new User(authManager, req.session.user.steamid)
         }
         done()
     })

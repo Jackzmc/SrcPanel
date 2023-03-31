@@ -1,6 +1,7 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
 import { OkPacket, RowDataPacket } from 'mysql2';
 import { Static, Type } from '@sinclair/typebox'
+import { Action, Service } from '../../../../common-types/Privileges.js';
 
 const PUTNotes = Type.Object({
     markedBy: Type.String(),
@@ -46,10 +47,11 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 })
             }
 
-            const note = {
+            const note: any = {
                 ...existing[0],
                 ...req.body
             }
+
 
             const [ok] = await fastify.db.execute<OkPacket>(`
                 UPDATE notes
@@ -58,7 +60,16 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 note
             )
 
-            fastify.authmngr.log.addWebEntry(req.session.user.steamid, 'NOTE_EDIT', `Updated note ${req.params.id} for ${existing[0].steamid}`)
+
+            await req.user.log(note.steamid, `%client% edited note #${req.params.id} for %target%`, {
+                service: Service.Notes,
+                action: Action.Edit,
+                metadata: {
+                    content: req.body.content,
+                    markedBy: req.body.markedBy
+                }
+            })
+            // fastify.authmngr.log.addWebEntry(req.session.user.steamid, 'NOTE_EDIT', `Updated note ${req.params.id} for ${existing[0].steamid}`)
 
             return {
                 changes: ok.affectedRows
@@ -106,7 +117,12 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 [req.params.id]
             )
 
-            fastify.authmngr.log.addWebEntry(req.session.user.steamid, 'NOTE_DELETE', `Deleted note ${req.params.id} for ${existing[0].steamid}`)
+            await req.user.log(existing[0].client, `%client% deleted note #${req.params.id} for %target%`, {
+                service: Service.Notes,
+                action: Action.Delete,
+            })
+            // fastify.authmngr.log.addWebEntry(req.session.user.steamid, 'NOTE_DELETE', `Deleted note ${req.params.id} for ${existing[0].steamid}`)
+
 
             return {
                 changes: ok.affectedRows,

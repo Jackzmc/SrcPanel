@@ -62,15 +62,15 @@
 </div>
 </template>
 
-<style src="../../../node_modules/bulma-list/css/bulma-list.css" />
 
 <script setup lang="ts">
 import { UserData } from '../../../../common-types/User.js';
 import { useNotification } from '@kyvg/vue3-notification';
-import { PrivilegedUser } from '../../js/User';
-import { ref } from 'vue';
+import { PrivilegedUser } from '@/js/User';
+import { ref, onBeforeMount } from 'vue';
 import UserComponent from '@/components/UserComponent.vue';
-import { getRelDate } from '../../js/util';
+import { getRelDate, request } from '@/js/util';
+import { faTruckLoading } from '@fortawesome/free-solid-svg-icons';
 
 const { notify } = useNotification();
 
@@ -79,6 +79,7 @@ const props = defineProps<{
   privUser: PrivilegedUser
 }>();
 
+let loading = ref(false)
 let expandedId = ref()
 let page = ref(1);
 let limit = ref(30);
@@ -161,4 +162,38 @@ let entries = ref([
   }
 ])
 
+async function fetchLogs() {
+  loading.value = true
+  const response = await request("/api/logs/?servers=web&page=1&limit=100")
+  loading.value = false
+  if(response?.ok) {
+    const json = await response.json()
+    entries.value = json.logs.map((entry: any) => {
+      return {
+        id: entry.id,
+        timestamp: entry.timestamp,
+        server: entry.server,
+        type: entry.type,
+        activator: entry.client ? {
+          steamid: entry.client,
+          name: entry.clientName,
+          avatarUrl: "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/79/672f1a349cdeb1273ec566bb40c126bb73d86d3e.jpg"
+        } : null,
+        target: entry.target ? {
+          steamid: entry.target,
+          name: entry.targetName,
+          avatarUrl: "https://avatars.cloudflare.steamstatic.com/4d7836164e9a2e342afbb4334b237f96bff0c5cd_full.jpg"
+        } : null,
+        message: entry.message
+      }
+    })
+  }
+}
+
+onBeforeMount(() => {
+  fetchLogs()
+})
+
 </script>
+
+<style src="../../../node_modules/bulma-list/css/bulma-list.css" />

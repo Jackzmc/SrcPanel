@@ -115,7 +115,6 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
         query += `ORDER BY id ${req.query.orderByAscending ? 'ASC' : 'DESC'} `
 
-        console.log({ limit, page })
         if(!req.query.fetchAll) {
             query += `LIMIT ? OFFSET ?`
             data = [...data, Number(limit), (page * limit) - limit]
