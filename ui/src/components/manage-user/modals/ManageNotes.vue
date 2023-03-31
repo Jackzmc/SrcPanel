@@ -35,7 +35,7 @@
       <p class="has-text-danger" v-if="!canAddNote">You do not have the permission to add notes</p>
     </div>
     <div class="list has-visible-pointer-controls has-hoverable-list-items">
-      <NoteComponent v-for="(note, i) in notes" :key="note.id" :note="note" :priv-user="privUser" @deleted="notes.splice(i, 1)" />
+      <NoteComponent v-for="(note, i) in notes" :key="note.id" :note="note" :priv-user="privUser" @deleted="notes.splice(i, 1)" @change="onNoteChange" />
     </div>
     <br>
   </template>
@@ -67,6 +67,17 @@ const canAddNote = computed(() => {
 function startNewNote() {
   newNote.value = {
     content: null
+  }
+}
+
+function onNoteChange(data: any) {
+  if(!data.id) return
+  for(const note of notes.value) {
+    if(note.id === data.id) {
+      note.content = data.content
+      note.markedBy = data.markedBy
+      break
+    }
   }
 }
 
