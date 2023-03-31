@@ -9,6 +9,7 @@ import { SteamUserDetails } from '../../../common-types/Share';
 import SteamID from "steamid";
 import FastGeoip from 'fast-geoip';
 import { SESSION_VERSION } from '../routes/auth/steam.js';
+import SteamAPI from "./steam.js";
 
 interface AddAdmin {
     authtype: "steam" | "name" | "ip",
@@ -37,14 +38,16 @@ export default class AuthManager {
     private groups: Record<number, AdminGroup> = {}
     private apikeysCache: QuickLRU<string, APIKey>
     private actLog: ActivityLog
+    private steam: SteamAPI
     // Caches the resolved name of a ban source such as discord:DISCORD_ID
     private providerNameCache: Map<string, string>
 
-    constructor(adminDatabase: Pool, sessionDatabase: Pool) {
+    constructor(adminDatabase: Pool, sessionDatabase: Pool, steam: SteamAPI) {
         this.providerNameCache = new Map()
         this.apikeysCache = new QuickLRU<string, APIKey>({ maxSize: 100 });
         this.db = adminDatabase
         this.dbna = sessionDatabase
+        this.steam = steam
         this.actLog = new ActivityLog(sessionDatabase)
         this.fetchAdmins()
     }
@@ -206,6 +209,13 @@ export default class AuthManager {
 
     public async addAdmin(admin: AddAdmin, webPermissions?: number, webFlags?: number) {
         // TODO: Add group support
+
+        const details = await this.steam.getUserDetails([new SteamID(admin.identity)])
+        try {
+            await this.dbna.execute("INSERT INTO user_names (steamid, name, avatar_hash) VALUES (?, ?, ?)", [admin.identity.slice(10), details[0].personaname, details[0].avatarhash])
+        } catch(err) {
+            console.warn(`Warn: Could not insert admin resolved name (${admin.identity.slice(10)}, name ${details[0].personaname}):`, err.sqlMessage)
+        }
 
         const [ok] = await this.db.execute<OkPacket>(
             `INSERT INTO sm_admins (\`authtype\`, \`identity\`, \`password\`, \`flags\`, \`name\`, \`immunity\`) VALUES (:authtype, :identity, :password, :flags, :name, :immunity)`,
@@ -370,6 +380,15 @@ export default class AuthManager {
         this.groups = groups
         console.info(`Fetched ${Object.keys(admins).length} admins and ${Object.keys(groups).length} groups`)
         console.timeEnd("fetchAdmins")
+
+        // console.time('fetchavatars')
+        // const details = await this.steam.getUserDetails(Object.values(this.admins).map(s => new SteamID(s.identity)))
+        // for(const detail of details) {
+        //     const s = new SteamID(detail.steamid).getSteam2RenderedID()
+        //     console.log(`${s} -> ${detail.avatarhash}`)
+        //     await this.dbna.execute("UPDATE user_names SET avatar_hash = ? WHERE steamid = ?", [detail.avatarhash, s.slice(10)])
+        // }
+        // console.timeEnd('fetchavatars')
     }
 
     public getAdmins(fullAdmin: boolean = false) {
@@ -425,7 +444,7 @@ export default class AuthManager {
             const data: OauthProviderData = {
                 id: row.provider_id,
                 username: row.username,
-                avatarUrl: row.avatar_url
+                avatarUrl: row.avatar_hash
             }
             result[row.provider] = data
         }

@@ -49,6 +49,7 @@ export default class SteamAPI {
             if(users) {
                 return users as SteamUserDetails[]
             }
+            return null
         }
         throw new Error(`${res.statusText}: ${await res.text()}`)
     }

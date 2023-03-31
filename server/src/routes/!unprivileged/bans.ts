@@ -183,7 +183,10 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         `)
 
         const [bans] = await fastify.db.execute<RowDataPacket[]>(`
-            SELECT u1.last_alias, names.name as resolved_name,
+            SELECT 
+                u1.last_alias as client_statname, 
+                n1.name as client_cachename,
+                n1.avatar_hash as client_avatar,
                 bans.id,
                 bans.steamid,
                 bans.reason,
@@ -191,16 +194,19 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 bans.flags,
                 bans.timestamp,
                 bans.executor,
-                u2.last_alias as executor_name,
+                u2.last_alias as executor_statname,
+                n2.name as executor_cachename,
+                n2.avatar_hash as executor_avatar,
                 bans.expires,
                 bans.expired,
                 bans.times_tried,
                 (SELECT COUNT(*) FROM ban_appeals WHERE ban_id = bans.id) as appeals,
                 (SELECT COUNT(*) FROM notes WHERE steamid = bans.steamid) as notes
             FROM bans
-                LEFT JOIN stats_users as u1 on bans.steamid = u1.steamid
-                LEFT JOIN stats_users as u2 on bans.executor = u2.steamid
-                LEFT JOIN user_names as names on SUBSTRING(bans.steamid, 11) = names.steamid
+                LEFT JOIN stats_users as u1 on u1.steamid LIKE SUBSTRING(bans.steamid, 11)
+                LEFT JOIN stats_users as u2 on u2.steamid LIKE SUBSTRING(bans.executor, 11)
+                LEFT JOIN user_names as n1 on SUBSTRING(bans.steamid, 11) = n1.steamid
+                LEFT JOIN user_names as n2 on SUBSTRING(bans.executor, 11) = n2.steamid
             ${req.query.include !== "expired" ? 'WHERE bans.expired = 0' : ''}
             ORDER BY bans.timestamp DESC LIMIT ?, ?`, 
             [offset, limit]
@@ -217,14 +223,15 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             ban.client = {
                 id: ban.steamid,
                 accountid: ban.steamid.slice(10),
-                nameResolver: "none"
+                nameResolver: "none",
+                avatarUrl: ban.client_avatar,
             }
 
-            if(ban.last_alias) {
-                ban.client.name = ban.last_alias.replace(NAME_INVALID_CHAR_REPLACE, '�')
+            if(ban.client_statsname) {
+                ban.client.name = ban.client_statsname.replace(NAME_INVALID_CHAR_REPLACE, '�')
                 ban.client.nameResolver = "stats"
-            } else if(ban.resolved_name) {
-                ban.client.name = ban.resolved_name.replace(NAME_INVALID_CHAR_REPLACE, '�')
+            } else if(ban.client_cachename) {
+                ban.client.name = ban.client_cachename.replace(NAME_INVALID_CHAR_REPLACE, '�')
                 ban.client.nameResolver = "name_db"
             } else {
                 // Optimize by having count of steamids so we can break in resolver quicker
@@ -232,9 +239,17 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             }
             ban.executor = {
                 id: ban.executor,
-                name: ban.executor_name,
-                nameResolver: ban.executor_name !== null ? "stats" : "none",
-                provider: "steam"
+                name: null,
+                nameResolver: "none",
+                avatarUrl: ban.executor_avatar,
+            }
+            console.log(ban.executor_statsname, ban.executor_cachename, ban.executor.id)
+            if(ban.executor_statsname) {
+                ban.executor.name = ban.executor_statsname.replace(NAME_INVALID_CHAR_REPLACE, '�')
+                ban.executor.nameResolver = "stats"
+            } else if(ban.executor_cachename) {
+                ban.executor.name = ban.executor_cachename.replace(NAME_INVALID_CHAR_REPLACE, '�')
+                ban.executor.nameResolver = "name_db"
             }
             // If we don't have a name, try to parse it as a provider (such as discord: )
             if(!ban.executor.name) {
@@ -265,11 +280,12 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                     if(ban.client.accountid == accountid) {
                         ban.client.name = name
                         ban.client.nameResolver = "steam"
+                        ban.client.avatarUrl = resolvedName.avatarfull
                     }
                 }
 
                 try {
-                    await fastify.db.execute("INSERT INTO user_names (steamid, name) VALUES (?, ?)", [accountid, name])
+                    await fastify.db.execute("INSERT INTO user_names (steamid, name, avatar_hash) VALUES (?, ?, ?)", [accountid, name, resolvedName.avatarhash])
                 } catch(err) {
                     console.warn(`Warn: Could not insert resolved name (${accountid}, name ${name}):`, err.sqlMessage)
                 }

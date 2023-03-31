@@ -195,7 +195,7 @@
       </div>
       <hr />
       <div class="container" v-if="!search.id">
-        <p v-if="loading == 1" class="subtitle is-3 has-text-centered">Loading...</p>
+        <p v-if="loading == 1" class="subtitle is-3 has-text-centered my-6"><Icon icon-class="mr-4" icon="spinner" spin>Loading...</Icon></p>
         <Pagination
           v-else-if="isFilterTargetValid || !filters.target || filters.target == ''"
           :page="page"

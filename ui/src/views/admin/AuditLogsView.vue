@@ -11,27 +11,28 @@
       <div class="list has-visible-pointer-controls has-hoverable-list-items">
         <template v-for="entry in entries" :key="entry.id">
           <div class="list-item">
-            <div class="list-item-image">
+            <div class="list-item-image" v-if="entry.client.avatarUrl">
               <figure class="image is-48x48">
-                <img class="is-rounded" :src="entry.activator.avatarUrl">
+                <img class="is-rounded" :src="entry.client.avatarUrl">
               </figure>
             </div>
 
             <div class="list-item-content">
               <div class="list-item-title">
-                {{ new Date(entry.timestamp).toLocaleDateString() }} at {{ new Date(entry.timestamp).toLocaleTimeString(undefined, { timeStyle: 'short' }) }}
-                <span class="ml-2 has-text-grey-light is-inline subtitle is-6">{{ getRelDate(entry.timestamp / 1000) }}</span>
+                {{ formatDate(entry.timestamp) }}
+                <span class="ml-2 has-text-grey-light is-inline subtitle is-6">{{ getRelDate(entry.timestamp) }}</span>
                 <span class="tags is-pulled-right">
                   <span class="tag is-pulled-right is-info">Action</span>
                   <span class="tag is-pulled-right is-dark">reserved</span>
                 </span>
               </div>
               <div class="list-item-description">
-                <UserComponent :user="entry.activator" is-admin />
+                <!-- <UserComponent :user="entry.client" is-admin />
                 {{entry.message}}
                 <span v-html='entry._html' />
                 <UserComponent v-if="entry.target" :user="entry.target"/>
-                {{ entry._message2 }}
+                {{ entry._message2 }} -->
+                <LogMessage :log="entry" :userdata="userdata" />
                 </div>
             </div>
 
@@ -52,6 +53,10 @@
               <div class="notification is-dark">
                 <p><b>Id:</b> #{{ entry.id }}</p>
                 <p><b>Server: </b><span class="tag is-info">reserved</span></p>
+                <template v-if="entry.metadata">
+                  <p><b>Metadata: </b></p>
+                  <pre>{{ JSON.stringify(JSON.parse(entry.metadata), null, 2) }}</pre>
+                </template>
               </div>
             </div>
           </div>
@@ -69,8 +74,9 @@ import { useNotification } from '@kyvg/vue3-notification';
 import { PrivilegedUser } from '@/js/User';
 import { ref, onBeforeMount } from 'vue';
 import UserComponent from '@/components/UserComponent.vue';
-import { getRelDate, request } from '@/js/util';
+import { formatDate, getRelDate, request } from '@/js/util';
 import { faTruckLoading } from '@fortawesome/free-solid-svg-icons';
+import LogMessage from '@/components/LogMessage.vue';
 
 const { notify } = useNotification();
 
@@ -83,84 +89,7 @@ let loading = ref(false)
 let expandedId = ref()
 let page = ref(1);
 let limit = ref(30);
-let entries = ref([
-  {
-    showDetails: false,
-    id: 1,
-    activator: {
-      name: "Jackzie ❤",
-      steamid: "STEAM_1:0:49243767",
-      avatarUrl: "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/79/672f1a349cdeb1273ec566bb40c126bb73d86d3e.jpg"
-    },
-    target: {
-      name: "Disgruntled Pea",
-      steamid: 'blah',
-      avatarUrl: "https://avatars.cloudflare.steamstatic.com/4d7836164e9a2e342afbb4334b237f96bff0c5cd_full.jpg"
-    },
-    message: "did an action on",
-    timestamp: Date.now()
-  },
-  {
-    showDetails: false,
-    id: 2,
-    activator: {
-      name: "Jackzie ❤",
-      steamid: "STEAM_1:0:49243767",
-      avatarUrl: "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/79/672f1a349cdeb1273ec566bb40c126bb73d86d3e.jpg"
-    },
-    target: {
-      name: "Disgruntled Pea",
-      steamid: 'blah',
-      avatarUrl: "https://avatars.cloudflare.steamstatic.com/4d7836164e9a2e342afbb4334b237f96bff0c5cd_full.jpg"
-    },
-    message: "did another action on",
-    timestamp: Date.now() - 500000
-  },
-  {
-    showDetails: false,
-    id: 3,
-    activator: {
-      name: "Ashley Golix ❤",
-      steamid: "STEAM_1:0:530680608",
-      avatarUrl: "https://avatars.cloudflare.steamstatic.com/e046c40c4d06f48b4e84711b064da1c09bea47ed_full.jpg"
-    },
-    target: {
-      name: "Disgruntled Pea",
-      steamid: 'blah',
-      avatarUrl: "https://avatars.cloudflare.steamstatic.com/4d7836164e9a2e342afbb4334b237f96bff0c5cd_full.jpg"
-    },
-    message: "murdered and banned",
-    _message2: "for \"being stupid, spamming notes, and more\"",
-    timestamp: Date.now() - 90000000
-  },
-  {
-    showDetails: false,
-    id: 4,
-    activator: {
-      name: "Jackzie ❤",
-      steamid: "STEAM_1:0:49243767",
-      avatarUrl: "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/79/672f1a349cdeb1273ec566bb40c126bb73d86d3e.jpg"
-    },
-    _html: "updated the admin panel",
-    timestamp: Date.now() - 2590000000
-  },
-  {
-    showDetails: false,
-    id: 4,
-    activator: {
-      name: "Jackzie ❤",
-      steamid: "STEAM_1:0:49243767",
-      avatarUrl: "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/79/672f1a349cdeb1273ec566bb40c126bb73d86d3e.jpg"
-    },
-    target: {
-      name: "Disgruntled Pea",
-      steamid: 'blah',
-      avatarUrl: "https://avatars.cloudflare.steamstatic.com/4d7836164e9a2e342afbb4334b237f96bff0c5cd_full.jpg"
-    },
-    _html: "granted <b>privileges</b> to ",
-    timestamp: Date.now() - 9590000000
-  }
-])
+let entries = ref()
 
 async function fetchLogs() {
   loading.value = true
@@ -174,16 +103,17 @@ async function fetchLogs() {
         timestamp: entry.timestamp,
         server: entry.server,
         type: entry.type,
-        activator: entry.client ? {
+        client: entry.client ? {
           steamid: entry.client,
           name: entry.clientName,
-          avatarUrl: "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/79/672f1a349cdeb1273ec566bb40c126bb73d86d3e.jpg"
+          avatarUrl: entry.clientAvatar ? `https://avatars.steamstatic.com/${entry.clientAvatar}.jpg` : null
         } : null,
         target: entry.target ? {
           steamid: entry.target,
           name: entry.targetName,
-          avatarUrl: "https://avatars.cloudflare.steamstatic.com/4d7836164e9a2e342afbb4334b237f96bff0c5cd_full.jpg"
+          avatarUrl: entry.targetAvatar ? `https://avatars.steamstatic.com/${entry.targetAvatar}.jpg` : null
         } : null,
+        metadata: entry.metadata,
         message: entry.message
       }
     })

@@ -53,8 +53,8 @@ export default class ActivityLog {
         let msg = null
         if(message) {
             msg = (message || "")
-                .replace(/%client%/g, `"Activator"<0><${activator.steamid64}><>"`)
-            if(target) msg = msg.replace(/%target%/g, `"Target"<0><${target.steamid64}><>"`)
+                .replace(/%client%/g, `"Activator<0><${activator.steamid64}><>"`)
+            if(target) msg = msg.replace(/%target%/g, `"Target<0><${target.steamid64}><>"`)
         }
 
         let type = null
@@ -63,12 +63,13 @@ export default class ActivityLog {
 
 
         const [r] = await this.db.execute<OkPacket>(
-            `INSERT INTO activity_log (server, type, client, target, message, timestamp) VALUES ('web', :type, :client, :target, :msg, UNIX_TIMESTAMP())`,
+            `INSERT INTO activity_log (server, type, client, target, message, timestamp, metadata) VALUES ('web', :type, :client, :target, :msg, UNIX_TIMESTAMP(), :metadata)`,
             {
                 client: activator.steamid64,
                 target: target ? target.steamid64 : null,
                 msg,
-                type
+                type,
+                metadata: payload.metadata ? JSON.stringify(payload.metadata) : null
             }
         )
 

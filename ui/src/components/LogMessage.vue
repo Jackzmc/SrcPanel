@@ -1,15 +1,15 @@
 <template>
   <td>
       <template v-if="props.log.type === 'CHAT'">
-        <b v-if="props.log.type === 'CHAT'" ><LogClientTarget :user="props.log.client" type="client" @set-filter="setFilter" />: </b>
+        <b v-if="props.log.type === 'CHAT'" ><UserComponent :user="props.log.client" type="client" @set-filter="setFilter"/>: </b>
         <span v-html="props.log.message" />
       </template>
       <template v-else>
-        <b v-if="LPieceCount == 0 && props.log.client.steamid"><LogClientTarget :user="props.log.client" type="client" @set-filter="setFilter" /></b>
-        <b v-else-if="LPieceCount == 0 && !props.log.client.steamid && props.log.target.steamid"><LogClientTarget type="target" :user="props.log.target" @set-filter="setFilter" /></b>
+        <b v-if="LPieceCount == 0 && props.log.client.steamid"><UserComponent :user="props.log.client" type="client" @set-filter="setFilter" /></b>
+        <b v-else-if="LPieceCount == 0 && !props.log.client.steamid && props.log.target.steamid"><UserComponent type="target" :user="props.log.target" @set-filter="setFilter" /></b>
         <template v-for="m in messagePieces" :key="m">
           <b v-if="m.LMatch">
-            <LogClientTarget v-if="m.user" :user="m.user" :type="m.type" @set-filter="setFilter" />
+            <UserComponent v-if="m.user" :user="m.user" :type="m.type" @set-filter="setFilter" />
           </b>
           <span v-else>{{ m.content }}</span>
           <!-- <component :is="m.LMatch ? 'b' : 'span'">{{ m.content }}</component> -->
@@ -32,7 +32,7 @@
 
 <script setup lang="ts">
 import { computed, ref } from "@vue/reactivity";
-import LogClientTarget from "@/components/LogClientTarget.vue";
+import UserComponent from "@/components/UserComponent.vue";
 const emit = defineEmits(["set-filter", "redact-id"]);
 const props = defineProps(["log", "hoverId", "userdata"]);
 

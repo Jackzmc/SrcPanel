@@ -42,7 +42,7 @@ async function db(fastify: FastifyInstance) {
     })
 
     const userManager = new UserManager(db, steam)
-    const authManager = new AuthManager(admindb, db)
+    const authManager = new AuthManager(admindb, db, steam)
     const configManager = new ConfigManager()
         await configManager.Load(DATA_FOLDER)
     fastify.decorate('users', userManager)
