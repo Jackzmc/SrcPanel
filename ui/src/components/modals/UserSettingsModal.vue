@@ -26,7 +26,7 @@
               </thead>
               <tbody>
                 <tr v-for="(session, i) in sessions" :key="session.id">
-                  <td>{{ session.id }}</td>
+                  <td>{{ session.id.substring(0,4) }}</td>
                   <td>
                     <span v-if="session.ip !== '127.0.0.1'">{{ formatCountry(session.countryCode) }}</span><em v-else>(dev)</em>
                     <br>

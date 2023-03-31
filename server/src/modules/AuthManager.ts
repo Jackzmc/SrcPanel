@@ -80,7 +80,7 @@ export default class AuthManager {
             })
         }
 
-        req.session.lastActive = Math.round(Date.now() / 1000)
+        req.session.lastActive = Math.floor(Date.now() / 1000)
     
         return authorized
     }

@@ -1,3 +1,4 @@
+import { SessionStore } from '@fastify/session';
 import { FastifyInstance, FastifyPluginOptions, FastifyReply, FastifyRequest } from 'fastify';
 import { RowDataPacket } from 'mysql2';
 import { SessionData, UserData } from '../../../../common-types/User';
@@ -26,15 +27,20 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             [req.params.id, req.session.user.accountid]
         )
         if(sessions.length == 0) {
-            reply.code(404).send({
+            return reply.code(404).send({
                 error: 'NO_SESSION',
                 message: 'No session found'
             })
         } else {
-            req.sessionStore.destroy(req.session.sessionId, (err: Error) => {
-                if(err) throw err
+            try {
+                await deleteSession(req.sessionStore, req.session.sessionId)
                 reply.code(204).send()
-            })
+            } catch(err) {
+                return reply.code(500).send({
+                    error: "INTERNAL_SERVER_ERROR",
+                    message: err.message
+                })
+            }
         }
     })
 
@@ -44,7 +50,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         return { 
             sessions: sessions.map(session => { 
                 const data: SessionData = {
-                    id: session.id.substring(0, 4),
+                    id: session.id,
                     ip: session.ip,
                     loginTime: session.loginTime,
                     lastActive: session.lastActive,
@@ -52,12 +58,22 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 }
                 return data
             }), 
-            currentSessionId: req.session.sessionId.substring(0, 4)
+            currentSessionId: req.session.sessionId
         }
     })
 
     fastify.get('/logout', async (req, reply) => {
         await req.session.destroy()
         reply.code(204).send()
+        req.sessionStore
     })
+
+    async function deleteSession(sessionStore: SessionStore, sessionId: string) {
+        return new Promise((resolve, reject) => {
+            sessionStore.destroy(sessionId, (err) => {
+                if(err) return reject(err)
+                else resolve(true)
+            })
+        })
+    }
 }

@@ -19,7 +19,7 @@ import { FastifyPluginOptions } from 'fastify';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-const MySQLStore = MySQLSession(FastifySession)
+const MySQLStore = MySQLSession(FastifySession  )
 
 const app = Fastify({
     trustProxy: process.env.NODE_ENV === "production",

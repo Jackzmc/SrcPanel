@@ -87,6 +87,13 @@ async function getAuth() {
     window.sessionStorage.setItem('srcds_userdata', JSON.stringify(userdata.value))
     console.log('Authorized: Hello', json.user.name)
   } else if(response.status == 401) {
+    userdata.value = undefined
+    if(window.sessionStorage['srcds_userdata']) {
+      notify({
+        type: "error",
+        text: "Your session has expired"
+      })
+    }
     window.sessionStorage.removeItem('srcds_userdata')
     if(route.meta.authRequired && !userdata) {
       router.push({
