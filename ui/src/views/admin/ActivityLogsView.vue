@@ -353,7 +353,7 @@ const FILTERS = {
   types: ["ACTION", "CHAT", "INFO", "STATE", "QUIT", "JOIN", "WEB"],
 };
 
-let hoverId = ref("");
+let hoverId = ref<number>();
 let modal = ref<{ message?: string }>({ message: undefined });
 let loading = ref(1);
 let data = ref<any[]>([]);
@@ -483,7 +483,7 @@ function searchID(id: string) {
   getData();
 }
 async function redactID(id: string) {
-  hoverId.value = "";
+  hoverId.value = undefined;
   let log = data.value.find((log) => log.id === id);
   if (!log) {
     alert("Could not find log for " + id);

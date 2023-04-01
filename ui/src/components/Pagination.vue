@@ -1,7 +1,7 @@
 <template>
   <nav class="pagination" role="navigation" aria-label="pagination">
-    <a v-if="prevPage" class="pagination-previous" @click="setPage(prevPage)">Previous</a>
-    <a v-if="nextPage" class="pagination-next" @click="setPage(nextPage)">Next page</a>
+    <a :disabled="prevPage ? undefined : true" class="pagination-previous" @click="setPage(prevPage)">Previous</a>
+    <a :disabled="nextPage ? undefined : true" class="pagination-next" @click="setPage(nextPage)">Next page</a>
     <ul class="pagination-list">
       <template v-if="prevPage">
         <li>
@@ -29,6 +29,7 @@
       </li>
       </template>
     </ul>
+    <input type="number" class="input pagination-previous" style="width:5%" min=1 :max="maxPages" step=1 v-model="pageInput" @blur="setPage(pageInput)" />
   </nav>
 </template>
 
@@ -43,6 +44,8 @@ const props = defineProps<{
   count: number,
   limit: number
 }>()
+let pageInput = ref(props.page)
+watch(() => props.page, (value) => pageInput.value = value)
 
 
 const prevPage = computed(() => {
@@ -58,7 +61,7 @@ const maxPages = computed(() => {
 })
 
 function setPage(page: number | null) {
-  if(page) emit('page', page)
+  if(page && page > 0 && page <= maxPages.value) emit('page', page)
 }
 
 </script>

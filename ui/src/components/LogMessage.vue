@@ -38,7 +38,7 @@ import { PrivilegedUser } from "@/js/User.js";
 const emit = defineEmits(["set-filter", "redact-id"]);
 const props = defineProps<{
   log: any,
-  hoverId?: string,
+  hoverId?: number,
   privUser: PrivilegedUser
 }>()
 
