@@ -72,7 +72,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             const maxId = highestId - (limit * (page - 1))
             const minId = maxId - limit
             // We don't need to also fetch usernames from user_names as if there is a log entry they should always have an entry in statistics 
-            query = `SELECT id, timestamp, server, type, client, target, message, metadata,
+            query = `SELECT id, l.timestamp, server, type, client, target, message, metadata,
                 s1.last_alias as clientName, s2.last_alias as targetName,
                 u1.avatar_hash as clientAvatar, u2.avatar_hash as targetAvatar
                 FROM activity_log l
