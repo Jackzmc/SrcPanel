@@ -52,7 +52,7 @@ function redactID(id: number) {
 }
 
 const icon = computed(() => {
-  if(props.log.server === 'web') return { icon: "fa-cloud"}
+  if(props.log.server === 'web') return "fa-cloud"
   switch(props.log.type) {
     case "CHAT": return "fa-regular fa-comment"
     case "JOIN": return "fa-plus"
