@@ -148,7 +148,7 @@ const loadingDuration = computed(() => {
 
 async function fetchLogs() {
   loadingTime.value = Date.now()
-  const response = await request(`/api/logs/${page.value}?optimized=1&limit=${limit.value}`)
+  const response = await request(`/api/logs/${page.value}?limit=${limit.value}`)
   loadingTime.value = undefined
   if(response?.ok) {
     const json = await response.json()
