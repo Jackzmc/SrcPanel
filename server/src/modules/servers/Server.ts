@@ -91,7 +91,7 @@ export interface ServerInfo {
 }
 
 const sleep = time => new Promise(res => setTimeout(res, time));
-const MAX_PLAYER_STATS = 100
+const MAX_PLAYER_STATS = 300
 
 interface PlayerStats {
   timestamp: number,
@@ -313,8 +313,8 @@ export default class Server {
               cvars: this._cvars
             }
         } catch(err) {
-            this._status.data = null
-            this._status.online = false
+          this._status.data = null
+          this._status.online = false
         }
     } 
 }

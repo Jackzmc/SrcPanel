@@ -121,14 +121,12 @@
         <table v-if="activities" class="table">
           <thead>
             <tr>
-              <th>Type</th>
               <th>Message</th>
               <th>Time</th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="activity in activities" :key="activity.id">
-              <td>{{activity.type}}</td>
               <LogMessage :log="activity" :userdata="userdata" />
               <td>{{ new Date(activity.timestampRaw * 1000).toLocaleTimeString()}}</td>
             </tr>
