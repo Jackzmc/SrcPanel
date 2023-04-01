@@ -144,14 +144,19 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
 
         const [[logs], [count]] = await Promise.all([
-            fastify.db.execute(query, data),
-            fastify.db.execute(countQuery, countData)
+            fastify.db.execute<RowDataPacket[]>(query, data),
+            fastify.db.execute<RowDataPacket[]>(countQuery, countData)
         ])
         // const [logs] = await fastify.db.query(query, data)
         // const [count] = await fastify.db.query(countQuery, countData)
 
         return {
-            logs,
+            logs: logs.map(log => {
+                return {
+                    ...log, 
+                    metadata: log.metadata ? JSON.parse(log.metadata) : null
+                }
+            }),
             totalCount: count[0].count,
             raw: process.env.NODE_ENV === "production" ? null : {
                 query,

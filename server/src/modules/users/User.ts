@@ -91,7 +91,6 @@ export default class User {
     async log(targetUser: User | string | null, message: string, payload?: LogData) {
         let user: User = null
         if(targetUser != null) {
-            console.log('tg', targetUser)
             if(targetUser instanceof User) user = targetUser
             else user = new User(this.authmngr, targetUser) 
         }

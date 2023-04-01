@@ -115,7 +115,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
                     await fastify.authmngr.revokeAdmin(admin.id)
 
-                    await req.user.log(admin.identity, `%client% revoked admin privileges #${admin.id} for %target%`, {
+                    await req.user.log(admin.identity, `%client% revoked admin privileges #%id for %target%`, {
                         service: Service.Admins,
                         action: Action.Delete,
                         metadata: {
@@ -179,7 +179,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                     }
                     const newAdmin = await fastify.authmngr.editAdmin(admin.id, newAdminData, req.body.webPermissions)
 
-                    await req.user.log(admin.identity, `%client% edited admin privileges #${admin.id} for %target%`, {
+                    await req.user.log(admin.identity, `%client% edited admin privileges #%id% for %target%`, {
                         service: Service.Admins,
                         action: Action.Edit,
                         metadata: {
@@ -257,7 +257,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                         groupIds
                     }, req.body.webPermissions)
 
-                    await req.user.log(req.params.steamid, `%client% added new admin #${id} for %target%`, {
+                    await req.user.log(req.params.steamid, `%client% added new admin #%id% for %target%`, {
                         service: Service.Admins,
                         action: Action.Edit,
                         metadata: {

@@ -3,11 +3,19 @@
   <article class="message is-warning">
     <div class="message-body content">
       <b>Feature in development</b><br>
-      In the meantime, you can still use the <router-link :to="{name: 'logs-activity' }">Activity Logs</router-link>.
+      Feature may not be working, in the meantime, you can still use the <router-link :to="{name: 'logs-activity' }">Activity Logs</router-link>.
     </div>
   </article>
+  <h4 class="title is-4">
+    Showing <input type="number" class="input" min=20 max=1000 step=10 style="width:5%" v-model="limit" @blur="fetchLogs" /> / {{ totalEntries.toLocaleString() }} Entries
+    <!-- <em class="subtitle is-4" v-if="hasSearchQuery">({{ notesCount }} filtered)</em> -->
+  </h4>
+  <Pagination :page="page" :count="totalEntries" :limit="limit" @page="setPage" />
   <div class="columns">
-    <div class="column is-8 box">
+    <div class="column is-8 box" v-if="loading">
+      <p class="has-text-centered my-6 is-size-5"><Icon icon="spinner" spin>Loading...</Icon></p>
+    </div>
+    <div class="column is-8 box" v-else>
       <div class="list has-visible-pointer-controls has-hoverable-list-items">
         <template v-for="entry in entries" :key="entry.id">
           <div class="list-item">
@@ -63,7 +71,22 @@
         </template>
       </div>
     </div>
+    <div class="column">
+      <article class="message is-warning">
+        <div class="message-body content">
+          <b>Feature in development</b><br>
+          Search is not implemented at this time.
+        </div>
+      </article>
+      <Field label="Search Client" icon-left="search">
+        <input type="text" class="input" placeholder="Search for a client" />
+      </Field>
+      <Field label="Search Target" icon-left="search">
+        <input type="text" class="input" placeholder="Search for a target" />
+      </Field>
+    </div>
   </div>
+  <Pagination :page="page" :count="totalEntries" :limit="limit" @page="setPage" />
 </div>
 </template>
 
@@ -73,10 +96,10 @@ import { UserData } from '../../../../common-types/User.js';
 import { useNotification } from '@kyvg/vue3-notification';
 import { PrivilegedUser } from '@/js/User';
 import { ref, onBeforeMount } from 'vue';
-import UserComponent from '@/components/UserComponent.vue';
 import { formatDate, getRelDate, request } from '@/js/util';
-import { faTruckLoading } from '@fortawesome/free-solid-svg-icons';
 import LogMessage from '@/components/LogMessage.vue';
+import Field from '@/components/Field.vue';
+import Pagination from '@/components/Pagination.vue';
 
 const { notify } = useNotification();
 
@@ -89,6 +112,7 @@ let loading = ref(false)
 let expandedId = ref()
 let page = ref(1);
 let limit = ref(30);
+let totalEntries = ref(0)
 let entries = ref()
 
 async function fetchLogs() {
@@ -97,7 +121,13 @@ async function fetchLogs() {
   loading.value = false
   if(response?.ok) {
     const json = await response.json()
+    totalEntries.value = json.totalCount
     entries.value = json.logs.map((entry: any) => {
+      if(entry.metadata) {
+        for(const key in entry.metadata) {
+          entry.message = entry.message.replace(new RegExp(`%${key}%`, 'g'), `<b data-tooltip="${key}">${entry.metadata[key]}</b>`)
+        }
+      }
       return {
         id: entry.id,
         timestamp: entry.timestamp,
@@ -118,6 +148,10 @@ async function fetchLogs() {
       }
     })
   }
+}
+function setPage(pageNum: number) {
+  page.value = pageNum;
+  fetchLogs();
 }
 
 onBeforeMount(() => {

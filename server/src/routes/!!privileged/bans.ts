@@ -89,11 +89,11 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             }
 
             if(req.body.flags & APIBanFlags.Suspended && ~existing[0].flags & APIBanFlags.Suspended) {
-                await req.user.log(existing[0].steamid, `%client% suspended ban #${req.params.id} for %target%`, logPayload)
+                await req.user.log(existing[0].steamid, `%client% suspended ban #%id% for %target%`, logPayload)
             } else if(~req.body.flags & APIBanFlags.Suspended && existing[0].flags & APIBanFlags.Suspended) {
-                await req.user.log(existing[0].steamid, `%client% reinstate ban #${req.params.id} for %target%`, logPayload)
+                await req.user.log(existing[0].steamid, `%client% reinstate ban #%id% for %target%`, logPayload)
             } else {
-                await req.user.log(existing[0].steamid, `%client% edited ban #${req.params.id}'s details for %target%`, logPayload)
+                await req.user.log(existing[0].steamid, `%client% edited ban #%id%'s details for %target%`, logPayload)
             }
 
             return {
@@ -210,7 +210,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 [req.params.id]
             )
 
-            await req.user.log(existing[0].steamid, `%client% removed ban #${existing[0].id} for %target%`, {
+            await req.user.log(existing[0].steamid, `%client% removed ban #%id for %target%`, {
                 service: Service.Bans,
                 action: Action.Delete,
                 metadata: {

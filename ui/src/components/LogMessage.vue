@@ -11,7 +11,7 @@
           <b v-if="m.LMatch">
             <UserComponent v-if="m.user" :user="m.user" :type="m.type" @set-filter="setFilter" />
           </b>
-          <span v-else>{{ m.content }}</span>
+          <span v-else v-html="m.content"></span>
           <!-- <component :is="m.LMatch ? 'b' : 'span'">{{ m.content }}</component> -->
         </template>
       </template>

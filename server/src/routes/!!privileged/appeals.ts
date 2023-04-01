@@ -18,11 +18,11 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             [ BanAppealState.Accepted ]
         )
 
-        await req.user.log(null, `approved appeal #${req.params.appealid}`, {
+        await req.user.log(null, `approved appeal #%appealid%`, {
             service: Service.Bans,
             action: Action.Edit,
             metadata: {
-                id: req.params.appealid
+                appealid: req.params.appealid
             }
         })
 
@@ -41,11 +41,11 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             [ BanAppealState.Rejected, req.query.reason, req.session.user.steamid, req.params.appealid]
         )
 
-        await req.user.log(null, `rejected appeal #${req.params.appealid} for \"${req.query.reason}\"`, {
+        await req.user.log(null, `rejected appeal #%appealid% for \"%reason%\"`, {
             service: Service.Bans,
             action: Action.Edit,
             metadata: {
-                id: req.params.appealid,
+                appealid: req.params.appealid,
                 reason: req.query.reason
             }
         })
