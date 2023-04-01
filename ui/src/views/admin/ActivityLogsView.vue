@@ -594,7 +594,8 @@ onBeforeMount(() => {
 
 onMounted(() => {
   setInterval(() => {
-    getData();
+    if(document.visibilityState === "visible")
+      getData();
   }, REFRESH_INTERVAL_MS);
   getData();
 });

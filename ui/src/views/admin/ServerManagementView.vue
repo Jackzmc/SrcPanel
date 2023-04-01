@@ -92,7 +92,7 @@ let selectedServer = ref()
 let starting = ref<Record<string, boolean>>({})
 let refreshTimer = ref<any>()
 let secondsTimer = ref<any>()
-let lastRefresh = ref<number>()
+let lastRefresh = ref<number | undefined>(0)
 
 function sendMessage(type: string, content: string) {
   message.value = {
@@ -160,13 +160,16 @@ function getServerMessage(server: any) {
   //
   return
 }
-async function refreshServers() {
+async function refreshServers(notify = false) {
+  if(lastRefresh.value === undefined || document.visibilityState === "hidden") return // wait for last refresh
   lastRefresh.value = undefined
   clearInterval(secondsTimer.value)
-  const response = await request('/api/servers')
-  startCountdown()
+  const response = await (notify ? request('/api/servers') : fetch('/api/servers'))
   if(response?.ok) {
     servers.value = await response.json()
+    startCountdown()
+  } else {
+    clearInterval(secondsTimer.value)
   }
 }
 
@@ -186,7 +189,7 @@ function startCountdown() {
 }
 
 onBeforeMount(() => {
-  refreshServers()
+  refreshServers(true)
   refreshTimer.value = setInterval(() => {
     refreshServers()
   }, REFRESH_INTERVAL)

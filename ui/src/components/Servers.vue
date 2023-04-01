@@ -95,6 +95,7 @@ function getServerMessage(server: any) {
   else return "Server is offline, unresponsive, or unreachable";
 }
 function refreshServers() {
+  if(document.visibilityState === "hidden") return
   emit("refresh", {
     state: "start",
   });
