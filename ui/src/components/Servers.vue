@@ -45,7 +45,7 @@
 import { ref, watch, computed, onBeforeMount, onBeforeUnmount } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
-const REFRESH_INTERVAL = 1000 * 10;
+const REFRESH_INTERVAL = 1000 * 15;
 
 const emit = defineEmits(["refresh"]);
 

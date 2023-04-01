@@ -1,6 +1,6 @@
 <template>
   <td>
-    <Icon :icon="icon" v-if="icon" />
+    <Icon :icon="icon" v-if="icon" :icon-class="iconClass" />
     <template v-if="props.log.type === 'CHAT'">
       <b v-if="props.log.type === 'CHAT'" ><UserComponent :user="props.log.client" type="client" @set-filter="setFilter"/>: </b>
       <span v-html="props.log.message" />
@@ -52,13 +52,20 @@ function redactID(id: number) {
 }
 
 const icon = computed(() => {
-  if(props.log.server === 'web') return "fa-cloud"
+  if(props.log.server === 'web') return { icon: "fa-cloud"}
   switch(props.log.type) {
     case "CHAT": return "fa-regular fa-comment"
     case "JOIN": return "fa-plus"
     case "QUIT": return "fa-arrow-right-from-bracket"
   }
   return null
+})
+const iconClass = computed(() => {
+  switch(props.log.type) {
+    case "JOIN": return "has-text-success"
+    case "QUIT": return "has-text-danger"
+  }
+  return undefined
 })
 const FULLNAME_REGEX = /"([^"<>]+)<\d+><(STEAM_\d:\d:\d+|Console|BOT)><(Console)?>"/;
 const messagePieces = computed(() => {

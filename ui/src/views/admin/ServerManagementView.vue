@@ -56,6 +56,10 @@
             </template>
           </tbody>
       </table>
+      <p class="is-inline is-pulled-right" style="margin-right: 90px">
+        <em v-if="lastRefresh">refreshing in {{lastRefresh}}s</em>
+        <Icon icon="spinner" v-else spin />
+      </p>
     </div>
     <div class="column">
       <b>Request Restart</b> will restart the server if its empty
@@ -74,13 +78,11 @@
 
 <script setup lang="ts">
 import { request } from '@/js/util';
-import { ref, watch, computed, onBeforeMount, onMounted, onDeactivated } from 'vue'
+import { ref, computed, onBeforeMount, onDeactivated } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 
-const router = useRouter()
-const route = useRoute()
-
-const emit = defineEmits(['refresh'])
+const REFRESH_SECONDS = 6
+const REFRESH_INTERVAL = 1000 * REFRESH_SECONDS
 
 let servers = ref<any[]>([])
 let shiftPressed = ref(false)
@@ -88,7 +90,9 @@ let message = ref<{content?: string, type?: string}>()
 let selectedServer = ref()
 
 let starting = ref<Record<string, boolean>>({})
-let refreshTimer = ref<number>()
+let refreshTimer = ref<any>()
+let secondsTimer = ref<any>()
+let lastRefresh = ref<number>()
 
 function sendMessage(type: string, content: string) {
   message.value = {
@@ -157,31 +161,35 @@ function getServerMessage(server: any) {
   return
 }
 async function refreshServers() {
-  emit('refresh', 'start')
+  lastRefresh.value = undefined
+  clearInterval(secondsTimer.value)
   const response = await request('/api/servers')
+  startCountdown()
   if(response?.ok) {
     servers.value = await response.json()
   }
-
-  fetch('/api/servers')
-  .then(response => {
-    if(response.ok) return response.json()
-    else console.error('Failure getting servers', response)
-  })
-  .then(json => {
-    servers.value = json
-  })
-  .finally(() => {
-    emit('refresh', 'stop')
-  })
 }
 
 onDeactivated(() => {
   clearInterval(refreshTimer.value)
+  clearInterval(secondsTimer.value)
 })
+
+
+function startCountdown() {
+  lastRefresh.value = REFRESH_SECONDS
+  secondsTimer.value = setInterval(() => {
+    if(--lastRefresh.value! <= 0) {
+      clearTimeout(secondsTimer.value)
+    }
+  }, 1000)
+}
 
 onBeforeMount(() => {
   refreshServers()
+  refreshTimer.value = setInterval(() => {
+    refreshServers()
+  }, REFRESH_INTERVAL)
   document.onkeydown = (e) => {
     shiftPressed.value = !!e.shiftKey
   }

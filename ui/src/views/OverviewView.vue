@@ -59,6 +59,7 @@ function onServerRefresh(payload: { state: string, interval?: number }) {
     startCountdown()
   }
 }
+
 function startCountdown() {
   clearInterval(interval.value as unknown as number)
   interval.value = setInterval(() => {
