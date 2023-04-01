@@ -9,19 +9,22 @@
   <h4 class="title is-4">
     Showing <input type="number" class="input" min=20 max=1000 step=10 style="width:5%" v-model="limit" @blur="fetchLogs" /> / {{ totalEntries.toLocaleString() }} Entries
     <!-- <em class="subtitle is-4" v-if="hasSearchQuery">({{ notesCount }} filtered)</em> -->
-    <a :class="['button','is-info','is-pulled-right',{'is-loading': loadingTime}]" @click="fetchLogs"><Icon icon="sync">Refresh</Icon></a>
+    <div class="is-pulled-right">
+      <p class="is-inline mr-3 is-size-6" v-if="nextRefreshCountdown" data-tooltip="When the logs will be auto refreshed">{{ nextRefreshCountdown }}s</p>
+      <a :class="['button','is-info',{'is-loading': loadingTime}]" @click="fetchLogs"><Icon icon="sync">Refresh</Icon></a>
+    </div>
   </h4>
   <p class="subtitle is-6">For now only shows results for web panel actions</p>
   <Pagination :page="page" :count="totalEntries" :limit="limit" @page="setPage" />
   <div class="columns">
-    <div class="column is-8 box" v-if="loadingTime">
+    <div class="column is-8 box" v-if="loadingTime && !entries">
       <p class="has-text-centered is-size-5" style="margin-top:10%">
         <Icon icon="spinner" spin>Loading...</Icon>
         <br>
         {{ loadingDuration }}s
       </p>
     </div>
-    <div class="column is-8 box" v-else>
+    <div class="column is-8 box" v-else-if="entries">
       <p class="has-text-centered is-size-5" v-if="entries.length === 0" style="margin-top:10%">No entries were found</p>
       <div class="list has-visible-pointer-controls has-hoverable-list-items" v-else>
         <template v-for="entry in entries" :key="entry.id">
@@ -93,6 +96,40 @@
       <Field label="Search Target" icon-left="search">
         <input type="text" class="input" placeholder="Search for a target" />
       </Field>
+      <Field>
+        <label class="label">
+          Enabled Types
+          <a class="is-inline" @click="filters['types'] = []">(Clear)</a>&nbsp;
+          <a @click="filters['types'] = FILTERS['types']">(Select All)</a>
+        </label>
+        <div class="buttons has-addons">
+          <a
+            v-for="key in FILTERS.types"
+            :key="key"
+            :class="['button', 'is-small', typeColors[key]]"
+          >
+            {{ key }}
+          </a>
+        </div>
+      </Field>
+      <Field>
+        <label class="label">
+          Enabled Servers
+          <a class="is-inline" @click="filters['servers'] = ['unknown']">(Clear)</a
+          >&nbsp;
+          <a @click="filters['servers'] = FILTERS['servers']">(Select All)</a>
+        </label>
+
+        <div class="buttons has-addons">
+          <a
+            v-for="key in FILTERS.servers"
+            :key="key"
+            :class="['button', 'is-small', serverColors[key]]"
+          >
+            {{ key }}
+          </a>
+        </div>
+      </Field>
     </div>
   </div>
   <Pagination :page="page" :count="totalEntries" :limit="limit" @page="setPage" />
@@ -111,8 +148,29 @@ import LogMessage from '@/components/LogMessage.vue';
 import Field from '@/components/Field.vue';
 import Pagination from '@/components/Pagination.vue';
 
+const REFRESH_INTERVAL = 45_000
+
 const { notify } = useNotification();
 
+const FILTERS = {
+  servers: [
+    "main",
+    "reserved",
+    "public1",
+    "public2",
+    "public3",
+    "public4",
+    "public5",
+    "public6",
+    "public7",
+    "public8",
+    "unknown",
+    "web",
+  ],
+  types: ["ACTION", "CHAT", "INFO", "STATE", "QUIT", "JOIN", "WEB"],
+};
+const DEFAULT_TYPES = ["ACTION", "CHAT", "INFO", "STATE", "WEB"];
+const DEFAULT_SERVERS = ["main", "reserved", "web"];
 const TYPE_COLORS: Dictionary<string, string> = {
   ACTION: "is-info",
   CHAT: "is-secondary",
@@ -127,6 +185,24 @@ const SERVER_COLORS: Dictionary<string, string> = {
   reserved: "is-dark",
 };
 
+const typeColors = computed(() => {
+  let obj: Dictionary<string, string> = {};
+  for (const type of FILTERS.types) {
+    obj[type] = filters.value.types!.includes(type) ? TYPE_COLORS[type] : "is-light";
+  }
+  return obj;
+});
+
+const serverColors = computed(() => {
+  let obj: Dictionary<string, string> = {};
+  for (const server of FILTERS.servers) {
+    obj[server] = filters.value.servers!.includes(server)
+      ? SERVER_COLORS[server]
+      : "is-light";
+  }
+  return obj;
+});
+
 const props = defineProps<{
   userdata: UserData,
   privUser: PrivilegedUser
@@ -134,22 +210,37 @@ const props = defineProps<{
 
 let now = ref()
 let loadingTime = ref<number>()
-let expandedId = ref()
+let lastRefresh = ref<number>()
 let hoverId = ref()
 let page = ref(1);
 let limit = ref(30);
 let totalEntries = ref(0)
 let entries = ref()
+let filters: Ref<Dictionary<string, string[] | string | null>> = ref<{
+  servers: string[];
+  types: string[];
+  client: string | null;
+  target: string | null;
+}>({
+  servers: DEFAULT_SERVERS,
+  types: DEFAULT_TYPES,
+  client: null,
+  target: null,
+});
 
 const loadingDuration = computed(() => {
   if(!loadingTime.value) return
   return Math.floor((now.value - loadingTime.value) / 1000)
 })
+const nextRefreshCountdown = computed(() => {
+  if(!lastRefresh.value) return 0
+  return Math.floor(((lastRefresh.value + REFRESH_INTERVAL) - now.value) / 1000)
+})
 
 async function fetchLogs() {
   loadingTime.value = Date.now()
+  lastRefresh.value = Date.now()
   const response = await request(`/api/logs/${page.value}?limit=${limit.value}`)
-  loadingTime.value = undefined
   if(response?.ok) {
     const json = await response.json()
     totalEntries.value = json.totalCount
@@ -179,6 +270,9 @@ async function fetchLogs() {
         message: entry.message
       }
     })
+    loadingTime.value = undefined
+  } else {
+    loadingTime.value = undefined
   }
 }
 function setPage(pageNum: number) {
@@ -189,7 +283,10 @@ function setPage(pageNum: number) {
 onBeforeMount(() => {
   setInterval(() => {
     now.value = Date.now()
-  })
+  }, 1000)
+  setInterval(() => {
+    fetchLogs()
+  }, REFRESH_INTERVAL)
   now.value = Date.now()
   fetchLogs()
 })
