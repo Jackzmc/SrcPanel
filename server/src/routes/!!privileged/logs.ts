@@ -18,6 +18,7 @@ const LogQuery = Type.Object({
     aroundId: Type.Optional(Type.Integer()),
     fetchAll: Type.Optional(Type.Boolean()),
     limit: Type.Optional(Type.Integer()),
+    page: Type.Optional(Type.Integer()),
     timestampOnly: Type.Optional(Type.Boolean({ default: false }))
 })
 
@@ -75,12 +76,13 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         let limit = Number(req.query.limit) || 50
         if(limit <= 0) limit = 50
 
-        let page = Number(req.params.page) || 1
+        let page = Number(req.params.page || req.query.page) || 1
         if(page <= 0) page = 1
 
         const totalRows = await getTotalRows()
         // Optimize query by calculating the minimum id based on totalRows
         const minId = totalRows - (limit * page)
+        console.log(`minId = ${totalRows} - (${limit} * ${page}) = ${minId}`)
         conditions.push(`id > ${minId}`)
 
         if(req.query.servers) {
@@ -139,8 +141,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         query += `ORDER BY id ${req.query.orderByAscending ? 'ASC' : 'DESC'} `
 
         if(!req.query.fetchAll) {
-            query += `LIMIT ? OFFSET ?`
-            data = [...data, Number(limit), (page * limit) - limit]
+            query += `LIMIT ?`
+            data = [...data, Number(limit)] //, (page * limit) - limit]
         }
 
         const [[logs], [count]] = await Promise.all([

@@ -1,40 +1,46 @@
 <template>
   <td>
-      <template v-if="props.log.type === 'CHAT'">
-        <b v-if="props.log.type === 'CHAT'" ><UserComponent :user="props.log.client" type="client" @set-filter="setFilter"/>: </b>
-        <span v-html="props.log.message" />
+    <Icon :icon="icon" v-if="icon" />
+    <template v-if="props.log.type === 'CHAT'">
+      <b v-if="props.log.type === 'CHAT'" ><UserComponent :user="props.log.client" type="client" @set-filter="setFilter"/>: </b>
+      <span v-html="props.log.message" />
+    </template>
+    <template v-else>
+      <b v-if="LPieceCount == 0 && props.log.client.steamid"><UserComponent :user="props.log.client" type="client" @set-filter="setFilter" /></b>
+      <b v-else-if="LPieceCount == 0 && !props.log.client.steamid && props.log.target.steamid"><UserComponent type="target" :user="props.log.target" @set-filter="setFilter" /></b>
+      <template v-for="m in messagePieces" :key="m">
+        <b v-if="m.LMatch">
+          <UserComponent v-if="m.user" :user="m.user" :type="m.type" @set-filter="setFilter" />
+        </b>
+        <span v-else v-html="m.content" :class="{'has-text-danger': props.log.type === 'QUIT', 'has-text-success': props.log.type === 'JOIN'}"></span>
+        <!-- <component :is="m.LMatch ? 'b' : 'span'">{{ m.content }}</component> -->
       </template>
-      <template v-else>
-        <b v-if="LPieceCount == 0 && props.log.client.steamid"><UserComponent :user="props.log.client" type="client" @set-filter="setFilter" /></b>
-        <b v-else-if="LPieceCount == 0 && !props.log.client.steamid && props.log.target.steamid"><UserComponent type="target" :user="props.log.target" @set-filter="setFilter" /></b>
-        <template v-for="m in messagePieces" :key="m">
-          <b v-if="m.LMatch">
-            <UserComponent v-if="m.user" :user="m.user" :type="m.type" @set-filter="setFilter" />
-          </b>
-          <span v-else v-html="m.content"></span>
-          <!-- <component :is="m.LMatch ? 'b' : 'span'">{{ m.content }}</component> -->
-        </template>
-      </template>
-      <a
-        v-if="
-          !props.log.redacted &&
-          props.hoverId == props.log.id &&
-          props.log.type === 'CHAT' &&
-          props.log.client.steamid === userdata.user.steamid
-        "
-        data-tooltip="Redact your own message"
-        class="has-text-danger"
-        @click="redactID(log.id)"
-        >(redact)</a
-      >
+    </template>
+    <a
+      v-if="
+        !props.log.redacted &&
+        props.hoverId == props.log.id &&
+        props.log.type === 'CHAT' &&
+        props.log.client?.steamid === privUser.id
+      "
+      data-tooltip="Redact your own message"
+      class="has-text-danger"
+      @click="redactID(log.id)"
+      >(redact)</a
+    >
   </td>
 </template>
 
 <script setup lang="ts">
 import { computed, ref } from "@vue/reactivity";
 import UserComponent from "@/components/UserComponent.vue";
+import { PrivilegedUser } from "@/js/User.js";
 const emit = defineEmits(["set-filter", "redact-id"]);
-const props = defineProps(["log", "hoverId", "userdata"]);
+const props = defineProps<{
+  log: any,
+  hoverId?: string,
+  privUser: PrivilegedUser
+}>()
 
 let LPieceCount = ref(0)
 
@@ -45,6 +51,15 @@ function redactID(id: number) {
   emit("redact-id", id)
 }
 
+const icon = computed(() => {
+  if(props.log.server === 'web') return "fa-cloud"
+  switch(props.log.type) {
+    case "CHAT": return "fa-regular fa-comment"
+    case "JOIN": return "fa-plus"
+    case "QUIT": return "fa-arrow-right-from-bracket"
+  }
+  return null
+})
 const FULLNAME_REGEX = /"([^"<>]+)<\d+><(STEAM_\d:\d:\d+|Console|BOT)><(Console)?>"/;
 const messagePieces = computed(() => {
   if(!props.log.message) return []
@@ -60,15 +75,17 @@ const messagePieces = computed(() => {
         content: prevSlice
       });
 
-      const [, name, steamid] = match
+      let [, name, steamid] = match
 
       let type, user
-      if(steamid === "BOT" && name === props.log.client.steamid || props.log.client.steamid && props.log.client.steamid === steamid) {
+      if((steamid === "BOT" && name === props.log.client.steamid) || props.log.client.steamid === steamid) {
         type = "client"
-        user = props.log.client
-      } else if(steamid === "BOT" && name === props.log.target.steamid || props.log.target.steamid && props.log.target.steamid === steamid) {
+        if(steamid === "BOT") steamid = null
+        user = { name: props.log.client.name || name, steamid }
+      } else if((steamid === "BOT" && name === props.log.target.steamid) || props.log.target.steamid === steamid) {
         type = "target"
-        user = props.log.target
+        if(steamid === "BOT") steamid = null
+        user = { name: props.log.target.name || name, steamid }
       }
       pieces.push({
         content: match[0],

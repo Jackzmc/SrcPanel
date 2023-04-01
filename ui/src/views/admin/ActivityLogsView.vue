@@ -252,7 +252,7 @@
                 <span :class="['tag', TYPE_COLORS[log.type]]">{{ log.type }}</span>
               </td>
               <td class="nowrap">{{ log.timestamp }}</td>
-              <LogMessage :log="log" :hover-id="hoverId" :userdata="userdata" @set-filter="setUserFilter" @redact-id="redactID" />
+              <LogMessage :log="log" :hover-id="hoverId" :priv-user="privUser" @set-filter="setUserFilter" @redact-id="redactID" />
               <td class="nowrap">
                 <span v-if="log.server" :class="['tag', SERVER_COLORS[log.server]]">{{
                   log.server
@@ -296,6 +296,7 @@ import { useNotification } from "@kyvg/vue3-notification";
 import LogMessage from "@/components/LogMessage.vue";
 import { request } from '@/js/util';
 import { parseLog } from '../../js/util';
+import { PrivilegedUser } from '../../js/User';
 
 const emit = defineEmits([]);
 const route = useRoute();
@@ -330,7 +331,8 @@ const SERVER_COLORS: Dictionary<string, string> = {
 const { notify } = useNotification();
 
 const props = defineProps<{
-  userdata: UserData
+  userdata: UserData,
+  privUser: PrivilegedUser
 }>();
 
 const FILTERS = {

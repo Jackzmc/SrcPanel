@@ -243,7 +243,6 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 nameResolver: "none",
                 avatarUrl: ban.executor_avatar,
             }
-            console.log(ban.executor_statsname, ban.executor_cachename, ban.executor.id)
             if(ban.executor_statsname) {
                 ban.executor.name = ban.executor_statsname.replace(NAME_INVALID_CHAR_REPLACE, '�')
                 ban.executor.nameResolver = "stats"
