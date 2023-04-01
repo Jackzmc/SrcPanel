@@ -22,12 +22,13 @@
       </p>
     </div>
     <div class="column is-8 box" v-else>
-      <div class="list has-visible-pointer-controls has-hoverable-list-items">
+      <p class="has-text-centered is-size-5" v-if="entries.length === 0" style="margin-top:10%">No entries were found</p>
+      <div class="list has-visible-pointer-controls has-hoverable-list-items" v-else>
         <template v-for="entry in entries" :key="entry.id">
-          <div class="list-item">
+          <div class="list-item" @hover="hoverId = entry.id">
             <div class="list-item-image">
               <figure class="image is-48x48">
-                <img class="is-rounded" :src="entry.client?.avatarUrl || '/img/server_avatar.svg'">
+                <img class="is-rounded" :src="entry.client.avatarUrl || entry.target.avatarUrl || '/img/server_avatar.svg'">
               </figure>
             </div>
 
@@ -66,7 +67,8 @@
             <div class="list-item-content">
               <div class="notification is-dark">
                 <p><b>Id:</b> #{{ entry.id }}</p>
-                <p><b>Server: </b><span class="tag is-info">reserved</span></p>
+                <p><b>Client ID: </b><span v-if="entry.client.steamid">{{ entry.client.steamid }}</span><em v-else>none</em></p>
+                <p><b>Target ID: </b><span v-if="entry.target.steamid">{{ entry.target.steamid }}</span><em v-else>none</em></p>
                 <p><b>Raw Message: </b>{{ entry.message }}</p>
                 <template v-if="entry.metadata">
                   <p><b>Metadata: </b></p>
@@ -94,6 +96,7 @@
     </div>
   </div>
   <Pagination :page="page" :count="totalEntries" :limit="limit" @page="setPage" />
+  <br>
 </div>
 </template>
 
@@ -145,7 +148,7 @@ const loadingDuration = computed(() => {
 
 async function fetchLogs() {
   loadingTime.value = Date.now()
-  const response = await request(`/api/logs/?&page=${page.value}&limit=${limit.value}`)
+  const response = await request(`/api/logs/${page.value}?optimized=1&limit=${limit.value}`)
   loadingTime.value = undefined
   if(response?.ok) {
     const json = await response.json()
@@ -165,12 +168,12 @@ async function fetchLogs() {
         client: {
           steamid: entry.client,
           name: entry.clientName,
-          avatarUrl: entry.clientAvatar ? `https://avatars.steamstatic.com/${entry.clientAvatar}.jpg` : "/img/steam_default_avatar.png"
+          avatarUrl: entry.clientName ? (entry.clientAvatar ? `https://avatars.steamstatic.com/${entry.clientAvatar}.jpg` : "/img/steam_default_avatar.png") : null
         },
         target: {
           steamid: entry.target,
           name: entry.targetName,
-          avatarUrl: entry.targetAvatar ? `https://avatars.steamstatic.com/${entry.targetAvatar}.jpg` : "/img/steam_default_avatar.png"
+          avatarUrl: entry.targetName ? (entry.targetAvatar ? `https://avatars.steamstatic.com/${entry.targetAvatar}.jpg` : "/img/steam_default_avatar.png") : null
         },
         metadata: entry.metadata,
         message: entry.message

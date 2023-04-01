@@ -19,7 +19,7 @@ const LogQuery = Type.Object({
     fetchAll: Type.Optional(Type.Boolean()),
     limit: Type.Optional(Type.Integer()),
     page: Type.Optional(Type.Integer()),
-    timestampOnly: Type.Optional(Type.Boolean({ default: false }))
+    timestampOnly: Type.Optional(Type.Boolean({ default: false })),
 })
 
 type LogQueryType = Static<typeof LogQuery>
@@ -29,6 +29,7 @@ const LOG_TOTAL_ROW_CACHE_TIME = 30_000 //ms
 
 let logServerCache = []
 let totalRows = 0
+let highestId = 0
 let totalRowsLastFetch: number = null
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
@@ -37,11 +38,11 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
     async function getTotalRows() {
         if(Date.now() - totalRowsLastFetch > LOG_TOTAL_ROW_CACHE_TIME || totalRowsLastFetch === null) {
-            const [c] = await fastify.db.execute<RowDataPacket[]>(`SELECT COUNT(*) AS count from ${ACTIVITY_LOG_TABLE_NAME}`)
+            const [c] = await fastify.db.execute<RowDataPacket[]>(`SELECT COUNT(*) AS count, MAX(id) as highestId from ${ACTIVITY_LOG_TABLE_NAME}`)
             totalRows = c[0].count
+            highestId = c[0].highestId
             totalRowsLastFetch = Date.now()
         }
-        return totalRows
     }
 
     fastify.get('/servers', async(req, reply) => {
@@ -53,23 +54,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     fastify.get('/:page?', async(req: FastifyRequest<{ Querystring: LogQueryType, Params: { page?: number } }>, reply) => {
         const searchMessage = req.query.searchMessage ? `%${req.query.searchMessage}%` : (req.query.search_message ? `%${req.query.search_message}%` : null)
 
-        let countQuery = `SELECT COUNT(*) AS count from ${ACTIVITY_LOG_TABLE_NAME} `
+        let countQuery = `SELECT COUNT(*) AS count from ${ACTIVITY_LOG_TABLE_NAME} WHERE 1 = 1 `
         let query: string;
-
-        if(req.query.timestampOnly) {
-            query = `SELECT timestamp, message FROM ${ACTIVITY_LOG_TABLE_NAME} l`
-        } else {
-            // We don't need to also fetch usernames from user_names as if there is a log entry they should always have an entry in statistics 
-            query = `SELECT id, timestamp, server, type, client, target, message, metadata,
-                s1.last_alias as clientName, s2.last_alias as targetName,
-                u1.avatar_hash as clientAvatar, u2.avatar_hash as targetAvatar
-                FROM activity_log l
-                LEFT JOIN stats_users as s1 ON s1.steamid = client 
-                LEFT JOIN stats_users as s2 ON s2.steamid = target 
-                LEFT JOIN user_names u1 ON u1.steamid LIKE SUBSTRING(l.client, 11) 
-                LEFT JOIN user_names u2 ON u2.steamid LIKE SUBSTRING(l.target, 11) 
-            `
-        }
 
         const conditions = []
         let data = [], countData = []
@@ -79,11 +65,26 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         let page = Number(req.params.page || req.query.page) || 1
         if(page <= 0) page = 1
 
-        const totalRows = await getTotalRows()
-        // Optimize query by calculating the minimum id based on totalRows
-        const minId = totalRows - (limit * page)
-        console.log(`minId = ${totalRows} - (${limit} * ${page}) = ${minId}`)
-        conditions.push(`id > ${minId}`)
+        if(req.query.timestampOnly) {
+            query = `SELECT timestamp, message FROM ${ACTIVITY_LOG_TABLE_NAME} l`
+        } else {
+            await getTotalRows()
+            const maxId = highestId - (limit * (page - 1))
+            const minId = maxId - limit
+            // We don't need to also fetch usernames from user_names as if there is a log entry they should always have an entry in statistics 
+            query = `SELECT id, timestamp, server, type, client, target, message, metadata,
+                s1.last_alias as clientName, s2.last_alias as targetName,
+                u1.avatar_hash as clientAvatar, u2.avatar_hash as targetAvatar
+                FROM activity_log l
+                LEFT JOIN stats_users as s1 ON s1.steamid = client 
+                LEFT JOIN stats_users as s2 ON s2.steamid = target 
+                LEFT JOIN user_names u1 ON u1.steamid LIKE SUBSTRING(l.client, 11) 
+                LEFT JOIN user_names u2 ON u2.steamid LIKE SUBSTRING(l.target, 11)
+                WHERE id >= ? AND id <= ?
+            `
+            data.push(minId, maxId)
+        }
+
 
         if(req.query.servers) {
             const servers = req.query.servers.split(",")
@@ -134,24 +135,23 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
         
         if(conditions.length > 0) {
-            query += `WHERE ${conditions.join(' AND ')} `
-            countQuery += `WHERE ${conditions.join(' AND ')} `
+            query += ` AND ${conditions.join(' AND ')} `
+            countQuery += ` AND ${conditions.join(' AND ')} `
         }
 
         query += `ORDER BY id ${req.query.orderByAscending ? 'ASC' : 'DESC'} `
 
         if(!req.query.fetchAll) {
             query += `LIMIT ?`
-            data = [...data, Number(limit)] //, (page * limit) - limit]
+            data = [...data, limit] //, (page * limit) - limit]
         }
 
+        const startTime = Date.now()
         const [[logs], [count]] = await Promise.all([
             fastify.db.execute<RowDataPacket[]>(query, data),
             fastify.db.execute<RowDataPacket[]>(countQuery, countData)
         ])
-        // const [logs] = await fastify.db.query(query, data)
-        // const [count] = await fastify.db.query(countQuery, countData)
-
+        
         return {
             logs: logs.map(log => {
                 return {
@@ -159,6 +159,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                     metadata: log.metadata ? JSON.parse(log.metadata) : null
                 }
             }),
+            timeTaken: Date.now() - startTime,
             totalCount: count[0].count,
             raw: process.env.NODE_ENV === "production" ? null : {
                 query,
