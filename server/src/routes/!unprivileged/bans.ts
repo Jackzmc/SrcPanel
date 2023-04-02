@@ -184,7 +184,6 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
         const [bans] = await fastify.db.execute<RowDataPacket[]>(`
             SELECT 
-                u1.last_alias as client_statname, 
                 n1.name as client_cachename,
                 n1.avatar_hash as client_avatar,
                 bans.id,
@@ -194,7 +193,6 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 bans.flags,
                 bans.timestamp,
                 bans.executor,
-                u2.last_alias as executor_statname,
                 n2.name as executor_cachename,
                 n2.avatar_hash as executor_avatar,
                 bans.expires,
@@ -203,10 +201,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 (SELECT COUNT(*) FROM ban_appeals WHERE ban_id = bans.id) as appeals,
                 (SELECT COUNT(*) FROM notes WHERE steamid = bans.steamid) as notes
             FROM bans
-                LEFT JOIN stats_users as u1 on u1.steamid LIKE SUBSTRING(bans.steamid, 11)
-                LEFT JOIN stats_users as u2 on u2.steamid LIKE SUBSTRING(bans.executor, 11)
-                LEFT JOIN user_names as n1 on SUBSTRING(bans.steamid, 11) = n1.steamid
-                LEFT JOIN user_names as n2 on SUBSTRING(bans.executor, 11) = n2.steamid
+                LEFT JOIN user_names as n1 on n1.steamid LIKE SUBSTRING(bans.steamid, 11) 
+                LEFT JOIN user_names as n2 on n2.steamid LIKE SUBSTRING(bans.executor, 11)
             ${req.query.include !== "expired" ? 'WHERE bans.expired = 0' : ''}
             ORDER BY bans.timestamp DESC LIMIT ?, ?`, 
             [offset, limit]
