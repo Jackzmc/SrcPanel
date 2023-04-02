@@ -14,6 +14,7 @@
       <a :class="['button','is-info',{'is-loading': loadingTime}]" @click="fetchLogs"><Icon icon="sync">Refresh</Icon></a>
     </div>
   </h4>
+  <p class="subtitle is-6">Some requests may take a long time to process such as searching users or message content</p>
   <Pagination :page="page" :count="totalEntries" :limit="limit" @page="setPage" />
   <div class="columns">
     <div class="column is-8 box" v-if="!entries">
@@ -39,7 +40,8 @@
                 {{ formatDate(entry.timestamp) }}
                 <span class="ml-2 has-text-grey-light is-inline subtitle is-6">{{ getRelDate(entry.timestamp) }}</span>
                 <span class="tags is-pulled-right">
-                  <span :class="['tag', 'is-pulled-right', FILTER_DATA.types[entry.type]]">{{ entry.type }}</span>
+                  <span v-if="entry.adminChat" class="tag is-pulled-right is-warning" data-tooltip="Message was sent in the admin chat">CHAT</span>
+                  <span v-else :class="['tag', 'is-pulled-right', FILTER_DATA.types[entry.type]]">{{ entry.type }}</span>
                   <span :class="['tag', 'is-pulled-right', FILTER_DATA.servers[entry.server]]">{{ entry.server }}</span>
                 </span>
               </div>
@@ -49,7 +51,7 @@
                 <span v-html='entry._html' />
                 <UserComponent v-if="entry.target" :user="entry.target"/>
                 {{ entry._message2 }} -->
-                <LogMessage :log="entry" :priv-user="privUser" :hover-id="hoverId" />
+                <LogMessage :log="entry" :priv-user="privUser" :hover-id="hoverId" :highlight-regex="highlightRegex" />
                 </div>
             </div>
 
@@ -84,11 +86,29 @@
     </div>
     <div class="column">
       <Field label="Search Client" icon-left="search">
-        <input type="text" class="input" placeholder="Search for a client" v-model="filters.client" @change="fetchDebounce" />
+        <SimpleTypeahead
+          placeholder="Search for a client"
+          class="input"
+          @onInput="searchUsers"
+          @selectItem="onSelectUser('client', $event)"
+          :items="userSearchItems"
+          :item-projection="projectUser"
+          @onBlur="onUserSearchBlur('client', $event)"
+        />
+        <!-- <input type="text" class="input" placeholder="Search for a client" v-model="filters.client" @change="fetchDebounce" /> -->
         <p class="hint">Requires the user's steamid, not their name</p>
       </Field>
       <Field label="Search Target" icon-left="search">
-        <input type="text" class="input" placeholder="Search for a target" v-model="filters.target" @change="fetchDebounce" />
+        <SimpleTypeahead
+          placeholder="Search for a target"
+          class="input"
+          @onInput="searchUsers"
+          @selectItem="onSelectUser('target', $event)"
+          :items="userSearchItems"
+          :item-projection="projectUser"
+          @onBlur="onUserSearchBlur('target', $event)"
+        />
+        <!-- <input type="text" class="input" placeholder="Search for a target" v-model="filters.target" @change="fetchDebounce" /> -->
         <p class="hint">Requires the user's steamid, not their name</p>
       </Field>
       <Field label="Search Message" icon-left="search">
@@ -145,13 +165,42 @@ import Field from '@/components/Field.vue';
 import Pagination from '@/components/Pagination.vue';
 import debounce from '@/js/debounce';
 import { useRoute, useRouter } from 'vue-router';
+//@ts-ignore
+import SimpleTypeahead from 'vue3-simple-typeahead';
+import 'vue3-simple-typeahead/dist/vue3-simple-typeahead.css'
+let userSearchItems = ref([])
+async function searchUsers(e: any) {
+  if(!e.input || e.input.length < 3) return userSearchItems.value = []
+  const response = await request(`/api/users/search/${e.input}`)
+  if(response?.ok) {
+    const json = await response.json()
+    userSearchItems.value = json.users
+  }
+}
+function projectUser(user: any) {
+  return `${user.name} (${user.steamid})`
+}
+function onSelectUser(filter: string, user: any) {
+  filters.value[filter] = user.steamid
+  fetchDebounce.value()
+}
+function onUserSearchBlur(filter: string, event: any) {
+  console.log('blur', event.input.length, filter)
+  if(event.input.length < 3) {
+    filters.value[filter] = null
+    fetchDebounce.value()
+  }
+}
 
 const route = useRoute()
 const router = useRouter()
-
-const REFRESH_INTERVAL = 45_000
-
 const { notify } = useNotification();
+
+const REFRESH_INTERVAL = 60_000
+
+const DEFAULT_TYPES = ["ACTION", "CHAT", "INFO", "STATE", "QUIT", "JOIN"];
+const DEFAULT_SERVERS = ["main", "reserved", "web"];
+const DEFAULT_LIMIT = 30
 
 const FILTER_DATA: Record<string, Record<string, boolean | string>> = {
   servers: {
@@ -178,12 +227,10 @@ const FILTER_DATA: Record<string, Record<string, boolean | string>> = {
   },
   // Just indicate this a valid filter:
   client: {},
-  target: {}
+  target: {},
+  message: {}
 }
 
-const DEFAULT_TYPES = ["ACTION", "CHAT", "INFO", "STATE", "QUIT", "JOIN"];
-const DEFAULT_SERVERS = ["main", "reserved", "web"];
-const DEFAULT_LIMIT = 30
 
 const props = defineProps<{
   userdata: UserData,
@@ -206,6 +253,11 @@ let filters = ref<Record<string, string|string[]|null>>({
   target: null
 });
 
+const ADMINCHAT_REGEX = /triggered sm_say \(text (.*)\)/;
+
+const highlightRegex = computed(() => {
+  return filters.value.message ? new RegExp(`(${filters.value.message})`, 'ig') : undefined
+})
 const loadingDuration = computed(() => {
   if(!loadingTime.value) return
   return Math.floor((now.value - loadingTime.value) / 1000)
@@ -262,11 +314,20 @@ async function fetchLogs() {
         }
       }
       if(entry.type === 'JOIN') entry.message = " joined"
+      if(entry.type === 'ACTION') {
+        const match = entry.message.match(ADMINCHAT_REGEX)
+        if(match) {
+          entry.adminChat = true
+          entry.type = 'CHAT'
+          entry.message = "<span style='color:#dcac36'>" + match[1] + "</span>"
+        }
+      }
       return {
         id: entry.id,
         timestamp: entry.timestamp,
         server: entry.server,
         type: entry.type,
+        adminChat: entry.adminChat,
         client: {
           steamid: entry.client,
           name: entry.clientName,

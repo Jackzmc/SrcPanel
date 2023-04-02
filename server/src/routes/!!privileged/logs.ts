@@ -15,6 +15,8 @@ const LogQuery = Type.Object({
     searchMessage: Type.Optional(Type.String()),
     search_message: Type.Optional(Type.String()),
     search_id: Type.Optional(Type.Integer()),
+    search_client: Type.Optional(Type.String()),
+    search_target: Type.Optional(Type.String()),
     aroundId: Type.Optional(Type.Integer()),
     fetchAll: Type.Optional(Type.Boolean()),
     limit: Type.Optional(Type.Integer()),
@@ -54,7 +56,10 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
     fastify.get('/:page?', async(req: FastifyRequest<{ Querystring: LogQueryType, Params: { page?: number } }>, reply) => {
         const searchMessage = req.query.searchMessage ? `%${req.query.searchMessage}%` : (req.query.search_message ? `%${req.query.search_message}%` : null)
-        req.query.optimized = true
+        const clientSearch = req.query.client ?? req.query.search_client
+        const targetSearch = req.query.target ?? req.query.search_target
+
+        req.query.optimized = !clientSearch && !targetSearch && !searchMessage
         let countQuery = `SELECT COUNT(*) AS count from ${ACTIVITY_LOG_TABLE_NAME} `
         let query = `SELECT id, l.timestamp, server, type, client, target, message, metadata,
             s1.last_alias as clientName, s2.last_alias as targetName,
@@ -98,18 +103,18 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             data = [ ...data, ...types ]
             countData = [ ...countData, ...types ]
         }
-        if(req.query.client && req.query.target) {
+        if(clientSearch && targetSearch) {
             conditions.push('(client = ? OR target = ?)')
-            data = [ ...data, req.query.client, req.query.target ]
-            countData = [ ...countData, req.query.client, req.query.target ]
-        } else if(req.query.client && !req.query.target) {
+            data = [ ...data, clientSearch, targetSearch ]
+            countData = [ ...countData, clientSearch, targetSearch ]
+        } else if(clientSearch && !targetSearch) {
             conditions.push('client = ?')
-            data.push(req.query.client)
-            countData.push(req.query.client)
-        } else if(!req.query.client && req.query.target) {
+            data.push(clientSearch)
+            countData.push(clientSearch)
+        } else if(!clientSearch && targetSearch) {
             conditions.push('target = ?')
-            data.push(req.query.target)
-            countData.push(req.query.target)
+            data.push(targetSearch)
+            countData.push(targetSearch)
         }
 
         if(req.query.timestamp) {

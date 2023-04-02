@@ -2,8 +2,8 @@
   <td>
     <Icon :icon="icon" v-if="icon" :icon-class="iconClass" />
     <template v-if="props.log.type === 'CHAT'">
-      <b v-if="props.log.type === 'CHAT'" ><UserComponent :user="props.log.client" type="client" @set-filter="setFilter"/>: </b>
-      <span v-html="props.log.message" />
+      <b><UserComponent :user="props.log.client" type="client" @set-filter="setFilter"/>: </b>
+      <span v-html="chatMessage" />
     </template>
     <template v-else>
       <b v-if="LPieceCount == 0 && props.log.client.steamid"><UserComponent :user="props.log.client" type="client" @set-filter="setFilter" /></b>
@@ -13,7 +13,6 @@
           <UserComponent v-if="m.user" :user="m.user" :type="m.type" @set-filter="setFilter" />
         </b>
         <span v-else v-html="m.content" :class="{'has-text-danger': props.log.type === 'QUIT', 'has-text-success': props.log.type === 'JOIN', 'has-text-info': props.log.type === 'INFO'}"></span>
-        <!-- <component :is="m.LMatch ? 'b' : 'span'">{{ m.content }}</component> -->
       </template>
     </template>
     <a
@@ -40,6 +39,7 @@ const props = defineProps<{
   log: any,
   hoverId?: number,
   privUser: PrivilegedUser
+  highlightRegex?: RegExp
 }>()
 
 let LPieceCount = ref(0)
@@ -68,16 +68,23 @@ const iconClass = computed(() => {
   return undefined
 })
 const FULLNAME_REGEX = /"([^"<>]+)<\d+><(STEAM_\d:\d:\d+|Console|BOT)><(Console)?>"/;
+const chatMessage = computed(() => {
+  if(!props.log.message || props.log.type !== "CHAT") return
+  let message = props.log.message
+  if(props.highlightRegex) message = message.replace(props.highlightRegex, '<b>$1</b>')
+  return message
+})
 const messagePieces = computed(() => {
-  if(!props.log.message) return []
+  if(!props.log.message || props.log.type === "CHAT") return []
 
   const pieces = [];
   let index = 0;
   for (let i = 0; i < 2; i++) {
     const match = props.log.message.slice(index).match(FULLNAME_REGEX);
     if (match) {
-      let prevSlice = props.log.message.slice(index, index + match.index)
+      let prevSlice: string = props.log.message.slice(index, index + match.index)
       if(prevSlice[0] !== " ") prevSlice = " " + prevSlice
+      if(props.highlightRegex) prevSlice = prevSlice.replace(props.highlightRegex, "<b>$1</b>")
       pieces.push({
         content: prevSlice
       });
@@ -107,7 +114,9 @@ const messagePieces = computed(() => {
       break;
     }
   }
-  pieces.push({ content: props.log.message.slice(index)});
+  let message = props.log.message.slice(index)
+  if(props.highlightRegex) message = message.replace(props.highlightRegex, "<b>$1</b>")
+  pieces.push({ content: message });
   return pieces;
 });
 

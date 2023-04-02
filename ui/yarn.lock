@@ -9265,6 +9265,11 @@ vue3-apexcharts@^1.4.1:
   resolved "https://registry.yarnpkg.com/vue3-apexcharts/-/vue3-apexcharts-1.4.1.tgz#ea561308430a1c5213b7f17c44ba3c845f6c490d"
   integrity sha512-96qP8JDqB9vwU7bkG5nVU+E0UGQn7yYQVqUUCLQMYWDuQyu2vE77H/UFZ1yI+hwzlSTBKT9BqnNG8JsFegB3eg==
 
+vue3-simple-typeahead@^1.0.11:
+  version "1.0.11"
+  resolved "https://registry.yarnpkg.com/vue3-simple-typeahead/-/vue3-simple-typeahead-1.0.11.tgz#dc1c4eb03f3494ae9f5d6034a933b425ce1c493e"
+  integrity sha512-JKgVfWz7uENBoB4ginYw28ZVlv3LNTkFbZzbDdK2W0y+Pj2xIryfwKlkW5bYUN+w4CiPS6CmXhPma9uwUnk0Lg==
+
 vue3-tabs-component@jackzmc/vue3-tabs-component:
   version "1.0.7"
   resolved "https://codeload.github.com/jackzmc/vue3-tabs-component/tar.gz/0f93b7e79fec24558dd3cb687cc0b7e175a0e5c6"
