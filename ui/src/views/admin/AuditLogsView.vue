@@ -1,5 +1,5 @@
 <template>
-<div class="container">
+<div class="container is-fluid">
   <article class="message is-warning">
     <div class="message-body content">
       <b>Feature in development</b><br>
@@ -14,7 +14,6 @@
       <a :class="['button','is-info',{'is-loading': loadingTime}]" @click="fetchLogs"><Icon icon="sync">Refresh</Icon></a>
     </div>
   </h4>
-  <p class="subtitle is-6">For now only shows results for web panel actions</p>
   <Pagination :page="page" :count="totalEntries" :limit="limit" @page="setPage" />
   <div class="columns">
     <div class="column is-8 box" v-if="loadingTime && !entries">
@@ -40,8 +39,8 @@
                 {{ formatDate(entry.timestamp) }}
                 <span class="ml-2 has-text-grey-light is-inline subtitle is-6">{{ getRelDate(entry.timestamp) }}</span>
                 <span class="tags is-pulled-right">
-                  <span :class="['tag', 'is-pulled-right', TYPE_COLORS[entry.type]]">{{ entry.type }}</span>
-                  <span :class="['tag', 'is-pulled-right', TYPE_COLORS[entry.server]]">{{ entry.server }}</span>
+                  <span :class="['tag', 'is-pulled-right', FILTER_DATA.types[entry.type]]">{{ entry.type }}</span>
+                  <span :class="['tag', 'is-pulled-right', FILTER_DATA.servers[entry.server]]">{{ entry.server }}</span>
                 </span>
               </div>
               <div class="list-item-description">
@@ -91,22 +90,21 @@
         </div>
       </article>
       <Field label="Search Client" icon-left="search">
-        <input type="text" class="input" placeholder="Search for a client" />
+        <input type="text" class="input" placeholder="Search for a client" v-model="filters.client" />
       </Field>
       <Field label="Search Target" icon-left="search">
-        <input type="text" class="input" placeholder="Search for a target" />
+        <input type="text" class="input" placeholder="Search for a target" v-model="filters.target" />
       </Field>
       <Field>
         <label class="label">
           Enabled Types
-          <a class="is-inline" @click="filters['types'] = []">(Clear)</a>&nbsp;
-          <a @click="filters['types'] = FILTERS['types']">(Select All)</a>
+          <a @click="filters.types = Object.keys(FILTER_DATA.types)">(Select All)</a>
         </label>
-        <div class="buttons has-addons">
+        <div class="buttons">
           <a
-            v-for="key in FILTERS.types"
-            :key="key"
-            :class="['button', 'is-small', typeColors[key]]"
+            v-for="(value, key) of FILTER_DATA.types" :key="key"
+            :class="['button', 'is-small', getFilterColor('types', key)]"
+            @click="toggleFilter('types', key)"
           >
             {{ key }}
           </a>
@@ -115,16 +113,13 @@
       <Field>
         <label class="label">
           Enabled Servers
-          <a class="is-inline" @click="filters['servers'] = ['unknown']">(Clear)</a
-          >&nbsp;
-          <a @click="filters['servers'] = FILTERS['servers']">(Select All)</a>
+          <a @click="filters.servers = Object.keys(FILTER_DATA.servers)">(Select All)</a>
         </label>
-
         <div class="buttons has-addons">
           <a
-            v-for="key in FILTERS.servers"
-            :key="key"
-            :class="['button', 'is-small', serverColors[key]]"
+            v-for="(val, key) of FILTER_DATA.servers" :key="key"
+            :class="['button', 'is-small',  getFilterColor('servers', key)]"
+            @click="toggleFilter('servers', key)"
           >
             {{ key }}
           </a>
@@ -152,56 +147,33 @@ const REFRESH_INTERVAL = 45_000
 
 const { notify } = useNotification();
 
-const FILTERS = {
-  servers: [
-    "main",
-    "reserved",
-    "public1",
-    "public2",
-    "public3",
-    "public4",
-    "public5",
-    "public6",
-    "public7",
-    "public8",
-    "unknown",
-    "web",
-  ],
-  types: ["ACTION", "CHAT", "INFO", "STATE", "QUIT", "JOIN", "WEB"],
-};
-const DEFAULT_TYPES = ["ACTION", "CHAT", "INFO", "STATE", "WEB"];
+const FILTER_DATA: Record<string, Record<string, boolean | string>> = {
+  servers: {
+    web: "is-info",
+    main: "is-success",
+    reserved: "is-dark",
+    public1: true,
+    public2: true,
+    public3: true,
+    public4: true,
+    public5: true,
+    public6: true,
+    public7: true,
+    public8: true,
+    unknown: true,
+  },
+  types: {
+    ACTION: "is-info",
+    CHAT: "is-secondary",
+    STATE: "is-primary",
+    QUIT: "is-danger",
+    JOIN: "is-success",
+    INFO: "is-link",
+  }
+}
+
+const DEFAULT_TYPES = ["ACTION", "CHAT", "INFO", "STATE", "QUIT", "JOIN"];
 const DEFAULT_SERVERS = ["main", "reserved", "web"];
-const TYPE_COLORS: Record<string, string> = {
-  ACTION: "is-info",
-  CHAT: "is-secondary",
-  STATE: "is-primary",
-  QUIT: "is-danger",
-  JOIN: "is-success",
-  INFO: "is-link",
-  WEB: "is-dark",
-};
-const SERVER_COLORS: Record<string, string> = {
-  main: "is-success",
-  reserved: "is-dark",
-};
-
-const typeColors = computed(() => {
-  let obj: Record<string, string> = {};
-  for (const type of FILTERS.types) {
-    obj[type] = filters.value.types!.includes(type) ? TYPE_COLORS[type] : "is-light";
-  }
-  return obj;
-});
-
-const serverColors = computed(() => {
-  let obj: Record<string, string> = {};
-  for (const server of FILTERS.servers) {
-    obj[server] = filters.value.servers!.includes(server)
-      ? SERVER_COLORS[server]
-      : "is-light";
-  }
-  return obj;
-});
 
 const props = defineProps<{
   userdata: UserData,
@@ -216,16 +188,11 @@ let page = ref(1);
 let limit = ref(30);
 let totalEntries = ref(0)
 let entries = ref()
-let filters = ref<{
-  servers: string[];
-  types: string[];
-  client: string | null;
-  target: string | null;
-}>({
+let filters = ref<Record<string, string|string[]|null>>({
   servers: DEFAULT_SERVERS,
   types: DEFAULT_TYPES,
   client: null,
-  target: null,
+  target: null
 });
 
 const loadingDuration = computed(() => {
@@ -237,10 +204,41 @@ const nextRefreshCountdown = computed(() => {
   return Math.floor(((lastRefresh.value + REFRESH_INTERVAL) - now.value) / 1000)
 })
 
+function toggleFilter(filter: string, key: string) {
+  if(filters.value[filter] && Array.isArray(filters.value[filter])) {
+    let v = filters.value[filter] as string[]
+    let index = v.indexOf(key)
+    if(index > -1)
+      v.splice(index, 1)
+    else
+      v.push(key)
+  }
+  fetchLogs()
+}
+function getFilterColor(filter: string, key: string) {
+  if(!filters.value[filter] || !Array.isArray(filters.value[filter])) return
+  if(!filters.value[filter]!.includes(key)) return
+  return FILTER_DATA[filter][key] !== true ? FILTER_DATA[filter][key] : undefined
+}
+
+function getParams() {
+  const searchParams = new URLSearchParams()
+  searchParams.append('limit', limit.value.toString())
+  for(const [filter, val] of Object.entries(filters.value)) {
+    if(!val) continue
+    if(Array.isArray(val))
+      searchParams.append(filter, val.join(","))
+    else
+      searchParams.append(`search_${filter}`, val)
+  }
+
+  return searchParams.toString()
+}
+
 async function fetchLogs() {
   loadingTime.value = Date.now()
   lastRefresh.value = Date.now()
-  const response = await request(`/api/logs/${page.value}?limit=${limit.value}`)
+  const response = await request(`/api/logs/${page.value}?${getParams()}`)
   if(response?.ok) {
     const json = await response.json()
     totalEntries.value = json.totalCount
