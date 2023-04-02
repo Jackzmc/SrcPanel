@@ -12,7 +12,7 @@
         <b v-if="m.LMatch">
           <UserComponent v-if="m.user" :user="m.user" :type="m.type" @set-filter="setFilter" />
         </b>
-        <span v-else v-html="m.content" :class="{'has-text-danger': props.log.type === 'QUIT', 'has-text-success': props.log.type === 'JOIN', 'has-text-info': props.log.type === 'INFO'}"></span>
+        <span v-else v-html="m.content" :class="{'has-text-danger': props.log.type === 'QUIT', 'has-text-success': props.log.type === 'JOIN', 'has-text-info': props.log.type === 'INFO', 'has-text-weight-bold': props.log.type === 'INFO'}"></span>
       </template>
     </template>
     <a
