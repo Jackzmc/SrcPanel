@@ -171,7 +171,7 @@ const FILTERS = {
 };
 const DEFAULT_TYPES = ["ACTION", "CHAT", "INFO", "STATE", "WEB"];
 const DEFAULT_SERVERS = ["main", "reserved", "web"];
-const TYPE_COLORS: Dictionary<string, string> = {
+const TYPE_COLORS: Record<string, string> = {
   ACTION: "is-info",
   CHAT: "is-secondary",
   STATE: "is-primary",
@@ -180,13 +180,13 @@ const TYPE_COLORS: Dictionary<string, string> = {
   INFO: "is-link",
   WEB: "is-dark",
 };
-const SERVER_COLORS: Dictionary<string, string> = {
+const SERVER_COLORS: Record<string, string> = {
   main: "is-success",
   reserved: "is-dark",
 };
 
 const typeColors = computed(() => {
-  let obj: Dictionary<string, string> = {};
+  let obj: Record<string, string> = {};
   for (const type of FILTERS.types) {
     obj[type] = filters.value.types!.includes(type) ? TYPE_COLORS[type] : "is-light";
   }
@@ -194,7 +194,7 @@ const typeColors = computed(() => {
 });
 
 const serverColors = computed(() => {
-  let obj: Dictionary<string, string> = {};
+  let obj: Record<string, string> = {};
   for (const server of FILTERS.servers) {
     obj[server] = filters.value.servers!.includes(server)
       ? SERVER_COLORS[server]
@@ -216,7 +216,7 @@ let page = ref(1);
 let limit = ref(30);
 let totalEntries = ref(0)
 let entries = ref()
-let filters: Ref<Dictionary<string, string[] | string | null>> = ref<{
+let filters = ref<{
   servers: string[];
   types: string[];
   client: string | null;
