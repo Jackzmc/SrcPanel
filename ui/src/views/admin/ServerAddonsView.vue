@@ -408,8 +408,8 @@ function formatTime(time: number) {
 
 onBeforeMount(async() => {
   await fetchShares()
-  if(route.query.share) {
-    const share = route.query.share.toString()
+  if(route.params.share) {
+    const share = route.params.share.toString()
     if(shares.value.includes(share)) {
       selectedShare.value = share.toString()
     } else {
