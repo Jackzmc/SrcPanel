@@ -90,10 +90,15 @@
         </div>
       </article>
       <Field label="Search Client" icon-left="search">
-        <input type="text" class="input" placeholder="Search for a client" v-model="filters.client" />
+        <input type="text" class="input" placeholder="Search for a client" v-model="filters.client" @change="fetchDebounce" />
+        <p class="hint">Requires the user's steamid, not their name</p>
       </Field>
       <Field label="Search Target" icon-left="search">
-        <input type="text" class="input" placeholder="Search for a target" v-model="filters.target" />
+        <input type="text" class="input" placeholder="Search for a target" v-model="filters.target" @change="fetchDebounce" />
+        <p class="hint">Requires the user's steamid, not their name</p>
+      </Field>
+      <Field label="Search Message" icon-left="search">
+        <input type="text" class="input" placeholder="Search messages" v-model="filters.message" @change="fetchDebounce" />
       </Field>
       <Field>
         <label class="label">
@@ -142,6 +147,11 @@ import { formatDate, getRelDate, request } from '@/js/util';
 import LogMessage from '@/components/LogMessage.vue';
 import Field from '@/components/Field.vue';
 import Pagination from '@/components/Pagination.vue';
+import debounce from '@/js/debounce';
+import { useRoute, useRouter } from 'vue-router';
+
+const route = useRoute()
+const router = useRouter()
 
 const REFRESH_INTERVAL = 45_000
 
@@ -169,11 +179,15 @@ const FILTER_DATA: Record<string, Record<string, boolean | string>> = {
     QUIT: "is-danger",
     JOIN: "is-success",
     INFO: "is-link",
-  }
+  },
+  // Just indicate this a valid filter:
+  client: {},
+  target: {}
 }
 
 const DEFAULT_TYPES = ["ACTION", "CHAT", "INFO", "STATE", "QUIT", "JOIN"];
 const DEFAULT_SERVERS = ["main", "reserved", "web"];
+const DEFAULT_LIMIT = 30
 
 const props = defineProps<{
   userdata: UserData,
@@ -185,9 +199,10 @@ let loadingTime = ref<number>()
 let lastRefresh = ref<number>()
 let hoverId = ref()
 let page = ref(1);
-let limit = ref(30);
+let limit = ref(DEFAULT_LIMIT);
 let totalEntries = ref(0)
 let entries = ref()
+let fetchDebounce = ref()
 let filters = ref<Record<string, string|string[]|null>>({
   servers: DEFAULT_SERVERS,
   types: DEFAULT_TYPES,
@@ -213,7 +228,7 @@ function toggleFilter(filter: string, key: string) {
     else
       v.push(key)
   }
-  fetchLogs()
+  fetchDebounce.value()
 }
 function getFilterColor(filter: string, key: string) {
   if(!filters.value[filter] || !Array.isArray(filters.value[filter])) return
@@ -223,6 +238,7 @@ function getFilterColor(filter: string, key: string) {
 
 function getParams() {
   const searchParams = new URLSearchParams()
+  searchParams.append('page', page.value.toString())
   searchParams.append('limit', limit.value.toString())
   for(const [filter, val] of Object.entries(filters.value)) {
     if(!val) continue
@@ -231,14 +247,14 @@ function getParams() {
     else
       searchParams.append(`search_${filter}`, val)
   }
-
+  router.replace({ query: Object.fromEntries(searchParams) })
   return searchParams.toString()
 }
 
 async function fetchLogs() {
   loadingTime.value = Date.now()
   lastRefresh.value = Date.now()
-  const response = await request(`/api/logs/${page.value}?${getParams()}`)
+  const response = await request(`/api/logs/?${getParams()}`)
   if(response?.ok) {
     const json = await response.json()
     totalEntries.value = json.totalCount
@@ -286,6 +302,24 @@ onBeforeMount(() => {
     fetchLogs()
   }, REFRESH_INTERVAL)
   now.value = Date.now()
+  fetchDebounce.value = debounce(fetchLogs, 500)
+
+  if(route.query.limit) limit.value = Number(route.query.limit) || DEFAULT_LIMIT
+  if(route.query.page) page.value = Number(route.query.page) || 1
+  if(page.value <= 0) page.value = 1
+  for(const filter in FILTER_DATA) {
+    let queryName = filter
+    // Some query are prefixed with search_, so we check them:
+    if(!route.query[queryName]) queryName = `search_${queryName}`
+    if(route.query[queryName]) {
+      if(Array.isArray(filters.value[filter])) {
+        filters.value[filter] = (route.query[queryName] as string).split(/,+/g)
+      } else {
+        filters.value[filter] = route.query[queryName] as string
+      }
+    }
+  }
+
   fetchLogs()
 })
 

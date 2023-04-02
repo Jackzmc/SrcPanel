@@ -82,6 +82,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 LEFT JOIN user_names u2 ON u2.steamid LIKE SUBSTRING(l.target, 11)
                 WHERE id >= ? AND id <= ?
             `
+            // TODO:L Only use optimized when no filters are applied - optimization doens't work with them
             data.push(minId, maxId)
         }
 
