@@ -19,6 +19,7 @@ const LogQuery = Type.Object({
     fetchAll: Type.Optional(Type.Boolean()),
     limit: Type.Optional(Type.Integer()),
     page: Type.Optional(Type.Integer()),
+    optimized: Type.Optional(Type.Boolean()),
     timestampOnly: Type.Optional(Type.Boolean({ default: false })),
 })
 
@@ -53,9 +54,16 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
     fastify.get('/:page?', async(req: FastifyRequest<{ Querystring: LogQueryType, Params: { page?: number } }>, reply) => {
         const searchMessage = req.query.searchMessage ? `%${req.query.searchMessage}%` : (req.query.search_message ? `%${req.query.search_message}%` : null)
-
-        let countQuery = `SELECT COUNT(*) AS count from ${ACTIVITY_LOG_TABLE_NAME} WHERE 1 = 1 `
-        let query: string;
+        req.query.optimized = true
+        let countQuery = `SELECT COUNT(*) AS count from ${ACTIVITY_LOG_TABLE_NAME} `
+        let query = `SELECT id, l.timestamp, server, type, client, target, message, metadata,
+            s1.last_alias as clientName, s2.last_alias as targetName,
+            u1.avatar_hash as clientAvatar, u2.avatar_hash as targetAvatar
+            FROM activity_log l
+            LEFT JOIN stats_users as s1 ON s1.steamid = client 
+            LEFT JOIN stats_users as s2 ON s2.steamid = target 
+            LEFT JOIN user_names u1 ON u1.steamid LIKE SUBSTRING(l.client, 11) 
+            LEFT JOIN user_names u2 ON u2.steamid LIKE SUBSTRING(l.target, 11)`
 
         const conditions = []
         let data = [], countData = []
@@ -67,21 +75,12 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
         if(req.query.timestampOnly) {
             query = `SELECT timestamp, message FROM ${ACTIVITY_LOG_TABLE_NAME} l`
-        } else {
+        } else if(req.query.optimized) {
             await getTotalRows()
-            const maxId = highestId - (limit * (page - 1))
-            const minId = maxId - limit
+            const maxId = highestId - (2*limit * (page - 1))
+            const minId = maxId - (2*limit)
             // We don't need to also fetch usernames from user_names as if there is a log entry they should always have an entry in statistics 
-            query = `SELECT id, l.timestamp, server, type, client, target, message, metadata,
-                s1.last_alias as clientName, s2.last_alias as targetName,
-                u1.avatar_hash as clientAvatar, u2.avatar_hash as targetAvatar
-                FROM activity_log l
-                LEFT JOIN stats_users as s1 ON s1.steamid = client 
-                LEFT JOIN stats_users as s2 ON s2.steamid = target 
-                LEFT JOIN user_names u1 ON u1.steamid LIKE SUBSTRING(l.client, 11) 
-                LEFT JOIN user_names u2 ON u2.steamid LIKE SUBSTRING(l.target, 11)
-                WHERE id >= ? AND id <= ?
-            `
+            query += " WHERE id >= ? AND id <= ?"
             // TODO:L Only use optimized when no filters are applied - optimization doens't work with them
             data.push(minId, maxId)
         }
@@ -136,15 +135,25 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
         
         if(conditions.length > 0) {
-            query += ` AND ${conditions.join(' AND ')} `
-            countQuery += ` AND ${conditions.join(' AND ')} `
+            if(req.query.optimized) {
+                // Optimized query already has WHERE condition
+                query += ` AND ${conditions.join(' AND ')} `
+            } else {
+                query += ` WHERE ${conditions.join(' AND ')} `
+            }
+            countQuery += ` WHERE ${conditions.join(' AND ')} `
         }
 
         query += `ORDER BY id ${req.query.orderByAscending ? 'ASC' : 'DESC'} `
 
         if(!req.query.fetchAll) {
-            query += `LIMIT ?`
-            data = [...data, limit] //, (page * limit) - limit]
+            if(req.query.optimized) {
+                query += `LIMIT ?`
+                data = [...data, limit] //, (page * limit) - limit]
+            } else {
+                query += `LIMIT ? OFFSET ?`
+                data = [...data, limit, (page * limit) - limit]
+            }
         }
 
         const startTime = Date.now()
@@ -155,10 +164,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         
         return {
             logs: logs.map(log => {
-                return {
-                    ...log, 
-                    metadata: log.metadata ? JSON.parse(log.metadata) : null
-                }
+                if(log.metadata) log.metadata = JSON.parse(log.metadata)
+                return log
             }),
             timeTaken: Date.now() - startTime,
             totalCount: count[0].count,

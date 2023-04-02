@@ -16,14 +16,14 @@
   </h4>
   <Pagination :page="page" :count="totalEntries" :limit="limit" @page="setPage" />
   <div class="columns">
-    <div class="column is-8 box" v-if="loadingTime && !entries">
+    <div class="column is-8 box" v-if="!entries">
       <p class="has-text-centered is-size-5" style="margin-top:10%">
         <Icon icon="spinner" spin>Loading...</Icon>
         <br>
         {{ loadingDuration }}s
       </p>
     </div>
-    <div class="column is-8 box" v-else-if="entries">
+    <div class="column is-8 box" v-else>
       <p class="has-text-centered is-size-5" v-if="entries.length === 0" style="margin-top:10%">No entries were found</p>
       <div class="list has-visible-pointer-controls has-hoverable-list-items" v-else>
         <template v-for="entry in entries" :key="entry.id">
@@ -211,7 +211,7 @@ const loadingDuration = computed(() => {
   return Math.floor((now.value - loadingTime.value) / 1000)
 })
 const nextRefreshCountdown = computed(() => {
-  if(!lastRefresh.value) return 0
+  if(!lastRefresh.value || loadingTime.value != undefined) return 0
   return Math.floor(((lastRefresh.value + REFRESH_INTERVAL) - now.value) / 1000)
 })
 
@@ -248,8 +248,9 @@ function getParams() {
 }
 
 async function fetchLogs() {
+  // Wait for previous request
+  if(loadingTime.value != undefined) return
   loadingTime.value = Date.now()
-  lastRefresh.value = Date.now()
   const response = await request(`/api/logs/?${getParams()}`)
   if(response?.ok) {
     const json = await response.json()
@@ -280,7 +281,9 @@ async function fetchLogs() {
         message: entry.message
       }
     })
+    console.info('Took', json.timeTaken, 'ms')
     loadingTime.value = undefined
+    lastRefresh.value = Date.now()
   } else {
     loadingTime.value = undefined
   }
