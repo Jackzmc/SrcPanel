@@ -83,12 +83,6 @@
       </div>
     </div>
     <div class="column">
-      <article class="message is-warning">
-        <div class="message-body content">
-          <b>Feature in development</b><br>
-          Search is not implemented at this time.
-        </div>
-      </article>
       <Field label="Search Client" icon-left="search">
         <input type="text" class="input" placeholder="Search for a client" v-model="filters.client" @change="fetchDebounce" />
         <p class="hint">Requires the user's steamid, not their name</p>
@@ -103,6 +97,7 @@
       <Field>
         <label class="label">
           Enabled Types
+          <a class="is-inline" @click="filters.types = []">(Clear)</a>&nbsp;
           <a @click="filters.types = Object.keys(FILTER_DATA.types)">(Select All)</a>
         </label>
         <div class="buttons">
@@ -118,6 +113,7 @@
       <Field>
         <label class="label">
           Enabled Servers
+          <a class="is-inline" @click="filters.types = []">(Clear)</a>&nbsp;
           <a @click="filters.servers = Object.keys(FILTER_DATA.servers)">(Select All)</a>
         </label>
         <div class="buttons has-addons">
