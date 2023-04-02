@@ -171,7 +171,7 @@
     <p class="subtitle is-6 has-text-centered has-text-danger">{{error}}</p>
   </div>
   <div v-else>
-    <p class="title is-2 has-text-centered">Fetching addons...</p>
+    <p class="title is-2 has-text-centered"><Icon icon="spinner" spin icon-class="mr-3">Fetching addons...</Icon></p>
     <p class="subtitle is-4 has-text-centered">This may take some time, please wait...</p>
   </div>
   <br>
@@ -182,6 +182,7 @@
 import { ref, watch, computed, onBeforeMount, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import Field from '@/components/Field.vue'
+
 
 const SORT_NAME = (a: any, b: any) => {
   return (a.workshop?.title ?? a.filename).localeCompare(b.workshop?.title ?? b.filename)

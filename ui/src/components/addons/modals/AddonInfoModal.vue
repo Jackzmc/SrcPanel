@@ -32,6 +32,8 @@
               <span v-if="props.addon.workshop?.deleted" class="tag is-danger has-tooltip-warning has-tooltip-bottom" data-tooltip="Addon no longer exists on the workshop, but it's still locally stored">Deleted</span>
             </div>
           </div>
+        </div>
+        <div class="field is-grouped is-grouped-multiline">
           <div class="control">
             <div class="tags has-addons">
               <span class="tag is-dark">Last Updated</span>
