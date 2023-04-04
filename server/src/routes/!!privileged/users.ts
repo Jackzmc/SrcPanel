@@ -115,32 +115,38 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 message: "Provided steamid is invalid"
             })
         }
-        const [rows] = await fastify.db.execute<RowDataPacket[]>(
+        const [userdata] = await fastify.db.execute<RowDataPacket[]>(
             `SELECT
-            (SELECT COUNT(*) FROM notes WHERE SUBSTRING(notes.steamid,11) = SUBSTRING(stats_users.steamid,11)) as notesCount,
-            (SELECT COUNT(*) FROM bans WHERE SUBSTRING(bans.steamid,11) = SUBSTRING(stats_users.steamid,11) ) as bansCount,
-            (SELECT COUNT(*) FROM ${ADMINS_DB}.sm_admins WHERE ${ADMINS_DB}.sm_admins.identity = stats_users.steamid) as isAdmin,
-            steamid, last_alias as name, country, last_join_date as lastJoinDate, created_date as firstJoinDate
+                steamid, last_alias as name, country, last_join_date as lastJoinDate, created_date as firstJoinDate
             FROM stats_users
-            WHERE SUBSTRING(steamid,11) = SUBSTRING(?, 11)`, 
-            [ req.params.steamid ]
+            WHERE SUBSTRING(steamid,11) = SUBSTRING(:steamid, 11)`, 
+            { steamid: req.params.steamid }
         )
+
+        const [stats] = await fastify.db.execute<RowDataPacket[]>(
+            `SELECT
+            (SELECT COUNT(*) FROM notes WHERE SUBSTRING(notes.steamid,11) = SUBSTRING(:steamid, 11)) as notesCount,
+            (SELECT COUNT(*) FROM bans WHERE SUBSTRING(bans.steamid,11) = SUBSTRING(:steamid, 11)) as bansCount,
+            (SELECT COUNT(*) FROM ${ADMINS_DB}.sm_admins WHERE ${ADMINS_DB}.sm_admins.identity = :steamid) as isAdmin
+            `,
+            { steamid: req.params.steamid }
+        )
+
+        let userInfo = {}
         
-        if(STEAM_ID_REGEX.test(req.params.steamid) && rows.length === 0) {
+        if(userdata.length > 0) {
+            userInfo = userdata[0]
+        } else if(STEAM_ID_REGEX.test(req.params.steamid)) {
             const steamid = new SteamID(req.params.steamid)
             const userInfos = await fastify.steam.getUserDetails([steamid])
             if(userInfos.length > 0) {
-                const userInfo = userInfos[0]
-                rows.push({
+                userInfo = {
                     steamid: steamid.getSteam2RenderedID(),
-                    name: userInfo.personaname,
+                    name: userInfos[0].personaname,
                     country: null,
                     lastJoinDate: null,
                     firstJoinDate: null,
-                    notesCount: 0,
-                    bansCount: 0,
-                    isAdmin: false
-                } as RowDataPacket)
+                }
             }
         }
 
@@ -151,10 +157,12 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
 
         return {
-            user: rows.length > 0 ? {
-                ...rows[0],
-                country: rows[0].country?.length > 0 ? rows[0].country : null
-            } : null,
+            user: {
+                ...userInfo,
+                notesCount: stats[0].notesCount,
+                bansCount: stats[0].bansCount,
+                isAdmin: stats[0].isAdmin
+            },
             adminData
         }
     })
