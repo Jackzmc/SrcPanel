@@ -1,6 +1,6 @@
 <template>
 <div>
-  <router-view :share="shareInfo" :addon="prefetch" @close="onChildClose" v-if="prefetch"></router-view>
+  <router-view :share="shareInfo" :addon="prefetch" @close="onChildClose"></router-view>
   <div class="container" v-if="ready">
     <div class="level">
       <div class="level-left">

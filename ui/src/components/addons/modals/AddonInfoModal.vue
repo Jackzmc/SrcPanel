@@ -1,15 +1,21 @@
 <template>
   <Modal active closable @close="close">
     <div class="modal-card">
-      <header class="modal-card-head">
+      <header class="modal-card-head" v-if="share && addon">
         <p class="modal-card-title">Addon Info
-          <span class="tag is-info has-tooltip-bottom is-pulled-right mr-2 is-rounded" data-tooltip="The target share">{{props.share.id}}</span>
+          <span class="tag is-info has-tooltip-bottom is-pulled-right mr-2 is-rounded" data-tooltip="The target share">{{share.id}}</span>
         </p>
         <button class="delete" aria-label="close" @click='close(false)'></button>
       </header>
-      <section class="modal-card-body">
-        <template v-if="props.addon.workshop">
-          <img alt="The workshop addon's uploaded image preview" :src="props.addon.workshop.previewUrl" @load="previewImageLoaded = true" />
+      <header class="modal-card-head" v-else>
+        <p class="modal-card-title">
+          <Icon icon="spinner" spin>Loading...</Icon>
+        </p>
+        <button class="delete" aria-label="close" @click='close(false)'></button>
+      </header>
+      <section class="modal-card-body" v-if="addon">
+        <template v-if="addon.workshop">
+          <img alt="The workshop addon's uploaded image preview" :src="addon.workshop.previewUrl" @load="previewImageLoaded = true" />
           <img v-if="!previewImageLoaded" src="@/assets/WorkshopImageFallback.svg" />
           <br><br>
         </template>
@@ -73,7 +79,7 @@
           Close
         </button>
         <a v-if="pendingRestarts.length > 0" class="button is-info" data-tooltip="Server must be restarted to apply changes" @click='restartServers'>Restart Servers</a>
-        <a v-if="props.addon.workshop" target="_blank" :href="props.addon.workshop.url" class="button is-info" data-tooltip="View the steam workshop page">Steam Workshop</a>
+        <a v-if="addon && addon.workshop" target="_blank" :href="addon.workshop.url" class="button is-info" data-tooltip="View the steam workshop page">Steam Workshop</a>
         <a class="button is-danger" data-tooltip="Uninstall from all servers and delete the file" @click="deleteAddon">Delete</a>
       </footer>
     </div>
@@ -83,19 +89,25 @@
 <script setup lang="ts">
 import Modal from '@/components/Modal.vue'
 import { useNotification } from "@kyvg/vue3-notification";
-import { computed, ref } from 'vue'
+import { computed, ref, onBeforeMount } from 'vue';
 
 const emit = defineEmits(['close'])
 const { notify }  = useNotification()
-const props = defineProps({
-  addon: null,
-  share: null
-})
+const props = defineProps<{
+  addon: any,
+  share: any
+}>()
 let previewImageLoaded = ref(false)
 let pendingRestarts = ref<string[]>([])
-let installInfo = ref<Record<string, boolean>>(props.addon.installInfo)
+let installInfo = ref<Record<string, boolean>>()
+
+onBeforeMount(() => {
+  if(props.addon)
+    installInfo.value = props.addon.installInfo
+})
 
 async function installAddon(destKey: string, mode: "install" | "uninstall") {
+  if(!installInfo.value) return console.warn('no install info')
   try {
     const response = await fetch(`/api/shares/${props.share.id}/addons/${props.addon.filename}/${mode}/${destKey}`, { method: 'POST' })
     const json = await response.json()

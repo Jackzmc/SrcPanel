@@ -12,6 +12,9 @@
         <label class="file-label">
           <input class="file-input" type="file" ref="filePicker" @change="onFileUploaded" :accept="validFiles">
           <span class="file-cta">
+            <span class="file-icon">
+              <Icon icon="fas fa-upload" />
+            </span>
             <span class="file-label">
               Choose an addon
             </span>
