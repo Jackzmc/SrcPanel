@@ -44,7 +44,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             LEFT JOIN stats_users as u ON notes.steamid = u.steamid 
             LEFT JOIN stats_users as e ON notes.markedBy = e.steamid 
             LEFT JOIN bans as b ON notes.steamid = b.steamid 
-            WHERE notes.steamid = ?
+            WHERE SUBSTRING(notes.steamid, 11) = SUBSTRING(?, 11)
             ORDER BY notes.id DESC`,
             [req.params.steamid]
         )
