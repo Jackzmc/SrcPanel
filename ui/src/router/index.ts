@@ -200,7 +200,7 @@ const routes = [
     component: () => import(/* webpackChunkName: 'logs' */ '../views/admin/ActivityLogsView.vue'),
     meta: {
       title: 'Activity Logs',
-      description: 'View all activity inside the game',
+      description: 'View all activity inside and outside the game',
       authRequired: true
     }
   },
@@ -210,7 +210,7 @@ const routes = [
     component: () => import(/* webpackChunkName: 'logs' */ '../views/admin/AuditLogsView.vue'),
     meta: {
       title: 'Audit Logs',
-      description: 'View all actions outside the game',
+      description: 'View all actions inside and outside the game',
       authRequired: true
     }
   },

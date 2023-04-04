@@ -15,7 +15,7 @@
         <span v-else v-html="m.content" :class="{'has-text-danger': props.log.type === 'QUIT', 'has-text-success': props.log.type === 'JOIN', 'has-text-info': props.log.type === 'INFO', 'has-text-weight-bold': props.log.type === 'INFO'}"></span>
       </template>
     </template>
-    <a
+    &nbsp;<a
       v-if="
         !props.log.redacted &&
         props.hoverId == props.log.id &&

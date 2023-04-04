@@ -10,7 +10,7 @@
     Showing <input type="number" class="input" min=20 max=1000 step=10 style="width:5%" v-model="limit" @blur="fetchLogs" /> / {{ totalEntries.toLocaleString() }} Entries
     <!-- <em class="subtitle is-4" v-if="hasSearchQuery">({{ notesCount }} filtered)</em> -->
     <div class="is-pulled-right">
-      <p class="is-inline mr-3 is-size-6" v-if="nextRefreshCountdown" data-tooltip="When the logs will be auto refreshed">{{ nextRefreshCountdown }}s</p>
+      <p class="is-inline mr-3 is-size-6" v-if="nextRefreshCountdown" data-tooltip="Time until the next auto refresh">{{ nextRefreshCountdown }}s</p>
       <a :class="['button','is-info',{'is-loading': loadingTime}]" @click="fetchLogs"><Icon icon="sync">Refresh</Icon></a>
     </div>
   </h4>
@@ -18,7 +18,7 @@
   <Pagination :page="page" :count="totalEntries" :limit="limit" @page="setPage" />
   <div class="columns">
     <div class="column is-8 box" v-if="!entries">
-      <p class="has-text-centered is-size-5" style="margin-top:10%">
+      <p class="has-text-centered is-size-5" style="margin-top:20%">
         <Icon icon="spinner" spin>Loading...</Icon>
         <br>
         {{ loadingDuration }}s
@@ -28,10 +28,10 @@
       <p class="has-text-centered is-size-5" v-if="entries.length === 0" style="margin-top:10%">No entries were found</p>
       <div class="list has-visible-pointer-controls has-hoverable-list-items" v-else>
         <template v-for="entry in entries" :key="entry.id">
-          <div class="list-item" @hover="hoverId = entry.id">
-            <div class="list-item-image">
+          <div class="list-item" @mouseenter="hoverId = entry.id">
+            <div class="list-item-image" v-if="entry.client.avatarUrl || entry.target.avatarUrl">
               <figure class="image is-48x48">
-                <img class="is-rounded" :src="entry.client.avatarUrl || entry.target.avatarUrl || '/img/server_avatar.svg'">
+                <img class="is-rounded" :src="entry.client.avatarUrl || entry.target.avatarUrl">
               </figure>
             </div>
 
@@ -70,7 +70,7 @@
 
             <div class="list-item-content">
               <div class="notification is-dark">
-                <p><b>Id:</b> #{{ entry.id }}</p>
+                <p><b>Id:</b> #{{ entry.id }}<a class="ml-2" @click="filters.aroundId = entry.id">(find entries nearby)</a></p>
                 <p><b>Client ID: </b><span v-if="entry.client.steamid">{{ entry.client.steamid }}</span><em v-else>none</em></p>
                 <p><b>Target ID: </b><span v-if="entry.target.steamid">{{ entry.target.steamid }}</span><em v-else>none</em></p>
                 <p><b>Raw Message: </b>{{ entry.message }}</p>
@@ -145,6 +145,9 @@
             {{ key }}
           </a>
         </div>
+      </Field>
+      <Field label="Around Id">
+        <input v-model="filters.aroundId" type="number" class="input" min="0" style="width:30%" @change="fetchDebounce" placeholder="########" />
       </Field>
     </div>
   </div>
@@ -250,7 +253,8 @@ let filters = ref<Record<string, string|string[]|null>>({
   servers: DEFAULT_SERVERS,
   types: DEFAULT_TYPES,
   client: null,
-  target: null
+  target: null,
+  aroundId: null
 });
 
 const ADMINCHAT_REGEX = /triggered sm_say \(text (.*)\)/;
@@ -295,7 +299,8 @@ function getParams() {
     else
       searchParams.append(`search_${filter}`, val)
   }
-  router.replace({ query: Object.fromEntries(searchParams) })
+  if(now.value != undefined)
+    router.replace({ query: Object.fromEntries(searchParams) })
   return searchParams.toString()
 }
 
@@ -331,18 +336,18 @@ async function fetchLogs() {
         client: {
           steamid: entry.client,
           name: entry.clientName,
-          avatarUrl: entry.clientName ? (entry.clientAvatar ? `https://avatars.steamstatic.com/${entry.clientAvatar}.jpg` : "/img/steam_default_avatar.png") : null
+          avatarUrl: entry.clientName ? (entry.clientAvatar ? `https://avatars.steamstatic.com/${entry.clientAvatar}.jpg` : `https://ui-avatars.com/api/?name=${encodeURIComponent(entry.clientName || entry.client)}`) : null
         },
         target: {
           steamid: entry.target,
           name: entry.targetName,
-          avatarUrl: entry.targetName ? (entry.targetAvatar ? `https://avatars.steamstatic.com/${entry.targetAvatar}.jpg` : "/img/steam_default_avatar.png") : null
+          avatarUrl: entry.targetName ? (entry.targetAvatar ? `https://avatars.steamstatic.com/${entry.targetAvatar}.jpg` : `https://ui-avatars.com/api/?name=${encodeURIComponent(entry.targetName || entry.target)}`) : null
         },
         metadata: entry.metadata,
         message: entry.message
       }
     })
-    console.info('Took', json.timeTaken, 'ms')
+    console.info('Fetch took', json.timeTaken, 'ms')
     loadingTime.value = undefined
     lastRefresh.value = Date.now()
   } else {
@@ -356,13 +361,11 @@ function setPage(pageNum: number) {
 
 onBeforeMount(() => {
   setInterval(() => {
-    now.value = Date.now()
-  }, 1000)
-  setInterval(() => {
     fetchLogs()
   }, REFRESH_INTERVAL)
-  now.value = Date.now()
+
   fetchDebounce.value = debounce(fetchLogs, 500)
+
 
   if(route.query.limit) limit.value = Number(route.query.limit) || DEFAULT_LIMIT
   if(route.query.page) page.value = Number(route.query.page) || 1
@@ -379,6 +382,11 @@ onBeforeMount(() => {
       }
     }
   }
+
+  now.value = Date.now()
+  setInterval(() => {
+    now.value = Date.now()
+  }, 1000)
 
   fetchLogs()
 })

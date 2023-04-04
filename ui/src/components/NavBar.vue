@@ -56,10 +56,10 @@
               <Icon icon="fa-server">Servers</Icon>
             </router-link>
             <router-link to="/admin/activity" class="navbar-item">
-              <Icon icon="list">Activity Log</Icon>
+              <Icon icon="list">Activity Log <span class="tag">Old</span></Icon>
             </router-link>
             <router-link to="/admin/audit" class="navbar-item">
-              <Icon icon="list">Audit Log</Icon>
+              <Icon icon="list">Activity Log <span class="tag is-info">Beta</span></Icon>
             </router-link>
             <router-link to="/admin/players" class="navbar-item">
               <Icon icon="users-gear">Manage Players</Icon>
