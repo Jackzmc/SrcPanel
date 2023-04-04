@@ -24,25 +24,33 @@
         </div>
         <div class="column content">
             <p>
-              Convars are settings on the server that can affect anything and can be changed at any time.
+              Convars are settings on the server that can affect anything such as gameplay or plugin settings and can be changed at any time.
             </p>
             <p class="has-text-info">
-              You can change convars with the command:<br>
-              <b>sm_cvar
-                <span class='tag is-link'>cvar name</span> <span class='tag'>value</span>
-              </b>
-              <br>
-              <b>/cvar
-                <span class='tag is-link'>cvar name</span> <span class='tag'>value</span>
-              </b>
-              <br>
-              <b>!cvar
-                <span class='tag is-link'>cvar name</span> <span class='tag'>value</span>
-              </b>
+              You can change convars with one of these commands:<br>
+              <table class="table">
+                <tr>
+                  <td>sm_cvar</td>
+                  <td><span class='tag is-link'>cvar name</span> <span class='tag'>value</span></td>
+                  <td>from console</td>
+                </tr>
+                <tr>
+                  <td>!cvar</td>
+                  <td><span class='tag is-link'>cvar name</span> <span class='tag'>value</span></td>
+                  <td>publicly in chat</td>
+                </tr>
+                <tr>
+                  <td>/cvar</td>
+                  <td><span class='tag is-link'>cvar name</span> <span class='tag'>value</span></td>
+                  <td>privately in chat</td>
+                </tr>
+              </table>
             </p>
 	          <p>
               If value is not specified, it will instead show you the value of the cvar
             </p>
+            <hr>
+            <p>Percentages are represented by decimals, so 100% = 1.0, 50% = 0.5, 0% = 0.0</p>
             <p><b>Example</b> <code>/cvar l4d2_population_clowns 1.0</code> – This will make it a 100% chance it spawns clown zombies</p>
             <br>
             <p>
@@ -56,8 +64,9 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
-import { formatParameters } from '@/js/util'
+import { formatParameters, request } from '@/js/util'
 import Field from '@/components/Field.vue'
+import { notify } from '@kyvg/vue3-notification';
 
 const LAST_UPDATED = new Date(Number(process.env.VUE_APP_BUILD_DATE))
 
@@ -82,10 +91,11 @@ const filteredCvars = computed(() => {
   return filtered
 })
 
-onMounted(() => {
-  fetch(`../data/cvars.json?t=${LAST_UPDATED}`)
-  .then(response => response.json())
-  .then(json => {
+onMounted(async () => {
+  try {
+    const response = await request(`../data/cvars.json?t=${LAST_UPDATED}`)
+    if(!response?.ok) return
+    const json = await response.json()
     for(let cvar of json) {
       const split = cvar.cvar.trim().split(' ')
       cvar.name = split.shift()
@@ -100,9 +110,12 @@ onMounted(() => {
       delete cvar.default
       cvars.value.push(cvar)
     }
-  })
-  .catch(err => {
-      console.error('Could not fetch commands, network error.', err)
-  })
+  } catch(err: any) {
+    notify({
+      type: "error",
+      text: err.message
+    })
+    console.error('Could not fetch commands, network error.', err)
+  }
 })
 </script>

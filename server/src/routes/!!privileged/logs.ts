@@ -36,8 +36,8 @@ let highestId = 0
 let totalRowsLastFetch: number = null
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
-    const [rows] = await fastify.db.query<RowDataPacket[]>(`SELECT DISTINCT server FROM ${ACTIVITY_LOG_TABLE_NAME}`)
-    logServerCache = rows.filter(row => row.server !== "web").map(row => row.server)
+    const [rows] = await fastify.db.query<RowDataPacket[]>(`SELECT DISTINCT server FROM ${ACTIVITY_LOG_TABLE_NAME} ORDER BY timestamp DESC`)
+    logServerCache = rows.filter(row => row.server && row.server !== "web").map(row => row.server)
 
     async function getTotalRows() {
         if(Date.now() - totalRowsLastFetch > LOG_TOTAL_ROW_CACHE_TIME || totalRowsLastFetch === null) {

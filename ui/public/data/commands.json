@@ -298,7 +298,7 @@
                 "perm": "c"
             },
             {
-                "command": "sm_unreserve",
+                "command": "unreserve",
                 "description": "Removes the lobby reservation, which allows extra players to join (on improved+)",
                 "perm": "d"
             },

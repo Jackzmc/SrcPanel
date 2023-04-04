@@ -25,9 +25,9 @@
         <label class="label">Content:</label>
         <input type="text" class="input" v-model="edit.content" />
       </template>
-      <template v-else-if="canEdit">
+      <span v-else-if="canEdit" :class="note.content.startsWith('@') ? 'tag is-dark' : ''" :data-tooltip="note.content.startsWith('@') ? 'Is an automatic action' : undefined">
         {{ note.content }}
-      </template>
+      </span>
       </div>
   </div>
 

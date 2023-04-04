@@ -75,10 +75,10 @@
                   <li>Parameters are separated by spaces. If you want to have spaces for a parameter, surround it with "quotes around the word".</li>
                   <li><b class="tag is-link">&lt;&gt;</b> indictates the argument is <u>required.</u></li>
                   <li><b class="tag is-secondary">[&nbsp;]</b> indictates the argument is <em>optional</em>.</li>
-                  <li>Do not include the <b class="tag is-link">&lt; &gt;</b> or <b class="tag is-secondary">[ ]</b> as its only to indicate if a value is optional or not.</li>
+                  <li><b>Do not</b> include the symbols <b class="tag is-link">&lt; &gt;</b> or <b class="tag is-secondary">[ ]</b> as they are just used to indicate if the parameter is required or not.</li>
               </ul>
               <p>
-                For player selection purposes, you do not need to input their FULL name, just enough to make it only select a player (‘ja’ for jackz, as a jockey could exist, and it wouldn’t know if you wanted jockey or jackz)
+                When selecting a player, you only need to put enough of their name that uniquely identifies them. If there is no other player that name starts with 'ja', then you could use that to select 'jackz', if you wanted to select jockey, you could do 'ey'.
               </p>
             </div>
             <div class="box">
@@ -86,6 +86,7 @@
               <ol>
                   <li><b class="tag is-link">user</b> means a required user while <b class="tag is-secondary">user</b> means an optional user.</li>
                   <li>I want to kick jackz, the command is <code>{{prefix}}kick &lt;player&gt; [reason]</code>, I don’t need to input a reason so I will just type in: <code>{{prefix}}kick jackz</code></li>
+                  <li>I want to kick a troll, and I want to state why. <code>{{ prefix }}kick JimmyTheTroll "goodbye troll"</code></li>
                   <li><p>
                       I want to respawn disgruntled pea, the problem is that he has a space in his name. You can either:
                       <ol type="a">
@@ -104,12 +105,13 @@
 </template>
 
 <script setup lang="ts">
-import { formatParameters } from '@/js/util'
+import { formatParameters, request } from '@/js/util'
 import ExamplesModal from '@/components/modals/ExamplesModal.vue'
 import { ref, computed, onMounted } from 'vue'
 import { PrivilegedUser } from '../../js/User';
 import { UserData } from '../../../../common-types/User';
 import Field from '@/components/Field.vue'
+import { notify } from '@kyvg/vue3-notification';
 
 const LAST_UPDATED = new Date(Number(process.env.VUE_APP_BUILD_DATE))
 
@@ -163,9 +165,9 @@ function showExamples(cmd: any) {
 onMounted(async () => {
   loading.value = true
   try {
-    const response = await fetch(`../data/commands.json?t=${LAST_UPDATED}`)
-    const json = await response.json()
-
+    const response = await request(`../data/commands.json?t=${LAST_UPDATED}`)
+    const json = await response?.json()
+    if(!json) return
 
     for(const group in json) {
       const commands = []
@@ -183,7 +185,11 @@ onMounted(async () => {
         list: commands
       }
     }
-  } catch(err) {
+  } catch(err: any) {
+    notify({
+      type: "error",
+      text: err.message
+    })
     console.error('Could not fetch commands, network error.', err)
   } finally {
     loading.value = false

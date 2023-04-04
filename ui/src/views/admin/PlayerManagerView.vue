@@ -10,8 +10,9 @@
             <div class="level-item">
               <div class="select">
                 <select @change="getRecentPlayers" v-model="recentPlayers.server">
+                  <option :value="null">All Servers</option>
                   <option v-for="server in servers" :key="server" :value="server">
-                    {{ server || "All Servers" }}
+                    {{ server}}
                   </option>
                 </select>
               </div>
@@ -77,8 +78,8 @@ import { request } from '@/js/util';
 import SteamID from 'steamid';
 import Field from '@/components/Field.vue'
 
-const AUTO_REFRESH_INTERVAL_MINUTES = 2
-const RECENT_LIMIT = 15
+const AUTO_REFRESH_INTERVAL_MINUTES = 1
+const RECENT_LIMIT = 20
 const STEAM_PROFILE_URL_REGEX = new RegExp(/https?:\/\/steamcommunity.com\/profiles\/(\d+)/)
 
 const router = useRouter()
