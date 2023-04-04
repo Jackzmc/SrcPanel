@@ -444,7 +444,7 @@ export default class AuthManager {
             const data: OauthProviderData = {
                 id: row.provider_id,
                 username: row.username,
-                avatarUrl: row.avatar_hash
+                avatarUrl: row.avatar_url
             }
             result[row.provider] = data
         }
