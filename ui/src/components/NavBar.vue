@@ -56,7 +56,7 @@
               <Icon icon="fa-server">Servers</Icon>
             </router-link>
             <router-link to="/admin/activity" class="navbar-item">
-              <Icon icon="list">Activity Log <span class="tag">Old</span></Icon>
+              <Icon icon="list">Activity Log <span class="tag">Legacy</span></Icon>
             </router-link>
             <router-link to="/admin/audit" class="navbar-item">
               <Icon icon="list">Activity Log <span class="tag is-info">Beta</span></Icon>

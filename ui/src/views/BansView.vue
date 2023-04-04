@@ -13,7 +13,7 @@
       </div>
       <div class="field">
         <input id="showExpiredButton" type="checkbox" class="switch is-danger" v-model="showExpired" @change="fetchBans(true)">
-        <label for="showExpiredButton">Show Expired Bans</label>
+        <label for="showExpiredButton">Include Expired Bans</label>
       </div>
     </div>
   </div>
@@ -188,7 +188,7 @@ async function fetchBans(resetPage = false) {
       }
     })
   } else if(response) {
-    error.value = (await response.json()).message
+    error.value = "An error occurred"
   }
 }
 

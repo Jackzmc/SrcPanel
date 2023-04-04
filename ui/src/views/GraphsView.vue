@@ -28,13 +28,9 @@
 import { ref, watch, computed, onBeforeMount, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
-//@ts-ignore
 import Chart from 'highcharts/es-modules/Core/Chart/Chart.js';
-//@ts-ignore
 import 'highcharts/es-modules/Series/Line/LineSeries.js';
-//@ts-ignore
 import ColumnSeries from 'highcharts/es-modules/Series/Column/ColumnSeries.js';
-//@ts-ignore
 import BarSeries from 'highcharts/es-modules/Series/Bar/BarSeries.js';
 
 const TROLL_REGEX = new RegExp(/[^de]activated (constant\s)?troll "([a-zA-Z\s]+)"( with flags=(\d+)\s)?(\s\(?(\d+)?\)? for (.*\((\d+)x\))?)?/)
@@ -387,6 +383,8 @@ onBeforeMount(() => {
   Promise.allSettled([
     fetchBanStat(),
     fetchStates(),
+  ])
+  Promise.allSettled([
     fetchTrolls(),
     fetchSlaps(),
   ]).then(() => fetchPlaytime())
