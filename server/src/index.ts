@@ -22,6 +22,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const MySQLStore = MySQLSession(FastifySession  )
 
 const app = Fastify({
+    pluginTimeout: 20000,
     trustProxy: process.env.NODE_ENV === "production",
     logger: {
         transport: process.env.NODE_ENV !== 'production'
