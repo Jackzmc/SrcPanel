@@ -121,7 +121,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
 
         const [existing] = await fastify.db.execute<RowDataPacket[]>(`
-            SELECT * FROM bans WHERE steamid = ?`,
+            SELECT * FROM bans WHERE SUBSTRING(steamid, 11) = SUBSTRING(?, 11)`,
             [req.params.steamid]
         )
 

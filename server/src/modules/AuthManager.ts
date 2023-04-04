@@ -380,15 +380,6 @@ export default class AuthManager {
         this.groups = groups
         console.info(`Fetched ${Object.keys(admins).length} admins and ${Object.keys(groups).length} groups`)
         console.timeEnd("fetchAdmins")
-
-        // console.time('fetchavatars')
-        // const details = await this.steam.getUserDetails(Object.values(this.admins).map(s => new SteamID(s.identity)))
-        // for(const detail of details) {
-        //     const s = new SteamID(detail.steamid).getSteam2RenderedID()
-        //     console.log(`${s} -> ${detail.avatarhash}`)
-        //     await this.dbna.execute("UPDATE user_names SET avatar_hash = ? WHERE steamid = ?", [detail.avatarhash, s.slice(10)])
-        // }
-        // console.timeEnd('fetchavatars')
     }
 
     public getAdmins(fullAdmin: boolean = false) {
@@ -412,7 +403,7 @@ export default class AuthManager {
     public async setProvider(steamid: string, provider: OauthProvider, providerData: OauthProviderData, refreshToken: string = null) {
         if(providerData === null) {
             return await this.db.query<OkPacket>(
-                "DELETE FROM dash_providers WHERE steamid = ? AND provider = ?",
+                "DELETE FROM dash_providers WHERE SUBSTRING(steamid, 11) = SUBSTRING(?, 11) AND provider = ?",
                 [ steamid, provider ]
             )
         } else {
