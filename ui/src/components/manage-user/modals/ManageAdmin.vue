@@ -153,12 +153,14 @@
                 <button
                   :class="['button','is-small',{'is-info': form.privileges[service] == undefined}]"
                   @click="form.privileges[service] = null"
+                  :disabled="canApplyPrivilege(service) ? undefined : true"
                 >
                   None
                 </button>
                 <button v-for="priv in ServiceSupportedActions[service]" :key="priv"
                   :class="['button','is-small',{'is-info': form.privileges[service] == priv}]"
                   :data-tooltip="canApplyPrivilege(service, priv) ? null : 'You do not have this privilege'"
+                  :disabled="canApplyPrivilege(service, priv) ? undefined : true"
                   @click="form.privileges[service] = priv"
                 >
                   {{ ServicePrivilegeKeys[priv] }}
@@ -248,6 +250,7 @@ import { convertBitsArrayToInt, convertIntToBitsArray, } from '@/js/User';
 import { Tab, Tabs } from 'vue3-tabs-component'
 import { notify } from '@kyvg/vue3-notification';
 import { getRelDate, request } from '@/js/util';
+import { tsConstructSignatureDeclaration } from '@babel/types';
 
 const PrivilegeNames: string[] = Object.values(ServicePrivilege).filter(item => isNaN(Number(item))) as string[]
 const MIN_HOURS_PLAYTIME = 10
@@ -292,16 +295,13 @@ function reset() {
     immunity: props.userAdminData?.permissions.base.immunityLevel || 0,
     privileges: privileges.value
   }
-  // form.value = {
-  //   immunity: 0,
-  //   flags: [],
-  //   webFlags: [],
-  //   privileges: { ... privileges.value}
-  // }
 }
-function canApplyPrivilege(service: Service, privilege: ServicePrivilege) {
+function canApplyPrivilege(service: Service, privilege?: ServicePrivilege) {
   if(!canEdit.value) return false
-  return props.privUser.hasPrivilege(service, privilege)
+  // Require user to have admins.manage perm:
+  if(!props.privUser.hasPrivilege(Service.Admins, ServicePrivilege.Manage)) return
+  // Check if user has the permission they want to apply (they must have it to apply)
+  if(privilege) props.privUser.hasPrivilege(service, privilege)
 }
 let stats = ref<Record<string, string|number>|null>()
 let fetchError = ref("")
@@ -334,7 +334,7 @@ const policyFailures = computed(() => {
   return failures
 })
 const hasRoot = computed(() => {
-  return props.privUser.flags?.includes('z')
+  return canEdit.value && props.privUser.flags?.includes('z')
 })
 const hoursPlayed = computed(() => {
   if(!stats) return 0
