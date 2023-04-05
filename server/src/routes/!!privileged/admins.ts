@@ -36,8 +36,7 @@ interface AddonListEntry {
         deleted: boolean
         title: string,
         filesize: number,
-        // children: AddonChildListEntry[]
-    }, 
+    },
     shareInfo: Record<string, boolean>
 }
 

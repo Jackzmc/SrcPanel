@@ -142,7 +142,7 @@ export default class AuthManager {
         // possibly make optional:
         const steamid = this.getAdminById(id)
         if(steamid)
-            await this.db.execute<OkPacket>("DELETE FROM dash_perms WHERE SUBSTRING(steamid, 1!) = SUBSTRING(?, 11)", [steamid])
+            await this.db.execute<OkPacket>("DELETE FROM dash_perms WHERE SUBSTRING(steamid, 11) = SUBSTRING(?, 11)", [steamid])
             delete this.admins[id]
     }
 
