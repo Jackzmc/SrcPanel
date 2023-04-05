@@ -154,8 +154,10 @@ onBeforeUnmount(() => {
 
 watch(() => route.params.id, async (value) => {
   if(!value) return
-  if(route.query.returnTo) returnTo.value = decodeURIComponent(route.query.returnTo.toString())
-  if(route.query.returnTo) router.push({ query: { returnTo: route.query.returnTo.toString() }})
+  if(route.query.returnTo) {
+    returnTo.value = decodeURIComponent(route.query.returnTo.toString())
+    router.push({ query: { returnTo: route.query.returnTo.toString() }})
+  }
   await getUser()
 })
 </script>
