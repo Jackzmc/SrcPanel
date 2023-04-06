@@ -127,6 +127,7 @@ async function getAuth() {
 function onLogout() {
   window.localStorage.removeItem('srcds_userdata')
   userdata.value = undefined
+  privUser.value = undefined
 }
 
 onBeforeMount(async() => {
