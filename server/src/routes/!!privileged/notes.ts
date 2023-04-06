@@ -117,7 +117,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 [req.params.id]
             )
 
-            await req.user.log(existing[0].client, `%client% deleted note #%id% for %target%`, {
+            await req.user.log(existing[0].steamid, `%client% deleted note #%id% for %target%`, {
                 service: Service.Notes,
                 action: Action.Delete,
                 metadata: {
