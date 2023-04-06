@@ -32,7 +32,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         async handler(req: FastifyRequest<{ Body: POSTNotesType, Params: { steamid: string } }>, reply) {
             const [ok] = await fastify.db.execute<OkPacket>(`
                 INSERT INTO notes (steamid, markedBy, content)
-                VALUES (:content, :markedBy, :steamid)`,
+                VALUES (:steamid, :markedBy, :content)`,
                 {
                     content: req.body.content,
                     steamid: req.params.steamid,
