@@ -95,8 +95,6 @@
           :item-projection="projectUser"
           @onBlur="onUserSearchBlur('client', $event)"
         />
-        <!-- <input type="text" class="input" placeholder="Search for a client" v-model="filters.client" @change="fetchDebounce" /> -->
-        <p class="hint">Requires the user's steamid, not their name</p>
       </Field>
       <Field label="Search Target" icon-left="search">
         <SimpleTypeahead
@@ -108,8 +106,6 @@
           :item-projection="projectUser"
           @onBlur="onUserSearchBlur('target', $event)"
         />
-        <!-- <input type="text" class="input" placeholder="Search for a target" v-model="filters.target" @change="fetchDebounce" /> -->
-        <p class="hint">Requires the user's steamid, not their name</p>
       </Field>
       <Field label="Search Message" icon-left="search">
         <input type="text" class="input" placeholder="Search messages" v-model="filters.message" @change="fetchDebounce" />
@@ -202,7 +198,7 @@ const { notify } = useNotification();
 const REFRESH_INTERVAL = 60_000
 
 const DEFAULT_TYPES = ["ACTION", "CHAT", "INFO", "STATE", "QUIT", "JOIN"];
-const DEFAULT_SERVERS = ["main", "reserved", "web"];
+const DEFAULT_SERVERS = ["main", "reserved"];
 const DEFAULT_LIMIT = 30
 
 const FILTER_DATA: Record<string, Record<string, boolean | string>> = {
