@@ -3,6 +3,12 @@ import { OkPacket, RowDataPacket } from 'mysql2';
 import { Static, Type } from '@sinclair/typebox'
 import { Action, Service } from '../../../../common-types/Privileges.js';
 
+const POSTNotes = Type.Object({
+    content: Type.String(),
+});
+
+type POSTNotesType = Static<typeof POSTNotes>;
+
 const PUTNotes = Type.Object({
     markedBy: Type.String(),
     content: Type.String(),
@@ -11,7 +17,45 @@ const PUTNotes = Type.Object({
 type PUTNotesType = Static<typeof PUTNotes>;
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
-    
+    fastify.route({
+        url: '/:steamid', 
+        method: 'POST',
+        schema: {
+            body: {
+                type: 'object',
+                properties: {
+                    content: { type: 'string' },
+                    steamid: { type: 'string' },
+                }
+            }
+        },
+        async handler(req: FastifyRequest<{ Body: POSTNotesType, Params: { steamid: string } }>, reply) {
+            const [ok] = await fastify.db.execute<OkPacket>(`
+                INSERT INTO notes (steamid, markedBy, content)
+                VALUES (:content, :markedBy, :steamid)`,
+                {
+                    content: req.body.content,
+                    steamid: req.params.steamid,
+                    markedBy: req.user.steamid64
+                }
+            )
+
+
+            await req.user.log(req.params.steamid, `%client% created note #%id% for %target%`, {
+                service: Service.Notes,
+                action: Action.Edit,
+                metadata: {
+                    id: ok.insertId,
+                    content: req.body.content,
+                }
+            })
+
+            return {
+                id: ok.insertId,
+            }
+        }
+    })
+
     fastify.route({
         url: '/:id', 
         method: 'PUT',

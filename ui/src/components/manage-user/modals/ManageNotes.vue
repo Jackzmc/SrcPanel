@@ -84,7 +84,7 @@ function onNoteChange(data: any) {
 async function addNote() {
   loading.value = true
   try {
-    const response = await fetch(`/api/notes/user/${props.user.steamid}`, {
+    const response = await fetch(`/api/notes/${props.user.steamid}`, {
       method: "POST",
       headers: {
         'Content-Type': 'application/json'
