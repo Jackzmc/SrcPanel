@@ -76,7 +76,7 @@
                 <p><b>Raw Message: </b>{{ entry.message }}</p>
                 <template v-if="entry.metadata">
                   <p><b>Metadata: </b></p>
-                  <pre class="px-1 py-1 box"><code>{{ JSON.stringify(JSON.parse(entry.metadata), null, 2) }}</code></pre>
+                  <pre class="px-1 py-1 box"><code>{{ JSON.stringify(entry.metadata, null, 2) }}</code></pre>
                 </template>
               </div>
             </div>
@@ -117,7 +117,7 @@
       <Field>
         <label class="label">
           Enabled Types
-          <a class="is-inline" @click="filters.types = []">(Clear)</a>&nbsp;
+          <a class="is-inline" @click="filters.types = []; getParams()">(Clear)</a>&nbsp;
           <a @click="filters.types = Object.keys(FILTER_DATA.types)">(Select All)</a>
         </label>
         <div class="buttons">
@@ -132,8 +132,8 @@
       </Field>
       <Field>
         <label class="label">
-          Enabled Servers
-          <a class="is-inline" @click="filters.types = []">(Clear)</a>&nbsp;
+          Enabled Sources
+          <a class="is-inline" @click="filters.servers = []">(Clear)</a>&nbsp;
           <a @click="filters.servers = Object.keys(FILTER_DATA.servers)">(Select All)</a>
         </label>
         <div class="buttons has-addons">
@@ -289,18 +289,19 @@ function getFilterColor(filter: string, key: string) {
 }
 
 function getParams() {
+  if(!entries.value) return
   const searchParams = new URLSearchParams()
   searchParams.append('page', page.value.toString())
   searchParams.append('limit', limit.value.toString())
   for(const [filter, val] of Object.entries(filters.value)) {
     if(!val) continue
-    if(Array.isArray(val))
+    if(Array.isArray(val)) {
       searchParams.append(filter, val.join(","))
-    else
+    } else {
       searchParams.append(`search_${filter}`, val)
+    }
   }
-  if(now.value != undefined)
-    router.replace({ query: Object.fromEntries(searchParams) })
+  router.replace({ query: Object.fromEntries(searchParams) })
   return searchParams.toString()
 }
 
@@ -372,12 +373,15 @@ onBeforeMount(() => {
   if(page.value <= 0) page.value = 1
   for(const filter in FILTER_DATA) {
     let queryName = filter
+    console.log('filter', filter, queryName, '=', route.query[queryName])
     // Some query are prefixed with search_, so we check them:
-    if(!route.query[queryName]) queryName = `search_${queryName}`
-    if(route.query[queryName]) {
+    if(route.query[queryName] === undefined) queryName = `search_${queryName}`
+    if(route.query[queryName] !== undefined) {
       if(Array.isArray(filters.value[filter])) {
-        filters.value[filter] = (route.query[queryName] as string).split(/,+/g)
+        if(route.query[queryName] === "") filters.value[filter] = []
+        else filters.value[filter] = (route.query[queryName] as string).split(/,+/g)
       } else {
+        console.log('setting', filter, (route.query[queryName] as string))
         filters.value[filter] = route.query[queryName] as string
       }
     }

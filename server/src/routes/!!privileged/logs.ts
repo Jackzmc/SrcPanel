@@ -59,7 +59,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         const clientSearch = req.query.client ?? req.query.search_client
         const targetSearch = req.query.target ?? req.query.search_target
 
-        req.query.optimized = !clientSearch && !targetSearch && !searchMessage
+        req.query.optimized = !clientSearch && !targetSearch && !searchMessage && !req.query.servers?.includes("web")
         let countQuery = `SELECT COUNT(*) AS count from ${ACTIVITY_LOG_TABLE_NAME} `
         let query = `SELECT id, l.timestamp, server, type, client, target, message, metadata,
             s1.last_alias as clientName, s2.last_alias as targetName,
@@ -85,23 +85,27 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             const maxId = highestId - (2*limit * (page - 1))
             const minId = maxId - (2*limit)
             // We don't need to also fetch usernames from user_names as if there is a log entry they should always have an entry in statistics 
-            query += " WHERE id >= ? AND id <= ?"
+            query += " WHERE id >= ? AND id <= ? "
             // TODO:L Only use optimized when no filters are applied - optimization doens't work with them
             data.push(minId, maxId)
         }
 
 
-        if(req.query.servers) {
+        if(req.query.servers && req.query.servers !== "") {
             const servers = req.query.servers.split(",")
-            conditions.push(`server IN (${generateParams(servers.length)})`)
-            data = [ ...data, ...servers ]
-            countData = [ ...countData, ...servers ]
+            if(servers.length > 0) {
+                conditions.push(`server IN (${generateParams(servers.length)})`)
+                data = [ ...data, ...servers ]
+                countData = [ ...countData, ...servers ]
+            }
         }
-        if(req.query.types) {
+        if(req.query.types && req.query.types !== "") {
             const types = req.query.types.split(",")
-            conditions.push(`type IN (${generateParams(types.length)})`)
-            data = [ ...data, ...types ]
-            countData = [ ...countData, ...types ]
+            if(types.length > 0) {
+                conditions.push(`type IN (${generateParams(types.length)})`)
+                data = [ ...data, ...types ]
+                countData = [ ...countData, ...types ]
+            }
         }
         if(clientSearch && targetSearch) {
             conditions.push('(client = ? OR target = ?)')

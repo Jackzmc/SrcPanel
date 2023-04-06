@@ -6,7 +6,7 @@
       <span v-html="chatMessage" />
     </template>
     <template v-else>
-      <b v-if="LPieceCount == 0 && props.log.client.steamid"><UserComponent :user="props.log.client" type="client" @set-filter="setFilter" /></b>
+      <b v-if="LPieceCount == 0 && props.log.client.steamid"><UserComponent :user="props.log.client" type="client" @set-filter="setFilter" />&nbsp;</b>
       <b v-else-if="LPieceCount == 0 && !props.log.client.steamid && props.log.target.steamid"><UserComponent type="target" :user="props.log.target" @set-filter="setFilter" /></b>
       <template v-for="m in messagePieces" :key="m">
         <b v-if="m.LMatch">
