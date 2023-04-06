@@ -121,7 +121,9 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 service: Service.Notes,
                 action: Action.Delete,
                 metadata: {
-                    id: req.params.id
+                    id: req.params.id,
+                    markedBy: existing[0].markedBy,
+                    content: existing[0].content
                 }
             })
 

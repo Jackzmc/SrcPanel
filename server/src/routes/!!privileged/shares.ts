@@ -264,7 +264,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                             entry: detail.publishedfileid,
                             message: `Downloaded <a href="https://steamcommunity.com/sharedfiles/filedetails/?id=${detail.publishedfileid}"><b>${detail.title}</b></a> (${humanFileSize(detail.file_size)})`
                         })
-                        await req.user.log(null, `downloaded workshop addon \"${detail.title}\" (${detail.publishedfileid})`, {
+                        await req.user.log(null, `downloaded workshop addon \"%title%\" (%filename%) for %share%`, {
                             service: Service.Addons,
                             action: Action.Edit,
                             metadata: {
@@ -298,7 +298,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                                 destResults[destKey][detail.publishedfileid] = { 
                                     result: "success"
                                 }
-                                await req.user.log(null, `enabled addon ${detail.publishedfileid} for ${destKey}`, {
+                                await req.user.log(null, `enabled addon %filename% for "%share/%server"`, {
                                     service: Service.Addons,
                                     action: Action.Edit,
                                     metadata: {
@@ -362,7 +362,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         if(addonInfo) {
             try {
                 await share.install(req.params.filename, req.params.destKey)
-                await req.user.log(null, `enabled addon ${addonInfo.filename} for ${req.params.destKey}`, {
+                await req.user.log(null, `enabled addon "%filename%" for "%share%/%server%"`, {
                     service: Service.Addons,
                     action: Action.Edit,
                     metadata: {
@@ -410,7 +410,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         if(addonInfo) {
             try {
                 await share.uninstall(req.params.filename, req.params.destKey)
-                await req.user.log(null, `disabled addon ${addonInfo.filename} for ${req.params.destKey}`, {
+                await req.user.log(null, `disabled addon "%filename%" for "%share%/%server%"`, {
                     service: Service.Addons,
                     action: Action.Edit,
                     metadata: {
