@@ -1,11 +1,5 @@
 <template>
 <div class="list-item">
-  <!-- <div class="list-item-image">
-    <figure class="image is-48x48">
-      <img class="is-rounded" :src="entry.activator.avatarUrl">
-    </figure>
-  </div> -->
-
   <div class="list-item-content">
     <div class="list-item-title">
       <template v-if="edit">
@@ -25,7 +19,7 @@
         <label class="label">Content:</label>
         <input type="text" class="input" v-model="edit.content" />
       </template>
-      <span v-else-if="canEdit" :class="note.content.startsWith('@') ? 'tag is-dark' : ''" :data-tooltip="note.content.startsWith('@') ? 'Is an automatic action' : undefined">
+      <span :class="note.content.startsWith('@') ? 'tag is-dark' : ''" :data-tooltip="note.content.startsWith('@') ? 'Is an automatic action' : undefined">
         {{ note.content }}
       </span>
       </div>
@@ -48,7 +42,7 @@
         </button>
       </span>
       <template v-else>
-        <button class="button is-inverted is-outlined is-black" @click="startEdit">
+        <button class="button is-inverted is-outlined is-black" @click="startEdit" v-if="canEdit">
           <Icon icon-class="is-small has-text-black" icon="edit" />
         </button>
       </template>
