@@ -269,7 +269,7 @@ async function fetchNotes() {
           }
         }
       } else if(note.content === "-rep")  {
-        rating.value.thumbsUp--
+        rating.value.thumbsDown++
         if(note.markedBy.id === props.privUser.id) {
           rating.value.mine = {
             id: note.id,
