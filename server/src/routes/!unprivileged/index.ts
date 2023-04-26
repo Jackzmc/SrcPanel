@@ -89,7 +89,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             },
             rating: {
                 key,
-                value: ratings
+                value: ratings.toFixed(2)
             }
         })
     })
