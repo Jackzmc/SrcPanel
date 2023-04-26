@@ -17,6 +17,8 @@
         "teamplayer": 4,
         "insufferable": -5,
         "ff": -2,
-        "friendlyfire": -2
+        "friendlyfire": -2,
+        "+rep": 5,
+        "-rep": -5
     }
 }
