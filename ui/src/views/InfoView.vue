@@ -119,10 +119,6 @@ const notesCount = computed(() => {
   else return totalNotesCount.value
 })
 
-const POSITIVE_WORDS = ["good", "great", "decent", "amazing", "helpful", "yes"]
-const CAUTION_WORDS = ["ok", "alright", "noob", "new", "noobs", "no", "burned", "dumb", "suspicious", "nooby", "tried", "threw", "tossed", "waste", "waster", "meh"]
-const NEGATIVE_WORDS = ["troll", "teamkiller", "tk", "tker", "bad", "stupid", "annoying", "lit", "sucks", "unhelpful", "spam", "rushes", "rusher", "dick", "asshole", "cunt"]
-
 const filteredNotes = computed(() => {
   if(!notes.value) return []
   if(!hasSearchQuery) return notes.value
@@ -189,30 +185,6 @@ function computeRating(content: string) {
   else if(score <= -2) key = "negative"
   else if(score != 0) key = "neutral"
   return { key, value: score }
-
-  let obj = {
-    positive: 0, neutral: 0, negative: 0
-  }
-  for(let word of content.split(" ")) {
-    word = word
-    if(POSITIVE_WORDS.includes(word)) obj.positive++
-    else if(CAUTION_WORDS.includes(word)) obj.neutral++
-    else if(NEGATIVE_WORDS.includes(word)) obj.negative++
-  }
-  const highest = getHighest(obj)
-  if(highest.value <= 0) return null
-  return highest
-}
-
-function getHighest(obj: Record<string, number>) {
-  let curKey: string|null = null, curVal = -1
-  for(const [key, val] of Object.entries(obj)) {
-    if(val > curVal || !curKey) {
-      curKey = key;
-      curVal = val;
-    }
-  }
-  return { key: curKey, value: curVal }
 }
 
 function fetchAdmins() {
