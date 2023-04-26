@@ -40,16 +40,16 @@
         </p>
       </div>
       <div class="level-right">
-        <p class="level-item">
+        <p class="level-item has-tooltip-left has-tooltip-success" data-tooltip="Rate this player as good/helpful/friendly">
           <a @click="setRating(1)"
-            :class="['button', {'is-active': rating.mine?.value === 1, 'is-loading': rating.loading }]"
+            :class="['button', {'is-active': rating.mine?.value === 1, 'is-loading': rating.loading, 'is-success': rating.mine?.value === 1 }]"
           >
             <Icon icon="fa-thumbs-up" button>{{ rating.thumbsUp }}</Icon>
           </a>
         </p>
-        <p class="level-item">
+        <p class="level-item has-tooltip-left has-tooltip-danger"  data-tooltip="Rate this player as bad/unfriendly">
           <a @click="setRating(-1)"
-            :class="['button', {'is-active': rating.mine?.value === -1, 'is-loading': rating.loading }]"
+            :class="['button', {'is-active': rating.mine?.value === -1, 'is-loading': rating.loading, 'is-danger': rating.mine?.value === -1  }]"
           >
             <Icon icon="fa-thumbs-down" button>{{ rating.thumbsDown }}</Icon>
           </a>
