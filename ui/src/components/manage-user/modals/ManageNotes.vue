@@ -261,7 +261,6 @@ async function fetchNotes() {
     for(const note of json.notes) {
       if(note.content === "+rep") {
         rating.value.thumbsUp++
-        console.log(note.markedBy, props.privUser.id, note.markedBy.id === props.privUser.id)
         if(note.markedBy.id.slice(10) === props.privUser.id.slice(10)) {
           rating.value.mine = {
             id: note.id,

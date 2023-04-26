@@ -1,4 +1,3 @@
-import { onBeforeMount } from 'vue';
 <template>
   <div :class="['modal',{'is-active': active}]">
     <div class="modal-background"></div>
