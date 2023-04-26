@@ -30,9 +30,31 @@
       <p v-else class="has-text-danger">You lack the permissions to add notes</p>
       <br>
     </div>
-    <div class="mb-5">
-      <p v-if="notes.length > 0"><a class="button" :disabled="canAddNote ? undefined : true" @click="startNewNote"><Icon icon-class="has-text-success" icon="fa-note-sticky" button>New Note</Icon></a></p>
-      <p class="has-text-danger" v-if="!canAddNote">You do not have the permission to add notes</p>
+    <div class="mb-5 level">
+      <div class="level-left">
+        <p v-if="notes.length > 0" class="level-item">
+          <a class="button has-tooltip-danger has-tooltip-right" @click="startNewNote"
+            :disabled="canAddNote ? undefined : true"
+            :data-tooltip="canAddNote ? undefined : 'You lack the permissions to add notes'"
+          ><Icon icon-class="has-text-success" icon="fa-note-sticky" button>New Note</Icon></a>
+        </p>
+      </div>
+      <div class="level-right">
+        <p class="level-item">
+          <a @click="setRating(1)"
+            :class="['button', {'is-active': rating.mine?.value === 1, 'is-loading': rating.loading }]"
+          >
+            <Icon icon="fa-thumbs-up" button>{{ rating.thumbsUp }}</Icon>
+          </a>
+        </p>
+        <p class="level-item">
+          <a @click="setRating(-1)"
+            :class="['button', {'is-active': rating.mine?.value === -1, 'is-loading': rating.loading }]"
+          >
+            <Icon icon="fa-thumbs-down" button>{{ rating.thumbsDown }}</Icon>
+          </a>
+        </p>
+      </div>
     </div>
     <div class="list has-visible-pointer-controls has-hoverable-list-items">
       <NoteComponent v-for="(note, i) in notes" :key="note.id" :note="note" :priv-user="privUser" @deleted="notes.splice(i, 1)" @change="onNoteChange" />
@@ -54,6 +76,14 @@ import { Action, Service } from '../../../../../common-types/Privileges';
 let notes = ref<Note[]>([])
 let loading = ref(false)
 let newNote = ref()
+let rating = ref<{
+  thumbsUp: number, thumbsDown: number, mine?: { id: string, value: number}, loading: boolean
+}>({
+  thumbsUp: 0,
+  thumbsDown: 0,
+  mine: undefined,
+  loading: false
+})
 
 const props = defineProps<{
   user: PlayerData,
@@ -79,6 +109,105 @@ function onNoteChange(data: any) {
       break
     }
   }
+}
+
+//spaghetti
+async function setRating(value: number) {
+  rating.value.loading = true
+  if(rating.value.mine) {
+    if(rating.value.mine.value !== value) {
+      try {
+        const response = await fetch(`/api/notes/${rating.value.mine.id}`, {
+          method: "PUT",
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            content: value == 1 ? "+rep" : "-rep"
+          })
+        })
+
+        const json = await response.json()
+        if(response.ok) {
+          loading.value = true
+          // Lazy, fetch all again:
+          await fetchNotes()
+          loading.value = false
+        } else {
+          notify({
+            type: "error",
+            text: json.message,
+            title: "Could not change rating"
+          })
+        }
+      } catch(err: any) {
+        notify({
+          type: "error",
+          text: err.message,
+          title: "Could not change rating"
+        })
+      }
+    } else {
+      try {
+        const response = await fetch(`/api/notes/${rating.value.mine.id}`, {
+          method: "DELETE",
+        })
+
+        const json = await response.json()
+        if(response.ok) {
+          loading.value = true
+          // Lazy, fetch all again:
+          await fetchNotes()
+          loading.value = false
+        } else {
+          notify({
+            type: "error",
+            text: json.message,
+            title: "Could not remove rating"
+          })
+        }
+      } catch(err: any) {
+        notify({
+          type: "error",
+          text: err.message,
+          title: "Could not remove rating"
+        })
+      }
+    }
+  } else {
+    try {
+      const response = await fetch(`/api/notes/${props.user.steamid}`, {
+        method: "POST",
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          content: value == 1 ? "+rep" : "-rep"
+        })
+      })
+
+      const json = await response.json()
+      if(response.ok) {
+        loading.value = true
+        // Lazy, fetch all again:
+        await fetchNotes()
+        loading.value = false
+      } else {
+        notify({
+          type: "error",
+          text: json.message,
+          title: "Could not submit rating"
+        })
+      }
+    } catch(err: any) {
+      notify({
+        type: "error",
+        text: err.message,
+        title: "Could not submit rating"
+      })
+    }
+  }
+  rating.value.loading = false
 }
 
 async function addNote() {
@@ -123,6 +252,33 @@ async function fetchNotes() {
   const json = await response.json()
   if(response.ok) {
     notes.value = json.notes
+    rating.value = {
+      thumbsUp: 0,
+      thumbsDown: 0,
+      mine: undefined,
+      loading: false
+    }
+    for(const note of json.notes) {
+      if(note.content === "+rep") {
+        rating.value.thumbsUp++
+        console.log(note.markedBy, props.privUser.id, note.markedBy.id === props.privUser.id)
+        if(note.markedBy.id === props.privUser.id) {
+          rating.value.mine = {
+            id: note.id,
+            value: 1
+          }
+        }
+      } else if(note.content === "-rep")  {
+        rating.value.thumbsUp--
+        if(note.markedBy.id === props.privUser.id) {
+          rating.value.mine = {
+            id: note.id,
+            value: -1
+          }
+        }
+      }
+
+    }
     loading.value = false
   } else {
     notify({
