@@ -64,10 +64,21 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         )
 
         let ratings = 0, key: string = null
+        let reputation = { thumbsUp: 0, thumbsDown: 0, sum: 0, total: 0 }
         if(notes.length > 0 && !fastify.authmngr.isAdmin(req.params.steamid)) {
             let totalRatings = 0
 
             for(const note of notes) {
+                if(note.content === "+rep") {
+                    reputation.thumbsUp++
+                    reputation.sum += 1
+                    reputation.total++
+                } else if(note.content === "-rep") {
+                    reputation.thumbsDown++
+                    reputation.sum -= 1
+                    reputation.total++
+                }
+
                 const rating = computeRating(note.content)
                 if(rating.value == 0) continue;
                 ratings += rating.value
@@ -89,8 +100,9 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             },
             rating: {
                 key,
-                value: ratings.toFixed(2)
-            }
+                value: Number(ratings.toFixed(2))
+            },
+            reputation
         })
     })
 

@@ -1,8 +1,9 @@
 <template>
 <section>
+  <h5 class="title is-5">Player Statistics</h5>
   <div class="container has-text-centered" v-if="!info">
     <br>
-    <p class="has-text-danger" v-if="statsFailure">{{ statsFailure }}</p>
+    <p class="has-text-danger" v-if="statsFailure"><b>Error:</b> {{ statsFailure }}</p>
     <Icon icon="spinner" spin v-else>Fetching player statistics... please wait</Icon>
     <br>
   </div>
@@ -73,7 +74,31 @@
       </div>
     </div>
   </template>
-
+  <br>
+  <h5 class="title is-5">Player Analysis</h5>
+  <div class="container has-text-centered" v-if="!analysis">
+    <br>
+    <p class="has-text-danger" v-if="analysisFailure"><b>Error:</b> {{ analysisFailure }}</p>
+    <Icon icon="spinner" spin v-else>Fetching player analysis... please wait</Icon>
+    <br>
+  </div>
+  <div class="level" v-else>
+    <div class="level-item has-text-centered">
+      <div class="field">
+        <label class="label">Reputation</label>
+        {{ analysis.rating.key }}
+        <span :class="{'has-text-success' : analysis.rating.value > 0, 'has-text-danger': analysis.rating.value < 0 }">
+          ({{analysis.rating.value.toLocaleString()}})
+        </span>
+      </div>
+    </div>
+    <div class="level-item has-text-centered">
+      <div class="field">
+        <label class="label">Ratings</label>
+        <span>{{analysis.reputation.sum.toLocaleString()}}</span>
+      </div>
+    </div>
+  </div>
   <br>
 
   <ul class="content is-medium">
@@ -101,6 +126,8 @@ const props = defineProps<{
   user: PlayerData
 }>()
 
+let analysis = ref()
+let analysisFailure = ref<string>()
 let statsFailure = ref<string|undefined>()
 
 
@@ -114,6 +141,32 @@ const playtime = computed(() => {
   return "< 0"
 })
 
+async function fetchAnalysis() {
+  try {
+    const response = await fetch(`/api/analyze/${props.user.steamid}`)
+    const json = await response.json()
+    if(response.ok) {
+      analysis.value = json
+      if(json.not_found) {
+        analysisFailure.value = "No statistics found for user"
+      }
+    } else {
+      analysisFailure.value = json.message ?? json.error
+      notify({
+        type: "error",
+        title: 'Error fetching player analysis',
+        text: json.message ?? json.error
+      })
+    }
+  } catch(err: any) {
+    analysisFailure.value = err.message
+    notify({
+      type: "error",
+      title: 'Error fetching player analysis',
+      text: err.message
+    })
+  }
+}
 async function fetchInfo() {
   try {
     const response = await fetch(`https://stats.jackz.me/api/user/${props.user.steamid}`)
@@ -127,7 +180,7 @@ async function fetchInfo() {
       statsFailure.value = json.message ?? json.error
       notify({
         type: "error",
-        title: 'Could Not Fetch User Info',
+        title: 'Error fetching player statistics',
         text: json.message ?? json.error
       })
     }
@@ -135,13 +188,16 @@ async function fetchInfo() {
     statsFailure.value = err.message
     notify({
       type: "error",
-      title: 'Could Not Fetch User Info',
+      title: 'Error fetching player statistics',
       text: err.message
     })
   }
 }
 
 onBeforeMount(async () => {
-  await fetchInfo()
+  Promise.allSettled([
+    fetchInfo(),
+    fetchAnalysis()
+  ])
 })
 </script>
