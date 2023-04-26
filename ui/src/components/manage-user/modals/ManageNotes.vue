@@ -262,7 +262,7 @@ async function fetchNotes() {
       if(note.content === "+rep") {
         rating.value.thumbsUp++
         console.log(note.markedBy, props.privUser.id, note.markedBy.id === props.privUser.id)
-        if(note.markedBy.id === props.privUser.id) {
+        if(note.markedBy.id.slice(10) === props.privUser.id.slice(10)) {
           rating.value.mine = {
             id: note.id,
             value: 1
@@ -270,7 +270,7 @@ async function fetchNotes() {
         }
       } else if(note.content === "-rep")  {
         rating.value.thumbsDown++
-        if(note.markedBy.id === props.privUser.id) {
+        if(note.markedBy.id.slice(10) === props.privUser.id.slice(10)) {
           rating.value.mine = {
             id: note.id,
             value: -1
