@@ -57,7 +57,7 @@
       </div>
     </div>
     <div class="list has-visible-pointer-controls has-hoverable-list-items">
-      <NoteComponent v-for="(note, i) in notes" :key="note.id" :note="note" :priv-user="privUser" @deleted="notes.splice(i, 1)" @change="onNoteChange" />
+      <NoteComponent v-for="(note, i) in notes" :key="note.id" :note="note" :priv-user="privUser" @deleted="notes.splice(i, 1)" @change="fetchNotes" />
     </div>
     <br>
   </template>
@@ -97,17 +97,6 @@ const canAddNote = computed(() => {
 function startNewNote() {
   newNote.value = {
     content: null
-  }
-}
-
-function onNoteChange(data: any) {
-  if(!data.id) return
-  for(const note of notes.value) {
-    if(note.id === data.id) {
-      note.content = data.content
-      note.markedBy = data.markedBy
-      break
-    }
   }
 }
 
