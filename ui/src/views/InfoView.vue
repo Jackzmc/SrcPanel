@@ -9,7 +9,7 @@
         <p class="subtitle is-=6">
           The ID column shows the id of the note, with the rating of the note's message.
         </p>
-        <Pagination :page="page" :limit="limit" :count="notesCount" @page="setPage"></pagination>
+        <Pagination :page="page" :limit="limit" :count="totalNotesCount" @page="setPage"></pagination>
 
         <table class="table is-fullwidth">
           <thead>
@@ -49,7 +49,7 @@
             </tr>
           </tbody>
         </table>
-        <Pagination :page="page" :limit="limit" :count="notesCount" @page="setPage"></pagination>
+        <Pagination :page="page" :limit="limit" :count="totalNotesCount" @page="setPage"></pagination>
       </div>
       <div class="column" v-else-if="fetchError">
         <p class="my-5 is-size-2 has-text-centered has-text-danger">{{ fetchError }}</p>
