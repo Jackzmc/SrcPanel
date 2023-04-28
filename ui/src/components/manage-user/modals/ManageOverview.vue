@@ -86,10 +86,13 @@
     <div class="level-item has-text-centered">
       <div class="field">
         <label class="label">Reputation</label>
-        {{ analysis.rating.key }}
-        <span :class="{'has-text-success' : analysis.rating.value > 0, 'has-text-danger': analysis.rating.value < 0 }">
-          ({{analysis.rating.value.toLocaleString()}})
-        </span>
+        <template v-if="analysis.rating.key">
+          {{ analysis.rating.key }}
+          <span :class="{'has-text-success' : analysis.rating.value > 0, 'has-text-danger': analysis.rating.value < 0 }">
+            ({{analysis.rating.value.toLocaleString()}})
+          </span>
+        </template>
+        <em v-else>no data</em>
       </div>
     </div>
     <div class="level-item has-text-centered">

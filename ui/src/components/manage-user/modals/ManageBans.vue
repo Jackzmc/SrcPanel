@@ -357,7 +357,7 @@ async function save() {
         executor: edited.value.executorId,
         reason: edited.value.reason,
         flags: edited.value.flags,
-        public_reason: edited.value.publicReason,
+        public_message: edited.value.publicReason,
         expires: ban.value.expires
       })
     })
