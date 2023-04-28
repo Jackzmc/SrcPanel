@@ -112,4 +112,8 @@ export default class User {
     async getSessions() {
         return await this.authmngr.getSessions(this.steamid64)
     }
+
+    async getApiKey() {
+        return this.authmngr.getAPIKeyForUser(this.steamid64)
+    }
 }

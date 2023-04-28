@@ -280,6 +280,14 @@ export default class AuthManager {
         return apikey
     }
 
+    public async getAPIKeyForUser(steamid: string) {
+        const [rows] = await this.db.execute<RowDataPacket[]>(
+            "SELECT * FROM dash_apikeys WHERE SUBSTRING(steamid, 11) = SUBSTRING(?, 11)",
+            [ steamid ]
+        )
+        return rows.length > 0 ? rows[0] : null
+    }
+
     public async fetchAdmins() { 
         console.info("Fetching admins...")
         console.time("fetchAdmins")

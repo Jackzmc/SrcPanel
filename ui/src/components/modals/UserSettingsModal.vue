@@ -73,6 +73,13 @@
               </OauthProviderCard>
             </div>
           </Tab>
+          <Tab name="Developer">
+            <h4 class="title is-4">API Key</h4>
+            <p class="subtitle is-6">You have not created an API Key</p>
+
+            <input type="text" class="input" readonly v-if="api.key" v-model="api.key">
+            <a :class="['button','is-info',{'is-loading': api.loading }]" v-else>Create API Key</a>
+          </Tab>
         </Tabs>
       </section>
       <footer class="modal-card-foot">
@@ -111,6 +118,10 @@ const intl = new Intl.DisplayNames(["en"], { type: "region" });
 
 let loading = ref(false)
 let sessions = ref<SessionData[]>([]);
+let api = ref({
+  key: null,
+  loading: false
+})
 let currentSessionId = ref<string>();
 
 async function fetchSessions() {
@@ -123,6 +134,26 @@ async function fetchSessions() {
     sessions.value = json.sessions;
   }
 }
+async function fetchDeveloperData() {
+  api.value.loading = true
+  const response = await request("/api/auth/developer");
+  api.value.loading = false
+  if (response?.ok) {
+    const json = await response.json();
+    api.value.key = json.apikey
+  }
+}
+
+async function createApiKey() {
+  api.value.loading = true
+  const response = await request("/api/auth/developer", { method: "POST" });
+  api.value.loading = false
+  if (response?.ok) {
+    const json = await response.json();
+    api.value.key = json.apikey
+  }
+}
+
 async function revokeSession(id: string, i: number) {
   const response = await request(
     `/api/auth/sessions/${id}`,

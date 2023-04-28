@@ -235,16 +235,6 @@ const routes = [
     },
   },
   {
-    name: 'admin-settings',
-    path: '/user/settings',
-    component: () => import(/* webpackChunkName: 'sessions' */ '../views/user/SettingsView.vue'),
-    meta: {
-      title: 'User Settings',
-      description: null,
-      authRequired: true
-    }
-  },
-  {
     name: 'panel-dash',
     path: '/panel/dashboard',
     component: () => import(/* webpackChunkName: 'paneladmin' */ '../views/panel-admin/Dashboard.vue'),
