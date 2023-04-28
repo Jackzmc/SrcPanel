@@ -10,6 +10,7 @@ import SteamID from "steamid";
 import FastGeoip from 'fast-geoip';
 import { SESSION_VERSION } from '../routes/auth/steam.js';
 import SteamAPI from "./steam.js";
+import crypto from 'crypto'
 
 interface AddAdmin {
     authtype: "steam" | "name" | "ip",
@@ -23,8 +24,8 @@ interface AddAdmin {
 }
 
 interface APIKey {
-    uuid: string,
-    adminId: number,
+    id: string,
+    steamid: string,
     perms: number,
     created: number,
     lastUsed: number
@@ -263,42 +264,57 @@ export default class AuthManager {
         return id
     }
 
-    public async getAPIKey(uuid: string) {
-        let apikey = this.apikeysCache.get(uuid)
+    public async getAPIKey(id: string): Promise<APIKey> {
+        let apikey = this.apikeysCache.get(id)
         if(!apikey) {
-            const [rows] = await this.db.execute<RowDataPacket[]>(`SELECT * FROM dash_apikeys WHERE uuid = ?`, [uuid])
+            const [rows] = await this.db.execute<RowDataPacket[]>(`SELECT * FROM dash_apikeys WHERE id = ?`, [id])
             if(rows.length == 0) return null
             apikey = {
-                uuid: rows[0].uuid,
-                adminId: rows[0].adminId,
+                id: rows[0].id,
+                steamid: rows[0].steamid,
                 perms: rows[0].perms,
                 created: rows[0].created,
                 lastUsed: rows[0].lastUsed
             }
-            this.apikeysCache.set(uuid, apikey)
+            this.apikeysCache.set(id, apikey)
         }
         return apikey
     }
 
-    public async getAPIKeyForUser(steamid: string) {
+    public async getAPIKeyForUser(steamid: string): Promise<APIKey> {
         const [rows] = await this.db.execute<RowDataPacket[]>(
             "SELECT * FROM dash_apikeys WHERE SUBSTRING(steamid, 11) = SUBSTRING(?, 11)",
             [ steamid ]
         )
-        return rows.length > 0 ? rows[0] : null
+        return rows.length > 0 ? {
+            id: rows[0].id,
+            steamid: rows[0].steamid,
+            perms: rows[0].perms,
+            created: rows[0].created,
+            lastUsed: rows[0].lastUsed
+         } : null
     }
 
-    public async createApiKey(steamid: string) {
+    public async createApiKey(steamid: string): Promise<APIKey> {
         await this.db.execute<OkPacket>(
             "DELETE FROM dash_apikeys WHERE SUBSTRING(steamid, 11) = SUBSTRING(?, 11)",
             [ steamid ]
         )
 
-        const [ok] = await this.db.execute<OkPacket>(
-            "INSERT INTO dash_apikeys (uuid, steamid, perms, created, lastUsed) VALUES (UUID(), ?, 0, UNIX_TIMESTAMP(), UNIX_TIMESTAMP())",
-            [ steamid ]
+        const id = crypto.randomBytes(32).toString('hex')
+        await this.db.execute<OkPacket>(
+            "INSERT INTO dash_apikeys (id, steamid, perms, created, lastUsed) VALUES (?, ?, 0, UNIX_TIMESTAMP(), UNIX_TIMESTAMP())",
+            [ id, steamid ]
         )
-        console.log(ok.insertId)
+
+        const created = Math.floor(Date.now() / 1000)
+        return {
+            id,
+            steamid,
+            created,
+            lastUsed: created,
+            perms: 0
+        }
     }
 
     public async fetchAdmins() { 

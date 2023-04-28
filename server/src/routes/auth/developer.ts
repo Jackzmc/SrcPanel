@@ -5,12 +5,15 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
     fastify.get('/', async(req, reply) => {
         return {
-            apikey: (await req.user.getApiKey()).uuid,
+            apikey: await req.user.getApiKey(),
             apps: {}
         }
     })
 
     fastify.post('/apikey', async (req, reply) => {
-        await req.user.regenerateApiKey()
+        const newApikey = await req.user.regenerateApiKey()
+        return {
+            apikey: newApikey
+        }
     })
 }

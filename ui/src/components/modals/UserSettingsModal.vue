@@ -77,8 +77,12 @@
             <h4 class="title is-4">Developer</h4>
 
             <p class="title is-5">API Key</p>
-            <template v-if="api.key">
-              <input type="text" class="input" readonly v-model="api.key">
+            <p class="subtitle is-6" v-if="api.data">
+              <b>Created: </b>{{ formatDate(api.data.created) }}
+              <span class="is-pulled-right"><b>Last Active: </b>{{ formatDate(api.data.lastUsed) }}</span>
+            </p>
+            <template v-if="api.data">
+              <input type="text" class="input" readonly v-model="api.data.id">
               <br>
               <a class="is-danger is-small" @click="createApiKey">regenerate</a>
             </template>
@@ -126,8 +130,8 @@ const intl = new Intl.DisplayNames(["en"], { type: "region" });
 
 let loading = ref(false)
 let sessions = ref<SessionData[]>([]);
-let api = ref({
-  key: null,
+let api = ref<{data: any, loading: boolean}>({
+  data: null,
   loading: false
 })
 let currentSessionId = ref<string>();
@@ -154,23 +158,23 @@ async function fetchDeveloperData() {
   api.value.loading = false
   if (response?.ok) {
     const json = await response.json();
-    api.value.key = json.apikey
+    api.value.data = json.apikey
   }
 }
 
 async function createApiKey() {
-  if(api.value.key) {
-    if(!prompt("Are you sure you want to regenerate your apikey? The existing key will no longer work")) {
+  if(api.value.data) {
+    if(!confirm("Are you sure you want to regenerate your apikey? The existing key will no longer work")) {
       return;
     }
   }
 
   api.value.loading = true
-  const response = await request("/api/auth/developer", { method: "POST" });
+  const response = await request("/api/auth/developer/apikey", { method: "POST" });
   api.value.loading = false
   if (response?.ok) {
     const json = await response.json();
-    api.value.key = json.apikey
+    api.value.data = json.apikey
   }
 }
 
