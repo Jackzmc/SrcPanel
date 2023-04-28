@@ -116,4 +116,8 @@ export default class User {
     async getApiKey() {
         return this.authmngr.getAPIKeyForUser(this.steamid64)
     }
+
+    async regenerateApiKey() {
+        return this.authmngr.createApiKey(this.steamid64)
+    }
 }

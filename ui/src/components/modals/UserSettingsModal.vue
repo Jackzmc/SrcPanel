@@ -6,7 +6,7 @@
         <button class="delete" aria-label="close" @click="close"></button>
       </header>
       <section class="modal-card-body">
-        <Tabs inner-wrapper-class="tabs" :options="{ useUrlFragment: false }">
+        <Tabs inner-wrapper-class="tabs" :options="{ useUrlFragment: false }" @changed="onTabChanged">
           <Tab name="Sessions">
             <h4 class="title is-4">
               Active Sessions
@@ -74,11 +74,19 @@
             </div>
           </Tab>
           <Tab name="Developer">
-            <h4 class="title is-4">API Key</h4>
-            <p class="subtitle is-6">You have not created an API Key</p>
+            <h4 class="title is-4">Developer</h4>
 
-            <input type="text" class="input" readonly v-if="api.key" v-model="api.key">
-            <a :class="['button','is-info',{'is-loading': api.loading }]" v-else>Create API Key</a>
+            <p class="title is-5">API Key</p>
+            <template v-if="api.key">
+              <input type="text" class="input" readonly v-model="api.key">
+              <br>
+              <a class="is-danger is-small" @click="createApiKey">regenerate</a>
+            </template>
+            <template v-else>
+              <p class="subtitle is-6">You have not created an API Key</p>
+
+              <a :class="['button','is-info',{'is-loading': api.loading }]" @click="createApiKey">Create API Key</a>
+            </template>
           </Tab>
         </Tabs>
       </section>
@@ -124,6 +132,12 @@ let api = ref({
 })
 let currentSessionId = ref<string>();
 
+function onTabChanged(selectedTab: any) {
+  if(selectedTab.tab.name === "Developer") {
+    fetchDeveloperData()
+  }
+}
+
 async function fetchSessions() {
   loading.value = true
   const response = await request("/api/auth/sessions");
@@ -145,6 +159,12 @@ async function fetchDeveloperData() {
 }
 
 async function createApiKey() {
+  if(api.value.key) {
+    if(!prompt("Are you sure you want to regenerate your apikey? The existing key will no longer work")) {
+      return;
+    }
+  }
+
   api.value.loading = true
   const response = await request("/api/auth/developer", { method: "POST" });
   api.value.loading = false

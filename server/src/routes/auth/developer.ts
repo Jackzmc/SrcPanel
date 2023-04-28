@@ -10,7 +10,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
     })
 
-    fastify.post('/apikey', async (rqe, reply) => {
-
+    fastify.post('/apikey', async (req, reply) => {
+        await req.user.regenerateApiKey()
     })
 }

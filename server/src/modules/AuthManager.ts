@@ -288,6 +288,19 @@ export default class AuthManager {
         return rows.length > 0 ? rows[0] : null
     }
 
+    public async createApiKey(steamid: string) {
+        await this.db.execute<OkPacket>(
+            "DELETE FROM dash_apikeys WHERE SUBSTRING(steamid, 11) = SUBSTRING(?, 11)",
+            [ steamid ]
+        )
+
+        const [ok] = await this.db.execute<OkPacket>(
+            "INSERT INTO dash_apikeys (uuid, steamid, perms, created, lastUsed) VALUES (UUID(), ?, 0, UNIX_TIMESTAMP(), UNIX_TIMESTAMP())",
+            [ steamid ]
+        )
+        console.log(ok.insertId)
+    }
+
     public async fetchAdmins() { 
         console.info("Fetching admins...")
         console.time("fetchAdmins")
