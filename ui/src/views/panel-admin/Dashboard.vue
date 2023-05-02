@@ -1,27 +1,30 @@
 <template>
 <div class="container">
-    <div class="columns">
-        <div class="column is-3">
-            <h4 class="title is-4">Admin Panel Control</h4>
-            <p>{{ serverHealth.currentState }}</p>
-            <p>{{ uptime }} uptime</p>
-            <p>Node.JS Version {{serverHealth?.versions?.node}}</p>
-            <br>
-            <a
-                :disabled="canUpdate"
-                :class="['button', {'is-loading': updateStatus.state === 'CHECKING'}]"
-                @click="updateServer">
-                Update Server
-            </a>
-            <p class="has-text-danger" v-if="updateStatus.error">{{updateStatus.error}}</p>
-            <p class="has-text-info" v-else-if="updateStatus.upToDate">Server is already up to date.</p>
-            <p class="has-text-success" v-else-if="updateStatus.state === 'SUCCESS'">Server has been updated successfully.</p>
-        </div>
-        <div class="column is-5">
-          <ConfigEditor />
-        </div>
-    </div>
-    <SharesEditor />
+  <Tabs  inner-wrapper-class="tabs" :options="{useUrlFragment:false}">
+    <Tab name="Overview">
+      <h4 class="title is-4">Admin Panel Control</h4>
+          <p>{{ serverHealth.currentState }}</p>
+          <p>{{ uptime }} uptime</p>
+          <p>Node.JS Version {{serverHealth?.versions?.node}}</p>
+          <br>
+          <a
+              :disabled="canUpdate"
+              :class="['button', {'is-loading': updateStatus.state === 'CHECKING'}]"
+              @click="updateServer">
+              Update Server
+          </a>
+          <p class="has-text-danger" v-if="updateStatus.error">{{updateStatus.error}}</p>
+          <p class="has-text-info" v-else-if="updateStatus.upToDate">Server is already up to date.</p>
+          <p class="has-text-success" v-else-if="updateStatus.state === 'SUCCESS'">Server has been updated successfully.</p>
+    </Tab>
+    <Tab name="Config">
+      <ConfigEditor />
+    </Tab>
+    <Tab name="Shares">
+      <SharesEditor />
+    </Tab>
+  </Tabs>
+  <br>
 </div>
 </template>
 
@@ -35,6 +38,8 @@ import { UserData } from "../../../../common-types/User";
 import { HealthReport, UpdateState } from "../../../../server/src/routes/!!privileged/admin";
 import ConfigEditor from "@/components/panel-admin/ConfigEditor.vue";
 import SharesEditor from "@/components/panel-admin/SharesEditor.vue";
+//@ts-ignore
+import { Tab, Tabs } from 'vue3-tabs-component'
 
 const POLL_SERVER_HEALTH_INTERVAL = 1000 * 60 * 0.5
 
