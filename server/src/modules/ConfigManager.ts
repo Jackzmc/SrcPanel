@@ -2,6 +2,10 @@ import sqlite3 from 'sqlite3'
 import sqlite, { open } from 'sqlite'
 import SQL from 'sql-template-strings';
 import { join } from 'path';
+import { mkdir, readFile, stat, writeFile } from 'fs/promises';
+import Json5 from 'json5'
+import { ShareDestination, ShareInfo } from '../../../common-types/Share';
+import Share from './Share';
 
 export interface KeyConfig {
     public?: boolean,
@@ -28,8 +32,10 @@ export default class ConfigManager {
     private db: sqlite.Database<sqlite3.Database, sqlite3.Statement>
     private _shares: ShareData[] = null
     private _servers: any[] = null
+    private dataDir: string
 
     public async Load(dataDir: string) {
+        this.dataDir = dataDir
         this.db = await open({
             filename: join(dataDir, "config.db"),
             driver: sqlite3.Database
@@ -84,32 +90,48 @@ export default class ConfigManager {
         return this._shares
     }
 
+    public async UpdateShare(share: Share) {
+        if(!share) throw new Error("share is null")
+        const content = await readFile('./config/config.json', 'utf-8')
+        let json = Json5.parse(content)
+        json[share.id] = share.export(false)
+        await writeFile('./config/config.json', Json5.stringify(json))
+    }
+
     public async RefreshShares() {
-        const shares = await this.db.all<any[]>(SQL`SELECT * FROM shares`)
-        const dests = await this.db.all<any[]>(SQL`SELECT * FROM share_dests`)
-
-        this._shares = shares.map((share: any) => {
-            let destinations = {}
-            for(const dest of dests) {
-                if(dest.share_id === share.id) {
-                    destinations[dest.id] = {
-                        name: dest.name,
-                        path: dest.path,
-                        serverIds: dest.server_ids?.split(",") ?? []
-                    }
-                }
+        const content = await readFile('./config/config.json', 'utf-8')
+        const config = Json5.parse(content)
+        if(!config.shares) {
+            return []
+        }
+        try {
+        await mkdir(join(this.dataDir, "shares"))
+        } catch(err) {
+            if(err.code !== "EEXIST") throw err
+        }
+        
+        let shares: Partial<ShareInfo>[] = []
+        for(const key in config.shares) {
+            const data = config.shares[key] as Partial<ShareInfo>
+            data.id = key
+            if(!data.sourceFolder) {
+                console.warn(`[Warn] Skipping share \"${key}\": Missing property 'sourceFolder' in config`)
+                continue
             }
+        
+            try {
+                await stat(data.sourceFolder)
+                shares.push(data)
+            } catch(err) {
+                console.warn(`Addon Share Directory "${key}" returned error: ${err}`)
+            }
+        }
+    
+        if(!config.addons["default"]) {
+            console.warn("Warn: No default share found (no key named \"default\")")
+        }
 
-            return {
-                id: share.id,
-                name: share.name,
-                sourceFolder: share.source_folder,
-                steamAppid: share.steam_appid,
-                allowedExts: share.valid_exts?.split(',') ?? [],
-                downloadSources: share.download_sources,
-                destinations
-            } as ShareData
-        })
+        return shares
     }
 
     public async GetPublicKeyvalues() {

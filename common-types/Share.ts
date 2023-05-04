@@ -5,7 +5,7 @@ export interface ShareData {
     sourceFolder: string,
     steamAppid?: number,
     allowedExts: string[],
-    downloadSources: DownloadSourceE,
+    downloadSources: DownloadSourceRecord,
     destinations: Record<string, ShareDestData>
 }
 
@@ -29,7 +29,7 @@ export interface ShareInfo {
     appid?: number,
     name: string,
     fileExts?: string[],
-    downloadSources?: Record<string, boolean>
+    downloadSources?: DownloadSourceRecord
 }
 
 export interface AddonInfo {
@@ -68,6 +68,7 @@ export const enum DownloadSourceE {
     DirectUpload = 1,
     SteamWorkshop = 2
 }
+export type DownloadSourceRecord = Partial<Record<DownloadSourceE, boolean>>
 
 export interface ChildWorkshopItem extends WorkshopItem {
     collection?: WorkshopCollectionInfo

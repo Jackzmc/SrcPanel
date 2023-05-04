@@ -87,7 +87,11 @@ export default class ServerManager {
     return this.addonShares[shareId.toLowerCase()]
   }
 
-  public get shares() { 
+  public get shares() {
+    return Object.values(this.addonShares).map(share => share.export())
+  }
+
+  public get shareIds() { 
     return Object.keys(this.addonShares)
   }
 
@@ -96,11 +100,11 @@ export default class ServerManager {
       await mkdir(join(this.dataDir, "shares"))
     } catch(_) {}
 
-    for(const key in config.addons) {
-      const data = config.addons[key] as Partial<ShareInfo>
+    for(const key in config.shares) {
+      const data = config.shares[key] as Partial<ShareInfo>
       data.id = key
       if(!data.sourceFolder) {
-        console.warn(`[Warn] Skipping addon share \"${key}\": Missing property 'sourceFolder' in config`)
+        console.warn(`[Warn] Skipping share \"${key}\": Missing property 'sourceFolder' in config`)
         continue
       }
 
@@ -123,23 +127,23 @@ export default class ServerManager {
               dest.serverIds = serverIds
             }
           } catch(err) {
-            console.warn(`[Warn] Addon Share "${key}" destination "${dest.id}" path is invalid: "${dest.path}"`, err)
+            console.warn(`[Warn] Share "${key}" destination "${dest.id}" path is invalid: "${dest.path}"`, err)
           }
           
         }
         const db = await open({
-          filename: join(this.dataDir, `shares/${key.toLowerCase()}_addons_cache.db`),
+          filename: join(this.dataDir, `shares/${key.toLowerCase()}_cache.db`),
           driver: sqlite3.Database
         })
         this.addonShares[key.toLowerCase()] = new Share(db, this.steam, data)
-        console.info(`Loaded addon share "${key}"`)
+        console.info(`Loaded share "${key}"`)
       } catch(err) {
-        console.warn(`Addon Share Directory "${key}" returned error: ${err}`)
+        console.warn(`Share Directory "${key}" returned error: ${err}`)
       }
     }
 
-    if(!config.addons["default"]) {
-      console.warn("Warn: No default addon share found (no key named \"default\")")
+    if(!config.shares["default"]) {
+      console.warn("Warn: No default share found (no key named \"default\")")
     }
   }
 

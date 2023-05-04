@@ -18,18 +18,18 @@
         <td><InlineEdit v-model="share.id" /></td>
         <td><InlineEdit v-model="share.name" /></td>
         <td><InlineEdit v-model="share.sourceFolder" /></td>
-        <td><InlineEdit v-model="share.appId" /></td>
+        <td><InlineEdit v-model="share.appid" /></td>
         <td>
           <span class="tags">
-            <span class="tag" v-for="(key) in share.allowedExts" :key="key">
+            <span class="tag" v-for="(key) in share.fileExts" :key="key">
               {{ key.replace(/_/, ' ') }}
             </span>
           </span>
         </td>
         <td>
           <span class="tags">
-            <span class="tag" v-for="(key) in getDownloadSources(share.downloadSources)" :key="key">
-              {{ key.replace(/_/, ' ') }}
+            <span class="tag" v-for="source in getDownloadSources(share.downloadSources)" :key="source">
+              {{ source.replace(/_/, ' ') }}
             </span>
           </span>
         </td>
@@ -70,19 +70,19 @@
 import { ref, onBeforeMount, onMounted } from 'vue';
 import { request } from '@/js/util';
 import InlineEdit from './InlineEdit.vue';
-import { DownloadSourceE } from '../../../../common-types/Share'
 
 let shares = ref()
 
 
-function getDownloadSources(sources: DownloadSourceE) {
-  const output = []
-  if(sources & DownloadSourceE.DirectUpload) output.push("Upload")
-  if(sources & DownloadSourceE.SteamWorkshop) output.push("Steam Workshop")
-  return output
+function getDownloadSources(sources: any) {
+  let enabled = []
+  for(const source of Object.keys(sources)) {
+    if(sources[source]) enabled.push(source)
+  }
+  return enabled
 }
 async function fetchShares() {
-  const response = await request("/api/panel/shares")
+  const response = await request("/api/shares?full=1")
   if(response?.ok) {
     const json = await response.json()
     shares.value = json.shares

@@ -1,5 +1,5 @@
 <template>
-<div class="container">
+<div class="container is-fluid">
   <Tabs  inner-wrapper-class="tabs" :options="{useUrlFragment:false}">
     <Tab name="Overview">
       <h4 class="title is-4">Admin Panel Control</h4>

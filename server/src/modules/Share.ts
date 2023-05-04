@@ -2,7 +2,7 @@ import { stat, readdir, unlink, symlink } from 'fs/promises';
 import { createWriteStream } from 'fs'
 import path from 'path'
 import SteamAPI from './steam.js';
-import { AddonCollectionInfo, AddonInfo, AddonWorkshopInfo, ChildWorkshopItem, ShareDestination, ShareInfo, WorkshopCollectionInfo, WorkshopItem } from '../../../common-types/Share.js'
+import { AddonCollectionInfo, AddonInfo, AddonWorkshopInfo, ChildWorkshopItem, DownloadSourceRecord, ShareDestination, ShareInfo, WorkshopCollectionInfo, WorkshopItem } from '../../../common-types/Share.js'
 import { exec } from 'child_process'
 import sqlite3 from 'sqlite3'
 import sqlite from 'sqlite'
@@ -10,15 +10,12 @@ import SQL from 'sql-template-strings';
 
 const DOWNLOAD_TIMEOUT = 1000 * 60 * 3
 
-
-export const DOWNLOAD_SOURCES = ["steam_workshop", "direct"] as const
-
-export type DownloadSource = typeof DOWNLOAD_SOURCES
+export type DownloadSource = "steam_workshop" | "direct"
 
 const WS_ITEMID_REGEX = new RegExp(/^(\d+).vpk$/)
 
 export default class Share {
-    public id: string
+    public _id: string
     public name: string
     public sourceFolder: string
     public destinations: Record<string, ShareDestination> = {}
@@ -27,16 +24,16 @@ export default class Share {
     private steam: SteamAPI
 
     private validExts?: string[]
-    private downloadSources: DownloadSource[] = []
+    private downloadSources: DownloadSourceRecord
 
     constructor(db: sqlite.Database<sqlite3.Database, sqlite3.Statement>, steam: SteamAPI, shareInfo: Partial<ShareInfo>) {
-        this.id = shareInfo.id
+        this._id = shareInfo.id
         this.db = db
         this.steam = steam
         this.name = shareInfo.name ?? shareInfo.id,
         this.sourceFolder = shareInfo.sourceFolder
         this.appId = shareInfo.appid
-        this._parseDownloadSources(shareInfo.downloadSources)
+        this.downloadSources = shareInfo.downloadSources || {}
         this.validExts = shareInfo.fileExts
         for(const dest of shareInfo.destinations) {
             this.destinations[dest.id] = dest
@@ -50,29 +47,20 @@ export default class Share {
         );`)
     }
 
-    private _parseDownloadSources(downloadSources?: Record<string, boolean>) {
-        if(downloadSources) {
-            for(const [src, enabled] of Object.entries(downloadSources)) {
-                if((DOWNLOAD_SOURCES as ReadonlyArray<string>).includes(src)) {
-                    if(enabled)
-                        this.downloadSources.push(src as unknown as DownloadSource) 
-                } else {
-                    console.log(`Share/${this.name}: Unknown download source ${src}`)
-                }
-            }
-        }
-    }
-
     public isExtAllowed(ext: string) {
         return this.validExts === undefined || this.validExts.includes(ext)
     }
 
     public get sources() {
-        return [...this.downloadSources]
+        return this.downloadSources
     }
 
     public get exts() {
         return this.validExts ? [...this.validExts] : null
+    }
+
+    public get id() {
+        return this._id
     }
 
     public createUploadStream(filename: string) {
@@ -305,6 +293,19 @@ export default class Share {
             lastModified: item.time_updated
         }, Share.serializeWorkshopItem(item), item.collection)
         return true
+    }
+
+    // Exports to a saveable object
+    public export(includeId = true): ShareInfo {
+        return {
+            id: includeId ? this.id : undefined, 
+            name: this.name,
+            sourceFolder: this.sourceFolder,
+            appid: this.appId,
+            downloadSources: this.downloadSources,
+            destinations: Object.values(this.destinations),
+            fileExts: this.validExts
+        }
     }
 }
 

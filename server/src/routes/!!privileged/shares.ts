@@ -27,9 +27,9 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     })
 
 
-    fastify.get('/', async(req, reply) => {
+    fastify.get('/', async(req: FastifyRequest<{Querystring: {full?: boolean}}>, reply) => {
         return {
-            shares: fastify.servers.shares
+            shares: req.query.full ? fastify.servers.shares : fastify.servers.shareIds
         }
     })
 
