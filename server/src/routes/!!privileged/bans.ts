@@ -113,7 +113,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 message: "The steamid is invalid"
             })
         }
-        if(this.authmngr.isAdmin(req.params.steamid)) {
+        if(fastify.authmngr.isAdmin(req.params.steamid)) {
             return reply.status(403).send({
                 error: "IS_ADMIN",
                 message: "Cannot ban a user with privileges, revoke the privileges first"
