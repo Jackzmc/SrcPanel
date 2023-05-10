@@ -99,6 +99,10 @@ export default class ServerManager {
     try {
       await mkdir(join(this.dataDir, "shares"))
     } catch(_) {}
+    if(!config.shares) {
+      console.warn("[Warn] No shares to load")
+      return
+    }
 
     for(const key in config.shares) {
       const data = config.shares[key] as Partial<ShareInfo>
