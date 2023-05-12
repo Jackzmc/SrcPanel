@@ -1,0 +1,23 @@
+{
+    // Name of the addon share
+    "default": {
+        // The folder where the *.vpk files are located
+        "sourceFolder": "/home/steam/content",
+        // The appid this share is for. Optional. Used for limiting downloads so other game addons can't be installed to it
+        "appid": 550,
+        // The sources that can provide new addons
+        "downloadSources": {
+            "steam_workshop": true,  // Allow downloading steam workshop downloads (only anonymous appids)
+            "direct": true // Allow users to upload files (of matching validExtenstions)
+        },
+        "fileExts": ["vpk"],
+        // List of destinations
+        "destinations": {
+            "dest-1": {
+                "name": "My Destination Display Name", // Optional
+                "serverIds": ["my-server-id"], // Optional
+                "path": "/home/steam/myserver-1/addons/"
+            }
+        }
+    }
+}
