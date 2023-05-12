@@ -20,8 +20,7 @@
             </div>
           </Field>
         </div>
-        <template  v-if="shareInfo && shareInfo.downloadSources.length > 0">
-        <div class="level-item" v-if="shareInfo.downloadSources.includes('steam_workshop')">
+        <div class="level-item" v-if="shareInfo.downloadSources.steam_workshop">
           <div class="field">
             <label class="label">&nbsp;</label>
             <div class="control">
@@ -32,7 +31,7 @@
             </div>
           </div>
         </div>
-        <div class="level-item" v-if="shareInfo.downloadSources.includes('direct')" >
+        <div class="level-item" v-if="shareInfo.downloadSources.direct" >
           <div class="field">
             <label class="label">&nbsp;</label>
             <div class="control">
@@ -43,7 +42,6 @@
             </div>
           </div>
         </div>
-        </template>
       </div>
     </div>
     <p class="subtitle is-4" style="width:60%">Click on any addon to view additional info and to (un)install it from servers. <router-link to="/admin/servers/">Click here to view servers page</router-link></p>
@@ -428,7 +426,7 @@ onBeforeMount(async() => {
       }
     }
   }
-  if(route.query.url && shareInfo.value.downloadSources.includes("steam_workshop")) {
+  if(route.query.url && shareInfo.value.downloadSources.steam_workshop) {
     showDownloadModal.value = true
   }
 })

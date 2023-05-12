@@ -2,7 +2,7 @@ import { stat, readdir, unlink, symlink } from 'fs/promises';
 import { createWriteStream } from 'fs'
 import path from 'path'
 import SteamAPI from './steam.js';
-import { AddonCollectionInfo, AddonInfo, AddonWorkshopInfo, ChildWorkshopItem, DownloadSourceRecord, ShareDestination, ShareInfo, WorkshopCollectionInfo, WorkshopItem } from '../../../common-types/Share.js'
+import { AddonCollectionInfo, AddonInfo, AddonWorkshopInfo, ChildWorkshopItem, DownloadSourceRecord, ShareDestination, ShareDestinations, ShareInfo, WorkshopCollectionInfo, WorkshopItem } from '../../../common-types/Share.js'
 import { exec } from 'child_process'
 import sqlite3 from 'sqlite3'
 import sqlite from 'sqlite'
@@ -18,7 +18,7 @@ export default class Share {
     public _id: string
     public name: string
     public sourceFolder: string
-    public destinations: Record<string, ShareDestination> = {}
+    public destinations: ShareDestinations = {}
     public appId?: number
     private db: sqlite.Database<sqlite3.Database, sqlite3.Statement>
     private steam: SteamAPI
@@ -35,14 +35,14 @@ export default class Share {
         this.appId = shareInfo.appid
         this.downloadSources = shareInfo.downloadSources || {}
         this.validExts = shareInfo.fileExts
-        for(const dest of shareInfo.destinations) {
-            this.destinations[dest.id] = dest
-        }
+        this.destinations = shareInfo.destinations || {}
         db.exec(SQL`CREATE TABLE IF NOT EXISTS addoncache (
             filename VARCHAR(128) NOT NULL,
             filesize INT,
             lastModified INT,
             ws_info TEXT,
+            collection_id VARCHAR(32),
+            collection_name VARCHAR(64),
             PRIMARY KEY (filename)
         );`)
     }
@@ -156,7 +156,7 @@ export default class Share {
 
     private async addAddonEntry(filename: string, fsInfo?: { filesize: number, lastModified: number }, workshop?: AddonWorkshopInfo, collection?: WorkshopCollectionInfo) {
         try {
-            console.debug(`adding \"${filename}\" [fs=${fsInfo != null}] [workshop=${workshop != null}] [collection=${collection != null}]`)
+            // console.debug(`adding \"${filename}\" [fs=${fsInfo != null}] [workshop=${workshop != null}] [collection=${collection != null}]`)
             await this.db.run(
                 SQL`REPLACE INTO addoncache 
                     (filename, filesize, lastModified, ws_info, collection_id, collection_name) 
@@ -205,8 +205,8 @@ export default class Share {
         if(statInfo) {
             let states: Record<string, boolean> = {}
             if(this.destinations) {
-                for(const dest of Object.values(this.destinations)) {
-                states[dest.id] = await this.doesFileExist(dest.path, filename) !== null
+                for(const [id, dest] of Object.entries(this.destinations)) {
+                    states[id] = await this.doesFileExist(dest.path, filename) !== null
                 }
             }
             return { 
@@ -303,7 +303,7 @@ export default class Share {
             sourceFolder: this.sourceFolder,
             appid: this.appId,
             downloadSources: this.downloadSources,
-            destinations: Object.values(this.destinations),
+            destinations: this.destinations,
             fileExts: this.validExts
         }
     }

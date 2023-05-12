@@ -6,30 +6,28 @@ export interface ShareData {
     steamAppid?: number,
     allowedExts: string[],
     downloadSources: DownloadSourceRecord,
-    destinations: Record<string, ShareDestData>
-}
-
-export interface ShareDestData {
-    name?: string,
-    path: string,
-    serverIds: string[]
+    destinations: ShareDestinations
 }
 
 export interface ShareDestination {
-    id: string,
     name?: string,
     serverIds?: string[],
     path: string
 }
+export type ShareDestinations = Record<string, ShareDestination>
 
 export interface ShareInfo {
     id: string,
     sourceFolder: string;
-    destinations: ShareDestination[],
+    destinations: ShareDestinations,
     appid?: number,
     name: string,
     fileExts?: string[],
     downloadSources?: DownloadSourceRecord
+}
+
+export interface ExtendedShareInfo extends ShareInfo {
+    appTitle: string
 }
 
 export interface AddonInfo {

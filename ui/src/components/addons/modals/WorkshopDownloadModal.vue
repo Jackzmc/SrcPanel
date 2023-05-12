@@ -31,7 +31,7 @@
         <p class="subtitle is-6 has-text-danger" v-else>
           Addon is for <b><a :href="'https://store.steampowered.com/app/' + workshopDetails.consumer_app_id">
             {{workshopDetails.consumer_app_title}}
-          </a></b>, but only addons for <b><a :href="'https://store.steampowered.com/app/' + props.share.appId">
+          </a></b>, but only addons for <b><a :href="'https://store.steampowered.com/app/' + props.share.appid">
             {{props.share.appTitle}}
           </a></b> are allowed
         </p>
@@ -40,17 +40,17 @@
       </template>
       <div class="field" v-if="isAddonValid">
         <label class="label">Install Destinations</label>
-        <div class="field" v-for="dest in props.share.destinations" :key="dest.id">
+        <div class="field" v-for="(dest, id) in props.share.destinations" :key="id">
           <input
-            :id="dest.id"
+            :id="id"
             type="checkbox"
-            :value="dest.id"
+            :value="id"
             class="is-checkradio has-tooltip-right"
             v-model="installDestinations"
           >
-          <label :for="dest.id">
-            <span v-if="dest.name"><b>{{dest.name}}</b> (<em>{{dest.id}}</em>)</span>
-            <span v-else>{{dest.id}}</span>
+          <label :for="id">
+            <span v-if="dest.name"><b>{{dest.name}}</b> (<em>{{id}}</em>)</span>
+            <span v-else>{{id}}</span>
             &nbsp;<span class="tag is-info has-tooltip-right is-small is-rounded" data-tooltip="Number of servers that share this destination">{{dest.serverIds?.length ?? 0}} Servers</span>
           </label>
         </div>
@@ -113,6 +113,7 @@ import Modal from '@/components/Modal.vue'
 import { computed, ref, onBeforeMount } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useNotification } from "@kyvg/vue3-notification";
+import { ExtendedShareInfo, ShareInfo } from '../../../../../common-types/Share';
 
 const { notify }  = useNotification()
 
@@ -121,7 +122,7 @@ const WORKSHOP_LINK_REGEX = new RegExp(/https:\/\/steamcommunity\.com\/(sharedfi
 
 const emit = defineEmits(['close'])
 const props = defineProps<{
-  share: any
+  share: ExtendedShareInfo
 }>()
 let link = ref()
 let workshopId = ref<string>("")
@@ -133,9 +134,9 @@ let showForceDownload = ref(false)
 let updateDone = ref(false)
 
 const isAddonValid = computed(() => {
-  if(!props.share.appId) return true // Allow all if no appid is set
+  if(!props.share.appid) return true // Allow all if no appid is set
   if(!workshopId.value) return false // If no file found, dont check
-  return workshopDetails.value?.consumer_app_id == props.share.appId
+  return workshopDetails.value?.consumer_app_id == props.share.appid
 })
 
 async function verifyLink(test: any) {
@@ -168,7 +169,7 @@ async function restartServers() {
     rejected: 0
   }
   for(const destId of installDestinations.value) {
-    const destInfo = props.share.destinations.find((dest: any) => dest.id == destId)
+    const destInfo = props.share.destinations[destId]
     if(destInfo.serverIds) {
       const promises = destInfo.serverIds.map((serverId: string) => restartServer(serverId))
       const results = await Promise.allSettled(promises)
@@ -177,7 +178,7 @@ async function restartServers() {
         return pv
       }, 0)
       if(rejectedCount > 0) {
-        console.error(`${destInfo.id}: ${rejectedCount} / ${promises.length} servers failed to restart`)
+        console.error(`${destId}: ${rejectedCount} / ${promises.length} servers failed to restart`)
       }
       count.total += promises.length
       count.success += promises.length - rejectedCount

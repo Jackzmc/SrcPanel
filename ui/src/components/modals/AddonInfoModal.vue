@@ -128,7 +128,7 @@ async function restartServers() {
     rejected: 0
   }
   for(const destId of pendingRestarts.value) {
-    const destInfo = props.share.destinations.find((dest: any) => dest.id == destId)
+    const destInfo = props.share.destinations[destId]
     if(destInfo.serverIds) {
       const promises = destInfo.serverIds.map((serverId: string) => restartServer(serverId))
       const results = await Promise.allSettled(promises)

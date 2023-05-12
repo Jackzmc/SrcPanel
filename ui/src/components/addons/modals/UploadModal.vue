@@ -27,17 +27,17 @@
       <br>
       <div class="field" v-if="filename">
         <label class="label">Install Destinations</label>
-        <div class="field" v-for="dest in props.share.destinations" :key="dest.id">
+        <div class="field" v-for="(dest, id) in props.share.destinations" :key="id">
           <input
-            :id="dest.id"
+            :id="id"
             type="checkbox"
-            :value="dest.id"
+            :value="id"
             class="is-checkradio has-tooltip-right"
             v-model="installDestinations"
           >
-          <label :for="dest.id">
-            <span v-if="dest.name"><b>{{dest.name}}</b> (<em>{{dest.id}}</em>)</span>
-            <span v-else>{{dest.id}}</span>
+          <label :for="id">
+            <span v-if="dest.name"><b>{{dest.name}}</b> (<em>{{id}}</em>)</span>
+            <span v-else>{{id}}</span>
             &nbsp;<span class="tag is-info has-tooltip-right is-small is-rounded" data-tooltip="Number of servers that share this destination">{{dest.serverIds?.length ?? 0}} Servers</span>
           </label>
         </div>
@@ -72,16 +72,18 @@ import { computed, ref, onBeforeMount } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useNotification } from "@kyvg/vue3-notification";
 import { request } from '@/js/util';
+import { ShareInfo } from '../../../../../common-types/Share';
 
 const { notify }  = useNotification()
 
 const validFiles = computed(() => {
-  return '.' + props.share.validExts.join(",.")
+  if(!props.share.fileExts) return ""
+  return '.' + props.share.fileExts.join(",.")
 })
 
 const emit = defineEmits(['close'])
 const props = defineProps<{
-  share: any
+  share: ShareInfo
 }>()
 let installDestinations = ref<string[]>([])
 let uploadState = ref(0)
@@ -104,7 +106,7 @@ async function restartServers() {
     rejected: 0
   }
   for(const destId of installDestinations.value) {
-    const destInfo = props.share.destinations.find((dest: any) => dest.id == destId)
+    const destInfo = props.share.destinations[destId]
     if(destInfo.serverIds) {
       const promises = destInfo.serverIds.map((serverId: string) => restartServer(serverId))
       const results = await Promise.allSettled(promises)
@@ -113,7 +115,7 @@ async function restartServers() {
         return pv
       }, 0)
       if(rejectedCount > 0) {
-        console.error(`${destInfo.id}: ${rejectedCount} / ${promises.length} servers failed to restart`)
+        console.error(`${destId}: ${rejectedCount} / ${promises.length} servers failed to restart`)
       }
       count.total += promises.length
       count.success += promises.length - rejectedCount

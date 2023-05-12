@@ -203,6 +203,7 @@ import { FullAPIBan, FullAPIBanPlayer, APIBanFlags, BanAppeal, BanAppealState } 
 import { formatDate, getRelDate } from '@/js/util';
 import { Service, Action } from '../../../../../common-types/Privileges';
 
+const emit = defineEmits(["close"])
 const router = useRouter()
 const route = useRoute()
 const props = defineProps<{
@@ -464,7 +465,8 @@ async function answerAppeal(id: number, approve: boolean) {
   }
 }
 function close() {
-  router.back()
+  emit("close")
+  // router.back()
 }
 
 async function getBans() {

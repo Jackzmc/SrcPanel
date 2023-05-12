@@ -53,7 +53,7 @@
             </router-link>
           </ul>
         </div>
-        <router-view :userdata="userdata" :priv-user="privUser" :user="user" :user-admin-data="userAdminData" />
+        <router-view :userdata="userdata" :priv-user="privUser" :user="user" :user-admin-data="userAdminData" @close="router.push(routerHref)" />
       </section>
       <section class="modal-card-body has-text-centered" v-else>
         <img src="@/assets/loader.gif" />

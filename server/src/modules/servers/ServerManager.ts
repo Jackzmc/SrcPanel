@@ -1,14 +1,14 @@
 import { readFileSync } from 'fs'
-import { mkdir, stat } from 'fs/promises'
+import { mkdir, readFile, stat } from 'fs/promises'
 import Json5 from 'json5'
 import DNS from 'dns'
 import Server, { ConfigServerData } from './Server.js'
 import Share from '../Share.js';
-import { join } from 'path';
+import path, { join } from 'path';
 import { open } from 'sqlite'
 import sqlite3 from 'sqlite3'
 import SteamAPI from '../steam.js'
-import { ShareDestination, ShareInfo } from '../../../../common-types/Share.js'
+import { ShareDestination, ShareDestinations, ShareInfo } from '../../../../common-types/Share.js'
 
 // How long after no status requests to switch from short to long refresh
 const SHORT_REFRESH_TIMEOUT = 1000 * 60
@@ -18,6 +18,7 @@ export default class ServerManager {
   private addonShares: Record<string, Share> = {}
 
   private dataDir: string;
+  private configDir: string;
   private steam: SteamAPI
 
   private shortRefreshInterval: number
@@ -25,9 +26,10 @@ export default class ServerManager {
   private refreshTimer: NodeJS.Timer
   private refreshTimeout: NodeJS.Timer = null
 
-  constructor(steam: SteamAPI, dataDir: string) {
+  constructor(steam: SteamAPI, dataDir: string, configDir: string) {
     this.steam = steam
     this.dataDir = dataDir
+    this.configDir = configDir
     this.load()
       .then(() => {
         this.refresh()
@@ -95,27 +97,31 @@ export default class ServerManager {
     return Object.keys(this.addonShares)
   }
 
-  private async loadShares(config: any) {
-    try {
-      await mkdir(join(this.dataDir, "shares"))
-    } catch(_) {}
-    if(!config.shares) {
+  private async loadShares(shares: any) {
+    if(!shares) {
       console.warn("[Warn] No shares to load")
       return
     }
 
-    for(const key in config.shares) {
-      const data = config.shares[key] as Partial<ShareInfo>
-      data.id = key
-      if(!data.sourceFolder) {
-        console.warn(`[Warn] Skipping share \"${key}\": Missing property 'sourceFolder' in config`)
+    try {
+      await mkdir(join(this.dataDir, "shares"))
+    } catch(err) {
+      if(err.code != "EEXIST") throw err
+    }
+
+
+    for(const shareId in shares) {
+      let share = shares[shareId] as Partial<ShareInfo>
+      share.id = shareId
+      if(!share.sourceFolder) {
+        console.warn(`[Warn] Skipping share \"${shareId}\": Missing property 'sourceFolder' in config`)
         continue
       }
 
       try {
-        await stat(data.sourceFolder)
-        const destinations = data.destinations as ShareDestination[] || []
-        for(let dest of Object.values(destinations)) {
+        await stat(share.sourceFolder)
+        const destinations = share.destinations as ShareDestinations || {}
+        for(let [destKey, dest] of Object.entries(destinations)) {
           try {
             await stat(dest.path)
             if(dest.serverIds) {
@@ -125,50 +131,71 @@ export default class ServerManager {
                 if(this.servers[_id]) {
                   serverIds.push(_id)
                 } else {
-                  console.warn(`[Warn] Addon Share "${key}" destination "${dest.id}" includes non existent server id: "${_id}"; skipping`)
+                  console.warn(`[Warn] Addon Share "${shareId}" destination "${destKey}" includes non existent server id: "${_id}"; skipping`)
                 }
               }
               dest.serverIds = serverIds
             }
           } catch(err) {
-            console.warn(`[Warn] Share "${key}" destination "${dest.id}" path is invalid: "${dest.path}"`, err)
+            console.warn(`[Warn] Share "${shareId}" destination "${destKey}" path is invalid: "${dest.path}"`, err)
           }
-          
         }
         const db = await open({
-          filename: join(this.dataDir, `shares/${key.toLowerCase()}_cache.db`),
+          filename: join(this.dataDir, `shares/${shareId.toLowerCase()}_cache.db`),
           driver: sqlite3.Database
         })
-        this.addonShares[key.toLowerCase()] = new Share(db, this.steam, data)
-        console.info(`Loaded share "${key}"`)
+        this.addonShares[shareId.toLowerCase()] = new Share(db, this.steam, share)
+        console.info(`Loaded share "${shareId}"`)
       } catch(err) {
-        console.warn(`Share Directory "${key}" returned error: ${err}`)
+        console.warn(`Share Directory "${shareId}" returned error: ${err}`)
       }
     }
 
-    if(!config.shares["default"]) {
+    if(!shares["default"]) {
       console.warn("Warn: No default share found (no key named \"default\")")
     }
   }
 
   private async load() {
-    const content = readFileSync('./config/config.json', 'utf-8')
-    const config = Json5.parse(content)
+    try {
+      const servers = await readFile(path.join(this.configDir, "servers.json"), 'utf-8')
+      const config = Json5.parse(servers)
+      await this.loadServers(Json5.parse(servers))
+
+      try {
+        const shares = await readFile(path.join(this.configDir, "shares.json"), 'utf-8')
+        await this.loadShares(Json5.parse(shares))
+      } catch(err) {
+        if(err.code !== "ENOENT") {
+          throw err
+        } else {
+          console.warn("[Warn] No shares.json file found, no shares will be loaded.", err.message)
+        }
+      }
+    } catch(err) {
+      if(err.code !== "ENOENT") {
+        throw err
+      } else {
+        console.warn("[Warn] No servers.json file found, no servers or shares will be loaded.", err.message)
+      }
+    }
+  }
+
+  private async loadServers(config: any) {
 
     this.shortRefreshInterval = 1000 * (config['shortRefreshIntervalSeconds'] ?? 60)
     this.longRefreshInterval = 1000 * (config['longRefreshIntervalSeconds'] ?? 60)
 
     const serverPromises = []
     let i = 0
-    for (const server of config['servers'] as ConfigServerData[]) {
+    for (const [id, server] of Object.entries<ConfigServerData>(config)) {
       if(!server.name) {
-        console.warn(`Server ${server.id ?? server} has no name`)
+        console.warn(`Skipping ${id}: Server has no name`)
       } else if(!server.type) {
-        console.warn(`Server ${server.name} has no type`)
+        console.warn(`Skipping ${id}: ${server.name} has no type`)
       } else if(!server.ip) {
-        console.warn(`Server ${server.name} has no ip`)
+        console.warn(`Skipping ${id}: ${server.name} has no ip`)
       } else {
-        const id = server.id?.toLowerCase() ?? server.name.toLowerCase().replace(/\s/g, '_').replace(/[^a-z0-9_]/g, '')
         const [, host, port] = server.ip.match(/([a-zA-Z0-9.]+):?(\d*)/)
         serverPromises.push(new Promise((resolve, reject) => {
           DNS.lookup(host, {
@@ -218,7 +245,6 @@ export default class ServerManager {
 
     await Promise.allSettled(serverPromises)
 
-    console.log(`Loaded ${Object.keys(this.servers).length} servers, now loading shares...`)
-    await this.loadShares(config)
+    console.log(`Loaded ${Object.keys(this.servers).length} servers`)
   }
 }

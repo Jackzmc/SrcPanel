@@ -4,7 +4,7 @@ import FastifyMultipart from '@fastify/multipart'
 import { pipeline } from 'stream'
 import { promisify } from 'util'
 import { Action, Service } from '../../../../common-types/Privileges.js';
-import { ChildWorkshopItem } from '../../../../common-types/Share.js';
+import { ChildWorkshopItem, ShareInfo } from '../../../../common-types/Share.js';
 const pump = promisify(pipeline)
 
 const VALID_FILENAME_REGEX = new RegExp(/[a-z0-9_\- \.]+/i)
@@ -63,20 +63,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         return {
             addons: await share.getAddons(),
             shareInfo: {
-                id: share.id,
-                name: share.name,
-                appId: share.appId,
+                ...share.export(),
                 appTitle: (share.appId ? await fastify.steam.getAppName(share.appId) : null),
-                destinations: Object.values(share.destinations)
-                    .map(dest => {
-                        return {
-                            id: dest.id,
-                            name: dest.name,
-                            serverIds: dest.serverIds
-                        }
-                    }),
-                validExts: share.exts,
-                downloadSources: share.sources
             }
         }
 
