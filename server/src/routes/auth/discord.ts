@@ -38,7 +38,12 @@ const STATE_SEED = crypto.randomBytes(STATE_SEED_LENGTH).toString('hex')
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
     // Disable discord support if no secret
-    if(!STATE_JWT_SECRET) return
+    if(!STATE_JWT_SECRET) {
+        fastify.get("*", (req, reply) => {
+            reply.type("text/html")
+            reply.send("<h1>Discord login has not be setup</h1>")
+        })
+    }
     else  fastify.log.info("[Oauth] Discord provider available")
 
     fastify.get('/login', async (req, reply) => {

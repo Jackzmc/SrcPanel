@@ -3,4 +3,34 @@
     // When there is active clients, the shortRefresh timer is activated
     "longRefreshIntervalSeconds": 600,
     "shortRefreshIntervalSeconds": 30,
+
+    // Optional list of blocked addons
+    /* Valid types: 
+    *   filename       (match the filename, supports wildcards (*))
+    *   steam_fileid   (match the steam workshop file id)
+    *   checksum       (match the hash, must set an "algorithm" property)
+    * Valid checksum algorithms
+    *   sha1  (match the SHA-1 file hash)
+    *   sha2  (match the SHA-2 file hash)
+    *   md5   (match the md5 file hash)
+    * Valid entries properties:
+    *   type - see above 
+    *   value - the fileid/filename/etc
+    *   reason - an optional reason why addon was blocked
+    *   algorithm (only if type = checksum)
+    *   shares - a list of share ids. if not set, entry will be global 
+    */ 
+    "blocklist": [
+        {
+            "type": "filename",
+            "value": "forbidden_filename.vpk",
+            "shares": ["default"]
+        },
+        {
+            "type": "checksum",
+            "algorithm": "sha1",
+            "value": "da39a3ee5e6b4b0d3255bfef95601890afd80709",
+            "reason": "File is an empty file"
+        }
+    ]
 }

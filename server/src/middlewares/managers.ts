@@ -50,7 +50,7 @@ async function db(fastify: FastifyInstance) {
     fastify.decorate('authmngr', authManager)
     fastify.decorate('db', db)
     fastify.decorate('steam', steam)
-    fastify.decorate('servers', new ServerManager(steam, DATA_FOLDER, CONFIG_FOLDER))
+    fastify.decorate('servers', new ServerManager(steam, DATA_FOLDER, CONFIG_FOLDER, configManager))
     fastify.decorate('config', configManager)
     fastify.addHook('preHandler', (req, reply, done) => {
         if(req.session && req.session.user) {

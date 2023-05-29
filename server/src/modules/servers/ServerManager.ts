@@ -9,6 +9,7 @@ import { open } from 'sqlite'
 import sqlite3 from 'sqlite3'
 import SteamAPI from '../steam.js'
 import { ShareDestination, ShareDestinations, ShareInfo } from '../../../../common-types/Share.js'
+import ConfigManager from '../ConfigManager.js'
 
 // How long after no status requests to switch from short to long refresh
 const SHORT_REFRESH_TIMEOUT = 1000 * 60
@@ -26,10 +27,13 @@ export default class ServerManager {
   private refreshTimer: NodeJS.Timer
   private refreshTimeout: NodeJS.Timer = null
 
-  constructor(steam: SteamAPI, dataDir: string, configDir: string) {
+  private cfgManger: ConfigManager
+
+  constructor(steam: SteamAPI, dataDir: string, configDir: string, configManager: ConfigManager) {
     this.steam = steam
     this.dataDir = dataDir
     this.configDir = configDir
+    this.cfgManger = configManager
     this.load()
       .then(() => {
         this.refresh()
@@ -97,6 +101,31 @@ export default class ServerManager {
     return Object.keys(this.addonShares)
   }
 
+  private async load() {
+    try {
+      const servers = await readFile(path.join(this.configDir, "servers.json"), 'utf-8')
+      const config = Json5.parse(servers)
+      await this.loadServers(Json5.parse(servers))
+
+      try {
+        const shares = await readFile(path.join(this.configDir, "shares.json"), 'utf-8')
+        await this.loadShares(Json5.parse(shares))
+      } catch(err) {
+        if(err.code !== "ENOENT") {
+          throw err
+        } else {
+          console.warn("[Warn] No shares.json file found, no shares will be loaded.", err.message)
+        }
+      }
+    } catch(err) {
+      if(err.code !== "ENOENT") {
+        throw err
+      } else {
+        console.warn("[Warn] No servers.json file found, no servers or shares will be loaded.", err.message)
+      }
+    }
+  }
+
   private async loadShares(shares: any) {
     if(!shares) {
       console.warn("[Warn] No shares to load")
@@ -153,31 +182,6 @@ export default class ServerManager {
 
     if(!shares["default"]) {
       console.warn("Warn: No default share found (no key named \"default\")")
-    }
-  }
-
-  private async load() {
-    try {
-      const servers = await readFile(path.join(this.configDir, "servers.json"), 'utf-8')
-      const config = Json5.parse(servers)
-      await this.loadServers(Json5.parse(servers))
-
-      try {
-        const shares = await readFile(path.join(this.configDir, "shares.json"), 'utf-8')
-        await this.loadShares(Json5.parse(shares))
-      } catch(err) {
-        if(err.code !== "ENOENT") {
-          throw err
-        } else {
-          console.warn("[Warn] No shares.json file found, no shares will be loaded.", err.message)
-        }
-      }
-    } catch(err) {
-      if(err.code !== "ENOENT") {
-        throw err
-      } else {
-        console.warn("[Warn] No servers.json file found, no servers or shares will be loaded.", err.message)
-      }
     }
   }
 
