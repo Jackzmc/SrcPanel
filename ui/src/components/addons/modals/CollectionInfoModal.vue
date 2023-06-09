@@ -8,71 +8,80 @@
         <button class="delete" aria-label="close" @click='close(false)'></button>
       </header>
       <section class="modal-card-body">
-        <template v-if="props.addon.workshop">
+        <!-- <template v-if="props.addon.workshop">
           <img alt="The workshop addon's uploaded image preview" :src="props.addon.workshop.previewUrl" @load="previewImageLoaded = true" />
           <img v-if="!previewImageLoaded" src="@/assets/loader.gif" />
           <br><br>
-        </template>
+        </template> -->
         <h4 class='title is-4'>{{ addonName }} </h4>
         <div class="field is-grouped is-grouped-multiline">
           <div class="control">
             <div class="tags has-addons">
-              <span class="tag is-dark">Filename</span>
-              <span class="tag is-info">{{props.addon.filename}}</span>
+              <span class="tag is-dark">Collection ID</span>
+              <span class="tag is-info">{{props.addon.collection.id}}</span>
             </div>
           </div>
           <div class="control">
             <div class="tags has-addons">
               <span class="tag is-dark">File Size</span>
-              <span class="tag is-info">{{formatSize(props.addon.workshop?.filesize ?? props.addon.filesize)}}</span>
+              <span class="tag is-info">{{totalFileSize}}</span>
             </div>
           </div>
           <div class="control">
             <div class="tags has-addons">
-              <span v-if="props.addon.workshop?.deleted" class="tag is-danger has-tooltip-warning has-tooltip-bottom" data-tooltip="Addon no longer exists on the workshop, but it's still locally stored">Deleted</span>
-            </div>
-          </div>
-          <div class="control">
-            <div class="tags has-addons">
-              <span class="tag is-dark">Last Updated</span>
-              <span class="tag">{{ formatTime(props.addon.workshop?.lastUpdated ?? props.addon.lastModified) }}</span>
-            </div>
-          </div>
-          <div class="control">
-            <div class="tags has-addons">
-              <span class="tag is-dark">Downloaded</span>
-              <span class="tag">{{ formatTime(props.addon.downloaded) }}</span>
+              <span class="tag is-dark">Children</span>
+              <span class="tag is-info">{{props.addon.children.length}}</span>
             </div>
           </div>
         </div>
         <h5 class="title is-5">Servers</h5>
-        <p class="subtitle is-6">Click any tag to enable or disable it from the server. The server must be restarted for the changes to apply.</p>
+        <p class="subtitle is-6">Click any tag to enable or disable the collection from the server. The server must be restarted for the changes to apply.</p>
         <div class="field is-grouped is-grouped-multiline">
-          <div class="control" v-for="(installed, dest) in installInfo" :key="dest">
+          <div class="control" v-for="(installed, dest) in installInfo.collection" :key="dest">
             <div class="tags has-addons">
               <span class="tag is-dark">{{ dest }}</span>
-              <a class="tag is-success" v-if="installed" @click="installAddon(dest, 'uninstall')" data-tooltip="Click here to disable">Enabled</a>
-              <a class="tag is-danger" v-else @click="installAddon(dest, 'install')" data-tooltip="Click here to enable">Disabled</a>
+              <a class="tag is-success" v-if="installed" @click="installAddons(dest, 'uninstall')" data-tooltip="Click here to disable">Enabled</a>
+              <a class="tag is-danger" v-else @click="installAddons(dest, 'install')" data-tooltip="Click here to enable">Disabled</a>
             </div>
           </div>
         </div>
-        <template v-if="props.addon.workshop">
-          <h5 class="title is-5">Description</h5>
-          <article class="message">
-            <div class="message-body content is-size-7">
-              <span style="white-space: pre-wrap" v-html="parsedDescription" />
-            </div>
-          </article>
-          <a target="_blank" :href="props.addon.workshop.fileUrl"  data-tooltip="Direct download" class="button is-small">Download Addon File</a>
-        </template>
+        <br>
+        <h5 class="title is-5">Children</h5>
+        <p class="subtitle is-6">Click any child to view their addon entry</p>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Filename</th>
+              <th>File Size</th>
+              <th>Installed On</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="child in props.addon.children" :key="child.filename">
+              <td>{{ child.filename }}</td>
+              <td>{{ formatSize(child.filesize) }}</td>
+              <td>
+                <div class="field is-grouped is-grouped-multiline">
+                  <div class="control" v-for="(installed, dest) in installInfo.children[child.filename]" :key="dest">
+                    <div class="tags has-addons">
+                      <span class="tag is-dark">{{ dest }}</span>
+                      <a class="tag is-success" v-if="installed" @click="installAddon(dest, 'uninstall', child.filename)" data-tooltip="Click here to disable">Enabled</a>
+                      <a class="tag is-danger" v-else @click="installAddon(dest, 'install', child.filename)" data-tooltip="Click here to enable">Disabled</a>
+                    </div>
+                  </div>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </section>
       <footer class="modal-card-foot">
         <button class="button" @click="close(false)">
           Close
         </button>
         <a v-if="pendingRestarts.length > 0" class="button is-info" data-tooltip="Server must be restarted to apply changes" @click='restartServers'>Restart Servers</a>
-        <a v-if="props.addon.workshop" target="_blank" :href="props.addon.workshop.url" class="button is-info" data-tooltip="View the steam workshop page">Steam Workshop</a>
-        <a class="button is-danger" data-tooltip="Uninstall from all servers and delete the file" @click="deleteAddon">Delete</a>
+        <a target="_blank" :href="workshopUrl" class="button is-info" data-tooltip="View the steam workshop page">Steam Workshop</a>
+        <a class="button is-danger" data-tooltip="Uninstall from all servers and delete files" @click="deleteAddons">Delete Collection</a>
       </footer>
     </div>
   </Modal>
@@ -81,7 +90,7 @@
 <script setup lang="ts">
 import Modal from '@/components/Modal.vue'
 import { useNotification } from "@kyvg/vue3-notification";
-import { computed, ref } from 'vue'
+import { computed, ref, onBeforeMount } from 'vue';
 
 const emit = defineEmits(['close'])
 const { notify }  = useNotification()
@@ -91,20 +100,52 @@ const props = defineProps({
 })
 let previewImageLoaded = ref(false)
 let pendingRestarts = ref<string[]>([])
-let installInfo = ref<Record<string, boolean>>(props.addon.installInfo)
 
-async function installAddon(destKey: string, mode: "install" | "uninstall") {
+const workshopUrl = computed(() => {
+  return `https://steamcommunity.com/workshop/filedetails/?id=${props.addon.collection.id}`
+})
+
+let installInfo = ref<{ collection: Record<string, boolean>, children: Record<string, Record<string, boolean>> }>({ collection: {}, children: {} })
+onBeforeMount(() => {
+  if(!props.addon || props.addon.children.length == 0) return
+  const children: Record<string, Record<string, boolean>> = {}
+  for(const child of props.addon.children) {
+    children[child.filename] = child.installInfo
+  }
+  installInfo.value = {
+    collection: props.addon.children[0].installInfo as Record<string, boolean>,
+    children
+  }
+})
+
+
+const totalFileSize = computed(() => {
+  if(!props.addon) return
+  let size = 0
+  for(const child of props.addon.children) {
+    size += child.filesize
+  }
+  return formatSize(size)
+})
+
+async function installAddons(destKey: string, mode: "install" | "uninstall") {
+  for(const child of props.addon.children) {
+    await installAddon(destKey, mode, child.filename)
+  }
+}
+
+async function installAddon(destKey: string, mode: "install" | "uninstall", filename: string) {
   try {
-    const response = await fetch(`/api/shares/${props.share.id}/addons/${props.addon.filename}/${mode}/${destKey}`, { method: 'POST' })
+    const response = await fetch(`/api/shares/${props.share.id}/addons/${filename}/${mode}/${destKey}`, { method: 'POST' })
     const json = await response.json()
     if(response.ok) {
       // Update local copy
-      installInfo.value[destKey] = (mode == "install")
+      installInfo.value.children[filename][destKey] = (mode == "install")
       if(!pendingRestarts.value.includes(destKey))
         pendingRestarts.value.push(destKey)
       notify({
         type: "success",
-        text: mode == "install" ? `Enabled ${addonName.value} on ${destKey}` : `Disabled ${addonName.value} on ${destKey}`
+        text: mode == "install" ? `Enabled ${filename} on ${destKey}` : `Disabled ${filename} on ${destKey}`
       })
     } else {
       notify({
@@ -165,52 +206,43 @@ async function restartServer(id: string) {
 }
 
 const addonName = computed(() => {
-  return props.addon.workshop ? props.addon.workshop.title : props.addon.filename
+  if(!props.addon) return "[error]"
+  return props.addon.collection.name ?? props.addon.collection.id
 })
 
-const parsedDescription = computed(() => {
-  return props.addon.workshop?.description
-    .replace(/\[b\]/gi, '<b>')
-    .replace(/\[u\]/gi, '<u>')
-    .replace(/\[i\]/gi, '<i>')
-    .replace(/\[hr\]/gi, '<hr>')
-    .replace(/\[img\](.*)\[\/img\]/gi, '<img src="$1" />')
-    .replace(/\[h(\d)\]/gi, '<h$1>')
-    .replace(/\[url=(.*)\]/gi, '<a href="$1">')
-    .replace(/\[list]/gi, '<ul>')
-    .replace(/\[\/list]/gi, '</ul>')
-    .replace(/\[\*\](.*)/gi, '<li>$1</li>')
-    .replace(/\[\/([a-zA-Z0-9]+)\]/gi, '</$1>')
-})
+async function deleteAddon(id: string) {
+  try {
+    const response = await fetch(`/api/shares/${props.share.id}/addons/${props.addon.filename}`, {
+      method: 'DELETE',
+      credentials: 'include'
+    })
 
-async function deleteAddon() {
-  if(window.confirm("Are you sure you want to delete this addon? This will be be uninstalled from all servers and its file will be deleted.")) {
-    try {
-      const response = await fetch(`/api/shares/${props.share.id}/addons/${props.addon.filename}`, {
-        method: 'DELETE',
-        credentials: 'include'
+    if(response.ok) {
+      notify({
+        type: 'success',
+        text: `Deleted ${addonName}`
       })
-
-      if(response.ok) {
-        notify({
-          type: 'success',
-          text: `Deleted ${addonName}`
-        })
-        close(true)
-      } else {
-        const json = await response.json()
-        notify({
-          type: 'error',
-          text: json.message
-        })
-      }
-
-    } catch(err: any) {
-      console.error("Faield to delete addon: " + err)
+      close(true)
+    } else {
+      const json = await response.json()
       notify({
         type: 'error',
-        text: err.message
+        text: json.message
       })
+    }
+
+  } catch(err: any) {
+    console.error("Faield to delete addon: " + err)
+    notify({
+      type: 'error',
+      text: err.message
+    })
+  }
+}
+async function deleteAddons() {
+  if(window.confirm("Are you sure you want to delete this collection? All children of this collection will be be uninstalled from all servers and their files deleted.")) {
+    for(const child of props.addon.children) {
+      deleteAddon(child.filename)
     }
   }
 }

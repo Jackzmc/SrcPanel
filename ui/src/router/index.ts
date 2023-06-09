@@ -131,11 +131,17 @@ const routes = [
       {
         name: "collection-info",
         path: 'collections/:collection/:title?',
+        meta: {
+          needsPrefetch: true
+        },
         component: () => import(/* webpackChunkName: 'shares */ '../components/addons/modals/CollectionInfoModal.vue')
       },
       {
         name: "addon-info",
         path: ':addon',
+        meta: {
+          needsPrefetch: true
+        },
         component: () => import(/* webpackChunkName: 'shares' */ '../components/addons/modals/AddonInfoModal.vue')
       }
     ]

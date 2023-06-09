@@ -1,6 +1,6 @@
 <template>
 <div>
-  <router-view :share="shareInfo" :addon="prefetch" @close="onChildClose" v-if="shareInfo"></router-view>
+  <router-view :share="shareInfo" :addon="prefetch" @close="onChildClose" v-if="shareInfo && (!route.meta.needsPrefetch || prefetch)"></router-view>
   <div class="container" v-if="ready">
     <div class="level">
       <div class="level-left">
@@ -27,7 +27,6 @@
               <router-link :to="{ name: 'workshop-download'}" class="button is-info is-fullwidth">
                 <Icon icon="fa-plus">Workshop Addon</Icon>
               </router-link>
-              <!-- <a  class="button is-info is-fullwidth" @click="showDownloadModal = true">Add Workshop Addon</a> -->
             </div>
           </div>
         </div>
@@ -38,7 +37,6 @@
               <router-link :to="{ name: 'upload-addon' }" class="button is-info is-fullwidth">
                 <Icon icon="fa-upload">Upload</Icon>
               </router-link>
-              <!-- <a class="button is-info is-fullwidth" @click="showDownloadModal = true">Upload Addon</a> -->
             </div>
           </div>
         </div>
@@ -242,8 +240,6 @@ const computedTotalFileSize = computed(() => {
   return size
 })
 
-let showDownloadModal = ref(false)
-let showAddonModal = ref(false)
 const sortSymbol = computed(() => {
   if(!sort.value) return ''
   else if(sort.value.descending) return '(↓)'
@@ -321,15 +317,6 @@ function preview(entry: any) {
       }
     })
   }
-}
-function closePreview(removeEntry: boolean) {
-  if(removeEntry) {
-    const index = vpks.value.findIndex(vpk => vpk.filename === prefetch.value.filename)
-    vpks.value.splice(index, 1)
-  }
-  router.push(`/admin/addons/${selectedShare.value}`)
-  prefetch.value = null
-  showAddonModal.value = false
 }
 
 function getTooltip(addon: any) {
@@ -443,18 +430,12 @@ onBeforeMount(async() => {
   }
   await fetchVPKS()
   if(route.params.addon) {
-    for(const vpk of vpks.value) {
-      if(vpk.filename === route.params.addon) {
-        prefetch.value = vpk
-        showAddonModal.value = true
-        break
-      }
-    }
-  }
-  if(route.query.url && shareInfo.value.downloadSources.steam_workshop) {
-    showDownloadModal.value = true
+    prefetch.value = vpks.value.find(vpk => vpk.filename === route.params.addon)
+  } else if(route.params.collection) {
+    prefetch.value = vpks.value.find(vpk => vpk.collection?.id === route.params.collection)
   }
 })
+
 </script>
 
 <style>
