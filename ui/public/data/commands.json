@@ -85,6 +85,16 @@
                     "%cmd% grace rochelle - Sets the player's model that has the name 'grace' to rochelle"
                 ],
                 "perm": "c"
+            },
+            {
+                "command": "note <player:player> [message:string]",
+                "description": "Add a note to a player",
+                "perm": "k"
+            },
+            {
+                "command": "notes",
+                "description": "View notes for a player",
+                "perm": "k"
             }
         ]
     },
