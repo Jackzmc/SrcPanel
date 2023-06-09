@@ -2,7 +2,7 @@
   <Modal active closable @close="close">
     <div class="modal-card">
       <header class="modal-card-head">
-        <p class="modal-card-title">Addon Info
+        <p class="modal-card-title">Collection Info
           <span class="tag is-info has-tooltip-bottom is-pulled-right mr-2 is-rounded" data-tooltip="The target share">{{props.share.id}}</span>
         </p>
         <button class="delete" aria-label="close" @click='close(false)'></button>

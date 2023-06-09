@@ -100,7 +100,10 @@
             <template v-for="vpk in filteredVPKs" :key="vpk.filename ?? vpk.collection.id">
               <tr>
                 <td>
-                  <b v-if="vpk.collection"  @click="preview(vpk)">{{vpk.collection.name}}&nbsp;<span class="tag is-dark is-pulled-right">Collection</span></b>
+                  <a v-if="vpk.collection" @click="preview(vpk)">
+                    <b class="has-text-dark">{{vpk.collection.name}}</b>&nbsp;
+                    <span @click="preview(vpk)" class="tag is-dark is-pulled-right">Collection</span>
+                  </a>
                   <a :class="{'has-text-weight-light': vpk.enabledOn.length == 0 }" @click="preview(vpk)" v-else :data-tooltip="getTooltip(vpk)">
                     {{vpk.workshop ? vpk.workshop.title : vpk.filename}}
                   </a>
@@ -300,13 +303,24 @@ const filteredVPKs = computed(() => {
 
 function preview(entry: any) {
   prefetch.value = entry
-  router.push({
-    name: "addon-info",
-    params: {
-      shareId: selectedShare.value,
-      addon: entry.filename
-    }
-  })
+  if(entry.collection) {
+    router.push({
+      name: "collection-info",
+      params: {
+        shareId: selectedShare.value,
+        collection: entry.collection.id,
+        title: entry.collection.title
+      }
+    })
+  } else {
+    router.push({
+      name: "addon-info",
+      params: {
+        shareId: selectedShare.value,
+        addon: entry.filename,
+      }
+    })
+  }
 }
 function closePreview(removeEntry: boolean) {
   if(removeEntry) {

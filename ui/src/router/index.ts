@@ -129,6 +129,11 @@ const routes = [
         component: () => import(/* webpackChunkName: 'shares' */ '../components/addons/modals/WorkshopDownloadModal.vue')
       },
       {
+        name: "collection-info",
+        path: 'collections/:collection/:title?',
+        component: () => import(/* webpackChunkName: 'shares */ '../components/addons/modals/CollectionInfoModal.vue')
+      },
+      {
         name: "addon-info",
         path: ':addon',
         component: () => import(/* webpackChunkName: 'shares' */ '../components/addons/modals/AddonInfoModal.vue')
