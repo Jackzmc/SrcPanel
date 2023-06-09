@@ -89,6 +89,7 @@ export default class SteamAPI {
         })
         if(response.ok) {
             const json = await response.json() as any
+            console.log('RES', JSON.stringify(json['response']['publishedfiledetails']))
             return json['response']['publishedfiledetails'];
         }
         throw new Error(`${response.statusText}: ${await response.text()}`)
@@ -101,6 +102,7 @@ export default class SteamAPI {
                 .replace(/%TITLE%/, item.title)
             const filepath = path.join(destination, filename)
             const file = createWriteStream(filepath)
+            console.log(item.file_url)
             https.get(item.file_url, requestOptions, (response) => {
                 file.on('finish', () => {
                     file.close(() => {

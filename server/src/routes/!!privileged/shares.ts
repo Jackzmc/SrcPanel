@@ -231,16 +231,30 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 } else {
                     details = await fastify.steam.getItemDetails(children)
                     console.debug('got collection children', parentItem.title)
-                    details.map(detail => {
+                    details
+                        .filter(detail => detail.result === 1)
+                        .map(detail => {
                         detail.collection = {
                             id: parentItem.publishedfileid,
                             name: parentItem.title
                         }
+                        return detail
                     })
                 }
 
+
                 const downloadPromises = details.map(detail => {
-                    return new Promise(async(resolve) => {
+                    return new Promise(async(resolve, reject) => {
+                        if(!detail || !detail.file_url) {
+                            console.log(detail)
+                            sendSSE({
+                                state: "DOWNLOADING",
+                                error: true,
+                                entry: detail.publishedfileid,
+                                message: `Skipping ${detail.publishedfileid}: not found or no file published</a>`
+                            })
+                            return reject(new Error(`No file_url for ${detail.publishedfileid}`))
+                        }
                         sendSSE({
                             state: "DOWNLOADING",
                             entry: detail.publishedfileid,

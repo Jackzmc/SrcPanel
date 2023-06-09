@@ -1,29 +1,29 @@
 Arguments: 
-  /home/jackzie/.nvm/versions/node/v18.6.0/bin/node /home/jackzie/.nvm/versions/node/v18.6.0/bin/yarn start
+  /home/jackzie/.nvm/versions/node/v18.15.0/bin/node /home/jackzie/.nvm/versions/node/v18.15.0/bin/yarn start
 
 PATH: 
-  /home/jackzie/Projects/l4d2-admin-page/server/node_modules/.bin:/tmp/yarn--1680198454242-0.2191781479438537:/home/jackzie/Projects/l4d2-admin-page/server/node_modules/.bin:/home/jackzie/.config/yarn/link/node_modules/.bin:/home/jackzie/.yarn/bin:/home/jackzie/.nvm/versions/node/v18.6.0/libexec/lib/node_modules/npm/bin/node-gyp-bin:/home/jackzie/.nvm/versions/node/v18.6.0/lib/node_modules/npm/bin/node-gyp-bin:/home/jackzie/.nvm/versions/node/v18.6.0/bin/node_modules/npm/bin/node-gyp-bin:/home/jackzie/.nvm/versions/node/v18.6.0/bin:/home/jackzie/.cargo/bin:/home/jackzie/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/snap/bin:/home/jackzie/.dotnet/tools:/usr/local/go/bin
+  /home/jackzie/Projects/l4d2-admin-page/server/node_modules/.bin:/tmp/yarn--1686317025732-0.9410427987006589:/home/jackzie/Projects/l4d2-admin-page/server/node_modules/.bin:/home/jackzie/.config/yarn/link/node_modules/.bin:/home/jackzie/.yarn/bin:/home/jackzie/.nvm/versions/node/v18.15.0/libexec/lib/node_modules/npm/bin/node-gyp-bin:/home/jackzie/.nvm/versions/node/v18.15.0/lib/node_modules/npm/bin/node-gyp-bin:/home/jackzie/.nvm/versions/node/v18.15.0/bin/node_modules/npm/bin/node-gyp-bin:/home/jackzie/.nvm/versions/node/v18.15.0/bin:/home/jackzie/.cargo/bin:/home/jackzie/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/snap/bin:/home/jackzie/.dotnet/tools:/usr/local/go/bin
 
 Yarn version: 
   1.22.19
 
 Node version: 
-  18.6.0
+  18.15.0
 
 Platform: 
   linux x64
 
 Trace: 
   Error: EIO: i/o error, write
-      at writeSync (node:fs:932:3)
+      at writeSync (node:fs:934:3)
       at SyncWriteStream._write (node:internal/fs/sync_write_stream:26:3)
       at writeOrBuffer (node:internal/streams/writable:392:12)
       at _write (node:internal/streams/writable:333:10)
       at Writable.write (node:internal/streams/writable:337:10)
-      at ConsoleReporter._log (/home/jackzie/.nvm/versions/node/v18.6.0/lib/node_modules/yarn/lib/cli.js:92833:17)
-      at ConsoleReporter.log (/home/jackzie/.nvm/versions/node/v18.6.0/lib/node_modules/yarn/lib/cli.js:92821:10)
-      at ConsoleReporter.command (/home/jackzie/.nvm/versions/node/v18.6.0/lib/node_modules/yarn/lib/cli.js:92850:10)
-      at /home/jackzie/.nvm/versions/node/v18.6.0/lib/node_modules/yarn/lib/cli.js:34401:16
+      at ConsoleReporter._log (/home/jackzie/.nvm/versions/node/v18.15.0/lib/node_modules/yarn/lib/cli.js:92833:17)
+      at ConsoleReporter.log (/home/jackzie/.nvm/versions/node/v18.15.0/lib/node_modules/yarn/lib/cli.js:92821:10)
+      at ConsoleReporter.command (/home/jackzie/.nvm/versions/node/v18.15.0/lib/node_modules/yarn/lib/cli.js:92850:10)
+      at /home/jackzie/.nvm/versions/node/v18.15.0/lib/node_modules/yarn/lib/cli.js:34401:16
       at Generator.next (<anonymous>)
 
 npm manifest: 

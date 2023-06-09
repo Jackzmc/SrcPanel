@@ -1,6 +1,6 @@
 <template>
 <div>
-  <router-view :share="shareInfo" :addon="prefetch" @close="onChildClose"></router-view>
+  <router-view :share="shareInfo" :addon="prefetch" @close="onChildClose" v-if="shareInfo"></router-view>
   <div class="container" v-if="ready">
     <div class="level">
       <div class="level-left">
@@ -39,6 +39,16 @@
                 <Icon icon="fa-upload">Upload</Icon>
               </router-link>
               <!-- <a class="button is-info is-fullwidth" @click="showDownloadModal = true">Upload Addon</a> -->
+            </div>
+          </div>
+        </div>
+        <div class="level-item">
+          <div class="field">
+            <label class="label">&nbsp;</label>
+            <div class="control">
+              <a class="button is-info is-fullwidth" @click="fetchVPKS">
+                <Icon icon="fa-sync"></Icon>
+              </a>
             </div>
           </div>
         </div>
@@ -169,7 +179,7 @@
     <p class="subtitle is-6 has-text-centered has-text-danger">{{error}}</p>
   </div>
   <div v-else>
-    <p class="title is-2 has-text-centered"><Icon icon="spinner" spin icon-class="mr-3">Fetching addons...</Icon></p>
+    <p class="title is-2 has-text-centered mt-2"><Icon icon="spinner" spin icon-class="mr-5">Fetching addons...</Icon></p>
     <p class="subtitle is-4 has-text-centered">This may take some time, please wait...</p>
   </div>
   <br>
@@ -341,6 +351,7 @@ async function fetchShares() {
   }
 }
 async function fetchVPKS() {
+  ready.value = false
   error.value = undefined
   shareInfo.value = undefined
   vpks.value = []
