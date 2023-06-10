@@ -102,7 +102,7 @@
                     <b class="has-text-dark">{{vpk.collection.name}}</b>&nbsp;
                     <span @click="preview(vpk)" class="tag is-dark is-pulled-right">Collection</span>
                   </a>
-                  <a :class="{'has-text-weight-light': vpk.enabledOn.length == 0 }" @click="preview(vpk)" v-else :data-tooltip="getTooltip(vpk)">
+                  <a :class="{'has-text-weight-light': vpk.enabledOn.length == 0, 'has-text-grey': vpk.enabledOn.length == 0 }" @click="preview(vpk)" v-else :data-tooltip="getTooltip(vpk)">
                     {{vpk.workshop ? vpk.workshop.title : vpk.filename}}
                   </a>
                   &nbsp;
@@ -189,8 +189,9 @@
 
 <script setup lang="ts">
 import { ref, watch, computed, onBeforeMount, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { onBeforeRouteUpdate, useRoute, useRouter } from 'vue-router'
 import Field from '@/components/Field.vue'
+import { SelectEventObject } from 'highcharts'
 
 
 const SORT_NAME = (a: any, b: any) => {
@@ -227,7 +228,12 @@ let sort = ref<{
 } | undefined>()
 
 let selectedShare = ref<string>("default")
-watch(() => selectedShare.value, fetchVPKS)
+watch(selectedShare, (value) => {
+  router.replace({
+    params: {shareId: value},
+  })
+  fetchVPKS()
+})
 let shares = ref<string[]>(["default"])
 let shareInfo = ref()
 let totalFileSize = ref(0)
@@ -419,16 +425,17 @@ function formatTime(time: number) {
 
 onBeforeMount(async() => {
   await fetchShares()
-  if(route.params.share) {
-    const share = route.params.share.toString()
+  if(route.params.shareId) {
+    const share = route.params.shareId.toString()
     if(shares.value.includes(share)) {
       selectedShare.value = share.toString()
     } else {
       error.value = `No shares with the id "${share}" were found`
       return
     }
+  } else {
+    await fetchVPKS()
   }
-  await fetchVPKS()
   if(route.params.addon) {
     prefetch.value = vpks.value.find(vpk => vpk.filename === route.params.addon)
   } else if(route.params.collection) {
