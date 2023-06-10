@@ -227,7 +227,7 @@ let sort = ref<{
   descending: boolean
 } | undefined>()
 
-let selectedShare = ref<string>("default")
+let selectedShare = ref<string>()
 watch(selectedShare, (value) => {
   router.replace({
     params: {shareId: value},
@@ -434,7 +434,7 @@ onBeforeMount(async() => {
       return
     }
   } else {
-    await fetchVPKS()
+    selectedShare.value = "default"
   }
   if(route.params.addon) {
     prefetch.value = vpks.value.find(vpk => vpk.filename === route.params.addon)
