@@ -368,6 +368,7 @@ export default class AuthManager {
                             flags: row.flags,
                             privileges
                         },
+                        // TODO: REMOVE LEGACY: 
                         web: {
                             role: row.web_role || 0,
                             flags: row.web_flags || 0
@@ -391,14 +392,20 @@ export default class AuthManager {
                     }
                 }
 
+                // Grab the privileges for this row's group id
                 const [privRows] = await this.db.execute<RowDataPacket[]>("SELECT service, privilege FROM sm_group_privileges WHERE group_id = ?", [ groupId])
                 for(const privRow of privRows) {
                     groups[groupId].privileges[privRow.service] = privRow.privilege
-                    // Set .permissions.privileges to be the highest of base + group
+
+                    // Set <User>.permissions.privileges service privilege to be the highest privilege (between root & group permissions)
+                    // So say for the service notes, user has root privilege of 1, and the group has a privilege of 2, 
+                    // the user will have a privilege of 2
+                    console.log(admins[key].name, 'inheritted group', groups[groupId].name, 'privilege for service', privRow.service, 'to', privRow.privilege)
                     if(!admins[key].permissions.privileges[privRow.service] || privRow.privilege > admins[key].permissions.privileges[privRow.service]) {
                         admins[key].permissions.privileges[privRow.service] = privRow.privilege
                     }
                 }
+
 
                 admins[key].groups.push(groups[groupId])
                 // Merge immunity & flags
