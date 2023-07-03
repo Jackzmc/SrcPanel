@@ -62,11 +62,17 @@ declare module 'fastify' {
 
 import FastifySwagger from '@fastify/swagger'
 
-const CORS_WHITELIST = process.env.CORS_WHITELIST ? process.env.CORS_WHITELIST.split(",") : [] 
+const CORS_WHITELIST = process.env.CORS_WHITELIST ? process.env.CORS_WHITELIST.split(",") : ["localhost:8080"] 
 app.register(cors, {
     origin: CORS_WHITELIST,
     methods: ["GET","POST","PATCH","UPDATE","DELETE"]
 })
+
+import FastifyHelmet from '@fastify/helmet'
+app.register(
+    FastifyHelmet,
+)
+  
 
 app.register(import('./middlewares/managers.js'))
 .then(async() => {
@@ -90,12 +96,9 @@ app.register(import('./middlewares/managers.js'))
 
     await setupSwagger()
 
-
-   
-
     app.addHook('preHandler', (request, reply, next) => {
-        if(!request.headers.origin || CORS_WHITELIST.includes(request.headers.origin)) {
-            reply.header("Access-Control-Allow-Origin", request.headers.origin || "*")
+        if(request.headers.origin && CORS_WHITELIST.includes(request.headers.origin)) {
+            reply.header("Access-Control-Allow-Origin", request.headers.origin)
         }
         return next()
     })
