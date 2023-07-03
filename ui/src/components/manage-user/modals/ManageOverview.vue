@@ -140,7 +140,7 @@ const steamid64 = computed(() => {
 })
 const playtime = computed(() => {
   if(!info.value) return
-  if(info.value.minutes_played > 0) return info.value.minutes_played
+  if(info.value.minutes_played > 0) return Math.round(info.value.minutes_played / 60)
   return "< 0"
 })
 

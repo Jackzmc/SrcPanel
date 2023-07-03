@@ -400,7 +400,7 @@ export default class AuthManager {
                     // Set <User>.permissions.privileges service privilege to be the highest privilege (between root & group permissions)
                     // So say for the service notes, user has root privilege of 1, and the group has a privilege of 2, 
                     // the user will have a privilege of 2
-                    console.log(admins[key].name, 'inheritted group', groups[groupId].name, 'privilege for service', privRow.service, 'to', privRow.privilege)
+                    // console.log(admins[key].name, 'inheritted group', groups[groupId].name, 'privilege for service', privRow.service, 'to', privRow.privilege)
                     if(!admins[key].permissions.privileges[privRow.service] || privRow.privilege > admins[key].permissions.privileges[privRow.service]) {
                         admins[key].permissions.privileges[privRow.service] = privRow.privilege
                     }
