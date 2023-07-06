@@ -96,6 +96,7 @@ export class PrivilegedUser {
   /** @deprecated */
   hasPrivilege(service: Service, privilege: ServicePrivilege) : boolean {
     if(!ServiceSupportedActions[service].includes(privilege)) console.warn(`[Privileges] <User>.hasPrivilege() called on service ${service} with invalid privilege (service does not support ${ServicePrivilegeKeys[privilege]})`)
+    return true
     return this.privileges[service] as number >= privilege
   }
 

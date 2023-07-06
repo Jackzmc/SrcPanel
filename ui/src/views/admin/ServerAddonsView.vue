@@ -1,6 +1,6 @@
 <template>
 <div>
-  <router-view :share="shareInfo" :addon="prefetch" @close="onChildClose" v-if="shareInfo"></router-view>
+  <router-view :share="shareInfo" :addon="prefetch" @close="onChildClose" v-if="shareInfo && (!route.meta.needsPrefetch || prefetch)"></router-view>
   <div class="container" v-if="ready">
     <div class="level">
       <div class="level-left">
@@ -27,7 +27,6 @@
               <router-link :to="{ name: 'workshop-download'}" class="button is-info is-fullwidth">
                 <Icon icon="fa-plus">Workshop Addon</Icon>
               </router-link>
-              <!-- <a  class="button is-info is-fullwidth" @click="showDownloadModal = true">Add Workshop Addon</a> -->
             </div>
           </div>
         </div>
@@ -38,7 +37,6 @@
               <router-link :to="{ name: 'upload-addon' }" class="button is-info is-fullwidth">
                 <Icon icon="fa-upload">Upload</Icon>
               </router-link>
-              <!-- <a class="button is-info is-fullwidth" @click="showDownloadModal = true">Upload Addon</a> -->
             </div>
           </div>
         </div>
@@ -100,8 +98,11 @@
             <template v-for="vpk in filteredVPKs" :key="vpk.filename ?? vpk.collection.id">
               <tr>
                 <td>
-                  <b v-if="vpk.collection"  @click="preview(vpk)">{{vpk.collection.name}}&nbsp;<span class="tag is-dark is-pulled-right">Collection</span></b>
-                  <a :class="{'has-text-weight-light': vpk.enabledOn.length == 0 }" @click="preview(vpk)" v-else :data-tooltip="getTooltip(vpk)">
+                  <a v-if="vpk.collection" @click="preview(vpk)">
+                    <b class="has-text-dark">{{vpk.collection.name}}</b>&nbsp;
+                    <span @click="preview(vpk)" class="tag is-dark is-pulled-right">Collection</span>
+                  </a>
+                  <a :class="{'has-text-weight-light': vpk.enabledOn.length == 0, 'has-text-grey': vpk.enabledOn.length == 0 }" @click="preview(vpk)" v-else :data-tooltip="getTooltip(vpk)">
                     {{vpk.workshop ? vpk.workshop.title : vpk.filename}}
                   </a>
                   &nbsp;
@@ -188,8 +189,9 @@
 
 <script setup lang="ts">
 import { ref, watch, computed, onBeforeMount, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { onBeforeRouteUpdate, useRoute, useRouter } from 'vue-router'
 import Field from '@/components/Field.vue'
+import { SelectEventObject } from 'highcharts'
 
 
 const SORT_NAME = (a: any, b: any) => {
@@ -225,8 +227,13 @@ let sort = ref<{
   descending: boolean
 } | undefined>()
 
-let selectedShare = ref<string>("default")
-watch(() => selectedShare.value, fetchVPKS)
+let selectedShare = ref<string>()
+watch(selectedShare, (value) => {
+  router.replace({
+    params: {shareId: value},
+  })
+  fetchVPKS()
+})
 let shares = ref<string[]>(["default"])
 let shareInfo = ref()
 let totalFileSize = ref(0)
@@ -239,8 +246,6 @@ const computedTotalFileSize = computed(() => {
   return size
 })
 
-let showDownloadModal = ref(false)
-let showAddonModal = ref(false)
 const sortSymbol = computed(() => {
   if(!sort.value) return ''
   else if(sort.value.descending) return '(↓)'
@@ -300,22 +305,24 @@ const filteredVPKs = computed(() => {
 
 function preview(entry: any) {
   prefetch.value = entry
-  router.push({
-    name: "addon-info",
-    params: {
-      shareId: selectedShare.value,
-      addon: entry.filename
-    }
-  })
-}
-function closePreview(removeEntry: boolean) {
-  if(removeEntry) {
-    const index = vpks.value.findIndex(vpk => vpk.filename === prefetch.value.filename)
-    vpks.value.splice(index, 1)
+  if(entry.collection) {
+    router.push({
+      name: "collection-info",
+      params: {
+        shareId: selectedShare.value,
+        collection: entry.collection.id,
+        title: entry.collection.title
+      }
+    })
+  } else {
+    router.push({
+      name: "addon-info",
+      params: {
+        shareId: selectedShare.value,
+        addon: entry.filename,
+      }
+    })
   }
-  router.push(`/admin/addons/${selectedShare.value}`)
-  prefetch.value = null
-  showAddonModal.value = false
 }
 
 function getTooltip(addon: any) {
@@ -418,29 +425,24 @@ function formatTime(time: number) {
 
 onBeforeMount(async() => {
   await fetchShares()
-  if(route.params.share) {
-    const share = route.params.share.toString()
+  if(route.params.shareId) {
+    const share = route.params.shareId.toString()
     if(shares.value.includes(share)) {
       selectedShare.value = share.toString()
     } else {
       error.value = `No shares with the id "${share}" were found`
       return
     }
+  } else {
+    selectedShare.value = "default"
   }
-  await fetchVPKS()
   if(route.params.addon) {
-    for(const vpk of vpks.value) {
-      if(vpk.filename === route.params.addon) {
-        prefetch.value = vpk
-        showAddonModal.value = true
-        break
-      }
-    }
-  }
-  if(route.query.url && shareInfo.value.downloadSources.steam_workshop) {
-    showDownloadModal.value = true
+    prefetch.value = vpks.value.find(vpk => vpk.filename === route.params.addon)
+  } else if(route.params.collection) {
+    prefetch.value = vpks.value.find(vpk => vpk.collection?.id === route.params.collection)
   }
 })
+
 </script>
 
 <style>
