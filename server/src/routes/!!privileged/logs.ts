@@ -2,6 +2,7 @@ import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
 import { OkPacket, RowDataPacket } from 'mysql2';
 import { Static, Type } from '@sinclair/typebox'
 import SteamID from 'steamid'
+import { NO_PERMISSION } from '../../responses';
 
 const LogQuery = Type.Object({
     servers: Type.Optional(Type.String()),
@@ -55,6 +56,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     })
 
     fastify.get('/:page?', async(req: FastifyRequest<{ Querystring: LogQueryType, Params: { page?: number } }>, reply) => {
+        if(!req.user.hasPermission("logs.view")) return NO_PERMISSION(reply)
         const searchMessage = req.query.searchMessage ? `%${req.query.searchMessage}%` : (req.query.search_message ? `%${req.query.search_message}%` : null)
         const clientSearch = req.query.client ?? req.query.search_client
         const targetSearch = req.query.target ?? req.query.search_target
@@ -189,6 +191,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     })
 
     fastify.post("/:id/redact", async(req: FastifyRequest<{Params: {id: 'string'}}>, reply) => {
+        if(!req.user.hasPermission("logs.redact")) return NO_PERMISSION(reply)
         if(!req.params.id) {
             return reply.code(404).send({
                 error: "NOT_FOUND",
