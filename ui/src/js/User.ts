@@ -1,6 +1,6 @@
 import { AdminData, SessionUser, WebPermission, WebRole, AdminPermissions } from '../../../common-types/User';
 import type  { UserData } from '../../../common-types/User';
-import { UserPrivileges, ActionRequiredPrivilege, ServicePrivilege, Service, Action, ServiceSupportedActions, ServicePrivilegeKeys } from '../../../common-types/Privileges';
+import { UserPrivileges, ActionRequiredPrivilege, ServicePrivilege, Service, Action, ServiceSupportedActions, ServicePrivilegeKeys, UserPrivilegeCode } from '../../../common-types/Privileges';
 
 export interface PlayerData {
   isAdmin: boolean,
@@ -79,9 +79,13 @@ export class PrivilegedUser {
     return this.id.substring(10) === id.substring(10)
   }
 
+  /** @deprecated */
   hasWebPerm(webPerm: WebPermission): boolean {
-    if(this.data.permissions.web.flags & WebPermission.FullPermission) return true
-    return (this.data.permissions.web.flags & webPerm) !== 0
+    return false
+  }
+
+  hasPermission(code: UserPrivilegeCode) {
+    return this.permissions.codes.has(code)
   }
 
   hasFlag(flag: string, ignoreRoot: boolean = false) : boolean {
@@ -89,18 +93,22 @@ export class PrivilegedUser {
     return (!ignoreRoot && flags.includes("z")) || flags.includes(flag)
   }
 
+  /** @deprecated */
   hasPrivilege(service: Service, privilege: ServicePrivilege) : boolean {
     if(!ServiceSupportedActions[service].includes(privilege)) console.warn(`[Privileges] <User>.hasPrivilege() called on service ${service} with invalid privilege (service does not support ${ServicePrivilegeKeys[privilege]})`)
     return this.privileges[service] as number >= privilege
   }
 
+  /** @deprecated */
   getPrivilege(service: Service): ServicePrivilege | null {
     return this.privileges[service] ?? null
   }
+  /** @deprecated */
   getPrivilegeById(service: string): ServicePrivilege | null {
     return this.privileges[service as Service] ?? null
   }
 
+  /** @deprecated */
   canPerformAction(service: Service, action: Action, userSteamid?: string) : boolean {
     let hasPerm = this.hasPrivilege(service, ActionRequiredPrivilege[action])
     // Check if they have manage permission
@@ -113,10 +121,12 @@ export class PrivilegedUser {
     return hasPerm
   }
 
+  /** @deprecated */
   get webRole(): WebRole {
-    return this.data.permissions.web.role
+    return WebRole.None
   }
 
+  /** @deprecated */
   get privileges(): UserPrivileges {
     return this.permissions.privileges ?? {}
   }
@@ -127,6 +137,10 @@ export class PrivilegedUser {
 
   get id() {
     return this.data.user.steamid
+  }
+
+  get codes() {
+    return this.data.permissions.codes
   }
 
   get permissions() {

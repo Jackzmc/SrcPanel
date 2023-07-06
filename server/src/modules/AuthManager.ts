@@ -453,7 +453,6 @@ export default class AuthManager {
         console.info(`Fetched ${Object.keys(admins).length} admins and ${Object.keys(this.groups).length} groups`)
         console.timeEnd('fetchAdmins')
 
-        console.log(this._fuckinStupid(Object.values(this.admins)))
     }
 
     private _applyGroup(group: AdminGroup, admin: AdminData) {

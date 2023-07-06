@@ -64,7 +64,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             })
         } else if(!req.user.hasPermission("configs.read")) {
             return NO_PERMISSION(reply)
-        } else if(req.query.raw && !req.user.hasPermission("configs.read_raw")) {
+        } else if(req.query.raw && !req.user.hasPermission("configs.read.raw")) {
             return NO_PERMISSION(reply)
         }
 

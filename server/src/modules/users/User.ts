@@ -69,10 +69,17 @@ export default class User {
     //     return this.
     // }
 
+    /**
+     * @deprecated
+     */
     async grantPrivilege(service: Service, privilege: ServicePrivilege) {
         await this.authmngr.setPrivileges(this.steamid64, { [service]: privilege })
     }
 
+    
+    /**
+     * @deprecated
+     */
     hasPrivilege(service: Service, type: ServicePrivilege) : boolean {
         if(!this.isAdmin) return false
         return this.adminData.permissions.privileges[service] === type
@@ -85,11 +92,17 @@ export default class User {
         return false
     }
 
+    /**
+     * @deprecated
+     */
     canPerformAction(service: Service, action: Action) : boolean {
         if(!this.isAdmin) return false
         return this.hasPrivilege(service, ActionRequiredPrivilege[action])
     }
 
+    /**
+     * @deprecated
+     */
     getPrivilege(service: Service) {
         if(!this.isAdmin) return null
         return this.adminData.permissions.privileges[service]
@@ -126,5 +139,11 @@ export default class User {
 
     async regenerateApiKey() {
         return this.authmngr.createApiKey(this.steamid64)
+    }
+
+    equals(id: string) {
+        if(id === this.steamid64) return true
+
+        return false
     }
 }

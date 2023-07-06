@@ -5,6 +5,7 @@ import SteamID from 'steamid'
 import { FullAPIBan, APIBanFlags } from '../../../../common-types/Ban.js';
 import { computeChanges, replaceObject } from '../../util.js';
 import { Action, Service } from '../../../../common-types/Privileges.js';
+import { NO_PERMISSION } from '../../responses.js';
 
 const STEAM_WEB_APIKEY = process.env.STEAM_WEB_APIKEY
 
@@ -50,6 +51,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             }
         },
         async handler(req: FastifyRequest<{ Body: PUTBanBodyType, Params: { id: number } }>, reply) {
+            if(!req.user.hasPermission("bans.create")) return NO_PERMISSION(reply)
             const [existing] = await fastify.db.execute<RowDataPacket[]>(`
                 SELECT * FROM bans WHERE id = ?`,
                 [req.params.id]
@@ -61,6 +63,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                     message: 'Ban not found',
                     statusCode: 404
                 })
+            } else if(req.user.equals) {
+
             }
 
             const ban = replaceObject<any>(existing[0], req.body)
