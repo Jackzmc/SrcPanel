@@ -1,5 +1,5 @@
 import { AdminData, OauthProvider, OauthProviderData, SessionData, SessionUser } from '../../../../common-types/User';
-import { SteamInfo, UserPrivileges, Service, ServicePrivilege, ActionRequiredPrivilege, Action } from '../../../../common-types/Privileges.js';
+import { SteamInfo, UserPrivileges, Service, ServicePrivilege, ActionRequiredPrivilege, Action, UserPrivilegeCode } from '../../../../common-types/Privileges.js';
 import AuthManager from '../AuthManager.js';
 import { Session } from 'fastify';
 
@@ -76,6 +76,13 @@ export default class User {
     hasPrivilege(service: Service, type: ServicePrivilege) : boolean {
         if(!this.isAdmin) return false
         return this.adminData.permissions.privileges[service] === type
+    }
+
+    hasPermission(code: UserPrivilegeCode) {
+        for(const perm of this.adminData.permissions.codes) {
+            if(AuthManager.isPermissionGranted(code, perm)) return true
+        }
+        return false
     }
 
     canPerformAction(service: Service, action: Action) : boolean {

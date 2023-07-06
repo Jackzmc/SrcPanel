@@ -43,7 +43,6 @@ import User from './modules/users/User.js';
 import ConfigManager from './modules/ConfigManager.js';
 interface CustomSession extends CustomFastifySession {
 } 
-
 declare module 'fastify' {
   export interface FastifyInstance {
     db: Pool;
@@ -54,13 +53,14 @@ declare module 'fastify' {
     config: ConfigManager
   }
   export interface FastifyRequest {
-    user?: User
+    user?: User,
   }
   // I dont know how to do this properly, its a fucking pain
   interface Session extends CustomSession {}
 }
 
 import FastifySwagger from '@fastify/swagger'
+import { UserPrivilegeCode } from '../../common-types/Privileges.js';
 
 const CORS_WHITELIST = process.env.CORS_WHITELIST ? process.env.CORS_WHITELIST.split(",") : [] 
 app.register(cors, {

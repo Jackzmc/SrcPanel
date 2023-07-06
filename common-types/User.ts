@@ -1,4 +1,4 @@
-import { Action, Service, ServicePrivilege, UserPrivileges } from "./Privileges.js"
+import { Action, Service, ServicePrivilege, UserPrivilegeCode, UserPrivileges } from "./Privileges.js"
 
 export enum WebRole {
     None = 0,
@@ -112,15 +112,17 @@ export interface ReadableAdminData {
     steamid: string,
     name: string,
     permissions: AdminPermissions
-    groups: AdminGroup[]
+    groups: AdminGroup[],
 }
 
 export interface AdminGroup {
+    parentId?: number,
     id: number,
     flags: string,
     name: string,
-    immunity: 0,
+    immunity: number,
     privileges: Partial<Record<Service, ServicePrivilege>>,
+    codes: Set<UserPrivilegeCode>
 }
 
 export interface APIAdminGroup extends AdminGroup {
@@ -131,13 +133,11 @@ export interface AdminPermissions {
     immunityLevel: number
     flags: string,
     privileges: UserPrivileges,
-    web: { // TODO: REMOVE ME LEGACY
-        role: number,
-        flags: number
-    },
+    codes: Set<UserPrivilegeCode>,
     base: {
         immunityLevel: number,
         flags: string,
-        privileges: UserPrivileges
+        privileges: UserPrivileges,
+        codes: Set<UserPrivilegeCode>
     }
 }

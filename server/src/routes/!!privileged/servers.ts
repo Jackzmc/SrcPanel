@@ -5,6 +5,8 @@ import SteamID from 'steamid'
 import { WebPermission } from '../../../../common-types/User.js';
 import { join } from 'path';
 import { readFile } from 'fs/promises';
+import { Action, Service } from '../../../../common-types/Privileges.js';
+import { NO_PERMISSION, NOT_FOUND } from '../../responses.js';
     
 const COMMENT_LINE_REGEX = new RegExp(/^\s*(\/\/|#)/)
 const HIDDEN_COMMANDS = [
@@ -31,8 +33,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             "SELECT server, type, timestamp, COUNT(*) as count FROM activity_log WHERE server = ?  AND type = 'JOIN'AND FROM_UNIXTIME(timestamp) >= (NOW() - INTERVAL 1 MONTH) GROUP BY DATE(FROM_UNIXTIME(timestamp)), HOUR(FROM_UNIXTIME(timestamp)) order by timestamp DESC",
             [server.activityLogId]
         )
-
-        const configs = fastify.authmngr.hasPermission(req, WebPermission.ConfigRead) ? await server.getConfigFiles() : undefined
+        
+        const configs = req.user.hasPermission("configs.read") ? await server.getConfigFiles() : undefined
 
         return {
             info: server.info,
@@ -60,16 +62,10 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 error: "NO_CFG_SETUP",
                 message: "Server has no config path configured"
             })
-        } else if(!fastify.authmngr.hasPermission(req, WebPermission.ConfigRead)) {
-            return reply.code(403).send({ 
-                error: "NO_PERMISSION",
-                message: "You are not authorized to access this resource"
-            })
-        } else if(req.query.raw && !fastify.authmngr.hasPermission(req, WebPermission.ConfigRawView)) {
-            return reply.code(403).send({ 
-                error: "NO_PERMISSION",
-                message: "You are not authorized to access the raw contents of this resource"
-            })
+        } else if(!req.user.hasPermission("configs.read")) {
+            return NO_PERMISSION(reply)
+        } else if(req.query.raw && !req.user.hasPermission("configs.read_raw")) {
+            return NO_PERMISSION(reply)
         }
 
         const path = join(server.configDir, req.query.path)
@@ -184,20 +180,10 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     })
 
     fastify.post('/:id/cmd', async(req: FastifyRequest<{Params: { id: 'string'}, Body: string }>, reply) => {
-        // rcon access
-        if(~req.session.permissions.web.flags & WebPermission.RconAccess) {
-            return reply.code(403).send({ 
-                error: "NO_PERMISSION",
-                message: "You are not authorized to access this resource"
-            })
-        }
+        if(!req.user.hasPermission("rcon.manage")) return NO_PERMISSION(reply)
+
         const server = fastify.servers.get(req.params.id)
-        if(!server) {
-            return reply.code(404).send({
-                error: "SERVER_NOT_FOUND",
-                message: "Server not found"
-            })
-        }
+        if(!server) return NOT_FOUND(reply, "Server")
         if(!server.hasRcon) {
             return reply.code(400).send({
                 error: "NO_RCON",
@@ -206,6 +192,14 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
 
         try {
+            await req.user.log(null, `%client% ran command \"%cmd%\"`, {
+                service: Service.Rcon,
+                action: Action.Edit,
+                metadata: {
+                    cmd: req.body
+                }
+            })
+
             await server.sendCommand(req.body)
             reply.status(204).send()
         } catch(err) {

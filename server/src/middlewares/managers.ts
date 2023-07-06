@@ -1,4 +1,4 @@
-import { FastifyInstance } from 'fastify';
+import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import FastifyPlugin from 'fastify-plugin'
 import AuthManager from '../modules/AuthManager.js';
 
@@ -12,6 +12,7 @@ import ServerManager from '../modules/servers/ServerManager.js';
 import SteamAPI from '../modules/steam.js'
 import User from '../modules/users/User.js';
 import ConfigManager from '../modules/ConfigManager.js';
+import { UserPrivilegeCode } from '../../../common-types/Privileges.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -59,5 +60,4 @@ async function db(fastify: FastifyInstance) {
         done()
     })
 }
-
 export default FastifyPlugin(db)

@@ -235,7 +235,7 @@ export default class Server {
         await this.rcon.client.connect()
       }
     }
-
+    
     public async start() {
       if(!this.hasSystemd) throw new Error("Systemd config is missing")
     }

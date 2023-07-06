@@ -20,21 +20,10 @@ export enum Service {
     Admins = "admins",
     Addons = "addons",
     AddonsUpload = "addons.upload",
-    PanelAdmin = "panel"
+    PanelAdmin = "panel",
+    Rcon = "rcon"
 }
 
-const Services = {
-    notes: {
-        name: "Notes",
-        description: "Player notes",
-        privileges: ServicePrivilege.View | ServicePrivilege.Edit | ServicePrivilege.Manage
-    },
-    bans: {
-        name: "Bans",
-        description: "Player bans",
-        privileges: ServicePrivilege.View | ServicePrivilege.Edit | ServicePrivilege.Delete | ServicePrivilege.Manage
-    }
-}
 
 export const ServiceDescriptions: Record<Service, string> = {
     [Service.Notes]: "Player notes",
@@ -42,7 +31,8 @@ export const ServiceDescriptions: Record<Service, string> = {
     [Service.Admins]: "Controls editing admins",
     [Service.Addons]: "Controls viewing and changing addons",
     [Service.AddonsUpload]: "Controls uploading new addons",
-    [Service.PanelAdmin]: "Controls managing the admin panel"
+    [Service.PanelAdmin]: "Controls managing the admin panel",
+    [Service.Rcon]: "Controls rcon access, viewing logs and sending commands"
 }
 
 // The action that is being done, for logging, and what privilege it requires
@@ -66,7 +56,8 @@ export const ServiceSupportedActions: Record<Service, ServicePrivilege[]> = {
     [Service.Admins]: [ ServicePrivilege.View, ServicePrivilege.Manage ],
     [Service.Addons]: [ ServicePrivilege.View, ServicePrivilege.Edit, ServicePrivilege.Delete ],
     [Service.AddonsUpload]: [ ServicePrivilege.Edit ],
-    [Service.PanelAdmin]: [ ServicePrivilege.View, ServicePrivilege.Edit ]
+    [Service.PanelAdmin]: [ ServicePrivilege.View, ServicePrivilege.Edit ],
+    [Service.Rcon]: [ ServicePrivilege.View, ServicePrivilege.Manage ]
 } 
 
 export interface SteamInfo {
@@ -78,3 +69,11 @@ export interface SteamInfo {
 }
 
 export type UserPrivileges = Partial<Record<Service, ServicePrivilege | null>>
+
+export type UserPrivilegeCode = "notes.view" | "notes.create" | "notes.edit_others" | "notes.delete_others"
+    | "bans.view" | "bans.create" | "bans.edit_others" | "bans.delete_others"
+    | "admins.view" | "admins.grant" | "admins.edit_others" | "admins.revoke"
+    | "addons.view" | "addons.edit" | "addons.delete" | "addons.upload"
+    | "panel.view" | "panel.manage" | "panel.update"
+    | "rcon.view" | "rcon.manage"
+    | "configs.read" | "configs.read_raw" | "configs.edit" 
