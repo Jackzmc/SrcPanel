@@ -39,7 +39,7 @@ export default class SteamAPI {
 
     async getUserDetails(steamids: (SteamID | string)[]): Promise<SteamUserDetails[]> {
         this._key_check()
-        const ids = steamids.map(steamid => steamid instanceof SteamID ? steamid.getSteamID64() : steamid).slice(0, 100).join(",")
+        const ids = steamids.map(steamid => steamid instanceof SteamID ? steamid.getsteamid2() : steamid).slice(0, 100).join(",")
         const res = await fetch(`https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v2/?key=${this.apikey}&format=json&steamids=${ids}`, {
             headers: { 'User-Agent': this.userAgent }
         })

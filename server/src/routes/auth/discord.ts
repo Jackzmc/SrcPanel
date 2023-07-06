@@ -167,7 +167,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     async function generateState(user?: User) {
         return await JWT.sign<StateJwtPayoad>({
             seed: STATE_SEED,
-            pub: user?.steamid64,
+            pub: user?.steamid2,
         }, STATE_JWT_SECRET, {
             expiresIn: '1hr'
         })

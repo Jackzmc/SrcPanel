@@ -66,8 +66,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                         const details = await fastify.steam.getUserDetails([steamid])
                         if(details.length > 0) {
 
-                            const steamid64 = steamid.getSteam2RenderedID()
-                            const admin = fastify.authmngr.getAdmin(steamid64)
+                            const steamid2 = steamid.getSteam2RenderedID()
+                            const admin = fastify.authmngr.getAdmin(steamid2)
                             if(admin) {
                                 await fastify.authmngr.loginUser(req, details[0], admin)
 

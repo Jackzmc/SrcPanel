@@ -36,7 +36,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 {
                     content: req.body.content,
                     steamid: req.params.steamid,
-                    markedBy: req.user.steamid64
+                    markedBy: req.user.steamid2
                 }
             )
 

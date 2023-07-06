@@ -22,12 +22,12 @@ export default class User {
     private adminData?: AdminData
     private authmngr: AuthManager
 
-    public steamid64: string
+    public steamid2: string
 
-    constructor(_authmngr: AuthManager, steamid64: string) {
+    constructor(_authmngr: AuthManager, steamid2: string) {
         this.authmngr = _authmngr;
-        this.steamid64 = steamid64
-        this.adminData = _authmngr.getAdmin(steamid64)
+        this.steamid2 = steamid2
+        this.adminData = _authmngr.getAdmin(steamid2)
     }
 
     get isAdmin() {
@@ -73,7 +73,7 @@ export default class User {
      * @deprecated
      */
     async grantPrivilege(service: Service, privilege: ServicePrivilege) {
-        await this.authmngr.setPrivileges(this.steamid64, { [service]: privilege })
+        await this.authmngr.setPrivileges(this.steamid2, { [service]: privilege })
     }
 
     
@@ -118,31 +118,31 @@ export default class User {
     }
 
     async addProvider(provider: OauthProvider, providerData: OauthProviderData, refreshToken?: string) {
-        return await this.authmngr.setProvider(this.steamid64, provider, providerData, refreshToken)
+        return await this.authmngr.setProvider(this.steamid2, provider, providerData, refreshToken)
     }
 
     async removeProvider(provider: OauthProvider) {
-        return await this.authmngr.setProvider(this.steamid64, provider, null)
+        return await this.authmngr.setProvider(this.steamid2, provider, null)
     }
 
     getProviders() {
-        return this.authmngr.getProviders(this.steamid64)
+        return this.authmngr.getProviders(this.steamid2)
     }
 
     async getSessions() {
-        return await this.authmngr.getSessions(this.steamid64)
+        return await this.authmngr.getSessions(this.steamid2)
     }
 
     async getApiKey() {
-        return this.authmngr.getAPIKeyForUser(this.steamid64)
+        return this.authmngr.getAPIKeyForUser(this.steamid2)
     }
 
     async regenerateApiKey() {
-        return this.authmngr.createApiKey(this.steamid64)
+        return this.authmngr.createApiKey(this.steamid2)
     }
 
     equals(id: string) {
-        if(id === this.steamid64) return true
+        if(id === this.steamid2) return true
 
         return false
     }

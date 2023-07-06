@@ -90,23 +90,23 @@ export default class AuthManager {
         return authorized
     }
     
-    public isAdmin(steamid64: string) {
-        return this.getAdmin(steamid64) != undefined
+    public isAdmin(steamid2: string) {
+        return this.getAdmin(steamid2) != undefined
     }
 
-    public getAdmin(steamid64: string) {
-        if(!steamid64) throw new Error("steamid64 is not defined")
-        return this.admins[steamid64.slice(10)]
+    public getAdmin(steamid2: string) {
+        if(!steamid2) throw new Error("steamid2 is not defined")
+        return this.admins[steamid2.slice(10)]
     }
 
     public getAdminById(id: number) {
         return Object.values(this.admins).find(admin => admin.id === id)
     }
 
-    public async getPrivileges(steamid64: string): Promise<UserPrivileges> {
+    public async getPrivileges(steamid2: string): Promise<UserPrivileges> {
         const [rows] = await this.db.execute<RowDataPacket[]>(
             "SELECT service, privilege FROM dash_privileges WHERE SUBSTRING(steamid, 11) = SUBSTRING(?, 11)",
-            [steamid64]
+            [steamid2]
         )
         let privs: UserPrivileges = {}
         for(const row of rows) {
@@ -115,27 +115,27 @@ export default class AuthManager {
         return privs
     }
 
-    public async getPermissions(steamid64: string): Promise<UserPrivilegeCode[]> {
+    public async getPermissions(steamid2: string): Promise<UserPrivilegeCode[]> {
         const [rows] = await this.db.execute<RowDataPacket[]>(
             "SELECT code FROM dash_permissions WHERE SUBSTRING(steamid, 11) = SUBSTRING(?, 11)",
-            [steamid64]
+            [steamid2]
         )
         return rows.map(row => row.code)
     }
 
     // If privilege is undefined, it will be ignored, if a privilege is null, it will be revoked
-    public async setPrivileges(steamid64: string, privileges: UserPrivileges) {
-        let user = this.getAdmin(steamid64)
+    public async setPrivileges(steamid2: string, privileges: UserPrivileges) {
+        let user = this.getAdmin(steamid2)
         for(const [service, priv] of Object.entries(privileges)) {
             if(priv === null) {
                 await this.db.execute(
                     "DELETE FROM dash_privileges WHERE SUBSTRING(steamid, 11) = SUBSTRING(?, 11) AND service = ?",
-                    [steamid64, service]
+                    [steamid2, service]
                 )
             } else {
                 await this.db.execute(
                     "INSERT INTO dash_privileges (steamid, service, privilege) VALUES(?, ?, ?) ON DUPLICATE KEY UPDATE privilege = ?",
-                    [steamid64, service, priv, priv]
+                    [steamid2, service, priv, priv]
                 )
             }
             user.permissions.base.privileges[service] = priv
