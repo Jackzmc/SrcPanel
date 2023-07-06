@@ -63,8 +63,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                     message: 'Ban not found',
                     statusCode: 404
                 })
-            } else if(req.user.equals) {
-
+            } else if(!req.user.equals(existing[0].executor) && !req.user.hasPermission("bans.edit.others")) {
+                return NO_PERMISSION(reply)
             }
 
             const ban = replaceObject<any>(existing[0], req.body)
@@ -108,6 +108,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     })
 
     fastify.post('/:steamid', async(req: FastifyRequest<{ Body: POSTBanBodyType, Params: { steamid: string } }>, reply) => {
+        // We use 'create' for delete and edit, as we want users to be able to always edit their bans
+        if(!req.user.hasPermission("bans.create")) return NO_PERMISSION(reply)
         if(!req.body.executor) {
             req.body.executor = req.session.user.steamid
         }
@@ -196,6 +198,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         async handler(req: FastifyRequest<{ 
             Params: { id: number }
         }>, reply) {
+            // We use 'create' for delete and edit, as we want users to be able to always edit their bans
+            if(!req.user.hasPermission("bans.create")) return NO_PERMISSION(reply)
             const [existing] = await fastify.db.execute<RowDataPacket[]>(`
                 SELECT * FROM bans WHERE id = ?`,
                 [req.params.id]
@@ -207,6 +211,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                     message: 'Ban not found',
                     statusCode: 404
                 })
+            } else if(!req.user.equals(existing[0].executor) && !req.user.hasPermission("bans.delete.others")) {
+                return NO_PERMISSION(reply)
             }
 
             const [ok] = await fastify.db.execute<OkPacket>(

@@ -1,4 +1,4 @@
-import { AdminData, OauthProvider, OauthProviderData, SessionData, SessionUser } from '../../../../common-types/User';
+import { AdminData, OauthProvider, OauthProviderData, SessionData, SessionUser, UserOauthProviders } from '../../../../common-types/User';
 import { SteamInfo, UserPrivileges, Service, ServicePrivilege, ActionRequiredPrivilege, Action, UserPrivilegeCode } from '../../../../common-types/Privileges.js';
 import AuthManager from '../AuthManager.js';
 import { Session } from 'fastify';
@@ -21,6 +21,7 @@ export type LogData = LogPropertiesType | LogPropertiesServiceAction
 export default class User {
     private adminData?: AdminData
     private authmngr: AuthManager
+    private _providers: UserOauthProviders
 
     public steamid2: string
 
@@ -63,6 +64,10 @@ export default class User {
     get flags() {
         if(!this.isAdmin) return null
         return this.adminData.permissions.flags
+    }
+
+    get providers() {
+        return this._providers
     }
 
     // get ip() {
@@ -125,8 +130,13 @@ export default class User {
         return await this.authmngr.setProvider(this.steamid2, provider, null)
     }
 
-    getProviders() {
-        return this.authmngr.getProviders(this.steamid2)
+    async getProvider(provider: OauthProvider) {
+        if(!this._providers) await this.updateProviders()
+        return this._providers[provider]
+    }
+
+    async updateProviders() {
+        this._providers = await this.authmngr.getProviders(this.steamid2)
     }
 
     async getSessions() {
@@ -143,6 +153,14 @@ export default class User {
 
     equals(id: string) {
         if(id === this.steamid2) return true
+        else if(id.substring(10) == id.substring(10)) return true
+
+        // Check if id is part of providers (ie, discord)
+        const [provider, identifier] = id.split(":")
+        if(provider && identifier  && this._providers) {
+            const data = this._providers[provider] as OauthProviderData | undefined
+            if(data?.id === id) return true
+        }
 
         return false
     }
