@@ -28,13 +28,14 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 message: "Server not found"
             })
         }
+        if(!req.user.hasPermission("servers.view", server.id)) return NO_PERMISSION(reply)
 
         const [test] = await fastify.db.execute(
             "SELECT server, type, timestamp, COUNT(*) as count FROM activity_log WHERE server = ?  AND type = 'JOIN'AND FROM_UNIXTIME(timestamp) >= (NOW() - INTERVAL 1 MONTH) GROUP BY DATE(FROM_UNIXTIME(timestamp)), HOUR(FROM_UNIXTIME(timestamp)) order by timestamp DESC",
             [server.activityLogId]
         )
         
-        const configs = req.user.hasPermission("configs.read") ? await server.getConfigFiles() : undefined
+        const configs = req.user.hasPermission("servers.configs.read", server.id) ? await server.getConfigFiles() : undefined
 
         return {
             info: server.info,
@@ -46,6 +47,9 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     })
 
     fastify.get('/:id/configs', async(req: FastifyRequest<{Params: { id: 'string' }, Querystring: { path: 'string', raw?: boolean }}>, reply) => {
+        // if(req.query.raw && !req.user.hasPermission("servers.configs.read_raw")) return NO_PERMISSION(reply)
+        // else if(!req.user.hasPermission("servers.configs.read")) return NO_PERMISSION(reply)
+        
         const server = fastify.servers.get(req.params.id)
         if(!server) {
             return reply.code(404).send({
@@ -62,11 +66,10 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 error: "NO_CFG_SETUP",
                 message: "Server has no config path configured"
             })
-        } else if(!req.user.hasPermission("configs.read")) {
-            return NO_PERMISSION(reply)
-        } else if(req.query.raw && !req.user.hasPermission("configs.read.raw")) {
-            return NO_PERMISSION(reply)
         }
+
+        const [code, granted] = req.user.requirePermission(`servers.configs.${req.query.raw ? 'read_raw' : 'read'}`, { resourceId: server.id })
+        if(!granted) return NO_PERMISSION(reply)
 
         const path = join(server.configDir, req.query.path)
         // Make sure supplied path has no path traversal
@@ -126,6 +129,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     })
 
     fastify.get('/:id/status', async(req: FastifyRequest<{Params: { id: 'string' }}>, reply) => {
+
         const server = fastify.servers.get(req.params.id)
         if(!server) {
             return reply.code(404).send({
@@ -133,6 +137,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 message: "Server not found"
             })
         }
+        if(!req.user.hasPermission("servers.view", server.id)) return NO_PERMISSION(reply)
+
         let recentActivities = null
         if(server.activityLogId) {
             const [rows] = await fastify.db.execute<RowDataPacket[]>("SELECT *, s1.last_alias as clientName, s2.last_alias as targetName FROM activity_log LEFT JOIN stats_users as s1 ON s1.steamid = client LEFT JOIN stats_users as s2 ON s2.steamid = target WHERE server = ? ORDER BY timestamp DESC LIMIT 5 ", [server.activityLogId])
@@ -155,12 +161,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
     fastify.post('/:id/start', async(req: FastifyRequest<{Params: { id: 'string'} }>, reply) => {
         const server = fastify.servers.get(req.params.id)
-        if(!server) {
-            return reply.code(404).send({
-                error: "SERVER_NOT_FOUND",
-                message: "Server not found"
-            })
-        }
+        if(!server) NOT_FOUND(reply, "Server")
+        if(!req.user.hasPermission("servers.cmds.start", server.id)) return NO_PERMISSION(reply)
         if(!server.hasSystemd) {
             return reply.code(400).send({
                 error: "NO_SYSTEMD",
@@ -180,10 +182,10 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     })
 
     fastify.post('/:id/cmd', async(req: FastifyRequest<{Params: { id: 'string'}, Body: string }>, reply) => {
-        if(!req.user.hasPermission("rcon.manage")) return NO_PERMISSION(reply)
-
         const server = fastify.servers.get(req.params.id)
         if(!server) return NOT_FOUND(reply, "Server")
+        if(!req.user.hasPermission("servers.rcon", server.id)) return NO_PERMISSION(reply)
+
         if(!server.hasRcon) {
             return reply.code(400).send({
                 error: "NO_RCON",
@@ -213,12 +215,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
     fastify.post('/:id/stop', async(req: FastifyRequest<{Querystring: { force?: boolean }, Params: { id: 'string'} }>, reply) => {
         const server = fastify.servers.get(req.params.id)
-        if(!server) {
-            return reply.code(404).send({
-                error: "SERVER_NOT_FOUND",
-                message: "Server not found"
-            })
-        }
+        if(!server) NOT_FOUND(reply, "Server")
+        if(!req.user.hasPermission("servers.cmds.stop", server.id)) return NO_PERMISSION(reply)
         if(!server.hasRcon) {
             return reply.code(400).send({
                 error: "NO_RCON",
@@ -252,12 +250,12 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
     fastify.post('/:id/restart', async(req: FastifyRequest<{Querystring: { force?: boolean, sse?: boolean }, Params: { id: 'string'} }>, reply) => {
         const server = fastify.servers.get(req.params.id)
-        if(!server) {
-            return reply.code(404).send({
-                error: "SERVER_NOT_FOUND",
-                message: "Server not found"
-            })
-        }
+        if(!server) NOT_FOUND(reply, "Server")
+        // We will allow users to restart IF they can start, allowing them to stop it kinda
+        // But if they force it, they will need stop permission too
+        if(req.query.force && !req.user.hasPermission("servers.cmds.stop", server.id)) return NO_PERMISSION(reply)
+        if(!req.user.hasPermission("servers.cmds.start", server.id)) return NO_PERMISSION(reply)
+
         if(!server.hasRcon) {
             return reply.code(400).send({
                 error: "NO_RCON",
@@ -288,12 +286,17 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         reply.raw.flushHeaders()
         reply.raw.write('retry: 10000\n\n')
         const server = fastify.servers.get(req.params.id)
+        
         if(!server) {
             send({
                 error: "Server Not Found", 
                 code: "SERVER_NOT_FOUND",
             })
         }
+        if((req.query.force && !req.user.hasPermission("servers.cmds.stop", server.id)) 
+            || !req.user.hasPermission("servers.cmds.start", server.id)
+        ) return send({error: "NO_PERMISSION", message: "You are not authorized to access this resource"})
+
         if(!server.hasRcon) {
             send({
                 error: "NO_RCON",
@@ -341,12 +344,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
     fastify.post('/:id/unreserve', async(req: FastifyRequest<{Params: { id: 'string'} }>, reply) => {
         const server = fastify.servers.get(req.params.id)
-        if(!server) {
-            return reply.code(404).send({
-                error: "SERVER_NOT_FOUND",
-                message: "Server not found"
-            })
-        }
+        if(!server) NOT_FOUND(reply, "Server")
+        if(!req.user.hasPermission("servers.cmds.unreserve", server.id)) return NO_PERMISSION(reply)
         if(!server.hasRcon) {
             return reply.code(400).send({
                 error: "NO_RCON",

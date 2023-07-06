@@ -21,6 +21,10 @@ export interface LogPropertiesPermCode extends LogProperties {
 
 export type LogData = LogPropertiesType | LogPropertiesServiceAction | LogPropertiesPermCode
 export type PermissionResult = [UserPrivilegeCode, boolean]
+export interface RequirePermissionOptions {
+    isCreator?: boolean,
+    resourceId?: string | number
+}
 
 export default class User {
     private adminData?: AdminData
@@ -94,20 +98,32 @@ export default class User {
         return this.adminData.permissions.privileges[service] === type
     }
 
-    hasPermission(code: UserPrivilegeCode) {
+    hasPermission(code: UserPrivilegeCode, resourceId?: string | number | undefined) {
+        // TODO: Make sure user for 'servers.configs.read' has access to 'servers.configs'? idk verify
+        let permCode: string = code
+        if(resourceId != undefined) permCode = `${permCode}.${resourceId}`
         for(const perm of this.adminData.permissions.codes) {
-            if(AuthManager.isPermissionGranted(code, perm)) return true
+            if(AuthManager.isPermissionGranted(permCode as UserPrivilegeCode, perm)) return true
         }
         return false
     }
 
 
-    requirePermission(code: UserPrivilegeCode, isCreator: boolean): PermissionResult {
+    requirePermission(code: UserPrivilegeCode, options: RequirePermissionOptions = {}): PermissionResult {
         let permCode: string = code
-        if(isCreator != undefined) {
+        if(options.isCreator != undefined) {
             permCode = `${code}.others`
+            if(this.hasPermission(permCode as UserPrivilegeCode)) {
+                return [permCode as UserPrivilegeCode, true]
+            }
+        } else if(options.resourceId != undefined) {
+            permCode = `${code}.${options.resourceId}`
+            if(this.hasPermission(permCode as UserPrivilegeCode)) {
+                return [permCode as UserPrivilegeCode, true]
+            }
         }
-        return [permCode as UserPrivilegeCode, this.hasPermission(code)]
+        // TODO: Hoist up to not waste time computing lower?
+        return [code, this.hasPermission(code)]
     }
 
     /**

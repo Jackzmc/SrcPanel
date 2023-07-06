@@ -65,7 +65,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             }
             // Check if they can edit this
             const isCreator = req.user.equals(existing[0].executor) 
-            const [code, granted] = req.user.requirePermission("bans.edit", isCreator)
+            const [code, granted] = req.user.requirePermission("bans.edit", {isCreator})
             if(!granted) return NO_PERMISSION(reply)
 
             const ban = replaceObject<any>(existing[0], req.body)
@@ -212,8 +212,9 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             }
             // Check if they can edit this
             const isCreator = req.user.equals(existing[0].executor) 
-            const [code, granted] = req.user.requirePermission("bans.delete", isCreator)
+            const [code, granted] = req.user.requirePermission("bans.delete", { isCreator })
             if(!granted) return NO_PERMISSION(reply)
+
             const [ok] = await fastify.db.execute<OkPacket>(
                 `DELETE FROM bans WHERE id = ?`,
                 [req.params.id]
