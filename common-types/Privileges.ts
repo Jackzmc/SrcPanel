@@ -70,9 +70,9 @@ export interface SteamInfo {
 
 export type UserPrivileges = Partial<Record<Service, ServicePrivilege | null>>
 
-export type UserPrivilegeCode = "notes.view" | "notes.create" | "notes.edit.others" | "notes.delete.others"
-    | "bans.view" | "bans.create" | "bans.edit.others" | "bans.delete.others"
-    | "admins.view" | "admins.grant" | "admins.edit.others" | "admins.revoke"
+export type UserPrivilegeCode = "notes.view" | "notes.create" | "notes.edit" | "notes.edit.others" | "notes.delete" | "notes.delete.others"
+    | "bans.view" | "bans.create" | "bans.edit" | "bans.edit.others" | "bans.delete" | "bans.delete.others"
+    | "admins.view" | "admins.grant" | "admins.edit" | "admins.edit.others" | "admins.revoke"
     | "addons.view" | "addons.edit" | "addons.delete" | "addons.upload"
     | "panel.view" | "panel.manage" | "panel.update"
     | "rcon.view" | "rcon.manage"

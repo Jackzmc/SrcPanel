@@ -136,7 +136,7 @@ let statsFailure = ref<string|undefined>()
 
 let info = ref<any>()
 const steamid2 = computed(() => {
-  return new SteamID(props.user.steamid).getsteamid2()
+  return new SteamID(props.user.steamid).getSteam2RenderedID()
 })
 const playtime = computed(() => {
   if(!info.value) return

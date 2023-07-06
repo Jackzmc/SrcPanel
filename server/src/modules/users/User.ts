@@ -15,8 +15,12 @@ export interface LogPropertiesServiceAction extends LogProperties {
     service: Service,
     action: Action
 }
+export interface LogPropertiesPermCode extends LogProperties {
+    code: UserPrivilegeCode,
+}
 
-export type LogData = LogPropertiesType | LogPropertiesServiceAction
+export type LogData = LogPropertiesType | LogPropertiesServiceAction | LogPropertiesPermCode
+export type PermissionResult = [UserPrivilegeCode, boolean]
 
 export default class User {
     private adminData?: AdminData
@@ -95,6 +99,15 @@ export default class User {
             if(AuthManager.isPermissionGranted(code, perm)) return true
         }
         return false
+    }
+
+
+    requirePermission(code: UserPrivilegeCode, isCreator: boolean): PermissionResult {
+        let permCode: string = code
+        if(isCreator != undefined) {
+            permCode = `${code}.others`
+        }
+        return [permCode as UserPrivilegeCode, this.hasPermission(code)]
     }
 
     /**

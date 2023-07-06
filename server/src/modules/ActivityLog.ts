@@ -45,8 +45,10 @@ export default class ActivityLog {
             if(target) msg = msg.replace(/%target%/g, `"Target<0><${target.steamid2}><>"`)
         }
         
+        // Legacy
         let type = null
-        if('type' in payload) type = payload.type
+        if('code' in payload) type = payload.code
+        else if('type' in payload) type = payload.type
         else if('service' in payload) type = `${payload.service}.${payload.action}`
 
 

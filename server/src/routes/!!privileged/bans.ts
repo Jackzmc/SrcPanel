@@ -4,7 +4,6 @@ import { Static, Type } from '@sinclair/typebox'
 import SteamID from 'steamid'
 import { FullAPIBan, APIBanFlags } from '../../../../common-types/Ban.js';
 import { computeChanges, replaceObject } from '../../util.js';
-import { Action, Service } from '../../../../common-types/Privileges.js';
 import { NO_PERMISSION } from '../../responses.js';
 
 const STEAM_WEB_APIKEY = process.env.STEAM_WEB_APIKEY
@@ -63,9 +62,11 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                     message: 'Ban not found',
                     statusCode: 404
                 })
-            } else if(!req.user.equals(existing[0].executor) && !req.user.hasPermission("bans.edit.others")) {
-                return NO_PERMISSION(reply)
             }
+            // Check if they can edit this
+            const isCreator = req.user.equals(existing[0].executor) 
+            const [code, granted] = req.user.requirePermission("bans.edit", isCreator)
+            if(!granted) return NO_PERMISSION(reply)
 
             const ban = replaceObject<any>(existing[0], req.body)
 
@@ -84,8 +85,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 }
             )
             const logPayload = {
-                service: Service.Bans,
-                action: Action.Edit,
+                code,
                 metadata: {
                     id: existing[0].id,
                     ...computeChanges<any>(existing[0], req.body)
@@ -162,8 +162,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         )
 
         await req.user.log(req.params.steamid, `%client% banned user %target%`, {
-            service: Service.Bans,
-            action: Action.Create,
+            code: "bans.create",
             metadata: {
                 id: ok.insertId, 
                 ...req.body
@@ -198,8 +197,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         async handler(req: FastifyRequest<{ 
             Params: { id: number }
         }>, reply) {
-            // We use 'create' for delete and edit, as we want users to be able to always edit their bans
-            if(!req.user.hasPermission("bans.create")) return NO_PERMISSION(reply)
+            if(!req.user.hasPermission("bans.delete")) return NO_PERMISSION(reply)
             const [existing] = await fastify.db.execute<RowDataPacket[]>(`
                 SELECT * FROM bans WHERE id = ?`,
                 [req.params.id]
@@ -211,22 +209,23 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                     message: 'Ban not found',
                     statusCode: 404
                 })
-            } else if(!req.user.equals(existing[0].executor) && !req.user.hasPermission("bans.delete.others")) {
-                return NO_PERMISSION(reply)
             }
-
+            // Check if they can edit this
+            const isCreator = req.user.equals(existing[0].executor) 
+            const [code, granted] = req.user.requirePermission("bans.delete", isCreator)
+            if(!granted) return NO_PERMISSION(reply)
             const [ok] = await fastify.db.execute<OkPacket>(
                 `DELETE FROM bans WHERE id = ?`,
                 [req.params.id]
             )
 
             await req.user.log(existing[0].steamid, `%client% removed ban #%id for %target%`, {
-                service: Service.Bans,
-                action: Action.Delete,
+                code,
                 metadata: {
                     id: existing[0].id, 
                 }
             })
+            
 
             return {
                 changes: ok.affectedRows,

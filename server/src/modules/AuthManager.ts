@@ -115,12 +115,12 @@ export default class AuthManager {
         return privs
     }
 
-    public async getPermissions(steamid2: string): Promise<UserPrivilegeCode[]> {
+    public async getPermissions(steamid2: string): Promise<Set<UserPrivilegeCode>> {
         const [rows] = await this.db.execute<RowDataPacket[]>(
             "SELECT code FROM dash_permissions WHERE SUBSTRING(steamid, 11) = SUBSTRING(?, 11)",
             [steamid2]
         )
-        return rows.map(row => row.code)
+        return new Set(rows.map(row => row.code))
     }
 
     // If privilege is undefined, it will be ignored, if a privilege is null, it will be revoked
@@ -439,12 +439,9 @@ export default class AuthManager {
         // Now we finally resolve user permission overrides
         // This is the most time intensive as we are running a query per admin
         for(const admin of Object.values(admins)) {
-            const [rows] = await this.db.execute<RowDataPacket[]>(
-                "SELECT code FROM dash_permissions WHERE admin_id = ?",
-                [admin.id]
-            )
-            for(const row of rows) {
-                admin.permissions.codes.add(row.code)
+            const permissions = await this.getPermissions(admin.identity)
+            for(const perm of permissions) {
+                admin.permissions.codes.add(perm)
             }
         }
         console.timeEnd('fetchAdmins:resolveOverrides')
@@ -506,7 +503,6 @@ export default class AuthManager {
             // Add the admin to the admin list
             if(!admins[accountId]) {
                 const privileges = await this.getPrivileges(row.identity)
-                const permissions = await this.getPermissions(row.identity)
                 admins[accountId] = {
                     id: row.id,
                     authtype: row.authtype,
