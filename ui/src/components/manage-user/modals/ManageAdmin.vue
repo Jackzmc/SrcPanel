@@ -293,6 +293,7 @@ function reset() {
     privileges: privileges.value
   }
 }
+/** @deprecated */
 function canApplyPrivilege(service: Service, privilege?: ServicePrivilege) {
   if(!canEdit.value) return false
   // Require user to have admins.manage perm:
@@ -313,7 +314,7 @@ let selectedgroupIds = ref<number[]>([])
 const noEditReasons = computed(() => {
   if(props.privUser.equals(props.user.steamid)) return ["Cannot edit your own profile"] // Disable editing ourself
   const reasons = []
-  if(!props.privUser.canPerformAction(Service.Admins, Action.Edit, props.user.steamid)) reasons.push("You lack the privileges to edit privileges")
+  if(!props.privUser.hasPermission("admins.edit", props.user.steamid)) reasons.push("You lack the privileges to edit privileges")
   if(props.userAdminData && form.value.immunity >= props.privUser.immunityLevel) reasons.push("You lack the access to edit this user")
   if(policyFailures.value.length > 0) reasons.push(...policyFailures.value)
   return reasons

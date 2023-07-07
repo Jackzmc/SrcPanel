@@ -12,6 +12,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     })
     
     fastify.get('/profile', async(req, reply): Promise<UserData<UserPrivilegeCode[]>> => {
+        await req.user.updateProviders()
         return {
             user: req.session.user,
             permissions: req.session.permissions,

@@ -73,9 +73,12 @@ export class PrivilegedUser {
 
   constructor(session: UserData<UserPrivilegeCode[]>) {
     if(!session) throw new Error("Session is empty")
+    console.log('what the fuck')
+    console.log({...session})
     // @ts-expect-error We store it temp as [] then immediately correct and change to set:
     this.data = session
-    if(this.data.permissions.codes) this.data.permissions.codes = new Set(this.data.permissions.codes)
+    if(this.data.permissions.codes) this.data.permissions.codes = new Set(session.permissions.codes)
+    console.log('type', typeof(session.permissions.codes))
   }
 
   equals(id: string) {
@@ -87,13 +90,18 @@ export class PrivilegedUser {
     return false
   }
 
-  hasPermission(code: UserPrivilegeCode) {
-    console.log('codes', typeof(this.permissions.codes))
-    for(const pattern of this.permissions.codes.values()) {
-      if(minimatch(code, pattern)) return true
+  hasPermission(code: UserPrivilegeCode, ...resourceIds: (string | number | undefined)[]) {
+    // TODO: Make sure user for 'servers.configs.read' has access to 'servers.configs'? idk verify
+    let permCode: string = code
+    for(const resource of resourceIds) {
+      if(resource != undefined)
+        permCode += `.${resource}`
+    }
+    for(const pattern of this.permissions.codes) {
+        if(minimatch(code, pattern)) return true
     }
     return false
-  }
+}
 
   hasFlag(flag: string, ignoreRoot: boolean = false) : boolean {
     const flags = this.flags

@@ -107,7 +107,7 @@
             <a class="navbar-item" @click="showSettings = !showSettings">
               <Icon icon="fa-gear" text="User Settings" />
             </a>
-            <router-link class="navbar-item" to="/panel/dashboard" v-if="privUser!.canPerformAction(Service.PanelAdmin, Action.View)">
+            <router-link class="navbar-item" to="/panel/dashboard" v-if="privUser!.hasPermission('panel.view')">
               <Icon icon="fa-sitemap" text="Panel Administration" />
             </router-link>
             <hr class="navbar-divider">

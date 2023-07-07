@@ -78,7 +78,7 @@ interface EditedNote {
 }
 
 const canEdit = computed(() => {
-  return props.privUser.canPerformAction(Service.Notes, Action.Edit, props.note.markedBy.id)
+  return props.privUser.hasPermission("notes.edit", props.note.markedBy.id)
 })
 
 const routeHref = computed(() => {
