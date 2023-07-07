@@ -152,7 +152,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
         let adminData = undefined
         if(req.query.include === "admin") {
-            adminData = fastify.authmngr.getAdmin(req.params.steamid)
+            adminData = fastify.authmngr.getAdminExport(req.params.steamid)
             if(adminData) delete adminData.password
         }
 

@@ -99,6 +99,40 @@ export default class AuthManager {
         return this.admins[steamid2.slice(10)]
     }
 
+    public getAdminExport(steamid2: string) {
+        if(!steamid2) throw new Error("steamid2 is not defined")
+        const admin = this.admins[steamid2.slice(10)]
+        if(!admin) return null
+        return {
+            id: admin.id,
+            name: admin.name,
+            groups: admin.groups.map(group => {
+                return {
+                    parentId: group.parentId,
+                    id: group.id,
+                    name: group.name,
+                    privileges: group.privileges,
+                    codes: [...group.codes.values()],
+                    immunityLevel: group.immunity,
+                    flags: group.flags,
+                }
+            }),
+            permissions: {
+                base: {
+                    flags: admin.permissions.base.flags,
+                    codes: [...admin.permissions.base.codes.values()],
+                    immunityLevel: admin.permissions.base.immunityLevel,
+                    privileges: admin.permissions.base.privileges
+                },
+                flags: admin.permissions.flags,
+                codes: [...admin.permissions.codes.values()],
+                immunityLevel: admin.permissions.immunityLevel,
+                privileges: admin.permissions.privileges
+            },
+            authtype: admin.authtype
+        }
+    }
+
     public getAdminById(id: number) {
         return Object.values(this.admins).find(admin => admin.id === id)
     }
@@ -581,7 +615,7 @@ export default class AuthManager {
                     steamid: admin.identity,
                     name: admin.name,
                     permissions: admin.permissions,
-                    groups: admin.groups
+                    groups: [...admin.groups.values()],
                 }
             }) as ReadableAdminData[]
     }
