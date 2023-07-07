@@ -5,7 +5,7 @@ import FastGeoip from 'fast-geoip'
 import User from '../../modules/users/User.js';
 import { SteamInfo } from '../../../../common-types/Privileges.js';
 
-export const SESSION_VERSION = "2.0"
+export const SESSION_VERSION = "3.0"
 
 
 interface OpenIDQuery {
@@ -67,7 +67,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                         if(details.length > 0) {
 
                             const steamid2 = steamid.getSteam2RenderedID()
-                            const admin = fastify.authmngr.getAdmin(steamid2)
+                            const admin = fastify.authmngr.getAdminExport(steamid2)
                             if(admin) {
                                 await fastify.authmngr.loginUser(req, details[0], admin)
 

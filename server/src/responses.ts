@@ -6,12 +6,12 @@ function response(reply: FastifyReply, code: number, error: string, message: str
     })
 }
 
-export function NO_PRIVILEGE(reply: FastifyReply) {
-    return response(reply, 403, "NO_PERMISSION", "You are not authorized to access this resource")
+export function NOT_LOGGED_IN(reply: FastifyReply) {
+    return response(reply, 403, "NOT_LOGGED_IN", "You are not logged in")
 }
 
 export function NO_PERMISSION(reply: FastifyReply) {
-    return response(reply, 401, "UNAUTHORIZED", "You are not logged in")
+    return response(reply, 401, "NO_PERMISSION", "You are not authorized to access this resource")
 }
 
 export function NOT_FOUND(reply: FastifyReply, resource: string) {

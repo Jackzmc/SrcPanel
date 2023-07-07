@@ -41,7 +41,7 @@ const app = Fastify({
 import { CustomFastifySession } from '../../common-types/User.js'
 import User from './modules/users/User.js';
 import ConfigManager from './modules/ConfigManager.js';
-interface CustomSession extends CustomFastifySession {
+interface CustomSession extends CustomFastifySession<UserPrivilegeCode[]> {
 } 
 declare module 'fastify' {
   export interface FastifyInstance {

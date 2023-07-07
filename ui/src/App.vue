@@ -85,6 +85,12 @@ async function getAuth() {
     userdata.value = json as UserData
     privUser.value = new PrivilegedUser(userdata.value)
     window.sessionStorage.setItem('srcds_userdata', JSON.stringify(userdata.value))
+    if(json.isSessionOld) { //
+      notify({
+        type: "warn",
+        text: "Your session is outdated, please login again.",
+      })
+    }
     console.log('Authorized: Hello', json.user.name)
   } else if(response.status == 401) {
     userdata.value = undefined

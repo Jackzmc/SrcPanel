@@ -1,6 +1,7 @@
 import { AdminData, SessionUser, WebPermission, WebRole, AdminPermissions } from '../../../common-types/User';
 import type  { UserData } from '../../../common-types/User';
 import { UserPrivileges, ActionRequiredPrivilege, ServicePrivilege, Service, Action, ServiceSupportedActions, ServicePrivilegeKeys, UserPrivilegeCode } from '../../../common-types/Privileges';
+import { minimatch } from 'minimatch'
 
 export interface PlayerData {
   isAdmin: boolean,
@@ -68,11 +69,13 @@ export class User {
 }
 
 export class PrivilegedUser {
-  private data: UserData
+  private data: UserData<Set<UserPrivilegeCode>>
 
-  constructor(session: UserData) {
+  constructor(session: UserData<UserPrivilegeCode[]>) {
     if(!session) throw new Error("Session is empty")
+    // @ts-expect-error We store it temp as [] then immediately correct and change to set:
     this.data = session
+    if(this.data.permissions.codes) this.data.permissions.codes = new Set(this.data.permissions.codes)
   }
 
   equals(id: string) {
@@ -85,7 +88,11 @@ export class PrivilegedUser {
   }
 
   hasPermission(code: UserPrivilegeCode) {
-    return this.permissions.codes.has(code)
+    console.log('codes', typeof(this.permissions.codes))
+    for(const pattern of this.permissions.codes.values()) {
+      if(minimatch(code, pattern)) return true
+    }
+    return false
   }
 
   hasFlag(flag: string, ignoreRoot: boolean = false) : boolean {

@@ -1,8 +1,9 @@
 import { SessionStore } from '@fastify/session';
 import { FastifyInstance, FastifyPluginOptions, FastifyReply, FastifyRequest } from 'fastify';
 import { RowDataPacket } from 'mysql2';
-import { SessionData, UserData } from '../../../../common-types/User';
+import type { SessionData, UserData } from '../../../../common-types/User';
 import { SESSION_VERSION } from './steam.js';
+import type { UserPrivilegeCode } from '../../../../common-types/Privileges.js';
 
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
@@ -10,7 +11,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         await fastify.authmngr.verify(req, reply)
     })
     
-    fastify.get('/profile', async(req, reply): Promise<UserData> => {
+    fastify.get('/profile', async(req, reply): Promise<UserData<UserPrivilegeCode[]>> => {
         return {
             user: req.session.user,
             permissions: req.session.permissions,

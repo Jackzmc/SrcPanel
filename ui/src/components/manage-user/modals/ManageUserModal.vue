@@ -35,7 +35,7 @@
                 </a>
               </li>
             </router-link>
-            <router-link v-if="privUser.canPerformAction(Service.Notes, Action.View)" :to="{ name: 'manage-user-notes' }" v-slot="{ href, navigate, isExactActive }" custom>
+            <router-link v-if="privUser.hasPermission('notes.view')" :to="{ name: 'manage-user-notes' }" v-slot="{ href, navigate, isExactActive }" custom>
               <li :class="{'is-active': isExactActive}">
                 <a :href="href" @click="navigate">
                   <Icon icon="fa-note-sticky">Notes ({{ user?.notesCount ?? 0 }})</Icon>

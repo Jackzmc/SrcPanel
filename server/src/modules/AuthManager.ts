@@ -99,12 +99,13 @@ export default class AuthManager {
         return this.admins[steamid2.slice(10)]
     }
 
-    public getAdminExport(steamid2: string) {
+    public getAdminExport(steamid2: string): ReadableAdminData {
         if(!steamid2) throw new Error("steamid2 is not defined")
         const admin = this.admins[steamid2.slice(10)]
         if(!admin) return null
         return {
             id: admin.id,
+            steamid: admin.identity,
             name: admin.name,
             groups: admin.groups.map(group => {
                 return {
@@ -113,7 +114,7 @@ export default class AuthManager {
                     name: group.name,
                     privileges: group.privileges,
                     codes: [...group.codes.values()],
-                    immunityLevel: group.immunity,
+                    immunity: group.immunity,
                     flags: group.flags,
                 }
             }),
@@ -129,7 +130,6 @@ export default class AuthManager {
                 immunityLevel: admin.permissions.immunityLevel,
                 privileges: admin.permissions.privileges
             },
-            authtype: admin.authtype
         }
     }
 
@@ -610,13 +610,7 @@ export default class AuthManager {
         if(fullAdmin) return Object.values(this.admins)
         else return Object.values(this.admins)
             .map(admin => {
-                return {
-                    id: admin.id,
-                    steamid: admin.identity,
-                    name: admin.name,
-                    permissions: admin.permissions,
-                    groups: [...admin.groups.values()],
-                }
+                return this.getAdminExport(admin.identity)
             }) as ReadableAdminData[]
     }
 
@@ -673,7 +667,7 @@ export default class AuthManager {
         )
 
         if(rows.length > 0) {
-            return this.getAdmin(rows[0].steamid)
+            return this.getAdminExport(rows[0].steamid)
         }
         return null
     }
@@ -690,10 +684,10 @@ export default class AuthManager {
         return rows[0].username
     }
     
-    public async loginUser(req: FastifyRequest, steamDetails: SteamUserDetails, admin: AdminData) {
+    public async loginUser(req: FastifyRequest, steamDetails: SteamUserDetails, admin: ReadableAdminData) {
         const steamInfo: SteamInfo = {
-            steamid: admin.identity,
-            accountid: new SteamID(admin.identity).accountid.toString(),
+            steamid: admin.steamid,
+            accountid: new SteamID(admin.steamid).accountid.toString(),
             name: steamDetails.personaname,
             profileurl: steamDetails.profileurl,
             avatarhash: steamDetails.avatarhash
@@ -719,6 +713,7 @@ export default class AuthManager {
      * @param {string} pattern The permission to check against matchCode
      */
     public static isPermissionGranted(matchCode: UserPrivilegeCode, pattern: string) {
+        console.log('test', pattern, matchCode, 'result='+ minimatch(matchCode, pattern))
         return minimatch(matchCode, pattern)
     }
 

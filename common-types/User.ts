@@ -36,14 +36,14 @@ export interface SessionData {
     countryCode: string,
     version?: string
 }
-interface BaseSession {
+interface BaseSession<T> {
     user: SessionUser,
-    permissions: AdminPermissions,
+    permissions: AdminPermissions<T>,
 }
-export interface CustomFastifySession extends BaseSession, SessionData {
+export interface CustomFastifySession<T> extends BaseSession<T>, SessionData {
 
 }
-export interface UserData extends BaseSession {
+export interface UserData<T> extends BaseSession<T> {
     isSessionOld: boolean,
     providers: UserOauthProviders
 }
@@ -102,7 +102,7 @@ export interface AdminData {
     identity: string,
     password: string | null,
     name: string,
-    permissions: AdminPermissions
+    permissions: AdminPermissions<Set<UserPrivilegeCode>>
 
     groups: AdminGroup[]
 }
@@ -111,8 +111,17 @@ export interface ReadableAdminData {
     id: number,
     steamid: string,
     name: string,
-    permissions: AdminPermissions
-    groups: AdminGroup[],
+    permissions: AdminPermissions<UserPrivilegeCode[]>
+    groups: ReadableAdminGroup[],
+}
+export interface ReadableAdminGroup {
+    parentId?: number,
+    id: number,
+    flags: string,
+    name: string,
+    immunity: number,
+    privileges: Partial<Record<Service, ServicePrivilege>>,
+    codes: UserPrivilegeCode[]
 }
 
 export interface AdminGroup {
@@ -129,15 +138,15 @@ export interface APIAdminGroup extends AdminGroup {
     canApply: boolean
 }
 
-export interface AdminPermissions {
+export interface AdminPermissions<C> {
     immunityLevel: number
     flags: string,
     privileges: UserPrivileges,
-    codes: Set<UserPrivilegeCode>,
+    codes: C,
     base: {
         immunityLevel: number,
         flags: string,
         privileges: UserPrivileges,
-        codes: Set<UserPrivilegeCode>
+        codes: C
     }
 }

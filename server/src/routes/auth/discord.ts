@@ -139,7 +139,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 // User is logging in to their account via discord
                 const admin = await fastify.authmngr.getAdminByProvider("discord", userJson.id)
                 if(!admin) return reply.send("<h1>You must link your discord account to your admin panel account first</h1>")
-                const details = await fastify.steam.getUserDetails([ new SteamID(admin.identity) ])
+                const details = await fastify.steam.getUserDetails([ new SteamID(admin.steamid) ])
                 if(details.length > 0) {
                     await fastify.authmngr.loginUser(req, details[0], admin)
                     const domain = await fastify.config.GetKV("domain");

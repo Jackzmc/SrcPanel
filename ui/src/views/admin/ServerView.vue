@@ -294,9 +294,8 @@ async function fetchServerInfo() {
         })
       }]
     } else {
-      const msg = json.message || json.error || json
+      const msg = json.message ?? json.error ?? json
       error.value = msg
-      throw new Error('Server returned: ', msg)
     }
   } catch(err: any) {
     error.value = `${response.statusText}: ${err.message}`
