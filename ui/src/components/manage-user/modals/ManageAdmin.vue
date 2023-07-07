@@ -61,9 +61,9 @@
           <FlagList :userdata="userdata" :flags="userAdminData.permissions.flags" only-active />
         </div>
         <div class="column">
-          <h6 class="title is-6">Web Privileges</h6>
-          <div v-for="(priv, service) in userAdminData.permissions.privileges" :key="service">
-            <b>{{ service }}</b>:&nbsp;<span v-if="priv != undefined">{{ PrivilegeNames[priv] }}</span><em v-else>(no privileges)</em>
+          <h6 class="title is-6">Web Permissions</h6>
+          <div v-for="code in userAdminData.permissions.codes" :key="code">
+            <b>{{ code }}</b>
           </div>
         </div>
       </div>
@@ -280,18 +280,15 @@ let groups = ref<AdminGroup[]>([])
 let form = ref<{
   immunity: number,
   flags: string[],
-  webFlags: number[],
   privileges: Partial<Record<Service, number | null>>
 }>({
   immunity: 0,
   flags: [],
-  webFlags: [],
   privileges: {}
 })
 function reset() {
   form.value = {
     flags: props.userAdminData?.permissions.base.flags?.split("") || [],
-    webFlags: convertIntToBitsArray(props.userAdminData.permissions.web.flags || 0),
     immunity: props.userAdminData?.permissions.base.immunityLevel || 0,
     privileges: privileges.value
   }
@@ -357,7 +354,7 @@ const cantAddAdmin = computed(() => {
 })
 
 const noPermsGiven = computed(() => {
-  return form.value.flags.length === 0 && selectedgroupIds.value.length === 0 && form.value.webFlags  .length === 0
+  return form.value.flags.length === 0 && selectedgroupIds.value.length === 0
 })
 
 
@@ -376,7 +373,6 @@ interface POSTAdminAPI {
   immunityLevel: number,
   flags: string,
   groupIds: string,
-  webPermissions: number
 }
 async function revoke() {
   if(window.confirm(`Are you sure you want to revoke ${props.user?.name}'s admin privileges? They will no longer be able to use any admin commands, see admin chat, or view any administration pages online.`)) {
@@ -416,7 +412,6 @@ async function save() {
         immunityLevel: form.value.immunity,
         flags: form.value.flags.join(''),
         groupIds: selectedgroupIds.value.join(','),
-        webPermissions: convertBitsArrayToInt(form.value.webFlags),
         name: props.user?.name,
         privileges
       } as POSTAdminAPI)
