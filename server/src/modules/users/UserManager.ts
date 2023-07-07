@@ -27,8 +27,8 @@ export default class UserManager {
 
     // Returns a user if they exist
     async getName(steamid: SteamID): Promise<IUserName | undefined> {
-        const steam64 = steamid.getsteamid2()
-        const [users] = await this.db.execute<IUserName[]>(SQL`SELECT * FROM user_names WHERE SUBSTRING(steamid, 11) = SUBSTRING(${steam64}, 11)`)
+        const steamacct = steamid.getSteam2RenderedID()
+        const [users] = await this.db.execute<IUserName[]>(SQL`SELECT * FROM user_names WHERE SUBSTRING(steamid, 11) = SUBSTRING(${steamacct}, 11)`)
         const user = users[0]
         if(!user) return null
         // Don't wait for the result, serve the stale data:
@@ -40,11 +40,10 @@ export default class UserManager {
     async fetchName(steamid: SteamID):Promise<IUserName | undefined> {
         let user = await this.getName(steamid)
         if(!user) {
-            const steam64 = steamid.getsteamid2()
             const users = await this.steam.getUserDetails([steamid])
             if(users.length > 0) {
                 user = {
-                    steamid: steam64,
+                    steamid: steamid.getSteam2RenderedID(),
                     name: users[0].personaname,
                     avatarHash: users[0].avatarhash
                 } as IUserName

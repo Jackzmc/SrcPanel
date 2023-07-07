@@ -115,10 +115,10 @@ export default class AuthManager {
         return privs
     }
 
-    public async getPermissions(steamid2: string): Promise<Set<UserPrivilegeCode>> {
+    public async getPermissions(adminId: number): Promise<Set<UserPrivilegeCode>> {
         const [rows] = await this.db.execute<RowDataPacket[]>(
-            "SELECT code FROM dash_permissions WHERE SUBSTRING(steamid, 11) = SUBSTRING(?, 11)",
-            [steamid2]
+            "SELECT code FROM dash_permissions WHERE admin_id = ?",
+            [adminId]
         )
         return new Set(rows.map(row => row.code))
     }
@@ -439,7 +439,7 @@ export default class AuthManager {
         // Now we finally resolve user permission overrides
         // This is the most time intensive as we are running a query per admin
         for(const admin of Object.values(admins)) {
-            const permissions = await this.getPermissions(admin.identity)
+            const permissions = await this.getPermissions(admin.id)
             for(const perm of permissions) {
                 admin.permissions.codes.add(perm)
             }
@@ -553,7 +553,7 @@ export default class AuthManager {
                     }
                 }
 
-                admins[key].groups.push(groups[groupId])
+                admins[accountId].groups.push(groups[groupId])
                 // Merge immunity & flags
                 if(row.sg_immunity > highestImmunity) highestImmunity = row.sg_immunity
                 for(const flag of row.sg_flags) {

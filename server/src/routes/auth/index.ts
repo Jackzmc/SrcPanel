@@ -15,7 +15,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             user: req.session.user,
             permissions: req.session.permissions,
             isSessionOld: req.session.version !== SESSION_VERSION,
-            providers: await req.user.getProviders(),
+            providers: req.user.providers,
         }
     })
 

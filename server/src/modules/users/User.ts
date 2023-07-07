@@ -98,10 +98,12 @@ export default class User {
         return this.adminData.permissions.privileges[service] === type
     }
 
-    hasPermission(code: UserPrivilegeCode, resourceId?: string | number | undefined) {
+    hasPermission(code: UserPrivilegeCode, ...resourceIds: (string | number | undefined)[]) {
         // TODO: Make sure user for 'servers.configs.read' has access to 'servers.configs'? idk verify
         let permCode: string = code
-        if(resourceId != undefined) permCode = `${permCode}.${resourceId}`
+        for(const resource of resourceIds) {
+            permCode += `.${resource}`
+        }
         for(const perm of this.adminData.permissions.codes) {
             if(AuthManager.isPermissionGranted(permCode as UserPrivilegeCode, perm)) return true
         }

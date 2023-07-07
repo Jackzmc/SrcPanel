@@ -1,8 +1,7 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
 import { OkPacket, RowDataPacket } from 'mysql2';
 import { Static, Type } from '@sinclair/typebox'
-import SteamID from 'steamid'
-import { NO_PERMISSION } from '../../responses';
+import { NO_PERMISSION } from '../../responses.js';
 
 const LogQuery = Type.Object({
     servers: Type.Optional(Type.String()),
