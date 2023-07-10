@@ -142,9 +142,26 @@
           </a>
         </div>
       </Field>
-      <Field label="Around Id">
-        <input v-model="filters.aroundId" type="number" class="input" min="0" style="width:30%" @change="fetchDebounce" placeholder="########" />
-      </Field>
+      <div class="columns">
+        <div class="column is-3">
+          <Field label="Around Id">
+            <input v-model="filters.aroundId" type="number" class="input" min="0" @change="fetchDebounce" placeholder="########" />
+          </Field>
+        </div>
+        <div class="column is-5">
+          <Field label="Data Source">
+            <div class="select is-fullwidth">
+              <select v-model="dataSource" @change="fetchDebounce">
+                <option value="main">Main</option>
+                <option value="archive">Archive</option>
+              </select>
+            </div>
+            <template v-slot:hint_info>
+              The archival sources can take a significant time to fetch
+            </template>
+          </Field>
+        </div>
+      </div>
     </div>
   </div>
   <Pagination :page="page" :count="totalEntries" :limit="limit" @page="setPage" />
@@ -245,6 +262,7 @@ let limit = ref(DEFAULT_LIMIT);
 let totalEntries = ref(0)
 let entries = ref()
 let fetchDebounce = ref()
+let dataSource = ref("main")
 let filters = ref<Record<string, string|string[]|null>>({
   servers: DEFAULT_SERVERS,
   types: DEFAULT_TYPES,
@@ -289,6 +307,7 @@ function getParams() {
   const searchParams = new URLSearchParams()
   searchParams.append('page', page.value.toString())
   searchParams.append('limit', limit.value.toString())
+  searchParams.append('source', dataSource.value)
   for(const [filter, val] of Object.entries(filters.value)) {
     if(!val) continue
     if(Array.isArray(val)) {

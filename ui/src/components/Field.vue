@@ -1,5 +1,5 @@
 <template>
-<div class="field">
+<div :class="['field', {'is-horizontal': props.horizontal}]">
     <label class="label" v-if="label || slots.label"><slot name="label">{{ label }}</slot></label>
     <div :class="['control', {'has-icons-left': iconLeft, 'has-icons-right': iconRight}]">
       <slot />
@@ -21,6 +21,7 @@ import { useSlots } from 'vue'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 const slots = useSlots()
 const props = defineProps<{
+  horizontal?: boolean,
   label?: string,
   success?: string,
   error?: string,
