@@ -77,8 +77,8 @@ export class PrivilegedUser {
     console.log({...session})
     // @ts-expect-error We store it temp as [] then immediately correct and change to set:
     this.data = session
-    if(this.data.permissions.codes) this.data.permissions.codes = new Set(session.permissions.codes)
-    console.log('type', typeof(session.permissions.codes))
+    if(Array.isArray(this.data.permissions.codes)) this.data.permissions.codes = new Set(session.permissions.codes)
+    else this.data.permissions.codes = new Set()
   }
 
   equals(id: string) {

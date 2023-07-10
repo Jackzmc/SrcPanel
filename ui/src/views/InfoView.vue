@@ -83,6 +83,7 @@ import Field from '@/components/Field.vue'
 import { UserData } from '../../../common-types/User.js';
 import data from '@/assets/data.json'
 import Sentiment from 'sentiment'
+import debounce from '@/js/debounce';
 const sentiment = new Sentiment();
 const analyzeOptions = {
   extras: data.sentimentWords
@@ -119,9 +120,10 @@ const notesCount = computed(() => {
   else return totalNotesCount.value
 })
 
-watch(() => notes.value, () => {
-  fetchNotes()
-})
+watch(() => search.value, () => {
+  console.log('search changed')
+  debounceFetchNotes()
+}, {deep: true})
 
 async function fetchNotes() {
   notes.value = undefined
@@ -153,6 +155,8 @@ async function fetchNotes() {
     fetchError.value = err.message
   }
 }
+
+const debounceFetchNotes = debounce(fetchNotes, 800)
 
 function computeRating(content: string) {
   content = content.toLowerCase()
