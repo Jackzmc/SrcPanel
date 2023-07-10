@@ -6,7 +6,9 @@ import { ADMINS_DB } from '../../routes/!!privileged/admins.js';
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
     
-    fastify.get('/', async(req: FastifyRequest<{ Params: { id: string }, Querystring: { limit?: number, page?: number }}>, reply) => {
+    fastify.get('/', async(req: FastifyRequest<{ Querystring: { 
+            limit?: number, page?: number, search_content?: string, search_user?: string
+        }}>, reply) => {
         let page = Number(req.query.page)
         if(!page || page < 0) page = 1
 
@@ -15,9 +17,18 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
         const offset = (page - 1) * limit;
 
-        const [notesCount] = await fastify.db.execute<RowDataPacket[]>("SELECT COUNT(*) as count FROM notes")
 
-
+        const queryConditions = []
+        const queryData = []
+        for(const param in req.query) {
+            let [key, column] = param.split("_")
+            if(key === "search" && req.query[param] != "") {
+                if(column == "user") column = 'u.last_alias'
+                queryConditions.push(`${column} LIKE ?`)
+                queryData.push(`%${req.query[param]}%`)
+            }
+        }
+        const whereCondition = queryConditions.length > 0 ? `WHERE ${queryConditions.join(' AND ')}` : ''
         const [notes] = await fastify.db.execute<RowDataPacket[]>(
             `SELECT DISTINCT notes.id, notes.steamid, notes.markedBy, notes.content, u.last_alias as user, e.last_alias as executor, !b.expired as banned,
             (SELECT COUNT(*) FROM ${ADMINS_DB}.sm_admins WHERE ${ADMINS_DB}.sm_admins.identity = u.steamid) as targetIsAdmin
@@ -25,9 +36,12 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             LEFT JOIN stats_users as u ON notes.steamid = u.steamid 
             LEFT JOIN stats_users as e ON notes.markedBy = e.steamid 
             LEFT JOIN bans as b ON notes.steamid = b.steamid 
+            ${whereCondition}
             ORDER BY notes.id DESC LIMIT ?, ?`,
-            [offset, limit]
+            [...queryData, offset, limit]
         )
+
+        const [notesCount] = await fastify.db.execute<RowDataPacket[]>(`SELECT COUNT(*) as count FROM notes`)
 
         return {
             totalNotes: notesCount[0].count,

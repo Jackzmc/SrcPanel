@@ -22,7 +22,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="note in filteredNotes" :key="note.id">
+            <tr v-for="note in notes" :key="note.id">
               <td class="has-tooltip-right" :data-tooltip="'Rating: ' + note.rating.value">
                 <span :class="note.class">{{note.id}}</span>
               </td>
@@ -76,7 +76,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onBeforeMount, onMounted, computed } from 'vue'
+import { ref, onBeforeMount, onMounted, computed, watch } from 'vue'
 import ActionNote from '@/components/ActionNote.vue'
 import Pagination from '@/components/Pagination.vue'
 import Field from '@/components/Field.vue'
@@ -115,39 +115,18 @@ const hasSearchQuery = computed(() => {
   return search.value.user || search.value.content
 })
 const notesCount = computed(() => {
-  if(hasSearchQuery) return filteredNotes.value.length
+  if(hasSearchQuery && notes.value) return notes.value.length
   else return totalNotesCount.value
 })
 
-const filteredNotes = computed(() => {
-  if(!notes.value) return []
-  if(!hasSearchQuery) return notes.value
-  let filtered = notes.value
-  if(search.value.user != '') {
-    let query = search.value.user.toLowerCase()
-    let onlyMarkedBy = query.startsWith("$")
-    if(onlyMarkedBy) {
-      query = query.slice(1)
-    }
-
-    filtered = filtered.filter(note => {
-      return (!onlyMarkedBy && (note.client.id.includes(query) || note.client.name?.toLowerCase().includes(query)))
-        || note.markedBy.id.includes(query) || note.markedBy.name?.toLowerCase().includes(query)
-    })
-  }
-
-  if(search.value.content != '') {
-    const query = search.value.content.toLowerCase()
-    filtered = filtered.filter(note => note.content.toLowerCase().includes(query))
-  }
-
-  return filtered.sort((a,b) => b.id - a.id)
+watch(() => notes.value, () => {
+  fetchNotes()
 })
 
 async function fetchNotes() {
   notes.value = undefined
   try {
-    const response = await fetch(`/api/notes?page=${page.value}&limit=${limit.value}`)
+    const response = await fetch(`/api/notes?page=${page.value}&limit=${limit.value}&search_content=${search.value.content}&search_user=${search.value.user}`)
     const json = await response.json()
     if(response.ok) {
       totalNotesCount.value = json.totalNotes
@@ -179,6 +158,11 @@ function computeRating(content: string) {
   content = content.toLowerCase()
     .replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,"")
     .replace(/\s{2,}/g," ");
+
+  // Ideally analyzeOptions's extraWords should catch these, but its not:
+  if(content == "+rep") return { key: "positive", score: 5}
+  else if(content == "-rep") return { key: "negative", score: -5}
+
   const { score } = sentiment.analyze(content, analyzeOptions)
   let key = null
   if(score >= 2) key = "positive"
