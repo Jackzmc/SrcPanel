@@ -9,7 +9,7 @@
         <p class="subtitle is-=6">
           The ID column shows the id of the note, with the rating of the note's message.
         </p>
-        <Pagination :page="page" :limit="limit" :count="totalNotesCount" @page="setPage"></pagination>
+        <Pagination :page="page" :limit="limit" :count="notesCount" @page="setPage"></pagination>
 
         <table class="table is-fullwidth">
           <thead>
@@ -49,7 +49,7 @@
             </tr>
           </tbody>
         </table>
-        <Pagination :page="page" :limit="limit" :count="totalNotesCount" @page="setPage"></pagination>
+        <Pagination :page="page" :limit="limit" :count="notesCount" @page="setPage"></pagination>
       </div>
       <div class="column" v-else-if="fetchError">
         <p class="my-5 is-size-2 has-text-centered has-text-danger">{{ fetchError }}</p>
@@ -95,7 +95,9 @@ const props = defineProps<{
 
 let page = ref(1)
 let limit = ref(40)
-let totalNotesCount = ref(0)
+let totalNotesCount = ref(0) // Absolute count, no filters
+let notesCount = ref(0) // Count with filters
+// notes.length: Count with filters, returned from pagination
 let fetchError = ref<string|undefined>(undefined)
 let notes = ref<any[] | undefined>(undefined)
 let admins = ref<any[]>([])
@@ -115,10 +117,6 @@ function changeLimit() {
 const hasSearchQuery = computed(() => {
   return search.value.user || search.value.content
 })
-const notesCount = computed(() => {
-  if(hasSearchQuery && notes.value) return notes.value.length
-  else return totalNotesCount.value
-})
 
 watch(() => search.value, () => {
   console.log('search changed')
@@ -131,7 +129,6 @@ async function fetchNotes() {
     const response = await fetch(`/api/notes?page=${page.value}&limit=${limit.value}&search_content=${search.value.content}&search_user=${search.value.user}`)
     const json = await response.json()
     if(response.ok) {
-      totalNotesCount.value = json.totalNotes
       notes.value = json.notes.map((note: any) => {
         note.content = note.content.trim()
         note.class = ["tag"]
@@ -148,6 +145,8 @@ async function fetchNotes() {
         }
         return note
       })
+      totalNotesCount.value = json.totalNotes
+      notesCount.value = json.notesCount
     } else {
       fetchError.value = json.message
     }

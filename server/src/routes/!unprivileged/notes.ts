@@ -28,7 +28,18 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 queryData.push(`%${req.query[param]}%`)
             }
         }
-        const whereCondition = queryConditions.length > 0 ? `WHERE ${queryConditions.join(' AND ')}` : ''
+        let whereCondition = ""
+        let whereCount = null
+        if(queryConditions.length > 0) {
+            whereCondition = `WHERE ${queryConditions.join(' AND ')}`
+            const [notesCount] = await fastify.db.execute<RowDataPacket[]>(`
+                SELECT COUNT(*) as count FROM notes 
+                LEFT JOIN stats_users as u ON notes.steamid = u.steamid
+                ${whereCondition}`,
+                queryData
+            )
+            whereCount = notesCount[0].count
+        }
         const [notes] = await fastify.db.execute<RowDataPacket[]>(
             `SELECT DISTINCT notes.id, notes.steamid, notes.markedBy, notes.content, u.last_alias as user, e.last_alias as executor, !b.expired as banned,
             (SELECT COUNT(*) FROM ${ADMINS_DB}.sm_admins WHERE ${ADMINS_DB}.sm_admins.identity = u.steamid) as targetIsAdmin
@@ -45,6 +56,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
         return {
             totalNotes: notesCount[0].count,
+            notesCount: whereCount ?? notesCount[0].count,
             notes: notes.map(note => {
                 return formatNote(note)
             })
