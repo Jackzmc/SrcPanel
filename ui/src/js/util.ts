@@ -123,6 +123,29 @@ export async function request(url: RequestInfo, options?: RequestInit, errOption
   }
 }
 
+
+/**
+ * Gives a object that allows you to start a request with a configurable timeout and being able to abort it
+ * @date 7/11/2023 - 9:20:14 AM
+ *
+ * @export
+ * @param {RequestInfo} url The url
+ * @param {number} timeout Milliseconds
+ * @param {?RequestInit} [options]
+ * @param {Partial<NotificationsOptions>} [errOptions={}]
+ */
+export function requestTimeout(url: RequestInfo, timeout: number, options?: RequestInit, errOptions: Partial<NotificationsOptions> = {}) {
+  const controller = new AbortController()
+  const start = () => {
+    setTimeout(() => controller.abort(), timeout)
+    return request(url, { signal: controller.signal, ...options}, errOptions)
+  }
+  return {
+    controller,
+    start
+  }
+}
+
 export function formatDate(timestamp?: number, onlyDate = false) {
   const d = timestamp ? new Date(timestamp * 1000) : new Date();
   if(onlyDate) return d.toLocaleDateString()

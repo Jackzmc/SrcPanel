@@ -213,7 +213,7 @@ import { UserData } from '../../../../common-types/User.js';
 import { useNotification } from '@kyvg/vue3-notification';
 import { PrivilegedUser } from '@/js/User';
 import { ref, onBeforeMount, computed } from 'vue';
-import { formatDate, getRelDate, request } from '@/js/util';
+import { formatDate, getRelDate, request, requestTimeout } from '@/js/util';
 import LogMessage from '@/components/LogMessage.vue';
 import Field from '@/components/Field.vue';
 import Pagination from '@/components/Pagination.vue';
@@ -250,6 +250,7 @@ const router = useRouter()
 const { notify } = useNotification();
 
 const REFRESH_INTERVAL = 90_000
+const MAX_REQUEST_TIME = 1000 * 110 // 110 seconds max, any more and CF may kick in
 
 const DEFAULT_TYPES = ["ACTION", "CHAT", "INFO", "STATE", "QUIT", "JOIN"];
 const DEFAULT_SERVERS = ["main", "reserved"];
@@ -366,7 +367,8 @@ function getParams() {
   return searchParams.toString()
 }
 
-let fetchAbort = new AbortController()
+let fetchAbort: AbortController | null = null
+
 
 async function fetchLogs(resetPage = true) {
   // Wait for previous request
@@ -374,12 +376,13 @@ async function fetchLogs(resetPage = true) {
   if(loadingTime.value != undefined) return
   if(resetPage) {
     page.value = 1
-    fetchAbort.abort()
-    fetchAbort = new AbortController()
+    fetchAbort?.abort()
   }
 
   loadingTime.value = Date.now()
-  const response = await request(`/api/logs/?${params}`, { signal: fetchAbort.signal })
+  const responseHandle = requestTimeout(`/api/logs/?${params}`, MAX_REQUEST_TIME)
+  fetchAbort = responseHandle.controller
+  const response = await responseHandle.start()
   if(response?.ok) {
     const json = await response.json()
     totalEntries.value = json.totalFilteredCount
