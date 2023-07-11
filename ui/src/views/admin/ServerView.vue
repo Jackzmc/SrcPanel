@@ -1,13 +1,18 @@
 <template>
-<div>
-<div class="notification is-danger" v-if="error">
-  <h4 class="title is-4 has-text-centered">Could not acquire server information</h4>
-  <h4 class="subtitle is-4  has-text-centered">Server returned an error</h4>
-  <p class="has-text-centered ">
-    {{error}}
-  </p>
+<div class="has-background-light pt-0">
+<div class="container">
+  <article class="message is-danger" v-if="error && !server">
+    <div class="message-header">
+      <p><Icon icon="fa-exclamation-triangle">An error occurred while fetching server information</Icon></p>
+    </div>
+    <div class="message-body">
+      <p>{{ error }}</p>
+      <br>
+      <p><a class="button is-info" @click="init">Retry</a></p>
+    </div>
+  </article>
 </div>
-<nav class="container mb-3" v-if="server">
+<nav class="container mb-3 is-fluid" v-if="server">
   <div class="columns">
     <div class="column is-8">
       <router-link to="/admin/servers" class="button is-small">🠐 back to servers list</router-link><br><br>
@@ -17,11 +22,15 @@
         <div class="tags is-pulled-right inline">
           <span class="tag is-success  is-medium" v-if="status && status.online">Online</span>
           <span class="tag is-danger  is-medium" v-else-if="status && !status.online">Offline</span>
-          <span class="tag  is-medium" v-else>Unknown</span>
-          <span data-tooltip="Server ID" class="tag is-info  is-medium">{{server.info.id}}</span>
+          <span class="tag is-danger is-medium has-tooltip-danger no-border" v-else-if="error" data-tooltip="An error occurred while fetching the server's status"><Icon icon="fa-exclamation-triangle">Error</Icon></span>
+          <span class="tag is-medium" v-else><Icon icon="fa-spinner" spin></Icon></span>
+          <span data-tooltip="Server ID" class="tag is-info is-medium no-border">{{server.info.id}}</span>
         </div>
       </h3>
-      <h4 class="subtitle is-4">{{server.info.domain}}:{{server.info.port}}</h4>
+      <h4 class="subtitle is-4">
+        {{server.info.domain}}:{{server.info.port}}
+        <Icon icon="fa-copy" data-tooltip="Copy to clipboard" @click="copyAddress"></Icon>
+      </h4>
       <div class="tags">
         <span v-for="tag in server.info.tags" :key="tag" class="tag is-dark">{{tag}}</span>
       </div>
@@ -31,7 +40,7 @@
           <li v-for="(data, id) in TABS" :key="id"  :class="{'is-active': tab === id}">
             <router-link
               :to="{params:{tab: id}}"
-              v-if="(!data.flag || privUser.hasWebPerm(data.flag)) && (data.enabled == undefined || data.enabled())"
+              v-if="(!data.flag || privUser.hasPermission('servers.configs.read')) && (data.enabled == undefined || data.enabled())"
             >
               {{data.name}}
             </router-link>
@@ -40,19 +49,31 @@
       </div>
       <div v-if="tab === 'overview'" class="box">
         <template v-if="status && status.online">
+          <!-- <div>
+            <div class="tile is-ancestor">
+              <div class="tile">
+                <p class="title">Map</p>
+                <p class="subtitle">
+                  {{ getMapDisplay(status.data.map)?.name }}
+                </p>
+              </div>
+            </div>
+          </div> -->
           <div class="columns">
             <div class="column">
-              <h5 class="title is-5 is-underlined">Map</h5>
+              <h5 class="title is-5 is-underlined"><span class="tag is-large is-info">Map</span></h5>
               <p :data-tooltip="status.data.map" v-html="formatMap(status.data.map)"></p>
             </div>
             <div class="column">
-              <h5 class="title is-5 is-underlined">Gamemode</h5>
+              <h5 class="title is-5 is-underlined"><span class="tag is-large is-info">Gamemode</span></h5>
               <p :data-tooltip="status.data.gamemode">{{formatGamemode(status.data.gamemode)}}</p>
             </div>
           </div>
           <div class="columns">
             <div class="column">
-              <h5 class="title is-5 is-underlined">Online Players ({{status.data.players.length}} / {{status.data.maxplayers}})</h5>
+              <h5 class="title is-5 tags">
+                <span class="tag is-large is-info">Online Players ({{status.data.players.length}} / {{status.data.maxplayers}})</span>
+              </h5>
               <div class="content" v-if="status.data.players.length > 0">
                 <ul>
                   <li v-for="player in status.data.players" :key="player">
@@ -63,7 +84,7 @@
               <em class="my-2" v-else>no players are online</em>
             </div>
             <div class="column">
-              <h5 class="title is-5 is-underlined">Uptime</h5>
+              <h5 class="title is-5 is-underlined"><span class="tag is-large is-info">Uptime</span></h5>
               <p v-if="stats">{{ formatUptime(stats.uptime) }}</p>
               <em v-else>no information available</em>
             </div>
@@ -73,11 +94,25 @@
         </template>
         <div class="notification is-danger has-text-centered" v-else-if="status && !status.online">
           The server is offline or is unreachable.
+          <span class="is-inline is-pulled-right no-border" data-tooltip="Time until next refresh">
+            <Icon icon="fa-spinner" spin v-if="nextRefreshCountdown == 0"></Icon>
+            <span v-else>{{ nextRefreshCountdown }}s</span>
+          </span>
         </div>
         <!-- <p v-else-if="status && !status.online" class="has-text-centered has-text-danger subtitle is-4">Server is offline or unreachable</p> -->
         <p class="has-text-centered subtitle is-4 my-6 has-text-danger" v-else-if="status && status.error">{{  status.error }}</p>
-        <p class="has-text-centered subtitle is-4 my-6" v-else>Waiting for server status...</p>
-        <br>
+        <!-- <div class="notification is-danger has-text-centered" v-else-if="error">
+          An error occurred while
+        </div> -->
+        <article class="message is-danger" v-else-if="error">
+          <div class="message-header">
+            <p><Icon icon="fa-exclamation-triangle">An error occurred while fetching server information</Icon></p>
+          </div>
+          <div class="message-body">
+            {{ error }}
+          </div>
+        </article>
+        <p class="has-text-centered subtitle is-4 my-6" v-else><Icon icon="fa-spinner" spin>Waiting for server status...</Icon></p>
         <VueApexCharts :series='series' :options="options" type="line" />
         <VueApexCharts :series='series2' :options="options2" type="line" />
 
@@ -92,16 +127,6 @@
         </template>
         <p class="has-text-centered subtitle is-5 my-6" v-else>Select a config file on the right to view its content</p>
       </div>
-      <div v-else-if="tab === 'actions'" class="box">
-        <div class="buttons">
-          <template v-if="status?.online">
-          <a @click="processAction(server, 'stop')" class="button is-dark">Request Restart</a>
-          <a @click="processAction(server, 'unreserve')" class="button is-dark">Unreserve</a>
-          <a @click="processAction(server, 'stop?force=1')" class="button is-warning">Force Restart</a>
-          </template>
-          <a v-if="server.info.tags.includes('systemd')" @click="processAction(server, 'start')" class="button is-success">Start Server</a>
-        </div>
-      </div>
     </div>
 
     <div class="column">
@@ -115,6 +140,18 @@
             </option>
           </select>
         </div>
+      </div>
+      <div class="box">
+        <h4 class="title is-5">Actions</h4>
+        <div class="buttons">
+          <template v-if="status?.online">
+          <a @click="processAction(server, 'stop')" class="button is-dark">Request Restart</a>
+          <a @click="processAction(server, 'stop?force=1')" class="button is-warning">Force Restart</a>
+          <a @click="processAction(server, 'unreserve')" class="button is-dark">Unreserve</a>
+          </template>
+          <a v-if="server.info.tags.includes('systemd')" @click="processAction(server, 'start')" class="button is-success">Start Server</a>
+        </div>
+        <p v-if="!status?.online && !server.info.tags.includes('systemd')"><em>no actions available</em></p>
       </div>
       <div class="box" v-if="tab === 'overview'">
         <h4 class="title is-5">Recent Activity</h4>
@@ -132,12 +169,12 @@
             </tr>
           </tbody>
         </table>
-        <p v-else class="has-text-centered">Server has no activity logs setup</p>
+        <p v-else><em>not supported on server</em></p>
       </div>
       <div v-else-if="tab === 'configs'" class="box">
         <h5 class="title is-5">Config Files</h5>
         <FolderBrower v-if="server.configs" @select="onCfgChosen" :paths="server.configs" />
-        <p v-else>Server has no configs setup</p>
+        <em v-else>not supported on server</em>
       </div>
     </div>
   </div>
@@ -148,7 +185,7 @@
 
 <script setup lang="ts">
 import { useRoute, useRouter } from 'vue-router'
-import { onBeforeMount, ref, computed } from 'vue'
+import { onBeforeMount, ref, computed, onUnmounted } from 'vue'
 import FolderBrower from'@/components/FolderBrowser.vue'
 import { UserData, WebPermission } from '../../../../common-types/User';
 import { PrivilegedUser } from '@/js/User';
@@ -232,13 +269,11 @@ const TABS: Record<string, { name: string, flag?: WebPermission, enabled?: Funct
     enabled: () => {
       return server.value && server.value.configs
     }
-  },
-  actions: {
-    name: "Actions"
   }
 }
 
 let starting = ref(false)
+let lastRefreshTime = ref()
 let server = ref()
 let servers = ref()
 let status = ref()
@@ -248,9 +283,15 @@ let cfg = ref<{
   selected?: string, raw?: string, json?: any, loading: boolean }
 >({ loading: false })
 let error = ref<string>()
+let now = ref(Date.now())
+
 
 const tab = computed(() => {
   return route.params.tab.length > 0 ? route.params.tab : "overview"
+})
+
+const nextRefreshCountdown = computed(() => {
+  return Math.max(Math.floor(((lastRefreshTime.value + REFRESH_INTERVAL) - now.value) / 1000), 0)
 })
 
 async function onCfgChosen(data: { file: string, folder?: string }, raw = false) {
@@ -271,12 +312,13 @@ async function onCfgChosen(data: { file: string, folder?: string }, raw = false)
 async function onSelectNewServer(event: any) {
   await router.push({ name: 'admin-server-view', params: { tab: 'overview', id: event.target.value }})
   server.value = undefined
-  await fetchServerInfo()
-  await fetchServerStatus()
+  init()
 }
 async function fetchServerInfo() {
   error.value = undefined
+  const id = route.params.id
   const response = await fetch(`/api/servers/${route.params.id}`)
+  if(id != route.params.id) return // Ignore changes in id
   try {
     const json = await response.json()
     if(response.ok) {
@@ -287,23 +329,30 @@ async function fetchServerInfo() {
           return { x: new Date(count.timestamp*1000), y: count.count }
         })
       }]
-      series.value = [{
-        name: "Player Joins",
-        data: json.test.map((row: any) => {
-          return { x: new Date(row.timestamp*1000), y: row.count }
-        })
-      }]
+      if(json.playerJoins) {
+        series.value = [{
+          name: "Player Joins",
+          data: json.playerJoins.map((row: any) => {
+            return { x: new Date(row.timestamp*1000), y: row.count }
+          })
+        }]
+      }
+      return true
     } else {
-      const msg = json.message ?? json.error ?? json
-      error.value = msg
+      error.value = json.message ?? json.err ?? json ?? await response.text()
+      return false
     }
   } catch(err: any) {
-    error.value = `${response.statusText}: ${err.message}`
-    throw err
+    console.error(err)
+    error.value = `${response.status} ${response.statusText}: ${err.message}`
+    return false
   }
 }
 async function fetchServerStatus() {
+  const id = route.params.id
   const response = await fetch(`/api/servers/${route.params.id}/status`)
+  if(id != route.params.id) return // Ignore changes in id
+  lastRefreshTime.value = Date.now()
   const json = await response.json()
   if(response.ok) {
     status.value = json.status
@@ -313,12 +362,23 @@ async function fetchServerStatus() {
     status.value = { error: json.message }
   }
 }
+const SERVER_CACHE_EXP_TIME = 1000 * 60 * 60 * 24 // 1 day
 async function fetchServersCompact() {
-  const response = await request(`/api/servers?compact=1`)
-  if(response?.ok) {
-    const json = await response.json()
-    servers.value = json
+  let cachedServers: any = window.localStorage?.getItem("srcds_servers")
+  if(cachedServers) cachedServers = JSON.parse(cachedServers)
+
+  if(!cachedServers || Date.now() - cachedServers.timestamp > SERVER_CACHE_EXP_TIME) {
+    const response = await request(`/api/servers?compact=1`)
+    if(response?.ok) {
+      const json = await response.json()
+      cachedServers = {
+        timestamp: Date.now(),
+        data: json
+      }
+      window.localStorage.setItem("srcds_servers", JSON.stringify(cachedServers))
+    }
   }
+  servers.value = cachedServers.data
 }
 
 function processAction(server: any, type: string) {
@@ -353,11 +413,19 @@ function processAction(server: any, type: string) {
 }
 
 function formatMap(mapId: string) {
+  const display = getMapDisplay(mapId)
+  return display ? `<p class="title is-6">${display.name}</p><p class="subtitle is-6">Chapter ${display.chapterId} "${display.chapterName}"</p>` : mapId
+}
+function getMapDisplay(mapId: string) {
   const match = mapId.match(/c(\d{1,2})m(\d)_(.*)/)
   if(match && match.length == 4) {
-    return `<p class="title is-6">${OfficialCampaignNames[Number(match[1]) - 1]}</p><p class="subtitle is-6">Chapter ${match[2]} "${match[3]}"</p>`
+    return {
+      name: OfficialCampaignNames[Number(match[1]) - 1],
+      chapterId: match[2],
+      chapterName: match[3]
+    }
   }
-  return mapId;
+  return null;
 }
 
 function formatGamemode(gamemode: string) {
@@ -373,6 +441,14 @@ function formatUptime(minutes: number) {
   const days = Math.round(hours / 24)
   if(days < 1) return `${hours} hours`
   return `${days} days`
+}
+
+async function copyAddress() {
+  await navigator.clipboard.writeText(`connect ${server.value.info.domain}:${server.value.info.port}`)
+  notify({
+    type: "success",
+    text: "Copied to clipboard"
+  })
 }
 
 const Gamemodes: Record<string, string> = {
@@ -396,11 +472,25 @@ const OfficialCampaignNames = [
   "The Last Stand"
 ]
 
+async function init() {
+  status.value = undefined
+  error.value = undefined
+  clearInterval(refreshInterval)
+  if(await fetchServerInfo()) {
+    await fetchServerStatus()
+    setInterval(fetchServerStatus, REFRESH_INTERVAL)
+  }
+}
+let refreshInterval = setInterval(() => {
+  now.value = Date.now()
+}, 1000)
+
 onBeforeMount(async() => {
-  await fetchServerInfo()
-  await fetchServerStatus()
   await fetchServersCompact()
-  setInterval(fetchServerStatus, REFRESH_INTERVAL)
+  await init()
+})
+onUnmounted(() => {
+  clearInterval(refreshInterval)
 })
 </script>
 

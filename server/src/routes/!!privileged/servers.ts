@@ -29,19 +29,20 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             })
         }
         if(!req.user.hasPermission("servers.view", server.id)) return NO_PERMISSION(reply)
-
-        const [test] = await fastify.db.execute(
-            "SELECT server, type, timestamp, COUNT(*) as count FROM activity_log WHERE server = ?  AND type = 'JOIN'AND FROM_UNIXTIME(timestamp) >= (NOW() - INTERVAL 1 MONTH) GROUP BY DATE(FROM_UNIXTIME(timestamp)), HOUR(FROM_UNIXTIME(timestamp)) order by timestamp DESC",
-            [server.activityLogId]
-        )
-        
+        let playerJoins = null
+        if(server.activityLogId) {
+            [playerJoins] = await fastify.db.execute(
+                "SELECT server, type, timestamp, COUNT(*) as count FROM activity_log WHERE server = ?  AND type = 'JOIN'AND FROM_UNIXTIME(timestamp) >= (NOW() - INTERVAL 1 MONTH) GROUP BY DATE(FROM_UNIXTIME(timestamp)), HOUR(FROM_UNIXTIME(timestamp)) order by timestamp DESC",
+                [server.activityLogId]
+            )
+        }
         const configs = req.user.hasPermission("servers.configs.read", server.id) ? await server.getConfigFiles() : undefined
 
         return {
             info: server.info,
             cvars: server.cvars,
             playerCounts: server.playerCounts,
-            test,
+            playerJoins,
             configs
         }
     })
