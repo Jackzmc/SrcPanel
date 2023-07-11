@@ -472,16 +472,18 @@ const OfficialCampaignNames = [
   "The Last Stand"
 ]
 
+let refreshInterval: any = 0
 async function init() {
   status.value = undefined
   error.value = undefined
   clearInterval(refreshInterval)
   if(await fetchServerInfo()) {
     await fetchServerStatus()
-    setInterval(fetchServerStatus, REFRESH_INTERVAL)
+    refreshInterval = setInterval(fetchServerStatus, REFRESH_INTERVAL)
   }
 }
-let refreshInterval = setInterval(() => {
+
+setInterval(() => {
   now.value = Date.now()
 }, 1000)
 

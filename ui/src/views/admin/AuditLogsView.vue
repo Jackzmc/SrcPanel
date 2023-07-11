@@ -286,7 +286,7 @@ const FILTER_DATA: Record<string, Record<string, boolean | string>> = {
 }
 
 const DATA_SOURCES: Record<string, string> = {
-  main: "Main",
+  main: `Main (2023-${new Date().getFullYear()})`,
   archive: "Archive (2020-2022)"
 }
 
