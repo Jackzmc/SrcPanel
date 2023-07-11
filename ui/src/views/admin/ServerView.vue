@@ -159,17 +159,19 @@
       </div>
       <div class="box" v-if="tab === 'overview'">
         <h4 class="title is-5">Recent Activity</h4>
-        <table v-if="activities" class="table">
+        <table v-if="activities" class="table is-fullwidth">
           <thead>
             <tr>
               <th>Message</th>
               <th>Time</th>
+              <th>Date</th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="activity in activities" :key="activity.id">
               <LogMessage :log="activity" :userdata="userdata" />
               <td>{{ new Date(activity.timestampRaw * 1000).toLocaleTimeString()}}</td>
+              <td>{{ new Date(activity.timestampRaw * 1000).toLocaleDateString('en-US', {day: 'numeric', month: 'numeric'})}}</td>
             </tr>
           </tbody>
         </table>
