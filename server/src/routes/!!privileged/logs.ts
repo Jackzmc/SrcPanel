@@ -23,6 +23,7 @@ const LogQuery = Type.Object({
     page: Type.Optional(Type.Integer()),
     optimized: Type.Optional(Type.Boolean()),
     timestampOnly: Type.Optional(Type.Boolean({ default: false })),
+    source: Type.Optional(Type.String())
 })
 
 type LogQueryType = Static<typeof LogQuery>
@@ -31,21 +32,27 @@ export const ACTIVITY_LOG_TABLE_NAME = 'activity_log'
 const LOG_TOTAL_ROW_CACHE_TIME = 30_000 //ms
 
 let logServerCache = []
-let totalRows = 0
-let highestId = 0
-let totalRowsLastFetch: number = null
+interface DataCache {
+    totalRows: number,
+    highestId: number,
+    lastFetchTime: number
+}
+let cache: Record<string, DataCache> = {}
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
     const [rows] = await fastify.db.query<RowDataPacket[]>(`SELECT DISTINCT server FROM ${ACTIVITY_LOG_TABLE_NAME} ORDER BY timestamp DESC`)
     logServerCache = rows.filter(row => row.server && row.server !== "web").map(row => row.server)
 
-    async function getTotalRows() {
-        if(Date.now() - totalRowsLastFetch > LOG_TOTAL_ROW_CACHE_TIME || totalRowsLastFetch === null) {
-            const [c] = await fastify.db.execute<RowDataPacket[]>(`SELECT COUNT(*) AS count, MAX(id) as highestId from ${ACTIVITY_LOG_TABLE_NAME}`)
-            totalRows = c[0].count
-            highestId = c[0].highestId
-            totalRowsLastFetch = Date.now()
+    async function getTotalRows(tableName = ACTIVITY_LOG_TABLE_NAME): Promise<DataCache> {
+        if(!cache[tableName] ||Date.now() - cache[tableName].lastFetchTime > LOG_TOTAL_ROW_CACHE_TIME) {
+            const [c] = await fastify.db.execute<RowDataPacket[]>(`SELECT COUNT(*) AS count, MAX(id) as highestId from ${tableName}`)
+            cache[tableName] = {
+                totalRows: c[0].count,
+                highestId: c[0].highestId,
+                lastFetchTime: Date.now()
+            }
         }
+        return cache[tableName]
     }
 
     fastify.get('/servers', async(req, reply) => {
@@ -60,12 +67,15 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         const clientSearch = req.query.client ?? req.query.search_client
         const targetSearch = req.query.target ?? req.query.search_target
 
+        let tableName = ACTIVITY_LOG_TABLE_NAME
+        if(req.query.source && req.query.source != "main") tableName += `_${req.query.source}`
+
         req.query.optimized = !clientSearch && !targetSearch && !searchMessage && !req.query.servers?.includes("web")
-        let countQuery = `SELECT COUNT(*) AS count from ${ACTIVITY_LOG_TABLE_NAME} `
+        let countQuery = `SELECT COUNT(*) AS count from ${tableName} `
         let query = `SELECT id, l.timestamp, server, type, client, target, message, metadata,
             s1.last_alias as clientName, s2.last_alias as targetName,
             u1.avatar_hash as clientAvatar, u2.avatar_hash as targetAvatar
-            FROM activity_log l
+            FROM ${tableName} l
             LEFT JOIN stats_users as s1 ON s1.steamid = client 
             LEFT JOIN stats_users as s2 ON s2.steamid = target 
             LEFT JOIN user_names u1 ON u1.steamid LIKE SUBSTRING(l.client, 11) 
@@ -82,8 +92,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         if(req.query.timestampOnly) {
             query = `SELECT timestamp, message FROM ${ACTIVITY_LOG_TABLE_NAME} l`
         } else if(req.query.optimized) {
-            await getTotalRows()
-            const maxId = highestId - (2*limit * (page - 1))
+            const cache = await getTotalRows(tableName)
+            const maxId = cache.highestId - (2*limit * (page - 1))
             const minId = maxId - (2*limit)
             // We don't need to also fetch usernames from user_names as if there is a log entry they should always have an entry in statistics 
             query += " WHERE id >= ? AND id <= ? "
@@ -183,7 +193,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 query,
                 countQuery,
                 data,
-                countData
+                countData,
+                tableName
             }
         }
         

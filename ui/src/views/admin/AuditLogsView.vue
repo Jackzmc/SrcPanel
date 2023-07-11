@@ -152,8 +152,9 @@
           <Field label="Data Source">
             <div class="select is-fullwidth">
               <select v-model="dataSource" @change="fetchDebounce">
-                <option value="main">Main</option>
-                <option value="archive">Archive</option>
+                <option v-for="(source, id) in DATA_SOURCES" :key="id" :value="id">
+                  {{ source }}
+                </option>
               </select>
             </div>
             <template v-slot:hint_info>
@@ -247,6 +248,11 @@ const FILTER_DATA: Record<string, Record<string, boolean | string>> = {
   message: {}
 }
 
+const DATA_SOURCES = {
+  main: "Main",
+  archive: "Archive (2020-2022)"
+}
+
 
 const props = defineProps<{
   userdata: UserData,
@@ -308,6 +314,7 @@ function getParams() {
   searchParams.append('page', page.value.toString())
   searchParams.append('limit', limit.value.toString())
   searchParams.append('source', dataSource.value)
+  console.log(dataSource.value)
   for(const [filter, val] of Object.entries(filters.value)) {
     if(!val) continue
     if(Array.isArray(val)) {
