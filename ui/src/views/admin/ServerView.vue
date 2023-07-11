@@ -49,6 +49,10 @@
       </div>
       <div v-if="tab === 'overview'" class="box">
         <template v-if="status && status.online">
+          <span class="is-inline is-pulled-right no-border pr-4" data-tooltip="Time until next refresh" style="width:10px">
+            <Icon icon="fa-spinner" spin v-if="nextRefreshCountdown == 0"></Icon>
+            <span v-else>{{ nextRefreshCountdown }}s</span>
+          </span>
           <!-- <div>
             <div class="tile is-ancestor">
               <div class="tile">
@@ -248,7 +252,7 @@ const options2 = {
     datetimeUTC: false
   }
 }
-const REFRESH_INTERVAL = 1000 * 60
+const REFRESH_INTERVAL = 1000 * 10
 
 const { notify } = useNotification();
 const props = defineProps<{
