@@ -7,11 +7,11 @@
     </div>
   </article>
   <h4 class="title is-4">
-    Showing <input type="number" class="input" min=20 max=1000 step=10 style="width:5%" v-model="limit" @blur="fetchLogs" /> / {{ totalEntries.toLocaleString() }} Entries
+    Showing <input type="number" class="input" min=20 max=1000 step=10 style="width:5%" v-model="limit" @blur="fetchLogs(false)" /> / {{ totalEntries.toLocaleString() }} Entries
     <!-- <em class="subtitle is-4" v-if="hasSearchQuery">({{ notesCount }} filtered)</em> -->
     <div class="is-pulled-right">
       <p class="is-inline mr-3 is-size-6" v-if="nextRefreshCountdown" data-tooltip="Time until the next auto refresh">{{ nextRefreshCountdown }}s</p>
-      <a :class="['button','is-info',{'is-loading': loadingTime}]" @click="fetchLogs"><Icon icon="sync">Refresh</Icon></a>
+      <a :class="['button','is-info',{'is-loading': loadingTime}]" @click="fetchLogs(false)"><Icon icon="sync">Refresh</Icon></a>
     </div>
   </h4>
   <p class="subtitle is-6">Some requests may take a long time to process such as searching users or message content</p>
@@ -311,7 +311,7 @@ function getFilterColor(filter: string, key: string) {
 }
 
 function getParams() {
-  if(!entries.value) return ''
+  // if(!entries.value) return ''
   const searchParams = new URLSearchParams()
   searchParams.append('page', page.value.toString())
   searchParams.append('limit', limit.value.toString())
@@ -328,11 +328,20 @@ function getParams() {
   return searchParams.toString()
 }
 
-async function fetchLogs() {
+let fetchAbort = new AbortController()
+
+async function fetchLogs(resetPage = true) {
   // Wait for previous request
+  const params = getParams()
   if(loadingTime.value != undefined) return
+  if(resetPage) {
+    page.value = 1
+    fetchAbort.abort()
+    fetchAbort = new AbortController()
+  }
+
   loadingTime.value = Date.now()
-  const response = await request(`/api/logs/?${getParams()}`)
+  const response = await request(`/api/logs/?${params}`, { signal: fetchAbort.signal })
   if(response?.ok) {
     const json = await response.json()
     totalEntries.value = json.totalCount
@@ -380,13 +389,12 @@ async function fetchLogs() {
 }
 function setPage(pageNum: number) {
   page.value = pageNum;
-  fetchLogs();
+  fetchLogs(false);
 }
-
 onBeforeMount(() => {
   setInterval(() => {
     if(shouldAutoRefresh.value)
-      fetchLogs()
+      fetchLogs(false)
   }, REFRESH_INTERVAL)
 
   fetchDebounce.value = debounce(fetchLogs, 500)
@@ -394,6 +402,7 @@ onBeforeMount(() => {
 
   if(route.query.limit) limit.value = Number(route.query.limit) || DEFAULT_LIMIT
   if(route.query.page) page.value = Number(route.query.page) || 1
+  if(route.query.source) dataSource.value = route.query.source as string
   if(page.value <= 0) page.value = 1
   for(const filter in FILTER_DATA) {
     let queryName = filter
