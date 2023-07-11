@@ -2,7 +2,7 @@
 <div class="container is-fluid">
   <h4 class="title is-4">
     Showing <input type="number" class="input" min=20 max=1000 step=10 style="width:5%" v-model="limit" @blur="fetchLogs(false)" /> / {{ totalEntries.toLocaleString() }} Entries
-    <!-- <em class="subtitle is-4" v-if="hasSearchQuery">({{ notesCount }} filtered)</em> -->
+    <em class="subtitle is-4" >({{ totalUnfilteredEntries.toLocaleString() }} total)</em>
     <div class="is-pulled-right">
       <p class="is-inline mr-3 is-size-6" v-if="nextRefreshCountdown" data-tooltip="Time until the next auto refresh">{{ nextRefreshCountdown }}s</p>
       <a :class="['button','is-info',{'is-loading': loadingTime}]" @click="fetchLogs(false)"><Icon icon="sync">Refresh</Icon></a>
@@ -18,8 +18,22 @@
         {{ loadingDuration }}s
       </p>
     </div>
-    <div class="column is-8 box" v-else>
-      <p class="has-text-centered is-size-5" v-if="entries.length === 0" style="margin-top:10%">No entries were found</p>
+    <div class="column is-8 box" v-else style="vertical-align: middle">
+      <div class="has-text-centered is-size-5" v-if="entries.length === 0" style="margin-top:12%">
+        <p>No entries were found for data source {{ DATA_SOURCES[dataSource] }}</p>
+        <p>Try searching a different source</p>
+        <br>
+
+        <Field label="Data Source">
+            <div class="select">
+              <select v-model="dataSource" @change="fetchDebounce">
+                <option v-for="(source, id) in DATA_SOURCES" :key="id" :value="id">
+                  {{ source }}
+                </option>
+              </select>
+            </div>
+          </Field>
+      </div>
       <div class="list has-visible-pointer-controls has-hoverable-list-items" v-else>
         <template v-for="entry in entries" :key="entry.id">
           <div class="list-item" @mouseenter="hoverId = entry.id">
@@ -168,7 +182,7 @@
       <div class="columns">
         <div class="column is-3">
           <Field label="Around Id">
-            <input v-model="filters.aroundId" type="number" class="input" min="0" @change="fetchDebounce" placeholder="########" />
+            <input v-model="filters.aroundId" type="number" class="input" min="0" @change="fetchDebounce" placeholder="######" />
           </Field>
         </div>
         <div class="column is-5">
@@ -270,7 +284,7 @@ const FILTER_DATA: Record<string, Record<string, boolean | string>> = {
   message: {}
 }
 
-const DATA_SOURCES = {
+const DATA_SOURCES: Record<string, string> = {
   main: "Main",
   archive: "Archive (2020-2022)"
 }
@@ -288,9 +302,10 @@ let hoverId = ref()
 let page = ref(1);
 let limit = ref(DEFAULT_LIMIT);
 let totalEntries = ref(0)
+let totalUnfilteredEntries = ref(0)
 let entries = ref()
 let fetchDebounce = ref()
-let dataSource = ref("main")
+let dataSource = ref<string>("main")
 let filters = ref<Record<string, string|string[]|null>>({
   servers: DEFAULT_SERVERS,
   types: DEFAULT_TYPES,
@@ -367,7 +382,8 @@ async function fetchLogs(resetPage = true) {
   const response = await request(`/api/logs/?${params}`, { signal: fetchAbort.signal })
   if(response?.ok) {
     const json = await response.json()
-    totalEntries.value = json.totalCount
+    totalEntries.value = json.totalFilteredCount
+    totalUnfilteredEntries.value = json.totalUnfilteredCount
     entries.value = json.logs.map((entry: any) => {
       let message = entry.message
       if(entry.metadata && entry.message) {

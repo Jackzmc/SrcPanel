@@ -91,10 +91,10 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         let page = Number(req.params.page || req.query.page) || 1
         if(page <= 0) page = 1
 
+        const cache = await getTotalRows(tableName)
         if(req.query.timestampOnly) {
             query = `SELECT timestamp, message FROM ${ACTIVITY_LOG_TABLE_NAME} l`
         } else if(req.query.optimized) {
-            const cache = await getTotalRows(tableName)
             const maxId = cache.highestId - (2*limit * (page - 1))
             const minId = maxId - (2*limit)
             // We don't need to also fetch usernames from user_names as if there is a log entry they should always have an entry in statistics 
@@ -190,7 +190,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 return log
             }),
             timeTaken: Date.now() - startTime,
-            totalCount: count[0].count,
+            totalUnfilteredCount: cache.totalRows,
+            totalFilteredCount: count[0].count,
             wasOptimized: req.query.optimized,
             raw: process.env.NODE_ENV === "production" ? null : {
                 cache: cache[tableName],
