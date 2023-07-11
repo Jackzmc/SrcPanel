@@ -141,7 +141,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
     function formatNote(note): Note {
         let action = null
-        if(note.content.startsWith("@")) {
+        if(note.content.startsWith("@") && note.content.length > 1) {
             action = note.content.slice(1).split(".")
         }
         return {

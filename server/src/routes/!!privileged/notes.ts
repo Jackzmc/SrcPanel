@@ -44,8 +44,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
 
             await req.user.log(req.params.steamid, `%client% created note #%id% for %target%`, {
-                service: Service.Notes,
-                action: Action.Edit,
+                code: "notes.create",
                 metadata: {
                     id: ok.insertId,
                     content: req.body.content,

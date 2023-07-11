@@ -70,7 +70,7 @@
 
             <div class="list-item-content">
               <div class="notification is-dark">
-                <p><b>Id:</b> #{{ entry.id }}<a class="ml-2" @click="filters.aroundId = entry.id">(find entries nearby)</a></p>
+                <p><b>Id:</b> #{{ entry.id }}<a class="ml-2 button is-small" @click="filters.aroundId = entry.id">(find entries nearby)</a></p>
                 <p><b>Client ID: </b><span v-if="entry.client.steamid">{{ entry.client.steamid }}</span><em v-else>none</em></p>
                 <p><b>Target ID: </b><span v-if="entry.target.steamid">{{ entry.target.steamid }}</span><em v-else>none</em></p>
                 <p><b>Raw Message: </b>{{ entry.message }}</p>

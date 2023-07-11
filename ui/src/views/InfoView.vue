@@ -132,6 +132,7 @@ async function fetchNotes() {
       notes.value = json.notes.map((note: any) => {
         note.content = note.content.trim()
         note.class = ["tag"]
+
         note.rating = computeRating(note.content)
         if(note.rating) {
           if(note.rating.key === "positive") note.class.push("is-success")
@@ -143,6 +144,7 @@ async function fetchNotes() {
         } else {
           note.class.push("is-secondary")
         }
+
         return note
       })
       totalNotesCount.value = json.totalNotes
@@ -174,18 +176,7 @@ function computeRating(content: string) {
   return { key, value: score }
 }
 
-function fetchAdmins() {
-  fetch('/api/admins')
-    .then(response => response.json())
-    .then(json => {
-      admins.value = json.admins
-    })
-}
 onBeforeMount(() => {
   fetchNotes()
-})
-
-onMounted(() => {
-  if(props.userdata) fetchAdmins()
 })
 </script>
