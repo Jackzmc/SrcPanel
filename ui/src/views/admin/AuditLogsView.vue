@@ -202,7 +202,6 @@ function onSelectUser(filter: string, user: any) {
   fetchDebounce.value()
 }
 function onUserSearchBlur(filter: string, event: any) {
-  console.log('blur', event.input.length, filter)
   if(event.input.length < 3) {
     filters.value[filter] = null
     fetchDebounce.value()
@@ -287,8 +286,11 @@ const loadingDuration = computed(() => {
   return Math.floor((now.value - loadingTime.value) / 1000)
 })
 const nextRefreshCountdown = computed(() => {
-  if(!lastRefresh.value || loadingTime.value != undefined) return 0
+  if(!shouldAutoRefresh.value || !lastRefresh.value || loadingTime.value != undefined) return 0
   return Math.floor(((lastRefresh.value + REFRESH_INTERVAL) - now.value) / 1000)
+})
+const shouldAutoRefresh = computed(() => {
+  return page.value == 1
 })
 
 function toggleFilter(filter: string, key: string) {
@@ -309,12 +311,11 @@ function getFilterColor(filter: string, key: string) {
 }
 
 function getParams() {
-  if(!entries.value) return
+  if(!entries.value) return ''
   const searchParams = new URLSearchParams()
   searchParams.append('page', page.value.toString())
   searchParams.append('limit', limit.value.toString())
   searchParams.append('source', dataSource.value)
-  console.log(dataSource.value)
   for(const [filter, val] of Object.entries(filters.value)) {
     if(!val) continue
     if(Array.isArray(val)) {
@@ -384,7 +385,8 @@ function setPage(pageNum: number) {
 
 onBeforeMount(() => {
   setInterval(() => {
-    fetchLogs()
+    if(shouldAutoRefresh.value)
+      fetchLogs()
   }, REFRESH_INTERVAL)
 
   fetchDebounce.value = debounce(fetchLogs, 500)
@@ -395,7 +397,7 @@ onBeforeMount(() => {
   if(page.value <= 0) page.value = 1
   for(const filter in FILTER_DATA) {
     let queryName = filter
-    console.log('filter', filter, queryName, '=', route.query[queryName])
+    console.debug('filter', filter, queryName, '=', route.query[queryName])
     // Some query are prefixed with search_, so we check them:
     if(route.query[queryName] === undefined) queryName = `search_${queryName}`
     if(route.query[queryName] !== undefined) {
@@ -403,7 +405,7 @@ onBeforeMount(() => {
         if(route.query[queryName] === "") filters.value[filter] = []
         else filters.value[filter] = (route.query[queryName] as string).split(/,+/g)
       } else {
-        console.log('setting', filter, (route.query[queryName] as string))
+        console.debug('setting', filter, (route.query[queryName] as string))
         filters.value[filter] = route.query[queryName] as string
       }
     }
