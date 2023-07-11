@@ -340,7 +340,7 @@ async function fetchLogs() {
         if(match) {
           entry.adminChat = true
           entry.type = 'CHAT'
-          entry.message = "<span style='color:#dcac36'>" + match[1] + "</span>"
+          entry.message = "<span class='admin-chat'>" + match[1] + "</span>"
         }
       }
       return {
@@ -413,3 +413,9 @@ onBeforeMount(() => {
 </script>
 
 <style src="../../../node_modules/bulma-list/css/bulma-list.css" />
+
+<style>
+.admin-chat {
+  color: #f0e359
+}
+</style>
