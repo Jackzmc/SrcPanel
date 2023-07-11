@@ -1,11 +1,5 @@
 <template>
 <div class="container is-fluid">
-  <article class="message is-warning">
-    <div class="message-body content">
-      <b>Feature in development</b><br>
-      Feature may have some bugs, in the meantime, you can still use the <router-link :to="{name: 'logs-activity' }">Activity Logs</router-link>.
-    </div>
-  </article>
   <h4 class="title is-4">
     Showing <input type="number" class="input" min=20 max=1000 step=10 style="width:5%" v-model="limit" @blur="fetchLogs(false)" /> / {{ totalEntries.toLocaleString() }} Entries
     <!-- <em class="subtitle is-4" v-if="hasSearchQuery">({{ notesCount }} filtered)</em> -->
@@ -68,17 +62,46 @@
           </div>
           <div class="list-item  px-0 mx-0 my-0 py-0" v-if="entry.showDetails">
 
-            <div class="list-item-content">
-              <div class="notification is-dark">
-                <p><b>Id:</b> #{{ entry.id }}<a class="ml-2 button is-small" @click="filters.aroundId = entry.id">(find entries nearby)</a></p>
-                <p><b>Client ID: </b><span v-if="entry.client.steamid">{{ entry.client.steamid }}</span><em v-else>none</em></p>
-                <p><b>Target ID: </b><span v-if="entry.target.steamid">{{ entry.target.steamid }}</span><em v-else>none</em></p>
-                <p><b>Raw Message: </b>{{ entry.message }}</p>
-                <template v-if="entry.metadata">
-                  <p><b>Metadata: </b></p>
-                  <pre class="px-1 py-1 box"><code>{{ JSON.stringify(entry.metadata, null, 2) }}</code></pre>
-                </template>
-              </div>
+            <div class="list-item-content has-background-light-gray">
+                <table class="table is-bordered is-fullwidth">
+                  <tbody>
+                    <tr>
+                      <th style="width:20%">
+                        Id
+                        <a class="ml-2 button is-small is-info is-pulled-right" @click="filters.aroundId = entry.id">find entries nearby</a>
+                      </th>
+                      <td>#{{ entry.id }}</td>
+                    </tr>
+                    <tr>
+                      <th>Client Id</th>
+                      <td><span v-if="entry.client.steamid">{{ entry.client.steamid }}</span><em v-else>none</em></td>
+                    </tr>
+                    <tr>
+                      <th>Target Id</th>
+                      <td><span v-if="entry.target.steamid">{{ entry.target.steamid }}</span><em v-else>none</em></td>
+                    </tr>
+                    <tr>
+                      <th>Raw Message</th>
+                      <td>{{ entry.rawMessage }}</td>
+                    </tr>
+                    <tr v-if="entry.metadata">
+                      <th>Metadata</th>
+                      <td>
+                        <table class="table is-bordered">
+                          <tbody>
+                            <tr v-for="(val, key) in entry.metadata" :key="key">
+                              <th>{{ key }}</th>
+                              <td>
+                                <em v-if="val === null">null</em>
+                                <span v-else>{{ val }}</span>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
             </div>
           </div>
         </template>
@@ -212,7 +235,7 @@ const route = useRoute()
 const router = useRouter()
 const { notify } = useNotification();
 
-const REFRESH_INTERVAL = 60_000
+const REFRESH_INTERVAL = 90_000
 
 const DEFAULT_TYPES = ["ACTION", "CHAT", "INFO", "STATE", "QUIT", "JOIN"];
 const DEFAULT_SERVERS = ["main", "reserved"];
@@ -283,7 +306,7 @@ const highlightRegex = computed(() => {
 })
 const loadingDuration = computed(() => {
   if(!loadingTime.value) return
-  return Math.floor((now.value - loadingTime.value) / 1000)
+  return Math.max(Math.floor((now.value - loadingTime.value) / 1000), 0)
 })
 const nextRefreshCountdown = computed(() => {
   if(!shouldAutoRefresh.value || !lastRefresh.value || loadingTime.value != undefined) return 0
@@ -346,18 +369,19 @@ async function fetchLogs(resetPage = true) {
     const json = await response.json()
     totalEntries.value = json.totalCount
     entries.value = json.logs.map((entry: any) => {
+      let message = entry.message
       if(entry.metadata && entry.message) {
         for(const key in entry.metadata) {
-          entry.message = entry.message.replace(new RegExp(`%${key}%`, 'g'), `<b data-tooltip="${key}">${entry.metadata[key]}</b>`)
+          message = message.replace(new RegExp(`%${key}%`, 'g'), `<b data-tooltip="${key}">${entry.metadata[key]}</b>`)
         }
       }
-      if(entry.type === 'JOIN') entry.message = " joined"
+      if(entry.type === 'JOIN') message = " joined"
       if(entry.type === 'ACTION') {
         const match = entry.message.match(ADMINCHAT_REGEX)
         if(match) {
           entry.adminChat = true
           entry.type = 'CHAT'
-          entry.message = "<span class='admin-chat'>" + match[1] + "</span>"
+          message = "<span class='admin-chat'>" + match[1] + "</span>"
         }
       }
       return {
@@ -377,7 +401,8 @@ async function fetchLogs(resetPage = true) {
           avatarUrl: entry.targetName ? (entry.targetAvatar ? `https://avatars.steamstatic.com/${entry.targetAvatar}.jpg` : `https://ui-avatars.com/api/?name=${encodeURIComponent(entry.targetName || entry.target)}`) : null
         },
         metadata: entry.metadata,
-        message: entry.message
+        message,
+        rawMessage: entry.message
       }
     })
     console.info('Fetch took', json.timeTaken, 'ms')
