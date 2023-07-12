@@ -35,7 +35,7 @@
         <p class="has-text-centered my-6 is-size-5" v-if="!search.query">Enter a search query</p>
         <p class="has-text-centered my-6 is-size-5" v-else-if="users.length === 0">No players found</p>
       </Tab>
-      <Tab name="Admins" id="admins" v-if="privUser.hasWebPerm(WebPermission.ManageAdmins)" @selected="fetchAdmins">
+      <Tab name="Admins" id="admins" v-if="privUser.hasPermission('admins.view')" @selected="fetchAdmins">
         <table class="table">
           <thead>
             <tr>
@@ -68,7 +68,7 @@
 import { ref, onBeforeMount, computed } from 'vue'
 import { User, PrivilegedUser, PlayerData } from '@/js/User'
 import { useRouter, useRoute } from 'vue-router'
-import { UserData, WebPermission, ReadableAdminData } from '../../../../common-types/User';
+import { ClientUserData, WebPermission, ReadableAdminData } from '../../../../common-types/User';
 import UserSelection from '@/components/UserSelection.vue'
 // @ts-ignore
 import {Tabs, Tab} from 'vue3-tabs-component';
@@ -85,7 +85,7 @@ const STEAM_PROFILE_URL_REGEX = new RegExp(/https?:\/\/steamcommunity.com\/profi
 const router = useRouter()
 const route = useRoute()
 const props = defineProps<{
-  userdata: UserData
+  userdata: ClientUserData
 }>()
 const privUser = new PrivilegedUser(props.userdata)
 

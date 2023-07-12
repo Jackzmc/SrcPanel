@@ -17,7 +17,7 @@
       <td>
         <router-link :to="{ name: 'manage-user', params: { id: user.steamid }}">
           <b>{{user.name}}</b>
-          <span v-if="user.isAdmin" class="tag is-info ml-1">Admin</span>
+          <span v-if="user.isAdmin" class="tag is-info ml-1 is-pulled-right">Admin</span>
         </router-link>
       </td>
       <td data-tooltip="View user's stats profile"><a :href="'https://stats.jackz.me/user/' + user.steamid">{{user.steamid}}</a></td>

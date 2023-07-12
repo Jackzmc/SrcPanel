@@ -18,7 +18,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onBeforeMount } from 'vue'
 import { useRoute, useRouter } from 'vue-router';
 const route = useRoute()
 const router = useRouter()
@@ -27,6 +27,17 @@ const hasHistory = computed(() => window.history.length > 0)
 
 const returnTo = computed(() => {
   return route.query.return as string
+})
+
+async function testServer() {
+  const response = await fetch("/api/auth/profile")
+  if(response.ok) {
+    router.push(returnTo.value)
+  }
+}
+
+onBeforeMount(() => {
+  testServer()
 })
 
 </script>
