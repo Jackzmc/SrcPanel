@@ -289,7 +289,7 @@ import Pagination from "@/components/Pagination.vue";
 import Debounce from "@/js/debounce";
 import LogClientTarget from "@/components/LogClientTarget.vue";
 import Modal from "@/components/Modal.vue";
-import { UserData } from "../../../../common-types/User";
+import { ClientUserData } from "../../../../common-types/User";
 import { ref, watch, computed, onBeforeMount, onMounted, Ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useNotification } from "@kyvg/vue3-notification";
@@ -331,7 +331,7 @@ const SERVER_COLORS: Dictionary<string, string> = {
 const { notify } = useNotification();
 
 const props = defineProps<{
-  userdata: UserData,
+  userdata: ClientUserData,
   privUser: PrivilegedUser
 }>();
 
@@ -532,13 +532,13 @@ function setUserFilter(type: string, id: string) {
 async function getData() {
   try {
     const response = await request(
-      `/api/logs/${page.value}?limit=${limit.value}${query.value}`,
+      `/api/logs/?page=${page.value}&limit=${limit.value}${query.value}`,
       { credentials: "include" }
     );
     if (response?.ok) {
       const json = await response.json();
       loading.value = 0;
-      count.value = json.totalCount;
+      count.value = json.totalFilteredCount;
       json.logs.forEach((log: any) => {
         log = parseLog(log, history.value, debugView.value)
       });

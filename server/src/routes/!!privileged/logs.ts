@@ -68,11 +68,12 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         const targetSearch = req.query.target ?? req.query.search_target
 
         let tableName = ACTIVITY_LOG_TABLE_NAME
-        if(req.query.source && req.query.source != "main") tableName += `_${req.query.source}`
+        if(!req.query.source) req.query.source = "main"
+        if(req.query.source != "main") tableName += `_${req.query.source}`
 
         req.query.optimized = !clientSearch && !targetSearch && !searchMessage 
             && !req.query.servers?.includes("web") 
-            && (!req.query.source || req.query.source == "main")
+            && req.query.source == "main"
         let countQuery = `SELECT COUNT(*) AS count from ${tableName} `
         let query = `SELECT id, l.timestamp, server, type, client, target, message, metadata,
             s1.last_alias as clientName, s2.last_alias as targetName,
