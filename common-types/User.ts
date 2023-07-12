@@ -47,6 +47,7 @@ export interface UserData<T> extends BaseSession<T> {
     isSessionOld: boolean,
     providers: UserOauthProviders
 }
+export type ClientUserData = UserData<UserPrivilegeCode[]>
 
 export type OauthProvider = "discord"
 

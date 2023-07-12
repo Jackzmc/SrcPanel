@@ -143,7 +143,7 @@ import DiscordLoginButton from '@/components/DiscordLoginButton.vue'
 import { useRoute, useRouter } from 'vue-router';
 import { notify } from '@kyvg/vue3-notification';
 import { PrivilegedUser } from '@/js/User';
-import { UserData } from '../../../common-types/User';
+import { ClientUserData } from '../../../common-types/User';
 import { Service, Action } from '../../../common-types/Privileges';
 import UserSettingsModal from './modals/UserSettingsModal.vue';
 // Bulma nav code
@@ -173,7 +173,7 @@ const emit = defineEmits(['logout'])
 const LAST_UPDATED = new Date(Number(process.env.VUE_APP_BUILD_DATE))
 
 const props = defineProps<{
-  userdata?: UserData,
+  userdata?: ClientUserData,
   privUser?: PrivilegedUser,
   updateInfo: any
 }>()

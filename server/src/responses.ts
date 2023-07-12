@@ -6,8 +6,8 @@ function response(reply: FastifyReply, code: number, error: string, message: str
     })
 }
 
-export function NOT_LOGGED_IN(reply: FastifyReply) {
-    return response(reply, 403, "NOT_LOGGED_IN", "You are not logged in")
+export function NOT_LOGGED_IN(reply: FastifyReply, code = "NOT_LOGGED_IN", message = "You are not logged in") {
+    return response(reply, 403, code, message)
 }
 
 export function NO_PERMISSION(reply: FastifyReply) {

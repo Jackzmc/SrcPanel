@@ -40,7 +40,7 @@ import NavBar from '@/components/NavBar.vue'
 import { useRoute, useRouter } from 'vue-router';
 import { PrivilegedUser} from '@/js/User'
 import { notify } from '@kyvg/vue3-notification';
-import { UserData } from '../../common-types/User';
+import { ClientUserData } from '../../common-types/User';
 
 
 
@@ -57,7 +57,7 @@ let updateInfo = ref<{
   updating: boolean
 }>({updating: false})
 
-let userdata = ref<UserData>()
+let userdata = ref<ClientUserData>()
 let privUser = ref()
 
 function reloadPage() {
@@ -82,17 +82,18 @@ async function getAuth() {
   })
   if(response.ok) {
     const json = await response.json()
-    userdata.value = json as UserData
+    userdata.value = json as ClientUserData
     privUser.value = new PrivilegedUser(userdata.value)
     window.sessionStorage.setItem('srcds_userdata', JSON.stringify(userdata.value))
     if(json.isSessionOld) { //
       notify({
         type: "warn",
-        text: "Your session is outdated, please login again.",
+        text: "Your session has expired, please login again.",
       })
+
     }
     console.log('Authorized: Hello', json.user.name)
-  } else if(response.status == 401) {
+  } else if(response.status === 401 || response.status === 403) {
     userdata.value = undefined
     if(window.sessionStorage['srcds_userdata']) {
       notify({

@@ -13,6 +13,8 @@ import SteamAPI from '../modules/steam.js'
 import User from '../modules/users/User.js';
 import ConfigManager from '../modules/ConfigManager.js';
 import { UserPrivilegeCode } from '../../../common-types/Privileges.js';
+import { SESSION_VERSION } from '../routes/auth/steam.js';
+import { NOT_LOGGED_IN } from '../responses.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -54,8 +56,14 @@ async function db(fastify: FastifyInstance) {
     fastify.decorate('servers', new ServerManager(steam, DATA_FOLDER, CONFIG_FOLDER, configManager))
     fastify.decorate('config', configManager)
     fastify.addHook('preHandler', (req, reply, done) => {
-        if(req.session && req.session.user) {
-            req.user = new User(authManager, req.session.user.steamid)
+        if(req.session) {
+            if(req.session.version !== SESSION_VERSION) { 
+                req.session.destroy()
+                return NOT_LOGGED_IN(reply, "SESSION_EXPIRED", "Session has expired")
+            }
+            if(req.session.user) {
+                req.user = new User(authManager, req.session.user.steamid)
+            }
         }
         done()
     })
