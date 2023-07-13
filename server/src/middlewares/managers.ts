@@ -56,14 +56,12 @@ async function db(fastify: FastifyInstance) {
     fastify.decorate('servers', new ServerManager(steam, DATA_FOLDER, CONFIG_FOLDER, configManager))
     fastify.decorate('config', configManager)
     fastify.addHook('preHandler', (req, reply, done) => {
-        if(req.session) {
+        if(req.session?.user) {
             if(req.session.version !== SESSION_VERSION) { 
                 req.session.destroy()
-                return NOT_LOGGED_IN(reply, "SESSION_EXPIRED", "Session has expired")
+                return NOT_LOGGED_IN(reply, "SESSION_EXPIRED", `Session has expired (target:${SESSION_VERSION}, cur:${req.session.version})`)
             }
-            if(req.session.user) {
-                req.user = new User(authManager, req.session.user.steamid)
-            }
+            req.user = new User(authManager, req.session.user.steamid)
         }
         done()
     })
