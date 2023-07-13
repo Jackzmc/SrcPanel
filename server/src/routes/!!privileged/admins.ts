@@ -171,7 +171,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                     immunity,
                     flags: req.body.flags,
                     privileges: req.body.privileges,
-                    codes: req.body.webCodes,
+                    codes: req.body.webCodes as string[],
                     groupIds: req.body.groupIds ? req.body.groupIds.split(',') : []
                 }
                 const newAdmin = await fastify.authmngr.editAdmin(admin.id, newAdminData, req.body.webPermissions)

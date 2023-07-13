@@ -35,6 +35,11 @@
           </Field>
       </div>
       <div class="list has-visible-pointer-controls has-hoverable-list-items" v-else>
+        <div class="list-item  message is-info">
+          <a class="list-item-content has-text-centered" style="text-decoration: none">
+            <p class=""><Icon icon="fa-message" />7 new entries are available, click here to view</p>
+          </a>
+        </div>
         <template v-for="entry in entries" :key="entry.id">
           <div class="list-item" @mouseenter="hoverId = entry.id">
             <div class="list-item-image" v-if="entry.client.avatarUrl || entry.target.avatarUrl">
@@ -54,20 +59,12 @@
                 </span>
               </div>
               <div class="list-item-description">
-                <!-- <UserComponent :user="entry.client" is-admin />
-                {{entry.message}}
-                <span v-html='entry._html' />
-                <UserComponent v-if="entry.target" :user="entry.target"/>
-                {{ entry._message2 }} -->
                 <LogMessage :log="entry" :priv-user="privUser" :hover-id="hoverId" :highlight-regex="highlightRegex" />
                 </div>
             </div>
 
             <div class="list-item-controls">
               <div class="buttons is-right">
-                <!-- <button :class="['button', {'is-info': entry.showDetails, 'is-outlined': entry.showDetails }]">
-                  <span @click="entry.showDetails = !entry.showDetails">Details</span>
-                </button> -->
                 <button class="button is-inverted is-outlined is-black" @click="entry.showDetails = !entry.showDetails">
                   <Icon icon-class="is-small has-text-black" :icon="entry.showDetails ? 'fa-chevron-up' : 'fa-chevron-down'" />
                 </button>
@@ -80,6 +77,12 @@
                 <table class="table is-bordered is-fullwidth">
                   <tbody>
                     <tr>
+                      <th>Share Url
+                        <Icon icon="fa-copy" data-tooltip="Click to copy" class="no-border" @click="copyShareLink(entry)"></Icon>
+                      </th>
+                      <td>{{ getShareLink(entry) }}</td>
+                    </tr>
+                    <tr>
                       <th style="width:20%">
                         Id
                         <a class="ml-2 button is-small is-info is-pulled-right" @click="jumpTo(entry)">find entries nearby</a>
@@ -88,11 +91,11 @@
                     </tr>
                     <tr>
                       <th>Client Id</th>
-                      <td><span v-if="entry.client.steamid">{{ entry.client.steamid }}</span><em v-else>none</em></td>
+                      <td><span v-if="entry.client.steamid">{{ entry.client.steamid }}</span><em v-else>-</em></td>
                     </tr>
                     <tr>
                       <th>Target Id</th>
-                      <td><span v-if="entry.target.steamid">{{ entry.target.steamid }}</span><em v-else>none</em></td>
+                      <td><span v-if="entry.target.steamid">{{ entry.target.steamid }}</span><em v-else>-</em></td>
                     </tr>
                     <tr>
                       <th>Raw Message</th>
@@ -122,6 +125,7 @@
       </div>
     </div>
     <div class="column">
+      <div class="box">
       <Field label="Search Client" icon-left="search">
         <SimpleTypeahead
           placeholder="Search for a client"
@@ -150,7 +154,7 @@
       <Field>
         <label class="label">
           Enabled Types
-          <a class="is-inline" @click="filters.types = []; getParams()">(Clear)</a>&nbsp;
+          <a class="is-inline" @click="filters.types = []; updateParams()">(Clear)</a>&nbsp;
           <a @click="filters.types = Object.keys(FILTER_DATA.types)">(Select All)</a>
         </label>
         <div class="buttons">
@@ -202,6 +206,7 @@
       </div>
     </div>
   </div>
+  </div>
   <Pagination :page="page" :count="totalEntries" :limit="limit" @page="setPage" />
   <br>
 </div>
@@ -222,6 +227,7 @@ import { useRoute, useRouter } from 'vue-router';
 //@ts-ignore
 import SimpleTypeahead from 'vue3-simple-typeahead';
 import 'vue3-simple-typeahead/dist/vue3-simple-typeahead.css'
+import { filter } from 'minimatch';
 let userSearchItems = ref([])
 async function searchUsers(e: any) {
   if(!e.input || e.input.length < 3) return userSearchItems.value = []
@@ -329,6 +335,7 @@ const nextRefreshCountdown = computed(() => {
   return Math.floor(((lastRefresh.value + REFRESH_INTERVAL) - now.value) / 1000)
 })
 const shouldAutoRefresh = computed(() => {
+  return false
   return page.value == 1
 })
 
@@ -363,16 +370,27 @@ function getParams() {
       searchParams.append(`search_${filter}`, val)
     }
   }
-  router.replace({ query: Object.fromEntries(searchParams) })
-  return searchParams.toString()
+  return searchParams
+}
+function updateParams() {
+  const params = getParams()
+  router.replace({ query: Object.fromEntries(params) })
+  return params.toString()
 }
 
 let fetchAbort: AbortController | null = null
-
-
+let logInfo = ref<{cache:Record<string,any>}>({cache:{}})
+async function getInfo() {
+  const response = await request("/api/logs/data")
+  if(response?.ok) {
+    const json = await response.json()
+    console.log(json.cache)
+    logInfo.value = json
+  }
+}
 async function fetchLogs(resetPage = true) {
   // Wait for previous request
-  const params = getParams()
+  const params = updateParams()
   if(loadingTime.value != undefined) return
   if(resetPage) {
     page.value = 1
@@ -385,8 +403,8 @@ async function fetchLogs(resetPage = true) {
   const response = await responseHandle.start()
   if(response?.ok) {
     const json = await response.json()
-    totalEntries.value = json.totalFilteredCount
-    totalUnfilteredEntries.value = json.totalUnfilteredCount
+    totalEntries.value = json.totals.filteredTotal
+    totalUnfilteredEntries.value = json.totals.total
     entries.value = json.logs.map((entry: any) => {
       let message = entry.message
       if(entry.metadata && entry.message) {
@@ -400,7 +418,7 @@ async function fetchLogs(resetPage = true) {
         if(match) {
           entry.adminChat = true
           entry.type = 'CHAT'
-          message = "<span class='admin-chat'>" + match[1] + "</span>"
+          message = match[1]
         }
       }
       return {
@@ -431,8 +449,14 @@ async function fetchLogs(resetPage = true) {
     loadingTime.value = undefined
   }
 }
+// Sets page, -1 for latest
 function setPage(pageNum: number) {
-  page.value = pageNum;
+  if(pageNum == -1) {
+    const numberOfPages = Math.ceil(logInfo.value.cache[dataSource.value].totalRows / limit.value)
+    page.value = numberOfPages - 1
+  } else {
+    page.value = pageNum;
+  }
   fetchLogs(false);
 }
 
@@ -446,7 +470,22 @@ function jumpTo(entry: any) {
   }
 }
 
-onBeforeMount(() => {
+function getShareLink(entry: any) {
+  const params = getParams()
+  params.set('aroundId', entry.id)
+  return `${location.protocol}//${window.location.host}${window.location.pathname}?${params}`
+}
+async function copyShareLink(entry: any) {
+  const link = getShareLink(entry)
+  await window.navigator.clipboard.writeText(link)
+  await notify({
+    type: "success",
+    text: "Link copied to clipboard"
+  })
+}
+
+onBeforeMount(async() => {
+  await getInfo()
   setInterval(() => {
     if(shouldAutoRefresh.value)
       fetchLogs(false)
@@ -474,6 +513,10 @@ onBeforeMount(() => {
       }
     }
   }
+  // Swap to latest page if page not set
+  // if(page.value)
+  // setPage(-1)
+
 
   now.value = Date.now()
   setInterval(() => {

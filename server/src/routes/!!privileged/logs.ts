@@ -21,7 +21,7 @@ const LogQuery = Type.Object({
     fetchAll: Type.Optional(Type.Boolean()),
     limit: Type.Optional(Type.Integer()),
     page: Type.Optional(Type.Integer()),
-    optimized: Type.Optional(Type.Boolean()),
+    optimized: Type.Optional(Type.String()),
     timestampOnly: Type.Optional(Type.Boolean({ default: false })),
     source: Type.Optional(Type.String())
 })
@@ -55,11 +55,16 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         return cache[tableName]
     }
 
-    fastify.get('/servers', async(req, reply) => {
+    fastify.get('/data', async(req, reply) => {
         return {
-            servers: logServerCache
+            servers: logServerCache,
+            cache: {
+                main: await getTotalRows("activity_log"),
+                archive: await getTotalRows("activity_log_archive")
+            }
         }
     })
+
 
     fastify.get('/:page?', async(req: FastifyRequest<{ Querystring: LogQueryType, Params: { page?: number } }>, reply) => {
         if(!req.user.hasPermission("logs.view")) return NO_PERMISSION(reply)
@@ -70,8 +75,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         let tableName = ACTIVITY_LOG_TABLE_NAME
         if(!req.query.source) req.query.source = "main"
         if(req.query.source != "main") tableName += `_${req.query.source}`
-
-        req.query.optimized = !clientSearch && !targetSearch && !searchMessage 
+        const optimized = req.query.optimized !== "false" && !clientSearch && !targetSearch && !searchMessage 
             && !req.query.servers?.includes("web") 
             && req.query.source == "main"
         let countQuery = `SELECT COUNT(*) AS count from ${tableName} `
@@ -95,7 +99,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         const cache = await getTotalRows(tableName)
         if(req.query.timestampOnly) {
             query = `SELECT timestamp, message FROM ${ACTIVITY_LOG_TABLE_NAME} l`
-        } else if(req.query.optimized) {
+        } else if(optimized) {
             const maxId = cache.highestId - (2*limit * (page - 1))
             const minId = maxId - (2*limit)
             // We don't need to also fetch usernames from user_names as if there is a log entry they should always have an entry in statistics 
@@ -158,7 +162,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
         
         if(conditions.length > 0) {
-            if(req.query.optimized) {
+            if(optimized) {
                 // Optimized query already has WHERE condition
                 query += ` AND ${conditions.join(' AND ')} `
             } else {
@@ -170,7 +174,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         query += `ORDER BY id ${req.query.orderByAscending ? 'ASC' : 'DESC'} `
 
         if(!req.query.fetchAll) {
-            if(req.query.optimized) {
+            if(optimized) {
                 query += `LIMIT ?`
                 data = [...data, limit] //, (page * limit) - limit]
             } else {
@@ -191,9 +195,13 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 return log
             }),
             timeTaken: Date.now() - startTime,
-            totalUnfilteredCount: cache.totalRows,
-            totalFilteredCount: count[0].count,
-            wasOptimized: req.query.optimized,
+            wasOptimized: optimized,
+            totals: {
+                total: cache.totalRows, // # of rows in entire data source
+                filteredTotal: count[0].count, // # of rows in entire data source WITH filters
+                count: logs.length // # of rows + filtered + pagination (<= limit)
+            },
+            pages: Math.ceil(count[0].count / limit),
             raw: process.env.NODE_ENV === "production" ? null : {
                 cache: cache[tableName],
                 query,

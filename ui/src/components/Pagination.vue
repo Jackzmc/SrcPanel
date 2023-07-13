@@ -42,7 +42,7 @@ const emit = defineEmits(['page'])
 const props = defineProps<{
   page: number,
   count: number,
-  limit: number
+  limit: number,
 }>()
 let pageInput = ref(props.page)
 watch(() => props.page, (value) => pageInput.value = value)
