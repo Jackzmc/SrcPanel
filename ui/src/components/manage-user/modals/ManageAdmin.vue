@@ -138,41 +138,10 @@
           />
         </div>
         <p class="help has-text-danger" v-if="form.immunity >= privUser.immunityLevel">The maximum immunity level you can apply is {{userdata.permissions.immunityLevel - 1}}, which is below yours ({{userdata.permissions.immunityLevel}})</p>
-        <p class="help has-text-info" v-else>The higher value between the immunity of every group and this value is chosen as user's immunity</p>
+        <p class="help has-text-info" v-else>Will only be used if it's greater than user's groups' immunity</p>
       </div>
-      <label class="label">Web Privileges</label>
-      <p class="subtitle is-6">These control what services the user can use on this admin panel. The highest value between these values and whatever group privileges are given is chosen.</p>
-      <div class="field is-horizontal" v-for="(priv, service) in privileges" :key="service">
-        <div class="field-label">
-          <label class="label has-tooltip-right has-tooltip-info" :data-tooltip="ServiceDescriptions[service]">{{ service }}</label>
-        </div>
-        <div class="field-body">
-          <div class="field is-narrow">
-            <div class="control">
-              <div class="buttons has-addons">
-                <button
-                  :class="['button','is-small',{'is-info': form.privileges[service] == undefined}]"
-                  @click="form.privileges[service] = null"
-                  :disabled="canApplyPrivilege(service) ? undefined : true"
-                >
-                  None
-                </button>
-                <button v-for="priv in ServiceSupportedActions[service]" :key="priv"
-                  :class="['button','is-small',{'is-info': form.privileges[service] == priv}]"
-                  :data-tooltip="canApplyPrivilege(service, priv) ? null : 'You do not have this privilege'"
-                  :disabled="canApplyPrivilege(service, priv) ? undefined : true"
-                  @click="form.privileges[service] = priv"
-                >
-                  {{ ServicePrivilegeKeys[priv] }}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <br>
       <h6 class="title is-6">Base Flags</h6>
-      <p class="subtitle is-6">Only flags you have access to can be added</p>
+      <p class="subtitle is-6">Permission flags for in-game. Only flags you have access to can be added</p>
       <div class="field">
         <input
           id="z"
@@ -196,6 +165,10 @@
         >
         <label :for="flag">{{name}}  <span class="tag">{{flag}}</span></label>
       </div>
+      <Field>
+        <AdminPermissionInput v-model="webCodes" />
+        <!-- <TagField v-model="webCodes" placeholder="Add permissions" :choices="['admins.view', 'admins.edit']" /> -->
+      </Field>
     </Tab>
     <Tab name="Danger" v-if="userAdminData">
       <div class="field">
@@ -238,11 +211,14 @@
 </template>
 
 <script setup lang="ts">
+import AdminPermissionInput from '@/components/AdminPermissionInput.vue'
+import TagField from '@/components/TagField.vue'
+import Field from '@/components/Field.vue'
 import { ref, onMounted, computed } from 'vue'
 import { User, PrivilegedUser, PlayerData } from '@/js/User'
 import { useRouter, useRoute } from 'vue-router'
 import SteamID from 'steamid'
-import { UserData, FLAGS, WEB_FLAGS, AdminData, AdminGroup } from '../../../../../common-types/User';
+import { ClientUserData, FLAGS, WEB_FLAGS, AdminData, AdminGroup } from '../../../../../common-types/User';
 import { Action, Service, UserPrivileges, ServicePrivilege, ServiceSupportedActions, ServicePrivilegeKeys, ServiceDescriptions } from '../../../../../common-types/Privileges';
 import FlagList from '@/components/FlagList.vue'
 import { convertBitsArrayToInt, convertIntToBitsArray, } from '@/js/User';
@@ -252,6 +228,7 @@ import { notify } from '@kyvg/vue3-notification';
 import { getRelDate, request } from '@/js/util';
 import { tsConstructSignatureDeclaration } from '@babel/types';
 
+
 const PrivilegeNames: string[] = Object.values(ServicePrivilege).filter(item => isNaN(Number(item))) as string[]
 const MIN_HOURS_PLAYTIME = 10
 const POLICY_MSG_MIN_HOURS_OF_PLAYTIME = `Policy requires a minimum of ${MIN_HOURS_PLAYTIME} hours of playtime`
@@ -260,9 +237,11 @@ const route = useRoute()
 const props = defineProps<{
   userAdminData: AdminData,
   user: PlayerData,
-  userdata: UserData,
+  userdata: ClientUserData,
   privUser: PrivilegedUser
 }>()
+
+let webCodes = ref<string[]>(props.privUser.codes)
 
 const privileges = computed(() => {
   let privs: Partial<Record<Service, number|null>> = {}
@@ -292,14 +271,6 @@ function reset() {
     immunity: props.userAdminData?.permissions.base.immunityLevel || 0,
     privileges: privileges.value
   }
-}
-/** @deprecated */
-function canApplyPrivilege(service: Service, privilege?: ServicePrivilege) {
-  if(!canEdit.value) return false
-  // Require user to have admins.manage perm:
-  if(!props.privUser.hasPrivilege(Service.Admins, ServicePrivilege.Manage)) return
-  // Check if user has the permission they want to apply (they must have it to apply)
-  if(privilege) props.privUser.hasPrivilege(service, privilege)
 }
 let stats = ref<Record<string, string|number>|null>()
 let fetchError = ref("")
@@ -414,7 +385,8 @@ async function save() {
         flags: form.value.flags.join(''),
         groupIds: selectedgroupIds.value.join(','),
         name: props.user?.name,
-        privileges
+        privileges,
+        codes: webCodes.value
       } as POSTAdminAPI)
     }, { title: "Save Admin Failed" })
 

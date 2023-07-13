@@ -21,6 +21,7 @@ interface AddAdmin {
     name: string,
     immunity: number,
     privileges: Partial<Record<Service, ServicePrivilege>>
+    codes: (UserPrivilegeCode|string)[],
     groupIds?: string[]
 }
 
@@ -701,6 +702,7 @@ export default class AuthManager {
         req.session.lastActive = Math.round(Date.now() / 1000)
         req.session.version = SESSION_VERSION
     }
+
 
 
     /**

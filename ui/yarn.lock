@@ -961,6 +961,11 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
+"@creativebulma/bulma-tagsinput@^1.0.3":
+  version "1.0.3"
+  resolved "https://registry.yarnpkg.com/@creativebulma/bulma-tagsinput/-/bulma-tagsinput-1.0.3.tgz#bbf38aad9a4ed0f04f2baa7832b21679cdc54462"
+  integrity sha512-uQg0KEBcvEmSfwozv2EkFtqai1+pwOgunt3YLlADjRuyKXQePcR3nPW4EDnLMsCt9XlDr4RLu5pcp3XwHIhaOQ==
+
 "@creativebulma/bulma-tooltip@^1.2.0":
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/@creativebulma/bulma-tooltip/-/bulma-tooltip-1.2.0.tgz#84dcdd59d94c09c2975fadbec1d3d765ae29c471"
@@ -3149,6 +3154,11 @@ cli-truncate@^0.2.1:
   dependencies:
     slice-ansi "0.0.4"
     string-width "^1.0.1"
+
+click-outside-vue3@^4.0.1:
+  version "4.0.1"
+  resolved "https://registry.yarnpkg.com/click-outside-vue3/-/click-outside-vue3-4.0.1.tgz#81a6ac01696b301764b42db6fdbdf28e7cd8ef95"
+  integrity sha512-sbplNecrup5oGqA3o4bo8XmvHRT6q9fvw21Z67aDbTqB9M6LF7CuYLTlLvNtOgKU6W3zst5H5zJuEh4auqA34g==
 
 clipboardy@^2.3.0:
   version "2.3.0"
@@ -9102,6 +9112,13 @@ vue3-tabs-component@jackzmc/vue3-tabs-component:
   resolved "https://codeload.github.com/jackzmc/vue3-tabs-component/tar.gz/0f93b7e79fec24558dd3cb687cc0b7e175a0e5c6"
   dependencies:
     jest "^28.1.0"
+
+vue3-tags-input@^1.0.12:
+  version "1.0.12"
+  resolved "https://registry.yarnpkg.com/vue3-tags-input/-/vue3-tags-input-1.0.12.tgz#afbd12cff99d2de0dd57113d340879c325c69111"
+  integrity sha512-s5rG+1W3M8+be0nd9H1nv/8WLjJOO6pShgVz8ALAqOiz3tDH5QhGrDH6fzD14ZjJNRWSa3bRBSXQwHEXffPQ6g==
+  dependencies:
+    click-outside-vue3 "^4.0.1"
 
 vue@^3.2.45:
   version "3.2.47"
