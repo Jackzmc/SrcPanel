@@ -82,7 +82,7 @@
                     <tr>
                       <th style="width:20%">
                         Id
-                        <a class="ml-2 button is-small is-info is-pulled-right" @click="filters.aroundId = entry.id">find entries nearby</a>
+                        <a class="ml-2 button is-small is-info is-pulled-right" @click="jumpTo(entry)">find entries nearby</a>
                       </th>
                       <td>#{{ entry.id }}</td>
                     </tr>
@@ -435,6 +435,17 @@ function setPage(pageNum: number) {
   page.value = pageNum;
   fetchLogs(false);
 }
+
+function jumpTo(entry: any) {
+  // Clear any set messages
+  // We assign once to prevent any triggering of fetch before everything is set
+  filters.value = {
+    ...filters.value,
+    message: null,
+    aroundId: entry.id
+  }
+}
+
 onBeforeMount(() => {
   setInterval(() => {
     if(shouldAutoRefresh.value)
