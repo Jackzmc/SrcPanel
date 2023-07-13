@@ -51,14 +51,14 @@ export const ActionRequiredPrivilege: Record<Action, ServicePrivilege> = {
 
 // Controls what actions the service supports
 export const ServiceSupportedActions: Record<Service, ServicePrivilege[]> = {
-    [Service.Notes]: [ ServicePrivilege.View, ServicePrivilege.Edit, ServicePrivilege.Manage ],
-    [Service.Bans]: [ ServicePrivilege.View, ServicePrivilege.Edit, ServicePrivilege.Delete, ServicePrivilege.Manage],
-    [Service.Admins]: [ ServicePrivilege.View, ServicePrivilege.Manage ],
-    [Service.Addons]: [ ServicePrivilege.View, ServicePrivilege.Edit, ServicePrivilege.Delete ],
-    [Service.AddonsUpload]: [ ServicePrivilege.Edit ],
-    [Service.PanelAdmin]: [ ServicePrivilege.View, ServicePrivilege.Edit ],
-    [Service.Rcon]: [ ServicePrivilege.View, ServicePrivilege.Manage ]
-} 
+    [Service.Notes]: [ServicePrivilege.View, ServicePrivilege.Edit, ServicePrivilege.Manage],
+    [Service.Bans]: [ServicePrivilege.View, ServicePrivilege.Edit, ServicePrivilege.Delete, ServicePrivilege.Manage],
+    [Service.Admins]: [ServicePrivilege.View, ServicePrivilege.Manage],
+    [Service.Addons]: [ServicePrivilege.View, ServicePrivilege.Edit, ServicePrivilege.Delete],
+    [Service.AddonsUpload]: [ServicePrivilege.Edit],
+    [Service.PanelAdmin]: [ServicePrivilege.View, ServicePrivilege.Edit],
+    [Service.Rcon]: [ServicePrivilege.View, ServicePrivilege.Manage]
+}
 
 export interface SteamInfo {
     steamid: string
@@ -70,13 +70,17 @@ export interface SteamInfo {
 
 export type UserPrivileges = Partial<Record<Service, ServicePrivilege | null>>
 
-export type UserPrivilegeCode = "notes.view" | "notes.create" | "notes.edit" | "notes.edit.others" | "notes.delete" | "notes.delete.others"
-    | "bans.view" | "bans.create" | "bans.edit" | "bans.edit.others" | "bans.delete" | "bans.delete.others"
-    | "admins.view" | "admins.grant" | "admins.edit" | "admins.edit.others" | "admins.revoke"
-    | "shares.view" | "shares.manage" 
-    | "shares.addons.view" | "shares.addons.edit" | "shares.addons.delete" 
-    | "shares.addons.upload" | "shares.addons.upload.direct" | "shares.addons.upload.steam_workshop"
-    | "panel.view" | "panel.manage" | "panel.update"
-    | "servers.view" | "servers.cmds.start" | "servers.cmds.stop" | "servers.cmds.unreserve" | "servers.rcon"
-    | "servers.configs.read" | "servers.configs.read_raw" | "servers.configs.edit" 
-    | "logs.view" | "logs.redact"
+export const UserPrivilegeCodes = [
+    "notes.view", "notes.create", "notes.edit", "notes.edit.others", "notes.delete", "notes.delete.others"
+    , "bans.view", "bans.create", "bans.edit", "bans.edit.others", "bans.delete", "bans.delete.others"
+    , "admins.view", "admins.grant", "admins.edit", "admins.edit.others", "admins.revoke"
+    , "shares.view", "shares.manage"
+    , "shares.addons.view", "shares.addons.edit", "shares.addons.delete"
+    , "shares.addons.upload", "shares.addons.upload.direct", "shares.addons.upload.steam_workshop"
+    , "panel.view", "panel.manage", "panel.update"
+    , "servers.view", "servers.cmds.start", "servers.cmds.stop", "servers.cmds.unreserve", "servers.rcon"
+    , "servers.configs.read", "servers.configs.read_raw", "servers.configs.edit"
+    , "logs.view", "logs.redact"
+] as const
+
+export type UserPrivilegeCode = typeof UserPrivilegeCodes[number]

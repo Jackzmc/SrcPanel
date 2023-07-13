@@ -73,8 +73,11 @@ async function getAuth() {
   const userData = window.sessionStorage.getItem('srcds_userdata')
   if(userData) {
     userdata.value = JSON.parse(userData)
-    if(userdata.value)
+    if(userdata.value) {
       privUser.value = new PrivilegedUser(userdata.value)
+      console.debug('using cached user data')
+      return
+    }
   }
 
   const response = await fetch(`/api/auth/profile`, {
@@ -82,6 +85,7 @@ async function getAuth() {
   })
   if(response.ok) {
     const json = await response.json()
+    console.log('new data', json.permissions, json.codes instanceof Set)
     userdata.value = json as ClientUserData
     privUser.value = new PrivilegedUser(userdata.value)
     window.sessionStorage.setItem('srcds_userdata', JSON.stringify(userdata.value))
@@ -132,7 +136,8 @@ async function getAuth() {
 }
 
 function onLogout() {
-  window.localStorage.removeItem('srcds_userdata')
+  console.debug('user is logging out')
+  window.sessionStorage.removeItem('srcds_userdata')
   userdata.value = undefined
   privUser.value = undefined
 }

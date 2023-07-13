@@ -1,5 +1,5 @@
 import { AdminData, SessionUser, WebPermission, WebRole, AdminPermissions } from '../../../common-types/User';
-import type  { UserData } from '../../../common-types/User';
+import type  { UserData, ClientUserData } from '../../../common-types/User';
 import { UserPrivileges, ActionRequiredPrivilege, ServicePrivilege, Service, Action, ServiceSupportedActions, ServicePrivilegeKeys, UserPrivilegeCode } from '../../../common-types/Privileges';
 import { minimatch } from 'minimatch'
 
@@ -69,16 +69,14 @@ export class User {
 }
 
 export class PrivilegedUser {
-  private data: UserData<Set<UserPrivilegeCode>>
+  private data: ClientUserData
+  private webCodes: Set<UserPrivilegeCode> = new Set()
 
   constructor(session: UserData<UserPrivilegeCode[]>) {
     if(!session) throw new Error("Session is empty")
-    console.log('what the fuck')
-    console.log({...session})
-    // @ts-expect-error We store it temp as [] then immediately correct and change to set:
     this.data = session
-    if(Array.isArray(this.data.permissions.codes)) this.data.permissions.codes = new Set(session.permissions.codes)
-    else this.data.permissions.codes = new Set()
+    if(Array.isArray(session.permissions.codes))
+      this.webCodes = new Set(session.permissions.codes)
   }
 
   equals(id: string) {
@@ -102,7 +100,7 @@ export class PrivilegedUser {
         if(minimatch(code, pattern)) return true
     }
     return false
-}
+  }
 
   hasFlag(flag: string, ignoreRoot: boolean = false) : boolean {
     const flags = this.flags
@@ -156,8 +154,8 @@ export class PrivilegedUser {
     return this.data.user.steamid
   }
 
-  get codes() {
-    return this.data.permissions.codes
+  get codes(): UserPrivilegeCode[] {
+    return [...this.webCodes.values()]
   }
 
   get permissions() {
