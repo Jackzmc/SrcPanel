@@ -2,7 +2,7 @@ Arguments:
   /home/jackzie/.nvm/versions/node/v18.15.0/bin/node /home/jackzie/.nvm/versions/node/v18.15.0/bin/yarn start
 
 PATH: 
-  /home/jackzie/Projects/l4d2-admin-page/server/node_modules/.bin:/tmp/yarn--1686317025732-0.9410427987006589:/home/jackzie/Projects/l4d2-admin-page/server/node_modules/.bin:/home/jackzie/.config/yarn/link/node_modules/.bin:/home/jackzie/.yarn/bin:/home/jackzie/.nvm/versions/node/v18.15.0/libexec/lib/node_modules/npm/bin/node-gyp-bin:/home/jackzie/.nvm/versions/node/v18.15.0/lib/node_modules/npm/bin/node-gyp-bin:/home/jackzie/.nvm/versions/node/v18.15.0/bin/node_modules/npm/bin/node-gyp-bin:/home/jackzie/.nvm/versions/node/v18.15.0/bin:/home/jackzie/.cargo/bin:/home/jackzie/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/snap/bin:/home/jackzie/.dotnet/tools:/usr/local/go/bin
+  /home/jackzie/Projects/l4d2-admin-page/server/node_modules/.bin:/tmp/yarn--1689346443024-0.5104293519629488:/home/jackzie/Projects/l4d2-admin-page/server/node_modules/.bin:/home/jackzie/.config/yarn/link/node_modules/.bin:/home/jackzie/.yarn/bin:/home/jackzie/.nvm/versions/node/v18.15.0/libexec/lib/node_modules/npm/bin/node-gyp-bin:/home/jackzie/.nvm/versions/node/v18.15.0/lib/node_modules/npm/bin/node-gyp-bin:/home/jackzie/.nvm/versions/node/v18.15.0/bin/node_modules/npm/bin/node-gyp-bin:/home/jackzie/.nvm/versions/node/v18.15.0/bin:/home/jackzie/.pyenv/shims:/home/jackzie/.pyenv/bin:/home/jackzie/.cargo/bin:/home/jackzie/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/snap/bin:/home/jackzie/.dotnet/tools:/usr/local/go/bin:/usr/local/go/bin
 
 Yarn version: 
   1.22.19
@@ -14,16 +14,16 @@ Platform:
   linux x64
 
 Trace: 
-  Error: EIO: i/o error, write
+  Error: ../package.json: EIO: i/o error, write
       at writeSync (node:fs:934:3)
       at SyncWriteStream._write (node:internal/fs/sync_write_stream:26:3)
       at writeOrBuffer (node:internal/streams/writable:392:12)
       at _write (node:internal/streams/writable:333:10)
       at Writable.write (node:internal/streams/writable:337:10)
-      at ConsoleReporter._log (/home/jackzie/.nvm/versions/node/v18.15.0/lib/node_modules/yarn/lib/cli.js:92833:17)
-      at ConsoleReporter.log (/home/jackzie/.nvm/versions/node/v18.15.0/lib/node_modules/yarn/lib/cli.js:92821:10)
-      at ConsoleReporter.command (/home/jackzie/.nvm/versions/node/v18.15.0/lib/node_modules/yarn/lib/cli.js:92850:10)
-      at /home/jackzie/.nvm/versions/node/v18.15.0/lib/node_modules/yarn/lib/cli.js:34401:16
+      at ConsoleReporter.warn (/home/jackzie/.nvm/versions/node/v18.15.0/lib/node_modules/yarn/lib/cli.js:92855:17)
+      at warn (/home/jackzie/.nvm/versions/node/v18.15.0/lib/node_modules/yarn/lib/cli.js:51326:23)
+      at module.exports.exports.default (/home/jackzie/.nvm/versions/node/v18.15.0/lib/node_modules/yarn/lib/cli.js:37409:7)
+      at /home/jackzie/.nvm/versions/node/v18.15.0/lib/node_modules/yarn/lib/cli.js:51337:51
       at Generator.next (<anonymous>)
 
 npm manifest: 
@@ -36,6 +36,7 @@ npm manifest:
     "dependencies": {
       "@fastify/cookie": "^8.3.0",
       "@fastify/cors": "^8.2.0",
+      "@fastify/helmet": "^11.0.0",
       "@fastify/multipart": "^7.5.0",
       "@fastify/session": "^10.1.1",
       "@fastify/swagger": "^7.4.1",
@@ -50,8 +51,10 @@ npm manifest:
       "fast-geoip": "^1.1.64",
       "fastify": "^4.14.0",
       "gamedig": "^4.0.6",
+      "identicon": "^3.1.1",
       "json5": "^2.2.3",
       "jsonwebtoken": "^9.0.0",
+      "minimatch": "^9.0.2",
       "mysql2": "^2.3.3",
       "node-fetch": "^3.2.3",
       "openid": "^2.0.10",
@@ -134,6 +137,14 @@ Lockfile:
     integrity sha512-ypZynRvXA3dibfPykQN3RB5wBdEUgSGgny8Qc6k163wYPLD4mEGEDkACp+00YmqkGvIm8D/xYoHajwyEdWD/eg==
     dependencies:
       fast-json-stringify "^5.0.0"
+  
+  "@fastify/helmet@^11.0.0":
+    version "11.0.0"
+    resolved "https://registry.yarnpkg.com/@fastify/helmet/-/helmet-11.0.0.tgz#e38849750f8811614444ca89b963bae231f61464"
+    integrity sha512-YSFhJFR4Pk2azmTkX54f0Z/O7h5j4ruCQUlagf/Rw1P45u5/2u+F+I83DRyIKryM6prXl++X2yY0Ib0RXAlZ7Q==
+    dependencies:
+      fastify-plugin "^4.2.1"
+      helmet "^7.0.0"
   
   "@fastify/multipart@^7.5.0":
     version "7.5.0"
@@ -549,6 +560,15 @@ Lockfile:
       function-bind "^1.1.1"
       get-intrinsic "^1.0.2"
   
+  canvas@^2.8.0:
+    version "2.11.2"
+    resolved "https://registry.yarnpkg.com/canvas/-/canvas-2.11.2.tgz#553d87b1e0228c7ac0fc72887c3adbac4abbd860"
+    integrity sha512-ItanGBMrmRV7Py2Z+Xhs7cT+FNt5K0vPL4p9EZ/UX/Mu7hFbkxSjKF2KVtPwX7UYWp7dRKnrTvReflgrItJbdw==
+    dependencies:
+      "@mapbox/node-pre-gyp" "^1.0.0"
+      nan "^2.17.0"
+      simple-get "^3.0.3"
+  
   cheerio-select@^2.1.0:
     version "2.1.0"
     resolved "https://registry.yarnpkg.com/cheerio-select/-/cheerio-select-2.1.0.tgz#4d8673286b8126ca2a8e42740d5e3c4884ae21b4"
@@ -690,6 +710,13 @@ Lockfile:
     integrity sha512-PRWFHuSU3eDtQJPvnNY7Jcket1j0t5OuOsFzPPzsekD52Zl8qUfFIPEiswXqIvHWGVHOgX+7G/vCNNhehwxfkQ==
     dependencies:
       ms "2.1.2"
+  
+  decompress-response@^4.2.0:
+    version "4.2.1"
+    resolved "https://registry.yarnpkg.com/decompress-response/-/decompress-response-4.2.1.tgz#414023cc7a302da25ce2ec82d0d5238ccafd8986"
+    integrity sha512-jOSne2qbyE+/r8G1VU+G/82LBs2Fs4LAsTiLSHOCOMZQl2OKZ6i8i4IyHemTe+/yIXOtTcRQMzPcgyhoFlqPkw==
+    dependencies:
+      mimic-response "^2.0.0"
   
   decompress-response@^6.0.0:
     version "6.0.0"
@@ -959,7 +986,7 @@ Lockfile:
     resolved "https://registry.yarnpkg.com/fast-uri/-/fast-uri-2.2.0.tgz#519a0f849bef714aad10e9753d69d8f758f7445a"
     integrity sha512-cIusKBIt/R/oI6z/1nyfe2FvGKVTohVRfvkOhvx0nCEW+xf5NoCXjAHcWp93uOUBchzYcsvPlrapAdX1uW+YGg==
   
-  fastify-plugin@^4.0.0:
+  fastify-plugin@^4.0.0, fastify-plugin@^4.2.1:
     version "4.5.0"
     resolved "https://registry.yarnpkg.com/fastify-plugin/-/fastify-plugin-4.5.0.tgz#8b853923a0bba6ab6921bb8f35b81224e6988d91"
     integrity sha512-79ak0JxddO0utAXAQ5ccKhvs6vX2MGyHHMMsmZkBANrq3hXc1CHzvNPHOcvTsVMEPl5I+NT+RO4YKMGehOfSIg==
@@ -1209,6 +1236,11 @@ Lockfile:
     dependencies:
       function-bind "^1.1.1"
   
+  helmet@^7.0.0:
+    version "7.0.0"
+    resolved "https://registry.yarnpkg.com/helmet/-/helmet-7.0.0.tgz#ac3011ba82fa2467f58075afa58a49427ba6212d"
+    integrity sha512-MsIgYmdBh460ZZ8cJC81q4XJknjG567wzEmv46WOBblDb6TUd3z8/GhgmsM9pn8g2B80tAJ4m5/d3Bi1KrSUBQ==
+  
   help-me@^4.0.1:
     version "4.2.0"
     resolved "https://registry.yarnpkg.com/help-me/-/help-me-4.2.0.tgz#50712bfd799ff1854ae1d312c36eafcea85b0563"
@@ -1293,6 +1325,13 @@ Lockfile:
     integrity sha512-4fCk79wshMdzMp2rH06qWrJE4iolqLhCUH+OiuIgU++RB0+94NlDL81atO7GX55uUKueo0txHNtvEyI6D7WdMw==
     dependencies:
       safer-buffer ">= 2.1.2 < 3.0.0"
+  
+  identicon@^3.1.1:
+    version "3.1.1"
+    resolved "https://registry.yarnpkg.com/identicon/-/identicon-3.1.1.tgz#d511e26785f3fa8f2cfecfc8d91b849a27f09baa"
+    integrity sha512-wzIGJ1jdLaU+iJubEp009rAIoQZSHln+cImbpsbrobdXXw2XyLNjB6Zzz1L2pn73hiebpD2RrdS8ZLXT7AkoNQ==
+    dependencies:
+      canvas "^2.8.0"
   
   ieee754@^1.2.1:
     version "1.2.1"
@@ -1537,6 +1576,11 @@ Lockfile:
     resolved "https://registry.yarnpkg.com/mime/-/mime-3.0.0.tgz#b374550dca3a0c18443b0c950a6a58f1931cf7a7"
     integrity sha512-jSCU7/VB1loIWBZe14aEYHU/+1UMEHoaO7qxCOVJOw9GgH72VAWppxNcjU+x9a2k3GSIBXNKxXQFqRvvZ7vr3A==
   
+  mimic-response@^2.0.0:
+    version "2.1.0"
+    resolved "https://registry.yarnpkg.com/mimic-response/-/mimic-response-2.1.0.tgz#d13763d35f613d09ec37ebb30bac0469c0ee8f43"
+    integrity sha512-wXqjST+SLt7R009ySCglWBCFpjUygmCIfD790/kVbiGmUgfYGuB14PiTd5DwVxSV4NcYHjzMkoj5LjQZwTQLEA==
+  
   mimic-response@^3.1.0:
     version "3.1.0"
     resolved "https://registry.yarnpkg.com/mimic-response/-/mimic-response-3.1.0.tgz#2d1d59af9c1b129815accc2c46a022a5ce1fa3c9"
@@ -1558,6 +1602,13 @@ Lockfile:
     version "5.1.6"
     resolved "https://registry.yarnpkg.com/minimatch/-/minimatch-5.1.6.tgz#1cfcb8cf5522ea69952cd2af95ae09477f122a96"
     integrity sha512-lKwV/1brpG6mBUFHtb7NUmtABCb2WZZmm2wNiOA5hAb8VdCS4B3dtMWyvcoViccwAW/COERjXLt0zP1zXUN26g==
+    dependencies:
+      brace-expansion "^2.0.1"
+  
+  minimatch@^9.0.2:
+    version "9.0.2"
+    resolved "https://registry.yarnpkg.com/minimatch/-/minimatch-9.0.2.tgz#397e387fff22f6795844d00badc903a3d5de7057"
+    integrity sha512-PZOT9g5v2ojiTL7r1xF6plNHLtOeTpSlDI007As2NlA2aYBMfVom17yqa6QzhmDP8QOhn7LjHTg7DFCVSSa6yg==
     dependencies:
       brace-expansion "^2.0.1"
   
@@ -1682,6 +1733,11 @@ Lockfile:
     integrity sha512-eLoBxg6wE/rZkJPhU/xRX1WTpkFEwDJEN96oxFrTsqBdbT5ec295Q+CoHrL9IT0DipqKhmGcaZmwOt8OON5x1w==
     dependencies:
       lru-cache "^7.14.1"
+  
+  nan@^2.17.0:
+    version "2.17.0"
+    resolved "https://registry.yarnpkg.com/nan/-/nan-2.17.0.tgz#c0150a2368a182f033e9aa5195ec76ea41a199cb"
+    integrity sha512-2ZTgtl0nJsO0KQCjEpxcIr5D+Yv90plTitZt9JBfQvVJDS5seMl3FOvsh3+9CoYWXf/1l5OaZzzF6nDm4cagaQ==
   
   negotiator@0.6.3, negotiator@^0.6.2:
     version "0.6.3"
@@ -2243,6 +2299,20 @@ Lockfile:
     version "3.0.7"
     resolved "https://registry.yarnpkg.com/signal-exit/-/signal-exit-3.0.7.tgz#a9a1767f8af84155114eaabd73f99273c8f59ad9"
     integrity sha512-wnD2ZE+l+SPC/uoS0vXeE9L1+0wuaMqKlfz9AMUo38JsyLSBWSFcHR1Rri62LZc12vLr1gb3jl7iwQhgwpAbGQ==
+  
+  simple-concat@^1.0.0:
+    version "1.0.1"
+    resolved "https://registry.yarnpkg.com/simple-concat/-/simple-concat-1.0.1.tgz#f46976082ba35c2263f1c8ab5edfe26c41c9552f"
+    integrity sha512-cSFtAPtRhljv69IK0hTVZQ+OfE9nePi/rtJmw5UjHeVyVroEqJXP1sFztKUy1qU+xvz3u/sfYJLa947b7nAN2Q==
+  
+  simple-get@^3.0.3:
+    version "3.1.1"
+    resolved "https://registry.yarnpkg.com/simple-get/-/simple-get-3.1.1.tgz#cc7ba77cfbe761036fbfce3d021af25fc5584d55"
+    integrity sha512-CQ5LTKGfCpvE1K0n2us+kuMPbk/q0EKl82s4aheV9oXjFEz6W/Y7oQFVJuU6QG77hRT4Ghb5RURteF5vnWjupA==
+    dependencies:
+      decompress-response "^4.2.0"
+      once "^1.3.1"
+      simple-concat "^1.0.0"
   
   smart-buffer@^4.2.0:
     version "4.2.0"

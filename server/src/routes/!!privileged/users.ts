@@ -40,7 +40,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
         for(const row of rows) {
             if(!row.name) {
-                const user = await fastify.users.fetchName(new SteamID(row.steamid))
+                const user = await fastify.users.fetchUser(row.steamid)
                 if(user) {
                     row.name = user.name
                 }

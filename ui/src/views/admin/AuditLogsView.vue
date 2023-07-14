@@ -251,12 +251,12 @@ function projectUser(user: any) {
 }
 function onSelectUser(filter: string, user: any) {
   filters.value[filter] = user.steamid
-  fetchDebounce.value()
+  fetchDebounce()
 }
 function onUserSearchBlur(filter: string, event: any) {
   if(event.input.length < 3) {
     filters.value[filter] = null
-    fetchDebounce.value()
+    fetchDebounce()
   }
 }
 
@@ -321,7 +321,6 @@ let limit = ref(DEFAULT_LIMIT);
 let totalEntries = ref(0)
 let totalUnfilteredEntries = ref(0)
 let entries = ref()
-let fetchDebounce = ref()
 let dataSource = ref<string>("main")
 let filters = ref<Record<string, string|string[]|null>>({
   servers: DEFAULT_SERVERS,
@@ -330,6 +329,9 @@ let filters = ref<Record<string, string|string[]|null>>({
   target: null,
   aroundId: null
 });
+let highestId = ref()
+let pendingEntries = ref()
+
 let queryId = ref<number>()
 let queryLoading = ref(false)
 let queryTimer: any
@@ -361,7 +363,7 @@ function toggleFilter(filter: string, key: string) {
     else
       v.push(key)
   }
-  fetchDebounce.value()
+  fetchDebounce()
 }
 function getFilterColor(filter: string, key: string) {
   if(!filters.value[filter] || !Array.isArray(filters.value[filter])) return
@@ -397,8 +399,8 @@ async function getInfo() {
   const response = await request("/api/logs/data")
   if(response?.ok) {
     const json = await response.json()
-    console.log(json.cache)
     logInfo.value = json
+    highestId.value = json.cache[dataSource.value].highestId
   }
 }
 async function fetchLogs2() {
@@ -460,12 +462,14 @@ async function checkQuery() {
         client: {
           steamid: entry.client,
           name: entry.clientName,
-          avatarUrl: entry.clientName ? (entry.clientAvatar ? `https://avatars.steamstatic.com/${entry.clientAvatar}.jpg` : `https://ui-avatars.com/api/?name=${encodeURIComponent(entry.clientName || entry.client)}`) : null
+          avatarUrl: `/api/users/${entry.client}/avatar`
+          // avatarUrl: entry.clientName ? (entry.clientAvatar ? `https://avatars.steamstatic.com/${entry.clientAvatar}.jpg` : `https://ui-avatars.com/api/?name=${encodeURIComponent(entry.clientName || entry.client)}`) : null
         },
         target: {
           steamid: entry.target,
           name: entry.targetName,
-          avatarUrl: entry.targetName ? (entry.targetAvatar ? `https://avatars.steamstatic.com/${entry.targetAvatar}.jpg` : `https://ui-avatars.com/api/?name=${encodeURIComponent(entry.targetName || entry.target)}`) : null
+          avatarUrl: `/api/users/${entry.target}/avatar`
+          // avatarUrl: entry.targetName ? (entry.targetAvatar ? `https://avatars.steamstatic.com/${entry.targetAvatar}.jpg` : `https://ui-avatars.com/api/?name=${encodeURIComponent(entry.targetName || entry.target)}`) : null
         },
         metadata: entry.metadata,
         message,
@@ -478,6 +482,7 @@ async function checkQuery() {
   }
 }
 
+const fetchDebounce = debounce(fetchLogs, 500)
 async function fetchLogs(resetPage = true) {
   // Wait for previous request
   const params = updateParams()
@@ -520,12 +525,14 @@ async function fetchLogs(resetPage = true) {
         client: {
           steamid: entry.client,
           name: entry.clientName,
-          avatarUrl: entry.clientName ? (entry.clientAvatar ? `https://avatars.steamstatic.com/${entry.clientAvatar}.jpg` : `https://ui-avatars.com/api/?name=${encodeURIComponent(entry.clientName || entry.client)}`) : null
+          avatarUrl: entry.client?.startsWith("STEAM_") ? `/api/users/${entry.client}/avatar` : null,
+          // avatarUrl: entry.clientName ? (entry.clientAvatar ? `https://avatars.steamstatic.com/${entry.clientAvatar}.jpg` : `https://ui-avatars.com/api/?name=${encodeURIComponent(entry.clientName || entry.client)}`) : null
         },
         target: {
           steamid: entry.target,
           name: entry.targetName,
-          avatarUrl: entry.targetName ? (entry.targetAvatar ? `https://avatars.steamstatic.com/${entry.targetAvatar}.jpg` : `https://ui-avatars.com/api/?name=${encodeURIComponent(entry.targetName || entry.target)}`) : null
+          avatarUrl: entry.target?.startsWith("STEAM_") ? `/api/users/${entry.target}/avatar` : null,
+          // avatarUrl: entry.targetName ? (entry.targetAvatar ? `https://avatars.steamstatic.com/${entry.targetAvatar}.jpg` : `https://ui-avatars.com/api/?name=${encodeURIComponent(entry.targetName || entry.target)}`) : null
         },
         metadata: entry.metadata,
         message,
@@ -581,7 +588,6 @@ onBeforeMount(async() => {
       fetchLogs(false)
   }, REFRESH_INTERVAL)
 
-  fetchDebounce.value = debounce(fetchLogs, 500)
 
 
   if(route.query.limit) limit.value = Number(route.query.limit) || DEFAULT_LIMIT

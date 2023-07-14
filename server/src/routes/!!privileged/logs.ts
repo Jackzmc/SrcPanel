@@ -2,6 +2,7 @@ import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
 import { OkPacket, RowDataPacket } from 'mysql2';
 import { Static, Type } from '@sinclair/typebox'
 import { NO_PERMISSION } from '../../responses.js';
+import { QueryBuilder, SortDirection } from '../../modules/QueryBuilder.js';
 
 const LogQuery = Type.Object({
     servers: Type.Optional(Type.String()),
@@ -23,7 +24,8 @@ const LogQuery = Type.Object({
     page: Type.Optional(Type.Integer()),
     optimized: Type.Optional(Type.String()),
     timestampOnly: Type.Optional(Type.Boolean({ default: false })),
-    source: Type.Optional(Type.String())
+    source: Type.Optional(Type.String()),
+    afterId: Type.Optional(Type.Number())
 })
 
 type LogQueryType = Static<typeof LogQuery>
@@ -76,6 +78,64 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         return response
     })
 
+    fastify.get('/:type/:id', async (req: FastifyRequest<{ Querystring: LogQueryType, Params: { type: string, id: number}}>, reply) => {
+        const isBefore = req.params.type === "before"
+        if(!isBefore && req.params.type !== "after") {
+            return reply.status(400).send({
+                error: "BAD_REQUEST",
+                message: `Unknown type ${req.params.type}, should be 'before' or 'after'` 
+            })
+        }
+        let tableName = ACTIVITY_LOG_TABLE_NAME
+        if(!req.query.source) req.query.source = "main"
+        if(req.query.source != "main") tableName += `_${req.query.source}`
+
+        const query = new QueryBuilder(tableName, "l")
+            .selectMultiple("id", "l.timestamp", "server", "type", "client", "target", "message", "metadata")
+            .select("s1.last_alias", "clientName")
+            .select("s2.last_alias", "targetName")
+            .leftJoin("stats_users", "steamid", "=", "client", "s1")
+            .leftJoin("stats_users", "steamid", "=", "target", "s2")
+            .where('id', isBefore ? '<' : '>', req.params.id)
+            .limit(req.query.limit ?? 30)
+            .sort('id', SortDirection.Descending)
+
+        if(req.query.client) query.where('client', '=', req.query.client)
+        if(req.query.target) query.where('target', '=', req.query.target)
+        if(req.query.searchMessage) query.where('content','LIKE',`%${req.query.searchMessage}%`)
+        if(req.query.types) {
+            const types = req.query.types.split(/[+,]/g)
+            query.whereIn('type', types)
+        }
+        if(req.query.servers) {
+            const servers = req.query.servers.split(/[+,]/g)
+            query.whereIn('server', servers)
+        }
+        if(req.query.aroundId) {
+            query.where('id', '<', req.query.aroundId + 100)
+                .where('id', '>', req.query.aroundId - 100)
+        }
+
+        const startTime = Date.now()
+        const [logs] = await query.execute(fastify.db)
+        return {
+            logs,
+            timeTaken: Date.now() - startTime,
+            // wasOptimized: optimized,
+            totals: {
+                total: cache.totalRows, // # of rows in entire data source
+                // filteredTotal: count[0].count, // # of rows in entire data source WITH filters
+                count: logs.length // # of rows + filtered + pagination (<= limit)
+            },
+            // pages: Math.ceil(count[0].count / limit),
+            raw: process.env.NODE_ENV === "production" ? null : {
+                cache: cache[tableName],
+                query: query.build(),
+                tableName
+            }
+        }
+    })
+
     /// PLAN:
     /*
     1. Have only ~ 10,000 rows (roughly ~ month of data)
@@ -97,13 +157,10 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             && req.query.source == "main"
         let countQuery = `SELECT COUNT(*) AS count from ${tableName} `
         let query = `SELECT id, l.timestamp, server, type, client, target, message, metadata,
-            s1.last_alias as clientName, s2.last_alias as targetName,
-            u1.avatar_hash as clientAvatar, u2.avatar_hash as targetAvatar
+            s1.last_alias as clientName, s2.last_alias as targetName
             FROM ${tableName} l
             LEFT JOIN stats_users as s1 ON s1.steamid = client 
-            LEFT JOIN stats_users as s2 ON s2.steamid = target 
-            LEFT JOIN user_names u1 ON u1.steamid LIKE SUBSTRING(l.client, 11) 
-            LEFT JOIN user_names u2 ON u2.steamid LIKE SUBSTRING(l.target, 11)`
+            LEFT JOIN stats_users as s2 ON s2.steamid = target`
 
         const conditions = []
         let data = [], countData = []
@@ -176,6 +233,13 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             conditions.push(`id >= ? AND id <= ?`)
             data = [ ...data, min, max ]
             countData = [ ...countData, min, max ]
+        }
+
+        const afterId = Number(req.query.afterId)
+        if(afterId) {
+            conditions.push('id > ?')
+            data = [ ...data, afterId ]
+            countData = [ ...countData, afterId ]
         }
         
         if(conditions.length > 0) {
