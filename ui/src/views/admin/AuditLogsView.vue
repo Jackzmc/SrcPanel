@@ -41,7 +41,7 @@
           </a>
         </div>
         <template v-for="entry in entries" :key="entry.id">
-          <div class="list-item" @mouseenter="hoverId = entry.id">
+          <div :class="['list-item', {'has-background-primary': entry.id == Number(filters.aroundId) }]" @mouseenter="hoverId = entry.id">
             <div class="list-item-image" v-if="entry.client.avatarUrl || entry.target.avatarUrl">
               <figure class="image is-48x48">
                 <img class="is-rounded" :src="entry.client.avatarUrl || entry.target.avatarUrl">
@@ -392,8 +392,8 @@ function getFilterColor(filter: string, key: string) {
 function getParams() {
   // if(!entries.value) return ''
   const searchParams = new URLSearchParams()
-  searchParams.append('page', page.value.toString())
-  searchParams.append('limit', limit.value.toString())
+  // searchParams.append('page', page.value.toString())
+  // searchParams.append('limit', limit.value.toString())
   searchParams.append('source', dataSource.value)
   for(const [filter, val] of Object.entries(filters.value)) {
     if(!val) continue
@@ -520,7 +520,7 @@ async function checkQuery() {
 }
 
 const fetchDebounce = debounce(fetchLogs, 500)
-async function fetchLogs3(id: number, mode: "before" | "after") {
+async function fetchLogs3(id: number, mode: "before" | "after" | "around") {
   // Wait for previous request
   const params = updateParams()
   if(loadingTime.value != undefined) return
@@ -689,7 +689,7 @@ function jumpTo(entry: any) {
 function getShareLink(entry: any) {
   const params = getParams()
   params.set('aroundId', entry.id)
-  return `${location.protocol}//${window.location.host}${window.location.pathname}?${params}`
+  return `${location.protocol}//${window.location.host}${window.location.pathname}/${entry.id}`
 }
 async function copyShareLink(entry: any) {
   const link = getShareLink(entry)
@@ -707,6 +707,16 @@ onBeforeMount(async() => {
   //     fetchLogs(false)
   // }, REFRESH_INTERVAL)
 
+  now.value = Date.now()
+  setInterval(() => {
+    now.value = Date.now()
+  }, 1000)
+
+  if(route.params.aroundId) {
+    const id = Number(route.params.id)
+    filters.value['aroundId'] = id.toString()
+    return await fetchLogs3(id, "around")
+  }
 
 
   if(route.query.limit) limit.value = Number(route.query.limit) || DEFAULT_LIMIT
@@ -731,12 +741,6 @@ onBeforeMount(async() => {
   // Swap to latest page if page not set
   // if(page.value)
   // setPage(-1)
-
-
-  now.value = Date.now()
-  setInterval(() => {
-    now.value = Date.now()
-  }, 1000)
 
   await fetchLogs3(cache.value.highestId, "before")
   setInterval(() => {

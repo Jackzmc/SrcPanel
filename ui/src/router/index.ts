@@ -217,7 +217,7 @@ const routes = [
   },
   {
     name: 'logs-audit',
-    path: '/admin/audit',
+    path: '/admin/audit/:aroundId?',
     component: () => import(/* webpackChunkName: 'logs' */ '../views/admin/AuditLogsView.vue'),
     meta: {
       title: 'Audit Logs',

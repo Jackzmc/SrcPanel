@@ -78,14 +78,18 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         return response
     })
 
+    const VALID_TYPES = ["before","after","around"]
     fastify.get('/:type/:id', async (req: FastifyRequest<{ Querystring: LogQueryType, Params: { type: string, id: number}}>, reply) => {
-        const isBefore = req.params.type === "before"
-        if(!isBefore && req.params.type !== "after") {
+        const type = req.params.type
+        if(!VALID_TYPES.includes(type)) {
             return reply.status(400).send({
                 error: "BAD_REQUEST",
-                message: `Unknown type ${req.params.type}, should be 'before' or 'after'` 
+                message: `Unknown type ${req.params.type}, should be one of: ${VALID_TYPES}` 
             })
         }
+
+        const limit = req.query.limit ?? 30 
+
         let tableName = ACTIVITY_LOG_TABLE_NAME
         if(!req.query.source) req.query.source = "main"
         if(req.query.source != "main") tableName += `_${req.query.source}`
@@ -96,9 +100,16 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             .select("s2.last_alias", "targetName")
             .leftJoin("stats_users", "steamid", "=", "client", "s1")
             .leftJoin("stats_users", "steamid", "=", "target", "s2")
-            .where('id', isBefore ? '<' : '>', req.params.id)
-            .limit(req.query.limit ?? 30)
+            .limit(limit)
             .sort('id', SortDirection.Descending)
+
+        if(type === 'before') query.where("id", '<', req.params.id)
+        else if(type === 'after') query.where("id", '>', req.params.id)
+        else if(type === 'around') {
+            const half = Math.round(limit / 2)
+            query.where("id", '>', req.params.id - half)
+                .where("id", "<", req.params.id + half)
+        }
 
         if(req.query.client) query.where('client', '=', req.query.client)
         if(req.query.target) query.where('target', '=', req.query.target)
