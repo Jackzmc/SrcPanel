@@ -586,6 +586,13 @@ async function fetchLogs3(id: number, mode: "before" | "after") {
     loadingTime.value = undefined
   }
 }
+const isTopOfList = computed(() => {
+  if(!entries.value || entries.value.length === 0) return false
+  const highestRow = entries.value?.reduce((prev, curr) => {
+    return (prev.id > curr.id) ? prev : curr
+  })
+  return highestRow.id == cache.value.highestId
+})
 function addPendingEntries(entries: LogEntry[]) {
   pendingEntries.value = [ ...pendingEntries.value, ...entries]
   // for(const entry of entries) {
@@ -734,7 +741,7 @@ onBeforeMount(async() => {
   await fetchLogs3(cache.value.highestId, "before")
   setInterval(() => {
     // Only check for new values IF we not full
-    if(pendingEntries.value.length < limit.value)
+    if(isTopOfList.value && pendingEntries.value.length < limit.value)
       fetchLogs3(cache.value.highestId, "after")
   }, REFRESH_INTERVAL)
 })
