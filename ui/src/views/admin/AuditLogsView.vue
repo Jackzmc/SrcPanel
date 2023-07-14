@@ -329,7 +329,6 @@ let filters = ref<Record<string, string|string[]|null>>({
   target: null,
   aroundId: null
 });
-let highestId = ref()
 let pendingEntries = ref()
 
 let queryId = ref<number>()
@@ -394,15 +393,20 @@ function updateParams() {
 }
 
 let fetchAbort: AbortController | null = null
-let logInfo = ref<{cache:Record<string,any>}>({cache:{}})
+let logInfo = ref<{cache:Record<string,{totalRows:number,highestId:number}>}>({cache:{}})
+const cache = computed(() => {
+  return logInfo.value.cache[dataSource.value]
+})
 async function getInfo() {
   const response = await request("/api/logs/data")
   if(response?.ok) {
     const json = await response.json()
     logInfo.value = json
-    highestId.value = json.cache[dataSource.value].highestId
   }
 }
+
+
+
 async function fetchLogs2() {
   loadingTime.value = Date.now()
   clearInterval(queryTimer)
@@ -483,6 +487,65 @@ async function checkQuery() {
 }
 
 const fetchDebounce = debounce(fetchLogs, 500)
+async function fetchLogs3(id: number, mode: "before" | "after") {
+  // Wait for previous request
+  const params = updateParams()
+  if(loadingTime.value != undefined) return
+
+  loadingTime.value = Date.now()
+  const responseHandle = requestTimeout(`/api/logs/${mode}/${id}?${params}`, MAX_REQUEST_TIME)
+  fetchAbort = responseHandle.controller
+  const response = await responseHandle.start()
+  if(response?.ok) {
+    const json = await response.json()
+    totalEntries.value = cache.value.totalRows
+    // totalUnfilteredEntries.value = json.totals.total
+    entries.value = json.logs.map((entry: any) => {
+      let message = entry.message
+      if(entry.metadata && entry.message) {
+        for(const key in entry.metadata) {
+          message = message.replace(new RegExp(`%${key}%`, 'g'), `<b data-tooltip="${key}">${entry.metadata[key]}</b>`)
+        }
+      }
+      if(entry.type === 'JOIN') message = " joined"
+      if(entry.type === 'ACTION') {
+        const match = entry.message.match(ADMINCHAT_REGEX)
+        if(match) {
+          entry.adminChat = true
+          entry.type = 'CHAT'
+          message = match[1]
+        }
+      }
+      return {
+        id: entry.id,
+        timestamp: entry.timestamp,
+        server: entry.server,
+        type: entry.type,
+        adminChat: entry.adminChat,
+        client: {
+          steamid: entry.client,
+          name: entry.clientName,
+          avatarUrl: entry.client?.startsWith("STEAM_") ? `/api/users/${entry.client}/avatar` : null,
+          // avatarUrl: entry.clientName ? (entry.clientAvatar ? `https://avatars.steamstatic.com/${entry.clientAvatar}.jpg` : `https://ui-avatars.com/api/?name=${encodeURIComponent(entry.clientName || entry.client)}`) : null
+        },
+        target: {
+          steamid: entry.target,
+          name: entry.targetName,
+          avatarUrl: entry.target?.startsWith("STEAM_") ? `/api/users/${entry.target}/avatar` : null,
+          // avatarUrl: entry.targetName ? (entry.targetAvatar ? `https://avatars.steamstatic.com/${entry.targetAvatar}.jpg` : `https://ui-avatars.com/api/?name=${encodeURIComponent(entry.targetName || entry.target)}`) : null
+        },
+        metadata: entry.metadata,
+        message,
+        rawMessage: entry.message
+      }
+    })
+    console.info('Fetch took', json.timeTaken, 'ms')
+    loadingTime.value = undefined
+    lastRefresh.value = Date.now()
+  } else {
+    loadingTime.value = undefined
+  }
+}
 async function fetchLogs(resetPage = true) {
   // Wait for previous request
   const params = updateParams()
@@ -583,10 +646,10 @@ async function copyShareLink(entry: any) {
 
 onBeforeMount(async() => {
   await getInfo()
-  setInterval(() => {
-    if(shouldAutoRefresh.value)
-      fetchLogs(false)
-  }, REFRESH_INTERVAL)
+  // setInterval(() => {
+  //   if(shouldAutoRefresh.value)
+  //     fetchLogs(false)
+  // }, REFRESH_INTERVAL)
 
 
 
@@ -619,7 +682,7 @@ onBeforeMount(async() => {
     now.value = Date.now()
   }, 1000)
 
-  fetchLogs()
+  await fetchLogs3(cache.value.highestId, "before")
 })
 
 </script>
