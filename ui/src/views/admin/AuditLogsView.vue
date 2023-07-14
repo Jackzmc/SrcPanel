@@ -439,7 +439,7 @@ async function getInfo() {
 }
 
 
-
+const fetchDebounce = debounce(fetchLogs, 400)
 async function fetchLogs2() {
   loadingTime.value = Date.now()
   clearInterval(queryTimer)
@@ -585,7 +585,7 @@ async function fetchLogs3(id: number, mode: "before" | "after" | "around") {
     loadingTime.value = undefined
   }
 }
-// TODO: return highest and lowest _local_ ids
+// TODO: return highest and lowest _local_
 const isTopOfList = computed(() => {
   if(!entries.value || entries.value.length === 0) return false
   const highestRow = entries.value?.reduce((prev, curr) => {
