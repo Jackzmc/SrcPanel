@@ -15,6 +15,7 @@ import ConfigManager from '../modules/ConfigManager.js';
 import { UserPrivilegeCode } from '../../../common-types/Privileges.js';
 import { SESSION_VERSION } from '../routes/auth/steam.js';
 import { NOT_LOGGED_IN } from '../responses.js';
+import { QueryQueue } from '../modules/QueryQueue.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -55,6 +56,7 @@ async function db(fastify: FastifyInstance) {
     fastify.decorate('steam', steam)
     fastify.decorate('servers', new ServerManager(steam, DATA_FOLDER, CONFIG_FOLDER, configManager))
     fastify.decorate('config', configManager)
+    fastify.decorate('jobs', new QueryQueue(db))
     fastify.addHook('preHandler', (req, reply, done) => {
         if(req.session?.user) {
             if(req.session.version !== SESSION_VERSION) { 

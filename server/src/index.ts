@@ -16,6 +16,14 @@ dotenv.config()
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { FastifyPluginOptions } from 'fastify';
+import { CustomFastifySession } from '../../common-types/User.js'
+import User from './modules/users/User.js';
+import ConfigManager from './modules/ConfigManager.js';
+import FastifySwagger from '@fastify/swagger'
+import { UserPrivilegeCode } from '../../common-types/Privileges.js';
+
+import FastifyHelmet from '@fastify/helmet'
+import { QueryQueue } from './modules/QueryQueue.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -38,9 +46,7 @@ const app = Fastify({
       }
 })
 
-import { CustomFastifySession } from '../../common-types/User.js'
-import User from './modules/users/User.js';
-import ConfigManager from './modules/ConfigManager.js';
+
 interface CustomSession extends CustomFastifySession<UserPrivilegeCode[]> {
 } 
 declare module 'fastify' {
@@ -50,7 +56,8 @@ declare module 'fastify' {
     authmngr: AuthManager,
     servers: ServerManager,
     users: UserManager,
-    config: ConfigManager
+    config: ConfigManager,
+    jobs: QueryQueue
   }
   export interface FastifyRequest {
     user?: User,
@@ -59,8 +66,6 @@ declare module 'fastify' {
   interface Session extends CustomSession {}
 }
 
-import FastifySwagger from '@fastify/swagger'
-import { UserPrivilegeCode } from '../../common-types/Privileges.js';
 
 const CORS_WHITELIST = process.env.CORS_WHITELIST ? process.env.CORS_WHITELIST.split(",") : ["localhost:8080"] 
 app.register(cors, {
@@ -68,7 +73,6 @@ app.register(cors, {
     methods: ["GET","POST","PATCH","UPDATE","DELETE"]
 })
 
-import FastifyHelmet from '@fastify/helmet'
 app.register(
     FastifyHelmet,
 )

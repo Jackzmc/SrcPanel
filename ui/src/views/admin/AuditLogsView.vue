@@ -9,7 +9,6 @@
     </div>
   </h4>
   <p class="subtitle is-6">Some requests may take a long time to process such as searching users or message content</p>
-  <Pagination :page="page" :count="totalEntries" :limit="limit" @page="setPage" />
   <div class="columns">
     <div class="column is-8 box" v-if="!entries">
       <p class="has-text-centered is-size-5" style="margin-top:20%">
@@ -126,8 +125,10 @@
     </div>
     <div class="column">
       <div class="box">
+      <Pagination :page="page" :count="totalEntries" :limit="limit" @page="setPage" :disabled="queryId != undefined" />
       <Field label="Search Client" icon-left="search">
         <SimpleTypeahead
+          :disabled="queryId != undefined"
           placeholder="Search for a client"
           class="input"
           @onInput="searchUsers"
@@ -139,6 +140,7 @@
       </Field>
       <Field label="Search Target" icon-left="search">
         <SimpleTypeahead
+          :disabled="queryId != undefined"
           placeholder="Search for a target"
           class="input"
           @onInput="searchUsers"
@@ -149,16 +151,16 @@
         />
       </Field>
       <Field label="Search Message" icon-left="search">
-        <input type="text" class="input" placeholder="Search messages" v-model="filters.message" @change="fetchDebounce" />
+        <input :disabled="queryId != undefined" type="text" class="input" placeholder="Search messages" v-model="filters.message" @change="fetchDebounce" />
       </Field>
       <Field>
         <label class="label">
           Enabled Types
-          <a class="is-inline" @click="filters.types = []; updateParams()">(Clear)</a>&nbsp;
-          <a @click="filters.types = Object.keys(FILTER_DATA.types)">(Select All)</a>
+          <a :disabled="queryId != undefined" class="is-inline" @click="filters.types = []; updateParams()">(Clear)</a>&nbsp;
+          <a :disabled="queryId != undefined" @click="filters.types = Object.keys(FILTER_DATA.types)">(Select All)</a>
         </label>
         <div class="buttons">
-          <a
+          <a :disabled="queryId ? true : undefined"
             v-for="(value, key) of FILTER_DATA.types" :key="key"
             :class="['button', 'is-small', getFilterColor('types', key)]"
             @click="toggleFilter('types', key)"
@@ -170,11 +172,11 @@
       <Field>
         <label class="label">
           Enabled Sources
-          <a class="is-inline" @click="filters.servers = []">(Clear)</a>&nbsp;
-          <a @click="filters.servers = Object.keys(FILTER_DATA.servers)">(Select All)</a>
+          <a :disabled="queryId ? true : undefined" class="is-inline" @click="filters.servers = []">(Clear)</a>&nbsp;
+          <a :disabled="queryId ? true : undefined" @click="filters.servers = Object.keys(FILTER_DATA.servers)">(Select All)</a>
         </label>
         <div class="buttons has-addons">
-          <a
+          <a :disabled="queryId ? true : undefined"
             v-for="(val, key) of FILTER_DATA.servers" :key="key"
             :class="['button', 'is-small',  getFilterColor('servers', key)]"
             @click="toggleFilter('servers', key)"
@@ -186,13 +188,13 @@
       <div class="columns">
         <div class="column is-3">
           <Field label="Around Id">
-            <input v-model="filters.aroundId" type="number" class="input" min="0" @change="fetchDebounce" placeholder="######" />
+            <input v-model="filters.aroundId" type="number" class="input" min="0" @change="fetchDebounce" placeholder="####" :disabled="queryId != undefined" />
           </Field>
         </div>
         <div class="column is-5">
           <Field label="Data Source">
             <div class="select is-fullwidth">
-              <select v-model="dataSource" @change="fetchDebounce">
+              <select v-model="dataSource" @change="fetchDebounce" :disabled="queryId != undefined">
                 <option v-for="(source, id) in DATA_SOURCES" :key="id" :value="id">
                   {{ source }}
                 </option>
@@ -204,6 +206,13 @@
           </Field>
         </div>
       </div>
+      <div class="buttons">
+        <a :class="['button','is-info',{'is-loading': queryId}]" @click="fetchLogs2()">
+          <Icon icon="search">Search</Icon>
+        </a>
+        <Icon icon="spinner" spin v-if="queryLoading">Checking...</Icon>
+      </div>
+      <p>Request may take a long time to complete. The results will be shown when ready</p>
     </div>
   </div>
   </div>
@@ -256,6 +265,7 @@ const router = useRouter()
 const { notify } = useNotification();
 
 const REFRESH_INTERVAL = 90_000
+const FETCH_QUERY_STATUS_INTERVAL = 1000 * 30 // 30 seconds
 const MAX_REQUEST_TIME = 1000 * 110 // 110 seconds max, any more and CF may kick in
 
 const DEFAULT_TYPES = ["ACTION", "CHAT", "INFO", "STATE", "QUIT", "JOIN"];
@@ -320,6 +330,9 @@ let filters = ref<Record<string, string|string[]|null>>({
   target: null,
   aroundId: null
 });
+let queryId = ref<number>()
+let queryLoading = ref(false)
+let queryTimer: any
 
 const ADMINCHAT_REGEX = /triggered sm_say \(text (.*)\)/;
 
@@ -388,6 +401,83 @@ async function getInfo() {
     logInfo.value = json
   }
 }
+async function fetchLogs2() {
+  loadingTime.value = Date.now()
+  clearInterval(queryTimer)
+  const response = await request(`/api/logs/batch?${updateParams()}`, { method: 'POST' })
+  if(response?.ok) {
+    const json = await response.json()
+    queryId.value = json.queryId
+    queryTimer = setInterval(async() => {
+      try {
+
+        await checkQuery()
+      } catch(err) {
+        queryTimer = null
+        clearInterval(queryTimer)
+      }
+    }, FETCH_QUERY_STATUS_INTERVAL)
+  } else {
+    loadingTime.value = undefined
+  }
+}
+
+async function checkQuery() {
+  if(!queryId.value) return
+  queryLoading.value = true
+  const response = await request(`/api/logs/batch/${queryId.value}`)
+  queryLoading.value = false
+  if(response?.ok) {
+    const json = await response.json()
+    if(!json.result) return // Request not done
+    queryId.value = undefined
+    totalEntries.value = json.totals.filteredTotal
+    totalUnfilteredEntries.value = json.totals.total
+    clearInterval(queryTimer)
+    queryTimer = null
+    entries.value = json.logs.map((entry: any) => {
+      let message = entry.message
+      if(entry.metadata && entry.message) {
+        for(const key in entry.metadata) {
+          message = message.replace(new RegExp(`%${key}%`, 'g'), `<b data-tooltip="${key}">${entry.metadata[key]}</b>`)
+        }
+      }
+      if(entry.type === 'JOIN') message = " joined"
+      if(entry.type === 'ACTION') {
+        const match = entry.message.match(ADMINCHAT_REGEX)
+        if(match) {
+          entry.adminChat = true
+          entry.type = 'CHAT'
+          message = match[1]
+        }
+      }
+      return {
+        id: entry.id,
+        timestamp: entry.timestamp,
+        server: entry.server,
+        type: entry.type,
+        adminChat: entry.adminChat,
+        client: {
+          steamid: entry.client,
+          name: entry.clientName,
+          avatarUrl: entry.clientName ? (entry.clientAvatar ? `https://avatars.steamstatic.com/${entry.clientAvatar}.jpg` : `https://ui-avatars.com/api/?name=${encodeURIComponent(entry.clientName || entry.client)}`) : null
+        },
+        target: {
+          steamid: entry.target,
+          name: entry.targetName,
+          avatarUrl: entry.targetName ? (entry.targetAvatar ? `https://avatars.steamstatic.com/${entry.targetAvatar}.jpg` : `https://ui-avatars.com/api/?name=${encodeURIComponent(entry.targetName || entry.target)}`) : null
+        },
+        metadata: entry.metadata,
+        message,
+        rawMessage: entry.message
+      }
+    })
+    console.info('Fetch took', json.timeTaken, 'ms')
+    loadingTime.value = undefined
+    lastRefresh.value = Date.now()
+  }
+}
+
 async function fetchLogs(resetPage = true) {
   // Wait for previous request
   const params = updateParams()

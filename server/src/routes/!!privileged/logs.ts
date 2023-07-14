@@ -65,7 +65,24 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
     })
 
+    fastify.post('/batch', (req: FastifyRequest<{ Querystring: LogQueryType, Params: { page?: number } }>, reply) => {
+        const id = fastify.jobs.add("SELECT * FROM activity_log", "SELECT COUNT(*) FROM activity_log", [], [])
+        return { id }
+    })
 
+    fastify.get('/batch/:id', (req: FastifyRequest<{ Params: { id: number } }>, reply) => {
+        if(!req.params.id) return "404"
+        const response = fastify.jobs.get(req.params.id)
+        return response
+    })
+
+    /// PLAN:
+    /*
+    1. Have only ~ 10,000 rows (roughly ~ month of data)
+    2. Move the rest into archive table
+    3. When running query, if < 10 seconds, return data
+        If >= 10 seconds, return a batch id user can fetch
+    */
     fastify.get('/:page?', async(req: FastifyRequest<{ Querystring: LogQueryType, Params: { page?: number } }>, reply) => {
         if(!req.user.hasPermission("logs.view")) return NO_PERMISSION(reply)
         const searchMessage = req.query.searchMessage ? `%${req.query.searchMessage}%` : (req.query.search_message ? `%${req.query.search_message}%` : null)
@@ -184,6 +201,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
 
         const startTime = Date.now()
+        // TODO: put count query as sub query??
         const [[logs], [count]] = await Promise.all([
             fastify.db.execute<RowDataPacket[]>(query, data),
             fastify.db.execute<RowDataPacket[]>(countQuery, countData)
