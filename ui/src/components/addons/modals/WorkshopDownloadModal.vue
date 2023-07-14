@@ -66,7 +66,7 @@
             {{entry.state}}
           </span>&nbsp;
           <span v-html="entry.message" />
-          <router-link v-if="showForceDownload" :to="'/admin/addons/' + share.id + '/' + entry.filename">View existing addon</router-link>
+          <router-link v-if="showForceDownload && entry.state == 'INFO'" :to="'/admin/addons/' + share.id + '/' + entry.filename">&nbsp;View existing addon</router-link>
         </p>
       </div>
     </section>
