@@ -118,9 +118,22 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
         const startTime = Date.now()
         const [logs] = await query.execute(fastify.db)
+
+        let cache = await getTotalRows(tableName)
+        if(logs.length > 0) {
+            const highestRow = logs.reduce((prev, current) => {
+                return (prev.id > current.id) ? prev : current
+            })
+            if(highestRow.highestId > cache.highestId) {
+                console.log('updating', cache[tableName].highestId, '->', highestRow.id)
+                cache[tableName].highestId = highestRow.id
+            }
+        }
+
         return {
             logs,
             timeTaken: Date.now() - startTime,
+            cache,
             // wasOptimized: optimized,
             totals: {
                 total: cache.totalRows, // # of rows in entire data source

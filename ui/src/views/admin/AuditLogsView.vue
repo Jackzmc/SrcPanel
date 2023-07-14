@@ -5,7 +5,6 @@
     <em class="subtitle is-4" >({{ totalUnfilteredEntries.toLocaleString() }} total)</em>
     <div class="is-pulled-right">
       <p class="is-inline mr-3 is-size-6" v-if="nextRefreshCountdown" data-tooltip="Time until the next auto refresh">{{ nextRefreshCountdown }}s</p>
-      <a :class="['button','is-info',{'is-loading': loadingTime}]" @click="fetchLogs(false)"><Icon icon="sync">Refresh</Icon></a>
     </div>
   </h4>
   <p class="subtitle is-6">Some requests may take a long time to process such as searching users or message content</p>
@@ -34,9 +33,11 @@
           </Field>
       </div>
       <div class="list has-visible-pointer-controls has-hoverable-list-items" v-else>
-        <div class="list-item  message is-info">
+        <div class="list-item  message is-info" v-if="pendingEntries.length > 0">
           <a class="list-item-content has-text-centered" style="text-decoration: none">
-            <p class=""><Icon icon="fa-message" />7 new entries are available, click here to view</p>
+            <p class="">
+              <Icon icon="fa-message" />{{ pendingEntries.length }}{{ pendingEntries.length >= limit ? '+' : ''}}  new entries are available, click here to view
+            </p>
           </a>
         </div>
         <template v-for="entry in entries" :key="entry.id">
@@ -264,7 +265,7 @@ const route = useRoute()
 const router = useRouter()
 const { notify } = useNotification();
 
-const REFRESH_INTERVAL = 90_000
+const REFRESH_INTERVAL = 15_000
 const FETCH_QUERY_STATUS_INTERVAL = 1000 * 30 // 30 seconds
 const MAX_REQUEST_TIME = 1000 * 110 // 110 seconds max, any more and CF may kick in
 
@@ -320,7 +321,7 @@ let page = ref(1);
 let limit = ref(DEFAULT_LIMIT);
 let totalEntries = ref(0)
 let totalUnfilteredEntries = ref(0)
-let entries = ref()
+let entries = ref<LogEntry[]>()
 let dataSource = ref<string>("main")
 let filters = ref<Record<string, string|string[]|null>>({
   servers: DEFAULT_SERVERS,
@@ -329,7 +330,25 @@ let filters = ref<Record<string, string|string[]|null>>({
   target: null,
   aroundId: null
 });
-let pendingEntries = ref()
+interface LogEntryUser {
+  steamid: string,
+  name: string,
+  avatarUrl?: string
+}
+interface LogEntry {
+  id: number,
+  timestamp: number,
+  server: string,
+  type: string,
+  adminChat: boolean,
+  client: LogEntryUser,
+  target: LogEntryUser,
+  metadata: Record<string, any>,
+  message: string,
+  rawMessage: string,
+  showDetails: boolean
+}
+let pendingEntries = ref<LogEntry[]>([])
 
 let queryId = ref<number>()
 let queryLoading = ref(false)
@@ -394,14 +413,28 @@ function updateParams() {
 
 let fetchAbort: AbortController | null = null
 let logInfo = ref<{cache:Record<string,{totalRows:number,highestId:number}>}>({cache:{}})
-const cache = computed(() => {
-  return logInfo.value.cache[dataSource.value]
+const cache = computed({
+  get() {
+    return logInfo.value.cache[dataSource.value]
+  },
+  set(newValue) {
+    logInfo.value.cache[dataSource.value] = newValue
+  }
+})
+const highestId = computed({
+  get() {
+    return cache.value.highestId
+  },
+  set(newValue) {
+    logInfo.value.cache[dataSource.value].highestId = newValue
+  }
 })
 async function getInfo() {
   const response = await request("/api/logs/data")
   if(response?.ok) {
     const json = await response.json()
     logInfo.value = json
+    logInfo.value.cache["main"].highestId = 1188867
   }
 }
 
@@ -500,7 +533,7 @@ async function fetchLogs3(id: number, mode: "before" | "after") {
     const json = await response.json()
     totalEntries.value = cache.value.totalRows
     // totalUnfilteredEntries.value = json.totals.total
-    entries.value = json.logs.map((entry: any) => {
+    const newEntries = json.logs.map((entry: any) => {
       let message = entry.message
       if(entry.metadata && entry.message) {
         for(const key in entry.metadata) {
@@ -525,13 +558,13 @@ async function fetchLogs3(id: number, mode: "before" | "after") {
         client: {
           steamid: entry.client,
           name: entry.clientName,
-          avatarUrl: entry.client?.startsWith("STEAM_") ? `/api/users/${entry.client}/avatar` : null,
+          avatarUrl: entry.client?.startsWith("STEAM_") ? `/api/users/${entry.client}/avatar` : undefined,
           // avatarUrl: entry.clientName ? (entry.clientAvatar ? `https://avatars.steamstatic.com/${entry.clientAvatar}.jpg` : `https://ui-avatars.com/api/?name=${encodeURIComponent(entry.clientName || entry.client)}`) : null
         },
         target: {
           steamid: entry.target,
           name: entry.targetName,
-          avatarUrl: entry.target?.startsWith("STEAM_") ? `/api/users/${entry.target}/avatar` : null,
+          avatarUrl: entry.target?.startsWith("STEAM_") ? `/api/users/${entry.target}/avatar` : undefined,
           // avatarUrl: entry.targetName ? (entry.targetAvatar ? `https://avatars.steamstatic.com/${entry.targetAvatar}.jpg` : `https://ui-avatars.com/api/?name=${encodeURIComponent(entry.targetName || entry.target)}`) : null
         },
         metadata: entry.metadata,
@@ -539,12 +572,28 @@ async function fetchLogs3(id: number, mode: "before" | "after") {
         rawMessage: entry.message
       }
     })
+    if(mode === "before") {
+      entries.value = newEntries
+    } else {
+      cache.value.highestId = json.cache.highestId
+      // don't replace, append non duplicates
+      addPendingEntries(newEntries)
+    }
     console.info('Fetch took', json.timeTaken, 'ms')
     loadingTime.value = undefined
     lastRefresh.value = Date.now()
   } else {
     loadingTime.value = undefined
   }
+}
+function addPendingEntries(entries: LogEntry[]) {
+  pendingEntries.value = [ ...pendingEntries.value, ...entries]
+  // for(const entry of entries) {
+  //   if(!pendingEntries.value.find(e => e.id === entry.id)) {
+  //     pendingEntries.value.push(entry)
+  //   }
+  // }
+  // pendingEntries.value.sort((a, b) => b.id - a.id)
 }
 async function fetchLogs(resetPage = true) {
   // Wait for previous request
@@ -683,6 +732,11 @@ onBeforeMount(async() => {
   }, 1000)
 
   await fetchLogs3(cache.value.highestId, "before")
+  setInterval(() => {
+    // Only check for new values IF we not full
+    if(pendingEntries.value.length < limit.value)
+      fetchLogs3(cache.value.highestId, "after")
+  }, REFRESH_INTERVAL)
 })
 
 </script>
