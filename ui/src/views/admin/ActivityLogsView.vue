@@ -538,7 +538,7 @@ async function getData() {
     if (response?.ok) {
       const json = await response.json();
       loading.value = 0;
-      count.value = json.totalFilteredCount;
+      count.value = json.totals.filteredTotal;
       json.logs.forEach((log: any) => {
         log = parseLog(log, history.value, debugView.value)
       });
