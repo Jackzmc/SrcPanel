@@ -97,41 +97,30 @@ export const FLAGS = {
     't': 'Custom 6',
 }
 
-export interface AdminData {
-    id?: number,
+interface BaseAdminData<T,P> { 
+    id: number,
+    name: string,
+    permissions: AdminPermissions<P>
+    groups: T[],
+}
+export interface AdminData extends BaseAdminData<AdminGroup, Set<UserPrivilegeCode>> {
     authtype: "steam" | "name" | "ip",
     identity: string,
     password: string | null,
-    name: string,
-    permissions: AdminPermissions<Set<UserPrivilegeCode>>
-    groups: AdminGroup[]
 }
-
-export interface ReadableAdminData {
-    id: number,
+export interface ReadableAdminData extends BaseAdminData<ReadableAdminGroup, UserPrivilegeCode[]>{
     steamid: string,
-    name: string,
-    permissions: AdminPermissions<UserPrivilegeCode[]>
-    groups: ReadableAdminGroup[],
 }
-export interface ReadableAdminGroup {
+export type AdminGroup = BaseAdminGroup<Set<UserPrivilegeCode>>
+export type ReadableAdminGroup = BaseAdminGroup<UserPrivilegeCode[]>
+interface BaseAdminGroup<T> {
     parentId?: number,
     id: number,
     flags: string,
     name: string,
     immunity: number,
     privileges: Partial<Record<Service, ServicePrivilege>>,
-    codes: UserPrivilegeCode[]
-}
-
-export interface AdminGroup {
-    parentId?: number,
-    id: number,
-    flags: string,
-    name: string,
-    immunity: number,
-    privileges: Partial<Record<Service, ServicePrivilege>>,
-    codes: Set<UserPrivilegeCode>
+    codes: T
 }
 
 export interface APIAdminGroup extends AdminGroup {

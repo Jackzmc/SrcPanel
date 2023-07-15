@@ -71,7 +71,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
     fastify.get('/groups', async(req, reply) => {
         const hasRoot = req.user.hasRoot;
-        const groups = fastify.authmngr.Groups
+        const groups = fastify.authmngr.GroupsExport
             .map(group => {
                 let canApply = group.immunity < req.user.immunity && hasRoot
                 if(!hasRoot) {

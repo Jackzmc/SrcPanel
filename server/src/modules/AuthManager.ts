@@ -2,7 +2,7 @@ import { Connection, Pool, RowDataPacket, OkPacket } from "mysql2/promise";
 import QuickLRU from 'quick-lru'
 import { FastifyReply, FastifyRequest } from 'fastify';
 import ActivityLog from "./ActivityLog.js";
-import { AdminPermissions, AdminData, AdminGroup, WebRole, WebPermission, OauthProvider, SessionData } from '../../../common-types/User.js';
+import { AdminPermissions, AdminData, AdminGroup, WebRole, WebPermission, OauthProvider, SessionData, ReadableAdminGroup } from '../../../common-types/User.js';
 import { ReadableAdminData, UserOauthProviders, OauthProviderData } from '../../../common-types/User';
 import { Service, ServicePrivilege, ServicePrivilegeKeys, SteamInfo, UserPrivilegeCode, UserPrivileges } from  '../../../common-types/Privileges.js';
 import { SteamUserDetails } from '../../../common-types/Share';
@@ -395,14 +395,6 @@ export default class AuthManager {
         this.groups = groups
         console.timeEnd('fetchGroups')
     }
-
-    private _fuckinStupid(a) {
-        return JSON.stringify(a, (key, value) => {
-            if(value instanceof Set) return [...value]
-            return value
-        })
-    }
-
     // Merge parent onto group
     private _mergeGroup(parent: AdminGroup, group: AdminGroup) {
         if(group.immunity == 0) group.immunity = parent.immunity
@@ -503,8 +495,18 @@ export default class AuthManager {
             }) as ReadableAdminData[]
     }
 
-    get Groups() {
+    get Groups(): AdminGroup[] {
         return Object.values(this.groups)
+    }
+
+    get GroupsExport(): ReadableAdminGroup[] {
+        return this.Groups
+            .map(group => {
+                return {
+                    ...group,
+                    codes: [...group.codes.values()]
+                }
+            })
     }
 
     public async setProvider(steamid: string, provider: OauthProvider, providerData: OauthProviderData, refreshToken: string = null) {
