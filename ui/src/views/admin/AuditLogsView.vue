@@ -221,17 +221,9 @@
           </Field>
         </div>
       </div>
-      <div class="buttons">
-        <a :class="['button','is-info',{'is-loading': loadingTime }]" @click="search()">
-          <Icon icon="search">Search</Icon>
-        </a>
-        <Icon icon="spinner" spin v-if="queryLoading">Checking...</Icon>
-      </div>
-      <p>Request may take a long time to complete. The results will be shown when ready</p>
     </div>
   </div>
   </div>
-  <Pagination :page="page" :count="totalEntries" :limit="limit" @page="setPage" />
   <br>
 </div>
 </template>
@@ -241,11 +233,10 @@
 import { ClientUserData } from '../../../../common-types/User.js';
 import { useNotification } from '@kyvg/vue3-notification';
 import { PrivilegedUser } from '@/js/User';
-import { ref, onBeforeMount, computed, onMounted, watchEffect, onBeforeUnmount } from 'vue';
+import { ref, onBeforeMount, computed, onBeforeUnmount } from 'vue';
 import { formatDate, getRelDate, request, requestTimeout } from '@/js/util';
 import LogMessage from '@/components/LogMessage.vue';
 import Field from '@/components/Field.vue';
-import Pagination from '@/components/Pagination.vue';
 import debounce from '@/js/debounce';
 import { useRoute, useRouter } from 'vue-router';
 //@ts-ignore
