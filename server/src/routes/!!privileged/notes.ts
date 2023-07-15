@@ -94,7 +94,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             }
 
             // Check if they can edit this
-            const isCreator = req.user.equals(existing[0].executor) 
+            const isCreator = req.user.equals(existing[0].markedBy) 
             const [code, granted] = req.user.requirePermission("notes.edit", {isCreator})
             if(!granted) return NO_PERMISSION(reply)
 
@@ -164,7 +164,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             }
 
             // Check if they can edit this
-            const isCreator = req.user.equals(existing[0].executor) 
+            const isCreator = req.user.equals(existing[0].markedBy) 
             const [code, granted] = req.user.requirePermission("notes.delete", {isCreator})
             if(!granted) return NO_PERMISSION(reply)
 
