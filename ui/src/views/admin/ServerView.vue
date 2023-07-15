@@ -359,12 +359,15 @@ async function fetchServerInfo() {
     return false
   }
 }
+let isRefreshing = false
 async function fetchServerStatus() {
   const id = route.params.id
   const response = await fetch(`/api/servers/${route.params.id}/status`)
-  if(id != route.params.id) return // Ignore changes in id
+  if(id != route.params.id || isRefreshing) return // Ignore changes in id or if refreshing
   lastRefreshTime.value = Date.now()
+  isRefreshing = true
   const json = await response.json()
+  isRefreshing = false
   if(response.ok) {
     status.value = json.status
     stats.value = json.stats
