@@ -103,7 +103,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             .limit(limit)
             .sort('id', SortDirection.Descending)
 
-        if(type === 'before') query.where("id", '<', req.params.id)
+        if(type === 'before') query.where("id", '<=', req.params.id)
         else if(type === 'after') query.where("id", '>', req.params.id)
         else if(type === 'around') {
             const half = Math.round(limit / 2)
@@ -111,9 +111,9 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 .where("id", "<", req.params.id + half)
         }
 
-        if(req.query.client) query.where('client', '=', req.query.client)
-        if(req.query.target) query.where('target', '=', req.query.target)
-        if(req.query.searchMessage) query.where('content','LIKE',`%${req.query.searchMessage}%`)
+        if(req.query.search_client) query.where('client', '=', req.query.client)
+        if(req.query.search_target) query.where('target', '=', req.query.target)
+        if(req.query.search_message) query.where('message','LIKE',`%${req.query.search_message}%`)
         if(req.query.types) {
             const types = req.query.types.split(/[+,]/g)
             query.whereIn('type', types)
@@ -121,10 +121,6 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         if(req.query.servers) {
             const servers = req.query.servers.split(/[+,]/g)
             query.whereIn('server', servers)
-        }
-        if(req.query.aroundId) {
-            query.where('id', '<', req.query.aroundId + 100)
-                .where('id', '>', req.query.aroundId - 100)
         }
 
         const startTime = Date.now()

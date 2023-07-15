@@ -1,30 +1,30 @@
 Arguments: 
-  /home/jackzie/.nvm/versions/node/v18.15.0/bin/node /home/jackzie/.nvm/versions/node/v18.15.0/bin/yarn start
+  C:\Users\Jackz\AppData\Roaming\nvm\v18.15.0\node.exe C:\Program Files (x86)\Yarn\bin\yarn.js add -D @types/identicon
 
 PATH: 
-  /home/jackzie/Projects/l4d2-admin-page/server/node_modules/.bin:/tmp/yarn--1689346443024-0.5104293519629488:/home/jackzie/Projects/l4d2-admin-page/server/node_modules/.bin:/home/jackzie/.config/yarn/link/node_modules/.bin:/home/jackzie/.yarn/bin:/home/jackzie/.nvm/versions/node/v18.15.0/libexec/lib/node_modules/npm/bin/node-gyp-bin:/home/jackzie/.nvm/versions/node/v18.15.0/lib/node_modules/npm/bin/node-gyp-bin:/home/jackzie/.nvm/versions/node/v18.15.0/bin/node_modules/npm/bin/node-gyp-bin:/home/jackzie/.nvm/versions/node/v18.15.0/bin:/home/jackzie/.pyenv/shims:/home/jackzie/.pyenv/bin:/home/jackzie/.cargo/bin:/home/jackzie/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/snap/bin:/home/jackzie/.dotnet/tools:/usr/local/go/bin:/usr/local/go/bin
+  C:\Program Files\Git\mingw64\bin;C:\Program Files\Git\usr\bin;C:\Users\Jackz\bin;C:\Program Files\Common Files\Oracle\Java\javapath;C:\Program Files (x86)\Common Files\Oracle\Java\javapath;C:\Program Files (x86)\Common Files\Intel\Shared Libraries\redist\intel64\compiler;C:\ProgramData\Oracle\Java\javapath;C:\Windows\System32;C:\Windows;C:\Windows\System32\wbem;C:\Windows\System32\WindowsPowerShell\v1.0;C:\Windows\System32;C:\Windows;C:\Windows\System32\wbem;C:\Windows\System32\WindowsPowerShell\v1.0;C:\Program Files\PuTTY;C:\Program Files (x86)\WinSCP;D:\Software\FFMPEG\bin;D:\Software\youtube-dl;C:\Program Files\PowerShell\6.0.1;C:\Program Files (x86)\GtkSharp\2.12\bin;D:\Software\PHP;D:\Software\ngrok;C:\Program Files\dotnet;C:\Users\Jackz\AppData\Roaming\nvm;C:\Windows\System32\OpenSSH;C:\Program Files\Microsoft VS Code\bin;D:\Software\cmd;D:\Software\Python\Scripts;D:\Software\pstools;D:\Software\apache-maven-3.6.1\bin;C:\Windows\System32;C:\Windows;C:\Windows\System32\wbem;C:\Windows\System32\WindowsPowerShell\v1.0;C:\Windows\System32\OpenSSH;D:\Software\gradle-6.0.1\bin;D:\Software\mongodb-win32-x86_64-2012plus-4.2.1\bin;C:\Program Files (x86)\Intel\Intel(R) Management Engine Components\DAL;C:\Program Files\Intel\Intel(R) Management Engine Components\DAL;S:\Jackz\Documents\Sourcepawn\sm_1_10_6502;C:\Program Files\Microsoft SQL Server\130\Tools\Binn;C:\Program Files (x86)\sox-14-4-2;D:\Software\scrcpy-win64-v1.15.1;C:\Android;C:\MinGW\bin;C:\Program Files\WireGuard;C:\Program Files\Oracle\VirtualBox;D:\SteamCMD;C:\Program Files\CMake\bin;C:\Users\Jackz\AppData\Roaming\nvm;C:\Program Files (x86)\Yarn\bin;C:\Program Files (x86)\NVIDIA Corporation\PhysX\Common;C:\Program Files\MySQL\MySQL Server 8.0\lib;C:\Program Files\Tesseract-OCR;C:\Program Files (x86)\GnuPG\bin;D:\Software\pluto;D:\Software\tl-0.13.2-windows-x86_64;C:\Program Files\Git\cmd;C:\Program Files\NVIDIA Corporation\NVIDIA NvDLISR;C:\Users\Jackz\AppData\Roaming\nvm;C:\Program Files\nodejs;C:\Program Files\Amazon\AWSCLIV2;C:\Program Files\Tailscale;C:\Users\Jackz\.console-ninja\.bin;C:\Users\Jackz\AppData\Local\Programs\Python\Python310\Scripts;C:\Users\Jackz\AppData\Local\Programs\Python\Python310;C:\Users\Jackz\AppData\Local\Programs\Python\Python36-32\Scripts;C:\Users\Jackz\AppData\Local\Programs\Python\Python36-32;C:\Users\Jackz\.cargo\bin;C:\Users\Jackz\AppData\Local\Microsoft\WindowsApps;C:\Program Files\Microsoft VS Code\bin;C:\Users\Jackz\.windows-build-tools\python27;C:\Users\Jackz\AppData\Local\Programs\Fiddler;C:\Program Files (x86)\Nmap;C:\Users\Jackz\AppData\Local\now-cli;C:\Users\Jackz\AppData\Roaming\nvm;C:\Users\Jackz\AppData\Local\Programs\Microsoft VS Code\bin;C:\Users\Jackz\go\bin;C:\Users\Jackz\AppData\Local\Google\Cloud SDK\google-cloud-sdk\bin;C:\Users\Jackz\AppData\Roaming\spedit\sourcepawn\configs\sm_1_8_5914;C:\Users\Jackz\AppData\Local\GitHubDesktop\bin;C:\Users\Jackz\.deno\bin;C:\Users\Jackz\AppData\Local\Microsoft\WindowsApps;C:\Program Files\JetBrains\DataGrip 2021.2.3\bin;C:\Users\Jackz\AppData\Roaming\nvm;C:\Users\Jackz\AppData\Local\Yarn\bin;C:\Users\Jackz\.dotnet\tools;C:\Users\Jackz\AppData\Roaming\nvm;C:\Program Files\nodejs
 
 Yarn version: 
-  1.22.19
+  1.22.15
 
 Node version: 
   18.15.0
 
 Platform: 
-  linux x64
+  win32 x64
 
 Trace: 
-  Error: ../package.json: EIO: i/o error, write
-      at writeSync (node:fs:934:3)
-      at SyncWriteStream._write (node:internal/fs/sync_write_stream:26:3)
-      at writeOrBuffer (node:internal/streams/writable:392:12)
-      at _write (node:internal/streams/writable:333:10)
-      at Writable.write (node:internal/streams/writable:337:10)
-      at ConsoleReporter.warn (/home/jackzie/.nvm/versions/node/v18.15.0/lib/node_modules/yarn/lib/cli.js:92855:17)
-      at warn (/home/jackzie/.nvm/versions/node/v18.15.0/lib/node_modules/yarn/lib/cli.js:51326:23)
-      at module.exports.exports.default (/home/jackzie/.nvm/versions/node/v18.15.0/lib/node_modules/yarn/lib/cli.js:37409:7)
-      at /home/jackzie/.nvm/versions/node/v18.15.0/lib/node_modules/yarn/lib/cli.js:51337:51
-      at Generator.next (<anonymous>)
+  Error: https://registry.yarnpkg.com/@types%2fidenticon: Not found
+      at params.callback [as _callback] (C:\Program Files (x86)\Yarn\lib\cli.js:66140:18)
+      at self.callback (C:\Program Files (x86)\Yarn\lib\cli.js:140885:22)
+      at Request.emit (node:events:513:28)
+      at Request.<anonymous> (C:\Program Files (x86)\Yarn\lib\cli.js:141857:10)
+      at Request.emit (node:events:513:28)
+      at IncomingMessage.<anonymous> (C:\Program Files (x86)\Yarn\lib\cli.js:141779:12)
+      at Object.onceWrapper (node:events:627:28)
+      at IncomingMessage.emit (node:events:525:35)
+      at endReadableNT (node:internal/streams/readable:1359:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:82:21)
 
 npm manifest: 
   {
@@ -41,10 +41,6 @@ npm manifest:
       "@fastify/session": "^10.1.1",
       "@fastify/swagger": "^7.4.1",
       "@sinclair/typebox": "^0.23.4",
-      "@types/gamedig": "^3.0.2",
-      "@types/jsonwebtoken": "^9.0.1",
-      "@types/node": "^18.11.19",
-      "@types/steamid": "^2.0.1",
       "dotenv": "^16.0.0",
       "express": "^4.17.3",
       "express-mysql-session": "^2.1.7",
@@ -73,7 +69,12 @@ npm manifest:
       "clean": "rm -r dist && tsc",
       "dev": "nodemon -e ts --exec \"yarn start || exit 1\""
     },
-    "devDependencies": {}
+    "devDependencies": {
+      "@types/gamedig": "^3.0.2",
+      "@types/jsonwebtoken": "^9.0.1",
+      "@types/node": "^18.11.19",
+      "@types/steamid": "^2.0.1"
+    }
   }
 
 yarn manifest: 

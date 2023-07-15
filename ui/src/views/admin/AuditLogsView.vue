@@ -9,7 +9,7 @@
   </h4>
   <p class="subtitle is-6">Some requests may take a long time to process such as searching users or message content</p>
   <div class="columns">
-    <div class="column is-8 box" v-if="!entries">
+    <div class="column is-8 box" v-if="!entries || loadingTime">
       <p class="has-text-centered is-size-5" style="margin-top:20%">
         <Icon icon="spinner" spin>Loading...</Icon>
         <br>
@@ -34,7 +34,7 @@
       </div>
       <div class="list has-visible-pointer-controls has-hoverable-list-items" v-else>
         <div class="list-item  message is-info" v-if="pendingEntries.length > 0">
-          <a class="list-item-content has-text-centered" style="text-decoration: none">
+          <a class="list-item-content has-text-centered" style="text-decoration: none" @click="viewPendingEntries">
             <p class="">
               <Icon icon="fa-message" />{{ pendingEntries.length }}{{ pendingEntries.length >= limit ? '+' : ''}}  new entries are available, click here to view
             </p>
@@ -126,6 +126,13 @@
     </div>
     <div class="column">
       <div class="box">
+      <pre>{{ JSON.stringify({
+          isTopOfList: isTopOfList,
+          fetchAbort: fetchAbort !== undefined ? true : undefined,
+          idMinMax: idMinMax,
+          pendingEntries: pendingEntries.map(e => e.id),
+          cache
+        }, null, 2) }}</pre>
       <Pagination :page="page" :count="totalEntries" :limit="limit" @page="setPage" :disabled="queryId != undefined" />
       <Field label="Search Client" icon-left="search">
         <SimpleTypeahead
@@ -208,7 +215,7 @@
         </div>
       </div>
       <div class="buttons">
-        <a :class="['button','is-info',{'is-loading': queryId}]" @click="fetchLogs2()">
+        <a :class="['button','is-info',{'is-loading': loadingTime }]" @click="search()">
           <Icon icon="search">Search</Icon>
         </a>
         <Icon icon="spinner" spin v-if="queryLoading">Checking...</Icon>
@@ -259,6 +266,12 @@ function onUserSearchBlur(filter: string, event: any) {
     filters.value[filter] = null
     fetchDebounce()
   }
+}
+
+function viewPendingEntries() {
+  if(!entries.value) return
+  entries.value = [...pendingEntries.value, ...entries.value.slice(0, -pendingEntries.value.length) ]
+  pendingEntries.value = []
 }
 
 const route = useRoute()
@@ -360,7 +373,7 @@ const highlightRegex = computed(() => {
   return filters.value.message ? new RegExp(`(${filters.value.message})`, 'ig') : undefined
 })
 const loadingDuration = computed(() => {
-  if(!loadingTime.value) return
+  if(!loadingTime.value) return 0
   return Math.max(Math.floor((now.value - loadingTime.value) / 1000), 0)
 })
 const nextRefreshCountdown = computed(() => {
@@ -393,12 +406,12 @@ function getParams() {
   // if(!entries.value) return ''
   const searchParams = new URLSearchParams()
   // searchParams.append('page', page.value.toString())
-  // searchParams.append('limit', limit.value.toString())
+  searchParams.append('limit', limit.value.toString())
   searchParams.append('source', dataSource.value)
   for(const [filter, val] of Object.entries(filters.value)) {
     if(!val) continue
     if(Array.isArray(val)) {
-      searchParams.append(filter, val.join(","))
+      searchParams.append(filter, val.join("+"))
     } else {
       searchParams.append(`search_${filter}`, val)
     }
@@ -421,25 +434,24 @@ const cache = computed({
     logInfo.value.cache[dataSource.value] = newValue
   }
 })
-const highestId = computed({
-  get() {
-    return cache.value.highestId
-  },
-  set(newValue) {
-    logInfo.value.cache[dataSource.value].highestId = newValue
-  }
-})
 async function getInfo() {
   const response = await request("/api/logs/data")
   if(response?.ok) {
     const json = await response.json()
     logInfo.value = json
-    logInfo.value.cache["main"].highestId = 1188867
+
   }
 }
 
 
-const fetchDebounce = debounce(fetchLogs, 400)
+const fetchDebounce = debounce(search, 400)
+async function search() {
+  console.log('searching')
+  if(!cache.value) return
+  loadingTime.value = Date.now()
+  await fetchLogs3(cache.value.highestId, "before")
+  loadingTime.value = undefined
+}
 async function fetchLogs2() {
   loadingTime.value = Date.now()
   clearInterval(queryTimer)
@@ -519,18 +531,19 @@ async function checkQuery() {
   }
 }
 
+
 async function fetchLogs3(id: number, mode: "before" | "after" | "around") {
   // Wait for previous request
   const params = updateParams()
-  if(loadingTime.value != undefined) return
-
-  loadingTime.value = Date.now()
+  fetchAbort?.abort()
   const responseHandle = requestTimeout(`/api/logs/${mode}/${id}?${params}`, MAX_REQUEST_TIME)
   fetchAbort = responseHandle.controller
   const response = await responseHandle.start()
+  fetchAbort = null
+
   if(response?.ok) {
     const json = await response.json()
-    totalEntries.value = cache.value.totalRows
+    totalEntries.value = json.cache.totalRows
     // totalUnfilteredEntries.value = json.totals.total
     const newEntries = json.logs.map((entry: any) => {
       let message = entry.message
@@ -580,18 +593,21 @@ async function fetchLogs3(id: number, mode: "before" | "after" | "around") {
     }
     console.info('Fetch took', json.timeTaken, 'ms')
     loadingTime.value = undefined
-    lastRefresh.value = Date.now()
-  } else {
-    loadingTime.value = undefined
   }
 }
 // TODO: return highest and lowest _local_
 const isTopOfList = computed(() => {
-  if(!entries.value || entries.value.length === 0) return false
-  const highestRow = entries.value?.reduce((prev, curr) => {
-    return (prev.id > curr.id) ? prev : curr
-  })
-  return highestRow.id == cache.value.highestId
+  if(!cache.value) return
+  return idMinMax.value[1] === cache.value.highestId
+})
+const idMinMax = computed(() => {
+  if(!entries.value || entries.value.length === 0) return [-1, -1]
+  let lowestId = -1, highestId = -1
+  for(const row of entries.value) {
+    if(row.id > highestId || highestId === -1) highestId = row.id
+    if(row.id < lowestId || lowestId === -1) lowestId = row.id
+  }
+  return [ lowestId, highestId ]
 })
 function addPendingEntries(entries: LogEntry[]) {
   pendingEntries.value = [ ...pendingEntries.value, ...entries]
@@ -615,6 +631,7 @@ async function fetchLogs(resetPage = true) {
   const responseHandle = requestTimeout(`/api/logs/?${params}`, MAX_REQUEST_TIME)
   fetchAbort = responseHandle.controller
   const response = await responseHandle.start()
+  fetchAbort = null
   if(response?.ok) {
     const json = await response.json()
     totalEntries.value = json.totals.filteredTotal
@@ -684,6 +701,7 @@ function jumpTo(entry: any) {
     message: null,
     aroundId: entry.id
   }
+  fetchLogs3(entry.id, "around");
 }
 
 function getShareLink(entry: any) {
@@ -712,10 +730,11 @@ onBeforeMount(async() => {
     now.value = Date.now()
   }, 1000)
 
+  // If /admin/audit/:id is used, fetch that, and just grab filters, but wont be used
   if(route.params.aroundId) {
     const id = Number(route.params.id)
     filters.value['aroundId'] = id.toString()
-    return await fetchLogs3(id, "around")
+    fetchLogs3(id, "around")
   }
 
 
@@ -731,21 +750,24 @@ onBeforeMount(async() => {
     if(route.query[queryName] !== undefined) {
       if(Array.isArray(filters.value[filter])) {
         if(route.query[queryName] === "") filters.value[filter] = []
-        else filters.value[filter] = (route.query[queryName] as string).split(/,+/g)
+        else filters.value[filter] = (route.query[queryName] as string).split(/[,+]/g)
       } else {
         console.debug('setting', filter, (route.query[queryName] as string))
         filters.value[filter] = route.query[queryName] as string
       }
     }
   }
+
+  // Don't do any more fetch logic, alreadyt fetched above
+  if(route.params.aroundId) return
   // Swap to latest page if page not set
   // if(page.value)
   // setPage(-1)
 
   await fetchLogs3(cache.value.highestId, "before")
   setInterval(() => {
-    // Only check for new values IF we not full
-    if(isTopOfList.value && pendingEntries.value.length < limit.value)
+    // Only check for new values IF we not full, not searching, and at the top of list
+    if(isTopOfList.value && fetchAbort == null && pendingEntries.value.length < limit.value)
       fetchLogs3(cache.value.highestId, "after")
   }, REFRESH_INTERVAL)
 })
