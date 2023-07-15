@@ -1,13 +1,5 @@
 <template>
 <div class="container is-fluid">
-  <h4 class="title is-4">
-    Showing <input type="number" class="input" min=20 max=1000 step=10 style="width:5%" v-model="limit" @blur="fetchLogs(false)" /> / {{ totalEntries.toLocaleString() }} Entries
-    <em class="subtitle is-4" >({{ totalUnfilteredEntries.toLocaleString() }} total)</em>
-    <div class="is-pulled-right">
-      <p class="is-inline mr-3 is-size-6" v-if="nextRefreshCountdown" data-tooltip="Time until the next auto refresh">{{ nextRefreshCountdown }}s</p>
-    </div>
-  </h4>
-  <p class="subtitle is-6">Some requests may take a long time to process such as searching users or message content</p>
   <div class="columns">
     <div class="column is-8 box" v-if="!entries || loadingTime">
       <p class="has-text-centered is-size-5" style="margin-top:20%">
@@ -134,6 +126,7 @@
     </div>
     <div class="column">
       <div class="box" style="position: sticky; top: 4em">
+        <h4 class="title is-4">{{ totalEntries.toLocaleString() }} entries</h4>
       <!-- <pre>{{ JSON.stringify({
           isTopOfList: isTopOfList,
           fetchAbort: fetchAbort !== undefined ? true : undefined,
@@ -143,7 +136,6 @@
         }, null, 2) }}</pre> -->
       <Field label="Search Client" icon-left="search">
         <SimpleTypeahead
-          :disabled="queryId != undefined"
           placeholder="Search for a client"
           class="input"
           @onInput="searchUsers"
@@ -155,7 +147,6 @@
       </Field>
       <Field label="Search Target" icon-left="search">
         <SimpleTypeahead
-          :disabled="queryId != undefined"
           placeholder="Search for a target"
           class="input"
           @onInput="searchUsers"
@@ -166,16 +157,16 @@
         />
       </Field>
       <Field label="Search Message" icon-left="search">
-        <input :disabled="queryId != undefined" type="text" class="input" placeholder="Search messages" v-model="filters.message" @change="fetchDebounce" />
+        <input type="text" class="input" placeholder="Search messages" v-model="filters.message" @change="fetchDebounce" />
       </Field>
       <Field>
         <label class="label">
           Enabled Types
-          <a :disabled="queryId != undefined" class="is-inline" @click="filters.types = []; updateParams()">(Clear)</a>&nbsp;
-          <a :disabled="queryId != undefined" @click="filters.types = Object.keys(FILTER_DATA.types)">(Select All)</a>
+          <a class="is-inline" @click="filters.types = []; updateParams()">(Clear)</a>&nbsp;
+          <a @click="filters.types = Object.keys(FILTER_DATA.types)">(Select All)</a>
         </label>
         <div class="buttons">
-          <a :disabled="queryId ? true : undefined"
+          <a
             v-for="(value, key) of FILTER_DATA.types" :key="key"
             :class="['button', 'is-small', getFilterColor('types', key)]"
             @click="toggleFilter('types', key)"
@@ -187,11 +178,11 @@
       <Field>
         <label class="label">
           Enabled Sources
-          <a :disabled="queryId ? true : undefined" class="is-inline" @click="filters.servers = []">(Clear)</a>&nbsp;
-          <a :disabled="queryId ? true : undefined" @click="filters.servers = Object.keys(FILTER_DATA.servers)">(Select All)</a>
+          <a class="is-inline" @click="filters.servers = []">(Clear)</a>&nbsp;
+          <a @click="filters.servers = Object.keys(FILTER_DATA.servers)">(Select All)</a>
         </label>
         <div class="buttons has-addons">
-          <a :disabled="queryId ? true : undefined"
+          <a
             v-for="(val, key) of FILTER_DATA.servers" :key="key"
             :class="['button', 'is-small',  getFilterColor('servers', key)]"
             @click="toggleFilter('servers', key)"
@@ -203,13 +194,13 @@
       <div class="columns">
         <div class="column is-3">
           <Field label="Around Id">
-            <input v-model="filters.aroundId" type="number" class="input" min="0" @change="fetchDebounce" placeholder="####" :disabled="queryId != undefined" />
+            <input v-model="filters.aroundId" type="number" class="input" min="0" @change="fetchDebounce" placeholder="####" />
           </Field>
         </div>
         <div class="column is-5">
           <Field label="Data Source">
             <div class="select is-fullwidth">
-              <select v-model="dataSource" @change="fetchDebounce" :disabled="queryId != undefined">
+              <select v-model="dataSource" @change="fetchDebounce">
                 <option v-for="(source, id) in DATA_SOURCES" :key="id" :value="id">
                   {{ source }}
                 </option>
@@ -329,10 +320,8 @@ let now = ref()
 let loadingTime = ref<number>()
 let lastRefresh = ref<number>()
 let hoverId = ref()
-let page = ref(1);
 let limit = ref(DEFAULT_LIMIT);
 let totalEntries = ref(0)
-let totalUnfilteredEntries = ref(0)
 let entries = ref<LogEntry[]>()
 let dataSource = ref<string>("main")
 let filters = ref<Record<string, string|string[]|null>>({
@@ -362,9 +351,6 @@ interface LogEntry {
 }
 let pendingEntries = ref<LogEntry[]>([])
 
-let queryId = ref<number>()
-let queryLoading = ref(false)
-let queryTimer: any
 let infiniteScroll = ref()
 let infiniteScrolLoading = ref(false)
 
@@ -378,12 +364,8 @@ const loadingDuration = computed(() => {
   return Math.max(Math.floor((now.value - loadingTime.value) / 1000), 0)
 })
 const nextRefreshCountdown = computed(() => {
-  if(!shouldAutoRefresh.value || !lastRefresh.value || loadingTime.value != undefined) return 0
+  if(!lastRefresh.value || loadingTime.value != undefined) return 0
   return Math.floor(((lastRefresh.value + REFRESH_INTERVAL) - now.value) / 1000)
-})
-const shouldAutoRefresh = computed(() => {
-  return false
-  return page.value == 1
 })
 
 function toggleFilter(filter: string, key: string) {
@@ -444,104 +426,23 @@ async function getInfo() {
   }
 }
 
-
 const fetchDebounce = debounce(search, 400)
 async function search() {
   console.log('searching')
   if(!cache.value) return
   loadingTime.value = Date.now()
-  entries.value = await fetchLogs3(cache.value.highestId, "before")
+  entries.value = await fetchLogs(cache.value.highestId, "before")
   loadingTime.value = undefined
 }
 async function loadBottomContent() {
   if(infiniteScrolLoading.value || !entries.value) return
   console.log('fetching bottom content')
   infiniteScrolLoading.value = true
-  const newEntries = await fetchLogs3(idMinMax.value[0] - 1, "before")
+  const newEntries = await fetchLogs(idMinMax.value[0] - 1, "before")
   entries.value = [...entries.value, ...newEntries]
   infiniteScrolLoading.value = false
 }
-async function fetchLogs2() {
-  loadingTime.value = Date.now()
-  clearInterval(queryTimer)
-  const response = await request(`/api/logs/batch?${updateParams()}`, { method: 'POST' })
-  if(response?.ok) {
-    const json = await response.json()
-    queryId.value = json.queryId
-    queryTimer = setInterval(async() => {
-      try {
-
-        await checkQuery()
-      } catch(err) {
-        queryTimer = null
-        clearInterval(queryTimer)
-      }
-    }, FETCH_QUERY_STATUS_INTERVAL)
-  } else {
-    loadingTime.value = undefined
-  }
-}
-
-async function checkQuery() {
-  if(!queryId.value) return
-  queryLoading.value = true
-  const response = await request(`/api/logs/batch/${queryId.value}`)
-  queryLoading.value = false
-  if(response?.ok) {
-    const json = await response.json()
-    if(!json.result) return // Request not done
-    queryId.value = undefined
-    totalEntries.value = json.totals.filteredTotal
-    totalUnfilteredEntries.value = json.totals.total
-    clearInterval(queryTimer)
-    queryTimer = null
-    entries.value = json.logs.map((entry: any) => {
-      let message = entry.message
-      if(entry.metadata && entry.message) {
-        for(const key in entry.metadata) {
-          message = message.replace(new RegExp(`%${key}%`, 'g'), `<b data-tooltip="${key}">${entry.metadata[key]}</b>`)
-        }
-      }
-      if(entry.type === 'JOIN') message = " joined"
-      if(entry.type === 'ACTION') {
-        const match = entry.message.match(ADMINCHAT_REGEX)
-        if(match) {
-          entry.adminChat = true
-          entry.type = 'CHAT'
-          message = match[1]
-        }
-      }
-      return {
-        id: entry.id,
-        timestamp: entry.timestamp,
-        server: entry.server,
-        type: entry.type,
-        adminChat: entry.adminChat,
-        client: {
-          steamid: entry.client,
-          name: entry.clientName,
-          avatarUrl: `/api/users/${entry.client}/avatar`
-          // avatarUrl: entry.clientName ? (entry.clientAvatar ? `https://avatars.steamstatic.com/${entry.clientAvatar}.jpg` : `https://ui-avatars.com/api/?name=${encodeURIComponent(entry.clientName || entry.client)}`) : null
-        },
-        target: {
-          steamid: entry.target,
-          name: entry.targetName,
-          avatarUrl: `/api/users/${entry.target}/avatar`
-          // avatarUrl: entry.targetName ? (entry.targetAvatar ? `https://avatars.steamstatic.com/${entry.targetAvatar}.jpg` : `https://ui-avatars.com/api/?name=${encodeURIComponent(entry.targetName || entry.target)}`) : null
-        },
-        metadata: entry.metadata,
-        message,
-        rawMessage: entry.message
-      }
-    })
-    console.info('Fetch took', json.timeTaken, 'ms')
-    loadingTime.value = undefined
-    lastRefresh.value = Date.now()
-  }
-}
-
-
-async function fetchLogs3(id: number, mode: "before" | "after" | "around") {
+async function fetchLogs(id: number, mode: "before" | "after" | "around") {
   // Wait for previous request
   const params = updateParams()
   fetchAbort?.abort()
@@ -630,80 +531,6 @@ function addPendingEntries(entries: LogEntry[]) {
   // }
   // pendingEntries.value.sort((a, b) => b.id - a.id)
 }
-async function fetchLogs(resetPage = true) {
-  // Wait for previous request
-  const params = updateParams()
-  if(loadingTime.value != undefined) return
-  if(resetPage) {
-    page.value = 1
-    fetchAbort?.abort()
-  }
-
-  loadingTime.value = Date.now()
-  const responseHandle = requestTimeout(`/api/logs/?${params}`, MAX_REQUEST_TIME)
-  fetchAbort = responseHandle.controller
-  const response = await responseHandle.start()
-  fetchAbort = null
-  if(response?.ok) {
-    const json = await response.json()
-    totalEntries.value = json.totals.filteredTotal
-    totalUnfilteredEntries.value = json.totals.total
-    entries.value = json.logs.map((entry: any) => {
-      let message = entry.message
-      if(entry.metadata && entry.message) {
-        for(const key in entry.metadata) {
-          message = message.replace(new RegExp(`%${key}%`, 'g'), `<b data-tooltip="${key}">${entry.metadata[key]}</b>`)
-        }
-      }
-      if(entry.type === 'JOIN') message = " joined"
-      if(entry.type === 'ACTION') {
-        const match = entry.message.match(ADMINCHAT_REGEX)
-        if(match) {
-          entry.adminChat = true
-          entry.type = 'CHAT'
-          message = match[1]
-        }
-      }
-      return {
-        id: entry.id,
-        timestamp: entry.timestamp,
-        server: entry.server,
-        type: entry.type,
-        adminChat: entry.adminChat,
-        client: {
-          steamid: entry.client,
-          name: entry.clientName,
-          avatarUrl: entry.client?.startsWith("STEAM_") ? `/api/users/${entry.client}/avatar` : null,
-          // avatarUrl: entry.clientName ? (entry.clientAvatar ? `https://avatars.steamstatic.com/${entry.clientAvatar}.jpg` : `https://ui-avatars.com/api/?name=${encodeURIComponent(entry.clientName || entry.client)}`) : null
-        },
-        target: {
-          steamid: entry.target,
-          name: entry.targetName,
-          avatarUrl: entry.target?.startsWith("STEAM_") ? `/api/users/${entry.target}/avatar` : null,
-          // avatarUrl: entry.targetName ? (entry.targetAvatar ? `https://avatars.steamstatic.com/${entry.targetAvatar}.jpg` : `https://ui-avatars.com/api/?name=${encodeURIComponent(entry.targetName || entry.target)}`) : null
-        },
-        metadata: entry.metadata,
-        message,
-        rawMessage: entry.message
-      }
-    })
-    console.info('Fetch took', json.timeTaken, 'ms')
-    loadingTime.value = undefined
-    lastRefresh.value = Date.now()
-  } else {
-    loadingTime.value = undefined
-  }
-}
-// Sets page, -1 for latest
-function setPage(pageNum: number) {
-  if(pageNum == -1) {
-    const numberOfPages = Math.ceil(logInfo.value.cache[dataSource.value].totalRows / limit.value)
-    page.value = numberOfPages - 1
-  } else {
-    page.value = pageNum;
-  }
-  fetchLogs(false);
-}
 
 async function jumpTo(entry: any) {
   // Clear any set messages
@@ -713,7 +540,7 @@ async function jumpTo(entry: any) {
     message: null,
     aroundId: entry.id
   }
-  entries.value = await fetchLogs3(entry.id, "around");
+  entries.value = await fetchLogs(entry.id, "around");
 }
 
 function getShareLink(entry: any) {
@@ -733,10 +560,6 @@ async function copyShareLink(entry: any) {
 let refreshTimer: any
 onBeforeMount(async() => {
   await getInfo()
-  // setInterval(() => {
-  //   if(shouldAutoRefresh.value)
-  //     fetchLogs(false)
-  // }, REFRESH_INTERVAL)
 
   now.value = Date.now()
   setInterval(() => {
@@ -747,14 +570,12 @@ onBeforeMount(async() => {
   if(route.params.aroundId) {
     const id = Number(route.params.id)
     filters.value['aroundId'] = id.toString()
-    entries.value = await fetchLogs3(id, "around")
+    entries.value = await fetchLogs(id, "around")
   }
 
 
   if(route.query.limit) limit.value = Number(route.query.limit) || DEFAULT_LIMIT
-  if(route.query.page) page.value = Number(route.query.page) || 1
   if(route.query.source) dataSource.value = route.query.source as string
-  if(page.value <= 0) page.value = 1
   for(const filter in FILTER_DATA) {
     let queryName = filter
     console.debug('filter', filter, queryName, '=', route.query[queryName])
@@ -773,15 +594,12 @@ onBeforeMount(async() => {
 
   // Don't do any more fetch logic, alreadyt fetched above
   if(route.params.aroundId) return
-  // Swap to latest page if page not set
-  // if(page.value)
-  // setPage(-1)
 
-  entries.value = await fetchLogs3(cache.value.highestId, "before")
+  entries.value = await fetchLogs(cache.value.highestId, "before")
   refreshTimer = setInterval(async () => {
     // Only check for new values IF we not full, not searching, and at the top of list
     if(isTopOfList.value && fetchAbort == null && pendingEntries.value.length < limit.value) {
-      const newEntries = await fetchLogs3(cache.value.highestId, "after")
+      const newEntries = await fetchLogs(cache.value.highestId, "after")
 
       // don't replace, append non duplicates
       addPendingEntries(newEntries)
