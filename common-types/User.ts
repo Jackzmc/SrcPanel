@@ -104,7 +104,6 @@ export interface AdminData {
     password: string | null,
     name: string,
     permissions: AdminPermissions<Set<UserPrivilegeCode>>
-
     groups: AdminGroup[]
 }
 

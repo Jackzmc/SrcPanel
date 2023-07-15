@@ -114,9 +114,9 @@
               </td>
               <td colspan="2">
                 <div class="box">
-                  <h6 class="title is-6">Web Privileges</h6>
-                  <div v-for="(priv, service) in expandedGroup.privileges" :key="service">
-                    <b>{{ service }}</b>:&nbsp;<span v-if="priv != undefined">{{ PrivilegeNames[priv] }}</span><em v-else>(no privileges)</em>
+                  <h6 class="title is-6">Web Permissions</h6>
+                  <div v-for="code in expandedGroup.codes" :key="code">
+                    {{ code }}
                   </div>
                 </div>
               </td>
@@ -212,46 +212,30 @@
 
 <script setup lang="ts">
 import AdminPermissionInput from '@/components/AdminPermissionInput.vue'
-import TagField from '@/components/TagField.vue'
 import Field from '@/components/Field.vue'
 import { ref, onMounted, computed } from 'vue'
 import { User, PrivilegedUser, PlayerData } from '@/js/User'
 import { useRouter, useRoute } from 'vue-router'
-import SteamID from 'steamid'
-import { ClientUserData, FLAGS, WEB_FLAGS, AdminData, AdminGroup } from '../../../../../common-types/User';
-import { Action, Service, UserPrivileges, ServicePrivilege, ServiceSupportedActions, ServicePrivilegeKeys, ServiceDescriptions } from '../../../../../common-types/Privileges';
+import { ClientUserData, FLAGS, AdminGroup, ReadableAdminData } from '../../../../../common-types/User';
 import FlagList from '@/components/FlagList.vue'
-import { convertBitsArrayToInt, convertIntToBitsArray, } from '@/js/User';
 // @ts-ignore
 import { Tab, Tabs } from 'vue3-tabs-component'
 import { notify } from '@kyvg/vue3-notification';
-import { getRelDate, request } from '@/js/util';
-import { tsConstructSignatureDeclaration } from '@babel/types';
+import { request } from '@/js/util';
 
 
-const PrivilegeNames: string[] = Object.values(ServicePrivilege).filter(item => isNaN(Number(item))) as string[]
 const MIN_HOURS_PLAYTIME = 10
 const POLICY_MSG_MIN_HOURS_OF_PLAYTIME = `Policy requires a minimum of ${MIN_HOURS_PLAYTIME} hours of playtime`
 const router = useRouter()
 const route = useRoute()
 const props = defineProps<{
-  userAdminData: AdminData,
+  userAdminData: ReadableAdminData,
   user: PlayerData,
   userdata: ClientUserData,
   privUser: PrivilegedUser
 }>()
 
-let webCodes = ref<string[]>(props.privUser.codes)
-
-const privileges = computed(() => {
-  let privs: Partial<Record<Service, number|null>> = {}
-  for(const service of Object.values(Service)) {
-    const priv = props.userAdminData?.permissions.privileges[service]
-    privs[service] = priv ?? null
-  }
-  return privs as Record<Service, number | null>
-})
-
+let webCodes = ref<string[]>(props.userAdminData.permissions.base.codes)
 
 
 let groups = ref<AdminGroup[]>([])
@@ -259,17 +243,14 @@ let groups = ref<AdminGroup[]>([])
 let form = ref<{
   immunity: number,
   flags: string[],
-  privileges: Partial<Record<Service, number | null>>
 }>({
   immunity: 0,
   flags: [],
-  privileges: {}
 })
 function reset() {
   form.value = {
     flags: props.userAdminData?.permissions.base.flags?.split("") || [],
     immunity: props.userAdminData?.permissions.base.immunityLevel || 0,
-    privileges: privileges.value
   }
 }
 let stats = ref<Record<string, string|number>|null>()
@@ -369,12 +350,6 @@ async function save() {
     alert(`Cannot add admin for the following reasons:\n* ${noAddReasons.value.join('\n *')}`)
   } else {
     loading.value.save = true;
-    let privileges: Record<string, number> = {}
-    for(const [service, priv] of Object.entries(form.value.privileges)) {
-      if(!props.userAdminData || priv != props.userAdminData.permissions.privileges[service as Service]) {
-        privileges[service] = Number(priv)
-      }
-    }
     const response = await request(`/api/admins/${props.user?.steamid}`, {
       method: props.userAdminData ? 'PUT': 'POST',
       headers: {
@@ -385,7 +360,6 @@ async function save() {
         flags: form.value.flags.join(''),
         groupIds: selectedgroupIds.value.join(','),
         name: props.user?.name,
-        privileges,
         codes: webCodes.value
       } as POSTAdminAPI)
     }, { title: "Save Admin Failed" })

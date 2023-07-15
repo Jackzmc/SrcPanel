@@ -142,7 +142,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         Params: { steamid: string },
         Body: PUTAdminType
     }>, reply) => {
-        if(!req.user.hasPermission("admins.edit.others")) return NO_PERMISSION(reply)
+        if(!req.user.hasPermission("admins.edit.others")) return NO_PERMISSION(reply, "You do not have permission to edit other users")
         if(req.params.steamid.length > 10) {
             const admin = fastify.authmngr.getAdmin(req.params.steamid)
             if(admin) {

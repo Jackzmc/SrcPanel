@@ -52,7 +52,7 @@ export default class AuthManager {
         this.dbna = sessionDatabase
         this.steam = steam
         this.actLog = new ActivityLog(sessionDatabase)
-        this.fetchGroups().then(() => this.fetchAdmins2())
+        this.fetchGroups().then(() => this.fetchAdmins())
     }
 
     getConnection() {
@@ -421,7 +421,7 @@ export default class AuthManager {
         return new Set<T>([...pSet, ...cSet])
     }
 
-    public async fetchAdmins2() {
+    public async fetchAdmins() {
         console.time('fetchAdmins')
         console.time('fetchAdmins:fetch')
         const [rows] = await this.db.execute<RowDataPacket[]>(`
@@ -493,118 +493,6 @@ export default class AuthManager {
         admin.permissions.flags = [...this._mergeToSet(group.flags, admin.permissions.flags)].join("")
 
         admin.permissions.codes = this._mergeToSet(group.codes, admin.permissions.codes)
-    }
-
-    // TODO: One day refactor
-    public async fetchAdmins() { 
-        console.info("Fetching admins...")
-        console.time("fetchAdmins")
-        const admins: Record<string, AdminData> = {}
-        const groups: Record<string, AdminGroup> = {}
-        // TODO: Remove first LEFT JOIN stats_users, see #2
-        const [rows] = await this.db.execute<RowDataPacket[]>(`
-            SELECT sm_admins.*, sag.group_id as sg_id, sg.name as sg_name, sg.immunity_level as sg_immunity, sg.flags as sg_flags, left4dead2.stats_users.last_alias as name
-            FROM sm_admins
-            LEFT JOIN left4dead2.stats_users ON SUBSTRING(sm_admins.identity,11) = SUBSTRING(left4dead2.stats_users.steamid, 11)
-            LEFT JOIN sm_admins_groups sag on sm_admins.id = sag.admin_id
-            LEFT JOIN sm_groups sg on sg.id = sag.group_id
-        `)
-
-        let lastId = null
-        let highestImmunity = 0, flags = ''
-
-        // Loops every admin. If an admin is more than one group, there will be multiple rows related to them
-        for(const row of rows) {
-            // Add initial set of flags and immunity
-            const accountId = row.identity.slice(10)
-            // Reset merge data on a new user
-            if(lastId !== accountId) {
-                highestImmunity = 0
-                flags = ''
-            }
-
-            if(row.immunity > highestImmunity) highestImmunity = row.immunity
-            // If user has 'Z' flag (from self, or group), only include 'Z' flag and exclude others
-            if(!flags.includes('z')) {
-                if(row.flags.includes('z')) {
-                    flags = 'z';
-                } else {
-                    for(const flag of row.flags) {
-                        if(!flags.includes(flag)) flags += flag
-                    }
-                }
-            }
-            
-            // Add the admin to the admin list
-            if(!admins[accountId]) {
-                const privileges = await this.getPrivileges(row.identity)
-                admins[accountId] = {
-                    id: row.id,
-                    authtype: row.authtype,
-                    identity: row.identity,
-                    password: row.password,
-                    name: row.name,
-                    permissions: {
-                        immunityLevel: highestImmunity,
-                        flags,
-                        privileges,
-                        codes: new Set(),
-                        base: {
-                            immunityLevel: row.immunity,
-                            flags: row.flags,
-                            privileges,
-                            codes: new Set()
-                        }
-                    },
-                    groups: []
-                }
-            }
-
-            // If a group is set
-            const groupId = row.sg_id?.toString()
-            if(groupId) {
-                // If group not cached, add it to list
-                if(!groups[groupId]) {
-                    groups[groupId] = {
-                        id: groupId,
-                        flags: row.sg_flags,
-                        name: row.sg_name,
-                        immunity: row.sg_immunity,
-                        privileges: {},
-                        codes: new Set()
-                    }
-                }
-
-                // Grab the privileges for this row's group id
-                const [privRows] = await this.db.execute<RowDataPacket[]>("SELECT service, privilege FROM sm_group_privileges WHERE group_id = ?", [ groupId])
-                for(const privRow of privRows) {
-                    groups[groupId].privileges[privRow.service] = privRow.privilege
-                    // Set <User>.permissions.privileges service privilege to be the highest privilege (between root & group permissions)
-                    // So say for the service notes, user has root privilege of 1, and the group has a privilege of 2, 
-                    // the user will have a privilege of 2
-                    // console.log(admins[key].name, 'inheritted group', groups[groupId].name, 'privilege for service', privRow.service, 'to', privRow.privilege)
-                    if(!admins[accountId].permissions.privileges[privRow.service] || privRow.privilege > admins[accountId].permissions.privileges[privRow.service]) {
-                        admins[accountId].permissions.privileges[privRow.service] = privRow.privilege
-                    }
-                }
-
-                admins[accountId].groups.push(groups[groupId])
-                // Merge immunity & flags
-                if(row.sg_immunity > highestImmunity) highestImmunity = row.sg_immunity
-                for(const flag of row.sg_flags) {
-                    if(!flags.includes(flag)) flags += flag
-                }
-            }
-
-            admins[accountId].permissions.flags = flags
-            admins[accountId].permissions.immunityLevel = highestImmunity
-        }
-
-
-        this.admins = admins
-        this.groups = groups
-        console.info(`Fetched ${Object.keys(admins).length} admins and ${Object.keys(groups).length} groups`)
-        console.timeEnd("fetchAdmins")
     }
 
     public getAdmins(fullAdmin: boolean = false) {
@@ -715,7 +603,6 @@ export default class AuthManager {
      * @param {string} pattern The permission to check against matchCode
      */
     public static isPermissionGranted(matchCode: UserPrivilegeCode, pattern: string) {
-        console.log('test', pattern, matchCode, 'result='+ minimatch(matchCode, pattern))
         return minimatch(matchCode, pattern)
     }
 
