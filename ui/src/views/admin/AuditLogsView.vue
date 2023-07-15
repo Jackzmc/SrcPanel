@@ -33,7 +33,7 @@
           </a>
         </div>
         <template v-for="entry in entries" :key="entry.id">
-          <div :class="['list-item', {'has-background-primary': entry.id == Number(filters.aroundId) }]" @mouseenter="hoverId = entry.id">
+          <div :class="['list-item', {'has-background-primary': entry.id == Number(filters.aroundId)}]" @mouseenter="hoverId = entry.id">
             <div class="list-item-image" v-if="entry.client.avatarUrl || entry.target.avatarUrl">
               <figure class="image is-48x48">
                 <img class="is-rounded" :src="entry.client.avatarUrl || entry.target.avatarUrl">
@@ -77,7 +77,7 @@
                     <tr>
                       <th style="width:20%">
                         Id
-                        <a class="ml-2 button is-small is-info is-pulled-right" @click="jumpTo(entry)">find entries nearby</a>
+                        <a class="ml-2 button is-small is-info is-pulled-right has-tooltip-right" @click="jumpTo(entry)" data-tooltip="Will ignore filters and jump to message, to understand the context">find entries nearby</a>
                       </th>
                       <td>#{{ entry.id }}</td>
                     </tr>
@@ -568,7 +568,7 @@ onBeforeMount(async() => {
 
   // If /admin/audit/:id is used, fetch that, and just grab filters, but wont be used
   if(route.params.aroundId) {
-    const id = Number(route.params.id)
+    const id = Number(route.params.aroundId)
     filters.value['aroundId'] = id.toString()
     entries.value = await fetchLogs(id, "around")
   }
