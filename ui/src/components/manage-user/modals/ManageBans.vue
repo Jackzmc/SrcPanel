@@ -2,7 +2,7 @@
 <section>
   <div class="tabs">
     <ul>
-      <li v-for="userBan in bans" :key="userBan.id" :class="{'is-active': ban && ban.id === userBan.id, 'striked': ban?.expired}" @click="selectBan(userBan)">
+      <li v-for="userBan in bans" :key="userBan.id" :class="{'is-active': ban && ban.id === userBan.id, 'striked': userBan?.expired}" @click="selectBan(userBan)">
         <a>#{{ userBan.id }}&nbsp;<span class="tag is-info" v-if="userBan.activeAppeal">Appeal</span></a>
       </li>
       <li :class="{'is-active': isNewBan }" @click="selectBan()" v-if="canAddBan"><a>Add Ban</a></li>
