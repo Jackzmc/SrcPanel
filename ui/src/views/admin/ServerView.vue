@@ -185,6 +185,11 @@
     </div>
   </div>
 </nav>
+<div class="container mb-3 mt-2" v-else>
+  <div class="box has-text-centered">
+    <h4 class='title is-4'><Icon icon="spinner" spin>Fetching server information</Icon></h4>
+  </div>
+</div>
 <br>
 </div>
 </template>
