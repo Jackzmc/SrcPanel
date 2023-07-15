@@ -316,7 +316,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                                 destResults[destKey][detail.publishedfileid] = { 
                                     result: "success"
                                 }
-                                await req.user.log(null, `enabled addon %filename% for "%share/%server"`, {
+                                await req.user.log(null, `enabled addon %filename% for "%share%/%server%"`, {
                                     service: Service.Addons,
                                     action: Action.Edit,
                                     metadata: {

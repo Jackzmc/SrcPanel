@@ -126,7 +126,12 @@
     </div>
     <div class="column">
       <div class="box" style="position: sticky; top: 4em">
-        <h4 class="title is-4">{{ totalEntries.toLocaleString() }} entries</h4>
+        <h4 class="title is-4">
+          {{ totalEntries.toLocaleString() }} entries
+          <a :disabled="loadingTime" :class="['button','is-pulled-right','is-info',{'is-loading': loadingTime || !entries}]" @click="search">
+            <Icon icon="refresh">Refresh</Icon>
+          </a>
+        </h4>
       <!-- <pre>{{ JSON.stringify({
           isTopOfList: isTopOfList,
           fetchAbort: fetchAbort !== undefined ? true : undefined,
@@ -162,8 +167,8 @@
       <Field>
         <label class="label">
           Enabled Types
-          <a class="is-inline" @click="filters.types = []; updateParams()">(Clear)</a>&nbsp;
-          <a @click="filters.types = Object.keys(FILTER_DATA.types)">(Select All)</a>
+          <a class="is-inline" @click="clearFilter('types')">(Clear)</a>&nbsp;
+          <a @click="selectAllFilter('types')">(Select All)</a>
         </label>
         <div class="buttons">
           <a
@@ -178,8 +183,8 @@
       <Field>
         <label class="label">
           Enabled Sources
-          <a class="is-inline" @click="filters.servers = []">(Clear)</a>&nbsp;
-          <a @click="filters.servers = Object.keys(FILTER_DATA.servers)">(Select All)</a>
+          <a class="is-inline" @click="clearFilter('servers')">(Clear)</a>&nbsp;
+          <a @click="selectAllFilter('servers')">(Select All)</a>
         </label>
         <div class="buttons has-addons">
           <a
@@ -192,7 +197,7 @@
         </div>
       </Field>
       <div class="columns">
-        <div class="column is-3">
+        <div class="column is-4">
           <Field label="Around Id">
             <input v-model="filters.aroundId" type="number" class="input" min="0" @change="fetchDebounce" placeholder="####" />
           </Field>
@@ -256,6 +261,17 @@ function onUserSearchBlur(filter: string, event: any) {
     filters.value[filter] = null
     fetchDebounce()
   }
+}
+function clearFilter(filter: string) {
+  filters.value[filter] = [];
+  updateParams()
+  search()
+}
+
+function selectAllFilter(filter: string) {
+  filters.value[filter] = Object.keys(FILTER_DATA[filter])
+  updateParams()
+  search()
 }
 
 function viewPendingEntries() {
@@ -428,14 +444,14 @@ async function getInfo() {
 
 const fetchDebounce = debounce(search, 400)
 async function search() {
-  console.log('searching')
   if(!cache.value) return
   loadingTime.value = Date.now()
   entries.value = await fetchLogs(cache.value.highestId, "before")
   loadingTime.value = undefined
 }
 async function loadBottomContent() {
-  if(infiniteScrolLoading.value || !entries.value) return
+  // Do not fire if loading, or if there is no content available
+  if(infiniteScrolLoading.value || !entries.value || entries.value.length == 0) return
   console.log('fetching bottom content')
   infiniteScrolLoading.value = true
   const newEntries = await fetchLogs(idMinMax.value[0] - 1, "before")

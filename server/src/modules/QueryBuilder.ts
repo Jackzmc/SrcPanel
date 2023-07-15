@@ -164,9 +164,9 @@ export class QueryBuilder {
     limit(limit: number, offset?: number) {
         if(limit == undefined || isNaN(limit)) throw Error("limit is not defined or invalid")
         if(offset != undefined) {
-            this._limit = ["LIMIT ?, ?", limit, offset]
+            this._limit = ["LIMIT ?, ?", Number(limit), Number(offset)]
         } else {
-            this._limit = ["LIMIT ?", limit]
+            this._limit = ["LIMIT ?", Number(limit)]
         }
         return this
     }
@@ -183,10 +183,11 @@ export class QueryBuilder {
     }
 
     buildUnsafe() {
+        console.log(this._data)
         let query = this.build()
         for(let data of this._data) {
             if(typeof data === "string") {
-                data = `"${data}"`
+                data = `'${data}'`
             }
             query = query.replace(/\?/, data)
         }

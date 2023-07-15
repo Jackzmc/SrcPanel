@@ -115,16 +115,16 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         if(req.query.search_target) query.where('target', '=', req.query.search_target)
         if(req.query.search_message) query.where('message','LIKE',`%${req.query.search_message}%`)
         if(req.query.types) {
-            const types = req.query.types.split(/[+,]/g)
+            const types = req.query.types.split(/[+, ]/g)
             query.whereIn('type', types)
         }
         if(req.query.servers) {
-            const servers = req.query.servers.split(/[+,]/g)
+            const servers = req.query.servers.split(/[+, ]/g)
             query.whereIn('server', servers)
         }
 
         const startTime = Date.now()
-        const [logs] = await query.execute(fastify.db)
+        const [logs] = (await query.execute(fastify.db))
 
         let cache = await getTotalRows(tableName)
         if(logs.length > 0) {
@@ -138,7 +138,10 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
 
         return {
-            logs,
+            logs: logs.map(log => {
+                if(log.metadata) log.metadata = JSON.parse(log.metadata)
+                return log
+            }),
             timeTaken: Date.now() - startTime,
             cache,
             // wasOptimized: optimized,
@@ -150,7 +153,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             // pages: Math.ceil(count[0].count / limit),
             raw: process.env.NODE_ENV === "production" ? null : {
                 cache: cache[tableName],
-                query: query.build(),
+                query: query.buildUnsafe(),
                 tableName
             }
         }
