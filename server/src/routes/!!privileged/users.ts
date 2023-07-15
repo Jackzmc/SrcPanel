@@ -115,22 +115,24 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 message: "Provided steamid is invalid"
             })
         }
-        const [userdata] = await fastify.db.execute<RowDataPacket[]>(
-            `SELECT
-                steamid, last_alias as name, country, last_join_date as lastJoinDate, created_date as firstJoinDate
-            FROM stats_users
-            WHERE SUBSTRING(steamid,11) = SUBSTRING(:steamid, 11)`, 
-            { steamid: req.params.steamid }
-        )
 
-        const [stats] = await fastify.db.execute<RowDataPacket[]>(
-            `SELECT
-            (SELECT COUNT(*) FROM notes WHERE SUBSTRING(notes.steamid,11) = SUBSTRING(:steamid, 11)) as notesCount,
-            (SELECT COUNT(*) FROM bans WHERE SUBSTRING(bans.steamid,11) = SUBSTRING(:steamid, 11)) as bansCount,
-            (SELECT COUNT(*) FROM ${ADMINS_DB}.sm_admins WHERE ${ADMINS_DB}.sm_admins.identity = :steamid) as isAdmin
-            `,
-            { steamid: req.params.steamid }
-        )
+        const [[userdata], [stats]] = await Promise.all([
+            fastify.db.execute<RowDataPacket[]>(
+                `SELECT
+                    steamid, last_alias as name, country, last_join_date as lastJoinDate, created_date as firstJoinDate
+                FROM stats_users
+                WHERE SUBSTRING(steamid,11) = SUBSTRING(:steamid, 11) LIMIT 1`, 
+                { steamid: req.params.steamid }
+            ),
+            fastify.db.execute<RowDataPacket[]>(
+                `SELECT
+                (SELECT COUNT(*) FROM notes WHERE SUBSTRING(notes.steamid,11) = SUBSTRING(:steamid, 11)) as notesCount,
+                (SELECT COUNT(*) FROM bans WHERE SUBSTRING(bans.steamid,11) = SUBSTRING(:steamid, 11)) as bansCount,
+                (SELECT COUNT(*) FROM ${ADMINS_DB}.sm_admins WHERE ${ADMINS_DB}.sm_admins.identity = :steamid) as isAdmin
+                LIMIT 1`,
+                { steamid: req.params.steamid }
+            )
+        ])
 
         let userInfo = {}
         
