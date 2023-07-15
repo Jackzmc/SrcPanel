@@ -18,7 +18,7 @@
 
     <br>
     <router-view :userdata="userdata" :priv-user="privUser"></router-view>
-
+    <br>
     <footer class="footer">
       <div class="content has-text-centered">
         L4D2 Admin Dashboard - Updated {{lastUpdated}}
@@ -85,7 +85,6 @@ async function getAuth() {
   })
   if(response.ok) {
     const json = await response.json()
-    console.log('new data', json.permissions, json.codes instanceof Set)
     userdata.value = json as ClientUserData
     privUser.value = new PrivilegedUser(userdata.value)
     window.sessionStorage.setItem('srcds_userdata', JSON.stringify(userdata.value))
