@@ -123,17 +123,24 @@
           </div>
         </template>
       </div>
+      <InfiniteLoading @infinite="loadBottomContent"  />
+      <div class="list-item message is-info" ref="infiniteScroll" v-show="infiniteScrolLoading">
+        <div class="list-item-content has-text-centered" style="text-decoration: none">
+          <p>
+            <Icon icon="spinner" spin>Fetching older entries...</Icon>
+          </p>
+        </div>
+      </div>
     </div>
     <div class="column">
-      <div class="box">
-      <pre>{{ JSON.stringify({
+      <div class="box" style="position: sticky; top: 4em">
+      <!-- <pre>{{ JSON.stringify({
           isTopOfList: isTopOfList,
           fetchAbort: fetchAbort !== undefined ? true : undefined,
           idMinMax: idMinMax,
           pendingEntries: pendingEntries.map(e => e.id),
           cache
-        }, null, 2) }}</pre>
-      <Pagination :page="page" :count="totalEntries" :limit="limit" @page="setPage" :disabled="queryId != undefined" />
+        }, null, 2) }}</pre> -->
       <Field label="Search Client" icon-left="search">
         <SimpleTypeahead
           :disabled="queryId != undefined"
@@ -234,7 +241,7 @@
 import { ClientUserData } from '../../../../common-types/User.js';
 import { useNotification } from '@kyvg/vue3-notification';
 import { PrivilegedUser } from '@/js/User';
-import { ref, onBeforeMount, computed } from 'vue';
+import { ref, onBeforeMount, computed, onMounted, watchEffect, onBeforeUnmount } from 'vue';
 import { formatDate, getRelDate, request, requestTimeout } from '@/js/util';
 import LogMessage from '@/components/LogMessage.vue';
 import Field from '@/components/Field.vue';
@@ -244,7 +251,8 @@ import { useRoute, useRouter } from 'vue-router';
 //@ts-ignore
 import SimpleTypeahead from 'vue3-simple-typeahead';
 import 'vue3-simple-typeahead/dist/vue3-simple-typeahead.css'
-import { filter } from 'minimatch';
+//@ts-ignore
+import InfiniteLoading from "v3-infinite-loading";
 let userSearchItems = ref([])
 async function searchUsers(e: any) {
   if(!e.input || e.input.length < 3) return userSearchItems.value = []
@@ -366,6 +374,8 @@ let pendingEntries = ref<LogEntry[]>([])
 let queryId = ref<number>()
 let queryLoading = ref(false)
 let queryTimer: any
+let infiniteScroll = ref()
+let infiniteScrolLoading = ref(false)
 
 const ADMINCHAT_REGEX = /triggered sm_say \(text (.*)\)/;
 
@@ -449,8 +459,16 @@ async function search() {
   console.log('searching')
   if(!cache.value) return
   loadingTime.value = Date.now()
-  await fetchLogs3(cache.value.highestId, "before")
+  entries.value = await fetchLogs3(cache.value.highestId, "before")
   loadingTime.value = undefined
+}
+async function loadBottomContent() {
+  if(infiniteScrolLoading.value || !entries.value) return
+  console.log('fetching bottom content')
+  infiniteScrolLoading.value = true
+  const newEntries = await fetchLogs3(idMinMax.value[0] - 1, "before")
+  entries.value = [...entries.value, ...newEntries]
+  infiniteScrolLoading.value = false
 }
 async function fetchLogs2() {
   loadingTime.value = Date.now()
@@ -584,15 +602,18 @@ async function fetchLogs3(id: number, mode: "before" | "after" | "around") {
         rawMessage: entry.message
       }
     })
-    if(mode === "before") {
-      entries.value = newEntries
-    } else {
-      cache.value.highestId = json.cache.highestId
-      // don't replace, append non duplicates
-      addPendingEntries(newEntries)
-    }
+
+    cache.value.highestId = json.cache.highestId
+    // if(mode === "before") {
+    //   entries.value = newEntries
+    // } else {
+    //   cache.value.highestId = json.cache.highestId
+    //   // don't replace, append non duplicates
+    //   addPendingEntries(newEntries)
+    // }
     console.info('Fetch took', json.timeTaken, 'ms')
     loadingTime.value = undefined
+    return newEntries
   }
 }
 // TODO: return highest and lowest _local_
@@ -693,7 +714,7 @@ function setPage(pageNum: number) {
   fetchLogs(false);
 }
 
-function jumpTo(entry: any) {
+async function jumpTo(entry: any) {
   // Clear any set messages
   // We assign once to prevent any triggering of fetch before everything is set
   filters.value = {
@@ -701,7 +722,7 @@ function jumpTo(entry: any) {
     message: null,
     aroundId: entry.id
   }
-  fetchLogs3(entry.id, "around");
+  entries.value = await fetchLogs3(entry.id, "around");
 }
 
 function getShareLink(entry: any) {
@@ -712,12 +733,13 @@ function getShareLink(entry: any) {
 async function copyShareLink(entry: any) {
   const link = getShareLink(entry)
   await window.navigator.clipboard.writeText(link)
-  await notify({
+  notify({
     type: "success",
     text: "Link copied to clipboard"
   })
 }
 
+let refreshTimer: any
 onBeforeMount(async() => {
   await getInfo()
   // setInterval(() => {
@@ -734,7 +756,7 @@ onBeforeMount(async() => {
   if(route.params.aroundId) {
     const id = Number(route.params.id)
     filters.value['aroundId'] = id.toString()
-    fetchLogs3(id, "around")
+    entries.value = await fetchLogs3(id, "around")
   }
 
 
@@ -764,14 +786,24 @@ onBeforeMount(async() => {
   // if(page.value)
   // setPage(-1)
 
-  await fetchLogs3(cache.value.highestId, "before")
-  setInterval(() => {
+  entries.value = await fetchLogs3(cache.value.highestId, "before")
+  refreshTimer = setInterval(async () => {
     // Only check for new values IF we not full, not searching, and at the top of list
-    if(isTopOfList.value && fetchAbort == null && pendingEntries.value.length < limit.value)
-      fetchLogs3(cache.value.highestId, "after")
+    if(isTopOfList.value && fetchAbort == null && pendingEntries.value.length < limit.value) {
+      const newEntries = await fetchLogs3(cache.value.highestId, "after")
+
+      // don't replace, append non duplicates
+      addPendingEntries(newEntries)
+    }
+
   }, REFRESH_INTERVAL)
+
+
 })
 
+onBeforeUnmount(() => {
+  clearInterval(refreshTimer)
+})
 </script>
 
 <style src="../../../node_modules/bulma-list/css/bulma-list.css" />

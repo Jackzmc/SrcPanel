@@ -111,8 +111,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 .where("id", "<", req.params.id + half)
         }
 
-        if(req.query.search_client) query.where('client', '=', req.query.client)
-        if(req.query.search_target) query.where('target', '=', req.query.target)
+        if(req.query.search_client) query.where('client', '=', req.query.search_client)
+        if(req.query.search_target) query.where('target', '=', req.query.search_target)
         if(req.query.search_message) query.where('message','LIKE',`%${req.query.search_message}%`)
         if(req.query.types) {
             const types = req.query.types.split(/[+,]/g)
