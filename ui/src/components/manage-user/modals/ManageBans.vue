@@ -194,12 +194,12 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed, watch } from 'vue'
-import { User, PrivilegedUser, PlayerData } from '@/js/User'
+import { PrivilegedUser, PlayerData } from '@/js/User'
 import { useRouter, useRoute } from 'vue-router'
-import { UserData, WebPermission, WebRole, AdminData } from '../../../../../common-types/User';
+import { ClientUserData, AdminData } from '../../../../../common-types/User';
 import { notify } from '@kyvg/vue3-notification';
 // TOOD: fix
-import { FullAPIBan, FullAPIBanPlayer, APIBanFlags, BanAppeal, BanAppealState } from '../../../../../common-types/Ban';
+import { FullAPIBan, APIBanFlags, BanAppeal, BanAppealState } from '../../../../../common-types/Ban';
 import { formatDate, getRelDate } from '@/js/util';
 import { Service, Action } from '../../../../../common-types/Privileges';
 
@@ -207,7 +207,7 @@ const emit = defineEmits(["close"])
 const router = useRouter()
 const route = useRoute()
 const props = defineProps<{
-  userdata: UserData,
+  userdata: ClientUserData,
   userAdminData: AdminData,
   user: PlayerData,
   privUser: PrivilegedUser,

@@ -127,6 +127,7 @@ async function saveNote() {
           })
       }
   } catch(err: any) {
+      console.error(err)
       notify({
           type: "error",
           title: `Failed to edit note #${props.note.id}`,
