@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <Notifications position="top center" :duration=7000 />
+    <Notifications position="top center" :duration=7000 @start="onNotificationShown" />
     <NavBar v-if="!$route.meta.hideNav" :userdata="userdata" @logout="onLogout" :update-info="updateInfo" :priv-user="privUser" />
     <br>
     <br v-if="$route.meta.hideHero">
@@ -39,7 +39,7 @@ import { onBeforeMount, ref, computed } from 'vue'
 import NavBar from '@/components/NavBar.vue'
 import { useRoute, useRouter } from 'vue-router';
 import { PrivilegedUser} from '@/js/User'
-import { notify } from '@kyvg/vue3-notification';
+import { NotificationItem, notify } from '@kyvg/vue3-notification';
 import { ClientUserData } from '../../common-types/User';
 
 
@@ -58,7 +58,7 @@ let updateInfo = ref<{
 }>({updating: false})
 
 let userdata = ref<ClientUserData>()
-let privUser = ref()
+let privUser = ref<PrivilegedUser>()
 
 function reloadPage() {
   if (!updateInfo.value.registration || !updateInfo.value.registration.waiting) return console.warn("reloadPage() called when no sw update")
@@ -131,6 +131,24 @@ async function getAuth() {
         }
       })
     }
+  }
+}
+
+import * as Sentry from "@sentry/vue";
+function onNotificationShown(item: NotificationItem) {
+  if(item.type === 'error') {
+    console.log('captured notification', item)
+    Sentry.captureEvent({
+      message: item.title ? `${item.title}:\n${item.text}` : item.text,
+      user: {
+        id: privUser.value?.id,
+        name: privUser.value?.name,
+      },
+      level: 'error',
+      tags: {
+        notification: true,
+      },
+    })
   }
 }
 
