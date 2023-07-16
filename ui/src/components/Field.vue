@@ -1,7 +1,7 @@
 <template>
 <div :class="['field', {'is-horizontal': props.horizontal}]">
     <label class="label" v-if="label || slots.label"><slot name="label">{{ label }}</slot></label>
-    <div :class="['control', {'has-icons-left': iconLeft, 'has-icons-right': iconRight}]">
+    <div :class="[{'control': !props.horizontal, 'has-icons-left': iconLeft, 'has-icons-right': iconRight}]">
       <slot />
       <span class="icon is-small is-left" v-if="iconLeft">
         <FontAwesomeIcon :icon="iconLeft" :spin="iconLeftSpin" />

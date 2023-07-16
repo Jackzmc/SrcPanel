@@ -124,7 +124,48 @@
       <div v-else-if="tab === 'configs'" class="box">
         <p class="has-text-centered my-6 is-size-5" v-if="cfg.loading">Loading...</p>
         <template v-if="cfg.selected">
-          <pre v-if="cfg.json" class="box" spellcheck="false"><template v-for="entry in cfg.json" :key="entry.command"><span class="has-text-dark">{{entry.cvar ?? entry.command}}</span> <span :class="{'config-string': entry.type === 'string', 'has-text-info': entry.type === 'number'}">{{entry.value}}</span><br></template></pre>
+          <template v-if="cfg.json" >
+            <Field label="Cvars" >
+              <div class="columns " v-for="entry in cfg.json" :key="entry.command">
+                <div class="column is-5">
+                  <input class="input is-expanded"  type="text" :value="entry.cvar ?? entry.command" />
+                </div>
+                <div class="column is-6">
+                  <input v-if="entry.type === 'string'" class="input" type="text" :value="entry.value" />
+                  <input v-else-if="entry.type === 'number'" class="input" type="number" :value="entry.value" />
+                  <em v-else-if="entry.type === 'hidden'">(hidden)</em>
+                </div>
+                <div class="column is-1">
+                  <span v-if="entry.type === 'string'" class="tag is-primary is-large" data-tooltip="String">S</span>
+                  <span v-if="entry.type === 'number'" class="tag is-info is-large" data-tooltip="Number">N</span>
+                </div>
+              </div>
+              <!-- <span class="has-text-dark">{{entry.cvar ?? entry.command}}</span>
+              <span :class="{'config-string': entry.type === 'string', 'has-text-info': entry.type === 'number'}">
+                {{entry.value}}
+              </span> -->
+            </Field>
+            <Field label="Add New Cvar">
+              <div class="columns">
+                <div class="column">
+                  <input class="input" type="text" />
+                </div>
+                <div class="column">
+                  <input class="input" type="text" />
+                </div>
+              </div>
+            </Field>
+            <Field label="Add New Command">
+              <div class="columns">
+                <div class="column">
+                  <input class="input" type="text" />
+                </div>
+                <div class="column">
+                  <input class="input" type="text" />
+                </div>
+              </div>
+            </Field>
+          </template>
           <pre class="box" v-if="cfg.raw">
             {{ cfg.raw }}
           </pre>
@@ -204,6 +245,7 @@ import { parseLog, getRelDate, request } from '@/js/util';
 import LogMessage from "@/components/LogMessage.vue";
 import { useNotification } from "@kyvg/vue3-notification";
 import VueApexCharts from 'vue3-apexcharts'
+import Field from '@/components/Field.vue';
 
 let series = ref<any[]>([])
 let series2 = ref<any[]>([])

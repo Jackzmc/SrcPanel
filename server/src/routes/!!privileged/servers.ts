@@ -88,6 +88,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                         if(HIDDEN_COMMANDS.includes(command)) {
                             records.push({
                                 command,
+                                type: "hidden",
                                 value: '**HIDDEN**'
                             })
                             continue
@@ -96,12 +97,16 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                         if(command === "sm_cvar" && split.length > 2) {
                             cvar = split.shift()
                         }
-                        const value = split.join(" ").trim()
+                        let value = split.join(" ").trim()
+                        const type = isNaN(Number(value)) ? "string" : "number"
+                        if(type === "string" && value.at(0) == '"' && value.at(-1) == '"') {
+                            value = value.slice(1, -1)
+                        }
                         records.push({ 
                             command,
                             value,
                             cvar,
-                            type: isNaN(Number(value)) ? "string" : "number" //value.startsWith('"') && value.endsWith('"') ? 'string' : 'number'
+                            type
                         })
                         
                     }
