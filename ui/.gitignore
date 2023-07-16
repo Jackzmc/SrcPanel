@@ -25,3 +25,5 @@ pnpm-debug.log*
 
 *.bat
 *.sh
+# Sentry Auth Token
+.env.sentry-build-plugin

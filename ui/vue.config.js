@@ -1,4 +1,5 @@
 process.env.VUE_APP_BUILD_DATE = Date.now()
+const { sentryWebpackPlugin } = require("@sentry/webpack-plugin");
 
 module.exports = {
   publicPath: process.env.PUBLIC_PATH || '/',
@@ -88,5 +89,16 @@ module.exports = {
         }
       ]
     }
+  },
+  configureWebpack: {
+    // ... other config options
+    devtool: "source-map", // Source map generation must be turned on
+    plugins: [
+      sentryWebpackPlugin({
+        authToken: process.env.SENTRY_AUTH_TOKEN,
+        org: "jackzmc",
+        project: "l4d2-admin-panel",
+      }),
+    ],
   }
 }
