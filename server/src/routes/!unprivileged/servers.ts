@@ -13,11 +13,11 @@ interface AuthTokenData {
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
     fastify.post('/status', async(req: FastifyRequest<{Params: {id: string}}>, reply) => {
-        const authKey = req.headers['authtoken'] as string
+        const authKey = req.headers['x-authtoken'] as string
         if(!authKey) {
             return NOT_LOGGED_IN(reply, "No auth token provided")
         }
-        
+
         try {
             const data = await JWT.verify<Partial<AuthTokenData>>(authKey, JWT_SECRET)
             console.log('decoded data', data)
