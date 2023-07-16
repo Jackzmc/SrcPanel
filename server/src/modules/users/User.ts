@@ -99,6 +99,7 @@ export default class User {
     }
 
     hasPermission(code: UserPrivilegeCode, ...resourceIds: (string | number | undefined)[]) {
+        if(!this.isAdmin) return false
         // TODO: Make sure user for 'servers.configs.read' has access to 'servers.configs'? idk verify
         let permCode: string = code
         for(const resource of resourceIds) {
