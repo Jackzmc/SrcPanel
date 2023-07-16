@@ -4,6 +4,8 @@ export interface Jwt<T> extends JWT.Jwt {
     payload: T
 }
 
+export const JsonWebTokenError = JWT.JsonWebTokenError
+
 // This is an async/await promise wrapper over the jsonwebtoken package which does callback style 
 export default {
     verify<T>(token: string, secretOrPublicKey: JWT.Secret, options?: JWT.VerifyOptions): Promise<Jwt<T>> {

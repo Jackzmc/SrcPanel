@@ -1,8 +1,7 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
-import JWT from '../../jwt-promise.js'
+import JWT,  { JsonWebTokenError } from '../../jwt-promise.js'
 import { NOT_LOGGED_IN, NO_PERMISSION } from '../../responses.js';
 import { PluginServerStatus } from '../../modules/servers/Server.js';
-
 const JWT_SECRET = process.env.STATE_SECRET
 
 interface AuthTokenData {
@@ -35,8 +34,10 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 return NO_PERMISSION(reply, "Auth token is invalid")
             }
         } catch(err) {
-            console.log(err)
-            return NO_PERMISSION(reply, "Could not verify auth token")
+            if(err instanceof JsonWebTokenError) {
+                return NO_PERMISSION(reply, "Could not verify auth token")
+            }
+            throw err
         }
     })
 
