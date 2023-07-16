@@ -30,10 +30,14 @@ const HIDDEN_CONFIG_FILES = [
 const VALID_CONFIG_EXTS = ["cfg", "toml"]
 const MIN_REFRESH_TIME = 5000
 
-export interface PluginServerStatus {
+export interface IncomingPluginServerStatus {
   playerCount: number;
   map: string;
   players: StatusPlayer[];
+}
+
+export interface PluginServerStatus {
+  lastUpdateTime: number
 }
 
 interface StatusPlayer {
@@ -215,9 +219,11 @@ export default class Server {
     public get activityLogId() {  return this._actid }
     public get cvars() { return this._cvars }
 
-    public setStatus(status: PluginServerStatus) {
-      console.log(this._info.name, 'updating plugin status', status)
-      this._status2 = status
+    public setStatus(status: IncomingPluginServerStatus) {
+      this._status2 = {
+        ...status,
+        lastUpdateTime: Date.now()
+      }
     }
 
     // Fetches all config, including one level nested

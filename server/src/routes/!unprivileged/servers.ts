@@ -1,7 +1,7 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
 import JWT,  { JsonWebTokenError } from '../../jwt-promise.js'
 import { NOT_LOGGED_IN, NO_PERMISSION } from '../../responses.js';
-import { PluginServerStatus } from '../../modules/servers/Server.js';
+import { IncomingPluginServerStatus } from '../../modules/servers/Server.js';
 const JWT_SECRET = process.env.STATE_SECRET
 
 interface AuthTokenData {
@@ -19,7 +19,6 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
         try {
             const data = await JWT.verify<Partial<AuthTokenData>>(authKey, JWT_SECRET)
-            console.log('decoded data', data)
             if(data.payload.iat && data.payload.issuer && data.payload.sub) {
                 const server = fastify.servers.get(data.payload.sub)
                 if(!server) {
@@ -28,7 +27,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                         message: "Server not found"
                     })
                 }
-                server.setStatus(req.body as PluginServerStatus)
+                server.setStatus(req.body as IncomingPluginServerStatus)
                 return reply.status(204).send()
             } else {
                 return NO_PERMISSION(reply, "Auth token is invalid")
