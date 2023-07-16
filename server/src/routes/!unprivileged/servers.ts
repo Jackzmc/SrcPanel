@@ -35,7 +35,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             }
         } catch(err) {
             if(err instanceof JsonWebTokenError) {
-                return NO_PERMISSION(reply, "Could not verify auth token")
+                return NO_PERMISSION(reply, "Could not verify auth token:\n" + err.message)
             }
             throw err
         }
