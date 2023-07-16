@@ -30,7 +30,7 @@ const HIDDEN_CONFIG_FILES = [
 const VALID_CONFIG_EXTS = ["cfg", "toml"]
 const MIN_REFRESH_TIME = 5000
 
-interface PluginServerStatus {
+export interface PluginServerStatus {
   playerCount: number;
   map: string;
   players: StatusPlayer[];

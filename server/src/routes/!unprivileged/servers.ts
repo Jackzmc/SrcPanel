@@ -1,6 +1,7 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
 import JWT from '../../jwt-promise.js'
 import { NOT_LOGGED_IN, NO_PERMISSION } from '../../responses.js';
+import { PluginServerStatus } from '../../modules/servers/Server.js';
 
 const JWT_SECRET = process.env.STATE_SECRET
 
@@ -28,7 +29,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                         message: "Server not found"
                     })
                 }
-                console.log('got data', req.body)
+                server.setStatus(req.body as PluginServerStatus)
             } else {
                 return NO_PERMISSION(reply, "Auth token is invalid")
             }
