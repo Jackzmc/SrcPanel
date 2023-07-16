@@ -216,6 +216,7 @@ export default class Server {
     public get cvars() { return this._cvars }
 
     public setStatus(status: PluginServerStatus) {
+      console.log(this._info.name, 'updating plugin status', status)
       this._status2 = status
     }
 
