@@ -161,7 +161,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         return {
             recentActivities, 
             stats,
-            status: server.status
+            status: server.status,
+            status2: server.status2
         }
     })
 

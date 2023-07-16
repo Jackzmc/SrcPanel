@@ -30,6 +30,22 @@ const HIDDEN_CONFIG_FILES = [
 const VALID_CONFIG_EXTS = ["cfg", "toml"]
 const MIN_REFRESH_TIME = 5000
 
+interface PluginServerStatus {
+  playerCount: number;
+  map: string;
+  players: StatusPlayer[];
+}
+
+interface StatusPlayer {
+  steamid: string;
+  name: string;
+  team: number;
+  isAlive: boolean;
+  permHealth: number;
+  tempHealth: number;
+  weapons?: (null | string)[];
+}
+
 export interface BaseServerData {
   id ? : string;
   name: string;
@@ -101,6 +117,7 @@ interface PlayerStats {
 export default class Server { 
     private _info: ServerInfo
     private _status: ServerStatus
+    private _status2: PluginServerStatus
     private _cfgDir: string;
     private _actid: string
     private _sortOrder: number
@@ -181,6 +198,7 @@ export default class Server {
     }
 
     public get status(): ServerStatus { return this._status }
+    public get status2(): PluginServerStatus { return this._status2 }
 
     public get hasRcon() { return this.rcon !== null }
     public get hasSystemd() { return this.systemd !== null }
@@ -196,6 +214,10 @@ export default class Server {
 
     public get activityLogId() {  return this._actid }
     public get cvars() { return this._cvars }
+
+    public setStatus(status: PluginServerStatus) {
+      this._status2 = status
+    }
 
     // Fetches all config, including one level nested
     public async getConfigFiles(showHidden = false) {
