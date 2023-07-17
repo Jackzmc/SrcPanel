@@ -134,9 +134,10 @@
                 {{ player.name }}
               </div>
               <div class="list-item-description has-text-black" v-if="'survivor' in player">
-                {{ player.flow }} - {{ player.permHealth }}
+                <span class="tag">{{ player.flow.toFixed(0) }}</span> - <span class="tag">{{ player.permHealth }} HP</span>
               </div>
               <div class="list-item-description has-text-black" v-else-if="'class' in player">
+                <span v-if="player.steamid == 'BOT'">BOT</span>
                 {{ player.pinnedSurvivor }}
               </div>
             </div>

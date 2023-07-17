@@ -45,8 +45,8 @@ export interface IncomingPluginServerStatus {
     Coach = 2,
     Ellis = 3,
     Bill = 4,
-    Francis = 5,
-    Zoey = 6,
+    Francis = 6,
+    Zoey = 5,
     Louis = 7,
   }
   
