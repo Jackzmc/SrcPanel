@@ -82,6 +82,10 @@
                       <td>#{{ entry.id }}</td>
                     </tr>
                     <tr>
+                      <th>Timestamp</th>
+                      <td>{{ getTimestamp(entry) }}</td>
+                    </tr>
+                    <tr>
                       <th>Client Id</th>
                       <td><span v-if="entry.client.steamid">{{ entry.client.steamid }}</span><em v-else>-</em></td>
                     </tr>
@@ -559,10 +563,14 @@ async function jumpTo(entry: any) {
   entries.value = await fetchLogs(entry.id, "around");
 }
 
-function getShareLink(entry: any) {
+function getShareLink(entry: LogEntry) {
   const params = getParams()
-  params.set('aroundId', entry.id)
+  params.set('aroundId', entry.id.toString())
   return `${location.protocol}//${window.location.host}${window.location.pathname}/${entry.id}`
+}
+function getTimestamp(entry: LogEntry) {
+  const date = new Date(entry.timestamp * 1000)
+  return `${date.toLocaleDateString('sv-SE')} at ${date.toLocaleTimeString()}`
 }
 async function copyShareLink(entry: any) {
   const link = getShareLink(entry)
