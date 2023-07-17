@@ -42,12 +42,20 @@
               :to="{params:{tab: id}}"
               v-if="(!data.permission || privUser.hasPermission(data.permission)) && (data.enabled == undefined || data.enabled())"
             >
-              {{data.name}}
+              {{data.name}}&nbsp;
+              <span class="tag is-info is-small" v-if="data.tag">{{ data.tag }}</span>
             </router-link>
           </li>
         </ul>
       </div>
       <div v-if="tab === 'overview'" class="box">
+        <div class="notification is-danger has-text-centered" v-if="status && !status.online">
+          The server is offline or is unreachable.
+          <span class="is-inline is-pulled-right no-border" data-tooltip="Time until next refresh">
+            <Icon icon="fa-spinner" spin v-if="nextRefreshCountdown == 0"></Icon>
+            <span v-else>{{ nextRefreshCountdown }}s</span>
+          </span>
+        </div>
         <template v-if="status && status.online">
           <span class="is-inline is-pulled-right no-border pr-4" data-tooltip="Time until next refresh" style="width:10px">
             <Icon icon="fa-spinner" spin v-if="nextRefreshCountdown == 0"></Icon>
@@ -96,13 +104,6 @@
 
           <br>
         </template>
-        <div class="notification is-danger has-text-centered" v-else-if="status && !status.online">
-          The server is offline or is unreachable.
-          <span class="is-inline is-pulled-right no-border" data-tooltip="Time until next refresh">
-            <Icon icon="fa-spinner" spin v-if="nextRefreshCountdown == 0"></Icon>
-            <span v-else>{{ nextRefreshCountdown }}s</span>
-          </span>
-        </div>
         <!-- <p v-else-if="status && !status.online" class="has-text-centered has-text-danger subtitle is-4">Server is offline or unreachable</p> -->
         <p class="has-text-centered subtitle is-4 my-6 has-text-danger" v-else-if="status && status.error">{{  status.error }}</p>
         <!-- <div class="notification is-danger has-text-centered" v-else-if="error">
@@ -122,6 +123,13 @@
 
       </div>
       <div v-else-if="tab === 'players'" class="box">
+        <div class="notification is-danger has-text-centered" v-if="!status">
+          The server is offline or is unreachable.
+          <span class="is-inline is-pulled-right no-border" data-tooltip="Time until next refresh">
+            <Icon icon="fa-spinner" spin v-if="nextRefreshCountdown == 0"></Icon>
+            <span v-else>{{ nextRefreshCountdown }}s</span>
+          </span>
+        </div>
         <span class="is-inline is-pulled-right no-border pr-4" data-tooltip="Time until next refresh" style="width:10px">
           <Icon icon="fa-spinner" spin v-if="nextStatusRefreshCountdown == 0"></Icon>
           <span v-else>{{ nextStatusRefreshCountdown }}s</span>
@@ -246,6 +254,9 @@
         <p v-if="!status?.online && !server.info.tags.includes('systemd')"><em>no actions available</em></p>
       </div>
       <div class="box" v-if="tab === 'players'">
+        <div class="notification is-warning mb-2">
+          This feature is currently in development and may be wrong or broken.
+        </div>
         Game info
       </div>
       <div class="box" v-if="tab === 'overview'">
@@ -375,12 +386,13 @@ const SURVIVOR_IDS: Record<SurvivorId, string> = {
   [SurvivorId.Louis]: "manager"
 }
 
-const TABS: Record<string, { name: string, permission?: UserPrivilegeCode, enabled?: Function }> = {
+const TABS: Record<string, { name: string, tag?: string, permission?: UserPrivilegeCode, enabled?: Function }> = {
   overview: {
     name: "Overview",
   },
   players: {
-    name: "Players",
+    name: "Live Status",
+    tag: "BETA"
   },
   configs: {
     name: "Configs",

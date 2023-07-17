@@ -50,7 +50,7 @@ const REFRESH_INTERVAL = 1000 * 15;
 const emit = defineEmits(["refresh"]);
 
 let servers = ref<any[]>([]);
-let refreshTimer = ref<ReturnType<typeof setInterval>>();
+let refreshTimer: any = null
 
 function copyCommand(event: any) {
   //@ts-ignore
@@ -117,14 +117,14 @@ function refreshServers() {
 }
 
 onBeforeMount(() => {
-  refreshTimer.value = setInterval(() => {
+  refreshTimer = setInterval(() => {
     refreshServers();
   }, REFRESH_INTERVAL);
   refreshServers();
 });
 
 onBeforeUnmount(() => {
-  clearInterval((refreshTimer.value as unknown) as number);
+  clearInterval(refreshTimer);
 });
 </script>
 
