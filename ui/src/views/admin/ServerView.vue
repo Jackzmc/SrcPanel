@@ -122,6 +122,10 @@
 
       </div>
       <div v-else-if="tab === 'players'" class="box">
+        <span class="is-inline is-pulled-right no-border pr-4" data-tooltip="Time until next refresh" style="width:10px">
+          <Icon icon="fa-spinner" spin v-if="nextStatusRefreshCountdown == 0"></Icon>
+          <span v-else>{{ nextStatusRefreshCountdown }}s</span>
+        </span>
         <div class="list" v-if="status2 && status2.playerCount > 0">
           <div class="list-item" v-for="player in status2.players" :key="player.steamid ?? player.name">
             <div class="list-item-image">
@@ -130,18 +134,29 @@
               </figure>
             </div>
             <div class="list-item-content">
-              <div class="list-item-title">
+              <div :class="['list-item-title', {'has-text-danger': !player.isAlive, 'has-text-crossed': !player.isAlive }]">
+                <progress v-if="player.isAlive" :class="['progress', getHealthClass(player)]" :value="player.permHealth + ((player as any).tempHealth ?? 0)" max="100" style="width:20%">{{player.permHealth}}%</progress>
                 {{ player.name }}
+                <span class="tag is-info is-small" v-if="player.steamid === 'BOT'">BOT</span>
               </div>
               <div class="list-item-description has-text-black" v-if="'survivor' in player">
-                <span class="tag">{{ player.flow.toFixed(0) }}</span> - <span class="tag">{{ player.permHealth }} HP</span>
+                <template v-if="player.isAlive">
+                  <div class="tags">
+                    <span :class="['tag',getHealthClass(player)]">{{ player.permHealth + player.tempHealth }} HP</span>
+                    <span class="tag">{{ player.flowProgress }}%</span>
+                  </div>
+                  <div class="tags" v-if="player.weapons">
+                    <span class="tag is-dark" v-for="item in getPlayerWeaponNames(player)" :key="item">
+                      {{ item }}
+                    </span>
+                  </div>
+                </template>
+                <span v-else>Dead</span>
               </div>
               <div class="list-item-description has-text-black" v-else-if="'class' in player">
-                <span v-if="player.steamid == 'BOT'">BOT</span>
                 {{ player.pinnedSurvivor }}
               </div>
             </div>
-
             <div class="list-item-controls">
               <div class="buttons is-right">
 
@@ -229,6 +244,9 @@
           <a v-if="server.info.tags.includes('systemd')" @click="processAction(server, 'start')" class="button is-success">Start Server</a>
         </div>
         <p v-if="!status?.online && !server.info.tags.includes('systemd')"><em>no actions available</em></p>
+      </div>
+      <div class="box" v-if="tab === 'players'">
+        Game info
       </div>
       <div class="box" v-if="tab === 'overview'">
         <h4 class="title is-5">Recent Activity</h4>
@@ -402,7 +420,21 @@ const nextRefreshCountdown = computed(() => {
   return Math.max(Math.floor(((lastRefreshTime.value + REFRESH_INTERVAL) - now.value) / 1000), 0)
 })
 
+const nextStatusRefreshCountdown = computed(() => {
+  if(!status2.value) return 0
+  return Math.max(Math.floor(((status2.value.lastUpdateTime + status2.value.refreshInterval) - now.value) / 1000), 0)
+})
+
+function getPlayerWeaponNames(player: StatusPlayerSurvivor) {
+  return player.weapons
+    .filter(weapon => weapon)
+    .map(weapon => {
+      return weapon?.replace("weapon_", '').replace(/_/g, ' ')
+    })
+}
+
 function getIconUrl(player: StatusPlayer) {
+  if(!player.isAlive) return `/img/survivors/dead.png`
   if('survivor' in player) {
     return `/img/survivors/${SURVIVOR_IDS[player.survivor]}.png`
   } else if('class' in player) {
@@ -476,7 +508,7 @@ async function fetchServerStatus() {
   isRefreshing = false
   if(response.ok) {
     status.value = json.status
-    status2.value = json.status2
+    if(json.status2) status2.value = json.status2
     stats.value = json.stats
     activities.value = json.recentActivities?.map((act: any) => parseLog(act))
   } else {
@@ -533,6 +565,15 @@ function processAction(server: any, type: string) {
   })
 }
 
+function getHealthClass(player: StatusPlayer) {
+  if(player.permHealth > 50)
+    return 'is-success'
+  else if(player.permHealth > 30) {
+    return 'is-warning'
+  } else {
+    return 'is-danger'
+  }
+}
 function formatMap(mapId: string) {
   const display = getMapDisplay(mapId)
   return display ? `<p class="title is-6">${display.name}</p><p class="subtitle is-6">Chapter ${display.chapterId} "${display.chapterName}"</p>` : mapId
@@ -620,5 +661,25 @@ onUnmounted(() => {
 <style>
 .config-string {
   color: #628503
+}
+.has-text-crossed {
+  text-decoration: line-through;
+}
+.scroll-line {
+  background: linear-gradient(217deg, rgba(255,0,0,.8), rgba(255,0,0,0) 70.71%),
+    linear-gradient(127deg, rgba(0,255,0,.8), rgba(0,255,0,0) 70.71%),
+    linear-gradient(336deg, rgba(0,0,255,.8), rgba(0,0,255,0) 70.71%);
+  top: 0;
+  left: 0;
+  height: 10px;
+  position: fixed;
+  transition: 0.5s cubic-bezier(0.075, 0.82, 0.165, 1);
+}
+.player-item {
+  border-top: thick green;
+  border-style: solid;
+  border-left: 0;
+  border-bottom: 0;
+  border-right: 0;
 }
 </style>

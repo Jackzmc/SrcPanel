@@ -21,15 +21,17 @@ export interface BaseStatusPlayer {
     team: number;
     isAlive: boolean;
     permHealth: number;
+    states: number // see PlayerState;
 }
 
 export interface StatusPlayerSurvivor extends BaseStatusPlayer {
     tempHealth: number;
     idlePlayer?: string;
     flow: number;
+    flowProgress: number,
     survivor: SurvivorId;
-    weapons?: ( null | string )[];
-    isPinned: boolean
+    weapons: ( null | string )[];
+    isPinned: boolean,
 }
 
 export interface StatusPlayerInfected extends BaseStatusPlayer {
@@ -38,6 +40,16 @@ export interface StatusPlayerInfected extends BaseStatusPlayer {
 }
 
 export type StatusPlayer = StatusPlayerSurvivor | StatusPlayerInfected
+
+export enum PlayerState {
+	Alive,
+	Idle,
+	Walking,
+	Running,
+	Crouched,
+	Incapped,
+	BlackAndWhite
+}
 
 export enum SurvivorId {
     Nick = 0,

@@ -184,7 +184,141 @@ export default class Server {
     }
 
     public get status(): ServerStatus { return this._status }
-    public get status2(): PluginServerStatus { return this._status2 }
+    public get status2(): PluginServerStatus { 
+      // return {
+      //   "playerCount": 5,
+      //   "map": "c8m2_subway",
+      //   "gamemode": "coop",
+      //   "players": [
+      //     {
+      //       "flowProgress": 0,
+      //       "states": 2,
+      //       "steamid": "76561198003132253",
+      //       "name": "Tough Guy",
+      //       "team": 2,
+      //       "isAlive": true,
+      //       "permHealth": 47,
+      //       "flow": 18741.15625,
+      //       "isPinned": false,
+      //       "tempHealth": 0,
+      //       "survivor": 2,
+      //       "weapons": [
+      //         "weapon_shotgun_spas",
+      //         "weapon_melee",
+      //         "weapon_molotov",
+      //         "weapon_first_aid_kit",
+      //         null,
+      //         null
+      //       ]
+      //     },
+      //     {
+      //       "flowProgress": 0,
+      //       "states": 4,
+      //       "steamid": "76561199367350969",
+      //       "name": "Mrs. Kelly",
+      //       "team": 2,
+      //       "isAlive": false,
+      //       "permHealth": 1,
+      //       "flow": 18741.15625,
+      //       "isPinned": false,
+      //       "tempHealth": 7,
+      //       "survivor": 3,
+      //       "weapons": [
+      //         "weapon_shotgun_spas",
+      //         "weapon_chainsaw",
+      //         null,
+      //         "weapon_first_aid_kit",
+      //         null,
+      //         null
+      //       ]
+      //     },
+      //     {
+      //       "flowProgress": 25,
+      //       "states": 5,
+      //       "steamid": "76561198058753262",
+      //       "name": "Jackzie ❤",
+      //       "team": 2,
+      //       "isAlive": true,
+      //       "permHealth": 1,
+      //       "flow": 18841.93359375,
+      //       "isPinned": false,
+      //       "tempHealth": 13,
+      //       "survivor": 1,
+      //       "weapons": [
+      //         "weapon_sniper_military",
+      //         "weapon_melee",
+      //         "weapon_molotov",
+      //         null,
+      //         "weapon_pain_pills",
+      //         null
+      //       ]
+      //     },
+      //     {
+      //       "flowProgress": 62,
+      //       "states": 1,
+      //       "steamid": "76561198046593262",
+      //       "name": "Silynx",
+      //       "team": 2,
+      //       "isAlive": true,
+      //       "permHealth": 1,
+      //       "flow": 18692.767578125,
+      //       "isPinned": false,
+      //       "tempHealth": 20,
+      //       "survivor": 0,
+      //       "weapons": [
+      //         "weapon_shotgun_spas",
+      //         "weapon_melee",
+      //         "weapon_molotov",
+      //         "weapon_first_aid_kit",
+      //         null,
+      //         null
+      //       ]
+      //     },
+      //     {
+      //       "flowProgress": 25,
+      //       "states": 3,
+      //       "steamid": "76561198368726720",
+      //       "name": "The Liquor",
+      //       "team": 2,
+      //       "isAlive": true,
+      //       "permHealth": 47,
+      //       "flow": 18741.15625,
+      //       "isPinned": false,
+      //       "tempHealth": 0,
+      //       "survivor": 1,
+      //       "weapons": [
+      //         "weapon_shotgun_spas",
+      //         "weapon_melee",
+      //         null,
+      //         "weapon_first_aid_kit",
+      //         "weapon_pain_pills",
+      //         null
+      //       ]
+      //     },
+      //     {
+      //       "states": 2,
+      //       "steamid": "BOT",
+      //       "name": "Smoker",
+      //       "team": 3,
+      //       "isAlive": true,
+      //       "permHealth": 250,
+      //       "class": 2
+      //     },
+      //     {
+      //       "states": 2,
+      //       "steamid": "BOT",
+      //       "name": "Spitter",
+      //       "team": 3,
+      //       "isAlive": true,
+      //       "permHealth": 100,
+      //       "class": 3
+      //     }
+      //   ],
+      //   "refreshInterval": 10,
+      //   "lastUpdateTime": 1689561354061
+      // }
+      return this._status2
+    }
 
     public get hasRcon() { return this.rcon !== null }
     public get hasSystemd() { return this.systemd !== null }
@@ -202,6 +336,7 @@ export default class Server {
     public get cvars() { return this._cvars }
 
     public setStatus(status: PluginServerStatus) {
+      status.players = status.players.sort((a, b) => b.team - a.team)
       this._status2 = status
     }
 
