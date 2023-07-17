@@ -3,7 +3,7 @@ import { Rcon } from 'rcon-client';
 import { readdir } from 'fs/promises'
 import { join, resolve } from 'path'
 import { statSync } from 'fs';
-import { IncomingPluginServerStatus, PluginServerStatus } from '../../../../common-types/Server';
+import { PluginServerStatus } from '../../../../common-types/Server';
 
 const HIDDEN_CONFIG_FILES = [
   "360controller.cfg",
@@ -201,11 +201,8 @@ export default class Server {
     public get activityLogId() {  return this._actid }
     public get cvars() { return this._cvars }
 
-    public setStatus(status: IncomingPluginServerStatus) {
-      this._status2 = {
-        ...status,
-        lastUpdateTime: Date.now()
-      }
+    public setStatus(status: PluginServerStatus) {
+      this._status2 = status
     }
 
     // Fetches all config, including one level nested

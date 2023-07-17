@@ -1,45 +1,45 @@
-export interface IncomingPluginServerStatus {
+
+
+export interface StatusFinaleInfo {
+    escapeLeaving: boolean
+    finaleStage: FinaleStage
+}
+
+export interface PluginServerStatus {
+    lastUpdateTime: number
+    refreshInterval: number,
     playerCount: number;
     map: string;
     gamemode: string;
     players: StatusPlayer[];
     finaleInfo?: StatusFinaleInfo
-  }
-  
-  export interface StatusFinaleInfo {
-    escapeLeaving: boolean
-    finaleStage: FinaleStage
-  }
-  
-  export interface PluginServerStatus extends IncomingPluginServerStatus {
-    lastUpdateTime: number
-  }
-  
-  export interface BaseStatusPlayer {
+}
+
+export interface BaseStatusPlayer {
     steamid: string;
     name: string;
     team: number;
     isAlive: boolean;
     permHealth: number;
-  }
-  
-  export interface StatusPlayerSurvivor extends BaseStatusPlayer {
+}
+
+export interface StatusPlayerSurvivor extends BaseStatusPlayer {
     tempHealth: number;
     idlePlayer?: string;
     flow: number;
     survivor: SurvivorId;
-    weapons?: (null | string)[];
+    weapons?: ( null | string )[];
     isPinned: boolean
-  }
-  
-  export interface StatusPlayerInfected extends BaseStatusPlayer {
+}
+
+export interface StatusPlayerInfected extends BaseStatusPlayer {
     class: InfectedClass;
     pinnedSurvivor?: string
-  }
-  
-  export type StatusPlayer = StatusPlayerSurvivor | StatusPlayerInfected
-  
-  export enum SurvivorId {
+}
+
+export type StatusPlayer = StatusPlayerSurvivor | StatusPlayerInfected
+
+export enum SurvivorId {
     Nick = 0,
     Rochelle = 1,
     Coach = 2,
@@ -48,9 +48,9 @@ export interface IncomingPluginServerStatus {
     Francis = 6,
     Zoey = 5,
     Louis = 7,
-  }
-  
-  export enum InfectedClass {
+}
+
+export enum InfectedClass {
     Smoker = 1,
     Boomer = 2,
     Hunter = 3,
@@ -59,9 +59,9 @@ export interface IncomingPluginServerStatus {
     Charger = 6,
     Witch = 7,
     Tank = 8,
-  }
-  
-  export enum FinaleStage {
+}
+
+export enum FinaleStage {
     Gauntlet = 0,
     HordeWave1 = 1,
     FirstBoss = 2,
@@ -80,4 +80,4 @@ export interface IncomingPluginServerStatus {
     GauntletHordeBossIncoming = 15,
     GauntletBoss = 16,
     GauntletEscape = 17,
-  };
+};
