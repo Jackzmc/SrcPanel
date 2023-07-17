@@ -3,6 +3,7 @@ import { Rcon } from 'rcon-client';
 import { readdir } from 'fs/promises'
 import { join, resolve } from 'path'
 import { statSync } from 'fs';
+import { IncomingPluginServerStatus, PluginServerStatus } from '../../../../common-types/Server';
 
 const HIDDEN_CONFIG_FILES = [
   "360controller.cfg",
@@ -30,25 +31,6 @@ const HIDDEN_CONFIG_FILES = [
 const VALID_CONFIG_EXTS = ["cfg", "toml"]
 const MIN_REFRESH_TIME = 5000
 
-export interface IncomingPluginServerStatus {
-  playerCount: number;
-  map: string;
-  players: StatusPlayer[];
-}
-
-export interface PluginServerStatus {
-  lastUpdateTime: number
-}
-
-interface StatusPlayer {
-  steamid: string;
-  name: string;
-  team: number;
-  isAlive: boolean;
-  permHealth: number;
-  tempHealth: number;
-  weapons?: (null | string)[];
-}
 
 export interface BaseServerData {
   id ? : string;

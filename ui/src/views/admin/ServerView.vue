@@ -40,7 +40,7 @@
           <li v-for="(data, id) in TABS" :key="id"  :class="{'is-active': tab === id}">
             <router-link
               :to="{params:{tab: id}}"
-              v-if="(!data.flag || privUser.hasPermission('servers.configs.read')) && (data.enabled == undefined || data.enabled())"
+              v-if="(!data.permission || privUser.hasPermission(data.permission)) && (data.enabled == undefined || data.enabled())"
             >
               {{data.name}}
             </router-link>
@@ -120,6 +120,37 @@
         <VueApexCharts :series='series' :options="options" type="line" />
         <VueApexCharts :series='series2' :options="options2" type="line" />
 
+      </div>
+      <div v-else-if="tab === 'players'" class="box">
+        <div class="list" v-if="status2 && status2.playerCount > 0">
+          <div class="list-item" v-for="player in status2.players" :key="player.steamid ?? player.name">
+            <div class="list-item-image">
+              <figure class="image is-48x48">
+                <img class="is-rounded" :src="getIconUrl(player)" />
+              </figure>
+            </div>
+            <div class="list-item-content">
+              <div class="list-item-title">
+                {{ player.name }}
+              </div>
+              <div class="list-item-description has-text-black" v-if="'survivor' in player">
+                {{ player.flow }} - {{ player.permHealth }}
+              </div>
+              <div class="list-item-description has-text-black" v-else-if="'class' in player">
+                {{ player.pinnedSurvivor }}
+              </div>
+            </div>
+
+            <div class="list-item-controls">
+              <div class="buttons is-right">
+
+              </div>
+            </div>
+          </div>
+        </div>
+        <div v-else>
+          <p class="has-text-centered">No server status or no players online</p>
+        </div>
       </div>
       <div v-else-if="tab === 'configs'" class="box">
         <p class="has-text-centered my-6 is-size-5" v-if="cfg.loading">Loading...</p>
@@ -246,6 +277,8 @@ import LogMessage from "@/components/LogMessage.vue";
 import { useNotification } from "@kyvg/vue3-notification";
 import VueApexCharts from 'vue3-apexcharts'
 import Field from '@/components/Field.vue';
+import { PluginServerStatus, StatusPlayer, StatusPlayerSurvivor, SurvivorId } from '../../../../common-types/Server';
+import { UserPrivilegeCode } from '../../../../common-types/Privileges';
 
 let series = ref<any[]>([])
 let series2 = ref<any[]>([])
@@ -312,13 +345,27 @@ const privUser = new PrivilegedUser(props.userdata)
 const route = useRoute()
 const router = useRouter()
 
-const TABS: Record<string, { name: string, flag?: WebPermission, enabled?: Function }> = {
+const SURVIVOR_IDS: Record<SurvivorId, string> = {
+  [SurvivorId.Nick]: "gambler",
+  [SurvivorId.Rochelle]: "producer",
+  [SurvivorId.Coach]: "coach",
+  [SurvivorId.Ellis]: "mechanic",
+  [SurvivorId.Bill]: "namvet",
+  [SurvivorId.Francis]: "biker",
+  [SurvivorId.Zoey]: "teenangst",
+  [SurvivorId.Louis]: "manager"
+}
+
+const TABS: Record<string, { name: string, permission?: UserPrivilegeCode, enabled?: Function }> = {
   overview: {
     name: "Overview",
   },
+  players: {
+    name: "Players",
+  },
   configs: {
     name: "Configs",
-    flag: WebPermission.ConfigRead,
+    permission: 'servers.configs.read',
     enabled: () => {
       return server.value && server.value.configs
     }
@@ -330,7 +377,14 @@ let lastRefreshTime = ref()
 let server = ref()
 let servers = ref()
 let status = ref()
-let stats = ref()
+let status2 = ref<PluginServerStatus>()
+let stats = ref<{
+  cpu: number,
+  bandwidth: { in: number, out: number },
+  uptime: number,
+  suers: number,
+  fps: number
+}>()
 let activities = ref()
 let cfg = ref<{
   selected?: string, raw?: string, json?: any, loading: boolean }
@@ -346,6 +400,15 @@ const tab = computed(() => {
 const nextRefreshCountdown = computed(() => {
   return Math.max(Math.floor(((lastRefreshTime.value + REFRESH_INTERVAL) - now.value) / 1000), 0)
 })
+
+function getIconUrl(player: StatusPlayer) {
+  if('survivor' in player) {
+    return `/img/survivors/${SURVIVOR_IDS[player.survivor]}.png`
+  } else if('class' in player) {
+    return `/img/survivors/infected.png`
+  }
+  return `/img/survivors/unknown.png`
+}
 
 async function onCfgChosen(data: { file: string, folder?: string }, raw = false) {
   cfg.value.selected = data.folder ? `${data.folder}/${data.file}` : data.file
@@ -412,6 +475,7 @@ async function fetchServerStatus() {
   isRefreshing = false
   if(response.ok) {
     status.value = json.status
+    status2.value = json.status2
     stats.value = json.stats
     activities.value = json.recentActivities?.map((act: any) => parseLog(act))
   } else {

@@ -1,7 +1,7 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
 import JWT,  { JsonWebTokenError } from '../../jwt-promise.js'
 import { NOT_LOGGED_IN, NO_PERMISSION } from '../../responses.js';
-import { IncomingPluginServerStatus } from '../../modules/servers/Server.js';
+import { IncomingPluginServerStatus } from '../../../../common-types/Server.js';
 const JWT_SECRET = process.env.STATE_SECRET
 
 interface AuthTokenData {
