@@ -266,10 +266,27 @@
         </div>
         <p v-if="!status?.online && !server.info.tags.includes('systemd')"><em>no actions available</em></p>
       </div> -->
+      <div class="box" v-if="tab === 'overview' || tab === 'players'">
+        <h4 class="title is-5">Recent Activity</h4>
+        <table v-if="activities" class="table is-fullwidth">
+          <thead>
+            <tr>
+              <th>Message</th>
+              <th>Time</th>
+              <th>Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="activity in activities" :key="activity.id">
+              <LogMessage :log="activity" :userdata="userdata" :priv-user="privUser" />
+              <td>{{ new Date(activity.timestampRaw * 1000).toLocaleTimeString()}}</td>
+              <td>{{ new Date(activity.timestampRaw * 1000).toLocaleDateString('en-US', {day: 'numeric', month: 'numeric'})}}</td>
+            </tr>
+          </tbody>
+        </table>
+        <p v-else><em>not supported on server</em></p>
+      </div>
       <div class="box" v-if="tab === 'players'">
-        <div class="notification is-warning mb-2">
-          This feature is currently in development and may be wrong or broken.
-        </div>
         <h4 class="title is-5">Game Info</h4>
         <table class="table is-fullwidth" v-if="liveStatus">
           <tbody>
@@ -295,26 +312,7 @@
             </tr>
           </tbody>
         </table>
-      </div>
-      <div class="box" v-if="tab === 'overview'">
-        <h4 class="title is-5">Recent Activity</h4>
-        <table v-if="activities" class="table is-fullwidth">
-          <thead>
-            <tr>
-              <th>Message</th>
-              <th>Time</th>
-              <th>Date</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="activity in activities" :key="activity.id">
-              <LogMessage :log="activity" :userdata="userdata" :priv-user="privUser" />
-              <td>{{ new Date(activity.timestampRaw * 1000).toLocaleTimeString()}}</td>
-              <td>{{ new Date(activity.timestampRaw * 1000).toLocaleDateString('en-US', {day: 'numeric', month: 'numeric'})}}</td>
-            </tr>
-          </tbody>
-        </table>
-        <p v-else><em>not supported on server</em></p>
+        <p class="has-text-centered" v-else>No live data</p>
       </div>
       <div v-else-if="tab === 'configs'" class="box">
         <h5 class="title is-5">Config Files</h5>
