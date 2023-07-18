@@ -143,7 +143,7 @@
             </div>
             <div class="list-item-content">
               <div :class="['list-item-title', {'has-text-danger': !player.isAlive, 'has-text-crossed': !player.isAlive }]">
-                <progress v-if="player.isAlive" :class="['progress', getHealthClass(player)]" :value="player.permHealth + ((player as any).tempHealth ?? 0)" max="100" style="width:20%">{{player.permHealth}}%</progress>
+                <progress v-if="player.isAlive && 'flowProgress' in player" :class="['progress', 'is-info']" :value="player.flowProgress" max="100" style="width:20%">{{player.flowProgress}}%</progress>
                 {{ player.name }}
                 <span class="tag is-info is-small" v-if="player.steamid === 'BOT'">BOT</span>
               </div>
@@ -151,9 +151,7 @@
                 <template v-if="player.isAlive">
                   <div class="tags">
                     <span :class="['tag',getHealthClass(player)]">{{ player.permHealth + player.tempHealth }} HP</span>
-                    <span class="tag">{{ player.flowProgress }}%</span>
-                  </div>
-                  <div class="tags" v-if="player.weapons">
+                    <span class="tag">{{ getPlayerStateInfo(player) }}</span>
                     <span class="tag is-dark" v-for="item in getPlayerWeaponNames(player)" :key="item">
                       {{ item }}
                     </span>
@@ -257,7 +255,30 @@
         <div class="notification is-warning mb-2">
           This feature is currently in development and may be wrong or broken.
         </div>
-        Game info
+        <h4 class="title is-5">Game Info</h4>
+        <table class="table is-fullwidth" v-if="status2">
+          <tbody>
+            <tr>
+              <th>Campaign</th>
+              <td class="has-text-right">{{ formatCampaign(status2.map) }}</td>
+            </tr>
+            <tr>
+              <th>Gamemode</th>
+              <td class="has-text-right">{{ formatGamemode(status2.gamemode) }}</td>
+            </tr>
+            <tr>
+              <th>Last Update</th>
+              <td class="has-text-right">
+                <p>{{ formatDate(status2.lastUpdateTime) }}</p>
+                <em>{{ getRelDate(status2.lastUpdateTime )}}</em>
+              </td>
+            </tr>
+            <tr v-if="status2.finaleInfo">
+              <th>Finale Info</th>
+              <td class="has-text-right">{{ FinaleStageName[status2.finaleInfo.finaleStage] }}</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
       <div class="box" v-if="tab === 'overview'">
         <h4 class="title is-5">Recent Activity</h4>
@@ -307,8 +328,9 @@ import LogMessage from "@/components/LogMessage.vue";
 import { useNotification } from "@kyvg/vue3-notification";
 import VueApexCharts from 'vue3-apexcharts'
 import Field from '@/components/Field.vue';
-import { PluginServerStatus, StatusPlayer, StatusPlayerSurvivor, SurvivorId } from '../../../../common-types/Server';
+import { PluginServerStatus, StatusPlayer, StatusPlayerSurvivor, SurvivorId, FinaleStageName, PlayerState } from '../../../../common-types/Server';
 import { UserPrivilegeCode } from '../../../../common-types/Privileges';
+import { formatDate } from '../../js/util';
 
 let series = ref<any[]>([])
 let series2 = ref<any[]>([])
@@ -438,6 +460,7 @@ const nextStatusRefreshCountdown = computed(() => {
 })
 
 function getPlayerWeaponNames(player: StatusPlayerSurvivor) {
+  if(!player.weapons) return []
   return player.weapons
     .filter(weapon => weapon)
     .map(weapon => {
@@ -586,9 +609,21 @@ function getHealthClass(player: StatusPlayer) {
     return 'is-danger'
   }
 }
+function getPlayerStateInfo(player: StatusPlayerSurvivor) {
+  if(player.states & PlayerState.Idle) return "Idle"
+  else if(player.states & PlayerState.Incapped) return "Incapped"
+  else if(player.states & PlayerState.Walking) return "Walking"
+  else if(player.states & PlayerState.Running) return "Running"
+  else if(player.states & PlayerState.Crouched) return "Crouched"
+  else return "Unknown"
+}
 function formatMap(mapId: string) {
   const display = getMapDisplay(mapId)
   return display ? `<p class="title is-6">${display.name}</p><p class="subtitle is-6">Chapter ${display.chapterId} "${display.chapterName}"</p>` : mapId
+}
+function formatCampaign(mapId: string) {
+  const display = getMapDisplay(mapId)
+  return display ? `${display.name} - ${display.chapterName}` : mapId
 }
 function getMapDisplay(mapId: string) {
   const match = mapId.match(/c(\d{1,2})m(\d)_(.*)/)
@@ -596,7 +631,7 @@ function getMapDisplay(mapId: string) {
     return {
       name: OfficialCampaignNames[Number(match[1]) - 1],
       chapterId: match[2],
-      chapterName: match[3]
+      chapterName: match[3].charAt(0).toUpperCase() + match[3].slice(1)
     }
   }
   return null;

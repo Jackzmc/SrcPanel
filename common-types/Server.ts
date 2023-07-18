@@ -93,3 +93,24 @@ export enum FinaleStage {
     GauntletBoss = 16,
     GauntletEscape = 17,
 };
+
+export const FinaleStageName: Record<FinaleStage, string> = {
+    [FinaleStage.Gauntlet]: "Gauntlet",
+    [FinaleStage.Gauntlet2]: "Gauntlet",
+    [FinaleStage.HordeWave1]: "Horde Wave",
+    [FinaleStage.FirstBoss]: "First Tank",
+    [FinaleStage.GauntletHorde]: "Gauntlet: Horde",
+    [FinaleStage.GauntletHordeBonusTime]: "Gauntlet: Over Time",
+    [FinaleStage.GauntletHordeBossIncoming]: "Gauntlet: Tank Incoming",
+    [FinaleStage.GauntletBoss]: "Gauntlet: Tank",
+    [FinaleStage.GauntletEscape]: "Gauntlet: Escape",
+    [FinaleStage.GauntletStart]: "Gauntlet",
+    [FinaleStage.HordeWave2]: "Horde Wave",
+    [FinaleStage.FinalBoss]: "Final Boss",
+    [FinaleStage.CustomPanic]: "Panic",
+    [FinaleStage.CustomTank]: "Tank",
+    [FinaleStage.CustomScripted]: "Scripted",
+    [FinaleStage.CustomDelay]: "Intermission",
+    [FinaleStage.CustomClearout]: "Clearout",
+    [FinaleStage.HordeEscape]: "Horde Escape",
+}
