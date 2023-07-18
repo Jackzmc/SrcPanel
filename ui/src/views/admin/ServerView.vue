@@ -17,23 +17,37 @@
     <div class="column is-8">
       <router-link to="/admin/servers" class="button is-small">🠐 back to servers list</router-link><br><br>
       <div class="box">
-      <h3 class="title is-3">
-        {{server.info.name}}
-        <div class="tags is-pulled-right inline">
-          <span class="tag is-success  is-medium" v-if="status && status.online">Online</span>
-          <span class="tag is-danger  is-medium" v-else-if="status && !status.online">Offline</span>
-          <span class="tag is-danger is-medium has-tooltip-danger no-border" v-else-if="error" data-tooltip="An error occurred while fetching the server's status"><Icon icon="fa-exclamation-triangle">Error</Icon></span>
-          <span class="tag is-medium" v-else><Icon icon="fa-spinner" spin></Icon></span>
-          <span data-tooltip="Server ID" class="tag is-info is-medium no-border">{{server.info.id}}</span>
+        <h3 class="title is-3">
+          {{server.info.name}}
+          <div class="tags is-pulled-right inline">
+            <span class="tag is-success  is-medium" v-if="status && status.online">Online</span>
+            <span class="tag is-danger  is-medium" v-else-if="status && !status.online">Offline</span>
+            <span class="tag is-danger is-medium has-tooltip-danger no-border" v-else-if="error" data-tooltip="An error occurred while fetching the server's status"><Icon icon="fa-exclamation-triangle">Error</Icon></span>
+            <span class="tag is-medium" v-else><Icon icon="fa-spinner" spin></Icon></span>
+            <span data-tooltip="Server ID" class="tag is-info is-medium no-border">{{server.info.id}}</span>
+          </div>
+        </h3>
+        <h4 class="subtitle is-4">
+          {{server.info.domain}}:{{server.info.port}}
+          <Icon icon="fa-copy" data-tooltip="Copy to clipboard" @click="copyAddress"></Icon>
+        </h4>
+        <div class="level">
+          <div class="level-left">
+            <div class="tags">
+              <span v-for="tag in server.info.tags" :key="tag" class="tag is-dark">{{tag}}</span>
+            </div>
+          </div>
+          <div class="level-right">
+            <div class="buttons">
+              <template v-if="status?.online">
+              <a @click="processAction(server, 'stop')" class="button is-dark is-small">Request Restart</a>
+              <a @click="processAction(server, 'stop?force=1')" class="button is-warning is-small">Force Restart</a>
+              <a @click="processAction(server, 'unreserve')" class="button is-dark is-small">Unreserve</a>
+              </template>
+              <a v-if="server.info.tags.includes('systemd')" @click="processAction(server, 'start')" class="button is-success is-small">Start Server</a>
+            </div>
+          </div>
         </div>
-      </h3>
-      <h4 class="subtitle is-4">
-        {{server.info.domain}}:{{server.info.port}}
-        <Icon icon="fa-copy" data-tooltip="Copy to clipboard" @click="copyAddress"></Icon>
-      </h4>
-      <div class="tags">
-        <span v-for="tag in server.info.tags" :key="tag" class="tag is-dark">{{tag}}</span>
-      </div>
       </div>
       <div class="tabs is-large">
         <ul>
@@ -131,8 +145,8 @@
           </span>
         </div>
         <span class="is-inline is-pulled-right no-border pr-4" data-tooltip="Time until next refresh" style="width:10px">
-          <Icon icon="fa-spinner" spin v-if="nextStatusRefreshCountdown == 0"></Icon>
-          <span v-else>{{ nextStatusRefreshCountdown }}s</span>
+          <Icon icon="fa-spinner" spin v-if="nextRefreshCountdown == 0"></Icon>
+          <span v-else>{{ nextRefreshCountdown }}s</span>
         </span>
         <div class="list" v-if="status2 && status2.playerCount > 0">
           <div class="list-item" v-for="player in status2.players" :key="player.steamid ?? player.name">
@@ -143,9 +157,10 @@
             </div>
             <div class="list-item-content">
               <div :class="['list-item-title', {'has-text-danger': !player.isAlive, 'has-text-crossed': !player.isAlive }]">
-                <progress v-if="player.isAlive && 'flowProgress' in player" :class="['progress', 'is-info']" :value="player.flowProgress" max="100" style="width:20%">{{player.flowProgress}}%</progress>
-                {{ player.name }}
-                <span class="tag is-info is-small" v-if="player.steamid === 'BOT'">BOT</span>
+                <progress v-if="player.isAlive && 'flowProgress' in player" :class="['progress', 'is-info', 'flowprogress']" :value="player.flowProgress" max="100" style="width:20%">{{player.flowProgress}}%</progress>
+                {{ 'idlePlayer' in player && player.idlePlayer ? player.idlePlayer.name : player.name }}
+                <span class="tag is-warning is-small" v-if="'idlePlayer' in player">Idle</span>
+                <span class="tag is-info is-small" v-else-if="player.steamid === 'BOT'">BOT</span>
               </div>
               <div class="list-item-description has-text-black" v-if="'survivor' in player">
                 <template v-if="player.isAlive">
@@ -239,7 +254,7 @@
           </select>
         </div>
       </div>
-      <div class="box">
+      <!-- <div class="box">
         <h4 class="title is-5">Actions</h4>
         <div class="buttons">
           <template v-if="status?.online">
@@ -250,7 +265,7 @@
           <a v-if="server.info.tags.includes('systemd')" @click="processAction(server, 'start')" class="button is-success">Start Server</a>
         </div>
         <p v-if="!status?.online && !server.info.tags.includes('systemd')"><em>no actions available</em></p>
-      </div>
+      </div> -->
       <div class="box" v-if="tab === 'players'">
         <div class="notification is-warning mb-2">
           This feature is currently in development and may be wrong or broken.
@@ -270,12 +285,13 @@
               <th>Last Update</th>
               <td class="has-text-right">
                 <p>{{ formatDate(status2.lastUpdateTime) }}</p>
-                <em>{{ getRelDate(status2.lastUpdateTime )}}</em>
+                <em>{{ formatRelDate(status2.lastUpdateTime )}}</em>
               </td>
             </tr>
             <tr v-if="status2.finaleInfo">
               <th>Finale Info</th>
-              <td class="has-text-right">{{ FinaleStageName[status2.finaleInfo.finaleStage] }}</td>
+              <td class="has-text-right" v-if="status2.finaleInfo.escapeLeaving">Escaping</td>
+              <td class="has-text-right" v-else>{{ FinaleStageName[status2.finaleInfo.finaleStage] }}</td>
             </tr>
           </tbody>
         </table>
@@ -454,10 +470,6 @@ const nextRefreshCountdown = computed(() => {
   return Math.max(Math.floor(((lastRefreshTime.value + REFRESH_INTERVAL) - now.value) / 1000), 0)
 })
 
-const nextStatusRefreshCountdown = computed(() => {
-  if(!status2.value) return 0
-  return Math.max(Math.floor(((status2.value.lastUpdateTime + status2.value.refreshInterval) - now.value) / 1000), 0)
-})
 
 function getPlayerWeaponNames(player: StatusPlayerSurvivor) {
   if(!player.weapons) return []
@@ -651,6 +663,19 @@ function formatUptime(minutes: number) {
   if(days < 1) return `${hours} hours`
   return `${days} days`
 }
+function formatRelDate(timestamp: number) {
+  const date = timestamp ? new Date(timestamp * 1000) : new Date();
+  const secondsDiff = ((Date.now() - date.getTime()) / 1000);
+  const dayDiff = Math.floor(secondsDiff / 86400);
+  const monthsDiff = Math.round(dayDiff / 30)
+  const yearsDiff = Math.round(monthsDiff / 12)
+  if(yearsDiff > 0) return `${yearsDiff} year${yearsDiff == 1 ? "" : "s"} ago`
+  if(monthsDiff > 0) return `${monthsDiff} month${monthsDiff == 1 ? "" : "s"} ago`
+  if (isNaN(dayDiff) || dayDiff < 0 || dayDiff >= 31) return "<invalid date>"
+
+  return dayDiff == 0 && (
+    secondsDiff < 60 && `${secondsDiff.toFixed(0)} seconds ago` || secondsDiff < 120 && "1 minute ago" || secondsDiff < 3600 && Math.floor(secondsDiff / 60) + " minutes ago" || secondsDiff < 7200 && "1 hour ago" || secondsDiff < 86400 && Math.floor(secondsDiff / 3600) + " hours ago") || dayDiff == 1 && "yesterday" || dayDiff < 7 && dayDiff + " days ago" || dayDiff < 31 && Math.ceil(dayDiff / 7) + " weeks ago";
+}
 
 async function copyAddress() {
   await navigator.clipboard.writeText(`connect ${server.value.info.domain}:${server.value.info.port}`)
@@ -728,5 +753,8 @@ onUnmounted(() => {
   border-left: 0;
   border-bottom: 0;
   border-right: 0;
+}
+.flowprogress {
+  margin-bottom: 0 !important;
 }
 </style>

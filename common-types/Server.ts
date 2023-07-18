@@ -26,7 +26,8 @@ export interface BaseStatusPlayer {
 
 export interface StatusPlayerSurvivor extends BaseStatusPlayer {
     tempHealth: number;
-    idlePlayer?: string;
+    idlePlayerId?: string;
+    idlePlayer?: BaseStatusPlayer
     flow: number;
     flowProgress: number,
     survivor: SurvivorId;
@@ -92,10 +93,12 @@ export enum FinaleStage {
     GauntletHordeBossIncoming = 15,
     GauntletBoss = 16,
     GauntletEscape = 17,
+    Gauntlet_ = 18,
 };
 
 export const FinaleStageName: Record<FinaleStage, string> = {
     [FinaleStage.Gauntlet]: "Gauntlet",
+    [FinaleStage.Gauntlet_]: "Gauntlet",
     [FinaleStage.Gauntlet2]: "Gauntlet",
     [FinaleStage.HordeWave1]: "Horde Wave",
     [FinaleStage.FirstBoss]: "First Tank",

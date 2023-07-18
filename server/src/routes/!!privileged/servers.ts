@@ -7,11 +7,13 @@ import { join } from 'path';
 import { readFile } from 'fs/promises';
 import { Action, Service } from '../../../../common-types/Privileges.js';
 import { NO_PERMISSION, NOT_FOUND } from '../../responses.js';
+import JWT from '../../jwt-promise.js'
     
 const COMMENT_LINE_REGEX = new RegExp(/^\s*(\/\/|#)/)
 const HIDDEN_COMMANDS = [
     "rcon_password"
 ]
+const JWT_SECRET = process.env.STATE_SECRET
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
     fastify.addContentTypeParser(
@@ -19,6 +21,27 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         { parseAs: 'string' },
         (req, body, done) => done(null, body)
     )
+
+    fastify.get('/:id/generate-jwt', async(req: FastifyRequest<{Params: { id: 'string' }}>, reply) => {
+        const server = fastify.servers.get(req.params.id)
+        if(!server) {
+            return reply.code(404).send({
+                error: "SERVER_NOT_FOUND",
+                message: "Server not found"
+            })
+        }
+        if(!req.user.hasPermission("servers.rcon", server.id)) return NO_PERMISSION(reply)
+
+        const jwt = await JWT.sign({
+            sub: server.id,
+            issuer: "l4d2-admin-dash",
+            iat: Math.floor(Date.now() / 1000)
+        }, JWT_SECRET)
+
+        return {
+            authtoken: jwt
+        }
+    })
 
     fastify.get('/:id', async(req: FastifyRequest<{Params: { id: 'string' }}>, reply) => {
         const server = fastify.servers.get(req.params.id)
