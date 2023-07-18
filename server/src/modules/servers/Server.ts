@@ -30,6 +30,8 @@ const HIDDEN_CONFIG_FILES = [
 
 const VALID_CONFIG_EXTS = ["cfg", "toml"]
 const MIN_REFRESH_TIME = 5000
+// The number of milliseconds until live data expires
+const STALE_LIVE_STATUS_EXPIRE = 1000 * 60 * 1.5 
 
 
 export interface BaseServerData {
@@ -103,7 +105,7 @@ interface PlayerStats {
 export default class Server { 
     private _info: ServerInfo
     private _status: ServerStatus
-    private _status2: PluginServerStatus
+    private _liveData: PluginServerStatus
     private _cfgDir: string;
     private _actid: string
     private _sortOrder: number
@@ -184,7 +186,7 @@ export default class Server {
     }
 
     public get status(): ServerStatus { return this._status }
-    public get status2(): PluginServerStatus { 
+    public get liveStatus(): PluginServerStatus { 
       // return {
       //   "playerCount": 5,
       //   "map": "c8m2_subway",
@@ -317,7 +319,10 @@ export default class Server {
       //   "refreshInterval": 10,
       //   "lastUpdateTime": 1689637994
       // }
-      return this._status2
+      if(this._liveData && Date.now() - (this._liveData.lastUpdateTime*1000) > STALE_LIVE_STATUS_EXPIRE) {
+        this._liveData = null
+      }
+      return this._liveData
     }
 
     public get hasRcon() { return this.rcon !== null }
@@ -335,10 +340,10 @@ export default class Server {
     public get activityLogId() {  return this._actid }
     public get cvars() { return this._cvars }
 
-    public setStatus(status: PluginServerStatus) {
+    public setLiveData(status: PluginServerStatus) {
       status.players = status.players
         .sort((a, b) => a.team - b.team)
-      this._status2 = status
+      this._liveData = status
     }
 
     // Fetches all config, including one level nested

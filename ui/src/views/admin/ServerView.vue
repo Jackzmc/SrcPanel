@@ -148,8 +148,8 @@
           <Icon icon="fa-spinner" spin v-if="nextRefreshCountdown == 0"></Icon>
           <span v-else>{{ nextRefreshCountdown }}s</span>
         </span>
-        <div class="list" v-if="status2 && status2.playerCount > 0">
-          <div class="list-item" v-for="player in status2.players" :key="player.steamid ?? player.name">
+        <div class="list" v-if="liveStatus && liveStatus.playerCount > 0">
+          <div class="list-item" v-for="player in liveStatus.players" :key="player.steamid ?? player.name">
             <div class="list-item-image">
               <figure class="image is-48x48">
                 <img class="is-rounded" :src="getIconUrl(player)" />
@@ -271,27 +271,27 @@
           This feature is currently in development and may be wrong or broken.
         </div>
         <h4 class="title is-5">Game Info</h4>
-        <table class="table is-fullwidth" v-if="status2">
+        <table class="table is-fullwidth" v-if="liveStatus">
           <tbody>
             <tr>
               <th>Campaign</th>
-              <td class="has-text-right">{{ formatCampaign(status2.map) }}</td>
+              <td class="has-text-right">{{ formatCampaign(liveStatus.map) }}</td>
             </tr>
             <tr>
               <th>Gamemode</th>
-              <td class="has-text-right">{{ formatGamemode(status2.gamemode) }}</td>
+              <td class="has-text-right">{{ formatGamemode(liveStatus.gamemode) }}</td>
             </tr>
             <tr>
               <th>Last Update</th>
               <td class="has-text-right">
-                <p>{{ formatDate(status2.lastUpdateTime) }}</p>
-                <em>{{ formatRelDate(status2.lastUpdateTime )}}</em>
+                <p>{{ formatDate(liveStatus.lastUpdateTime) }}</p>
+                <em>{{ formatRelDate(liveStatus.lastUpdateTime )}}</em>
               </td>
             </tr>
-            <tr v-if="status2.finaleInfo">
+            <tr v-if="liveStatus.finaleInfo">
               <th>Finale Info</th>
-              <td class="has-text-right" v-if="status2.finaleInfo.escapeLeaving">Escaping</td>
-              <td class="has-text-right" v-else>{{ FinaleStageName[status2.finaleInfo.finaleStage] }}</td>
+              <td class="has-text-right" v-if="liveStatus.finaleInfo.escapeLeaving">Escaping</td>
+              <td class="has-text-right" v-else>{{ FinaleStageName[liveStatus.finaleInfo.finaleStage] }}</td>
             </tr>
           </tbody>
         </table>
@@ -446,7 +446,7 @@ let lastRefreshTime = ref()
 let server = ref()
 let servers = ref()
 let status = ref()
-let status2 = ref<PluginServerStatus>()
+let liveStatus = ref<PluginServerStatus>()
 let stats = ref<{
   cpu: number,
   bandwidth: { in: number, out: number },
@@ -555,7 +555,7 @@ async function fetchServerStatus() {
   isRefreshing = false
   if(response.ok) {
     status.value = json.status
-    if(json.status2) status2.value = json.status2
+    if(json.liveStatus) liveStatus.value = json.liveStatus
     stats.value = json.stats
     activities.value = json.recentActivities?.map((act: any) => parseLog(act))
   } else {

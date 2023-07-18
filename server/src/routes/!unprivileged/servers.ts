@@ -27,7 +27,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                         message: "Server not found"
                     })
                 }
-                server.setStatus(req.body as PluginServerStatus)
+                server.setLiveData(req.body as PluginServerStatus)
                 return reply.status(204).send()
             } else {
                 return NO_PERMISSION(reply, "Auth token is invalid")
