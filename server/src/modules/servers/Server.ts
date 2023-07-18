@@ -422,7 +422,6 @@ export default class Server {
     }
 
     public async refresh(force = false, includeRules = false) {
-        return
         const now = Date.now()
         if(!force && now - this.lastRefresh < MIN_REFRESH_TIME) return
         this.lastRefresh = now
