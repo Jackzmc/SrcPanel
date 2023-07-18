@@ -186,7 +186,7 @@
           </div>
         </div>
         <div v-else>
-          <p class="has-text-centered">No server status or no players online</p>
+          <p class="has-text-centered">No fresh server status or no players online</p>
         </div>
       </div>
       <div v-else-if="tab === 'configs'" class="box">
