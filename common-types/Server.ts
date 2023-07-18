@@ -43,13 +43,14 @@ export interface StatusPlayerInfected extends BaseStatusPlayer {
 export type StatusPlayer = StatusPlayerSurvivor | StatusPlayerInfected
 
 export enum PlayerState {
-	Alive,
-	Idle,
-	Walking,
-	Running,
-	Crouched,
-	Incapped,
-	BlackAndWhite
+	Alive = 0,
+	Idle = 1,
+	Walking = 2,
+	Running = 4,
+	Crouched = 8,
+	Incapped = 16,
+	BlackAndWhite = 32,
+    InSaferoom = 64
 }
 
 export enum SurvivorId {
