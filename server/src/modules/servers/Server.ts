@@ -336,7 +336,7 @@ export default class Server {
     public get cvars() { return this._cvars }
 
     public setStatus(status: PluginServerStatus) {
-      status.players = status.players.sort((a, b) => b.team - a.team)
+      status.players = status.players.sort((a, b) => a.team - b.team)
       this._status2 = status
     }
 
