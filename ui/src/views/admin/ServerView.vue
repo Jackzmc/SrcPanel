@@ -136,7 +136,7 @@
         <VueApexCharts :series='series2' :options="options2" type="line" />
 
       </div>
-      <div v-else-if="tab === 'players'" class="box">
+      <div v-else-if="tab === 'live'" class="box">
         <div class="notification is-danger has-text-centered" v-if="!status">
           The server is offline or is unreachable.
           <span class="is-inline is-pulled-right no-border" data-tooltip="Time until next refresh">
@@ -266,7 +266,7 @@
         </div>
         <p v-if="!status?.online && !server.info.tags.includes('systemd')"><em>no actions available</em></p>
       </div> -->
-      <div class="box" v-if="tab === 'overview' || tab === 'players'">
+      <div class="box" v-if="tab === 'overview' || tab === 'live'">
         <h4 class="title is-5">Recent Activity</h4>
         <table v-if="activities" class="table is-fullwidth">
           <thead>
@@ -286,7 +286,7 @@
         </table>
         <p v-else><em>not supported on server</em></p>
       </div>
-      <div class="box" v-if="tab === 'players'">
+      <div class="box" v-if="tab === 'live'">
         <h4 class="title is-5">Game Info</h4>
         <table class="table is-fullwidth" v-if="liveStatus">
           <tbody>
@@ -426,7 +426,7 @@ const TABS: Record<string, { name: string, tag?: string, permission?: UserPrivil
   overview: {
     name: "Overview",
   },
-  players: {
+  live: {
     name: "Live Status",
     tag: "BETA"
   },
