@@ -555,7 +555,7 @@ async function fetchServerStatus() {
   isRefreshing = false
   if(response.ok) {
     status.value = json.status
-    if(json.liveStatus) liveStatus.value = json.liveStatus
+    liveStatus.value = json.liveStatus
     stats.value = json.stats
     activities.value = json.recentActivities?.map((act: any) => parseLog(act))
   } else {
