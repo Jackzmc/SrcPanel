@@ -268,23 +268,24 @@
       </div> -->
       <div class="box" v-if="tab === 'overview' || tab === 'live'">
         <h4 class="title is-5">Recent Activity</h4>
-        <table v-if="activities" class="table is-fullwidth">
-          <thead>
-            <tr>
-              <th>Message</th>
-              <th>Time</th>
-              <th>Date</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="activity in activities" :key="activity.id">
-              <LogMessage :log="activity" :userdata="userdata" :priv-user="privUser" />
-              <td>{{ new Date(activity.timestampRaw * 1000).toLocaleTimeString()}}</td>
-              <td>{{ new Date(activity.timestampRaw * 1000).toLocaleDateString('en-US', {day: 'numeric', month: 'numeric'})}}</td>
-            </tr>
-          </tbody>
-        </table>
-        <p v-else><em>not supported on server</em></p>
+        <template v-if="activities">
+          <table v-if="activities.length > 0" class="table is-fullwidth">
+            <thead>
+              <tr>
+                <th>Message</th>
+                <th>Time</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="activity in activities" :key="activity.id">
+                <LogMessage :log="activity" :userdata="userdata" :priv-user="privUser" />
+                <td>{{ new Date(activity.timestampRaw * 1000).toLocaleTimeString()}}</td>
+              </tr>
+            </tbody>
+          </table>
+          <p v-else>No recent activity</p>
+        </template>
+        <p v-else>Not supported on server</p>
       </div>
       <div class="box" v-if="tab === 'live'">
         <h4 class="title is-5">Game Info</h4>
@@ -312,7 +313,7 @@
             </tr>
           </tbody>
         </table>
-        <p class="has-text-centered" v-else>No live data</p>
+        <p v-else>No live data</p>
       </div>
       <div v-else-if="tab === 'configs'" class="box">
         <h5 class="title is-5">Config Files</h5>
@@ -400,7 +401,7 @@ const options2 = {
     datetimeUTC: false
   }
 }
-const REFRESH_INTERVAL = 1000 * 10
+const REFRESH_INTERVAL = 1000 * 8
 
 const { notify } = useNotification();
 const props = defineProps<{
@@ -465,6 +466,7 @@ const tab = computed(() => {
 })
 
 const nextRefreshCountdown = computed(() => {
+  if(!lastRefreshTime.value || !now.value) return 0
   return Math.max(Math.floor(((lastRefreshTime.value + REFRESH_INTERVAL) - now.value) / 1000), 0)
 })
 
@@ -545,19 +547,23 @@ async function fetchServerInfo() {
 let isRefreshing = false
 async function fetchServerStatus() {
   const id = route.params.id
-  const response = await fetch(`/api/servers/${route.params.id}/status`)
-  if(id != route.params.id || isRefreshing) return // Ignore changes in id or if refreshing
-  lastRefreshTime.value = Date.now()
-  isRefreshing = true
-  const json = await response.json()
-  isRefreshing = false
-  if(response.ok) {
-    status.value = json.status
-    liveStatus.value = json.liveStatus
-    stats.value = json.stats
-    activities.value = json.recentActivities?.map((act: any) => parseLog(act))
-  } else {
-    status.value = { error: json.message }
+  try {
+    const response = await fetch(`/api/servers/${route.params.id}/status`)
+    if(id != route.params.id || isRefreshing) return // Ignore changes in id or if refreshing
+    lastRefreshTime.value = Date.now()
+    isRefreshing = true
+    const json = await response.json()
+    isRefreshing = false
+    if(response.ok) {
+      status.value = json.status
+      liveStatus.value = json.liveStatus
+      stats.value = json.stats
+      activities.value = json.recentActivities?.map((act: any) => parseLog(act))
+    } else {
+      status.value = { error: json.message }
+    }
+  } catch(err) {
+
   }
 }
 const SERVER_CACHE_EXP_TIME = 1000 * 60 * 60 * 24 // 1 day
