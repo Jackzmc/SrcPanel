@@ -312,11 +312,11 @@
               <td class="has-text-right" v-else>{{ FinaleStageName[liveStatus.finaleInfo.finaleStage] }}</td>
             </tr>
             <tr>
-              <th>FPS</th>
-              <td class="has-text-right">{{ liveStatus.fps }}</td>
+              <th>Server FPS</th>
+              <td class="has-text-right">{{ liveStatus.fps.toFixed(0) }}</td>
             </tr>
             <tr>
-              <th>Uptime</th>
+              <th>Server Uptime</th>
               <td class="has-text-right">{{ getDuration(liveStatus.uptime) }}</td>
             </tr>
           </tbody>
