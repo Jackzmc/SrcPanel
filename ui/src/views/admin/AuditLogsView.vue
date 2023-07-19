@@ -442,7 +442,8 @@ async function getInfo() {
   if(response?.ok) {
     const json = await response.json()
     logInfo.value = json
-
+  } else {
+    throw Error(response?.statusText)
   }
 }
 

@@ -84,7 +84,7 @@
 import { ref, onBeforeMount } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
-const LAST_UPDATED = new Date(Number(process.env.VUE_APP_BUILD_DATE))
+const LAST_UPDATED = new Date(Number(BUILD_TIMESTAMP))
 
 let trolls = ref<Record<string,any>>({})
 let combos = ref<Record<string,any>>({})

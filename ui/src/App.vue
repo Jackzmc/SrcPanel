@@ -42,9 +42,7 @@ import { PrivilegedUser} from '@/js/User'
 import { NotificationItem, notify } from '@kyvg/vue3-notification';
 import { ClientUserData } from '../../common-types/User';
 
-
-
-const LAST_UPDATED = new Date(Number(process.env.VUE_APP_BUILD_DATE))
+const LAST_UPDATED = new Date(Number(BUILD_TIMESTAMP))
 const lastUpdated = computed(() => {
   return LAST_UPDATED.toLocaleString()
 })

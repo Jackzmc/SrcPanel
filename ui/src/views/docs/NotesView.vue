@@ -40,7 +40,7 @@
 <script setup lang="ts">
 import { ref, onBeforeMount } from 'vue'
 
-const LAST_UPDATED = new Date(Number(process.env.VUE_APP_BUILD_DATE))
+const LAST_UPDATED = new Date(Number(BUILD_TIMESTAMP))
 
 let actions = ref<Record<string,any>>([])
 
@@ -48,7 +48,7 @@ function parseActions(actionsList: Record<string, any>) {
   for(const [id, description] of Object.entries(actionsList)) {
     let [action, key, value] = id.split(".")
     // Determine if the documented key or value is a variable (multiple user inputs, store.<store name>) or a fixed point (store.store_a)
-    let keyIsVar = false, valueIsVar = false 
+    let keyIsVar = false, valueIsVar = false
     if(key && key.startsWith("$")) {
       key = key.slice(1)
       keyIsVar = true

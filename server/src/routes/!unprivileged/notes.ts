@@ -2,6 +2,7 @@ import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
 import { OkPacket, RowDataPacket } from 'mysql2';
 import { Static, Type } from '@sinclair/typebox'
 import { ADMINS_DB } from '../../routes/!!privileged/admins.js';
+import { Note } from '../../../../common-types/Note';
 
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
@@ -160,18 +161,4 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             action
         }
     }
-}
-
-export interface Note {
-    id: number,
-    content: string,
-    client: NoteUser,
-    markedBy: NoteUser,
-    banned: boolean
-    action?: string[]
-}
-export interface NoteUser {
-    id: string,
-    name?: string,
-    isAdmin?: boolean
 }

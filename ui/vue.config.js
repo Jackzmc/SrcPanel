@@ -1,4 +1,4 @@
-process.env.VUE_APP_BUILD_DATE = Date.now()
+process.env.VITE_BUILD_DATE = Date.now()
 const { sentryWebpackPlugin } = require("@sentry/webpack-plugin");
 
 module.exports = {
@@ -7,7 +7,7 @@ module.exports = {
     allowedHosts: "all",
     proxy: {
       '^/api': {
-        target: process.env.VUE_APP_REALM,
+        target: process.env.VITE_REALM,
         changeOrigin: true
       }
     }

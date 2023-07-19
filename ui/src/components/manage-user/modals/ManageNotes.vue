@@ -65,7 +65,7 @@
 </template>
 
 <script setup lang="ts">
-import { Note } from '../../../../../server/src/routes/!unprivileged/notes'
+import { Note } from '../../../../../common-types/Note.js'
 import { ref, onBeforeMount, computed } from 'vue';
 import NoteComponent from '@/components/manage-user/Note.vue'
 import { PlayerData } from '@/js/User';

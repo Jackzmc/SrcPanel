@@ -16,7 +16,7 @@ const routes = [
   {
     name: "docs-commands",
     path: '/docs/commands',
-    component: () => import(/* webpackChunkName: 'commands' */ '../views/docs/CommandsView.vue'),
+    component: () => import('../views/docs/CommandsView.vue'),
     meta: {
       title: 'Commands',
       description: 'All the information to have fun, and manage those troublemakers'
@@ -25,7 +25,7 @@ const routes = [
   {
     name: "docs-cvars",
     path: '/docs/cvars',
-    component: () => import(/* webpackChunkName: 'cvars' */ '../views/docs/CvarsView.vue'),
+    component: () => import('../views/docs/CvarsView.vue'),
     meta: {
       title: 'Cvars',
       description: 'All the cvars you may want to change up the gameplay'
@@ -34,7 +34,7 @@ const routes = [
   {
     name: 'docs-ftt',
     path: '/docs/ftt',
-    component: () => import(/* webpackChunkName: 'ftt' */ '../views/docs/FeedTheTrollsView.vue'),
+    component: () => import('../views/docs/FeedTheTrollsView.vue'),
     meta: {
       title: 'Feed The Trolls',
       description: 'The anti-troll arsenal'
@@ -43,7 +43,7 @@ const routes = [
   {
     name: 'docs-5plus',
     path: '/docs/extraplayers',
-    component: () => import(/* webpackChunkName: 'extraplayers' */ '../views/docs/ExtraPlayersView.vue'),
+    component: () => import('../views/docs/ExtraPlayersView.vue'),
     meta: {
       title: '5+ Games',
       description: 'How to setup 5+ games, including 8 player lobbies'
@@ -52,7 +52,7 @@ const routes = [
   {
     name: 'docs-targetting',
     path: '/docs/targetting',
-    component: () => import(/* webpackChunkName: 'targetting' */ '../views/docs/PlayerTargettingView.vue'),
+    component: () => import('../views/docs/PlayerTargettingView.vue'),
     meta: {
       title: 'Player Targetting'
     }
@@ -60,7 +60,7 @@ const routes = [
   {
     name: 'docs-plugins',
     path: '/docs/plugins',
-    component: () => import(/* webpackChunkName: 'plugindev' */ '../views/docs/PluginDescriptionsView.vue'),
+    component: () => import('../views/docs/PluginDescriptionsView.vue'),
     meta: {
       title: "Plugin Development History",
       description: "A insight on how my plugins were developed"
@@ -69,7 +69,7 @@ const routes = [
   {
     name: 'docs-notes',
     path: '/docs/notes',
-    component: () => import(/* webpackChunkName: 'ftt' */ '../views/docs/NotesView.vue'),
+    component: () => import('../views/docs/NotesView.vue'),
     meta: {
       title: "Player Notes",
       description: ""
@@ -78,7 +78,7 @@ const routes = [
   {
     name: 'bans',
     path: '/bans',
-    component: () => import(/* webpackChunkName: 'bans' */ '../views/BansView.vue'),
+    component: () => import('../views/BansView.vue'),
     meta: {
       title: 'Bans',
       hideHero: true,
@@ -88,7 +88,7 @@ const routes = [
     name: 'notes',
     path: '/notes',
     alias: '/info',
-    component: () => import(/* webpackChunkName: 'info' */ '../views/InfoView.vue'),
+    component: () => import('../views/InfoView.vue'),
     meta: {
       title: 'Notes',
       description: 'View all player notes'
@@ -97,7 +97,7 @@ const routes = [
   {
     name: 'graphs',
     path: '/graphs',
-    component: () => import(/* webpackChunkName: 'graphs' */ '../views/GraphsView.vue'),
+    component: () => import('../views/GraphsView.vue'),
     meta: {
       title: 'Graphs',
       description: 'View some statistics about gameplay and administration'
@@ -110,8 +110,7 @@ const routes = [
   {
     name: 'admin-addons',
     path: '/admin/addons/:shareId',
-    // redirect: '/admin/addons/default',
-    component: () => import(/* webpackChunkName: 'shares' */ '../views/admin/ServerAddonsView.vue'),
+    component: () => import('../views/admin/ServerAddonsView.vue'),
     meta: {
       title: 'Addons / Maps',
       description: 'View all the installed custom maps (and some non-map addons)',
@@ -121,12 +120,12 @@ const routes = [
       {
         name: "upload-addon",
         path: 'upload',
-        component: () => import(/* webpackChunkName: 'shares' */ '../components/addons/modals/UploadModal.vue')
+        component: () => import('../components/addons/modals/UploadModal.vue')
       },
       {
         name: "workshop-download",
         path: 'workshop-download/:url?',
-        component: () => import(/* webpackChunkName: 'shares' */ '../components/addons/modals/WorkshopDownloadModal.vue')
+        component: () => import('../components/addons/modals/WorkshopDownloadModal.vue')
       },
       {
         name: "collection-info",
@@ -134,7 +133,7 @@ const routes = [
         meta: {
           needsPrefetch: true
         },
-        component: () => import(/* webpackChunkName: 'shares' */ '../components/addons/modals/CollectionInfoModal.vue')
+        component: () => import('../components/addons/modals/CollectionInfoModal.vue')
       },
       {
         name: "addon-info",
@@ -142,7 +141,7 @@ const routes = [
         meta: {
           needsPrefetch: true
         },
-        component: () => import(/* webpackChunkName: 'shares' */ '../components/addons/modals/AddonInfoModal.vue')
+        component: () => import('../components/addons/modals/AddonInfoModal.vue')
       }
     ]
   },
@@ -150,7 +149,7 @@ const routes = [
     name: 'admin-players',
     path: '/admin/players',
     alias: '/admin/users',
-    component: () => import(/* webpackChunkName: 'players' */ '../views/admin/PlayerManagerView.vue'),
+    component: () => import('../views/admin/PlayerManagerView.vue'),
     meta: {
       title: 'Player Management',
       description: 'View all players and manage them, all in one place',
@@ -160,7 +159,7 @@ const routes = [
       {
         name: 'manage-user',
         path: ':id',
-        component: () => import(/* webpackChunkName: 'manage-user' */ '../components/manage-user/modals/ManageUserModal.vue'),
+        component: () => import('../components/manage-user/modals/ManageUserModal.vue'),
         meta: {
           title: 'Manage User',
           authRequired: true
@@ -171,7 +170,7 @@ const routes = [
             name: 'manage-user-overview',
             path: '',
             alias: 'overview',
-            component: () => import(/* webpackChunkName: 'manage-user' */ '../components/manage-user/modals/ManageOverview.vue'),
+            component: () => import('../components/manage-user/modals/ManageOverview.vue'),
             meta: {
               authRequired: true
             }
@@ -179,7 +178,7 @@ const routes = [
           {
             name: 'manage-user-admin',
             path: 'privileges',
-            component: () => import(/* webpackChunkName: 'manage-user' */ '../components/manage-user/modals/ManageAdmin.vue'),
+            component: () => import('../components/manage-user/modals/ManageAdmin.vue'),
             meta: {
               authRequired: true
             }
@@ -187,7 +186,7 @@ const routes = [
           {
             name: 'manage-user-bans',
             path: 'bans/:banid?',
-            component: () => import(/* webpackChunkName: 'manage-user' */ '../components/manage-user/modals/ManageBans.vue'),
+            component: () => import('../components/manage-user/modals/ManageBans.vue'),
             meta: {
               authRequired: true
             }
@@ -195,7 +194,7 @@ const routes = [
           {
             name: 'manage-user-notes',
             path: 'notes',
-            component: () => import(/* webpackChunkName: 'manage-user' */ '../components/manage-user/modals/ManageNotes.vue'),
+            component: () => import('../components/manage-user/modals/ManageNotes.vue'),
             meta: {
               authRequired: true
             }
@@ -208,7 +207,7 @@ const routes = [
     name: 'logs-activity',
     path: '/admin/activity',
     alias: '/admin/logs',
-    component: () => import(/* webpackChunkName: 'logs' */ '../views/admin/ActivityLogsView.vue'),
+    component: () => import('../views/admin/ActivityLogsView.vue'),
     meta: {
       title: 'Activity Logs',
       description: 'View all activity inside and outside the game',
@@ -218,7 +217,7 @@ const routes = [
   {
     name: 'logs-audit',
     path: '/admin/audit/:aroundId?',
-    component: () => import(/* webpackChunkName: 'logs' */ '../views/admin/AuditLogsView.vue'),
+    component: () => import('../views/admin/AuditLogsView.vue'),
     meta: {
       title: 'Audit Logs',
       description: 'View all actions inside and outside the game',
@@ -228,7 +227,7 @@ const routes = [
   {
     name: 'admin-server-view',
     path: '/admin/servers/:id/:tab?',
-    component: () => import(/* webpackChunkName: 'servers' */ '../views/admin/ServerView.vue'),
+    component: () => import('../views/admin/ServerView.vue'),
     meta: {
       title: 'Server View',
       authRequired: true,
@@ -238,7 +237,7 @@ const routes = [
   {
     name: 'admin-servers',
     path: '/admin/servers',
-    component: () => import(/* webpackChunkName: 'servers' */ '../views/admin/ServerManagementView.vue'),
+    component: () => import('../views/admin/ServerManagementView.vue'),
     meta: {
       title: 'Server Management',
       description: 'View all the servers and manage them, all in one place',
@@ -248,7 +247,7 @@ const routes = [
   {
     name: 'panel-dash',
     path: '/panel/dashboard',
-    component: () => import(/* webpackChunkName: 'paneladmin' */ '../views/panel-admin/Dashboard.vue'),
+    component: () => import('../views/panel-admin/Dashboard.vue'),
     meta: {
       title: "Panel Admin",
       authRequired: true
@@ -258,7 +257,7 @@ const routes = [
   {
     name: 'authrequired',
     path: '/login-required',
-    component: () => import(/* webpackChunkName: 'errors' */ '../views/UnauthorizedView.vue'),
+    component: () => import('../views/UnauthorizedView.vue'),
     meta: {
       hideHero: true
     }
@@ -266,7 +265,7 @@ const routes = [
   {
     name: 'errorview',
     path: '/error',
-    component: () => import(/* webpackChunkName: 'errors' */ '../views/ErrorView.vue'),
+    component: () => import('../views/ErrorView.vue'),
     meta: {
       hideHero: true,
       hideNav: true
@@ -275,7 +274,7 @@ const routes = [
   {
     name: "404",
     path: '/:path(.*)*',
-    component: () => import(/* webpackChunkName: 'errors' */ '../views/ErrorView.vue'),
+    component: () => import('../views/ErrorView.vue'),
     meta: {
       status: 404,
       hideHero: false,
@@ -287,7 +286,7 @@ const routes = [
 
 
 const router = createRouter({
-  history: createWebHistory(process.env.BASE_URL),
+  history: createWebHistory(import.meta.env.BASE_URL),
   routes,
   linkExactActiveClass: "is-active"
 })

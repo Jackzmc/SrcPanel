@@ -256,6 +256,6 @@ function formatSize(bytes: number, si = false, dp = 1) {
 
 function formatTime(time: number) {
   const date = new Date(time*1000)
-  return `${date.toLocaleDateString()} at ${date.toLocaleTimeString()}`
+  return `${date.toLocaleDateString()} at ${date.toLocaleTimeString(undefined, { timeStyle: "short" })}`
 }
 </script>

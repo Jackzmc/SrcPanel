@@ -21,7 +21,7 @@ import { Tree, TreeNode } from '@/js/Tree'
 import { ref, onBeforeMount } from 'vue'
 import SectionRoot from '@/components/sections/SectionRoot.vue'
 
-const LAST_UPDATED = new Date(Number(process.env.VUE_APP_BUILD_DATE))
+const LAST_UPDATED = new Date(Number(BUILD_TIMESTAMP))
 
 let html = ref<string>()
 let headersTree = ref<Tree>()

@@ -33,12 +33,10 @@
 
 <script setup lang="ts">
 import { ref, watch, onBeforeMount } from 'vue';
-import { Keyvalue } from '../../../../server/src/modules/ConfigManager';
-import { ApiPanelConfig } from '../../../../server/src/routes/!!privileged/panel.js';
+import { Keyvalue, ApiPanelConfig, PanelKeysRecord } from '../../../../common-types/Panel.js';
 import { notify } from '@kyvg/vue3-notification';
 import { request } from '@/js/util';
 import { convertSnakeToHuman } from '../../js/util';
-import { PanelKeysRecord } from '../../../../server/src/routes/!!privileged/panel';
 import Field from '@/components/Field.vue'
 
 const URL_REGEX = new RegExp(/^https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_\+.~#?&\/=]*)$/)

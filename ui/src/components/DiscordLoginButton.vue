@@ -10,12 +10,12 @@ import { useRoute } from 'vue-router'
 const route = useRoute()
 
 const redirectUri = computed(() => {
-  return `${process.env.VUE_APP_API_URL}/auth/discord/callback?return_uri=${route.fullPath}`
+  return `${import.meta.env.VITE_API_URL}/auth/discord/callback?return_uri=${route.fullPath}`
 })
 const loginUri = computed(() => {
-  return `${process.env.VUE_APP_API_URL}/auth/discord/login?return_uri=${route.fullPath}`
+  return `${import.meta.env.VITE_API_URL}/auth/discord/login?return_uri=${route.fullPath}`
 })
 const realm = computed(() => {
-  return process.env.VUE_APP_REALM
+  return import.meta.env.VITE_REALM
 })
 </script>

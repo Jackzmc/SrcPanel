@@ -1,12 +1,6 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
-import { Keyvalue, Keyvalues } from '../../modules/ConfigManager.js';
-import { KeyConfig } from '../../modules/ConfigManager';
+import { Keyvalue, Keyvalues, KeyConfig } from '../../../../common-types/Panel.js';
 import { NO_PERMISSION } from '../../responses.js';
-
-export interface ApiPanelConfig extends KeyConfig {
-    value: string
-}
-export type PanelKeysRecord = Record<Keyvalue, ApiPanelConfig>
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
     fastify.get('/', async (req, reply) => {

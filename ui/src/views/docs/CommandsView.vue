@@ -109,14 +109,12 @@ import { formatParameters, request } from '@/js/util'
 import ExamplesModal from '@/components/modals/ExamplesModal.vue'
 import { ref, computed, onMounted } from 'vue'
 import { PrivilegedUser } from '../../js/User';
-import { UserData } from '../../../../common-types/User';
+import { ClientUserData } from '../../../../common-types/User';
 import Field from '@/components/Field.vue'
 import { notify } from '@kyvg/vue3-notification';
 
-const LAST_UPDATED = new Date(Number(process.env.VUE_APP_BUILD_DATE))
-
 const props = defineProps<{
-  userdata: UserData,
+  userdata: ClientUserData,
   privUser: PrivilegedUser
 }>()
 const isLoggedIn = computed(() => props.privUser != null)
@@ -165,7 +163,7 @@ function showExamples(cmd: any) {
 onMounted(async () => {
   loading.value = true
   try {
-    const response = await request(`../data/commands.json?t=${LAST_UPDATED}`)
+    const response = await request(`../data/commands.json?t=${BUILD_TIMESTAMP}`)
     const json = await response?.json()
     if(!json) return
 

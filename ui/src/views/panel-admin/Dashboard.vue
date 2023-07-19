@@ -34,8 +34,8 @@ import { request } from "@/js/util";
 import { notify } from "@kyvg/vue3-notification";
 import { ref, computed, onBeforeMount, onActivated, onDeactivated, watch } from "vue"
 import { Action, Service } from "../../../../common-types/Privileges";
-import { UserData } from "../../../../common-types/User";
-import { HealthReport, UpdateState } from "../../../../server/src/routes/!!privileged/admin";
+import { ClientUserData } from "../../../../common-types/User";
+import { HealthReport, UpdateState } from "../../../../common-types/Panel.js";
 import ConfigEditor from "@/components/panel-admin/ConfigEditor.vue";
 import SharesEditor from "@/components/panel-admin/SharesEditor.vue";
 //@ts-ignore
@@ -45,7 +45,7 @@ const POLL_SERVER_HEALTH_INTERVAL = 1000 * 60 * 0.5
 
 const props = defineProps<{
   privUser: PrivilegedUser,
-  userdata: UserData
+  userdata: ClientUserData
 }>()
 
 let serverHealth = ref<Partial<HealthReport>>({})

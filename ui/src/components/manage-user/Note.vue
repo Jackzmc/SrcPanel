@@ -62,7 +62,7 @@
 import { notify } from '@kyvg/vue3-notification';
 import { ref, computed } from 'vue';
 import { Service, Action } from '../../../../common-types/Privileges';
-import { Note } from '../../../../server/src/routes/!unprivileged/notes'
+import { Note } from '../../../../common-types/Note.js'
 import { PrivilegedUser } from '../../js/User';
 import { useRoute } from 'vue-router';
 const route = useRoute()

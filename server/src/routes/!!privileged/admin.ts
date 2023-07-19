@@ -5,22 +5,10 @@ import { WebPermission } from '../../../../common-types/User.js';
 import { rm, unlink } from 'fs/promises';
 import path from 'path'
 import { NO_PERMISSION } from '../../responses.js';
+import { UpdateState } from '../../../../common-types/Panel.js';
 // const execPromise = util.promisify(exec);
 
-export type UpdateState = "NORMAL" | "GIT_PULL" | "UNLINK_NODE_MODULES" | "PACKAGES_INSTALL" | "TSC" | "RESTARTING" | "CLEANUP_OLD_BUILD"
 let updateState: UpdateState = "NORMAL"
-
-export interface HealthReport {
-    currentState: UpdateState,
-    uptime: number
-    pid: number,
-    versions: {
-        fastify: string,
-        node: string
-    },
-    memoryPercentage: number
-}
-
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions)  {
     fastify.get('/health', async(req, reply) => {

@@ -68,8 +68,6 @@ import { formatParameters, request } from '@/js/util'
 import Field from '@/components/Field.vue'
 import { notify } from '@kyvg/vue3-notification';
 
-const LAST_UPDATED = new Date(Number(process.env.VUE_APP_BUILD_DATE))
-
 let cvars = ref<any[]>([])
 let selected = ref<any>()
 let searchQuery = ref("")
@@ -93,7 +91,7 @@ const filteredCvars = computed(() => {
 
 onMounted(async () => {
   try {
-    const response = await request(`../data/cvars.json?t=${LAST_UPDATED}`)
+    const response = await request(`../data/cvars.json?t=${BUILD_TIMESTAMP}`)
     if(!response?.ok) return
     const json = await response.json()
     for(let cvar of json) {

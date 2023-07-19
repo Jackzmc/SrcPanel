@@ -170,7 +170,7 @@ const router = useRouter()
 const route = useRoute()
 const emit = defineEmits(['logout'])
 
-const LAST_UPDATED = new Date(Number(process.env.VUE_APP_BUILD_DATE))
+const LAST_UPDATED = new Date(Number(BUILD_TIMESTAMP))
 
 const props = defineProps<{
   userdata?: ClientUserData,
@@ -203,12 +203,23 @@ async function logout() {
         router.push('/')
       }
     } else {
-      const json = await res.json()
-      notify({
-        type: "error",
-        title: "Logout Failed",
-        text: json.message
-      })
+      if(res.status == 401) {
+        emit('logout')
+        notify({
+          type: "error",
+          text: "You were already logged out"
+        })
+        if(route.meta.authRequired) {
+          router.push('/')
+        }
+      } else {
+        const json = await res.json()
+        notify({
+          type: "error",
+          title: "Logout Failed",
+          text: json.message
+        })
+      }
     }
   } catch(err: any) {
     notify({
