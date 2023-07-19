@@ -1,5 +1,5 @@
 import { notify, NotificationsOptions } from "@kyvg/vue3-notification"
-import { formatRelative } from "date-fns"
+import { formatDuration, intervalToDuration } from "date-fns"
 
 export function parseType(type: string) {
   switch(type) {
@@ -165,6 +165,15 @@ export function getRelDate(timestamp: number) {
 
   return dayDiff == 0 && (
     secondsDiff < 60 && "just now" || secondsDiff < 120 && "1 minute ago" || secondsDiff < 3600 && Math.floor(secondsDiff / 60) + " minutes ago" || secondsDiff < 7200 && "1 hour ago" || secondsDiff < 86400 && Math.floor(secondsDiff / 3600) + " hours ago") || dayDiff == 1 && "yesterday" || dayDiff < 7 && dayDiff + " days ago" || dayDiff < 31 && Math.ceil(dayDiff / 7) + " weeks ago";
+}
+
+export function getDuration(timestamp: number) {
+  const date = timestamp ? new Date(timestamp * 1000) : new Date();
+  const duration = intervalToDuration({
+    start: date,
+    end: new Date()
+  })
+  return formatDuration(duration)
 }
 
 export function convertSnakeToHuman(input: string) {

@@ -12,7 +12,9 @@ export interface PluginServerStatus {
     map: string;
     gamemode: string;
     players: StatusPlayer[];
-    finaleInfo?: StatusFinaleInfo
+    finaleInfo?: StatusFinaleInfo,
+    fps: number,
+    uptime: number
 }
 
 export interface BaseStatusPlayer {

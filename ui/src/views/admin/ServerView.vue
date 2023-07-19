@@ -311,6 +311,14 @@
               <td class="has-text-right" v-if="liveStatus.finaleInfo.escapeLeaving">Escaping</td>
               <td class="has-text-right" v-else>{{ FinaleStageName[liveStatus.finaleInfo.finaleStage] }}</td>
             </tr>
+            <tr>
+              <th>FPS</th>
+              <td class="has-text-right">{{ liveStatus.fps }}</td>
+            </tr>
+            <tr>
+              <th>Uptime</th>
+              <td class="has-text-right">{{ getDuration(liveStatus.uptime) }}</td>
+            </tr>
           </tbody>
         </table>
         <p v-else>No live data</p>
@@ -345,7 +353,7 @@ import VueApexCharts from 'vue3-apexcharts'
 import Field from '@/components/Field.vue';
 import { PluginServerStatus, StatusPlayer, StatusPlayerSurvivor, SurvivorId, FinaleStageName, PlayerState } from '../../../../common-types/Server';
 import { UserPrivilegeCode } from '../../../../common-types/Privileges';
-import { formatDate } from '../../js/util';
+import { formatDate, getDuration } from '../../js/util';
 
 let series = ref<any[]>([])
 let series2 = ref<any[]>([])
@@ -548,10 +556,10 @@ let isRefreshing = false
 async function fetchServerStatus() {
   const id = route.params.id
   try {
-    const response = await fetch(`/api/servers/${route.params.id}/status`)
     if(id != route.params.id || isRefreshing) return // Ignore changes in id or if refreshing
-    lastRefreshTime.value = Date.now()
     isRefreshing = true
+    const response = await fetch(`/api/servers/${route.params.id}/status`)
+    lastRefreshTime.value = Date.now()
     const json = await response.json()
     isRefreshing = false
     if(response.ok) {
@@ -563,7 +571,7 @@ async function fetchServerStatus() {
       status.value = { error: json.message }
     }
   } catch(err) {
-
+    isRefreshing = false
   }
 }
 const SERVER_CACHE_EXP_TIME = 1000 * 60 * 60 * 24 // 1 day
