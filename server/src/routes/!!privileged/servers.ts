@@ -170,15 +170,24 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
         let recentActivities = null
         if(server.activityLogId) {
-            const [rows] = await fastify.db.execute<RowDataPacket[]>("SELECT *, s1.last_alias as clientName, s2.last_alias as targetName FROM activity_log LEFT JOIN stats_users as s1 ON s1.steamid = client LEFT JOIN stats_users as s2 ON s2.steamid = target WHERE server = ? ORDER BY timestamp DESC LIMIT 5 ", [server.activityLogId])
+            const [rows] = await fastify.db.execute<RowDataPacket[]>(`SELECT client, target, type, id, message, timestamp, s1.last_alias as clientName, s2.last_alias as targetName
+                FROM activity_log
+                LEFT JOIN stats_users as s1 ON s1.steamid = client
+                LEFT JOIN stats_users as s2 ON s2.steamid = target
+                WHERE server = ? AND FROM_UNIXTIME(timestamp) >= CURDATE() AND FROM_UNIXTIME(timestamp) < CURDATE() + INTERVAL 1 DAY
+                ORDER BY timestamp DESC
+                LIMIT 5`, 
+            [server.activityLogId]
+        )
             recentActivities = rows
         }
+
         let stats = null
         try {
             await server.refresh(true, true)
             stats = await server.getStats()
         } catch(err) {
-
+            
         }
 
         return {
