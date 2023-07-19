@@ -634,7 +634,8 @@ function getHealthClass(player: StatusPlayer) {
   }
 }
 function getPlayerStateInfo(player: StatusPlayerSurvivor) {
-  if(player.states & PlayerState.InSaferoom) return "In Saferoom"
+  if(player.states == 0) return "Alive"
+  else if(player.states & PlayerState.InSaferoom) return "In Saferoom"
   else if(player.states & PlayerState.Idle) return "Idle"
   else if(player.states & PlayerState.Incapped) return "Incapped"
   else if(player.states & PlayerState.Walking) return "Walking"
