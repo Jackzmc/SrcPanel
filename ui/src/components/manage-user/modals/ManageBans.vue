@@ -187,7 +187,8 @@
   </template>
   <div v-else class="has-text-centered my-6">
     <p>User has no bans on record</p>
-    <p v-if="!canAddBan" class="has-text-danger">You lack the permission to add a ban</p>
+    <p v-if="props.userAdminData" class="has-text-danger">You cannot add a ban to an admin</p>
+    <p v-else-if="!canAddBan" class="has-text-danger">You lack the permission to add a ban</p>
   </div>
 </section>
 </template>
@@ -201,7 +202,6 @@ import { notify } from '@kyvg/vue3-notification';
 // TOOD: fix
 import { FullAPIBan, APIBanFlags, BanAppeal, BanAppealState } from '../../../../../common-types/Ban';
 import { formatDate, getRelDate } from '@/js/util';
-import { Service, Action } from '../../../../../common-types/Privileges';
 
 const emit = defineEmits(["close"])
 const router = useRouter()
@@ -273,7 +273,7 @@ function calculateExpires(value: string) {
 }
 
 const canAddBan = computed(() => {
-  return !props.userAdminData && props.privUser.canPerformAction(Service.Bans, Action.Create)
+  return !props.userAdminData && props.privUser.hasPermission("bans.create")
 })
 
 const relDate = computed(() => {

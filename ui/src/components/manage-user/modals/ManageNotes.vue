@@ -71,7 +71,6 @@ import NoteComponent from '@/components/manage-user/Note.vue'
 import { PlayerData } from '@/js/User';
 import { notify } from '@kyvg/vue3-notification';
 import { PrivilegedUser } from '@/js/User';
-import { Action, Service } from '../../../../../common-types/Privileges';
 
 let notes = ref<Note[]>([])
 let loading = ref(false)
@@ -91,7 +90,7 @@ const props = defineProps<{
 }>()
 
 const canAddNote = computed(() => {
-  return props.privUser.canPerformAction(Service.Notes, Action.Create)
+  return props.privUser.hasPermission("notes.create")
 })
 
 function startNewNote() {

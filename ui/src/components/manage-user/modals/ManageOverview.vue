@@ -14,7 +14,7 @@
           <label class="label">Playtime</label>
           <span>
             <p v-if="info">
-              {{playtime.toLocaleString()}} hours
+              {{playtime}} hours
             </p>
             <em v-else>(no recorded statistics found)</em>
           </span>
@@ -116,7 +116,7 @@
 import { ref, onMounted, computed, watch, onBeforeMount } from 'vue';
 import { User, PrivilegedUser, PlayerData } from '@/js/User'
 import { useRouter, useRoute } from 'vue-router'
-import { UserData, WebPermission, WebRole, AdminData } from '../../../../../common-types/User';
+import { ClientUserData, WebPermission, WebRole, AdminData } from '../../../../../common-types/User';
 import { notify } from '@kyvg/vue3-notification';
 import SteamID from 'steamid';
 import { formatDate, getRelDate } from '@/js/util';
@@ -124,7 +124,7 @@ import { formatDate, getRelDate } from '@/js/util';
 const router = useRouter()
 const route = useRoute()
 const props = defineProps<{
-  userdata: UserData,
+  userdata: ClientUserData,
   userAdminData: AdminData,
   user: PlayerData
 }>()
@@ -139,8 +139,8 @@ const steamid2 = computed(() => {
   return new SteamID(props.user.steamid).getSteam2RenderedID()
 })
 const playtime = computed(() => {
-  if(!info.value) return
-  if(info.value.minutes_played > 0) return Math.round(info.value.minutes_played / 60)
+  if(!info.value) return "0"
+  if(info.value.minutes_played > 0) return Math.round(info.value.minutes_played / 60).toLocaleString()
   return "< 0"
 })
 

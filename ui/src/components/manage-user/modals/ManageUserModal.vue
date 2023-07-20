@@ -26,7 +26,7 @@
                 </a>
               </li>
             </router-link>
-            <router-link v-if="privUser.canPerformAction(Service.Admins, Action.View)" :to="{ name: 'manage-user-admin' }" v-slot="{ href, navigate, isExactActive }" custom>
+            <router-link v-if="privUser.hasPermission('admins.view')" :to="{ name: 'manage-user-admin' }" v-slot="{ href, navigate, isExactActive }" custom>
               <li :class="{'is-active': isExactActive, 'has-text-grey-dark': true }">
                 <a :href="href" @click="navigate" disabled>
                   <Icon :icon="userAdminData ? 'fa-user-pen' : 'fa-user-plus'">Privileges&nbsp;</Icon>
@@ -42,7 +42,7 @@
                 </a>
               </li>
             </router-link>
-            <router-link v-if="privUser.canPerformAction(Service.Bans, Action.View)" :to="{ name: 'manage-user-bans' }" v-slot="{ href, navigate, isActive }" custom>
+            <router-link v-if="privUser.hasPermission('bans.view')" :to="{ name: 'manage-user-bans' }" v-slot="{ href, navigate, isActive }" custom>
               <li :class="{'is-active': isActive }">
                 <a :href="href" @click="navigate">
                   <Icon icon="fa-user-slash">
@@ -75,8 +75,7 @@
 import { ref, onMounted, computed, onBeforeMount, watch, onBeforeUnmount } from 'vue';
 import { User, PrivilegedUser, PlayerData } from '@/js/User'
 import { useRouter, useRoute } from 'vue-router'
-import { UserData, AdminData } from '../../../../../common-types/User';
-import { Action, Service } from '../../../../../common-types/Privileges';
+import { ClientUserData, AdminData } from '../../../../../common-types/User';
 // @ts-ignore
 import { Tab, Tabs } from 'vue3-tabs-component'
 import { notify } from '@kyvg/vue3-notification';
@@ -84,7 +83,7 @@ import { notify } from '@kyvg/vue3-notification';
 const router = useRouter()
 const route = useRoute()
 const props = defineProps<{
-  userdata: UserData
+  userdata: ClientUserData
 }>()
 const privUser = new PrivilegedUser(props.userdata)
 
