@@ -277,23 +277,6 @@ export default class Server {
       return await this.rcon.client.send(cmd)
     }
 
-    public async getStats() {
-      const statusResponse = await this.sendCommand("stats")
-      const lines = statusResponse.split("\n")
-      if(lines.length == 3) { // 3rd line is empty
-        const data = lines[1].trim().split(/[\s,]+/g)
-        return { 
-          cpu: Number(data[0]), 
-          bandwidth: { in: Number(data[1]), out: Number(data[2]) }, 
-          uptime: Number(data[3]), 
-          users: Number(data[4]), 
-          fps: Number(data[5])
-        }
-      } else {
-        return null
-      }
-    }
-
     public async refresh(force = false, includeRules = false) {
         const now = Date.now()
         if(!force && now - this.lastRefresh < MIN_REFRESH_TIME) return

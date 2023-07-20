@@ -184,8 +184,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
         let stats = null
         try {
-            await server.refresh(true, true)
-            stats = await server.getStats()
+            await server.refresh(true, false)
         } catch(err) {
             
         }
