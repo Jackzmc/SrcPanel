@@ -111,6 +111,7 @@ export default class Server {
     private _sortOrder: number
     private lastRefresh: number
     private _cvars: Record<string, string>
+    private _startTime: number
     private rcon?: {
       password: string,
       exitCommand: string
@@ -185,6 +186,15 @@ export default class Server {
       } 
     }
 
+    public get startTime() {
+      return this._startTime
+    }
+
+    public get uptime() {
+      if(!this._startTime) return 0
+      return Date.now() - this._startTime
+    }
+
     public get status(): ServerStatus { return this._status }
     public get liveStatus(): PluginServerStatus { 
       if(this._liveData && Date.now() - (this._liveData.lastUpdateTime*1000) > STALE_LIVE_STATUS_EXPIRE) {
@@ -211,6 +221,7 @@ export default class Server {
     public setLiveData(status: PluginServerStatus) {
       status.players = status.players
         .sort((a, b) => a.team - b.team)
+      this._startTime = status.startTime
       this._liveData = status
     }
 

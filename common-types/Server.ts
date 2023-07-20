@@ -14,7 +14,7 @@ export interface PluginServerStatus {
     players: StatusPlayer[];
     finaleInfo?: StatusFinaleInfo,
     fps: number,
-    uptime: number
+    startTime: number
 }
 
 export interface BaseStatusPlayer {

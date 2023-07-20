@@ -109,11 +109,6 @@
               </div>
               <em class="my-2" v-else>no players are online</em>
             </div>
-            <div class="column">
-              <h5 class="title is-5 is-underlined"><span class="tag is-large is-info">Uptime</span></h5>
-              <p v-if="stats">{{ formatUptime(stats.uptime) }}</p>
-              <em v-else>no information available</em>
-            </div>
           </div>
 
           <br>
@@ -317,7 +312,7 @@
             </tr>
             <tr>
               <th>Server Uptime</th>
-              <td class="has-text-right">{{ getDuration(liveStatus.uptime) }}</td>
+              <td class="has-text-right">{{ getDuration(liveStatus.startTime) }}</td>
             </tr>
           </tbody>
         </table>
@@ -454,13 +449,6 @@ let server = ref()
 let servers = ref()
 let status = ref()
 let liveStatus = ref<PluginServerStatus>()
-let stats = ref<{
-  cpu: number,
-  bandwidth: { in: number, out: number },
-  uptime: number,
-  suers: number,
-  fps: number
-}>()
 let activities = ref()
 let cfg = ref<{
   selected?: string, raw?: string, json?: any, loading: boolean }
@@ -565,7 +553,6 @@ async function fetchServerStatus() {
     if(response.ok) {
       status.value = json.status
       liveStatus.value = json.liveStatus
-      stats.value = json.stats
       activities.value = json.recentActivities?.map((act: any) => parseLog(act))
     } else {
       status.value = { error: json.message }
@@ -669,13 +656,6 @@ function formatGamemode(gamemode: string) {
     output = output.charAt(0).toUpperCase() + output.slice(1)
   }
   return output
-}
-function formatUptime(minutes: number) {
-  const hours = Math.round(minutes / 60)
-  if(hours < 1) return `${minutes} minutes`
-  const days = Math.round(hours / 24)
-  if(days < 1) return `${hours} hours`
-  return `${days} days`
 }
 function formatRelDate(timestamp: number) {
   const date = timestamp ? new Date(timestamp * 1000) : new Date();
