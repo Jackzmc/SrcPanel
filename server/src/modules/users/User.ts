@@ -78,26 +78,6 @@ export default class User {
         return this._providers
     }
 
-    // get ip() {
-    //     return this.
-    // }
-
-    /**
-     * @deprecated
-     */
-    async grantPrivilege(service: Service, privilege: ServicePrivilege) {
-        await this.authmngr.setPrivileges(this.steamid2, { [service]: privilege })
-    }
-
-    
-    /**
-     * @deprecated
-     */
-    hasPrivilege(service: Service, type: ServicePrivilege) : boolean {
-        if(!this.isAdmin) return false
-        return this.adminData.permissions.privileges[service] === type
-    }
-
     hasPermission(code: UserPrivilegeCode, ...resourceIds: (string | number | undefined)[]) {
         if(!this.isAdmin) return false
         // TODO: Make sure user for 'servers.configs.read' has access to 'servers.configs'? idk verify
@@ -127,22 +107,6 @@ export default class User {
         }
         // TODO: Hoist up to not waste time computing lower?
         return [code, this.hasPermission(code)]
-    }
-
-    /**
-     * @deprecated
-     */
-    canPerformAction(service: Service, action: Action) : boolean {
-        if(!this.isAdmin) return false
-        return this.hasPrivilege(service, ActionRequiredPrivilege[action])
-    }
-
-    /**
-     * @deprecated
-     */
-    getPrivilege(service: Service) {
-        if(!this.isAdmin) return null
-        return this.adminData.permissions.privileges[service]
     }
 
     async log(targetUser: User | string | null, message: string, payload?: LogData) {

@@ -108,35 +108,6 @@ export class PrivilegedUser {
   }
 
   /** @deprecated */
-  hasPrivilege(service: Service, privilege: ServicePrivilege) : boolean {
-    if(!ServiceSupportedActions[service].includes(privilege)) console.warn(`[Privileges] <User>.hasPrivilege() called on service ${service} with invalid privilege (service does not support ${ServicePrivilegeKeys[privilege]})`)
-    return true
-    return this.privileges[service] as number >= privilege
-  }
-
-  /** @deprecated */
-  getPrivilege(service: Service): ServicePrivilege | null {
-    return this.privileges[service] ?? null
-  }
-  /** @deprecated */
-  getPrivilegeById(service: string): ServicePrivilege | null {
-    return this.privileges[service as Service] ?? null
-  }
-
-  /** @deprecated */
-  canPerformAction(service: Service, action: Action, userSteamid?: string) : boolean {
-    let hasPerm = this.hasPrivilege(service, ActionRequiredPrivilege[action])
-    // Check if they have manage permission
-    if(userSteamid && userSteamid !== this.id) {
-      hasPerm = hasPerm && this.hasPrivilege(service, ServicePrivilege.Manage)
-      // console.debug(`[permcheck] ${service}.${action}: ${hasPerm} | user: ${userSteamid}`)
-      return hasPerm
-    }
-    // console.debug(`[permcheck] ${service}.${action}: ${hasPerm}`)
-    return hasPerm
-  }
-
-  /** @deprecated */
   get webRole(): WebRole {
     return WebRole.None
   }

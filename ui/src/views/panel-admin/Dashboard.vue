@@ -58,7 +58,7 @@ let serverHealth = ref<Partial<HealthReport>>({})
 })
 
 const canUpdate = computed(() => {
-  return props.privUser.canPerformAction(Service.PanelAdmin, Action.Edit) && updateStatus.value.state !== "NORMAL" || undefined
+  return props.privUser.hasPermission("panel.update") && updateStatus.value.state !== "NORMAL" || undefined
 })
 const uptime = computed(() => {
   const minutes = (serverHealth.value.uptime ?? 0) / 60
@@ -107,7 +107,7 @@ async function fetchServerHealth() {
 }
 
 onBeforeMount(async () => {
-  if(props.privUser.canPerformAction(Service.PanelAdmin, Action.View)) {
+  if(props.privUser.hasPermission("panel.view")) {
     await fetchServerHealth()
   }
 })
