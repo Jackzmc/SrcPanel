@@ -3,10 +3,11 @@ import { OkPacket, RowDataPacket } from 'mysql2';
 import { Static, Type } from '@sinclair/typebox'
 import SteamID from 'steamid'
 import { APIBanFlags, BanAppealState } from '../../../../common-types/Ban.js';
-import { Action, Service } from '../../../../common-types/Privileges.js';
+import { NO_PERMISSION } from '../../responses.js';
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
     fastify.post('/:appealid/approve', async(req: FastifyRequest<{Params: { appealid: string }}>, reply) => {
+        if(!req.user.hasPermission("bans.appeals.manage")) return NO_PERMISSION(reply)
         // Suspend the ban by grabbing the id from appeal
         await fastify.db.execute(
             `UPDATE bans SET flags = ~flags & ${APIBanFlags.Suspended} WHERE id = (SELECT ban_id FROM ban_appeals WHERE id = ?)`,
@@ -19,8 +20,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         )
 
         await req.user.log(null, `approved appeal #%appealid%`, {
-            service: Service.Bans,
-            action: Action.Edit,
+            code: "bans.appeals.manage",
             metadata: {
                 appealid: req.params.appealid
             }
@@ -30,6 +30,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     })
 
     fastify.post('/:appealid/reject', async(req: FastifyRequest<{Params: { appealid: string }, Querystring: { reason: string }}>, reply) => {
+        if(!req.user.hasPermission("bans.appeals.manage")) return NO_PERMISSION(reply)
         if(!req.query.reason) {
             return reply.status(400).send({
                 error: "INVALID_REJECT",
@@ -42,8 +43,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         )
 
         await req.user.log(null, `rejected appeal #%appealid% for \"%reason%\"`, {
-            service: Service.Bans,
-            action: Action.Edit,
+            code: "bans.appeals.manage",
             metadata: {
                 appealid: req.params.appealid,
                 reason: req.query.reason

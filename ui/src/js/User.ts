@@ -1,6 +1,6 @@
-import { AdminData, SessionUser, WebPermission, WebRole, AdminPermissions } from '../../../common-types/User';
+import { AdminData} from '../../../common-types/User';
 import type  { UserData, ClientUserData } from '../../../common-types/User';
-import { UserPrivileges, ActionRequiredPrivilege, ServicePrivilege, Service, Action, ServiceSupportedActions, ServicePrivilegeKeys, UserPrivilegeCode } from '../../../common-types/Privileges';
+import { UserPrivilegeCode } from '../../../common-types/Privileges';
 import { minimatch } from 'minimatch'
 
 export interface PlayerData {
@@ -83,11 +83,6 @@ export class PrivilegedUser {
     return this.id.substring(10) === id.substring(10)
   }
 
-  /** @deprecated */
-  hasWebPerm(webPerm: WebPermission): boolean {
-    return false
-  }
-
   hasPermission(code: UserPrivilegeCode, ...resourceIds: (string | number | undefined)[]) {
     return true
     // TODO: Make sure user for 'servers.configs.read' has access to 'servers.configs'? idk verify
@@ -105,16 +100,6 @@ export class PrivilegedUser {
   hasFlag(flag: string, ignoreRoot: boolean = false) : boolean {
     const flags = this.flags
     return (!ignoreRoot && flags.includes("z")) || flags.includes(flag)
-  }
-
-  /** @deprecated */
-  get webRole(): WebRole {
-    return WebRole.None
-  }
-
-  /** @deprecated */
-  get privileges(): UserPrivileges {
-    return this.permissions.privileges ?? {}
   }
 
   get name() {

@@ -3,9 +3,9 @@ import { exec } from 'child_process'
 import FastifyMultipart from '@fastify/multipart'
 import { pipeline } from 'stream'
 import { promisify } from 'util'
-import { Action, Service } from '../../../../common-types/Privileges.js';
 import { ChildWorkshopItem, ShareInfo } from '../../../../common-types/Share.js';
 import { NO_PERMISSION } from '../../responses.js';
+import { UserPrivilegeCode } from '../../../../common-types/Privileges.js';
 const pump = promisify(pipeline)
 
 const VALID_FILENAME_REGEX = new RegExp(/[a-z0-9_\- \.]+/i)
@@ -125,8 +125,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             }
             await pump (part.file, share.createUploadStream(part.filename))
             await req.user.log(null, `uploaded addon \"${part.filename}\"`, {
-                service: Service.AddonsUpload,
-                action: Action.Edit,
+                code: "shares.addons.upload.direct",
                 metadata: {
                     filename: part.filename
                 }
@@ -141,14 +140,17 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     })
 
     fastify.delete('/:shareId/addons/:filename', async(req: FastifyRequest<{Params: {shareId: string, filename: string}}>, reply) => {
-        if(!req.user.hasPermission("shares.addons.delete", req.params.shareId, req.params.filename)) return NO_PERMISSION(reply)
         if(!req.params.filename) {
             return reply.status(401).send({
                 error: "No filename provided", 
                 message: `Filename is blank`   
             })
         }
+
         const shareId = req.params.shareId
+        const [code, granted] = req.user.requirePermission("bans.edit", { resourceId: shareId })
+        if(!granted) return NO_PERMISSION(reply)
+
         const share = fastify.servers.getShare(shareId)
         if(!share) {
             return reply.status(404).send({
@@ -158,8 +160,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
         await share.deleteAddon(req.params.filename)
         await req.user.log(null, `deleted addon \"${req.params.filename}\"`, {
-            service: Service.AddonsUpload,
-            action: Action.Edit,
+            code,
             metadata: {
                 filename: req.params.filename
             }
@@ -283,8 +284,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                             message: `Downloaded <a href="https://steamcommunity.com/sharedfiles/filedetails/?id=${detail.publishedfileid}"><b>${detail.title}</b></a> (${humanFileSize(detail.file_size)})`
                         })
                         await req.user.log(null, `downloaded workshop addon \"%title%\" (%filename%) for %share%`, {
-                            service: Service.Addons,
-                            action: Action.Edit,
+                            code: "shares.addons.upload.steam_workshop." + detail.publishedfileid as UserPrivilegeCode,
                             metadata: {
                                 type: "workshop",
                                 share: share.id,
@@ -317,8 +317,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                                     result: "success"
                                 }
                                 await req.user.log(null, `enabled addon %filename% for "%share%/%server%"`, {
-                                    service: Service.Addons,
-                                    action: Action.Edit,
+                                    code: "shares.addons.edit." + detail.publishedfileid as UserPrivilegeCode,
                                     metadata: {
                                         share: share.id,
                                         server: destKey,
@@ -363,8 +362,11 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
     fastify.post('/:shareId/addons/:filename/install/:destKey', async(req: FastifyRequest<{Params: {shareId: string, filename: string, destKey: string}}>, reply) => {
         const shareId = req.params.shareId
-        if(!req.user.hasPermission("shares.addons.edit", shareId, req.params.filename)) return NO_PERMISSION(reply)
+        const [code, granted] = req.user.requirePermission("shares.addons.edit", { resourceId: shareId })
+        if(!granted) return NO_PERMISSION(reply)
+        
         const share = fastify.servers.getShare(shareId)
+        
         if(!share) {
             return reply.status(404).send({
                 error: "Share Not Found", 
@@ -382,8 +384,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             try {
                 await share.install(req.params.filename, req.params.destKey)
                 await req.user.log(null, `enabled addon "%filename%" for "%share%/%server%"`, {
-                    service: Service.Addons,
-                    action: Action.Edit,
+                    code,
                     metadata: {
                         share: share.id,
                         server: req.params.destKey,
@@ -412,7 +413,9 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     // Might be smarter to merge this with install
     fastify.post('/:shareId/addons/:filename/uninstall/:destKey', async(req: FastifyRequest<{Params: {shareId: string, filename: string, destKey: string}}>, reply) => {
         const shareId = req.params.shareId
-        if(!req.user.hasPermission("shares.addons.edit", shareId, req.params.filename)) return NO_PERMISSION(reply)
+        const [code, granted] = req.user.requirePermission("shares.addons.edit", { resourceId: shareId })
+        if(!granted) return NO_PERMISSION(reply)
+
         const share = fastify.servers.getShare(shareId)
         if(!share) {
             return reply.status(404).send({
@@ -431,8 +434,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             try {
                 await share.uninstall(req.params.filename, req.params.destKey)
                 await req.user.log(null, `disabled addon "%filename%" for "%share%/%server%"`, {
-                    service: Service.Addons,
-                    action: Action.Edit,
+                    code,
                     metadata: {
                         share: share.id,
                         server: req.params.destKey,

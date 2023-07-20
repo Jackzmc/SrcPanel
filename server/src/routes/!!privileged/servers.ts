@@ -2,10 +2,8 @@ import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
 import { OkPacket, RowDataPacket } from 'mysql2';
 import { Static, Type } from '@sinclair/typebox'
 import SteamID from 'steamid'
-import { WebPermission } from '../../../../common-types/User.js';
 import { join } from 'path';
 import { readFile } from 'fs/promises';
-import { Action, Service } from '../../../../common-types/Privileges.js';
 import { NO_PERMISSION, NOT_FOUND } from '../../responses.js';
 import JWT from '../../jwt-promise.js'
     
@@ -222,7 +220,9 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     fastify.post('/:id/cmd', async(req: FastifyRequest<{Params: { id: 'string'}, Body: string }>, reply) => {
         const server = fastify.servers.get(req.params.id)
         if(!server) return NOT_FOUND(reply, "Server")
-        if(!req.user.hasPermission("servers.rcon", server.id)) return NO_PERMISSION(reply)
+        
+        const [code, granted] = req.user.requirePermission("servers.rcon", { resourceId: server.id })
+        if(!granted) return NO_PERMISSION(reply)
 
         if(!server.hasRcon) {
             return reply.code(400).send({
@@ -233,8 +233,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
         try {
             await req.user.log(null, `%client% ran command \"%cmd%\"`, {
-                service: Service.Rcon,
-                action: Action.Edit,
+                code,
                 metadata: {
                     cmd: req.body
                 }

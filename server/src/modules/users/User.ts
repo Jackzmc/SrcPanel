@@ -1,5 +1,5 @@
 import { AdminData, OauthProvider, OauthProviderData, SessionData, SessionUser, UserOauthProviders } from '../../../../common-types/User';
-import { SteamInfo, UserPrivileges, Service, ServicePrivilege, ActionRequiredPrivilege, Action, UserPrivilegeCode } from '../../../../common-types/Privileges.js';
+import { UserPrivilegeCode } from '../../../../common-types/Privileges.js';
 import AuthManager from '../AuthManager.js';
 import { Session } from 'fastify';
 
@@ -11,15 +11,11 @@ export interface LogProperties {
 export interface LogPropertiesType extends LogProperties {
     type: string
 }
-export interface LogPropertiesServiceAction extends LogProperties {
-    service: Service,
-    action: Action
-}
 export interface LogPropertiesPermCode extends LogProperties {
     code: UserPrivilegeCode,
 }
 
-export type LogData = LogPropertiesType | LogPropertiesServiceAction | LogPropertiesPermCode
+export type LogData = LogPropertiesType | LogPropertiesPermCode
 export type PermissionResult = [UserPrivilegeCode, boolean]
 export interface RequirePermissionOptions {
     isCreator?: boolean,
@@ -41,12 +37,6 @@ export default class User {
 
     get isAdmin() {
         return this.adminData != null
-    }
-
-    // Make a copy
-    get privileges() {
-        if(!this.isAdmin) return null
-        return { ...this.adminData.permissions.privileges }
     }
 
     get immunity() {

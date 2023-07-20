@@ -1,7 +1,6 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
 import { OkPacket, RowDataPacket } from 'mysql2';
 import { Static, Type } from '@sinclair/typebox'
-import { Action, Service } from '../../../../common-types/Privileges.js';
 import { NO_PERMISSION } from '../../responses.js';
 
 const POSTNotes = Type.Object({

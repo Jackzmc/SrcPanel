@@ -33,7 +33,6 @@ import { PrivilegedUser } from "@/js/User";
 import { request } from "@/js/util";
 import { notify } from "@kyvg/vue3-notification";
 import { ref, computed, onBeforeMount, onActivated, onDeactivated, watch } from "vue"
-import { Action, Service } from "../../../../common-types/Privileges";
 import { ClientUserData } from "../../../../common-types/User";
 import { HealthReport, UpdateState } from "../../../../common-types/Panel.js";
 import ConfigEditor from "@/components/panel-admin/ConfigEditor.vue";

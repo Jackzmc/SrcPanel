@@ -1,32 +1,5 @@
-import { Action, Service, ServicePrivilege, UserPrivilegeCode, UserPrivileges } from "./Privileges.js"
+import { UserPrivilegeCode } from "./Privileges.js"
 
-export enum WebRole {
-    None = 0,
-    ReadOnly = 1,
-    ReadWrite = 2,
-    Admin = 3,
-}
-
-export enum WebPermission {
-    RconAccess = 1 << 1,
-    ManageAdmins = 1 << 2,
-    CanWrite = 1 << 3,
-    FullPermission = 1 << 4,
-    ConfigRead = 1 << 5,
-    ConfigWrite = 1 << 6,
-    ConfigRawView = 1 << 7,
-}
-
-  
-export const WEB_FLAGS: Record<WebPermission, string> = {
-    [WebPermission.RconAccess]: 'RCON Access',
-    [WebPermission.ManageAdmins]: 'Manage Admins',
-    [WebPermission.CanWrite]: 'Can Add / Modify / Delete',
-    [WebPermission.FullPermission]: 'Full Permission / Super-admin',
-    [WebPermission.ConfigRead]: 'Read Config Files',
-    [WebPermission.ConfigWrite]: 'Edit Config Files',
-    [WebPermission.ConfigRawView]: 'Can view unfiltered config files'
-}
 
 export interface SessionData {
     id: string,
@@ -119,7 +92,6 @@ interface BaseAdminGroup<T> {
     flags: string,
     name: string,
     immunity: number,
-    privileges: Partial<Record<Service, ServicePrivilege>>,
     codes: T
 }
 
@@ -130,12 +102,10 @@ export interface APIAdminGroup extends AdminGroup {
 export interface AdminPermissions<C> {
     immunityLevel: number
     flags: string,
-    privileges: UserPrivileges,
     codes: C,
     base: {
         immunityLevel: number,
         flags: string,
-        privileges: UserPrivileges,
         codes: C
     }
 }

@@ -1,10 +1,10 @@
-import { Connection, Pool, RowDataPacket, OkPacket } from "mysql2/promise";
+import { Pool, RowDataPacket, OkPacket } from "mysql2/promise";
 import QuickLRU from 'quick-lru'
 import { FastifyReply, FastifyRequest } from 'fastify';
 import ActivityLog from "./ActivityLog.js";
-import { AdminPermissions, AdminData, AdminGroup, WebRole, WebPermission, OauthProvider, SessionData, ReadableAdminGroup } from '../../../common-types/User.js';
+import { AdminData, AdminGroup, OauthProvider, SessionData, ReadableAdminGroup } from '../../../common-types/User.js';
 import { ReadableAdminData, UserOauthProviders, OauthProviderData } from '../../../common-types/User';
-import { Service, ServicePrivilege, ServicePrivilegeKeys, SteamInfo, UserPrivilegeCode, UserPrivileges } from  '../../../common-types/Privileges.js';
+import { SteamInfo, UserPrivilegeCode } from  '../../../common-types/Privileges.js';
 import { SteamUserDetails } from '../../../common-types/Share';
 import SteamID from "steamid";
 import FastGeoip from 'fast-geoip';
@@ -20,7 +20,6 @@ interface AddAdmin {
     password?: string,
     name: string,
     immunity: number,
-    privileges: Partial<Record<Service, ServicePrivilege>>
     codes: (UserPrivilegeCode|string)[],
     groupIds?: string[]
 }
@@ -113,7 +112,6 @@ export default class AuthManager {
                     parentId: group.parentId,
                     id: group.id,
                     name: group.name,
-                    privileges: group.privileges,
                     codes: [...group.codes.values()],
                     immunity: group.immunity,
                     flags: group.flags,
@@ -124,12 +122,10 @@ export default class AuthManager {
                     flags: admin.permissions.base.flags,
                     codes: [...admin.permissions.base.codes.values()],
                     immunityLevel: admin.permissions.base.immunityLevel,
-                    privileges: admin.permissions.base.privileges
                 },
                 flags: admin.permissions.flags,
                 codes: [...admin.permissions.codes.values()],
                 immunityLevel: admin.permissions.immunityLevel,
-                privileges: admin.permissions.privileges
             },
         }
     }
@@ -138,43 +134,12 @@ export default class AuthManager {
         return Object.values(this.admins).find(admin => admin.id === id)
     }
 
-    public async getPrivileges(steamid2: string): Promise<UserPrivileges> {
-        const [rows] = await this.db.execute<RowDataPacket[]>(
-            "SELECT service, privilege FROM dash_privileges WHERE SUBSTRING(steamid, 11) = SUBSTRING(?, 11)",
-            [steamid2]
-        )
-        let privs: UserPrivileges = {}
-        for(const row of rows) {
-            privs[row.service as Service] = row.privilege as ServicePrivilege
-        }
-        return privs
-    }
-
     public async getPermissions(adminId: number): Promise<Set<UserPrivilegeCode>> {
         const [rows] = await this.db.execute<RowDataPacket[]>(
             "SELECT code FROM dash_permissions WHERE admin_id = ?",
             [adminId]
         )
         return new Set(rows.map(row => row.code))
-    }
-
-    // If privilege is undefined, it will be ignored, if a privilege is null, it will be revoked
-    public async setPrivileges(steamid2: string, privileges: UserPrivileges) {
-        let user = this.getAdmin(steamid2)
-        for(const [service, priv] of Object.entries(privileges)) {
-            if(priv === null) {
-                await this.db.execute(
-                    "DELETE FROM dash_privileges WHERE SUBSTRING(steamid, 11) = SUBSTRING(?, 11) AND service = ?",
-                    [steamid2, service]
-                )
-            } else {
-                await this.db.execute(
-                    "INSERT INTO dash_privileges (steamid, service, privilege) VALUES(?, ?, ?) ON DUPLICATE KEY UPDATE privilege = ?",
-                    [steamid2, service, priv, priv]
-                )
-            }
-            user.permissions.base.privileges[service] = priv
-        }
     }
 
     public async revokeAdmin(id: number) {
@@ -202,28 +167,7 @@ export default class AuthManager {
             [newAdminData.flags, newAdminData.name, newAdminData.immunity, newAdminData.password, newAdminData.authtype, id]
         )
 
-        if(data.privileges) {
-            await this.setPrivileges(rows[0].identity, data.privileges)
-        }
-
-        if(webPerms) {
-            const [exists] = await this.db.execute<RowDataPacket[]>(
-                "SELECT * FROM dash_perms WHERE SUBSTRING(steamid, 11) = SUBSTRING(?, 11)", 
-                [rows[0].identity]
-            )
-
-            if(exists.length > 0) {
-                await this.db.execute<OkPacket>(
-                    `UPDATE dash_perms SET flags = ? WHERE steamid = ?`,
-                    [webPerms, rows[0].identity]
-                )
-            } else {
-                await this.db.execute<OkPacket>(
-                    `INSERT INTO dash_perms (steamid, role, flags) VALUES (?, ${WebRole.ReadWrite}, ?)`,
-                    [rows[0].identity, webPerms]
-                )
-            }
-        }
+        // TODO: update permissions
 
         // If a change in groups
         if(data.groupIds) {
@@ -282,10 +226,6 @@ export default class AuthManager {
 
                 }
             )
-        }
-
-        if(admin.privileges) {
-            await this.setPrivileges(admin.identity, admin.privileges)
         }
 
         if(admin.groupIds) {
@@ -368,7 +308,6 @@ export default class AuthManager {
                 groups[row.id] = {
                     parentId: row.parent_id,
                     id: row.id,
-                    privileges: {},
                     codes: new Set(),
                     flags: row.flags,
                     name: row.name,
@@ -429,7 +368,6 @@ export default class AuthManager {
                 const base = {
                     immunityLevel: row.immunity,
                     flags: row.flags,
-                    privileges: {},
                     codes: new Set<UserPrivilegeCode>()
                 }
                 admins[accountId] = {

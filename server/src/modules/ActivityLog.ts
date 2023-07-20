@@ -1,6 +1,5 @@
 import { Pool, OkPacket } from "mysql2/promise";
 import User, { LogData } from "./users/User.js";
-import { LogPropertiesType } from './users/User';
 
 interface LogEntry {
     id: number,
@@ -49,8 +48,6 @@ export default class ActivityLog {
         let type = null
         if('code' in payload) type = payload.code
         else if('type' in payload) type = payload.type
-        else if('service' in payload) type = `${payload.service}.${payload.action}`
-
 
         const [r] = await this.db.execute<OkPacket>(
             `INSERT INTO activity_log (server, type, client, target, message, timestamp, metadata) VALUES ('web', :type, :client, :target, :msg, UNIX_TIMESTAMP(), :metadata)`,

@@ -1,7 +1,5 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
-import util from 'util'
-import { exec, PromiseWithChild } from 'child_process';
-import { WebPermission } from '../../../../common-types/User.js';
+import { exec } from 'child_process';
 import { rm, unlink } from 'fs/promises';
 import path from 'path'
 import { NO_PERMISSION } from '../../responses.js';

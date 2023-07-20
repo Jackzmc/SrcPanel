@@ -2,10 +2,8 @@ import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
 import { OkPacket, RowDataPacket } from 'mysql2';
 import { Static, Type } from '@sinclair/typebox'
 import SteamID from 'steamid';
-import { AdminGroup, APIAdminGroup, WebPermission } from '../../../../common-types/User.js';
 import { AdminData, ReadableAdminData } from '../../../../common-types/User';
 import { APIBanFlags } from '../../../../common-types/Ban.js';
-import { Action, Service } from '../../../../common-types/Privileges.js';
 import { computeChanges } from '../../util.js';
 import { NO_PERMISSION } from '../../responses.js';
 
@@ -16,7 +14,6 @@ const POSTAdmin = Type.Object({
     webPermissions: Type.Optional(Type.Number()),
     name: Type.Optional(Type.String()),
     webCodes: Type.Optional(Type.Array(Type.String())),
-    privileges: Type.Optional(Type.Record(Type.String(), Type.Number())),
 })
 
 
@@ -25,7 +22,6 @@ const PUTAdmin = Type.Object({
     flags: Type.Optional(Type.String()),
     groupIds: Type.Optional(Type.String()),
     webPermissions: Type.Optional(Type.Number()),
-    privileges: Type.Optional(Type.Record(Type.String(), Type.Number())),
     webCodes: Type.Optional(Type.Array(Type.String())),
     name: Type.Optional(Type.String())
 })
@@ -118,8 +114,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 await fastify.authmngr.revokeAdmin(admin.id)
 
                 await req.user.log(admin.identity, `%client% revoked admin privileges #%id for %target%`, {
-                    service: Service.Admins,
-                    action: Action.Delete,
+                    code: "admins.revoke",
                     metadata: {
                         id: admin.id,
                     }
@@ -170,15 +165,13 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                     name: req.body.name || "",
                     immunity,
                     flags: req.body.flags,
-                    privileges: req.body.privileges,
                     codes: req.body.webCodes as string[],
                     groupIds: req.body.groupIds ? req.body.groupIds.split(',') : []
                 }
                 const newAdmin = await fastify.authmngr.editAdmin(admin.id, newAdminData, req.body.webPermissions)
 
                 await req.user.log(admin.identity, `%client% edited admin privileges #%id% for %target%`, {
-                    service: Service.Admins,
-                    action: Action.Edit,
+                    code: "admins.edit",
                     metadata: {
                         id: admin.id,
                         ...computeChanges<any>(admin, newAdminData)
@@ -245,19 +238,16 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                     name: req.body.name || "",
                     immunity,
                     flags: req.body.flags,
-                    privileges: req.body.privileges,
                     codes: req.body.webCodes,
                     groupIds
                 }, req.body.webPermissions)
 
                 await req.user.log(req.params.steamid, `%client% added new admin #%id% for %target%`, {
-                    service: Service.Admins,
-                    action: Action.Edit,
+                    code: "admins.grant",
                     metadata: {
                         id,
                         immunity,
                         flags: req.body.flags,
-                        privileges: req.body.privileges,
                         groupIds,
                     }
                 })

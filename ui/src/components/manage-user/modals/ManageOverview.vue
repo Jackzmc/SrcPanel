@@ -116,7 +116,7 @@
 import { ref, onMounted, computed, watch, onBeforeMount } from 'vue';
 import { User, PrivilegedUser, PlayerData } from '@/js/User'
 import { useRouter, useRoute } from 'vue-router'
-import { ClientUserData, WebPermission, WebRole, AdminData } from '../../../../../common-types/User';
+import { ClientUserData, AdminData } from '../../../../../common-types/User';
 import { notify } from '@kyvg/vue3-notification';
 import SteamID from 'steamid';
 import { formatDate, getRelDate } from '@/js/util';
