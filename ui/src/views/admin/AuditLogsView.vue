@@ -481,6 +481,7 @@ async function fetchLogs(id: number, mode: "before" | "after" | "around") {
       if(entry.metadata && entry.message) {
         for(const key in entry.metadata) {
           message = message.replace(new RegExp(`%${key}%`, 'g'), `<b data-tooltip="${key}">${entry.metadata[key]}</b>`)
+                           .replace(new RegExp(`{${key}}`, 'g'), `<b data-tooltip="${key}">${entry.metadata[key]}</b>`)
         }
       }
       if(entry.type === 'JOIN') message = " joined"
