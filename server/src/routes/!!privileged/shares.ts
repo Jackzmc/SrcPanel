@@ -383,7 +383,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         if(addonInfo) {
             try {
                 await share.install(req.params.filename, req.params.destKey)
-                await req.user.log(null, `enabled addon "%filename%" for "%share%/%server%"`, {
+                await req.user.log(null, `enabled addon %filename% for %share%/%server%`, {
                     code,
                     metadata: {
                         share: share.id,
@@ -433,7 +433,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         if(addonInfo) {
             try {
                 await share.uninstall(req.params.filename, req.params.destKey)
-                await req.user.log(null, `disabled addon "%filename%" for "%share%/%server%"`, {
+                await req.user.log(null, `disabled addon %filename% for %share%/%server%`, {
                     code,
                     metadata: {
                         share: share.id,
