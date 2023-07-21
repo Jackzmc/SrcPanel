@@ -41,6 +41,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { PrivilegedUser} from '@/js/User'
 import { NotificationItem, notify } from '@kyvg/vue3-notification';
 import { ClientUserData } from '../../common-types/User';
+import * as Sentry from "@sentry/vue";
 
 const LAST_UPDATED = new Date(Number(BUILD_TIMESTAMP))
 const lastUpdated = computed(() => {
@@ -132,7 +133,6 @@ async function getAuth() {
   }
 }
 
-import * as Sentry from "@sentry/vue";
 function onNotificationShown(item: NotificationItem) {
   if(item.type === 'error') {
     Sentry.captureEvent({
