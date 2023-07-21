@@ -222,7 +222,11 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 nameResolver: "none",
                 avatarUrl: ban.client_avatar,
             }
-
+            /* We grab name from order of: 
+                1. stats (stats_users table)
+                2. user name cache (user_names)
+                3. bulk fetch from steam (see below)
+            */
             if(ban.client_statsname) {
                 ban.client.name = ban.client_statsname.replace(NAME_INVALID_CHAR_REPLACE, '�')
                 ban.client.nameResolver = "stats"
@@ -233,6 +237,9 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 // Optimize by having count of steamids so we can break in resolver quicker
                 bulkNameSteamIds.push(steamid)
             }
+
+            // Now we do the same for the executor (who created ban), 
+            // We should always have their name in a cache, so need for bulk fetch, simplified logic
             ban.executor = {
                 id: ban.executor,
                 name: null,
@@ -246,14 +253,17 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 ban.executor.name = ban.executor_cachename.replace(NAME_INVALID_CHAR_REPLACE, '�')
                 ban.executor.nameResolver = "name_db"
             }
+
             // If we don't have a name, try to parse it as a provider (such as discord: )
             if(!ban.executor.name) {
                 const [provider, id] = ban.executor.id.split(":")
                 if(provider && id) {
                     ban.executor.name = await fastify.authmngr.getNameFromProvider(provider, id)
-                    if(ban.executor.name) {
-                        ban.executor.nameResolver = "provider"
-                        ban.executor.provider = provider
+                    ban.executor.nameResolver = "provider"
+                    ban.executor.provider = provider
+                    // Fallback to the id if we don't have the resolved name:
+                    if(!ban.executor.name) {
+                        ban.executor.name = id
                     }
                 }
             }
@@ -262,21 +272,25 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         meta.initParse = Date.now() - profilerStart
         profilerStart = Date.now()
 
+        // For any names we did not find, we do bulk requests through Steam's API to resolve it
         while(bulkNameSteamIds.length > 0) {
+            // Steam API only supports upto 100 ids at one
             const sliceSteamids = bulkNameSteamIds.splice(0, 100)
             // This does not return in the order of sliceSteamids!!
             const resolvedNames = await fastify.steam.getUserDetails(sliceSteamids)
             for(const resolvedName of resolvedNames) {
-                // Stupid but i dont care
+                // Stupid but i dont care, resolves the STEAM2 id, then slices what we use as account id
                 const accountid = new SteamID(resolvedName.steamid).getSteam2RenderedID().slice(10)
                 // VERY bad, but should only run on limited amounts
                 const name = resolvedName.personaname.replace(NAME_INVALID_CHAR_REPLACE, '�')
+                // Update our local copy with the new name
                 for(let ban of bans) {
                     if(ban.client.accountid == accountid) {
                         ban.client.name = name
                         ban.client.nameResolver = "steam"
                         ban.client.avatarUrl = resolvedName.avatarfull
                     }
+                    // No break here, we want _all_ bans of user to be updated, in the event they got banned more than once
                 }
 
                 try {
@@ -300,7 +314,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                     id: row.id,
                     client: row.client,
                     publicReason: row.public_message,
-                    reason: authorized ? row.reason: undefined,
+                    reason: authorized ? row.reason: undefined, // Hide the private reason/notes from not logged in users
                     flags: row.flags,
                     timestamp: row.timestamp,
                     executor: row.executor,
