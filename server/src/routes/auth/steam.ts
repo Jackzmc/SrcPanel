@@ -122,14 +122,14 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             })
         }
     })
-}
 
-async function getUserDetails(id: SteamID) {
-    try {
-        const details = await fastify.steam.getUserDetails([steamid])
-        return details[0]
-    } catch(err) {
-        console.error("auth/steam: getUserDetails error:\n", err) 
-        return null
+    async function getUserDetails(steamid: SteamID) {
+        try {
+            const details = await fastify.steam.getUserDetails([steamid])
+            return details[0]
+        } catch(err) {
+            console.error("auth/steam: getUserDetails error:\n", err) 
+            return null
+        }
     }
 }
