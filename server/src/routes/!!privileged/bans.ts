@@ -220,7 +220,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 [req.params.id]
             )
 
-            await req.user.log(existing[0].steamid, `%client% removed ban #%id for %target%`, {
+            await req.user.log(existing[0].steamid, `%client% removed ban #%id% for %target%`, {
                 code,
                 metadata: {
                     id: existing[0].id, 
