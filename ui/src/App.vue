@@ -135,7 +135,6 @@ async function getAuth() {
 import * as Sentry from "@sentry/vue";
 function onNotificationShown(item: NotificationItem) {
   if(item.type === 'error') {
-    console.log('captured notification', item)
     Sentry.captureEvent({
       message: item.title ? `${item.title}:\n${item.text}` : item.text,
       user: {

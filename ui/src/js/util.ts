@@ -153,7 +153,7 @@ export function formatDate(timestamp?: number, onlyDate = false) {
     timeStyle: "short"
   });
 }
-export function getRelDate(timestamp: number) {
+export function getRelDate(timestamp: number) : string {
   const date = timestamp ? new Date(timestamp * 1000) : new Date();
   const secondsDiff = ((Date.now() - date.getTime()) / 1000);
   const dayDiff = Math.floor(secondsDiff / 86400);
@@ -164,7 +164,8 @@ export function getRelDate(timestamp: number) {
   if (isNaN(dayDiff) || dayDiff < 0 || dayDiff >= 31) return "<invalid date>"
 
   return dayDiff == 0 && (
-    secondsDiff < 60 && "just now" || secondsDiff < 120 && "1 minute ago" || secondsDiff < 3600 && Math.floor(secondsDiff / 60) + " minutes ago" || secondsDiff < 7200 && "1 hour ago" || secondsDiff < 86400 && Math.floor(secondsDiff / 3600) + " hours ago") || dayDiff == 1 && "yesterday" || dayDiff < 7 && dayDiff + " days ago" || dayDiff < 31 && Math.ceil(dayDiff / 7) + " weeks ago";
+    secondsDiff < 60 && "just now" || secondsDiff < 120 && "1 minute ago" || secondsDiff < 3600 && Math.floor(secondsDiff / 60) + " minutes ago" || secondsDiff < 7200 && "1 hour ago" || secondsDiff < 86400 && Math.floor(secondsDiff / 3600) + " hours ago") || dayDiff == 1 && "yesterday" || dayDiff < 7 && dayDiff + " days ago" || dayDiff < 31 && Math.ceil(dayDiff / 7) + " weeks ago"
+    || "Unknown"
 }
 
 export function getDuration(timestamp: number) {

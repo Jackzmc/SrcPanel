@@ -75,16 +75,6 @@
             <Icon icon="fa-spinner" spin v-if="nextRefreshCountdown == 0"></Icon>
             <span v-else>{{ nextRefreshCountdown }}s</span>
           </span>
-          <!-- <div>
-            <div class="tile is-ancestor">
-              <div class="tile">
-                <p class="title">Map</p>
-                <p class="subtitle">
-                  {{ getMapDisplay(status.data.map)?.name }}
-                </p>
-              </div>
-            </div>
-          </div> -->
           <div class="columns">
             <div class="column">
               <h5 class="title is-5 is-underlined"><span class="tag is-large is-info">Map</span></h5>
@@ -137,6 +127,12 @@
           <span class="is-inline is-pulled-right no-border" data-tooltip="Time until next refresh">
             <Icon icon="fa-spinner" spin v-if="nextRefreshCountdown == 0"></Icon>
             <span v-else>{{ nextRefreshCountdown }}s</span>
+          </span>
+        </div>
+        <div class="notification is-danger has-text-centered" v-else-if="liveStatusError">
+          {{ liveStatusError }}
+          <span class="is-inline is-pulled-right no-border">
+            <Icon icon="fa-spinner" spin></Icon>
           </span>
         </div>
         <div class="list" v-if="liveStatus && liveStatus.players.length > 0">
@@ -308,7 +304,7 @@
             <tr>
               <th>Last Update</th>
               <td class="has-text-right">
-                <p>{{ formatRelDate(liveStatus.lastUpdateTime )}}</p>
+                <p>{{ lastLiveUpdateTime }}</p>
               </td>
             </tr>
             <tr>
@@ -511,6 +507,8 @@ let server = ref()
 let servers = ref()
 let status = ref()
 let liveStatus = ref<PluginServerStatus>()
+let liveStatusError = ref<string>()
+let lastLiveUpdateTime = ref<string>()
 let activities = ref()
 let cfg = ref<{
   selected?: string, raw?: string, json?: any, loading: boolean }
@@ -527,7 +525,6 @@ const nextRefreshCountdown = computed(() => {
   if(!lastRefreshTime.value || !now.value) return 0
   return Math.max(Math.floor(((lastRefreshTime.value + REFRESH_INTERVAL) - now.value) / 1000), 0)
 })
-
 
 function getPlayerWeaponNames(player: StatusPlayerSurvivor) {
   if(!player.weapons) return []
@@ -723,19 +720,6 @@ function formatGamemode(gamemode: string) {
   }
   return output
 }
-function formatRelDate(timestamp: number) {
-  const date = timestamp ? new Date(timestamp * 1000) : new Date();
-  const secondsDiff = ((Date.now() - date.getTime()) / 1000);
-  const dayDiff = Math.floor(secondsDiff / 86400);
-  const monthsDiff = Math.round(dayDiff / 30)
-  const yearsDiff = Math.round(monthsDiff / 12)
-  if(yearsDiff > 0) return `${yearsDiff} year${yearsDiff == 1 ? "" : "s"} ago`
-  if(monthsDiff > 0) return `${monthsDiff} month${monthsDiff == 1 ? "" : "s"} ago`
-  if (isNaN(dayDiff) || dayDiff < 0 || dayDiff >= 31) return "<invalid date>"
-
-  return dayDiff == 0 && (
-    secondsDiff < 60 && `${secondsDiff.toFixed(0)} seconds ago` || secondsDiff < 120 && "1 minute ago" || secondsDiff < 3600 && Math.floor(secondsDiff / 60) + " minutes ago" || secondsDiff < 7200 && "1 hour ago" || secondsDiff < 86400 && Math.floor(secondsDiff / 3600) + " hours ago") || dayDiff == 1 && "yesterday" || dayDiff < 7 && dayDiff + " days ago" || dayDiff < 31 && Math.ceil(dayDiff / 7) + " weeks ago";
-}
 
 async function copyAddress() {
   await navigator.clipboard.writeText(`connect ${server.value.info.domain}:${server.value.info.port}`)
@@ -766,6 +750,31 @@ const OfficialCampaignNames = [
   "The Last Stand"
 ]
 
+let errCount = 0
+function createLiveConnection() {
+  const evtSource = new EventSource(`/api/servers/${route.params.id}/live`);
+  evtSource.onmessage = (event) => {
+    errCount = 0
+    liveStatusError.value = undefined
+    const json = JSON.parse(event.data)
+    liveStatus.value = json
+  }
+  evtSource.onerror = (event) => {
+    errCount++
+    if(errCount > 3) {
+      liveStatusError.value = "Too many errors connecting to live server, please try again later"
+      notify({
+        type: "error",
+        text:  "Too many errors connecting to live server, please try again later"
+      })
+    } else {
+      liveStatusError.value = "Connection with the live server errored, retrying..."
+      evtSource.close()
+      createLiveConnection()
+    }
+  }
+}
+
 let refreshInterval: any = 0
 async function init() {
   status.value = undefined
@@ -773,21 +782,15 @@ async function init() {
   clearInterval(refreshInterval)
   if(await fetchServerInfo()) {
     await fetchServerStatus()
-    const evtSource = new EventSource(`/api/servers/${route.params.id}/live`);
-    evtSource.onmessage = (event) => {
-      const json = JSON.parse(event.data)
-      liveStatus.value = json
-    }
-    evtSource.onerror = (event) => {
-
-    }
-
-    refreshInterval = setInterval(fetchServerStatus, REFRESH_INTERVAL)
+    createLiveConnection()
   }
+  refreshInterval = setInterval(fetchServerStatus, REFRESH_INTERVAL)
 }
 
 setInterval(() => {
   now.value = Date.now()
+  if(liveStatus.value)
+    lastLiveUpdateTime.value = getRelDate(liveStatus.value.lastUpdateTime)
 }, 1000)
 
 onBeforeMount(async() => {

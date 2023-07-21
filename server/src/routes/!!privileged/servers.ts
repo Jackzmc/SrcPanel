@@ -4,7 +4,7 @@ import { join } from 'path';
 import { readFile } from 'fs/promises';
 import { NO_PERMISSION, NOT_FOUND } from '../../responses.js';
 import JWT from '../../jwt-promise.js'
-import { request } from 'http';
+import { PluginServerStatus } from '../../../../common-types/Server.js';
     
 const COMMENT_LINE_REGEX = new RegExp(/^\s*(\/\/|#)/)
 const HIDDEN_COMMANDS = [
@@ -161,11 +161,12 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             'Connection': 'keep-alive',
             'X-Accel-Buffering': 'no'
         });
-        function send(msg: any) {
+        function send(msg: object, eventName?: string) {
+            if(eventName) reply.raw.write(`event: ${eventName}\n\n`)
             reply.raw.write(`data: ${JSON.stringify(msg)}\n\n`)
         }
         reply.raw.flushHeaders()
-        reply.raw.write('retry: 10000\n\n')
+        reply.raw.write('retry: 5000\n\n')
 
         const server = fastify.servers.get(req.params.id)
         
@@ -178,7 +179,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         // Send any stale data:
         if(server.liveStatus) send(server.liveStatus)
 
-        function eventHandler(data: string) {
+        function eventHandler(data: PluginServerStatus) {
             send(data)
         }
         

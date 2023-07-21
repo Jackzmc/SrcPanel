@@ -3,8 +3,12 @@ import path from 'path';
 import vue from '@vitejs/plugin-vue'
 import { VitePWA } from 'vite-plugin-pwa'
 
+
 export default ({ mode }) => {
-  process.env = {...process.env, ...loadEnv(mode, process.cwd())};
+  process.env = {...process.env, ...loadEnv(mode, process.cwd(), '')};
+  if(!process.env.VITE_REALM) {
+    throw new Error("No VITE_REALM environment variable set")
+  }
   return defineConfig({
     plugins: [
       vue(),
