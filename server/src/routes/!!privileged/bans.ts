@@ -133,10 +133,10 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
         if(existing.length > 0) {
             for(const ban of existing) {
-                if(~ban.flags & APIBanFlags.Suspended) {
+                if(~ban.flags & APIBanFlags.Suspended && !ban.expired) {
                     return reply.code(409).send({
                         error: 'BAN_EXISTS',
-                        message: `User was already banned on non-suspended ban #${ban.id}`,
+                        message: `User currently has an active ban: #${ban.id}`,
                         statusCode: 409
                     })
                 }
