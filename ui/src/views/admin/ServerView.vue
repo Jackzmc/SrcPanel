@@ -778,6 +778,9 @@ async function init() {
       const json = JSON.parse(event.data)
       liveStatus.value = json
     }
+    evtSource.onerror = (event) => {
+
+    }
 
     refreshInterval = setInterval(fetchServerStatus, REFRESH_INTERVAL)
   }

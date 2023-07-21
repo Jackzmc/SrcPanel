@@ -175,9 +175,13 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 code: "SERVER_NOT_FOUND",
             })
         }
+        // Send any stale data:
+        if(server.liveStatus) send(server.liveStatus)
+
         function eventHandler(data: string) {
             send(data)
         }
+        
         server.addListener("live", eventHandler)
         req.raw.on("close", () => {
             server.removeListener("live", eventHandler)
