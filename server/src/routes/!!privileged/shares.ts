@@ -124,7 +124,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 })  
             }
             await pump (part.file, share.createUploadStream(part.filename))
-            await req.user.log(null, `uploaded addon \"${part.filename}\"`, {
+            await req.user.log(null, `uploaded addon %filename%`, {
                 code: "shares.addons.upload.direct",
                 metadata: {
                     filename: part.filename
