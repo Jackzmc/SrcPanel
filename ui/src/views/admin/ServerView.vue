@@ -139,10 +139,6 @@
             <span v-else>{{ nextRefreshCountdown }}s</span>
           </span>
         </div>
-        <span class="is-inline is-pulled-right no-border pr-4" data-tooltip="Time until next refresh" style="width:10px">
-          <Icon icon="fa-spinner" spin v-if="nextRefreshCountdown == 0"></Icon>
-          <span v-else>{{ nextRefreshCountdown }}s</span>
-        </span>
         <div class="list" v-if="liveStatus && liveStatus.players.length > 0">
           <div class="list-item" v-for="player in liveStatus.players" :key="player.steamid ?? player.name">
             <div class="list-item-image">
