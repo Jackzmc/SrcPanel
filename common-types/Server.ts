@@ -24,6 +24,7 @@ export interface BaseStatusPlayer {
     team: number;
     isAlive: boolean;
     permHealth: number;
+    joinTime: number;
 }
 
 export interface StatusPlayerSurvivor extends BaseStatusPlayer {
