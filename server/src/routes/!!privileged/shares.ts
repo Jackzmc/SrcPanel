@@ -316,7 +316,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                                 destResults[destKey][detail.publishedfileid] = { 
                                     result: "success"
                                 }
-                                await req.user.log(null, `enabled addon %filename% for "%share%/%server%"`, {
+                                await req.user.log(null, `enabled addon {filename} for "{share}/{server}"`, {
                                     code: "shares.addons.edit." + detail.publishedfileid as UserPrivilegeCode,
                                     metadata: {
                                         share: share.id,
@@ -360,58 +360,15 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
     })
 
-    fastify.post('/:shareId/addons/:filename/install/:destKey', async(req: FastifyRequest<{Params: {shareId: string, filename: string, destKey: string}}>, reply) => {
-        const shareId = req.params.shareId
-        const [code, granted] = req.user.requirePermission("shares.addons.edit", { resourceId: shareId })
-        if(!granted) return NO_PERMISSION(reply)
-        
-        const share = fastify.servers.getShare(shareId)
-        
-        if(!share) {
-            return reply.status(404).send({
-                error: "Share Not Found", 
-                message: `No share with id \"${shareId.toLowerCase()}\" could be found. Share may be unavailable, incorrecty configured or does not exist`   
-            })
-        } else if(!share.destinations[req.params.destKey]) {
-            return reply.status(404).send({
-                error: "Share Destination Not Found", 
-                message: `Share does not have a destination of id \"${req.params.destKey}\".`   
+    fastify.post('/:shareId/addons/:filename/:operation/:destKey', async(req: FastifyRequest<{Params: {shareId: string, operation: string, filename: string, destKey: string}}>, reply) => {
+        const isInstall = req.params.operation === "install"
+        if(!isInstall && req.params.operation !== "uninstall") {
+            return reply.status(400).send({
+                error: "INVALID_OPERATION",
+                message: `Operation must be of 'install' or 'uninstall', not ${req.params.operation}`
             })
         }
-        // Verify that the filename exists in the src:
-        let addonInfo = await share.getAddonInfo(req.params.filename)
-        if(addonInfo) {
-            try {
-                await share.install(req.params.filename, req.params.destKey)
-                await req.user.log(null, `enabled addon %filename% for %share%/%server%`, {
-                    code,
-                    metadata: {
-                        share: share.id,
-                        server: req.params.destKey,
-                        filename: addonInfo.filename
-                    }
-                })
-                addonInfo[req.params.destKey] = true
-                return {
-                    addonInfo
-                }
-            } catch(err) {
-                fastify.log.error(err)
-                return reply.code(500).send({
-                    error: "Install Failed",
-                    message: "Error occurred while installing addon"
-                })
-            }
-        } else {
-            return reply.status(404).send({
-                error: "File not found", 
-                message: `Share does not have a downloaded filename \"${req.params.filename}\".`   
-            })
-        }
-    })
-
-    // Might be smarter to merge this with install
-    fastify.post('/:shareId/addons/:filename/uninstall/:destKey', async(req: FastifyRequest<{Params: {shareId: string, filename: string, destKey: string}}>, reply) => {
+    
         const shareId = req.params.shareId
         const [code, granted] = req.user.requirePermission("shares.addons.edit", { resourceId: shareId })
         if(!granted) return NO_PERMISSION(reply)
@@ -432,8 +389,9 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         let addonInfo = await share.getAddonInfo(req.params.filename)
         if(addonInfo) {
             try {
-                await share.uninstall(req.params.filename, req.params.destKey)
-                await req.user.log(null, `disabled addon %filename% for %share%/%server%`, {
+                const method = isInstall ? share.install : share.uninstall
+                await method(req.params.filename, req.params.destKey)
+                await req.user.log(null, `${isInstall ? 'enabled' : 'disabled'} addon %filename% for %share%/%server%`, {
                     code,
                     metadata: {
                         share: share.id,
@@ -441,7 +399,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                         filename: addonInfo.filename
                     }
                 })
-                addonInfo[req.params.destKey] = false
+                addonInfo[req.params.destKey] = isInstall
                 return {
                     addonInfo
                 }
