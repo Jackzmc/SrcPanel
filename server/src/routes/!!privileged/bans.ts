@@ -87,8 +87,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             const logPayload = {
                 code,
                 metadata: {
-                    id: existing[0].id,
-                    ...computeChanges<any>(existing[0], req.body)
+                    ...computeChanges<any>(existing[0], ban),
+                    id: existing[0].id, // After spread, incase it returns null
                 }
             }
 
