@@ -151,17 +151,26 @@
               </figure>
             </div>
             <div class="list-item-content">
-              <div :class="['list-item-title', {'has-text-danger': !player.isAlive, 'has-text-crossed': !player.isAlive }]">
-                <progress v-if="player.isAlive && 'flowProgress' in player" :class="['progress', 'is-info', 'flowprogress']" :value="player.flowProgress" max="100" style="width:20%">{{player.flowProgress}}%</progress>
+              <div v-if="'survivor' in player" :class="['list-item-title', {'has-text-danger': !player.isAlive, 'has-text-crossed': !player.isAlive }]">
+                <progress v-if="player.isAlive" :class="['progress', 'is-info', 'flowprogress']" :value="player.flowProgress" max="100" style="width:20%">{{player.flowProgress}}%</progress>
                 {{ 'idlePlayer' in player && player.idlePlayer ? player.idlePlayer.name : player.name }}
                 <span class="tag is-warning is-small" v-if="'idlePlayer' in player">Idle</span>
                 <span class="tag is-info is-small" v-else-if="player.steamid === 'BOT'">BOT</span>
               </div>
+              <div v-else :class="['list-item-title', {'has-text-crossed': !player.isAlive }]">
+                <progress v-if="player.isAlive" :class="['progress', getHealthClassInfected(player), 'flowprogress']" :value="player.permHealth" :max="player.maxHealth" style="width:20%">{{player.permHealth}}%</progress>
+                {{ player.name }}
+                <span class="tag is-info is-small" v-if="player.steamid === 'BOT'">BOT</span>
+              </div>
               <div class="list-item-description has-text-black" v-if="'survivor' in player">
                 <template v-if="player.isAlive">
                   <div class="tags">
-                    <span :class="['tag',getHealthClass(player)]">{{ player.permHealth + player.tempHealth }} HP</span>
-                    <span class="tag">{{ getPlayerStateInfo(player) }}</span>
+                    <span :class="['tag',getHealthClass(player.permHealth)]">{{ player.permHealth + player.tempHealth }} HP</span>
+                    <span class="tag">{{ PlayerMoveString[player.move] }}</span>
+                    <span class="tag is-info" v-if="player.action">{{ PlayerAction[player.action] }}</span>
+                    <span class="tag is-primary" v-for="state in getPlayerStates(player)" :key="state">
+                      {{ state }}
+                    </span>
                     <span class="tag is-dark" v-for="item in getPlayerWeaponNames(player)" :key="item">
                       {{ item }}
                     </span>
@@ -170,7 +179,7 @@
                 <span v-else>Dead</span>
               </div>
               <div class="list-item-description has-text-black" v-else-if="'class' in player">
-                {{ player.pinnedSurvivor }}
+                {{ player.pinnedSurvivorId }}
               </div>
             </div>
             <div class="list-item-controls">
@@ -339,16 +348,63 @@
 import { useRoute, useRouter } from 'vue-router'
 import { onBeforeMount, ref, computed, onUnmounted } from 'vue'
 import FolderBrower from'@/components/FolderBrowser.vue'
-import { ClientUserData, WebPermission } from '../../../../common-types/User';
+import { ClientUserData } from '../../../../common-types/User';
 import { PrivilegedUser } from '@/js/User';
 import { parseLog, getRelDate, request } from '@/js/util';
 import LogMessage from "@/components/LogMessage.vue";
 import { useNotification } from "@kyvg/vue3-notification";
 import VueApexCharts from 'vue3-apexcharts'
 import Field from '@/components/Field.vue';
-import { PluginServerStatus, StatusPlayer, StatusPlayerSurvivor, SurvivorId, FinaleStageName, PlayerState } from '../../../../common-types/Server';
+import { PluginServerStatus, StatusPlayer, StatusPlayerSurvivor, SurvivorId, FinaleStage, PlayerState, PlayerAction, PlayerMove, StatusPlayerInfected } from '../../../../common-types/Server';
 import { UserPrivilegeCode } from '../../../../common-types/Privileges';
 import { formatDate, getDuration } from '../../js/util';
+
+export const FinaleStageName: Record<FinaleStage, string> = {
+    [FinaleStage.Gauntlet]: "Gauntlet",
+    [FinaleStage.Gauntlet_]: "Gauntlet",
+    [FinaleStage.Gauntlet2]: "Gauntlet",
+    [FinaleStage.HordeWave1]: "Horde Wave",
+    [FinaleStage.FirstBoss]: "First Tank",
+    [FinaleStage.GauntletHorde]: "Gauntlet: Horde",
+    [FinaleStage.GauntletHordeBonusTime]: "Gauntlet: Over Time",
+    [FinaleStage.GauntletHordeBossIncoming]: "Gauntlet: Tank Incoming",
+    [FinaleStage.GauntletBoss]: "Gauntlet: Tank",
+    [FinaleStage.GauntletEscape]: "Gauntlet: Escape",
+    [FinaleStage.GauntletStart]: "Gauntlet",
+    [FinaleStage.HordeWave2]: "Horde Wave",
+    [FinaleStage.FinalBoss]: "Final Boss",
+    [FinaleStage.CustomPanic]: "Panic",
+    [FinaleStage.CustomTank]: "Tank",
+    [FinaleStage.CustomScripted]: "Scripted",
+    [FinaleStage.CustomDelay]: "Intermission",
+    [FinaleStage.CustomClearout]: "Clearout",
+    [FinaleStage.HordeEscape]: "Horde Escape",
+}
+
+export const PlayerActionString: Record<PlayerAction, string> = {
+  [PlayerAction.BeingHealed]: "Being Healed",
+  [PlayerAction.None]: "None",
+  [PlayerAction.Healing]: "Healing",
+  [PlayerAction.AmmoPack]: "Deploying Ammo Pack",
+  [PlayerAction.DefibDefibing]: "Defibbing",
+  [PlayerAction.GettingDefibed]: "Being Defibbed",
+  [PlayerAction.DeployIncendiary]: "Deploying Fire Ammo",
+  [PlayerAction.DeployExplosive]: "Deploying Explosive Ammo",
+  [PlayerAction.PouringGas]: "Pouring Gascan",
+  [PlayerAction.Cola]: "Using Cola",
+  [PlayerAction.Button]: "Pressing button",
+  [PlayerAction.UsePointScript]: "Pointing",
+}
+
+export const PlayerMoveString: Record<PlayerMove, string> = {
+  [PlayerMove.UnderAttack]: "Pinned by Special",
+  [PlayerMove.Hanging]: "Hanging",
+  [PlayerMove.Incapped]: "Incapped",
+  [PlayerMove.Idle]: "Idle",
+  [PlayerMove.Walk]: "Walking",
+  [PlayerMove.Run]: "Running",
+  [PlayerMove.Crouched]: "Crouched",
+}
 
 let series = ref<any[]>([])
 let series2 = ref<any[]>([])
@@ -474,6 +530,15 @@ function getPlayerWeaponNames(player: StatusPlayerSurvivor) {
     .map(weapon => {
       return weapon?.replace("weapon_", '').replace(/_/g, ' ')
     })
+}
+
+function getPlayerStates(player: StatusPlayerSurvivor) {
+  const states: string[] = []
+  if(player.states & PlayerState.BlackAndWhite) states.push("Black & White")
+  if(player.states & PlayerState.InSaferoom) states.push("In Saferoom")
+  if(player.states & PlayerState.IsCalm) states.push("Calm")
+  if(player.states & PlayerState.IsBoomed) states.push("Is Boomed")
+  return states
 }
 
 function getIconUrl(player: StatusPlayer) {
@@ -611,24 +676,18 @@ function processAction(server: any, type: string) {
   })
 }
 
-function getHealthClass(player: StatusPlayer) {
-  if(player.permHealth > 50)
+function getHealthClass(health: number) {
+  if(health > 50)
     return 'is-success'
-  else if(player.permHealth > 30) {
+  else if(health > 30) {
     return 'is-warning'
   } else {
     return 'is-danger'
   }
 }
-function getPlayerStateInfo(player: StatusPlayerSurvivor) {
-  if(player.states == 0) return "Alive"
-  else if(player.states & PlayerState.InSaferoom) return "In Saferoom"
-  else if(player.states & PlayerState.Idle) return "Idle"
-  else if(player.states & PlayerState.Incapped) return "Incapped"
-  else if(player.states & PlayerState.Walking) return "Walking"
-  else if(player.states & PlayerState.Running) return "Running"
-  else if(player.states & PlayerState.Crouched) return "Crouched"
-  else return "Unknown"
+function getHealthClassInfected(player: StatusPlayerInfected) {
+  const percent = (player.permHealth / player.maxHealth) * 100
+  return getHealthClass(percent)
 }
 function formatMap(mapId: string) {
   const display = getMapDisplay(mapId)

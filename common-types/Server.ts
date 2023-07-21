@@ -23,7 +23,6 @@ export interface BaseStatusPlayer {
     team: number;
     isAlive: boolean;
     permHealth: number;
-    states: number // see PlayerState;
 }
 
 export interface StatusPlayerSurvivor extends BaseStatusPlayer {
@@ -35,24 +34,50 @@ export interface StatusPlayerSurvivor extends BaseStatusPlayer {
     survivor: SurvivorId;
     weapons: ( null | string )[];
     isPinned: boolean,
+    states: PlayerState
+    move: PlayerMove,
+    action: PlayerAction
 }
 
 export interface StatusPlayerInfected extends BaseStatusPlayer {
     class: InfectedClass;
-    pinnedSurvivor?: string
+    pinnedSurvivorId?: string,
+    pinnedSurvivor?: StatusPlayerSurvivor
+    maxHealth: number
 }
 
 export type StatusPlayer = StatusPlayerSurvivor | StatusPlayerInfected
 
 export enum PlayerState {
-	Alive = 0,
-	Idle = 1,
-	Walking = 2,
-	Running = 4,
-	Crouched = 8,
-	Incapped = 16,
-	BlackAndWhite = 32,
-    InSaferoom = 64
+    BlackAndWhite = 1,
+	InSaferoom = 2,
+	IsCalm = 4,
+	IsBoomed = 8
+}
+
+export enum PlayerMove {
+    UnderAttack = -3,
+    Hanging = -2,
+    Incapped = -1,
+    Idle = 0,
+    Walk = 1,
+    Run = 2,
+    Crouched = 3,
+}
+
+export enum PlayerAction {
+    BeingHealed      = -1,
+    None				= 0,	// No use action active
+    Healing			= 1,	// Includes healing yourself or a teammate.
+    AmmoPack			= 2,	// When deploying the ammo pack that was never added into the game
+    DefibDefibing			= 4,	// When defib'ing a dead body.
+    GettingDefibed	= 5,	// When comming back to life from a dead body.
+    DeployIncendiary	= 6,	// When deploying Incendiary ammo
+    DeployExplosive	= 7,	// When deploying Explosive ammo
+    PouringGas		= 8,	// Pouring gas into a generator
+    Cola				= 9,	// For Dead Center map 2 cola event, when handing over the cola to whitalker.
+    Button			= 10,	// Such as buttons, timed buttons, generators, etc.
+    UsePointScript	= 11	// When using a "point_script_use_target" entity
 }
 
 export enum SurvivorId {
@@ -98,25 +123,3 @@ export enum FinaleStage {
     GauntletEscape = 17,
     Gauntlet_ = 18,
 };
-
-export const FinaleStageName: Record<FinaleStage, string> = {
-    [FinaleStage.Gauntlet]: "Gauntlet",
-    [FinaleStage.Gauntlet_]: "Gauntlet",
-    [FinaleStage.Gauntlet2]: "Gauntlet",
-    [FinaleStage.HordeWave1]: "Horde Wave",
-    [FinaleStage.FirstBoss]: "First Tank",
-    [FinaleStage.GauntletHorde]: "Gauntlet: Horde",
-    [FinaleStage.GauntletHordeBonusTime]: "Gauntlet: Over Time",
-    [FinaleStage.GauntletHordeBossIncoming]: "Gauntlet: Tank Incoming",
-    [FinaleStage.GauntletBoss]: "Gauntlet: Tank",
-    [FinaleStage.GauntletEscape]: "Gauntlet: Escape",
-    [FinaleStage.GauntletStart]: "Gauntlet",
-    [FinaleStage.HordeWave2]: "Horde Wave",
-    [FinaleStage.FinalBoss]: "Final Boss",
-    [FinaleStage.CustomPanic]: "Panic",
-    [FinaleStage.CustomTank]: "Tank",
-    [FinaleStage.CustomScripted]: "Scripted",
-    [FinaleStage.CustomDelay]: "Intermission",
-    [FinaleStage.CustomClearout]: "Clearout",
-    [FinaleStage.HordeEscape]: "Horde Escape",
-}
