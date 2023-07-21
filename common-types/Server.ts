@@ -14,7 +14,8 @@ export interface PluginServerStatus {
     players: StatusPlayer[];
     finaleInfo?: StatusFinaleInfo,
     fps: number,
-    startTime: number
+    startTime: number,
+    commonsCount: number
 }
 
 export interface BaseStatusPlayer {
@@ -63,6 +64,7 @@ export enum PlayerMove {
     Walk = 1,
     Run = 2,
     Crouched = 3,
+    Ladder = 4
 }
 
 export enum PlayerAction {
@@ -121,5 +123,5 @@ export enum FinaleStage {
     GauntletHordeBossIncoming = 15,
     GauntletBoss = 16,
     GauntletEscape = 17,
-    Gauntlet_ = 18,
+    Unknown = 18,
 };

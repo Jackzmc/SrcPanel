@@ -143,7 +143,7 @@
           <Icon icon="fa-spinner" spin v-if="nextRefreshCountdown == 0"></Icon>
           <span v-else>{{ nextRefreshCountdown }}s</span>
         </span>
-        <div class="list" v-if="liveStatus && liveStatus.playerCount > 0">
+        <div class="list" v-if="liveStatus && liveStatus.players.length > 0">
           <div class="list-item" v-for="player in liveStatus.players" :key="player.steamid ?? player.name">
             <div class="list-item-image">
               <figure class="image is-48x48">
@@ -191,6 +191,9 @@
               </div>
             </div>
           </div>
+        </div>
+        <div v-else-if="liveStatus">
+          <p class="has-text-centered">Waiting for players to connect</p>
         </div>
         <div v-else>
           <p class="has-text-centered">No fresh server status or no players online</p>
@@ -309,9 +312,12 @@
             <tr>
               <th>Last Update</th>
               <td class="has-text-right">
-                <p>{{ formatDate(liveStatus.lastUpdateTime) }}</p>
-                <em>{{ formatRelDate(liveStatus.lastUpdateTime )}}</em>
+                <p>{{ formatRelDate(liveStatus.lastUpdateTime )}}</p>
               </td>
+            </tr>
+            <tr>
+              <th>Commons Count</th>
+              <td class="has-text-right">{{ liveStatus.commonsCount }}</td>
             </tr>
             <tr v-if="liveStatus.finaleInfo">
               <th>Finale Info</th>
@@ -364,7 +370,7 @@ import { formatDate, getDuration } from '../../js/util.js';
 
 const FinaleStageName: Record<FinaleStage, string> = {
     [FinaleStage.Gauntlet]: "Gauntlet",
-    [FinaleStage.Gauntlet_]: "Gauntlet",
+    [FinaleStage.Unknown]: "Unknown",
     [FinaleStage.Gauntlet2]: "Gauntlet",
     [FinaleStage.HordeWave1]: "Horde Wave",
     [FinaleStage.FirstBoss]: "First Tank",
@@ -407,6 +413,7 @@ const PlayerMoveString: Record<PlayerMove, string> = {
   [PlayerMove.Walk]: "Walking",
   [PlayerMove.Run]: "Running",
   [PlayerMove.Crouched]: "Crouched",
+  [PlayerMove.Ladder]: "On Ladder",
 }
 
 let series = ref<any[]>([])
@@ -463,7 +470,7 @@ const options2 = {
     datetimeUTC: false
   }
 }
-const REFRESH_INTERVAL = 1000 * 8
+const REFRESH_INTERVAL = 1000 * 15
 
 const { notify } = useNotification();
 const props = defineProps<{
@@ -620,7 +627,8 @@ async function fetchServerStatus() {
     isRefreshing = false
     if(response.ok) {
       status.value = json.status
-      liveStatus.value = json.liveStatus
+      // liveStatus.value = json.liveStatus
+      // TODO: automatically change interval to reduce latency from sourcemod refresh interval
       activities.value = json.recentActivities?.map((act: any) => parseLog(act))
     } else {
       status.value = { error: json.message }
@@ -769,6 +777,12 @@ async function init() {
   clearInterval(refreshInterval)
   if(await fetchServerInfo()) {
     await fetchServerStatus()
+    const evtSource = new EventSource(`/api/servers/${route.params.id}/live`);
+    evtSource.onmessage = (event) => {
+      const json = JSON.parse(event.data)
+      liveStatus.value = json
+    }
+
     refreshInterval = setInterval(fetchServerStatus, REFRESH_INTERVAL)
   }
 }

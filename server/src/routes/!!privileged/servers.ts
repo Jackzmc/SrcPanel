@@ -1,11 +1,10 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
 import { OkPacket, RowDataPacket } from 'mysql2';
-import { Static, Type } from '@sinclair/typebox'
-import SteamID from 'steamid'
 import { join } from 'path';
 import { readFile } from 'fs/promises';
 import { NO_PERMISSION, NOT_FOUND } from '../../responses.js';
 import JWT from '../../jwt-promise.js'
+import { request } from 'http';
     
 const COMMENT_LINE_REGEX = new RegExp(/^\s*(\/\/|#)/)
 const HIDDEN_COMMANDS = [
@@ -153,6 +152,37 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 message: "Path specified is invalid"
             })
         }
+    })
+
+    fastify.get('/:id/live', (req: FastifyRequest<{Params: { id: 'string' }}>, reply) => {
+        reply.raw.writeHead(200, {
+            'Cache-Control': 'no-cache,no-transform',
+            'Content-Type': 'text/event-stream',
+            'Connection': 'keep-alive',
+            'X-Accel-Buffering': 'no'
+        });
+        function send(msg: any) {
+            reply.raw.write(`data: ${JSON.stringify(msg)}\n\n`)
+        }
+        reply.raw.flushHeaders()
+        reply.raw.write('retry: 10000\n\n')
+
+        const server = fastify.servers.get(req.params.id)
+        
+        if(!server) {
+            send({
+                error: "Server Not Found", 
+                code: "SERVER_NOT_FOUND",
+            })
+        }
+        function eventHandler(data: string) {
+            send(data)
+        }
+        server.addListener("live", eventHandler)
+        req.raw.on("close", () => {
+            server.removeListener("live", eventHandler)
+        })
+        reply.hijack()
     })
 
     fastify.get('/:id/status', async(req: FastifyRequest<{Params: { id: 'string' }}>, reply) => {

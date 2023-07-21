@@ -4,6 +4,7 @@ import { readdir } from 'fs/promises'
 import { join, resolve } from 'path'
 import { statSync } from 'fs';
 import { PluginServerStatus } from '../../../../common-types/Server';
+import { EventEmitter } from 'node:events';
 
 const HIDDEN_CONFIG_FILES = [
   "360controller.cfg",
@@ -102,7 +103,7 @@ interface PlayerStats {
   count: number
 }
 
-export default class Server { 
+export default class Server extends EventEmitter { 
     private _info: ServerInfo
     private _status: ServerStatus
     private _liveData: PluginServerStatus
@@ -128,6 +129,7 @@ export default class Server {
     public playerCounts: PlayerStats[] = [] 
 
     constructor(server: ServerData) {
+        super()
         this._info = {
           id: server.id,
           name: server.name,
@@ -223,6 +225,10 @@ export default class Server {
         .sort((a, b) => a.team - b.team)
       this._startTime = status.startTime
       this._liveData = status
+
+      this.emit("live", status)
+
+      return this.listenerCount("live")
     }
 
     // Fetches all config, including one level nested
