@@ -113,7 +113,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
                 await fastify.authmngr.revokeAdmin(admin.id)
 
-                await req.user.log(admin.identity, `%client% revoked admin privileges #%id for %target%`, {
+                await req.user.log(admin.identity, `%client% revoked admin from %target% (#%id)`, {
                     code: "admins.revoke",
                     metadata: {
                         id: admin.id,
@@ -242,7 +242,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                     groupIds
                 }, req.body.webPermissions)
 
-                await req.user.log(req.params.steamid, `%client% added new admin #%id% for %target%`, {
+                await req.user.log(req.params.steamid, `%client% granted admin to %target% (#%id)`, {
                     code: "admins.grant",
                     metadata: {
                         id,
