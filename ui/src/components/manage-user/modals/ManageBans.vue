@@ -129,7 +129,7 @@
               </select>
             </div>
           </div>
-          <p class="help has-text-danger" v-if="ban.expired">Ban is currently expired</p>
+          <p class="help has-text-danger" v-if="ban.expired">Ban has expired</p>
           <p class="help" v-else-if="ban.expires">Will expire on {{formatDate(ban.expires)}}</p>
           <p class="help" v-else>Ban will never expire</p>
         </div>
