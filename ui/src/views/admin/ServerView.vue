@@ -179,6 +179,9 @@
                 <span v-else>Dead</span>
               </div>
               <div class="list-item-description has-text-black" v-else-if="'class' in player">
+                <div class="tags">
+                  <span v-if="player.class === InfectedClass.Tank" :class="['tag', getHealthClassInfected(player)]">{{ player.permHealth }}/{{ player.maxHealth }} HP</span>
+                </div>
                 {{ player.pinnedSurvivorId }}
               </div>
             </div>
@@ -317,7 +320,7 @@
             </tr>
             <tr>
               <th>Server FPS</th>
-              <td class="has-text-right">{{ liveStatus.fps.toFixed(0) }}</td>
+              <td class="has-text-right">{{ liveStatus.fps.toFixed(1) }}</td>
             </tr>
             <tr>
               <th>Server Uptime</th>
@@ -355,7 +358,7 @@ import LogMessage from "@/components/LogMessage.vue";
 import { useNotification } from "@kyvg/vue3-notification";
 import VueApexCharts from 'vue3-apexcharts'
 import Field from '@/components/Field.vue';
-import { PluginServerStatus, StatusPlayer, StatusPlayerSurvivor, SurvivorId, FinaleStage, PlayerState, PlayerAction, PlayerMove, StatusPlayerInfected } from '../../../../common-types/Server';
+import { PluginServerStatus, StatusPlayer, StatusPlayerSurvivor, SurvivorId, FinaleStage, PlayerState, PlayerAction, PlayerMove, StatusPlayerInfected, InfectedClass } from '../../../../common-types/Server';
 import { UserPrivilegeCode } from '../../../../common-types/Privileges';
 import { formatDate, getDuration } from '../../js/util.js';
 
