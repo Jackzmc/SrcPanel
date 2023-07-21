@@ -235,7 +235,7 @@ const props = defineProps<{
   privUser: PrivilegedUser
 }>()
 
-let webCodes = ref<string[]>(props.userAdminData.permissions.base.codes)
+let webCodes = ref<string[]>(props.userAdminData?.permissions.base.codes ?? [])
 
 
 let groups = ref<AdminGroup[]>([])
