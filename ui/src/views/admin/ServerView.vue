@@ -357,9 +357,9 @@ import VueApexCharts from 'vue3-apexcharts'
 import Field from '@/components/Field.vue';
 import { PluginServerStatus, StatusPlayer, StatusPlayerSurvivor, SurvivorId, FinaleStage, PlayerState, PlayerAction, PlayerMove, StatusPlayerInfected } from '../../../../common-types/Server';
 import { UserPrivilegeCode } from '../../../../common-types/Privileges';
-import { formatDate, getDuration } from '../../js/util';
+import { formatDate, getDuration } from '../../js/util.js';
 
-export const FinaleStageName: Record<FinaleStage, string> = {
+const FinaleStageName: Record<FinaleStage, string> = {
     [FinaleStage.Gauntlet]: "Gauntlet",
     [FinaleStage.Gauntlet_]: "Gauntlet",
     [FinaleStage.Gauntlet2]: "Gauntlet",
@@ -381,7 +381,7 @@ export const FinaleStageName: Record<FinaleStage, string> = {
     [FinaleStage.HordeEscape]: "Horde Escape",
 }
 
-export const PlayerActionString: Record<PlayerAction, string> = {
+const PlayerActionString: Record<PlayerAction, string> = {
   [PlayerAction.BeingHealed]: "Being Healed",
   [PlayerAction.None]: "None",
   [PlayerAction.Healing]: "Healing",
@@ -396,7 +396,7 @@ export const PlayerActionString: Record<PlayerAction, string> = {
   [PlayerAction.UsePointScript]: "Pointing",
 }
 
-export const PlayerMoveString: Record<PlayerMove, string> = {
+const PlayerMoveString: Record<PlayerMove, string> = {
   [PlayerMove.UnderAttack]: "Pinned by Special",
   [PlayerMove.Hanging]: "Hanging",
   [PlayerMove.Incapped]: "Incapped",
