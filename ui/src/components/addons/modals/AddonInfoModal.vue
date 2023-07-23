@@ -66,13 +66,19 @@
         </div>
         <template v-if="props.addon.workshop">
           <h5 class="title is-5">Description</h5>
+          <div class="buttons">
+            <a target="_blank" :href="props.addon.workshop.fileUrl"  data-tooltip="Download the addon directly from steam workshop" class="button is-small is-info">Download (Workshop)</a>
+            <a target="_blank" :href="downloadUrl"  data-tooltip="Download the addon from the admin panel" class="button is-small">Download (Direct)</a>
+          </div>
           <article class="message">
             <div class="message-body content is-size-7">
               <span style="white-space: pre-wrap" v-html="parsedDescription" />
             </div>
           </article>
-          <a target="_blank" :href="props.addon.workshop.fileUrl"  data-tooltip="Direct download" class="button is-small">Download Addon File</a>
         </template>
+        <div class="buttons" v-else>
+          <a target="_blank" :href="downloadUrl"  data-tooltip="Download the addon from the admin panel" class="button is-small is-link">Download (Direct)</a>
+          </div>
       </section>
       <footer class="modal-card-foot">
         <button class="button" @click="close(false)">
@@ -180,6 +186,10 @@ async function restartServer(id: string) {
 
 const addonName = computed(() => {
   return props.addon.workshop ? props.addon.workshop.title : props.addon.filename
+})
+
+const downloadUrl = computed(() => {
+  return `/api/shares/${props.share.id}/addons/${props.addon.filename}/download`
 })
 
 const parsedDescription = computed(() => {
