@@ -168,7 +168,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         return reply.status(204).send()
     })
 
-    fastify.get('/:shareId/addons/:workshopId/download', async(req: FastifyRequest<{
+    fastify.get('/:shareId/addons/workshop/:workshopId/download', async(req: FastifyRequest<{
         Params: {shareId: string, workshopId: string},
         Querystring: {'destinations'?: string, force?: boolean, sse?: boolean }
     }>, reply) => {
