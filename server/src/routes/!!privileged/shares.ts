@@ -40,6 +40,12 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         if(!req.user.hasPermission("shares.view", req.params.shareId)) return NO_PERMISSION(reply)
         const shareId = req.params.shareId
         const share = fastify.servers.getShare(shareId)
+        if(!share) {
+            return reply.status(404).send({
+                error: "Share Not Found", 
+                message: `No share with id \"${shareId.toLowerCase()}\" could be found. Share may be unavailable, incorrecty configured or does not exist`   
+            })
+        }
         return {
             share: {
                 id: share.id,
@@ -137,6 +143,35 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             }
         }
         reply.send()
+    })
+
+    fastify.get('/:shareId/addons/:filename/download', async(req: FastifyRequest<{Params: {shareId: string, filename: string}}>, reply) => {
+        if(!req.params.filename) {
+            return reply.status(401).send({
+                error: "No filename provided", 
+                message: `Filename is blank`   
+            })
+        }
+
+        const shareId = req.params.shareId
+        const [code, granted] = req.user.requirePermission("bans.edit", { resourceId: shareId })
+        if(!granted) return NO_PERMISSION(reply)
+
+        const share = fastify.servers.getShare(shareId)
+        if(!share) {
+            return reply.status(404).send({
+                error: "Share Not Found", 
+                message: `No share with id \"${shareId.toLowerCase()}\" could be found. Share may be unavailable, incorrecty configured or does not exist`   
+            })
+        }
+        await share.deleteAddon(req.params.filename)
+        await req.user.log(null, `deleted addon \"${req.params.filename}\"`, {
+            code,
+            metadata: {
+                filename: req.params.filename
+            }
+        })
+        return reply.status(204).send()
     })
 
     fastify.delete('/:shareId/addons/:filename', async(req: FastifyRequest<{Params: {shareId: string, filename: string}}>, reply) => {
