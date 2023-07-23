@@ -6,6 +6,8 @@ import { promisify } from 'util'
 import { ChildWorkshopItem, ShareInfo } from '../../../../common-types/Share.js';
 import { NO_PERMISSION } from '../../responses.js';
 import { UserPrivilegeCode } from '../../../../common-types/Privileges.js';
+import { createReadStream } from 'fs';
+import path from 'path';
 const pump = promisify(pipeline)
 
 const VALID_FILENAME_REGEX = new RegExp(/[a-z0-9_\- \.]+/i)
@@ -154,7 +156,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
 
         const shareId = req.params.shareId
-        const [code, granted] = req.user.requirePermission("bans.edit", { resourceId: shareId })
+        const [code, granted] = req.user.requirePermission("shares.addons.view", { resourceId: shareId })
         if(!granted) return NO_PERMISSION(reply)
 
         const share = fastify.servers.getShare(shareId)
@@ -164,14 +166,17 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 message: `No share with id \"${shareId.toLowerCase()}\" could be found. Share may be unavailable, incorrecty configured or does not exist`   
             })
         }
-        await share.deleteAddon(req.params.filename)
-        await req.user.log(null, `deleted addon \"${req.params.filename}\"`, {
-            code,
-            metadata: {
-                filename: req.params.filename
-            }
-        })
-        return reply.status(204).send()
+        const addonInfo = await share.isInstalled(req.params.filename)
+        if(!addonInfo) {
+            return reply.status(404).send({
+                error: "Addon Not Found", 
+                message: `No addon with filename \"${req.params.filename} for share \"${shareId.toLowerCase()}\" could be found.`   
+            })
+        }
+
+        const stream = createReadStream(path.join(share.sourceFolder, req.params.filename))
+        reply.header("Content-Disposition", "attachment; filename=" + req.params.filename)
+        return reply.send(stream)
     })
 
     fastify.delete('/:shareId/addons/:filename', async(req: FastifyRequest<{Params: {shareId: string, filename: string}}>, reply) => {
@@ -183,7 +188,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
 
         const shareId = req.params.shareId
-        const [code, granted] = req.user.requirePermission("bans.edit", { resourceId: shareId })
+        const [code, granted] = req.user.requirePermission("shares.addons.delete", { resourceId: shareId })
         if(!granted) return NO_PERMISSION(reply)
 
         const share = fastify.servers.getShare(shareId)

@@ -230,8 +230,9 @@ export default class Share {
     }
 
     public async isInstalled(query: string) {
-        return (await this.getInstalledFiles())
+        const file = (await this.getInstalledFiles())
             .find(filename => filename === query)
+        return file != null
     }
 
     public async install(filename: string, destinationKey: string) {
