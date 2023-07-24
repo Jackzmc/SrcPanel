@@ -11,11 +11,16 @@ import path from 'path';
 const pump = promisify(pipeline)
 
 const VALID_FILENAME_REGEX = new RegExp(/[a-z0-9_\- \.]+/i)
+const UPLOAD_MAX_FILESIZE_BYTES = 1000 * 1000 * 1000 * 5 // 5 GB
 
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions)  {
 
-    fastify.register(FastifyMultipart)
+    fastify.register(FastifyMultipart, {
+        limits: {
+            fileSize: UPLOAD_MAX_FILESIZE_BYTES
+        }
+    })
 
 
     fastify.get('/workshop/:publishedfileid/details', async(req: FastifyRequest<{Params: { publishedfileid: string }}>, reply) => {
