@@ -42,6 +42,7 @@
           </label>
         </div>
       </div>
+      <p>Note: Max file size is limited to 5 GB.</p>
     </section>
     <footer class="modal-card-foot">
       <template v-if="uploadState > 1">
@@ -87,16 +88,17 @@ const props = defineProps<{
 }>()
 let installDestinations = ref<string[]>([])
 let uploadState = ref(0)
-let filePicker = ref()
+let filePicker = ref<HTMLInputElement>()
 let filename = ref()
+let uploadProgress = ref({ total: 0, current: 0})
 
 // TODO: use router-view for /admin/addons/add
 const route = useRoute()
 const router = useRouter()
 
 function onFileUploaded() {
-  filename.value = filePicker.value.files[0].name
-  console.log(filePicker.value.files)
+  filename.value = filePicker.value!.files![0].name
+  console.log(filePicker.value!.files)
 }
 
 async function restartServers() {
@@ -143,13 +145,22 @@ async function restartServer(id: string) {
 }
 
 async function startUpload() {
+  if(!filePicker.value || !filePicker.value.files) return
   uploadState.value = 1
   const formData = new FormData()
   formData.append("files[]", filePicker.value.files[0])
-  const response = await request(`/api/shares/${props.share.id}/addons/upload`, {
+  uploadProgress.value = {
+    current: 0,
+    total: filePicker.value.files[0].size
+  }
+  const response = await fetch(`/api/shares/${props.share.id}/addons/upload`, {
     method: 'POST',
     body: formData
   })
+  
+  for await (const chunk of response.body) {
+    uploadProgress.value += chunk.length;
+  }
   if(response?.ok) {
     uploadState.value = 2
     notify({

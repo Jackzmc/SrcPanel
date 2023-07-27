@@ -137,17 +137,17 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 })  
             }
             await pump (part.file, share.createUploadStream(part.filename))
+            if (part.file.truncated) {
+                console.warn(`${part.filename} is truncated, clearing downloaded piece`)
+                await share.deleteAddon(part.filename)
+                reply.send(new fastify.multipartErrors.FilesLimitError());    
+            }
             await req.user.log(null, `uploaded addon %filename%`, {
                 code: "shares.addons.upload.direct",
                 metadata: {
                     filename: part.filename
                 }
             })
-            if (part.file.truncated) {
-                console.warn(`${part.filename} is truncated, clearing downloaded piece`)
-                await share.deleteAddon(part.filename)
-                reply.send(new fastify.multipartErrors.FilesLimitError());    
-            }
         }
         reply.send()
     })

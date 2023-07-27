@@ -28,6 +28,9 @@
             {{workshopDetails.consumer_app_title}}
           </a>
         </p>
+        <p class="subtitle is-6" v-else-if="workshopDetails.result === 9"><b>Game: </b>
+          Addon is either private, friends-only, or does not exist.
+        </p>
         <p class="subtitle is-6 has-text-danger" v-else>
           Addon is for <b><a :href="'https://store.steampowered.com/app/' + workshopDetails.consumer_app_id">
             {{workshopDetails.consumer_app_title}}
