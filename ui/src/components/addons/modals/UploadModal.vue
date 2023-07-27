@@ -157,10 +157,10 @@ async function startUpload() {
     method: 'POST',
     body: formData
   })
-  
-  for await (const chunk of response.body) {
-    uploadProgress.value += chunk.length;
-  }
+
+  // for await (const chunk of response?.body) {
+  //   uploadProgress.value += chunk.length;
+  // }
   if(response?.ok) {
     uploadState.value = 2
     notify({
