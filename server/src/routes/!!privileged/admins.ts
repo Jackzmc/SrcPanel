@@ -57,7 +57,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             .sort((a:AdminData|ReadableAdminData, b: AdminData|ReadableAdminData) => {
                 const diff = b.permissions.immunityLevel - a.permissions.immunityLevel
                 if(diff != 0) return diff
-                return a.name.localeCompare(b.name)
+                return a.id - b.id
             })
 
         return {
