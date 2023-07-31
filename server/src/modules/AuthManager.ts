@@ -145,11 +145,8 @@ export default class AuthManager {
     public async revokeAdmin(id: number) {
         await this.db.execute<OkPacket>("DELETE FROM sm_admins WHERE id = ?", [id])
         await this.db.execute<OkPacket>("DELETE FROM sm_admins_groups WHERE admin_id = ?", [id])
-        // possibly make optional:
-        const steamid = this.getAdminById(id)
-        if(steamid)
-            await this.db.execute<OkPacket>("DELETE FROM dash_permissions WHERE SUBSTRING(steamid, 11) = SUBSTRING(?, 11)", [steamid])
-            delete this.admins[id]
+        await this.db.execute<OkPacket>("DELETE FROM dash_permissions WHERE admin_id = ?", [id])
+        delete this.admins[id]
     }
 
     public async editAdmin(id: number, data: Partial<AddAdmin>, webPerms?: number) {
