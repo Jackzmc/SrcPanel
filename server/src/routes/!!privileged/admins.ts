@@ -120,9 +120,13 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                     }
                 })
 
-
-                reply.send({
+                return reply.send({
                     success: true
+                })
+            } else {
+                return reply.code(404).send({
+                    error: "NOT_AN_ADMIN",
+                    message: "The target user is not an admin."
                 })
             }
         } else {

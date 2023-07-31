@@ -148,7 +148,7 @@ export default class AuthManager {
         // possibly make optional:
         const steamid = this.getAdminById(id)
         if(steamid)
-            await this.db.execute<OkPacket>("DELETE FROM dash_perms WHERE SUBSTRING(steamid, 11) = SUBSTRING(?, 11)", [steamid])
+            await this.db.execute<OkPacket>("DELETE FROM dash_permissions WHERE SUBSTRING(steamid, 11) = SUBSTRING(?, 11)", [steamid])
             delete this.admins[id]
     }
 
@@ -215,18 +215,6 @@ export default class AuthManager {
         )
 
         const id = ok.insertId
-
-        if(webPermissions) {
-            await this.db.execute(
-                "INSERT INTO dash_perms (steamid, permissions, flags) VALUES (:steamid, :permissions, :flags)",
-                {
-                    steamid: admin.identity,
-                    permissions: webPermissions,
-                    flags: webFlags || 0
-
-                }
-            )
-        }
 
         if(admin.groupIds) {
             for(const groupId of admin.groupIds) {
