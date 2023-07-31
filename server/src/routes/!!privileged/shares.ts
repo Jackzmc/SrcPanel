@@ -329,7 +329,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                             message: `Downloaded <a href="https://steamcommunity.com/sharedfiles/filedetails/?id=${detail.publishedfileid}"><b>${detail.title}</b></a> (${humanFileSize(detail.file_size)})`
                         })
                         await req.user.log(null, `downloaded workshop addon \"%title%\" (%filename%) for %share%`, {
-                            code: "shares.addons.upload.steam_workshop." + detail.publishedfileid as UserPrivilegeCode,
+                            code: "shares.addons.upload.steam_workshop." + share.id as UserPrivilegeCode,
                             metadata: {
                                 type: "workshop",
                                 share: share.id,
@@ -362,7 +362,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                                     result: "success"
                                 }
                                 await req.user.log(null, `enabled addon {filename} for "{share}/{server}"`, {
-                                    code: "shares.addons.edit." + detail.publishedfileid as UserPrivilegeCode,
+                                    code: "shares.addons.edit." + share.id + "." + destKey as UserPrivilegeCode,
                                     metadata: {
                                         share: share.id,
                                         server: destKey,
