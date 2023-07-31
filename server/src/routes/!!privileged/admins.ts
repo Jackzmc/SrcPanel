@@ -100,8 +100,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     }>, reply) => {
         if(!req.user.hasPermission("admins.revoke")) return NO_PERMISSION(reply)
         if(req.params.steamid.length > 10) {
-            const steamid = req.params.steamid.slice(10)
-            const admin = fastify.authmngr.getAdmin(steamid)
+            const admin = fastify.authmngr.getAdmin(req.params.steamid)
             if(admin) {
                 if(admin.permissions.immunityLevel >= req.session.permissions.immunityLevel) {
                     reply.code(403).send({
