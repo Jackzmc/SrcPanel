@@ -150,11 +150,10 @@ async function fetchAdmins() {
 }
 async function getRecentPlayers() {
   recentPlayers.value.loading = true
-  const resp = await request(`/api/users/recent/${recentPlayers.value.server||''}?limit=${RECENT_LIMIT}`)
+  const resp = await request(`/api/users/recent/${recentPlayers.value.server || ''}?limit=${RECENT_LIMIT}`)
   recentPlayers.value.loading = false
   if(resp?.ok) {
     const json = await resp.json()
-
     recentPlayers.value.list = []
 
     for(const user of json.users) {
@@ -165,6 +164,7 @@ async function getRecentPlayers() {
           break
         }
       }
+
       if(!existing) {
         recentPlayers.value.list.push(user)
       }

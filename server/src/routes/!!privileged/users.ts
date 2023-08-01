@@ -13,17 +13,18 @@ const STEAM_ID_REGEX = new RegExp(/STEAM_\d:\d:\d+/)
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
     fastify.get('/recent/:server?', async(req: FastifyRequest<{Params: { server?: string }, Querystring: { limit?: number }}>, reply) => {
-        let limit = req.query.limit ?? RECENT_DEFAULT_LIMIT
+        let limit = Number(req.query.limit) ?? RECENT_DEFAULT_LIMIT
         if(limit < 0 || limit > 100) limit = RECENT_DEFAULT_LIMIT
         let server = req.params.server || null
         if(server === "all") server = null
         const start = Date.now()
         const [rows] = await fastify.db.execute<RowDataPacket[]>(
-            `SELECT 
+            `SELECT
                 (SELECT COUNT(*) FROM notes WHERE notes.steamid = client) as notesCount,
                 (SELECT COUNT(*) FROM bans WHERE bans.steamid = client) as bansCount,
                 (SELECT COUNT(*) FROM ${ADMINS_DB}.sm_admins 
                     WHERE SUBSTRING(${ADMINS_DB}.sm_admins.identity,11) = SUBSTRING(client, 11)
+                    LIMIT 1
                 ) as isAdmin,
                 COALESCE(last_alias, user_names.name) as name, country, l.timestamp as lastJoinDate, created_date as firstJoinDate,
                 server,
@@ -32,7 +33,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             LEFT JOIN user_names ON client = user_names.steamid
             LEFT JOIN stats_users ON client = stats_users.steamid
             WHERE
-                TYPE = 'JOIN' AND server = IFNULL(?,server) AND client != ?
+                TYPE = 'QUIT' AND server = IFNULL(?,server) AND client != ?
             ORDER BY l.timestamp DESC
             LIMIT ?`, 
             [server, req.session.user.steamid, limit]
@@ -45,7 +46,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                     row.name = user.name
                 }
             }
-            row.isAdmin = row.isAdmin == 1
+            row.isAdmin = row.isAdmin === 1
         }
 
         return {
