@@ -331,9 +331,6 @@ async function revoke() {
   if(window.confirm(`Are you sure you want to revoke ${props.user?.name}'s admin privileges? They will no longer be able to use any admin commands, see admin chat, or view any administration pages online.`)) {
     const response = await request(`/api/admins/${props.user?.steamid}`, {
       method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json',
-      },
       credentials: 'include'
     }, { title: "Revoke Admin Failed"})
     if(response?.ok) {

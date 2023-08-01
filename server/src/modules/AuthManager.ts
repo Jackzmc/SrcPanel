@@ -143,13 +143,14 @@ export default class AuthManager {
     }
 
     public async revokeAdmin(id: number) {
-        await this.db.execute<OkPacket>("DELETE FROM sm_admins WHERE id = ?", [id])
-        await this.db.execute<OkPacket>("DELETE FROM sm_admins_groups WHERE admin_id = ?", [id])
-        // possibly make optional:
-        const steamid = this.getAdminById(id)
-        if(steamid)
-            await this.db.execute<OkPacket>("DELETE FROM dash_perms WHERE SUBSTRING(steamid, 11) = SUBSTRING(?, 11)", [steamid])
-            delete this.admins[id]
+        const conn = await this.db.getConnection()
+        conn.beginTransaction()
+        await conn.execute<OkPacket>("DELETE FROM sm_admins WHERE id = ?", [id])
+        await conn.execute<OkPacket>("DELETE FROM sm_admins_groups WHERE admin_id = ?", [id])
+        await conn.execute<OkPacket>("DELETE FROM dash_permissions WHERE admin_id = ?", [id])
+        await conn.commit()
+        conn.release()
+        delete this.admins[id]
     }
 
     public async editAdmin(id: number, data: Partial<AddAdmin>, webPerms?: number) {
@@ -162,7 +163,9 @@ export default class AuthManager {
                 newAdminData[key] = data[key]
             }
         }
-        await this.db.query<OkPacket>(
+        const conn = await this.db.getConnection()
+        await conn.beginTransaction()
+        await conn.query<OkPacket>(
             "UPDATE sm_admins SET flags = ?, name = ?, immunity = ?, password = ?, authtype = ? WHERE id = ?", 
             [newAdminData.flags, newAdminData.name, newAdminData.immunity, newAdminData.password, newAdminData.authtype, id]
         )
@@ -172,17 +175,20 @@ export default class AuthManager {
         // If a change in groups
         if(data.groupIds) {
             // We don't know how many groups there are, easier to nuke them all and re-add
-            await this.db.query<OkPacket>(
+            await conn.query<OkPacket>(
                 "DELETE FROM sm_admins_groups WHERE admin_id = ?", 
                 [id]
             )
             for(const groupId of data.groupIds) {
-                await this.db.execute(
+                await conn.execute(
                     "INSERT INTO sm_admins_groups (admin_id, group_id, inherit_order) VALUES (?, ?, 0)",
                     [id, groupId]
                 )
             }
         }
+
+        await conn.commit()
+        conn.release()
 
         await this.fetchAdmins()
 
@@ -194,7 +200,6 @@ export default class AuthManager {
 
     public async addAdmin(admin: AddAdmin, webPermissions?: number, webFlags?: number) {
         // TODO: Add group support
-
         const details = await this.steam.getUserDetails([new SteamID(admin.identity)])
         try {
             await this.dbna.execute("INSERT INTO user_names (steamid, name, avatar_hash) VALUES (?, ?, ?)", [admin.identity.slice(10), details[0].personaname, details[0].avatarhash])
@@ -202,7 +207,9 @@ export default class AuthManager {
             console.warn(`Warn: Could not insert admin resolved name (${admin.identity.slice(10)}, name ${details[0].personaname}):`, err.sqlMessage)
         }
 
-        const [ok] = await this.db.execute<OkPacket>(
+        const conn = await this.db.getConnection()
+        await conn.beginTransaction()
+        const [ok] = await conn.execute<OkPacket>(
             `INSERT INTO sm_admins (\`authtype\`, \`identity\`, \`password\`, \`flags\`, \`name\`, \`immunity\`) VALUES (:authtype, :identity, :password, :flags, :name, :immunity)`,
             {
                 authtype: admin.authtype || "steam",
@@ -216,29 +223,19 @@ export default class AuthManager {
 
         const id = ok.insertId
 
-        if(webPermissions) {
-            await this.db.execute(
-                "INSERT INTO dash_perms (steamid, permissions, flags) VALUES (:steamid, :permissions, :flags)",
-                {
-                    steamid: admin.identity,
-                    permissions: webPermissions,
-                    flags: webFlags || 0
-
-                }
-            )
-        }
-
         if(admin.groupIds) {
             for(const groupId of admin.groupIds) {
                 // Currently silently ignores if group does not exist. This should be changed.
-                await this.db.execute(
+                await conn.execute(
                     "INSERT INTO sm_admins_groups (admin_id, group_id, inherit_order) VALUES (?, ?, 0)",
                     [id, groupId]
                 )
             }
         }
 
-        // TODO: Refactor so full refresh not needed
+        await conn.commit()
+        conn.release()
+        // TODO: update admin in place, no full refresh
         await this.fetchAdmins()
 
         return id
@@ -276,16 +273,21 @@ export default class AuthManager {
     }
 
     public async createApiKey(steamid: string): Promise<APIKey> {
-        await this.db.execute<OkPacket>(
+        const conn = await this.db.getConnection()
+        await conn.beginTransaction()
+        await conn.execute<OkPacket>(
             "DELETE FROM dash_apikeys WHERE SUBSTRING(steamid, 11) = SUBSTRING(?, 11)",
             [ steamid ]
         )
 
         const id = crypto.randomBytes(32).toString('hex')
-        await this.db.execute<OkPacket>(
+        await conn.execute<OkPacket>(
             "INSERT INTO dash_apikeys (id, steamid, perms, created, lastUsed) VALUES (?, ?, 0, UNIX_TIMESTAMP(), UNIX_TIMESTAMP())",
             [ id, steamid ]
         )
+
+        await conn.commit()
+        conn.release()
 
         const created = Math.floor(Date.now() / 1000)
         return {

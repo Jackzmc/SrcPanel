@@ -57,7 +57,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             .sort((a:AdminData|ReadableAdminData, b: AdminData|ReadableAdminData) => {
                 const diff = b.permissions.immunityLevel - a.permissions.immunityLevel
                 if(diff != 0) return diff
-                return a.name.localeCompare(b.name)
+                return a.id - b.id
             })
 
         return {
@@ -100,8 +100,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     }>, reply) => {
         if(!req.user.hasPermission("admins.revoke")) return NO_PERMISSION(reply)
         if(req.params.steamid.length > 10) {
-            const steamid = req.params.steamid.slice(10)
-            const admin = fastify.authmngr.getAdmin(steamid)
+            const admin = fastify.authmngr.getAdmin(req.params.steamid)
             if(admin) {
                 if(admin.permissions.immunityLevel >= req.session.permissions.immunityLevel) {
                     reply.code(403).send({
@@ -120,9 +119,13 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                     }
                 })
 
-
-                reply.send({
+                return reply.send({
                     success: true
+                })
+            } else {
+                return reply.code(404).send({
+                    error: "NOT_AN_ADMIN",
+                    message: "The target user is not an admin."
                 })
             }
         } else {
