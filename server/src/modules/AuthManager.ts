@@ -356,7 +356,10 @@ export default class AuthManager {
         console.time('fetchAdmins')
         console.time('fetchAdmins:fetch')
         const [rows] = await this.db.execute<RowDataPacket[]>(`
-            SELECT a.*, sag.group_id as group_id FROM sm_admins a LEFT JOIN sm_admins_groups sag on a.id = sag.admin_id
+            SELECT a.*, sag.group_id as group_id, u.last_alias as resolvedName
+            FROM sm_admins a
+            LEFT JOIN sm_admins_groups sag on a.id = sag.admin_id
+            LEFT JOIN \`left4dead2\`.stats_users u ON SUBSTRING(a.identity, 11) = SUBSTRING(u.steamid, 11)
         `)
         console.timeEnd('fetchAdmins:fetch')
         console.time('fetchAdmins:parse')
@@ -375,7 +378,7 @@ export default class AuthManager {
                     authtype: row.authtype,
                     identity: row.identity,
                     password: row.password,
-                    name: row.name,
+                    name: row.resolvedName ?? row.name,
                     permissions: {
                         ...base,
                         base
