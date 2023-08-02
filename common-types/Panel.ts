@@ -4,15 +4,17 @@ export interface KeyConfig {
     name?: string
     type: KeysType,
     sensitive?: boolean,
+    description?: string,
+    required: boolean
 }
 export type KeysType = "string" | "integer" | "float" | "url" | "path"
-export type Keyvalue = keyof typeof Keyvalues
+export type Keyvalue = "domain" | "discord.appid" | "discord.appsecret" | "discord.link"
 export type KeysRecords = Record<string, KeyConfig>
 export const Keyvalues: KeysRecords = {
-    "domain": { type: "url", public: true, name: "Domain" },
-    "discord.appid": { type: "string", name: "Discord Appid"},
-    "discord.appsecret": { type: "string", name: "Discord App Secret", sensitive: true},
-    discord_link: { type: "url", name: "Discord Invite Code" },
+    "domain": { required: true, type: "url", public: true, name: "Domain", description: "The domain used for return urls from Oauth2 login (discord)" },
+    "discord.appid": { required: false, type: "string", name: "Discord Appid"},
+    "discord.appsecret": { required: false, type: "string", name: "Discord App Secret", sensitive: true},
+    "discord.link": { required: false, type: "url", name: "Discord Invite Code", description: "A link to a discord server, joinable from the 'Administration' dropdown" },
 }
 export const PublicKeys = Object.entries(Keyvalues).filter(([k,v]) => v.public).map(([k,v]) => k) as Keyvalue[]
 
