@@ -71,13 +71,14 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                          return reply.code(500).send({
                             error: 'STEAM_API_ERROR',
                             message: 'Could not get user details from Steam API',
+                            steamid: req.query['openid.identity']
                         })
                     }
                     
                     const steamid2 = steamid.getSteam2RenderedID()
                     const admin = fastify.authmngr.getAdminExport(steamid2)
                     if(admin) {
-                        await fastify.authmngr.loginUser(req, details[0], admin)
+                        await fastify.authmngr.loginUser(req, details, admin)
 
                         if(req.query.return_uri) {
                             const redirectUri = process.env.STEAM_REDIRECT_URI || "http://localhost:8080"
