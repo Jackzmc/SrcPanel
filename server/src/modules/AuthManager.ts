@@ -518,7 +518,7 @@ export default class AuthManager {
         return rows[0].username
     }
     
-    public async loginUser(req: FastifyRequest, steamDetails?: SteamUserDetails, admin: ReadableAdminData) {
+    public async loginUser(req: FastifyRequest, admin: ReadableAdminData, steamDetails?: SteamUserDetails) {
         const steamInfo: SteamInfo = {
             steamid: admin.steamid,
             accountid: new SteamID(admin.steamid).accountid.toString(),
