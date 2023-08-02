@@ -518,13 +518,13 @@ export default class AuthManager {
         return rows[0].username
     }
     
-    public async loginUser(req: FastifyRequest, steamDetails: SteamUserDetails, admin: ReadableAdminData) {
+    public async loginUser(req: FastifyRequest, steamDetails?: SteamUserDetails, admin: ReadableAdminData) {
         const steamInfo: SteamInfo = {
             steamid: admin.steamid,
             accountid: new SteamID(admin.steamid).accountid.toString(),
-            name: steamDetails.personaname,
-            profileurl: steamDetails.profileurl,
-            avatarhash: steamDetails.avatarhash
+            name: steamDetails?.personaname ?? admin.steamid,
+            profileurl: steamDetails?.profileurl,
+            avatarhash: steamDetails?.avatarhash
         }
         req.session.user = steamInfo
         req.session.permissions = admin.permissions
