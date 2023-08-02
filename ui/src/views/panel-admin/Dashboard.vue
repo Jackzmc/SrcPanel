@@ -32,7 +32,7 @@
 import { PrivilegedUser } from "@/js/User";
 import { request } from "@/js/util";
 import { notify } from "@kyvg/vue3-notification";
-import { ref, computed, onBeforeMount, onActivated, onDeactivated, watch } from "vue"
+import { ref, computed, onBeforeMount, onMounted, onUnmounted } from "vue"
 import { ClientUserData } from "../../../../common-types/User";
 import { HealthReport, UpdateState } from "../../../../common-types/Panel.js";
 import ConfigEditor from "@/components/panel-admin/ConfigEditor.vue";
@@ -111,10 +111,10 @@ onBeforeMount(async () => {
   }
 })
 let refreshTimer = ref()
-onActivated(() => {
+onMounted(() => {
   refreshTimer.value = setInterval(fetchServerHealth, POLL_SERVER_HEALTH_INTERVAL)
 })
-onDeactivated(() => {
+onUnmounted(() => {
   clearInterval(refreshTimer.value)
   refreshTimer.value = null
 })
