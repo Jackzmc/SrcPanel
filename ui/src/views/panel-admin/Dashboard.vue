@@ -113,6 +113,7 @@ onBeforeMount(async () => {
 let refreshTimer = ref()
 onMounted(() => {
   refreshTimer.value = setInterval(fetchServerHealth, POLL_SERVER_HEALTH_INTERVAL)
+  fetchServerHealth()
 })
 onUnmounted(() => {
   clearInterval(refreshTimer.value)
