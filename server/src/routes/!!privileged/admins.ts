@@ -11,7 +11,6 @@ const POSTAdmin = Type.Object({
     immunityLevel: Type.Number(),
     flags: Type.String(),
     groupIds: Type.Optional(Type.String()),
-    webPermissions: Type.Optional(Type.Number()),
     name: Type.Optional(Type.String()),
     webCodes: Type.Optional(Type.Array(Type.String())),
 })
@@ -21,13 +20,12 @@ const PUTAdmin = Type.Object({
     immunityLevel: Type.Optional(Type.Number()),
     flags: Type.Optional(Type.String()),
     groupIds: Type.Optional(Type.String()),
-    webPermissions: Type.Optional(Type.Number()),
     webCodes: Type.Optional(Type.Array(Type.String())),
     name: Type.Optional(Type.String())
 })
 
-type POSTAdminType = Static<typeof POSTAdmin>
-type PUTAdminType = Static<typeof PUTAdmin>
+export type POSTAdminType = Static<typeof POSTAdmin>
+export type PUTAdminType = Static<typeof PUTAdmin>
 
 interface AddonListEntry {
     filename: string,
@@ -171,7 +169,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                     codes: req.body.webCodes as string[],
                     groupIds: req.body.groupIds ? req.body.groupIds.split(',') : []
                 }
-                const newAdmin = await fastify.authmngr.editAdmin(admin.id, newAdminData, req.body.webPermissions)
+                const newAdmin = await fastify.authmngr.editAdmin(admin.id, newAdminData)
 
                 await req.user.log(admin.identity, `%client% edited admin privileges #%id% for %target%`, {
                     code: "admins.edit",
@@ -243,7 +241,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                     flags: req.body.flags,
                     codes: req.body.webCodes,
                     groupIds
-                }, req.body.webPermissions)
+                })
 
                 await req.user.log(req.params.steamid, `%client% granted admin to %target% (#%id)`, {
                     code: "admins.grant",
