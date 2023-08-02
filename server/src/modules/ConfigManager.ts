@@ -6,7 +6,8 @@ import { mkdir, readFile, stat, writeFile } from 'fs/promises';
 import Json5 from 'json5'
 import { ShareDestination, ShareInfo } from '../../../common-types/Share';
 import Share from './Share';
-import { Keyvalue, PublicKeys } from '../../../common-types/Panel.js';
+import { Keyvalue, Keyvalues, PublicKeys } from '../../../common-types/Panel.js';
+import { Key } from 'readline';
 
 
 export default class ConfigManager {
@@ -55,6 +56,7 @@ export default class ConfigManager {
             constraint keyvalues_pk
                 primary key (key)
         );`)
+        await this.checkRequiredKeys()
     }
 
     public async GetServers(): Promise<any[]> {
@@ -130,7 +132,7 @@ export default class ConfigManager {
     }
 
     public async HasKV(key: Keyvalue) {
-        return this.GetKV(key) != null
+        return await this.GetKV(key) != undefined 
     }
 
     public async SetKV(key: Keyvalue, value: string | number) {
@@ -140,5 +142,27 @@ export default class ConfigManager {
 
     private async deleteKV(key: Keyvalue) {
         await this.db.run(SQL`DELETE FROM keyvalues WHERE key = ${key}`)
+    }
+
+    private async checkRequiredKeys() {
+        const missing = []
+        for(const [key, data] of Object.entries(Keyvalues)) {
+            if(data.required) {
+                if(!await this.HasKV(key as Keyvalue)) {
+                    missing.push(key)
+                }
+            }
+        }
+
+        if(missing.length > 0) {
+            console.warn(`[configManager] WARNING: Missing ${missing.length} required configurations:`)
+            for(const key of missing) {
+                if(Keyvalues[key].description)
+                    console.warn(`  ${key} [${Keyvalues[key].type}] - ${Keyvalues[key].description}`)
+                else
+                    console.warn(`  ${key} [${Keyvalues[key].type}]`)
+
+            }
+        }
     }
 }

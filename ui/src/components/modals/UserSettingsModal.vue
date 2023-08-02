@@ -112,8 +112,7 @@ import { ref, watch, computed, onBeforeMount, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 // @ts-ignore
 import { Tab, Tabs } from "vue3-tabs-component";
-import { UserPrivileges } from "../../../../common-types/Privileges";
-import { UserData, OauthProvider, SessionData } from '../../../../common-types/User';
+import { ClientUserData, OauthProvider, SessionData } from '../../../../common-types/User';
 import OauthProviderCard from "@/components/OauthProviderCard.vue";
 
 const emit = defineEmits(["close"]);
@@ -122,7 +121,7 @@ const route = useRoute();
 const router = useRouter();
 
 const props = defineProps<{
-  userdata: UserData;
+  userdata: ClientUserData;
   privUser: PrivilegedUser;
 }>();
 

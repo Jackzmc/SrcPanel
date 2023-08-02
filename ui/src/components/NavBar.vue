@@ -55,9 +55,6 @@
             <router-link to="/admin/servers" class="navbar-item">
               <Icon icon="fa-server">Servers</Icon>
             </router-link>
-            <router-link to="/admin/activity" class="navbar-item">
-              <Icon icon="list">Activity Log <span class="tag">Legacy</span></Icon>
-            </router-link>
             <router-link to="/admin/audit" class="navbar-item">
               <Icon icon="list">Activity Log</Icon>
             </router-link>
@@ -144,7 +141,6 @@ import { useRoute, useRouter } from 'vue-router';
 import { notify } from '@kyvg/vue3-notification';
 import { PrivilegedUser } from '@/js/User';
 import { ClientUserData } from '../../../common-types/User';
-import { Service, Action } from '../../../common-types/Privileges';
 import UserSettingsModal from './modals/UserSettingsModal.vue';
 // Bulma nav code
 onMounted(() => {
