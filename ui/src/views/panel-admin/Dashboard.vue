@@ -40,7 +40,7 @@ import SharesEditor from "@/components/panel-admin/SharesEditor.vue";
 //@ts-ignore
 import { Tab, Tabs } from 'vue3-tabs-component'
 
-const POLL_SERVER_HEALTH_INTERVAL = 1000 * 60 * 0.5
+const POLL_SERVER_HEALTH_INTERVAL = 1000 * 10
 
 const props = defineProps<{
   privUser: PrivilegedUser,
