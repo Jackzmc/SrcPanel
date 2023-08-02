@@ -166,7 +166,7 @@ export default class AuthManager {
         delete this.admins[id]
     }
 
-    public async editAdmin(id: number, data: Partial<AddAdmin>, webPerms?: number) {
+    public async editAdmin(id: number, data: Partial<AddAdmin>) {
         const [rows] = await this.db.execute<RowDataPacket[]>(`SELECT * FROM sm_admins WHERE id = ?`, [id])
         if(rows.length == 0) throw new Error("No admin with specified id exists")
         let newAdminData = rows[0]
@@ -207,11 +207,10 @@ export default class AuthManager {
 
         return {
             admin: newAdminData,
-            webPerms
         }
     }
 
-    public async addAdmin(admin: AddAdmin, webPermissions?: number, webFlags?: number) {
+    public async addAdmin(admin: AddAdmin) {
         // TODO: Add group support
         const details = await this.steam.getUserDetails([new SteamID(admin.identity)])
         try {
