@@ -51,7 +51,20 @@ export default class AuthManager {
         this.dbna = sessionDatabase
         this.steam = steam
         this.actLog = new ActivityLog(sessionDatabase)
-        this.fetchGroups().then(() => this.fetchAdmins())
+        this.init()
+    }
+
+    private async init() {
+        let startTime = Date.now()
+        await this.fetchGroups()
+        const fetchGroupsTime = Date.now() - startTime
+
+        startTime = Date.now()
+        await this.fetchAdmins()
+        const fetchAdminsTime = Date.now() - startTime
+
+        console.info(`[AuthManager] Fetched ${Object.keys(this.admins).length} admins in ${(fetchAdminsTime).toFixed(1)} ms`)
+        console.info(`[AuthManager] Fetched ${Object.keys(this.groups).length} groups in ${(fetchGroupsTime).toFixed(1)} ms`)
     }
 
     getConnection() {
@@ -204,7 +217,7 @@ export default class AuthManager {
         try {
             await this.dbna.execute("INSERT INTO user_names (steamid, name, avatar_hash) VALUES (?, ?, ?)", [admin.identity.slice(10), details[0].personaname, details[0].avatarhash])
         } catch(err) {
-            console.warn(`Warn: Could not insert admin resolved name (${admin.identity.slice(10)}, name ${details[0].personaname}):`, err.sqlMessage)
+            console.warn(`[AuthManager] WARN: Could not insert admin resolved name (${admin.identity.slice(10)}, name ${details[0].personaname}):`, err.sqlMessage)
         }
 
         const conn = await this.db.getConnection()
@@ -300,7 +313,6 @@ export default class AuthManager {
     }
 
     public async fetchGroups() {
-        console.time('fetchGroups')
         const groups: Record<number, AdminGroup> = {}
         // Returns right join of sm_group_permissions, will return N permissions with group data for each one
         const [rows] = await this.db.execute<RowDataPacket[]>("SELECT g.*, gp.code FROM sm_groups g LEFT JOIN sm_group_permissions gp ON g.id = gp.group_id")
@@ -334,7 +346,6 @@ export default class AuthManager {
             }
         }
         this.groups = groups
-        console.timeEnd('fetchGroups')
     }
     // Merge parent onto group
     private _mergeGroup(parent: AdminGroup, group: AdminGroup) {
@@ -355,16 +366,12 @@ export default class AuthManager {
     }
 
     public async fetchAdmins() {
-        console.time('fetchAdmins')
-        console.time('fetchAdmins:fetch')
         const [rows] = await this.db.execute<RowDataPacket[]>(`
             SELECT a.*, sag.group_id as group_id, u.last_alias as resolvedName
             FROM sm_admins a
             LEFT JOIN sm_admins_groups sag on a.id = sag.admin_id
             LEFT JOIN \`left4dead2\`.stats_users u ON SUBSTRING(a.identity, 11) = SUBSTRING(u.steamid, 11)
         `)
-        console.timeEnd('fetchAdmins:fetch')
-        console.time('fetchAdmins:parse')
         const admins: Record<string, AdminData> = {}
         for(const row of rows) {
             const accountId = row.identity.slice(10)
@@ -402,10 +409,8 @@ export default class AuthManager {
             }
 
         }
-        console.timeEnd('fetchAdmins:parse')
 
 
-        console.time('fetchAdmins:resolveOverrides')
         // Now we finally resolve user permission overrides
         // This is the most time intensive as we are running a query per admin
         for(const admin of Object.values(admins)) {
@@ -414,12 +419,7 @@ export default class AuthManager {
                 admin.permissions.codes.add(perm)
             }
         }
-        console.timeEnd('fetchAdmins:resolveOverrides')
-
         this.admins = admins
-        console.info(`Fetched ${Object.keys(admins).length} admins and ${Object.keys(this.groups).length} groups`)
-        console.timeEnd('fetchAdmins')
-
     }
 
     private _applyGroup(group: AdminGroup, admin: AdminData) {

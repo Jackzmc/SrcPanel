@@ -98,7 +98,7 @@ export default class ConfigManager {
             const data = config.shares[key] as Partial<ShareInfo>
             data.id = key
             if(!data.sourceFolder) {
-                console.warn(`[Warn] Skipping share \"${key}\": Missing property 'sourceFolder' in config`)
+                console.warn(`[ConfigManager] WARN: Skipping share \"${key}\": Missing property 'sourceFolder' in config`)
                 continue
             }
         
@@ -106,12 +106,15 @@ export default class ConfigManager {
                 await stat(data.sourceFolder)
                 shares.push(data)
             } catch(err) {
-                console.warn(`Addon Share Directory "${key}" returned error: ${err}`)
+                if(err.code === "ENOENT")
+                    console.warn(`[ConfigManager] WARN: Addon Share "${key}" source folder does not exist (ENOENT)`)
+                else
+                    console.error(`[ConfigManager] ERROR: Addon Share Directory "${key}" returned error: ${err}`)
             }
         }
     
         if(!config.addons["default"]) {
-            console.warn("Warn: No default share found (no key named \"default\")")
+            console.warn("[ConfigManager] Warn: No default share found (no key named \"default\")")
         }
 
         return shares
@@ -155,7 +158,7 @@ export default class ConfigManager {
         }
 
         if(missing.length > 0) {
-            console.warn(`[configManager] WARNING: Missing ${missing.length} required configurations:`)
+            console.warn(`[ConfigManager] WARNING: Missing ${missing.length} required configurations:`)
             for(const key of missing) {
                 if(Keyvalues[key].description)
                     console.warn(`  ${key} [${Keyvalues[key].type}] - ${Keyvalues[key].description}`)

@@ -138,46 +138,45 @@ export default class ServerManager {
       if(err.code != "EEXIST") throw err
     }
 
+    let numServers = 0
 
     for(const shareId in shares) {
       let share = shares[shareId] as Partial<ShareInfo>
       share.id = shareId
       if(!share.sourceFolder) {
-        console.warn(`[Warn] Skipping share \"${shareId}\": Missing property 'sourceFolder' in config`)
+        console.warn(`[ServerManager] WARN: Skipping share \"${shareId}\": Missing property 'sourceFolder' in config`)
         continue
       }
-
-      try {
-        await stat(share.sourceFolder)
-        const destinations = share.destinations as ShareDestinations || {}
-        for(let [destKey, dest] of Object.entries(destinations)) {
-          try {
-            await stat(dest.path)
-            if(dest.serverIds) {
-              const serverIds = []
-              for(const id of dest.serverIds) {
-                const _id = id.toLowerCase()
-                if(this.servers[_id]) {
-                  serverIds.push(_id)
-                } else {
-                  console.warn(`[Warn] Addon Share "${shareId}" destination "${destKey}" includes non existent server id: "${_id}"; skipping`)
-                }
-              }
-              dest.serverIds = serverIds
-            }
-          } catch(err) {
-            console.warn(`[Warn] Share "${shareId}" destination "${destKey}" path is invalid: "${dest.path}"`, err)
-          }
-        }
-        const db = await open({
-          filename: join(this.dataDir, `shares/${shareId.toLowerCase()}_cache.db`),
-          driver: sqlite3.Database
-        })
-        this.addonShares[shareId.toLowerCase()] = new Share(db, this.steam, share)
-        console.info(`Loaded share "${shareId}"`)
-      } catch(err) {
-        console.warn(`Share Directory "${shareId}" returned error: ${err}`)
+      
+      if(!await doesFileExist(share.sourceFolder)) {
+        console.warn(`[ServerManager] WARN: Share \"${shareId}\": source folder does not exist (ENOENT)`)
       }
+
+      const destinations = share.destinations as ShareDestinations || {}
+      for(let [destKey, dest] of Object.entries(destinations)) {
+        if(!await doesFileExist(share.sourceFolder)) {
+          console.warn(`[ServerManager] WARN: Share "${shareId}" destination "${destKey}" does not exist path "${dest.path}" (ENOENT)`)
+        }
+        if(dest.serverIds) {
+          const serverIds = []
+          for(const id of dest.serverIds) {
+            const _id = id.toLowerCase()
+            if(this.servers[_id]) {
+              serverIds.push(_id)
+              numServers++
+            } else {
+              console.warn(`[ServerManager] WARN: Addon Share "${shareId}" destination "${destKey}" includes non existent server id "${_id}"; skipping`)
+            }
+          }
+          dest.serverIds = serverIds
+        }
+      }
+      const db = await open({
+        filename: join(this.dataDir, `shares/${shareId.toLowerCase()}_cache.db`),
+        driver: sqlite3.Database
+      })
+      this.addonShares[shareId.toLowerCase()] = new Share(db, this.steam, share)
+      console.info(`[ServerManager] Loaded share "${shareId}" with ${Object.keys(share.destinations).length} destinations, ${numServers} servers`)
     }
 
     if(!shares["default"]) {
@@ -194,11 +193,11 @@ export default class ServerManager {
     let i = 0
     for (const [id, server] of Object.entries<ConfigServerData>(config)) {
       if(!server.name) {
-        console.warn(`Skipping ${id}: Server has no name`)
+        console.warn(`[ServerManager] WARN: Skipping ${id}: Server has no name`)
       } else if(!server.type) {
-        console.warn(`Skipping ${id}: ${server.name} has no type`)
+        console.warn(`[ServerManager] WARN: Skipping ${id}: ${server.name} has no type`)
       } else if(!server.ip) {
-        console.warn(`Skipping ${id}: ${server.name} has no ip`)
+        console.warn(`[ServerManager] WARN: Skipping ${id}: ${server.name} has no ip`)
       } else {
         const [, host, port] = server.ip.match(/([a-zA-Z0-9.]+):?(\d*)/)
         serverPromises.push(new Promise((resolve, reject) => {
@@ -206,7 +205,7 @@ export default class ServerManager {
             verbatim: false
           }, (err, address, family) => {
             if (err) {
-              console.warn("Warn: Failed to lookup ip for" + host, err)
+              console.warn(`[ServerManager] Warn: Could not resolve IP for hostname ${host}:\n`, err)
               return reject(err)
             }
 
@@ -247,8 +246,20 @@ export default class ServerManager {
       }
     }
 
+    const startTime = Date.now()
     await Promise.allSettled(serverPromises)
+    const endTime = Date.now() - startTime
 
-    console.log(`Loaded ${Object.keys(this.servers).length} servers`)
+    console.log(`[ServerManager] Loaded ${Object.keys(this.servers).length} servers in ${endTime.toFixed(1)} ms`)
+  }
+}
+
+async function doesFileExist(filename: string) {
+  try {
+    await stat(filename)
+    return true
+  } catch(err) {
+    if(err.code === "ENOENT") return false
+    throw err
   }
 }
