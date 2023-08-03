@@ -107,7 +107,7 @@ export async function request(url: RequestInfo, options?: RequestInit, errOption
       const text = await response.text()
       notify({
         type: "error",
-        text,
+        text: `${response.status} ${response.statusText}`,
         ...errOptions
       })
       console.error(`${url} returned an error:\n${text}`)
