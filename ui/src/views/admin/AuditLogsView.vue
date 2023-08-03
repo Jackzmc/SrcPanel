@@ -233,7 +233,7 @@
 import { ClientUserData } from '../../../../common-types/User.js';
 import { useNotification } from '@kyvg/vue3-notification';
 import { PrivilegedUser } from '@/js/User';
-import { ref, onBeforeMount, computed, onBeforeUnmount } from 'vue';
+import { ref, onBeforeMount, computed, onBeforeUnmount, onUnmounted } from 'vue';
 import { formatDate, getRelDate, request, requestTimeout } from '@/js/util';
 import LogMessage from '@/components/LogMessage.vue';
 import Field from '@/components/Field.vue';
@@ -584,11 +584,12 @@ async function copyShareLink(entry: any) {
 }
 
 let refreshTimer: any
+let nowTimer: any
 onBeforeMount(async() => {
   await getInfo()
 
   now.value = Date.now()
-  setInterval(() => {
+  nowTimer = setInterval(() => {
     now.value = Date.now()
   }, 1000)
 
@@ -636,7 +637,8 @@ onBeforeMount(async() => {
 
 })
 
-onBeforeUnmount(() => {
+onUnmounted(() => {
+  clearInterval(nowTimer)
   clearInterval(refreshTimer)
 })
 </script>
