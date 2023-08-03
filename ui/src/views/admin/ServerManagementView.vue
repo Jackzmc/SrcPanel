@@ -78,7 +78,7 @@
 
 <script setup lang="ts">
 import { request } from '@/js/util';
-import { ref, computed, onBeforeMount, onDeactivated } from 'vue'
+import { ref, computed, onBeforeMount, onDeactivated, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 
 const REFRESH_SECONDS = 6
@@ -173,7 +173,7 @@ async function refreshServers(notify = false) {
   }
 }
 
-onDeactivated(() => {
+onUnmounted(() => {
   clearInterval(refreshTimer.value)
   clearInterval(secondsTimer.value)
 })
