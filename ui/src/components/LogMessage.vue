@@ -3,7 +3,7 @@
     <Icon :icon="icon" v-if="icon" :icon-class="iconClass" />
     <template v-if="props.log.type === 'CHAT'">
       <b><UserComponent :user="props.log.client" type="client" @set-filter="setFilter"/>: </b>
-      <span :class="{'adminchat': props.log.adminchat}" v-html="chatMessage" />
+      <span :class="{'tag is-warning': props.log.adminChat}" v-html="chatMessage" />
     </template>
     <template v-else>
       <b v-if="LPieceCount == 0 && props.log.client.steamid">

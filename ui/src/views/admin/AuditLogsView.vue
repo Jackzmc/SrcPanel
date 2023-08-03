@@ -451,7 +451,10 @@ const fetchDebounce = debounce(search, 400)
 async function search() {
   if(!cache.value) return
   loadingTime.value = Date.now()
-  entries.value = await fetchLogs(cache.value.highestId, "before")
+  if(filters.value.aroundId)
+    entries.value = await fetchLogs(Number(filters.value.aroundId), "around")
+  else
+    entries.value = await fetchLogs(cache.value.highestId, "before")
   loadingTime.value = undefined
 }
 async function loadBottomContent() {
@@ -467,10 +470,17 @@ async function fetchLogs(id: number, mode: "before" | "after" | "around") {
   // Wait for previous request
   const params = updateParams()
   fetchAbort?.abort()
-  const responseHandle = requestTimeout(`/api/logs/${mode}/${id}?${params}`, MAX_REQUEST_TIME)
-  fetchAbort = responseHandle.controller
-  const response = await responseHandle.start()
-  fetchAbort = null
+
+  let response
+  try {
+    const responseHandle = requestTimeout(`/api/logs/${mode}/${id}?${params}`, MAX_REQUEST_TIME)
+    fetchAbort = responseHandle.controller
+    response = await responseHandle.start()
+    fetchAbort = null
+  } catch(err) {
+    loadingTime.value = undefined
+    throw err
+  }
 
   if(response?.ok) {
     const json = await response.json()
