@@ -225,6 +225,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         return {
             recentActivities, 
             stats,
+            uptime: server.uptime,
             status: server.status,
             liveStatus: server.liveStatus
         }

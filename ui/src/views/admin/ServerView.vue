@@ -99,6 +99,11 @@
               </div>
               <em class="my-2" v-else>no players are online</em>
             </div>
+            <div class="column">
+              <h5 class="title is-5 is-underlined"><span class="tag is-large is-info">Uptime</span></h5>
+              <p v-if="uptime">{{formatUptime(uptime)}}</p>
+              <p v-else>unknown</p>
+            </div>
           </div>
 
           <br>
@@ -188,7 +193,9 @@
           <p class="has-text-centered">Waiting for players to connect</p>
         </div>
         <div v-else>
-          <p class="has-text-centered">No fresh server status or no players online</p>
+          <h4 class="has-text-centered is-size-4">No recent server data</h4>
+          <br>
+          <p class="subtitle is-6 has-text-centered">Server may not have live view configured or there are no players online</p>
         </div>
       </div>
       <div v-else-if="tab === 'configs'" class="box">
@@ -269,6 +276,10 @@
         <p v-if="!status?.online && !server.info.tags.includes('systemd')"><em>no actions available</em></p>
       </div> -->
       <div class="box" v-if="tab === 'overview' || tab === 'live'">
+        <span class="is-inline is-pulled-right no-border pr-4" data-tooltip="Time until next refresh" style="width:10px">
+          <Icon icon="fa-spinner" spin v-if="nextRefreshCountdown == 0"></Icon>
+          <span v-else>{{ nextRefreshCountdown }}s</span>
+        </span>
         <h4 class="title is-5">Recent Activity</h4>
         <template v-if="activities">
           <table v-if="activities.length > 0" class="table is-fullwidth">
@@ -509,6 +520,7 @@ let status = ref()
 let liveStatus = ref<PluginServerStatus>()
 let liveStatusError = ref<string>()
 let lastLiveUpdateTime = ref<string>()
+let uptime = ref<number>()
 let activities = ref()
 let cfg = ref<{
   selected?: string, raw?: string, json?: any, loading: boolean }
@@ -620,8 +632,8 @@ async function fetchServerStatus() {
     isRefreshing = false
     if(response.ok) {
       status.value = json.status
-      // liveStatus.value = json.liveStatus
-      // TODO: automatically change interval to reduce latency from sourcemod refresh interval
+      uptime.value = json.uptime
+      if(json.liveStatus) liveStatus.value = json.liveStatus
       activities.value = json.recentActivities?.map((act: any) => parseLog(act))
     } else {
       status.value = { error: json.message }
@@ -711,6 +723,14 @@ function getMapDisplay(mapId: string) {
     }
   }
   return null;
+}
+
+function formatUptime(minutes: number) {
+  const hours = Math.round(minutes / 60)
+  if(hours < 1) return `${minutes} minutes`
+  const days = Math.round(hours / 24)
+  if(days < 1) return `${hours} hours`
+  return `${days} days`
 }
 
 function formatGamemode(gamemode: string) {
