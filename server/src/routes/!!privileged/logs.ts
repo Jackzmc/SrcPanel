@@ -106,9 +106,9 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         if(type === 'before') query.where("id", '<=', req.params.id)
         else if(type === 'after') query.where("id", '>', req.params.id)
         else if(type === 'around') {
-            const half = Math.floor(limit / 2)
-            query.where("id", '>=', req.params.id - half)
-                .where("id", "<", Number(req.params.id) + half)
+            const half = Math.ceil(limit / 2)
+            query.where("id", '>', Number(req.params.id) - half)
+                .where("id", "<=", Number(req.params.id) + half)
         }
 
         if(req.query.search_client) query.where('client', '=', req.query.search_client)
