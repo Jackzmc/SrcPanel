@@ -194,7 +194,7 @@ export default class Server extends EventEmitter {
 
     public get uptime() {
       if(!this._startTime) return 0
-      return (Date.now() - this._startTime / 1000)
+      return (Date.now() / 1000) - this._startTime
     }
 
     public get status(): ServerStatus { return this._status }
