@@ -796,6 +796,7 @@ function createLiveConnection() {
 }
 
 let refreshInterval: any = 0
+let nowInterval: any = 0
 async function init() {
   status.value = undefined
   error.value = undefined
@@ -807,7 +808,7 @@ async function init() {
   refreshInterval = setInterval(fetchServerStatus, REFRESH_INTERVAL)
 }
 
-setInterval(() => {
+nowInterval = setInterval(() => {
   now.value = Date.now()
   if(liveStatus.value)
     lastLiveUpdateTime.value = getRelDate(liveStatus.value.lastUpdateTime)
@@ -819,6 +820,7 @@ onBeforeMount(async() => {
 })
 onUnmounted(() => {
   clearInterval(refreshInterval)
+  clearInterval(nowInterval)
 })
 </script>
 
