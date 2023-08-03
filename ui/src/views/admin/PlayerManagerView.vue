@@ -172,10 +172,10 @@ async function getRecentPlayers() {
   }
 }
 async function getServerTypes() {
-  const resp = await request(`/api/logs/servers`)
+  const resp = await request(`/api/servers`)
   if(resp?.ok) {
     const json = await resp.json()
-    servers.value = json.servers
+    servers.value = json.map((server: any) => server.id)
   }
 }
 
