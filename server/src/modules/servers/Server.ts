@@ -3,8 +3,9 @@ import { Rcon } from 'rcon-client';
 import { readdir } from 'fs/promises'
 import { join, resolve } from 'path'
 import { statSync } from 'fs';
-import { PluginServerStatus } from '../../../../common-types/Server';
+import { PlayerAction, PlayerState, PluginServerStatus } from '../../../../common-types/Server';
 import { EventEmitter } from 'node:events';
+import { GenericError } from '../../util.js';
 
 const HIDDEN_CONFIG_FILES = [
   "360controller.cfg",
@@ -199,6 +200,7 @@ export default class Server extends EventEmitter {
 
     public get status(): ServerStatus { return this._status }
     public get liveStatus(): PluginServerStatus { 
+      return {"playerCount":2,"map":"c5m2_park","gamemode":"coop","startTime":1691075941,"commonsCount":23,"fps":29.999998092651367,"players":[{"steamid":"76561198003132253","name":"Tough Guy","team":2,"isAlive":true,"joinTime":1691083882,"permHealth":82,"action":0,"flowProgress":43,"flow":10959.26953125,"isPinned":false,"tempHealth":0,"states":0,"move":0,"survivor":2,"weapons":["weapon_shotgun_spas","machete","weapon_vomitjar","weapon_first_aid_kit","weapon_pain_pills",null]},{"steamid":"BOT","name":"Rochelle","team":2,"isAlive":true,"joinTime":1691084450,"permHealth":64,"idlePlayerId":"76561197963353091","idlePlayer":{"steamid":"76561197963353091","name":"Killa Joe","team":1,"isAlive":false,"joinTime":1691084450,"permHealth":100},"action":0,"flowProgress":42,"flow":10795.9189453125,"isPinned":false,"tempHealth":0,"states":0,"move":0,"survivor":1,"weapons":["weapon_sniper_military","frying_pan","weapon_vomitjar","weapon_first_aid_kit","weapon_adrenaline",null]},{"steamid":"76561198021394695","name":"MrKringle","team":2,"isAlive":true,"joinTime":1691083937,"permHealth":71,"action":0,"flowProgress":42,"flow":10794.5634765625,"isPinned":false,"tempHealth":0,"states":0,"move":0,"survivor":0,"weapons":["weapon_smg_mp5","tonfa","weapon_pipe_bomb","weapon_first_aid_kit","weapon_adrenaline",null]},{"steamid":"76561198096326505","name":"〤Dep ネ","team":2,"isAlive":true,"joinTime":1691084229,"permHealth":87,"action":0,"flowProgress":42,"flow":10833.2470703125,"isPinned":false,"tempHealth":0,"states":0,"move":0,"survivor":3,"weapons":["weapon_sniper_military","baseball_bat",null,"weapon_first_aid_kit","weapon_adrenaline",null]},{"steamid":"BOT","name":"Smoker","team":3,"isAlive":false,"joinTime":1691084446,"permHealth":1,"class":1,"maxHealth":250},{"steamid":"BOT","name":"Hunter","team":3,"isAlive":true,"joinTime":1691084456,"permHealth":250,"class":3,"maxHealth":250}],"refreshInterval":6,"lastUpdateTime":1691084470}
       if(this._liveData && Date.now() - (this._liveData.lastUpdateTime*1000) > STALE_LIVE_STATUS_EXPIRE) {
         this._liveData = null
       }
@@ -292,6 +294,24 @@ export default class Server extends EventEmitter {
     public async sendCommand(cmd: string) {
       await this.rconConnect()
       return await this.rcon.client.send(cmd)
+    }
+
+    public async performAction(action: PlayerAction, steamid: string, args: Record<string, string> = {}) {
+      const sourcemodId = `#${steamid.replace(/:/g, '_')}`
+      const command = this.#getActionCommand(action, sourcemodId, args)
+      await this.sendCommand(command)
+    }
+
+    #getActionCommand(action: PlayerAction, sourcemodId: string, args: Record<string, string>): string {
+      switch(action) {
+        case "kick": {
+          if(args.reason)
+            return `sm_kick ${sourcemodId} "${args.reason.replace(/"/, "'")}`
+          else
+            return `sm_kick ${sourcemodId}`
+        }
+        default: throw new GenericError(`Unsupported action \"${action}\"`, "UNSUPPORTED_PLAYER_ACTION")
+      }
     }
 
     public async refresh(force = false, includeRules = false) {

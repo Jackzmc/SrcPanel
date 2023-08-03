@@ -1,4 +1,4 @@
-
+export type PlayerAction = "kick"
 
 export interface StatusFinaleInfo {
     escapeLeaving: boolean
@@ -38,7 +38,7 @@ export interface StatusPlayerSurvivor extends BaseStatusPlayer {
     isPinned: boolean,
     states: PlayerState
     move: PlayerMove,
-    action: PlayerAction
+    action: PlayerGameAction
 }
 
 export interface StatusPlayerInfected extends BaseStatusPlayer {
@@ -51,6 +51,7 @@ export interface StatusPlayerInfected extends BaseStatusPlayer {
 export type StatusPlayer = StatusPlayerSurvivor | StatusPlayerInfected
 
 export enum PlayerState {
+    None = 0,
     BlackAndWhite = 1,
 	InSaferoom = 2,
 	IsCalm = 4,
@@ -68,7 +69,7 @@ export enum PlayerMove {
     Ladder = 4
 }
 
-export enum PlayerAction {
+export enum PlayerGameAction {
     BeingHealed      = -1,
     None				= 0,	// No use action active
     Healing			= 1,	// Includes healing yourself or a teammate.

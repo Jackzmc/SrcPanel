@@ -18,3 +18,9 @@ export function computeChanges<T>(original: T, compare: T): Partial<T> {
     }
     return obj
 }
+
+export class GenericError extends Error {
+    constructor(message: string, public code: string, options?: ErrorOptions) {
+        super(message, options)
+    }
+}

@@ -68,9 +68,9 @@
 import { ref, onBeforeMount, computed } from 'vue'
 import { User, PrivilegedUser, PlayerData } from '@/js/User'
 import { useRouter, useRoute } from 'vue-router'
-import { ClientUserData, WebPermission, ReadableAdminData } from '../../../../common-types/User';
+import { ClientUserData, ReadableAdminData } from '../../../../common-types/User';
 import UserSelection from '@/components/UserSelection.vue'
-// @ts-ignore
+// @ts-expect-error no @types
 import {Tabs, Tab} from 'vue3-tabs-component';
 // Keep track and open gui for each ban
 import Debounce from '@/js/debounce'

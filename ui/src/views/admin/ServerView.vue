@@ -148,11 +148,12 @@
               </figure>
             </div>
             <div class="list-item-content">
-              <div v-if="'survivor' in player" :class="['list-item-title', {'has-text-danger': !player.isAlive, 'has-text-crossed': !player.isAlive }]">
+              <div v-if="'survivor' in player" :class="['list-item-title', {'has-text-danger': !player.isAlive }]">
                 <progress v-if="player.isAlive" :class="['progress', 'is-info', 'flowprogress']" :value="player.flowProgress" max="100" style="width:20%">{{player.flowProgress}}%</progress>
-                {{ 'idlePlayer' in player && player.idlePlayer ? player.idlePlayer.name : player.name }}
-                <span class="tag is-warning is-small" v-if="'idlePlayer' in player">Idle</span>
-                <span class="tag is-info is-small" v-else-if="player.steamid === 'BOT'">BOT</span>
+                <!-- <a>{{ 'idlePlayer' in player && player.idlePlayer ? player.idlePlayer.name : player.name }}</a> -->
+                <UserComponent :class="{'has-text-crossed': !player.isAlive}" :user="'idlePlayer' in player ? player.idlePlayer! : player" />
+                &nbsp;<span class="tag is-warning is-small" v-if="'idlePlayer' in player">Idle</span>
+                &nbsp;<span class="tag is-info is-small" v-else-if="player.steamid === 'BOT'">BOT</span>
               </div>
               <div v-else :class="['list-item-title', {'has-text-crossed': !player.isAlive }]">
                 <progress v-if="player.isAlive" :class="['progress', getHealthClassInfected(player), 'flowprogress']" :value="player.permHealth" :max="player.maxHealth" style="width:20%">{{player.permHealth}}%</progress>
@@ -164,7 +165,7 @@
                   <div class="tags">
                     <span :class="['tag',getHealthClass(player.permHealth)]">{{ player.permHealth + player.tempHealth }} HP</span>
                     <span class="tag">{{ PlayerMoveString[player.move] }}</span>
-                    <span class="tag is-info" v-if="player.action">{{ PlayerAction[player.action] }}</span>
+                    <span class="tag is-info" v-if="player.action">{{ PlayerGameAction[player.action] }}</span>
                     <span class="tag is-primary" v-for="state in getPlayerStates(player)" :key="state">
                       {{ state }}
                     </span>
@@ -184,7 +185,10 @@
             </div>
             <div class="list-item-controls">
               <div class="buttons is-right">
-
+                <a class="button is-warning has-tooltip-danger" @click="kickPlayer(player)"
+                  :disabled="player.steamid === 'BOT' ? true : undefined"
+                  :data-tooltip="player.steamid === 'BOT' ? 'Can only kick real players' : undefined"
+                >Kick</a>
               </div>
             </div>
           </div>
@@ -361,15 +365,16 @@ import { useRoute, useRouter } from 'vue-router'
 import { onBeforeMount, ref, computed, onUnmounted } from 'vue'
 import FolderBrower from'@/components/FolderBrowser.vue'
 import { ClientUserData } from '../../../../common-types/User';
-import { PrivilegedUser } from '@/js/User';
+import { PlayerData, PrivilegedUser } from '@/js/User';
 import { parseLog, getRelDate, request } from '@/js/util';
 import LogMessage from "@/components/LogMessage.vue";
 import { useNotification } from "@kyvg/vue3-notification";
 import VueApexCharts from 'vue3-apexcharts'
 import Field from '@/components/Field.vue';
-import { PluginServerStatus, StatusPlayer, StatusPlayerSurvivor, SurvivorId, FinaleStage, PlayerState, PlayerAction, PlayerMove, StatusPlayerInfected, InfectedClass } from '../../../../common-types/Server';
+import { PluginServerStatus, StatusPlayer, StatusPlayerSurvivor, SurvivorId, FinaleStage, PlayerState, PlayerGameAction, PlayerMove, StatusPlayerInfected, InfectedClass } from '../../../../common-types/Server';
 import { UserPrivilegeCode } from '../../../../common-types/Privileges';
 import { formatDate, getDuration } from '../../js/util.js';
+import UserComponent from '@/components/UserComponent.vue';
 
 const FinaleStageName: Record<FinaleStage, string> = {
     [FinaleStage.Gauntlet]: "Gauntlet",
@@ -393,19 +398,19 @@ const FinaleStageName: Record<FinaleStage, string> = {
     [FinaleStage.HordeEscape]: "Horde Escape",
 }
 
-const PlayerActionString: Record<PlayerAction, string> = {
-  [PlayerAction.BeingHealed]: "Being Healed",
-  [PlayerAction.None]: "None",
-  [PlayerAction.Healing]: "Healing",
-  [PlayerAction.AmmoPack]: "Deploying Ammo Pack",
-  [PlayerAction.DefibDefibing]: "Defibbing",
-  [PlayerAction.GettingDefibed]: "Being Defibbed",
-  [PlayerAction.DeployIncendiary]: "Deploying Fire Ammo",
-  [PlayerAction.DeployExplosive]: "Deploying Explosive Ammo",
-  [PlayerAction.PouringGas]: "Pouring Gascan",
-  [PlayerAction.Cola]: "Using Cola",
-  [PlayerAction.Button]: "Pressing button",
-  [PlayerAction.UsePointScript]: "Pointing",
+const PlayerGameActionString: Record<PlayerGameAction, string> = {
+  [PlayerGameAction.BeingHealed]: "Being Healed",
+  [PlayerGameAction.None]: "None",
+  [PlayerGameAction.Healing]: "Healing",
+  [PlayerGameAction.AmmoPack]: "Deploying Ammo Pack",
+  [PlayerGameAction.DefibDefibing]: "Defibbing",
+  [PlayerGameAction.GettingDefibed]: "Being Defibbed",
+  [PlayerGameAction.DeployIncendiary]: "Deploying Fire Ammo",
+  [PlayerGameAction.DeployExplosive]: "Deploying Explosive Ammo",
+  [PlayerGameAction.PouringGas]: "Pouring Gascan",
+  [PlayerGameAction.Cola]: "Using Cola",
+  [PlayerGameAction.Button]: "Pressing button",
+  [PlayerGameAction.UsePointScript]: "Pointing",
 }
 
 const PlayerMoveString: Record<PlayerMove, string> = {
@@ -659,6 +664,16 @@ async function fetchServersCompact() {
     }
   }
   servers.value = cachedServers.data
+}
+
+async function kickPlayer(player: StatusPlayer) {
+  const response = await request(`/api/servers/${server.value.info.id}/players/${player.steamid}/kick`, { method: 'POST' })
+  if(response?.ok) {
+    notify({
+      type: "success",
+      text: `Kicked ${player.name} successfully`
+    })
+  }
 }
 
 function processAction(server: any, type: string) {

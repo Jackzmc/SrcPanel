@@ -7,7 +7,7 @@
     </figure>
     <div class="is-inline-block">
       <p class="title is-5 has-text-info">{{ props.user.name }}</p>
-      <p class="subtitle is-6 has-text-white" v-if="props.user.steamid">{{ props.user.steamid }}</p>
+      <p class="subtitle is-6 has-text-white" v-if="props.user.steamid">{{ steamid2 }}</p>
       <p class="subtitle is-6 has-text-white" v-else>BOT</p>
     </div>
     <template v-if="props.user.steamid">
@@ -17,7 +17,7 @@
         <span class="tag is-danger" v-if="props.user.bansCount != null">{{ props.user.bansCount }} Ban(s)</span>
         <span class="tag" v-if="props.user.notesCount != null">{{ props.user.notesCount }}Notes(s)</span>
       </span>
-      <router-link :to="{name:'manage-user',params:{ id:props.user.steamid }, query: { returnTo: $route.fullPath }}" class="button is-info is-fullwidth is-small">View Profile</router-link>
+      <router-link :to="{name:'manage-user',params:{ id: steamid2 }, query: { returnTo: $route.fullPath }}" class="button is-info is-fullwidth is-small">View Profile</router-link>
     </template>
   </div>
   <!-- <div class="custom-tooltip-hover box has-background-dark" v-if="!active">
@@ -27,8 +27,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-import { UserData } from '../../../common-types/User.js';
+import SteamID from 'steamid'
+import { ref, computed } from 'vue'
 
 export interface User {
   steamid: string,
@@ -38,12 +38,24 @@ export interface User {
   bansCount?: number
 }
 
-let active = ref(false)
 
 const props = defineProps<{
   user: User,
   isAdmin?: boolean
 }>()
+
+const steamid2 = computed(() => {
+  if(props.user.steamid.startsWith("STEAM_")) return props.user.steamid
+  try {
+    const steamid = new SteamID(props.user.steamid)
+    return steamid.getSteam2RenderedID()
+  } catch(err) {
+    return null
+  }
+})
+
+let active = ref(false)
+
 </script>
 
 <style>

@@ -4,7 +4,7 @@ import { join } from 'path';
 import { readFile } from 'fs/promises';
 import { NO_PERMISSION, NOT_FOUND } from '../../responses.js';
 import JWT from '../../jwt-promise.js'
-import { PluginServerStatus } from '../../../../common-types/Server.js';
+import { PlayerAction, PluginServerStatus } from '../../../../common-types/Server.js';
     
 const COMMENT_LINE_REGEX = new RegExp(/^\s*(\/\/|#)/)
 const HIDDEN_COMMANDS = [
@@ -257,7 +257,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         const server = fastify.servers.get(req.params.id)
         if(!server) return NOT_FOUND(reply, "Server")
         
-        const [code, granted] = req.user.requirePermission("servers.rcon", { resourceId: server.id })
+        const [code, granted] = req.user.requirePermission("servers.rcon", { resourceIds: [server.id] })
         if(!granted) return NO_PERMISSION(reply)
 
         if(!server.hasRcon) {
@@ -274,8 +274,41 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                     cmd: req.body
                 }
             })
-
             await server.sendCommand(req.body)
+            reply.status(204).send()
+        } catch(err) {
+            return reply.code(500).send({
+                error: "SERVER_ERROR",
+                message: "Server returned an error: " + err.message,
+                code: 500
+            })
+        }
+    })
+
+    fastify.post('/:id/players/:steamid/:action', async(req: FastifyRequest<{Params: { id: 'string', steamid: 'string', action: 'string'} }>, reply) => {
+        const server = fastify.servers.get(req.params.id)
+        if(!server) return NOT_FOUND(reply, "Server")
+        
+        const [code, granted] = req.user.requirePermission("servers.rcon", { resourceIds: [server.id, req.params.action] })
+        if(!granted) return NO_PERMISSION(reply)
+
+        if(!server.hasRcon) {
+            return reply.code(400).send({
+                error: "NO_RCON",
+                message: "Server does not have rcon setup"
+            })
+        }
+
+        try {
+            await req.user.log(null, `%client% performed action %action% on %steamid%`, {
+                code,
+                metadata: {
+                    action: req.params.action,
+                    steamid: req.params.steamid,
+                    arguments: {...req.query as Record<string, string>} 
+                }
+            })
+            await server.performAction(req.params.action as PlayerAction, req.params.action, req.query as Record<string, string>)
             reply.status(204).send()
         } catch(err) {
             return reply.code(500).send({
@@ -444,3 +477,6 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 }
 
 const sleep = time => new Promise(res => setTimeout(res, time));
+
+
+

@@ -20,6 +20,7 @@ export type PermissionResult = [UserPrivilegeCode, boolean]
 export interface RequirePermissionOptions {
     isCreator?: boolean,
     resourceId?: string | number
+    resourceIds?: (string | number | undefined)[]
 }
 
 export default class User {
@@ -91,6 +92,13 @@ export default class User {
             }
         } else if(options.resourceId != undefined) {
             permCode = `${code}.${options.resourceId}`
+            if(this.hasPermission(permCode as UserPrivilegeCode)) {
+                return [permCode as UserPrivilegeCode, true]
+            }
+        } else if(options.resourceIds != undefined) {
+            // Filter out undefined:
+            const ids = options.resourceIds.filter(r => r).join(".")
+            permCode = `${code}.${ids}`
             if(this.hasPermission(permCode as UserPrivilegeCode)) {
                 return [permCode as UserPrivilegeCode, true]
             }
