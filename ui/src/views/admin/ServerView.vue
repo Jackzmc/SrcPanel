@@ -781,16 +781,21 @@ function createLiveConnection() {
   }
   evtSource.onerror = (event) => {
     errCount++
-    if(errCount > 3) {
+    evtSource.close()
+    if(errCount > 5) {
       liveStatusError.value = "Too many errors connecting to live server, please try again later"
       notify({
         type: "error",
         text:  "Too many errors connecting to live server, please try again later"
       })
+      setTimeout(() => {
+        createLiveConnection()
+      }, 1000 * 60 * 2)
     } else {
       liveStatusError.value = "Connection with the live server errored, retrying..."
-      evtSource.close()
-      createLiveConnection()
+      setTimeout(() => {
+        createLiveConnection()
+      }, 1500 * errCount)
     }
   }
 }
