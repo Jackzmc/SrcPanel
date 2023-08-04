@@ -780,6 +780,8 @@ let errCount = 0
 let liveReadyState = ref<number>(0)
 let evtSource: EventSource
 
+const MAX_BACKOFF = 1000 * 60 * 2
+
 function createLiveConnection() {
   evtSource = new EventSource(`/api/servers/${route.params.id}/live`);
   evtSource.onmessage = (event) => {
@@ -792,6 +794,7 @@ function createLiveConnection() {
     liveReadyState.value = evtSource.readyState ?? 0
   }
   evtSource.onerror = (event) => {
+    console.error("Disconnected from live server", { errCount })
     errCount++
     evtSource.close()
     liveReadyState.value = evtSource.readyState ?? 0
@@ -807,10 +810,13 @@ function createLiveConnection() {
         createLiveConnection()
       }, 1000 * 60 * 1)
     } else {
-      liveStatusError.value = "Connection with the live server errored, retrying..."
+      // Exponentional backoff:
+      const retryTime = Math.min(1000 * 1.5 ^ (errCount / 2), MAX_BACKOFF)
+      const retryTimeSeconds = Math.ceil(retryTime / 1000)
+      liveStatusError.value = `Connection with the live server errored, retrying in ${retryTimeSeconds} seconds...`
       setTimeout(() => {
         createLiveConnection()
-      }, 1500 * errCount)
+      }, retryTime)
     }
   }
 }
