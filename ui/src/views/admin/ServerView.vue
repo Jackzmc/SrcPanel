@@ -815,6 +815,7 @@ function createLiveConnection() {
       const retryTimeSeconds = Math.ceil(retryTime / 1000)
       liveStatusError.value = `Connection with the live server errored, retrying in ${retryTimeSeconds} seconds...`
       setTimeout(() => {
+        liveStatusError.value = `Connection with the live server errored, retrying...`
         createLiveConnection()
       }, retryTime)
     }
