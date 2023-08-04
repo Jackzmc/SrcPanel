@@ -34,17 +34,17 @@
         <div class="level">
           <div class="level-left">
             <div class="tags">
-              <span v-for="tag in server.info.tags" :key="tag" class="tag is-dark">{{tag}}</span>
+              <span v-for="tag in server.info.tags" :key="tag" class="tag is-dark" data-tooltip="Server tag">{{tag}}</span>
             </div>
           </div>
           <div class="level-right">
             <div class="buttons">
+              <a v-if="server.info.tags.includes('systemd') && (!status || !status.online)" @click="processAction('start')" class="button is-success is-small">Start Server</a>
               <template v-if="status?.online">
-              <a @click="processAction(server, 'stop')" class="button is-dark is-small">Request Restart</a>
-              <a @click="processAction(server, 'stop?force=1')" class="button is-warning is-small">Force Restart</a>
-              <a @click="processAction(server, 'unreserve')" class="button is-dark is-small">Unreserve</a>
+                <a data-tooltip="Will restart server if no players online, or fail if there are" @click="processAction('stop')" class="button is-dark is-small">Request Restart</a>
+                <a data-tooltip="Will remove lobby reservation, allowing 5+ to join. This is done automatically after 4 players have fully loaded in" @click="processAction('unreserve')" class="button is-dark is-small">Unreserve</a>
+                <a data-tooltip="Will forcefully restart server, regardless if players are online" @click="processAction('stop', { force: true })" class="button is-warning is-small">Force Restart</a>
               </template>
-              <a v-if="server.info.tags.includes('systemd')" @click="processAction(server, 'start')" class="button is-success is-small">Start Server</a>
             </div>
           </div>
         </div>
@@ -127,6 +127,7 @@
 
       </div>
       <div v-else-if="tab === 'live'" class="box">
+        <span class="tag is-pulled-right is-danger" v-if="isLiveViewActive" data-tooltip="Connected to server, receiving live data">Live</span>
         <div class="notification is-danger has-text-centered" v-if="!status">
           The server is offline or is unreachable.
           <span class="is-inline is-pulled-right no-border" data-tooltip="Time until next refresh">
@@ -199,7 +200,8 @@
         <div v-else>
           <h4 class="has-text-centered is-size-4">No recent server data</h4>
           <br>
-          <p class="subtitle is-6 has-text-centered">Server may not have live view configured or there are no players online</p>
+          <p class="subtitle is-6 has-text-centered">Server might not have live view setup or no players are currently online.</p>
+          <p class="subtitle is-6 has-text-centered">This will automatically update data is available.</p>
         </div>
       </div>
       <div v-else-if="tab === 'configs'" class="box">
@@ -267,18 +269,6 @@
           </select>
         </div>
       </div>
-      <!-- <div class="box">
-        <h4 class="title is-5">Actions</h4>
-        <div class="buttons">
-          <template v-if="status?.online">
-          <a @click="processAction(server, 'stop')" class="button is-dark">Request Restart</a>
-          <a @click="processAction(server, 'stop?force=1')" class="button is-warning">Force Restart</a>
-          <a @click="processAction(server, 'unreserve')" class="button is-dark">Unreserve</a>
-          </template>
-          <a v-if="server.info.tags.includes('systemd')" @click="processAction(server, 'start')" class="button is-success">Start Server</a>
-        </div>
-        <p v-if="!status?.online && !server.info.tags.includes('systemd')"><em>no actions available</em></p>
-      </div> -->
       <div class="box" v-if="tab === 'overview' || tab === 'live'">
         <span class="is-inline is-pulled-right no-border pr-4" data-tooltip="Time until next refresh" style="width:10px">
           <Icon icon="fa-spinner" spin v-if="nextRefreshCountdown == 0"></Icon>
@@ -300,11 +290,12 @@
               </tr>
             </tbody>
           </table>
-          <p v-else>No recent activity</p>
+          <p v-else>No recent activity has been recorded</p>
         </template>
-        <p v-else>Not supported on server</p>
+        <p v-else>Not supported on this server.</p>
       </div>
       <div class="box" v-if="tab === 'live'">
+        <span class="tag is-pulled-right is-danger has-tooltip-left" v-if="isLiveViewActive" data-tooltip="Connected to server, receiving live data">Live</span>
         <h4 class="title is-5">Game Info</h4>
         <table class="table is-fullwidth" v-if="liveStatus">
           <tbody>
@@ -341,7 +332,7 @@
             </tr>
           </tbody>
         </table>
-        <p v-else>No live data</p>
+        <p v-else>No live data, will update automatically when data available</p>
       </div>
       <div v-else-if="tab === 'configs'" class="box">
         <h5 class="title is-5">Config Files</h5>
@@ -676,35 +667,31 @@ async function kickPlayer(player: StatusPlayer) {
   }
 }
 
-function processAction(server: any, type: string) {
+async function processAction(type: string, options: Record<string, any> = {}) {
   if(type === "start") {
     starting.value = true
     setTimeout(() => {
       starting.value = false
     }, 1000 * 30)
   }
-  fetch(`/api/servers/${server.id}/${type}`, {
+  // Ask user to confirm:
+  if(type === "stop" && options.force) {
+    if(!confirm("Are you sure you want to force restart the server? Any players online will be kicked")) return
+  }
+  const response = await request(`/api/servers/${server.value.id}/${type}`, {
     method: 'POST',
     credentials: 'include'
   })
-  .then(async(response) => {
-    if(response.ok ) {
-      const json = await response.json()
-      if(json.error) {
-        return notify({ type: 'error', text: `<b>Server returned error</b><br>${json.message}` })
-      }
-      if(json.response.includes("players online")) {
-        notify({ type: 'error', text: 'Cannot restart server: There are players online'})
-      }else{
-        notify({ type: 'sucess', text: json.response})
-      }
-    }else{
-      notify({ type: 'error', text: `<b>Server returned error</b><br>${response.statusText}`})
+  if(response?.ok) {
+    const json = await response.json()
+    if(json.error) {
+      return notify({ type: 'error', title: "Server returned error", text: json.message })
+    } else if(json.response.includes("players online")) {
+      notify({ type: 'error', text: 'Cannot restart server: There are players online'})
+    } else{
+      notify({ type: 'sucess', text: json.response})
     }
-  })
-  .catch(err => {
-    notify({ type: 'error', text: `${err.message}`})
-  })
+  }
 }
 
 function getHealthClass(health: number) {
@@ -785,18 +772,29 @@ const OfficialCampaignNames = [
   "The Last Stand"
 ]
 
+const isLiveViewActive = computed(() => {
+  if(liveStatusError.value) return false
+  return liveStatus.value != undefined || liveReadyState.value == EventSource.OPEN
+})
 let errCount = 0
+let liveReadyState = ref<number>(0)
+let evtSource: EventSource
 function createLiveConnection() {
-  const evtSource = new EventSource(`/api/servers/${route.params.id}/live`);
+  evtSource = new EventSource(`/api/servers/${route.params.id}/live`);
   evtSource.onmessage = (event) => {
     errCount = 0
     liveStatusError.value = undefined
     const json = JSON.parse(event.data)
     liveStatus.value = json
   }
+  evtSource.onopen = () => {
+    liveReadyState.value = evtSource.readyState ?? 0
+  }
   evtSource.onerror = (event) => {
+    console.log('error')
     errCount++
     evtSource.close()
+    liveReadyState.value = evtSource.readyState ?? 0
     if(errCount > 5) {
       liveStatusError.value = "Too many errors connecting to live server, please try again later"
       notify({
