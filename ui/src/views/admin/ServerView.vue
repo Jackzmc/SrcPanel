@@ -63,56 +63,53 @@
         </ul>
       </div>
       <div v-if="tab === 'overview'" class="box">
-        <div class="notification is-danger has-text-centered" v-if="status && !status.online">
-          The server is offline or is unreachable.
-          <span class="is-inline is-pulled-right no-border" data-tooltip="Time until next refresh">
-            <Icon icon="fa-spinner" spin v-if="nextRefreshCountdown == 0"></Icon>
-            <span v-else>{{ nextRefreshCountdown }}s</span>
-          </span>
-        </div>
-        <template v-if="status && status.online">
-          <span class="is-inline is-pulled-right no-border pr-4" data-tooltip="Time until next refresh" style="width:10px">
-            <Icon icon="fa-spinner" spin v-if="nextRefreshCountdown == 0"></Icon>
-            <span v-else>{{ nextRefreshCountdown }}s</span>
-          </span>
-          <div class="columns">
-            <div class="column">
-              <h5 class="title is-5 is-underlined"><span class="tag is-large is-info">Map</span></h5>
-              <p :data-tooltip="status.data.map" v-html="formatMap(status.data.map)"></p>
-            </div>
-            <div class="column">
-              <h5 class="title is-5 is-underlined"><span class="tag is-large is-info">Gamemode</span></h5>
-              <p :data-tooltip="status.data.gamemode">{{formatGamemode(status.data.gamemode)}}</p>
-            </div>
+        <template v-if="status">
+          <div class="notification is-danger has-text-centered" v-if="!status.online">
+            The server is offline or is unreachable.
+            <span class="is-inline is-pulled-right no-border" data-tooltip="Time until next refresh">
+              <Icon icon="fa-spinner" spin v-if="nextRefreshCountdown == 0"></Icon>
+              <span v-else>{{ nextRefreshCountdown }}s</span>
+            </span>
           </div>
-          <div class="columns">
-            <div class="column">
-              <h5 class="title is-5 tags">
-                <span class="tag is-large is-info">Online Players ({{status.data.players.length}} / {{status.data.maxplayers}})</span>
-              </h5>
-              <div class="content" v-if="status.data.players.length > 0">
-                <ul>
-                  <li v-for="player in status.data.players" :key="player">
-                    {{player}}
-                  </li>
-                </ul>
+          <p class="has-text-centered subtitle is-4 my-6 has-text-danger" v-else-if="status.error">{{  status.error }}</p>
+          <template v-else>
+            <span class="is-inline is-pulled-right no-border pr-4" data-tooltip="Time until next refresh" style="width:10px">
+              <Icon icon="fa-spinner" spin v-if="nextRefreshCountdown == 0"></Icon>
+              <span v-else>{{ nextRefreshCountdown }}s</span>
+            </span>
+            <div class="columns">
+              <div class="column">
+                <h5 class="title is-5 is-underlined"><span class="tag is-large is-info">Map</span></h5>
+                <p :data-tooltip="status.data.map" v-html="formatMap(status.data.map)"></p>
               </div>
-              <em class="my-2" v-else>no players are online</em>
+              <div class="column">
+                <h5 class="title is-5 is-underlined"><span class="tag is-large is-info">Gamemode</span></h5>
+                <p :data-tooltip="status.data.gamemode">{{formatGamemode(status.data.gamemode)}}</p>
+              </div>
             </div>
-            <div class="column">
-              <h5 class="title is-5 is-underlined"><span class="tag is-large is-info">Uptime</span></h5>
-              <p v-if="uptime">{{formatUptime(uptime)}}</p>
-              <p v-else>unknown</p>
+            <div class="columns">
+              <div class="column">
+                <h5 class="title is-5 tags">
+                  <span class="tag is-large is-info">Online Players ({{status.data.players.length}} / {{status.data.maxplayers}})</span>
+                </h5>
+                <div class="content" v-if="status.data.players.length > 0">
+                  <ul>
+                    <li v-for="player in status.data.players" :key="player">
+                      {{player}}
+                    </li>
+                  </ul>
+                </div>
+                <em class="my-2" v-else>no players are online</em>
+              </div>
+              <div class="column">
+                <h5 class="title is-5 is-underlined"><span class="tag is-large is-info">Uptime</span></h5>
+                <p v-if="uptime">{{formatUptime(uptime)}}</p>
+                <p v-else>unknown</p>
+              </div>
             </div>
-          </div>
-
-          <br>
+            <br>
+          </template>
         </template>
-        <!-- <p v-else-if="status && !status.online" class="has-text-centered has-text-danger subtitle is-4">Server is offline or unreachable</p> -->
-        <p class="has-text-centered subtitle is-4 my-6 has-text-danger" v-else-if="status && status.error">{{  status.error }}</p>
-        <!-- <div class="notification is-danger has-text-centered" v-else-if="error">
-          An error occurred while
-        </div> -->
         <article class="message is-danger" v-else-if="error">
           <div class="message-header">
             <p><Icon icon="fa-exclamation-triangle">An error occurred while fetching server information</Icon></p>
@@ -332,7 +329,7 @@
             </tr>
           </tbody>
         </table>
-        <p v-else>No live data, will update automatically when data available</p>
+        <p v-else>No live data, will update automatically when data is available</p>
       </div>
       <div v-else-if="tab === 'configs'" class="box">
         <h5 class="title is-5">Config Files</h5>
