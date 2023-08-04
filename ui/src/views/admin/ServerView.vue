@@ -124,14 +124,12 @@
 
       </div>
       <div v-else-if="tab === 'live'" class="box">
-        <span class="tag is-pulled-right is-danger" v-if="isLiveViewActive" data-tooltip="Connected to server, receiving live data">Live</span>
-        <div class="notification is-danger has-text-centered" v-if="!status">
+        <!-- show notice that server is offline, but only if there is also no live data -->
+        <!-- server might be shown offline but actually is online and sending data (eg. map transitions) -->
+        <div class="notification is-danger has-text-centered" v-if="!status?.online && !liveStatus">
           The server is offline or is unreachable.
-          <span class="is-inline is-pulled-right no-border" data-tooltip="Time until next refresh">
-            <Icon icon="fa-spinner" spin v-if="nextRefreshCountdown == 0"></Icon>
-            <span v-else>{{ nextRefreshCountdown }}s</span>
-          </span>
         </div>
+        <span class="tag is-pulled-right is-danger" v-if="isLiveViewActive" data-tooltip="Connected to server, receiving live data">Live</span>
         <div class="notification is-danger has-text-centered" v-else-if="liveStatusError">
           {{ liveStatusError }}
           <span class="is-inline is-pulled-right no-border">
