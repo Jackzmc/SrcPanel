@@ -798,27 +798,14 @@ function createLiveConnection() {
     errCount++
     evtSource.close()
     liveReadyState.value = evtSource.readyState ?? 0
-    if(errCount > 10) {
-      liveStatusError.value = "Too many errors connecting to live server, please try again later"
-      notify({
-        type: "error",
-        text:  "Too many errors connecting to live server, please try again later"
-      })
-      // Reset in a minute after 10 errors
-      setTimeout(() => {
-        errCount = 0
-        createLiveConnection()
-      }, 1000 * 60 * 1)
-    } else {
-      // Exponentional backoff:
-      const retryTime = Math.min(1000 * 1.5 ^ (errCount / 2), MAX_BACKOFF)
-      const retryTimeSeconds = Math.ceil(retryTime / 1000)
-      liveStatusError.value = `Connection with the live server errored, retrying in ${retryTimeSeconds} seconds...`
-      setTimeout(() => {
-        liveStatusError.value = `Connection with the live server errored, retrying...`
-        createLiveConnection()
-      }, retryTime)
-    }
+    // Exponentional backoff:
+    const retryTime = Math.min(1000 * 1.5 ^ (errCount / 2), MAX_BACKOFF)
+    const retryTimeSeconds = Math.ceil(retryTime / 1000)
+    liveStatusError.value = `Connection with the live server errored, retrying in ${retryTimeSeconds} seconds...`
+    setTimeout(() => {
+      liveStatusError.value = `Connection with the live server errored, retrying...`
+      createLiveConnection()
+    }, retryTime)
   }
 }
 
