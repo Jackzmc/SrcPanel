@@ -790,7 +790,7 @@ const MAX_BACKOFF = 1000 * 60 * 2
 
 function createLiveConnection() {
   liveReadyState.value = 0
-  evtSource = new EventSource(`http://localhost:8081/api/servers/${route.params.id}/live`);
+  evtSource = new EventSource(`/api/servers/${route.params.id}/live`);
   evtSource.onmessage = (event) => {
     errCount = 0
     liveStatusNextRetryTime.value = undefined
