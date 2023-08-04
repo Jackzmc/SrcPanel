@@ -779,6 +779,7 @@ const isLiveViewActive = computed(() => {
 let errCount = 0
 let liveReadyState = ref<number>(0)
 let evtSource: EventSource
+
 function createLiveConnection() {
   evtSource = new EventSource(`/api/servers/${route.params.id}/live`);
   evtSource.onmessage = (event) => {
@@ -791,19 +792,20 @@ function createLiveConnection() {
     liveReadyState.value = evtSource.readyState ?? 0
   }
   evtSource.onerror = (event) => {
-    console.log('error')
     errCount++
     evtSource.close()
     liveReadyState.value = evtSource.readyState ?? 0
-    if(errCount > 5) {
+    if(errCount > 10) {
       liveStatusError.value = "Too many errors connecting to live server, please try again later"
       notify({
         type: "error",
         text:  "Too many errors connecting to live server, please try again later"
       })
+      // Reset in a minute after 10 errors
       setTimeout(() => {
+        errCount = 0
         createLiveConnection()
-      }, 1000 * 60 * 2)
+      }, 1000 * 60 * 1)
     } else {
       liveStatusError.value = "Connection with the live server errored, retrying..."
       setTimeout(() => {
