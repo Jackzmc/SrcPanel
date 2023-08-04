@@ -20,9 +20,11 @@
         <h3 class="title is-3">
           {{server.info.name}}
           <div class="tags is-pulled-right inline">
-            <span class="tag is-success  is-medium" v-if="status && status.online">Online</span>
-            <span class="tag is-danger  is-medium" v-else-if="status && !status.online">Offline</span>
-            <span class="tag is-danger is-medium has-tooltip-danger no-border" v-else-if="error" data-tooltip="An error occurred while fetching the server's status"><Icon icon="fa-exclamation-triangle">Error</Icon></span>
+            <template v-if="status">
+              <span class="tag is-danger is-medium has-tooltip-danger no-border" v-if="error || status.error" data-tooltip="An error occurred while fetching the server's status"><Icon icon="fa-exclamation-triangle">Error</Icon></span>
+              <span class="tag is-success  is-medium" v-else-if="status.online">Online</span>
+              <span class="tag is-danger  is-medium" v-else="!status.online">Offline</span>
+            </template>
             <span class="tag is-medium" v-else><Icon icon="fa-spinner" spin></Icon></span>
             <span data-tooltip="Server ID" class="tag is-info is-medium no-border">{{server.info.id}}</span>
           </div>
@@ -124,17 +126,17 @@
 
       </div>
       <div v-else-if="tab === 'live'" class="box">
-        <!-- show notice that server is offline, but only if there is also no live data -->
-        <!-- server might be shown offline but actually is online and sending data (eg. map transitions) -->
-        <div class="notification is-danger has-text-centered" v-if="!status?.online && !liveStatus">
-          The server is offline or is unreachable.
-        </div>
         <span class="tag is-pulled-right is-danger" v-if="isLiveViewActive" data-tooltip="Connected to server, receiving live data">Live</span>
-        <div class="notification is-danger has-text-centered" v-else-if="liveStatusError">
-          {{ liveStatusError }}
-          <span class="is-inline is-pulled-right no-border">
+        <div class="notification is-danger has-text-centered" v-else-if="liveStatusNextRetryTime !== undefined">
+          Lost connection with live server. Retrying in {{ nextLiveRetryTime }} seconds
+          <span class="is-inline is-pulled-right no-border" v-if="nextLiveRetryTime <= 1">
             <Icon icon="fa-spinner" spin></Icon>
           </span>
+        </div>
+          <!-- show notice that server is offline, but only if there is also no live data -->
+        <!-- server might be shown offline but actually is online and sending data (eg. map transitions) -->
+        <div class="notification is-danger has-text-centered" v-else-if="!status?.online && !liveStatus">
+          The server is offline or is unreachable.
         </div>
         <div class="list" v-if="liveStatus && liveStatus.players.length > 0">
           <div class="list-item" v-for="player in liveStatus.players" :key="player.steamid ?? player.name">
@@ -337,7 +339,7 @@
     </div>
   </div>
 </nav>
-<div class="container mb-3 mt-2" v-else>
+<div class="container mb-3 mt-2" v-else-if="!error">
   <div class="box has-text-centered">
     <h4 class='title is-4'><Icon icon="spinner" spin>Fetching server information</Icon></h4>
   </div>
@@ -509,7 +511,7 @@ let server = ref()
 let servers = ref()
 let status = ref()
 let liveStatus = ref<PluginServerStatus>()
-let liveStatusError = ref<string>()
+let liveStatusNextRetryTime = ref<number>()
 let lastLiveUpdateTime = ref<string>()
 let uptime = ref<number>()
 let activities = ref()
@@ -527,6 +529,11 @@ const tab = computed(() => {
 const nextRefreshCountdown = computed(() => {
   if(!lastRefreshTime.value || !now.value) return 0
   return Math.max(Math.floor(((lastRefreshTime.value + REFRESH_INTERVAL) - now.value) / 1000), 0)
+})
+
+const nextLiveRetryTime = computed(() => {
+  if(liveStatusNextRetryTime.value === undefined || !now.value) return 0
+  return Math.max(Math.ceil((liveStatusNextRetryTime.value - now.value) / 1000), 0)
 })
 
 function getPlayerWeaponNames(player: StatusPlayerSurvivor) {
@@ -627,9 +634,12 @@ async function fetchServerStatus() {
       if(json.liveStatus) liveStatus.value = json.liveStatus
       activities.value = json.recentActivities?.map((act: any) => parseLog(act))
     } else {
+      error.value = json.message
       status.value = { error: json.message }
     }
-  } catch(err) {
+  } catch(err: any) {
+    error.value = err.message
+    status.value = { error: err.message }
     isRefreshing = false
   }
 }
@@ -768,37 +778,37 @@ const OfficialCampaignNames = [
 ]
 
 const isLiveViewActive = computed(() => {
-  if(liveStatusError.value) return false
+  if(liveStatusNextRetryTime.value) return false
   return liveStatus.value != undefined || liveReadyState.value == EventSource.OPEN
 })
 let errCount = 0
 let liveReadyState = ref<number>(0)
 let evtSource: EventSource
+let retryTimeout: any
 
 const MAX_BACKOFF = 1000 * 60 * 2
 
 function createLiveConnection() {
-  evtSource = new EventSource(`/api/servers/${route.params.id}/live`);
+  liveReadyState.value = 0
+  evtSource = new EventSource(`http://localhost:8081/api/servers/${route.params.id}/live`);
   evtSource.onmessage = (event) => {
     errCount = 0
-    liveStatusError.value = undefined
+    liveStatusNextRetryTime.value = undefined
     const json = JSON.parse(event.data)
     liveStatus.value = json
   }
   evtSource.onopen = () => {
-    liveReadyState.value = evtSource.readyState ?? 0
+    liveReadyState.value =EventSource.OPEN
   }
   evtSource.onerror = (event) => {
     console.error("Disconnected from live server", { errCount })
     errCount++
     evtSource.close()
-    liveReadyState.value = evtSource.readyState ?? 0
+    liveReadyState.value = EventSource.CLOSED
     // Exponentional backoff:
-    const retryTime = Math.min(1000 * 1.5 ^ (errCount / 2), MAX_BACKOFF)
-    const retryTimeSeconds = Math.ceil(retryTime / 1000)
-    liveStatusError.value = `Connection with the live server errored, retrying in ${retryTimeSeconds} seconds...`
-    setTimeout(() => {
-      liveStatusError.value = `Connection with the live server errored, retrying...`
+    const retryTime = Math.min(1000 * (Math.pow(1.5, errCount / 2) + 5), MAX_BACKOFF)
+    liveStatusNextRetryTime.value = Date.now() + retryTime
+    retryTimeout = setTimeout(() => {
       createLiveConnection()
     }, retryTime)
   }
@@ -830,6 +840,7 @@ onBeforeMount(async() => {
 onUnmounted(() => {
   clearInterval(refreshInterval)
   clearInterval(nowInterval)
+  clearTimeout(retryTimeout)
 })
 </script>
 
