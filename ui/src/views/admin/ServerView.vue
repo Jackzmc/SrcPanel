@@ -201,7 +201,7 @@
           <h4 class="has-text-centered is-size-4">No recent server data</h4>
           <br>
           <p class="subtitle is-6 has-text-centered">Server might not have live view setup or no players are currently online.</p>
-          <p class="subtitle is-6 has-text-centered">This will automatically update data is available.</p>
+          <p class="subtitle is-6 has-text-centered">This will automatically update when data is available.</p>
         </div>
       </div>
       <div v-else-if="tab === 'configs'" class="box">
