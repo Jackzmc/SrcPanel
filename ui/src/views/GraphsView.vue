@@ -37,58 +37,6 @@ import TrollsGraph from '@/components/charts/TrollsGraph.vue'
 const TROLL_REGEX = new RegExp(/[^de]activated (constant\s)?troll "([a-zA-Z\s]+)"( with flags=(\d+)\s)?(\s\(?(\d+)?\)? for (.*\((\d+)x\))?)?/)
 const COUNT_REGEX = new RegExp(/\((\d+)x\)$/)
 
-async function fetchTrolls() {
-  const response = await fetch('/api/graphs/trolls')
-  const json = await response.json()
-  // const flags = []
-  // for(let i = 1; i < 16; i++) {
-  //   flags.push({
-  //     name: `Flags:${i}`,
-  //     type: 'column',
-  //     data: Object.values(data).map(d => d[i]).filter(d => d),
-  //     showInLegend: false
-  //   })
-  // }
-  new Chart('trollbar', {
-    chart: {
-      type: 'column',
-      zoomType: 'x'
-    },
-    plotOptions: {
-      line: {
-        connectNulls: false
-      },
-      series: {
-        stacking: 'normal',
-      }
-    },
-    rangeSelector: {
-      selected: 1,
-      verticalAlign: 'top',
-      x: 0,
-      y: 0
-    },
-    title: {
-      text: 'Troll Usage'
-    },
-    xAxis: {
-      categories: Object.keys(json)
-    },
-    yAxis: {
-      title: {
-        text: 'Times Applied'
-      },
-
-    },
-    series: [
-      {
-        name: 'Default',
-        type: 'column',
-        data: Object.values(json)
-      },
-    ]
-  });
-}
 async function fetchSlaps() {
   const response = await fetch('/api/graph?types=ACTION&search_message= slapped ')
   const json = await response.json()

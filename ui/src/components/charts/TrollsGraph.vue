@@ -1,5 +1,5 @@
 <template>
-  <Bubble v-if="chartData"
+  <Bar v-if="chartData"
     id="my-chart-id"
     :options="chartOptions"
     :data="chartData"
@@ -8,13 +8,23 @@
 
 <script setup lang="ts">
 import { ref, onBeforeMount } from 'vue';
-import { Bar, Bubble } from 'vue-chartjs'
-import { Chart as ChartJS, Colors, Title, Tooltip, Legend, ArcElement, BarElement, PointElement, CategoryScale, LinearScale } from 'chart.js'
+import { Bar } from 'vue-chartjs'
+import { Chart as ChartJS, Colors, Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale } from 'chart.js'
+import autocolors from 'chartjs-plugin-autocolors';
 
-ChartJS.register(Title, Tooltip, Legend, PointElement, ArcElement, BarElement, CategoryScale, LinearScale, Colors)
+ChartJS.register(autocolors, Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale, Colors)
 
 const chartOptions = {
-  responsive: true
+  responsive: true,
+  plugins: {
+    autocolors: {
+      mode: 'data'
+    },
+    title: {
+      display: true,
+      text: 'Troll Usages',
+    }
+  },
 }
 
 let chartData = ref()
@@ -26,7 +36,7 @@ async function getData() {
     labels: Object.keys(json),
     datasets: [ {
       label: "Usage",
-      data: Object.values(json)
+      data: Object.values(json),
     }]
   }
 }
