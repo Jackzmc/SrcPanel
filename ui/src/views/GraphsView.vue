@@ -9,8 +9,8 @@
     </div>
   </div>
   <div class="columns">
-    <div class="column is-12">
-      <div id="trollbar" />
+    <div class="column is-6">
+      <TrollsGraph />
     </div>
   </div>
   <div class="columns">
@@ -27,38 +27,28 @@
 <script setup lang="ts">
 import { ref, watch, computed, onBeforeMount, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import TrollsGraph from '@/components/charts/TrollsGraph.vue'
 
-import Chart from 'highcharts/es-modules/Core/Chart/Chart.js';
-import 'highcharts/es-modules/Series/Line/LineSeries.js';
-import ColumnSeries from 'highcharts/es-modules/Series/Column/ColumnSeries.js';
-import BarSeries from 'highcharts/es-modules/Series/Bar/BarSeries.js';
+// import Chart from 'highcharts/es-modules/Core/Chart/Chart.js';
+// import 'highcharts/es-modules/Series/Line/LineSeries.js';
+// import ColumnSeries from 'highcharts/es-modules/Series/Column/ColumnSeries.js';
+// import BarSeries from 'highcharts/es-modules/Series/Bar/BarSeries.js';
 
 const TROLL_REGEX = new RegExp(/[^de]activated (constant\s)?troll "([a-zA-Z\s]+)"( with flags=(\d+)\s)?(\s\(?(\d+)?\)? for (.*\((\d+)x\))?)?/)
 const COUNT_REGEX = new RegExp(/\((\d+)x\)$/)
 
 async function fetchTrolls() {
-  const response = await fetch('/api/graph?types=ACTION&search_message=activated%20troll&timestampOnly=1')
+  const response = await fetch('/api/graphs/trolls')
   const json = await response.json()
-  let data: Record<string, any> = {}
-  for(const entry of json.logs) {
-    if(!entry.timestamp) continue;
-    const match = entry.message.match(TROLL_REGEX)
-    if(!match) continue;
-    let [,,troll,,flags,,count] = match
-    flags = Number(flags) || 0
-    if(!data[troll]) data[troll] = {}
-    if(!data[troll][flags]) data[troll][flags] = 0
-    data[troll][flags] += (Number(count) || 1)
-  }
-  const flags = []
-  for(let i = 1; i < 16; i++) {
-    flags.push({
-      name: `Flags:${i}`,
-      type: 'column',
-      data: Object.values(data).map(d => d[i]).filter(d => d),
-      showInLegend: false
-    })
-  }
+  // const flags = []
+  // for(let i = 1; i < 16; i++) {
+  //   flags.push({
+  //     name: `Flags:${i}`,
+  //     type: 'column',
+  //     data: Object.values(data).map(d => d[i]).filter(d => d),
+  //     showInLegend: false
+  //   })
+  // }
   new Chart('trollbar', {
     chart: {
       type: 'column',
@@ -82,7 +72,7 @@ async function fetchTrolls() {
       text: 'Troll Usage'
     },
     xAxis: {
-      categories: Object.keys(data)
+      categories: Object.keys(json)
     },
     yAxis: {
       title: {
@@ -94,9 +84,8 @@ async function fetchTrolls() {
       {
         name: 'Default',
         type: 'column',
-        data: Object.values(data).map((d: any) => d[0]).filter(d => d),
+        data: Object.values(json)
       },
-      ...flags
     ]
   });
 }
@@ -380,14 +369,14 @@ function ISOtoUTC(data: string) {
 }
 
 onBeforeMount(() => {
-  Promise.allSettled([
-    fetchBanStat(),
-    fetchStates(),
-  ])
-  Promise.allSettled([
-    fetchTrolls(),
-    fetchSlaps(),
-  ]).then(() => fetchPlaytime())
+  // Promise.allSettled([
+  //   fetchBanStat(),
+  //   fetchStates(),
+  // ])
+  // Promise.allSettled([
+  //   fetchTrolls(),
+  //   fetchSlaps(),
+  // ]).then(() => fetchPlaytime())
 })
 
 </script>

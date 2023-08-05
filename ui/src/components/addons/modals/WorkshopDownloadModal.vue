@@ -219,7 +219,7 @@ function startDownload(force = false) {
   sse.onerror = () => {
     downloadLog.value.push({
       state: "SERVER_ERROR",
-      message: "Server returned an unknown error",
+      message: "Lost connection with server, please try again.",
       error: true
     })
     sse.close()

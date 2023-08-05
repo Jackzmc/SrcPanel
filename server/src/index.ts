@@ -27,7 +27,7 @@ import { QueryQueue } from './modules/QueryQueue.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-const MySQLStore = MySQLSession(FastifySession  )
+const MySQLStore = MySQLSession(FastifySession )
 
 const app = Fastify({
     pluginTimeout: 20000,
@@ -117,11 +117,9 @@ app.register(import('./middlewares/managers.js'))
         for(const dirent of dirents) {
             if(dirent.isDirectory()) {
                 let prefix: string;
-                let requiresAuth = false
                 if(dirent.name[0] === "!") {
                     prefix = rootPrefix
                     if(dirent.name[1] === "!") {
-                        requiresAuth = true
                         app.register(async(fastify: FastifyInstance, opts: FastifyPluginOptions) => {
                             fastify.addHook('preHandler', async(req, reply) => {
                                 await fastify.authmngr.verify(req, reply)
@@ -161,10 +159,7 @@ app.register(import('./middlewares/managers.js'))
     } catch (err) {
         app.log.error(err)
         process.exit(1)
-    }
-
-  
-      
+    }      
 })
 
 async function setupSwagger() {
