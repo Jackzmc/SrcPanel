@@ -2,7 +2,7 @@ Arguments:
   /home/jackzie/.nvm/versions/node/v18.15.0/bin/node /home/jackzie/.nvm/versions/node/v18.15.0/bin/yarn start
 
 PATH: 
-  /home/jackzie/Projects/l4d2-admin-page/server/node_modules/.bin:/tmp/yarn--1691076634295-0.8774111753251652:/home/jackzie/Projects/l4d2-admin-page/server/node_modules/.bin:/home/jackzie/.config/yarn/link/node_modules/.bin:/home/jackzie/.yarn/bin:/home/jackzie/.nvm/versions/node/v18.15.0/libexec/lib/node_modules/npm/bin/node-gyp-bin:/home/jackzie/.nvm/versions/node/v18.15.0/lib/node_modules/npm/bin/node-gyp-bin:/home/jackzie/.nvm/versions/node/v18.15.0/bin/node_modules/npm/bin/node-gyp-bin:/home/jackzie/.nvm/versions/node/v18.15.0/bin:/home/jackzie/.pyenv/shims:/home/jackzie/.pyenv/bin:/home/jackzie/.cargo/bin:/home/jackzie/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/snap/bin:/home/jackzie/.dotnet/tools:/usr/local/go/bin:/usr/local/go/bin
+  /home/jackzie/Projects/l4d2-admin-page/server/node_modules/.bin:/tmp/yarn--1691084137488-0.6915196799844043:/home/jackzie/Projects/l4d2-admin-page/server/node_modules/.bin:/home/jackzie/.config/yarn/link/node_modules/.bin:/home/jackzie/.yarn/bin:/home/jackzie/.nvm/versions/node/v18.15.0/libexec/lib/node_modules/npm/bin/node-gyp-bin:/home/jackzie/.nvm/versions/node/v18.15.0/lib/node_modules/npm/bin/node-gyp-bin:/home/jackzie/.nvm/versions/node/v18.15.0/bin/node_modules/npm/bin/node-gyp-bin:/home/jackzie/.nvm/versions/node/v18.15.0/bin:/home/jackzie/.pyenv/shims:/home/jackzie/.pyenv/bin:/home/jackzie/.cargo/bin:/home/jackzie/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/snap/bin:/home/jackzie/.dotnet/tools:/usr/local/go/bin
 
 Yarn version: 
   1.22.19

@@ -166,7 +166,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             reply.raw.write(`data: ${JSON.stringify(msg)}\n\n`)
         }
         reply.raw.flushHeaders()
-        reply.raw.write('retry: 5000\n\n')
+        reply.raw.write('retry: 1000\n\n')
 
         const server = fastify.servers.get(req.params.id)
         
@@ -182,10 +182,15 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         function eventHandler(data: PluginServerStatus) {
             send(data)
         }
-        
+
+        const heartbeatTimer = setInterval(() => {
+            reply.raw.write(': heartbeat')
+        }, 1000 * 30)
+
         server.addListener("live", eventHandler)
         req.raw.on("close", () => {
             server.removeListener("live", eventHandler)
+            clearTimeout(heartbeatTimer)
         })
         reply.hijack()
     })
