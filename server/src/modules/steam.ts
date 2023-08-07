@@ -6,6 +6,7 @@ import { readFile } from 'fs/promises'
 import https from 'https';
 import { unlink } from 'fs/promises';
 import { WorkshopItem, SteamUserDetails } from '../../../common-types/Share.js'
+import { EventEmitter } from 'node:events';
 
 export default class SteamAPI {
     private apikey: string
@@ -115,6 +116,34 @@ export default class SteamAPI {
                 reject(err)
             })
         })
+    }
+
+    static downloadItemProgress(item: WorkshopItem, destination: string, requestOptions?: any, filenameTemplate: string = "%ID%.vpk"): EventEmitter {
+        const event = new EventEmitter()
+        const filename = filenameTemplate
+            .replace(/%ID%/, item.publishedfileid)
+            .replace(/%TITLE%/, item.title)
+        const filepath = path.join(destination, filename)
+        const file = createWriteStream(filepath)
+        console.log(item.file_url)
+        let curBytes = 0
+        https.get(item.file_url, requestOptions, (response) => {
+            response.headers['content-length']
+            file.on('finish', () => {
+                file.close(() => {
+                    event.emit("finish", file.bytesWritten, Number(response.headers['content-length']))
+                })
+            })
+            response.on('data', (chunk) => {
+                curBytes += chunk.length
+                event.emit("progress", file.bytesWritten, Number(response.headers['content-length']))
+            })
+            response.pipe(file)
+        }).on('error', (err) => {
+            unlink(filepath)
+            event.emit("error", err)
+        })
+        return event
     }
 
 }

@@ -296,6 +296,23 @@ export default class Share {
         return true
     }
 
+    public steamDownloadStream(item: ChildWorkshopItem) {
+        const filename = `${item.publishedfileid}.vpk`
+
+        const event = SteamAPI.downloadItemProgress(item, this.sourceFolder, { timeout: DOWNLOAD_TIMEOUT })
+        event.addListener("finish", (curBytes, totalBytes) => {
+            if(curBytes != item.file_size) {
+                throw new Error(`Downloaded size mismatch (downloaded ${curBytes} bytes, expected ${item.file_size} bytes)`)
+            }
+
+            this.addAddonEntry(filename, {
+                filesize: item.file_size,
+                lastModified: item.time_updated
+            }, Share.serializeWorkshopItem(item), item.collection)
+        })
+        return event
+    }
+
     // Exports to a saveable object
     public export(includeId = true): ShareInfo {
         return {

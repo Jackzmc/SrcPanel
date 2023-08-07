@@ -64,6 +64,25 @@
         Update in progress, this might take a while...
       </p>
       <div class="content">
+        <h4 class="title">Downloads</h4>
+        <div class="list has-visible-pointer-controls" v-if="Object.keys(downloads).length > 0">
+          <div class="list-item" v-for="(download, id) in downloads" :key="id">
+            <div class="list-item-content">
+              <div class="list-item-title"><a :href="download.url"><b>{{ download.entryTitle }}</b></a></div>
+              <div class="list-item-description">
+                <progress :class="['progress', {'is-success': download.progress >= 1, 'is-info': download.progress < 1 }]"
+                  :max="download.totalBytes" :value="download.currentBytes"
+                >{{ (download.progress * 100).toFixed(0) }}%</progress>
+              </div>
+            </div>
+            <div class="list-item-controls">
+              <span v-if="download.progress >= 1" class="tag is-pulled-right is-success">{{ formatSize(download.currentBytes) }}</span>
+              <span v-else="download.progress >= 1" class="tag is-pulled-right is-info">{{ formatSize(download.currentBytes) }} / {{ formatSize(download.totalBytes) }}</span>
+            </div>
+          </div>
+        </div>
+        <br>
+        <h4 class="title">Logs</h4>
         <p v-for="(entry, i) in downloadLog" :key="i">
           <span :class="['tag',{'is-link': !entry.error&&!entry.success, 'is-danger': entry.error, 'is-success': entry.success}]">
             {{entry.state}}
@@ -117,6 +136,7 @@ import { computed, ref, onBeforeMount } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useNotification } from "@kyvg/vue3-notification";
 import { ExtendedShareInfo, ShareInfo } from '../../../../../common-types/Share';
+import { formatSize } from '@/js/util.js'
 
 const { notify }  = useNotification()
 
@@ -134,6 +154,7 @@ let downloadingState = ref(0) // 0: not downloading, 1 : downloading normal, 2 :
 let installDestinations = ref<string[]>([])
 let downloadLog = ref<{state: string, message: string, error?: boolean, success?: boolean, filename?: string}[]>([])
 let showForceDownload = ref(false)
+let downloads = ref<Record<string, { entryTitle: string, url: string, totalBytes: number, currentBytes: number, progress: number }>>({})
 let updateDone = ref(false)
 
 const isAddonValid = computed(() => {
@@ -252,7 +273,21 @@ function startDownload(force = false) {
           message: `Took ${Math.round((Date.now() - start) / 1000)} seconds. Maps will not be playable until the server(s) have restarted. You can restart individual servers from the 'Server Management' page.`
         })
         if(!showForceDownload.value || force) updateDone.value = true
+      } else if(payload.state === "DOWNLOAD_PROGRESS") {
+        if(!downloads.value[payload.entry]) return console.warn(`Progress update for download that we don't know: ${payload.entry}`)
+        downloads.value[payload.entry].currentBytes = payload.currentBytes
+        downloads.value[payload.entry].progress = payload.progress
+      } else if(payload.state === "DOWNLOADING") {
+        downloads.value[payload.entry] = {
+          ...payload,
+          url: `https://steamcommunity.com/sharedfiles/filedetails/?id=${payload.entry}`
+        }
       } else {
+        if(payload.state === "DOWNLOADED") {
+          if(!downloads.value[payload.entry]) return console.warn(`Progress update for download that we don't know: ${payload.entry}`)
+          downloads.value[payload.entry].progress = 1
+        }
+
         downloadLog.value.push({
           state: payload.state || payload.code,
           message: payload.message,

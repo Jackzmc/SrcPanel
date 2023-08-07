@@ -297,7 +297,6 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                     details.push(parentItem)
                 } else {
                     details = await fastify.steam.getItemDetails(children)
-                    console.debug('got collection children', parentItem.title)
                     details
                         .filter(detail => detail.result === 1)
                         .map(detail => {
@@ -313,38 +312,57 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 const downloadPromises = details.map(detail => {
                     return new Promise(async(resolve, reject) => {
                         if(!detail || !detail.file_url) {
-                            console.log(detail)
                             sendSSE({
                                 state: "DOWNLOADING",
                                 error: true,
                                 entry: detail.publishedfileid,
-                                message: `Skipping ${detail.publishedfileid}: not found or no file published</a>`
+                                message: `Skipping ${detail.publishedfileid}: may not exist or is private</a>`
                             })
                             return reject(new Error(`No file_url for ${detail.publishedfileid}`))
                         }
+
                         sendSSE({
                             state: "DOWNLOADING",
                             entry: detail.publishedfileid,
+                            entryTitle: detail.title,
+                            currentBytes: 0,
+                            totalBytes: detail.file_size,
+                            progress: 0.0,
                             message: `Downloading <a href="https://steamcommunity.com/sharedfiles/filedetails/?id=${detail.publishedfileid}"><b>${detail.title}</b></a>`
                         })
-                        await share.steamDownload(detail)
-                        sendSSE({
-                            state: "DOWNLOADED",
-                            entry: detail.publishedfileid,
-                            message: `Downloaded <a href="https://steamcommunity.com/sharedfiles/filedetails/?id=${detail.publishedfileid}"><b>${detail.title}</b></a> (${humanFileSize(detail.file_size)})`
+
+                        // await share.steamDownload(detail)
+                        const event = share.steamDownloadStream(detail)
+                        event.addListener("progress", (curBytes, totalBytes) => {
+                            sendSSE({
+                                state: "DOWNLOAD_PROGRESS",
+                                entry: detail.publishedfileid,
+                                currentBytes: curBytes,
+                                totalBytes: totalBytes,
+                                progress: curBytes / totalBytes
+                            })
                         })
-                        await req.user.log(null, `downloaded workshop addon \"%title%\" (%filename%) for %share%`, {
-                            code: "shares.addons.upload.steam_workshop." + share.id as UserPrivilegeCode,
-                            metadata: {
-                                type: "workshop",
-                                share: share.id,
-                                server: null,
-                                filename: detail.publishedfileid + ".vpk",
-                                title: detail.title,
-                                size: detail.file_size
-                            }
+                        event.addListener("finish", async () => {
+                            sendSSE({
+                                state: "DOWNLOADED",
+                                entry: detail.publishedfileid,
+                                message: `Downloaded <a href="https://steamcommunity.com/sharedfiles/filedetails/?id=${detail.publishedfileid}"><b>${detail.title}</b></a> (${humanFileSize(detail.file_size)})`
+                            })
+
+                            await req.user.log(null, `downloaded workshop addon \"%title%\" (%filename%) for %share%`, {
+                                code: "shares.addons.upload.steam_workshop." + share.id as UserPrivilegeCode,
+                                metadata: {
+                                    type: "workshop",
+                                    share: share.id,
+                                    server: null,
+                                    filename: detail.publishedfileid + ".vpk",
+                                    title: detail.title,
+                                    size: detail.file_size
+                                }
+                            })
+
+                            resolve(true)
                         })
-                        resolve(true)
                     })
                 })
 
