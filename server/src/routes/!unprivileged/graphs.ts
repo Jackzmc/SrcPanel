@@ -23,4 +23,19 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         
         return trolls
     })
+
+    fastify.get("/bans", async (req, reply) => {
+        const [rows] = await fastify.db.execute<RowDataPacket[]>(`
+            SELECT date_start, date_end, date_end - date_start as duration
+            FROM stats_games
+            WHERE date_start > 0 AND FROM_UNIXTIME(date_end) > DATE_SUB(NOW(), INTERVAL 1 YEAR) 
+            ORDER BY id DESC`)
+
+        return rows.map(row => {
+            return {
+                x: row.date_start,
+                y: Math.round(row.duration / 60)
+            }
+        })
+    })
 }

@@ -1,6 +1,5 @@
 <template>
   <Bar v-if="chartData"
-    id="my-chart-id"
     :options="chartOptions"
     :data="chartData"
   />

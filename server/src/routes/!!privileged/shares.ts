@@ -434,8 +434,10 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         let addonInfo = await share.getAddonInfo(req.params.filename)
         if(addonInfo) {
             try {
-                const method = isInstall ? share.install : share.uninstall
-                await method(req.params.filename, req.params.destKey)
+                if(isInstall)
+                    await share.install(req.params.filename, req.params.destKey)
+                else
+                    await share.uninstall(req.params.filename, req.params.destKey)
                 await req.user.log(null, `${isInstall ? 'enabled' : 'disabled'} addon %filename% for %share%/%server%`, {
                     code,
                     metadata: {

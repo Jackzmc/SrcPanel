@@ -18,7 +18,7 @@
       <div id="slapsbar" />
     </div>
     <div class="column">
-      <div id="playtimegraph" />
+      <GamesGraph />
     </div>
   </div>
 </div>
@@ -28,6 +28,7 @@
 import { ref, watch, computed, onBeforeMount, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import TrollsGraph from '@/components/charts/TrollsGraph.vue'
+import GamesGraph from '@/components/charts/GamesGraph.vue'
 
 // import Chart from 'highcharts/es-modules/Core/Chart/Chart.js';
 // import 'highcharts/es-modules/Series/Line/LineSeries.js';
