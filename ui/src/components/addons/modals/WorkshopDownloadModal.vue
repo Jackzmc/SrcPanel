@@ -220,7 +220,6 @@ async function restartServers() {
   })
   close()
   downloadingState.value = 0
-
 }
 
 async function restartServer(id: string) {

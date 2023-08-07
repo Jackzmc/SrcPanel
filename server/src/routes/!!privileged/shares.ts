@@ -129,19 +129,21 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                     error: "TYPE_NOT_ALLOWED",
                     message: "The file type is not allowed for this share"
                 })  
-            }
-            if(!VALID_FILENAME_REGEX.test(part.filename)) {
+            } else if(!VALID_FILENAME_REGEX.test(part.filename)) {
                 return reply.status(400).send({
                     error: "INVALID_FILENAME",
                     message: `The filename must match the pattern /${VALID_FILENAME_REGEX.source}/`
                 })  
             }
+
             await pump (part.file, share.createUploadStream(part.filename))
+
             if (part.file.truncated) {
                 console.warn(`${part.filename} is truncated, clearing downloaded piece`)
                 await share.deleteAddon(part.filename)
                 reply.send(new fastify.multipartErrors.FilesLimitError());    
             }
+
             await req.user.log(null, `uploaded addon %filename%`, {
                 code: "shares.addons.upload.direct",
                 metadata: {
