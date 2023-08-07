@@ -132,6 +132,7 @@ export default class SteamAPI {
             file.on('finish', () => {
                 file.close(() => {
                     event.emit("finish", file.bytesWritten, Number(response.headers['content-length']))
+                    event.removeAllListeners()
                 })
             })
             response.on('data', (chunk) => {
