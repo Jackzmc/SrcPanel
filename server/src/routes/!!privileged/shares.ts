@@ -227,6 +227,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             if(useSSE) return sendSSE(payload)
             else return await reply.status(statusCode).send(payload)
         }
+        let keepAliveTimer
         if(useSSE) {
             reply.raw.writeHead(200, {
                 'Cache-Control': 'no-cache,no-transform',
@@ -236,6 +237,10 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             });
             reply.raw.flushHeaders()
             reply.raw.write('retry: 10000\n\n')
+            // Send keep alive comments to prevent client from disconnecting
+            keepAliveTimer = setInterval(() => {
+                reply.raw.write(': keepalive\n\n')
+            }, 1000 * 30)
         }
         if(!req.user.hasPermission("shares.addons.upload.steam_workshop", req.params.shareId)) {
             await send({
@@ -401,7 +406,11 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             // Let the client terminate the connection:
             reply.hijack()
             // Timeout if they haven't killed it
-            setTimeout(() => reply.raw.end(), 10000)
+            const timeout = setTimeout(() => reply.raw.end(), 60000)
+            reply.raw.on("close", () => {
+                clearInterval(keepAliveTimer)
+                clearTimeout(timeout)
+            })
         }
     })
 
