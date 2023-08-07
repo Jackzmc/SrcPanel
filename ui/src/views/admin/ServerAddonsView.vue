@@ -1,6 +1,6 @@
 <template>
 <div>
-  <router-view :share="shareInfo" :addon="prefetch" @close="onChildClose" v-if="shareInfo && (!route.meta.needsPrefetch || prefetch)"></router-view>
+  <router-view :share="shareInfo" :addon="prefetch" @update="onChildUpdate" @close="onChildClose" v-if="shareInfo && (!route.meta.needsPrefetch || prefetch)"></router-view>
   <div class="container" v-if="ready">
     <div class="level">
       <div class="level-left">
@@ -44,7 +44,7 @@
           <div class="field">
             <label class="label">&nbsp;</label>
             <div class="control">
-              <a class="button is-info is-fullwidth" @click="fetchVPKS">
+              <a class="button is-info is-fullwidth" @click="fetchVPKS()">
                 <Icon icon="fa-sync"></Icon>
               </a>
             </div>
@@ -191,8 +191,12 @@
 import { ref, watch, computed, onBeforeMount, onMounted } from 'vue'
 import { onBeforeRouteUpdate, useRoute, useRouter } from 'vue-router'
 import Field from '@/components/Field.vue'
-import { SelectEventObject } from 'highcharts'
 
+export interface AddonUpdatePayload {
+  deleted?: boolean,
+  installInfo?: Record<string, boolean>
+  // fullUpdateIds?: string[], // NOT IMPLEMENTED
+}
 
 const SORT_NAME = (a: any, b: any) => {
   return (a.workshop?.title ?? a.filename).localeCompare(b.workshop?.title ?? b.filename)
@@ -287,7 +291,7 @@ const filteredVPKs = computed(() => {
     }
   }
 
-
+  console.log("updating")
   return vpks.value
     .filter(vpk => {
       if(!query) return true
@@ -301,7 +305,7 @@ const filteredVPKs = computed(() => {
       )
     })
     .sort(_sort)
-})
+}, { })
 
 function preview(entry: any) {
   prefetch.value = entry
@@ -337,10 +341,30 @@ function getTooltip(addon: any) {
   }
 }
 
-async function onChildClose(requestRefresh: boolean) {
+async function onChildUpdate(payload: AddonUpdatePayload) {
+  if(payload.deleted) {
+    for(let i = 0; i < vpks.value.length; i++) {
+      if(prefetch.value.filename === vpks.value[i].filename) {
+        vpks.value.splice(i, 1)
+        console.debug('deleted entry')
+        prefetch.value = undefined
+        break;
+      }
+    }
+  } else if(payload.installInfo) {
+    for(let i = 0; i < vpks.value.length; i++) {
+      if(prefetch.value.filename === vpks.value[i].filename) {
+        console.debug('updated entry', Object.assign({}, vpks.value[i].installInfo), Object.assign({}, payload.installInfo))
+        vpks.value[i].installInfo = payload.installInfo
+        formatAddonEntryEnabledOn(vpks.value[i])
+        break;
+      }
+    }
+  }
+}
+
+async function onChildClose(updates?: AddonUpdatePayload) {
   router.push({ name: "admin-addons" })
-  if(requestRefresh)
-    await fetchVPKS()
 }
 async function fetchShares() {
   error.value = undefined
@@ -369,26 +393,7 @@ async function fetchVPKS() {
     const json = await response.json()
     if(response.ok) {
       shareInfo.value = json.shareInfo
-      vpks.value = json.addons.map((entry: any) => {
-        if(entry.collection) {
-          for(let child of entry.children) {
-            child.enabledOn = child.installInfo ? Object.entries(child.installInfo).filter(([key, value]) => value).map(([key]) => key) : []
-          }
-        } else {
-          entry.enabledOn = Object.entries(entry.installInfo).filter(([key, value]) => value).map(([key]) => key)
-        }
-
-        if(entry.workshop) {
-          hasAnyWorkshop.value = true
-          if(entry.workshop.deleted) {
-            entry.workshop = null
-            return entry
-          }
-          entry.workshop.url = `https://steamcommunity.com/sharedfiles/filedetails/?id=${entry.filename.slice(0, -4)}`
-          totalFileSize.value += entry.workshop.filesize
-        }
-        return entry
-      })
+      vpks.value = json.addons.map((entry: any) => formatAddonEntry(entry))
       ready.value = true
     } else {
       error.value = json.error ? `${json.error}: ${json.message}` : response.statusText
@@ -396,6 +401,30 @@ async function fetchVPKS() {
   } catch(err: any) {
     error.value = err.message || err
   }
+}
+function formatAddonEntryEnabledOn(entry: any) {
+  if(entry.collection) {
+    for(let child of entry.children) {
+      child.enabledOn = child.installInfo ? Object.entries(child.installInfo).filter(([key, value]) => value).map(([key]) => key) : []
+    }
+  } else {
+    entry.enabledOn = Object.entries(entry.installInfo).filter(([key, value]) => value).map(([key]) => key)
+  }
+}
+
+function formatAddonEntry(entry: any) {
+  formatAddonEntryEnabledOn(entry)
+
+  if(entry.workshop) {
+    hasAnyWorkshop.value = true
+    if(entry.workshop.deleted) {
+      entry.workshop = null
+      return entry
+    }
+    entry.workshop.url = `https://steamcommunity.com/sharedfiles/filedetails/?id=${entry.filename.slice(0, -4)}`
+    totalFileSize.value += entry.workshop.filesize
+  }
+  return entry
 }
 
 function formatSize(bytes: number, si = false, dp = 1) {

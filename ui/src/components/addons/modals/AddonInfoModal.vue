@@ -5,13 +5,13 @@
         <p class="modal-card-title">Addon Info
           <span class="tag is-info has-tooltip-bottom is-pulled-right mr-2 is-rounded" data-tooltip="The target share">{{share.id}}</span>
         </p>
-        <button class="delete" aria-label="close" @click='close(false)'></button>
+        <button class="delete" aria-label="close" @click='close()'></button>
       </header>
       <header class="modal-card-head" v-else>
         <p class="modal-card-title">
           <Icon icon="spinner" spin>Loading...</Icon>
         </p>
-        <button class="delete" aria-label="close" @click='close(false)'></button>
+        <button class="delete" aria-label="close" @click='close()'></button>
       </header>
       <section class="modal-card-body" v-if="addon">
         <template v-if="addon.workshop">
@@ -30,7 +30,7 @@
           <div class="control">
             <div class="tags has-addons">
               <span class="tag is-dark">File Size</span>
-              <span class="tag is-info">{{formatSize(props.addon.workshop?.filesize ?? props.addon.filesize)}}</span>
+              <span class="tag is-info">{{ formatSize(props.addon.workshop?.filesize ?? props.addon.filesize) }}</span>
             </div>
           </div>
           <div class="control">
@@ -43,13 +43,13 @@
           <div class="control">
             <div class="tags has-addons">
               <span class="tag is-dark">Last Updated</span>
-              <span class="tag">{{ formatTime(props.addon.workshop?.lastUpdated ?? props.addon.lastModified) }}</span>
+              <span class="tag">{{ formatDate(props.addon.workshop?.lastUpdated ?? props.addon.lastModified) }}</span>
             </div>
           </div>
           <div class="control">
             <div class="tags has-addons">
               <span class="tag is-dark">Downloaded</span>
-              <span class="tag">{{ formatTime(props.addon.downloaded) }}</span>
+              <span class="tag">{{ formatDate(props.addon.downloaded) }}</span>
             </div>
           </div>
         </div>
@@ -81,7 +81,7 @@
           </div>
       </section>
       <footer class="modal-card-foot">
-        <button class="button" @click="close(false)">
+        <button class="button" @click="close()">
           Close
         </button>
         <a v-if="pendingRestarts.length > 0" class="button is-info" data-tooltip="Server must be restarted to apply changes" @click='restartServers'>Restart Servers</a>
@@ -96,8 +96,10 @@
 import Modal from '@/components/Modal.vue'
 import { useNotification } from "@kyvg/vue3-notification";
 import { computed, ref, onBeforeMount } from 'vue';
+import { formatDate, formatSize } from '@/js/util.js'
+import { AddonUpdatePayload } from '@/views/admin/ServerAddonsView.vue';
 
-const emit = defineEmits(['close'])
+const emit = defineEmits(['close', 'update'])
 const { notify }  = useNotification()
 const props = defineProps<{
   addon: any,
@@ -106,10 +108,11 @@ const props = defineProps<{
 let previewImageLoaded = ref(false)
 let pendingRestarts = ref<string[]>([])
 let installInfo = ref<Record<string, boolean>>()
+let hasUpdated = false
 
 onBeforeMount(() => {
   if(props.addon)
-    installInfo.value = props.addon.installInfo
+    installInfo.value = Object.assign({}, props.addon.installInfo)
 })
 
 async function installAddon(destKey: string, mode: "install" | "uninstall") {
@@ -125,6 +128,9 @@ async function installAddon(destKey: string, mode: "install" | "uninstall") {
       notify({
         type: "success",
         text: mode == "install" ? `Enabled ${addonName.value} on ${destKey}` : `Disabled ${addonName.value} on ${destKey}`
+      })
+      emit('update', {
+        installInfo: installInfo.value
       })
     } else {
       notify({
@@ -220,7 +226,8 @@ async function deleteAddon() {
           type: 'success',
           text: `Deleted ${addonName.value}`
         })
-        close(true)
+        emit('update', { deleted: true })
+        close()
       } else {
         const json = await response.json()
         notify({
@@ -239,33 +246,8 @@ async function deleteAddon() {
   }
 }
 
-function close(requestRefresh = false) {
-  emit('close', requestRefresh)
+function close() {
+  emit('close')
 }
 
-function formatSize(bytes: number, si = false, dp = 1) {
-  const thresh = si ? 1000 : 1024;
-
-  if (Math.abs(bytes) < thresh) {
-    return bytes + ' B';
-  }
-
-  const units = si
-    ? ['kB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
-    : ['KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB', 'ZiB', 'YiB'];
-  let u = -1;
-  const r = 10**dp;
-
-  do {
-    bytes /= thresh;
-    ++u;
-  } while (Math.round(Math.abs(bytes) * r) / r >= thresh && u < units.length - 1);
-
-  return (dp > 0 ? bytes.toFixed(dp) : Math.round(bytes)) + ' ' + units[u];
-}
-
-function formatTime(time: number) {
-  const date = new Date(time*1000)
-  return `${date.toLocaleDateString()} at ${date.toLocaleTimeString(undefined, { timeStyle: "short" })}`
-}
 </script>
