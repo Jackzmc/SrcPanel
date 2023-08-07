@@ -5,7 +5,7 @@
     <div class="level">
       <div class="level-left">
         <div class="level-item">
-          <h5 class="title is-4">Viewing {{filteredVPKs.length}} addons</h5>
+          <h5 class="title is-4">Viewing {{filteredAddons.length}} addons</h5>
         </div>
       </div>
       <div class="level-right">
@@ -44,7 +44,7 @@
           <div class="field">
             <label class="label">&nbsp;</label>
             <div class="control">
-              <a class="button is-info is-fullwidth" @click="fetchVPKS()">
+              <a class="button is-info is-fullwidth" @click="fetchAddons()">
                 <Icon icon="fa-sync"></Icon>
               </a>
             </div>
@@ -95,51 +95,51 @@
             </tr>
           </thead>
           <tbody>
-            <template v-for="vpk in filteredVPKs" :key="vpk.filename ?? vpk.collection.id">
+            <template v-for="addon in filteredAddons" :key="addon.filename ?? addon.collection.id">
               <tr>
                 <td>
-                  <a v-if="vpk.collection" @click="preview(vpk)">
-                    <b class="has-text-dark">{{vpk.collection.name}}</b>&nbsp;
-                    <span @click="preview(vpk)" class="tag is-dark is-pulled-right">Collection</span>
+                  <a v-if="addon.collection" @click="preview(addon)">
+                    <b class="has-text-dark">{{addon.collection.name}}</b>&nbsp;
+                    <span @click="preview(addon)" class="tag is-dark is-pulled-right">Collection</span>
                   </a>
-                  <a :class="{'has-text-weight-light': vpk.enabledOn.length == 0, 'has-text-grey': vpk.enabledOn.length == 0 }" @click="preview(vpk)" v-else :data-tooltip="getTooltip(vpk)">
-                    {{vpk.workshop ? vpk.workshop.title : vpk.filename}}
+                  <a :class="{'has-text-weight-light': addon.enabledOn.length == 0, 'has-text-grey': addon.enabledOn.length == 0 }" @click="preview(addon)" v-else :data-tooltip="getTooltip(addon)">
+                    {{addon.workshop ? addon.workshop.title : addon.filename}}
                   </a>
                   &nbsp;
-                  <span class="tags is-inline is-pulled-right" v-if="!vpk.collection">
-                    <span class="tag is-rounded is-info" v-for="server in vpk.enabledOn" :key="server">
+                  <span class="tags is-inline is-pulled-right" v-if="!addon.collection">
+                    <span class="tag is-rounded is-info" v-for="server in addon.enabledOn" :key="server">
                       {{ server }}
                     </span>
                   </span>
-                  <!-- <span class="tag" v-if="!vpk.collection" data-tooltip="Number of servers the addon is installed on">{{ vpk.enabledOn.length }} servers</span> -->
+                  <!-- <span class="tag" v-if="!addon.collection" data-tooltip="Number of servers the addon is installed on">{{ addon.enabledOn.length }} servers</span> -->
                 </td>
                 <td v-if="hasAnyWorkshop">
-                  <template v-if="vpk.workshop">
-                    <span class="has-text-danger" v-if="vpk.workshop.delete" data-tooltip="Item has been deleted or private">Deleted</span>
-                    <a v-else :href="vpk.workshop.url" class="button is-small" target="_blank"  data-tooltip="Open a new tab to the workshop entry page">
+                  <template v-if="addon.workshop">
+                    <span class="has-text-danger" v-if="addon.workshop.delete" data-tooltip="Item has been deleted or private">Deleted</span>
+                    <a v-else :href="addon.workshop.url" class="button is-small" target="_blank"  data-tooltip="Open a new tab to the workshop entry page">
                       <Icon icon="fab fa-steam" button>Workshop</Icon>
                     </a>
                   </template>
-                  <a v-else-if="vpk.collection" :href="'https://steamcommunity.com/workshop/filedetails/?id=' + vpk.collection.id" class="button is-small" target="_blank"  data-tooltip="Open a new tab to the workshop entry page">
+                  <a v-else-if="addon.collection" :href="'https://steamcommunity.com/workshop/filedetails/?id=' + addon.collection.id" class="button is-small" target="_blank"  data-tooltip="Open a new tab to the workshop entry page">
                     <Icon icon="fab fa-steam" button>Workshop</Icon>
                   </a>
                 </td>
-                <td :colspan="vpk.collection ? 3 : 1">
-                  <span v-if="vpk.workshop">{{formatSize(vpk.workshop.filesize, true, 0)}}</span>
-                  <span v-else>{{formatSize(vpk.filesize, true, 0)}}</span>
+                <td :colspan="addon.collection ? 3 : 1">
+                  <span v-if="addon.workshop">{{formatSize(addon.workshop.filesize, true, 0)}}</span>
+                  <span v-else>{{formatSize(addon.filesize, true, 0)}}</span>
                 </td>
-                <template v-if="!vpk.collection">
+                <template v-if="!addon.collection">
                 <td>
-                  <span v-if="vpk.workshop">{{formatTime(vpk.workshop.lastUpdated)}}</span>
-                  <span v-else>{{formatTime(vpk.lastModified)}}</span>
+                  <span v-if="addon.workshop">{{formatTime(addon.workshop.lastUpdated)}}</span>
+                  <span v-else>{{formatTime(addon.lastModified)}}</span>
                 </td>
                 <td>
-                  <span>{{formatTime(vpk.downloaded)}}</span>
+                  <span>{{formatTime(addon.downloaded)}}</span>
                 </td>
                 </template>
               </tr>
-              <template v-if="vpk.collection">
-                <tr v-for="child in vpk.children" :key="child.filename">
+              <template v-if="addon.collection">
+                <tr v-for="child in addon.children" :key="child.filename">
                   <td>
                     <a v-if="child.workshop" class="has-text-info ml-5" @click="preview(child)" :data-tooltip="getTooltip(child)">
                       <b>{{child.workshop.title}}</b>
@@ -195,9 +195,9 @@ import Field from '@/components/Field.vue'
 export interface AddonUpdatePayload {
   deleted?: boolean,
   installInfo?: Record<string, boolean>
-  // fullUpdateIds?: string[], // NOT IMPLEMENTED
 }
 
+/// SORT FUNCTIONS
 const SORT_NAME = (a: any, b: any) => {
   return (a.workshop?.title ?? a.filename).localeCompare(b.workshop?.title ?? b.filename)
 }
@@ -219,7 +219,7 @@ const route = useRoute()
 const router = useRouter()
 
 
-let vpks = ref<any[]>([])
+let addons = ref<any[]>([])
 let ready = ref(false)
 let search = ref<any>()
 let prefetch = ref<any>()
@@ -236,7 +236,7 @@ watch(selectedShare, (value) => {
   router.replace({
     params: {shareId: value},
   })
-  fetchVPKS()
+  fetchAddons()
 })
 let shares = ref<string[]>(["default"])
 let shareInfo = ref()
@@ -244,7 +244,7 @@ let totalFileSize = ref(0)
 const computedTotalFileSize = computed(() => {
   if(!search.value) return totalFileSize.value
   let size = 0
-  for(const entry of filteredVPKs.value) {
+  for(const entry of filteredAddons.value) {
     size += (entry.workshop ? entry.workshop.filesize : entry.filesize )
   }
   return size
@@ -273,7 +273,7 @@ function setSortFunc(id: string, sortFunc: Function) {
     }
   }
 }
-const filteredVPKs = computed(() => {
+const filteredAddons = computed(() => {
   const query = search.value?.toLowerCase()
   let _sort = (a: any, b: any) => { return 0 }
   if(sort.value) {
@@ -292,16 +292,16 @@ const filteredVPKs = computed(() => {
   }
 
   console.log("updating")
-  return vpks.value
-    .filter(vpk => {
+  return addons.value
+    .filter(addon => {
       if(!query) return true
       // Search the collection's name and it's children instead:
-      if(vpk.collection) {
-        return vpk.collection.name.toLowerCase().includes(query)
-        || vpk.children.some((child: any) => child.filename.toLowerCase().includes(query) || (child.workshop && child.workshop.title.toLowerCase().includes(query)))
+      if(addon.collection) {
+        return addon.collection.name.toLowerCase().includes(query)
+        || addon.children.some((child: any) => child.filename.toLowerCase().includes(query) || (child.workshop && child.workshop.title.toLowerCase().includes(query)))
       }
-      return (vpk.filename.toLowerCase().includes(query)
-        || (vpk.workshop && vpk.workshop.title.toLowerCase().includes(query))
+      return (addon.filename.toLowerCase().includes(query)
+        || (addon.workshop && addon.workshop.title.toLowerCase().includes(query))
       )
     })
     .sort(_sort)
@@ -343,29 +343,30 @@ function getTooltip(addon: any) {
 
 async function onChildUpdate(payload: AddonUpdatePayload) {
   if(payload.deleted) {
-    for(let i = 0; i < vpks.value.length; i++) {
-      if(prefetch.value.filename === vpks.value[i].filename) {
-        vpks.value.splice(i, 1)
+    for(let i = 0; i < addons.value.length; i++) {
+      if(prefetch.value.filename === addons.value[i].filename) {
+        addons.value.splice(i, 1)
         console.debug('deleted entry')
         prefetch.value = undefined
         break;
       }
     }
   } else if(payload.installInfo) {
-    for(let i = 0; i < vpks.value.length; i++) {
-      if(prefetch.value.filename === vpks.value[i].filename) {
-        console.debug('updated entry', Object.assign({}, vpks.value[i].installInfo), Object.assign({}, payload.installInfo))
-        vpks.value[i].installInfo = payload.installInfo
-        formatAddonEntryEnabledOn(vpks.value[i])
+    for(let i = 0; i < addons.value.length; i++) {
+      if(prefetch.value.filename === addons.value[i].filename) {
+        console.debug('updated entry', Object.assign({}, addons.value[i].installInfo), Object.assign({}, payload.installInfo))
+        addons.value[i].installInfo = payload.installInfo
+        formatAddonEntryEnabledOn(addons.value[i])
         break;
       }
     }
   }
 }
 
-async function onChildClose(updates?: AddonUpdatePayload) {
+async function onChildClose() {
   router.push({ name: "admin-addons" })
 }
+
 async function fetchShares() {
   error.value = undefined
   shares.value = []
@@ -381,11 +382,12 @@ async function fetchShares() {
     error.value = err.message || err
   }
 }
-async function fetchVPKS() {
+
+async function fetchAddons() {
   ready.value = false
   error.value = undefined
   shareInfo.value = undefined
-  vpks.value = []
+  addons.value = []
   hasAnyWorkshop.value = false
   totalFileSize.value = 0
   try {
@@ -393,7 +395,7 @@ async function fetchVPKS() {
     const json = await response.json()
     if(response.ok) {
       shareInfo.value = json.shareInfo
-      vpks.value = json.addons.map((entry: any) => formatAddonEntry(entry))
+      addons.value = json.addons.map((entry: any) => formatAddonEntry(entry))
       ready.value = true
     } else {
       error.value = json.error ? `${json.error}: ${json.message}` : response.statusText
@@ -466,9 +468,9 @@ onBeforeMount(async() => {
     selectedShare.value = "default"
   }
   if(route.params.addon) {
-    prefetch.value = vpks.value.find(vpk => vpk.filename === route.params.addon)
+    prefetch.value = addons.value.find(addon => addon.filename === route.params.addon)
   } else if(route.params.collection) {
-    prefetch.value = vpks.value.find(vpk => vpk.collection?.id === route.params.collection)
+    prefetch.value = addons.value.find(addon => addon.collection?.id === route.params.collection)
   }
 })
 
