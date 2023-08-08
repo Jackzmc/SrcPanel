@@ -672,7 +672,7 @@ async function kickPlayer(player: StatusPlayer) {
     })
   }
   if(!confirm(`Are you sure you want to kick ${player.name}?`)) return
-  const response = await request(`/api/servers/${server.value.info.id}/players/${player.steamid}/kick?reason=${reason}`, { method: 'POST' })
+  const response = await request(`/api/servers/${server.value.info.id}/players/${player.steamid}/kick?reason=${encodeURIComponent(reason)}`, { method: 'POST' })
   if(response?.ok) {
     notify({
       type: "success",
