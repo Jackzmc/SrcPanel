@@ -309,9 +309,10 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             return NO_PERMISSION(reply, "You do not have permisson to perform actions on this user")
         }
         
-        await req.user.log(null, `%client% performed action %action% on %steamid%`, {
+        await req.user.log(null, `%client% performed action %action% to %steamid% on %server%`, {
             code,
             metadata: {
+                server: server.id,
                 action: req.params.action,
                 steamid: req.params.steamid,
                 arguments: {...req.query as Record<string, string>} 

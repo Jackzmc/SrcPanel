@@ -103,16 +103,16 @@ export default class AuthManager {
         return authorized
     }
     
-    public isAdmin(steamid2: string) {
+    public isAdmin(steamid2: string): boolean {
         return this.getAdmin(steamid2) != undefined
     }
 
-    public getAdmin(steamid2: string) {
+    public getAdmin(steamid2: string): AdminData | undefined {
         if(!steamid2) throw new Error("steamid2 is not defined")
         return this.admins[steamid2.slice(10)]
     }
 
-    public getAdminExport(steamid2: string): ReadableAdminData {
+    public getAdminExport(steamid2: string): ReadableAdminData | undefined {
         if(!steamid2) throw new Error("steamid2 is not defined")
         const admin = this.admins[steamid2.slice(10)]
         if(!admin) return null
@@ -143,7 +143,7 @@ export default class AuthManager {
         }
     }
 
-    public getAdminById(id: number) {
+    public getAdminById(id: number): AdminData | undefined {
         return Object.values(this.admins).find(admin => admin.id === id)
     }
 
