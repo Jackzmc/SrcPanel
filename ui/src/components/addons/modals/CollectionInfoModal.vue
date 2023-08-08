@@ -29,7 +29,7 @@
           </div>
           <div class="control">
             <div class="tags has-addons">
-              <span class="tag is-dark">Children</span>
+              <span class="tag is-dark">Collection Addons</span>
               <span class="tag is-info">{{props.addon.children.length}}</span>
             </div>
           </div>
@@ -46,9 +46,9 @@
           </div>
         </div>
         <br>
-        <h5 class="title is-5">Children</h5>
-        <p class="subtitle is-6">Click any child to view their addon entry</p>
-        <table class="table">
+        <h5 class="title is-5">Collection Addons</h5>
+        <p class="subtitle is-6">Click any child addon to view their addon entry</p>
+        <table class="table is-fullwidth">
           <thead>
             <tr>
               <th>Filename</th>
@@ -58,7 +58,7 @@
           </thead>
           <tbody>
             <tr v-for="child in props.addon.children" :key="child.filename">
-              <td>{{ child.filename }}</td>
+              <td><router-link :to="{ name: 'addon-info', params: { shareId: props.share.id, addon: child.filename } }">{{ child.filename }}</router-link></td>
               <td>{{ formatSize(child.filesize) }}</td>
               <td>
                 <div class="field is-grouped is-grouped-multiline">

@@ -130,11 +130,11 @@
                 </td>
                 <template v-if="!addon.collection">
                 <td>
-                  <span v-if="addon.workshop">{{formatTime(addon.workshop.lastUpdated)}}</span>
-                  <span v-else>{{formatTime(addon.lastModified)}}</span>
+                  <span v-if="addon.workshop">{{formatDate(addon.workshop.lastUpdated)}}</span>
+                  <span v-else>{{formatDate(addon.lastModified)}}</span>
                 </td>
                 <td>
-                  <span>{{formatTime(addon.downloaded)}}</span>
+                  <span>{{formatDate(addon.downloaded)}}</span>
                 </td>
                 </template>
               </tr>
@@ -161,11 +161,11 @@
                     <span v-else>{{formatSize(child.filesize, true, 0)}}</span>
                   </td>
                   <td>
-                    <span v-if="child.workshop">{{formatTime(child.workshop.lastUpdated)}}</span>
-                    <span v-else>{{formatTime(child.lastModified)}}</span>
+                    <span v-if="child.workshop">{{formatDate(child.workshop.lastUpdated)}}</span>
+                    <span v-else>{{formatDate(child.lastModified)}}</span>
                   </td>
                   <td>
-                    <span>{{formatTime(child.downloaded)}}</span>
+                    <span>{{formatDate(child.downloaded)}}</span>
                   </td>
                 </tr>
               </template>
@@ -191,6 +191,7 @@
 import { ref, watch, computed, onBeforeMount, onMounted } from 'vue'
 import { onBeforeRouteUpdate, useRoute, useRouter } from 'vue-router'
 import Field from '@/components/Field.vue'
+import { formatDate, formatSize } from '@/js/util.js'
 
 export interface AddonUpdatePayload {
   deleted?: boolean,
@@ -230,6 +231,7 @@ let sort = ref<{
   func: Function,
   descending: boolean
 } | undefined>()
+let selectedAddons = ref<string[]>([])
 
 let selectedShare = ref<string>()
 watch(selectedShare, (value) => {
@@ -237,6 +239,13 @@ watch(selectedShare, (value) => {
     params: {shareId: value},
   })
   fetchAddons()
+})
+watch(() => route.params.addon, (value) => {
+  if(value) {
+    prefetch.value = addons.value.find(addon => addon.filename === value)
+  } else if(route.params.collection) {
+    prefetch.value = addons.value.find(addon => addon.collection?.id === route.params.collection)
+  }
 })
 let shares = ref<string[]>(["default"])
 let shareInfo = ref()
@@ -291,7 +300,6 @@ const filteredAddons = computed(() => {
     }
   }
 
-  console.log("updating")
   return addons.value
     .filter(addon => {
       if(!query) return true
@@ -427,31 +435,6 @@ function formatAddonEntry(entry: any) {
     totalFileSize.value += entry.workshop.filesize
   }
   return entry
-}
-
-function formatSize(bytes: number, si = false, dp = 1) {
-  const thresh = si ? 1000 : 1024;
-
-  if (Math.abs(bytes) < thresh) {
-    return bytes + ' B';
-  }
-
-  const units = si
-    ? ['kB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
-    : ['KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB', 'ZiB', 'YiB'];
-  let u = -1;
-  const r = 10**dp;
-
-  do {
-    bytes /= thresh;
-    ++u;
-  } while (Math.round(Math.abs(bytes) * r) / r >= thresh && u < units.length - 1);
-
-  return (dp > 0 ? bytes.toFixed(dp) : Math.round(bytes)) + ' ' + units[u];
-}
-function formatTime(time: number) {
-  const date = new Date(time*1000)
-  return `${date.toLocaleDateString()} at ${date.toLocaleTimeString(undefined, { timeStyle: "short" })}`
 }
 
 onBeforeMount(async() => {

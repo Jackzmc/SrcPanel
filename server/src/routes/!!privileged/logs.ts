@@ -132,7 +132,6 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 return (prev.id > current.id) ? prev : current
             })
             if(highestRow.highestId > cache.highestId) {
-                console.log('updating', cache[tableName].highestId, '->', highestRow.id)
                 cache[tableName].highestId = highestRow.id
             }
         }
