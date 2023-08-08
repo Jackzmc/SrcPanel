@@ -23,7 +23,7 @@
             <template v-if="status">
               <span class="tag is-danger is-medium has-tooltip-danger no-border" v-if="error || status.error" data-tooltip="An error occurred while fetching the server's status"><Icon icon="fa-exclamation-triangle">Error</Icon></span>
               <span class="tag is-success  is-medium" v-else-if="status.online">Online</span>
-              <span class="tag is-danger  is-medium" v-else="!status.online">Offline</span>
+              <span class="tag is-danger  is-medium" v-else>Offline</span>
             </template>
             <span class="tag is-medium" v-else><Icon icon="fa-spinner" spin></Icon></span>
             <span data-tooltip="Server ID" class="tag is-info is-medium no-border">{{server.info.id}}</span>
@@ -55,7 +55,7 @@
         <ul>
           <li v-for="(data, id) in TABS" :key="id"  :class="{'is-active': tab === id}">
             <router-link
-              :to="{params:{tab: id}}"
+              :to="{params:{tab: id, id: server.info.id }}"
               v-if="(!data.permission || privUser.hasPermission(data.permission)) && (data.enabled == undefined || data.enabled())"
             >
               {{data.name}}&nbsp;
@@ -663,6 +663,8 @@ async function fetchServersCompact() {
 }
 
 async function kickPlayer(player: StatusPlayer) {
+  if(player.steamid === 'BOT') return
+  if(!confirm(`Are you sure you want to kick ${player.name}?`)) return
   const response = await request(`/api/servers/${server.value.info.id}/players/${player.steamid}/kick`, { method: 'POST' })
   if(response?.ok) {
     notify({
