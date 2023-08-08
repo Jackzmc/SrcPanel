@@ -231,22 +231,25 @@ let sort = ref<{
   func: Function,
   descending: boolean
 } | undefined>()
-let selectedAddons = ref<string[]>([])
 
 let selectedShare = ref<string>()
-watch(selectedShare, (value) => {
+watch(selectedShare, async (value) => {
   router.replace({
     params: {shareId: value},
   })
-  fetchAddons()
+  await fetchAddons()
+  openSelectedAddon()
 })
-watch(() => route.params.addon, (value) => {
-  if(value) {
-    prefetch.value = addons.value.find(addon => addon.filename === value)
+watch(() => route.params.addon, openSelectedAddon)
+
+function openSelectedAddon() {
+  if(route.params.addon) {
+    prefetch.value = addons.value.find(addon => addon.filename === route.params.addon)
   } else if(route.params.collection) {
     prefetch.value = addons.value.find(addon => addon.collection?.id === route.params.collection)
   }
-})
+}
+
 let shares = ref<string[]>(["default"])
 let shareInfo = ref()
 let totalFileSize = ref(0)
@@ -449,11 +452,6 @@ onBeforeMount(async() => {
     }
   } else {
     selectedShare.value = "default"
-  }
-  if(route.params.addon) {
-    prefetch.value = addons.value.find(addon => addon.filename === route.params.addon)
-  } else if(route.params.collection) {
-    prefetch.value = addons.value.find(addon => addon.collection?.id === route.params.collection)
   }
 })
 
