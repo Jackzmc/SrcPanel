@@ -664,8 +664,15 @@ async function fetchServersCompact() {
 
 async function kickPlayer(player: StatusPlayer) {
   if(player.steamid === 'BOT') return
+  const reason = prompt(`Enter a reason to kick \"${player.name}\":`)
+  if(!reason) {
+    return notify({
+      type: "warning",
+      text: "Kick Cancelled (no reason provided)"
+    })
+  }
   if(!confirm(`Are you sure you want to kick ${player.name}?`)) return
-  const response = await request(`/api/servers/${server.value.info.id}/players/${player.steamid}/kick`, { method: 'POST' })
+  const response = await request(`/api/servers/${server.value.info.id}/players/${player.steamid}/kick?reason=${reason}`, { method: 'POST' })
   if(response?.ok) {
     notify({
       type: "success",
