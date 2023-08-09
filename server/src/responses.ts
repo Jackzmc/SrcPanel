@@ -10,8 +10,10 @@ export function NOT_LOGGED_IN(reply: FastifyReply, code = "NOT_LOGGED_IN", messa
     return response(reply, 401, code, message)
 }
 
-export function NO_PERMISSION(reply: FastifyReply, altMessage?: string) {
-    return response(reply, 403, "NO_PERMISSION", altMessage ?? "You are not authorized to access this resource")
+export function NO_PERMISSION(reply: FastifyReply,altMessage?: string, permCode?: string) {
+    return response(reply, 403, "NO_PERMISSION", altMessage ?? "You are not authorized to access this resource", {
+        permCode
+    })
 }
 
 export function NOT_FOUND(reply: FastifyReply, resource: string) {

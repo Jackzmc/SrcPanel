@@ -306,7 +306,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
         const targetUser = fastify.authmngr.getAdmin(req.params.steamid)
         if(targetUser && targetUser.permissions.immunityLevel > req.user.immunity) {
-            return NO_PERMISSION(reply, "You do not have permisson to perform actions on this user")
+            return NO_PERMISSION(reply, "You do not have permisson to perform actions on this user", code)
         }
         
         await req.user.log(null, `%client% performed action %action% to %steamid% on %server%`, {
