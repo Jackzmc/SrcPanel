@@ -8,12 +8,12 @@
   </div>
   <Field :icon-left="rconSupported ? 'terminal' : 'warning'" :icon-class="rconSupported ? 'has-text-white' : 'has-text-info'">
     <template v-if="rconSupported">
-      <input id="terminal-input" class="input terminal-input" v-model="commandInput"
+      <input id="terminal-input" :class="['input','terminal-input',commandClass]" v-model="commandInput"
         placeholder="Enter a command" @keyup.enter="runCommand"
         :disabled="isConnected ? undefined : true"
       >
       <datalist id="terminal-input">
-        <option v-for="cmd in VALID_COMMANDS" :key="cmd" :value="cmd"></option>
+        <option v-for="cmd in validCommands" :key="cmd" :value="cmd"></option>
       </datalist>
     </template>
     <input v-else disabled class="input terminal-input" placeholder="Server does not support RCON">
@@ -35,18 +35,6 @@ const props = defineProps<{
   server: any
 }>()
 
-const VALID_COMMANDS = [
-  "sm_request",
-  "status",
-  "sm_status",
-  "sm_kick",
-  "sm_ban",
-  "sm_who",
-  "sm",
-  "sm_cvar",
-  "sm_cvarl"
-]
-
 const rconSupported = computed(() => {
   return props.server.info.features.includes('rcon')
 })
@@ -55,12 +43,26 @@ const isConnected = computed(() => {
   if(liveStatusNextRetryTime.value) return false
   return liveReadyState.value == EventSource.OPEN
 })
+
+const commandClass = computed(() => {
+  if(currentCommandName.value && validCommands.value.has(currentCommandName.value)) {
+    return ""
+  }
+  return "has-text-danger"
+})
+
+const currentCommandName = computed(() => {
+  if(!commandInput.value) return
+  const split = commandInput.value.split(" ")
+  return split[0].toLowerCase()
+})
+
 let liveStatusNextRetryTime = ref<number>()
 let liveReadyState = ref<number>(0)
 let evtSource: EventSource
 let commandInput = ref<string>()
-
 let logs = ref<string[]>([])
+let validCommands = ref<Set<string>>(new Set())
 
 async function runCommand() {
   if(!commandInput.value) return
@@ -107,8 +109,40 @@ function createLogsConnection() {
     }, retryTime)
   }
 }
+
+async function fetchCommands() {
+  try {
+    const response = await fetch(`/data/commands.json?t=${BUILD_TIMESTAMP}`)
+    const json = await response.json()
+    if(!json) return
+
+    for(const group in json) {
+      for(const command of json[group].commands) {
+        // skip any official commands, the fetch below will get them:
+        if(!command.consoleOnly) continue
+
+        const split = command.command.trim().split(' ')
+        validCommands.value.add(`sm_${split[0]}`)
+      }
+    }
+  } catch(err) {
+    console.error('could not fetch /data/commands.json', err)
+  }
+
+  try {
+    const response = await fetch(`/data/550_commands.txt?t=${BUILD_TIMESTAMP}`)
+    const commands = await response.text()
+    for(const command of commands.split(/\r?\n/)) {
+      validCommands.value.add(command)
+    }
+  } catch(err) {
+    console.error('could not fetch /data/commands.json', err)
+  }
+}
+
 onBeforeMount(async() => {
   createLogsConnection()
+  await fetchCommands()
 })
 onUnmounted(() => {
   errCount = -1
@@ -125,6 +159,7 @@ onUnmounted(() => {
   font-style: monospace;
   overflow-y: scroll;
   overscroll-behavior-y: contain;
+  scroll-snap-type: y mandatory;
 }
 .terminal-input::placeholder {
   color: white;
