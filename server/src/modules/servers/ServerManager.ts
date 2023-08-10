@@ -227,6 +227,7 @@ export default class ServerManager {
               type: server.type,
               tags: tags,
               cfgDirectory: server.cfgDirectory,
+              logsPath: server.logsPath,
               activityId: server.activityId,
               systemd: server.systemd,
               rcon: {

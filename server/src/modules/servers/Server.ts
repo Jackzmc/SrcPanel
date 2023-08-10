@@ -1,6 +1,6 @@
 import Gamedig from 'gamedig';
 import { Rcon } from 'rcon-client';
-import { readdir } from 'fs/promises'
+import { open, readdir } from 'fs/promises'
 import { join, resolve } from 'path'
 import { statSync } from 'fs';
 import { PlayerAction, PlayerState, PluginServerStatus } from '../../../../common-types/Server';
@@ -44,6 +44,7 @@ export interface BaseServerData {
   port: number,
   type: string,
   cfgDirectory?: string,
+  logsPath?: string,
   activityId?: string,
   sortOrder?: number,
   systemd ? : {
@@ -98,6 +99,7 @@ export interface ServerInfo {
 
 const sleep = time => new Promise(res => setTimeout(res, time));
 const MAX_PLAYER_STATS = 300
+const MAX_LOGS_LINES = 30
 
 interface PlayerStats {
   timestamp: number,
@@ -110,12 +112,14 @@ export default class Server extends EventEmitter {
     private _info: ServerInfo
     private _status: ServerStatus
     private _liveData: PluginServerStatus
-    private _cfgDir: string;
+    private _cfgDir: string
+    private _logPath: string
     private _actid: string
     private _sortOrder: number
     private lastRefresh: number
     private _cvars: Record<string, string>
     private _startTime: number
+    private _logsCache: string[]
     private rcon?: {
       password: string,
       exitCommand: string
@@ -150,6 +154,10 @@ export default class Server extends EventEmitter {
           } catch(err) {
             console.error(`Error: Could not access config directory for server \"${server.id}\":`, err)
           }
+        }
+        if(server.logsPath) {
+          this._logPath = resolve(server.logsPath)
+          this.#createLogsReader()
         }
         if(server.rcon) {
           const client = new Rcon({
@@ -223,6 +231,21 @@ export default class Server extends EventEmitter {
 
     public get activityLogId() {  return this._actid }
     public get cvars() { return this._cvars }
+
+    public get logs() { return this._logsCache }
+
+    async #createLogsReader() { 
+      const file = await open(this._logPath, 'r')
+      const event = file.readLines()
+      event.on('line', (line) => {
+        this._logsCache.push(line)
+        if(this._logsCache.length > MAX_LOGS_LINES) {
+          this._logsCache.splice(0, 1)
+        }
+        this.emit("log", line)
+      })
+      return event
+    }
 
     public setLiveData(status: PluginServerStatus) {
       status.players = status.players

@@ -535,6 +535,13 @@ const TABS: Record<string, { name: string, tag?: string, permission?: UserPrivil
     enabled: () => {
       return server.value && server.value.configs
     }
+  },
+  console: {
+    name: "Console",
+    permission: "servers.rcon",
+    enabled: () => {
+      return true
+    }
   }
 }
 

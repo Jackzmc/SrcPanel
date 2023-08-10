@@ -485,6 +485,47 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     fastify.post('/:id/create', async(req: FastifyRequest<{Params: { id: 'string'} }>, reply) => {
         reply.code(501).send()
     })
+
+    fastify.get('/:id/logs', async (req: FastifyRequest<{ Params: { id: 'string' } }>, reply) => {
+        const server = fastify.servers.get(req.params.id)
+        if(!server) {
+            return reply.status(404).send({
+                error: "Server Not Found", 
+                code: "SERVER_NOT_FOUND",
+            })
+        }
+        const [code, granted] = req.user.requirePermission("servers.rcon", { resourceId: server.id })
+        if(!granted) return NO_PERMISSION(reply, "You do not have permission to view server logs", code)
+        
+        reply.raw.writeHead(200, {
+            'Cache-Control': 'no-cache,no-transform',
+            'Content-Type': 'text/event-stream',
+            'Connection': 'keep-alive',
+            'X-Accel-Buffering': 'no'
+        });
+        reply.raw.flushHeaders()
+        reply.raw.write('retry: 1000\n\n')
+        
+        // Send any stale data:
+        for(const line of server.logs) {
+            eventHandler(line)
+        }
+
+        function eventHandler(line: string) {
+            reply.raw.write(`data: ${encodeURIComponent(line)}\n\n`)
+        }
+
+        const heartbeatTimer = setInterval(() => {
+            reply.raw.write(': heartbeat')
+        }, 1000 * 30)
+
+        server.on('log', eventHandler)
+        req.raw.on("close", () => {
+            server.removeListener("live", eventHandler)
+            clearTimeout(heartbeatTimer)
+        })
+        reply.hijack()
+    })
 }
 
 const sleep = time => new Promise(res => setTimeout(res, time));
