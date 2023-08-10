@@ -531,7 +531,6 @@ const TABS: Record<string, { name: string, tag?: string, permission?: UserPrivil
   },
   live: {
     name: "Live Status",
-    tag: "BETA"
   },
   configs: {
     name: "Configs",
@@ -850,6 +849,7 @@ let retryTimeout: any
 const MAX_BACKOFF = 1000 * 60 * 2
 
 function createLiveConnection() {
+  if(errCount === -1) return // Unloading, dont start new
   liveReadyState.value = 0
   evtSource = new EventSource(`/api/servers/${route.params.id}/live`);
   evtSource.onmessage = (event) => {
@@ -899,6 +899,7 @@ onBeforeMount(async() => {
   await init()
 })
 onUnmounted(() => {
+  errCount = -1
   clearInterval(refreshInterval)
   clearInterval(nowInterval)
   clearTimeout(retryTimeout)
