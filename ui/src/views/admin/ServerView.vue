@@ -281,6 +281,9 @@
         </template>
         <p class="has-text-centered subtitle is-5 my-6" v-else>Select a config file on the right to view its content</p>
       </div>
+      <div v-else-if="tab === 'console'" class="box">
+        <Console :server="server" />
+      </div>
     </div>
 
     <div class="column">
@@ -396,6 +399,7 @@ import { PluginServerStatus, StatusPlayer, StatusPlayerSurvivor, SurvivorId, Fin
 import { UserPrivilegeCode } from '../../../../common-types/Privileges';
 import { formatDate, getDuration } from '../../js/util.js';
 import UserComponent from '@/components/UserComponent.vue';
+import Console from '@/components/server/Console.vue'
 
 const FinaleStageName: Record<FinaleStage, string> = {
     [FinaleStage.Gauntlet]: "Gauntlet",

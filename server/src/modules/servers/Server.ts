@@ -119,7 +119,7 @@ export default class Server extends EventEmitter {
     private lastRefresh: number
     private _cvars: Record<string, string>
     private _startTime: number
-    private _logsCache: string[]
+    private _logsCache: string[] = []
     private rcon?: {
       password: string,
       exitCommand: string
