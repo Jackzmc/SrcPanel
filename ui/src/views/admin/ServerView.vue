@@ -138,58 +138,87 @@
         <div class="notification is-danger has-text-centered" v-else-if="!status?.online && !liveStatus">
           The server is offline or is unreachable.
         </div>
-        <div class="list" v-if="liveStatus && liveStatus.players.length > 0">
-          <div class="list-item" v-for="player in liveStatus.players" :key="player.steamid ?? player.name">
-            <div class="list-item-image">
-              <figure class="image is-48x48">
-                <img class="is-rounded" :src="getIconUrl(player)" />
-              </figure>
-            </div>
-            <div class="list-item-content">
-              <div v-if="'survivor' in player" :class="['list-item-title', {'has-text-danger': !player.isAlive }]">
-                <progress v-if="player.isAlive" :class="['progress', 'is-info', 'flowprogress']" :value="player.flowProgress" max="100" style="width:20%">{{player.flowProgress}}%</progress>
-                <!-- <a>{{ 'idlePlayer' in player && player.idlePlayer ? player.idlePlayer.name : player.name }}</a> -->
-                <UserComponent :class="{'has-text-crossed': !player.isAlive}" :user="'idlePlayer' in player ? player.idlePlayer! : player" />
-                &nbsp;<span class="tag is-warning is-small" v-if="'idlePlayer' in player">Idle</span>
-                &nbsp;<span class="tag is-info is-small" v-else-if="player.steamid === 'BOT'">BOT</span>
+        <div class="list has-visible-pointer-controls" v-if="liveStatus && liveStatus.players.length > 0">
+          <template v-for="player in liveStatus.players" :key="player.steamid ?? player.name">
+            <div class="list-item">
+              <div class="list-item-image">
+                <figure class="image is-48x48">
+                  <img class="is-rounded" :src="getIconUrl(player)" />
+                </figure>
               </div>
-              <div v-else :class="['list-item-title', {'has-text-crossed': !player.isAlive }]">
-                <progress v-if="player.isAlive" :class="['progress', getHealthClassInfected(player), 'flowprogress']" :value="player.permHealth" :max="player.maxHealth" style="width:20%">{{player.permHealth}}%</progress>
-                {{ player.name }}
-                <span class="tag is-info is-small" v-if="player.steamid === 'BOT'">BOT</span>
-              </div>
-              <div class="list-item-description has-text-black" v-if="'survivor' in player">
-                <template v-if="player.isAlive">
-                  <div class="tags">
-                    <span :class="['tag',getHealthClass(player.permHealth)]">{{ player.permHealth + player.tempHealth }} HP</span>
-                    <span class="tag">{{ PlayerMoveString[player.move] }}</span>
-                    <span class="tag is-info" v-if="player.action">{{ PlayerGameAction[player.action] }}</span>
-                    <span class="tag is-primary" v-for="state in getPlayerStates(player)" :key="state">
-                      {{ state }}
-                    </span>
-                    <span class="tag is-dark" v-for="item in getPlayerWeaponNames(player)" :key="item">
-                      {{ item }}
-                    </span>
-                  </div>
-                </template>
-                <span v-else>Dead</span>
-              </div>
-              <div class="list-item-description has-text-black" v-else-if="'class' in player">
-                <div class="tags">
-                  <span v-if="player.class === InfectedClass.Tank" :class="['tag', getHealthClassInfected(player)]">{{ player.permHealth }}/{{ player.maxHealth }} HP</span>
+              <div class="list-item-content">
+                <div v-if="'survivor' in player" :class="['list-item-title', {'has-text-danger': !player.isAlive }]">
+                  <progress v-if="player.isAlive" :class="['progress', 'is-info', 'flowprogress']" :value="player.flowProgress" max="100" style="width:20%">{{player.flowProgress}}%</progress>
+                  <!-- <a>{{ 'idlePlayer' in player && player.idlePlayer ? player.idlePlayer.name : player.name }}</a> -->
+                  <UserComponent :class="{'has-text-crossed': !player.isAlive}" :user="'idlePlayer' in player ? player.idlePlayer! : player" />
+                  &nbsp;<span class="tag is-warning is-small" v-if="'idlePlayer' in player">Idle</span>
+                  &nbsp;<span class="tag is-info is-small" v-else-if="player.steamid === 'BOT'">BOT</span>
                 </div>
-                {{ player.pinnedSurvivorId }}
+                <div v-else :class="['list-item-title', {'has-text-crossed': !player.isAlive }]">
+                  <progress v-if="player.isAlive" :class="['progress', getHealthClassInfected(player), 'flowprogress']" :value="player.permHealth" :max="player.maxHealth" style="width:20%">{{player.permHealth}}%</progress>
+                  {{ player.name }}
+                  <span class="tag is-info is-small" v-if="player.steamid === 'BOT'">BOT</span>
+                </div>
+                <div class="list-item-description has-text-black" v-if="'survivor' in player">
+                  <template v-if="player.isAlive">
+                    <div class="tags">
+                      <span :class="['tag',getHealthClass(player.permHealth)]">{{ player.permHealth + player.tempHealth }} HP</span>
+                      <span class="tag">{{ PlayerMoveString[player.move] }}</span>
+                      <span class="tag is-info" v-if="player.action">{{ PlayerGameAction[player.action] }}</span>
+                      <span class="tag is-primary" v-for="state in getPlayerStates(player)" :key="state">
+                        {{ state }}
+                      </span>
+                      <span class="tag is-dark" v-for="item in getPlayerWeaponNames(player)" :key="item">
+                        {{ item }}
+                      </span>
+                    </div>
+                  </template>
+                  <span v-else>Dead</span>
+                </div>
+                <div class="list-item-description has-text-black" v-else-if="'class' in player">
+                  <div class="tags">
+                    <span v-if="player.class === InfectedClass.Tank" :class="['tag', getHealthClassInfected(player)]">{{ player.permHealth }}/{{ player.maxHealth }} HP</span>
+                  </div>
+                  {{ player.pinnedSurvivorId }}
+                </div>
+              </div>
+              <div class="list-item-controls">
+                <div class="buttons is-right">
+                  <button class="button is-inverted is-outlined is-black" @click="toggleDetails(player)">
+                    <Icon icon-class="is-small has-text-black" :icon="showDetailsId && showDetailsId === player.userId ? 'fa-chevron-up' : 'fa-chevron-down'" />
+                  </button>
+                </div>
               </div>
             </div>
-            <div class="list-item-controls">
-              <div class="buttons is-right">
-                <a class="button is-warning has-tooltip-danger" @click="kickPlayer(player)"
-                  :disabled="player.steamid === 'BOT' ? true : undefined"
-                  :data-tooltip="player.steamid === 'BOT' ? 'Can only kick real players' : undefined"
-                >Kick</a>
+            <div class="list-item  px-0 mx-0 my-0 py-0" v-if="showDetailsId && showDetailsId === player.userId">
+              <div class="list-item-content has-background-light-gray">
+                <table class="table is-bordered is-fullwidth">
+                  <tbody>
+                    <tr>
+                      <th data-tooltip="Since player has joined the game">Campaign Playtime</th>
+                      <td>{{ getDuration(player.joinTime) }}</td>
+                    </tr>
+                    <tr>
+                      <th>SteamID / UserId</th>
+                      <td>{{ player.steamid }} / #{{ player.userId }}</td>
+                    </tr>
+                    <template v-if="'survivor' in player">
+                    <tr>
+                      <th>Flow Progress</th>
+                      <td>{{ player.flowProgress }}%</td>
+                    </tr>
+                    </template>
+                    <tr>
+                      <th>Actions</th>
+                      <td><div class="buttons">
+                        <a class="button is-warning has-tooltip-danger" @click="kickPlayer(player)">Kick</a>
+                      </div></td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
             </div>
-          </div>
+          </template>
         </div>
         <div v-else-if="liveStatus">
           <p class="has-text-centered">Waiting for players to connect</p>
@@ -305,16 +334,10 @@
               <td class="has-text-right">{{ formatGamemode(liveStatus.gamemode) }}</td>
             </tr>
             <tr>
-              <th>Last Update</th>
-              <td class="has-text-right">
-                <p>{{ lastLiveUpdateTime }}</p>
-              </td>
-            </tr>
-            <tr>
               <th>Commons Count</th>
               <td class="has-text-right">{{ liveStatus.commonsCount }}</td>
             </tr>
-            <tr v-if="liveStatus.finaleInfo">
+            <tr v-if="liveStatus.finaleInfo && liveStatus.finaleInfo.finaleStage !== FinaleStage.Unknown">
               <th>Finale Info</th>
               <td class="has-text-right" v-if="liveStatus.finaleInfo.escapeLeaving">Escaping</td>
               <td class="has-text-right" v-else>{{ FinaleStageName[liveStatus.finaleInfo.finaleStage] }}</td>
@@ -326,6 +349,16 @@
             <tr>
               <th>Server Uptime</th>
               <td class="has-text-right">{{ getDuration(liveStatus.startTime) }}</td>
+            </tr>
+            <tr>
+              <th>Campaign Duration</th>
+              <td class="has-text-right">{{ getDuration(liveStatus.campaignStartTime) }}</td>
+            </tr>
+            <tr>
+              <th>Last Update</th>
+              <td class="has-text-right">
+                <p>{{ lastLiveUpdateTime }}</p>
+              </td>
             </tr>
           </tbody>
         </table>
@@ -405,7 +438,7 @@ const PlayerMoveString: Record<PlayerMove, string> = {
   [PlayerMove.UnderAttack]: "Pinned by Special",
   [PlayerMove.Hanging]: "Hanging",
   [PlayerMove.Incapped]: "Incapped",
-  [PlayerMove.Idle]: "Idle",
+  [PlayerMove.Idle]: "Standstill",
   [PlayerMove.Walk]: "Walking",
   [PlayerMove.Run]: "Running",
   [PlayerMove.Crouched]: "Crouched",
@@ -520,6 +553,7 @@ let cfg = ref<{
 >({ loading: false })
 let error = ref<string>()
 let now = ref(Date.now())
+let showDetailsId = ref<number>()
 
 
 const tab = computed(() => {
@@ -663,7 +697,6 @@ async function fetchServersCompact() {
 }
 
 async function kickPlayer(player: StatusPlayer) {
-  if(player.steamid === 'BOT') return
   const reason = prompt(`Enter a reason to kick \"${player.name}\":`)
   if(!reason) {
     return notify({
@@ -672,7 +705,7 @@ async function kickPlayer(player: StatusPlayer) {
     })
   }
   if(!confirm(`Are you sure you want to kick ${player.name}?`)) return
-  const response = await request(`/api/servers/${server.value.info.id}/players/${player.steamid}/kick?reason=${encodeURIComponent(reason)}`, { method: 'POST' })
+  const response = await request(`/api/servers/${server.value.info.id}/players/#${player.userId}/kick?reason=${encodeURIComponent(reason)}`, { method: 'POST' })
   if(response?.ok) {
     notify({
       type: "success",
@@ -717,6 +750,14 @@ function getHealthClass(health: number) {
     return 'is-danger'
   }
 }
+function toggleDetails(player: StatusPlayer) {
+  console.log(showDetailsId.value, player.userId)
+  if(showDetailsId.value === player.userId) {
+    showDetailsId.value = undefined
+  } else {
+    showDetailsId.value = player.userId
+  }
+}
 function getHealthClassInfected(player: StatusPlayerInfected) {
   const percent = (player.permHealth / player.maxHealth) * 100
   return getHealthClass(percent)
@@ -727,7 +768,7 @@ function formatMap(mapId: string) {
 }
 function formatCampaign(mapId: string) {
   const display = getMapDisplay(mapId)
-  return display ? `${display.name} - ${display.chapterName}` : mapId
+  return display ? `${display.name} - ${display.chapterName} (${display.chapterId})` : mapId
 }
 function getMapDisplay(mapId: string) {
   const match = mapId.match(/c(\d{1,2})m(\d)_(.*)/)

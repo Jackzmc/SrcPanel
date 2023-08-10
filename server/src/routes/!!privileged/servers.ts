@@ -232,7 +232,6 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             stats,
             uptime: server.uptime,
             status: server.status,
-            liveStatus: server.liveStatus
         }
     })
 

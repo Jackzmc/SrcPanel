@@ -16,6 +16,7 @@ export interface PluginServerStatus {
     fps: number,
     startTime: number,
     commonsCount: number
+    campaignStartTime: number
 }
 
 export interface BaseStatusPlayer {
@@ -25,6 +26,7 @@ export interface BaseStatusPlayer {
     isAlive: boolean;
     permHealth: number;
     joinTime: number;
+    userId: number
 }
 
 export interface StatusPlayerSurvivor extends BaseStatusPlayer {

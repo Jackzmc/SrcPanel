@@ -104,7 +104,7 @@ interface PlayerStats {
   count: number
 }
 
-const DEBUG_SAMPLE_LIVE_DATA = null // {"playerCount":2,"map":"c5m2_park","gamemode":"coop","startTime":1691075941,"commonsCount":23,"fps":29.999998092651367,"players":[{"steamid":"76561198003132253","name":"Tough Guy","team":2,"isAlive":true,"joinTime":1691083882,"permHealth":82,"action":0,"flowProgress":43,"flow":10959.26953125,"isPinned":false,"tempHealth":0,"states":0,"move":0,"survivor":2,"weapons":["weapon_shotgun_spas","machete","weapon_vomitjar","weapon_first_aid_kit","weapon_pain_pills",null]},{"steamid":"BOT","name":"Rochelle","team":2,"isAlive":true,"joinTime":1691084450,"permHealth":64,"idlePlayerId":"76561197963353091","idlePlayer":{"steamid":"76561197963353091","name":"Killa Joe","team":1,"isAlive":false,"joinTime":1691084450,"permHealth":100},"action":0,"flowProgress":42,"flow":10795.9189453125,"isPinned":false,"tempHealth":0,"states":0,"move":0,"survivor":1,"weapons":["weapon_sniper_military","frying_pan","weapon_vomitjar","weapon_first_aid_kit","weapon_adrenaline",null]},{"steamid":"76561198021394695","name":"MrKringle","team":2,"isAlive":true,"joinTime":1691083937,"permHealth":71,"action":0,"flowProgress":42,"flow":10794.5634765625,"isPinned":false,"tempHealth":0,"states":0,"move":0,"survivor":0,"weapons":["weapon_smg_mp5","tonfa","weapon_pipe_bomb","weapon_first_aid_kit","weapon_adrenaline",null]},{"steamid":"76561198096326505","name":"〤Dep ネ","team":2,"isAlive":true,"joinTime":1691084229,"permHealth":87,"action":0,"flowProgress":42,"flow":10833.2470703125,"isPinned":false,"tempHealth":0,"states":0,"move":0,"survivor":3,"weapons":["weapon_sniper_military","baseball_bat",null,"weapon_first_aid_kit","weapon_adrenaline",null]},{"steamid":"BOT","name":"Smoker","team":3,"isAlive":false,"joinTime":1691084446,"permHealth":1,"class":1,"maxHealth":250},{"steamid":"BOT","name":"Hunter","team":3,"isAlive":true,"joinTime":1691084456,"permHealth":250,"class":3,"maxHealth":250}],"refreshInterval":6,"lastUpdateTime":1691084470}
+const DEBUG_SAMPLE_LIVE_DATA = {"playerCount":1,"map":"c3m4_plantation","gamemode":"coop","startTime":1691628390,"commonsCount":23,"fps":29.999998092651367,"finaleInfo":{"escapeLeaving":false,"finaleStage":18},"players":[{"userId": 4, "steamid":"76561198058753262","name":"Jackzie \u2764","team":2,"isAlive":true,"joinTime":1691628429,"permHealth":100,"action":0,"flowProgress":0,"flow":-13.388671875,"isPinned":false,"tempHealth":0,"states":2,"move":0,"survivor":5,"weapons":[null,"weapon_pistol",null,null,null,null]},{"userId": 2, "steamid":"BOT","name":"Coach","team":2,"isAlive":true,"joinTime":1691628429,"permHealth":100,"action":0,"flowProgress":0,"flow":75,"isPinned":false,"tempHealth":0,"states":2,"move":0,"survivor":2,"weapons":["weapon_autoshotgun","weapon_pistol",null,"weapon_first_aid_kit",null,null]},{"steamid":"BOT","userId": 1, "name":"Rochelle","team":2,"isAlive":true,"joinTime":1691628429,"permHealth":100,"action":0,"flowProgress":0,"flow":-64.7568359375,"isPinned":false,"tempHealth":0,"states":2,"move":0,"survivor":1,"weapons":["weapon_rifle","weapon_pistol",null,"weapon_first_aid_kit",null,null]},{"userId": 3,"steamid":"BOT","name":"Ellis","team":2,"isAlive":true,"joinTime":1691628429,"permHealth":100,"action":0,"flowProgress":0,"flow":0,"isPinned":false,"tempHealth":0,"states":2,"move":0,"survivor":3,"weapons":["weapon_sniper_military","weapon_pistol",null,"weapon_first_aid_kit",null,null]}],"refreshInterval":6,"lastUpdateTime":1691628457,"campaignStartTime":1691628457}
 
 export default class Server extends EventEmitter { 
     private _info: ServerInfo
@@ -299,7 +299,15 @@ export default class Server extends EventEmitter {
     }
 
     public async performAction(action: PlayerAction, steamid: string, args: Record<string, string> = {}) {
-      const sourcemodId = `#${steamid.replace(/:/g, '_')}`
+      let sourcemodId: string;
+      if(steamid.startsWith("#")) {
+        if(isNaN(Number(steamid.slice(1)))) { 
+          throw new Error("invalid userid: " + steamid)
+        }
+        sourcemodId = steamid
+      } else {
+        sourcemodId = `#${steamid.replace(/:/g, '_')}`
+      }
       const command = this.#getActionCommand(action, sourcemodId, args)
       await this.sendCommand(command)
     }

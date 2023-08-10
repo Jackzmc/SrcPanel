@@ -17,7 +17,7 @@
         <span class="tag is-danger" v-if="props.user.bansCount != null">{{ props.user.bansCount }} Ban(s)</span>
         <span class="tag" v-if="props.user.notesCount != null">{{ props.user.notesCount }}Notes(s)</span>
       </span>
-      <router-link :to="{name:'manage-user',params:{ id: steamid2 }, query: { returnTo: $route.fullPath }}" class="button is-info is-fullwidth is-small">View Profile</router-link>
+      <router-link v-if="steamid2" :to="{name:'manage-user',params:{ id: steamid2 }, query: { returnTo: $route.fullPath }}" class="button is-info is-fullwidth is-small">View Profile</router-link>
     </template>
   </div>
   <!-- <div class="custom-tooltip-hover box has-background-dark" v-if="!active">
