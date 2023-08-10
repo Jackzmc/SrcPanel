@@ -230,11 +230,11 @@ export default class ServerManager {
               logsPath: server.logsPath,
               activityId: server.activityId,
               systemd: server.systemd,
-              rcon: {
+              rcon: server.rcon ? {
                 password: rconPassword,
-                exitCommand: server.rcon?.exitCommand || "exit",
-                requestExitCommand: server.rcon?.requestExitCommand || "exit"
-              },
+                exitCommand: server.rcon.exitCommand || "exit",
+                requestExitCommand: server.rcon.requestExitCommand || "exit"
+              } : null,
               status: {
                 online: false,
                 data: null

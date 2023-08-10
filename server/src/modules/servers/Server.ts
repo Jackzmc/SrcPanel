@@ -170,10 +170,10 @@ export default class Server extends EventEmitter {
           }
         }
         if(server.rcon) {
-          this.#features.push("rcon")
           const client = new Rcon({
             host: this._info.ip, port: this._info.port, password: server.rcon.password
           })
+          this.#features.push("rcon")
           client.on('connect', () => {
             this.rcon.connected = true
           })
@@ -313,6 +313,10 @@ export default class Server extends EventEmitter {
 
     private async rconConnect() {
       if(!this.rcon.connected || !this.rcon.client.authenticated) {
+        // Drop connection if already connected
+        if(this.rcon.client.socket && !this.rcon.client.authenticated) {
+          console.error(`[Server/${this.id}] Connected but not authenticated. Possibly unauthorized?`)
+        }
         await this.rcon.client.connect()
       }
     }
