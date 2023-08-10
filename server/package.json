@@ -32,7 +32,8 @@
     "sql-template-strings": "^2.2.2",
     "sqlite": "^4.1.2",
     "sqlite3": "^5.1.5",
-    "steamid": "^2.0.0"
+    "steamid": "^2.0.0",
+    "tail": "^2.2.6"
   },
   "type": "module",
   "scripts": {
@@ -44,6 +45,7 @@
     "@types/gamedig": "^3.0.2",
     "@types/jsonwebtoken": "^9.0.1",
     "@types/node": "^18.11.19",
-    "@types/steamid": "^2.0.1"
+    "@types/steamid": "^2.0.1",
+    "@types/tail": "^2.2.1"
   }
 }

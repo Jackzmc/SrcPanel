@@ -2,10 +2,11 @@ import Gamedig from 'gamedig';
 import { Rcon } from 'rcon-client';
 import { open, readdir } from 'fs/promises'
 import { join, resolve } from 'path'
-import { statSync } from 'fs';
+import { createReadStream, statSync } from 'fs';
 import { PlayerAction, PlayerState, PluginServerStatus } from '../../../../common-types/Server';
 import { EventEmitter } from 'node:events';
 import { GenericError } from '../../util.js';
+import { Tail } from 'tail'
 
 const HIDDEN_CONFIG_FILES = [
   "360controller.cfg",
@@ -106,6 +107,8 @@ interface PlayerStats {
   count: number
 }
 
+type Features = "rcon" | "console" | "configs" | "systemd"
+
 const DEBUG_SAMPLE_LIVE_DATA = null //{"playerCount":1,"map":"c3m4_plantation","gamemode":"coop","startTime":1691628390,"commonsCount":23,"fps":29.999998092651367,"finaleInfo":{"escapeLeaving":false,"finaleStage":18},"players":[{"userId": 4, "steamid":"76561198058753262","name":"Jackzie \u2764","team":2,"isAlive":true,"joinTime":1691628429,"permHealth":100,"action":0,"flowProgress":0,"flow":-13.388671875,"isPinned":false,"tempHealth":0,"states":2,"move":0,"survivor":5,"weapons":[null,"weapon_pistol",null,null,null,null]},{"userId": 2, "steamid":"BOT","name":"Coach","team":2,"isAlive":true,"joinTime":1691628429,"permHealth":100,"action":0,"flowProgress":0,"flow":75,"isPinned":false,"tempHealth":0,"states":2,"move":0,"survivor":2,"weapons":["weapon_autoshotgun","weapon_pistol",null,"weapon_first_aid_kit",null,null]},{"steamid":"BOT","userId": 1, "name":"Rochelle","team":2,"isAlive":true,"joinTime":1691628429,"permHealth":100,"action":0,"flowProgress":0,"flow":-64.7568359375,"isPinned":false,"tempHealth":0,"states":2,"move":0,"survivor":1,"weapons":["weapon_rifle","weapon_pistol",null,"weapon_first_aid_kit",null,null]},{"userId": 3,"steamid":"BOT","name":"Ellis","team":2,"isAlive":true,"joinTime":1691628429,"permHealth":100,"action":0,"flowProgress":0,"flow":0,"isPinned":false,"tempHealth":0,"states":2,"move":0,"survivor":3,"weapons":["weapon_sniper_military","weapon_pistol",null,"weapon_first_aid_kit",null,null]}],"refreshInterval":6,"lastUpdateTime":1691628457,"campaignStartTime":1691628457}
 
 export default class Server extends EventEmitter { 
@@ -120,6 +123,7 @@ export default class Server extends EventEmitter {
     private _cvars: Record<string, string>
     private _startTime: number
     private _logsCache: string[] = []
+    #features: Features[] = []
     private rcon?: {
       password: string,
       exitCommand: string
@@ -151,15 +155,22 @@ export default class Server extends EventEmitter {
           this._cfgDir = resolve(server.cfgDirectory)
           try {
             statSync(this._cfgDir)
+            this.#features.push("configs")
           } catch(err) {
-            console.error(`Error: Could not access config directory for server \"${server.id}\":`, err)
+            console.error(`[Server/${server.id}] ERROR: Could not access config directory:`, err)
           }
         }
         if(server.logsPath) {
-          this._logPath = resolve(server.logsPath)
-          this.#createLogsReader()
+          try {
+            this._logPath = resolve(server.logsPath)
+            this.#features.push("console")
+            this.#createLogsReader()
+          } catch(err) {
+            console.error(`[Server/${server.id}] ERROR: Could not access logs file at ${server.logsPath}:\n`, err)
+          }
         }
         if(server.rcon) {
+          this.#features.push("rcon")
           const client = new Rcon({
             host: this._info.ip, port: this._info.port, password: server.rcon.password
           })
@@ -178,6 +189,7 @@ export default class Server extends EventEmitter {
           }
         }
         this.systemd = server.systemd
+        if(this.systemd) this.#features.push("systemd")
         this.tags = server.tags
         this._status = { data: null, online: false }
     }
@@ -220,13 +232,10 @@ export default class Server extends EventEmitter {
     public get hasRcon() { return this.rcon !== null }
     public get hasSystemd() { return this.systemd !== null }
     public get hasConfigs() { return this._cfgDir !== null && this._cfgDir !== undefined}
+    public get hasConsole() { return this.#features.includes("console") }
 
     public get features() {
-      const arr = []
-      if(this.rcon) arr.push("rcon")
-      if(this.systemd) arr.push("systemd")
-      if(this._cfgDir) arr.push("configs")
-      return arr
+      return [...this.#features]
     }
 
     public get activityLogId() {  return this._actid }
@@ -234,17 +243,28 @@ export default class Server extends EventEmitter {
 
     public get logs() { return this._logsCache }
 
+    #pushLogEntry(line: string) {
+      this._logsCache.push(line)
+      if(this._logsCache.length > MAX_LOGS_LINES) {
+        this._logsCache.splice(0, 1)
+      }
+      this.emit("log", line)
+    }
+
     async #createLogsReader() { 
-      const file = await open(this._logPath, 'r')
-      const event = file.readLines()
-      event.on('line', (line) => {
-        this._logsCache.push(line)
-        if(this._logsCache.length > MAX_LOGS_LINES) {
-          this._logsCache.splice(0, 1)
-        }
-        this.emit("log", line)
+      // Read previous lines
+      const file = await open(this._logPath)
+      for await (const line of file.readLines()) {
+        this.#pushLogEntry(line)
+      }
+
+      // Subscribe to new:
+      const tail = new Tail(this._logPath)
+      tail.on('line', (line) => this.#pushLogEntry(line))
+      tail.on("error", (err) => {
+        console.warn(`[Server/${this.id}] WARN: Log file stream errored.\n`, err)
       })
-      return event
+      return tail
     }
 
     public setLiveData(status: PluginServerStatus) {

@@ -4,10 +4,10 @@
     <div :class="[{'control': !props.horizontal, 'has-icons-left': iconLeft, 'has-icons-right': iconRight}]">
       <slot />
       <span class="icon is-small is-left" v-if="iconLeft">
-        <FontAwesomeIcon :icon="iconLeft" :spin="iconLeftSpin" />
+        <FontAwesomeIcon :icon="iconLeft" :spin="iconLeftSpin" :icon-class="iconClass" />
       </span>
       <span class="icon is-small is-right" v-if="iconRight">
-        <FontAwesomeIcon :icon="iconRight" :spin="iconLeftSpin" />
+        <FontAwesomeIcon :icon="iconRight" :spin="iconLeftSpin" :icon-class="iconClass" />
       </span>
     </div>
     <p class="help is-success" v-if="success || slots.hint_success"><slot name="hint_success">{{ success }}</slot></p>
@@ -30,5 +30,6 @@ const props = defineProps<{
   iconLeftSpin?: boolean,
   iconRight?: string
   iconRightSpin?: boolean,
+  iconClass?: string
 }>()
 </script>
