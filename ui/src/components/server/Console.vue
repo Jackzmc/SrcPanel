@@ -1,6 +1,6 @@
 <template>
 <div>
-  <div id="console" ref="console">
+  <div id="console" ref="consoleElem">
     <span v-show="isConnected" class="tag is-danger is-pulled-right" style="position: sticky; top: 0; right: 0;">Live</span>
     <div class="console-content" v-for="(line, i) of logs" :key="i">
       {{ line }}
@@ -22,7 +22,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onBeforeMount, onUnmounted } from 'vue'
+import { ref, computed, onBeforeMount, onUnmounted, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router';
 import Field from '@/components/Field.vue'
 import { request } from '@/js/util';
@@ -65,7 +65,7 @@ let evtSource: EventSource
 let commandInput = ref<string>()
 let logs = ref<string[]>([])
 let validCommands = ref<Set<string>>(new Set())
-let console = ref()
+let consoleElem = ref()
 
 async function runCommand() {
   if(!commandInput.value) return
@@ -116,10 +116,10 @@ function createLogsConnection() {
 
 function pushLine(line: string) {
   logs.value.push(decodeURIComponent(line))
-  if(logs.value > MAX_LOGS_LINES) logs.value = logs.value.splice(0, 1)
+  if(logs.value.length > MAX_LOGS_LINES) logs.value = logs.value.splice(0, 1)
   // Potentionally helps fix partial end of logs scroll
   nextTick(() => {
-    console.value.scrollTop = console.value.scrollHeight;
+    consoleElem.value.scrollTop = consoleElem.value.scrollHeight;
   })
 }
 
