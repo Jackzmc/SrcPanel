@@ -117,7 +117,10 @@ function createLogsConnection() {
 function pushLine(line: string) {
   logs.value.push(decodeURIComponent(line))
   if(logs.value > MAX_LOGS_LINES) logs.value = logs.value.splice(0, 1)
-  console.value.scrollTop = console.value.scrollHeight;
+  // Potentionally helps fix partial end of logs scroll
+  nextTick(() => {
+    console.value.scrollTop = console.value.scrollHeight;
+  })
 }
 
 async function fetchCommands() {
