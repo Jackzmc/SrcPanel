@@ -28,6 +28,8 @@ import Field from '@/components/Field.vue'
 import { request } from '@/js/util';
 import { notify } from '@kyvg/vue3-notification';
 
+const MAX_LOGS_LINES = 150
+
 const route = useRoute()
 const router = useRouter()
 
@@ -74,9 +76,15 @@ async function runCommand() {
   })
   commandInput.value = undefined
   if(response?.ok) {
+    const text = await response.text()
+    // Rcon output is not shown to the main server logs, include here:
+    for(const line of text.split(/\r?\n/)) {
+      logs.value.push(line)
+      if(logs.value > MAX_LOGS_LINES) logs.value = logs.value.splice(0, 1)
+    }
     notify({
       type: "success",
-      text: await response.text()
+      text: text
     })
   }
 }
@@ -92,6 +100,7 @@ function createLogsConnection() {
     errCount = 0
     liveStatusNextRetryTime.value = undefined
     logs.value.push(decodeURIComponent(event.data))
+    if(logs.value > MAX_LOGS_LINES) logs.value = logs.value.splice(0, 1)
   }
   evtSource.onopen = () => {
     liveReadyState.value =EventSource.OPEN
