@@ -167,7 +167,9 @@ export default class Server extends EventEmitter {
             this.#features.push("console")
             this.#createLogsReader()
           } catch(err) {
-            console.error(`[Server/${server.id}] ERROR: Could not access logs file at ${server.logsPath}:\n`, err)
+            if(err.code === "ENOENT")
+              console.error(`[Server/${server.id}] ERROR: Could not access logs file at ${server.logsPath}:\n`, err)
+            else throw err
           }
         }
         if(server.rcon) {
@@ -255,9 +257,11 @@ export default class Server extends EventEmitter {
     async #createLogsReader() { 
       // Read previous lines
       const file = await open(this._logPath)
+      if(!file) return console.warn(`[Server/${this.id}] ERROR: Cannot open file ${this._logPath}`)
       for await (const line of file.readLines()) {
         this.#pushLogEntry(line)
       }
+      await file.close()
 
       // Subscribe to new:
       const tail = new Tail(this._logPath)
