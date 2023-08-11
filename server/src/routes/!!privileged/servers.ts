@@ -257,7 +257,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
     })
 
-    fastify.post('/:id/cmd', async(req: FastifyRequest<{Params: { id: 'string'}, Body: string }>, reply) => {
+    fastify.post('/:id/cmd', async(req: FastifyRequest<{Params: { id: 'string'}, Querystring: {'no-response'?: boolean}, Body: string }>, reply) => {
         const server = fastify.servers.get(req.params.id)
         if(!server) return NOT_FOUND(reply, "Server")
         
@@ -278,8 +278,10 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                     cmd: req.body
                 }
             })
-            await server.sendCommand(req.body)
-            reply.status(204).send()
+            const response = await server.sendCommand(req.body)
+            if(!req.query['no-response'])
+                return reply.status(204).send()
+            else return response
         } catch(err) {
             return reply.code(500).send({
                 error: "SERVER_ERROR",
@@ -505,7 +507,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         });
         reply.raw.flushHeaders()
         reply.raw.write('retry: 1000\n\n')
-        
+
         // Send any stale data:
         for(const line of server.logs) {
             eventHandler(line)
