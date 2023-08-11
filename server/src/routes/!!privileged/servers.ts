@@ -279,7 +279,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 }
             })
             const response = await server.sendCommand(req.body)
-            if(!req.query['no-response'])
+            if(req.query['no-response'])
                 return reply.status(204).send()
             else return response
         } catch(err) {
