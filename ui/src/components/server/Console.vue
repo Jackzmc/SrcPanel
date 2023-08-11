@@ -1,6 +1,6 @@
 <template>
 <div>
-  <div id="console">
+  <div id="console" ref="console">
     <span v-show="isConnected" class="tag is-danger is-pulled-right" style="position: sticky; top: 0; right: 0;">Live</span>
     <div class="console-content" v-for="(line, i) of logs" :key="i">
       {{ line }}
@@ -65,6 +65,7 @@ let evtSource: EventSource
 let commandInput = ref<string>()
 let logs = ref<string[]>([])
 let validCommands = ref<Set<string>>(new Set())
+let console = ref()
 
 async function runCommand() {
   if(!commandInput.value) return
@@ -79,8 +80,7 @@ async function runCommand() {
     const text = await response.text()
     // Rcon output is not shown to the main server logs, include here:
     for(const line of text.split(/\r?\n/)) {
-      logs.value.push(line)
-      if(logs.value > MAX_LOGS_LINES) logs.value = logs.value.splice(0, 1)
+      pushLine(line)
     }
     notify({
       type: "success",
@@ -99,8 +99,7 @@ function createLogsConnection() {
   evtSource.onmessage = (event) => {
     errCount = 0
     liveStatusNextRetryTime.value = undefined
-    logs.value.push(decodeURIComponent(event.data))
-    if(logs.value > MAX_LOGS_LINES) logs.value = logs.value.splice(0, 1)
+    pushLine(event.data)
   }
   evtSource.onopen = () => {
     liveReadyState.value =EventSource.OPEN
@@ -117,6 +116,12 @@ function createLogsConnection() {
       createLogsConnection()
     }, retryTime)
   }
+}
+
+function pushLine(line: string) {
+  logs.value.push(decodeURIComponent(line))
+  if(logs.value > MAX_LOGS_LINES) logs.value = logs.value.splice(0, 1)
+  console.value.scrollTop = console.value.scrollHeight;
 }
 
 async function fetchCommands() {
