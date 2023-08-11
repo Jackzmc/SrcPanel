@@ -82,10 +82,6 @@ async function runCommand() {
     for(const line of text.split(/\r?\n/)) {
       pushLine(line)
     }
-    notify({
-      type: "success",
-      text: text
-    })
   }
 }
 
