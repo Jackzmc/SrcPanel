@@ -168,7 +168,7 @@ export default class Server extends EventEmitter {
             this.#createLogsReader()
           } catch(err) {
             if(err.code === "ENOENT")
-              console.error(`[Server/${server.id}] ERROR: Could not access logs file at ${server.logsPath}:\n`, err)
+              console.error(`[Server/${server.id}] ERROR: Log file does not exist at ${server.logsPath}; skipping`)
             else throw err
           }
         }
