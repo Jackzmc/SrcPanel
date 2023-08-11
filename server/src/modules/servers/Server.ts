@@ -163,6 +163,7 @@ export default class Server extends EventEmitter {
         if(server.logsPath) {
           try {
             this._logPath = resolve(server.logsPath)
+            statSync(this._logPath)
             this.#features.push("console")
             this.#createLogsReader()
           } catch(err) {
