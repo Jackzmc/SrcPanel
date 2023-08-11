@@ -498,6 +498,20 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
         const [code, granted] = req.user.requirePermission("servers.rcon", { resourceId: server.id })
         if(!granted) return NO_PERMISSION(reply, "You do not have permission to view server logs", code)
+
+        return server.logs.join("\n")
+    })
+
+    fastify.get('/:id/logs/sse', async (req: FastifyRequest<{ Params: { id: 'string' } }>, reply) => {
+        const server = fastify.servers.get(req.params.id)
+        if(!server) {
+            return reply.status(404).send({
+                error: "Server Not Found", 
+                code: "SERVER_NOT_FOUND",
+            })
+        }
+        const [code, granted] = req.user.requirePermission("servers.rcon", { resourceId: server.id })
+        if(!granted) return NO_PERMISSION(reply, "You do not have permission to view server logs", code)
         
         reply.raw.writeHead(200, {
             'Cache-Control': 'no-cache,no-transform',

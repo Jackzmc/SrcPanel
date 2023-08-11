@@ -91,7 +91,7 @@ let retryTimeout: any
 function createLogsConnection() {
   if(errCount === -1) return // Unloading, do not connect again
   liveReadyState.value = 0
-  evtSource = new EventSource(`/api/servers/${route.params.id}/logs`);
+  evtSource = new EventSource(`/api/servers/${route.params.id}/logs/sse`);
   evtSource.onmessage = (event) => {
     errCount = 0
     liveStatusNextRetryTime.value = undefined
@@ -160,6 +160,7 @@ onBeforeMount(async() => {
 onUnmounted(() => {
   errCount = -1
   clearTimeout(retryTimeout)
+  evtSource?.close()
 })
 </script>
 
