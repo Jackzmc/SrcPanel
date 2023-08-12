@@ -226,6 +226,10 @@
         "name": "Miscellaneous",
         "commands": [
             {
+                "command": "admin",
+                "description": "Opens an admin menu with some menus such as voting, player interactions, weapon spawning, etc"
+            },
+            {
                 "command": "respawn_all",
                 "description": "Will make all dead players respawn at the next available respawn closet. It won’t work for already opened rooms, even if door is closed. ",
                 "perm": "n"
