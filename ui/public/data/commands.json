@@ -92,7 +92,7 @@
                 "perm": "k"
             },
             {
-                "command": "notes",
+                "command": "notes <player:player>",
                 "description": "View notes for a player",
                 "perm": "k"
             }
@@ -103,7 +103,7 @@
         "commands": [
             {
                 "command": "ban <player(s):players> [minutes=0:int] [reason message:string]",
-                "description": "Bans the player(s) for the optional specified time. A time of 0 is a permament ban.",
+                "description": "Bans the player(s) for the optional specified time. A time of 0 makes the ban permament.",
                 "args": {
                     "minutes=0": {
                         "allowed_values": ">= 0"

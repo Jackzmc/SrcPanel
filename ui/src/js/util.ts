@@ -44,12 +44,12 @@ export function formatParameters({parameters, defaultValue, args}: any) {
       lastChar = ']'
     }else if(char === lastChar) {
       const isRequired = char === '>'
-      if(mode == ParseNode.DefaultValue) defaultValue += '"'
       let tooltip = "";
 
       if(type.length > 0)
         tooltip = `Accepts a(n) ${isRequired?'':'optional '}${parseType(type)}.`
-      if(defaultValue !== undefined && defaultValue !== null) {
+      if(defaultValue != undefined) {
+        console.log(defaultValue)
         defaultValue = defaultValue.toString().replace(/"/g, '&quot;')
         tooltip += ` Default value is ${defaultValue}`
       }
@@ -67,16 +67,16 @@ export function formatParameters({parameters, defaultValue, args}: any) {
       string += `<span class='tag ${tagType}' ${tooltip}>${letters.replace(/_/, ' ')}</span> `
       lastChar = null
       letters = ''
-      tooltip = ""
       type = ""
+      defaultValue = undefined
       if(mode == ParseNode.DefaultValue) defaultValue = null
       mode = ParseNode.None
     } else if(lastChar)
       if(char == ':') {
         mode = ParseNode.Type
-      } else if((defaultValue === undefined || defaultValue === null) && char == '=') {
+      } else if((defaultValue == undefined) && char == '=') {
         mode = ParseNode.DefaultValue
-        defaultValue = "\""
+        defaultValue = ""
       } else if(mode == ParseNode.Type) {
         type += char
       } else if(mode == ParseNode.DefaultValue) {
