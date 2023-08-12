@@ -862,8 +862,8 @@ function createLiveConnection() {
     liveReadyState.value =EventSource.OPEN
   }
   evtSource.onerror = (event) => {
-    console.error("Disconnected from live server", { errCount })
     errCount++
+    console.error("Disconnected from live server", { errCount })
     evtSource.close()
     liveReadyState.value = EventSource.CLOSED
     // Exponentional backoff:
@@ -895,6 +895,7 @@ nowInterval = setInterval(() => {
 }, 1000)
 
 onBeforeMount(async() => {
+  errCount = 0
   await fetchServersCompact()
   await init()
 })
