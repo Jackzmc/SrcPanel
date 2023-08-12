@@ -1,10 +1,12 @@
 <template>
 <div>
   <div id="console" ref="consoleElem">
+    <Icon icon="spinner" spin v-if="liveReadyState !== 1">Connecting to server... ({{ errCount }} attempts)</Icon>
     <span v-show="isConnected" class="tag is-danger is-pulled-right" style="position: sticky; top: 0; right: 0;">Live</span>
     <div class="console-content" v-for="(line, i) of logs" :key="i">
       {{ line }}
     </div>
+    <span v-if="!isConnected && logs.length > 0" class="has-text-danger"><Icon icon="warning">Disconnected from server, trying to reconnect...</Icon></span>
   </div>
   <Field :icon-left="rconSupported ? 'terminal' : 'warning'" :icon-class="rconSupported ? 'has-text-white' : 'has-text-info'">
     <template v-if="rconSupported">
@@ -66,6 +68,7 @@ let commandInput = ref<string>()
 let logs = ref<string[]>([])
 let validCommands = ref<Set<string>>(new Set())
 let consoleElem = ref()
+let errCount = ref(0)
 
 async function runCommand() {
   if(!commandInput.value) return
@@ -86,31 +89,33 @@ async function runCommand() {
 }
 
 const MAX_BACKOFF = 1000 * 60 * 2
-let errCount = 0
 let retryTimeout: any
 function createLogsConnection() {
-  if(errCount === -1) return // Unloading, do not connect again
+  if(errCount.value === -1) return // Unloading, do not connect again
   liveReadyState.value = 0
   evtSource = new EventSource(`/api/servers/${route.params.id}/logs/sse`);
   evtSource.onmessage = (event) => {
-    errCount = 0
+    errCount.value = 0
     liveStatusNextRetryTime.value = undefined
     pushLine(event.data)
   }
   evtSource.onopen = () => {
-    liveReadyState.value =EventSource.OPEN
+    liveReadyState.value = EventSource.OPEN
   }
   evtSource.onerror = (event) => {
-    console.error("Disconnected", { errCount })
-    errCount++
+    console.error("Disconnected", { errCount: errCount.value })
+    errCount.value++
     evtSource.close()
     liveReadyState.value = EventSource.CLOSED
     // Exponentional backoff:
-    const retryTime = Math.min(1000 * (Math.pow(1.5, errCount / 2) + 5), MAX_BACKOFF)
+    const retryTime = Math.min(1000 * (Math.pow(1.5, errCount.value / 2) + 5), MAX_BACKOFF)
     liveStatusNextRetryTime.value = Date.now() + retryTime
     retryTimeout = setTimeout(() => {
       createLogsConnection()
     }, retryTime)
+    nextTick(() => {
+      consoleElem.value.scrollTop = consoleElem.value.scrollHeight;
+    })
   }
 }
 
@@ -158,7 +163,7 @@ onBeforeMount(async() => {
   await fetchCommands()
 })
 onUnmounted(() => {
-  errCount = -1
+  errCount.value = -1
   clearTimeout(retryTimeout)
   evtSource?.close()
 })

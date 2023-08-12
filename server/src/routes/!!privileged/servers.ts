@@ -520,7 +520,6 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             'X-Accel-Buffering': 'no'
         });
         reply.raw.flushHeaders()
-        reply.raw.write('retry: 1000\n\n')
 
         // Send any stale data:
         for(const line of server.logs) {

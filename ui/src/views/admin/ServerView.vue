@@ -41,8 +41,8 @@
           </div>
           <div class="level-right">
             <div class="buttons">
-              <a v-if="server.info.tags.includes('systemd') && (!status || !status.online)" @click="processAction('start')" class="button is-success is-small">Start Server</a>
-              <template v-if="status?.online">
+              <a v-if="server.info.features.includes('systemd') && (!status || !status.online)" @click="processAction('start')" class="button is-success is-small">Start Server</a>
+              <template v-if="status?.online && server.info.features.includes('rcon')">
                 <a data-tooltip="Will restart server if no players online, or fail if there are" @click="processAction('stop')" class="button is-dark is-small">Request Restart</a>
                 <a data-tooltip="Will remove lobby reservation, allowing 5+ to join. This is done automatically after 4 players have fully loaded in" @click="processAction('unreserve')" class="button is-dark is-small">Unreserve</a>
                 <a data-tooltip="Will forcefully restart server, regardless if players are online" @click="processAction('stop', { force: true })" class="button is-warning is-small">Force Restart</a>
