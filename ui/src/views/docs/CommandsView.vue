@@ -35,7 +35,7 @@
                               </component>&nbsp;
                               <span v-html="formatParameters(cmd)" class="is-size-5"></span>
                             </component>
-                             - {{cmd.description}}
+                             - {{formatDescription(cmd)}}
                         </dt>
                         <dd v-if="cmd.note">
                             <em :class="{'has-text-grey': !cmd.hasPermission}"><span class="tag is-warning"><b>Note</b></span> {{cmd.note}}</em>
@@ -158,6 +158,10 @@ const showLockedCommands = computed(() => {
 
 function showExamples(cmd: any) {
   selected.value = cmd
+}
+
+function formatDescription(command: any) {
+  return command.description?.replace(/%prefix%/g, prefix.value)
 }
 
 onMounted(async () => {

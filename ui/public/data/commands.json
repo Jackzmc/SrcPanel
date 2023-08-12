@@ -317,5 +317,42 @@
                 "description": "Opens a menu to select clientside options, such as disallowing being a player hat"
             }
         ]
+    },
+    "hats": {
+        "name": "Hats & Entity Editing",
+        "commands": [
+            {
+                "command": "hat",
+                "description": "Will hat whatever entity / player you are looking at, or if hatted / hatting, return them to where you picked them up"
+            },
+            {
+                "command": "hat y\\[eet]",
+                "description": "Will yeet the hat forwards, if hat was a player, they will get a few seconds of invincibility"
+            },
+            {
+                "command": "hat p\\[lace]",
+                "description": "Instead of returning to where picked up, this will place the hat right infront of you."
+            },
+            {
+                "command": "hat c\\[ursor]",
+                "description": "Places the hat where your cursor is, this does not rotate the entity which can help in moving items"
+            },
+            {
+                "command": "edit cu\\[rsor]",
+                "description": "Starts editing entity you are looking at"
+            },
+            {
+                "command": "edit ca\\[ncel]",
+                "description": "Cancels entity edit or wall creation"
+            },
+            {
+                "command": "edit done",
+                "description": "Completes the wall creation or entity edit (can also use %prefix%edit build)"
+            },
+            {
+                "command": "edit copy",
+                "description": "Duplicates the entity you are currently editing, and starts editing the copy"
+            }
+        ]
     }
 }

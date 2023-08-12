@@ -35,10 +35,19 @@ export function formatParameters({parameters, defaultValue, args}: any) {
   const chars = parameters.split('')
   let mode = ParseNode.None
   let lastChar = null, letters = "", string = "", type = ""
-
+  let ignore = false
 
   for(const char of chars) {
-    if(char === '<') {
+    if(ignore) {
+      ignore = false
+      string += char
+      continue
+    }
+
+    if(char === "\\") {
+      ignore = true
+      continue
+    } if(char === '<') {
       lastChar = '>'
     }else if(char === '[') {
       lastChar = ']'
