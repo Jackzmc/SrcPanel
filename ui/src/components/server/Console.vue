@@ -28,7 +28,7 @@ import Field from '@/components/Field.vue'
 import { request } from '@/js/util';
 import { notify } from '@kyvg/vue3-notification';
 
-const MAX_LOGS_LINES = 150
+const MAX_LOGS_LINES = 350
 
 const route = useRoute()
 const router = useRouter()
