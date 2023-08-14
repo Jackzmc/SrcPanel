@@ -1,5 +1,5 @@
 <template>
-  <table class="table is-striped is-fullwidth">
+  <table class="table is-striped is-fullwidth is-bordered">
     <thead>
       <tr>
         <th>Name</th>
