@@ -244,6 +244,7 @@ import SimpleTypeahead from 'vue3-simple-typeahead';
 import 'vue3-simple-typeahead/dist/vue3-simple-typeahead.css'
 //@ts-ignore
 import InfiniteLoading from "v3-infinite-loading";
+import { sleep } from '../../js/util';
 let userSearchItems = ref([])
 async function searchUsers(e: any) {
   if(!e.input || e.input.length < 3) return userSearchItems.value = []
@@ -380,12 +381,8 @@ const highlightRegex = computed(() => {
   return filters.value.message ? new RegExp(`(${filters.value.message})`, 'ig') : undefined
 })
 const loadingDuration = computed(() => {
-  if(!loadingTime.value) return 0
-  return Math.max(Math.floor((now.value - loadingTime.value) / 1000), 0)
-})
-const nextRefreshCountdown = computed(() => {
-  if(!lastRefresh.value || loadingTime.value != undefined) return 0
-  return Math.floor(((lastRefresh.value + REFRESH_INTERVAL) - now.value) / 1000)
+  if(!loadingTime.value) return "0.0"
+  return Math.max(((now.value - loadingTime.value) / 1000), 0).toFixed(1)
 })
 
 function toggleFilter(filter: string, key: string) {
@@ -468,6 +465,7 @@ async function loadBottomContent() {
 }
 async function fetchLogs(id: number, mode: "before" | "after" | "around") {
   // Wait for previous request
+  loadingTime.value = Date.now()
   const params = updateParams()
   fetchAbort?.abort()
 
@@ -596,12 +594,13 @@ async function copyShareLink(entry: any) {
 let refreshTimer: any
 let nowTimer: any
 onBeforeMount(async() => {
-  await getInfo()
-
   now.value = Date.now()
   nowTimer = setInterval(() => {
     now.value = Date.now()
-  }, 1000)
+  }, 100)
+
+  await getInfo()
+
 
   // If /admin/audit/:id is used, fetch that, and just grab filters, but wont be used
   if(route.params.aroundId) {
