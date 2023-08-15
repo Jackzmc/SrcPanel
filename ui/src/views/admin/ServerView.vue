@@ -803,7 +803,7 @@ function formatUptime(minutes: number) {
 function formatGamemode(gamemode: string) {
   let output = Gamemodes[gamemode];
   if(!output) {
-    output = output.charAt(0).toUpperCase() + output.slice(1)
+    output = gamemode.charAt(0).toUpperCase() + gamemode.slice(1)
   }
   return output
 }

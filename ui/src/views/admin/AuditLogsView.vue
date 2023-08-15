@@ -86,11 +86,11 @@
                       <td>{{ getTimestamp(entry) }}</td>
                     </tr>
                     <tr>
-                      <th>Client Id</th>
+                      <th>Client ID</th>
                       <td><span v-if="entry.client.steamid">{{ entry.client.steamid }}</span><em v-else>-</em></td>
                     </tr>
                     <tr>
-                      <th>Target Id</th>
+                      <th>Target ID</th>
                       <td><span v-if="entry.target.steamid">{{ entry.target.steamid }}</span><em v-else>-</em></td>
                     </tr>
                     <tr>

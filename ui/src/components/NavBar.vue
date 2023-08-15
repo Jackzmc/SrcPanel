@@ -85,47 +85,52 @@
             <span class="ml-2">Updating UI...</span>
           </Icon>
         </div>
-        <div v-if="privUser" class="navbar-item has-dropdown is-hoverable " >
-          <a class="navbar-link">
-            <img class="mx-2" :src="avatarUrl" />
-            <span>{{privUser.name}}</span>
+        <template v-if="privUser">
+          <a class="navbar-item" v-if="privUser.notifications.length > 0">
+            <Icon icon="bell">{{ privUser.notifications.length }}</Icon>
           </a>
-          <div class="navbar-dropdown is-right" style="width:140%">
-            <a class="navbar-item">
-              <Icon icon="fa-circle-info" :data-tooltip="updateTooltip" class="has-tooltip-bottom">
-                <template v-if="updateInfo.updating">UI is being updated</template>
-                <template v-else>UI Build Info <em>(hover)</em></template>
-              </Icon>
+          <div class="navbar-item has-dropdown is-hoverable " >
+            <a class="navbar-link">
+              <img class="mx-2" :src="avatarUrl" />
+              <span>{{privUser.name}}</span>
             </a>
-            <hr class="navbar-divider">
-            <router-link class="navbar-item" :to="{ name: 'manage-user', params: { id: privUser.id }, query: { returnTo: $route.fullPath }}">
-              <Icon icon="fa-user" text="Profile" />
-            </router-link>
-            <a class="navbar-item" @click="showSettings = !showSettings">
-              <Icon icon="fa-gear" text="User Settings" />
-            </a>
-            <router-link class="navbar-item" to="/panel/dashboard" v-if="privUser!.hasPermission('panel.view')">
-              <Icon icon="fa-sitemap" text="Panel Administration" />
-            </router-link>
-            <hr class="navbar-divider">
-            <p class="navbar-item" v-if="userdata!.isSessionOld">
-              <span class="tag is-warning">
-                <Icon icon="fa-exclamation-triangle" icon-class="mr-2" />
-                Outdated session, please relogin
-              </span>
-            </p>
-            <a class="navbar-item has-text-danger" @click="logout">
-              <Icon icon="fa-arrow-right-from-bracket">Logout</Icon>
-            </a>
+            <div class="navbar-dropdown is-right" style="width:140%">
+              <a class="navbar-item">
+                <Icon icon="fa-circle-info" :data-tooltip="updateTooltip" class="has-tooltip-bottom">
+                  <template v-if="updateInfo.updating">UI is being updated</template>
+                  <template v-else>UI Build Info <em>(hover)</em></template>
+                </Icon>
+              </a>
+              <hr class="navbar-divider">
+              <router-link class="navbar-item" :to="{ name: 'manage-user', params: { id: privUser.id }, query: { returnTo: $route.fullPath }}">
+                <Icon icon="fa-user" text="Profile" />
+              </router-link>
+              <a class="navbar-item" @click="showSettings = !showSettings">
+                <Icon icon="fa-gear" text="User Settings" />
+              </a>
+              <router-link class="navbar-item" to="/panel/dashboard" v-if="privUser!.hasPermission('panel.view')">
+                <Icon icon="fa-sitemap" text="Panel Administration" />
+              </router-link>
+              <hr class="navbar-divider">
+              <p class="navbar-item" v-if="userdata!.isSessionOld">
+                <span class="tag is-warning">
+                  <Icon icon="fa-exclamation-triangle" icon-class="mr-2" />
+                  Outdated session, please relogin
+                </span>
+              </p>
+              <a class="navbar-item has-text-danger" @click="logout">
+                <Icon icon="fa-arrow-right-from-bracket">Logout</Icon>
+              </a>
+            </div>
           </div>
-        </div>
+        </template>
         <template v-else>
-        <div class="navbar-item">
-          <DiscordLoginButton />
-        </div>
-        <div class="navbar-item">
-          <SteamLoginButton />
-        </div>
+          <div class="navbar-item">
+            <DiscordLoginButton />
+          </div>
+          <div class="navbar-item">
+            <SteamLoginButton />
+          </div>
         </template>
       </div>
     </div>

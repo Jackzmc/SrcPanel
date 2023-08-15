@@ -134,4 +134,13 @@ export class PrivilegedUser {
     return `https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/79/${this.data.user.avatarhash}.jpg`
   }
 
+  get notifications() {
+    return this.data.notifications ?? []
+  }
+
+  async clearNotifications() {
+    await fetch(`https://stats.jackz.me/api/auth/notifications`, {
+      method: "DELETE"
+    })
+  }
 }

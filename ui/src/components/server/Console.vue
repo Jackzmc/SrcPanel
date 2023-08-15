@@ -147,14 +147,19 @@ async function fetchCommands() {
     console.error('could not fetch /data/commands.json', err)
   }
 
+  await getCommands("550_commands")
+  await getCommands("extra_commands")
+}
+
+async function getCommands(filename: string) {
   try {
-    const response = await fetch(`/data/550_commands.txt?t=${BUILD_TIMESTAMP}`)
+    const response = await fetch(`/data/${filename}.txt?t=${BUILD_TIMESTAMP}`)
     const commands = await response.text()
     for(const command of commands.split(/\r?\n/)) {
+      if(command.startsWith("#")) continue
       validCommands.value.add(command)
     }
   } catch(err) {
-    console.error('could not fetch /data/commands.json', err)
   }
 }
 

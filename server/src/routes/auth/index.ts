@@ -10,6 +10,10 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     fastify.addHook('preHandler', async(req, reply) => {
         await fastify.authmngr.verify(req, reply)
     })
+
+    fastify.delete('/notifications', async(req, reply) => {
+        return await req.user.clearNotifications()
+    })
     
     fastify.get('/profile', async(req, reply): Promise<UserData<UserPrivilegeCode[]>> => {
         await req.user.updateProviders()
@@ -18,6 +22,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             permissions: req.session.permissions,
             isSessionOld: req.session.version !== SESSION_VERSION,
             providers: req.user.providers,
+            notifications: await req.user.getNotifications()
         }
     })
 

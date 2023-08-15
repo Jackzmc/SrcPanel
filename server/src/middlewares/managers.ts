@@ -57,15 +57,30 @@ async function db(fastify: FastifyInstance) {
     fastify.decorate('servers', new ServerManager(steam, DATA_FOLDER, CONFIG_FOLDER, configManager))
     fastify.decorate('config', configManager)
     fastify.decorate('jobs', new QueryQueue(db))
-    fastify.addHook('preHandler', (req, reply, done) => {
+    fastify.addHook('preHandler', async (req, reply) => {
         if(req.session?.user) {
             if(req.session.version !== SESSION_VERSION) { 
                 req.session.destroy()
                 return NOT_LOGGED_IN(reply, "SESSION_EXPIRED", `Session has expired (target:${SESSION_VERSION}, cur:${req.session.version})`)
             }
             req.user = new User(authManager, req.session.user.steamid)
+            // reply.setCookie("srcds_data", await getUserDataCookie(req), {
+            //     path: '/',
+            //     secure: "auto",
+            //     httpOnly: false
+            // })
         }
-        done()
     })
 }
+
+// async function getUserDataCookie(req: FastifyRequest) {
+//     const json = {
+//         user: req.session.user,
+//         permissions: req.session.permissions,
+//         isSessionOld: req.session.version !== SESSION_VERSION,
+//         providers: req.user.providers,
+//         notifications: await req.user.getNotifications()
+//     }
+//     return JSON.stringify(json)
+// }
 export default FastifyPlugin(db)

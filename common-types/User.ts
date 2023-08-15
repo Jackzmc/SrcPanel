@@ -18,7 +18,8 @@ export interface CustomFastifySession<T> extends BaseSession<T>, SessionData {
 }
 export interface UserData<T> extends BaseSession<T> {
     isSessionOld: boolean,
-    providers: UserOauthProviders
+    providers: UserOauthProviders,
+    notifications: UserNotification[]
 }
 export type ClientUserData = UserData<UserPrivilegeCode[]>
 
@@ -108,4 +109,12 @@ export interface AdminPermissions<C> {
         flags: string,
         codes: C
     }
+}
+
+export interface UserNotification extends UserNotificationOptions {
+    timestamp: number,
+    message: number,
+}
+export interface UserNotificationOptions {
+    link?: string
 }

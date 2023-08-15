@@ -2,7 +2,7 @@ import { Pool, RowDataPacket, OkPacket } from "mysql2/promise";
 import QuickLRU from 'quick-lru'
 import { FastifyReply, FastifyRequest } from 'fastify';
 import ActivityLog from "./ActivityLog.js";
-import { AdminData, AdminGroup, OauthProvider, SessionData, ReadableAdminGroup } from '../../../common-types/User.js';
+import { AdminData, AdminGroup, OauthProvider, SessionData, ReadableAdminGroup, UserNotification, UserNotificationOptions } from '../../../common-types/User.js';
 import { ReadableAdminData, UserOauthProviders, OauthProviderData } from '../../../common-types/User';
 import { SteamInfo, UserPrivilegeCode } from  '../../../common-types/Privileges.js';
 import { SteamUserDetails } from '../../../common-types/Share';
@@ -309,6 +309,35 @@ export default class AuthManager {
             lastUsed: created,
             perms: 0
         }
+    }
+
+    public async getNotifications(steamid2: string): Promise<UserNotification[]> {
+        return []
+        const [rows] = await this.db.execute<RowDataPacket[]>(
+            "SELECT * FROM notifications WHERE SUBSTRING(steamid, 11) = SUBSTRING(?, 11)", 
+            [steamid2]
+        )
+        return rows.map(row => {
+            return {
+                timestamp: row.timestamp,
+                message: row.message,
+                link: row.link
+            } 
+        })
+    }
+
+    public async addNotification(steamid2: string, message: string, options: UserNotificationOptions = {}) {
+        await this.db.execute(
+            "INSERT INTO notifications (steamid, message, link) VALUES (?, ?, ?)",
+            [ steamid2, message, options.link ]
+        )
+    }
+
+    public async clearNotifications(steamid2: string) {
+        await this.db.execute(
+            "DELETE FROM notifications WHERE SUBSTRING(steamid, 11) = SUBSTRING(?, 11)",
+            [ steamid2 ]
+        )
     }
 
     public async fetchGroups() {

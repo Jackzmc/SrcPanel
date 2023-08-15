@@ -88,12 +88,12 @@ app.register(import('./middlewares/managers.js'))
             secure: process.env.NODE_ENV === "production", 
             sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
             maxAge: 1.21e+9,
-            httpOnly: true 
+            httpOnly: true
         },
         store: new MySQLStore({
-          schema: {
-              tableName: 'dash_sessions',
-          }
+            schema: {
+                tableName: 'dash_sessions',
+            }
         }, app.db),
         saveUninitialized: false
     })

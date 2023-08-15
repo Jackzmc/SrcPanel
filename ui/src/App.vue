@@ -69,16 +69,16 @@ function updateAvailable(event: any) {
   reloadPage()
 }
 async function getAuth() {
+  // We fetch cache to populate user name / icon
   const userData = window.sessionStorage.getItem('srcds_userdata')
   if(userData) {
     userdata.value = JSON.parse(userData)
     if(userdata.value) {
       privUser.value = new PrivilegedUser(userdata.value)
       console.debug('using cached user data')
-      return
     }
   }
-
+  // Fetch profile even if cached, to verify its valid and to get notifications
   const response = await fetch(`/api/auth/profile`, {
     credentials: 'include'
   })
