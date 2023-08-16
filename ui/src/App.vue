@@ -113,20 +113,26 @@ async function getAuth() {
       })
     }
   } else {
-    const body = await response.text()
-    console.error(`Error while authenticating with server: ${body}`)
+    let error
+    if(response.headers.get("content-type")?.includes("application/json")) {
+      const json = await response.json()
+      console.error(`Error while authenticating with server:`, json)
+      error = json.message ?? json.error
+    } else {
+      error = response.status + " " + response.statusText
+    }
     notify({
       type: 'error',
       title: 'Could not authenticate with server:',
       duration: 10000,
-      text: response.statusText
+      text: error
     })
     if(route.meta.authRequired) {
       router.push({
         name: 'errorview',
         query: {
           return: route.fullPath,
-          error: response.statusText
+          error: error
         }
       })
     }
