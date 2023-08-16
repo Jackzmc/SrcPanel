@@ -107,7 +107,7 @@
   <ul class="content is-medium">
     <li><a :href="'https://stats.jackz.me/user/' + props.user.steamid" target="_blank">Stats Profile</a></li>
     <li><a :href="'https://steamcommunity.com/profiles/' + steamid2" target="_blank">Steam Profile</a></li>
-    <li><router-link :to="{ name: 'logs-activity', query: { client: props.user.steamid } }" target="_blank">View Logs</router-link></li>
+    <li><router-link :to="{ name: 'logs-audit', query: { client: props.user.steamid } }" target="_blank">View Logs</router-link></li>
   </ul>
 </section>
 </template>
