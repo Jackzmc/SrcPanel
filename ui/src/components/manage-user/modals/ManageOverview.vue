@@ -106,7 +106,7 @@
 
   <ul class="content is-medium">
     <li><a :href="'https://stats.jackz.me/user/' + props.user.steamid" target="_blank">Stats Profile</a></li>
-    <li><a :href="'https://steamcommunity.com/profiles/' + steamid2" target="_blank">Steam Profile</a></li>
+    <li><a :href="'https://steamcommunity.com/profiles/' + steamid64" target="_blank">Steam Profile</a></li>
     <li><router-link :to="{ name: 'logs-activity', query: { client: props.user.steamid } }" target="_blank">View Logs</router-link></li>
   </ul>
 </section>
@@ -135,8 +135,8 @@ let statsFailure = ref<string|undefined>()
 
 
 let info = ref<any>()
-const steamid2 = computed(() => {
-  return new SteamID(props.user.steamid).getSteam2RenderedID()
+const steamid64 = computed(() => {
+  return new SteamID(props.user.steamid).getSteamID64()
 })
 const playtime = computed(() => {
   if(!info.value) return "0"
