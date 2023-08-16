@@ -1,7 +1,7 @@
 <template>
   <div id="app">
     <Notifications position="top center" :duration=7000 @start="onNotificationShown" />
-    <NavBar v-if="!$route.meta.hideNav" :userdata="userdata" @logout="onLogout" :update-info="updateInfo" :priv-user="privUser" />
+    <NavBar v-if="!$route.meta.hideNav" :userdata="userdata" @logout="onLogout" :update-info="updateInfo" :priv-user="privUser" @notifications:clear="clearNotifications" />
     <br>
     <br v-if="$route.meta.hideHero">
 
@@ -137,6 +137,13 @@ async function getAuth() {
       })
     }
   }
+}
+
+async function clearNotifications() {
+  await privUser.value?.clearNotifications()
+  userdata.value!.notifications = []
+  // Update local cache:
+  window.sessionStorage.setItem('srcds_userdata', JSON.stringify(userdata.value))
 }
 
 function onNotificationShown(item: NotificationItem) {

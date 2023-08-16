@@ -1,6 +1,9 @@
 <template>
 <div>
-  <UserSettingsModal v-if="showSettings&&userdata&&privUser" :userdata="userdata" :priv-user="privUser" @close="showSettings = false" />
+  <template v-if="privUser && userdata">
+    <UserSettingsModal v-if="showModal === 'settings'" :userdata="userdata" :priv-user="privUser" @close="showModal = undefined" />
+    <NotificationsModal v-else-if="showModal === 'notifications'" :priv-user="privUser" @close="showModal = undefined; emit('notifications:clear')" />
+  </template>
   <nav class="navbar is-info is-fixed-top" role="navigation" aria-label="main navigation">
     <div class="navbar-brand">
       <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" data-target="navMenu">
@@ -86,7 +89,7 @@
           </Icon>
         </div>
         <template v-if="privUser">
-          <a class="navbar-item" v-if="privUser.notifications.length > 0">
+          <a class="navbar-item" v-if="privUser.notifications.length > 0" @click="showModal = 'notifications'">
             <Icon icon="bell">{{ privUser.notifications.length }}</Icon>
           </a>
           <div class="navbar-item has-dropdown is-hoverable " >
@@ -105,7 +108,7 @@
               <router-link class="navbar-item" :to="{ name: 'manage-user', params: { id: privUser.id }, query: { returnTo: $route.fullPath }}">
                 <Icon icon="fa-user" text="Profile" />
               </router-link>
-              <a class="navbar-item" @click="showSettings = !showSettings">
+              <a class="navbar-item" @click="showModal = 'settings'">
                 <Icon icon="fa-gear" text="User Settings" />
               </a>
               <router-link class="navbar-item" to="/panel/dashboard" v-if="privUser!.hasPermission('panel.view')">
@@ -147,6 +150,7 @@ import { notify } from '@kyvg/vue3-notification';
 import { PrivilegedUser } from '@/js/User';
 import { ClientUserData } from '../../../common-types/User';
 import UserSettingsModal from './modals/UserSettingsModal.vue';
+import NotificationsModal from './modals/NotificationsModal.vue'
 // Bulma nav code
 onMounted(() => {
   const $navbarBurgers = Array.prototype.slice.call(document.querySelectorAll('.navbar-burger'), 0);
@@ -169,7 +173,7 @@ onMounted(() => {
 
 const router = useRouter()
 const route = useRoute()
-const emit = defineEmits(['logout'])
+const emit = defineEmits(['logout', 'notifications:clear'])
 
 const LAST_UPDATED = new Date(Number(BUILD_TIMESTAMP))
 
@@ -179,7 +183,7 @@ const props = defineProps<{
   updateInfo: any
 }>()
 
-let showSettings = ref(false)
+let showModal = ref<string>()
 
 const avatarUrl = computed(() => {
   if(!props.userdata) return ''
