@@ -9,7 +9,6 @@
         <Tabs inner-wrapper-class="tabs" :options="{ useUrlFragment: false }" @changed="onTabChanged">
           <Tab name="Sessions">
             <h4 class="title is-4">
-              Active Sessions
               <a :class="['button','is-info','is-small','is-pulled-right',{'is-loading': loading}]" @click="fetchSessions">
                 <Icon icon="sync" button :spin="loading">Refresh</Icon>
               </a>
@@ -57,8 +56,6 @@
             </table>
           </Tab>
           <Tab name="Connections">
-
-            <h4 class="title is-4">Connections</h4>
             <div class="list has-visible-pointer-controls">
               <OauthProviderCard provider="Steam" provider-image-src="/img/providers/steam.png" :data="{id: props.privUser.id, username: props.privUser.name}">
                 Cannot unlink
@@ -74,8 +71,6 @@
             </div>
           </Tab>
           <Tab name="Developer">
-            <h4 class="title is-4">Developer</h4>
-
             <p class="title is-5">API Key</p>
             <p class="subtitle is-6" v-if="api.data">
               <b>Created: </b>{{ formatDate(api.data.created) }}
