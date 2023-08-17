@@ -64,7 +64,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             }
             // Check if they are creator or if CONSOLE (automatic ban), can always edit
             const isCreator = existing[0].executor === "CONSOLE" || req.user.equals(existing[0].executor) 
-            const [code, granted] = req.user.requirePermission("bans.edit.others", { isCreator })
+            const [code, granted] = req.user.requirePermission("bans.edit", { isCreator })
             if(!granted) return NO_PERMISSION(reply)
 
             const ban = replaceObject<any>(existing[0], req.body)
@@ -111,7 +111,6 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     })
 
     fastify.post('/:steamid', async(req: FastifyRequest<{ Body: POSTBanBodyType, Params: { steamid: string } }>, reply) => {
-        // We use 'create' for delete and edit, as we want users to be able to always edit their bans
         if(!req.user.hasPermission("bans.create")) return NO_PERMISSION(reply)
         if(!req.body.executor) {
             req.body.executor = req.session.user.steamid
@@ -121,8 +120,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 error: "INVALID_STEAMID",
                 message: "The steamid is invalid"
             })
-        }
-        if(fastify.authmngr.isAdmin(req.params.steamid)) {
+        } else if(fastify.authmngr.isAdmin(req.params.steamid)) {
             return reply.status(403).send({
                 error: "IS_ADMIN",
                 message: "Cannot ban a user with privileges, revoke the privileges first"
