@@ -50,7 +50,6 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             }
         },
         async handler(req: FastifyRequest<{ Body: PUTBanBodyType, Params: { id: number } }>, reply) {
-            if(!req.user.hasPermission("bans.create")) return NO_PERMISSION(reply)
             const [existing] = await fastify.db.execute<RowDataPacket[]>(`
                 SELECT * FROM bans WHERE id = ?`,
                 [req.params.id]
@@ -63,12 +62,16 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                     statusCode: 404
                 })
             }
-            // Check if they can edit this
-            const isCreator = req.user.equals(existing[0].executor) 
-            const [code, granted] = req.user.requirePermission("bans.edit", {isCreator})
+            // Check if they are creator or if CONSOLE (automatic ban), can always edit
+            const isCreator = existing[0].executor === "CONSOLE" || req.user.equals(existing[0].executor) 
+            const [code, granted] = req.user.requirePermission("bans.edit.others", { isCreator })
             if(!granted) return NO_PERMISSION(reply)
 
             const ban = replaceObject<any>(existing[0], req.body)
+            // Make the user claim any automatic bans they edit:
+            if(existing[0].executor === "CONSOLE") {
+                ban.executor = req.user.steamid2
+            }
 
             const [ok] = await fastify.db.execute<OkPacket>(`
                 UPDATE bans 
