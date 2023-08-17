@@ -99,13 +99,14 @@ const messagePieces = computed(() => {
       });
 
       let [, name, steamid] = match
+      console.log(name, steamid)
 
       let type, user
-      if((steamid === "BOT" && name === props.log.client.steamid) || props.log.client.steamid === steamid) {
+      if((steamid === "BOT" && i === 0) || props.log.client.steamid === steamid) {
         type = "client"
         if(steamid === "BOT") steamid = null
         user = { name: props.log.client.name || name, steamid }
-      } else if((steamid === "BOT" && name === props.log.target.steamid) || props.log.target.steamid === steamid) {
+      } else if((steamid === "BOT" && i === 1) || props.log.target.steamid === steamid) {
         type = "target"
         if(steamid === "BOT") steamid = null
         user = { name: props.log.target.name || name, steamid }
