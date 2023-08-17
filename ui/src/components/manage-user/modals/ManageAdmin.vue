@@ -58,7 +58,7 @@
       <div class="columns">
         <div class="column">
           <h6 class="title is-6">Game Flags</h6>
-          <FlagList :userdata="userdata" :flags="userAdminData.permissions.flags" only-active />
+          <FlagList :priv-user="privUser" :flags="userAdminData.permissions.flags" only-active />
         </div>
         <div class="column">
           <h6 class="title is-6">Web Permissions</h6>
@@ -109,7 +109,7 @@
               <td colspan="2">
                 <div class="box">
                   <h6 class="title is-6">Game Flags</h6>
-                  <FlagList :userdata="userdata" :flags="group.flags" only-active />
+                  <FlagList :priv-user="privUser" :flags="group.flags" only-active />
                 </div>
               </td>
               <td colspan="2">
@@ -137,7 +137,7 @@
             :disabled="!canEdit"
           />
         </div>
-        <p class="help has-text-danger" v-if="form.immunity >= privUser.immunityLevel">The maximum immunity level you can apply is {{userdata.permissions.immunityLevel - 1}}, which is below yours ({{userdata.permissions.immunityLevel}})</p>
+        <p class="help has-text-danger" v-if="form.immunity >= privUser.immunityLevel">The maximum immunity level you can apply is {{privUser.immunityLevel - 1}}, which is below yours ({{privUser.immunityLevel}})</p>
         <p class="help has-text-info" v-else>Will only be used if it's greater than user's groups' immunity</p>
       </div>
       <h6 class="title is-6">Base Flags</h6>
@@ -216,7 +216,7 @@ import Field from '@/components/Field.vue'
 import { ref, onMounted, computed } from 'vue'
 import { User, PrivilegedUser, PlayerData } from '@/js/User'
 import { useRouter, useRoute } from 'vue-router'
-import { ClientUserData, FLAGS, AdminGroup, ReadableAdminData } from '../../../../../common-types/User';
+import { FLAGS, AdminGroup, ReadableAdminData } from '../../../../../common-types/User';
 import FlagList from '@/components/FlagList.vue'
 // @ts-ignore
 import { Tab, Tabs } from 'vue3-tabs-component'
@@ -231,7 +231,6 @@ const route = useRoute()
 const props = defineProps<{
   userAdminData: ReadableAdminData,
   user: PlayerData,
-  userdata: ClientUserData,
   privUser: PrivilegedUser
 }>()
 

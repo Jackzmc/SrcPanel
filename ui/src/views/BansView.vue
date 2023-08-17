@@ -23,7 +23,7 @@
     <thead>
       <th style="width:0">Player</th>
       <th>Executor</th>
-      <th v-if="userdata">Reason</th>
+      <th v-if="privUser">Reason</th>
       <th>Public Reason</th>
       <th>Flags</th>
       <th>Expires</th>
@@ -61,7 +61,7 @@
           </template>
           <p class='has-text-info' v-if="ban.executor.provider && ban.executor.provider !== 'steam'"><em>via {{ban.executor.provider}}</em></p>
         </td>
-        <td v-if="userdata">
+        <td v-if="privUser">
           {{ban.reason}}
         </td>
         <td>
@@ -99,6 +99,7 @@ import { formatDate, request } from '@/js/util'
 import { APIBanFlags } from '../../../common-types/Ban';
 import Pagination from '@/components/Pagination.vue'
 import 'bulma-switch'
+import { PrivilegedUser } from '@/js/User';
 
 const DISCORD_SOURCE_REGEX = new RegExp(/([^\n]+#\d{4})\s\((\d+)\)/)
 const AUTO_REFRESH_INTERVAL = 1000 * 60 * 15
@@ -107,7 +108,7 @@ const emit = defineEmits([])
 const router = useRouter()
 
 const props = defineProps({
-  userdata: null
+  privUser: PrivilegedUser
 })
 interface Ban extends ListAPIBan {
   relDate?: string,

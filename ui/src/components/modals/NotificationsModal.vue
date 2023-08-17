@@ -23,10 +23,8 @@
 <script setup lang="ts">
 import Modal from "@/components/Modal.vue";
 import { PrivilegedUser } from "@/js/User";
-import { formatDate, getRelDate, request, sleep } from "@/js/util";
-import { ref, watch, computed, onBeforeMount, onMounted } from "vue";
+import { onBeforeMount } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { ClientUserData, OauthProvider, SessionData } from '../../../../common-types/User';
 
 const emit = defineEmits(["close"]);
 

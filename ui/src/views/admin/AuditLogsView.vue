@@ -230,7 +230,6 @@
 
 
 <script setup lang="ts">
-import { ClientUserData } from '../../../../common-types/User.js';
 import { useNotification } from '@kyvg/vue3-notification';
 import { PrivilegedUser } from '@/js/User';
 import { ref, onBeforeMount, computed, onBeforeUnmount, onUnmounted } from 'vue';
@@ -333,7 +332,6 @@ const DATA_SOURCES: Record<string, string> = {
 
 
 const props = defineProps<{
-  userdata: ClientUserData,
   privUser: PrivilegedUser
 }>();
 

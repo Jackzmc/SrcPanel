@@ -27,10 +27,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed, watch } from 'vue'
-import { User, PrivilegedUser, PlayerData } from '@/js/User'
-import { useRouter, useRoute } from 'vue-router'
-import SteamID from 'steamid'
-import { UserData, WebPermission, WebRole } from '../../../common-types/User';
+import { PrivilegedUser } from '@/js/User'
 
 // TODO: Move to common
 const FLAGS: Record<string,string> = {
@@ -57,13 +54,11 @@ const FLAGS: Record<string,string> = {
 }
 
 const props = defineProps<{
-  userdata: UserData,
+  privUser: PrivilegedUser,
   flags: string,
   editable?: boolean,
   onlyActive?: boolean
 }>()
-const privUser = new PrivilegedUser(props.userdata)
-
 
 let editedFlags = ref(props.flags.split(''))
 
@@ -89,8 +84,6 @@ const shownFlags = computed(() => {
 })
 
 const hasRoot = computed(() => {
-  return props.userdata.permissions.flags?.indexOf('z') !== -1
+  return props.privUser.permissions.flags?.indexOf('z') !== -1
 })
-
-
 </script>

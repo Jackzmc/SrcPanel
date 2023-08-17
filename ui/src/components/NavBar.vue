@@ -1,7 +1,7 @@
 <template>
 <div>
-  <template v-if="privUser && userdata">
-    <UserSettingsModal v-if="showModal === 'settings'" :userdata="userdata" :priv-user="privUser" @close="showModal = undefined" />
+  <template v-if="privUser">
+    <UserSettingsModal v-if="showModal === 'settings'" :priv-user="privUser" @close="showModal = undefined" />
     <NotificationsModal v-else-if="showModal === 'notifications'" :priv-user="privUser" @close="showModal = undefined; emit('notifications:clear')" />
   </template>
   <nav class="navbar is-info is-fixed-top" role="navigation" aria-label="main navigation">
@@ -115,7 +115,7 @@
                 <Icon icon="fa-sitemap" text="Panel Administration" />
               </router-link>
               <hr class="navbar-divider">
-              <p class="navbar-item" v-if="userdata!.isSessionOld">
+              <p class="navbar-item" v-if="privUser.isSessionOld">
                 <span class="tag is-warning">
                   <Icon icon="fa-exclamation-triangle" icon-class="mr-2" />
                   Outdated session, please relogin
@@ -148,7 +148,6 @@ import DiscordLoginButton from '@/components/DiscordLoginButton.vue'
 import { useRoute, useRouter } from 'vue-router';
 import { notify } from '@kyvg/vue3-notification';
 import { PrivilegedUser } from '@/js/User';
-import { ClientUserData } from '../../../common-types/User';
 import UserSettingsModal from './modals/UserSettingsModal.vue';
 import NotificationsModal from './modals/NotificationsModal.vue'
 // Bulma nav code
@@ -178,7 +177,6 @@ const emit = defineEmits(['logout', 'notifications:clear'])
 const LAST_UPDATED = new Date(Number(BUILD_TIMESTAMP))
 
 const props = defineProps<{
-  userdata?: ClientUserData,
   privUser?: PrivilegedUser,
   updateInfo: any
 }>()
@@ -186,8 +184,7 @@ const props = defineProps<{
 let showModal = ref<string>()
 
 const avatarUrl = computed(() => {
-  if(!props.userdata) return ''
-  return `https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/79/${props.userdata.user.avatarhash}.jpg`
+  return props.privUser ? props.privUser.avatarUrl : ""
 })
 
 const updateTooltip = computed(() => {

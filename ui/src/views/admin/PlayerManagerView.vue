@@ -1,6 +1,6 @@
 <template>
 <div>
-  <router-view :userdata="userdata" />
+  <router-view :priv-user="privUser" />
   <div class="container">
     <Tabs inner-wrapper-class="tabs is-large" @changed="setTab" :dummy="Date.now()">
       <Tab name="Recently Played With" id="recent">
@@ -36,7 +36,7 @@
           </div>
         </div>
         <br>
-        <UserSelection :userdata="userdata" :users="recentPlayers.list" @manual="onManualSelected" />
+        <UserSelection :priv-user="privUser" :users="recentPlayers.list" @manual="onManualSelected" />
       </Tab>
       <Tab name="Search for a User" id="search">
         <div class="card">
@@ -50,7 +50,7 @@
           </div>
         </div>
         <br>
-        <UserSelection has-manual :userdata="userdata" :users="users" @manual="onManualSelected" />
+        <UserSelection has-manual :priv-user="privUser" :users="users" @manual="onManualSelected" />
         <p class="has-text-centered my-6 is-size-5" v-if="!search.query">Enter a search query</p>
         <p class="has-text-centered my-6 is-size-5" v-else-if="users.length === 0">No players found</p>
       </Tab>
@@ -87,7 +87,7 @@
 import { ref, onBeforeMount, computed } from 'vue'
 import { User, PrivilegedUser, PlayerData } from '@/js/User'
 import { useRouter, useRoute } from 'vue-router'
-import { ClientUserData, ReadableAdminData } from '../../../../common-types/User';
+import { ReadableAdminData } from '../../../../common-types/User';
 import UserSelection from '@/components/UserSelection.vue'
 // @ts-expect-error no @types
 import {Tabs, Tab} from 'vue3-tabs-component';
@@ -104,9 +104,8 @@ const STEAM_PROFILE_URL_REGEX = new RegExp(/https?:\/\/steamcommunity.com\/profi
 const router = useRouter()
 const route = useRoute()
 const props = defineProps<{
-  userdata: ClientUserData
+  privUser: PrivilegedUser
 }>()
-const privUser = new PrivilegedUser(props.userdata)
 
 let selectedTabId = ref("recent")
 let users = ref<PlayerData[]>([])

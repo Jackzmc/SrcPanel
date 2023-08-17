@@ -60,7 +60,7 @@
               <OauthProviderCard provider="Steam" provider-image-src="/img/providers/steam.png" :data="{id: props.privUser.id, username: props.privUser.name}">
                 Cannot unlink
               </OauthProviderCard>
-              <OauthProviderCard provider="Discord" provider-image-src="/img/providers/discord.svg" v-slot="slotProps" :data="userdata.providers.discord">
+              <OauthProviderCard provider="Discord" provider-image-src="/img/providers/discord.svg" v-slot="slotProps" :data="privUser.providers.discord">
                 <a v-if="slotProps.data" target="_blank" href="/api/auth/discord/revoke" class="button has-text-white" style="background-color:#5865F2">
                   <Icon icon="fab fa-discord">Unlink Discord Account</Icon>
                 </a>
@@ -107,7 +107,7 @@ import { ref, watch, computed, onBeforeMount, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 // @ts-ignore
 import { Tab, Tabs } from "vue3-tabs-component";
-import { ClientUserData, OauthProvider, SessionData } from '../../../../common-types/User';
+import { SessionData } from '../../../../common-types/User';
 import OauthProviderCard from "@/components/OauthProviderCard.vue";
 
 const emit = defineEmits(["close"]);
@@ -116,7 +116,6 @@ const route = useRoute();
 const router = useRouter();
 
 const props = defineProps<{
-  userdata: ClientUserData;
   privUser: PrivilegedUser;
 }>();
 

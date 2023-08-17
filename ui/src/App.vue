@@ -1,7 +1,7 @@
 <template>
   <div id="app">
     <Notifications position="top center" :duration=7000 @start="onNotificationShown" />
-    <NavBar v-if="!$route.meta.hideNav" :userdata="userdata" @logout="onLogout" :update-info="updateInfo" :priv-user="privUser" @notifications:clear="clearNotifications" />
+    <NavBar v-if="!$route.meta.hideNav" @logout="onLogout" :update-info="updateInfo" :priv-user="privUser" @notifications:clear="clearNotifications" />
     <br>
     <br v-if="$route.meta.hideHero">
 
@@ -17,20 +17,13 @@
     </section>
 
     <br>
-    <router-view :userdata="userdata" :priv-user="privUser"></router-view>
+    <router-view :priv-user="privUser"></router-view>
     <br>
     <footer class="footer">
       <div class="content has-text-centered">
         L4D2 Admin Dashboard - Updated {{lastUpdated}}
       </div>
     </footer>
-    <!-- <div style="background-color: #fafafa !important">
-    <router-view :userdata="userdata"></router-view>
-    </div>
-
-    <footer class="footer">
-
-    </footer> -->
   </div>
 </template>
 

@@ -109,12 +109,10 @@ import { formatParameters, request } from '@/js/util'
 import ExamplesModal from '@/components/modals/ExamplesModal.vue'
 import { ref, computed, onMounted } from 'vue'
 import { PrivilegedUser } from '../../js/User';
-import { ClientUserData } from '../../../../common-types/User';
 import Field from '@/components/Field.vue'
 import { notify } from '@kyvg/vue3-notification';
 
 const props = defineProps<{
-  userdata: ClientUserData,
   privUser: PrivilegedUser
 }>()
 const isLoggedIn = computed(() => props.privUser != null)

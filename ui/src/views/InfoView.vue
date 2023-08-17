@@ -80,17 +80,17 @@ import { ref, onBeforeMount, onMounted, computed, watch } from 'vue'
 import ActionNote from '@/components/ActionNote.vue'
 import Pagination from '@/components/Pagination.vue'
 import Field from '@/components/Field.vue'
-import { UserData } from '../../../common-types/User.js';
 import data from '@/assets/data.json'
 import Sentiment from 'sentiment'
 import debounce from '@/js/debounce';
+import { PrivilegedUser } from '@/js/User'
 const sentiment = new Sentiment();
 const analyzeOptions = {
   extras: data.sentimentWords
 };
 
 const props = defineProps<{
-  userdata: UserData
+  privUser: PrivilegedUser
 }>()
 
 let page = ref(1)

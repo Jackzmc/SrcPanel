@@ -45,12 +45,10 @@ import { getRelDate } from '../js/util';
 const emit = defineEmits(['select', 'manual'])
 const props = defineProps<{
   users: any[],
-  userdata: any,
   hasManual?: boolean
 }>()
 let selectedId = ref<any>()
 let manualInput = ref<any>()
-let isAddAdminDisabled = ref(false)
 
 watch(selectedId, (value) => {
   if(value !== "_custom")

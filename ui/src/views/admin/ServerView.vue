@@ -314,7 +314,7 @@
             </thead>
             <tbody>
               <tr v-for="activity in activities" :key="activity.id">
-                <LogMessage :log="activity" :userdata="userdata" :priv-user="privUser" />
+                <LogMessage :log="activity" :priv-user="privUser" />
                 <td>{{ new Date(activity.timestampRaw * 1000).toLocaleTimeString()}}</td>
               </tr>
             </tbody>
@@ -388,7 +388,6 @@
 import { useRoute, useRouter } from 'vue-router'
 import { onBeforeMount, ref, computed, onUnmounted } from 'vue'
 import FolderBrower from'@/components/FolderBrowser.vue'
-import { ClientUserData } from '../../../../common-types/User';
 import { PlayerData, PrivilegedUser } from '@/js/User';
 import { parseLog, getRelDate, request } from '@/js/util';
 import LogMessage from "@/components/LogMessage.vue";
@@ -507,9 +506,8 @@ const REFRESH_INTERVAL = 1000 * 15
 
 const { notify } = useNotification();
 const props = defineProps<{
-  userdata: ClientUserData
+  privUser: PrivilegedUser
 }>()
-const privUser = new PrivilegedUser(props.userdata)
 
 const route = useRoute()
 const router = useRouter()
