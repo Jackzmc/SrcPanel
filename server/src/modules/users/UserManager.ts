@@ -63,6 +63,32 @@ export default class UserManager {
         return user
     }
 
+    /**
+     * Fetches in bulk users from steam API. Does not grab any from cache
+     * @param {SteamID} steamids - List of steamids instances or steamid64 strings
+     * @returns {Promise<IUserData[]>}
+     */
+    async fetchUsers(steamids: (SteamID|string)[]): Promise<IUserData[]> {
+        if(steamids.length > 100) throw new Error("Too many ids, steam API only supports 100")
+        const expUsers = []
+        const insertPromises = []
+        const users = await this.steam.getUserDetails(steamids)
+        for(const user of users) {
+            const expUser = {
+                steamid: new SteamID(user.steamid).getSteam2RenderedID(),
+                name: user.personaname,
+                avatarHash: user.avatarhash
+            }
+            insertPromises.push(this.insertUser(expUser))
+        }
+        try {
+            await Promise.allSettled(insertPromises)
+        } catch(err) {
+            console.warn("[UserManager] Error inserting users:", err)
+        }
+        return expUsers
+    }
+
     // Gets a user's name from stats table
     async getStatsName(steamid: string): Promise<string | undefined> {
         const [rows] = await this.db.execute<RowDataPacket[]>(

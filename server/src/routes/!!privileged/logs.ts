@@ -3,6 +3,7 @@ import { OkPacket, RowDataPacket } from 'mysql2';
 import { Static, Type } from '@sinclair/typebox'
 import { NO_PERMISSION } from '../../responses.js';
 import { QueryBuilder, SortDirection } from '../../modules/QueryBuilder.js';
+import SteamID from 'steamid';
 
 const LogQuery = Type.Object({
     servers: Type.Optional(Type.String()),
@@ -32,6 +33,8 @@ type LogQueryType = Static<typeof LogQuery>
 
 export const ACTIVITY_LOG_TABLE_NAME = 'activity_log'
 const LOG_TOTAL_ROW_CACHE_TIME = 30_000 //ms
+const MISSING_NAME_MAX_QUEUED = 90
+const MISSING_NAME_MIN_INTERVAL = 1000 * 60 // Only fetch per minute
 
 let logServerCache = []
 interface DataCache {
@@ -40,6 +43,9 @@ interface DataCache {
     lastFetchTime: number
 }
 let cache: Record<string, DataCache> = {}
+
+let missingNameSet = new Set<SteamID>()
+let lastMissingFetch = Date.now()
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
     const [rows] = await fastify.db.query<RowDataPacket[]>(`SELECT DISTINCT server FROM ${ACTIVITY_LOG_TABLE_NAME} ORDER BY timestamp DESC`)
@@ -55,6 +61,16 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             }
         }
         return cache[tableName]
+    }
+
+    function addMissingName(id: string) {
+        missingNameSet.add(new SteamID(id))
+        if(missingNameSet.size >= MISSING_NAME_MAX_QUEUED || Date.now() - lastMissingFetch > MISSING_NAME_MIN_INTERVAL) {
+            console.log("[$r/logs]", "Updating missing names")
+            fastify.users.fetchUsers([...missingNameSet].slice(0,100))
+            missingNameSet.clear()
+            lastMissingFetch = Date.now()
+        }
     }
 
     fastify.get('/data', async(req, reply) => {
@@ -139,6 +155,13 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         return {
             logs: logs.map(log => {
                 if(log.metadata) log.metadata = JSON.parse(log.metadata)
+                // If its a valid user but no name, then put it in a list to be updated:
+                if(!log.clientName && log.client?.startsWith("STEAM_")) {
+                    addMissingName(log.client)
+                }
+                if(!log.targetName && log.target?.startsWith("STEAM_")) {
+                    addMissingName(log.target)
+                }
                 return log
             }),
             timeTaken: Date.now() - startTime,
