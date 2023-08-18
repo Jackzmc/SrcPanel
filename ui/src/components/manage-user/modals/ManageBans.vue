@@ -197,7 +197,7 @@
 import { ref, onMounted, computed, watch } from 'vue'
 import { PrivilegedUser, PlayerData } from '@/js/User'
 import { useRouter, useRoute } from 'vue-router'
-import { ClientUserData, AdminData } from '../../../../../common-types/User';
+import { AdminData } from '../../../../../common-types/User';
 import { notify } from '@kyvg/vue3-notification';
 // TOOD: fix
 import { FullAPIBan, APIBanFlags, BanAppeal, BanAppealState } from '../../../../../common-types/Ban';
@@ -207,7 +207,6 @@ const emit = defineEmits(["close"])
 const router = useRouter()
 const route = useRoute()
 const props = defineProps<{
-  userdata: ClientUserData,
   userAdminData: AdminData,
   user: PlayerData,
   privUser: PrivilegedUser,

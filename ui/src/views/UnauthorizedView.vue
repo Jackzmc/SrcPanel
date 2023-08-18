@@ -11,26 +11,26 @@
 </template>
 
 <script setup lang="ts">
+import { PrivilegedUser } from '@/js/User';
 import { ref, onBeforeMount, watch } from 'vue'
 import { useRouter } from 'vue-router';
-import { UserData } from '../../../common-types/User.js';
 
 const router = useRouter()
 const props = defineProps<{
-  userdata: UserData
+  privUser: PrivilegedUser
 }>()
 
 
 function onIsLoggedIn() {
   const params = new URLSearchParams(window.location.search);
   if(params.has('type')) type.value = Number(params.get('type'))
-  if(props.userdata && type.value == 0) {
+  if(props.privUser && type.value == 0) {
     router.push(params.get('return') || '/')
   }
 }
 
 let type = ref(0)
 
-watch(() => props.userdata, onIsLoggedIn)
+watch(() => props.privUser, onIsLoggedIn)
 onBeforeMount(onIsLoggedIn)
 </script>

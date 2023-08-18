@@ -107,7 +107,7 @@
   <ul class="content is-medium">
     <li><a :href="'https://stats.jackz.me/user/' + props.user.steamid" target="_blank">Stats Profile</a></li>
     <li><a :href="'https://steamcommunity.com/profiles/' + steamid64" target="_blank">Steam Profile</a></li>
-    <li><router-link :to="{ name: 'logs-activity', query: { client: props.user.steamid } }" target="_blank">View Logs</router-link></li>
+    <li><router-link :to="{ name: 'logs-audit', query: { client: props.user.steamid } }" target="_blank">View Logs</rourouter-linkli>
   </ul>
 </section>
 </template>
@@ -116,7 +116,7 @@
 import { ref, onMounted, computed, watch, onBeforeMount } from 'vue';
 import { User, PrivilegedUser, PlayerData } from '@/js/User'
 import { useRouter, useRoute } from 'vue-router'
-import { ClientUserData, AdminData } from '../../../../../common-types/User';
+import { AdminData } from '../../../../../common-types/User';
 import { notify } from '@kyvg/vue3-notification';
 import SteamID from 'steamid';
 import { formatDate, getRelDate } from '@/js/util';
@@ -124,7 +124,6 @@ import { formatDate, getRelDate } from '@/js/util';
 const router = useRouter()
 const route = useRoute()
 const props = defineProps<{
-  userdata: ClientUserData,
   userAdminData: AdminData,
   user: PlayerData
 }>()

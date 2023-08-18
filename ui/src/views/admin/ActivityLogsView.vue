@@ -289,7 +289,6 @@ import Pagination from "@/components/Pagination.vue";
 import Debounce from "@/js/debounce";
 import LogClientTarget from "@/components/LogClientTarget.vue";
 import Modal from "@/components/Modal.vue";
-import { ClientUserData } from "../../../../common-types/User";
 import { ref, watch, computed, onBeforeMount, onMounted, Ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useNotification } from "@kyvg/vue3-notification";
@@ -331,7 +330,6 @@ const SERVER_COLORS: Dictionary<string, string> = {
 const { notify } = useNotification();
 
 const props = defineProps<{
-  userdata: ClientUserData,
   privUser: PrivilegedUser
 }>();
 
@@ -602,7 +600,7 @@ onMounted(() => {
 
 watch(query, (value) => {
   page.value = 1;
-  if (props.userdata && fetchDebounce.value) fetchDebounce.value();
+  if (props.privUser && fetchDebounce.value) fetchDebounce.value();
   setQuery()
 });
 

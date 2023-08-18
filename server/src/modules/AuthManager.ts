@@ -312,9 +312,8 @@ export default class AuthManager {
     }
 
     public async getNotifications(steamid2: string): Promise<UserNotification[]> {
-        return []
         const [rows] = await this.db.execute<RowDataPacket[]>(
-            "SELECT * FROM notifications WHERE SUBSTRING(steamid, 11) = SUBSTRING(?, 11)", 
+            "SELECT * FROM user_notifications WHERE SUBSTRING(steamid, 11) = SUBSTRING(?, 11)", 
             [steamid2]
         )
         return rows.map(row => {
@@ -328,14 +327,14 @@ export default class AuthManager {
 
     public async addNotification(steamid2: string, message: string, options: UserNotificationOptions = {}) {
         await this.db.execute(
-            "INSERT INTO notifications (steamid, message, link) VALUES (?, ?, ?)",
+            "INSERT INTO user_notifications (steamid, message, link) VALUES (?, ?, ?)",
             [ steamid2, message, options.link ]
         )
     }
 
     public async clearNotifications(steamid2: string) {
         await this.db.execute(
-            "DELETE FROM notifications WHERE SUBSTRING(steamid, 11) = SUBSTRING(?, 11)",
+            "DELETE FROM user_notifications WHERE SUBSTRING(steamid, 11) = SUBSTRING(?, 11)",
             [ steamid2 ]
         )
     }

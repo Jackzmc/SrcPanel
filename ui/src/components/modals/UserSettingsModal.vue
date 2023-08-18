@@ -9,7 +9,6 @@
         <Tabs inner-wrapper-class="tabs" :options="{ useUrlFragment: false }" @changed="onTabChanged">
           <Tab name="Sessions">
             <h4 class="title is-4">
-              Active Sessions
               <a :class="['button','is-info','is-small','is-pulled-right',{'is-loading': loading}]" @click="fetchSessions">
                 <Icon icon="sync" button :spin="loading">Refresh</Icon>
               </a>
@@ -57,13 +56,11 @@
             </table>
           </Tab>
           <Tab name="Connections">
-
-            <h4 class="title is-4">Connections</h4>
             <div class="list has-visible-pointer-controls">
               <OauthProviderCard provider="Steam" provider-image-src="/img/providers/steam.png" :data="{id: props.privUser.id, username: props.privUser.name}">
                 Cannot unlink
               </OauthProviderCard>
-              <OauthProviderCard provider="Discord" provider-image-src="/img/providers/discord.svg" v-slot="slotProps" :data="userdata.providers.discord">
+              <OauthProviderCard provider="Discord" provider-image-src="/img/providers/discord.svg" v-slot="slotProps" :data="privUser.providers.discord">
                 <a v-if="slotProps.data" target="_blank" href="/api/auth/discord/revoke" class="button has-text-white" style="background-color:#5865F2">
                   <Icon icon="fab fa-discord">Unlink Discord Account</Icon>
                 </a>
@@ -74,8 +71,6 @@
             </div>
           </Tab>
           <Tab name="Developer">
-            <h4 class="title is-4">Developer</h4>
-
             <p class="title is-5">API Key</p>
             <p class="subtitle is-6" v-if="api.data">
               <b>Created: </b>{{ formatDate(api.data.created) }}
@@ -112,7 +107,7 @@ import { ref, watch, computed, onBeforeMount, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 // @ts-ignore
 import { Tab, Tabs } from "vue3-tabs-component";
-import { ClientUserData, OauthProvider, SessionData } from '../../../../common-types/User';
+import { SessionData } from '../../../../common-types/User';
 import OauthProviderCard from "@/components/OauthProviderCard.vue";
 
 const emit = defineEmits(["close"]);
@@ -121,7 +116,6 @@ const route = useRoute();
 const router = useRouter();
 
 const props = defineProps<{
-  userdata: ClientUserData;
   privUser: PrivilegedUser;
 }>();
 

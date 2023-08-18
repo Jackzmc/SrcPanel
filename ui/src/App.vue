@@ -1,7 +1,7 @@
 <template>
   <div id="app">
     <Notifications position="top center" :duration=7000 @start="onNotificationShown" />
-    <NavBar v-if="!$route.meta.hideNav" :userdata="userdata" @logout="onLogout" :update-info="updateInfo" :priv-user="privUser" />
+    <NavBar v-if="!$route.meta.hideNav" @logout="onLogout" :update-info="updateInfo" :priv-user="privUser" @notifications:clear="clearNotifications" />
     <br>
     <br v-if="$route.meta.hideHero">
 
@@ -17,20 +17,13 @@
     </section>
 
     <br>
-    <router-view :userdata="userdata" :priv-user="privUser"></router-view>
+    <router-view :priv-user="privUser"></router-view>
     <br>
     <footer class="footer">
       <div class="content has-text-centered">
         L4D2 Admin Dashboard - Updated {{lastUpdated}}
       </div>
     </footer>
-    <!-- <div style="background-color: #fafafa !important">
-    <router-view :userdata="userdata"></router-view>
-    </div>
-
-    <footer class="footer">
-
-    </footer> -->
   </div>
 </template>
 
@@ -113,24 +106,37 @@ async function getAuth() {
       })
     }
   } else {
-    const body = await response.text()
-    console.error(`Error while authenticating with server: ${body}`)
+    let error
+    if(response.headers.get("content-type")?.includes("application/json")) {
+      const json = await response.json()
+      console.error(`Error while authenticating with server:`, json)
+      error = json.message ?? json.error
+    } else {
+      error = response.status + " " + response.statusText
+    }
     notify({
       type: 'error',
       title: 'Could not authenticate with server:',
       duration: 10000,
-      text: response.statusText
+      text: error
     })
     if(route.meta.authRequired) {
       router.push({
         name: 'errorview',
         query: {
           return: route.fullPath,
-          error: response.statusText
+          error: error
         }
       })
     }
   }
+}
+
+async function clearNotifications() {
+  await privUser.value?.clearNotifications()
+  userdata.value!.notifications = []
+  // Update local cache:
+  window.sessionStorage.setItem('srcds_userdata', JSON.stringify(userdata.value))
 }
 
 function onNotificationShown(item: NotificationItem) {

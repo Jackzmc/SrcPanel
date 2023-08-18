@@ -1,7 +1,7 @@
 <template>
 <div class="container is-fluid">
   <div class="columns">
-    <div class="column is-8 box" v-if="!entries || loadingTime">
+    <div class="column is-8 box" v-if="!entries || showLoading">
       <p class="has-text-centered is-size-5" style="margin-top:20%">
         <Icon icon="spinner" spin>Loading...</Icon>
         <br>
@@ -230,7 +230,6 @@
 
 
 <script setup lang="ts">
-import { ClientUserData } from '../../../../common-types/User.js';
 import { useNotification } from '@kyvg/vue3-notification';
 import { PrivilegedUser } from '@/js/User';
 import { ref, onBeforeMount, computed, onBeforeUnmount, onUnmounted } from 'vue';
@@ -333,12 +332,12 @@ const DATA_SOURCES: Record<string, string> = {
 
 
 const props = defineProps<{
-  userdata: ClientUserData,
   privUser: PrivilegedUser
 }>();
 
 let now = ref()
 let loadingTime = ref<number>()
+let showLoading = ref<boolean>(true)
 let lastRefresh = ref<number>()
 let hoverId = ref()
 let limit = ref(DEFAULT_LIMIT);
@@ -381,8 +380,7 @@ const highlightRegex = computed(() => {
   return filters.value.message ? new RegExp(`(${filters.value.message})`, 'ig') : undefined
 })
 const loadingDuration = computed(() => {
-  if(!loadingTime.value) return "0.0"
-  return Math.max(((now.value - loadingTime.value) / 1000), 0).toFixed(1)
+  return Math.max(((now.value - (loadingTime.value ?? 0)) / 1000), 0).toFixed(1)
 })
 
 function toggleFilter(filter: string, key: string) {
@@ -444,10 +442,11 @@ async function getInfo() {
   }
 }
 
-const fetchDebounce = debounce(search, 400)
+const fetchDebounce = debounce(search, 1000)
 async function search() {
   if(!cache.value) return
   loadingTime.value = Date.now()
+  showLoading.value = true
   if(filters.value.aroundId)
     entries.value = await fetchLogs(Number(filters.value.aroundId), "around")
   else
@@ -471,6 +470,7 @@ async function fetchLogs(id: number, mode: "before" | "after" | "around") {
 
   let response
   try {
+    await sleep(2000)
     const responseHandle = requestTimeout(`/api/logs/${mode}/${id}?${params}`, MAX_REQUEST_TIME)
     fetchAbort = responseHandle.controller
     response = await responseHandle.start()
@@ -535,6 +535,7 @@ async function fetchLogs(id: number, mode: "before" | "after" | "around") {
     // }
     console.info('Fetch took', json.timeTaken, 'ms')
     loadingTime.value = undefined
+    showLoading.value = false
     return newEntries
   }
 }
@@ -631,6 +632,7 @@ onBeforeMount(async() => {
   // Don't do any more fetch logic, alreadyt fetched above
   if(route.params.aroundId) return
 
+  showLoading.value = true
   entries.value = await fetchLogs(cache.value.highestId, "before")
   refreshTimer = setInterval(async () => {
     // Only check for new values IF we not full, not searching, and at the top of list

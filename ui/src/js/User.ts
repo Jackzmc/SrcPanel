@@ -143,4 +143,12 @@ export class PrivilegedUser {
       method: "DELETE"
     })
   }
+
+  get isSessionOld() {
+    return this.data.isSessionOld
+  }
+
+  get providers() {
+    return this.data.providers
+  }
 }

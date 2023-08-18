@@ -53,7 +53,7 @@
             </router-link>
           </ul>
         </div>
-        <router-view :userdata="userdata" :priv-user="privUser" :user="user" :user-admin-data="userAdminData" @close="router.push(routerHref)" />
+        <router-view :priv-user="privUser" :user="user" :user-admin-data="userAdminData" @close="router.push(routerHref)" />
       </section>
       <section class="modal-card-body has-text-centered" v-else>
         <img src="@/assets/loader.gif" />
@@ -75,7 +75,7 @@
 import { ref, onMounted, computed, onBeforeMount, watch, onBeforeUnmount } from 'vue';
 import { User, PrivilegedUser, PlayerData } from '@/js/User'
 import { useRouter, useRoute } from 'vue-router'
-import { ClientUserData, AdminData } from '../../../../../common-types/User';
+import { AdminData } from '../../../../../common-types/User';
 // @ts-ignore
 import { Tab, Tabs } from 'vue3-tabs-component'
 import { notify } from '@kyvg/vue3-notification';
@@ -83,9 +83,8 @@ import { notify } from '@kyvg/vue3-notification';
 const router = useRouter()
 const route = useRoute()
 const props = defineProps<{
-  userdata: ClientUserData
+  privUser: PrivilegedUser
 }>()
-const privUser = new PrivilegedUser(props.userdata)
 
 let user = ref<PlayerData>()
 let userAdminData = ref<AdminData>()
