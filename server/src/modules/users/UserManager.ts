@@ -13,12 +13,18 @@ interface IUserData {
 export const STALE_USER_CACHE_TIME = 1000 * 60 * 60 * 14 // 14 days
 
 export default class UserManager {
+    private static _instance: UserManager
     private db: Pool
     private steam: SteamAPI
 
     constructor(pool: Pool, steam: SteamAPI) {
         this.db = pool
         this.steam = steam
+        UserManager._instance = this
+    }
+
+    public static get instance() {
+        return UserManager._instance
     }
 
     async insertUser(user: IUserData) {

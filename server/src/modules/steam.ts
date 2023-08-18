@@ -103,7 +103,6 @@ export default class SteamAPI {
                 .replace(/%TITLE%/, item.title)
             const filepath = path.join(destination, filename)
             const file = createWriteStream(filepath)
-            console.log(item.file_url)
             https.get(item.file_url, requestOptions, (response) => {
                 file.on('finish', () => {
                     file.close(() => {
@@ -125,7 +124,6 @@ export default class SteamAPI {
             .replace(/%TITLE%/, item.title)
         const filepath = path.join(destination, filename)
         const file = createWriteStream(filepath)
-        console.log(item.file_url)
         let curBytes = 0
         https.get(item.file_url, requestOptions, (response) => {
             response.headers['content-length']

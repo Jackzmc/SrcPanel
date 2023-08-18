@@ -336,7 +336,7 @@ const props = defineProps<{
 }>();
 
 let now = ref()
-let loadingTime = ref<number>()
+let loadingTime = ref<number|undefined>(Date.now())
 let showLoading = ref<boolean>(true)
 let lastRefresh = ref<number>()
 let hoverId = ref()
@@ -380,7 +380,8 @@ const highlightRegex = computed(() => {
   return filters.value.message ? new RegExp(`(${filters.value.message})`, 'ig') : undefined
 })
 const loadingDuration = computed(() => {
-  return Math.max(((now.value - (loadingTime.value ?? 0)) / 1000), 0).toFixed(1)
+  if(!loadingTime.value) return "0.0"
+  return Math.max(((now.value - loadingTime.value) / 1000), 0).toFixed(1)
 })
 
 function toggleFilter(filter: string, key: string) {
@@ -477,6 +478,7 @@ async function fetchLogs(id: number, mode: "before" | "after" | "around") {
     fetchAbort = null
   } catch(err) {
     loadingTime.value = undefined
+    showLoading.value = false
     throw err
   }
 

@@ -2,6 +2,7 @@ import { AdminData, OauthProvider, OauthProviderData, SessionData, SessionUser, 
 import { UserPrivilegeCode } from '../../../../common-types/Privileges.js';
 import AuthManager from '../AuthManager.js';
 import { Session } from 'fastify';
+import UserManager from './UserManager.js';
 
 export interface LogProperties {
     targetUser?: string,
@@ -27,6 +28,7 @@ export default class User {
     private adminData?: AdminData
     private authmngr: AuthManager
     private _providers: UserOauthProviders
+    private _name: string
 
     public steamid2: string
 
@@ -34,6 +36,14 @@ export default class User {
         this.authmngr = _authmngr;
         this.steamid2 = steamid2
         this.adminData = _authmngr.getAdmin(steamid2)
+    }
+    
+    public async name() {
+        if(this._name) return this._name
+        const user = await UserManager.instance.fetchUser(this.steamid2)
+        if(!user) return null
+        this._name = user.name
+        return this._name
     }
 
     get isAdmin() {

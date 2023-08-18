@@ -40,8 +40,8 @@ export default class ActivityLog {
         let msg = null
         if(message) {
             msg = (message || "")
-                .replace(/%client%/g, `"Activator<0><${activator.steamid2}><>"`)
-            if(target) msg = msg.replace(/%target%/g, `"Target<0><${target.steamid2}><>"`)
+                .replace(/%client%/g, `"${await activator.name() ?? "Activator"}<0><${activator.steamid2}><>"`)
+            if(target) msg = msg.replace(/%target%/g, `"${await target.name() ?? "Target"}<0><${target.steamid2}><>"`)
         }
         
         // Legacy

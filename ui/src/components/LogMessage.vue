@@ -99,7 +99,6 @@ const messagePieces = computed(() => {
       });
 
       let [, name, steamid] = match
-      console.log(name, steamid)
 
       let type, user
       if((steamid === "BOT" && i === 0) || props.log.client.steamid === steamid) {
