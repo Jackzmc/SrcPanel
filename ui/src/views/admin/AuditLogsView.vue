@@ -501,6 +501,8 @@ async function fetchLogs(id: number, mode: "before" | "after" | "around") {
           message = match[1]
         }
       }
+      const hasValidClient = entry.client?.startsWith("STEAM_")
+      const hasValidTarget = entry.target?.startsWith("STEAM_")
       return {
         id: entry.id,
         timestamp: entry.timestamp,
@@ -509,14 +511,14 @@ async function fetchLogs(id: number, mode: "before" | "after" | "around") {
         adminChat: entry.adminChat,
         client: {
           steamid: entry.client,
-          name: entry.clientName,
-          avatarUrl: entry.client?.startsWith("STEAM_") ? `/api/users/${entry.client}/avatar` : undefined,
+          name: hasValidClient ? entry.clientName ?? "<UNKNOWN>" : null,
+          avatarUrl: hasValidClient ? `/api/users/${entry.client}/avatar` : undefined,
           // avatarUrl: entry.clientName ? (entry.clientAvatar ? `https://avatars.steamstatic.com/${entry.clientAvatar}.jpg` : `https://ui-avatars.com/api/?name=${encodeURIComponent(entry.clientName || entry.client)}`) : null
         },
         target: {
           steamid: entry.target,
-          name: entry.targetName,
-          avatarUrl: entry.target?.startsWith("STEAM_") ? `/api/users/${entry.target}/avatar` : undefined,
+          name: hasValidTarget ? entry.targetName ?? "<UNKNOWN>" : null,
+          avatarUrl: hasValidTarget ? `/api/users/${entry.target}/avatar` : undefined,
           // avatarUrl: entry.targetName ? (entry.targetAvatar ? `https://avatars.steamstatic.com/${entry.targetAvatar}.jpg` : `https://ui-avatars.com/api/?name=${encodeURIComponent(entry.targetName || entry.target)}`) : null
         },
         metadata: entry.metadata,
