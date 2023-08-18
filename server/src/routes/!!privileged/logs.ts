@@ -96,10 +96,10 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
         const query = new QueryBuilder(tableName, "l")
             .selectMultiple("id", "l.timestamp", "server", "type", "client", "target", "message", "metadata")
-            .select("s1.last_alias", "clientName")
-            .select("s2.last_alias", "targetName")
-            .leftJoin("stats_users", "steamid", "=", "client", "s1")
-            .leftJoin("stats_users", "steamid", "=", "target", "s2")
+            .select("s1.name", "clientName")
+            .select("s2.name", "targetName")
+            .leftJoin("user_names", "steamid", "=", "SUBSTRING(client, 11)", "s1", true)
+            .leftJoin("user_names", "steamid", "=", "SUBSTRING(target, 11)", "s2", true)
             .limit(limit)
             .sort('id', SortDirection.Descending)
 
@@ -179,10 +179,10 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             && req.query.source == "main"
         let countQuery = `SELECT COUNT(*) AS count from ${tableName} `
         let query = `SELECT id, l.timestamp, server, type, client, target, message, metadata,
-            s1.last_alias as clientName, s2.last_alias as targetName
+            s1.name as clientName, s2.name as targetName
             FROM ${tableName} l
-            LEFT JOIN stats_users as s1 ON s1.steamid = client 
-            LEFT JOIN stats_users as s2 ON s2.steamid = target`
+            LEFT JOIN user_names as s1 ON s1.steamid = SUBSTRING(client, 11)
+            LEFT JOIN user_names as s2 ON s2.steamid = SUBSTRING(target, 11)`
 
         const conditions = []
         let data = [], countData = []

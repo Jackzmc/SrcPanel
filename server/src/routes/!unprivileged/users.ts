@@ -8,7 +8,6 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     fastify.get("/:steamid/avatar", async (req: FastifyRequest<{Querystring: { noCache?: boolean }, Params: {steamid: string }}>, reply) => {
         try {
             const user = await fastify.users.getUser(req.params.steamid)
-            console.log(user)
             if(user?.avatarHash) {
                 return reply.redirect(`https://avatars.steamstatic.com/${user.avatarHash}_full.jpg`)
             } else {

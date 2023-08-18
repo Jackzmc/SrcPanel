@@ -11,7 +11,8 @@ interface Join {
     alias?: string,
     leftColumn: string,
     rightColumn: string,
-    condition: Condition
+    condition: Condition,
+    unsafe?: boolean
 }
 export class QueryBuilder {
     private _tableName: string
@@ -47,57 +48,62 @@ export class QueryBuilder {
         })
     }
 
-    leftJoin(table: string, leftColumn: string, condition: Condition, rightColumn: string, alias?: string) {
+    leftJoin(table: string, leftColumn: string, condition: Condition, rightColumn: string, alias?: string, unsafe = false) {
         this._addJoin("LEFT", {
             table,
             leftColumn,
             condition,
             rightColumn,
-            alias
+            alias,
+            unsafe
         })
         return this
     }
 
-    rightJoin(table: string, leftColumn: string, condition: Condition, rightColumn: string, alias?: string) {
+    rightJoin(table: string, leftColumn: string, condition: Condition, rightColumn: string, alias?: string, unsafe = false) {
         this._addJoin("RIGHT", {
             table,
             leftColumn,
             condition,
             rightColumn,
-            alias
+            alias,
+            unsafe
         })
         return this
     }
 
-    innerJoin(table: string, leftColumn: string, condition: Condition, rightColumn: string, alias?: string) {
+    innerJoin(table: string, leftColumn: string, condition: Condition, rightColumn: string, alias?: string, unsafe = false) {
         this._addJoin("INNER", {
             table,
             leftColumn,
             condition,
             rightColumn,
-            alias
+            alias,
+            unsafe
         })
         return this
     }
 
-    outerJoin(table: string, leftColumn: string, condition: Condition, rightColumn: string, alias?: string) {
+    outerJoin(table: string, leftColumn: string, condition: Condition, rightColumn: string, alias?: string, unsafe = false) {
         this._addJoin("OUTER", {
             table,
             leftColumn,
             condition,
             rightColumn,
-            alias
+            alias,
+            unsafe
         })
         return this
     }
 
-    join(table: string, leftColumn: string, condition: Condition, rightColumn: string, alias?: string) {
+    join(table: string, leftColumn: string, condition: Condition, rightColumn: string, alias?: string, unsafe = false) {
         this._addJoin("", {
             table,
             leftColumn,
             condition,
             rightColumn,
-            alias
+            alias,
+            unsafe
         })
         return this
     }
@@ -112,7 +118,12 @@ export class QueryBuilder {
     private _buildJoins() {
         return this._joins.map(joinData => {
             const name = joinData.alias ?? joinData.table
-            return `${joinData.type} JOIN ${escapeId(joinData.table)} ${joinData.alias} ON ${name}.${escapeId(joinData.leftColumn)} ${joinData.condition} ${escapeId(joinData.rightColumn)}`
+            if(!joinData.unsafe) {
+                joinData.leftColumn = escapeId(joinData.leftColumn)
+                joinData.rightColumn = escapeId(joinData.rightColumn)
+            }
+            return `${joinData.type} JOIN ${escapeId(joinData.table)} ${joinData.alias} ON ${name}.${joinData.leftColumn} ${joinData.condition} ${joinData.rightColumn}`
+            
         }).join(" ")
     }
 
@@ -183,7 +194,6 @@ export class QueryBuilder {
     }
 
     buildUnsafe() {
-        console.log(this._data)
         let query = this.build()
         for(let data of this._data) {
             if(typeof data === "string") {
