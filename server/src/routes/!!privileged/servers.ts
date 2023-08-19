@@ -176,23 +176,25 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 error: "Server Not Found", 
                 code: "SERVER_NOT_FOUND",
             })
+        } else {
+            // Send any stale data:
+            if(server.liveStatus) send(server.liveStatus)
+
+            function eventHandler(data: PluginServerStatus) {
+                send(data)
+            }
+
+            const heartbeatTimer = setInterval(() => {
+                reply.raw.write(': heartbeat')
+            }, 1000 * 30)
+
+            server.addListener("live", eventHandler)
+            req.raw.on("close", () => {
+                server.removeListener("live", eventHandler)
+                clearTimeout(heartbeatTimer)
+            })
+
         }
-        // Send any stale data:
-        if(server.liveStatus) send(server.liveStatus)
-
-        function eventHandler(data: PluginServerStatus) {
-            send(data)
-        }
-
-        const heartbeatTimer = setInterval(() => {
-            reply.raw.write(': heartbeat')
-        }, 1000 * 30)
-
-        server.addListener("live", eventHandler)
-        req.raw.on("close", () => {
-            server.removeListener("live", eventHandler)
-            clearTimeout(heartbeatTimer)
-        })
         reply.hijack()
     })
 
