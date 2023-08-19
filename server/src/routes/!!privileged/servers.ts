@@ -296,7 +296,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
     })
 
-    fastify.post('/:id/players/:steamid/:action', async(req: FastifyRequest<{Params: { id: 'string', steamid: 'string', action: 'string'} }>, reply) => {
+    fastify.post('/:id/players/:action', async(req: FastifyRequest<{Params: { id: 'string', action: 'string'}, Querystring: { userId?: string, steamid?: string } }>, reply) => {
         const server = fastify.servers.get(req.params.id)
         if(!server) return NOT_FOUND(reply, "Server")
         
@@ -311,7 +311,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             })
         }
 
-        const targetUser = fastify.authmngr.getAdmin(req.params.steamid)
+        const targetUser = fastify.authmngr.getAdmin(req.query.steamid)
         if(targetUser && targetUser.permissions.immunityLevel > req.user.immunity) {
             return NO_PERMISSION(reply, "You do not have permisson to perform actions on this user", code)
         }
@@ -321,13 +321,13 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             metadata: {
                 server: server.id,
                 action: req.params.action,
-                steamid: req.params.steamid,
+                steamid: req.query.steamid,
                 arguments: {...req.query as Record<string, string>} 
             }
         })
 
         try {
-            await server.performAction(req.params.action as PlayerAction, req.params.action, req.query as Record<string, string>)
+            await server.performAction(req.params.action as PlayerAction, req.query.steamid, req.query as Record<string, string>)
             reply.status(204).send()
         } catch(err) {
             return reply.code(500).send({
