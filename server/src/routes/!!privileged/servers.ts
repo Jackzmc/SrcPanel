@@ -515,15 +515,21 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     })
 
     fastify.get('/:id/logs/sse', async (req: FastifyRequest<{ Params: { id: 'string' } }>, reply) => {
+        function eventHandler(line: string) {
+            reply.raw.write(`data: ${encodeURIComponent(line)}\n\n`)
+        }
+        let failed = false
+
         const server = fastify.servers.get(req.params.id)
         if(!server) {
-            return reply.status(404).send({
-                error: "Server Not Found", 
-                code: "SERVER_NOT_FOUND",
-            })
+            failed = true
+            eventHandler(`Unknown server`)
         }
         const [code, granted] = req.user.requirePermission("servers.rcon", { resourceId: server.id })
-        if(!granted) return NO_PERMISSION(reply, "You do not have permission to view the server console", code)
+        if(!granted) {
+            failed = true
+            eventHandler(`You do not have permission to view the server console.`)
+        }
         
         reply.raw.writeHead(200, {
             'Cache-Control': 'no-cache,no-transform',
@@ -533,20 +539,19 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         });
         reply.raw.flushHeaders()
 
-        // Send any stale data:
-        for(const line of server.logs) {
-            eventHandler(line)
+        let heartbeatTimer
+        if(!failed) {
+            // Send any stale data:
+            for(const line of server.logs) {
+                eventHandler(line)
+            }
+
+            heartbeatTimer = setInterval(() => {
+                reply.raw.write(': heartbeat')
+            }, 1000 * 30)
+
+            server.on('log', eventHandler)
         }
-
-        function eventHandler(line: string) {
-            reply.raw.write(`data: ${encodeURIComponent(line)}\n\n`)
-        }
-
-        const heartbeatTimer = setInterval(() => {
-            reply.raw.write(': heartbeat')
-        }, 1000 * 30)
-
-        server.on('log', eventHandler)
         req.raw.on("close", () => {
             server.removeListener("live", eventHandler)
             clearTimeout(heartbeatTimer)
