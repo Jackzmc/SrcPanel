@@ -48,7 +48,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 message: "Server not found"
             })
         }
-        if(!req.user.hasPermission("servers.view", server.id)) return NO_PERMISSION(reply)
+        const [code, granted] = req.user.requirePermission("servers.view", { resourceId: server.id })
+        if(!granted) return NO_PERMISSION(reply, "You do not have permission to view this server", code)
         let playerJoins = null
         if(server.activityLogId) {
             [playerJoins] = await fastify.db.execute(
@@ -90,7 +91,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
 
         const [code, granted] = req.user.requirePermission(`servers.configs.${req.query.raw ? 'read_raw' : 'read'}`, { resourceId: server.id })
-        if(!granted) return NO_PERMISSION(reply)
+        if(!granted) return NO_PERMISSION(reply, "You do not have permission to view server configs", code)
 
         const path = join(server.configDir, req.query.path)
         // Make sure supplied path has no path traversal
@@ -175,23 +176,25 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 error: "Server Not Found", 
                 code: "SERVER_NOT_FOUND",
             })
+        } else {
+            // Send any stale data:
+            if(server.liveStatus) send(server.liveStatus)
+
+            function eventHandler(data: PluginServerStatus) {
+                send(data)
+            }
+
+            const heartbeatTimer = setInterval(() => {
+                reply.raw.write(': heartbeat')
+            }, 1000 * 30)
+
+            server.addListener("live", eventHandler)
+            req.raw.on("close", () => {
+                server.removeListener("live", eventHandler)
+                clearTimeout(heartbeatTimer)
+            })
+
         }
-        // Send any stale data:
-        if(server.liveStatus) send(server.liveStatus)
-
-        function eventHandler(data: PluginServerStatus) {
-            send(data)
-        }
-
-        const heartbeatTimer = setInterval(() => {
-            reply.raw.write(': heartbeat')
-        }, 1000 * 30)
-
-        server.addListener("live", eventHandler)
-        req.raw.on("close", () => {
-            server.removeListener("live", eventHandler)
-            clearTimeout(heartbeatTimer)
-        })
         reply.hijack()
     })
 
@@ -204,7 +207,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 message: "Server not found"
             })
         }
-        if(!req.user.hasPermission("servers.view", server.id)) return NO_PERMISSION(reply)
+        const [code, granted] = req.user.requirePermission("servers.view", { resourceId: server.id })
+        if(!granted) return NO_PERMISSION(reply, "You do not have permission to view this server", code)
 
         let recentActivities = null
         if(server.activityLogId) {
@@ -238,7 +242,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     fastify.post('/:id/start', async(req: FastifyRequest<{Params: { id: 'string'} }>, reply) => {
         const server = fastify.servers.get(req.params.id)
         if(!server) NOT_FOUND(reply, "Server")
-        if(!req.user.hasPermission("servers.cmds.start", server.id)) return NO_PERMISSION(reply)
+        const [code, granted] = req.user.requirePermission("servers.cmds.start", { resourceId: server.id })
+        if(!granted) return NO_PERMISSION(reply, "You do not have permission to start this server", code)
         if(!server.hasSystemd) {
             return reply.code(400).send({
                 error: "NO_SYSTEMD",
@@ -262,7 +267,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         if(!server) return NOT_FOUND(reply, "Server")
         
         const [code, granted] = req.user.requirePermission("servers.rcon", { resourceIds: [server.id] })
-        if(!granted) return NO_PERMISSION(reply, "You do not have permission to run commands", code)
+        if(!granted) return NO_PERMISSION(reply, "You do not have permission to run commands on this server", code)
 
         if(!server.hasRcon) {
             return reply.code(400).send({
@@ -291,12 +296,13 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
     })
 
-    fastify.post('/:id/players/:steamid/:action', async(req: FastifyRequest<{Params: { id: 'string', steamid: 'string', action: 'string'} }>, reply) => {
+    fastify.post('/:id/players/:action', async(req: FastifyRequest<{Params: { id: 'string', action: 'string'}, Querystring: { userId?: string, steamid?: string } }>, reply) => {
         const server = fastify.servers.get(req.params.id)
         if(!server) return NOT_FOUND(reply, "Server")
         
+        // TODO: diff permission code
         const [code, granted] = req.user.requirePermission("servers.rcon", { resourceIds: [server.id, req.params.action] })
-        if(!granted) return NO_PERMISSION(reply)
+        if(!granted) return NO_PERMISSION(reply, "You do not have permissions to run commands on this server", code)
 
         if(!server.hasRcon) {
             return reply.code(400).send({
@@ -305,7 +311,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             })
         }
 
-        const targetUser = fastify.authmngr.getAdmin(req.params.steamid)
+        const targetUser = fastify.authmngr.getAdmin(req.query.steamid)
         if(targetUser && targetUser.permissions.immunityLevel > req.user.immunity) {
             return NO_PERMISSION(reply, "You do not have permisson to perform actions on this user", code)
         }
@@ -315,13 +321,13 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             metadata: {
                 server: server.id,
                 action: req.params.action,
-                steamid: req.params.steamid,
+                steamid: req.query.steamid,
                 arguments: {...req.query as Record<string, string>} 
             }
         })
 
         try {
-            await server.performAction(req.params.action as PlayerAction, req.params.action, req.query as Record<string, string>)
+            await server.performAction(req.params.action as PlayerAction, req.query.steamid, req.query as Record<string, string>)
             reply.status(204).send()
         } catch(err) {
             return reply.code(500).send({
@@ -335,7 +341,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     fastify.post('/:id/stop', async(req: FastifyRequest<{Querystring: { force?: boolean }, Params: { id: 'string'} }>, reply) => {
         const server = fastify.servers.get(req.params.id)
         if(!server) NOT_FOUND(reply, "Server")
-        if(!req.user.hasPermission("servers.cmds.stop", server.id)) return NO_PERMISSION(reply)
+        const [code, granted] = req.user.requirePermission("servers.cmds.start", { resourceId: server.id })
+        if(!granted) return NO_PERMISSION(reply, "You do not have permission to stop this server", code)
         if(!server.hasRcon) {
             return reply.code(400).send({
                 error: "NO_RCON",
@@ -372,8 +379,12 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         if(!server) NOT_FOUND(reply, "Server")
         // We will allow users to restart IF they can start, allowing them to stop it kinda
         // But if they force it, they will need stop permission too
-        if(req.query.force && !req.user.hasPermission("servers.cmds.stop", server.id)) return NO_PERMISSION(reply)
-        if(!req.user.hasPermission("servers.cmds.start", server.id)) return NO_PERMISSION(reply)
+        if(req.query.force) {
+            const [code, granted] = req.user.requirePermission("servers.cmds.stop", { resourceId: server.id })
+            if(!granted) return NO_PERMISSION(reply, "You do not have permission to force stop this server", code)
+        }
+        const [code, granted] = req.user.requirePermission("servers.cmds.start", { resourceId: server.id })
+        if(!granted) return NO_PERMISSION(reply, "You do not have permission to start this server", code)
 
         if(!server.hasRcon) {
             return reply.code(400).send({
@@ -464,7 +475,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     fastify.post('/:id/unreserve', async(req: FastifyRequest<{Params: { id: 'string'} }>, reply) => {
         const server = fastify.servers.get(req.params.id)
         if(!server) NOT_FOUND(reply, "Server")
-        if(!req.user.hasPermission("servers.cmds.unreserve", server.id)) return NO_PERMISSION(reply)
+        const [code, granted] = req.user.requirePermission("servers.cmds.unreserve", { resourceId: server.id })
+        if(!granted) return NO_PERMISSION(reply, "You do not have permission to unreserve this server", code)
         if(!server.hasRcon) {
             return reply.code(400).send({
                 error: "NO_RCON",
@@ -497,7 +509,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             })
         }
         const [code, granted] = req.user.requirePermission("servers.rcon", { resourceId: server.id })
-        if(!granted) return NO_PERMISSION(reply, "You do not have permission to view server logs", code)
+        if(!granted) return NO_PERMISSION(reply, "You do not have permission to view the server console", code)
 
         return server.logs.join("\n")
     })
@@ -511,7 +523,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             })
         }
         const [code, granted] = req.user.requirePermission("servers.rcon", { resourceId: server.id })
-        if(!granted) return NO_PERMISSION(reply, "You do not have permission to view server logs", code)
+        if(!granted) return NO_PERMISSION(reply, "You do not have permission to view the server console", code)
         
         reply.raw.writeHead(200, {
             'Cache-Control': 'no-cache,no-transform',

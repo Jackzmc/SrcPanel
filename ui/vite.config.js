@@ -2,6 +2,7 @@ import { defineConfig, loadEnv } from 'vite';
 import path from 'path';
 import vue from '@vitejs/plugin-vue'
 import { VitePWA } from 'vite-plugin-pwa'
+import { sentryVitePlugin } from "@sentry/vite-plugin";
 
 
 export default ({ mode }) => {
@@ -11,6 +12,11 @@ export default ({ mode }) => {
   }
   return defineConfig({
     plugins: [
+      sentryVitePlugin({
+        authToken: process.env.SENTRY_AUTH_TOKEN,
+        org: "jackzmc",
+        project: "l4d2-admin-panel",
+      }),
       vue(),
       // VitePWA({
       //   registerType: "autoUpdate",
@@ -116,6 +122,7 @@ export default ({ mode }) => {
       ]
     },
     build: {
+      sourcemap: true,
       chunkSizeWarningLimit: 600,
       cssCodeSplit: false
     },

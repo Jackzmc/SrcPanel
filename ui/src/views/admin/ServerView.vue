@@ -211,7 +211,7 @@
                     <tr>
                       <th>Actions</th>
                       <td><div class="buttons">
-                        <a class="button is-warning has-tooltip-danger" @click="kickPlayer(player)">Kick</a>
+                        <a v-if="player.steamid !== 'BOT'" class="button is-warning has-tooltip-danger" @click="kickPlayer(player)">Kick</a>
                       </div></td>
                     </tr>
                   </tbody>
@@ -673,7 +673,6 @@ async function fetchServerStatus() {
     if(response.ok) {
       status.value = json.status
       uptime.value = json.uptime
-      if(json.liveStatus) liveStatus.value = json.liveStatus
       activities.value = json.recentActivities?.map((act: any) => parseLog(act))
     } else {
       error.value = json.message
@@ -712,8 +711,7 @@ async function kickPlayer(player: StatusPlayer) {
       text: "Kick Cancelled (no reason provided)"
     })
   }
-  if(!confirm(`Are you sure you want to kick ${player.name}?`)) return
-  const response = await request(`/api/servers/${server.value.info.id}/players/#${player.userId}/kick?reason=${encodeURIComponent(reason)}`, { method: 'POST' })
+  const response = await request(`/api/servers/players/kick?reason=${encodeURIComponent(reason)}&steamid=${player.steamid}`, { method: 'POST' })
   if(response?.ok) {
     notify({
       type: "success",
