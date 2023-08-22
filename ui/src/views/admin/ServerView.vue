@@ -56,7 +56,7 @@
           <li v-for="(data, id) in TABS" :key="id"  :class="{'is-active': tab === id}">
             <router-link
               :to="{params:{tab: id, id: server.info.id }}"
-              v-if="(!data.permission || privUser.hasPermission(data.permission)) && (data.enabled == undefined || data.enabled())"
+              v-if="isTabEnabled(data)"
             >
               {{data.name}}&nbsp;
               <span class="tag is-info is-small" v-if="data.tag">{{ data.tag }}</span>
@@ -577,6 +577,12 @@ const nextLiveRetryTime = computed(() => {
   if(liveStatusNextRetryTime.value === undefined || !now.value) return 0
   return Math.max(Math.ceil((liveStatusNextRetryTime.value - now.value) / 1000), 0)
 })
+
+function isTabEnabled(data: any): boolean {
+  if(!data.permission || data.enabled == undefined) return true
+  if(!data.enabled()) return false
+  return props.privUser.hasPermission(data.permission)
+}
 
 function getPlayerWeaponNames(player: StatusPlayerSurvivor) {
   if(!player.weapons) return []
