@@ -24,7 +24,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         return trolls
     })
 
-    fastify.get("/bans", async (req, reply) => {
+    fastify.get("/games", async (req, reply) => {
         const [rows] = await fastify.db.execute<RowDataPacket[]>(`
             SELECT date_start, date_end, date_end - date_start as duration
             FROM stats_games
