@@ -44,7 +44,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             reply.send("<h1>Discord login has not be setup</h1>")
         })
     }
-    else  fastify.log.info("[Oauth] Discord provider available")
+    else fastify.log.info("[Oauth] Discord provider available")
 
     fastify.get('/login', async (req, reply) => {
         reply.type("text/html")

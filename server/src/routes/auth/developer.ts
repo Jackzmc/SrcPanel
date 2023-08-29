@@ -2,7 +2,6 @@ import { FastifyInstance, FastifyPluginOptions, FastifyReply, FastifyRequest } f
 
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
-
     fastify.get('/', async(req, reply) => {
         return {
             apikey: await req.user.getApiKey(),

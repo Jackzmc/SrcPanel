@@ -6,7 +6,6 @@ import { Note } from '../../../../common-types/Note';
 
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
-    
     fastify.get('/', async(req: FastifyRequest<{ Querystring: { 
             limit?: number, page?: number, search_content?: string, search_user?: string
         }}>, reply) => {

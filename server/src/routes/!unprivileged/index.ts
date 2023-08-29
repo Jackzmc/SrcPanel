@@ -50,8 +50,6 @@ interface CompactDisplayedServer {
 }
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions)  {
     fastify.get('/analyze/:steamid', async(req: FastifyRequest<{Params: { 'steamid': string }}>, reply) => {
-
-
         const [notes] = await fastify.db.execute<RowDataPacket[]>(
             `SELECT notes.*, u.last_alias as user, e.last_alias as executor, !b.expired as banned
             FROM notes 

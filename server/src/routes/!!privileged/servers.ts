@@ -403,6 +403,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             })
         }
     })
+    
     fastify.post('/:id/restart/sse', async(req: FastifyRequest<{Querystring: { force?: boolean }, Params: { id: 'string'} }>, reply) => {
         reply.raw.writeHead(200, {
             'Cache-Control': 'no-cache,no-transform',
@@ -495,7 +496,6 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
     })
 
-
     fastify.post('/:id/create', async(req: FastifyRequest<{Params: { id: 'string'} }>, reply) => {
         reply.code(501).send()
     })
@@ -557,7 +557,4 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     })
 }
 
-const sleep = time => new Promise(res => setTimeout(res, time));
-
-
-
+const sleep = (time: number) => new Promise(res => setTimeout(res, time));
