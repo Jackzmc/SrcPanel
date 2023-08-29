@@ -551,11 +551,11 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             }, 1000 * 30)
 
             server.on('log', eventHandler)
+            req.raw.on("close", () => {
+                server.removeListener("live", eventHandler)
+                clearTimeout(heartbeatTimer)
+            })
         }
-        req.raw.on("close", () => {
-            server.removeListener("live", eventHandler)
-            clearTimeout(heartbeatTimer)
-        })
         reply.hijack()
     })
 }
