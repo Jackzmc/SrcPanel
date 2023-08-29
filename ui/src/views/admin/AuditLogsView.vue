@@ -9,6 +9,14 @@
       </p>
     </div>
     <div class="column is-8 box" v-else style="vertical-align: middle">
+      <div class="list-item message is-info" ref="infiniteScroll" v-show="infiniteScrollLoading === 'top'">
+        <div class="list-item-content has-text-centered" style="text-decoration: none">
+          <p>
+            <Icon icon="spinner" spin>Fetching newer entries...</Icon>
+          </p>
+        </div>
+      </div>
+      <InfiniteLoading @infinite="loadTopContent" />
       <div class="has-text-centered is-size-5" v-if="entries.length === 0" style="margin-top:12%">
         <p>No entries were found for data source {{ DATA_SOURCES[dataSource] }}</p>
         <p>Try searching a different source</p>
@@ -120,7 +128,7 @@
         </template>
       </div>
       <InfiniteLoading @infinite="loadBottomContent"  />
-      <div class="list-item message is-info" ref="infiniteScroll" v-show="infiniteScrolLoading">
+      <div class="list-item message is-info" ref="infiniteScroll" v-show="infiniteScrollLoading === 'bottom'">
         <div class="list-item-content has-text-centered" style="text-decoration: none">
           <p>
             <Icon icon="spinner" spin>Fetching older entries...</Icon>
@@ -372,7 +380,7 @@ interface LogEntry {
 let pendingEntries = ref<LogEntry[]>([])
 
 let infiniteScroll = ref()
-let infiniteScrolLoading = ref(false)
+let infiniteScrollLoading = ref<"top"|"bottom">()
 
 const ADMINCHAT_REGEX = /triggered sm_say \(text (.*)\)/;
 
@@ -456,12 +464,22 @@ async function search() {
 }
 async function loadBottomContent() {
   // Do not fire if loading, or if there is no content available
-  if(infiniteScrolLoading.value || !entries.value || entries.value.length == 0) return
+  if(infiniteScrollLoading.value || !entries.value || entries.value.length == 0) return
   console.log('fetching bottom content')
-  infiniteScrolLoading.value = true
+  infiniteScrollLoading.value = "bottom"
   const newEntries = await fetchLogs(idMinMax.value[0] - 1, "before")
   entries.value = [...entries.value, ...newEntries]
-  infiniteScrolLoading.value = false
+  infiniteScrollLoading.value = undefined
+}
+async function loadTopContent() {
+  // Do not fire if loading, or if there is no content available
+  if(infiniteScrollLoading.value || !entries.value || entries.value.length == 0) return
+  if(idMinMax.value[1] === cache.value.highestId) return
+  console.log('fetching top content')
+  infiniteScrollLoading.value = "top"
+  const newEntries = await fetchLogs(idMinMax.value[1] + 1, "after")
+  entries.value = [...entries.value, ...newEntries]
+  infiniteScrollLoading.value = undefined
 }
 async function fetchLogs(id: number, mode: "before" | "after" | "around") {
   // Wait for previous request
