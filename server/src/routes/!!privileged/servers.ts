@@ -515,11 +515,17 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     })
 
     fastify.get('/:id/logs/sse', async (req: FastifyRequest<{ Params: { id: 'string' } }>, reply) => {
+        reply.raw.writeHead(200, {
+            'Cache-Control': 'no-cache,no-transform',
+            'Content-Type': 'text/event-stream',
+            'Connection': 'keep-alive',
+            'X-Accel-Buffering': 'no'
+        });
+        reply.raw.flushHeaders()
         function eventHandler(line: string) {
             reply.raw.write(`data: ${encodeURIComponent(line)}\n\n`)
         }
         let failed = false
-
         const server = fastify.servers.get(req.params.id)
         if(!server) {
             failed = true
@@ -531,22 +537,13 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             eventHandler(`You do not have permission to view the server console.`)
         }
         
-        reply.raw.writeHead(200, {
-            'Cache-Control': 'no-cache,no-transform',
-            'Content-Type': 'text/event-stream',
-            'Connection': 'keep-alive',
-            'X-Accel-Buffering': 'no'
-        });
-        reply.raw.flushHeaders()
-
-        let heartbeatTimer
         if(!failed) {
             // Send any stale data:
             for(const line of server.logs) {
                 eventHandler(line)
             }
 
-            heartbeatTimer = setInterval(() => {
+            const heartbeatTimer = setInterval(() => {
                 reply.raw.write(': heartbeat')
             }, 1000 * 30)
 
