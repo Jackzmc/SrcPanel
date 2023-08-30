@@ -55,6 +55,17 @@
         <p class="has-text-centered my-6 is-size-5" v-else-if="users.length === 0">No players found</p>
       </Tab>
       <Tab name="Admins" id="admins" v-if="privUser.hasPermission('admins.view')" @selected="fetchAdmins">
+      <div class="card">
+          <header class="card-header">
+            <p class="card-header-title">
+              Search for a player (SteamID2 or name)
+            </p>
+          </header>
+          <div class="card-content">
+            <input v-model="search.query" @input="search.func" class="input" type="text" placeholder="STEAM_1:1:####### or a name" style="width:30%">
+          </div>
+        </div>
+        <br>
         <table class="table is-bordered">
           <thead>
             <tr>
@@ -64,7 +75,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="admin in admins" :key="admin.id">
+            <tr v-for="admin in filteredAdmins" :key="admin.id">
               <td>{{ admin.id }}</td>
               <td>
                 <router-link :to="{name:'manage-user',params:{id:admin.steamid},query:{returnTo:$route.fullPath}}">
@@ -125,10 +136,19 @@ let servers = ref([])
 let admins = ref<ReadableAdminData[]>([])
 let loading = ref(false)
 
+const filteredAdmins = computed(() => {
+  if(!search.value.query) return admins.value
+  const query = search.value.query.toLowerCase()
+  return admins.value.filter(admin => {
+    return admin.steamid.includes(query) || admin.name.toLowerCase().includes(query)
+  })
+})
+
 function setTab(tab: any) {
   selectedTabId.value = tab.tab.computedId
   manualInput.value = undefined
   selectedId.value = undefined
+  search.value.query = ''
 }
 function onUserSelected(id: string) {
   selectedId.value = id
@@ -141,6 +161,7 @@ function onManualSelected(id: string) {
   search.value.func()
 }
 async function searchUser() {
+  if(selectedTabId.value !== "search") return
   users.value = []
   let query = manualInput.value ?? search.value.query
   if(query == "") return
