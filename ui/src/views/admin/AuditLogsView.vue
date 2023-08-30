@@ -533,13 +533,11 @@ async function fetchLogs(id: number, mode: "before" | "after" | "around") {
           steamid: entry.client,
           name: hasValidClient ? entry.clientName ?? "<UNKNOWN>" : null,
           avatarUrl: hasValidClient ? `/api/users/${entry.client}/avatar` : undefined,
-          // avatarUrl: entry.clientName ? (entry.clientAvatar ? `https://avatars.steamstatic.com/${entry.clientAvatar}.jpg` : `https://ui-avatars.com/api/?name=${encodeURIComponent(entry.clientName || entry.client)}`) : null
         },
         target: {
           steamid: entry.target,
           name: hasValidTarget ? entry.targetName ?? "<UNKNOWN>" : null,
           avatarUrl: hasValidTarget ? `/api/users/${entry.target}/avatar` : undefined,
-          // avatarUrl: entry.targetName ? (entry.targetAvatar ? `https://avatars.steamstatic.com/${entry.targetAvatar}.jpg` : `https://ui-avatars.com/api/?name=${encodeURIComponent(entry.targetName || entry.target)}`) : null
         },
         metadata: entry.metadata,
         message,
@@ -548,13 +546,6 @@ async function fetchLogs(id: number, mode: "before" | "after" | "around") {
     })
 
     cache.value.highestId = json.cache.highestId
-    // if(mode === "before") {
-    //   entries.value = newEntries
-    // } else {
-    //   cache.value.highestId = json.cache.highestId
-    //   // don't replace, append non duplicates
-    //   addPendingEntries(newEntries)
-    // }
     console.info('Fetch took', json.timeTaken, 'ms')
     loadingTime.value = undefined
     showLoading.value = false
@@ -576,13 +567,8 @@ const idMinMax = computed(() => {
   return [ lowestId, highestId ]
 })
 function addPendingEntries(entries: LogEntry[]) {
+  if(!entries) return
   pendingEntries.value = [ ...pendingEntries.value, ...entries]
-  // for(const entry of entries) {
-  //   if(!pendingEntries.value.find(e => e.id === entry.id)) {
-  //     pendingEntries.value.push(entry)
-  //   }
-  // }
-  // pendingEntries.value.sort((a, b) => b.id - a.id)
 }
 
 async function jumpTo(entry: any) {
@@ -632,7 +618,6 @@ onBeforeMount(async() => {
     entries.value = await fetchLogs(id, "around")
   }
 
-
   if(route.query.limit) limit.value = Number(route.query.limit) || DEFAULT_LIMIT
   if(route.query.source) dataSource.value = route.query.source as string
   for(const filter in FILTER_DATA) {
@@ -666,8 +651,6 @@ onBeforeMount(async() => {
     }
 
   }, REFRESH_INTERVAL)
-
-
 })
 
 onUnmounted(() => {
