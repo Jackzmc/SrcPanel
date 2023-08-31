@@ -1,6 +1,10 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
 import { Keyvalue, Keyvalues, KeyConfig } from '../../../../common-types/Panel.js';
 import { NO_PERMISSION } from '../../responses.js';
+import path from 'node:path';
+import { createReadStream } from 'node:fs';
+import Json5 from 'json5'
+import { readFile } from 'node:fs/promises';
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
     fastify.get('/', async (req, reply) => {
@@ -15,6 +19,18 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         
         return {
             keys: kv
+        }
+    })
+
+    fastify.get('/config/:filename', async (req: FastifyRequest<{ Params: { filename: string }}>, reply) => {
+        try {
+            let content = await readFile(path.resolve('config/', req.params.filename), 'utf-8') 
+            content = Json5.parse(content)
+            return reply.send(content)
+        } catch(err: any) {
+            if(err.code === "ENOENT")
+                return reply.status(404).send()
+            throw err
         }
     })
 

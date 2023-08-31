@@ -18,6 +18,7 @@
           <p class="has-text-success" v-else-if="updateStatus.state === 'SUCCESS'">Server has been updated successfully.</p>
     </Tab>
     <Tab name="Config">
+      <JsonConfigEditor filename="servers.json" />
       <ConfigEditor />
     </Tab>
     <Tab name="Shares">
@@ -38,6 +39,7 @@ import ConfigEditor from "@/components/panel-admin/ConfigEditor.vue";
 import SharesEditor from "@/components/panel-admin/SharesEditor.vue";
 //@ts-ignore
 import { Tab, Tabs } from 'vue3-tabs-component'
+import JsonConfigEditor from "@/components/panel-admin/JsonConfigEditor.vue";
 
 const POLL_SERVER_HEALTH_INTERVAL = 1000 * 10
 
