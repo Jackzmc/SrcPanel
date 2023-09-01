@@ -74,6 +74,17 @@ async function runCommand() {
   if(!commandInput.value) return
   const command = commandInput.value.trim()
   if(command.length === 0) return
+  if(command.startsWith("/") || command.startsWith("!")) {
+    console.log(command)
+    notify({
+      type: "info",
+      title: "Bad Command",
+      text: `/ and ! commands are only used in chat. To enter commands replace them with the sm_ prefix`
+    })
+    return
+  }
+
+  pushLine(`> ${command}`)
   const response = await request(`/api/servers/${route.params.id}/cmd`, {
     method: "POST",
     body: command
