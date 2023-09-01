@@ -243,7 +243,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                     groupIds
                 })
 
-                await req.user.log(req.params.steamid, `%client% granted admin to %target% (#%id)`, {
+                await req.user.log(req.params.steamid, `%client% granted admin to %target% (#%id%)`, {
                     code: "admins.grant",
                     metadata: {
                         id,

@@ -206,7 +206,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             })
         }
         await share.deleteAddon(req.params.filename)
-        await req.user.log(null, `deleted addon \"${req.params.filename}\"`, {
+        await req.user.log(null, `deleted addon %filename%`, {
             code,
             metadata: {
                 filename: req.params.filename
