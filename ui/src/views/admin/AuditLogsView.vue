@@ -296,8 +296,7 @@ const route = useRoute()
 const router = useRouter()
 const { notify } = useNotification();
 
-const REFRESH_INTERVAL = 15_000
-const FETCH_QUERY_STATUS_INTERVAL = 1000 * 30 // 30 seconds
+const REFRESH_INTERVAL = 12_000
 const MAX_REQUEST_TIME = 1000 * 110 // 110 seconds max, any more and CF may kick in
 
 const DEFAULT_TYPES = ["ACTION", "CHAT", "INFO", "STATE", "QUIT", "JOIN"];
