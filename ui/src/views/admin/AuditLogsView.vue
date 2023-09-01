@@ -531,12 +531,12 @@ async function fetchLogs(id: number, mode: "before" | "after" | "around") {
         adminChat: entry.adminChat,
         client: {
           steamid: entry.client,
-          name: hasValidClient ? entry.clientName ?? "<UNKNOWN>" : null,
+          name: hasValidClient ? entry.clientName ?? entry.client : null,
           avatarUrl: hasValidClient ? `/api/users/${entry.client}/avatar` : undefined,
         },
         target: {
           steamid: entry.target,
-          name: hasValidTarget ? entry.targetName ?? "<UNKNOWN>" : null,
+          name: hasValidTarget ? entry.targetName ?? entry.target : null,
           avatarUrl: hasValidTarget ? `/api/users/${entry.target}/avatar` : undefined,
         },
         metadata: entry.metadata,

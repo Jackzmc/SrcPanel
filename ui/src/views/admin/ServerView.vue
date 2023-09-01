@@ -372,6 +372,26 @@
         <FolderBrower v-if="server.configs" @select="onCfgChosen" :paths="server.configs" />
         <em v-else>not supported on server</em>
       </div>
+      <div v-else-if="tab === 'console'" class="box">
+        <h5 class="title is-5">Console Help Information</h5>
+        <p>
+          Commands that you would use in chat such as <code>/slay</code> (or publicly <code>!slay</code>) use the <code>sm_</code> prefix in the console.
+          An example command <code>/slay @me</code> would be <code>sm_slay @me</code>.
+        </p>
+        <br>
+        <p>
+          Invalid commands will be shown as <span class="has-text-danger">red</span>, where valid commands will show as white. Some commands may not be marked as "valid", but you can still attempt to enter them.
+        </p>
+        <br>
+      </div>
+        <article class="message is-warning" v-if="tab === 'console'">
+        <div class="message-header">
+          <p>Notice</p>
+        </div>
+        <div class="message-body">
+          Please note that the console access gives you full access to the server and as such every command you run will be logged. Every command you use will be ran as "Console", not identified to you in-game in any way, which is hard to track abuse of.
+        </div>
+      </article>
     </div>
   </div>
 </nav>

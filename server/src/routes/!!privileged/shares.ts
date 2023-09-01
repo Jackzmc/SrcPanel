@@ -359,7 +359,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                                     server: null,
                                     filename: detail.publishedfileid + ".vpk",
                                     title: detail.title,
-                                    size: detail.file_size
+                                    size: detail.file_size,
+                                    url: `https://steamcommunity.com/sharedfiles/filedetails/?id=${detail.publishedfileid}`
                                 }
                             })
 
