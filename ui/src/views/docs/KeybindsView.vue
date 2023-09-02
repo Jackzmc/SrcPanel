@@ -65,7 +65,7 @@ let command = ref("sm_example_command")
 
 onMounted(() => {
   const options = {
-    onKeyPress: button => onKeyPress(button),
+    onKeyPress,
     theme: "simple-keyboard hg-theme-default hg-layout-default",
     physicalKeyboardHighlight: true,
     syncInstanceInputs: true,

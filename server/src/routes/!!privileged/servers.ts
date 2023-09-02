@@ -277,7 +277,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
 
         try {
-            await req.user.log(null, `%client% ran command \"%cmd%\"`, {
+            await req.user.log(null, `%client% ran command %cmd%`, {
                 code,
                 metadata: {
                     cmd: req.body

@@ -105,6 +105,10 @@
                       <th>Raw Message</th>
                       <td>{{ entry.rawMessage }}</td>
                     </tr>
+                    <tr v-if="entry.via">
+                      <th>Via <Icon icon="info-circle" icon-class="has-text-info has-tooltip-right" data-tooltip="Where the log orginated from"></Icon></th>
+                      <td>{{ entry.via }}</td>
+                    </tr>
                     <tr v-if="entry.metadata">
                       <th>Metadata</th>
                       <td>
@@ -369,6 +373,7 @@ interface LogEntry {
   server: string,
   type: string,
   adminChat: boolean,
+  via?: string,
   client: LogEntryUser,
   target: LogEntryUser,
   metadata: Record<string, any>,
@@ -381,7 +386,8 @@ let pendingEntries = ref<LogEntry[]>([])
 let infiniteScroll = ref()
 let infiniteScrollLoading = ref<"top"|"bottom">()
 
-const ADMINCHAT_REGEX = /triggered sm_say \(text (.*)\)/;
+const ADMINCHAT_REGEX = new RegExp(/triggered sm_say \(text (.*)\)/);
+const CONSOLE_SAY_REGEX = new RegExp(/(sm_say|sm_chat) "?([^"]*)"?/)
 
 const highlightRegex = computed(() => {
   return filters.value.message ? new RegExp(`(${filters.value.message})`, 'ig') : undefined
@@ -463,16 +469,21 @@ async function search() {
 }
 async function loadBottomContent() {
   // Do not fire if loading, or if there is no content available
-  if(infiniteScrollLoading.value || !entries.value || entries.value.length == 0) return
+  if(infiniteScrollLoading.value || !entries.value || entries.value.length == 0 || loadingTime.value !== undefined) return
   console.log('fetching bottom content')
   infiniteScrollLoading.value = "bottom"
   const newEntries = await fetchLogs(idMinMax.value[0] - 1, "before")
   entries.value = [...entries.value, ...newEntries]
   infiniteScrollLoading.value = undefined
 }
+let firstLoad = false
 async function loadTopContent() {
   // Do not fire if loading, or if there is no content available
-  if(infiniteScrollLoading.value || !entries.value || entries.value.length == 0) return
+  if(!firstLoad) {
+    firstLoad = true
+    return
+  }
+  if(infiniteScrollLoading.value || !entries.value || entries.value.length == 0 || loadingTime.value !== undefined) return
   if(idMinMax.value[1] === cache.value.highestId) return
   console.log('fetching top content')
   infiniteScrollLoading.value = "top"
@@ -520,6 +531,16 @@ async function fetchLogs(id: number, mode: "before" | "after" | "around") {
           message = match[1]
         }
       }
+      if(entry.server === 'web' && entry.type.startsWith("servers.rcon.") && entry.metadata?.cmd) {
+        const match = entry.metadata.cmd.match(CONSOLE_SAY_REGEX)
+        if(match) {
+          entry.adminChat = true
+          entry.via = 'rcon'
+          entry.metadata._type = entry.type
+          entry.type = 'CHAT'
+          message = match[2]
+        }
+      }
       const hasValidClient = entry.client?.startsWith("STEAM_")
       const hasValidTarget = entry.target?.startsWith("STEAM_")
       return {
@@ -528,6 +549,7 @@ async function fetchLogs(id: number, mode: "before" | "after" | "around") {
         server: entry.server,
         type: entry.type,
         adminChat: entry.adminChat,
+        via: entry.via,
         client: {
           steamid: entry.client,
           name: hasValidClient ? entry.clientName ?? entry.client : null,

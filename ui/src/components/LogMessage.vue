@@ -24,18 +24,17 @@
         }"></span>
       </template>
     </template>
-    &nbsp;<a
-      v-if="
+    <span v-if="log.via === 'rcon'" class="has-text-info ml-1">(via console)&nbsp;</span>
+    <span v-if="
         !props.log.redacted &&
         props.hoverId == props.log.id &&
         props.log.type === 'CHAT' &&
-        props.log.client?.steamid === privUser.id
-      "
-      data-tooltip="Redact your own message"
-      class="has-text-danger"
-      @click="redactID(log.id)"
-      >(redact)</a
-    >
+        props.log.client?.steamid === privUser.id"
+      >
+      <a data-tooltip="Redact your own message" class="has-text-danger" @click="redactID(log.id)">
+        (redact)
+      </a>
+    </span>
   </td>
 </template>
 
