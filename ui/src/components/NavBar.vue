@@ -45,6 +45,9 @@
             <router-link to="/docs/notes" class="navbar-item">
               Player Notes
             </router-link>
+            <router-link to="/docs/keybinds" class="navbar-item">
+              <Icon icon="keyboard">Keybinds</Icon>
+            </router-link>
           </div>
         </div>
         <div class="navbar-item has-dropdown is-hoverable" v-if="privUser">
@@ -75,7 +78,7 @@
         <router-link to="/bans" class="navbar-item">
           <Icon icon="fa-user-slash">Bans</Icon>
         </router-link>
-        <router-link to="/info" class="navbar-item">
+        <router-link to="/notes" class="navbar-item">
           <Icon icon="fa-note-sticky">Player Notes</Icon>
         </router-link>
         <router-link to="/graphs" class="navbar-item">

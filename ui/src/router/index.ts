@@ -76,6 +76,15 @@ const routes = [
     }
   },
   {
+    name: "docs-keybinds",
+    path: '/docs/keybinds',
+    component: () => import('../views/docs/KeybindsView.vue'),
+    meta: {
+      title: "Keybinds",
+      description: ""
+    }
+  },
+  {
     name: 'bans',
     path: '/bans',
     component: () => import('../views/BansView.vue'),

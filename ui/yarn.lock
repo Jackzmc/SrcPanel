@@ -5896,6 +5896,11 @@ signal-exit@^3.0.2, signal-exit@^3.0.3, signal-exit@^3.0.7:
   resolved "https://registry.yarnpkg.com/signal-exit/-/signal-exit-3.0.7.tgz#a9a1767f8af84155114eaabd73f99273c8f59ad9"
   integrity sha512-wnD2ZE+l+SPC/uoS0vXeE9L1+0wuaMqKlfz9AMUo38JsyLSBWSFcHR1Rri62LZc12vLr1gb3jl7iwQhgwpAbGQ==
 
+simple-keyboard@^3.7.7:
+  version "3.7.7"
+  resolved "https://registry.yarnpkg.com/simple-keyboard/-/simple-keyboard-3.7.7.tgz#6e58d69847418f720a00f1d07729a0c608b99692"
+  integrity sha512-iIlYW7TMfnZJ5dbioOfMNEjrX+ZCL3RaWzMHzieLgSSPkk8681Kc4b+FMr/z56faWuFrwbfnIWgAdbKwD7tg4w==
+
 sisteransi@^1.0.5:
   version "1.0.5"
   resolved "https://registry.yarnpkg.com/sisteransi/-/sisteransi-1.0.5.tgz#134d681297756437cc05ca01370d3a7a571075ed"
