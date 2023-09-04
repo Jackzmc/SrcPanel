@@ -45,6 +45,9 @@ export default class AuthManager {
     private providerNameCache: Map<string, string>
 
     constructor(adminDatabase: Pool, sessionDatabase: Pool, steam: SteamAPI) {
+        if(process.env.DEBUG_DISABLE_PERMISSION_SYSTEM) {
+            console.warn("[AuthManager] Warn: DEBUG_DISABLE_PERMISSION_SYSTEM set, permissions are ignored")
+        }
         this.providerNameCache = new Map()
         this.apikeysCache = new QuickLRU<string, APIKey>({ maxSize: 100 });
         this.db = adminDatabase
