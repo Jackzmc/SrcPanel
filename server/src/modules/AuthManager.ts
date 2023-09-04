@@ -155,8 +155,6 @@ export default class AuthManager {
             "SELECT code FROM dash_permissions WHERE admin_id = ?",
             [adminId]
         )
-        //FIXME: remove
-        return new Set(["servers.view"])
         return new Set(rows.map(row => row.code))
     }
 
