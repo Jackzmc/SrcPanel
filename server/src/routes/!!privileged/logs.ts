@@ -130,12 +130,16 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         if(req.query.search_client) query.where('client', '=', req.query.search_client)
         if(req.query.search_target) query.where('target', '=', req.query.search_target)
         if(req.query.search_message) query.where('message','LIKE',`%${req.query.search_message}%`)
-        if(req.query.types) {
-            const types = req.query.types.split(/[+, ]/g)
+        const servers = req.query.servers?.split(/[+, ]/g)
+        const types = req.query.types?.split(/[+, ]/g)
+        if(types) {
             query.whereIn('type', types)
+            if(servers.includes('web')) {
+                // TODO: if .servers includes 'web', do AND type IN () OR server = 'web'
+                // query.where('server', 'web')
+            }
         }
-        if(req.query.servers) {
-            const servers = req.query.servers.split(/[+, ]/g)
+        if(servers) {
             query.whereIn('server', servers)
         }
 

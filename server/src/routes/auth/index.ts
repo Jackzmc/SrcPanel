@@ -14,7 +14,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     fastify.delete('/notifications', async(req, reply) => {
         return await req.user.clearNotifications()
     })
-    
+
     fastify.get('/profile', async(req, reply): Promise<UserData<UserPrivilegeCode[]>> => {
         await req.user.updateProviders()
         return {

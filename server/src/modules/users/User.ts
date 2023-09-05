@@ -1,4 +1,4 @@
-import { AdminData, OauthProvider, OauthProviderData, SessionData, SessionUser, UserNotification, UserOauthProviders } from '../../../../common-types/User';
+import { AdminData, OauthProvider, OauthProviderData, SessionData, SessionUser, UserNotification, UserNotificationOptions, UserOauthProviders } from '../../../../common-types/User';
 import { UserPrivilegeCode } from '../../../../common-types/Privileges.js';
 import AuthManager from '../AuthManager.js';
 import { Session } from 'fastify';
@@ -77,6 +77,14 @@ export default class User {
 
     get providers() {
         return this._providers
+    }
+
+    get permCodes() {
+        return new Set([...this.adminData.permissions.codes])
+    }
+
+    async notify(message: string, options: UserNotificationOptions = {}) {
+        await this.authmngr.addNotification(this.steamid2, message, options)
     }
 
     async getNotifications(): Promise<UserNotification[]> {

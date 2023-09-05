@@ -600,8 +600,9 @@ const nextLiveRetryTime = computed(() => {
 
 function isTabEnabled(data: any): boolean {
   if(!data.permission || data.enabled == undefined) return true
-  if(!data.enabled()) return false
-  return props.privUser.hasPermission(data.permission)
+  if(data._enabled == undefined)
+    data._enabled = (data.enabled()??true) && props.privUser.hasPermission(data.permission)
+  return data._enabled
 }
 
 function getPlayerWeaponNames(player: StatusPlayerSurvivor) {

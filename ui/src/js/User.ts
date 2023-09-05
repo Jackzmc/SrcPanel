@@ -84,7 +84,6 @@ export class PrivilegedUser {
   }
 
   hasPermission(code: UserPrivilegeCode, ...resourceIds: (string | number | undefined)[]) {
-    return true
     // TODO: Make sure user for 'servers.configs.read' has access to 'servers.configs'? idk verify
     let permCode: string = code
     for(const resource of resourceIds) {
@@ -139,7 +138,7 @@ export class PrivilegedUser {
   }
 
   async clearNotifications() {
-    await fetch(`https://stats.jackz.me/api/auth/notifications`, {
+    await fetch(`/api/auth/notifications`, {
       method: "DELETE"
     })
   }

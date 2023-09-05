@@ -14,6 +14,11 @@ interface Join {
     condition: Condition,
     unsafe?: boolean
 }
+interface WhereCondition {
+    column: string,
+    condition: Condition,
+    value: any
+}
 export class QueryBuilder {
     private _tableName: string
     private _tableAlias: string
@@ -125,6 +130,10 @@ export class QueryBuilder {
             return `${joinData.type} JOIN ${escapeId(joinData.table)} ${joinData.alias} ON ${name}.${joinData.leftColumn} ${joinData.condition} ${joinData.rightColumn}`
             
         }).join(" ")
+    }
+
+    whereOr(conditions: WhereCondition[]) {
+
     }
 
     where(column: string, condition: Condition, value: any) {

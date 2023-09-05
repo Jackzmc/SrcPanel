@@ -111,8 +111,10 @@ export interface AdminPermissions<C> {
     }
 }
 
-export interface UserNotification extends UserNotificationOptions {
+export interface UserNotification extends AddUserNotification {
     timestamp: number,
+}
+export interface AddUserNotification extends UserNotificationOptions {
     message: number,
 }
 export interface UserNotificationOptions {

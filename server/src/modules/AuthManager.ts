@@ -2,7 +2,7 @@ import { Pool, RowDataPacket, OkPacket } from "mysql2/promise";
 import QuickLRU from 'quick-lru'
 import { FastifyReply, FastifyRequest } from 'fastify';
 import ActivityLog from "./ActivityLog.js";
-import { AdminData, AdminGroup, OauthProvider, SessionData, ReadableAdminGroup, UserNotification, UserNotificationOptions } from '../../../common-types/User.js';
+import { AdminData, AdminGroup, OauthProvider, SessionData, ReadableAdminGroup, UserNotification, UserNotificationOptions, AddUserNotification } from '../../../common-types/User.js';
 import { ReadableAdminData, UserOauthProviders, OauthProviderData } from '../../../common-types/User';
 import { SteamInfo, UserPrivilegeCode } from  '../../../common-types/Privileges.js';
 import { SteamUserDetails } from '../../../common-types/Share';
@@ -328,13 +328,68 @@ export default class AuthManager {
         })
     }
 
+
+    /**
+     * Create a notification for a user
+     *
+     * @param {string} steamid2 admin's steamid
+     * @param {string} message
+     * @param {UserNotificationOptions} [options={}]
+     * @memberof AuthManager
+     */
     public async addNotification(steamid2: string, message: string, options: UserNotificationOptions = {}) {
         await this.db.execute(
             "INSERT INTO user_notifications (steamid, message, link) VALUES (?, ?, ?)",
-            [ steamid2, message, options.link ]
+            [ steamid2, message, options.link ?? null ]
         )
     }
 
+    /**
+     * Send bulk notifications, with the key being the steamid2 and value being notification data
+     *
+     * @param {Record<string, AddUserNotification>} notifications <steamid2, Notification>
+     * @memberof AuthManager
+     */
+    public async addNotificationsBulk(notifications: Record<string, AddUserNotification>) {
+        const conn = await this.db.getConnection()
+        await conn.beginTransaction()
+        for(const [steamid2, notification] of Object.entries(notifications)) {
+            await conn.execute(
+                "INSERT INTO user_notifications (steamid, message, link) VALUES (?, ?, ?)",
+                [ steamid2, notification.message, notification.link ?? null ]
+            )
+        }
+        await conn.commit()
+        conn.release()
+    }
+
+    /**
+     * Sends a notification to all admins
+     *
+     * @param {string} message the message
+     * @param {UserNotificationOptions} [options={}]
+     * @memberof AuthManager
+     */
+    public async addNotificationsAll(message: string, options: UserNotificationOptions = {}) {
+        const conn = await this.db.getConnection()
+        await conn.beginTransaction()
+        for(const admin of Object.values(this.admins)) {
+            await conn.execute(
+                "INSERT INTO user_notifications (steamid, message, link) VALUES (?, ?, ?)",
+                [ admin.identity, message, options.link ?? null ]
+            )
+        }
+        await conn.commit()
+        conn.release()
+    }
+
+
+    /**
+     * Clears all notifications from a user
+     *
+     * @param {string} steamid2
+     * @memberof AuthManager
+     */
     public async clearNotifications(steamid2: string) {
         await this.db.execute(
             "DELETE FROM user_notifications WHERE SUBSTRING(steamid, 11) = SUBSTRING(?, 11)",
@@ -388,6 +443,17 @@ export default class AuthManager {
     }
 
     // Merge parent onto child
+
+    /**
+     * Creates a new set that is the merge of child Set<T> onto parent Set<T>. The parent and child params are coverted to a set
+     *
+     * @private
+     * @template T
+     * @param {Iterable<T>} parent A set or array to merge into
+     * @param {Iterable<T>} child A set or array to merge parent with
+     * @return {Set<T>}  {Set<T>}
+     * @memberof AuthManager
+     */
     private _mergeToSet<T>(parent: Iterable<T>, child: Iterable<T>): Set<T> {
         const pSet = new Set<T>(parent)
         const cSet = new Set<T>(child)
