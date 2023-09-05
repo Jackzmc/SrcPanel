@@ -31,6 +31,8 @@
             </div>
         </article>
       </div>
+      <h4 class="title is-4">Tutorial Video</h4>
+      <video src="https://i.jackz.me/2023/09/Irritatingsezq3.mp4" controls />
     </div>
     <div class="column">
       <p><a class="button" href="https://steamcommunity.com/sharedfiles/filedetails/?id=2276071285">8 Player Lobby Addon - Workshop Page</a></p>
