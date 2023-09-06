@@ -218,7 +218,7 @@
             <input v-model="filters.aroundId" type="number" class="input" min="0" @change="fetchDebounce" placeholder="####" />
           </Field>
         </div>
-        <div class="column is-5">
+        <div class="column is-6">
           <Field label="Data Source">
             <div class="select is-fullwidth">
               <select v-model="dataSource" @change="fetchDebounce">
@@ -423,7 +423,8 @@ function getParams() {
   for(const [filter, val] of Object.entries(filters.value)) {
     if(!val) continue
     if(Array.isArray(val)) {
-      searchParams.append(filter, val.join("+"))
+      if(val.length > 0)
+        searchParams.append(filter, val.join("+"))
     } else {
       searchParams.append(`search_${filter}`, val)
     }
@@ -499,15 +500,15 @@ async function fetchLogs(id: number, mode: "before" | "after" | "around") {
 
   let response
   try {
-    await sleep(2000)
     const responseHandle = requestTimeout(`/api/logs/${mode}/${id}?${params}`, MAX_REQUEST_TIME)
     fetchAbort = responseHandle.controller
     response = await responseHandle.start()
     fetchAbort = null
-  } catch(err) {
+  } catch(err: any) {
     loadingTime.value = undefined
     showLoading.value = false
-    throw err
+    if(err.name !== "AbortError")
+      throw err
   }
 
   if(response?.ok) {
@@ -531,7 +532,7 @@ async function fetchLogs(id: number, mode: "before" | "after" | "around") {
           message = match[1]
         }
       }
-      if(entry.server === 'web' && entry.type.startsWith("servers.rcon.") && entry.metadata?.cmd) {
+      if(entry.server === 'web' && entry.metata?.cmd && entry.type.startsWith("servers.rcon.")) {
         const match = entry.metadata.cmd.match(CONSOLE_SAY_REGEX)
         if(match) {
           entry.adminChat = true
