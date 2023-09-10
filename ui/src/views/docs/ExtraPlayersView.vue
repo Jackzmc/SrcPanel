@@ -13,7 +13,7 @@
             <li>Select <b>8 Player Lobby</b></li>
             <li>Create a new lobby</li>
             <li>
-                Click on edit game settings and change the game type to campaign<br>
+                Click on <b>Edit Game Settings</b> and change <b>Gamemode</b> to <b>Campaign</b><br>
                 <em>This makes it so that only the host (you) need to download the lobby addon</em>
             </li>
             <li>
