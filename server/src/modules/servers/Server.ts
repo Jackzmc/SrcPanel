@@ -332,7 +332,9 @@ export default class Server extends EventEmitter {
 
     public async stop(force: boolean) {
       if(!this.hasRcon) throw new Error("No rcon config is setup")
-      return await this.sendCommand(force ? this.rcon.exitCommand : this.rcon.requestExitCommand)
+      const msg = await this.sendCommand(force ? this.rcon.exitCommand : this.rcon.requestExitCommand);
+      // If players online, requestExitCommand will not shut down server, so return false
+      return force || msg != "Players are online."
     }
 
     public async stopWait(force: boolean, timeoutSeconds = 10_000) {

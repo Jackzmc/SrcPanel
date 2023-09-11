@@ -136,7 +136,7 @@ import { computed, ref, onBeforeMount } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useNotification } from "@kyvg/vue3-notification";
 import { ExtendedShareInfo, ShareInfo } from '../../../../../common-types/Share';
-import { formatSize } from '@/js/util.js'
+import { formatSize, restartServer } from '@/js/util.js'
 
 const { notify }  = useNotification()
 
@@ -220,14 +220,6 @@ async function restartServers() {
   })
   close()
   downloadingState.value = 0
-}
-
-async function restartServer(id: string) {
-  const response = await fetch(`/api/servers/${id}/restart`, {
-    method: 'POST'
-  })
-  if(response.ok) return true
-  throw new Error(`Server returned ${response.status} ${response.statusText} for ${id}`)
 }
 
 function startDownload(force = false) {

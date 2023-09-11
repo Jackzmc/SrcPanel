@@ -257,4 +257,15 @@ export function parseLog(log: any, history: {activators: any[], targets: any[] }
   return log
 }
 
+export async function restartServer(id: string) {
+  const response = await fetch(`/api/servers/${id}/restart`, {
+    method: 'POST'
+  })
+  if(response.ok) {
+    const json = await response.json()
+    return json.response
+  }
+  throw new Error(`Server returned ${response.status} ${response.statusText} for ${id}`)
+}
+
 export const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));

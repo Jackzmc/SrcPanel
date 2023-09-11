@@ -72,7 +72,7 @@ import Modal from '@/components/Modal.vue'
 import { computed, ref, onBeforeMount } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useNotification } from "@kyvg/vue3-notification";
-import { request } from '@/js/util';
+import { request, restartServer } from '@/js/util';
 import { ShareInfo } from '../../../../../common-types/Share';
 
 const { notify }  = useNotification()
@@ -135,13 +135,6 @@ async function restartServers() {
   })
   close()
 
-}
-
-async function restartServer(id: string) {
-  const response = await request(`/api/servers/${id}/restart`, {
-    method: 'POST'
-  })
-  if(response?.ok) return true
 }
 
 async function startUpload() {
