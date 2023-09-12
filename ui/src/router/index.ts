@@ -85,6 +85,16 @@ const routes = [
     }
   },
   {
+    name: "docs-tutorials",
+    path: '/docs/tutorials',
+    alias: '/docs/tutorial',
+    component: () => import('../views/docs/TutorialsView.vue'),
+    meta: {
+      title: "Tutorials",
+      description: ""
+    }
+  },
+  {
     name: 'bans',
     path: '/bans',
     component: () => import('../views/BansView.vue'),

@@ -48,6 +48,9 @@
             <router-link to="/docs/keybinds" class="navbar-item">
               <Icon icon="keyboard">Keybinds</Icon>
             </router-link>
+            <router-link to="/docs/tutorials" class="navbar-item">
+              <Icon icon="circle-question">Tutorials</Icon>
+            </router-link>
           </div>
         </div>
         <div class="navbar-item has-dropdown is-hoverable" v-if="privUser">
