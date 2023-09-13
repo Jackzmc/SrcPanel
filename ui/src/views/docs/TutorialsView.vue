@@ -4,12 +4,13 @@
     <div class="column is-8">
       <template v-if="selectedTutorial">
         <h4 class="title is-4">{{ selectedTutorial.title }}</h4>
-        <video :src="selectedTutorial.videoSrc" controls autoplay />
+        <video v-if="selectedTutorial.videoSrc" :src="selectedTutorial.videoSrc" controls autoplay />
+        <span class="content box" v-if="content" v-html="content"></span>
       </template>
       <template v-else>
-        <h4 class="title mt-6 is-4 has-text-centered">No tutorial selected</h4>
+        <h4 class="title mt-6 is-4 has-text-centered">Select a tutorial</h4>
         <p class="subtitle has-text-centered">
-          Select a tutorial on the right
+          No tutorial selected, select a tutorial from the box on the right.
         </p>
       </template>
     </div>
@@ -18,6 +19,10 @@
         <p class="panel-heading">
           Tutorials
         </p>
+        <div class="panel-block" v-if="!tutorials">
+          <Icon icon="spinner" spin>Loading tutorials...</Icon>
+        </div>
+        <template v-else>
         <div class="panel-block">
           <p class="control has-icons-left">
             <input v-model="searchQuery" class="input" type="text" placeholder="Search">
@@ -27,12 +32,14 @@
         <a :class="['panel-block', {'is-active': selectedTutorial == tutorial}]" v-for="tutorial in filteredTutorials" :key="tutorial.title" @click="selectTutorial(tutorial)">
           <span class="panel-icon">
             <FontAwesomeIcon v-if="tutorial.type === 'video'" icon="fa-video" />
+            <FontAwesomeIcon v-else-if="tutorial.type === 'text'" icon="fa-font" />
           </span>
           {{ tutorial.title }}
         </a>
         <div class="panel-block has-text-grey">
-          {{ tutorials.length }} tutorials found
+          {{ filteredTutorials.length }} tutorials found
         </div>
+        </template>
       </nav>
       <div class="box content" v-if="selectedTutorial?.description">
         <h4 class="title is-4">Tutorial Description</h4>
@@ -44,31 +51,26 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, onBeforeMount } from 'vue';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
+import { request } from '@/js/util.js';
+//@ts-expect-error
+import { marked } from 'marked'
+
 
 interface Tutorial {
   title: string,
   videoSrc: string,
-  type: "video",
-  description?: string
+  type: "video" | "text",
+  description?: string,
+  filename?: string
 }
-const TUTORIALS: Tutorial[] = [
-  {
-    title: "5 Player Tutorial Video",
-    videoSrc: "https://cdn.jackz.me/videos/tutorial-8player.mp4",
-    type: "video"
-  },
-  {
-    title: "Addon Installing Video",
-    videoSrc: "https://i.jackz.me/2023/09/DimwittedVuByh.mp4",
-    type: "video",
-    description: "Dummy"
-  }
-]
-let tutorials = ref<Tutorial[]>(TUTORIALS)
+let tutorials = ref<Tutorial[]>()
 let searchQuery = ref()
+let content = ref()
+
 const filteredTutorials = computed(() => {
+  if(!tutorials.value) return []
   if(!searchQuery.value) return tutorials.value
   const query = searchQuery.value.toLowerCase()
   return tutorials.value.filter(tut => {
@@ -77,7 +79,28 @@ const filteredTutorials = computed(() => {
 })
 let selectedTutorial = ref<Tutorial>()
 
-function selectTutorial(tutorial: Tutorial) {
+async function selectTutorial(tutorial: Tutorial) {
   selectedTutorial.value = tutorial
+  content.value = undefined
+  if(selectedTutorial.value.filename) {
+    await fetchTutorialText(selectedTutorial.value.filename)
+  }
+}
+onBeforeMount(async() => {
+  const response = await request(`../data/tutorials/tutorials.json?t=${BUILD_TIMESTAMP}`)
+  if(response?.ok) {
+    tutorials.value = await response.json()
+  }
+})
+
+async function fetchTutorialText(filename: string) {
+  const response = await fetch(`../data/tutorials/${filename}?t=${BUILD_TIMESTAMP}`)
+  if(response?.ok) {
+    content.value = marked(await response.text())
+  } else if(response && response.status == 404) {
+    content.value = "<span class='has-text-danger'>Tutorial file is missing</span>"
+  } else {
+    content.value = `<span class='has-text-danger'>An error occurred</span>`
+  }
 }
 </script>
