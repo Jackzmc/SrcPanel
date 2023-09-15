@@ -77,17 +77,16 @@
                 <table class="table is-bordered is-fullwidth">
                   <tbody>
                     <tr>
-                      <th>Share Url
-                        <Icon icon="fa-copy" data-tooltip="Click to copy" class="no-border" @click="copyShareLink(entry)"></Icon>
-                      </th>
-                      <td>{{ getShareLink(entry) }}</td>
-                    </tr>
-                    <tr>
                       <th style="width:20%">
                         Id
-                        <a class="ml-2 button is-small is-info is-pulled-right has-tooltip-right" @click="jumpTo(entry)" data-tooltip="Will ignore filters and jump to message, to understand the context">find entries nearby</a>
                       </th>
-                      <td>#{{ entry.id }}</td>
+                      <td class="pb-0">
+                        <span class="mr-2">#{{ entry.id }}</span>
+                        <div class="buttons is-inline">
+                          <a class="button is-small"><Icon icon="fa-copy" data-tooltip="Click to copy a shareable link" class="no-border" @click="copyShareLink(entry)">Share</Icon></a>
+                          <a class="ml-2 button is-small is-info" @click="jumpTo(entry)" data-tooltip="Shows messages around this message, ignoring filters">find nearby entries</a>
+                        </div>
+                      </td>
                     </tr>
                     <tr>
                       <th>Timestamp</th>
@@ -568,7 +567,7 @@ async function fetchLogs(id: number, mode: "before" | "after" | "around") {
     })
 
     cache.value.highestId = json.cache.highestId
-    console.info('Fetch took', json.timeTaken, 'ms')
+    console.info('Fetch', mode, 'took', json.timeTaken, 'ms')
     loadingTime.value = undefined
     showLoading.value = false
     return newEntries
@@ -599,9 +598,16 @@ async function jumpTo(entry: any) {
   filters.value = {
     ...filters.value,
     message: null,
-    aroundId: entry.id
   }
-  entries.value = await fetchLogs(entry.id, "around");
+  router.replace({
+    name: "logs-audit",
+    params: {
+      aroundId: entry.id
+    },
+    query: route.query
+  })
+  // showLoading.value = true
+  // entries.value = await fetchLogs(entry.id, "around");
 }
 
 function getShareLink(entry: LogEntry) {
@@ -652,7 +658,6 @@ onBeforeMount(async() => {
         if(route.query[queryName] === "") filters.value[filter] = []
         else filters.value[filter] = (route.query[queryName] as string).split(/[,+]/g)
       } else {
-        console.debug('setting', filter, (route.query[queryName] as string))
         filters.value[filter] = route.query[queryName] as string
       }
     }
