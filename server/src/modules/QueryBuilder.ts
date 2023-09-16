@@ -14,10 +14,10 @@ interface Join {
     condition: Condition,
     unsafe?: boolean
 }
-interface WhereCondition {
-    column: string,
-    condition: Condition,
-    value: any
+type WhereCondition = [string, Condition, any]
+interface WhereConditionInternal {
+    conditions: string[],
+    data: any[]
 }
 export class QueryBuilder {
     private _tableName: string
@@ -25,6 +25,7 @@ export class QueryBuilder {
     private _data: any[] = []
     private _sorts: Record<string, SortDirection> = {}
     private _whereConditions: string[] = []
+    private _orConditions: WhereConditionInternal[] = []
     private _whereData: any[] = []
     private _limit: [string, number, number?]
     private _selects: string[][] = []
@@ -132,8 +133,16 @@ export class QueryBuilder {
         }).join(" ")
     }
 
-    whereOr(conditions: WhereCondition[]) {
-
+    or(conditions: WhereCondition[]) {
+        const cond: WhereConditionInternal = {
+            conditions: [],
+            data: []
+        }
+        for(const condition of conditions) {
+            cond.conditions.push(`${escapeId(condition[0])} ${condition[1]} ?`)
+            cond.data.push(condition[2])
+        }
+        this._orConditions.push(cond)
     }
 
     where(column: string, condition: Condition, value: any) {
@@ -157,7 +166,14 @@ export class QueryBuilder {
     private _buildWhere() {
         this._data = [...this._data, ...this._whereData]
         if(this._whereConditions.length === 0) return ""
-        return `WHERE ${this._whereConditions.join(" AND ")}`
+        let str = `WHERE ${this._whereConditions.join(" AND ")}`
+        if(this._orConditions.length > 0) {
+            str += ` OR (${this._orConditions.map(c => c.conditions).join(" AND ")})`
+            for(const cond of this._orConditions) {
+                this._data = [...this._data, ...cond.data]
+            }
+        }
+        return str
     }
 
     sort(column: string, sortDirection = SortDirection.Ascending) {

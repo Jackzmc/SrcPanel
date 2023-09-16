@@ -124,7 +124,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         else if(type === 'around') {
             const half = Math.ceil(limit / 2)
             query.where("id", '>', Number(req.params.id) - half)
-                .where("id", "<=", Number(req.params.id) + half)
+                 .where("id", '<=', Number(req.params.id) + half)
         }
 
         if(req.query.search_client) query.where('client', '=', req.query.search_client)
@@ -132,17 +132,21 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         if(req.query.search_message) query.where('message','LIKE',`%${req.query.search_message}%`)
         const servers = req.query.servers?.split(/[+, ]/g)
         const types = req.query.types?.split(/[+, ]/g)
+        if(servers) {
+            query.whereIn('server', servers)
+        }
         if(types) {
+            // type in (?,?,?) OR server = 'web' AND server IN (?,?,?)
             query.whereIn('type', types)
             if(servers.includes('web')) {
                 // TODO: if .servers includes 'web', do AND type IN () OR server = 'web'
                 // query.where('server', 'web')
+                query.or([
+                    ['server', '=', 'web']
+                ])
             }
         }
-        if(servers) {
-            query.whereIn('server', servers)
-        }
-
+        
         const startTime = Date.now()
         const [logs] = (await query.execute(fastify.db))
 
