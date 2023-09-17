@@ -17,7 +17,7 @@ export const UserPrivilegeCodes = [
     , "panel.view", "panel.manage", "panel.update"
     , "servers.view", "servers.cmds.start", "servers.cmds.stop", "servers.cmds.unreserve", "servers.rcon"
     , "servers.configs.read", "servers.configs.read_raw", "servers.configs.edit"
-    , "logs.view", "logs.redact"
+    , "logs.view", "logs.redact", "admins.disable_policy_check"
 ] as const
 
 export type UserPrivilegeCode = typeof UserPrivilegeCodes[number]

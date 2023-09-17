@@ -124,18 +124,16 @@ export default class SteamAPI {
             .replace(/%TITLE%/, item.title)
         const filepath = path.join(destination, filename)
         const file = createWriteStream(filepath)
-        let curBytes = 0
         https.get(item.file_url, requestOptions, (response) => {
-            response.headers['content-length']
+            const contentLength = Number(response.headers['content-length'])
             file.on('finish', () => {
                 file.close(() => {
-                    event.emit("finish", file.bytesWritten, Number(response.headers['content-length']))
+                    event.emit("finish", file.bytesWritten, contentLength)
                     event.removeAllListeners()
                 })
             })
             response.on('data', (chunk) => {
-                curBytes += chunk.length
-                event.emit("progress", file.bytesWritten, Number(response.headers['content-length']))
+                event.emit("progress", file.bytesWritten, contentLength)
             })
             response.pipe(file)
         }).on('error', (err) => {

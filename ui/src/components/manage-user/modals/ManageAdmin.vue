@@ -4,8 +4,13 @@
     <div class="message-body">
       <b>Cannot Edit: </b>
       <div class="content">
-        <ul v-for="(reason, i) in noEditReasons" :key="i">
-          <li>{{ reason }}</li>
+        <ul>
+          <li v-for="(reason, i) in noEditReasons" :key="i">
+            {{ reason }}
+          </li>
+          <li v-for="(reason, i) in policyFailures" :key="i">
+            {{ reason }}
+          </li>
         </ul>
       </div>
     </div>
@@ -170,16 +175,25 @@
         <!-- <TagField v-model="webCodes" placeholder="Add permissions" :choices="['admins.view', 'admins.edit']" /> -->
       </Field>
     </Tab>
-    <Tab name="Danger" v-if="userAdminData">
-      <div class="field">
+    <Tab name="Danger">
+      <div class="field" v-if="userAdminData">
         <div class="control">
           <a class="button is-danger" @click='revoke'>Revoke Admin</a>
         </div>
         <p class="help has-text-danger">This will remove all admin privileges, for the web and in-game.</p>
       </div>
+      <div class="field" v-if="privUser.hasPermission('admins.disable_policy_check')">
+        <div class="control">
+          <a :class="['button',{'is-danger': form.policyCheck, 'is-info': !form.policyCheck}]" @click='togglePolicyCheck'>
+            <template v-if="form.policyCheck">Disable policy checks</template>
+            <template v-else>Enable policy checks</template>
+          </a>
+        </div>
+        <p class="help has-text-danger">This will disable any policy checks, and allow granting or editing admins. Does not disable immunity checks</p>
+      </div>
     </Tab>
   </Tabs>
-  <br>
+  <hr>
   <!-- TODO: Add a computed policy system -->
   <article class="message is-danger" v-if="policyFailures.length > 0">
     <div class="message-body content">
@@ -191,8 +205,13 @@
   </article>
   <article class="message is-warning" v-if="noPermsGiven">
     <div class="message-body">
-      <p><b>Warning: </b>No permissions has been granted to the user. The user's access will be very restricted.</p>
+      <p><b>Warning:</b> No permissions have been granted to the user. The user will not have any admin privileges in game and limited access to the admin panel.</p>
       <p>Apply a permission group, apply some base permissions, or some web permissions.</p>
+    </div>
+  </article>
+  <article class="message is-warning" v-if="!form.policyCheck">
+    <div class="message-body">
+      <p><b>Warning:</b> Policy checks have been ignored. </p>
     </div>
   </article>
   <Teleport to="#manage-user-footer">
@@ -242,14 +261,17 @@ let groups = ref<AdminGroup[]>([])
 let form = ref<{
   immunity: number,
   flags: string[],
+  policyCheck: boolean
 }>({
   immunity: 0,
   flags: [],
+  policyCheck: true,
 })
 function reset() {
   form.value = {
     flags: props.userAdminData?.permissions.base.flags?.split("") || [],
     immunity: props.userAdminData?.permissions.base.immunityLevel || 0,
+    policyCheck: true
   }
 }
 let stats = ref<Record<string, string|number>|null>()
@@ -267,11 +289,10 @@ const noEditReasons = computed(() => {
   const reasons = []
   if(!props.privUser.hasPermission("admins.edit", props.user.steamid)) reasons.push("You lack the privileges to edit privileges")
   if(props.userAdminData && form.value.immunity >= props.privUser.immunityLevel) reasons.push("You lack the access to edit this user")
-  if(policyFailures.value.length > 0) reasons.push(...policyFailures.value)
   return reasons
 })
 const canEdit = computed(() => {
-  return noEditReasons.value.length == 0
+  return noEditReasons.value.length == 0 && (!form.value.policyCheck || policyFailures.value.length == 0)
 })
 
 const policyFailures = computed(() => {
@@ -297,12 +318,12 @@ const playtime = computed(() => {
 const noAddReasons = computed(() => {
   const msgs = []
   if(hoursPlayed.value < MIN_HOURS_PLAYTIME) {
-    msgs.push(`A minimum of ${MIN_HOURS_PLAYTIME} hours of playtime is required.`)
+    msgs.push(POLICY_MSG_MIN_HOURS_OF_PLAYTIME)
   }
   return msgs
 })
 const cantAddAdmin = computed(() => {
-  return noAddReasons.value.length > 0 || !canEdit.value
+  return noAddReasons.value.length > 0 && !(!form.value.policyCheck || policyFailures.value.length == 0) && !canEdit.value
 })
 
 const noPermsGiven = computed(() => {
@@ -319,6 +340,9 @@ function expandGroup(id: number) {
     expandedGroup.value = undefined
   else
     expandedGroup.value = groups.value.find(group => group.id === id)
+}
+function togglePolicyCheck() {
+  form.value.policyCheck = !form.value.policyCheck
 }
 
 interface POSTAdminAPI {

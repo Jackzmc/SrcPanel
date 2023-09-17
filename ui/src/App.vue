@@ -1,5 +1,6 @@
 <template>
   <div id="app">
+    <v-tour v-if="tour" :name="tour.name" :steps="tour.steps"></v-tour>
     <Notifications position="top center" :duration=7000 @start="onNotificationShown" />
     <NavBar v-if="!$route.meta.hideNav" @logout="onLogout" :update-info="updateInfo" :priv-user="privUser" @notifications:clear="clearNotifications" />
     <br>
@@ -35,6 +36,7 @@ import { PrivilegedUser} from '@/js/User'
 import { NotificationItem, notify } from '@kyvg/vue3-notification';
 import { ClientUserData } from '../../common-types/User';
 import * as Sentry from "@sentry/vue";
+import { request } from './js/util.js';
 
 const LAST_UPDATED = new Date(Number(BUILD_TIMESTAMP))
 const lastUpdated = computed(() => {
@@ -51,6 +53,7 @@ let updateInfo = ref<{
 
 let userdata = ref<ClientUserData>()
 let privUser = ref<PrivilegedUser>()
+let tour = ref<{name: string, steps: any[]}|undefined>()
 
 function reloadPage() {
   if (!updateInfo.value.registration || !updateInfo.value.registration.waiting) return console.warn("reloadPage() called when no sw update")
@@ -162,9 +165,20 @@ function onLogout() {
   privUser.value = undefined
 }
 
+async function loadTour(tourId: string) {
+  const response = await request(`/tutorials/tours/${tourId}.json`)
+  if(response?.ok) {
+    const json = await response.json()
+    tour.value = json
+  }
+}
+
 onBeforeMount(async() => {
   document.addEventListener('swUpdated', updateAvailable, { once: true })
   document.addEventListener('swUpdating', () => updateInfo.value.updating = true, { once: true })
   await getAuth()
+  if(route.query.tour) {
+    loadTour(route.query.tour as string)
+  }
 })
 </script>

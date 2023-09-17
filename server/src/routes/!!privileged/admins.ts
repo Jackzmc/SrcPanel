@@ -27,27 +27,11 @@ const PUTAdmin = Type.Object({
 export type POSTAdminType = Static<typeof POSTAdmin>
 export type PUTAdminType = Static<typeof PUTAdmin>
 
-interface AddonListEntry {
-    filename: string,
-    workshop?: {
-        deleted: boolean
-        title: string,
-        filesize: number,
-    },
-    shareInfo: Record<string, boolean>
-}
-
-interface AddonChildListEntry {
-    filename: string,
-    workshop?: {
-        title: string,
-        filesize: number,
-    },
-}
-
 export const MAIN_DB = process.env.MYSQL_DB ? `\`${process.env.MYSQL_DB}\`` : null
 export const ADMINS_DB = process.env.MYSQL_ADMINS_DB ? `\`${process.env.MYSQL_ADMINS_DB}\`` : null
 
+// TODO: Policy checks
+// TODO: Disable policy checks
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
     fastify.get('/', async(req, res) => {
