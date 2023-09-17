@@ -8,6 +8,9 @@ import { unlink } from 'fs/promises';
 import { WorkshopItem, SteamUserDetails } from '../../../common-types/Share.js'
 import { EventEmitter } from 'node:events';
 
+// How many bytes of progress to make before sending an update
+const PROGRES_MIN_BYTES = 1000
+
 export default class SteamAPI {
     private apikey: string
     private userAgent: string
@@ -132,8 +135,14 @@ export default class SteamAPI {
                     event.removeAllListeners()
                 })
             })
+            let progressBytes = 0
             response.on('data', (chunk) => {
-                event.emit("progress", file.bytesWritten, contentLength)
+                // Only send updates every PROGRES_MIN_BYTES bytes 
+                progressBytes += chunk.length
+                if(progressBytes > PROGRES_MIN_BYTES) {
+                    progressBytes = 0
+                    event.emit("progress", file.bytesWritten, contentLength)
+                }
             })
             response.pipe(file)
         }).on('error', (err) => {
