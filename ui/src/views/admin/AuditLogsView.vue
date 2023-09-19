@@ -254,46 +254,6 @@ import SimpleTypeahead from 'vue3-simple-typeahead';
 import 'vue3-simple-typeahead/dist/vue3-simple-typeahead.css'
 //@ts-ignore
 import InfiniteLoading from "v3-infinite-loading";
-import { sleep } from '../../js/util';
-let userSearchItems = ref([])
-async function searchUsers(e: any) {
-  if(!e.input || e.input.length < 3) return userSearchItems.value = []
-  const response = await request(`/api/users/search/${e.input}`)
-  if(response?.ok) {
-    const json = await response.json()
-    userSearchItems.value = json.users
-  }
-}
-function projectUser(user: any) {
-  return `${user.name} (${user.steamid})`
-}
-function onSelectUser(filter: string, user: any) {
-  filters.value[filter] = user.steamid
-  fetchDebounce()
-}
-function onUserSearchBlur(filter: string, event: any) {
-  if(event.input.length < 3) {
-    filters.value[filter] = null
-    fetchDebounce()
-  }
-}
-function clearFilter(filter: string) {
-  filters.value[filter] = [];
-  updateParams()
-  search()
-}
-
-function selectAllFilter(filter: string) {
-  filters.value[filter] = Object.keys(FILTER_DATA[filter])
-  updateParams()
-  search()
-}
-
-function viewPendingEntries() {
-  if(!entries.value) return
-  entries.value = [...pendingEntries.value, ...entries.value.slice(0, -pendingEntries.value.length) ]
-  pendingEntries.value = []
-}
 
 const route = useRoute()
 const router = useRouter()
@@ -340,15 +300,17 @@ const DATA_SOURCES: Record<string, string> = {
   archive: "Archive (2020-2022)"
 }
 
+const ADMINCHAT_REGEX = new RegExp(/triggered sm_say \(text (.*)\)/);
+const CONSOLE_SAY_REGEX = new RegExp(/(sm_say|sm_chat) "?([^"]*)"?/)
 
 const props = defineProps<{
   privUser: PrivilegedUser
 }>();
 
+let userSearchItems = ref([])
 let now = ref()
 let loadingTime = ref<number|undefined>(Date.now())
 let showLoading = ref<boolean>(true)
-let lastRefresh = ref<number>()
 let hoverId = ref()
 let limit = ref(DEFAULT_LIMIT);
 let totalEntries = ref(0)
@@ -381,12 +343,12 @@ interface LogEntry {
   showDetails: boolean
 }
 let pendingEntries = ref<LogEntry[]>([])
-
 let infiniteScroll = ref()
 let infiniteScrollLoading = ref<"top"|"bottom">()
 
-const ADMINCHAT_REGEX = new RegExp(/triggered sm_say \(text (.*)\)/);
-const CONSOLE_SAY_REGEX = new RegExp(/(sm_say|sm_chat) "?([^"]*)"?/)
+let fetchAbort: AbortController | null = null
+let logInfo = ref<{cache:Record<string,{totalRows:number,highestId:number}>}>({cache:{}})
+let firstLoad = false
 
 const highlightRegex = computed(() => {
   return filters.value.message ? new RegExp(`(${filters.value.message})`, 'ig') : undefined
@@ -395,6 +357,45 @@ const loadingDuration = computed(() => {
   if(!loadingTime.value) return "0.0"
   return Math.max(((now.value - loadingTime.value) / 1000), 0).toFixed(1)
 })
+
+async function searchUsers(e: any) {
+  if(!e.input || e.input.length < 3) return userSearchItems.value = []
+  const response = await request(`/api/users/search/${e.input}`)
+  if(response?.ok) {
+    const json = await response.json()
+    userSearchItems.value = json.users
+  }
+}
+function projectUser(user: any) {
+  return `${user.name} (${user.steamid})`
+}
+function onSelectUser(filter: string, user: any) {
+  filters.value[filter] = user.steamid
+  fetchDebounce()
+}
+function onUserSearchBlur(filter: string, event: any) {
+  if(event.input.length < 3) {
+    filters.value[filter] = null
+    fetchDebounce()
+  }
+}
+function clearFilter(filter: string) {
+  filters.value[filter] = [];
+  updateParams()
+  search()
+}
+
+function selectAllFilter(filter: string) {
+  filters.value[filter] = Object.keys(FILTER_DATA[filter])
+  updateParams()
+  search()
+}
+
+function viewPendingEntries() {
+  if(!entries.value) return
+  entries.value = [...pendingEntries.value, ...entries.value.slice(0, -pendingEntries.value.length) ]
+  pendingEntries.value = []
+}
 
 function toggleFilter(filter: string, key: string) {
   if(filters.value[filter] && Array.isArray(filters.value[filter])) {
@@ -436,8 +437,6 @@ function updateParams() {
   return params.toString()
 }
 
-let fetchAbort: AbortController | null = null
-let logInfo = ref<{cache:Record<string,{totalRows:number,highestId:number}>}>({cache:{}})
 const cache = computed({
   get() {
     return logInfo.value.cache[dataSource.value]
@@ -476,7 +475,6 @@ async function loadBottomContent() {
   entries.value = [...entries.value, ...newEntries]
   infiniteScrollLoading.value = undefined
 }
-let firstLoad = false
 async function loadTopContent() {
   // Do not fire if loading, or if there is no content available
   if(!firstLoad) {
@@ -624,7 +622,7 @@ async function copyShareLink(entry: any) {
   await window.navigator.clipboard.writeText(link)
   notify({
     type: "success",
-    text: "Link copied to clipboard"
+    text: "Shareable link copied to clipboard"
   })
 }
 
@@ -637,7 +635,6 @@ onBeforeMount(async() => {
   }, 100)
 
   await getInfo()
-
 
   // If /admin/audit/:id is used, fetch that, and just grab filters, but wont be used
   if(route.params.aroundId) {
