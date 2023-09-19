@@ -300,7 +300,7 @@ const DATA_SOURCES: Record<string, string> = {
   archive: "Archive (2020-2022)"
 }
 
-const ADMINCHAT_REGEX = new RegExp(/triggered sm_say \(text (.*)\)/);
+const ADMINCHAT_REGEX = new RegExp(/triggered (sm_say|sm_chat) \(text (.*)\s*\)/);
 const CONSOLE_SAY_REGEX = new RegExp(/(sm_say|sm_chat) "?([^"]*)"?/)
 
 const props = defineProps<{
@@ -526,7 +526,7 @@ async function fetchLogs(id: number, mode: "before" | "after" | "around") {
         if(match) {
           entry.adminChat = true
           entry.type = 'CHAT'
-          message = match[1]
+          message = match[2]
         }
       }
       if(entry.server === 'web' && entry.metata?.cmd && entry.type.startsWith("servers.rcon.")) {
