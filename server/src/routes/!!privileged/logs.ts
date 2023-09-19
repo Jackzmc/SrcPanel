@@ -33,8 +33,7 @@ type LogQueryType = Static<typeof LogQuery>
 
 export const ACTIVITY_LOG_TABLE_NAME = 'activity_log'
 const LOG_TOTAL_ROW_CACHE_TIME = 30_000 //ms
-const MISSING_NAME_MAX_QUEUED = 90
-const MISSING_NAME_MIN_INTERVAL = 1000 * 60 // Only fetch per minute
+const MISSING_NAME_MIN_INTERVAL = 1000 * 30 // Do not fetch if last fetch was between this
 
 let logServerCache = []
 interface DataCache {
@@ -43,9 +42,7 @@ interface DataCache {
     lastFetchTime: number
 }
 let cache: Record<string, DataCache> = {}
-
-let missingNameSet = new Set<SteamID>()
-let lastMissingFetch = Date.now()
+let lastMissingNameFetchTime
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
     const [rows] = await fastify.db.query<RowDataPacket[]>(`SELECT DISTINCT server FROM ${ACTIVITY_LOG_TABLE_NAME} ORDER BY timestamp DESC`)
@@ -63,16 +60,6 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         return cache[tableName]
     }
 
-    function addMissingName(id: string) {
-        missingNameSet.add(new SteamID(id))
-        if(missingNameSet.size >= MISSING_NAME_MAX_QUEUED || Date.now() - lastMissingFetch > MISSING_NAME_MIN_INTERVAL) {
-            console.log("[$r/logs]", "Updating missing names")
-            fastify.users.fetchUsers([...missingNameSet].slice(0,100))
-            missingNameSet.clear()
-            lastMissingFetch = Date.now()
-        }
-    }
-
     fastify.get('/data', async(req, reply) => {
         return {
             servers: logServerCache,
@@ -81,17 +68,6 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 archive: await getTotalRows("activity_log_archive")
             }
         }
-    })
-
-    fastify.post('/batch', (req: FastifyRequest<{ Querystring: LogQueryType, Params: { page?: number } }>, reply) => {
-        const id = fastify.jobs.add("SELECT * FROM activity_log", "SELECT COUNT(*) FROM activity_log", [], [])
-        return { id }
-    })
-
-    fastify.get('/batch/:id', (req: FastifyRequest<{ Params: { id: number } }>, reply) => {
-        if(!req.params.id) return "404"
-        const response = fastify.jobs.get(req.params.id)
-        return response
     })
 
     const VALID_TYPES = ["before","after","around"]
@@ -148,7 +124,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
         
         const startTime = Date.now()
-        const [logs] = (await query.execute(fastify.db))
+        let [logs] = (await query.execute(fastify.db))
 
         let cache = await getTotalRows(tableName)
         if(logs.length > 0) {
@@ -159,22 +135,49 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 cache[tableName].highestId = highestRow.id
             }
         }
+        const missingNameSet = new Set<SteamID>()
+
+        logs = logs.map(log => {
+            if(log.metadata) log.metadata = JSON.parse(log.metadata)
+            // If its a valid user but no name, then put it in a list to be updated:
+            if(!log.clientName && log.client?.startsWith("STEAM_")) {
+                missingNameSet.add(new SteamID(log.client))
+            }
+            if(!log.targetName && log.target?.startsWith("STEAM_")) {
+                missingNameSet.add(new SteamID(log.target))
+            }
+            return log
+        })
+
+        // If we have missing names, fetch it in bulk (only every MISSING_NAME_MIN_INTERVAL ms)
+        if(missingNameSet.size > 0 && Date.now() - lastMissingNameFetchTime > MISSING_NAME_MIN_INTERVAL) {
+            try {
+                const newNames = await fastify.users.fetchUsers([...missingNameSet])
+                const nameRecord: Record<string,string> = {}
+                // Push it into a record
+                for(const user of newNames) {
+                    nameRecord[user.steamid] = user.name
+                }
+                // Iterate logs and replace
+                for(const log of logs) {
+                    if(log.client && !log.clientName) {
+                        log.clientName = nameRecord[log.client]
+                    }
+                    if(log.target && !log.targetName) {
+                        log.targetName = nameRecord[log.target]
+                    }
+                }
+                lastMissingNameFetchTime = Date.now()
+            } catch(err) {
+                fastify.log.warn(`[logs] Could not fetch missing names (${[...missingNameSet].toString()}):`, err)
+            }
+        }
+
 
         return {
-            logs: logs.map(log => {
-                if(log.metadata) log.metadata = JSON.parse(log.metadata)
-                // If its a valid user but no name, then put it in a list to be updated:
-                if(!log.clientName && log.client?.startsWith("STEAM_")) {
-                    addMissingName(log.client)
-                }
-                if(!log.targetName && log.target?.startsWith("STEAM_")) {
-                    addMissingName(log.target)
-                }
-                return log
-            }),
+            logs,
             timeTaken: Date.now() - startTime,
             cache,
-            // wasOptimized: optimized,
             totals: {
                 total: cache.totalRows, // # of rows in entire data source
                 // filteredTotal: count[0].count, // # of rows in entire data source WITH filters
