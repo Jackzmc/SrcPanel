@@ -26,10 +26,17 @@
   </div>
   <hr>
   <div class="">
-    <h4 class="title is-4">
-      <span class="is-inline">Keybinds</span>
-      <input class="input is-inline is-small is-pulled-right is-inline" style="width:60%" type="text"  v-model="command" />
-    </h4>
+    <div class="columns">
+      <div class="column is-1">
+        <span class="is-inline">Keybinds</span>
+      </div>
+      <div class="column is-3">
+        <input :class="['input','is-inline','is-small','is-inline',{'is-danger': isInvalidCommand}]" style="width:100%" type="text"  v-model="command" />
+        <p class="help is-danger" v-if="isInvalidCommand">
+          Keybinds require the console command prefix <b>sm_</b>. Replace <b>/</b> or <b>!</b> with <b>sm_</b>
+        </p>
+      </div>
+    </div>
     <div class="list has-hoverable-list-items">
         <div class="list-item" v-for="(keybind, i) in keybinds" :key="keybind">
           <div class="list-item-content" style="text-decoration: none">
@@ -51,7 +58,7 @@
 <script setup lang="ts">
 import Keyboard from 'simple-keyboard';
 import 'simple-keyboard/build/css/index.css';
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, onBeforeMount, computed } from 'vue';
 import { notify } from '@kyvg/vue3-notification';
 
 let keyboard = ref()
@@ -62,6 +69,10 @@ let numpadEnd = ref()
 
 let keybinds = ref<any[]>([])
 let command = ref("sm_example_command")
+
+const isInvalidCommand = computed(() => {
+  return command.value.startsWith('/') || command.value.startsWith('!')
+})
 
 onMounted(() => {
   const options = {
@@ -156,6 +167,17 @@ function onKeyPress(button: string) {
     button = orgButton
   }
   keybinds.value.splice(0, 0, `bind ${button} "${command.value}"`)
+  save()
+}
+
+function save() {
+  window.localStorage.setItem('panel_keybinds', JSON.stringify(keybinds.value))
+}
+function load() {
+  const data = window.localStorage.getItem("panel_keybinds")
+  if(data) {
+    keybinds.value = JSON.parse(data)
+  }
 }
 
 const BUTTON_MAP: Record<string, string> = {
@@ -203,7 +225,9 @@ const BUTTON_MAP: Record<string, string> = {
   "{arrowdown}": "downarrow",
 
 }
-
+onBeforeMount(() => {
+  load()
+})
 </script>
 
 <style scoped>
