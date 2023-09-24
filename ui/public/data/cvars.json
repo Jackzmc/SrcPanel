@@ -149,5 +149,10 @@
         "cvar": "l4d2_crescendo_control <0/1/2:int>",
         "default": 1,
         "description": "Disables players from running far head and starting events. 1 = On, 2 = Admins bypass only can start events"
+    },
+    {
+        "cvar": "sm_autoidle_ping_max <0.0-1000.0:float>",
+        "default": 420.0,
+        "description": "If non-zero, will automatically make players idle when their ping averages to over this threshold."
     }
 ]

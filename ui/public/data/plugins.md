@@ -107,21 +107,22 @@ On first spawn, another feature is to give the incoming player's a random weapon
 
 There was some conflicts - one being ABM's spawning item feature, and another being giving them to their idle bot.
 
-ABM feature was easy to disable, but the other conflict was hard to figure out. When players first join, they are technically idle as the bot until they fully load in. When my plugin attempted to give items, the items would tend to drop on the floor infront. Now items are given directly to the player, which 90% of the time causes no dropped items.
+The ABM feature was easy to disable, but the other conflict was hard to figure out. When players first join, they are technically idle as the bot until they fully load in. When my plugin attempted to give items, the items would tend to drop on the floor infront. Now items are given directly to the player, which 80% of the time causes no dropped items.
 
 ### Extra Tanks
 
-This system is still a work in progress but its goal is simple:
+The goal is simple:
 
-During games where there are 7 or more players, tanks are by default (determined by another plugin, ABM) spawned with an increased health dependent on player count.
+During games where there are 5 or more players, tanks are by default (determined by another plugin, ABM) spawned with an increased health dependent on player count.
 
-The problem is, lots of players decide to not help with the tank, or there is too much activity or not enough room to all cleanly attack the tank. 
+The problem is, lots of players decide to not help with the tank, or there is too much activity or not enough room to all cleanly attack the tank. This usually means only around 30-40% of players are actively doing anything.
 
-My solution is during non-finale tanks is to wait for a tank to spawn, and then "split" it's health, such that a 8000 (default is ~4,000) HP tank would now have 4,000 hp and another tank spawns with 4,000 as well. This has the benefit that a game of 7-8 players can break into two squads that fight the tanks, which mimicks the traditional 4-player behavior. 
+
+The solution is during non-finale tanks is to wait for a tank to spawn, and then "split" it's health, such that the ABM-increased 8000 HP tank would now have 4000 HP (4,000 is the default for advanced) and another tank spawns with 4000 HP as well. This has the benefit that a game of 7-8 players can hopefully break into two squads that fight the tanks, which helps mimic the traditional 4-player behavior.
 
 #### Finales
 
-The original system only did the splitting on the second finale tank, but after some games (ahem), I decided its necessary to always occur, but I didn't want to scrap the finale system.
+The original system only did the splitting on the second finale tank, but after some games (ahem), I decided its necessary for it to always occur, but I didn't want to scrap the finale system.
 
 The current system as it stands instead just spawns a second tank, normal health (I actually don't know if it has scaled player health) such that you'll fight 3.
 
@@ -132,4 +133,27 @@ A logical issue caused the first time, for it to get stuck in an infinite spawn 
 
 Another issue is the health, when I had the original finale split tanks health means they die really fast, like normal difficulty tanks, which isn't as enjoyable.
 
-Another problem is when its too much, as hard rain finale two full hp tanks is a little extreme.
+Another problem is when its too much, such as Hard Rain's finale. Two 8,000 HP tanks is a little bit extreme.
+
+### Extra Witches
+
+I wanted to have extra witches spawn, scaled by player count. This system has a lot of complexity, to ensure it still makes the game random and unpredictable. The system works as follows:
+
+1. On map start, knowing the amount of players from the previous round (`abmExtraCount` in code), two biased, up-to 7-sided, dice are rolled.
+
+	* The dice are biased to the left, [with this distribution (https://anydice.com/program/c91)](https://anydice.com/program/c91)
+	* The minimum value of the dice is determined by `ceil((abmExtraCount - 4)/ 4)` where abmExtraCount is the internal variable tracking the number of players. The `abmExtraCount - 4` is to extract the number of _extra players_ (minus the 4 base players), and it's divided by 4 to slow it's increment.
+2. The dice roll determines how many extra witches (the normal game director still can spawn its own witch) will spawn. Let's call that N
+3. For every number of extra witches, a flow position is calculated between [0, M]
+	* **M** is the map's maximum flow (see **Crescendo Stopper** for explanation)
+	* The value is offset by **FLOW_CUTOFF** which is an arbitrary value that is chosen to prevent tanks from spawning too close to the beginning and ending saferooms / areas.
+	* The end result is `[0 + FLOW_CUTOFF, M - FLOW_CUTOFF]`
+4. A timer is created that runs periodically that first:
+	a. Checks that at least **DIRECTOR_WITCH_MIN_TIME** (120 seconds) has passed since the last time _any_ witches (not just ours) have spawned
+	b. There has not been N amount of witches spawned (`totalWitchesSpawned < N`)
+5. The timer iterates over all flow positions calculated earlier, and checks if the highest flow achieved on the chapter is greater or equal to the flow.
+	* If it is, a witch is spawned and the flow value is reset to 0.0 (to stop it continuously spawning more). The iteration breaks on the first witch spawn, we don't want to spawn more than one at a time.
+	 
+#### Witch Spawning
+How the witch is spawned is pretty simple, there is a built in game command `z_spawn_old` that has an option to spawn like the director, `z_spawn_old witch auto`, that will spawn just like the director would.
+The only gotcha is that the command runs around the player who executed the command. We run the command on behalf of the client with the highest flow value on the map, hoping that the director spawns the witch _ahead_ and not on-top or behind the survivors. Let's hope that works.
