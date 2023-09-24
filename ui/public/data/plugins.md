@@ -143,17 +143,23 @@ I wanted to have extra witches spawn, scaled by player count. This system has a 
 
 	* The dice are biased to the left, [with this distribution (https://anydice.com/program/c91)](https://anydice.com/program/c91)
 	* The minimum value of the dice is determined by `ceil((abmExtraCount - 4)/ 4)` where abmExtraCount is the internal variable tracking the number of players. The `abmExtraCount - 4` is to extract the number of _extra players_ (minus the 4 base players), and it's divided by 4 to slow it's increment.
-2. The dice roll determines how many extra witches (the normal game director still can spawn its own witch) will spawn. Let's call that N
-3. For every number of extra witches, a flow position is calculated between [0, M]
+
+2. The dice roll determines how many extra witches (the normal game director still can spawn its own witch) will spawn. Let's call that **N**
+3. For every number of extra witches, a random flow position is calculated between [0, M]
 	* **M** is the map's maximum flow (see **Crescendo Stopper** for explanation)
 	* The value is offset by **FLOW_CUTOFF** which is an arbitrary value that is chosen to prevent tanks from spawning too close to the beginning and ending saferooms / areas.
 	* The end result is `[0 + FLOW_CUTOFF, M - FLOW_CUTOFF]`
 4. A timer is created that runs periodically that first:
-	a. Checks that at least **DIRECTOR_WITCH_MIN_TIME** (120 seconds) has passed since the last time _any_ witches (not just ours) have spawned
-	b. There has not been N amount of witches spawned (`totalWitchesSpawned < N`)
+	
+    * Checks that at least **DIRECTOR_WITCH_MIN_TIME** (120 seconds) has passed since the last time _any_ witches (not just ours) have spawned
+
+	* There has not been **N** amount of witches spawned (`totalWitchesSpawned < N`)
+
+
 5. The timer iterates over all flow positions calculated earlier, and checks if the highest flow achieved on the chapter is greater or equal to the flow.
 	* If it is, a witch is spawned and the flow value is reset to 0.0 (to stop it continuously spawning more). The iteration breaks on the first witch spawn, we don't want to spawn more than one at a time.
 	 
 #### Witch Spawning
 How the witch is spawned is pretty simple, there is a built in game command `z_spawn_old` that has an option to spawn like the director, `z_spawn_old witch auto`, that will spawn just like the director would.
+
 The only gotcha is that the command runs around the player who executed the command. We run the command on behalf of the client with the highest flow value on the map, hoping that the director spawns the witch _ahead_ and not on-top or behind the survivors. Let's hope that works.
