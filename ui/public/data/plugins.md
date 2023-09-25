@@ -150,7 +150,6 @@ I wanted to have extra witches spawn, scaled by player count. This system has a 
 	* The value is offset by **FLOW_CUTOFF** which is an arbitrary value that is chosen to prevent tanks from spawning too close to the beginning and ending saferooms / areas.
 	* The end result is `[0 + FLOW_CUTOFF, M - FLOW_CUTOFF]`
 4. A timer is created that runs periodically that first:
-	
     * Checks that at least **DIRECTOR_WITCH_MIN_TIME** (120 seconds) has passed since the last time _any_ witches (not just ours) have spawned
 
 	* There has not been **N** amount of witches spawned (`totalWitchesSpawned < N`)

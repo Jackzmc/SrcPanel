@@ -68,16 +68,18 @@ export default class Share {
     }
 
     public async getAddons() {
+        console.time('getAddons:readdir')
         const dirents = await readdir(this.sourceFolder, { withFileTypes: true }) 
+        console.timeEnd('getAddons:readdir')
         const steamResolveQueue: string[] = [] // Array of workshop ids
         const results: (AddonInfo|AddonCollectionInfo)[] = []
         let collections: Record<string, AddonCollectionInfo> = {}
+        console.time('getAddons:direntLoop')
         for(const dirent of dirents) {
             if(dirent.isFile()) {
                 // Only fetch the specified extenstions
                 const ext = dirent.name.split(".").pop()
                 if(this.validExts && !this.validExts.includes(ext)) continue
-
 
                 const addonInfo = await this.getAddonInfo(dirent.name)
                 if(addonInfo) {
@@ -109,11 +111,14 @@ export default class Share {
                             ...fsinfo,
                             installInfo: (await this.getInstallInfo(dirent.name)).states
                         })
+                        console.time('getAddons:direntLoop:addAddonEntry')
                         await this.addAddonEntry(dirent.name, fsinfo)
+                        console.timeEnd('getAddons:direntLoop:addAddonEntry')
                     }
                 }
             }
         }
+        console.timeEnd('getAddons:direntLoop')
 
         for(const collection of Object.values(collections)) {
             results.push({
@@ -122,6 +127,8 @@ export default class Share {
             })
         }
 
+        console.debug('getAddons:steamResolveQueue.length', steamResolveQueue.length)
+        console.time('getAddons:steamResolveQueue')
         while(steamResolveQueue.length > 0) {
             const slice = steamResolveQueue.splice(0, 100)
             const wsDetails = await this.steam.getItemDetails(slice)
@@ -133,10 +140,12 @@ export default class Share {
                     installInfo: (await this.getInstallInfo(filename)).states,
                     workshop
                 })
-
+                console.time('getAddons:steamResolveQueue:addAddonEntry')
                 await this.addAddonEntry(filename, null, workshop)
+                console.timeEnd('getAddons:steamResolveQueue:addAddonEntry')
             }
         } 
+        console.timeEnd('getAddons:steamResolveQueue')
 
         return results
     }
