@@ -51,14 +51,18 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed, onBeforeMount } from 'vue';
+import { ref, onMounted, computed, onBeforeMount, watchEffect, watch } from 'vue';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
+import { useRoute, useRouter } from 'vue-router';
 import { request } from '@/js/util.js';
 //@ts-expect-error
 import { marked } from 'marked'
 
+const route = useRoute()
+const router = useRouter()
 
 interface Tutorial {
+  id: string,
   title: string,
   videoSrc: string,
   type: "video" | "text",
@@ -85,16 +89,30 @@ async function selectTutorial(tutorial: Tutorial) {
   if(selectedTutorial.value.filename) {
     await fetchTutorialText(selectedTutorial.value.filename)
   }
+  router.replace({params: { id: tutorial.id }})
 }
 onBeforeMount(async() => {
-  const response = await request(`../data/tutorials/tutorials.json?t=${BUILD_TIMESTAMP}`)
+  const response = await request(`/data/tutorials/tutorials.json?t=${BUILD_TIMESTAMP}`)
   if(response?.ok) {
     tutorials.value = await response.json()
+    if(route.params.id) {
+      const tutorial = tutorials.value!.find(tut => tut.id === route.params.id)
+      if(tutorial) selectTutorial(tutorial)
+      else console.warn(`No tutorial found with id ${route.params.id}`)
+    }
   }
 })
 
+// TODO: use router-link instead?
+watch(() => route.params.id, (id) => {
+  if(!tutorials.value) return
+  const tutorial = tutorials.value.find(tut => tut.id === id)
+  if(tutorial) selectTutorial(tutorial)
+  else console.warn(`No tutorial found with id ${id}`)
+})
+
 async function fetchTutorialText(filename: string) {
-  const response = await fetch(`../data/tutorials/${filename}?t=${BUILD_TIMESTAMP}`)
+  const response = await fetch(`/data/tutorials/${filename}?t=${BUILD_TIMESTAMP}`)
   if(response?.ok) {
     content.value = marked(await response.text())
   } else if(response && response.status == 404) {

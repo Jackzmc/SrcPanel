@@ -94,6 +94,7 @@ export default class Share {
                         results.push(addonInfo)
                     }
                 } else {
+                    // TODO: Figure out optimization, perhaps new downloads aren't being fetched in cache.?
                     const match = dirent.name.match(WS_ITEMID_REGEX)
                     const isSteamItem = match && match.length == 2
                     if(isSteamItem) {
@@ -210,12 +211,12 @@ export default class Share {
     }
 
     public async getInstallInfo(filename: string) {
-        const statInfo = await this.doesFileExist(this.sourceFolder, filename)
+        const statInfo = await this.getFileInfo(this.sourceFolder, filename)
         if(statInfo) {
             let states: Record<string, boolean> = {}
             if(this.destinations) {
                 for(const [id, dest] of Object.entries(this.destinations)) {
-                    states[id] = await this.doesFileExist(dest.path, filename) !== null
+                    states[id] = await this.getFileInfo(dest.path, filename) !== null
                 }
             }
             return { 
@@ -248,7 +249,7 @@ export default class Share {
         const dest = this.destinations[destinationKey]
         if(!dest) throw new Error(`Destination "${destinationKey}" does not exist`)
         
-        if(!this.doesFileExist(this.sourceFolder, filename)) {
+        if(!this.getFileInfo(this.sourceFolder, filename)) {
             throw new Error(`File \"${filename}\" does not exist in ${this.sourceFolder}`)
         }
         try {
@@ -265,7 +266,7 @@ export default class Share {
         const dest = this.destinations[destinationKey]
         if(!dest) throw new Error(`Destination "${destinationKey}" does not exist`)
         
-        if(!this.doesFileExist(this.sourceFolder, filename)) {
+        if(!this.getFileInfo(this.sourceFolder, filename)) {
             throw new Error(`File \"${filename}\" does not exist in ${this.sourceFolder}`)
         }
 
@@ -277,7 +278,7 @@ export default class Share {
         }
     }
 
-    private async doesFileExist(folder: string, file: string) {
+    private async getFileInfo(folder: string, file: string) {
         try {
           return await stat(path.join(folder, file))
         } catch(err) {
