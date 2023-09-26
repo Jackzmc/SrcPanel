@@ -81,7 +81,9 @@ export default class Share {
                 const ext = dirent.name.split(".").pop()
                 if(this.validExts && !this.validExts.includes(ext)) continue
 
+                console.time(`getAddons:direntLoop:getaddonInfo("${dirent.name}")`)
                 const addonInfo = await this.getAddonInfo(dirent.name)
+                console.timeEnd(`getAddons:direntLoop:getaddonInfo("${dirent.name}")`)
                 if(addonInfo) {
                     if(addonInfo.collection) {
                         if(!collections[addonInfo.collection.id]) collections[addonInfo.collection.id] = { 
