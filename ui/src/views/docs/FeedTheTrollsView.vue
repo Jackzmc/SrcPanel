@@ -90,12 +90,16 @@ let trolls = ref<Record<string,any>>({})
 let combos = ref<Record<string,any>>({})
 let modal = ref<{content?: string, troll?: any}>({})
 
+const MODE_MAP: Record<string, string> = {
+  "constant": "Always active",
+  "instant": "Runs once"
+}
 
 function getTooltip(troll: any) {
   let modes = ''
-  if(troll.modes)
-    modes = troll.modes.map((v: any) => `runs ${v}ly`).join("\n-or-\n")
-  else
+  if(troll.modes) {
+    modes = troll.modes.map((v: any) => MODE_MAP[v] || "???").join("\n-or-\n")
+  } else
     console.warn("No modes found for", troll.name)
 
   const flags = troll.prompts ? `\n\nClick to view flags` : ''

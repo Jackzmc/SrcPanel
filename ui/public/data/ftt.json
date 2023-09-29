@@ -20,6 +20,14 @@
             "name": "Witch Magnet",
             "description": "All witches when startled will target any player with this troll",
             "modes": ["constant"]
+        },
+        {
+            "name": "Projectile Magnet", 
+            "description": "Makes all projectiles (biles, molotovs, pipes, tank rocks) go to player",
+            "modes": ["constant"],
+            "prompts": [
+                { "flags": ["Infected (rocks/goo)", "Teammates (grenades)", "Thrown Tank Objects"], "multiple": true}
+            ]
         }
     ],
     "Infected": [
@@ -30,8 +38,8 @@
         },
         {
             "name": "Vomit Player",
-            "description": "Shortcut to sm_vomitplayer. vomits the player.",
-            "modes": ["instant"]
+            "description": "Shortcut to sm_vomitplayer. vomits the player. Can also be used periodically, constantly vomitting on them",
+            "modes": ["instant", "constant"]
         },
         {
             "name": "Inface Special",
@@ -50,10 +58,10 @@
         },
         {
             "name": "Sticky Goo",
-            "description": "Slows the player down in goo",
+            "description": "Slows the player down in goo. Doesnt work.",
             "modes": ["constant"],
             "prompts": [
-                { "flags": ["60% Movement Speed", "30% Movement Speed", "0% Movement Speed"], "multi": false }
+                { "flags": ["60% Movement Speed", "30% Movement Speed", "0% Movement Speed"], "multiple": false }
             ]
         },
         {
@@ -73,7 +81,7 @@
             "prompts": [
                 {
                     "flags": ["In Back", "In front"],
-                    "multi": false
+                    "multiple": false
                 }
             ]
         },
@@ -84,7 +92,7 @@
             "prompts": [
                 {
                     "flags": ["15 seconds", "30 seconds", "1 minute", "5 minutes"],
-                    "multi": false
+                    "multiple": false
                 }
             ]
         }
@@ -100,7 +108,7 @@
             "description": "Smash a player with a car",
             "modes": ["instant"],
             "prompts": [
-                { "flags": ["On Top", "Into"], "multi": false}
+                { "flags": ["On Top", "Into"], "multiple": false}
             ] 
         },        {
             "name": "Bad Throw",
@@ -174,6 +182,15 @@
             "name": "CameTooEarly",
             "description": "When they shoot, random chance they empty whole clip",
             "modes": ["constant"]
+        },
+        {
+            "name": "Slot Roulette",
+            "description": "Randomly chooses a different item slot for the player.",
+            "modes": ["constant"],
+            "prompts": [
+                { "flags": ["On Vomitted", "On Damage", "On Vocalize", "Periodically"], "multiple": true },
+                { "flags": ["Subtle", "Confusing", "Annoying", "Unusable"], "multiple": false}
+            ]
         }
     ],
     "Chat": [
@@ -218,6 +235,11 @@
             "name": "Voice Mute",
             "description": "Mutes a player from talking. Same as /mute, but will last until they actually leave",
             "modes": ["constant"]
+        },
+        {
+            "name": "No Rushing Us",
+            "description": "Decreases player speed everytime they yell hurry up",
+            "modes": ["constant"]
         }
     ],
     "Health": [
@@ -248,7 +270,11 @@
             "prompts": [
               {
                 "flags": ["1:1", "2x", "0.5x", "0.0x", "3x"],
-                "multi": false
+                "multiple": false
+              },
+              {
+                "flags": ["Reverse Fire Damage", "Reverse Explosions"],
+                "multiple": true
               }
             ]
         },
@@ -277,7 +303,7 @@
             "prompts": [
                 {
                   "flags": ["60% Movement Speed", "30% Movement Speed", "0% Movement Speed"],
-                  "multi": false
+                  "multiple": false
                 }
               ]
         },
@@ -303,8 +329,24 @@
             "prompts": [
                 { 
                     "flags": ["Periodically", "When using doors", "On throwable use", "On pills/adrenaline use", "On zombie bite"], 
-                    "multi": true 
+                    "multiple": true 
                 }
+            ]
+        },
+        {
+            "name": "Randomize Angles",
+            "description": "Randomly change their angles, confusing them",
+            "modes": ["constant"],
+            "prompts": [
+                { "flags": ["Once in a while", "Periodically", "A lot", "Painful", "Seizure"], "multiple": false}
+            ]
+        },
+        {
+            "name": "Randomize Velocity",
+            "description": "Randomly change their velocity, making them fly uncontrollably around the map",
+            "modes": ["constant"],
+            "prompts": [
+                { "flags": ["Loose", "Slippery", "Earthquake", "Severe Earthquake", "Bouncy Castle"], "multiple": false}
             ]
         }
     ],
@@ -335,6 +377,14 @@
                     "flags": ["Prevent Use", "Vomit On Use", "Slay On Use", "Slap On Use", "0.8x Movement Speed"],
                     "multi": true
                 }
+            ]
+        },
+        {
+            "name": "Shakey Camera",
+            "description": "Extremely shakes their camera. It's horrible.",
+            "modes": ["constant"],
+            "prompts": [
+                { "flags": ["Annoying but playable", "Bad", "Sickness", "Violent", "Violent XX"], "multiple": false}
             ]
         }
     ],
