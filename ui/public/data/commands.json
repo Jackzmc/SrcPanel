@@ -95,6 +95,27 @@
                 "command": "notes <player:player>",
                 "description": "View notes for a player",
                 "perm": "k"
+            },
+            {
+                "command": "rff <player:player> <amount:int> [modifiers:string] [modifiers:string]",
+                "args": {
+                    "modifiers": {
+                        "allowed_values": ["fire", "explosion"]
+                    },
+                    "amount": {
+                        "allowed_values": ["0", "0.5", "1", "2", "3"]
+                    }
+                },
+                "description": "Quicky applies the inputted reverse friendly fire amountt",
+                "perm": "k"
+            },
+            {
+                "command": "sorry <player:player> [reason:string=\"shot you\"]",
+                "description": "Send an apology to a player, reason being inserted \"Sorry I (reason here) shot you (player name)"
+            },
+            {
+                "command": "sorrymenu",
+                "description": "Opens a menu, letting you select the player to apology to"
             }
         ]
     },
