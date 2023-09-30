@@ -35,39 +35,7 @@ onBeforeMount(async () => {
   if(response.ok) {
     const text = await response.text()
     html.value = marked(text)
-    // const parents: Node[] = [{level: 5, children:[], name: null}]
     const headers = html.value!.matchAll(/h(\d) id="(.+)"/g)
-    // for(let [,rawLevel,name] of headers) {
-    //   const level = 6 - Number(rawLevel)
-    //   const node = {
-    //     level,
-    //     name,
-    //     children: []
-    //   }
-    //   console.debug(level, parents[parents.length-1], parents[parents.length-1].level)
-    //   if(parents[parents.length - 1].level > level) {
-    //     console.log("found our parent", parents[parents.length - 1], node)
-    //     parents[parents.length - 1].children.push(node)
-    //   }
-    //   // Work our way up to the parent to be their children
-    //   else {
-    //     console.log("finding new suitable parent", parents, node)
-    //     let parent
-    //     for(let i = parents.length - 1; i >= 0; i--) {
-    //       // If we find a parent that's higher than us, stop and use them
-    //       if(parents[i].level < level) {
-    //         parent = parents[i]
-    //         console.debug("found parent")
-    //         break;
-    //       }
-    //       parents.pop()
-    //     }
-    //     console.log("found new suitable parent", parents, parent, node)
-    //     if(!parent) return console.error("no valid parent")
-    //     parent.children.push(node)
-    //   }
-    // }
-    // console.log(parents)
 
     const tree = new Tree(0, 0)
     let lastNode: TreeNode | null = null
