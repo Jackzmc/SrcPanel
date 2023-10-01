@@ -116,6 +116,11 @@
             {
                 "command": "sorrymenu",
                 "description": "Opens a menu, letting you select the player to apology to"
+            },
+            {
+                "command": "csplat <target:player> [top/front/back:string]",
+                "description": "Spawns a car on a player from the given direction. If no direction provided, will show a menu",
+                "perm": "k"
             }
         ]
     },
@@ -361,6 +366,10 @@
             {
                 "command": "hat c\\[ursor]",
                 "description": "Places the hat where your cursor is, this does not rotate the entity which can help in moving items"
+            },
+            {
+                "command": "hat a\\[ttach]",
+                "description": "Selects the location where the hat is mounted on you. "
             },
             {
                 "command": "edit cu\\[rsor]",

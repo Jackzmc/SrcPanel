@@ -386,6 +386,11 @@
             "prompts": [
                 { "flags": ["Annoying but playable", "Bad", "Sickness", "Violent", "Violent XX"], "multiple": false}
             ]
+        },
+        {
+            "name": "Meta: Random",
+            "description": "Applies a random troll with random flags",
+            "modes": ["instant"]
         }
     ],
     "_Combos_": {
