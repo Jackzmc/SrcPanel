@@ -42,7 +42,7 @@ interface DataCache {
     lastFetchTime: number
 }
 let cache: Record<string, DataCache> = {}
-let lastMissingNameFetchTime
+let lastMissingNameFetchTime = 0
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
     const [rows] = await fastify.db.query<RowDataPacket[]>(`SELECT DISTINCT server FROM ${ACTIVITY_LOG_TABLE_NAME} ORDER BY timestamp DESC`)
@@ -144,10 +144,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             }
             return log
         })
-
         // If we have missing names, fetch it in bulk (only every MISSING_NAME_MIN_INTERVAL ms)
         if(missingNameSet.size > 0 && Date.now() - lastMissingNameFetchTime > MISSING_NAME_MIN_INTERVAL) {
-            fastify.log.debug(`[logs] Fetching ${missingNameSet.size} missing names (${[...missingNameSet].toString()})`)
             try {
                 const newNames = await fastify.users.fetchUsers([...missingNameSet])
                 const nameRecord: Record<string,string> = {}
@@ -158,10 +156,10 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 // Iterate logs and replace
                 for(const log of logs) {
                     if(log.client && !log.clientName) {
-                        log.clientName = nameRecord[log.client]
+                        log.clientName = nameRecord[log.client.slice(10)]
                     }
                     if(log.target && !log.targetName) {
-                        log.targetName = nameRecord[log.target]
+                        log.targetName = nameRecord[log.target.slice(10)]
                     }
                 }
                 lastMissingNameFetchTime = Date.now()

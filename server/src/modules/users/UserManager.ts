@@ -75,10 +75,12 @@ export default class UserManager {
         const users = await this.steam.getUserDetails(steamids)
         for(const user of users) {
             const expUser = {
-                steamid: new SteamID(user.steamid).getSteam2RenderedID(),
+                // We use the right side of STEAM_#:#:#####
+                steamid: new SteamID(user.steamid).getSteam2RenderedID().slice(10),
                 name: user.personaname,
                 avatarHash: user.avatarhash
             }
+            expUsers.push(expUser)
             insertPromises.push(this.insertUser(expUser))
         }
         try {
