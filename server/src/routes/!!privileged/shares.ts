@@ -271,7 +271,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 } else {
                     sendSSE({
                         code: 'NOTICE',
-                        message: `Addon already installed but our version is out of date, updating...`
+                        message: `Addon is already installed but our version is out of date, updating...`
                     })
                 }
             } else {
