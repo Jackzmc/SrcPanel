@@ -42,7 +42,7 @@ interface DataCache {
     lastFetchTime: number
 }
 let cache: Record<string, DataCache> = {}
-let lastMissingNameFetchTime
+let lastMissingNameFetchTime = 0
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
     const [rows] = await fastify.db.query<RowDataPacket[]>(`SELECT DISTINCT server FROM ${ACTIVITY_LOG_TABLE_NAME} ORDER BY timestamp DESC`)
@@ -127,14 +127,6 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         let [logs] = (await query.execute(fastify.db))
 
         let cache = await getTotalRows(tableName)
-        if(logs.length > 0) {
-            const highestRow = logs.reduce((prev, current) => {
-                return (prev.id > current.id) ? prev : current
-            })
-            if(highestRow.highestId > cache.highestId) {
-                cache[tableName].highestId = highestRow.id
-            }
-        }
         const missingNameSet = new Set<SteamID>()
 
         logs = logs.map(log => {
@@ -146,25 +138,28 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             if(!log.targetName && log.target?.startsWith("STEAM_")) {
                 missingNameSet.add(new SteamID(log.target))
             }
+            // Side effect, but update highest id recorded
+            if(log.id > cache.highestId) {
+                cache.highestId = log.id
+            }
             return log
         })
-
         // If we have missing names, fetch it in bulk (only every MISSING_NAME_MIN_INTERVAL ms)
         if(missingNameSet.size > 0 && Date.now() - lastMissingNameFetchTime > MISSING_NAME_MIN_INTERVAL) {
             try {
                 const newNames = await fastify.users.fetchUsers([...missingNameSet])
                 const nameRecord: Record<string,string> = {}
-                // Push it into a record
+                // Push the array into a record
                 for(const user of newNames) {
                     nameRecord[user.steamid] = user.name
                 }
                 // Iterate logs and replace
                 for(const log of logs) {
                     if(log.client && !log.clientName) {
-                        log.clientName = nameRecord[log.client]
+                        log.clientName = nameRecord[log.client.slice(10)]
                     }
                     if(log.target && !log.targetName) {
-                        log.targetName = nameRecord[log.target]
+                        log.targetName = nameRecord[log.target.slice(10)]
                     }
                 }
                 lastMissingNameFetchTime = Date.now()
@@ -172,7 +167,6 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 fastify.log.warn(`[logs] Could not fetch missing names (${[...missingNameSet].toString()}):`, err)
             }
         }
-
 
         return {
             logs,

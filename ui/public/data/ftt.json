@@ -386,6 +386,19 @@
             "prompts": [
                 { "flags": ["Annoying but playable", "Bad", "Sickness", "Violent", "Violent XX"], "multiple": false}
             ]
+        },
+        {
+            "name": "Hide HUD",
+            "description": "Hides the player's hud",
+            "modes": ["constant"],
+            "prompts": [
+                { "flags": ["Rare & Short", "Common & Medium", "Constant"], "multiple": false}
+            ]
+        },
+        {
+            "name": "Meta: Random",
+            "description": "Applies a random troll with random flags",
+            "modes": ["instant"]
         }
     ],
     "_Combos_": {
