@@ -35,7 +35,7 @@
         "default": 1
     },
     {
-        "cvar": "l4d2_extraitem_chance <0.0 - 1.0:float>",
+        "cvar": "epi_item_chance <0.0 - 1.0:float>",
         "description": "The base chance (multiplied by player count) of an extra item being spawned for games that contain > 4 survivors. Default is 0.056",
         "default": 0.056
     },
@@ -92,12 +92,12 @@
         "description": "Should bots automatically defend themselves and shoot back at attackers? 0: No, 1: Only against non-admins, 2: Anyone"
     },
     {
-        "cvar": "l4d2_extraitems_extra_tanks <0/1/2/3:int>",
+        "cvar": "epi_extra_tanks <0/1/2/3:int>",
         "description": "Add bits together. 0: Normal vanilla behavior, 1: Non finale split tanks (half hp), 2: Split finale tank (full hp)",
         "default": 3
     },
     {
-        "cvar": "l4d2_extraitems_splittank_chance <0.0 - 1.0:float>",
+        "cvar": "epi_splittank_chance <0.0 - 1.0:float>",
         "description": "The chance a tank will split (Only applies in non finale, and when >= 7 players",
         "default": 3
     },
@@ -121,7 +121,7 @@
         "description": "Enables hats. 0 = OFF, 1 = Admins Only, 2 = Anyone"
     },
     {
-        "cvar": "l4d2_extraitems_hudstate <0/1/2:int>",
+        "cvar": "epi_hudstate <0/1/2:int>",
         "default": 1,
         "description": "Controls the 5+ hud. 0: OFF, 1: Only when 6+ players, 2: Always"
     },
