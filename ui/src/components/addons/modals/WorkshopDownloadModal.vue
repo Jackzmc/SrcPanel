@@ -11,9 +11,9 @@
       <div class="field">
         <label class="label">Enter a workshop link</label>
         <div class="control">
-          <input class="input" type="text" v-model="link" @input="verifyLink" />
+          <input class="input" type="text" v-model="link" @input="verifyLink" placeholder="https://steamcommunity.com/sharedfiles/filedetails/?id=######" />
           <p class="help has-text-danger" v-if="!workshopId">
-            Not a valid workshop link
+            Not a valid steam workshop url
           </p>
         </div>
       </div>
@@ -23,10 +23,10 @@
           {{workshopDetails.title}}
           <span data-tooltip="Workshop Id" class="tag is-dark">{{ workshopId }}</span>
         </h4>
-        <p class="subtitle is-6" v-if="isAddonValid"><b>Game: </b>
-          <a :href="'https://store.steampowered.com/app/' + workshopDetails.consumer_app_id">
+        <p class="subtitle is-6" v-if="isAddonValid">For app
+          <b><a :data-tooltip="workshopDetails.consumer_app_id" :href="'https://store.steampowered.com/app/' + workshopDetails.consumer_app_id">
             {{workshopDetails.consumer_app_title}}
-          </a>
+          </a></b>
         </p>
         <p class="subtitle is-6" v-else-if="workshopDetails.result === 9"><b>Game: </b>
           Addon is either private, friends-only, or does not exist.
@@ -42,7 +42,7 @@
         <hr>
       </template>
       <div class="field" v-if="isAddonValid">
-        <label class="label">Install Destinations</label>
+        <label class="label">Install To:</label>
         <div class="field" v-for="(dest, id) in props.share.destinations" :key="id">
           <input
             :id="id"
@@ -118,7 +118,7 @@
           :disabled="downloadingState == 1 || !workshopId || installDestinations.length == 0"
           @click="startDownload(false)"
         >
-          Download
+          Download & Install
         </button>
         <button class="button" @click="close">
           Cancel
@@ -247,7 +247,7 @@ function startDownload(force = false) {
           downloadLog.value.push({
             state: payload.state || payload.code,
             filename: payload.filename,
-            message: "Addon already is downloaded, press redownload to download a fresh version",
+            message: "Addon was already downloaded. Press the redownload button to download a fresh version",
             error: true
           })
         } else {
