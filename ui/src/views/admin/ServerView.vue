@@ -815,7 +815,8 @@ function getMapDisplay(mapId: string) {
   return null;
 }
 
-function formatUptime(minutes: number) {
+function formatUptime(milliseconds: number) {
+  const minutes = milliseconds / 1000 / 60
   const hours = Math.round(minutes / 60)
   if(hours < 1) return `${minutes} minutes`
   const days = Math.round(hours / 24)
