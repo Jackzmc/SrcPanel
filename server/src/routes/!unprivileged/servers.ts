@@ -11,6 +11,7 @@ interface AuthTokenData {
 }
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
+    
     fastify.post('/status', async(req: FastifyRequest<{Params: {id: string}}>, reply) => {
         const authKey = req.headers['x-authtoken'] as string
         if(!authKey) {

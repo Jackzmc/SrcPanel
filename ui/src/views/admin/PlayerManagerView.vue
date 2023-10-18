@@ -211,13 +211,12 @@ async function getRecentPlayers() {
   }
 }
 async function getServerTypes() {
-  const resp = await request(`/api/servers`)
+  const resp = await request(`/api/logs/data`)
   if(resp?.ok) {
     const json = await resp.json()
-    servers.value = json.map((server: any) => server.id)
+    servers.value = json.servers
   }
 }
-
 onBeforeMount(() => {
   search.value.func = Debounce(searchUser, 400)
   getServerTypes()
