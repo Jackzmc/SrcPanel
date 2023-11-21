@@ -28,6 +28,7 @@ export default class UserManager {
     }
 
     async insertUser(user: IUserData) {
+        if(user.steamid.length <= 10) throw new Error("steamid is invalid (bad length)")
         return await this.db.query(SQL`INSERT INTO user_names (steamid, name, avatar_hash) VALUES (SUBSTRING(${user.steamid}, 11), ${user.name}, ${user.avatarHash})`)
     }
 

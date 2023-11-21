@@ -215,6 +215,7 @@ export default class AuthManager {
 
     public async addAdmin(admin: AddAdmin) {
         // TODO: Add group support
+        if(admin.identity.length < 10) throw new Error("Invalid admin identity")
         const details = await this.steam.getUserDetails([new SteamID(admin.identity)])
         try {
             await this.dbna.execute("INSERT INTO user_names (steamid, name, avatar_hash) VALUES (?, ?, ?)", [admin.identity.slice(10), details[0].personaname, details[0].avatarhash])
