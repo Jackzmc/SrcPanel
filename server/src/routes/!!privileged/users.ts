@@ -39,14 +39,27 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             [server, req.session.user.steamid, limit]
         )
 
+        const bulkFetchSet = new Set<SteamID>()
+
         for(const row of rows) {
             if(!row.name) {
-                const user = await fastify.users.fetchUser(row.steamid)
-                if(user) {
-                    row.name = user.name
-                }
+                bulkFetchSet.add(new SteamID(row.steamid))
             }
             row.isAdmin = row.isAdmin === 1
+        }
+
+        if(bulkFetchSet.size > 0) {
+            const users = await fastify.users.fetchUsers([...bulkFetchSet])
+            // Add the names to the missing entries
+            for(const row of rows) {
+                for(const user of users) {
+                    // user.steamid is their accountid, so we slice it off of steamid
+                    if(user.steamid == row.steamid.slice(10)) {
+                        row.name = user.name
+                        break
+                    }
+                }
+            }
         }
 
         return {

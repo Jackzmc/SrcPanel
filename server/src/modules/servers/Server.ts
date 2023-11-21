@@ -214,13 +214,15 @@ export default class Server extends EventEmitter {
       } 
     }
 
+    /// Gets start time of server in unix milliseconds
     public get startTime() {
       return this._startTime
     }
 
+    /// Returns uptime of server in unix milliseconds
     public get uptime() {
       if(!this._startTime) return 0
-      return (Date.now() / 1000) - this._startTime
+      return Date.now() - this._startTime
     }
 
     public get status(): ServerStatus { return this._status }
@@ -275,7 +277,7 @@ export default class Server extends EventEmitter {
     public setLiveData(status: PluginServerStatus) {
       status.players = status.players
         .sort((a, b) => a.team - b.team)
-      this._startTime = status.startTime
+      this._startTime = (status.startTime*1000) // .startTime is in seconds, convert to ms
       this._liveData = status
 
       this.emit("live", status)
