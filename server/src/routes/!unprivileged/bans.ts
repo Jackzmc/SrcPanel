@@ -200,7 +200,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 (SELECT COUNT(*) FROM notes WHERE steamid = bans.steamid) as notes
             FROM bans
                 LEFT JOIN user_names as n1 on n1.steamid LIKE SUBSTRING(bans.steamid, 11) 
-                LEFT JOIN user_names as n2 on n2.steamid LIKE SUBSTRING(bans.executor, 11)
+                LEFT JOIN user_names as n2 on bans.executor != 'CONSOLE' AND n2.steamid LIKE SUBSTRING(bans.executor, 11)
             ${req.query.include !== "expired" ? 'WHERE bans.expired = 0' : ''}
             ORDER BY bans.timestamp DESC LIMIT ?, ?`, 
             [offset, limit]
