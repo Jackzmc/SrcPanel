@@ -73,16 +73,13 @@ export default class Share {
         console.timeEnd('getAddons:readdir')
         const results: (AddonInfo|AddonCollectionInfo)[] = []
         let collections: Record<string, AddonCollectionInfo> = {}
-        console.time('getAddons:direntLoop')
         for(const dirent of dirents) {
             if(dirent.isFile()) {
                 // Only check the specified extenstions
                 const ext = dirent.name.split(".").pop()
                 if(this.validExts && !this.validExts.includes(ext)) continue
 
-                console.time(`getAddons:direntLoop:getaddonInfo("${dirent.name}")`)
                 const addonInfo = await this.getAddonInfo(dirent.name)
-                console.timeEnd(`getAddons:direntLoop:getaddonInfo("${dirent.name}")`)
                 if(addonInfo) {
                     // If we have cached addon info, check if its a collection or an item
                     if(addonInfo.collection) {
@@ -107,14 +104,10 @@ export default class Share {
                         ...fsinfo,
                         installInfo: (await this.getInstallInfo(dirent.name)).states
                     })
-                    console.time('getAddons:direntLoop:addAddonEntry')
                     await this.addAddonEntry(dirent.name, fsinfo)
-                    console.timeEnd('getAddons:direntLoop:addAddonEntry')
                 }
             }
         }
-        console.timeEnd('getAddons:direntLoop')
-        
         // Calculate total file size for collections
         for(const collection of Object.values(collections)) {
             results.push({
