@@ -67,6 +67,9 @@ export default class Share {
         return createWriteStream(path.join(this.sourceFolder, path.normalize(filename)))
     }
 
+    /** 
+     * Fetches all addons for this share, including returning if the destinations are 
+     **/
     public async getAddons() {
         console.time('getAddons:readdir')
         const dirents = await readdir(this.sourceFolder, { withFileTypes: true }) 
@@ -77,7 +80,7 @@ export default class Share {
         console.time('getAddons:direntLoop')
         for(const dirent of dirents) {
             if(dirent.isFile()) {
-                // Only fetch the specified extenstions
+                // Only check the specified extenstions
                 const ext = dirent.name.split(".").pop()
                 if(this.validExts && !this.validExts.includes(ext)) continue
 
@@ -85,6 +88,7 @@ export default class Share {
                 const addonInfo = await this.getAddonInfo(dirent.name)
                 console.timeEnd(`getAddons:direntLoop:getaddonInfo("${dirent.name}")`)
                 if(addonInfo) {
+                    // If we have cached addon info, check if its a collection or an item
                     if(addonInfo.collection) {
                         if(!collections[addonInfo.collection.id]) collections[addonInfo.collection.id] = { 
                             collection: addonInfo.collection,
@@ -96,7 +100,10 @@ export default class Share {
                         results.push(addonInfo)
                     }
                 } else {
+                    // Item is not cached, fetch it from steam workshop if it looks like one
                     // TODO: Figure out optimization, perhaps new downloads aren't being fetched in cache.?
+                    // TODO: maybe remove steam fetching entirely? If you plop in vpk manually, you need to trigger it to check
+                    // otherwise when downloading workshop addons, should already have data
                     const match = dirent.name.match(WS_ITEMID_REGEX)
                     const isSteamItem = match && match.length == 2
                     if(isSteamItem) {
@@ -122,7 +129,8 @@ export default class Share {
             }
         }
         console.timeEnd('getAddons:direntLoop')
-
+        
+        // Calculate total file size for collections
         for(const collection of Object.values(collections)) {
             results.push({
                 ...collection,
@@ -132,6 +140,7 @@ export default class Share {
 
         console.debug('getAddons:steamResolveQueue.length', steamResolveQueue.length)
         console.time('getAddons:steamResolveQueue')
+        // TODO: possibly remove this - fetch steam workshop info
         while(steamResolveQueue.length > 0) {
             const slice = steamResolveQueue.splice(0, 100)
             const wsDetails = await this.steam.getItemDetails(slice)
@@ -166,6 +175,13 @@ export default class Share {
         }
     }
 
+    /**
+     * Adds an addon to the cache
+     * @param filename the filename with ext
+     * @param fsInfo File system info (filesize, lastModified)
+     * @param workshop (optional) workshop item details info
+     * @param collection (optional) workshop collection info (collection id and name)
+     */
     private async addAddonEntry(filename: string, fsInfo?: { filesize: number, lastModified: number }, workshop?: AddonWorkshopInfo, collection?: WorkshopCollectionInfo) {
         try {
             // console.debug(`adding \"${filename}\" [fs=${fsInfo != null}] [workshop=${workshop != null}] [collection=${collection != null}]`)
@@ -183,6 +199,11 @@ export default class Share {
         }
     }
 
+    /**
+     * Get addon info from cache
+     * @param filename filename with ext
+     * @returns Promise<AddonInfo | undefined>
+     */
     public async getAddonInfo(filename: string): Promise<AddonInfo | undefined> {
         const info = await this.db.get(SQL`SELECT * FROM addoncache WHERE filename = ${filename}`)
         if(!info) return null
@@ -201,6 +222,10 @@ export default class Share {
         }
     }
 
+    /**
+     * Deletes an addon, removing it from all destinations, source folder, and cache
+     * @param filename filename with ext
+     */
     public async deleteAddon(filename: string) {
         // Uninstall from all destinations
         await Promise.all(Object.keys(this.destinations)
@@ -212,6 +237,11 @@ export default class Share {
         await this.db.exec(SQL`DELETE FROM addoncache WHERE filename = ${filename}`)
     }
 
+    /**
+     * Gets file info and any destinations this file is enabled on
+     * @param filename 
+     * @returns 
+     */
     public async getInstallInfo(filename: string) {
         const statInfo = await this.getFileInfo(this.sourceFolder, filename)
         if(statInfo) {
@@ -232,6 +262,10 @@ export default class Share {
         
     }
 
+    /**
+     * Returns all files in source folder with the allowed extenstions
+     * @returns string[]
+     */
     public async getInstalledFiles() {
         const files = await readdir(this.sourceFolder)
         if(!this.validExts) return files
@@ -241,12 +275,23 @@ export default class Share {
         })
     }
 
+    /**
+     * Is this file installed (and downloaded), checking the source folder
+     * @param query The filename to check
+     * @returns boolean
+     */
     public async isInstalled(query: string) {
         const file = (await this.getInstalledFiles())
             .find(filename => filename === query)
         return file != null
     }
 
+    /**
+     * Enables an addon at a destinaton
+     * @param filename The filename to enable
+     * @param destinationKey The destination id to enable on
+     * @returns 
+     */
     public async install(filename: string, destinationKey: string) {
         const dest = this.destinations[destinationKey]
         if(!dest) throw new Error(`Destination "${destinationKey}" does not exist`)
@@ -264,6 +309,12 @@ export default class Share {
         }
     }
 
+    /**
+     * Disables an addon from a destinaton
+     * @param filename The filename to disable
+     * @param destinationKey The destination id to disable on
+     * @returns 
+     */
     public async uninstall(filename: string, destinationKey: string) {
         const dest = this.destinations[destinationKey]
         if(!dest) throw new Error(`Destination "${destinationKey}" does not exist`)
@@ -280,6 +331,12 @@ export default class Share {
         }
     }
 
+    /**
+     * Returns file system info (stat). Folder and file are path.join'd
+     * @param folder The folder to check
+     * @param file The filename to check
+     * @returns 
+     */
     private async getFileInfo(folder: string, file: string) {
         try {
           return await stat(path.join(folder, file))
@@ -291,7 +348,11 @@ export default class Share {
         }
     } 
 
-      
+    /**
+     * Downloads an item from steam workshop, returning once complete
+     * @param item The workshop item object (needs publishedfileid, file_size, and time_updated)
+     * @returns 
+     */
     public async steamDownload(item: ChildWorkshopItem) {
         const filename = `${item.publishedfileid}.vpk`
 
@@ -308,6 +369,11 @@ export default class Share {
         return true
     }
 
+    /**
+     * Returns a stream of a workshop item download. Emits "finish" and "progress"
+     * @param item The workshop item object (needs publishedfileid, file_size, and time_updated)
+     * @returns 
+     */
     public steamDownloadStream(item: ChildWorkshopItem) {
         const filename = `${item.publishedfileid}.vpk`
 
@@ -337,17 +403,4 @@ export default class Share {
             fileExts: this.validExts
         }
     }
-}
-
-
-async function execPromise(command: string): Promise<string> {
-    return new Promise(function(resolve, reject) {
-        exec(command, (error: Error, stdout: string, stderr: string) => {
-            if (error) {
-                reject(error + "\n" + stderr.trim());
-                return;
-            }
-            resolve(stdout.trim());
-        });
-    });
 }
