@@ -64,12 +64,10 @@
     <div class="column">
       <b>Request Restart</b> will restart the server if its empty
       <br>
-      <b>Force Restart</b> requires you to hold SHIFT to select, and will force restart even if people are playing
+      <b>Force Restart</b> requires you to hold SHIFT to select, and will force restart the server even if people are playing
       <br>
-      <b>Update</b> will run an update script to update the server. This will take a while, server will not auto restart.
-      <p>Updating does not show any progress, just have to wait and hope its updated.</p>
       <b>Start</b> will start the service if the server is currently not running. Check in 1-2 minutes to see if the server goes online.
-      <p>Improved and vanilla do not support this, as they are managed differently</p>
+      <p>Only public support this (servers with <span class="tag">systemd</span> tag) as they are managed differently</p>
       <b>Unreserve</b> will remove the lobby reservation which allows others to join a 5+ game before the reservation is automatically removed (so when people are still loading in)
     </div>
   </div>
