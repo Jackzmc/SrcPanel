@@ -13,9 +13,13 @@ export default ({ mode }) => {
   return defineConfig({
     plugins: [
       sentryVitePlugin({
+        disable: process.env.SENTRY_AUTH_TOKEN === undefined,
         authToken: process.env.SENTRY_AUTH_TOKEN,
         org: "jackzmc",
         project: "l4d2-admin-panel",
+        errorHandler: (err) => {
+          console.error("[Sentry] ", err)
+        }
       }),
       vue(),
       // VitePWA({
