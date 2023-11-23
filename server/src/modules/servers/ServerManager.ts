@@ -24,8 +24,8 @@ export default class ServerManager {
 
   private shortRefreshInterval: number
   private longRefreshInterval: number
-  private refreshTimer: NodeJS.Timer
-  private refreshTimeout: NodeJS.Timer = null
+  private refreshTimer: ReturnType<typeof setTimeout>
+  private refreshTimeout: ReturnType<typeof setTimeout> = null
 
   private cfgManger: ConfigManager
 
