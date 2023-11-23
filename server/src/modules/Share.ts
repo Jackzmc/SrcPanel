@@ -74,7 +74,6 @@ export default class Share {
         console.time('getAddons:readdir')
         const dirents = await readdir(this.sourceFolder, { withFileTypes: true }) 
         console.timeEnd('getAddons:readdir')
-        const steamResolveQueue: string[] = [] // Array of workshop ids
         const results: (AddonInfo|AddonCollectionInfo)[] = []
         let collections: Record<string, AddonCollectionInfo> = {}
         console.time('getAddons:direntLoop')
@@ -100,31 +99,20 @@ export default class Share {
                         results.push(addonInfo)
                     }
                 } else {
-                    // Item is not cached, fetch it from steam workshop if it looks like one
-                    // TODO: Figure out optimization, perhaps new downloads aren't being fetched in cache.?
-                    // TODO: maybe remove steam fetching entirely? If you plop in vpk manually, you need to trigger it to check
-                    // otherwise when downloading workshop addons, should already have data
-                    const match = dirent.name.match(WS_ITEMID_REGEX)
-                    const isSteamItem = match && match.length == 2
-                    if(isSteamItem) {
-                        // Put in queue to be resolved in batches of 100
-                        steamResolveQueue.push(match[1])
-                    } else {
-                        // It has no valid steam workshop id, so just query filesystem
-                        const fstat = await stat(path.join(this.sourceFolder, dirent.name))
-                        const fsinfo = {
-                            filesize: fstat.size,
-                            lastModified: Math.round(fstat.mtime.getTime() / 1000),
-                        }
-                        results.push({
-                            filename: dirent.name,
-                            ...fsinfo,
-                            installInfo: (await this.getInstallInfo(dirent.name)).states
-                        })
-                        console.time('getAddons:direntLoop:addAddonEntry')
-                        await this.addAddonEntry(dirent.name, fsinfo)
-                        console.timeEnd('getAddons:direntLoop:addAddonEntry')
+                    // Manually added item, just fs.stat it:
+                    const fstat = await stat(path.join(this.sourceFolder, dirent.name))
+                    const fsinfo = {
+                        filesize: fstat.size,
+                        lastModified: Math.round(fstat.mtime.getTime() / 1000),
                     }
+                    results.push({
+                        filename: dirent.name,
+                        ...fsinfo,
+                        installInfo: (await this.getInstallInfo(dirent.name)).states
+                    })
+                    console.time('getAddons:direntLoop:addAddonEntry')
+                    await this.addAddonEntry(dirent.name, fsinfo)
+                    console.timeEnd('getAddons:direntLoop:addAddonEntry')
                 }
             }
         }
@@ -137,27 +125,6 @@ export default class Share {
                 filesize: collection.children.reduce((pv, child) => pv + child.filesize, 0)
             })
         }
-
-        console.debug('getAddons:steamResolveQueue.length', steamResolveQueue.length)
-        console.time('getAddons:steamResolveQueue')
-        // TODO: possibly remove this - fetch steam workshop info
-        while(steamResolveQueue.length > 0) {
-            const slice = steamResolveQueue.splice(0, 100)
-            const wsDetails = await this.steam.getItemDetails(slice)
-            for(let i = 0; i < wsDetails.length; i++) {
-                const filename = `${wsDetails[i].publishedfileid || slice[i]}.vpk`
-                const workshop = Share.serializeWorkshopItem(wsDetails[i])
-                results.push({
-                    filename,
-                    installInfo: (await this.getInstallInfo(filename)).states,
-                    workshop
-                })
-                console.time('getAddons:steamResolveQueue:addAddonEntry')
-                await this.addAddonEntry(filename, null, workshop)
-                console.timeEnd('getAddons:steamResolveQueue:addAddonEntry')
-            }
-        } 
-        console.timeEnd('getAddons:steamResolveQueue')
 
         return results
     }
