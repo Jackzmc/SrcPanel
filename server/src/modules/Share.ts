@@ -2,8 +2,7 @@ import { stat, readdir, unlink, symlink } from 'fs/promises';
 import { createWriteStream } from 'fs'
 import path from 'path'
 import SteamAPI from './steam.js';
-import { AddonCollectionInfo, AddonInfo, AddonWorkshopInfo, ChildWorkshopItem, DownloadSourceRecord, ShareDestination, ShareDestinations, ShareInfo, WorkshopCollectionInfo, WorkshopItem } from '../../../common-types/Share.js'
-import { exec } from 'child_process'
+import { AddonCollectionInfo, AddonInfo, AddonWorkshopInfo, ChildWorkshopItem, DownloadSourceRecord, ShareDestinations, ShareInfo, WorkshopCollectionInfo, WorkshopItem } from '../../../common-types/Share.js'
 import sqlite3 from 'sqlite3'
 import sqlite from 'sqlite'
 import SQL from 'sql-template-strings';
@@ -11,8 +10,6 @@ import SQL from 'sql-template-strings';
 const DOWNLOAD_TIMEOUT = 1000 * 60 * 3
 
 export type DownloadSource = "steam_workshop" | "direct"
-
-const WS_ITEMID_REGEX = new RegExp(/^(\d+).vpk$/)
 
 export default class Share {
     public _id: string
@@ -207,7 +204,7 @@ export default class Share {
     /**
      * Gets file info and any destinations this file is enabled on
      * @param filename 
-     * @returns 
+     * @returns { states: Record<string, boolean>, created: number, modified: number, size: number }
      */
     public async getInstallInfo(filename: string) {
         const statInfo = await this.getFileInfo(this.sourceFolder, filename)
@@ -257,7 +254,7 @@ export default class Share {
      * Enables an addon at a destinaton
      * @param filename The filename to enable
      * @param destinationKey The destination id to enable on
-     * @returns 
+     * @returns void
      */
     public async install(filename: string, destinationKey: string) {
         const dest = this.destinations[destinationKey]
@@ -302,7 +299,7 @@ export default class Share {
      * Returns file system info (stat). Folder and file are path.join'd
      * @param folder The folder to check
      * @param file The filename to check
-     * @returns 
+     * @returns Promise<Stats>
      */
     private async getFileInfo(folder: string, file: string) {
         try {
@@ -318,7 +315,7 @@ export default class Share {
     /**
      * Downloads an item from steam workshop, returning once complete
      * @param item The workshop item object (needs publishedfileid, file_size, and time_updated)
-     * @returns 
+     * @returns Promise<void>
      */
     public async steamDownload(item: ChildWorkshopItem) {
         const filename = `${item.publishedfileid}.vpk`
@@ -333,7 +330,7 @@ export default class Share {
             filesize: item.file_size,
             lastModified: item.time_updated
         }, Share.serializeWorkshopItem(item), item.collection)
-        return true
+        return
     }
 
     /**
