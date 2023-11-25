@@ -136,7 +136,7 @@ export default class Server extends EventEmitter {
       serviceName: string;
     } = null;
     public tags: Readonly<string[]>;
-    
+      
     public playerCounts: PlayerStats[] = [] 
 
     constructor(server: ServerData) {
@@ -204,6 +204,9 @@ export default class Server extends EventEmitter {
     public get port() { return this._info.port }
     public get type() { return this._info.type }
     public get configDir() { return this._cfgDir }
+    /**
+     * The order to sort the server, ascending (lower: higher)
+     */
     public get sortOrder() { return this._sortOrder }
 
     public get info() { 
@@ -214,18 +217,29 @@ export default class Server extends EventEmitter {
       } 
     }
 
-    /// Gets start time of server in unix milliseconds
+    /**
+     * Start time of server in unix milliseconds
+     */
     public get startTime() {
       return this._startTime
     }
 
-    /// Returns uptime of server in unix milliseconds
+    /**
+     * Uptime of server in unix milliseconds
+     */
     public get uptime() {
       if(!this._startTime) return 0
       return Date.now() - this._startTime
     }
 
+    /**
+     * Latest cached server status, if any
+     */
     public get status(): ServerStatus { return this._status }
+
+    /**
+     * Returns any fresh live view data. Will purge any stale data
+     */
     public get liveStatus(): PluginServerStatus { 
       if(DEBUG_SAMPLE_LIVE_DATA) return DEBUG_SAMPLE_LIVE_DATA
       if(this._liveData && Date.now() - (this._liveData.lastUpdateTime*1000) > STALE_LIVE_STATUS_EXPIRE) {
@@ -243,11 +257,24 @@ export default class Server extends EventEmitter {
       return [...this.#features]
     }
 
+    /**
+     * The id to find activity logs for
+     */
     public get activityLogId() {  return this._actid }
+    /**
+     * List of any cached cvars from calling .refresh(true)
+     */
     public get cvars() { return this._cvars }
 
+    /**
+     * Returns the cached list of server console logs
+     */
     public get logs() { return this._logsCache }
 
+    /**
+     * Add log entry to console
+     * @param line
+     */
     #pushLogEntry(line: string) {
       this._logsCache.push(line)
       if(this._logsCache.length > MAX_LOGS_LINES) {
@@ -256,6 +283,10 @@ export default class Server extends EventEmitter {
       this.emit("log", line)
     }
 
+    /**
+     * Returns a tail stream (live-view) of server's console logs
+     * @returns 
+     */
     async #createLogsReader() { 
       // Read previous lines
       const file = await open(this._logPath)
@@ -274,6 +305,11 @@ export default class Server extends EventEmitter {
       return tail
     }
 
+    /**
+     * Set live data
+     * @param status live status data 
+     * @returns 
+     */
     public setLiveData(status: PluginServerStatus) {
       status.players = status.players
         .sort((a, b) => a.team - b.team)
@@ -285,7 +321,11 @@ export default class Server extends EventEmitter {
       return this.listenerCount("live")
     }
 
-    // Fetches all config, including one level nested
+    /**
+     * Returns a list of config files' paths recursively
+     * @param showHidden Should hidden files be included (see HIDDEN_CONFIG_FILES)
+     * @returns string[]
+     */
     public async getConfigFiles(showHidden = false) {
       if(!this._cfgDir) return
       return await this._recurseConfig(this._cfgDir, showHidden)
@@ -318,6 +358,9 @@ export default class Server extends EventEmitter {
       return files
     }
 
+    /**
+     * Attempt to connect to rcon, if not already connected
+     */
     private async rconConnect() {
       if(!this.rcon.connected || !this.rcon.client.authenticated) {
         // Drop connection if already connected
@@ -328,10 +371,19 @@ export default class Server extends EventEmitter {
       }
     }
     
+    /**
+     * Attempt to start server by systemd (Not implemented)
+     */
     public async start() {
       if(!this.hasSystemd) throw new Error("Systemd config is missing")
+      throw new Error("Not implemented")
     }
 
+    /**
+     * Sends stop command or force-stop command (according to configured commands)
+     * @param force forcefully?
+     * @returns boolean on success or false if not successful (players online and not forced)
+     */
     public async stop(force: boolean) {
       if(!this.hasRcon) throw new Error("No rcon config is setup")
       const msg = await this.sendCommand(force ? this.rcon.exitCommand : this.rcon.requestExitCommand);
@@ -339,6 +391,12 @@ export default class Server extends EventEmitter {
       return force || msg != "Players are online."
     }
 
+    /**
+     * Stops a server, but polls until server stopped, finally returning after timeout or stopped
+     * @param force forcefully?
+     * @param timeoutSeconds Amount of seconds to wait for server to hahve stopped
+     * @returns bool - success or false on timed out
+     */
     public async stopWait(force: boolean, timeoutSeconds = 10_000) {
       if(!this.hasRcon) throw new Error("No rcon config is setup")
       await this.sendCommand(force ? this.rcon.exitCommand : this.rcon.requestExitCommand)
@@ -349,11 +407,22 @@ export default class Server extends EventEmitter {
       return timeoutSeconds > 0
     }
 
+    /**
+     * Send an rcon command, automatically trying to connect to rcon
+     * @param cmd the command
+     * @returns the server's response
+     */
     public async sendCommand(cmd: string) {
       await this.rconConnect()
       return await this.rcon.client.send(cmd)
     }
 
+    /**
+     * Attempts to perform an action (ie, kicking)
+     * @param action The action to perform
+     * @param steamid The player to perform it on
+     * @param args 
+     */
     public async performAction(action: PlayerAction, steamid: string, args: Record<string, string> = {}) {
       let sourcemodId: string;
       if(steamid.startsWith("#")) {
@@ -368,6 +437,13 @@ export default class Server extends EventEmitter {
       await this.sendCommand(command)
     }
 
+    /**
+     * Returns the command formatted for the action
+     * @param action 
+     * @param sourcemodId The valid sourcemod client id
+     * @param args 
+     * @returns 
+     */
     #getActionCommand(action: PlayerAction, sourcemodId: string, args: Record<string, string>): string {
       switch(action) {
         case "kick": {
@@ -380,6 +456,12 @@ export default class Server extends EventEmitter {
       }
     }
 
+    /**
+     * Fetches server information (via gamedig), possibly using cache
+     * @param force true to bypass cache
+     * @param includeRules include cvars
+     * @returns 
+     */
     public async refresh(force = false, includeRules = false) {
         const now = Date.now()
         if(!force && now - this.lastRefresh < MIN_REFRESH_TIME) return

@@ -41,6 +41,10 @@ export default class ServerManager {
       })
   }
 
+  /**
+   * Gets all servers sorted by their sortOrder
+   * @returns Server[]
+   */
   public getAll() {
     return Object.values(this.servers)
       .sort((a,b) => {
@@ -51,18 +55,25 @@ export default class ServerManager {
       })
   }
 
-  get HasViewers() {
-    return this.refreshTimeout != null
-  }
-
+  /**
+   * Gets server (case-insensitive)
+   * @param key 
+   * @returns 
+   */
   public get(key: string) {
     return this.servers[key.toLowerCase()]
   }
 
+  /**
+   * Refreshes all servers at once
+   */
   public async refresh() {
     await Promise.allSettled(Object.values(this.servers).map(server => server.refresh()))
   }
 
+  /**
+   * Marks the server has being viewed, switching to a short refresh cycle
+   */
   public resetInactivity() {
     const inShortRefresh = this.refreshTimeout != null
     // Kill the inactivity timeout if there was a request
@@ -101,6 +112,9 @@ export default class ServerManager {
     return Object.keys(this.addonShares)
   }
 
+  /**
+   * Loads all servers and shares from their respective json files
+   */
   private async load() {
     try {
       const servers = await readFile(path.join(this.configDir, "servers.json"), 'utf-8')
@@ -126,6 +140,7 @@ export default class ServerManager {
     }
   }
 
+  
   private async loadShares(shares: any) {
     if(!shares) {
       console.warn("[Warn] No shares to load")

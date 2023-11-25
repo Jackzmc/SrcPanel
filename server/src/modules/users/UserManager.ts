@@ -27,12 +27,21 @@ export default class UserManager {
         return UserManager._instance
     }
 
+    /**
+     * Adds user data to the user name cache
+     * @param user user data
+     * @returns 
+     */
     async insertUser(user: IUserData) {
         if(user.steamid.length <= 10) throw new Error("steamid is invalid (bad length)")
         return await this.db.query(SQL`INSERT INTO user_names (steamid, name, avatar_hash) VALUES (SUBSTRING(${user.steamid}, 11), ${user.name}, ${user.avatarHash})`)
     }
 
-    // Returns a user if they exist
+    /**
+     * Returns a user from user name cache if they exist. Queues background update if data is stale (returning the stale data)
+     * @param steamid Steamid2
+     * @returns 
+     */
     async getUser(steamid: string): Promise<IUserData | undefined> {
         const [users] = await this.db.execute<RowDataPacket[]>(SQL`SELECT * FROM user_names WHERE steamid = SUBSTRING(${steamid}, 11)`)
         const user = users[0]
@@ -47,7 +56,11 @@ export default class UserManager {
         }
     }
 
-    // Gets a user, if they do not exist, fetches it
+    /**
+     * Gets a user, fetching their steam details if not cached
+     * @param steamid The steamid2
+     * @returns 
+     */
     async fetchUser(steamid: string):Promise<IUserData | undefined> {
         let user = await this.getUser(steamid)
         if(!user) {
@@ -92,7 +105,11 @@ export default class UserManager {
         return expUsers
     }
 
-    // Gets a user's name from stats table
+    /**
+     * Get a user's name from the l4d2 stats plugin's table
+     * @param steamid 
+     * @returns 
+     */
     async getStatsName(steamid: string): Promise<string | undefined> {
         const [rows] = await this.db.execute<RowDataPacket[]>(
             "SELECT last_alias FROM stats_users WHERE SUBSTRING(steamid, 11) = SUBSTRING(?, 11)",

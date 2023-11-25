@@ -38,7 +38,6 @@
                     <template v-else-if="server.tags.includes('systemd')">
                       <a @click="processAction(server, 'start')" v-if="!starting[server.port]" class="button is-success">Start Server</a>
                     </template>
-                    <!-- <a @click="processAction(server, 'update')" class="button is-info">Update</a> -->
                   </div>
                 </td>
               </tr>

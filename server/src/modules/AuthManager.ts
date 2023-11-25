@@ -257,6 +257,11 @@ export default class AuthManager {
         return id
     }
 
+    /**
+     * Gets the generated API key by its id from cache, or from database if exists
+     * @param id the API key id
+     * @returns 
+     */
     public async getAPIKey(id: string): Promise<APIKey> {
         let apikey = this.apikeysCache.get(id)
         if(!apikey) {
@@ -274,6 +279,11 @@ export default class AuthManager {
         return apikey
     }
 
+    /**
+     * Gets the generated API key, if exist, for a user
+     * @param steamid steamid2
+     * @returns 
+     */
     public async getAPIKeyForUser(steamid: string): Promise<APIKey> {
         const [rows] = await this.db.execute<RowDataPacket[]>(
             "SELECT * FROM dash_apikeys WHERE SUBSTRING(steamid, 11) = SUBSTRING(?, 11)",
@@ -288,6 +298,11 @@ export default class AuthManager {
          } : null
     }
 
+    /**
+     * (Re-)generates an API key for a user, deleting their old one if it exists.
+     * @param steamid steamid2
+     * @returns 
+     */
     public async createApiKey(steamid: string): Promise<APIKey> {
         const conn = await this.db.getConnection()
         await conn.beginTransaction()
@@ -315,6 +330,11 @@ export default class AuthManager {
         }
     }
 
+    /**
+     * Returns all notifications for a user
+     * @param steamid2 steamid2
+     * @returns 
+     */
     public async getNotifications(steamid2: string): Promise<UserNotification[]> {
         const [rows] = await this.db.execute<RowDataPacket[]>(
             "SELECT * FROM user_notifications WHERE SUBSTRING(steamid, 11) = SUBSTRING(?, 11)", 
@@ -398,6 +418,9 @@ export default class AuthManager {
         )
     }
 
+    /**
+     * Fetches all game admin groups
+     */
     public async fetchGroups() {
         const groups: Record<number, AdminGroup> = {}
         // Returns right join of sm_group_permissions, will return N permissions with group data for each one
@@ -433,7 +456,8 @@ export default class AuthManager {
         }
         this.groups = groups
     }
-    // Merge parent onto group
+
+    // Merge parent flags and codes onto group
     private _mergeGroup(parent: AdminGroup, group: AdminGroup) {
         if(group.immunity == 0) group.immunity = parent.immunity
         
@@ -442,8 +466,6 @@ export default class AuthManager {
 
         group.codes = this._mergeToSet(parent.codes, group.codes)
     }
-
-    // Merge parent onto child
 
     /**
      * Creates a new set that is the merge of child Set<T> onto parent Set<T>. The parent and child params are coverted to a set
@@ -462,6 +484,9 @@ export default class AuthManager {
         return new Set<T>([...pSet, ...cSet])
     }
 
+    /**
+     * Fetches the latest admin data from the table
+     */
     public async fetchAdmins() {
         const [rows] = await this.db.execute<RowDataPacket[]>(`
             SELECT a.*, sag.group_id as group_id, u.last_alias as resolvedName
@@ -527,6 +552,11 @@ export default class AuthManager {
         admin.permissions.codes = this._mergeToSet(group.codes, admin.permissions.codes)
     }
 
+    /**
+     * Returns the resolved fetched admin data, returns an exportable (Set -> string[]) if not full admin
+     * @param fullAdmin Return as-is admin data
+     * @returns 
+     */
     public getAdmins(fullAdmin: boolean = false) {
         if(fullAdmin) return Object.values(this.admins)
         else return Object.values(this.admins)
@@ -535,6 +565,9 @@ export default class AuthManager {
             }) as ReadableAdminData[]
     }
 
+    /**
+     * List of all resolved admin groups
+     */
     get Groups(): AdminGroup[] {
         return Object.values(this.groups)
     }
@@ -549,6 +582,14 @@ export default class AuthManager {
             })
     }
 
+    /**
+     * Sets or deletes a provider for a user
+     * @param steamid steamid2
+     * @param provider
+     * @param providerData null to delete, otherwise provider oauth data
+     * @param refreshToken The refresh token for the user's access
+     * @returns 
+     */
     public async setProvider(steamid: string, provider: OauthProvider, providerData: OauthProviderData, refreshToken: string = null) {
         if(providerData === null) {
             return await this.db.query<OkPacket>(
@@ -573,7 +614,12 @@ export default class AuthManager {
         return sessions as SessionData[]
     }
 
-    // Gets all providers with their id for that provider (discord: <discord_id>)
+    /**
+     * Returns a record of all providers for a user, with key being provider name, value being id for said provider .
+     * Example of `{ discord: "#####" <-- discord account's id }`
+     * @param steamid 
+     * @returns Record<providerName, providerId>
+     */
     public async getProviders(steamid: string): Promise<UserOauthProviders> {
         const [providers] = await this.db.query<RowDataPacket[]>(
             "SELECT provider, provider_id, username, avatar_url FROM dash_providers WHERE SUBSTRING(steamid, 11) = SUBSTRING(?, 11)",
@@ -590,7 +636,13 @@ export default class AuthManager {
         }
         return result
     }
-
+    
+    /**
+     * Gets an admin user by a provider and the id for given provider 
+     * @param provider the provider service
+     * @param id id for provider service
+     * @returns 
+     */
     public async getAdminByProvider(provider: OauthProvider, id: string) {
         const [rows] = await this.db.execute<RowDataPacket[]>(
             "SELECT steamid FROM dash_providers WHERE provider = ? and provider_id = ?", 
@@ -603,6 +655,12 @@ export default class AuthManager {
         return null
     }
 
+    /**
+     * Gets an admin name by a provider and the id for given provider 
+     * @param provider the provider service
+     * @param id id for provider service
+     * @returns 
+     */
     public async getNameFromProvider(provider: OauthProvider, providerId: string): Promise<string> {
         const cached = this.providerNameCache.get(`${provider}:${providerId}`)
         if(cached) return cached

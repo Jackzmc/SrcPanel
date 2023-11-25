@@ -38,6 +38,10 @@ export default class User {
         this.adminData = _authmngr.getAdmin(steamid2)
     }
     
+    /**
+     * Return user's name, fetching it if not cached
+     * @returns string 
+     */
     public async name() {
         if(this._name) return this._name
         const user = await UserManager.instance.fetchUser(this.steamid2)
@@ -46,35 +50,56 @@ export default class User {
         return this._name
     }
 
+    /**
+     * Is user an admin
+     */
     get isAdmin() {
         return this.adminData != null
     }
 
+    /**
+     * Returns the user's computed highest immunity level
+     */
     get immunity() {
         if(!this.isAdmin) return null
         return this.adminData.permissions.immunityLevel
     }
 
+    /**
+     * The base immunity level the user has
+     */
     get baseImmunity() {
         if(!this.isAdmin) return null
         return this.adminData.permissions.base.immunityLevel
     }
 
+    /**
+     * Does the user have root game permissions ("z" flag)
+     */
     get hasRoot() {
         if(!this.isAdmin) return null
         return this.adminData.permissions.flags.includes('z')
     }
 
+    /**
+     * List of base game flags
+     */
     get baseFlags() {
         if(!this.isAdmin) return null
         return this.adminData.permissions.base.flags
     }
 
+    /**
+     * List of game flags (base flags + computed from group(s))
+     */
     get flags() {
         if(!this.isAdmin) return null
         return this.adminData.permissions.flags
     }
 
+    /**
+     * Record of login providers user has
+     */
     get providers() {
         return this._providers
     }
@@ -83,10 +108,19 @@ export default class User {
         return new Set([...this.adminData.permissions.codes])
     }
 
+    /**
+     * Sends a notification for the user on the admin panel
+     * @param message The message to send
+     * @param options
+     */
     async notify(message: string, options: UserNotificationOptions = {}) {
         await this.authmngr.addNotification(this.steamid2, message, options)
     }
 
+    /**
+     * Returns all notifications for user
+     * @returns 
+     */
     async getNotifications(): Promise<UserNotification[]> {
         return await this.authmngr.getNotifications(this.steamid2)
     }
@@ -95,6 +129,12 @@ export default class User {
         await this.authmngr.clearNotifications(this.steamid2)
     }
 
+    /**
+     * Does user have permission for this code, and optionally a sub resource 
+     * @param code 
+     * @param resourceIds 
+     * @returns 
+     */
     hasPermission(code: UserPrivilegeCode, ...resourceIds: (string | number | undefined)[]) {
         if(process.env.DEBUG_DISABLE_PERMISSION_SYSTEM) return true
         if(!this.isAdmin) return false
@@ -109,7 +149,12 @@ export default class User {
         return false
     }
 
-
+    /**
+     * Automatically appends permission strings for resources, returning the code used for permission checks 
+     * @param code the permission code that passed
+     * @param options 
+     * @returns 
+     */
     requirePermission(code: UserPrivilegeCode, options: RequirePermissionOptions = {}): PermissionResult {
         if(process.env.DEBUG_DISABLE_PERMISSION_SYSTEM) return ["*" as UserPrivilegeCode, true]
         let permCode: string = code
@@ -135,6 +180,12 @@ export default class User {
         return [code, this.hasPermission(code)]
     }
 
+    /**
+     * Adds a web entry to the audit logs
+     * @param targetUser Optional, another user this user is targetting 
+     * @param message 
+     * @param payload 
+     */
     async log(targetUser: User | string | null, message: string, payload?: LogData) {
         let user: User = null
         if(targetUser != null) {
@@ -157,14 +208,25 @@ export default class User {
         return this._providers[provider]
     }
 
+    /**
+     * Updates cached list of providers
+     */
     async updateProviders() {
         this._providers = await this.authmngr.getProviders(this.steamid2)
     }
 
+    /**
+     * Returns a list of active web sessions for user
+     * @returns 
+     */
     async getSessions() {
         return await this.authmngr.getSessions(this.steamid2)
     }
 
+    /**
+     * Returns the api key for user, if any was generated
+     * @returns 
+     */
     async getApiKey() {
         return this.authmngr.getAPIKeyForUser(this.steamid2)
     }
