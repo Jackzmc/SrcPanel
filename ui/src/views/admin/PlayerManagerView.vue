@@ -66,26 +66,32 @@
           </div>
         </div>
         <br>
-        <table class="table is-bordered">
-          <thead>
-            <tr>
-              <th>Id</th>
-              <th>Name</th>
-              <th>SteamID</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="admin in filteredAdmins" :key="admin.id">
-              <td>{{ admin.id }}</td>
-              <td>
-                <router-link :to="{name:'manage-user',params:{id:admin.steamid},query:{returnTo:$route.fullPath}}">
-                  {{ admin.name }}
-                </router-link>
-              </td>
-              <td>{{ admin.steamid }}</td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="columns">
+          <SplitTable :items-per-column="10" :data="filteredAdmins" v-slot="slotProps">
+            <div class="column">
+              <table class="table is-bordered">
+                <thead>
+                  <tr>
+                    <th>Id</th>
+                    <th>Name</th>
+                    <th>SteamID</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="admin in slotProps.data" :key="admin.id">
+                    <td>{{ admin.id }}</td>
+                    <td>
+                      <router-link :to="{name:'manage-user',params:{id:admin.steamid},query:{returnTo:$route.fullPath}}">
+                        {{ admin.name }}
+                      </router-link>
+                    </td>
+                    <td>{{ admin.steamid }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </SplitTable>
+        </div>
       </Tab>
     </Tabs>
     <br>
@@ -107,9 +113,10 @@ import Debounce from '@/js/debounce'
 import { request } from '@/js/util';
 import SteamID from 'steamid';
 import Field from '@/components/Field.vue'
+import SplitTable from '@/components/SplitTable.vue'
 
 const AUTO_REFRESH_INTERVAL_MINUTES = 1
-const RECENT_LIMIT = 20
+const RECENT_LIMIT = 25
 const STEAM_PROFILE_URL_REGEX = new RegExp(/https?:\/\/steamcommunity.com\/profiles\/(\d+)/)
 
 const router = useRouter()
