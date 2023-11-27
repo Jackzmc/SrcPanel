@@ -4,6 +4,7 @@
       <tr>
         <th>Name</th>
         <th>Players</th>
+        <th>Current Map</th>
         <th>Direct Connect Command</th>
         <th>Create Lobby Command</th>
       </tr>
@@ -22,9 +23,14 @@
           </span>
         </td>
         <td class="has-text-centered">
-          <span v-if="server.status.online">
+          <template v-if="server.status.online">
             {{ server.status.data.players.length }} / {{ server.status.data.maxplayers }}
-          </span>
+          </template>
+        </td>
+        <td>
+          <template v-if="server.status.online">
+            {{ server.status.data.map }}
+          </template>
         </td>
         <td>
           <p @click="copyCommand" :class="{ 'has-text-grey': !server.status.online }">

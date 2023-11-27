@@ -3,17 +3,18 @@
   <div class="columns">
     <div class="column is-8">
       <p :class='message.type' v-if="message" v-html="message.content"></p>
-
+      <h4 class="title is-4">L4D2</h4>
       <table class="table is-fullwidth">
           <thead>
               <tr>
                   <th>Name</th>
                   <th>Players</th>
+                  <th>Current Map</th>
                   <th>Actions</th>
               </tr>
           </thead>
           <tbody>
-            <template v-for="server in servers" :key="server.id">
+            <template v-for="server in sortedServers" :key="server.id">
               <tr>
                 <td :class="{'is-size-5': server.status.online, 'is-size-6': !server.status.online}">
                   <router-link :to="{name: 'admin-server-view', params: { id: server.id, tab: 'overview' }}" data-tooltip="Click here to manage server">
@@ -25,7 +26,8 @@
                     </div>
                   </div>
                 </td>
-                <td><span v-if="server.status.online">{{server.status.data.players.length}} / {{server.status.data.maxplayers}}</span></td>
+                <td><template v-if="server.status.online">{{server.status.data.players.length}} / {{server.status.data.maxplayers}}</template></td>
+                <td><template v-if="server.status.online">{{ server.status.data.map }}</template></td>
                 <td>
                   <div class="buttons">
                     <template v-if="server.status.online">
@@ -90,6 +92,10 @@ let starting = ref<Record<string, boolean>>({})
 let refreshTimer = ref<any>()
 let secondsTimer = ref<any>()
 let lastRefresh = ref<number | undefined>(0)
+
+const sortedServers = computed(() => {
+  return servers.value.sort((a,b) => a.sortOrder - b.sortOrder)
+})
 
 function sendMessage(type: string, content: string) {
   message.value = {

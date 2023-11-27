@@ -1,7 +1,8 @@
 <template>
-<div class="container is-fullwidth">
-    <div class="columns is-multiline is-variable is-1">
-      <div class="column is-">
+<div class="container is-fluid">
+    <div class="columns is-multiline is-variable is-1 is-fullwidth">
+      <div class="column">
+          <h4 class="title is-4">L4D2</h4>
           <Servers @refresh="onServerRefresh" />
           <p class="is-inline is-pulled-right" style="margin-right: 90px">
             <em v-if="countdownText">{{countdownText}}</em>
