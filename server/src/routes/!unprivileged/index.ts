@@ -104,32 +104,6 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         })
     })
 
-    fastify.get('/servers', (req: FastifyRequest<{Querystring: {'compact'?: boolean}}>, reply) =>  {
-        const servers = fastify.servers.getAll()
-        if(req.query.compact) {
-            reply.send(servers.map(server => {
-                return { 
-                    id: server.id,
-                    name: server.name,
-                }
-            }))
-        } else {
-            reply.send(servers.map(server => {
-                return {
-                    name: server.name,
-                    ip: server.ip,
-                    port: server.port,
-                    type: server.type,
-                    tags: server.tags,
-                    domain: server.domain,
-                    id: server.id,
-                    status: server.status
-                }
-            }))
-        }
-        fastify.servers.resetInactivity()
-    })
-
     fastify.get('/graph', async(req: FastifyRequest<{Querystring: LimitedLogQueryType}>, reply) => {
         const searchMessage = req.query.searchMessage ? `%${req.query.searchMessage}%` : (req.query.search_message ? `%${req.query.search_message}%` : null)
 

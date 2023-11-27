@@ -11,6 +11,33 @@ interface AuthTokenData {
 }
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
+
+    fastify.get('/', (req: FastifyRequest<{Querystring: {'compact'?: boolean}}>, reply) =>  {
+        const servers = fastify.servers.getAll()
+        if(req.query.compact) {
+            reply.send(servers.map(server => {
+                return { 
+                    id: server.id,
+                    name: server.name,
+                }
+            }))
+        } else {
+            reply.send(servers.map(server => {
+                return {
+                    name: server.name,
+                    ip: server.ip,
+                    port: server.port,
+                    type: server.type,
+                    tags: server.tags,
+                    domain: server.domain,
+                    id: server.id,
+                    status: server.status,
+                    sortOrder: server.sortOrder
+                }
+            }))
+        }
+        fastify.servers.resetInactivity()
+    })
     
     fastify.post('/status', async(req: FastifyRequest<{Params: {id: string}}>, reply) => {
         const authKey = req.headers['x-authtoken'] as string
