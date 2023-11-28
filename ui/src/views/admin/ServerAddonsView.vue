@@ -33,8 +33,8 @@
           <Field label="Share" icon-left="folder">
             <div class="select">
               <select v-model="selectedShare">
-                <option v-for="share in shares" :key="share" :value="share">
-                  {{share}}
+                <option v-for="share in shares" :key="share.name" :value="share.id">
+                  {{share.name}}
                 </option>
               </select>
             </div>
@@ -176,6 +176,25 @@
     <p class="title is-4 has-text-centered has-text-danger">Failed to load addons list</p>
     <p class="subtitle is-6 has-text-centered has-text-danger">{{error}}</p>
   </div>
+  <div class="container" v-else-if="!selectedShare">
+    <h4 class="title is-4">Select a share</h4>
+    <div class="tile is-ancestor">
+      <div class="tile is-horizontal">
+        <div class="tile is-parent" v-for="share in shares" :key="share.id">
+          <a class="tile is-child box has-background-info" @click="selectedShare = share.id">
+            <h4 class="title is-4  has-text-white">{{ share.name }} <span v-if="share.appid" data-tooltip="The steam appid for this share" class="tag is-dark is-pulled-right">{{ share.appid }}</span></h4>
+            <p class="subtitle mb-0  has-text-white">{{ Object.keys(share.destinations).length }} destinations</p>
+            <p class="subtitle mb-0  has-text-white">{{ share.serversCount }} servers</p>
+            <div class="tags mt-4">
+              <span class="tag" v-for="(enabled, source) in share.downloadSources" :key="source">
+                {{ source.replace(/_/g, ' ') }}
+              </span>
+            </div>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
   <div v-else>
     <p class="title is-2 has-text-centered mt-2"><Icon icon="spinner" spin icon-class="mr-5">Fetching addons...</Icon></p>
     <p class="subtitle is-4 has-text-centered">This may take some time, please wait...</p>
@@ -189,6 +208,7 @@ import { ref, watch, computed, onBeforeMount, onMounted } from 'vue'
 import { onBeforeRouteUpdate, useRoute, useRouter } from 'vue-router'
 import Field from '@/components/Field.vue'
 import { formatDate, formatSize } from '@/js/util.js'
+import { ShareInfo } from '../../../../common-types/Share'
 
 export interface AddonUpdatePayload {
   deleted?: boolean,
@@ -247,7 +267,7 @@ function openSelectedAddon() {
   }
 }
 
-let shares = ref<string[]>(["default"])
+let shares = ref<ShareInfo[]>([])
 let shareInfo = ref()
 let totalFileSize = ref(0)
 const computedTotalFileSize = computed(() => {
@@ -379,10 +399,20 @@ async function fetchShares() {
   error.value = undefined
   shares.value = []
   try {
-    const response = await fetch(`/api/shares`)
+    const response = await fetch(`/api/shares?full=1`)
     const json = await response.json()
     if(response.ok) {
-      shares.value = json.shares
+      shares.value = json.shares.map((share: ShareInfo) => {
+        const serversCount = Object.values(share.destinations).reduce((pv, cv) => {
+          console.log(pv, cv)
+          if(cv.serverIds) return pv + cv.serverIds.length
+          return pv
+        }, 0)
+        return {
+          serversCount,
+          ...share
+        }
+      })
     } else {
       error.value = json.error ? `${json.error}: ${json.message}` : response.statusText
     }
@@ -440,15 +470,13 @@ function formatAddonEntry(entry: any) {
 onBeforeMount(async() => {
   await fetchShares()
   if(route.params.shareId) {
-    const share = route.params.shareId.toString()
-    if(shares.value.includes(share)) {
-      selectedShare.value = share.toString()
-    } else {
+    const shareId = route.params.shareId.toString()
+    const share = shares.value.find(share => share.id === shareId)
+    if(!share) {
       error.value = `No shares with the id "${share}" were found`
-      return
+    } else {
+      selectedShare.value = shareId
     }
-  } else {
-    selectedShare.value = "default"
   }
 })
 
