@@ -124,7 +124,7 @@ const routes = [
   },
   {
     name: 'admin-addons',
-    path: '/admin/addons/:shareId?',
+    path: '/admin/addons/:shareId?/',
     component: () => import('../views/admin/ServerAddonsView.vue'),
     meta: {
       title: 'Addons / Maps',

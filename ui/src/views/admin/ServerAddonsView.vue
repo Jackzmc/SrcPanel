@@ -181,7 +181,7 @@
     <div class="tile is-ancestor">
       <div class="tile is-horizontal">
         <div class="tile is-parent" v-for="share in shares" :key="share.id">
-          <a class="tile is-child box has-background-info" @click="selectedShare = share.id">
+          <a class="tile is-child box has-background-info" @click="setShare(share.id)">
             <h4 class="title is-4  has-text-white">{{ share.name }} <span v-if="share.appid" data-tooltip="The steam appid for this share" class="tag is-dark is-pulled-right">{{ share.appid }}</span></h4>
             <p class="subtitle mb-0  has-text-white">{{ Object.keys(share.destinations).length }} destinations</p>
             <p class="subtitle mb-0  has-text-white">{{ share.serversCount }} servers</p>
@@ -196,6 +196,7 @@
     </div>
   </div>
   <div v-else>
+    <br>
     <p class="title is-2 has-text-centered mt-2"><Icon icon="spinner" spin icon-class="mr-5">Fetching addons...</Icon></p>
     <p class="subtitle is-4 has-text-centered">This may take some time, please wait...</p>
   </div>
@@ -251,11 +252,21 @@ let sort = ref<{
 
 let selectedShare = ref<string>()
 watch(selectedShare, async (value) => {
+  if(!value) return
   router.replace({
     params: {shareId: value},
   })
   await fetchAddons()
   openSelectedAddon()
+})
+watch(() => route.params.shareId, (val) => {
+  if(val == "") {
+    ready.value = false
+    error.value = undefined
+    addons.value = []
+    prefetch.value = undefined
+    selectedShare.value = undefined
+  }
 })
 watch(() => route.params.addon, openSelectedAddon)
 
@@ -391,6 +402,14 @@ async function onChildUpdate(payload: AddonUpdatePayload) {
   }
 }
 
+function setShare(id: string) {
+  selectedShare.value = id
+  router.replace({
+    name: "share-addons-s",
+    params: { shareId: id }
+  })
+}
+
 async function onChildClose() {
   router.push({ name: "admin-addons" })
 }
@@ -404,7 +423,6 @@ async function fetchShares() {
     if(response.ok) {
       shares.value = json.shares.map((share: ShareInfo) => {
         const serversCount = Object.values(share.destinations).reduce((pv, cv) => {
-          console.log(pv, cv)
           if(cv.serverIds) return pv + cv.serverIds.length
           return pv
         }, 0)
@@ -472,6 +490,7 @@ onBeforeMount(async() => {
   if(route.params.shareId) {
     const shareId = route.params.shareId.toString()
     const share = shares.value.find(share => share.id === shareId)
+    console.log(shareId, share)
     if(!share) {
       error.value = `No shares with the id "${share}" were found`
     } else {
