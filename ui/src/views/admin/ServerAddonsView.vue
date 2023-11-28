@@ -9,17 +9,6 @@
         </div>
       </div>
       <div class="level-right">
-        <div class="level-item">
-          <Field label="Share" icon-left="folder">
-            <div class="select">
-              <select v-model="selectedShare">
-                <option v-for="share in shares" :key="share" :value="share">
-                  {{share}}
-                </option>
-              </select>
-            </div>
-          </Field>
-        </div>
         <div class="level-item" v-if="shareInfo.downloadSources.steam_workshop">
           <div class="field">
             <label class="label">&nbsp;</label>
@@ -41,6 +30,17 @@
           </div>
         </div>
         <div class="level-item">
+          <Field label="Share" icon-left="folder">
+            <div class="select">
+              <select v-model="selectedShare">
+                <option v-for="share in shares" :key="share" :value="share">
+                  {{share}}
+                </option>
+              </select>
+            </div>
+          </Field>
+        </div>
+        <div class="level-item">
           <div class="field">
             <label class="label">&nbsp;</label>
             <div class="control">
@@ -52,11 +52,8 @@
         </div>
       </div>
     </div>
-    <p class="subtitle is-4" style="width:60%">Click on any addon to view additional info and to (un)install it from servers. <router-link to="/admin/servers/">Click here to view servers page</router-link></p>
-    <br>
     <div class="columns">
       <div class="column">
-
         <table class="table is-striped is-fullwidth">
           <thead>
             <tr>
@@ -66,7 +63,7 @@
                 </Field>
               </th>
               <th></th>
-              <th data-tooltip="Total file size of all addons">{{ formatSize(computedTotalFileSize, true, 0) }}</th>
+              <th data-tooltip="Total file size of all addons" style="vertical-align:bottom">{{ formatSize(computedTotalFileSize, true, 0) }}</th>
               <th></th>
               <th></th>
             </tr>
