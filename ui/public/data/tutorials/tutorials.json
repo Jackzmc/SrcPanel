@@ -10,5 +10,11 @@
         "title": "Addon Installing Video",
         "videoSrc": "https://i.jackz.me/2023/09/DimwittedVuByh.mp4",
         "type": "video"
+    },
+    {
+        "id": "autoexec",
+        "title": "Automatic Lobby Setup (autoexec)",
+        "type": "text",
+        "filename": "autoexec.md"
     }
 ]

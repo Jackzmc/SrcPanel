@@ -7,12 +7,21 @@
           <p>{{ uptime }} uptime</p>
           <p>Node.JS Version {{serverHealth?.versions?.node}}</p>
           <br>
-          <a
+          <div class="buttons">
+            <a
               :disabled="canUpdate"
               :class="['button', {'is-loading': updateStatus.state === 'CHECKING'}]"
               @click="updateServer">
               Update Server
-          </a>
+            </a>
+            <a
+              :disabled="canUpdate"
+              :class="['button']"
+              @click="restartServer">
+              Restart Server
+            </a>
+          </div>
+
           <p class="has-text-danger" v-if="updateStatus.error">{{updateStatus.error}}</p>
           <p class="has-text-info" v-else-if="updateStatus.upToDate">Server is already up to date.</p>
           <p class="has-text-success" v-else-if="updateStatus.state === 'SUCCESS'">Server has been updated successfully.</p>
@@ -48,7 +57,7 @@ const props = defineProps<{
 }>()
 
 let serverHealth = ref<Partial<HealthReport>>({})
-    let updateStatus = ref<{
+let updateStatus = ref<{
   state: UpdateState | "CHECKING" | "SUCCESS",
   error?: string,
   upToDate?: boolean
