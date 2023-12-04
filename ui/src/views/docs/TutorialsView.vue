@@ -43,7 +43,7 @@
       </nav>
       <div class="box content" v-if="selectedTutorial?.description">
         <h4 class="title is-4">Tutorial Description</h4>
-        <p>{{ selectedTutorial.description }}</p>
+        <p v-html="selectedTutorial.description"></p>
       </div>
     </div>
   </div>
@@ -72,6 +72,7 @@ interface Tutorial {
 let tutorials = ref<Tutorial[]>()
 let searchQuery = ref()
 let content = ref()
+let selectedTutorial = ref<Tutorial>()
 
 const filteredTutorials = computed(() => {
   if(!tutorials.value) return []
@@ -81,7 +82,6 @@ const filteredTutorials = computed(() => {
     return tut.title.toLowerCase().includes(query)
   })
 })
-let selectedTutorial = ref<Tutorial>()
 
 async function selectTutorial(tutorial: Tutorial) {
   selectedTutorial.value = tutorial
@@ -94,7 +94,12 @@ async function selectTutorial(tutorial: Tutorial) {
 onBeforeMount(async() => {
   const response = await request(`/data/tutorials/tutorials.json?t=${BUILD_TIMESTAMP}`)
   if(response?.ok) {
-    tutorials.value = await response.json()
+    const tuts = await response.json()
+    tutorials.value = tuts.map((tut: Tutorial) => {
+      if(tut.description) tut.description = marked(tut.description)
+      return tut
+    })
+
     if(route.params.id) {
       const tutorial = tutorials.value!.find(tut => tut.id === route.params.id)
       if(tutorial) selectTutorial(tutorial)
