@@ -3,60 +3,62 @@
   <div class="columns">
     <div class="column is-8">
       <p :class='message.type' v-if="message" v-html="message.content"></p>
-      <h4 class="title is-4">L4D2</h4>
-      <table class="table is-fullwidth">
-          <thead>
-              <tr>
-                  <th>Name</th>
-                  <th>Players</th>
-                  <th>Current Map</th>
-                  <th>Actions</th>
-              </tr>
-          </thead>
-          <tbody>
-            <template v-for="server in sortedServers" :key="server.id">
-              <tr>
-                <td :class="{'is-size-5': server.status.online, 'is-size-6': !server.status.online}">
-                  <router-link :to="{name: 'admin-server-view', params: { id: server.id, tab: 'overview' }}" data-tooltip="Click here to manage server">
-                    <b :class="getServerClasses(server)" >{{server.name}}</b>
-                  </router-link>
-                  <div class="tags">
-                    <div class="tag" v-for="tag in server.tags" :key="tag">
-                      {{ tag }}
-                    </div>
-                  </div>
-                </td>
-                <td><template v-if="server.status.online">{{server.status.data.players.length}} / {{server.status.data.maxplayers}}</template></td>
-                <td><template v-if="server.status.online">{{ server.status.data.map }}</template></td>
-                <td>
-                  <div class="buttons">
-                    <template v-if="server.status.online">
-                      <template v-if="server.tags.includes('rcon')">
-                        <a @click="processAction(server, 'stop')" class="button is-dark">Request Restart</a>
-                        <a @click="processAction(server, 'unreserve')" class="button is-dark">Unreserve</a>
-                        <a @click="processAction(server, 'stop?force=1')" class="button is-warning" v-if="shiftPressed">Force Restart</a>
-                      </template>
-                    </template>
-                    <template v-else-if="server.tags.includes('systemd')">
-                      <a @click="processAction(server, 'start')" v-if="!starting[server.port]" class="button is-success">Start Server</a>
-                    </template>
-                  </div>
-                </td>
-              </tr>
-              <table v-if="selectedServer && selectedServer.id == server.id" class="table is-fullwidth">
+      <template v-for="group in sortedServers" :key="group.id">
+        <h4 class="title is-4">{{ group.name }}</h4>
+        <table class="table is-fullwidth">
+            <thead>
                 <tr>
+                    <th>Name</th>
+                    <th>Players</th>
+                    <th>Current Map</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+              <template v-for="server in group.servers" :key="server.id">
+                <tr>
+                  <td :class="{'is-size-5': server.status.online, 'is-size-6': !server.status.online}">
+                    <router-link :to="{name: 'admin-server-view', params: { id: server.id, tab: 'overview' }}" data-tooltip="Click here to manage server">
+                      <b :class="getServerClasses(server)" >{{server.name}}</b>
+                    </router-link>
+                    <div class="tags">
+                      <div class="tag" v-for="tag in server.tags" :key="tag">
+                        {{ tag }}
+                      </div>
+                    </div>
+                  </td>
+                  <td><template v-if="server.status.online">{{server.status.data.players.length}} / {{server.status.data.maxplayers}}</template></td>
+                  <td><template v-if="server.status.online">{{ server.status.data.map }}</template></td>
                   <td>
-                    {{ selectedServer }}
                     <div class="buttons">
-                      <a class="button is-info">Configs</a>
-                      <a class="button is-black">Console</a>
+                      <template v-if="server.status.online">
+                        <template v-if="server.tags.includes('rcon')">
+                          <a @click="processAction(server, 'stop')" class="button is-dark">Request Restart</a>
+                          <a @click="processAction(server, 'unreserve')" class="button is-dark">Unreserve</a>
+                          <a @click="processAction(server, 'stop?force=1')" class="button is-warning" v-if="shiftPressed">Force Restart</a>
+                        </template>
+                      </template>
+                      <template v-else-if="server.tags.includes('systemd')">
+                        <a @click="processAction(server, 'start')" v-if="!starting[server.port]" class="button is-success">Start Server</a>
+                      </template>
                     </div>
                   </td>
                 </tr>
-              </table>
-            </template>
-          </tbody>
-      </table>
+                <table v-if="selectedServer && selectedServer.id == server.id" class="table is-fullwidth">
+                  <tr>
+                    <td>
+                      {{ selectedServer }}
+                      <div class="buttons">
+                        <a class="button is-info">Configs</a>
+                        <a class="button is-black">Console</a>
+                      </div>
+                    </td>
+                  </tr>
+                </table>
+              </template>
+            </tbody>
+        </table>
+      </template>
       <p class="is-inline is-pulled-right" style="margin-right: 90px">
         <em v-if="lastRefresh">refreshing in {{lastRefresh}}s</em>
         <Icon icon="spinner" v-else spin />

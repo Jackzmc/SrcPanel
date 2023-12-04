@@ -129,3 +129,21 @@ export enum FinaleStage {
     GauntletEscape = 17,
     Unknown = 18,
 };
+
+export interface GroupInfo {
+    name: string,
+}
+
+export interface ServerInfo {
+    id?: string,
+    name: string,
+    domain?: string,
+    port: number,
+    type: string,
+    ip: string,
+}
+
+  
+export interface ExportGroupInfo extends GroupInfo {
+    servers: Record<string, ServerInfo>
+}

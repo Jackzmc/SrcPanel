@@ -10,9 +10,15 @@ import sqlite3 from 'sqlite3'
 import SteamAPI from '../steam.js'
 import { ShareDestination, ShareDestinations, ShareInfo } from '../../../../common-types/Share.js'
 import ConfigManager from '../ConfigManager.js'
+import { GroupInfo } from '../../../../common-types/Server.js'
 
 // How long after no status requests to switch from short to long refresh
 const SHORT_REFRESH_TIMEOUT = 1000 * 60
+
+export interface ConfigGroupData {
+  servers: Record<string, ConfigServerData>,
+  name?: string
+}
 
 export default class ServerManager {
   private servers: Record<string, Server> = {}
@@ -26,6 +32,8 @@ export default class ServerManager {
   private longRefreshInterval: number
   private refreshTimer: ReturnType<typeof setTimeout>
   private refreshTimeout: ReturnType<typeof setTimeout> = null
+
+  private groups: Record<string, GroupInfo> = {}
 
   private cfgManger: ConfigManager
 
@@ -47,12 +55,33 @@ export default class ServerManager {
    */
   public getAll() {
     return Object.values(this.servers)
-      .sort((a,b) => {
-        if(b.sortOrder != undefined && a.sortOrder != undefined) return a.sortOrder - b.sortOrder
-        else if(b.sortOrder && !a.sortOrder) return 1
-        else if(!b.sortOrder && a.sortOrder) return -1
-        else return a.port - b.port
-      })
+      .sort(this.sortServer)
+  }
+
+  /**
+   * Returns all servers grouped by their group
+   * @param mapFn Function to map the individual server's data (only include what you need)
+   * @returns Record<string, GroupInfo | {servers: Server[]}>
+   */
+  public getAllGrouped<T>(mapFn: (value: Server) => (T)) {
+    return Object.entries(this.groups).map(([groupId, data]) => {
+      return {
+        id: groupId,
+        name: data.name,
+        servers: Object.fromEntries(Object.entries(this.servers)
+          .filter(([, server]) => server.group === groupId)
+          .sort(([gid1,server1],[gid2,server2]) => this.sortServer(server1, server2))
+          .map(([gid,server]) => [gid, mapFn(server)] )
+        )
+      }
+    })
+  }
+
+  private sortServer(a: Server, b: Server) {
+    if(b.sortOrder != undefined && a.sortOrder != undefined) return a.sortOrder - b.sortOrder
+    else if(b.sortOrder && !a.sortOrder) return 1
+    else if(!b.sortOrder && a.sortOrder) return -1
+    else return a.port - b.port
   }
 
   /**
@@ -205,60 +234,60 @@ export default class ServerManager {
     this.longRefreshInterval = 1000 * (config['longRefreshIntervalSeconds'] ?? 60)
 
     const serverPromises = []
-    let i = 0
-    for (const [id, server] of Object.entries<ConfigServerData>(config)) {
-      if(!server.name) {
-        console.warn(`[ServerManager] WARN: Skipping ${id}: Server has no name`)
-      } else if(!server.type) {
-        console.warn(`[ServerManager] WARN: Skipping ${id}: ${server.name} has no type`)
-      } else if(!server.ip) {
-        console.warn(`[ServerManager] WARN: Skipping ${id}: ${server.name} has no ip`)
-      } else {
-        const [, host, port] = server.ip.match(/([a-zA-Z0-9.]+):?(\d*)/)
-        serverPromises.push(new Promise((resolve, reject) => {
-          DNS.lookup(host, {
-            verbatim: false
-          }, (err, address, family) => {
-            if (err) {
-              console.warn(`[ServerManager] Warn: Could not resolve IP for hostname ${host}:\n`, err)
-              return reject(err)
-            }
+    for(const [groupId, data] of Object.entries<ConfigGroupData>(config)) {
+      this.groups[groupId] = {
+        name: data.name ?? groupId
+      }
+      for (const [id, server] of Object.entries<ConfigServerData>(data.servers)) {
+        if(!server.name) {
+          console.warn(`[ServerManager] WARN: Skipping ${id}: Server has no name`)
+        } else if(!server.type) {
+          console.warn(`[ServerManager] WARN: Skipping ${id}: ${server.name} has no type`)
+        } else if(!server.ip) {
+          console.warn(`[ServerManager] WARN: Skipping ${id}: ${server.name} has no ip`)
+        } else {
+          const [, host, port] = server.ip.match(/([a-zA-Z0-9.]+):?(\d*)/)
+          serverPromises.push(new Promise((resolve, reject) => {
+            DNS.lookup(host, {
+              verbatim: false
+            }, (err, address, family) => {
+              if (err) {
+                console.warn(`[ServerManager] Warn: Could not resolve IP for hostname ${host}:\n`, err)
+                return reject(err)
+              }
 
-            const tags = server.tags ?? []
-            if(server.systemd) tags.push('systemd')
-            if(server.rcon) tags.push('rcon')
+              const tags = server.tags ?? []
+              if(server.systemd) tags.push('systemd')
+              if(server.rcon) tags.push('rcon')
 
-            let rconPassword = server.rcon?.password?.text
-            if(server.rcon && server.rcon.password.env) {
-              rconPassword = process.env[server.rcon.password.env]
-            }
+              let rconPassword = server.rcon?.password?.text
+              if(server.rcon && server.rcon.password.env) {
+                rconPassword = process.env[server.rcon.password.env]
+              }
 
-            this.servers[id] = new Server({
-              id,
-              name: server.name,
-              domain: host,
-              port: Number(port) ?? 27015,
-              ip: address,
-              type: server.type,
-              tags: tags,
-              cfgDirectory: server.cfgDirectory,
-              logsPath: server.logsPath,
-              activityId: server.activityId,
-              systemd: server.systemd,
-              rcon: server.rcon ? {
-                password: rconPassword,
-                exitCommand: server.rcon.exitCommand || "exit",
-                requestExitCommand: server.rcon.requestExitCommand || "exit"
-              } : null,
-              status: {
-                online: false,
-                data: null
-              },
-              sortOrder: server.sortOrder
+              this.servers[id] = new Server(groupId, {
+                id,
+                name: server.name,
+                domain: host,
+                port: Number(port) ?? 27015,
+                ip: address,
+                type: server.type,
+                tags: tags,
+                cfgDirectory: server.cfgDirectory,
+                logsPath: server.logsPath,
+                activityId: server.activityId,
+                systemd: server.systemd,
+                rcon: server.rcon ? {
+                  password: rconPassword,
+                  exitCommand: server.rcon.exitCommand || "exit",
+                  requestExitCommand: server.rcon.requestExitCommand || "exit"
+                } : null,
+                sortOrder: server.sortOrder
+              })
+              resolve(true)
             })
-            resolve(true)
-          })
-        }))
+          }))
+        }
       }
     }
 

@@ -13,8 +13,8 @@ interface AuthTokenData {
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
 
     fastify.get('/', (req: FastifyRequest<{Querystring: {'compact'?: boolean}}>, reply) =>  {
-        const servers = fastify.servers.getAll()
         if(req.query.compact) {
+            const servers = fastify.servers.getAll()
             reply.send(servers.map(server => {
                 return { 
                     id: server.id,
@@ -22,10 +22,11 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 }
             }))
         } else {
-            reply.send(servers.map(server => {
+            reply.send(fastify.servers.getAllGrouped(server => {
                 return {
                     name: server.name,
                     ip: server.ip,
+                    group: server.group,
                     port: server.port,
                     type: server.type,
                     tags: server.tags,

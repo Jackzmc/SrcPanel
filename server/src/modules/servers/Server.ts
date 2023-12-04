@@ -3,7 +3,7 @@ import { Rcon } from 'rcon-client';
 import { open, readdir } from 'fs/promises'
 import { join, resolve } from 'path'
 import { createReadStream, statSync } from 'fs';
-import { PlayerAction, PlayerState, PluginServerStatus } from '../../../../common-types/Server';
+import { PlayerAction, PlayerState, PluginServerStatus, ServerInfo } from '../../../../common-types/Server';
 import { EventEmitter } from 'node:events';
 import { GenericError } from '../../util.js';
 import { Tail } from 'tail'
@@ -53,8 +53,8 @@ export interface BaseServerData {
     serviceName: string;
   },
   tags: string[],
-  status: ServerStatus
 }
+
 
 export interface ConfigServerData extends BaseServerData {
   rcon ? : {
@@ -89,15 +89,6 @@ export interface ServerStatus {
   online: boolean
 }
 
-export interface ServerInfo {
-  id?: string,
-  name: string,
-  domain?: string,
-  port: number,
-  type: string,
-  ip: string,
-}
-
 const sleep = time => new Promise(res => setTimeout(res, time));
 const MAX_PLAYER_STATS = 300
 const MAX_LOGS_LINES = 30
@@ -123,6 +114,7 @@ export default class Server extends EventEmitter {
     private _cvars: Record<string, string>
     private _startTime: number
     private _logsCache: string[] = []
+    private _group: string
     #features: Features[] = []
     private rcon?: {
       password: string,
@@ -139,8 +131,9 @@ export default class Server extends EventEmitter {
       
     public playerCounts: PlayerStats[] = [] 
 
-    constructor(server: ServerData) {
+    constructor(group: string, server: ServerData) {
         super()
+        this._group = group
         this._info = {
           id: server.id,
           name: server.name,
@@ -215,6 +208,13 @@ export default class Server extends EventEmitter {
         features: this.features,
         tags: this.tags
       } 
+    }
+
+    /**
+      Returns the group (if any) server belongs to
+    */
+    public get group() {
+      return this._group
     }
 
     /**
