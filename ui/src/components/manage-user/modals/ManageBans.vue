@@ -341,7 +341,6 @@ function onExEditBlur() {
     id: edited.value.executorId!,
     name: undefined
   }
-  edited.value.executorId = undefined
 }
 async function save() {
   if(!ban.value) return
