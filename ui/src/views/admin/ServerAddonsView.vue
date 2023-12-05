@@ -183,12 +183,26 @@
         <div class="tile is-parent" v-for="share in shares" :key="share.id">
           <a class="tile is-child box has-background-info" @click="setShare(share.id)">
             <h4 class="title is-4  has-text-white">{{ share.name }} <span v-if="share.appid" data-tooltip="The steam appid for this share" class="tag is-dark is-pulled-right">{{ share.appid }}</span></h4>
-            <p class="subtitle mb-0  has-text-white">{{ Object.keys(share.destinations).length }} destinations</p>
-            <p class="subtitle mb-0  has-text-white">{{ share.serversCount }} servers</p>
-            <div class="tags mt-4">
-              <span class="tag" v-for="(enabled, source) in share.downloadSources" :key="source">
-                {{ source.replace(/_/g, ' ') }}
+            <div class="tags" data-tooltip="Install destinations">
+              <span class="tag is-dark" v-for="(dest, id) in share.destinations" :key="id">
+                {{ id }}
               </span>
+            </div>
+            <div class="level mt-4">
+              <div class="level-left" data-tooltip="Supported file sources">
+                <div class="level-item" v-for="(enabled, source) in share.downloadSources" :key="source">
+                  <span class="tag">
+                    {{ source.replace(/_/g, ' ') }}
+                  </span>
+                </div>
+              </div>
+              <div class="level-right" data-tooltip="Supported file extensions">
+                <div class="level-item" v-for="ext in share.fileExts" :key="ext">
+                  <span class="tag">
+                    {{ ext }}
+                  </span>
+                </div>
+              </div>
             </div>
           </a>
         </div>
