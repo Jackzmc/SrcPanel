@@ -53,7 +53,7 @@
             </router-link>
           </ul>
         </div>
-        <router-view :priv-user="privUser" :user="user" :user-admin-data="userAdminData" @close="router.push(routerHref)" />
+        <router-view :priv-user="privUser" :user="user" :user-admin-data="userAdminData" @close="router.push(routerHref)" @update-user="onUserUpdate" />
       </section>
       <section class="modal-card-body has-text-centered" v-else>
         <img src="@/assets/loader.gif" />
@@ -136,6 +136,12 @@ function closeModal(event: KeyboardEvent) {
     if(e.key == "Escape") {
       close()
     }
+}
+
+function onUserUpdate(newUser: any) {
+  console.log('getting user update', newUser)
+  if(!user.value) return
+  user.value.name = newUser.name
 }
 
 onBeforeMount(async () => {

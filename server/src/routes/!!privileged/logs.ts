@@ -154,6 +154,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                     nameRecord[user.steamid] = user.name
                 }
                 // Iterate logs and replace
+                // TODO: this is failing to find and replace
                 for(const log of logs) {
                     if(log.client && !log.clientName) {
                         log.clientName = nameRecord[log.client.slice(10)]
@@ -174,7 +175,6 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             cache,
             totals: {
                 total: cache.totalRows, // # of rows in entire data source
-                // filteredTotal: count[0].count, // # of rows in entire data source WITH filters
                 count: logs.length // # of rows + filtered + pagination (<= limit)
             },
             // pages: Math.ceil(count[0].count / limit),

@@ -117,6 +117,20 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
     })
 
+    fastify.post('/:steamid/update', async(req: FastifyRequest<{Params: {steamid: string}}>, reply) => {
+        if(!req.params.steamid || req.params.steamid.length < 10) {
+            return reply.status(400).send({
+                error: "INVALID_STEAMID",
+                message: "Provided steamid is invalid"
+            })
+        }
+
+        const user = await fastify.users.fetchUser(new SteamID(req.params.steamid).getSteamID64(), true)
+        return {
+            user
+        }
+    })
+
     fastify.get('/:steamid', async(req: FastifyRequest<{
         Params: { steamid: string }, 
         Querystring: {

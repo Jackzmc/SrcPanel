@@ -37,33 +37,47 @@ export default class UserManager {
         return await this.db.query(SQL`INSERT INTO user_names (steamid, name, avatar_hash) VALUES (SUBSTRING(${user.steamid}, 11), ${user.name}, ${user.avatarHash})`)
     }
 
+    async updateUser(user: IUserData) {
+        if(user.steamid.length <= 10) throw new Error("steamid is invalid (bad length)")
+        return await this.db.query(SQL`UPDATE user_names SET name = ${user.name}, avatar_hash = ${user.avatarHash} WHERE steamid = SUBSTRING(${user.steamid},11)`)
+    }
+
     /**
      * Returns a user from user name cache if they exist. Queues background update if data is stale (returning the stale data)
      * @param steamid Steamid2
      * @returns 
      */
     async getUser(steamid: string): Promise<IUserData | undefined> {
-        const [users] = await this.db.execute<RowDataPacket[]>(SQL`SELECT * FROM user_names WHERE steamid = SUBSTRING(${steamid}, 11)`)
-        const user = users[0]
-        if(!user) return null
+        const user = await this.getUserDirect(steamid)
         // Don't wait for the result, serve the stale data:
         if(Date.now() - user.timestamp > STALE_USER_CACHE_TIME) this.fetchUser(steamid)
-        return {
-            steamid: user.steamid,
-            avatarHash: user.avatar_hash,
-            name: user.namee,
-            timestamp: user.timestamp
+        return user
+    }
+
+    private async getUserDirect(steamid: string): Promise<IUserData|null> {
+        const [users] = await this.db.execute<RowDataPacket[]>(SQL`SELECT * FROM user_names WHERE steamid = SUBSTRING(${steamid}, 11)`)
+        const user = users[0]
+        if(user) {
+            return {
+                steamid: user.steamid,
+                avatarHash: user.avatar_hash,
+                name: user.namee,
+                timestamp: user.timestamp
+            }
         }
+        return null
     }
 
     /**
      * Gets a user, fetching their steam details if not cached
      * @param steamid The steamid2
+     * @param force force bypass cache fetching latest info
      * @returns 
      */
-    async fetchUser(steamid: string):Promise<IUserData | undefined> {
-        let user = await this.getUser(steamid)
-        if(!user) {
+    async fetchUser(steamid: string, force = false): Promise<IUserData | undefined> {
+        let user = await this.getUserDirect(steamid)
+        const hasPrevious = user != undefined
+        if(!user || force) {
             const users = await this.steam.getUserDetails([steamid])
             if(users.length > 0) {
                 user = {
@@ -71,7 +85,11 @@ export default class UserManager {
                     name: users[0].personaname,
                     avatarHash: users[0].avatarhash
                 } as IUserData
-                await this.insertUser(user)
+                // TODO: is inserting new
+                if(hasPrevious)
+                    await this.updateUser(user)
+                else
+                    await this.insertUser(user)
             }
         }
         return user
