@@ -662,20 +662,6 @@ async function fetchServerInfo() {
     const json = await response.json()
     if(response.ok) {
       server.value = json
-      series2.value = [{
-        name: "Players",
-        data: json.playerCounts.map((count: any) => {
-          return { x: new Date(count.timestamp*1000), y: count.count }
-        })
-      }]
-      if(json.playerJoins) {
-        series.value = [{
-          name: "Player Joins",
-          data: json.playerJoins.map((row: any) => {
-            return { x: new Date(row.timestamp*1000), y: row.count }
-          })
-        }]
-      }
       return true
     } else {
       error.value = json.message ?? json.err ?? json ?? await response.text()
@@ -685,6 +671,30 @@ async function fetchServerInfo() {
     console.error(err)
     error.value = `${response.status} ${response.statusText}: ${err.message}`
     return false
+  }
+}
+async function fetchServerData() {
+  error.value = undefined
+  const id = route.params.id
+  const response = await request(`/api/servers/${route.params.id}/data`)
+  if(id != route.params.id) return // Ignore changes in id
+  if(response?.ok) {
+    const json = await response.json()
+    series2.value = [{
+      name: "Players",
+      data: json.playerCounts.map((count: any) => {
+        return { x: new Date(count.timestamp*1000), y: count.count }
+      })
+    }]
+    if(json.playerJoins) {
+      series.value = [{
+        name: "Player Joins",
+        data: json.playerJoins.map((row: any) => {
+          return { x: new Date(row.timestamp*1000), y: row.count }
+        })
+      }]
+    }
+    return true
   }
 }
 let isRefreshing = false
@@ -906,7 +916,10 @@ async function init() {
   error.value = undefined
   clearInterval(refreshInterval)
   if(await fetchServerInfo()) {
-    await fetchServerStatus()
+    await Promise.any([
+      fetchServerData(),
+      fetchServerStatus()
+    ])
     createLiveConnection()
   }
   refreshInterval = setInterval(fetchServerStatus, REFRESH_INTERVAL)

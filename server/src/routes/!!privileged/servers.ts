@@ -50,6 +50,24 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
         const [code, granted] = req.user.requirePermission("servers.view", { resourceId: server.id })
         if(!granted) return NO_PERMISSION(reply, "You do not have permission to view this server", code)
+
+
+        return {
+            info: server.info
+        }
+    })
+
+    fastify.get('/:id/data', async(req: FastifyRequest<{Params: { id: 'string' }}>, reply) => {
+        const server = fastify.servers.get(req.params.id)
+        if(!server) {
+            return reply.code(404).send({
+                error: "SERVER_NOT_FOUND",
+                message: "Server not found"
+            })
+        }
+        const [code, granted] = req.user.requirePermission("servers.view", { resourceId: server.id })
+        if(!granted) return NO_PERMISSION(reply, "You do not have permission to view this server", code)
+
         let playerJoins = null
         if(server.activityLogId) {
             [playerJoins] = await fastify.db.execute(
@@ -58,9 +76,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             )
         }
         const configs = req.user.hasPermission("servers.configs.read", server.id) ? await server.getConfigFiles() : undefined
-
         return {
-            info: server.info,
             cvars: server.cvars,
             playerCounts: server.playerCounts,
             playerJoins,
