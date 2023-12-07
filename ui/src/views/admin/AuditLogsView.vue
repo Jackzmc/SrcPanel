@@ -147,13 +147,6 @@
             <Icon icon="refresh">Refresh</Icon>
           </a>
         </h4>
-      <!-- <pre>{{ JSON.stringify({
-          isTopOfList: isTopOfList,
-          fetchAbort: fetchAbort !== undefined ? true : undefined,
-          idMinMax: idMinMax,
-          pendingEntries: pendingEntries.map(e => e.id),
-          cache
-        }, null, 2) }}</pre> -->
       <Field label="Search Client" icon-left="search">
         <SimpleTypeahead
           placeholder="Search for a client"
@@ -571,17 +564,17 @@ async function fetchLogs(id: number, mode: "before" | "after" | "around") {
     return newEntries
   }
 }
-// TODO: return highest and lowest _local_
 const isTopOfList = computed(() => {
   if(!cache.value) return
-  return idMinMax.value[1] === cache.value.highestId
+  // If our highest id is greater than the cached, its some bug - just act like its the latest
+  return idMinMax.value[1] >= cache.value.highestId
 })
 const idMinMax = computed(() => {
   if(!entries.value || entries.value.length === 0) return [-1, -1]
   let lowestId = -1, highestId = -1
   for(const row of entries.value) {
     if(row.id > highestId || highestId === -1) highestId = row.id
-    if(row.id < lowestId || lowestId === -1) lowestId = row.id
+    else if(row.id < lowestId || lowestId === -1) lowestId = row.id
   }
   return [ lowestId, highestId ]
 })

@@ -84,6 +84,8 @@ const filteredTutorials = computed(() => {
 })
 
 async function selectTutorial(tutorial: Tutorial) {
+  // Prevent double clicking making redudant requests
+  if(tutorial == selectedTutorial.value) return
   selectedTutorial.value = tutorial
   content.value = undefined
   if(selectedTutorial.value.filename) {
