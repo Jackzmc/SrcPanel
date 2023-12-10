@@ -92,7 +92,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         const appId = await fastify.config.GetKV("discord.appid")
         const appSecret = await fastify.config.GetKV("discord.appsecret")
         if(!appId || !appSecret) return reply.send("<h1>Discord not supported</h1>")
-
+        const domain = await fastify.config.GetKV("domain");
         try {
             const jwt = await JWT.verify<StateJwtPayoad>(req.query.state, STATE_JWT_SECRET)
             // The user is linking their discord to their steam login
@@ -111,7 +111,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             })
             if(!tokenResponse.ok) {
                 req.log.error(`discord token error: ${tokenResponse.status} ${tokenResponse.statusText}\n${await tokenResponse.text()}`)
-                return reply.status(503).send("<h1>An error occurred with processing your login</h1>")
+                return reply.redirect(`${domain}/error?type=oauth_error&provider=discord&oauth_error=token_error`)
             }
             const tokenJson: OauthTokenResponse = await tokenResponse.json()
 
@@ -122,39 +122,35 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             })
             if(!userResponse.ok) {
                 req.log.error(`discord users error: ${userResponse.status} ${userResponse.statusText}\n${await userResponse.text()}`)
-                return reply.status(503).send("<h1>An error occurred with processing your login")
+                return reply.redirect(`${domain}/error?type=oauth_error&provider=discord&oauth_error=api_error`)
             }
             const userJson: DiscordUser = await userResponse.json()
 
+            const returnUrl = req.query.return_uri ? `${domain}${req.query.return_uri}` : domain
             if(jwt.payload.pub) {
-                
                 await req.user.addProvider("discord", {
                     id: userJson.id,
-                    username: `${userJson.username}#${userJson.discriminator}`,
+                    username: `${userJson.username}`,
                     avatarUrl: `https://cdn.discordapp.com/avatars/${userJson.id}/${userJson.avatar}.png`
                 }, tokenJson.refresh_token)
 
-                return reply.send("<h1>Discord is now linked, you can close this page</h1>")
+                await req.user.notify(`Your discord account ${userJson.username} has been linked successfully.`)
+                await reply.redirect(302, returnUrl)
             } else {
                 // User is logging in to their account via discord
                 const admin = await fastify.authmngr.getAdminByProvider("discord", userJson.id)
-                if(!admin) return reply.send("<h1>You must link your discord account to your admin panel account first</h1>")
+                if(!admin) return reply.redirect(`${domain}/error?type=oauth_no_account&provider=discord`)
                 const details = await fastify.steam.getUserDetails([ new SteamID(admin.steamid) ])
                 if(details.length > 0) {
                     await fastify.authmngr.loginUser(req, admin, details[0])
-                    const domain = await fastify.config.GetKV("domain");
-                    if(req.query.return_uri) {
-                        return reply.redirect(302, `${domain}${req.query.return_uri}`)
-                    } else {
-                        return reply.redirect(302, domain)
-                    }
+                    await reply.redirect(302, returnUrl)
                 } else {
-                    return reply.send("<h1>No steam account found</h1>")
+                    return reply.send("<h1>Cannot access steam account information, cannot login.</h1>")
                 }
             }
         } catch(err) {
             req.log.error(err)
-            return reply.send("<h1>Login token has expired, please try again</h1>")
+            return reply.redirect(`${domain}/error?type=oauth_error&provider=discord&oauth_error=login_token_expired`)
         }
     })
 

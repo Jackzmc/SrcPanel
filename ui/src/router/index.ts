@@ -283,7 +283,7 @@ const routes = [
     component: () => import('../views/ErrorView.vue'),
     meta: {
       hideHero: true,
-      hideNav: true
+      // hideNav: true
     }
   },
   {
