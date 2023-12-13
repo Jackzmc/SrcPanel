@@ -197,9 +197,16 @@ export default class ServerManager {
       }
 
       const destinations = share.destinations as ShareDestinations || {}
+      shareLoop:
       for(let [destKey, dest] of Object.entries(destinations)) {
-        if(!await doesFileExist(share.sourceFolder)) {
-          console.warn(`[ServerManager] WARN: Share "${shareId}" destination "${destKey}" does not exist path "${dest.path}" (ENOENT)`)
+        if(!dest.paths || dest.paths.length === 0) {
+          console.warn(`[ServerManager] WARN: Share ${shareId}/${destKey} has no paths; skipping`)
+          continue shareLoop;
+        }
+        for(const path of dest.paths) {
+          if(!await doesFileExist(path)) {
+            console.warn(`[ServerManager] WARN: Share ${shareId}/${destKey} has invalid path "${path}" (ENOENT)`)
+          }
         }
         if(dest.serverIds) {
           const serverIds = []
@@ -209,12 +216,14 @@ export default class ServerManager {
               serverIds.push(_id)
               numServers++
             } else {
-              console.warn(`[ServerManager] WARN: Addon Share "${shareId}" destination "${destKey}" includes non existent server id "${_id}"; skipping`)
+              console.warn(`[ServerManager] WARN: Share ${shareId}/${destKey} includes non existent server id "${_id}"; skipping`)
+              continue shareLoop;
             }
           }
           dest.serverIds = serverIds
         }
       }
+
       const db = await open({
         filename: join(this.dataDir, `shares/${shareId.toLowerCase()}_cache.db`),
         driver: sqlite3.Database
