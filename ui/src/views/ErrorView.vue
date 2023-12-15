@@ -34,7 +34,7 @@
   </template>
   <template v-else>
     <br>
-    <h1 class="title is-1 has-text-danger">{{ route.query.error ?? "Internal Server Error" }}</h1>
+    <h4 class="title is-4 has-text-danger">{{ route.query.error ?? "Internal Server Error" }}</h4>
     <p class="subtitle is-4">An error occurred while authenticating with the server</p>
     <p class="subtitle is-4">The server may be down or unreachable, try again in a few minutes.</p>
     <br>

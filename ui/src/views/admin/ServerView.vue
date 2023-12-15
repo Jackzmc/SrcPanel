@@ -79,36 +79,42 @@
               <Icon icon="fa-spinner" spin v-if="nextRefreshCountdown == 0"></Icon>
               <span v-else>{{ nextRefreshCountdown }}s</span>
             </span>
-            <div class="columns">
-              <div class="column">
-                <h5 class="title is-5 is-underlined"><span class="tag is-large is-info">Map</span></h5>
-                <p :data-tooltip="status.data.map" v-html="formatMap(status.data.map)"></p>
-              </div>
-              <div class="column">
-                <h5 class="title is-5 is-underlined"><span class="tag is-large is-info">Gamemode</span></h5>
-                <p :data-tooltip="status.data.gamemode">{{formatGamemode(status.data.gamemode)}}</p>
-              </div>
-            </div>
-            <div class="columns">
-              <div class="column">
-                <h5 class="title is-5 tags">
-                  <span class="tag is-large is-info">Online Players ({{status.data.players.length}} / {{status.data.maxplayers}})</span>
-                </h5>
-                <div class="content" v-if="status.data.players.length > 0">
-                  <ul>
+            <table class="table is-fullwidth is-size-4">
+              <tr>
+                <th>Map</th>
+                <td v-if="mapInfo">
+                  <h4 class="title is-4">{{mapInfo.name}}
+                    <span class="is-inline is-pulled-right has-text-weight-normal is-size-6">{{ status.data.map }}</span>
+                  </h4>
+                  <p>Chapter {{ mapInfo.chapterId }} - {{ mapInfo.chapterName }}</p>
+                </td>
+                <td v-else-if="status.data.map">{{ status.data.map }}</td>
+                <td v-else><em data-tooltip="Unknown">-</em></td>
+              </tr>
+              <tr>
+                <th>Gamemode</th>
+                <td v-if="status.data.gamemode" :data-tooltip="status.data.gamemode">
+                  {{ formatGamemode(status.data.gamemode) }}
+                </td>
+                <td v-else><em data-tooltip="Unknown">-</em></td>
+              </tr>
+              <tr>
+                <th>Uptime</th>
+                <td v-if="uptime">{{ formatUptime(uptime) }}</td>
+                <td v-else><em data-tooltip="Unknown">-</em></td>
+              </tr>
+              <tr>
+                <th  style="border-style: none">Players ({{status.data.players.length}} / {{status.data.maxplayers}})</th>
+                <td  style="border-style: none">
+                  <ul v-if="status.data.players.length > 0">
                     <li v-for="player in status.data.players" :key="player">
-                      {{player}}
+                      {{ player }}
                     </li>
                   </ul>
-                </div>
-                <em class="my-2" v-else>no players are online</em>
-              </div>
-              <div class="column">
-                <h5 class="title is-5 is-underlined"><span class="tag is-large is-info">Uptime</span></h5>
-                <p v-if="uptime">{{formatUptime(uptime)}}</p>
-                <p v-else>unknown</p>
-              </div>
-            </div>
+                  <em v-else>no players online</em>
+                </td>
+              </tr>
+            </table>
             <br>
           </template>
         </template>
@@ -587,7 +593,10 @@ let showDetailsId = ref<number>()
 const tab = computed(() => {
   return route.params.tab.length > 0 ? route.params.tab : "overview"
 })
-
+const mapInfo = computed(() => {
+  if(!status.value?.data) return
+  return getMapDisplay(status.value.data.map)
+})
 const nextRefreshCountdown = computed(() => {
   if(!lastRefreshTime.value || !now.value) return 0
   return Math.max(Math.floor(((lastRefreshTime.value + REFRESH_INTERVAL) - now.value) / 1000), 0)
