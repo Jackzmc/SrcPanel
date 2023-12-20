@@ -64,7 +64,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
-import { formatParameters, request } from '@/js/util'
+import { formatParameters, parseParameters, request } from '@/js/util'
 import Field from '@/components/Field.vue'
 import { notify } from '@kyvg/vue3-notification';
 
@@ -98,6 +98,7 @@ onMounted(async () => {
       const split = cvar.cvar.trim().split(' ')
       cvar.name = split.shift()
       cvar.parameters = split.join(" ")
+      cvar.args = parseParameters(cvar)
       cvar.defaultValue = cvar.default
       if(cvar.default !== null && cvar.default !== undefined) {
         if(typeof(cvar.default) === "string") {

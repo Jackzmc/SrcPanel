@@ -1,6 +1,6 @@
 <template>
 <div class="container">
-    <ExamplesModal :data="selected" :prefix="prefix" @close='selected = null' />
+    <CommandsModal v-if="selected" :cmd="selected" :prefix="prefix" @close='selected = null' />
     <div class="columns is-variable is-6">
         <div class="column is-7 content">
             <Field label="Search" icon-left="search">
@@ -13,18 +13,18 @@
                 </p>
                 <ul class="is-unstyled">
                     <li v-for="cmd in group.list" :key="cmd.command">
-                      <dl v-if="cmd.hasPermission || showLockedCommands">
-                        <dt
+                      <template v-if="cmd.hasPermission || showLockedCommands">
+                        <div
                           v-if="!cmd.consoleOnly || commandViewmode == 'console'"
                           :class="{'has-text-grey': !cmd.hasPermission}"
                           :data-tooltip="cmd.hasPermission ? null : 'You do not have access to this command.'"
-                          class="has-tooltip-danger has-tooltip-top"
+                          class="has-tooltip-danger has-tooltip-top is-clickable box-hover"
+                          @click="showCommand(cmd)"
                           >
                             <component
                               :is="cmd.hasPermission ? 'b' : 'p'"
                             >
                               <component
-                                @click='showExamples(cmd)'
                                 :is="(cmd.hasPermission && cmd.examples && cmd.examples.length > 0) ? 'a' : 'span'"
                                 class="is-size-5 has-tooltip-success"
                                 :data-tooltip="cmd.examples && cmd.examples.length > 0 ? 'Click to view examples' : null"
@@ -36,11 +36,12 @@
                               <span v-html="formatParameters(cmd)" class="is-size-5"></span>
                             </component>
                              - {{formatDescription(cmd)}}
-                        </dt>
-                        <dd v-if="cmd.note">
-                            <em :class="{'has-text-grey': !cmd.hasPermission}"><span class="tag is-warning"><b>Note</b></span> {{cmd.note}}</em>
-                        </dd>
-                      </dl>
+                            <div v-if="cmd.note">
+                              <em :class="{'has-text-grey': !cmd.hasPermission}"><span class="tag is-warning"><b>Note</b></span> {{cmd.note}}</em>
+                            </div>
+                        </div>
+
+                      </template>
                     </li>
                 </ul>
                 <hr>
@@ -106,11 +107,12 @@
 
 <script setup lang="ts">
 import { formatParameters, request } from '@/js/util'
-import ExamplesModal from '@/components/modals/ExamplesModal.vue'
+import CommandsModal from '@/components/modals/CommandsModal.vue'
 import { ref, computed, onMounted } from 'vue'
 import { PrivilegedUser } from '../../js/User';
 import Field from '@/components/Field.vue'
 import { notify } from '@kyvg/vue3-notification';
+import { parseParameters } from '../../js/util';
 
 const props = defineProps<{
   privUser: PrivilegedUser
@@ -154,7 +156,7 @@ const showLockedCommands = computed(() => {
   return hideNoPermissionCommands.value.length > 0
 })
 
-function showExamples(cmd: any) {
+function showCommand(cmd: any) {
   selected.value = cmd
 }
 
@@ -175,6 +177,7 @@ onMounted(async () => {
         const split = command.command.trim().split(' ')
         command.name = split.shift()
         command.parameters = split.join(" ")
+        command.args = parseParameters(command)
         command.hasPermission = !isLoggedIn.value || (command.perm != undefined ? props.privUser.hasFlag(command.perm) : true)
 
         delete command.command
@@ -203,5 +206,13 @@ ul.is-unstyled {
   list-style: none !important;
   margin: 0;
   padding: 0;
+}
+.box-hover:hover {
+  background-color: hsl(0, 0%, 90%);
+  border-radius: 6px;
+  box-shadow: 0 0.5em 1em -0.125em rgba(10, 10, 10, 0.1), 0 0px 0 1px rgba(10, 10, 10, 0.02);
+  /* color: hsl(0, 0%, 29%); */
+  display: block;
+  padding: .25rem;
 }
 </style>

@@ -31,16 +31,16 @@ enum ParseNode {
   DefaultValue
 }
 
-export function formatParameters({parameters, defaultValue, args}: any) {
-  const chars = parameters.split('')
+export function parseParameters(cmd: any) {
+  const params: Record<string, any> = {}
+  const chars = cmd.parameters.split('')
   let mode = ParseNode.None
-  let lastChar = null, letters = "", string = "", type = ""
+  let lastChar = null, letters = "", type = "", defaultValue
   let ignore = false
 
   for(const char of chars) {
     if(ignore) {
       ignore = false
-      string += char
       continue
     }
 
@@ -53,27 +53,19 @@ export function formatParameters({parameters, defaultValue, args}: any) {
       lastChar = ']'
     }else if(char === lastChar) {
       const isRequired = char === '>'
-      let tooltip = "";
 
-      if(type.length > 0)
-        tooltip = `Accepts a(n) ${isRequired?'':'optional '}${parseType(type)}.`
-      if(defaultValue != undefined) {
-        console.log(defaultValue)
-        defaultValue = defaultValue.toString().replace(/"/g, '&quot;')
-        tooltip += ` Default value is ${defaultValue}`
+      const name = letters.replace(/_/, ' ')
+      params[name] = {
+        required: isRequired,
+        type: parseType(type),
+        defaultValue: defaultValue,
       }
-      if(args && args[letters]) {
-        if(args[letters].allowed_values)
-          if(Array.isArray(args[letters].allowed_values))
-            tooltip += `\nAllowed Values: ${args[letters].allowed_values.join(", ")}`
-          else
-            tooltip += `\nAllowed Values: ${args[letters].allowed_values.replace(/>=/,'≥').replace(/<=/,'≤')}`
+      if(cmd.args && cmd.args[letters]) {
+        if(cmd.args[letters].allowed_values)
+          params[name].allowedValues = cmd.args[letters].allowed_values
+          if(!Array.isArray(cmd.args[letters].allowed_values))
+            params[name].allowedValues = [cmd.args[letters].allowed_values.replace(/>=/,'≥').replace(/<=/,'≤')]
       }
-      if(tooltip.length > 0)
-        tooltip = `data-tooltip="${tooltip}"`
-
-      const tagType = isRequired ? 'is-link' : 'is-secondary'
-      string += `<span class='tag ${tagType}' ${tooltip}>${letters.replace(/_/, ' ')}</span> `
       lastChar = null
       letters = ''
       type = ""
@@ -93,9 +85,34 @@ export function formatParameters({parameters, defaultValue, args}: any) {
       } else{
         letters += char
       }
-    else
-      string += char
   }
+  return params
+}
+
+export function formatParameters(cmd: { args: Record<string, any>, defaultValue?: any}) {
+  let string = ""
+
+  for(const [arg, data] of Object.entries(cmd.args)) {
+    const tagType = data.required ? 'is-link' : 'is-secondary'
+    let tooltip = ""
+    if(data.type.length > 0)
+      tooltip = `Accepts a(n) ${data.required?'':'optional '}${data.type}.`
+    let defaultValue = cmd.defaultValue || data.defaultValue
+    if(defaultValue) {
+      defaultValue = defaultValue.toString().replace(/"/g, '&quot;')
+      tooltip += ` Default value is ${defaultValue}`
+    }
+    if(data.allowedValues) {
+      if(Array.isArray(data.allowedValues))
+        tooltip += `\nAllowed Values: ${data.allowedValues.join(", ")}`
+      else
+        tooltip += `\nAllowed Values: ${data.allowedValues.replace(/>=/,'≥').replace(/<=/,'≤')}`
+    }
+    if(tooltip.length > 0)
+      tooltip = `data-tooltip="${tooltip}"`
+    string += `<span class='tag ${tagType}' ${tooltip}>${arg}</span> `
+  }
+
   return string
 }
 
