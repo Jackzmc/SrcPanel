@@ -17,7 +17,14 @@
         <div class="control">
           <div class="tags has-addons">
             <span class="tag is-dark">Required Permission</span>
-            <span class="tag">{{ props.cmd.perm ?? 'None' }}</span>
+            <span class="tag">{{ cmd.perm ?? 'None' }}</span>
+          </div>
+        </div>
+        <div class="control">
+          <div class="tags has-addons">
+            <span class="tag is-dark">Has Permission</span>
+            <span class="tag is-success" v-if="cmd.hasPermission">Yes</span>
+            <span class="tag is-danger" v-else>No</span>
           </div>
         </div>
       </div>
