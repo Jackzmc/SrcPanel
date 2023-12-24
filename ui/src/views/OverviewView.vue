@@ -3,10 +3,10 @@
     <div class="columns is-multiline is-variable is-1 is-fullwidth">
       <div class="column">
           <Servers @refresh="onServerRefresh" />
-          <p class="is-inline is-pulled-right" style="margin-right: 90px">
+          <div class="is-pulled-right mt-2" style="margin-right: 10px">
             <em v-if="countdownText">{{countdownText}}</em>
             <Icon icon="spinner" v-else spin />
-          </p>
+          </div>
       </div>
       <div class="column is-offset-1 is-3">
           <div class="content">
