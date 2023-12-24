@@ -10,31 +10,38 @@
       </div>
       <div class="column is-offset-1 is-3">
           <div class="content">
-            <h6>How to enable & open the developer console?</h6>
-            <ol>
-                <li>Go to your options, then keyboard/mouse</li>
-                <li>Enable the option 'Allow Developer Console'</li>
-                <li>Open the console with the tilda key (<code>`</code> or <code>~</code>, left of the <code>1</code>)</li>
-            </ol>
-            <h5>Server Notes</h5>
-            <ol>
-                <li>Only servers marked as such support 5+ campaign <em>(see bottom left)</em></li>
-                <li>The public servers will automatically scale, so that only one server is empty (upto 7 active)</li>
-                <li>Directly connecting does not start matchmaking - no randoms will join! See the below section on how to create a lobby:</li>
-            </ol>
-            <h5>To create a lobby to a server:</h5>
-            <ul>
-                <li>Create a normal lobby, <b>you need to be the host</b></li>
-                <li>Open the console <em>(see above for instructions)</em></li>
-                <li>Copy the <b>Create Lobby Command</b> to the console</li>
-                <li>Start the lobby</li>
-            </ul>
-            <h5>Joining a 5+ server when its full</h5>
-            <p>
-              If there is 4 people on a 5+ server, you can still join:
-              Use the <code>connect <b>ip_address</b></code> command shown on the server entries to join
-            </p>
-            <p>If you get kicked because it's full, wait a few seconds for people to finish joining, or you maybe be trying to join a non 5+ server.</p>
+            <div class="box">
+              <h6>Enabling & opening the dev console:</h6>
+              <ol>
+                  <li>Go to <b>Options</b> then <b>Keyboard/Mouse</b></li>
+                  <li>Enable the option <b>Allow Developer Console</b></li>
+                  <li>Open the console with the tilda key (<code>`</code> or <code>~</code>, under <code>ESC</code>)</li>
+              </ol>
+            </div>
+            <div class="box">
+              <h6>Server notes:</h6>
+              <ol>
+                  <li>Only servers marked <span class="tag">5+</span> support 5+ campaign</li>
+                  <li>Directly connecting does not start matchmaking - the server will not be public. See the below section on how to create a lobby:</li>
+              </ol>
+            </div>
+            <div class="box">
+              <h6>To create a lobby to a server:</h6>
+              <ul>
+                  <li>Create a normal lobby, <b>you need to be the host</b></li>
+                  <li>Open the console <em>(see above for instructions)</em></li>
+                  <li>Copy the <b>Create Lobby Command</b> <em>(on the left)</em> to the console</li>
+                  <li>Start the lobby</li>
+              </ul>
+            </div>
+            <div class="box">
+              <h6>Joining a 5+ server when its full:</h6>
+              <p>
+                If there is 4 people on a 5+ server, you can still join:
+                Use the <code>connect <b>ip_address</b></code> command shown on the server entries to join
+              </p>
+              <p>If you get kicked because it's full, wait a few seconds for people to finish joining, or you maybe be trying to join a non 5+ server.</p>
+            </div>
           </div>
       </div>
     </div>
