@@ -2,7 +2,6 @@
 <div class="container is-fluid">
   <div class="columns">
     <div class="column is-8">
-      <p :class='message.type' v-if="message" v-html="message.content"></p>
       <template v-for="group in sortedServers" :key="group.id">
         <h4 class="title is-4">{{ group.name }}</h4>
         <table class="table is-fullwidth">
@@ -33,9 +32,9 @@
                     <div class="buttons">
                       <template v-if="server.status.online">
                         <template v-if="server.tags.includes('rcon')">
-                          <a @click="processAction(server, 'stop')" class="button is-dark">Request Restart</a>
+                          <a @click="stopServer(server, false)" class="button is-dark">Request Restart</a>
                           <a @click="processAction(server, 'unreserve')" class="button is-dark">Unreserve</a>
-                          <a @click="processAction(server, 'stop?force=1')" class="button is-warning" v-if="shiftPressed">Force Restart</a>
+                          <a @click="stopServer(server, true)" class="button is-warning" v-if="shiftPressed">Force Restart</a>
                         </template>
                       </template>
                       <template v-else-if="server.tags.includes('systemd')">
@@ -81,6 +80,7 @@
 
 <script setup lang="ts">
 import { request } from '@/js/util';
+import { notify } from '@kyvg/vue3-notification';
 import { ref, computed, onBeforeMount, onDeactivated, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 
@@ -89,7 +89,6 @@ const REFRESH_INTERVAL = 1000 * REFRESH_SECONDS
 
 let servers = ref<any[]>([])
 let shiftPressed = ref(false)
-let message = ref<{content?: string, type?: string}>()
 let selectedServer = ref()
 
 let starting = ref<Record<string, boolean>>({})
@@ -98,51 +97,52 @@ let secondsTimer = ref<any>()
 let lastRefresh = ref<number | undefined>(0)
 
 const sortedServers = computed(() => {
-  return servers.value.sort((a,b) => a.sortOrder - b.sortOrder)
+  return servers.value.toSorted((a,b) => a.sortOrder - b.sortOrder)
 })
-
-function sendMessage(type: string, content: string) {
-  message.value = {
-    type: type === "error" ? "has-text-danger" : type === "success" ? "has-text-success" : type,
-    content: content
-  }
-  setTimeout(() => message.value = undefined, 8000)
-}
-function processAction(server: any, type: string) {
+async function processAction(server: any, type: string) {
   if(type === "start") {
     starting.value[server.meta.port] = true
     setTimeout(() => {
       starting.value[server.meta.port] = false
     }, 1000 * 30)
   }
-  fetch(`/api/servers/${server.id}/${type}`, {
+  const response = await fetch(`/api/servers/${server.id}/${type}`, {
     method: 'POST',
     credentials: 'include'
   })
-  .then(async(response) => {
-    if(response.ok ) {
-      // there is no json body:
-      if(response.status === 204) {
-        sendMessage('success', `Action ${type} completed succesfully`)
-        return
-      }
-
-      const json = await response.json()
-      if(json.error) {
-        return sendMessage('error', `<b>Server returned error</b><br>${json.message}`)
-      }
-      if(json.response.includes("players online")) {
-        sendMessage('error', 'Cannot restart server: There are players online')
-      }else{
-        sendMessage('success', json.response)
-      }
-    }else{
-      sendMessage('error', `<b>Server returned error</b><br>${response.statusText}`)
+  if(response.ok) {
+    // there is no json body:
+    if(response.status === 204) {
+      notify({ type: 'success', text: `Action ${type} completed succesfully`, title: `Server (${server.id})` })
+      return
     }
-  })
-  .catch(err => {
-    sendMessage('error', `${err.message}`)
-  })
+    const json = await response.json()
+    if(json.error) {
+      notify({ type: 'error', text: json.message, title: `Server (${server.id}) returned error` })
+    } else if(json.response.includes("players online")) {
+      notify({ type: 'error', text: "Request failed: There are players online.", title: `Server (${server.id})` })
+    } else {
+      notify({ type: 'success', text: json.response ?? `Action ${type} completed succesfully`, title: `Server (${server.id})` })
+    }
+  } else {
+    const json = await response.json()
+    notify({ type: 'error', text: json.message || json.error, title: `Server (${server.id})` })
+  }
+}
+async function stopServer(server: any, force: boolean = false) {
+  const es = new EventSource(`/api/servers/${server.id}/restart/sse${force?'?force=1' : ''}`)
+  es.onmessage = (event) => {
+    const json = JSON.parse(event.data)
+    if(json.state === "done") {
+      es.close()
+      notify({ type: 'success', text: 'Server has been restarted', title: `Server (${server.id})` })
+    } else if(json.error) {
+      notify({ type: 'error', text: json.message ?? json.error, title: `Server (${server.id})` })
+      es.close()
+    } else if(json.state) {
+      server.status.state = json.state
+    }
+  }
 }
 function getServerClasses(server: any) {
   const classes = ['has-tooltip-arrow']
@@ -160,12 +160,6 @@ function getServerClasses(server: any) {
   }
 
   return classes
-}
-function getServerMessage(server: any) {
-  if(server.status.online) return server.status.data.players.list == 0 ? 'Server is currently online & empty. Click to join' : 'Server has players online. Click to join.'
-  else return 'Server is offline or unreachable'
-  //
-  return
 }
 async function refreshServers(notify = false) {
   if(lastRefresh.value === undefined || document.visibilityState === "hidden") return // wait for last refresh

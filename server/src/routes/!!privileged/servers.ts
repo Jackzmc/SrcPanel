@@ -50,6 +50,24 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
         const [code, granted] = req.user.requirePermission("servers.view", { resourceId: server.id })
         if(!granted) return NO_PERMISSION(reply, "You do not have permission to view this server", code)
+
+
+        return {
+            info: server.info
+        }
+    })
+
+    fastify.get('/:id/data', async(req: FastifyRequest<{Params: { id: 'string' }}>, reply) => {
+        const server = fastify.servers.get(req.params.id)
+        if(!server) {
+            return reply.code(404).send({
+                error: "SERVER_NOT_FOUND",
+                message: "Server not found"
+            })
+        }
+        const [code, granted] = req.user.requirePermission("servers.view", { resourceId: server.id })
+        if(!granted) return NO_PERMISSION(reply, "You do not have permission to view this server", code)
+
         let playerJoins = null
         if(server.activityLogId) {
             [playerJoins] = await fastify.db.execute(
@@ -58,9 +76,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             )
         }
         const configs = req.user.hasPermission("servers.configs.read", server.id) ? await server.getConfigFiles() : undefined
-
         return {
-            info: server.info,
             cvars: server.cvars,
             playerCounts: server.playerCounts,
             playerJoins,
@@ -404,7 +420,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
     })
     
-    fastify.post('/:id/restart/sse', async(req: FastifyRequest<{Querystring: { force?: boolean }, Params: { id: 'string'} }>, reply) => {
+    fastify.get('/:id/restart/sse', async(req: FastifyRequest<{Querystring: { force?: boolean }, Params: { id: 'string'} }>, reply) => {
         reply.raw.writeHead(200, {
             'Cache-Control': 'no-cache,no-transform',
             'Content-Type': 'text/event-stream',
@@ -420,8 +436,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         
         if(!server) {
             send({
-                error: "Server Not Found", 
-                code: "SERVER_NOT_FOUND",
+                error: "SERVER_NOT_FOUND",
+                message: "Server Not Found", 
             })
         }
         if((req.query.force && !req.user.hasPermission("servers.cmds.stop", server.id)) 
@@ -435,38 +451,55 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             })
         }
         try {
-            send({ response: await server.stop(req.query.force) })
-            let timeout = 30_000
-            let waitingState = 1
-            while(timeout > 0 && waitingState != 0) {
-                await server.refresh()
-                if(waitingState == 1 && !server.status.online) {
-                    // Wait for server to go offline
-                    send({ state: server.status.online, waitingState })
-                    waitingState = 2
-                } else if(waitingState == 2 && server.status.online) {
-                    // Now server went offline, wait for it to go online
-                    send({ state: server.status.online, waitingState })
-                    waitingState = 0
-                }
-                timeout -= 1000
-                await sleep(1000)
-            }
-            if(timeout > 0)
-                send({ success: true })
-            else
-                send({ 
-                    code: "RESTART_CHECK_TIMEOUT",
-                    error: "Restart Check Time out",
-                    message: "Timed out while waiting for server to restart"
+            const response = await server.stop(req.query.force)
+            if(!req.query.force && !response) {
+                send({
+                    error: "PLAYERS_ONLINE",
+                    message: "There are players are online"
                 })
+            } else {
+            send({ state: "restarting" })
+                let timeout = 30_000
+                let waitingState = "before_offline"
+                while(timeout > 0) {
+                    await server.refresh()
+                    if(waitingState === "before_offline") {
+                        if(!server.status.online) {
+                            // Wait for server to go offline
+                            waitingState = "server_offline"
+                            send({ state: waitingState })
+                        }
+                    } else if(waitingState === "server_offline") {
+                        if(server.status.online) {
+                            // Now server went offline, wait for it to go online
+                            waitingState = "done"
+                            send({ state: waitingState })
+                            break
+                        }
+                    }
+                    timeout -= 1000
+                    await sleep(1000)
+                }
+                if(timeout == 0) {
+                    send({ 
+                        error: "RESTART_CHECK_TIMEOUT",
+                        message: "Timed out while waiting for server to restart"
+                    })
+                }
+            }
         } catch(err) {
             console.log('error', err)
-            reply.code(500).send({
-                error: "SERVER_ERROR",
-                message: "Server returned an error: " + err.message,
-                code: 500
-            })
+            if(err.code === "ETIMEDOUT") {
+                send({
+                    error: "CONNECTION_TIMED_OUT",
+                    message: "Could not reach server in time"
+                })
+            } else {
+                send({
+                    error: "UNKNOWN_ERROR",
+                    message: "An unknown error occurred"
+                })
+            }
         }
         reply.hijack()
         // Timeout if they haven't killed it

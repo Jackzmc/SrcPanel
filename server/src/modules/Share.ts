@@ -197,15 +197,15 @@ export default class Share {
     /**
      * Gets file info and any destinations this file is enabled on
      * @param filename 
-     * @returns { states: Record<string, boolean>, created: number, modified: number, size: number }
      */
-    public async getInstallInfo(filename: string) {
+    public async getInstallInfo(filename: string): Promise<{ states: Record<string, boolean>, created: number, modified: number, size: number }> {
         const statInfo = await this.getFileInfo(this.sourceFolder, filename)
         if(statInfo) {
             let states: Record<string, boolean> = {}
             if(this.destinations) {
                 for(const [id, dest] of Object.entries(this.destinations)) {
-                    states[id] = await this.getFileInfo(dest.path, filename) !== null
+                    // We just use the first path
+                    states[id] = await this.getFileInfo(dest.paths[0], filename) !== null
                 }
             }
             return { 
@@ -257,7 +257,9 @@ export default class Share {
             throw new Error(`File \"${filename}\" does not exist in ${this.sourceFolder}`)
         }
         try {
-            await symlink(path.join(this.sourceFolder, filename), path.join(dest.path, filename))
+            for(const destPath of dest.paths) {
+                await symlink(path.join(this.sourceFolder, filename), path.join(destPath, filename))
+            }
         } catch(err) {
             // Ignore already installed
             if(err.code == "EEXIST")
@@ -281,7 +283,9 @@ export default class Share {
         }
 
         try {
-            await unlink(path.join(dest.path, filename))
+            for(const destPath of dest.paths) {
+                await unlink(path.join(destPath, filename))
+            }
         } catch(err) {
             // Do not fail if its not installed already, just ignore
             if(err.code !== "ENOENT") throw err

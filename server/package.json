@@ -17,7 +17,7 @@
     "express-mysql-session": "^2.1.7",
     "fast-geoip": "^1.1.64",
     "fastify": "^4.14.0",
-    "gamedig": "^4.0.6",
+    "gamedig": "^4.3.0",
     "identicon": "^3.1.1",
     "json5": "^2.2.3",
     "jsonwebtoken": "^9.0.0",
