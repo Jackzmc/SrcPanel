@@ -26,12 +26,17 @@
           <p class="has-text-info" v-else-if="updateStatus.upToDate">Server is already up to date.</p>
           <p class="has-text-success" v-else-if="updateStatus.state === 'SUCCESS'">Server has been updated successfully.</p>
     </Tab>
-    <Tab name="Config">
-      <JsonConfigEditor filename="servers.json" />
+    <Tab name="Panel Config">
       <ConfigEditor />
     </Tab>
+    <Tab name="Servers">
+      <JsonConfigEditor filename="servers.json" />
+    </Tab>
     <Tab name="Shares">
-      <SharesEditor />
+      <JsonConfigEditor filename="shares.json" />
+    </Tab>
+    <Tab name="Config (Legacy)">
+      <JsonConfigEditor filename="config.json" />
     </Tab>
   </Tabs>
   <br>
