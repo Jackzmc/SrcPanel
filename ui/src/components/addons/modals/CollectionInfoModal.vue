@@ -212,7 +212,7 @@ const addonName = computed(() => {
 
 async function deleteAddon(id: string) {
   try {
-    const response = await fetch(`/api/shares/${props.share.id}/addons/${props.addon.filename}`, {
+    const response = await fetch(`/api/shares/${props.share.id}/addons/${id}`, {
       method: 'DELETE',
       credentials: 'include'
     })
