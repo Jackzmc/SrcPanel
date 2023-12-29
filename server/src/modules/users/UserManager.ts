@@ -50,7 +50,7 @@ export default class UserManager {
     async getUser(steamid: string): Promise<IUserData | undefined> {
         const user = await this.getUserDirect(steamid)
         // Don't wait for the result, serve the stale data:
-        if(Date.now() - user.timestamp > STALE_USER_CACHE_TIME) this.fetchUser(steamid)
+        if(user && Date.now() - user.timestamp > STALE_USER_CACHE_TIME) this.fetchUser(steamid)
         return user
     }
 

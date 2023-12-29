@@ -10,6 +10,7 @@ export interface BlockEntry {
     shares?: string[]
 }
 
+// TODO: Move to panel settings?
 export interface Config {
     longRefreshIntervalSeconds: number,
     shortRefreshIntervalSeconds: number,

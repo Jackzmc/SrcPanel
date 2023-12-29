@@ -4,7 +4,7 @@ import { NO_PERMISSION } from '../../responses.js';
 import path from 'node:path';
 import { createReadStream } from 'node:fs';
 import Json5 from 'json5'
-import { readFile } from 'node:fs/promises';
+import { readFile, writeFile } from 'node:fs/promises';
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
     fastify.get('/', async (req, reply) => {
@@ -27,6 +27,18 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             let content = await readFile(path.resolve('config/', req.params.filename), 'utf-8') 
             content = Json5.parse(content)
             return reply.send(content)
+        } catch(err: any) {
+            if(err.code === "ENOENT")
+                return reply.status(404).send()
+            throw err
+        }
+    })
+
+    fastify.post('/config/:filename', async (req: FastifyRequest<{ Params: { filename: string }}>, reply) => {
+        try {
+            const prettyJson = JSON.stringify(req.body, null, 2)
+            await writeFile(path.resolve('config/', req.params.filename), prettyJson,  { encoding: 'utf-8' })
+            return reply.code(204).send()
         } catch(err: any) {
             if(err.code === "ENOENT")
                 return reply.status(404).send()
