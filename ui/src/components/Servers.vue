@@ -103,6 +103,7 @@ function getServerMessage(server: any) {
       : "Server has players online. Click to join.";
   else return "Server is offline, unresponsive, or unreachable";
 }
+let failureCount = 0
 async function refreshServers() {
   if(document.visibilityState === "hidden") return
   emit("refresh", {
@@ -117,16 +118,30 @@ async function refreshServers() {
       state: "stop",
       interval: REFRESH_INTERVAL,
     });
+    failureCount = 0
   } else {
+    failureCount++
+    if(failureCount == 3) {
+      // Try again later
+      clearInterval(refreshTimer)
+      setTimeout(() => {
+        failureCount = 0;
+        createRefreshTimer()
+      }, 1000 * 60 * 1)
+    }
     console.error("Failure getting servers", response);
   }
 }
 
-onBeforeMount(() => {
+function createRefreshTimer() {
   refreshTimer = setInterval(() => {
     refreshServers();
   }, REFRESH_INTERVAL);
   refreshServers();
+}
+
+onBeforeMount(() => {
+  createRefreshTimer()
 });
 
 onBeforeUnmount(() => {
