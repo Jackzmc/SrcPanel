@@ -103,26 +103,23 @@ function getServerMessage(server: any) {
       : "Server has players online. Click to join.";
   else return "Server is offline, unresponsive, or unreachable";
 }
-function refreshServers() {
+async function refreshServers() {
   if(document.visibilityState === "hidden") return
   emit("refresh", {
     state: "start",
   });
 
-  fetch("/api/servers")
-    .then((response) => {
-      if (response.ok) return response.json();
-      else console.error("Failure getting servers", response);
-    })
-    .then((json) => {
-      servers.value = json;
-    })
-    .finally(() => {
-      emit("refresh", {
-        state: "stop",
-        interval: REFRESH_INTERVAL,
-      });
+  const response = await fetch("/api/servers")
+  if(response.ok) {
+    const json = await response.json()
+    servers.value = json
+    emit("refresh", {
+      state: "stop",
+      interval: REFRESH_INTERVAL,
     });
+  } else {
+    console.error("Failure getting servers", response);
+  }
 }
 
 onBeforeMount(() => {
