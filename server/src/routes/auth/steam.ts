@@ -56,8 +56,11 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             // Send data back to steam for validation
             const params = new URLSearchParams({...req.query})
             params.set('openid.mode', 'check_authentication')
-            const validateRes = await fetch(`https://steamcommunity.com/openid/login?${params.toString()}`)
-            
+            const validateRes = await fetch(`https://steamcommunity.com/openid/login?${params.toString()}`, {
+                headers: {
+                    'User-Agent': 'admin.jackz.me'
+                }
+            })
             if(validateRes.ok) {
                 const text = await validateRes.text()
                 // Only result we care about, check if steam says request valid
