@@ -101,6 +101,9 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         try {
             const jwt = await JWT.verify<StateJwtPayoad>(req.query.state, STATE_JWT_SECRET)
             const provider = await fastify.authmngr.oauth.getProvider(PROVIDER_NAME)
+            if(!provider) {
+                return reply.redirect(`${domain}/error?type=oauth_error&provider=${PROVIDER_NAME}&oauth_error=provider_not_supported`)
+            }
             try {
                 // Converts code into access token
                 await provider.authorize(req.query.code)

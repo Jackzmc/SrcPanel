@@ -663,6 +663,7 @@ export default class AuthManager {
         for(const providerName of Object.keys(providers)) {
             const provider = await this.oauth.getProvider(providerName)
             // Set the user, so we can fetch their access/refresh token
+            if(!provider) continue
             await provider.setUser(steamid)
             if(provider.isExpired) {
                 result[providerName] = null
