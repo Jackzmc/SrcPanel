@@ -38,18 +38,6 @@ const STATE_JWT_SECRET = process.env.STATE_SECRET
 const STATE_SEED = crypto.randomBytes(STATE_SEED_LENGTH).toString('hex')
 
 const PROVIDER_NAME = "discord"
-/*
-TODO:
-need these kv:
-discord.appid
-discord.appsecret
-discord.authorize_url
-discord.token_url
-discord.revoke_url
-discord.user_url
-
-discord.avatar_format
-*/
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
     // Disable discord support if no secret
