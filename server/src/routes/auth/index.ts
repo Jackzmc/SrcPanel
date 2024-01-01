@@ -1,7 +1,7 @@
 import { SessionStore } from '@fastify/session';
 import { FastifyInstance, FastifyPluginOptions, FastifyReply, FastifyRequest } from 'fastify';
 import { RowDataPacket } from 'mysql2';
-import type { SessionData, UserData } from '../../../../common-types/User';
+import type { OauthProviderData, ProviderConnectionData, SessionData, UserData } from '../../../../common-types/User';
 import { SESSION_VERSION } from './steam.js';
 import type { UserPrivilegeCode } from '../../../../common-types/Privileges.js';
 
@@ -16,14 +16,36 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     })
 
     fastify.get('/profile', async(req, reply): Promise<UserData<UserPrivilegeCode[]>> => {
-        await req.user.updateProviders()
         return {
             user: req.session.user,
             permissions: req.session.permissions,
             isSessionOld: req.session.version !== SESSION_VERSION,
-            providers: req.user.providers,
+            providers: req.user.providers, // TODO: is this needed?
             notifications: await req.user.getNotifications()
         }
+    })
+
+    fastify.get('/connections', async(req, reply) => {
+        // Forces all providers to refetch user data, to ensure it's up to date.
+        await req.user.updateProviders()
+        const providerList = await fastify.authmngr.oauth.getProviders()
+        let providers: Record<string, ProviderConnectionData> = {}
+        for(const provider of providerList) {
+            providers[provider.id] = {
+                id: provider.id,
+                name: provider.name,
+                enabled: false,
+                expired: null,
+                data: null
+            }
+            console.log(req.user.providers[provider.id])
+            // Check if user has such provider setup
+            if(req.user.providers[provider.id] !== undefined) {
+                providers[provider.id].data = req.user.providers[provider.id]
+                providers[provider.id].expired = req.user.providers[provider.id] === null
+            }
+        }
+        return providers
     })
 
     fastify.delete('/sessions/:id', async(req: FastifyRequest<{ Params: { id: string } }>, reply) => {

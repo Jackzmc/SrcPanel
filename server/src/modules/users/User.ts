@@ -1,6 +1,6 @@
 import { AdminData, OauthProvider, OauthProviderData, SessionData, SessionUser, UserNotification, UserNotificationOptions, UserOauthProviders } from '../../../../common-types/User';
 import { UserPrivilegeCode } from '../../../../common-types/Privileges.js';
-import AuthManager from '../AuthManager.js';
+import AuthManager from '../auth/AuthManager.js';
 import { Session } from 'fastify';
 import UserManager from './UserManager.js';
 
@@ -195,16 +195,12 @@ export default class User {
         await this.authmngr.log.logWeb(this, user, message, payload)
     }
 
-    async addProvider(provider: OauthProvider, providerData: OauthProviderData, refreshToken?: string) {
-        return await this.authmngr.setProvider(this.steamid2, provider, providerData, refreshToken)
-    }
-
     async removeProvider(provider: OauthProvider) {
         return await this.authmngr.setProvider(this.steamid2, provider, null)
     }
 
     async getProvider(provider: OauthProvider) {
-        if(!this._providers) await this.updateProviders()
+        if(!this._providers) await this.getProviders()
         return this._providers[provider]
     }
 
@@ -212,8 +208,17 @@ export default class User {
      * Updates cached list of providers
      */
     async updateProviders() {
+        this._providers = await this.authmngr.updateProviders(this.steamid2)
+        return this._providers
+    }
+
+    /**
+     * Fetches cached list of providers
+     */
+    async getProviders() {
         this._providers = await this.authmngr.getProviders(this.steamid2)
     }
+    
 
     /**
      * Returns a list of active web sessions for user

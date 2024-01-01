@@ -6,17 +6,20 @@
     </figure>
   </div>
   <div class="list-item-content">
-    <div class="list-item-title">
-      {{ data?.username }}
+    <div class="list-item-title has-text-danger" v-if="provider.expired">
+      Link has expired, please relogin.
+    </div>
+    <div class="list-item-title" v-else>
+      {{ provider.data?.username }}
     </div>
     <div class="list-item-description has-text-black">
-      {{ provider }}
+      {{ provider.name }}
     </div>
   </div>
 
   <div class="list-item-controls">
     <div class="buttons is-right">
-      <slot :provider="provider" :data="data">
+      <slot :provider="provider" :data="provider.data">
 
       </slot>
     </div>
@@ -25,16 +28,15 @@
 </template>
 
 <script setup lang="ts">
-import { OauthProviderData } from '../../../common-types/User.js';
+import { ProviderConnectionData } from '../../../common-types/User.js';
 import { computed } from 'vue';
 
 const props = defineProps<{
-  provider: string,
-  data?: OauthProviderData
+  provider: ProviderConnectionData
   providerImageSrc: string,
 }>()
 
 const imageUrl = computed(() => {
-  return props.data?.avatarUrl ?? props.providerImageSrc
+  return props.provider.data?.avatarUrl ?? props.providerImageSrc
 })
 </script>

@@ -38,6 +38,17 @@ export interface OauthProviderData {
     username?: string,
     avatarUrl?: string
 }
+
+export interface RegisteredProvider {
+    id: string
+    name: string,
+}
+export interface ProviderConnectionData extends RegisteredProvider {
+    enabled: boolean,
+    expired: boolean,
+    data?: OauthProviderData
+}
+
 export type UserOauthProviders = Partial<Record<OauthProvider, OauthProviderData>>
 
 export interface SessionUser {

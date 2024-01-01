@@ -1,5 +1,5 @@
 import { AdminData} from '../../../common-types/User';
-import type  { UserData, ClientUserData } from '../../../common-types/User';
+import type  { UserData, ClientUserData, OauthProviderData } from '../../../common-types/User';
 import { UserPrivilegeCode } from '../../../common-types/Privileges';
 import { minimatch } from 'minimatch'
 
@@ -96,6 +96,10 @@ export class PrivilegedUser {
     return false
   }
 
+  updateProviders(providers: Record<string, OauthProviderData>) {
+    this.data.providers = providers
+  }
+
   hasFlag(flag: string, ignoreRoot: boolean = false) : boolean {
     const flags = this.flags
     return (!ignoreRoot && flags.includes("z")) || flags.includes(flag)
@@ -148,6 +152,6 @@ export class PrivilegedUser {
   }
 
   get providers() {
-    return this.data.providers
+    return this.data.providers ?? {}
   }
 }

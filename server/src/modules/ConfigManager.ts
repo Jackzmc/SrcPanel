@@ -7,8 +7,11 @@ import Json5 from 'json5'
 import { ShareDestination, ShareInfo } from '../../../common-types/Share';
 import Share from './Share';
 import { Keyvalue, Keyvalues, PublicKeys } from '../../../common-types/Panel.js';
-import { Key } from 'readline';
 
+export interface RegisteredProvider {
+    id: string
+    name?: string,
+}
 
 export default class ConfigManager {
     private db: sqlite.Database<sqlite3.Database, sqlite3.Statement>
@@ -128,10 +131,31 @@ export default class ConfigManager {
         return kv
     }
 
+    public async FindProviders() {
+        const providers: RegisteredProvider[] = []
+        const data: {key: string}[] = await this.db.all(SQL`SELECT SUBSTRING(key,11) as key FROM keyvalues WHERE key LIKE "providers.%"`)
+        for(const row of data) {
+            const provider = row.key.split(".").shift()
+            if(!providers.some(p => p.id === provider)) {
+                const name = await this.GetKVNamespaced("providers", provider, "name")
+                providers.push({
+                    id: provider,
+                    name: name ?? provider
+                })
+            }
+        }
+        console.log('found registered providers:', providers)
+        return providers
+    }
+
     public async GetKV<T extends number | string = string>(key: Keyvalue, defaultValue?: T): Promise<T> {
         const data = await this.db.get(SQL`SELECT value FROM keyvalues WHERE key = ${key}`)
         if(!data) return defaultValue
         return data.value as T ?? defaultValue
+    }
+
+    public async GetKVNamespaced<T extends number | string = string>(...args: string[]): Promise<T> {
+        return this.GetKV(args.join(".") as Keyvalue, null)
     }
 
     public async HasKV(key: Keyvalue) {

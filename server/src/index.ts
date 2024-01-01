@@ -5,7 +5,7 @@ import MySQLSession from 'express-mysql-session'
 import { Pool } from 'mysql2/promise';
 import dotenv from 'dotenv'
 import SteamAPI from './modules/steam.js'
-import AuthManager from './modules/AuthManager';
+import AuthManager from './modules/auth/AuthManager.js';
 import ServerManager from './modules/servers/ServerManager.js';
 import UserManager from './modules/users/UserManager.js';
 import { readdir } from 'fs/promises';

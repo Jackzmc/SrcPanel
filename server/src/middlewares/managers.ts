@@ -1,6 +1,6 @@
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import FastifyPlugin from 'fastify-plugin'
-import AuthManager from '../modules/AuthManager.js';
+import AuthManager from '../modules/auth/AuthManager.js';
 
 import mysql from 'mysql2/promise'
 import { mkdir } from 'fs/promises'
@@ -47,9 +47,9 @@ async function db(fastify: FastifyInstance) {
     })
 
     const userManager = new UserManager(db, steam)
-    const authManager = new AuthManager(admindb, db, steam)
     const configManager = new ConfigManager()
         await configManager.Load(DATA_FOLDER)
+    const authManager = new AuthManager(admindb, db, steam, configManager)
     fastify.decorate('users', userManager)
     fastify.decorate('authmngr', authManager)
     fastify.decorate('db', db)

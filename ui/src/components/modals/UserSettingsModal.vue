@@ -57,15 +57,16 @@
           </Tab>
           <Tab name="Connections">
             <div class="list has-visible-pointer-controls">
-              <OauthProviderCard provider="Steam" provider-image-src="/img/providers/steam.png" :data="{id: props.privUser.id, username: props.privUser.name}">
+              <OauthProviderCard :provider="dummySteamProvider" provider-image-src="/img/providers/steam.png">
                 Cannot unlink
               </OauthProviderCard>
-              <OauthProviderCard provider="Discord" provider-image-src="/img/providers/discord.svg" v-slot="slotProps" :data="privUser.providers.discord">
-                <a v-if="slotProps.data" target="_blank" href="/api/auth/discord/revoke" class="button has-text-white" style="background-color:#5865F2">
-                  <Icon icon="fab fa-discord">Unlink Discord Account</Icon>
+              <span class="has-text-centered is-size-4 mt-3" v-if="!providers">Loading...</span>
+              <OauthProviderCard v-for="provider in providers" :key="provider.id" :provider="provider" :provider-image-src="'/img/providers/' + provider.id + '.svg'">
+                <a v-if="provider.enabled" target="_blank" :href="'/api/auth/' + provider.id + '/revoke'" class="button has-text-white" style="background-color:#5865F2">
+                  <Icon icon="fab fa-discord">Unlink {{ provider.name }} Account</Icon>
                 </a>
-                <a v-else target="_blank" href="/api/auth/discord/link" class="button has-text-white" style="background-color:#5865F2">
-                  <Icon icon="fab fa-discord">Link Discord Account</Icon>
+                <a v-else target="_blank" :href="'/api/auth/' + provider.id + '/link'" class="button has-text-white" style="background-color:#5865F2">
+                  <Icon icon="fab fa-discord">Link {{ provider.name }} Account</Icon>
                 </a>
               </OauthProviderCard>
             </div>
@@ -107,7 +108,7 @@ import { ref, watch, computed, onBeforeMount, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 // @ts-ignore
 import { Tab, Tabs } from "vue3-tabs-component";
-import { SessionData } from '../../../../common-types/User';
+import { SessionData, ProviderConnectionData } from '../../../../common-types/User';
 import OauthProviderCard from "@/components/OauthProviderCard.vue";
 
 const emit = defineEmits(["close"]);
@@ -123,15 +124,29 @@ const intl = new Intl.DisplayNames(["en"], { type: "region" });
 
 let loading = ref(false)
 let sessions = ref<SessionData[]>([]);
+let providers = ref<ProviderConnectionData[]>()
 let api = ref<{data: any, loading: boolean}>({
   data: null,
   loading: false
 })
 let currentSessionId = ref<string>();
 
+const dummySteamProvider = computed(() => {
+  return {
+    id: 'steam',
+    name: 'Steam',
+    enabled: true,
+    expired: false,
+    data: { id: props.privUser.id, username: props.privUser.name }
+  } as ProviderConnectionData
+})
+
 function onTabChanged(selectedTab: any) {
+  console.log(selectedTab.tab.name, 'selected')
   if(selectedTab.tab.name === "Developer") {
     fetchDeveloperData()
+  } else if(selectedTab.tab.name === "Connections") {
+    fetchConnections()
   }
 }
 
@@ -152,6 +167,15 @@ async function fetchDeveloperData() {
   if (response?.ok) {
     const json = await response.json();
     api.value.data = json.apikey
+  }
+}
+
+async function fetchConnections() {
+  const response = await request("/api/auth/connections");
+  if (response?.ok) {
+    const json = await response.json();
+    props.privUser.updateProviders(json)
+    providers.value = json
   }
 }
 

@@ -1,17 +1,20 @@
 import { Pool, RowDataPacket, OkPacket } from "mysql2/promise";
 import QuickLRU from 'quick-lru'
 import { FastifyReply, FastifyRequest } from 'fastify';
-import ActivityLog from "./ActivityLog.js";
-import { AdminData, AdminGroup, OauthProvider, SessionData, ReadableAdminGroup, UserNotification, UserNotificationOptions, AddUserNotification } from '../../../common-types/User.js';
-import { ReadableAdminData, UserOauthProviders, OauthProviderData } from '../../../common-types/User';
-import { SteamInfo, UserPrivilegeCode } from  '../../../common-types/Privileges.js';
-import { SteamUserDetails } from '../../../common-types/Share';
+import ActivityLog from "../ActivityLog.js";
+import { AdminData, AdminGroup, OauthProvider, SessionData, ReadableAdminGroup, UserNotification, UserNotificationOptions, AddUserNotification } from '../../../../common-types/User.js';
+import { ReadableAdminData, UserOauthProviders, OauthProviderData } from '../../../../common-types/User.js';
+import { SteamInfo, UserPrivilegeCode } from  '../../../../common-types/Privileges.js';
+import { SteamUserDetails } from '../../../../common-types/Share.js';
 import SteamID from "steamid";
 import FastGeoip from 'fast-geoip';
-import { SESSION_VERSION } from '../routes/auth/steam.js';
-import SteamAPI from "./steam.js";
+import { SESSION_VERSION } from '../../routes/auth/steam.js';
+import SteamAPI from "../steam.js";
 import crypto from 'crypto'
 import { minimatch } from 'minimatch'
+import { OauthManager } from "./OauthManager.js";
+import ConfigManager from "../ConfigManager.js";
+import { OauthAuthData } from './OauthProvider.js';
 
 interface AddAdmin {
     authtype: "steam" | "name" | "ip",
@@ -41,10 +44,13 @@ export default class AuthManager {
     private apikeysCache: QuickLRU<string, APIKey>
     private actLog: ActivityLog
     private steam: SteamAPI
+    #config: ConfigManager
     // Caches the resolved name of a ban source such as discord:DISCORD_ID
     private providerNameCache: Map<string, string>
 
-    constructor(adminDatabase: Pool, sessionDatabase: Pool, steam: SteamAPI) {
+    #oauthManager: OauthManager
+
+    constructor(adminDatabase: Pool, sessionDatabase: Pool, steam: SteamAPI, configManager: ConfigManager) {
         if(process.env.DEBUG_DISABLE_PERMISSION_SYSTEM) {
             console.warn("[AuthManager] Warn: DEBUG_DISABLE_PERMISSION_SYSTEM set, permissions are ignored")
         }
@@ -53,7 +59,9 @@ export default class AuthManager {
         this.db = adminDatabase
         this.dbna = sessionDatabase
         this.steam = steam
+        this.#config = configManager
         this.actLog = new ActivityLog(sessionDatabase)
+        this.#oauthManager = new OauthManager(this, this.#config)
         this.init()
     }
 
@@ -68,6 +76,10 @@ export default class AuthManager {
 
         console.info(`[AuthManager] Fetched ${Object.keys(this.admins).length} admins in ${(fetchAdminsTime).toFixed(1)} ms`)
         console.info(`[AuthManager] Fetched ${Object.keys(this.groups).length} groups in ${(fetchGroupsTime).toFixed(1)} ms`)
+    }
+
+    get oauth() {
+        return this.#oauthManager
     }
 
     getConnection() {
@@ -590,16 +602,19 @@ export default class AuthManager {
      * @param refreshToken The refresh token for the user's access
      * @returns 
      */
-    public async setProvider(steamid: string, provider: OauthProvider, providerData: OauthProviderData, refreshToken: string = null) {
+    public async setProvider(steamid: string, providerName: OauthProvider, providerData: OauthProviderData) {
         if(providerData === null) {
+            // TOOD: also revoke token
             return await this.db.query<OkPacket>(
                 "DELETE FROM dash_providers WHERE SUBSTRING(steamid, 11) = SUBSTRING(?, 11) AND provider = ?",
-                [ steamid, provider ]
+                [ steamid, providerName ]
             )
         } else {
+            console.log(steamid, providerName, providerData)
             return await this.db.query<OkPacket>(
-                "INSERT INTO dash_providers (steamid, provider, provider_id, username, avatar_url, refresh_token) VALUES (?, ?, ?, ?, ?, ?)",
-                [ steamid, provider, providerData.id, providerData.username, providerData.avatarUrl, refreshToken ]
+                `INSERT INTO dash_providers (steamid, provider, provider_id, username, avatar_url) VALUES (?, ?, ?, ?, ?) 
+                    ON DUPLICATE KEY UPDATE username = ?, avatar_url = ?`,
+                [ steamid, providerName, providerData.id, providerData.username, providerData.avatarUrl, providerData.username, providerData.avatarUrl ]
             )
         }
     }
@@ -635,6 +650,51 @@ export default class AuthManager {
             result[row.provider] = data
         }
         return result
+    }
+
+    /** 
+     * Updates every provider for user, fetching the latest avatar, username from the provider.
+     * @param steamid steamid2
+     * @returns Record<providerName, OauthProviderData>
+    */
+    public async updateProviders(steamid: string): Promise<UserOauthProviders> {
+        const providers = await this.getProviders(steamid)
+        let result: UserOauthProviders = {}
+        for(const providerName of Object.keys(providers)) {
+            const provider = await this.oauth.getProvider(providerName)
+            // Set the user, so we can fetch their access/refresh token
+            await provider.setUser(steamid)
+            console.log(providerName, 'loaded', steamid, `isExpired:${provider.isExpired}`)
+            if(provider.isExpired) {
+                result[providerName] = null
+            } else {
+                result[providerName] = await provider.fetchDetails()
+                // Don't need to pass in steamid again, it's already set by .setUser
+                await provider.save()
+            }
+        }
+        return result
+    }
+
+    public async fetchProviderAuthData(steamid: string, providerName: OauthProvider): Promise<OauthAuthData> {
+        const [provider] = await this.db.query<RowDataPacket[]>(
+            "SELECT refresh_token, refresh_token_expired, access_token, access_token_expires FROM dash_providers WHERE SUBSTRING(steamid, 11) = SUBSTRING(?, 11) AND provider = ?",
+            [ steamid, providerName ]
+        )
+        if(!provider) return null
+        return {
+            refreshToken: provider[0].refresh_token,
+            refreshTokenExpired: provider[0].refresh_token_expired,
+            accessToken: provider[0].access_token,
+            accessTokenExpires: provider[0].access_token_expires
+        }
+    }
+
+    public async setProviderAuthData(steamid: string, providerName: OauthProvider, providerData: OauthAuthData) {
+        return await this.db.query<OkPacket>(
+            "UPDATE dash_providers SET refresh_token = ?, refresh_token_expired = ?, access_token = ?, access_token_expires = ? WHERE SUBSTRING(steamid, 11) = SUBSTRING(?, 11) AND provider = ?",
+            [ providerData.refreshToken, providerData.refreshTokenExpired, providerData.accessToken, providerData.accessTokenExpires, steamid, providerName ]
+        )
     }
     
     /**
