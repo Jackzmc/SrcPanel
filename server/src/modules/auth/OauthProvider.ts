@@ -71,7 +71,6 @@ export class OauthProviderUser {
             params.append('redirect_uri', redirectUrl)
         }
         else if(this.#authData.refreshToken) params.append('refresh_token', this.#authData.refreshToken)
-        console.log(params, this.#basicAuth)
         const response = await fetch(this.#oauth.urls.tokenUrl, {
             method: 'POST',
             headers: {
@@ -83,17 +82,16 @@ export class OauthProviderUser {
         })
         if(response.ok) {
             const json: AccessTokenResponse = await response.json()
-            console.log(json)
             this.#authData = {
                 refreshToken: json.refresh_token,
                 refreshTokenExpired: false,
                 accessToken: json.access_token,
-                accessTokenExpires: Date.now() + (json.expires_in*1000), //convert json.expires_in from sec to milliseconds
+                accessTokenExpires: Math.floor((Date.now()/1000) + json.expires_in), //convert to seconds
             }
             return json
         } else {
             const json = await response.json()
-            if(json.error === "invalid_grant") {
+            if(json.error === "invalid_grant" && !json.message) {
                 // Set error here
                 this.#authData = {
                     refreshToken: null,
@@ -113,14 +111,16 @@ export class OauthProviderUser {
     }
 
     async #getAccessToken() {
-        if(!this.#authData.accessToken || this.#authData.accessTokenExpires >= (Date.now() + EXPIRES_WINDOW_S)) {
+        if(!this.#authData.accessToken || this.#authData.accessTokenExpires >= ((Date.now() / 1000) + EXPIRES_WINDOW_S)) {
             await this.#fetchAccessToken()
         }
         return this.#authData.accessToken
     }
 
     async authorize(code: string) {
-        return await this.#fetchAccessToken(code, this.#oauth.urls.redirectUrl)
+        const val = await this.#fetchAccessToken(code, this.#oauth.urls.redirectUrl)
+        if(!val) throw new Error("Failed to fetch access token")
+        return val
     }
 
     async setUser(steamid2: string) {
@@ -137,13 +137,13 @@ export class OauthProviderUser {
             // No user data means .setUser was not called and .fetchDetails was not called
             throw new Error("No user data, either call .setUser() to get cached, or .fetchDetails to fetch")
         }
+        await this.#authManager.setProvider(this.#steamid2, this.#providerName as OauthProvider, this.#userData)
         await this.#authManager.setProviderAuthData(this.#steamid2, this.#providerName as OauthProvider, this.#authData)
     }
 
     public async fetchDetails(): Promise<OauthProviderData> {
         const accessToken = await this.#getAccessToken()
         if(!accessToken) return null
-        console.log('token', accessToken)
         const userResponse = await fetch(this.#oauth.urls.detailsUrl, {
             headers: {
                 Authorization: `Bearer ${accessToken}`,
@@ -161,8 +161,6 @@ export class OauthProviderUser {
                 username: user.username,
                 avatarUrl
             }
-            await this.#authManager.setProvider(this.#steamid2, this.#providerName as OauthProvider, this.#userData)
-            
             return this.#userData
         } else {
             throw new Error(`fetchDetails for ${this.#providerName} returned error: `, await userResponse.json())

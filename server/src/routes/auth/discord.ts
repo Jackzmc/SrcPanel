@@ -67,19 +67,19 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         const isLink = req.url.endsWith("/link")
         reply.type("text/html")
         const redirectUri = await getRedirectUri()
-        const appId = await fastify.config.GetKVNamespaced(PROVIDER_NAME, "appid")
+        const clientId = await fastify.config.GetKVNamespaced("providers", PROVIDER_NAME, "clientId")
         const domain = await fastify.config.GetKV("domain")
-        if(!redirectUri || !appId) {
+        const authorizeUrl = await fastify.config.GetKVNamespaced("providers", PROVIDER_NAME, "authorize_url")
+        if(!redirectUri || !clientId || !authorizeUrl) {
             return reply.redirect(`${domain}/error?type=oauth_error&provider=${PROVIDER_NAME}&oauth_error=provider_not_supported`)
         }
         const params = new URLSearchParams({
-            client_id: appId,
+            client_id: clientId,
             scope: "identify",
             response_type: "code",
             redirect_uri: redirectUri,
             state: await generateState(isLink ? req.user : null)
         })
-        const authorizeUrl = await fastify.config.GetKVNamespaced(PROVIDER_NAME, "authorize_url")
         return reply.redirect(`${authorizeUrl}?${params.toString()}`)
     }
     ["/login", "/link"].forEach(url => fastify.get.bind(fastify)(url, loginLinkHandler))
@@ -129,7 +129,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                     }
                 }
             } catch(err) {
-                req.log.error(`Provider (${PROVIDER_NAME}) token error: ${err}`)
+                req.log.error(`Provider (${PROVIDER_NAME}) token error:` + err.stack)
                 return reply.redirect(`${domain}/error?type=oauth_error&provider=${PROVIDER_NAME}&oauth_error=token_error`)
             }
         } catch(err) {

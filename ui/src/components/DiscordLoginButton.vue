@@ -1,6 +1,6 @@
 <template>
   <a type="submit" class="button has-text-white is-dark"  style="background-color:#5865F2" :href="loginUri">
-    <Icon icon="fab fa-discord" >Login with Discord</Icon>
+    <Icon icon="fab fa-discord">Login with Discord</Icon>
   </a>
 </template>
 

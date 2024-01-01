@@ -55,7 +55,7 @@ export class OauthManager {
             tokenUrl: await this.#config.GetKVNamespaced("providers", providerName, "token_url"),
             revokeUrl: await this.#config.GetKVNamespaced("providers", providerName, "revoke_url"),
             detailsUrl: await this.#config.GetKVNamespaced("providers", providerName, "user_url"),
-            redirectUrl: `${domain}/auth/${providerName}/callback`
+            redirectUrl: `${domain}/api/auth/${providerName}/callback`
         }
         
         const oauthConfig: OauthConfig = {

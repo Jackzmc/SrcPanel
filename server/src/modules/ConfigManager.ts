@@ -144,7 +144,6 @@ export default class ConfigManager {
                 })
             }
         }
-        console.log('found registered providers:', providers)
         return providers
     }
 

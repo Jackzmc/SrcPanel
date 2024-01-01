@@ -594,31 +594,6 @@ export default class AuthManager {
             })
     }
 
-    /**
-     * Sets or deletes a provider for a user
-     * @param steamid steamid2
-     * @param provider
-     * @param providerData null to delete, otherwise provider oauth data
-     * @param refreshToken The refresh token for the user's access
-     * @returns 
-     */
-    public async setProvider(steamid: string, providerName: OauthProvider, providerData: OauthProviderData) {
-        if(providerData === null) {
-            // TOOD: also revoke token
-            return await this.db.query<OkPacket>(
-                "DELETE FROM dash_providers WHERE SUBSTRING(steamid, 11) = SUBSTRING(?, 11) AND provider = ?",
-                [ steamid, providerName ]
-            )
-        } else {
-            console.log(steamid, providerName, providerData)
-            return await this.db.query<OkPacket>(
-                `INSERT INTO dash_providers (steamid, provider, provider_id, username, avatar_url) VALUES (?, ?, ?, ?, ?) 
-                    ON DUPLICATE KEY UPDATE username = ?, avatar_url = ?`,
-                [ steamid, providerName, providerData.id, providerData.username, providerData.avatarUrl, providerData.username, providerData.avatarUrl ]
-            )
-        }
-    }
-
     public async getSessions(steamid: string): Promise<SessionData[]> {
         const [sessions] = await this.dbna.execute<RowDataPacket[]>(`
             SELECT session_id AS id, JSON_UNQUOTE(JSON_EXTRACT(data,'$.ip')) as ip, JSON_UNQUOTE(JSON_EXTRACT(data, '$.countryCode')) as countryCode, CAST(JSON_UNQUOTE(JSON_EXTRACT(data, '$.loginTime')) AS UNSIGNED) as loginTime, CAST((JSON_EXTRACT(data, '$.lastActive')) AS UNSIGNED) as lastActive
@@ -652,6 +627,31 @@ export default class AuthManager {
         return result
     }
 
+    
+    /**
+     * Sets or deletes a provider for a user
+     * @param steamid steamid2
+     * @param provider
+     * @param providerData null to delete, otherwise provider oauth data
+     * @param refreshToken The refresh token for the user's access
+     * @returns 
+     */
+    public async setProvider(steamid: string, providerName: OauthProvider, providerData: OauthProviderData) {
+        if(providerData === null) {
+            // TOOD: also revoke token
+            return await this.db.query<OkPacket>(
+                "DELETE FROM dash_providers WHERE SUBSTRING(steamid, 11) = SUBSTRING(?, 11) AND provider = ?",
+                [ steamid, providerName ]
+            )
+        } else {
+            return await this.db.query<OkPacket>(
+                `INSERT INTO dash_providers (steamid, provider, provider_id, username, avatar_url) VALUES (?, ?, ?, ?, ?) 
+                    ON DUPLICATE KEY UPDATE username = ?, avatar_url = ?`,
+                [ steamid, providerName, providerData.id, providerData.username, providerData.avatarUrl, providerData.username, providerData.avatarUrl ]
+            )
+        }
+    }
+
     /** 
      * Updates every provider for user, fetching the latest avatar, username from the provider.
      * @param steamid steamid2
@@ -664,7 +664,6 @@ export default class AuthManager {
             const provider = await this.oauth.getProvider(providerName)
             // Set the user, so we can fetch their access/refresh token
             await provider.setUser(steamid)
-            console.log(providerName, 'loaded', steamid, `isExpired:${provider.isExpired}`)
             if(provider.isExpired) {
                 result[providerName] = null
             } else {
