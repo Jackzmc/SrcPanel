@@ -38,9 +38,9 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 expired: null,
                 data: null
             }
-            console.log(req.user.providers[provider.id])
             // Check if user has such provider setup
             if(req.user.providers[provider.id] !== undefined) {
+                providers[provider.id].enabled = true
                 providers[provider.id].data = req.user.providers[provider.id]
                 providers[provider.id].expired = req.user.providers[provider.id] === null
             }
