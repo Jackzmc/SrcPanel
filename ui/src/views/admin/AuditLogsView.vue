@@ -289,8 +289,9 @@ const FILTER_DATA: Record<string, Record<string, boolean | string>> = {
 }
 
 const DATA_SOURCES: Record<string, string> = {
-  main: `Main (2023-${new Date().getFullYear()})`,
-  archive: "Archive (2020-2022)"
+  main: `Main (${new Date().getFullYear()})`,
+  archive2023: "Archive (2023)",
+  archive: "Archive (2020-2022)",
 }
 
 const ADMINCHAT_REGEX = new RegExp(/triggered (sm_say|sm_chat) \(text (.*)\s*\)/);
