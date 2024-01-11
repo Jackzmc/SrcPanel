@@ -76,6 +76,15 @@ const routes = [
     }
   },
   {
+    name: 'docs-props',
+    path: '/docs/props',
+    component: () => import('../views/docs/PropSpawnerView.vue'),
+    meta: {
+      title: "Prop Spawner",
+      description: ""
+    }
+  },
+  {
     name: "docs-keybinds",
     path: '/docs/keybinds',
     component: () => import('../views/docs/KeybindsView.vue'),
