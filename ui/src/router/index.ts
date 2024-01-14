@@ -122,7 +122,7 @@ const routes = [
       description: 'View all player notes'
     }
   },
-/*  {
+  {
     name: 'graphs',
     path: '/graphs',
     component: () => import('../views/GraphsView.vue'),
@@ -130,7 +130,7 @@ const routes = [
       title: 'Graphs',
       description: 'View some statistics about gameplay and administration'
     }
-  },*/
+  },
   {
     name: 'admin-addons',
     path: '/admin/addons/:shareId?/',
