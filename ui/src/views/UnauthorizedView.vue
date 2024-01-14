@@ -6,7 +6,7 @@
   <p v-if="type == 0">please login with steam (top right) to view</p>
   <p v-if="type == 1">
     You are not a registered administrator
-    </p>
+  </p>
 </div>
 </template>
 

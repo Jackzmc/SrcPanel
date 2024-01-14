@@ -67,20 +67,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onBeforeMount } from 'vue'
-
 const LAST_UPDATED = new Date(Number(BUILD_TIMESTAMP))
-
-onBeforeMount(() => {
-    // fetch(`../data/notes.json?t=${LAST_UPDATED}`)
-    // .then(response => response.json())
-    // .then(json => {
-    // })
-    // .catch(err => {
-    //     console.error('Could not fetch notes data, network error.', err)
-    // })
-
-})
 </script>
 
 <style>

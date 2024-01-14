@@ -257,12 +257,9 @@ export default class ServerManager {
         } else {
           const [, host, port] = server.ip.match(/([a-zA-Z0-9.]+):?(\d*)/)
           serverPromises.push(new Promise((resolve, reject) => {
-            DNS.lookup(host, {
-              verbatim: false
-            }, (err, address, family) => {
+            DNS.lookup(host, { verbatim: false}, (err, address, family) => {
               if (err) {
                 console.warn(`[ServerManager] Warn: Could not resolve IP for hostname ${host}:\n`, err)
-                return reject(err)
               }
 
               const tags = server.tags ?? []
@@ -279,7 +276,7 @@ export default class ServerManager {
                 name: server.name,
                 domain: host,
                 port: Number(port) ?? 27015,
-                ip: address,
+                ip: address ?? null,
                 type: server.type,
                 tags: tags,
                 cfgDirectory: server.cfgDirectory,
