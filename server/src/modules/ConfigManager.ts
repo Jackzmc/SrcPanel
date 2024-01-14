@@ -147,6 +147,17 @@ export default class ConfigManager {
         return providers
     }
 
+    /**
+     * Returns a list of all keys from a parent. 
+     * @example GetKVChildren("policy") will return "policy.X", "policy.YYY.ZZ", etc..
+     * @param parents list of parents, like KVNamespaced
+     * @returns list of { key, value }
+     */
+    public async GetKVChildren(...parents: string[]): Promise<{key: string, value: string}[]> {
+        const data = await this.db.all(SQL`SELECT key, value FROM keyvalues WHERE key LIKE '${parents.join(".")}.%'`)
+        return data
+    }
+
     public async GetKV<T extends number | string = string>(key: Keyvalue, defaultValue?: T): Promise<T> {
         const data = await this.db.get(SQL`SELECT value FROM keyvalues WHERE key = ${key}`)
         if(!data) return defaultValue
@@ -164,6 +175,15 @@ export default class ConfigManager {
     public async SetKV(key: Keyvalue, value: string | number) {
         if(value == null || value == undefined) await this.deleteKV(key)
         else await this.db.run(SQL`REPLACE INTO keyvalues (key, value) VALUES (${key}, ${value})`)
+    }
+    /**
+     * Similar to GetKVNamespaced, but the key must be in its own array
+     * @param args 
+     */
+    public async SetKVNamespaced(key: string[], value: string | number) {
+        const dbKey = key.join(".") as Keyvalue
+        if(value == null || value == undefined) await this.deleteKV(dbKey)
+        else await this.db.run(SQL`REPLACE INTO keyvalues (key, value) VALUES (${dbKey}, ${value})`)
     }
 
     private async deleteKV(key: Keyvalue) {

@@ -34,8 +34,6 @@ export default class ActivityLog {
         this.db = db
     }
 
-    //"Tank<146><BOT><>"
-    //"soap suds<37><STEAM_1:1:223885525><>"
     async logWeb(activator: User, target?: User, message?: string, payload?: LogData) {
         let msg = null
         if(message) {
