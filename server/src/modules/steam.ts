@@ -9,7 +9,7 @@ import { WorkshopItem, SteamUserDetails } from '../../../common-types/Share.js'
 import { EventEmitter } from 'node:events';
 
 // How many bytes of progress to make before sending an update
-const PROGRES_MIN_BYTES = 1000
+const PROGRES_MIN_BYTES = 2_000_000 // 2 MB
 
 export default class SteamAPI {
     private apikey: string
