@@ -88,9 +88,9 @@
         <router-link to="/notes" class="navbar-item">
           <Icon icon="fa-note-sticky">Player Notes</Icon>
         </router-link>
-        <router-link to="/graphs" class="navbar-item">
+        <!-- <router-link to="/graphs" class="navbar-item">
           <Icon icon="fa-chart-simple">Graphs</Icon>
-        </router-link>
+        </router-link> -->
       </div>
       <div class="navbar-end">
         <div class="navbar-item" v-if="updateInfo.updating">
