@@ -45,7 +45,7 @@
               <template v-if="status?.online && server.info.features.includes('rcon')">
                 <a data-tooltip="Will restart server if no players online, or fail if there are" @click="processAction('stop')" class="button is-dark is-small">Request Restart</a>
                 <a data-tooltip="Will remove lobby reservation, allowing 5+ to join. This is done automatically after 4 players have fully loaded in" @click="processAction('unreserve')" class="button is-dark is-small">Unreserve</a>
-                <a data-tooltip="Will forcefully restart server, regardless if players are online" @click="processAction('stop', { force: true })" class="button is-warning is-small">Force Restart</a>
+                <a v-show="shiftPressed" data-tooltip="Will forcefully restart server, regardless if players are online" @click="processAction('stop', { force: true })" class="button is-danger is-small">Force Restart</a>
               </template>
             </div>
           </div>
@@ -588,7 +588,7 @@ let cfg = ref<{
 let error = ref<string>()
 let now = ref(Date.now())
 let showDetailsId = ref<number>()
-
+let shiftPressed = ref(false)
 
 const tab = computed(() => {
   return route.params.tab.length > 0 ? route.params.tab : "overview"
@@ -775,7 +775,7 @@ async function processAction(type: string, options: Record<string, any> = {}) {
   }
   // Ask user to confirm:
   if(type === "stop" && options.force) {
-    if(!confirm("Are you sure you want to force restart the server? Any players online will be kicked")) return
+    if(!confirm("You are requesting to forcefully restart the server. This should only be used in the last resort, if the server became unresponsive. This does not check for players being online. Are you sure?")) return
   }
   const response = await request(`/api/servers/${server.value.id}/${type}`, {
     method: 'POST',
@@ -941,11 +941,18 @@ nowInterval = setInterval(() => {
 }, 1000)
 
 onBeforeMount(async() => {
+  document.addEventListener("keyup", _toggleShift)
+  document.addEventListener("keydown", _toggleShift)
   errCount = 0
   await fetchServersCompact()
   await init()
 })
+function _toggleShift(e: any) {
+  shiftPressed.value = !!e.shiftKey
+}
 onUnmounted(() => {
+  document.removeEventListener("keyup", _toggleShift)
+  document.removeEventListener("keydown", _toggleShift)
   errCount = -1
   clearInterval(refreshInterval)
   clearInterval(nowInterval)

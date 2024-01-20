@@ -34,7 +34,6 @@
                         <template v-if="server.tags.includes('rcon')">
                           <a @click="stopServer(server, false)" class="button is-dark">Request Restart</a>
                           <a @click="processAction(server, 'unreserve')" class="button is-dark">Unreserve</a>
-                          <a @click="stopServer(server, true)" class="button is-danger" v-if="shiftPressed">Force Restart</a>
                         </template>
                       </template>
                       <template v-else-if="server.tags.includes('systemd')">
@@ -66,8 +65,6 @@
     <div class="column">
       <div class="box">
         <b>Request Restart</b> will restart the server if its empty
-        <br>
-        <b>Force Restart</b> requires you to hold SHIFT to select, and will force restart the server even if people are playing
         <br>
         <b>Start</b> will start the service if the server is currently not running. Check in 1-2 minutes to see if the server goes online.
         <p>Only public support this (servers with <span class="tag">systemd</span> tag) as they are managed differently</p>
@@ -129,11 +126,8 @@ async function processAction(server: any, type: string) {
     notify({ type: 'error', text: json.message || json.error, title: `Server (${server.id})` })
   }
 }
-async function stopServer(server: any, force: boolean = false) {
-  if(force) {
-    if(!confirm("You are requesting to forcefully restart the server. This should only be used in the last resort, if the server became unresponsive. This does not check for players being online. Are you sure?")) return
-  }
-  const es = new EventSource(`/api/servers/${server.id}/restart/sse${force?'?force=1' : ''}`)
+async function stopServer(server: any) {
+  const es = new EventSource(`/api/servers/${server.id}/restart/sse`)
   es.onmessage = (event) => {
     const json = JSON.parse(event.data)
     if(json.state === "done") {
@@ -197,11 +191,5 @@ onBeforeMount(() => {
   refreshTimer.value = setInterval(() => {
     refreshServers()
   }, REFRESH_INTERVAL)
-  document.onkeydown = (e) => {
-    shiftPressed.value = !!e.shiftKey
-  }
-  document.onkeyup = (e) => {
-    shiftPressed.value = !!e.shiftKey
-  }
 })
 </script>
