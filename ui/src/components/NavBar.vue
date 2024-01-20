@@ -40,11 +40,15 @@
               5+ Player
             </router-link>
             <router-link to="/docs/plugins" class="navbar-item">
-              Server Plugin Information
+              Dev Docs
             </router-link>
             <router-link to="/docs/notes" class="navbar-item">
               Player Notes
             </router-link>
+            <router-link to="/docs/props" class="navbar-item">
+              Prop Spawner
+            </router-link>
+            <hr class="navbar-divider">
             <router-link to="/docs/keybinds" class="navbar-item">
               <Icon icon="keyboard">Keybinds</Icon>
             </router-link>
