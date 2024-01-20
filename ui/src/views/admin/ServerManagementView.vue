@@ -34,7 +34,7 @@
                         <template v-if="server.tags.includes('rcon')">
                           <a @click="stopServer(server, false)" class="button is-dark">Request Restart</a>
                           <a @click="processAction(server, 'unreserve')" class="button is-dark">Unreserve</a>
-                          <a @click="stopServer(server, true)" class="button is-warning" v-if="shiftPressed">Force Restart</a>
+                          <a @click="stopServer(server, true)" class="button is-danger" v-if="shiftPressed">Force Restart</a>
                         </template>
                       </template>
                       <template v-else-if="server.tags.includes('systemd')">
@@ -130,6 +130,9 @@ async function processAction(server: any, type: string) {
   }
 }
 async function stopServer(server: any, force: boolean = false) {
+  if(force) {
+    if(!confirm("You are requesting to forcefully restart the server. This should only be used in the last resort, if the server became unresponsive. This does not check for players being online. Are you sure?")) return
+  }
   const es = new EventSource(`/api/servers/${server.id}/restart/sse${force?'?force=1' : ''}`)
   es.onmessage = (event) => {
     const json = JSON.parse(event.data)
