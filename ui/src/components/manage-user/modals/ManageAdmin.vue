@@ -243,7 +243,7 @@ import { notify } from '@kyvg/vue3-notification';
 import { request } from '@/js/util';
 
 
-const MIN_HOURS_PLAYTIME = 10
+const MIN_HOURS_PLAYTIME = 8
 const POLICY_MSG_MIN_HOURS_OF_PLAYTIME = `Policy requires a minimum of ${MIN_HOURS_PLAYTIME} hours of playtime`
 const router = useRouter()
 const route = useRoute()

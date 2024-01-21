@@ -757,7 +757,7 @@ async function kickPlayer(player: StatusPlayer) {
       text: "Kick Cancelled (no reason provided)"
     })
   }
-  const response = await request(`/api/servers/players/kick?reason=${encodeURIComponent(reason)}&steamid=${player.steamid}`, { method: 'POST' })
+  const response = await request(`/api/servers/${server.value.id}/players/kick?reason=${encodeURIComponent(reason)}&steamid=${player.steamid}`, { method: 'POST' })
   if(response?.ok) {
     notify({
       type: "success",
