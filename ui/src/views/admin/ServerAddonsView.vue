@@ -59,7 +59,7 @@
             <tr>
               <th>
                 <Field icon-left="search">
-                  <input type="text" class="input" placeholder="Search" v-model="search" />
+                  <input type="text" class="input" placeholder="Search" v-model.lazy="search" />
                 </Field>
               </th>
               <th></th>
