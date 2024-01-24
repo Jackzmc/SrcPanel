@@ -3,7 +3,7 @@ import { exec } from 'child_process'
 import FastifyMultipart from '@fastify/multipart'
 import { pipeline } from 'stream'
 import { promisify } from 'util'
-import { ChildWorkshopItem, ShareInfo } from '../../../../common-types/Share.js';
+import { ChildWorkshopItem, DetailsResponse, ShareInfo } from '../../../../common-types/Share.js';
 import { NO_PERMISSION } from '../../responses.js';
 import { UserPrivilegeCode } from '../../../../common-types/Privileges.js';
 import { createReadStream } from 'fs';
@@ -12,7 +12,6 @@ const pump = promisify(pipeline)
 
 const VALID_FILENAME_REGEX = new RegExp(/[a-z0-9_\- \.]+/i)
 const UPLOAD_MAX_FILESIZE_BYTES = 1000 * 1000 * 1000 * 5 // 5 GB
-
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions)  {
 
@@ -23,14 +22,30 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     })
 
 
-    fastify.get('/workshop/:publishedfileid/details', async(req: FastifyRequest<{Params: { publishedfileid: string }}>, reply) => {
+    fastify.get('/workshop/:publishedfileid/details', async(req: FastifyRequest<{Params: { publishedfileid: string }}>, reply): Promise<DetailsResponse> => {
         if(!req.user.hasPermission("shares.addons.view")) return NO_PERMISSION(reply)
         const results = await fastify.steam.getItemDetails([req.params.publishedfileid])
-        if(results.length == 0) return { result: null }
-        return {
-            result: {
-                ...results[0],
-                consumer_app_title: results[0].consumer_app_id ? await fastify.steam.getAppName(results[0].consumer_app_id) : null
+        if(results.length == 0) return { item: null }
+        const children = await fastify.steam.getCollectionChildren(req.params.publishedfileid)
+        const item = {
+            ...results[0],
+            consumer_app_title: results[0].consumer_app_id ? await fastify.steam.getAppName(results[0].consumer_app_id) : null,
+        }
+        if(children) {
+            const childrenDetails = await fastify.steam.getItemDetails(children)
+            return {
+                item: {
+                    ...item,
+                    type: "collection",
+                    children: childrenDetails
+                }
+            }
+        } else {
+            return { 
+                item: {
+                    ...item,
+                    type: "item"
+                }
             }
         }
     })
@@ -217,7 +232,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
     fastify.get('/:shareId/addons/workshop/:workshopId/download', async(req: FastifyRequest<{
         Params: {shareId: string, workshopId: string},
-        Querystring: {'destinations'?: string, force?: boolean, sse?: boolean }
+        Querystring: {'destinations'?: string, force?: boolean, sse?: boolean, children: string[] }
     }>, reply) => {
         let allowDownload = true
         const useSSE = req.query.sse
@@ -300,7 +315,12 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 } else {
                     details = await fastify.steam.getItemDetails(children)
                     details
-                        .filter(detail => detail.result === 1)
+                        .filter(detail => {
+                            // If query ?children provided and id is NOT in list, skip it:
+                            if(req.query.children && !req.query.children.includes(detail.publishedfileid)) return false
+                            // If there is data
+                            return detail.result === 1
+                        })
                         .map(detail => {
                         detail.collection = {
                             id: parentItem.publishedfileid,

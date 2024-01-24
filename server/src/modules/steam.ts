@@ -93,7 +93,6 @@ export default class SteamAPI {
         })
         if(response.ok) {
             const json = await response.json() as any
-            console.log('RES', JSON.stringify(json['response']['publishedfiledetails']))
             return json['response']['publishedfiledetails'];
         }
         throw new Error(`${response.statusText}: ${await response.text()}`)

@@ -117,3 +117,18 @@ export interface WorkshopItem {
         tag: string
     }[]
 }
+
+export interface CollectionWorkshopItem extends WorkshopItem {
+    consumer_app_title?: string,
+    type: "collection",
+    children: WorkshopItem[]
+}
+export interface ItemWorkshopItem extends WorkshopItem {
+    consumer_app_title?: string,
+    type: "item"
+}
+export type DetailWorkshopItem = CollectionWorkshopItem | ItemWorkshopItem
+
+export interface DetailsResponse {
+    item?:  DetailWorkshopItem
+}
