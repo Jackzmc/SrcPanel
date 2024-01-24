@@ -39,9 +39,6 @@
             <router-link to="/docs/extraplayers" class="navbar-item">
               5+ Player
             </router-link>
-            <router-link to="/docs/plugins" class="navbar-item">
-              Dev Docs
-            </router-link>
             <router-link to="/docs/notes" class="navbar-item">
               Player Notes
             </router-link>

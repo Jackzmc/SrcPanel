@@ -58,15 +58,6 @@ const routes = [
     }
   },
   {
-    name: 'docs-plugins',
-    path: '/docs/plugins',
-    component: () => import('../views/docs/PluginDescriptionsView.vue'),
-    meta: {
-      title: "Plugin Development History",
-      description: "A insight on how my plugins were developed"
-    }
-  },
-  {
     name: 'docs-notes',
     path: '/docs/notes',
     component: () => import('../views/docs/NotesView.vue'),
