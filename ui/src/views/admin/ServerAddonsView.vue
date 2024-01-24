@@ -59,7 +59,7 @@
             <tr>
               <th>
                 <Field icon-left="search">
-                  <input type="text" class="input" placeholder="Search" v-model.lazy="search" />
+                  <input type="text" class="input" placeholder="Search" v-model="search" @input="filterAndSortDebounce" />
                 </Field>
               </th>
               <th></th>
@@ -92,7 +92,7 @@
             </tr>
           </thead>
           <tbody>
-            <template v-for="addon in filteredAddons" :key="addon.filename ?? addon.collection.id">
+            <template v-for="addon in filteredAddons" :key="addon.id">
               <tr>
                 <td>
                   <a v-if="addon.collection" @click="preview(addon)">
@@ -219,11 +219,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, computed, onBeforeMount, onMounted } from 'vue'
+import { ref, watch, computed, onBeforeMount, onMounted, markRaw, shallowRef } from 'vue'
 import { onBeforeRouteUpdate, useRoute, useRouter } from 'vue-router'
 import Field from '@/components/Field.vue'
 import { formatDate, formatSize } from '@/js/util.js'
-import { ShareInfo } from '../../../../common-types/Share'
+import { ShareInfo, WorkshopItem } from '../../../../common-types/Share';
+import debounce from '@/js/debounce.js';
 
 export interface AddonUpdatePayload {
   deleted?: boolean,
@@ -252,7 +253,7 @@ const route = useRoute()
 const router = useRouter()
 
 
-let addons = ref<any[]>([])
+let addons: any[] = []
 let ready = ref(false)
 let search = ref<any>()
 let prefetch = ref<any>()
@@ -277,7 +278,8 @@ watch(() => route.params.shareId, (val) => {
   if(val == "") {
     ready.value = false
     error.value = undefined
-    addons.value = []
+    addons = []
+    filteredAddons.value = []
     prefetch.value = undefined
     selectedShare.value = undefined
   }
@@ -286,23 +288,16 @@ watch(() => route.params.addon, openSelectedAddon)
 
 function openSelectedAddon() {
   if(route.params.addon) {
-    prefetch.value = addons.value.find(addon => addon.filename === route.params.addon)
+    prefetch.value = addons.find(addon => addon.filename === route.params.addon)
   } else if(route.params.collection) {
-    prefetch.value = addons.value.find(addon => addon.collection?.id === route.params.collection)
+    prefetch.value = addons.find(addon => addon.collection?.id === route.params.collection)
   }
 }
 
 let shares = ref<ShareInfo[]>([])
 let shareInfo = ref()
 let totalFileSize = ref(0)
-const computedTotalFileSize = computed(() => {
-  if(!search.value) return totalFileSize.value
-  let size = 0
-  for(const entry of filteredAddons.value) {
-    size += (entry.workshop ? entry.workshop.filesize : entry.filesize )
-  }
-  return size
-})
+const computedTotalFileSize = ref<number>(0)
 
 const sortSymbol = computed(() => {
   if(!sort.value) return ''
@@ -326,8 +321,10 @@ function setSortFunc(id: string, sortFunc: Function) {
       descending: true
     }
   }
+  filterAndSortDebounce()
 }
-const filteredAddons = computed(() => {
+const filteredAddons = shallowRef<any[]>([])
+function filterAndSort() {
   const query = search.value?.toLowerCase()
   let _sort = (a: any, b: any) => { return 0 }
   if(sort.value) {
@@ -344,21 +341,31 @@ const filteredAddons = computed(() => {
       }
     }
   }
-
-  return addons.value
-    .filter(addon => {
-      if(!query) return true
+  let filtered
+  if(query) {
+    filtered = addons.filter(addon => {
       // Search the collection's name and it's children instead:
       if(addon.collection) {
         return addon.collection.name.toLowerCase().includes(query)
-        || addon.children.some((child: any) => child.filename.toLowerCase().includes(query) || (child.workshop && child.workshop.title.toLowerCase().includes(query)))
+        || addon.children.some((child: any) => child.filename.toLowerCase().includes(query)
+        || (child.workshop && child.workshop.title.toLowerCase().includes(query)))
       }
       return (addon.filename.toLowerCase().includes(query)
         || (addon.workshop && addon.workshop.title.toLowerCase().includes(query))
       )
     })
-    .sort(_sort)
-}, { })
+    let size = 0
+    for(const entry of filtered) {
+      size += (entry.workshop ? entry.workshop.filesize : entry.filesize )
+    }
+    computedTotalFileSize.value = size
+  } else {
+    filtered = addons
+    computedTotalFileSize.value = totalFileSize.value
+  }
+  filteredAddons.value = markRaw(filtered.sort(_sort))
+}
+const filterAndSortDebounce = debounce(filterAndSort, 400)
 
 function preview(entry: any) {
   prefetch.value = entry
@@ -396,20 +403,20 @@ function getTooltip(addon: any) {
 
 async function onChildUpdate(payload: AddonUpdatePayload) {
   if(payload.deleted) {
-    for(let i = 0; i < addons.value.length; i++) {
-      if(prefetch.value.filename === addons.value[i].filename) {
-        addons.value.splice(i, 1)
+    for(let i = 0; i < addons.length; i++) {
+      if(prefetch.value.filename === addons[i].filename) {
+        addons.splice(i, 1)
         console.debug('deleted entry')
         prefetch.value = undefined
         break;
       }
     }
   } else if(payload.installInfo) {
-    for(let i = 0; i < addons.value.length; i++) {
-      if(prefetch.value.filename === addons.value[i].filename) {
-        console.debug('updated entry', Object.assign({}, addons.value[i].installInfo), Object.assign({}, payload.installInfo))
-        addons.value[i].installInfo = payload.installInfo
-        formatAddonEntryEnabledOn(addons.value[i])
+    for(let i = 0; i < addons.length; i++) {
+      if(prefetch.value.filename === addons[i].filename) {
+        console.debug('updated entry', Object.assign({}, addons[i].installInfo), Object.assign({}, payload.installInfo))
+        addons[i].installInfo = payload.installInfo
+        formatAddonEntryEnabledOn(addons[i])
         break;
       }
     }
@@ -457,7 +464,7 @@ async function fetchAddons() {
   ready.value = false
   error.value = undefined
   shareInfo.value = undefined
-  addons.value = []
+  addons = []
   hasAnyWorkshop.value = false
   totalFileSize.value = 0
   try {
@@ -465,8 +472,9 @@ async function fetchAddons() {
     const json = await response.json()
     if(response.ok) {
       shareInfo.value = json.shareInfo
-      addons.value = json.addons.map((entry: any) => formatAddonEntry(entry))
+      addons = json.addons.map((entry: any) => formatAddonEntry(entry))
       ready.value = true
+      filterAndSort()
     } else {
       error.value = json.error ? `${json.error}: ${json.message}` : response.statusText
     }
@@ -496,6 +504,7 @@ function formatAddonEntry(entry: any) {
     entry.workshop.url = `https://steamcommunity.com/sharedfiles/filedetails/?id=${entry.filename.slice(0, -4)}`
     totalFileSize.value += entry.workshop.filesize
   }
+  entry.id = entry.filename ?? entry.collection.id
   return entry
 }
 
