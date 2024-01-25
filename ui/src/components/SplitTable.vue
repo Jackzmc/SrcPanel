@@ -19,7 +19,6 @@ const columnCount = computed(() => {
 const splitData = computed(() => {
   const a = []
   for(let column = 0; column < columnCount.value; column++) {
-    console.log('slice', `[${column * props.itemsPerColumn}, ${((column + 1) * props.itemsPerColumn)}]`)
     a.push(props.data.slice(column * props.itemsPerColumn, (column + 1) * props.itemsPerColumn))
   }
   return a
