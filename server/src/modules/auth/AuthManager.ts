@@ -668,9 +668,13 @@ export default class AuthManager {
             if(provider.isExpired) {
                 result[providerName] = null
             } else {
-                result[providerName] = await provider.fetchDetails()
-                // Don't need to pass in steamid again, it's already set by .setUser
-                await provider.save()
+                try {
+                    result[providerName] = await provider.fetchDetails()
+                    // Don't need to pass in steamid again, it's already set by .setUser
+                    await provider.save()
+                } catch(err) {
+                    result[providerName] = null
+                }
             }
         }
         return result

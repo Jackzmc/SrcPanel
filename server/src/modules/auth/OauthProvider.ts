@@ -141,7 +141,7 @@ export class OauthProviderUser {
         await this.#authManager.setProviderAuthData(this.#steamid2, this.#providerName as OauthProvider, this.#authData)
     }
 
-    public async fetchDetails(): Promise<OauthProviderData> {
+    public async fetchDetails(retry = false): Promise<OauthProviderData> {
         const accessToken = await this.#getAccessToken()
         if(!accessToken) return null
         const userResponse = await fetch(this.#oauth.urls.detailsUrl, {
@@ -163,7 +163,17 @@ export class OauthProviderUser {
             }
             return this.#userData
         } else {
-            throw new Error(`fetchDetails for ${this.#providerName} returned error: `, await userResponse.json())
+            // Our access token expired, retry
+            if(userResponse.status === 401) {
+                if(retry) {
+                    console.error(`[oauth/${this.#providerName}] ${await userResponse.text()}`)
+                    throw new Error(`Could not authenticate with ${this.#providerName}`)
+                }
+                this.#authData.accessToken = undefined
+                return this.fetchDetails(true)
+            }
+            console.error(`[oauth/${this.#providerName}] ${await userResponse.text()}`)
+            throw new Error(`fetchDetails for ${this.#providerName} returned error:`)
         }
     }
 
