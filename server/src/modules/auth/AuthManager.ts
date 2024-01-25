@@ -400,17 +400,20 @@ export default class AuthManager {
      * Sends a notification to all admins
      *
      * @param {string} message the message
+     * @param {string?} [permission] The permission admin must have, or blank for none
      * @param {UserNotificationOptions} [options={}]
      * @memberof AuthManager
      */
-    public async addNotificationsAll(message: string, options: UserNotificationOptions = {}) {
+    public async notifyAdmins(message: string, permission: string | null, options: UserNotificationOptions = {}) {
         const conn = await this.db.getConnection()
         await conn.beginTransaction()
         for(const admin of Object.values(this.admins)) {
-            await conn.execute(
-                "INSERT INTO user_notifications (steamid, message, link) VALUES (?, ?, ?)",
-                [ admin.identity, message, options.link ?? null ]
-            )
+            if(!permission || this.hasPermission(admin, permission)) {
+                await conn.execute(
+                    "INSERT INTO user_notifications (steamid, message, link) VALUES (?, ?, ?)",
+                    [ admin.identity, message, options.link ?? null ]
+                )
+            }
         }
         await conn.commit()
         conn.release()
@@ -755,7 +758,13 @@ export default class AuthManager {
         req.session.version = SESSION_VERSION
     }
 
-
+    public hasPermission(admin: AdminData, permission: string) {
+        if(process.env.DEBUG_DISABLE_PERMISSION_SYSTEM) return true
+        for(const perm of admin.permissions.codes) {
+            if(AuthManager.isPermissionGranted(permission as UserPrivilegeCode, perm)) return true
+        }
+        return false
+    }
 
     /**
      * Determines if 'code' has permission against 'matchCode'

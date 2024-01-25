@@ -293,12 +293,13 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
 
         try {
-            await req.user.log(null, `%client% ran command %cmd%`, {
+            const id = await req.user.log(null, `%client% ran command %cmd%`, {
                 code,
                 metadata: {
                     cmd: req.body
                 }
             })
+            await fastify.authmngr.notifyAdmins(`Admin ${req.user.steamid2} ran rcon command \"${req.body}\" on server ${server.id}. Log entry: ${id}`, "notify_rcon_use")
             const response = await server.sendCommand(req.body)
             if(req.query['no-response'])
                 return reply.status(204).send()

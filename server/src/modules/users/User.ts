@@ -185,14 +185,15 @@ export default class User {
      * @param targetUser Optional, another user this user is targetting 
      * @param message 
      * @param payload 
+     * @returns ID number of log entry
      */
-    async log(targetUser: User | string | null, message: string, payload?: LogData) {
+    async log(targetUser: User | string | null, message: string, payload?: LogData): Promise<number> {
         let user: User = null
         if(targetUser != null) {
             if(targetUser instanceof User) user = targetUser
             else user = new User(this.authmngr, targetUser) 
         }
-        await this.authmngr.log.logWeb(this, user, message, payload)
+        return await this.authmngr.log.logWeb(this, user, message, payload)
     }
 
     async removeProvider(provider: OauthProvider) {

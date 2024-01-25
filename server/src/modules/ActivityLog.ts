@@ -36,7 +36,7 @@ export default class ActivityLog {
 
     //"Tank<146><BOT><>"
     //"soap suds<37><STEAM_1:1:223885525><>"
-    async logWeb(activator: User, target?: User, message?: string, payload?: LogData) {
+    async logWeb(activator: User, target?: User, message?: string, payload?: LogData): Promise<number> {
         let msg = null
         if(message) {
             msg = (message || "")
@@ -60,6 +60,6 @@ export default class ActivityLog {
             }
         )
 
-        return r.affectedRows > 0
+        return r.insertId
     }
 }
