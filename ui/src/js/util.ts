@@ -125,7 +125,8 @@ export async function request(url: RequestInfo, options?: RequestInit, errOption
       const json = await response.json()
       notify({
         type: "error",
-        text: json.message ?? json.error,
+        title: json.error,
+        text: json.message,
         ...errOptions
       })
       console.error(`${url} returned an error:\n${json}`)
