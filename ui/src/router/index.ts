@@ -137,7 +137,7 @@ const routes = [
       // Vue3 seems to just give us a warning and work as I want it for now so...
       {
         name: 'list-addons',
-        path: "addons",
+        path: "files",
       },
       {
         name: "upload-addon",
