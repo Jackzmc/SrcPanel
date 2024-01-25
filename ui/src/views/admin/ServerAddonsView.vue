@@ -95,13 +95,13 @@
             <template v-for="addon in filteredAddons" :key="addon.id">
               <tr>
                 <td>
-                  <a v-if="addon.collection" @click="preview(addon)">
+                  <router-link v-if="addon.collection" :to="getRoute(addon)">
                     <b class="has-text-dark">{{addon.collection.name}}</b>&nbsp;
-                    <span @click="preview(addon)" class="tag is-dark is-pulled-right">Collection</span>
-                  </a>
-                  <a :class="{'has-text-weight-light': addon.enabledOn.length == 0, 'has-text-grey': addon.enabledOn.length == 0 }" @click="preview(addon)" v-else :data-tooltip="getTooltip(addon)">
+                    <span class="tag is-dark is-pulled-right">Collection</span>
+                  </router-link>
+                  <router-link :to="getRoute(addon)" :class="{'has-text-weight-light': addon.enabledOn.length == 0, 'has-text-grey': addon.enabledOn.length == 0 }" v-else :data-tooltip="getTooltip(addon)">
                     {{addon.workshop ? addon.workshop.title : addon.filename}}
-                  </a>
+                  </router-link>
                   &nbsp;
                   <span class="tags is-inline is-pulled-right" v-if="!addon.collection">
                     <span class="tag is-rounded is-info" v-for="server in addon.enabledOn" :key="server">
@@ -138,10 +138,10 @@
               <template v-if="addon.collection">
                 <tr v-for="child in addon.children" :key="child.filename">
                   <td>
-                    <a v-if="child.workshop" class="has-text-info ml-5" @click="preview(child)" :data-tooltip="getTooltip(child)">
+                    <router-link v-if="child.workshop" class="has-text-info ml-5" :to="getRoute(child)" :data-tooltip="getTooltip(child)">
                       <b>{{child.workshop.title}}</b>
-                    </a>
-                    <a @click="preview(child)" v-else class="ml-5" :data-tooltip="getTooltip(child)">{{child.filename}}</a>
+                    </router-link>
+                    <router-link :to="getRoute(child)" v-else class="ml-5" :data-tooltip="getTooltip(child)">{{child.filename}}</router-link>
                     <span class="tags is-inline is-pulled-right" v-if="!child.collection">
                       <span class="tag is-info is-rounded" v-for="server in child.enabledOn" :key="server">
                         {{ server }}
@@ -176,12 +176,12 @@
     <p class="title is-4 has-text-centered has-text-danger">Failed to load addons list</p>
     <p class="subtitle is-6 has-text-centered has-text-danger">{{error}}</p>
   </div>
-  <div class="container" v-else-if="!selectedShare">
+  <div class="container" v-else-if="route.name === 'admin-shares' || !route.params.shareId">
     <h4 class="title is-4">Select a share</h4>
     <div class="tile is-ancestor">
       <div class="tile is-horizontal">
         <div class="tile is-parent" v-for="share in shares" :key="share.id">
-          <a class="tile is-child box has-background-info" @click="setShare(share.id)">
+          <router-link class="tile is-child box has-background-info" :to="{name: 'list-addons', params: { shareId: share.id }}">
             <h4 class="title is-4  has-text-white">{{ share.name }} <span v-if="share.appid" data-tooltip="The steam appid for this share" class="tag is-dark is-pulled-right">{{ share.appid }}</span></h4>
             <div class="tags" data-tooltip="Install destinations">
               <span class="tag is-dark" v-for="(dest, id) in share.destinations" :key="id">
@@ -204,12 +204,12 @@
                 </div>
               </div>
             </div>
-          </a>
+          </router-link>
         </div>
       </div>
     </div>
   </div>
-  <div v-else>
+  <div v-else-if="!ready">
     <br>
     <p class="title is-2 has-text-centered mt-2"><Icon icon="spinner" spin icon-class="mr-5">Fetching addons...</Icon></p>
     <p class="subtitle is-4 has-text-centered">This may take some time, please wait...</p>
@@ -225,6 +225,7 @@ import Field from '@/components/Field.vue'
 import { formatDate, formatSize } from '@/js/util.js'
 import { ShareInfo, WorkshopItem } from '../../../../common-types/Share';
 import debounce from '@/js/debounce.js';
+import { notify } from '@kyvg/vue3-notification';
 
 export interface AddonUpdatePayload {
   deleted?: boolean,
@@ -265,32 +266,77 @@ let sort = ref<{
   descending: boolean
 } | undefined>()
 
+// Use for <select> element, to change route
 let selectedShare = ref<string>()
 watch(selectedShare, async (value) => {
   if(!value) return
   router.replace({
     params: {shareId: value},
   })
-  await fetchAddons()
-  openSelectedAddon()
 })
-watch(() => route.params.shareId, (val) => {
-  if(val == "") {
+
+watch(() => route.params.shareId, (share) => _setShare(share as string))
+async function _setShare(shareId: string) {
+  if(!shareId) {
+    return router.replace({ name: "admin-shares" })
+  }
+  const share = shares.value.find(share => share.id === shareId)
+  if(!share) {
+    notify({
+      type: "warn",
+      text: `A share does not exist with id ${shareId}`
+    })
+    router.replace({ name: "admin-shares" })
+  } else {
+    selectedShare.value = shareId
+    await fetchAddons()
+    openSelectedAddon()
+  }
+}
+watch(() => route.name, (name) => {
+  if(route.name === "admin-shares") {
     ready.value = false
     error.value = undefined
     addons = []
     filteredAddons.value = []
     prefetch.value = undefined
-    selectedShare.value = undefined
+  } else if(route.name === "list-addons") {
+    prefetch.value = undefined
+    error.value = undefined
+  } else {
+    openSelectedAddon()
   }
 })
 watch(() => route.params.addon, openSelectedAddon)
-
 function openSelectedAddon() {
-  if(route.params.addon) {
-    prefetch.value = addons.find(addon => addon.filename === route.params.addon)
-  } else if(route.params.collection) {
+  if(route.name === "collection-info") {
     prefetch.value = addons.find(addon => addon.collection?.id === route.params.collection)
+  } else if(route.name === "item-info") {
+    let addon = undefined
+    for(const item of addons) {
+      if(item.children) {
+        const child = item.children.find((child: WorkshopItem) => {
+          return child.filename === route.params.addon
+        })
+        if(child) {
+          addon = child
+          break
+        }
+      } else if(item.id === route.params.addon) {
+        addon = item
+        break
+      }
+    }
+    prefetch.value = addon
+  } else {
+    return
+  }
+
+  if(!prefetch.value) {
+    notify({
+      type: "warn",
+      text: `Could not find item`
+    })
   }
 }
 
@@ -367,30 +413,28 @@ function filterAndSort() {
 }
 const filterAndSortDebounce = debounce(filterAndSort, 400)
 
-function preview(entry: any) {
-  prefetch.value = entry
+function getRoute(entry: any) {
   if(entry.collection) {
-    router.push({
+    return {
       name: "collection-info",
       params: {
-        shareId: selectedShare.value,
+        shareId: route.params.shareId,
         collection: entry.collection.id,
         title: entry.collection.title
       }
-    })
+    }
   } else {
-    router.push({
-      name: "addon-info",
+    return {
+      name: "item-info",
       params: {
-        shareId: selectedShare.value,
+        shareId: route.params.shareId,
         addon: entry.filename,
       }
-    })
+    }
   }
 }
 
 function getTooltip(addon: any) {
-  // const installedOn = Object.entries(addon.installInfo).filter(([key, value]) => value).map(([key]) => key).join("\n\t")
   if(!addon.enabledOn) {
     console.warn('missing enabledOn', { ... addon })
   }
@@ -423,16 +467,8 @@ async function onChildUpdate(payload: AddonUpdatePayload) {
   }
 }
 
-function setShare(id: string) {
-  selectedShare.value = id
-  router.replace({
-    name: "share-addons-s",
-    params: { shareId: id }
-  })
-}
-
 async function onChildClose() {
-  router.push({ name: "admin-addons" })
+  router.replace({ name: "list-addons", params: { shareId: route.params.shareId } })
 }
 
 async function fetchShares() {
@@ -468,7 +504,7 @@ async function fetchAddons() {
   hasAnyWorkshop.value = false
   totalFileSize = 0
   try {
-    const response = await fetch(`/api/shares/${selectedShare.value}/addons`)
+    const response = await fetch(`/api/shares/${route.params.shareId}/addons`)
     const json = await response.json()
     if(response.ok) {
       shareInfo.value = json.shareInfo
@@ -511,14 +547,7 @@ function formatAddonEntry(entry: any) {
 onBeforeMount(async() => {
   await fetchShares()
   if(route.params.shareId) {
-    const shareId = route.params.shareId.toString()
-    const share = shares.value.find(share => share.id === shareId)
-    console.log(shareId, share)
-    if(!share) {
-      error.value = `No shares with the id "${share}" were found`
-    } else {
-      selectedShare.value = shareId
-    }
+    await _setShare(route.params.shareId as string)
   }
 })
 

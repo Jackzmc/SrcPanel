@@ -56,19 +56,27 @@
         <h5 class="title is-5">Servers</h5>
         <p class="subtitle is-6">Click any tag to enable or disable it from the server. The server must be restarted for the changes to apply.</p>
         <div class="field is-grouped is-grouped-multiline">
-          <div class="control" v-for="(installed, dest) in installInfo" :key="dest">
+          <div class="field mr-4" v-for="(installed, dest) in installInfo" :key="dest">
+            <input :id="dest" type="checkbox" class="switch is-rtl" :checked="installed == true" @click="installAddon(dest, installed ? 'uninstall' : 'install')" :disabled="installed == null">
+            <label :for="dest">{{ dest }}</label>
+            <br>
+          </div>
+          <!-- <div class="control" v-for="(installed, dest) in installInfo" :key="dest">
             <div class="tags has-addons">
               <span class="tag is-dark">{{ dest }}</span>
+              <div class="field">
+
+              </div>
               <a class="tag is-success" v-if="installed" @click="installAddon(dest, 'uninstall')" data-tooltip="Click here to disable">Enabled</a>
               <a class="tag is-danger" v-else @click="installAddon(dest, 'install')" data-tooltip="Click here to enable">Disabled</a>
             </div>
-          </div>
+          </div> -->
         </div>
         <template v-if="props.addon.workshop">
           <h5 class="title is-5">Description</h5>
           <div class="buttons">
-            <a target="_blank" :href="props.addon.workshop.fileUrl"  data-tooltip="Download the addon directly from steam workshop" class="button is-small is-info">Download (Workshop)</a>
-            <a target="_blank" :href="downloadUrl"  data-tooltip="Download the addon from the admin panel" class="button is-small">Download (Direct)</a>
+            <a target="_blank" :href="props.addon.workshop.fileUrl"  data-tooltip="Download the addon directly from steam workshop" class="button is-small is-info has-tooltip-right">Download (Workshop)</a>
+            <a target="_blank" :href="downloadUrl"  data-tooltip="Download the addon from the admin panel" class="button is-small has-tooltip-right">Download (Direct)</a>
           </div>
           <article class="message">
             <div class="message-body content is-size-7">
@@ -96,7 +104,7 @@
 import Modal from '@/components/Modal.vue'
 import { useNotification } from "@kyvg/vue3-notification";
 import { computed, ref, onBeforeMount } from 'vue';
-import { formatDate, formatSize } from '@/js/util.js'
+import { formatDate, formatSize, request } from '@/js/util.js'
 import { AddonUpdatePayload } from '@/views/admin/ServerAddonsView.vue';
 
 const emit = defineEmits(['close', 'update'])
@@ -107,7 +115,7 @@ const props = defineProps<{
 }>()
 let previewImageLoaded = ref(false)
 let pendingRestarts = ref<string[]>([])
-let installInfo = ref<Record<string, boolean>>()
+let installInfo = ref<Record<string, boolean|null>>()
 let hasUpdated = false
 
 onBeforeMount(() => {
@@ -117,32 +125,20 @@ onBeforeMount(() => {
 
 async function installAddon(destKey: string, mode: "install" | "uninstall") {
   if(!installInfo.value) return console.warn('no install info')
-  try {
-    const response = await fetch(`/api/shares/${props.share.id}/addons/${props.addon.filename}/${mode}/${destKey}`, { method: 'POST' })
+  installInfo.value[destKey] = null
+  const response = await request(`/api/shares/${props.share.id}/addons/${props.addon.filename}/${mode}/${destKey}`, { method: 'POST' })
+  if(response?.ok) {
     const json = await response.json()
-    if(response.ok) {
-      // Update local copy
-      installInfo.value[destKey] = (mode == "install")
-      if(!pendingRestarts.value.includes(destKey))
-        pendingRestarts.value.push(destKey)
-      notify({
-        type: "success",
-        text: mode == "install" ? `Enabled ${addonName.value} on ${destKey}` : `Disabled ${addonName.value} on ${destKey}`
-      })
-      emit('update', {
-        installInfo: installInfo.value
-      })
-    } else {
-      notify({
-        type: "error",
-        text: json.error ? `${json.error}: ${json.message}` : response.statusText
-      })
-      alert(json.error ? `${json.error}: ${json.message}` : response.statusText)
-    }
-  } catch(err: any) {
+    // Update local copy
+    installInfo.value[destKey] = (mode == "install")
+    if(!pendingRestarts.value.includes(destKey))
+      pendingRestarts.value.push(destKey)
     notify({
-        type: "error",
-        text: err.message
+      type: "success",
+      text: mode == "install" ? `Enabled ${addonName.value} on ${destKey}` : `Disabled ${addonName.value} on ${destKey}`
+    })
+    emit('update', {
+      installInfo: installInfo.value
     })
   }
 }

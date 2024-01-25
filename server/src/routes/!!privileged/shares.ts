@@ -471,12 +471,12 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         const share = fastify.servers.getShare(shareId)
         if(!share) {
             return reply.status(404).send({
-                error: "Share Not Found", 
+                error: "SHARE_NOT_FOUND", 
                 message: `No share with id \"${shareId.toLowerCase()}\" could be found. Share may be unavailable, incorrecty configured or does not exist`   
             })
         } else if(!share.destinations[req.params.destKey]) {
             return reply.status(404).send({
-                error: "Share Destination Not Found", 
+                error: "SHARE_DEST_NOT_FOUND", 
                 message: `Share does not have a destination of id \"${req.params.destKey}\".`   
             })
         }
@@ -503,8 +503,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             } catch(err) {
                 fastify.log.error(err)
                 return reply.code(500).send({
-                    error: "Install Failed",
-                    message: "Error occurred while installing addon"
+                    error: "INSTALL_FAILED",
+                    message: `Error occurred while ${isInstall ? 'enabling' : 'disabling'} addon`
                 })
             }
         } else {

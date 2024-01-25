@@ -123,8 +123,8 @@ const routes = [
     }
   },
   {
-    name: 'admin-addons',
-    path: '/admin/addons/:shareId?/',
+    name: 'admin-shares',
+    path: '/admin/shares/:shareId?/',
     component: () => import('../views/admin/ServerAddonsView.vue'),
     meta: {
       title: 'Addons / Maps',
@@ -132,6 +132,13 @@ const routes = [
       authRequired: true
     },
     children: [
+      // I don't think this is valid - but we cannot load a component, otherwise
+      // we would have the router-view of admin-shares become list-addons
+      // Vue3 seems to just give us a warning and work as I want it for now so...
+      {
+        name: 'list-addons',
+        path: "addons",
+      },
       {
         name: "upload-addon",
         path: 'upload',
@@ -151,8 +158,8 @@ const routes = [
         component: () => import('../components/addons/modals/CollectionInfoModal.vue')
       },
       {
-        name: "addon-info",
-        path: ':addon',
+        name: "item-info",
+        path: 'item/:addon',
         meta: {
           needsPrefetch: true
         },

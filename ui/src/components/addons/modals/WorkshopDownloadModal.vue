@@ -118,7 +118,9 @@
             {{entry.state}}
           </span>&nbsp;
           <span v-html="entry.message" />
-          <router-link v-if="downloadState == DownloadState.PromptRedownload && entry.state == 'INFO'" :to="'/admin/addons/' + share.id + '/' + entry.filename">&nbsp;View existing addon</router-link>
+          <router-link v-if="downloadState == DownloadState.PromptRedownload && entry.state == 'INFO'"
+            :to="{name: 'item-info', params: {id: share.id, filename: entry.filename}}"
+          >&nbsp;View existing addon</router-link>
         </p>
       </div>
     </section>
@@ -254,7 +256,7 @@ async function getSteamWSDetails(id: string): Promise<DetailWorkshopItem | undef
   }
 }
 
-// TODO: use router-view for /admin/addons/add
+// TODO: use router-view for s/add
 const route = useRoute()
 const router = useRouter()
 

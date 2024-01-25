@@ -59,7 +59,7 @@
             <Icon icon="toolbox">Administration</Icon>
           </a>
           <div class="navbar-dropdown is-left" style="width:140%">
-            <router-link to="/admin/addons" class="navbar-item">
+            <router-link :to="{name: 'admin-shares'}" class="navbar-item">
               <Icon icon="fa-puzzle-piece">Addons / Maps</Icon>
             </router-link>
             <router-link to="/admin/servers" class="navbar-item">
