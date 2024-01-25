@@ -1,6 +1,6 @@
 <template>
 <div class="container is-fluid">
-  <Tabs  inner-wrapper-class="tabs" :options="{useUrlFragment:false}">
+  <Tabs inner-wrapper-class="tabs" :options="{useUrlFragment:false}" @changed="onTabChanged">
     <Tab name="Overview">
       <h4 class="title is-4">Admin Panel Control</h4>
           <p>{{ serverHealth.currentState }}</p>
@@ -30,13 +30,13 @@
       <ConfigEditor />
     </Tab>
     <Tab name="Servers">
-      <JsonConfigEditor filename="servers.json" />
+      <JsonConfigEditor v-if="tab == 'Servers'" filename="servers.json" />
     </Tab>
     <Tab name="Shares">
-      <JsonConfigEditor filename="shares.json" />
+      <JsonConfigEditor v-if="tab == 'Shares'" filename="shares.json" />
     </Tab>
     <Tab name="Config (Legacy)">
-      <JsonConfigEditor filename="config.json" />
+      <JsonConfigEditor v-if="tab == 'Config (Legacy)'" filename="config.json" />
     </Tab>
   </Tabs>
   <br>
@@ -50,7 +50,6 @@ import { notify } from "@kyvg/vue3-notification";
 import { ref, computed, onBeforeMount, onMounted, onUnmounted } from "vue"
 import { HealthReport, UpdateState } from "../../../../common-types/Panel.js";
 import ConfigEditor from "@/components/panel-admin/ConfigEditor.vue";
-import SharesEditor from "@/components/panel-admin/SharesEditor.vue";
 //@ts-ignore
 import { Tab, Tabs } from 'vue3-tabs-component'
 import JsonConfigEditor from "@/components/panel-admin/JsonConfigEditor.vue";
@@ -61,6 +60,7 @@ const props = defineProps<{
   privUser: PrivilegedUser,
 }>()
 
+let tab = ref<string>()
 let serverHealth = ref<Partial<HealthReport>>({})
 let updateStatus = ref<{
   state: UpdateState | "CHECKING" | "SUCCESS",
@@ -83,6 +83,10 @@ const uptime = computed(() => {
   }
   else return `${minutes.toFixed(1)} minutes`
 })
+
+function onTabChanged(selectedTab: any) {
+  tab.value = selectedTab.tab.name
+}
 
 
 async function updateServer() {
