@@ -311,7 +311,7 @@ watch(() => route.params.addon, openSelectedAddon)
 function openSelectedAddon() {
   if(route.name === "collection-info") {
     prefetch.value = addons.find(addon => addon.collection?.id === route.params.collection)
-  } else if(route.name === "item-info") {
+  } else if(route.name === "file-info") {
     let addon = undefined
     for(const item of addons) {
       if(item.children) {
@@ -425,7 +425,7 @@ function getRoute(entry: any) {
     }
   } else {
     return {
-      name: "item-info",
+      name: "file-info",
       params: {
         shareId: route.params.shareId,
         addon: entry.filename,

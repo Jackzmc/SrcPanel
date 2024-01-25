@@ -158,8 +158,8 @@ const routes = [
         component: () => import('../components/addons/modals/CollectionInfoModal.vue')
       },
       {
-        name: "item-info",
-        path: 'item/:addon',
+        name: "file-info",
+        path: 'file/:addon',
         meta: {
           needsPrefetch: true
         },

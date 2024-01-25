@@ -54,7 +54,7 @@
           </thead>
           <tbody>
             <tr v-for="child in props.addon.children" :key="child.filename">
-              <td><router-link :to="{ name: 'item-info', params: { shareId: props.share.id, addon: child.filename } }">{{ child.filename }}</router-link></td>
+              <td><router-link :to="{ name: 'file-info', params: { shareId: props.share.id, addon: child.filename } }">{{ child.filename }}</router-link></td>
               <td>{{ formatSize(child.filesize) }}</td>
             </tr>
           </tbody>

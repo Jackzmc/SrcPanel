@@ -119,7 +119,7 @@
           </span>&nbsp;
           <span v-html="entry.message" />
           <router-link v-if="downloadState == DownloadState.PromptRedownload && entry.state == 'INFO'"
-            :to="{name: 'item-info', params: {id: share.id, filename: entry.filename}}"
+            :to="{name: 'file-info', params: {id: share.id, filename: entry.filename}}"
           >&nbsp;View existing addon</router-link>
         </p>
       </div>
