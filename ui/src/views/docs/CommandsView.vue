@@ -174,10 +174,9 @@ onMounted(async () => {
     for(const group in json) {
       const commands = []
       for(let command of json[group].commands) {
-        const split = command.command.trim().split(' ')
-        command.name = split.shift()
-        command.parameters = split.join(" ")
-        command.args = parseParameters(command)
+        const result = parseParameters(command, "command")
+        command.name = result.command
+        command.args = result.params
         command.hasPermission = !isLoggedIn.value || (command.perm != undefined ? props.privUser.hasFlag(command.perm) : true)
 
         delete command.command
