@@ -505,17 +505,15 @@ async function fetchLogs(id: number, mode: "before" | "after" | "around") {
   if(response?.ok) {
     const json = await response.json()
     totalEntries.value = json.cache.totalRows
-    // totalUnfilteredEntries.value = json.totals.total
     const newEntries = json.logs.map((entry: any) => {
       let message = entry.message
       if(entry.metadata && entry.message) {
         for(const key in entry.metadata) {
-          message = message.replace(new RegExp(`%${key}%`, 'g'), `<b data-tooltip="${key}">${entry.metadata[key]}</b>`)
-                           .replace(new RegExp(`{${key}}`, 'g'), `<b data-tooltip="${key}">${entry.metadata[key]}</b>`)
+          message = message.replace(new RegExp(`(%${key}%|{${key}})`, 'g'), `<b data-tooltip="${key}">${entry.metadata[key]}</b>`)
         }
       }
       if(entry.type === 'JOIN') message = " joined"
-      if(entry.type === 'ACTION') {
+      else if(entry.type === 'ACTION') {
         const match = entry.message.match(ADMINCHAT_REGEX)
         if(match) {
           entry.adminChat = true
@@ -598,8 +596,6 @@ async function jumpTo(entry: any) {
     },
     query: route.query
   })
-  // showLoading.value = true
-  // entries.value = await fetchLogs(entry.id, "around");
 }
 
 function getShareLink(entry: LogEntry) {
@@ -628,6 +624,7 @@ onBeforeMount(async() => {
     now.value = Date.now()
   }, 100)
 
+  showLoading.value = true
   await getInfo()
 
   // If /admin/audit/:id is used, fetch that, and just grab filters, but wont be used
@@ -641,7 +638,6 @@ onBeforeMount(async() => {
   if(route.query.source) dataSource.value = route.query.source as string
   for(const filter in FILTER_DATA) {
     let queryName = filter
-    console.debug('filter', filter, queryName, '=', route.query[queryName])
     // Some query are prefixed with search_, so we check them:
     if(route.query[queryName] === undefined) queryName = `search_${queryName}`
     if(route.query[queryName] !== undefined) {
@@ -654,11 +650,10 @@ onBeforeMount(async() => {
     }
   }
 
-  // Don't do any more fetch logic, alreadyt fetched above
-  if(route.params.aroundId) return
+  // We already jumped using "around", so don't fetch before
+  if(!route.params.aroundId) entries.value = await fetchLogs(cache.value.highestId, "before")
 
-  showLoading.value = true
-  entries.value = await fetchLogs(cache.value.highestId, "before")
+
   refreshTimer = setInterval(async () => {
     // Only check for new values IF we not full, not searching, and at the top of list
     if(isTopOfList.value && fetchAbort == null && pendingEntries.value.length < limit.value) {
