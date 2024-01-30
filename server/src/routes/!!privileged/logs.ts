@@ -31,7 +31,7 @@ const LogQuery = Type.Object({
 
 type LogQueryType = Static<typeof LogQuery>
 
-export const ACTIVITY_LOG_TABLE_NAME = 'activity_log'
+export const ACTIVITY_LOG_TABLE_NAME = 'activity_log_full'
 const LOG_TOTAL_ROW_CACHE_TIME = 30_000 //ms
 const MISSING_NAME_MIN_INTERVAL = 1000 * 30 // Do not fetch if last fetch was between this
 
@@ -39,34 +39,40 @@ let logServerCache = []
 interface DataCache {
     totalRows: number,
     highestId: number,
+    lowestId: number,
     lastFetchTime: number
 }
-let cache: Record<string, DataCache> = {}
+let cache: Map<number | undefined, DataCache> = new Map()
 let lastMissingNameFetchTime = 0
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
     const [rows] = await fastify.db.query<RowDataPacket[]>(`SELECT DISTINCT server FROM ${ACTIVITY_LOG_TABLE_NAME} ORDER BY timestamp DESC`)
     logServerCache = rows.filter(row => row.server && row.server !== "web").map(row => row.server)
 
-    async function getTotalRows(tableName = ACTIVITY_LOG_TABLE_NAME): Promise<DataCache> {
-        if(!cache[tableName] ||Date.now() - cache[tableName].lastFetchTime > LOG_TOTAL_ROW_CACHE_TIME) {
-            const [c] = await fastify.db.execute<RowDataPacket[]>(`SELECT COUNT(*) AS count, MAX(id) as highestId from ${tableName}`)
-            cache[tableName] = {
+    const CURRENT_YEAR = new Date().getFullYear()
+
+    async function getTotalRows(year: number | null): Promise<DataCache> {
+        let value = cache.get(year)
+        if(!value || Date.now() - value.lastFetchTime > LOG_TOTAL_ROW_CACHE_TIME) {
+            const [c] = await fastify.db.execute<RowDataPacket[]>(`SELECT COUNT(*) AS count, MAX(id) as highestId, MIN(id) as lowestId from ${ACTIVITY_LOG_TABLE_NAME} ${year != null ? `PARTITION (p${year})` : ''}`)
+            value = {
                 totalRows: c[0].count,
                 highestId: c[0].highestId,
+                lowestId: c[0].lowestId,
                 lastFetchTime: Date.now()
             }
+            cache.set(year, value)
         }
-        return cache[tableName]
+        return value
     }
+    // Fetch null (absolute total rows) and current year
+    getTotalRows(null)
+    getTotalRows(CURRENT_YEAR)
 
     fastify.get('/data', async(req, reply) => {
         return {
             servers: logServerCache,
-            cache: {
-                main: await getTotalRows("activity_log"),
-                archive: await getTotalRows("activity_log_archive")
-            }
+            cache: Object.fromEntries(cache)
         }
     })
 
@@ -83,8 +89,6 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         const limit = req.query.limit ?? 30 
 
         let tableName = ACTIVITY_LOG_TABLE_NAME
-        if(!req.query.source) req.query.source = "main"
-        if(req.query.source != "main") tableName += `_${req.query.source}`
 
         const query = new QueryBuilder(tableName, "l")
             .selectMultiple("id", "l.timestamp", "server", "type", "client", "target", "message", "metadata")
@@ -126,7 +130,9 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         const startTime = Date.now()
         let [logs] = (await query.execute(fastify.db))
 
-        let cache = await getTotalRows(tableName)
+        let year = parseInt(req.query.source)
+        if(!year || isNaN(year)) year = CURRENT_YEAR
+        let cache = await getTotalRows(year)
         const missingNameSet = new Set<SteamID>()
 
         logs = logs.map(log => {
@@ -184,166 +190,6 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 tableName
             }
         }
-    })
-
-    /// PLAN:
-    /*
-    1. Have only ~ 10,000 rows (roughly ~ month of data)
-    2. Move the rest into archive table
-    3. When running query, if < 10 seconds, return data
-        If >= 10 seconds, return a batch id user can fetch
-    */
-    fastify.get('/:page?', async(req: FastifyRequest<{ Querystring: LogQueryType, Params: { page?: number } }>, reply) => {
-        if(!req.user.hasPermission("logs.view")) return NO_PERMISSION(reply)
-        const searchMessage = req.query.searchMessage ? `%${req.query.searchMessage}%` : (req.query.search_message ? `%${req.query.search_message}%` : null)
-        const clientSearch = req.query.client ?? req.query.search_client
-        const targetSearch = req.query.target ?? req.query.search_target
-
-        let tableName = ACTIVITY_LOG_TABLE_NAME
-        if(!req.query.source) req.query.source = "main"
-        if(req.query.source != "main") tableName += `_${req.query.source}`
-        const optimized = req.query.optimized !== "false" && !clientSearch && !targetSearch && !searchMessage 
-            && !req.query.servers?.includes("web") 
-            && req.query.source == "main"
-        let countQuery = `SELECT COUNT(*) AS count from ${tableName} `
-        let query = `SELECT id, l.timestamp, server, type, client, target, message, metadata,
-            s1.name as clientName, s2.name as targetName
-            FROM ${tableName} l
-            LEFT JOIN user_names as s1 ON s1.steamid = SUBSTRING(client, 11)
-            LEFT JOIN user_names as s2 ON s2.steamid = SUBSTRING(target, 11)`
-
-        const conditions = []
-        let data = [], countData = []
-        let limit = Number(req.query.limit) || 50
-        if(limit <= 0) limit = 50
-
-        let page = Number(req.params.page || req.query.page) || 1
-        if(page <= 0) page = 1
-
-        const cache = await getTotalRows(tableName)
-        if(req.query.timestampOnly) {
-            query = `SELECT timestamp, message FROM ${ACTIVITY_LOG_TABLE_NAME} l`
-        } else if(optimized) {
-            const maxId = cache.highestId - (2*limit * (page - 1))
-            const minId = maxId - (2*limit)
-            // We don't need to also fetch usernames from user_names as if there is a log entry they should always have an entry in statistics 
-            query += " WHERE id >= ? AND id <= ? "
-            // TODO:L Only use optimized when no filters are applied - optimization doens't work with them
-            data.push(minId, maxId)
-        }
-
-
-        if(req.query.servers && req.query.servers !== "") {
-            const servers = req.query.servers.split(",")
-            if(servers.length > 0) {
-                conditions.push(`server IN (${generateParams(servers.length)})`)
-                data = [ ...data, ...servers ]
-                countData = [ ...countData, ...servers ]
-            }
-        }
-        if(req.query.types && req.query.types !== "") {
-            const types = req.query.types.split(",")
-            if(types.length > 0) {
-                conditions.push(`type IN (${generateParams(types.length)})`)
-                data = [ ...data, ...types ]
-                countData = [ ...countData, ...types ]
-            }
-        }
-        if(clientSearch && targetSearch) {
-            conditions.push('(client = ? OR target = ?)')
-            data = [ ...data, clientSearch, targetSearch ]
-            countData = [ ...countData, clientSearch, targetSearch ]
-        } else if(clientSearch && !targetSearch) {
-            conditions.push('client = ?')
-            data.push(clientSearch)
-            countData.push(clientSearch)
-        } else if(!clientSearch && targetSearch) {
-            conditions.push('target = ?')
-            data.push(targetSearch)
-            countData.push(targetSearch)
-        }
-
-        if(req.query.timestamp) {
-            conditions.push(req.query.timestampBefore ? 'timestamp <= ?' : 'timestamp >= ?')
-            data.push(req.query.timestamp)
-            countData.push(req.query.timestamp)
-        }
-
-        if(searchMessage) {
-            conditions.push(`message LIKE ?`)
-            data.push(searchMessage)
-            countData.push(searchMessage)
-        }
-
-        const aroundId = Number(req.query.aroundId || req.query.search_id)
-        if(aroundId) {
-            const min = aroundId - limit
-            const max = aroundId + limit
-            limit *= 2
-            conditions.push(`id >= ? AND id <= ?`)
-            data = [ ...data, min, max ]
-            countData = [ ...countData, min, max ]
-        }
-
-        const afterId = Number(req.query.afterId)
-        if(afterId) {
-            conditions.push('id > ?')
-            data = [ ...data, afterId ]
-            countData = [ ...countData, afterId ]
-        }
-        
-        if(conditions.length > 0) {
-            if(optimized) {
-                // Optimized query already has WHERE condition
-                query += ` AND ${conditions.join(' AND ')} `
-            } else {
-                query += ` WHERE ${conditions.join(' AND ')} `
-            }
-            countQuery += ` WHERE ${conditions.join(' AND ')} `
-        }
-
-        query += `ORDER BY id ${req.query.orderByAscending ? 'ASC' : 'DESC'} `
-
-        if(!req.query.fetchAll) {
-            if(optimized) {
-                query += `LIMIT ?`
-                data = [...data, limit] //, (page * limit) - limit]
-            } else {
-                query += `LIMIT ? OFFSET ?`
-                data = [...data, limit, (page * limit) - limit]
-            }
-        }
-
-        const startTime = Date.now()
-        // TODO: put count query as sub query??
-        const [[logs], [count]] = await Promise.all([
-            fastify.db.execute<RowDataPacket[]>(query, data),
-            fastify.db.execute<RowDataPacket[]>(countQuery, countData)
-        ])
-        
-        return {
-            logs: logs.map(log => {
-                if(log.metadata) log.metadata = JSON.parse(log.metadata)
-                return log
-            }),
-            timeTaken: Date.now() - startTime,
-            wasOptimized: optimized,
-            totals: {
-                total: cache.totalRows, // # of rows in entire data source
-                filteredTotal: count[0].count, // # of rows in entire data source WITH filters
-                count: logs.length // # of rows + filtered + pagination (<= limit)
-            },
-            pages: Math.ceil(count[0].count / limit),
-            raw: process.env.NODE_ENV === "production" ? null : {
-                cache: cache[tableName],
-                query,
-                countQuery,
-                data,
-                countData,
-                tableName
-            }
-        }
-        
     })
 
     fastify.post("/:id/redact", async(req: FastifyRequest<{Params: {id: 'string'}}>, reply) => {

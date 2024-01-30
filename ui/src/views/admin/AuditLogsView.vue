@@ -18,15 +18,15 @@
       </div>
       <InfiniteLoading @infinite="loadTopContent" />
       <div class="has-text-centered is-size-5" v-if="entries.length === 0" style="margin-top:12%">
-        <p>No entries were found for data source {{ DATA_SOURCES[dataSource] }}</p>
-        <p>Try searching a different source</p>
+        <p>No entries were found within year {{ dataSource }}</p>
+        <p>Try searching in a different year</p>
         <br>
 
-        <Field label="Data Source">
+        <Field label="Data Year">
             <div class="select">
               <select v-model="dataSource" @change="fetchDebounce">
-                <option v-for="(source, id) in DATA_SOURCES" :key="id" :value="id">
-                  {{ source }}
+                <option v-for="(year) in DATA_SOURCES" :key="year" :value="year">
+                  {{ year }}
                 </option>
               </select>
             </div>
@@ -211,16 +211,16 @@
           </Field>
         </div>
         <div class="column is-6">
-          <Field label="Data Source">
+          <Field label="Data Year">
             <div class="select is-fullwidth">
               <select v-model="dataSource" @change="fetchDebounce">
-                <option v-for="(source, id) in DATA_SOURCES" :key="id" :value="id">
-                  {{ source }}
+                <option v-for="year in DATA_SOURCES" :key="year" :value="year">
+                  {{ year }}
                 </option>
               </select>
             </div>
             <template v-slot:hint_info>
-              The archival sources can take a significant time to fetch
+              Fetch data from a certain year
             </template>
           </Field>
         </div>
@@ -288,10 +288,10 @@ const FILTER_DATA: Record<string, Record<string, boolean | string>> = {
   message: {}
 }
 
-const DATA_SOURCES: Record<string, string> = {
-  main: `Main (${new Date().getFullYear()})`,
-  archive2023: "Archive (2023)",
-  archive: "Archive (2020-2022)",
+const PartitionRange = [ 2022, new Date().getFullYear() ]
+const DATA_SOURCES: number[] = []
+for(let i = PartitionRange[1] ; i >= PartitionRange[0]; i--) {
+  DATA_SOURCES.push(i)
 }
 
 const ADMINCHAT_REGEX = new RegExp(/triggered (sm_say|sm_chat) \(text (.*)\s*\)/);
@@ -309,7 +309,7 @@ let hoverId = ref()
 let limit = ref(DEFAULT_LIMIT);
 let totalEntries = ref(0)
 let entries = ref<LogEntry[]>()
-let dataSource = ref<string>("main")
+let dataSource = ref<number>(new Date().getFullYear())
 let filters = ref<Record<string, string|string[]|null>>({
   servers: DEFAULT_SERVERS,
   types: DEFAULT_TYPES,
@@ -413,7 +413,7 @@ function getParams() {
   const searchParams = new URLSearchParams()
   // searchParams.append('page', page.value.toString())
   searchParams.append('limit', limit.value.toString())
-  searchParams.append('source', dataSource.value)
+  searchParams.append('source', dataSource.value.toString())
   for(const [filter, val] of Object.entries(filters.value)) {
     if(!val) continue
     if(Array.isArray(val)) {
@@ -635,7 +635,8 @@ onBeforeMount(async() => {
   }
 
   if(route.query.limit) limit.value = Number(route.query.limit) || DEFAULT_LIMIT
-  if(route.query.source) dataSource.value = route.query.source as string
+  if(route.query.source) dataSource.value = parseInt(route.query.source as string)
+  if(isNaN(dataSource.value)) dataSource.value = PartitionRange[1]
   for(const filter in FILTER_DATA) {
     let queryName = filter
     // Some query are prefixed with search_, so we check them:
