@@ -31,7 +31,7 @@ const LogQuery = Type.Object({
 
 type LogQueryType = Static<typeof LogQuery>
 
-export const ACTIVITY_LOG_TABLE_NAME = 'activity_log_full'
+export const ACTIVITY_LOG_TABLE_NAME = 'activity_log'
 const LOG_TOTAL_ROW_CACHE_TIME = 30_000 //ms
 const MISSING_NAME_MIN_INTERVAL = 1000 * 30 // Do not fetch if last fetch was between this
 
@@ -201,7 +201,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             })
         }
 
-        const [rows] = await fastify.db.query<RowDataPacket[]>("SELECT id, message, type, client FROM activity_log WHERE id = ?", [ req.params.id ])
+        const [rows] = await fastify.db.query<RowDataPacket[]>(`SELECT id, message, type, client FROM ${ACTIVITY_LOG_TABLE_NAME} WHERE id = ?`, [ req.params.id ])
         if(rows.length == 0) {
             return reply.code(404).send({
                 error: "NOT_FOUND",
@@ -213,7 +213,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             if(rows[0].client === req.session.user.steamid) {
                 fastify.log.info(`${req.session.user.steamid} has redacted message ${rows[0].message}`)
 
-                await fastify.db.query("UPDATE activity_log SET message = '[redacted]' WHERE id = ?", [ rows[0].id ])
+                await fastify.db.query(`UPDATE ${ACTIVITY_LOG_TABLE_NAME} SET message = '[redacted]' WHERE id = ?`, [ rows[0].id ])
         
                 return reply.code(204).send()
             } else {
