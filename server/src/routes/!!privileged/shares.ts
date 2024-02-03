@@ -23,32 +23,25 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
 
     fastify.get('/workshop/:publishedfileid/details', async(req: FastifyRequest<{Params: { publishedfileid: string }}>, reply): Promise<DetailsResponse> => {
-        // TODO: use cache
-        // FIXME: needing to do [0] twice
         if(!req.user.hasPermission("shares.addons.view")) return NO_PERMISSION(reply)
         const results = await fastify.steam.getItemDetails([req.params.publishedfileid])
-        console.log(results)
         if(results.length == 0) return { item: null }
         const children = await fastify.steam.getCollectionChildren(req.params.publishedfileid)
         const item = {
-            ...results[0][0],
+            ...results[0],
             consumer_app_title: results[0].consumer_app_id ? await fastify.steam.getAppName(results[0].consumer_app_id) : null,
         }
         if(children) {
             const childrenDetails = await fastify.steam.getItemDetails(children)
             return {
-                item: {
-                    ...item,
-                    type: "collection",
-                    children: childrenDetails
-                }
+                item,
+                type: "collection",
+                children: childrenDetails
             }
         } else {
             return { 
-                item: {
-                    ...item,
-                    type: "item"
-                }
+                item,
+                type: "item"
             }
         }
     })

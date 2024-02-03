@@ -108,7 +108,11 @@ export default class SteamAPI {
             })
             if(response.ok) {
                 const json = await response.json() as any
-                details = [...details, json['response']['publishedfiledetails']]
+                const files = json.response.publishedfiledetails as WorkshopItem[]
+                for(const file of files) {
+                    this.itemCache.set(file.publishedfileid, file)
+                }
+                details = [...details, ...files]
             } else {
                 throw new Error(`${response.statusText}: ${await response.text()}`)
             }

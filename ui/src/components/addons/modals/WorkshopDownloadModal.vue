@@ -20,7 +20,7 @@
       <template v-if="workshopDetails">
       <br>
         <h4 class="title is-4" >
-          {{workshopDetails.title}}
+          {{workshopDetails.item.title}}
           <span data-tooltip="Workshop Id" class="tag is-dark">{{ workshopId }}</span>
         </h4>
         <p class="subtitle is-6" v-if="isAddonValid">
@@ -28,16 +28,16 @@
             Collection -
           </template>
           For app
-          <b><a :data-tooltip="workshopDetails.consumer_app_id" :href="'https://store.steampowered.com/app/' + workshopDetails.consumer_app_id">
-            {{workshopDetails.consumer_app_title}}
+          <b><a :data-tooltip="workshopDetails.item.consumer_app_id" :href="'https://store.steampowered.com/app/' + workshopDetails.item.consumer_app_id">
+            {{workshopDetails.item.consumer_app_title}}
           </a></b>
         </p>
-        <p class="subtitle is-6" v-else-if="workshopDetails.result === 9"><b>Game: </b>
+        <p class="subtitle is-6" v-else-if="workshopDetails.item.result === 9"><b>Game: </b>
           Addon is either private, friends-only, or does not exist.
         </p>
         <p class="subtitle is-6 has-text-danger" v-else>
-          Addon is for <b><a :href="'https://store.steampowered.com/app/' + workshopDetails.consumer_app_id">
-            {{workshopDetails.consumer_app_title}}
+          Addon is for <b><a :href="'https://store.steampowered.com/app/' + workshopDetails.item.consumer_app_id">
+            {{workshopDetails.item.consumer_app_title}}
           </a></b>, but only addons for <b><a :href="'https://store.steampowered.com/app/' + props.share.appid">
             {{props.share.appTitle}}
           </a></b> are allowed
@@ -46,7 +46,7 @@
         <hr>
       </template>
       <p class="has-text-centered is-size-5 mt-2" v-if="!workshopDetails && workshopId">
-        <span class="has-text-danger" v-if="InputState.FetchError">
+        <span class="has-text-danger" v-if="inputState == InputState.FetchError">
           Could not fetch workshop item
         </span>
         <Icon icon="fa-solid fa-spinner" spin v-else>
@@ -220,7 +220,7 @@ let downloads = ref<Record<string, { entryTitle: string, url: string, totalBytes
 const isAddonValid = computed(() => {
   if(!props.share.appid) return true // Allow all if no appid is set
   if(!workshopId.value) return false // If no file found, dont check
-  return workshopDetails.value?.consumer_app_id == props.share.appid
+  return workshopDetails.value?.item.consumer_app_id == props.share.appid
 })
 
 async function verifyLink(test: any) {
@@ -229,30 +229,33 @@ async function verifyLink(test: any) {
   if(match) {
     workshopId.value = match[2]
     workshopDetails.value = undefined // reset it for comparison used in template
-    workshopDetails.value = await getSteamWSDetails(workshopId.value)
-    if(workshopDetails.value) {
-      if(workshopDetails.value.consumer_app_id != props.share.appid) return
-      if(workshopDetails.value.type === 'collection') {
+    const response = await getSteamWSDetails(workshopId.value)
+    if(response) {
+      if(response.item.consumer_app_id != props.share.appid) return
+      if(response.type === 'collection') {
         inputState.value = InputState.ChoosingChildren
-        acceptedChildren.value = workshopDetails.value.children.map(child => child.publishedfileid)
+        acceptedChildren.value = response.children.map(child => child.publishedfileid)
       } else {
         inputState.value = InputState.ChoosingDestinations
         acceptedChildren.value = undefined
       }
+      workshopDetails.value = response
     }
   }
 }
 const verifyLinkDebounce = debounce(verifyLink, 400)
 
-async function getSteamWSDetails(id: string): Promise<DetailWorkshopItem | undefined> {
+async function getSteamWSDetails(id: string): Promise<DetailWorkshopItem | null> {
   const response = await request(`/api/shares/workshop/${id}/details`, undefined, {
     title: "Error fetching workshop item"
   })
   if(response?.ok) {
-    const json = await response.json()
-    return json.item
+    const json: DetailsResponse = await response.json()
+    if(!json.item) return null
+    return json
   } else {
     inputState.value = InputState.FetchError
+    return null
   }
 }
 
@@ -309,7 +312,7 @@ function startDownload(force = false) {
   query.append("destinations", installDestinations.value.join(','))
   query.append("sse", "1")
   if(force) query.append("force", "1")
-  if(acceptedChildren != null) query.append("children", acceptedChildren.value.join(','))
+  if(acceptedChildren.value != null) query.append("children", acceptedChildren.value.join(','))
   const sse = new EventSource(`/api/shares/${props.share.id}/addons/workshop/${workshopId.value}/download?${query.toString()}`)
   // Don't care about see.onerror, will trigger when server closes
   sse.onerror = () => {
@@ -349,6 +352,7 @@ function startDownload(force = false) {
         })
         // If no force prompt shown or this was a force download, then we are done.
         if(downloadState.value == DownloadState.Downloading || force) downloadState.value = DownloadState.Done
+        else console.debug("COMPLETE on state=",downloadState.value)
       } else if(payload.state === "DOWNLOAD_PROGRESS") {
         if(!downloads.value[payload.entry]) return console.warn(`Progress update for download that we don't know: ${payload.entry}`)
         downloads.value[payload.entry].currentBytes = payload.currentBytes
