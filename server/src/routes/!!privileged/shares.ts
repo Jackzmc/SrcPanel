@@ -23,12 +23,15 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
 
     fastify.get('/workshop/:publishedfileid/details', async(req: FastifyRequest<{Params: { publishedfileid: string }}>, reply): Promise<DetailsResponse> => {
+        // TODO: use cache
+        // FIXME: needing to do [0] twice
         if(!req.user.hasPermission("shares.addons.view")) return NO_PERMISSION(reply)
         const results = await fastify.steam.getItemDetails([req.params.publishedfileid])
+        console.log(results)
         if(results.length == 0) return { item: null }
         const children = await fastify.steam.getCollectionChildren(req.params.publishedfileid)
         const item = {
-            ...results[0],
+            ...results[0][0],
             consumer_app_title: results[0].consumer_app_id ? await fastify.steam.getAppName(results[0].consumer_app_id) : null,
         }
         if(children) {
@@ -470,11 +473,11 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 message: `Filename is blank`   
             })
         }
-        const isInstall = req.params.operation === "install"
-        if(!isInstall && req.params.operation !== "uninstall") {
+        const isInstall = req.params.operation === "install" || req.params.operation === "enable"
+        if(!isInstall && req.params.operation !== "uninstall" && req.params.operation !== "disable") {
             return reply.status(400).send({
                 error: "INVALID_OPERATION",
-                message: `Operation must be of 'install' or 'uninstall', not ${req.params.operation}`
+                message: `Operation must be of 'enable' or 'disable', not ${req.params.operation}`
             })
         }
     
@@ -517,7 +520,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             } catch(err) {
                 fastify.log.error(err)
                 return reply.code(500).send({
-                    error: "INSTALL_FAILED",
+                    error: isInstall ? "ENABLE_ERROR" : "DISABLE_ERROR",
                     message: `Error occurred while ${isInstall ? 'enabling' : 'disabling'} addon`
                 })
             }

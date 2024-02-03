@@ -57,7 +57,7 @@
         <p class="subtitle is-6">Click any tag to enable or disable it from the server. The server must be restarted for the changes to apply.</p>
         <div class="field is-grouped is-grouped-multiline">
           <div class="field mr-4" v-for="(installed, dest) in installInfo" :key="dest">
-            <input :id="dest" type="checkbox" class="switch is-rtl" :checked="installed == true" @click="installAddon(dest, installed ? 'uninstall' : 'install')" :disabled="installed == null">
+            <input :id="dest" type="checkbox" class="switch is-rtl" :checked="installed == true" @click="enableAddon(dest, installed ? 'disable' : 'enable')" :disabled="installed == null">
             <label :for="dest">{{ dest }}</label>
             <br>
           </div>
@@ -123,19 +123,19 @@ onBeforeMount(() => {
     installInfo.value = Object.assign({}, props.addon.installInfo)
 })
 
-async function installAddon(destKey: string, mode: "install" | "uninstall") {
+async function enableAddon(destKey: string, mode: "enable" | "disable") {
   if(!installInfo.value) return console.warn('no install info')
   installInfo.value[destKey] = null
   const response = await request(`/api/shares/${props.share.id}/addons/${props.addon.filename}/${mode}/${destKey}`, { method: 'POST' })
   if(response?.ok) {
     const json = await response.json()
     // Update local copy
-    installInfo.value[destKey] = (mode == "install")
+    installInfo.value[destKey] = (mode == "enable")
     if(!pendingRestarts.value.includes(destKey))
       pendingRestarts.value.push(destKey)
     notify({
       type: "success",
-      text: mode == "install" ? `Enabled ${addonName.value} on ${destKey}` : `Disabled ${addonName.value} on ${destKey}`
+      text: mode == "enable" ? `Enabled ${addonName.value} on ${destKey}` : `Disabled ${addonName.value} on ${destKey}`
     })
     emit('update', {
       installInfo: installInfo.value
