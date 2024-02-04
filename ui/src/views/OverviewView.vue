@@ -1,6 +1,6 @@
 <template>
 <div class="container is-fluid">
-    <div class="columns is-multiline is-variable is-1 is-fullwidth">
+    <div class="columns">
       <div class="column">
           <Servers @refresh="onServerRefresh" />
           <div class="is-pulled-right mt-2" style="margin-right: 10px">
@@ -8,7 +8,7 @@
             <Icon icon="spinner" v-else spin />
           </div>
       </div>
-      <div class="column is-offset-1 is-3">
+      <div class="column is-3">
           <div class="content">
             <div class="box">
               <h6>Enabling & opening the dev console:</h6>

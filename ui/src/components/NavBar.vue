@@ -85,9 +85,9 @@
         <router-link to="/notes" class="navbar-item">
           <Icon icon="fa-note-sticky">Player Notes</Icon>
         </router-link>
-        <router-link to="/graphs" class="navbar-item">
+        <a href="https://data.jackz.me/dashboard/1-public-dashboard" class="navbar-item">
           <Icon icon="fa-chart-simple">Graphs</Icon>
-        </router-link>
+        </a>
       </div>
       <div class="navbar-end">
         <div class="navbar-item" v-if="updateInfo.updating">

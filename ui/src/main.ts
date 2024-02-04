@@ -1,6 +1,6 @@
 import { createApp } from 'vue';
 import App from './App.vue';
-import './registerServiceWorker'
+// import './registerServiceWorker'
 //@ts-ignore next-line
 import VueSkeletonLoader from 'skeleton-loader-vue';
 import Notifications from '@kyvg/vue3-notification'

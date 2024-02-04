@@ -114,15 +114,6 @@ const routes = [
     }
   },
   {
-    name: 'graphs',
-    path: '/graphs',
-    component: () => import('../views/GraphsView.vue'),
-    meta: {
-      title: 'Graphs',
-      description: 'View some statistics about gameplay and administration'
-    }
-  },
-  {
     name: 'admin-shares',
     path: '/admin/shares/:shareId?/',
     component: () => import('../views/admin/ServerAddonsView.vue'),
