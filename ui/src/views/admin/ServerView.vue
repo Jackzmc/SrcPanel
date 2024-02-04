@@ -127,9 +127,6 @@
           </div>
         </article>
         <p class="has-text-centered subtitle is-4 my-6" v-else><Icon icon="fa-spinner" spin>Waiting for server status...</Icon></p>
-        <VueApexCharts :series='series' :options="options" type="line" />
-        <VueApexCharts :series='series2' :options="options2" type="line" />
-
       </div>
       <div v-else-if="tab === 'live'" class="box">
         <span class="tag is-pulled-right is-danger" v-if="isLiveViewActive" data-tooltip="Connected to server, receiving live data">Live</span>
@@ -421,7 +418,6 @@ import { PlayerData, PrivilegedUser } from '@/js/User';
 import { parseLog, getRelDate, request } from '@/js/util';
 import LogMessage from "@/components/LogMessage.vue";
 import { useNotification } from "@kyvg/vue3-notification";
-import VueApexCharts from 'vue3-apexcharts'
 import Field from '@/components/Field.vue';
 import { PluginServerStatus, StatusPlayer, StatusPlayerSurvivor, SurvivorId, FinaleStage, PlayerState, PlayerGameAction, PlayerMove, StatusPlayerInfected, InfectedClass } from '../../../../common-types/Server';
 import { UserPrivilegeCode } from '../../../../common-types/Privileges';
@@ -692,20 +688,6 @@ async function fetchServerData() {
   if(id != route.params.id) return // Ignore changes in id
   if(response?.ok) {
     const json = await response.json()
-    series2.value = [{
-      name: "Players",
-      data: json.playerCounts.map((count: any) => {
-        return { x: new Date(count.timestamp*1000), y: count.count }
-      })
-    }]
-    if(json.playerJoins) {
-      series.value = [{
-        name: "Player Joins",
-        data: json.playerJoins.map((row: any) => {
-          return { x: new Date(row.timestamp*1000), y: row.count }
-        })
-      }]
-    }
     return true
   }
 }
