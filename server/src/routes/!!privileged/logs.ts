@@ -35,44 +35,100 @@ export const ACTIVITY_LOG_TABLE_NAME = 'activity_log'
 const LOG_TOTAL_ROW_CACHE_TIME = 30_000 //ms
 const MISSING_NAME_MIN_INTERVAL = 1000 * 30 // Do not fetch if last fetch was between this
 
-let logServerCache = []
 interface DataCache {
     totalRows: number,
     highestId: number,
     lowestId: number,
     lastFetchTime: number
 }
-let cache: Map<number | undefined, DataCache> = new Map()
+interface SetCache<T> {
+    set: Set<T>,
+    lastFetchTime: number
+}
+class SetCache<T> {
+    set: Set<T>
+    lastFetchTime: number
+    staleTime: number
+    #getData: () => Promise<Set<T>>
+    #isStaleFn: (fetchTime: number, staleTime: number) => boolean
+    constructor(updateFn: () => Promise<Set<T>>, staleTime = 1000 * 60 * 60 * 4) {
+        this.#getData = updateFn
+        this.staleTime = staleTime
+    }
+    setStaleFunction(fn: (fetchTime: number, staleTime: number) => boolean) {
+        this.#isStaleFn = fn.bind(this)
+        return this
+    }
+    async fetch() {
+        if(this.isStale) this.set = await this.#getData()
+        return this.set
+    }
+    get isStale() { 
+        if(!this.set) return true
+        if(this.#isStaleFn) return this.#isStaleFn(this.lastFetchTime, this.staleTime)
+        else return Date.now() - this.lastFetchTime > this.staleTime
+    }
+}
+let partitionRowCache: Map<number | undefined, DataCache> = new Map()
 let lastMissingNameFetchTime = 0
 
+let serverFilterCache: SetCache<string>
+let partitionCache: SetCache<number>
+
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
-    const [rows] = await fastify.db.query<RowDataPacket[]>(`SELECT DISTINCT server FROM ${ACTIVITY_LOG_TABLE_NAME} ORDER BY timestamp DESC`)
-    logServerCache = rows.filter(row => row.server && row.server !== "web").map(row => row.server)
+    serverFilterCache = new SetCache<string>(
+        async () => {
+            const [rows] = await fastify.db.query<RowDataPacket[]>(`SELECT DISTINCT server FROM ${ACTIVITY_LOG_TABLE_NAME} ORDER BY timestamp DESC`)
+            const list: string[] = rows.filter(row => row.server && row.server !== "web").map(row => row.server)
+            return new Set(list)
+        }
+    )
+    partitionCache = new SetCache<number>(
+        async () => {
+            const [rows] = await fastify.db.query<RowDataPacket[]>(`SELECT YEAR(FROM_UNIXTIME(timestamp)) as year FROM left4dead2.activity_log GROUP BY YEAR(FROM_UNIXTIME(timestamp))`, [])
+            if(rows.length === 0) return new Set([new Date().getFullYear()])
+            return new Set(rows.map(row => Number(row.year)))
+        }
+    ).setStaleFunction((lastFetched, staleTime) => {
+        return new Date(lastFetched).getFullYear() > new Date().getFullYear()
+    })
 
     const CURRENT_YEAR = new Date().getFullYear()
 
+    const partitions = await partitionCache.fetch()
     async function getTotalRows(year: number | null): Promise<DataCache> {
-        let value = cache.get(year)
+        let value = partitionRowCache.get(year)
         if(!value || Date.now() - value.lastFetchTime > LOG_TOTAL_ROW_CACHE_TIME) {
-            const [c] = await fastify.db.execute<RowDataPacket[]>(`SELECT COUNT(*) AS count, MAX(id) as highestId, MIN(id) as lowestId from ${ACTIVITY_LOG_TABLE_NAME} ${year != null ? `PARTITION (p${year})` : ''}`)
-            value = {
-                totalRows: c[0].count,
-                highestId: c[0].highestId,
-                lowestId: c[0].lowestId,
-                lastFetchTime: Date.now()
+            try {
+                const [c] = await fastify.db.execute<RowDataPacket[]>(`SELECT COUNT(*) AS count, MAX(id) as highestId, MIN(id) as lowestId from ${ACTIVITY_LOG_TABLE_NAME} ${year != null ? `PARTITION (p${year})` : ''}`)
+                value = {
+                    totalRows: c[0].count,
+                    highestId: c[0].highestId,
+                    lowestId: c[0].lowestId,
+                    lastFetchTime: Date.now()
+                }
+                partitionRowCache.set(year, value)
+            } catch(err) {
+                // Ignore invalid partitions
+                if(err.code !== "ER_UNKNOWN_PARTITION") {
+                    throw err
+                }
             }
-            cache.set(year, value)
         }
         return value
     }
-    // Fetch null (absolute total rows) and current year
-    getTotalRows(null)
-    getTotalRows(CURRENT_YEAR)
+    // Fetch null to get the complete number of rows
+    await getTotalRows(null)
+    for await (const part of partitions) {
+        getTotalRows(part)
+    }
 
     fastify.get('/data', async(req, reply) => {
+        const servers = await serverFilterCache.fetch()
+        const partitions = Object.fromEntries(partitionRowCache)
         return {
-            servers: logServerCache,
-            cache: Object.fromEntries(cache)
+            servers: [...servers],
+            cache: partitions
         }
     })
 

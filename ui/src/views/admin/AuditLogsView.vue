@@ -25,7 +25,7 @@
         <Field label="Data Year">
             <div class="select">
               <select v-model="dataSource" @change="fetchDebounce">
-                <option v-for="(year) in DATA_SOURCES" :key="year" :value="year">
+                <option v-for="(year) in dataSources" :key="year" :value="year">
                   {{ year }}
                 </option>
               </select>
@@ -196,7 +196,7 @@
         </label>
         <div class="buttons has-addons">
           <a
-            v-for="(val, key) of FILTER_DATA.servers" :key="key"
+            v-for="(key) of logInfo.servers" :key="key"
             :class="['button', 'is-small',  getFilterColor('servers', key)]"
             @click="toggleFilter('servers', key)"
           >
@@ -214,7 +214,7 @@
           <Field label="Data Year">
             <div class="select is-fullwidth">
               <select v-model="dataSource" @change="fetchDebounce">
-                <option v-for="year in DATA_SOURCES" :key="year" :value="year">
+                <option v-for="year in dataSources" :key="year" :value="year">
                   {{ year }}
                 </option>
               </select>
@@ -264,15 +264,6 @@ const FILTER_DATA: Record<string, Record<string, boolean | string>> = {
     web: "is-info",
     main: "is-success",
     reserved: "is-dark",
-    public1: true,
-    public2: true,
-    public3: true,
-    public4: true,
-    public5: true,
-    public6: true,
-    public7: true,
-    public8: true,
-    unknown: true,
   },
   types: {
     ACTION: "is-info",
@@ -287,13 +278,6 @@ const FILTER_DATA: Record<string, Record<string, boolean | string>> = {
   target: {},
   message: {}
 }
-
-const PartitionRange = [ 2022, new Date().getFullYear() ]
-const DATA_SOURCES: number[] = []
-for(let i = PartitionRange[1] ; i >= PartitionRange[0]; i--) {
-  DATA_SOURCES.push(i)
-}
-
 const ADMINCHAT_REGEX = new RegExp(/triggered (sm_say|sm_chat) \(text (.*)\s*\)/);
 const CONSOLE_SAY_REGEX = new RegExp(/(sm_say|sm_chat) "?([^"]*)"?/)
 
@@ -341,7 +325,7 @@ let infiniteScroll = ref()
 let infiniteScrollLoading = ref<"top"|"bottom">()
 
 let fetchAbort: AbortController | null = null
-let logInfo = ref<{cache:Record<string,{totalRows:number,highestId:number}>}>({cache:{}})
+let logInfo = ref<{servers: string[], cache:Record<string,{totalRows:number,highestId:number}>}>({servers:[],cache:{}})
 let firstLoad = false
 
 const highlightRegex = computed(() => {
@@ -350,6 +334,12 @@ const highlightRegex = computed(() => {
 const loadingDuration = computed(() => {
   if(!loadingTime.value) return "0.0"
   return Math.max(((now.value - loadingTime.value) / 1000), 0).toFixed(1)
+})
+const dataSources = computed(() => {
+  if(!logInfo.value?.cache) return []
+  // A cache value of null is provided for absolute totals, we ignore it
+  // The list is also ascending, so just reverse it. Maybe in future order it just in case
+  return Object.keys(logInfo.value.cache).filter(key => key != "null").reverse()
 })
 
 async function searchUsers(e: any) {
@@ -491,7 +481,9 @@ async function fetchLogs(id: number, mode: "before" | "after" | "around") {
 
   let response
   try {
-    const responseHandle = requestTimeout(`/api/logs/${mode}/${id}?${params}`, MAX_REQUEST_TIME)
+    const responseHandle = requestTimeout(`/api/logs/${mode}/${id}?${params}`, MAX_REQUEST_TIME, undefined, {
+      title: "Fetch Failure"
+    })
     fetchAbort = responseHandle.controller
     response = await responseHandle.start()
     fetchAbort = null
@@ -635,8 +627,10 @@ onBeforeMount(async() => {
   }
 
   if(route.query.limit) limit.value = Number(route.query.limit) || DEFAULT_LIMIT
-  if(route.query.source) dataSource.value = parseInt(route.query.source as string)
-  if(isNaN(dataSource.value)) dataSource.value = PartitionRange[1]
+  if(route.query.source) {
+    const year = parseInt(route.query.source as string)
+    if(!isNaN(year)) dataSource.value = year
+  }
   for(const filter in FILTER_DATA) {
     let queryName = filter
     // Some query are prefixed with search_, so we check them:
