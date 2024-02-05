@@ -217,17 +217,6 @@ const routes = [
     ]
   },
   {
-    name: 'logs-activity',
-    path: '/admin/activity',
-    alias: '/admin/logs',
-    component: () => import('../views/admin/ActivityLogsView.vue'),
-    meta: {
-      title: 'Activity Logs',
-      description: 'View all activity inside and outside the game',
-      authRequired: true
-    }
-  },
-  {
     name: 'logs-audit',
     path: '/admin/audit/:aroundId?',
     component: () => import('../views/admin/AuditLogsView.vue'),
