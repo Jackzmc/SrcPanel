@@ -90,6 +90,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             return new Set(rows.map(row => Number(row.year)))
         }
     ).setStaleFunction((lastFetched, staleTime) => {
+        // Partitions should only need to be updated once every year
         return new Date(lastFetched).getFullYear() > new Date().getFullYear()
     })
 
@@ -98,7 +99,9 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     const partitions = await partitionCache.fetch()
     async function getTotalRows(year: number | null): Promise<DataCache> {
         let value = partitionRowCache.get(year)
-        if(!value || Date.now() - value.lastFetchTime > LOG_TOTAL_ROW_CACHE_TIME) {
+        // Fetch data if: (1) no cached data (2) if data is for this year/null and exceeds LOG_TOTAL_ROW_CACHE_TIME
+        // Any other year, the data will never change.
+        if(!value || (!year || year == new Date().getFullYear()) && Date.now() - value.lastFetchTime > LOG_TOTAL_ROW_CACHE_TIME) {
             try {
                 const [c] = await fastify.db.execute<RowDataPacket[]>(`SELECT COUNT(*) AS count, MAX(id) as highestId, MIN(id) as lowestId from ${ACTIVITY_LOG_TABLE_NAME} ${year != null ? `PARTITION (p${year})` : ''}`)
                 value = {
