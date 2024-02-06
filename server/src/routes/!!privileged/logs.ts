@@ -33,7 +33,7 @@ type LogQueryType = Static<typeof LogQuery>
 
 export const ACTIVITY_LOG_TABLE_NAME = 'activity_log'
 const LOG_TOTAL_ROW_CACHE_TIME = 30_000 //ms
-const MISSING_NAME_MIN_INTERVAL = 1000 * 30 // Do not fetch if last fetch was between this
+const MISSING_NAME_MIN_INTERVAL = 1000 * 20 // Do not fetch if last fetch was between this
 
 interface DataCache {
     totalRows: number,

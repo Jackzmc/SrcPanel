@@ -584,10 +584,11 @@ async function jumpTo(entry: any) {
   router.replace({
     name: "logs-audit",
     params: {
-      aroundId: entry.id
+      aroundId: entry.id,
     },
     query: route.query
   })
+  await fetchLogs(entry.id, 'around')
 }
 
 function getShareLink(entry: LogEntry) {
