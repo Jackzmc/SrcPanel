@@ -282,6 +282,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         const server = fastify.servers.get(req.params.id)
         if(!server) return NOT_FOUND(reply, "Server")
         
+        if(req.body.includes("rcon_password"))
+            return NO_PERMISSION(reply, "You do not have permission to run that command")
         const [code, granted] = req.user.requirePermission("servers.rcon", { resourceIds: [server.id] })
         if(!granted) return NO_PERMISSION(reply, "You do not have permission to run commands on this server", code)
 
