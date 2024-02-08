@@ -133,7 +133,7 @@
           Close
         </button>
 
-        <button v-if="isAddonValid" @click="restartServers" :class="['button','is-info', {'is-loading': DownloadState.RestartingServers }]">
+        <button v-if="isAddonValid" @click="restartServers" :class="['button','is-info', {'is-loading': downloadState == DownloadState.RestartingServers }]">
           Restart Servers
         </button>
       </template>
