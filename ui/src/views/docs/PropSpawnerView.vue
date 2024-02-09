@@ -46,6 +46,7 @@
             <li><kbd>Right Mouse</kbd> - Bring closer to you</li>
             <li><kbd>Shift + E</kbd> - Toggles collision</li>
             <li><kbd>Ctrl + E</kbd> - Toggles collision rotating</li>
+            <li><kbd>Space + E</kbd> - Toggles stacker tool</li>
             <br>
             <li><kbd>E + Left Mouse</kbd> - Change rotation axis</li>
             <li><kbd>E + Right Mouse</kbd> - Change rotation snap angle</li>
