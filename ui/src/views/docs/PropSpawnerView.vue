@@ -83,21 +83,3 @@ onBeforeMount(() => {
 
 })
 </script>
-
-<style>
-/* bulma has no kbd support, thanks https://github.com/jgthms/bulma/issues/1363 */
-kbd {
-  display: inline-block;
-  padding: 3px 5px;
-  font-size: 11px;
-  line-height: 10px;
-  color: #555;
-  vertical-align: middle;
-  background-color: #fcfcfc;
-  border: solid 1px #ccc;
-  border-bottom-color: #bbb;
-  border-radius: 3px;
-  box-shadow: inset 0 -1px 0 #bbb;
-}
-
-</style>

@@ -15,7 +15,7 @@
               <ol>
                   <li>Go to <b>Options</b> then <b>Keyboard/Mouse</b></li>
                   <li>Enable the option <b>Allow Developer Console</b></li>
-                  <li>Open the console with the tilda key (<code>`</code> or <code>~</code>, under <code>ESC</code>)</li>
+                  <li>Open the console with the tilda key (<kbd>`</kbd>/<kbd>~</kbd>, under <kbd>ESC</kbd>)</li>
               </ol>
             </div>
             <div class="box">
