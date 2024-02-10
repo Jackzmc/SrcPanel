@@ -80,7 +80,7 @@
           </div>
         </div>
         <router-link to="/bans" class="navbar-item">
-          <Icon icon="fa-user-slash">Bans</Icon>
+          <Icon icon="fa-gavel">Bans</Icon>
         </router-link>
         <router-link to="/notes" class="navbar-item">
           <Icon icon="fa-note-sticky">Player Notes</Icon>
