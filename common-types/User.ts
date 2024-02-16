@@ -59,7 +59,7 @@ export interface SessionUser {
     avatarhash: string,
 }
 
-export const FLAGS = {
+export const FLAGS: Record<string, string> = {
     'a': 'Reserved Slot',
     'b': 'Generic Admin',
     'c': 'Kick',
@@ -73,7 +73,7 @@ export const FLAGS = {
     'k': 'Start a generic vote',
     // 'l': 'Set a password on the server',
     'm': 'Ingame rcon access',
-    'n': 'Enable sv_cheats or use cheat commands',
+    'n': 'Cheat commands',
     'o': 'Custom 1',
     'p': 'Custom 2',
     'q': 'Custom 3',

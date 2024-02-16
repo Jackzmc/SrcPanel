@@ -29,7 +29,6 @@
     "register-service-worker": "^1.7.1",
     "sentiment": "^5.0.2",
     "simple-keyboard": "^3.7.7",
-    "skeleton-loader-vue": "^1.0.10",
     "steamid": "^2.0.0",
     "sugar": "^2.0.6",
     "v3-infinite-loading": "^1.2.2",

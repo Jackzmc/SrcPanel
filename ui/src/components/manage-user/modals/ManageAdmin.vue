@@ -36,7 +36,7 @@
               :data-tooltip="POLICY_MSG_MIN_HOURS_OF_PLAYTIME"
             >(!) </b>
           </p>
-          <em v-else>(no recorded statistics found)</em>
+          <em v-else><Icon icon="fa-spinner" spin></Icon></em>
         </span>
       </div>
     </div>
@@ -62,11 +62,11 @@
     <Tab name="Overview" v-if="userAdminData">
       <div class="columns">
         <div class="column">
-          <h6 class="title is-6">Game Flags</h6>
+          <h6 class="title is-6">Game Permissions</h6>
           <FlagList :priv-user="privUser" :flags="userAdminData.permissions.flags" only-active />
         </div>
         <div class="column">
-          <h6 class="title is-6">Web Permissions</h6>
+          <h6 class="title is-6">Panel Permissions</h6>
           <div v-for="code in userAdminData.permissions.codes" :key="code">
             <b>{{ code }}</b>
           </div>
@@ -113,13 +113,13 @@
             <tr v-if="expandedGroup?.id == group.id" style="width:100%" class="has-background-light">
               <td colspan="2">
                 <div class="box">
-                  <h6 class="title is-6">Game Flags</h6>
+                  <h6 class="title is-6">Game Permissions</h6>
                   <FlagList :priv-user="privUser" :flags="group.flags" only-active />
                 </div>
               </td>
               <td colspan="2">
                 <div class="box">
-                  <h6 class="title is-6">Web Permissions</h6>
+                  <h6 class="title is-6">Panel Permissions</h6>
                   <div v-for="code in expandedGroup.codes" :key="code">
                     {{ code }}
                   </div>
@@ -206,7 +206,7 @@
   <article class="message is-warning" v-if="noPermsGiven">
     <div class="message-body">
       <p><b>Warning:</b> No permissions have been granted to the user. The user will not have any admin privileges in game and limited access to the admin panel.</p>
-      <p>Apply a permission group, apply some base permissions, or some web permissions.</p>
+      <p>Apply a permission group, apply some base permissions, or some panel permissions.</p>
     </div>
   </article>
   <article class="message is-warning" v-if="!form.policyCheck">

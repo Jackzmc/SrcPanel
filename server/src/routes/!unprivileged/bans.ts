@@ -21,7 +21,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
         const [tkers] = await fastify.db.query(
             `SELECT DATE_FORMAT(FROM_UNIXTIME(activity_log.timestamp), '%Y-%m-%d') as x, COUNT(DISTINCT activity_log.timestamp) as y 
-            FROM activity_log 
+            FROM activity_log
             WHERE message LIKE 'Excessive FF (%)' and TYPE = 'ACTION' GROUP BY YEAR(FROM_UNIXTIME(activity_log.timestamp)), MONTH(FROM_UNIXTIME(activity_log.timestamp)), DAY(FROM_UNIXTIME(activity_log.timestamp)) 
             ORDER BY activity_log.timestamp ASC`,
             []

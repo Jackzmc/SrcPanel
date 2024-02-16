@@ -28,30 +28,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed, watch } from 'vue'
 import { PrivilegedUser } from '@/js/User'
-
-// TODO: Move to common
-const FLAGS: Record<string,string> = {
-  'a': 'Reserved Slot',
-  'b': 'Generic Admin',
-  'c': 'Kick',
-  'd': 'Ban',
-  'e': 'Unban',
-  'f': 'Slay/harm others',
-  'g': 'Change the map',
-  'h': 'Change cvar rules',
-  'i': 'Execute custom config files',
-  'j': 'Use admin chat',
-  'k': 'Start a generic vote',
-  // 'l': 'Set a password on the server',
-  'm': 'Ingame rcon access',
-  'n': 'Enable sv_cheats or use cheat commands',
-  'o': 'Custom 1',
-  'p': 'Custom 2',
-  'q': 'Custom 3',
-  'r': 'Custom 4',
-  's': 'Custom 5',
-  't': 'Custom 6',
-}
+import { FLAGS } from '../../../common-types/User.js'
 
 const props = defineProps<{
   privUser: PrivilegedUser,

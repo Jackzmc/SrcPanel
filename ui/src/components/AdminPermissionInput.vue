@@ -1,5 +1,5 @@
 <template>
-  <Field label="Web Permissions">
+  <Field label="Panel Permissions">
     <div class="tags">
       <span v-for="tag in value" :key="tag" class="tag is-info">
         {{ tag }}
@@ -9,7 +9,7 @@
       <em>No permissions granted</em>
     </p>
     <Field :error="formError">
-      <input placeholder="Add new web permission" list="codes" type="text" :class="['input', {'is-danger': isNewCodeValid === false, 'is-success': isNewCodeValid === true}]" v-model="newCode" @keydown.enter="addCode">
+      <input placeholder="Add new panel permission" list="codes" type="text" :class="['input', {'is-danger': isNewCodeValid === false, 'is-success': isNewCodeValid === true}]" v-model="newCode" @keydown.enter="addCode">
       <datalist id="codes">
         <option v-for="code in UserPrivilegeCodes" :key="code">
           {{ code }}

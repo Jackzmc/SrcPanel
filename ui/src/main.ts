@@ -2,7 +2,6 @@ import { createApp } from 'vue';
 import App from './App.vue';
 // import './registerServiceWorker'
 //@ts-ignore next-line
-import VueSkeletonLoader from 'skeleton-loader-vue';
 import Notifications from '@kyvg/vue3-notification'
 import router from './router'
 
@@ -26,8 +25,6 @@ library.add(faEllipsisV, faChevronDown, faChevronUp, faSpinner, faUser, faCog, f
 const app = createApp(App)
   .use(Notifications)
   .component('Icon', Icon)
-  .component('vue-skeleton-loader', VueSkeletonLoader)
-
 
 Sentry.init({
   app,
