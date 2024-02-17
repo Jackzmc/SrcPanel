@@ -1,5 +1,8 @@
 <template>
   <span :class="(button ? ' ' : 'icon-text ') + (containerClass ?? '')">
+    <span v-if="$slots.defaultLeft || textLeft" :class="textClass">
+      <slot name="text-left">{{ textLeft }}</slot>
+    </span>
     <span :class="'icon ' + (iconClass ?? '')">
       <FontAwesomeLayers full-width :class="layerClass">
         <FontAwesomeIcon :icon="icon" :spin="spin" :rotation="rotate" :size="size" />
@@ -17,6 +20,7 @@ import { FontAwesomeIcon, FontAwesomeLayers, FontAwesomeLayersText } from '@fort
 const props = defineProps<{
   icon: string,
   text?: string,
+  textLeft?: string
   containerClass?: string
   iconClass?: string,
   spin?: boolean,

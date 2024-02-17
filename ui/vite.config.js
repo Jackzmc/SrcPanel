@@ -20,7 +20,7 @@ export default ({ mode }) => {
           console.error("[Sentry] ", err)
         }
       }),
-      vue(),
+      vue({ defineModel: true }),
     ],
     server: {
       port: 8080,

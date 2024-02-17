@@ -65,6 +65,10 @@ export default class AuthManager {
         this.init()
     }
 
+    get AdminCount() {
+        return Object.keys(this.admins).length
+    }
+
     private async init() {
         let startTime = Date.now()
         await this.fetchGroups()

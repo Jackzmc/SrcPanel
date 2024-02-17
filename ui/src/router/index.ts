@@ -114,6 +114,24 @@ const routes = [
     }
   },
   {
+    name: 'discuss-new',
+    path: '/discuss/new',
+    component: () => import('../views/DiscussionNewView.vue'),
+  },
+  {
+    name: 'discuss-edit',
+    path: '/discuss/edit/:id',
+    component: () => import('../views/DiscussionNewView.vue'),
+  },
+  {
+    name: 'discuss',
+    path: '/discuss/:id?',
+    component: () => import('../views/DiscussionsView.vue'),
+    meta: {
+      title: "Discussions"
+    },
+  },
+  {
     name: 'admin-shares',
     path: '/admin/shares/:shareId?/',
     component: () => import('../views/admin/ServerAddonsView.vue'),

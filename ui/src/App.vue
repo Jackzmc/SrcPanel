@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <v-tour v-if="tour" :name="tour.name" :steps="tour.steps"></v-tour>
+    <!-- <v-tour v-if="tour" :name="tour.name" :steps="tour.steps"></v-tour> -->
     <Notifications position="top center" :duration=7000 @start="onNotificationShown" />
     <NavBar v-if="!$route.meta.hideNav" @logout="onLogout" :update-info="updateInfo" :priv-user="privUser" @notifications:clear="clearNotifications" />
     <br>

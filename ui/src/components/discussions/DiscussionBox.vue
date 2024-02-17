@@ -1,0 +1,170 @@
+<template>
+<div class="box question-box">
+  <div class="taglist">
+    <template v-if="discuss.expires">
+      <span v-if="isExpired" class="tag is-danger is-inline is-pulled-right">
+        <Icon icon="fa-clock">Closed</Icon>
+      </span>
+      <span v-else class="tag is-link is-inline is-pulled-right">
+        <Icon icon="fa-clock">Ends {{ expiresText }}</Icon>
+      </span>
+    </template>
+    <span class="mr-3 tag is-pulled-right is-inline" v-if="discuss.commentsCount > 0" data-tooltip="Number of comments"><Icon icon="far fa-comment">{{ discuss.commentsCount }}</Icon></span>
+  </div>
+  <h5 class="title is-5"><b>Discuss:</b> {{ discuss.title }}</h5>
+  <p v-if="discuss.description" class="subtitle">{{ discuss.description }}</p>
+  <div class="columns">
+    <div class="column is-6">
+      <div :class="['box','field',{'is-clickable': canInteract}]" v-for="option of getOptions(0)" :key="option.id" @click="selectChoice(option)">
+        <input v-if="canInteract && isSelection && 'selected' in discuss" v-model="discuss.selected" readonly :value="option" :id="option.id.toString()" class="is-checkradio" :type="optionType" :name="'choice' + discuss.id">
+        <label :for="option.id.toString()">{{ option.label }}</label>
+        <span v-if="showPercents" class="is-pulled-right has-text-info">
+          {{ Math.round((responses!.counts![option.id.toString()]?.percent || 0) * 100) }}%
+        </span>
+      </div>
+    </div>
+    <div class="column is-6">
+      <div :class="['box','field',{'is-clickable': canInteract}]" v-for="option of getOptions(1)" :key="option.id" @click="selectChoice(option)">
+        <input v-if="canInteract && isSelection && 'selected' in discuss" v-model="discuss.selected" readonly :value="option" :id="option.id.toString()" class="is-checkradio" :type="optionType" :name="'choice' + discuss.id">
+        <label :for="option.id.toString()">{{ option.label }}</label>
+        <span v-if="showPercents" class="is-pulled-right has-text-info">
+          {{ Math.round((responses!.counts![option.id.toString()]?.percent || 0) * 100) }}%
+        </span>
+
+      </div>
+    </div>
+  </div>
+  <div class="columns" v-if="!selected">
+    <div class="column">
+      <div class="columns is-gapless" v-if="discuss.responses.users">
+        <div class="column is-narrow" v-for="(user, i) in discuss.responses.users.slice(0, MAX_DISCUSSION_AVATARS)" :key="i">
+          <figure class="image is-32x32" :data-tooltip="user.name">
+            <img class="is-rounded" :src="'/api/users/' + user.id + '/avatar'">
+          </figure>
+        </div>
+        <div class="column mx-2 mt-2" v-if="discuss.responses.totalCount > MAX_DISCUSSION_AVATARS">
+          <p>... and {{ discuss.responses.totalCount - MAX_DISCUSSION_AVATARS }} more</p>
+        </div>
+      </div>
+    </div>
+    <div class="column is-4">
+      <router-link :to="{params:{id: discuss.id.toString()}}" class="is-small is-pulled-right"><Icon icon="fa-arrow-right" text-left="View responses" /></router-link>
+      <router-link v-if="privUser.equals(discuss.creator.id)" :to="{name: 'discuss-edit', params:{id: discuss.id.toString()}}" class="is-small is-pulled-right mr-2"><Icon icon="fa-edit" text="Edit" /></router-link>
+    </div>
+  </div>
+  <p class="has-text-success" v-if="discuss.state == DiscussionState.SavedSuccess">
+    <Icon icon="fa-circle-check"> Choice saved successfully</Icon>
+  </p>
+  <p class="has-text-danger" v-else-if="discuss.state == DiscussionState.SavedError">
+    <Icon icon="fa-times"> Could not save your choice. Please try again later.</Icon>
+  </p>
+  <p v-else-if="discuss.state == DiscussionState.Saving">
+    <Icon icon="fa-spinner" spin> Saving your choice</Icon>
+  </p>
+</div>
+</template>
+
+<script setup lang="ts">
+import { APIDiscussionFlags, APIDiscussionType, APIDiscussion, APIDiscussionOption, DiscussionState, Discussion, APIDiscussionDetails, APIResponsesData, APIComment } from '../../../../common-types/Discussions';
+import { request } from '@/js/util.js';
+import debounce from '@/js/debounce.js';
+import { ref, computed, onMounted } from 'vue';
+import Sugar from 'sugar'
+import { PrivilegedUser } from '../../js/User';
+
+const MAX_DISCUSSION_AVATARS = 10
+const DISCUSSION_SAVE_NOTIFICATION_DURATION = 1000 * 3
+
+const optionType = computed(() => {
+  return discuss.value.type == APIDiscussionType.Checkbox ? 'checkbox' : 'radio'
+})
+const isSelection = computed(() => {
+  return discuss.value.type == APIDiscussionType.Selection || discuss.value.type == APIDiscussionType.Checkbox || discuss.value.type == APIDiscussionType.Radio
+})
+
+const props = defineProps<{
+  privUser: PrivilegedUser,
+  modelValue: Discussion,
+  selected?: boolean,
+  responses?: APIResponsesData
+}>()
+let discuss = ref(props.modelValue)
+const emit = defineEmits<{
+  (e: 'update:modelValue', discuss: Discussion): void
+}>()
+
+const expiresText = computed(() => {
+  return discuss.value.expires ? new Sugar.Date(discuss.value.expires*1000).relative() : null
+})
+const isClosed = computed(() => {
+  if(discuss.value.flags & APIDiscussionFlags.Closed) return true
+  else if(isExpired.value) return true
+  return false
+})
+const isExpired = computed(() => {
+  return discuss.value.expires && (discuss.value.expires*1000) < Date.now()
+})
+const showPercents = computed(() => {
+  return props.responses?.counts != undefined && (isClosed.value || props.selected)
+})
+const canInteract = computed(() => {
+  return !isClosed.value && !props.selected
+})
+
+function getOptions(column: number) {
+  let options = discuss.value.options
+  if(column == 0) {
+    return options.filter((v, i) => !(i % 2))
+  } else {
+    return options.filter((v, i) => i % 2)
+  }
+}
+
+async function selectChoice(option: APIDiscussionOption) {
+  if(!canInteract.value) return
+  if(Date.now() - discuss.value.lastEditTime < 10) return
+  discuss.value.lastEditTime = Date.now()
+  console.log("selectChoice")
+  if(discuss.value.type == APIDiscussionType.Radio) {
+    if(discuss.value.selected?.id == option.id) return
+    discuss.value.selected = option
+    submitChoiceDebounceRadio()
+  } else if(discuss.value.type == APIDiscussionType.Checkbox || discuss.value.type == APIDiscussionType.Selection) {
+    submitChoiceDebounceMulti()
+  }
+  emit("update:modelValue", discuss.value)
+}
+async function submitChoice() {
+  if(discuss.value.type === APIDiscussionType.Checkbox || discuss.value.type === APIDiscussionType.Selection || discuss.value.type === APIDiscussionType.Radio) {
+    if(!discuss.value.selected) return
+  }
+  discuss.value.state = DiscussionState.Saving
+
+  // TODO: abort controller?
+  const params = new URLSearchParams()
+  if(discuss.value.type == APIDiscussionType.Checkbox || discuss.value.type == APIDiscussionType.Selection)
+    discuss.value.selected.every(opt => params.append("option", opt.id.toString()))
+  else if(discuss.value.type == APIDiscussionType.Radio)
+    params.append("option", discuss.value.selected!.id.toString())
+  else if(discuss.value.type == APIDiscussionType.ShortText || discuss.value.type == APIDiscussionType.LongText) {
+    params.append("text", discuss.value.text)
+  }
+
+  const response = await request(`/api/discussions/${discuss.value.id}/choose?${params.toString()}`, {
+    method: 'POST',
+  })
+  if(response?.ok) {
+    discuss.value.state = DiscussionState.SavedSuccess
+  } else {
+    discuss.value.state = DiscussionState.SavedError
+  }
+
+  setTimeout(() => {
+    if(discuss.value.state != DiscussionState.Saving)
+    discuss.value.state = DiscussionState.PendingAnswer
+  }, DISCUSSION_SAVE_NOTIFICATION_DURATION)
+}
+const submitChoiceDebounceMulti = debounce(submitChoice, 2000)
+const submitChoiceDebounceRadio = debounce(submitChoice, 400)
+
+</script>
