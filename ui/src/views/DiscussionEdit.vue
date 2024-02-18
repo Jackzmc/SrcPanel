@@ -2,16 +2,20 @@
 <div class="container">
   <div class="columns">
     <div class="column is-8">
+      <div class="block mb-2">
+        <a @click="confirmCancel"><Icon icon="fa-arrow-left"  class="is-pulled-left" text="Back to discussions (cancel)" /></a>
+      </div>
+      <br>
       <div class="box question-box" v-if="loadState == LoadState.Success">
         <div class="taglist">
-          <template v-if="discuss.expires">
-            <!-- <span v-else class="tag is-link is-inline is-pulled-right">
+          <!-- <template v-if="discuss.closedAt">
+            <span v-else class="tag is-link is-inline is-pulled-right">
               <Icon icon="fa-clock">Ends {{ expiresText }}</Icon>
-            </span> -->
-          </template>
+            </span>
+          </template> -->
         </div>
-        <h5 class="title is-5"><b>Discuss:</b> <span contenteditable @keydown.enter.prevent="(event) => saveText('title', event as KeyboardEvent)">{{discuss.title}}</span></h5>
-        <p class="subtitle" contenteditable @keydown.enter.prevent="(event) => saveText('description', event as KeyboardEvent)">{{ discuss.description }}</p>
+        <h5 class="title is-5"><b>Discuss:</b> <span contenteditable @blur="(event) => saveText('title', event as FocusEvent)" @keydown.enter.prevent="(event) => saveText('title', event as KeyboardEvent)">{{discuss.title}}</span></h5>
+        <p class="subtitle" contenteditable @blur="(event) => saveText('description', event as FocusEvent)" @keydown.enter.prevent="(event) => saveText('description', event as KeyboardEvent)">{{ discuss.description }}</p>
         <div class="columns">
           <div class="column is-6">
             <div class="box field is-clickable" v-for="option of getOptions(0)" :key="option.id" @click="editOption(option)">
@@ -34,7 +38,7 @@
       <div class="box question-box" v-else>
         <router-link :to="{name: 'discuss'}"><Icon icon="fa-arrow-left" class="is-pulled-left" text="Back to discussions" /></router-link>
         <br>
-        <p class="is-size-3 has-text-centered my-4" v-if="loadState == LoadState.Loading"><Icon icon="fa-spinner" spin>Fetching discussion...</Icon></p>
+        <p class="is-size-3 has-text-centered my-4 ml-3" v-if="loadState == LoadState.Loading"><Icon icon="fa-spinner" spin>Fetching discussion...</Icon></p>
         <p class="is-size-4 has-text-centered has-text-danger my-4" v-else><Icon icon="fa-times">An error occurred. Could not fetch discussion.</Icon></p>
       </div>
     </div>
@@ -57,15 +61,30 @@
             </div>
           </div>
         </div>
-        <div class="list-item">
+        <div class="list-item" v-if="!previouslyClosed">
           <div class="list-item-content">
             <div class="list-item-title">
-              <Icon icon="fa-info-circle" icon-class="has-text-info" text-left="Expires" data-tooltip="An optional time for the discussion to automatically close"></Icon>
+              <Icon icon="fa-info-circle" icon-class="has-text-info" text-left="Closes" data-tooltip="An optional time for the discussion to automatically close"></Icon>
             </div>
           </div>
           <div class="list-item-controls">
-            <input :step="60*60" :min="new Date().toISOString().slice(0, -8)" class="input" type="datetime-local" v-model="expires">
-            <a @click="discuss.expires = undefined" v-if="discuss.expires" class="is-pulled-right">clear expired</a>
+            <input :step="60*60" :min="new Date().toISOString().slice(0, -8)" class="input" type="datetime-local" v-model="closedAt">
+            <a @click="discuss.closedAt = undefined" v-if="discuss.closedAt" class="is-pulled-right">clear closed at</a>
+          </div>
+        </div>
+        <div class="list-item">
+          <div class="list-item-content">
+            <div class="list-item-title">
+              <Icon icon="fa-info-circle" icon-class="has-text-info" text-left="Voting" data-tooltip="If voting is open"></Icon>
+            </div>
+          </div>
+          <div class="list-item-controls" v-if="previouslyClosed">
+            <span class="tag is-danger is-inline is-pulled-right">
+              <Icon icon="fa-clock">Closed</Icon>
+            </span>
+          </div>
+          <div class="list-item-controls" v-else>
+            <a @click="closeVoting"><Icon icon="fa-lock-open">Active</Icon> (click to close)</a>
           </div>
         </div>
         <div class="list-item">
@@ -89,32 +108,12 @@
             </div>
           </div>
         </div>
-        <div class="list-item">
-          <div class="list-item-content">
-            <div class="list-item-title">
-              <Icon icon="fa-info-circle" icon-class="has-text-info" text-left="State" data-tooltip="If voting is open"></Icon>
-            </div>
-          </div>
-          <div class="list-item-controls">
-            <div class="field has-addons">
-              <p class="control">
-                <button :class="['button', {'is-info': (discuss.flags & APIDiscussionFlags.Closed) == 0}]" @click="toggleFlag(APIDiscussionFlags.Closed)">
-                  <Icon icon="fa-lock-open">Open</Icon>
-                </button>
-              </p>
-              <p class="control">
-                <button :class="['button', {'is-info': (discuss.flags & APIDiscussionFlags.Closed) != 0}]" @click="toggleFlag(APIDiscussionFlags.Closed)">
-                  <Icon icon="fa-lock">Closed</Icon>
-                </button>
-              </p>
-            </div>
-          </div>
-        </div>
       </div>
       <br>
       <div class="buttons">
         <a :class="['button','is-success',{'is-loading': isSaving }]" @click="save" :disabled="isSaving ? true : undefined ">{{ isNew ? 'Create Discussion' : 'Save Changes' }}</a>
         <a class="button" @click="confirmCancel">Cancel</a>
+        <a class="button is-warning" @click="archive"><Icon icon="fa-box-archive">Archive</Icon></a>
       </div>
     </div>
   </div>
@@ -139,15 +138,23 @@ const DISCUSSION_TYPES: { [key in APIDiscussionType]?: string } = {
 const isNew = computed(() => {
   return route.name === "discuss-new"
 })
-const expires = computed({
+const closedAt = computed({
   get() {
-    if(!discuss.value.expires) return
-    return new Date(discuss.value.expires * 1000).toISOString().slice(0, -8)
+    if(!discuss.value.closedAt) return
+    return new Date(discuss.value.closedAt * 1000).toISOString().slice(0, -8)
   },
   set(newValue) {
-    if(newValue) discuss.value.expires = Math.floor(new Date(newValue).getTime() / 1000 )
-    else discuss.value.expires = undefined
+    if(newValue) discuss.value.closedAt = Math.floor(new Date(newValue).getTime() / 1000 )
+    else discuss.value.closedAt = undefined
   }
+})
+const previouslyClosed = computed(() => {
+  return !isNew.value && orgDiscuss.value?.closedAt != undefined
+})
+const hasChanges = computed(() => {
+  if(isNew.value) return true
+  // TODO: compare orgDiscuss vs discuss
+  return true
 })
 
 const route = useRoute()
@@ -163,11 +170,12 @@ enum LoadState {
   Error
 }
 const loadState = ref<LoadState>(LoadState.Loading)
+const orgDiscuss = ref<APIDiscussionBase>()
 const discuss = ref<APIDiscussionBase>({
   title: "",
   description: 'A short optional description',
   type: APIDiscussionType.Radio,
-  expires: 0,
+  closedAt: 0,
   timestamp: Date.now(),
   options: [],
   flags: 0,
@@ -195,6 +203,18 @@ function editOption(option?: APIDiscussionOption) {
 function confirmCancel() {
   if(confirm("Are you sure you want to cancel?")) {
     router.push({ name: "discuss" })
+  }
+}
+
+function closeVoting() {
+  if(confirm("Are you sure you want to close this discussion? You will not be able to reopen it.")) {
+    discuss.value.closedAt = Math.round(Date.now() / 1000)
+  }
+}
+
+async function archive() {
+  if(confirm("Are you sure you want to archive this discussion?")) {
+    alert("Not implemented")
   }
 }
 
@@ -246,6 +266,7 @@ onMounted(async() => {
     if(response?.ok) {
       loadState.value = LoadState.Success
       discuss.value = await response.json()
+      orgDiscuss.value = JSON.parse(JSON.stringify(discuss.value))
     } else {
       loadState.value = LoadState.Error
     }

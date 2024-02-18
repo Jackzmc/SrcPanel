@@ -1,5 +1,5 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
-import { APICountData, APIDiscussion, APIDiscussionDetails, APIDiscussionFlags, APIDiscussionOption, APIDiscussionType, APIResponsesData, APIUser } from '../../../../common-types/Discussions.js';
+import { APIComment, APICountData, APIDiscussion, APIDiscussionDetails, APIDiscussionFlags, APIDiscussionOption, APIDiscussionType, APIResponsesData, APIUser } from '../../../../common-types/Discussions.js';
 import { OkPacket, RowDataPacket } from 'mysql2';
 import { NOT_FOUND, NO_PERMISSION } from '../../responses.js';
 import User from '../../modules/users/User.js';
@@ -45,7 +45,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 title: row.title,
                 description: row.description,
                 timestamp: row.timestamp,
-                expires: row.expires,
+                closedAt: row.closed_at,
                 type: row.type,
                 options: options.map(o => ({ id: o.id, label: o.label })),
                 responses: responses.responses,
@@ -90,6 +90,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         return reply.status(204).send()
     })
 
+    // TODO: sanitize .description!
     fastify.put('/:id', async (req: FastifyRequest<{Params: { id: string}}>, reply) => {
         const [rows] = await fastify.db.execute<RowDataPacket[]>("SELECT * FROM `left4dead2-admins`.dash_discussions WHERE id = ?", [req.params.id])
         if(rows.length == 0) {
@@ -98,11 +99,17 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             return NO_PERMISSION(reply, "You can only edit your own discussions")
         }
         const discuss = {...rows[0], ...req.body as APIDiscussion }
+        if(rows[0].closed_at && !discuss.closedAt) {
+            return reply.status(400).send({
+                error: "CANNOT_REOPEN",
+                message: "Cannot reopen a closed discussion"
+            })
+        }
         const conn = await fastify.db.getConnection()
         await conn.beginTransaction()
         await conn.query<OkPacket>(
-            "UPDATE `left4dead2-admins`.dash_discussions SET title = ?, description = ?, expires = ?, type = ?, flags = ? WHERE id = ?",
-            [discuss.title, discuss.description, discuss.expires, discuss.type, discuss.flags, req.params.id]
+            "UPDATE `left4dead2-admins`.dash_discussions SET title = ?, description = ?, closed_at = ?, type = ?, flags = ? WHERE id = ?",
+            [discuss.title, discuss.description, discuss.closedAt, discuss.type, discuss.flags, req.params.id]
         )
         const [options] = await conn.query<RowDataPacket[]>("SELECT * FROM `left4dead2-admins`.dash_discussion_options WHERE discussion_id = ?", [req.params.id])
         for(const option of discuss.options) {
@@ -129,8 +136,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         const conn = await fastify.db.getConnection()
         await conn.beginTransaction()
         const [ok] = await conn.query<OkPacket>(
-            "INSERT INTO`left4dead2-admins`.dash_discussions (title, description, creator, expires, type, flags) VALUES (?, ?, ?, ?, ?, ?)",
-            [discuss.title, discuss.description, req.user.steamid2, discuss.expires, discuss.type, discuss.flags]
+            "INSERT INTO`left4dead2-admins`.dash_discussions (title, description, creator, closed_at, type, flags) VALUES (?, ?, ?, ?, ?, ?)",
+            [discuss.title, discuss.description, req.user.steamid2, discuss.closedAt, discuss.type, discuss.flags]
         )
         discuss.id = ok.insertId
         // TODO: bulk options in one query
@@ -142,9 +149,9 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             )
         }
         await conn.commit()
-        return reply.status(200).send({
+        return {
             id: ok.insertId
-        })
+        }
     })
 
 
@@ -163,7 +170,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             title: row.title,
             description: row.description,
             timestamp: row.timestamp,
-            expires: row.expires,
+            closedAt: row.closed_at,
             type: row.type,
             options: options.map(o => ({ id: o.id, label: o.label })),
             responses: responses.responses,
@@ -183,6 +190,31 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 avatarUrl: `${domain}/api/users/${row.creator}/avatar`
             },
             userSelection: responses.userSelection
+        }
+    })
+
+    fastify.post('/:id/comments', async (req: FastifyRequest<{Params: {id: string}}>, reply): Promise<APIComment> => {
+        const domain = await fastify.config.GetKV("domain");
+        const [rows] = await fastify.db.execute<RowDataPacket[]>("SELECT * FROM `left4dead2-admins`.dash_discussions WHERE id = ?", [req.params.id])
+        if(rows.length == 0) {
+            return NOT_FOUND(reply, req.params.id)
+        }
+        const discuss = rows[0]
+        const comment: Record<string, any> = req.body
+        const timestamp = Math.round(Date.now()/1000)
+        const [ok] = await fastify.db.query<OkPacket>(
+            "INSERT INTO `left4dead2-admins`.dash_discussion_comments (discussion_id, creator, content, timestamp) VALUES (?, ?, ?, UNIX_TIMESTAMP())",
+            [discuss.id, req.user.steamid2, comment.content]
+        )
+        return {
+            id: ok.insertId,
+            creator: {
+                id: req.user.steamid2,
+                name: await req.user.name(),
+                avatarUrl: `${domain}/api/users/${req.user.steamid2}/avatar`
+            },
+            content: comment.content,
+            timestamp
         }
     })
 }

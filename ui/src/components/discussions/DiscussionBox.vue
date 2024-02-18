@@ -1,18 +1,18 @@
 <template>
 <div class="box question-box">
   <div class="taglist">
-    <template v-if="discuss.expires">
-      <span v-if="isExpired" class="tag is-danger is-inline is-pulled-right">
+    <template v-if="discuss.closedAt">
+      <span v-if="isClosed" class="tag is-danger is-inline is-pulled-right">
         <Icon icon="fa-clock">Closed</Icon>
       </span>
       <span v-else class="tag is-link is-inline is-pulled-right">
-        <Icon icon="fa-clock">Ends {{ expiresText }}</Icon>
+        <Icon icon="fa-clock">Closes {{ expiresText }}</Icon>
       </span>
     </template>
     <span class="mr-3 tag is-pulled-right is-inline" v-if="discuss.commentsCount > 0" data-tooltip="Number of comments"><Icon icon="far fa-comment">{{ discuss.commentsCount }}</Icon></span>
   </div>
   <h5 class="title is-5"><b>Discuss:</b> {{ discuss.title }}</h5>
-  <p v-if="discuss.description" class="subtitle">{{ discuss.description }}</p>
+  <p v-if="discuss.description" class="subtitle" v-html="markedDescription"></p>
   <div class="columns">
     <div class="column is-6">
       <div :class="['box','field',{'is-clickable': canInteract}]" v-for="option of getOptions(0)" :key="option.id" @click="selectChoice(option)">
@@ -52,6 +52,9 @@
       <router-link v-if="privUser.equals(discuss.creator.id)" :to="{name: 'discuss-edit', params:{id: discuss.id.toString()}}" class="is-small is-pulled-right mr-2"><Icon icon="fa-edit" text="Edit" /></router-link>
     </div>
   </div>
+  <p class="has-text-danger" v-if="selected && isClosed">
+    <Icon icon="fa-clock"> This discussion has closed and no more responses are accepted</Icon>
+  </p>
   <p class="has-text-success" v-if="discuss.state == DiscussionState.SavedSuccess">
     <Icon icon="fa-circle-check"> Choice saved successfully</Icon>
   </p>
@@ -71,6 +74,15 @@ import debounce from '@/js/debounce.js';
 import { ref, computed, onMounted } from 'vue';
 import Sugar from 'sugar'
 import { PrivilegedUser } from '../../js/User';
+//@ts-expect-error
+import { marked } from 'marked';
+marked.use({renderer:{
+  image(src: string, title: string, alt: string) {
+    return `<figure class="image is-256x256">
+      <img class="md-image" src="${src}" alt="${alt ?? title}" />
+    </figure>`
+  }
+}})
 
 const MAX_DISCUSSION_AVATARS = 10
 const DISCUSSION_SAVE_NOTIFICATION_DURATION = 1000 * 3
@@ -94,21 +106,20 @@ const emit = defineEmits<{
 }>()
 
 const expiresText = computed(() => {
-  return discuss.value.expires ? new Sugar.Date(discuss.value.expires*1000).relative() : null
+  return discuss.value.closedAt ? new Sugar.Date(discuss.value.closedAt*1000).relative() : null
 })
 const isClosed = computed(() => {
-  if(discuss.value.flags & APIDiscussionFlags.Closed) return true
-  else if(isExpired.value) return true
-  return false
-})
-const isExpired = computed(() => {
-  return discuss.value.expires && (discuss.value.expires*1000) < Date.now()
+  return discuss.value.closedAt && (discuss.value.closedAt*1000) < Date.now()
 })
 const showPercents = computed(() => {
   return props.responses?.counts != undefined && (isClosed.value || props.selected)
 })
 const canInteract = computed(() => {
   return !isClosed.value && !props.selected
+})
+const markedDescription = computed(() => {
+  if(!discuss.value.description) return
+  return marked.parse(discuss.value.description)
 })
 
 function getOptions(column: number) {
@@ -124,13 +135,21 @@ async function selectChoice(option: APIDiscussionOption) {
   if(!canInteract.value) return
   if(Date.now() - discuss.value.lastEditTime < 10) return
   discuss.value.lastEditTime = Date.now()
-  console.log("selectChoice")
   if(discuss.value.type == APIDiscussionType.Radio) {
     if(discuss.value.selected?.id == option.id) return
     discuss.value.selected = option
     submitChoiceDebounceRadio()
   } else if(discuss.value.type == APIDiscussionType.Checkbox || discuss.value.type == APIDiscussionType.Selection) {
     submitChoiceDebounceMulti()
+  }
+  if(discuss.value.flags & APIDiscussionFlags.PublicResponses && discuss.value.responses.users) {
+    if(!discuss.value.responses.users.some(user => user.id == props.privUser.id)) {
+      discuss.value.responses.users.push({
+        id: props.privUser.id,
+        name: props.privUser.name,
+        avatarUrl: props.privUser.avatarUrl
+      })
+    }
   }
   emit("update:modelValue", discuss.value)
 }
@@ -168,3 +187,10 @@ const submitChoiceDebounceMulti = debounce(submitChoice, 2000)
 const submitChoiceDebounceRadio = debounce(submitChoice, 400)
 
 </script>
+
+<style>
+.md-image {
+  max-width: 64%;
+  max-height: 64%;
+}
+</style>

@@ -4,13 +4,13 @@
     <div class="column is-8">
       <template v-if="selectedDiscussion">
         <div class="block mb-2">
-          <router-link :to="{params: { id: ''}}"><Icon icon="fa-arrow-left" @click="selectedDiscussion = undefined" class="is-pulled-left" text="Back to discussions" /></router-link>
+          <router-link :to="{params: { id: ''}}"><Icon icon="fa-arrow-left" class="is-pulled-left" text="Back to discussions" /></router-link>
           </div>
         <br>
         <DiscussionBox :priv-user="privUser" v-model="selectedDiscussion" selected :responses="responses" />
         <div class="box">
           <h4 class="title is-4 mb-0"><Icon icon="far fa-comment">Discussion</Icon></h4>
-          <Comments v-if="comments" :priv-user="privUser" :comments="comments"></Comments>
+          <Comments v-if="comments" :priv-user="privUser" :comments="comments" :discussion="selectedDiscussion" @comment="onSubmitComment"></Comments>
           <p class="has-text-centered my-3" v-else><Icon icon="fa-spinner" spin>Loading comments...</Icon></p>
         </div>
       </template>
@@ -120,6 +120,10 @@ function startNewDiscussion(event: KeyboardEvent) {
       title: target.value
     }
   })
+}
+function onSubmitComment(comment: APIComment) {
+  if(!comments.value) return
+  comments.value.push(comment)
 }
 
 onMounted(async () => {

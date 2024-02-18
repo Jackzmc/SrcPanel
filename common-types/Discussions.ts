@@ -1,7 +1,7 @@
 export enum APIDiscussionFlags {
     None = 0,
     PublicResponses,
-    Closed
+    Archived
 }
 
 export enum APIDiscussionType {
@@ -14,7 +14,7 @@ export enum APIDiscussionType {
 export interface APIDiscussionBase {
     title: string,
     timestamp: number,
-    expires?: number
+    closedAt?: number
     type: APIDiscussionType,
     description?: string,
     options: APIDiscussionOption[],
