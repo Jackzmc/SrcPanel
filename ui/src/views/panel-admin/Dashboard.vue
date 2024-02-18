@@ -47,12 +47,12 @@
 import { PrivilegedUser } from "@/js/User";
 import { request } from "@/js/util";
 import { notify } from "@kyvg/vue3-notification";
-import { ref, computed, onBeforeMount, onMounted, onUnmounted } from "vue"
+import { ref, computed, onBeforeMount, onMounted, onUnmounted, defineAsyncComponent } from "vue"
 import { HealthReport, UpdateState } from "../../../../common-types/Panel.js";
 import ConfigEditor from "@/components/panel-admin/ConfigEditor.vue";
 //@ts-ignore
 import { Tab, Tabs } from 'vue3-tabs-component'
-import JsonConfigEditor from "@/components/panel-admin/JsonConfigEditor.vue";
+const JsonConfigEditor = defineAsyncComponent(() => import("@/components/panel-admin/JsonConfigEditor.vue"))
 
 const POLL_SERVER_HEALTH_INTERVAL = 1000 * 10
 
@@ -114,6 +114,16 @@ async function updateServer() {
       state: "NORMAL"
     }
   }, 1000 * 7)
+}
+
+async function restartServer() {
+  const response = await request('/api/admin/restart')
+  if(response?.ok) {
+    notify({
+      type: "success",
+      text: "Restart was successful",
+    })
+  }
 }
 
 async function fetchServerHealth() {
