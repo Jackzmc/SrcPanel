@@ -7,7 +7,7 @@
     <input type="hidden" name="openid.claimed_id" value="http://specs.openid.net/auth/2.0/identifier_select">
     <input type="hidden" name="openid.ns" value="http://specs.openid.net/auth/2.0">
 
-    <button type="submit" class="button is-dark">
+    <button type="submit" :class="['button','is-dark',{'is-large': size === 'large', 'is-medium': size === 'medium', 'is-small': size === 'small'}]">
       <Icon icon="fab fa-steam">Login with Steam</Icon>
     </button>
   </form>
@@ -17,6 +17,10 @@
 import { inject, computed} from 'vue'
 import { useRoute } from 'vue-router'
 const route = useRoute()
+
+const props = defineProps<{
+  size?: "small" | "medium" | "large"
+}>()
 
 const redirectUri = computed(() => {
   return `${import.meta.env.VITE_API_URL}/auth/steam/callback?return_uri=${route.fullPath}`
