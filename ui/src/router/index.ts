@@ -125,7 +125,7 @@ const routes = [
   },
   {
     name: 'discuss',
-    path: '/discuss/:id?',
+    path: '/discuss/:id?/:title?',
     component: () => import('../views/DiscussionsView.vue'),
     meta: {
       title: "Discussions"

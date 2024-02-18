@@ -48,7 +48,7 @@
       </div>
     </div>
     <div class="column is-4">
-      <router-link :to="{params:{id: discuss.id.toString()}}" class="is-small is-pulled-right"><Icon icon="fa-arrow-right" text-left="View responses" /></router-link>
+      <router-link :to="{params:{id: discuss.id.toString(), title: urlTitle }}" class="is-small is-pulled-right"><Icon icon="fa-arrow-right" text-left="View responses" /></router-link>
       <router-link v-if="privUser.equals(discuss.creator.id)" :to="{name: 'discuss-edit', params:{id: discuss.id.toString()}}" class="is-small is-pulled-right mr-2"><Icon icon="fa-edit" text="Edit" /></router-link>
     </div>
   </div>
@@ -92,6 +92,10 @@ const optionType = computed(() => {
 })
 const isSelection = computed(() => {
   return discuss.value.type == APIDiscussionType.Selection || discuss.value.type == APIDiscussionType.Checkbox || discuss.value.type == APIDiscussionType.Radio
+})
+
+const urlTitle = computed(() => {
+  return discuss.value.title.toLocaleLowerCase().replace(/\s/g,'-').replace(/[^a-zA-Z0-9\-]/g,'')
 })
 
 const props = defineProps<{

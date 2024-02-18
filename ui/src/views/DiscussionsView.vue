@@ -4,7 +4,7 @@
     <div class="column is-8">
       <template v-if="selectedDiscussion">
         <div class="block mb-2">
-          <router-link :to="{params: { id: ''}}"><Icon icon="fa-arrow-left" class="is-pulled-left" text="Back to discussions" /></router-link>
+          <router-link :to="{params: { id: '', title: '' }}"><Icon icon="fa-arrow-left" class="is-pulled-left" text="Back to discussions" /></router-link>
           </div>
         <br>
         <DiscussionBox :priv-user="privUser" v-model="selectedDiscussion" selected :responses="responses" />
