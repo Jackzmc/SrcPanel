@@ -2,81 +2,15 @@ import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
 import { APIComment, APICountData, APIDiscussion, APIDiscussionCacheableData, APIDiscussionDetails, APIDiscussionFlags, APIDiscussionOption, APIDiscussionType, APIResponsesData, APIUser } from '../../../../common-types/Discussions.js';
 import { OkPacket, RowDataPacket } from 'mysql2';
 import { NOT_FOUND, NO_PERMISSION } from '../../responses.js';
-import User from '../../modules/users/User.js';
-
-// Does not include archived
-const DISCUSSIONS = new Map<number, APIDiscussionCacheableData>()
-
-// The number of time after discussion is closed, where it will auto be archived
-const AUTO_ARCHIVE_TIME = 1000 * 60 * 60 * 24 * 10 // 10 days
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
-    async function getResponses(id: number, user: User, includeUsers: boolean): Promise<{ responses: APIResponsesData, userSelection: number[] }> {
-        const totalUsers = fastify.authmngr.AdminCount
-        const domain = await fastify.config.GetKV("domain");
-        const [responses] = await fastify.db.execute<RowDataPacket[]>(
-            "SELECT res.steamid, res.choice, u.last_alias as name FROM `left4dead2-admins`.dash_discussion_responses res LEFT JOIN `left4dead2`.stats_users u ON res.steamid = u.steamid WHERE res.discussion_id = ?", [id]
-        )
-        const counts: Record<string, APICountData> = {}
-        const userSelection: number[] = []
-        for(const response of responses) {
-            if(!counts[response.choice])
-                counts[response.choice] = { count: 0, percent: 0 }
-            counts[response.choice].count++
-            counts[response.choice].percent = counts[response.choice].count / responses.length
-
-            if(response.steamid == user.steamid2) {
-                userSelection.push(Number(response.choice))
-            }
-        }
-        return {
-            responses: {
-                totalCount: responses.length,
-                percentVoted: responses.length / totalUsers,
-                counts,
-                users: includeUsers ? responses.map(r => ({ id: r.steamid, name: r.name, avatarUrl: `${domain}/api/users/${r.steamid}/avatar` })) : undefined
-            },
-            userSelection
-        }
-    }
-
-    async function fetchDiscussions() {
-        const domain = await fastify.config.GetKV("domain");
-        let [rows] = await fastify.db.execute<RowDataPacket[]>("SELECT d.*, u.last_alias as creator_name, (SELECT COUNT(*) FROM `left4dead2-admins`.dash_discussion_comments WHERE discussion_id = d.id) as comments FROM `left4dead2-admins`.dash_discussions d LEFT JOIN `left4dead2`.stats_users u ON u.steamid = d.creator WHERE d.flags & 2 = 0 ORDER BY d.timestamp DESC")
-        for(const row of rows) {
-            if(row.closed_at && Date.now() - (row.closed_at*1000) > AUTO_ARCHIVE_TIME) {
-                // Auto archive
-                console.info("[Discuss] Automatically archiving discussion #" + row.id)
-                await fastify.db.execute(`UPDATE \`left4dead2-admins\`.dash_discussions SET flags = flags | ${APIDiscussionFlags.Archived} WHERE id = ?`, [row.id])
-                continue
-            }
-            const [options] = await fastify.db.execute<RowDataPacket[]>("SELECT * FROM `left4dead2-admins`.dash_discussion_options WHERE discussion_id = ?", [row.id])
-            DISCUSSIONS.set(row.id, {
-                id: row.id,
-                title: row.title,
-                description: row.description,
-                timestamp: row.timestamp,
-                closedAt: row.closed_at,
-                type: row.type,
-                options: options.map(o => ({ id: o.id, label: o.label })),
-                flags: row.flags,
-                commentsCount: row.comments,
-                creator: {
-                    id: row.creator,
-                    name: row.creator_name,
-                    avatarUrl: `${domain}/api/user/${row.creator}/avatar`
-                },
-            })
-        }
-    }
-
-    await fetchDiscussions()
-
+    const discManager = fastify.managers.discussions
+    await discManager.fetchDiscussions()
 
     fastify.get('/', async (req, reply): Promise<APIDiscussion[]> => {
         const discussions: APIDiscussion[] = []
-        for(const discussion of DISCUSSIONS.values()) {
-            const responses = await getResponses(discussion.id, req.user, (discussion.flags & APIDiscussionFlags.PublicResponses) != 0)
+        for(const discussion of discManager.getAll()) {
+            const responses = await discManager.getResponses(discussion.id, req.user, (discussion.flags & APIDiscussionFlags.PublicResponses) != 0)
             discussions.push({
                 ...discussion,
                 responses: responses.responses,
@@ -116,7 +50,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
     // TODO: sanitize .description!
     fastify.put('/:id', async (req: FastifyRequest<{Params: { id: string}}>, reply) => {
-        let discuss = DISCUSSIONS.get(Number(req.params.id))
+        let discuss = discManager.get(Number(req.params.id))
         if(!discuss) return NOT_FOUND(reply, req.params.id)
         else if(discuss.creator.id !== req.user.steamid2) {
             return NO_PERMISSION(reply, "You can only edit your own discussions")
@@ -153,7 +87,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 )
             }
         }
-        DISCUSSIONS.set(discuss.id, discuss)
+        discManager.set(discuss.id, discuss)
         await conn.commit()
         return reply.status(204).send()
     })
@@ -175,7 +109,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 [ok.insertId, option.label]
             )
         }
-        DISCUSSIONS.set(discuss.id, discuss)
+        discManager.set(discuss.id, discuss)
         await conn.commit()
         return {
             id: ok.insertId
@@ -185,7 +119,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
     fastify.get('/:id', async (req: FastifyRequest<{Params: {id: string}}>, reply): Promise<APIDiscussionDetails> => {
         const domain = await fastify.config.GetKV("domain");
-        let discuss = DISCUSSIONS.get(Number(req.params.id))
+        let discuss = discManager.get(Number(req.params.id))
         if(!discuss) {
             const [rows] = await fastify.db.execute<RowDataPacket[]>("SELECT * FROM `left4dead2-admins`.dash_discussions WHERE id = ?", [req.params.id])
             if(rows.length == 0) {
@@ -212,7 +146,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
        
         const [comments] = await fastify.db.execute<RowDataPacket[]>("SELECT com.id, com.creator, com.content, u.last_alias as creator_name FROM `left4dead2-admins`.dash_discussion_comments com LEFT JOIN `left4dead2`.stats_users u ON com.creator = u.steamid WHERE com.discussion_id = ? ", [discuss.id])
-        const responses = await getResponses(Number(req.params.id), req.user, (discuss.flags & APIDiscussionFlags.PublicResponses) != 0)
+        const responses = await discManager.getResponses(Number(req.params.id), req.user, (discuss.flags & APIDiscussionFlags.PublicResponses) != 0)
         return {
             ...discuss,
             responses: responses.responses,

@@ -105,6 +105,10 @@ export class PrivilegedUser {
     return (!ignoreRoot && flags.includes("z")) || flags.includes(flag)
   }
 
+  get openDiscussionCount() {
+    return this.data.openDiscussions
+  }
+
   get name() {
     return this.data.user.name
   }

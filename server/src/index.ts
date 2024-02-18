@@ -24,6 +24,7 @@ import { UserPrivilegeCode } from '../../common-types/Privileges.js';
 
 import FastifyHelmet from '@fastify/helmet'
 import { QueryQueue } from './modules/QueryQueue.js';
+import DiscussionManager from './modules/DiscussionManager.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -57,7 +58,10 @@ declare module 'fastify' {
     servers: ServerManager,
     users: UserManager,
     config: ConfigManager,
-    jobs: QueryQueue
+    jobs: QueryQueue,
+    managers: {
+      discussions: DiscussionManager
+    }
   }
   export interface FastifyRequest {
     user?: User,

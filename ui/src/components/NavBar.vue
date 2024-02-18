@@ -86,7 +86,9 @@
           <Icon icon="fa-note-sticky">Player Notes</Icon>
         </router-link>
         <router-link to="/discuss" class="navbar-item">
-          <Icon icon="far fa-comment">Discuss</Icon>
+          <Icon icon="far fa-comment">Discuss
+            <template v-if="privUser && privUser.openDiscussionCount > 0">({{privUser.openDiscussionCount}})</template>
+          </Icon>
         </router-link>
         <a href="https://data.jackz.me/dashboard/1-public-dashboard" class="navbar-item">
           <Icon icon="fa-chart-simple">Graphs</Icon>
