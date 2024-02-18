@@ -214,7 +214,8 @@ function closeVoting() {
 
 async function archive() {
   if(confirm("Are you sure you want to archive this discussion?")) {
-    alert("Not implemented")
+    discuss.value.flags |= APIDiscussionFlags.Archived
+    await save()
   }
 }
 

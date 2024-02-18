@@ -21,13 +21,17 @@ export interface APIDiscussionBase {
     flags: APIDiscussionFlags,
 }
 
-export interface APIDiscussion extends APIDiscussionBase {
+export interface APIDiscussionCacheableData extends APIDiscussionBase  {
     id: number,
-    responses: APIResponsesData,
     commentsCount: number
     creator: APIUser,
+}
+
+export interface APIDiscussion extends APIDiscussionCacheableData {
+    responses: APIResponsesData,
     userSelection: number[]
 }
+
 
 export interface APIResponsesData {
     totalCount: number,

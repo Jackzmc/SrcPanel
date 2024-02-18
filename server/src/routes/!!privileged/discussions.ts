@@ -1,8 +1,11 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
-import { APIComment, APICountData, APIDiscussion, APIDiscussionDetails, APIDiscussionFlags, APIDiscussionOption, APIDiscussionType, APIResponsesData, APIUser } from '../../../../common-types/Discussions.js';
+import { APIComment, APICountData, APIDiscussion, APIDiscussionCacheableData, APIDiscussionDetails, APIDiscussionFlags, APIDiscussionOption, APIDiscussionType, APIResponsesData, APIUser } from '../../../../common-types/Discussions.js';
 import { OkPacket, RowDataPacket } from 'mysql2';
 import { NOT_FOUND, NO_PERMISSION } from '../../responses.js';
 import User from '../../modules/users/User.js';
+
+// Does not include archived
+const DISCUSSIONS = new Map<number, APIDiscussionCacheableData>()
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
     async function getResponses(id: number, user: User, includeUsers: boolean): Promise<{ responses: APIResponsesData, userSelection: number[] }> {
@@ -33,14 +36,13 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             userSelection
         }
     }
-    fastify.get('/', async (req, reply): Promise<APIDiscussion[]> => {
+
+    async function fetchDiscussions() {
         const domain = await fastify.config.GetKV("domain");
-        let [rows] = await fastify.db.execute<RowDataPacket[]>("SELECT d.*, u.last_alias as creator_name, (SELECT COUNT(*) FROM `left4dead2-admins`.dash_discussion_comments WHERE discussion_id = d.id) as comments FROM `left4dead2-admins`.dash_discussions d LEFT JOIN `left4dead2`.stats_users u ON u.steamid = d.creator ORDER BY d.timestamp DESC")
-        const discussions: APIDiscussion[] = []
+        let [rows] = await fastify.db.execute<RowDataPacket[]>("SELECT d.*, u.last_alias as creator_name, (SELECT COUNT(*) FROM `left4dead2-admins`.dash_discussion_comments WHERE discussion_id = d.id) as comments FROM `left4dead2-admins`.dash_discussions d LEFT JOIN `left4dead2`.stats_users u ON u.steamid = d.creator WHERE d.flags & 2 = 0 ORDER BY d.timestamp DESC")
         for(const row of rows) {
             const [options] = await fastify.db.execute<RowDataPacket[]>("SELECT * FROM `left4dead2-admins`.dash_discussion_options WHERE discussion_id = ?", [row.id])
-            const responses = await getResponses(row.id, req.user, (row.flags & APIDiscussionFlags.PublicResponses) != 0)
-            discussions.push({
+            DISCUSSIONS.set(row.id, {
                 id: row.id,
                 title: row.title,
                 description: row.description,
@@ -48,7 +50,6 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 closedAt: row.closed_at,
                 type: row.type,
                 options: options.map(o => ({ id: o.id, label: o.label })),
-                responses: responses.responses,
                 flags: row.flags,
                 commentsCount: row.comments,
                 creator: {
@@ -56,6 +57,20 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                     name: row.creator_name,
                     avatarUrl: `${domain}/api/user/${row.creator}/avatar`
                 },
+            })
+        }
+    }
+
+    await fetchDiscussions()
+
+
+    fastify.get('/', async (req, reply): Promise<APIDiscussion[]> => {
+        const discussions: APIDiscussion[] = []
+        for(const discussion of DISCUSSIONS.values()) {
+            const responses = await getResponses(discussion.id, req.user, (discussion.flags & APIDiscussionFlags.PublicResponses) != 0)
+            discussions.push({
+                ...discussion,
+                responses: responses.responses,
                 userSelection: responses.userSelection
             })
         }
@@ -92,25 +107,27 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
     // TODO: sanitize .description!
     fastify.put('/:id', async (req: FastifyRequest<{Params: { id: string}}>, reply) => {
-        const [rows] = await fastify.db.execute<RowDataPacket[]>("SELECT * FROM `left4dead2-admins`.dash_discussions WHERE id = ?", [req.params.id])
-        if(rows.length == 0) {
-            return NOT_FOUND(reply, req.params.id)
-        } else if(rows[0].creator != req.user.steamid2) {
+        let discuss = DISCUSSIONS.get(Number(req.params.id))
+        if(!discuss) return NOT_FOUND(reply, req.params.id)
+        else if(discuss.creator.id !== req.user.steamid2) {
             return NO_PERMISSION(reply, "You can only edit your own discussions")
         }
-        const discuss = {...rows[0], ...req.body as APIDiscussion }
-        if(rows[0].closed_at && !discuss.closedAt) {
+        const newDiscuss = req.body as APIDiscussion
+        if(discuss.closedAt && !newDiscuss.closedAt) {
             return reply.status(400).send({
                 error: "CANNOT_REOPEN",
                 message: "Cannot reopen a closed discussion"
             })
         }
+        // Merge new data onto existing
+        discuss = {...discuss, ...newDiscuss}
         const conn = await fastify.db.getConnection()
         await conn.beginTransaction()
         await conn.query<OkPacket>(
             "UPDATE `left4dead2-admins`.dash_discussions SET title = ?, description = ?, closed_at = ?, type = ?, flags = ? WHERE id = ?",
             [discuss.title, discuss.description, discuss.closedAt, discuss.type, discuss.flags, req.params.id]
         )
+
         const [options] = await conn.query<RowDataPacket[]>("SELECT * FROM `left4dead2-admins`.dash_discussion_options WHERE discussion_id = ?", [req.params.id])
         for(const option of discuss.options) {
             const existingOption = options.find(o => o.id === option.id)
@@ -127,6 +144,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 )
             }
         }
+        DISCUSSIONS.set(discuss.id, discuss)
         await conn.commit()
         return reply.status(204).send()
     })
@@ -148,6 +166,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 [ok.insertId, option.label]
             )
         }
+        DISCUSSIONS.set(discuss.id, discuss)
         await conn.commit()
         return {
             id: ok.insertId
@@ -157,24 +176,37 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
     fastify.get('/:id', async (req: FastifyRequest<{Params: {id: string}}>, reply): Promise<APIDiscussionDetails> => {
         const domain = await fastify.config.GetKV("domain");
-        const [rows] = await fastify.db.execute<RowDataPacket[]>("SELECT * FROM `left4dead2-admins`.dash_discussions WHERE id = ?", [req.params.id])
-        if(rows.length == 0) {
-            return NOT_FOUND(reply, req.params.id)
+        let discuss = DISCUSSIONS.get(Number(req.params.id))
+        if(!discuss) {
+            const [rows] = await fastify.db.execute<RowDataPacket[]>("SELECT * FROM `left4dead2-admins`.dash_discussions WHERE id = ?", [req.params.id])
+            if(rows.length == 0) {
+                return NOT_FOUND(reply, req.params.id)
+            }
+            const [options] = await fastify.db.execute<RowDataPacket[]>("SELECT * FROM `left4dead2-admins`.dash_discussion_options WHERE discussion_id = ?", [req.params.id])
+            const row = rows[0]
+            discuss = {
+                id: row.id,
+                title: row.title,
+                description: row.description,
+                timestamp: row.timestamp,
+                closedAt: row.closed_at,
+                type: row.type,
+                options: options.map(o => ({ id: o.id, label: o.label })),
+                flags: row.flags,
+                commentsCount: 0, // We don't fetch it here as we are fetching the full comment list anyway below.
+                creator: {
+                    id: row.creator,
+                    name: row.creator_name,
+                    avatarUrl: `${domain}/api/users/${row.creator}/avatar`
+                },
+            } 
         }
-        const row = rows[0]
-        const [options] = await fastify.db.execute<RowDataPacket[]>("SELECT * FROM `left4dead2-admins`.dash_discussion_options WHERE discussion_id = ?", [req.params.id])
-        const [comments] = await fastify.db.execute<RowDataPacket[]>("SELECT com.id, com.creator, com.content, u.last_alias as creator_name FROM `left4dead2-admins`.dash_discussion_comments com LEFT JOIN `left4dead2`.stats_users u ON com.creator = u.steamid WHERE com.discussion_id = ? ", [req.params.id])
-        const responses = await getResponses(Number(req.params.id), req.user, (row.flags & APIDiscussionFlags.PublicResponses) != 0)
+       
+        const [comments] = await fastify.db.execute<RowDataPacket[]>("SELECT com.id, com.creator, com.content, u.last_alias as creator_name FROM `left4dead2-admins`.dash_discussion_comments com LEFT JOIN `left4dead2`.stats_users u ON com.creator = u.steamid WHERE com.discussion_id = ? ", [discuss.id])
+        const responses = await getResponses(Number(req.params.id), req.user, (discuss.flags & APIDiscussionFlags.PublicResponses) != 0)
         return {
-            id: row.id,
-            title: row.title,
-            description: row.description,
-            timestamp: row.timestamp,
-            closedAt: row.closed_at,
-            type: row.type,
-            options: options.map(o => ({ id: o.id, label: o.label })),
+            ...discuss,
             responses: responses.responses,
-            flags: row.flags,
             commentsCount: comments.length,
             comments: comments.map(c => { 
                 return {
@@ -184,11 +216,6 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                     content: c.content
                 }
             }),
-            creator: {
-                id: row.creator,
-                name: row.creator_name,
-                avatarUrl: `${domain}/api/users/${row.creator}/avatar`
-            },
             userSelection: responses.userSelection
         }
     })
