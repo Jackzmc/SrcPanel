@@ -16,6 +16,7 @@
       </template>
       <template v-else-if="discussions">
         <DiscussionBox :priv-user="privUser" v-for="(discuss, index) in discussions" :key="discuss.id" v-model="discussions[index]" :responses="discuss.responses" />
+        <p class="has-text-centered my-3 is-size-3" v-if="discussions.length === 0">There are no active discussions, start one!</p>
       </template>
       <p class="mt-5 has-text-centered is-size-4" v-else>
         <Icon icon="fa-spinner" spin>Loading discussions...</Icon>

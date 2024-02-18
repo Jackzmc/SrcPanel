@@ -7,6 +7,9 @@ import User from '../../modules/users/User.js';
 // Does not include archived
 const DISCUSSIONS = new Map<number, APIDiscussionCacheableData>()
 
+// The number of time after discussion is closed, where it will auto be archived
+const AUTO_ARCHIVE_TIME = 1000 * 60 * 60 * 24 * 10 // 10 days
+
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
     async function getResponses(id: number, user: User, includeUsers: boolean): Promise<{ responses: APIResponsesData, userSelection: number[] }> {
         const totalUsers = fastify.authmngr.AdminCount
@@ -41,6 +44,12 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         const domain = await fastify.config.GetKV("domain");
         let [rows] = await fastify.db.execute<RowDataPacket[]>("SELECT d.*, u.last_alias as creator_name, (SELECT COUNT(*) FROM `left4dead2-admins`.dash_discussion_comments WHERE discussion_id = d.id) as comments FROM `left4dead2-admins`.dash_discussions d LEFT JOIN `left4dead2`.stats_users u ON u.steamid = d.creator WHERE d.flags & 2 = 0 ORDER BY d.timestamp DESC")
         for(const row of rows) {
+            if(row.closed_at && Date.now() - (row.closed_at*1000) > AUTO_ARCHIVE_TIME) {
+                // Auto archive
+                console.info("[Discuss] Automatically archiving discussion #" + row.id)
+                await fastify.db.execute(`UPDATE \`left4dead2-admins\`.dash_discussions SET flags = flags | ${APIDiscussionFlags.Archived} WHERE id = ?`, [row.id])
+                continue
+            }
             const [options] = await fastify.db.execute<RowDataPacket[]>("SELECT * FROM `left4dead2-admins`.dash_discussion_options WHERE discussion_id = ?", [row.id])
             DISCUSSIONS.set(row.id, {
                 id: row.id,

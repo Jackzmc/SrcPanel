@@ -21,7 +21,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             permissions: req.session.permissions,
             isSessionOld: req.session.version !== SESSION_VERSION,
             providers: req.user.providers, // TODO: is this needed?
-            notifications: await req.user.getNotifications()
+            notifications: await req.user.getNotifications(),
+            openDiscussions: 0 // TODO: implement
         }
     })
 

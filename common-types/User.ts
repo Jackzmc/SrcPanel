@@ -19,7 +19,8 @@ export interface CustomFastifySession<T> extends BaseSession<T>, SessionData {
 export interface UserData<T> extends BaseSession<T> {
     isSessionOld: boolean,
     providers: UserOauthProviders,
-    notifications: UserNotification[]
+    notifications: UserNotification[],
+    openDiscussions: number
 }
 export type ClientUserData = UserData<UserPrivilegeCode[]>
 
