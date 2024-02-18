@@ -117,18 +117,25 @@ const routes = [
     name: 'discuss-new',
     path: '/discuss/new',
     component: () => import('../views/DiscussionEdit.vue'),
+    meta: {
+      authRequired: true
+    },
   },
   {
     name: 'discuss-edit',
     path: '/discuss/edit/:id',
     component: () => import('../views/DiscussionEdit.vue'),
+    meta: {
+      authRequired: true
+    },
   },
   {
     name: 'discuss',
     path: '/discuss/:id?/:title?',
     component: () => import('../views/DiscussionsView.vue'),
     meta: {
-      title: "Discussions"
+      title: "Discussions",
+      authRequired: true
     },
   },
   {
