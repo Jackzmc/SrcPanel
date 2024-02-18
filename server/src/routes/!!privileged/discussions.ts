@@ -1,7 +1,7 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
 import { APICountData, APIDiscussion, APIDiscussionDetails, APIDiscussionFlags, APIDiscussionOption, APIDiscussionType, APIResponsesData, APIUser } from '../../../../common-types/Discussions.js';
 import { OkPacket, RowDataPacket } from 'mysql2';
-import { NOT_FOUND } from '../../responses.js';
+import { NOT_FOUND, NO_PERMISSION } from '../../responses.js';
 import User from '../../modules/users/User.js';
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
@@ -94,18 +94,21 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         const [rows] = await fastify.db.execute<RowDataPacket[]>("SELECT * FROM `left4dead2-admins`.dash_discussions WHERE id = ?", [req.params.id])
         if(rows.length == 0) {
             return NOT_FOUND(reply, req.params.id)
+        } else if(rows[0].creator != req.user.steamid2) {
+            return NO_PERMISSION(reply, "You can only edit your own discussions")
         }
         const discuss = {...rows[0], ...req.body as APIDiscussion }
         const conn = await fastify.db.getConnection()
         await conn.beginTransaction()
-        const [ok] = await conn.query<OkPacket>(
+        await conn.query<OkPacket>(
             "UPDATE `left4dead2-admins`.dash_discussions SET title = ?, description = ?, expires = ?, type = ?, flags = ? WHERE id = ?",
             [discuss.title, discuss.description, discuss.expires, discuss.type, discuss.flags, req.params.id]
         )
-        const [options] = await conn.query<RowDataPacket[]>("SELECT * FROM `left4dead2-admins`.dash_discussion_options WHERE discussion_id = ?", [ok.insertId])
+        const [options] = await conn.query<RowDataPacket[]>("SELECT * FROM `left4dead2-admins`.dash_discussion_options WHERE discussion_id = ?", [req.params.id])
         for(const option of discuss.options) {
             const existingOption = options.find(o => o.id === option.id)
             if(existingOption) {
+                if(existingOption.label === option.label) continue
                 await conn.query(
                     "UPDATE `left4dead2-admins`.dash_discussion_options SET label = ? WHERE id = ?",
                     [option.label, existingOption.id]
@@ -113,7 +116,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             } else {
                 await conn.query(
                     "INSERT INTO `left4dead2-admins`.dash_discussion_options (discussion_id, label) VALUES (?, ?)",
-                    [ok.insertId, option.label]
+                    [req.params.id, option.label]
                 )
             }
         }

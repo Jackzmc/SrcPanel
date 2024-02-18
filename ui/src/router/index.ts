@@ -116,12 +116,12 @@ const routes = [
   {
     name: 'discuss-new',
     path: '/discuss/new',
-    component: () => import('../views/DiscussionNewView.vue'),
+    component: () => import('../views/DiscussionEdit.vue'),
   },
   {
     name: 'discuss-edit',
     path: '/discuss/edit/:id',
-    component: () => import('../views/DiscussionNewView.vue'),
+    component: () => import('../views/DiscussionEdit.vue'),
   },
   {
     name: 'discuss',

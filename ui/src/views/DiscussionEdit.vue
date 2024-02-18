@@ -2,7 +2,7 @@
 <div class="container">
   <div class="columns">
     <div class="column is-8">
-      <div class="box question-box">
+      <div class="box question-box" v-if="loadState == LoadState.Success">
         <div class="taglist">
           <template v-if="discuss.expires">
             <!-- <span v-else class="tag is-link is-inline is-pulled-right">
@@ -31,8 +31,14 @@
           </div>
         </div>
       </div>
+      <div class="box question-box" v-else>
+        <router-link :to="{name: 'discuss'}"><Icon icon="fa-arrow-left" class="is-pulled-left" text="Back to discussions" /></router-link>
+        <br>
+        <p class="is-size-3 has-text-centered my-4" v-if="loadState == LoadState.Loading"><Icon icon="fa-spinner" spin>Fetching discussion...</Icon></p>
+        <p class="is-size-4 has-text-centered has-text-danger my-4" v-else><Icon icon="fa-times">An error occurred. Could not fetch discussion.</Icon></p>
+      </div>
     </div>
-    <div class="column">
+    <div class="column" v-if="loadState == LoadState.Success">
       <h4 class="title is-4 mb-2">Options</h4>
       <div class="list has-visible-pointer-controls has-hoverable-list-items">
         <div class="list-item">
@@ -77,7 +83,28 @@
               </p>
               <p class="control">
                 <button :class="['button', {'is-info': (discuss.flags & APIDiscussionFlags.PublicResponses) == 0}]" @click="toggleFlag(APIDiscussionFlags.PublicResponses)">
-                  <Icon icon="fa-eye-slash">Private</Icon>
+                  <Icon icon="fa-eye-slash">Hidden</Icon>
+                </button>
+              </p>
+            </div>
+          </div>
+        </div>
+        <div class="list-item">
+          <div class="list-item-content">
+            <div class="list-item-title">
+              <Icon icon="fa-info-circle" icon-class="has-text-info" text-left="State" data-tooltip="If voting is open"></Icon>
+            </div>
+          </div>
+          <div class="list-item-controls">
+            <div class="field has-addons">
+              <p class="control">
+                <button :class="['button', {'is-info': (discuss.flags & APIDiscussionFlags.Closed) == 0}]" @click="toggleFlag(APIDiscussionFlags.Closed)">
+                  <Icon icon="fa-lock-open">Open</Icon>
+                </button>
+              </p>
+              <p class="control">
+                <button :class="['button', {'is-info': (discuss.flags & APIDiscussionFlags.Closed) != 0}]" @click="toggleFlag(APIDiscussionFlags.Closed)">
+                  <Icon icon="fa-lock">Closed</Icon>
                 </button>
               </p>
             </div>
@@ -100,6 +127,7 @@ import { ref, computed, onMounted, Ref } from 'vue';
 import { APIDiscussion, APIDiscussionType, APIDiscussionBase, APIDiscussionFlags, APIDiscussionOption } from '../../../common-types/Discussions';
 import { useRoute, useRouter } from 'vue-router';
 import { notify } from '@kyvg/vue3-notification';
+import { request } from '@/js/util.js';
 
 const DISCUSSION_TYPES: { [key in APIDiscussionType]?: string } = {
   [APIDiscussionType.Radio]: "Radio",
@@ -129,7 +157,12 @@ const leftColumn = computed(() => {
   // if odd
   return discuss.value.options.length % 2 == 0
 })
-
+enum LoadState {
+  Loading,
+  Success,
+  Error
+}
+const loadState = ref<LoadState>(LoadState.Loading)
 const discuss = ref<APIDiscussionBase>({
   title: "",
   description: 'A short optional description',
@@ -177,15 +210,19 @@ function getOptions(column: number) {
 async function save() {
   isSaving.value = true
   let response
+  let id = route.params.id
   if(isNew.value) {
-    response = await fetch("/api/discussions", { method: "POST", body: JSON.stringify(discuss.value) })
+    response = await fetch("/api/discussions", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(discuss.value) })
+    const json = await response.json()
+    id = json.id
   } else {
-    response = await fetch(`/api/discussions/${route.params.id}`, { method: "PUT", body: JSON.stringify(discuss.value) })
+    response = await fetch(`/api/discussions/${route.params.id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(discuss.value) })
   }
   isSaving.value = false
   if(response?.ok) {
     notify({
-      title: `${isNew.value ? 'Discussion Created' : 'Discussion Saved'}`,
+      title: `Discussion #${id}`,
+      text: isNew.value ? 'Discussion Created' : 'Discussion Saved',
       type: "success"
     })
     router.push({ name: "discuss" })
@@ -205,9 +242,12 @@ onMounted(async() => {
     }
   })
   if(!isNew.value) {
-    const response = await fetch(`/api/discussions/${route.params.id}`)
+    const response = await request(`/api/discussions/${route.params.id}`)
     if(response?.ok) {
+      loadState.value = LoadState.Success
       discuss.value = await response.json()
+    } else {
+      loadState.value = LoadState.Error
     }
   }
 })
