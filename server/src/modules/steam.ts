@@ -10,7 +10,7 @@ import { EventEmitter } from 'node:events';
 import LruCache, { LRUCache } from 'lru-cache'
 
 // How many bytes of progress to make before sending an update
-const PROGRES_MIN_BYTES = 1000
+const PROGRES_MIN_BYTES = 5_000 // 5KB
 const ITEM_CACHE_MAX_SIZE = 20
 const ITEM_CACHE_TTL = 1000 * 60 * 10 // 10 min
 
