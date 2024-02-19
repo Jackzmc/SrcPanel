@@ -84,7 +84,7 @@
             </span>
           </div>
           <div class="list-item-controls" v-else>
-            <a @click="closeVoting"><Icon icon="fa-lock-open">Active</Icon> (click to close)</a>
+            <a @click="closeVoting"><Icon icon="fa-lock-open">Active</Icon> (click to close now)</a>
           </div>
         </div>
         <div class="list-item">
@@ -149,7 +149,7 @@ const closedAt = computed({
   }
 })
 const previouslyClosed = computed(() => {
-  return !isNew.value && orgDiscuss.value?.closedAt != undefined
+  return !isNew.value && orgDiscuss.value?.closedAt != undefined && discuss.value.closedAt == undefined
 })
 const hasChanges = computed(() => {
   if(isNew.value) return true
