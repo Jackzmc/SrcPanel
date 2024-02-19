@@ -105,6 +105,10 @@ export class PrivilegedUser {
     return (!ignoreRoot && flags.includes("z")) || flags.includes(flag)
   }
 
+  get isImpersonating() {
+    return this.data.impersonating
+  }
+
   get openDiscussionCount() {
     return this.data.openDiscussions
   }

@@ -175,7 +175,7 @@
         <!-- <TagField v-model="webCodes" placeholder="Add permissions" :choices="['admins.view', 'admins.edit']" /> -->
       </Field>
     </Tab>
-    <Tab name="Danger">
+    <Tab name="Actions">
       <div class="field" v-if="userAdminData">
         <div class="control">
           <a class="button is-danger" @click='revoke'>Revoke Admin</a>
@@ -191,6 +191,13 @@
         </div>
         <p class="help has-text-danger">This will disable any policy checks, and allow granting or editing admins. Does not disable immunity checks</p>
       </div>
+      <div class="field" v-if="userAdminData">
+        <div class="control">
+          <a class="button" style="background-color: #c42dbf; color: white;" @click='impersonate'>Impersonate</a>
+        </div>
+        <p class="help">Impersonate as this user, mimicking their permissions.</p>
+      </div>
+
     </Tab>
   </Tabs>
   <hr>
@@ -363,6 +370,20 @@ async function revoke() {
       })
       cancel()
     }
+  }
+}
+async function impersonate() {
+  const response = await request(`/api/admin/impersonate/${props.user.steamid}`, {
+    method: 'POST',
+    credentials: 'include'
+  }, { title: "Impersonation Failed"})
+  if(response?.ok) {
+    notify({
+      type: "success",
+      text: `Now impersonating ${props.user.name}`
+    })
+    // Lazy reload the page to force refetch of data. Otherwise need to pass response ==> App.vue
+    location.href = "/"
   }
 }
 async function save() {

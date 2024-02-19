@@ -32,7 +32,7 @@
                     <div class="buttons">
                       <template v-if="server.status.online">
                         <template v-if="server.tags.includes('rcon')">
-                          <a @click="stopServer(server, false)" class="button is-dark">Request Restart</a>
+                          <a @click="stopServer(server)" class="button is-dark">Request Restart</a>
                           <a @click="processAction(server, 'unreserve')" class="button is-dark">Unreserve</a>
                         </template>
                       </template>

@@ -13,14 +13,21 @@ interface BaseSession<T> {
     user: SessionUser,
     permissions: AdminPermissions<T>,
 }
-export interface CustomFastifySession<T> extends BaseSession<T>, SessionData {
-
+export interface CustomFastifySession extends BaseSession<UserPrivilegeCode[]>, SessionData {
+    impersonate?: ImpersationData
+}
+export interface ImpersationData {
+    original: {
+        permissions: AdminPermissions<UserPrivilegeCode[]>,
+        user: SessionUser
+    }
 }
 export interface UserData<T> extends BaseSession<T> {
     isSessionOld: boolean,
     providers: UserOauthProviders,
     notifications: UserNotification[],
-    openDiscussions: number
+    openDiscussions: number,
+    impersonating?: boolean
 }
 export type ClientUserData = UserData<UserPrivilegeCode[]>
 
@@ -120,7 +127,7 @@ export interface AdminPermissions<C> {
         immunityLevel: number,
         flags: string,
         codes: C
-    }
+    },
 }
 
 export interface UserNotification extends AddUserNotification {

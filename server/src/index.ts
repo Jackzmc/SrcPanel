@@ -47,9 +47,6 @@ const app = Fastify({
       }
 })
 
-
-interface CustomSession extends CustomFastifySession<UserPrivilegeCode[]> {
-} 
 declare module 'fastify' {
   export interface FastifyInstance {
     db: Pool;
@@ -67,7 +64,7 @@ declare module 'fastify' {
     user?: User,
   }
   // I dont know how to do this properly, its a fucking pain
-  interface Session extends CustomSession {}
+  interface Session extends CustomFastifySession {}
 }
 
 

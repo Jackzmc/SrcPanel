@@ -49,7 +49,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             })
         }
         const [code, granted] = req.user.requirePermission("servers.view", { resourceId: server.id })
-        if(!granted) return NO_PERMISSION(reply, "You do not have permission to view this server", code)
+        if(!granted) return NO_PERMISSION(reply, "You do not have permission to view this server (code: " + code + ")", code)
 
 
         return {
@@ -193,6 +193,11 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 code: "SERVER_NOT_FOUND",
             })
         } else {
+            const [code, granted] = req.user.requirePermission("servers.view", { resourceId: server.id })
+            if(!granted) return send({
+                error: "Cannot access server, no permission", 
+                code: "NO_PERMISSION",
+            })
             // Send any stale data:
             if(server.liveStatus) send(server.liveStatus)
 

@@ -25,6 +25,26 @@
         L4D2 Admin Dashboard - Updated {{lastUpdated}}
       </div>
     </footer>
+    <div class="impersonate-overlay" v-if="privUser?.isImpersonating">
+      <nav class="level">
+        <div class="level-left">
+          <div class="level-item">
+            <p>
+              Impersonating as <router-link class="has-text-white" :to="{ name: 'manage-user', params: { id: privUser.id }}">
+                <b>{{privUser.name}}</b>
+              </router-link>
+            </p>
+          </div>
+        </div>
+        <div class="level-right">
+          <div class="level-item">
+            <a class="button" @click="stopImpersonating">
+              Stop Impersonating
+            </a>
+          </div>
+        </div>
+      </nav>
+    </div>
   </div>
 </template>
 
@@ -173,6 +193,23 @@ async function loadTour(tourId: string) {
   }
 }
 
+async function stopImpersonating() {
+  const response = await request(`/api/admin/impersonate/`, {
+    method: 'POST',
+    credentials: 'include'
+  }, { title: "Impersonation Failed"})
+  if(response?.ok) {
+    const json = await response.json()
+    userdata.value!.impersonating = false
+    userdata.value!.user = json.user
+    userdata.value!.permissions = json.permissions
+    notify({
+      type: "success",
+      text: `Stoped impersonating`
+    })
+  }
+}
+
 onBeforeMount(async() => {
   document.addEventListener('swUpdated', updateAvailable, { once: true })
   document.addEventListener('swUpdating', () => updateInfo.value.updating = true, { once: true })
@@ -182,3 +219,14 @@ onBeforeMount(async() => {
   }
 })
 </script>
+
+<style>
+.impersonate-overlay {
+  position: fixed;
+  bottom: 0;
+  background-color: #c42dbf;
+  padding: 1.25rem;
+  width: 100%;
+  color: white;
+}
+</style>
