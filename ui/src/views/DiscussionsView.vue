@@ -40,7 +40,7 @@
       </div>
     </div>
     <div class="column is-offset-1" v-else>
-      <Field label="Start A New Discussion" icon-left="far fa-comment">
+      <Field label="Start A New Discussion" icon-left="far fa-comment" info="Press enter to continue">
         <input type="text" class="input is-rounded" placeholder="Enter a title"  @keyup.enter="startNewDiscussion">
       </Field>
     </div>
