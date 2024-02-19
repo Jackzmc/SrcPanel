@@ -200,7 +200,7 @@ async function stopImpersonating() {
   }, { title: "Impersonation Failed"})
   if(response?.ok) {
     const json = await response.json()
-    userdata.value!.impersonating = false
+    userdata.value!.impersonatingId = undefined
     userdata.value!.user = json.user
     userdata.value!.permissions = json.permissions
     notify({

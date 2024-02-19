@@ -106,7 +106,16 @@ export class PrivilegedUser {
   }
 
   get isImpersonating() {
-    return this.data.impersonating
+    return this.data.impersonatingId
+  }
+
+  /**
+   * Returns the steamid of the user that is being impersonated
+   *
+   * @readonly
+   */
+  get ImpersonatingSteamId() {
+    return this.data.impersonatingId
   }
 
   get openDiscussionCount() {

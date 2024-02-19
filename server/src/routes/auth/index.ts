@@ -23,7 +23,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             providers: req.user.providers, // TODO: is this needed?
             notifications: await req.user.getNotifications(),
             openDiscussions: await req.user.getOpenDiscussionsCount(),
-            impersonating: req.session.impersonate != undefined
+            impersonatingId: req.session.impersonate ? req.session.user.steamid : undefined
         }
     })
 

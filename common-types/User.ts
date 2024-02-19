@@ -27,7 +27,7 @@ export interface UserData<T> extends BaseSession<T> {
     providers: UserOauthProviders,
     notifications: UserNotification[],
     openDiscussions: number,
-    impersonating?: boolean
+    impersonatingId?: string
 }
 export type ClientUserData = UserData<UserPrivilegeCode[]>
 

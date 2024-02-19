@@ -193,7 +193,14 @@
       </div>
       <div class="field" v-if="userAdminData">
         <div class="control">
-          <a class="button" style="background-color: #c42dbf; color: white;" @click='impersonate'>Impersonate</a>
+          <a class="button" style="background-color: #c42dbf; color: white;" @click='impersonate'>
+            <template v-if='privUser.ImpersonatingSteamId === userAdminData.steamid'>
+              Stop Impersonating
+            </template>
+            <template v-else>
+              Impersonate
+            </template>
+          </a>
         </div>
         <p class="help">Impersonate as this user, mimicking their permissions.</p>
       </div>
@@ -373,14 +380,17 @@ async function revoke() {
   }
 }
 async function impersonate() {
-  const response = await request(`/api/admin/impersonate/${props.user.steamid}`, {
+  // Set id to null/"" to stop impersonating
+  const isImpersonating = props.privUser.ImpersonatingSteamId == props.userAdminData.steamid
+  const id = isImpersonating ? "" : props.userAdminData.steamid
+  const response = await request(`/api/admin/impersonate/${id}}`, {
     method: 'POST',
     credentials: 'include'
   }, { title: "Impersonation Failed"})
   if(response?.ok) {
     notify({
       type: "success",
-      text: `Now impersonating ${props.user.name}`
+      text: `${isImpersonating ? "Stopped" : "Now"} impersonating ${props.user.name}`
     })
     // Lazy reload the page to force refetch of data. Otherwise need to pass response ==> App.vue
     location.href = "/"

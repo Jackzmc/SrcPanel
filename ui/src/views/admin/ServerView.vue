@@ -609,7 +609,7 @@ const nextLiveRetryTime = computed(() => {
 function isTabEnabled(data: any): boolean {
   if(!data.permission || data.enabled == undefined) return true
   if(data._enabled == undefined)
-    data._enabled = (data.enabled()??true) && props.privUser.hasPermission(data.permission + "." + server.value.info.id)
+    data._enabled = (data.enabled()??true) && props.privUser.hasPermission(data.permission + "." + server.value.info.id as UserPrivilegeCode)
   return data._enabled
 }
 
