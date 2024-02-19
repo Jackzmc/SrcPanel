@@ -164,18 +164,20 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     })
 
     fastify.post('/:id/comments', async (req: FastifyRequest<{Params: {id: string}}>, reply): Promise<APIComment> => {
-        const domain = await fastify.config.GetKV("domain");
-        const [rows] = await fastify.db.execute<RowDataPacket[]>("SELECT * FROM `left4dead2-admins`.dash_discussions WHERE id = ?", [req.params.id])
-        if(rows.length == 0) {
+        const discuss = discManager.get(Number(req.params.id))
+        if(!discuss) {
             return NOT_FOUND(reply, req.params.id)
         }
-        const discuss = rows[0]
         const comment: Record<string, any> = req.body
         const timestamp = Math.round(Date.now()/1000)
         const [ok] = await fastify.db.query<OkPacket>(
             "INSERT INTO `left4dead2-admins`.dash_discussion_comments (discussion_id, creator, content, timestamp) VALUES (?, ?, ?, UNIX_TIMESTAMP())",
             [discuss.id, req.user.steamid2, comment.content]
         )
+        const domain = await fastify.config.GetKV("domain");
+        await fastify.authmngr.addNotification(discuss.creator.id, `${await req.user.name()} commented on your discussion \"${discuss.title}\"`, {
+            link: `${domain}/discuss/${discuss.id}`,
+        })
         return {
             id: ok.insertId,
             creator: {

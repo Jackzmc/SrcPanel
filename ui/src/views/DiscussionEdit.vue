@@ -64,7 +64,7 @@
         <div class="list-item" v-if="!previouslyClosed">
           <div class="list-item-content">
             <div class="list-item-title">
-              <Icon icon="fa-info-circle" icon-class="has-text-info" text-left="Closes" data-tooltip="An optional time for the discussion to automatically close"></Icon>
+              <Icon icon="fa-info-circle" icon-class="has-text-info no-border" text-left="Closes" data-tooltip="An optional time for the discussion to automatically close"></Icon>
             </div>
           </div>
           <div class="list-item-controls">
@@ -75,7 +75,7 @@
         <div class="list-item">
           <div class="list-item-content">
             <div class="list-item-title">
-              <Icon icon="fa-info-circle" icon-class="has-text-info" text-left="Voting" data-tooltip="If voting is open"></Icon>
+              <Icon icon="fa-info-circle" icon-class="has-text-info no-border" text-left="Voting" data-tooltip="If voting is open"></Icon>
             </div>
           </div>
           <div class="list-item-controls" v-if="previouslyClosed">
@@ -90,7 +90,7 @@
         <div class="list-item">
           <div class="list-item-content">
             <div class="list-item-title">
-              <Icon icon="fa-info-circle" icon-class="has-text-info" text-left="Responses" data-tooltip="Should the users who responded be shown publicly"></Icon>
+              <Icon icon="fa-info-circle" icon-class="has-text-info no-border" text-left="Responses" data-tooltip="Should the users who responded be shown publicly"></Icon>
             </div>
           </div>
           <div class="list-item-controls">
@@ -129,8 +129,8 @@ import { notify } from '@kyvg/vue3-notification';
 import { request } from '@/js/util.js';
 
 const DISCUSSION_TYPES: { [key in APIDiscussionType]?: string } = {
-  [APIDiscussionType.Radio]: "Radio",
-  [APIDiscussionType.Checkbox]: "Checkbox",
+  [APIDiscussionType.Radio]: "Single Choice (Radio)",
+  [APIDiscussionType.Checkbox]: "Multiple Choice (Checkbox)",
   // [APIDiscussionType.Selection]: "Selection",
   // [APIDiscussionType.ShortText]: "Short Text",
   // [APIDiscussionType.LongText]: "Long Text",
