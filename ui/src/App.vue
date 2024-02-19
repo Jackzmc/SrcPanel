@@ -129,12 +129,14 @@ async function getAuth() {
       })
     }
   } else {
-    let error
+    let error, code
     if(response.headers.get("content-type")?.includes("application/json")) {
       const json = await response.json()
+      code = json.code ?? json.error
       console.error(`Error while authenticating with server:`, json)
       error = json.message ?? json.error
     } else {
+      code = response.status
       error = response.status + " " + response.statusText
     }
     notify({
@@ -148,7 +150,8 @@ async function getAuth() {
         name: 'errorview',
         query: {
           return: route.fullPath,
-          error: error
+          error: error,
+          code: code
         }
       })
     }

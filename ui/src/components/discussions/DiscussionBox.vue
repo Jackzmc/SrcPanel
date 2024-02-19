@@ -146,7 +146,7 @@ async function selectChoice(option: APIDiscussionOption) {
   } else if(discuss.value.type == APIDiscussionType.Checkbox || discuss.value.type == APIDiscussionType.Selection) {
     submitChoiceDebounceMulti()
   }
-  if(discuss.value.flags & APIDiscussionFlags.PublicResponses && discuss.value.responses.users) {
+  if(discuss.value.flags & APIDiscussionFlags.RespondersPublic && discuss.value.responses.users) {
     if(!discuss.value.responses.users.some(user => user.id == props.privUser.id)) {
       discuss.value.responses.users.push({
         id: props.privUser.id,

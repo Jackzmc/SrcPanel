@@ -1,7 +1,11 @@
 export enum APIDiscussionFlags {
     None = 0,
-    PublicResponses,
-    Archived
+    /** Should the avatars/names of those that responded be vsible **/
+    RespondersPublic,
+    /** Is not listed in main list, no more comments or responses can be made */
+    Archived,
+    /** Should the actual choices / response be visible? (Requires RespondersPublic) */
+    ResponsesPublic
 }
 
 export enum APIDiscussionType {

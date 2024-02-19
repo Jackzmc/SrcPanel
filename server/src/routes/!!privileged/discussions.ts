@@ -10,7 +10,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     fastify.get('/', async (req, reply): Promise<APIDiscussion[]> => {
         const discussions: APIDiscussion[] = []
         for(const discussion of discManager.getAll()) {
-            const responses = await discManager.getResponses(discussion.id, req.user, (discussion.flags & APIDiscussionFlags.PublicResponses) != 0)
+            const responses = await discManager.getResponses(discussion.id, req.user, (discussion.flags & APIDiscussionFlags.RespondersPublic) != 0)
             discussions.push({
                 ...discussion,
                 responses: responses.responses,
@@ -146,7 +146,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
        
         const [comments] = await fastify.db.execute<RowDataPacket[]>("SELECT com.id, com.creator, com.content, u.last_alias as creator_name FROM `left4dead2-admins`.dash_discussion_comments com LEFT JOIN `left4dead2`.stats_users u ON com.creator = u.steamid WHERE com.discussion_id = ? ", [discuss.id])
-        const responses = await discManager.getResponses(Number(req.params.id), req.user, (discuss.flags & APIDiscussionFlags.PublicResponses) != 0)
+        const responses = await discManager.getResponses(Number(req.params.id), req.user, (discuss.flags & APIDiscussionFlags.RespondersPublic) != 0)
         return {
             ...discuss,
             responses: responses.responses,

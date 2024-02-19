@@ -96,12 +96,12 @@
           <div class="list-item-controls">
             <div class="field has-addons">
               <p class="control">
-                <button :class="['button', {'is-info': (discuss.flags & APIDiscussionFlags.PublicResponses) != 0}]" @click="toggleFlag(APIDiscussionFlags.PublicResponses)">
+                <button :class="['button', {'is-info': (discuss.flags & APIDiscussionFlags.RespondersPublic) != 0}]" @click="toggleFlag(APIDiscussionFlags.RespondersPublic)">
                   <Icon icon="fa-eye">Public</Icon>
                 </button>
               </p>
               <p class="control">
-                <button :class="['button', {'is-info': (discuss.flags & APIDiscussionFlags.PublicResponses) == 0}]" @click="toggleFlag(APIDiscussionFlags.PublicResponses)">
+                <button :class="['button', {'is-info': (discuss.flags & APIDiscussionFlags.RespondersPublic) == 0}]" @click="toggleFlag(APIDiscussionFlags.RespondersPublic)">
                   <Icon icon="fa-eye-slash">Hidden</Icon>
                 </button>
               </p>
