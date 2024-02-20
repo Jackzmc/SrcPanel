@@ -20,6 +20,12 @@
               @click="restartServer">
               Restart Server
             </a>
+            <a
+              :disabled="canUpdate" class="button"
+              @click="updateAdmins">
+              Update Admins
+            </a>
+
           </div>
 
           <p class="has-text-danger" v-if="updateStatus.error">{{updateStatus.error}}</p>
@@ -125,6 +131,17 @@ async function restartServer() {
     })
   }
 }
+
+async function updateAdmins() {
+  const response = await request('/api/admin/update-admins')
+  if(response?.ok) {
+    notify({
+      type: "success",
+      text: "Admins have been updated",
+    })
+  }
+}
+
 
 async function fetchServerHealth() {
   const response = await fetch('/api/admin/health')

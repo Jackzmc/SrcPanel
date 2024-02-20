@@ -148,6 +148,18 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             })
         }
     })
+
+    fastify.post('/restart', async (req, reply) => {
+        if(!req.user.hasPermission("panel.restart")) return NO_PERMISSION(reply)
+        await reply.status(204).send()
+        await fastify.close()
+        process.exit()
+    })
+
+    fastify.post('/update-admins', async (req, reply) => {
+        await fastify.authmngr.fetchAdmins()
+        await reply.status(204).send()
+    })
 }
 
 /**
