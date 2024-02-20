@@ -548,7 +548,7 @@ const SURVIVOR_IDS: Record<SurvivorId, string> = {
   [SurvivorId.Louis]: "manager"
 }
 
-const TABS: Record<string, { name: string, tag?: string, permission?: UserPrivilegeCode, enabled?: Function }> = {
+const TABS: Record<string, { name: string, tag?: string, permission?: string, enabled?: Function }> = {
   overview: {
     name: "Overview",
   },
@@ -557,14 +557,14 @@ const TABS: Record<string, { name: string, tag?: string, permission?: UserPrivil
   },
   configs: {
     name: "Configs",
-    permission: 'servers.configs.read',
+    permission: 'servers.configs.read.<id>',
     enabled: () => {
       return server.value.info.features.includes("configs")
     }
   },
   console: {
     name: "Console",
-    permission: "servers.rcon",
+    permission: "servers.rcon.<id>",
     enabled: () => {
       return server.value.info.features.includes("console")
     }
@@ -608,8 +608,10 @@ const nextLiveRetryTime = computed(() => {
 
 function isTabEnabled(data: any): boolean {
   if(!data.permission || data.enabled == undefined) return true
-  if(data._enabled == undefined)
-    data._enabled = (data.enabled()??true) && props.privUser.hasPermission(data.permission + "." + server.value.info.id as UserPrivilegeCode)
+  if(data._enabled == undefined) {
+    const perm = data.permission.replace(/<id>/g, server.value.info.id)
+      data._enabled = (data.enabled()??true) && props.privUser.hasPermission(perm as UserPrivilegeCode)
+  }
   return data._enabled
 }
 
