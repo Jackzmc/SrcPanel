@@ -1,4 +1,4 @@
-import { APICountData, APIDiscussionCacheableData, APIDiscussionFlags, APIResponsesData } from "../../../common-types/Discussions.js";
+import { APICountData, APIDiscussionCacheableData, APIDiscussionFlags, APIResponsesData, APIUserWithChoice } from "../../../common-types/Discussions.js";
 import ConfigManager from "./ConfigManager.js";
 import { Pool, RowDataPacket } from 'mysql2/promise';
 import User from "./users/User.js";
@@ -58,23 +58,33 @@ export default class DiscussionManager {
                 userSelection.push(Number(response.choice))
             }
         }
-        let users = undefined
+        let usersResponse: APIUserWithChoice[] = undefined
         if(flags & APIDiscussionFlags.RespondersPublic) {
-            users = responses.map(r => {
-                // TODO: implement ResponsesPublic
-                return { 
-                    id: r.steamid, 
-                    name: r.name, 
-                    avatarUrl: `${domain}/api/users/${r.steamid}/avatar` 
+            usersResponse = []
+            const users = {}
+            // Merge multiple responses (for multiselect) into one user object
+            for(const response of responses) {
+                if(!users[response.steamid]) {
+                    users[response.steamid] = { 
+                        id: response.steamid, 
+                        name: response.name, 
+                        avatarUrl: `${domain}/api/users/${response.steamid}/avatar` ,
+                        choices: flags & APIDiscussionFlags.RespondersPublic ? [] : undefined
+                    }
                 }
-            })
+                if(flags & APIDiscussionFlags.RespondersPublic) {
+                    // Try choice, if choice is undefined/null, then its not radio/multi, its text
+                    users[response.steamid].choices.push(response.choice ?? response.text)
+                }
+            }
+            usersResponse = Object.values(users)
         }
         return {
             responses: {
                 totalCount: responses.length,
                 percentVoted: responses.length / totalUsers,
                 counts,
-                users
+                users: usersResponse
             },
             userSelection
         }

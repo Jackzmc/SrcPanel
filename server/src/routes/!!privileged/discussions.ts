@@ -20,28 +20,35 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         return discussions
     })
 
-    fastify.post('/:id/choose', async (req: FastifyRequest<{Params: { id: string}, Querystring: { option: string | string[] }}>, reply) => {
+    fastify.post('/:id/choose', async (req: FastifyRequest<{Params: { id: string}}>, reply) => {
         const [discussions] = await fastify.db.execute<RowDataPacket[]>("SELECT * FROM `left4dead2-admins`.dash_discussions WHERE id = ?", [req.params.id])
         if(discussions.length == 0) {
             return NOT_FOUND(reply, req.params.id)
         }
+        const body: { option?: string[]|string, text?: string } = req.body
         const discuss = discussions[0] as APIDiscussion
         await fastify.db.execute("DELETE FROM `left4dead2-admins`.dash_discussion_responses WHERE discussion_id = ? AND steamid = ?", [discuss.id, req.user.steamid2])
         if(discuss.type == APIDiscussionType.Radio) {
             // Insert new, or update existing
-            if(Array.isArray(req.query.option)) return reply.status(400).send({ error: "INVALID_OPTION", message: "Options must be a string for radio"})
+            if(!body.option || Array.isArray(body.option)) return reply.status(400).send({ error: "INVALID_OPTION", message: "Options must be a string for radio"})
             await fastify.db.execute(
                 "INSERT INTO `left4dead2-admins`.dash_discussion_responses (discussion_id, steamid, choice) VALUES (?, ?, ?)", 
-                [discuss.id, req.user.steamid2, req.query.option]
+                [discuss.id, req.user.steamid2, body.option]
             )
         } else if(discuss.type == APIDiscussionType.Checkbox || discuss.type == APIDiscussionType.Selection) {
-            if(!Array.isArray(req.query.option)) return reply.status(400).send({ error: "INVALID_OPTION", message: "Options must be an array for checkbox or selection"})
-            for(const option of req.query.option) {
+            if(!body.option || !Array.isArray(body.option)) return reply.status(400).send({ error: "INVALID_OPTION", message: "Options must be an array for checkbox or selection"})
+            for(const option of body.option) {
                 await fastify.db.execute(
                     "INSERT INTO `left4dead2-admins`.dash_discussion_responses (discussion_id, steamid, choice) VALUES (?, ?, ?)", 
                     [discuss.id, req.user.steamid2, option]
                 )
             }
+        } else if(discuss.type == APIDiscussionType.ShortText || discuss.type == APIDiscussionType.LongText) {
+            if(!body.text || body.text == "") return reply.status(400).send({ error: "INVALID_CHOICE", message: "Must include the text of the choice"})
+            await fastify.db.execute(
+                "INSERT INTO `left4dead2-admins`.dash_discussion_responses (discussion_id, steamid, text) VALUES (?, ?, ?)", 
+                [discuss.id, req.user.steamid2, body.text]
+            )
         } else {
             return reply.status(501).send()
         }

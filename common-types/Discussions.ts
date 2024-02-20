@@ -21,7 +21,7 @@ export interface APIDiscussionBase {
     closedAt?: number
     type: APIDiscussionType,
     description?: string,
-    options: APIDiscussionOption[],
+    options?: APIDiscussionOption[],
     flags: APIDiscussionFlags,
 }
 
@@ -36,12 +36,14 @@ export interface APIDiscussion extends APIDiscussionCacheableData {
     userSelection: number[]
 }
 
-
+export interface APIUserWithChoice extends APIUser {
+    choices?: string[]
+}
 export interface APIResponsesData {
     totalCount: number,
     percentVoted: number,
     counts: Record<string, APICountData> 
-    users?: APIUser[]
+    users?: APIUserWithChoice[]
 }
 export interface APICountData {
     count: number,

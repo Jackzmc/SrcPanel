@@ -29,7 +29,6 @@
         </div>
         <div v-else-if="discuss.type == APIDiscussionType.ShortText">
           <Field>
-            <!-- TODO: need support from interface -->
             <input type="text" class="input" readonly placeholder="Enter your submission">
           </Field>
         </div>
@@ -142,7 +141,7 @@
 
 
 <script setup lang="ts">
-import { ref, computed, onMounted, Ref } from 'vue';
+import { ref, computed, onMounted, Ref, watch } from 'vue';
 import { APIDiscussion, APIDiscussionType, APIDiscussionBase, APIDiscussionFlags, APIDiscussionOption } from '../../../common-types/Discussions';
 import { useRoute, useRouter } from 'vue-router';
 import { notify } from '@kyvg/vue3-notification';
@@ -152,8 +151,8 @@ const DISCUSSION_TYPES: { [key in APIDiscussionType]?: string } = {
   [APIDiscussionType.Radio]: "Single Choice (Radio)",
   [APIDiscussionType.Checkbox]: "Multiple Choice (Checkbox)",
   // [APIDiscussionType.Selection]: "Selection",
-  // [APIDiscussionType.ShortText]: "Short Text",
-  // [APIDiscussionType.LongText]: "Long Text",
+  [APIDiscussionType.ShortText]: "Short Text",
+  [APIDiscussionType.LongText]: "Long Text",
 }
 const isNew = computed(() => {
   return route.name === "discuss-new"
@@ -182,7 +181,7 @@ const router = useRouter()
 
 const leftColumn = computed(() => {
   // if odd
-  return discuss.value.options.length % 2 == 0
+  return discuss.value.options!.length % 2 == 0
 })
 enum LoadState {
   Loading,
@@ -220,7 +219,7 @@ function editOption(option?: APIDiscussionOption) {
   if(option) {
     option.label = name
   } else {
-    discuss.value.options.push({
+    discuss.value.options!.push({
       label: name,
       id: dummyId++
     })
@@ -249,9 +248,9 @@ async function archive() {
 function getOptions(column: number) {
   let options = discuss.value.options
   if(column == 0) {
-    return options.filter((v, i) => !(i % 2))
+    return options!.filter((v, i) => !(i % 2))
   } else {
-    return options.filter((v, i) => i % 2)
+    return options!.filter((v, i) => i % 2)
   }
 }
 

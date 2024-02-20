@@ -37,6 +37,8 @@
             </div>
           </div>
           <div class="list-item-controls" v-if="selectedDiscussion.flags & APIDiscussionFlags.ResponsesPublic">
+            {{ user.choices?.join(', ') }}
+          </div>
         </div>
       </div>
     </div>
@@ -100,9 +102,9 @@ async function fetchDiscussions() {
       let selected: APIDiscussionOption[] | APIDiscussionOption | undefined = undefined
       if(discuss.userSelection.length > 0) {
         if(discuss.type == APIDiscussionType.Radio) {
-          selected = discuss.options.find(opt => discuss.userSelection[0] == opt.id)
+          selected = discuss.options!.find(opt => discuss.userSelection[0] == opt.id)
         } else {
-          selected = discuss.options.filter(opt => discuss.userSelection.includes(opt.id))
+          selected = discuss.options!.filter(opt => discuss.userSelection.includes(opt.id))
         }
       }
       return {

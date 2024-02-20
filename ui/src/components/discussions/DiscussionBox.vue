@@ -13,7 +13,7 @@
   </div>
   <h5 class="title is-5"><b>Discuss:</b> {{ discuss.title }}</h5>
   <p v-if="discuss.description" class="subtitle" v-html="markedDescription"></p>
-  <div class="columns">
+  <div class="columns" v-if="discuss.type == APIDiscussionType.Radio || discuss.type == APIDiscussionType.Checkbox">
     <div class="column is-6">
       <div :class="['box','field',{'is-clickable': canInteract}]" v-for="option of getOptions(0)" :key="option.id" @click="selectChoice(option)">
         <input v-if="canInteract && isSelection && 'selected' in discuss" v-model="discuss.selected" readonly :value="option" :id="option.id.toString()" class="is-checkradio" :type="optionType" :name="'choice' + discuss.id">
@@ -33,6 +33,16 @@
 
       </div>
     </div>
+  </div>
+  <div v-else-if="discuss.type == APIDiscussionType.ShortText">
+    <Field>
+      <input type="text" class="input" readonly placeholder="Enter your submission" v-model.trim="discuss.value" @input="submitChoiceDebounceMultiOrText">
+    </Field>
+  </div>
+  <div v-else-if="discuss.type == APIDiscussionType.LongText">
+    <Field>
+      <textarea class="textarea" readonly placeholder="Enter your submission" v-model="discuss.value" @input="submitChoiceDebounceMultiOrText"></textarea>
+    </Field>
   </div>
   <div class="columns" v-if="!selected">
     <div class="column">
@@ -129,22 +139,27 @@ const markedDescription = computed(() => {
 function getOptions(column: number) {
   let options = discuss.value.options
   if(column == 0) {
-    return options.filter((v, i) => !(i % 2))
+    return options!.filter((v, i) => !(i % 2))
   } else {
-    return options.filter((v, i) => i % 2)
+    return options!.filter((v, i) => i % 2)
   }
 }
 
-async function selectChoice(option: APIDiscussionOption) {
+async function selectChoice(option?: APIDiscussionOption) {
   if(!canInteract.value) return
   if(Date.now() - discuss.value.lastEditTime < 10) return
   discuss.value.lastEditTime = Date.now()
   if(discuss.value.type == APIDiscussionType.Radio) {
-    if(discuss.value.selected?.id == option.id) return
+    // Ignore selecting the same option again.
+    if(!option || discuss.value.selected?.id == option.id) return
     discuss.value.selected = option
     submitChoiceDebounceRadio()
   } else if(discuss.value.type == APIDiscussionType.Checkbox || discuss.value.type == APIDiscussionType.Selection) {
-    submitChoiceDebounceMulti()
+    submitChoiceDebounceMultiOrText()
+  } else if(discuss.value.type == APIDiscussionType.LongText || discuss.value.type == APIDiscussionType.ShortText) {
+    // Ignore empty submissions
+    if(!discuss.value.value || discuss.value.value == "") return
+    submitChoiceDebounceMultiOrText()
   }
   if(discuss.value.flags & APIDiscussionFlags.RespondersPublic && discuss.value.responses.users) {
     if(!discuss.value.responses.users.some(user => user.id == props.privUser.id)) {
@@ -164,17 +179,20 @@ async function submitChoice() {
   discuss.value.state = DiscussionState.Saving
 
   // TODO: abort controller?
-  const params = new URLSearchParams()
-  if(discuss.value.type == APIDiscussionType.Checkbox || discuss.value.type == APIDiscussionType.Selection)
-    discuss.value.selected.every(opt => params.append("option", opt.id.toString()))
-  else if(discuss.value.type == APIDiscussionType.Radio)
-    params.append("option", discuss.value.selected!.id.toString())
+  const data: { option?: string[]|string, text?: string } = {}
+  if(discuss.value.type == APIDiscussionType.Checkbox || discuss.value.type == APIDiscussionType.Selection) {
+    data.option = []
+    discuss.value.selected.every(opt => (data.option! as string[]).push(opt.id.toString()))
+  } else if(discuss.value.type == APIDiscussionType.Radio)
+    data.option = discuss.value.selected!.id.toString()
   else if(discuss.value.type == APIDiscussionType.ShortText || discuss.value.type == APIDiscussionType.LongText) {
-    params.append("text", discuss.value.text)
+    data.text = discuss.value.value
   }
 
-  const response = await request(`/api/discussions/${discuss.value.id}/choose?${params.toString()}`, {
+  const response = await request(`/api/discussions/${discuss.value.id}/choose`, {
     method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
   })
   if(response?.ok) {
     discuss.value.state = DiscussionState.SavedSuccess
@@ -187,7 +205,7 @@ async function submitChoice() {
     discuss.value.state = DiscussionState.PendingAnswer
   }, DISCUSSION_SAVE_NOTIFICATION_DURATION)
 }
-const submitChoiceDebounceMulti = debounce(submitChoice, 2000)
+const submitChoiceDebounceMultiOrText = debounce(submitChoice, 2000)
 const submitChoiceDebounceRadio = debounce(submitChoice, 400)
 
 </script>
