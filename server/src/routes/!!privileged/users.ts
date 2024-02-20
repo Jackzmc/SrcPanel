@@ -1,11 +1,9 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
 import { OkPacket, RowDataPacket } from 'mysql2';
-import { Static, Type } from '@sinclair/typebox'
 import { ADMINS_DB } from '../!!privileged/admins.js';
 import SteamID from 'steamid';
 import { BanAppeal, FullAPIBan } from '../../../../common-types/Ban.js';
 import { NAME_INVALID_CHAR_REPLACE } from '../../routes/!unprivileged/bans.js';
-import { SteamUserDetails } from '../../../../common-types/Share.js';
 
 
 const RECENT_DEFAULT_LIMIT = 25
@@ -29,11 +27,11 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 COALESCE(last_alias, user_names.name) as name, country, l.timestamp as lastJoinDate, created_date as firstJoinDate,
                 server,
                 client as steamid
-            FROM activity_log l
+            FROM activity_log PARTITION (p${new Date().getFullYear()}) l 
             LEFT JOIN user_names ON client = user_names.steamid
             LEFT JOIN stats_users ON client = stats_users.steamid
             WHERE
-                TYPE = 'QUIT' AND server = IFNULL(?,server) AND client != ?
+                TYPE = 'QUIT' AND server = IFNULL(?,server) AND client != ? AND ISNULL(target) 
             ORDER BY l.timestamp DESC
             LIMIT ?`, 
             [server, req.session.user.steamid, limit]

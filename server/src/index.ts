@@ -24,6 +24,7 @@ import { UserPrivilegeCode } from '../../common-types/Privileges.js';
 
 import FastifyHelmet from '@fastify/helmet'
 import { QueryQueue } from './modules/QueryQueue.js';
+import DiscussionManager from './modules/DiscussionManager.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -46,9 +47,6 @@ const app = Fastify({
       }
 })
 
-
-interface CustomSession extends CustomFastifySession<UserPrivilegeCode[]> {
-} 
 declare module 'fastify' {
   export interface FastifyInstance {
     db: Pool;
@@ -57,13 +55,16 @@ declare module 'fastify' {
     servers: ServerManager,
     users: UserManager,
     config: ConfigManager,
-    jobs: QueryQueue
+    jobs: QueryQueue,
+    managers: {
+      discussions: DiscussionManager
+    }
   }
   export interface FastifyRequest {
     user?: User,
   }
   // I dont know how to do this properly, its a fucking pain
-  interface Session extends CustomSession {}
+  interface Session extends CustomFastifySession {}
 }
 
 

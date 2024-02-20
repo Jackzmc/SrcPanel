@@ -31,16 +31,19 @@ enum ParseNode {
   DefaultValue
 }
 
-export function parseParameters(cmd: any) {
+export function parseParameters(cmd: any, propName: string) {
   const params: Record<string, any> = {}
-  const chars = cmd.parameters.split('')
+  const chars = cmd[propName].trim().split('')
   let mode = ParseNode.None
   let lastChar = null, letters = "", type = "", defaultValue
   let ignore = false
+  let command = ""
 
   for(const char of chars) {
     if(ignore) {
       ignore = false
+      // Include it in 'command' part
+      if(!lastChar) command += char
       continue
     }
 
@@ -72,7 +75,7 @@ export function parseParameters(cmd: any) {
       defaultValue = undefined
       if(mode == ParseNode.DefaultValue) defaultValue = null
       mode = ParseNode.None
-    } else if(lastChar)
+    } else if(lastChar) {
       if(char == ':') {
         mode = ParseNode.Type
       } else if((defaultValue == undefined) && char == '=') {
@@ -85,8 +88,12 @@ export function parseParameters(cmd: any) {
       } else{
         letters += char
       }
+    } else {
+      // A arg char (< or [) was not detected, so add the bits to command until then
+      command += char
+    }
   }
-  return params
+  return { command, params }
 }
 
 export function formatParameters(cmd: { args: Record<string, any>, defaultValue?: any}) {
@@ -125,7 +132,8 @@ export async function request(url: RequestInfo, options?: RequestInit, errOption
       const json = await response.json()
       notify({
         type: "error",
-        text: json.message ?? json.error,
+        title: json.error,
+        text: json.message,
         ...errOptions
       })
       console.error(`${url} returned an error:\n${json}`)

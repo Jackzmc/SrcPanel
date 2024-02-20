@@ -39,9 +39,6 @@
             <router-link to="/docs/extraplayers" class="navbar-item">
               5+ Player
             </router-link>
-            <router-link to="/docs/plugins" class="navbar-item">
-              Dev Docs
-            </router-link>
             <router-link to="/docs/notes" class="navbar-item">
               Player Notes
             </router-link>
@@ -62,7 +59,7 @@
             <Icon icon="toolbox">Administration</Icon>
           </a>
           <div class="navbar-dropdown is-left" style="width:140%">
-            <router-link to="/admin/addons" class="navbar-item">
+            <router-link :to="{name: 'admin-shares'}" class="navbar-item">
               <Icon icon="fa-puzzle-piece">Addons / Maps</Icon>
             </router-link>
             <router-link to="/admin/servers" class="navbar-item">
@@ -83,14 +80,19 @@
           </div>
         </div>
         <router-link to="/bans" class="navbar-item">
-          <Icon icon="fa-user-slash">Bans</Icon>
+          <Icon icon="fa-gavel">Bans</Icon>
         </router-link>
         <router-link to="/notes" class="navbar-item">
           <Icon icon="fa-note-sticky">Player Notes</Icon>
         </router-link>
-        <!-- <router-link to="/graphs" class="navbar-item">
+        <router-link to="/discuss" class="navbar-item">
+          <Icon icon="far fa-comment">Discuss
+            <template v-if="privUser && privUser.openDiscussionCount > 0">({{privUser.openDiscussionCount}})</template>
+          </Icon>
+        </router-link>
+        <a href="https://data.jackz.me/dashboard/1-public-dashboard" class="navbar-item">
           <Icon icon="fa-chart-simple">Graphs</Icon>
-        </router-link> -->
+        </a>
       </div>
       <div class="navbar-end">
         <div class="navbar-item" v-if="updateInfo.updating">

@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <v-tour v-if="tour" :name="tour.name" :steps="tour.steps"></v-tour>
+    <!-- <v-tour v-if="tour" :name="tour.name" :steps="tour.steps"></v-tour> -->
     <Notifications position="top center" :duration=7000 @start="onNotificationShown" />
     <NavBar v-if="!$route.meta.hideNav" @logout="onLogout" :update-info="updateInfo" :priv-user="privUser" @notifications:clear="clearNotifications" />
     <br>
@@ -25,6 +25,26 @@
         L4D2 Admin Dashboard - Updated {{lastUpdated}}
       </div>
     </footer>
+    <div class="impersonate-overlay" v-if="privUser?.isImpersonating">
+      <nav class="level">
+        <div class="level-left">
+          <div class="level-item">
+            <p>
+              Impersonating as <router-link class="has-text-white" :to="{ name: 'manage-user', params: { id: privUser.id }}">
+                <b>{{privUser.name}}</b>
+              </router-link>
+            </p>
+          </div>
+        </div>
+        <div class="level-right">
+          <div class="level-item">
+            <a class="button" @click="stopImpersonating">
+              Stop Impersonating
+            </a>
+          </div>
+        </div>
+      </nav>
+    </div>
   </div>
 </template>
 
@@ -109,12 +129,14 @@ async function getAuth() {
       })
     }
   } else {
-    let error
+    let error, code
     if(response.headers.get("content-type")?.includes("application/json")) {
       const json = await response.json()
+      code = json.code ?? json.error
       console.error(`Error while authenticating with server:`, json)
       error = json.message ?? json.error
     } else {
+      code = response.status
       error = response.status + " " + response.statusText
     }
     notify({
@@ -128,7 +150,8 @@ async function getAuth() {
         name: 'errorview',
         query: {
           return: route.fullPath,
-          error: error
+          error: error,
+          code: code
         }
       })
     }
@@ -173,6 +196,23 @@ async function loadTour(tourId: string) {
   }
 }
 
+async function stopImpersonating() {
+  const response = await request(`/api/admin/impersonate/`, {
+    method: 'POST',
+    credentials: 'include'
+  }, { title: "Impersonation Failed"})
+  if(response?.ok) {
+    const json = await response.json()
+    userdata.value!.impersonatingId = undefined
+    userdata.value!.user = json.user
+    userdata.value!.permissions = json.permissions
+    notify({
+      type: "success",
+      text: `Stoped impersonating`
+    })
+  }
+}
+
 onBeforeMount(async() => {
   document.addEventListener('swUpdated', updateAvailable, { once: true })
   document.addEventListener('swUpdating', () => updateInfo.value.updating = true, { once: true })
@@ -182,3 +222,14 @@ onBeforeMount(async() => {
   }
 })
 </script>
+
+<style>
+.impersonate-overlay {
+  position: fixed;
+  bottom: 0;
+  background-color: #c42dbf;
+  padding: 1.25rem;
+  width: 100%;
+  color: white;
+}
+</style>

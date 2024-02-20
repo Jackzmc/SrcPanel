@@ -16,6 +16,7 @@ import { UserPrivilegeCode } from '../../../common-types/Privileges.js';
 import { SESSION_VERSION } from '../routes/auth/steam.js';
 import { NOT_LOGGED_IN } from '../responses.js';
 import { QueryQueue } from '../modules/QueryQueue.js';
+import DiscussionManager from '../modules/DiscussionManager.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -57,30 +58,17 @@ async function db(fastify: FastifyInstance) {
     fastify.decorate('servers', new ServerManager(steam, DATA_FOLDER, CONFIG_FOLDER, configManager))
     fastify.decorate('config', configManager)
     fastify.decorate('jobs', new QueryQueue(db))
+    fastify.decorate('managers', {
+        discussions: new DiscussionManager(db, configManager, authManager)
+    })
     fastify.addHook('preHandler', async (req, reply) => {
         if(req.session?.user) {
             if(req.session.version !== SESSION_VERSION) { 
                 req.session.destroy()
                 return NOT_LOGGED_IN(reply, "SESSION_EXPIRED", `Session has expired (target:${SESSION_VERSION}, cur:${req.session.version})`)
             }
-            req.user = new User(authManager, req.session.user.steamid)
-            // reply.setCookie("srcds_data", await getUserDataCookie(req), {
-            //     path: '/',
-            //     secure: "auto",
-            //     httpOnly: false
-            // })
+            req.user = new User(fastify, req.session.user.steamid)
         }
     })
 }
-
-// async function getUserDataCookie(req: FastifyRequest) {
-//     const json = {
-//         user: req.session.user,
-//         permissions: req.session.permissions,
-//         isSessionOld: req.session.version !== SESSION_VERSION,
-//         providers: req.user.providers,
-//         notifications: await req.user.getNotifications()
-//     }
-//     return JSON.stringify(json)
-// }
 export default FastifyPlugin(db)

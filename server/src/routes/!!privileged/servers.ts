@@ -49,7 +49,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             })
         }
         const [code, granted] = req.user.requirePermission("servers.view", { resourceId: server.id })
-        if(!granted) return NO_PERMISSION(reply, "You do not have permission to view this server", code)
+        if(!granted) return NO_PERMISSION(reply, "You do not have permission to view this server (code: " + code + ")", code)
 
 
         return {
@@ -193,6 +193,11 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 code: "SERVER_NOT_FOUND",
             })
         } else {
+            const [code, granted] = req.user.requirePermission("servers.view", { resourceId: server.id })
+            if(!granted) return send({
+                error: "Cannot access server, no permission", 
+                code: "NO_PERMISSION",
+            })
             // Send any stale data:
             if(server.liveStatus) send(server.liveStatus)
 
@@ -229,7 +234,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         let recentActivities = null
         if(server.activityLogId) {
             const [rows] = await fastify.db.execute<RowDataPacket[]>(`SELECT client, target, type, id, message, timestamp, s1.last_alias as clientName, s2.last_alias as targetName
-                FROM activity_log
+                FROM activity_log PARTITION (p${new Date().getFullYear()})
                 LEFT JOIN stats_users as s1 ON s1.steamid = client
                 LEFT JOIN stats_users as s2 ON s2.steamid = target
                 WHERE server = ? AND FROM_UNIXTIME(timestamp) >= CURDATE() AND FROM_UNIXTIME(timestamp) < CURDATE() + INTERVAL 1 DAY
@@ -282,6 +287,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         const server = fastify.servers.get(req.params.id)
         if(!server) return NOT_FOUND(reply, "Server")
         
+        if(req.body.includes("rcon_password"))
+            return NO_PERMISSION(reply, "You do not have permission to run that command")
         const [code, granted] = req.user.requirePermission("servers.rcon", { resourceIds: [server.id] })
         if(!granted) return NO_PERMISSION(reply, "You do not have permission to run commands on this server", code)
 
@@ -293,12 +300,13 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
 
         try {
-            await req.user.log(null, `%client% ran command %cmd%`, {
+            const id = await req.user.log(null, `%client% ran command %cmd%`, {
                 code,
                 metadata: {
                     cmd: req.body
                 }
             })
+            await fastify.authmngr.notifyAdmins(`Admin ${req.user.steamid2} ran rcon command \"${req.body}\" on server ${server.id}. Log entry: ${id}`, "notify_rcon_use")
             const response = await server.sendCommand(req.body)
             if(req.query['no-response'])
                 return reply.status(204).send()

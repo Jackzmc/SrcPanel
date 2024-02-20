@@ -18,15 +18,15 @@
       </div>
       <InfiniteLoading @infinite="loadTopContent" />
       <div class="has-text-centered is-size-5" v-if="entries.length === 0" style="margin-top:12%">
-        <p>No entries were found for data source {{ DATA_SOURCES[dataSource] }}</p>
-        <p>Try searching a different source</p>
+        <p>No entries were found within year {{ dataSource }}</p>
+        <p>Try searching in a different year</p>
         <br>
 
-        <Field label="Data Source">
+        <Field label="Data Year">
             <div class="select">
               <select v-model="dataSource" @change="fetchDebounce">
-                <option v-for="(source, id) in DATA_SOURCES" :key="id" :value="id">
-                  {{ source }}
+                <option v-for="(year) in dataSources" :key="year" :value="year">
+                  {{ year }}
                 </option>
               </select>
             </div>
@@ -196,7 +196,7 @@
         </label>
         <div class="buttons has-addons">
           <a
-            v-for="(val, key) of FILTER_DATA.servers" :key="key"
+            v-for="(key) of logInfo.servers" :key="key"
             :class="['button', 'is-small',  getFilterColor('servers', key)]"
             @click="toggleFilter('servers', key)"
           >
@@ -211,16 +211,16 @@
           </Field>
         </div>
         <div class="column is-6">
-          <Field label="Data Source">
+          <Field label="Data Year">
             <div class="select is-fullwidth">
               <select v-model="dataSource" @change="fetchDebounce">
-                <option v-for="(source, id) in DATA_SOURCES" :key="id" :value="id">
-                  {{ source }}
+                <option v-for="year in dataSources" :key="year" :value="year">
+                  {{ year }}
                 </option>
               </select>
             </div>
             <template v-slot:hint_info>
-              The archival sources can take a significant time to fetch
+              Fetch data from a certain year
             </template>
           </Field>
         </div>
@@ -264,15 +264,6 @@ const FILTER_DATA: Record<string, Record<string, boolean | string>> = {
     web: "is-info",
     main: "is-success",
     reserved: "is-dark",
-    public1: true,
-    public2: true,
-    public3: true,
-    public4: true,
-    public5: true,
-    public6: true,
-    public7: true,
-    public8: true,
-    unknown: true,
   },
   types: {
     ACTION: "is-info",
@@ -287,13 +278,6 @@ const FILTER_DATA: Record<string, Record<string, boolean | string>> = {
   target: {},
   message: {}
 }
-
-const DATA_SOURCES: Record<string, string> = {
-  main: `Main (${new Date().getFullYear()})`,
-  archive2023: "Archive (2023)",
-  archive: "Archive (2020-2022)",
-}
-
 const ADMINCHAT_REGEX = new RegExp(/triggered (sm_say|sm_chat) \(text (.*)\s*\)/);
 const CONSOLE_SAY_REGEX = new RegExp(/(sm_say|sm_chat) "?([^"]*)"?/)
 
@@ -309,7 +293,7 @@ let hoverId = ref()
 let limit = ref(DEFAULT_LIMIT);
 let totalEntries = ref(0)
 let entries = ref<LogEntry[]>()
-let dataSource = ref<string>("main")
+let dataSource = ref<number>(new Date().getFullYear())
 let filters = ref<Record<string, string|string[]|null>>({
   servers: DEFAULT_SERVERS,
   types: DEFAULT_TYPES,
@@ -341,7 +325,7 @@ let infiniteScroll = ref()
 let infiniteScrollLoading = ref<"top"|"bottom">()
 
 let fetchAbort: AbortController | null = null
-let logInfo = ref<{cache:Record<string,{totalRows:number,highestId:number}>}>({cache:{}})
+let logInfo = ref<{servers: string[], cache:Record<string,{totalRows:number,highestId:number}>}>({servers:[],cache:{}})
 let firstLoad = false
 
 const highlightRegex = computed(() => {
@@ -350,6 +334,12 @@ const highlightRegex = computed(() => {
 const loadingDuration = computed(() => {
   if(!loadingTime.value) return "0.0"
   return Math.max(((now.value - loadingTime.value) / 1000), 0).toFixed(1)
+})
+const dataSources = computed(() => {
+  if(!logInfo.value?.cache) return []
+  // A cache value of null is provided for absolute totals, we ignore it
+  // The list is also ascending, so just reverse it. Maybe in future order it just in case
+  return Object.keys(logInfo.value.cache).filter(key => key != "null").reverse()
 })
 
 async function searchUsers(e: any) {
@@ -413,7 +403,7 @@ function getParams() {
   const searchParams = new URLSearchParams()
   // searchParams.append('page', page.value.toString())
   searchParams.append('limit', limit.value.toString())
-  searchParams.append('source', dataSource.value)
+  searchParams.append('source', dataSource.value.toString())
   for(const [filter, val] of Object.entries(filters.value)) {
     if(!val) continue
     if(Array.isArray(val)) {
@@ -491,7 +481,9 @@ async function fetchLogs(id: number, mode: "before" | "after" | "around") {
 
   let response
   try {
-    const responseHandle = requestTimeout(`/api/logs/${mode}/${id}?${params}`, MAX_REQUEST_TIME)
+    const responseHandle = requestTimeout(`/api/logs/${mode}/${id}?${params}`, MAX_REQUEST_TIME, undefined, {
+      title: "Fetch Failure"
+    })
     fetchAbort = responseHandle.controller
     response = await responseHandle.start()
     fetchAbort = null
@@ -505,17 +497,15 @@ async function fetchLogs(id: number, mode: "before" | "after" | "around") {
   if(response?.ok) {
     const json = await response.json()
     totalEntries.value = json.cache.totalRows
-    // totalUnfilteredEntries.value = json.totals.total
     const newEntries = json.logs.map((entry: any) => {
       let message = entry.message
       if(entry.metadata && entry.message) {
         for(const key in entry.metadata) {
-          message = message.replace(new RegExp(`%${key}%`, 'g'), `<b data-tooltip="${key}">${entry.metadata[key]}</b>`)
-                           .replace(new RegExp(`{${key}}`, 'g'), `<b data-tooltip="${key}">${entry.metadata[key]}</b>`)
+          message = message.replace(new RegExp(`(%${key}%|{${key}})`, 'g'), `<b data-tooltip="${key}">${entry.metadata[key]}</b>`)
         }
       }
       if(entry.type === 'JOIN') message = " joined"
-      if(entry.type === 'ACTION') {
+      else if(entry.type === 'ACTION') {
         const match = entry.message.match(ADMINCHAT_REGEX)
         if(match) {
           entry.adminChat = true
@@ -594,12 +584,11 @@ async function jumpTo(entry: any) {
   router.replace({
     name: "logs-audit",
     params: {
-      aroundId: entry.id
+      aroundId: entry.id,
     },
     query: route.query
   })
-  // showLoading.value = true
-  // entries.value = await fetchLogs(entry.id, "around");
+  await fetchLogs(entry.id, 'around')
 }
 
 function getShareLink(entry: LogEntry) {
@@ -628,6 +617,7 @@ onBeforeMount(async() => {
     now.value = Date.now()
   }, 100)
 
+  showLoading.value = true
   await getInfo()
 
   // If /admin/audit/:id is used, fetch that, and just grab filters, but wont be used
@@ -638,10 +628,12 @@ onBeforeMount(async() => {
   }
 
   if(route.query.limit) limit.value = Number(route.query.limit) || DEFAULT_LIMIT
-  if(route.query.source) dataSource.value = route.query.source as string
+  if(route.query.source) {
+    const year = parseInt(route.query.source as string)
+    if(!isNaN(year)) dataSource.value = year
+  }
   for(const filter in FILTER_DATA) {
     let queryName = filter
-    console.debug('filter', filter, queryName, '=', route.query[queryName])
     // Some query are prefixed with search_, so we check them:
     if(route.query[queryName] === undefined) queryName = `search_${queryName}`
     if(route.query[queryName] !== undefined) {
@@ -654,11 +646,10 @@ onBeforeMount(async() => {
     }
   }
 
-  // Don't do any more fetch logic, alreadyt fetched above
-  if(route.params.aroundId) return
+  // We already jumped using "around", so don't fetch before
+  if(!route.params.aroundId) entries.value = await fetchLogs(cache.value.highestId, "before")
 
-  showLoading.value = true
-  entries.value = await fetchLogs(cache.value.highestId, "before")
+
   refreshTimer = setInterval(async () => {
     // Only check for new values IF we not full, not searching, and at the top of list
     if(isTopOfList.value && fetchAbort == null && pendingEntries.value.length < limit.value) {

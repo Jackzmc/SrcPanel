@@ -36,7 +36,7 @@
               :data-tooltip="POLICY_MSG_MIN_HOURS_OF_PLAYTIME"
             >(!) </b>
           </p>
-          <em v-else>(no recorded statistics found)</em>
+          <em v-else><Icon icon="fa-spinner" spin></Icon></em>
         </span>
       </div>
     </div>
@@ -62,11 +62,11 @@
     <Tab name="Overview" v-if="userAdminData">
       <div class="columns">
         <div class="column">
-          <h6 class="title is-6">Game Flags</h6>
+          <h6 class="title is-6">Game Permissions</h6>
           <FlagList :priv-user="privUser" :flags="userAdminData.permissions.flags" only-active />
         </div>
         <div class="column">
-          <h6 class="title is-6">Web Permissions</h6>
+          <h6 class="title is-6">Panel Permissions</h6>
           <div v-for="code in userAdminData.permissions.codes" :key="code">
             <b>{{ code }}</b>
           </div>
@@ -113,13 +113,13 @@
             <tr v-if="expandedGroup?.id == group.id" style="width:100%" class="has-background-light">
               <td colspan="2">
                 <div class="box">
-                  <h6 class="title is-6">Game Flags</h6>
+                  <h6 class="title is-6">Game Permissions</h6>
                   <FlagList :priv-user="privUser" :flags="group.flags" only-active />
                 </div>
               </td>
               <td colspan="2">
                 <div class="box">
-                  <h6 class="title is-6">Web Permissions</h6>
+                  <h6 class="title is-6">Panel Permissions</h6>
                   <div v-for="code in expandedGroup.codes" :key="code">
                     {{ code }}
                   </div>
@@ -175,7 +175,7 @@
         <!-- <TagField v-model="webCodes" placeholder="Add permissions" :choices="['admins.view', 'admins.edit']" /> -->
       </Field>
     </Tab>
-    <Tab name="Danger">
+    <Tab name="Actions">
       <div class="field" v-if="userAdminData">
         <div class="control">
           <a class="button is-danger" @click='revoke'>Revoke Admin</a>
@@ -191,6 +191,20 @@
         </div>
         <p class="help has-text-danger">This will disable any policy checks, and allow granting or editing admins. Does not disable immunity checks</p>
       </div>
+      <div class="field" v-if="userAdminData">
+        <div class="control">
+          <a class="button" style="background-color: #c42dbf; color: white;" @click='impersonate'>
+            <template v-if='privUser.ImpersonatingSteamId === userAdminData.steamid'>
+              Stop Impersonating
+            </template>
+            <template v-else>
+              Impersonate
+            </template>
+          </a>
+        </div>
+        <p class="help">Impersonate as this user, mimicking their permissions.</p>
+      </div>
+
     </Tab>
   </Tabs>
   <hr>
@@ -206,7 +220,7 @@
   <article class="message is-warning" v-if="noPermsGiven">
     <div class="message-body">
       <p><b>Warning:</b> No permissions have been granted to the user. The user will not have any admin privileges in game and limited access to the admin panel.</p>
-      <p>Apply a permission group, apply some base permissions, or some web permissions.</p>
+      <p>Apply a permission group, apply some base permissions, or some panel permissions.</p>
     </div>
   </article>
   <article class="message is-warning" v-if="!form.policyCheck">
@@ -243,7 +257,7 @@ import { notify } from '@kyvg/vue3-notification';
 import { request } from '@/js/util';
 
 
-const MIN_HOURS_PLAYTIME = 10
+const MIN_HOURS_PLAYTIME = 8
 const POLICY_MSG_MIN_HOURS_OF_PLAYTIME = `Policy requires a minimum of ${MIN_HOURS_PLAYTIME} hours of playtime`
 const router = useRouter()
 const route = useRoute()
@@ -363,6 +377,23 @@ async function revoke() {
       })
       cancel()
     }
+  }
+}
+async function impersonate() {
+  // Set id to null/"" to stop impersonating
+  const isImpersonating = props.privUser.ImpersonatingSteamId == props.userAdminData.steamid
+  const id = isImpersonating ? "" : props.userAdminData.steamid
+  const response = await request(`/api/admin/impersonate/${id}}`, {
+    method: 'POST',
+    credentials: 'include'
+  }, { title: "Impersonation Failed"})
+  if(response?.ok) {
+    notify({
+      type: "success",
+      text: `${isImpersonating ? "Stopped" : "Now"} impersonating ${props.user.name}`
+    })
+    // Lazy reload the page to force refetch of data. Otherwise need to pass response ==> App.vue
+    location.href = "/"
   }
 }
 async function save() {

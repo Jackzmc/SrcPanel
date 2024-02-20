@@ -20,7 +20,7 @@ export default ({ mode }) => {
           console.error("[Sentry] ", err)
         }
       }),
-      vue(),
+      vue({ defineModel: true }),
     ],
     server: {
       port: 8080,
@@ -46,7 +46,8 @@ export default ({ mode }) => {
       cssCodeSplit: false
     },
     define: {
-      BUILD_TIMESTAMP: Date.now()
+      BUILD_TIMESTAMP: Date.now(),
+      __VUE_PROD_DEVTOOLS__: process.env.NODE_ENV !== 'production'
     }
   });
 

@@ -7,18 +7,26 @@ import https from 'https';
 import { unlink } from 'fs/promises';
 import { WorkshopItem, SteamUserDetails } from '../../../common-types/Share.js'
 import { EventEmitter } from 'node:events';
+import LruCache, { LRUCache } from 'lru-cache'
 
 // How many bytes of progress to make before sending an update
-const PROGRES_MIN_BYTES = 2_000_000 // 2 MB
+const PROGRES_MIN_BYTES = 5_000 // 5KB
+const ITEM_CACHE_MAX_SIZE = 20
+const ITEM_CACHE_TTL = 1000 * 60 * 10 // 10 min
 
 export default class SteamAPI {
     private apikey: string
     private userAgent: string
     private appMap: Record<string, string>
+    private itemCache: LRUCache<string, WorkshopItem>
 
     constructor(apikey?: string, userAgent?: string) {
         this.apikey = apikey ?? process.env.STEAM_WEB_APIKEY
         this.userAgent = userAgent || "SrcdsDash-API-Client"
+        this.itemCache = new LRUCache({
+            max: ITEM_CACHE_MAX_SIZE,
+            ttl: ITEM_CACHE_TTL
+        })
     }
 
     private _key_check() {
@@ -60,7 +68,6 @@ export default class SteamAPI {
 
     // Gets a collection's children items or null if is not a collection
     async getCollectionChildren(fileid: string): Promise<string[]> {
-        
         const response = await fetch('https://api.steampowered.com/ISteamRemoteStorage/GetCollectionDetails/v1/', {
             method: 'POST',
             headers: {
@@ -80,23 +87,37 @@ export default class SteamAPI {
     }
 
     async getItemDetails(fileids: string[]): Promise<WorkshopItem[]> {
-        const data = fileids.map((fileid, index) => {
-            return `publishedfileids[${index}]=${fileid}`
-        }).join("&")
-        const response = await fetch('https://api.steampowered.com/ISteamRemoteStorage/GetPublishedFileDetails/v1/', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-                'User-Agent': this.userAgent
-            },
-            body: `itemcount=${fileids.length}&${data}`
-        })
-        if(response.ok) {
-            const json = await response.json() as any
-            console.log('RES', JSON.stringify(json['response']['publishedfiledetails']))
-            return json['response']['publishedfiledetails'];
+        let details: WorkshopItem[] = []
+        const params = new URLSearchParams()
+        let index = 0
+        for(const fileid of fileids) {
+            // Grab items from cache if they exist and don't add them to fetch
+            const detail = this.itemCache.get(fileid)
+            if(detail) details.push(detail)
+            else params.append(`publishedfileids[${index++}]`, fileid)
         }
-        throw new Error(`${response.statusText}: ${await response.text()}`)
+        if(index > 0) {
+            // Don't waste a fetch if all items are in the cache
+            const response = await fetch('https://api.steampowered.com/ISteamRemoteStorage/GetPublishedFileDetails/v1/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'User-Agent': this.userAgent
+                },
+                body: `itemcount=${fileids.length}&${params.toString()}`
+            })
+            if(response.ok) {
+                const json = await response.json() as any
+                const files = json.response.publishedfiledetails as WorkshopItem[]
+                for(const file of files) {
+                    this.itemCache.set(file.publishedfileid, file)
+                }
+                details = [...details, ...files]
+            } else {
+                throw new Error(`${response.statusText}: ${await response.text()}`)
+            }
+        }
+        return details
     }
 
     static downloadItem(item: WorkshopItem, destination: string, requestOptions?: any, filenameTemplate: string = "%ID%.vpk"): Promise<number> {

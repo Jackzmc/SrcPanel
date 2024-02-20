@@ -95,10 +95,9 @@ onMounted(async () => {
     if(!response?.ok) return
     const json = await response.json()
     for(let cvar of json) {
-      const split = cvar.cvar.trim().split(' ')
-      cvar.name = split.shift()
-      cvar.parameters = split.join(" ")
-      cvar.args = parseParameters(cvar)
+      const result = parseParameters(cvar, "cvar")
+      cvar.name = result.command
+      cvar.args = result.params
       cvar.defaultValue = cvar.default
       if(cvar.default !== null && cvar.default !== undefined) {
         if(typeof(cvar.default) === "string") {

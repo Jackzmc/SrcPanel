@@ -7,8 +7,7 @@
     <router-link to="/" class="button is-medium is-info  has-text-centered">To Homepage</router-link>
   </template>
   <template v-else-if="errorType === 'oauth_no_account'">
-    <h4 class="title is-4">No account found</h4>
-    <p class="subtitle is-4">No account was found linked to your {{ route.query.provider }} account.</p>
+    <p class="subtitle is-4">Your {{ route.query.provider }} account has not been linked.</p>
     <div class="container content box has-text-left" style="width:30%">
       <p>You must link your {{ route.query.provider }} account to your steam account to be able to login with {{ route.query.provider }}. You can do this by:</p>
       <ul>
@@ -33,12 +32,21 @@
     <router-link :to="returnTo ?? '/'" class="button is-medium is-info">Home</router-link>
   </template>
   <template v-else>
-    <br>
-    <h4 class="title is-4 has-text-danger">{{ route.query.error ?? "Internal Server Error" }}</h4>
-    <p class="subtitle is-4">An error occurred while authenticating with the server</p>
-    <p class="subtitle is-4">The server may be down or unreachable, try again in a few minutes.</p>
-    <br>
-    <router-link :to="returnTo" class="button is-medium is-info">Retry</router-link>
+    <div class="container"  style="width:50%">
+      <article class="message is-danger">
+        <div class="message-header">
+          <p><Icon icon="fa-exclamation-triangle">{{ route.query.error ?? "Internal Server Error" }}</Icon></p>
+        </div>
+        <div class="message-body">
+          <p>An error occurred while authenticating with the server.</p>
+          <p>This can be caused by the server being down, under maintenance, or otherwise unreachable.</p>
+          <p>Please try again in a few minutes, if this continues please yell loudly.</p>
+          <p v-if="route.query.code" class="mt-2">Code: {{ route.query.code }}</p>
+          <br>
+          <router-link :to="returnTo" class="button is-medium is-info">Retry</router-link>
+        </div>
+      </article>
+    </div>
   </template>
 </div>
 </template>
@@ -53,7 +61,7 @@ const hasHistory = computed(() => window.history.length > 0)
 
 
 const returnTo = computed(() => {
-  return route.query.return as string
+  return route.query.return as string ?? '/'
 })
 const errorType = computed(() => {
   return route.query.type as string
@@ -67,7 +75,8 @@ async function testServer() {
 }
 
 onBeforeMount(() => {
-  testServer()
+  if(!errorType.value)
+    testServer()
 })
 
 </script>

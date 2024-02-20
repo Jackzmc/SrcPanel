@@ -1,4 +1,3 @@
-
 export interface ShareData {
     id: string,
     name?: string,
@@ -117,3 +116,20 @@ export interface WorkshopItem {
         tag: string
     }[]
 }
+
+export interface ExtendedWorkshopItem extends WorkshopItem {
+    consumer_app_title?: string,
+}
+
+export interface CollectionWorkshopItem {
+    item: ExtendedWorkshopItem,
+    type: "collection",
+    children: WorkshopItem[]
+}
+export interface ItemWorkshopItem {
+    item: ExtendedWorkshopItem
+    type: "item"
+}
+export type DetailWorkshopItem = CollectionWorkshopItem | ItemWorkshopItem
+
+export type DetailsResponse = DetailWorkshopItem | { item: null }

@@ -45,7 +45,7 @@
             <router-link v-if="privUser.hasPermission('bans.view')" :to="{ name: 'manage-user-bans' }" v-slot="{ href, navigate, isActive }" custom>
               <li :class="{'is-active': isActive }">
                 <a :href="href" @click="navigate">
-                  <Icon icon="fa-user-slash">
+                  <Icon icon="fa-gavel">
                     Bans&nbsp;<span :class="{'has-text-danger': user?.bansCount > 0 }">({{ user?.bansCount }})</span>
                   </Icon>
                 </a>

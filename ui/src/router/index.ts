@@ -58,15 +58,6 @@ const routes = [
     }
   },
   {
-    name: 'docs-plugins',
-    path: '/docs/plugins',
-    component: () => import('../views/docs/PluginDescriptionsView.vue'),
-    meta: {
-      title: "Plugin Development History",
-      description: "A insight on how my plugins were developed"
-    }
-  },
-  {
     name: 'docs-notes',
     path: '/docs/notes',
     component: () => import('../views/docs/NotesView.vue'),
@@ -123,17 +114,33 @@ const routes = [
     }
   },
   {
-    name: 'graphs',
-    path: '/graphs',
-    component: () => import('../views/GraphsView.vue'),
+    name: 'discuss-new',
+    path: '/discuss/new',
+    component: () => import('../views/DiscussionEdit.vue'),
     meta: {
-      title: 'Graphs',
-      description: 'View some statistics about gameplay and administration'
-    }
+      authRequired: true
+    },
   },
   {
-    name: 'admin-addons',
-    path: '/admin/addons/:shareId?/',
+    name: 'discuss-edit',
+    path: '/discuss/edit/:id',
+    component: () => import('../views/DiscussionEdit.vue'),
+    meta: {
+      authRequired: true
+    },
+  },
+  {
+    name: 'discuss',
+    path: '/discuss/:id?/:title?',
+    component: () => import('../views/DiscussionsView.vue'),
+    meta: {
+      title: "Discussions",
+      authRequired: true
+    },
+  },
+  {
+    name: 'admin-shares',
+    path: '/admin/shares/:shareId?/',
     component: () => import('../views/admin/ServerAddonsView.vue'),
     meta: {
       title: 'Addons / Maps',
@@ -141,6 +148,13 @@ const routes = [
       authRequired: true
     },
     children: [
+      // I don't think this is valid - but we cannot load a component, otherwise
+      // we would have the router-view of admin-shares become list-addons
+      // Vue3 seems to just give us a warning and work as I want it for now so...
+      {
+        name: 'list-addons',
+        path: "files",
+      },
       {
         name: "upload-addon",
         path: 'upload',
@@ -160,8 +174,8 @@ const routes = [
         component: () => import('../components/addons/modals/CollectionInfoModal.vue')
       },
       {
-        name: "addon-info",
-        path: ':addon',
+        name: "file-info",
+        path: 'file/:addon',
         meta: {
           needsPrefetch: true
         },
@@ -226,17 +240,6 @@ const routes = [
         ]
       }
     ]
-  },
-  {
-    name: 'logs-activity',
-    path: '/admin/activity',
-    alias: '/admin/logs',
-    component: () => import('../views/admin/ActivityLogsView.vue'),
-    meta: {
-      title: 'Activity Logs',
-      description: 'View all activity inside and outside the game',
-      authRequired: true
-    }
   },
   {
     name: 'logs-audit',

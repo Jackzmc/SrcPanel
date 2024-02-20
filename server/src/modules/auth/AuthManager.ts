@@ -65,6 +65,10 @@ export default class AuthManager {
         this.init()
     }
 
+    get AdminCount() {
+        return Object.keys(this.admins).length
+    }
+
     private async init() {
         let startTime = Date.now()
         await this.fetchGroups()
@@ -400,17 +404,20 @@ export default class AuthManager {
      * Sends a notification to all admins
      *
      * @param {string} message the message
+     * @param {string?} [permission] The permission admin must have, or blank for none
      * @param {UserNotificationOptions} [options={}]
      * @memberof AuthManager
      */
-    public async addNotificationsAll(message: string, options: UserNotificationOptions = {}) {
+    public async notifyAdmins(message: string, permission: string | null, options: UserNotificationOptions = {}) {
         const conn = await this.db.getConnection()
         await conn.beginTransaction()
         for(const admin of Object.values(this.admins)) {
-            await conn.execute(
-                "INSERT INTO user_notifications (steamid, message, link) VALUES (?, ?, ?)",
-                [ admin.identity, message, options.link ?? null ]
-            )
+            if(!permission || this.hasPermission(admin, permission)) {
+                await conn.execute(
+                    "INSERT INTO user_notifications (steamid, message, link) VALUES (?, ?, ?)",
+                    [ admin.identity, message, options.link ?? null ]
+                )
+            }
         }
         await conn.commit()
         conn.release()
@@ -668,9 +675,13 @@ export default class AuthManager {
             if(provider.isExpired) {
                 result[providerName] = null
             } else {
-                result[providerName] = await provider.fetchDetails()
-                // Don't need to pass in steamid again, it's already set by .setUser
-                await provider.save()
+                try {
+                    result[providerName] = await provider.fetchDetails()
+                    // Don't need to pass in steamid again, it's already set by .setUser
+                    await provider.save()
+                } catch(err) {
+                    result[providerName] = null
+                }
             }
         }
         return result
@@ -751,7 +762,13 @@ export default class AuthManager {
         req.session.version = SESSION_VERSION
     }
 
-
+    public hasPermission(admin: AdminData, permission: string) {
+        if(process.env.DEBUG_DISABLE_PERMISSION_SYSTEM) return true
+        for(const perm of admin.permissions.codes) {
+            if(AuthManager.isPermissionGranted(permission as UserPrivilegeCode, perm)) return true
+        }
+        return false
+    }
 
     /**
      * Determines if 'code' has permission against 'matchCode'

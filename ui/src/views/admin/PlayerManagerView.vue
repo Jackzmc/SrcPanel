@@ -66,10 +66,10 @@
           </div>
         </div>
         <br>
-        <div class="columns">
+        <div class="columns is-multiline">
           <SplitTable :items-per-column="10" :data="filteredAdmins" v-slot="slotProps">
-            <div class="column">
-              <table class="table is-bordered">
+            <div class="column is-4">
+              <table class="table is-bordered is-fullwidth">
                 <thead>
                   <tr>
                     <th>Id</th>

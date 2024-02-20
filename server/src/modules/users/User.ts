@@ -1,7 +1,7 @@
 import { AdminData, OauthProvider, OauthProviderData, SessionData, SessionUser, UserNotification, UserNotificationOptions, UserOauthProviders } from '../../../../common-types/User';
 import { UserPrivilegeCode } from '../../../../common-types/Privileges.js';
 import AuthManager from '../auth/AuthManager.js';
-import { Session } from 'fastify';
+import { FastifyInstance, Session } from 'fastify';
 import UserManager from './UserManager.js';
 
 export interface LogProperties {
@@ -26,16 +26,16 @@ export interface RequirePermissionOptions {
 
 export default class User {
     private adminData?: AdminData
-    private authmngr: AuthManager
     private _providers: UserOauthProviders
     private _name: string
+    #fastify: FastifyInstance
 
     public steamid2: string
 
-    constructor(_authmngr: AuthManager, steamid2: string) {
-        this.authmngr = _authmngr;
+    constructor(fastify: FastifyInstance, steamid2: string) {
+        this.#fastify = fastify
         this.steamid2 = steamid2
-        this.adminData = _authmngr.getAdmin(steamid2)
+        this.adminData = fastify.authmngr.getAdmin(steamid2)
     }
     
     /**
@@ -114,7 +114,7 @@ export default class User {
      * @param options
      */
     async notify(message: string, options: UserNotificationOptions = {}) {
-        await this.authmngr.addNotification(this.steamid2, message, options)
+        await this.#fastify.authmngr.addNotification(this.steamid2, message, options)
     }
 
     /**
@@ -122,11 +122,16 @@ export default class User {
      * @returns 
      */
     async getNotifications(): Promise<UserNotification[]> {
-        return await this.authmngr.getNotifications(this.steamid2)
+        return await this.#fastify.authmngr.getNotifications(this.steamid2)
     }
 
     async clearNotifications(): Promise<void> {
-        await this.authmngr.clearNotifications(this.steamid2)
+        await this.#fastify.authmngr.clearNotifications(this.steamid2)
+    }
+
+    async getOpenDiscussionsCount(): Promise<number> {
+        const count = await this.#fastify.managers.discussions.getUnrespondedCount(this.steamid2)
+        return count
     }
 
     /**
@@ -185,18 +190,19 @@ export default class User {
      * @param targetUser Optional, another user this user is targetting 
      * @param message 
      * @param payload 
+     * @returns ID number of log entry
      */
-    async log(targetUser: User | string | null, message: string, payload?: LogData) {
+    async log(targetUser: User | string | null, message: string, payload?: LogData): Promise<number> {
         let user: User = null
         if(targetUser != null) {
             if(targetUser instanceof User) user = targetUser
-            else user = new User(this.authmngr, targetUser) 
+            else user = new User(this.#fastify, targetUser) 
         }
-        await this.authmngr.log.logWeb(this, user, message, payload)
+        return await this.#fastify.authmngr.log.logWeb(this, user, message, payload)
     }
 
     async removeProvider(provider: OauthProvider) {
-        return await this.authmngr.setProvider(this.steamid2, provider, null)
+        return await this.#fastify.authmngr.setProvider(this.steamid2, provider, null)
     }
 
     async getProvider(provider: OauthProvider) {
@@ -208,7 +214,7 @@ export default class User {
      * Updates cached list of providers
      */
     async updateProviders() {
-        this._providers = await this.authmngr.updateProviders(this.steamid2)
+        this._providers = await this.#fastify.authmngr.updateProviders(this.steamid2)
         return this._providers
     }
 
@@ -216,7 +222,7 @@ export default class User {
      * Fetches cached list of providers
      */
     async getProviders() {
-        this._providers = await this.authmngr.getProviders(this.steamid2)
+        this._providers = await this.#fastify.authmngr.getProviders(this.steamid2)
     }
     
 
@@ -225,7 +231,7 @@ export default class User {
      * @returns 
      */
     async getSessions() {
-        return await this.authmngr.getSessions(this.steamid2)
+        return await this.#fastify.authmngr.getSessions(this.steamid2)
     }
 
     /**
@@ -233,11 +239,11 @@ export default class User {
      * @returns 
      */
     async getApiKey() {
-        return this.authmngr.getAPIKeyForUser(this.steamid2)
+        return this.#fastify.authmngr.getAPIKeyForUser(this.steamid2)
     }
 
     async regenerateApiKey() {
-        return this.authmngr.createApiKey(this.steamid2)
+        return this.#fastify.authmngr.createApiKey(this.steamid2)
     }
 
     equals(id: string) {

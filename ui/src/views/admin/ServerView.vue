@@ -45,7 +45,7 @@
               <template v-if="status?.online && server.info.features.includes('rcon')">
                 <a data-tooltip="Will restart server if no players online, or fail if there are" @click="processAction('stop')" class="button is-dark is-small">Request Restart</a>
                 <a data-tooltip="Will remove lobby reservation, allowing 5+ to join. This is done automatically after 4 players have fully loaded in" @click="processAction('unreserve')" class="button is-dark is-small">Unreserve</a>
-                <a data-tooltip="Will forcefully restart server, regardless if players are online" @click="processAction('stop', { force: true })" class="button is-warning is-small">Force Restart</a>
+                <a v-show="shiftPressed" data-tooltip="Will forcefully restart server, regardless if players are online" @click="processAction('stop', { force: true })" class="button is-danger is-small">Force Restart</a>
               </template>
             </div>
           </div>
@@ -127,9 +127,6 @@
           </div>
         </article>
         <p class="has-text-centered subtitle is-4 my-6" v-else><Icon icon="fa-spinner" spin>Waiting for server status...</Icon></p>
-        <VueApexCharts :series='series' :options="options" type="line" />
-        <VueApexCharts :series='series2' :options="options2" type="line" />
-
       </div>
       <div v-else-if="tab === 'live'" class="box">
         <span class="tag is-pulled-right is-danger" v-if="isLiveViewActive" data-tooltip="Connected to server, receiving live data">Live</span>
@@ -382,20 +379,23 @@
         <h5 class="title is-5">Console Help Information</h5>
         <p>
           Commands that you would use in chat such as <code>/slay</code> (or publicly <code>!slay</code>) use the <code>sm_</code> prefix in the console.
-          An example command <code>/slay @me</code> would be <code>sm_slay @me</code>.
+          An example command <code>/slay jockey</code> would be <code>sm_slay jockey</code>.
         </p>
         <br>
         <p>
-          Invalid commands will be shown as <span class="has-text-danger">red</span>, where valid commands will show as white. Some commands may not be marked as "valid", but you can still attempt to enter them.
+          Unknown commands will be shown as <span class="has-text-danger">red</span>, where known commands will show as white. Some commands may not be marked as known, but you can still attempt to enter them.
         </p>
         <br>
+        <p>
+          Some commands were not decided to run from console and can't be used, this includes any command that shows a menu (/fta, /notesdisconnected, etc).
+        </p>
       </div>
         <article class="message is-warning" v-if="tab === 'console'">
         <div class="message-header">
           <p>Notice</p>
         </div>
         <div class="message-body">
-          Please note that the console access gives you full access to the server and as such every command you run will be logged. Every command you use will be ran as "Console", not identified to you in-game in any way, which is hard to track abuse of.
+          Please note that the console access gives you full access to the server and as such every command you run will be logged. Every command you use will be ran as "Console", not identified to you in-game in any way. Console access is a privilege, don't abuse it.
         </div>
       </article>
     </div>
@@ -418,7 +418,6 @@ import { PlayerData, PrivilegedUser } from '@/js/User';
 import { parseLog, getRelDate, request } from '@/js/util';
 import LogMessage from "@/components/LogMessage.vue";
 import { useNotification } from "@kyvg/vue3-notification";
-import VueApexCharts from 'vue3-apexcharts'
 import Field from '@/components/Field.vue';
 import { PluginServerStatus, StatusPlayer, StatusPlayerSurvivor, SurvivorId, FinaleStage, PlayerState, PlayerGameAction, PlayerMove, StatusPlayerInfected, InfectedClass } from '../../../../common-types/Server';
 import { UserPrivilegeCode } from '../../../../common-types/Privileges';
@@ -588,7 +587,7 @@ let cfg = ref<{
 let error = ref<string>()
 let now = ref(Date.now())
 let showDetailsId = ref<number>()
-
+let shiftPressed = ref(false)
 
 const tab = computed(() => {
   return route.params.tab.length > 0 ? route.params.tab : "overview"
@@ -610,7 +609,7 @@ const nextLiveRetryTime = computed(() => {
 function isTabEnabled(data: any): boolean {
   if(!data.permission || data.enabled == undefined) return true
   if(data._enabled == undefined)
-    data._enabled = (data.enabled()??true) && props.privUser.hasPermission(data.permission)
+    data._enabled = (data.enabled()??true) && props.privUser.hasPermission(data.permission + "." + server.value.info.id as UserPrivilegeCode)
   return data._enabled
 }
 
@@ -689,20 +688,6 @@ async function fetchServerData() {
   if(id != route.params.id) return // Ignore changes in id
   if(response?.ok) {
     const json = await response.json()
-    series2.value = [{
-      name: "Players",
-      data: json.playerCounts.map((count: any) => {
-        return { x: new Date(count.timestamp*1000), y: count.count }
-      })
-    }]
-    if(json.playerJoins) {
-      series.value = [{
-        name: "Player Joins",
-        data: json.playerJoins.map((row: any) => {
-          return { x: new Date(row.timestamp*1000), y: row.count }
-        })
-      }]
-    }
     return true
   }
 }
@@ -757,7 +742,7 @@ async function kickPlayer(player: StatusPlayer) {
       text: "Kick Cancelled (no reason provided)"
     })
   }
-  const response = await request(`/api/servers/players/kick?reason=${encodeURIComponent(reason)}&steamid=${player.steamid}`, { method: 'POST' })
+  const response = await request(`/api/servers/${server.value.id}/players/kick?reason=${encodeURIComponent(reason)}&steamid=${player.steamid}`, { method: 'POST' })
   if(response?.ok) {
     notify({
       type: "success",
@@ -775,7 +760,7 @@ async function processAction(type: string, options: Record<string, any> = {}) {
   }
   // Ask user to confirm:
   if(type === "stop" && options.force) {
-    if(!confirm("Are you sure you want to force restart the server? Any players online will be kicked")) return
+    if(!confirm("You are requesting to forcefully restart the server. This should only be used in the last resort, if the server became unresponsive. This does not check for players being online. Are you sure?")) return
   }
   const response = await request(`/api/servers/${server.value.id}/${type}`, {
     method: 'POST',
@@ -941,11 +926,18 @@ nowInterval = setInterval(() => {
 }, 1000)
 
 onBeforeMount(async() => {
+  document.addEventListener("keyup", _toggleShift)
+  document.addEventListener("keydown", _toggleShift)
   errCount = 0
   await fetchServersCompact()
   await init()
 })
+function _toggleShift(e: any) {
+  shiftPressed.value = !!e.shiftKey
+}
 onUnmounted(() => {
+  document.removeEventListener("keyup", _toggleShift)
+  document.removeEventListener("keydown", _toggleShift)
   errCount = -1
   clearInterval(refreshInterval)
   clearInterval(nowInterval)

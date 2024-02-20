@@ -13,13 +13,21 @@ interface BaseSession<T> {
     user: SessionUser,
     permissions: AdminPermissions<T>,
 }
-export interface CustomFastifySession<T> extends BaseSession<T>, SessionData {
-
+export interface CustomFastifySession extends BaseSession<UserPrivilegeCode[]>, SessionData {
+    impersonate?: ImpersationData
+}
+export interface ImpersationData {
+    original: {
+        permissions: AdminPermissions<UserPrivilegeCode[]>,
+        user: SessionUser
+    }
 }
 export interface UserData<T> extends BaseSession<T> {
     isSessionOld: boolean,
     providers: UserOauthProviders,
-    notifications: UserNotification[]
+    notifications: UserNotification[],
+    openDiscussions: number,
+    impersonatingId?: string
 }
 export type ClientUserData = UserData<UserPrivilegeCode[]>
 
@@ -59,7 +67,7 @@ export interface SessionUser {
     avatarhash: string,
 }
 
-export const FLAGS = {
+export const FLAGS: Record<string, string> = {
     'a': 'Reserved Slot',
     'b': 'Generic Admin',
     'c': 'Kick',
@@ -73,7 +81,7 @@ export const FLAGS = {
     'k': 'Start a generic vote',
     // 'l': 'Set a password on the server',
     'm': 'Ingame rcon access',
-    'n': 'Enable sv_cheats or use cheat commands',
+    'n': 'Cheat commands',
     'o': 'Custom 1',
     'p': 'Custom 2',
     'q': 'Custom 3',
@@ -119,7 +127,7 @@ export interface AdminPermissions<C> {
         immunityLevel: number,
         flags: string,
         codes: C
-    }
+    },
 }
 
 export interface UserNotification extends AddUserNotification {

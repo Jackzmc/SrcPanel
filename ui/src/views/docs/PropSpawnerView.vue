@@ -46,6 +46,7 @@
             <li><kbd>Right Mouse</kbd> - Bring closer to you</li>
             <li><kbd>Shift + E</kbd> - Toggles collision</li>
             <li><kbd>Ctrl + E</kbd> - Toggles collision rotating</li>
+            <li><kbd>Space + E</kbd> - Toggles stacker tool</li>
             <br>
             <li><kbd>E + Left Mouse</kbd> - Change rotation axis</li>
             <li><kbd>E + Right Mouse</kbd> - Change rotation snap angle</li>
@@ -69,21 +70,3 @@
 <script setup lang="ts">
 const LAST_UPDATED = new Date(Number(BUILD_TIMESTAMP))
 </script>
-
-<style>
-/* bulma has no kbd support, thanks https://github.com/jgthms/bulma/issues/1363 */
-kbd {
-  display: inline-block;
-  padding: 3px 5px;
-  font-size: 11px;
-  line-height: 10px;
-  color: #555;
-  vertical-align: middle;
-  background-color: #fcfcfc;
-  border: solid 1px #ccc;
-  border-bottom-color: #bbb;
-  border-radius: 3px;
-  box-shadow: inset 0 -1px 0 #bbb;
-}
-
-</style>

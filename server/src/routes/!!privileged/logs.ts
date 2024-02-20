@@ -33,42 +33,105 @@ type LogQueryType = Static<typeof LogQuery>
 
 export const ACTIVITY_LOG_TABLE_NAME = 'activity_log'
 const LOG_TOTAL_ROW_CACHE_TIME = 30_000 //ms
-const MISSING_NAME_MIN_INTERVAL = 1000 * 30 // Do not fetch if last fetch was between this
+const MISSING_NAME_MIN_INTERVAL = 1000 * 20 // Do not fetch if last fetch was between this
 
-let logServerCache = []
 interface DataCache {
     totalRows: number,
     highestId: number,
+    lowestId: number,
     lastFetchTime: number
 }
-let cache: Record<string, DataCache> = {}
+interface SetCache<T> {
+    set: Set<T>,
+    lastFetchTime: number
+}
+class SetCache<T> {
+    set: Set<T>
+    lastFetchTime: number
+    staleTime: number
+    #getData: () => Promise<Set<T>>
+    #isStaleFn: (fetchTime: number, staleTime: number) => boolean
+    constructor(updateFn: () => Promise<Set<T>>, staleTime = 1000 * 60 * 60 * 4) {
+        this.#getData = updateFn
+        this.staleTime = staleTime
+    }
+    setStaleFunction(fn: (fetchTime: number, staleTime: number) => boolean) {
+        this.#isStaleFn = fn.bind(this)
+        return this
+    }
+    async fetch() {
+        if(this.isStale) this.set = await this.#getData()
+        return this.set
+    }
+    get isStale() { 
+        if(!this.set) return true
+        if(this.#isStaleFn) return this.#isStaleFn(this.lastFetchTime, this.staleTime)
+        else return Date.now() - this.lastFetchTime > this.staleTime
+    }
+}
+let partitionRowCache: Map<number | undefined, DataCache> = new Map()
 let lastMissingNameFetchTime = 0
 
+let serverFilterCache: SetCache<string>
+let partitionCache: SetCache<number>
+
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
-    const [rows] = await fastify.db.query<RowDataPacket[]>(`SELECT DISTINCT server FROM ${ACTIVITY_LOG_TABLE_NAME} ORDER BY timestamp DESC`)
-    logServerCache = rows.filter(row => row.server && row.server !== "web").map(row => row.server)
+    serverFilterCache = new SetCache<string>(
+        async () => {
+            const [rows] = await fastify.db.query<RowDataPacket[]>(`SELECT DISTINCT server FROM ${ACTIVITY_LOG_TABLE_NAME} ORDER BY timestamp DESC`)
+            const list: string[] = rows.filter(row => row.server && row.server !== "web").map(row => row.server)
+            return new Set(list)
+        }
+    )
+    partitionCache = new SetCache<number>(
+        async () => {
+            const [rows] = await fastify.db.query<RowDataPacket[]>(`SELECT YEAR(FROM_UNIXTIME(timestamp)) as year FROM left4dead2.activity_log GROUP BY YEAR(FROM_UNIXTIME(timestamp))`, [])
+            if(rows.length === 0) return new Set([new Date().getFullYear()])
+            return new Set(rows.map(row => Number(row.year)))
+        }
+    ).setStaleFunction((lastFetched, staleTime) => {
+        // Partitions should only need to be updated once every year
+        return new Date(lastFetched).getFullYear() > new Date().getFullYear()
+    })
 
-    // TODO: query list of activity_log* tables and pass them to UI
+    const CURRENT_YEAR = new Date().getFullYear()
 
-    async function getTotalRows(tableName = ACTIVITY_LOG_TABLE_NAME): Promise<DataCache> {
-        if(!cache[tableName] ||Date.now() - cache[tableName].lastFetchTime > LOG_TOTAL_ROW_CACHE_TIME) {
-            const [c] = await fastify.db.execute<RowDataPacket[]>(`SELECT COUNT(*) AS count, MAX(id) as highestId from ${tableName}`)
-            cache[tableName] = {
-                totalRows: c[0].count,
-                highestId: c[0].highestId,
-                lastFetchTime: Date.now()
+    const partitions = await partitionCache.fetch()
+    async function getTotalRows(year: number | null): Promise<DataCache> {
+        let value = partitionRowCache.get(year)
+        // Fetch data if: (1) no cached data (2) if data is for this year/null and exceeds LOG_TOTAL_ROW_CACHE_TIME
+        // Any other year, the data will never change.
+        if(!value || (!year || year == new Date().getFullYear()) && Date.now() - value.lastFetchTime > LOG_TOTAL_ROW_CACHE_TIME) {
+            try {
+                const [c] = await fastify.db.execute<RowDataPacket[]>(`SELECT COUNT(*) AS count, MAX(id) as highestId, MIN(id) as lowestId from ${ACTIVITY_LOG_TABLE_NAME} ${year != null ? `PARTITION (p${year})` : ''}`)
+                value = {
+                    totalRows: c[0].count,
+                    highestId: c[0].highestId,
+                    lowestId: c[0].lowestId,
+                    lastFetchTime: Date.now()
+                }
+                partitionRowCache.set(year, value)
+            } catch(err) {
+                // Ignore invalid partitions
+                if(err.code !== "ER_UNKNOWN_PARTITION") {
+                    throw err
+                }
             }
         }
-        return cache[tableName]
+        return value
+    }
+    // Fetch null to get the complete number of rows
+    await getTotalRows(null)
+    for await (const part of partitions) {
+        getTotalRows(part)
     }
 
     fastify.get('/data', async(req, reply) => {
+        const servers = await serverFilterCache.fetch()
+        const partitions = Object.fromEntries(partitionRowCache)
         return {
-            servers: logServerCache,
-            cache: {
-                main: await getTotalRows("activity_log"),
-                archive: await getTotalRows("activity_log_archive")
-            }
+            servers: [...servers],
+            cache: partitions
         }
     })
 
@@ -85,8 +148,6 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         const limit = req.query.limit ?? 30 
 
         let tableName = ACTIVITY_LOG_TABLE_NAME
-        if(!req.query.source) req.query.source = "main"
-        if(req.query.source != "main") tableName += `_${req.query.source}`
 
         const query = new QueryBuilder(tableName, "l")
             .selectMultiple("id", "l.timestamp", "server", "type", "client", "target", "message", "metadata")
@@ -128,7 +189,9 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         const startTime = Date.now()
         let [logs] = (await query.execute(fastify.db))
 
-        let cache = await getTotalRows(tableName)
+        let year = parseInt(req.query.source)
+        if(!year || isNaN(year)) year = CURRENT_YEAR
+        let cache = await getTotalRows(year)
         const missingNameSet = new Set<SteamID>()
 
         logs = logs.map(log => {
@@ -197,7 +260,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             })
         }
 
-        const [rows] = await fastify.db.query<RowDataPacket[]>("SELECT id, message, type, client FROM activity_log WHERE id = ?", [ req.params.id ])
+        const [rows] = await fastify.db.query<RowDataPacket[]>(`SELECT id, message, type, client FROM ${ACTIVITY_LOG_TABLE_NAME} WHERE id = ?`, [ req.params.id ])
         if(rows.length == 0) {
             return reply.code(404).send({
                 error: "NOT_FOUND",
@@ -209,7 +272,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             if(rows[0].client === req.session.user.steamid) {
                 fastify.log.info(`${req.session.user.steamid} has redacted message ${rows[0].message}`)
 
-                await fastify.db.query("UPDATE activity_log SET message = '[redacted]' WHERE id = ?", [ rows[0].id ])
+                await fastify.db.query(`UPDATE ${ACTIVITY_LOG_TABLE_NAME} SET message = '[redacted]' WHERE id = ?`, [ rows[0].id ])
         
                 return reply.code(204).send()
             } else {

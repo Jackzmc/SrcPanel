@@ -37,12 +37,9 @@
         <h5 class="title is-5">Servers</h5>
         <p class="subtitle is-6">Click any tag to enable or disable the collection from the server. The server must be restarted for the changes to apply.</p>
         <div class="field is-grouped is-grouped-multiline">
-          <div class="control" v-for="(installed, dest) in installInfo.collection" :key="dest">
-            <div class="tags has-addons">
-              <span class="tag is-dark">{{ dest }}</span>
-              <a class="tag is-success" v-if="installed" @click="installAddons(dest, 'uninstall')" data-tooltip="Click here to disable">Enabled</a>
-              <a class="tag is-danger" v-else @click="installAddons(dest, 'install')" data-tooltip="Click here to enable">Disabled</a>
-            </div>
+          <div class="field mr-2" v-for="(installed, dest) in installInfo.collection" :key="dest">
+            <input :id="dest" type="checkbox" class="switch is-rtl" :checked="installed" @click="enableAddons(dest, installed ? 'disable' : 'enable')" :disabled="installed == null">
+            <label :for="dest">{{ dest }}</label>
           </div>
         </div>
         <br>
@@ -53,24 +50,12 @@
             <tr>
               <th>Filename</th>
               <th>File Size</th>
-              <th>Installed On</th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="child in props.addon.children" :key="child.filename">
-              <td><router-link :to="{ name: 'addon-info', params: { shareId: props.share.id, addon: child.filename } }">{{ child.filename }}</router-link></td>
+              <td><router-link :to="{ name: 'file-info', params: { shareId: props.share.id, addon: child.filename } }">{{ child.filename }}</router-link></td>
               <td>{{ formatSize(child.filesize) }}</td>
-              <td>
-                <div class="field is-grouped is-grouped-multiline">
-                  <div class="control" v-for="(installed, dest) in installInfo.children[child.filename]" :key="dest">
-                    <div class="tags has-addons">
-                      <span class="tag is-dark">{{ dest }}</span>
-                      <a class="tag is-success" v-if="installed" @click="installAddon(dest, 'uninstall', child.filename)" data-tooltip="Click here to disable">Enabled</a>
-                      <a class="tag is-danger" v-else @click="installAddon(dest, 'install', child.filename)" data-tooltip="Click here to enable">Disabled</a>
-                    </div>
-                  </div>
-                </div>
-              </td>
             </tr>
           </tbody>
         </table>
@@ -128,24 +113,24 @@ const totalFileSize = computed(() => {
   return formatSize(size)
 })
 
-async function installAddons(destKey: string, mode: "install" | "uninstall") {
+async function enableAddons(destKey: string, mode: "enable" | "disable") {
   for(const child of props.addon.children) {
-    await installAddon(destKey, mode, child.filename)
+    await enableAddon(destKey, mode, child.filename)
   }
 }
 
-async function installAddon(destKey: string, mode: "install" | "uninstall", filename: string) {
+async function enableAddon(destKey: string, mode: "enable" | "disable", filename: string) {
   try {
     const response = await fetch(`/api/shares/${props.share.id}/addons/${filename}/${mode}/${destKey}`, { method: 'POST' })
     const json = await response.json()
     if(response.ok) {
       // Update local copy
-      installInfo.value.children[filename][destKey] = (mode == "install")
+      installInfo.value.children[filename][destKey] = (mode == "enable")
       if(!pendingRestarts.value.includes(destKey))
         pendingRestarts.value.push(destKey)
       notify({
         type: "success",
-        text: mode == "install" ? `Enabled ${filename} on ${destKey}` : `Disabled ${filename} on ${destKey}`
+        text: mode == "enable" ? `Enabled ${filename} on ${destKey}` : `Disabled ${filename} on ${destKey}`
       })
     } else {
       notify({
