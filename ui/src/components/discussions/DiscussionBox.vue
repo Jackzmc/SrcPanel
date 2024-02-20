@@ -44,7 +44,7 @@
       <textarea class="textarea" readonly placeholder="Enter your submission" v-model="discuss.value" @input="submitChoiceDebounceMultiOrText"></textarea>
     </Field>
   </div>
-  <div class="columns" v-if="!selected">
+  <div class="columns mt-3" v-if="!selected">
     <div class="column">
       <div class="columns is-gapless" v-if="discuss.responses.users">
         <div class="column is-narrow" v-for="(user, i) in discuss.responses.users.slice(0, MAX_DISCUSSION_AVATARS)" :key="i">
