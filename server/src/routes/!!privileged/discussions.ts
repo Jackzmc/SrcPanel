@@ -96,6 +96,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
         await conn.commit()
         discManager.set(discuss.id, discuss)
+        // TODO: REMOVE ME, TEMP FIX
+        await discManager.fetchDiscussions()
         return reply.status(204).send()
     })
 
@@ -135,6 +137,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             options: discuss.options,
             commentsCount: 0
         })
+        // TODO: REMOVE ME, TEMP FIX
+        await discManager.fetchDiscussions()
         return {
             id: ok.insertId
         }
