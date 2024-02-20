@@ -7,16 +7,9 @@
       </div>
       <br>
       <div class="box question-box" v-if="loadState == LoadState.Success">
-        <div class="taglist">
-          <!-- <template v-if="discuss.closedAt">
-            <span v-else class="tag is-link is-inline is-pulled-right">
-              <Icon icon="fa-clock">Ends {{ expiresText }}</Icon>
-            </span>
-          </template> -->
-        </div>
         <h5 class="title is-5"><b>Discuss:</b> <span contenteditable @blur="(event) => saveText('title', event as FocusEvent)" @keydown.enter.prevent="(event) => saveText('title', event as KeyboardEvent)">{{discuss.title}}</span></h5>
         <p class="subtitle" contenteditable @blur="(event) => saveText('description', event as FocusEvent)" @keydown.enter.prevent="(event) => saveText('description', event as KeyboardEvent)">{{ discuss.description }}</p>
-        <div class="columns">
+        <div class="columns" v-if="discuss.type == APIDiscussionType.Radio || discuss.type == APIDiscussionType.Checkbox">
           <div class="column is-6">
             <div class="box field is-clickable" v-for="option of getOptions(0)" :key="option.id" @click="editOption(option)">
               <label>{{ option.label }}</label>
@@ -34,11 +27,17 @@
             </a>
           </div>
         </div>
+        <div v-else-if="discuss.type == APIDiscussionType.ShortText">
+          <Field>
+            <!-- TODO: need support from interface -->
+            <input type="text" class="input" readonly placeholder="Enter your submission">
+          </Field>
+        </div>
       </div>
       <div class="box question-box" v-else>
         <router-link :to="{name: 'discuss'}"><Icon icon="fa-arrow-left" class="is-pulled-left" text="Back to discussions" /></router-link>
         <br>
-        <p class="is-size-3 has-text-centered my-4 ml-3" v-if="loadState == LoadState.Loading"><Icon icon="fa-spinner" spin>Fetching discussion...</Icon></p>
+        <p class="is-size-3 has-text-centered my-4" v-if="loadState == LoadState.Loading"><Icon icon="fa-spinner" icon-class="mr-4" spin>Fetching discussion...</Icon></p>
         <p class="is-size-4 has-text-centered has-text-danger my-4" v-else><Icon icon="fa-times">An error occurred. Could not fetch discussion.</Icon></p>
       </div>
     </div>
@@ -48,7 +47,7 @@
         <div class="list-item">
           <div class="list-item-content">
             <div class="list-item-title">
-              <Icon icon="fa-info-circle" icon-class="has-text-info" text-left="Type" :data-tooltip="'Radio - only one option can be selected\nCheckbox - multiple items can be selected'"></Icon>
+              <Icon icon="fa-info-circle" icon-class="has-text-info no-border" text-left="Type" :data-tooltip="'Radio - only one option can be selected\nCheckbox - multiple items can be selected'"></Icon>
             </div>
           </div>
           <div class="list-item-controls">
@@ -90,18 +89,39 @@
         <div class="list-item">
           <div class="list-item-content">
             <div class="list-item-title">
-              <Icon icon="fa-info-circle" icon-class="has-text-info no-border" text-left="Responses" data-tooltip="Should the users who responded be shown publicly"></Icon>
+              <Icon icon="fa-info-circle" icon-class="has-text-info no-border" text-left="Respondants" data-tooltip="Should the users who responded be shown publicly"></Icon>
             </div>
           </div>
           <div class="list-item-controls">
             <div class="field has-addons">
               <p class="control">
-                <button :class="['button', {'is-info': (discuss.flags & APIDiscussionFlags.RespondersPublic) != 0}]" @click="toggleFlag(APIDiscussionFlags.RespondersPublic)">
+                <button :class="['button', {'is-info': hasFlag(APIDiscussionFlags.RespondersPublic)}]" @click="setFlag(APIDiscussionFlags.RespondersPublic, true)">
                   <Icon icon="fa-eye">Public</Icon>
                 </button>
               </p>
               <p class="control">
-                <button :class="['button', {'is-info': (discuss.flags & APIDiscussionFlags.RespondersPublic) == 0}]" @click="toggleFlag(APIDiscussionFlags.RespondersPublic)">
+                <button :class="['button', {'is-info': !hasFlag(APIDiscussionFlags.RespondersPublic)}]" @click="setFlag(APIDiscussionFlags.RespondersPublic, false)">
+                  <Icon icon="fa-eye-slash">Hidden</Icon>
+                </button>
+              </p>
+            </div>
+          </div>
+        </div>
+        <div class="list-item" v-if="(discuss.flags & APIDiscussionFlags.RespondersPublic) != 0">
+          <div class="list-item-content">
+            <div class="list-item-title">
+              <Icon icon="fa-info-circle" icon-class="has-text-info no-border" text-left="Responses" data-tooltip="Should the users who responded have their responses public?"></Icon>
+            </div>
+          </div>
+          <div class="list-item-controls">
+            <div class="field has-addons">
+              <p class="control">
+                <button :class="['button', {'is-info': hasFlag(APIDiscussionFlags.ResponsesPublic)}]" @click="setFlag(APIDiscussionFlags.ResponsesPublic, true)">
+                  <Icon icon="fa-eye">Public</Icon>
+                </button>
+              </p>
+              <p class="control">
+                <button :class="['button', {'is-info': !hasFlag(APIDiscussionFlags.ResponsesPublic)}]" @click="setFlag(APIDiscussionFlags.ResponsesPublic, false)">
                   <Icon icon="fa-eye-slash">Hidden</Icon>
                 </button>
               </p>
@@ -113,7 +133,7 @@
       <div class="buttons">
         <a :class="['button','is-success',{'is-loading': isSaving }]" @click="save" :disabled="isSaving ? true : undefined ">{{ isNew ? 'Create Discussion' : 'Save Changes' }}</a>
         <a class="button" @click="confirmCancel">Cancel</a>
-        <a class="button is-warning" @click="archive"><Icon icon="fa-box-archive">Archive</Icon></a>
+        <a v-if="!isNew" class="button is-warning" @click="archive"><Icon icon="fa-box-archive">Archive</Icon></a>
       </div>
     </div>
   </div>
@@ -182,8 +202,15 @@ const discuss = ref<APIDiscussionBase>({
 })
 const isSaving = ref(false)
 
-function toggleFlag(flag: APIDiscussionFlags) {
-  discuss.value.flags = discuss.value.flags ^ flag
+function setFlag(flag: APIDiscussionFlags, state: boolean) {
+  if(state) {
+    discuss.value.flags |= flag;
+  } else {
+    discuss.value.flags &= ~flag;
+  }
+}
+function hasFlag(flag: APIDiscussionFlags) {
+  return (discuss.value.flags & flag) != 0
 }
 
 let dummyId = 0
@@ -271,6 +298,14 @@ onMounted(async() => {
     } else {
       loadState.value = LoadState.Error
     }
+  } else {
+    loadState.value = LoadState.Success
   }
 })
 </script>
+
+<style scoped>
+span[data-tooltip] {
+  border: 0;
+}
+</style>

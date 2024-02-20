@@ -40,7 +40,7 @@ export default class DiscussionManager {
         return totalOpenDiscussions - rows.length
     }
 
-    async getResponses(id: number, user: User, includeUsers: boolean): Promise<{ responses: APIResponsesData, userSelection: number[] }> {
+    async getResponses(id: number, user: User, flags: APIDiscussionFlags): Promise<{ responses: APIResponsesData, userSelection: number[] }> {
         const totalUsers = this.#authmngr.AdminCount
         const domain = await this.#config.GetKV("domain");
         const [responses] = await this.#db.execute<RowDataPacket[]>(
@@ -58,12 +58,23 @@ export default class DiscussionManager {
                 userSelection.push(Number(response.choice))
             }
         }
+        let users = undefined
+        if(flags & APIDiscussionFlags.RespondersPublic) {
+            users = responses.map(r => {
+                // TODO: implement ResponsesPublic
+                return { 
+                    id: r.steamid, 
+                    name: r.name, 
+                    avatarUrl: `${domain}/api/users/${r.steamid}/avatar` 
+                }
+            })
+        }
         return {
             responses: {
                 totalCount: responses.length,
                 percentVoted: responses.length / totalUsers,
                 counts,
-                users: includeUsers ? responses.map(r => ({ id: r.steamid, name: r.name, avatarUrl: `${domain}/api/users/${r.steamid}/avatar` })) : undefined
+                users
             },
             userSelection
         }

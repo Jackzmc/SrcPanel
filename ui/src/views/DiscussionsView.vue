@@ -36,6 +36,7 @@
               {{ user.name }}
             </div>
           </div>
+          <div class="list-item-controls" v-if="selectedDiscussion.flags & APIDiscussionFlags.ResponsesPublic">
         </div>
       </div>
     </div>

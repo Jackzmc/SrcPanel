@@ -1,11 +1,11 @@
 export enum APIDiscussionFlags {
     None = 0,
     /** Should the avatars/names of those that responded be vsible **/
-    RespondersPublic,
+    RespondersPublic = 1,
     /** Is not listed in main list, no more comments or responses can be made */
-    Archived,
+    Archived = 2,
     /** Should the actual choices / response be visible? (Requires RespondersPublic) */
-    ResponsesPublic
+    ResponsesPublic = 4
 }
 
 export enum APIDiscussionType {
@@ -87,7 +87,7 @@ export interface DiscussionMulti<T extends APIDiscussionType> extends BaseDiscus
 }
 export interface DiscussionText<T extends APIDiscussionType> extends BaseDiscussion {
     type: T
-    text: string
+    value: string
 }
 export type Discussion = DiscussionRadio | DiscussionMulti<APIDiscussionType.Selection> |  DiscussionMulti<APIDiscussionType.Checkbox> | DiscussionText<APIDiscussionType.LongText> | DiscussionText<APIDiscussionType.ShortText>
 export type DiscussionDetailed = Discussion & APIDiscussionDetails
