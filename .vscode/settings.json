@@ -4,7 +4,8 @@
             "splitTerminals": [
                 {
                     "name": "ui",
-                    "commands": ["cd ui", "yarn", "yarn serve"]
+                    /* sometimes first command gets skipped */
+                    "commands": ["echo", "cd ui", "yarn", "yarn serve"]
                 }
             ]
         },
