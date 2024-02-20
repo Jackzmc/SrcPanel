@@ -9,10 +9,14 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         try {
             const user = await fastify.users.getUser(req.params.steamid)
             if(user?.avatarHash) {
-                return reply.redirect(`https://avatars.steamstatic.com/${user.avatarHash}_full.jpg`)
+                // Setup cache control to make the 301 have a lifetime
+                if(!req.query.noCache) {
+                    reply.header("ETag", user.avatarHash)
+                    reply.header('Cache-Control', 'public, maxage=29030400, stale-while-revalidate=86400, stale-if-error=86400')
+                }
+                return reply.redirect(301, `https://avatars.steamstatic.com/${user.avatarHash}_full.jpg`)
             } else {
-                // const username = await fastify.users.getStatsName(steamid)
-                // const buffer = Buffer.from(GeoPattern.generate(req.params.steamid, { }).toBase64(), "base64")
+                // Fallback to an identicon based off their steamid, incase we don't have the user information, or its not a real steam user.
                 const buffer = await getIdenticon({ id: req.params.steamid, size: 150 })
                 if(buffer.length > 0 && !req.query.noCache) {
                     reply.header("ETag", Buffer.from(IDENTICON_VERSION + req.params.steamid + buffer.length).toString('base64'))
@@ -21,10 +25,9 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 reply.header("Content-Type", "image/png")
                 reply.header('Content-Length', buffer.length)
                 return buffer
-                // return reply.redirect(`https://ui-avatars.com/api/?name=${username ?? "UNK"}`)
             }
         } catch(ex) {
-            console.log(ex)
+            req.log.error(ex, "failed to generate identicon")
         }
     })
 }
