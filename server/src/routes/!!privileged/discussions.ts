@@ -94,12 +94,13 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 )
             }
         }
-        discManager.set(discuss.id, discuss)
         await conn.commit()
+        discManager.set(discuss.id, discuss)
         return reply.status(204).send()
     })
 
     fastify.post('/', async (req: FastifyRequest<{Params: { id: string}}>, reply) => {
+        // TODO: check fields exist
         const discuss = req.body as APIDiscussion
         const conn = await fastify.db.getConnection()
         await conn.beginTransaction()
@@ -116,8 +117,24 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 [ok.insertId, option.label]
             )
         }
-        discManager.set(discuss.id, discuss)
         await conn.commit()
+        const domain = await fastify.config.GetKV("domain");
+        discManager.set(discuss.id, {
+            id: discuss.id,
+            title: discuss.title,
+            description: discuss.description,
+            timestamp: Math.round(Date.now()/1000),
+            creator: {
+                id: req.user.steamid2,
+                name: await req.user.name(),
+                avatarUrl: `${domain}/api/user/${req.user.steamid2}/avatar`
+            },
+            closedAt: discuss.closedAt,
+            type: discuss.type,
+            flags: discuss.flags,
+            options: discuss.options,
+            commentsCount: 0
+        })
         return {
             id: ok.insertId
         }

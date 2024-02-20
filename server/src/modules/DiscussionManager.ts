@@ -44,7 +44,7 @@ export default class DiscussionManager {
         const totalUsers = this.#authmngr.AdminCount
         const domain = await this.#config.GetKV("domain");
         const [responses] = await this.#db.execute<RowDataPacket[]>(
-            "SELECT res.steamid, res.choice, u.last_alias as name FROM `left4dead2-admins`.dash_discussion_responses res LEFT JOIN `left4dead2`.stats_users u ON res.steamid = u.steamid WHERE res.discussion_id = ?", [id]
+            "SELECT res.steamid, res.choice, u.name as name FROM `left4dead2-admins`.dash_discussion_responses res LEFT JOIN `left4dead2`.user_names u ON SUBSTRING(res.steamid, 11) = u.steamid WHERE res.discussion_id = ?", [id]
         )
         const counts: Record<string, APICountData> = {}
         const userSelection: number[] = []
@@ -92,7 +92,7 @@ export default class DiscussionManager {
 
     async fetchDiscussions() {
         const domain = await this.#config.GetKV("domain");
-        let [rows] = await this.#db.execute<RowDataPacket[]>("SELECT d.*, u.last_alias as creator_name, (SELECT COUNT(*) FROM `left4dead2-admins`.dash_discussion_comments WHERE discussion_id = d.id) as comments FROM `left4dead2-admins`.dash_discussions d LEFT JOIN `left4dead2`.stats_users u ON u.steamid = d.creator WHERE d.flags & 2 = 0 ORDER BY d.timestamp DESC")
+        let [rows] = await this.#db.execute<RowDataPacket[]>("SELECT d.*, u.name as creator_name, (SELECT COUNT(*) FROM `left4dead2-admins`.dash_discussion_comments WHERE discussion_id = d.id) as comments FROM `left4dead2-admins`.dash_discussions d LEFT JOIN `left4dead2`.user_names u ON SUBSTRING(d.creator, 11) = u.steamid WHERE d.flags & 2 = 0 ORDER BY d.timestamp DESC")
         for(const row of rows) {
             if(row.closed_at && Date.now() - (row.closed_at*1000) > AUTO_ARCHIVE_TIME) {
                 // Auto archive
