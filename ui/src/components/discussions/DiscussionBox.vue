@@ -126,7 +126,8 @@ const isClosed = computed(() => {
   return discuss.value.closedAt && (discuss.value.closedAt*1000) < Date.now()
 })
 const showPercents = computed(() => {
-  return props.responses?.counts != undefined && (isClosed.value || props.selected)
+  if(!(discuss.value.flags & APIDiscussionFlags.RespondersPublic)) return false
+  return props.responses?.counts != undefined
 })
 const canInteract = computed(() => {
   return !isClosed.value && !props.selected
