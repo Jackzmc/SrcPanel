@@ -2,7 +2,8 @@
 <section>
   <div class="tabs">
     <ul>
-      <li v-for="(name, tab) in TAB_NAMES" :key="tab" :class="{'is-active': route.params.tab === tab }"><router-link :to="{params: { tab }}">{{ name }}</router-link></li>
+      <!-- TODO: disable 'profile' for non-admins -->
+      <li v-for="tab in TABS" :key="tab.id" :class="{'is-active': route.params.tab === tab.id }"><router-link :to="{params: { tab: tab.id }}">{{ tab.name }}</router-link></li>
     </ul>
   </div>
   <template v-if="route.params.tab === 'stats'">
@@ -190,11 +191,16 @@ import { Tab } from 'vue3-tabs-component';
 const MONTHS = [ "January", "February", "March", "April", "May", "June",
 "July", "August", "September", "October", "November", "December" ];
 
-const TAB_NAMES: Record<string, string> = {
-  stats: 'Stats',
-  profile: 'Profile',
-  actions: 'Actions'
-}
+const TAB_DATA: { id: string, name: string, enableFn?: () => boolean }[] = [
+  { id: "stats", name: 'Stats' },
+  { id: "profile", name: 'Profile', enableFn: () => props.user.isAdmin },
+  { id: "actions", name: 'Actions' }
+]
+const TABS = computed(() => {
+  return TAB_DATA.filter(tab => {
+    return !tab.enableFn || tab.enableFn()
+  })
+})
 
 const emit = defineEmits(['update-user'])
 const router = useRouter()
@@ -242,13 +248,19 @@ watch(() => props.user.steamid, () => {
   onTab(route.params.tab as string)
 })
 
-async function onTab(tab: string) {
-  if(tab === "stats" && !info.value) {
+async function onTab(tabId: string) {
+  const tabData = TABS.value.find(tab => tab.id == tabId)
+  // If there is no tab, or the tab is not valid for user, reset to stats
+  if(!tabData || tabData.enableFn && !tabData.enableFn()) {
+    router.replace({...route, ...{ params: { ...route.params, tab: 'stats'}}})
+    return
+  }
+  if(tabId === "stats" && !info.value) {
     await Promise.allSettled([
       fetchStats(),
       fetchAnalysis()
     ])
-  } else if(tab === "profile" && !profile.value.data) {
+  } else if(tabId === "profile" && !profile.value.data) {
     await fetchProfileData()
   }
 }
