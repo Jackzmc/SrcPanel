@@ -4,6 +4,8 @@ import { ADMINS_DB } from '../!!privileged/admins.js';
 import SteamID from 'steamid';
 import { BanAppeal, FullAPIBan } from '../../../../common-types/Ban.js';
 import { NAME_INVALID_CHAR_REPLACE } from '../../routes/!unprivileged/bans.js';
+import { UserProfileData } from '../../../../common-types/User.js';
+import { NOT_FOUND, NO_PERMISSION } from '../../responses.js';
 
 
 const RECENT_DEFAULT_LIMIT = 25
@@ -127,6 +129,26 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         return {
             user
         }
+    })
+
+    fastify.get('/:steamid/profile', async(req: FastifyRequest<{Params: { steamid: string }}>, reply): Promise<UserProfileData> => {
+        const [rows] = await fastify.db.query<RowDataPacket[]>("SELECT * FROM `left4dead2-admins`.panel_user_data WHERE steamid = ?", [ req.params.steamid ])
+        if(rows.length == 0) return NOT_FOUND(reply, "User has no profile data")
+        return {
+            birthDate: rows[0].birth_date,
+            birthMonth: rows[0].birth_month
+        }
+    })
+
+    fastify.post('/:steamid/profile', async(req: FastifyRequest<{Params: { steamid: string }, Body: UserProfileData}>, reply): Promise<UserProfileData> => {
+        if(req.params.steamid !== req.user.steamid2) {
+            return NO_PERMISSION(reply, "You can only edit your own profile")
+        }
+        await fastify.db.query<OkPacket>(
+            "INSERT INTO `left4dead2-admins`.panel_user_data (steamid, birth_date, birth_month) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE birth_date = ?, birth_month = ?",
+            [ req.user.steamid2, req.body.birthDate, req.body.birthMonth, req.body.birthDate, req.body.birthMonth ]
+        )
+        return reply.status(204).send()
     })
 
     fastify.get('/:steamid', async(req: FastifyRequest<{

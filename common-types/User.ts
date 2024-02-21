@@ -139,3 +139,7 @@ export interface AddUserNotification extends UserNotificationOptions {
 export interface UserNotificationOptions {
     link?: string
 }
+export interface UserProfileData {
+    birthDate?: number,
+    birthMonth?: number // 0 indexed. 11 is dec
+}
