@@ -1,7 +1,7 @@
 <template>
   <div class="modal is-active">
     <div class="modal-background"></div>
-    <div class="modal-card" style="width:800px">
+    <div class="modal-card" style="width:50%">
       <header class="modal-card-head">
         <p class="modal-card-title" v-if="user">
           <image class="image is-24x24 is-inline-block mr-2">
