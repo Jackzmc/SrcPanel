@@ -191,7 +191,7 @@
         </div>
         <p class="help has-text-danger">This will disable any policy checks, and allow granting or editing admins. Does not disable immunity checks</p>
       </div>
-      <div class="field" v-if="userAdminData">
+      <div class="field" v-if="userAdminData && !privUser.equals(user.steamid) && privUser.hasPermission('admins.impersonate')">
         <div class="control">
           <a class="button" style="background-color: #c42dbf; color: white;" @click='impersonate'>
             <template v-if='privUser.ImpersonatingSteamId === userAdminData.steamid'>
