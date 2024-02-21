@@ -206,12 +206,12 @@ const routes = [
         children: [
           {
             name: 'manage-user-overview',
-            path: '',
-            alias: 'overview',
+            path: 'overview/:tab?',
+            alias: '',
             component: () => import('../components/manage-user/modals/ManageOverview.vue'),
             meta: {
               authRequired: true
-            }
+            },
           },
           {
             name: 'manage-user-admin',

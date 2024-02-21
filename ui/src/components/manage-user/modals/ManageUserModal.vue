@@ -1,9 +1,12 @@
 <template>
   <div class="modal is-active">
     <div class="modal-background"></div>
-    <div class="modal-card">
+    <div class="modal-card" style="width:800px">
       <header class="modal-card-head">
         <p class="modal-card-title" v-if="user">
+          <image class="image is-24x24 is-inline-block mr-2">
+            <img :src="'/api/users/' + user.steamid + '/avatar'" />
+          </image>
           <b>{{user.name}}</b> <span class="is-pulled-right">{{user.steamid}}</span></p>
         <p v-else-if="fetchError" class="modal-card-title has-text-danger">Error</p>
         <Icon icon="spinner" v-else spin>Fetching user...</Icon>
@@ -19,8 +22,8 @@
       <section class="modal-card-body" v-else-if="user">
         <div class="tabs is-fullwidth is-boxed is-centered">
           <ul>
-            <router-link :to="{ name: 'manage-user-overview' }" v-slot="{ href, navigate, isExactActive }" custom>
-              <li :class="{'is-active': isExactActive}">
+            <router-link :to="{ name: 'manage-user-overview', params: { tab: 'stats' } }" v-slot="{ href, navigate}" custom>
+              <li :class="{'is-active': route.name === 'manage-user-overview' }">
                 <a :href="href" @click="navigate">
                   <Icon icon="fa-info-circle">Overview</Icon>
                 </a>
@@ -36,14 +39,14 @@
               </li>
             </router-link>
             <router-link v-if="privUser.hasPermission('notes.view')" :to="{ name: 'manage-user-notes' }" v-slot="{ href, navigate, isExactActive }" custom>
-              <li :class="{'is-active': isExactActive}">
+              <li :class="{'is-active': isExactActive }">
                 <a :href="href" @click="navigate">
                   <Icon icon="fa-note-sticky">Notes ({{ user?.notesCount ?? 0 }})</Icon>
                 </a>
               </li>
             </router-link>
-            <router-link v-if="privUser.hasPermission('bans.view')" :to="{ name: 'manage-user-bans' }" v-slot="{ href, navigate, isActive }" custom>
-              <li :class="{'is-active': isActive }">
+            <router-link v-if="privUser.hasPermission('bans.view')" :to="{ name: 'manage-user-bans' }" v-slot="{ href, navigate }" custom>
+              <li :class="{'is-active': route.name === 'manage-user-bans' }">
                 <a :href="href" @click="navigate">
                   <Icon icon="fa-gavel">
                     Bans&nbsp;<span :class="{'has-text-danger': user?.bansCount > 0 }">({{ user?.bansCount }})</span>
@@ -51,6 +54,7 @@
                 </a>
               </li>
             </router-link>
+
           </ul>
         </div>
         <router-view :priv-user="privUser" :user="user" :user-admin-data="userAdminData" @close="router.push(routerHref)" @update-user="onUserUpdate" />

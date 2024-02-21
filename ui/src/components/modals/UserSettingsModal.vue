@@ -88,6 +88,26 @@
               <a :class="['button','is-info',{'is-loading': api.loading }]" @click="createApiKey">Create API Key</a>
             </template>
           </Tab>
+          <Tab name="User Data">
+            <p class="title is-5">User Data</p>
+            <div class="field is-horizontal">
+              <div class="field-label is-normal">
+                <label class="label">Birthdate</label>
+              </div>
+              <div class="field is-grouped">
+                <p class="control">
+                  <div class="select">
+                    <select v-model="userData.birthMonth">
+                      <option v-for="month in MONTHS" :key="month">{{ month }}</option>
+                    </select>
+                  </div>
+                </p>
+                <p class="control">
+                  <input style="width:6rem" class="input" type="number" :min="1" :max="30" placeholder="Day" v-model="userData.birthDay">
+                </p>
+              </div>
+            </div>
+          </Tab>
         </Tabs>
       </section>
       <footer class="modal-card-foot">
@@ -111,6 +131,9 @@ import { Tab, Tabs } from "vue3-tabs-component";
 import { SessionData, ProviderConnectionData } from '../../../../common-types/User';
 import OauthProviderCard from "@/components/OauthProviderCard.vue";
 
+const MONTHS = [ "January", "February", "March", "April", "May", "June",
+"July", "August", "September", "October", "November", "December" ];
+
 const emit = defineEmits(["close"]);
 
 const route = useRoute();
@@ -131,6 +154,7 @@ let api = ref<{data: any, loading: boolean}>({
 })
 let currentSessionId = ref<string>();
 
+// Steam is not an actual provider, but OauthCard needs this data so we just spoof:
 const dummySteamProvider = computed(() => {
   return {
     id: 'steam',

@@ -1,6 +1,6 @@
 <template>
 <section>
-  <div class="tabs">
+  <div class="tabs" v-if="bans.length > 0 || canAddBan">
     <ul>
       <li v-for="userBan in bans" :key="userBan.id" :class="{'is-active': ban && ban.id === userBan.id, 'striked': userBan?.expired}" @click="selectBan(userBan)">
         <a>#{{ userBan.id }}&nbsp;<span class="tag is-info" v-if="userBan.activeAppeal">Appeal</span></a>
