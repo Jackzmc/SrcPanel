@@ -2,7 +2,7 @@ import { Pool, RowDataPacket, OkPacket } from "mysql2/promise";
 import QuickLRU from 'quick-lru'
 import { FastifyReply, FastifyRequest } from 'fastify';
 import ActivityLog from "../ActivityLog.js";
-import { AdminData, AdminGroup, OauthProvider, SessionData, ReadableAdminGroup, UserNotification, UserNotificationOptions, AddUserNotification } from '../../../../common-types/User.js';
+import { AdminData, AdminGroup, OauthProvider, SessionData, ReadableAdminGroup, UserNotification, UserNotificationOptions, AddUserNotification, UserProfileData } from '../../../../common-types/User.js';
 import { ReadableAdminData, UserOauthProviders, OauthProviderData } from '../../../../common-types/User.js';
 import { SteamInfo, UserPrivilegeCode } from  '../../../../common-types/Privileges.js';
 import { SteamUserDetails } from '../../../../common-types/Share.js';
@@ -742,6 +742,20 @@ export default class AuthManager {
         if(rows.length === 0) return null
         this.providerNameCache.set(`${provider}:${providerId}`, rows[0].username)
         return rows[0].username
+    }
+
+    /**
+     * Returns user's profile data, if it exists
+     * @param steamid2 
+     * @returns 
+     */
+    public async getProfileData(steamid2: string): Promise<UserProfileData> {
+        const [rows] = await this.db.query<RowDataPacket[]>("SELECT * FROM `left4dead2-admins`.panel_user_data WHERE steamid = ?", [ steamid2 ])
+        if(rows.length == 0) return null
+        return {
+            birthDate: rows[0].birth_date,
+            birthMonth: rows[0].birth_month
+        }
     }
     
     public async loginUser(req: FastifyRequest, admin: ReadableAdminData, steamDetails?: SteamUserDetails) {

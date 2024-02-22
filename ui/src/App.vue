@@ -1,6 +1,7 @@
 <template>
   <div id="app">
     <!-- <v-tour v-if="tour" :name="tour.name" :steps="tour.steps"></v-tour> -->
+    <BirthdayComponent v-if="isBirthday" @close="closeBirthday" />
     <Notifications position="top center" :duration=7000 @start="onNotificationShown" />
     <NavBar v-if="!$route.meta.hideNav" @logout="onLogout" :update-info="updateInfo" :priv-user="privUser" @notifications:clear="clearNotifications" />
     <br>
@@ -49,7 +50,7 @@
 </template>
 
 <script setup lang="ts">
-import { onBeforeMount, ref, computed } from 'vue'
+import { onBeforeMount, ref, computed, defineAsyncComponent } from 'vue';
 import NavBar from '@/components/NavBar.vue'
 import { useRoute, useRouter } from 'vue-router';
 import { PrivilegedUser} from '@/js/User'
@@ -57,6 +58,8 @@ import { NotificationItem, notify } from '@kyvg/vue3-notification';
 import { ClientUserData } from '../../common-types/User';
 import * as Sentry from "@sentry/vue";
 import { request } from './js/util.js';
+
+const BirthdayComponent = defineAsyncComponent(() => import("@/components/BirthdayComponent.vue"))
 
 const LAST_UPDATED = new Date(Number(BUILD_TIMESTAMP))
 const lastUpdated = computed(() => {
@@ -73,6 +76,7 @@ let updateInfo = ref<{
 
 let userdata = ref<ClientUserData>()
 let privUser = ref<PrivilegedUser>()
+let isBirthday = ref(false)
 let tour = ref<{name: string, steps: any[]}|undefined>()
 
 function reloadPage() {
@@ -83,6 +87,15 @@ function reloadPage() {
 function updateAvailable(event: any) {
   updateInfo.value.registration = event.detail
   reloadPage()
+}
+async function onAuthorized() {
+  if(!userdata.value) return
+  if(isModalAllowed("birthday")) {
+    const date = new Date()
+    if(userdata.value.profile && userdata.value.profile.birthMonth == date.getMonth() && userdata.value.profile.birthDate == date.getDate()) {
+      isBirthday.value = true
+    }
+  }
 }
 async function getAuth() {
   // We fetch cache to populate user name / icon
@@ -108,7 +121,8 @@ async function getAuth() {
         type: "warn",
         text: "Your session has expired, please login again.",
       })
-
+    } else {
+      await onAuthorized()
     }
     console.log('Authorized: Hello', json.user.name)
   } else if(response.status === 401 || response.status === 403) {
@@ -181,6 +195,13 @@ function onNotificationShown(item: NotificationItem) {
   }
 }
 
+function closeBirthday() {
+  const popups = (sessionStorage['srcds_dismissed'] ?? "").split(',')
+  popups.push("birthday")
+  sessionStorage.setItem("srcds_dismissed", popups.join(','))
+  isBirthday.value = false
+}
+
 function onLogout() {
   console.debug('user is logging out')
   window.sessionStorage.removeItem('srcds_userdata')
@@ -211,6 +232,11 @@ async function stopImpersonating() {
       text: `Stoped impersonating`
     })
   }
+}
+
+function isModalAllowed(name: string) {
+  const popups = (sessionStorage['srcds_dismissed'] ?? "").split(',')
+  return !popups.includes(name)
 }
 
 onBeforeMount(async() => {

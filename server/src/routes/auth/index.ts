@@ -16,7 +16,9 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     })
 
     fastify.get('/profile', async(req, reply): Promise<UserData<UserPrivilegeCode[]>> => {
+        const profile = await fastify.authmngr.getProfileData(req.user.steamid2)
         return {
+            profile,
             user: req.session.user,
             permissions: req.session.permissions,
             isSessionOld: req.session.version !== SESSION_VERSION,

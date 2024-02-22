@@ -132,12 +132,9 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     })
 
     fastify.get('/:steamid/profile', async(req: FastifyRequest<{Params: { steamid: string }}>, reply): Promise<UserProfileData> => {
-        const [rows] = await fastify.db.query<RowDataPacket[]>("SELECT * FROM `left4dead2-admins`.panel_user_data WHERE steamid = ?", [ req.params.steamid ])
-        if(rows.length == 0) return NOT_FOUND(reply, "User has no profile data")
-        return {
-            birthDate: rows[0].birth_date,
-            birthMonth: rows[0].birth_month
-        }
+        const profile = await fastify.authmngr.getProfileData(req.params.steamid)
+        if(!profile) return NOT_FOUND(reply, "User has no profile data")
+        return profile
     })
 
     fastify.post('/:steamid/profile', async(req: FastifyRequest<{Params: { steamid: string }, Body: UserProfileData}>, reply): Promise<UserProfileData> => {

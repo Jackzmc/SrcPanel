@@ -23,6 +23,7 @@ export interface ImpersationData {
     }
 }
 export interface UserData<T> extends BaseSession<T> {
+    profile: UserProfileData,
     isSessionOld: boolean,
     providers: UserOauthProviders,
     notifications: UserNotification[],
