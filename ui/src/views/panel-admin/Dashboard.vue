@@ -41,9 +41,6 @@
     <Tab name="Shares">
       <JsonConfigEditor v-if="tab == 'Shares'" filename="shares.json" />
     </Tab>
-    <Tab name="Config (Legacy)">
-      <JsonConfigEditor v-if="tab == 'Config (Legacy)'" filename="config.json" />
-    </Tab>
   </Tabs>
   <br>
 </div>
