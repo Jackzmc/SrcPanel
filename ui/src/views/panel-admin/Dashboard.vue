@@ -8,24 +8,9 @@
           <p>Node.JS Version {{serverHealth?.versions?.node}}</p>
           <br>
           <div class="buttons">
-            <a
-              :disabled="canUpdate"
-              :class="['button', {'is-loading': updateStatus.state === 'CHECKING'}]"
-              @click="updateServer">
-              Update Server
-            </a>
-            <a
-              :disabled="canUpdate"
-              :class="['button']"
-              @click="restartServer">
-              Restart Server
-            </a>
-            <a
-              :disabled="canUpdate" class="button"
-              @click="updateAdmins">
-              Update Admins
-            </a>
-
+            <a :disabled="canUpdate" :class="['button', {'is-loading': updateStatus.state === 'CHECKING'}]" @click="updateServer">Update Panel</a>
+            <a :disabled="canUpdate" :class="['button']" @click="restartServer">Restart Panel</a>
+            <a :disabled="canUpdate" :class="['button']" @click="updateAdmins">Update Admins Cache</a>
           </div>
 
           <p class="has-text-danger" v-if="updateStatus.error">{{updateStatus.error}}</p>
