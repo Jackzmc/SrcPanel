@@ -2,10 +2,6 @@ import sqlite3 from 'sqlite3'
 import sqlite, { open } from 'sqlite'
 import SQL from 'sql-template-strings';
 import { join } from 'path';
-import { mkdir, readFile, stat, writeFile } from 'fs/promises';
-import Json5 from 'json5'
-import { ShareDestination, ShareInfo } from '../../../common-types/Share';
-import Share from './Share';
 import { Keyvalue, Keyvalues, PublicKeys } from '../../../common-types/Panel.js';
 
 export interface RegisteredProvider {
@@ -14,13 +10,11 @@ export interface RegisteredProvider {
 }
 
 export default class ConfigManager {
-    private db: sqlite.Database<sqlite3.Database, sqlite3.Statement>
-    private _servers: any[] = null
-    private dataDir: string
+    #db: sqlite.Database<sqlite3.Database, sqlite3.Statement>
+    #servers: any[] = null
 
     public async Load(dataDir: string) {
-        this.dataDir = dataDir
-        this.db = await open({
+        this.#db = await open({
             filename: join(dataDir, "config.db"),
             driver: sqlite3.Database
         })
@@ -28,7 +22,7 @@ export default class ConfigManager {
     }
 
     public async SetupDatabase() {
-        await this.db.run(SQL`create table if not exists shares
+        await this.#db.run(SQL`create table if not exists shares
         (
             id               varchar(32)   not null,
             name             varchar(64)   null,
@@ -39,7 +33,7 @@ export default class ConfigManager {
             constraint shares_pk
                 primary key (id)
         );`)
-        await this.db.run(SQL`create table if not exists share_dests
+        await this.#db.run(SQL`create table if not exists share_dests
         (
             share_id varchar(32) not null,
             id       varchar(32) not null,
@@ -51,7 +45,7 @@ export default class ConfigManager {
             constraint share_dests_shares_id_fk
                 foreign key (share_id) references shares (id)
         );`)
-        await this.db.run(SQL`create table if not exists keyvalues
+        await this.#db.run(SQL`create table if not exists keyvalues
         (
             key varchar(64) not null,
             value smalltext not null,
@@ -62,12 +56,12 @@ export default class ConfigManager {
     }
 
     public async GetServers(): Promise<any[]> {
-        if(!this._servers) await this.RefreshServers()
-        return this._servers
+        if(!this.#servers) await this.RefreshServers()
+        return this.#servers
     }
 
     public async RefreshServers(){
-        this._servers = []
+        this.#servers = []
     }
 
     public async GetPublicKeyvalues() {
@@ -80,7 +74,7 @@ export default class ConfigManager {
 
     public async FindProviders() {
         const providers: RegisteredProvider[] = []
-        const data: {key: string}[] = await this.db.all(SQL`SELECT SUBSTRING(key,11) as key FROM keyvalues WHERE key LIKE "providers.%"`)
+        const data: {key: string}[] = await this.#db.all(SQL`SELECT SUBSTRING(key,11) as key FROM keyvalues WHERE key LIKE "providers.%"`)
         for(const row of data) {
             const provider = row.key.split(".").shift()
             if(!providers.some(p => p.id === provider)) {
@@ -101,12 +95,12 @@ export default class ConfigManager {
      * @returns list of { key, value }
      */
     public async GetKVChildren(...parents: string[]): Promise<{key: string, value: string}[]> {
-        const data = await this.db.all(SQL`SELECT key, value FROM keyvalues WHERE key LIKE '${parents.join(".")}.%'`)
+        const data = await this.#db.all(SQL`SELECT key, value FROM keyvalues WHERE key LIKE '${parents.join(".")}.%'`)
         return data
     }
 
     public async GetKV<T extends number | string = string>(key: Keyvalue, defaultValue?: T): Promise<T> {
-        const data = await this.db.get(SQL`SELECT value FROM keyvalues WHERE key = ${key}`)
+        const data = await this.#db.get(SQL`SELECT value FROM keyvalues WHERE key = ${key}`)
         if(!data) return defaultValue
         return data.value as T ?? defaultValue
     }
@@ -121,7 +115,7 @@ export default class ConfigManager {
 
     public async SetKV(key: Keyvalue, value: string | number) {
         if(value == null || value == undefined) await this.deleteKV(key)
-        else await this.db.run(SQL`REPLACE INTO keyvalues (key, value) VALUES (${key}, ${value})`)
+        else await this.#db.run(SQL`REPLACE INTO keyvalues (key, value) VALUES (${key}, ${value})`)
     }
     /**
      * Similar to GetKVNamespaced, but the key must be in its own array
@@ -130,11 +124,11 @@ export default class ConfigManager {
     public async SetKVNamespaced(key: string[], value: string | number) {
         const dbKey = key.join(".") as Keyvalue
         if(value == null || value == undefined) await this.deleteKV(dbKey)
-        else await this.db.run(SQL`REPLACE INTO keyvalues (key, value) VALUES (${dbKey}, ${value})`)
+        else await this.#db.run(SQL`REPLACE INTO keyvalues (key, value) VALUES (${dbKey}, ${value})`)
     }
 
     private async deleteKV(key: Keyvalue) {
-        await this.db.run(SQL`DELETE FROM keyvalues WHERE key = ${key}`)
+        await this.#db.run(SQL`DELETE FROM keyvalues WHERE key = ${key}`)
     }
 
     private async checkRequiredKeys() {

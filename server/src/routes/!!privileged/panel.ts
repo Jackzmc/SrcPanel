@@ -2,7 +2,6 @@ import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
 import { Keyvalue, Keyvalues, KeyConfig } from '../../../../common-types/Panel.js';
 import { NO_PERMISSION } from '../../responses.js';
 import path from 'node:path';
-import { createReadStream } from 'node:fs';
 import Json5 from 'json5'
 import { readFile, writeFile } from 'node:fs/promises';
 

@@ -1,4 +1,3 @@
-import { readFileSync } from 'fs'
 import { mkdir, readFile, stat } from 'fs/promises'
 import Json5 from 'json5'
 import DNS from 'dns'
@@ -8,7 +7,7 @@ import path, { join } from 'path';
 import { open } from 'sqlite'
 import sqlite3 from 'sqlite3'
 import SteamAPI from '../steam.js'
-import { ShareDestination, ShareDestinations, ShareInfo } from '../../../../common-types/Share.js'
+import { ShareDestinations, ShareInfo } from '../../../../common-types/Share.js'
 import ConfigManager from '../ConfigManager.js'
 import { GroupInfo } from '../../../../common-types/Server.js'
 
