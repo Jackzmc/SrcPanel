@@ -46,26 +46,6 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
     })
 
-    fastify.get('/shares', async (req, reply) => {
-        if(!req.user.hasPermission("panel.view")) return NO_PERMISSION(reply)
-        const shares = await fastify.config.GetShares()
-        // const shares = fastify.servers.shares.map(shareId => {
-        //     const share = fastify.servers.getShare(shareId)
-        //     return {
-        //         id: shareId,
-        //         name: share.name,
-        //         sourceFolder: share.sourceFolder,
-        //         destinations: share.destinations,
-        //         appId: share.appId,
-        //         validExtensions: share.exts,
-        //         installSources: share.sources,
-        //     }
-        // })
-        return {
-            shares
-        }
-    })
-
     fastify.post('/kv', async (req, reply) => {
         if(!req.user.hasPermission("panel.manage")) return NO_PERMISSION(reply)
         if(req.headers['content-type']?.toLowerCase() !== "application/json") {

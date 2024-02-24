@@ -35,13 +35,13 @@ export default class ServerManager {
 
   private groups: Record<string, GroupInfo> = {}
 
-  private cfgManger: ConfigManager
+  #cfgManager: ConfigManager
 
   constructor(steam: SteamAPI, dataDir: string, configDir: string, configManager: ConfigManager) {
     this.steam = steam
     this.dataDir = dataDir
     this.configDir = configDir
-    this.cfgManger = configManager
+    this.#cfgManager = configManager
     this.load()
       .then(() => {
         this.refresh()
@@ -145,9 +145,10 @@ export default class ServerManager {
    * Loads all servers and shares from their respective json files
    */
   private async load() {
+    this.longRefreshInterval = await this.#cfgManager.GetKV<number>("servers.long_refresh_interval", 600)
+    this.shortRefreshInterval = await this.#cfgManager.GetKV<number>("servers.short_refresh_interval", 30)
     try {
       const servers = await readFile(path.join(this.configDir, "servers.json"), 'utf-8')
-      const config = Json5.parse(servers)
       await this.loadServers(Json5.parse(servers))
 
       try {

@@ -15,7 +15,6 @@ export interface RegisteredProvider {
 
 export default class ConfigManager {
     private db: sqlite.Database<sqlite3.Database, sqlite3.Statement>
-    private _shares: ShareData[] = null
     private _servers: any[] = null
     private dataDir: string
 
@@ -69,58 +68,6 @@ export default class ConfigManager {
 
     public async RefreshServers(){
         this._servers = []
-    }
-
-    public async GetShares(): Promise<ShareData[]> {
-        if(!this._shares) await this.RefreshShares()
-        return this._shares
-    }
-
-    public async UpdateShare(share: Share) {
-        if(!share) throw new Error("share is null")
-        const content = await readFile('./config/config.json', 'utf-8')
-        let json = Json5.parse(content)
-        json[share.id] = share.export(false)
-        await writeFile('./config/config.json', Json5.stringify(json))
-    }
-
-    public async RefreshShares() {
-        const content = await readFile('./config/config.json', 'utf-8')
-        const config = Json5.parse(content)
-        if(!config.shares) {
-            return []
-        }
-        try {
-        await mkdir(join(this.dataDir, "shares"))
-        } catch(err) {
-            if(err.code !== "EEXIST") throw err
-        }
-        
-        let shares: Partial<ShareInfo>[] = []
-        for(const key in config.shares) {
-            const data = config.shares[key] as Partial<ShareInfo>
-            data.id = key
-            if(!data.sourceFolder) {
-                console.warn(`[ConfigManager] WARN: Skipping share \"${key}\": Missing property 'sourceFolder' in config`)
-                continue
-            }
-        
-            try {
-                await stat(data.sourceFolder)
-                shares.push(data)
-            } catch(err) {
-                if(err.code === "ENOENT")
-                    console.warn(`[ConfigManager] WARN: Addon Share "${key}" source folder does not exist (ENOENT)`)
-                else
-                    console.error(`[ConfigManager] ERROR: Addon Share Directory "${key}" returned error: ${err}`)
-            }
-        }
-    
-        if(!config.addons["default"]) {
-            console.warn("[ConfigManager] Warn: No default share found (no key named \"default\")")
-        }
-
-        return shares
     }
 
     public async GetPublicKeyvalues() {

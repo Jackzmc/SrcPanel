@@ -92,7 +92,7 @@ async function onAuthorized() {
   if(!userdata.value) return
   if(isModalAllowed("birthday")) {
     const date = new Date()
-    if(userdata.value.profile && userdata.value.profile.birthMonth == date.getMonth() && userdata.value.profile.birthDate == date.getDate()) {
+    if(userdata.value.profile && userdata.value.profile.birthMonth === date.getMonth() && userdata.value.profile.birthDate === date.getDate()) {
       isBirthday.value = true
     }
   }
