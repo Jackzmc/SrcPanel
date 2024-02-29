@@ -146,6 +146,7 @@ import { APIDiscussion, APIDiscussionType, APIDiscussionBase, APIDiscussionFlags
 import { useRoute, useRouter } from 'vue-router';
 import { notify } from '@kyvg/vue3-notification';
 import { request } from '@/js/util.js';
+import Field from '@/components/Field.vue';
 
 const DISCUSSION_TYPES: { [key in APIDiscussionType]?: string } = {
   [APIDiscussionType.Radio]: "Single Choice (Radio)",
@@ -168,7 +169,9 @@ const closedAt = computed({
   }
 })
 const previouslyClosed = computed(() => {
-  return !isNew.value && orgDiscuss.value?.closedAt != undefined && discuss.value.closedAt == undefined
+  if(!orgDiscuss.value) return
+  console.log(isNew.value, orgDiscuss.value.closedAt != undefined, discuss.value.closedAt == undefined)
+  return !isNew.value && orgDiscuss.value.closedAt != undefined && (Date.now() > (orgDiscuss.value.closedAt*1000) || discuss.value.closedAt == undefined)
 })
 const hasChanges = computed(() => {
   if(isNew.value) return true
