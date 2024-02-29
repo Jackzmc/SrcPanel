@@ -17,21 +17,11 @@
       </datalist>
     </Field>
   </Field>
-  <!-- <Vue3TagsInput :tags="['test']" :loading="loading" :validate="validatePerm" select :select-items="choices" placeholder="Add permissions">
-    <template #item="{tag}">
-      {{ tag }}
-    </template>
-    <template #select-item="tag">
-      {{ tag.text }}
-    </template>
-  </Vue3TagsInput> -->
 </template>
 
 <script setup lang="ts">
 import { UserPrivilegeCodes } from '../../../common-types/Privileges'
 import Field from '@/components/Field.vue'
-//@ts-expect-error
-import Vue3TagsInput from 'vue3-tags-input'
 import { ref, computed } from 'vue'
 
 const VALID_CODE_REGEX = new RegExp(/^([a-z_0-9]+)(\.([a-z_\*0-9]+))+$/)

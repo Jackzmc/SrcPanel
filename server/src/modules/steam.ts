@@ -29,7 +29,11 @@ export default class SteamAPI {
         })
     }
 
-    private _key_check() {
+    get AppTitles() {
+        return {...this.appMap}
+    }
+
+    #checkKey() {
         if(!this.apikey) {
             throw new Error("Missing steam api key. Provide in constructor or in env STEAM_WEB_APIKEY")
         }
@@ -50,7 +54,7 @@ export default class SteamAPI {
     }
 
     async getUserDetails(steamids: (SteamID | string)[]): Promise<SteamUserDetails[]> {
-        this._key_check()
+        this.#checkKey()
         const ids = steamids.map(steamid => steamid instanceof SteamID ? steamid.getSteamID64() : steamid).slice(0, 100).join(",")
         const res = await fetch(`https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v2/?key=${this.apikey}&format=json&steamids=${ids}`, {
             headers: { 'User-Agent': this.userAgent }

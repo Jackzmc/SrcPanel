@@ -61,11 +61,9 @@ export interface AddonInstallInfo {
     size: number
 }
 
-export const enum DownloadSourceE {
-    DirectUpload = 1,
-    SteamWorkshop = 2
-}
-export type DownloadSourceRecord = Partial<Record<DownloadSourceE, boolean>>
+export const DownloadSources = ["direct", "steam_workshop"] as const;
+export type DownloadSource = typeof DownloadSources[number];
+export type DownloadSourceRecord = Partial<Record<DownloadSource, boolean>>
 
 export interface ChildWorkshopItem extends WorkshopItem {
     collection?: WorkshopCollectionInfo

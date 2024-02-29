@@ -24,7 +24,8 @@
       <JsonConfigEditor v-if="tab == 'Servers'" filename="servers.json" />
     </Tab>
     <Tab name="Shares">
-      <JsonConfigEditor v-if="tab == 'Shares'" filename="shares.json" />
+      <SharesEditor />
+      <!-- <JsonConfigEditor v-if="tab == 'Shares'" filename="shares.json" /> -->
     </Tab>
   </Tabs>
   <br>
@@ -40,6 +41,7 @@ import { HealthReport, UpdateState } from "../../../../common-types/Panel.js";
 import ConfigEditor from "@/components/panel-admin/ConfigEditor.vue";
 //@ts-ignore
 import { Tab, Tabs } from 'vue3-tabs-component'
+import SharesEditor from "@/components/panel-admin/ShareEditor.vue";
 const JsonConfigEditor = defineAsyncComponent(() => import("@/components/panel-admin/JsonConfigEditor.vue"))
 
 const POLL_SERVER_HEALTH_INTERVAL = 1000 * 10
