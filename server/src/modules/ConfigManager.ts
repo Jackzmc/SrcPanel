@@ -67,7 +67,7 @@ export default class ConfigManager {
     public async GetPublicKeyvalues() {
         let kv = {}
         for(const key of PublicKeys) {
-            kv[key] = this.GetKV(key)
+            kv[key] = await this.GetKV(key, null)
         }
         return kv
     }

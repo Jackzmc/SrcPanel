@@ -14,11 +14,15 @@ const PROGRES_MIN_BYTES = 5_000 // 5KB
 const ITEM_CACHE_MAX_SIZE = 20
 const ITEM_CACHE_TTL = 1000 * 60 * 10 // 10 min
 
+const STEAM_STATUS_CHECK_INTERVAL = 1000 * 60 * 2 // 2 minute
+
 export default class SteamAPI {
     private apikey: string
     private userAgent: string
     private appMap: Record<string, string>
     private itemCache: LRUCache<string, WorkshopItem>
+    #lastStatusCheck: number = 0
+    #steamAvailable: boolean
 
     constructor(apikey?: string, userAgent?: string) {
         this.apikey = apikey ?? process.env.STEAM_WEB_APIKEY
@@ -27,6 +31,13 @@ export default class SteamAPI {
             max: ITEM_CACHE_MAX_SIZE,
             ttl: ITEM_CACHE_TTL
         })
+    }
+
+    async Available(force = false): Promise<boolean> {
+        if(force || Date.now() - this.#lastStatusCheck > STEAM_STATUS_CHECK_INTERVAL) {
+            await this.#checkSteamStatus()
+        }
+        return this.#steamAvailable
     }
 
     private _key_check() {
@@ -42,6 +53,16 @@ export default class SteamAPI {
             if(entry.name != '') this.appMap[entry.appid.toString()] = entry.name
         }
     }
+
+    async #checkSteamStatus() {
+        try {
+            const response = await fetch('https://api.steampowered.com/')
+            this.#steamAvailable = response.status < 500
+        } catch(err) {
+            this.#steamAvailable = false
+        }
+        this.#lastStatusCheck = Date.now()
+    } 
 
     async getAppName(id: number) {
         if(!id) throw new Error("App id is null: " + id)
@@ -63,6 +84,7 @@ export default class SteamAPI {
             }
             return null
         }
+        // TODO: if down mark unavailable
         throw new Error(`${res.statusText}: ${await res.text()}`)
     }
 
