@@ -139,6 +139,11 @@ const routes = [
     },
   },
   {
+    name: 'schedule',
+    path: '/schedule',
+    component: () => import('../views/SchedulerView.vue')
+  },
+  {
     name: 'admin-shares',
     path: '/admin/shares/:shareId?/',
     component: () => import('../views/admin/ServerAddonsView.vue'),
