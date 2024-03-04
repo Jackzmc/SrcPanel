@@ -206,12 +206,12 @@
         },
         {
             "name": "Vocalize Gag",
-            "description": "Prevents player from sending any vocalizations (even automatic)",
+            "description": "Prevents player from sending any vocalizations (even automatic). Quieter:Halfs volume, Painful:Damage on vocalize",
             "modes": ["constant"],
             "prompts": [
                 {
-                    "flags": ["Mute for All", "Mute For All But Them"],
-                    "multiple": false
+                    "flags": ["Quieter", "Painful"],
+                    "multiple": true
                 }
             ]
         },
