@@ -8,7 +8,7 @@
         <li><a class="pagination-link" aria-label="" @click="advanceWeek(true)"><Icon icon="fa-chevron-right"></Icon></a></li>
       </ul>
     </nav>
-    <table class="table is-fullwidth is-bordered">
+    <table class="table is-fullwidth is-bordered" @mouseleave="hoveredElementData = undefined">
       <thead>
       <tr>
         <th style="border-bottom: 0" v-for="(month, i) in Months" :key="month">{{ month }} ({{ monthDates[i] }})</th>
@@ -17,25 +17,29 @@
       <tbody style="user-select: none">
         <tr v-for="(hour, i) in Hours" :key="hour">
           <td v-for="(hours, j) in days" :key="j"
-            :class="['cell',{'available': hours[i], 'unavailable': !hours[i], 'hovered': hoveredElement && hoveredElement[0] == i && hoveredElement[1] == j}]"
+            :class="['cell',{'available': hours[i].available, 'unavailable': !hours[i].available}]"
+            :style="hours[i].percentAvailable ? {'background-color': `rgba(32, 128, 0, ${hours[i].percentAvailable})`, 'color': hours[i].percentAvailable! > 0.5 ? 'white' : 'inherit'} : {}"
             @mouseover="e => onMouseOver(e, [i, j])" @mousedown="e => onMouseDown(e, [i, j])"
           >
             {{ hour }}
+            <span class="is-pulled-right" v-if="hours[i].percentAvailable">{{ Math.round(hours[i].percentAvailable*100)}}%</span>
             <div class="box hover-box px-0 py-0" v-if="hoveredElement && hoveredElement[0] == i && hoveredElement[1] == j">
               <List v-if="hoveredElementData">
-                <div class="list-item py-1" v-for="user in hoveredElementData.users" :key="user">
-                  <div class="list-item-image">
-                    <figure class="image is-32x32" :data-tooltip="user.name">
-                        <img class="is-rounded" :style="{opacity: user.available ? 1 : 0.5}" :src="user.avatarUrl">
-                      </figure>
-                  </div>
-                  <div class="list-item-content">
-                    <div :class="['list-item-title', {'has-text-grey-lighter': !user.available}]">
-                      {{ user.name }}
-                      <span  v-if="user.available" class="tag is-success is-pulled-right ml-2">Available</span>
+                <template v-for="user in hoveredElementData.users" :key="user">
+                  <div class="list-item py-1">
+                    <div class="list-item-image">
+                      <figure class="image is-32x32" :data-tooltip="user.name">
+                          <img class="is-rounded" :style="{opacity: user.available ? 1 : 0.5}" :src="user.avatarUrl">
+                        </figure>
+                    </div>
+                    <div class="list-item-content">
+                      <div :class="['list-item-title', {'has-text-grey-lighter': !user.available}]">
+                        {{ user.name }}
+                        <span  v-if="user.available" class="tag is-success is-pulled-right ml-2">Available</span>
+                      </div>
                     </div>
                   </div>
-                </div>
+                </template>
               </List>
             </div>
           </td>
@@ -68,10 +72,32 @@ let week = ref<[{ date: Date, label: string }, { date: Date, label: string }]>([
   { date: Sunday, label: Sunday.toLocaleDateString(undefined, {month: 'short', day: '2-digit'}) },
   { date: Saturday, label: Saturday.toLocaleDateString(undefined, {month: 'short', day: '2-digit'}) }
 ])
-let prevDays = ref<boolean[][]>()
-let days = ref<boolean[][]>(Array(7).fill(undefined).map(() => Array(Hours.length).fill(undefined).map(h => false)))
+interface DayInfo {
+  users?: any,
+  available: boolean,
+  percentAvailable?: number
+}
+let prevDays = ref<DayInfo[][]>()
+const USERS = [{"available": true, "id": "STEAM_1:0:49243767","name": "Jackzie ❤","avatarUrl": "http://localhost:8080/api/users/STEAM_1:0:49243767/avatar","choices": [1]},{"id": "STEAM_1:1:37698533","available": true, "name": "Butternut Crinklefries","avatarUrl": "http://localhost:8080/api/users/STEAM_1:1:37698533/avatar","choices": [1]},{"id": "STEAM_1:0:204230496","name": "The Liquor","avatarUrl": "http://localhost:8080/api/users/STEAM_1:0:204230496/avatar","choices": [2], "available": true, },{"available": false, "id": "STEAM_0:1:10882645","name": "Disgruntled Pea","avatarUrl": "http://localhost:8080/api/users/STEAM_0:1:10882645/avatar","choices": [2]},{"name": "Valerie", "avatarUrl": "http://localhost:8080/api/users/STEAM_0:1:437712426/avatar"},{name: "Ashley Golix❤", avatarUrl: "http://localhost:8080/api/users/STEAM_1:0:530680608/avatar"}]
+const numUsers = USERS.length
+function generateRandomUsers() {
+  return USERS.map(user => { return {
+    ...user,
+    available: Math.random() > 0.5
+  }})
+  // we use + to convert to number, because TS doesn't like subtracting booleans, but it's valid
+  // .sort((a, b) => +b.available - +a.available)
+}
+let days = ref<DayInfo[][]>(Array(7).fill(undefined).map(() => Array(Hours.length).fill(undefined).map(h => {
+  const users = generateRandomUsers()
+  return {
+    // users,
+    // percentAvailable: users.reduce((prev, user) => prev + (user.available ? 1 : 0), 0) / numUsers,
+    available: false
+  }
+})))
 
-let hoveredElement = ref<[number, number]>([0, 0])
+let hoveredElement = ref<[number, number]|undefined>()
 let hoveredElementData = ref<any>()
 let monthDates = ref<string[]>([])
 let availableType = false
@@ -79,12 +105,14 @@ let startCoord = [0, 0]
 let axis: number | undefined = undefined
 let isDragging = false
 function onMouseDown(event: any, pos: [number, number]) {
+  if(days.value[pos[1]][pos[0]].percentAvailable) return
   isDragging = true
-  availableType = !days.value[pos[1]][pos[0]]
+  availableType = !days.value[pos[1]][pos[0]].available
   startCoord = pos
   onMouseOver(event, pos)
 }
 function onMouseOver(event: any, pos: [number, number]) {
+  if(days.value[pos[1]][pos[0]].percentAvailable) return
   if(isDragging && event.buttons == 1) {
     // Prevent dragging on different row or column:
     if(startCoord[0] != pos[0] && startCoord[1] != pos[1]) return
@@ -93,14 +121,22 @@ function onMouseOver(event: any, pos: [number, number]) {
     // if(axis && startCoord[axis] != pos[axis]) return
     // if(startCoord[0] == pos[0]) axis = 0
     // else if(startCoord[1] == pos[1]) axis = 1
-    days.value[pos[1]][pos[0]] = availableType
+    days.value[pos[1]][pos[0]].available = availableType
+    // TODO: improve thing and auto fill previous cells incase they get skipped
   } else {
     hoveredElement.value = pos
     hoveredElementData.value = {
-      users: [{"available": true, "id": "STEAM_1:0:49243767","name": "Jackzie ❤","avatarUrl": "http://localhost:8080/api/users/STEAM_1:0:49243767/avatar","choices": [1]},{"id": "STEAM_1:1:37698533","available": true, "name": "Butternut Crinklefries","avatarUrl": "http://localhost:8080/api/users/STEAM_1:1:37698533/avatar","choices": [1]},{"id": "STEAM_1:0:204230496","name": "The Liquor","avatarUrl": "http://localhost:8080/api/users/STEAM_1:0:204230496/avatar","choices": [2], "available": true, },{"available": false, "id": "STEAM_0:1:10882645","name": "Disgruntled Pea","avatarUrl": "http://localhost:8080/api/users/STEAM_0:1:10882645/avatar","choices": [2]}]
+      users: days.value[pos[1]][pos[0]].users
     }
   }
 
+}
+function onMouseUp(event: any) {
+  if(event.buttons != 1 && isDragging) {
+    isDragging = false;
+  }
+  hoveredElement.value = undefined
+  hoveredElementData.value = undefined
 }
 function computeWeek() {
   week.value[0].label = week.value[0].date.toLocaleDateString(undefined, {month: 'short', day: '2-digit'})
@@ -117,18 +153,18 @@ function advanceWeek(forward: boolean) {
   week.value[1].date.setDate(week.value[1].date.getDate() + amount)
   // Reset selected values
   prevDays.value = days.value.slice().map(a => a.slice())
-  days.value = Array(7).fill(undefined).map(() => Array(Hours.length).fill(undefined).map(h => false))
+  days.value = Array(7).fill(undefined).map(() => Array(Hours.length).fill(undefined).map(h => {
+    return {
+      percentAvailable: 0.0,
+      available: false
+    }
+  }))
   computeWeek()
 }
 function copyPrev() {
   if(!prevDays.value) return
   days.value = prevDays.value.slice().map(a => a.slice())
   prevDays.value = undefined
-}
-function onMouseUp(event: any) {
-  if(event.buttons != 1 && isDragging) {
-    isDragging = false;
-  }
 }
 onBeforeMount(() => {
   computeWeek()
@@ -145,17 +181,16 @@ onBeforeUnmount(() => {
   height: 25px;
   user-select: none;
 }
+.cell:hover {
+  outline: 2px solid #000;
+  border-radius: 5px;
+}
 .available {
   background-color: green;
   color: white;
 }
 .unavailable {
-}
-.hovered:not(.available) {
-  background-color: lightgray;
-}
-.hovered.available {
-  background-color: lightgreen;
+
 }
 .hover-box {
   position: absolute;
