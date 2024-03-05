@@ -17,7 +17,7 @@
       <tbody style="user-select: none">
         <tr v-for="(hour, i) in Hours" :key="hour">
           <td v-for="(hours, j) in days" :key="j"
-            :class="['cell',{'available': hours[i].available, 'unavailable': !hours[i].available}]"
+            :class="['cell',{'available': availableDays[i*24+j], 'unavailable': !availableDays[i*24+j]}]"
             :style="hours[i].percentAvailable ? {'background-color': `rgba(32, 128, 0, ${hours[i].percentAvailable})`, 'color': hours[i].percentAvailable! > 0.5 ? 'white' : 'inherit'} : {}"
             @mouseover="e => onMouseOver(e, [i, j])" @mousedown="e => onMouseDown(e, [i, j])"
           >
@@ -52,6 +52,7 @@
 <script setup lang="ts">
 import List from '@/components/List.vue';
 import ListItem from '@/components/ListItem.vue';
+import { faN } from '@fortawesome/free-solid-svg-icons';
 import { ref, computed, onBeforeMount, onBeforeUnmount } from 'vue';
 
 const HourRange = [ 1, 24 ]
@@ -88,6 +89,7 @@ function generateRandomUsers() {
   // we use + to convert to number, because TS doesn't like subtracting booleans, but it's valid
   // .sort((a, b) => +b.available - +a.available)
 }
+let availableDays = ref<boolean[]>(Array(7*24).fill(false))
 let days = ref<DayInfo[][]>(Array(7).fill(undefined).map(() => Array(Hours.length).fill(undefined).map(h => {
   const users = generateRandomUsers()
   return {
@@ -116,11 +118,11 @@ function onMouseOver(event: any, pos: [number, number]) {
   if(isDragging && event.buttons == 1) {
     // Prevent dragging on different row or column:
     if(startCoord[0] != pos[0] && startCoord[1] != pos[1]) return
-    console.log(`start=[${startCoord[0]}, ${startCoord[1]}], pos=[${pos[0]}, ${pos[1]}]`)
     // TODO: prevent returning back to startCoord and dragging different direction
     // if(axis && startCoord[axis] != pos[axis]) return
     // if(startCoord[0] == pos[0]) axis = 0
     // else if(startCoord[1] == pos[1]) axis = 1
+    availableDays.value[pos[0] * 24 + pos[1]] = availableType
     days.value[pos[1]][pos[0]].available = availableType
     // TODO: improve thing and auto fill previous cells incase they get skipped
   } else {
@@ -129,7 +131,12 @@ function onMouseOver(event: any, pos: [number, number]) {
       users: days.value[pos[1]][pos[0]].users
     }
   }
-
+}
+function bigint() {
+  const binString = availableDays.value.map(a => a ? '1' : '0').join('')
+  const int = BigInt(`0b${binString}`)
+  int.toString(2) // back to binString
+  int.toString() // for mysql storage
 }
 function onMouseUp(event: any) {
   if(event.buttons != 1 && isDragging) {
