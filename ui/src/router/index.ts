@@ -138,15 +138,18 @@ const routes = [
       authRequired: true
     },
   },
-  // {
-  //   name: 'events',
-  //   path: '/events',
-  //   component: () => import('../views/EventsView.vue')
-  // },
+  {
+    name: 'events',
+    path: '/events',
+    component: () => import('../views/EventsView.vue'),
+    meta: {
+      title: "Events"
+    }
+  },
   {
     name: 'events',
     path: '/events/:id/:title?',
-    component: () => import('../views/EventView.vue'),
+    component: () => import('../views/EventDetailView.vue'),
     meta: {
       title: "Event Scheduler"
     }
