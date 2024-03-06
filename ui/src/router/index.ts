@@ -145,7 +145,8 @@ const routes = [
     path: '/events',
     component: () => import('../views/EventsView.vue'),
     meta: {
-      title: "Events"
+      title: "Events",
+      authRequired: true
     }
   },
   {
@@ -154,7 +155,8 @@ const routes = [
     component: () => import('../views/EventDetailView.vue'),
     meta: {
       title: "Event Scheduler",
-      prevRoute: "events"
+      prevRoute: "events",
+      authRequired: true
     }
   },
   {
