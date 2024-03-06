@@ -4,14 +4,15 @@
       <div class="column">
         <nav class="pagination is-rounded" role="navigation" aria-label="pagination">
           <ul class="pagination-list">
-            <li><a class="pagination-link" aria-label=""  @click="advanceWeek(false)"><Icon icon="fa-chevron-left"></Icon></a></li>
+            <li><a class="pagination-link" aria-label="" :disabled="weekDirections[0]?undefined:true" @click="advanceWeek(false)"><Icon icon="fa-chevron-left"></Icon></a></li>
             <li><span class="mx-2">{{ weekLabels[0] }} - {{ weekLabels[1] }}</span></li>
-            <li><a class="pagination-link" aria-label="" @click="advanceWeek(true)"><Icon icon="fa-chevron-right"></Icon></a></li>
+            <li><a class="pagination-link" aria-label="" :disabled="weekDirections[1]?undefined:true" @click="advanceWeek(true)"><Icon icon="fa-chevron-right"></Icon></a></li>
           </ul>
         </nav>
       </div>
       <div class="column has-text-centered">
-        <a class="button is-info" @click="toggleEditing">{{ editCurrentWeek ? 'Stop Editing' : 'Edit My Availability' }}</a>
+        <a class="button is-info" disabled v-if="editSubmitting">Submitting changes...</a>
+        <a class="button is-info" v-else @click="toggleEditing">{{ editCurrentWeek ? 'Stop Editing' : 'Edit My Availability' }}</a>
       </div>
       <div class="column has-text-right">
         <a class="button is-rounded" @click="copyPrev" v-if="prevDays"><Icon icon="fa-copy">Copy From Previous Week</Icon></a>
@@ -60,11 +61,10 @@
 
 <script setup lang="ts">
 import List from '@/components/List.vue';
-import ListItem from '@/components/ListItem.vue';
-import { faN } from '@fortawesome/free-solid-svg-icons';
 import { ref, computed, onBeforeMount, onBeforeUnmount } from 'vue';
 import { EventDataSubmission, APIEventDetailed, APIWeekAvailability } from '../../../common-types/Event';
 import { useRoute } from 'vue-router';
+import { request } from '@/js/util.js'
 
 const route = useRoute()
 
@@ -91,6 +91,7 @@ let selectedWeek = ref<APIWeekAvailability<boolean[]>>()
 // User submitted values:
 let userAvailableWeeks = ref<Record<string, boolean[]>>()
 let editCurrentWeek = ref<number>()
+let editSubmitting = ref<boolean>(false)
 
 const userAvailability = computed(() => {
   if(!editCurrentWeek.value || !userAvailableWeeks.value) return []
@@ -118,6 +119,8 @@ const selectedWeekAvailability = computed(() => {
   if(!selectedWeek.value) return
   const numUsers = selectedWeek.value.availability.length
   const sums = Array(24*7).fill(0)
+  // Incase there's no users, can't divide by 0
+  if(numUsers == 0) return sums
   for(let i = 0; i < sums.length; i++) {
     sums[i] += selectedWeek.value.availability.filter(a => a.data[i]).length
   }
@@ -129,6 +132,13 @@ const weekLabels = computed(() => {
   const sunday = new Date(selectedWeek.value.startDate*1000)
   const saturday = new Date(selectedWeek.value.endDate*1000)
   return getWeekLabels(sunday, saturday)
+})
+const weekDirections = computed(() => {
+  if(!event.value || !selectedWeek.value) return [false, false]
+  return [
+    Boolean(selectedWeek.value.startDate !== event.value.range[0]),
+    Boolean(selectedWeek.value.endDate !== event.value.range[1]),
+  ]
 })
 function getWeekLabels(start: Date, end: Date) {
   return [ start, end ].map(date => {
@@ -175,6 +185,13 @@ function onMouseOver(event: any, pos: [number, number]) {
     hoveredElement.value = pos
   }
 }
+function onMouseUp(event: any) {
+  if(event.buttons != 1 && isDragging) {
+    isDragging = false;
+    hoveredElement.value = undefined
+  }
+}
+
 // Converts every 8 booleans into one byte where each bit is its value
 function toBytes(array: boolean[]): Uint8Array {
   let bytes = [];
@@ -207,50 +224,52 @@ function deserializeWeekData(base64: string): boolean[] {
   return fromBytes(new Uint8Array(atob(base64).split("").map(function(c) {
       return c.charCodeAt(0); })));
 }
-function onMouseUp(event: any) {
-  if(event.buttons != 1 && isDragging) {
-    isDragging = false;
-  }
-  hoveredElement.value = undefined
-}
 const dayLabels = computed(() => {
-  return Array(7).fill(undefined).map((_, i) => {
-    const date = selectedWeek.value ? new Date(selectedWeek.value.startDate*1000) : CurrentSaturday
-    date.setDate(CurrentSunday.getDate() + i)
-    return date.toLocaleDateString(undefined, {month: 'short', day: '2-digit'})
+  const date = selectedWeek.value ? new Date(selectedWeek.value.startDate*1000) : CurrentSunday
+  return Array(7).fill(undefined).map(() => {
+    const str = date.toLocaleDateString(undefined, {month: 'short', day: '2-digit'})
+    date.setDate(date.getDate() + 1)
+    return str
   })
 })
-function computeWeek() {
-  // week.value[0].label = week.value[0].date.toLocaleDateString(undefined, {month: 'short', day: '2-digit'})
-  // week.value[1].label = week.value[1].date.toLocaleDateString(undefined, {month: 'short', day: '2-digit'})
-}
 function advanceWeek(forward: boolean) {
+  if(!selectedWeek.value || !event.value) return
+  else if(!forward && !weekDirections.value[0]) return
+  else if(forward && !weekDirections.value[1]) return
   let amount = forward ? 7 : -7;
-  // selectedWeek.value = event.value?.weeks.find(w => w.startDate == )
-  // week.value[0].date.setDate(week.value[0].date.getDate() + amount)
-  // week.value[1].date.setDate(week.value[1].date.getDate() + amount)
-  // Reset selected values
-  // prevDays.value = days.value.slice().map(a => a.slice())
-  // days.value = Array(7).fill(undefined).map(() => Array(Hours.length).fill(undefined).map(h => {
-  //   return {
-  //     percentAvailable: 0.0,
-  //     available: false
-  //   }
-  // }))
-  computeWeek()
+  const nextDate = new Date(selectedWeek.value.startDate * 1000)
+  nextDate.setDate(nextDate.getDate() + amount)
+  console.log('next week:',nextDate.valueOf())
+  let week = event.value.weeks.find(w => (w.startDate*1000) === nextDate.valueOf())
+  if(!week) {
+    const endDate = new Date(nextDate)
+    endDate.setDate(endDate.getDate() + 7 - 1)
+    week = {
+      startDate: Math.round(nextDate.valueOf() / 1000),
+      endDate: Math.round(endDate.valueOf() / 1000),
+      availability: []
+    }
+  }
+  selectedWeek.value = week
 }
 
-async function submitWeeks() {
-  const response = await fetch(`/api/events/:id/my-schedule`, {
+async function submitEdit() {
+  if(!userAvailableWeeks.value) return
+  const response = await request(`/api/events/:id/my-schedule`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      weeks: [{
-        startDate: 0,
-        data: serializeWeekData(availableDays.value)
-      }]
+      weeks: Object.entries(userAvailableWeeks.value).map(([startDate, data]) => {
+        return {
+          startDate: parseInt(startDate),
+          data: serializeWeekData(data)
+        }
+      })
     } as EventDataSubmission<string>)
   })
+  if(response?.ok) {
+    editSubmitting.value = false
+  }
 }
 async function fetchEvent() {
   const response = await fetch(`/api/events/${route.params.id}`)
@@ -282,7 +301,6 @@ function copyPrev() {
   prevDays.value = undefined
 }
 onBeforeMount(async() => {
-  computeWeek()
   document.addEventListener("mouseup", onMouseUp)
 
   await fetchEvent()
@@ -301,6 +319,8 @@ onBeforeUnmount(() => {
 .cell:hover {
   outline: 2px solid #000;
   border-radius: 5px;
+  padding-left: 20px;
+  padding-right: 20px;
 }
 .available {
   background-color: green;
