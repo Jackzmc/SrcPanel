@@ -195,7 +195,7 @@ const weekRangeLabels = computed(() => {
 const weekDirections = computed(() => {
   if(!scEvent.value || !selectedWeek.value) return [false, false]
   return [
-    Boolean(selectedWeek.value.startDate !== scEvent.value.range[0] && selectedWeek.value.startDate*1000 < CurrentSunday.valueOf()),
+    Boolean(selectedWeek.value.startDate !== scEvent.value.range[0] && selectedWeek.value.startDate*1000 >= CurrentSunday.valueOf()),
     Boolean(selectedWeek.value.endDate !== scEvent.value.range[1]),
   ]
 })
