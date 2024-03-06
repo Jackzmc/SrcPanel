@@ -205,7 +205,8 @@ export default class Share {
             if(this.destinations) {
                 for(const [id, dest] of Object.entries(this.destinations)) {
                     // We just use the first path
-                    states[id] = await this.getFileInfo(dest.paths[0], filename) !== null
+                    if(!dest.paths) continue
+                    states[id] = dest.paths.length > 0 ? await this.getFileInfo(dest.paths[0], filename) !== null : false
                 }
             }
             return { 
