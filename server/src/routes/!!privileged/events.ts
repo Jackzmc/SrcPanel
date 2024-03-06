@@ -61,7 +61,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             return NOT_FOUND(reply, "No event with that id could be found")
         }
     })
-    fastify.post('/:id/my-schedule', async(req: FastifyRequest<{Params: {id: string}, Body: EventDataSubmission<string> }>, reply) => {
+    fastify.post('/:id/my-schedule', async(req: FastifyRequest<{Params: {id: number}, Body: EventDataSubmission<string> }>, reply) => {
         if(!req.body.weeks) {
             return reply.code(400).send({
                 error: "NO_WEEKS_PROVIDED",
@@ -71,12 +71,11 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         const conn = await fastify.db.getConnection()
         await conn.beginTransaction()
         for(const week of req.body.weeks) {
-            await conn.execute("INSERT INTO `left4dead2-admins`.dash_event_responses (event_id, steamid, start_date, data) VALUES (?, ?, ?, FROM_BASE64(?))", [req.params.id, req.user.steamid2, week.startDate, week.data])    
+            console.log(req.params.id, req.user.steamid2, week.startDate, week.data)
+            await conn.execute("INSERT INTO `left4dead2-admins`.dash_event_responses (event_id, steamid, week_start, days) VALUES (?, ?, ?, FROM_BASE64(?)) ON DUPLICATE KEY UPDATE days = FROM_BASE64(?)", [req.params.id, req.user.steamid2, week.startDate, week.data, week.data])    
         }
         await conn.commit()
-        return {
-
-        }
+        return reply.status(204).send()
     })
 }
 

@@ -28,14 +28,14 @@
         <a class="button is-rounded" @click="copyPrev" v-if="prevDays"><Icon icon="fa-copy">Copy From Previous Week</Icon></a>
       </div>
     </div>
-    <table class="table is-fullwidth is-bordered" @mouseleave="hoveredElement = undefined">
+    <table class="table is-fullwidth is-bordered is-narrow" @mouseleave="hoveredElement = undefined">
       <thead>
-      <tr>
-        <th style="border-bottom: 0" v-for="(day, i) in dayLabels" :key="i" :data-tooltip="day[0]">{{ Days[i] }} <span class="is-pulled-right">{{ day[1] }}</span></th>
+      <tr @mouseover="hoveredElement = undefined">
+        <th style="border-bottom: 0; table-layout:fixed; max-width: 0;" v-for="(day, i) in dayLabels" :key="i" :data-tooltip="day[0]">{{ Days[i] }} <span class="is-pulled-right">{{ day[1] }}</span></th>
       </tr>
       </thead>
       <tbody style="user-select: none">
-        <tr v-for="(hourLabel, hour) in Hours" :key="hour">
+        <tr v-for="(hourLabel, hour) in Hours" :key="hour" :style="{'border-bottom': hour == 11 ? '5px solid white' : '0'}">
           <td v-for="(_, day) in Days" :key="day"
             :class="['cell',{'available': userAvailability[day*24+hour], 'unavailable': !userAvailability[day*24+hour]}]"
             :style="selectedWeekAvailability && !isEditing ? {'background-color': `rgba(32, 128, 0, ${selectedWeekAvailability[day*24+hour]})`, 'color': selectedWeekAvailability[day*24+hour] > 0.5 ? 'white' : 'inherit'} : {}"
@@ -49,13 +49,14 @@
                   <div class="list-item py-1">
                     <div class="list-item-image">
                       <figure class="image is-32x32" :data-tooltip="res.user.name">
-                        <img class="is-rounded" :style="{opacity: res.data[hoveredElement[0]*24+hoveredElement[1]] ? 1 : 0.5}" :src="res.user.avatarUrl">
+                        <img class="is-rounded" :style="{opacity: res.data[hoveredElement[0]*24+hoveredElement[1]] ? 1 : 0.25}" :src="res.user.avatarUrl">
                       </figure>
                     </div>
                     <div class="list-item-content">
                       <div :class="['list-item-title', {'has-text-grey-lighter': !res.data[hoveredElement[0]*24+hoveredElement[1]]}]">
                         {{ res.user.name }}
-                        <span  v-if="res.data[hoveredElement[0]*24+hoveredElement[1]]" class="tag is-success is-pulled-right ml-2">Available</span>
+                        <Icon  v-if="res.data[hoveredElement[0]*24+hoveredElement[1]]" icon="fa-check-circle" class="is-pulled-right ml-2" style="color: hsl(141, 53%, 53%)"></Icon>
+                        <!-- <span  class="tag is-success is-pulled-right ml-2">Available</span> -->
                       </div>
                     </div>
                   </div>
@@ -71,12 +72,18 @@
 
 <script setup lang="ts">
 import List from '@/components/List.vue';
-import { ref, computed, onBeforeMount, onBeforeUnmount } from 'vue';
+import { ref, computed, onBeforeMount, onBeforeUnmount, watch } from 'vue';
 import { EventDataSubmission, APIEventDetailed, APIWeekAvailability } from '../../../common-types/Event';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { request } from '@/js/util.js'
+import { PrivilegedUser } from '@/js/User.js';
 
+const router = useRouter()
 const route = useRoute()
+
+const props = defineProps<{
+  privUser: PrivilegedUser
+}>()
 
 const HourRange = [ 1, 24 ]
 
@@ -112,14 +119,15 @@ const isEditing = computed(() => {
   return editCurrentWeek.value != undefined
 })
 
-function toggleEditing() {
-  if(userAvailableWeeks.value) {
-    userAvailableWeeks.value = undefined
+async function toggleEditing() {
+  // While submitting, ignore any requests
+  if(editSubmitting.value) return
+  if(isEditing.value) {
+    await submitEdit()
     editCurrentWeek.value = undefined
   } else {
     if(!scEvent.value) return alert("No event has been loaded")
     if(!scEvent.value.range[0]) return alert("Event has no min_date, this should never happen")
-    userAvailableWeeks.value = {[scEvent.value.range[0]!.toString()]: Array(24*7).fill(false)}
     editCurrentWeek.value = scEvent.value.range[0]!
   }
 }
@@ -272,8 +280,9 @@ function advanceWeek(forward: boolean) {
 }
 
 async function submitEdit() {
-  if(!userAvailableWeeks.value) return
-  const response = await request(`/api/events/:id/my-schedule`, {
+  if(!userAvailableWeeks.value || editSubmitting.value || !scEvent.value) return
+  editSubmitting.value = true
+  const response = await request(`/api/events/${scEvent.value.id}/my-schedule`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -284,14 +293,17 @@ async function submitEdit() {
         }
       })
     } as EventDataSubmission<string>)
-  })
+  }, { title: "Updating availability" })
   if(response?.ok) {
-    editSubmitting.value = false
+    // Lazy way to get updated data
+    await fetchEvent()
   }
+  editSubmitting.value = false
 }
 async function fetchEvent() {
   const response = await fetch(`/api/events/${route.params.id}`)
   if(response.ok) {
+    userAvailableWeeks.value = undefined
     const json: APIEventDetailed<string> = await response.json()
     scEvent.value = {
       ...json,
@@ -307,8 +319,16 @@ async function fetchEvent() {
         }
       })
     }
-    // TODO: temporary
     selectedWeek.value = scEvent.value.weeks[0]
+    // Fill out default data for first selected week
+    userAvailableWeeks.value = {[selectedWeek.value.startDate!.toString()]: Array(24*7).fill(false)}
+    for(const week of scEvent.value.weeks) {
+      const myAvailability = week.availability.find(av => av.user.id === props.privUser.id)
+      console.log(week.startDate, myAvailability?.data)
+      if(myAvailability)
+        userAvailableWeeks.value[week.startDate.toString()] = myAvailability.data
+    }
+    // TODO: temporary
     console.log('week:', selectedWeek.value.startDate)
 
   }
@@ -336,9 +356,10 @@ onBeforeUnmount(() => {
 }
 .cell:hover {
   outline: 2px solid #000;
-  border-radius: 5px;
-  padding-left: 20px;
-  padding-right: 20px;
+  /* border-radius: 5px; */
+  padding-left: 15px;
+  padding-right: 15px;
+  box-shadow: 2px 5px 8px #000;
 }
 .available {
   background-color: green;

@@ -145,8 +145,11 @@ const routes = [
   // },
   {
     name: 'events',
-    path: '/events/:id',
-    component: () => import('../views/EventView.vue')
+    path: '/events/:id/:title?',
+    component: () => import('../views/EventView.vue'),
+    meta: {
+      title: "Event Scheduler"
+    }
   },
   {
     name: 'admin-shares',
