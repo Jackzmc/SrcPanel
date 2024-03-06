@@ -3,6 +3,30 @@
     <!-- <div class="block mb-4">
       <router-link :to="{name: 'events', params: { id: null }}"><Icon icon="fa-arrow-left" class="is-pulled-left" text="Back to events list" /></router-link>
     </div> -->
+    <div class="modal is-active" v-if="showingEditTutorial">
+      <div class="modal-background"></div>
+      <div class="modal-card">
+        <header class="modal-card-head">
+          <p class="modal-card-title">Editing Tutorial</p>
+          <button class="delete" aria-label="close" @click="showingEditTutorial = false"></button>
+        </header>
+        <section class="modal-card-body">
+          <h5 class="title is-5 is-underlined mb-1">Key</h5>
+          <div class="example-cell available">Available</div>
+          <div class="example-cell unavailable">Unavailable</div>
+          <br>
+          <p>
+            Click on a cell to make it as available, and then you can drag sideways or up and down to mark multiple at once.
+            Once you are done editing your availability, press the button again to submit your changes.
+          </p>
+          <br>
+          <img src="/img/events-tutorial-optimized.gif">
+        </section>
+        <footer class="modal-card-foot">
+          <button class="button" @click="showingEditTutorial = false">Dismiss</button>
+        </footer>
+      </div>
+    </div>
     <router-link :data-tooltip="scEvent.creator.id" :to="{ name: 'manage-user', params: { id: scEvent.creator.id }, query: { returnTo: $route.fullPath }}">
       <figure class="image is-32x32 is-inline-block">
         <img class="is-rounded" :src="scEvent.creator.avatarUrl">
@@ -28,7 +52,7 @@
         <a class="button is-info" v-else @click="toggleEditing">{{ editCurrentWeek ? 'Stop Editing' : 'Edit My Availability' }}</a>
       </div>
       <div class="column has-text-right">
-        <a class="button is-rounded" @click="copyPrev" v-if="editPrevWeek"><Icon icon="fa-copy">Copy From Previous Week</Icon></a>
+        <a class="button is-rounded has-tooltip-left" @click="copyPrev" v-if="editPrevWeek" data-tooltip="Copies all your available times from the previous week to this week"><Icon icon="fa-copy">Copy From Previous Week</Icon></a>
       </div>
     </div>
     <table class="table is-fullwidth is-bordered is-narrow" @mouseleave="hoveredElement = undefined">
@@ -38,36 +62,39 @@
       </tr>
       </thead>
       <tbody style="user-select: none">
-        <tr v-for="(hourLabel, hour) in Hours" :key="hour" :style="{'border-bottom': hour == 11 ? '5px solid white' : '0'}">
-          <td v-for="(_, day) in Days" :key="day"
-            :class="['cell',{'available': userAvailability[day*24+hour], 'unavailable': !userAvailability[day*24+hour]}]"
-            :style="selectedWeekAvailability && !isEditing ? {'background-color': `rgba(32, 128, 0, ${selectedWeekAvailability[day*24+hour]})`, 'color': selectedWeekAvailability[day*24+hour] > 0.5 ? 'white' : 'inherit'} : {}"
-            @mouseover="e => onMouseOver(e, [day, hour])" @mousedown="e => onMouseDown(e, [day, hour])"
-          >
-            {{ hourLabel }}
-            <span class="is-pulled-right" v-if="selectedWeekAvailability && !isEditing">{{ Math.round(selectedWeekAvailability[day*24+hour]*100)}}%</span>
-            <div class="box hover-box px-0 py-0" v-if="!isEditing && hoveredElement && hoveredElement[0] == day && hoveredElement[1] == hour">
-              <List>
-                <template v-for="(res, i) in selectedWeek?.availability" :key="i">
-                  <div class="list-item py-1">
-                    <div class="list-item-image">
-                      <figure class="image is-32x32" :data-tooltip="res.user.name">
-                        <img class="is-rounded" :style="{opacity: res.data[hoveredElement[0]*24+hoveredElement[1]] ? 1 : 0.25}" :src="res.user.avatarUrl">
-                      </figure>
-                    </div>
-                    <div class="list-item-content">
-                      <div :class="['list-item-title', {'has-text-grey-lighter': !res.data[hoveredElement[0]*24+hoveredElement[1]]}]">
-                        {{ res.user.name }}
-                        <Icon  v-if="res.data[hoveredElement[0]*24+hoveredElement[1]]" icon="fa-check-circle" class="is-pulled-right ml-2" style="color: hsl(141, 53%, 53%)"></Icon>
-                        <!-- <span  class="tag is-success is-pulled-right ml-2">Available</span> -->
+        <template v-for="(hourLabel, hour) in Hours" :key="hour">
+          <tr>
+            <td v-for="(_, day) in Days" :key="day"
+              :class="['cell',{'available': userAvailability[day*24+hour], 'unavailable': !userAvailability[day*24+hour]}]"
+              :style="selectedWeekAvailability && !isEditing ? {'background-color': `rgba(32, 128, 0, ${selectedWeekAvailability[day*24+hour]})`, 'color': selectedWeekAvailability[day*24+hour] > 0.5 ? 'white' : 'inherit'} : {}"
+              @mouseover="e => onMouseOver(e, [day, hour])" @mousedown="e => onMouseDown(e, [day, hour])"
+            >
+              {{ hourLabel }}
+              <span class="is-pulled-right" v-if="selectedWeekAvailability && !isEditing">{{ Math.round(selectedWeekAvailability[day*24+hour]*100)}}%</span>
+              <div class="box hover-box px-0 py-0" v-if="!isEditing && hoveredElement && hoveredElement[0] == day && hoveredElement[1] == hour">
+                <List>
+                  <template v-for="(res, i) in selectedWeek?.availability" :key="i">
+                    <div class="list-item py-1">
+                      <div class="list-item-image">
+                        <figure class="image is-32x32" :data-tooltip="res.user.name">
+                          <img class="is-rounded" :style="{opacity: res.data[hoveredElement[0]*24+hoveredElement[1]] ? 1 : 0.25}" :src="res.user.avatarUrl">
+                        </figure>
+                      </div>
+                      <div class="list-item-content">
+                        <div :class="['list-item-title', {'has-text-grey-lighter': !res.data[hoveredElement[0]*24+hoveredElement[1]]}]">
+                          {{ res.user.name }}
+                          <Icon  v-if="res.data[hoveredElement[0]*24+hoveredElement[1]]" icon="fa-check-circle" class="is-pulled-right ml-2" style="color: hsl(141, 53%, 53%)"></Icon>
+                          <!-- <span  class="tag is-success is-pulled-right ml-2">Available</span> -->
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </template>
-              </List>
-            </div>
-          </td>
-        </tr>
+                  </template>
+                </List>
+              </div>
+            </td>
+          </tr>
+          <tr v-if="hour == 11"><td style="border:0"></td></tr>
+        </template>
       </tbody>
     </table>
   </div>
@@ -108,6 +135,7 @@ const Hours = Array(HourRange[1] - HourRange[0] + 1).fill(undefined).map((_, i) 
 
 let scEvent = ref<APIEventDetailed<boolean[]>>()
 let selectedWeek = ref<APIWeekAvailability<boolean[]>>()
+let showingEditTutorial = ref(false)
 // User submitted values:
 let userAvailableWeeks = ref<Record<string, boolean[]>>()
 let editCurrentWeek = ref<number>()
@@ -131,6 +159,11 @@ async function toggleEditing() {
     editCurrentWeek.value = undefined
     editPrevWeek.value = undefined
   } else {
+    if(!sessionStorage['events_tutorial_shown']) {
+      showingEditTutorial.value = true
+      sessionStorage['events_tutorial_shown'] = true
+    }
+    // TODO: show a popup introduction, only show first time
     if(!scEvent.value) return alert("No event has been loaded")
     if(!scEvent.value.range[0]) return alert("Event has no min_date, this should never happen")
     editCurrentWeek.value = scEvent.value.range[0]!
@@ -262,7 +295,6 @@ function advanceWeek(forward: boolean) {
   let amount = forward ? 7 : -7;
   const nextDate = new Date(selectedWeek.value.startDate * 1000)
   nextDate.setDate(nextDate.getDate() + amount)
-  console.log('next week:',nextDate.valueOf())
   let week = scEvent.value.weeks.find(w => (w.startDate*1000) === nextDate.valueOf())
   if(!week) {
     const endDate = new Date(nextDate)
@@ -333,19 +365,18 @@ async function fetchEvent() {
     userAvailableWeeks.value = {[selectedWeek.value.startDate!.toString()]: Array(24*7).fill(false)}
     for(const week of scEvent.value.weeks) {
       const myAvailability = week.availability.find(av => av.user.id === props.privUser.id)
-      console.log(week.startDate, myAvailability?.data)
       if(myAvailability)
         userAvailableWeeks.value[week.startDate.toString()] = myAvailability.data
     }
-    // TODO: temporary
-    console.log('week:', selectedWeek.value.startDate)
-
   }
 }
 onBeforeMount(async() => {
   document.addEventListener("mouseup", onMouseUp)
 
   await fetchEvent()
+  editCurrentWeek.value = scEvent.value!.range[0]!
+  advanceWeek(true)
+
 })
 onBeforeUnmount(() => {
   document.removeEventListener("mouseup", onMouseUp)
@@ -375,5 +406,10 @@ onBeforeUnmount(() => {
 .hover-box {
   position: absolute;
   margin-top: 20px;
+}
+.example-cell {
+  width: 20%;
+  padding: 4px 2px 2px 1rem;
+  border: 1px solid #000;
 }
 </style>

@@ -13,7 +13,8 @@
             "splitTerminals": [
                 {
                     "name": "server",
-                    "commands": ["cd server", "yarn", "yarn dev"]
+                    /* sometimes first command gets skipped */
+                    "commands": ["echo", "cd server", "yarn", "yarn dev"]
                 },
             ]
         }
