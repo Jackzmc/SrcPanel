@@ -144,3 +144,8 @@ export interface UserProfileData {
     birthDate?: number,
     birthMonth?: number // 0 indexed. 11 is dec
 }
+export interface APIUser {
+    id: string,
+    name: string
+    avatarUrl: string
+}

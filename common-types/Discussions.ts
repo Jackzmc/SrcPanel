@@ -1,3 +1,5 @@
+import { APIUser } from "./User.js"
+
 export enum APIDiscussionFlags {
     None = 0,
     /** Should the avatars/names of those that responded be vsible **/
@@ -57,11 +59,6 @@ export interface APIComment {
     creator: APIUser,
     content: string,
     timestamp: number
-}
-export interface APIUser {
-    id: string,
-    name: string
-    avatarUrl: string
 }
 export interface APIDiscussionOption {
     id: number,

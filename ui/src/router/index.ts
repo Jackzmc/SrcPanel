@@ -138,10 +138,15 @@ const routes = [
       authRequired: true
     },
   },
+  // {
+  //   name: 'events',
+  //   path: '/events',
+  //   component: () => import('../views/EventsView.vue')
+  // },
   {
-    name: 'schedule',
-    path: '/schedule',
-    component: () => import('../views/SchedulerView.vue')
+    name: 'events',
+    path: '/events/:id',
+    component: () => import('../views/EventView.vue')
   },
   {
     name: 'admin-shares',
