@@ -77,7 +77,7 @@ let comments = ref<APIComment[]>()
 let responses = ref<APIResponsesData>()
 
 watch(() => route.params.id, async (val) => {
-  if(route.params.name !== 'discuss') return
+  if(route.name !== 'discuss') return
   const id = Number(val)
   if(val && !isNaN(id)) {
     await selectDiscussion(id)
