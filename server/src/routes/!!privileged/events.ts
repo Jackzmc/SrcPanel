@@ -54,7 +54,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 },
                 name: row.name,
                 description: row.description,
-                range: [row.start_date, row.end_date],
+                range: [row.min_date, row.max_date],
                 weeks: Object.values(weeks).sort((a,b) => a.startDate - b.startDate)
             }
         } else {

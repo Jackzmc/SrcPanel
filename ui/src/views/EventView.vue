@@ -1,30 +1,38 @@
 <template>
   <div class="container">
-    <nav class="pagination is-rounded" role="navigation" aria-label="pagination">
-      <a class="pagination-previous" @click="copyPrev" v-if="prevDays"><Icon icon="fa-copy">Copy From Previous Week</Icon></a>
-      <ul class="pagination-list">
-        <li><a class="pagination-link" aria-label=""  @click="advanceWeek(false)"><Icon icon="fa-chevron-left"></Icon></a></li>
-        <li><span class="mx-2">{{ week[0].label }} - {{ week[1].label }}</span></li>
-        <li><a class="pagination-link" aria-label="" @click="advanceWeek(true)"><Icon icon="fa-chevron-right"></Icon></a></li>
-      </ul>
-    </nav>
-    <table class="table is-fullwidth is-bordered" @mouseleave="hoveredElementData = undefined">
+    <div class="columns">
+      <div class="column">
+        <nav class="pagination is-rounded" role="navigation" aria-label="pagination">
+          <ul class="pagination-list">
+            <li><a class="pagination-link" aria-label=""  @click="advanceWeek(false)"><Icon icon="fa-chevron-left"></Icon></a></li>
+            <li><span class="mx-2">{{ weekLabels[0] }} - {{ weekLabels[1] }}</span></li>
+            <li><a class="pagination-link" aria-label="" @click="advanceWeek(true)"><Icon icon="fa-chevron-right"></Icon></a></li>
+          </ul>
+        </nav>
+      </div>
+      <div class="column has-text-centered">
+        <a class="button is-info" @click="toggleEditing">{{ editCurrentWeek ? 'Stop Editing' : 'Edit My Availability' }}</a>
+      </div>
+      <div class="column has-text-right">
+        <a class="button is-rounded" @click="copyPrev" v-if="prevDays"><Icon icon="fa-copy">Copy From Previous Week</Icon></a>
+      </div>
+    </div>
+    <table class="table is-fullwidth is-bordered" @mouseleave="hoveredElement = undefined">
       <thead>
       <tr>
-        <th style="border-bottom: 0" v-for="(day, i) in Days" :key="day">{{ day }} ({{ dayDates[i] }})</th>
+        <th style="border-bottom: 0" v-for="(day, i) in dayLabels" :key="day">{{ Days[i] }} ({{ day }})</th>
       </tr>
       </thead>
       <tbody style="user-select: none">
         <tr v-for="(hourLabel, hour) in Hours" :key="hour">
           <td v-for="(_, day) in Days" :key="day"
-            :class="['cell',{'available': availableDays[day*24+hour], 'unavailable': !availableDays[day*24+hour]}]"
-            :style="selectedWeekAvailability ? {'background-color': `rgba(32, 128, 0, ${selectedWeekAvailability[day*24+hour]})`, 'color': selectedWeekAvailability[day*24+hour] > 0.5 ? 'white' : 'inherit'} : {}"
+            :class="['cell',{'available': userAvailability[day*24+hour], 'unavailable': !userAvailability[day*24+hour]}]"
+            :style="selectedWeekAvailability && !isEditing ? {'background-color': `rgba(32, 128, 0, ${selectedWeekAvailability[day*24+hour]})`, 'color': selectedWeekAvailability[day*24+hour] > 0.5 ? 'white' : 'inherit'} : {}"
             @mouseover="e => onMouseOver(e, [day, hour])" @mousedown="e => onMouseDown(e, [day, hour])"
           >
             {{ hourLabel }}
-            <!-- hour={{hour}} day={{ day }} -->
-            <span class="is-pulled-right" v-if="selectedWeekAvailability">{{ Math.round(selectedWeekAvailability[day*24+hour]*100)}}%</span>
-            <div class="box hover-box px-0 py-0" v-if="hoveredElement && hoveredElement[0] == day && hoveredElement[1] == hour">
+            <span class="is-pulled-right" v-if="selectedWeekAvailability && !isEditing">{{ Math.round(selectedWeekAvailability[day*24+hour]*100)}}%</span>
+            <div class="box hover-box px-0 py-0" v-if="!isEditing && hoveredElement && hoveredElement[0] == day && hoveredElement[1] == hour">
               <List>
                 <template v-for="(res, i) in selectedWeek?.availability" :key="i">
                   <div class="list-item py-1">
@@ -64,19 +72,48 @@ const HourRange = [ 1, 24 ]
 
 const Days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
 
+// Calculate this week's start and end timestamps
 const date = new Date()
-const Sunday = new Date()
-Sunday.setDate(date.getDate() - date.getDay())
+const CurrentSunday = new Date()
+CurrentSunday.setDate(date.getDate() - date.getDay())
+CurrentSunday.setHours(0, 0, 0, 0)
+const CurrentSaturday = new Date(CurrentSunday)
+CurrentSaturday.setDate(CurrentSunday.getDate() + 6)
+
 const Hours = Array(HourRange[1] - HourRange[0] + 1).fill(undefined).map((_, i) => {
-  date.setHours(i + HourRange[0], 0, 0)
+  date.setHours(i + HourRange[0], 0, 0, 0)
   return date.toLocaleTimeString(undefined, {hour: 'numeric'})
 })
-const Saturday = new Date(Sunday)
-Saturday.setDate(Sunday.getDate() + 6)
+
 
 let event = ref<APIEventDetailed<boolean[]>>()
 let selectedWeek = ref<APIWeekAvailability<boolean[]>>()
+// User submitted values:
+let userAvailableWeeks = ref<Record<string, boolean[]>>()
+let editCurrentWeek = ref<number>()
 
+const userAvailability = computed(() => {
+  if(!editCurrentWeek.value || !userAvailableWeeks.value) return []
+  return userAvailableWeeks.value[editCurrentWeek.value]
+})
+
+const isEditing = computed(() => {
+  return editCurrentWeek.value != undefined
+})
+
+function toggleEditing() {
+  if(userAvailableWeeks.value) {
+    userAvailableWeeks.value = undefined
+    editCurrentWeek.value = undefined
+  } else {
+    if(!event.value) return alert("No event has been loaded")
+    if(!event.value.range[0]) return alert("Event has no min_date, this should never happen")
+    userAvailableWeeks.value = {[event.value.range[0]!.toString()]: Array(24*7).fill(false)}
+    editCurrentWeek.value = event.value.range[0]!
+  }
+}
+
+/// float[] of percentages of users that are available for each day/hour
 const selectedWeekAvailability = computed(() => {
   if(!selectedWeek.value) return
   const numUsers = selectedWeek.value.availability.length
@@ -86,69 +123,56 @@ const selectedWeekAvailability = computed(() => {
   }
   return sums.map(s => s / numUsers)
 })
+/// Computed week start and end and it's display
+const weekLabels = computed(() => {
+  if(!selectedWeek.value) return getWeekLabels(CurrentSunday, CurrentSaturday)
+  const sunday = new Date(selectedWeek.value.startDate*1000)
+  const saturday = new Date(selectedWeek.value.endDate*1000)
+  return getWeekLabels(sunday, saturday)
+})
+function getWeekLabels(start: Date, end: Date) {
+  return [ start, end ].map(date => {
+    return date.toLocaleDateString(undefined, {month: 'long', day: 'numeric'})
+  })
+}
 
-let week = ref<[{ date: Date, label: string }, { date: Date, label: string }]>([
-  { date: Sunday, label: Sunday.toLocaleDateString(undefined, {month: 'short', day: '2-digit'}) },
-  { date: Saturday, label: Saturday.toLocaleDateString(undefined, {month: 'short', day: '2-digit'}) }
-])
 interface DayInfo {
   users?: any,
   available: boolean,
   percentAvailable?: number
 }
 let prevDays = ref<DayInfo[][]>()
-const USERS = [{"available": true, "id": "STEAM_1:0:49243767","name": "Jackzie ❤","avatarUrl": "http://localhost:8080/api/users/STEAM_1:0:49243767/avatar","choices": [1]},{"id": "STEAM_1:1:37698533","available": true, "name": "Butternut Crinklefries","avatarUrl": "http://localhost:8080/api/users/STEAM_1:1:37698533/avatar","choices": [1]},{"id": "STEAM_1:0:204230496","name": "The Liquor","avatarUrl": "http://localhost:8080/api/users/STEAM_1:0:204230496/avatar","choices": [2], "available": true, },{"available": false, "id": "STEAM_0:1:10882645","name": "Disgruntled Pea","avatarUrl": "http://localhost:8080/api/users/STEAM_0:1:10882645/avatar","choices": [2]},{"name": "Valerie", "avatarUrl": "http://localhost:8080/api/users/STEAM_0:1:437712426/avatar"},{name: "Ashley Golix❤", avatarUrl: "http://localhost:8080/api/users/STEAM_1:0:530680608/avatar"}]
-const numUsers = USERS.length
-function generateRandomUsers() {
-  return USERS.map(user => { return {
-    ...user,
-    available: Math.random() > 0.5
-  }})
-  // we use + to convert to number, because TS doesn't like subtracting booleans, but it's valid
-  // .sort((a, b) => +b.available - +a.available)
-}
-let availableDays = ref<boolean[]>(Array(7*24).fill(false))
-let days = ref<DayInfo[][]>(Array(7).fill(undefined).map(() => Array(Hours.length).fill(undefined).map(h => {
-  const users = generateRandomUsers()
-  return {
-    // users,
-    // percentAvailable: users.reduce((prev, user) => prev + (user.available ? 1 : 0), 0) / numUsers,
-    available: false
-  }
-})))
+
 
 let hoveredElement = ref<[number, number]|undefined>()
-let hoveredElementData = ref<any>()
-let dayDates = ref<string[]>([])
 let availableType = false
 let startCoord = [0, 0]
 let axis: number | undefined = undefined
 let isDragging = false
 function onMouseDown(event: any, pos: [number, number]) {
-  // if(days.value[pos[1]][pos[0]].percentAvailable) return
+  if(!isEditing.value) return
   isDragging = true
   // TODO: reimplement
-  // availableType = !days.value[pos[1]][pos[0]].available
+  availableType = !userAvailableWeeks.value![editCurrentWeek.value!.toString()][pos[0]*24+pos[1]]
   startCoord = pos
   onMouseOver(event, pos)
 }
 function onMouseOver(event: any, pos: [number, number]) {
   // if(days.value[pos[1]][pos[0]].percentAvailable) return
-  if(isDragging && event.buttons == 1) {
-    // Prevent dragging on different row or column:
-    if(startCoord[0] != pos[0] && startCoord[1] != pos[1]) return
-    // TODO: prevent returning back to startCoord and dragging different direction
-    // if(axis && startCoord[axis] != pos[axis]) return
-    // if(startCoord[0] == pos[0]) axis = 0
-    // else if(startCoord[1] == pos[1]) axis = 1
-    availableDays.value[pos[0] * 24 + pos[1]] = availableType
-    days.value[pos[1]][pos[0]].available = availableType
-    // TODO: improve thing and auto fill previous cells incase they get skipped
+  if(isEditing.value) {
+    if(isDragging && event.buttons == 1) {
+      // Prevent dragging on different row or column:
+      if(startCoord[0] != pos[0] && startCoord[1] != pos[1]) return
+      // TODO: prevent returning back to startCoord and dragging different direction
+      // if(axis && startCoord[axis] != pos[axis]) return
+      // if(startCoord[0] == pos[0]) axis = 0
+      // else if(startCoord[1] == pos[1]) axis = 1
+      userAvailableWeeks.value![editCurrentWeek.value!.toString()][pos[0] * 24 + pos[1]] = availableType
+      // days.value[pos[1]][pos[0]].available = availableType
+      // TODO: improve thing and auto fill previous cells incase they get skipped
+    }
   } else {
     hoveredElement.value = pos
-    // hoveredElementData.value = {
-    //   users: selectedWeek.value?.availability .value[pos[1]][pos[0]].users
-    // }
   }
 }
 // Converts every 8 booleans into one byte where each bit is its value
@@ -188,29 +212,31 @@ function onMouseUp(event: any) {
     isDragging = false;
   }
   hoveredElement.value = undefined
-  hoveredElementData.value = undefined
 }
-function computeWeek() {
-  week.value[0].label = week.value[0].date.toLocaleDateString(undefined, {month: 'short', day: '2-digit'})
-  week.value[1].label = week.value[1].date.toLocaleDateString(undefined, {month: 'short', day: '2-digit'})
-  dayDates.value = Array(7).fill(undefined).map((_, i) => {
-    const d = new Date(week.value[0].date)
-    d.setDate(Sunday.getDate() + i)
-    return d.toLocaleDateString(undefined, {month: 'short', day: '2-digit'})
+const dayLabels = computed(() => {
+  return Array(7).fill(undefined).map((_, i) => {
+    const date = selectedWeek.value ? new Date(selectedWeek.value.startDate*1000) : CurrentSaturday
+    date.setDate(CurrentSunday.getDate() + i)
+    return date.toLocaleDateString(undefined, {month: 'short', day: '2-digit'})
   })
+})
+function computeWeek() {
+  // week.value[0].label = week.value[0].date.toLocaleDateString(undefined, {month: 'short', day: '2-digit'})
+  // week.value[1].label = week.value[1].date.toLocaleDateString(undefined, {month: 'short', day: '2-digit'})
 }
 function advanceWeek(forward: boolean) {
   let amount = forward ? 7 : -7;
-  week.value[0].date.setDate(week.value[0].date.getDate() + amount)
-  week.value[1].date.setDate(week.value[1].date.getDate() + amount)
+  // selectedWeek.value = event.value?.weeks.find(w => w.startDate == )
+  // week.value[0].date.setDate(week.value[0].date.getDate() + amount)
+  // week.value[1].date.setDate(week.value[1].date.getDate() + amount)
   // Reset selected values
-  prevDays.value = days.value.slice().map(a => a.slice())
-  days.value = Array(7).fill(undefined).map(() => Array(Hours.length).fill(undefined).map(h => {
-    return {
-      percentAvailable: 0.0,
-      available: false
-    }
-  }))
+  // prevDays.value = days.value.slice().map(a => a.slice())
+  // days.value = Array(7).fill(undefined).map(() => Array(Hours.length).fill(undefined).map(h => {
+  //   return {
+  //     percentAvailable: 0.0,
+  //     available: false
+  //   }
+  // }))
   computeWeek()
 }
 
@@ -246,11 +272,13 @@ async function fetchEvent() {
     }
     // TODO: temporary
     selectedWeek.value = event.value.weeks[0]
+    console.log('week:', selectedWeek.value.startDate)
+
   }
 }
 function copyPrev() {
   if(!prevDays.value) return
-  days.value = prevDays.value.slice().map(a => a.slice())
+  // days.value = prevDays.value.slice().map(a => a.slice())
   prevDays.value = undefined
 }
 onBeforeMount(async() => {
