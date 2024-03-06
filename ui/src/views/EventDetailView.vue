@@ -74,6 +74,7 @@
               {{ hourLabel }}
               <span class="is-pulled-right" v-if="selectedWeekAvailability && !isEditing">{{ Math.round(selectedWeekAvailability[day*24+hour]*100)}}%</span>
               <div class="box hover-box px-0 py-0" v-if="!isEditing && hoveredElement && hoveredElement[0] == day && hoveredElement[1] == hour">
+                <h6 class="title is-6 px-4 pt-2 mb-2">People Available:</h6>
                 <List>
                   <template v-for="(res, i) in selectedWeek?.availability" :key="i">
                     <div class="list-item py-1">
@@ -83,7 +84,7 @@
                         </figure>
                       </div>
                       <div class="list-item-content">
-                        <div :class="['list-item-title', {'has-text-grey-lighter': !res.data[hoveredElement[0]*24+hoveredElement[1]]}]">
+                        <div :class="['list-item-title', {'has-text-grey-lighter': !res.data[hoveredElement[0]*24+hoveredElement[1]]}]" style="font-weight:normal !important">
                           {{ res.user.name }}
                           <Icon  v-if="res.data[hoveredElement[0]*24+hoveredElement[1]]" icon="fa-check-circle" class="is-pulled-right ml-2" style="color: hsl(141, 53%, 53%)"></Icon>
                           <!-- <span  class="tag is-success is-pulled-right ml-2">Available</span> -->
@@ -220,12 +221,15 @@ function onMouseDown(event: any, pos: [number, number]) {
 }
 function onMouseOver(event: any, pos: [number, number]) {
   // if(days.value[pos[1]][pos[0]].percentAvailable) return
+  if(!dayLabels.value[pos[0]][2]) {
+    hoveredElement.value = undefined
+    return
+  }
   if(isEditing.value) {
     if(isDragging && event.buttons == 1) {
       // Prevent dragging on different row or column:
       if(startCoord[0] != pos[0] && startCoord[1] != pos[1]) return
       // Prevent dragging on days that are disabled (in the past)
-      if(!dayLabels.value[pos[0]][2]) return
       // TODO: prevent returning back to startCoord and dragging different direction
       // if(axis && startCoord[axis] != pos[axis]) return
       // if(startCoord[0] == pos[0]) axis = 0
@@ -324,7 +328,7 @@ function advanceWeek(forward: boolean) {
 }
 function copyPrev() {
   if(!editPrevWeek.value || !userAvailableWeeks.value) return
-  userAvailableWeeks.value[editCurrentWeek.value!.toString()] = userAvailableWeeks.value[editPrevWeek.value.toString()]
+  userAvailableWeeks.value[editCurrentWeek.value!.toString()] = userAvailableWeeks.value[editPrevWeek.value.toString()].slice()
   editPrevWeek.value = undefined
 }
 
@@ -417,6 +421,7 @@ onBeforeUnmount(() => {
 .hover-box {
   position: absolute;
   margin-top: 20px;
+  opacity: 100%;
 }
 .example-cell {
   width: 20%;
