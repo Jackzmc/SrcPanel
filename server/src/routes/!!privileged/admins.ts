@@ -94,7 +94,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
                 await fastify.authmngr.revokeAdmin(admin.id)
 
-                await req.user.log(admin.identity, `%client% revoked admin from %target% (#%id)`, {
+                await req.user.log(admin.identity, `%client% revoked admin from %target% (#%id%)`, {
                     code: "admins.revoke",
                     metadata: {
                         id: admin.id,

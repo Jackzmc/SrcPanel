@@ -75,8 +75,8 @@ async function testServer() {
 }
 
 onBeforeMount(() => {
-  if(!errorType.value)
-    testServer()
+  // if(!errorType.value)
+    // testServer()
 })
 
 </script>

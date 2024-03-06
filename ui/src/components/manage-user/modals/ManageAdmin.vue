@@ -172,7 +172,6 @@
       </div>
       <Field>
         <AdminPermissionInput v-model="webCodes" />
-        <!-- <TagField v-model="webCodes" placeholder="Add permissions" :choices="['admins.view', 'admins.edit']" /> -->
       </Field>
     </Tab>
     <Tab name="Actions">

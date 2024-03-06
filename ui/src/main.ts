@@ -9,7 +9,7 @@ import '@/assets/main.scss'
 import '@creativebulma/bulma-tooltip/dist/bulma-tooltip.min.css'
 
 import { library } from '@fortawesome/fontawesome-svg-core'
-import { faEllipsisV, faChevronDown, faChevronUp, faSpinner, faUser, faCog, faSitemap, faInfoCircle, faExclamationCircle, faExclamationTriangle, faArrowRightFromBracket, faUsersCog, faServer, faList, faPuzzlePiece, faWrench, faGavel ,faToolbox, faNoteSticky, faChartSimple, faUserCheck, faUserPlus, faUserPen, faTimes, faUpload, faPlus, faEdit, faTrash, faCheck, faSearch, faMessage, faFolder, faDownload, faLock, faSync, faCloud, faThumbsUp, faThumbsDown, faQuestionCircle, faCopy, faChevronLeft, faChevronRight, faTerminal, faBell, faKeyboard, faCircleQuestion, faVideo, faFont, faCircleCheck, faArrowRight, faArrowLeft, faClock, faEye, faEyeSlash, faLockOpen, faBoxArchive } from '@fortawesome/free-solid-svg-icons'
+import { faEllipsisV, faChevronDown, faChevronUp, faSpinner, faUser, faCog, faSitemap, faInfoCircle, faExclamationCircle, faExclamationTriangle, faArrowRightFromBracket, faUsersCog, faServer, faList, faPuzzlePiece, faWrench, faGavel ,faToolbox, faNoteSticky, faChartSimple, faUserCheck, faUserPlus, faUserPen, faTimes, faUpload, faPlus, faEdit, faTrash, faCheck, faSearch, faMessage, faFolder, faDownload, faLock, faSync, faCloud, faThumbsUp, faThumbsDown, faQuestionCircle, faCopy, faChevronLeft, faChevronRight, faTerminal, faBell, faKeyboard, faCircleQuestion, faVideo, faFont, faCircleCheck, faArrowRight, faArrowLeft, faClock, faEye, faEyeSlash, faLockOpen, faBoxArchive, faCalendar } from '@fortawesome/free-solid-svg-icons'
 import { faCircle, faComment} from '@fortawesome/free-regular-svg-icons'
 import { faSteam, faDiscord } from '@fortawesome/free-brands-svg-icons'
 import Icon from '@/components/Icon.vue'
@@ -20,7 +20,7 @@ import * as Sentry from "@sentry/vue";
 
 
 library.add(faSteam, faDiscord)
-library.add(faEllipsisV, faChevronDown, faChevronUp, faSpinner, faUser, faCog, faSitemap, faInfoCircle, faExclamationTriangle, faExclamationCircle, faArrowRightFromBracket, faUsersCog, faServer, faList, faPuzzlePiece,  faWrench, faCircle, faGavel, faToolbox,faNoteSticky, faChartSimple, faUserCheck, faUserPlus, faUserPen, faTimes, faUpload, faPlus, faEdit, faTrash, faCheck, faSearch, faMessage, faFolder, faDownload, faLock, faSync, faComment, faCloud, faThumbsUp, faThumbsDown, faQuestionCircle, faCopy, faChevronLeft, faChevronRight, faTerminal, faBell, faKeyboard, faCircleQuestion, faVideo, faFont, faCircleCheck, faArrowRight, faClock, faArrowLeft, faEye, faEyeSlash, faLockOpen, faBoxArchive )
+library.add(faEllipsisV, faChevronDown, faChevronUp, faSpinner, faUser, faCog, faSitemap, faInfoCircle, faExclamationTriangle, faExclamationCircle, faArrowRightFromBracket, faUsersCog, faServer, faList, faPuzzlePiece,  faWrench, faCircle, faGavel, faToolbox,faNoteSticky, faChartSimple, faUserCheck, faUserPlus, faUserPen, faTimes, faUpload, faPlus, faEdit, faTrash, faCheck, faSearch, faMessage, faFolder, faDownload, faLock, faSync, faComment, faCloud, faThumbsUp, faThumbsDown, faQuestionCircle, faCopy, faChevronLeft, faChevronRight, faTerminal, faBell, faKeyboard, faCircleQuestion, faVideo, faFont, faCircleCheck, faArrowRight, faClock, faArrowLeft, faEye, faEyeSlash, faLockOpen, faBoxArchive, faCalendar )
 
 const app = createApp(App)
   .use(Notifications)

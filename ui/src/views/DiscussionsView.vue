@@ -5,7 +5,7 @@
       <template v-if="selectedDiscussion">
         <div class="block mb-2">
           <router-link :to="{params: { id: '', title: '' }}"><Icon icon="fa-arrow-left" class="is-pulled-left" text="Back to discussions" /></router-link>
-          </div>
+        </div>
         <br>
         <DiscussionBox :priv-user="privUser" v-model="selectedDiscussion" selected :responses="responses" />
         <div class="box">
@@ -77,7 +77,7 @@ let comments = ref<APIComment[]>()
 let responses = ref<APIResponsesData>()
 
 watch(() => route.params.id, async (val) => {
-  if(route.params.name !== 'discuss') return
+  if(route.name !== 'discuss') return
   const id = Number(val)
   if(val && !isNaN(id)) {
     await selectDiscussion(id)

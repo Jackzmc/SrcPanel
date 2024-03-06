@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory } from 'vue-router'
+import { RouteLocationNormalizedLoaded, createRouter, createWebHistory } from 'vue-router'
 import Overview from '../views/OverviewView.vue'
 
 const DEFAULT_TITLE = "L4D2 Admin Guide"
@@ -118,7 +118,8 @@ const routes = [
     path: '/discuss/new',
     component: () => import('../views/DiscussionEdit.vue'),
     meta: {
-      authRequired: true
+      authRequired: true,
+      prevRoute: "discuss"
     },
   },
   {
@@ -126,7 +127,8 @@ const routes = [
     path: '/discuss/edit/:id',
     component: () => import('../views/DiscussionEdit.vue'),
     meta: {
-      authRequired: true
+      authRequired: true,
+      prevRoute: "discuss"
     },
   },
   {
@@ -135,8 +137,25 @@ const routes = [
     component: () => import('../views/DiscussionsView.vue'),
     meta: {
       title: "Discussions",
-      authRequired: true
+      authRequired: true,
     },
+  },
+  {
+    name: 'events',
+    path: '/events',
+    component: () => import('../views/EventsView.vue'),
+    meta: {
+      title: "Events"
+    }
+  },
+  {
+    name: 'event-details',
+    path: '/events/:id/:title?',
+    component: () => import('../views/EventDetailView.vue'),
+    meta: {
+      title: "Event Scheduler",
+      prevRoute: "events"
+    }
   },
   {
     name: 'admin-shares',
