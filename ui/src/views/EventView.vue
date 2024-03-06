@@ -25,7 +25,7 @@
         <a class="button is-info" v-else @click="toggleEditing">{{ editCurrentWeek ? 'Stop Editing' : 'Edit My Availability' }}</a>
       </div>
       <div class="column has-text-right">
-        <a class="button is-rounded" @click="copyPrev" v-if="prevDays"><Icon icon="fa-copy">Copy From Previous Week</Icon></a>
+        <a class="button is-rounded" @click="copyPrev" v-if="editPrevWeek"><Icon icon="fa-copy">Copy From Previous Week</Icon></a>
       </div>
     </div>
     <table class="table is-fullwidth is-bordered is-narrow" @mouseleave="hoveredElement = undefined">
@@ -108,6 +108,7 @@ let selectedWeek = ref<APIWeekAvailability<boolean[]>>()
 // User submitted values:
 let userAvailableWeeks = ref<Record<string, boolean[]>>()
 let editCurrentWeek = ref<number>()
+let editPrevWeek = ref<number>()
 let editSubmitting = ref<boolean>(false)
 
 const userAvailability = computed(() => {
@@ -125,6 +126,7 @@ async function toggleEditing() {
   if(isEditing.value) {
     await submitEdit()
     editCurrentWeek.value = undefined
+    editPrevWeek.value = undefined
   } else {
     if(!scEvent.value) return alert("No event has been loaded")
     if(!scEvent.value.range[0]) return alert("Event has no min_date, this should never happen")
@@ -163,14 +165,6 @@ function getWeekLabels(start: Date, end: Date) {
     return date.toLocaleDateString(undefined, {month: 'long', day: 'numeric'})
   })
 }
-
-interface DayInfo {
-  users?: any,
-  available: boolean,
-  percentAvailable?: number
-}
-let prevDays = ref<DayInfo[][]>()
-
 
 let hoveredElement = ref<[number, number]|undefined>()
 let availableType = false
@@ -276,7 +270,19 @@ function advanceWeek(forward: boolean) {
       availability: []
     }
   }
+  if(isEditing.value) {
+    editPrevWeek.value = editCurrentWeek.value
+    editCurrentWeek.value = week.startDate
+    if(!userAvailableWeeks.value![editCurrentWeek.value.toString()]) {
+      userAvailableWeeks.value![editCurrentWeek.value.toString()] = Array(24*7).fill(false)
+    }
+  }
   selectedWeek.value = week
+}
+function copyPrev() {
+  if(!editPrevWeek.value || !userAvailableWeeks.value) return
+  userAvailableWeeks.value[editCurrentWeek.value!.toString()] = userAvailableWeeks.value[editPrevWeek.value.toString()]
+  editPrevWeek.value = undefined
 }
 
 async function submitEdit() {
@@ -332,11 +338,6 @@ async function fetchEvent() {
     console.log('week:', selectedWeek.value.startDate)
 
   }
-}
-function copyPrev() {
-  if(!prevDays.value) return
-  // days.value = prevDays.value.slice().map(a => a.slice())
-  prevDays.value = undefined
 }
 onBeforeMount(async() => {
   document.addEventListener("mouseup", onMouseUp)
