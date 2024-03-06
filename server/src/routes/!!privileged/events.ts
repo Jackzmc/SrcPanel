@@ -6,7 +6,7 @@ import { NOT_FOUND, NO_PERMISSION } from '../../responses.js';
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
     fastify.get('/', async (req, reply) => {
         const domain = await fastify.config.GetKV("domain");
-        const [rows] = await fastify.db.query<RowDataPacket[]>("SELECT e.*, u.name as creator_name FROM `left4dead2-admins`.dash_events e LEFT JOIN `left4dead2`.user_names u ON SUBSTRING(e.creator_id, 11) = u.steamid ORDER BY created_date", [])
+        const [rows] = await fastify.db.query<RowDataPacket[]>("SELECT e.*, u.name as creator_name FROM `left4dead2-admins`.dash_events e LEFT JOIN `left4dead2`.user_names u ON SUBSTRING(e.creator_id, 11) = u.steamid ORDER BY created_date desc", [])
         return {
             events: rows.map(row => {
                 return {
@@ -24,7 +24,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
     })
     fastify.get('/:id', async(req: FastifyRequest<{Params: {id: string}}>, reply): Promise<APIEventDetailed<string>> => {
-        const [rows] = await fastify.db.query<RowDataPacket[]>("SELECT e.*, u.name as creator_name FROM `left4dead2-admins`.dash_events e LEFT JOIN `left4dead2`.user_names u ON SUBSTRING(e.creator_id, 11) = u.steamid WHERE id = ? ORDER BY created_date", [req.params.id])
+        const [rows] = await fastify.db.query<RowDataPacket[]>("SELECT e.*, u.name as creator_name FROM `left4dead2-admins`.dash_events e LEFT JOIN `left4dead2`.user_names u ON SUBSTRING(e.creator_id, 11) = u.steamid WHERE id = ?", [req.params.id])
         if(rows.length > 0) {
             const row = rows[0]
             const domain = await fastify.config.GetKV("domain");
