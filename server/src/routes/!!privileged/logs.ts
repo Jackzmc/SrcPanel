@@ -79,7 +79,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     serverFilterCache = new SetCache<string>(
         async () => {
             const [rows] = await fastify.db.query<RowDataPacket[]>(`SELECT DISTINCT server FROM ${ACTIVITY_LOG_TABLE_NAME} ORDER BY timestamp DESC`)
-            const list: string[] = rows.filter(row => row.server && row.server !== "web").map(row => row.server)
+            const list: string[] = rows.filter(row => row.server).map(row => row.server)
             return new Set(list)
         }
     )
