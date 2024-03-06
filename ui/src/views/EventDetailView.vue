@@ -374,8 +374,6 @@ onBeforeMount(async() => {
   document.addEventListener("mouseup", onMouseUp)
 
   await fetchEvent()
-  editCurrentWeek.value = scEvent.value!.range[0]!
-  advanceWeek(true)
 
 })
 onBeforeUnmount(() => {
