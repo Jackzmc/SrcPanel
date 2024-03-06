@@ -1,5 +1,15 @@
 <template>
-  <div class="container">
+  <div class="container is-fluid" v-if="scEvent">
+    <router-link :data-tooltip="scEvent.creator.id" :to="{ name: 'manage-user', params: { id: scEvent.creator.id }, query: { returnTo: $route.fullPath }}">
+      <figure class="image is-32x32 is-inline-block">
+        <img class="is-rounded" :src="scEvent.creator.avatarUrl">
+      </figure>
+      <p class="is-inline is-size-5 mt-0 ml-1" style="top:-8px;position:relative">{{ scEvent.creator.name }}</p>
+    </router-link>
+    <h4 class="title is-4">
+      <b>Event: </b>{{ scEvent.name }}
+    </h4>
+    <p class="subtitle">{{ scEvent.description }}</p>
     <div class="columns">
       <div class="column">
         <nav class="pagination is-rounded" role="navigation" aria-label="pagination">
@@ -21,7 +31,7 @@
     <table class="table is-fullwidth is-bordered" @mouseleave="hoveredElement = undefined">
       <thead>
       <tr>
-        <th style="border-bottom: 0" v-for="(day, i) in dayLabels" :key="day">{{ Days[i] }} ({{ day }})</th>
+        <th style="border-bottom: 0" v-for="(day, i) in dayLabels" :key="i" :data-tooltip="day[0]">{{ Days[i] }} <span class="is-pulled-right">{{ day[1] }}</span></th>
       </tr>
       </thead>
       <tbody style="user-select: none">
@@ -39,8 +49,8 @@
                   <div class="list-item py-1">
                     <div class="list-item-image">
                       <figure class="image is-32x32" :data-tooltip="res.user.name">
-                          <img class="is-rounded" :style="{opacity: res.data[hoveredElement[0]*24+hoveredElement[1]] ? 1 : 0.5}" :src="res.user.avatarUrl">
-                        </figure>
+                        <img class="is-rounded" :style="{opacity: res.data[hoveredElement[0]*24+hoveredElement[1]] ? 1 : 0.5}" :src="res.user.avatarUrl">
+                      </figure>
                     </div>
                     <div class="list-item-content">
                       <div :class="['list-item-title', {'has-text-grey-lighter': !res.data[hoveredElement[0]*24+hoveredElement[1]]}]">
@@ -86,7 +96,7 @@ const Hours = Array(HourRange[1] - HourRange[0] + 1).fill(undefined).map((_, i) 
 })
 
 
-let event = ref<APIEventDetailed<boolean[]>>()
+let scEvent = ref<APIEventDetailed<boolean[]>>()
 let selectedWeek = ref<APIWeekAvailability<boolean[]>>()
 // User submitted values:
 let userAvailableWeeks = ref<Record<string, boolean[]>>()
@@ -107,10 +117,10 @@ function toggleEditing() {
     userAvailableWeeks.value = undefined
     editCurrentWeek.value = undefined
   } else {
-    if(!event.value) return alert("No event has been loaded")
-    if(!event.value.range[0]) return alert("Event has no min_date, this should never happen")
-    userAvailableWeeks.value = {[event.value.range[0]!.toString()]: Array(24*7).fill(false)}
-    editCurrentWeek.value = event.value.range[0]!
+    if(!scEvent.value) return alert("No event has been loaded")
+    if(!scEvent.value.range[0]) return alert("Event has no min_date, this should never happen")
+    userAvailableWeeks.value = {[scEvent.value.range[0]!.toString()]: Array(24*7).fill(false)}
+    editCurrentWeek.value = scEvent.value.range[0]!
   }
 }
 
@@ -134,10 +144,10 @@ const weekLabels = computed(() => {
   return getWeekLabels(sunday, saturday)
 })
 const weekDirections = computed(() => {
-  if(!event.value || !selectedWeek.value) return [false, false]
+  if(!scEvent.value || !selectedWeek.value) return [false, false]
   return [
-    Boolean(selectedWeek.value.startDate !== event.value.range[0]),
-    Boolean(selectedWeek.value.endDate !== event.value.range[1]),
+    Boolean(selectedWeek.value.startDate !== scEvent.value.range[0]),
+    Boolean(selectedWeek.value.endDate !== scEvent.value.range[1]),
   ]
 })
 function getWeekLabels(start: Date, end: Date) {
@@ -227,20 +237,28 @@ function deserializeWeekData(base64: string): boolean[] {
 const dayLabels = computed(() => {
   const date = selectedWeek.value ? new Date(selectedWeek.value.startDate*1000) : CurrentSunday
   return Array(7).fill(undefined).map(() => {
-    const str = date.toLocaleDateString(undefined, {month: 'short', day: '2-digit'})
+    const ret = [
+      new Date(date).toLocaleDateString(undefined, {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      }),
+      date.toLocaleDateString(undefined, {month: 'numeric', day: '2-digit'})
+    ]
     date.setDate(date.getDate() + 1)
-    return str
+    return ret
   })
 })
 function advanceWeek(forward: boolean) {
-  if(!selectedWeek.value || !event.value) return
+  if(!selectedWeek.value || !scEvent.value) return
   else if(!forward && !weekDirections.value[0]) return
   else if(forward && !weekDirections.value[1]) return
   let amount = forward ? 7 : -7;
   const nextDate = new Date(selectedWeek.value.startDate * 1000)
   nextDate.setDate(nextDate.getDate() + amount)
   console.log('next week:',nextDate.valueOf())
-  let week = event.value.weeks.find(w => (w.startDate*1000) === nextDate.valueOf())
+  let week = scEvent.value.weeks.find(w => (w.startDate*1000) === nextDate.valueOf())
   if(!week) {
     const endDate = new Date(nextDate)
     endDate.setDate(endDate.getDate() + 7 - 1)
@@ -275,7 +293,7 @@ async function fetchEvent() {
   const response = await fetch(`/api/events/${route.params.id}`)
   if(response.ok) {
     const json: APIEventDetailed<string> = await response.json()
-    event.value = {
+    scEvent.value = {
       ...json,
       weeks: json.weeks.map(w => {
         return {
@@ -290,7 +308,7 @@ async function fetchEvent() {
       })
     }
     // TODO: temporary
-    selectedWeek.value = event.value.weeks[0]
+    selectedWeek.value = scEvent.value.weeks[0]
     console.log('week:', selectedWeek.value.startDate)
 
   }
