@@ -3,18 +3,20 @@
     <!-- <v-tour v-if="tour" :name="tour.name" :steps="tour.steps"></v-tour> -->
     <BirthdayComponent v-if="isBirthday" @close="closeBirthday" />
     <Notifications position="top center" :duration=7000 @start="onNotificationShown" />
-    <NavBar v-if="!$route.meta.hideNav" @logout="onLogout" :update-info="updateInfo" :priv-user="privUser" @notifications:clear="clearNotifications" />
+    <NavBar v-if="!route.meta.hideNav" @logout="onLogout" :update-info="updateInfo" :priv-user="privUser" @notifications:clear="clearNotifications" />
     <br>
-    <br v-if="$route.meta.hideHero">
+    <br v-if="route.meta.hideHero">
 
     <section v-else class="hero is-info has-text-centered">
       <div class="hero-body">
+        <router-link v-if="prevRoute" :to="{ name: prevRoute }" class="is-pulled-left is-light is-rounded button" ><Icon icon="fa-chevron-left">Back</Icon></router-link>
         <p class="title" >
-          {{ $route.meta.title }}
+          {{ route.meta.title }}
         </p>
         <p class="subtitle">
-          {{ $route.meta.description }}
+          {{ route.meta.description }}
         </p>
+        <router-link v-if="nextRoute" :to="{ name: nextRoute }" class="is-pulled-left is-light is-rounded button" ><Icon icon="fa-chevron-left">Next</Icon></router-link>
       </div>
     </section>
 
@@ -68,6 +70,15 @@ const lastUpdated = computed(() => {
 
 const route = useRoute()
 const router = useRouter()
+
+const prevRoute = computed(() => {
+  if(typeof route.meta.prevRoute === 'function') return route.meta.prevRoute(route)
+  return route.meta.prevRoute
+})
+const nextRoute = computed(() => {
+  if(typeof route.meta.nextRoute === 'function') return route.meta.nextRoute(route)
+  return route.meta.nextRoute
+})
 
 let updateInfo = ref<{
   registration?: any,

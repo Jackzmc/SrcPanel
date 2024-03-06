@@ -1,5 +1,8 @@
 <template>
   <div class="container is-fluid" v-if="scEvent">
+    <!-- <div class="block mb-4">
+      <router-link :to="{name: 'events', params: { id: null }}"><Icon icon="fa-arrow-left" class="is-pulled-left" text="Back to events list" /></router-link>
+    </div> -->
     <router-link :data-tooltip="scEvent.creator.id" :to="{ name: 'manage-user', params: { id: scEvent.creator.id }, query: { returnTo: $route.fullPath }}">
       <figure class="image is-32x32 is-inline-block">
         <img class="is-rounded" :src="scEvent.creator.avatarUrl">

@@ -58,7 +58,7 @@
           <a class="navbar-link">
             <Icon icon="toolbox">Administration</Icon>
           </a>
-          <div class="navbar-dropdown is-left" style="width:140%">
+          <div class="navbar-dropdown is-left" style="width:110%">
             <router-link :to="{name: 'admin-shares'}" class="navbar-item">
               <Icon icon="fa-puzzle-piece">Addons / Maps</Icon>
             </router-link>
@@ -71,23 +71,28 @@
             <router-link to="/admin/players" class="navbar-item">
               <Icon icon="users-gear">Manage Players</Icon>
             </router-link>
+            <router-link to="/bans" class="navbar-item">
+              <Icon icon="fa-gavel">Bans</Icon>
+            </router-link>
             <hr class="navbar-divider">
             <div class="navbar-item">
-              <a href="/api/admins/discord" class="button" style="background-color: #5865F2; color: white">
+              <a href="/api/admins/discord" class="button is-expanded" style="background-color: #5865F2; color: white">
                 <Icon icon="fab fa-discord">Join the Discord</Icon>
               </a>
             </div>
           </div>
         </div>
-        <router-link to="/bans" class="navbar-item">
-          <Icon icon="fa-gavel">Bans</Icon>
-        </router-link>
         <router-link to="/notes" class="navbar-item">
           <Icon icon="fa-note-sticky">Player Notes</Icon>
         </router-link>
         <router-link to="/discuss" class="navbar-item">
           <Icon icon="far fa-comment">Discuss
             <template v-if="privUser && privUser.openDiscussionCount > 0">({{privUser.openDiscussionCount}})</template>
+          </Icon>
+        </router-link>
+        <router-link to="/events" class="navbar-item">
+          <Icon icon="fa fa-calendar">Events
+            <!-- <template v-if="privUser && privUser.openEventsCount > 0">({{privUser.openEventsCount}})</template> -->
           </Icon>
         </router-link>
         <a href="https://data.jackz.me/dashboard/1-public-dashboard" class="navbar-item">
