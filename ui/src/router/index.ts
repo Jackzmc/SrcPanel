@@ -145,7 +145,8 @@ const routes = [
     path: '/events',
     component: () => import('../views/EventsView.vue'),
     meta: {
-      title: "Events"
+      title: "Events",
+      authRequired: true
     }
   },
   {
@@ -154,8 +155,20 @@ const routes = [
     component: () => import('../views/EventDetailView.vue'),
     meta: {
       title: "Event Scheduler",
-      prevRoute: "events"
+      prevRoute: "events",
+      authRequired: true
     }
+  },
+  // Need to make separate route because we can't have a child without a component
+  {
+    name: 'list-addons',
+    path: '/admin/shares/:shareId?/files',
+    component: () => import('../views/admin/ServerAddonsView.vue'),
+    meta: {
+      title: 'Addons / Maps',
+      description: 'View all the installed custom maps (and some non-map addons)',
+      authRequired: true
+    },
   },
   {
     name: 'admin-shares',
@@ -167,13 +180,6 @@ const routes = [
       authRequired: true
     },
     children: [
-      // I don't think this is valid - but we cannot load a component, otherwise
-      // we would have the router-view of admin-shares become list-addons
-      // Vue3 seems to just give us a warning and work as I want it for now so...
-      {
-        name: 'list-addons',
-        path: "files",
-      },
       {
         name: "upload-addon",
         path: 'upload',
@@ -221,8 +227,11 @@ const routes = [
           title: 'Manage User',
           authRequired: true
         },
-        redirect: { name: 'manage-user-overview' },
         children: [
+          {
+            path: '',
+            redirect: { name: 'manage-user-overview' }
+          },
           {
             name: 'manage-user-overview',
             path: 'overview/:tab?',
@@ -314,7 +323,6 @@ const routes = [
     component: () => import('../views/ErrorView.vue'),
     meta: {
       hideHero: true,
-      // hideNav: true
     }
   },
   {
