@@ -19,6 +19,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                     name: row.name,
                     description: row.description,
                     range: [row.start_date, row.end_date],
+                    hourRange: [row.min_hour, row.max_hour],
                 } as APIEvent
             })
         }
@@ -55,7 +56,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 name: row.name,
                 description: row.description,
                 range: [row.min_date, row.max_date],
-                weeks: Object.values(weeks).sort((a,b) => a.startDate - b.startDate)
+                hourRange: [row.min_hour, row.max_hour],
+                weeks: Object.values(weeks).sort((a,b) => a.startDate - b.startDate),
             }
         } else {
             return NOT_FOUND(reply, "No event with that id could be found")

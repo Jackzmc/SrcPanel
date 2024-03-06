@@ -5,7 +5,8 @@ export interface APIEvent {
     creator: APIUser,
     name: string,
     description?: string
-    range: [number|null, number|null]
+    range: [number|null, number|null],
+    hourRange: [number, number]
 }
 export interface APIEventDetailed<T extends string | boolean[]> extends APIEvent {
     weeks: APIWeekAvailability<T>[]
