@@ -19,7 +19,7 @@
     </section>
 
     <br>
-    <router-view :priv-user="privUser"></router-view>
+    <router-view :priv-user="privUser" :meta="meta"></router-view>
     <br>
     <footer class="footer">
       <div class="content has-text-centered">
@@ -58,6 +58,7 @@ import { NotificationItem, notify } from '@kyvg/vue3-notification';
 import { ClientUserData } from '../../common-types/User';
 import * as Sentry from "@sentry/vue";
 import { request } from './js/util.js';
+import { PanelMetaInfo } from '../../common-types/Panel.js';
 
 const BirthdayComponent = defineAsyncComponent(() => import("@/components/BirthdayComponent.vue"))
 
@@ -76,6 +77,7 @@ let updateInfo = ref<{
 
 let userdata = ref<ClientUserData>()
 let privUser = ref<PrivilegedUser>()
+let meta = ref<PanelMetaInfo>()
 let isBirthday = ref(false)
 let tour = ref<{name: string, steps: any[]}|undefined>()
 
@@ -95,6 +97,12 @@ async function onAuthorized() {
     if(userdata.value.profile && userdata.value.profile.birthMonth === date.getMonth() && userdata.value.profile.birthDate === date.getDate()) {
       isBirthday.value = true
     }
+  }
+}
+async function getMeta() {
+  const response = await fetch('/api/meta')
+  if(response.ok) {
+    meta.value = await response.json()
   }
 }
 async function getAuth() {
@@ -246,6 +254,7 @@ onBeforeMount(async() => {
   if(route.query.tour) {
     loadTour(route.query.tour as string)
   }
+  await getMeta()
 })
 </script>
 

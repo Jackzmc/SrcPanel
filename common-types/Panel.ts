@@ -35,3 +35,9 @@ export interface HealthReport {
     },
     memoryPercentage: number
 }
+
+export interface PanelMetaInfo {
+    servers: string[],
+    settings: Record<string, any>,
+    steamAvailable: boolean
+}

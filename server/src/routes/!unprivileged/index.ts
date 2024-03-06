@@ -8,6 +8,7 @@ import { readFileSync } from 'fs';
 const data = JSON.parse(readFileSync('assets/data.json', 'utf-8'))
 import Sentiment from 'sentiment'
 import SteamID from 'steamid';
+import { PanelMetaInfo } from '../../../../common-types/Panel.js';
 
 
 const sentiment = new Sentiment();
@@ -174,10 +175,11 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
     })
     
-    fastify.get('/meta', async(req, reply) => {
+    fastify.get('/meta', async(req, reply): Promise<PanelMetaInfo> => {
         return {
             servers: await fastify.config.GetServers(),
-            settings: await fastify.config.GetPublicKeyvalues()
+            settings: await fastify.config.GetPublicKeyvalues(),
+            steamAvailable: await fastify.steam.Available()
         }
     })
 

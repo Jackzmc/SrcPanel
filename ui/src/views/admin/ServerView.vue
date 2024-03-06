@@ -472,61 +472,6 @@ const PlayerMoveString: Record<PlayerMove, string> = {
   [PlayerMove.Crouched]: "Crouched",
   [PlayerMove.Ladder]: "On Ladder",
 }
-
-let series = ref<any[]>([])
-let series2 = ref<any[]>([])
-const options = {
-  chart: {
-    zoom: {
-      enabled: true,
-      type: 'x',
-      autoScaleYaxis: true
-    },
-
-  },
-  title: {
-    text: "Player Joins",
-    align: 'left'
-  },
-  yaxis: {
-    type: "numeric",
-    title: "Joins"
-  },
-  xaxis: {
-    type: "datetime",
-    datetimeUTC: false
-  }
-}
-const options2 = {
-  chart: {
-    zoom: {
-      enabled: true,
-      type: 'x',
-      autoScaleYaxis: true
-    },
-
-  },
-  title: {
-    text: "Online Players",
-    align: 'left'
-  },
-  yaxis: {
-    type: "numeric",
-    title: "Players",
-    labels: {
-      formatter: function (val: any) {
-        return val.toFixed(0);
-      }
-    },
-  },
-  stroke: {
-    curve: 'stepline',
-  },
-  xaxis: {
-    type: "datetime",
-    datetimeUTC: false
-  }
-}
 const REFRESH_INTERVAL = 1000 * 15
 
 const { notify } = useNotification();
@@ -546,6 +491,12 @@ const SURVIVOR_IDS: Record<SurvivorId, string> = {
   [SurvivorId.Francis]: "biker",
   [SurvivorId.Zoey]: "teenangst",
   [SurvivorId.Louis]: "manager"
+}
+const STATES: { [key in PlayerState]?: string } = {
+  [PlayerState.BlackAndWhite]: "Black & White",
+  [PlayerState.InSaferoom]: "In Saferoom",
+  [PlayerState.IsCalm]: "Calm",
+  [PlayerState.IsBoomed]: "Is Boomed"
 }
 
 const TABS: Record<string, { name: string, tag?: string, permission?: string, enabled?: Function }> = {
@@ -626,10 +577,9 @@ function getPlayerWeaponNames(player: StatusPlayerSurvivor) {
 
 function getPlayerStates(player: StatusPlayerSurvivor) {
   const states: string[] = []
-  if(player.states & PlayerState.BlackAndWhite) states.push("Black & White")
-  if(player.states & PlayerState.InSaferoom) states.push("In Saferoom")
-  if(player.states & PlayerState.IsCalm) states.push("Calm")
-  if(player.states & PlayerState.IsBoomed) states.push("Is Boomed")
+  for(const [state, value] of Object.entries(STATES)) {
+    if(player.states & Number(state)) states.push(value)
+  }
   return states
 }
 
