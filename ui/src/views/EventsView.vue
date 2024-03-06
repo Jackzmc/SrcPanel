@@ -3,7 +3,7 @@
   <div class="columns">
     <div class="column is-8">
       <div class="box"  v-for="event in events" :key="event.id">
-        <router-link :data-tooltip="event.creator.id" :to="{ name: 'manage-user', params: { id: event.creator.id }, query: { returnTo: $route.fullPath }}">
+        <router-link :data-tooltip="event.creator.id" :to="{ name: 'manage-user', params: { id: event.creator.id, title: event.name.toLocaleLowerCase().replace(/\s/g,'-').replace(/[^a-zA-Z0-9\-]/g,'') }, query: { returnTo: $route.fullPath }}">
           <figure class="image is-32x32 is-inline-block">
             <img class="is-rounded" :src="event.creator.avatarUrl">
           </figure>
