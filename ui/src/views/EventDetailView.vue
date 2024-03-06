@@ -42,7 +42,7 @@
         <nav class="pagination is-rounded" role="navigation" aria-label="pagination">
           <ul class="pagination-list">
             <li><a class="pagination-link" aria-label="" :disabled="weekDirections[0]?undefined:true" @click="advanceWeek(false)"><Icon icon="fa-chevron-left"></Icon></a></li>
-            <li><span class="mx-2">{{ weekLabels[0] }} - {{ weekLabels[1] }}</span></li>
+            <li><span class="mx-2">{{ weekRangeLabels[0] }} - {{ weekRangeLabels[1] }}</span></li>
             <li><a class="pagination-link" aria-label="" :disabled="weekDirections[1]?undefined:true" @click="advanceWeek(true)"><Icon icon="fa-chevron-right"></Icon></a></li>
           </ul>
         </nav>
@@ -58,14 +58,16 @@
     <table class="table is-fullwidth is-bordered is-narrow" @mouseleave="hoveredElement = undefined">
       <thead>
       <tr @mouseover="hoveredElement = undefined">
-        <th style="border-bottom: 0; table-layout:fixed; max-width: 0;" v-for="(day, i) in dayLabels" :key="i" :data-tooltip="day[0]">{{ Days[i] }} <span class="is-pulled-right">{{ day[1] }}</span></th>
+        <th v-for="(day, i) in dayLabels" :key="i" :class="{'disabled': !dayLabels[i][2]}" :data-tooltip="day[0]">
+          {{ Days[i] }} <span class="is-pulled-right">{{ day[1] }}</span>
+        </th>
       </tr>
       </thead>
       <tbody style="user-select: none">
         <template v-for="(hourLabel, hour) in Hours" :key="hour">
           <tr>
             <td v-for="(_, day) in Days" :key="day"
-              :class="['cell',{'available': userAvailability[day*24+hour], 'unavailable': !userAvailability[day*24+hour]}]"
+              :class="['cell',{'available': userAvailability[day*24+hour], 'unavailable': !userAvailability[day*24+hour], 'disabled': !dayLabels[day][2] }]"
               :style="selectedWeekAvailability && !isEditing ? {'background-color': `rgba(32, 128, 0, ${selectedWeekAvailability[day*24+hour]})`, 'color': selectedWeekAvailability[day*24+hour] > 0.5 ? 'white' : 'inherit'} : {}"
               @mouseover="e => onMouseOver(e, [day, hour])" @mousedown="e => onMouseDown(e, [day, hour])"
             >
@@ -183,16 +185,17 @@ const selectedWeekAvailability = computed(() => {
   return sums.map(s => s / numUsers)
 })
 /// Computed week start and end and it's display
-const weekLabels = computed(() => {
+const weekRangeLabels = computed(() => {
   if(!selectedWeek.value) return getWeekLabels(CurrentSunday, CurrentSaturday)
   const sunday = new Date(selectedWeek.value.startDate*1000)
   const saturday = new Date(selectedWeek.value.endDate*1000)
   return getWeekLabels(sunday, saturday)
 })
+/// Determines if you can go backwards or forward
 const weekDirections = computed(() => {
   if(!scEvent.value || !selectedWeek.value) return [false, false]
   return [
-    Boolean(selectedWeek.value.startDate !== scEvent.value.range[0]),
+    Boolean(selectedWeek.value.startDate !== scEvent.value.range[0] && selectedWeek.value.startDate*1000 < CurrentSunday.valueOf()),
     Boolean(selectedWeek.value.endDate !== scEvent.value.range[1]),
   ]
 })
@@ -221,6 +224,8 @@ function onMouseOver(event: any, pos: [number, number]) {
     if(isDragging && event.buttons == 1) {
       // Prevent dragging on different row or column:
       if(startCoord[0] != pos[0] && startCoord[1] != pos[1]) return
+      // Prevent dragging on days that are disabled (in the past)
+      if(!dayLabels.value[pos[0]][2]) return
       // TODO: prevent returning back to startCoord and dragging different direction
       // if(axis && startCoord[axis] != pos[axis]) return
       // if(startCoord[0] == pos[0]) axis = 0
@@ -274,15 +279,18 @@ function deserializeWeekData(base64: string): boolean[] {
 }
 const dayLabels = computed(() => {
   const date = selectedWeek.value ? new Date(selectedWeek.value.startDate*1000) : CurrentSunday
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
   return Array(7).fill(undefined).map(() => {
     const ret = [
-      new Date(date).toLocaleDateString(undefined, {
+      date.toLocaleDateString(undefined, {
         weekday: "long",
         year: "numeric",
         month: "long",
         day: "numeric",
       }),
-      date.toLocaleDateString(undefined, {month: 'numeric', day: '2-digit'})
+      date.toLocaleDateString(undefined, {month: 'numeric', day: '2-digit'}),
+      Boolean(date.valueOf() >= today.valueOf())
     ]
     date.setDate(date.getDate() + 1)
     return ret
@@ -360,7 +368,14 @@ async function fetchEvent() {
         }
       })
     }
-    selectedWeek.value = scEvent.value.weeks[0]
+    selectedWeek.value = scEvent.value.weeks.find(w => w.startDate*1000 >= CurrentSunday.valueOf())
+    if(!selectedWeek.value) {
+      selectedWeek.value = {
+        startDate: Math.round(CurrentSunday.valueOf() / 1000),
+        endDate: Math.round(CurrentSaturday.valueOf() / 1000),
+        availability: []
+      }
+    }
     // Fill out default data for first selected week
     userAvailableWeeks.value = {[selectedWeek.value.startDate!.toString()]: Array(24*7).fill(false)}
     for(const week of scEvent.value.weeks) {
@@ -398,9 +413,7 @@ onBeforeUnmount(() => {
   background-color: green;
   color: white;
 }
-.unavailable {
 
-}
 .hover-box {
   position: absolute;
   margin-top: 20px;
@@ -409,5 +422,13 @@ onBeforeUnmount(() => {
   width: 20%;
   padding: 4px 2px 2px 1rem;
   border: 1px solid #000;
+}
+th {
+  border-bottom: 0;
+  table-layout:fixed;
+  max-width: 0;
+}
+td.disabled {
+  opacity: 0.3;
 }
 </style>
