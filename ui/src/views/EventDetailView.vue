@@ -161,9 +161,9 @@ async function toggleEditing() {
     editCurrentWeek.value = undefined
     editPrevWeek.value = undefined
   } else {
-    if(!sessionStorage['events_tutorial_shown']) {
+    if(!localStorage['events_tutorial_shown']) {
       showingEditTutorial.value = true
-      sessionStorage['events_tutorial_shown'] = true
+      localStorage['events_tutorial_shown'] = true
     }
     // TODO: show a popup introduction, only show first time
     if(!scEvent.value) return alert("No event has been loaded")
