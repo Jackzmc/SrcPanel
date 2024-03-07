@@ -75,7 +75,7 @@
               {{ hourData.label }}
               <span class="is-pulled-right" v-if="selectedWeekAvailability && !isEditing">{{ Math.round(selectedWeekAvailability[day*24+hour]*100)}}%</span>
               <div class="box hover-box px-0 py-0" v-if="!isEditing && hoveredElement && hoveredElement[0] == day && hoveredElement[1] == hour">
-                <h6 class="title is-6 px-4 pt-2 mb-2">People Available:</h6>
+                <h6 class="title is-6 px-4 pt-2 mb-2">People Availability:</h6>
                 <List>
                   <template v-for="(res, i) in selectedWeek?.availability" :key="i">
                     <div class="list-item py-1">
@@ -88,7 +88,6 @@
                         <div :class="['list-item-title', {'has-text-grey-lighter': !res.data[hoveredElement[0]*24+hoveredElement[1]]}]" style="font-weight:normal !important">
                           {{ res.user.name }}
                           <Icon  v-if="res.data[hoveredElement[0]*24+hoveredElement[1]]" icon="fa-check-circle" class="is-pulled-right ml-2" style="color: hsl(141, 53%, 53%)"></Icon>
-                          <!-- <span  class="tag is-success is-pulled-right ml-2">Available</span> -->
                         </div>
                       </div>
                     </div>
@@ -101,6 +100,16 @@
         </template>
       </tbody>
     </table>
+  </div>
+  <div class="container" v-else-if="error">
+    <article class="message is-danger">
+      <div class="message-header">
+        <p><Icon icon="fa-exclamation-triangle">Error</Icon></p>
+      </div>
+      <div class="message-body is-size-4">
+        {{ error }}
+      </div>
+    </article>
   </div>
   <div class="container" v-else>
     <div class="box has-text-centered is-size-4">
@@ -148,6 +157,7 @@ const Hours = computed(() => {
 
 
 let scEvent = ref<APIEventDetailed<boolean[]>>()
+let error = ref<string>()
 let selectedWeek = ref<APIWeekAvailability<boolean[]>>()
 let showingEditTutorial = ref(false)
 // User submitted values:
@@ -396,6 +406,13 @@ async function fetchEvent() {
       const myAvailability = week.availability.find(av => av.user.id === props.privUser.id)
       if(myAvailability)
         userAvailableWeeks.value[week.startDate.toString()] = myAvailability.data
+    }
+  } else {
+    if(response.headers.get('content-type')?.includes("application/json")) {
+      const json = await response.json()
+      error.value = json.message ?? json.error
+    } else {
+      error.value = response.statusText
     }
   }
 }
