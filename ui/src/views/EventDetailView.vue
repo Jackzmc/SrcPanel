@@ -1,4 +1,5 @@
 <template>
+<div>
   <div class="container is-fluid" v-if="scEvent">
     <!-- <div class="block mb-4">
       <router-link :to="{name: 'events', params: { id: null }}"><Icon icon="fa-arrow-left" class="is-pulled-left" text="Back to events list" /></router-link>
@@ -41,9 +42,9 @@
       <div class="column">
         <nav class="pagination is-rounded" role="navigation" aria-label="pagination">
           <ul class="pagination-list">
-            <li><a class="pagination-link" aria-label="" :disabled="weekDirections[0]?undefined:true" @click="advanceWeek(false)"><Icon icon="fa-chevron-left"></Icon></a></li>
+            <li><a class="pagination-link" data-tooltip="Advance to previous week" aria-label="Advance to previous week" :disabled="weekDirections[0]?undefined:true" @click="advanceWeek(false)"><Icon icon="fa-chevron-left"></Icon></a></li>
             <li><span class="mx-2">{{ weekRangeLabels[0] }} - {{ weekRangeLabels[1] }}</span></li>
-            <li><a class="pagination-link" aria-label="" :disabled="weekDirections[1]?undefined:true" @click="advanceWeek(true)"><Icon icon="fa-chevron-right"></Icon></a></li>
+            <li><a class="pagination-link" data-tooltip="Advance to next week" aria-label="Advance to next week" :disabled="weekDirections[1]?undefined:true" @click="advanceWeek(true)"><Icon icon="fa-chevron-right"></Icon></a></li>
           </ul>
         </nav>
       </div>
@@ -64,14 +65,14 @@
       </tr>
       </thead>
       <tbody style="user-select: none">
-        <template v-for="(hourLabel, hour) in Hours" :key="hour">
-          <tr>
+        <template v-for="(hourData, hour) in Hours" :key="hour">
+          <tr v-if="hourData.visible">
             <td v-for="(_, day) in Days" :key="day"
               :class="['cell',{'available': userAvailability[day*24+hour], 'unavailable': !userAvailability[day*24+hour], 'disabled': !dayLabels[day][2] }]"
               :style="selectedWeekAvailability && !isEditing ? {'background-color': `rgba(32, 128, 0, ${selectedWeekAvailability[day*24+hour]})`, 'color': selectedWeekAvailability[day*24+hour] > 0.5 ? 'white' : 'inherit'} : {}"
               @mouseover="e => onMouseOver(e, [day, hour])" @mousedown="e => onMouseDown(e, [day, hour])"
             >
-              {{ hourLabel }}
+              {{ hourData.label }}
               <span class="is-pulled-right" v-if="selectedWeekAvailability && !isEditing">{{ Math.round(selectedWeekAvailability[day*24+hour]*100)}}%</span>
               <div class="box hover-box px-0 py-0" v-if="!isEditing && hoveredElement && hoveredElement[0] == day && hoveredElement[1] == hour">
                 <h6 class="title is-6 px-4 pt-2 mb-2">People Available:</h6>
@@ -101,6 +102,12 @@
       </tbody>
     </table>
   </div>
+  <div class="container" v-else>
+    <div class="box has-text-centered is-size-4">
+      <Icon icon="fa-spinner" spin>Fetching event</Icon>
+    </div>
+  </div>
+</div>
 </template>
 
 <script setup lang="ts">
@@ -118,8 +125,6 @@ const props = defineProps<{
   privUser: PrivilegedUser
 }>()
 
-const HourRange = [ 1, 24 ]
-
 const Days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
 
 // Calculate this week's start and end timestamps
@@ -130,9 +135,15 @@ CurrentSunday.setHours(0, 0, 0, 0)
 const CurrentSaturday = new Date(CurrentSunday)
 CurrentSaturday.setDate(CurrentSunday.getDate() + 6)
 
-const Hours = Array(HourRange[1] - HourRange[0] + 1).fill(undefined).map((_, i) => {
-  date.setHours(i + HourRange[0], 0, 0, 0)
-  return date.toLocaleTimeString(undefined, {hour: 'numeric'})
+const Hours = computed(() => {
+  return Array(24).fill(undefined).map((_, i) => {
+    date.setHours(i + 1, 0, 0, 0)
+    return {
+      label: date.toLocaleTimeString(undefined, {hour: 'numeric'}),
+      visible: !scEvent.value || (i >= scEvent.value.hourRange[0] && i <= scEvent.value.hourRange[1])
+    }
+  })
+
 })
 
 
@@ -220,7 +231,6 @@ function onMouseDown(event: any, pos: [number, number]) {
   onMouseOver(event, pos)
 }
 function onMouseOver(event: any, pos: [number, number]) {
-  // if(days.value[pos[1]][pos[0]].percentAvailable) return
   if(!dayLabels.value[pos[0]][2]) {
     hoveredElement.value = undefined
     return
