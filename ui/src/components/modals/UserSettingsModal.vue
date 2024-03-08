@@ -97,9 +97,6 @@
   </Modal>
 </template>
 
-<style src="../../../node_modules/bulma-list/css/bulma-list.css"></style>
-
-
 <script setup lang="ts">
 import Modal from "@/components/Modal.vue";
 import { PrivilegedUser } from "@/js/User";
