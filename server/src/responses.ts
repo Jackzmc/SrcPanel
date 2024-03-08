@@ -23,6 +23,6 @@ export function NO_PERMISSION(reply: FastifyReply,altMessage?: string, permCode?
     })
 }
 
-export function NOT_FOUND(reply: FastifyReply, resource: string) {
-    return response(reply, 404, `${resource.toUpperCase()}_NOT_FOUND`, `${resource} was not found`)
+export function NOT_FOUND(reply: FastifyReply, resource: string, message?: string) {
+    return response(reply, 404, `${resource.toUpperCase()}_NOT_FOUND`, message ?? `${resource} was not found`)
 }

@@ -60,7 +60,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 weeks: Object.values(weeks).sort((a,b) => a.startDate - b.startDate),
             }
         } else {
-            return NOT_FOUND(reply, "No event with that id could be found")
+            return NOT_FOUND(reply, "Event")
         }
     })
     fastify.post('/:id/my-schedule', async(req: FastifyRequest<{Params: {id: number}, Body: EventDataSubmission<string> }>, reply) => {
