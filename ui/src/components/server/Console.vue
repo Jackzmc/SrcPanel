@@ -185,7 +185,7 @@ onUnmounted(() => {
 })
 </script>
 
-<style>
+<style scoped>
 #console {
   height: 512px;
   background: black;

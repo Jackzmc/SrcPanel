@@ -137,9 +137,11 @@ CurrentSaturday.setDate(CurrentSunday.getDate() + 6)
 
 const Hours = computed(() => {
   return Array(24).fill(undefined).map((_, i) => {
+    // if(i % 2) date.setMinutes(30)
+    // else date.setHours(i + 1, 0, 0, 0)
     date.setHours(i + 1, 0, 0, 0)
     return {
-      label: date.toLocaleTimeString(undefined, {hour: 'numeric'}),
+      label: date.toLocaleTimeString(undefined, {hour: 'numeric', minute: '2-digit'}),
       visible: !scEvent.value || (i >= scEvent.value.hourRange[0] && i <= scEvent.value.hourRange[1])
     }
   })
@@ -410,7 +412,7 @@ onBeforeUnmount(() => {
 })
 </script>
 
-<style>
+<style scoped>
 .cell {
   /* width: 100px; */
   height: 25px;

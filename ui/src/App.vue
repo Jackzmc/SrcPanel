@@ -268,7 +268,7 @@ onBeforeMount(async() => {
   await getMeta()
 })
 </script>
-
+<style src="../../../node_modules/bulma-list/css/bulma-list.css"></style>
 <style>
 .impersonate-overlay {
   position: fixed;
@@ -279,3 +279,4 @@ onBeforeMount(async() => {
   color: white;
 }
 </style>
+

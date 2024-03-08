@@ -15,7 +15,6 @@ export interface PluginServerStatus {
     finaleInfo?: StatusFinaleInfo,
     fps: number,
     startTime: number,
-    commonsCount: number
     campaignStartTime: number
 }
 

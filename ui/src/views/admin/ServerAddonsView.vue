@@ -553,7 +553,7 @@ onBeforeMount(async() => {
 
 </script>
 
-<style>
+<style scope>
 .column-separator {
   border-left: solid 1px!important;
 }

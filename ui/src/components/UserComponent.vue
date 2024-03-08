@@ -58,7 +58,7 @@ let active = ref(false)
 
 </script>
 
-<style>
+<style scoped>
 /* a.has-custom-tooltip + a.custom-tooltip-hover {
   display: none;
 }

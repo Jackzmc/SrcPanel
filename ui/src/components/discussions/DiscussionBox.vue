@@ -212,7 +212,7 @@ const submitChoiceDebounceRadio = debounce(submitChoice, 400)
 
 </script>
 
-<style>
+<style scoped>
 .md-image {
   max-width: 64%;
   max-height: 64%;

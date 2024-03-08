@@ -91,7 +91,7 @@ async function submit() {
 }
 </script>
 
-<style>
+<style scoped>
 .expanded-box {
   height: 100px;
 }

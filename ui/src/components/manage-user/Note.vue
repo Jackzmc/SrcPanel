@@ -56,7 +56,6 @@
   </div>
 </div>
 </template>
-<style src="../../../node_modules/bulma-list/css/bulma-list.css"></style>
 
 <script setup lang="ts">
 import { notify } from '@kyvg/vue3-notification';

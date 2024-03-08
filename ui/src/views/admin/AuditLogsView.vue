@@ -668,9 +668,7 @@ onUnmounted(() => {
 })
 </script>
 
-<style src="../../../node_modules/bulma-list/css/bulma-list.css" />
-
-<style>
+<style scoped>
 .admin-chat {
   color: #f0e359
 }

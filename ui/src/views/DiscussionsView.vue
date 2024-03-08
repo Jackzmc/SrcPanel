@@ -140,7 +140,7 @@ onMounted(async () => {
 })
 </script>
 
-<style>
+<style scoped>
 .question-box {
   background-color: #f9f9f9
 }

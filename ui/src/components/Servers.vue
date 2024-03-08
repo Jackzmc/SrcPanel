@@ -149,7 +149,7 @@ onBeforeUnmount(() => {
 });
 </script>
 
-<style>
+<style scoped>
 #lastUpdate {
   position: fixed;
   top: 0;

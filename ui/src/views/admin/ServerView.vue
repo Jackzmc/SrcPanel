@@ -339,10 +339,6 @@
               <th>Gamemode</th>
               <td class="has-text-right">{{ formatGamemode(liveStatus.gamemode) }}</td>
             </tr>
-            <tr>
-              <th>Commons Count</th>
-              <td class="has-text-right">{{ liveStatus.commonsCount }}</td>
-            </tr>
             <tr v-if="liveStatus.finaleInfo && liveStatus.finaleInfo.finaleStage !== FinaleStage.Unknown">
               <th>Finale Info</th>
               <td class="has-text-right" v-if="liveStatus.finaleInfo.escapeLeaving">Escaping</td>
@@ -897,7 +893,7 @@ onUnmounted(() => {
 })
 </script>
 
-<style>
+<style scoped>
 .config-string {
   color: #628503
 }
