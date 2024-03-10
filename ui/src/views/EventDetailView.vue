@@ -67,13 +67,14 @@
       <tbody style="user-select: none">
         <template v-for="(hourData, hour) in Hours" :key="hour">
           <tr v-if="hourData.visible">
+            <!--(un)available classes used for editing. style is used for display -->
             <td v-for="(_, day) in Days" :key="day"
               :class="['cell',{'available': userAvailability[day*24+hour], 'unavailable': !userAvailability[day*24+hour], 'disabled': !dayLabels[day][2] }]"
-              :style="selectedWeekAvailability && !isEditing ? {'background-color': `rgba(32, 128, 0, ${selectedWeekAvailability[day*24+hour]})`, 'color': selectedWeekAvailability[day*24+hour] > 0.5 ? 'white' : 'inherit'} : {}"
+              :style="availabilityPercents && !isEditing ? {'background-color': `rgba(32, 128, 0, ${availabilityPercents[day*24+hour]})`, 'color': availabilityPercents[day*24+hour] > 0.5 ? 'white' : 'inherit'} : {}"
               @mouseover="e => onMouseOver(e, [day, hour])" @mousedown="e => onMouseDown(e, [day, hour])"
             >
               {{ hourData.label }}
-              <span class="is-pulled-right" v-if="selectedWeekAvailability && !isEditing">{{ Math.round(selectedWeekAvailability[day*24+hour]*100)}}%</span>
+              <span class="is-pulled-right" v-if="availabilityPercents && !isEditing">{{ Math.round(availabilityPercents[day*24+hour]*100)}}%</span>
               <div class="box hover-box px-0 py-0" v-if="!isEditing && hoveredElement && hoveredElement[0] == day && hoveredElement[1] == hour">
                 <h6 class="title is-6 px-4 pt-2 mb-2">People Availability:</h6>
                 <List>
@@ -192,12 +193,12 @@ async function toggleEditing() {
     // TODO: show a popup introduction, only show first time
     if(!scEvent.value) return alert("No event has been loaded")
     if(!scEvent.value.range[0]) return alert("Event has no min_date, this should never happen")
-    editCurrentWeek.value = scEvent.value.range[0]!
+    editCurrentWeek.value = selectedWeek.value!.startDate
   }
 }
 
 /// float[] of percentages of users that are available for each day/hour
-const selectedWeekAvailability = computed(() => {
+const availabilityPercents = computed(() => {
   if(!selectedWeek.value) return
   const numUsers = selectedWeek.value.availability.length
   const sums = Array(24*7).fill(0)
@@ -406,8 +407,9 @@ async function fetchEvent() {
     userAvailableWeeks.value = {[selectedWeek.value.startDate!.toString()]: Array(24*7).fill(false)}
     for(const week of scEvent.value.weeks) {
       const myAvailability = week.availability.find(av => av.user.id === props.privUser.id)
-      if(myAvailability)
-        userAvailableWeeks.value[week.startDate.toString()] = myAvailability.data
+      if(myAvailability) {
+        userAvailableWeeks.value[week.startDate.toString()] = myAvailability.data.slice()
+      }
     }
   } else {
     if(response.headers.get('content-type')?.includes("application/json")) {
