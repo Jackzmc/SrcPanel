@@ -76,7 +76,7 @@
               {{ hourData.label }}
               <span class="is-pulled-right" v-if="availabilityPercents && !isEditing">{{ Math.round(availabilityPercents[day*24+hour]*100)}}%</span>
               <div class="box hover-box px-0 py-0" v-if="!isEditing && hoveredElement && hoveredElement[0] == day && hoveredElement[1] == hour">
-                <h6 class="title is-6 px-4 pt-2 mb-2">People Availability:</h6>
+                <h6 class="title is-6 px-4 pt-2 mb-2">Availabilities:</h6>
                 <List>
                   <template v-for="(res, i) in selectedWeek?.availability" :key="i">
                     <div class="list-item py-1">

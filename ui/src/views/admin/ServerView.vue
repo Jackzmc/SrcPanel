@@ -501,6 +501,9 @@ const TABS: Record<string, { name: string, tag?: string, permission?: string, en
   },
   live: {
     name: "Live Status",
+    enabled: () => {
+      return server.value.info.type === "left4dead2"
+    }
   },
   configs: {
     name: "Configs",
@@ -554,12 +557,21 @@ const nextLiveRetryTime = computed(() => {
 })
 
 function isTabEnabled(data: any): boolean {
-  if(!data.permission || data.enabled == undefined) return true
-  if(data._enabled == undefined) {
-    const perm = data.permission.replace(/<id>/g, server.value.info.id)
-      data._enabled = (data.enabled()??true) && props.privUser.hasPermission(perm as UserPrivilegeCode)
+  if(data._enabled != undefined) return data._enabled
+  if(data.enabled == undefined && data.permission == undefined) {
+    data._enabled = true
+    return true
   }
-  return data._enabled
+  let enabled = false
+  if(data.permission != undefined) {
+    const perm = data.permission.replace(/<id>/g, server.value.info.id)
+    enabled = props.privUser.hasPermission(perm as UserPrivilegeCode)
+  }
+  if(enabled && data.enabled != undefined) {
+    enabled = data.enabled() ?? true
+  }
+  data._enabled = enabled
+  return enabled
 }
 
 function getPlayerWeaponNames(player: StatusPlayerSurvivor) {
@@ -862,7 +874,8 @@ async function init() {
       fetchServerData(),
       fetchServerStatus()
     ])
-    createLiveConnection()
+    if(server?.value.info.type === "left4dead2")
+      createLiveConnection()
   }
   refreshInterval = setInterval(fetchServerStatus, REFRESH_INTERVAL)
 }

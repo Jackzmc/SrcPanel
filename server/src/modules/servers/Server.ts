@@ -477,8 +477,9 @@ export default class Server extends EventEmitter {
               attemptTimeout: 5000,
               requestRules: includeRules
             })
-            if(includeRules && (state.raw as any).rules) {
-              this._cvars = (state.raw as any).rules
+            const raw = state.raw as any
+            if(includeRules && raw.rules) {
+              this._cvars = raw.rules
             }
             this._status.data = {
               players: state.players
@@ -486,7 +487,7 @@ export default class Server extends EventEmitter {
                 .map(p => p.name),
               maxplayers: state.maxplayers,
               map: state.map,
-              gamemode: (state.raw as any).tags[0]
+              gamemode: raw.tags ? raw.tags[0] : undefined
             }
             this.playerCounts.push({
               timestamp: Math.floor(Date.now() / 1000),
