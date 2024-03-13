@@ -229,6 +229,7 @@ const routes = [
         },
         children: [
           {
+            name: "manage-user-default",
             path: '',
             redirect: { name: 'manage-user-overview' }
           },
