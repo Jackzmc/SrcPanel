@@ -502,6 +502,7 @@ const TABS: Record<string, { name: string, tag?: string, permission?: string, en
   live: {
     name: "Live Status",
     enabled: () => {
+      console.log("live status", server.value.info.type)
       return server.value.info.type === "left4dead2"
     }
   },
@@ -567,7 +568,7 @@ function isTabEnabled(data: any): boolean {
     const perm = data.permission.replace(/<id>/g, server.value.info.id)
     enabled = props.privUser.hasPermission(perm as UserPrivilegeCode)
   }
-  if(enabled && data.enabled != undefined) {
+  if((data.permission == undefined || enabled) && data.enabled != undefined) {
     enabled = data.enabled() ?? true
   }
   data._enabled = enabled
