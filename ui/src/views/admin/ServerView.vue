@@ -620,6 +620,8 @@ async function onCfgChosen(data: { file: string, folder?: string }, raw = false)
 async function onSelectNewServer(event: any) {
   await router.push({ name: 'admin-server-view', params: { tab: 'overview', id: event.target.value }})
   server.value = undefined
+  // Delete old enables
+  Object.values(TABS).map(t => (t as any)._enabled = undefined)
   init()
 }
 async function fetchServerInfo() {
