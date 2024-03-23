@@ -27,7 +27,7 @@ interface AddAdmin {
     groupIds?: string[]
 }
 
-interface APIKey {
+export interface APIKey {
     id: string,
     steamid: string,
     perms: number,
@@ -95,15 +95,7 @@ export default class AuthManager {
     }
 
     async isAuthorized(req: FastifyRequest): Promise<boolean> {
-        if(req.headers['x-apikey']) {
-            const key = Array.isArray(req.headers['x-apikey']) ? req.headers['x-apikey'][0] : req.headers['x-apikey']
-            const apikey = await this.getAPIKey(key)
-            if(apikey) return true
-        } else if(req.session.sessionId && req.session.permissions) {
-            return true
-        }
-
-        return false
+        return req.user != undefined
     }
 
     async verify(req: FastifyRequest, reply: FastifyReply): Promise<boolean> {

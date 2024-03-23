@@ -68,6 +68,13 @@ async function db(fastify: FastifyInstance) {
                 return NOT_LOGGED_IN(reply, "SESSION_EXPIRED", `Session has expired (target:${SESSION_VERSION}, cur:${req.session.version})`)
             }
             req.user = new User(fastify, req.session.user.steamid)
+        } else if(req.headers['x-apikey']) {
+            const key = Array.isArray(req.headers['x-apikey']) ? req.headers['x-apikey'][0] : req.headers['x-apikey']
+            const apikey = await authManager.getAPIKey(key)
+            if(apikey)
+                req.user = new User(fastify, apikey.steamid)
+            else
+                return NOT_LOGGED_IN(reply, "INVALID_APIKEY", "Invalid API Key")
         }
     })
 }
