@@ -23,6 +23,7 @@ export interface ConfigGroupData {
   name?: string
 }
 
+const DEBUG_LIVE_SOCKET = process.env.DEBUG_LIVE_SOCKET != undefined
 
 export default class ServerManager {
   private servers: Record<string, Server> = {}
@@ -65,7 +66,8 @@ export default class ServerManager {
   }
 
   #onLiveClient(client: net.Socket) {
-    console.debug('[ServerManager::Live]','client connected', client.remoteAddress)
+    if(DEBUG_LIVE_SOCKET)
+      console.debug('[ServerManager::Live]','client connected', client.remoteAddress)
     this.#socketClients.set(client.remoteAddress, client)
 
     client.on('data', (buf) => {
@@ -79,7 +81,8 @@ export default class ServerManager {
             this.#sendResponse(client, LiveRecordResponse.Error, server.liveViewers)
             return
           }
-          console.log("header", { version, serverId })
+          if(DEBUG_LIVE_SOCKET)
+            console.debug("header", { version, serverId })
           for(const recordBuffer of reader.readRecord()) {
             const recordReader = new BufferReader(recordBuffer)
             try {
@@ -91,7 +94,8 @@ export default class ServerManager {
               else if(!server.liveStatus?.game) {
                 needsRefresh = true
               }
-              console.log('record', LiveRecordType[record.type], record)
+              if(DEBUG_LIVE_SOCKET)
+                console.debug('record', LiveRecordType[record.type], record)
             } catch(err) {
               continue
             }
@@ -103,14 +107,16 @@ export default class ServerManager {
       }
       
       if(needsRefresh) {
-        console.log('sending refresh request')
+        if(DEBUG_LIVE_SOCKET)
+          console.debug('sending refresh request')
         this.#sendResponse(client, LiveRecordResponse.Refresh, null)
       }
     })
 
     client.on('close', () => {
       this.#socketClients.delete(client.remoteAddress)
-      console.debug('[ServerManager::Live] client disconnected', client.remoteAddress)
+      if(DEBUG_LIVE_SOCKET)
+        console.debug('[ServerManager::Live] client disconnected', client.remoteAddress)
     })
   }
 
@@ -124,7 +130,7 @@ export default class ServerManager {
       })
 
       .listen(livePort, () => {
-        console.log(`[ServerManager::Live] Live server listening on :${livePort}`)
+        console.info(`[ServerManager::Live] Live server listening on :${livePort}`)
       })
   }
 

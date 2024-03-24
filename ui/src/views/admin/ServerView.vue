@@ -859,7 +859,6 @@ function createLiveConnection() {
     liveStatusNextRetryTime.value = undefined
     if(!event.data) return
     const json = JSON.parse(event.data)
-    console.log(json)
     if(json.state) {
       if(json.state === "EXIT") {
         evtSource.close()
@@ -867,7 +866,6 @@ function createLiveConnection() {
       }
     } else {
       const record: LiveRecord = json
-      console.log("got", LiveRecordType[record.type], record)
       liveStatus.value = updateLiveCache(liveStatus.value, record)
     }
     clearTimeout(reconnectTimeout)
@@ -876,7 +874,6 @@ function createLiveConnection() {
   evtSource.onopen = () => {
     liveReadyState.value = EventSource.OPEN
     liveStatusNextRetryTime.value = undefined
-    console.log("live conn")
   }
   evtSource.onerror = reconnect;
   function reconnect() {
