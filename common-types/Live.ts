@@ -169,7 +169,7 @@ export interface LivePlayerSurvivor extends LiveRecordPlayer {
 export interface LivePlayerInfected extends LiveRecordPlayer {
     infected: LiveRecordInfected,
     isAlive: boolean,
-    pinnedPlayer?: LiveRecordSurvivor
+    pinnedPlayer?: LivePlayerFull
 }
 
 export type LivePlayerFull = LivePlayerSurvivor | LivePlayerInfected
@@ -236,10 +236,7 @@ export function updateLiveCache(cache: LiveDataCache | undefined, record: LiveRe
             // isAlive is checked a lot, so we just split it out
             player.isAlive = record.health > 0
             if(record.pinnedPlayerUserid) {
-                const pinned = cache.players[record.pinnedPlayerUserid.toString()]
-                if('survivor' in pinned) {
-                    player.pinnedPlayer = pinned.survivor
-                }
+                player.pinnedPlayer = cache.players[record.pinnedPlayerUserid.toString()]
             }
             break
         }

@@ -484,16 +484,7 @@ const props = defineProps<{
 const route = useRoute()
 const router = useRouter()
 
-const SURVIVOR_IDS: Record<SurvivorId, string> = {
-  [SurvivorId.Nick]: "gambler",
-  [SurvivorId.Rochelle]: "producer",
-  [SurvivorId.Coach]: "coach",
-  [SurvivorId.Ellis]: "mechanic",
-  [SurvivorId.Bill]: "namvet",
-  [SurvivorId.Francis]: "biker",
-  [SurvivorId.Zoey]: "teenangst",
-  [SurvivorId.Louis]: "manager"
-}
+const SURVIVOR_IDS = ["gambler", "producer", "coach", "mechanic", "namvet", "biker", "teenangst", "manager"]
 const STATES: { [key in PlayerState]?: string } = {
   [PlayerState.BlackAndWhite]: "Black & White",
   [PlayerState.InSaferoom]: "In Saferoom",
