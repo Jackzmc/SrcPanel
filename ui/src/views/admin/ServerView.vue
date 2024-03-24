@@ -869,8 +869,9 @@ function createLiveConnection() {
       }
     } else {
       const record: LiveRecord = json
-      console.debug("got", LiveRecordType[record.type], record)
+      console.debug("got", LiveRecordType[record.type], record, 'pre=', Object.assign({}, liveStatus.value))
       liveStatus.value = updateLiveCache(liveStatus.value, record)
+      console.log('out', Object.assign({}, liveStatus.value))
     }
     clearTimeout(reconnectTimeout)
     reconnectTimeout = setTimeout(() => createLiveConnection, 1000 * 20)

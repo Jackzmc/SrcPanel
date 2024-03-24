@@ -218,7 +218,7 @@ export function updateLiveCache(cache: LiveDataCache | undefined, record: LiveRe
             break
         case LiveRecordType.Survivor: {
             let player = cache.players[record.userid.toString()] as LivePlayerSurvivor
-            if(!player) return
+            if(!player) return cache
             player.survivor = record
             //@ts-expect-error remove old property
             player.infected = undefined
@@ -229,7 +229,7 @@ export function updateLiveCache(cache: LiveDataCache | undefined, record: LiveRe
         }
         case LiveRecordType.Infected: {
             let player = cache.players[record.userid.toString()] as LivePlayerInfected
-            if(!player) return
+            if(!player) return cache
             //@ts-expect-error remove old property
             player.survivor = undefined
             player.infected = record
