@@ -20,27 +20,6 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         (req, body, done) => done(null, body)
     )
 
-    fastify.get('/:id/generate-jwt', async(req: FastifyRequest<{Params: { id: 'string' }}>, reply) => {
-        const server = fastify.servers.get(req.params.id)
-        if(!server) {
-            return reply.code(404).send({
-                error: "SERVER_NOT_FOUND",
-                message: "Server not found"
-            })
-        }
-        if(!req.user.hasPermission("servers.rcon", server.id)) return NO_PERMISSION(reply)
-
-        const jwt = await JWT.sign({
-            sub: server.id,
-            issuer: req.user.steamid2,
-            iat: Math.floor(Date.now() / 1000)
-        }, JWT_SECRET)
-
-        return {
-            authtoken: jwt
-        }
-    })
-
     fastify.get('/:id', async(req: FastifyRequest<{Params: { id: 'string' }}>, reply) => {
         const server = fastify.servers.get(req.params.id)
         if(!server) {
