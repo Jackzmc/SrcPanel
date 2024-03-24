@@ -51,11 +51,12 @@ async function db(fastify: FastifyInstance) {
     const configManager = new ConfigManager()
         await configManager.Load(DATA_FOLDER)
     const authManager = new AuthManager(admindb, db, steam, configManager)
+    const serverManager = new ServerManager(steam, DATA_FOLDER, CONFIG_FOLDER, configManager)
     fastify.decorate('users', userManager)
     fastify.decorate('authmngr', authManager)
     fastify.decorate('db', db)
     fastify.decorate('steam', steam)
-    fastify.decorate('servers', new ServerManager(steam, DATA_FOLDER, CONFIG_FOLDER, configManager))
+    fastify.decorate('servers', serverManager)
     fastify.decorate('config', configManager)
     fastify.decorate('jobs', new QueryQueue(db))
     fastify.decorate('managers', {
@@ -76,6 +77,11 @@ async function db(fastify: FastifyInstance) {
             else
                 return NOT_LOGGED_IN(reply, "INVALID_APIKEY", "Invalid API Key")
         }
+    })
+    fastify.addHook("onClose", (inst, done) => {
+        serverManager.onShutdown()
+        console.log("Shutdown complete")
+        done()
     })
 }
 export default FastifyPlugin(db)

@@ -2,8 +2,9 @@ import Gamedig from 'gamedig';
 import { Rcon } from 'rcon-client';
 import { open, readdir } from 'fs/promises'
 import { join, resolve } from 'path'
-import { createReadStream, statSync } from 'fs';
-import { PlayerAction, PlayerState, PluginServerStatus, ServerInfo } from '../../../../common-types/Server';
+import { statSync } from 'fs';
+import { PlayerAction, PlayerStats, ServerInfo } from '../../../../common-types/Server';
+import { LiveRecord, LiveDataCache, updateLiveCache } from '../../../../common-types/Live.js';
 import { EventEmitter } from 'node:events';
 import { GenericError } from '../../util.js';
 import { Tail } from 'tail'
@@ -34,8 +35,6 @@ const HIDDEN_CONFIG_FILES = [
 const VALID_CONFIG_EXTS = ["cfg", "toml"]
 const MIN_REFRESH_TIME = 5000
 // The number of milliseconds until live data expires
-const STALE_LIVE_STATUS_EXPIRE = 1000 * 60 * 1.5 
-
 
 export interface BaseServerData {
   id ? : string;
@@ -92,20 +91,15 @@ export interface ServerStatus {
 const sleep = time => new Promise(res => setTimeout(res, time));
 const MAX_PLAYER_STATS = 300
 const MAX_LOGS_LINES = 30
+const LIVE_CACHE_TTL = 1000 * 60 * 60 * 1 // Live cache data expires after a minute
 
-interface PlayerStats {
-  timestamp: number,
-  count: number
-}
 
 type Features = "rcon" | "console" | "configs" | "systemd"
-
-const DEBUG_SAMPLE_LIVE_DATA = null //{"playerCount":1,"map":"c3m4_plantation","gamemode":"coop","startTime":1691628390,"commonsCount":23,"fps":29.999998092651367,"finaleInfo":{"escapeLeaving":false,"finaleStage":18},"players":[{"userId": 4, "steamid":"76561198058753262","name":"Jackzie \u2764","team":2,"isAlive":true,"joinTime":1691628429,"permHealth":100,"action":0,"flowProgress":0,"flow":-13.388671875,"isPinned":false,"tempHealth":0,"states":2,"move":0,"survivor":5,"weapons":[null,"weapon_pistol",null,null,null,null]},{"userId": 2, "steamid":"BOT","name":"Coach","team":2,"isAlive":true,"joinTime":1691628429,"permHealth":100,"action":0,"flowProgress":0,"flow":75,"isPinned":false,"tempHealth":0,"states":2,"move":0,"survivor":2,"weapons":["weapon_autoshotgun","weapon_pistol",null,"weapon_first_aid_kit",null,null]},{"steamid":"BOT","userId": 1, "name":"Rochelle","team":2,"isAlive":true,"joinTime":1691628429,"permHealth":100,"action":0,"flowProgress":0,"flow":-64.7568359375,"isPinned":false,"tempHealth":0,"states":2,"move":0,"survivor":1,"weapons":["weapon_rifle","weapon_pistol",null,"weapon_first_aid_kit",null,null]},{"userId": 3,"steamid":"BOT","name":"Ellis","team":2,"isAlive":true,"joinTime":1691628429,"permHealth":100,"action":0,"flowProgress":0,"flow":0,"isPinned":false,"tempHealth":0,"states":2,"move":0,"survivor":3,"weapons":["weapon_sniper_military","weapon_pistol",null,"weapon_first_aid_kit",null,null]}],"refreshInterval":6,"lastUpdateTime":1691628457,"campaignStartTime":1691628457}
 
 export default class Server extends EventEmitter { 
     private _info: ServerInfo
     private _status: ServerStatus
-    private _liveData: PluginServerStatus
+    #liveCache?: LiveDataCache
     private _cfgDir: string
     private _logPath: string
     private _actid: string
@@ -240,12 +234,18 @@ export default class Server extends EventEmitter {
     /**
      * Returns any fresh live view data. Will purge any stale data
      */
-    public get liveStatus(): PluginServerStatus { 
-      if(DEBUG_SAMPLE_LIVE_DATA) return DEBUG_SAMPLE_LIVE_DATA
-      if(this._liveData && Date.now() - (this._liveData.lastUpdateTime*1000) > STALE_LIVE_STATUS_EXPIRE) {
-        this._liveData = null
+    public get liveStatus(): LiveDataCache { 
+      if(this.#liveCache) {
+        if(Date.now() - this.#liveCache.lastUpdate > LIVE_CACHE_TTL) {
+          console.debug("Live cache expired, purging")
+          this.#liveCache = null
+        }
       }
-      return this._liveData
+      return this.#liveCache
+    }
+
+    public get liveViewers() {
+      return this.listenerCount("live")
     }
 
     public get hasRcon() { return this.rcon !== null }
@@ -306,19 +306,16 @@ export default class Server extends EventEmitter {
     }
 
     /**
-     * Set live data
-     * @param status live status data 
+     * Pushes a live record to all subscribers
+     * @param type The type of ther ecord
+     * @param record The record itself
      * @returns 
      */
-    public setLiveData(status: PluginServerStatus) {
-      status.players = status.players
-        .sort((a, b) => a.team - b.team)
-      this._startTime = (status.startTime*1000) // .startTime is in seconds, convert to ms
-      this._liveData = status
-
-      this.emit("live", status)
-
-      return this.listenerCount("live")
+    public pushLiveRecord(record?: LiveRecord) {
+      // If record is null, it means shutdown is happening
+      this.emit("live", record)
+      if(record)
+        this.#liveCache = updateLiveCache(this.#liveCache, record)
     }
 
     /**

@@ -36,9 +36,10 @@
     "tail": "^2.2.6"
   },
   "scripts": {
-    "start": "tsx src/index.ts",
-    "dev": "nodemon -e ts  --signal SIGINT --exec \"tsx src/index.ts\""
+    "start": "tsc && node dist/server/src/index.js",
+    "dev": "nodemon -e ts --exec \"yarn start\""
   },
+  "type": "module",
   "devDependencies": {
     "@types/gamedig": "^3.0.2",
     "@types/jsonwebtoken": "^9.0.1",

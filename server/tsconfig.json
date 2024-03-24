@@ -1,9 +1,9 @@
 {
     "compilerOptions": {
-        "module": "esnext",
+        "module": "es2020",
         "esModuleInterop": true,
         "allowSyntheticDefaultImports": true,
-        "target": "esnext",
+        "target": "es2022",
         "noImplicitAny": false,
         "moduleResolution": "node",
         "inlineSourceMap": true,
@@ -23,5 +23,8 @@
     ],
     "exclude": [
         "node_modules"
-    ]
+    ],
+    "ts-node": {
+        "swc": true
+    }
 }

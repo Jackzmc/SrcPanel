@@ -2,7 +2,6 @@ import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
 import { OkPacket, RowDataPacket } from 'mysql2';
 
 import SteamID from 'steamid'
-import fetch from 'node-fetch'
 import { APIBanFlags, FullAPIBan, ListAPIBan } from '../../../../common-types/Ban.js';
 import { Type } from '@sinclair/typebox';
 

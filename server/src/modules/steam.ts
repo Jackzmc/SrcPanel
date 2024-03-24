@@ -1,5 +1,4 @@
 import SteamID from 'steamid'
-import fetch from 'node-fetch'
 import path from 'path';
 import  { createWriteStream } from 'fs';
 import { readFile } from 'fs/promises'

@@ -10,6 +10,10 @@ import SteamAPI from '../steam.js'
 import { ShareDestinations, ShareInfo } from '../../../../common-types/Share.js'
 import ConfigManager from '../ConfigManager.js'
 import { GroupInfo } from '../../../../common-types/Server.js'
+import net from 'net'
+import JWT from '../../jwt-promise.js'
+import { LiveRecordType, LiveRecordGame, LiveRecord, LiveRecordResponse, LiveRecordSurvivor, LiveRecordPlayer, LiveRecordInfected, LiveRecordFinaleInfo, LiveRecordSurvivorItems } from '../../../../common-types/Live.js';
+import BufferReader from '../BufferReader.js';
 
 // How long after no status requests to switch from short to long refresh
 const SHORT_REFRESH_TIMEOUT = 1000 * 60
@@ -18,6 +22,7 @@ export interface ConfigGroupData {
   servers: Record<string, ConfigServerData>,
   name?: string
 }
+
 
 export default class ServerManager {
   private servers: Record<string, Server> = {}
@@ -35,6 +40,8 @@ export default class ServerManager {
   private groups: Record<string, GroupInfo> = {}
 
   #cfgManager: ConfigManager
+  #socket: net.Server
+  #socketClients: Map<string, net.Socket>
 
   constructor(steam: SteamAPI, dataDir: string, configDir: string, configManager: ConfigManager) {
     this.steam = steam
@@ -46,6 +53,168 @@ export default class ServerManager {
         this.refresh()
         this.refreshTimer = setInterval(() => this.refresh(), this.longRefreshInterval)
       })
+    this.#createLiveServer()
+  }
+
+  #sendResponse(client: net.Socket, response: LiveRecordResponse, viewCount?: number) {
+    const writer = BufferReader.new(32)
+    writer.writeByte(response)
+    if(viewCount)
+      writer.writeByte(viewCount)
+    client.write(writer.buffer)
+  }
+
+  #onLiveClient(client: net.Socket) {
+    console.debug('[ServerManager::Live]','client connected', client.remoteAddress)
+    this.#socketClients.set(client.remoteAddress, client)
+
+    client.on('data', (buf) => {
+      let needsRefresh = false
+      for(const reader of BufferReader.getBuffers(buf)) {
+        const version = reader.readByte()
+        try {
+          const serverId = reader.readString()
+          const server = this.servers[serverId]
+          if(!server) {
+            this.#sendResponse(client, LiveRecordResponse.Error, server.liveViewers)
+            return
+          }
+          console.log("header", { version, serverId })
+          for(const recordBuffer of reader.readRecord()) {
+            const recordReader = new BufferReader(recordBuffer)
+            try {
+              const record = this.#getRecord(recordReader)
+              server.pushLiveRecord(record)
+              // Request 'game' record if we don't have it
+              if(record.type === LiveRecordType.Game) 
+                needsRefresh = false
+              else if(!server.liveStatus?.game) {
+                needsRefresh = true
+              }
+              console.log('record', LiveRecordType[record.type], record)
+            } catch(err) {
+              continue
+            }
+          }
+        } catch(err) {
+          console.error(`[ServerManager::Live] bad packet`, err)
+          return
+        }
+      }
+      
+      if(needsRefresh) {
+        console.log('sending refresh request')
+        this.#sendResponse(client, LiveRecordResponse.Refresh, null)
+      }
+    })
+
+    client.on('close', () => {
+      this.#socketClients.delete(client.remoteAddress)
+      console.debug('[ServerManager::Live] client disconnected', client.remoteAddress)
+    })
+  }
+
+  #createLiveServer() {
+    this.#socketClients = new Map()
+    const livePort = process.env.LIVE_PORT || 7888
+    this.#socket = net.createServer(this.#onLiveClient.bind(this))
+      .on('error', (err) => {
+        // socket.send(SocketResponse.Error.toString())
+        console.error(`[ServerManager::Live] Live server error: \n${err}`)
+      })
+
+      .listen(livePort, () => {
+        console.log(`[ServerManager::Live] Live server listening on :${livePort}`)
+      })
+  }
+
+  #getRecord(reader: BufferReader): LiveRecord {
+    const type: LiveRecordType = reader.readByte()
+    try {
+      switch(type) {
+        case LiveRecordType.Game: {
+          return {
+            type,
+            startTime: reader.readInt(),
+            campaignStartTime: reader.readInt(),
+            difficulty: reader.readByte(),
+            inTransition: reader.readByte() > 0,
+            gamemode: reader.readString(),
+            map: reader.readString(),
+          } as LiveRecord
+        }
+        case LiveRecordType.Player: {
+          let record: LiveRecordPlayer = {
+            type,
+            userid: reader.readInt(),
+            steamid: reader.readString()
+          }
+          if(!reader.isEOF) {
+            record = {
+              ...record,
+              isIdle: reader.readByte() == 1,
+              joinTime: reader.readInt(),
+              name: reader.readString(),
+            } as LiveRecordPlayer
+          }
+          return record
+        }
+        case LiveRecordType.Survivor: {
+          return {
+            type,
+            userid: reader.readInt(),
+            survivor: reader.readByte(),
+            tempHealth: reader.readByte(),
+            permHealth: reader.readByte(),
+            flowPercent: reader.readByte(),
+            states: reader.readInt(),
+            move: reader.readInt(),
+            action: reader.readInt(),
+          }
+        }
+        case LiveRecordType.Infected: {
+          return {
+            type,
+            userid: reader.readInt(),
+            health: reader.readShort(),
+            maxHealth: reader.readShort(),
+            class: reader.readByte(),
+            pinnedPlayerUserid: reader.readInt(),
+          }
+        }
+        case LiveRecordType.Finale: {
+          return {
+            type,
+            stage: reader.readByte(),
+            escapeInProgress: reader.readByte() === 1
+          }
+        }
+        case LiveRecordType.SurvivorItems: {
+          return {
+            type,
+            userid: reader.readInt(),
+            items: [reader.readString(), reader.readString(), reader.readString(), reader.readString(), reader.readString()]
+          }
+        }
+        default: {
+          throw new Error("Not Implemented type: " + type)
+        }
+      }
+    } catch(err) {
+      throw new Error(`error reading record of type ${LiveRecordType[type]}(${type})\n` + reader.buffer.toString('hex') + "\n" + err)
+    }
+  }
+
+  onShutdown() {
+    if(this.#socket) {
+      for(const client of this.#socketClients.values()) {
+        this.#sendResponse(client, LiveRecordResponse.Reconnect, null)
+      }
+      this.#socket.close()
+    }
+    for(const server of Object.values(this.servers)) {
+      server.pushLiveRecord(null)
+    }
   }
 
   /**

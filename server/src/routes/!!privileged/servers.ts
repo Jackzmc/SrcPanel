@@ -4,7 +4,8 @@ import { join } from 'path';
 import { readFile } from 'fs/promises';
 import { NO_PERMISSION, NOT_FOUND } from '../../responses.js';
 import JWT from '../../jwt-promise.js'
-import { PlayerAction, PluginServerStatus } from '../../../../common-types/Server.js';
+import { PlayerAction, ServerData } from '../../../../common-types/Server.js';
+import { LiveRecord, LiveRecordType } from '../../../../common-types/Live.js';
     
 const COMMENT_LINE_REGEX = new RegExp(/^\s*(\/\/|#)/)
 const HIDDEN_COMMANDS = [
@@ -31,7 +32,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
         const jwt = await JWT.sign({
             sub: server.id,
-            issuer: "l4d2-admin-dash",
+            issuer: req.user.steamid2,
             iat: Math.floor(Date.now() / 1000)
         }, JWT_SECRET)
 
@@ -57,7 +58,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
     })
 
-    fastify.get('/:id/data', async(req: FastifyRequest<{Params: { id: 'string' }}>, reply) => {
+    fastify.get('/:id/data', async(req: FastifyRequest<{Params: { id: 'string' }}>, reply): Promise<ServerData> => {
         const server = fastify.servers.get(req.params.id)
         if(!server) {
             return reply.code(404).send({
@@ -77,6 +78,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
         const configs = req.user.hasPermission("servers.configs.read", server.id) ? await server.getConfigFiles() : undefined
         return {
+            live: server.liveStatus,
             cvars: server.cvars,
             playerCounts: server.playerCounts,
             playerJoins,
@@ -183,7 +185,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             reply.raw.write(`data: ${JSON.stringify(msg)}\n\n`)
         }
         reply.raw.flushHeaders()
-        reply.raw.write('retry: 1000\n\n')
+        reply.raw.write('retry: 5000\n\n')
 
         const server = fastify.servers.get(req.params.id)
         
@@ -194,20 +196,21 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             })
         } else {
             const [code, granted] = req.user.requirePermission("servers.view", { resourceId: server.id })
-            if(!granted) return send({
-                error: "Cannot access server, no permission", 
-                code: "NO_PERMISSION",
-            })
-            // Send any stale data:
-            if(server.liveStatus) send(server.liveStatus)
+            if(!granted) return NO_PERMISSION(reply, 
+                "Cannot access server, no permission", 
+                code,
+            )
 
-            function eventHandler(data: PluginServerStatus) {
-                send(data)
+            function eventHandler(record?: LiveRecord) {
+                if(record)
+                    send(record)
+                else
+                    send({ state: "EXIT" })
             }
 
             const heartbeatTimer = setInterval(() => {
-                reply.raw.write(': heartbeat')
-            }, 1000 * 30)
+                reply.raw.write(': heartbeat\n\n')
+            }, 1000 * 15)
 
             server.addListener("live", eventHandler)
             req.raw.on("close", () => {

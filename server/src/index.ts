@@ -46,6 +46,17 @@ const app = Fastify({
             (process.env.NODE_ENV !== "production" ? 'debug' : 'error')
       }
 })
+async function onSignal(signal: NodeJS.Signals) {
+    console.log("GOT SIGNAL", signal, "-- SHUTTING DOWN")
+    app.servers?.onShutdown()
+    app.close()
+    setTimeout(() => {
+        process.exit(0)
+    }, 1000)
+}
+["SIGUSR2", "SIGINT", "SIGTERM"].map((signal) => {
+    process.on(signal, onSignal)
+})
 
 declare module 'fastify' {
   export interface FastifyInstance {
@@ -79,7 +90,8 @@ app.register(
 )
   
 
-app.register(import('./middlewares/managers.js'))
+import MiddleManager from './middlewares/managers.js'
+app.register(MiddleManager)
 .then(async() => {
     app.register(FastifyCookie)
     app.register(FastifySession, { 
@@ -111,8 +123,7 @@ app.register(import('./middlewares/managers.js'))
 
     const mainPrefix = `/api/`
 
-    async function loadRoutes(rootPrefix: string = "/", folderPath?: string) {
-        if(!folderPath) folderPath = path.join(__dirname, 'routes')
+    async function loadRoutes(rootPrefix: string = "/", folderPath: string) {
         const dirents = await readdir(folderPath, { withFileTypes: true })
 
         for(const dirent of dirents) {
