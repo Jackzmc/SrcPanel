@@ -141,7 +141,7 @@
         <div class="notification is-danger has-text-centered" v-else-if="!status?.online && !liveStatus">
           The server is offline or is unreachable.
         </div>
-        <div class="list has-visible-pointer-controls" v-if="liveStatus && liveStatus.players.length > 0">
+        <div class="list has-visible-pointer-controls" v-if="liveStatus && Object.values(liveStatus.players).length > 0">
           <template v-for="player in liveStatus.players" :key="player.steamid ?? player.name">
             <div class="list-item">
               <div class="list-item-image">
@@ -151,23 +151,24 @@
               </div>
               <div class="list-item-content">
                 <div v-if="'survivor' in player" :class="['list-item-title', {'has-text-danger': !player.isAlive }]">
-                  <progress v-if="player.isAlive" :class="['progress', 'is-info', 'flowprogress']" :value="player.flowProgress" max="100" style="width:20%">{{player.flowProgress}}%</progress>
+                  <progress v-if="player.isAlive" :class="['progress', 'is-info', 'flowprogress']" :value="player.survivor.flowPercent" max="100" style="width:20%">{{player.survivor.flowPercent}}%</progress>
                   <!-- <a>{{ 'idlePlayer' in player && player.idlePlayer ? player.idlePlayer.name : player.name }}</a> -->
-                  <UserComponent :class="{'has-text-crossed': !player.isAlive}" :user="'idlePlayer' in player ? player.idlePlayer! : player" />
-                  &nbsp;<span class="tag is-warning is-small" v-if="'idlePlayer' in player">Idle</span>
+                  <!-- :user prop just needs { steamid, name } which 'player' contains -->
+                  <UserComponent :class="{'has-text-crossed': !player.isAlive}" :user="player as User" />
+                  &nbsp;<span class="tag is-warning is-small" v-if="player.isIdle">Idle</span>
                   &nbsp;<span class="tag is-info is-small" v-else-if="player.steamid === 'BOT'">BOT</span>
                 </div>
                 <div v-else :class="['list-item-title', {'has-text-crossed': !player.isAlive }]">
-                  <progress v-if="player.isAlive" :class="['progress', getHealthClassInfected(player), 'flowprogress']" :value="player.permHealth" :max="player.maxHealth" style="width:20%">{{player.permHealth}}%</progress>
+                  <progress v-if="player.isAlive" :class="['progress', getHealthClassInfected(player), 'flowprogress']" :value="player.infected.health" :max="player.infected.maxHealth" style="width:20%">{{Math.round(player.infected.health / player.infected.maxHealth)}}%</progress>
                   {{ player.name }}
                   <span class="tag is-info is-small" v-if="player.steamid === 'BOT'">BOT</span>
                 </div>
                 <div class="list-item-description has-text-black" v-if="'survivor' in player">
                   <template v-if="player.isAlive">
                     <div class="tags">
-                      <span :class="['tag',getHealthClass(player.permHealth)]">{{ player.permHealth + player.tempHealth }} HP</span>
-                      <span class="tag">{{ PlayerMoveString[player.move] }}</span>
-                      <span class="tag is-info" v-if="player.action">{{ PlayerGameAction[player.action] }}</span>
+                      <span :class="['tag',getHealthClass(player.survivor.permHealth)]">{{ player.survivor.permHealth + player.survivor.tempHealth }} HP</span>
+                      <span class="tag">{{ PlayerMoveString[player.survivor.move] }}</span>
+                      <span class="tag is-info" v-if="player.survivor.action">{{ PlayerGameAction[player.survivor.action] }}</span>
                       <span class="tag is-primary" v-for="state in getPlayerStates(player)" :key="state">
                         {{ state }}
                       </span>
@@ -180,35 +181,36 @@
                 </div>
                 <div class="list-item-description has-text-black" v-else-if="'class' in player">
                   <div class="tags">
-                    <span v-if="player.class === InfectedClass.Tank" :class="['tag', getHealthClassInfected(player)]">{{ player.permHealth }}/{{ player.maxHealth }} HP</span>
+                    <span v-if="player.class === InfectedClass.Tank" :class="['tag', getHealthClassInfected(player)]">{{ player.infected.health }}/{{ player.infected.maxHealth }} HP</span>
                   </div>
-                  {{ player.pinnedSurvivorId }}
+                  {{ player.pinnedPlayer }}
                 </div>
               </div>
               <div class="list-item-controls">
                 <div class="buttons is-right">
                   <button class="button is-inverted is-outlined is-black" @click="toggleDetails(player)">
-                    <Icon icon-class="is-small has-text-black" :icon="showDetailsId && showDetailsId === player.userId ? 'fa-chevron-up' : 'fa-chevron-down'" />
+                    <Icon icon-class="is-small has-text-black" :icon="showDetailsId && showDetailsId === player.userid ? 'fa-chevron-up' : 'fa-chevron-down'" />
                   </button>
                 </div>
               </div>
             </div>
-            <div class="list-item  px-0 mx-0 my-0 py-0" v-if="showDetailsId && showDetailsId === player.userId">
+            <div class="list-item  px-0 mx-0 my-0 py-0" v-if="showDetailsId && showDetailsId === player.userid">
               <div class="list-item-content has-background-light-gray">
                 <table class="table is-bordered is-fullwidth">
                   <tbody>
                     <tr>
                       <th data-tooltip="Since player has joined the game">Campaign Playtime</th>
-                      <td>{{ getDuration(player.joinTime) }}</td>
+                      <!-- joinTime should be defined here -->
+                      <td>{{ getDuration(player.joinTime!) }}</td>
                     </tr>
                     <tr>
                       <th>SteamID / UserId</th>
-                      <td>{{ player.steamid }} / #{{ player.userId }}</td>
+                      <td>{{ player.steamid }} / #{{ player.userid }}</td>
                     </tr>
                     <template v-if="'survivor' in player">
                     <tr>
                       <th>Flow Progress</th>
-                      <td>{{ player.flowProgress }}%</td>
+                      <td>{{ player.survivor.flowPercent }}%</td>
                     </tr>
                     </template>
                     <tr>
@@ -224,12 +226,12 @@
           </template>
         </div>
         <div v-else-if="liveStatus">
-          <p class="has-text-centered">Waiting for players to connect</p>
+          <p class="has-text-centered is-size-5">Waiting for players to connect</p>
         </div>
         <div v-else>
-          <h4 class="has-text-centered is-size-4">No recent server data</h4>
+          <h4 class="has-text-centered is-size-4">Waiting to receive data</h4>
           <br>
-          <p class="subtitle is-6 has-text-centered">Server might not have live view setup or no players are currently online.</p>
+          <p class="subtitle is-6 has-text-centered">Live view may not be supported on this server, or the server is offline.</p>
           <p class="subtitle is-6 has-text-centered">This will automatically update when data is available.</p>
         </div>
       </div>
@@ -333,28 +335,28 @@
           <tbody>
             <tr>
               <th>Campaign</th>
-              <td class="has-text-right">{{ formatCampaign(liveStatus.map) }}</td>
+              <td class="has-text-right">{{ formatCampaign(liveStatus.game.map) }}</td>
             </tr>
             <tr>
               <th>Gamemode</th>
-              <td class="has-text-right">{{ formatGamemode(liveStatus.gamemode) }}</td>
-            </tr>
-            <tr v-if="liveStatus.finaleInfo && liveStatus.finaleInfo.finaleStage !== FinaleStage.Unknown">
-              <th>Finale Info</th>
-              <td class="has-text-right" v-if="liveStatus.finaleInfo.escapeLeaving">Escaping</td>
-              <td class="has-text-right" v-else>{{ FinaleStageName[liveStatus.finaleInfo.finaleStage] }}</td>
+              <td class="has-text-right">{{ formatGamemode(liveStatus.game.gamemode) }}</td>
             </tr>
             <tr>
-              <th>Server FPS</th>
-              <td class="has-text-right">{{ liveStatus.fps.toFixed(1) }}</td>
+              <th>Difficulty</th>
+              <td class="has-text-right">{{ DIFFICULTY_NAME[liveStatus.game.difficulty] }}</td>
+            </tr>
+            <tr v-if="liveStatus.finale && liveStatus.finale.stage !== FinaleStage.Unknown">
+              <th>Finale Info</th>
+              <td class="has-text-right" v-if="liveStatus.finale.escapeInProgress">Escaping</td>
+              <td class="has-text-right" v-else>{{ FinaleStageName[liveStatus.finale.stage] }}</td>
             </tr>
             <tr>
               <th>Server Uptime</th>
-              <td class="has-text-right">{{ getDuration(liveStatus.startTime) }}</td>
+              <td class="has-text-right">{{ getDuration(liveStatus.game.startTime) }}</td>
             </tr>
             <tr>
               <th>Campaign Duration</th>
-              <td class="has-text-right">{{ getDuration(liveStatus.campaignStartTime) }}</td>
+              <td class="has-text-right">{{ getDuration(liveStatus.game.campaignStartTime) }}</td>
             </tr>
             <tr>
               <th>Last Update</th>
@@ -364,7 +366,7 @@
             </tr>
           </tbody>
         </table>
-        <p v-else>No live data, will update automatically when data is available</p>
+        <p v-else>Waiting for live data</p>
       </div>
       <div v-else-if="tab === 'configs'" class="box">
         <h5 class="title is-5">Config Files</h5>
@@ -415,11 +417,12 @@ import { parseLog, getRelDate, request } from '@/js/util';
 import LogMessage from "@/components/LogMessage.vue";
 import { useNotification } from "@kyvg/vue3-notification";
 import Field from '@/components/Field.vue';
-import { PluginServerStatus, StatusPlayer, StatusPlayerSurvivor, SurvivorId, FinaleStage, PlayerState, PlayerGameAction, PlayerMove, StatusPlayerInfected, InfectedClass } from '../../../../common-types/Server';
+import { SurvivorId, FinaleStage, PlayerState, PlayerGameAction, PlayerMove, InfectedClass, LiveDataCache, LiveRecord, updateLiveCache, LivePlayerSurvivor, LivePlayerFull, LivePlayerInfected, LiveRecordType, GameDifficulty } from '../../../../common-types/Live';
 import { UserPrivilegeCode } from '../../../../common-types/Privileges';
 import { formatDate, getDuration } from '../../js/util.js';
-import UserComponent from '@/components/UserComponent.vue';
+import UserComponent, { User } from '@/components/UserComponent.vue';
 import Console from '@/components/server/Console.vue'
+import { ServerData } from '../../../../common-types/Server';
 
 const FinaleStageName: Record<FinaleStage, string> = {
     [FinaleStage.Gauntlet]: "Gauntlet",
@@ -494,6 +497,12 @@ const STATES: { [key in PlayerState]?: string } = {
   [PlayerState.IsCalm]: "Calm",
   [PlayerState.IsBoomed]: "Is Boomed"
 }
+const DIFFICULTY_NAME: { [key in GameDifficulty]?: string } = {
+  [GameDifficulty.Easy]: "Easy",
+  [GameDifficulty.Normal]: "Normal",
+  [GameDifficulty.Advanced]: "Advanced",
+  [GameDifficulty.Expert]: "Expert",
+}
 
 const TABS: Record<string, { name: string, tag?: string, permission?: string, enabled?: Function }> = {
   overview: {
@@ -527,7 +536,7 @@ let lastRefreshTime = ref()
 let server = ref()
 let servers = ref()
 let status = ref()
-let liveStatus = ref<PluginServerStatus>()
+let liveStatus = ref<LiveDataCache>()
 let liveStatusNextRetryTime = ref<number>()
 let lastLiveUpdateTime = ref<string>()
 let uptime = ref<number>()
@@ -575,27 +584,27 @@ function isTabEnabled(data: any): boolean {
   return enabled
 }
 
-function getPlayerWeaponNames(player: StatusPlayerSurvivor) {
-  if(!player.weapons) return []
-  return player.weapons
-    .filter(weapon => weapon)
-    .map(weapon => {
-      return weapon?.replace("weapon_", '').replace(/_/g, ' ')
+function getPlayerWeaponNames(player: LivePlayerSurvivor) {
+  if(!player.items) return []
+  return player.items
+    .filter(item => item)
+    .map(item => {
+      return item.replace("weapon_", '').replace(/_/g, ' ')
     })
 }
 
-function getPlayerStates(player: StatusPlayerSurvivor) {
+function getPlayerStates(player: LivePlayerSurvivor) {
   const states: string[] = []
   for(const [state, value] of Object.entries(STATES)) {
-    if(player.states & Number(state)) states.push(value)
+    if(player.survivor.states & Number(state)) states.push(value)
   }
   return states
 }
 
-function getIconUrl(player: StatusPlayer) {
+function getIconUrl(player: LivePlayerFull) {
   if(!player.isAlive) return `/img/survivors/dead.png`
   if('survivor' in player) {
-    return `/img/survivors/${SURVIVOR_IDS[player.survivor]}.png`
+    return `/img/survivors/${SURVIVOR_IDS[player.survivor.survivor]}.png`
   } else if('class' in player) {
     return `/img/survivors/infected.png`
   }
@@ -650,7 +659,8 @@ async function fetchServerData() {
   const response = await request(`/api/servers/${route.params.id}/data`)
   if(id != route.params.id) return // Ignore changes in id
   if(response?.ok) {
-    const json = await response.json()
+    const json: ServerData = await response.json()
+    liveStatus.value = json.live
     return true
   }
 }
@@ -697,7 +707,7 @@ async function fetchServersCompact() {
   servers.value = cachedServers.data
 }
 
-async function kickPlayer(player: StatusPlayer) {
+async function kickPlayer(player: LivePlayerFull) {
   const reason = prompt(`Enter a reason to kick \"${player.name}\":`)
   if(!reason) {
     return notify({
@@ -750,16 +760,16 @@ function getHealthClass(health: number) {
     return 'is-danger'
   }
 }
-function toggleDetails(player: StatusPlayer) {
-  console.log(showDetailsId.value, player.userId)
-  if(showDetailsId.value === player.userId) {
+function toggleDetails(player: LivePlayerFull) {
+  console.log(showDetailsId.value, player.userid)
+  if(showDetailsId.value === player.userid) {
     showDetailsId.value = undefined
   } else {
-    showDetailsId.value = player.userId
+    showDetailsId.value = player.userid
   }
 }
-function getHealthClassInfected(player: StatusPlayerInfected) {
-  const percent = (player.permHealth / player.maxHealth) * 100
+function getHealthClassInfected(player: LivePlayerInfected) {
+  const percent = (player.infected.health / player.infected.maxHealth) * 100
   return getHealthClass(percent)
 }
 function formatMap(mapId: string) {
@@ -830,29 +840,46 @@ const OfficialCampaignNames = [
 
 const isLiveViewActive = computed(() => {
   if(liveStatusNextRetryTime.value) return false
-  return liveStatus.value != undefined || liveReadyState.value == EventSource.OPEN
+  return liveReadyState.value == EventSource.OPEN
 })
 let errCount = 0
 let liveReadyState = ref<number>(0)
 let evtSource: EventSource
 let retryTimeout: any
+let reconnectTimeout: number
 
 const MAX_BACKOFF = 1000 * 60 * 2
 
 function createLiveConnection() {
   if(errCount === -1) return // Unloading, dont start new
-  liveReadyState.value = 0
+  liveReadyState.value = EventSource.CONNECTING
   evtSource = new EventSource(`/api/servers/${route.params.id}/live`);
   evtSource.onmessage = (event) => {
     errCount = 0
     liveStatusNextRetryTime.value = undefined
+    if(!event.data) return
     const json = JSON.parse(event.data)
-    liveStatus.value = json
+    console.log(json)
+    if(json.state) {
+      if(json.state === "EXIT") {
+        evtSource.close()
+        return reconnect()
+      }
+    } else {
+      const record: LiveRecord = json
+      console.log("got", LiveRecordType[record.type], record)
+      liveStatus.value = updateLiveCache(liveStatus.value, record)
+    }
+    clearTimeout(reconnectTimeout)
+    reconnectTimeout = setTimeout(() => createLiveConnection, 1000 * 20)
   }
   evtSource.onopen = () => {
-    liveReadyState.value =EventSource.OPEN
+    liveReadyState.value = EventSource.OPEN
+    liveStatusNextRetryTime.value = undefined
+    console.log("live conn")
   }
-  evtSource.onerror = (event) => {
+  evtSource.onerror = reconnect;
+  function reconnect() {
     errCount++
     console.error("Disconnected from live server", { errCount })
     evtSource.close()
@@ -886,7 +913,7 @@ async function init() {
 nowInterval = setInterval(() => {
   now.value = Date.now()
   if(liveStatus.value)
-    lastLiveUpdateTime.value = getRelDate(liveStatus.value.lastUpdateTime)
+    lastLiveUpdateTime.value = getRelDate(liveStatus.value.lastUpdate / 1000)
 }, 1000)
 
 onBeforeMount(async() => {
