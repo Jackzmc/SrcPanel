@@ -109,7 +109,7 @@ export default class ServerManager {
       if(needsRefresh) {
         if(DEBUG_LIVE_SOCKET)
           console.debug('sending refresh request')
-        this.#sendResponse(client, LiveRecordResponse.Refresh, null)
+        // this.#sendResponse(client, LiveRecordResponse.Refresh, null)
       }
     })
 

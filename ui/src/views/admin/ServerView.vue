@@ -606,7 +606,7 @@ function getPlayerStates(player: LivePlayerSurvivor) {
 
 function getIconUrl(player: LivePlayerFull) {
   if(!player.isAlive) return `/img/survivors/dead.png`
-  if('survivor' in player && player.survivor) {
+  if('survivor' in player && player.survivor?.survivor) {
     return `/img/survivors/${SURVIVOR_IDS[player.survivor.survivor]}.png`
   } else if('infected' in player && player.infected) {
     return `/img/survivors/infected.png`
