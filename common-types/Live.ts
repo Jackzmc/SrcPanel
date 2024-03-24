@@ -249,7 +249,7 @@ export function updateLiveCache(cache: LiveDataCache | undefined, record: LiveRe
         }
         case LiveRecordType.SurvivorItems: {
             let player = cache.players[record.userid.toString()] as LivePlayerSurvivor
-            if(!player) return
+            if(!player) return cache
             if(!player.items) player.items = ["","","","",""]
             player.items = record.items
             break
