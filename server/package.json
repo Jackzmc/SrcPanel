@@ -21,11 +21,9 @@
     "identicon": "^3.1.1",
     "json5": "^2.2.3",
     "jsonwebtoken": "^9.0.0",
-    "kysely": "^0.26.3",
     "lru-cache": "^10.1.0",
     "minimatch": "^9.0.2",
     "mysql2": "^2.3.3",
-    "node-fetch": "^3.2.3",
     "openid": "^2.0.10",
     "pino-pretty": "^8.1.0",
     "quick-lru": "^6.1.0",
@@ -37,17 +35,17 @@
     "steamid": "^2.0.0",
     "tail": "^2.2.6"
   },
-  "type": "module",
   "scripts": {
-    "start": "tsc && node dist/server/src/index.js",
-    "clean": "rm -r dist && tsc",
-    "dev": "nodemon -e ts --exec \"yarn start || exit 1\""
+    "start": "tsx src/index.ts",
+    "dev": "nodemon -e ts  --signal SIGINT --exec \"tsx src/index.ts\""
   },
   "devDependencies": {
     "@types/gamedig": "^3.0.2",
     "@types/jsonwebtoken": "^9.0.1",
     "@types/node": "^20.10.6",
     "@types/steamid": "^2.0.1",
-    "@types/tail": "^2.2.1"
+    "@types/tail": "^2.2.1",
+    "tsx": "^4.7.1",
+    "typescript": "^5.4.3"
   }
 }

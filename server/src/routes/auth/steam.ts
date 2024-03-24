@@ -1,6 +1,5 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyReply, FastifyRequest } from 'fastify';
 import SteamID from 'steamid'
-import fetch from 'node-fetch'
 import FastGeoip from 'fast-geoip'
 import User from '../../modules/users/User.js';
 import { SteamInfo } from '../../../../common-types/Privileges.js';
