@@ -199,6 +199,9 @@ export function updateLiveCache(cache: LiveDataCache | undefined, record: LiveRe
     switch(record.type) {
         case LiveRecordType.Game:
             cache.game = record
+            if(cache.game.inTransition) {
+                cache.players = {}
+            }
             break
         case LiveRecordType.Player:
             if(record.joinTime == undefined) {
@@ -217,6 +220,8 @@ export function updateLiveCache(cache: LiveDataCache | undefined, record: LiveRe
             let player = cache.players[record.userid.toString()] as LivePlayerSurvivor
             if(!player) return
             player.survivor = record
+            //@ts-expect-error remove old property
+            player.infected = undefined
             // isAlive is checked a lot, so we just split it out
             console.log('survivor state', record.states, record.states & PlayerState.Alive)
             player.isAlive = (record.states & PlayerState.Alive) != 0
@@ -225,6 +230,8 @@ export function updateLiveCache(cache: LiveDataCache | undefined, record: LiveRe
         case LiveRecordType.Infected: {
             let player = cache.players[record.userid.toString()] as LivePlayerInfected
             if(!player) return
+            //@ts-expect-error remove old property
+            player.survivor = undefined
             player.infected = record
             // isAlive is checked a lot, so we just split it out
             player.isAlive = record.health > 0

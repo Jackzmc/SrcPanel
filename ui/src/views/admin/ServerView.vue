@@ -225,6 +225,9 @@
             </div>
           </template>
         </div>
+        <div v-else-if="liveStatus?.game?.inTransition">
+          <p class="has-text-centered is-size-5">The next map is loading</p>
+        </div>
         <div v-else-if="liveStatus">
           <p class="has-text-centered is-size-5">Waiting for players to connect</p>
         </div>
@@ -603,10 +606,9 @@ function getPlayerStates(player: LivePlayerSurvivor) {
 
 function getIconUrl(player: LivePlayerFull) {
   if(!player.isAlive) return `/img/survivors/dead.png`
-  console.log(player)
-  if('survivor' in player) {
+  if('survivor' in player && player.survivor) {
     return `/img/survivors/${SURVIVOR_IDS[player.survivor.survivor]}.png`
-  } else if('class' in player) {
+  } else if('infected' in player && player.infected) {
     return `/img/survivors/infected.png`
   }
   return `/img/survivors/unknown.png`
