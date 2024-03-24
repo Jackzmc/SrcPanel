@@ -78,7 +78,7 @@ export default class ServerManager {
           const serverId = reader.readString()
           const server = this.servers[serverId]
           if(!server) {
-            this.#sendResponse(client, LiveRecordResponse.Error, server.liveViewers)
+            this.#sendResponse(client, LiveRecordResponse.Error, null)
             return
           }
           if(DEBUG_LIVE_SOCKET)
