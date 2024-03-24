@@ -331,7 +331,7 @@
       <div class="box" v-if="tab === 'live'">
         <span class="tag is-pulled-right is-danger has-tooltip-left" v-if="isLiveViewActive" data-tooltip="Connected to server, receiving live data">Live</span>
         <h4 class="title is-5">Game Info</h4>
-        <table class="table is-fullwidth" v-if="liveStatus">
+        <table class="table is-fullwidth" v-if="liveStatus?.game">
           <tbody>
             <tr>
               <th>Campaign</th>
@@ -603,6 +603,7 @@ function getPlayerStates(player: LivePlayerSurvivor) {
 
 function getIconUrl(player: LivePlayerFull) {
   if(!player.isAlive) return `/img/survivors/dead.png`
+  console.log(player)
   if('survivor' in player) {
     return `/img/survivors/${SURVIVOR_IDS[player.survivor.survivor]}.png`
   } else if('class' in player) {
@@ -866,6 +867,7 @@ function createLiveConnection() {
       }
     } else {
       const record: LiveRecord = json
+      console.debug("got", LiveRecordType[record.type], record)
       liveStatus.value = updateLiveCache(liveStatus.value, record)
     }
     clearTimeout(reconnectTimeout)

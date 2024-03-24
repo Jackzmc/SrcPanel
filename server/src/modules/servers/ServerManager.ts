@@ -71,7 +71,7 @@ export default class ServerManager {
     this.#socketClients.set(client.remoteAddress, client)
 
     client.on('data', (buf) => {
-      let needsRefresh = false
+      let needsRefresh = undefined
       for(const reader of BufferReader.getBuffers(buf)) {
         const version = reader.readByte()
         try {
@@ -91,7 +91,7 @@ export default class ServerManager {
               // Request 'game' record if we don't have it
               if(record.type === LiveRecordType.Game) 
                 needsRefresh = false
-              else if(!server.liveStatus?.game) {
+              else if(needsRefresh == undefined && !server.liveStatus?.game) {
                 needsRefresh = true
               }
               if(DEBUG_LIVE_SOCKET)
