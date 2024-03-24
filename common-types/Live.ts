@@ -190,7 +190,7 @@ export interface LiveDataCache {
 
 export function updateLiveCache(cache: LiveDataCache | undefined, record: LiveRecord): LiveDataCache {
     if(!cache) cache = {
-        lastUpdate: Date.now(),
+        lastUpdate: 0,
         players: {},
         game: null
     }
@@ -201,51 +201,51 @@ export function updateLiveCache(cache: LiveDataCache | undefined, record: LiveRe
             cache.game = record
             break
         case LiveRecordType.Player:
-        if(record.joinTime == undefined) {
-            // Player disconnected, wipe them
-            delete cache.players[record.userid.toString()]
-        } else {
-            // Updated player info, merge it on top of old data (to preserve infected/survivor info)
-            const id = record.userid.toString()
-            cache.players[id] = {
-            ...cache.players[id],
-            ...record
+            if(record.joinTime == undefined) {
+                // Player disconnected, wipe them
+                delete cache.players[record.userid.toString()]
+            } else {
+                // Updated player info, merge it on top of old data (to preserve infected/survivor info)
+                const id = record.userid.toString()
+                cache.players[id] = {
+                ...cache.players[id],
+                ...record
+                }
             }
-        }
-        break
+            break
         case LiveRecordType.Survivor: {
-        let player = cache.players[record.userid.toString()] as LivePlayerSurvivor
-        if(!player) return
-        player.survivor = record
-        // isAlive is checked a lot, so we just split it out
-        console.log('survivor state', record.states, record.states & PlayerState.Alive)
-        player.isAlive = (record.states & PlayerState.Alive) != 0
-        break
+            let player = cache.players[record.userid.toString()] as LivePlayerSurvivor
+            if(!player) return
+            player.survivor = record
+            // isAlive is checked a lot, so we just split it out
+            console.log('survivor state', record.states, record.states & PlayerState.Alive)
+            player.isAlive = (record.states & PlayerState.Alive) != 0
+            break
         }
         case LiveRecordType.Infected: {
-        let player = cache.players[record.userid.toString()] as LivePlayerInfected
-        if(!player) return
-        player.infected = record
-        // isAlive is checked a lot, so we just split it out
-        player.isAlive = record.health > 0
-        if(record.pinnedPlayerUserid) {
-            const pinned = cache.players[record.pinnedPlayerUserid.toString()]
-            if('survivor' in pinned) {
-                player.pinnedPlayer = pinned.survivor
+            let player = cache.players[record.userid.toString()] as LivePlayerInfected
+            if(!player) return
+            player.infected = record
+            // isAlive is checked a lot, so we just split it out
+            player.isAlive = record.health > 0
+            if(record.pinnedPlayerUserid) {
+                const pinned = cache.players[record.pinnedPlayerUserid.toString()]
+                if('survivor' in pinned) {
+                    player.pinnedPlayer = pinned.survivor
+                }
             }
-        }
-        break
+            break
         }
         case LiveRecordType.Finale: {
-        cache.finale = record as LiveRecordFinaleInfo
-        break
+            cache.finale = record as LiveRecordFinaleInfo
+            break
         }
         case LiveRecordType.SurvivorItems: {
-        let player = cache.players[record.userid.toString()] as LivePlayerSurvivor
-        if(!player) return
-        if(!player.items) player.items = ["","","","",""]
-        player.items = record.items
-        break
+            let player = cache.players[record.userid.toString()] as LivePlayerSurvivor
+            if(!player) return
+            if(!player.items) player.items = ["","","","",""]
+            player.items = record.items
+            break
         }
     }
     return cache
