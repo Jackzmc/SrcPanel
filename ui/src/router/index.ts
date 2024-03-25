@@ -227,6 +227,7 @@ const routes = [
           title: 'Manage User',
           authRequired: true
         },
+        redirect: { name: "manage-user-overview"},
         children: [
           {
             name: "manage-user-default",

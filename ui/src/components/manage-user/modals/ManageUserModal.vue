@@ -149,6 +149,7 @@ function onUserUpdate(newUser: any) {
 }
 
 onBeforeMount(async () => {
+  console.log(route.name, Object.assign({}, route))
   if(route.query.returnTo) returnTo.value = decodeURIComponent(route.query.returnTo.toString())
   if(route.query.returnTo) router.push({ query: { returnTo: route.query.returnTo.toString() }})
   document.addEventListener('keydown', closeModal)
