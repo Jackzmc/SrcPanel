@@ -211,8 +211,8 @@ export function updateLiveCache(cache: LiveDataCache | undefined, record: LiveRe
                 // Updated player info, merge it on top of old data (to preserve infected/survivor info)
                 const id = record.userid.toString()
                 cache.players[id] = {
-                ...cache.players[id],
-                ...record
+                    ...cache.players[id],
+                    ...record
                 }
             }
             break
@@ -223,7 +223,6 @@ export function updateLiveCache(cache: LiveDataCache | undefined, record: LiveRe
             //@ts-expect-error remove old property
             player.infected = undefined
             // isAlive is checked a lot, so we just split it out
-            console.log('survivor state', record.states, record.states & PlayerState.Alive)
             player.isAlive = (record.states & PlayerState.Alive) != 0
             break
         }
@@ -232,6 +231,8 @@ export function updateLiveCache(cache: LiveDataCache | undefined, record: LiveRe
             if(!player) return cache
             //@ts-expect-error remove old property
             player.survivor = undefined
+            //@ts-expect-error remove old property
+            player.items = undefined
             player.infected = record
             // isAlive is checked a lot, so we just split it out
             player.isAlive = record.health > 0

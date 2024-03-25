@@ -19,7 +19,7 @@ export default class BufferReader {
   
     constructor(data: Buffer) {
       if(!data) throw new Error("buffer is null or undefined")	
-      console.log(data.byteLength, data.length, data.toString('hex'))
+      // console.log(data.byteLength, data.length, data.toString('hex'))
       this.#buffer = data
       this.#offset = 0
       this.#length = data.byteLength

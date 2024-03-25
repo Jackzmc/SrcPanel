@@ -91,7 +91,7 @@ export interface ServerStatus {
 const sleep = time => new Promise(res => setTimeout(res, time));
 const MAX_PLAYER_STATS = 300
 const MAX_LOGS_LINES = 30
-const LIVE_CACHE_TTL = 1000 * 60 * 60 * 1 // Live cache data expires after a minute
+const LIVE_CACHE_TTL = 1000 * 60 * 3 // Live cache data expires after 3 minutes
 
 
 type Features = "rcon" | "console" | "configs" | "systemd"

@@ -1,9 +1,10 @@
+import dotenv from 'dotenv'
+dotenv.config()
 import Fastify, { FastifyInstance } from 'fastify'
 import FastifySession from '@fastify/session'
 import FastifyCookie from '@fastify/cookie'
 import MySQLSession from 'express-mysql-session'
 import { Pool } from 'mysql2/promise';
-import dotenv from 'dotenv'
 import SteamAPI from './modules/steam.js'
 import AuthManager from './modules/auth/AuthManager.js';
 import ServerManager from './modules/servers/ServerManager.js';
@@ -11,7 +12,6 @@ import UserManager from './modules/users/UserManager.js';
 import { readdir } from 'fs/promises';
 import path from 'path'
 import cors from '@fastify/cors'
-dotenv.config()
 
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';

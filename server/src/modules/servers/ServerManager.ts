@@ -11,7 +11,6 @@ import { ShareDestinations, ShareInfo } from '../../../../common-types/Share.js'
 import ConfigManager from '../ConfigManager.js'
 import { GroupInfo } from '../../../../common-types/Server.js'
 import net from 'net'
-import JWT from '../../jwt-promise.js'
 import { LiveRecordType, LiveRecordGame, LiveRecord, LiveRecordResponse, LiveRecordSurvivor, LiveRecordPlayer, LiveRecordInfected, LiveRecordFinaleInfo, LiveRecordSurvivorItems } from '../../../../common-types/Live.js';
 import BufferReader from '../BufferReader.js';
 
@@ -22,7 +21,9 @@ export interface ConfigGroupData {
   servers: Record<string, ConfigServerData>,
   name?: string
 }
-
+// BECAUSE FOR SOME **** REASON THIS ISNT LOADING HERE:
+import dotenv from 'dotenv'
+dotenv.config()
 const DEBUG_LIVE_SOCKET = process.env.DEBUG_LIVE_SOCKET != undefined
 
 export default class ServerManager {
