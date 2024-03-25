@@ -24,7 +24,7 @@ export const enum PlayerMove {
     Ladder = 4
 }
 
-export enum PlayerGameAction {
+export const enum PlayerGameAction {
     BeingHealed      = -1,
     None				= 0,	// No use action active
     Healing			= 1,	// Includes healing yourself or a teammate.
@@ -221,7 +221,7 @@ export function updateLiveCache(cache: LiveDataCache | undefined, record: LiveRe
             if(!player) return cache
             player.survivor = record
             //@ts-expect-error remove old property
-            player.infected = undefined
+            delete player.infected
             // isAlive is checked a lot, so we just split it out
             player.isAlive = (record.states & PlayerState.Alive) != 0
             break
@@ -230,9 +230,9 @@ export function updateLiveCache(cache: LiveDataCache | undefined, record: LiveRe
             let player = cache.players[record.userid.toString()] as LivePlayerInfected
             if(!player) return cache
             //@ts-expect-error remove old property
-            player.survivor = undefined
+            delete player.survivor
             //@ts-expect-error remove old property
-            player.items = undefined
+            delete player.items
             player.infected = record
             // isAlive is checked a lot, so we just split it out
             player.isAlive = record.health > 0

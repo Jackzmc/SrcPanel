@@ -151,32 +151,29 @@
               </div>
               <div class="list-item-content">
                 <div v-if="'survivor' in player" :class="['list-item-title', {'has-text-danger': !player.isAlive }]">
-                  <div class="healthbar"  v-if="player.isAlive">
+                  <div class="progressbar" style="width:50%"  v-if="player.isAlive" :data-label="player.survivor.permHealth + player.survivor.tempHealth + ' HP'">
                     <div :class="['permhealth',getHealthClass(player.survivor.tempHealth + player.survivor.permHealth)]" :style="{width: player.survivor.permHealth + '%' }"></div>
                     <div :class="['temphealth',getHealthClass(player.survivor.tempHealth + player.survivor.permHealth)]" :style="{width: player.survivor.tempHealth + '%' }"></div>
-                    <span>{{ player.survivor.permHealth + player.survivor.tempHealth }} HP</span>
                   </div>
-                  <!-- <progress v-if="player.isAlive" :class="['progress', 'is-info', 'flowprogress']" :value="player.survivor.flowPercent" max="100" style="width:20%">{{player.survivor.flowPercent}}%</progress> -->
-                  <!-- <a>{{ 'idlePlayer' in player && player.idlePlayer ? player.idlePlayer.name : player.name }}</a> -->
-                  <!-- :user prop just needs { steamid, name } which 'player' contains -->
+                  <div class="progressbar" style="width:50%" :data-label="player.survivor.flowPercent + '% Chapter Progress'">
+                    <div class="flow-progress" :style="{width: player.survivor.flowPercent + '%'}"></div>
+                  </div>
                   <UserComponent :class="{'has-text-crossed': !player.isAlive}" :user="player as User" />
                   &nbsp;<span class="tag is-warning is-small" v-if="player.isIdle">Idle</span>
                   &nbsp;<span class="has-text-info is-small" v-else-if="player.steamid === 'BOT'">[BOT]</span>
                 </div>
                 <div v-else :class="['list-item-title', {'has-text-crossed': !player.isAlive }]">
-                  <div class="healthbar" v-if="player.isAlive">
-                    <div class="permhealth has-background-success" :style="{width: (100*player.infected.health / player.infected.maxHealth) + '%' }"></div>
-                    <span>{{ player.infected.health }} / {{  player.infected.maxHealth }} HP</span>
+                  <div class="progressbar" style="width:50%"  v-if="player.isAlive" :data-label="player.infected.health + '/' + player.infected.maxHealth + ' HP'">
+                    <div :class="['permhealth',getHealthClass(player.infected.health)]" :style="{width: (100*player.infected.health / player.infected.maxHealth) + '%' }"></div>
                   </div>
                   {{ player.name }}
                   &nbsp;<span class="has-text-info is-small" v-if="player.steamid === 'BOT'">[BOT]</span>
                 </div>
-                <div class="list-item-description has-text-black" v-if="'survivor' in player">
+                <div class="list-item-description has-text-black" v-if="'survivor' in player && player.survivor">
                   <template v-if="player.isAlive">
                     <div class="tags">
-                      <span class="tag is-info" data-tooltip="% of how far through map">{{ player.survivor.flowPercent }}%</span>
                       <span class="tag">{{ PlayerMoveString[player.survivor.move] }}</span>
-                      <span class="tag is-info" v-if="player.survivor.action">{{ PlayerGameAction[player.survivor.action] }}</span>
+                      <span class="tag is-info" v-if="player.survivor.action">{{ PlayerGameActionString[player.survivor.action] }}</span>
                       <span class="tag is-primary" v-for="state in getPlayerStates(player)" :key="state">
                         {{ state }}
                       </span>
@@ -190,7 +187,7 @@
                 <div class="list-item-description has-text-black" v-else-if="'infected' in player">
                   <div class="tags">
                   </div>
-                  {{ player.pinnedPlayer }}
+                  <span v-if="player.pinnedPlayer">Pinned <b>{{ player.pinnedPlayer?.name }}</b></span>
                 </div>
               </div>
               <div class="list-item-controls">
@@ -214,7 +211,7 @@
                       <th>SteamID / UserId</th>
                       <td>{{ player.steamid }} / #{{ player.userid }}</td>
                     </tr>
-                    <template v-if="'survivor' in player">
+                    <template v-if="'survivor' in player && player.survivor">
                     <tr>
                       <th>Flow Progress</th>
                       <td>{{ player.survivor.flowPercent }}%</td>
@@ -237,7 +234,7 @@
           </template>
         </div>
         <div v-else-if="liveStatus?.game?.inTransition">
-          <p class="has-text-centered is-size-5">The next map is loading</p>
+          <p class="has-text-centered is-size-5">The next chapter is loading</p>
         </div>
         <div v-else-if="liveStatus">
           <p class="has-text-centered is-size-5">Waiting for players to connect</p>
@@ -967,36 +964,39 @@ onUnmounted(() => {
   border-bottom: 0;
   border-right: 0;
 }
-.flowprogress {
-  margin-bottom: 0 !important;
-}
-.healthbar {
-  background-color: #ccc;
-  width: 50%;
-  height: 14px;
-  border-radius: 2px;
-  max-width: 100%;
-}
-.healthbar span {
-  display: inline-block;
+.progressbar {
+  height: 1.2em;
+  width: 100%;
+  background-color: #c9c9c9;
   position: relative;
-  top: -20px;
-  left: 49%;
+}
+.progressbar::before {
+  content: attr(data-label);
+  font-size: 0.75em;
+  position: absolute;
   text-align: center;
+  top: 2px;
+  left: 0;
+  right: 0;
 }
-
-.permhealth {
+.progressbar .permhealth {
+  background-color: #7cc4ff;
+  /* display: inline-block; */
+  height: 100%;
+  background-color: red;
   float: left;
-  height: 100%;
-  border-radius: 2px;
 }
-
-.temphealth {
-  background-color: greenyellow;
-  opacity: 0.5;
+.progressbar .temphealth {
+  background-color: #7cc4ff;
+  display: inline-block;
   height: 100%;
-  border-radius: 2px;
-
+  opacity: 0.25;
+  background-color: red;
 }
-
+.progressbar .flow-progress {
+  background-color: #7cc4ff;
+  display: inline-block;
+  height: 100%;
+  background-color: #3e8ed0;
+}
 </style>
