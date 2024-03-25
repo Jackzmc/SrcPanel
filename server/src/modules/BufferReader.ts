@@ -123,26 +123,31 @@ export default class BufferReader {
     writeByte(value: number) {
         this.#buffer.writeInt8(value, this.#offset)
         this.#offset++
+        return this
     }
   
     writeShort(value: number) {
         this.#buffer.writeInt16LE(value, this.#offset)
         this.#offset += 2
+        return this
     }   
   
     writeInt(value: number) {
         this.#buffer.writeInt32LE(value, this.#offset)
         this.#offset += 4
+        return this
     }
 
     writeFloat(value: number) {
         this.#buffer.writeFloatLE(value, this.#offset)
         this.#offset += 4
+        return this
     }
 
     writeString(value: string) {
         this.#buffer.write(value + "\0", this.#offset, "ascii")
         this.#offset += value.length + 1
+        return this
     }
   
     get nextBuffer() {

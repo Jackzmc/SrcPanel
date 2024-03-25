@@ -192,8 +192,10 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             }, 1000 * 15)
 
             server.addListener("live", eventHandler)
+            server.emit("live:subscribe", true)
             req.raw.on("close", () => {
                 server.removeListener("live", eventHandler)
+                server.emit("live:subscribe", false)
                 clearTimeout(heartbeatTimer)
             })
 

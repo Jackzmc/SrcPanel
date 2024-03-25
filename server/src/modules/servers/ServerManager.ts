@@ -44,6 +44,9 @@ export default class ServerManager {
   #cfgManager: ConfigManager
   #socket: net.Server
   #socketClients: Map<string, net.Socket>
+  // Maps a server to a specific connection, this assumes there should never be more than one socket per server
+  #liveServerToSocketMap: Map<Server, net.Socket> = new Map()
+  #liveSocketToServerMap: Map<net.Socket, Server> = new Map() 
 
   constructor(steam: SteamAPI, dataDir: string, configDir: string, configManager: ConfigManager) {
     this.steam = steam
@@ -56,73 +59,103 @@ export default class ServerManager {
         this.refreshTimer = setInterval(() => this.refresh(), this.longRefreshInterval)
       })
     this.#createLiveServer()
+    
+    for(const server of Object.values(this.servers)) {
+      // This event is called anytime there is a new viewer or not, 
+      // this will tell the server client for that server a new viewer count
+      server.on("live:subscribe", (active: boolean) => {
+        const socket = this.#liveServerToSocketMap.get(server)
+        if(socket) {
+          socket.write(BufferReader.new(2)
+            .writeByte(LiveRecordResponse.OK)
+            .writeByte(server.liveViewers)
+            .buffer
+          )
+        }
+      })
+    }
   }
 
-  #sendResponse(client: net.Socket, response: LiveRecordResponse, viewCount?: number) {
-    const writer = BufferReader.new(32)
+  #sendResponse(client: net.Socket, response: LiveRecordResponse) {
+    const writer = BufferReader.new(2)
     writer.writeByte(response)
-    if(viewCount)
-      writer.writeByte(viewCount)
     client.write(writer.buffer)
   }
 
-  #onLiveClient(client: net.Socket) {
+  #debugLive(...args: any[]) {
     if(DEBUG_LIVE_SOCKET)
-      console.debug('[ServerManager::Live]','client connected', client.remoteAddress)
+      console.debug("[ServerManager::Live",...args)
+  }
+
+  #onPacket(client: net.Socket, reader: BufferReader): Server {
+    try {
+      const version = reader.readByte()
+      const serverId = reader.readString()
+      const server = this.servers[serverId]
+      if(!server) {
+        this.#sendResponse(client, LiveRecordResponse.Error)
+        return
+      }
+
+      this.#debugLive("header", { version, serverId })
+      for(const recordBuffer of reader.readRecord()) {
+        const recordReader = new BufferReader(recordBuffer)
+        try {
+          const record = this.#getRecord(recordReader)
+          server.pushLiveRecord(record)
+          this.#debugLive('record', LiveRecordType[record.type], record)
+        } catch(err) {
+          continue
+        }
+      }
+      return server
+    } catch(err) {
+      console.error(`[ServerManager::Live] bad packet`, err)
+      return
+    }
+  }
+
+
+  #onLiveClient(client: net.Socket) {
+    this.#debugLive('[ServerManager::Live]','client connected', client.remoteAddress)
     this.#socketClients.set(client.remoteAddress, client)
 
     client.on('data', (buf) => {
-      let needsRefresh = undefined
       for(const reader of BufferReader.getBuffers(buf)) {
-        const version = reader.readByte()
+        let server: Server
         try {
-          const serverId = reader.readString()
-          const server = this.servers[serverId]
-          if(!server) {
-            this.#sendResponse(client, LiveRecordResponse.Error, null)
-            return
-          }
-          if(DEBUG_LIVE_SOCKET)
-            console.debug("header", { version, serverId })
-          for(const recordBuffer of reader.readRecord()) {
-            const recordReader = new BufferReader(recordBuffer)
-            try {
-              const record = this.#getRecord(recordReader)
-              server.pushLiveRecord(record)
-              // Request 'game' record if we don't have it
-              if(record.type === LiveRecordType.Game) 
-                needsRefresh = false
-              else if(needsRefresh == undefined && !server.liveStatus?.game) {
-                needsRefresh = true
-              }
-              if(DEBUG_LIVE_SOCKET)
-                console.debug('record', LiveRecordType[record.type], record)
-            } catch(err) {
-              continue
-            }
-          }
+          server = this.#onPacket(client, reader)
         } catch(err) {
           console.error(`[ServerManager::Live] bad packet`, err)
           return
         }
+
+        // Map the socket to the server and vise-versa
+        if(server) {
+          this.#liveServerToSocketMap.set(server, client)
+          this.#liveSocketToServerMap.set(client, server)
+        }
       }
-      
-      if(needsRefresh) {
-        if(DEBUG_LIVE_SOCKET)
-          console.debug('sending refresh request')
-        // this.#sendResponse(client, LiveRecordResponse.Refresh, null)
-      }
+
     })
 
     client.on('close', () => {
       this.#socketClients.delete(client.remoteAddress)
-      if(DEBUG_LIVE_SOCKET)
-        console.debug('[ServerManager::Live] client disconnected', client.remoteAddress)
+      this.#debugLive('[ServerManager::Live] client disconnected', client.remoteAddress)
+
+      // Clear the mappings
+      const server = this.#liveSocketToServerMap.get(client)
+      if(server) {
+        this.#liveSocketToServerMap.delete(client)
+        this.#liveServerToSocketMap.delete(server)
+      }
     })
   }
 
   #createLiveServer() {
     this.#socketClients = new Map()
+    this.#liveServerToSocketMap.clear()
+    this.#liveSocketToServerMap.clear()
     const livePort = process.env.LIVE_PORT || 7888
     this.#socket = net.createServer(this.#onLiveClient.bind(this))
       .on('error', (err) => {
@@ -215,10 +248,11 @@ export default class ServerManager {
   onShutdown() {
     if(this.#socket) {
       for(const client of this.#socketClients.values()) {
-        this.#sendResponse(client, LiveRecordResponse.Reconnect, null)
+        this.#sendResponse(client, LiveRecordResponse.Reconnect)
       }
       this.#socket.close()
     }
+
     for(const server of Object.values(this.servers)) {
       server.pushLiveRecord(null)
     }
