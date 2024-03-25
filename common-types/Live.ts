@@ -164,12 +164,14 @@ export interface LivePlayerSurvivor extends LiveRecordPlayer {
     survivor: LiveRecordSurvivor,
     items: [string,string,string,string,string],
     isAlive: boolean,
+    totalHealth: number
 }
 
 export interface LivePlayerInfected extends LiveRecordPlayer {
     infected: LiveRecordInfected,
     isAlive: boolean,
     pinnedPlayer?: LivePlayerFull
+    totalHealth: number,
 }
 
 export type LivePlayerFull = LivePlayerSurvivor | LivePlayerInfected
@@ -223,6 +225,7 @@ export function updateLiveCache(cache: LiveDataCache | undefined, record: LiveRe
             //@ts-expect-error remove old property
             delete player.infected
             // isAlive is checked a lot, so we just split it out
+            player.totalHealth = record.permHealth + record.tempHealth
             player.isAlive = (record.states & PlayerState.Alive) != 0
             break
         }
@@ -236,6 +239,7 @@ export function updateLiveCache(cache: LiveDataCache | undefined, record: LiveRe
             player.infected = record
             // isAlive is checked a lot, so we just split it out
             player.isAlive = record.health > 0
+            player.totalHealth = 100 * record.health / record.maxHealth
             if(record.pinnedPlayerUserid) {
                 player.pinnedPlayer = cache.players[record.pinnedPlayerUserid.toString()]
             }

@@ -151,11 +151,11 @@
               </div>
               <div class="list-item-content">
                 <div v-if="'survivor' in player" :class="['list-item-title', {'has-text-danger': !player.isAlive }]">
-                  <div class="progressbar" style="width:50%"  v-if="player.isAlive" :data-label="player.survivor.permHealth + player.survivor.tempHealth + ' HP'">
-                    <div :class="['permhealth',getHealthClass(player.survivor.tempHealth + player.survivor.permHealth)]" :style="{width: player.survivor.permHealth + '%' }"></div>
-                    <div :class="['temphealth',getHealthClass(player.survivor.tempHealth + player.survivor.permHealth)]" :style="{width: player.survivor.tempHealth + '%' }"></div>
+                  <div class="progressbar" style="width:50%"  v-if="player.isAlive" :data-label="player.totalHealth + ' HP'">
+                    <div :class="['permhealth',getHealthClass(player.totalHealth)]" :style="{width: player.survivor.permHealth + '%' }"></div>
+                    <div :class="['temphealth',getHealthClass(player.totalHealth)]" :style="{width: player.survivor.tempHealth + '%' }"></div>
                   </div>
-                  <div class="progressbar" style="width:50%" :data-label="player.survivor.flowPercent + '% Chapter Progress'">
+                  <div class="progressbar mt-1" style="width:50%" :data-label="player.survivor.flowPercent + '% Chapter Progress'">
                     <div class="flow-progress" :style="{width: player.survivor.flowPercent + '%'}"></div>
                   </div>
                   <UserComponent :class="{'has-text-crossed': !player.isAlive}" :user="player as User" />
@@ -164,7 +164,7 @@
                 </div>
                 <div v-else :class="['list-item-title', {'has-text-crossed': !player.isAlive }]">
                   <div class="progressbar" style="width:50%"  v-if="player.isAlive" :data-label="player.infected.health + '/' + player.infected.maxHealth + ' HP'">
-                    <div :class="['permhealth',getHealthClass(player.infected.health)]" :style="{width: (100*player.infected.health / player.infected.maxHealth) + '%' }"></div>
+                    <div :class="['permhealth',getHealthClass(100 * player.totalHealth)]" :style="{width: (player.totalHealth) + '%' }"></div>
                   </div>
                   {{ player.name }}
                   &nbsp;<span class="has-text-info is-small" v-if="player.steamid === 'BOT'">[BOT]</span>
@@ -476,11 +476,11 @@ const PlayerMoveString: Record<PlayerMove, string> = {
   [PlayerMove.UnderAttack]: "Pinned by Special",
   [PlayerMove.Hanging]: "Hanging",
   [PlayerMove.Incapped]: "Incapped",
-  [PlayerMove.Idle]: "Standstill",
+  [PlayerMove.Idle]: "Standing",
   [PlayerMove.Walk]: "Walking",
   [PlayerMove.Run]: "Running",
-  [PlayerMove.Crouched]: "Crouched",
-  [PlayerMove.Ladder]: "On Ladder",
+  [PlayerMove.Crouched]: "Crouching",
+  [PlayerMove.Ladder]: "Climbing",
 }
 const REFRESH_INTERVAL = 1000 * 15
 
@@ -972,10 +972,10 @@ onUnmounted(() => {
 }
 .progressbar::before {
   content: attr(data-label);
-  font-size: 0.75em;
+  font-size: 0.85em;
   position: absolute;
   text-align: center;
-  top: 2px;
+  top: -1px;
   left: 0;
   right: 0;
 }
@@ -990,7 +990,7 @@ onUnmounted(() => {
   background-color: #7cc4ff;
   display: inline-block;
   height: 100%;
-  opacity: 0.25;
+  opacity: 0.35;
   background-color: red;
 }
 .progressbar .flow-progress {
