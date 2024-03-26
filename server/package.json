@@ -37,13 +37,13 @@
   },
   "scripts": {
     "start": "tsc && node dist/server/src/index.js",
-    "dev": "nodemon -e ts --exec \"yarn start\""
+    "dev": "nodemon -e ts --exec \"yarn start || exit 1\""
   },
   "type": "module",
   "devDependencies": {
     "@types/gamedig": "^3.0.2",
     "@types/jsonwebtoken": "^9.0.1",
-    "@types/node": "^20.10.6",
+    "@types/node": "^20.11.30",
     "@types/steamid": "^2.0.1",
     "@types/tail": "^2.2.1",
     "tsx": "^4.7.1",
