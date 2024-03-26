@@ -193,7 +193,6 @@ async function getAuth() {
 
 async function clearNotifications() {
   await privUser.value?.clearNotifications()
-  userdata.value!.notifications = []
   // Update local cache:
   window.sessionStorage.setItem('srcds_userdata', JSON.stringify(userdata.value))
 }

@@ -159,9 +159,13 @@ export class PrivilegedUser {
   }
 
   async clearNotifications() {
-    await fetch(`/api/auth/notifications`, {
+    const res = await fetch(`/api/auth/notifications`, {
       method: "DELETE"
     })
+    if(res.ok)
+      this.data.notifications = []
+    else
+      return null
   }
 
   get isSessionOld() {

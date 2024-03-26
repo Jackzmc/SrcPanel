@@ -95,6 +95,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             }
         }
         await conn.commit()
+        conn.release()
         discManager.set(discuss.id, discuss)
         // TODO: REMOVE ME, TEMP FIX
         await discManager.fetchDiscussions()
@@ -120,6 +121,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             )
         }
         await conn.commit()
+        await conn.release()
         const domain = await fastify.config.GetKV("domain");
         discManager.set(discuss.id, {
             id: discuss.id,
