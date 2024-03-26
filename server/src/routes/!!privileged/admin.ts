@@ -170,9 +170,13 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 function execPromise(cmd: string): Promise<{ stdout: string, stderr: string }> {
     return new Promise((resolve, reject) => {
         exec(cmd, { cwd: process.cwd() }, (error, stdout, stderr) => {
-        if (error) {
-            console.warn(error);
-        }
+            if (error) {
+                console.warn("execPromise", error);
+                return reject({
+                    stdout,
+                    stderr
+                });
+            }
             resolve({
                 stdout,
                 stderr
