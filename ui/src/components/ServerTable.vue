@@ -6,7 +6,7 @@
         <tr>
           <th>Name</th>
           <th style="width:0">Players</th>
-          <template v-if="group.type === 'left4dead2' || group.type === 'source'">
+          <template v-if="group.type === 'source'">
             <th>Current Map</th>
             <th>Direct Connect Command</th>
             <th>Create Lobby Command</th>

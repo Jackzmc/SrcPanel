@@ -16,7 +16,7 @@
         {{ server.status.data?.players.length }} / {{ server.status.data?.maxplayers }}
       </template>
     </td>
-    <template v-if="type === 'left4dead2' || type === 'source'">
+    <template v-if="type === 'source'">
       <td>
         <template v-if="server.status.online">
           {{ server.status.data?.map }}

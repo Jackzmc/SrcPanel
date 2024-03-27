@@ -33,7 +33,7 @@
                       <template v-if="server.status.online">
                         <template v-if="server.tags.includes('rcon')">
                           <a @click="stopServer(server)" class="button is-dark">Request Restart</a>
-                          <a @click="processAction(server, 'unreserve')" class="button is-dark" v-if="server.type === 'source' || server.type === 'left4dead2'">Unreserve</a>
+                          <a @click="processAction(server, 'unreserve')" class="button is-dark" v-if="server.type === 'source'">Unreserve</a>
                         </template>
                       </template>
                       <template v-else-if="server.tags.includes('systemd')">

@@ -44,7 +44,7 @@
               <a v-if="server.info.features.includes('systemd') && (!status || !status.online)" @click="processAction('start')" class="button is-success is-small">Start Server</a>
               <template v-if="status?.online && server.info.features.includes('rcon')">
                 <a data-tooltip="Will restart server if no players online, or fail if there are" @click="processAction('stop')" class="button is-dark is-small">Request Restart</a>
-                <a v-if="server.type === 'source' || server.type === 'left4dead2'" data-tooltip="Will remove lobby reservation, allowing 5+ to join. This is done automatically after 4 players have fully loaded in" @click="processAction('unreserve')" class="button is-dark is-small">Unreserve</a>
+                <a v-if="server.type === 'source'" data-tooltip="Will remove lobby reservation, allowing 5+ to join. This is done automatically after 4 players have fully loaded in" @click="processAction('unreserve')" class="button is-dark is-small">Unreserve</a>
                 <a v-show="shiftPressed" data-tooltip="Will forcefully restart server, regardless if players are online" @click="processAction('stop', { force: true })" class="button is-danger is-small">Force Restart</a>
               </template>
             </div>
