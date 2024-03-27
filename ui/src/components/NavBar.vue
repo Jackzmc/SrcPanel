@@ -2,7 +2,7 @@
 <div>
   <template v-if="privUser">
     <UserSettingsModal v-if="showModal === 'settings'" :priv-user="privUser" @close="showModal = undefined" />
-    <NotificationsModal v-else-if="showModal === 'notifications'" :priv-user="privUser" @close="showModal = undefined; emit('notifications:clear')" />
+    <NotificationsModal v-else-if="showModal === 'notifications'" :priv-user="privUser" @close="clearNotifications" />
   </template>
   <nav class="navbar is-info is-fixed-top" role="navigation" aria-label="main navigation">
     <div class="navbar-brand">
@@ -106,7 +106,7 @@
           </Icon>
         </div>
         <template v-if="privUser">
-          <a class="navbar-item" v-if="privUser.notifications.length > 0" @click="showModal = 'notifications'">
+          <a :class="['navbar-item',{loading: notificationsClearing }]" v-if="privUser.notifications.length > 0" @click="showModal = 'notifications'">
             <Icon icon="bell">{{ privUser.notifications.length }}</Icon>
           </a>
           <div class="navbar-item has-dropdown is-hoverable " >
@@ -199,6 +199,7 @@ const props = defineProps<{
 }>()
 
 let showModal = ref<string>()
+let notificationsClearing = ref<boolean>()
 
 const avatarUrl = computed(() => {
   return props.privUser ? props.privUser.avatarUrl : ""
@@ -247,5 +248,13 @@ async function logout() {
       text: err.message
     })
   }
+}
+
+async function clearNotifications() {
+  showModal.value = undefined;
+  if(!props.privUser) return
+  notificationsClearing.value = true
+  await props.privUser.clearNotifications()
+  notificationsClearing.value = false
 }
 </script>

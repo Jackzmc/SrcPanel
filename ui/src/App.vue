@@ -3,7 +3,7 @@
     <!-- <v-tour v-if="tour" :name="tour.name" :steps="tour.steps"></v-tour> -->
     <BirthdayComponent v-if="isBirthday" @close="closeBirthday" />
     <Notifications position="top center" :duration=7000 @start="onNotificationShown" />
-    <NavBar v-if="!route.meta.hideNav" @logout="onLogout" :update-info="updateInfo" :priv-user="privUser" @notifications:clear="clearNotifications" />
+    <NavBar v-if="!route.meta.hideNav" @logout="onLogout" :update-info="updateInfo" :priv-user="privUser" />
     <br>
     <br v-if="route.meta.hideHero">
 
@@ -189,12 +189,6 @@ async function getAuth() {
       })
     }
   }
-}
-
-async function clearNotifications() {
-  await privUser.value?.clearNotifications()
-  // Update local cache:
-  window.sessionStorage.setItem('srcds_userdata', JSON.stringify(userdata.value))
 }
 
 function onNotificationShown(item: NotificationItem) {

@@ -98,6 +98,7 @@ export class PrivilegedUser {
 
   updateProviders(providers: Record<string, OauthProviderData>) {
     this.data.providers = providers
+    this.#updateCache()
   }
 
   hasFlag(flag: string, ignoreRoot: boolean = false) : boolean {
@@ -162,9 +163,10 @@ export class PrivilegedUser {
     const res = await fetch(`/api/auth/notifications`, {
       method: "DELETE"
     })
-    if(res.ok)
+    if(res.ok) {
       this.data.notifications = []
-    else
+      this.#updateCache()
+    } else
       return null
   }
 
@@ -174,5 +176,9 @@ export class PrivilegedUser {
 
   get providers() {
     return this.data.providers ?? {}
+  }
+
+  #updateCache() {
+    window.sessionStorage.setItem('srcds_userdata', JSON.stringify(this.data))
   }
 }
