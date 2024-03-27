@@ -63,6 +63,10 @@ export interface GroupedServer {
 
 export type ServerType = "source" | "left4dead2" | "minecraft"
 
+export const SERVER_TYPE_MAP = {
+    "left4dead2": "source"
+}
+
 export interface ServerGroup {
     id: string,
     name: string,
