@@ -3,7 +3,7 @@
     <div class="columns is-variable is-6">
         <div class="column is-7">
           <Field label="Search" icon-left="search">
-              <input v-model="searchQuery" class="input" style="width:50%" type="text" placeholder="Search for a cvar">
+              <input v-model="searchQuery" class="input" type="text" placeholder="Search for a cvar">
             </Field>
           <ul>
             <li v-for="cvar in filteredCvars" :key="cvar.cvar">

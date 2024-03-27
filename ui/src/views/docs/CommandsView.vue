@@ -4,7 +4,7 @@
     <div class="columns is-variable is-6">
         <div class="column is-7 content">
             <Field label="Search" icon-left="search">
-              <input v-model="searchQuery" class="input" style="width:50%" type="text" placeholder="Search for a command">
+              <input v-model="searchQuery" class="input" type="text" placeholder="Search for a command">
             </Field>
             <span v-for="(group, id) in filteredGroups" :key="id">
                 <h5 class='title is-5'>{{group.name}}</h5>

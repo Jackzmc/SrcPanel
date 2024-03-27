@@ -62,14 +62,16 @@
       <section class="modal-card-body has-text-centered" v-else>
         <img src="@/assets/loader.gif" />
       </section>
-      <footer class="modal-card-foot" id="manage-user-footer">
-        <template v-if="fetchError">
-          <router-link class="button is-info" :to="routerHref">Close</router-link>
-          <button class="button is-secondary" @click="getUser">Retry</button>
-        </template>
-        <router-link class="button" :to="routerHref">
-          <Icon icon="close">Close</Icon>
-        </router-link>
+      <footer class="modal-card-foot">
+        <div class="buttons"  id="manage-user-footer">
+          <router-link class="button" :to="routerHref">
+            <Icon icon="close">Close</Icon>
+          </router-link>
+          <template v-if="fetchError">
+            <router-link class="button is-info" :to="routerHref">Close</router-link>
+            <button class="button is-secondary" @click="getUser">Retry</button>
+          </template>
+        </div>
       </footer>
     </div>
   </div>

@@ -60,7 +60,7 @@
   --bulma-weight-medium: 500;
   --bulma-weight-semibold: 600;
   --bulma-weight-bold: 700;
-  --bulma-weight-extrabold: 800;
+  --bulma-weight-extrabold: 600;
   --bulma-block-spacing: 1.5rem;
   --bulma-duration: 294ms;
   --bulma-easing: ease-out;
@@ -960,7 +960,7 @@
     --bulma-weight-medium: 500;
     --bulma-weight-semibold: 600;
     --bulma-weight-bold: 700;
-    --bulma-weight-extrabold: 800;
+    --bulma-weight-extrabold: 600;
     --bulma-block-spacing: 1.5rem;
     --bulma-duration: 294ms;
     --bulma-easing: ease-out;
@@ -1877,7 +1877,7 @@
   --bulma-weight-medium: 500;
   --bulma-weight-semibold: 600;
   --bulma-weight-bold: 700;
-  --bulma-weight-extrabold: 800;
+  --bulma-weight-extrabold: 600;
   --bulma-block-spacing: 1.5rem;
   --bulma-duration: 294ms;
   --bulma-easing: ease-out;
@@ -22459,3 +22459,7 @@ kbd {
 }
 
 /*# sourceMappingURL=main-out.css.map */
+
+.is-info {
+    color:white;
+}
