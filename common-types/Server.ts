@@ -1,10 +1,24 @@
 import { LiveDataCache } from "./Live.js"
 
+
+export interface ServerStatus {
+    data?: {
+      players: string[],
+      maxplayers: number,
+      map: string,
+      gamemode: string,
+    },
+    online: boolean
+}
+  
+
 export type PlayerAction = "kick"
 
 
 export interface GroupInfo {
+    id: string,
     name: string,
+    type: ServerType
 }
 
 export interface ServerInfo {
@@ -33,3 +47,25 @@ export interface ExportGroupInfo extends GroupInfo {
     servers: Record<string, ServerInfo>
 }
 
+
+export interface GroupedServer {
+    name: string,
+    ip: string,
+    group: string,
+    port: number,
+    type: string,
+    tags: string[],
+    domain: string,
+    id: string,
+    status: ServerStatus,
+    sortOrder: number
+}
+
+export type ServerType = "source" | "left4dead2" | "minecraft"
+
+export interface ServerGroup {
+    id: string,
+    name: string,
+    servers: Record<string, GroupedServer>,
+    type: ServerType
+}

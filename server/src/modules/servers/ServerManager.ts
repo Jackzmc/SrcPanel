@@ -9,7 +9,7 @@ import sqlite3 from 'sqlite3'
 import SteamAPI from '../steam.js'
 import { ShareDestinations, ShareInfo } from '../../../../common-types/Share.js'
 import ConfigManager from '../ConfigManager.js'
-import { GroupInfo } from '../../../../common-types/Server.js'
+import { GroupInfo, ServerType } from '../../../../common-types/Server.js'
 import net from 'net'
 import { LiveRecordType, LiveRecordGame, LiveRecord, LiveRecordResponse, LiveRecordSurvivor, LiveRecordPlayer, LiveRecordInfected, LiveRecordFinaleInfo, LiveRecordSurvivorItems } from '../../../../common-types/Live.js';
 import BufferReader from '../BufferReader.js';
@@ -19,6 +19,7 @@ const SHORT_REFRESH_TIMEOUT = 1000 * 60
 
 export interface ConfigGroupData {
   servers: Record<string, ConfigServerData>,
+  type: ServerType
   name?: string
 }
 // BECAUSE FOR SOME **** REASON THIS ISNT LOADING HERE:
@@ -277,8 +278,9 @@ export default class ServerManager {
       return {
         id: groupId,
         name: data.name,
+        type: data.type,
         servers: Object.fromEntries(Object.entries(this.servers)
-          .filter(([, server]) => server.group === groupId)
+          .filter(([, server]) => server.group.id === groupId)
           .sort(([gid1,server1],[gid2,server2]) => this.sortServer(server1, server2))
           .map(([gid,server]) => [gid, mapFn(server)] )
         )
@@ -455,7 +457,9 @@ export default class ServerManager {
     const serverPromises = []
     for(const [groupId, data] of Object.entries<ConfigGroupData>(config)) {
       this.groups[groupId] = {
-        name: data.name ?? groupId
+        id: groupId,
+        name: data.name ?? groupId,
+        type: data.type || "source"
       }
       for (const [id, server] of Object.entries<ConfigServerData>(data.servers)) {
         if(!server.name) {
@@ -481,7 +485,7 @@ export default class ServerManager {
                 rconPassword = process.env[server.rcon.password.env]
               }
 
-              this.servers[id] = new Server(groupId, {
+              this.servers[id] = new Server(this.groups[groupId], {
                 id,
                 name: server.name,
                 domain: host,

@@ -3,7 +3,7 @@ import { Rcon } from 'rcon-client';
 import { open, readdir } from 'fs/promises'
 import { join, resolve } from 'path'
 import { statSync } from 'fs';
-import { PlayerAction, PlayerStats, ServerInfo } from '../../../../common-types/Server';
+import { GroupInfo, PlayerAction, PlayerStats, ServerInfo, ServerStatus } from '../../../../common-types/Server';
 import { LiveRecord, LiveDataCache, updateLiveCache } from '../../../../common-types/Live.js';
 import { EventEmitter } from 'node:events';
 import { GenericError } from '../../util.js';
@@ -78,15 +78,6 @@ export interface ServerData extends BaseServerData {
     }
 }
   
-export interface ServerStatus {
-  data?: {
-    players: string[],
-    maxplayers: number,
-    map: string,
-    gamemode: string,
-  },
-  online: boolean
-}
 
 const sleep = time => new Promise(res => setTimeout(res, time));
 const MAX_PLAYER_STATS = 300
@@ -108,7 +99,7 @@ export default class Server extends EventEmitter {
     private _cvars: Record<string, string>
     private _startTime: number
     private _logsCache: string[] = []
-    private _group: string
+    #group: GroupInfo
     #features: Features[] = []
     private rcon?: {
       password: string,
@@ -125,16 +116,16 @@ export default class Server extends EventEmitter {
       
     public playerCounts: PlayerStats[] = [] 
 
-    constructor(group: string, server: ServerData) {
+    constructor(group: GroupInfo, server: ServerData) {
         super()
-        this._group = group
+        this.#group = group
         this._info = {
           id: server.id,
           name: server.name,
           domain: server.domain,
           ip: server.ip,
           port: server.port,
-          type: server.type,
+          type: group.type || /* legacy */ server.type,
         }
         this._actid = server.activityId
         this._sortOrder = server.sortOrder
@@ -208,7 +199,7 @@ export default class Server extends EventEmitter {
       Returns the group (if any) server belongs to
     */
     public get group() {
-      return this._group
+      return this.#group
     }
 
     /**

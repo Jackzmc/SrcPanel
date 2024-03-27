@@ -3,7 +3,7 @@ import { OkPacket, RowDataPacket } from 'mysql2';
 import { Static, Type } from '@sinclair/typebox'
 import { ACTIVITY_LOG_TABLE_NAME } from '../!!privileged/logs.js';
 import { generateParams } from '../!!privileged/logs.js';
-import { ServerStatus } from '../../modules/servers/Server.js';
+import { ServerStatus } from '../../../../common-types/Server.js';
 import { readFileSync } from 'fs';
 const data = JSON.parse(readFileSync('assets/data.json', 'utf-8'))
 import Sentiment from 'sentiment'
