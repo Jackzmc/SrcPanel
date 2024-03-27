@@ -73,3 +73,5 @@ export interface ServerGroup {
     servers: Record<string, GroupedServer>,
     type: ServerType
 }
+
+export type BuiltInActions = "builtin:stop" | "builtin:request_stop" | "builtin:update"
