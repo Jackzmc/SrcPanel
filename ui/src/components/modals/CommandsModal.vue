@@ -3,16 +3,10 @@
   <div class="modal-card">
     <header class="modal-card-head">
       <p class="modal-card-title"><b>{{prefix}}{{cmd.name}}</b> Command</p>
+
       <button class="delete" aria-label="close" @click='close'></button>
     </header>
     <section class="modal-card-body">
-      <p class="content">
-        {{ cmd.description }}
-        <div v-if="cmd.note">
-          <em :class="{'has-text-grey': !cmd.hasPermission}"><span class="tag is-warning"><b>Note</b></span> {{cmd.note}}</em>
-        </div>
-      </p>
-
       <div class="field is-grouped is-grouped-multiline">
         <div class="control">
           <div class="tags has-addons">
@@ -28,9 +22,18 @@
           </div>
         </div>
       </div>
-      <p class="content">
-        <h5>Arguments</h5>
-        <table class="table" v-if="Object.keys(props.cmd.args).length > 0">
+      <br>
+      <div class="block">
+        <h5 class="title is-5"><Icon icon="fa-circle-question">Description</Icon></h5>
+        <p>{{ cmd.description }}</p>
+        <div v-if="cmd.note">
+          <em :class="{'has-text-grey': !cmd.hasPermission}"><span class="tag is-warning"><b>Note</b></span> {{cmd.note}}</em>
+        </div>
+      </div>
+      <br>
+      <div class="block">
+        <h5 class="title is-5 mb-2"><Icon icon="fa-bars-staggered">Arguments</Icon></h5>
+        <table class="table is-fullwidth" v-if="Object.keys(props.cmd.args).length > 0">
           <thead>
             <tr>
               <th>Parameter</th>
@@ -46,16 +49,15 @@
           </thead>
         </table>
         <p v-else class="ml-5">Command has no arguments</p>
-      </p>
-
+      </div>
       <template v-if="cmd.examples?.length > 0">
-        <p class="content">
+        <div class="content">
           <h5>Examples</h5>
           <ol>
             <li v-for="(example, i) in cmd.examples" :key="i" v-html="format(example)">
             </li>
           </ol>
-        </p>
+        </div>
       </template>
     </section>
     <footer class="modal-card-foot">
