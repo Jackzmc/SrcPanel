@@ -47,11 +47,9 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     })
 
 
-    fastify.get('/', async(req: FastifyRequest<{Querystring: {full?: boolean}}>, reply) => {
+    fastify.get('/', async(req: FastifyRequest, reply) => {
         if(!req.user.hasPermission("shares.view")) return NO_PERMISSION(reply)
-        return {
-            shares: req.query.full ? fastify.servers.shares : fastify.servers.shareIds
-        }
+        return fastify.servers.shares
     })
 
     fastify.get('/:shareId', async(req: FastifyRequest<{Params: {shareId?: string}}>, reply) => {

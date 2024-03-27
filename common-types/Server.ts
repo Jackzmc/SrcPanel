@@ -18,11 +18,13 @@ export type PlayerAction = "kick"
 export interface GroupInfo {
     id: string,
     name: string,
-    type: ServerType
+    type: ServerType,
+    actions?: ServerAction[]
+
 }
 
-export interface ServerInfo {
-    id?: string,
+export interface ServerData {
+    id: string,
     name: string,
     domain?: string,
     port: number,
@@ -30,7 +32,8 @@ export interface ServerInfo {
     ip: string,
 }
 
-export interface ServerData {
+export interface ServerDetailed {
+    server: ServerInfo
     live: LiveDataCache,
     cvars: Record<string, string>,
     playerCounts: PlayerStats[],
@@ -44,21 +47,16 @@ export interface PlayerStats {
 }
   
 export interface ExportGroupInfo extends GroupInfo {
-    servers: Record<string, ServerInfo>
+    servers: Record<string, ServerData>
 }
 
 
-export interface GroupedServer {
-    name: string,
-    ip: string,
-    group: string,
-    port: number,
-    type: string,
+export interface ServerInfo extends ServerData {
     tags: string[],
-    domain: string,
-    id: string,
+    features: string[]
     status: ServerStatus,
-    sortOrder: number
+    sortOrder: number,
+    actions: ServerAction[]
 }
 
 export type ServerType = "source" | "left4dead2" | "minecraft"
@@ -70,6 +68,15 @@ export const SERVER_TYPE_MAP = {
 export interface ServerGroup {
     id: string,
     name: string,
-    servers: Record<string, GroupedServer>,
+    servers: Record<string, ServerInfo>,
     type: ServerType
+}
+
+export interface ServerAction {
+    name: string,
+    command: string,
+    permission?: string,
+    color?: string,
+    isHidden: boolean,
+    description?: string
 }

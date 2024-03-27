@@ -1,7 +1,7 @@
 <template>
 <div class="has-background-light pt-0">
 <div class="container">
-  <article class="message is-danger" v-if="error && !server">
+  <article class="message is-danger" v-if="error && !serverInfo">
     <div class="message-header">
       <p><Icon icon="fa-exclamation-triangle">An error occurred while fetching server information</Icon></p>
     </div>
@@ -12,13 +12,13 @@
     </div>
   </article>
 </div>
-<nav class="container mb-3 is-fluid" v-if="server">
+<nav class="container mb-3 is-fluid" v-if="serverInfo">
   <div class="columns">
     <div class="column is-8">
       <router-link to="/admin/servers" class="button is-small">🠐 back to servers list</router-link><br><br>
       <div class="box">
         <h3 class="title is-3">
-          {{server.info.name}}
+          {{serverInfo.name}}
           <div class="tags is-pulled-right inline">
             <template v-if="status">
               <span class="tag is-danger is-medium has-tooltip-danger no-border" v-if="error || status.error" data-tooltip="An error occurred while fetching the server's status"><Icon icon="fa-exclamation-triangle">Error</Icon></span>
@@ -26,26 +26,29 @@
               <span class="tag is-danger  is-medium" v-else>Offline</span>
             </template>
             <span class="tag is-medium" v-else><Icon icon="fa-spinner" spin></Icon></span>
-            <span data-tooltip="Server ID" class="tag is-info is-medium no-border">{{server.info.id}}</span>
+            <span data-tooltip="Server ID" class="tag is-info is-medium no-border">{{serverInfo.id}}</span>
           </div>
         </h3>
         <h4 class="subtitle is-4">
-          {{server.info.domain}}:{{server.info.port}}
+          {{serverInfo.domain}}:{{serverInfo.port}}
           <Icon icon="fa-copy" data-tooltip="Copy to clipboard" @click="copyAddress"></Icon>
         </h4>
         <div class="level">
           <div class="level-left">
             <div class="tags">
-              <span v-for="tag in server.info.tags" :key="tag" class="tag is-dark" data-tooltip="Server tag">{{tag}}</span>
+              <span v-for="tag in serverInfo.tags" :key="tag" class="tag is-dark" data-tooltip="Server tag">{{tag}}</span>
             </div>
           </div>
           <div class="level-right">
             <div class="buttons">
-              <a v-if="server.info.features.includes('systemd') && (!status || !status.online)" @click="processAction('start')" class="button is-success is-small">Start Server</a>
-              <template v-if="status?.online && server.info.features.includes('rcon')">
-                <a data-tooltip="Will restart server if no players online, or fail if there are" @click="processAction('stop')" class="button is-dark is-small">Request Restart</a>
-                <a v-if="server.type === 'source'" data-tooltip="Will remove lobby reservation, allowing 5+ to join. This is done automatically after 4 players have fully loaded in" @click="processAction('unreserve')" class="button is-dark is-small">Unreserve</a>
-                <a v-show="shiftPressed" data-tooltip="Will forcefully restart server, regardless if players are online" @click="processAction('stop', { force: true })" class="button is-danger is-small">Force Restart</a>
+              <a v-if="serverInfo.features.includes('systemd') && (!status || !status.online)" @click="processAction('start')" class="button is-success is-small">Start Server</a>
+              <template v-if="status?.online && serverInfo.features.includes('rcon')">
+                <!-- <a data-tooltip="Will restart server if no players online, or fail if there are" @click="processAction('stop')" class="button is-dark is-small">Request Restart</a>
+                <a v-if="serverInfo.type === 'source'" data-tooltip="Will remove lobby reservation, allowing 5+ to join. This is done automatically after 4 players have fully loaded in" @click="processAction('unreserve')" class="button is-dark is-small">Unreserve</a>
+                <a v-show="shiftPressed" data-tooltip="Will forcefully restart server, regardless if players are online" @click="processAction('stop', { force: true })" class="button is-danger is-small">Force Restart</a> -->
+              </template>
+              <template v-if="serverInfo.status.online">
+                <button :data-tooltip="action.description" :disabled="actionRunning" v-for="(action, i) in actions" :key="i" @click="processAction(action.command)" class="button is-dark is-small" :style="{'background-color': action.color}">{{ action.name }}</button>
               </template>
             </div>
           </div>
@@ -55,7 +58,7 @@
         <ul>
           <li v-for="(data, id) in TABS" :key="id"  :class="{'is-active': tab === id}">
             <router-link
-              :to="{params:{tab: id, id: server.info.id }}"
+              :to="{params:{tab: id, id: serverInfo.id }}"
               v-if="isTabEnabled(data)"
             >
               {{data.name}}&nbsp;
@@ -80,7 +83,7 @@
               <span v-else>{{ nextRefreshCountdown }}s</span>
             </span>
             <table class="table is-fullwidth is-size-4">
-              <tr>
+              <tr v-if="serverInfo.type === 'source'">
                 <th>Map</th>
                 <td v-if="mapInfo">
                   <h4 class="title is-4">{{mapInfo.name}}
@@ -91,7 +94,7 @@
                 <td v-else-if="status.data.map">{{ status.data.map }}</td>
                 <td v-else><em data-tooltip="Unknown">-</em></td>
               </tr>
-              <tr>
+              <tr v-if="serverInfo.type === 'source'">
                 <th>Gamemode</th>
                 <td v-if="status.data.gamemode" :data-tooltip="status.data.gamemode">
                   {{ formatGamemode(status.data.gamemode) }}
@@ -298,7 +301,7 @@
         <p class="has-text-centered subtitle is-5 my-6" v-else>Select a config file on the right to view its content</p>
       </div>
       <div v-else-if="tab === 'console'" class="box">
-        <Console :server="server" />
+        <Console :server="serverInfo" />
       </div>
     </div>
 
@@ -307,8 +310,8 @@
         <label class="label">View another server:&nbsp;</label>
         <div class="select">
           <select @change="onSelectNewServer">
-            <option default v-if="!servers">Loading servers...</option>
-            <option v-for="server2 in servers" :key="server2.id" :value="server2.id" :selected="server2.id == server.info.id">
+            <option default v-if="!serverIds">Loading servers...</option>
+            <option v-for="server2 in serverIds" :key="server2.id" :value="server2.id" :selected="server2.id == serverInfo.id">
               {{server2.name}}
             </option>
           </select>
@@ -381,7 +384,7 @@
       </div>
       <div v-else-if="tab === 'configs'" class="box">
         <h5 class="title is-5">Config Files</h5>
-        <FolderBrower v-if="server.configs" @select="onCfgChosen" :paths="server.configs" />
+        <FolderBrower v-if="serverConfigs" @select="onCfgChosen" :paths="serverConfigs" />
         <em v-else>not supported on server</em>
       </div>
       <div v-else-if="tab === 'console'" class="box">
@@ -421,7 +424,7 @@
 
 <script setup lang="ts">
 import { useRoute, useRouter } from 'vue-router'
-import { onBeforeMount, ref, computed, onUnmounted } from 'vue'
+import { onBeforeMount, ref, computed, onUnmounted, onBeforeUnmount } from 'vue';
 import FolderBrower from'@/components/FolderBrowser.vue'
 import { PlayerData, PrivilegedUser } from '@/js/User';
 import { parseLog, getRelDate, request } from '@/js/util';
@@ -433,7 +436,7 @@ import { UserPrivilegeCode } from '../../../../common-types/Privileges';
 import { formatDate, getDuration } from '../../js/util.js';
 import UserComponent, { User } from '@/components/UserComponent.vue';
 import Console from '@/components/server/Console.vue'
-import { ServerData } from '../../../../common-types/Server';
+import { ServerData, ServerInfo, ServerDetailed } from '../../../../common-types/Server';
 
 const FinaleStageName: Record<FinaleStage, string> = {
     [FinaleStage.Gauntlet]: "Gauntlet",
@@ -513,30 +516,30 @@ const TABS: Record<string, { name: string, tag?: string, permission?: string, en
   live: {
     name: "Live Status",
     enabled: () => {
-      console.log("live status", server.value.info.type)
-      return server.value.info.type === "left4dead2"
+      return serverInfo.value?.type === "source"
     }
   },
   configs: {
     name: "Configs",
     permission: 'servers.configs.read.<id>',
     enabled: () => {
-      return server.value.info.features.includes("configs")
+      return serverInfo.value?.features.includes("configs")
     }
   },
   console: {
     name: "Console",
     permission: "servers.rcon.<id>",
     enabled: () => {
-      return server.value.info.features.includes("console")
+      return serverInfo.value?.features.includes("console")
     }
   }
 }
 
 let starting = ref(false)
 let lastRefreshTime = ref()
-let server = ref()
-let servers = ref()
+let serverInfo = ref<ServerInfo>()
+let serverConfigs = ref()
+let serverIds = ref()
 let status = ref()
 let liveStatus = ref<LiveDataCache>()
 let liveStatusNextRetryTime = ref<number>()
@@ -550,7 +553,12 @@ let error = ref<string>()
 let now = ref(Date.now())
 let showDetailsId = ref<number>()
 let shiftPressed = ref(false)
+let actionRunning = ref()
 
+const actions = computed(() => {
+  if(!serverInfo.value) return []
+  return serverInfo.value.actions.filter(action => shiftPressed.value || !action.isHidden)
+})
 const tab = computed(() => {
   return route.params.tab.length > 0 ? route.params.tab : "overview"
 })
@@ -576,7 +584,7 @@ function isTabEnabled(data: any): boolean {
   }
   let enabled = false
   if(data.permission != undefined) {
-    const perm = data.permission.replace(/<id>/g, server.value.info.id)
+    const perm = data.permission.replace(/<id>/g, serverInfo.value?.id)
     enabled = props.privUser.hasPermission(perm as UserPrivilegeCode)
   }
   if((data.permission == undefined || enabled) && data.enabled != undefined) {
@@ -630,7 +638,7 @@ async function onCfgChosen(data: { file: string, folder?: string }, raw = false)
 
 async function onSelectNewServer(event: any) {
   await router.push({ name: 'admin-server-view', params: { tab: 'overview', id: event.target.value }})
-  server.value = undefined
+  serverInfo.value = undefined
   // Delete old enables
   Object.values(TABS).map(t => (t as any)._enabled = undefined)
   init()
@@ -643,7 +651,10 @@ async function fetchServerInfo() {
   try {
     const json = await response.json()
     if(response.ok) {
-      server.value = json
+      const data = json as ServerDetailed
+      liveStatus.value = data.live
+      serverInfo.value = data.server
+      serverConfigs.value = data.configs
       return true
     } else {
       error.value = json.message ?? json.err ?? json ?? await response.text()
@@ -653,17 +664,6 @@ async function fetchServerInfo() {
     console.error(err)
     error.value = `${response.status} ${response.statusText}: ${err.message}`
     return false
-  }
-}
-async function fetchServerData() {
-  error.value = undefined
-  const id = route.params.id
-  const response = await request(`/api/servers/${route.params.id}/data`)
-  if(id != route.params.id) return // Ignore changes in id
-  if(response?.ok) {
-    const json: ServerData = await response.json()
-    liveStatus.value = json.live
-    return true
   }
 }
 let isRefreshing = false
@@ -706,7 +706,7 @@ async function fetchServersCompact() {
       window.localStorage.setItem("srcds_servers", JSON.stringify(cachedServers))
     }
   }
-  servers.value = cachedServers.data
+  serverIds.value = cachedServers.data
 }
 
 async function kickPlayer(player: LivePlayerFull) {
@@ -717,7 +717,7 @@ async function kickPlayer(player: LivePlayerFull) {
       text: "Kick Cancelled (no reason provided)"
     })
   }
-  const response = await request(`/api/servers/${server.value.id}/players/kick?reason=${encodeURIComponent(reason)}&steamid=${player.steamid}`, { method: 'POST' })
+  const response = await request(`/api/servers/${serverInfo.value!.id}/players/kick?reason=${encodeURIComponent(reason)}&steamid=${player.steamid}`, { method: 'POST' })
   if(response?.ok) {
     notify({
       type: "success",
@@ -737,7 +737,7 @@ async function processAction(type: string, options: Record<string, any> = {}) {
   if(type === "stop" && options.force) {
     if(!confirm("You are requesting to forcefully restart the server. This should only be used in the last resort, if the server became unresponsive. This does not check for players being online. Are you sure?")) return
   }
-  const response = await request(`/api/servers/${server.value.id}/${type}`, {
+  const response = await request(`/api/servers/${serverInfo.value!.id}/${type}`, {
     method: 'POST',
     credentials: 'include'
   })
@@ -769,14 +769,6 @@ function toggleDetails(player: LivePlayerFull) {
   } else {
     showDetailsId.value = player.userid
   }
-}
-function getHealthClassInfected(player: LivePlayerInfected) {
-  const percent = (player.infected.health / player.infected.maxHealth) * 100
-  return getHealthClass(percent)
-}
-function formatMap(mapId: string) {
-  const display = getMapDisplay(mapId)
-  return display ? `<p class="title is-6">${display.name}</p><p class="subtitle is-6">Chapter ${display.chapterId} "${display.chapterName}"</p>` : mapId
 }
 function formatCampaign(mapId: string) {
   const display = getMapDisplay(mapId)
@@ -812,7 +804,7 @@ function formatGamemode(gamemode: string) {
 }
 
 async function copyAddress() {
-  await navigator.clipboard.writeText(`connect ${server.value.info.domain}:${server.value.info.port}`)
+  await navigator.clipboard.writeText(`connect ${serverInfo.value!.domain}:${serverInfo.value!.port}`)
   notify({
     type: "success",
     text: "Copied to clipboard"
@@ -905,10 +897,9 @@ async function init() {
   clearInterval(refreshInterval)
   if(await fetchServerInfo()) {
     await Promise.any([
-      fetchServerData(),
       fetchServerStatus()
     ])
-    if(server?.value.info.type === "left4dead2")
+    if(serverInfo.value?.type === "source")
       createLiveConnection()
   }
   refreshInterval = setInterval(fetchServerStatus, REFRESH_INTERVAL)
@@ -930,7 +921,7 @@ onBeforeMount(async() => {
 function _toggleShift(e: any) {
   shiftPressed.value = !!e.shiftKey
 }
-onUnmounted(() => {
+onBeforeUnmount(() => {
   document.removeEventListener("keyup", _toggleShift)
   document.removeEventListener("keydown", _toggleShift)
   errCount = -1

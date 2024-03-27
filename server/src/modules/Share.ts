@@ -12,7 +12,7 @@ const DOWNLOAD_TIMEOUT = 1000 * 60 * 3
 export type DownloadSource = "steam_workshop" | "direct"
 
 export default class Share {
-    public _id: string
+    #id: string
     public name: string
     public sourceFolder: string
     public destinations: ShareDestinations = {}
@@ -22,9 +22,10 @@ export default class Share {
 
     private validExts?: string[]
     private downloadSources: DownloadSourceRecord
+    #description: string
 
     constructor(db: sqlite.Database<sqlite3.Database, sqlite3.Statement>, steam: SteamAPI, shareInfo: Partial<ShareInfo>) {
-        this._id = shareInfo.id
+        this.#id = shareInfo.id
         this.db = db
         this.steam = steam
         this.name = shareInfo.name ?? shareInfo.id,
@@ -33,6 +34,7 @@ export default class Share {
         this.downloadSources = shareInfo.downloadSources || {}
         this.validExts = shareInfo.fileExts
         this.destinations = shareInfo.destinations || {}
+        this.#description = shareInfo.description
         db.exec(SQL`CREATE TABLE IF NOT EXISTS addoncache (
             filename VARCHAR(128) NOT NULL,
             filesize INT,
@@ -44,8 +46,14 @@ export default class Share {
         );`)
     }
 
+    public get id() { return this.#id }
+
     public isExtAllowed(ext: string) {
         return this.validExts === undefined || this.validExts.includes(ext)
+    }
+
+    public get description() {
+        return this.#description
     }
 
     public get sources() {
@@ -54,10 +62,6 @@ export default class Share {
 
     public get exts() {
         return this.validExts ? [...this.validExts] : null
-    }
-
-    public get id() {
-        return this._id
     }
 
     public createUploadStream(filename: string) {
@@ -358,6 +362,7 @@ export default class Share {
         return {
             id: includeId ? this.id : undefined, 
             name: this.name,
+            description: this.description,
             sourceFolder: this.sourceFolder,
             appid: this.appId,
             downloadSources: this.downloadSources,

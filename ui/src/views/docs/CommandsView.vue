@@ -69,7 +69,7 @@
                     <li>Via chat privately by using <b>/</b> (forward slash) <b class='tag is-dark'>Recommended</b> </li>
                 </ol>
             </p>
-            <p class="notification is-dark">Commands highlighted in <b class="has-text-link">blue</b> have examples, click to view the examples.</p>
+            <p class="notification is-dark has-text-white">Commands highlighted in <b class="has-text-link">blue</b> have examples, click to view the examples.</p>
             <div class="box">
               <h5 class="title is-5">Parameter Info</h5>
               <ul>

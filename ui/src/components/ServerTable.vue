@@ -1,23 +1,29 @@
 <template>
   <div class="mb-4">
     <h4 class="title is-4">{{ group.name }}</h4>
-    <table class="table is-bordered is-fullwidth">
+    <table :class="['table','is-fullwidth',{'is-bordered': !manage}]">
       <thead>
         <tr>
           <th>Name</th>
-          <th style="width:0">Players</th>
-          <template v-if="group.type === 'source'">
-            <th>Current Map</th>
-            <th>Direct Connect Command</th>
-            <th>Create Lobby Command</th>
+          <th>Players</th>
+          <template v-if="manage">
+            <th v-if="group.type === 'source'">Current Map</th>
+            <th>Actions</th>
           </template>
-          <template v-else-if="group.type === 'minecraft'">
-            <th>IP</th>
+          <template v-else>
+            <template v-if="group.type === 'source'">
+              <th>Current Map</th>
+              <th>Direct Connect Command</th>
+              <th>Create Lobby Command</th>
+            </template>
+            <template v-else-if="group.type === 'minecraft'">
+              <th>IP</th>
+            </template>
           </template>
         </tr>
       </thead>
       <tbody>
-        <ServerRow v-for="server in group.servers" :key="server.id" :server="server" :type="group.type"></ServerRow>
+        <ServerRow v-for="server in group.servers" :key="server.id" :server="server" :type="group.type" :manage="manage"></ServerRow>
       </tbody>
     </table>
   </div>
@@ -29,7 +35,8 @@ import ServerRow from '@/components/ServerRow.vue'
 import { computed } from 'vue';
 
 const props = defineProps<{
-  group: ServerGroup
+  group: ServerGroup,
+  manage?: boolean
 }>()
 
 </script>

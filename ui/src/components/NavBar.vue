@@ -4,7 +4,7 @@
     <UserSettingsModal v-if="showModal === 'settings'" :priv-user="privUser" @close="showModal = undefined" />
     <NotificationsModal v-else-if="showModal === 'notifications'" :priv-user="privUser" @close="clearNotifications" />
   </template>
-  <nav class="navbar is-info is-fixed-top" role="navigation" aria-label="main navigation">
+  <nav class="navbar is-light is-fixed-top" role="navigation" aria-label="main navigation">
     <div class="navbar-brand">
       <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" data-target="navMenu">
         <span aria-hidden="true"></span>
@@ -105,6 +105,11 @@
             <span class="ml-2">Updating UI...</span>
           </Icon>
         </div>
+        <div class="navbar-item has-tooltip-bottom" :data-tooltip="darkMode ? 'Turn dark mode off' : 'Turn dark mode on'">
+          <a class="button" @click="toggleTheme">
+            <Icon :icon="themeIcon"></Icon>
+          </a>
+        </div>
         <template v-if="privUser">
           <a :class="['navbar-item',{loading: notificationsClearing }]" v-if="privUser.notifications.length > 0" @click="showModal = 'notifications'">
             <Icon icon="bell">{{ privUser.notifications.length }}</Icon>
@@ -159,7 +164,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onMounted } from 'vue';
+import { computed, ref, onMounted, onBeforeMount } from 'vue';
 import SteamLoginButton from '@/components/SteamLoginButton.vue'
 import DiscordLoginButton from '@/components/DiscordLoginButton.vue'
 import { useRoute, useRouter } from 'vue-router';
@@ -167,6 +172,7 @@ import { notify } from '@kyvg/vue3-notification';
 import { PrivilegedUser } from '@/js/User';
 import UserSettingsModal from './modals/UserSettingsModal.vue';
 import NotificationsModal from './modals/NotificationsModal.vue'
+let darkMode = ref(false)
 // Bulma nav code
 onMounted(() => {
   const $navbarBurgers = Array.prototype.slice.call(document.querySelectorAll('.navbar-burger'), 0);
@@ -208,7 +214,15 @@ const avatarUrl = computed(() => {
 const updateTooltip = computed(() => {
   return `${LAST_UPDATED.toLocaleDateString()} at ${LAST_UPDATED.toLocaleTimeString()}`
 })
+const themeIcon = computed(() => {
+  return darkMode.value ? "fa-sun" : "fa-moon"
+})
 
+function toggleTheme() {
+  darkMode.value = !darkMode.value
+  document.documentElement.setAttribute("data-theme", darkMode.value ? "dark" : "light");
+  window.localStorage.setItem("srcds-theme", darkMode.value ? "dark" : "light")
+}
 
 async function logout() {
   try {
@@ -257,4 +271,11 @@ async function clearNotifications() {
   await props.privUser.clearNotifications()
   notificationsClearing.value = false
 }
+
+onBeforeMount(() => {
+  if(window.localStorage['srcds-theme']) {
+    document.documentElement.setAttribute("data-theme", window.localStorage['srcds-theme']);
+    darkMode.value = window.localStorage['srcds-theme'] === "dark"
+  }
+})
 </script>

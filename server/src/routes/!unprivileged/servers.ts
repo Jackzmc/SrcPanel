@@ -1,5 +1,6 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
 import { SERVER_TYPE_MAP } from '../../../../common-types/Server.js';
+import Server from '../../modules/servers/Server.js';
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
 
@@ -13,18 +14,19 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 }
             }))
         } else {
-            reply.send(fastify.servers.getAllGrouped(server => {
+            reply.send(fastify.servers.getAllGrouped((server: Server) => {
                 return {
                     name: server.name,
                     ip: server.ip,
-                    group: server.group,
                     port: server.port,
-                    type: SERVER_TYPE_MAP[server.type] ?? server.type,
+                    type: server.type,
                     tags: server.tags,
+                    features: server.features,
                     domain: server.domain,
                     id: server.id,
                     status: server.status,
-                    sortOrder: server.sortOrder
+                    sortOrder: server.sortOrder,
+                    actions: server.actions
                 }
             }))
         }

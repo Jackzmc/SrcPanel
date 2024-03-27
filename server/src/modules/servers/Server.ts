@@ -3,7 +3,7 @@ import { Rcon } from 'rcon-client';
 import { open, readdir } from 'fs/promises'
 import { join, resolve } from 'path'
 import { statSync } from 'fs';
-import { GroupInfo, PlayerAction, PlayerStats, ServerInfo, ServerStatus } from '../../../../common-types/Server';
+import { GroupInfo, PlayerAction, PlayerStats, SERVER_TYPE_MAP, ServerAction, ServerData, ServerInfo, ServerStatus, ServerType } from '../../../../common-types/Server.js';
 import { LiveRecord, LiveDataCache, updateLiveCache } from '../../../../common-types/Live.js';
 import { EventEmitter } from 'node:events';
 import { GenericError } from '../../util.js';
@@ -52,6 +52,7 @@ export interface BaseServerData {
     serviceName: string;
   },
   tags: string[],
+  actions?: ServerAction[]
 }
 
 
@@ -68,14 +69,16 @@ export interface ConfigServerData extends BaseServerData {
     isUser: boolean;
     serviceName: string;
   },
+
 }
 
-export interface ServerData extends BaseServerData {
-    rcon: {
-      password: string,
-      exitCommand: string,
-      requestExitCommand: string
-    }
+export interface ServerExtendedData extends BaseServerData {
+  rcon: {
+    password: string,
+    exitCommand: string,
+    requestExitCommand: string
+  },
+  actions?: ServerAction[]
 }
   
 
@@ -88,38 +91,39 @@ const LIVE_CACHE_TTL = 1000 * 60 * 3 // Live cache data expires after 3 minutes
 type Features = "rcon" | "console" | "configs" | "systemd"
 
 export default class Server extends EventEmitter { 
-    private _info: ServerInfo
-    private _status: ServerStatus
+    #info: ServerData
+    #status: ServerStatus
     #liveCache?: LiveDataCache
-    private _cfgDir: string
-    private _logPath: string
-    private _actid: string
-    private _sortOrder: number
-    private lastRefresh: number
-    private _cvars: Record<string, string>
-    private _startTime: number
-    private _logsCache: string[] = []
+    #cfgDir: string
+    #logPath: string
+    #actid: string
+    #sortOrder: number
+    #lastRefresh: number
+    #cvars: Record<string, string>
+    #startTime: number
+    #logsCache: string[] = []
+    #actions: ServerAction[]
     #group: GroupInfo
     #features: Features[] = []
-    private rcon?: {
+    #rcon?: {
       password: string,
       exitCommand: string
       requestExitCommand: string,
       client: Rcon,
       connected: boolean
     } = null; 
-    private systemd?: {
+    #systemd?: {
       isUser: boolean;
       serviceName: string;
     } = null;
-    public tags: Readonly<string[]>;
+    #tags: string[];
       
     public playerCounts: PlayerStats[] = [] 
 
-    constructor(group: GroupInfo, server: ServerData) {
+    constructor(group: GroupInfo, server: ServerExtendedData) {
         super()
         this.#group = group
-        this._info = {
+        this.#info = {
           id: server.id,
           name: server.name,
           domain: server.domain,
@@ -127,21 +131,23 @@ export default class Server extends EventEmitter {
           port: server.port,
           type: group.type || /* legacy */ server.type,
         }
-        this._actid = server.activityId
-        this._sortOrder = server.sortOrder
+        this.#actid = server.activityId
+        this.#sortOrder = server.sortOrder
+        this.#actions = [ ... group.actions, ... server.actions ]
         if(server.cfgDirectory) {
-          this._cfgDir = resolve(server.cfgDirectory)
+          this.#cfgDir = resolve(server.cfgDirectory)
           try {
-            statSync(this._cfgDir)
+            statSync(this.#cfgDir)
             this.#features.push("configs")
           } catch(err) {
             console.error(`[Server/${server.id}] ERROR: Could not access config directory:`, err)
           }
         }
+
         if(server.logsPath) {
           try {
-            this._logPath = resolve(server.logsPath)
-            statSync(this._logPath)
+            this.#logPath = resolve(server.logsPath)
+            statSync(this.#logPath)
             this.#features.push("console")
             this.#createLogsReader()
           } catch(err) {
@@ -150,47 +156,57 @@ export default class Server extends EventEmitter {
             else throw err
           }
         }
+
         if(server.rcon) {
           const client = new Rcon({
-            host: this._info.ip, port: this._info.port, password: server.rcon.password
+            host: this.#info.ip, port: this.#info.port, password: server.rcon.password
           })
           this.#features.push("rcon")
           client.on('connect', () => {
-            this.rcon.connected = true
+            this.#rcon.connected = true
           })
-          client.on('end', () => this.rcon.connected = false)
+          client.on('end', () => this.#rcon.connected = false)
           client.on('error', (err) => {
-            console.warn(`[Warn] [Server::${this._info.id}]`, err.code ?? err.message)
-            this.rcon.connected = false
+            console.warn(`[Warn] [Server::${this.#info.id}]`, err.code ?? err.message)
+            this.#rcon.connected = false
           })
-          this.rcon = {
+          this.#rcon = {
             ...server.rcon,
             client,
             connected: false
           }
         }
-        this.systemd = server.systemd
-        if(this.systemd) this.#features.push("systemd")
-        this.tags = server.tags
-        this._status = { data: null, online: false }
+
+        this.#systemd = server.systemd
+        if(this.#systemd) this.#features.push("systemd")
+        this.#tags = server.tags
+        this.#status = { data: null, online: false }
     }
 
-    public get id() { return this._info.id }
-    public get name() { return this._info.name }
-    public get domain() { return this._info.domain }
-    public get ip() { return this._info.ip }
-    public get port() { return this._info.port }
-    public get type() { return this._info.type }
-    public get configDir() { return this._cfgDir }
+    public get id() { return this.#info.id }
+    public get name() { return this.#info.name }
+    public get domain() { return this.#info.domain }
+    public get ip() { return this.#info.ip }
+    public get port() { return this.#info.port }
+    public get type(): ServerType { 
+      return SERVER_TYPE_MAP[this.#info.type] ?? this.#info.type 
+    }
+    public get configDir() { return this.#cfgDir }
+    public get actions() { return this.#actions }
+    public get tags(): string[] {  return this.#tags }
     /**
      * The order to sort the server, ascending (lower: higher)
      */
-    public get sortOrder() { return this._sortOrder }
+    public get sortOrder() { return this.#sortOrder }
 
-    public get info() { 
+    public get info() : ServerInfo { 
       return {
-        ...this._info,
+        ...this.#info,
+        type: this.type,
+        actions: this.actions,
         features: this.features,
+        status: this.status,
+        sortOrder: this.sortOrder,
         tags: this.tags
       } 
     }
@@ -206,21 +222,21 @@ export default class Server extends EventEmitter {
      * Start time of server in unix milliseconds
      */
     public get startTime() {
-      return this._startTime
+      return this.#startTime
     }
 
     /**
      * Uptime of server in unix milliseconds
      */
     public get uptime() {
-      if(!this._startTime) return 0
-      return Date.now() - this._startTime
+      if(!this.#startTime) return 0
+      return Date.now() - this.#startTime
     }
 
     /**
      * Latest cached server status, if any
      */
-    public get status(): ServerStatus { return this._status }
+    public get status(): ServerStatus { return this.#status }
 
     /**
      * Returns any fresh live view data. Will purge any stale data
@@ -228,7 +244,6 @@ export default class Server extends EventEmitter {
     public get liveStatus(): LiveDataCache { 
       if(this.#liveCache) {
         if(Date.now() - this.#liveCache.lastUpdate > LIVE_CACHE_TTL) {
-          console.debug("Live cache expired, purging")
           this.#liveCache = null
         }
       }
@@ -239,9 +254,9 @@ export default class Server extends EventEmitter {
       return this.listenerCount("live")
     }
 
-    public get hasRcon() { return this.rcon !== null }
-    public get hasSystemd() { return this.systemd !== null }
-    public get hasConfigs() { return this._cfgDir !== null && this._cfgDir !== undefined}
+    public get hasRcon() { return this.#rcon !== null }
+    public get hasSystemd() { return this.#systemd !== null }
+    public get hasConfigs() { return this.#cfgDir !== null && this.#cfgDir !== undefined}
     public get hasConsole() { return this.#features.includes("console") }
 
     public get features() {
@@ -251,25 +266,25 @@ export default class Server extends EventEmitter {
     /**
      * The id to find activity logs for
      */
-    public get activityLogId() {  return this._actid }
+    public get activityLogId() {  return this.#actid }
     /**
      * List of any cached cvars from calling .refresh(true)
      */
-    public get cvars() { return this._cvars }
+    public get cvars() { return this.#cvars }
 
     /**
      * Returns the cached list of server console logs
      */
-    public get logs() { return this._logsCache }
+    public get logs() { return this.#logsCache }
 
     /**
      * Add log entry to console
      * @param line
      */
     #pushLogEntry(line: string) {
-      this._logsCache.push(line)
-      if(this._logsCache.length > MAX_LOGS_LINES) {
-        this._logsCache.splice(0, 1)
+      this.#logsCache.push(line)
+      if(this.#logsCache.length > MAX_LOGS_LINES) {
+        this.#logsCache.splice(0, 1)
       }
       this.emit("log", line)
     }
@@ -280,15 +295,15 @@ export default class Server extends EventEmitter {
      */
     async #createLogsReader() { 
       // Read previous lines
-      const file = await open(this._logPath)
-      if(!file) return console.warn(`[Server/${this.id}] ERROR: Cannot open file ${this._logPath}`)
+      const file = await open(this.#logPath)
+      if(!file) return console.warn(`[Server/${this.id}] ERROR: Cannot open file ${this.#logPath}`)
       for await (const line of file.readLines()) {
         this.#pushLogEntry(line)
       }
       await file.close()
 
       // Subscribe to new:
-      const tail = new Tail(this._logPath)
+      const tail = new Tail(this.#logPath)
       tail.on('line', (line) => this.#pushLogEntry(line))
       tail.on("error", (err) => {
         console.warn(`[Server/${this.id}] WARN: Log file stream errored.\n`, err)
@@ -315,17 +330,17 @@ export default class Server extends EventEmitter {
      * @returns string[]
      */
     public async getConfigFiles(showHidden = false) {
-      if(!this._cfgDir) return
-      return await this._recurseConfig(this._cfgDir, showHidden)
+      if(!this.#cfgDir) return
+      return await this.#recurseConfig(this.#cfgDir, showHidden)
     }
 
-    private async _recurseConfig(path: string, showHidden: boolean, parent = "") {
+    async #recurseConfig(path: string, showHidden: boolean, parent = "") {
       const dirents = await readdir(path, { withFileTypes: true })
       const files = []
       for(const dirent of dirents) {
         const filepath = `${parent}${dirent.name}`
         if(dirent.isDirectory()) {
-          files.push(...await this._recurseConfig(join(path, dirent.name), showHidden, `${filepath}/`))
+          files.push(...await this.#recurseConfig(join(path, dirent.name), showHidden, `${filepath}/`))
         } else if(dirent.isFile()) {
           if(!showHidden) {
             let skip = false
@@ -349,13 +364,13 @@ export default class Server extends EventEmitter {
     /**
      * Attempt to connect to rcon, if not already connected
      */
-    private async rconConnect() {
-      if(!this.rcon.connected || !this.rcon.client.authenticated) {
+    async rconConnect() {
+      if(!this.#rcon.connected || !this.#rcon.client.authenticated) {
         // Drop connection if already connected
-        if(this.rcon.client.socket && !this.rcon.client.authenticated) {
+        if(this.#rcon.client.socket && !this.#rcon.client.authenticated) {
           console.error(`[Server/${this.id}] Connected but not authenticated. Possibly unauthorized?`)
         }
-        await this.rcon.client.connect()
+        await this.#rcon.client.connect()
       }
     }
     
@@ -374,7 +389,7 @@ export default class Server extends EventEmitter {
      */
     public async stop(force: boolean) {
       if(!this.hasRcon) throw new Error("No rcon config is setup")
-      const msg = await this.sendCommand(force ? this.rcon.exitCommand : this.rcon.requestExitCommand);
+      const msg = await this.sendCommand(force ? this.#rcon.exitCommand : this.#rcon.requestExitCommand);
       // If players online, requestExitCommand will not shut down server, so return false
       return force || msg != "Players are online."
     }
@@ -387,8 +402,8 @@ export default class Server extends EventEmitter {
      */
     public async stopWait(force: boolean, timeoutSeconds = 10_000) {
       if(!this.hasRcon) throw new Error("No rcon config is setup")
-      await this.sendCommand(force ? this.rcon.exitCommand : this.rcon.requestExitCommand)
-      while(this.rcon.connected && timeoutSeconds > 0) {
+      await this.sendCommand(force ? this.#rcon.exitCommand : this.#rcon.requestExitCommand)
+      while(this.#rcon.connected && timeoutSeconds > 0) {
         timeoutSeconds -= 1000
         await sleep(1000)
       }
@@ -402,7 +417,7 @@ export default class Server extends EventEmitter {
      */
     public async sendCommand(cmd: string) {
       await this.rconConnect()
-      return await this.rcon.client.send(cmd)
+      return await this.#rcon.client.send(cmd)
     }
 
     /**
@@ -452,13 +467,13 @@ export default class Server extends EventEmitter {
      */
     public async refresh(force = false, includeRules = false) {
         const now = Date.now()
-        if(!force && now - this.lastRefresh < MIN_REFRESH_TIME) return
-        this.lastRefresh = now
+        if(!force && now - this.#lastRefresh < MIN_REFRESH_TIME) return
+        this.#lastRefresh = now
         try {
             const state = await Gamedig.query({
-              type: this._info.type as Gamedig.Type,
-              host: this._info.ip,
-              port: this._info.port,
+              type: this.#info.type as Gamedig.Type,
+              host: this.#info.ip,
+              port: this.#info.port,
               givenPortOnly: true,
               maxAttempts: 1,
               socketTimeout: 3000,
@@ -467,9 +482,9 @@ export default class Server extends EventEmitter {
             })
             const raw = state.raw as any
             if(includeRules && raw.rules) {
-              this._cvars = raw.rules
+              this.#cvars = raw.rules
             }
-            this._status.data = {
+            this.#status.data = {
               players: state.players
                 .filter(p => p.name.length > 0) // Some names are just "", assumingly bots?
                 .map(p => p.name),
@@ -482,13 +497,13 @@ export default class Server extends EventEmitter {
               count: state.players.length
             })
             if(this.playerCounts.length > MAX_PLAYER_STATS) this.playerCounts.shift()
-            this._status.online = true
+            this.#status.online = true
             return {
-              cvars: this._cvars
+              cvars: this.#cvars
             }
         } catch(err) {
-          this._status.data = null
-          this._status.online = false
+          this.#status.data = null
+          this.#status.online = false
         }
     } 
 }

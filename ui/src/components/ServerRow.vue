@@ -1,7 +1,10 @@
 <template>
-  <tr>
+  <tr :class="trClass">
     <td>
-      <a :href="'steam://connect/' + server.ip + '/' + server.port">
+      <router-link v-if="manage" :to="{name: 'admin-server-view', params: { id: server.id, tab: 'overview' }}" :data-tooltip="tooltip">
+        <b :class="serverClasses" >{{server.name}}</b>
+      </router-link>
+      <a v-else :href="'steam://connect/' + server.ip + '/' + server.port">
         <b :data-tooltip="tooltip" :class="serverClasses">
           {{ server.name }}
         </b>
@@ -16,38 +19,58 @@
         {{ server.status.data?.players.length }} / {{ server.status.data?.maxplayers }}
       </template>
     </td>
-    <template v-if="type === 'source'">
-      <td>
-        <template v-if="server.status.online">
-          {{ server.status.data?.map }}
-        </template>
+    <template v-if="manage">
+      <td v-if="server.type === 'source'">
+        {{ server.status?.data?.map }}
       </td>
       <td>
-        <p @click="copyCommand" :class="{ 'has-text-grey': !server.status.online }">
-          connect {{ server.domain }}:{{ server.port }}
-        </p>
-      </td>
-      <td>
-        <p @click="copyCommand" :class="{ 'has-text-grey': !server.status.online }">
-          mm_dedicated_force_servers {{ server.ip }}:{{ server.port }}
-        </p>
+        <div class="buttons">
+          <button :disabled="actionRunning" v-if="server.features.includes('systemd')" @click="processAction(undefined, 'start')" class="button is-success">Start</button>
+          <template v-if="server.status.online">
+            <button :data-tooltip="action.description" :disabled="actionRunning" v-for="(action, i) in actions" :key="i" @click="processAction(action)" class="button is-dark" :style="{'background-color': action.color}">{{ action.name }}</button>
+          </template>
+        </div>
       </td>
     </template>
-    <template v-else-if="type === 'minecraft'">
-      <td>
-        {{ server.domain ?? server.ip }}:{{ server.port }}
-      </td>
+    <template v-else>
+      <template v-if="type === 'source'">
+        <td>
+          <template v-if="server.status.online">
+            {{ server.status.data?.map }}
+          </template>
+        </td>
+        <td>
+          <p @click="copyCommand" :class="{ 'has-text-grey': !server.status.online }">
+            connect {{ server.domain }}:{{ server.port }}
+          </p>
+        </td>
+        <td>
+          <p @click="copyCommand" :class="{ 'has-text-grey': !server.status.online }">
+            mm_dedicated_force_servers {{ server.ip }}:{{ server.port }}
+          </p>
+        </td>
+      </template>
+      <template v-else-if="type === 'minecraft'">
+        <td>
+          {{ server.domain ?? server.ip }}:{{ server.port }}
+        </td>
+      </template>
     </template>
   </tr>
 </template>
 
 <script setup lang="ts">
-import { GroupedServer, ServerType } from '../../../common-types/Server';
-import { computed } from 'vue';
+import { request } from '@/js/util.js';
+import { ServerInfo, ServerType, ServerAction } from '../../../common-types/Server';
+import { computed, ref } from 'vue';
+import { notify } from '@kyvg/vue3-notification';
 const props = defineProps<{
-  server: GroupedServer,
-  type: ServerType
+  server: ServerInfo,
+  type: ServerType,
+  manage?: boolean
 }>()
+
+let actionRunning = ref(false)
 
 function copyCommand(event: any) {
   //@ts-ignore
@@ -67,25 +90,64 @@ function copyCommand(event: any) {
   }
 }
 
+async function processAction(action?: ServerAction, command?: string) {
+  if(!action && !command) throw new Error("no action nor command")
+  if(!command) command = action!.command
+  actionRunning.value = true
+
+  const response = await request(`/api/servers/${props.server.id}/action/${command}?no-response=1`, {
+    method: 'POST',
+    credentials: 'include'
+  })
+
+  actionRunning.value = false
+
+  if(response?.ok) {
+    // there is no json body:
+    if(response.status === 204) {
+      return notify({ type: 'success', text: `${action?.name ?? command} ran successfully`, title: props.server.name })
+    }
+    const json = await response.json()
+    if(json.error) {
+      notify({ type: 'error', text: json.message, title: `Server (${props.server.id}) returned error` })
+    } else if(json.response.includes("players online")) {
+      notify({ type: 'error', text: "Request failed: There are players online.", title: props.server.name })
+    } else {
+      notify({ type: 'success', text: `${action?.name ?? command} ran successfully`, title: props.server.name })
+    }
+  }
+}
+
+const actions = computed(() => {
+  return props.server.actions.filter(action => !action.isHidden)
+})
+
+const trClass = computed(() => {
+  const classes: string[] = []
+  if(props.manage) {
+    classes.push(props.server.status.online ? "is-size-5" : "is-size-6")
+  }
+  return classes
+})
 const serverClasses = computed(() => {
   const classes = ["has-tooltip-arrow", "has-tooltip-right"];
 
   if (props.server.status.online) {
     if (props.server.status.data?.players.length == 0) {
       classes.push("has-text-success");
-      classes.push("has-tooltip-success");
+      if(!props.manage) classes.push("has-tooltip-success");
     } else {
-      classes.push("");
-      classes.push("has-tooltip-info");
+      if(!props.manage) classes.push("has-tooltip-info");
     }
   } else {
     classes.push("has-text-danger");
-    classes.push("has-tooltip-danger");
+    if(!props.manage) classes.push("has-tooltip-danger");
   }
 
   return classes;
 })
 const tooltip = computed(() => {
+  if(props.manage) return "Click to manage server"
   if (props.server.status.online)
     return props.server.status.data?.players.length == 0
       ? "Server is currently online & empty. Click to join"

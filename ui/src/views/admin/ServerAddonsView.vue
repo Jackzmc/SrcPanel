@@ -178,34 +178,33 @@
   </div>
   <div class="container" v-else-if="route.name === 'admin-shares' || !route.params.shareId">
     <h4 class="title is-4">Select a share</h4>
-    <div class="tile is-ancestor">
-      <div class="tile is-horizontal">
-        <div class="tile is-parent" v-for="share in shares" :key="share.id">
-          <router-link class="tile is-child box has-background-info" :to="{name: 'list-addons', params: { shareId: share.id }}">
-            <h4 class="title is-4  has-text-white">{{ share.name }} <span v-if="share.appid" data-tooltip="The steam appid for this share" class="tag is-dark is-pulled-right">{{ share.appid }}</span></h4>
-            <div class="tags" data-tooltip="Install destinations">
-              <span class="tag is-dark" v-for="(dest, id) in share.destinations" :key="id">
-                {{ id }}
-              </span>
-            </div>
-            <div class="level mt-4">
-              <div class="level-left" data-tooltip="Supported file sources">
-                <div class="level-item" v-for="(enabled, source) in share.downloadSources" :key="source">
-                  <span class="tag">
-                    {{ source.replace(/_/g, ' ') }}
-                  </span>
-                </div>
-              </div>
-              <div class="level-right" data-tooltip="Supported file extensions">
-                <div class="level-item" v-for="ext in share.fileExts" :key="ext">
-                  <span class="tag">
-                    {{ ext }}
-                  </span>
-                </div>
+    <div class="columns">
+      <div class="column is-6" v-for="share in shares" :key="share.id">
+        <router-link class="box has-background-light-02" :to="{name: 'list-addons', params: { shareId: share.id }}">
+          <h4 class="title is-4">{{ share.name }} <span v-if="share.appid" data-tooltip="The steam appid for this share" class="tag is-dark is-pulled-right">{{ share.appid }}</span></h4>
+          <p class="subtitle is-6">{{ share.description ?? '&nbsp;' }}</p>
+          <div class="tags" data-tooltip="Install destinations">
+            <span class="tag is-dark" v-for="(dest, id) in share.destinations" :key="id">
+              {{ id }}
+            </span>
+          </div>
+          <div class="level mt-4">
+            <div class="level-left" data-tooltip="Supported file sources">
+              <div class="level-item" v-for="(enabled, source) in share.downloadSources" :key="source">
+                <span class="tag is-light">
+                  {{ source.replace(/_/g, ' ') }}
+                </span>
               </div>
             </div>
-          </router-link>
-        </div>
+            <div class="level-right" data-tooltip="Supported file extensions">
+              <div class="level-item" v-for="ext in share.fileExts" :key="ext">
+                <span class="tag">
+                  {{ ext }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </router-link>
       </div>
     </div>
   </div>
@@ -475,10 +474,10 @@ async function fetchShares() {
   error.value = undefined
   shares.value = []
   try {
-    const response = await fetch(`/api/shares?full=1`)
+    const response = await fetch(`/api/shares`)
     const json = await response.json()
     if(response.ok) {
-      shares.value = json.shares.map((share: ShareInfo) => {
+      shares.value = json.map((share: ShareInfo) => {
         const serversCount = Object.values(share.destinations).reduce((pv, cv) => {
           if(cv.serverIds) return pv + cv.serverIds.length
           return pv

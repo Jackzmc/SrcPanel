@@ -1,6 +1,7 @@
 export interface ShareData {
     id: string,
     name?: string,
+    description?: string
     sourceFolder: string,
     steamAppid?: number,
     allowedExts: string[],
@@ -17,6 +18,7 @@ export type ShareDestinations = Record<string, ShareDestination>
 
 export interface ShareInfo {
     id: string,
+    description?: string
     sourceFolder: string;
     destinations: ShareDestinations,
     appid?: number,

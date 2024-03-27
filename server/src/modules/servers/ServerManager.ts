@@ -9,7 +9,7 @@ import sqlite3 from 'sqlite3'
 import SteamAPI from '../steam.js'
 import { ShareDestinations, ShareInfo } from '../../../../common-types/Share.js'
 import ConfigManager from '../ConfigManager.js'
-import { GroupInfo, ServerType } from '../../../../common-types/Server.js'
+import { GroupInfo, ServerAction, ServerType, SERVER_TYPE_MAP } from '../../../../common-types/Server.js'
 import net from 'net'
 import { LiveRecordType, LiveRecordGame, LiveRecord, LiveRecordResponse, LiveRecordSurvivor, LiveRecordPlayer, LiveRecordInfected, LiveRecordFinaleInfo, LiveRecordSurvivorItems } from '../../../../common-types/Live.js';
 import BufferReader from '../BufferReader.js';
@@ -20,7 +20,8 @@ const SHORT_REFRESH_TIMEOUT = 1000 * 60
 export interface ConfigGroupData {
   servers: Record<string, ConfigServerData>,
   type: ServerType
-  name?: string
+  name?: string,
+  actions?: ServerAction[]
 }
 // BECAUSE FOR SOME **** REASON THIS ISNT LOADING HERE:
 import dotenv from 'dotenv'
@@ -278,7 +279,7 @@ export default class ServerManager {
       return {
         id: groupId,
         name: data.name,
-        type: data.type,
+        type: SERVER_TYPE_MAP[data.type] ?? data.type,
         servers: Object.fromEntries(Object.entries(this.servers)
           .filter(([, server]) => server.group.id === groupId)
           .sort(([gid1,server1],[gid2,server2]) => this.sortServer(server1, server2))
@@ -459,7 +460,8 @@ export default class ServerManager {
       this.groups[groupId] = {
         id: groupId,
         name: data.name ?? groupId,
-        type: data.type || "source"
+        type: data.type || "source",
+        actions: data.actions ?? []
       }
       for (const [id, server] of Object.entries<ConfigServerData>(data.servers)) {
         if(!server.name) {
@@ -486,6 +488,7 @@ export default class ServerManager {
               }
 
               this.servers[id] = new Server(this.groups[groupId], {
+                actions: server.actions ?? [],
                 id,
                 name: server.name,
                 domain: host,
