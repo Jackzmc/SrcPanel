@@ -121,7 +121,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             )
         }
         await conn.commit()
-        await conn.release()
+        conn.release()
         const domain = await fastify.config.GetKV("domain");
         discManager.set(discuss.id, {
             id: discuss.id,

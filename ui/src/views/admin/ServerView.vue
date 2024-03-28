@@ -16,7 +16,7 @@
   <div class="columns">
     <div class="column is-8">
       <router-link to="/admin/servers" class="button is-small">🠐 back to servers list</router-link><br><br>
-      <div class="box">
+      <div class="box has-background-primary-90">
         <h3 class="title is-3">
           {{serverInfo.name}}
           <div class="tags is-pulled-right inline">
@@ -515,7 +515,7 @@ const TABS: Record<string, { name: string, tag?: string, permission?: string, en
     name: "Overview",
   },
   live: {
-    name: "Live Status",
+    name: "Live View",
     enabled: () => {
       return serverInfo.value?.type === "source"
     }
@@ -868,6 +868,8 @@ function createLiveConnection() {
       if(record.type === LiveRecordType.Game) {
         uptime.value = (Date.now()/1000) - record.startTime
       }
+      // If we have live connection, server is alive
+      status.value.online = true
     }
     clearTimeout(reconnectTimeout)
     reconnectTimeout = setTimeout(() => {

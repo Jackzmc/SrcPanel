@@ -6,7 +6,6 @@
     <NavBar v-if="!route.meta.hideNav" @logout="onLogout" :update-info="updateInfo" :priv-user="privUser" />
     <br>
     <br v-if="route.meta.hideHero">
-
     <section v-else class="hero is-info has-text-centered">
       <div class="hero-body">
         <router-link v-if="prevRoute" :to="{ name: prevRoute }" class="is-pulled-left is-light is-rounded button" ><Icon icon="fa-chevron-left">Back</Icon></router-link>
