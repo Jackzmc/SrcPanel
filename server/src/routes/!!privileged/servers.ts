@@ -276,7 +276,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         })
         const args = req.query.args ? req.query.args.split(",") : []
         try {
-            const result = await server.performCommand(command, namespace, args )
+            const result = await server.performAction(command, namespace, args )
             return {
                 result
             }
@@ -355,7 +355,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         })
 
         try {
-            await server.performAction(req.params.action as PlayerAction, req.query.steamid, req.query as Record<string, string>)
+            await server.performActionLegacy(req.params.action as PlayerAction, req.query.steamid, req.query as Record<string, string>)
             reply.status(204).send()
         } catch(err) {
             return reply.code(500).send({

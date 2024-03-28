@@ -11,7 +11,7 @@ import { ShareDestinations, ShareInfo } from '../../../../common-types/Share.js'
 import ConfigManager from '../ConfigManager.js'
 import { GroupInfo, ServerAction, ServerType, SERVER_TYPE_MAP } from '../../../../common-types/Server.js'
 import net from 'net'
-import { LiveRecordType, LiveRecordGame, LiveRecord, LiveRecordResponse, LiveRecordSurvivor, LiveRecordPlayer, LiveRecordInfected, LiveRecordFinaleInfo, LiveRecordSurvivorItems } from '../../../../common-types/Live.js';
+import { LiveRecordType, LiveRecordGame, LiveRecord, LiveRecordResponse, LiveRecordSurvivor, LiveRecordPlayer, LiveRecordInfected, LiveRecordFinaleInfo, LiveRecordSurvivorItems, LiveRecordCommandResponse } from '../../../../common-types/Live.js';
 import BufferReader from '../BufferReader.js';
 
 // How long after no status requests to switch from short to long refresh
@@ -27,6 +27,7 @@ export interface ConfigGroupData {
 }
 // BECAUSE FOR SOME **** REASON THIS ISNT LOADING HERE:
 import dotenv from 'dotenv'
+import PluginSocket from './PluginSocket.js';
 dotenv.config()
 const DEBUG_LIVE_SOCKET = process.env.DEBUG_LIVE_SOCKET != undefined
 
@@ -47,7 +48,7 @@ export default class ServerManager {
 
   #cfgManager: ConfigManager
   #socket: net.Server
-  #socketClients: Map<string, net.Socket>
+  #socketClients: Map<string, PluginSocket>
   // Maps a server to a specific connection, this assumes there should never be more than one socket per server
   #liveServerToSocketMap: Map<Server, net.Socket> = new Map()
   #liveSocketToServerMap: Map<net.Socket, Server> = new Map() 
@@ -80,33 +81,32 @@ export default class ServerManager {
     }
   }
 
-  #sendResponse(client: net.Socket, response: LiveRecordResponse) {
-    const writer = BufferReader.new(2)
-    writer.writeByte(response)
-    client.write(writer.buffer)
-  }
-
   #debugLive(...args: any[]) {
     if(DEBUG_LIVE_SOCKET)
       console.debug("[ServerManager::Live",...args)
   }
 
-  #onPacket(client: net.Socket, reader: BufferReader): Server {
+  #onPacket(client: PluginSocket, reader: BufferReader): Server {
     try {
       const version = reader.readByte()
       const serverId = reader.readString()
       const server = this.servers[serverId]
       if(!server) {
-        this.#sendResponse(client, LiveRecordResponse.Error)
+        client.send(LiveRecordResponse.Error)
         return
       }
+      server._setSocket(client)
 
       this.#debugLive("header", { version, serverId })
       for(const recordBuffer of reader.readRecord()) {
         const recordReader = new BufferReader(recordBuffer)
         try {
           const record = this.#getRecord(recordReader)
-          server.pushLiveRecord(record)
+          if(record.type === LiveRecordType.CommandResponse) {
+            client.onRecord(record)
+          } else {
+            server.pushLiveRecord(record)
+          }
           this.#debugLive('record', LiveRecordType[record.type], record)
         } catch(err) {
           continue
@@ -122,13 +122,16 @@ export default class ServerManager {
 
   #onLiveClient(client: net.Socket) {
     this.#debugLive('[ServerManager::Live]','client connected', client.remoteAddress)
-    this.#socketClients.set(client.remoteAddress, client)
+    const ps = new PluginSocket(client)
+    this.#socketClients.set(client.remoteAddress, ps)
+
 
     client.on('data', (buf) => {
+      // TODO: get authentication
       for(const reader of BufferReader.getBuffers(buf)) {
         let server: Server
         try {
-          server = this.#onPacket(client, reader)
+          server = this.#onPacket(ps, reader)
         } catch(err) {
           console.error(`[ServerManager::Live] bad packet`, err)
           return
@@ -136,6 +139,7 @@ export default class ServerManager {
 
         // Map the socket to the server and vise-versa
         if(server) {
+          ps._setServer(server)
           this.#liveServerToSocketMap.set(server, client)
           this.#liveSocketToServerMap.set(client, server)
         }
@@ -160,14 +164,15 @@ export default class ServerManager {
     this.#socketClients = new Map()
     this.#liveServerToSocketMap.clear()
     this.#liveSocketToServerMap.clear()
-    const livePort = process.env.LIVE_PORT || 7888
+    const liveHost = process.env.LIVE_HOST || "127.0.0.1";
+    const livePort = process.env.LIVE_PORT ? parseInt(process.env.LIVE_PORT) ?? 7888 : 7888
     this.#socket = net.createServer(this.#onLiveClient.bind(this))
       .on('error', (err) => {
         // socket.send(SocketResponse.Error.toString())
         console.error(`[ServerManager::Live] Live server error: \n${err}`)
       })
 
-      .listen(livePort, () => {
+      .listen(livePort, liveHost, () => {
         console.info(`[ServerManager::Live] Live server listening on :${livePort}`)
       })
 
@@ -251,6 +256,17 @@ export default class ServerManager {
             items: [reader.readString(), reader.readString(), reader.readString(), reader.readString(), reader.readString()]
           }
         }
+        case LiveRecordType.CommandResponse: {
+          let res: LiveRecordCommandResponse = {
+            type,
+            id: reader.readByte(),
+            result: true,
+          }
+          if(!reader.isEOF) {
+            res.message = reader.readString()
+          }
+          return res
+        }
         default: {
           throw new Error("Not Implemented type: " + type)
         }
@@ -263,7 +279,7 @@ export default class ServerManager {
   onShutdown() {
     if(this.#socket) {
       for(const client of this.#socketClients.values()) {
-        this.#sendResponse(client, LiveRecordResponse.Reconnect)
+        client.send(LiveRecordResponse.Reconnect)
       }
       this.#socket.close()
     }

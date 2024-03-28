@@ -8,6 +8,8 @@ import { LiveRecord, LiveDataCache, updateLiveCache, LiveRecordType } from '../.
 import { EventEmitter } from 'node:events';
 import { GenericError } from '../../util.js';
 import { Tail } from 'tail'
+import { Socket } from 'net'
+import PluginSocket from './PluginSocket.js';
 
 const HIDDEN_CONFIG_FILES = [
   "360controller.cfg",
@@ -88,7 +90,7 @@ const MAX_LOGS_LINES = 30
 const LIVE_CACHE_TTL = 1000 * 60 * 3 // Live cache data expires after 3 minutes
 
 
-type Features = "rcon" | "console" | "configs" | "systemd"
+type Features = "rcon" | "console" | "configs" | "systemd" | "plugin"
 
 export default class Server extends EventEmitter { 
     #info: ServerData
@@ -117,6 +119,8 @@ export default class Server extends EventEmitter {
       serviceName: string;
     } = null;
     #tags: string[];
+
+    #socket: PluginSocket
       
     public playerCounts: PlayerStats[] = [] 
 
@@ -371,6 +375,17 @@ export default class Server extends EventEmitter {
       return files
     }
 
+    _setSocket(socket: PluginSocket | null) {
+      this.#socket = socket
+
+      if(socket) {
+        this.#features.push("plugin")
+      } else {
+        let index = this.#features.indexOf("plugin")
+        if(index > -1) this.#features.splice(index, 1)
+      }
+    }
+
     /**
      * Attempt to connect to rcon, if not already connected
      */
@@ -404,7 +419,9 @@ export default class Server extends EventEmitter {
         command = force ? "exit" : "sm_panel_request_stop"
       else
         command = "stop"
+      console.log(`stop(${force}): ${command}`)
       const msg = await this.sendCommand(command);
+      console.log(msg)
       // If players online, requestExitCommand will not shut down server, so return false
       return force || !msg.includes("players online.")
     }
@@ -441,7 +458,7 @@ export default class Server extends EventEmitter {
      * @param steamid The player to perform it on
      * @param args 
      */
-    public async performAction(action: PlayerAction, steamid: string, args: Record<string, string> = {}) {
+    public async performActionLegacy(action: PlayerAction, steamid: string, args: Record<string, string> = {}) {
       let sourcemodId: string;
       if(steamid.startsWith("#")) {
         if(isNaN(Number(steamid.slice(1)))) { 
@@ -455,23 +472,28 @@ export default class Server extends EventEmitter {
       await this.sendCommand(command)
     }
 
-    public async performCommand(command: string, namespace = "default", args: string[] = []) {
+    public async performAction(command: string, namespace = "default", args: string[] = []) {
+      console.log("running", command, namespace, [command, ...args])
+      await this.rconConnect()
       if(namespace == "builtin") {
         if(command === "stop") {
           return await this.stop(true)
         } else if(command === "request_stop") {
           return await this.stop(false)
         } else {
-          command = this.#getBuiltinCommand(command as BuiltInActions)
+          command = this.#getBuiltinCommand(command)
         }
       }
-        await this.sendCommand([command, ...args].join(" "))
+      console.log("executing now", command, namespace, [command, ...args], this.#rcon.client.authenticated)
+      await this.sendCommand([command, ...args].join(" "))
       return true
     }
 
-    #getBuiltinCommand(command: BuiltInActions): string {
+    #getBuiltinCommand(command: string): string {
       switch(command) {
-        case "builtin:update":
+        case "unreserve":
+          return "sm_unreserve"
+        case "update":
           throw new Error("Not implemented")
           // await this.update()
         default:

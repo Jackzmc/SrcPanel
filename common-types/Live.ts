@@ -89,7 +89,9 @@ export enum LiveRecordType {
     Survivor,
     Infected,
     Finale,
-	SurvivorItems
+	SurvivorItems,
+    CommandResponse,
+    Auth
 }
 
 export const enum GameDifficulty {
@@ -154,8 +156,19 @@ export interface LiveRecordSurvivorItems extends BaseLiveRecord {
     items: [string,string,string,string,string]
 }
 
-export type LiveRecord = LiveRecordGame | LiveRecordPlayer | LiveRecordSurvivor | LiveRecordInfected | LiveRecordFinaleInfo | LiveRecordSurvivorItems
+export interface LiveRecordCommandResponse {
+    type: LiveRecordType.CommandResponse,
+    id: number,
+    result: boolean,
+    message?: string
+}
 
+export interface LiveRecordAuth {
+    type: LiveRecordType.Auth,
+    token: string
+}
+
+export type LiveRecord = LiveRecordGame | LiveRecordPlayer | LiveRecordSurvivor | LiveRecordInfected | LiveRecordFinaleInfo | LiveRecordSurvivorItems | LiveRecordCommandResponse
 export interface BaseLiveRecord {
     type: LiveRecordType
 }
@@ -177,11 +190,13 @@ export interface LivePlayerInfected extends LiveRecordPlayer {
 export type LivePlayerFull = LivePlayerSurvivor | LivePlayerInfected
 
 export const enum LiveRecordResponse {
-    OK,
+    OK, // OK(byte) ViewCount(byte)
     Reconnect,
     Error,
-    Refresh
+    Refresh,
+    RunCommand // RunCommand(byte) id(number) command(string)
 }
+
 
 export interface LiveDataCache {
     game: LiveRecordGame | null,
@@ -189,6 +204,7 @@ export interface LiveDataCache {
     finale?: LiveRecordFinaleInfo,
     lastUpdate: number
 }
+
 
 export function updateLiveCache(cache: LiveDataCache | undefined, record: LiveRecord): LiveDataCache {
     if(!cache) cache = {
