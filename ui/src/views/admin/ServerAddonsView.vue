@@ -188,17 +188,17 @@
               {{ id }}
             </span>
           </div>
-          <div class="level mt-4">
+          <div class="level mt-1">
             <div class="level-left" data-tooltip="Supported file sources">
               <div class="level-item" v-for="(enabled, source) in share.downloadSources" :key="source">
-                <span class="tag is-light">
+                <span class="tag is-info">
                   {{ source.replace(/_/g, ' ') }}
                 </span>
               </div>
             </div>
             <div class="level-right" data-tooltip="Supported file extensions">
               <div class="level-item" v-for="ext in share.fileExts" :key="ext">
-                <span class="tag">
+                <span class="tag is-info">
                   {{ ext }}
                 </span>
               </div>
