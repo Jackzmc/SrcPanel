@@ -3,8 +3,8 @@ import { Rcon } from 'rcon-client';
 import { open, readdir } from 'fs/promises'
 import { join, resolve } from 'path'
 import { statSync } from 'fs';
-import { GroupInfo, PlayerAction, PlayerStats, SERVER_TYPE_MAP, ServerAction, ServerData, ServerInfo, ServerStatus, ServerType } from '../../../../common-types/Server.js';
-import { LiveRecord, LiveDataCache, updateLiveCache } from '../../../../common-types/Live.js';
+import { BuiltInActions, GroupInfo, PlayerAction, PlayerStats, SERVER_TYPE_MAP, ServerAction, ServerData, ServerInfo, ServerStatus, ServerType } from '../../../../common-types/Server.js';
+import { LiveRecord, LiveDataCache, updateLiveCache, LiveRecordType } from '../../../../common-types/Live.js';
 import { EventEmitter } from 'node:events';
 import { GenericError } from '../../util.js';
 import { Tail } from 'tail'
@@ -229,8 +229,8 @@ export default class Server extends EventEmitter {
      * Uptime of server in unix milliseconds
      */
     public get uptime() {
-      if(!this.#startTime) return 0
-      return Date.now() - this.#startTime
+      if(!this.#startTime) return null
+      return (Date.now()/1000) - this.#startTime
     }
 
     /**
@@ -243,6 +243,7 @@ export default class Server extends EventEmitter {
      */
     public get liveStatus(): LiveDataCache { 
       if(this.#liveCache) {
+        console.debug(Date.now() - this.#liveCache.lastUpdate, this.#liveCache.lastUpdate)
         if(Date.now() - this.#liveCache.lastUpdate > LIVE_CACHE_TTL) {
           this.#liveCache = null
         }
@@ -320,8 +321,12 @@ export default class Server extends EventEmitter {
     public pushLiveRecord(record?: LiveRecord) {
       // If record is null, it means shutdown is happening
       this.emit("live", record)
-      if(record)
+      if(record) {
         this.#liveCache = updateLiveCache(this.#liveCache, record)
+        if(record.type === LiveRecordType.Game) {
+          this.#startTime = record.startTime
+        }
+      }
     }
 
     /**
@@ -389,9 +394,14 @@ export default class Server extends EventEmitter {
      */
     public async stop(force: boolean) {
       if(!this.hasRcon) throw new Error("No rcon config is setup")
-      const msg = await this.sendCommand(force ? this.#rcon.exitCommand : this.#rcon.requestExitCommand);
+      let command: string
+      if(this.type === "source")
+        command = force ? "exit" : "sm_panel_request_stop"
+      else
+        command = "stop"
+      const msg = await this.sendCommand(command);
       // If players online, requestExitCommand will not shut down server, so return false
-      return force || msg != "Players are online."
+      return force || !msg.includes("players online.")
     }
 
     /**
@@ -438,6 +448,30 @@ export default class Server extends EventEmitter {
       }
       const command = this.#getActionCommand(action, sourcemodId, args)
       await this.sendCommand(command)
+    }
+
+    public async performCommand(command: string, namespace = "default", args: string[] = []) {
+      if(namespace == "builtin") {
+        if(command === "stop") {
+          return await this.stop(true)
+        } else if(command === "request_stop") {
+          return await this.stop(false)
+        } else {
+          command = this.#getBuiltinCommand(command as BuiltInActions)
+        }
+      }
+        await this.sendCommand([command, ...args].join(" "))
+      return true
+    }
+
+    #getBuiltinCommand(command: BuiltInActions): string {
+      switch(command) {
+        case "builtin:update":
+          throw new Error("Not implemented")
+          // await this.update()
+        default:
+          throw new Error("Unsupported builtin command: " + command)
+      }
     }
 
     /**

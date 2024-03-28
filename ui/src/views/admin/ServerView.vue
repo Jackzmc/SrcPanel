@@ -103,7 +103,7 @@
               </tr>
               <tr>
                 <th>Uptime</th>
-                <td v-if="uptime">{{ formatUptime(uptime) }}</td>
+                <td v-if="uptime">{{ uptimeDuration }}</td>
                 <td v-else><em data-tooltip="Unknown">-</em></td>
               </tr>
               <tr>
@@ -240,7 +240,8 @@
           <p class="has-text-centered is-size-5">The next chapter is loading</p>
         </div>
         <div v-else-if="liveStatus">
-          <p class="has-text-centered is-size-5">Waiting for players to connect</p>
+          <p class="has-text-centered title is-4">No players online</p>
+          <p class="has-text-centered subtitle">Waiting for players to connect</p>
         </div>
         <div v-else>
           <h4 class="has-text-centered is-size-4">Waiting to receive data</h4>
@@ -786,14 +787,15 @@ function getMapDisplay(mapId: string) {
   return null;
 }
 
-function formatUptime(milliseconds: number) {
-  const minutes = milliseconds / 1000 / 60
-  const hours = Math.round(minutes / 60)
-  if(hours < 1) return `${minutes} minutes`
-  const days = Math.round(hours / 24)
-  if(days < 1) return `${hours} hours`
-  return `${days} days`
-}
+const uptimeDuration = computed(() => {
+  if(!uptime.value) return
+  const minutes = uptime.value / 60
+  const hours = minutes / 60
+  if(hours < 1) return `${Math.round(minutes)} minutes`
+  const days = hours / 24
+  if(days < 1) return `${Math.round(hours)} hours`
+  return `${Math.round(days)} days`
+})
 
 function formatGamemode(gamemode: string) {
   let output = Gamemodes[gamemode];
@@ -863,12 +865,15 @@ function createLiveConnection() {
       console.debug("got", LiveRecordType[record.type], record, 'pre=', Object.assign({}, liveStatus.value))
       liveStatus.value = updateLiveCache(liveStatus.value, record)
       console.log('out', Object.assign({}, liveStatus.value))
+      if(record.type === LiveRecordType.Game) {
+        uptime.value = (Date.now()/1000) - record.startTime
+      }
     }
     clearTimeout(reconnectTimeout)
     reconnectTimeout = setTimeout(() => {
       console.debug("no msg in a while, reconnecting")
       createLiveConnection()
-    }, 1000 * 20)
+    }, 1000 * 40)
   }
   evtSource.onopen = () => {
     liveReadyState.value = EventSource.OPEN

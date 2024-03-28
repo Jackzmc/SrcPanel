@@ -4,8 +4,9 @@ import { join } from 'path';
 import { readFile } from 'fs/promises';
 import { NO_PERMISSION, NOT_FOUND } from '../../responses.js';
 import JWT from '../../jwt-promise.js'
-import { PlayerAction, ServerData } from '../../../../common-types/Server.js';
+import { PlayerAction, ServerData, ServerDetailed } from '../../../../common-types/Server.js';
 import { LiveRecord, LiveRecordType } from '../../../../common-types/Live.js';
+import { UserPrivilegeCode } from '../../../../common-types/Privileges.js';
     
 const COMMENT_LINE_REGEX = new RegExp(/^\s*(\/\/|#)/)
 const HIDDEN_COMMANDS = [
@@ -20,7 +21,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         (req, body, done) => done(null, body)
     )
 
-    fastify.get('/:id', async(req: FastifyRequest<{Params: { id: 'string' }}>, reply) => {
+    fastify.get('/:id', async(req: FastifyRequest<{Params: { id: 'string' }}>, reply): Promise<ServerDetailed> => {
         const server = fastify.servers.get(req.params.id)
         if(!server) {
             return reply.code(404).send({
@@ -41,6 +42,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
         return {
             server: server.info,
+            uptime: server.uptime,
             live: server.liveStatus,
             cvars: server.cvars,
             playerCounts: server.playerCounts,
@@ -251,7 +253,42 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
     })
 
-    fastify.post('/:id/cmd', async(req: FastifyRequest<{Params: { id: 'string'}, Querystring: {'no-response'?: boolean}, Body: string }>, reply) => {
+    fastify.post('/:id/action/:action', async(req: FastifyRequest<{Params: { id: string, action: string }, Querystring: { args: string } }>, reply) => {
+        const server = fastify.servers.get(req.params.id)
+        if(!server) return NOT_FOUND(reply, "Server")
+
+        const [code, granted] = req.user.requirePermission("servers.cmds.action" as UserPrivilegeCode, { resourceId: server.id })
+        if(!granted) return NO_PERMISSION(reply, undefined, code)
+
+        let namespace = "default"
+        let command: string = req.params.action
+        const split = req.params.action.split(":")
+        if(split.length > 1) {
+            [namespace, command] = split
+        }
+
+        await req.user.log(null, `%client% ran action %namespace%:%command%`, {
+            code,
+            metadata: {
+                namespace,
+                command
+            }
+        })
+        const args = req.query.args ? req.query.args.split(",") : []
+        try {
+            const result = await server.performCommand(command, namespace, args )
+            return {
+                result
+            }
+        } catch(err) {
+            return reply.code(500).send({
+                error: "COMMAND_FAILED",
+                message: "Command failed to run:\n" + err,
+            })
+        }
+    })
+
+    fastify.post('/:id/cmd', async(req: FastifyRequest<{Params: { id: string }, Querystring: {'no-response'?: boolean}, Body: string }>, reply) => {
         const server = fastify.servers.get(req.params.id)
         if(!server) return NOT_FOUND(reply, "Server")
         
@@ -283,7 +320,6 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             return reply.code(500).send({
                 error: "SERVER_ERROR",
                 message: "Server returned an error: " + err.message,
-                code: 500
             })
         }
     })

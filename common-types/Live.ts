@@ -184,7 +184,7 @@ export const enum LiveRecordResponse {
 }
 
 export interface LiveDataCache {
-    game: LiveRecordGame,
+    game: LiveRecordGame | null,
     players: Record<string, LivePlayerFull>, // key is userid as string
     finale?: LiveRecordFinaleInfo,
     lastUpdate: number

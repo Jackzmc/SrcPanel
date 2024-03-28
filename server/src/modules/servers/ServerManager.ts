@@ -17,6 +17,8 @@ import BufferReader from '../BufferReader.js';
 // How long after no status requests to switch from short to long refresh
 const SHORT_REFRESH_TIMEOUT = 1000 * 60
 
+const LIVE_SOCKET_KEEPALIVE_INTERVAL = 1000 * 60 * 1.5
+
 export interface ConfigGroupData {
   servers: Record<string, ConfigServerData>,
   type: ServerType
@@ -168,6 +170,17 @@ export default class ServerManager {
       .listen(livePort, () => {
         console.info(`[ServerManager::Live] Live server listening on :${livePort}`)
       })
+
+    // Periodically send out packets to hopefully keep it alive, and let the other end know we are here
+    setInterval(() => {
+      for(const [socket, server] of this.#liveSocketToServerMap.entries()) {
+        socket.write(BufferReader.new(2)
+          .writeByte(LiveRecordResponse.OK)
+          .writeByte(server.liveViewers)
+          .buffer
+        )
+      }
+    }, LIVE_SOCKET_KEEPALIVE_INTERVAL)
   }
 
   #getRecord(reader: BufferReader): LiveRecord {

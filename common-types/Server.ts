@@ -35,6 +35,7 @@ export interface ServerData {
 export interface ServerDetailed {
     server: ServerInfo
     live: LiveDataCache,
+    uptime: number
     cvars: Record<string, string>,
     playerCounts: PlayerStats[],
     playerJoins: { server: string, type: string, timestamp: number, count: number}[],
@@ -56,7 +57,7 @@ export interface ServerInfo extends ServerData {
     features: string[]
     status: ServerStatus,
     sortOrder: number,
-    actions: ServerAction[]
+    actions: ServerAction[],
 }
 
 export type ServerType = "source" | "left4dead2" | "minecraft"

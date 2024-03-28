@@ -90,12 +90,12 @@ function copyCommand(event: any) {
   }
 }
 
-async function processAction(action?: ServerAction, command?: string) {
+async function processAction(action?: ServerAction, command?: string, args: string[] = []) {
   if(!action && !command) throw new Error("no action nor command")
   if(!command) command = action!.command
   actionRunning.value = true
 
-  const response = await request(`/api/servers/${props.server.id}/action/${command}?no-response=1`, {
+  const response = await request(`/api/servers/${props.server.id}/action/${command}?args=${args.join(",")}`, {
     method: 'POST',
     credentials: 'include'
   })

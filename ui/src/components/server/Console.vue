@@ -29,6 +29,7 @@ import { useRoute, useRouter } from 'vue-router';
 import Field from '@/components/Field.vue'
 import { request } from '@/js/util';
 import { notify } from '@kyvg/vue3-notification';
+import { ServerInfo } from '../../../../common-types/Server';
 
 const MAX_LOGS_LINES = 350
 
@@ -36,11 +37,11 @@ const route = useRoute()
 const router = useRouter()
 
 const props = defineProps<{
-  server: any
+  server: ServerInfo
 }>()
 
 const rconSupported = computed(() => {
-  return props.server.info.features.includes('rcon')
+  return props.server.features.includes('rcon')
 })
 
 const isConnected = computed(() => {
@@ -85,11 +86,11 @@ async function runCommand() {
   }
 
   pushLine(`> ${command}`)
+  commandInput.value = undefined
   const response = await request(`/api/servers/${route.params.id}/cmd`, {
     method: "POST",
     body: command
   })
-  commandInput.value = undefined
   if(response?.ok) {
     const text = await response.text()
     // Rcon output is not shown to the main server logs, include here:
