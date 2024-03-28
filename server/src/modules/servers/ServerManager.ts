@@ -11,7 +11,7 @@ import { ShareDestinations, ShareInfo } from '../../../../common-types/Share.js'
 import ConfigManager from '../ConfigManager.js'
 import { GroupInfo, ServerAction, ServerType, SERVER_TYPE_MAP } from '../../../../common-types/Server.js'
 import net from 'net'
-import { LiveRecordType, LiveRecordGame, LiveRecord, LiveRecordResponse, LiveRecordSurvivor, LiveRecordPlayer, LiveRecordInfected, LiveRecordFinaleInfo, LiveRecordSurvivorItems, LiveRecordCommandResponse } from '../../../../common-types/Live.js';
+import { LiveRecordType, LiveRecordGame, LiveRecord, LiveRecordResponse, LiveRecordSurvivor, LiveRecordPlayer, LiveRecordInfected, LiveRecordFinaleInfo, LiveRecordSurvivorItems, LiveRecordCommandResponse, PluginTokenPayload } from '../../../../common-types/Live.js';
 import BufferReader from '../BufferReader.js';
 
 // How long after no status requests to switch from short to long refresh
@@ -28,6 +28,7 @@ export interface ConfigGroupData {
 // BECAUSE FOR SOME **** REASON THIS ISNT LOADING HERE:
 import dotenv from 'dotenv'
 import PluginSocket from './PluginSocket.js';
+import JWT from '../../jwt-promise.js';
 dotenv.config()
 const DEBUG_LIVE_SOCKET = process.env.DEBUG_LIVE_SOCKET != undefined
 
@@ -50,8 +51,6 @@ export default class ServerManager {
   #socket: net.Server
   #socketClients: Map<string, PluginSocket>
   // Maps a server to a specific connection, this assumes there should never be more than one socket per server
-  #liveServerToSocketMap: Map<Server, net.Socket> = new Map()
-  #liveSocketToServerMap: Map<net.Socket, Server> = new Map() 
 
   constructor(steam: SteamAPI, dataDir: string, configDir: string, configManager: ConfigManager) {
     this.steam = steam
@@ -64,108 +63,63 @@ export default class ServerManager {
         this.refreshTimer = setInterval(() => this.refresh(), this.longRefreshInterval)
       })
     this.#createLiveServer()
-    
-    for(const server of Object.values(this.servers)) {
-      // This event is called anytime there is a new viewer or not, 
-      // this will tell the server client for that server a new viewer count
-      server.on("live:subscribe", (active: boolean) => {
-        const socket = this.#liveServerToSocketMap.get(server)
-        if(socket) {
-          socket.write(BufferReader.new(2)
-            .writeByte(LiveRecordResponse.OK)
-            .writeByte(server.liveViewers)
-            .buffer
-          )
-        }
-      })
-    }
   }
 
   #debugLive(...args: any[]) {
     if(DEBUG_LIVE_SOCKET)
-      console.debug("[ServerManager::Live",...args)
+      console.debug("[ServerManager::Live]",...args)
   }
 
-  #onPacket(client: PluginSocket, reader: BufferReader): Server {
-    try {
-      const version = reader.readByte()
-      const serverId = reader.readString()
-      const server = this.servers[serverId]
-      if(!server) {
-        client.send(LiveRecordResponse.Error)
-        return
-      }
-      server._setSocket(client)
-
-      this.#debugLive("header", { version, serverId })
-      for(const recordBuffer of reader.readRecord()) {
-        const recordReader = new BufferReader(recordBuffer)
-        try {
-          const record = this.#getRecord(recordReader)
-          if(record.type === LiveRecordType.CommandResponse) {
-            client.onRecord(record)
-          } else {
-            server.pushLiveRecord(record)
-          }
-          this.#debugLive('record', LiveRecordType[record.type], record)
-        } catch(err) {
-          continue
+  #authenticateSocket(client: PluginSocket, reader: BufferReader) {
+    const type = reader.readByte()
+    // skip any other type until authenticated
+    if(type != LiveRecordType.Auth) return console.warn("[ServerManager] Got non-auth packets when not-authenticated, ignoring")
+    const version = reader.readByte()
+    const token = reader.readString()
+    JWT.verify<PluginTokenPayload>(token, process.env.STATE_SECRET)
+      .then(({payload}) => {
+        const server = this.servers[payload.sub]
+        if(server) {
+          client._setServer(server)
+          server._setSocket(client)
+          client.send(LiveRecordResponse.OK, server.liveViewers)
+          this.#debugLive("Authenticated", client.IP)
+        } else {
+          client.send(LiveRecordResponse.Error, "Invalid or unknown server: " + payload.sub)
+          return
         }
-      }
-      return server
-    } catch(err) {
-      console.error(`[ServerManager::Live] bad packet`, err)
-      return
-    }
+      })
+      .catch(err => {
+        console.error("[ServerManager] Auth Error: ", err)
+        client.send(LiveRecordResponse.Error, err.message)
+      })
   }
-
 
   #onLiveClient(client: net.Socket) {
-    this.#debugLive('[ServerManager::Live]','client connected', client.remoteAddress)
+    this.#debugLive('client connected', client.remoteAddress)
     const ps = new PluginSocket(client)
     this.#socketClients.set(client.remoteAddress, ps)
 
-
     client.on('data', (buf) => {
-      // TODO: get authentication
-      for(const reader of BufferReader.getBuffers(buf)) {
-        let server: Server
-        try {
-          server = this.#onPacket(ps, reader)
-        } catch(err) {
-          console.error(`[ServerManager::Live] bad packet`, err)
-          return
-        }
-
-        // Map the socket to the server and vise-versa
-        if(server) {
-          ps._setServer(server)
-          this.#liveServerToSocketMap.set(server, client)
-          this.#liveSocketToServerMap.set(client, server)
-        }
+      // If we aren't authenticate, check to see if it's valid:
+      if(!ps.Authenticated) {
+        return this.#authenticateSocket(ps, new BufferReader(buf))
       }
-
+      for(const packet of BufferReader.getPackets(buf)) {
+        ps.onPacket(packet)
+      }
     })
 
     client.on('close', () => {
       this.#socketClients.delete(client.remoteAddress)
-      this.#debugLive('[ServerManager::Live] client disconnected', client.remoteAddress)
-
-      // Clear the mappings
-      const server = this.#liveSocketToServerMap.get(client)
-      if(server) {
-        this.#liveSocketToServerMap.delete(client)
-        this.#liveServerToSocketMap.delete(server)
-      }
+      this.#debugLive('client disconnected', client.remoteAddress)
     })
   }
 
   #createLiveServer() {
     this.#socketClients = new Map()
-    this.#liveServerToSocketMap.clear()
-    this.#liveSocketToServerMap.clear()
-    const liveHost = process.env.LIVE_HOST || "127.0.0.1";
-    const livePort = process.env.LIVE_PORT ? parseInt(process.env.LIVE_PORT) ?? 7888 : 7888
+    const liveHost = process.env.PLUGIN_SOCKET_HOSTNAME || "127.0.0.1";
+    const livePort = process.env.PLUGIN_SOCKET_PORT ? parseInt(process.env.PLUGIN_SOCKET_PORT) ?? 7888 : 7888
     this.#socket = net.createServer(this.#onLiveClient.bind(this))
       .on('error', (err) => {
         // socket.send(SocketResponse.Error.toString())
@@ -173,107 +127,16 @@ export default class ServerManager {
       })
 
       .listen(livePort, liveHost, () => {
-        console.info(`[ServerManager::Live] Live server listening on :${livePort}`)
+        console.info(`[ServerManager::Live] Live server listening on ${liveHost}:${livePort}`)
       })
 
     // Periodically send out packets to hopefully keep it alive, and let the other end know we are here
     setInterval(() => {
-      for(const [socket, server] of this.#liveSocketToServerMap.entries()) {
-        socket.write(BufferReader.new(2)
-          .writeByte(LiveRecordResponse.OK)
-          .writeByte(server.liveViewers)
-          .buffer
-        )
+      // Periodically have server submit it's live count, as a keep alive
+      for(const server of Object.values(this.servers)) {
+        server.emit("live:subscribe")
       }
     }, LIVE_SOCKET_KEEPALIVE_INTERVAL)
-  }
-
-  #getRecord(reader: BufferReader): LiveRecord {
-    const type: LiveRecordType = reader.readByte()
-    try {
-      switch(type) {
-        case LiveRecordType.Game: {
-          return {
-            type,
-            startTime: reader.readInt(),
-            campaignStartTime: reader.readInt(),
-            difficulty: reader.readByte(),
-            inTransition: reader.readByte() > 0,
-            gamemode: reader.readString(),
-            map: reader.readString(),
-          } as LiveRecord
-        }
-        case LiveRecordType.Player: {
-          let record: LiveRecordPlayer = {
-            type,
-            userid: reader.readInt(),
-            steamid: reader.readString()
-          }
-          if(!reader.isEOF) {
-            record = {
-              ...record,
-              isIdle: reader.readByte() == 1,
-              joinTime: reader.readInt(),
-              name: reader.readString(),
-            } as LiveRecordPlayer
-          }
-          return record
-        }
-        case LiveRecordType.Survivor: {
-          return {
-            type,
-            userid: reader.readInt(),
-            survivor: reader.readByte(),
-            tempHealth: reader.readByte(),
-            permHealth: reader.readByte(),
-            flowPercent: reader.readByte(),
-            states: reader.readInt(),
-            move: reader.readInt(),
-            action: reader.readInt(),
-          }
-        }
-        case LiveRecordType.Infected: {
-          return {
-            type,
-            userid: reader.readInt(),
-            health: reader.readShort(),
-            maxHealth: reader.readShort(),
-            class: reader.readByte(),
-            pinnedPlayerUserid: reader.readInt(),
-          }
-        }
-        case LiveRecordType.Finale: {
-          return {
-            type,
-            stage: reader.readByte(),
-            escapeInProgress: reader.readByte() === 1
-          }
-        }
-        case LiveRecordType.SurvivorItems: {
-          return {
-            type,
-            userid: reader.readInt(),
-            items: [reader.readString(), reader.readString(), reader.readString(), reader.readString(), reader.readString()]
-          }
-        }
-        case LiveRecordType.CommandResponse: {
-          let res: LiveRecordCommandResponse = {
-            type,
-            id: reader.readByte(),
-            result: true,
-          }
-          if(!reader.isEOF) {
-            res.message = reader.readString()
-          }
-          return res
-        }
-        default: {
-          throw new Error("Not Implemented type: " + type)
-        }
-      }
-    } catch(err) {
-      throw new Error(`error reading record of type ${LiveRecordType[type]}(${type})\n` + reader.buffer.toString('hex') + "\n" + err)
-    }
   }
 
   onShutdown() {

@@ -4,7 +4,7 @@ import { open, readdir } from 'fs/promises'
 import { join, resolve } from 'path'
 import { statSync } from 'fs';
 import { BuiltInActions, GroupInfo, PlayerAction, PlayerStats, SERVER_TYPE_MAP, ServerAction, ServerData, ServerInfo, ServerStatus, ServerType } from '../../../../common-types/Server.js';
-import { LiveRecord, LiveDataCache, updateLiveCache, LiveRecordType } from '../../../../common-types/Live.js';
+import { LiveRecord, LiveDataCache, updateLiveCache, LiveRecordType, LiveRecordResponse } from '../../../../common-types/Live.js';
 import { EventEmitter } from 'node:events';
 import { GenericError } from '../../util.js';
 import { Tail } from 'tail'
@@ -185,6 +185,12 @@ export default class Server extends EventEmitter {
         if(this.#systemd) this.#features.push("systemd")
         this.#tags = server.tags
         this.#status = { data: null, online: false }
+
+      this.on("live:subscribe", () => {
+        if(this.#socket?.Authenticated) {
+          this.#socket.send(LiveRecordResponse.OK, this.liveViewers)
+        }
+      })
     }
 
     public get id() { return this.#info.id }
@@ -331,11 +337,16 @@ export default class Server extends EventEmitter {
           this.#startTime = record.startTime
         }
       }
-      this.status.online = true
-      if(this.#liveCache?.game?.gamemode)
-        this.status.data.gamemode = this.#liveCache.game.gamemode
-      if(this.#liveCache?.game?.map)
-        this.status.data.map = this.#liveCache.game.map
+
+      this.#status = {
+        data: {
+            gamemode: this.#liveCache.game.gamemode,
+            map: this.#liveCache.game.map,
+            players: this.#liveCache.players ? Object.values(this.#liveCache.players).map(pl => pl.name) : [],
+            maxplayers: this.#liveCache.players ? Object.keys(this.#liveCache.players).length : 0
+        },
+        online: true
+    }
     }
 
     /**
@@ -474,31 +485,8 @@ export default class Server extends EventEmitter {
 
     public async performAction(command: string, namespace = "default", args: string[] = []) {
       console.log("running", command, namespace, [command, ...args])
-      await this.rconConnect()
-      if(namespace == "builtin") {
-        if(command === "stop") {
-          return await this.stop(true)
-        } else if(command === "request_stop") {
-          return await this.stop(false)
-        } else {
-          command = this.#getBuiltinCommand(command)
-        }
-      }
-      console.log("executing now", command, namespace, [command, ...args], this.#rcon.client.authenticated)
-      await this.sendCommand([command, ...args].join(" "))
-      return true
-    }
-
-    #getBuiltinCommand(command: string): string {
-      switch(command) {
-        case "unreserve":
-          return "sm_unreserve"
-        case "update":
-          throw new Error("Not implemented")
-          // await this.update()
-        default:
-          throw new Error("Unsupported builtin command: " + command)
-      }
+      if(!this.#socket) throw new Error("Not connected to plugin socket")
+      return await this.#socket.send(LiveRecordResponse.RunCommand, command, namespace)
     }
 
     /**

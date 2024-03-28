@@ -230,6 +230,20 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
     })
 
+    fastify.get('/:id/generate-jwt', async(req: FastifyRequest<{Params: { id: 'string'} }>, reply) => {
+        const server = fastify.servers.get(req.params.id)
+        if(!server) NOT_FOUND(reply, "Server")
+        const [code, granted] = req.user.requirePermission("servers.generate_jwt", { resourceId: server.id })
+        if(!granted) return NO_PERMISSION(reply, "You do not have permission to generate a JWT for this server", code)
+        const token = await JWT.sign({
+            sub: server.id,
+            iat: Math.round(Date.now()/1000)
+        }, JWT_SECRET)
+        reply.header("Content-Type", "text/plain")
+        return reply.code(200).send(token)
+    })
+
+
     fastify.post('/:id/start', async(req: FastifyRequest<{Params: { id: 'string'} }>, reply) => {
         const server = fastify.servers.get(req.params.id)
         if(!server) NOT_FOUND(reply, "Server")
@@ -276,9 +290,10 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         })
         const args = req.query.args ? req.query.args.split(",") : []
         try {
-            const result = await server.performAction(command, namespace, args )
+            const response = await server.performAction(command, namespace, args )
             return {
-                result
+                result: response.result,
+                message: response.message
             }
         } catch(err) {
             return reply.code(500).send({

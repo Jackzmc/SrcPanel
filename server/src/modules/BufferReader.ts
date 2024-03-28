@@ -2,15 +2,16 @@ export default class BufferReader {
     #buffer: Buffer
     #offset: number
     #length = 0
-  
-    static *getBuffers(data: Buffer) {
-        let reader = new BufferReader(data)
-        yield reader
-        while(reader.nextBuffer != null) {
-            reader = new BufferReader(reader.nextBuffer)
-            yield reader
-        }
-        return null
+
+    /// Yields BufferReaders, splitting when it hits newline
+    static *getPackets(data: Buffer) {
+      let reader = new BufferReader(data)
+      yield reader
+      while(reader.nextBuffer != null) {
+          reader = new BufferReader(reader.nextBuffer)
+          yield reader
+      }
+      return null
     }
 
     static new(size: number) {
@@ -92,59 +93,62 @@ export default class BufferReader {
         }
         throw new Error("No null term found")
     }
-  
-    readVarString(): string {
-      let length = this.readShort()
-      const slice = this.#buffer.subarray(this.#offset, this.#offset + length)
-      this.#offset += length
-      return slice.toString().split("\0").shift();
+
+    /// Yields a BufferReader for every record in a packet
+    *readRecords() {
+      let start = this.#offset
+      while(this.#offset < this.#length && this.at(this.#offset) != 0x0a) {
+        if(this.at(this.#offset) == BufferReader.RecordSeparator) {
+          yield new BufferReader(this.#buffer.subarray(start, this.#offset))
+          start = this.#offset
+        }
+        this.#offset++
+      }
+      yield new BufferReader(this.#buffer.subarray(start, this.#offset))
+      return null
     }
   
-    *readRecord() {
-      let recordStart: number = null
-      while(!this.isEOF) {
-        if(this.IsRecordSeparator) {
-          if(recordStart != null) {
-            // End of record
-            yield this.#buffer.subarray(recordStart, this.#offset)
-          }
-          recordStart = this.#offset + 1
-        }
-        this.#offset++;
-      }
-      // Check to see that we have seen the \n(0xa) character at the end, otherwise this record got truncated:
-      if(recordStart != null && this.#curChar == 0xa) {
-        yield this.#buffer.subarray(recordStart, this.#offset)
-      }
-      return null
+    #expand(newSize?: number) {
+      if(!newSize) newSize = 2 * this.buffer.length
+      if(newSize < this.#buffer.length) throw new Error("new size must be greater than the current size")
+      const newBuffer = Buffer.alloc(newSize)
+      this.buffer.copy(newBuffer, 0, 0, this.buffer.length)
+      this.#buffer = newBuffer
+      this.#length = newSize
     }
 
     
     writeByte(value: number) {
+        if(this.#offset + 1 >= this.#length) this.#expand()
         this.#buffer.writeInt8(value, this.#offset)
         this.#offset++
         return this
     }
   
     writeShort(value: number) {
+        if(this.#offset + 2 >= this.#length) this.#expand()
         this.#buffer.writeInt16LE(value, this.#offset)
         this.#offset += 2
         return this
     }   
   
     writeInt(value: number) {
+        if(this.#offset + 4 >= this.#length) this.#expand()
         this.#buffer.writeInt32LE(value, this.#offset)
         this.#offset += 4
         return this
     }
 
     writeFloat(value: number) {
+       if(this.#offset + 4 >= this.#length) this.#expand()
         this.#buffer.writeFloatLE(value, this.#offset)
         this.#offset += 4
         return this
     }
 
     writeString(value: string) {
+        if(this.#offset + value.length + 1 >= this.#length) this.#expand(this.#length + value.length + 1)
+        if(value == undefined) value = ""
         this.#buffer.write(value + "\0", this.#offset, "ascii")
         this.#offset += value.length + 1
         return this

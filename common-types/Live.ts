@@ -159,7 +159,7 @@ export interface LiveRecordSurvivorItems extends BaseLiveRecord {
 export interface LiveRecordCommandResponse {
     type: LiveRecordType.CommandResponse,
     id: number,
-    result: boolean,
+    result: number,
     message?: string
 }
 
@@ -274,4 +274,9 @@ export function updateLiveCache(cache: LiveDataCache | undefined, record: LiveRe
         }
     }
     return cache
+}
+
+export interface PluginTokenPayload {
+    sub: string, // server id
+    iat: number, // issued
 }
