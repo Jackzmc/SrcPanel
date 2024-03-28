@@ -8,7 +8,7 @@
       <br>
       <div class="box question-box" v-if="loadState == LoadState.Success">
         <h5 class="title is-5"><b>Discuss:</b> <span data-tooltip="Click to edit" contenteditable @blur="(event) => saveText('title', event as FocusEvent)" @keydown.enter.prevent="(event) => saveText('title', event as KeyboardEvent)">{{discuss.title}}</span></h5>
-        <p data-tooltip="Click to edit" class="subtitle" contenteditable @blur="(event) => saveText('description', event as FocusEvent)" @keydown.enter.prevent="(event) => saveText('description', event as KeyboardEvent)" @click="(e) => e.target.textContent = ''">
+        <p data-tooltip="Click to edit" class="subtitle" contenteditable @blur="(event) => saveText('description', event as FocusEvent)" @keydown.enter.prevent="(event) => saveText('description', event as KeyboardEvent)" @click="onDescriptionClick">
           <template v-if="discuss.description != ''">{{ discuss.description }}</template>
           <em v-else>A short optional description</em>
         </p>
@@ -244,6 +244,9 @@ function editOption(option?: APIDiscussionOption) {
       id: dummyId++
     })
   }
+}
+function onDescriptionClick(e: any) {
+  e.target.textContent = discuss.value.description
 }
 
 function confirmCancel() {
