@@ -35,6 +35,7 @@
     </div>
   </div>
   <div v-else-if="discuss.type == APIDiscussionType.ShortText">
+    ah
     <Field>
       <input type="text" class="input" readonly placeholder="Enter your submission" v-model.trim="discuss.value" @input="submitChoiceDebounceMultiOrText">
     </Field>
@@ -43,6 +44,9 @@
     <Field>
       <textarea class="textarea" readonly placeholder="Enter your submission" v-model="discuss.value" @input="submitChoiceDebounceMultiOrText"></textarea>
     </Field>
+  </div>
+  <div v-else>
+   Unsupported Discussion Type
   </div>
   <div class="columns mt-3" v-if="!selected">
     <div class="column">

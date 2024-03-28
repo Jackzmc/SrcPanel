@@ -7,8 +7,11 @@
       </div>
       <br>
       <div class="box question-box" v-if="loadState == LoadState.Success">
-        <h5 class="title is-5"><b>Discuss:</b> <span contenteditable @blur="(event) => saveText('title', event as FocusEvent)" @keydown.enter.prevent="(event) => saveText('title', event as KeyboardEvent)">{{discuss.title}}</span></h5>
-        <p class="subtitle" contenteditable @blur="(event) => saveText('description', event as FocusEvent)" @keydown.enter.prevent="(event) => saveText('description', event as KeyboardEvent)">{{ discuss.description }}</p>
+        <h5 class="title is-5"><b>Discuss:</b> <span data-tooltip="Click to edit" contenteditable @blur="(event) => saveText('title', event as FocusEvent)" @keydown.enter.prevent="(event) => saveText('title', event as KeyboardEvent)">{{discuss.title}}</span></h5>
+        <p data-tooltip="Click to edit" class="subtitle" contenteditable @blur="(event) => saveText('description', event as FocusEvent)" @keydown.enter.prevent="(event) => saveText('description', event as KeyboardEvent)" @click="(e) => e.target.textContent = ''">
+          <template v-if="discuss.description != ''">{{ discuss.description }}</template>
+          <em v-else>A short optional description</em>
+        </p>
         <div class="columns" v-if="discuss.type == APIDiscussionType.Radio || discuss.type == APIDiscussionType.Checkbox">
           <div class="column is-6">
             <div class="box field is-clickable" v-for="option of getOptions(0)" :key="option.id" @click="editOption(option)">
@@ -39,6 +42,9 @@
         <p class="is-size-3 has-text-centered my-4" v-if="loadState == LoadState.Loading"><Icon icon="fa-spinner" icon-class="mr-4" spin>Fetching discussion...</Icon></p>
         <p class="is-size-4 has-text-centered has-text-danger my-4" v-else><Icon icon="fa-times">An error occurred. Could not fetch discussion.</Icon></p>
       </div>
+      <p class="has-text-danger" v-for="(error, i) in validationErrors" :key="i">
+        <Icon icon="fa-exclamation-triangle">{{ error }}</Icon>
+      </p>
     </div>
     <div class="column" v-if="loadState == LoadState.Success">
       <h4 class="title is-4 mb-2">Options</h4>
@@ -130,7 +136,7 @@
       </div>
       <br>
       <div class="buttons">
-        <a :class="['button','is-success',{'is-loading': isSaving }]" @click="save" :disabled="isSaving ? true : undefined ">{{ isNew ? 'Create Discussion' : 'Save Changes' }}</a>
+        <a :class="['button','is-success',{'is-loading': isSaving }]" @click="save" :disabled="canSave ? undefined : true ">{{ isNew ? 'Create Discussion' : 'Save Changes' }}</a>
         <a class="button" @click="confirmCancel">Cancel</a>
         <a v-if="!isNew" class="button is-warning" @click="archive"><Icon icon="fa-box-archive">Archive</Icon></a>
       </div>
@@ -178,6 +184,17 @@ const hasChanges = computed(() => {
   // TODO: compare orgDiscuss vs discuss
   return true
 })
+const validationErrors = computed(() => {
+  const errors = []
+  if(discuss.value.type === APIDiscussionType.Checkbox || discuss.value.type === APIDiscussionType.Radio) {
+    if(!discuss.value.options || discuss.value.options.length < 2) errors.push("Must have at least 2 options")
+  }
+  return errors
+})
+const canSave = computed(() => {
+  if(isSaving.value) return false
+  return validationErrors.value.length === 0
+})
 
 const route = useRoute()
 const router = useRouter()
@@ -195,7 +212,7 @@ const loadState = ref<LoadState>(LoadState.Loading)
 const orgDiscuss = ref<APIDiscussionBase>()
 const discuss = ref<APIDiscussionBase>({
   title: "",
-  description: 'A short optional description',
+  description: '',
   type: APIDiscussionType.Radio,
   closedAt: 0,
   timestamp: Date.now(),
