@@ -327,6 +327,11 @@ export default class Server extends EventEmitter {
           this.#startTime = record.startTime
         }
       }
+      this.status.online = true
+      if(this.#liveCache?.game?.gamemode)
+        this.status.data.gamemode = this.#liveCache.game.gamemode
+      if(this.#liveCache?.game?.map)
+        this.status.data.map = this.#liveCache.game.map
     }
 
     /**
