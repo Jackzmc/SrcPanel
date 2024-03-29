@@ -81,4 +81,4 @@ export interface ServerAction {
     isHidden: boolean,
     description?: string
 }
-export type BuiltInActions = "builtin:stop" | "builtin:request_stop" | "builtin:update"
+export type BuiltInActions = "builtin:stop" | "builtin:request_stop" | "builtin:update" | "builtin:kick"

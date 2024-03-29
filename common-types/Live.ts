@@ -91,7 +91,8 @@ export enum LiveRecordType {
     Finale,
 	SurvivorItems,
     CommandResponse,
-    Auth
+    Auth,
+    Meta
 }
 
 export const enum GameDifficulty {
@@ -178,7 +179,12 @@ export interface LiveRecordAuth {
     token: string
 }
 
-export type LiveRecord = LiveRecordGame | LiveRecordPlayer | LiveRecordSurvivor | LiveRecordInfected | LiveRecordFinaleInfo | LiveRecordSurvivorItems | LiveRecordCommandResponse
+export interface LiveRecordMeta {
+    type: LiveRecordType.Meta,
+    steamConnected: boolean
+}
+
+export type LiveRecord = LiveRecordGame | LiveRecordPlayer | LiveRecordSurvivor | LiveRecordInfected | LiveRecordFinaleInfo | LiveRecordSurvivorItems | LiveRecordCommandResponse | LiveRecordMeta
 export interface BaseLiveRecord {
     type: LiveRecordType
 }
