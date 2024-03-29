@@ -168,7 +168,7 @@ export default class Server extends EventEmitter {
     }
 
     public get SocketConnected() {
-      return this.#socket.Authenticated
+      return this.#socket?.Authenticated
     }
 
     public get id() { return this.#info.id }
