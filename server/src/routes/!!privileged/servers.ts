@@ -4,7 +4,7 @@ import { join } from 'path';
 import { readFile } from 'fs/promises';
 import { NO_PERMISSION, NOT_FOUND } from '../../responses.js';
 import JWT from '../../jwt-promise.js'
-import { PlayerAction, ServerData, ServerDetailed } from '../../../../common-types/Server.js';
+import { PlayerAction, ServerData, ServerDetailed, ServerInfo } from '../../../../common-types/Server.js';
 import { LiveRecord, LiveRecordType } from '../../../../common-types/Live.js';
 import { UserPrivilegeCode } from '../../../../common-types/Privileges.js';
     
@@ -21,7 +21,21 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         (req, body, done) => done(null, body)
     )
 
-    fastify.get('/:id', async(req: FastifyRequest<{Params: { id: 'string' }}>, reply): Promise<ServerDetailed> => {
+    fastify.get('/:id', async(req: FastifyRequest<{Params: { id: 'string' }}>, reply): Promise<ServerInfo> => {
+        const server = fastify.servers.get(req.params.id)
+        if(!server) {
+            return reply.code(404).send({
+                error: "SERVER_NOT_FOUND",
+                message: "Server not found"
+            })
+        }
+        const [code, granted] = req.user.requirePermission("servers.view", { resourceId: server.id })
+        if(!granted) return NO_PERMISSION(reply, "You do not have permission to view this server (code: " + code + ")", code)
+
+        return server.info
+    })
+
+    fastify.get('/:id/data', async(req: FastifyRequest<{Params: { id: 'string' }}>, reply): Promise<ServerDetailed> => {
         const server = fastify.servers.get(req.params.id)
         if(!server) {
             return reply.code(404).send({

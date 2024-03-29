@@ -24,12 +24,13 @@
         {{ server.status?.data?.map }}
       </td>
       <td>
-        <div class="buttons">
+        <div class="buttons" v-if="server.features.includes('plugin')">
           <button :disabled="actionRunning" v-if="server.features.includes('systemd')" @click="processAction(undefined, 'start')" class="button is-success">Start</button>
           <template v-if="server.status.online">
             <button :data-tooltip="action.description" :disabled="actionRunning" v-for="(action, i) in actions" :key="i" @click="processAction(action)" class="button is-dark" :style="{'background-color': action.color}">{{ action.name }}</button>
           </template>
         </div>
+        <Icon class="is-size-6" v-else icon="fa-plug-circle-minus" data-tooltip="No connection to plugin, cannot perform actions at this time">Unavailable</Icon>
       </td>
     </template>
     <template v-else>

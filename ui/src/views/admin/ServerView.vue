@@ -41,15 +41,18 @@
           </div>
           <div class="level-right">
             <div class="buttons">
-              <a v-if="serverInfo.features.includes('systemd') && (!status || !status.online)" @click="performAction('start')" class="button is-success is-small">Start Server</a>
-              <template v-if="status?.online && serverInfo.features.includes('rcon')">
-                <!-- <a data-tooltip="Will restart server if no players online, or fail if there are" @click="processAction('stop')" class="button is-dark is-small">Request Restart</a>
-                <a v-if="serverInfo.type === 'source'" data-tooltip="Will remove lobby reservation, allowing 5+ to join. This is done automatically after 4 players have fully loaded in" @click="processAction('unreserve')" class="button is-dark is-small">Unreserve</a>
-                <a v-show="shiftPressed" data-tooltip="Will forcefully restart server, regardless if players are online" @click="processAction('stop', { force: true })" class="button is-danger is-small">Force Restart</a> -->
+              <template v-if="serverInfo.features.includes('plugin')">
+                <a v-if="serverInfo.features.includes('systemd') && (!status || !status.online)" @click="performAction('start')" class="button is-success is-small">Start Server</a>
+                <template v-if="status?.online && serverInfo.features.includes('rcon')">
+                  <!-- <a data-tooltip="Will restart server if no players online, or fail if there are" @click="processAction('stop')" class="button is-dark is-small">Request Restart</a>
+                  <a v-if="serverInfo.type === 'source'" data-tooltip="Will remove lobby reservation, allowing 5+ to join. This is done automatically after 4 players have fully loaded in" @click="processAction('unreserve')" class="button is-dark is-small">Unreserve</a>
+                  <a v-show="shiftPressed" data-tooltip="Will forcefully restart server, regardless if players are online" @click="processAction('stop', { force: true })" class="button is-danger is-small">Force Restart</a> -->
+                </template>
+                <template v-if="serverInfo.status.online">
+                  <button :data-tooltip="action.description" :disabled="actionRunning" v-for="(action, i) in actions" :key="i" @click="performAction(action.command)" class="button is-dark is-small" :style="{'background-color': action.color}">{{ action.name }}</button>
+                </template>
               </template>
-              <template v-if="serverInfo.status.online">
-                <button :data-tooltip="action.description" :disabled="actionRunning" v-for="(action, i) in actions" :key="i" @click="performAction(action.command)" class="button is-dark is-small" :style="{'background-color': action.color}">{{ action.name }}</button>
-              </template>
+              <Icon v-else icon="fa-plug-circle-minus" data-tooltip="No connection to plugin, cannot perform actions at this time">Actions Unavailable</Icon>
             </div>
           </div>
         </div>
@@ -652,10 +655,7 @@ async function fetchServerInfo() {
   try {
     const json = await response.json()
     if(response.ok) {
-      const data = json as ServerDetailed
-      liveStatus.value = data.live
-      serverInfo.value = data.server
-      serverConfigs.value = data.configs
+      serverInfo.value  = json as ServerInfo
       return true
     } else {
       error.value = json.message ?? json.err ?? json ?? await response.text()
@@ -667,6 +667,27 @@ async function fetchServerInfo() {
     return false
   }
 }
+
+async function fetchServerData() {
+  error.value = undefined
+  const id = route.params.id
+  const response = await fetch(`/api/servers/${route.params.id}/data`)
+  if(id != route.params.id) return // Ignore changes in id
+  try {
+    const json = await response.json()
+    if(response.ok) {
+      const data = json as ServerDetailed
+      liveStatus.value = data.live
+      serverConfigs.value = data.configs
+    } else {
+      error.value = json.message ?? json.err ?? json ?? await response.text()
+    }
+  } catch(err: any) {
+    console.error(err)
+    error.value = `${response.status} ${response.statusText}: ${err.message}`
+  }
+}
+
 let isRefreshing = false
 async function fetchServerStatus() {
   const id = route.params.id
@@ -899,6 +920,7 @@ async function init() {
   clearInterval(refreshInterval)
   if(await fetchServerInfo()) {
     await Promise.any([
+      fetchServerData(),
       fetchServerStatus()
     ])
     if(serverInfo.value?.type === "source")
