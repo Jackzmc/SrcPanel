@@ -27,7 +27,7 @@ export default class PluginSocket {
                 startTime: reader.readInt(),
                 campaignStartTime: reader.readInt(),
                 difficulty: reader.readByte(),
-                inTransition: reader.readByte() > 0,
+                state: reader.readByte(),
                 maxplayers: reader.readByte(),
                 gamemode: reader.readString(),
                 map: reader.readString(),

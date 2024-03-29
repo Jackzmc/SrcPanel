@@ -239,8 +239,11 @@
             </div>
           </template>
         </div>
-        <div v-else-if="liveStatus?.game?.inTransition">
+        <div v-else-if="liveStatus?.game?.state == GameState.Transitioning">
           <p class="has-text-centered is-size-5">The next chapter is loading</p>
+        </div>
+        <div v-else-if="liveStatus?.game?.state == GameState.Hibernating">
+          <p class="has-text-centered is-size-5">Server is currently hibernating</p>
         </div>
         <div v-else-if="liveStatus">
           <p class="has-text-centered title is-4">No players online</p>
@@ -435,7 +438,7 @@ import { parseLog, getRelDate, request } from '@/js/util';
 import LogMessage from "@/components/LogMessage.vue";
 import { useNotification } from "@kyvg/vue3-notification";
 import Field from '@/components/Field.vue';
-import { SurvivorId, FinaleStage, PlayerState, PlayerGameAction, PlayerMove, InfectedClass, LiveDataCache, LiveRecord, updateLiveCache, LivePlayerSurvivor, LivePlayerFull, LivePlayerInfected, LiveRecordType, GameDifficulty, CommandResultType } from '../../../../common-types/Live';
+import { SurvivorId, FinaleStage, PlayerState, PlayerGameAction, PlayerMove, InfectedClass, LiveDataCache, LiveRecord, updateLiveCache, LivePlayerSurvivor, LivePlayerFull, LivePlayerInfected, LiveRecordType, GameDifficulty, CommandResultType, GameState } from '../../../../common-types/Live';
 import { UserPrivilegeCode } from '../../../../common-types/Privileges';
 import { formatDate, getDuration } from '../../js/util.js';
 import UserComponent, { User } from '@/components/UserComponent.vue';

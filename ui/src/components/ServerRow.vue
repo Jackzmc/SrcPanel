@@ -14,7 +14,7 @@
         <span class="tag" v-if="server.tags.includes('customs')">Custom Maps</span>
       </span>
     </td>
-    <td class="has-text-centered">
+    <td>
       <template v-if="server.status.online">
         {{ server.status.data?.players.length }} / {{ server.status.data?.maxplayers }}
       </template>
@@ -30,7 +30,7 @@
             <button :data-tooltip="action.description" :disabled="actionRunning" v-for="(action, i) in actions" :key="i" @click="processAction(action)" class="button is-dark" :style="{'background-color': action.color}">{{ action.name }}</button>
           </template>
         </div>
-        <Icon class="is-size-6" v-else icon="fa-plug-circle-minus" data-tooltip="No connection to plugin, cannot perform actions at this time">Unavailable</Icon>
+        <Icon class="is-size-6 no-border" v-else icon="fa-plug-circle-minus" data-tooltip="No connection to plugin, cannot perform actions at this time">Unavailable</Icon>
       </td>
     </template>
     <template v-else>

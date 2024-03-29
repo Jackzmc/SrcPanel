@@ -106,7 +106,7 @@ export interface LiveRecordGame extends BaseLiveRecord {
     startTime: number,
     campaignStartTime: number,
     difficulty: GameDifficulty,
-    inTransition: boolean,
+    state: GameState,
     maxplayers: number,
     map: string,
     gamemode: string,
@@ -207,6 +207,12 @@ export const enum LiveRecordResponse {
     RunCommand // RunCommand(byte) id(number) command(string)
 }
 
+export enum GameState {
+    None,
+    Transitioning,
+    Hibernating
+}
+
 
 export interface LiveDataCache {
     game: LiveRecordGame | null,
@@ -227,7 +233,7 @@ export function updateLiveCache(cache: LiveDataCache | undefined, record: LiveRe
     switch(record.type) {
         case LiveRecordType.Game:
             cache.game = record
-            if(cache.game.inTransition) {
+            if(cache.game.state != GameState.None) {
                 cache.players = {}
             }
             break
