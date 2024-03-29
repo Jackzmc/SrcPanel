@@ -101,14 +101,14 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                     )
                 }
 
-                const timePackagesInstall = await doExec("PACKAGES_INSTALL", "yarn")
+                const timePackagesInstall = await doExec("PACKAGES_INSTALL", "yarn install")
 
                 await doState("CLEANUP_OLD_BUILD", rm(path.join(process.cwd(), 'dist'), {
                     recursive: true,
                     force: true
                 }))
 
-                const timeTsc = await doExec("TSC", 'tsc')
+                const timeTsc = await doExec("TSC", 'yarn tsc')
 
                 updateState = "RESTARTING"
 

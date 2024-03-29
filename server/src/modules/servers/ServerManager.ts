@@ -105,6 +105,7 @@ export default class ServerManager {
       if(!ps.Authenticated) {
         return this.#authenticateSocket(ps, new BufferReader(buf))
       }
+      
       for(const packet of BufferReader.getPackets(buf)) {
         for(const reader of packet.readRecords()) {
           try {
@@ -112,6 +113,7 @@ export default class ServerManager {
             if(record.type === LiveRecordType.Meta) {
               this.#steam.SteamAvailable = record.steamConnected
             }
+
             ps.onRecord(record)
           } catch(err) {
             console.warn("[ServerManager] bad packet:", err)
