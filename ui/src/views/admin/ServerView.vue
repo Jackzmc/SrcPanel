@@ -82,7 +82,7 @@
               <Icon icon="fa-spinner" spin v-if="nextRefreshCountdown == 0"></Icon>
               <span v-else>{{ nextRefreshCountdown }}s</span>
             </span>
-            <table class="table is-fullwidth is-size-4">
+            <table class="table is-fullwidth is-size-4" v-if="status.online">
               <tr v-if="serverInfo.type === 'source'">
                 <th>Map</th>
                 <td v-if="mapInfo">
