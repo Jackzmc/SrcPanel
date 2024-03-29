@@ -271,6 +271,13 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         const server = fastify.servers.get(req.params.id)
         if(!server) return NOT_FOUND(reply, "Server")
 
+        if(!server.SocketConnected) {
+            return reply.status(503).send({
+                error: "SERVER_UNAVAILABLE",
+                message: "Server is not connected to the panel."
+            })
+        }
+
         let namespace = "default"
         let command: string = req.params.action
         const split = req.params.action.split(":")
