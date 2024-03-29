@@ -247,7 +247,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     fastify.post('/:id/start', async(req: FastifyRequest<{Params: { id: 'string'} }>, reply) => {
         const server = fastify.servers.get(req.params.id)
         if(!server) NOT_FOUND(reply, "Server")
-        const [code, granted] = req.user.requirePermission("servers.cmds.start", { resourceId: server.id })
+        const [code, granted] = req.user.requirePermission("servers.action.builtin.start", { resourceId: server.id })
         if(!granted) return NO_PERMISSION(reply, "You do not have permission to start this server", code)
         if(!server.hasSystemd) {
             return reply.code(400).send({
@@ -271,15 +271,15 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         const server = fastify.servers.get(req.params.id)
         if(!server) return NOT_FOUND(reply, "Server")
 
-        const [code, granted] = req.user.requirePermission("servers.cmds.action" as UserPrivilegeCode, { resourceId: server.id })
-        if(!granted) return NO_PERMISSION(reply, undefined, code)
-
         let namespace = "default"
         let command: string = req.params.action
         const split = req.params.action.split(":")
         if(split.length > 1) {
             [namespace, command] = split
         }
+
+        const [code, granted] = req.user.requirePermission(`servers.plugin.${namespace}.${command}` as UserPrivilegeCode, { resourceId: server.id })
+        if(!granted) return NO_PERMISSION(reply, undefined, code)
 
         await req.user.log(null, `%client% ran action %namespace%:%command%`, {
             code,
@@ -311,7 +311,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         
         if(req.body.includes("rcon_password"))
             return NO_PERMISSION(reply, "You do not have permission to run that command")
-        const [code, granted] = req.user.requirePermission("servers.plugin", { resourceIds: [server.id] })
+        const [code, granted] = req.user.requirePermission("servers.plugin.default." + req.params.id as UserPrivilegeCode, { resourceIds: [server.id] })
         if(!granted) return NO_PERMISSION(reply, "You do not have permission to run commands on this server", code)
 
         if(!server.hasPlugin) {
@@ -343,7 +343,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     fastify.post('/:id/stop', async(req: FastifyRequest<{Querystring: { force?: boolean }, Params: { id: 'string'} }>, reply) => {
         const server = fastify.servers.get(req.params.id)
         if(!server) NOT_FOUND(reply, "Server")
-        const [code, granted] = req.user.requirePermission("servers.cmds.start", { resourceId: server.id })
+        const [code, granted] = req.user.requirePermission(req.query.force ? "servers.action.builtin.stop" : "servers.action.builtin.request_stop", { resourceId: server.id })
         if(!granted) return NO_PERMISSION(reply, "You do not have permission to stop this server", code)
         if(!server.hasPlugin) {
             return reply.code(400).send({
