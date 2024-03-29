@@ -41,14 +41,14 @@
           </div>
           <div class="level-right">
             <div class="buttons">
-              <a v-if="serverInfo.features.includes('systemd') && (!status || !status.online)" @click="processAction('start')" class="button is-success is-small">Start Server</a>
+              <a v-if="serverInfo.features.includes('systemd') && (!status || !status.online)" @click="performAction('start')" class="button is-success is-small">Start Server</a>
               <template v-if="status?.online && serverInfo.features.includes('rcon')">
                 <!-- <a data-tooltip="Will restart server if no players online, or fail if there are" @click="processAction('stop')" class="button is-dark is-small">Request Restart</a>
                 <a v-if="serverInfo.type === 'source'" data-tooltip="Will remove lobby reservation, allowing 5+ to join. This is done automatically after 4 players have fully loaded in" @click="processAction('unreserve')" class="button is-dark is-small">Unreserve</a>
                 <a v-show="shiftPressed" data-tooltip="Will forcefully restart server, regardless if players are online" @click="processAction('stop', { force: true })" class="button is-danger is-small">Force Restart</a> -->
               </template>
               <template v-if="serverInfo.status.online">
-                <button :data-tooltip="action.description" :disabled="actionRunning" v-for="(action, i) in actions" :key="i" @click="processAction(action.command)" class="button is-dark is-small" :style="{'background-color': action.color}">{{ action.name }}</button>
+                <button :data-tooltip="action.description" :disabled="actionRunning" v-for="(action, i) in actions" :key="i" @click="performAction(action.command)" class="button is-dark is-small" :style="{'background-color': action.color}">{{ action.name }}</button>
               </template>
             </div>
           </div>
@@ -432,7 +432,7 @@ import { parseLog, getRelDate, request } from '@/js/util';
 import LogMessage from "@/components/LogMessage.vue";
 import { useNotification } from "@kyvg/vue3-notification";
 import Field from '@/components/Field.vue';
-import { SurvivorId, FinaleStage, PlayerState, PlayerGameAction, PlayerMove, InfectedClass, LiveDataCache, LiveRecord, updateLiveCache, LivePlayerSurvivor, LivePlayerFull, LivePlayerInfected, LiveRecordType, GameDifficulty } from '../../../../common-types/Live';
+import { SurvivorId, FinaleStage, PlayerState, PlayerGameAction, PlayerMove, InfectedClass, LiveDataCache, LiveRecord, updateLiveCache, LivePlayerSurvivor, LivePlayerFull, LivePlayerInfected, LiveRecordType, GameDifficulty, CommandResultType } from '../../../../common-types/Live';
 import { UserPrivilegeCode } from '../../../../common-types/Privileges';
 import { formatDate, getDuration } from '../../js/util.js';
 import UserComponent, { User } from '@/components/UserComponent.vue';
@@ -718,38 +718,34 @@ async function kickPlayer(player: LivePlayerFull) {
       text: "Kick Cancelled (no reason provided)"
     })
   }
-  const response = await request(`/api/servers/${serverInfo.value!.id}/players/kick?reason=${encodeURIComponent(reason)}&steamid=${player.steamid}`, { method: 'POST' })
-  if(response?.ok) {
-    notify({
-      type: "success",
-      text: `Kicked ${player.name} successfully`
-    })
-  }
+  await performAction(`builtin:kick #${player.userid}`)
 }
 
-async function processAction(type: string, options: Record<string, any> = {}) {
-  if(type === "start") {
-    starting.value = true
-    setTimeout(() => {
-      starting.value = false
-    }, 1000 * 30)
-  }
+async function performAction(command: string, options: Record<string, any> = {}) {
   // Ask user to confirm:
-  if(type === "stop" && options.force) {
+  const prefix = command.split(" ").shift()
+
+  if(prefix === "builtin:stop" && options.force) {
     if(!confirm("You are requesting to forcefully restart the server. This should only be used in the last resort, if the server became unresponsive. This does not check for players being online. Are you sure?")) return
   }
-  const response = await request(`/api/servers/${serverInfo.value!.id}/${type}`, {
+  const response = await request(`/api/servers/${serverInfo.value!.id}/action/${command}`, {
     method: 'POST',
     credentials: 'include'
   })
   if(response?.ok) {
     const json = await response.json()
-    if(json.error) {
-      return notify({ type: 'error', title: "Server returned error", text: json.message })
-    } else if(json.response.includes("players online")) {
-      notify({ type: 'error', text: 'Cannot restart server: There are players online'})
-    } else{
-      notify({ type: 'sucess', text: json.response})
+    if(json.resultType === CommandResultType.Error) {
+      notify({
+        type: "danger",
+        title: `Action (${prefix}) Failed`,
+        text: json.message
+      })
+    } else if(json.resultType === CommandResultType.Boolean) {
+      notify({
+        type: json.result ? "success" : "warn",
+        title: json.result ? `Action (${prefix}) Succeeded` : `Action (${prefix}) Failed`,
+        text: json.message
+      })
     }
   }
 }

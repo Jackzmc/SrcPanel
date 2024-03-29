@@ -61,8 +61,8 @@ export default class ServerManager {
       .then(() => {
         this.refresh()
         this.refreshTimer = setInterval(() => this.refresh(), this.longRefreshInterval)
+        this.#createLiveServer()
       })
-    this.#createLiveServer()
   }
 
   #debugLive(...args: any[]) {

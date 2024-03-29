@@ -4,7 +4,7 @@ import { open, readdir } from 'fs/promises'
 import { join, resolve } from 'path'
 import { statSync } from 'fs';
 import { BuiltInActions, GroupInfo, PlayerAction, PlayerStats, SERVER_TYPE_MAP, ServerAction, ServerData, ServerInfo, ServerStatus, ServerType } from '../../../../common-types/Server.js';
-import { LiveRecord, LiveDataCache, updateLiveCache, LiveRecordType, LiveRecordResponse } from '../../../../common-types/Live.js';
+import { LiveRecord, LiveDataCache, updateLiveCache, LiveRecordType, LiveRecordResponse, CommandResultType } from '../../../../common-types/Live.js';
 import { EventEmitter } from 'node:events';
 import { GenericError } from '../../util.js';
 import { Tail } from 'tail'
@@ -485,9 +485,14 @@ export default class Server extends EventEmitter {
     }
 
     public async performAction(command: string, namespace = "default", args: string[] = []) {
-      console.log("running", command, namespace, [command, ...args])
       if(!this.#socket) throw new Error("Not connected to plugin socket")
-      return await this.#socket.send(LiveRecordResponse.RunCommand, command, namespace)
+      const response = await this.#socket.send(LiveRecordResponse.RunCommand, command, namespace)
+      switch(response.resultType) {
+        case CommandResultType.Boolean: 
+          response.result = Boolean(response.result)
+          break
+      }
+      return response
     }
 
     /**

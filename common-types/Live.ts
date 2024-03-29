@@ -156,10 +156,19 @@ export interface LiveRecordSurvivorItems extends BaseLiveRecord {
     items: [string,string,string,string,string]
 }
 
+export enum CommandResultType {
+    Error = -1,
+    None,
+    Boolean,
+    Integer,
+    Float
+}
+
 export interface LiveRecordCommandResponse {
     type: LiveRecordType.CommandResponse,
     id: number,
-    result: number,
+    resultType: CommandResultType,
+    result: number | boolean,
     message?: string
 }
 

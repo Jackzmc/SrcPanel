@@ -290,8 +290,10 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         })
         const args = req.query.args ? req.query.args.split(",") : []
         try {
-            const response = await server.performAction(command, namespace, args )
+            const response = await server.performAction(command, namespace, args)
             return {
+                id: response.id,
+                resultType: response.resultType,
                 result: response.result,
                 message: response.message
             }

@@ -89,6 +89,7 @@ export default class PluginSocket {
               let res: LiveRecordCommandResponse = {
                 type,
                 id: reader.readByte(),
+                resultType: reader.readByte(),
                 result: reader.readByte(),
                 message: reader.readString()
               }
