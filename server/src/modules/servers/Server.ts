@@ -56,14 +56,6 @@ export interface BaseServerData {
 
 
 export interface ConfigServerData extends BaseServerData {
-  rcon ? : {
-      password: {
-        text ? : string;
-        env ? : string;
-      };
-      exitCommand ? : string;
-      requestExitCommand ? : string;
-  },
   systemd ? : {
     isUser: boolean;
     serviceName: string;
@@ -72,11 +64,6 @@ export interface ConfigServerData extends BaseServerData {
 }
 
 export interface ServerExtendedData extends BaseServerData {
-  rcon: {
-    password: string,
-    exitCommand: string,
-    requestExitCommand: string
-  },
   actions?: ServerAction[]
 }
   
@@ -87,7 +74,7 @@ const MAX_LOGS_LINES = 30
 const LIVE_CACHE_TTL = 1000 * 60 * 3 // Live cache data expires after 3 minutes
 
 
-type Features = "rcon" | "console" | "configs" | "systemd" | "plugin"
+type Features = "console" | "configs" | "systemd" | "plugin"
 
 export default class Server extends EventEmitter { 
     #info: ServerData

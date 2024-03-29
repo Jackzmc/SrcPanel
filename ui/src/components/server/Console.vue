@@ -18,7 +18,7 @@
         <option v-for="cmd in validCommands" :key="cmd" :value="cmd"></option>
       </datalist>
     </template>
-    <input v-else disabled class="input terminal-input" placeholder="Server does not support RCON">
+    <input v-else disabled class="input terminal-input" placeholder="Plugin not connected, cannot send commands">
   </Field>
 </div>
 </template>
@@ -41,7 +41,7 @@ const props = defineProps<{
 }>()
 
 const rconSupported = computed(() => {
-  return props.server.features.includes('rcon')
+  return props.server.features.includes('plugin')
 })
 
 const isConnected = computed(() => {
@@ -73,16 +73,15 @@ let errCount = ref(0)
 
 async function runCommand() {
   if(!commandInput.value) return
-  const command = commandInput.value.trim()
+  let command = commandInput.value.trim()
   if(command.length === 0) return
   if(command.startsWith("/") || command.startsWith("!")) {
-    console.log(command)
     notify({
       type: "info",
       title: "Bad Command",
       text: `/ and ! commands are only used in chat. To enter commands replace them with the sm_ prefix`
     })
-    return
+    command = "sm_" + command.slice(1)
   }
 
   pushLine(`> ${command}`)
@@ -91,6 +90,7 @@ async function runCommand() {
     method: "POST",
     body: command
   })
+
   if(response?.ok) {
     const text = await response.text()
     // Rcon output is not shown to the main server logs, include here:

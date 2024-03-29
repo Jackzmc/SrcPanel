@@ -105,6 +105,14 @@ export default class PluginSocket {
               res.message = reader.readString()
               return res as LiveRecordCommandResponse
             }
+            case LiveRecordType.Meta: {
+              return {
+                type,
+                steamConnected: reader.readByte() > 0
+              }
+              break;
+            }
+            
             default: {
               throw new Error("Not Implemented type: " + type)
             }

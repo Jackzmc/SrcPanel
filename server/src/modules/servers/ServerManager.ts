@@ -375,12 +375,6 @@ export default class ServerManager {
 
               const tags = server.tags ?? []
               if(server.systemd) tags.push('systemd')
-              if(server.rcon) tags.push('rcon')
-
-              let rconPassword = server.rcon?.password?.text
-              if(server.rcon && server.rcon.password.env) {
-                rconPassword = process.env[server.rcon.password.env]
-              }
 
               this.servers[id] = new Server(this.groups[groupId], {
                 actions: server.actions ?? [],
@@ -395,11 +389,6 @@ export default class ServerManager {
                 logsPath: server.logsPath,
                 activityId: server.activityId,
                 systemd: server.systemd,
-                rcon: server.rcon ? {
-                  password: rconPassword,
-                  exitCommand: server.rcon.exitCommand || "exit",
-                  requestExitCommand: server.rcon.requestExitCommand || "exit"
-                } : null,
                 sortOrder: server.sortOrder
               })
               resolve(true)
