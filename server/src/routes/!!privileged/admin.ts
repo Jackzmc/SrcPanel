@@ -101,7 +101,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                     )
                 }
 
-                const timePackagesInstall = await doExec("PACKAGES_INSTALL", "yarn install")
+                const timePackagesInstall = await doExec("PACKAGES_INSTALL", "yarn")
 
                 await doState("CLEANUP_OLD_BUILD", rm(path.join(process.cwd(), 'dist'), {
                     recursive: true,

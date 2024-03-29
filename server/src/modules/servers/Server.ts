@@ -1,14 +1,11 @@
 import Gamedig from 'gamedig';
-import { Rcon } from 'rcon-client';
 import { open, readdir } from 'fs/promises'
 import { join, resolve } from 'path'
 import { statSync } from 'fs';
-import { BuiltInActions, GroupInfo, PlayerAction, PlayerStats, SERVER_TYPE_MAP, ServerAction, ServerData, ServerInfo, ServerStatus, ServerType } from '../../../../common-types/Server.js';
+import { GroupInfo, PlayerStats, SERVER_TYPE_MAP, ServerAction, ServerData, ServerInfo, ServerStatus, ServerType } from '../../../../common-types/Server.js';
 import { LiveRecord, LiveDataCache, updateLiveCache, LiveRecordType, LiveRecordResponse, CommandResultType } from '../../../../common-types/Live.js';
 import { EventEmitter } from 'node:events';
-import { GenericError } from '../../util.js';
 import { Tail } from 'tail'
-import { Socket } from 'net'
 import PluginSocket from './PluginSocket.js';
 
 const HIDDEN_CONFIG_FILES = [
@@ -107,13 +104,6 @@ export default class Server extends EventEmitter {
     #actions: ServerAction[]
     #group: GroupInfo
     #features: Features[] = []
-    #rcon?: {
-      password: string,
-      exitCommand: string
-      requestExitCommand: string,
-      client: Rcon,
-      connected: boolean
-    } = null; 
     #systemd?: {
       isUser: boolean;
       serviceName: string;
@@ -158,26 +148,6 @@ export default class Server extends EventEmitter {
             if(err.code === "ENOENT")
               console.error(`[Server/${server.id}] ERROR: Log file does not exist at ${server.logsPath}; skipping`)
             else throw err
-          }
-        }
-
-        if(server.rcon) {
-          const client = new Rcon({
-            host: this.#info.ip, port: this.#info.port, password: server.rcon.password
-          })
-          this.#features.push("rcon")
-          client.on('connect', () => {
-            this.#rcon.connected = true
-          })
-          client.on('end', () => this.#rcon.connected = false)
-          client.on('error', (err) => {
-            console.warn(`[Warn] [Server::${this.#info.id}]`, err.code ?? err.message)
-            this.#rcon.connected = false
-          })
-          this.#rcon = {
-            ...server.rcon,
-            client,
-            connected: false
           }
         }
 
@@ -269,10 +239,10 @@ export default class Server extends EventEmitter {
       return this.listenerCount("live")
     }
 
-    public get hasRcon() { return this.#rcon !== null }
     public get hasSystemd() { return this.#systemd !== null }
     public get hasConfigs() { return this.#cfgDir !== null && this.#cfgDir !== undefined}
     public get hasConsole() { return this.#features.includes("console") }
+    public get hasPlugin() { return this.#features.includes("plugin") }
 
     public get features() {
       return [...this.#features]
@@ -401,20 +371,6 @@ export default class Server extends EventEmitter {
         if(index > -1) this.#features.splice(index, 1)
       }
     }
-
-    /**
-     * Attempt to connect to rcon, if not already connected
-     */
-    async rconConnect() {
-      if(!this.#rcon.connected || !this.#rcon.client.authenticated) {
-        // Drop connection if already connected
-        if(this.#rcon.client.socket && !this.#rcon.client.authenticated) {
-          console.error(`[Server/${this.id}] Connected but not authenticated. Possibly unauthorized?`)
-        }
-        await this.#rcon.client.connect()
-      }
-    }
-    
     /**
      * Attempt to start server by systemd (Not implemented)
      */
@@ -428,18 +384,14 @@ export default class Server extends EventEmitter {
      * @param force forcefully?
      * @returns boolean on success or false if not successful (players online and not forced)
      */
-    public async stop(force: boolean) {
-      if(!this.hasRcon) throw new Error("No rcon config is setup")
-      let command: string
-      if(this.type === "source")
-        command = force ? "exit" : "sm_panel_request_stop"
-      else
-        command = "stop"
-      console.log(`stop(${force}): ${command}`)
-      const msg = await this.sendCommand(command);
-      console.log(msg)
-      // If players online, requestExitCommand will not shut down server, so return false
-      return force || !msg.includes("players online.")
+    public async stop(force: boolean): Promise<boolean> {
+      if(force) {
+        const result = await this.performAction("stop", "builtin")
+        return Boolean(result.result)
+      } else {
+        const result = await this.performAction("request_stop", "builtin")
+        return Boolean(result.result)
+      }
     }
 
     /**
@@ -449,43 +401,15 @@ export default class Server extends EventEmitter {
      * @returns bool - success or false on timed out
      */
     public async stopWait(force: boolean, timeoutSeconds = 10_000) {
-      if(!this.hasRcon) throw new Error("No rcon config is setup")
-      await this.sendCommand(force ? this.#rcon.exitCommand : this.#rcon.requestExitCommand)
-      while(this.#rcon.connected && timeoutSeconds > 0) {
+      if(!await this.stop(force)) return false
+      // The stop happens a frame after, wait a second
+      await sleep(1000) 
+      // Wait until socket re-established
+      while(!this.#socket?.Authenticated && timeoutSeconds > 0) {
         timeoutSeconds -= 1000
         await sleep(1000)
       }
       return timeoutSeconds > 0
-    }
-
-    /**
-     * Send an rcon command, automatically trying to connect to rcon
-     * @param cmd the command
-     * @returns the server's response
-     */
-    public async sendCommand(cmd: string) {
-      await this.rconConnect()
-      return await this.#rcon.client.send(cmd)
-    }
-
-    /**
-     * Attempts to perform an action (ie, kicking)
-     * @param action The action to perform
-     * @param steamid The player to perform it on
-     * @param args 
-     */
-    public async performActionLegacy(action: PlayerAction, steamid: string, args: Record<string, string> = {}) {
-      let sourcemodId: string;
-      if(steamid.startsWith("#")) {
-        if(isNaN(Number(steamid.slice(1)))) { 
-          throw new Error("invalid userid: " + steamid)
-        }
-        sourcemodId = steamid
-      } else {
-        sourcemodId = `#${steamid.replace(/:/g, '_')}`
-      }
-      const command = this.#getActionCommand(action, sourcemodId, args)
-      await this.sendCommand(command)
     }
 
     public async performAction(command: string, namespace = "default", args: string[] = []) {
@@ -497,25 +421,6 @@ export default class Server extends EventEmitter {
           break
       }
       return response
-    }
-
-    /**
-     * Returns the command formatted for the action
-     * @param action 
-     * @param sourcemodId The valid sourcemod client id
-     * @param args 
-     * @returns 
-     */
-    #getActionCommand(action: PlayerAction, sourcemodId: string, args: Record<string, string>): string {
-      switch(action) {
-        case "kick": {
-          if(args.reason)
-            return `sm_kick ${sourcemodId} "${args.reason.replace(/"/, "'")}`
-          else
-            return `sm_kick ${sourcemodId}`
-        }
-        default: throw new GenericError(`Unsupported action \"${action}\"`, "UNSUPPORTED_PLAYER_ACTION")
-      }
     }
 
     /**

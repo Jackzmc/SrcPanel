@@ -111,6 +111,9 @@ export default class ServerManager {
     })
 
     client.on('close', () => {
+      const server = ps.Server
+      server._setSocket(null)
+      ps._setServer(null)
       this.#socketClients.delete(client.remoteAddress)
       this.#debugLive('client disconnected', client.remoteAddress)
     })

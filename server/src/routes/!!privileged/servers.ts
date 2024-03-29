@@ -311,75 +311,32 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         
         if(req.body.includes("rcon_password"))
             return NO_PERMISSION(reply, "You do not have permission to run that command")
-        const [code, granted] = req.user.requirePermission("servers.rcon", { resourceIds: [server.id] })
+        const [code, granted] = req.user.requirePermission("servers.plugin", { resourceIds: [server.id] })
         if(!granted) return NO_PERMISSION(reply, "You do not have permission to run commands on this server", code)
 
-        if(!server.hasRcon) {
+        if(!server.hasPlugin) {
             return reply.code(400).send({
-                error: "NO_RCON",
-                message: "Server does not have rcon setup"
+                error: "NO_PLUGIN",
+                message: "Server has not been setup to run commands"
             })
         }
 
-        try {
-            const id = await req.user.log(null, `%client% ran command %cmd%`, {
-                code,
-                metadata: {
-                    cmd: req.body
-                }
-            })
-            await fastify.authmngr.notifyAdmins(`Admin ${req.user.steamid2} ran rcon command \"${req.body}\" on server ${server.id}. Log entry: ${id}`, "notify_rcon_use")
-            const response = await server.sendCommand(req.body)
-            if(req.query['no-response'])
-                return reply.status(204).send()
-            else return response
-        } catch(err) {
-            return reply.code(500).send({
-                error: "SERVER_ERROR",
-                message: "Server returned an error: " + err.message,
-            })
-        }
-    })
-
-    fastify.post('/:id/players/:action', async(req: FastifyRequest<{Params: { id: 'string', action: 'string'}, Querystring: { userId?: string, steamid?: string } }>, reply) => {
-        const server = fastify.servers.get(req.params.id)
-        if(!server) return NOT_FOUND(reply, "Server")
-        
-        // TODO: diff permission code
-        const [code, granted] = req.user.requirePermission("servers.rcon", { resourceIds: [server.id, req.params.action] })
-        if(!granted) return NO_PERMISSION(reply, "You do not have permissions to run commands on this server", code)
-
-        if(!server.hasRcon) {
-            return reply.code(400).send({
-                error: "NO_RCON",
-                message: "Server does not have rcon setup"
-            })
-        }
-
-        const targetUser = fastify.authmngr.getAdmin(req.query.steamid)
-        if(targetUser && targetUser.permissions.immunityLevel > req.user.immunity) {
-            return NO_PERMISSION(reply, "You do not have permisson to perform actions on this user", code)
-        }
-        
-        await req.user.log(null, `%client% performed action %action% to %steamid% on %server%`, {
+        const id = await req.user.log(null, `%client% ran command %cmd% on %server%`, {
             code,
             metadata: {
                 server: server.id,
-                action: req.params.action,
-                steamid: req.query.steamid,
-                arguments: {...req.query as Record<string, string>} 
+                cmd: req.body
             }
         })
-
-        try {
-            await server.performActionLegacy(req.params.action as PlayerAction, req.query.steamid, req.query as Record<string, string>)
-            reply.status(204).send()
-        } catch(err) {
-            return reply.code(500).send({
-                error: "SERVER_ERROR",
-                message: "Server returned an error: " + err.message,
-                code: 500
-            })
+        await fastify.authmngr.notifyAdmins(`Admin ${req.user.steamid2} ran server command \"${req.body}\" on server ${server.id}. Log entry: ${id}`, "notify_rcon_use")
+        const response = await server.performAction(req.body, "default")
+        if(req.query['no-response'])
+            return reply.status(204).send()
+        else return {
+            id: response.id,
+            resultType: response.resultType,
+            result: response.result,
+            message: response.message
         }
     })
 
@@ -388,10 +345,10 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         if(!server) NOT_FOUND(reply, "Server")
         const [code, granted] = req.user.requirePermission("servers.cmds.start", { resourceId: server.id })
         if(!granted) return NO_PERMISSION(reply, "You do not have permission to stop this server", code)
-        if(!server.hasRcon) {
+        if(!server.hasPlugin) {
             return reply.code(400).send({
-                error: "NO_RCON",
-                message: "Server does not have rcon setup"
+                error: "NO_PLUGIN",
+                message: "Server has not been setup to run commands"
             })
         }
         try {
@@ -419,145 +376,6 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
     })
 
-    fastify.post('/:id/restart', async(req: FastifyRequest<{Querystring: { force?: boolean, sse?: boolean }, Params: { id: 'string'} }>, reply) => {
-        const server = fastify.servers.get(req.params.id)
-        if(!server) NOT_FOUND(reply, "Server")
-        // We will allow users to restart IF they can start, allowing them to stop it kinda
-        // But if they force it, they will need stop permission too
-        if(req.query.force) {
-            const [code, granted] = req.user.requirePermission("servers.cmds.stop", { resourceId: server.id })
-            if(!granted) return NO_PERMISSION(reply, "You do not have permission to force stop this server", code)
-        }
-        const [code, granted] = req.user.requirePermission("servers.cmds.start", { resourceId: server.id })
-        if(!granted) return NO_PERMISSION(reply, "You do not have permission to start this server", code)
-
-        if(!server.hasRcon) {
-            return reply.code(400).send({
-                error: "NO_RCON",
-                message: "Server does not have rcon setup"
-            })
-        }
-        try {
-            return { response: await server.stop(req.query.force) }
-        } catch(err) {
-            console.log('error', err)
-            return reply.code(500).send({
-                error: "SERVER_ERROR",
-                message: "Server returned an error: " + err.message,
-                code: 500
-            })
-        }
-    })
-    
-    fastify.get('/:id/restart/sse', async(req: FastifyRequest<{Querystring: { force?: boolean }, Params: { id: 'string'} }>, reply) => {
-        reply.raw.writeHead(200, {
-            'Cache-Control': 'no-cache,no-transform',
-            'Content-Type': 'text/event-stream',
-            'Connection': 'keep-alive',
-            'X-Accel-Buffering': 'no'
-        });
-        function send(msg: any) {
-            reply.raw.write(`data: ${JSON.stringify(msg)}\n\n`)
-        }
-        reply.raw.flushHeaders()
-        reply.raw.write('retry: 10000\n\n')
-        const server = fastify.servers.get(req.params.id)
-        
-        if(!server) {
-            send({
-                error: "SERVER_NOT_FOUND",
-                message: "Server Not Found", 
-            })
-        }
-        if((req.query.force && !req.user.hasPermission("servers.cmds.stop", server.id)) 
-            || !req.user.hasPermission("servers.cmds.start", server.id)
-        ) return send({error: "NO_PERMISSION", message: "You are not authorized to access this resource"})
-
-        if(!server.hasRcon) {
-            send({
-                error: "NO_RCON",
-                message: "Server does not have rcon setup"
-            })
-        }
-        try {
-            const response = await server.stop(req.query.force)
-            if(!req.query.force && !response) {
-                send({
-                    error: "PLAYERS_ONLINE",
-                    message: "There are players are online"
-                })
-            } else {
-            send({ state: "restarting" })
-                let timeout = 30_000
-                let waitingState = "before_offline"
-                while(timeout > 0) {
-                    await server.refresh()
-                    if(waitingState === "before_offline") {
-                        if(!server.status.online) {
-                            // Wait for server to go offline
-                            waitingState = "server_offline"
-                            send({ state: waitingState })
-                        }
-                    } else if(waitingState === "server_offline") {
-                        if(server.status.online) {
-                            // Now server went offline, wait for it to go online
-                            waitingState = "done"
-                            send({ state: waitingState })
-                            break
-                        }
-                    }
-                    timeout -= 1000
-                    await sleep(1000)
-                }
-                if(timeout == 0) {
-                    send({ 
-                        error: "RESTART_CHECK_TIMEOUT",
-                        message: "Timed out while waiting for server to restart"
-                    })
-                }
-            }
-        } catch(err) {
-            console.log('error', err)
-            if(err.code === "ETIMEDOUT") {
-                send({
-                    error: "CONNECTION_TIMED_OUT",
-                    message: "Could not reach server in time"
-                })
-            } else {
-                send({
-                    error: "UNKNOWN_ERROR",
-                    message: "An unknown error occurred"
-                })
-            }
-        }
-        reply.hijack()
-        // Timeout if they haven't killed it
-        setTimeout(() => reply.raw.end(), 60_000)
-    })
-
-    fastify.post('/:id/unreserve', async(req: FastifyRequest<{Params: { id: 'string'} }>, reply) => {
-        const server = fastify.servers.get(req.params.id)
-        if(!server) NOT_FOUND(reply, "Server")
-        const [code, granted] = req.user.requirePermission("servers.cmds.unreserve", { resourceId: server.id })
-        if(!granted) return NO_PERMISSION(reply, "You do not have permission to unreserve this server", code)
-        if(!server.hasRcon) {
-            return reply.code(400).send({
-                error: "NO_RCON",
-                message: "Server does not have rcon setup"
-            })
-        }
-        try {
-            return { response: await server.sendCommand("sm_unreserve") }
-        } catch(err) {
-            console.log('error', err)
-            return reply.code(500).send({
-                error: "SERVER_ERROR",
-                message: "Server returned an error: " + err.message,
-                code: 500
-            })
-        }
-    })
-
     fastify.post('/:id/create', async(req: FastifyRequest<{Params: { id: 'string'} }>, reply) => {
         reply.code(501).send()
     })
@@ -570,7 +388,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 code: "SERVER_NOT_FOUND",
             })
         }
-        const [code, granted] = req.user.requirePermission("servers.rcon", { resourceId: server.id })
+        const [code, granted] = req.user.requirePermission("servers.view_console", { resourceId: server.id })
         if(!granted) return NO_PERMISSION(reply, "You do not have permission to view the server console", code)
 
         return server.logs.join("\n")
@@ -593,7 +411,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             failed = true
             eventHandler(`Unknown server`)
         }
-        const [code, granted] = req.user.requirePermission("servers.rcon", { resourceId: server.id })
+        const [code, granted] = req.user.requirePermission("servers.view_console", { resourceId: server.id })
         console.log(code, granted, req.user.permCodes)
         if(!granted) {
             failed = true

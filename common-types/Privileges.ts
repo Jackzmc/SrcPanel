@@ -15,8 +15,8 @@ export const UserPrivilegeCodes = [
     , "shares.addons.view", "shares.addons.edit", "shares.addons.delete"
     , "shares.addons.upload", "shares.addons.upload.direct", "shares.addons.upload.steam_workshop"
     , "panel.view", "panel.manage", "panel.update"
-    , "servers.view", "servers.cmds.start", "servers.cmds.stop", "servers.cmds.unreserve", "servers.rcon"
-    , "servers.configs.read", "servers.configs.read_raw", "servers.configs.edit", "servers.generate_jwt"
+    , "servers.view", "servers.cmds.start", "servers.cmds.stop", "servers.cmds.unreserve", "servers.plugin"
+    , "servers.configs.read", "servers.configs.read_raw", "servers.configs.edit", "servers.generate_jwt", "servers.view_console"
     , "logs.view", "logs.redact", "admins.disable_policy_check"
     , "admins.notify_rcon_use", "admins.impersonate", "panel.restart"
 ] as const
