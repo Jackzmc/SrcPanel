@@ -535,7 +535,7 @@ const TABS: Record<string, { name: string, tag?: string, permission?: string, en
   },
   console: {
     name: "Console",
-    permission: "servers.rcon.<id>",
+    permission: "servers.action.<id>",
     enabled: () => {
       return serverInfo.value?.features.includes("console")
     }

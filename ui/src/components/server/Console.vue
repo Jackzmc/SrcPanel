@@ -18,7 +18,7 @@
         <option v-for="cmd in validCommands" :key="cmd" :value="cmd"></option>
       </datalist>
     </template>
-    <input v-else disabled class="input terminal-input" placeholder="Server does not support RCON">
+    <input v-else disabled class="input terminal-input" placeholder="Plugin not connected, cannot send commands">
   </Field>
 </div>
 </template>
@@ -41,7 +41,7 @@ const props = defineProps<{
 }>()
 
 const rconSupported = computed(() => {
-  return props.server.features.includes('rcon')
+  return props.server.features.includes('plugin')
 })
 
 const isConnected = computed(() => {
