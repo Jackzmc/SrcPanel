@@ -41,7 +41,7 @@
           </div>
           <div class="level-right">
             <div class="buttons">
-              <template v-if="serverInfo.features.includes('plugin')">
+              <template v-if="isLiveViewActive || serverInfo.features.includes('plugin')">
                 <a v-if="serverInfo.features.includes('systemd') && (!status || !status.online)" @click="performAction('start')" class="button is-success is-small">Start Server</a>
                 <template v-if="status?.online && serverInfo.features.includes('rcon')">
                   <!-- <a data-tooltip="Will restart server if no players online, or fail if there are" @click="processAction('stop')" class="button is-dark is-small">Request Restart</a>
