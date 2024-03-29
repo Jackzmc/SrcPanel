@@ -4,7 +4,7 @@
     <div class="column is-8">
       <p class="is-inline is-pulled-right" style="margin-right: 90px">
         <em v-if="lastRefresh">refreshing in {{lastRefresh}}s</em>
-        <Icon icon="spinner" v-else spin />
+        <Icon icon="spinner" v-else spin >Refreshing</Icon>
       </p>
       <ServerTable v-for="group in sortedServers" :key="group.id" :group="group" manage>
       </ServerTable>
@@ -23,7 +23,7 @@
 </template>
 
 <script setup lang="ts">
-import ServerTable from '@/components/ServerTable.vue';
+import ServerTable from '@/components/servers/ServerTable.vue';
 import { request } from '@/js/util';
 import { notify } from '@kyvg/vue3-notification';
 import { ref, computed, onBeforeMount, onDeactivated, onUnmounted } from 'vue'

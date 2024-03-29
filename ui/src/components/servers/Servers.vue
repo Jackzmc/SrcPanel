@@ -7,7 +7,7 @@
 <script setup lang="ts">
 import { ref, watch, computed, onBeforeMount, onBeforeUnmount } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import ServerTable from "@/components/ServerTable.vue";
+import ServerTable from "@/components/servers/ServerTable.vue";
 
 const REFRESH_INTERVAL = 1000 * 15;
 

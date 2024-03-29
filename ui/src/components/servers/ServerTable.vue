@@ -5,7 +5,7 @@
       <thead>
         <tr>
           <th>Name</th>
-          <th>Players</th>
+          <th :class="manage ? undefined : 'has-text-centered'">Players</th>
           <template v-if="manage">
             <th v-if="group.type === 'source'">Current Map</th>
             <th>Actions</th>
@@ -30,8 +30,8 @@
 </template>
 
 <script setup lang="ts">
-import { ServerGroup } from '../../../common-types/Server';
-import ServerRow from '@/components/ServerRow.vue'
+import { ServerGroup } from '../../../../common-types/Server';
+import ServerRow from '@/components/servers/ServerRow.vue'
 import { computed } from 'vue';
 
 const props = defineProps<{

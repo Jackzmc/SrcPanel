@@ -54,7 +54,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import Servers from '../components/Servers.vue'
+import Servers from '../components/servers/Servers.vue'
 import { PanelMetaInfo } from '../../../common-types/Panel.js';
 
 const props = defineProps<{

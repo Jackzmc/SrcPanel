@@ -14,7 +14,7 @@
         <span class="tag" v-if="server.tags.includes('customs')">Custom Maps</span>
       </span>
     </td>
-    <td>
+    <td :class="manage ? undefined : 'has-text-centered'">
       <template v-if="server.status.online">
         {{ server.status.data?.players.length }} / {{ server.status.data?.maxplayers }}
       </template>
@@ -63,7 +63,7 @@
 
 <script setup lang="ts">
 import { request } from '@/js/util.js';
-import { ServerInfo, ServerType, ServerAction } from '../../../common-types/Server';
+import { ServerInfo, ServerType, ServerAction } from '../../../../common-types/Server';
 import { computed, ref } from 'vue';
 import { notify } from '@kyvg/vue3-notification';
 const props = defineProps<{
