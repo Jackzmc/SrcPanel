@@ -323,8 +323,10 @@ export default class Server extends EventEmitter {
           this.#status.data.map = this.#liveCache.game.map
         }
         if(this.#liveCache.players)
-          this.#status.data.players = Object.values(this.#liveCache.players).map(pl => pl.name)
-          this.#status.data.maxplayers = Object.keys(this.#liveCache.players).length
+          this.#status.data.players = Object.values(this.#liveCache.players)
+            .filter(pl => pl.steamid != "BOT" && ('survivor' in pl || 'ínfected' in pl))
+            .map(pl => pl.name)
+          this.#status.data.maxplayers = 4
       }
     }
 
