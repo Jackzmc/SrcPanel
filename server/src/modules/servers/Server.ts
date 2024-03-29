@@ -186,9 +186,13 @@ export default class Server extends EventEmitter {
         this.#tags = server.tags
         this.#status = { data: null, online: false }
 
-      this.on("live:subscribe", () => {
-        if(this.#socket?.Authenticated) {
-          this.#socket.send(LiveRecordResponse.OK, this.liveViewers)
+      this.on("live:subscribe", async() => {
+        try {
+          if(this.#socket?.Authenticated) {
+            await this.#socket.send(LiveRecordResponse.OK, this.liveViewers)
+          }
+        } catch(err) {
+          // Swallow errors, doesn't mater
         }
       })
     }
