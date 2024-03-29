@@ -28,6 +28,7 @@ export default class PluginSocket {
                 campaignStartTime: reader.readInt(),
                 difficulty: reader.readByte(),
                 inTransition: reader.readByte() > 0,
+                maxplayers: reader.readByte(),
                 gamemode: reader.readString(),
                 map: reader.readString(),
               } as LiveRecord

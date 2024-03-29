@@ -107,8 +107,9 @@ export interface LiveRecordGame extends BaseLiveRecord {
     campaignStartTime: number,
     difficulty: GameDifficulty,
     inTransition: boolean,
+    maxplayers: number,
     map: string,
-    gamemode: string
+    gamemode: string,
 }
 
 export interface LiveRecordPlayer extends BaseLiveRecord {
@@ -211,7 +212,7 @@ export interface LiveDataCache {
     game: LiveRecordGame | null,
     players: Record<string, LivePlayerFull>, // key is userid as string
     finale?: LiveRecordFinaleInfo,
-    lastUpdate: number
+    lastUpdate: number,
 }
 
 
