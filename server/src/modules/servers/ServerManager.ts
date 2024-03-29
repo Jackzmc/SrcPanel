@@ -38,7 +38,7 @@ export default class ServerManager {
 
   private dataDir: string;
   private configDir: string;
-  private steam: SteamAPI
+  #steam: SteamAPI
 
   private shortRefreshInterval: number
   private longRefreshInterval: number
@@ -53,7 +53,7 @@ export default class ServerManager {
   // Maps a server to a specific connection, this assumes there should never be more than one socket per server
 
   constructor(steam: SteamAPI, dataDir: string, configDir: string, configManager: ConfigManager) {
-    this.steam = steam
+    this.#steam = steam
     this.dataDir = dataDir
     this.configDir = configDir
     this.#cfgManager = configManager
@@ -106,7 +106,18 @@ export default class ServerManager {
         return this.#authenticateSocket(ps, new BufferReader(buf))
       }
       for(const packet of BufferReader.getPackets(buf)) {
-        ps.onPacket(packet)
+        for(const reader of packet.readRecords()) {
+          try {
+            const record = PluginSocket.ParseRecord(reader)
+            if(record.type === LiveRecordType.Meta) {
+              this.#steam.SteamAvailable = record.steamConnected
+            }
+            ps.onRecord(record)
+          } catch(err) {
+            console.warn("[ServerManager] bad packet:", err)
+            continue
+          }
+        }
       }
     })
 
@@ -336,7 +347,7 @@ export default class ServerManager {
         filename: join(this.dataDir, `shares/${shareId.toLowerCase()}_cache.db`),
         driver: sqlite3.Database
       })
-      this.addonShares[shareId.toLowerCase()] = new Share(db, this.steam, share)
+      this.addonShares[shareId.toLowerCase()] = new Share(db, this.#steam, share)
       console.info(`[ServerManager] Loaded share "${shareId}" with ${Object.keys(share.destinations).length} destinations, ${numServers} servers`)
     }
 

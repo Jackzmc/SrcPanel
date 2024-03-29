@@ -20,8 +20,8 @@ export default class SteamAPI {
     private userAgent: string
     private appMap: Record<string, string>
     private itemCache: LRUCache<string, WorkshopItem>
-    #lastStatusCheck: number = 0
-    #steamAvailable: boolean
+
+    public SteamAvailable: boolean = true
 
     constructor(apikey?: string, userAgent?: string) {
         this.apikey = apikey ?? process.env.STEAM_WEB_APIKEY
@@ -32,13 +32,6 @@ export default class SteamAPI {
         })
     }
 
-    async Available(force = false): Promise<boolean> {
-        if(force || Date.now() - this.#lastStatusCheck > STEAM_STATUS_CHECK_INTERVAL) {
-            await this.#checkSteamStatus()
-        }
-        return this.#steamAvailable
-    }
-    
     get AppTitles() {
         return {...this.appMap}
     }
@@ -56,16 +49,6 @@ export default class SteamAPI {
             if(entry.name != '') this.appMap[entry.appid.toString()] = entry.name
         }
     }
-
-    async #checkSteamStatus() {
-        try {
-            const response = await fetch('https://api.steampowered.com/')
-            this.#steamAvailable = response.status < 500
-        } catch(err) {
-            this.#steamAvailable = false
-        }
-        this.#lastStatusCheck = Date.now()
-    } 
 
     async getAppName(id: number) {
         if(!id) throw new Error("App id is null: " + id)

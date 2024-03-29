@@ -183,7 +183,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         return {
             servers: await fastify.config.GetServers(),
             settings: await fastify.config.GetPublicKeyvalues(),
-            steamAvailable: await fastify.steam.Available()
+            steamAvailable: fastify.steam.SteamAvailable
         }
     })
 
