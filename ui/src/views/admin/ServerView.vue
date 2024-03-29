@@ -82,7 +82,7 @@
               <Icon icon="fa-spinner" spin v-if="nextRefreshCountdown == 0"></Icon>
               <span v-else>{{ nextRefreshCountdown }}s</span>
             </span>
-            <table class="table is-fullwidth is-size-4" v-if="status.online">
+            <table class="table is-fullwidth is-size-4" v-if="status.data">
               <tr v-if="serverInfo.type === 'source'">
                 <th>Map</th>
                 <td v-if="mapInfo">
@@ -864,7 +864,6 @@ function createLiveConnection() {
       const record: LiveRecord = json
       console.debug("got", LiveRecordType[record.type], record, 'pre=', Object.assign({}, liveStatus.value))
       liveStatus.value = updateLiveCache(liveStatus.value, record)
-      console.log('out', Object.assign({}, liveStatus.value))
       if(record.type === LiveRecordType.Game) {
         uptime.value = (Date.now()/1000) - record.startTime
       }
