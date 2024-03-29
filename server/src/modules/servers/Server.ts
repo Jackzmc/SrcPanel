@@ -420,13 +420,7 @@ export default class Server extends EventEmitter {
 
     public async performAction(command: string, namespace = "default", args: string[] = []) {
       if(!this.#socket) throw new Error("Not connected to plugin socket")
-      const response = await this.#socket.send(LiveRecordResponse.RunCommand, command, namespace)
-      switch(response.resultType) {
-        case CommandResultType.Boolean: 
-          response.result = Boolean(response.result)
-          break
-      }
-      return response
+      return await this.#socket.send(LiveRecordResponse.RunCommand, command, namespace)
     }
 
     /**

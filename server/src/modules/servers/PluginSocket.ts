@@ -1,5 +1,5 @@
 import { Socket } from 'net'
-import { LiveRecord, LiveRecordCommandResponse, LiveRecordPlayer, LiveRecordResponse, LiveRecordType } from '../../../../common-types/Live.js'
+import { CommandResultType, LiveRecord, LiveRecordCommandResponse, LiveRecordPlayer, LiveRecordResponse, LiveRecordType } from '../../../../common-types/Live.js'
 import Server from './Server.js'
 import BufferReader from '../BufferReader.js'
 import JWT from '../../jwt-promise.js'
@@ -87,14 +87,23 @@ export default class PluginSocket {
               }
             }
             case LiveRecordType.CommandResponse: {
-              let res: LiveRecordCommandResponse = {
+              let res: Partial<LiveRecordCommandResponse> = {
                 type,
                 id: reader.readByte(),
                 resultType: reader.readByte(),
-                result: reader.readByte(),
-                message: reader.readString()
               }
-              return res
+              switch(res.resultType) {
+                case CommandResultType.Boolean: 
+                  res.result = reader.readByte() > 0
+                  break
+                case CommandResultType.Float:
+                  res.result = reader.readFloat()
+                  break
+                default:
+                  res.result = reader.readInt()
+              }
+              res.message = reader.readString()
+              return res as LiveRecordCommandResponse
             }
             default: {
               throw new Error("Not Implemented type: " + type)
