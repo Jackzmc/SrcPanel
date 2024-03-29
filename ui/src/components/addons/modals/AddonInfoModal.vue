@@ -89,12 +89,15 @@
           </div>
       </section>
       <footer class="modal-card-foot">
-        <button class="button" @click="close()">
-          Close
-        </button>
-        <a v-if="pendingRestarts.length > 0" class="button is-info" data-tooltip="Server must be restarted to apply changes" @click='restartServers'>Restart Servers</a>
-        <a v-if="addon && addon.workshop" target="_blank" :href="addon.workshop.url" class="button is-info" data-tooltip="View the steam workshop page">Steam Workshop</a>
-        <a class="button is-danger" data-tooltip="Uninstall from all servers and delete the file" @click="deleteAddon">Delete</a>
+        <div class="buttons">
+          <button class="button" @click="close()">
+            Close
+          </button>
+
+          <a v-if="pendingRestarts.length > 0" class="button is-info" data-tooltip="Server must be restarted to apply changes" @click='restartServers'>Restart Servers</a>
+          <a v-if="addon && addon.workshop" target="_blank" :href="addon.workshop.url" class="button is-info" data-tooltip="View the steam workshop page">Steam Workshop</a>
+          <a class="button is-danger" data-tooltip="Uninstall from all servers and delete the file" @click="deleteAddon">Delete</a>
+        </div>
       </footer>
     </div>
   </Modal>

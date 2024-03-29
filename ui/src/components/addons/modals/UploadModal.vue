@@ -45,22 +45,24 @@
       <p>Note: Max file size is limited to 5 GB.</p>
     </section>
     <footer class="modal-card-foot">
-      <template v-if="uploadState > 1">
-        <button  @click="restartServers" :class="['button','is-info', {'is-loading': uploadState === 3}]">
-          Restart Servers
-        </button>
-      </template>
-      <template v-else>
-        <button :class="['button','is-info', {'is-loading': uploadState == 1}]"
-          :disabled="!filename || installDestinations.length == 0"
-          @click="startUpload()"
-        >
-          Upload
-        </button>
-        <button class="button" @click="close">
-          Cancel
-        </button>
-      </template>
+      <div class="buttons">
+        <template v-if="uploadState > 1">
+          <button  @click="restartServers" :class="['button','is-info', {'is-loading': uploadState === 3}]">
+            Restart Servers
+          </button>
+        </template>
+        <template v-else>
+          <button :class="['button','is-info', {'is-loading': uploadState == 1}]"
+            :disabled="!filename || installDestinations.length == 0"
+            @click="startUpload()"
+          >
+            Upload
+          </button>
+          <button class="button" @click="close">
+            Cancel
+          </button>
+        </template>
+      </div>
     </footer>
   </div>
 </Modal>

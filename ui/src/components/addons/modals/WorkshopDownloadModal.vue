@@ -125,51 +125,53 @@
       </div>
     </section>
     <footer class="modal-card-foot">
-      <template v-if="downloadState == DownloadState.Done || !isAddonValid">
-        <button class="button is-info" @click="verifyLink(link)" v-if="inputState == InputState.FetchError">
-          Retry
-        </button>
-        <button class="button is-success" @click="close">
-          Close
-        </button>
+      <div class="buttons">
+        <template v-if="downloadState == DownloadState.Done || !isAddonValid">
+          <button class="button is-info" @click="verifyLink(link)" v-if="inputState == InputState.FetchError">
+            Retry
+          </button>
+          <button class="button is-success" @click="close">
+            Close
+          </button>
 
-        <button v-if="isAddonValid" @click="restartServers" :class="['button','is-info', {'is-loading': downloadState == DownloadState.RestartingServers }]">
-          Restart Servers
-        </button>
-      </template>
-      <template v-else-if="downloadState == DownloadState.PromptRedownload">
-        <button
-          class="button is-info"
-          @click="startDownload(true)"
-        >
-          Redownload
-        </button>
-        <button class="button" @click="close">
+          <button v-if="isAddonValid" @click="restartServers" :class="['button','is-info', {'is-loading': downloadState == DownloadState.RestartingServers }]">
+            Restart Servers
+          </button>
+        </template>
+        <template v-else-if="downloadState == DownloadState.PromptRedownload">
+          <button
+            class="button is-info"
+            @click="startDownload(true)"
+          >
+            Redownload
+          </button>
+          <button class="button" @click="close">
+              Cancel
+            </button>
+        </template>
+        <template v-else-if="inputState == InputState.ChoosingChildren">
+          <button :class="['button','is-info']"
+            :disabled="acceptedChildren.length === 0"
+            @click="acceptChildren()"
+          >
+            Install Items
+          </button>
+          <button class="button" @click="close">
             Cancel
           </button>
-      </template>
-      <template v-else-if="inputState == InputState.ChoosingChildren">
-        <button :class="['button','is-info']"
-          :disabled="acceptedChildren.length === 0"
-          @click="acceptChildren()"
-        >
-          Install Items
-        </button>
-        <button class="button" @click="close">
-          Cancel
-        </button>
-      </template>
-      <template v-else>
-        <button :class="['button','is-info', {'is-loading': downloadState == DownloadState.Downloading }]"
-          :disabled="downloadState == DownloadState.Downloading || !workshopId || installDestinations.length == 0"
-          @click="startDownload(false)"
-        >
-          Download & Install
-        </button>
-        <button class="button" @click="close">
-          Cancel
-        </button>
-      </template>
+        </template>
+        <template v-else>
+          <button :class="['button','is-info', {'is-loading': downloadState == DownloadState.Downloading }]"
+            :disabled="downloadState == DownloadState.Downloading || !workshopId || installDestinations.length == 0"
+            @click="startDownload(false)"
+          >
+            Download & Install
+          </button>
+          <button class="button" @click="close">
+            Cancel
+          </button>
+        </template>
+      </div>
     </footer>
   </div>
 </Modal>

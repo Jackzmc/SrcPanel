@@ -61,12 +61,14 @@
         </table>
       </section>
       <footer class="modal-card-foot">
-        <button class="button" @click="close(false)">
-          Close
-        </button>
-        <a v-if="pendingRestarts.length > 0" class="button is-info" data-tooltip="Server must be restarted to apply changes" @click='restartServers'>Restart Servers</a>
-        <a target="_blank" :href="workshopUrl" class="button is-info" data-tooltip="View the steam workshop page">Steam Workshop</a>
-        <a class="button is-danger" data-tooltip="Uninstall from all servers and delete files" @click="deleteAddons">Delete Collection</a>
+        <div class="buttons">
+          <button class="button" @click="close(false)">
+            Close
+          </button>
+          <a v-if="pendingRestarts.length > 0" class="button is-info" data-tooltip="Server must be restarted to apply changes" @click='restartServers'>Restart Servers</a>
+          <a target="_blank" :href="workshopUrl" class="button is-info" data-tooltip="View the steam workshop page">Steam Workshop</a>
+          <a class="button is-danger" data-tooltip="Uninstall from all servers and delete files" @click="deleteAddons">Delete Collection</a>
+        </div>
       </footer>
     </div>
   </Modal>
