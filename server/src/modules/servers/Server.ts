@@ -434,6 +434,9 @@ export default class Server extends EventEmitter {
      * @returns 
      */
     public async refresh(force = false, includeRules = false) {
+        // Don't need to do a refresh if we have plugin data
+        if(this.hasPlugin) return;
+
         const now = Date.now()
         if(!force && now - this.#lastRefresh < MIN_REFRESH_TIME) return
         this.#lastRefresh = now
