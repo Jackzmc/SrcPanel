@@ -340,18 +340,18 @@ export default class Server extends EventEmitter {
         if(record.type === LiveRecordType.Game) {
           this.#startTime = record.startTime
         }
+        this.#status = {
+          data: this.#status.data ??  { players: [], maxplayers: 0, map: "", gamemode: "" },
+          online: true
+        } 
+        if(this.#liveCache.game) {
+          this.#status.data.gamemode = this.#liveCache.game.gamemode
+          this.#status.data.map = this.#liveCache.game.map
+        }
+        if(this.#liveCache.players)
+          this.#status.data.players = Object.values(this.#liveCache.players).map(pl => pl.name)
+          this.#status.data.maxplayers = Object.keys(this.#liveCache.players).length
       }
-      this.#status = {
-        data: this.#status.data ??  { players: [], maxplayers: 0, map: "", gamemode: "" },
-        online: true
-      } 
-      if(this.#liveCache.game) {
-        this.#status.data.gamemode = this.#liveCache.game.gamemode
-        this.#status.data.map = this.#liveCache.game.map
-      }
-      if(this.#liveCache.players)
-        this.#status.data.players = Object.values(this.#liveCache.players).map(pl => pl.name)
-        this.#status.data.maxplayers = Object.keys(this.#liveCache.players).length
     }
 
     /**
