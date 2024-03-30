@@ -78,6 +78,7 @@
 import Modal from '@/components/Modal.vue'
 import { useNotification } from "@kyvg/vue3-notification";
 import { computed, ref, onBeforeMount } from 'vue';
+import { LiveRecordCommandResponse } from '../../../../../common-types/Live';
 
 const emit = defineEmits(['close'])
 const { notify }  = useNotification()
@@ -185,10 +186,13 @@ async function restartServers() {
 }
 
 async function restartServer(id: string) {
-  const response = await fetch(`/api/servers/${id}/restart`, {
+  const response = await fetch(`/api/servers/${id}/action/builtin:request_stop`, {
     method: 'POST'
   })
-  if(response.ok) return true
+  if(response.ok) {
+    const json: LiveRecordCommandResponse = await response.json()
+    return json.result
+  }
   throw new Error(`Server returned ${response.status} ${response.statusText} for ${id}`)
 }
 
