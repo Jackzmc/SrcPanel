@@ -281,14 +281,14 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
     })
 
-    fastify.post('/:id/action/:action', async(req: FastifyRequest<{Params: { id: string, action: string }, Querystring: { args: string } }>, reply) => {
+    fastify.post('/:id/action/:action', async(req: FastifyRequest<{Params: { id: string, action: string } }>, reply) => {
         const server = fastify.servers.get(req.params.id)
         if(!server) return NOT_FOUND(reply, "Server")
 
-        if(!server.SocketConnected) {
+        if(!server.hasCommandSupport) {
             return reply.status(503).send({
                 error: "SERVER_UNAVAILABLE",
-                message: "Server is not connected to the panel."
+                message: "Command support is not available on this server at this time."
             })
         }
 
@@ -309,9 +309,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 command
             }
         })
-        const args = req.query.args ? req.query.args.split(",") : []
         try {
-            const response = await server.performAction(command, namespace, args)
+            const response = await server.performAction(command, namespace)
             return {
                 id: response.id,
                 resultType: response.resultType,
@@ -335,10 +334,10 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         const [code, granted] = req.user.requirePermission("servers.plugin.default." + req.params.id as UserPrivilegeCode, { resourceIds: [server.id] })
         if(!granted) return NO_PERMISSION(reply, "You do not have permission to run commands on this server", code)
 
-        if(!server.hasPlugin) {
+        if(!server.hasCommandSupport) {
             return reply.code(400).send({
                 error: "NO_PLUGIN",
-                message: "Server has not been setup to run commands"
+                message: "Command support is not available on this server at this time."
             })
         }
 

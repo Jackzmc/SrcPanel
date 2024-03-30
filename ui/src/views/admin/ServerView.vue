@@ -41,13 +41,8 @@
           </div>
           <div class="level-right">
             <div class="buttons">
-              <template v-if="isLiveViewActive || serverInfo.features.includes('plugin')">
-                <a v-if="serverInfo.features.includes('systemd') && (!status || !status.online)" @click="performAction('start')" class="button is-success is-small">Start Server</a>
-                <template v-if="status?.online && serverInfo.features.includes('rcon')">
-                  <!-- <a data-tooltip="Will restart server if no players online, or fail if there are" @click="processAction('stop')" class="button is-dark is-small">Request Restart</a>
-                  <a v-if="serverInfo.type === 'source'" data-tooltip="Will remove lobby reservation, allowing 5+ to join. This is done automatically after 4 players have fully loaded in" @click="processAction('unreserve')" class="button is-dark is-small">Unreserve</a>
-                  <a v-show="shiftPressed" data-tooltip="Will forcefully restart server, regardless if players are online" @click="processAction('stop', { force: true })" class="button is-danger is-small">Force Restart</a> -->
-                </template>
+              <template v-if="isLiveViewActive || serverInfo.features.plugin || serverInfo.features.rcon">
+                <a v-if="serverInfo.features.systemd && (!status || !status.online)" @click="performAction('start')" class="button is-success is-small">Start Server</a>
                 <template v-if="serverInfo.status.online">
                   <button :data-tooltip="action.description" :disabled="actionRunning" v-for="(action, i) in actions" :key="i" @click="performAction(action.command)" class="button is-dark is-small" :style="{'background-color': action.color}">{{ action.name }}</button>
                 </template>
@@ -532,14 +527,14 @@ const TABS: Record<string, { name: string, tag?: string, permission?: string, en
     name: "Configs",
     permission: 'servers.configs.read.<id>',
     enabled: () => {
-      return serverInfo.value?.features.includes("configs")
+      return serverInfo.value?.features.configs
     }
   },
   console: {
     name: "Console",
     permission: "servers.action.<id>",
     enabled: () => {
-      return serverInfo.value?.features.includes("console")
+      return serverInfo.value?.features.console
     }
   }
 }

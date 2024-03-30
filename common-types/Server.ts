@@ -54,7 +54,7 @@ export interface ExportGroupInfo extends GroupInfo {
 
 export interface ServerInfo extends ServerData {
     tags: string[],
-    features: string[]
+    features: ServerAvailableFeatures
     status: ServerStatus,
     sortOrder: number,
     actions: ServerAction[],
@@ -82,3 +82,12 @@ export interface ServerAction {
     description?: string
 }
 export type BuiltInActions = "builtin:stop" | "builtin:request_stop" | "builtin:update" | "builtin:kick"
+
+export interface ServerAvailableFeatures {
+    rcon: boolean
+    console: boolean
+    configs: boolean
+    systemd: boolean
+    plugin: boolean
+} 
+export type ServerFeature = keyof ServerAvailableFeatures

@@ -401,6 +401,7 @@ export default class ServerManager {
                 cfgDirectory: server.cfgDirectory,
                 logsPath: server.logsPath,
                 activityId: server.activityId,
+                rcon: server.rcon,
                 systemd: server.systemd,
                 sortOrder: server.sortOrder
               })

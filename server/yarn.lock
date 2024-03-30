@@ -2104,6 +2104,13 @@ raw-body@2.5.1:
     iconv-lite "0.4.24"
     unpipe "1.0.0"
 
+rcon-client@^4.2.4:
+  version "4.2.4"
+  resolved "https://registry.yarnpkg.com/rcon-client/-/rcon-client-4.2.4.tgz#2582d16847063b47b4db9b517c6646ab3d5a3aae"
+  integrity sha512-sTHYLbcu2qrrOX4TOD3rvcLZNs7xiAhTsnZZIvxviSpa0yeV63sPAVI0PeScn5IvhKOCMURGt1NmnQ8h/GxjtA==
+  dependencies:
+    typed-emitter "^0.1.0"
+
 readable-stream@2.3.7:
   version "2.3.7"
   resolved "https://registry.npmjs.org/readable-stream/-/readable-stream-2.3.7.tgz"
@@ -2547,6 +2554,11 @@ type-is@~1.6.18:
   dependencies:
     media-typer "0.3.0"
     mime-types "~2.1.24"
+
+typed-emitter@^0.1.0:
+  version "0.1.0"
+  resolved "https://registry.yarnpkg.com/typed-emitter/-/typed-emitter-0.1.0.tgz#ca532f100ccbf850e3a73b8ebf43d43e4f1f3849"
+  integrity sha512-Tfay0l6gJMP5rkil8CzGbLthukn+9BN/VXWcABVFPjOoelJ+koW8BuPZYk+h/L+lEeIp1fSzVRiWRPIjKVjPdg==
 
 typescript@^5.4.3:
   version "5.4.3"

@@ -2,11 +2,12 @@ import Gamedig from 'gamedig';
 import { open, readdir } from 'fs/promises'
 import { join, resolve } from 'path'
 import { statSync } from 'fs';
-import { GroupInfo, PlayerStats, SERVER_TYPE_MAP, ServerAction, ServerData, ServerInfo, ServerStatus, ServerType } from '../../../../common-types/Server.js';
-import { LiveRecord, LiveDataCache, updateLiveCache, LiveRecordType, LiveRecordResponse, CommandResultType } from '../../../../common-types/Live.js';
+import { GroupInfo, PlayerStats, SERVER_TYPE_MAP, ServerAction, ServerAvailableFeatures, ServerData, ServerFeature, ServerInfo, ServerStatus, ServerType } from '../../../../common-types/Server.js';
+import { LiveRecord, LiveDataCache, updateLiveCache, LiveRecordType, LiveRecordResponse, CommandResultType, LiveRecordCommandResponse } from '../../../../common-types/Live.js';
 import { EventEmitter } from 'node:events';
 import { Tail } from 'tail'
 import PluginSocket from './PluginSocket.js';
+import { Rcon } from 'rcon-client'
 
 const HIDDEN_CONFIG_FILES = [
   "360controller.cfg",
@@ -36,9 +37,9 @@ const MIN_REFRESH_TIME = 5000
 // The number of milliseconds until live data expires
 
 export interface BaseServerData {
-  id ? : string;
+  id? : string;
   name: string;
-  domain ? : string;
+  domain? : string;
   ip: string,
   port: number,
   type: string,
@@ -46,9 +47,16 @@ export interface BaseServerData {
   logsPath?: string,
   activityId?: string,
   sortOrder?: number,
-  systemd ? : {
+  systemd? : {
     isUser: boolean;
     serviceName: string;
+  },
+  rcon? : {
+    password: {
+      env?: string,
+      value?: string
+    },
+    port?: number
   },
   tags: string[],
   actions?: ServerAction[]
@@ -60,11 +68,15 @@ export interface ConfigServerData extends BaseServerData {
     isUser: boolean;
     serviceName: string;
   },
-
 }
 
 export interface ServerExtendedData extends BaseServerData {
   actions?: ServerAction[]
+}
+
+export interface RconData {
+  client: Rcon,
+  password: string
 }
   
 
@@ -73,8 +85,6 @@ const MAX_PLAYER_STATS = 300
 const MAX_LOGS_LINES = 30
 const LIVE_CACHE_TTL = 1000 * 60 * 3 // Live cache data expires after 3 minutes
 
-
-type Features = "console" | "configs" | "systemd" | "plugin"
 
 export default class Server extends EventEmitter { 
     #info: ServerData
@@ -90,12 +100,13 @@ export default class Server extends EventEmitter {
     #logsCache: string[] = []
     #actions: ServerAction[]
     #group: GroupInfo
-    #features: Features[] = []
+    #features: ServerAvailableFeatures
     #systemd?: {
       isUser: boolean;
       serviceName: string;
     } = null;
     #tags: string[];
+    #rcon?: RconData
 
     #socket: PluginSocket
       
@@ -119,7 +130,7 @@ export default class Server extends EventEmitter {
           this.#cfgDir = resolve(server.cfgDirectory)
           try {
             statSync(this.#cfgDir)
-            this.#features.push("configs")
+            this.#features['configs'] = true
           } catch(err) {
             console.error(`[Server/${server.id}] ERROR: Could not access config directory:`, err)
           }
@@ -129,7 +140,7 @@ export default class Server extends EventEmitter {
           try {
             this.#logPath = resolve(server.logsPath)
             statSync(this.#logPath)
-            this.#features.push("console")
+            this.#features['console'] = true
             this.#createLogsReader()
           } catch(err) {
             if(err.code === "ENOENT")
@@ -137,9 +148,35 @@ export default class Server extends EventEmitter {
             else throw err
           }
         }
+        if(server.rcon) {
+          let pass = server.rcon.password.value
+          if(!pass) pass = process.env[server.rcon.password.env]
+          if(pass) {
+            this.#rcon = {
+              password: pass,
+              client: new Rcon({
+                host: server.ip,
+                port: server.rcon.port ?? server.port,
+                password: pass,
+              }),
+            }
+            this.#rcon.client.on("authenticated", () => {
+              this.#features['rcon'] = true
+            })
+            this.#rcon.client.on('error', (err) => {
+              console.error(`[Server/${server.id}] Rcon: ${err}`)
+            })
+            this.#rcon.client.on('end', () => {
+              this.#features['rcon'] = false
+            })
+          } else {
+            console.warn(`[Server/${server.id}] ERROR: Could not find RCON password for ${server.name}`)
+          }
+          
+        }
 
         this.#systemd = server.systemd
-        if(this.#systemd) this.#features.push("systemd")
+        if(this.#systemd) this.#features['systemd'] = true
         this.#tags = server.tags
         this.#status = { data: null, online: false }
 
@@ -232,11 +269,19 @@ export default class Server extends EventEmitter {
 
     public get hasSystemd() { return this.#systemd !== null }
     public get hasConfigs() { return this.#cfgDir !== null && this.#cfgDir !== undefined}
-    public get hasConsole() { return this.#features.includes("console") }
-    public get hasPlugin() { return this.#features.includes("plugin") }
+    public get hasConsole() { return this.#features.console }
+    public get hasRcon() { return this.#features.rcon }
+    public get hasPlugin() { return this.#features.plugin }
+    public get hasCommandSupport() { return this.#features.console || this.#features.plugin }
 
-    public get features() {
-      return [...this.#features]
+    public get features(): ServerAvailableFeatures {
+      return {
+        rcon: this.hasRcon,
+        console: this.hasConsole,
+        configs: this.hasConfigs,
+        systemd: this.hasSystemd,
+        plugin: this.hasPlugin,
+      }
     }
 
     /**
@@ -263,6 +308,12 @@ export default class Server extends EventEmitter {
         this.#logsCache.splice(0, 1)
       }
       this.emit("log", line)
+    }
+
+    async #connectRcon() {
+      if(!this.#rcon) return
+      if(!this.#rcon.client.authenticated)
+        await this.#rcon.client.connect()
     }
 
     /**
@@ -360,13 +411,7 @@ export default class Server extends EventEmitter {
 
     _setSocket(socket: PluginSocket | null) {
       this.#socket = socket
-
-      if(socket) {
-        this.#features.push("plugin")
-      } else {
-        let index = this.#features.indexOf("plugin")
-        if(index > -1) this.#features.splice(index, 1)
-      }
+      this.#features.plugin = socket != undefined
     }
     /**
      * Attempt to start server by systemd (Not implemented)
@@ -409,9 +454,48 @@ export default class Server extends EventEmitter {
       return timeoutSeconds > 0
     }
 
-    public async performAction(command: string, namespace = "default", args: string[] = []) {
-      if(!this.#socket) throw new Error("Not connected to plugin socket")
-      return await this.#socket.send(LiveRecordResponse.RunCommand, command, namespace)
+    public async performAction(command: string, namespace = "default"): Promise<LiveRecordCommandResponse> {
+      if(!this.#socket) 
+      if(this.#socket)
+        return await this.#socket.send(LiveRecordResponse.RunCommand, command, namespace)
+      else if(this.hasRcon) {
+        await this.#connectRcon()
+        if(namespace === "builtin") command = this.#getFallbackCommandForBuiltin(command)
+        if(!command) {
+          throw new Error("Command cannot be run at this time")
+        }
+        const result = await this.#rcon.client.send(command)
+        return {
+          type: LiveRecordType.CommandResponse,
+          id: null,
+          result: 0,
+          resultType: CommandResultType.None,
+          message: result
+        }
+      } else {
+        throw new Error("Not connected to plugin or RCON")
+      }
+    }
+
+    #getFallbackCommandForBuiltin(command: string) {
+      switch(command) {
+        case "builtin:stop": {
+          return "exit"
+        }
+        case "builtin:request_stop": {
+          return "sm_panel_request_stop"
+        }
+        case "builtin:kick": {
+          return "sm_kick"
+        }
+        case "builtin:kick": {
+          return "sm_ban"
+        }
+        case "builtin:unreserve": {
+          return "sm_unreserve"
+        }
+        default: return null
+      }
     }
 
     /**

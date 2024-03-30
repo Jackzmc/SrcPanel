@@ -41,7 +41,7 @@ const props = defineProps<{
 }>()
 
 const rconSupported = computed(() => {
-  return props.server.features.includes('plugin')
+  return props.server.features.plugin || props.server.features.rcon
 })
 
 const isConnected = computed(() => {

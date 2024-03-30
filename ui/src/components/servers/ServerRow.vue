@@ -26,7 +26,7 @@
       <td>
         <!-- <div class="buttons" v-if="server.features.includes('plugin')"> -->
         <div class="buttons">
-          <button :disabled="actionRunning" v-if="server.features.includes('systemd')" @click="processAction(undefined, 'start')" class="button is-success">Start</button>
+          <button :disabled="actionRunning" v-if="server.features.systemd" @click="processAction(undefined, 'start')" class="button is-success">Start</button>
           <template v-if="server.status.online">
             <button :data-tooltip="action.description" :disabled="actionRunning" v-for="(action, i) in actions" :key="i" @click="processAction(action)" class="button is-dark" :style="{'background-color': action.color}">{{ action.name }}</button>
           </template>
@@ -92,12 +92,12 @@ function copyCommand(event: any) {
   }
 }
 
-async function processAction(action?: ServerAction, command?: string, args: string[] = []) {
+async function processAction(action?: ServerAction, command?: string) {
   if(!action && !command) throw new Error("no action nor command")
   if(!command) command = action!.command
   actionRunning.value = true
 
-  const response = await request(`/api/servers/${props.server.id}/action/${command}?args=${args.join(",")}`, {
+  const response = await request(`/api/servers/${props.server.id}/action/${command}`, {
     method: 'POST',
     credentials: 'include'
   })
