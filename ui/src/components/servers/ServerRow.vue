@@ -4,11 +4,14 @@
       <router-link v-if="manage" :to="{name: 'admin-server-view', params: { id: server.id, tab: 'overview' }}" :data-tooltip="tooltip">
         <b :class="serverClasses" >{{server.name}}</b>
       </router-link>
-      <a v-else :href="'steam://connect/' + server.ip + '/' + server.port">
+      <a v-else-if="server.type === 'source'" :href="'steam://connect/' + server.ip + '/' + server.port">
         <b :data-tooltip="tooltip" :class="serverClasses">
           {{ server.name }}
         </b>
       </a>
+      <b v-else :data-tooltip="tooltip" :class="serverClasses">
+        {{ server.name }}
+      </b>
       <span class="tags">
         <span class="tag" v-if="server.tags.includes('5+')">5+</span>
         <span class="tag" v-if="server.tags.includes('customs')">Custom Maps</span>
