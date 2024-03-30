@@ -258,7 +258,10 @@ export function updateLiveCache(cache: LiveDataCache | undefined, record: LiveRe
             break
         case LiveRecordType.Survivor: {
             let player = cache.players[record.userid.toString()] as LivePlayerSurvivor
-            if(!player) return cache
+            if(!player) {
+                console.debug("got survivor but no player", record.userid)
+                return cache
+            }
             player.survivor = record
             //@ts-expect-error remove old property
             delete player.infected

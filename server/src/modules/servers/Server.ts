@@ -308,12 +308,12 @@ export default class Server extends EventEmitter {
         if(this.#liveCache.game) {
           this.#status.data.gamemode = this.#liveCache.game.gamemode
           this.#status.data.map = this.#liveCache.game.map
+          this.#status.data.maxplayers = this.#liveCache.game.maxplayers || 4
         }
         if(this.#liveCache.players) {
           this.#status.data.players = Object.values(this.#liveCache.players)
             .filter(pl => pl.steamid != "BOT" && ('survivor' in pl || 'ínfected' in pl))
             .map(pl => pl.name)
-          this.#status.data.maxplayers = this.#liveCache.game.maxplayers || 4
         }
         if(!this.#liveCache.game) {
           this.#socket.send(LiveRecordResponse.Reconnect)

@@ -100,7 +100,7 @@ export default class BufferReader {
       while(this.#offset < this.#length && this.at(this.#offset) != 0x0a) {
         if(this.at(this.#offset) == BufferReader.RecordSeparator) {
           yield new BufferReader(this.#buffer.subarray(start, this.#offset))
-          start = this.#offset
+          start = this.#offset + 1
         }
         this.#offset++
       }
