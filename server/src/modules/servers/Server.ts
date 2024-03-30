@@ -272,7 +272,7 @@ export default class Server extends EventEmitter {
     public get hasConsole() { return this.#features.console }
     public get hasRcon() { return this.#features.rcon }
     public get hasPlugin() { return this.#features.plugin }
-    public get hasCommandSupport() { return this.#features.console || this.#features.plugin }
+    public get hasCommandSupport() { return this.#features.plugin || this.#features.rcon }
 
     public get features(): ServerAvailableFeatures {
       return {
