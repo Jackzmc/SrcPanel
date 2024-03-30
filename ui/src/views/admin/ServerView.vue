@@ -105,14 +105,28 @@
                 <td v-else><em data-tooltip="Unknown">-</em></td>
               </tr>
               <tr>
-                <th  style="border-style: none">Players ({{status.data.players.length}} / {{status.data.maxplayers}})</th>
-                <td  style="border-style: none">
+                <th>Players ({{status.data.players.length}} / {{status.data.maxplayers}})</th>
+                <td >
                   <ul v-if="status.data.players.length > 0">
                     <li v-for="player in status.data.players" :key="player">
                       {{ player }}
                     </li>
                   </ul>
                   <em v-else>no players online</em>
+                </td>
+              </tr>
+              <tr>
+                <th>Type</th>
+                <td>{{ serverInfo.type }}</td>
+              </tr>
+              <tr>
+                <th style="border-style: none">Features</th>
+                <td style="border-style: none">
+                  <div class="tags">
+                    <span class="tag" v-for="(t,feat) in serverInfo.features" :key="feat">
+                      <template v-if="feat">{{ feat }}</template>
+                    </span>
+                  </div>
                 </td>
               </tr>
             </table>
