@@ -181,6 +181,7 @@ export default class Server extends EventEmitter {
         try {
           await this.#rcon.client.connect()
           this.#features['rcon'] = true
+          console.log(`[Server/${server.id}] Initial RCON connection successful`)
         } catch(err) {
           this.#features['rcon'] = false
           console.warn(`[Server/${server.id}] Initial RCON connection failed:`, err.message)
