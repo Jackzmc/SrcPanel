@@ -387,7 +387,6 @@ export default class ServerManager {
               }
 
               const tags = server.tags ?? []
-              if(server.systemd) tags.push('systemd')
 
               this.servers[id] = new Server(this.groups[groupId], {
                 actions: server.actions ?? [],

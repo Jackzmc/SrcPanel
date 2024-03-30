@@ -150,9 +150,8 @@ export default class Server extends EventEmitter {
         }
         if(server.rcon) this.#setupRcon(server)
       
-
         this.#systemd = server.systemd
-        if(this.#systemd) this.#features['systemd'] = true
+        this.#features['systemd'] = server.systemd != undefined
         this.#tags = server.tags
         this.#status = { data: null, online: false }
 
@@ -268,8 +267,8 @@ export default class Server extends EventEmitter {
       return this.listenerCount("live")
     }
 
-    public get hasSystemd() { return this.#systemd !== null }
-    public get hasConfigs() { return this.#cfgDir !== null && this.#cfgDir !== undefined}
+    public get hasSystemd() { return this.#features.systemd }
+    public get hasConfigs() { return this.#features.configs }
     public get hasConsole() { return this.#features.console }
     public get hasRcon() { return this.#features.rcon }
     public get hasPlugin() { return this.#features.plugin }
