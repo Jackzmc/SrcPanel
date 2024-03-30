@@ -322,6 +322,7 @@ export default class Server extends EventEmitter {
           return false
         }
       }
+      return true
     }
 
     /**
@@ -464,7 +465,7 @@ export default class Server extends EventEmitter {
 
     public async performAction(command: string, namespace = "default"): Promise<LiveRecordCommandResponse> {
       if(!this.#socket) 
-      if(this.#socket)
+      if(this.#socket?.Authenticated)
         return await this.#socket.send(LiveRecordResponse.RunCommand, command, namespace)
       else if(this.hasRcon && await this.#connectRcon()) {
         if(namespace === "builtin") command = this.#getFallbackCommandForBuiltin(command)
@@ -475,7 +476,7 @@ export default class Server extends EventEmitter {
         return {
           type: LiveRecordType.CommandResponse,
           id: null,
-          result: 0,
+          result: 1,
           resultType: CommandResultType.None,
           message: result
         }
