@@ -149,7 +149,7 @@
         </div>
         <div class="list has-visible-pointer-controls" v-if="liveStatus && Object.values(liveStatus.players).length > 0">
           <template v-for="player in liveStatus.players" :key="player.userid">
-            <div class="list-item" v-if="'survivor' in player || 'infected' in player">
+            <div class="list-item" v-if="true">
               <div class="list-item-image">
                 <figure class="image is-48x48">
                   <img :src="getIconUrl(player)" />
