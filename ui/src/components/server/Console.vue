@@ -30,6 +30,7 @@ import Field from '@/components/Field.vue'
 import { request } from '@/js/util';
 import { notify } from '@kyvg/vue3-notification';
 import { ServerInfo } from '../../../../common-types/Server';
+import { LiveRecordCommandResponse } from '../../../../common-types/Live';
 
 const MAX_LOGS_LINES = 350
 
@@ -92,10 +93,14 @@ async function runCommand() {
   })
 
   if(response?.ok) {
-    const text = await response.text()
+    const json: LiveRecordCommandResponse = await response.json()
     // Rcon output is not shown to the main server logs, include here:
-    for(const line of text.split(/\r?\n/)) {
-      pushLine(line)
+    if(!json.message) {
+      pushLine(``)
+    } else {
+      for(const line of json.message.split(/\r?\n/)) {
+        pushLine(line)
+      }
     }
   }
 }
