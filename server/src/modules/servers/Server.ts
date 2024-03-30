@@ -462,7 +462,7 @@ export default class Server extends EventEmitter {
         await this.#connectRcon()
         if(namespace === "builtin") command = this.#getFallbackCommandForBuiltin(command)
         if(!command) {
-          throw new Error("Command cannot be run at this time")
+          throw new Error("Command cannot be run at this time (no rcon fallback equivalent)")
         }
         const result = await this.#rcon.client.send(command)
         return {
@@ -479,19 +479,19 @@ export default class Server extends EventEmitter {
 
     #getFallbackCommandForBuiltin(command: string) {
       switch(command) {
-        case "builtin:stop": {
+        case "stop": {
           return "exit"
         }
-        case "builtin:request_stop": {
+        case "request_stop": {
           return "sm_panel_request_stop"
         }
-        case "builtin:kick": {
+        case "kick": {
           return "sm_kick"
         }
-        case "builtin:kick": {
+        case "ban": {
           return "sm_ban"
         }
-        case "builtin:unreserve": {
+        case "unreserve": {
           return "sm_unreserve"
         }
         default: return null
