@@ -100,7 +100,7 @@ export default class Server extends EventEmitter {
     #logsCache: string[] = []
     #actions: ServerAction[]
     #group: GroupInfo
-    #features: ServerAvailableFeatures
+    #features: ServerAvailableFeatures = {}
     #systemd?: {
       isUser: boolean;
       serviceName: string;
@@ -148,32 +148,8 @@ export default class Server extends EventEmitter {
             else throw err
           }
         }
-        if(server.rcon) {
-          let pass = server.rcon.password.value
-          if(!pass) pass = process.env[server.rcon.password.env]
-          if(pass) {
-            this.#rcon = {
-              password: pass,
-              client: new Rcon({
-                host: server.ip,
-                port: server.rcon.port ?? server.port,
-                password: pass,
-              }),
-            }
-            this.#rcon.client.on("authenticated", () => {
-              this.#features['rcon'] = true
-            })
-            this.#rcon.client.on('error', (err) => {
-              console.error(`[Server/${server.id}] Rcon: ${err}`)
-            })
-            this.#rcon.client.on('end', () => {
-              this.#features['rcon'] = false
-            })
-          } else {
-            console.warn(`[Server/${server.id}] ERROR: Could not find RCON password for ${server.name}`)
-          }
-          
-        }
+        if(server.rcon) this.#setupRcon(server)
+      
 
         this.#systemd = server.systemd
         if(this.#systemd) this.#features['systemd'] = true
@@ -189,6 +165,31 @@ export default class Server extends EventEmitter {
           // Swallow errors, doesn't mater
         }
       })
+    }
+
+    async #setupRcon(server: ServerExtendedData) {
+      let pass = server.rcon.password.value
+      if(!pass) pass = process.env[server.rcon.password.env]
+      if(pass) {
+        this.#rcon = {
+          password: pass,
+          client: new Rcon({
+            host: server.ip,
+            port: server.rcon.port ?? server.port,
+            password: pass,
+          }),
+        }
+        try {
+          await this.#rcon.client.connect()
+          this.#features['rcon'] = true
+        } catch(err) {
+          this.#features['rcon'] = false
+          console.warn(`[Server/${server.id}] Initial RCON connection failed:`, err.message)
+        }
+        
+      } else {
+        console.warn(`[Server/${server.id}] ERROR: Could not find RCON password for ${server.name}`)
+      }
     }
 
     public get SocketConnected() {

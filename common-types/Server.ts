@@ -84,10 +84,10 @@ export interface ServerAction {
 export type BuiltInActions = "builtin:stop" | "builtin:request_stop" | "builtin:update" | "builtin:kick"
 
 export interface ServerAvailableFeatures {
-    rcon: boolean
-    console: boolean
-    configs: boolean
-    systemd: boolean
-    plugin: boolean
+    rcon?: boolean
+    console?: boolean
+    configs?: boolean
+    systemd?: boolean
+    plugin?: boolean
 } 
 export type ServerFeature = keyof ServerAvailableFeatures
