@@ -359,7 +359,7 @@
         <p v-else>Not supported on this server.</p>
       </div>
       <div class="box" v-if="tab === 'live'">
-        <span class="tag is-pulled-right is-danger has-tooltip-left" v-if="isLiveViewActive" data-tooltip="Connected to server, receiving live data">Live</span>
+        <!-- <span class="tag is-pulled-right is-danger has-tooltip-left" v-if="isLiveViewActive" data-tooltip="Connected to server, receiving live data">Live</span> -->
         <h4 class="title is-5">Game Info</h4>
         <table class="table is-fullwidth" v-if="liveStatus?.game">
           <tbody>

@@ -58,7 +58,7 @@ import { ref, onBeforeMount, computed, onBeforeUnmount, onUnmounted, onMounted, 
 import { useRoute, useRouter } from 'vue-router';
 import DiscussionBox from '@/components/discussions/DiscussionBox.vue'
 import Comments from '@/components/discussions/Comments.vue'
-import { APIDiscussionFlags, APIDiscussionType, APIDiscussion, APIDiscussionOption, DiscussionState, Discussion, APIDiscussionDetails, DiscussionDetailed, APIResponsesData, APIComment } from '../../../common-types/Discussions';
+import { APIDiscussionFlags, APIDiscussionType, APIDiscussion, APIDiscussionOption, DiscussionState, Discussion, APIDiscussionDetails, DiscussionDetailed, APIResponsesData, APIComment, APIUserWithChoice } from '../../../common-types/Discussions';
 import { request } from '@/js/util.js';
 import Field from '@/components/Field.vue';
 

@@ -205,7 +205,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             [discuss.id, req.user.steamid2, comment.content]
         )
         const domain = await fastify.config.GetKV("domain");
-        await fastify.authmngr.addNotification(discuss.creator.id, `${await req.user.name()} commented on your discussion \"${discuss.title}\"`, {
+        await fastify.authmngr.addNotification(discuss.creator.id, `${await req.user.name() ?? req.user.steamid2} commented on your discussion \"${discuss.title}\"`, {
             link: `${domain}/discuss/${discuss.id}`,
         })
         return {

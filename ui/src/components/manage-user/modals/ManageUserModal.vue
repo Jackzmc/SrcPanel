@@ -19,7 +19,7 @@
           </div>
         </article>
       </section>
-      <section class="modal-card-body" v-else-if="user">
+      <section class="modal-card-body px-0 pt-4" v-else-if="user">
         <div class="tabs is-fullwidth is-boxed is-centered">
           <ul>
             <router-link :to="{ name: 'manage-user-overview', params: { tab: 'stats' } }" v-slot="{ href, navigate}" custom>
@@ -57,7 +57,7 @@
 
           </ul>
         </div>
-        <router-view :priv-user="privUser" :user="user" :user-admin-data="userAdminData" @close="router.push(routerHref)" @update-user="onUserUpdate" />
+        <router-view class="block px-6" :priv-user="privUser" :user="user" :user-admin-data="userAdminData" @close="router.push(routerHref)" @update-user="onUserUpdate" />
       </section>
       <section class="modal-card-body has-text-centered" v-else>
         <img src="@/assets/loader.gif" />
