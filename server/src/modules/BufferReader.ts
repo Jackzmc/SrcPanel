@@ -97,8 +97,9 @@ export default class BufferReader {
     /// Yields a BufferReader for every record in a packet
     *readRecords() {
       let start = this.#offset
-      while(this.#offset < this.#length && this.at(this.#offset) != 0x0a) {
-        if(this.at(this.#offset) == BufferReader.RecordSeparator) {
+      const maxLength = this.#length - 1
+      while(this.#offset < maxLength && this.at(this.#offset) != 0x0a) {
+        if(this.at(this.#offset) === BufferReader.RecordSeparator) {
           yield new BufferReader(this.#buffer.subarray(start, this.#offset))
           start = this.#offset + 1
         }

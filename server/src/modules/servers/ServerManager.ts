@@ -71,12 +71,10 @@ export default class ServerManager {
   }
 
   #authenticateSocket(client: PluginSocket, reader: BufferReader) {
-    const type = reader.readByte()
+    const record = PluginSocket.ParseRecord(reader)
     // skip any other type until authenticated
-    if(type != LiveRecordType.Auth) return console.warn("[ServerManager] Got non-auth packets when not-authenticated, ignoring")
-    const version = reader.readByte()
-    const token = reader.readString()
-    JWT.verify<PluginTokenPayload>(token, process.env.STATE_SECRET)
+    if(record.type != LiveRecordType.Auth) return console.warn("[ServerManager] Got non-auth packets when not-authenticated, ignoring")
+    JWT.verify<PluginTokenPayload>(record.token, process.env.STATE_SECRET)
       .then(({payload}) => {
         const server = this.servers[payload.sub]
         if(server) {
@@ -107,7 +105,9 @@ export default class ServerManager {
       }
       
       for(const packet of BufferReader.getPackets(buf)) {
+        if(packet.length == 0) break
         for(const reader of packet.readRecords()) {
+          if(reader.length == 0) break
           try {
             const record = PluginSocket.ParseRecord(reader)
             if(record.type === LiveRecordType.Meta) {
@@ -116,7 +116,7 @@ export default class ServerManager {
 
             ps.onRecord(record)
           } catch(err) {
-            console.warn("[ServerManager] bad packet:", err, reader.buffer.toString('hex'))
+            console.warn(`[ServerManager] bad packet: ${err}\nbuffer: ${reader.buffer.toString('hex')}`)
             continue
           }
         }
@@ -125,7 +125,7 @@ export default class ServerManager {
 
     client.on('close', () => {
       const server = ps.Server
-      server._setSocket(null)
+      server?._setSocket(null) // server may be null (connected but not authenticated)
       ps._setServer(null)
       this.#socketClients.delete(client.remoteAddress)
       this.#debugLive('client disconnected', client.remoteAddress)

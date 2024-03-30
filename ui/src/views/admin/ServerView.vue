@@ -148,7 +148,7 @@
           The server is offline or is unreachable.
         </div>
         <div class="list has-visible-pointer-controls" v-if="liveStatus && Object.values(liveStatus.players).length > 0">
-          <template v-for="player in liveStatus.players" :key="player.userid">
+          <template v-for="player in livePlayers" :key="player.userid">
             <div class="list-item" v-if="true">
               <div class="list-item-image">
                 <figure class="image is-48x48">
@@ -226,7 +226,7 @@
                     <tr>
                       <th>Actions</th>
                       <td><div class="buttons">
-                        <a v-if="player.steamid !== 'BOT'" class="button is-warning has-tooltip-danger" @click="kickPlayer(player)">Kick</a>
+                        <a class="button is-warning has-tooltip-danger" @click="kickPlayer(player)">Kick</a>
                       </div></td>
                     </tr>
                     <tr>
@@ -373,11 +373,13 @@
             </tr>
             <tr>
               <th>Server Uptime</th>
-              <td class="has-text-right">{{ getDuration(liveStatus.game.startTime) }}</td>
+              <td class="has-text-right" v-if="liveStatus.game.startTime">{{ getDuration(liveStatus.game.startTime) }}</td>
+              <td v-else>-</td>
             </tr>
             <tr>
               <th>Campaign Duration</th>
-              <td class="has-text-right">{{ getDuration(liveStatus.game.campaignStartTime) }}</td>
+              <td class="has-text-right" v-if="liveStatus.game.campaignStartTime">{{ getDuration(liveStatus.game.campaignStartTime) }}</td>
+              <td v-else>-</td>
             </tr>
             <tr>
               <th>Last Update</th>
@@ -858,6 +860,14 @@ const isLiveViewActive = computed(() => {
   if(liveStatusNextRetryTime.value) return false
   return liveReadyState.value == EventSource.OPEN
 })
+const livePlayers = computed(() => {
+  if(!liveStatus.value?.players) return []
+  return Object.values(liveStatus.value.players).sort((a, b) => {
+    if('survivor' in a) return 1
+    else if('survivor' in b) return -1
+    return 0
+  })
+})
 let errCount = 0
 let liveReadyState = ref<number>(0)
 let evtSource: EventSource
@@ -890,11 +900,12 @@ function createLiveConnection() {
       // If we have live connection, server is alive
       status.value.online = true
     }
+
     clearTimeout(reconnectTimeout)
     reconnectTimeout = setTimeout(() => {
       console.debug("no msg in a while, reconnecting")
       createLiveConnection()
-    }, 1000 * 40)
+    }, 1000 * 60)
   }
   evtSource.onopen = () => {
     liveReadyState.value = EventSource.OPEN

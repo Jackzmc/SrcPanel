@@ -111,7 +111,13 @@ export default class PluginSocket {
             steamConnected: reader.readByte() > 0
           }
         }
-        
+        case LiveRecordType.Auth: {
+          return {
+            type,
+            version: reader.readByte(),
+            token: reader.readString()
+          }
+        }
         default: {
           throw new Error("Not Implemented type: " + type)
         }

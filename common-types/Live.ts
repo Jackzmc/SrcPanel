@@ -176,6 +176,7 @@ export interface LiveRecordCommandResponse {
 
 export interface LiveRecordAuth {
     type: LiveRecordType.Auth,
+    version: number,
     token: string
 }
 
@@ -184,7 +185,7 @@ export interface LiveRecordMeta {
     steamConnected: boolean
 }
 
-export type LiveRecord = LiveRecordGame | LiveRecordPlayer | LiveRecordSurvivor | LiveRecordInfected | LiveRecordFinaleInfo | LiveRecordSurvivorItems | LiveRecordCommandResponse | LiveRecordMeta
+export type LiveRecord = LiveRecordGame | LiveRecordPlayer | LiveRecordSurvivor | LiveRecordInfected | LiveRecordFinaleInfo | LiveRecordSurvivorItems | LiveRecordCommandResponse | LiveRecordMeta | LiveRecordAuth
 export interface BaseLiveRecord {
     type: LiveRecordType
 }
