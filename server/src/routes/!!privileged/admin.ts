@@ -108,7 +108,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                     force: true
                 }))
 
-                const timeTsc = await doExec("TSC", 'yarn tsc')
+                const timeTsc = await doExec("TSC", 'npx tsc')
 
                 updateState = "RESTARTING"
 
