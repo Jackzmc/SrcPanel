@@ -311,9 +311,16 @@ export default class Server extends EventEmitter {
     }
 
     async #connectRcon() {
-      if(!this.#rcon) return
-      if(!this.#rcon.client.authenticated)
-        await this.#rcon.client.connect()
+      if(!this.#rcon) return false
+      if(!this.#rcon.client.authenticated) {
+        try {
+          await this.#rcon.client.connect()
+          return true
+        } catch(err) {
+          console.warn(`[Server/${this.id}] Rcon connection failed:`, err.message)
+          return false
+        }
+      }
     }
 
     /**
@@ -458,8 +465,7 @@ export default class Server extends EventEmitter {
       if(!this.#socket) 
       if(this.#socket)
         return await this.#socket.send(LiveRecordResponse.RunCommand, command, namespace)
-      else if(this.hasRcon) {
-        await this.#connectRcon()
+      else if(this.hasRcon && await this.#connectRcon()) {
         if(namespace === "builtin") command = this.#getFallbackCommandForBuiltin(command)
         if(!command) {
           throw new Error("Command cannot be run at this time (no rcon fallback equivalent)")
