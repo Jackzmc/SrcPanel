@@ -502,7 +502,7 @@ const props = defineProps<{
 const route = useRoute()
 const router = useRouter()
 
-const SURVIVOR_IDS = ["gambler", "producer", "coach", "mechanic", "namvet", "biker", "teenangst", "manager"]
+const SURVIVOR_IDS = ["gambler", "producer", "coach", "mechanic", "namvet", "teenangst", "biker", "manager"]
 const STATES: { [key in PlayerState]?: string } = {
   [PlayerState.BlackAndWhite]: "Black & White",
   [PlayerState.InSaferoom]: "In Saferoom",

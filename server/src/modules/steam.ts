@@ -9,7 +9,7 @@ import { EventEmitter } from 'node:events';
 import LruCache, { LRUCache } from 'lru-cache'
 
 // How many bytes of progress to make before sending an update
-const PROGRES_MIN_BYTES = 5_000 // 5KB
+const PROGRES_MIN_BYTES = 10_000 // 10KB
 const ITEM_CACHE_MAX_SIZE = 20
 const ITEM_CACHE_TTL = 1000 * 60 * 10 // 10 min
 
@@ -164,12 +164,13 @@ export default class SteamAPI {
                     event.removeAllListeners()
                 })
             })
-            let progressBytes = 0
+            let progressBytes = 0, lastProgress = Date.now()
             response.on('data', (chunk) => {
                 // Only send updates every PROGRES_MIN_BYTES bytes 
                 progressBytes += chunk.length
-                if(progressBytes > PROGRES_MIN_BYTES) {
+                if(progressBytes > PROGRES_MIN_BYTES && Date.now() - lastProgress > 2000) {
                     progressBytes = 0
+                    lastProgress = Date.now()
                     event.emit("progress", file.bytesWritten, contentLength)
                 }
             })

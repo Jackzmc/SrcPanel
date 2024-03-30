@@ -116,7 +116,7 @@ export default class ServerManager {
 
             ps.onRecord(record)
           } catch(err) {
-            console.warn("[ServerManager] bad packet:", err)
+            console.warn("[ServerManager] bad packet:", err, reader.buffer.toString('hex'))
             continue
           }
         }
