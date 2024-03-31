@@ -464,7 +464,6 @@ export default class Server extends EventEmitter {
     }
 
     public async performAction(command: string, namespace = "default"): Promise<LiveRecordCommandResponse> {
-      if(!this.#socket) 
       if(this.#socket?.Authenticated)
         return await this.#socket.send(LiveRecordResponse.RunCommand, command, namespace)
       else if(this.hasRcon && await this.#connectRcon()) {

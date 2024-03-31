@@ -171,22 +171,22 @@ export default class PluginSocket {
       let id = this.#id++
       switch(type) {
         case LiveRecordResponse.OK:
-        writer.writeByte(arg ?? this.#server?.liveViewers ?? 0)
+          writer.writeByte(arg ?? this.#server?.liveViewers ?? 0)
         break
         case LiveRecordResponse.Error:
-        writer.writeString(arg ?? "")
+          writer.writeString(arg ?? "")
         break
         case LiveRecordResponse.RunCommand:
-        writer.writeByte(id)
-        writer.writeString(arg)
-        writer.writeString(namespace ?? "")
+          writer.writeByte(id)
+          writer.writeString(arg)
+          writer.writeString(namespace ?? "")
         break
       }
       if(!this.#socket.write(writer.buffer)) return reject(new Error("Failed to write to socket"))
-      if(type != LiveRecordResponse.RunCommand) return resolve()
+      if(type != LiveRecordResponse.RunCommand) return reject(new Error("Unsupported response type"))
       // For RunCommand, we wait for a response:
       let rejectTimeout = setTimeout(() => {
-        reject("Response timed out")
+        reject(new Error("Response timed out"))
       }, RESPONSE_TIMEOUT)
       this.#responseQueue.push((record) => {
         clearTimeout(rejectTimeout)

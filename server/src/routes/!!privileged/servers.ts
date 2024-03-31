@@ -309,19 +309,12 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 command
             }
         })
-        try {
-            const response = await server.performAction(command, namespace)
-            return {
-                id: response.id,
-                resultType: response.resultType,
-                result: response.result,
-                message: response.message
-            }
-        } catch(err) {
-            return reply.code(500).send({
-                error: "COMMAND_FAILED",
-                message: "Command failed to run:\n" + err,
-            })
+        const response = await server.performAction(command, namespace)
+        return {
+            id: response.id,
+            resultType: response.resultType,
+            result: response.result,
+            message: response.message
         }
     })
 
