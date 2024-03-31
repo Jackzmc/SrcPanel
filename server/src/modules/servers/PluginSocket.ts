@@ -183,7 +183,7 @@ export default class PluginSocket {
         break
       }
       if(!this.#socket.write(writer.buffer)) return reject(new Error("Failed to write to socket"))
-      if(type != LiveRecordResponse.RunCommand) return reject(new Error("Unsupported response type"))
+      if(type != LiveRecordResponse.RunCommand) return resolve()
       // For RunCommand, we wait for a response:
       let rejectTimeout = setTimeout(() => {
         reject(new Error("Response timed out"))

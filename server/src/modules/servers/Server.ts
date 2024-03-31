@@ -464,9 +464,11 @@ export default class Server extends EventEmitter {
     }
 
     public async performAction(command: string, namespace = "default"): Promise<LiveRecordCommandResponse> {
-      if(this.#socket?.Authenticated)
-        return await this.#socket.send(LiveRecordResponse.RunCommand, command, namespace)
-      else if(this.hasRcon && await this.#connectRcon()) {
+      if(this.#socket?.Authenticated) {
+        const response = await this.#socket.send(LiveRecordResponse.RunCommand, command, namespace)
+        if(!response) throw new Error("Got no response")
+        return response
+      } else if(this.hasRcon && await this.#connectRcon()) {
         if(namespace === "builtin") command = this.#getFallbackCommandForBuiltin(command)
         if(!command) {
           throw new Error("Command cannot be run at this time (no rcon fallback equivalent)")
