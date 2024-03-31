@@ -26,7 +26,7 @@
 import ServerTable from '@/components/servers/ServerTable.vue';
 import { request } from '@/js/util';
 import { notify } from '@kyvg/vue3-notification';
-import { ref, computed, onBeforeMount, onDeactivated, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onDeactivated, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 
 const REFRESH_SECONDS = 6
@@ -134,7 +134,7 @@ function startCountdown() {
   }, 1000)
 }
 
-onBeforeMount(() => {
+onMounted(() => {
   refreshServers(true)
   refreshTimer.value = setInterval(() => {
     refreshServers()

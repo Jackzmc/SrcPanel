@@ -37,8 +37,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, computed, onBeforeMount, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { ref, watch } from 'vue'
 import { formatDate } from "@/js/util"
 import { getRelDate } from '../js/util';
 

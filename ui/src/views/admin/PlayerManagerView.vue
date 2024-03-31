@@ -101,7 +101,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onBeforeMount, computed } from 'vue'
+import { ref, onBeforeMount, computed, onMounted } from 'vue';
 import { User, PrivilegedUser, PlayerData } from '@/js/User'
 import { useRouter, useRoute } from 'vue-router'
 import { ReadableAdminData } from '../../../../common-types/User';
@@ -224,7 +224,7 @@ async function getServerTypes() {
     servers.value = json.servers
   }
 }
-onBeforeMount(() => {
+onMounted(() => {
   search.value.func = Debounce(searchUser, 400)
   getServerTypes()
   getRecentPlayers()

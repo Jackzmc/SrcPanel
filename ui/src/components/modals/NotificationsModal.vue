@@ -20,13 +20,8 @@
 <script setup lang="ts">
 import Modal from "@/components/Modal.vue";
 import { PrivilegedUser } from "@/js/User";
-import { onBeforeMount } from "vue";
-import { useRoute, useRouter } from "vue-router";
 
 const emit = defineEmits(["close"]);
-
-const route = useRoute();
-const router = useRouter();
 
 const props = defineProps<{
   privUser: PrivilegedUser;
@@ -35,7 +30,4 @@ const props = defineProps<{
 async function close() {
   emit("close");
 }
-
-onBeforeMount(() => {
-});
 </script>

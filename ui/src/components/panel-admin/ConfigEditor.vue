@@ -32,7 +32,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onBeforeMount } from 'vue';
+import { ref, watch, onBeforeMount, onMounted } from 'vue';
 import { Keyvalue, ApiPanelConfig, PanelKeysRecord } from '../../../../common-types/Panel.js';
 import { notify } from '@kyvg/vue3-notification';
 import { request } from '@/js/util';
@@ -144,7 +144,7 @@ async function fetchPanelConfigs() {
   }
 }
 
-onBeforeMount(() => {
+onMounted(() => {
   fetchPanelConfigs()
 })
 </script>

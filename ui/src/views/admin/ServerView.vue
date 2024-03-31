@@ -442,7 +442,7 @@
 
 <script setup lang="ts">
 import { useRoute, useRouter } from 'vue-router'
-import { onBeforeMount, ref, computed, onUnmounted, onBeforeUnmount } from 'vue';
+import { ref, computed, onUnmounted, onBeforeUnmount, onMounted } from 'vue';
 import FolderBrower from'@/components/FolderBrowser.vue'
 import { PlayerData, PrivilegedUser } from '@/js/User';
 import { parseLog, getRelDate, request } from '@/js/util';
@@ -958,7 +958,7 @@ nowInterval = setInterval(() => {
     lastLiveUpdateTime.value = getRelDate(liveStatus.value.lastUpdate / 1000)
 }, 1000)
 
-onBeforeMount(async() => {
+onMounted(async() => {
   document.addEventListener("keyup", _toggleShift)
   document.addEventListener("keydown", _toggleShift)
   errCount = 0

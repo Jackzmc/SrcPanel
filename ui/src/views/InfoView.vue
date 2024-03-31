@@ -176,7 +176,7 @@ function computeRating(content: string) {
   return { key, value: score }
 }
 
-onBeforeMount(() => {
+onMounted(() => {
   fetchNotes()
 })
 </script>

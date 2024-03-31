@@ -11,7 +11,7 @@
 
 <script setup lang="ts">
 import JsonEditorVue from 'json-editor-vue'
-import { ref, onBeforeMount, computed, watch } from 'vue'
+import { ref, onBeforeMount, computed, watch, onMounted } from 'vue';
 import { request } from '@/js/util'
 import { notify } from '@kyvg/vue3-notification'
 
@@ -60,7 +60,7 @@ async function fetchFile() {
   }
 }
 
-onBeforeMount(() => {
+onMounted(() => {
   fetchFile()
 })
 </script>

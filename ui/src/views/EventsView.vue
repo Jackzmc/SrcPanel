@@ -23,7 +23,7 @@
 </template>
 
 <script setup lang="ts">
-import { onBeforeMount, ref } from 'vue';
+import { onBeforeMount, ref, onMounted } from 'vue';
 import { APIEvent } from '../../../common-types/Event.js';
 import { request } from '@/js/util.js';
 
@@ -36,7 +36,7 @@ async function getEvents() {
   }
 }
 
-onBeforeMount(() => {
+onMounted(() => {
   getEvents()
 })
 </script>

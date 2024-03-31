@@ -211,7 +211,7 @@ function close() {
   emit("close");
 }
 
-onBeforeMount(() => {
+onMounted(() => {
   fetchSessions();
 });
 </script>

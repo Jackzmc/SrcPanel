@@ -122,7 +122,7 @@
 
 <script setup lang="ts">
 import List from '@/components/List.vue';
-import { ref, computed, onBeforeMount, onBeforeUnmount, watch } from 'vue';
+import { ref, computed, onBeforeMount, onBeforeUnmount, watch, onMounted } from 'vue';
 import { EventDataSubmission, APIEventDetailed, APIWeekAvailability } from '../../../common-types/Event';
 import { useRoute, useRouter } from 'vue-router';
 import { request } from '@/js/util.js'
@@ -420,7 +420,7 @@ async function fetchEvent() {
     }
   }
 }
-onBeforeMount(async() => {
+onMounted(async() => {
   document.addEventListener("mouseup", onMouseUp)
 
   await fetchEvent()

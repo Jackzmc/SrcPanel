@@ -93,7 +93,7 @@ async function selectTutorial(tutorial: Tutorial) {
   }
   router.replace({params: { id: tutorial.id }})
 }
-onBeforeMount(async() => {
+onMounted(async() => {
   const response = await request(`/data/tutorials/tutorials.json?t=${BUILD_TIMESTAMP}`)
   if(response?.ok) {
     const tuts = await response.json()

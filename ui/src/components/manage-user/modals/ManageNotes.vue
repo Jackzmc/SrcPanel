@@ -66,7 +66,7 @@
 
 <script setup lang="ts">
 import { Note } from '../../../../../common-types/Note.js'
-import { ref, onBeforeMount, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import NoteComponent from '@/components/manage-user/Note.vue'
 import { PlayerData } from '@/js/User';
 import { notify } from '@kyvg/vue3-notification';
@@ -276,7 +276,7 @@ async function fetchNotes() {
   }
 }
 
-onBeforeMount(async () => {
+onMounted(async () => {
   await fetchNotes()
 })
 </script>

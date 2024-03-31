@@ -112,7 +112,7 @@
 
 <script setup lang="ts">
 import Field from '@/components/Field.vue'
-import { ref, computed, onBeforeMount, watch } from 'vue';
+import { ref, computed, onBeforeMount, watch, onMounted } from 'vue';
 import { ShareInfo, DownloadSource, DownloadSources, ShareDestination } from '../../../../common-types/Share';
 //@ts-expect-error
 import Vue3TagsInput from 'vue3-tags-input';
@@ -184,7 +184,7 @@ watch(() => selectedDestId.value, (cur, prev) => {
   prevDestId = prev
 })
 
-onBeforeMount(async() => {
+onMounted(async() => {
   const response = await fetch('/api/appids')
   if(response.ok) {
     const json: Record<string, string> = await response.json()

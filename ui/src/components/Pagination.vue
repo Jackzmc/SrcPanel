@@ -34,8 +34,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, computed, onBeforeMount, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { ref, watch, computed } from 'vue'
 
 const emit = defineEmits(['page'])
 

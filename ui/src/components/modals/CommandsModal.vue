@@ -69,13 +69,10 @@
 
 <script setup lang="ts">
 import Modal from '@/components/Modal.vue'
-import { ref, watch, computed, onBeforeMount, onMounted } from 'vue'
+import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 const emit = defineEmits(['close'])
-
-const route = useRoute()
-const router = useRouter()
 
 const props = defineProps<{
   cmd: {

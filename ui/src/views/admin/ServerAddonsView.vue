@@ -543,7 +543,7 @@ function formatAddonEntry(entry: any) {
   return entry
 }
 
-onBeforeMount(async() => {
+onMounted(async() => {
   await fetchShares()
   if(route.params.shareId) {
     await _setShare(route.params.shareId as string)

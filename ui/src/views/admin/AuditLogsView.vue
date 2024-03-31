@@ -236,7 +236,7 @@
 <script setup lang="ts">
 import { useNotification } from '@kyvg/vue3-notification';
 import { PrivilegedUser } from '@/js/User';
-import { ref, onBeforeMount, computed, onBeforeUnmount, onUnmounted } from 'vue';
+import { ref, onBeforeMount, computed, onBeforeUnmount, onUnmounted, onMounted } from 'vue';
 import { formatDate, getRelDate, request, requestTimeout } from '@/js/util';
 import LogMessage from '@/components/LogMessage.vue';
 import Field from '@/components/Field.vue';
@@ -611,7 +611,7 @@ async function copyShareLink(entry: any) {
 
 let refreshTimer: any
 let nowTimer: any
-onBeforeMount(async() => {
+onMounted(async() => {
   now.value = Date.now()
   nowTimer = setInterval(() => {
     now.value = Date.now()

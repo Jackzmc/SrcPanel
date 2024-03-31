@@ -168,9 +168,9 @@
           <label class="label">Flags</label>
           <div class="buttons">
             <div class="button is-warning" v-if="edited.flags & APIBanFlags.Suspended" @click="toggleFlag(APIBanFlags.Suspended)" data-tooltip="Click to resume this ban">Suspended</div>
-            <div class="button is-outlined" v-else @click="toggleFlag(APIBanFlags.Suspended)" data-tooltip="Click to suspend this ban">Suspend</div>
+            <div class="button is-light" v-else @click="toggleFlag(APIBanFlags.Suspended)" data-tooltip="Click to suspend this ban">Suspend</div>
             <div class="button is-info" v-if="edited.flags & APIBanFlags.IPBan" @click="toggleFlag(APIBanFlags.IPBan)" data-tooltip="Click to disable the ip ban">IP Banned</div>
-            <div class="button is-outlined" v-else @click="toggleFlag(APIBanFlags.IPBan)" data-tooltip="Click to enable ip ban">IP Ban</div>
+            <div class="button is-light" v-else @click="toggleFlag(APIBanFlags.IPBan)" data-tooltip="Click to enable ip ban">IP Ban</div>
           </div>
         </div>
       </div>

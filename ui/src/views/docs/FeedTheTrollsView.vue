@@ -81,7 +81,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onBeforeMount } from 'vue'
+import { ref, onBeforeMount, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router'
 
 const LAST_UPDATED = new Date(Number(BUILD_TIMESTAMP))
@@ -149,7 +149,7 @@ function showFlags(troll: any) {
 
 }
 
-onBeforeMount(() => {
+onMounted(() => {
     fetch(`../data/ftt.json?t=${LAST_UPDATED}`)
     .then(response => response.json())
     .then(json => {

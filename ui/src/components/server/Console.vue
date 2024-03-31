@@ -24,7 +24,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onBeforeMount, onUnmounted, nextTick } from 'vue'
+import { ref, computed, onBeforeMount, onUnmounted, nextTick, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import Field from '@/components/Field.vue'
 import { request } from '@/js/util';
@@ -180,7 +180,7 @@ async function getCommands(filename: string) {
   }
 }
 
-onBeforeMount(async() => {
+onMounted(async() => {
   createLogsConnection()
   await fetchCommands()
 })

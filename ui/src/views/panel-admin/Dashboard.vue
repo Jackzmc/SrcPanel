@@ -134,7 +134,7 @@ async function fetchServerHealth() {
   }
 }
 
-onBeforeMount(async () => {
+onMounted(async () => {
   if(props.privUser.hasPermission("panel.view")) {
     await fetchServerHealth()
   }

@@ -52,7 +52,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeMount } from 'vue'
+import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router';
 const route = useRoute()
 const router = useRouter()
@@ -65,18 +65,6 @@ const returnTo = computed(() => {
 })
 const errorType = computed(() => {
   return route.query.type as string
-})
-
-async function testServer() {
-  const response = await fetch("/api/auth/profile")
-  if(response.ok) {
-    router.push(returnTo.value)
-  }
-}
-
-onBeforeMount(() => {
-  // if(!errorType.value)
-    // testServer()
 })
 
 </script>

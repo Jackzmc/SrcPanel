@@ -9,7 +9,7 @@
 </template>
 
 <script setup lang="ts">
-import { onBeforeMount } from 'vue';
+import { onMounted } from 'vue';
 //@ts-expect-error
 import confetti from "canvas-confetti"
 const emit = defineEmits(["close"])
@@ -38,7 +38,7 @@ function close() {
   emit('close')
 }
 
-onBeforeMount(async () => {
+onMounted(async () => {
   await playConfetti(3000)
 })
 </script>

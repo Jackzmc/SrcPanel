@@ -150,15 +150,16 @@ function onUserUpdate(newUser: any) {
   user.value.name = newUser.name
 }
 
-onBeforeMount(async () => {
-  console.log(route.name, Object.assign({}, route))
+onBeforeMount(() => {
   if(route.query.returnTo) returnTo.value = decodeURIComponent(route.query.returnTo.toString())
   if(route.query.returnTo) router.push({ query: { returnTo: route.query.returnTo.toString() }})
   document.addEventListener('keydown', closeModal)
-  await getUser()
   if(route.name === "manage-user-default") {
     router.push({ ...route, name: "manage-user" })
   }
+})
+onMounted(async () => {
+  await getUser()
 })
 onBeforeUnmount(() => {
   document.removeEventListener('keydown', closeModal)
