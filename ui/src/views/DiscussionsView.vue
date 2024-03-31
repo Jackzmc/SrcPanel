@@ -24,7 +24,7 @@
     </div>
     <div class="column" v-if="selectedDiscussion">
       <h4 class="title is-4">Respondants ({{ selectedDiscussion.responses.totalCount }}) ({{ Math.round(selectedDiscussion.responses.percentVoted * 100) }}%)</h4>
-      <div class="list" v-if="selectedDiscussion.responses.users">
+      <div class="list has-visible-pointer-controls" v-if="selectedDiscussion.responses.users">
         <div class="list-item" v-for="(user, i) in selectedDiscussion.responses.users" :key="i">
           <div class="list-item-image">
             <figure class="image is-32x32" :data-tooltip="user.name">
