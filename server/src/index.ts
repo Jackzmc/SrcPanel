@@ -23,7 +23,6 @@ import FastifySwagger from '@fastify/swagger'
 import { UserPrivilegeCode } from '../../common-types/Privileges.js';
 
 import FastifyHelmet from '@fastify/helmet'
-import { QueryQueue } from './modules/QueryQueue.js';
 import DiscussionManager from './modules/DiscussionManager.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -66,7 +65,6 @@ declare module 'fastify' {
     servers: ServerManager,
     users: UserManager,
     config: ConfigManager,
-    jobs: QueryQueue,
     managers: {
       discussions: DiscussionManager
     }
