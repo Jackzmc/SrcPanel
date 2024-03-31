@@ -69,7 +69,6 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                     const steamid = new SteamID(pieces[pieces.length - 1])
 
                     const userDetails = await getUserDetails(steamid)
-                    console.log('details', userDetails)
                     if(!userDetails) {
                          return reply.code(500).send({
                             error: 'STEAM_API_ERROR',
