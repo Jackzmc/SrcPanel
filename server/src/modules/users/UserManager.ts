@@ -61,7 +61,7 @@ export default class UserManager {
             return {
                 steamid: user.steamid,
                 avatarHash: user.avatar_hash,
-                name: user.namee,
+                name: user.name,
                 timestamp: user.timestamp
             }
         }

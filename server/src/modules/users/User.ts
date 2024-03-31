@@ -27,7 +27,7 @@ export interface RequirePermissionOptions {
 export default class User {
     private adminData?: AdminData
     private _providers: UserOauthProviders
-    private _name: string
+    #name: string
     #fastify: FastifyInstance
 
     public steamid2: string
@@ -43,11 +43,11 @@ export default class User {
      * @returns string 
      */
     public async name() {
-        if(this._name) return this._name
+        if(this.#name) return this.#name
         const user = await UserManager.instance.fetchUser(this.steamid2)
         if(!user) return null
-        this._name = user.name
-        return this._name
+        this.#name = user.name
+        return this.#name
     }
 
     /**
