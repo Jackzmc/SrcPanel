@@ -5,11 +5,14 @@ import User from "./users/User.js";
 import AuthManager from "./auth/AuthManager.js";
 
 const AUTO_ARCHIVE_TIME = 1000 * 60 * 60 * 24 * 10 // 10 days
+const CACHE_TTL = 1000 * 60 * 60 * 1
 
 export default class DiscussionManager {
     #db: Pool
     #config: ConfigManager
     #authmngr: AuthManager
+
+    #lastFetchTime
 
     #discussions = new Map<number, APIDiscussionCacheableData>()
 
@@ -19,11 +22,20 @@ export default class DiscussionManager {
         this.#authmngr = authManager
     }
 
+    async #tryRefresh() {
+        if(Date.now() - this.#lastFetchTime > CACHE_TTL) {
+            this.#lastFetchTime = Date.now()
+            await this.fetchDiscussions()
+        }
+    }
+
     get(id: number) {
+        this.#tryRefresh()
         return this.#discussions.get(id)
     }
 
     getAll() {
+        this.#tryRefresh()
         return this.#discussions.values()
     }
 
