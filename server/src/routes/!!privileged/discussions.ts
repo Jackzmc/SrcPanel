@@ -204,6 +204,10 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             "INSERT INTO `left4dead2-admins`.dash_discussion_comments (discussion_id, creator, content, timestamp) VALUES (?, ?, ?, UNIX_TIMESTAMP())",
             [discuss.id, req.user.steamid2, comment.content]
         )
+        // Update cache
+        discuss.commentsCount++
+        discManager.set(discuss.id, discuss)
+        
         const domain = await fastify.config.GetKV("domain");
         await fastify.authmngr.addNotification(discuss.creator.id, `${await req.user.name() ?? req.user.steamid2} commented on your discussion \"${discuss.title}\"`, {
             link: `${domain}/discuss/${discuss.id}`,
