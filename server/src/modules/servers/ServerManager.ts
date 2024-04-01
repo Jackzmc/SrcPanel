@@ -17,7 +17,7 @@ import BufferReader from '../BufferReader.js';
 // How long after no status requests to switch from short to long refresh
 const SHORT_REFRESH_TIMEOUT = 1000 * 60
 
-const LIVE_SOCKET_KEEPALIVE_INTERVAL = 1000 * 60 * 1.5
+const LIVE_SOCKET_KEEPALIVE_INTERVAL = 1000 * 60 * 2
 
 export interface ConfigGroupData {
   servers: Record<string, ConfigServerData>,
@@ -71,6 +71,7 @@ export default class ServerManager {
   }
 
   #authenticateSocket(client: PluginSocket, reader: BufferReader) {
+    const size = reader.readByte()
     const record = PluginSocket.ParseRecord(reader)
     // skip any other type until authenticated
     if(record.type != LiveRecordType.Auth) return console.warn("[ServerManager] Got non-auth packets when not-authenticated, ignoring")
@@ -100,25 +101,24 @@ export default class ServerManager {
 
     client.on('data', (buf) => {
       // If we aren't authenticate, check to see if it's valid:
+      const packetReader = new BufferReader(buf)
       if(!ps.Authenticated) {
-        return this.#authenticateSocket(ps, new BufferReader(buf))
+        return this.#authenticateSocket(ps, packetReader)
       }
-      
-      for(const packet of BufferReader.getPackets(buf)) {
-        if(packet.length == 0) break
-        for(const reader of packet.readRecords()) {
-          if(reader.length == 0) break
-          try {
-            const record = PluginSocket.ParseRecord(reader)
-            if(record.type === LiveRecordType.Meta) {
-              this.#steam.SteamAvailable = record.steamConnected
-            }
 
-            ps.onRecord(record)
-          } catch(err) {
-            console.warn(`[ServerManager] bad packet: ${err}\nbuffer: ${reader.buffer.toString('hex')}`)
-            continue
+      for(const reader of packetReader.readRecords()) {
+        if(reader.length == 0) break
+        try {
+          const record = PluginSocket.ParseRecord(reader)
+          this.#debugLive(LiveRecordType[record.type], record)
+          if(record.type === LiveRecordType.Meta) {
+            this.#steam.SteamAvailable = record.steamConnected
           }
+
+          ps.onRecord(record)
+        } catch(err) {
+          console.warn(`[ServerManager] bad packet: ${err}\nbuffer: ${reader.buffer.toString('hex')}`)
+          continue
         }
       }
     })

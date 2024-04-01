@@ -108,7 +108,6 @@ import Modal from '@/components/Modal.vue'
 import { useNotification } from "@kyvg/vue3-notification";
 import { computed, ref, onBeforeMount } from 'vue';
 import { formatDate, formatSize, request } from '@/js/util.js'
-import { AddonUpdatePayload } from '@/views/admin/ServerAddonsView.vue';
 
 const emit = defineEmits(['close', 'update'])
 const { notify }  = useNotification()

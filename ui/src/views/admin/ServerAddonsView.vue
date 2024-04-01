@@ -399,11 +399,15 @@ function filterAndSort() {
         || (addon.workshop && addon.workshop.title.toLowerCase().includes(query))
       )
     })
-    let size = 0
+    let totalSize = 0
     for(const entry of filtered) {
-      size += (entry.workshop ? entry.workshop.filesize : entry.filesize )
+      const size = entry.workshop ? entry.workshop.filesize : entry.filesize
+      if(size)
+        totalSize += size
+      else
+        console.warn('no size', entry)
     }
-    computedTotalFileSize.value = size
+    computedTotalFileSize.value = totalSize
   } else {
     filtered = addons
     computedTotalFileSize.value = totalFileSize

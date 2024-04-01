@@ -7,10 +7,10 @@ export default class BufferReader {
     static *getPackets(data: Buffer) {
       let reader = new BufferReader(data)
       yield reader
-      while(reader.nextBuffer != null) {
-          reader = new BufferReader(reader.nextBuffer)
-          yield reader
-      }
+      // while(reader.nextBuffer != null) {
+      //     reader = new BufferReader(reader.nextBuffer)
+      //     yield reader
+      // }
       return null
     }
 
@@ -24,6 +24,7 @@ export default class BufferReader {
       this.#buffer = data
       this.#offset = 0
       this.#length = data.byteLength
+
     }
 
     get buffer() {
@@ -96,16 +97,12 @@ export default class BufferReader {
 
     /// Yields a BufferReader for every record in a packet
     *readRecords() {
-      let start = this.#offset
-      const maxLength = this.#length - 1
-      while(this.#offset < maxLength && this.at(this.#offset) != 0x0a) {
-        if(this.at(this.#offset) === BufferReader.RecordSeparator) {
-          yield new BufferReader(this.#buffer.subarray(start, this.#offset))
-          start = this.#offset + 1
-        }
-        this.#offset++
+      while(!this.isEOF) {
+        const length = this.readByte()
+        const endRecord = this.#offset + length
+        yield new BufferReader(this.#buffer.subarray(this.#offset, endRecord))
+        this.#offset = endRecord + 1
       }
-      yield new BufferReader(this.#buffer.subarray(start, this.#offset))
       return null
     }
   
@@ -155,13 +152,13 @@ export default class BufferReader {
         return this
     }
   
-    get nextBuffer() {
-      if(this.#curChar == 0xa && this.#offset + 1 < this.#buffer.length) {
-        return this.#buffer.subarray(this.#offset + 1)
-      } else {
-        return null
-      }
-    }
+    // get nextBuffer() {
+    //   if(this.#curChar == 0xa && this.#offset + 1 < this.#buffer.length) {
+    //     return this.#buffer.subarray(this.#offset + 1)
+    //   } else {
+    //     return null
+    //   }
+    // }
   
     at(i: number): number {
       return this.#buffer.at(i)
