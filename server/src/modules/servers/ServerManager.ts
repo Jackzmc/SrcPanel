@@ -102,6 +102,7 @@ export default class ServerManager {
     client.on('data', (buf) => {
       // If we aren't authenticate, check to see if it's valid:
       const packetReader = new BufferReader(buf)
+      // console.log(buf.toString('hex'))
       if(!ps.Authenticated) {
         return this.#authenticateSocket(ps, packetReader)
       }
