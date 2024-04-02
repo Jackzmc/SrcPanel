@@ -16,51 +16,51 @@ const ITEM_CACHE_TTL = 1000 * 60 * 10 // 10 min
 const STEAM_STATUS_CHECK_INTERVAL = 1000 * 60 * 2 // 2 minute
 
 export default class SteamAPI {
-    private apikey: string
-    private userAgent: string
-    private appMap: Record<string, string>
-    private itemCache: LRUCache<string, WorkshopItem>
+    #apikey: string
+    #userAgent: string
+    #appMap: Record<string, string>
+    #itemCache: LRUCache<string, WorkshopItem>
 
     public SteamAvailable: boolean = true
 
     constructor(apikey?: string, userAgent?: string) {
-        this.apikey = apikey ?? process.env.STEAM_WEB_APIKEY
-        this.userAgent = userAgent || "SrcdsDash-API-Client"
-        this.itemCache = new LRUCache({
+        this.#apikey = apikey ?? process.env.STEAM_WEB_APIKEY
+        this.#userAgent = userAgent || "SrcdsDash-API-Client"
+        this.#itemCache = new LRUCache({
             max: ITEM_CACHE_MAX_SIZE,
             ttl: ITEM_CACHE_TTL
         })
     }
 
     get AppTitles() {
-        return {...this.appMap}
+        return {...this.#appMap}
     }
 
     #checkKey() {
-        if(!this.apikey) {
+        if(!this.#apikey) {
             throw new Error("Missing steam api key. Provide in constructor or in env STEAM_WEB_APIKEY")
         }
     }
 
     public async loadAppIdFile(path: string) {
         const json = JSON.parse(await readFile(path, 'utf-8'))
-        this.appMap = {}
+        this.#appMap = {}
         for(const entry of json.apps) {
-            if(entry.name != '') this.appMap[entry.appid.toString()] = entry.name
+            if(entry.name != '') this.#appMap[entry.appid.toString()] = entry.name
         }
     }
 
     async getAppName(id: number) {
         if(!id) throw new Error("App id is null: " + id)
-        if(!this.appMap) throw new Error("App map is not initialized, use loadAppIdFile(path_to_db_file) to initalize")
-        return this.appMap[id.toString()]
+        if(!this.#appMap) throw new Error("App map is not initialized, use loadAppIdFile(path_to_db_file) to initalize")
+        return this.#appMap[id.toString()]
     }
 
     async getUserDetails(steamids: (SteamID | string)[]): Promise<SteamUserDetails[]> {
         this.#checkKey()
         const ids = steamids.map(steamid => steamid instanceof SteamID ? steamid.getSteamID64() : steamid).slice(0, 100).join(",")
-        const res = await fetch(`https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v2/?key=${this.apikey}&format=json&steamids=${ids}`, {
-            headers: { 'User-Agent': this.userAgent }
+        const res = await fetch(`https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v2/?key=${this.#apikey}&format=json&steamids=${ids}`, {
+            headers: { 'User-Agent': this.#userAgent }
         })
         if(res.ok) {
             const json: any = await res.json()
@@ -80,7 +80,7 @@ export default class SteamAPI {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
-                'User-Agent': this.userAgent
+                'User-Agent': this.#userAgent
             },
             body: `collectioncount=1&publishedfileids[0]=${fileid}`
         })
@@ -100,7 +100,7 @@ export default class SteamAPI {
         let index = 0
         for(const fileid of fileids) {
             // Grab items from cache if they exist and don't add them to fetch
-            const detail = this.itemCache.get(fileid)
+            const detail = this.#itemCache.get(fileid)
             if(detail) details.push(detail)
             else params.append(`publishedfileids[${index++}]`, fileid)
         }
@@ -110,7 +110,7 @@ export default class SteamAPI {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
-                    'User-Agent': this.userAgent
+                    'User-Agent': this.#userAgent
                 },
                 body: `itemcount=${fileids.length}&${params.toString()}`
             })
@@ -118,7 +118,7 @@ export default class SteamAPI {
                 const json = await response.json() as any
                 const files = json.response.publishedfiledetails as WorkshopItem[]
                 for(const file of files) {
-                    this.itemCache.set(file.publishedfileid, file)
+                    this.#itemCache.set(file.publishedfileid, file)
                 }
                 details = [...details, ...files]
             } else {

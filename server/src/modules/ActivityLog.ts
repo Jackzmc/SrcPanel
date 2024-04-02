@@ -28,10 +28,10 @@ id        bigint auto_increment
     */
 
 export default class ActivityLog {
-    private db: Pool
+    #db: Pool
 
     constructor(db: Pool) {
-        this.db = db
+        this.#db = db
     }
 
     //"Tank<146><BOT><>"
@@ -49,7 +49,7 @@ export default class ActivityLog {
         if('code' in payload) type = payload.code
         else if('type' in payload) type = payload.type
 
-        const [r] = await this.db.execute<OkPacket>(
+        const [r] = await this.#db.execute<OkPacket>(
             `INSERT INTO activity_log (server, type, client, target, message, timestamp, metadata) VALUES ('web', :type, :client, :target, :msg, UNIX_TIMESTAMP(), :metadata)`,
             {
                 client: activator.steamid2,

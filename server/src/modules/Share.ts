@@ -17,8 +17,8 @@ export default class Share {
     public sourceFolder: string
     public destinations: ShareDestinations = {}
     public appId?: number
-    private db: sqlite.Database<sqlite3.Database, sqlite3.Statement>
-    private steam: SteamAPI
+    #db: sqlite.Database<sqlite3.Database, sqlite3.Statement>
+    #steam: SteamAPI
 
     private validExts?: string[]
     private downloadSources: DownloadSourceRecord
@@ -26,8 +26,8 @@ export default class Share {
 
     constructor(db: sqlite.Database<sqlite3.Database, sqlite3.Statement>, steam: SteamAPI, shareInfo: Partial<ShareInfo>) {
         this.#id = shareInfo.id
-        this.db = db
-        this.steam = steam
+        this.#db = db
+        this.#steam = steam
         this.name = shareInfo.name ?? shareInfo.id,
         this.sourceFolder = shareInfo.sourceFolder
         this.appId = shareInfo.appid
@@ -108,7 +108,7 @@ export default class Share {
                         ...fsinfo,
                         installInfo: (await this.getInstallInfo(dirent.name)).states
                     })
-                    await this.addAddonEntry(dirent.name, fsinfo)
+                    await this.#addAddonEntry(dirent.name, fsinfo)
                 }
             }
         }
@@ -123,7 +123,7 @@ export default class Share {
         return results
     }
 
-    private static serializeWorkshopItem(item: WorkshopItem): AddonWorkshopInfo {
+    static serializeWorkshopItem(item: WorkshopItem): AddonWorkshopInfo {
         return {
             deleted: item.title === undefined,
             title: item.title,
@@ -143,10 +143,10 @@ export default class Share {
      * @param workshop (optional) workshop item details info
      * @param collection (optional) workshop collection info (collection id and name)
      */
-    private async addAddonEntry(filename: string, fsInfo?: { filesize: number, lastModified: number }, workshop?: AddonWorkshopInfo, collection?: WorkshopCollectionInfo) {
+    async #addAddonEntry(filename: string, fsInfo?: { filesize: number, lastModified: number }, workshop?: AddonWorkshopInfo, collection?: WorkshopCollectionInfo) {
         try {
             // console.debug(`adding \"${filename}\" [fs=${fsInfo != null}] [workshop=${workshop != null}] [collection=${collection != null}]`)
-            await this.db.run(
+            await this.#db.run(
                 SQL`REPLACE INTO addoncache 
                     (filename, filesize, lastModified, ws_info, collection_id, collection_name) 
                     VALUES(${filename}, ${fsInfo?.filesize}, ${fsInfo?.lastModified}, ${workshop ? JSON.stringify(workshop) : null}, ${collection?.id}, ${collection?.name})`
@@ -166,7 +166,7 @@ export default class Share {
      * @returns Promise<AddonInfo | undefined>
      */
     public async getAddonInfo(filename: string): Promise<AddonInfo | undefined> {
-        const info = await this.db.get(SQL`SELECT * FROM addoncache WHERE filename = ${filename}`)
+        const info = await this.#db.get(SQL`SELECT * FROM addoncache WHERE filename = ${filename}`)
         if(!info) return null
         const installInfo = await this.getInstallInfo(filename)
         return {
@@ -195,7 +195,7 @@ export default class Share {
         // Delete the source file
         await unlink(path.join(this.sourceFolder, filename))
         // Remove cache from database
-        await this.db.exec(SQL`DELETE FROM addoncache WHERE filename = ${filename}`)
+        await this.#db.exec(SQL`DELETE FROM addoncache WHERE filename = ${filename}`)
     }
 
     /**
@@ -203,14 +203,14 @@ export default class Share {
      * @param filename 
      */
     public async getInstallInfo(filename: string): Promise<{ states: Record<string, boolean>, created: number, modified: number, size: number }> {
-        const statInfo = await this.getFileInfo(this.sourceFolder, filename)
+        const statInfo = await this.#getFileInfo(this.sourceFolder, filename)
         if(statInfo) {
             let states: Record<string, boolean> = {}
             if(this.destinations) {
                 for(const [id, dest] of Object.entries(this.destinations)) {
                     // We just use the first path
                     if(!dest.paths) continue
-                    states[id] = dest.paths.length > 0 ? await this.getFileInfo(dest.paths[0], filename) !== null : false
+                    states[id] = dest.paths.length > 0 ? await this.#getFileInfo(dest.paths[0], filename) !== null : false
                 }
             }
             return { 
@@ -258,7 +258,7 @@ export default class Share {
         const dest = this.destinations[destinationKey]
         if(!dest) throw new Error(`Destination "${destinationKey}" does not exist`)
         
-        if(!this.getFileInfo(this.sourceFolder, filename)) {
+        if(!this.#getFileInfo(this.sourceFolder, filename)) {
             throw new Error(`File \"${filename}\" does not exist in ${this.sourceFolder}`)
         }
         try {
@@ -283,7 +283,7 @@ export default class Share {
         const dest = this.destinations[destinationKey]
         if(!dest) throw new Error(`Destination "${destinationKey}" does not exist`)
         
-        if(!this.getFileInfo(this.sourceFolder, filename)) {
+        if(!this.#getFileInfo(this.sourceFolder, filename)) {
             throw new Error(`File \"${filename}\" does not exist in ${this.sourceFolder}`)
         }
 
@@ -303,7 +303,7 @@ export default class Share {
      * @param file The filename to check
      * @returns Promise<Stats>
      */
-    private async getFileInfo(folder: string, file: string) {
+    async #getFileInfo(folder: string, file: string) {
         try {
           return await stat(path.join(folder, file))
         } catch(err) {
@@ -328,7 +328,7 @@ export default class Share {
         }
 
         // Update the cache
-        await this.addAddonEntry(filename, {
+        await this.#addAddonEntry(filename, {
             filesize: item.file_size,
             lastModified: item.time_updated
         }, Share.serializeWorkshopItem(item), item.collection)
@@ -349,7 +349,7 @@ export default class Share {
                 throw new Error(`Downloaded size mismatch (downloaded ${curBytes} bytes, expected ${item.file_size} bytes)`)
             }
 
-            this.addAddonEntry(filename, {
+            this.#addAddonEntry(filename, {
                 filesize: item.file_size,
                 lastModified: item.time_updated
             }, Share.serializeWorkshopItem(item), item.collection)

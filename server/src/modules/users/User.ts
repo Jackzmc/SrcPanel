@@ -25,8 +25,8 @@ export interface RequirePermissionOptions {
 }
 
 export default class User {
-    private adminData?: AdminData
-    private _providers: UserOauthProviders
+    #adminData?: AdminData
+    #providers: UserOauthProviders
     #name: string
     #fastify: FastifyInstance
 
@@ -35,7 +35,7 @@ export default class User {
     constructor(fastify: FastifyInstance, steamid2: string) {
         this.#fastify = fastify
         this.steamid2 = steamid2
-        this.adminData = fastify.authmngr.getAdmin(steamid2)
+        this.#adminData = fastify.authmngr.getAdmin(steamid2)
     }
     
     /**
@@ -54,7 +54,7 @@ export default class User {
      * Is user an admin
      */
     get isAdmin() {
-        return this.adminData != null
+        return this.#adminData != null
     }
 
     /**
@@ -62,7 +62,7 @@ export default class User {
      */
     get immunity() {
         if(!this.isAdmin) return null
-        return this.adminData.permissions.immunityLevel
+        return this.#adminData.permissions.immunityLevel
     }
 
     /**
@@ -70,7 +70,7 @@ export default class User {
      */
     get baseImmunity() {
         if(!this.isAdmin) return null
-        return this.adminData.permissions.base.immunityLevel
+        return this.#adminData.permissions.base.immunityLevel
     }
 
     /**
@@ -78,7 +78,7 @@ export default class User {
      */
     get hasRoot() {
         if(!this.isAdmin) return null
-        return this.adminData.permissions.flags.includes('z')
+        return this.#adminData.permissions.flags.includes('z')
     }
 
     /**
@@ -86,7 +86,7 @@ export default class User {
      */
     get baseFlags() {
         if(!this.isAdmin) return null
-        return this.adminData.permissions.base.flags
+        return this.#adminData.permissions.base.flags
     }
 
     /**
@@ -94,18 +94,18 @@ export default class User {
      */
     get flags() {
         if(!this.isAdmin) return null
-        return this.adminData.permissions.flags
+        return this.#adminData.permissions.flags
     }
 
     /**
      * Record of login providers user has
      */
     get providers() {
-        return this._providers
+        return this.#providers
     }
 
     get permCodes() {
-        return new Set([...this.adminData.permissions.codes])
+        return new Set([...this.#adminData.permissions.codes])
     }
 
     /**
@@ -148,7 +148,7 @@ export default class User {
         for(const resource of resourceIds) {
             permCode += `.${resource}`
         }
-        for(const perm of this.adminData.permissions.codes) {
+        for(const perm of this.#adminData.permissions.codes) {
             if(AuthManager.isPermissionGranted(permCode as UserPrivilegeCode, perm)) return true
         }
         return false
@@ -206,23 +206,23 @@ export default class User {
     }
 
     async getProvider(provider: OauthProvider) {
-        if(!this._providers) await this.getProviders()
-        return this._providers[provider]
+        if(!this.#providers) await this.getProviders()
+        return this.#providers[provider]
     }
 
     /**
      * Updates cached list of providers
      */
     async updateProviders() {
-        this._providers = await this.#fastify.authmngr.updateProviders(this.steamid2)
-        return this._providers
+        this.#providers = await this.#fastify.authmngr.updateProviders(this.steamid2)
+        return this.#providers
     }
 
     /**
      * Fetches cached list of providers
      */
     async getProviders() {
-        this._providers = await this.#fastify.authmngr.getProviders(this.steamid2)
+        this.#providers = await this.#fastify.authmngr.getProviders(this.steamid2)
     }
     
 
@@ -253,8 +253,8 @@ export default class User {
 
         // Check if id is part of providers (ie, discord)
         const [provider, identifier] = id.split(":")
-        if(provider && identifier  && this._providers) {
-            const data = this._providers[provider] as OauthProviderData | undefined
+        if(provider && identifier  && this.#providers) {
+            const data = this.#providers[provider] as OauthProviderData | undefined
             if(data?.id === id) return true
         }
 

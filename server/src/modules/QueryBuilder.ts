@@ -20,42 +20,42 @@ interface WhereConditionInternal {
     data: any[]
 }
 export class QueryBuilder {
-    private _tableName: string
-    private _tableAlias: string
-    private _data: any[] = []
-    private _sorts: Record<string, SortDirection> = {}
-    private _whereConditions: string[] = []
-    private _orConditions: WhereConditionInternal[] = []
-    private _whereData: any[] = []
-    private _limit: [string, number, number?]
-    private _selects: string[][] = []
-    private _joins: Join[] = []
+    #tableName: string
+    #tableAlias: string
+    #data: any[] = []
+    #sorts: Record<string, SortDirection> = {}
+    #whereConditions: string[] = []
+    #orConditions: WhereConditionInternal[] = []
+    #whereData: any[] = []
+    #limit: [string, number, number?]
+    #selects: string[][] = []
+    #joins: Join[] = []
 
     constructor(tableName: string, tableAlias?: string) {
-        this._tableName = tableName
-        this._tableAlias = tableAlias
+        this.#tableName = tableName
+        this.#tableAlias = tableAlias
         // "SERVER IN (?, ?, ?)
     }
     
     selectMultiple(...column: string[]) {
-        this._selects = [...this._selects, ...column.map(col => [escapeId(col)])]
+        this.#selects = [...this.#selects, ...column.map(col => [escapeId(col)])]
         return this
     }
 
     select(column: string, alias?: string) {
-        this._selects.push([escapeId(column), alias])
+        this.#selects.push([escapeId(column), alias])
         return this
     }
 
-    private _buildSelect() {
-        return this._selects.map(data => {
+    #buildSelect() {
+        return this.#selects.map(data => {
             if(data[1]) return `${data[0]} AS ${data[1]}`
             else return data[0]
         })
     }
 
     leftJoin(table: string, leftColumn: string, condition: Condition, rightColumn: string, alias?: string, unsafe = false) {
-        this._addJoin("LEFT", {
+        this.#addJoin("LEFT", {
             table,
             leftColumn,
             condition,
@@ -67,7 +67,7 @@ export class QueryBuilder {
     }
 
     rightJoin(table: string, leftColumn: string, condition: Condition, rightColumn: string, alias?: string, unsafe = false) {
-        this._addJoin("RIGHT", {
+        this.#addJoin("RIGHT", {
             table,
             leftColumn,
             condition,
@@ -79,7 +79,7 @@ export class QueryBuilder {
     }
 
     innerJoin(table: string, leftColumn: string, condition: Condition, rightColumn: string, alias?: string, unsafe = false) {
-        this._addJoin("INNER", {
+        this.#addJoin("INNER", {
             table,
             leftColumn,
             condition,
@@ -91,7 +91,7 @@ export class QueryBuilder {
     }
 
     outerJoin(table: string, leftColumn: string, condition: Condition, rightColumn: string, alias?: string, unsafe = false) {
-        this._addJoin("OUTER", {
+        this.#addJoin("OUTER", {
             table,
             leftColumn,
             condition,
@@ -103,7 +103,7 @@ export class QueryBuilder {
     }
 
     join(table: string, leftColumn: string, condition: Condition, rightColumn: string, alias?: string, unsafe = false) {
-        this._addJoin("", {
+        this.#addJoin("", {
             table,
             leftColumn,
             condition,
@@ -114,15 +114,15 @@ export class QueryBuilder {
         return this
     }
 
-    private _addJoin(type: JoinType, joinData: Omit<Join, 'type'>) {
-        this._joins.push({
+    #addJoin(type: JoinType, joinData: Omit<Join, 'type'>) {
+        this.#joins.push({
             ...joinData,
             type
         })
     }
 
-    private _buildJoins() {
-        return this._joins.map(joinData => {
+    #buildJoins() {
+        return this.#joins.map(joinData => {
             const name = joinData.alias ?? joinData.table
             if(!joinData.unsafe) {
                 joinData.leftColumn = escapeId(joinData.leftColumn)
@@ -142,56 +142,56 @@ export class QueryBuilder {
             cond.conditions.push(`${escapeId(condition[0])} ${condition[1]} ?`)
             cond.data.push(condition[2])
         }
-        this._orConditions.push(cond)
+        this.#orConditions.push(cond)
     }
 
     where(column: string, condition: Condition, value: any) {
-        this._whereConditions.push(`${escapeId(column)} ${condition} ?`)
-        this._whereData.push(value)
+        this.#whereConditions.push(`${escapeId(column)} ${condition} ?`)
+        this.#whereData.push(value)
         return this
     }
 
     whereIn(column: string, values: any[]) {
-        this._whereConditions.push(`${escapeId(column)} IN (${generateParams(values.length)})`)
-        this._whereData = [ ...this._whereData, ...values ]
+        this.#whereConditions.push(`${escapeId(column)} IN (${generateParams(values.length)})`)
+        this.#whereData = [ ...this.#whereData, ...values ]
         return this
     }
 
     clearWhere() {
-        this._whereConditions = []
-        this._whereData = []
+        this.#whereConditions = []
+        this.#whereData = []
         return this
     }
 
-    private _buildWhere() {
-        this._data = [...this._data, ...this._whereData]
-        if(this._whereConditions.length === 0) return ""
-        let str = `WHERE ${this._whereConditions.join(" AND ")}`
-        if(this._orConditions.length > 0) {
-            str += ` OR (${this._orConditions.map(c => c.conditions).join(" AND ")})`
-            for(const cond of this._orConditions) {
-                this._data = [...this._data, ...cond.data]
+    #buildWhere() {
+        this.#data = [...this.#data, ...this.#whereData]
+        if(this.#whereConditions.length === 0) return ""
+        let str = `WHERE ${this.#whereConditions.join(" AND ")}`
+        if(this.#orConditions.length > 0) {
+            str += ` OR (${this.#orConditions.map(c => c.conditions).join(" AND ")})`
+            for(const cond of this.#orConditions) {
+                this.#data = [...this.#data, ...cond.data]
             }
         }
         return str
     }
 
     sort(column: string, sortDirection = SortDirection.Ascending) {
-        this._sorts[column] = sortDirection
+        this.#sorts[column] = sortDirection
         return this
     }
 
     sortMultiple(columns: Record<string, SortDirection>) {
         for(const [k, v] of Object.entries(columns)) {
-            this._sorts[k] = v
+            this.#sorts[k] = v
         }
         return this
     }
 
-    private _buildSort(): string {
-        if(Object.keys(this._sorts).length === 0) return ""
+    #buildSort(): string {
+        if(Object.keys(this.#sorts).length === 0) return ""
         const sortPieces = []
-        for(const [column, dir] of Object.entries(this._sorts)) {
+        for(const [column, dir] of Object.entries(this.#sorts)) {
             sortPieces.push(`${escapeId(column)} ${dir == SortDirection.Ascending ? 'ASC' : 'DESC'}`)
         }
         return `ORDER BY ${sortPieces.join(', ')}`
@@ -200,39 +200,39 @@ export class QueryBuilder {
     limit(limit: number, offset?: number) {
         if(limit == undefined || isNaN(limit)) throw Error("limit is not defined or invalid")
         if(offset != undefined) {
-            this._limit = ["LIMIT ?, ?", Number(limit), Number(offset)]
+            this.#limit = ["LIMIT ?, ?", Number(limit), Number(offset)]
         } else {
-            this._limit = ["LIMIT ?", Number(limit)]
+            this.#limit = ["LIMIT ?", Number(limit)]
         }
         return this
     }
 
     private _buildLimit() {
-        if(!this._limit) return ""
-        this._data = [...this._data, ...this._limit.slice(1)]
-        return this._limit[0]
+        if(!this.#limit) return ""
+        this.#data = [...this.#data, ...this.#limit.slice(1)]
+        return this.#limit[0]
     }
 
     build() {
-        const tablePrefix = this._tableAlias ? `AS ${this._tableAlias}` : ''
-        return `SELECT ${this._buildSelect()} FROM ${escapeId(this._tableName)} ${tablePrefix} ${this._buildJoins()} ${this._buildWhere()} ${this._buildSort()} ${this._buildLimit()}`
+        const tablePrefix = this.#tableAlias ? `AS ${this.#tableAlias}` : ''
+        return `SELECT ${this.#buildSelect()} FROM ${escapeId(this.#tableName)} ${tablePrefix} ${this.#buildJoins()} ${this.#buildWhere()} ${this.#buildSort()} ${this._buildLimit()}`
     }
 
     buildUnsafe() {
         let query = this.build()
-        for(let data of this._data) {
+        for(let data of this.#data) {
             if(typeof data === "string") {
                 data = `'${data}'`
             }
             query = query.replace(/\?/, data)
         }
-        this._data = []
+        this.#data = []
         return query
     }
 
     async execute(pool: Pool): Promise<[RowDataPacket[], FieldPacket[]]> {
-        const result = await pool.execute<RowDataPacket[]>(this.build(), this._data)
-        this._data = []
+        const result = await pool.execute<RowDataPacket[]>(this.build(), this.#data)
+        this.#data = []
         return result
     }
 
