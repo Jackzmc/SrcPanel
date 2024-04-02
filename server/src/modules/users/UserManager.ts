@@ -13,18 +13,22 @@ interface IUserData {
 export const STALE_USER_CACHE_TIME = 1000 * 60 * 60 * 14 // 14 days
 
 export default class UserManager {
-    private static _instance: UserManager
-    private db: Pool
-    private steam: SteamAPI
+    static #instance: UserManager
+    #db: Pool
+    #steam: SteamAPI
 
     constructor(pool: Pool, steam: SteamAPI) {
-        this.db = pool
-        this.steam = steam
-        UserManager._instance = this
+        this.#db = pool
+        this.#steam = steam
+        UserManager.#instance = this
     }
 
     public static get instance() {
-        return UserManager._instance
+        return UserManager.#instance
+    }
+
+    public static isSteamID(input: string) {
+        return input.match(/STEAM_#+:#+:#+/) != null
     }
 
     /**
@@ -34,20 +38,22 @@ export default class UserManager {
      */
     async insertUser(user: IUserData) {
         if(user.steamid.length <= 10) throw new Error("steamid is invalid (bad length)")
-        return await this.db.query(SQL`INSERT INTO user_names (steamid, name, avatar_hash) VALUES (SUBSTRING(${user.steamid}, 11), ${user.name}, ${user.avatarHash})`)
+        return await this.#db.query(SQL`INSERT INTO user_names (steamid, name, avatar_hash) VALUES (SUBSTRING(${user.steamid}, 11), ${user.name}, ${user.avatarHash})`)
     }
 
     async updateUser(user: IUserData) {
         if(user.steamid.length <= 10) throw new Error("steamid is invalid (bad length)")
-        return await this.db.query(SQL`UPDATE user_names SET name = ${user.name}, avatar_hash = ${user.avatarHash} WHERE steamid = SUBSTRING(${user.steamid},11)`)
+        return await this.#db.query(SQL`UPDATE user_names SET name = ${user.name}, avatar_hash = ${user.avatarHash} WHERE steamid = SUBSTRING(${user.steamid},11)`)
     }
 
     /**
      * Returns a user from user name cache if they exist. Queues background update if data is stale (returning the stale data)
+     * Returns null instantly if not a steamID
      * @param steamid Steamid2
      * @returns 
      */
     async getUser(steamid: string): Promise<IUserData | undefined> {
+        if(!steamid || !UserManager.isSteamID(steamid)) return null
         const user = await this.getUserDirect(steamid)
         // Don't wait for the result, serve the stale data:
         if(user && Date.now() - user.timestamp > STALE_USER_CACHE_TIME) this.fetchUser(steamid)
@@ -55,7 +61,7 @@ export default class UserManager {
     }
 
     private async getUserDirect(steamid: string): Promise<IUserData|null> {
-        const [users] = await this.db.execute<RowDataPacket[]>(SQL`SELECT * FROM user_names WHERE steamid = SUBSTRING(${steamid}, 11)`)
+        const [users] = await this.#db.execute<RowDataPacket[]>(SQL`SELECT * FROM user_names WHERE steamid = SUBSTRING(${steamid}, 11)`)
         const user = users[0]
         if(user) {
             return {
@@ -78,7 +84,7 @@ export default class UserManager {
         let user = await this.getUserDirect(steamid)
         const hasPrevious = user != undefined
         if(!user || force) {
-            const users = await this.steam.getUserDetails([steamid])
+            const users = await this.#steam.getUserDetails([steamid])
             if(users.length > 0) {
                 user = {
                     steamid: steamid,
@@ -104,7 +110,7 @@ export default class UserManager {
         if(steamids.length > 100) throw new Error("Too many ids, steam API only supports 100")
         const expUsers = []
         const insertPromises = []
-        const users = await this.steam.getUserDetails(steamids)
+        const users = await this.#steam.getUserDetails(steamids)
         for(const user of users) {
             const expUser = {
                 // We use the right side of STEAM_#:#:#####
@@ -129,7 +135,7 @@ export default class UserManager {
      * @returns 
      */
     async getStatsName(steamid: string): Promise<string | undefined> {
-        const [rows] = await this.db.execute<RowDataPacket[]>(
+        const [rows] = await this.#db.execute<RowDataPacket[]>(
             "SELECT last_alias FROM stats_users WHERE SUBSTRING(steamid, 11) = SUBSTRING(?, 11)",
             [steamid]
         )

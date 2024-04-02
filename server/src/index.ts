@@ -146,7 +146,7 @@ app.register(MiddleManager)
                 
             } else if(dirent.isFile()) {
                 const [,name,ext] = dirent.name.match(/^(.+)\.(.+)$/)
-                if(ext === "js") {
+                if(ext === "js" || ext === "ts") {
                     const prefix = (name === "index") ? rootPrefix : `${rootPrefix}${name}`
                     try {
                         app.register(import(`file://${path.join(folderPath, dirent.name)}`), { prefix })
