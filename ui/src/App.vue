@@ -206,10 +206,19 @@ function onNotificationShown(item: NotificationItem) {
   }
 }
 
+const dismissedModals = computed({
+  get() {
+    return localStorage['srcds_dismissed'] ? JSON.parse(localStorage['srcds_dismissed']) : {}
+  },
+  set(value) {
+    localStorage['srcds_dismissed'] = JSON.stringify(value)
+  }
+})
+
 function closeBirthday() {
-  const popups = (sessionStorage['srcds_dismissed'] ?? "").split(',')
-  popups.push("birthday")
-  sessionStorage.setItem("srcds_dismissed", popups.join(','))
+  const modals = dismissedModals.value
+  modals['birthday'] = Date.now() + (1000 * 60 * 60 * 24)
+  dismissedModals.value = modals
   isBirthday.value = false
 }
 
@@ -246,8 +255,15 @@ async function stopImpersonating() {
 }
 
 function isModalAllowed(name: string) {
-  const popups = (sessionStorage['srcds_dismissed'] ?? "").split(',')
-  return !popups.includes(name)
+  const modals = dismissedModals.value
+  if(modals[name]) {
+    if(modals[name] < Date.now()) {
+      delete modals[name]
+      dismissedModals.value = modals
+    }
+    return false
+  }
+  return true
 }
 
 onBeforeMount(async() => {

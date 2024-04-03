@@ -160,7 +160,7 @@ app.register(MiddleManager)
 
     }
 
-    await loadRoutes(mainPrefix, path.join(__dirname, 'routes'))
+    await loadRoutes(mainPrefix, path.join(__dirname, './routes'))
 
     try {
         await app.listen({
