@@ -246,7 +246,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
     fastify.get('/:id/generate-jwt', async(req: FastifyRequest<{Params: { id: 'string'} }>, reply) => {
         const server = fastify.servers.get(req.params.id)
-        if(!server) NOT_FOUND(reply, "Server")
+        if(!server) return NOT_FOUND(reply, "Server")
         const [code, granted] = req.user.requirePermission("servers.generate_jwt", { resourceId: server.id })
         if(!granted) return NO_PERMISSION(reply, "You do not have permission to generate a JWT for this server", code)
         const token = await JWT.sign({
