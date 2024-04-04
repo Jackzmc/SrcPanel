@@ -382,7 +382,7 @@ async function impersonate() {
   // Set id to null/"" to stop impersonating
   const isImpersonating = props.privUser.ImpersonatingSteamId == props.userAdminData.steamid
   const id = isImpersonating ? "" : props.userAdminData.steamid
-  const response = await request(`/api/admin/impersonate/${id}`, {
+  const response = await request(`/api/admins/impersonate/${id}`, {
     method: 'POST',
     credentials: 'include'
   }, { title: "Impersonation Failed"})

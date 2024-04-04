@@ -83,7 +83,7 @@ async function updateServer() {
   updateStatus.value = {
     state: "CHECKING"
   }
-  const response = await request('/api/admin/update')
+  const response = await request('/api/panel/update', { method: "POST"})
   if(response?.ok) {
     const json = await response.json()
     updateStatus.value.state = "SUCCESS"
@@ -107,7 +107,7 @@ async function updateServer() {
 }
 
 async function restartServer() {
-  const response = await request('/api/admin/restart')
+  const response = await request('/api/panel/restart', { method: "POST"})
   if(response?.ok) {
     notify({
       type: "success",
@@ -117,7 +117,7 @@ async function restartServer() {
 }
 
 async function updateAdmins() {
-  const response = await request('/api/admin/update-admins')
+  const response = await request('/api/panel/update-admins', { method: "POST"})
   if(response?.ok) {
     notify({
       type: "success",
@@ -128,7 +128,7 @@ async function updateAdmins() {
 
 
 async function fetchServerHealth() {
-  const response = await fetch('/api/admin/health')
+  const response = await fetch('/api/panel/health')
   if(response.ok) {
     serverHealth.value = await response.json()
   }

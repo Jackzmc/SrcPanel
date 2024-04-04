@@ -55,10 +55,10 @@ export default class BufferReader {
       return 0x1e
     }
   
-    peekByte(): number {
-      return this.#buffer.readInt8(this.#offset)
+    readByteAt(offset: number): number {
+      return this.#buffer.readInt8(offset)
     }
-  
+
     readByte(): number {
       const value = this.#buffer.readInt8(this.#offset)
       this.#offset += 1

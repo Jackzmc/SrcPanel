@@ -102,9 +102,19 @@ export default class ServerManager {
     client.on('data', (buf) => {
       // If we aren't authenticate, check to see if it's valid:
       const packetReader = new BufferReader(buf)
-      // console.log(buf.toString('hex'))
+      if(packetReader.readByteAt(0) == 0x47) {
+        client.write("HTTP/1.1 204 No Content")
+        client.end()
+        return
+      }
+      console.log(buf.toString('hex'))
       if(!ps.Authenticated) {
-        return this.#authenticateSocket(ps, packetReader)
+        try {
+          return this.#authenticateSocket(ps, packetReader);
+        } catch(err) {
+          console.error("[ServerManager] Bad Auth:", err);
+          return
+        }
       }
 
       for(const reader of packetReader.readRecords()) {

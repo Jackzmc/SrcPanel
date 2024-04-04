@@ -185,6 +185,47 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         
     })
 
+    fastify.post('/impersonate/:steamid?', async(req: FastifyRequest<{ Params: { steamid: string } }>, reply) => {
+        if(req.params.steamid) {
+            if(!req.user.hasPermission("admins.impersonate")) return NO_PERMISSION(reply)
+            const user = fastify.authmngr.getAdminExport(req.params.steamid)
+            if(!user) {
+                return reply.code(404).send({
+                    error: "USER_NOT_FOUND",
+                    message: "User was not found, they must be an admin to impersonate"
+                })
+            }
+            const userDetails = await fastify.users.fetchUser(req.params.steamid)
+            req.session.impersonate = {
+                original: {
+                    user: req.session.user,
+                    permissions: req.session.permissions
+                },
+                
+            }
+            req.session.user = {
+                name: user.name,
+                steamid: user.steamid,
+                accountid: new SteamID(user.steamid).accountid.toString(),
+                avatarhash: userDetails.avatarHash,
+                profileurl: `https://avatars.steamstatic.com/${userDetails.avatarHash}_full.jpg`,
+            }
+            req.session.permissions = user.permissions
+            return {
+                user: req.session.user,
+                permissions: req.session.permissions
+            }
+        } else {
+            req.session.user = req.session.impersonate.original.user
+            req.session.permissions = req.session.impersonate.original.permissions
+            delete req.session.impersonate
+            return {
+                user: req.session.user,
+                permissions: req.session.permissions
+            }
+        }
+    })
+
     fastify.post('/:steamid', async(req: FastifyRequest<{
         Params: { steamid: string },
         Body: POSTAdminType

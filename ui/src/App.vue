@@ -238,7 +238,7 @@ async function loadTour(tourId: string) {
 }
 
 async function stopImpersonating() {
-  const response = await request(`/api/admin/impersonate/`, {
+  const response = await request(`/api/admins/impersonate/`, {
     method: 'POST',
     credentials: 'include'
   }, { title: "Impersonation Failed"})
