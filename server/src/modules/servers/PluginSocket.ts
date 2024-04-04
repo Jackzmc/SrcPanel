@@ -18,15 +18,25 @@ export default class PluginSocket {
     this.#socket = socket
   }
 
-  static ReadRecord(reader: BufferReader, type: RecordDataType) {
+  static ReadRecordField(reader: BufferReader, type: RecordDataType) {
     switch(type) {
       case RecordDataType.Byte: return reader.readByte()
       case RecordDataType.Short: return reader.readShort()
       case RecordDataType.Integer: return reader.readInt()
       case RecordDataType.Float: return reader.readFloat()
       case RecordDataType.String: return reader.readString()
-      default: throw new Error("unsupported type")
+      case RecordDataType.Boolean: return reader.readByte() != 0
     }
+    if(reader.isEOF) return null
+    switch(type) {
+      case RecordDataType.OptionalByte: return reader.readByte()
+      case RecordDataType.OptionalShort: return reader.readShort()
+      case RecordDataType.OptionalInteger: return reader.readInt()
+      case RecordDataType.OptionalFloat: return reader.readFloat()
+      case RecordDataType.OptionalString: return reader.readString()
+      case RecordDataType.OptionalBoolean: return reader.readByte() != 0
+    }
+    throw new Error(`Unsupported record data type ${type}`)
   }
 
   static ParseRecord2(reader: BufferReader) {
@@ -39,10 +49,10 @@ export default class PluginSocket {
       if(Array.isArray(recType)) {
         // Loop every type in array, and map it back
         record[key] = recType.map(recTypeSub => {
-          return PluginSocket.ReadRecord(reader, recTypeSub)
+          return PluginSocket.ReadRecordField(reader, recTypeSub)
         })
       } else {
-        record[key] = PluginSocket.ReadRecord(reader, recType)
+        record[key] = PluginSocket.ReadRecordField(reader, recType)
       }
     }
     return record as LiveRecord

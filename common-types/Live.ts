@@ -108,12 +108,14 @@ export enum RecordDataType {
     Integer,
     Float,
     String,
+    Boolean,
 
     OptionalByte,
     OptionalShort,
     OptionalInteger,
     OptionalFloat,
-    OptionalString
+    OptionalString,
+    OptionalBoolean,
 }
 
 
@@ -145,7 +147,7 @@ export const RecordPlayerParseDef: RecordParserInterface<LiveRecordPlayer> = {
     type: RecordDataType.Byte,
     userid: RecordDataType.Integer,
     steamid: RecordDataType.String,
-    isIdle: RecordDataType.OptionalByte,
+    isIdle: RecordDataType.OptionalBoolean,
     joinTime: RecordDataType.OptionalByte,
     name: RecordDataType.OptionalString
 }
@@ -207,7 +209,7 @@ export interface LiveRecordInfected extends BaseLiveRecord {
 export const RecordFinaleInfoParseDef: RecordParserInterface<LiveRecordFinaleInfo> = {
     type: RecordDataType.Byte,
     stage: RecordDataType.Byte,
-    escapeInProgress: RecordDataType.Byte
+    escapeInProgress: RecordDataType.Boolean
 }
 
 export interface LiveRecordFinaleInfo extends BaseLiveRecord {
@@ -266,7 +268,7 @@ export interface LiveRecordAuth {
 
 export const RecordMetaParseDef: RecordParserInterface<LiveRecordMeta> = {
     type: RecordDataType.Byte,
-    steamConnected: RecordDataType.Byte,
+    steamConnected: RecordDataType.Boolean,
 }
 
 export interface LiveRecordMeta {
