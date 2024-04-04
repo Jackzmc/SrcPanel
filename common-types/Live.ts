@@ -102,6 +102,34 @@ export const enum GameDifficulty {
     Expert
 }
 
+export enum RecordDataType {
+    Byte,
+    Short,
+    Integer,
+    Float,
+    String,
+
+    OptionalByte,
+    OptionalShort,
+    OptionalInteger,
+    OptionalFloat,
+    OptionalString
+}
+
+
+export type RecordParserInterface<T> = Record<keyof T, RecordDataType | RecordDataType[]>
+
+export const RecordGameParseDef: RecordParserInterface<LiveRecordGame> = {
+    type: RecordDataType.Byte,
+    startTime: RecordDataType.Integer,
+    campaignStartTime: RecordDataType.Integer,
+    difficulty: RecordDataType.Byte,
+    state: RecordDataType.Byte,
+    maxplayers: RecordDataType.Byte,
+    map: RecordDataType.String,
+    gamemode: RecordDataType.String,
+}
+
 export interface LiveRecordGame extends BaseLiveRecord {
     type: LiveRecordType.Game,
     startTime: number,
@@ -113,6 +141,15 @@ export interface LiveRecordGame extends BaseLiveRecord {
     gamemode: string,
 }
 
+export const RecordPlayerParseDef: RecordParserInterface<LiveRecordPlayer> = {
+    type: RecordDataType.Byte,
+    userid: RecordDataType.Integer,
+    steamid: RecordDataType.String,
+    isIdle: RecordDataType.OptionalByte,
+    joinTime: RecordDataType.OptionalByte,
+    name: RecordDataType.OptionalString
+}
+
 export interface LiveRecordPlayer extends BaseLiveRecord {
     type: LiveRecordType.Player,
     userid: number
@@ -121,6 +158,18 @@ export interface LiveRecordPlayer extends BaseLiveRecord {
     isIdle?: boolean,
     joinTime?: number,
     name?: string,
+}
+
+export const RecordSurvivorParseDef: RecordParserInterface<LiveRecordSurvivor> = {
+    type: RecordDataType.Byte,
+    userid: RecordDataType.Integer,
+    survivor: RecordDataType.Byte,
+    tempHealth: RecordDataType.Byte,
+    permHealth: RecordDataType.Byte,
+    flowPercent: RecordDataType.Byte,
+    states: RecordDataType.Byte,
+    move: RecordDataType.Byte,
+    action: RecordDataType.Byte
 }
 
 export interface LiveRecordSurvivor extends BaseLiveRecord {
@@ -136,6 +185,15 @@ export interface LiveRecordSurvivor extends BaseLiveRecord {
     action: PlayerGameAction
 }
 
+export const RecordInfectedParseDef: RecordParserInterface<LiveRecordInfected> = {
+    type: RecordDataType.Byte,
+    userid: RecordDataType.Integer,
+    health: RecordDataType.Byte,
+    maxHealth: RecordDataType.Byte,
+    class: RecordDataType.Byte,
+    pinnedPlayerUserid: RecordDataType.Integer,
+}
+
 export interface LiveRecordInfected extends BaseLiveRecord {
     type: LiveRecordType.Infected,
     // player: LivePlayer,
@@ -146,10 +204,22 @@ export interface LiveRecordInfected extends BaseLiveRecord {
     pinnedPlayerUserid: number,
 }
 
+export const RecordFinaleInfoParseDef: RecordParserInterface<LiveRecordFinaleInfo> = {
+    type: RecordDataType.Byte,
+    stage: RecordDataType.Byte,
+    escapeInProgress: RecordDataType.Byte
+}
+
 export interface LiveRecordFinaleInfo extends BaseLiveRecord {
     type: LiveRecordType.Finale,
     stage: FinaleStage
     escapeInProgress: boolean
+}
+
+export const RecordSurvivorItemsParseDef: RecordParserInterface<LiveRecordSurvivorItems> = {
+    type: RecordDataType.Byte,
+    userid: RecordDataType.Integer,
+    items: [RecordDataType.String, RecordDataType.String, RecordDataType.String, RecordDataType.String, RecordDataType.String]
 }
 
 export interface LiveRecordSurvivorItems extends BaseLiveRecord {
@@ -166,6 +236,14 @@ export enum CommandResultType {
     Float
 }
 
+export const RecordCommandResponseParseDef: RecordParserInterface<LiveRecordCommandResponse> = {
+    type: RecordDataType.Byte,
+    id: RecordDataType.Byte,
+    resultType: RecordDataType.Byte,
+    result: RecordDataType.Byte,
+    message: RecordDataType.OptionalString
+}
+
 export interface LiveRecordCommandResponse {
     type: LiveRecordType.CommandResponse,
     id: number,
@@ -174,10 +252,21 @@ export interface LiveRecordCommandResponse {
     message?: string
 }
 
+export const RecordAuthParseDef: RecordParserInterface<LiveRecordAuth> = {
+    type: RecordDataType.Byte,
+    version: RecordDataType.Byte,
+    token: RecordDataType.String
+}
+
 export interface LiveRecordAuth {
     type: LiveRecordType.Auth,
     version: number,
     token: string
+}
+
+export const RecordMetaParseDef: RecordParserInterface<LiveRecordMeta> = {
+    type: RecordDataType.Byte,
+    steamConnected: RecordDataType.Byte,
 }
 
 export interface LiveRecordMeta {
@@ -205,6 +294,18 @@ export interface LivePlayerInfected extends LiveRecordPlayer {
 }
 
 export type LivePlayerFull = LivePlayerSurvivor | LivePlayerInfected
+
+export const RecordParseConfig: Record<LiveRecordType, RecordParserInterface<BaseLiveRecord>> = {
+    [LiveRecordType.Game]: RecordGameParseDef,
+    [LiveRecordType.Player]: RecordPlayerParseDef,
+    [LiveRecordType.Survivor]: RecordSurvivorParseDef,
+    [LiveRecordType.SurvivorItems]: RecordSurvivorItemsParseDef,
+    [LiveRecordType.Infected]: RecordInfectedParseDef,
+    [LiveRecordType.Finale]: RecordFinaleInfoParseDef,
+    [LiveRecordType.Meta]: RecordMetaParseDef,
+    [LiveRecordType.Auth]: RecordAuthParseDef,
+    [LiveRecordType.CommandResponse]: RecordCommandResponseParseDef
+}
 
 export const enum LiveRecordResponse {
     OK, // OK(byte) ViewCount(byte)

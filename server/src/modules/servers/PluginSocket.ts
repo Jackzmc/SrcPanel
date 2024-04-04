@@ -1,5 +1,5 @@
 import { Socket } from 'net'
-import { CommandResultType, LiveRecord, LiveRecordCommandResponse, LiveRecordPlayer, LiveRecordResponse, LiveRecordType } from '../../../../common-types/Live.js'
+import { CommandResultType, LiveRecord, LiveRecordCommandResponse, LiveRecordGame, LiveRecordPlayer, LiveRecordResponse, LiveRecordType, RecordGameParseDef, RecordDataType, RecordParseConfig } from '../../../../common-types/Live.js'
 import Server from './Server.js'
 import BufferReader from '../BufferReader.js'
 import JWT from '../../jwt-promise.js'
@@ -17,9 +17,40 @@ export default class PluginSocket {
   constructor(socket: Socket) {
     this.#socket = socket
   }
+
+  static ReadRecord(reader: BufferReader, type: RecordDataType) {
+    switch(type) {
+      case RecordDataType.Byte: return reader.readByte()
+      case RecordDataType.Short: return reader.readShort()
+      case RecordDataType.Integer: return reader.readInt()
+      case RecordDataType.Float: return reader.readFloat()
+      case RecordDataType.String: return reader.readString()
+      default: throw new Error("unsupported type")
+    }
+  }
+
+  static ParseRecord2(reader: BufferReader) {
+    const type: LiveRecordType = reader.readByte()
+    const record: Partial<LiveRecord> = {}
+    const parseDefinition = RecordParseConfig[type]
+    if(!parseDefinition) throw new Error(`unsupported record type ${LiveRecordType[type]}(${type}): no RecordParseConfig entry`)
+
+    for(const [key, recType] of Object.entries(parseDefinition)) {
+      if(Array.isArray(recType)) {
+        // Loop every type in array, and map it back
+        record[key] = recType.map(recTypeSub => {
+          return PluginSocket.ReadRecord(reader, recTypeSub)
+        })
+      } else {
+        record[key] = PluginSocket.ReadRecord(reader, recType)
+      }
+    }
+    return record as LiveRecord
+  }
   
   static ParseRecord(reader: BufferReader): LiveRecord {
     const type: LiveRecordType = reader.readByte()
+    const parse = RecordParseConfig[type]
     try {
       switch(type) {
         case LiveRecordType.Game: {
