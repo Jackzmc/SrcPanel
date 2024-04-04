@@ -5,6 +5,7 @@ import BufferReader from '../BufferReader.js'
 import JWT from '../../jwt-promise.js'
 
 const RESPONSE_TIMEOUT = 1000 * 60
+const MIN_REFRESH_TIME = 1000 * 60 * 60
 
 export default class PluginSocket {
   #socket: Socket
@@ -142,6 +143,9 @@ export default class PluginSocket {
   _setServer(server: Server) {
     this.#server = server
   }
+
+  #refreshCheckTimeout: NodeJS.Timeout
+  #lastRefreshTime: number
   
   onRecord(record: LiveRecord) {
     if(record.type === LiveRecordType.CommandResponse) {
@@ -150,6 +154,15 @@ export default class PluginSocket {
       else console.error("PluginSocket: got command response but no callback is ready")
     } else {
       this.#server.pushLiveRecord(record)
+      // We use a timeout as many records can come at once, including a game record. So we wait for a gap of a second
+      clearTimeout(this.#refreshCheckTimeout)
+      this.#refreshCheckTimeout = setTimeout(() => {
+        // If we have live status, but no game record, send a refresh if we haven't already
+        if(this.#server?.liveStatus && !this.#server.liveStatus.game && Date.now() - this.#lastRefreshTime > MIN_REFRESH_TIME) {
+          console.info("[PluginSocket] No game packet, sending a Refresh response")
+          this.send(LiveRecordResponse.Refresh)
+        }
+      }, 1000)
     }
   }
   
@@ -172,15 +185,18 @@ export default class PluginSocket {
       switch(type) {
         case LiveRecordResponse.OK:
           writer.writeByte(arg ?? this.#server?.liveViewers ?? 0)
-        break
+          break
         case LiveRecordResponse.Error:
           writer.writeString(arg ?? "")
-        break
+          break
         case LiveRecordResponse.RunCommand:
           writer.writeByte(id)
           writer.writeString(arg)
           writer.writeString(namespace ?? "")
-        break
+          break
+        case LiveRecordResponse.Refresh:
+          this.#lastRefreshTime = Date.now()
+          break
       }
       if(!this.#socket.write(writer.buffer)) return reject(new Error("Failed to write to socket"))
       if(type != LiveRecordResponse.RunCommand) return resolve()
