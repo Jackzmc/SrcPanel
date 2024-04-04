@@ -13,8 +13,6 @@ const PROGRES_MIN_BYTES = 10_000 // 10KB
 const ITEM_CACHE_MAX_SIZE = 20
 const ITEM_CACHE_TTL = 1000 * 60 * 10 // 10 min
 
-const STEAM_STATUS_CHECK_INTERVAL = 1000 * 60 * 2 // 2 minute
-
 export default class SteamAPI {
     #apikey: string
     #userAgent: string
@@ -31,6 +29,9 @@ export default class SteamAPI {
             ttl: ITEM_CACHE_TTL
         })
     }
+
+    get UserAgent() { return this.#userAgent }
+    set UserAgent(value: string) { this.#userAgent = value }
 
     get AppTitles() {
         return {...this.#appMap}
@@ -128,11 +129,19 @@ export default class SteamAPI {
         return details
     }
 
+    /**
+     * Downloads a workshop item, resolves on completition
+     * @param item The workshop item
+     * @param destination The filepath to download the file to
+     * @param requestOptions  Any options to send to https.get()
+     * @param filenameTemplate How the file should be namedm variables: %ID%, %TITLE%. Default is %ID%.vpk
+     * @returns Promise<number> - bytes written
+     */
     static downloadItem(item: WorkshopItem, destination: string, requestOptions?: any, filenameTemplate: string = "%ID%.vpk"): Promise<number> {
         return new Promise((resolve, reject) => {
             const filename = filenameTemplate
-                .replace(/%ID%/, item.publishedfileid)
-                .replace(/%TITLE%/, item.title)
+                .replace(/%ID%/g, item.publishedfileid)
+                .replace(/%TITLE%/g, item.title)
             const filepath = path.join(destination, filename)
             const file = createWriteStream(filepath)
             https.get(item.file_url, requestOptions, (response) => {
@@ -149,11 +158,19 @@ export default class SteamAPI {
         })
     }
 
+    /**
+     * Downloads a workshop item, and emits a "progress" event with data (bytesWritten, bytesTotal) periodically. Emits "finish" on completion
+     * @param item The workshop item
+     * @param destination The filepath to download the file to
+     * @param requestOptions  Any options to send to https.get()
+     * @param filenameTemplate How the file should be namedm variables: %ID%, %TITLE%. Default is %ID%.vpk
+     * @returns EventEmitter
+     */
     static downloadItemProgress(item: WorkshopItem, destination: string, requestOptions?: any, filenameTemplate: string = "%ID%.vpk"): EventEmitter {
         const event = new EventEmitter()
         const filename = filenameTemplate
-            .replace(/%ID%/, item.publishedfileid)
-            .replace(/%TITLE%/, item.title)
+            .replace(/%ID%/g, item.publishedfileid)
+            .replace(/%TITLE%/g, item.title)
         const filepath = path.join(destination, filename)
         const file = createWriteStream(filepath)
         https.get(item.file_url, requestOptions, (response) => {
