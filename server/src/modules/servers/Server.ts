@@ -370,8 +370,8 @@ export default class Server extends EventEmitter {
           this.#status.data.map = this.#liveCache.game.map
           this.#status.data.maxplayers = this.#liveCache.game.maxplayers || 4
         }
-        // only update if players is not hibernate/transitioning
-        if(this.#liveCache.players && (!this.#liveCache.game || this.#liveCache.game.state !== 0)) {
+        // only update if players is not hibernate/transitioning or unk game state
+        if(this.#liveCache.players && (!this.#liveCache.game || this.#liveCache.game.state === 0)) {
           this.#status.data.players = Object.values(this.#liveCache.players)
             .filter(pl => pl.steamid != "BOT"/* && ('survivor' in pl || 'ínfected' in pl)*/)
             .map(pl => pl.name)
