@@ -60,7 +60,6 @@ export default class PluginSocket {
   
   static ParseRecord(reader: BufferReader): LiveRecord {
     const type: LiveRecordType = reader.readByte()
-    const parse = RecordParseConfig[type]
     try {
       switch(type) {
         case LiveRecordType.Game: {
