@@ -425,7 +425,6 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             eventHandler(`Unknown server`)
         }
         const [code, granted] = req.user.requirePermission("servers.view_console", { resourceId: server.id })
-        console.log(code, granted, req.user.permCodes)
         if(!granted) {
             failed = true
             eventHandler(`You do not have permission to view the server console.`)

@@ -73,7 +73,6 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         const conn = await fastify.db.getConnection()
         await conn.beginTransaction()
         for(const week of req.body.weeks) {
-            console.log(req.params.id, req.user.steamid2, week.startDate, week.data)
             await conn.execute("INSERT INTO `left4dead2-admins`.dash_event_responses (event_id, steamid, week_start, days) VALUES (?, ?, ?, FROM_BASE64(?)) ON DUPLICATE KEY UPDATE days = FROM_BASE64(?)", [req.params.id, req.user.steamid2, week.startDate, week.data, week.data])    
         }
         await conn.commit()

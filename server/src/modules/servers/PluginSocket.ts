@@ -164,10 +164,10 @@ export default class PluginSocket {
       }
     } catch(err) {
       const buf = reader.parent ?? reader.buffer
-      throw new Error(`error reading record of type ${LiveRecordType[type]}(${type})\n` + buf.toString('hex') + "\n" + err)
+      throw new Error(`error reading record of type ${LiveRecordType[type]}(${type})\n0x` + buf.toString('hex') + "\n" + err)
     }
     const buf = reader.parent ?? reader.buffer
-    throw new Error(`Unknown record type: ${type}, buffer:\n${buf.toString('hex')}`)
+    throw new Error(`Unknown record type: ${type}, buffer:\n0x${buf.toString('hex')}`)
   }
   
   public get IP() {

@@ -256,7 +256,6 @@ export default class Server extends EventEmitter {
      */
     public get liveStatus(): LiveDataCache { 
       if(this.#liveCache) {
-        console.debug(Date.now() - this.#liveCache.lastUpdate, this.#liveCache.lastUpdate)
         if(Date.now() - this.#liveCache.lastUpdate > LIVE_CACHE_TTL) {
           this.#liveCache = null
         }
