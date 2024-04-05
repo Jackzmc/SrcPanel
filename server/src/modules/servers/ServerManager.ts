@@ -13,6 +13,11 @@ import { GroupInfo, ServerAction, ServerType, SERVER_TYPE_MAP } from '../../../.
 import net from 'net'
 import { LiveRecordType, LiveRecordGame, LiveRecord, LiveRecordResponse, LiveRecordSurvivor, LiveRecordPlayer, LiveRecordInfected, LiveRecordFinaleInfo, LiveRecordSurvivorItems, LiveRecordCommandResponse, PluginTokenPayload } from '../../../../common-types/Live.js';
 import BufferReader from '../BufferReader.js';
+import PluginSocket from './PluginSocket.js';
+import JWT from '../../jwt-promise.js';
+import { WriteStream, createWriteStream } from 'fs';
+import dotenv from 'dotenv'
+
 
 // How long after no status requests to switch from short to long refresh
 const SHORT_REFRESH_TIMEOUT = 1000 * 60
@@ -26,9 +31,7 @@ export interface ConfigGroupData {
   actions?: ServerAction[]
 }
 // BECAUSE FOR SOME **** REASON THIS ISNT LOADING HERE:
-import dotenv from 'dotenv'
-import PluginSocket from './PluginSocket.js';
-import JWT from '../../jwt-promise.js';
+
 dotenv.config()
 const DEBUG_LIVE_SOCKET = process.env.DEBUG_LIVE_SOCKET != undefined
 
@@ -50,6 +53,7 @@ export default class ServerManager {
   #cfgManager: ConfigManager
   #socket: net.Server
   #socketClients: Map<string, PluginSocket>
+  #liveErrors: WriteStream
   // Maps a server to a specific connection, this assumes there should never be more than one socket per server
 
   constructor(steam: SteamAPI, dataDir: string, configDir: string, configManager: ConfigManager) {
@@ -121,6 +125,7 @@ export default class ServerManager {
 
           ps.onRecord(record)
         } catch(err) {
+          this.#liveErrors.write(`buffer: ${reader.buffer.toString('hex')}\n`)
           console.warn(`[ServerManager] bad packet: ${err}\nbuffer: ${reader.buffer.toString('hex')}`)
           continue
         }
@@ -138,6 +143,7 @@ export default class ServerManager {
 
   #createLiveServer() {
     this.#socketClients = new Map()
+    this.#liveErrors = createWriteStream(path.join(this.dataDir, "live_errors.log"))
     const liveHost = process.env.PLUGIN_SOCKET_HOSTNAME || "127.0.0.1";
     const livePort = process.env.PLUGIN_SOCKET_PORT ? parseInt(process.env.PLUGIN_SOCKET_PORT) ?? 7888 : 7888
     this.#socket = net.createServer(this.#onLiveClient.bind(this))
