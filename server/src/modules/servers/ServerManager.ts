@@ -71,7 +71,8 @@ export default class ServerManager {
   }
 
   #authenticateSocket(client: PluginSocket, reader: BufferReader) {
-    const size = reader.readByte()
+    const size = reader.readShort()
+    console.log("auth", size, reader.buffer.toString('hex'))
     const record = PluginSocket.ParseRecord(reader)
     // skip any other type until authenticated
     if(record.type != LiveRecordType.Auth) return console.warn("[ServerManager] Got non-auth packets when not-authenticated, ignoring")

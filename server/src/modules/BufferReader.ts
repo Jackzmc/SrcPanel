@@ -5,17 +5,6 @@ export default class BufferReader {
 
     public parent?: Buffer
 
-    /// Yields BufferReaders, splitting when it hits newline
-    static *getPackets(data: Buffer) {
-      let reader = new BufferReader(data)
-      yield reader
-      // while(reader.nextBuffer != null) {
-      //     reader = new BufferReader(reader.nextBuffer)
-      //     yield reader
-      // }
-      return null
-    }
-
     static new(size: number) {
         return new BufferReader(Buffer.alloc(size))
     }
@@ -57,8 +46,8 @@ export default class BufferReader {
       return 0x1e
     }
   
-    readByteAt(offset: number): number {
-      return this.#buffer.readInt8(offset)
+    peakByte(offset: number): number {
+      return this.#buffer.readInt8(offset ?? this.#offset)
     }
 
     readByte(): number {
@@ -100,9 +89,15 @@ export default class BufferReader {
     /// Yields a BufferReader for every record in a packet
     *readRecords() {
       while(this.#offset < this.#length - 1) {
-        const length = this.readByte()
+        const length = this.readShort()
+        if(length <= 0) {
+          console.debug("discarding entire packet, bad record length\n", '0x'+this.#buffer.toString('hex'))
+          return null
+        }
         const endRecord = this.#offset + length
+        // console.log(`record len=${length} type=${this.peakByte(this.#offset)} bounds=[${this.#offset}, ${endRecord}]`, this.#buffer.subarray(this.#offset, endRecord).toString('hex'), '\nfull:' + this.#buffer.toString('hex'))
         yield new BufferReader(this.#buffer.subarray(this.#offset, endRecord), this.#buffer)
+        // records are separated by 0x1e or 0x0a (concatted), so skip +1
         this.#offset = endRecord + 1
       }
       return null
