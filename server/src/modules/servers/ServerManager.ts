@@ -102,12 +102,6 @@ export default class ServerManager {
     client.on('data', (buf) => {
       // If we aren't authenticate, check to see if it's valid:
       const packetReader = new BufferReader(buf)
-      if(packetReader.readByteAt(0) == 0x47) {
-        client.write("HTTP/1.1 204 No Content")
-        client.end()
-        return
-      }
-      console.log(buf.toString('hex'))
       if(!ps.Authenticated) {
         try {
           return this.#authenticateSocket(ps, packetReader);
@@ -121,7 +115,6 @@ export default class ServerManager {
         if(reader.length == 0) break
         try {
           const record = PluginSocket.ParseRecord(reader)
-          this.#debugLive(LiveRecordType[record.type], record)
           if(record.type === LiveRecordType.Meta) {
             this.#steam.SteamAvailable = record.steamConnected
           }
