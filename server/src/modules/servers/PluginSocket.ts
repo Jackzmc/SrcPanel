@@ -163,11 +163,11 @@ export default class PluginSocket {
         }
       }
     } catch(err) {
-      const buf = reader.parent ?? reader.buffer
-      throw new Error(`error reading record of type ${LiveRecordType[type]}(${type})\n0x` + buf.toString('hex') + "\n" + err)
+      const parentDebug = reader.parent ? '\nparent: ' + reader.parent.toString('hex') : ''
+      throw new Error(`error reading record of type ${LiveRecordType[type]}(${type}) offset ${reader.offset}\n0x` + reader.buffer.toString('hex') + parentDebug + '\n' + err)
     }
-    const buf = reader.parent ?? reader.buffer
-    throw new Error(`Unknown record type: ${type}, buffer:\n0x${buf.toString('hex')}`)
+    const parentDebug = reader.parent ? '\nparent: ' + reader.parent.toString('hex') : ''
+    throw new Error(`Unknown record type: ${type}, offset ${reader.offset}\nbuffer:0x${reader.buffer.toString('hex')}${parentDebug}`)
   }
   
   public get IP() {
