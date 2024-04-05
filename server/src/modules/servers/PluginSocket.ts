@@ -197,6 +197,11 @@ export default class PluginSocket {
     } else {
       this.#server.pushLiveRecord(record)
       // We use a timeout as many records can come at once, including a game record. So we wait for a gap of a second
+      if(record.type === LiveRecordType.Survivor && !this.#server.liveStatus.players[record.userid.toString()]) {
+        if(!this.#server.liveStatus.game && Date.now() - this.#lastRefreshTime > MIN_REFRESH_TIME) {
+          this.send(LiveRecordResponse.Refresh, record.userid)
+        }
+      }
       clearTimeout(this.#refreshCheckTimeout)
       this.#refreshCheckTimeout = setTimeout(() => {
         // If we have live status, but no game record, send a refresh if we haven't already
@@ -211,7 +216,7 @@ export default class PluginSocket {
   send(type: LiveRecordResponse.OK, viewCount: number): Promise<void>;
   send(type: LiveRecordResponse.Error, message?: string): Promise<void>;
   send(type: LiveRecordResponse.Reconnect): Promise<void>;
-  send(type: LiveRecordResponse.Refresh): Promise<void>;
+  send(type: LiveRecordResponse.Refresh, userid?: number): Promise<void>;
   send(type: LiveRecordResponse.RunCommand, command: string, namespace?: string): Promise<LiveRecordCommandResponse>;
   async send(type: LiveRecordResponse, arg?: any, namespace?: string): Promise<void | LiveRecordCommandResponse> {
     if(!this.Authenticated && type != LiveRecordResponse.OK && type != LiveRecordResponse.Error) {
@@ -237,6 +242,7 @@ export default class PluginSocket {
           writer.writeString(namespace ?? "")
           break
         case LiveRecordResponse.Refresh:
+          writer.writeByte(arg ?? 0)
           this.#lastRefreshTime = Date.now()
           break
       }
