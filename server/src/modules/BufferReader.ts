@@ -3,6 +3,8 @@ export default class BufferReader {
     #offset: number
     #length = 0
 
+    public parent?: Buffer
+
     /// Yields BufferReaders, splitting when it hits newline
     static *getPackets(data: Buffer) {
       let reader = new BufferReader(data)
@@ -18,13 +20,13 @@ export default class BufferReader {
         return new BufferReader(Buffer.alloc(size))
     }
   
-    constructor(data: Buffer) {
+    constructor(data: Buffer, parent?: Buffer) {
       if(!data) throw new Error("buffer is null or undefined")	
       // console.log(data.byteLength, data.length, data.toString('hex'))
       this.#buffer = data
       this.#offset = 0
       this.#length = data.byteLength
-
+      this.parent = parent
     }
 
     get buffer() {
@@ -100,7 +102,7 @@ export default class BufferReader {
       while(this.#offset < this.#length - 1) {
         const length = this.readByte()
         const endRecord = this.#offset + length
-        yield new BufferReader(this.#buffer.subarray(this.#offset, endRecord))
+        yield new BufferReader(this.#buffer.subarray(this.#offset, endRecord), this.#buffer)
         this.#offset = endRecord + 1
       }
       return null
