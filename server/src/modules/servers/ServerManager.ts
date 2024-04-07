@@ -24,6 +24,8 @@ const SHORT_REFRESH_TIMEOUT = 1000 * 60
 
 const LIVE_SOCKET_KEEPALIVE_INTERVAL = 1000 * 60 * 2
 
+const MAX_SOCKET_CONNECTIONS = 40
+
 export interface ConfigGroupData {
   servers: Record<string, ConfigServerData>,
   type: ServerType
@@ -102,7 +104,7 @@ export default class ServerManager {
     this.#debugLive('client connected', client.remoteAddress)
     const ps = new PluginSocket(client)
     this.#socketClients.set(client.remoteAddress, ps)
-
+    
     client.on('data', (buf) => {
       // If we aren't authenticate, check to see if it's valid:
       const packetReader = new BufferReader(buf)
@@ -146,7 +148,9 @@ export default class ServerManager {
     this.#liveErrors = createWriteStream(path.join(this.dataDir, "live_errors.log"))
     const liveHost = process.env.PLUGIN_SOCKET_HOSTNAME || "127.0.0.1";
     const livePort = process.env.PLUGIN_SOCKET_PORT ? parseInt(process.env.PLUGIN_SOCKET_PORT) ?? 7888 : 7888
-    this.#socket = net.createServer(this.#onLiveClient.bind(this))
+    this.#socket = net.createServer({
+      keepAlive : true,
+    }, this.#onLiveClient.bind(this))
       .on('error', (err) => {
         // socket.send(SocketResponse.Error.toString())
         console.error(`[ServerManager::Live] Live server error: \n${err}`)
@@ -155,6 +159,7 @@ export default class ServerManager {
       .listen(livePort, liveHost, () => {
         console.info(`[ServerManager::Live] Live server listening on ${liveHost}:${livePort}`)
       })
+    this.#socket.maxConnections = MAX_SOCKET_CONNECTIONS
 
     // Periodically send out packets to hopefully keep it alive, and let the other end know we are here
     setInterval(() => {
