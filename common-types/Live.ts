@@ -343,9 +343,11 @@ export function updateLiveCache(cache: LiveDataCache | undefined, record: LiveRe
     switch(record.type) {
         case LiveRecordType.Game:
             cache.game = record
-            if(cache.game.state != GameState.None) {
+            // Start time of 0 is end of game
+            console.log("game record, state:", record.state)
+            // if(record.startTime == 0 || cache.game.state != GameState.None) {
                 cache.players = {}
-            }
+            // }
             break
         case LiveRecordType.Player:
             if(record.joinTime == undefined) {
