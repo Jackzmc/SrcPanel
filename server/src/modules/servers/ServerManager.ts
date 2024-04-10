@@ -134,6 +134,10 @@ export default class ServerManager {
       }
     })
 
+    client.on('error', (err) => {
+      
+    })
+
     client.on('close', () => {
       const server = ps.Server
       server?._setSocket(null) // server may be null (connected but not authenticated)
