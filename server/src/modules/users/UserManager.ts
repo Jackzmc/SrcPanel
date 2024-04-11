@@ -27,8 +27,8 @@ export default class UserManager {
         return UserManager.#instance
     }
 
-    public static isSteamID(input: string) {
-        return input.match(/STEAM_#+:#+:#+/) != null
+    public static isSteamID2(input: string) {
+        return /STEAM_\d:\d:\d+/.test(input)
     }
 
     /**
@@ -53,7 +53,7 @@ export default class UserManager {
      * @returns 
      */
     async getUser(steamid: string): Promise<IUserData | undefined> {
-        if(!steamid || !UserManager.isSteamID(steamid)) return null
+        if(!steamid || !UserManager.isSteamID2(steamid)) return null
         const user = await this.getUserDirect(steamid)
         // Don't wait for the result, serve the stale data:
         if(user && Date.now() - user.timestamp > STALE_USER_CACHE_TIME) this.fetchUser(steamid)
@@ -62,6 +62,7 @@ export default class UserManager {
 
     private async getUserDirect(steamid: string): Promise<IUserData|null> {
         const [users] = await this.#db.execute<RowDataPacket[]>(SQL`SELECT * FROM user_names WHERE steamid = SUBSTRING(${steamid}, 11)`)
+        console.log(users, steamid)
         const user = users[0]
         if(user) {
             return {
