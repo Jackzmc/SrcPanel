@@ -1,6 +1,5 @@
 import { createApp } from 'vue';
 import App from './App.vue';
-import { createPinia } from 'pinia'
 import Notifications from '@kyvg/vue3-notification'
 import router from './router'
 
@@ -18,10 +17,7 @@ import * as Sentry from "@sentry/vue";
 library.add(faSteam, faDiscord)
 library.add(faEllipsisV, faChevronDown, faChevronUp, faSpinner, faUser, faCog, faSitemap, faInfoCircle, faExclamationTriangle, faExclamationCircle, faArrowRightFromBracket, faUsersCog, faServer, faList, faPuzzlePiece,  faWrench, faCircle, faGavel, faToolbox,faNoteSticky, faChartSimple, faUserCheck, faUserPlus, faUserPen, faTimes, faUpload, faPlus, faEdit, faTrash, faCheck, faSearch, faMessage, faFolder, faDownload, faLock, faSync, faComment, faCloud, faThumbsUp, faThumbsDown, faQuestionCircle, faCopy, faChevronLeft, faChevronRight, faTerminal, faBell, faKeyboard, faCircleQuestion, faVideo, faFont, faCircleCheck, faArrowRight, faClock, faArrowLeft, faEye, faEyeSlash, faLockOpen, faBoxArchive, faCalendar, faMoon, faSun, faBarsStaggered, faPlugCircleMinus, faBan )
 
-const pinia = createPinia()
-
 const app = createApp(App)
-  .use(pinia)
   .use(Notifications)
   .component('Icon', Icon)
 
