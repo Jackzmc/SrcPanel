@@ -159,9 +159,7 @@ app.register(MiddleManager)
         }
 
     }
-
     await loadRoutes(mainPrefix, path.join(__dirname, './routes'))
-
     try {
         await app.listen({
             port: Number(process.env.WEB_PORT) || 8081

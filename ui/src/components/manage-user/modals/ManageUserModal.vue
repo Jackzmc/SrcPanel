@@ -9,7 +9,7 @@
           </image>
           <b>{{user.name}}</b> <span class="is-pulled-right">{{user.steamid}}</span></p>
         <p v-else-if="fetchError" class="modal-card-title has-text-danger">Error</p>
-        <Icon icon="spinner" v-else spin>Fetching user...</Icon>
+        <Icon icon="spinner" v-else spin class="is-size-4">Fetching user details</Icon>
         &nbsp;&nbsp;
       </header>
       <section class="modal-card-body" v-if="fetchError">
@@ -19,7 +19,7 @@
           </div>
         </article>
       </section>
-      <section class="modal-card-body px-0 pt-4" v-else-if="user">
+      <section class="modal-card-body px-0 pt-4">
         <div class="tabs is-fullwidth is-boxed is-centered">
           <ul>
             <router-link :to="{ name: 'manage-user-overview', params: { tab: 'stats' } }" v-slot="{ href, navigate}" custom>
@@ -31,7 +31,7 @@
             </router-link>
             <router-link v-if="privUser.hasPermission('admins.view')" :to="{ name: 'manage-user-admin' }" v-slot="{ href, navigate, isExactActive }" custom>
               <li :class="{'is-active': isExactActive, 'has-text-grey-dark': true }">
-                <a :href="href" @click="navigate" disabled>
+                <a :href="href" @click="navigate()">
                   <Icon :icon="userAdminData ? 'fa-user-pen' : 'fa-user-plus'">Privileges&nbsp;</Icon>
                   <span v-if="userAdminData" class="tag is-info">Admin</span>
                   <span v-else class="tag is-secondary">None</span>
@@ -49,19 +49,35 @@
               <li :class="{'is-active': route.name === 'manage-user-bans' }">
                 <a :href="href" @click="navigate">
                   <Icon icon="fa-gavel">
-                    Bans&nbsp;<span :class="{'has-text-danger': user?.bansCount > 0 }">({{ user?.bansCount }})</span>
+                    Bans&nbsp;<span :class="{'has-text-danger': user && user.bansCount > 0 }">({{ user?.bansCount ?? 0 }})</span>
                   </Icon>
                 </a>
               </li>
             </router-link>
-
           </ul>
         </div>
-        <router-view class="block px-6" :priv-user="privUser" :user="user" :user-admin-data="userAdminData" @close="router.push(routerHref)" @update-user="onUserUpdate" />
+        <router-view class="block px-6" :priv-user="privUser" :user="user" :user-admin-data="userAdminData" @close="router.push(routerHref)" @update-user="onUserUpdate" v-if="user" />
+        <div class="block px-6" v-else>
+          <div class="block skeleton-lines">
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+          </div>
+          <div class="block skeleton-lines">
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+          </div>
+        </div>
       </section>
-      <section class="modal-card-body has-text-centered" v-else>
+      <!-- <section class="modal-card-body has-text-centered" v-else>
+        <div class="skeleton-block"></div>
         <img src="@/assets/loader.gif" />
-      </section>
+      </section> -->
       <footer class="modal-card-foot">
         <div class="buttons"  id="manage-user-footer">
           <router-link class="button" :to="routerHref">

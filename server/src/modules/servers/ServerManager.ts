@@ -63,12 +63,6 @@ export default class ServerManager {
     this.dataDir = dataDir
     this.configDir = configDir
     this.#cfgManager = configManager
-    this.load()
-      .then(() => {
-        this.refresh()
-        this.refreshTimer = setInterval(() => this.refresh(), this.longRefreshInterval)
-        this.#createLiveServer()
-      })
   }
 
   #debugLive(...args: any[]) {
@@ -283,7 +277,8 @@ export default class ServerManager {
   /**
    * Loads all servers and shares from their respective json files
    */
-  private async load() {
+  
+  async Load() {
     this.longRefreshInterval = await this.#cfgManager.GetKV<number>("servers.long_refresh_interval", 600)
     this.shortRefreshInterval = await this.#cfgManager.GetKV<number>("servers.short_refresh_interval", 30)
     try {
@@ -300,6 +295,10 @@ export default class ServerManager {
           console.warn("[Warn] No shares.json file found, no shares will be loaded.", err.message)
         }
       }
+      // We don't need to await refresh
+      this.#createLiveServer()
+      this.refresh()
+      this.refreshTimer = setInterval(() => this.refresh(), this.longRefreshInterval)
     } catch(err) {
       if(err.code !== "ENOENT") {
         throw err

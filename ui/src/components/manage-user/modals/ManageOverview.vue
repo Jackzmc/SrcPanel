@@ -82,34 +82,6 @@
       </div>
     </template>
     <br>
-    <h5 class="title is-5">Player Analysis</h5>
-    <div class="container has-text-centered" v-if="!analysis">
-      <br>
-      <p class="has-text-danger" v-if="analysisFailure"><b>Error:</b> {{ analysisFailure }}</p>
-      <Icon icon="spinner" spin v-else>Fetching player analysis... please wait</Icon>
-      <br>
-    </div>
-    <div class="level" v-else>
-      <div class="level-item has-text-centered">
-        <div class="field">
-          <label class="label">Reputation</label>
-          <template v-if="analysis.rating.key">
-            {{ analysis.rating.key }}
-            <span :class="{'has-text-success' : analysis.rating.value > 0, 'has-text-danger': analysis.rating.value < 0 }">
-              ({{analysis.rating.value.toLocaleString()}})
-            </span>
-          </template>
-          <em v-else>no data</em>
-        </div>
-      </div>
-      <div class="level-item has-text-centered">
-        <div class="field">
-          <label class="label">Ratings</label>
-          <span>{{analysis.reputation.sum.toLocaleString()}}</span>
-        </div>
-      </div>
-    </div>
-    <br>
     <div class="level is-size-4">
       <div class="level-item"><a :href="'https://stats.jackz.me/user/' + props.user.steamid" target="_blank">Stats Profile</a></div>
       <div class="level-item"><a :href="'https://steamcommunity.com/profiles/' + steamid64" target="_blank">Steam Profile</a></div>
@@ -119,52 +91,90 @@
     </div>
   </template>
   <template v-else-if="route.params.tab === 'profile'">
-    <article class="message is-danger" v-if="profile.loadState == LoadState.Error">
-      <div class="message-body">
-        Could not fetch user's profile data at this time.
-      </div>
-    </article>
-    <div class="has-text-centered my-5" v-else-if="profile.loadState == LoadState.Loading || !profile.data">
-      <Icon icon="fa-spinner" icon-class="mr-2" spin>Fetching user's profile</Icon>
-    </div>
-    <div class="box" v-else>
-      <figure class="image is-48x48 is-inline-block mr-3 is-round">
+    <div class="box pt-0">
+      <figure class="image is-48x48 is-inline-block mr-3 is-round mt-4">
         <img :src="'/api/users/' + props.user.steamid + '/avatar'" style="height:48px;width:48px">
       </figure>
       <div class="is-inline-block">
         <p class="title is-5">{{ props.user.name }}</p>
         <p class="subtitle is-6">{{ props.user.steamid }}</p>
       </div>
-      <div class="content mt-2">
-        <Field label="Birthday">
-          <p v-if="!profile.editing">
-            <template v-if="profile.data.birthMonth">{{ MONTHS[profile.data.birthMonth] }}</template><em v-else>(not set)</em>
-            <span class="ml-1"><template v-if="profile.data.birthDate">{{ profile.data.birthDate }}</template><em v-else>(not set)</em></span>
-            <a class="ml-1" v-if="isSelfProfile" @click="profile.editing = true">(Change)</a>
-          </p>
-          <Teleport to="#manage-user-footer" v-if="profile.editing">
-            <button
-              :class="['button','has-tooltip-top']"
-              @click="profile.editing = false"
-            >Cancel</button>
-            <button
-              :class="['button','has-tooltip-top', 'is-success',{'is-loading': profile.loadState == LoadState.Updating }]"
-              @click="setProfileData"
-            >Save Profile Changes</button>
-          </Teleport>
-          <div class="field is-grouped" v-if="isSelfProfile && profile.editing">
-            <p class="control">
-              <div class="select">
-                <select v-model="profile.data.birthMonth">
-                  <option v-for="(month, i) in MONTHS" :key="month" :value="i">{{ month }}</option>
-                </select>
+      <div class="is-inline is-pulled-right mt-2">
+        <div><a :href="'https://stats.jackz.me/user/' + props.user.steamid" target="_blank">Stats Profile</a></div>
+        <div><a :href="'https://steamcommunity.com/profiles/' + steamid64" target="_blank">Steam Profile</a></div>
+        <div><router-link :to="{ name: 'logs-audit', query: { client: props.user.steamid } }" target="_blank">
+        View Logs
+      </router-link></div>
+      </div>
+      <div class="columns mt-2">
+        <div class="column is-6">
+          <Field label="Reputation">
+            <template v-if="analysis.loadState == LoadState.Loading">
+              <Icon icon="fa-spinner" icon-class="mr-2" spin>Fetching</Icon>
+            </template>
+            <div v-else-if="analysis.loadState == LoadState.Error" class="has-text-danger has-tooltip-danger" data-tooltip="Could not fetch analysis">
+              <Icon icon="fa-exclamation-triangle">
+                {{ analysis?.errorReason ?? 'Could not fetch analysis' }}
+              </Icon>
+            </div>
+            <template v-else-if="analysis.data">
+              {{ convertSnakeToHuman(analysis.data.rating.key) }}
+              <span :class="{'has-text-success' : analysis.data.rating.value > 0, 'has-text-danger': analysis.data.rating.value < 0 }">
+                ({{ analysis.data.rating.value.toLocaleString() }})
+              </span>
+            </template>
+            <em v-else>No Data</em>
+          </Field>
+        </div>
+      </div>
+      <hr>
+      <article class="message is-danger" v-if="profile.loadState == LoadState.Error">
+        <div class="message-body">
+          Could not fetch user's profile data at this time.
+        </div>
+      </article>
+      <div class="has-text-centered my-5" v-else-if="profile.loadState == LoadState.Loading">
+        <Icon icon="fa-spinner" icon-class="mr-2" class="is-size-4" spin>Fetching user's profile</Icon>
+      </div>
+      <div class="columns mt-2" v-else-if="profile.data">
+        <div class="column is-6">
+          <Field label="Birthday">
+            <p v-if="!profile.editing">
+              <template v-if="profile.data.birthMonth">{{ MONTHS[profile.data.birthMonth] }}</template><em v-else>(not set)</em>
+              <span class="ml-1"><template v-if="profile.data.birthDate">{{ profile.data.birthDate }}</template><em v-else>(not set)</em></span>
+              <a class="ml-1" v-if="isSelfProfile" @click="profile.editing = true">(Change)</a>
+            </p>
+            <Teleport to="#manage-user-footer" v-if="profile.editing">
+              <button
+                :class="['button','has-tooltip-top']"
+                @click="profile.editing = false"
+              >Cancel</button>
+              <button
+                :class="['button','has-tooltip-top', 'is-success',{'is-loading': profile.loadState == LoadState.Updating }]"
+                @click="setProfileData"
+              >Save Profile Changes</button>
+            </Teleport>
+            <div class="field is-grouped" v-if="isSelfProfile && profile.editing">
+              <div class="control">
+                <div class="select">
+                  <select v-model="profile.data.birthMonth">
+                    <option v-for="(month, i) in MONTHS" :key="month" :value="i">{{ month }}</option>
+                  </select>
+                </div>
               </div>
-            </p>
-            <p class="control">
-              <input style="width:6rem" class="input" type="number" :min="1" :max="30" placeholder="Day" v-model="profile.data.birthDate"/>
-            </p>
+              <p class="control">
+                <input style="width:6rem" class="input" type="number" :min="1" :max="30" placeholder="Day" v-model="profile.data.birthDate"/>
+              </p>
+            </div>
+          </Field>
+        </div>
+      </div>
+      <div class="content mt-2" v-else-if="userAdminData">
+        <article class="message is-primary">
+          <div class="message-body">
+            User has not setup a profile
           </div>
-        </Field>
+        </article>
       </div>
     </div>
   </template>
@@ -180,20 +190,22 @@
 import { ref, onMounted, computed, watch, onBeforeMount } from 'vue';
 import { User, PrivilegedUser, PlayerData } from '@/js/User'
 import { useRouter, useRoute } from 'vue-router'
-import { AdminData, UserProfileData } from '../../../../../common-types/User';
+import { AdminData, UserProfileData, AnalysisData } from '../../../../../common-types/User';
 import { notify } from '@kyvg/vue3-notification';
 import SteamID from 'steamid';
-import { formatDate, getRelDate, request } from '@/js/util';
+import { formatDate, getRelDate, request, getErrorReason } from '@/js/util';
 import Field from '@/components/Field.vue';
 //@ts-expect-error
 import { Tab } from 'vue3-tabs-component';
+import { convertSnakeToHuman } from '../../../js/util';
+import { FetchData, LoadState, GetDefaultFetchData } from '../../../types/global';
 
 const MONTHS = [ "January", "February", "March", "April", "May", "June",
 "July", "August", "September", "October", "November", "December" ];
 
 const TAB_DATA: { id: string, name: string, enableFn?: () => boolean }[] = [
+  { id: "profile", name: 'Profile' },
   { id: "stats", name: 'Stats' },
-  { id: "profile", name: 'Profile', enableFn: () => props.user.isAdmin },
   { id: "actions", name: 'Actions' }
 ]
 const TABS = computed(() => {
@@ -210,19 +222,9 @@ const props = defineProps<{
   userAdminData: AdminData,
   user: PlayerData
 }>()
-enum LoadState {
-  Loading,
-  Success,
-  Error,
-  Updating
-}
-let profile = ref<{ data: UserProfileData | null, loadState: LoadState, editing: boolean}>({
-  data: null,
-  loadState: LoadState.Loading,
-  editing: false
-})
-let analysis = ref()
-let analysisFailure = ref<string>()
+let profile = ref<FetchData<UserProfileData>>(GetDefaultFetchData())
+
+let analysis = ref<FetchData<AnalysisData>>(GetDefaultFetchData())
 let statsFailure = ref<string|undefined>()
 
 
@@ -242,8 +244,7 @@ const playtime = computed(() => {
 watch(() => props.user.steamid, () => {
   info.value = undefined
   profile.value = { data: null, loadState: LoadState.Loading, editing: false }
-  analysis.value = undefined
-  analysisFailure.value = undefined
+  analysis.value = { data: null, loadState: LoadState.Loading, }
   statsFailure.value = undefined
   onTab(route.params.tab as string)
 })
@@ -252,16 +253,18 @@ async function onTab(tabId: string) {
   const tabData = TABS.value.find(tab => tab.id == tabId)
   // If there is no tab, or the tab is not valid for user, reset to stats
   if(!tabData || tabData.enableFn && !tabData.enableFn()) {
-    router.replace({...route, ...{ params: { ...route.params, tab: 'stats'}}})
+    router.replace({...route, ...{ params: { ...route.params, tab: 'profile'}}})
     return
   }
   if(tabId === "stats" && !info.value) {
     await Promise.allSettled([
       fetchStats(),
-      fetchAnalysis()
     ])
   } else if(tabId === "profile" && !profile.value.data) {
-    await fetchProfileData()
+    await Promise.allSettled([
+      fetchProfileData(),
+      fetchAnalysis()
+    ])
   }
 }
 
@@ -291,13 +294,20 @@ async function setProfileData() {
 }
 async function fetchProfileData() {
   profile.value.loadState = LoadState.Loading
-  const response = await request(`/api/users/${props.user.steamid}/profile`)
-  if(response?.ok) {
+  const response = await fetch(`/api/users/${props.user.steamid}/profile`)
+  if(response.ok) {
     profile.value.loadState = LoadState.Success
     const json = await response.json()
     profile.value.data = json
+  } else if(response.status === 404) {
+    profile.value.loadState = LoadState.Success
+    profile.value.data = null
   } else {
-    profile.value.loadState = LoadState.Error
+    notify({
+      type: "error",
+      title: "Could not fetch profile data",
+      text: await getErrorReason(response)
+    })
   }
 }
 
@@ -306,20 +316,29 @@ async function fetchAnalysis() {
     const response = await fetch(`/api/analyze/${props.user.steamid}`)
     const json = await response.json()
     if(response.ok) {
-      analysis.value = json
-      if(json.not_found) {
-        analysisFailure.value = "No statistics found for user"
+      analysis.value = {
+        data: json,
+        loadState: LoadState.Success
       }
     } else {
-      analysisFailure.value = json.message ?? json.error
+      const error = await getErrorReason(response)
+      analysis.value = {
+        data: null,
+        loadState: LoadState.Error,
+        errorReason: error
+      }
       notify({
         type: "error",
         title: 'Error fetching player analysis',
-        text: json.message ?? json.error
+        text: error
       })
     }
   } catch(err: any) {
-    analysisFailure.value = err.message
+    analysis.value = {
+      data: null,
+      loadState: LoadState.Error,
+      errorReason: err.message
+    }
     notify({
       type: "error",
       title: 'Error fetching player analysis',

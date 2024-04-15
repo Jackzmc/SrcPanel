@@ -294,3 +294,14 @@ export async function restartServer(id: string) {
 }
 
 export const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+export async function getErrorReason(response: Response) {
+  let value
+  if(response.headers.get("Content-Type")?.includes("application/json")) {
+    const json = await response.json()
+    value = json.message ?? json.error
+  } else {
+    value = await response.text()
+  }
+  return value
+}

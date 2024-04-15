@@ -62,14 +62,13 @@ export default class AuthManager {
         this.#config = configManager
         this.actLog = new ActivityLog(sessionDatabase)
         this.#oauthManager = new OauthManager(this, this.#config)
-        this.init()
     }
 
     get AdminCount() {
         return Object.keys(this.admins).length
     }
 
-    private async init() {
+    async Init() {
         let startTime = Date.now()
         await this.fetchGroups()
         const fetchGroupsTime = Date.now() - startTime

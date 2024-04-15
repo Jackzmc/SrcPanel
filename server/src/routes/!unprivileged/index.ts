@@ -9,6 +9,7 @@ const data = JSON.parse(readFileSync('assets/data.json', 'utf-8'))
 import Sentiment from 'sentiment'
 import SteamID from 'steamid';
 import { PanelMetaInfo } from '../../../../common-types/Panel.js';
+import { AnalysisData } from '../../../../common-types/User.js';
 
 
 const sentiment = new Sentiment();
@@ -50,7 +51,7 @@ interface CompactDisplayedServer {
     name: string
 }
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions)  {
-    fastify.get('/analyze/:steamid', async(req: FastifyRequest<{Params: { 'steamid': string }}>, reply) => {
+    fastify.get('/analyze/:steamid', async(req: FastifyRequest<{Params: { 'steamid': string }}>, reply): Promise<AnalysisData> => {
         const [notes] = await fastify.db.execute<RowDataPacket[]>(
             `SELECT notes.*, u.last_alias as user, e.last_alias as executor, !b.expired as banned
             FROM notes 
@@ -64,7 +65,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
         let ratings = 0, key: string = null
         let reputation = { thumbsUp: 0, thumbsDown: 0, sum: 0, total: 0 }
-        if(notes.length > 0 && !fastify.authmngr.isAdmin(req.params.steamid)) {
+        if(notes.length > 0 /*  && !fastify.authmngr.isAdmin(req.params.steamid) */) {
             let totalRatings = 0
 
             for(const note of notes) {
