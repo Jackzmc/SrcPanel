@@ -27,14 +27,10 @@
                 <span :class="note.class">{{note.id}}</span>
               </td>
               <td>
-                <router-link :data-tooltip="note.client.id" :to="{ name: 'manage-user', params: { id: note.client.id }, query: { returnTo: $route.fullPath }}" :class="{'has-text-danger': note.banned}">
-                  {{note.client.name ?? note.client.id}}
-                </router-link>
+                <UserComponent :user="note.client" />
               </td>
               <td>
-                <router-link :data-tooltip="note.markedBy.id" :to="{ name: 'manage-user', params: { id: note.markedBy.id }, query: { returnTo: $route.fullPath }}">
-                {{note.markedBy.name}}
-                </router-link>
+                <UserComponent :user="note.markedBy" />
               </td>
               <ActionNote :action="note.action" v-if="note.action"/>
               <td v-else>{{note.content}}</td>
@@ -58,12 +54,7 @@
         <p class="my-5 is-size-2 has-text-centered"><Icon icon="spinner" spin icon-class="mr-4">Fetching notes</Icon></p>
       </div>
       <div class="column is-3">
-        <div class="message is-warning">
-          <div class="message-body">
-            <b>Looking for Admins?</b>
-            <p>You can find the admins list in the <b><router-link to="/admin/players#admins">Player Management</router-link></b> panel</p>
-          </div>
-        </div>
+        <br><br><br><br><br><br>
         <Field icon-left="fa-user" label="Search By User">
           <input class="input" v-model="search.user" />
         </Field>
@@ -84,6 +75,7 @@ import data from '@/assets/data.json'
 import Sentiment from 'sentiment'
 import debounce from '@/js/debounce';
 import { PrivilegedUser } from '@/js/User'
+import UserComponent from '@/components/UserComponent.vue'
 const sentiment = new Sentiment();
 const analyzeOptions = {
   extras: data.sentimentWords

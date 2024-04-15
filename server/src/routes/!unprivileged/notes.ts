@@ -139,7 +139,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
     })
 
-    function formatNote(note): Note {
+    const domain = await fastify.config.GetKV("domain")
+    function formatNote(note: any): Note {
         let action = null
         if(note.content.startsWith("@") && note.content.length > 1) {
             action = note.content.slice(1).split(".")
@@ -150,11 +151,13 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             client: {
                 id: note.steamid,
                 name: note.user,
+                avatarUrl: `${domain}/api/users/${note.steamid}/avatar`,
                 isAdmin: note.targetIsAdmin == 1
             },
             markedBy: {
                 id: note.markedBy,
-                name: note.executor
+                name: note.executor,
+                avatarUrl: `${domain}/api/users/${note.markedBy}/avatar`,
             },
             banned: note.banned == 1,
             action

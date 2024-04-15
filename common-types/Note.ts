@@ -10,5 +10,6 @@ export interface Note {
 export interface NoteUser {
     id: string,
     name?: string,
-    isAdmin?: boolean
+    isAdmin?: boolean,
+    avatarUrl?: string
 }

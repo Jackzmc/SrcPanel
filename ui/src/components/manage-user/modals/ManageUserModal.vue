@@ -175,7 +175,8 @@ onBeforeMount(() => {
   }
 })
 onMounted(async () => {
-  await getUser()
+  if(route.params.id)
+    await getUser()
 })
 onBeforeUnmount(() => {
   document.removeEventListener('keydown', closeModal)

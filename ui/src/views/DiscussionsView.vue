@@ -8,8 +8,7 @@
         </div>
         <br>
         <b>Creator</b>
-        <UserComponent :user="selectedDiscussion.creator"></UserComponent>
-        <br>
+        <div><UserComponent :user="selectedDiscussion.creator"></UserComponent></div>
         <DiscussionBox :priv-user="privUser" v-model="selectedDiscussion" selected :responses="responses" />
         <div class="box">
           <h4 class="title is-4 mb-0"><Icon icon="far fa-comment">Discussion</Icon></h4>

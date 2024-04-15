@@ -2,19 +2,19 @@
   <td>
     <Icon :icon="icon" v-if="icon" :icon-class="iconClass" />
     <template v-if="props.log.type === 'CHAT'">
-      <b><UserComponent :user="props.log.client" type="client" @set-filter="setFilter"/>: </b>
+      <b><UserComponent hide-avatar :user="props.log.client" type="client" @set-filter="setFilter"/>: </b>
       <span :class="{'tag is-warning': props.log.adminChat}" v-html="chatMessage" />
     </template>
     <template v-else>
       <b v-if="LPieceCount == 0 && props.log.client.steamid">
-        <UserComponent :user="props.log.client" type="client" @set-filter="setFilter" />&nbsp;
+        <UserComponent hide-avatar :user="props.log.client" type="client" @set-filter="setFilter" />&nbsp;
       </b>
       <b v-else-if="LPieceCount == 0 && !props.log.client.steamid && props.log.target.steamid">
-        <UserComponent type="target" :user="props.log.target" @set-filter="setFilter" />
+        <UserComponent hide-avatar type="target" :user="props.log.target" @set-filter="setFilter" />
       </b>
       <template v-for="m in messagePieces" :key="m">
         <b v-if="m.LMatch">
-          <UserComponent v-if="m.user" :user="m.user" :type="m.type" @set-filter="setFilter" />
+          <UserComponent hide-avatar v-if="m.user" :user="m.user" :type="m.type" @set-filter="setFilter" />
         </b>
         <span v-else v-html="m.content" :class="{
           'has-text-danger': props.log.type === 'QUIT',
@@ -70,10 +70,10 @@ const icon = computed(() => {
 })
 const iconClass = computed(() => {
   switch(props.log.type) {
-    case "JOIN": return "has-text-success"
-    case "QUIT": return "has-text-danger"
+    case "JOIN": return "mt-1 has-text-success"
+    case "QUIT": return "mt-1 has-text-danger"
   }
-  return undefined
+  return "mt-1"
 })
 const FULLNAME_REGEX = /"([^"<>]+)<\d+><(STEAM_\d:\d:\d+|Console|BOT)><(Console)?>"/;
 const chatMessage = computed(() => {

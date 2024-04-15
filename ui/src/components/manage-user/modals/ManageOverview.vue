@@ -127,55 +127,57 @@
           </Field>
         </div>
       </div>
-      <hr>
-      <article class="message is-danger" v-if="profile.loadState == LoadState.Error">
-        <div class="message-body">
-          Could not fetch user's profile data at this time.
-        </div>
-      </article>
-      <div class="has-text-centered my-5" v-else-if="profile.loadState == LoadState.Loading">
-        <Icon icon="fa-spinner" icon-class="mr-2" class="is-size-4" spin>Fetching user's profile</Icon>
-      </div>
-      <div class="columns mt-2" v-else-if="profile.data">
-        <div class="column is-6">
-          <Field label="Birthday">
-            <p v-if="!profile.editing">
-              <template v-if="profile.data.birthMonth">{{ MONTHS[profile.data.birthMonth] }}</template><em v-else>(not set)</em>
-              <span class="ml-1"><template v-if="profile.data.birthDate">{{ profile.data.birthDate }}</template><em v-else>(not set)</em></span>
-              <a class="ml-1" v-if="isSelfProfile" @click="profile.editing = true">(Change)</a>
-            </p>
-            <Teleport to="#manage-user-footer" v-if="profile.editing">
-              <button
-                :class="['button','has-tooltip-top']"
-                @click="profile.editing = false"
-              >Cancel</button>
-              <button
-                :class="['button','has-tooltip-top', 'is-success',{'is-loading': profile.loadState == LoadState.Updating }]"
-                @click="setProfileData"
-              >Save Profile Changes</button>
-            </Teleport>
-            <div class="field is-grouped" v-if="isSelfProfile && profile.editing">
-              <div class="control">
-                <div class="select">
-                  <select v-model="profile.data.birthMonth">
-                    <option v-for="(month, i) in MONTHS" :key="month" :value="i">{{ month }}</option>
-                  </select>
-                </div>
-              </div>
-              <p class="control">
-                <input style="width:6rem" class="input" type="number" :min="1" :max="30" placeholder="Day" v-model="profile.data.birthDate"/>
-              </p>
-            </div>
-          </Field>
-        </div>
-      </div>
-      <div class="content mt-2" v-else-if="userAdminData">
-        <article class="message is-primary">
+      <template v-if="userAdminData">
+        <hr>
+        <article class="message is-danger" v-if="profile.loadState == LoadState.Error">
           <div class="message-body">
-            User has not setup a profile
+            Could not fetch user's profile data at this time.
           </div>
         </article>
-      </div>
+        <div class="has-text-centered my-5" v-else-if="profile.loadState == LoadState.Loading">
+          <Icon icon="fa-spinner" icon-class="mr-2" class="is-size-4" spin>Fetching user's profile</Icon>
+        </div>
+        <div class="columns mt-2" v-else-if="profile.data">
+          <div class="column is-6">
+            <Field label="Birthday">
+              <p v-if="!profile.editing">
+                <template v-if="profile.data.birthMonth">{{ MONTHS[profile.data.birthMonth] }}</template><em v-else>(not set)</em>
+                <span class="ml-1"><template v-if="profile.data.birthDate">{{ profile.data.birthDate }}</template><em v-else>(not set)</em></span>
+                <a class="ml-1" v-if="isSelfProfile" @click="profile.editing = true">(Change)</a>
+              </p>
+              <Teleport to="#manage-user-footer" v-if="profile.editing">
+                <button
+                  :class="['button','has-tooltip-top']"
+                  @click="profile.editing = false"
+                >Cancel</button>
+                <button
+                  :class="['button','has-tooltip-top', 'is-success',{'is-loading': profile.loadState == LoadState.Updating }]"
+                  @click="setProfileData"
+                >Save Profile Changes</button>
+              </Teleport>
+              <div class="field is-grouped" v-if="isSelfProfile && profile.editing">
+                <div class="control">
+                  <div class="select">
+                    <select v-model="profile.data.birthMonth">
+                      <option v-for="(month, i) in MONTHS" :key="month" :value="i">{{ month }}</option>
+                    </select>
+                  </div>
+                </div>
+                <p class="control">
+                  <input style="width:6rem" class="input" type="number" :min="1" :max="30" placeholder="Day" v-model="profile.data.birthDate"/>
+                </p>
+              </div>
+            </Field>
+          </div>
+        </div>
+        <div class="content mt-2" v-else-if="userAdminData">
+          <article class="message is-primary">
+            <div class="message-body">
+              User has not setup a profile
+            </div>
+          </article>
+        </div>
+      </template>
     </div>
   </template>
   <template v-else-if="route.params.tab === 'actions'">
