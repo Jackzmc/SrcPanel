@@ -20,7 +20,11 @@
     </section>
 
     <br>
-    <router-view :priv-user="privUser" :meta="meta"></router-view>
+    <router-view v-slot="{ Component }">
+      <keep-alive  :max="2">
+        <component :is="Component" :priv-user="privUser" :meta="meta" />
+      </keep-alive>
+    </router-view>
     <br>
     <footer class="footer">
       <div class="content has-text-centered">
