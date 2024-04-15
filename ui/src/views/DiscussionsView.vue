@@ -120,6 +120,7 @@ async function fetchDiscussions() {
 }
 function startNewDiscussion(event: KeyboardEvent) {
   const target = event.target as HTMLInputElement
+  if(!target.value || target.value == "") return
   router.push({
     name: "discuss-new",
     query: {

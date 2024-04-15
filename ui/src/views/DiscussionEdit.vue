@@ -35,6 +35,11 @@
             <input type="text" class="input" readonly placeholder="Enter your submission">
           </Field>
         </div>
+        <div v-else-if="discuss.type == APIDiscussionType.LongText">
+          <Field>
+            <textarea type="text" class="textarea" readonly placeholder="Enter your submission"></textarea>
+          </Field>
+        </div>
       </div>
       <div class="box question-box" v-else>
         <router-link :to="{name: 'discuss'}"><Icon icon="fa-arrow-left" class="is-pulled-left" text="Back to discussions" /></router-link>
@@ -47,7 +52,7 @@
       </p>
     </div>
     <div class="column" v-if="loadState == LoadState.Success">
-      <h4 class="title is-4 mb-2">Options</h4>
+      <h4 class="title is-4 mb-2">Discussion Settings</h4>
       <div class="list has-visible-pointer-controls has-hoverable-list-items">
         <div class="list-item">
           <div class="list-item-content">
@@ -58,7 +63,7 @@
           <div class="list-item-controls">
             <div class="select">
               <select v-model="discuss.type">
-                <option v-for="(display, type) in DISCUSSION_TYPES" :key="type" :value="type">
+                <option v-for="(display, type) in DISCUSSION_TYPES" :key="type" :value="Number(type)">
                   {{ display }}
                 </option>
               </select>
@@ -72,8 +77,11 @@
             </div>
           </div>
           <div class="list-item-controls">
-            <input :step="60*60" :min="new Date().toISOString().slice(0, -8)" class="input" type="datetime-local" v-model="closedAt">
-            <a @click="discuss.closedAt = undefined" v-if="discuss.closedAt" class="is-pulled-right">clear closed at</a>
+            <template v-if="discuss.closedAt">
+              <input style="width:inherit" :step="60*60" :min="new Date().toISOString().slice(0, -8)" class="input" type="datetime-local" v-model="closedAt">
+              <p><a @click="discuss.closedAt = undefined" class="is-pulled-right">clear date</a></p>
+            </template>
+            <span v-else>Never <a class="ml-4 button is-small is-info" @click="setClosedAt">Set Date</a></span>
           </div>
         </div>
         <div class="list-item" v-if="!isNew">
@@ -157,7 +165,7 @@
       </div>
       <br>
       <div class="buttons">
-        <a :class="['button','is-success',{'is-loading': isSaving }]" @click="save" :disabled="canSave ? undefined : true ">{{ isNew ? 'Create Discussion' : 'Save Changes' }}</a>
+        <a :class="['button','is-success','has-text-white',{'is-loading': isSaving }]" @click="save" :disabled="canSave ? undefined : true ">{{ isNew ? 'Create Discussion' : 'Save Changes' }}</a>
         <a class="button" @click="confirmCancel">Cancel</a>
         <a v-if="!isNew" class="button is-warning" @click="archive"><Icon icon="fa-box-archive">Archive</Icon></a>
       </div>
@@ -331,6 +339,12 @@ function setFlagFromQuery(query: string, flag: APIDiscussionFlags) {
   } else if(query === "hide" || query === "hidden" || query === "0") {
     discuss.value.flags &= ~flag
   }
+}
+function setClosedAt() {
+  const d = new Date()
+  d.setDate(d.getDate() + 7)
+  //@ts-expect-error closedAt get is string, set is number/date
+  closedAt.value = d
 }
 onMounted(async() => {
   discuss.value.title = route.query.title?.toString() ?? "Discussion Title"

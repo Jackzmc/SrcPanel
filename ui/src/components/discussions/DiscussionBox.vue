@@ -13,7 +13,7 @@
   </div>
   <h5 class="title is-5"><b>Discuss:</b> {{ discuss.title }}</h5>
   <p v-if="discuss.description" class="subtitle" v-html="markedDescription"></p>
-  <div class="columns" v-if="discuss.type == APIDiscussionType.Radio || discuss.type == APIDiscussionType.Checkbox">
+  <div class="columns is-mobile" v-if="discuss.type == APIDiscussionType.Radio || discuss.type == APIDiscussionType.Checkbox">
     <div class="column is-6">
       <div :class="['box','field',{'is-clickable': canInteract}]" v-for="option of getOptions(0)" :key="option.id" @click="selectChoice(option)">
         <input v-if="canInteract && isSelection && 'selected' in discuss" v-model="discuss.selected" readonly :value="option" :id="option.id.toString()" class="is-checkradio" :type="optionType" :name="'choice' + discuss.id">
@@ -50,7 +50,7 @@
   </div>
   <div class="columns mt-3" v-if="!selected">
     <div class="column">
-      <div class="columns is-gapless" v-if="discuss.responses.users">
+      <div class="columns is-gapless is-mobile" v-if="discuss.responses.users">
         <div class="column is-narrow" v-for="(user, i) in discuss.responses.users.slice(0, MAX_DISCUSSION_AVATARS)" :key="i">
           <figure class="image is-32x32" :data-tooltip="user.name">
             <img class="is-rounded" :src="'/api/users/' + user.id + '/avatar'">
