@@ -86,6 +86,7 @@ const messagePieces = computed(() => {
   if(!props.log.message || props.log.type === "CHAT") return []
 
   const pieces = [];
+  let lPieceCount = 0
   let index = 0;
   for (let i = 0; i < 2; i++) {
     const match = props.log.message.slice(index).match(FULLNAME_REGEX);
@@ -97,9 +98,9 @@ const messagePieces = computed(() => {
         content: prevSlice
       });
 
+      let type, user
       let [, name, steamid] = match
 
-      let type, user
       if((steamid === "BOT" && i === 0) || props.log.client.steamid === steamid) {
         type = "client"
         if(steamid === "BOT") steamid = null
@@ -109,6 +110,7 @@ const messagePieces = computed(() => {
         if(steamid === "BOT") steamid = null
         user = { name: props.log.target.name || name, steamid }
       }
+
       pieces.push({
         content: match[0],
         LMatch: true,
@@ -117,11 +119,11 @@ const messagePieces = computed(() => {
         type
       });
       index = match.index + match[0].length + index;
-      LPieceCount.value++
     } else {
       break;
     }
   }
+  LPieceCount.value = lPieceCount
   let message = props.log.message.slice(index)
   if(props.highlightRegex) message = message.replace(props.highlightRegex, "<b>$1</b>")
   pieces.push({ content: message });

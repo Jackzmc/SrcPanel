@@ -80,10 +80,15 @@
                       <th style="width:20%">
                         Id
                       </th>
-                      <td class="pb-0">
+                      <td class="">
                         <span class="mr-2">#{{ entry.id }}</span>
                         <div class="buttons is-inline">
-                          <a class="button is-small"><Icon icon="fa-copy" data-tooltip="Click to copy a shareable link" class="no-border" @click="copyShareLink(entry)">Share</Icon></a>
+                          <a class="button is-small" @click="copyShareLink(entry)" data-tooltip="Click to copy a shareable link">
+                            <span class="icon is-medium">
+                              <Icon icon="fa-copy" />
+                            </span>
+                            <span>Share</span>
+                          </a>
                           <a class="ml-2 button is-small is-info" @click="jumpTo(entry)" data-tooltip="Shows messages around this message, ignoring filters">find nearby entries</a>
                         </div>
                       </td>
