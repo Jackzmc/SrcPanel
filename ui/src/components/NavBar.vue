@@ -45,6 +45,9 @@
             <router-link to="/docs/props" class="navbar-item">
               Prop Spawner
             </router-link>
+            <router-link to="/docs/rules" class="navbar-item">
+              Rules & Procedures
+            </router-link>
             <hr class="navbar-divider">
             <router-link to="/docs/keybinds" class="navbar-item">
               <Icon icon="keyboard">Keybinds</Icon>

@@ -14,6 +14,15 @@ const routes = [
     }
   },
   {
+    name: "docs-rules",
+    path: '/docs/rules',
+    component: () => import('../views/docs/RulesAndInfoView.vue'),
+    meta: {
+      title: 'Procedures & Rules',
+      description: "Because it's a necessary"
+    }
+  },
+  {
     name: "docs-commands",
     path: '/docs/commands',
     component: () => import('../views/docs/CommandsView.vue'),
