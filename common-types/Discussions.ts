@@ -7,7 +7,8 @@ export enum APIDiscussionFlags {
     /** Is not listed in main list, no more comments or responses can be made */
     Archived = 2,
     /** Should the actual choices / response be visible? (Requires RespondersPublic) */
-    ResponsesPublic = 4
+    ResponsesPublic = 4,
+    CommentsPublic = 8
 }
 
 export enum APIDiscussionType {

@@ -1,29 +1,37 @@
 <template>
-<div class="list">
+<div class="list has-visible-pointer-controls">
   <div class="list-item" v-for="(comment, i) in comments" :key="i">
-    <div class="list-item-image">
+    <div class="list-item-image" v-if="discussion.flags & APIDiscussionFlags.CommentsPublic">
       <figure class="image is-32x32" :data-tooltip="comment.creator.name">
         <img class="is-rounded" :src="comment.creator.avatarUrl">
       </figure>
     </div>
     <div class="list-item-content">
       <div class="list-item-title">
-        {{ comment.creator.name }} <span class="tag">{{ formatDate(comment.timestamp) }}</span>
+        <router-link v-if="discussion.flags & APIDiscussionFlags.CommentsPublic" :to="{ name: 'manage-user', params: { id: comment.creator.id }, query: { returnTo: $route.fullPath }}">
+          {{ comment.creator.name ?? comment.creator.id }}
+        </router-link>
       </div>
       <div class="list-item-content">
         {{ comment.content }}
       </div>
+
+    </div>
+    <div class="list-item-controls">
+      <div class="list-item-controls">
+        <Icon icon="fa-clock">{{ formatDate(comment.timestamp) }}</Icon>
+      </div>
     </div>
   </div>
   <div class="list-item has-background-light" v-if="!isArchived">
-    <div class="list-item-image">
+    <div class="list-item-image" v-if="discussion.flags & APIDiscussionFlags.CommentsPublic">
       <figure class="image is-32x32" :data-tooltip="privUser.name">
         <img class="is-rounded" :src="'/api/users/' + privUser.id + '/avatar'">
       </figure>
     </div>
     <div class="list-item-content">
       <div class="list-item-title">
-        Submit New Comment
+        Submit New Comment <template v-if="~discussion.flags & APIDiscussionFlags.CommentsPublic">(anonymously)</template>
       </div>
       <div class="list-item-description" @mouseover="newComment.hovered = true" @mouseout="newComment.hovered = false">
         <textarea v-model="newComment.content" type="text" @focus="newComment.focused = true" @blur="newComment.focused = false" :class="['input', {'expanded-box': newComment.focused || newComment.hovered }]" placeholder="Enter a comment" style="width:70%" cols=10 :rows="10"></textarea>

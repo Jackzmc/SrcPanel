@@ -182,10 +182,14 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             responses: responses.responses,
             commentsCount: comments.length,
             comments: comments.map(c => { 
+                let creator = undefined
+                if(discuss.flags & APIDiscussionFlags.CommentsPublic) {
+                    creator = { id: c.creator, name: c.creator_name, avatarUrl: `${domain}/api/users/${c.creator}/avatar` }
+                } 
                 return {
                     id: c.id,
                     timestamp: c.timestamp,
-                    creator: { id: c.creator, name: c.creator_name, avatarUrl: `${domain}/api/users/${c.creator}/avatar` },
+                    creator,
                     content: c.content
                 }
             }),

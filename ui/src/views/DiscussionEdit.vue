@@ -17,7 +17,7 @@
             <div class="box field is-clickable" v-for="option of getOptions(0)" :key="option.id" @click="editOption(option)">
               <label>{{ option.label }}</label>
             </div>
-            <a class="box field is-clickable has-background-info has-text-white has-text-centered" v-if="leftColumn" @click="editOption()"  data-tooltip="Click to create a new option">
+            <a class="box field is-clickable has-background-info has-text-white has-text-centered" v-if="leftColumn&&!previouslyClosed" @click="editOption()"  data-tooltip="Click to create a new option">
               <Icon icon="fa-plus">New Option</Icon>
             </a>
           </div>
@@ -25,7 +25,7 @@
             <div class="box field is-clickable" v-for="option of getOptions(1)" :key="option.id" @click="editOption(option)">
               <label>{{ option.label }}</label>
             </div>
-            <a class="box field is-clickable has-background-info has-text-white has-text-centered" v-if="!leftColumn" @click="editOption()" data-tooltip="Click to create a new option">
+            <a class="box field is-clickable has-background-info has-text-white has-text-centered" v-if="!leftColumn&&!previouslyClosed" @click="editOption()" data-tooltip="Click to create a new option">
               <Icon icon="fa-plus">New Option</Icon>
             </a>
           </div>
@@ -76,7 +76,7 @@
             <a @click="discuss.closedAt = undefined" v-if="discuss.closedAt" class="is-pulled-right">clear closed at</a>
           </div>
         </div>
-        <div class="list-item">
+        <div class="list-item" v-if="!isNew">
           <div class="list-item-content">
             <div class="list-item-title">
               <Icon icon="fa-info-circle" icon-class="has-text-info no-border" text-left="Voting" data-tooltip="If voting is open"></Icon>
@@ -94,7 +94,7 @@
         <div class="list-item">
           <div class="list-item-content">
             <div class="list-item-title">
-              <Icon icon="fa-info-circle" icon-class="has-text-info no-border" text-left="Respondants" data-tooltip="Should the users who responded be shown publicly"></Icon>
+              <Icon icon="fa-info-circle" icon-class="has-text-info no-border" text-left="Respondants" data-tooltip="Should the names of the users who responded be public?"></Icon>
             </div>
           </div>
           <div class="list-item-controls">
@@ -115,7 +115,7 @@
         <div class="list-item" v-if="(discuss.flags & APIDiscussionFlags.RespondersPublic) != 0">
           <div class="list-item-content">
             <div class="list-item-title">
-              <Icon icon="fa-info-circle" icon-class="has-text-info no-border" text-left="Responses" data-tooltip="Should the users who responded have their responses public?"></Icon>
+              <Icon icon="fa-info-circle" icon-class="has-text-info no-border" text-left="Responses" data-tooltip="Should the users' responses be public?"></Icon>
             </div>
           </div>
           <div class="list-item-controls">
@@ -128,6 +128,27 @@
               <p class="control">
                 <button :class="['button', {'is-info': !hasFlag(APIDiscussionFlags.ResponsesPublic)}]" @click="setFlag(APIDiscussionFlags.ResponsesPublic, false)">
                   <Icon icon="fa-eye-slash">Hidden</Icon>
+                </button>
+              </p>
+            </div>
+          </div>
+        </div>
+        <div class="list-item" v-if="(discuss.flags & APIDiscussionFlags.RespondersPublic) != 0">
+          <div class="list-item-content">
+            <div class="list-item-title">
+              <Icon icon="fa-info-circle" icon-class="has-text-info no-border" text-left="Comments" data-tooltip="Should comments be anonymous?"></Icon>
+            </div>
+          </div>
+          <div class="list-item-controls">
+            <div class="field has-addons">
+              <p class="control">
+                <button :class="['button', {'is-info': hasFlag(APIDiscussionFlags.CommentsPublic)}]" @click="setFlag(APIDiscussionFlags.CommentsPublic, true)">
+                  <Icon icon="fa-eye">Public</Icon>
+                </button>
+              </p>
+              <p class="control">
+                <button :class="['button', {'is-info': !hasFlag(APIDiscussionFlags.CommentsPublic)}]" @click="setFlag(APIDiscussionFlags.CommentsPublic, false)">
+                  <Icon icon="fa-eye-slash">Anonymous</Icon>
                 </button>
               </p>
             </div>
@@ -159,7 +180,7 @@ const DISCUSSION_TYPES: { [key in APIDiscussionType]?: string } = {
   [APIDiscussionType.Checkbox]: "Multiple Choice (Checkbox)",
   // [APIDiscussionType.Selection]: "Selection",
   [APIDiscussionType.ShortText]: "Short Text",
-  [APIDiscussionType.LongText]: "Long Text",
+  [APIDiscussionType.LongText]: "Essay (Long Text)",
 }
 const isNew = computed(() => {
   return route.name === "discuss-new"
@@ -217,7 +238,7 @@ const discuss = ref<APIDiscussionBase>({
   closedAt: 0,
   timestamp: Date.now(),
   options: [],
-  flags: 0,
+  flags: APIDiscussionFlags.CommentsPublic | APIDiscussionFlags.RespondersPublic,
 })
 const isSaving = ref(false)
 
@@ -304,13 +325,28 @@ function saveText(field: keyof APIDiscussionBase, event: any) {
   discuss.value[field] = event.target.innerText.trim() ?? ""
   event.target.blur()
 }
+function setFlagFromQuery(query: string, flag: APIDiscussionFlags) {
+  if(query === "shown" || query === "visible" || query === "1") {
+    discuss.value.flags |= flag
+  } else if(query === "hide" || query === "hidden" || query === "0") {
+    discuss.value.flags &= ~flag
+  }
+}
 onMounted(async() => {
   discuss.value.title = route.query.title?.toString() ?? "Discussion Title"
-  router.replace({
-    query: {
-      title: undefined
+  discuss.value.description = route.query.description?.toString() ?? "";
+  setFlagFromQuery(route.query.respondants as string, APIDiscussionFlags.RespondersPublic)
+  setFlagFromQuery(route.query.responses as string, APIDiscussionFlags.ResponsesPublic)
+  setFlagFromQuery(route.query.comments as string, APIDiscussionFlags.CommentsPublic)
+  if(route.query.type) {
+    switch(route.query.type) {
+      case "radio": discuss.value.type = APIDiscussionType.Radio; break;
+      case "checkbox": discuss.value.type = APIDiscussionType.Checkbox; break;
+      case "text": discuss.value.type = APIDiscussionType.ShortText; break;
+      case "essay": discuss.value.type = APIDiscussionType.LongText; break;
     }
-  })
+  }
+
   if(!isNew.value) {
     const response = await request(`/api/discussions/${route.params.id}`)
     if(response?.ok) {
