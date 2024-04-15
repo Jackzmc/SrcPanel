@@ -131,7 +131,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             creator: {
                 id: req.user.steamid2,
                 name: await req.user.name(),
-                avatarUrl: `${domain}/api/user/${req.user.steamid2}/avatar`
+                avatarUrl: `${domain}/api/users/${req.user.steamid2}/avatar`
             },
             closedAt: discuss.closedAt,
             type: discuss.type,

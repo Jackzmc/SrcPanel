@@ -126,7 +126,7 @@ export default class DiscussionManager {
                 creator: {
                     id: row.creator,
                     name: row.creator_name,
-                    avatarUrl: `${domain}/api/user/${row.creator}/avatar`
+                    avatarUrl: `${domain}/api/users/${row.creator}/avatar`
                 },
             })
         }
