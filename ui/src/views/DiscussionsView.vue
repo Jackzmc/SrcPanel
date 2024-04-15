@@ -7,6 +7,9 @@
           <router-link :to="{params: { id: '', title: '' }}"><Icon icon="fa-arrow-left" class="is-pulled-left" text="Back to discussions" /></router-link>
         </div>
         <br>
+        <b>Creator</b>
+        <UserComponent :user="selectedDiscussion.creator"></UserComponent>
+        <br>
         <DiscussionBox :priv-user="privUser" v-model="selectedDiscussion" selected :responses="responses" />
         <div class="box">
           <h4 class="title is-4 mb-0"><Icon icon="far fa-comment">Discussion</Icon></h4>
@@ -61,6 +64,7 @@ import Comments from '@/components/discussions/Comments.vue'
 import { APIDiscussionFlags, APIDiscussionType, APIDiscussion, APIDiscussionOption, DiscussionState, Discussion, APIDiscussionDetails, DiscussionDetailed, APIResponsesData, APIComment, APIUserWithChoice } from '../../../common-types/Discussions';
 import { request } from '@/js/util.js';
 import Field from '@/components/Field.vue';
+import UserComponent from '@/components/UserComponent.vue';
 
 
 const route = useRoute()
