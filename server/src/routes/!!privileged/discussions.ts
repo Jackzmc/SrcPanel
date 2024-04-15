@@ -175,7 +175,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             } 
         }
        
-        const [comments] = await fastify.db.execute<RowDataPacket[]>("SELECT com.id, com.creator, com.content, u.last_alias as creator_name FROM `left4dead2-admins`.dash_discussion_comments com LEFT JOIN `left4dead2`.stats_users u ON com.creator = u.steamid WHERE com.discussion_id = ? ", [discuss.id])
+        const [comments] = await fastify.db.execute<RowDataPacket[]>("SELECT com.id, com.creator, com.content, u.name as creator_name FROM `left4dead2-admins`.dash_discussion_comments com LEFT JOIN `left4dead2`.user_names u ON SUBSTRING(com.creator, 11) = u.steamid WHERE com.discussion_id = ? ", [discuss.id])
         const responses = await discManager.getResponses(Number(req.params.id), req.user, discuss.flags)
         return {
             ...discuss,
