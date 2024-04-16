@@ -4,7 +4,7 @@
     <UserSettingsModal v-if="showModal === 'settings'" :priv-user="privUser" @close="showModal = undefined" />
     <NotificationsModal v-else-if="showModal === 'notifications'" :priv-user="privUser" @close="clearNotifications" />
   </template>
-  <nav class="navbar is-light is-fixed-top" role="navigation" aria-label="main navigation">
+  <nav class="navbar is-fixed-top" role="navigation" aria-label="main navigation">
     <div class="navbar-brand">
       <div class="navbar-item is-hidden is-flex-touch">
         <b>Admin Panel</b>
@@ -126,13 +126,6 @@
               <span>{{privUser.name}}</span>
             </a>
             <div class="navbar-dropdown is-right" style="width:140%">
-              <a class="navbar-item">
-                <Icon icon="fa-circle-info" :data-tooltip="updateTooltip" class="has-tooltip-bottom">
-                  <template v-if="updateInfo.updating">UI is being updated</template>
-                  <template v-else>UI Build Info <em>(hover)</em></template>
-                </Icon>
-              </a>
-              <hr class="navbar-divider">
               <router-link class="navbar-item" :to="{ name: 'manage-user', params: { id: privUser.id }, query: { returnTo: $route.fullPath }}">
                 <Icon icon="fa-user" text="Profile" />
               </router-link>

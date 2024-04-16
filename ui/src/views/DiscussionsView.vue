@@ -146,6 +146,13 @@ onMounted(async () => {
 
 <style scoped>
 .question-box {
-  background-color: #f9f9f9
+  background-color: #f9f9f9;
 }
+@media (prefers-color-scheme: dark) {
+  .question-box {
+    background-color: #24292E;
+    color: white;
+  }
+}
+
 </style>
