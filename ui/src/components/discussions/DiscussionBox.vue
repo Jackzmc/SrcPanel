@@ -12,7 +12,8 @@
     <span class="mr-3 tag is-pulled-right is-inline" v-if="discuss.commentsCount > 0" data-tooltip="Number of comments"><Icon icon="far fa-comment">{{ discuss.commentsCount }}</Icon></span>
   </div>
   <h5 class="title is-5"><b>Discuss:</b> {{ discuss.title }}</h5>
-  <p v-if="discuss.description" class="subtitle" v-html="markedDescription"></p>
+  <!-- <p v-if="discuss.description" class="subtitle" v-html="markedDescription"></p> -->
+  <TemplateRender :template="markedDescription" v-if="discuss.description" />
   <div class="columns is-mobile" v-if="discuss.type == APIDiscussionType.Radio || discuss.type == APIDiscussionType.Checkbox">
     <div class="column is-6">
       <div :class="['box','field',{'is-clickable': canInteract}]" v-for="option of getOptions(0)" :key="option.id" @click="selectChoice(option)">
@@ -101,6 +102,7 @@ marked.use({renderer:{
 
 const MAX_DISCUSSION_AVATARS = 10
 const DISCUSSION_SAVE_NOTIFICATION_DURATION = 1000 * 3
+const STEAMID_REGEX = new RegExp(/STEAM_\d:\d:\d+/g)
 
 const optionType = computed(() => {
   return discuss.value.type == APIDiscussionType.Checkbox ? 'checkbox' : 'radio'
@@ -137,9 +139,11 @@ const showPercents = computed(() => {
 const canInteract = computed(() => {
   return !(discuss.value.flags & APIDiscussionFlags.Archived) && !isClosed.value && !props.selected
 })
+import TemplateRender from '@/components/TemplateRender.vue'
 const markedDescription = computed(() => {
   if(!discuss.value.description) return
-  return marked.parse(discuss.value.description)
+  const html: string = marked.parse("Test STEAM_0:1:10882645")
+  return html.replace(STEAMID_REGEX, (match) => `<UserComponent :steamid="${match}" />`)
 })
 
 function getOptions(column: number) {
@@ -149,6 +153,9 @@ function getOptions(column: number) {
   } else {
     return options!.filter((v, i) => i % 2)
   }
+}
+function escapeHtml(unsafe: string) {
+    return unsafe.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#039;');
 }
 
 async function selectChoice(option?: APIDiscussionOption) {
