@@ -1,8 +1,8 @@
 <template>
 <div class="content">
-  <span v-for="(piece, i) in pieces" :key="i">
-    <UserComponent class="mr-1" hide-avatar v-if="piece.user" :user="piece.user" />
-    <span class="mr-1" v-else-if="piece.html" v-html="piece.html"></span>
+  <span v-for="(piece, i) in pieces" :key="i" class="mr-1">
+    <UserComponent hide-avatar v-if="piece.user" :user="piece.user" />
+    <span v-else-if="piece.html" v-html="piece.html"></span>
     <template v-else>{{ piece.text }}</template>
   </span>
 </div>
