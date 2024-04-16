@@ -31,7 +31,7 @@
             </router-link>
             <router-link v-if="privUser.hasPermission('admins.view')" :to="{ name: 'manage-user-admin' }" v-slot="{ href, navigate, isExactActive }" custom>
               <li :class="{'is-active': isExactActive, 'has-text-grey-dark': true }">
-                <a :href="href" @click="navigate()">
+                <a :href="href" @click="navigate">
                   <Icon :icon="userAdminData ? 'fa-user-pen' : 'fa-user-plus'">Privileges&nbsp;</Icon>
                   <span v-if="userAdminData" class="tag is-info">Admin</span>
                   <span v-else class="tag is-secondary">None</span>
