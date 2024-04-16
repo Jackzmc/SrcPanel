@@ -1,8 +1,8 @@
 <template>
 <span>
-  <img v-if="loadState == LoadState.Loading" :class="imgClass" :src="props.placeholderSrc">
+  <img v-if="loadState == LoadState.Loading || (loadState == LoadState.Error && !props.errorSrc)" :class="imgClass" :src="props.placeholderSrc">
   <img v-else-if="loadState == LoadState.Error && props.errorSrc" :class="imgClass" :src="props.errorSrc" loading="lazy">
-  <img v-show="loadState == LoadState.Success || !props.errorSrc" :class="imgClass" :src="props.src" loading="lazy"
+  <img v-show="loadState == LoadState.Success" :class="imgClass" :src="props.src" loading="lazy"
     @load="loadState = LoadState.Success" @error="loadState = LoadState.Error"
   >
 </span>
