@@ -107,7 +107,7 @@
 import Modal from '@/components/Modal.vue'
 import { useNotification } from "@kyvg/vue3-notification";
 import { computed, ref, onBeforeMount } from 'vue';
-import { formatDate, formatSize, request } from '@/js/util.js'
+import { formatDate, formatSize, request, restartServer } from '@/js/util.js'
 
 const emit = defineEmits(['close', 'update'])
 const { notify }  = useNotification()
@@ -178,14 +178,6 @@ async function restartServers() {
     text: msg,
   })
   close()
-}
-
-async function restartServer(id: string) {
-  const response = await fetch(`/api/servers/${id}/restart`, {
-    method: 'POST'
-  })
-  if(response.ok) return true
-  throw new Error(`Server returned ${response.status} ${response.statusText} for ${id}`)
 }
 
 const addonName = computed(() => {

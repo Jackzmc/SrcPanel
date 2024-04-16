@@ -283,7 +283,7 @@ export function parseLog(log: any, history: {activators: any[], targets: any[] }
 }
 
 export async function restartServer(id: string) {
-  const response = await fetch(`/api/servers/${id}/restart`, {
+  const response = await fetch(`/api/servers/${id}/action/builtin:request_stop`, {
     method: 'POST'
   })
   if(response.ok) {

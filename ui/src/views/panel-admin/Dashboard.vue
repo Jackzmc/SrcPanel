@@ -9,7 +9,7 @@
           <br>
           <div class="buttons">
             <a :disabled="canUpdate" :class="['button', {'is-loading': updateStatus.state === 'CHECKING'}]" @click="updateServer">Update Panel</a>
-            <a :disabled="canUpdate" :class="['button']" @click="restartServer">Restart Panel</a>
+            <a :disabled="canUpdate" :class="['button']" @click="restartPanel">Restart Panel</a>
             <a :disabled="canUpdate" :class="['button']" @click="updateAdmins">Update Admins Cache</a>
           </div>
 
@@ -106,7 +106,7 @@ async function updateServer() {
   }, 1000 * 7)
 }
 
-async function restartServer() {
+async function restartPanel() {
   const response = await request('/api/panel/restart', { method: "POST"})
   if(response?.ok) {
     notify({
