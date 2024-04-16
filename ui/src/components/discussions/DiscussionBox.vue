@@ -12,8 +12,7 @@
     <span class="mr-3 tag is-pulled-right is-inline" v-if="discuss.commentsCount > 0" data-tooltip="Number of comments"><Icon icon="far fa-comment">{{ discuss.commentsCount }}</Icon></span>
   </div>
   <h5 class="title is-5"><b>Discuss:</b> {{ discuss.title }}</h5>
-  <!-- <p v-if="discuss.description" class="subtitle" v-html="markedDescription"></p> -->
-  <TemplateRender :template="markedDescription" v-if="discuss.description" />
+  <FormatText class="subtitle" :text="discuss.description" markdown v-if="discuss.description" />
   <div class="columns is-mobile" v-if="discuss.type == APIDiscussionType.Radio || discuss.type == APIDiscussionType.Checkbox">
     <div class="column is-6">
       <div :class="['box','field',{'is-clickable': canInteract}]" v-for="option of getOptions(0)" :key="option.id" @click="selectChoice(option)">
@@ -90,19 +89,10 @@ import { ref, computed, onMounted } from 'vue';
 import Sugar from 'sugar'
 import { PrivilegedUser } from '../../js/User';
 import Field from '@/components/Field.vue'
-//@ts-expect-error
-import { marked } from 'marked';
-marked.use({renderer:{
-  image(src: string, title: string, alt: string) {
-    return `<figure class="image is-256x256">
-      <img class="md-image" src="${src}" alt="${alt ?? title}" />
-    </figure>`
-  }
-}})
+import FormatText from '@/components/FormatText.vue'
 
 const MAX_DISCUSSION_AVATARS = 10
 const DISCUSSION_SAVE_NOTIFICATION_DURATION = 1000 * 3
-const STEAMID_REGEX = new RegExp(/STEAM_\d:\d:\d+/g)
 
 const optionType = computed(() => {
   return discuss.value.type == APIDiscussionType.Checkbox ? 'checkbox' : 'radio'
@@ -138,12 +128,6 @@ const showPercents = computed(() => {
 })
 const canInteract = computed(() => {
   return !(discuss.value.flags & APIDiscussionFlags.Archived) && !isClosed.value && !props.selected
-})
-import TemplateRender from '@/components/TemplateRender.vue'
-const markedDescription = computed(() => {
-  if(!discuss.value.description) return
-  const html: string = marked.parse("Test STEAM_0:1:10882645")
-  return html.replace(STEAMID_REGEX, (match) => `<UserComponent :steamid="${match}" />`)
 })
 
 function getOptions(column: number) {
