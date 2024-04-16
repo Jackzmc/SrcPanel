@@ -1,16 +1,19 @@
 <template>
   <div class="container is-fullwidth is-fluid">
     <div class="columns">
-      <div class="column" v-if="notes">
-        <h3 class="title is-3">
-          Showing <input type="number" class="input" min=20 max=1000 step=10 style="width:7%" v-model="limit" @blur="changeLimit" /> / {{ totalNotesCount.toLocaleString() }} Notes
+      <div class="column">
+        <h3 class="title is-3" v-if="notes">
+          Showing <input type="number" class="input" min=20 max=1000 step=10 style="width:10%" v-model="limit" @blur="changeLimit" /> / {{ totalNotesCount.toLocaleString() }} Notes
           <em class="subtitle is-4" v-if="hasSearchQuery">({{ notesCount }} filtered)</em>
         </h3>
+        <h3 class="title is-3" v-else>
+          <Icon spin icon="spinner" icon-class="mr-2">Fetching notes</Icon>
+        </h3>
         <p class="subtitle is-=6">
-          The ID column shows the id of the note, with the rating of the note's message.
+          The color in the ID column represents their reputation.
         </p>
         <Pagination :page="page" :limit="limit" :count="notesCount" @page="setPage"></pagination>
-        <div class="table-container">
+        <div class="table-container" v-if="notes">
           <table class="table is-fullwidth">
             <thead>
               <tr>
@@ -46,21 +49,21 @@
             </tbody>
           </table>
         </div>
+        <template v-else>
+          <div class="skeleton-block" v-for="i in 20" :key="i"></div>
+        </template>
         <Pagination :page="page" :limit="limit" :count="notesCount" @page="setPage"></pagination>
       </div>
-      <div class="column" v-else-if="fetchError">
+      <div class="column" v-if="fetchError">
         <p class="my-5 is-size-2 has-text-centered has-text-danger">{{ fetchError }}</p>
-      </div>
-      <div class="column" v-else>
-        <p class="my-5 is-size-2 has-text-centered"><Icon icon="spinner" spin icon-class="mr-4">Fetching notes</Icon></p>
       </div>
       <div class="column is-3">
         <br><br><br><br><br><br>
         <Field icon-left="fa-user" label="Search By User">
-          <input class="input" v-model="search.user" />
+          <input class="input" v-model="search.user" :disabled="!notes" />
         </Field>
         <Field icon-left="fa-message" label="Search Note Message">
-          <input class="input" v-model="search.content" />
+          <input class="input" v-model="search.content" :disabled="!notes" />
         </Field>
       </div>
     </div>

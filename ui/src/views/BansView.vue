@@ -2,8 +2,8 @@
 <div class="container is-fluid">
   <div class="columns">
     <div class="column">
-      <p class="subtitle is-4">Viewing <input type="number" class="input" min=20 max=1000 step=10 style="width:8%" v-model="limit" @blur="changeLimit" /> / {{totalBansCount.toLocaleString()}} bans</p>
-      <p class="subtitle is-6">Click a user's name to view more detailed ban information</p>
+      <p class="title is-4">Viewing <input type="number" class="input" min=20 max=1000 step=10 style="width:8%" v-model="limit" @blur="changeLimit" /> / {{totalBansCount.toLocaleString()}} bans</p>
+      <p class="subtitle">Click a user's name to view more detailed ban information</p>
       <p class="has-text-danger" v-if="ban_error">{{ban_error}}</p>
     </div>
     <div class="column is-2">

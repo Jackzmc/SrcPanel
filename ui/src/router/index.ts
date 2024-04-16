@@ -109,14 +109,12 @@ const routes = [
     component: () => import('../views/BansView.vue'),
     meta: {
       title: 'Bans',
-      hideHero: true,
     },
   },
   {
     name: 'notes',
     path: '/notes',
-    alias: '/info',
-    component: () => import('../views/InfoView.vue'),
+    component: () => import('../views/PlayerNotesView.vue'),
     meta: {
       title: 'Notes',
       description: 'View all player notes'
