@@ -22,7 +22,7 @@
     <br>
     <router-view v-slot="{ Component }">
       <keep-alive  :max="2">
-        <component :is="Component" :priv-user="privUser" :meta="meta" />
+        <component :is="Component" :priv-user="privUser" :meta="meta" class="px-2" />
       </keep-alive>
     </router-view>
     <br>

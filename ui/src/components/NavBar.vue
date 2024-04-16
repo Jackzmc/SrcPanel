@@ -6,14 +6,17 @@
   </template>
   <nav class="navbar is-light is-fixed-top" role="navigation" aria-label="main navigation">
     <div class="navbar-brand">
-      <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" data-target="navMenu">
+      <div class="navbar-item is-hidden is-flex-touch">
+        <b>Admin Panel</b>
+      </div>
+      <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" @click="active = !active">
         <span aria-hidden="true"></span>
         <span aria-hidden="true"></span>
         <span aria-hidden="true"></span>
       </a>
     </div>
 
-    <div class="navbar-menu"  id="navMenu">
+    <div :class="['navbar-menu',{'is-active': active}]">
       <div class="navbar-start">
         <router-link to='/' class="navbar-item" tag="a">
           Overview
@@ -167,7 +170,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onMounted, onBeforeMount } from 'vue';
+import { computed, ref, onMounted, onBeforeMount, watch } from 'vue';
 import SteamLoginButton from '@/components/SteamLoginButton.vue'
 import DiscordLoginButton from '@/components/DiscordLoginButton.vue'
 import { useRoute, useRouter } from 'vue-router';
@@ -176,29 +179,15 @@ import { PrivilegedUser } from '@/js/User';
 import UserSettingsModal from './modals/UserSettingsModal.vue';
 import NotificationsModal from './modals/NotificationsModal.vue'
 let darkMode = ref(false)
-// Bulma nav code
-onMounted(() => {
-  const $navbarBurgers = Array.prototype.slice.call(document.querySelectorAll('.navbar-burger'), 0);
-
-  // Add a click event on each of them
-  $navbarBurgers.forEach( el => {
-    el.addEventListener('click', () => {
-
-      // Get the target from the "data-target" attribute
-      const target = el.dataset.target;
-      const $target = document.getElementById(target);
-
-      // Toggle the "is-active" class on both the "navbar-burger" and the "navbar-menu"
-      el.classList.toggle('is-active');
-      $target!.classList.toggle('is-active');
-
-    });
-  });
-})
+let active = ref(false)
 
 const router = useRouter()
 const route = useRoute()
 const emit = defineEmits(['logout', 'notifications:clear'])
+
+watch(() => route.fullPath, () => {
+  active.value = false
+})
 
 const LAST_UPDATED = new Date(Number(BUILD_TIMESTAMP))
 

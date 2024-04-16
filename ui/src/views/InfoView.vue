@@ -10,41 +10,42 @@
           The ID column shows the id of the note, with the rating of the note's message.
         </p>
         <Pagination :page="page" :limit="limit" :count="notesCount" @page="setPage"></pagination>
-
-        <table class="table is-fullwidth">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>User</th>
-              <th>Added By</th>
-              <th>Note</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="note in notes" :key="note.id">
-              <td class="has-tooltip-right" :data-tooltip="'Rating: ' + note.rating.value">
-                <span :class="note.class">{{note.id}}</span>
-              </td>
-              <td>
-                <UserComponent :user="note.client" />
-              </td>
-              <td>
-                <UserComponent :user="note.markedBy" />
-              </td>
-              <ActionNote :action="note.action" v-if="note.action"/>
-              <td v-else>{{note.content}}</td>
-              <td>
-                <div class="tags">
-                  <span v-if="note.action" class="tag is-success" data-tooltip="Has an automatic action">Action</span>
-                  <span v-if="note.banned" class="tag is-danger">Banned</span>
-                  <span v-if="note.client.id == note.markedBy.id" class="tag is-secondary" data-tooltip="Note creator added note to themselves">Self-marked</span>
-                  <span v-else-if="note.client.isAdmin" class="tag is-secondary" data-tooltip="This note was added to an admin">Admin</span>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="table-container">
+          <table class="table is-fullwidth">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>User</th>
+                <th>Added By</th>
+                <th>Note</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="note in notes" :key="note.id">
+                <td class="has-tooltip-right" :data-tooltip="'Rating: ' + note.rating.value">
+                  <span :class="note.class">{{note.id}}</span>
+                </td>
+                <td>
+                  <UserComponent :user="note.client" />
+                </td>
+                <td>
+                  <UserComponent :user="note.markedBy" />
+                </td>
+                <ActionNote :action="note.action" v-if="note.action"/>
+                <td v-else>{{note.content}}</td>
+                <td>
+                  <div class="tags">
+                    <span v-if="note.action" class="tag is-success" data-tooltip="Has an automatic action">Action</span>
+                    <span v-if="note.banned" class="tag is-danger">Banned</span>
+                    <span v-if="note.client.id == note.markedBy.id" class="tag is-secondary" data-tooltip="Note creator added note to themselves">Self-marked</span>
+                    <span v-else-if="note.client.isAdmin" class="tag is-secondary" data-tooltip="This note was added to an admin">Admin</span>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
         <Pagination :page="page" :limit="limit" :count="notesCount" @page="setPage"></pagination>
       </div>
       <div class="column" v-else-if="fetchError">

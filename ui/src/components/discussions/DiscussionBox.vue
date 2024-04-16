@@ -48,7 +48,7 @@
   <div v-else>
    Unsupported Discussion Type
   </div>
-  <div class="columns mt-3" v-if="!selected">
+  <div class="columns mt-3 actions" v-if="!selected">
     <div class="column">
       <div class="columns is-gapless is-mobile" v-if="discuss.responses.users">
         <div class="column is-narrow" v-for="(user, i) in discuss.responses.users.slice(0, MAX_DISCUSSION_AVATARS)" :key="i">
@@ -220,5 +220,10 @@ const submitChoiceDebounceRadio = debounce(submitChoice, 400)
 .md-image {
   max-width: 64%;
   max-height: 64%;
+}
+@media screen and (max-width: 640px) {
+  .actions {
+    margin-bottom: 3px;
+  }
 }
 </style>

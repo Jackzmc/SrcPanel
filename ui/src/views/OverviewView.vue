@@ -58,7 +58,7 @@ import Servers from '../components/servers/Servers.vue'
 import { PanelMetaInfo } from '../../../common-types/Panel.js';
 
 const props = defineProps<{
-  meta: PanelMetaInfo
+  meta?: PanelMetaInfo
 }>()
 
 let countdown = ref<number>(0)

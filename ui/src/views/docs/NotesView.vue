@@ -1,5 +1,5 @@
 <template>
-  <div class="container content" style="width:50%">
+  <div class="container content">
     <h4 class="title is-4 mb-2">About</h4>
     <p>
       Admins may leave small notes on a player, which all admins will see when said player connects. This is a useful feature to let other admins what to expect when people join such as trolls, newer players, friends, or good players.
@@ -82,3 +82,14 @@ onMounted(() => {
 
 })
 </script>
+
+<style scoped>
+.container {
+  width: 50%;
+}
+@media screen and (max-width: 640px) {
+  .container {
+    width: 100%;
+  }
+}
+</style>

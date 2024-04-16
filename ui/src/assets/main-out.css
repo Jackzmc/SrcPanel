@@ -13,7 +13,9 @@
   --bulma-control-size: var(--bulma-size-normal);
   --bulma-control-focus-shadow-l: 50%;
 }
-
+body {
+  overflow-x: clip;
+}
 /* Bulma Themes */
 :root {
   --bulma-scheme-h: 221;

@@ -188,7 +188,7 @@
               {{ id }}
             </span>
           </div>
-          <div class="level mt-1">
+          <div class="level mt-1 is-mobile">
             <div class="level-left" data-tooltip="Supported file sources">
               <div class="level-item" v-for="(enabled, source) in share.downloadSources" :key="source">
                 <span class="tag is-info">
