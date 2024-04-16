@@ -26,7 +26,7 @@ import SteamLoginButton from '@/components/SteamLoginButton.vue';
 
 const router = useRouter()
 const props = defineProps<{
-  privUser: PrivilegedUser
+  privUser?: PrivilegedUser
 }>()
 
 
