@@ -8,10 +8,13 @@
       <br>
       <div class="box question-box" v-if="loadState == LoadState.Success">
         <h5 class="title is-5"><b>Discuss:</b> <span data-tooltip="Click to edit" contenteditable @blur="(event) => saveText('title', event as FocusEvent)" @keydown.enter.prevent="(event) => saveText('title', event as KeyboardEvent)">{{discuss.title}}</span></h5>
-        <p data-tooltip="Click to edit" class="subtitle" contenteditable @blur="(event) => saveText('description', event as FocusEvent)" @keydown.enter.prevent="(event) => saveText('description', event as KeyboardEvent)" @click="onDescriptionClick">
+        <!-- <p data-tooltip="Click to edit" class="subtitle" contenteditable @blur="(event) => saveText('description', event as FocusEvent)" @keydown.enter.prevent="(event) => saveText('description', event as KeyboardEvent)" @click="onDescriptionClick">
           <template v-if="discuss.description != ''">{{ discuss.description }}</template>
-          <em v-else>A short optional description</em>
-        </p>
+          <em v-else>Click here to add a description</em>
+        </p> -->
+        <input ref="descriptionForm" type="text" class="input subtitle is-small" v-model="discuss.description" placeholder="Add a description" v-if="editingDesc" @keyup.enter="setEditingDesc(false)" @blur="setEditingDesc(false)" />
+        <FormatText  data-tooltip="Click to edit"  class="subtitle has-tooltip-left" v-else-if="discuss.description" :text="discuss.description" @click="setEditingDesc(true)" />
+        <p v-else  class="subtitle is-clickable" @click="setEditingDesc(true)"><em>Click here to add a description</em></p>
         <div class="columns" v-if="discuss.type == APIDiscussionType.Radio || discuss.type == APIDiscussionType.Checkbox">
           <div class="column is-6">
             <div class="box field is-clickable" v-for="option of getOptions(0)" :key="option.id" @click="editOption(option)">
@@ -176,13 +179,14 @@
 
 
 <script setup lang="ts">
-import { ref, computed, onMounted, Ref, watch } from 'vue';
+import { ref, computed, onMounted, Ref, watch, nextTick } from 'vue';
 import { APIDiscussion, APIDiscussionType, APIDiscussionBase, APIDiscussionFlags, APIDiscussionOption } from '../../../common-types/Discussions';
 import { useRoute, useRouter } from 'vue-router';
 import { notify } from '@kyvg/vue3-notification';
 import { request } from '@/js/util.js';
 import Field from '@/components/Field.vue';
 import { format } from 'date-fns'
+import FormatText from '@/components/FormatText.vue';
 
 const DISCUSSION_TYPES: { [key in APIDiscussionType]?: string } = {
   [APIDiscussionType.Radio]: "Single Choice (Radio)",
@@ -249,6 +253,8 @@ const discuss = ref<APIDiscussionBase>({
   flags: APIDiscussionFlags.CommentsPublic | APIDiscussionFlags.RespondersPublic,
 })
 const isSaving = ref(false)
+const editingDesc = ref(false)
+const descriptionForm = ref()
 
 function setFlag(flag: APIDiscussionFlags, state: boolean) {
   if(state) {
@@ -259,6 +265,14 @@ function setFlag(flag: APIDiscussionFlags, state: boolean) {
 }
 function hasFlag(flag: APIDiscussionFlags) {
   return (discuss.value.flags & flag) != 0
+}
+function setEditingDesc(value: boolean) {
+  editingDesc.value = value
+  if(value) {
+    nextTick(() => {
+      descriptionForm.value.focus()
+    })
+  }
 }
 
 let dummyId = 0
