@@ -79,7 +79,7 @@
           <div class="list-item-controls">
             <template v-if="discuss.closedAt">
               <input style="width:inherit" :step="60*60" :min="new Date().toISOString().slice(0, -8)" class="input" type="datetime-local" v-model="closedAt">
-              <p><a @click="discuss.closedAt = undefined" class="is-pulled-right">clear date</a></p>
+              <p><a @click="discuss.closedAt = 0" class="is-pulled-right">clear date</a></p>
             </template>
             <span v-else>Never <a class="ml-4 button is-small is-info" @click="setClosedAt">Set Date</a></span>
           </div>
@@ -182,6 +182,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { notify } from '@kyvg/vue3-notification';
 import { request } from '@/js/util.js';
 import Field from '@/components/Field.vue';
+import { format } from 'date-fns'
 
 const DISCUSSION_TYPES: { [key in APIDiscussionType]?: string } = {
   [APIDiscussionType.Radio]: "Single Choice (Radio)",
@@ -195,18 +196,17 @@ const isNew = computed(() => {
 })
 const closedAt = computed({
   get() {
-    if(!discuss.value.closedAt) return
-    return new Date(discuss.value.closedAt * 1000).toISOString().slice(0, -8)
+    if(discuss.value.closedAt == 0) return null
+    return format(new Date(discuss.value.closedAt * 1000), "uuuu-LL-dd'T'HH:mm:s")
   },
   set(newValue) {
     if(newValue) discuss.value.closedAt = Math.floor(new Date(newValue).getTime() / 1000 )
-    else discuss.value.closedAt = undefined
+    else discuss.value.closedAt = 0
   }
 })
 const previouslyClosed = computed(() => {
   if(!orgDiscuss.value) return
-  console.log(isNew.value, orgDiscuss.value.closedAt != undefined, discuss.value.closedAt == undefined)
-  return !isNew.value && orgDiscuss.value.closedAt != undefined && (Date.now() > (orgDiscuss.value.closedAt*1000) || discuss.value.closedAt == undefined)
+  return !isNew.value && orgDiscuss.value.closedAt != 0 && (Date.now() > (orgDiscuss.value.closedAt*1000) || discuss.value.closedAt == 0)
 })
 const hasChanges = computed(() => {
   if(isNew.value) return true

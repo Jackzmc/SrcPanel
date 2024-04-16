@@ -21,12 +21,17 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     })
 
     fastify.post('/:id/choose', async (req: FastifyRequest<{Params: { id: string}}>, reply) => {
-        const [discussions] = await fastify.db.execute<RowDataPacket[]>("SELECT * FROM `left4dead2-admins`.dash_discussions WHERE id = ?", [req.params.id])
-        if(discussions.length == 0) {
-            return NOT_FOUND(reply, req.params.id)
-        }
+        const discuss = discManager.get(Number(req.params.id))
+        if(!discuss) return NOT_FOUND(reply, req.params.id)
         const body: { option?: string[]|string, text?: string } = req.body
-        const discuss = discussions[0] as APIDiscussion
+        if(discuss.closedAt) {
+            if(Date.now() > discuss.closedAt*1000) {
+                return reply.status(400).send({
+                    error: "DISCUSSION_CLOSED",
+                    message: "Voting for this discussion has been closed"
+                })
+            }
+        }
         await fastify.db.execute("DELETE FROM `left4dead2-admins`.dash_discussion_responses WHERE discussion_id = ? AND steamid = ?", [discuss.id, req.user.steamid2])
         if(discuss.type == APIDiscussionType.Radio) {
             // Insert new, or update existing
@@ -201,6 +206,12 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         const discuss = discManager.get(Number(req.params.id))
         if(!discuss) {
             return NOT_FOUND(reply, req.params.id)
+        }
+        if(discuss.flags & APIDiscussionFlags.Archived) {
+            return reply.code(400).send({
+                error: "DISCUSSION_ARCHIVED",
+                message: "This discussion has been archived, no new comments are accepted"
+            })
         }
         const comment: Record<string, any> = req.body
         const timestamp = Math.round(Date.now()/1000)

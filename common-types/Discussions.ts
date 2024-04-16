@@ -21,7 +21,7 @@ export enum APIDiscussionType {
 export interface APIDiscussionBase {
     title: string,
     timestamp: number,
-    closedAt?: number
+    closedAt: number
     type: APIDiscussionType,
     description?: string,
     options?: APIDiscussionOption[],

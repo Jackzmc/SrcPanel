@@ -62,7 +62,6 @@ export default class UserManager {
 
     private async getUserDirect(steamid: string): Promise<IUserData|null> {
         const [users] = await this.#db.execute<RowDataPacket[]>(SQL`SELECT * FROM user_names WHERE steamid = SUBSTRING(${steamid}, 11)`)
-        console.log(users, steamid)
         const user = users[0]
         if(user) {
             return {
