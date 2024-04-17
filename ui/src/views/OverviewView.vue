@@ -6,11 +6,11 @@
         <button class="delete"></button>
         Steam servers are currently offline, most likely due to weekly scheduled maintenance. You won't be able to join servers until they come back online. <a href="https://steamstat.us/">Check the status live at steamstat.us</a>
       </div>
-      <Servers @refresh="onServerRefresh" />
       <div class="is-pulled-right mt-2" style="margin-right: 10px">
         <em v-if="countdownText">{{countdownText}}</em>
         <Icon icon="spinner" v-else spin />
       </div>
+      <Servers @refresh="onServerRefresh" />
     </div>
     <div class="column is-3">
       <div class="content">

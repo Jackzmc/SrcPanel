@@ -1,6 +1,23 @@
 <template>
 <div>
-  <ServerTable v-for="group in servers" :key="group.id" :group="group"></ServerTable>
+  <template v-if="servers">
+    <ServerTable v-for="group in servers" :key="group.id" :group="group"></ServerTable>
+  </template>
+  <div class="table-container" v-else>
+    <template  v-for="i in 3" :key="i">
+      <div class="skeleton-lines mb-4">
+        <div></div>
+      </div>
+      <table class="table is-fullwidth is-skeleton is-bordered">
+        <tbody>
+          <tr v-for="j in 10" :key="j">
+            <td></td>
+          </tr>
+        </tbody>
+      </table>
+      <br>
+    </template>
+  </div>
 </div>
 </template>
 
@@ -13,7 +30,7 @@ const REFRESH_INTERVAL = 1000 * 15;
 
 const emit = defineEmits(["refresh"]);
 
-let servers = ref<any[]>([]);
+let servers = ref<any[]>();
 let refreshTimer: any = null
 
 let failureCount = 0
@@ -22,7 +39,6 @@ async function refreshServers() {
   emit("refresh", {
     state: "start",
   });
-
   const response = await fetch("/api/servers")
   if(response.ok) {
     const json = await response.json()
@@ -32,33 +48,40 @@ async function refreshServers() {
       interval: REFRESH_INTERVAL,
     });
     failureCount = 0
+    startNextRefresh()
   } else {
-    failureCount++
-    if(failureCount == 3) {
-      // Try again later
-      clearInterval(refreshTimer)
-      setTimeout(() => {
-        failureCount = 0;
-        createRefreshTimer()
-      }, 1000 * 60 * 1)
-    }
-    console.error("Failure getting servers", response);
+    if(failureCount <= 6)
+      failureCount++
+    const nextRefresh = Math.exp(failureCount) + 15
+    startNextRefresh(nextRefresh*1000)
+    console.error(`Failed to get servers. failures=${failureCount} nextRefresh=${nextRefresh}s`, response);
   }
 }
 
-function createRefreshTimer() {
-  refreshTimer = setInterval(() => {
+function startNextRefresh(time = REFRESH_INTERVAL) {
+  clearTimeout(refreshTimer)
+  refreshTimer = setTimeout(() => {
     refreshServers();
-  }, REFRESH_INTERVAL);
-  refreshServers();
+  }, time);
+}
+function onTabActive() {
+  if(document.hidden) {
+    clearTimeout(refreshTimer)
+  } else {
+    startNextRefresh()
+    refreshServers();
+  }
 }
 
 onBeforeMount(() => {
-  createRefreshTimer()
+  startNextRefresh()
+  refreshServers();
+  document.addEventListener("visibilitychange", onTabActive);
 });
 
 onBeforeUnmount(() => {
-  clearInterval(refreshTimer);
+  clearTimeout(refreshTimer);
+  document.removeEventListener("visibilitychange", onTabActive);
 });
 </script>
 
