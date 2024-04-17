@@ -93,12 +93,12 @@
         </router-link>
         <router-link to="/discuss" class="navbar-item">
           <Icon icon="far fa-comment">Discuss
-            <template v-if="privUser && privUser.openDiscussionCount > 0">({{privUser.openDiscussionCount}})</template>
+            <span v-if="privUser && privUser.openDiscussionCount > 0" class="tag is-rounded is-info">{{privUser.openDiscussionCount}}</span>
           </Icon>
         </router-link>
         <router-link to="/events" class="navbar-item">
           <Icon icon="fa fa-calendar">Events
-            <!-- <template v-if="privUser && privUser.openEventsCount > 0">({{privUser.openEventsCount}})</template> -->
+            <!-- <span v-if="privUser && privUser.openEventsCount > 0" class="tag is-rounded is-info">{{privUser.openEventsCount}}</span> -->
           </Icon>
         </router-link>
         <a href="https://data.jackz.me/dashboard/1-public-dashboard" class="navbar-item">
