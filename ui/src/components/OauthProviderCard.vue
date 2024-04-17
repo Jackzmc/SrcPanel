@@ -6,7 +6,7 @@
     </figure>
   </template>
   <template #content>
-    <div class="list-item-title has-text-black">
+    <div class="list-item-title">
       {{ provider.name }}
     </div>
     <div class="list-item-description has-text-danger" v-if="provider.expired">

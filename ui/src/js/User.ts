@@ -69,14 +69,14 @@ export class User {
 }
 
 export class PrivilegedUser {
-  private data: ClientUserData
-  private webCodes: Set<UserPrivilegeCode> = new Set()
+  #data: ClientUserData
+  #webCodes: Set<UserPrivilegeCode> = new Set()
 
   constructor(session: UserData<UserPrivilegeCode[]>) {
     if(!session) throw new Error("Session is empty")
-    this.data = session
+    this.#data = session
     if(Array.isArray(session.permissions.codes))
-      this.webCodes = new Set(session.permissions.codes)
+      this.#webCodes = new Set(session.permissions.codes)
   }
 
   equals(id: string) {
@@ -96,8 +96,8 @@ export class PrivilegedUser {
     return false
   }
 
-  updateProviders(providers: Record<string, OauthProviderData>) {
-    this.data.providers = providers
+  public updateProviders(providers: Record<string, OauthProviderData>) {
+    this.#data.providers = providers
     this.#updateCache()
   }
 
@@ -107,7 +107,7 @@ export class PrivilegedUser {
   }
 
   get isImpersonating() {
-    return this.data.impersonatingId
+    return this.#data.impersonatingId
   }
 
   /**
@@ -116,47 +116,47 @@ export class PrivilegedUser {
    * @readonly
    */
   get ImpersonatingSteamId() {
-    return this.data.impersonatingId
+    return this.#data.impersonatingId
   }
 
   get openDiscussionCount() {
-    return this.data.openDiscussions
+    return this.#data.openDiscussions
   }
 
   get name() {
-    return this.data.user.name
+    return this.#data.user.name
   }
 
   get id() {
-    return this.data.user.steamid
+    return this.#data.user.steamid
   }
 
   get codes(): UserPrivilegeCode[] {
-    return [...this.webCodes.values()]
+    return [...this.#webCodes.values()]
   }
 
   get permissions() {
-    return this.data.permissions
+    return this.#data.permissions
   }
 
   get flags() {
-    return this.data.permissions.flags || ''
+    return this.#data.permissions.flags || ''
   }
 
   get immunityLevel() {
-    return this.data.permissions.immunityLevel
+    return this.#data.permissions.immunityLevel
   }
 
   get base() {
-    return this.data.permissions.base
+    return this.#data.permissions.base
   }
 
   get avatarUrl() {
-    return `https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/79/${this.data.user.avatarhash}.jpg`
+    return `https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/79/${this.#data.user.avatarhash}.jpg`
   }
 
   get notifications() {
-    return this.data.notifications ?? []
+    return this.#data.notifications ?? []
   }
 
   async clearNotifications() {
@@ -164,21 +164,21 @@ export class PrivilegedUser {
       method: "DELETE"
     })
     if(res.ok) {
-      this.data.notifications = []
+      this.#data.notifications = []
       this.#updateCache()
     } else
       return null
   }
 
   get isSessionOld() {
-    return this.data.isSessionOld
+    return this.#data.isSessionOld
   }
 
   get providers() {
-    return this.data.providers ?? {}
+    return this.#data.providers ?? {}
   }
 
   #updateCache() {
-    window.sessionStorage.setItem('srcds_userdata', JSON.stringify(this.data))
+    window.sessionStorage.setItem('srcds_userdata', JSON.stringify(this.#data))
   }
 }

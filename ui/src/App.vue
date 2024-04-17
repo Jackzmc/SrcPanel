@@ -55,7 +55,7 @@
 </template>
 
 <script setup lang="ts">
-import { onBeforeMount, ref, computed, defineAsyncComponent } from 'vue';
+import { onBeforeMount, ref, computed, defineAsyncComponent, markRaw, shallowRef } from 'vue';
 import NavBar from '@/components/NavBar.vue'
 import { useRoute, useRouter } from 'vue-router';
 import { PrivilegedUser} from '@/js/User'
@@ -90,7 +90,7 @@ let updateInfo = ref<{
 }>({updating: false})
 
 let userdata = ref<ClientUserData>()
-let privUser = ref<PrivilegedUser>()
+let privUser = shallowRef<PrivilegedUser>()
 let meta = ref<PanelMetaInfo>()
 let isBirthday = ref(false)
 let tour = ref<{name: string, steps: any[]}|undefined>()
