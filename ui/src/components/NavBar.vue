@@ -9,7 +9,7 @@
       <div class="navbar-item is-hidden is-flex-touch">
         <b>Admin Panel</b>
       </div>
-      <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" @click="active = !active">
+      <a role="button" :class="['navbar-burger',{'is-active': active}]" aria-label="menu" aria-expanded="false" @click="active = !active">
         <span aria-hidden="true"></span>
         <span aria-hidden="true"></span>
         <span aria-hidden="true"></span>
@@ -207,6 +207,7 @@ function toggleTheme() {
   darkMode.value = !darkMode.value
   document.documentElement.setAttribute("data-theme", darkMode.value ? "dark" : "light");
   window.localStorage.setItem("srcds-theme", darkMode.value ? "dark" : "light")
+  active.value = false
 }
 
 async function logout() {

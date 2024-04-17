@@ -1,13 +1,14 @@
 <template>
   <div class="modal is-active">
     <div class="modal-background"></div>
-    <div class="modal-card" style="width:50%">
+    <div class="modal-card">
       <header class="modal-card-head">
         <p class="modal-card-title" v-if="user">
           <image class="image is-24x24 is-inline-block mr-2">
             <img :src="'/api/users/' + user.steamid + '/avatar'" />
           </image>
-          <b>{{user.name}}</b> <span class="is-pulled-right">{{user.steamid}}</span></p>
+          <b>{{user.name}}</b> <br class="is-hidden is-flex-touch"> <span class="is-pulled-right">{{user.steamid}}</span>
+        </p>
         <p v-else-if="fetchError" class="modal-card-title has-text-danger">Error</p>
         <Icon icon="spinner" v-else spin class="is-size-4">Fetching user details</Icon>
         &nbsp;&nbsp;
@@ -193,3 +194,14 @@ watch(() => route.params.id, async (value) => {
   await getUser()
 })
 </script>
+
+<style scoped>
+.modal-card {
+  width: 50%;
+}
+@media screen and (max-width: 768px) {
+  .modal-card {
+    width: 90%;
+  }
+}
+</style>

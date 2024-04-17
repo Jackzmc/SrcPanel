@@ -1,4 +1,5 @@
 <template>
+<div class="table-container">
   <table class="table is-striped is-fullwidth is-bordered">
     <thead>
       <tr>
@@ -34,6 +35,7 @@
     </tr>
     </tbody>
   </table>
+</div>
 </template>
 
 <script setup lang="ts">
