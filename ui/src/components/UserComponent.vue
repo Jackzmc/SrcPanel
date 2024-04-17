@@ -3,7 +3,7 @@
   <component :is="steamid2 ? 'router-link' : 'a'" class="media" :to="{name:'manage-user',params:{ id: steamid2 }, query: { returnTo: $route.fullPath }}">
     <figure class="media-left mr-2" v-if="!hideAvatar && props.user.avatarUrl">
       <p class="image is-32x32">
-        <LazyImage img-class="is-rounded" :src="props.user.avatarUrl" placeholder-src="/img/steam_default_avatar.png" />
+        <LazyImage observer img-class="is-rounded" :src="props.user.avatarUrl" placeholder-src="/img/steam_default_avatar.png" />
       </p>
     </figure>
     <div class="media-content">
@@ -14,7 +14,7 @@
   </component>
   <div class="user-tooltip-content">
     <figure class="image is-48x48 is-inline-block mr-3 is-round">
-      <img v-if="props.user.avatarUrl" :src="props.user.avatarUrl" />
+      <LazyImage  v-if="props.user.avatarUrl" observer img-class="is-rounded" :src="props.user.avatarUrl" placeholder-src="/img/steam_default_avatar.png" />
       <img v-else src="/img/steam_default_avatar.png" >
     </figure>
     <div class="is-inline-block mt-0">
@@ -92,6 +92,7 @@ const steamid2 = computed(() => {
   display: inline-block;
 }
 .user-tooltip .user-tooltip-content {
+  /* display: hidden; */
   visibility: hidden;
   width: 120px;
   background-color: var(--bulma-dark);
@@ -99,12 +100,12 @@ const steamid2 = computed(() => {
   border-radius: 6px;
   padding: 10px;
   position: absolute;
-  z-index: 1;
+  z-index: 10;
   bottom: 125%;
   left: 50%;
   margin-left: -60px;
   opacity: 0;
-  transition: opacity 0.3s;
+  transition: opacity 0.2s;
   width: 300px !important;
 }
 .user-tooltip .user-tooltip-content::after {
@@ -118,6 +119,7 @@ const steamid2 = computed(() => {
   border-color: var(--bulma-dark) transparent transparent transparent;
 }
 .user-tooltip:hover .user-tooltip-content {
+  /* display: inline-block; */
   visibility: visible;
   opacity: 1;
 }
