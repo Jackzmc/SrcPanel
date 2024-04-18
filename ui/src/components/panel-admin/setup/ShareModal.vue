@@ -1,6 +1,6 @@
 <template>
 <ModalCard title="Add Share">
-  <ShareDestinationModal />
+  <ShareDestinationModal :share="DUMMY_SHARE" />
   <form>
     <Tabs inner-wrapper-class="tabs" :options="{useUrlFragment:false}">
       <Tab name="General">
@@ -104,4 +104,62 @@ import Field from '@/components/Field.vue'
 import { Tab, Tabs } from 'vue3-tabs-component'
 import ModalCard from '@/components/ModalCard.vue';
 import ShareDestinationModal from '@/components/panel-admin/setup/ShareDestinationModal.vue'
+
+const DUMMY_SHARE = {
+    "id": "default",
+    "name": "Addons",
+    "description": "Manage addons for L4D2",
+    "sourceFolder": "/home/steam/l4d2/content/",
+    "appid": 550,
+    "downloadSources": {
+      "steam_workshop": true,
+      "direct": true
+    },
+    "destinations": {
+      "main": {
+        "serverIds": [
+          "l4d2-main"
+        ],
+        "paths": [
+          "/home/steam/l4d2/main/left4dead2/addons/"
+        ]
+      },
+      "randomizer": {
+        "serverIds": [
+          "l4d2-randomizer"
+        ],
+        "paths": [
+          "/home/steam/l4d2/randomizer/left4dead2/addons/"
+        ]
+      },
+      "reserved": {
+        "serverIds": [
+          "l4d2-reserved",
+          "l4d2-reserved2"
+        ],
+        "paths": [
+          "/home/steam/l4d2/reserved/left4dead2/addons/",
+          "/home/steam/l4d2/reserved-2/left4dead2/addons/"
+        ]
+      },
+      "public": {
+        "serverIds": [
+          "l4d2-public-1",
+          "l4d2-public-2",
+          "l4d2-public-3",
+          "l4d2-public-4",
+          "l4d2-public-5",
+          "l4d2-public-6",
+          "l4d2-public-7",
+          "l4d2-public-8"
+        ],
+        "paths": [
+          "/home/steam/l4d2/publics/master/left4dead2/addons/"
+        ]
+      }
+    },
+    "fileExts": [
+      "vpk"
+    ]
+  }
 </script>
