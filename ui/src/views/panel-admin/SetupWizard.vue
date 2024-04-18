@@ -48,56 +48,15 @@
         <td>27015</td>
       </tbody>
     </table>
-    <!-- Put this in modal -->
-    <ModalCard title="Add Server">
-      <form>
-        <Tabs inner-wrapper-class="tabs" :options="{useUrlFragment:false}">
-          <Tab name="General">
-            <Field label="Name" info="ID will be: my-server-name">
-              <input class="input" type="text" placeholder="My Server Name" />
-            </Field>
-            <Field label="IP Address & Port">
-              <input class="input" type="text" placeholder="localhost:27015" pattern="([a-zA-Z0-9\.]+)(:\d+)?" />
-            </Field>
-            <Field label="Type">
-              <div class="select">
-                <select>
-                  <option>Automatic</option>
-                  <option>Left 4 Dead 2</option>
-                  <option>Generic Source Engine</option>
-                  <option>Minecraft</option>
-                </select>
-              </div>
-            </Field>
-          </Tab>
-          <Tab name="Features">
-            <!-- needed:
-              1. rcon
-              2. Plugin Setup (separate tab?)
-              3. config directory
-              4. systemd
-              5. activity id (combine with plugin setup?)
-              6. tags
-              7. logs path
-            -->
-          </Tab>
-        </Tabs>
-      </form>
-      <template v-slot:buttons>
-        <button class="button is-success has-text-white">Add Server</button>
-        <button class="button">Cancel</button>
-      </template>
-    </ModalCard>
+    <ShareModal></ShareModal>
   </template>
 </div>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import Field from '@/components/Field.vue'
-import ModalCard from '@/components/ModalCard.vue';
-// @ts-ignore
-import { Tab, Tabs } from 'vue3-tabs-component'
+import ShareModal from '@/components/panel-admin/setup/ShareModal.vue';
+
 const props = defineProps<{
 
 }>()
