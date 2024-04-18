@@ -42,7 +42,7 @@
             <router-link v-if="privUser.hasPermission('notes.view')" :to="{ name: 'manage-user-notes' }" v-slot="{ href, navigate, isExactActive }" custom>
               <li :class="{'is-active': isExactActive }">
                 <a :href="href" @click="navigate">
-                  <Icon icon="fa-note-sticky">Notes ({{ user?.notesCount ?? 0 }})</Icon>
+                  <Icon icon="fa-note-sticky">Notes <span class="tag ml-1 is-rounded">{{ user?.notesCount ?? 0 }}</span></Icon>
                 </a>
               </li>
             </router-link>
@@ -50,7 +50,8 @@
               <li :class="{'is-active': route.name === 'manage-user-bans' }">
                 <a :href="href" @click="navigate">
                   <Icon icon="fa-gavel">
-                    Bans&nbsp;<span :class="{'has-text-danger': user && user.bansCount > 0 }">({{ user?.bansCount ?? 0 }})</span>
+                    Bans <span :class="['tag','ml-1','is-rounded',{'is-danger': user && user.bansCount > 0}]">{{ user?.bansCount ?? 0 }}</span>
+                    <!-- Bans&nbsp;<span :class="{'has-text-danger': user && user.bansCount > 0 }">({{ user?.bansCount ?? 0 }})</span> -->
                   </Icon>
                 </a>
               </li>

@@ -4,7 +4,6 @@
     <thead>
       <tr>
         <th>Name</th>
-        <th>SteamID</th>
         <th>Country</th>
         <th>Bans</th>
         <th>Notes</th>
@@ -15,13 +14,13 @@
     </thead>
     <tbody>
     <tr v-for="user in users" :key="user.steamid">
-      <td>
-        <router-link :to="{ name: 'manage-user', params: { id: user.steamid }}">
+      <td style="position: relative">
+        <!-- <router-link :to="{ name: 'manage-user', params: { id: user.steamid }}">
           <b>{{user.name}}</b>
           <span v-if="user.isAdmin" class="tag is-info ml-1 is-pulled-right has-text-white">Admin</span>
-        </router-link>
+        </router-link> -->
+        <UserComponent :user="user" style="position: relative" />
       </td>
-      <td data-tooltip="View user's stats profile"><a :href="'https://stats.jackz.me/user/' + user.steamid">{{user.steamid}}</a></td>
       <td><span v-if="user.country">{{user.country}}</span><em v-else>(unknown)</em></td>
       <td>
         <span :class="{'has-text-grey-lighter': user.bansCount == 0}">{{user.bansCount}}</span>
@@ -42,6 +41,7 @@
 import { ref, watch } from 'vue'
 import { formatDate } from "@/js/util"
 import { getRelDate } from '../js/util';
+import UserComponent from './UserComponent.vue';
 
 const emit = defineEmits(['select', 'manual'])
 const props = defineProps<{

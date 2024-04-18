@@ -27,7 +27,7 @@
       <span class="tags">
         <span class="tag is-info" v-if="isAdmin">Admin</span>
         <span class="tag is-danger" v-if="'bansCount' in props.user && props.user.bansCount != null">{{ props.user.bansCount }} Ban(s)</span>
-        <span class="tag" v-if="'notesCount' in props.user && props.user.notesCount != null">{{ props.user.notesCount }}Notes(s)</span>
+        <span class="tag" v-if="'notesCount' in props.user && props.user.notesCount != null">{{ props.user.notesCount }} Notes(s)</span>
       </span>
     </template>
   </div>
@@ -100,7 +100,7 @@ const steamid2 = computed(() => {
   border-radius: 6px;
   padding: 10px;
   position: absolute;
-  z-index: 10;
+  z-index: 1000;
   bottom: 125%;
   left: 50%;
   margin-left: -60px;
