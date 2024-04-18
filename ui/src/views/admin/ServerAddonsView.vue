@@ -5,7 +5,7 @@
     <div class="level">
       <div class="level-left">
         <div class="level-item">
-          <h5 class="title is-4">Viewing {{filteredAddons.length}} addons</h5>
+          <h5 class="title is-4">Viewing {{filteredAddons.length}} files</h5>
         </div>
       </div>
       <div class="level-right">
@@ -104,7 +104,7 @@
                   </router-link>
                   &nbsp;
                   <span class="tags is-inline is-pulled-right" v-if="!addon.collection">
-                    <span class="tag is-rounded is-info" v-for="server in addon.enabledOn" :key="server">
+                    <span class="tag mr-1 is-rounded is-info" v-for="server in addon.enabledOn" :key="server">
                       {{ server }}
                     </span>
                   </span>
