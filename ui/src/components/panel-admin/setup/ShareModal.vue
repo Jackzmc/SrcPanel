@@ -1,96 +1,67 @@
 <template>
 <ModalCard title="Add Share">
-  <ShareDestinationModal :share="DUMMY_SHARE" />
-  <form>
-    <Tabs inner-wrapper-class="tabs" :options="{useUrlFragment:false}">
-      <Tab name="General">
-        <Field label="Name*" info="ID will be: my-share-name">
-          <input required class="input" type="text" placeholder="My Share Name" />
+  <!-- <ShareDestinationModal :share="share" /> -->
+  <div class="tabs is-fullwidth is-centered">
+    <ul>
+      <li v-for="(name, tab) in TAB_IDS" :key="tab" :class="{'is-active': selectedTab === tab }"><a @click="selectTab(tab)">{{ name }}</a></li>
+    </ul>
+  </div>
+  <template v-if="selectedTab === 'general'">
+    <div class="columns">
+      <div class="column is-6">
+        <Field label="Id*">
+          <template v-slot:hint_error v-if="!share.id">
+            <p class="help has-text-danger"><Icon icon="fa-exclamation-triangle">Required</Icon></p>
+          </template>
+          <input required :class="['input',{'is-danger': !share.id }]" type="text" placeholder="A unique identifier" v-model="share.id" />
         </Field>
-        <Field label="Source Directory Path*" info="">
-          <input required class="input" type="text" placeholder="/home/steam/content/addons" />
+      </div>
+      <div class="column is-6">
+        <Field label="Name">
+          <input required class="input" type="text" placeholder="An optional friendly name" v-model="share.name" @change="onEnterName" />
         </Field>
-      </Tab>
-      <Tab name="Download Sources">
-        <!-- toggle-button | [appid field]-->
-        <div class="columns">
-          <div class="column is-6">
-            <Field label="Steam Workshop">
-              <a class="button is-outlined is-info">Enable</a>
-            </Field>
-          </div>
-          <div class="column is-6">
-            <Field label="App Id" info="The appid for steam workshop downloading">
-              <input type="number" class="input" placeholder="550">
-            </Field>
-          </div>
-        </div>
-        <div class="columns">
-          <div class="column is-6">
-            <Field label="Direct Uploads">
-              <a class="button is-outlined is-info">Enable</a>
-            </Field>
-          </div>
-          <div class="column is-6">
-            <Field label="Allowed File Extenstions" info="Comma,separated">
-              <input class="input" type="text" placeholder=".vpk, .smx">
-            </Field>
-          </div>
-        </div>
-      </Tab>
-      <!-- manually do tabs. -->
-      <Tab name="Destinations">
-        <p>Temporarily, click <a>here to open destination editor</a></p>
-        <!-- id, name, serverids[], paths[] -->
-        <table class="table is-fullwidth">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th># Servers</th>
-              <th># Paths</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>
-                <p><b>Destination 1</b></p>
-                <em>dest-1</em>
-              </td>
-              <td>
-                2
-              </td>
-              <td>2</td>
-              <td>
-                <div class="buttons">
-                  <a class="button is-outlined is-info" data-tooltip="Edit destination"><Icon icon="fa-edit">Edit</Icon></a>
-                  <a class="button is-outlined is-danger has-tooltip-danger" data-tooltip="Delete"><Icon icon="fa-trash"></Icon></a>
-                </div>
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <p><b>Very Long Destination</b></p>
-                <em>dest-2</em>
-              </td>
-              <td>
-                <div class="tags">
-                  2
-                </div>
-              </td>
-              <td>2</td>
-              <td>
-                <div class="buttons">
-                  <a class="button is-outlined is-info" data-tooltip="Edit destination"><Icon icon="fa-edit">Edit</Icon></a>
-                  <a class="button is-outlined is-danger has-tooltip-danger" data-tooltip="Delete"><Icon icon="fa-trash"></Icon></a>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </Tab>
-    </Tabs>
-  </form>
+      </div>
+    </div>
+    <Field label="Source Directory Path*" info="">
+      <input required class="input" type="text" placeholder="/home/steam/content/addons" />
+    </Field>
+  </Template>
+  <template v-if="selectedTab === 'sources'">
+    <!-- toggle-button | [appid field]-->
+    <div class="columns">
+      <div class="column is-6">
+        <Field label="Steam Workshop">
+          <a :class="['button','is-info',{'is-outlined': !enabledSources['steam_workshop'] }]" @click="toggleSource('steam_workshop')">
+            <Icon v-if="enabledSources['steam_workshop']" icon="fa-check-circle">Enabled</Icon>
+            <Icon v-else icon="fa-times">Disabled</Icon>
+          </a>
+        </Field>
+      </div>
+      <div class="column is-6">
+        <Field label="App Id" info="The appid for steam workshop downloading" v-show="enabledSources['steam_workshop']">
+          <input type="number" class="input" placeholder="550">
+        </Field>
+      </div>
+    </div>
+    <div class="columns">
+      <div class="column is-6">
+        <Field label="Direct Uploads">
+          <a :class="['button','is-info',{'is-outlined': !enabledSources['direct'] }]" @click="toggleSource('direct')">
+            <Icon v-if="enabledSources['direct']" icon="fa-check-circle">Enabled</Icon>
+            <Icon v-else icon="fa-times">Disabled</Icon>
+          </a>
+        </Field>
+      </div>
+      <div class="column is-6">
+        <Field label="Allowed File Extenstions" info="Comma,separated" v-show="enabledSources['direct']">
+          <input data-type="tags" class="input" type="text" placeholder=".vpk, .smx">
+        </Field>
+      </div>
+    </div>
+</template>
+<template v-if="selectedTab === 'destinations'">
+  <ShareDestinationModal :share="share" @close="selectTab('general')" />
+</template>
   <template v-slot:buttons>
     <button class="button is-success has-text-white">Add Share</button>
     <button class="button">Cancel</button>
@@ -100,66 +71,104 @@
 
 <script setup lang="ts">
 import Field from '@/components/Field.vue'
-// @ts-ignore
-import { Tab, Tabs } from 'vue3-tabs-component'
 import ModalCard from '@/components/ModalCard.vue';
 import ShareDestinationModal from '@/components/panel-admin/setup/ShareDestinationModal.vue'
+import { computed, onMounted, ref } from 'vue';
+import { ShareInfo } from '../../../../../common-types/Share.js';
+// @ts-expect-error
+import BulmaTagsInput from '@creativebulma/bulma-tagsinput';
+import { DownloadSource } from '../../../../../common-types/Share';
 
-const DUMMY_SHARE = {
-    "id": "default",
-    "name": "Addons",
-    "description": "Manage addons for L4D2",
-    "sourceFolder": "/home/steam/l4d2/content/",
-    "appid": 550,
-    "downloadSources": {
-      "steam_workshop": true,
-      "direct": true
+const enabledSources = computed(() => {
+  if(!share.value.downloadSources) return {}
+  return share.value.downloadSources
+})
+const TAB_IDS = {
+  general: "General",
+  sources: "File Sources",
+  destinations: "Destinations"
+}
+
+type TABS = keyof typeof TAB_IDS
+let selectedTab = ref<TABS>("general")
+function selectTab(tab: TABS) {
+  selectedTab.value = tab
+}
+
+let share = ref<ShareInfo>({
+  "id": "default",
+  "name": "Addons",
+  "description": "Manage addons for L4D2",
+  "sourceFolder": "/home/steam/l4d2/content/",
+  "appid": 550,
+  "downloadSources": {
+    "steam_workshop": true,
+    "direct": true
+  },
+  "destinations": {
+    "main": {
+      "serverIds": [
+        "l4d2-main"
+      ],
+      "paths": [
+        "/home/steam/l4d2/main/left4dead2/addons/"
+      ]
     },
-    "destinations": {
-      "main": {
-        "serverIds": [
-          "l4d2-main"
-        ],
-        "paths": [
-          "/home/steam/l4d2/main/left4dead2/addons/"
-        ]
-      },
-      "randomizer": {
-        "serverIds": [
-          "l4d2-randomizer"
-        ],
-        "paths": [
-          "/home/steam/l4d2/randomizer/left4dead2/addons/"
-        ]
-      },
-      "reserved": {
-        "serverIds": [
-          "l4d2-reserved",
-          "l4d2-reserved2"
-        ],
-        "paths": [
-          "/home/steam/l4d2/reserved/left4dead2/addons/",
-          "/home/steam/l4d2/reserved-2/left4dead2/addons/"
-        ]
-      },
-      "public": {
-        "serverIds": [
-          "l4d2-public-1",
-          "l4d2-public-2",
-          "l4d2-public-3",
-          "l4d2-public-4",
-          "l4d2-public-5",
-          "l4d2-public-6",
-          "l4d2-public-7",
-          "l4d2-public-8"
-        ],
-        "paths": [
-          "/home/steam/l4d2/publics/master/left4dead2/addons/"
-        ]
-      }
+    "randomizer": {
+      "serverIds": [
+        "l4d2-randomizer"
+      ],
+      "paths": [
+        "/home/steam/l4d2/randomizer/left4dead2/addons/"
+      ]
     },
-    "fileExts": [
-      "vpk"
-    ]
+    "reserved": {
+      "serverIds": [
+        "l4d2-reserved",
+        "l4d2-reserved2"
+      ],
+      "paths": [
+        "/home/steam/l4d2/reserved/left4dead2/addons/",
+        "/home/steam/l4d2/reserved-2/left4dead2/addons/"
+      ]
+    },
+    "public": {
+      "serverIds": [
+        "l4d2-public-1",
+        "l4d2-public-2",
+        "l4d2-public-3",
+        "l4d2-public-4",
+        "l4d2-public-5",
+        "l4d2-public-6",
+        "l4d2-public-7",
+        "l4d2-public-8"
+      ],
+      "paths": [
+        "/home/steam/l4d2/publics/master/left4dead2/addons/"
+      ]
+    }
+  },
+  "fileExts": [
+    "vpk"
+  ]
+})
+
+function toggleSource(key: DownloadSource) {
+  if(!share.value.downloadSources) share.value.downloadSources = {}
+  share.value.downloadSources[key] = !share.value.downloadSources[key]
+}
+
+function onEnterName() {
+  if(!share.value.id) {
+    share.value.id = share.value.name?.toLowerCase().replace(/[^a-zA-Z0-9- ]/g, '').replace(/[\s]/g, '-')
   }
+}
+
+onMounted(() => {
+  BulmaTagsInput.attach()
+})
 </script>
+
+<style>
+@import 'node_modules/@creativebulma/bulma-tagsinput/dist/css/bulma-tagsinput.min.css';
+</style>

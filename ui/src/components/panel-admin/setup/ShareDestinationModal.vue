@@ -1,7 +1,7 @@
 <template>
   <ModalCard :title="title" hide-footer @close="cancel">
     <template v-slot:title>
-      <b>{{ share.name }}</b> / Destinations
+      <b>{{ share.name || share.id || "Unnamed Share" }}</b> / Destinations
     </template>
     <div class="tabs is-fullwidth is-centered">
       <ul>
@@ -75,7 +75,7 @@ import Field from '@/components/Field.vue'
 import { Tab, Tabs } from 'vue3-tabs-component'
 import ModalCard from '@/components/ModalCard.vue';
 import { ShareDestination, ShareInfo } from '../../../../../common-types/Share.js';
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
 // @ts-expect-error
 import { updatedDiff } from 'deep-object-diff'
 // @ts-expect-error
