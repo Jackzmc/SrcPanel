@@ -317,7 +317,15 @@ const routes = [
       authRequired: true
     }
   },
-
+  {
+    name: 'panel-first-time-setup',
+    path: '/panel/first-time-setup',
+    component: () => import('../views/panel-admin/SetupWizard.vue'),
+    meta: {
+      title: "Panel Admin",
+      authRequired: true
+    }
+  },
   {
     name: 'authrequired',
     path: '/login-required',

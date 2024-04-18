@@ -1699,10 +1699,22 @@ bulma-list@^1.2.0:
   resolved "https://registry.yarnpkg.com/bulma-list/-/bulma-list-1.2.0.tgz#0734b13a8ae8eaa3e5d3d4aca66cb3a0989b0e7c"
   integrity sha512-hOEVB32dtDyhXS+IqAt1TyRgZFjUTQ2RNXDG7MbvVokjMVeURDIDalGFO8UwjfkpjFMKQzJTlD/rdi3oDtdaHg==
 
+bulma-o-steps@^1.1.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/bulma-o-steps/-/bulma-o-steps-1.1.0.tgz#55ea73169e0f2a6bf502a23b485a012319512a7e"
+  integrity sha512-RelajORQ+tIY+CruowsEUzE6T5W5cbPp8Vskvu6Vgx5W45PcYhoP066Ls7kwMZl8M8djkxg+BcUswkX1a20hzg==
+  dependencies:
+    bulma "^0.8.2"
+
 bulma-switch@^2.0.4:
   version "2.0.4"
   resolved "https://registry.yarnpkg.com/bulma-switch/-/bulma-switch-2.0.4.tgz#a6dea1a026d025a7093a3675b2a599a36820e3a3"
   integrity sha512-kMu4H0Pr0VjvfsnT6viRDCgptUq0Rvy7y7PX6q+IHg1xUynsjszPjhAdal5ysAlCG5HNO+5YXxeiu92qYGQolw==
+
+bulma@^0.8.2:
+  version "0.8.2"
+  resolved "https://registry.yarnpkg.com/bulma/-/bulma-0.8.2.tgz#5d928f16ed4a84549c2873f95c92c38c69c631a7"
+  integrity sha512-vMM/ijYSxX+Sm+nD7Lmc1UgWDy2JcL2nTKqwgEqXuOMU+IGALbXd5MLt/BcjBAPLIx36TtzhzBcSnOP974gcqA==
 
 bulma@^0.9.3:
   version "0.9.4"

@@ -10,8 +10,8 @@
 import { onBeforeMount } from 'vue'
 const emit = defineEmits(["close"])
 const props = defineProps<{
-  active: boolean,
-  closable: boolean
+  active?: boolean,
+  closable?: boolean
 }>()
 onBeforeMount(() => {
   document.addEventListener('keydown', (event) => {
