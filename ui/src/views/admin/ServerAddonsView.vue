@@ -277,7 +277,8 @@ watch(selectedShare, async (value) => {
 watch(() => route.params.shareId, (share) => _setShare(share as string))
 async function _setShare(shareId: string) {
   if(!shareId) {
-    return router.replace({ name: "admin-shares" })
+    return
+    // return router.replace({ name: "admin-shares" })
   }
   const share = shares.value.find(share => share.id === shareId)
   if(!share) {
