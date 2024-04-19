@@ -1,4 +1,5 @@
 <template>
+<div>
   <div id="app">
     <!-- <v-tour v-if="tour" :name="tour.name" :steps="tour.steps"></v-tour> -->
     <BirthdayComponent v-if="isBirthday" @close="closeBirthday" />
@@ -26,11 +27,6 @@
       </keep-alive>
     </router-view>
     <br>
-    <footer class="footer">
-      <div class="content has-text-centered">
-        L4D2 Admin Dashboard - Updated {{lastUpdated}}
-      </div>
-    </footer>
     <div class="impersonate-overlay" v-if="privUser?.isImpersonating">
       <nav class="level">
         <div class="level-left">
@@ -52,6 +48,12 @@
       </nav>
     </div>
   </div>
+  <footer class="footer custom-footer">
+    <div class="content has-text-centered">
+      L4D2 Admin Dashboard - Updated {{lastUpdated}}
+    </div>
+  </footer>
+</div>
 </template>
 
 <script setup lang="ts">
@@ -289,6 +291,20 @@ onBeforeMount(async() => {
   padding: 1.25rem;
   width: 100%;
   color: white;
+}
+.custom-footer {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  height: 2rem;
+  padding: 1rem;
+}
+body {
+  min-height: 100vh;
+}
+#app {
+  position: relative;
+  padding-bottom: 2rem;
 }
 </style>
 
