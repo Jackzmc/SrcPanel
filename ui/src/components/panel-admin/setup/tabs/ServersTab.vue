@@ -3,7 +3,7 @@
   <template v-if="loadState === LoadState.Success">
     <div class="block" v-for="group in groups" :key="group.id">
       <h6 class="title is-4">{{ group.name }}</h6>
-      <ServerTable :group="group" @delete="onServerDelete" @update="onServerUpdate" />
+      <ServerTable :group="group" @delete="onServerDelete" @update="onServerUpdate"/>
     </div>
   </template>
   <div v-else-if="loadState === LoadState.Loading">

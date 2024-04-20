@@ -1,6 +1,11 @@
 <template>
 <div>
-  <ServerModal v-if="modalActive" :data="selectedServer" @close="closeModal" @save="onSave" />
+  <ServerModal v-if="editModalActive" :data="selectedServer" @close="closeModal" @save="onSave" @delete="deleteServer" />
+  <ConfirmModal title="Delete Confirmation" v-if="deleteModalActive&&selectedServer" @cancel="deleteModalActive = false" @confirm="deleteServerConfirm">
+    <p>Are you sure you want to delete the server:<br><b>{{ selectedServer.name }}</b> <span>({{ selectedServer.id }})</span>?</p>
+    <br>
+    <p>This will delete all servers that are in that group.</p>
+  </ConfirmModal>
   <table class="table is-fullwidth is-bordered">
     <thead>
       <tr>
@@ -46,6 +51,7 @@ import { request } from '@/js/util.js';
 import { notify } from '@kyvg/vue3-notification';
 import ServerModal from './ServerModal.vue'
 import { VueDraggableNext } from "vue-draggable-next";
+import ConfirmModal from '@/components/ConfirmModal.vue';
 
 const emit = defineEmits(['close', 'delete', 'update'])
 
@@ -53,11 +59,13 @@ const props = defineProps<{
   group: ServerGroup
 }>()
 let selectedServer = ref<ServerInfo|null>(null)
-let modalActive = ref(false)
+let editModalActive = ref(false)
+let deleteModalActive = ref(false)
+
 
 function editServer(server: ServerInfo | null) {
   selectedServer.value = server
-  modalActive.value = true
+  editModalActive.value = true
 }
 function onSave(server: ServerInfo) {
   emit('update', props.group, server, selectedServer.value?.id)
@@ -65,9 +73,16 @@ function onSave(server: ServerInfo) {
 }
 function closeModal() {
   selectedServer.value = null
-  modalActive.value = false
+  editModalActive.value = false
 }
-async function deleteServer(server: ServerInfo) {
+function deleteServer(server: ServerInfo) {
+  selectedServer.value = server
+  deleteModalActive.value = true
+}
+async function deleteServerConfirm() {
+  const server = selectedServer.value
+  if (!server) return
+
   const response = await request(`/api/servers/${server.id}`, { method: "DELETE" })
   if(response?.ok) {
     emit("delete", props.group, server.id)
@@ -76,6 +91,7 @@ async function deleteServer(server: ServerInfo) {
       type: "is-success"
     })
   }
+  deleteModalActive.value = false
 }
 
 </script>

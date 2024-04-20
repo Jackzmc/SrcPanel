@@ -2,7 +2,7 @@
   <ModalCard :title="title ?? 'Confirmation'" @close="cancel">
     <slot></slot>
     <template #buttons>
-      <button class="button is-success" @click="confirm">Confirm</button>
+      <button :class="['button',type ?? 'is-danger']" @click="confirm">Confirm</button>
       <button class="button" @click="cancel">Cancel</button>
     </template>
   </ModalCard>
@@ -13,6 +13,7 @@ import ModalCard from './ModalCard.vue';
 const emit = defineEmits(["cancel", "confirm"])
 const props = defineProps<{
   title?: string,
+  type?: "is-warning" | "is-danger" | "is-success" | "is-info"
 }>()
 
 function confirm() {

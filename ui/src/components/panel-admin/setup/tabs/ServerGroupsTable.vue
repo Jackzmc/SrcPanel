@@ -123,6 +123,7 @@ async function deleteGroupConfirm() {
       type: "is-success"
     })
   }
+  deleteModalActive.value = false
 }
 
 onMounted(() => {

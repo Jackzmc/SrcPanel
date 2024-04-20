@@ -125,10 +125,24 @@
       </Tab>
     </Tabs>
   </form>
-  <template v-slot:buttons>
-    <button class="button is-success has-text-white" :disabled="!canSubmit" v-if="hasEdited" @click="save">{{ data ? 'Save Changes' : 'Add Server' }}</button>
-    <button :class="['button',{'is-warning': hasEdited}]" @click="cancel">{{ hasEdited ? 'Cancel' : 'Close' }}</button>
-  </template>
+  <template v-slot:footer>
+      <nav class="level">
+        <div class="level-left">
+          <div class="level-item">
+            <button class="button is-success has-text-white" :disabled="!canSubmit" v-if="hasEdited" @click="save">{{ data ? 'Save Changes' : 'Add Server' }}</button>
+          </div>
+          <div class="level-item">
+            <button :class="['button',{'is-warning': hasEdited}]" @click="cancel">{{ hasEdited ? 'Cancel' : 'Close' }}</button>
+          </div>
+        </div>
+        <div class="level-right">
+          <div class="level-item">
+            <button class="button is-danger has-text-white" v-if="props.data" @click="emit('delete', props.data)"><Icon icon="fa-trash">Delete</Icon></button>
+          </div>
+        </div>
+      </nav>
+
+    </template>
 </ModalCard>
 </template>
 
@@ -149,7 +163,7 @@ import { updatedDiff } from 'deep-object-diff';
 import { VueDraggableNext } from 'vue-draggable-next';
 import ActionModal from './ActionModal.vue';
 
-const emit = defineEmits(["close", "save"])
+const emit = defineEmits(["close", "save", "delete"])
 
 const props = defineProps<{
   data?: ServerInfo | null
