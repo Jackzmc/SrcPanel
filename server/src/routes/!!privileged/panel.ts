@@ -191,6 +191,14 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         const groups = fastify.servers.Groups
         return reply.send(groups)
     })
+
+    fastify.delete('/groups/:id', async (req: FastifyRequest<{ Params: { id: string }}>, reply) => {
+        // const group = await fastify.server
+    })
+
+    fastify.put('/groups/:id', async (req: FastifyRequest<{ Params: { id: string }}>, reply) => {
+        
+    })
 }
 
 /**

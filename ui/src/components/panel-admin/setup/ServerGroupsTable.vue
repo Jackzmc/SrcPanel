@@ -1,6 +1,9 @@
 <template>
 <div>
-  <ServerGroupModal v-if="modalActive" :data="selectedGroup" @close="closeModal" @save="onSave" />
+  <ServerGroupModal v-if="editModalActive" :data="selectedGroup" @close="closeModal" @save="onSave" @delete="deleteGroup" />
+  <ConfirmModal title="Delete Confirmation" v-if="deleteModalActive&&selectedGroup" @cancel="deleteModalActive = false" @confirm="deleteGroupConfirm">
+    Are you sure you want to delete the group <b>{{ selectedGroup.name }}</b> <span>({{ selectedGroup.id }})</span>? This will delete all servers that are in that group.
+  </ConfirmModal>
   <table class="table is-fullwidth is-bordered" v-if="loadState == LoadState.Success">
     <thead>
       <tr>
@@ -53,6 +56,7 @@ import { GroupInfo, ServerGroup } from '../../../../../common-types/Server.js';
 import { request } from '@/js/util.js';
 import { notify } from '@kyvg/vue3-notification';
 import ServerGroupModal from './ServerGroupModal.vue';
+import ConfirmModal from '@/components/ConfirmModal.vue';
 import { LoadState } from '@/types/global.js';
 import { VueDraggableNext } from "vue-draggable-next";
 
@@ -72,11 +76,12 @@ async function fetchGroups() {
   }
 }
 let selectedGroup = ref<Group|null>(null)
-let modalActive = ref(false)
+let editModalActive = ref(false)
+let deleteModalActive = ref(false)
 
 function editGroup(group: Group | null) {
   selectedGroup.value = group
-  modalActive.value = true
+  editModalActive.value = true
 }
 function onSave(group: Group, oldId?: string) {
   if(!groups.value) return
@@ -100,9 +105,15 @@ function onSave(group: Group, oldId?: string) {
 }
 function closeModal() {
   selectedGroup.value = null
-  modalActive.value = false
+  editModalActive.value = false
 }
-async function deleteGroup(group: Group) {
+function deleteGroup(group: Group) {
+  selectedGroup.value = group
+  deleteModalActive.value = true
+}
+async function deleteGroupConfirm() {
+  const group = selectedGroup.value
+  if(!group) return
   const response = await request(`/api/panel/groups/${group.id}`, { method: "DELETE" })
   if(response?.ok) {
     groups.value = groups.value?.filter(g => g.id != group.id)

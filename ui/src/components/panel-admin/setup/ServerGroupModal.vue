@@ -29,7 +29,7 @@
           </Field>
         </Tab>
         <Tab name="Actions">
-          <ActionModal v-if="actionEditActive" :data="selectedAction" />
+          <ActionModal v-if="actionEditActive" :data="selectedAction" @save="onActionSaved" @close="actionEditActive = false" />
           <table class="table is-fullwidth">
             <thead>
               <tr>
@@ -57,9 +57,23 @@
         </Tab>
       </Tabs>
     </form>
-    <template v-slot:buttons>
-      <button class="button is-success has-text-white" :disabled="!canSubmit" v-if="hasEdited" @click="save">{{ data ? 'Save Changes' : 'Add Group' }}</button>
-      <button :class="['button',{'is-warning': hasEdited}]" @click="cancel">{{ hasEdited ? 'Cancel' : 'Close' }}</button>
+    <template v-slot:footer>
+      <nav class="level">
+        <div class="level-left">
+          <div class="level-item">
+            <button class="button is-success has-text-white" :disabled="!canSubmit" v-if="hasEdited" @click="save">{{ data ? 'Save Changes' : 'Add Group' }}</button>
+          </div>
+          <div class="level-item">
+            <button :class="['button',{'is-warning': hasEdited}]" @click="cancel">{{ hasEdited ? 'Cancel' : 'Close' }}</button>
+          </div>
+        </div>
+        <div class="level-right">
+          <div class="level-item">
+            <button class="button is-danger has-text-white" v-if="props.data" @click="emit('delete', props.data)"><Icon icon="fa-trash">Delete</Icon></button>
+          </div>
+        </div>
+      </nav>
+
     </template>
   </ModalCard>
 </template>
@@ -81,7 +95,7 @@ import { updatedDiff } from 'deep-object-diff';
 import { VueDraggableNext } from 'vue-draggable-next';
 import ActionModal from './ActionModal.vue'
 
-const emit = defineEmits(["close", "save"])
+const emit = defineEmits(["close", "save", 'delete'])
 
 const props = defineProps<{
   data?: GroupInfo | null
@@ -134,6 +148,17 @@ function editAction( action: ServerAction | null ) {
   selectedAction.value = action
 }
 
+function onActionSaved( action: ServerAction, oldId?: string) {
+  if(!group.value.actions) group.value.actions = []
+  if(!oldId) {
+    group.value.actions.push(action)
+  } else {
+    group.value.actions = group.value.actions.map(a => a.name === oldId ? action : a)
+  }
+  selectedAction.value = null
+  actionEditActive.value = false
+}
+
 function onEnterName() {
   if(!group.value.id) {
     group.value.id = group.value?.name?.toLowerCase().replace(/[^a-zA-Z0-9- ]/g, '').replace(/[\s]/g, '-')
@@ -149,8 +174,16 @@ function autoTrim( text: string, limit: number ) {
 }
 
 async function save() {
-  emit("save", group.value, props.data?.id)
-  // TODO: SAVE LOGIC
+  const response = await request('/api/panel/groups', {
+    method: "PUT",
+    body: JSON.stringify(group.value),
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  })
+  if(response?.ok) {
+    emit("save", group.value, props.data?.id)
+  }
 }
 
 function cancel() {

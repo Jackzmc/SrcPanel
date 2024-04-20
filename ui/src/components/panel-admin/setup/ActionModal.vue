@@ -33,7 +33,7 @@
       <label for="isHidden">Show in UI?</label>
     </Field>
     <template #buttons>
-      <button class="button is-success has-text-white" :disabled="!canSubmit" v-if="hasEdited">{{ data ? 'Save Changes' : 'Add Action' }}</button>
+      <button class="button is-success has-text-white" :disabled="!canSubmit" v-if="hasEdited" @click="save">{{ data ? 'Save Changes' : 'Add Action' }}</button>
       <button :class="['button',{'is-warning': hasEdited}]" @click="cancel">{{ hasEdited ? 'Cancel' : 'Close' }}</button>
     </template>
   </ModalCard>
@@ -46,7 +46,7 @@ import { computed, onMounted, ref, watch } from 'vue';
 import { ServerAction } from '../../../../../common-types/Server.js';
 import { updatedDiff } from 'deep-object-diff';
 
-const emit = defineEmits(["close"])
+const emit = defineEmits(["close", "save"])
 
 const props = defineProps <{
   data?: ServerAction | null
@@ -97,8 +97,12 @@ function onNamespaceSelect() {
   }
 }
 
-function cancel() {
+function save() {
+  emit('save', action.value, props.data?.name)
+}
 
+function cancel() {
+  emit('close')
 }
 
 onMounted(() => {

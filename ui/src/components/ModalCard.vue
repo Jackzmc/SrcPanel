@@ -11,7 +11,7 @@
     <section class="modal-card-body">
       <slot></slot>
     </section>
-    <footer class="modal-card-foot">
+    <footer class="modal-card-foot" style="display: block">
       <slot name="footer">
       <div class="buttons">
         <slot name="buttons">
