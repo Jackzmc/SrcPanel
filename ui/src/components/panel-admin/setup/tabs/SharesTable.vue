@@ -4,23 +4,27 @@
     <table class="table is-fullwidth is-bordered" v-if="loadState == LoadState.Success">
       <thead>
         <tr>
-          <th></th>
-          <th>Id</th>
-          <th>Name</th>
-          <th>Type</th>
-          <th>IP</th>
-          <th>Port</th>
-          <th>Actions</th>
-        </tr>
+        <th></th>
+        <th>Id</th>
+        <th>Name</th>
+        <th>Sources</th>
+        <th># of Destinations</th>
+        <th></th>
+      </tr>
       </thead>
       <VueDraggableNext :list="shares" tag="tbody" handle=".handle" >
         <tr v-for="(share) in shares" :key="share.id">
           <td class="valign" style="width:1%"><Icon class="handle" icon="fa-bars"></Icon></td>
           <td class="valign">{{ share.id }}</td>
           <td class="valign">{{ share.name }}</td>
-          <td class="valign">Left 4 Dead 2</td>
-          <td class="valign">127.0.0.1</td>
-          <td class="valign">27015</td>
+          <td class="valign">
+            <div class="tags">
+              <span class="tag" v-for="source in getEnabledSources(share)" :key="source">
+                {{ source }}
+              </span>
+            </div>
+          </td>
+          <td class="valign">{{ Object.keys(share.destinations).length }}</td>
           <td>
             <div class="buttons">
               <a class="button is-outlined is-info" @click="editShare(share)"><Icon icon="fa-edit">Edit</Icon></a>
@@ -51,7 +55,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { request } from '@/js/util.js';
 import { notify } from '@kyvg/vue3-notification';
 import { VueDraggableNext } from "vue-draggable-next";
@@ -64,6 +68,7 @@ type Share = ShareInfo
 // TODO: different type. Just the group, no servers? might be nice to have server count
 let shares = ref<Share[]>()
 let loadState = ref<LoadState>(LoadState.Loading)
+
 async function fetchShares() {
   loadState.value = LoadState.Loading
   const response = await request('/api/shares')
@@ -105,6 +110,10 @@ function onSave(share: Share, oldId?: string) {
 function closeModal() {
   selectedShare.value = null
   modalActive.value = false
+}
+function getEnabledSources(share: Share) {
+  if(!share.downloadSources) return []
+  return Object.entries(share.downloadSources).filter(([s, v]) => v).map(([s]) => s)
 }
 async function deleteShare(share: Share) {
   const response = await request(`/api/shares/${share.id}`, { method: "DELETE" })

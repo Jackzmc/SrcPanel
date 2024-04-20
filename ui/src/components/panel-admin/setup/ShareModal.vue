@@ -76,13 +76,17 @@
 import Field from '@/components/Field.vue'
 import ModalCard from '@/components/ModalCard.vue';
 import ShareDestinationModal from '@/components/panel-admin/setup/ShareDestinationModal.vue'
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { ShareInfo } from '../../../../../common-types/Share.js';
 // @ts-expect-error
 import BulmaTagsInput from '@creativebulma/bulma-tagsinput';
 import { DownloadSource } from '../../../../../common-types/Share';
 
 const emit = defineEmits(["close"])
+
+const props = defineProps<{
+  data?: ShareInfo | null
+}>()
 
 const enabledSources = computed(() => {
   if(!share.value.downloadSources) return {}
@@ -112,61 +116,10 @@ const canSubmit = computed(() => {
 })
 
 let share = ref<ShareInfo>({
-  "id": "default",
-  "name": "Addons",
-  "description": "Manage addons for L4D2",
-  "sourceFolder": "/home/steam/l4d2/content/",
-  "appid": 550,
-  "downloadSources": {
-    "steam_workshop": true,
-    "direct": true
-  },
-  "destinations": {
-    "main": {
-      "serverIds": [
-        "l4d2-main"
-      ],
-      "paths": [
-        "/home/steam/l4d2/main/left4dead2/addons/"
-      ]
-    },
-    "randomizer": {
-      "serverIds": [
-        "l4d2-randomizer"
-      ],
-      "paths": [
-        "/home/steam/l4d2/randomizer/left4dead2/addons/"
-      ]
-    },
-    "reserved": {
-      "serverIds": [
-        "l4d2-reserved",
-        "l4d2-reserved2"
-      ],
-      "paths": [
-        "/home/steam/l4d2/reserved/left4dead2/addons/",
-        "/home/steam/l4d2/reserved-2/left4dead2/addons/"
-      ]
-    },
-    "public": {
-      "serverIds": [
-        "l4d2-public-1",
-        "l4d2-public-2",
-        "l4d2-public-3",
-        "l4d2-public-4",
-        "l4d2-public-5",
-        "l4d2-public-6",
-        "l4d2-public-7",
-        "l4d2-public-8"
-      ],
-      "paths": [
-        "/home/steam/l4d2/publics/master/left4dead2/addons/"
-      ]
-    }
-  },
-  "fileExts": [
-    "vpk"
-  ]
+  id: '',
+  sourceFolder: '',
+  destinations: {},
+  name: ''
 })
 
 function toggleSource(key: DownloadSource) {
@@ -180,7 +133,16 @@ function onEnterName() {
   }
 }
 
+watch(() => props.data, () => {
+  if(props.data) {
+    share.value = JSON.parse(JSON.stringify(props.data))
+  }
+})
+
 onMounted(() => {
+  if(props.data) {
+    share.value = JSON.parse(JSON.stringify(props.data))
+  }
   BulmaTagsInput.attach()
 })
 </script>

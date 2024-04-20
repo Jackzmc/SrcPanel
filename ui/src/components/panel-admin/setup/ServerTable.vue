@@ -3,8 +3,6 @@
   <ServerModal v-if="editModalActive" :data="selectedServer" @close="closeModal" @save="onSave" @delete="deleteServer" />
   <ConfirmModal title="Delete Confirmation" v-if="deleteModalActive&&selectedServer" @cancel="deleteModalActive = false" @confirm="deleteServerConfirm">
     <p>Are you sure you want to delete the server:<br><b>{{ selectedServer.name }}</b> <span>({{ selectedServer.id }})</span>?</p>
-    <br>
-    <p>This will delete all servers that are in that group.</p>
   </ConfirmModal>
   <table class="table is-fullwidth is-bordered">
     <thead>
@@ -23,9 +21,9 @@
         <td class="valign" style="width:1%"><Icon class="handle" icon="fa-bars"></Icon></td>
         <td class="valign">{{ server.id }}</td>
         <td class="valign">{{ server.name }}</td>
-        <td class="valign">Left 4 Dead 2</td>
-        <td class="valign">127.0.0.1</td>
-        <td class="valign">27015</td>
+        <td class="valign">{{ server.type }}</td>
+        <td class="valign">{{ server.ip }}</td>
+        <td class="valign">{{ server.port }}</td>
         <td>
           <div class="buttons">
             <a class="button is-outlined is-info" @click="editServer(server)"><Icon icon="fa-edit">Edit</Icon></a>

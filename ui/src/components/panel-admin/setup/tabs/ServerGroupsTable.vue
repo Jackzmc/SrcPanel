@@ -2,7 +2,9 @@
 <div>
   <ServerGroupModal v-if="editModalActive" :data="selectedGroup" @close="closeModal" @save="onSave" @delete="deleteGroup" />
   <ConfirmModal title="Delete Confirmation" v-if="deleteModalActive&&selectedGroup" @cancel="deleteModalActive = false" @confirm="deleteGroupConfirm">
-    Are you sure you want to delete the group <b>{{ selectedGroup.name }}</b> <span>({{ selectedGroup.id }})</span>? This will delete all servers that are in that group.
+    <p>Are you sure you want to delete the group:<br><b>{{ selectedGroup.name }}</b> <span>({{ selectedGroup.id }})</span>?</p>
+    <br>
+    <p>This will delete all servers that are in that group.</p>
   </ConfirmModal>
   <table class="table is-fullwidth is-bordered" v-if="loadState == LoadState.Success">
     <thead>
