@@ -23,7 +23,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, markRaw, Raw, shallowRef } from 'vue';
+import { onMounted, ref, markRaw, Raw, shallowRef, watch } from 'vue';
 import ShareModal from '@/components/panel-admin/setup/ShareModal.vue';
 import ServerModal from '@/components/panel-admin/setup/ServerModal.vue';
 import { ExportGroupInfo, ServerGroup, ServerInfo } from '../../../../common-types/Server.js';
@@ -35,10 +35,14 @@ import ServerGroupsTable from '@/components/panel-admin/setup/tabs/ServerGroupsT
 import SharesTable from '@/components/panel-admin/setup/tabs/SharesTable.vue'
 import PanelSettingsTab from '@/components/panel-admin/setup/tabs/PanelSettingsTab.vue';
 import DoneTab from '@/components/panel-admin/setup/tabs/DoneTab.vue';
+import { useRoute, useRouter } from 'vue-router';
 
 const props = defineProps<{
   privUser: PrivilegedUser
 }>()
+
+const route = useRoute()
+const router = useRouter()
 
 enum Step { ServerGroups, Servers, Shares, Settings, Done }
 interface StepData { label: string, id: string, component: Raw<any>  }
@@ -73,13 +77,26 @@ let currentStep = ref<Step>(Step.ServerGroups)
 let currentStepData = shallowRef<StepData>()
 let highestStep = ref<Step>(Step.ServerGroups)
 
+watch(() => route.hash, setStepFromHash)
+
+function setStepFromHash() {
+  if(!route.hash) return
+  const hash = route.hash.slice(1)
+  for(const [id, step] of Object.entries(STEPS)) {
+    if(hash === step.id) {
+      currentStep.value = Number(id)
+      currentStepData.value = step
+      return
+    }
+  }
+}
+
 function setStep(step: Step) {
   currentStep.value = step
   if(step > highestStep.value) {
     highestStep.value = step
   }
-  window.location.hash = STEPS[currentStep.value].id
-  currentStepData.value = STEPS[currentStep.value]
+  router.replace({ hash: "#" + STEPS[currentStep.value].id })
 }
 function advStep(offset: number) {
   let nextStep = currentStep.value + offset
@@ -89,15 +106,7 @@ function advStep(offset: number) {
 }
 
 onMounted(() => {
-  if(window.location.hash) {
-    const hash = window.location.hash.slice(1)
-    for(const [id, step] of Object.entries(STEPS)) {
-      if(hash === id) {
-        currentStep.value = Number(id)
-        return
-      }
-    }
-  }
+  setStepFromHash()
   setStep(Step.ServerGroups)
 })
 </script>
