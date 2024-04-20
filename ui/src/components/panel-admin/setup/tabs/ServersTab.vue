@@ -27,7 +27,7 @@
 
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
-import { GroupInfo, ServerGroup, ServerInfo } from '../../../../../common-types/Server.js';
+import { GroupInfo, ServerGroup, ServerInfo } from '../../../../../../common-types/Server.js';
 import { request } from '@/js/util.js';
 import ServerTable from '@/components/panel-admin/setup/ServerTable.vue'
 import { LoadState } from '@/types/global.js';

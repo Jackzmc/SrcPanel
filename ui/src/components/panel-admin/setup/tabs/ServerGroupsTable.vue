@@ -32,7 +32,8 @@
     </VueDraggableNext>
     <tfoot>
       <tr>
-        <td colspan="6"><button class="is-info is-outlined button" @click="editGroup(null)"><Icon icon="fa-plus">New Group</Icon></button></td>
+        <td></td>
+        <td colspan="5"><button class="is-info is-outlined button" @click="editGroup(null)"><Icon icon="fa-plus">New Group</Icon></button></td>
       </tr>
     </tfoot>
   </table>
@@ -52,10 +53,10 @@
 
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
-import { GroupInfo, ServerGroup } from '../../../../../common-types/Server.js';
+import { GroupInfo, ServerGroup } from '../../../../../../common-types/Server.js';
 import { request } from '@/js/util.js';
 import { notify } from '@kyvg/vue3-notification';
-import ServerGroupModal from './ServerGroupModal.vue';
+import ServerGroupModal from '../ServerGroupModal.vue';
 import ConfirmModal from '@/components/ConfirmModal.vue';
 import { LoadState } from '@/types/global.js';
 import { VueDraggableNext } from "vue-draggable-next";

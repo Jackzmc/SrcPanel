@@ -56,8 +56,8 @@ import { request } from '@/js/util.js';
 import { notify } from '@kyvg/vue3-notification';
 import { VueDraggableNext } from "vue-draggable-next";
 import { LoadState } from '@/types/global.js';
-import { ShareInfo } from '../../../../../common-types/Share.js';
-import ShareModal from './ShareModal.vue'
+import { ShareInfo } from '../../../../../../common-types/Share.js';
+import ShareModal from '../ShareModal.vue'
 
 const emit = defineEmits(['close', 'delete', 'update'])
 type Share = ShareInfo
