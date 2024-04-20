@@ -17,11 +17,6 @@
   <template v-else-if="currentStep === Step.Servers">
     <ServersTab />
   </template>
-  <a class="button is-success is-inverted is-large" @click="editShare(null)">Add Share</a>
-    <a class="button is-success is-inverted is-large" @click="editServer(null)">Add Server</a>
-    <component v-if="modal" @close="stopEditing" :is="modal.component" :data="modal.data"></component>
-
-  <br>
   <div class="block mt-4 mb-6">
     <div class="button is-previous is-medium is-pulled-left" @click="advStep(-1)" v-if="currentStep > 0"><Icon icon="fa-chevron-left">Previous Step</Icon></div>
     <div class="button is-previous is-info is-medium is-pulled-right" @click="advStep(1)" v-if="currentStep < STEPS.length - 1"><Icon icon="fa-chevron-right" text-left="Next Step"></Icon> </div>
@@ -49,10 +44,6 @@ const STEPS = ["Server Groups", "Servers", "Shares", "Panel Settings", "Done"]
 enum Step { ServerGroups, Servers, Shares, Settings, Done }
 let currentStep = ref<Step>(Step.ServerGroups)
 let highestStep = ref<Step>(Step.ServerGroups)
-let modal = ref<{
-  component: any,
-  data: any
-}>()
 
 function setStep(index: number) {
   currentStep.value = index
@@ -66,27 +57,6 @@ function advStep(offset: number) {
   else if(nextStep >= STEPS.length) nextStep = STEPS.length - 1
   currentStep.value = nextStep
 }
-function editServer(server: ServerInfo | null) {
-  modal.value = {
-    component: ServerModal,
-    data: server
-  }
-}
-function editShare(share: ShareInfo | null) {
-  modal.value = {
-    component: ShareModal,
-    data: share
-  }
-}
-function stopEditing() {
-  modal.value = undefined
-}
-function deleteServer(server: ServerInfo, i: number) {
-  if(confirm(`Are you sure you want to delete ${server.name} (${server.id})?`)) {
-    // gro.value?.splice(i, 1)
-  }
-}
-
 
 onMounted(() => {
 })

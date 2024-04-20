@@ -1,7 +1,7 @@
 <template>
 <div>
   <ServerGroupModal v-if="modalActive" :data="selectedGroup" @close="closeModal" @save="onSave" />
-  <table class="table is-fullwidth is-bordered">
+  <table class="table is-fullwidth is-bordered" v-if="loadState == LoadState.Success">
     <thead>
       <tr>
         <th>Id</th>
@@ -31,6 +31,17 @@
       </tr>
     </tfoot>
   </table>
+  <div v-else-if="loadState === LoadState.Loading">
+    <p class="has-text-centered is-size-3"><Icon icon="fa-spinner" spin icon-class="mr-4">Loading</Icon></p>
+    <div class="skeleton-block" v-for="i in 6" :key="i"></div>
+  </div>
+  <div v-else-if="loadState === LoadState.Error">
+    <article class="message is-danger">
+      <div class="message-body content">
+        <Icon icon="fa-exclamation-triangle">Could not fetch groups</Icon>
+      </div>
+    </article>
+  </div>
 </div>
 </template>
 
@@ -40,6 +51,7 @@ import { GroupInfo, ServerGroup } from '../../../../../common-types/Server.js';
 import { request } from '@/js/util.js';
 import { notify } from '@kyvg/vue3-notification';
 import ServerGroupModal from './ServerGroupModal.vue';
+import { LoadState } from '@/types/global.js';
 
 const props = defineProps<{
 
@@ -47,11 +59,16 @@ const props = defineProps<{
 type Group = GroupInfo
 // TODO: different type. Just the group, no servers? might be nice to have server count
 let groups = ref<Group[]>()
-  async function fetchServers() {
+let loadState = ref<LoadState>(LoadState.Loading)
+async function fetchServers() {
+  loadState.value = LoadState.Loading
   const response = await request('/api/servers')
   if(response?.ok) {
     const json = await response.json()
     groups.value = json
+    loadState.value = LoadState.Success
+  } else {
+    loadState.value = LoadState.Error
   }
 }
 let selectedGroup = ref<Group|null>(null)
