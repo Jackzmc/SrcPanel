@@ -29,7 +29,7 @@
           </Field>
         </Tab>
         <Tab name="Actions">
-
+          <!-- TODO: ADD -->
         </Tab>
       </Tabs>
     </form>
@@ -118,6 +118,4 @@ onMounted(async () => {
 })
 </script>
 
-<style>
-@import 'node_modules/@creativebulma/bulma-tagsinput/dist/css/bulma-tagsinput.min.css';
-</style>
+<style scoped src="node_modules/@creativebulma/bulma-tagsinput/dist/css/bulma-tagsinput.min.css" />

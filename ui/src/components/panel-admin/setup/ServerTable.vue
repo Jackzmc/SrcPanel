@@ -13,9 +13,9 @@
         <th>Actions</th>
       </tr>
     </thead>
-    <tbody class="tdf">
+    <VueDraggableNext :list="Object.values(group.servers)" tag="tbody" handle=".handle" >
       <tr v-for="(server) in group.servers" :key="server.id">
-        <td></td>
+        <td class="valign" style="width:1%"><Icon class="handle" icon="fa-bars"></Icon></td>
         <td class="valign">{{ server.id }}</td>
         <td class="valign">{{ server.name }}</td>
         <td class="valign">Left 4 Dead 2</td>
@@ -28,7 +28,7 @@
           </div>
         </td>
       </tr>
-    </tbody>
+    </VueDraggableNext>
     <tfoot>
       <tr class="has-background">
         <td></td>
@@ -45,6 +45,7 @@ import { GroupInfo, ServerGroup, ServerInfo } from '../../../../../common-types/
 import { request } from '@/js/util.js';
 import { notify } from '@kyvg/vue3-notification';
 import ServerModal from './ServerModal.vue'
+import { VueDraggableNext } from "vue-draggable-next";
 
 const emit = defineEmits(['close', 'delete', 'update'])
 
@@ -77,5 +78,10 @@ async function deleteServer(server: ServerInfo) {
   }
 }
 
-
 </script>
+
+<style scoped>
+td.valign {
+  vertical-align: middle;
+}
+</style>

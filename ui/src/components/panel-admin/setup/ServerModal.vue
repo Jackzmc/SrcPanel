@@ -96,6 +96,11 @@
         </Field>
         <br>
       </Tab>
+      <Tab name="Actions">
+        <p>Actions will be inherrited from the group this server belongs in, but here you can add actions specific to this server only.</p>
+
+        <!-- TODO: ADD -->
+      </Tab>
     </Tabs>
   </form>
   <template v-slot:buttons>
@@ -251,7 +256,5 @@ onMounted(async () => {
 })
 </script>
 
-<style>
-@import 'node_modules/@creativebulma/bulma-tagsinput/dist/css/bulma-tagsinput.min.css';
-</style>
+<style scoped src="node_modules/@creativebulma/bulma-tagsinput/dist/css/bulma-tagsinput.min.css" />
 

@@ -4,15 +4,17 @@
   <table class="table is-fullwidth is-bordered" v-if="loadState == LoadState.Success">
     <thead>
       <tr>
+        <th style="width:0%"></th>
         <th>Id</th>
         <th>Name</th>
         <th>Type</th>
-        <th># Actions</th>
-        <th></th>
+        <th># of Actions</th>
+        <th style="width:0%"></th>
       </tr>
     </thead>
-    <tbody class="tdf">
+    <VueDraggableNext v-model="groups" tag="tbody" handle=".handle">
       <tr v-for="(group) in groups" :key="group.id">
+        <td class="valign" style="width:1%"><Icon class="handle" icon="fa-bars"></Icon></td>
         <td class="valign">{{ group.id }}</td>
         <td class="valign">{{ group.name }}</td>
         <td class="valign">{{ group.type }}</td>
@@ -24,7 +26,7 @@
           </div>
         </td>
       </tr>
-    </tbody>
+    </VueDraggableNext>
     <tfoot>
       <tr class="has-background">
         <td colspan="6"><button class="is-info is-outlined button" @click="editGroup(null)"><Icon icon="fa-plus">New Group</Icon></button></td>
@@ -52,10 +54,8 @@ import { request } from '@/js/util.js';
 import { notify } from '@kyvg/vue3-notification';
 import ServerGroupModal from './ServerGroupModal.vue';
 import { LoadState } from '@/types/global.js';
+import { VueDraggableNext } from "vue-draggable-next";
 
-const props = defineProps<{
-
-}>()
 type Group = GroupInfo
 // TODO: different type. Just the group, no servers? might be nice to have server count
 let groups = ref<Group[]>()

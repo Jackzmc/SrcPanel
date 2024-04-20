@@ -5,7 +5,7 @@
     <BirthdayComponent v-if="isBirthday" @close="closeBirthday" />
     <Notifications position="top center" :duration=7000 @start="onNotificationShown" />
     <NavBar v-if="!route.meta.hideNav" @logout="onLogout" :update-info="updateInfo" :priv-user="privUser" />
-    <br>
+    <br v-if="!route.meta.hideNav">
     <br v-if="route.meta.hideHero">
     <section v-else class="hero is-info has-text-centered">
       <div class="hero-body">
@@ -296,7 +296,7 @@ onBeforeMount(async() => {
   position: absolute;
   bottom: 0;
   width: 100%;
-  height: 2rem;
+  height: 4rem;
   padding: 1rem;
 }
 body {
@@ -304,7 +304,7 @@ body {
 }
 #app {
   position: relative;
-  padding-bottom: 2rem;
+  padding-bottom: 4rem;
 }
 </style>
 

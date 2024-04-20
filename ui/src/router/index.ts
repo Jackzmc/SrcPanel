@@ -323,7 +323,8 @@ const routes = [
     component: () => import('../views/panel-admin/SetupWizard.vue'),
     meta: {
       title: "First Time Setup",
-      authRequired: true
+      authRequired: true,
+      hideNav: true
     }
   },
   {
