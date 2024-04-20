@@ -1,5 +1,5 @@
 <template>
-<ModalCard title="Add Share">
+<ModalCard title="Add Share" @close="emit('close')">
   <!-- <ShareDestinationModal :share="share" /> -->
   <div class="tabs is-fullwidth is-centered">
     <ul>
@@ -22,8 +22,11 @@
         </Field>
       </div>
     </div>
-    <Field label="Source Directory Path*" info="">
-      <input required class="input" type="text" placeholder="/home/steam/content/addons" />
+    <Field label="Source Directory Path*">
+      <template v-slot:hint_error v-if="!share.sourceFolder">
+        <p class="help has-text-danger"><Icon icon="fa-exclamation-triangle">Required</Icon></p>
+      </template>
+      <input required :class="['input',{'is-danger': !share.sourceFolder}]" type="text" placeholder="/home/steam/content/addons" v-model="share.sourceFolder" />
     </Field>
   </Template>
   <template v-if="selectedTab === 'sources'">
@@ -63,8 +66,8 @@
   <ShareDestinationModal :share="share" @close="selectTab('general')" />
 </template>
   <template v-slot:buttons>
-    <button class="button is-success has-text-white">Add Share</button>
-    <button class="button">Cancel</button>
+    <button class="button is-success has-text-white" :disabled="!canSubmit">Add Share</button>
+    <button class="button" @click="emit('close')">Cancel</button>
   </template>
 </ModalCard>
 </template>
@@ -78,6 +81,8 @@ import { ShareInfo } from '../../../../../common-types/Share.js';
 // @ts-expect-error
 import BulmaTagsInput from '@creativebulma/bulma-tagsinput';
 import { DownloadSource } from '../../../../../common-types/Share';
+
+const emit = defineEmits(["close"])
 
 const enabledSources = computed(() => {
   if(!share.value.downloadSources) return {}
@@ -94,6 +99,17 @@ let selectedTab = ref<TABS>("general")
 function selectTab(tab: TABS) {
   selectedTab.value = tab
 }
+
+const validationErrors = computed(() => {
+  const errors = []
+  if(!share.value.id) errors.push("An unique identifier is required")
+  if(share.value.sourceFolder) errors.push("Source path is required")
+  return errors
+})
+
+const canSubmit = computed(() => {
+  return validationErrors.value.length === 0
+})
 
 let share = ref<ShareInfo>({
   "id": "default",

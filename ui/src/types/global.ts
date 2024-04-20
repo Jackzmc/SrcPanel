@@ -1,4 +1,5 @@
 export enum LoadState {
+  Idle = -1,
   Loading,
   Success,
   Error,

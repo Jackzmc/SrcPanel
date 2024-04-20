@@ -17,6 +17,7 @@ import PluginSocket from './PluginSocket.js';
 import JWT from '../../jwt-promise.js';
 import { WriteStream, createWriteStream } from 'fs';
 import dotenv from 'dotenv'
+import Gamedig from 'gamedig';
 
 
 // How long after no status requests to switch from short to long refresh
@@ -434,6 +435,19 @@ export default class ServerManager {
     const endTime = Date.now() - startTime
 
     console.log(`[ServerManager] Loaded ${Object.keys(this.servers).length} servers in ${endTime.toFixed(1)} ms`)
+  }
+
+  async queryHost(host: string, port: number, type: string, options: Partial<Gamedig.QueryOptions> = {}) {
+    return await Gamedig.query({
+      type: type as Gamedig.Type,
+      host,
+      port,
+      givenPortOnly: true,
+      maxAttempts: 1,
+      socketTimeout: 3000,
+      attemptTimeout: 5000,
+      ...options,
+    })
   }
 }
 

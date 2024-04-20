@@ -7,7 +7,8 @@ import JWT from '../../jwt-promise.js'
 import { PlayerAction, ServerData, ServerDetailed, ServerInfo } from '../../../../common-types/Server.js';
 import { LiveRecord, LiveRecordType } from '../../../../common-types/Live.js';
 import { UserPrivilegeCode } from '../../../../common-types/Privileges.js';
-    
+import DNS from 'dns/promises'
+
 const COMMENT_LINE_REGEX = new RegExp(/^\s*(\/\/|#)/)
 const HIDDEN_COMMANDS = [
     "rcon_password"
@@ -20,6 +21,51 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         { parseAs: 'string' },
         (req, body, done) => done(null, body)
     )
+
+    fastify.post('/validate/:address', async(req: FastifyRequest<{Params: { address: 'string' }}>, reply) => {
+        const [host,port] = req.params.address.split(':')
+        if(!port) {
+            return reply.status(400).send({
+                error: "INVALID_ADDRESS",
+                message: "A port is required"
+            })
+        }
+
+        let foundType: string
+
+        const { address: ip } = await DNS.lookup(host)
+
+        async function tryType(type: string) {
+            try {
+                const a = await fastify.servers.queryHost(ip, parseInt(port), type)
+                console.log(a)
+                foundType = type
+                return true
+            } catch(err) {
+                console.log(err.cause)
+                // Underlying errors aren't exposed annoyingly...
+                if(err.stack.includes("Error: No protocols succeeded")) return false
+                throw err
+            }
+        }
+
+        for (const type of ["minecraft", "left4dead2"]) {
+            if(await tryType(type)) break
+        }
+        if(foundType) {
+            return {
+                ip: ip,
+                domain: host,
+                port: port,
+                type: foundType
+            }
+        } else {
+            return reply.status(501).send({
+                error: "UNKNOWN_TYPE",
+                message: "Server is either unavailable or unsupported. Could not determine it's type"
+            })
+        }
+    })
 
     fastify.get('/:id', async(req: FastifyRequest<{Params: { id: 'string' }}>, reply): Promise<ServerInfo> => {
         const server = fastify.servers.get(req.params.id)
@@ -68,7 +114,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     fastify.get('/:id/configs', async(req: FastifyRequest<{Params: { id: 'string' }, Querystring: { path: 'string', raw?: boolean }}>, reply) => {
         // if(req.query.raw && !req.user.hasPermission("servers.configs.read_raw")) return NO_PERMISSION(reply)
         // else if(!req.user.hasPermission("servers.configs.read")) return NO_PERMISSION(reply)
-        
+
         const server = fastify.servers.get(req.params.id)
         if(!server) {
             return reply.code(404).send({
@@ -92,7 +138,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
         const path = join(server.configDir, req.query.path)
         // Make sure supplied path has no path traversal
-        if(path.startsWith(server.configDir)) { 
+        if(path.startsWith(server.configDir)) {
             try {
                 if(req.query.raw) return await readFile(path, 'utf-8')
                 const lines = (await readFile(path, 'utf-8')).split("\n")
@@ -120,13 +166,13 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                         if(type === "string" && value.at(0) == '"' && value.at(-1) == '"') {
                             value = value.slice(1, -1)
                         }
-                        records.push({ 
+                        records.push({
                             command,
                             value,
                             cvar,
                             type
                         })
-                        
+
                     }
                 }
                 return records
@@ -167,16 +213,16 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         reply.raw.write('retry: 5000\n\n')
 
         const server = fastify.servers.get(req.params.id)
-        
+
         if(!server) {
             send({
-                error: "Server Not Found", 
+                error: "Server Not Found",
                 code: "SERVER_NOT_FOUND",
             })
         } else {
             const [code, granted] = req.user.requirePermission("servers.view", { resourceId: server.id })
-            if(!granted) return NO_PERMISSION(reply, 
-                "Cannot access server, no permission", 
+            if(!granted) return NO_PERMISSION(reply,
+                "Cannot access server, no permission",
                 code,
             )
 
@@ -223,7 +269,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 LEFT JOIN stats_users as s2 ON s2.steamid = target
                 WHERE server = ? AND FROM_UNIXTIME(timestamp) >= CURDATE() AND FROM_UNIXTIME(timestamp) < CURDATE() + INTERVAL 1 DAY
                 ORDER BY timestamp DESC
-                LIMIT 5`, 
+                LIMIT 5`,
             [server.activityLogId]
         )
             recentActivities = rows
@@ -233,11 +279,11 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         try {
             await server.refresh(true, false)
         } catch(err) {
-            
+
         }
 
         return {
-            recentActivities, 
+            recentActivities,
             stats,
             uptime: server.uptime,
             status: server.status,
@@ -246,6 +292,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
     fastify.get('/:id/generate-jwt', async(req: FastifyRequest<{Params: { id: 'string'} }>, reply) => {
         const server = fastify.servers.get(req.params.id)
+
         if(!server) return NOT_FOUND(reply, "Server")
         const [code, granted] = req.user.requirePermission("servers.generate_jwt", { resourceId: server.id })
         if(!granted) return NO_PERMISSION(reply, "You do not have permission to generate a JWT for this server", code)
@@ -321,7 +368,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     fastify.post('/:id/cmd', async(req: FastifyRequest<{Params: { id: string }, Querystring: {'no-response'?: boolean}, Body: string }>, reply) => {
         const server = fastify.servers.get(req.params.id)
         if(!server) return NOT_FOUND(reply, "Server")
-        
+
         if(req.body.includes("rcon_password"))
             return NO_PERMISSION(reply, "You do not have permission to run that command")
         const [code, granted] = req.user.requirePermission("servers.plugin.default." + req.params.id as UserPrivilegeCode, { resourceIds: [server.id] })
@@ -397,7 +444,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         const server = fastify.servers.get(req.params.id)
         if(!server) {
             return reply.status(404).send({
-                error: "Server Not Found", 
+                error: "Server Not Found",
                 code: "SERVER_NOT_FOUND",
             })
         }
@@ -429,7 +476,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             failed = true
             eventHandler(`You do not have permission to view the server console.`)
         }
-        
+
         if(!failed) {
             // Send any stale data:
             for(const line of server.logs) {

@@ -1,68 +1,106 @@
 <template>
-<ModalCard title="Add Server">
+<ModalCard :title="(data ? 'Edit' : 'Add') + ' Server'" @close="cancel">
   <form>
     <Tabs inner-wrapper-class="tabs" :options="{useUrlFragment:false}">
       <Tab name="General">
-        <Field label="Name*" info="ID will be: my-server-name">
-          <input required class="input" type="text" placeholder="My Server Name" />
-        </Field>
-        <Field label="IP Address & Port*" info="IP or DNS records are valid">
-          <input required class="input" type="text" placeholder="localhost:27015" pattern="([a-zA-Z0-9\.]+)(:\d+)?" />
-        </Field>
-        <Field label="Type*" info="Automatic will try to detect the type based on the given ip">
-          <div class="select">
-            <select required >
+        <div class="columns">
+          <div class="column is-6">
+            <Field label="Id*">
+              <template v-slot:hint_error v-if="!server.id">
+                <p class="help has-text-danger"><Icon icon="fa-exclamation-triangle">Required</Icon></p>
+              </template>
+              <input required :class="['input',{'is-danger': !server.id }]" type="text" placeholder="A unique identifier" v-model="server.id" />
+            </Field>
+          </div>
+          <div class="column is-6">
+            <Field label="Name">
+              <input required class="input" type="text" placeholder="An optional friendly name" v-model="server.name" @change="onEnterName" />
+            </Field>
+          </div>
+        </div>
+        <div class="columns">
+          <div class="column is-6">
+            <Field label="IP Address / Domain*" :info="server.domain">
+              <template v-slot:hint_error v-if="!server.ip">
+                <p class="help has-text-danger"><Icon icon="fa-exclamation-triangle">A valid domain or IP address is required</Icon></p>
+              </template>
+              <input required :class="['input',{'is-danger': !server.ip }]" type="text" placeholder="127.0.0.1, localhost, your.domain" v-model="server.ip" @input="onAddrChangedDebounce" />
+            </Field>
+          </div>
+          <div class="column is-6">
+            <Field label="Port*">
+              <template v-slot:hint_error v-if="!server.port">
+                <p class="help has-text-danger"><Icon icon="fa-exclamation-triangle">A valid port is required</Icon></p>
+              </template>
+              <input required :class="['input',{'is-danger': !server.port }]" type="number" placeholder="27015" v-model="server.port" @input="onAddrChangedDebounce" />
+            </Field>
+          </div>
+        </div>
+        <Field label="Type" info="Automatic will try to detect the type based on the given ip and port">
+          <div :class="['select',{'is-loading': determiningType === LoadState.Loading}]">
+            <select required :disabled="determiningType === LoadState.Loading" v-model="server.type" @change="onTypeSelected">
               <option :value="null">Automatic</option>
               <option value="left4dead2">Left 4 Dead 2</option>
               <option value="source">Generic Source Engine</option>
               <option value="minecraft">Minecraft</option>
             </select>
           </div>
+          <p class="help">This will overrule the type defined in the group. It's not recommended, as group type determines layout of server tables.</p>
+          <p class="help has-text-danger" v-if="determiningType === LoadState.Error">Could not automatically determine server type</p>
         </Field>
-        <Field label="Tags (Comma separated)" info="These are generic tags used to categorize servers">
-          <input class="input" type="text" placeholder="tag-1, tag-2">
+        <Field label="Tags (Comma separated)" info="These are generic tags used to categorize servers" >
+          <input data-type="tags" class="input" type="text" placeholder="custom-maps, my-supported-gamemode, etc" v-model="server.tags">
         </Field>
       </Tab>
       <Tab name="Plugins">
         <Field label="Activity Log Id" info="The Id used by the activity monitor plugin">
           <input type="text" class="input" />
         </Field>
+        <hr>
         <Field label="Admin Panel Plugin">
-          <p>Once the server is created you can add the admin panel plugin</p>
+          <div class="content">
+            <h6>Setup Instructions</h6>
+            <ol>
+              <li>Download the <a href="https://github.com/Jackzmc/sourcemod-plugins/raw/master/plugins/activitymonitor.smx">activitymonitor.smx</a> to the server</li>
+              <li>Open the file in <code>/yourgame/&lt;left4dead2/other&gt;/cfg/sourcemod/plugins/adminpanel.cfg</code></li>
+              <li>Replace <code>127.0.0.1</code> with the IP of the admin panel for <code>sm_adminpanel_host</code></li>
+              <!-- <li><a @click="generateAuthToken">Click here to generate an auth token</a> and enter it in for <code>sm_adminpanel_authtoken</code></li> -->
+            </ol>
+            <p>Add the server to the panel to continue setup</p>
+          </div>
         </Field>
       </Tab>
       <Tab name="Advanced">
         <Field label="Systemd Service Id" info="Optional, the id of a service for starting servers manually">
           <input type="text" class="input" />
         </Field>
-        <!-- TODO: support ENV -->
-        <Field label="Rcon Password" info="Stored as plaintext in the servers.json">
+         <!-- TODO: disable on non-source engine -->
+         <Field label="Logs Output Path" info="Points to the config file generated by -usercon">
           <input type="text" class="input" />
         </Field>
-        <p class="has-text-info"><Icon icon="fa-info-circle"></Icon>
-          You can provide the password with environmental variables, in the form of <b>RCON_PASSWORD_<span class="tag">UPPERCASE_SERVER_ID</span></b>
-        </p>
+        <hr>
+        <h5 class="title is-5">Rcon</h5>
+        <p class="subtitle is-6">Used as a fallback if the adminpanel plugin is unavailable/unsupported</p>
+        <div class="tabs is-toggle">
+          <ul>
+            <li :class="{'is-active': !rconState}"><a @click="rconState = null">Disabled</a></li>
+            <li :class="{'is-active': rconState === 'plaintext'}"><a @click="rconState = 'plaintext'">Plaintext</a></li>
+            <li :class="{'is-active': rconState === 'env'}"><a @click="rconState = 'env'">From ENV Variable</a></li>
+          </ul>
+        </div>
+        <Field label="Rcon Password" info="Stored as plaintext in the servers.json" v-if="rconState === 'plaintext'">
+          <input type="text" class="input" />
+        </Field>
+        <Field label="ENV Variable Name" info="The full environmental variable that contains the rcon password" v-else-if="rconState === 'env'">
+          <input type="text" class="input" />
+        </Field>
         <br>
-
-        <!-- TODO: disable on non-source engine -->
-        <Field label="Logs Output Path (Source Only)" info="Points to the config file generated by -usercon">
-          <input type="text" class="input" />
-        </Field>
-        <!-- needed:
-          1. rcon
-          2. Plugin Setup (separate tab?)
-          3. config directory
-          4. systemd
-          5. activity id (combine with plugin setup?)
-          6. tags
-          7. logs path
-        -->
       </Tab>
     </Tabs>
   </form>
   <template v-slot:buttons>
-    <button class="button is-success has-text-white">Add Server</button>
-    <button class="button">Cancel</button>
+    <button class="button is-success has-text-white" :disabled="!canSubmit" v-if="hasEdited" @click="save">{{ data ? 'Save Changes' : 'Add Server' }}</button>
+    <button :class="['button',{'is-warning': hasEdited}]" @click="cancel">{{ hasEdited ? 'Cancel' : 'Close' }}</button>
   </template>
 </ModalCard>
 </template>
@@ -72,4 +110,148 @@ import Field from '@/components/Field.vue'
 // @ts-ignore
 import { Tab, Tabs } from 'vue3-tabs-component'
 import ModalCard from '@/components/ModalCard.vue';
+import { computed, onMounted, ref, watch } from 'vue';
+import { ServerInfo } from '../../../../../common-types/Server.js';
+import { ConfigServerData } from '../../../../../server/src/modules/servers/Server';
+// @ts-expect-error
+import BulmaTagsInput from '@creativebulma/bulma-tagsinput';
+import { request } from '@/js/util.js';
+import { LoadState } from '@/types/global.js';
+import debounce from '@/js/debounce.js';
+import { updatedDiff } from 'deep-object-diff';
+
+const emit = defineEmits(["close", "save"])
+
+const props = defineProps<{
+  data?: ServerInfo | null
+}>()
+
+watch(() => props.data, () => {
+  // deep copy:
+  console.log("COPY")
+  server.value = JSON.parse(JSON.stringify(props.data))
+})
+
+let server = ref<any>({
+  id: '',
+  name: '',
+  ip: null,
+  domain: '',
+  type: null,
+  tags: [''],
+  port: null
+})
+
+let serverData = ref<Record<string, { default_port?: number, supports?: string[] }>>()
+let rconState = ref<null | "plaintext" | "env">(null)
+
+let determiningType = ref<LoadState>(LoadState.Idle)
+
+const hasEdited = computed(() => {
+  if(!server.value || !props.data) return false
+  return Object.keys(updatedDiff(props.data, server.value)).length > 0
+})
+
+const validationErrors = computed(() => {
+  const errors = []
+  if(!server.value.id) errors.push("An unique identifier is required")
+  if(!server.value.ip) errors.push("An IP address is required")
+  if(!server.value.port) errors.push("A port is required")
+  // if(!server.value.type) errors.push("A valid server type is required")
+  return errors
+})
+
+const canSubmit = computed(() => {
+  return validationErrors.value.length === 0
+})
+
+
+function onEnterName() {
+  if(!server.value.id) {
+    server.value.id = server.value?.name?.toLowerCase().replace(/[^a-zA-Z0-9- ]/g, '').replace(/[\s]/g, '-')
+  }
+}
+function onTypeSelected() {
+  console.log(serverData.value, server.value.type, server.value.port)
+  if(serverData.value && server.value.type && !server.value.port) {
+    const data = serverData.value[server.value.type]
+    if(data?.default_port) {
+      server.value.port = data.default_port
+    }
+  }
+}
+function onAddrChanged() {
+  if(server.value.ip && server.value.port) {
+    if(server.value.port)
+      validateAddress(server.value.ip, Number(server.value.port))
+  }
+}
+const onAddrChangedDebounce = debounce(onAddrChanged, 600)
+
+async function validateAddress(ip: string, port: number) {
+  // Only show loading if its set to automatic
+  if(!server.value.type) {
+    determiningType.value = LoadState.Loading
+  }
+  try {
+    const response = await fetch(`/api/servers/validate/${ip}:${port}`, { method: "POST" })
+    if(response?.ok) {
+      const json = await response.json()
+      if(json.type) {
+        if(!server.value.type)
+          server.value.type = json.type
+        server.value.ip = json.ip
+        server.value.domain = json.domain
+        determiningType.value = LoadState.Success
+      }
+    } else {
+      if(response.headers.get("Content-Type")?.includes("application/json")) {
+        const json = await response.json()
+        // IP/domain is invalid:
+        if(json.code === "ENOTFOUND") {
+          server.value.ip = null
+        }
+      }
+      determiningType.value = LoadState.Error
+    }
+  } catch(err) {
+    determiningType.value = LoadState.Error
+  }
+}
+
+async function fetchServerData() {
+  const response = await request('/data/server_types.json')
+  if(response?.ok) {
+    serverData.value = await response.json()
+  }
+}
+
+async function generateAuthToken() {
+  const response = await request('/api/servers/')
+}
+
+async function save() {
+  emit("save", server.value)
+  // TODO: SAVE LOGIC
+}
+
+function cancel() {
+  if(hasEdited.value) {
+    if(!confirm(`You have unchanged changes to ${server.value?.name || server.value.id || '(new server)'}, are you sure you want to cancel?`)) return
+  }
+  emit('close')
+}
+
+onMounted(async () => {
+  if(props.data) {
+    server.value = JSON.parse(JSON.stringify(props.data))
+  }
+  await fetchServerData()
+  BulmaTagsInput.attach()
+})
 </script>
+
+<style>
+@import 'node_modules/@creativebulma/bulma-tagsinput/dist/css/bulma-tagsinput.min.css';
+</style>
+
