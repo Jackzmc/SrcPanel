@@ -35,9 +35,10 @@ import { LoadState } from '@/types/global.js';
 
 let groups = ref<ServerGroup[]>()
 let loadState = ref<LoadState>(LoadState.Loading)
+
 async function fetchServers() {
   loadState.value = LoadState.Loading
-  const response = await request('/api/servers')
+  const response = await request('/api/panel/servers')
   if(response?.ok) {
     const json = await response.json()
     groups.value = json

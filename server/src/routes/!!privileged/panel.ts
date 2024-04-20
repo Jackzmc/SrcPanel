@@ -7,6 +7,7 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { exec } from 'child_process';
 import { UpdateState } from '../../../../common-types/Panel.js';
 import { rm, unlink } from 'fs/promises';
+import Server from '../../modules/servers/Server.js';
 
 let updateState: UpdateState = "NORMAL"
 
@@ -186,7 +187,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         await reply.status(204).send()
     } )
     
-    fastify.get( '/groups', async ( req, reply ) => {
+    fastify.get('/groups', async ( req, reply ) => {
         // if(!req.user.hasPermission("panel.restart")) return NO_PERMISSION(reply)
         const groups = fastify.servers.Groups
         return reply.send(groups)
@@ -198,6 +199,22 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
     fastify.put('/groups/:id', async (req: FastifyRequest<{ Params: { id: string }}>, reply) => {
         
+    })
+
+    fastify.get('/servers', async (req, reply) => {
+        return fastify.servers.getAllGrouped((server: Server) => {
+            return {
+                id: server.id,
+                name: server.name,
+                ip: server.ip,
+                port: server.port,
+                type: server.type,
+                tags: server.tags,
+                features: server.features,
+                domain: server.domain,
+                actions: server.actions.filter(a => !a.inherited)
+            }
+        })
     })
 }
 

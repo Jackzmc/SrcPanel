@@ -98,8 +98,30 @@
       </Tab>
       <Tab name="Actions">
         <p>Actions will be inherrited from the group this server belongs in, but here you can add actions specific to this server only.</p>
-
-        <!-- TODO: ADD -->
+        <ActionModal v-if="actionEditActive" :data="selectedAction" @save="onActionSaved" @close="actionEditActive = false" />
+        <table class="table is-fullwidth">
+          <thead>
+            <tr>
+              <th></th>
+              <th>Name</th>
+              <th>Command</th>
+              <th></th>
+            </tr>
+          </thead>
+          <VueDraggableNext v-model="server.actions" tag="tbody" handle=".handle">
+            <tr v-for="action in server.actions" :key="action.name">
+              <td class="valign" style="width:1%"><Icon class="handle" icon="fa-bars"></Icon></td>
+              <td class="valign">{{ action.name }}</td>
+              <td class="valign">{{ action.command }}</td>
+              <td class="valign"><a class='button is-info is-outlined' @click="editAction(action)"><Icon icon="fa-edit"></Icon></a></td>
+            </tr>
+          </VueDraggableNext>
+          <tfoot>
+            <tr>
+              <td colspan="4"><button class="is-info is-outlined button" @click="editAction(null)"><Icon icon="fa-plus">New Action</Icon></button></td>
+            </tr>
+          </tfoot>
+        </table>
       </Tab>
     </Tabs>
   </form>
@@ -116,7 +138,7 @@ import Field from '@/components/Field.vue'
 import { Tab, Tabs } from 'vue3-tabs-component'
 import ModalCard from '@/components/ModalCard.vue';
 import { computed, onMounted, ref, watch } from 'vue';
-import { ServerInfo } from '../../../../../common-types/Server.js';
+import { ServerAction, ServerData, ServerInfo } from '../../../../../common-types/Server.js';
 import { ConfigServerData } from '../../../../../server/src/modules/servers/Server';
 // @ts-expect-error
 import BulmaTagsInput from '@creativebulma/bulma-tagsinput';
@@ -124,6 +146,8 @@ import { request } from '@/js/util.js';
 import { LoadState } from '@/types/global.js';
 import debounce from '@/js/debounce.js';
 import { updatedDiff } from 'deep-object-diff';
+import { VueDraggableNext } from 'vue-draggable-next';
+import ActionModal from './ActionModal.vue';
 
 const emit = defineEmits(["close", "save"])
 
@@ -132,23 +156,28 @@ const props = defineProps<{
 }>()
 
 watch(() => props.data, () => {
-  // deep copy:
-  console.log("COPY")
   server.value = JSON.parse(JSON.stringify(props.data))
 })
 
-let server = ref<any>({
+let server = ref<ServerInfo>({
   id: '',
   name: '',
-  ip: null,
+  ip: '',
   domain: '',
-  type: null,
+  type: '',
   tags: [''],
-  port: null
+  port: 0,
+
+  // Unused, just using ServerInfo
+  features: {},
+  sortOrder: -1,
+  actions: []
 })
 
 let serverData = ref<Record<string, { default_port?: number, supports?: string[] }>>()
 let rconState = ref<null | "plaintext" | "env">(null)
+let actionEditActive = ref(false)
+let selectedAction = ref<ServerAction|null>()
 
 let determiningType = ref<LoadState>(LoadState.Idle)
 
@@ -175,6 +204,20 @@ function onEnterName() {
   if(!server.value.id) {
     server.value.id = server.value?.name?.toLowerCase().replace(/[^a-zA-Z0-9- ]/g, '').replace(/[\s]/g, '-')
   }
+}
+function editAction(action: ServerAction | null) {
+  actionEditActive.value = true
+  selectedAction.value = action
+}
+function onActionSaved( action: ServerAction, oldId?: string) {
+  if(!server.value.actions) server.value.actions = []
+  if(!oldId) {
+    server.value.actions.push(action)
+  } else {
+    server.value.actions = server.value.actions.map(a => a.name === oldId ? action : a)
+  }
+  selectedAction.value = null
+  actionEditActive.value = false
 }
 function onTypeSelected() {
   console.log(serverData.value, server.value.type, server.value.port)
@@ -214,7 +257,7 @@ async function validateAddress(ip: string, port: number) {
         const json = await response.json()
         // IP/domain is invalid:
         if(json.code === "ENOTFOUND") {
-          server.value.ip = null
+          server.value.ip = ""
         }
       }
       determiningType.value = LoadState.Error

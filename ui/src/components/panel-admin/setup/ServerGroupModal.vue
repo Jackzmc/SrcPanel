@@ -48,12 +48,11 @@
               </tr>
             </VueDraggableNext>
             <tfoot>
-            <tr>
-              <td colspan="4"><button class="is-info is-outlined button" @click="editAction(null)"><Icon icon="fa-plus">New Action</Icon></button></td>
-            </tr>
-        </tfoot>
+              <tr>
+                <td colspan="4"><button class="is-info is-outlined button" @click="editAction(null)"><Icon icon="fa-plus">New Action</Icon></button></td>
+              </tr>
+            </tfoot>
           </table>
-          <!-- TODO: ADD -->
         </Tab>
       </Tabs>
     </form>

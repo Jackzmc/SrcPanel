@@ -125,7 +125,10 @@ export default class Server extends EventEmitter {
         }
         this.#actid = server.activityId
         this.#sortOrder = server.sortOrder
-        this.#actions = [ ... group.actions, ... server.actions ]
+        this.#actions = group.actions.map(a => {
+          return { ...a, inherited: true } as ServerAction
+        }).concat(server.actions)
+        
         if(server.cfgDirectory) {
           this.#cfgDir = resolve(server.cfgDirectory)
           try {

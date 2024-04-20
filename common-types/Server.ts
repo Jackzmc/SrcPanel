@@ -55,7 +55,7 @@ export interface ExportGroupInfo extends GroupInfo {
 export interface ServerInfo extends ServerData {
     tags: string[],
     features: ServerAvailableFeatures
-    status: ServerStatus,
+    status?: ServerStatus,
     sortOrder: number,
     actions: ServerAction[],
 }
@@ -79,7 +79,9 @@ export interface ServerAction {
     permission?: string,
     color?: string,
     isHidden: boolean,
-    description?: string
+    description?: string,
+
+    inherited?: boolean
 }
 export type BuiltInActions = "builtin:stop" | "builtin:request_stop" | "builtin:update" | "builtin:kick"
 
