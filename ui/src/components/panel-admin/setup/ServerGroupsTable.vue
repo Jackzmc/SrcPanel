@@ -28,7 +28,7 @@
       </tr>
     </VueDraggableNext>
     <tfoot>
-      <tr class="has-background">
+      <tr>
         <td colspan="6"><button class="is-info is-outlined button" @click="editGroup(null)"><Icon icon="fa-plus">New Group</Icon></button></td>
       </tr>
     </tfoot>
@@ -60,9 +60,9 @@ type Group = GroupInfo
 // TODO: different type. Just the group, no servers? might be nice to have server count
 let groups = ref<Group[]>()
 let loadState = ref<LoadState>(LoadState.Loading)
-async function fetchServers() {
+async function fetchGroups() {
   loadState.value = LoadState.Loading
-  const response = await request('/api/servers')
+  const response = await request('/api/panel/groups')
   if(response?.ok) {
     const json = await response.json()
     groups.value = json
@@ -114,7 +114,7 @@ async function deleteGroup(group: Group) {
 }
 
 onMounted(() => {
-  fetchServers()
+  fetchGroups()
 })
 </script>
 

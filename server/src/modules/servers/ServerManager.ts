@@ -51,7 +51,7 @@ export default class ServerManager {
   private refreshTimer: ReturnType<typeof setTimeout>
   private refreshTimeout: ReturnType<typeof setTimeout> = null
 
-  private groups: Record<string, GroupInfo> = {}
+  #groups: Record<string, GroupInfo> = {}
 
   #cfgManager: ConfigManager
   #socket: net.Server
@@ -64,6 +64,10 @@ export default class ServerManager {
     this.dataDir = dataDir
     this.configDir = configDir
     this.#cfgManager = configManager
+  }
+
+  public get Groups() {
+    return Object.values(this.#groups)
   }
 
   #debugLive(...args: any[]) {
@@ -197,7 +201,7 @@ export default class ServerManager {
    * @returns Record<string, GroupInfo | {servers: Server[]}>
    */
   public getAllGrouped<T>(mapFn: (value: Server) => (T)) {
-    return Object.entries(this.groups).map(([groupId, data]) => {
+    return Object.entries(this.#groups).map(([groupId, data]) => {
       return {
         id: groupId,
         name: data.name,
@@ -384,7 +388,7 @@ export default class ServerManager {
 
     const serverPromises = []
     for(const [groupId, data] of Object.entries<ConfigGroupData>(config)) {
-      this.groups[groupId] = {
+      this.#groups[groupId] = {
         id: groupId,
         name: data.name ?? groupId,
         type: data.type || "source",
@@ -407,7 +411,7 @@ export default class ServerManager {
 
               const tags = server.tags ?? []
 
-              this.servers[id] = new Server(this.groups[groupId], {
+              this.servers[id] = new Server(this.#groups[groupId], {
                 actions: server.actions ?? [],
                 id,
                 name: server.name,

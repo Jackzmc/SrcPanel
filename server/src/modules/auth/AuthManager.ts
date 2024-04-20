@@ -70,11 +70,11 @@ export default class AuthManager {
 
     async Init() {
         let startTime = Date.now()
-        await this.fetchGroups()
+        await this.refreshGroups()
         const fetchGroupsTime = Date.now() - startTime
 
         startTime = Date.now()
-        await this.fetchAdmins()
+        await this.refreshAdmins()
         const fetchAdminsTime = Date.now() - startTime
 
         console.info(`[AuthManager] Fetched ${Object.keys(this.admins).length} admins in ${(fetchAdminsTime).toFixed(1)} ms`)
@@ -213,7 +213,7 @@ export default class AuthManager {
         await conn.commit()
         conn.release()
 
-        await this.fetchAdmins()
+        await this.refreshAdmins()
 
         return {
             admin: newAdminData,
@@ -259,7 +259,7 @@ export default class AuthManager {
         await conn.commit()
         conn.release()
         // TODO: update admin in place, no full refresh
-        await this.fetchAdmins()
+        await this.refreshAdmins()
 
         return id
     }
@@ -431,7 +431,7 @@ export default class AuthManager {
     /**
      * Fetches all game admin groups
      */
-    public async fetchGroups() {
+    public async refreshGroups() {
         const groups: Record<number, AdminGroup> = {}
         // Returns right join of sm_group_permissions, will return N permissions with group data for each one
         const [rows] = await this.#db.execute<RowDataPacket[]>("SELECT g.*, gp.code FROM sm_groups g LEFT JOIN sm_group_permissions gp ON g.id = gp.group_id")
@@ -497,7 +497,7 @@ export default class AuthManager {
     /**
      * Fetches the latest admin data from the table
      */
-    public async fetchAdmins() {
+    public async refreshAdmins() {
         const [rows] = await this.#db.execute<RowDataPacket[]>(`
             SELECT a.*, sag.group_id as group_id, u.last_alias as resolvedName
             FROM sm_admins a

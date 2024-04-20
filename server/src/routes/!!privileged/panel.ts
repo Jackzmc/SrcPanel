@@ -12,6 +12,7 @@ let updateState: UpdateState = "NORMAL"
 
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
+
     fastify.get('/', async (req, reply) => {
         if(!req.user.hasPermission("panel.view")) return NO_PERMISSION(reply)
         let kv = {}
@@ -181,8 +182,14 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     })
 
     fastify.post('/update-admins', async (req, reply) => {
-        await fastify.authmngr.fetchAdmins()
+        await fastify.authmngr.refreshAdmins()
         await reply.status(204).send()
+    } )
+    
+    fastify.get( '/groups', async ( req, reply ) => {
+        // if(!req.user.hasPermission("panel.restart")) return NO_PERMISSION(reply)
+        const groups = fastify.servers.Groups
+        return reply.send(groups)
     })
 }
 

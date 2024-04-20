@@ -29,6 +29,30 @@
           </Field>
         </Tab>
         <Tab name="Actions">
+          <ActionModal v-if="actionEditActive" :data="selectedAction" />
+          <table class="table is-fullwidth">
+            <thead>
+              <tr>
+                <th></th>
+                <th>Name</th>
+                <th>Command</th>
+                <th></th>
+              </tr>
+            </thead>
+            <VueDraggableNext v-model="group.actions" tag="tbody" handle=".handle">
+              <tr v-for="action in group.actions" :key="action.name">
+                <td class="valign" style="width:1%"><Icon class="handle" icon="fa-bars"></Icon></td>
+                <td class="valign">{{ action.name }}</td>
+                <td class="valign">{{ action.command }}</td>
+                <td class="valign"><a class='button is-info is-outlined' @click="editAction(action)"><Icon icon="fa-edit"></Icon></a></td>
+              </tr>
+            </VueDraggableNext>
+            <tfoot>
+            <tr>
+              <td colspan="4"><button class="is-info is-outlined button" @click="editAction(null)"><Icon icon="fa-plus">New Action</Icon></button></td>
+            </tr>
+        </tfoot>
+          </table>
           <!-- TODO: ADD -->
         </Tab>
       </Tabs>
@@ -46,7 +70,7 @@ import Field from '@/components/Field.vue'
 import { Tab, Tabs } from 'vue3-tabs-component'
 import ModalCard from '@/components/ModalCard.vue';
 import { computed, onMounted, ref, watch } from 'vue';
-import { GroupInfo, ServerInfo } from '../../../../../common-types/Server.js';
+import { GroupInfo, ServerAction, ServerInfo } from '../../../../../common-types/Server.js';
 import { ConfigServerData } from '../../../../../server/src/modules/servers/Server';
 // @ts-expect-error
 import BulmaTagsInput from '@creativebulma/bulma-tagsinput';
@@ -54,6 +78,8 @@ import { request } from '@/js/util.js';
 import { LoadState } from '@/types/global.js';
 import debounce from '@/js/debounce.js';
 import { updatedDiff } from 'deep-object-diff';
+import { VueDraggableNext } from 'vue-draggable-next';
+import ActionModal from './ActionModal.vue'
 
 const emit = defineEmits(["close", "save"])
 
@@ -71,8 +97,20 @@ let group = ref<GroupInfo>({
   id: '',
   name: '',
   type: 'source',
-  actions: []
-})
+  actions: [{
+    name: 'Restart',
+    command: 'builtin:stop',
+    description: 'Restart the server',
+    isHidden: false,
+  }, {
+    name: 'Request Restart',
+    command: 'builtin:request_stop',
+    description: 'Restart the server if no players online',
+    isHidden: false,
+  }]
+} )
+let selectedAction = ref<ServerAction | null>()
+let actionEditActive = ref(false)
 
 const hasEdited = computed(() => {
   if(!group.value) return false
@@ -91,10 +129,22 @@ const canSubmit = computed(() => {
   return validationErrors.value.length === 0
 })
 
+function editAction( action: ServerAction | null ) {
+  actionEditActive.value = true
+  selectedAction.value = action
+}
 
 function onEnterName() {
   if(!group.value.id) {
     group.value.id = group.value?.name?.toLowerCase().replace(/[^a-zA-Z0-9- ]/g, '').replace(/[\s]/g, '-')
+  }
+}
+
+function autoTrim( text: string, limit: number ) {
+  if (text.length > limit ) {
+    return text.substring(0, limit) + '...'
+  } else {
+    return text
   }
 }
 
@@ -119,3 +169,10 @@ onMounted(async () => {
 </script>
 
 <style scoped src="node_modules/@creativebulma/bulma-tagsinput/dist/css/bulma-tagsinput.min.css" />
+
+
+<style scoped>
+td.valign {
+  vertical-align: middle;
+}
+</style>
