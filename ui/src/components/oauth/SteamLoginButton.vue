@@ -16,16 +16,18 @@
 <script setup lang="ts">
 import { inject, computed} from 'vue'
 import { useRoute } from 'vue-router'
+import { PanelMetaInfo } from '../../../../common-types/Panel.js';
 const route = useRoute()
 
 const props = defineProps<{
-  size?: "small" | "medium" | "large"
+  size?: "small" | "medium" | "large",
+  meta: PanelMetaInfo
 }>()
 
 const redirectUri = computed(() => {
-  return `${import.meta.env.VITE_API_URL}/auth/steam/callback?return_uri=${route.fullPath}`
+  return `${props.meta.settings.domain}/api/auth/steam/callback?return_uri=${route.fullPath}`
 })
 const realm = computed(() => {
-  return import.meta.env.VITE_REALM
+  return props.meta.settings.domain
 })
 </script>

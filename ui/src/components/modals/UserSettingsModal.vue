@@ -57,18 +57,18 @@
           </Tab>
           <Tab name="Connections">
             <div class="list has-visible-pointer-controls">
-              <OauthProviderCard :provider="dummySteamProvider" provider-image-src="/img/providers/steam.png">
+              <ProviderCard :provider="dummySteamProvider" provider-image-src="/img/providers/steam.png">
                 Cannot unlink
-              </OauthProviderCard>
+              </ProviderCard>
               <span class="has-text-centered is-size-4 mt-3" v-if="!providers">Loading...</span>
-              <OauthProviderCard v-for="provider in providers" :key="provider.id" :provider="provider" :provider-image-src="'/img/providers/' + provider.id + '.svg'">
+              <ProviderCard v-for="provider in providers" :key="provider.id" :provider="provider" :provider-image-src="'/img/providers/' + provider.id + '.svg'">
                 <a v-if="provider.enabled" target="_blank" :href="'/api/auth/' + provider.id + '/revoke'" class="button has-text-white" style="background-color:#5865F2">
                   <Icon icon="fab fa-discord">Unlink {{ provider.name }} Account</Icon>
                 </a>
                 <a v-else target="_blank" :href="'/api/auth/' + provider.id + '/link'" class="button has-text-white" style="background-color:#5865F2">
                   <Icon icon="fab fa-discord">Link {{ provider.name }} Account</Icon>
                 </a>
-              </OauthProviderCard>
+              </ProviderCard>
             </div>
           </Tab>
           <Tab name="Developer">
@@ -106,7 +106,7 @@ import { useRoute, useRouter } from "vue-router";
 // @ts-ignore
 import { Tab, Tabs } from "vue3-tabs-component";
 import { SessionData, ProviderConnectionData } from '../../../../common-types/User';
-import OauthProviderCard from "@/components/OauthProviderCard.vue";
+import ProviderCard from "@/components/oauth/ProviderCard.vue";
 
 const emit = defineEmits(["close"]);
 

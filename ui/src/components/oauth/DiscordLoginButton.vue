@@ -7,12 +7,14 @@
 <script setup lang="ts">
 import { inject, computed} from 'vue'
 import { useRoute } from 'vue-router'
+import { PanelMetaInfo } from '../../../../common-types/Panel.js';
 const route = useRoute()
 
 const props = defineProps<{
-  size?: "small" | "medium" | "large"
+  size?: "small" | "medium" | "large",
+  meta: PanelMetaInfo
 }>()
 const loginUri = computed(() => {
-  return `${import.meta.env.VITE_API_URL}/auth/discord/login?return_uri=${route.fullPath}`
+  return `${props.meta.settings.domain}/api/auth/discord/login?return_uri=${route.fullPath}`
 })
 </script>

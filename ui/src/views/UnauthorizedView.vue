@@ -10,8 +10,8 @@
       </div>
     </div>
     <div class="column">
-      <div class="block"><SteamLoginButton size="large" /></div>
-      <div class="block"><DiscordLoginButton size="large" /></div>
+      <div class="block"><SteamLoginButton size="large" :meta="meta" /></div>
+      <div class="block"><DiscordLoginButton size="large" :meta="meta" /></div>
     </div>
   </div>
 </div>
@@ -21,12 +21,14 @@
 import { PrivilegedUser } from '@/js/User';
 import { ref, onBeforeMount, watch } from 'vue'
 import { useRouter } from 'vue-router';
-import DiscordLoginButton from '@/components/DiscordLoginButton.vue';
-import SteamLoginButton from '@/components/SteamLoginButton.vue';
+import DiscordLoginButton from '@/components/oauth/DiscordLoginButton.vue';
+import SteamLoginButton from '@/components/oauth/SteamLoginButton.vue';
+import { PanelMetaInfo } from '../../../common-types/Panel.js';
 
 const router = useRouter()
 const props = defineProps<{
-  privUser?: PrivilegedUser
+  privUser?: PrivilegedUser,
+  meta: PanelMetaInfo
 }>()
 
 

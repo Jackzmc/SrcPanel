@@ -4,7 +4,7 @@
     <!-- <v-tour v-if="tour" :name="tour.name" :steps="tour.steps"></v-tour> -->
     <BirthdayComponent v-if="isBirthday" @close="closeBirthday" />
     <Notifications position="top center" :duration=7000 @start="onNotificationShown" />
-    <NavBar v-if="!route.meta.hideNav" @logout="onLogout" :update-info="updateInfo" :priv-user="privUser" />
+    <NavBar v-if="!route.meta.hideNav" @logout="onLogout" :update-info="updateInfo" :priv-user="privUser" :meta="meta" />
     <br v-if="!route.meta.hideNav">
     <br v-if="route.meta.hideHero">
     <section v-else class="hero is-info has-text-centered">
@@ -116,9 +116,23 @@ async function onAuthorized() {
   }
 }
 async function getMeta() {
+  if(window.localStorage['srcds_meta_cache']) {
+    try {
+      const json = JSON.parse(window.localStorage['srcds_meta_cache'])
+      meta.value = json.data
+    } catch(err) {
+      console.error("getMeta:", err)
+    }
+  }
+
   const response = await fetch('/api/meta')
   if(response.ok) {
-    meta.value = await response.json()
+    const json = await response.json()
+    window.localStorage['srcds_meta_cache'] = JSON.stringify({
+      data: json,
+      timestamp: Date.now()
+    })
+    meta.value = json
   }
 }
 async function getAuth() {

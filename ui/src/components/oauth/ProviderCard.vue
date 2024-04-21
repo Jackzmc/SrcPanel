@@ -31,9 +31,9 @@
 </template>
 
 <script setup lang="ts">
-import { ProviderConnectionData } from '../../../common-types/User.js';
+import { ProviderConnectionData } from '../../../../common-types/User.js';
 import { computed } from 'vue';
-import ListItem from './ListItem.vue';
+import ListItem from '@/components/ListItem.vue';
 
 const props = defineProps<{
   provider: ProviderConnectionData
