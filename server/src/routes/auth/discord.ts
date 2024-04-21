@@ -85,7 +85,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         reply.type("text/html")
         if(!req.query.code) return reply.send("<h1>Missing code</h1>")
         if(!req.query.state) return reply.send("<h1>Missing state</h1>")
-        const domain = await fastify.config.GetKV("domain");
+        const domain = await fastify.config.GetKV<string>("domain");
         try {
             const jwt = await JWT.verify<StateJwtPayoad>(req.query.state, STATE_JWT_SECRET)
             const provider = await fastify.authmngr.oauth.getProvider(PROVIDER_NAME)

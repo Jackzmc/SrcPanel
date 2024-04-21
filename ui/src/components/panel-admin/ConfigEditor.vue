@@ -33,7 +33,7 @@
 
 <script setup lang="ts">
 import { ref, watch, onBeforeMount, onMounted } from 'vue';
-import { Keyvalue, ApiPanelConfig, PanelKeysRecord } from '../../../../common-types/Panel.js';
+import { ConfigKey, ApiPanelConfig, PanelKeysRecord } from '../../../../common-types/Panel.js';
 import { notify } from '@kyvg/vue3-notification';
 import { request } from '@/js/util';
 import { convertSnakeToHuman } from '../../js/util';
@@ -47,7 +47,7 @@ interface KeyvaluesFormData extends ApiPanelConfig {
   focused: boolean
 }
 
-let keyvalues = ref<Record<Keyvalue, KeyvaluesFormData>>()
+let keyvalues = ref<Record<ConfigKey, KeyvaluesFormData>>()
 let canSave = ref(false)
 let canSaveTooltip = ref<string>()
 watch(() => keyvalues.value, () => {
@@ -69,7 +69,7 @@ watch(() => keyvalues.value, () => {
 
 function validateKeyvalue(key: string) {
   if(!keyvalues.value) return
-  const data = keyvalues.value[key as Keyvalue];
+  const data = keyvalues.value[key as ConfigKey];
   if(!data) return
   data.error = undefined
   data.success = undefined
@@ -104,7 +104,7 @@ async function saveKeyvalue() {
   let kv: Partial<Record<string, string | null>> = {}
   for(const [key, data] of Object.entries(keys)) {
     if(data.formValue !== data.value)
-      kv[key] = keyvalues.value[key as Keyvalue].formValue
+      kv[key] = keyvalues.value[key as ConfigKey].formValue
       if(kv[key] === "") {
         kv[key] = null
       }
@@ -130,15 +130,15 @@ async function fetchPanelConfigs() {
   const response = await request('/api/panel', undefined, { title: "Error fetching configs"})
   if(response?.ok) {
     const { keys }: { keys: PanelKeysRecord } = await response.json()
-    let obj: Partial<Record<Keyvalue, KeyvaluesFormData>> = {}
+    let obj: Partial<Record<ConfigKey, KeyvaluesFormData>> = {}
     for(const [key, data] of Object.entries(keys)) {
-      obj[key as Keyvalue] = {
+      obj[key as ConfigKey] = {
         ...data,
         focused: false,
         formValue: data.value,
       }
     }
-    keyvalues.value = obj as Record<Keyvalue, KeyvaluesFormData>
+    keyvalues.value = obj as Record<ConfigKey, KeyvaluesFormData>
   } else {
     console.error(response?.statusText)
   }

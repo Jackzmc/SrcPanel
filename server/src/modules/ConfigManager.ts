@@ -2,7 +2,7 @@ import sqlite3 from 'sqlite3'
 import sqlite, { open } from 'sqlite'
 import SQL from 'sql-template-strings';
 import { join } from 'path';
-import { Keyvalue, Keyvalues, PublicKeys } from '../../../common-types/Panel.js';
+import { KeyFlags, ConfigKey, KVConfig, PublicKeys } from '../../../common-types/Panel.js';
 
 export interface RegisteredProvider {
     id: string
@@ -22,29 +22,6 @@ export default class ConfigManager {
     }
 
     public async SetupDatabase() {
-        await this.#db.run(SQL`create table if not exists shares
-        (
-            id               varchar(32)   not null,
-            name             varchar(64)   null,
-            source_folder    TINYTEXT      not null,
-            steam_appid      int           null,
-            valid_exts       varchar(255)  null,
-            download_sources int default 0 not null,
-            constraint shares_pk
-                primary key (id)
-        );`)
-        await this.#db.run(SQL`create table if not exists share_dests
-        (
-            share_id varchar(32) not null,
-            id       varchar(32) not null,
-            name     tinytext    null,
-            path     tinytext    not null,
-            server_ids smalltext null,
-            constraint share_dests_pk
-                primary key (id),
-            constraint share_dests_shares_id_fk
-                foreign key (share_id) references shares (id)
-        );`)
         await this.#db.run(SQL`create table if not exists keyvalues
         (
             key varchar(64) not null,
@@ -54,16 +31,6 @@ export default class ConfigManager {
         );`)
         await this.checkRequiredKeys()
     }
-
-    public async GetServers(): Promise<any[]> {
-        if(!this.#servers) await this.RefreshServers()
-        return this.#servers
-    }
-
-    public async RefreshServers(){
-        this.#servers = []
-    }
-
     public async GetPublicKeyvalues() {
         let kv = {}
         for(const key of PublicKeys) {
@@ -99,21 +66,29 @@ export default class ConfigManager {
         return data
     }
 
-    public async GetKV<T extends number | string = string>(key: Keyvalue, defaultValue?: T): Promise<T> {
+    public async GetKV<T extends number | string | boolean = string>(key: ConfigKey, defaultValue?: T): Promise<T> {
         const data = await this.#db.get(SQL`SELECT value FROM keyvalues WHERE key = ${key}`)
+        const config = KVConfig[key]
         if(!data) return defaultValue
+        if(config) {
+            switch(config.type) {
+                case "float": return parseFloat(data) as T
+                case "integer": return parseInt(data) as T
+                case "boolean": return Boolean(data) as T
+            }
+        }
         return data.value as T ?? defaultValue
     }
 
     public async GetKVNamespaced<T extends number | string = string>(...args: string[]): Promise<T> {
-        return this.GetKV(args.join(".") as Keyvalue, null)
+        return this.GetKV(args.join(".") as ConfigKey, null)
     }
 
-    public async HasKV(key: Keyvalue) {
+    public async HasKV(key: ConfigKey) {
         return await this.GetKV(key) != undefined 
     }
 
-    public async SetKV(key: Keyvalue, value: string | number) {
+    public async SetKV(key: ConfigKey, value: string | number) {
         if(value == null || value == undefined) await this.deleteKV(key)
         else await this.#db.run(SQL`REPLACE INTO keyvalues (key, value) VALUES (${key}, ${value})`)
     }
@@ -122,20 +97,20 @@ export default class ConfigManager {
      * @param args 
      */
     public async SetKVNamespaced(key: string[], value: string | number) {
-        const dbKey = key.join(".") as Keyvalue
+        const dbKey = key.join(".") as ConfigKey
         if(value == null || value == undefined) await this.deleteKV(dbKey)
         else await this.#db.run(SQL`REPLACE INTO keyvalues (key, value) VALUES (${dbKey}, ${value})`)
     }
 
-    private async deleteKV(key: Keyvalue) {
+    private async deleteKV(key: ConfigKey) {
         await this.#db.run(SQL`DELETE FROM keyvalues WHERE key = ${key}`)
     }
 
     private async checkRequiredKeys() {
         const missing = []
-        for(const [key, data] of Object.entries(Keyvalues)) {
-            if(data.required) {
-                if(!await this.HasKV(key as Keyvalue)) {
+        for(const [key, data] of Object.entries(KVConfig)) {
+            if(data.flags & KeyFlags.Required) {
+                if(!await this.HasKV(key as ConfigKey)) {
                     missing.push(key)
                 }
             }
@@ -144,10 +119,10 @@ export default class ConfigManager {
         if(missing.length > 0) {
             console.warn(`[ConfigManager] WARNING: Missing ${missing.length} required configurations:`)
             for(const key of missing) {
-                if(Keyvalues[key].description)
-                    console.warn(`  ${key} [${Keyvalues[key].type}] - ${Keyvalues[key].description}`)
+                if(KVConfig[key].description)
+                    console.warn(`  ${key} [${KVConfig[key].type}] - ${KVConfig[key].description}`)
                 else
-                    console.warn(`  ${key} [${Keyvalues[key].type}]`)
+                    console.warn(`  ${key} [${KVConfig[key].type}]`)
 
             }
         }

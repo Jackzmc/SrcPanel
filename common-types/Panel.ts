@@ -1,27 +1,36 @@
 
 export interface KeyConfig {
-    public?: boolean,
     name?: string
     type: KeysType,
-    sensitive?: boolean,
+    flags?: KeyFlags
     description?: string,
-    required: boolean
 }
-export type KeysType = "string" | "integer" | "float" | "url" | "path"
-export type Keyvalue = "domain" | "discord.link" | "servers.long_refresh_interval" | "servers.short_refresh_interval"
+
+export enum KeyFlags {
+    None,
+    Public    = 1, /* Is the key public (received by /api/meta) */
+    Protected = 2, /* Is the key protected (password, should be hidden in editor) */
+    Internal  = 4, /* Should not be user-configable */
+    Required  = 8/* Required */
+}
+
+export type KeysType = "string" | "integer" | "boolean" | "float" | "url" | "path"
 export type KeysRecords = Record<string, KeyConfig>
-export const Keyvalues: KeysRecords = {
-    "domain": { required: true, type: "url", public: true, name: "Domain", description: "The domain used for return urls from Oauth2 login (discord)" },
-    "discord.link": { required: false, type: "url", public: false, name: "Discord Invite Link", description: "The link to your discord server" },
-    "servers.long_refresh_interval": { required: false, type: "float", name: "Long Refresh Interval", description: "How often in seconds to refresh servers in seconds when no clients are detected", public: true },
-    "servers.short_refresh_interval": { required: false, type: "float", name: "Short Refresh Interval", description: "How often in seconds to refresh servers in seconds when clients are detected", public: true },
+export const KVConfig: KeysRecords = {
+    "domain": { flags: KeyFlags.Public | KeyFlags.Required, type: "url", name: "Domain", description: "The domain used for return urls from Oauth2 login (discord)" },
+    "discord.link": { type: "url", name: "Discord Invite Link", description: "The link to your discord server" },
+    "servers.long_refresh_interval": { flags: KeyFlags.Public, type: "float", name: "Long Refresh Interval", description: "How often in seconds to refresh servers in seconds when no clients are detected", },
+    "servers.short_refresh_interval": { flags: KeyFlags.Public, type: "float", name: "Short Refresh Interval", description: "How often in seconds to refresh servers in seconds when clients are detected"},
+    "_version": { flags: KeyFlags.Internal, type: "string" },
+    "first_time_setup.stage": { flags: KeyFlags.Internal, type: "integer" },
 }
-export const PublicKeys = Object.entries(Keyvalues).filter(([k,v]) => v.public).map(([k,v]) => k) as Keyvalue[]
+export type ConfigKey = keyof typeof KVConfig //"domain" | "discord.link" | "servers.long_refresh_interval" | "servers.short_refresh_interval"
+export const PublicKeys = Object.entries(KVConfig).filter(([k,v]) => v.flags & KeyFlags.Public).map(([k,v]) => k) as ConfigKey[]
 
 export interface ApiPanelConfig extends KeyConfig {
     value: string
 }
-export type PanelKeysRecord = Record<Keyvalue, ApiPanelConfig>
+export type PanelKeysRecord = Record<ConfigKey, ApiPanelConfig>
 
 export type UpdateState = "NORMAL" | "GIT_PULL" | "UNLINK_NODE_MODULES" | "PACKAGES_INSTALL" | "TSC" | "RESTARTING" | "CLEANUP_OLD_BUILD"
 
@@ -37,7 +46,14 @@ export interface HealthReport {
 }
 
 export interface PanelMetaInfo {
-    servers: string[],
     settings: Record<string, any>,
     steamAvailable: boolean
+}
+
+export enum FirstTimeSetupStage {
+    Default,
+    FirstSetupComplete = 1,
+    SteamAdminCreated = 2,
+
+    DONE = 100
 }

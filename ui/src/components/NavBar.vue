@@ -148,12 +148,12 @@
             </div>
           </div>
         </template>
-        <template v-else>
+        <template v-else-if="meta">
           <div class="navbar-item">
-            <DiscordLoginButton />
+            <DiscordLoginButton :meta="meta" />
           </div>
           <div class="navbar-item">
-            <SteamLoginButton />
+            <SteamLoginButton :meta="meta" />
           </div>
         </template>
       </div>
@@ -164,13 +164,14 @@
 
 <script setup lang="ts">
 import { computed, ref, onMounted, onBeforeMount, watch } from 'vue';
-import SteamLoginButton from '@/components/SteamLoginButton.vue'
-import DiscordLoginButton from '@/components/DiscordLoginButton.vue'
+import SteamLoginButton from '@/components/oauth/SteamLoginButton.vue'
+import DiscordLoginButton from '@/components/oauth/DiscordLoginButton.vue'
 import { useRoute, useRouter } from 'vue-router';
 import { notify } from '@kyvg/vue3-notification';
 import { PrivilegedUser } from '@/js/User';
 import UserSettingsModal from './modals/UserSettingsModal.vue';
 import NotificationsModal from './modals/NotificationsModal.vue'
+import { PanelMetaInfo } from '../../../common-types/Panel.js';
 let darkMode = ref(false)
 let active = ref(false)
 
@@ -186,7 +187,8 @@ const LAST_UPDATED = new Date(Number(BUILD_TIMESTAMP))
 
 const props = defineProps<{
   privUser?: PrivilegedUser,
-  updateInfo: any
+  updateInfo: any,
+  meta?: PanelMetaInfo
 }>()
 
 let showModal = ref<string>()

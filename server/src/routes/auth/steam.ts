@@ -3,6 +3,7 @@ import SteamID from 'steamid'
 import FastGeoip from 'fast-geoip'
 import User from '../../modules/users/User.js';
 import { SteamInfo } from '../../../../common-types/Privileges.js';
+import { FirstTimeSetupStage } from '../../../../common-types/Panel.js';
 
 export const SESSION_VERSION = "3.0"
 
@@ -76,12 +77,28 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                             steamid: req.query['openid.identity']
                         })
                     }
-                    
+
                     const steamid2 = steamid.getSteam2RenderedID()
+
+                    // Handle first time setup:
+                    const setupStage = await fastify.config.GetKV<number>("first_time_setup.stage")
+                    if(setupStage == FirstTimeSetupStage.FirstSetupComplete) {
+                        await fastify.authmngr.addAdmin({
+                            authtype: 'steam',
+                            identity: steamid2,
+                            name: userDetails.personaname,
+                            immunity: 10,
+                            codes: ["*"]
+                        })
+                    }
+                    
+
                     const admin = fastify.authmngr.getAdminExport(steamid2)
                     if(admin) {
                         await fastify.authmngr.loginUser(req, admin, userDetails)
-
+                        if(setupStage == 1) {
+                            await fastify.config.SetKV("first_time_setup.stage", FirstTimeSetupStage.SteamAdminCreated)
+                        }
                         if(req.query.return_uri) {
                             const redirectUri = process.env.STEAM_REDIRECT_URI || "http://localhost:8080"
                             return reply.redirect(`${redirectUri}${req.query.return_uri}`)

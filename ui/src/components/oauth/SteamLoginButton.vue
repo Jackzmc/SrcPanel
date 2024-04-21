@@ -7,7 +7,7 @@
     <input type="hidden" name="openid.claimed_id" value="http://specs.openid.net/auth/2.0/identifier_select">
     <input type="hidden" name="openid.ns" value="http://specs.openid.net/auth/2.0">
 
-    <button type="submit" :class="['button','is-dark',{'is-large': size === 'large', 'is-medium': size === 'medium', 'is-small': size === 'small'}]">
+    <button type="submit" :class="['button','is-dark',{'is-large': size === 'large', 'is-medium': size === 'medium', 'is-small': size === 'small'}]" :disabled="!realm">
       <Icon icon="fab fa-steam">Login with Steam</Icon>
     </button>
   </form>

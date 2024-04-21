@@ -1,5 +1,5 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
-import { Keyvalue, Keyvalues, KeyConfig } from '../../../../common-types/Panel.js';
+import { ConfigKey, FirstTimeSetupStage, KVConfig, KeyConfig, KeyFlags } from '../../../../common-types/Panel.js';
 import { NO_PERMISSION } from '../../responses.js';
 import path from 'node:path';
 import Json5 from 'json5'
@@ -11,16 +11,17 @@ import Server from '../../modules/servers/Server.js';
 
 let updateState: UpdateState = "NORMAL"
 
-
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
 
     fastify.get('/', async (req, reply) => {
         if(!req.user.hasPermission("panel.view")) return NO_PERMISSION(reply)
         let kv = {}
-        for(const [key, value] of Object.entries(Keyvalues)) {
-            kv[key] = {
-                ...value,
-                value: await fastify.config.GetKV(key as Keyvalue, "")
+        for(const [key, config] of Object.entries(KVConfig)) {
+            if(config.flags & ~KeyFlags.Internal) {
+                kv[key] = {
+                    ...config,
+                    value: await fastify.config.GetKV(key as ConfigKey, "")
+                }
             }
         }
         
@@ -64,14 +65,14 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
 
         for(const [key, value] of Object.entries(req.body)) {
-            if(!(key in Keyvalues)) {
+            if(!(key in KVConfig)) {
                 return reply.status(400).send({
                     error: "UNKNOWN_KV",
                     message: `The key "${key}" is not a valid keyvalue key`
                 })
             }
 
-            await fastify.config.SetKV(key as Keyvalue, value)
+            await fastify.config.SetKV(key as ConfigKey, value)
         }
 
         return reply.status(204).send()
@@ -194,11 +195,12 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     })
 
     fastify.delete('/groups/:id', async (req: FastifyRequest<{ Params: { id: string }}>, reply) => {
+        // await fastify.servers.deleteGroup(req.params.id)
         // const group = await fastify.server
     })
 
     fastify.put('/groups/:id', async (req: FastifyRequest<{ Params: { id: string }}>, reply) => {
-        
+        // await fastify.servers.setGroup(req.params.id, req.body)
     })
 
     fastify.get('/servers', async (req, reply) => {
@@ -215,6 +217,32 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 actions: server.actions.filter(a => !a.inherited)
             }
         })
+    })
+
+    fastify.get('/first-time-setup', async(req: FastifyRequest, reply ) => {
+        return {
+            stage: Number(await fastify.config.GetKV("first-time-setup.stage", 0))
+        }
+    })
+
+    fastify.post('/first-time-setup', async(req: FastifyRequest<{ Querystring: { stage: number, [s: string]: any }}>, reply ) => {
+        const stage = Number(req.query.stage)
+        const currentStage = await fastify.config.GetKV<number>("first-time-setup.stage")
+        if(currentStage == FirstTimeSetupStage.DONE) return reply.code(403).send({
+            error: "SETUP_COMPLETE",
+            message: "Setup has already been completed"
+        })
+        if(stage === FirstTimeSetupStage.FirstSetupComplete) {
+            console.log("setting domain", req.query.domain)
+            // await fastify.config.SetKV("domain", req.query.domain)
+        } else {
+            return reply.code(400).send({
+                error: "INVALID_STAGE",
+                message: "Invalid stage"
+            })
+        }
+        await fastify.config.SetKV("first-time-setup.stage", stage)
+        return reply.status(204).send()
     })
 }
 

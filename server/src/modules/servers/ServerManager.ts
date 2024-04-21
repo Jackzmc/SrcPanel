@@ -279,6 +279,24 @@ export default class ServerManager {
     return Object.keys(this.addonShares)
   }
 
+  async deleteGroup(groupId: string) {
+    delete this.#groups[groupId]
+  }
+  async setGroup(id: string, group: string) {
+
+  }
+  async addGroup(group: string) {
+
+  }
+
+  async deleteServer(server: string) {
+
+  }
+
+  async putServer(serveR: Server) {
+
+  }
+
   /**
    * Loads all servers and shares from their respective json files
    */
