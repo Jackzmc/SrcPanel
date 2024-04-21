@@ -10,12 +10,12 @@
   <div class="container" style="min-height:400px" v-else>
     <ul class="steps has-content-centered">
       <li v-for="(step, i) in STEPS" :key="i" :class="['steps-segment',{'is-active': i == highestStep }]">
-        <a href="#" class="has-text-dark" @click="setStep(i)">
+        <router-link :to="{ hash: step.id }" class="has-text-dark">
           <span :class="['steps-marker',{'is-info': i <= highestStep }]">{{ Number(i)+1 }}</span>
           <div class="steps-content">
             <strong>{{ step.label }}</strong>
           </div>
-        </a>
+        </router-link>
       </li>
     </ul>
     <br>
@@ -59,33 +59,33 @@ enum Step { Intro, ServerGroups, Servers, Shares, Settings, Done }
 const STEPS: Record<Step, StepData> = {
   [Step.Intro]: {
     label: "Intro",
-    id: "intro",
+    id: "#intro",
     component: IntroTab
   },
   [Step.Settings]: {
     label: "Panel Settings",
-    id: "settings",
+    id: "#settings",
     component: PanelSettingsTab
   },
   [Step.ServerGroups]: {
     label: "Server Groups",
-    id: "groups",
+    id: "#groups",
     component: ServerGroupsTable
   },
   [Step.Servers]: {
     label: "Servers",
-    id: "servers",
+    id: "#servers",
     component: ServersTab
   },
   [Step.Shares]: {
     label: "Shares",
-    id: "shares",
+    id: "#shares",
     component:SharesTable
   },
 
   [Step.Done]: {
     label: "Done",
-    id: "done",
+    id: "#done",
     component: DoneTab
   }
 }
@@ -97,16 +97,19 @@ watch(() => route.hash, setStepFromHash)
 
 function setStepFromHash() {
   if(route.hash) {
-    const hash = route.hash.slice(1)
     for(const [id, step] of Object.entries(STEPS)) {
-      if(hash === step.id) {
+      if(route.hash === step.id) {
         currentStep.value = Number(id)
         currentStepData.value = step
+        if(currentStep.value > highestStep.value) {
+          highestStep.value = currentStep.value
+        }
         return
       }
     }
+  } else {
+    router.replace({ hash: STEPS[Step.Intro].id })
   }
-  setStep(Step.Intro)
 }
 
 const canStepBack = computed(() => {
@@ -117,18 +120,11 @@ const canStepNext = computed(() => {
     && props.privUser // 1st step sets up a user
 })
 
-function setStep(step: Step) {
-  currentStep.value = step
-  if(step > highestStep.value) {
-    highestStep.value = step
-  }
-  router.replace({ hash: "#" + STEPS[currentStep.value].id })
-}
 function advStep(offset: number) {
   let nextStep = currentStep.value + offset
   if(nextStep < 0) nextStep = 0
   else if(nextStep > Step.Done) nextStep = Step.Done
-  setStep(nextStep)
+  router.replace({ hash: STEPS[nextStep as Step].id })
 }
 
 let currentStage = ref<FirstTimeSetupStage>(FirstTimeSetupStage.DONE)
