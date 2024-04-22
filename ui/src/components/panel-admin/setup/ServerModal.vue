@@ -1,130 +1,128 @@
 <template>
 <ModalCard :title="(data ? 'Edit' : 'Add') + ' Server'" @close="cancel">
-  <form>
-    <Tabs inner-wrapper-class="tabs" :options="{useUrlFragment:false}">
-      <Tab name="General">
-        <div class="columns">
-          <div class="column is-6">
-            <Field label="Id*">
-              <template v-slot:hint_error v-if="!server.id">
-                <p class="help has-text-danger"><Icon icon="fa-exclamation-triangle">Required</Icon></p>
-              </template>
-              <input required :class="['input',{'is-danger': !server.id }]" type="text" placeholder="A unique identifier" v-model="server.id" />
-            </Field>
-          </div>
-          <div class="column is-6">
-            <Field label="Name">
-              <input required class="input" type="text" placeholder="An optional friendly name" v-model="server.name" @change="onEnterName" />
-            </Field>
-          </div>
+  <Tabs inner-wrapper-class="tabs" :options="{useUrlFragment:false}">
+    <Tab name="General">
+      <div class="columns">
+        <div class="column is-6">
+          <Field label="Id*">
+            <template v-slot:hint_error v-if="!server.id">
+              <p class="help has-text-danger"><Icon icon="fa-exclamation-triangle">Required</Icon></p>
+            </template>
+            <input required :class="['input',{'is-danger': !server.id }]" type="text" placeholder="A unique identifier" v-model="server.id" />
+          </Field>
         </div>
-        <div class="columns">
-          <div class="column is-6">
-            <Field label="IP Address / Domain*" :info="server.domain">
-              <template v-slot:hint_error v-if="!server.ip">
-                <p class="help has-text-danger"><Icon icon="fa-exclamation-triangle">A valid domain or IP address is required</Icon></p>
-              </template>
-              <input required :class="['input',{'is-danger': !server.ip }]" type="text" placeholder="127.0.0.1, localhost, your.domain" v-model="server.ip" @input="onAddrChangedDebounce" />
-            </Field>
-          </div>
-          <div class="column is-6">
-            <Field label="Port*">
-              <template v-slot:hint_error v-if="!server.port">
-                <p class="help has-text-danger"><Icon icon="fa-exclamation-triangle">A valid port is required</Icon></p>
-              </template>
-              <input required :class="['input',{'is-danger': !server.port }]" type="number" placeholder="27015" v-model="server.port" @input="onAddrChangedDebounce" />
-            </Field>
-          </div>
+        <div class="column is-6">
+          <Field label="Name">
+            <input required class="input" type="text" placeholder="An optional friendly name" v-model="server.name" @change="onEnterName" />
+          </Field>
         </div>
-        <Field label="Type" info="Automatic will try to detect the type based on the given ip and port">
-          <div :class="['select',{'is-loading': determiningType === LoadState.Loading}]">
-            <select required :disabled="determiningType === LoadState.Loading" v-model="server.type" @change="onTypeSelected">
-              <option :value="null">Automatic</option>
-              <option value="left4dead2">Left 4 Dead 2</option>
-              <option value="source">Generic Source Engine</option>
-              <option value="minecraft">Minecraft</option>
-            </select>
-          </div>
-          <p class="help">This will overrule the type defined in the group. It's not recommended, as group type determines layout of server tables.</p>
-          <p class="help has-text-danger" v-if="determiningType === LoadState.Error">Could not automatically determine server type</p>
-        </Field>
-        <Field label="Tags (Comma separated)" info="These are generic tags used to categorize servers" >
-          <input data-type="tags" class="input" type="text" placeholder="custom-maps, my-supported-gamemode, etc" v-model="server.tags">
-        </Field>
-      </Tab>
-      <Tab name="Plugins">
-        <Field label="Activity Log Id" info="The Id used by the activity monitor plugin">
-          <input type="text" class="input" />
-        </Field>
-        <hr>
-        <Field label="Admin Panel Plugin">
-          <div class="content">
-            <h6>Setup Instructions</h6>
-            <ol>
-              <li>Download the <a href="https://github.com/Jackzmc/sourcemod-plugins/raw/master/plugins/activitymonitor.smx">activitymonitor.smx</a> to the server</li>
-              <li>Open the file in <code>/yourgame/&lt;left4dead2/other&gt;/cfg/sourcemod/plugins/adminpanel.cfg</code></li>
-              <li>Replace <code>127.0.0.1</code> with the IP of the admin panel for <code>sm_adminpanel_host</code></li>
-              <!-- <li><a @click="generateAuthToken">Click here to generate an auth token</a> and enter it in for <code>sm_adminpanel_authtoken</code></li> -->
-            </ol>
-            <p>Add the server to the panel to continue setup</p>
-          </div>
-        </Field>
-      </Tab>
-      <Tab name="Advanced">
-        <Field label="Systemd Service Id" info="Optional, the id of a service for starting servers manually">
-          <input type="text" class="input" />
-        </Field>
-         <!-- TODO: disable on non-source engine -->
-         <Field label="Logs Output Path" info="Points to the config file generated by -usercon">
-          <input type="text" class="input" />
-        </Field>
-        <hr>
-        <h5 class="title is-5">Rcon</h5>
-        <p class="subtitle is-6">Used as a fallback if the adminpanel plugin is unavailable/unsupported</p>
-        <div class="tabs is-toggle">
-          <ul>
-            <li :class="{'is-active': !rconState}"><a @click="rconState = null">Disabled</a></li>
-            <li :class="{'is-active': rconState === 'plaintext'}"><a @click="rconState = 'plaintext'">Plaintext</a></li>
-            <li :class="{'is-active': rconState === 'env'}"><a @click="rconState = 'env'">From ENV Variable</a></li>
-          </ul>
+      </div>
+      <div class="columns">
+        <div class="column is-6">
+          <Field label="IP Address / Domain*" :info="server.domain">
+            <template v-slot:hint_error v-if="!server.ip">
+              <p class="help has-text-danger"><Icon icon="fa-exclamation-triangle">A valid domain or IP address is required</Icon></p>
+            </template>
+            <input required :class="['input',{'is-danger': !server.ip }]" type="text" placeholder="127.0.0.1, localhost, your.domain" v-model="server.ip" @input="onAddrChangedDebounce" />
+          </Field>
         </div>
-        <Field label="Rcon Password" info="Stored as plaintext in the servers.json" v-if="rconState === 'plaintext'">
-          <input type="text" class="input" />
-        </Field>
-        <Field label="ENV Variable Name" info="The full environmental variable that contains the rcon password" v-else-if="rconState === 'env'">
-          <input type="text" class="input" />
-        </Field>
-        <br>
-      </Tab>
-      <Tab name="Actions">
-        <p>Actions will be inherrited from the group this server belongs in, but here you can add actions specific to this server only.</p>
-        <ActionModal v-if="actionEditActive" :data="selectedAction" @save="onActionSaved" @close="actionEditActive = false" />
-        <table class="table is-fullwidth">
-          <thead>
-            <tr>
-              <th></th>
-              <th>Name</th>
-              <th>Command</th>
-              <th></th>
-            </tr>
-          </thead>
-          <VueDraggableNext v-model="server.actions" tag="tbody" handle=".handle">
-            <tr v-for="action in server.actions" :key="action.name">
-              <td class="valign" style="width:1%"><Icon class="handle" icon="fa-bars"></Icon></td>
-              <td class="valign">{{ action.name }}</td>
-              <td class="valign">{{ action.command }}</td>
-              <td class="valign"><a class='button is-info is-outlined' @click="editAction(action)"><Icon icon="fa-edit"></Icon></a></td>
-            </tr>
-          </VueDraggableNext>
-          <tfoot>
-            <tr>
-              <td colspan="4"><button class="is-info is-outlined button" @click="editAction(null)"><Icon icon="fa-plus">New Action</Icon></button></td>
-            </tr>
-          </tfoot>
-        </table>
-      </Tab>
-    </Tabs>
-  </form>
+        <div class="column is-6">
+          <Field label="Port*">
+            <template v-slot:hint_error v-if="!server.port">
+              <p class="help has-text-danger"><Icon icon="fa-exclamation-triangle">A valid port is required</Icon></p>
+            </template>
+            <input required :class="['input',{'is-danger': !server.port }]" type="number" placeholder="27015" v-model="server.port" @input="onAddrChangedDebounce" />
+          </Field>
+        </div>
+      </div>
+      <Field label="Type" info="Automatic will try to detect the type based on the given ip and port">
+        <div :class="['select',{'is-loading': determiningType === LoadState.Loading}]">
+          <select required :disabled="determiningType === LoadState.Loading" v-model="server.type" @change="onTypeSelected">
+            <option :value="null">Automatic</option>
+            <option value="left4dead2">Left 4 Dead 2</option>
+            <option value="source">Generic Source Engine</option>
+            <option value="minecraft">Minecraft</option>
+          </select>
+        </div>
+        <p class="help">This will overrule the type defined in the group. It's not recommended, as group type determines layout of server tables.</p>
+        <p class="help has-text-danger" v-if="determiningType === LoadState.Error">Could not automatically determine server type</p>
+      </Field>
+      <Field label="Tags (Comma separated)" info="These are generic tags used to categorize servers" >
+        <input data-type="tags" class="input" type="text" placeholder="custom-maps, my-supported-gamemode, etc" v-model="server.tags">
+      </Field>
+    </Tab>
+    <Tab name="Plugins">
+      <Field label="Activity Log Id" info="The Id used by the activity monitor plugin">
+        <input type="text" class="input" />
+      </Field>
+      <hr>
+      <Field label="Admin Panel Plugin">
+        <div class="content">
+          <h6>Setup Instructions</h6>
+          <ol>
+            <li>Download the <a href="https://github.com/Jackzmc/sourcemod-plugins/raw/master/plugins/activitymonitor.smx">activitymonitor.smx</a> to the server</li>
+            <li>Open the file in <code>/yourgame/&lt;left4dead2/other&gt;/cfg/sourcemod/plugins/adminpanel.cfg</code></li>
+            <li>Replace <code>127.0.0.1</code> with the IP of the admin panel for <code>sm_adminpanel_host</code></li>
+            <!-- <li><a @click="generateAuthToken">Click here to generate an auth token</a> and enter it in for <code>sm_adminpanel_authtoken</code></li> -->
+          </ol>
+          <p>Add the server to the panel to continue setup</p>
+        </div>
+      </Field>
+    </Tab>
+    <Tab name="Advanced">
+      <Field label="Systemd Service Id" info="Optional, the id of a service for starting servers manually">
+        <input type="text" class="input" />
+      </Field>
+      <!-- TODO: disable on non-source engine -->
+      <Field label="Logs Output Path" info="Points to the config file generated by -usercon">
+        <input type="text" class="input" />
+      </Field>
+      <hr>
+      <h5 class="title is-5">Rcon</h5>
+      <p class="subtitle is-6">Used as a fallback if the adminpanel plugin is unavailable/unsupported</p>
+      <div class="tabs is-toggle">
+        <ul>
+          <li :class="{'is-active': !rconState}"><a @click="rconState = null">Disabled</a></li>
+          <li :class="{'is-active': rconState === 'plaintext'}"><a @click="rconState = 'plaintext'">Plaintext</a></li>
+          <li :class="{'is-active': rconState === 'env'}"><a @click="rconState = 'env'">From ENV Variable</a></li>
+        </ul>
+      </div>
+      <Field label="Rcon Password" info="Stored as plaintext in the servers.json" v-if="rconState === 'plaintext'">
+        <input type="text" class="input" />
+      </Field>
+      <Field label="ENV Variable Name" info="The full environmental variable that contains the rcon password" v-else-if="rconState === 'env'">
+        <input type="text" class="input" />
+      </Field>
+      <br>
+    </Tab>
+    <Tab name="Actions">
+      <ActionModal v-if="actionEditActive" :data="selectedAction" @save="onActionSaved" @close="actionEditActive = false" :meta="meta" />
+      <p>Actions will be inherrited from the group this server belongs in, but here you can add actions specific to this server only.</p>
+      <table class="table is-fullwidth">
+        <thead>
+          <tr>
+            <th></th>
+            <th>Name</th>
+            <th>Command</th>
+            <th></th>
+          </tr>
+        </thead>
+        <VueDraggableNext v-model="server.actions" tag="tbody" handle=".handle">
+          <tr v-for="action in server.actions" :key="action.name">
+            <td class="valign" style="width:1%"><Icon class="handle" icon="fa-bars"></Icon></td>
+            <td class="valign">{{ action.name }}</td>
+            <td class="valign">{{ action.command }}</td>
+            <td class="valign"><button class='button is-info is-outlined' @click="editAction(action)"><Icon icon="fa-edit"></Icon></button></td>
+          </tr>
+        </VueDraggableNext>
+        <tfoot>
+          <tr>
+            <td colspan="4"><button class="is-info is-outlined button" @click="editAction(null)"><Icon icon="fa-plus">New Action</Icon></button></td>
+          </tr>
+        </tfoot>
+      </table>
+    </Tab>
+  </Tabs>
   <template v-slot:footer>
       <nav class="level">
         <div class="level-left">
@@ -162,11 +160,13 @@ import debounce from '@/js/debounce.js';
 import { updatedDiff } from 'deep-object-diff';
 import { VueDraggableNext } from 'vue-draggable-next';
 import ActionModal from './ActionModal.vue';
+import { PanelMetaInfo } from '../../../../../common-types/Panel.js';
 
 const emit = defineEmits(["close", "save", "delete"])
 
 const props = defineProps<{
-  data?: ServerInfo | null
+  data?: ServerInfo | null,
+  meta: PanelMetaInfo
 }>()
 
 watch(() => props.data, () => {

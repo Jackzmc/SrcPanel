@@ -80,7 +80,7 @@ export interface RconData {
 }
   
 
-const sleep = time => new Promise(res => setTimeout(res, time));
+const sleep = (time: number) => new Promise(res => setTimeout(res, time));
 const MAX_PLAYER_STATS = 300
 const MAX_LOGS_LINES = 30
 const LIVE_CACHE_TTL = 1000 * 60 * 3 // Live cache data expires after 3 minutes

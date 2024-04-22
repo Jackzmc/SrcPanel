@@ -1,6 +1,6 @@
 <template>
 <div>
-  <ServerModal v-if="editModalActive" :data="selectedServer" @close="closeModal" @save="onSave" @delete="deleteServer" />
+  <ServerModal v-if="editModalActive" :data="selectedServer" @close="closeModal" @save="onSave" @delete="deleteServer" :meta="meta" />
   <ConfirmModal title="Delete Confirmation" v-if="deleteModalActive&&selectedServer" @cancel="deleteModalActive = false" @confirm="deleteServerConfirm">
     <p>Are you sure you want to delete the server:<br><b>{{ selectedServer.name }}</b> <span>({{ selectedServer.id }})</span>?</p>
   </ConfirmModal>
@@ -26,8 +26,8 @@
         <td class="valign">{{ server.port }}</td>
         <td>
           <div class="buttons">
-            <a class="button is-outlined is-info" @click="editServer(server)"><Icon icon="fa-edit">Edit</Icon></a>
-            <a class="button is-outlined is-danger" @click="deleteServer(server)"><Icon icon="fa-trash">Delete</Icon></a>
+            <button class="button is-outlined is-info" @click="editServer(server)"><Icon icon="fa-edit">Edit</Icon></button>
+            <button class="button is-outlined is-danger" @click="deleteServer(server)"><Icon icon="fa-trash">Delete</Icon></button>
           </div>
         </td>
       </tr>
@@ -50,11 +50,13 @@ import { notify } from '@kyvg/vue3-notification';
 import ServerModal from './ServerModal.vue'
 import { VueDraggableNext } from "vue-draggable-next";
 import ConfirmModal from '@/components/ConfirmModal.vue';
+import { PanelMetaInfo } from '../../../../../common-types/Panel.js';
 
 const emit = defineEmits(['close', 'delete', 'update'])
 
 const props = defineProps<{
-  group: ServerGroup
+  group: ServerGroup,
+  meta: PanelMetaInfo
 }>()
 let selectedServer = ref<ServerInfo|null>(null)
 let editModalActive = ref(false)

@@ -1,5 +1,11 @@
 <template>
 <div>
+  <div class="container" v-if="!meta">
+    <h1 class="title is-1"><Icon icon="fa-spinner" spin>Setup Loading</Icon></h1>
+    <p class="subtitle">
+      Please wait, waiting for server information
+    </p>
+  </div>
   <div class="container" v-if="currentStage == FirstTimeSetupStage.DONE">
     <h1 class="title is-1">Setup Complete</h1>
     <p class="subtitle">
@@ -48,7 +54,7 @@ import { FirstTimeSetupStage, PanelMetaInfo } from '../../../../common-types/Pan
 
 const props = defineProps<{
   privUser: PrivilegedUser,
-  meta: PanelMetaInfo
+  meta?: PanelMetaInfo
 }>()
 
 const route = useRoute()
