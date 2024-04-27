@@ -50,8 +50,10 @@
       </Field>
       <Field label="Servers">
         <!-- <input class="input" type="text" placeholder="Choose Tags" value="One,Two" :data-source="availableServers"> -->
-        <div class="control">
-          <select multiple data-type="tags" data-placeholder="Choose Tags" v-model="destination.serverIds" data-selectable="false" :data-source="availableServers">
+        <div :class="['control',{'is-loading': !availableServers}]">
+          <!-- FIXME: when destination.serverIds changes, the list doesn't update -->
+          <!-- Possibly v-if to reset it, or rerun js-->
+          <select ref="element" v-if="destination.serverIds" :disabled="!availableServers" multiple data-type="tags" data-placeholder="Choose Tags" v-model="destination.serverIds" data-selectable="false" :data-source="availableServers">
             <option v-for="(server) in availableServers" :key="server.id" :value="server.id" selected>{{ server.name ?? server.id }}</option>
           </select>
         </div>
@@ -82,21 +84,23 @@ import Field from '@/components/Field.vue'
 import { Tab, Tabs } from 'vue3-tabs-component'
 import ModalCard from '@/components/ModalCard.vue';
 import { ShareDestination, ShareInfo } from '../../../../../common-types/Share.js';
-import { computed, onMounted, onUnmounted, ref } from 'vue';
-// @ts-expect-error
+import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue';
 import { updatedDiff } from 'deep-object-diff'
 // @ts-expect-error
 import BulmaTagsInput from '@creativebulma/bulma-tagsinput';
+import { request } from '@/js/util.js';
 
 const emit = defineEmits(["close"])
 
 const props = defineProps<{
   share: ShareInfo
 }>()
-let availableServers = ref<{ id: string, name?: string}[]>([{id: "server-1"},{id: "server-2",name: "Server 2"},{id:"server-3",name: "Server 3"}])
+let availableServers = ref<{ id: string, name?: string}[]>()
 let destination = ref<ShareDestination>()
 let destId = ref<string>()
 let selectedId = ref<string|null>()
+let element = ref()
+let tagListInstance: BulmaTagsInput
 
 const title = computed(() => {
   return `${props.share.name} > Destinations`
@@ -126,14 +130,23 @@ function select(id: string | null) {
 
   selectedId.value = id
   destId.value = id ?? ""
-  if(id)
-    destination.value = JSON.parse(JSON.stringify(props.share.destinations[id]))
-  else
-    destination.value = {
-      name: "",
-      paths: [""],
-      serverIds: []
+  let dest = {
+    name: "",
+    paths: [""],
+    serverIds: []
+  }
+  if(id && props.share.destinations[id]) {
+    dest = { ... dest, ... JSON.parse(JSON.stringify(props.share.destinations[id])) }
+  }
+  destination.value = dest
+  nextTick(() => {
+    if(tagListInstance) {
+      console.log("flush")
+      tagListInstance.removeAll()
+    } else {
+      tagListInstance = new BulmaTagsInput(element.value)
     }
+  })
 }
 
 function onEnterName() {
@@ -152,8 +165,18 @@ function cancel() {
   emit('close')
 }
 
-onMounted(() => {
-  BulmaTagsInput.attach()
+async function fetchServers() {
+  const response = await request('/api/servers?compact=1', undefined)
+  if(response?.ok) {
+    availableServers.value = await response.json()
+  }
+}
+
+onMounted(async() => {
+  const instances = BulmaTagsInput.attach()
+  console.log('instances', instances)
+  await fetchServers()
+
 })
 </script>
 
