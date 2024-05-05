@@ -105,6 +105,9 @@ async function fetchDiscussions() {
     const json: APIDiscussion[] = await response.json()
     discussions.value = json.map(discuss => {
       let selected: APIDiscussionOption[] | APIDiscussionOption | undefined = undefined
+      if(discuss.type === APIDiscussionType.Checkbox) {
+        selected = []
+      }
       if(discuss.userSelection.length > 0) {
         if(discuss.type == APIDiscussionType.Radio) {
           selected = discuss.options!.find(opt => discuss.userSelection[0] == opt.id)

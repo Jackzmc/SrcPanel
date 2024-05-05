@@ -143,13 +143,15 @@ function escapeHtml(unsafe: string) {
 }
 
 async function selectChoice(option?: APIDiscussionOption) {
+  console.log("selectChoice")
   if(!canInteract.value) return
   if(Date.now() - discuss.value.lastEditTime < 10) return
   discuss.value.lastEditTime = Date.now()
   if(discuss.value.type == APIDiscussionType.Radio) {
     // Ignore selecting the same option again.
     if(!option || discuss.value.selected?.id == option.id) return
-    discuss.value.selected = option
+    console.log("set option", option)
+    // discuss.value.selected = option
     submitChoiceDebounceRadio()
   } else if(discuss.value.type == APIDiscussionType.Checkbox || discuss.value.type == APIDiscussionType.Selection) {
     submitChoiceDebounceMultiOrText()

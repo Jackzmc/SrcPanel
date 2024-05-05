@@ -36,6 +36,7 @@ export default class DiscussionManager {
 
     getAll() {
         this.#tryRefresh()
+        console.log("sort")
         return [...this.#discussions.values()].sort((b,a) => b.timestamp - a.timestamp)
     }
 
