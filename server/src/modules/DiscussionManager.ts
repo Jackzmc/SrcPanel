@@ -36,7 +36,6 @@ export default class DiscussionManager {
 
     getAll() {
         this.#tryRefresh()
-        console.log("sort")
         return [...this.#discussions.values()].sort((b,a) => b.timestamp - a.timestamp)
     }
 
@@ -105,7 +104,7 @@ export default class DiscussionManager {
 
     async fetchDiscussions() {
         const domain = await this.#config.GetKV("domain");
-        let [rows] = await this.#db.execute<RowDataPacket[]>("SELECT d.*, u.name as creator_name, (SELECT COUNT(*) FROM `left4dead2-admins`.dash_discussion_comments WHERE discussion_id = d.id) as comments FROM `left4dead2-admins`.dash_discussions d LEFT JOIN `left4dead2`.user_names u ON SUBSTRING(d.creator, 11) = u.steamid WHERE d.flags & 2 = 0 ORDER BY d.timestamp DESC")
+        let [rows] = await this.#db.execute<RowDataPacket[]>(`SELECT d.*, u.name as creator_name, (SELECT COUNT(*) FROM \`left4dead2-admins\`.dash_discussion_comments WHERE discussion_id = d.id) as comments FROM \`left4dead2-admins\`.dash_discussions d LEFT JOIN \`left4dead2\`.user_names u ON SUBSTRING(d.creator, 11) = u.steamid WHERE d.flags & ${APIDiscussionFlags.Archived} = 0 ORDER BY d.timestamp DESC`)
         for(const row of rows) {
             if(row.closed_at && Date.now() - (row.closed_at*1000) > AUTO_ARCHIVE_TIME) {
                 // Auto archive
