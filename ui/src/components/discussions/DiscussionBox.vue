@@ -127,7 +127,7 @@ const showPercents = computed(() => {
   return props.responses?.counts != undefined
 })
 const canInteract = computed(() => {
-  return !(discuss.value.flags & APIDiscussionFlags.Archived) && !isClosed.value && !props.selected
+  return !(discuss.value.flags & APIDiscussionFlags.Archived) && !isClosed.value
 })
 
 function getOptions(column: number) {
