@@ -43,6 +43,10 @@ export default class DiscussionManager {
         this.#discussions.set(id, discussion)
     }
 
+    delete(id: number) {
+        this.#discussions.delete(id)
+    }
+
     async getUnrespondedCount(steamid2: string) {
         // Returns the number of non-archived, non-closed discussions user has responded to
         const [rows] = await this.#db.execute<RowDataPacket[]>(
@@ -103,6 +107,7 @@ export default class DiscussionManager {
     }
 
     async fetchDiscussions() {
+        const dis = new Map()
         const domain = await this.#config.GetKV("domain");
         let [rows] = await this.#db.execute<RowDataPacket[]>(`SELECT d.*, u.name as creator_name, (SELECT COUNT(*) FROM \`left4dead2-admins\`.dash_discussion_comments WHERE discussion_id = d.id) as comments FROM \`left4dead2-admins\`.dash_discussions d LEFT JOIN \`left4dead2\`.user_names u ON SUBSTRING(d.creator, 11) = u.steamid WHERE d.flags & ${APIDiscussionFlags.Archived} = 0 ORDER BY d.timestamp DESC`)
         for(const row of rows) {
@@ -113,7 +118,7 @@ export default class DiscussionManager {
                 continue
             }
             const [options] = await this.#db.execute<RowDataPacket[]>("SELECT * FROM `left4dead2-admins`.dash_discussion_options WHERE discussion_id = ?", [row.id])
-            this.#discussions.set(row.id, {
+            dis.set(row.id, {
                 id: row.id,
                 title: row.title,
                 description: row.description,
@@ -130,5 +135,6 @@ export default class DiscussionManager {
                 },
             })
         }
+        this.#discussions = dis
     }
 }

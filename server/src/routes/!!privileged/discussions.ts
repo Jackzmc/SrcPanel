@@ -101,9 +101,12 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
         await conn.commit()
         conn.release()
-        discManager.set(discuss.id, discuss)
-        // TODO: REMOVE ME, TEMP FIX
-        await discManager.fetchDiscussions()
+        // Update cache, deleting if archived
+        if(discuss.flags & APIDiscussionFlags.Archived) {
+            discManager.delete(discuss.id)
+        } else {
+            discManager.set(discuss.id, discuss)
+        }
         return reply.status(204).send()
     })
 

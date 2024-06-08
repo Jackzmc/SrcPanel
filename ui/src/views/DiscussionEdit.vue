@@ -338,7 +338,12 @@ async function save() {
       text: isNew.value ? 'Discussion Created' : 'Discussion Saved',
       type: "success"
     })
-    router.push({ name: "discuss" })
+    if(isNew.value) {
+      router.push({ name: "discuss", params: { id: Number(id), title: discuss.value.title.toLowerCase().replace(/\s*/,'').replace(/[^a-zA-Z_-]*/,'-')} })
+    } else {
+      router.push({ name: "discuss" })
+    }
+    setValues()
   }
 }
 
@@ -360,12 +365,17 @@ function setClosedAt() {
   //@ts-expect-error closedAt get is string, set is number/date
   closedAt.value = d
 }
-onMounted(async() => {
+function setValues() {
   discuss.value.title = route.query.title?.toString() ?? "Discussion Title"
   discuss.value.description = route.query.description?.toString() ?? "";
+  discuss.value.flags = 0
   setFlagFromQuery(route.query.respondants as string, APIDiscussionFlags.RespondersPublic)
   setFlagFromQuery(route.query.responses as string, APIDiscussionFlags.ResponsesPublic)
   setFlagFromQuery(route.query.comments as string, APIDiscussionFlags.CommentsPublic)
+  discuss.value.options = []
+  discuss.value.type = APIDiscussionType.Radio
+  discuss.value.timestamp = Date.now()
+  discuss.value.closedAt = 0
   if(route.query.type) {
     switch(route.query.type) {
       case "radio": discuss.value.type = APIDiscussionType.Radio; break;
@@ -374,6 +384,9 @@ onMounted(async() => {
       case "essay": discuss.value.type = APIDiscussionType.LongText; break;
     }
   }
+}
+onMounted(async() => {
+  setValues()
 
   if(!isNew.value) {
     const response = await request(`/api/discussions/${route.params.id}`)
