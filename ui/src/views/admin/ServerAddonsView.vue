@@ -342,7 +342,6 @@ function openSelectedAddon() {
 
 let shares = ref<ShareInfo[]>([])
 let shareInfo = ref()
-let totalFileSize = 0
 const computedTotalFileSize = ref<number>(0)
 
 const sortSymbol = computed(() => {
@@ -400,19 +399,19 @@ function filterAndSort() {
         || (addon.workshop && addon.workshop.title.toLowerCase().includes(query))
       )
     })
-    let totalSize = 0
-    for(const entry of filtered) {
-      const size = entry.workshop ? entry.workshop.filesize : entry.filesize
-      if(!isNaN(size))
-        totalSize += size
-      else
-        console.warn('no size', entry)
-    }
-    computedTotalFileSize.value = totalSize
   } else {
     filtered = addons
-    computedTotalFileSize.value = totalFileSize
   }
+
+  let totalSize = 0
+  for(const entry of filtered) {
+    const size = entry.workshop ? entry.workshop.filesize : entry.filesize
+    if(!isNaN(size))
+      totalSize += Number(size)
+    else
+      console.warn('no size', entry)
+  }
+  computedTotalFileSize.value = totalSize
   filteredAddons.value = markRaw(filtered.sort(_sort))
 }
 const filterAndSortDebounce = debounce(filterAndSort, 400)
@@ -506,7 +505,6 @@ async function fetchAddons() {
   shareInfo.value = undefined
   addons = []
   hasAnyWorkshop.value = false
-  totalFileSize = 0
   try {
     const response = await fetch(`/api/shares/${route.params.shareId}/addons`)
     const json = await response.json()
@@ -542,7 +540,6 @@ function formatAddonEntry(entry: any) {
       return entry
     }
     entry.workshop.url = `https://steamcommunity.com/sharedfiles/filedetails/?id=${entry.filename.slice(0, -4)}`
-    totalFileSize += entry.workshop.filesize
   }
   entry.id = entry.filename ?? entry.collection.id
   return entry
