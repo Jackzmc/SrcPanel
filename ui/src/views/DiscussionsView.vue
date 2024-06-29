@@ -56,7 +56,7 @@
 <script setup lang="ts">
 import { useNotification } from '@kyvg/vue3-notification';
 import { PrivilegedUser } from '@/js/User';
-import { ref, onBeforeMount, computed, onBeforeUnmount, onUnmounted, onMounted, watch } from 'vue';
+import { ref, onBeforeMount, computed, onBeforeUnmount, onUnmounted, onMounted, watch, onActivated } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import DiscussionBox from '@/components/discussions/DiscussionBox.vue'
 import Comments from '@/components/discussions/Comments.vue'
@@ -80,6 +80,7 @@ let comments = ref<APIComment[]>()
 let responses = ref<APIResponsesData>()
 
 watch(() => route.params.id, async (val) => {
+  console.log(route.name, route.params, val)
   if(route.name !== 'discuss') return
   const id = Number(val)
   if(val && !isNaN(id)) {
@@ -95,6 +96,8 @@ async function selectDiscussion(id: number) {
   const response = await request(`/api/discussions/${id}`)
   if(response?.ok) {
     const json: APIDiscussionDetails = await response.json()
+    // @ts-expect-error close enough... in case its new, where its not in cache.
+    selectedDiscussion.value = json as Discussion
     comments.value = json.comments
     responses.value = json.responses
   }
@@ -139,12 +142,15 @@ function onSubmitComment(comment: APIComment) {
   comments.value.push(comment)
 }
 
-onMounted(async () => {
+onActivated(async () => {
+  console.log("activated")
   await fetchDiscussions()
   if(route.params.id) {
     await selectDiscussion(Number(route.params.id))
   }
 })
+
+
 </script>
 
 <style scoped>
