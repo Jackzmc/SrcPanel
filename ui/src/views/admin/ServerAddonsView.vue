@@ -403,7 +403,7 @@ function filterAndSort() {
     let totalSize = 0
     for(const entry of filtered) {
       const size = entry.workshop ? entry.workshop.filesize : entry.filesize
-      if(size)
+      if(!isNaN(size))
         totalSize += size
       else
         console.warn('no size', entry)
