@@ -38,12 +38,14 @@ export interface AddonInfo {
     lastModified?: number,
     workshop?: AddonWorkshopInfo,
     installInfo: Record<string, boolean>,
-    collection?: WorkshopCollectionInfo
+    collection?: WorkshopCollectionInfo,
+    chapterIds?: string[] | null
 }
 
 export interface AddonCollectionInfo {
     collection: WorkshopCollectionInfo, 
-    children: AddonInfo[]
+    children: AddonInfo[],
+    chapterIds?: string[] | null
 }
 export interface AddonWorkshopInfo {
     publishedfileid: number

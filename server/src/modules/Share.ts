@@ -6,6 +6,9 @@ import { AddonCollectionInfo, AddonInfo, AddonWorkshopInfo, ChildWorkshopItem, D
 import sqlite3 from 'sqlite3'
 import sqlite from 'sqlite'
 import SQL from 'sql-template-strings';
+import VPK from '@lowly1337/vpk'
+import { readFile } from 'node:fs/promises';
+import ValveKV from 'valve-kv'
 
 const DOWNLOAD_TIMEOUT = 1000 * 60 * 3
 
@@ -42,8 +45,11 @@ export default class Share {
             ws_info TEXT,
             collection_id VARCHAR(32),
             collection_name VARCHAR(64),
+            chapter_ids TEXT,
             PRIMARY KEY (filename)
         );`)
+        db.exec(SQL`ALTER TABLE addoncache
+            ADD COLUMN chapter_ids TEXT;`).catch(() => {})
     }
 
     public get id() { return this.#id }
@@ -68,6 +74,27 @@ export default class Share {
         return createWriteStream(path.join(this.sourceFolder, path.normalize(filename)))
     }
 
+    #getChapterIds(filepath: string): string[] {
+        const vpk = new VPK(filepath)
+        vpk.load()
+        for(const filepath of vpk.files) {
+            if(filepath.startsWith("missions")) {
+                console.debug("mission", filepath)
+                const missionData = vpk.getFile(filepath)
+                const root = ValveKV.deserialize(missionData.toString('utf-8'))
+                const chapters = root["mission"]["modes"]["coop"]
+                if(!chapters) return null
+                const sorted = Object.entries(chapters)
+                    .sort(([k1, v1],[k2,v2]) => Number(k1) - Number(k2))
+                    .map(([_, v]) => v)
+                    .map((v: any) => v.Map)
+                console.debug(sorted)
+                return sorted
+            }
+        }
+        return null
+    }
+
     /** 
      * Fetches all addons for this share, including returning if the destinations are 
      **/
@@ -82,7 +109,7 @@ export default class Share {
                 // Only check the specified extenstions
                 const ext = dirent.name.split(".").pop()
                 if(this.validExts && !this.validExts.includes(ext)) continue
-
+            
                 const addonInfo = await this.getAddonInfo(dirent.name)
                 if(addonInfo) {
                     // If we have cached addon info, check if its a collection or an item
@@ -92,6 +119,11 @@ export default class Share {
                             children: []
                         }
                         collections[addonInfo.collection.id].children.push(addonInfo)
+                        // Merge child addon into collection's map list
+                        if(addonInfo.chapterIds) {
+                            if(!collections[addonInfo.collection.id].chapterIds) collections[addonInfo.collection.id].chapterIds = []
+                            collections[addonInfo.collection.id].chapterIds = [...collections[addonInfo.collection.id].chapterIds, ...addonInfo.chapterIds]
+                        }
                         delete addonInfo.collection
                     } else {
                         results.push(addonInfo)
@@ -103,12 +135,19 @@ export default class Share {
                         filesize: fstat.size,
                         lastModified: Math.round(fstat.mtime.getTime() / 1000),
                     }
+                    let chapterIds = null
+                    if(ext === "vpk") {
+                        chapterIds = this.#getChapterIds(path.join(this.sourceFolder, dirent.name))
+                    }
+                    console.debug(dirent.name, chapterIds)
+                   
                     results.push({
                         filename: dirent.name,
                         ...fsinfo,
-                        installInfo: (await this.getInstallInfo(dirent.name)).states
+                        installInfo: (await this.getInstallInfo(dirent.name)).states,
+                        chapterIds
                     })
-                    await this.#addAddonEntry(dirent.name, fsinfo)
+                    await this.#addAddonEntry(dirent.name, fsinfo, undefined, undefined, chapterIds)
                 }
             }
         }
@@ -143,18 +182,14 @@ export default class Share {
      * @param workshop (optional) workshop item details info
      * @param collection (optional) workshop collection info (collection id and name)
      */
-    async #addAddonEntry(filename: string, fsInfo?: { filesize: number, lastModified: number }, workshop?: AddonWorkshopInfo, collection?: WorkshopCollectionInfo) {
+    async #addAddonEntry(filename: string, fsInfo?: { filesize: number, lastModified: number }, workshop?: AddonWorkshopInfo, collection?: WorkshopCollectionInfo, chapterIds?: string[]) {
         try {
             // console.debug(`adding \"${filename}\" [fs=${fsInfo != null}] [workshop=${workshop != null}] [collection=${collection != null}]`)
             await this.#db.run(
                 SQL`REPLACE INTO addoncache 
-                    (filename, filesize, lastModified, ws_info, collection_id, collection_name) 
-                    VALUES(${filename}, ${fsInfo?.filesize}, ${fsInfo?.lastModified}, ${workshop ? JSON.stringify(workshop) : null}, ${collection?.id}, ${collection?.name})`
+                    (filename, filesize, lastModified, ws_info, collection_id, collection_name, chapter_ids) 
+                    VALUES(${filename}, ${fsInfo?.filesize}, ${fsInfo?.lastModified}, ${workshop ? JSON.stringify(workshop) : null}, ${collection?.id}, ${collection?.name}, ${chapterIds?.join(",")})`
             )
-            // if(fsInfo)
-            //     await this.db.run(SQL`INSERT INTO addoncache (filename, filesize, lastModified) VALUES (${filename}, ${fsInfo.filesize}, ${fsInfo.lastModified})`)
-            // else
-            //     await this.db.run(SQL`INSERT INTO addoncache (filename, ws_info) VALUES (${filename}, ${JSON.stringify(workshop)})`)
         } catch(err) {
             console.error(`addAddonEntry failed for "${filename}"`, { fsInfo: fsInfo !== null, workshop: workshop !== undefined }, err)
         }
@@ -179,7 +214,8 @@ export default class Share {
             collection: info.collection_id ? {
                 id: info.collection_id,
                 name: info.collection_name
-            } : null
+            } : null,
+            chapterIds: info.chapter_ids?.split(",")
         }
     }
 
@@ -315,27 +351,6 @@ export default class Share {
     } 
 
     /**
-     * Downloads an item from steam workshop, returning once complete
-     * @param item The workshop item object (needs publishedfileid, file_size, and time_updated)
-     * @returns Promise<void>
-     */
-    public async steamDownload(item: ChildWorkshopItem) {
-        const filename = `${item.publishedfileid}.vpk`
-
-        const bytes = await SteamAPI.downloadItem(item, this.sourceFolder, { timeout: DOWNLOAD_TIMEOUT })
-        if(bytes != item.file_size) {
-            throw new Error(`Downloaded size mismatch (downloaded ${bytes} bytes, expected ${item.file_size} bytes)`)
-        }
-
-        // Update the cache
-        await this.#addAddonEntry(filename, {
-            filesize: item.file_size,
-            lastModified: item.time_updated
-        }, Share.serializeWorkshopItem(item), item.collection)
-        return
-    }
-
-    /**
      * Returns a stream of a workshop item download. Emits "finish" and "progress"
      * @param item The workshop item object (needs publishedfileid, file_size, and time_updated)
      * @returns 
@@ -348,11 +363,12 @@ export default class Share {
             if(curBytes != item.file_size) {
                 throw new Error(`Downloaded size mismatch (downloaded ${curBytes} bytes, expected ${item.file_size} bytes)`)
             }
+            const chapterIds = this.#getChapterIds(path.join(this.sourceFolder, filename))
 
             this.#addAddonEntry(filename, {
                 filesize: item.file_size,
                 lastModified: item.time_updated
-            }, Share.serializeWorkshopItem(item), item.collection)
+            }, Share.serializeWorkshopItem(item), item.collection, chapterIds)
         })
         return event
     }
@@ -367,7 +383,7 @@ export default class Share {
             appid: this.appId,
             downloadSources: this.downloadSources,
             destinations: this.destinations,
-            fileExts: this.validExts
+            fileExts: this.validExts,
         }
     }
 }

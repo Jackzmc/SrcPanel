@@ -2,7 +2,7 @@
   <Modal active closable @close="close">
     <div class="modal-card">
       <header class="modal-card-head" v-if="share && addon">
-        <p class="modal-card-title">Addon Info
+        <p class="modal-card-title">{{ addonName }}
           <span class="tag is-info has-tooltip-bottom is-pulled-right mr-2 is-rounded" data-tooltip="The target share">{{share.id}}</span>
         </p>
         <button class="delete" aria-label="close" @click='close()'></button>
@@ -13,91 +13,109 @@
         </p>
         <button class="delete" aria-label="close" @click='close()'></button>
       </header>
-      <section class="modal-card-body" v-if="addon">
-        <template v-if="addon.workshop">
-          <img alt="The workshop addon's uploaded image preview" :src="addon.workshop.previewUrl" @load="previewImageLoaded = true" />
-          <img v-if="!previewImageLoaded" src="@/assets/WorkshopImageFallback.svg" />
-          <br><br>
-        </template>
-        <h4 class='title is-4'>{{ addonName }} </h4>
-        <div class="field is-grouped is-grouped-multiline">
-          <div class="control">
-            <div class="tags has-addons">
-              <span class="tag is-dark">Filename</span>
-              <span class="tag is-info">{{props.addon.filename}}</span>
-            </div>
-          </div>
-          <div class="control">
-            <div class="tags has-addons">
-              <span class="tag is-dark">File Size</span>
-              <span class="tag is-info">{{ formatSize(props.addon.workshop?.filesize ?? props.addon.filesize) }}</span>
-            </div>
-          </div>
-          <div class="control">
-            <div class="tags has-addons">
-              <span v-if="props.addon.workshop?.deleted" class="tag is-danger has-tooltip-warning has-tooltip-bottom" data-tooltip="Addon no longer exists on the workshop, but it's still locally stored">Deleted</span>
-            </div>
-          </div>
-        </div>
-        <div class="field is-grouped is-grouped-multiline">
-          <div class="control">
-            <div class="tags has-addons">
-              <span class="tag is-dark">Last Updated</span>
-              <span class="tag">{{ formatDate(props.addon.workshop?.lastUpdated ?? props.addon.lastModified) }}</span>
-            </div>
-          </div>
-          <div class="control">
-            <div class="tags has-addons">
-              <span class="tag is-dark">Downloaded</span>
-              <span class="tag">{{ formatDate(props.addon.downloaded) }}</span>
-            </div>
-          </div>
-        </div>
-        <h5 class="title is-5">Servers</h5>
-        <p class="subtitle is-6">Click any tag to enable or disable it from the server. The server must be restarted for the changes to apply.</p>
-        <div class="field is-grouped is-grouped-multiline">
-          <div class="field mr-4" v-for="(installed, dest) in installInfo" :key="dest">
-            <input :id="dest" type="checkbox" class="switch is-rtl" :checked="installed == true" @click="enableAddon(dest, installed ? 'disable' : 'enable')" :disabled="installed == null">
-            <label :for="dest">{{ dest }}</label>
-            <br>
-          </div>
-          <!-- <div class="control" v-for="(installed, dest) in installInfo" :key="dest">
-            <div class="tags has-addons">
-              <span class="tag is-dark">{{ dest }}</span>
-              <div class="field">
-
-              </div>
-              <a class="tag is-success" v-if="installed" @click="installAddon(dest, 'uninstall')" data-tooltip="Click here to disable">Enabled</a>
-              <a class="tag is-danger" v-else @click="installAddon(dest, 'install')" data-tooltip="Click here to enable">Disabled</a>
-            </div>
-          </div> -->
-        </div>
-        <template v-if="props.addon.workshop">
-          <h5 class="title is-5">Description</h5>
+      <section class="modal-card-body pt-1" v-if="addon">
+        <Tabs inner-wrapper-class="tabs" :options="{ useUrlFragment: false }">
+        <Tab name="Overview">
           <div class="buttons">
-            <a target="_blank" :href="props.addon.workshop.fileUrl"  data-tooltip="Download the addon directly from steam workshop" class="button is-small is-info has-tooltip-right">Download (Workshop)</a>
-            <a target="_blank" :href="downloadUrl"  data-tooltip="Download the addon from the admin panel" class="button is-small has-tooltip-right">Download (Direct)</a>
+            <a v-if="props.addon.workshop" target="_blank" :href="props.addon.workshop.fileUrl"
+              data-tooltip="Download the addon directly from steam workshop"
+              class="button is-small is-info has-tooltip-right">Download (Workshop)</a>
+            <a target="_blank" :href="downloadUrl" data-tooltip="Download the addon from the admin panel"
+              class="button is-small has-tooltip-right">Download (Direct)</a>
           </div>
-          <article class="message">
+          <template v-if="addon.workshop">
+            <img alt="The workshop addon's uploaded image preview" :src="addon.workshop.previewUrl"
+              @load="previewImageLoaded = true" />
+            <img v-if="!previewImageLoaded" src="@/assets/WorkshopImageFallback.svg" />
+            <br><br>
+          </template>
+          <table class="table is-striped is-fullwidth">
+            <tbody>
+              <tr>
+                <th>Filename</th>
+                <td>{{props.addon.filename}}</td>
+              </tr>
+              <tr v-if="props.addon.workshop">
+                <th>Workshop</th>
+                <td v-if="props.addon.workshop?.deleted">
+                  <span class="tag is-danger has-tooltip-warning has-tooltip-bottom"
+                    data-tooltip="Addon no longer exists on the workshop, but it's still locally stored">Deleted</span>
+                </td>
+                <td v-else>
+                  <a target="_blank" :href="addon.workshop.url" class="is-small"
+                    data-tooltip="Open the addon's steam workshop page">
+                    <Icon icon="arrow-up-right-from-square" text-left="Open Workshop Page"></Icon>
+                  </a>
+                </td>
+              </tr>
+              <tr>
+                <th>File Size</th>
+                <td>{{ formatSize(props.addon.workshop?.filesize ?? props.addon.filesize) }}</td>
+              </tr>
+              <tr>
+                <th>Last Updated</th>
+                <td>{{ formatDate(props.addon.workshop?.lastUpdated ?? props.addon.lastModified) }}</td>
+              </tr>
+              <tr>
+                <th>Downloaded</th>
+                <td>{{ formatDate(props.addon.downloaded) }}</td>
+              </tr>
+              <tr v-if="props.addon.chapterIds">
+                <th>Chapters</th>
+                <td>
+                  <ul>
+                    <li v-for="chapter in props.addon.chapterIds" :key="chapter">{{ chapter }}</li>
+                  </ul>
+                </td>
+              </tr>
+              <tr v-if="props.addon.chapterIds">
+                <th>Rating</th>
+                <td v-if="mapRating?.avgRating">
+                  <Icon size="is-small" icon="fas star" v-for=" i in Math.round( mapRating.avgRating ) " :key="i" />
+                  <Icon size="is-small" icon="far star" v-for=" i in 5 - Math.round( mapRating.avgRating )  " :key="i + 10" />
+                  {{ Number( mapRating.avgRating ).toFixed( 1 ) }}
+                </td>
+                <td v-else-if="mapRating">
+                  No rating
+                </td>
+                <td v-else>Loading...</td>
+              </tr>
+            </tbody>
+          </table>
+          <article class="message" v-if="parsedDescription">
             <div class="message-body content is-size-7">
+              <h4>Description</h4>
               <span style="white-space: pre-wrap" v-html="parsedDescription" />
             </div>
           </article>
-        </template>
-        <div class="buttons" v-else>
-          <a target="_blank" :href="downloadUrl"  data-tooltip="Download the addon from the admin panel" class="button is-small is-link">Download (Direct)</a>
-          </div>
-      </section>
-      <footer class="modal-card-foot">
-        <div class="buttons">
-          <button class="button" @click="close()">
-            Close
-          </button>
+        </Tab>
+        <Tab name="Servers">
+          <p class="subtitle is-6">Click any tag to enable or disable it from the server.<br>The server must be restarted for the changes to apply.</p>
+            <div class="field" v-for="(installed, dest) in installInfo" :key="dest">
+              <input :id="dest" type="checkbox" class="switch is-rtl" :checked="installed == true" @click="enableAddon(dest, installed ? 'disable' : 'enable')" :disabled="installed == null">
+              <label :for="dest">{{ dest }}</label>
+              <br>
+            </div>
+            <!-- <div class="control" v-for="(installed, dest) in installInfo" :key="dest">
+              <div class="tags has-addons">
+                <span class="tag is-dark">{{ dest }}</span>
+                <div class="field">
 
-          <a v-if="pendingRestarts.length > 0" class="button is-info" data-tooltip="Server must be restarted to apply changes" @click='restartServers'>Restart Servers</a>
-          <a v-if="addon && addon.workshop" target="_blank" :href="addon.workshop.url" class="button is-info" data-tooltip="View the steam workshop page">Steam Workshop</a>
-          <a class="button is-danger" data-tooltip="Uninstall from all servers and delete the file" @click="deleteAddon">Delete</a>
-        </div>
+                </div>
+                <a class="tag is-success" v-if="installed" @click="installAddon(dest, 'uninstall')" data-tooltip="Click here to disable">Enabled</a>
+                <a class="tag is-danger" v-else @click="installAddon(dest, 'install')" data-tooltip="Click here to enable">Disabled</a>
+              </div>
+            </div> -->
+        </Tab>
+      </Tabs>
+      </section>
+      <footer class="modal-card-foot buttons is-justify-content-space-between">
+        <button class="button" @click="close()">
+          Close
+        </button>
+        <a v-if="pendingRestarts.length > 0" class="button is-info" data-tooltip="Server must be restarted to apply changes" @click='restartServers'>Restart Servers</a>
+        <a class="button is-danger is-right" data-tooltip="Uninstall from all servers and delete the file"
+        @click="deleteAddon"><Icon icon="trash" class="has-text-white">Delete</Icon></a>
       </footer>
     </div>
   </Modal>
@@ -106,8 +124,10 @@
 <script setup lang="ts">
 import Modal from '@/components/Modal.vue'
 import { useNotification } from "@kyvg/vue3-notification";
-import { computed, ref, onBeforeMount } from 'vue';
+import { computed, ref, onBeforeMount, onActivated } from 'vue';
 import { formatDate, formatSize, request, restartServer } from '@/js/util.js'
+// @ts-ignore
+import { Tab, Tabs } from "vue3-tabs-component";
 
 const emit = defineEmits(['close', 'update'])
 const { notify }  = useNotification()
@@ -119,10 +139,18 @@ let previewImageLoaded = ref(false)
 let pendingRestarts = ref<string[]>([])
 let installInfo = ref<Record<string, boolean|null>>()
 let hasUpdated = false
+let mapRating = ref<{
+  avgRating: number,
+  ratings: {user:{id:string,name:string},value: number}[]
+}>()
 
 onBeforeMount(() => {
-  if(props.addon)
+  if(props.addon) {
     installInfo.value = Object.assign({}, props.addon.installInfo)
+    if(props.addon.chapterIds) {
+      fetchRating()
+    }
+  }
 })
 
 async function enableAddon(destKey: string, mode: "enable" | "disable") {
@@ -235,6 +263,22 @@ async function deleteAddon() {
     }
   }
 }
+
+async function fetchRating() {
+  mapRating.value = undefined
+  if(!props.addon.chapterIds) return
+  const response = await request(`https://stats.jackz.me/api/maps/${props.addon.chapterIds.at(-1)}`, undefined, {
+    title: "Map Rating"
+  })
+  if(response?.ok) {
+    mapRating = await response.json()
+  }
+}
+
+onActivated(() => {
+  if(props.addon.chapterIds)
+    fetchRating()
+})
 
 function close() {
   emit('close')

@@ -169,7 +169,7 @@ const routes = [
   // Need to make separate route because we can't have a child without a component
   {
     name: 'list-addons',
-    path: '/admin/shares/:shareId?/files',
+    path: '/admin/shares/:shareId?/files/:fileid?',
     component: () => import('../views/admin/ServerAddonsView.vue'),
     meta: {
       title: 'Addons / Maps',

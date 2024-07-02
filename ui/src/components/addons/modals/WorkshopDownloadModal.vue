@@ -167,9 +167,9 @@
           >
             Download & Install
           </button>
-          <button class="button" @click="close">
+          <!-- <button class="button" @click="close">
             Cancel
-          </button>
+          </button> -->
         </template>
       </div>
     </footer>
