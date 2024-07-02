@@ -82,8 +82,11 @@
             </router-link>
             <hr class="navbar-divider">
             <div class="navbar-item">
-              <a href="/api/admins/discord" class="button is-expanded" style="background-color: #5865F2; color: white">
-                <Icon icon="fab fa-discord">Join the Discord</Icon>
+              <a href="/api/admins/discord" class="button" style="background-color: #5865F2; color: white;">
+                <span class="icon">
+                  <FontAwesomeIcon icon="fab fa-discord" />
+                </span>
+                <span>Join the Discord</span>
               </a>
             </div>
           </div>
@@ -172,6 +175,7 @@ import { PrivilegedUser } from '@/js/User';
 import UserSettingsModal from './modals/UserSettingsModal.vue';
 import NotificationsModal from './modals/NotificationsModal.vue'
 import { PanelMetaInfo } from '../../../common-types/Panel.js';
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 let darkMode = ref(false)
 let active = ref(false)
 
