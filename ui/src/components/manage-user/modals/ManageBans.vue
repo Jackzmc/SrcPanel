@@ -10,7 +10,7 @@
     </ul>
   </div>
   <Teleport to="#manage-user-footer">
-    <button v-if="!showAppeals"
+    <button v-if="!showAppeals&&!props.userAdminData"
       :class="['button','has-tooltip-top', 'is-success',{'is-loading': loading }]"
       @click="save"
     >{{ isNewBan ? "Ban User" : "Edit Ban" }}</button>

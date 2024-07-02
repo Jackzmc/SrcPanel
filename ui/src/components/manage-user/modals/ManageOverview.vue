@@ -182,7 +182,7 @@
   </template>
   <template v-else-if="route.params.tab === 'actions'">
     <div class="buttons">
-      <button class="button is-pulled-right" @click="updateSteamInfo">Update Steam Info</button>
+      <button class="button is-pulled-right has-tooltip-right" @click="updateSteamInfo" data-tooltip="Updates our local copy of their name and avatar">Update Steam Info</button>
     </div>
 </template>
 </section>
