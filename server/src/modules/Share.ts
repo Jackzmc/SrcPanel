@@ -82,7 +82,11 @@ export default class Share {
                 if(filepath.startsWith("missions")) {
                     const missionData = vpk.getFile(filepath)
                     const root = ValveKV.deserialize(missionData.toString('utf-8'))
-                    const chapters = root["mission"]["modes"]["coop"]
+                    const mission = root["mission"]
+                    if(!mission) return null
+                    const modes = mission["modes"]
+                    if(!modes) return null
+                    const chapters = modes["coop"]
                     if(!chapters) return null
                     const sorted = Object.entries(chapters)
                         .sort(([k1, v1],[k2,v2]) => Number(k1) - Number(k2))
@@ -92,7 +96,7 @@ export default class Share {
                 }
             }
         } catch(err) {
-            console.warn(`[Share/${this.name}] Error opening VPK at ${filepath}:\n`, err)
+            console.warn(`[Share/${this.name}] Skipping vpk with error at ${filepath}:\n`, err)
         }
         return null
     }
