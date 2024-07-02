@@ -96,7 +96,7 @@ export default class Share {
                 }
             }
         } catch(err) {
-            console.warn(`[Share/${this.name}] Skipping vpk with error at ${filepath}:\n`, err)
+            console.warn(`[Share/${this.name}] Skipping vpk with error at ${filepath}:\n`, err.message)
         }
         return null
     }
@@ -118,7 +118,7 @@ export default class Share {
                 if(this.validExts && !this.validExts.includes(ext)) continue
             
                 const addonInfo = await this.getAddonInfo(dirent.name)
-                if(addonInfo && addonInfo.workshop) { // TODO: remove temp
+                if(addonInfo) {
                     // If we have cached addon info, check if its a collection or an item
                     if(addonInfo.collection) {
                         if(!collections[addonInfo.collection.id]) collections[addonInfo.collection.id] = { 
@@ -146,18 +146,15 @@ export default class Share {
                     let wsDetails = null
                     if(ext === "vpk") {
                         chapterIds = this.#getChapterIds(path.join(this.sourceFolder, dirent.name))
+                        // Check if this is a workshop addon, and fetch its details
                         const wsId = parseInt(dirent.name)
-                        // TODO: remove temp
                         if(wsId) {
                             wsDetails = await this.#steam.getItemDetails([wsId.toString()])
                             if(wsDetails.length > 0) {
                                 wsDetails = Share.serializeWorkshopItem(wsDetails[0])
-                                console.debug("got details for ", dirent.name)
                             } else {
                                 wsDetails = { deleted: true, publishedfileid: wsId }
-                                console.debug("no details for", dirent.name)
                             }
-                            await sleep(2000)
                         }
                     }
                    
