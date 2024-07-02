@@ -70,13 +70,18 @@
               </tr>
               <tr v-if="props.addon.chapterIds">
                 <th>Rating</th>
-                <td v-if="mapRating?.avgRating">
-                  <Icon size="is-small" icon="fas star" v-for=" i in Math.round( mapRating.avgRating ) " :key="i" />
-                  <Icon size="is-small" icon="far star" v-for=" i in 5 - Math.round( mapRating.avgRating )  " :key="i + 10" />
-                  {{ Number( mapRating.avgRating ).toFixed( 1 ) }}
+                <td v-if="mapRating.loadState == LoadState.Success">
+                  <template v-if="mapRating.data">
+                    <Icon size="is-small" icon="fas star" v-for=" i in Math.round( mapRating.data.avgRating ) " :key="i" />
+                    <Icon size="is-small" icon="far star" v-for=" i in 5 - Math.round( mapRating.data.avgRating )  " :key="i + 10" />
+                    {{ Number( mapRating.data.avgRating ).toFixed( 1 ) }}
+                  </template>
+                  <template v-else>
+                    No rating
+                  </template>
                 </td>
-                <td v-else-if="mapRating">
-                  No rating
+                <td v-else-if="mapRating.loadState == LoadState.Error">
+                  <Icon icon="fa-times" class="has-text-danger">Could not load rating</Icon>
                 </td>
                 <td v-else>Loading...</td>
               </tr>
@@ -128,6 +133,7 @@ import { computed, ref, onBeforeMount, onActivated } from 'vue';
 import { formatDate, formatSize, request, restartServer } from '@/js/util.js'
 // @ts-ignore
 import { Tab, Tabs } from "vue3-tabs-component";
+import { LoadState } from '@/types/global.js';
 
 const emit = defineEmits(['close', 'update'])
 const { notify }  = useNotification()
@@ -139,10 +145,10 @@ let previewImageLoaded = ref(false)
 let pendingRestarts = ref<string[]>([])
 let installInfo = ref<Record<string, boolean|null>>()
 let hasUpdated = false
-let mapRating = ref<{
+let mapRating = ref<{data?:{
   avgRating: number,
   ratings: {user:{id:string,name:string},value: number}[]
-}>()
+}, loadState: LoadState}>({ loadState: LoadState.Idle })
 
 onBeforeMount(() => {
   if(props.addon) {
@@ -265,13 +271,17 @@ async function deleteAddon() {
 }
 
 async function fetchRating() {
-  mapRating.value = undefined
+  mapRating.value.data = undefined
+  mapRating.value.loadState = LoadState.Loading
   if(!props.addon.chapterIds) return
-  const response = await request(`https://stats.jackz.me/api/maps/${props.addon.chapterIds.at(-1)}`, undefined, {
-    title: "Map Rating"
-  })
-  if(response?.ok) {
-    mapRating = await response.json()
+  const response = await fetch(`https://stats.jackz.me/api/maps/${props.addon.chapterIds.at(-1)}`)
+  if(response.ok) {
+    mapRating.value.data = await response.json()
+    mapRating.value.loadState = LoadState.Success
+  } else if(response.status == 404) {
+    mapRating.value.loadState = LoadState.Success
+  } else {
+    mapRating.value.loadState = LoadState.Error
   }
 }
 
