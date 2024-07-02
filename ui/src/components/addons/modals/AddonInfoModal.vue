@@ -24,9 +24,11 @@
               class="button is-small has-tooltip-right">Download (Direct)</a>
           </div>
           <template v-if="addon.workshop">
-            <img alt="The workshop addon's uploaded image preview" :src="addon.workshop.previewUrl"
+            <figure class="image" style="width:256px;height:256px">
+              <img alt="The workshop addon's uploaded image preview" :src="addon.workshop.previewUrl"
               @load="previewImageLoaded = true" />
             <img v-if="!previewImageLoaded" src="@/assets/WorkshopImageFallback.svg" />
+            </figure>
             <br><br>
           </template>
           <table class="table is-striped is-fullwidth">

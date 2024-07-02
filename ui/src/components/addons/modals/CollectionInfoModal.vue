@@ -11,9 +11,11 @@
         <Tabs inner-wrapper-class="tabs" :options="{ useUrlFragment: false }">
           <Tab name="Overview">
             <template v-if="props.addon.children.length > 0">
-              <img alt="The workshop addon's uploaded image preview" :src="props.addon.children[0].workshop.previewUrl"
-                @load="previewImageLoaded = true" />
-              <img v-if="!previewImageLoaded" src="@/assets/loader.gif" />
+              <figure class="image" style="width:256px;height:256px">
+                <img alt="The workshop addon's uploaded image preview" :src="props.addon.children[0].workshop.previewUrl"
+                  @load="previewImageLoaded = true" />
+                <img v-if="!previewImageLoaded" src="@/assets/loader.gif" />
+              </figure>
               <br><br>
             </template>
             <table class="table is-striped is-fullwidth">
