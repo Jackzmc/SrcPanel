@@ -96,11 +96,28 @@
         </Tab>
         <Tab name="Servers">
           <p class="subtitle is-6">Click any tag to enable or disable it from the server.<br>The server must be restarted for the changes to apply.</p>
-            <div class="field" v-for="(installed, dest) in installInfo" :key="dest">
-              <input :id="dest" type="checkbox" class="switch is-rtl" :checked="installed == true" @click="enableAddon(dest, installed ? 'disable' : 'enable')" :disabled="installed == null">
-              <label :for="dest">{{ dest }}</label>
-              <br>
-            </div>
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Enabled</th>
+                  <th style="width:100%">Server</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(installed, dest) in installInfo" :key="dest">
+                  <td>
+                    <input :id="dest" type="checkbox" class="switch is-rtl" :checked="installed == true"
+                      @click="enableAddon(dest, installed ? 'disable' : 'enable')" :disabled="installed == null">
+                      <label :for="dest"></label>
+                      <!----<label class="checkbox">
+                      <input type="checkbox" :checked="installed == true" @click="enableAddon(dest, installed ? 'disable' : 'enable')" :disabled="installed == null" />
+                      {{ installed ? 'Enabled' : 'Disabled' }}
+                    </label> -->
+                  </td>
+                  <td>{{ dest }}</td>
+                </tr>
+              </tbody>
+            </table>
             <!-- <div class="control" v-for="(installed, dest) in installInfo" :key="dest">
               <div class="tags has-addons">
                 <span class="tag is-dark">{{ dest }}</span>
