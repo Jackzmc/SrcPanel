@@ -48,8 +48,8 @@ export default class Share {
             chapter_ids TEXT,
             PRIMARY KEY (filename)
         );`)
-        db.exec(SQL`ALTER TABLE addoncache
-            ADD COLUMN chapter_ids TEXT;`).catch(() => {})
+        // db.exec(SQL`ALTER TABLE addoncache
+        //     ADD COLUMN chapter_ids TEXT;`).catch(() => {})
     }
 
     public get id() { return this.#id }
@@ -79,7 +79,6 @@ export default class Share {
         vpk.load()
         for(const filepath of vpk.files) {
             if(filepath.startsWith("missions")) {
-                console.debug("mission", filepath)
                 const missionData = vpk.getFile(filepath)
                 const root = ValveKV.deserialize(missionData.toString('utf-8'))
                 const chapters = root["mission"]["modes"]["coop"]
@@ -88,7 +87,6 @@ export default class Share {
                     .sort(([k1, v1],[k2,v2]) => Number(k1) - Number(k2))
                     .map(([_, v]) => v)
                     .map((v: any) => v.Map)
-                console.debug(sorted)
                 return sorted
             }
         }
@@ -104,6 +102,7 @@ export default class Share {
         console.timeEnd('getAddons:readdir')
         const results: (AddonInfo|AddonCollectionInfo)[] = []
         let collections: Record<string, AddonCollectionInfo> = {}
+                        const sleep = (time: number) => new Promise(res => setTimeout(res, time));
         for(const dirent of dirents) {
             if(dirent.isFile()) {
                 // Only check the specified extenstions
@@ -111,7 +110,7 @@ export default class Share {
                 if(this.validExts && !this.validExts.includes(ext)) continue
             
                 const addonInfo = await this.getAddonInfo(dirent.name)
-                if(addonInfo) {
+                if(addonInfo && addonInfo.workshop) { // TODO: remove temp
                     // If we have cached addon info, check if its a collection or an item
                     if(addonInfo.collection) {
                         if(!collections[addonInfo.collection.id]) collections[addonInfo.collection.id] = { 
@@ -136,10 +135,23 @@ export default class Share {
                         lastModified: Math.round(fstat.mtime.getTime() / 1000),
                     }
                     let chapterIds = null
+                    let wsDetails = null
                     if(ext === "vpk") {
                         chapterIds = this.#getChapterIds(path.join(this.sourceFolder, dirent.name))
+                        const wsId = parseInt(dirent.name)
+                        // TODO: remove temp
+                        if(wsId) {
+                            wsDetails = await this.#steam.getItemDetails([wsId.toString()])
+                            if(wsDetails.length > 0) {
+                                wsDetails = Share.serializeWorkshopItem(wsDetails[0])
+                                console.debug("got details for ", dirent.name)
+                            } else {
+                                wsDetails = { deleted: true, publishedfileid: wsId }
+                                console.debug("no details for", dirent.name)
+                            }
+                            await sleep(2000)
+                        }
                     }
-                    console.debug(dirent.name, chapterIds)
                    
                     results.push({
                         filename: dirent.name,
@@ -147,7 +159,7 @@ export default class Share {
                         installInfo: (await this.getInstallInfo(dirent.name)).states,
                         chapterIds
                     })
-                    await this.#addAddonEntry(dirent.name, fsinfo, undefined, undefined, chapterIds)
+                    await this.#addAddonEntry(dirent.name, fsinfo, wsDetails, undefined, chapterIds)
                 }
             }
         }
