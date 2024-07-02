@@ -74,15 +74,16 @@
                 "perm": "n"
             },
             {
-                "command": "model <survivor_name:string> [player(s):players] [keep:string]",
-                "description": "Sets your model or an optional player's model to the survivor specified.",
+                "command": "model <survivor_name:string> [player(s):players]",
+                "description": "Sets your model or optionally, another player's model to the survivor specified.",
                 "args": {
                     "survivor_name": {
                         "allowed_values": ["nick", "ellis", "rochelle", "coach", "bill", "francis", "zoey", "louis"]
                     }
                 },
                 "examples": [
-                    "%cmd% grace rochelle - Sets the player's model that has the name 'grace' to rochelle"
+                    "<code>%cmd% roch grace</code> - Sets the player's model that has the name 'grace' to rochelle",
+                    "<code>%cmd% z</code> - Sets your model to zoey"
                 ],
                 "perm": "c"
             },
@@ -145,7 +146,7 @@
             },
             {
                 "command": "bandisconnected",
-                "description": "Will open a menu with a list of disconnected players. Select a player to activate a ban on them. Just permanently ban them if they are for sure troll and not a noob.",
+                "description": "Will open a menu listing all the recently disconnected players, letting you ban them after they already left.",
                 "perm": "d"
             },
             {
@@ -184,8 +185,11 @@
             },
             {
                 "command": "rename <player:player> <new name:string>",
-                "description": "Renames the specified player, resets the next chapter",
-                "perm": "f"
+                "description": "Temporarily change the specified player's name, resets the next chapter. You can use @me to specify yourself",
+                "perm": "f",
+                "examples": [
+                    "<code>%cmd% @me \"My New Name\"</code> - Change your name to <b>My New Name</b>"
+                ]
             }
         ]
     },
@@ -201,7 +205,7 @@
                     }
                 },
                 "examples": [
-                    "%cmd% smoker 5 - Spawns 5 smokers in the area"
+                    "<code>%cmd% smoker 5</code> - Spawns 5 smokers in the area"
                 ],
                 "perm": "n"
             },
@@ -209,7 +213,7 @@
                 "command": "insta <player(s):players> [special:string]",
                 "description": "Will spawn specified special near the specified player, with target only on them. Defaults to jockey if no special specified.",
                 "examples": [
-                    "%cmd% insta pea jockey - Spawns a jockey near pea"
+                    "<code>%cmd% insta pea jockey</code> - Spawns a jockey near pea"
                 ],
                 "perm": "c"
             },
@@ -217,7 +221,7 @@
                 "command": "inface <player(s):players> [special:string=jockey]",
                 "description": "Will spawn specified special as close as possible to them. Basically on top",
                 "examples": [
-                    "%cmd% insta pea jockey - Spawns a jockey on pea"
+                    "<code>%cmd% insta pea jockey</code> - Spawns a jockey on pea"
                 ],
                 "perm": "c"
             },
@@ -284,10 +288,10 @@
                     }
                 },
                 "examples": [
-                    "<b>Spawn shotgun:</b> %cmd% shotgun",
-                    "<b>Spawn a kit:</b> %cmd% first_aid_kit",
-                    "<b>Spawns a bile</b> %cmd% vomitjar",
-                    "<b>Spawn adrendaline: </b> %cmd% adrendaline",
+                    "<b>Spawn shotgun:</b> <code>%cmd% shotgun<code>",
+                    "<b>Spawn a kit:</b> <code>%cmd% first_aid_kit</code>",
+                    "<b>Spawns a bile</b> <code>%cmd% vomitjar</code>",
+                    "<b>Spawn adrendaline: </b> <code>%cmd% adrendaline</code>",
                     "Discover item ids by googling l4d2 item ids, or by typing give in console, then whatever autocompletes put into sm_give (give != sm_give)"
                 ],
                 "perm": "n"
@@ -296,10 +300,10 @@
                 "command": "give <weapon:string>",
                 "description": "Same as above, except will directly put them in your hand, or drops on ground if you have no free hand",
                 "examples": [
-                    "<b>Spawn shotgun:</b> %cmd% shotgun",
-                    "<b>Spawn a kit:</b> %cmd% kit",
-                    "<b>Spawns a bile</b> %cmd% bile",
-                    "<b>Spawn adrendaline: </b> %cmd% adr",
+                    "<b>Spawn shotgun:</b> <code>%cmd% shotgun<code>",
+                    "<b>Spawn a kit:</b> <code>%cmd% first_aid_kit</code>",
+                    "<b>Spawns a bile</b> <code>%cmd% vomitjar</code>",
+                    "<b>Spawn adrendaline: </b> <code>%cmd% adrendaline</code>",
                     "Discover item ids by googling l4d2 item ids, or by typing give in console, then whatever autocompletes put into sm_give (give != sm_give)"
                 ],
                 "perm": "n"
@@ -323,7 +327,7 @@
                 "command": "playsound <player(s):players> <soundpath:string>",
                 "description": "Plays the specified soundpath to specified player(s). Automatically stops last sound",
                 "examples": [
-                    "To play <b>mariokartmusic.mp3</b>: %cmd% jackz custom/mariokartmusic.mp3"
+                    "To play <b>mariokartmusic.mp3</b>: <code>%cmd% jackz custom/mariokartmusic.mp3</code>"
                 ],
                 "perm": "c"
             },
