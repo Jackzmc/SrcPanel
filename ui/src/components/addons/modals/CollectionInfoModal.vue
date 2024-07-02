@@ -2,63 +2,114 @@
   <Modal active closable @close="close">
     <div class="modal-card">
       <header class="modal-card-head">
-        <p class="modal-card-title">Collection Info
+        <p class="modal-card-title">{{ addonName }}
           <span class="tag is-info has-tooltip-bottom is-pulled-right mr-2 is-rounded" data-tooltip="The target share">{{props.share.id}}</span>
         </p>
         <button class="delete" aria-label="close" @click='close(false)'></button>
       </header>
-      <section class="modal-card-body">
-        <!-- <template v-if="props.addon.workshop">
-          <img alt="The workshop addon's uploaded image preview" :src="props.addon.workshop.previewUrl" @load="previewImageLoaded = true" />
-          <img v-if="!previewImageLoaded" src="@/assets/loader.gif" />
-          <br><br>
-        </template> -->
-        <h4 class='title is-4'>{{ addonName }} </h4>
-        <div class="field is-grouped is-grouped-multiline">
-          <div class="control">
-            <div class="tags has-addons">
-              <span class="tag is-dark">Collection ID</span>
-              <span class="tag is-info">{{props.addon.collection.id}}</span>
-            </div>
-          </div>
-          <div class="control">
-            <div class="tags has-addons">
-              <span class="tag is-dark">File Size</span>
-              <span class="tag is-info">{{totalFileSize}}</span>
-            </div>
-          </div>
-          <div class="control">
-            <div class="tags has-addons">
-              <span class="tag is-dark">Collection Addons</span>
-              <span class="tag is-info">{{props.addon.children.length}}</span>
-            </div>
-          </div>
-        </div>
-        <h5 class="title is-5">Servers</h5>
-        <p class="subtitle is-6">Click any tag to enable or disable the collection from the server. The server must be restarted for the changes to apply.</p>
-        <div class="field is-grouped is-grouped-multiline">
-          <div class="field mr-2" v-for="(installed, dest) in installInfo.collection" :key="dest">
-            <input :id="dest" type="checkbox" class="switch is-rtl" :checked="installed" @click="enableAddons(dest, installed ? 'disable' : 'enable')" :disabled="installed == null">
-            <label :for="dest">{{ dest }}</label>
-          </div>
-        </div>
-        <br>
-        <h5 class="title is-5">Collection Addons</h5>
-        <p class="subtitle is-6">Click any child addon to view their addon entry</p>
-        <table class="table is-fullwidth">
-          <thead>
-            <tr>
-              <th>Filename</th>
-              <th>File Size</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="child in props.addon.children" :key="child.filename">
-              <td><router-link :to="{ name: 'file-info', params: { shareId: props.share.id, addon: child.filename } }">{{ child.filename }}</router-link></td>
-              <td>{{ formatSize(child.filesize) }}</td>
-            </tr>
-          </tbody>
-        </table>
+      <section class="modal-card-body pt-1">
+        <Tabs inner-wrapper-class="tabs" :options="{ useUrlFragment: false }">
+          <Tab name="Overview">
+            <template v-if="props.addon.children.length > 0">
+              <img alt="The workshop addon's uploaded image preview" :src="props.addon.children[0].workshop.previewUrl"
+                @load="previewImageLoaded = true" />
+              <img v-if="!previewImageLoaded" src="@/assets/loader.gif" />
+              <br><br>
+            </template>
+            <table class="table is-striped is-fullwidth">
+              <tbody>
+                <tr>
+                  <th>Collection ID</th>
+                  <td>{{props.addon.collection.id}}</td>
+                </tr>
+                <tr>
+                  <th>Workshop</th>
+                  <td>
+                    <a target="_blank" :href="'https://steamcommunity.com/workshop/filedetails/?id=' + props.addon.collection.id" class="is-small"
+                      data-tooltip="Open the collections's steam workshop page">
+                      <Icon icon="arrow-up-right-from-square" text-left="Open Workshop Page"></Icon>
+                    </a>
+                  </td>
+                </tr>
+                <tr>
+                  <th>File Size</th>
+                  <td>{{ totalFileSize }}</td>
+                </tr>
+                <tr v-if="props.addon.chapterIds">
+                  <th>Chapters</th>
+                  <td>
+                    <ul>
+                      <li v-for="chapter in props.addon.chapterIds" :key="chapter">{{ chapter }}</li>
+                    </ul>
+                  </td>
+                </tr>
+                <tr v-if="props.addon.chapterIds">
+                  <th>Rating</th>
+                  <td v-if="mapRating.loadState == LoadState.Success">
+                    <template v-if="mapRating.data">
+                      <Icon size="is-small" icon="fas star" v-for=" i in Math.round( mapRating.data.avgRating ) " :key="i" />
+                      <Icon size="is-small" icon="far star" v-for=" i in 5 - Math.round( mapRating.data.avgRating )  " :key="i + 10" />
+                      {{ Number( mapRating.data.avgRating ).toFixed( 1 ) }}
+                    </template>
+                    <template v-else>
+                      No rating
+                    </template>
+                  </td>
+                  <td v-else-if="mapRating.loadState == LoadState.Error">
+                    <Icon icon="fa-times" class="has-text-danger">Could not load rating</Icon>
+                  </td>
+                  <td v-else>Loading...</td>
+                </tr>
+              </tbody>
+            </table>
+            <h5 class="title is-5">Collection Addons</h5>
+            <p class="subtitle is-6">Click any child addon to view their addon entry</p>
+            <table class="table is-fullwidth">
+              <thead>
+                <tr>
+                  <th>Filename</th>
+                  <th>File Size</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="child in props.addon.children" :key="child.filename">
+                  <td><router-link
+                      :to="{ name: 'file-info', params: { shareId: props.share.id, addon: child.filename } }">
+                      {{ child.workshop?.title ?? child.filename }}
+                    </router-link>
+                  </td>
+                  <td>{{ formatSize(child.filesize) }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </Tab>
+          <Tab name="Servers">
+            <p class="subtitle is-6">Click any tag to enable or disable it from the server.<br>The server must be restarted for the
+              changes to apply.</p>
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Enabled</th>
+                  <th style="width:100%">Server</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(installed, dest) in installInfo.collection" :key="dest">
+                  <td>
+                    <input :id="dest" type="checkbox" class="switch is-rtl" :checked="installed == true"
+                      @click="enableAddons(dest, installed ? 'disable' : 'enable')" :disabled="installed == null">
+                    <label :for="dest"></label>
+                    <!----<label class="checkbox">
+                                <input type="checkbox" :checked="installed == true" @click="enableAddon(dest, installed ? 'disable' : 'enable')" :disabled="installed == null" />
+                                {{ installed ? 'Enabled' : 'Disabled' }}
+                              </label> -->
+                  </td>
+                  <td>{{ dest }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </Tab>
+        </Tabs>
       </section>
       <footer class="modal-card-foot">
         <div class="buttons">
@@ -79,6 +130,9 @@ import Modal from '@/components/Modal.vue'
 import { useNotification } from "@kyvg/vue3-notification";
 import { computed, ref, onBeforeMount } from 'vue';
 import { LiveRecordCommandResponse } from '../../../../../common-types/Live';
+// @ts-ignore
+import { Tab, Tabs } from "vue3-tabs-component";
+import { LoadState } from '@/types/global.js';
 
 const emit = defineEmits(['close'])
 const { notify }  = useNotification()
@@ -88,6 +142,10 @@ const props = defineProps({
 })
 let previewImageLoaded = ref(false)
 let pendingRestarts = ref<string[]>([])
+let mapRating = ref<{data?:{
+  avgRating: number,
+  ratings: {user:{id:string,name:string},value: number}[]
+}, loadState: LoadState}>({ loadState: LoadState.Idle })
 
 const workshopUrl = computed(() => {
   return `https://steamcommunity.com/workshop/filedetails/?id=${props.addon.collection.id}`
@@ -104,7 +162,23 @@ onBeforeMount(() => {
     collection: props.addon.children[0].installInfo as Record<string, boolean>,
     children
   }
+  fetchRating()
 })
+
+async function fetchRating() {
+  mapRating.value.data = undefined
+  mapRating.value.loadState = LoadState.Loading
+  if(!props.addon.chapterIds) return
+  const response = await fetch(`https://stats.jackz.me/api/maps/${props.addon.chapterIds.at(-1)}`)
+  if(response.ok) {
+    mapRating.value.data = await response.json()
+    mapRating.value.loadState = LoadState.Success
+  } else if(response.status == 404) {
+    mapRating.value.loadState = LoadState.Success
+  } else {
+    mapRating.value.loadState = LoadState.Error
+  }
+}
 
 
 const totalFileSize = computed(() => {
