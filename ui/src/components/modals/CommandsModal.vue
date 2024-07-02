@@ -1,5 +1,5 @@
 <template>
-<Modal :active="active" v-if="cmd" :closable="false">
+<Modal :active="active" v-if="cmd" :closable="true" @close="emit('close')">
   <div class="modal-card">
     <header class="modal-card-head">
       <p class="modal-card-title"><b>{{prefix}}{{cmd.name}}</b> Command</p>
@@ -61,7 +61,6 @@
       </template>
     </section>
     <footer class="modal-card-foot">
-      <button class="button is-success" aria-label="close" @click='close'>Close</button>
     </footer>
   </div>
 </Modal>
