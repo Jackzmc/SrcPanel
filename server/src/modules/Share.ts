@@ -76,19 +76,23 @@ export default class Share {
 
     #getChapterIds(filepath: string): string[] {
         const vpk = new VPK(filepath)
-        vpk.load()
-        for(const filepath of vpk.files) {
-            if(filepath.startsWith("missions")) {
-                const missionData = vpk.getFile(filepath)
-                const root = ValveKV.deserialize(missionData.toString('utf-8'))
-                const chapters = root["mission"]["modes"]["coop"]
-                if(!chapters) return null
-                const sorted = Object.entries(chapters)
-                    .sort(([k1, v1],[k2,v2]) => Number(k1) - Number(k2))
-                    .map(([_, v]) => v)
-                    .map((v: any) => v.Map)
-                return sorted
+        try {
+            vpk.load()
+            for(const filepath of vpk.files) {
+                if(filepath.startsWith("missions")) {
+                    const missionData = vpk.getFile(filepath)
+                    const root = ValveKV.deserialize(missionData.toString('utf-8'))
+                    const chapters = root["mission"]["modes"]["coop"]
+                    if(!chapters) return null
+                    const sorted = Object.entries(chapters)
+                        .sort(([k1, v1],[k2,v2]) => Number(k1) - Number(k2))
+                        .map(([_, v]) => v)
+                        .map((v: any) => v.Map)
+                    return sorted
+                }
             }
+        } catch(err) {
+            console.warn(`[Share/${this.name}] Error opening VPK at ${filepath}:\n`, err)
         }
         return null
     }
