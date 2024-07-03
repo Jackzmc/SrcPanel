@@ -368,6 +368,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                             sendSSE({
                                 state: "DOWNLOADED",
                                 entry: detail.publishedfileid,
+                                currentBytes: detail.file_size,
+                                totalBytes: detail.file_size,
                                 message: `Downloaded <a href="https://steamcommunity.com/sharedfiles/filedetails/?id=${detail.publishedfileid}"><b>${detail.title}</b></a> (${humanFileSize(detail.file_size)})`
                             })
 

@@ -368,6 +368,7 @@ function startDownload(force = false) {
         if(payload.state === "DOWNLOADED") {
           if(!downloads.value[payload.entry]) return console.warn(`Progress update for download that we don't know: ${payload.entry}`)
           downloads.value[payload.entry].progress = 1
+          downloads.value[payload.entry].currentBytes = payload.currentBytes
         }
 
         downloadLog.value.push({
