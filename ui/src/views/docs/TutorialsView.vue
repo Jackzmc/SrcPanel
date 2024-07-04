@@ -57,6 +57,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { request } from '@/js/util.js';
 //@ts-expect-error
 import { marked } from 'marked'
+import ActionNote from '@/components/ActionNote.vue';
 
 const route = useRoute()
 const router = useRouter()
@@ -129,3 +130,18 @@ async function fetchTutorialText(filename: string) {
   }
 }
 </script>
+
+<style>
+html[data-theme="light"] {
+  .panel-block.is-active {
+    color: black;
+    font-weight: bold;
+  }
+}
+html[data-theme="dark"] {
+  .panel-block.is-active {
+    font-weight: bold;
+  }
+}
+
+</style>
