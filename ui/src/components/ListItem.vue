@@ -1,6 +1,6 @@
 <template>
 <div :class="['list-item', {'box': props.box}]">
-  <div class="list-item-image">
+  <div class="list-item-image" v-if="props.imageSrc">
     <slot name="image">
       <figure class="image is-64x64">
         <img class="is-rounded" :src="props.imageSrc">

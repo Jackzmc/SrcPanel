@@ -558,4 +558,7 @@ onMounted(async() => {
 .column-separator {
   border-left: solid 1px!important;
 }
+td {
+  vertical-align: middle !important;
+}
 </style>

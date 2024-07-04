@@ -388,7 +388,9 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 cmd: req.body
             }
         })
-        await fastify.authmngr.notifyAdmins(`Admin ${req.user.steamid2} ran server command \"${req.body}\" on server ${server.id}. Log entry: ${id}`, "notify_rcon_use")
+        await fastify.authmngr.notifyAdmins(`Admin ${req.user.steamid2} ran server command \"${req.body}\" on server ${server.id}. Log entry: ${id}`, "notify_rcon_use", {
+            targetSteamid: req.user.steamid2
+        })
         const response = await server.performAction(req.body, "default")
         if(req.query['no-response'])
             return reply.status(204).send()

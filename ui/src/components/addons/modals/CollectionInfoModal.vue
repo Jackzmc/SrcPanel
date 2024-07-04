@@ -11,7 +11,7 @@
         <Tabs inner-wrapper-class="tabs" :options="{ useUrlFragment: false }">
           <Tab name="Overview">
             <template v-if="props.addon.children.length > 0">
-              <figure class="image" style="width:256px;height:256px">
+              <figure class="image" style="max-width:256px;max-height:256px">
                 <img alt="The workshop addon's uploaded image preview" :src="props.addon.children[0].workshop.previewUrl"
                   @load="previewImageLoaded = true" />
                 <img v-if="!previewImageLoaded" src="@/assets/loader.gif" />
@@ -48,7 +48,7 @@
                 <tr v-if="props.addon.chapterIds">
                   <th>Rating</th>
                   <td v-if="mapRating.loadState == LoadState.Success">
-                    <template v-if="mapRating.data">
+                    <template v-if="mapRating.data?.avgRating">
                       <Icon size="is-small" icon="fas star" v-for=" i in Math.round( mapRating.data.avgRating ) " :key="i" />
                       <Icon size="is-small" icon="far star" v-for=" i in 5 - Math.round( mapRating.data.avgRating )  " :key="i + 10" />
                       {{ Number( mapRating.data.avgRating ).toFixed( 1 ) }}

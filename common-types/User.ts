@@ -130,7 +130,13 @@ export interface AdminPermissions<C> {
         codes: C
     },
 }
-
+export enum NotificationLevel {
+    Default,
+    Info,
+    Success,
+    Warning,
+    Error
+}
 export interface UserNotification extends AddUserNotification {
     timestamp: number,
 }
@@ -138,7 +144,9 @@ export interface AddUserNotification extends UserNotificationOptions {
     message: number,
 }
 export interface UserNotificationOptions {
-    link?: string
+    link?: string,
+    level?: NotificationLevel,
+    targetSteamid?: string
 }
 export interface UserProfileData {
     birthDate?: number,
