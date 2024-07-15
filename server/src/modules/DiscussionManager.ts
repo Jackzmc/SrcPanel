@@ -60,7 +60,7 @@ export default class DiscussionManager {
         const totalUsers = this.#authmngr.AdminCount
         const domain = await this.#config.GetKV("domain");
         const [responses] = await this.#db.execute<RowDataPacket[]>(
-            "SELECT res.steamid, res.choice, opt.label, u.name as name FROM `left4dead2-admins`.dash_discussion_responses res LEFT JOIN `left4dead2`.user_names u ON SUBSTRING(res.steamid, 11) = u.steamid LEFT JOIN `left4dead2-admins`.dash_discussion_options opt ON opt.id = res.choice WHERE res.discussion_id = ?", [id]
+            "SELECT res.steamid, res.choice, res.text, opt.label, u.name as name FROM `left4dead2-admins`.dash_discussion_responses res LEFT JOIN `left4dead2`.user_names u ON SUBSTRING(res.steamid, 11) = u.steamid LEFT JOIN `left4dead2-admins`.dash_discussion_options opt ON opt.id = res.choice WHERE res.discussion_id = ?", [id]
         )
         const counts: Record<string, APICountData> = {}
         const userSelection: number[] = []
