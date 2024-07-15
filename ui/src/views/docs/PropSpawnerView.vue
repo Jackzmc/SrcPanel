@@ -25,7 +25,7 @@
           <li>Select the item in the category to spawn</li>
           <li>Position your mouse where you want it to spawn</li>
           <li>Rotate the prop how you want. (See <a href="#rotation">Rotating Props</a> for help)</li>
-          <li>Once satisfied, spawn it with <kbd>Shift + Middle Mouse</kbd></li>
+          <li>Once satisfied, spawn it with <kbd>Use</kbd></li>
         </ol>
       </div>
       <div class="column is-4">
@@ -57,9 +57,9 @@
           <br>
           <h5 class="title is-5">Color</h5>
           <ul>
-            <li><kbd>E</kbd> - change color component (red, green, blue)</li>
-            <li><kbd>Left Click</kbd> - decrease color component</li>
-            <li><kbd>Right Click</kbd> - increase color component</li>
+            <li><kbd>E</kbd> - change color component (red, green, blue, alpha)</li>
+            <li><kbd>Left Click</kbd> - decrease value of color component</li>
+            <li><kbd>Right Click</kbd> - increase value of color component</li>
           </ul>
         </div>
       </div>

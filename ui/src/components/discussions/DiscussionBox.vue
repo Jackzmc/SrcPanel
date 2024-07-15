@@ -35,14 +35,13 @@
     </div>
   </div>
   <div v-else-if="discuss.type == APIDiscussionType.ShortText">
-    ah
     <Field>
-      <input type="text" class="input" readonly placeholder="Enter your submission" v-model.trim="discuss.value" @input="submitChoiceDebounceMultiOrText">
+      <input type="text" class="input" placeholder="Enter your submission" v-model.trim="discuss.value" @input="submitChoiceDebounceMultiOrText">
     </Field>
   </div>
   <div v-else-if="discuss.type == APIDiscussionType.LongText">
     <Field>
-      <textarea class="textarea" readonly placeholder="Enter your submission" v-model="discuss.value" @input="submitChoiceDebounceMultiOrText"></textarea>
+      <textarea class="textarea" placeholder="Enter your submission" v-model="discuss.value" @input="submitChoiceDebounceMultiOrText"></textarea>
     </Field>
   </div>
   <div v-else>
