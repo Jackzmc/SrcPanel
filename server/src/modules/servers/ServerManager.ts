@@ -1,10 +1,10 @@
-import { mkdir, readFile, stat } from 'fs/promises'
+import { mkdir, readFile, stat, open } from 'fs/promises'
 import Json5 from 'json5'
 import DNS from 'dns'
 import Server, { ConfigServerData } from './Server.js'
 import Share from '../Share.js';
 import path, { join } from 'path';
-import { open } from 'sqlite'
+import { open as sqliteOpen } from 'sqlite'
 import sqlite3 from 'sqlite3'
 import SteamAPI from '../steam.js'
 import { ShareDestinations, ShareInfo } from '../../../../common-types/Share.js'
@@ -38,6 +38,8 @@ export interface ConfigGroupData {
 dotenv.config()
 const DEBUG_LIVE_SOCKET = process.env.DEBUG_LIVE_SOCKET != undefined
 
+let instance: ServerManager
+
 export default class ServerManager {
   private servers: Record<string, Server> = {}
   private addonShares: Record<string, Share> = {}
@@ -64,6 +66,33 @@ export default class ServerManager {
     this.dataDir = dataDir
     this.configDir = configDir
     this.#cfgManager = configManager
+
+    instance = this
+  }
+
+  public static get Instance(): ServerManager { 
+    return instance 
+  }
+
+  public static async isFileIgnored(filepath: string): Promise<boolean> {
+    const configPath = path.join(ServerManager.Instance.dataDir, "server_files.ignore")
+    try {
+      const file = await open(configPath)
+      if(!file) return false
+      let result = false
+      for await (const line of file.readLines()) {
+    // TODO: use more advanced code, that mimics .gitignore. for now this works:
+        if(line.includes(filepath)) {
+          result = true
+          break
+        }
+      }
+      await file.close()
+      return result
+    } catch(err) {
+      if(err.code == "ENOENT") return false
+      throw err
+    }
   }
 
   public get Groups() {
@@ -386,7 +415,7 @@ export default class ServerManager {
         }
       }
 
-      const db = await open({
+      const db = await sqliteOpen({
         filename: join(this.dataDir, `shares/${shareId.toLowerCase()}_cache.db`),
         driver: sqlite3.Database
       })

@@ -8,29 +8,7 @@ import { EventEmitter } from 'node:events';
 import { Tail } from 'tail'
 import PluginSocket from './PluginSocket.js';
 import { Rcon } from 'rcon-client'
-
-const HIDDEN_CONFIG_FILES = [
-  "360controller.cfg",
-  "addonconfig.cfg",
-  "config_default.cfg",
-  "lowend.cfg",
-  "listenserver.cfg",
-  "listenserver360.cfg",
-  "modsettings.cfg",
-  "perf.cfg",
-  "screenshots.cfg",
-  "screenshots_undo.cfg",
-  "skill1.cfg",
-  "splitscreen_off.cfg",
-  "splitscreen_on.cfg",
-  "test_end.cfg",
-  "test_start.cfg",
-  "undo360controller.cfg",
-  "joy_preset_1.cfg",
-  "joy_preset_2.cfg",
-  "joy_preset_3.cfg",
-  "joy_preset_4.cfg",
-]
+import ServerManager from './ServerManager.js';
 
 const VALID_CONFIG_EXTS = ["cfg", "toml"]
 const MIN_REFRESH_TIME = 5000
@@ -401,16 +379,9 @@ export default class Server extends EventEmitter {
         if(dirent.isDirectory()) {
           files.push(...await this.#recurseConfig(join(path, dirent.name), showHidden, `${filepath}/`))
         } else if(dirent.isFile()) {
-          if(!showHidden) {
-            let skip = false
-            for(const hidden of HIDDEN_CONFIG_FILES) {
-              if(dirent.name == hidden) {
-                skip = true
-                break
-              }
-            }
-            if(skip) continue
-          }
+          // Hide filenames ignored by server_files.ignore
+          if(!showHidden && ServerManager.isFileIgnored(dirent.name)) continue
+
           const ext = dirent.name.split(".").pop()
           if(VALID_CONFIG_EXTS.includes(ext)) {
             files.push(filepath)
