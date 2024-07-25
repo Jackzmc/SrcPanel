@@ -9,6 +9,7 @@ import { Tail } from 'tail'
 import PluginSocket from './PluginSocket.js';
 import { Rcon } from 'rcon-client'
 import ServerManager from './ServerManager.js';
+import ServerConsole from './ServerConsole.js';
 
 const VALID_CONFIG_EXTS = ["cfg", "toml"]
 const MIN_REFRESH_TIME = 5000
@@ -69,13 +70,11 @@ export default class Server extends EventEmitter {
     #status: ServerStatus
     #liveCache?: LiveDataCache
     #cfgDir: string
-    #logPath: string
     #actid: string
     #sortOrder: number
     #lastRefresh: number
     #cvars: Record<string, string>
     #startTime: number
-    #logsCache: string[] = []
     #actions: ServerAction[]
     #group: GroupInfo
     #features: ServerAvailableFeatures = {}
@@ -85,6 +84,8 @@ export default class Server extends EventEmitter {
     } = null;
     #tags: string[];
     #rcon?: RconData
+
+    #console: ServerConsole
 
     #socket: PluginSocket
       
@@ -116,19 +117,9 @@ export default class Server extends EventEmitter {
             console.error(`[Server/${server.id}] ERROR: Could not access config directory:`, err)
           }
         }
+        // Initalize console (log lines, and in future command input)
+        this.#console = ServerConsole.createConsole(this, server.logsPath)
 
-        if(server.logsPath) {
-          try {
-            this.#logPath = resolve(server.logsPath)
-            statSync(this.#logPath)
-            this.#features['console'] = true
-            this.#createLogsReader()
-          } catch(err) {
-            if(err.code === "ENOENT")
-              console.error(`[Server/${server.id}] ERROR: Log file does not exist at ${server.logsPath}; skipping`)
-            else throw err
-          }
-        }
         if(server.rcon) this.#setupRcon(server)
       
         this.#systemd = server.systemd
@@ -250,7 +241,7 @@ export default class Server extends EventEmitter {
 
     public get hasSystemd() { return this.#features.systemd }
     public get hasConfigs() { return this.#features.configs }
-    public get hasConsole() { return this.#features.console }
+    public get hasConsole() { return this.#console != null }
     public get hasRcon() { return this.#features.rcon }
     public get hasPlugin() { return this.#features.plugin }
     public get hasCommandSupport() { return this.#features.plugin || this.#features.rcon }
@@ -275,21 +266,9 @@ export default class Server extends EventEmitter {
     public get cvars() { return this.#cvars }
 
     /**
-     * Returns the cached list of server console logs
-     */
-    public get logs() { return this.#logsCache }
-
-    /**
-     * Add log entry to console
-     * @param line
-     */
-    #pushLogEntry(line: string) {
-      this.#logsCache.push(line)
-      if(this.#logsCache.length > MAX_LOGS_LINES) {
-        this.#logsCache.splice(0, 1)
-      }
-      this.emit("log", line)
-    }
+     * Returns the server console if available
+    **/
+    public get Console() { return this.#console }
 
     async #connectRcon() {
       if(!this.#rcon) return false
@@ -303,28 +282,6 @@ export default class Server extends EventEmitter {
         }
       }
       return true
-    }
-
-    /**
-     * Returns a tail stream (live-view) of server's console logs
-     * @returns 
-     */
-    async #createLogsReader() { 
-      // Read previous lines
-      const file = await open(this.#logPath)
-      if(!file) return console.warn(`[Server/${this.id}] ERROR: Cannot open file ${this.#logPath}`)
-      for await (const line of file.readLines()) {
-        this.#pushLogEntry(line)
-      }
-      await file.close()
-
-      // Subscribe to new:
-      const tail = new Tail(this.#logPath)
-      tail.on('line', (line) => this.#pushLogEntry(line))
-      tail.on("error", (err) => {
-        console.warn(`[Server/${this.id}] WARN: Log file stream errored.\n`, err)
-      })
-      return tail
     }
 
     /**

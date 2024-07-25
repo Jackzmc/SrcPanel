@@ -38,7 +38,7 @@ export interface ConfigGroupData {
 dotenv.config()
 const DEBUG_LIVE_SOCKET = process.env.DEBUG_LIVE_SOCKET != undefined
 
-let instance: ServerManager
+let _instance: ServerManager
 
 export default class ServerManager {
   private servers: Record<string, Server> = {}
@@ -67,11 +67,11 @@ export default class ServerManager {
     this.configDir = configDir
     this.#cfgManager = configManager
 
-    instance = this
+    _instance = this
   }
 
   public static get Instance(): ServerManager { 
-    return instance 
+    return _instance 
   }
 
   public static async isFileIgnored(filepath: string): Promise<boolean> {
