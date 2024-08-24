@@ -2,7 +2,7 @@
 <div class="container">
     <div class="columns is-variable is-6">
         <div class="column is-7">
-          <Field label="Search" icon-left="search">
+          <Field label="" icon-left="search">
               <input v-model="searchQuery" class="input" type="text" placeholder="Search for a cvar">
             </Field>
           <ul>
@@ -23,40 +23,44 @@
           </ul>
         </div>
         <div class="column content">
+          <div class="box has-background-info-light">
+            <h4 class="title is-4 has-text-info"><Icon icon="fa-info-circle">Cvar Overview</Icon></h4>
             <p>
-              Convars are settings on the server that can affect anything such as gameplay or plugin settings and can be changed at any time.
+              Convars (cvars for short) are settings on the server that can affect anything such as gameplay or plugin settings and can be changed at any time.
             </p>
-            <p class="has-text-info">
-              You can change convars with one of these commands:<br>
+            <p>Some convars will reset back to their configured value on the next chapter, and some will only reset when the server restarts.</p>
+            <div class="box  has-text-black">
+              <p>You can change convars with one of these commands:</p>
               <table class="table">
                 <tr>
                   <td>sm_cvar</td>
                   <td><span class='tag is-link'>cvar name</span> <span class='tag'>value</span></td>
-                  <td>from console</td>
+                  <td>in the dev console</td>
                 </tr>
                 <tr>
                   <td>!cvar</td>
                   <td><span class='tag is-link'>cvar name</span> <span class='tag'>value</span></td>
-                  <td>publicly in chat</td>
+                  <td>in chat (publicly)</td>
                 </tr>
                 <tr>
                   <td>/cvar</td>
                   <td><span class='tag is-link'>cvar name</span> <span class='tag'>value</span></td>
-                  <td>privately in chat</td>
+                  <td>in chat (privately)</td>
                 </tr>
               </table>
-            </p>
-	          <p>
-              If value is not specified, it will instead show you the value of the cvar
-            </p>
-            <hr>
-            <p>Percentages are represented by decimals, so 100% = 1.0, 50% = 0.5, 0% = 0.0</p>
+              <p>
+                If a value is not specified, it will instead show you the current value of the cvar
+              </p>
+            </div>
+            <p>Percentages are represented by decimals, so 100% would be entered as <code>1.0</code>, 50% = <code>0.5</code>, 0% = <code>0</code></p>
             <p><b>Example</b> <code>/cvar l4d2_population_clowns 1.0</code> – This will make it a 100% chance it spawns clown zombies</p>
             <br>
             <p>
               <em>Nerd shit: Cvars can take three types of inputs: floats, integers, and strings. Booleans are represented by 0 or 1 but using the sm_cvar command allows you to input anything, and this can do unknown behavior.
               0.0 or 1.0 is a float but can also be parsed as an integer or a string. Just be careful with the parameters.</em>
             </p>
+          </div>
+
         </div>
     </div>
 </div>

@@ -3,11 +3,12 @@
     <CommandsModal v-if="selected" :cmd="selected" :prefix="prefix" @close='selected = null' />
     <div class="columns is-variable is-6">
         <div class="column is-7 content">
-            <Field label="Search" icon-left="search">
+            <Field label="" icon-left="search">
               <input v-model="searchQuery" class="input" type="text" placeholder="Search for a command">
             </Field>
+            <br>
             <span v-for="(group, id) in filteredGroups" :key="id">
-                <h5 class='title is-5'>{{group.name}}</h5>
+                <h4 class="title is-4 has-text-link has-text-centered">{{group.name}}</h4>
                 <p class="has-text-centered is-size-6" v-if="!showLockedCommands && group.list.filter((cmd: any) => cmd.hasPermission).length === 0">
                   You do not have access to any commands in this category
                 </p>
@@ -48,41 +49,54 @@
             </span>
         </div>
         <div class="column content">
-            <label for="cmdViewmode" class="is-size-4"><b>I want to enter commands via </b></label>
-            <div class="select is-info">
-                <select name="cmdViewmode" id="cmdViewmode"  v-model="commandViewmode">
-                    <option value="console">console</option>
-                    <option value="private">chat privately</option>
-                    <option value="public">chat publicly</option>
-                </select>
+          <div class="box has-background-white-ter">
+            <div class="field has-tooltip-left"
+              :data-tooltip="isLoggedIn ? 'Show all commands, even if you don\'t have access to them' : 'Login and uncheck to show only commands you have access to'">
+              <input class="is-checkradio disabled" id="showlocked" type="checkbox" name="showlocked" value="locked"
+                v-model="hideNoPermissionCommands" :disabled="!isLoggedIn">
+              <label for="showlocked">Show All Commands</label>
             </div>
-            <div class="field has-tooltip-left" :data-tooltip="isLoggedIn ? 'Show all commands, even if you don\'t have access to them' : 'Login to filter commands you have access to'">
-              <input class="is-checkradio disabled" id="showlocked" type="checkbox" name="showlocked" value="locked" v-model="hideNoPermissionCommands" :disabled="!isLoggedIn">
-              <label for="showlocked" >Show All Commands</label>
-            </div>
-            <br>
-            <p>
-                There are three (3) ways to input commands:
+          </div>
+
+          <div class="box has-background-info-light">
+              <!-- <p>Inputting Commands</p> -->
+              <label for="cmdViewmode" class="is-size-5"><b>I want to enter commands via </b></label>
+              <div class="select is-info is-small mb-4">
+                  <select name="cmdViewmode" id="cmdViewmode"  v-model="commandViewmode">
+                      <option value="console">console</option>
+                      <option value="private">chat, privately</option>
+                      <option value="public">chat, publicly</option>
+                  </select>
+              </div>
+              <p>
+                There are three different methods to input commands:
                 <ol>
-                    <li>Via console, usually with the prefix <b>sm_</b></li>
-                    <li>Via chat publicly by using <b>!</b></li>
-                    <li>Via chat privately by using <b>/</b> (forward slash) <b class='tag is-dark'>Recommended</b> </li>
+                  <li>From the dev console, usually with the prefix <code>sm_</code></li>
+                  <li>In the chat, publicly by using <code>!</code></li>
+                  <li>In chat, privately by using <code>/</code> (forward slash) <b class='tag is-dark'>Recommended</b> </li>
                 </ol>
-            </p>
-            <p class="notification is-dark has-text-white">Commands highlighted in <b class="has-text-link">blue</b> have examples, click to view the examples.</p>
-            <div class="box">
+              </p>
+            </div>
+            <div class="box has-background-info-light">
               <h5 class="title is-5">Parameter Info</h5>
-              <ul>
-                  <li>Parameters are separated by spaces. If you want to have spaces for a parameter, surround it with "quotes around the word".</li>
+              <div class="box">
+                <ul>
+                  <li>Parameters are separated by spaces. If you want to have spaces for a parameter, surround it with "quotes around
+                    the word".</li>
                   <li><b class="tag is-link">&lt;&gt;</b> indictates the argument is <u>required.</u></li>
                   <li><b class="tag is-secondary">[&nbsp;]</b> indictates the argument is <em>optional</em>.</li>
-                  <li><b>Do not</b> include the symbols <b class="tag is-link">&lt; &gt;</b> or <b class="tag is-secondary">[ ]</b> as they are just used to indicate if the parameter is required or not.</li>
-              </ul>
+                  <li><b>Do not</b> include the symbols <b class="tag is-link">&lt; &gt;</b> or <b class="tag is-secondary">[ ]</b> as
+                    they are just used to indicate if the parameter is required or not.</li>
+                </ul>
+              </div>
               <p>
                 When selecting a player, you only need to put enough of their name that uniquely identifies them. If there is no other player that name starts with 'ja', then you could use that to select 'jackz', if you wanted to select jockey, you could do 'ey'.
               </p>
+              <p>
+                See <router-link :to="{name: 'docs-targetting'}">Advanced Targetting</router-link> for more information and examples
+              </p>
             </div>
-            <div class="box">
+            <div class="box has-background-light">
               <h5 class="title is-5">Examples</h5>
               <ol>
                   <li><b class="tag is-link">user</b> means a required user while <b class="tag is-secondary">user</b> means an optional user.</li>
