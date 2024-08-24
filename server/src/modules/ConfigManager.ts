@@ -22,13 +22,18 @@ export default class ConfigManager {
     }
 
     public async SetupDatabase() {
-        await this.#db.run(SQL`create table if not exists keyvalues
-        (
-            key varchar(64) not null,
-            value smalltext not null,
-            constraint keyvalues_pk
-                primary key (key)
-        );`)
+        const check = await this.#db.get("SELECT count(*) as setup FROM sqlite_master WHERE type='table' AND name='keyvalues'")
+        if(!check.setup) {
+            console.info("[ConfigManager] Keyvalues table does not exist, creating...")
+            await this.#db.run(SQL`create table if not exists keyvalues
+            (
+                key varchar(64) not null,
+                value smalltext not null,
+                constraint keyvalues_pk
+                    primary key (key)
+            );`)
+            await this.#db.run(SQL`INSERT INTO keyvalues (key, value) VALUES ('domain', 'http://localhost:8080')`)
+        }
         await this.checkRequiredKeys()
     }
     public async GetPublicKeyvalues() {
@@ -126,5 +131,6 @@ export default class ConfigManager {
 
             }
         }
+
     }
 }
