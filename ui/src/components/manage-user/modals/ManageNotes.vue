@@ -9,7 +9,7 @@
     <div class="field">
       <label class="label">Message</label>
       <div class="control">
-        <textarea class="textarea" placeholder="Enter note content" v-model="newNote.content"></textarea>
+        <textarea class="textarea" rows=2 placeholder="Enter note content" v-model="newNote.content"></textarea>
       </div>
     </div>
     <div class="field is-grouped">

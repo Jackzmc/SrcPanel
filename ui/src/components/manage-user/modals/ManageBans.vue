@@ -480,6 +480,10 @@ async function getBans() {
           activeAppeal: (activeAppeal && activeAppeal.length > 0) ? activeAppeal[0] : null
         }
       })
+      if(bans.value.length > 0) {
+        console.log("selecting ", bans.value[bans.value.length - 1])
+        selectBan(bans.value[bans.value.length - 1])
+      }
     } else {
       notify({
         type: "error",
@@ -512,8 +516,7 @@ onMounted(async() => {
     if(route.params.banid == "appeals") return showAppealsList()
     const ban = bans.value.find(ban => ban.id === Number(route.params.banid))
     if(ban) return selectBan(ban)
-  } else if(!props.userAdminData)
-    selectBan()
+  }
 })
 </script>
 

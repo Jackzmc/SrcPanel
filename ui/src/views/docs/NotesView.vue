@@ -15,7 +15,7 @@
       <li><b class="has-text-info">Disconnected: </b> <code>/notedisconnected</code>, select the player's name, and then send a chat message to create the note message.</li>
     </ul>
     <hr>
-    <h4 class="title is-4 mb-2" id="actions">Note Actions <span class="tag is-info">New</span></h4>
+    <h4 class="title is-4 mb-2" id="actions">Note Actions</h4>
     <p>
       A new feature that's been added is the ability to add automatic actions that will apply when the player joins. This can do things such as automatically muting the player (from voice chat or vocalizing), trolling them, or disabling automatic systems (auto reverse ff, teamkiller detection).
     </p>

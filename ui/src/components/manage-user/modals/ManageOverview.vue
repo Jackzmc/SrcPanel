@@ -91,7 +91,7 @@
     </div>
   </template>
   <template v-else-if="route.params.tab === 'profile'">
-    <div class="box pt-0">
+    <div class="box pt-0 has-background-primary-light">
       <figure class="image is-48x48 is-inline-block mr-3 is-round mt-4">
         <img :src="'/api/users/' + props.user.steamid + '/avatar'" style="height:48px;width:48px">
       </figure>

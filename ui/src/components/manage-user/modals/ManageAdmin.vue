@@ -2,7 +2,7 @@
 <section>
   <article class="message is-danger" v-if="!canEdit && props.userAdminData">
     <div class="message-body">
-      <b>Cannot Edit: </b>
+      <b>Editing disabled for the following reasons:</b>
       <div class="content">
         <ul>
           <li v-for="(reason, i) in noEditReasons" :key="i">
@@ -312,8 +312,8 @@ const policyFailures = computed(() => {
   const failures: string[] = []
   if(props.userAdminData) return failures
 
-  if(hoursPlayed.value < MIN_HOURS_PLAYTIME) failures.push(POLICY_MSG_MIN_HOURS_OF_PLAYTIME)
-  if(props.user?.bansCount || 0 > 0) failures.push('Player cannot have been banned at any point.')
+  if(hoursPlayed.value < MIN_HOURS_PLAYTIME) failures.push(POLICY_MSG_MIN_HOURS_OF_PLAYTIME + ` (they have ${hoursPlayed.value} hours)`)
+  if(props.user?.bansCount || 0 > 0) failures.push('Player cannot have any bans on record.')
   return failures
 })
 const hasRoot = computed(() => {
