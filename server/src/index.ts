@@ -20,7 +20,6 @@ import { CustomFastifySession } from '../../common-types/User.js'
 import User from './modules/users/User.js';
 import ConfigManager from './modules/ConfigManager.js';
 import FastifySwagger from '@fastify/swagger'
-import { UserPrivilegeCode } from '../../common-types/Privileges.js';
 
 import FastifyHelmet from '@fastify/helmet'
 import DiscussionManager from './modules/DiscussionManager.js';
