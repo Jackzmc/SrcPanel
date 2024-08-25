@@ -38,7 +38,7 @@
       <pre style="">
 # userid name uniqueid connected ping loss state rate
 # 20 1 "Jackzie ❤" STEAM_1:0:49243767 36:45 97 0 active 20000
-  ^ ↑ client / entity index
+  ^  ^ client / entity index
   ∟ user id
       </pre>
       <p>
