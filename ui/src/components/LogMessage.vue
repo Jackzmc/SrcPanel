@@ -1,7 +1,8 @@
 <template>
   <td>
-    <span :class="['tag', 'is-pulled-left mr-2 mt-1', FILTER_DATA.types[props.log.type]]">
-      <Icon :icon="icon" v-if="icon" :icon-class="iconClass" />
+    <span v-if="props.log.adminChat" class="tag is-pulled-left is-warning mr-2 mt-1" data-tooltip="Message was sent in the admin chat">CHAT</span>
+    <span v-else :class="['tag', 'is-pulled-left mr-2 mt-1', FILTER_DATA.types[props.log.type]]">
+      <Icon :icon="icon" v-if="icon" :icon-class="['mt-1']" />
       {{ props.log.type }}
     </span>
     <template v-if="props.log.type === 'CHAT'">
@@ -81,13 +82,6 @@ const icon = computed(() => {
     case "QUIT": return "fa-arrow-right-from-bracket"
   }
   return null
-})
-const iconClass = computed(() => {
-  switch(props.log.type) {
-    // case "JOIN": return "mt-1 has-text-success"
-    // case "QUIT": return "mt-1 has-text-danger"
-  }
-  return "mt-1"
 })
 const FULLNAME_REGEX = /"([^"<>]+)<\d+><(STEAM_\d:\d:\d+|Console|BOT)><(Console)?>"/;
 const chatMessage = computed(() => {

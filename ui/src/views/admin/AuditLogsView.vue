@@ -53,7 +53,6 @@
                 {{ formatDate(entry.timestamp) }}
                 <span class="ml-2 has-text-grey-light is-inline subtitle is-6">{{ getRelDate(entry.timestamp) }}</span>
                 <span class="field is-grouped is-grouped-multiline is-pulled-right">
-                  <span v-if="entry.adminChat" class="tag is-pulled-right is-warning" data-tooltip="Message was sent in the admin chat">CHAT</span>
                   <div class="control">
                     <div class="tags has-addons">
                       <span class="tag is-dark">Server</span>
