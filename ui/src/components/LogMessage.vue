@@ -1,8 +1,9 @@
 <template>
   <td>
-    <span v-if="props.log.adminChat" class="tag is-pulled-left is-warning mr-2 mt-1" data-tooltip="Message was sent in the admin chat">CHAT</span>
+    <span v-if="props.log.adminChat" class="tag is-pulled-left is-warning mr-2 mt-1" data-tooltip="Message was sent in the admin chat">
+      <Icon :icon="icon" v-if="icon" icon-class="pr-1" />CHAT</span>
     <span v-else :class="['tag', 'is-pulled-left mr-2 mt-1', FILTER_DATA.types[props.log.type]]">
-      <Icon :icon="icon" v-if="icon" :icon-class="['mt-1']" />
+      <Icon :icon="icon" v-if="icon" icon-class="pr-1" />
       {{ props.log.type }}
     </span>
     <template v-if="props.log.type === 'CHAT'">

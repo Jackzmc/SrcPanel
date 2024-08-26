@@ -43,7 +43,7 @@
             <div class="buttons">
               <template v-if="isLiveViewActive || serverInfo.features.plugin || serverInfo.features.rcon">
                 <a v-if="serverInfo.features.systemd && (!status || !status.online)" @click="performAction('start')" class="button is-success is-small">Start Server</a>
-                <template v-if="serverInfo.status.online">
+                <template v-if="serverInfo.status?.online">
                   <button :data-tooltip="action.description" :disabled="actionRunning" v-for="(action, i) in actions" :key="i" @click="performAction(action.command)" class="button is-dark is-small" :style="{'background-color': action.color}">{{ action.name }}</button>
                 </template>
               </template>
@@ -358,7 +358,7 @@
           </table>
           <div class="box has-background-info-light" v-else>No recent activity has been recorded</div>
         </template>
-        <p v-else>Not supported on this server.</p>
+        <div class="box has-background-warning-light" v-else>Recent activities is not supported on this server</div>
       </div>
       <div class="box" v-if="tab === 'live'">
         <!-- <span class="tag is-pulled-right is-danger has-tooltip-left" v-if="isLiveViewActive" data-tooltip="Connected to server, receiving live data">Live</span> -->
@@ -400,7 +400,7 @@
             </tr>
           </tbody>
         </table>
-        <p v-else>Waiting for live data</p>
+        <p v-else>Game data will appear here when live data is available</p>
       </div>
       <div v-else-if="tab === 'configs'" class="box">
         <h5 class="title is-5">Config Files</h5>
@@ -661,6 +661,7 @@ async function onCfgChosen(data: { file: string, folder?: string }, raw = false)
 async function onSelectNewServer(event: any) {
   await router.push({ name: 'admin-server-view', params: { tab: 'overview', id: event.target.value }})
   serverInfo.value = undefined
+  activities.value = undefined
   // Delete old enables
   Object.values(TABS).map(t => (t as any)._enabled = undefined)
   init()
