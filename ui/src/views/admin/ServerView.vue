@@ -15,7 +15,7 @@
 <nav class="container mb-3 is-fluid" v-if="serverInfo">
   <div class="columns">
     <div class="column is-8">
-      <router-link to="/admin/servers" class="button is-small">🠐 back to servers list</router-link><br><br>
+      <router-link to="/admin/servers" class="">🠐 back to servers list</router-link><br><br>
       <div class="box has-background-primary-90">
         <h3 class="title is-3">
           {{serverInfo.name}}
@@ -259,10 +259,12 @@
           <p class="has-text-centered subtitle">Waiting for players to connect</p>
         </div>
         <div v-else>
-          <h4 class="has-text-centered is-size-4">Waiting to receive data</h4>
-          <br>
-          <p class="subtitle is-6 has-text-centered">Live view may not be supported on this server, or the server is offline.</p>
-          <p class="subtitle is-6 has-text-centered">This will automatically update when data is available.</p>
+          <h4 class="has-text-centered is-size-4">Waiting for live data....</h4>
+          <br><br>
+          <div class="box has-text-centered has-background-warning-light">
+            <p class="subtitle is-6">Live view may not be supported on this server, or the server is offline.</p>
+            <p class="subtitle is-6">This will automatically update when data is available.</p>
+          </div>
         </div>
       </div>
       <div v-else-if="tab === 'configs'" class="box">
@@ -354,7 +356,7 @@
               </tr>
             </tbody>
           </table>
-          <p v-else>No recent activity has been recorded</p>
+          <div class="box has-background-info-light" v-else>No recent activity has been recorded</div>
         </template>
         <p v-else>Not supported on this server.</p>
       </div>
@@ -403,7 +405,9 @@
       <div v-else-if="tab === 'configs'" class="box">
         <h5 class="title is-5">Config Files</h5>
         <FolderBrower v-if="serverConfigs" @select="onCfgChosen" :paths="serverConfigs" />
-        <em v-else>not supported on server</em>
+        <div class="box has-background-danger-light">
+          <p class="subtitle has-text-centered is-6 ">Not available for this server</p>
+        </div>
       </div>
       <div v-else-if="tab === 'console'" class="box">
         <h5 class="title is-5">Console Help Information</h5>
