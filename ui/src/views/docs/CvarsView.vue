@@ -1,7 +1,7 @@
 <template>
 <div class="container">
     <div class="columns is-variable is-6">
-        <div class="column is-8">
+        <div class="column is-7">
           <Field label="" icon-left="search">
               <input v-model="searchQuery" class="input" type="text" placeholder="Search for a cvar">
             </Field>

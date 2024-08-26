@@ -1,6 +1,9 @@
 <template>
   <td>
-    <Icon :icon="icon" v-if="icon" :icon-class="iconClass" />
+    <span :class="['tag', 'is-pulled-left mr-2 mt-1', FILTER_DATA.types[props.log.type]]">
+      <Icon :icon="icon" v-if="icon" :icon-class="iconClass" />
+      {{ props.log.type }}
+    </span>
     <template v-if="props.log.type === 'CHAT'">
       <b><UserComponent hide-avatar :user="props.log.client" type="client" @set-filter="setFilter"/>: </b>
       <span :class="{'tag is-warning': props.log.adminChat}" v-html="chatMessage" />
@@ -52,6 +55,17 @@ const props = defineProps<{
 
 let LPieceCount = ref(0)
 
+const FILTER_DATA: Record<string, Record<string, boolean | string>> = {
+  types: {
+    ACTION: "is-info",
+    CHAT: "is-secondary",
+    STATE: "is-primary",
+    QUIT: "is-danger",
+    JOIN: "is-success",
+    INFO: "is-link",
+  },
+}
+
 function setFilter(type: string, id: string) {
   emit("set-filter", type, id)
 }
@@ -70,8 +84,8 @@ const icon = computed(() => {
 })
 const iconClass = computed(() => {
   switch(props.log.type) {
-    case "JOIN": return "mt-1 has-text-success"
-    case "QUIT": return "mt-1 has-text-danger"
+    // case "JOIN": return "mt-1 has-text-success"
+    // case "QUIT": return "mt-1 has-text-danger"
   }
   return "mt-1"
 })
@@ -109,6 +123,9 @@ const messagePieces = computed(() => {
         type = "target"
         if(steamid === "BOT") steamid = null
         user = { name: props.log.target.name || name, steamid }
+      }
+      if(user) {
+        lPieceCount++;
       }
 
       pieces.push({

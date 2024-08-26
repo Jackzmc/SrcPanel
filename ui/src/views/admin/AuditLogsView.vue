@@ -52,10 +52,14 @@
               <div class="list-item-title">
                 {{ formatDate(entry.timestamp) }}
                 <span class="ml-2 has-text-grey-light is-inline subtitle is-6">{{ getRelDate(entry.timestamp) }}</span>
-                <span class="tags is-pulled-right">
+                <span class="field is-grouped is-grouped-multiline is-pulled-right">
                   <span v-if="entry.adminChat" class="tag is-pulled-right is-warning" data-tooltip="Message was sent in the admin chat">CHAT</span>
-                  <span v-else :class="['tag', 'is-pulled-right', FILTER_DATA.types[entry.type]]">{{ entry.type }}</span>
-                  <span :class="['tag', 'is-pulled-right', FILTER_DATA.servers[entry.server]]">{{ entry.server }}</span>
+                  <div class="control">
+                    <div class="tags has-addons">
+                      <span class="tag is-dark">Server</span>
+                      <span class="tag is-info">{{ entry.server }}</span>
+                    </div>
+                  </div>
                 </span>
               </div>
               <div class="list-item-description">
@@ -65,7 +69,7 @@
 
             <div class="list-item-controls">
               <div class="buttons is-right">
-                <button class="button is-inverted is-outlined is-black" @click="entry.showDetails = !entry.showDetails">
+                <button class="button has-text-white" @click="entry.showDetails = !entry.showDetails">
                   <Icon icon-class="is-small has-text-black" :icon="entry.showDetails ? 'fa-chevron-up' : 'fa-chevron-down'" />
                 </button>
               </div>
