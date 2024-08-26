@@ -1,60 +1,43 @@
 <template>
 <div>
   <router-view :share="shareInfo" :addon="prefetch" @update="onChildUpdate" @close="onChildClose" v-if="shareInfo && (!route.meta.needsPrefetch || prefetch)"></router-view>
-  <div class="container" v-if="ready">
-    <div class="level">
-      <div class="level-left">
-        <div class="level-item">
-          <h5 class="title is-4">Viewing {{filteredAddons.length}} files</h5>
-        </div>
-      </div>
-      <div class="level-right">
-        <div class="level-item" v-if="shareInfo.downloadSources.steam_workshop">
-          <div class="field">
-            <label class="label">&nbsp;</label>
-            <div class="control">
-              <router-link :to="{ name: 'workshop-download', params: route.params }" class="button is-info is-fullwidth">
-                <Icon icon="fa-plus">Workshop Addon</Icon>
-              </router-link>
+  <div class="container" v-if="route.name === 'admin-shares' || !route.params.shareId">
+    <h4 class="title is-4">Select a share</h4>
+    <div class="columns">
+      <div class="column is-6" v-for="share in shares" :key="share.id">
+        <router-link class="box has-background-light-02" :to="{name: 'list-addons', params: { shareId: share.id }}">
+          <h4 class="title is-4">{{ share.name }} <span v-if="share.appid" data-tooltip="The steam appid for this share"
+              class="tag is-dark is-pulled-right">{{ share.appid }}</span></h4>
+          <p class="subtitle is-6">{{ share.description ?? '&nbsp;' }}</p>
+          <div class="tags" data-tooltip="Install destinations">
+            <span class="tag is-dark" v-for="(dest, id) in share.destinations" :key="id">
+              {{ id }}
+            </span>
+          </div>
+          <div class="level mt-1 is-mobile">
+            <div class="level-left" data-tooltip="Supported file sources">
+              <div class="level-item" v-for="(enabled, source) in share.downloadSources" :key="source">
+                <span class="tag is-info">
+                  {{ source.replace(/_/g, ' ') }}
+                </span>
+              </div>
+            </div>
+            <div class="level-right" data-tooltip="Supported file extensions">
+              <div class="level-item" v-for="ext in share.fileExts" :key="ext">
+                <span class="tag is-info">
+                  {{ ext }}
+                </span>
+              </div>
             </div>
           </div>
-        </div>
-        <div class="level-item" v-if="shareInfo.downloadSources.direct" >
-          <div class="field">
-            <label class="label">&nbsp;</label>
-            <div class="control">
-              <router-link :to="{ name: 'upload-addon', params: route.params }" class="button is-info is-fullwidth">
-                <Icon icon="fa-upload">Upload</Icon>
-              </router-link>
-            </div>
-          </div>
-        </div>
-        <div class="level-item">
-          <Field label="Share" icon-left="folder">
-            <div class="select">
-              <select v-model="selectedShare">
-                <option v-for="share in shares" :key="share.name" :value="share.id">
-                  {{share.name}}
-                </option>
-              </select>
-            </div>
-          </Field>
-        </div>
-        <div class="level-item">
-          <div class="field">
-            <label class="label">&nbsp;</label>
-            <div class="control">
-              <a class="button is-info is-fullwidth" @click="fetchAddons()">
-                <Icon icon="fa-sync"></Icon>
-              </a>
-            </div>
-          </div>
-        </div>
+        </router-link>
       </div>
     </div>
+  </div>
+  <div class="container is-fluid" v-else>
     <div class="columns">
-      <div class="column">
-        <table class="table is-striped is-fullwidth">
+      <div class="column box px-0 mx-90">
+        <table class="table is-striped is-fullwidth" v-if="ready">
           <thead>
             <tr>
               <th>
@@ -169,49 +152,47 @@
             </template>
           </tbody>
         </table>
+        <div class="has-text-centered box has-background-danger-light" v-else-if="error">
+          <p class="title is-3 mt-4"><Icon icon="exclamation-triangle" icon-class="pr-6 has-text-danger">Loading Files Failed</Icon></p>
+          <p class="subtitle is-4 mt-4 mb-4">{{error}}</p>
+        </div>
+        <div class="has-text-centered box has-background-info-light" v-else style="vertical-align: middle">
+          <p class="title is-3 mt-4"><Icon icon="spinner" spin icon-class="pr-6">Loading files...</Icon></p>
+          <p class="subtitle is-4 mt-4 mb-4">This may take some time, please wait...</p>
+        </div>
+      </div>
+      <div class="column is-3">
+        <div class="box">
+          <h5 class="title is-4" v-if="ready">{{filteredAddons.length}} files
+              <a class="button is-info is-pulled-right is-inline" @click="fetchAddons()" :disabled="!ready">
+                <Icon icon="fa-sync"></Icon>
+              </a>
+          </h5>
+          <h5 class="title is-4" v-else>- files
+            <a class="button is-info is-pulled-right is-inline" disabled>
+              <Icon icon="fa-sync"></Icon>
+            </a>
+          </h5>
+          <Field label="Share" icon-left="folder">
+            <div class="select">
+              <select v-model="selectedShare">
+                <option v-for="share in shares" :key="share.name" :value="share.id">
+                  {{share.name}}
+                </option>
+              </select>
+            </div>
+          </Field>
+            <div class="buttons" v-if="ready">
+              <router-link :to="{ name: 'workshop-download', params: route.params }" class="button is-info is-fullwidth">
+                <Icon icon="fa-plus">Workshop Addon</Icon>
+              </router-link>
+              <router-link :to="{ name: 'upload-addon', params: route.params }" class="button is-info is-fullwidth">
+                <Icon icon="fa-upload">Upload</Icon>
+              </router-link>
+            </div>
+        </div>
       </div>
     </div>
-  </div>
-  <div v-else-if="error">
-    <p class="title is-4 has-text-centered has-text-danger">Failed to load addons list</p>
-    <p class="subtitle is-6 has-text-centered has-text-danger">{{error}}</p>
-  </div>
-  <div class="container" v-else-if="route.name === 'admin-shares' || !route.params.shareId">
-    <h4 class="title is-4">Select a share</h4>
-    <div class="columns">
-      <div class="column is-6" v-for="share in shares" :key="share.id">
-        <router-link class="box has-background-light-02" :to="{name: 'list-addons', params: { shareId: share.id }}">
-          <h4 class="title is-4">{{ share.name }} <span v-if="share.appid" data-tooltip="The steam appid for this share" class="tag is-dark is-pulled-right">{{ share.appid }}</span></h4>
-          <p class="subtitle is-6">{{ share.description ?? '&nbsp;' }}</p>
-          <div class="tags" data-tooltip="Install destinations">
-            <span class="tag is-dark" v-for="(dest, id) in share.destinations" :key="id">
-              {{ id }}
-            </span>
-          </div>
-          <div class="level mt-1 is-mobile">
-            <div class="level-left" data-tooltip="Supported file sources">
-              <div class="level-item" v-for="(enabled, source) in share.downloadSources" :key="source">
-                <span class="tag is-info">
-                  {{ source.replace(/_/g, ' ') }}
-                </span>
-              </div>
-            </div>
-            <div class="level-right" data-tooltip="Supported file extensions">
-              <div class="level-item" v-for="ext in share.fileExts" :key="ext">
-                <span class="tag is-info">
-                  {{ ext }}
-                </span>
-              </div>
-            </div>
-          </div>
-        </router-link>
-      </div>
-    </div>
-  </div>
-  <div v-else-if="!ready">
-    <br>
-    <p class="title is-2 has-text-centered mt-2"><Icon icon="spinner" spin icon-class="mr-5">Fetching addons...</Icon></p>
-    <p class="subtitle is-4 has-text-centered">This may take some time, please wait...</p>
   </div>
   <br>
 </div>

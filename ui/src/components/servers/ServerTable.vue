@@ -42,3 +42,12 @@ const props = defineProps<{
 }>()
 
 </script>
+
+<style scoped>
+
+@media screen and (min-width: 640px) {
+  .table-container {
+    overflow: inherit !important;
+  }
+}
+</style>

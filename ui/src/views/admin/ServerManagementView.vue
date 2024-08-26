@@ -1,5 +1,5 @@
 <template>
-<div class="container is-fluid">
+<div class="container is-fluid mx-4">
   <div class="columns">
     <div class="column is-8">
       <p class="is-inline is-pulled-right" style="margin-right: 90px">

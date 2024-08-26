@@ -1,24 +1,29 @@
 <template>
 <div class="container is-fluid">
-  <div class="columns">
-    <div class="column">
-      <p class="title is-4">Viewing <input type="number" class="input" min=20 max=1000 step=10 style="width:8%" v-model="limit" @blur="changeLimit" /> / {{totalBansCount.toLocaleString()}} bans</p>
-      <p class="subtitle">Click a user's name to view more detailed ban information</p>
-      <p class="has-text-danger" v-if="ban_error">{{ban_error}}</p>
-    </div>
-    <div class="column is-2">
-      <div class="field">
-        <input id="onlyAppealsButton" type="checkbox" class="switch" v-model="showOnlyAppeals">
-        <label for="onlyAppealsButton">Only Appeals</label>
+  <div class="container">
+    <div class="columns">
+      <div class="column">
+        <p class="title is-4">Viewing <input type="number" class="input" min=20 max=1000 step=10 style="width:8%"
+            v-model="limit" @blur="changeLimit" /> / {{totalBansCount.toLocaleString()}} bans</p>
+        <p class="subtitle">Click a user's name to view more detailed ban information</p>
+        <p class="has-text-danger" v-if="ban_error">{{ban_error}}</p>
       </div>
-      <div class="field">
-        <input id="showExpiredButton" type="checkbox" class="switch is-danger" v-model="showExpired" @change="fetchBans(true)">
-        <label for="showExpiredButton">Include Expired Bans</label>
+      <div class="column is-2">
+        <div class="field">
+          <input id="onlyAppealsButton" type="checkbox" class="switch" v-model="showOnlyAppeals">
+          <label for="onlyAppealsButton">Only Appeals</label>
+        </div>
+        <div class="field">
+          <input id="showExpiredButton" type="checkbox" class="switch is-danger" v-model="showExpired"
+            @change="fetchBans(true)">
+          <label for="showExpiredButton">Include Expired Bans</label>
+        </div>
       </div>
     </div>
+    <Pagination :page="page" :limit="limit" :count="bansCount" @page="setPage"></pagination>
   </div>
 
-  <Pagination :page="page" :limit="limit" :count="bansCount" @page="setPage"></pagination>
+
   <table class="table is-fullwidth" v-if="!loading&&!error">
     <thead>
       <th style="width:0">Player</th>

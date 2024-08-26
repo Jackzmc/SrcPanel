@@ -27,7 +27,7 @@
           </a>
           <div class="navbar-dropdown is-left">
             <router-link to="/docs/commands" class="navbar-item">
-              <Icon icon="fa-regular fa-circle">Commands</Icon>
+              <Icon icon="fa-asterisk">Commands</Icon>
             </router-link>
             <router-link to="/docs/cvars" class="navbar-item">
               <Icon icon="wrench">Cvars</Icon>
@@ -66,7 +66,7 @@
           </a>
           <div class="navbar-dropdown is-left" style="width:110%">
             <router-link :to="{name: 'admin-shares'}" class="navbar-item">
-              <Icon icon="fa-puzzle-piece">Addons / Maps</Icon>
+              <Icon icon="fa-puzzle-piece">Addons / Files</Icon>
             </router-link>
             <router-link to="/admin/servers" class="navbar-item">
               <Icon icon="fa-server">Servers</Icon>

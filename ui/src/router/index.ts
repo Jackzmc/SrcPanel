@@ -172,7 +172,7 @@ const routes = [
     path: '/admin/shares/:shareId?/files/:fileid?',
     component: () => import('../views/admin/ServerAddonsView.vue'),
     meta: {
-      title: 'Addons / Maps',
+      title: 'Addons / Files',
       description: 'View all the installed custom maps (and some non-map addons)',
       authRequired: true
     },
@@ -182,7 +182,7 @@ const routes = [
     path: '/admin/shares/:shareId?/',
     component: () => import('../views/admin/ServerAddonsView.vue'),
     meta: {
-      title: 'Addons / Maps',
+      title: 'Addons / Files',
       description: 'View all the installed custom maps (and some non-map addons)',
       authRequired: true
     },
