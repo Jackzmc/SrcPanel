@@ -337,7 +337,7 @@ export default class Server extends EventEmitter {
           files.push(...await this.#recurseConfig(join(path, dirent.name), showHidden, `${filepath}/`))
         } else if(dirent.isFile()) {
           // Hide filenames ignored by server_files.ignore
-          if(!showHidden && ServerManager.isFileIgnored(dirent.name)) continue
+          if(!showHidden && await ServerManager.isFileIgnored(dirent.name)) continue
 
           const ext = dirent.name.split(".").pop()
           if(VALID_CONFIG_EXTS.includes(ext)) {

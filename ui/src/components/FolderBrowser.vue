@@ -2,7 +2,7 @@
 <aside class="menu my-1">
   <template v-for="(data, folder) in folders" :key="folder">
     <p class="menu-label my-1">
-      <a :class="{'has-text-black': !data.active, 'has-text-light': data.active, 'is-link': data.active, tag: true}" @click="data.active = !data.active"><Icon icon="folder">{{folder}}</Icon></a>
+      <a :class="{'has-text-black': !data.active, 'has-text-light': data.active, 'is-link': data.active, tag: true}" @click="data.active = !data.active"><Icon icon="folder">{{folder}}/</Icon></a>
     </p>
     <ul class="menu-list my-1" v-if="data.active">
       <li v-if="data.files.length === 0"><a class="has-text-black has-text-centered" disabled><em>Directory is empty</em></a></li>
@@ -28,6 +28,7 @@ watchEffect(() => {
   folders.value = {'_root': { files: [], active: true }}
   for(const path of props.paths) {
     const split = path.split('/')
+    console.log(split)
     if(split.length > 1) {
       const parent = split.slice(0, split.length - 1).join("/")
       if(!folders.value[parent]) folders.value[parent] = { files: [], active: false }
