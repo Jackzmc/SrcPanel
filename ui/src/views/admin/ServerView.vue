@@ -405,7 +405,7 @@
       <div v-else-if="tab === 'configs'" class="box">
         <h5 class="title is-5">Config Files</h5>
         <FolderBrower v-if="serverConfigs" @select="onCfgChosen" :paths="serverConfigs" />
-        <div class="box has-background-danger-light">
+        <div class="box has-background-danger-light" v-else>
           <p class="subtitle has-text-centered is-6 ">Not available for this server</p>
         </div>
       </div>
