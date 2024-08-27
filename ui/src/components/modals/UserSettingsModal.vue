@@ -1,6 +1,6 @@
 <template>
   <Modal active closable>
-    <div class="modal-card">
+    <div class="modal-card" style="width:40%">
       <header class="modal-card-head">
         <p class="modal-card-title">User Settings</p>
         <button class="delete" aria-label="close" @click="close"></button>
@@ -204,7 +204,7 @@ async function revokeSession(id: string, i: number) {
   }
 }
 function formatCountry(code: string) {
-  return intl.of(code);
+  return code ? intl.of(code) : "-";
 }
 
 function close() {

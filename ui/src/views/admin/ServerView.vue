@@ -886,7 +886,7 @@ let errCount = 0
 let liveReadyState = ref<number>(0)
 let evtSource: EventSource
 let retryTimeout: any
-let reconnectTimeout: number
+let reconnectTimeout: any
 
 const MAX_BACKOFF = 1000 * 60 * 2
 

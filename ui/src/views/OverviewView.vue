@@ -14,7 +14,7 @@
     </div>
     <div class="column is-3">
       <div class="content">
-        <div class="box">
+        <div class="box has-background-info-light">
           <h6>Enabling & opening the dev console:</h6>
           <ol>
               <li>Go to <b>Options</b> then <b>Keyboard/Mouse</b></li>
@@ -22,14 +22,14 @@
               <li>Open the console with the tilda key (<kbd>`</kbd>/<kbd>~</kbd>, under <kbd>ESC</kbd>)</li>
           </ol>
         </div>
-        <div class="box">
+        <div class="box has-background-info-light">
           <h6>Server notes:</h6>
           <ol>
               <li>Only servers marked <span class="tag">5+</span> support 5+ campaign</li>
               <li>Directly connecting does not start matchmaking - the server will not be public. See the below section on how to create a lobby:</li>
           </ol>
         </div>
-        <div class="box">
+        <div class="box has-background-info-light">
           <h6>To create a lobby to a server:</h6>
           <ul>
               <li>Create a normal lobby, <b>you need to be the host</b></li>
@@ -38,7 +38,7 @@
               <li>Start the lobby</li>
           </ul>
         </div>
-        <div class="box">
+        <div class="box has-background-info-light">
           <h6>Joining a 5+ server when its full:</h6>
           <p>
             If there is 4 people on a 5+ server, you can still join:
