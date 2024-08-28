@@ -116,8 +116,8 @@ const routes = [
     path: '/notes',
     component: () => import('../views/PlayerNotesView.vue'),
     meta: {
-      title: 'Notes',
-      description: 'View all player notes'
+      title: 'Player Notes',
+      description: 'View notes that admins have left on players'
     }
   },
   {
