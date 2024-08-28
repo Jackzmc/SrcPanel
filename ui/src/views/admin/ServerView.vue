@@ -146,7 +146,7 @@
         <div class="notification is-danger has-text-centered" v-else-if="!status?.online && !liveStatus">
           The server is offline or is unreachable.
         </div>
-        <div class="list has-visible-pointer-controls" v-if="liveStatus && Object.values(liveStatus.players).length > 0">
+        <div class="list has-visible-pointer-controls" v-if="liveStatus && Object.values(liveStatus.clients).length > 0">
           <template v-for="player in livePlayers" :key="player.userid">
             <div class="list-item" v-if="true">
               <div class="list-item-image">
@@ -155,7 +155,7 @@
                 </figure>
               </div>
               <div class="list-item-content">
-                <div v-if="'survivor' in player" :class="['list-item-title', {'has-text-danger': !player.isAlive }]">
+                <div v-if="player.survivor" :class="['list-item-title', {'has-text-danger': !player.isAlive }]">
                   <div class="progressbar" style="width:50%"  v-if="player.isAlive" :data-label="player.totalHealth + ' HP'">
                     <div :class="['permhealth',getHealthClass(player.totalHealth)]" :style="{width: player.survivor.permHealth + '%' }"></div>
                     <div :class="['temphealth',getHealthClass(player.totalHealth)]" :style="{width: player.survivor.tempHealth + '%' }"></div>
@@ -164,17 +164,17 @@
                     <div class="flow-progress" :style="{width: player.survivor.flowPercent + '%'}"></div>
                   </div>
                   <UserComponent :class="{'has-text-crossed': !player.isAlive}" :user="player as User" />
-                  &nbsp;<span class="tag is-warning is-small" v-if="player.isIdle">Idle</span>
+                  &nbsp;<span class="tag is-warning is-small" v-if="player.state == ClientState.Idle">Idle</span>
                   &nbsp;<span class="has-text-info is-small" v-else-if="player.steamid === 'BOT'">[BOT]</span>
                 </div>
-                <div v-else :class="['list-item-title', {'has-text-crossed': !player.isAlive }]">
+                <div v-else-if="player.infected" :class="['list-item-title', {'has-text-crossed': !player.isAlive }]">
                   <div class="progressbar" style="width:50%"  v-if="player.isAlive" :data-label="player.infected.health + '/' + player.infected.maxHealth + ' HP'">
                     <div :class="['permhealth',getHealthClass(100 * player.totalHealth)]" :style="{width: (player.totalHealth) + '%' }"></div>
                   </div>
                   {{ player.name }}
                   &nbsp;<span class="has-text-info is-small" v-if="player.steamid === 'BOT'">[BOT]</span>
                 </div>
-                <div class="list-item-description has-text-black" v-if="'survivor' in player && player.survivor">
+                <div class="list-item-description has-text-black" v-if="player.survivor">
                   <template v-if="player.isAlive">
                     <div class="tags">
                       <span class="tag">{{ PlayerMoveString[player.survivor.move] }}</span>
@@ -189,10 +189,10 @@
                   </template>
                   <span v-else>Dead</span>
                 </div>
-                <div class="list-item-description has-text-black" v-else-if="'infected' in player">
+                <div class="list-item-description has-text-black" v-else-if="player.infected">
                   <div class="tags">
                   </div>
-                  <span v-if="player.pinnedPlayer">Pinned <b>{{ player.pinnedPlayer?.name }}</b></span>
+                  <span v-if="player.infected.pinnedPlayer">Pinned <b>{{ player.infected.pinnedPlayer?.name }}</b></span>
                 </div>
               </div>
               <div class="list-item-controls">
@@ -210,7 +210,7 @@
                     <tr>
                       <th data-tooltip="Since player has joined the game">Campaign Playtime</th>
                       <!-- joinTime should be defined here -->
-                      <td>{{ getDuration(player.joinTime!) }}</td>
+                      <td>{{ getDuration(player.timestamp) }}</td>
                     </tr>
                     <tr>
                       <th>SteamID / UserId</th>
@@ -503,7 +503,7 @@ import { parseLog, getRelDate, request } from '@/js/util';
 import LogMessage from "@/components/LogMessage.vue";
 import { useNotification } from "@kyvg/vue3-notification";
 import Field from '@/components/Field.vue';
-import { SurvivorId, FinaleStage, PlayerState, PlayerGameAction, PlayerMove, InfectedClass, LiveDataCache, LiveRecord, updateLiveCache, LivePlayerSurvivor, LivePlayerFull, LivePlayerInfected, LiveRecordType, GameDifficulty, CommandResultType, GameState } from '../../../../common-types/Live';
+import { SurvivorId, FinaleStage, PlayerState, PlayerGameAction, PlayerMove, InfectedClass, LiveDataCache, LiveRecord, updateLiveCache, LiveSurvivor, LiveInfected, LiveRecordType, GameDifficulty, CommandResultType, GameState, ClientState, LiveClient } from '../../../../common-types/Live';
 import { UserPrivilegeCode } from '../../../../common-types/Privileges';
 import { formatDate, getDuration } from '../../js/util.js';
 import UserComponent, { User } from '@/components/UserComponent.vue';
@@ -671,24 +671,25 @@ function isTabEnabled(data: any): boolean {
   return enabled
 }
 
-function getPlayerWeaponNames(player: LivePlayerSurvivor) {
-  if(!player.items) return []
-  return player.items
+function getPlayerWeaponNames(player: LiveClient) {
+  if(!player.survivor?.items) return []
+  return player.survivor.items
     .filter(item => item)
     .map(item => {
       return item.replace("weapon_", '').replace(/_/g, ' ')
     })
 }
 
-function getPlayerStates(player: LivePlayerSurvivor) {
+function getPlayerStates(player: LiveClient) {
   const states: string[] = []
+  if(!player.survivor) return states
   for(const [state, value] of Object.entries(STATES)) {
     if(player.survivor.states & Number(state)) states.push(value)
   }
   return states
 }
 
-function getIconUrl(player: LivePlayerFull) {
+function getIconUrl(player: LiveClient) {
   if(!player.isAlive) return `/img/survivors/dead.png`
   if('survivor' in player && player.survivor?.survivor != undefined) {
     return `/img/survivors/${SURVIVOR_IDS[player.survivor.survivor]}.png`
@@ -805,7 +806,7 @@ async function fetchServersCompact() {
   serverIds.value = cachedServers.data
 }
 
-async function kickPlayer(player: LivePlayerFull) {
+async function kickPlayer(player: LiveClient) {
   const reason = prompt(`Enter a reason to kick \"${player.name}\":`)
   if(!reason) {
     return notify({
@@ -854,7 +855,7 @@ function getHealthClass(health: number) {
     return 'has-background-danger'
   }
 }
-function toggleDetails(player: LivePlayerFull) {
+function toggleDetails(player: LiveClient) {
   console.log(showDetailsId.value, player.userid)
   if(showDetailsId.value === player.userid) {
     showDetailsId.value = undefined
@@ -930,8 +931,8 @@ const isLiveViewActive = computed(() => {
   return liveReadyState.value == EventSource.OPEN
 })
 const livePlayers = computed(() => {
-  if(!liveStatus.value?.players) return []
-  return Object.values(liveStatus.value.players).sort((a, b) => {
+  if(!liveStatus.value?.clients) return []
+  return Object.values(liveStatus.value.clients).sort((a, b) => {
     if('survivor' in a) return 1
     else if('survivor' in b) return -1
     return 0

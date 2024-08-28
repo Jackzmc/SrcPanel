@@ -143,23 +143,22 @@ export interface LiveRecordGame extends BaseLiveRecord {
     gamemode: string,
 }
 
-export const RecordPlayerParseDef: RecordParserInterface<LiveRecordPlayer> = {
+export const RecordPlayerParseDef: RecordParserInterface<LiveRecordClient> = {
     type: RecordDataType.Byte,
     userid: RecordDataType.Integer,
     steamid: RecordDataType.String,
-    isIdle: RecordDataType.OptionalBoolean,
-    joinTime: RecordDataType.OptionalByte,
-    name: RecordDataType.OptionalString
+    state: RecordDataType.Byte,
+    timestamp: RecordDataType.Byte,
+    name: RecordDataType.String
 }
 
-export interface LiveRecordPlayer extends BaseLiveRecord {
+export interface LiveRecordClient extends BaseLiveRecord {
     type: LiveRecordType.Player,
     userid: number
     steamid: string,
-    // Undefined if player has disconnected
-    isIdle?: boolean,
-    joinTime?: number,
-    name?: string,
+    state: ClientState,
+    timestamp: number,
+    name: string,
 }
 
 export const RecordSurvivorParseDef: RecordParserInterface<LiveRecordSurvivor> = {
@@ -276,26 +275,11 @@ export interface LiveRecordMeta {
     steamConnected: boolean
 }
 
-export type LiveRecord = LiveRecordGame | LiveRecordPlayer | LiveRecordSurvivor | LiveRecordInfected | LiveRecordFinaleInfo | LiveRecordSurvivorItems | LiveRecordCommandResponse | LiveRecordMeta | LiveRecordAuth
+export type LiveRecord = LiveRecordGame | LiveRecordClient | LiveRecordSurvivor | LiveRecordInfected | LiveRecordFinaleInfo | LiveRecordSurvivorItems | LiveRecordCommandResponse | LiveRecordMeta | LiveRecordAuth
 export interface BaseLiveRecord {
     type: LiveRecordType
 }
 
-export interface LivePlayerSurvivor extends LiveRecordPlayer {
-    survivor: LiveRecordSurvivor,
-    items: [string,string,string,string,string],
-    isAlive: boolean,
-    totalHealth: number
-}
-
-export interface LivePlayerInfected extends LiveRecordPlayer {
-    infected: LiveRecordInfected,
-    isAlive: boolean,
-    pinnedPlayer?: LivePlayerFull
-    totalHealth: number,
-}
-
-export type LivePlayerFull = LivePlayerSurvivor | LivePlayerInfected
 
 export const RecordParseConfig: Record<LiveRecordType, RecordParserInterface<BaseLiveRecord>> = {
     [LiveRecordType.Game]: RecordGameParseDef,
@@ -323,19 +307,41 @@ export enum GameState {
     Hibernating
 }
 
+export enum ClientState {
+    Normal = 0,
+    Connected = 1,
+    Disconnected = 2,
+    Idle = 3
+}
+
 
 export interface LiveDataCache {
     game: LiveRecordGame | null,
-    players: Record<string, LivePlayerFull>, // key is userid as string
+    clients: Record<string, LiveClient>, // key is userid as string
     finale?: LiveRecordFinaleInfo,
     lastUpdate: number,
 }
+
+export interface LiveSurvivor extends LiveRecordSurvivor {
+    items?: [string,string,string,string,string],
+}
+
+export interface LiveInfected extends LiveRecordInfected {
+    pinnedPlayer?: LiveClient
+}
+
+export interface LiveClient extends LiveRecordClient {
+    infected?: LiveInfected,
+    survivor?: LiveSurvivor,
+    isAlive: boolean,
+    totalHealth: number
+} 
 
 
 export function updateLiveCache(cache: LiveDataCache | undefined, record: LiveRecord): LiveDataCache {
     if(!cache) cache = {
         lastUpdate: 0,
-        players: {},
+        clients: {},
         game: null
     }
     cache.lastUpdate = Date.now()
@@ -344,52 +350,56 @@ export function updateLiveCache(cache: LiveDataCache | undefined, record: LiveRe
         case LiveRecordType.Game:
             cache.game = record
             // Start time of 0 is end of game
-            console.log("game record, state:", record.state)
+            console.log("game record", `state=${record.state} maxplayers=${record.maxplayers}`)
             // if(record.startTime == 0 || cache.game.state != GameState.None) {
-                cache.players = {}
+                cache.clients = {}
             // }
             break
         case LiveRecordType.Player:
-            if(record.joinTime == undefined) {
+            if(record.state == ClientState.Disconnected) {
                 // Player disconnected, wipe them
-                delete cache.players[record.userid.toString()]
+                delete cache.clients[record.userid.toString()]
+            } else if(record.state == ClientState.Connected) {
+                cache.clients[record.userid.toString()] = { ...record, isAlive: true, totalHealth: 100 }
             } else {
                 // Updated player info, merge it on top of old data (to preserve infected/survivor info)
                 const id = record.userid.toString()
-                cache.players[id] = {
-                    ...cache.players[id],
+                cache.clients[id] = {
+                    ...cache.clients[id],
                     ...record
                 }
             }
             break
         case LiveRecordType.Survivor: {
-            let player = cache.players[record.userid.toString()] as LivePlayerSurvivor
-            if(!player) {
+            let client = cache.clients[record.userid.toString()]
+            if(!client) {
                 console.debug("got survivor but no player", record.userid)
                 return cache
             }
-            player.survivor = record
-            //@ts-expect-error remove old property
-            delete player.infected
-            // isAlive is checked a lot, so we just split it out
-            player.totalHealth = record.permHealth + record.tempHealth
-            player.isAlive = (record.states & PlayerState.Alive) != 0
+            delete client.infected
+            client.survivor = { 
+                // DefaultS:
+                items: ["","","","",""],
+                // Merge onto previous data
+                ...client,
+                // New data:
+                ...record, 
+                
+            } 
+            client.totalHealth = record.permHealth + record.tempHealth,
+            client.isAlive = (record.states & PlayerState.Alive) !== 0
             break
         }
         case LiveRecordType.Infected: {
-            let player = cache.players[record.userid.toString()] as LivePlayerInfected
-            if(!player) return cache
-            //@ts-expect-error remove old property
-            delete player.survivor
-            //@ts-expect-error remove old property
-            delete player.items
-            player.infected = record
-            // isAlive is checked a lot, so we just split it out
-            player.isAlive = record.health > 0
-            player.totalHealth = 100 * record.health / record.maxHealth
-            if(record.pinnedPlayerUserid) {
-                player.pinnedPlayer = cache.players[record.pinnedPlayerUserid.toString()]
+            let client = cache.clients[record.userid.toString()]
+            if(!client) return cache
+            delete client.survivor
+            client.infected = {
+                ...record,
+                pinnedPlayer: record.pinnedPlayerUserid ? cache.clients[record.pinnedPlayerUserid.toString()] : undefined
             }
+            client.totalHealth = 100 * record.health / record.maxHealth
+            client.isAlive = record.health > 0
             break
         }
         case LiveRecordType.Finale: {
@@ -397,10 +407,9 @@ export function updateLiveCache(cache: LiveDataCache | undefined, record: LiveRe
             break
         }
         case LiveRecordType.SurvivorItems: {
-            let player = cache.players[record.userid.toString()] as LivePlayerSurvivor
-            if(!player) return cache
-            if(!player.items) player.items = ["","","","",""]
-            player.items = record.items
+            let client = cache.clients[record.userid.toString()]
+            if(!client?.survivor) return cache
+            client.survivor.items = record.items
             break
         }
     }

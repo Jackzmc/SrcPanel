@@ -1,5 +1,5 @@
 import { Socket } from 'net'
-import { CommandResultType, LiveRecord, LiveRecordCommandResponse, LiveRecordGame, LiveRecordPlayer, LiveRecordResponse, LiveRecordType, RecordGameParseDef, RecordDataType, RecordParseConfig } from '../../../../common-types/Live.js'
+import { CommandResultType, LiveRecord, LiveRecordCommandResponse, LiveRecordGame, LiveRecordClient, LiveRecordResponse, LiveRecordType, RecordGameParseDef, RecordDataType, RecordParseConfig } from '../../../../common-types/Live.js'
 import Server from './Server.js'
 import BufferReader from '../BufferReader.js'
 import JWT from '../../jwt-promise.js'
@@ -75,7 +75,7 @@ export default class PluginSocket {
           } as LiveRecord
         }
         case LiveRecordType.Player: {
-          let record: LiveRecordPlayer = {
+          let record: LiveRecordClient = {
             type,
             userid: reader.readInt(),
             steamid: reader.readString()
@@ -86,7 +86,7 @@ export default class PluginSocket {
               isIdle: reader.readByte() == 1,
               joinTime: reader.readInt(),
               name: reader.readString(),
-            } as LiveRecordPlayer
+            } as LiveRecordClient
           }
           return record
         }
@@ -197,7 +197,7 @@ export default class PluginSocket {
     } else {
       this.#server.pushLiveRecord(record)
       // We use a timeout as many records can come at once, including a game record. So we wait for a gap of a second
-      if(record.type === LiveRecordType.Survivor && !this.#server.liveStatus.players[record.userid.toString()]) {
+      if(record.type === LiveRecordType.Survivor && !this.#server.liveStatus.clients[record.userid.toString()]) {
         if(!this.#server.liveStatus.game && Date.now() - this.#lastRefreshTime > MIN_REFRESH_TIME) {
           this.send(LiveRecordResponse.Refresh, record.userid)
         }

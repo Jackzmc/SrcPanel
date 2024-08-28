@@ -11,7 +11,7 @@ import { ShareDestinations, ShareInfo } from '../../../../common-types/Share.js'
 import ConfigManager from '../ConfigManager.js'
 import { GroupInfo, ServerAction, ServerType, SERVER_TYPE_MAP } from '../../../../common-types/Server.js'
 import net from 'net'
-import { LiveRecordType, LiveRecordGame, LiveRecord, LiveRecordResponse, LiveRecordSurvivor, LiveRecordPlayer, LiveRecordInfected, LiveRecordFinaleInfo, LiveRecordSurvivorItems, LiveRecordCommandResponse, PluginTokenPayload } from '../../../../common-types/Live.js';
+import { LiveRecordType, LiveRecordGame, LiveRecord, LiveRecordResponse, LiveRecordSurvivor, LiveRecordClient, LiveRecordInfected, LiveRecordFinaleInfo, LiveRecordSurvivorItems, LiveRecordCommandResponse, PluginTokenPayload } from '../../../../common-types/Live.js';
 import BufferReader from '../BufferReader.js';
 import PluginSocket from './PluginSocket.js';
 import JWT from '../../jwt-promise.js';
