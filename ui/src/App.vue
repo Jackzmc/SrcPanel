@@ -8,7 +8,7 @@
     <br v-if="!route.meta.hideNav">
     <br v-if="route.meta.hideHero">
     <section v-else class="hero is-info has-text-centered">
-      <div class="hero-body">
+      <div class="hero-body pb-5">
         <router-link v-if="prevRoute" :to="{ name: prevRoute }" class="is-pulled-left is-light is-rounded button" ><Icon icon="fa-chevron-left">Back</Icon></router-link>
         <p class="title has-text-white" >
           {{ route.meta.title }}
@@ -21,7 +21,7 @@
     </section>
 
     <!-- <br> -->
-    <router-view v-slot="{ Component }">
+    <router-view v-slot="{ Component }" class="mt-4">
       <keep-alive  :max="2">
         <component :is="Component" :priv-user="privUser" :meta="meta" class="px-2" />
       </keep-alive>
