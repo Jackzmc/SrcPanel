@@ -14,13 +14,24 @@
             <div class="level">
               <div class="level-left">
                 <div class="level-item">
-                  <div class="select">
-                    <select @change="getRecentPlayers" v-model="recentPlayers.server">
-                      <option :value="null">All Servers</option>
-                      <option v-for="server in servers" :key="server" :value="server">
-                        {{ server}}
-                      </option>
-                    </select>
+                  <div class="field is-horizontal">
+                    <div class="field-label is-normal">
+                      <label class="label">Server</label>
+                    </div>
+                    <div class="field-body">
+                      <div class="field is-narrow">
+                        <div class="control">
+                          <div class="select">
+                            <select @change="getRecentPlayers" v-model="recentPlayers.server">
+                              <option :value="null">All Servers</option>
+                              <option v-for="server in servers" :key="server" :value="server">
+                                {{ server}}
+                              </option>
+                            </select>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
                 <div class="level-item">
@@ -221,7 +232,7 @@ async function getServerTypes() {
   const resp = await request(`/api/logs/data`)
   if(resp?.ok) {
     const json = await resp.json()
-    servers.value = json.servers
+    servers.value = json.servers.filter((s: string) => s !== "web" && s !== "unknown")
   }
 }
 onMounted(() => {
