@@ -20,7 +20,7 @@
       </div>
     </section>
 
-    <br>
+    <!-- <br> -->
     <router-view v-slot="{ Component }">
       <keep-alive  :max="2">
         <component :is="Component" :priv-user="privUser" :meta="meta" class="px-2" />
