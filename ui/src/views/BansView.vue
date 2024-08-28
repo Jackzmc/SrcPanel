@@ -1,97 +1,92 @@
 <template>
 <div class="container is-fluid">
-  <div class="container">
-    <div class="columns">
-      <div class="column">
-        <p class="title is-4">Viewing <input type="number" class="input" min=20 max=1000 step=10 style="width:8%"
-            v-model="limit" @blur="changeLimit" /> / {{totalBansCount.toLocaleString()}} bans</p>
-        <p class="subtitle">Click a user's name to view more detailed ban information</p>
-        <p class="has-text-danger" v-if="ban_error">{{ban_error}}</p>
-      </div>
-      <div class="column is-2">
-        <div class="field">
-          <input id="onlyAppealsButton" type="checkbox" class="switch" v-model="showOnlyAppeals">
-          <label for="onlyAppealsButton">Only Appeals</label>
-        </div>
-        <div class="field">
-          <input id="showExpiredButton" type="checkbox" class="switch is-danger" v-model="showExpired"
-            @change="fetchBans(true)">
-          <label for="showExpiredButton">Include Expired Bans</label>
+  <div class="columns">
+    <div class="column">
+      <table class="table is-fullwidth" v-if="!loading&&!error">
+        <thead>
+          <th style="width:0">Player</th>
+          <th>Executor</th>
+          <th v-if="privUser">Reason</th>
+          <th>Public Reason</th>
+          <th>Flags</th>
+          <th>Expires</th>
+          <th data-tooltip="The amount of times user has tried to join">Attempts</th>
+          <th width="10%">Date</th>
+        </thead>
+        <tbody>
+          <tr v-for="(ban) in filteredBans" :key="ban.id" :class="{'has-text-grey-light': ban.expired}">
+            <td data-tooltip="Click to view more detailed ban information">
+              <p>
+                <router-link v-if="ban.client.name" class="is-small"
+                  :to="{name: 'manage-user-bans', params: { id: ban.client.id, banid: ban.id }, query: { returnTo: $route.fullPath }}">
+                  <component :is="ban.flags & APIBanFlags.Suspended ? 'span' : 'b'">{{ ban.client.name }}</component>
+                </router-link>
+                <em v-else>(unknown name)</em>
+              </p>
+              <router-link class="is-small has-text-black"
+                :to="{name: 'manage-user-bans', params: { id: ban.client.id, banid: ban.id }, query: { returnTo: $route.fullPath }}"><em>{{ ban.client.id }}</em></router-link>
+            </td>
+            <td>
+              <UserComponent :user="ban.executor" v-if="!ban.executor.provider" hide-avatar />
+              <template v-else>
+                <span v-if="ban.executor.id" class=''>{{ban.executor.id}}</span>
+              </template>
+              <p class='has-text-info' v-if="ban.executor.provider && ban.executor.provider !== 'steam'"><em>via
+                  {{ban.executor.provider}}</em></p>
+            </td>
+            <td v-if="privUser">
+              {{ban.reason}}
+            </td>
+            <td>
+              {{ban.publicReason}}
+            </td>
+            <td>
+              <div class="tags" v-html="getBanFlags(ban)"></div>
+            </td>
+            <td>
+              <span v-if="ban.expired" class="has-text-danger">Expired</span>
+              <span v-else>{{formatDaysAgo(ban.expires) || 'Never'}}</span>
+            </td>
+            <td>{{ban.joinAttempts}}</td>
+            <td :data-tooltip="formatDate(ban.timestamp)">
+              <p>{{ban.relDate}}</p>
+              <p class="has-text-grey">{{ new Date(ban.timestamp * 1000).toLocaleDateString() }}</p>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <p class="has-text-centered has-text-danger title is-3" v-else-if="error">{{error}}</p>
+      <p class="has-text-centered subtitle is-3" v-else><br>
+        <Icon icon="spinner" spin icon-class="mr-4"> Fetching bans</Icon>
+      </p>
+      <Pagination :page="page" :limit="limit" :count="bansCount" @page="setPage"></pagination>
+    </div>
+    <div class="column is-3">
+      <div class="box has-background-info-light">
+        <h3 class="title is-4" v-if="bans">
+          Showing <input type="number" class="input" min=20 max=1000 step=10 style="width:6rem" v-model="limit"
+            @blur="changeLimit" /> / {{ totalBansCount.toLocaleString() }} Bans
+        </h3>
+        <h3 class="title is-3" v-else>
+          Showing - / - Bans
+        </h3>
+        <p class="subtitle mt-2">
+          Click a user's name to view more detailed ban information
+        </p>
+        <div class="box">
+          <div class="field">
+            <input id="onlyAppealsButton" type="checkbox" class="switch" v-model="showOnlyAppeals">
+            <label for="onlyAppealsButton">Only Appeals</label>
+          </div>
+          <div class="field">
+            <input id="showExpiredButton" type="checkbox" class="switch is-danger" v-model="showExpired"
+              @change="fetchBans(true)">
+            <label for="showExpiredButton">Include Expired Bans</label>
+          </div>
         </div>
       </div>
     </div>
-    <Pagination :page="page" :limit="limit" :count="bansCount" @page="setPage"></pagination>
   </div>
-
-
-  <table class="table is-fullwidth" v-if="!loading&&!error">
-    <thead>
-      <th style="width:0">Player</th>
-      <th>Executor</th>
-      <th v-if="privUser">Reason</th>
-      <th>Public Reason</th>
-      <th>Flags</th>
-      <th>Expires</th>
-      <th data-tooltip="The amount of times user has tried to join">Attempts</th>
-      <th width="10%">Date</th>
-    </thead>
-    <tbody>
-      <tr v-for="(ban) in filteredBans" :key="ban.id" :class="{'has-text-grey-light': ban.expired}">
-        <td data-tooltip="Click to view more detailed ban information">
-          <p>
-            <router-link
-              v-if="ban.client.name"
-              class="is-small"
-              :to="{name: 'manage-user-bans', params: { id: ban.client.id, banid: ban.id }, query: { returnTo: $route.fullPath }}"
-            ><component :is="ban.flags & APIBanFlags.Suspended ? 'span' : 'b'">{{ ban.client.name }}</component></router-link>
-            <em v-else>(unknown name)</em>
-          </p>
-          <router-link
-            class="is-small has-text-black"
-            :to="{name: 'manage-user-bans', params: { id: ban.client.id, banid: ban.id }, query: { returnTo: $route.fullPath }}"
-          ><em>{{ ban.client.id }}</em></router-link>
-        </td>
-        <td>
-          <router-link
-            v-if="ban.executor.name"
-            class="is-small has-text-black"
-            :data-tooltip="ban.executor.id"
-            :to="ban.executor.provider === 'steam' ? '#' : {name: 'manage-user-bans', params: { id: ban.executor.id, banid: ban.id }, query: { returnTo: $route.fullPath }}"
-          >
-            <b>{{ ban.executor.name }}</b>
-          </router-link>
-          <template v-else>
-            <em v-if="ban.executor.name" class='has-text-info'>{{ban.executor.name}}</em>
-            <em v-else>{{ban.executor.id}}</em>
-          </template>
-          <p class='has-text-info' v-if="ban.executor.provider && ban.executor.provider !== 'steam'"><em>via {{ban.executor.provider}}</em></p>
-        </td>
-        <td v-if="privUser">
-          {{ban.reason}}
-        </td>
-        <td>
-          {{ban.publicReason}}
-        </td>
-        <td>
-          <div class="tags" v-html="getBanFlags(ban)"></div>
-        </td>
-        <td>
-          <span v-if="ban.expired" class="has-text-danger">Expired</span>
-          <span v-else>{{formatDaysAgo(ban.expires) || 'Never'}}</span>
-        </td>
-        <td>{{ban.joinAttempts}}</td>
-        <td :data-tooltip="formatDate(ban.timestamp)">
-          <p>{{ban.relDate}}</p>
-          <p class="has-text-grey">{{ new Date(ban.timestamp * 1000).toLocaleDateString() }}</p>
-        </td>
-      </tr>
-    </tbody>
-  </table>
-  <p class="has-text-centered has-text-danger title is-3" v-else-if="error">{{error}}</p>
-  <p class="has-text-centered subtitle is-3" v-else><br>
-    <Icon icon="spinner" spin icon-class="mr-4"> Fetching bans</Icon>
-  </p>
-  <Pagination :page="page" :limit="limit" :count="bansCount" @page="setPage"></pagination>
 </div>
 </template>
 
@@ -105,6 +100,7 @@ import { APIBanFlags } from '../../../common-types/Ban';
 import Pagination from '@/components/Pagination.vue'
 import 'bulma-switch'
 import { PrivilegedUser } from '@/js/User';
+import UserComponent from '@/components/UserComponent.vue';
 
 const DISCORD_SOURCE_REGEX = new RegExp(/([^\n]+#\d{4})\s\((\d+)\)/)
 const AUTO_REFRESH_INTERVAL = 1000 * 60 * 15

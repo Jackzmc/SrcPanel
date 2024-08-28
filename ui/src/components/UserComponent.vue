@@ -50,7 +50,7 @@ export interface User {
 
 
 const props = defineProps<{
-  user: User | APIUser,
+  user: User | APIUser | { steamid?: string, id?: string, name: string, avatarUrl?: string },
   isAdmin?: boolean,
   hideAvatar?: boolean
 }>()

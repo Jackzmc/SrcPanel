@@ -74,7 +74,7 @@
           <h3 class="title is-3" v-else>
             Showing - / - Notes
           </h3>
-          <p class="subtitle is-=6">
+          <p class="subtitle mt-2">
             The color in the ID column represents their reputation.
           </p>
           <div class="box">
