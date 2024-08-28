@@ -15,10 +15,6 @@
     <tbody>
       <tr v-for="user in users" :key="user.steamid">
         <td class="sel-user-component">
-          <!-- <router-link :to="{ name: 'manage-user', params: { id: user.steamid }}">
-            <b>{{user.name}}</b>
-            <span v-if="user.isAdmin" class="tag is-info ml-1 is-pulled-right has-text-white">Admin</span>
-          </router-link> -->
           <UserComponent :user="user" />
         </td>
         <td><span v-if="user.country">{{user.country}}</span><em v-else>(unknown)</em></td>

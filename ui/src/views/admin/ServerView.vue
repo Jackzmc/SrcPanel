@@ -1,21 +1,11 @@
 <template>
 <div class="has-background-light pt-0">
-<div class="container">
-  <article class="message is-danger" v-if="error && !serverInfo">
-    <div class="message-header">
-      <p><Icon icon="fa-exclamation-triangle">An error occurred while fetching server information</Icon></p>
-    </div>
-    <div class="message-body">
-      <p>{{ error }}</p>
-      <br>
-      <p><a class="button is-info" @click="init">Retry</a></p>
-    </div>
-  </article>
-</div>
-<nav class="container mb-3 is-fluid" v-if="serverInfo">
+<nav class="container mb-3 is-fluid">
+  <div class="block pt-5">
+    <router-link to="/admin/servers" class="">🠐 back to servers list</router-link>
+  </div>
   <div class="columns">
-    <div class="column is-8">
-      <router-link to="/admin/servers" class="">🠐 back to servers list</router-link><br><br>
+    <div class="column is-8" v-if="serverInfo">
       <div class="box has-background-primary-90">
         <h3 class="title is-3">
           {{serverInfo.name}}
@@ -329,8 +319,47 @@
         <Console :server="serverInfo" />
       </div>
     </div>
+    <div class="column is-8" v-else-if="error">
+      <div class="box">
+        <article class="message is-danger" v-if="error && !serverInfo">
+          <div class="message-header">
+            <p>
+              <Icon icon="fa-exclamation-triangle" icon-class="has-text-white">Could not fetch server information</Icon>
+            </p>
+          </div>
+          <div class="message-body">
+            <div class="content">
+              <p>An error occurred while trying to fetch server information from the admin panel. Please try again later.
+              </p>
+              <p>Error Data:
+              <pre>{{ error }}</pre>
+              </p>
+            </div>
+            <p><a class="button is-info" @click="init">Retry</a></p>
+          </div>
+        </article>
+      </div>
+    </div>
+    <div class="column is-8" v-else>
+      <div class="box has-background-primary-90 has-text-centered">
+        <h4 class='title is-4 my-6'>
+          <Icon icon="spinner" spin>Fetching server information</Icon>
+        </h4>
+      </div>
+      <div class="block">
+        <div class="skeleton-lines">
+          <div></div>
+          <div></div>
+        </div>
+      </div>
+      <div class="box">
+        <div class="skeleton-block" style="height:500px">
 
-    <div class="column">
+        </div>
+      </div>
+    </div>
+
+    <div class="column" v-if="serverInfo">
       <div class="field">
         <label class="label">View another server:&nbsp;</label>
         <div class="select">
@@ -440,14 +469,28 @@
         </div>
       </article>
     </div>
+    <div class="column" v-else-if="!error">
+      <div class="field">
+        <label class="label">View another server:&nbsp;</label>
+        <div class="select">
+          <select @change="onSelectNewServer">
+            <option default v-if="!serverIds">Loading servers...</option>
+            <option v-for="server2 in serverIds" :key="server2.id" :value="server2.id"
+              :selected="server2.id == route.params.id">
+              {{server2.name}}
+            </option>
+          </select>
+        </div>
+      </div>
+      <div class="box">
+        <div>
+          <h4 class="title is-4">Recent Activity</h4>
+          <div class="skeleton-block" style="height:280px"></div>
+        </div>
+      </div>
+    </div>
   </div>
 </nav>
-<div class="container mb-3 mt-2" v-else-if="!error">
-  <div class="box has-text-centered">
-    <h4 class='title is-4'><Icon icon="spinner" spin>Fetching server information</Icon></h4>
-  </div>
-</div>
-<br>
 </div>
 </template>
 
