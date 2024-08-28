@@ -1,14 +1,21 @@
 <template>
-<aside class="menu my-1">
+<aside class="menu">
   <template v-for="(data, folder) in folders" :key="folder">
-    <p class="menu-label my-1">
-      <a :class="{'has-text-black': !data.active, 'has-text-light': data.active, 'is-link': data.active, tag: true}" @click="data.active = !data.active"><Icon icon="folder">{{folder}}/</Icon></a>
-    </p>
-    <ul class="menu-list my-1" v-if="data.active">
-      <li v-if="data.files.length === 0"><a class="has-text-black has-text-centered" disabled><em>Directory is empty</em></a></li>
-      <li v-for="file in data.files" :key="file">
-        <a @click="emit('select', { file, folder })">{{file}}</a>
+    <ul class="menu-list">
+      <li>
+        <a
+          @click="selectFolder(folder)">
+          <Icon icon="folder">{{folder}}/</Icon>
+        </a>
       </li>
+      <template v-if="data.active">
+        <li v-if="data.files.length === 0"><a class="ml-5 has-text-black has-text-centered" disabled><em>Directory is empty</em></a></li>
+        <li v-for="entry in data.files" :key="entry.path" class="ml-5">
+          <a @click="selectFile(entry)" :class="{'is-active': selected === entry }">
+            <Icon icon="file-alt">{{entry.filename}}</Icon>
+          </a>
+        </li>
+      </template>
     </ul>
   </template>
 </aside>
@@ -18,23 +25,43 @@
 import { ref, watchEffect } from 'vue';
 const emit = defineEmits(["select"])
 
+let selected = ref()
+
 const props = defineProps<{
   paths: string[]
 }>()
 
-let folders = ref<Record<string, { files: string[], active: boolean}>>()
+function selectFile(entry: FolderEntry) {
+  selected.value = entry
+  emit('select', entry)
+  console.log("selected", entry)
+}
+
+function selectFolder(selectedFolder: string) {
+  if(!folders.value) return
+  for(const [folder, data] of Object.entries(folders.value)) {
+    data.active = folder === selectedFolder
+  }
+}
+
+interface FolderEntry {
+  path: string,
+  // The display name, without the parent prefix
+  filename: string
+}
+
+let folders = ref<Record<string, { files: FolderEntry[], active: boolean}>>()
 
 watchEffect(() => {
   folders.value = {'_root': { files: [], active: true }}
   for(const path of props.paths) {
     const split = path.split('/')
-    console.log(split)
     if(split.length > 1) {
       const parent = split.slice(0, split.length - 1).join("/")
       if(!folders.value[parent]) folders.value[parent] = { files: [], active: false }
-      folders.value[parent].files.push(split.pop() as string)
+      folders.value[parent].files.push({ path, filename: split.pop() as string })
     } else {
-      folders.value['_root'].files.push(path)
+      folders.value['_root'].files.push({ path, filename: path })
     }
   }
   // Push files below all folders

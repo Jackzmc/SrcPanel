@@ -267,56 +267,63 @@
           </div>
         </div>
       </div>
-      <div v-else-if="tab === 'configs'" class="box">
-        <p class="has-text-centered my-6 is-size-5" v-if="cfg.loading">Loading...</p>
-        <template v-if="cfg.selected">
-          <template v-if="cfg.json" >
-            <Field label="Cvars" >
-              <div class="columns " v-for="entry in cfg.json" :key="entry.command">
-                <div class="column is-5">
-                  <input class="input is-expanded"  type="text" :value="entry.cvar ?? entry.command" />
+      <div v-else-if="tab === 'configs'" class="">
+        <div class="card" v-if="cfg.selected && !cfg.loading">
+          <header class="card-header">
+            <p class="card-header-title">{{ cfgParentFolder }}<span class="has-text-weight-light">{{ cfg.selected.filename }}</span></p>
+          </header>
+          <div class="card-content" v-if="cfg.selected">
+            <template v-if="cfg.json">
+              <Field label="Cvars">
+                <div class="columns " v-for="entry in cfg.json" :key="entry.command">
+                  <div class="column is-5">
+                    <input class="input is-expanded" type="text" :value="entry.cvar ?? entry.command" />
+                  </div>
+                  <div class="column is-6">
+                    <input v-if="entry.type === 'string'" class="input" type="text" :value="entry.value" />
+                    <input v-else-if="entry.type === 'number'" class="input" type="number" :value="entry.value" />
+                    <em v-else-if="entry.type === 'hidden'">(hidden)</em>
+                  </div>
+                  <div class="column is-1">
+                    <span v-if="entry.type === 'string'" class="tag is-primary is-large" data-tooltip="String">S</span>
+                    <span v-if="entry.type === 'number'" class="tag is-info is-large" data-tooltip="Number">N</span>
+                  </div>
                 </div>
-                <div class="column is-6">
-                  <input v-if="entry.type === 'string'" class="input" type="text" :value="entry.value" />
-                  <input v-else-if="entry.type === 'number'" class="input" type="number" :value="entry.value" />
-                  <em v-else-if="entry.type === 'hidden'">(hidden)</em>
+                <!-- <span class="has-text-dark">{{entry.cvar ?? entry.command}}</span>
+                        <span :class="{'config-string': entry.type === 'string', 'has-text-info': entry.type === 'number'}">
+                          {{entry.value}}
+                        </span> -->
+              </Field>
+              <Field label="Add New Cvar">
+                <div class="columns">
+                  <div class="column">
+                    <input class="input" type="text" />
+                  </div>
+                  <div class="column">
+                    <input class="input" type="text" />
+                  </div>
                 </div>
-                <div class="column is-1">
-                  <span v-if="entry.type === 'string'" class="tag is-primary is-large" data-tooltip="String">S</span>
-                  <span v-if="entry.type === 'number'" class="tag is-info is-large" data-tooltip="Number">N</span>
+              </Field>
+              <Field label="Add New Command">
+                <div class="columns">
+                  <div class="column">
+                    <input class="input" type="text" />
+                  </div>
+                  <div class="column">
+                    <input class="input" type="text" />
+                  </div>
                 </div>
-              </div>
-              <!-- <span class="has-text-dark">{{entry.cvar ?? entry.command}}</span>
-              <span :class="{'config-string': entry.type === 'string', 'has-text-info': entry.type === 'number'}">
-                {{entry.value}}
-              </span> -->
-            </Field>
-            <Field label="Add New Cvar">
-              <div class="columns">
-                <div class="column">
-                  <input class="input" type="text" />
-                </div>
-                <div class="column">
-                  <input class="input" type="text" />
-                </div>
-              </div>
-            </Field>
-            <Field label="Add New Command">
-              <div class="columns">
-                <div class="column">
-                  <input class="input" type="text" />
-                </div>
-                <div class="column">
-                  <input class="input" type="text" />
-                </div>
-              </div>
-            </Field>
-          </template>
-          <pre class="box" v-if="cfg.raw">
+              </Field>
+            </template>
+            <pre class="box" v-if="cfg.raw">
             {{ cfg.raw }}
-          </pre>
-        </template>
-        <p class="has-text-centered subtitle is-5 my-6" v-else>Select a config file on the right to view its content</p>
+            </pre>
+          </div>
+        </div>
+        <div class="box" v-else>
+          <p class="has-text-centered subtitle is-4 my-6" v-if="cfg.loading"><Icon icon="spinner" spin>Loading configs</Icon></p>
+          <p class="has-text-centered subtitle is-5 my-6" v-else>Select a config file on the right to view its content</p>
+        </div>
       </div>
       <div v-else-if="tab === 'console'" class="box">
         <Console :server="serverInfo" />
@@ -403,8 +410,8 @@
         <p v-else>Game data will appear here when live data is available</p>
       </div>
       <div v-else-if="tab === 'configs'" class="box">
-        <h5 class="title is-5">Config Files</h5>
-        <FolderBrower v-if="serverConfigs" @select="onCfgChosen" :paths="serverConfigs" />
+        <h5 class="title is-5 mb-2">Config Files</h5>
+        <FolderBrower v-if="serverConfigs" @select="onCfgChosen" :paths="serverConfigs"/>
         <div class="box has-background-danger-light" v-else>
           <p class="subtitle has-text-centered is-6 ">Not available for this server</p>
         </div>
@@ -569,13 +576,18 @@ let lastLiveUpdateTime = ref<string>()
 let uptime = ref<number>()
 let activities = ref()
 let cfg = ref<{
-  selected?: string, raw?: string, json?: any, loading: boolean }
+  selected?: { filename: string, path: string }, raw?: string, json?: any, loading: boolean }
 >({ loading: false })
 let error = ref<string>()
 let now = ref(Date.now())
 let showDetailsId = ref<number>()
 let shiftPressed = ref(false)
 let actionRunning = ref()
+
+const cfgParentFolder = computed(() => {
+  if(!cfg.value.selected) return
+  return cfg.value.selected.path.substring(0, cfg.value.selected.path.length - cfg.value.selected.filename.length)
+})
 
 const actions = computed(() => {
   if(!serverInfo.value) return []
@@ -643,10 +655,10 @@ function getIconUrl(player: LivePlayerFull) {
   return `/img/survivors/unknown.png`
 }
 
-async function onCfgChosen(data: { file: string, folder?: string }, raw = false) {
-  cfg.value.selected = data.folder ? `${data.folder}/${data.file}` : data.file
+async function onCfgChosen(entry: { path: string, filename: string }, raw = false) {
+  cfg.value.selected = entry
   cfg.value.loading = true
-  const response = await fetch(`/api/servers/${route.params.id}/configs?path=${cfg.value.selected}${raw?'&raw=1':''}`)
+  const response = await fetch(`/api/servers/${route.params.id}/configs?path=${cfg.value.selected.path}${raw?'&raw=1':''}`)
   cfg.value.loading = false
   if(response.ok) {
     cfg.value.json = undefined
