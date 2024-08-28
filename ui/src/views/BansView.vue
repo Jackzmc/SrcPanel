@@ -2,6 +2,7 @@
 <div class="container is-fluid">
   <div class="columns">
     <div class="column">
+      <Pagination :page="page" :limit="limit" :count="bansCount" @page="setPage"></pagination>
       <table class="table is-fullwidth" v-if="!loading&&!error">
         <thead>
           <th style="width:0">Player</th>
@@ -56,10 +57,26 @@
           </tr>
         </tbody>
       </table>
-      <p class="has-text-centered has-text-danger title is-3" v-else-if="error">{{error}}</p>
-      <p class="has-text-centered subtitle is-3" v-else><br>
-        <Icon icon="spinner" spin icon-class="mr-4"> Fetching bans</Icon>
-      </p>
+      <div class="mx-4" v-else-if="error">
+        <article class="message is-danger">
+          <div class="message-header">
+            <p>
+              <Icon icon="fa-exclamation-triangle">Could not fetch bans</Icon>
+            </p>
+          </div>
+          <div class="message-body">
+            <p>While fetching bans, an error occurred:</p>
+            <p>
+            <pre>{{ error }}</pre>
+            </p>
+          </div>
+        </article>
+      </div>
+      <div class="box has-text-centered py-6" v-else>
+        <p class="subtitle is-2">
+          <Icon icon="spinner" spin icon-class="mr-4">Fetching bans</Icon>
+        </p>
+      </div>
       <Pagination :page="page" :limit="limit" :count="bansCount" @page="setPage"></pagination>
     </div>
     <div class="column is-3">
