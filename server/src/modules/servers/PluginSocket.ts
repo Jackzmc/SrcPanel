@@ -78,15 +78,10 @@ export default class PluginSocket {
           let record: LiveRecordClient = {
             type,
             userid: reader.readInt(),
-            steamid: reader.readString()
-          }
-          if(!reader.isEOF) {
-            record = {
-              ...record,
-              isIdle: reader.readByte() == 1,
-              joinTime: reader.readInt(),
-              name: reader.readString(),
-            } as LiveRecordClient
+            steamid: reader.readString(),
+            state: reader.readByte(),
+            timestamp: reader.readInt(),
+            name: reader.readString(),
           }
           return record
         }
