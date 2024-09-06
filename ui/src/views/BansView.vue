@@ -6,8 +6,8 @@
       <table class="table is-fullwidth" v-if="!loading&&!error">
         <thead>
           <th style="width:0">Player</th>
-          <th>Executor</th>
-          <th v-if="privUser">Reason</th>
+          <th>Banned By</th>
+          <th v-if="privUser" data-tooltip="Private reason, unless there is no public reason, then this is shown">Reason</th>
           <th>Public Reason</th>
           <th>Flags</th>
           <th>Expires</th>
@@ -81,10 +81,10 @@
     </div>
     <div class="column is-3">
       <div class="box has-background-info-light">
-        <h3 class="title is-4" v-if="bans">
+        <h4 class="title is-4" v-if="bans">
           Showing <input type="number" class="input" min=20 max=1000 step=10 style="width:6rem" v-model="limit"
             @blur="changeLimit" /> / {{ totalBansCount.toLocaleString() }} Bans
-        </h3>
+        </h4>
         <h3 class="title is-3" v-else>
           Showing - / - Bans
         </h3>
@@ -93,15 +93,16 @@
         </p>
         <div class="box">
           <div class="field">
-            <input id="onlyAppealsButton" type="checkbox" class="switch" v-model="showOnlyAppeals">
-            <label for="onlyAppealsButton">Only Appeals</label>
-          </div>
-          <div class="field">
             <input id="showExpiredButton" type="checkbox" class="switch is-danger" v-model="showExpired"
               @change="fetchBans(true)">
             <label for="showExpiredButton">Include Expired Bans</label>
           </div>
         </div>
+      </div>
+      <div class="box" v-if="appeals.length > 0">
+        <h4 class="title is-4 has-text-primary"><Icon icon="fa-circle-exclamation">0 pending appeals</Icon></h4>
+
+        <!-- TODO: implement -->
       </div>
     </div>
   </div>
@@ -142,17 +143,16 @@ let ban_error = ref<string>()
 let bans = ref<Ban[]>([])
 let shiftPressed = ref(false)
 let showExpired = ref(false)
-let showOnlyAppeals = ref(false)
+let appeals = ref([])
 
 const bansCount = computed(() => {
   return hasFilter.value ? filteredBans.value.length : totalBansCount.value
 })
 const hasFilter = computed(() => {
-  return showOnlyAppeals.value === true
+  return false
 })
 const filteredBans = computed(() => {
   return bans.value.filter(ban => {
-    if(showOnlyAppeals.value && ban.appealsCount === 0) return false
     return true
   })
 })

@@ -33,7 +33,7 @@
           </Field>
       </div>
       <div class="list has-visible-pointer-controls has-hoverable-list-items" v-else>
-        <div class="list-item  message is-info" v-if="pendingEntries.length > 0">
+        <div class="list-item  message has-background-info-light" v-if="pendingEntries.length > 0">
           <a class="list-item-content has-text-centered" style="text-decoration: none" @click="viewPendingEntries">
             <p class="">
               <Icon icon="fa-message" />{{ pendingEntries.length }}{{ pendingEntries.length >= limit ? '+' : ''}}  new entries are available, click here to view

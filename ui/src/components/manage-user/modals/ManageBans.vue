@@ -448,6 +448,7 @@ async function answerAppeal(id: number, approve: boolean) {
         appeal.rejecter_id = props.privUser.id
         appeal.state = approve ? BanAppealState.Accepted : BanAppealState.Rejected
       }
+      // TODO: fix refresh required
     } else {
       const json = await response.json()
       notify({
