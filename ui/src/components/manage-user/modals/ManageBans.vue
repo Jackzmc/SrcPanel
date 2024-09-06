@@ -419,7 +419,7 @@ async function deleteBan() {
   }
 }
 async function answerAppeal(id: number, approve: boolean) {
-  let reason, reasonQuery
+  let reason, reasonQuery = ""
   if(!approve) {
     reason = prompt("Enter reason for the appeal rejection: ")
     if(!reason) {
