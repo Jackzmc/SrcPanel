@@ -182,10 +182,11 @@ export function requestTimeout(url: RequestInfo, timeout: number, options?: Requ
 
 export function formatDate(timestamp?: number, onlyDate = false) {
   const d = timestamp ? new Date(timestamp * 1000) : new Date();
-  if(onlyDate) return d.toLocaleDateString()
-  return d.toLocaleDateString() + " at " + d.toLocaleTimeString(undefined, {
+  let output = d.toISOString().split('T')[0]
+  if(!onlyDate) output += " at " + d.toLocaleTimeString(undefined, {
     timeStyle: "short"
   });
+  return output
 }
 export function formatSize(bytes: number, si = false, dp = 1) {
   const thresh = si ? 1000 : 1024;

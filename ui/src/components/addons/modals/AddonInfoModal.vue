@@ -71,7 +71,7 @@
                 </td>
               </tr>
               <tr v-if="props.addon.chapterIds">
-                <th>Rating</th>
+                <th>Rating <Icon icon-class="has-text-info has-tooltip-right" icon="fa-circle-info" data-tooltip="Ratings pulled from stats.jackz.me"></Icon></th>
                 <td v-if="mapRating.loadState == LoadState.Success">
                   <template v-if="mapRating.data?.avgRating">
                     <Icon size="is-small" icon="fas star" v-for=" i in Math.round( mapRating.data.avgRating ) " :key="i" />
