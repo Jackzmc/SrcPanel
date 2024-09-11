@@ -189,7 +189,7 @@ watch(selectedShare, async (value) => {
 })
 
 watch(() => selectedShare.value, (name) => {
-  if(route.name === "share-files") {
+  if(route.name === "admin-share-detail") {
     prefetch.value = undefined
     error.value = undefined
   } else {

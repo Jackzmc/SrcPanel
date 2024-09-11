@@ -213,6 +213,7 @@ export default class AuthManager {
         await conn.commit()
         conn.release()
 
+        // TODO: optimize this away
         await this.refreshAdmins()
 
         return {
@@ -258,7 +259,8 @@ export default class AuthManager {
 
         await conn.commit()
         conn.release()
-        // TODO: update admin in place, no full refresh
+
+        // TODO: optimize this away
         await this.refreshAdmins()
 
         return id

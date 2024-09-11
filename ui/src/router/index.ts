@@ -186,16 +186,6 @@ const routes = [
       authRequired: true
     },
     children: [
-      // {
-      //   name: "share-files",
-      //   path: "files",
-      //   component: () => import('../components/addons/FileList.vue'),
-      // },
-      // {
-      //   name: "share-maps",
-      //   path: "maps",
-      //   component: () => import('../components/addons/FileList.vue'),
-      // },
       {
         name: "upload-addon",
         path: 'upload',

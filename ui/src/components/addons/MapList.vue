@@ -19,6 +19,7 @@
               <p class="title is-4"><router-link :to="getRoute(map)">{{ map.collection?.name ?? map.workshop?.title ?? map.filename }}</router-link>
                 <span class="ml-2 tag is-black is-medium" v-if="map.collection">Collection</span>
                 <!-- <Icon icon="fa-star" v-for="i in "></Icon> -->
+                 <span class="is-pulled-right">{{ getStats(map)?.avgRating }}</span>
               </p>
               <p class="subtitle is-6">
                 {{ formatDescription((map.collection ? map.children[0] : map).workshop?.description) }}
@@ -72,6 +73,7 @@ let sort = ref<{
 const props = defineProps<{
   shareInfo: ShareInfo,
   addons: any[],
+  mapStats: Record<string, any>
 }>()
 
 // Use for <select> element, to change route
@@ -84,7 +86,7 @@ watch(selectedShare, async (value) => {
 })
 
 watch(() => selectedShare.value, (name) => {
-  if(route.name === "share-files") {
+  if(route.name === "admin-share-detail") {
     prefetch.value = undefined
     error.value = undefined
   } else {
@@ -206,6 +208,11 @@ function formatDescription(content: string) {
   let output = content.slice(0, 256)
   if(content.length > 256) output += "..."
   return output
+}
+function getStats(map: any) {
+  const lastChapter = map.chapterIds?.at(-1)
+  if(!lastChapter) return
+  return props.mapStats[lastChapter]
 }
 function getRoute(entry: any) {
   if(entry.collection) {
