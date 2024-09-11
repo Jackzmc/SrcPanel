@@ -129,7 +129,9 @@ export default class Share {
                         // Merge child addon into collection's map list
                         if(addonInfo.chapterIds) {
                             if(!collections[addonInfo.collection.id].chapterIds) collections[addonInfo.collection.id].chapterIds = []
-                            collections[addonInfo.collection.id].chapterIds = [...collections[addonInfo.collection.id].chapterIds, ...addonInfo.chapterIds]
+                            // Convert to set and back to remove duplicates
+                            const set = new Set([...collections[addonInfo.collection.id].chapterIds, ...addonInfo.chapterIds])
+                            collections[addonInfo.collection.id].chapterIds = [...set]
                         }
                         delete addonInfo.collection
                     } else {

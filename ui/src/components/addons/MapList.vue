@@ -4,7 +4,7 @@
     <strong>Notice:</strong> This view is under development and may not have full functionality.
   </div>
   <div class="columns is-multiline is-1">
-    <div class="column is-4" v-for="map in filteredAddons" :key="map.filename">
+    <div class="column is-4 is-flex" v-for="map in filteredAddons" :key="map.filename">
       <div class="card">
         <div class="card-image">
           <figure class="image is-5by3">
@@ -18,8 +18,9 @@
             <div class="media-content">
               <p class="title is-4"><router-link :to="getRoute(map)">{{ map.collection?.name ?? map.workshop?.title ?? map.filename }}</router-link>
                 <span class="ml-2 tag is-black is-medium" v-if="map.collection">Collection</span>
-                <!-- <Icon icon="fa-star" v-for="i in "></Icon> -->
-                 <span class="is-pulled-right">{{ getStats(map)?.avgRating }}</span>
+                 <span class="is-pulled-right" v-if="getStats(map)">
+                    <Icon icon="fa-star" size="sm" v-for="i in Number(getStats(map).avgRating)" :key="i"></Icon>
+                 </span>
               </p>
               <p class="subtitle is-6">
                 {{ formatDescription((map.collection ? map.children[0] : map).workshop?.description) }}
@@ -30,7 +31,11 @@
           <div class="">
             <ul>
               <li>{{ map.chapterIds.length }} chapters</li>
+              <li>{{ formatSize(map.filesize) }}</li>
               <li>Updated {{ getRelDate(map.collection ? map.children[0].workshop?.lastUpdated : map.workshop?.lastUpdated) }}</li>
+              <template v-if="getStats(map)">
+                <li>Played {{ getStats(map).gamesPlayed.toLocaleString() }} times</li>
+              </template>
             </ul>
           </div>
         </div>
@@ -206,6 +211,7 @@ function getUpdateDuration(time: number) {
 function formatDescription(content: string) {
   if(!content) return ""
   let output = content.slice(0, 256)
+  output = output.substring(0, Math.min(output.length, output.lastIndexOf(" ")))
   if(content.length > 256) output += "..."
   return output
 }
