@@ -1,46 +1,53 @@
 <template>
+<div>
   <div class="notification is-warning is-light">
     <strong>Notice:</strong> This view is under development and may not have full functionality.
   </div>
-  <div class="columns is-multiline is-vcentered is-1">
-    <div class="column is-6" v-for="map in filteredAddons" :key="map.filename">
+  <div class="columns is-multiline is-1">
+    <div class="column is-4" v-for="map in filteredAddons" :key="map.filename">
       <div class="card">
         <div class="card-image">
           <figure class="image is-5by3">
-            <a>
+            <router-link :to="getRoute(map)">
               <img v-if="map.workshop" alt="The workshop addon's uploaded image preview" :src="map.workshop.previewUrl"
                 @load="addonImageLoaded[map.filename ?? map.collection.id] = true" />
               <img v-else-if="map.collection" alt="The workshop addon's uploaded image preview" :src="map.children[0].workshop.previewUrl"
                 @load="addonImageLoaded[map.filename ?? map.collection.id] = true" />
               <img v-if="!addonImageLoaded[map.filename ?? map.collection.id]" src="@/assets/WorkshopImageFallback.svg" />
-            </a>
+            </router-link>
           </figure>
         </div>
         <div class="card-content">
           <div class="media">
             <div class="media-content">
-              <p class="title is-4">{{ map.collection?.name ?? map.workshop?.title ?? map.filename }}
-                <span class="tag is-black" v-if="map.collection">Collection</span>
+              <p class="title is-4"><router-link :to="getRoute(map)">{{ map.collection?.name ?? map.workshop?.title ?? map.filename }}</router-link>
+                <span class="ml-2 tag is-black is-medium" v-if="map.collection">Collection</span>
+                <!-- <Icon icon="fa-star" v-for="i in "></Icon> -->
               </p>
-              <p class="subtitle is-6"></p>
+              <p class="subtitle is-6">
+                {{ formatDescription((map.collection ? map.children[0] : map).workshop?.description) }}
+              </p>
             </div>
           </div>
 
-          <div class="content">
-
+          <div class="">
+            <ul>
+              <li>{{ map.chapterIds.length }} chapters</li>
+              <li>Updated {{ getRelDate(map.collection ? map.children[0].workshop?.lastUpdated : map.workshop?.lastUpdated) }}</li>
+            </ul>
           </div>
         </div>
       </div>
-
     </div>
   </div>
+</div>
 </template>
 
 <script setup lang="ts">
 import { ref, watch, computed, onBeforeMount, onMounted, markRaw, shallowRef } from 'vue'
 import { onBeforeRouteUpdate, useRoute, useRouter } from 'vue-router'
 import Field from '@/components/Field.vue'
-import { formatDate, formatSize } from '@/js/util.js'
+import { formatDate, formatSize, getRelDate } from '@/js/util.js'
 import { ShareInfo, WorkshopItem } from '../../../../common-types/Share';
 import debounce from '@/js/debounce.js';
 import { notify } from '@kyvg/vue3-notification';
@@ -53,6 +60,8 @@ const route = useRoute()
 const router = useRouter()
 
 let addonImageLoaded = ref<Record<string, boolean>>({})
+// TODO: pull from stats api
+let mapStatsInfo = ref<Record<string, any>>()
 let search = ref<any>()
 let prefetch = ref<any>()
 let error = ref<string>()
@@ -191,6 +200,16 @@ function filterAndSort() {
 }
 const filterAndSortDebounce = debounce(filterAndSort, 400)
 
+function getUpdateDuration(time: number) {
+  const seconds = (Date.now()/1000) - time
+  return seconds / 60 / 60 / 24
+}
+function formatDescription(content: string) {
+  if(!content) return ""
+  let output = content.slice(0, 256)
+  if(content.length > 256) output += "..."
+  return output
+}
 function getRoute(entry: any) {
   if(entry.collection) {
     return {

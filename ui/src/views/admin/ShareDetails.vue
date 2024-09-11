@@ -25,7 +25,7 @@
       </div>
       <div class="column is-3">
         <div class="box">
-          <h5 class="title is-4" v-if="ready">{{filteredAddons.length}} files
+          <h5 class="title is-4" v-if="ready">{{filteredAddons.length}} total files
               <a class="button is-info is-pulled-right is-inline" @click="fetchAddons()" :disabled="ready ? undefined : true">
                 <Icon icon="fa-sync"></Icon>
               </a>
@@ -340,7 +340,7 @@ async function onChildUpdate(payload: AddonUpdatePayload) {
 }
 
 function onChildClose() {
-  router.replace({ name: "admin-share-detail", params: { shareId: route.params.shareId, viewMode: "files" } })
+  router.replace({ name: "admin-share-detail", params: { shareId: route.params.shareId, viewMode: route.params.viewMode} })
 }
 
 async function fetchShares() {
