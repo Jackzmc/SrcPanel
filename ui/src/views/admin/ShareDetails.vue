@@ -6,6 +6,7 @@
       <div class="column px-0 mx-90">
         <template v-if="shareInfo">
           <FileList :share-info="shareInfo" :addons="addons" v-if="shareInfo && viewMode === 'files'" />
+          <MapList :share-info="shareInfo" :addons="addons" v-if="shareInfo && viewMode === 'maps'" />
           <div class="has-text-centered box has-background-warning-light" v-else>
             <p class="title is-4 mt-4">
               Unknown view mode
@@ -77,6 +78,7 @@ import { ShareInfo, WorkshopItem } from '../../../../common-types/Share';
 import debounce from '@/js/debounce.js';
 import { notify } from '@kyvg/vue3-notification';
 import FileList from '@/components/addons/FileList.vue';
+import MapList from '@/components/addons/MapList.vue';
 
 export interface AddonUpdatePayload {
   deleted?: boolean,
