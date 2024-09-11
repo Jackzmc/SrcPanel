@@ -53,7 +53,7 @@
               <!-- <span class="rating-overlay" v-if="getStats(map)">
                 <Icon icon="fa-star" size="sm" v-for="i in Number(getStats(map).avgRating)" :key="i"></Icon>
               </span> -->
-              <span class="rating-overlay" v-if="getStats(map)">
+              <span class="rating-overlay" v-if="getStats(map)?.numRatings > 0">
                 {{ Number(getStats(map).avgRating) }} <Icon icon="fa-star"></Icon>
               </span>
             </router-link>
@@ -74,16 +74,34 @@
             </div>
           </div>
 
-          <div class="">
-            <ul>
-              <li>{{ map.chapterIds.length }} chapters<template v-if="map.collection">, {{ map.children.length }} parts</template>
-              </li>
-              <li><Icon icon="file">{{ formatSize(map.filesize) }}</Icon></li>
-              <li><Icon icon="clock">Updated {{ getRelDate(map.collection ? map.children[0].workshop?.lastUpdated : map.workshop?.lastUpdated) }}</Icon></li>
-              <template v-if="getStats(map)">
-                <li><Icon icon="gamepad">Played {{ getStats(map).gamesPlayed.toLocaleString() }} times</Icon></li>
-              </template>
-            </ul>
+          <div :class="cardSizeIndex > 0 ? ['columns','is-multiline'] : []">
+            <div :class="cardSizeIndex > 0 ? ['column'] : []">
+              <ul>
+                <li>
+                  <Icon icon="clock">Updated
+                    {{ getRelDate(map.collection ? map.children[0].workshop?.lastUpdated : map.workshop?.lastUpdated) }}</Icon>
+                </li>
+                <template v-if="getStats(map)">
+                  <li>
+                    <Icon icon="clock">Played
+                      {{ getRelDate(getStats(map).lastPlayedTime) }}
+                    </Icon>
+                  </li>
+                  <li>
+                    <Icon icon="gamepad">Played {{ getStats(map).gamesPlayed.toLocaleString() }} times</Icon>
+                  </li>
+                </template>
+              </ul>
+            </div>
+            <div :class="cardSizeIndex > 0 ? ['column','is-4','has-text-right'] : []">
+              <ul>
+                <li>
+                  <Icon icon="file">{{ formatSize(map.filesize) }}</Icon>
+                </li>
+                <li>{{ map.chapterIds.length }} chapters</li>
+                <li v-if="map.collection">{{ map.children.length }} parts</li>
+              </ul>
+            </div>
           </div>
         </div>
       </div>
