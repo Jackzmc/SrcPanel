@@ -6,7 +6,7 @@
       <div class="column px-0 mx-90">
         <template v-if="shareInfo">
           <FileList :share-info="shareInfo" :addons="addons" v-if="shareInfo && viewMode === 'files'" />
-          <MapList :share-info="shareInfo" :addons="addons" v-if="shareInfo && viewMode === 'maps'" />
+          <MapList :share-info="shareInfo" :addons="addons" :map-stats="mapStats" v-else-if="shareInfo && viewMode === 'maps'" />
           <div class="has-text-centered box has-background-warning-light" v-else>
             <p class="title is-4 mt-4">
               Unknown view mode
@@ -108,6 +108,7 @@ const router = useRouter()
 
 
 let addons: any[] = []
+let mapStats = ref<Record<string, any>>({})
 let ready = ref(false)
 let search = ref<any>()
 let prefetch = ref<any>()
@@ -387,6 +388,22 @@ async function fetchAddons() {
     }
   } catch(err: any) {
     error.value = err.message || err
+  }
+}
+async function fetchMapStats() {
+  try {
+    // TODO: fetch 'stats.jackz.me' from panel settings
+    const response = await fetch(`https://stats.jackz.me/api/maps`)
+    if(response.ok) {
+      const json = await response.json()
+      let rc: Record<string, any> = {}
+      for(const row of json) {
+        rc[row.map.id] = row
+      }
+      mapStats.value = rc
+    }
+  } catch(err) {
+    console.error("Failed to fetch map statistics:", err)
   }
 }
 function formatAddonEntryEnabledOn(entry: any) {

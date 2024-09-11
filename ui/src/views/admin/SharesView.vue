@@ -4,7 +4,7 @@
     <h4 class="title is-4">Select a share</h4>
     <div class="columns">
       <div class="column is-6" v-for="share in shares" :key="share.id">
-        <router-link class="box has-background-info-light" :to="{name: 'share-files', params: { shareId: share.id }}">
+        <router-link class="box has-background-info-light" :to="{name: 'admin-share-detail', params: { shareId: share.id, viewMode: 'files' }}">
           <h4 class="title is-4">{{ share.name }} <span v-if="share.appid" data-tooltip="The steam appid for this share"
               class="tag is-dark is-pulled-right">{{ share.appid }}</span></h4>
           <p class="subtitle is-6">{{ share.description ?? '&nbsp;' }}</p>
