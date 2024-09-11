@@ -146,6 +146,7 @@ async function _setShare(shareId: string) {
     selectedShare.value = shareId
     await fetchAddons()
     openSelectedAddon()
+    await fetchMapStats()
   }
 }
 watch(() => route.name, (name) => {

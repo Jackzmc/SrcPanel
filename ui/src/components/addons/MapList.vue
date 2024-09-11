@@ -210,7 +210,7 @@ function formatDescription(content: string) {
   return output
 }
 function getStats(map: any) {
-  const lastChapter = map.chapterIds?.slice(-1)
+  const lastChapter = map.chapterIds?.at(-1)
   if(!lastChapter) return
   return props.mapStats[lastChapter]
 }
