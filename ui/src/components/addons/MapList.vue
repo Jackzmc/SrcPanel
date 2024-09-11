@@ -49,7 +49,7 @@
         <div class="card-image">
           <figure class="image is-5by3">
             <router-link :to="getRoute(map)">
-              <LazyImage observer :src="(map.collection ? map.children[0] : map).workshop?.previewUrl" placeholder-src="/img/WorkshopImageFallback.svg" />
+              <LazyImage observer :src="(map.collection ? map.children[0] : map).workshop?.previewUrl" placeholder-src="/img/no-map-image.svg" />
               <!-- <span class="rating-overlay" v-if="getStats(map)">
                 <Icon icon="fa-star" size="sm" v-for="i in Number(getStats(map).avgRating)" :key="i"></Icon>
               </span> -->
@@ -68,7 +68,10 @@
                     <Icon icon="fa-star" size="sm" v-for="i in Number(getStats(map).avgRating)" :key="i"></Icon>
                  </span> -->
               </p>
-              <p class="subtitle is-6" v-if="cardSizeIndex > 0">
+              <p class="subtitle is-6" v-if="map.workshop?.deleted">
+                Addon has been removed from Steam Workshop.
+              </p>
+              <p class="subtitle is-6" v-else-if="cardSizeIndex > 0">
                 {{ formatDescription((map.collection ? map.children[0] : map).workshop?.description) }}
               </p>
             </div>
@@ -78,8 +81,11 @@
             <div :class="cardSizeIndex > 0 ? ['column'] : []">
               <ul>
                 <li>
-                  <Icon icon="clock">Updated
-                    {{ getRelDate(map.collection ? map.children[0].workshop?.lastUpdated : map.workshop?.lastUpdated) }}</Icon>
+                  <Icon icon="clock"  v-if="map.workshop || map.collection">Updated {{ getRelDate((map.collection ? map.children[0].workshop?.lastUpdated : map.workshop?.lastUpdated) ?? map.lastUpdated) }}</Icon>
+                  <!-- no workshop data, not collection, fallback to file info: -->
+                  <Icon icon="clock" v-else>Downloaded
+                    {{ getRelDate(map.lastUpdated) }}
+                  </Icon>
                 </li>
                 <template v-if="getStats(map)">
                   <li>
