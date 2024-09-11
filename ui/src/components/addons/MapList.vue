@@ -3,9 +3,43 @@
   <div class="notification is-warning is-light">
     <strong>Notice:</strong> This view is under development and may not have full functionality.
   </div>
+  <div class="columns">
+    <div class="column">
+      <Field icon-left="search" style="float: bottom">
+        <input type="text" class="input" placeholder="Search maps" v-model="search" @input="filterAndSortDebounce" />
+      </Field>
+    </div>
+    <div class="column"></div>
+    <div class="column">
+      <div class="field is-horizontal">
+        <div class="field-label is-normal">
+          <label class="label">Sort By</label>
+        </div>
+        <div class="field-body">
+          <Field>
+            <div class="select">
+              <select v-model="sort.id">
+                <option v-for="(data, id) in SORT_OPTIONS" :key="id" :value="id">
+                {{data.label}}
+                </option>
+              </select>
+            </div>
+          </Field>
+          <Field>
+            <div class="select">
+              <select v-model="sort.descending">
+                <option :value="false">(↑) Ascending</option>
+                <option :value="true">(↓) Descending</option>
+              </select>
+            </div>
+          </Field>
+        </div>
+      </div>
+    </div>
+  </div>
   <div class="columns is-multiline is-1">
     <div class="column is-4 is-flex" v-for="map in filteredAddons" :key="map.filename">
-      <div class="card">
+      <div class="card is-fullwidth">
         <div class="card-image">
           <figure class="image is-5by3">
             <router-link :to="getRoute(map)">
@@ -62,6 +96,47 @@ export interface AddonUpdatePayload {
 const route = useRoute()
 const router = useRouter()
 
+const SORT_OPTIONS: Record<string, { label: string, sortFn: (a: any, b: any) => number }> = {
+  none: {
+    label: "None",
+    sortFn: ( a, b) => 0
+  },
+  lastUpdated: {
+    label: "Last Updated",
+    sortFn: (a, b) => a.lastUpdated - b.lastUpdated
+  },
+  gamesPlayed: {
+    label: "Games Played",
+    sortFn: (a, b) => {
+      const aStats = getStats(a)
+      const bStats = getStats(b)
+      if(!aStats && !bStats) return 0
+      if(!aStats) return -1
+      if(!bStats) return 1
+      return aStats.gamesPlayed - bStats.gamesPlayed
+    }
+  },
+  rating: {
+    label: "Rating",
+    sortFn: (a, b) => {
+      const aStats = getStats(a)
+      const bStats = getStats(b)
+      if(!aStats && !bStats) return 0
+      if(!aStats) return -1
+      if(!bStats) return 1
+      return Number(aStats.avgRating) - Number(bStats.avgRating)
+    }
+  },
+  title: {
+    label: "Title",
+    sortFn: (a, b) => {
+      const aName: string = a.collection?.name ?? a.workshop?.title ?? a.filename
+      const bName: string = b.collection?.name ?? b.workshop?.title ?? b.filename
+      return aName.localeCompare(bName)
+    }
+  }
+}
+
 let addonImageLoaded = ref<Record<string, boolean>>({})
 // TODO: pull from stats api
 let mapStatsInfo = ref<Record<string, any>>()
@@ -71,9 +146,8 @@ let error = ref<string>()
 let hasAnyWorkshop = ref(false)
 let sort = ref<{
   id: string,
-  func: Function,
   descending: boolean
-} | undefined>()
+}>({ id: "none", descending: false })
 
 const props = defineProps<{
   shareInfo: ShareInfo,
@@ -134,48 +208,21 @@ function openSelectedAddon() {
 
 const computedTotalFileSize = ref<number>(0)
 
-const sortSymbol = computed(() => {
-  if(!sort.value) return ''
-  else if(sort.value.descending) return '(↓)'
-  else return '(↑)'
-})
-function setSort(id: string, column: string) {
-  setSortFunc(id, (a: any, b: any) => {
-    if(!a[column] || !b[column]) return 0
-    return a[column][id] - b[column][id]
-  })
-}
-function setSortFunc(id: string, sortFunc: Function) {
-  if(sort.value && (!sort.value.descending || sort.value.id != id)) sort.value = undefined
-  else if(sort.value) {
-    sort.value.descending = false
-  } else {
-    sort.value = {
-      func: sortFunc,
-      id,
-      descending: true
-    }
-  }
-  filterAndSortDebounce()
-}
+watch(() => sort.value.id, filterAndSort)
+watch(() => sort.value.descending, filterAndSort)
 const filteredAddons = shallowRef<any[]>([])
 function filterAndSort() {
   const query = search.value?.toLowerCase()
-  let _sort = (a: any, b: any) => { return 0 }
-  if(sort.value) {
-    _sort = (a: any, b: any) => {
-      // Use the collection's first child for sorting
-      if(a.collection && a.children.length > 0) a = a.children[0]
-      if(b.collection && b.children.length > 0) b = b.children[0]
-
-      const { id, descending, func } = sort.value! as { column: string, id: string, descending: boolean, func: Function }
-      if(descending) {
-        return func(b, a)
-      } else {
-        return func(a, b)
-      }
+  const sortFn = SORT_OPTIONS[sort.value.id].sortFn
+  let _sort = (a: any, b: any) => {
+    if(sort.value.descending) {
+      return sortFn(b, a)
+    } else {
+      return sortFn(a, b)
     }
   }
+  console.log(`sorting ${sort.value.id} desc=${sort.value.descending}`)
+  // Filter only maps
   let filtered = props.addons.filter(addon => addon.chapterIds)
   if(query) {
     filtered = filtered.filter(addon => {
@@ -310,7 +357,7 @@ onMounted(async() => {
 
 </script>
 
-<style scope>
+<style scoped>
 .column-separator {
   border-left: solid 1px !important;
 }
@@ -321,5 +368,8 @@ td {
 
 .collection-row {
   background-color: rgb(243, 244, 246);
+}
+.card.is-fullwidth {
+  width: 100%;
 }
 </style>
