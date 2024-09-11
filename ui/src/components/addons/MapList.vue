@@ -1,8 +1,5 @@
 <template>
 <div>
-  <div class="notification is-warning is-light">
-    <strong>Notice:</strong> This view is under development and may not have full functionality.
-  </div>
   <div class="columns">
     <div class="column">
       <Field icon-left="search" style="float: bottom">
