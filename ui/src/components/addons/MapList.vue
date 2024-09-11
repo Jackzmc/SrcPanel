@@ -9,7 +9,7 @@
         <div class="card-image">
           <figure class="image is-5by3">
             <router-link :to="getRoute(map)">
-              <LazyImage :src="(map.collection ? map.children[0] : map)?.workshop.previewUrl" placeholder-src="/img/WorkshopImageFallback.svg" />
+              <LazyImage observer :src="(map.collection ? map.children[0] : map).workshop?.previewUrl" placeholder-src="/img/WorkshopImageFallback.svg" />
             </router-link>
           </figure>
         </div>
