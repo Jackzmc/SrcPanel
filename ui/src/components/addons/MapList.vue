@@ -27,9 +27,9 @@
           </Field>
           <Field>
             <div class="select">
-              <select v-model="sort.descending">
-                <option :value="false">(↑) Ascending</option>
-                <option :value="true">(↓) Descending</option>
+              <select v-model="sort.direction">
+                <option :value="SortDirection.Ascending">(↑) Ascending</option>
+                <option :value="SortDirection.Descending">(↓) Descending</option>
               </select>
             </div>
           </Field>
@@ -96,17 +96,21 @@ export interface AddonUpdatePayload {
 const route = useRoute()
 const router = useRouter()
 
-const SORT_OPTIONS: Record<string, { label: string, sortFn: (a: any, b: any) => number }> = {
+enum SortDirection { Ascending, Descending }
+const SORT_OPTIONS: Record<string, { label: string, sortFn: (a: any, b: any) => number, defaultDirection: SortDirection }> = {
   none: {
     label: "None",
+    defaultDirection: SortDirection.Ascending,
     sortFn: ( a, b) => 0
   },
   lastUpdated: {
     label: "Last Updated",
+    defaultDirection: SortDirection.Descending,
     sortFn: (a, b) => a.lastUpdated - b.lastUpdated
   },
   gamesPlayed: {
     label: "Games Played",
+    defaultDirection: SortDirection.Descending,
     sortFn: (a, b) => {
       const aStats = getStats(a)
       const bStats = getStats(b)
@@ -118,6 +122,7 @@ const SORT_OPTIONS: Record<string, { label: string, sortFn: (a: any, b: any) => 
   },
   rating: {
     label: "Rating",
+    defaultDirection: SortDirection.Descending,
     sortFn: (a, b) => {
       const aStats = getStats(a)
       const bStats = getStats(b)
@@ -129,6 +134,7 @@ const SORT_OPTIONS: Record<string, { label: string, sortFn: (a: any, b: any) => 
   },
   title: {
     label: "Title",
+    defaultDirection: SortDirection.Ascending,
     sortFn: (a, b) => {
       const aName: string = a.collection?.name ?? a.workshop?.title ?? a.filename
       const bName: string = b.collection?.name ?? b.workshop?.title ?? b.filename
@@ -137,17 +143,14 @@ const SORT_OPTIONS: Record<string, { label: string, sortFn: (a: any, b: any) => 
   }
 }
 
-let addonImageLoaded = ref<Record<string, boolean>>({})
-// TODO: pull from stats api
-let mapStatsInfo = ref<Record<string, any>>()
 let search = ref<any>()
 let prefetch = ref<any>()
 let error = ref<string>()
 let hasAnyWorkshop = ref(false)
 let sort = ref<{
   id: string,
-  descending: boolean
-}>({ id: "none", descending: false })
+  direction: SortDirection,
+}>({ id: "none", direction: SortDirection.Ascending })
 
 const props = defineProps<{
   shareInfo: ShareInfo,
@@ -208,20 +211,19 @@ function openSelectedAddon() {
 
 const computedTotalFileSize = ref<number>(0)
 
-watch(() => sort.value.id, filterAndSort)
-watch(() => sort.value.descending, filterAndSort)
+watch(() => sort.value.id, () => {
+  sort.value.direction = SORT_OPTIONS[sort.value.id].defaultDirection
+  // changing direction triggers sort:
+  // filterAndSort()
+})
+watch(() => sort.value.direction, filterAndSort)
 const filteredAddons = shallowRef<any[]>([])
 function filterAndSort() {
   const query = search.value?.toLowerCase()
   const sortFn = SORT_OPTIONS[sort.value.id].sortFn
   let _sort = (a: any, b: any) => {
-    if(sort.value.descending) {
-      return sortFn(b, a)
-    } else {
-      return sortFn(a, b)
-    }
+    return sort.value.direction === SortDirection.Ascending ? sortFn(a, b) : sortFn(b, a)
   }
-  console.log(`sorting ${sort.value.id} desc=${sort.value.descending}`)
   // Filter only maps
   let filtered = props.addons.filter(addon => addon.chapterIds)
   if(query) {
