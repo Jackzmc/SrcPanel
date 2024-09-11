@@ -9,11 +9,7 @@
         <div class="card-image">
           <figure class="image is-5by3">
             <router-link :to="getRoute(map)">
-              <img v-if="map.workshop" alt="The workshop addon's uploaded image preview" :src="map.workshop.previewUrl"
-                @load="addonImageLoaded[map.filename ?? map.collection.id] = true" />
-              <img v-else-if="map.collection" alt="The workshop addon's uploaded image preview" :src="map.children[0].workshop.previewUrl"
-                @load="addonImageLoaded[map.filename ?? map.collection.id] = true" />
-              <img v-if="!addonImageLoaded[map.filename ?? map.collection.id]" src="@/assets/WorkshopImageFallback.svg" />
+              <LazyImage :src="(map.collection ? map.children[0] : map)?.workshop.previewUrl" placeholder-src="/img/WorkshopImageFallback.svg" />
             </router-link>
           </figure>
         </div>
@@ -51,6 +47,7 @@ import { formatDate, formatSize, getRelDate } from '@/js/util.js'
 import { ShareInfo, WorkshopItem } from '../../../../common-types/Share';
 import debounce from '@/js/debounce.js';
 import { notify } from '@kyvg/vue3-notification';
+import LazyImage from '../LazyImage.vue';
 
 export interface AddonUpdatePayload {
   deleted?: boolean,
