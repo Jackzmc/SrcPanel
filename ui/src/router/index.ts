@@ -166,50 +166,67 @@ const routes = [
       authRequired: true
     }
   },
-  // Need to make separate route because we can't have a child without a component
-  {
-    name: 'list-addons',
-    path: '/admin/shares/:shareId?/files/:fileid?',
-    component: () => import('../views/admin/ServerAddonsView.vue'),
-    meta: {
-      title: 'Addons / Files',
-      description: 'View all the installed custom maps (and some non-map addons)',
-      authRequired: true
-    },
-  },
   {
     name: 'admin-shares',
-    path: '/admin/shares/:shareId?/',
-    component: () => import('../views/admin/ServerAddonsView.vue'),
+    path: '/admin/shares',
+    component: () => import('../views/admin/SharesView.vue'),
+    meta: {
+      title: 'Shares',
+      description: 'View all the installed custom maps (and some non-map addons)',
+      authRequired: true
+    }
+  },
+  {
+    name: 'admin-share-detail',
+    path: '/admin/shares/:shareId/:viewMode',
+    component: () => import('../views/admin/ShareDetails.vue'),
     meta: {
       title: 'Addons / Files',
       description: 'View all the installed custom maps (and some non-map addons)',
       authRequired: true
     },
     children: [
+      // {
+      //   name: "share-files",
+      //   path: "files",
+      //   component: () => import('../components/addons/FileList.vue'),
+      // },
+      // {
+      //   name: "share-maps",
+      //   path: "maps",
+      //   component: () => import('../components/addons/FileList.vue'),
+      // },
       {
         name: "upload-addon",
         path: 'upload',
-        component: () => import('../components/addons/modals/UploadModal.vue')
+        component: () => import('../components/addons/modals/UploadModal.vue'),
+        meta: {
+          modal: true
+        }
       },
       {
         name: "workshop-download",
         path: 'workshop-download/:url?',
-        component: () => import('../components/addons/modals/WorkshopDownloadModal.vue')
+        component: () => import('../components/addons/modals/WorkshopDownloadModal.vue'),
+        meta: {
+          modal: true
+        }
       },
       {
         name: "collection-info",
         path: 'collections/:collection/:title?',
         meta: {
-          needsPrefetch: true
+          needsPrefetch: true,
+          modal: true
         },
         component: () => import('../components/addons/modals/CollectionInfoModal.vue')
       },
       {
         name: "file-info",
-        path: 'file/:addon',
+        path: ':addon',
         meta: {
-          needsPrefetch: true
+          needsPrefetch: true,
+          modal: true
         },
         component: () => import('../components/addons/modals/AddonInfoModal.vue')
       }
