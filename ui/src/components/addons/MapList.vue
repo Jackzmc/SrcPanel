@@ -9,7 +9,16 @@
         <input type="text" class="input" placeholder="Search maps" v-model="search" @input="filterAndSortDebounce" />
       </Field>
     </div>
-    <div class="column"></div>
+    <div class="column">
+      <div class="field is-horizontal">
+        <div class="field-label is-normal">
+          <label class="label">Size</label>
+        </div>
+        <div class="field-body">
+          <input type="range" id="volume" name="volume" min="0" :max="CARD_SIZES.length - 1" v-model="cardSizeIndex" />
+        </div>
+      </div>
+    </div>
     <div class="column">
       <div class="field is-horizontal">
         <div class="field-label is-normal">
@@ -38,25 +47,31 @@
     </div>
   </div>
   <div class="columns is-multiline is-1">
-    <div class="column is-4 is-flex" v-for="map in filteredAddons" :key="map.filename">
+    <div :class="['column','is-flex',cardSizeClass]" v-for="map in filteredAddons" :key="map.filename">
       <div class="card is-fullwidth">
         <div class="card-image">
           <figure class="image is-5by3">
             <router-link :to="getRoute(map)">
               <LazyImage observer :src="(map.collection ? map.children[0] : map).workshop?.previewUrl" placeholder-src="/img/WorkshopImageFallback.svg" />
+              <!-- <span class="rating-overlay" v-if="getStats(map)">
+                <Icon icon="fa-star" size="sm" v-for="i in Number(getStats(map).avgRating)" :key="i"></Icon>
+              </span> -->
+              <span class="rating-overlay" v-if="getStats(map)">
+                {{ Number(getStats(map).avgRating) }} <Icon icon="fa-star"></Icon>
+              </span>
             </router-link>
           </figure>
         </div>
         <div class="card-content">
           <div class="media">
             <div class="media-content">
-              <p class="title is-4"><router-link :to="getRoute(map)">{{ map.collection?.name ?? map.workshop?.title ?? map.filename }}</router-link>
-                <span class="ml-2 tag is-black is-medium" v-if="map.collection">Collection</span>
-                 <span class="is-pulled-right" v-if="getStats(map)">
+              <p class="title is-5"><router-link :to="getRoute(map)">{{ map.collection?.name ?? map.workshop?.title ?? map.filename }}</router-link>
+                <span class="ml-2 tag is-black" v-if="map.collection">Collection</span>
+                 <!-- <span class="is-pulled-right" v-if="getStats(map)">
                     <Icon icon="fa-star" size="sm" v-for="i in Number(getStats(map).avgRating)" :key="i"></Icon>
-                 </span>
+                 </span> -->
               </p>
-              <p class="subtitle is-6">
+              <p class="subtitle is-6" v-if="cardSizeIndex > 0">
                 {{ formatDescription((map.collection ? map.children[0] : map).workshop?.description) }}
               </p>
             </div>
@@ -64,11 +79,12 @@
 
           <div class="">
             <ul>
-              <li>{{ map.chapterIds.length }} chapters</li>
-              <li>{{ formatSize(map.filesize) }}</li>
-              <li>Updated {{ getRelDate(map.collection ? map.children[0].workshop?.lastUpdated : map.workshop?.lastUpdated) }}</li>
+              <li>{{ map.chapterIds.length }} chapters<template v-if="map.collection">, {{ map.children.length }} parts</template>
+              </li>
+              <li><Icon icon="file">{{ formatSize(map.filesize) }}</Icon></li>
+              <li><Icon icon="clock">Updated {{ getRelDate(map.collection ? map.children[0].workshop?.lastUpdated : map.workshop?.lastUpdated) }}</Icon></li>
               <template v-if="getStats(map)">
-                <li>Played {{ getStats(map).gamesPlayed.toLocaleString() }} times</li>
+                <li><Icon icon="gamepad">Played {{ getStats(map).gamesPlayed.toLocaleString() }} times</Icon></li>
               </template>
             </ul>
           </div>
@@ -99,7 +115,7 @@ const router = useRouter()
 enum SortDirection { Ascending, Descending }
 const SORT_OPTIONS: Record<string, { label: string, sortFn: (a: any, b: any) => number, defaultDirection: SortDirection }> = {
   none: {
-    label: "None",
+    label: "Default",
     defaultDirection: SortDirection.Ascending,
     sortFn: ( a, b) => 0
   },
@@ -142,6 +158,7 @@ const SORT_OPTIONS: Record<string, { label: string, sortFn: (a: any, b: any) => 
     }
   }
 }
+const CARD_SIZES = ["is-3", "is-4", "is-6", "is-12"]
 
 let search = ref<any>()
 let prefetch = ref<any>()
@@ -151,6 +168,11 @@ let sort = ref<{
   id: string,
   direction: SortDirection,
 }>({ id: "none", direction: SortDirection.Ascending })
+let cardSizeIndex = ref<number>(1)
+
+const cardSizeClass = computed(() => {
+  return CARD_SIZES[cardSizeIndex.value]
+})
 
 const props = defineProps<{
   shareInfo: ShareInfo,
@@ -373,5 +395,15 @@ td {
 }
 .card.is-fullwidth {
   width: 100%;
+}
+.rating-overlay {
+  position: absolute;
+  top: 0;
+  right: 0;
+  color: white;
+  padding: 5px;
+  box-shadow: 4px #000;
+  background-color: rgba(0, 0, 0, 0.7)
+  /* background-color: rgba(255, 255, 255, 0.2) */
 }
 </style>
