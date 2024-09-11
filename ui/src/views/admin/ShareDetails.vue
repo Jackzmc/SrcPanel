@@ -25,7 +25,7 @@
       </div>
       <div class="column is-3">
         <div class="box">
-          <h5 class="title is-4" v-if="ready">{{filteredAddons.length}} total files
+          <h5 class="title is-4" v-if="ready">{{ shownFileCount }} files
               <a class="button is-info is-pulled-right is-inline" @click="fetchAddons()" :disabled="ready ? undefined : true">
                 <Icon icon="fa-sync"></Icon>
               </a>
@@ -85,40 +85,15 @@ export interface AddonUpdatePayload {
   installInfo?: Record<string, boolean>
 }
 
-/// SORT FUNCTIONS
-const SORT_NAME = (a: any, b: any) => {
-  return (a.workshop?.title ?? a.filename).localeCompare(b.workshop?.title ?? b.filename)
-}
-const SORT_FILE_SIZE = (a: any, b: any) => {
-  return (a.filesize ?? a.workshop.filesize) - (b.filesize ?? b.workshop.filesize)
-}
-const SORT_WORKSHOP = (a: any, b: any) => {
-  if(a.workshop && !b.workshop) return 1
-  else if(!a.workshop && b.workshop) return -1
-  return 0
-}
-const SORT_LAST_UPDATED = (a: any, b: any) => {
-  return (a.workshop?.lastUpdated ?? a.lastModified) - (b.workshop?.lastUpdated ?? b.lastModified)
-}
-const SORT_DOWNLOADED = (a: any, b: any) => {
-  return (a.downloaded) - (b.downloaded)
-}
 const route = useRoute()
 const router = useRouter()
 
-
-let addons: any[] = []
+let addons = ref<any[]>([])
 let mapStats = ref<Record<string, any>>({})
 let ready = ref(false)
-let search = ref<any>()
 let prefetch = ref<any>()
 let error = ref<string>()
 let hasAnyWorkshop = ref(false)
-let sort = ref<{
-  id: string,
-  func: Function,
-  descending: boolean
-} | undefined>()
 
 // Use for <select> element, to change route
 let selectedShare = ref<string>()
@@ -153,8 +128,7 @@ watch(() => route.name, (name) => {
   if(route.name === "admin-shares") {
     ready.value = false
     error.value = undefined
-    addons = []
-    filteredAddons.value = []
+    addons.value = []
     prefetch.value = undefined
   } else if(route.name === "list-addons") {
     prefetch.value = undefined
@@ -166,10 +140,10 @@ watch(() => route.name, (name) => {
 watch(() => route.params.addon, openSelectedAddon)
 function openSelectedAddon() {
   if(route.name === "collection-info") {
-    prefetch.value = addons.find(addon => addon.collection?.id === route.params.collection)
+    prefetch.value = addons.value.find(addon => addon.collection?.id === route.params.collection)
   } else if(route.name === "file-info") {
     let addon = undefined
-    for(const item of addons) {
+    for(const item of addons.value) {
       if(item.children) {
         const child = item.children.find((child: WorkshopItem) => {
           return child.filename === route.params.addon
@@ -198,7 +172,6 @@ function openSelectedAddon() {
 
 let shares = ref<ShareInfo[]>([])
 let shareInfo = ref()
-const computedTotalFileSize = ref<number>(0)
 
 const viewMode = computed({
   get() {
@@ -215,126 +188,30 @@ const viewMode = computed({
   }
 })
 
-const sortSymbol = computed(() => {
-  if(!sort.value) return ''
-  else if(sort.value.descending) return '(↓)'
-  else return '(↑)'
+const shownFileCount = computed(() => {
+  if(!addons.value) return 0
+  if(viewMode.value === "maps")
+    return addons.value.filter(a => a.chapterIds).length
+  else
+    return addons.value.length
 })
-function setSort(id: string, column: string) {
-  setSortFunc(id, (a: any, b: any) => {
-    if(!a[column] || !b[column]) return 0
-    return a[column][id] - b[column][id]
-  })
-}
-function setSortFunc(id: string, sortFunc: Function) {
-  if(sort.value && (!sort.value.descending || sort.value.id != id)) sort.value = undefined
-  else if(sort.value) {
-    sort.value.descending = false
-  } else {
-    sort.value = {
-      func: sortFunc,
-      id,
-      descending: true
-    }
-  }
-  filterAndSortDebounce()
-}
-const filteredAddons = shallowRef<any[]>([])
-function filterAndSort() {
-  const query = search.value?.toLowerCase()
-  let _sort = (a: any, b: any) => { return 0 }
-  if(sort.value) {
-    _sort = (a: any, b: any) => {
-      // Use the collection's first child for sorting
-      if(a.collection && a.children.length > 0) a = a.children[0]
-      if(b.collection && b.children.length > 0) b = b.children[0]
-
-      const { id, descending, func } = sort.value! as { column: string, id: string, descending: boolean, func: Function }
-      if(descending) {
-        return func(b, a)
-      } else {
-        return func(a, b)
-      }
-    }
-  }
-  let filtered
-  if(query) {
-    filtered = addons.filter(addon => {
-      // Search the collection's name and it's children instead:
-      if(addon.collection) {
-        return addon.collection.name.toLowerCase().includes(query)
-        || addon.children.some((child: any) => child.filename.toLowerCase().includes(query)
-        || (child.workshop && child.workshop.title.toLowerCase().includes(query)))
-      }
-      return (addon.filename.toLowerCase().includes(query)
-        || (addon.workshop && addon.workshop.title.toLowerCase().includes(query))
-      )
-    })
-  } else {
-    filtered = addons
-  }
-
-  let totalSize = 0
-  for(const entry of filtered) {
-    const size = entry.workshop ? entry.workshop.filesize : entry.filesize
-    if(!isNaN(size))
-      totalSize += Number(size)
-    else
-      console.warn('no size', entry)
-  }
-  computedTotalFileSize.value = totalSize
-  filteredAddons.value = markRaw(filtered.sort(_sort))
-}
-const filterAndSortDebounce = debounce(filterAndSort, 400)
-
-function getRoute(entry: any) {
-  if(entry.collection) {
-    return {
-      name: "collection-info",
-      params: {
-        shareId: route.params.shareId,
-        collection: entry.collection.id,
-        title: entry.collection.title
-      }
-    }
-  } else {
-    return {
-      name: "file-info",
-      params: {
-        shareId: route.params.shareId,
-        addon: entry.filename,
-      }
-    }
-  }
-}
-
-function getTooltip(addon: any) {
-  if(!addon.enabledOn) {
-    console.warn('missing enabledOn', { ... addon })
-  }
-  if(addon.enabledOn?.length > 0) {
-    return `Filename: ${addon.filename}\nEnabled on:\n\t${addon.enabledOn.join("\n\t")}`
-  } else {
-    return `Filename: ${addon.filename}\nNot enabled on any servers`
-  }
-}
 
 async function onChildUpdate(payload: AddonUpdatePayload) {
   if(payload.deleted) {
-    for(let i = 0; i < addons.length; i++) {
-      if(prefetch.value.filename === addons[i].filename) {
-        addons.splice(i, 1)
+    for(let i = 0; i < addons.value.length; i++) {
+      if(prefetch.value.filename === addons.value[i].filename) {
+        addons.value.splice(i, 1)
         console.debug('deleted entry')
         prefetch.value = undefined
         break;
       }
     }
   } else if(payload.installInfo) {
-    for(let i = 0; i < addons.length; i++) {
-      if(prefetch.value.filename === addons[i].filename) {
-        console.debug('updated entry', Object.assign({}, addons[i].installInfo), Object.assign({}, payload.installInfo))
-        addons[i].installInfo = payload.installInfo
-        formatAddonEntryEnabledOn(addons[i])
+    for(let i = 0; i < addons.value.length; i++) {
+      if(prefetch.value.filename === addons.value[i].filename) {
+        console.debug('updated entry', Object.assign({}, addons.value[i].installInfo), Object.assign({}, payload.installInfo))
+        addons.value[i].installInfo = payload.installInfo
+        formatAddonEntryEnabledOn(addons.value[i])
         break;
       }
     }
@@ -374,16 +251,15 @@ async function fetchAddons() {
   ready.value = false
   error.value = undefined
   shareInfo.value = undefined
-  addons = []
+  addons.value = []
   hasAnyWorkshop.value = false
   try {
     const response = await fetch(`/api/shares/${route.params.shareId}/addons`)
     const json = await response.json()
     if(response.ok) {
       shareInfo.value = json.shareInfo
-      addons = json.addons.map((entry: any) => formatAddonEntry(entry))
+      addons.value = json.addons.map((entry: any) => formatAddonEntry(entry))
       ready.value = true
-      filterAndSort()
     } else {
       error.value = json.error ? `${json.error}: ${json.message}` : response.statusText
     }
