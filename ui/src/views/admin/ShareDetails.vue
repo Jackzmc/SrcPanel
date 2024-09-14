@@ -8,8 +8,8 @@
     <div class="columns">
       <div class="column px-0 mx-90">
         <template v-if="shareInfo">
-          <FileList :share-info="shareInfo" :addons="addons" v-if="shareInfo && viewMode === 'files'" />
-          <MapList :share-info="shareInfo" :addons="addons" :map-stats="mapStats" v-else-if="shareInfo && viewMode === 'maps'" />
+          <FileList :share-info="shareInfo" :addons="addons" v-if="viewMode === 'files'" />
+          <MapList :share-info="shareInfo" :addons="addons" :map-stats="mapStats" v-else-if="viewMode === 'maps'" />
           <div class="has-text-centered box has-background-warning-light" v-else>
             <p class="title is-4 mt-4">
               Unknown view mode
@@ -82,6 +82,13 @@ import debounce from '@/js/debounce.js';
 import { notify } from '@kyvg/vue3-notification';
 import FileList from '@/components/addons/FileList.vue';
 import MapList from '@/components/addons/MapList.vue';
+import { PrivilegedUser } from '@/js/User.js';
+import { PanelMetaInfo } from '../../../../common-types/Panel.js';
+
+const props = defineProps<{
+  privUser: PrivilegedUser,
+  meta?: PanelMetaInfo
+}>()
 
 export interface AddonUpdatePayload {
   deleted?: boolean,
@@ -92,7 +99,7 @@ const route = useRoute()
 const router = useRouter()
 
 let addons = ref<any[]>([])
-let mapStats = ref<Record<string, any>>({})
+let mapStats = ref<Record<string, any>>()
 let ready = ref(false)
 let prefetch = ref<any>()
 let error = ref<string>()
@@ -124,9 +131,13 @@ async function _setShare(shareId: string) {
     selectedShare.value = shareId
     await fetchAddons()
     openSelectedAddon()
-    await fetchMapStats()
   }
 }
+watch(() => props.meta, async() => {
+  if(props.meta) {
+    await fetchMapStats()
+  }
+}, { deep: true })
 watch(() => route.name, (name) => {
   if(route.name === "admin-shares") {
     ready.value = false
@@ -272,8 +283,9 @@ async function fetchAddons() {
 }
 async function fetchMapStats() {
   try {
-    // TODO: fetch 'stats.jackz.me' from panel settings
-    const response = await fetch(`https://stats.jackz.me/api/maps`)
+    if(!props.meta || mapStats.value) return // props.meta should always be set, but just in case. also ignore if we already fetched
+    if(!props.meta!.settings.stats_url) return console.debug(`fetchMapStats: no stats_url set, ignoring`)
+    const response = await fetch(`${props.meta!.settings.stats_url}/api/maps`)
     if(response.ok) {
       const json = await response.json()
       let rc: Record<string, any> = {}

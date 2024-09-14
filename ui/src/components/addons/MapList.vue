@@ -68,8 +68,11 @@
                     <Icon icon="fa-star" size="sm" v-for="i in Number(getStats(map).avgRating)" :key="i"></Icon>
                  </span> -->
               </p>
-              <p class="subtitle is-6" v-if="map.workshop?.deleted">
+              <p class="subtitle is-6" v-if="map.workshop && map.workshop.deleted">
                 Addon has been removed from Steam Workshop.
+              </p>
+              <p class="subtitle is-6" v-else-if="!map.workshop && !map.collection">
+                No workshop information available
               </p>
               <p class="subtitle is-6" v-else-if="cardSizeIndex > 0">
                 {{ formatDescription((map.collection ? map.children[0] : map).workshop?.description) }}
@@ -84,7 +87,7 @@
                   <Icon icon="clock"  v-if="map.workshop || map.collection">Updated {{ getRelDate((map.collection ? map.children[0].workshop?.lastUpdated : map.workshop?.lastUpdated) ?? map.lastUpdated) }}</Icon>
                   <!-- no workshop data, not collection, fallback to file info: -->
                   <Icon icon="clock" v-else>Downloaded
-                    {{ getRelDate(map.lastUpdated) }}
+                    {{ getRelDate(map.downloaded) }}
                   </Icon>
                 </li>
                 <template v-if="getStats(map)">
@@ -198,7 +201,7 @@ const cardSizeClass = computed(() => {
 const props = defineProps<{
   shareInfo: ShareInfo,
   addons: any[],
-  mapStats: Record<string, any>
+  mapStats?: Record<string, any>
 }>()
 
 // Use for <select> element, to change route
@@ -308,6 +311,7 @@ function formatDescription(content: string) {
   return output
 }
 function getStats(map: any) {
+  if(!props.mapStats) return
   const lastChapter = map.chapterIds?.at(-1)
   if(!lastChapter) return
   return props.mapStats[lastChapter]

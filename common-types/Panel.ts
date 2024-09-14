@@ -21,11 +21,14 @@ export const KVConfig: KeysRecords = {
     "discord.link": { type: "url", name: "Discord Invite Link", description: "The link to your discord server" },
     "servers.long_refresh_interval": { flags: KeyFlags.Public, type: "float", name: "Long Refresh Interval", description: "How often in seconds to refresh servers in seconds when no clients are detected", },
     "servers.short_refresh_interval": { flags: KeyFlags.Public, type: "float", name: "Short Refresh Interval", description: "How often in seconds to refresh servers in seconds when clients are detected"},
+    "stats_url": { flags: KeyFlags.Public, type: "url", name: "Stats Url", description: "Link to stats server to fetch stat data from"},
     "_version": { flags: KeyFlags.Internal, type: "string" },
     "first_time_setup.stage": { flags: KeyFlags.Internal, type: "integer" },
 }
 export type ConfigKey = keyof typeof KVConfig //"domain" | "discord.link" | "servers.long_refresh_interval" | "servers.short_refresh_interval"
-export const PublicKeys = Object.entries(KVConfig).filter(([k,v]) => v.flags & KeyFlags.Public).map(([k,v]) => k) as ConfigKey[]
+export const PublicKeys = Object.entries(KVConfig)
+    .filter(([k,v]) => v.flags && (v.flags & KeyFlags.Public))
+    .map(([k,v]) => k) as ConfigKey[]
 
 export interface ApiPanelConfig extends KeyConfig {
     value: string
@@ -47,7 +50,7 @@ export interface HealthReport {
 
 export interface PanelMetaInfo {
     settings: Record<string, any>,
-    steamAvailable: boolean
+    steamAvailable: boolean,
 }
 
 export enum FirstTimeSetupStage {
