@@ -265,9 +265,12 @@ function openSelectedAddon() {
 const computedTotalFileSize = ref<number>(0)
 
 watch(() => sort.value.id, () => {
-  sort.value.direction = SORT_OPTIONS[sort.value.id].defaultDirection
-  // changing direction triggers sort:
-  // filterAndSort()
+  // If direction is the same, then we manually trigger filterSort
+  // Changing direction triggers it manually
+  if(sort.value.direction != SORT_OPTIONS[sort.value.id].defaultDirection)
+    sort.value.direction = SORT_OPTIONS[sort.value.id].defaultDirection
+  else
+    filterAndSort()
 })
 watch(() => sort.value.direction, filterAndSort)
 const filteredAddons = shallowRef<any[]>([])
