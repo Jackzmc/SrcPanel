@@ -180,6 +180,13 @@ const SORT_OPTIONS: Record<string, { label: string, sortFn: (a: any, b: any) => 
       const bName: string = b.collection?.name ?? b.workshop?.title ?? b.filename
       return aName.localeCompare(bName)
     }
+  },
+  random: {
+    label: "Random",
+    defaultDirection: SortDirection.Ascending,
+    sortFn: (a, b) => {
+      return Math.random() ? 1 : -1
+    }
   }
 }
 const CARD_SIZES = ["is-3", "is-4", "is-6", "is-12"]
