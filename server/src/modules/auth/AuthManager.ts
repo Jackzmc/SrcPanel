@@ -15,6 +15,8 @@ import { minimatch } from 'minimatch'
 import { OauthManager } from "./OauthManager.js";
 import ConfigManager from "../ConfigManager.js";
 import { OauthAuthData } from './OauthProvider.js';
+import path from 'path'
+import { readFile, writeFile } from "fs/promises";
 
 interface AddAdmin {
     authtype: "steam" | "name" | "ip",
@@ -64,11 +66,44 @@ export default class AuthManager {
         this.#oauthManager = new OauthManager(this, this.#config)
     }
 
+    async #loadCache() {
+        try {
+            const file = await readFile(path.join(this.#config.DataDirectory, 'auth_cache.json'), 'utf-8')
+            const json = JSON.parse(file)
+            this.groups = json.groups
+            this.admins = json.admins
+            console.info("[AuthManager] Cache loaded successfully")
+        } catch(e) {
+            // Ignore, cache is a bonus
+        }
+    }
+
+    async #saveCache() {
+        try {
+            await writeFile(path.join(this.#config.DataDirectory, 'auth_cache.json'), JSON.stringify({
+                timestamp_ms: Date.now,
+                admins: this.admins,
+                groups: this.groups
+            }))
+        } catch(err) {
+            console.warn(`[AuthManager] WARN: Failed to save auth cache (${err.message})`)
+        }
+    }
+
     get AdminCount() {
         return Object.keys(this.admins).length
     }
 
     async Init() {
+        // Load data from cache (possibly stale), but then load the fresh data in the background
+        
+        await this.#loadCache()
+        // Don't block server starting when loading fresh data:
+        this.FullRefresh()
+    }
+
+    async FullRefresh() {
+        console.log("[AuthManager] Performing full refresh")
         let startTime = Date.now()
         await this.refreshGroups()
         const fetchGroupsTime = Date.now() - startTime
@@ -79,6 +114,7 @@ export default class AuthManager {
 
         console.info(`[AuthManager] Fetched ${Object.keys(this.admins).length} admins in ${(fetchAdminsTime).toFixed(1)} ms`)
         console.info(`[AuthManager] Fetched ${Object.keys(this.groups).length} groups in ${(fetchGroupsTime).toFixed(1)} ms`)
+        await this.#saveCache()
     }
 
     get oauth() {

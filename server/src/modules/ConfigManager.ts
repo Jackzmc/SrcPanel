@@ -12,14 +12,18 @@ export interface RegisteredProvider {
 export default class ConfigManager {
     #db: sqlite.Database<sqlite3.Database, sqlite3.Statement>
     #servers: any[] = null
+    #dataDir: string
 
     public async Load(dataDir: string) {
         this.#db = await open({
             filename: join(dataDir, "config.db"),
             driver: sqlite3.Database
         })
+        this.#dataDir = dataDir
         await this.SetupDatabase()
     }
+
+    public get DataDirectory () { return this.#dataDir }
 
     public async SetupDatabase() {
         const check = await this.#db.get("SELECT count(*) as setup FROM sqlite_master WHERE type='table' AND name='keyvalues'")
