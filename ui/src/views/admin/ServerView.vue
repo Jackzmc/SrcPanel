@@ -637,7 +637,7 @@ const actions = computed(() => {
   return serverInfo.value.actions.filter(action => shiftPressed.value || !action.isHidden)
 })
 const tab = computed(() => {
-  return route.params.tab.length > 0 ? route.params.tab : "overview"
+  return route.params.tab?.length > 0 ? route.params.tab : "overview"
 })
 const mapInfo = computed(() => {
   if(!status.value?.data) return

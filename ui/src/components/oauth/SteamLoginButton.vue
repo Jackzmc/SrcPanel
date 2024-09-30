@@ -1,5 +1,5 @@
 <template>
-  <form method="post" action="https://steamcommunity.com/openid/login">
+  <form method="post" action="https://steamcommunity.com/openid/login" v-if="props.meta">
     <input type="hidden" name="openid.realm" :value="realm" />
     <input type="hidden" name="openid.return_to" :value="redirectUri" />
     <input type="hidden" name="openid.mode" value="checkid_setup" />
@@ -25,9 +25,11 @@ const props = defineProps<{
 }>()
 
 const redirectUri = computed(() => {
+  if(!props.meta) return
   return `${props.meta.settings.domain}/api/auth/steam/callback?return_uri=${route.fullPath}`
 })
 const realm = computed(() => {
+  if(!props.meta) return
   return props.meta.settings.domain
 })
 </script>

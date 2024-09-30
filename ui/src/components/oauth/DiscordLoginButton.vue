@@ -1,5 +1,5 @@
 <template>
-  <a type="submit" :class="['button','has-text-white','is-dark',{'is-large': size === 'large', 'is-medium': size === 'medium', 'is-small': size === 'small'}]"  style="background-color:#5865F2" :href="loginUri">
+  <a v-if="props.meta" type="submit" :class="['button','has-text-white','is-dark',{'is-large': size === 'large', 'is-medium': size === 'medium', 'is-small': size === 'small'}]"  style="background-color:#5865F2" :href="loginUri">
     <Icon icon="fab fa-discord">Login with Discord</Icon>
   </a>
 </template>
@@ -15,6 +15,7 @@ const props = defineProps<{
   meta: PanelMetaInfo
 }>()
 const loginUri = computed(() => {
+  if(!props.meta) return
   return `${props.meta.settings.domain}/api/auth/discord/login?return_uri=${route.fullPath}`
 })
 </script>
