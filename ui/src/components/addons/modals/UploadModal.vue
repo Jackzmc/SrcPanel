@@ -84,7 +84,7 @@ const validFiles = computed(() => {
   return '.' + props.share.fileExts.join(",.")
 })
 
-const emit = defineEmits(['close'])
+const emit = defineEmits(['close', 'refresh'])
 const props = defineProps<{
   share: ShareInfo
 }>()
@@ -162,6 +162,7 @@ async function startUpload() {
       type: "success",
       text: `Uploaded \"${filename.value}\"`
     })
+    emit("refresh")
   } else {
     uploadState.value = 0
   }

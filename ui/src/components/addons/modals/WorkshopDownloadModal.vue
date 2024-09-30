@@ -205,7 +205,7 @@ enum InputState {
 
 const WORKSHOP_LINK_REGEX = new RegExp(/https:\/\/steamcommunity\.com\/(sharedfiles|workshop)\/filedetails\/\?id=(\d*)/)
 
-const emit = defineEmits(['close'])
+const emit = defineEmits(['close', 'refresh'])
 const props = defineProps<{
   share: ExtendedShareInfo
 }>()
@@ -360,6 +360,8 @@ function startDownload(force = false) {
         // If no force prompt shown or this was a force download, then we are done.
         if(downloadState.value == DownloadState.Downloading || force) downloadState.value = DownloadState.Done
         else console.debug("COMPLETE on state=",downloadState.value)
+
+        emit("refresh")
       } else if(payload.state === "DOWNLOAD_PROGRESS") {
         if(!downloads.value[payload.entry]) return console.warn(`Progress update for download that we don't know: ${payload.entry}`)
         downloads.value[payload.entry].currentBytes = payload.currentBytes
