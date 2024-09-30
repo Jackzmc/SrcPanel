@@ -107,13 +107,14 @@ export default class SteamAPI {
         }
         if(index > 0) {
             // Don't waste a fetch if all items are in the cache
+            console.debug(`itemcount=${fileids.length}&${params.toString()}`)
             const response = await fetch('https://api.steampowered.com/ISteamRemoteStorage/GetPublishedFileDetails/v1/', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
                     'User-Agent': this.#userAgent
                 },
-                body: `itemcount=${fileids.length}&${params.toString()}`
+                body: `itemcount=${index}&${params.toString()}`
             })
             if(response.ok) {
                 const json = await response.json() as any

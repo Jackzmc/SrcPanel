@@ -127,7 +127,7 @@
     <footer class="modal-card-foot">
       <div class="buttons">
         <template v-if="downloadState == DownloadState.Done || !isAddonValid">
-          <button class="button is-info" @click="verifyLink(link)" v-if="inputState == InputState.FetchError">
+          <button class="button is-info" @click="retryDownload" v-if="inputState == InputState.FetchError">
             Retry
           </button>
           <button class="button is-success" @click="close">
@@ -300,6 +300,11 @@ async function restartServers() {
   })
   close()
   downloadState.value = DownloadState.Idle
+}
+
+function retryDownload() {
+  downloadState.value = DownloadState.Idle
+  verifyLink(link.value)
 }
 
 function acceptChildren() {
