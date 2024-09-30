@@ -1,8 +1,5 @@
 <template>
 <div>
-  <div class="notification is-warning is-light">
-    <strong>Notice:</strong> Work in progress, updating or downloading new files may not update map/file lists. Refresh the page for now to fix.
-  </div>
   <router-view :share="shareInfo" :addon="prefetch" @update="onChildUpdate" @close="onChildClose" v-if="shareInfo && (!route.meta.needsPrefetch || prefetch) && route.meta.modal"></router-view>
   <div class="container is-fluid">
     <div class="columns">
