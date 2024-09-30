@@ -42,7 +42,7 @@ const app = Fastify({
             } : undefined,
         level: process.env.FASTIFY_DEBUG_LEVEL || 
             (process.env.NODE_ENV !== "production" ? 'debug' : 'error')
-      }
+      },
 })
 async function onSignal(signal: NodeJS.Signals) {
     console.log("GOT SIGNAL", signal, "-- SHUTTING DOWN")
@@ -108,8 +108,6 @@ app.register(MiddleManager)
         saveUninitialized: false
     })
 
-    await setupSwagger()
-
     app.addHook('preHandler', (request, reply, next) => {
         if(request.headers.origin && CORS_WHITELIST.includes(request.headers.origin)) {
             reply.header("Access-Control-Allow-Origin", request.headers.origin)
@@ -168,48 +166,3 @@ app.register(MiddleManager)
         process.exit(1)
     }      
 })
-
-async function setupSwagger() {
-    await app.register(FastifySwagger, {
-        routePrefix: '/api-docs',
-        swagger: {
-          info: {
-            title: 'Test swagger',
-            description: 'Testing the Fastify swagger API',
-            version: '0.1.0'
-          },
-          externalDocs: {
-            url: 'https://swagger.io',
-            description: 'Find more info here'
-          },
-          host: 'localhost',
-          schemes: ['http'],
-          consumes: ['application/json'],
-          produces: ['application/json'],
-          definitions: {
-            steamid: {
-                type: 'string',
-            }
-          },
-          securityDefinitions: {
-            apiKey: {
-              type: 'apiKey',
-              name: 'X-APIKEY',
-              in: 'header'
-            }
-          },
-        },
-        exposeRoute: true,
-        hideUntagged: false,
-        uiConfig: {
-          docExpansion: 'full',
-          deepLinking: false
-        },
-        uiHooks: {
-          onRequest: function (request, reply, next) { next() },
-          preHandler: function (request, reply, next) { next() }
-        },
-        staticCSP: true,
-        transformStaticCSP: (header) => header,
-    })
-} 
