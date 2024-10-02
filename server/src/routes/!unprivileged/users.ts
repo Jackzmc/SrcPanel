@@ -13,7 +13,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 reply.header("ETag", user.avatarHash)
                 reply.header('Cache-Control', 'public, maxage=29030400, stale-while-revalidate=86400, stale-if-error=86400')
             }
-            return reply.redirect(301, `https://avatars.steamstatic.com/${user.avatarHash}_full.jpg`)
+            return reply.redirect(`https://avatars.steamstatic.com/${user.avatarHash}_full.jpg`, 301)
         } else {
             // Fallback to an identicon based off their steamid, incase we don't have the user information, or its not a real steam user.
             try {
