@@ -3,6 +3,7 @@ import { UserPrivilegeCode } from '../../../../common-types/Privileges.js';
 import AuthManager from '../auth/AuthManager.js';
 import { FastifyInstance, Session } from 'fastify';
 import UserManager from './UserManager.js';
+import SteamID from 'steamid';
 
 export interface LogProperties {
     targetUser?: string,
@@ -44,7 +45,7 @@ export default class User {
      */
     public async name() {
         if(this.#name) return this.#name
-        const user = await UserManager.instance.fetchUser(this.steamid2)
+        const user = await UserManager.instance.fetchUser(new SteamID(this.steamid2))
         if(!user) return null
         this.#name = user.name
         return this.#name

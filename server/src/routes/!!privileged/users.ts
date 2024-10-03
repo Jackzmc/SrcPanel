@@ -127,7 +127,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             })
         }
 
-        const user = await fastify.users.fetchUser(new SteamID(req.params.steamid).getSteamID64(), true)
+        const user = await fastify.users.fetchUser(new SteamID(req.params.steamid), true)
         return {
             user
         }

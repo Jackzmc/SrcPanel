@@ -38,12 +38,13 @@ export default class UserManager {
      */
     async insertUser(user: IUserData) {
         if(user.steamid.length <= 10) throw new Error("steamid is invalid (bad length)")
-        return await this.#db.query(SQL`INSERT INTO user_names (steamid, name, avatar_hash) VALUES (SUBSTRING(${user.steamid}, 11), ${user.name}, ${user.avatarHash})`)
+        // return await this.#db.query(SQL`INSERT INTO user_names (steamid, name, avatar_hash) VALUES (SUBSTRING(${user.steamid}, 11), ${user.name}, ${user.avatarHash})`)
     }
 
     async updateUser(user: IUserData) {
         if(user.steamid.length <= 10) throw new Error("steamid is invalid (bad length)")
-        return await this.#db.query(SQL`UPDATE user_names SET name = ${user.name}, avatar_hash = ${user.avatarHash} WHERE steamid = SUBSTRING(${user.steamid},11)`)
+        const accountId = user.steamid.substring(10)
+        return await this.#db.query(SQL`UPDATE user_names SET name = ${user.name}, avatar_hash = ${user.avatarHash} WHERE steamid = ${accountId}`)
     }
 
     /**
@@ -56,7 +57,7 @@ export default class UserManager {
         if(!steamid || !UserManager.isSteamID2(steamid)) return null
         const user = await this.getUserDirect(steamid)
         // Don't wait for the result, serve the stale data:
-        if(user && Date.now() - user.timestamp > STALE_USER_CACHE_TIME) this.fetchUser(steamid)
+        if(user && Date.now() - user.timestamp > STALE_USER_CACHE_TIME) this.fetchUser(new SteamID(steamid))
         return user
     }
 
@@ -76,18 +77,19 @@ export default class UserManager {
 
     /**
      * Gets a user, fetching their steam details if not cached
-     * @param steamid The steamid2
+     * @param steamid The steamid
      * @param force force bypass cache fetching latest info
      * @returns 
      */
-    async fetchUser(steamid: string, force = false): Promise<IUserData | undefined> {
-        let user = await this.getUserDirect(steamid)
+    async fetchUser(steamid: SteamID, force = false): Promise<IUserData | undefined> {
+        const steamid2 = steamid.getSteam2RenderedID()
+        let user = await this.getUserDirect(steamid2)
         const hasPrevious = user != undefined
         if(!user || force) {
-            const users = await this.#steam.getUserDetails([steamid])
+            const users = await this.#steam.getUserDetails([ steamid ])
             if(users.length > 0) {
                 user = {
-                    steamid: steamid,
+                    steamid: steamid2,
                     name: users[0].personaname,
                     avatarHash: users[0].avatarhash
                 } as IUserData
@@ -106,7 +108,7 @@ export default class UserManager {
      * @param {SteamID} steamids - List of steamids instances or steamid64 strings
      * @returns {Promise<IUserData[]>}
      */
-    async fetchUsers(steamids: (SteamID|string)[]): Promise<IUserData[]> {
+    async fetchUsers(steamids: (SteamID)[]): Promise<IUserData[]> {
         if(steamids.length > 100) throw new Error("Too many ids, steam API only supports 100")
         const expUsers = []
         const insertPromises = []

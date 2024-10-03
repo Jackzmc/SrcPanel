@@ -195,7 +195,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                     message: "User was not found, they must be an admin to impersonate"
                 })
             }
-            const userDetails = await fastify.users.fetchUser(req.params.steamid)
+            const userDetails = await fastify.users.fetchUser(new SteamID(req.params.steamid))
             req.session.impersonate = {
                 original: {
                     user: req.session.user,
