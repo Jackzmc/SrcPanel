@@ -361,7 +361,6 @@ function startDownload(force = false) {
         if(downloadState.value == DownloadState.Downloading || force) downloadState.value = DownloadState.Done
         else console.debug("COMPLETE on state=",downloadState.value)
 
-        emit("refresh")
       } else if(payload.state === "DOWNLOAD_PROGRESS") {
         if(!downloads.value[payload.entry]) return console.warn(`Progress update for download that we don't know: ${payload.entry}`)
         downloads.value[payload.entry].currentBytes = payload.currentBytes

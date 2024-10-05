@@ -1,6 +1,6 @@
 <template>
 <div>
-  <router-view :share="shareInfo" :addon="prefetch" @update="onChildUpdate" @refresh="fetchAddons" @close="onChildClose" v-if="shareInfo && (!route.meta.needsPrefetch || prefetch) && route.meta.modal"></router-view>
+  <router-view :share="shareInfo" :addon="prefetch" @update="onChildUpdate" @close="onChildClose" v-if="shareInfo && (!route.meta.needsPrefetch || prefetch) && route.meta.modal"></router-view>
   <div class="container is-fluid">
     <div class="columns">
       <div class="column px-0 mx-90">
@@ -229,7 +229,10 @@ async function onChildUpdate(payload: AddonUpdatePayload) {
   }
 }
 
-function onChildClose() {
+function onChildClose(shouldRefresh: boolean) {
+  if(shouldRefresh) {
+    fetchAddons()
+  }
   router.replace({ name: "admin-share-detail", params: { shareId: route.params.shareId, viewMode: route.params.viewMode} })
 }
 
