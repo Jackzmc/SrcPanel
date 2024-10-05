@@ -339,7 +339,9 @@ async function save() {
       type: "success"
     })
     if(isNew.value) {
-      router.push({ name: "discuss", params: { id: Number(id), title: discuss.value.title.toLowerCase().replace(/\s*/,'').replace(/[^a-zA-Z_-]*/,'-')} })
+      router.push({ name: "discuss", params: {
+        id: Number(id),
+        title: discuss.value.title.toLowerCase().trim().replace(/\s*/,'').replace(/[^a-zA-Z_-]/g,'-')} })
     } else {
       router.push({ name: "discuss" })
     }
