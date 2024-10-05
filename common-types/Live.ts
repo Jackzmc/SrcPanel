@@ -352,7 +352,7 @@ export function updateLiveCache(cache: LiveDataCache | undefined, record: LiveRe
             // Start time of 0 is end of game
             console.log("game record", `state=${record.state} maxplayers=${record.maxplayers}`)
             // if(record.startTime == 0 || cache.game.state != GameState.None) {
-                cache.clients = {}
+                // cache.clients = {}
             // }
             break
         case LiveRecordType.Player:
