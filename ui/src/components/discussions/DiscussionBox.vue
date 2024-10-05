@@ -101,7 +101,7 @@ const isSelection = computed(() => {
 })
 
 const urlTitle = computed(() => {
-  return discuss.value.title.toLocaleLowerCase().replace(/\s/g,'-').replace(/[^a-zA-Z0-9\-]/g,'')
+  return discuss.value.title.toLocaleLowerCase().trim().replace(/\s/g,'-').replace(/[^a-zA-Z0-9\-]/g,'')
 })
 
 const props = defineProps<{
