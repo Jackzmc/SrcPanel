@@ -308,7 +308,7 @@ export default class Server extends EventEmitter {
           // Only want to update maxplayers when transitioning or start of game?
           // if(this.#liveCache.game.state !== 0)
             // this.#status.data.maxplayers = this.#liveCache.game.maxplayers || 4
-        } else if(this.#liveCache.clients && this.#liveCache.game.state === 0) {
+        } else if(this.#liveCache.clients && this.#liveCache.game?.state === 0) {
           // only update if players is not hibernate/transitioning or unk game state
           this.#status.data.players = Object.values(this.#liveCache.clients)
             .filter(pl => pl.steamid != "BOT"/* && ('survivor' in pl || 'ínfected' in pl)*/)
