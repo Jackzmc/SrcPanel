@@ -156,7 +156,7 @@ export default class ServerManager {
           ps.onRecord(record)
         } catch(err) {
           this.#liveErrors.write(`buffer: ${reader.buffer.toString('hex')}\n`)
-          console.warn(`[ServerManager] bad packet: ${err}\nbuffer: ${reader.buffer.toString('hex')}`)
+          console.warn(`[ServerManager] bad packet: ${err}\nbuffer: ${reader.buffer.toString('hex')}`, err.stack)
           continue
         }
       }
