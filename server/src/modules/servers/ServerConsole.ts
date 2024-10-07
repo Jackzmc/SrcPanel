@@ -33,6 +33,9 @@ export default class ServerConsole {
         if(!file) return console.warn(`[Server/${this.#server.id}] Warn: Cannot open log file ${this.#logPath}`)
         for await (const line of file.readLines()) {
             this.pushLine(line)
+            if(this.#lines.length > MAX_BUFFER_LINES) {
+                this.#lines.splice(0, 1)
+            }
         }
         await file.close()
     }
