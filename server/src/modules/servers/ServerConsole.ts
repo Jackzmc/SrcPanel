@@ -41,6 +41,9 @@ export default class ServerConsole {
     constructor(server: Server, logPath: string) {
         this.#server = server
         this.#logPath = logPath
+        this.#readExisting().then(() => {
+            this.#createLogsReader()
+        })
     }
 
     public get logs() { return [...this.#lines] }

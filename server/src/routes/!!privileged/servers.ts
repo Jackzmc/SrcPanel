@@ -452,7 +452,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
         const [code, granted] = req.user.requirePermission("servers.view_console", { resourceId: server.id })
         if(!granted) return NO_PERMISSION(reply, "You do not have permission to view the server console", code)
-
+            
         return server.Console.logs.join("\n")
     })
 
