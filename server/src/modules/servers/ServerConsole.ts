@@ -10,7 +10,7 @@ const MAX_BUFFER_LINES = 40
 export default class ServerConsole {
     #logPath: string
     #server: Server
-    #lines: string[]
+    #lines: string[] = []
 
     public static createConsole(server: Server, logPath: string): ServerConsole {
         if(!logPath) return null
