@@ -304,7 +304,8 @@ export const enum LiveRecordResponse {
 export enum GameState {
     None,
     Transitioning,
-    Hibernating
+    Hibernating,
+    NewGame
 }
 
 export enum ClientState {
@@ -348,6 +349,14 @@ export function updateLiveCache(cache: LiveDataCache | undefined, record: LiveRe
     // If we get any other record, but we don't have the game we just ignore it
     switch(record.type) {
         case LiveRecordType.Game:
+            if(record.state === GameState.NewGame) {
+                cache.clients = {}
+            } else if(cache.game) {
+                // From transition -> none, remove cached clients
+                if(cache.game.state == GameState.Transitioning && cache.game.state != GameState.Transitioning) {
+                    cache.clients = {}
+                }
+            }
             cache.game = record
             // Start time of 0 is end of game
             console.log("game record", `state=${record.state} maxplayers=${record.maxplayers} players=${Object.keys(cache.clients)}`)
