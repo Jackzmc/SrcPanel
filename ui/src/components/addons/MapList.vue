@@ -49,7 +49,10 @@
         <div class="card-image">
           <figure class="image is-5by3">
             <router-link :to="getRoute(map)">
-              <LazyImage observer :src="(map.collection ? map.children[0] : map).workshop?.previewUrl" placeholder-src="/img/no-map-image.svg" />
+              <LazyImage observer :src="(map.collection ? map.children[0] : map).workshop?.previewUrl"
+                placeholder-src="/img/no-map-image.svg"
+                error-src="/img/no-map-image.svg"
+              />
               <!-- <span class="rating-overlay" v-if="getStats(map)">
                 <Icon icon="fa-star" size="sm" v-for="i in Number(getStats(map).avgRating)" :key="i"></Icon>
               </span> -->

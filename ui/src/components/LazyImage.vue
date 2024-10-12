@@ -27,7 +27,8 @@ let loadState = ref<LoadState>(LoadState.Loading)
 let observer: IntersectionObserver
 
 watch(() => image.value?.complete, () => {
-  loadState.value = LoadState.Success
+  if(loadState.value == LoadState.Loading)
+    loadState.value = LoadState.Success
 })
 
 onMounted(() => {
