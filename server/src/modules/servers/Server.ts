@@ -298,6 +298,7 @@ export default class Server extends EventEmitter {
         if(record.type === LiveRecordType.Game) {
           this.#startTime = record.startTime
         }
+        console.log(`pushLiveRecord game=${this.#liveCache != undefined} clients=${this.liveStatus.clients != undefined} record=${LiveRecordType[record.type]}`)
         this.#status = {
           data: this.#status.data ??  { players: [], maxplayers: 0, map: "", gamemode: "" },
           online: true
@@ -307,7 +308,7 @@ export default class Server extends EventEmitter {
           this.#status.data.map = this.#liveCache.game.map
           // Only want to update maxplayers when transitioning or start of game?
           // if(this.#liveCache.game.state !== 0)
-            // this.#status.data.maxplayers = this.#liveCache.game.maxplayers || 4
+          this.#status.data.maxplayers = this.#liveCache.game.maxplayers || 4
         } else if(this.#liveCache.clients) {
           // only update if players is not hibernate/transitioning or unk game state
           const oldValue = Object.keys(this.#liveCache.clients)
