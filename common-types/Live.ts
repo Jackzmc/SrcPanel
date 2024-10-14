@@ -353,7 +353,7 @@ export function updateLiveCache(cache: LiveDataCache | undefined, record: LiveRe
                 cache.clients = {}
             } else if(cache.game) {
                 // From transition -> none, remove cached clients
-                if(cache.game.state == GameState.Transitioning && cache.game.state != GameState.Transitioning) {
+                if(cache.game.state == GameState.Transitioning && record.state != GameState.Transitioning) {
                     cache.clients = {}
                 }
             }
