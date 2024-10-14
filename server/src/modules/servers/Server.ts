@@ -299,6 +299,7 @@ export default class Server extends EventEmitter {
           this.#startTime = record.startTime
         }
         this.#status = {
+          source: "live",
           data: this.#status.data ??  { players: [], maxplayers: 0, map: "", gamemode: "" },
           online: true
         } 
@@ -315,7 +316,8 @@ export default class Server extends EventEmitter {
           this.#status.data.players = Object.values(this.#liveCache.clients)
             .filter(pl => pl.steamid != "BOT"/* && ('survivor' in pl || 'ínfected' in pl)*/)
             .map(pl => pl.name)
-          // console.debug(`pushLiveRecord old=${oldValue.join(',')} new=${Object.keys(this.#status.data.players).join(',')}`)
+          console.debug(`pushLiveRecord old=${oldValue.join(',')} new=${Object.keys(this.#status.data.players).join(',')}`)
+          console.log(`GAMEDIG players=${this.#status.data.players.length} / ${this.#status.data.maxplayers}`)
         }
       }
     }
@@ -467,6 +469,7 @@ export default class Server extends EventEmitter {
             if(includeRules && raw.rules) {
               this.#cvars = raw.rules
             }
+            this.#status.source = "gamedig"
             this.#status.data = {
               players: state.players
                 .filter(p => p.name.length > 0) // Some names are just "", assumingly bots?
@@ -475,6 +478,7 @@ export default class Server extends EventEmitter {
               map: state.map,
               gamemode: raw.tags ? raw.tags[0] : undefined
             }
+            console.log(`GAMEDIG players=${state.players.length} / ${state.maxplayers}`)
             this.playerCounts.push({
               timestamp: Math.floor(Date.now() / 1000),
               count: state.players.length

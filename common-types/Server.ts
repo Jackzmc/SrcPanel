@@ -2,6 +2,7 @@ import { LiveDataCache } from "./Live.js"
 
 
 export interface ServerStatus {
+    source?: "live" | "gamedig",
     data?: {
       players: string[],
       maxplayers: number,
