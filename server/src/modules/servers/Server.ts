@@ -312,12 +312,10 @@ export default class Server extends EventEmitter {
         }
         if(this.#liveCache.clients) {
           // only update if players is not hibernate/transitioning or unk game state
-          const oldValue = Object.keys(this.#liveCache.clients)
           this.#status.data.players = Object.values(this.#liveCache.clients)
             .filter(pl => pl.steamid != "BOT"/* && ('survivor' in pl || 'ínfected' in pl)*/)
             .map(pl => pl.name)
-          console.debug(`pushLiveRecord old=${oldValue.join(',')} new=${Object.keys(this.#status.data.players).join(',')}`)
-          console.log(`GAMEDIG players=${this.#status.data.players.length} / ${this.#status.data.maxplayers}`)
+          // console.log(`LIVE players=${this.#status.data.players.length} / ${this.#status.data.maxplayers}`)
         }
       }
     }
