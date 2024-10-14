@@ -932,11 +932,14 @@ const isLiveViewActive = computed(() => {
 })
 const livePlayers = computed(() => {
   if(!liveStatus.value?.clients) return []
-  return Object.values(liveStatus.value.clients).sort((a, b) => {
-    if('survivor' in a) return 1
-    else if('survivor' in b) return -1
-    return 0
-  })
+  return Object.values(liveStatus.value.clients)
+    // temp fix, don't show "inbetween" clients
+    .filter(a => a.infected || a.survivor)
+    .sort((a, b) => {
+      if('survivor' in a) return 1
+      else if('survivor' in b) return -1
+      return 0
+    })
 })
 let errCount = 0
 let liveReadyState = ref<number>(0)

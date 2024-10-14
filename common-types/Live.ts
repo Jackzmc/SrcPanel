@@ -363,16 +363,17 @@ export function updateLiveCache(cache: LiveDataCache | undefined, record: LiveRe
             // if(record.startTime == 0 || cache.game.state != GameState.None) {
                 // cache.clients = {}
             // }
+            
             break
         case LiveRecordType.Player:
+            const id = record.userid.toString()
             if(record.state == ClientState.Disconnected) {
                 // Player disconnected, wipe them
-                delete cache.clients[record.userid.toString()]
-            } else if(record.state == ClientState.Connected) {
-                cache.clients[record.userid.toString()] = { ...record, isAlive: true, totalHealth: 100 }
+                delete cache.clients[id]
+            } else if(record.state == ClientState.Connected || !cache.clients[id]) {
+                cache.clients[id] = { ...record, isAlive: true, totalHealth: 100 }
             } else {
                 // Updated player info, merge it on top of old data (to preserve infected/survivor info)
-                const id = record.userid.toString()
                 cache.clients[id] = {
                     ...cache.clients[id],
                     ...record
