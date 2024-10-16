@@ -164,6 +164,7 @@ export default class Server extends EventEmitter {
       }
     }
 
+    /** Are we connected to the game server via panel plugin? */
     public get SocketConnected() {
       return this.#socket?.Authenticated
     }
@@ -235,6 +236,7 @@ export default class Server extends EventEmitter {
       return this.#liveCache
     }
 
+    /** The number of active live status viewers */
     public get liveViewers() {
       return this.listenerCount("live")
     }
@@ -246,6 +248,7 @@ export default class Server extends EventEmitter {
     public get hasPlugin() { return this.#features.plugin }
     public get hasCommandSupport() { return this.#features.plugin || this.#features.rcon }
 
+    /** Returns all features server supports currently */
     public get features(): ServerAvailableFeatures {
       return {
         rcon: this.hasRcon,
@@ -354,6 +357,7 @@ export default class Server extends EventEmitter {
       this.#socket = socket
       this.#features.plugin = socket != undefined
     }
+
     /**
      * Attempt to start server by systemd (Not implemented)
      */
@@ -418,7 +422,13 @@ export default class Server extends EventEmitter {
       }
     }
 
-    #getFallbackCommandForBuiltin(command: string) {
+    /**
+     * Converts built in command to actual command for given server. 
+     * This allows different game support if the command is different. (minecraft uses "stop" instead of "exit")
+     * @param command the built in command, without namespace
+     * @returns null for unknown built in
+     */
+    #getFallbackCommandForBuiltin(command: string): string | null {
       switch(command) {
         case "stop": {
           return "exit"
@@ -440,17 +450,17 @@ export default class Server extends EventEmitter {
     }
 
     /**
-     * Fetches server information (via gamedig), possibly using cache
-     * @param force true to bypass cache
-     * @param includeRules include cvars
+     * Fetches server information via gamedig, or cache if available and not forced.
+     * @param bypassCache true to pull fresh data, bypassing cache
+     * @param includeRules include cvars in response? Takes slightly longer, more data
      * @returns 
      */
-    public async refresh(force = false, includeRules = false) {
+    public async refresh(bypassCache = false, includeRules = false) {
         // Don't need to do a refresh if we have plugin data
         if(this.hasPlugin) return;
 
         const now = Date.now()
-        if(!force && now - this.#lastRefresh < MIN_REFRESH_TIME) return
+        if(!bypassCache && now - this.#lastRefresh < MIN_REFRESH_TIME) return
         this.#lastRefresh = now
         try {
             const state = await Gamedig.query({

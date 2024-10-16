@@ -14,6 +14,11 @@ const DOWNLOAD_TIMEOUT = 1000 * 60 * 3
 
 export type DownloadSource = "steam_workshop" | "direct"
 
+/**
+ * "Installing" refers to symlinking the file from the source directory to the destination(s) specified. 
+ * In the UI, this is enabling or disabling an addon/file. The source file is not deleted except by deleteAddon()
+ */
+
 export default class Share {
     #id: string
     public name: string
@@ -70,10 +75,19 @@ export default class Share {
         return this.validExts ? [...this.validExts] : null
     }
 
+    /**
+     * Creates a write stream for a filename, in the share's source folder
+     * @param filename the filename to write to
+     */
     public createUploadStream(filename: string) {
         return createWriteStream(path.join(this.sourceFolder, path.normalize(filename)))
     }
 
+    /**
+     * Parse a given VPK file, and return the map file names or chapter ids, from the missions/*.txt file
+     * @param filepath 
+     * @returns string[] map file names without .bsp ext (ex: ["c1m1_hotel", ...])
+     */
     #getChapterIds(filepath: string): string[] {
         const vpk = new VPK(filepath)
         try {
@@ -88,6 +102,8 @@ export default class Share {
                     if(!modes) return null
                     const chapters = modes["coop"]
                     if(!chapters) return null
+                    // Sort chapter entries (keys are chapter #) ascendingly
+                    // { "1": { Map: "...", ... }} -> chapters[1].Map
                     const sorted = Object.entries(chapters)
                         .sort(([k1, v1],[k2,v2]) => Number(k1) - Number(k2))
                         .map(([_, v]) => v)
@@ -103,6 +119,7 @@ export default class Share {
 
     /** 
      * Fetches all addons for this share, including returning if the destinations are 
+     * Warn: Expensive, may take a long time for a large directory, and if no cache
      **/
     public async getAddons() {
         console.time('getAddons:readdir')
