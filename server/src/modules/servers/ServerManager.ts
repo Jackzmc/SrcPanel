@@ -105,7 +105,7 @@ export default class ServerManager {
   }
 
   #authenticateSocket(client: PluginSocket, reader: BufferReader) {
-    const size = reader.readShort()
+    const size = reader.readShort() // We don't need size for authentication, but we need to read 2 bytes
     const record = PluginSocket.ParseRecord(reader)
     // skip any other type until authenticated
     if(record.type != LiveRecordType.Auth) return console.warn("[ServerManager] Got non-auth packets when not-authenticated, ignoring")
@@ -134,8 +134,8 @@ export default class ServerManager {
     this.#socketClients.set(client.remoteAddress, ps)
     
     client.on('data', (buf) => {
-      // If we aren't authenticate, check to see if it's valid:
       const packetReader = new BufferReader(buf)
+      // If we aren't authenticate, read packet as an authentication packet and try to authenticate
       if(!ps.Authenticated) {
         try {
           return this.#authenticateSocket(ps, packetReader);
@@ -145,20 +145,25 @@ export default class ServerManager {
         }
       }
 
+      // Multiple records can be included in a packet, this returns an iteration of buffer readers that contain records
       for(const reader of packetReader.readRecords()) {
-        if(reader.length == 0) break
+        if(reader.length == 0) break // Sometimes a record can be empty, it shouldn't but it happens.
+        
+        // Try to parse the reader into a certain record
+        let record
         try {
-          const record = PluginSocket.ParseRecord(reader)
+          record = PluginSocket.ParseRecord(reader)
+          // Check if server reports it being disconnected from steam
           if(record.type === LiveRecordType.Meta) {
             this.#steam.SteamAvailable = record.steamConnected
           }
-
-          ps.onRecord(record)
         } catch(err) {
           this.#liveErrors.write(`buffer: ${reader.buffer.toString('hex')}\n`)
           console.warn(`[ServerManager] bad packet: ${err}\nbuffer: ${reader.buffer.toString('hex')}`, err.stack)
           continue
         }
+
+        ps.onRecord(record)
       }
     })
 
@@ -180,6 +185,7 @@ export default class ServerManager {
     this.#liveErrors = createWriteStream(path.join(this.dataDir, "live_errors.log"))
     const liveHost = process.env.PLUGIN_SOCKET_HOSTNAME || "127.0.0.1";
     const livePort = process.env.PLUGIN_SOCKET_PORT ? parseInt(process.env.PLUGIN_SOCKET_PORT) ?? 7888 : 7888
+    // Create TCP socket
     this.#socket = net.createServer({
       keepAlive : true,
     }, this.#onLiveClient.bind(this))
@@ -195,8 +201,8 @@ export default class ServerManager {
 
     // Periodically send out packets to hopefully keep it alive, and let the other end know we are here
     setInterval(() => {
-      // Periodically have server submit it's live count, as a keep alive
       for(const server of Object.values(this.servers)) {
+        // This triggers an OK packet
         server.emit("live:subscribe")
       }
     }, LIVE_SOCKET_KEEPALIVE_INTERVAL)
@@ -204,6 +210,7 @@ export default class ServerManager {
 
   onShutdown() {
     if(this.#socket) {
+      // Inform all clients that we are shutting down, try to reconnect
       for(const client of this.#socketClients.values()) {
         client.send(LiveRecordResponse.Reconnect)
       }

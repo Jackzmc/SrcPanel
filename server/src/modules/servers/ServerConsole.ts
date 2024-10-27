@@ -11,7 +11,7 @@ export default class ServerConsole {
     #logPath: string
     #server: Server
     #lines: string[] = []
-
+    
     public static createConsole(server: Server, logPath: string): ServerConsole {
         if(!logPath) return null
         try {
@@ -26,7 +26,7 @@ export default class ServerConsole {
         return new ServerConsole(server, logPath)
     }
 
-    /** Reads all lines from start to end */
+    /** Reads all lines from start to end, keeping only last MAX_BUFFER_LINES */
     async #readExisting() {
         // Read previous lines
         const file = await open(this.#logPath, "r")
@@ -56,14 +56,6 @@ export default class ServerConsole {
      * @returns 
      */
     async #createLogsReader() { 
-      // Read previous lines
-      const file = await open(this.#logPath)
-      if(!file) return console.warn(`[Server/${this.#server.id}] ERROR: Cannot open file ${this.#logPath}`)
-      for await (const line of file.readLines()) {
-        this.pushLine(line)
-      }
-      await file.close()
-
       // Subscribe to new:
       const tail = new Tail(this.#logPath)
       tail.on('line', (line) => this.pushLine(line))

@@ -27,6 +27,7 @@ export default class PluginSocket {
       case RecordDataType.String: return reader.readString()
       case RecordDataType.Boolean: return reader.readByte() != 0
     }
+    // Same as above, but returns null if there is anymore data to read
     if(reader.isEOF) return null
     switch(type) {
       case RecordDataType.OptionalByte: return reader.readByte()
@@ -39,6 +40,11 @@ export default class PluginSocket {
     throw new Error(`Unsupported record data type ${type}`)
   }
 
+  /**
+   * Parses data uses specification of RecordParseConfig
+   * @param reader The buffer to read from
+   * @returns 
+   */
   static ParseRecord2(reader: BufferReader) {
     const type: LiveRecordType = reader.readByte()
     const record: Partial<LiveRecord> = {}
@@ -58,6 +64,11 @@ export default class PluginSocket {
     return record as LiveRecord
   }
   
+  /**
+   * Old manual parsing. TODO: remove replace
+   * @param reader 
+   * @deprecated
+   */
   static ParseRecord(reader: BufferReader): LiveRecord {
     const type: LiveRecordType = reader.readByte()
     try {
@@ -207,11 +218,15 @@ export default class PluginSocket {
       }, 1000)
     }
   }
-  
+  /** Sends a OK packet, with a view count */
   send(type: LiveRecordResponse.OK, viewCount: number): Promise<void>;
+  /** Sends a ERROR packet, with optional message */
   send(type: LiveRecordResponse.Error, message?: string): Promise<void>;
+  /** Tells server to reconnect in a moment, for we are disconnecting or restarting */
   send(type: LiveRecordResponse.Reconnect): Promise<void>;
+  /** Requests server to refresh a given userid or all users if none set  */
   send(type: LiveRecordResponse.Refresh, userid?: number): Promise<void>;
+  /** Runs a game command or built in command on server  */
   send(type: LiveRecordResponse.RunCommand, command: string, namespace?: string): Promise<LiveRecordCommandResponse>;
   async send(type: LiveRecordResponse, arg?: any, namespace?: string): Promise<void | LiveRecordCommandResponse> {
     if(!this.Authenticated && type != LiveRecordResponse.OK && type != LiveRecordResponse.Error) {
