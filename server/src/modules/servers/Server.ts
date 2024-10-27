@@ -476,7 +476,6 @@ export default class Server extends EventEmitter {
               map: state.map,
               gamemode: raw.tags ? raw.tags[0] : undefined
             }
-            console.log(`GAMEDIG players=${state.players.length} / ${state.maxplayers}`)
             this.playerCounts.push({
               timestamp: Math.floor(Date.now() / 1000),
               count: state.players.length

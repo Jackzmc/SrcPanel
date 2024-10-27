@@ -17,5 +17,11 @@
         "title": "Automatic Lobby Setup (autoexec)",
         "type": "text",
         "filename": "autoexec.md"
+    },
+    {
+        "id": "sprays",
+        "title": "Creating & Adding Sprays",
+        "type": "text",
+        "filename": "sprays.md"
     }
 ]
