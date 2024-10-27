@@ -26,3 +26,7 @@ To create that folder:
 To now select the spray in game, go to **Options** -> **Multiplayer** -> **Import Spray**.
 This will open in the `left4dead2` folder, so just find the `sprays` folder and open that, and then select the file.
 ![l4d2_sprays_folder.png](/img/tutorials/l4d2_sprays_folder.png)
+
+Note: There is a bug in the UI, the first entry in a folder is cut off. You can either use arrow keys to select or type the filename to select it.
+
+Note: When you select a spray in-game, it will apply when you rejoin or advance to the next chapter.
