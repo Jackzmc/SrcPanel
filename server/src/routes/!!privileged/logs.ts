@@ -106,7 +106,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         let value = partitionRowCache.get(year)
         // Fetch data if: 
         //  (1) no cached data 
-        //  (2) if data is for this year (null) and exceeds LOG_TOTAL_ROW_CACHE_TIME
+        //  (2) if data is for this year or total rows (null) and exceeds LOG_TOTAL_ROW_CACHE_TIME
         // Any other year, the data will/should never change, as its old data.
         if(!value || (!year || year == CurrentYear()) && Date.now() - value.lastFetchTime > LOG_TOTAL_ROW_CACHE_TIME) {
             try {
@@ -135,8 +135,9 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
     fastify.get('/data', async(req, reply) => {
         const servers = await serverFilterCache.fetch()
-        // make sure the latest year is always up to date and force refresh:
+        // make sure the latest year and all row data is always up to date and force refresh:
         await getTotalRows(null)
+        await getTotalRows(CurrentYear())
 
         const partitions = Object.fromEntries(partitionRowCache)
         return {
