@@ -390,20 +390,23 @@ function viewPendingEntries() {
 }
 
 function toggleFilter(filter: string, key: string) {
+  console.log("toggling", filter, key)
   if(filters.value[filter] && Array.isArray(filters.value[filter])) {
     let v = filters.value[filter] as string[]
     let index = v.indexOf(key)
-    if(index > -1)
+    console.log(key, index)
+    if(index > -1) {
       v.splice(index, 1)
-    else
+    } else {
       v.push(key)
+    }
   }
   fetchDebounce()
 }
 function getFilterColor(filter: string, key: string) {
   if(!filters.value[filter] || !Array.isArray(filters.value[filter])) return
   if(!filters.value[filter]!.includes(key)) return
-  return FILTER_DATA[filter][key] !== true ? FILTER_DATA[filter][key] : undefined
+  return FILTER_DATA[filter][key] ?? "is-info"
 }
 
 function getParams() {
