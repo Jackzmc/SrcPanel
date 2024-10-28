@@ -6,6 +6,7 @@ import { QueryBuilder, SortDirection } from '../../modules/QueryBuilder.js';
 import SteamID from 'steamid';
 
 const LogQuery = Type.Object({
+    raw: Type.Optional(Type.Boolean({default: false})),
     servers: Type.Optional(Type.String()),
     types: Type.Optional(Type.String()),
     client: Type.Optional(Type.String()),
@@ -254,7 +255,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 count: logs.length // # of rows + filtered + pagination (<= limit)
             },
             // pages: Math.ceil(count[0].count / limit),
-            raw: process.env.NODE_ENV === "production" ? null : {
+            raw: process.env.NODE_ENV === "production" || req.query.raw ? null : {
                 cache: cache[tableName],
                 query: query.buildUnsafe(),
                 tableName
