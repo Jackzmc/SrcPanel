@@ -264,7 +264,7 @@ const REFRESH_INTERVAL = 12_000
 const MAX_REQUEST_TIME = 1000 * 110 // 110 seconds max, any more and CF may kick in
 
 const DEFAULT_TYPES = ["ACTION", "CHAT", "INFO", "STATE", "QUIT", "JOIN"];
-const DEFAULT_SERVERS = ["main", "reserved"];
+const DEFAULT_SERVERS = ["main", "reserved", "randomizer"];
 const DEFAULT_LIMIT = 30
 
 const FILTER_DATA: Record<string, Record<string, boolean | string>> = {
