@@ -6,12 +6,12 @@
         <h4 class="title is-3"><Icon icon="fa-lock">Login Required</Icon></h4>
         <p class="subtitle is-4">This page requires you to be logged in.</p>
         <hr>
-        <p class="subtitle is-5">Login with either Steam or Discord on the right to continue</p>
+        <p class="subtitle is-5">Login with either Steam or Discord (if linked) on the right to continue</p>
       </div>
     </div>
-    <div class="column">
+    <div class="column" v-if="meta">
       <div class="block"><SteamLoginButton size="large" :meta="meta" /></div>
-      <div class="block"><DiscordLoginButton size="large" :meta="meta" /></div>
+      <div class="block" data-tooltip="Only if you have linked to a steam account"><DiscordLoginButton size="large" :meta="meta" /></div>
     </div>
   </div>
 </div>
@@ -28,7 +28,7 @@ import { PanelMetaInfo } from '../../../common-types/Panel.js';
 const router = useRouter()
 const props = defineProps<{
   privUser?: PrivilegedUser,
-  meta: PanelMetaInfo
+  meta?: PanelMetaInfo
 }>()
 
 
