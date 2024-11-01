@@ -3,7 +3,7 @@
   <img v-if="loadState == LoadState.Loading || (loadState == LoadState.Error && !props.errorSrc)" :class="imgClass" :src="props.placeholderSrc">
   <img v-else-if="loadState == LoadState.Error && props.errorSrc" :class="imgClass" :src="props.errorSrc" loading="lazy">
   <img ref="image" fetchpriority="low"
-    v-show="loadState == LoadState.Success" v-if="startLoading && loadState != LoadState.Error"
+    v-show="loadState == LoadState.Success" v-if="startLoading && loadState != LoadState.Error && props.src"
     :class="imgClass" :src="props.src"
     @error="loadState = LoadState.Error"
   >
@@ -14,7 +14,7 @@
 import { LoadState } from '@/types/global.js';
 import { ref, onMounted, onUnmounted, watch } from 'vue';
 const props = defineProps<{
-  src: string,
+  src?: string | null,
   placeholderSrc: string,
   errorSrc?: string,
   imgClass?: string,
