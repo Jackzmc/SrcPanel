@@ -32,17 +32,20 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         method: 'GET',
         schema: {
             querystring: {
-                'openid.mode': { type: 'string' },
-                'openid.claimed_id': { type: 'string' },
-                'openid.identity': { type: 'string' },
-                'openid.return_to': { type: 'string' },
-                'openid.response_nonce': { type: 'string' },
-                'openid.assoc_handle': { type: 'string' },
-                'openid.signed': { type: 'string' },
-                'openid.sig': { type: 'string' },
-                'openid.ns': { type: 'string' },
-                'openid.op_endpoint': { type: 'string' },
-                'return_tab': { type: ['string', 'null'] }
+                type: "object",
+                properties: {
+                    'openid.mode': { type: 'string' },
+                    'openid.claimed_id': { type: 'string' },
+                    'openid.identity': { type: 'string' },
+                    'openid.return_to': { type: 'string' },
+                    'openid.response_nonce': { type: 'string' },
+                    'openid.assoc_handle': { type: 'string' },
+                    'openid.signed': { type: 'string' },
+                    'openid.sig': { type: 'string' },
+                    'openid.ns': { type: 'string' },
+                    'openid.op_endpoint': { type: 'string' },
+                    'return_tab': { type: ['string', 'null'] }
+                }
             }
         },
         async handler(req: FastifyRequest<{ Querystring: OpenIDQuery }>, reply: FastifyReply) {

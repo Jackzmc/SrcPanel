@@ -3,6 +3,7 @@ dotenv.config()
 import Fastify, { FastifyInstance } from 'fastify'
 import FastifySession from '@fastify/session'
 import FastifyCookie from '@fastify/cookie'
+import fastifyWebsocket from '@fastify/websocket'
 import MySQLSession from 'express-mysql-session'
 import { Pool } from 'mysql2/promise';
 import SteamAPI from './modules/steam.js'
@@ -19,7 +20,6 @@ import { FastifyPluginOptions } from 'fastify';
 import { CustomFastifySession } from '../../common-types/User.js'
 import User from './modules/users/User.js';
 import ConfigManager from './modules/ConfigManager.js';
-import FastifySwagger from '@fastify/swagger'
 
 import FastifyHelmet from '@fastify/helmet'
 import DiscussionManager from './modules/DiscussionManager.js';
@@ -85,6 +85,7 @@ app.register(cors, {
 app.register(
     FastifyHelmet,
 )
+app.register(fastifyWebsocket)
   
 
 import MiddleManager from './middlewares/managers.js'

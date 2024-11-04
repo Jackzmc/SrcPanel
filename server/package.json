@@ -5,18 +5,19 @@
   "types": "fastify.d.ts",
   "license": "MIT",
   "dependencies": {
-    "@fastify/cookie": "^8.3.0",
-    "@fastify/cors": "^8.2.0",
-    "@fastify/helmet": "^11.0.0",
-    "@fastify/multipart": "^7.5.0",
-    "@fastify/session": "^10.1.1",
+    "@fastify/cookie": "^11.0.1",
+    "@fastify/cors": "^10.0.1",
+    "@fastify/helmet": "^12.0.1",
+    "@fastify/multipart": "^9.0.1",
+    "@fastify/session": "^11.0.1",
+    "@fastify/websocket": "^11.0.1",
     "@lowly1337/vpk": "^0.2.6",
     "@sinclair/typebox": "^0.23.4",
     "dotenv": "^16.0.0",
     "express": "^4.17.3",
     "express-mysql-session": "^2.1.7",
     "fast-geoip": "^1.1.64",
-    "fastify": "^4.28.1",
+    "fastify": "^5.1.0",
     "gamedig": "^4.3.0",
     "jdenticon": "^3.2.0",
     "json5": "^2.2.3",
@@ -48,6 +49,6 @@
     "@types/steamid": "^2.0.1",
     "@types/tail": "^2.2.1",
     "tsx": "^4.7.1",
-    "typescript": "^5.4.3"
+    "typescript": "^5.6.3"
   }
 }

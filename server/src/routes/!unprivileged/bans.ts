@@ -37,10 +37,16 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         url: '/:id',
         schema: {
             params: {
-                id: { type: 'string' }
+                type: "object",
+                properties: {
+                    id: { type: 'string' }
+                }
             },
             querystring: {
-                filter: { type: 'string' }
+                type: "object",
+                properties: {
+                    filter: { type: 'string' }
+                }
             },
             response: {
                 200: {

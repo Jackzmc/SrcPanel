@@ -106,8 +106,11 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         method: 'GET',
         schema: {
             params: {
-                id: {
-                    type: 'number'
+                type: "object",
+                properties: {
+                    id: {
+                        type: 'number'
+                    }
                 }
             },
             response: {

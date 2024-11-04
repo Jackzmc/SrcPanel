@@ -103,7 +103,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                     await provider.save(req.user.steamid2)
 
                     await req.user.notify(`Your ${PROVIDER_NAME} account ${userInfo.username} has been linked successfully.`)
-                    await reply.redirect(302, returnUrl)
+                    await reply.redirect(returnUrl, 302)
                 } else {
                     // User is logging in to their account via provider
                     // We need to find their steam account
@@ -114,7 +114,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                     if(details.length > 0) {
                         await provider.save(admin.steamid)
                         await fastify.authmngr.loginUser(req, admin, details[0])
-                        await reply.redirect(302, returnUrl)
+                        await reply.redirect(returnUrl, 302)
                     } else {
                         return reply.send("<h1>Error: Cannot access steam account information, cannot login.</h1>")
                     }

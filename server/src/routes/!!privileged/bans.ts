@@ -44,8 +44,9 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 }
             },
             params: {
-                id: {
-                    type: "number"
+                type: "object",
+                properties: {
+                    id: { type: 'number' }
                 }
             }
         },
@@ -182,8 +183,9 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         method: 'DELETE',
         schema: {
             params: {
-                id: {
-                    type: 'number'
+                type: "object",
+                properties: {
+                    id: { type: 'number' }
                 }
             },
             response: {

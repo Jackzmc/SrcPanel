@@ -51,7 +51,7 @@ async function db(fastify: FastifyInstance) {
     await configManager.Load(DATA_FOLDER)
     const authManager = new AuthManager(admindb, db, steam, configManager)
     const serverManager = new ServerManager(steam, DATA_FOLDER, CONFIG_FOLDER, configManager)
-    Promise.all([
+    await Promise.all([
         authManager.Init(),
         serverManager.Load()
     ])

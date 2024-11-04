@@ -221,7 +221,10 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         url: '/:steamid/bans',
         schema: {
             params: {
-                id: { type: 'string' }
+                type: "object",
+                properties: {
+                    id: { type: 'string' }
+                }
             },
             response: {
                 200: {
