@@ -18,6 +18,7 @@ import JWT from '../../jwt-promise.js';
 import { WriteStream, createWriteStream } from 'fs';
 import dotenv from 'dotenv'
 import Gamedig from 'gamedig';
+import DynamicServerManager from './docker/DynamicServerManager.js';
 
 
 // How long after no status requests to switch from short to long refresh
@@ -33,6 +34,7 @@ export interface ConfigGroupData {
   name?: string,
   actions?: ServerAction[]
 }
+
 // BECAUSE FOR SOME **** REASON THIS ISNT LOADING HERE:
 
 dotenv.config()
@@ -59,6 +61,7 @@ export default class ServerManager {
   #socket: net.Server
   #socketClients: Map<string, PluginSocket>
   #liveErrors: WriteStream
+  #dynamicManager: DynamicServerManager
   // Maps a server to a specific connection, this assumes there should never be more than one socket per server
 
   constructor(steam: SteamAPI, dataDir: string, configDir: string, configManager: ConfigManager) {
@@ -66,8 +69,18 @@ export default class ServerManager {
     this.dataDir = dataDir
     this.configDir = configDir
     this.#cfgManager = configManager
+    this.#dynamicManager = new DynamicServerManager(configDir, {
+      protocol: process.env.DOCKER_FORCE_PROTOCOL as "http" | "https" | "ssh" | undefined,
+      host: process.env.DOCKER_HOST,
+      port: process.env.DOCKER_PORT || 2375,
+      version: process.env.DOCKER_VERSION
+    })
 
     _instance = this
+  }
+
+  public get Docker() {
+    return this.#dynamicManager
   }
 
   public static get Instance(): ServerManager { 
@@ -264,6 +277,11 @@ export default class ServerManager {
    * @returns 
    */
   public get(key: string) {
+    // TODO: re-implement when they share same interface
+    // // Is docker if starts with panel-
+    // if(key.startsWith("panel")) {
+    //   return this.#dynamicManager.getInstance(key)
+    // }
     return this.servers[key.toLowerCase()]
   }
 
@@ -340,6 +358,7 @@ export default class ServerManager {
   async Load() {
     this.longRefreshInterval = await this.#cfgManager.GetKV<number>("servers.long_refresh_interval", 600)
     this.shortRefreshInterval = await this.#cfgManager.GetKV<number>("servers.short_refresh_interval", 30)
+    await this.#dynamicManager.Load()
     try {
       const servers = await readFile(path.join(this.configDir, "servers.json"), 'utf-8')
       await this.loadServers(Json5.parse(servers))
@@ -368,6 +387,7 @@ export default class ServerManager {
   }
 
   
+
   private async loadShares(shares: any) {
     if(!shares) {
       console.warn("[Warn] No shares to load")

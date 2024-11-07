@@ -1,0 +1,90 @@
+import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
+
+export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
+    const manager = fastify.servers.Docker
+
+    fastify.get('/templates', (req, reply) => {
+        return manager.Templates
+    })
+
+    fastify.post('/templates/:templateId/create', async (req: FastifyRequest<{Params: {templateId: string}}>, reply) => {
+        if(!req.params.templateId) {
+            return reply.code(400).send({
+                error: "MISSING_TEMPLATE_ID",
+                message: "A valid template id must be provided"
+            })
+        }
+        try {
+            const instance = await manager.createInstance(req.params.templateId)
+            return {
+                id: instance.ContainerId,
+                ip: instance.Ip,
+                port: instance.Port,
+                hostname: instance.Hostname
+            }
+        } catch(err) {
+            return reply.code(500).send({
+                error: "CREATE_INSTANCE_ERROR",
+                message: err.message
+            })
+        }
+    })
+
+    fastify.get('/instances/:id', async (req: FastifyRequest<{Params: {id: string}}>, reply) => {
+        if(!req.params.id) {
+            return reply.code(400).send({
+                error: "MISSING_INSTANCE_ID",
+                message: "A valid instance id must be provided. They will be in the format of panel-{templateId}-{port}"
+            })
+        }
+        const instance = manager.getInstance(req.params.id)
+        if(!instance) {
+            return reply.code(404).send({
+                error: "INVALID_INSTANCE_ID",
+                message: "No instance with id could be found. They will be in the format of panel-{templateId}-{port}"
+            })
+        }
+        return {
+            hostname: instance.Hostname,
+            state: await instance.State()
+        }
+    })
+
+    // TEMP
+    fastify.get('/instances/:id/logs', async (req: FastifyRequest<{Params: {id: string}}>, reply) => {
+        if(!req.params.id) {
+            return reply.code(400).send({
+                error: "MISSING_INSTANCE_ID",
+                message: "A valid instance id must be provided. They will be in the format of panel-{templateId}-{port}"
+            })
+        }
+        const instance = manager.getInstance(req.params.id)
+        if(!instance) {
+            return reply.code(404).send({
+                error: "INVALID_INSTANCE_ID",
+                message: "No instance with id could be found. They will be in the format of panel-{templateId}-{port}"
+            })
+        }
+        return {
+            logs: await instance.FetchLogs()
+        }
+    })
+
+    fastify.post('/instances/:id/start', async (req: FastifyRequest<{Params: {id: string}}>, reply) => {
+        if(!req.params.id) {
+            return reply.code(400).send({
+                error: "MISSING_INSTANCE_ID",
+                message: "A valid instance id must be provided. They will be in the format of panel-{templateId}-{port}"
+            })
+        }
+        const instance = manager.getInstance(req.params.id)
+        if(!instance) {
+            return reply.code(404).send({
+                error: "INVALID_INSTANCE_ID",
+                message: "No instance with id could be found. They will be in the format of panel-{templateId}-{port}"
+            })
+        }
+        await instance.Start()
+        return reply.status(204).send()
+    })
+}
