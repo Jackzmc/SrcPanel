@@ -1,0 +1,25 @@
+{
+    "_type": "socket",
+    "sortOrder": 1,
+    "clients": [
+        {
+            "id": "xUF0GgikECBzJlxxuOLOj",
+            "url": "ws://{{API_DOMAIN}}/api/ws",
+            "payloads": [
+                {
+                    "id": "r1pgrI1z_2IpCtJYgWX1c",
+                    "name": "Authenticate",
+                    "payload": "{\n    \"apikey\": \"dc3c7ed5b77cb3c2bf2626d753d990010c1285bb4a51951cae4da8ca50a4d696\"\n}"
+                },
+                {
+                    "id": "iChFsvx-AxVv84LVqFMlC",
+                    "name": "Payload 2",
+                    "payload": "\"errr"
+                }
+            ],
+            "currentPayloadId": "iChFsvx-AxVv84LVqFMlC",
+            "message": "\"errr",
+            "visibility": "shown"
+        }
+    ]
+}
