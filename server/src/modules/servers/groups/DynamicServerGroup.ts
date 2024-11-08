@@ -48,6 +48,11 @@ export class DynamicServerGroup extends ServerGroup {
         for(const instance of instances) {
             await this.#registerInstance(instance)
         }
+        for(let i = this.ServerCount; i < this.#minServers; i++) {
+            console.debug(`Starting instance ${i+1}/${this.#minServers}`)
+            const instance = await this.createInstance()
+            await instance.Start()
+        }
     }
 
     get TemplateId() {
