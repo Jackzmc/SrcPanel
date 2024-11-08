@@ -12,7 +12,7 @@
               <th>Actions</th>
             </template>
             <template v-else>
-              <template v-if="group.type === 'left4dead2'">
+              <template v-if="group.type === 'source'">
                 <th>Current Map</th>
                 <th>Direct Connect Command</th>
                 <th>Create Lobby Command</th>
