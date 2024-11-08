@@ -68,7 +68,7 @@ const LIVE_CACHE_TTL = 1000 * 60 * 3 // Live cache data expires after 3 minutes
 
 export default class Server extends EventEmitter { 
     #info: ServerData
-    #status: ServerStatus
+    _status: ServerStatus
     #liveCache?: LiveDataCache
     #cfgDir: string
     #actid: string
@@ -130,7 +130,7 @@ export default class Server extends EventEmitter {
         this.#systemd = server.systemd
         this.#features['systemd'] = server.systemd != undefined
         this.#tags = server.tags
-        this.#status = { data: null, online: false }
+        this._status = { data: null, online: false }
 
       this.on("live:subscribe", async() => {
         try {
@@ -227,7 +227,7 @@ export default class Server extends EventEmitter {
     /**
      * Latest cached server status, if any
      */
-    public get status(): ServerStatus { return this.#status }
+    public get status(): ServerStatus { return this._status }
 
     /**
      * Returns any fresh live view data. Will purge any stale data
@@ -307,21 +307,21 @@ export default class Server extends EventEmitter {
         if(record.type === LiveRecordType.Game) {
           this.#startTime = record.startTime
         }
-        this.#status = {
+        this._status = {
           source: "live",
-          data: this.#status.data ??  { players: [], maxplayers: 0, map: "", gamemode: "" },
+          data: this._status.data ??  { players: [], maxplayers: 0, map: "", gamemode: "" },
           online: true
         } 
         if(this.#liveCache.game) {
-          this.#status.data.gamemode = this.#liveCache.game.gamemode
-          this.#status.data.map = this.#liveCache.game.map
+          this._status.data.gamemode = this.#liveCache.game.gamemode
+          this._status.data.map = this.#liveCache.game.map
           // Only want to update maxplayers when transitioning or start of game?
           // if(this.#liveCache.game.state !== 0)
-          this.#status.data.maxplayers = this.#liveCache.game.maxplayers || 4
+          this._status.data.maxplayers = this.#liveCache.game.maxplayers || 4
         }
         if(this.#liveCache.clients) {
           // only update if players is not hibernate/transitioning or unk game state
-          this.#status.data.players = Object.values(this.#liveCache.clients)
+          this._status.data.players = Object.values(this.#liveCache.clients)
             .filter(pl => pl.steamid != "BOT"/* && ('survivor' in pl || 'ínfected' in pl)*/)
             .map(pl => pl.name)
           // console.log(`LIVE players=${this.#status.data.players.length} / ${this.#status.data.maxplayers}`)
@@ -483,8 +483,8 @@ export default class Server extends EventEmitter {
             if(includeRules && raw.rules) {
               this.#cvars = raw.rules
             }
-            this.#status.source = "gamedig"
-            this.#status.data = {
+            this._status.source = "gamedig"
+            this._status.data = {
               players: state.players
                 .filter(p => p.name.length > 0) // Some names are just "", assumingly bots?
                 .map(p => p.name),
@@ -497,13 +497,13 @@ export default class Server extends EventEmitter {
               count: state.players.length
             })
             if(this.playerCounts.length > MAX_PLAYER_STATS) this.playerCounts.shift()
-            this.#status.online = true
+            this._status.online = true
             return {
               cvars: this.#cvars
             }
         } catch(err) {
-          this.#status.data = null
-          this.#status.online = false
+          this._status.data = null
+          this._status.online = false
         }
     } 
 }

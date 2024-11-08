@@ -35,4 +35,11 @@ export default class DockerServer extends Server {
         return this.#instance.Stop(force)
     }
 
+    public override async refresh(bypassCache = false, includeRules = false) {
+        const ret = super.refresh(bypassCache, includeRules)
+        const state = await this.#instance.State()
+        this._status.online = state.Running
+        return ret
+    }
+
 }
