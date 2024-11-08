@@ -12,7 +12,6 @@ import Server from '../../modules/servers/Server.js';
 let updateState: UpdateState = "NORMAL"
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
-
     fastify.get('/', async (req, reply) => {
         if(!req.user.hasPermission("panel.view")) return NO_PERMISSION(reply)
         let kv = {}

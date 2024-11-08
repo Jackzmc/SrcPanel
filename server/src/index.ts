@@ -23,6 +23,7 @@ import ConfigManager from './modules/ConfigManager.js';
 
 import FastifyHelmet from '@fastify/helmet'
 import DiscussionManager from './modules/DiscussionManager.js';
+import SetCacheManager from './modules/SetCache.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -47,6 +48,7 @@ const app = Fastify({
 async function onSignal(signal: NodeJS.Signals) {
     console.log("GOT SIGNAL", signal, "-- SHUTTING DOWN")
     app.servers?.onShutdown()
+    await SetCacheManager.Save()
     app.close()
     setTimeout(() => {
         process.exit(0)

@@ -4,6 +4,8 @@ import { Static, Type } from '@sinclair/typebox'
 import { NO_PERMISSION } from '../../responses.js';
 import { QueryBuilder, SortDirection } from '../../modules/QueryBuilder.js';
 import SteamID from 'steamid';
+import { open } from 'sqlite';
+import SetCacheManager, { SetCache } from '../../modules/SetCache.js';
 
 const LogQuery = Type.Object({
     raw: Type.Optional(Type.Boolean({default: false})),
@@ -44,34 +46,7 @@ interface DataCache {
     lowestId: number,
     lastFetchTime: number
 }
-interface SetCache<T> {
-    set: Set<T>,
-    lastFetchTime: number
-}
-class SetCache<T> {
-    set: Set<T>
-    lastFetchTime: number
-    staleTime: number
-    #getData: () => Promise<Set<T>>
-    #isStaleFn: (fetchTime: number, staleTime: number) => boolean
-    constructor(updateFn: () => Promise<Set<T>>, staleTime = 1000 * 60 * 60 * 4) {
-        this.#getData = updateFn
-        this.staleTime = staleTime
-    }
-    setStaleFunction(fn: (fetchTime: number, staleTime: number) => boolean) {
-        this.#isStaleFn = fn.bind(this)
-        return this
-    }
-    async fetch() {
-        if(this.isStale) this.set = await this.#getData()
-        return this.set
-    }
-    get isStale() { 
-        if(!this.set) return true
-        if(this.#isStaleFn) return this.#isStaleFn(this.lastFetchTime, this.staleTime)
-        else return Date.now() - this.lastFetchTime > this.staleTime
-    }
-}
+
 // Cache data for partitions
 let partitionRowCache: Map<number | undefined, DataCache> = new Map()
 let lastMissingNameFetchTime = 0
@@ -79,7 +54,10 @@ let lastMissingNameFetchTime = 0
 let serverFilterCache: SetCache<string>
 let partitionCache: SetCache<number>
 
+
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
+    // Must load before defining set cache
+    await SetCacheManager.Load()
     // Set of all server column values in activity log table
     serverFilterCache = new SetCache<string>(
         async () => {
@@ -87,7 +65,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             const list: string[] = rows.filter(row => row.server).map(row => row.server)
             return new Set(list)
         }
-    )
+    ).setDiskCacheKey("servers")
     // Set of all partitions for activity log table
     partitionCache = new SetCache<number>(
         async () => {
@@ -98,11 +76,11 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     ).setStaleFunction((lastFetched, staleTime) => {
         // Partitions should only need to be updated once every year
         return new Date(lastFetched).getFullYear() > new Date().getFullYear()
-    })
+    }).setDiskCacheKey("partitions")
+
     // Calculates current year in YYYY
     const CurrentYear = () => new Date().getFullYear()
 
-    const partitions = await partitionCache.fetch()
     async function getTotalRows(year: number | null): Promise<DataCache> {
         let value = partitionRowCache.get(year)
         // Fetch data if: 
@@ -128,11 +106,12 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
         return value
     }
+
     // Fetch null to get the complete number of rows
     await getTotalRows(null)
-    for await (const part of partitions) {
-        getTotalRows(part)
-    }
+    const partitions = await partitionCache.fetch()
+    await Promise.all([...partitions.values()].map(part => getTotalRows(part)))
+    await SetCacheManager.Save()
 
     fastify.get('/data', async(req, reply) => {
         const servers = await serverFilterCache.fetch()
