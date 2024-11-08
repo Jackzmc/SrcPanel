@@ -12,7 +12,7 @@
               <th>Actions</th>
             </template>
             <template v-else>
-              <template v-if="group.type === 'source'">
+              <template v-if="group.type === 'left4dead2'">
                 <th>Current Map</th>
                 <th>Direct Connect Command</th>
                 <th>Create Lobby Command</th>
@@ -29,8 +29,7 @@
         <tfoot v-if="group.templateId">
           <tr class="has-background-lighter">
             <td style="vertical-align: middle">Start New Instance</td>
-            <td>-</td>
-            <td>-</td>
+            <td colspan="2"></td>
             <td colspan="2">
               <button type="button" class="button is-info is-small" @click="createInstance">Start</button>
             </td>

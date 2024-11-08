@@ -588,7 +588,7 @@ const TABS: Record<string, { name: string, tag?: string, permission?: string, en
   live: {
     name: "Live View",
     enabled: () => {
-      return serverInfo.value?.type === "source"
+      return serverInfo.value?.type === "left4dead2"
     }
   },
   configs: {
