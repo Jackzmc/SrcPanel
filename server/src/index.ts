@@ -29,21 +29,26 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const MySQLStore = MySQLSession(FastifySession )
 
+const envToLogger = {
+  development: {
+    transport: {
+      target: 'pino-pretty',
+      options: {
+        translateTime: 'HH:MM:ss Z',
+        ignore: 'pid,hostname',
+      },
+    },
+    level: process.env.FASTIFY_DEBUG_LEVEL || 'debug'
+  },
+  production: {
+    level: process.env.FASTIFY_DEBUG_LEVEL || 'warn'
+  },
+  test: false,
+}
 const app = Fastify({
     pluginTimeout: 20000,
     trustProxy: process.env.NODE_ENV === "production",
-    logger: {
-        transport: process.env.NODE_ENV !== 'production'
-            ? {
-                target: 'pino-pretty',
-                options: {
-                    translateTime: 'HH:MM:ss Z',
-                    ignore: 'pid,hostname',
-                }
-            } : undefined,
-        level: process.env.FASTIFY_DEBUG_LEVEL || 
-            (process.env.NODE_ENV !== "production" ? 'debug' : 'error')
-      },
+    logger: envToLogger[process.env.NODE_ENV] ?? true
 })
 async function onSignal(signal: NodeJS.Signals) {
     console.log("GOT SIGNAL", signal, "-- SHUTTING DOWN")
