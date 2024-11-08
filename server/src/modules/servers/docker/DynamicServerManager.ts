@@ -87,11 +87,6 @@ export default class DynamicServerManager {
         const port = template.nextPort
         template.nextPort++
 
-        const volumes = {}
-        for(const vol of template.config.volumes) {
-            volumes[vol] = {}
-        }
-
         const command = DynamicServerGroup.formatTemplateVar(template.config.command,
             {
                 ip: template.config.ip,
@@ -108,12 +103,12 @@ export default class DynamicServerManager {
             OpenStdin: true,
             // TODO: improve 
             Cmd: [command],
-            Volumes: volumes,
             // ExposedPorts: {
             //     '27015/udp': {}
             // },
             HostConfig: {
                 "NetworkMode": "host",
+                "Binds": template.config.volumes ?? []
                 // "PortBindings": { "27015/udp": [{ "HostPort": port.toString(), "HostIp": template.config.ip }] }
             },
             Labels: {
