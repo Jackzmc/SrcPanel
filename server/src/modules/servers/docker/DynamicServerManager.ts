@@ -73,6 +73,7 @@ export default class DynamicServerManager {
                     nextPort: config.startPort
                 }
             }
+            console.log(Object.keys(this.#templates))
             console.info(`[ServerManager/docker] Loaded ${Object.keys(this.#templates).length} templates`)
         } catch(err) {
             if(err.code == "ENOENT")
@@ -115,7 +116,6 @@ export default class DynamicServerManager {
                 "panel.port": port.toString(),
             }
         }
-        console.debug('creating with config', config)
         const container = await this.#docker.createContainer(config)
         const instance =  new DynamicServerInstance(template.config, container, template.config.ip, port)
         await this.#registerInstance(instance)
