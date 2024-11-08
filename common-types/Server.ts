@@ -72,7 +72,7 @@ export interface ServerInfo extends ServerData {
 export type ServerType = "source" | "left4dead2" | "minecraft"
 
 export const SERVER_TYPE_MAP = {
-    "left4dead2": "source"
+    "left4dead2": "source",
     "l4d2": "source"
 }
 
