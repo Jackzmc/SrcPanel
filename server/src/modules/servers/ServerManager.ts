@@ -277,6 +277,7 @@ export default class ServerManager {
         return {
           id: group.Id,
           name: group.Name,
+          description: group.Description,
           type: SERVER_TYPE_MAP[group.Type] ?? group.Type,
           templateId: templateId,
           servers: Object.fromEntries(Object.values(group.Servers)

@@ -79,6 +79,7 @@ export const SERVER_TYPE_MAP = {
 export interface ServerGroup {
     id: string,
     name: string,
+    description: string,
     servers: Record<string, ServerInfo>,
     type: ServerType,
     templateId?: string

@@ -1,6 +1,7 @@
 <template>
   <div class="mb-4">
     <h4 class="title is-4">{{ group.name }}</h4>
+    <p v-if="group.description" class="subtitle is-6">{{ group.description }}</p>
     <div class="table-container">
       <table :class="['table','is-fullwidth',{'is-bordered': !manage}]">
         <thead>
