@@ -4,6 +4,7 @@ import Server from "../Server.js"
 export interface CreateGroupOptions {
     name?: string
     type?: string,
+    description?: string
     actions?: ServerAction[]
 }
 
@@ -12,6 +13,7 @@ export default class ServerGroup {
     _id: string
     _name: string
     _type: string
+    _description: string
     _actions: ServerAction[]
 
     _servers: Record<string, Server> = {}
@@ -20,10 +22,12 @@ export default class ServerGroup {
         this._name = options.name ?? id
         this._type = options.type ?? "source"
         this._actions = options.actions ?? []
+        this._description = options.description ?? ""
     }
 
     get Id() { return this._id }
     get Name() { return this._name }
+    get Description() { return this._description }
     get Type() { return this._type }
     get Actions() { return [...this._actions] }
 
