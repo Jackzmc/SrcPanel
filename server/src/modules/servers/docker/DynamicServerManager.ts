@@ -62,7 +62,6 @@ export default class DynamicServerManager {
             const instance = new DynamicServerInstance(template.config, container, template.config.ip, Number(port))
             await this.#registerInstance(instance)
         }
-        console.info(`[ServerManager/docker] Found ${Object.keys(this.#instances).length} existing containers`)
     }
 
     async #loadTemplates() {
@@ -96,6 +95,7 @@ export default class DynamicServerManager {
             ports.push(port)
         }
         ports.sort()
+        console.log(template.id, 'ports', ports)
 
         // Find next available, filling in gaps
         let port = template.startPort;
@@ -104,6 +104,7 @@ export default class DynamicServerManager {
                 port++
             }
         }
+        console.log('next port: ', port)
         return port
     }
 
