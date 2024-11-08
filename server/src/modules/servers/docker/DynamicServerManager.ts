@@ -12,7 +12,7 @@ export interface DockerTemplateConfig {
     startPort: number,
     minInstances?: number
     volumes?: string[],
-    command: string
+    command: string | string[]
 }
 export interface DockerTemplateContainer {
     config: DockerTemplateConfig,
@@ -78,7 +78,7 @@ export default class DynamicServerManager {
                     config,
                 }
             }
-            console.log(Object.keys(this.#templates))
+            console.debug('templates:', Object.keys(this.#templates).join(" "))
             console.info(`[ServerManager/docker] Loaded ${Object.keys(this.#templates).length} templates`)
         } catch(err) {
             if(err.code == "ENOENT")
@@ -113,13 +113,14 @@ export default class DynamicServerManager {
         if(!template) throw new Error(`Unknown template id: \"${templateId}\"`)
         const port = await this.#getNextPort(template.config)
 
-        const command = DynamicServerGroup.formatTemplateVar(template.config.command,
-            {
-                ip: template.config.ip,
-                port,
-                id: template.config.id
-            }
-        )
+        const templVars = {
+            ip: template.config.ip,
+            port,
+            id: template.config.id
+        }
+        let commands = Array.isArray(template.config.command) ? template.config.command : [template.config.command]
+        commands = commands.map(cmd => DynamicServerGroup.formatTemplateVar(cmd, templVars))
+
         const config = {
             name: `panel-${templateId}-${port}`,
             Image: template.config.image,
@@ -127,7 +128,7 @@ export default class DynamicServerManager {
             Tty: true,
             OpenStdin: true,
             // TODO: improve 
-            Cmd: [command],
+            Cmd: commands,
             // ExposedPorts: {
             //     '27015/udp': {}
             // },
