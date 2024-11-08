@@ -13,6 +13,7 @@
     "@fastify/websocket": "^11.0.1",
     "@lowly1337/vpk": "^0.2.6",
     "@sinclair/typebox": "^0.23.4",
+    "dockerode": "^4.0.2",
     "dotenv": "^16.0.0",
     "express": "^4.17.3",
     "express-mysql-session": "^2.1.7",
@@ -43,6 +44,7 @@
   },
   "type": "module",
   "devDependencies": {
+    "@types/dockerode": "^3.3.31",
     "@types/gamedig": "^3.0.2",
     "@types/jsonwebtoken": "^9.0.1",
     "@types/node": "^20.11.30",

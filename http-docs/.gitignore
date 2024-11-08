@@ -2,3 +2,4 @@ _collapsed
 *.responses.json
 *.messages.json
 .env
+_environments/Development.json
