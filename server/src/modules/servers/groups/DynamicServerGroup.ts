@@ -67,8 +67,6 @@ export class DynamicServerGroup extends ServerGroup {
     }
 
     async #registerInstance(instance: DynamicServerInstance) {
-        console.log("created instance, creating server")
-        console.log(instance.ContainerId, instance.ContainerName, )
         const vars = {
             id: Object.keys(this._servers).length + 1,
             port: instance.Port,
