@@ -104,7 +104,7 @@ export default class DynamicServerManager {
                 '27015/udp': {}
             },
             HostConfig: {
-                "PortBindings": { "27015/udp": [{ "HostPort": port.toString() }] }
+                "PortBindings": { "27015/udp": [{ "HostPort": port.toString(), "HostIp": template.config.ip }] }
             },
             Labels: {
                 "panel.template": templateId,
