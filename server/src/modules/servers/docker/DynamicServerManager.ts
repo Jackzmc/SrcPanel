@@ -4,6 +4,7 @@ import path from 'path'
 import Json5 from 'json5';
 import DynamicServerInstance from './DynamicServerInstance.js';
 import ServerManager from '../ServerManager.js';
+import { DynamicServerGroup } from '../groups/DynamicServerGroup.js';
 export interface DockerTemplateConfig {
     id: string
     image: string,
@@ -91,6 +92,14 @@ export default class DynamicServerManager {
             volumes[vol] = {}
         }
 
+        const command = DynamicServerGroup.formatTemplateVar(template.config.command,
+            {
+                ip: template.config.ip,
+                port,
+                id: template.config.id
+            }
+        )
+
         const container = await this.#docker.createContainer({
             name: `panel-${templateId}-${port}`,
             Image: template.config.image,
@@ -98,13 +107,14 @@ export default class DynamicServerManager {
             Tty: true,
             OpenStdin: true,
             // TODO: improve 
-            Cmd: [template.config.command],
+            Cmd: [command],
             Volumes: volumes,
-            ExposedPorts: {
-                '27015/udp': {}
-            },
+            // ExposedPorts: {
+            //     '27015/udp': {}
+            // },
             HostConfig: {
-                "PortBindings": { "27015/udp": [{ "HostPort": port.toString(), "HostIp": template.config.ip }] }
+                "NetworkMode": "host",
+                // "PortBindings": { "27015/udp": [{ "HostPort": port.toString(), "HostIp": template.config.ip }] }
             },
             Labels: {
                 "panel.template": templateId,

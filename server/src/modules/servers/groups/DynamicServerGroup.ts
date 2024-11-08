@@ -54,7 +54,7 @@ export class DynamicServerGroup extends ServerGroup {
         return this.#templateId
     }
 
-    #formatTemplateVar(template: string, variables: Record<string, string | number>) {
+    static formatTemplateVar(template: string, variables: Record<string, string | number>) {
         return Object.entries(variables)
             .reduce((acc, [key, value]) => {
                 return acc.replace(new RegExp(`%${key}%`, 'g'), value.toString())
@@ -69,13 +69,13 @@ export class DynamicServerGroup extends ServerGroup {
             port: instance.Port,
         }
         const id = `${this.Id}-${instance.Port}`
-        const ip = this.#formatTemplateVar(this.#serverTemplate.ip, vars)
+        const ip = DynamicServerGroup.formatTemplateVar(this.#serverTemplate.ip, vars)
         const [, host, port] = ip.match(/([a-zA-Z0-9.]+):?(\d*)/)
         try {
             const lookup = await DNS.lookup(host, { verbatim: false, family: 4 })
             this._servers[id] = new DockerServer(this, {
                 id,
-                name: this.#formatTemplateVar(this.#serverTemplate.name, vars),
+                name: DynamicServerGroup.formatTemplateVar(this.#serverTemplate.name, vars),
                 ip: lookup.address,
                 domain: host,
                 port: instance.Port,
