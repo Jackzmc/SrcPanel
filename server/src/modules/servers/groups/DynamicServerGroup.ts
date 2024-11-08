@@ -5,6 +5,7 @@ import Server from "../Server.js";
 import DynamicServerInstance from "../docker/DynamicServerInstance.js";
 import DNS from 'dns/promises';
 import { ServerAction } from "../../../../../common-types/Server.js";
+import DockerServer from "../DockerServer.js";
 
 
 export interface DynamicGroupServerTemplate {
@@ -72,7 +73,7 @@ export class DynamicServerGroup extends ServerGroup {
         const [, host, port] = ip.match(/([a-zA-Z0-9.]+):?(\d*)/)
         try {
             const lookup = await DNS.lookup(host, { verbatim: false, family: 4 })
-            this._servers[id] = new Server(this, {
+            this._servers[id] = new DockerServer(this, {
                 id,
                 name: this.#formatTemplateVar(this.#serverTemplate.name, vars),
                 ip: lookup.address,
@@ -83,7 +84,7 @@ export class DynamicServerGroup extends ServerGroup {
                 actions: this.#serverTemplate.actions ?? [],
                 activityId: this.#serverTemplate.activityId,
                 sortOrder: this.#serverTemplate.sortOrder
-            }, instance.TemplateId)
+            }, instance)
         } catch(err) {
             console.warn(`[ServerManager] Warn: Could not resolve IP for hostname ${host}:\n`, err)
         }

@@ -3,10 +3,6 @@ import { DynamicServerGroup } from '../../modules/servers/groups/DynamicServerGr
 import { hostname } from 'os';
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
-    fastify.get('/', async(req, reply) => {
-        return fastify.servers.Groups
-    })
-
     fastify.post('/:groupId/servers', async (req: FastifyRequest<{Params: { groupId: string}, Querystring: { start: boolean }}>, reply) => {
         let group = fastify.servers.getGroup(req.params.groupId)
         if(!group) {

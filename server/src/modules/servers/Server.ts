@@ -93,9 +93,8 @@ export default class Server extends EventEmitter {
       
     public playerCounts: PlayerStats[] = [] 
 
-    constructor(group: ServerGroup, server: ServerExtendedData, templateSource?: string) {
+    constructor(group: ServerGroup, server: ServerExtendedData,) {
         super()
-        this.#fromTemplate = templateSource
         this.#group = group
         this.#info = {
           id: server.id,
@@ -253,7 +252,6 @@ export default class Server extends EventEmitter {
     public get hasRcon() { return this.#features.rcon }
     public get hasPlugin() { return this.#features.plugin }
     public get hasCommandSupport() { return this.#features.plugin || this.#features.rcon }
-    public get templateSource () { return this.#fromTemplate }
 
     /** Returns all features server supports currently */
     public get features(): ServerAvailableFeatures {
@@ -263,7 +261,7 @@ export default class Server extends EventEmitter {
         configs: this.hasConfigs,
         systemd: this.hasSystemd,
         plugin: this.hasPlugin,
-        docker: this.#fromTemplate != undefined
+        docker: false
       }
     }
 
