@@ -153,11 +153,12 @@ const serverClasses = computed(() => {
   const classes = ["has-tooltip-arrow", "has-tooltip-right"];
 
   if (props.server.status?.online) {
-    if (props.server.status.data?.players.length === 0) {
+    const count = props.server.status.data?.players.length
+    if (count && count > 0) {
+      if(!props.manage) classes.push("has-tooltip-info");
+    } else {
       classes.push("has-text-success");
       if(!props.manage) classes.push("has-tooltip-success");
-    } else {
-      if(!props.manage) classes.push("has-tooltip-info");
     }
   } else {
     classes.push("has-text-danger");

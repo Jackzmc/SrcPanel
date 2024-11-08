@@ -16,7 +16,6 @@ export interface DockerTemplateConfig {
 }
 export interface DockerTemplateContainer {
     config: DockerTemplateConfig,
-    nextPort: number
 }
 
 export default class DynamicServerManager {
@@ -39,21 +38,29 @@ export default class DynamicServerManager {
         await this.#findExisting()
     }
 
-    async #findExisting() {
-        const containers = await this.#docker.listContainers({ all: true })
+    async *#getContainers() {
+        const containers = await this.#docker.listContainers({ all: true, filters: {
+            "label": ["panel.template"]
+        }})
         for(const containerInfo of containers) {
             if(containerInfo.Labels["panel.template"]) {
                 const template = this.#templates[containerInfo.Labels["panel.template"]]
                 if(!template) {
-                    console.warn(`[ServerManager/docker] Warn: Found existing container (${containerInfo.Id.slice(12)}${containerInfo.Names.join('')}) but does not match any template. skipping`)
+                    console.warn(`[ServerManager/docker] Warn: Found existing container (${containerInfo.Id.slice(0, 12)}${containerInfo.Names.join('')}) but does not match any template. skipping`)
                     continue
                 }
-                const port = containerInfo.Labels["panel.port"]
-                console.info(`[ServerManager/docker] Found existing container (${containerInfo.Id.slice(12)}${containerInfo.Names.join('')})`)
                 const container = this.#docker.getContainer(containerInfo.Id)
-                const instance = new DynamicServerInstance(template.config, container, template.config.ip, Number(port))
-                await this.#registerInstance(instance)
+                yield {containerInfo, container, template}
             }
+        }
+    }
+
+    async #findExisting() {
+        for await(const { containerInfo, container, template } of this.#getContainers()) {
+            const port = containerInfo.Labels["panel.port"]
+            console.info(`[ServerManager/docker] Found existing container (${containerInfo.Id.slice(0, 12)}${containerInfo.Names.join('')})`)
+            const instance = new DynamicServerInstance(template.config, container, template.config.ip, Number(port))
+            await this.#registerInstance(instance)
         }
         console.info(`[ServerManager/docker] Found ${Object.keys(this.#instances).length} existing containers`)
     }
@@ -70,7 +77,6 @@ export default class DynamicServerManager {
                 } as DockerTemplateConfig
                 this.#templates[id] = {
                     config,
-                    nextPort: config.startPort
                 }
             }
             console.log(Object.keys(this.#templates))
@@ -82,11 +88,29 @@ export default class DynamicServerManager {
         }
     }
 
+    async #getNextPort(template: DockerTemplateConfig) {
+        const ports = []
+        for await(const { containerInfo, container, template } of this.#getContainers()) {
+            if(template.config.id != template.config.id) continue
+            const port = Number(containerInfo.Labels["panel.port"])
+            ports.push(port)
+        }
+        ports.sort()
+
+        // Find next available, filling in gaps
+        let port = template.startPort;
+        if(ports.includes(port)) {
+            while(ports.includes(port)) {
+                port++
+            }
+        }
+        return port
+    }
+
     async createInstance(templateId: string) {
         const template = this.#templates[templateId]
         if(!template) throw new Error(`Unknown template id: \"${templateId}\"`)
-        const port = template.nextPort
-        template.nextPort++
+        const port = await this.#getNextPort(template.config)
 
         const command = DynamicServerGroup.formatTemplateVar(template.config.command,
             {
