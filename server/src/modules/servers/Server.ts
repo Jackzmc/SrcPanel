@@ -10,6 +10,7 @@ import PluginSocket from './PluginSocket.js';
 import { Rcon } from 'rcon-client'
 import ServerManager from './ServerManager.js';
 import ServerConsole from './ServerConsole.js';
+import ServerGroup from './groups/ServerGroup.js';
 
 const VALID_CONFIG_EXTS = ["cfg", "toml"]
 const MIN_REFRESH_TIME = 5000
@@ -76,7 +77,7 @@ export default class Server extends EventEmitter {
     #cvars: Record<string, string>
     #startTime: number
     #actions: ServerAction[]
-    #group: GroupInfo
+    #group: ServerGroup
     #features: ServerAvailableFeatures = {}
     #systemd?: {
       isUser: boolean;
@@ -88,11 +89,13 @@ export default class Server extends EventEmitter {
     #console: ServerConsole
 
     #socket: PluginSocket
+    #fromTemplate?: string
       
     public playerCounts: PlayerStats[] = [] 
 
-    constructor(group: GroupInfo, server: ServerExtendedData) {
+    constructor(group: ServerGroup, server: ServerExtendedData, templateSource?: string) {
         super()
+        this.#fromTemplate = templateSource
         this.#group = group
         this.#info = {
           id: server.id,
@@ -100,12 +103,15 @@ export default class Server extends EventEmitter {
           domain: server.domain,
           ip: server.ip,
           port: server.port,
-          type: group.type || /* legacy */ server.type,
+          type: group.Type || /* legacy */ server.type,
         }
         this.#actid = server.activityId
         this.#sortOrder = server.sortOrder
-        this.#actions = group.actions.map(a => {
-          return { ...a, inherited: true } as ServerAction
+        this.#actions = group.Actions.map(a => {
+          return {
+            ...a, 
+            inherited: true 
+          } as ServerAction
         }).concat(server.actions)
         
         if(server.cfgDirectory) {
@@ -247,6 +253,7 @@ export default class Server extends EventEmitter {
     public get hasRcon() { return this.#features.rcon }
     public get hasPlugin() { return this.#features.plugin }
     public get hasCommandSupport() { return this.#features.plugin || this.#features.rcon }
+    public get templateSource () { return this.#fromTemplate }
 
     /** Returns all features server supports currently */
     public get features(): ServerAvailableFeatures {
@@ -256,6 +263,7 @@ export default class Server extends EventEmitter {
         configs: this.hasConfigs,
         systemd: this.hasSystemd,
         plugin: this.hasPlugin,
+        docker: this.#fromTemplate != undefined
       }
     }
 

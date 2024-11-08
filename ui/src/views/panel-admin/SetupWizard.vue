@@ -39,7 +39,7 @@
 
 <script setup lang="ts">
 import { onMounted, ref, markRaw, Raw, shallowRef, watch, computed } from 'vue';
-import { ExportGroupInfo, ServerGroup, ServerInfo } from '../../../../common-types/Server.js';
+import { ServerGroup, ServerInfo } from '../../../../common-types/Server.js';
 import { request } from '@/js/util.js';
 import { PrivilegedUser } from '@/js/User.js';
 import { ShareInfo } from '../../../../common-types/Share.js';

@@ -3,6 +3,7 @@ import { readFile } from 'fs/promises'
 import path from 'path'
 import Json5 from 'json5';
 import DynamicServerInstance from './DynamicServerInstance.js';
+import ServerManager from '../ServerManager.js';
 export interface DockerTemplateConfig {
     id: string
     image: string,
@@ -22,7 +23,9 @@ export default class DynamicServerManager {
     #templates: Record<string, DockerTemplateContainer> = {}
     #instances: Record<string, DynamicServerInstance> = {}
     #configDir: string
-    constructor(configDir: string, dockerConfig: Docker.DockerOptions) {
+    #srvManager: ServerManager
+    constructor(serverManager: ServerManager, configDir: string, dockerConfig: Docker.DockerOptions) {
+        this.#srvManager = serverManager
         this.#docker = new Docker(dockerConfig)
         this.#docker.info().then(() => {
             console.info(`[ServerManager/docker] Docker connected`)
@@ -38,8 +41,8 @@ export default class DynamicServerManager {
     async #findExisting() {
         const containers = await this.#docker.listContainers({ all: true })
         for(const containerInfo of containers) {
-            if(containerInfo.Labels["panel.templateId"]) {
-                const template = this.#templates[containerInfo.Labels["panel.templateId"]]
+            if(containerInfo.Labels["panel.template"]) {
+                const template = this.#templates[containerInfo.Labels["panel.template"]]
                 if(!template) {
                     console.warn(`[ServerManager/docker] Warn: Found existing container (${containerInfo.Id.slice(12)}${containerInfo.Names.join('')}) but does not match any template. skipping`)
                     continue
@@ -48,12 +51,11 @@ export default class DynamicServerManager {
                 console.info(`[ServerManager/docker] Found existing container (${containerInfo.Id.slice(12)}${containerInfo.Names.join('')})`)
                 const container = this.#docker.getContainer(containerInfo.Id)
                 const instance = new DynamicServerInstance(template.config, container, template.config.ip, Number(port))
-                this.#instances[instance.ContainerId] = instance
+                await this.#registerInstance(instance)
             }
         }
         console.info(`[ServerManager/docker] Found ${Object.keys(this.#instances).length} existing containers`)
     }
-
 
     async #loadTemplates() {
         try {
@@ -81,7 +83,8 @@ export default class DynamicServerManager {
     async createInstance(templateId: string) {
         const template = this.#templates[templateId]
         if(!template) throw new Error(`Unknown template id: \"${templateId}\"`)
-        const port = template.nextPort++
+        const port = template.nextPort
+        template.nextPort++
 
         const volumes = {}
         for(const vol of template.config.volumes) {
@@ -109,12 +112,21 @@ export default class DynamicServerManager {
             }
         })
         const instance =  new DynamicServerInstance(template.config, container, template.config.ip, port)
-        this.#instances[instance.ContainerId] = instance
+        await this.#registerInstance(instance)
         return instance
+    }
+
+    async #registerInstance(instance: DynamicServerInstance) {
+        this.#instances[instance.ContainerName] = instance
     }
 
     getInstance(id: string) {
         return this.#instances[id] ?? null
+    }
+
+    getInstancesForTemplate(templateId: string) {
+        return Object.values(this.#instances)
+            .filter(inst => inst.TemplateId === templateId)
     }
 
     get Templates() {

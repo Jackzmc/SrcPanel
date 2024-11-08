@@ -9,7 +9,7 @@ import sqlite3 from 'sqlite3'
 import SteamAPI from '../steam.js'
 import { ShareDestinations, ShareInfo } from '../../../../common-types/Share.js'
 import ConfigManager from '../ConfigManager.js'
-import { GroupInfo, ServerAction, ServerType, SERVER_TYPE_MAP } from '../../../../common-types/Server.js'
+import { GroupInfo, ServerAction, ServerType, SERVER_TYPE_MAP, DynamicGroupInfo, StandardGroupInfo } from '../../../../common-types/Server.js'
 import net from 'net'
 import { LiveRecordType, LiveRecordGame, LiveRecord, LiveRecordResponse, LiveRecordSurvivor, LiveRecordClient, LiveRecordInfected, LiveRecordFinaleInfo, LiveRecordSurvivorItems, LiveRecordCommandResponse, PluginTokenPayload } from '../../../../common-types/Live.js';
 import BufferReader from '../BufferReader.js';
@@ -19,6 +19,9 @@ import { WriteStream, createWriteStream } from 'fs';
 import dotenv from 'dotenv'
 import Gamedig from 'gamedig';
 import DynamicServerManager from './docker/DynamicServerManager.js';
+import ServerGroup from './groups/ServerGroup.js';
+import { DynamicServerGroup } from './groups/DynamicServerGroup.js';
+import { StandardServerGroup } from './groups/StandardServerGroup.js';
 
 
 // How long after no status requests to switch from short to long refresh
@@ -28,12 +31,21 @@ const LIVE_SOCKET_KEEPALIVE_INTERVAL = 1000 * 60 * 2
 
 const MAX_SOCKET_CONNECTIONS = 40
 
-export interface ConfigGroupData {
-  servers: Record<string, ConfigServerData>,
+interface BaseConfigGroupData {
   type: ServerType
   name?: string,
   actions?: ServerAction[]
 }
+export interface ConfigStandaloneGroupData extends BaseConfigGroupData {
+  servers: Record<string, ConfigServerData>,
+}
+export interface ConfigDynamicGroupData extends BaseConfigGroupData {
+  templateId: string,
+  serverTemplate?: ConfigServerData,
+  minServers?: number
+}
+export type ConfigGroupData = ConfigStandaloneGroupData | ConfigDynamicGroupData
+
 
 // BECAUSE FOR SOME **** REASON THIS ISNT LOADING HERE:
 
@@ -43,7 +55,7 @@ const DEBUG_LIVE_SOCKET = process.env.DEBUG_LIVE_SOCKET != undefined
 let _instance: ServerManager
 
 export default class ServerManager {
-  private servers: Record<string, Server> = {}
+  // private servers: Record<string, Server> = {}
   private addonShares: Record<string, Share> = {}
 
   private dataDir: string;
@@ -55,13 +67,13 @@ export default class ServerManager {
   private refreshTimer: ReturnType<typeof setTimeout>
   private refreshTimeout: ReturnType<typeof setTimeout> = null
 
-  #groups: Record<string, GroupInfo> = {}
-
   #cfgManager: ConfigManager
   #socket: net.Server
   #socketClients: Map<string, PluginSocket>
   #liveErrors: WriteStream
   #dynamicManager: DynamicServerManager
+
+  #groups: Record<string, ServerGroup> = {}
   // Maps a server to a specific connection, this assumes there should never be more than one socket per server
 
   constructor(steam: SteamAPI, dataDir: string, configDir: string, configManager: ConfigManager) {
@@ -69,7 +81,7 @@ export default class ServerManager {
     this.dataDir = dataDir
     this.configDir = configDir
     this.#cfgManager = configManager
-    this.#dynamicManager = new DynamicServerManager(configDir, {
+    this.#dynamicManager = new DynamicServerManager(this, configDir, {
       protocol: process.env.DOCKER_FORCE_PROTOCOL as "http" | "https" | "ssh" | undefined,
       host: process.env.DOCKER_HOST,
       port: process.env.DOCKER_PORT || 2375,
@@ -124,7 +136,7 @@ export default class ServerManager {
     if(record.type != LiveRecordType.Auth) return console.warn("[ServerManager] Got non-auth packets when not-authenticated, ignoring")
     JWT.verify<PluginTokenPayload>(record.token, process.env.STATE_SECRET)
       .then(({payload}) => {
-        const server = this.servers[payload.sub]
+        const server = this.getServer(payload.sub)
         if(server) {
           client._setServer(server)
           server._setSocket(client)
@@ -214,14 +226,14 @@ export default class ServerManager {
 
     // Periodically send out packets to hopefully keep it alive, and let the other end know we are here
     setInterval(() => {
-      for(const server of Object.values(this.servers)) {
+      for(const server of Object.values(this.getAll())) {
         // This triggers an OK packet
         server.emit("live:subscribe")
       }
     }, LIVE_SOCKET_KEEPALIVE_INTERVAL)
   }
 
-  onShutdown() {
+  async onShutdown() {
     if(this.#socket) {
       // Inform all clients that we are shutting down, try to reconnect
       for(const client of this.#socketClients.values()) {
@@ -230,8 +242,8 @@ export default class ServerManager {
       this.#socket.close()
     }
 
-    for(const server of Object.values(this.servers)) {
-      server.pushLiveRecord(null)
+    for(const group of Object.values(this.#groups)) {
+      await group.onShutdown()
     }
   }
 
@@ -240,8 +252,14 @@ export default class ServerManager {
    * @returns Server[]
    */
   public getAll() {
-    return Object.values(this.servers)
-      .sort(this.sortServer)
+    const list = []
+    for(const groups of Object.values(this.#groups)) {
+      for(const server of groups.Servers) {
+        list.push(server)
+      }
+    }
+    list.sort(this.sortServer)
+    return list
   }
 
   /**
@@ -250,18 +268,23 @@ export default class ServerManager {
    * @returns Record<string, GroupInfo | {servers: Server[]}>
    */
   public getAllGrouped<T>(mapFn: (value: Server) => (T)) {
-    return Object.entries(this.#groups).map(([groupId, data]) => {
-      return {
-        id: groupId,
-        name: data.name,
-        type: SERVER_TYPE_MAP[data.type] ?? data.type,
-        servers: Object.fromEntries(Object.entries(this.servers)
-          .filter(([, server]) => server.group.id === groupId)
-          .sort(([gid1,server1],[gid2,server2]) => this.sortServer(server1, server2))
-          .map(([gid,server]) => [gid, mapFn(server)] )
-        )
-      }
-    })
+    return Object.values(this.#groups)
+      .map((group) => {
+        let templateId: string|null = null
+        if(group instanceof DynamicServerGroup) {
+          templateId = group.TemplateId
+        }
+        return {
+          id: group.Id,
+          name: group.Name,
+          type: SERVER_TYPE_MAP[group.Type] ?? group.Type,
+          templateId: templateId,
+          servers: Object.fromEntries(Object.values(group.Servers)
+            .sort((server1, server2) => this.sortServer(server1, server2))
+            .map(server => [server.id, mapFn(server)] )
+          )
+        }
+      })
   }
 
   private sortServer(a: Server, b: Server) {
@@ -276,20 +299,26 @@ export default class ServerManager {
    * @param key 
    * @returns 
    */
-  public get(key: string) {
+  public getServer(key: string) {
     // TODO: re-implement when they share same interface
     // // Is docker if starts with panel-
     // if(key.startsWith("panel")) {
     //   return this.#dynamicManager.getInstance(key)
     // }
-    return this.servers[key.toLowerCase()]
+    for(const group of Object.values(this.#groups)) {
+      const server = group.getServer(key)
+      if(server) return server
+    }
+    return null
   }
-
+  public getGroup(id: string) {
+    return this.#groups[id]
+  }
   /**
    * Refreshes all servers at once
    */
   public async refresh() {
-    await Promise.allSettled(Object.values(this.servers).map(server => server.refresh()))
+    await Promise.allSettled(this.getAll().map(server => server.refresh()))
   }
 
   /**
@@ -361,7 +390,7 @@ export default class ServerManager {
     await this.#dynamicManager.Load()
     try {
       const servers = await readFile(path.join(this.configDir, "servers.json"), 'utf-8')
-      await this.loadServers(Json5.parse(servers))
+      await this.#loadGroups(Json5.parse(servers))
 
       try {
         const shares = await readFile(path.join(this.configDir, "shares.json"), 'utf-8')
@@ -385,8 +414,6 @@ export default class ServerManager {
       }
     }
   }
-
-  
 
   private async loadShares(shares: any) {
     if(!shares) {
@@ -430,7 +457,7 @@ export default class ServerManager {
           const serverIds = []
           for(const id of dest.serverIds) {
             const _id = id.toLowerCase()
-            if(this.servers[_id]) {
+            if(this.getServer(_id)) {
               serverIds.push(_id)
               numServers++
             } else {
@@ -455,64 +482,49 @@ export default class ServerManager {
     }
   }
 
-  private async loadServers(config: any) {
-
-    this.shortRefreshInterval = 1000 * (config['shortRefreshIntervalSeconds'] ?? 60)
-    this.longRefreshInterval = 1000 * (config['longRefreshIntervalSeconds'] ?? 60)
-
-    const serverPromises = []
+  async #loadGroups(config: any) {
+    const startTime = Date.now()
     for(const [groupId, data] of Object.entries<ConfigGroupData>(config)) {
-      this.#groups[groupId] = {
-        id: groupId,
-        name: data.name ?? groupId,
-        type: data.type || "source",
-        actions: data.actions ?? []
-      }
-      for (const [id, server] of Object.entries<ConfigServerData>(data.servers)) {
-        if(!server.name) {
-          console.warn(`[ServerManager] WARN: Skipping ${id}: Server has no name`)
-        } else if(!server.type) {
-          console.warn(`[ServerManager] WARN: Skipping ${id}: ${server.name} has no type`)
-        } else if(!server.ip) {
-          console.warn(`[ServerManager] WARN: Skipping ${id}: ${server.name} has no ip`)
-        } else {
-          const [, host, port] = server.ip.match(/([a-zA-Z0-9.]+):?(\d*)/)
-          serverPromises.push(new Promise((resolve, reject) => {
-            DNS.lookup(host, { verbatim: false}, (err, address, family) => {
-              if (err) {
-                console.warn(`[ServerManager] Warn: Could not resolve IP for hostname ${host}:\n`, err)
-              }
-
-              const tags = server.tags ?? []
-
-              this.servers[id] = new Server(this.#groups[groupId], {
-                actions: server.actions ?? [],
-                id,
-                name: server.name,
-                domain: host,
-                port: Number(port) ?? 27015,
-                ip: address ?? null,
-                type: server.type,
-                tags: tags,
-                cfgDirectory: server.cfgDirectory,
-                logsPath: server.logsPath,
-                activityId: server.activityId,
-                rcon: server.rcon,
-                systemd: server.systemd,
-                sortOrder: server.sortOrder
-              })
-              resolve(true)
-            })
-          }))
+      const actions: ServerAction[] = (data.actions ?? []).map(action => {
+        return {
+          showWhen: "online",
+          ...action
         }
+      })
+      if('templateId' in data) {
+        const group = new DynamicServerGroup(this.#dynamicManager, groupId, {
+          name: data.name,
+          type: data.type,
+          actions,
+          templateId: data.templateId,
+          serverTemplate: data.serverTemplate,
+          minServers: data.minServers
+        })
+        this.#groups[groupId] = group
+      } else if('servers' in data) {
+        const group = new StandardServerGroup(groupId, {
+          name: data.name,
+          type: data.type,
+          actions
+        })
+        await group.ParseServers(data.servers)
+        this.#groups[groupId] = group
+      } else {
+        console.error(`[ServerManager] ERROR: Unknown group type for group \"${groupId}\" (no 'templateId' or 'servers')`)
       }
     }
 
-    const startTime = Date.now()
-    await Promise.allSettled(serverPromises)
+    // await Promise.allSettled(serverPromises)
     const endTime = Date.now() - startTime
+    console.log(`[ServerManager] Loaded ${this.Count} servers in ${endTime.toFixed(1)} ms`)
+  }
 
-    console.log(`[ServerManager] Loaded ${Object.keys(this.servers).length} servers in ${endTime.toFixed(1)} ms`)
+  get Count() {
+    let count = 0
+    for(const group of Object.values(this.#groups)) {
+      count += group.ServerCount
+    }
+    return count
   }
 
   async queryHost(host: string, port: number, type: string, options: Partial<Gamedig.QueryOptions> = {}) {

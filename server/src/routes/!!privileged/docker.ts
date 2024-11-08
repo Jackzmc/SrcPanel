@@ -7,7 +7,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         return manager.Templates
     })
 
-    fastify.post('/templates/:templateId/create', async (req: FastifyRequest<{Params: {templateId: string}}>, reply) => {
+    fastify.post('/templates/:templateId/create', async (req: FastifyRequest<{Params: {templateId: string}, Querystring: { start?: boolean }}>, reply) => {
         if(!req.params.templateId) {
             return reply.code(400).send({
                 error: "MISSING_TEMPLATE_ID",
@@ -16,6 +16,9 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
         try {
             const instance = await manager.createInstance(req.params.templateId)
+            if(req.query.start) {
+                await instance.Start()
+            }
             return {
                 id: instance.ContainerId,
                 ip: instance.Ip,

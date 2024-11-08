@@ -18,7 +18,7 @@
       </span>
     </td>
     <td :class="manage ? undefined : 'has-text-centered'">
-      <template v-if="server.status.online">
+      <template v-if="server.status?.online">
         {{ server.status.data?.players.length }} / {{ server.status.data?.maxplayers }}
       </template>
     </td>
@@ -29,10 +29,14 @@
       <td>
         <!-- <div class="buttons" v-if="server.features.includes('plugin')"> -->
         <div class="buttons">
-          <button :disabled="actionRunning" v-if="server.features.systemd" @click="processAction(undefined, 'start')" class="button is-success">Start</button>
-          <template v-if="server.status.online">
-            <button :data-tooltip="action.description" :disabled="actionRunning" v-for="(action, i) in actions" :key="i" @click="processAction(action)" class="button is-dark" :style="{'background-color': action.color}">{{ action.name }}</button>
-          </template>
+          <button :disabled="actionRunning" v-if="server.features.systemd || server.features.docker" @click="processAction(undefined, 'start')" class="button is-success">Start</button>
+          <button v-for="(action, i) in actions" :key="i"
+            :data-tooltip="action.description" :disabled="actionRunning"
+            class="button is-dark" :style="{'background-color': action.color}"
+            @click="processAction(action)"
+          >
+            {{ action.name }}
+          </button>
         </div>
         <!-- <Icon class="is-size-6 no-border" v-else icon="fa-plug-circle-minus" data-tooltip="No connection to plugin, cannot perform actions at this time">Unavailable</Icon> -->
       </td>
@@ -40,17 +44,17 @@
     <template v-else>
       <template v-if="type === 'source'">
         <td>
-          <template v-if="server.status.online">
+          <template v-if="server.status?.online">
             {{ server.status.data?.map }}
           </template>
         </td>
         <td>
-          <p @click="copyCommand" :class="{ 'has-text-grey': !server.status.online }">
+          <p @click="copyCommand" :class="{ 'has-text-grey': !server.status?.online }">
             connect {{ server.domain }}:{{ server.port }}
           </p>
         </td>
         <td>
-          <p @click="copyCommand" :class="{ 'has-text-grey': !server.status.online }">
+          <p @click="copyCommand" :class="{ 'has-text-grey': !server.status?.online }">
             mm_dedicated_force_servers {{ server.ip }}:{{ server.port }}
           </p>
         </td>
@@ -124,7 +128,18 @@ async function processAction(action?: ServerAction, command?: string) {
 }
 
 const actions = computed(() => {
-  return props.server.actions.filter(action => !action.isHidden)
+  return props.server.actions
+    .map(action => {
+      let isVisible = action.showWhen === "any"
+      if(props.server.status?.online && action.showWhen === "online") isVisible = true
+      else if(!props.server.status?.online && action.showWhen === "offline") isVisible = false
+      else isVisible = false
+      return {
+        ...action,
+        visible: isVisible
+      }
+    })
+    .filter(action => !action.isHidden && action.visible)
 })
 
 const trClass = computed(() => {

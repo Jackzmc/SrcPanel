@@ -13,6 +13,10 @@ export default class DynamicServerInstance {
         this.#ip = ip
         this.#port = port
     }
+    
+    get TemplateId() {
+        return this.#template.id
+    }
 
     get Ip() { 
         return this.#ip
@@ -23,8 +27,11 @@ export default class DynamicServerInstance {
     get Hostname() {
         return `${this.Ip}:${this.Port}`
     }
-
     get ContainerId() {
+        return this.#container.id
+    }
+
+    get ContainerName() {
         return `panel-${this.#template.id}-${this.#port}`
     }
 

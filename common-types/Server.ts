@@ -16,13 +16,26 @@ export interface ServerStatus {
 export type PlayerAction = "kick"
 
 
-export interface GroupInfo {
+interface BaseGroupInfo {
     id: string,
     name: string,
     type: ServerType,
     actions?: ServerAction[]
+}
+export interface StandardGroupInfo extends BaseGroupInfo {
 
 }
+export interface DynamicGroupInfo extends BaseGroupInfo {
+    templateId: string,
+    serverTemplate?: {
+        name: string,
+        ip: string,
+        activityId?: string,
+        tags?: string[]
+    },
+    minServers?: boolean
+}
+export type GroupInfo = StandardGroupInfo | DynamicGroupInfo
 
 export interface ServerData {
     id: string,
@@ -48,11 +61,6 @@ export interface PlayerStats {
     count: number
 }
   
-export interface ExportGroupInfo extends GroupInfo {
-    servers: Record<string, ServerData>
-}
-
-
 export interface ServerInfo extends ServerData {
     tags: string[],
     features: ServerAvailableFeatures
@@ -71,7 +79,8 @@ export interface ServerGroup {
     id: string,
     name: string,
     servers: Record<string, ServerInfo>,
-    type: ServerType
+    type: ServerType,
+    templateId?: string
 }
 
 export interface ServerAction {
@@ -82,7 +91,8 @@ export interface ServerAction {
     isHidden: boolean,
     description?: string,
 
-    inherited?: boolean
+    inherited?: boolean,
+    showWhen: "any" | "online" | "offline"
 }
 export type BuiltInActions = "builtin:stop" | "builtin:request_stop" | "builtin:update" | "builtin:kick"
 
@@ -91,6 +101,7 @@ export interface ServerAvailableFeatures {
     console?: boolean
     configs?: boolean
     systemd?: boolean
-    plugin?: boolean
+    plugin?: boolean,
+    docker?: boolean
 } 
 export type ServerFeature = keyof ServerAvailableFeatures

@@ -26,6 +26,16 @@
         <tbody>
           <ServerRow v-for="server in group.servers" :key="server.id" :server="server" :type="group.type" :manage="manage"></ServerRow>
         </tbody>
+        <tfoot v-if="group.templateId">
+          <tr class="has-background-lighter">
+            <td style="vertical-align: middle">Start New Instance</td>
+            <td>-</td>
+            <td>-</td>
+            <td colspan="2">
+              <button type="button" class="button is-info is-small" @click="createInstance">Start</button>
+            </td>
+          </tr>
+        </tfoot>
       </table>
     </div>
   </div>
@@ -34,12 +44,26 @@
 <script setup lang="ts">
 import { ServerGroup } from '../../../../common-types/Server';
 import ServerRow from '@/components/servers/ServerRow.vue'
+import { request } from '@/js/util.js';
+import { notify } from '@kyvg/vue3-notification';
 import { computed } from 'vue';
 
 const props = defineProps<{
   group: ServerGroup,
   manage?: boolean
 }>()
+
+async function createInstance() {
+  const response = await request(`/api/groups/${props.group.id}/servers?start=1`, {
+    method: "POST"
+  })
+  if(response?.ok) {
+    await notify({
+      type: "success",
+      text: `Started new instance for ${props.group.name}`
+    })
+  }
+}
 
 </script>
 

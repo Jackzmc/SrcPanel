@@ -68,7 +68,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     })
 
     fastify.get('/:id', async(req: FastifyRequest<{Params: { id: 'string' }}>, reply): Promise<ServerInfo> => {
-        const server = fastify.servers.get(req.params.id)
+        const server = fastify.servers.getServer(req.params.id)
         if(!server) {
             return reply.code(404).send({
                 error: "SERVER_NOT_FOUND",
@@ -82,7 +82,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     })
 
     fastify.get('/:id/data', async(req: FastifyRequest<{Params: { id: 'string' }}>, reply): Promise<ServerDetailed> => {
-        const server = fastify.servers.get(req.params.id)
+        const server = fastify.servers.getServer(req.params.id)
         if(!server) {
             return reply.code(404).send({
                 error: "SERVER_NOT_FOUND",
@@ -115,7 +115,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         // if(req.query.raw && !req.user.hasPermission("servers.configs.read_raw")) return NO_PERMISSION(reply)
         // else if(!req.user.hasPermission("servers.configs.read")) return NO_PERMISSION(reply)
 
-        const server = fastify.servers.get(req.params.id)
+        const server = fastify.servers.getServer(req.params.id)
         if(!server) {
             return reply.code(404).send({
                 error: "SERVER_NOT_FOUND",
@@ -212,7 +212,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         reply.raw.flushHeaders()
         reply.raw.write('retry: 5000\n\n')
 
-        const server = fastify.servers.get(req.params.id)
+        const server = fastify.servers.getServer(req.params.id)
 
         if(!server) {
             send({
@@ -251,7 +251,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
     fastify.get('/:id/status', async(req: FastifyRequest<{Params: { id: 'string' }}>, reply) => {
 
-        const server = fastify.servers.get(req.params.id)
+        const server = fastify.servers.getServer(req.params.id)
         if(!server) {
             return reply.code(404).send({
                 error: "SERVER_NOT_FOUND",
@@ -291,7 +291,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     })
 
     fastify.get('/:id/generate-jwt', async(req: FastifyRequest<{Params: { id: 'string'} }>, reply) => {
-        const server = fastify.servers.get(req.params.id)
+        const server = fastify.servers.getServer(req.params.id)
 
         if(!server) return NOT_FOUND(reply, "Server")
         const [code, granted] = req.user.requirePermission("servers.generate_jwt", { resourceId: server.id })
@@ -306,7 +306,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
 
     fastify.post('/:id/start', async(req: FastifyRequest<{Params: { id: 'string'} }>, reply) => {
-        const server = fastify.servers.get(req.params.id)
+        const server = fastify.servers.getServer(req.params.id)
         if(!server) NOT_FOUND(reply, "Server")
         const [code, granted] = req.user.requirePermission("servers.action.builtin.start", { resourceId: server.id })
         if(!granted) return NO_PERMISSION(reply, "You do not have permission to start this server", code)
@@ -329,7 +329,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     })
 
     fastify.post('/:id/action/:action', async(req: FastifyRequest<{Params: { id: string, action: string } }>, reply) => {
-        const server = fastify.servers.get(req.params.id)
+        const server = fastify.servers.getServer(req.params.id)
         if(!server) return NOT_FOUND(reply, "Server")
 
         if(!server.hasCommandSupport) {
@@ -366,7 +366,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     })
 
     fastify.post('/:id/cmd', async(req: FastifyRequest<{Params: { id: string }, Querystring: {'no-response'?: boolean}, Body: string }>, reply) => {
-        const server = fastify.servers.get(req.params.id)
+        const server = fastify.servers.getServer(req.params.id)
         if(!server) return NOT_FOUND(reply, "Server")
 
         if(req.body.includes("rcon_password"))
@@ -403,7 +403,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     })
 
     fastify.post('/:id/stop', async(req: FastifyRequest<{Querystring: { force?: boolean }, Params: { id: 'string'} }>, reply) => {
-        const server = fastify.servers.get(req.params.id)
+        const server = fastify.servers.getServer(req.params.id)
         if(!server) NOT_FOUND(reply, "Server")
         const [code, granted] = req.user.requirePermission(req.query.force ? "servers.action.builtin.stop" : "servers.action.builtin.request_stop", { resourceId: server.id })
         if(!granted) return NO_PERMISSION(reply, "You do not have permission to stop this server", code)
@@ -443,7 +443,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     })
 
     fastify.get('/:id/logs', async (req: FastifyRequest<{ Params: { id: 'string' } }>, reply) => {
-        const server = fastify.servers.get(req.params.id)
+        const server = fastify.servers.getServer(req.params.id)
         if(!server) {
             return reply.status(404).send({
                 error: "Server Not Found",
@@ -468,7 +468,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             reply.raw.write(`data: ${encodeURIComponent(line)}\n\n`)
         }
         let failed = false
-        const server = fastify.servers.get(req.params.id)
+        const server = fastify.servers.getServer(req.params.id)
         if(!server) {
             failed = true
             eventHandler(`Unknown server`)
