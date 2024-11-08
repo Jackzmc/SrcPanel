@@ -145,15 +145,15 @@ const actions = computed(() => {
 const trClass = computed(() => {
   const classes: string[] = []
   if(props.manage) {
-    classes.push(props.server.status.online ? "is-size-5" : "is-size-6")
+    classes.push(props.server.status?.online ? "is-size-5" : "is-size-6")
   }
   return classes
 })
 const serverClasses = computed(() => {
   const classes = ["has-tooltip-arrow", "has-tooltip-right"];
 
-  if (props.server.status.online) {
-    if (props.server.status.data?.players.length == 0) {
+  if (props.server.status?.online) {
+    if (props.server.status.data?.players.length === 0) {
       classes.push("has-text-success");
       if(!props.manage) classes.push("has-tooltip-success");
     } else {
@@ -168,10 +168,11 @@ const serverClasses = computed(() => {
 })
 const tooltip = computed(() => {
   if(props.manage) return "Click to manage server"
-  if (props.server.status.online)
-    return props.server.status.data?.players.length == 0
+  if (props.server.status?.online) {
+    if(!props.server.status.data) return ""
+    return props.server.status.data.players.length == 0
       ? "Server is currently online & empty. Click to join"
       : "Server has players online. Click to join.";
-  else return "Server is offline, unresponsive, or unreachable";
+  } else return "Server is offline, unresponsive, or unreachable";
 })
 </script>
