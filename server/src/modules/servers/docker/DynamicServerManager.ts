@@ -94,8 +94,7 @@ export default class DynamicServerManager {
                 id: template.config.id
             }
         )
-
-        const container = await this.#docker.createContainer({
+        const config = {
             name: `panel-${templateId}-${port}`,
             Image: template.config.image,
             AttachStdin: true,
@@ -115,7 +114,9 @@ export default class DynamicServerManager {
                 "panel.template": templateId,
                 "panel.port": port.toString(),
             }
-        })
+        }
+        console.debug('creating with config', config)
+        const container = await this.#docker.createContainer(config)
         const instance =  new DynamicServerInstance(template.config, container, template.config.ip, port)
         await this.#registerInstance(instance)
         return instance
