@@ -3,7 +3,7 @@ import Server from "../Server.js"
 
 export interface CreateGroupOptions {
     name?: string
-    type?: string,
+    type: string,
     description?: string
     actions?: ServerAction[]
 }
@@ -20,7 +20,7 @@ export default class ServerGroup {
     constructor(id: string, options: CreateGroupOptions) {
         this._id = id
         this._name = options.name ?? id
-        this._type = options.type ?? "source"
+        this._type = options.type
         this._actions = options.actions ?? []
         this._description = options.description ?? ""
     }

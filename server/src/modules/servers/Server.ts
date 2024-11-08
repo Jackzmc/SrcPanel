@@ -502,7 +502,7 @@ export default class Server extends EventEmitter {
               cvars: this.#cvars
             }
         } catch(err) {
-          if(!err.message.includes("Error: Failed all ")) {
+          if(!err.message.includes("Failed all ")) {
             console.error(`[Server/${this.#info.id}] refresh() Error:`, err)
           }
           this._status.data = null
