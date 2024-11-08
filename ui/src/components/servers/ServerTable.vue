@@ -27,7 +27,7 @@
         <tbody>
           <ServerRow v-for="server in group.servers" :key="server.id" :server="server" :type="group.type" :manage="manage"></ServerRow>
         </tbody>
-        <tfoot v-if="group.templateId">
+        <tfoot v-if="manage && group.templateId">
           <tr class="has-background-lighter">
             <td style="vertical-align: middle">Start New Instance</td>
             <td colspan="2"></td>
