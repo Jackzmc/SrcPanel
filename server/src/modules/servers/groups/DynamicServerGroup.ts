@@ -52,13 +52,14 @@ export class DynamicServerGroup extends ServerGroup {
             if(state.Running) {
                 activeCount++;
             } else if(activeCount < this.#minServers) {
+                console.debug(`Starting existing instance ${activeCount + 1}/${this.#minServers}`)
                 // If we have servers but they aren't active, activate
                 await instance.Start()
                 activeCount++
             }
         }
         for(let i = activeCount; i < this.#minServers; i++) {
-            console.debug(`Starting instance ${i+1}/${this.#minServers}`)
+            console.debug(`Creating new instance ${activeCount + 1}/${this.#minServers}`)
             const instance = await this.createInstance()
             await instance.Start()
         }
