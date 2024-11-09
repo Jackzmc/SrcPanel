@@ -81,12 +81,14 @@ export default class ServerManager {
     this.dataDir = dataDir
     this.configDir = configDir
     this.#cfgManager = configManager
-    this.#dynamicManager = new DynamicServerManager(this, configDir, {
-      protocol: process.env.DOCKER_FORCE_PROTOCOL as "http" | "https" | "ssh" | undefined,
-      host: process.env.DOCKER_HOST,
-      port: process.env.DOCKER_PORT || 2375,
-      version: process.env.DOCKER_VERSION
-    })
+    if(process.env.DOCKER_ENABLED) {
+      this.#dynamicManager = new DynamicServerManager(this, configDir, {
+        protocol: process.env.DOCKER_FORCE_PROTOCOL as "http" | "https" | "ssh" | undefined,
+        host: process.env.DOCKER_HOST,
+        port: process.env.DOCKER_PORT || 2375,
+        version: process.env.DOCKER_VERSION
+      })
+    }
 
     _instance = this
   }
@@ -388,7 +390,8 @@ export default class ServerManager {
   async Load() {
     this.longRefreshInterval = await this.#cfgManager.GetKV<number>("servers.long_refresh_interval", 600)
     this.shortRefreshInterval = await this.#cfgManager.GetKV<number>("servers.short_refresh_interval", 30)
-    await this.#dynamicManager.Load()
+    if(this.#dynamicManager)
+      await this.#dynamicManager.Load()
     try {
       const servers = await readFile(path.join(this.configDir, "servers.json"), 'utf-8')
       await this.#loadGroups(Json5.parse(servers))
@@ -493,6 +496,10 @@ export default class ServerManager {
         }
       })
       if('templateId' in data) {
+        if(!this.#dynamicManager) {
+          console.warn(`[ServerManager] WARN: Found templated server config but docker support is not enabled (DOCKER_ENABLED set to 1); skipping`)
+          continue;
+        }
         const group = new DynamicServerGroup(this.#dynamicManager, groupId, {
           name: data.name,
           type: data.type,
