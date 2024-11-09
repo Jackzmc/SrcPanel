@@ -23,6 +23,10 @@ export default class DockerServer extends Server {
       }
     }
 
+    public get ContainerInstance() {
+        return this.#instance
+    }
+
     public override async start() {
         return await this.#instance.Start()
     }

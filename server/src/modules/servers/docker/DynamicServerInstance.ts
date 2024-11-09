@@ -35,6 +35,15 @@ export default class DynamicServerInstance {
         return `panel-${this.#template.id}-${this.#port}`
     }
 
+    async Exists() {
+        try {
+            await this.#container.inspect()
+            return true
+        } catch(err) {
+            return false
+        }
+    }
+
     async State(): Promise<ContainerInspectInfo['State']> {
         const inspect = await this.#container.inspect()
         return inspect.State

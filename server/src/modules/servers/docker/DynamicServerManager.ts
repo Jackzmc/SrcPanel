@@ -1,4 +1,4 @@
-import Docker from 'dockerode'
+import Docker, { Container } from 'dockerode'
 import { readFile } from 'fs/promises'
 import path from 'path'
 import Json5 from 'json5';
@@ -148,8 +148,14 @@ export default class DynamicServerManager {
         return instance
     }
 
+
+
     async #registerInstance(instance: DynamicServerInstance) {
         this.#instances[instance.ContainerName] = instance
+    }
+
+    async unregisterInstance(instance: DynamicServerInstance) {
+        delete this.#instances[instance.ContainerName]
     }
 
     getInstance(id: string) {

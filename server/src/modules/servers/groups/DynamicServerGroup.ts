@@ -44,6 +44,16 @@ export class DynamicServerGroup extends ServerGroup {
     }
 
     async #checkServers() {
+        for(const [id, server] of Object.entries(this._servers)) {
+            if(server instanceof DockerServer) {
+                const exists = await server.ContainerInstance.Exists()
+                if(!exists)  {
+                    console.warn(`[Servers/${this.Id}]: Container gone for server ${id}, removing`)
+                    this.#manager.unregisterInstance(server.ContainerInstance)
+                    delete this._servers[id]
+                }
+            }
+        }
         const instances = this.#manager.getInstancesForTemplate(this.#templateId)
         let activeCount = 0
         for(const instance of instances) {
