@@ -6,6 +6,10 @@
         <button class="delete"></button>
         Steam servers are currently offline, most likely due to weekly scheduled maintenance. You won't be able to join servers until they come back online. <a href="https://steamstat.us/">Check the status live at steamstat.us</a>
       </div>
+      <div v-if="meta && meta.settings.notice" :class="['notification', meta.settings['notice.type']]" >
+        <button class="delete"></button>
+        <span v-html="noticeText" />
+      </div>
       <div class="is-pulled-right mt-2" style="margin-right: 10px">
         <em v-if="countdownText">{{countdownText}}</em>
         <Icon icon="spinner" v-else spin />
@@ -53,9 +57,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import Servers from '../components/servers/Servers.vue'
 import { PanelMetaInfo } from '../../../common-types/Panel.js';
+
+import { marked } from 'marked'
 
 const props = defineProps<{
   meta?: PanelMetaInfo
@@ -65,6 +71,11 @@ let countdown = ref<number>(0)
 let interval = ref<ReturnType<typeof setInterval>>()
 
 let countdownText = ref()
+
+const noticeText = computed(() => {
+  if(!props.meta || !props.meta.settings['notice']) return
+  return marked(props.meta.settings['notice'])
+})
 
 function onServerRefresh(payload: { state: string, interval?: number }) {
   if(payload.state == 'start') {

@@ -24,6 +24,8 @@ export const KVConfig: KeysRecords = {
     "stats_url": { flags: KeyFlags.Public, type: "url", name: "Stats Url", description: "Link to stats server to fetch stat data from"},
     "_version": { flags: KeyFlags.Internal, type: "string" },
     "first_time_setup.stage": { flags: KeyFlags.Internal, type: "integer" },
+    "notice": { flags: KeyFlags.Public, type: "string", name: "Notice", description: "A notice to post" },
+    "notice.type": { flags: KeyFlags.Public, type: "string", "name": "Notice Type", description: "Class"}
 }
 export type ConfigKey = keyof typeof KVConfig //"domain" | "discord.link" | "servers.long_refresh_interval" | "servers.short_refresh_interval"
 export const PublicKeys = Object.entries(KVConfig)
