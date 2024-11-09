@@ -21,14 +21,18 @@ import SetCache from '../modules/SetCache.js';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 async function db(fastify: FastifyInstance) {
+    const ASSETS_FOLDER = join(__dirname, '/../../../../assets')
     const DATA_FOLDER = join(__dirname, '/../../../../data')
     const CONFIG_FOLDER = join(__dirname, '/../../../../config')
+    console.log('assets', ASSETS_FOLDER)
+    console.log('data', DATA_FOLDER)
+    console.log('config', CONFIG_FOLDER)
     try {
         await mkdir(DATA_FOLDER)
     } catch(_) { }
     
     const steam = new SteamAPI()
-    await steam.loadAppIdFile('assets/steam_appids.json')
+    await steam.loadAppIdFile(join(ASSETS_FOLDER, 'steam_appids.json'))
 
     const db = mysql.createPool({
         socketPath: process.env.MYSQL_SOCKET_PATH,

@@ -45,10 +45,19 @@ export class DynamicServerGroup extends ServerGroup {
 
     async #checkServers() {
         const instances = this.#manager.getInstancesForTemplate(this.#templateId)
+        let activeCount = 0
         for(const instance of instances) {
             await this.#registerInstance(instance)
+            const state = await instance.State()
+            if(state.Running) {
+                activeCount++;
+            } else if(activeCount < this.#minServers) {
+                // If we have servers but they aren't active, activate
+                await instance.Start()
+                activeCount++
+            }
         }
-        for(let i = this.ServerCount; i < this.#minServers; i++) {
+        for(let i = activeCount; i < this.#minServers; i++) {
             console.debug(`Starting instance ${i+1}/${this.#minServers}`)
             const instance = await this.createInstance()
             await instance.Start()
