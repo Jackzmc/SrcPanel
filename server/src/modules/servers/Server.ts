@@ -98,10 +98,10 @@ export default abstract class Server implements IAction {
         ])
     }
 
-    get Console() { return this._console }
-    get Rcon() { return this._rcon }
-    get Configs() { return this._configs }
-    get Plugin() { return this._plugin }
+    get Console(): ConsoleFeature | null { return this._console }
+    get Rcon(): RconFeature | null { return this._rcon }
+    get Configs(): ConfigsFeature | null { return this._configs }
+    get Plugin(): PluginFeature | null { return this._plugin }
     
     get id() { return this._info.id }
     get name() { return this._info.name }

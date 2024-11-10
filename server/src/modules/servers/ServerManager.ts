@@ -230,7 +230,7 @@ export default class ServerManager {
     setInterval(() => {
       for(const server of Object.values(this.getAll())) {
         // This triggers an OK packet
-        server?.Plugin.Socket.send(LiveRecordResponse.OK, server.Plugin?.liveViewers)
+        server?.Plugin?.Socket.send(LiveRecordResponse.OK, server.Plugin?.liveViewers)
       }
     }, LIVE_SOCKET_KEEPALIVE_INTERVAL)
   }

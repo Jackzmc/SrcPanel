@@ -10,7 +10,8 @@ export default class ConfigsFeature extends Feature {
     #cfgDir: string
     #available: boolean
     constructor(server: Server, configDir: string) {
-        super("Configs", server)
+      super("Configs", server)
+      this.#cfgDir = configDir
     }
 
     async init() {
