@@ -155,6 +155,7 @@ const serverClasses = computed(() => {
   if (props.server.status?.online) {
     const count = props.server.status.data?.players.length
     if (count && count > 0) {
+      classes.push("has-text-info")
       if(!props.manage) classes.push("has-tooltip-info");
     } else {
       classes.push("has-text-success");

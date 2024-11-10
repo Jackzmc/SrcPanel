@@ -1,7 +1,7 @@
 import { mkdir, readFile, stat, open } from 'fs/promises'
 import Json5 from 'json5'
 import DNS from 'dns'
-import Server, { ConfigServerData } from './Server.js'
+import Server, { ConfigServerData } from './Server'
 import Share from '../Share.js';
 import path, { join } from 'path';
 import { open as sqliteOpen } from 'sqlite'
@@ -141,8 +141,8 @@ export default class ServerManager {
         const server = this.getServer(payload.sub)
         if(server) {
           client._setServer(server)
-          server._setSocket(client)
-          client.send(LiveRecordResponse.OK, server.liveViewers)
+          server.Plugin?._setSocket(client)
+          client.send(LiveRecordResponse.OK, server.Plugin?.liveViewers)
           this.#debugLive("Authenticated", client.IP)
         } else {
           client.send(LiveRecordResponse.Error, "Invalid or unknown server: " + payload.sub)
@@ -200,7 +200,7 @@ export default class ServerManager {
 
     client.on('close', () => {
       const server = ps.Server
-      server?._setSocket(null) // server may be null (connected but not authenticated)
+      server?.Plugin?._setSocket(null)
       ps._setServer(null)
       this.#socketClients.delete(client.remoteAddress)
       this.#debugLive('client disconnected', client.remoteAddress)
@@ -230,7 +230,7 @@ export default class ServerManager {
     setInterval(() => {
       for(const server of Object.values(this.getAll())) {
         // This triggers an OK packet
-        server.emit("live:subscribe")
+        server?.Plugin.Socket.send(LiveRecordResponse.OK, server.Plugin?.liveViewers)
       }
     }, LIVE_SOCKET_KEEPALIVE_INTERVAL)
   }
@@ -254,7 +254,7 @@ export default class ServerManager {
    * @returns Server[]
    */
   public getAll() {
-    const list = []
+    const list: Server[] = []
     for(const groups of Object.values(this.#groups)) {
       for(const server of groups.Servers) {
         list.push(server)
@@ -321,7 +321,7 @@ export default class ServerManager {
    * Refreshes all servers at once
    */
   public async refresh() {
-    await Promise.allSettled(this.getAll().map(server => server.refresh()))
+    await Promise.allSettled(this.getAll().map(server => server.refreshStatus(false)))
   }
 
   /**

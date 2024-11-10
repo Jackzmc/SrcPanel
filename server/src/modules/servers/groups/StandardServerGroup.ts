@@ -1,4 +1,5 @@
-import Server, { ConfigServerData } from "../Server.js"
+import Server, { ConfigServerData } from "../Server"
+import StandardServer from "../StandardServer.js"
 import ServerGroup, { CreateGroupOptions } from "./ServerGroup.js"
 import DNS from 'dns/promises'
 
@@ -26,7 +27,7 @@ export class StandardServerGroup extends ServerGroup {
                 const tags = server.tags ?? []
                 try {
                     const lookup = await DNS.lookup(host, { verbatim: false, family: 4 })
-                    this._servers[id] = new Server(this, {
+                    const instance = new StandardServer(this, {
                         actions: server.actions ?? [],
                         id,
                         name: server.name,
@@ -42,6 +43,8 @@ export class StandardServerGroup extends ServerGroup {
                         systemd: server.systemd,
                         sortOrder: server.sortOrder
                     })
+                    await instance.init()
+                    this._servers[id] = instance
                 } catch(err) {
                     console.warn(`[ServerManager] Warn: Could not resolve IP for hostname ${host}:\n`, err)
                 }

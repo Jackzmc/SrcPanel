@@ -54,7 +54,7 @@ export default {
         try {
             cacheObj = JSON.parse(await readFile(_dataPath, "utf-8"))
         } catch(err) {
-            if(err.code != "ENOENT") throw err
+            if(err.code != "ENOENT") console.warn(`SetCache.Load: Failed to read cache file: `, err)
         }
     },
     async Save() {

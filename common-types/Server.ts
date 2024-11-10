@@ -50,9 +50,6 @@ export interface ServerDetailed {
     server: ServerInfo
     live: LiveDataCache,
     uptime: number
-    cvars: Record<string, string>,
-    playerCounts: PlayerStats[],
-    playerJoins: { server: string, type: string, timestamp: number, count: number}[],
     configs: any[]
 }
 

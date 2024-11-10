@@ -201,17 +201,17 @@ export default class PluginSocket {
       if(cb) cb(record)
       else console.error("PluginSocket: got command response but no callback is ready")
     } else {
-      this.#server.pushLiveRecord(record)
+      this.#server.Plugin?.pushRecord(record)
       // We use a timeout as many records can come at once, including a game record. So we wait for a gap of a second
-      if(record.type === LiveRecordType.Survivor && !this.#server.liveStatus.clients[record.userid.toString()]) {
-        if(!this.#server.liveStatus.game && Date.now() - this.#lastRefreshTime > MIN_REFRESH_TIME) {
+      if(record.type === LiveRecordType.Survivor && !this.#server.Plugin?.liveStatus.clients[record.userid.toString()]) {
+        if(!this.#server.Plugin?.liveStatus.game && Date.now() - this.#lastRefreshTime > MIN_REFRESH_TIME) {
           this.send(LiveRecordResponse.Refresh, record.userid)
         }
       }
       clearTimeout(this.#refreshCheckTimeout)
       this.#refreshCheckTimeout = setTimeout(() => {
         // If we have live status, but no game record, send a refresh if we haven't already
-        if(this.#server?.liveStatus && !this.#server.liveStatus.game && Date.now() - this.#lastRefreshTime > MIN_REFRESH_TIME) {
+        if(this.#server?.Plugin?.liveStatus && !this.#server.Plugin?.liveStatus.game && Date.now() - this.#lastRefreshTime > MIN_REFRESH_TIME) {
           console.info("[PluginSocket] No game packet, sending a Refresh response")
           this.send(LiveRecordResponse.Refresh)
         }
@@ -241,7 +241,7 @@ export default class PluginSocket {
       let id = this.#id++
       switch(type) {
         case LiveRecordResponse.OK:
-          writer.writeByte(arg ?? this.#server?.liveViewers ?? 0)
+          writer.writeByte(arg ?? this.#server?.Plugin?.liveViewers ?? 0)
           break
         case LiveRecordResponse.Error:
           writer.writeString(arg ?? "")
