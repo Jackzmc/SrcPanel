@@ -31,6 +31,7 @@
     "quick-lru": "^6.1.0",
     "rcon-client": "^4.2.4",
     "sentiment": "^5.0.2",
+    "simple-git": "^3.27.0",
     "sql-template-strings": "^2.2.2",
     "sqlite": "^5.1.1",
     "sqlite3": "^5.1.7",

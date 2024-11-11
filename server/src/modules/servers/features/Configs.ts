@@ -3,12 +3,14 @@ import Server from "../Server.js";
 import Feature from "./Feature.js";
 import { readdir, stat } from "fs/promises";
 import ServerManager from "../ServerManager.js";
+import { simpleGit, SimpleGit, SimpleGitOptions } from 'simple-git';
 
 const VALID_CONFIG_EXTS = ["cfg", "toml", "yml", "json"]
 
 export default class ConfigsFeature extends Feature {
     #cfgDir: string
     #available: boolean
+    #git: SimpleGit | null = null
     constructor(server: Server, configDir: string) {
       super("Configs", server)
       this.#cfgDir = configDir
@@ -17,11 +19,24 @@ export default class ConfigsFeature extends Feature {
     async init() {
         try {
             await stat(this.#cfgDir)
+            await this.#setupGit()
             this.#available = true
         } catch(err) {
             this.#available = false
             console.error(`[Server/${this._server.id}] ERROR: Could not access config directory:`, err)
         }
+    }
+
+    async #setupGit() {
+      // Silent fail if no .git
+      if(!await stat(join(this.#cfgDir, ".git"))) {
+        return
+      }
+      this.#git = simpleGit(this.#cfgDir)
+    }
+
+    get HasGitSupport() {
+      return this.#git != undefined
     }
 
     get configDir() {
