@@ -56,10 +56,10 @@ export default abstract class Server implements IAction {
     protected _group: ServerGroup
     protected _logId: string | null
 
-    protected _console: ConsoleFeature = null
-    protected _rcon?: RconFeature = null
-    protected _configs?: ConfigsFeature = null
-    protected _plugin?: PluginFeature = null
+    protected _console: ConsoleFeature|null = null
+    protected _rcon?: RconFeature|null = null
+    protected _configs?: ConfigsFeature|null = null
+    protected _plugin?: PluginFeature|null = null
     protected _actions: ServerAction[] = []
 
     protected _status: ServerStatus

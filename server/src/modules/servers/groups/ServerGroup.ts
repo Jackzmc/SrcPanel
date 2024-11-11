@@ -39,7 +39,7 @@ export default class ServerGroup {
 
     async onShutdown() {
         for(const server of Object.values(this._servers)) {
-            server?.Plugin.pushRecord(null)
+            server?.Plugin?.pushRecord(null)
         }
     }
 

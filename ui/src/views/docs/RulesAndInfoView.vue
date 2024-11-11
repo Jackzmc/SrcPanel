@@ -26,16 +26,16 @@
     </div>
     <div class="column is-6" id="guidelines">
       <div class="box content">
-        <h4>Guidelines</h4>
-        <p>The following guidelines are intended for <b>official campaign maps</b>. In custom maps, its less of an issue.</p>
+        <h4>Command Use Guidelines</h4>
+        <p>The following guidelines are intended for using commands in <b>official campaign maps</b>. In custom maps, its less of an issue.</p>
         <p>These are guidelines, not rules, as they are not intended to never allow you to do these things. There are always exceptions, these are just meant to have everyone on the same page of what is okay and what is not.</p>
         <div>
           <h6>The general principles of the guidelines:</h6>
           <ol>
-            <li>Use cheats in moderation, do not abuse it, or rely on it.</li>
+            <li>Use cheats in moderation, do not abuse it, or rely on them.</li>
             <li>If it affects others or the team, it's a problem.</li>
             <li>If the team as a whole is okay with it, then it's fine. Don't do actions for what <em>you</em> want, without considering the team</li>
-            <li>Finales you can get away with a <em>little</em> more. </li>
+            <li>Finales and customs are okay to goof off a little more, but don't be excessive.</li>
           </ol>
         </div>
         <br>
