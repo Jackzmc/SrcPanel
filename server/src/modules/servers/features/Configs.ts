@@ -102,4 +102,8 @@ export default class ConfigsFeature extends Feature {
       })
     }
 
+    async pull(origin: string = "origin") {
+      await this.#git.pull(origin)
+    }
+
 }
