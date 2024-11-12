@@ -34,7 +34,7 @@ const MAX_SOCKET_CONNECTIONS = 40
 interface BaseConfigGroupData {
   type: ServerType
   name?: string,
-  actions?: ServerAction[]
+  actionSources?: string[]
 }
 export interface ConfigStandaloneGroupData extends BaseConfigGroupData {
   servers: Record<string, ConfigServerData>,
@@ -74,6 +74,7 @@ export default class ServerManager {
   #dynamicManager: DynamicServerManager
 
   #groups: Record<string, ServerGroup> = {}
+  #actions: Record<string, ServerAction[]> = {}
   // Maps a server to a specific connection, this assumes there should never be more than one socket per server
 
   constructor(steam: SteamAPI, dataDir: string, configDir: string, configManager: ConfigManager) {
@@ -393,6 +394,8 @@ export default class ServerManager {
     if(this.#dynamicManager)
       await this.#dynamicManager.Load()
     try {
+      await this.#loadActions()
+
       const servers = await readFile(path.join(this.configDir, "servers.json"), 'utf-8')
       await this.#loadGroups(Json5.parse(servers))
 
@@ -486,15 +489,31 @@ export default class ServerManager {
     }
   }
 
-  async #loadGroups(config: any) {
-    const startTime = Date.now()
-    for(const [groupId, data] of Object.entries<ConfigGroupData>(config)) {
-      const actions: ServerAction[] = (data.actions ?? []).map(action => {
+  async #loadActions() {
+    const content = await readFile(path.join(this.configDir, "actions.json"), 'utf-8')
+    const actionGroups = Json5.parse(content)
+
+    for(const [key, actions] of Object.entries<ServerAction[]>(actionGroups)) {
+      console.log(key)
+      this.#actions[key] = actions.map(action => {
         return {
           showWhen: "online",
           ...action
         }
       })
+    }
+  }
+
+  async #loadGroups(config: any) {
+    const startTime = Date.now()
+    for(const [groupId, data] of Object.entries<ConfigGroupData>(config)) {
+      let actions: ServerAction[] = []
+      if(data.actionSources) {
+        // Resolve [id1, id2] -> [action1, action2]
+        actions = data.actionSources.reduce((list, actionGroupId) => {
+          return list.concat(this.#actions[actionGroupId])
+        }, [])
+      }
       if('templateId' in data) {
         if(!this.#dynamicManager) {
           console.warn(`[ServerManager] WARN: Found templated server config but docker support is not enabled (DOCKER_ENABLED set to 1); skipping`)
