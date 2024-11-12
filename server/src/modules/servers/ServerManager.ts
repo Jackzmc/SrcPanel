@@ -490,17 +490,21 @@ export default class ServerManager {
   }
 
   async #loadActions() {
-    const content = await readFile(path.join(this.configDir, "actions.json"), 'utf-8')
-    const actionGroups = Json5.parse(content)
+    try {
+      const content = await readFile(path.join(this.configDir, "actions.json"), 'utf-8')
+      const actionGroups = Json5.parse(content)
 
-    for(const [key, actions] of Object.entries<ServerAction[]>(actionGroups)) {
-      console.log(key)
-      this.#actions[key] = actions.map(action => {
-        return {
-          showWhen: "online",
-          ...action
-        }
-      })
+      for(const [key, actions] of Object.entries<ServerAction[]>(actionGroups)) {
+        this.#actions[key] = actions.map(action => {
+          return {
+            showWhen: "online",
+            ...action
+          }
+        })
+      }
+    } catch(err) {
+      if(err.code == "ENOENT") return
+      throw err
     }
   }
 
