@@ -2,13 +2,14 @@ import { stat, readdir, unlink, symlink } from 'fs/promises';
 import { createWriteStream } from 'fs'
 import path from 'path'
 import SteamAPI from './steam.js';
-import { AddonCollectionInfo, AddonInfo, AddonWorkshopInfo, ChildWorkshopItem, DownloadSourceRecord, ShareDestinations, ShareInfo, WorkshopCollectionInfo, WorkshopItem } from '../../../common-types/Share.js'
+import { AddonCollectionInfo, AddonInfo, AddonWorkshopInfo, ChildWorkshopItem, DownloadSourceRecord, ShareDestination, ShareDestinations, ShareInfo, WorkshopCollectionInfo, WorkshopItem } from '../../../common-types/Share.js'
 import sqlite3 from 'sqlite3'
 import sqlite from 'sqlite'
 import SQL from 'sql-template-strings';
 import VPK from '@lowly1337/vpk'
 import { readFile } from 'node:fs/promises';
 import ValveKV from 'valve-kv'
+import { SimpleGit, simpleGit } from 'simple-git';
 
 const DOWNLOAD_TIMEOUT = 1000 * 60 * 3
 
@@ -24,6 +25,7 @@ export default class Share {
     public name: string
     public sourceFolder: string
     public destinations: ShareDestinations = {}
+    #destinationsGit: Record<string, SimpleGit> = {}
     public appId?: number
     #db: sqlite.Database<sqlite3.Database, sqlite3.Statement>
     #steam: SteamAPI
@@ -31,6 +33,7 @@ export default class Share {
     private validExts?: string[]
     private downloadSources: DownloadSourceRecord
     #description: string
+    #git: SimpleGit
 
     constructor(db: sqlite.Database<sqlite3.Database, sqlite3.Statement>, steam: SteamAPI, shareInfo: Partial<ShareInfo>) {
         this.#id = shareInfo.id
@@ -53,6 +56,7 @@ export default class Share {
             chapter_ids TEXT,
             PRIMARY KEY (filename)
         );`)
+        
         // db.exec(SQL`ALTER TABLE addoncache
         //     ADD COLUMN chapter_ids TEXT;`).catch(() => {})
     }

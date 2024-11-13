@@ -92,7 +92,9 @@ export class DynamicServerGroup extends ServerGroup {
 
     async #registerInstance(instance: DynamicServerInstance) {
         const vars = {
-            id: Object.keys(this._servers).length + 1,
+            id: instance.TemplateId,
+            index: Object.keys(this._servers).length + 1,
+            ip: instance.Ip,
             port: instance.Port,
         }
         const id = `${this.Id}-${instance.Port}`

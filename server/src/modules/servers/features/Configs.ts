@@ -1,11 +1,16 @@
 import path from "path";
 import Server from "../Server.js";
 import Feature from "./Feature.js";
-import { readdir, readFile, stat, writeFile } from "fs/promises";
+import { readdir, readFile, stat, unlink, writeFile } from "fs/promises";
 import ServerManager from "../ServerManager.js";
 import { simpleGit, SimpleGit, SimpleGitOptions } from 'simple-git';
 
 const VALID_CONFIG_EXTS = ["cfg", "toml", "yml", "json"]
+
+export interface CommitOptions {
+  message?: string,
+  author?: string,
+}
 
 export default class ConfigsFeature extends Feature {
     #cfgDir: string
@@ -29,10 +34,13 @@ export default class ConfigsFeature extends Feature {
 
     async #setupGit() {
       // Silent fail if no .git
-      if(!await stat(path.join(this.#cfgDir, ".git"))) {
-        return
+      try {
+        await stat(path.join(this.#cfgDir, ".git"))
+        this.#git = simpleGit(this.#cfgDir)
+      } catch(err) {
+        if(err.code === "ENOENT") return
+        else console.warn(`[Server::Configs/${this._server.id}]: Failed to access .git at ${this.#cfgDir}:`, err)
       }
-      this.#git = simpleGit(this.#cfgDir)
     }
 
     get HasGitSupport() {
@@ -88,22 +96,33 @@ export default class ConfigsFeature extends Feature {
       return newPath
     }
 
+    async #commit(filePath: string, options: CommitOptions) {
+      await this.#git.add(filePath)
+      const msg = options.message ? `Admin panel: ${options.message}` : 'Edited by admin panel'
+      await this.#git.commit(msg, {
+        author: `${options.author ?? 'steam'} <steam@admin.jackz.me>`
+      })
+    }
+
     async getFile(filePath: string): Promise<string|null> {
       const newPath = await this.#getPath(filePath)
       return await readFile(newPath, 'utf-8')
     }
 
-    async setFile(filePath: string, content: string, message = "", authorName?: string): Promise<void> {
+    async setFile(filePath: string, content: string, options: CommitOptions = {}): Promise<void> {
       const newPath = await this.#getPath(filePath)
       await writeFile(newPath, content)
-      await this.#git.add(filePath)
-      await this.#git.commit(`Edited file by admin panel: ${message}`, {
-        author: `${authorName ?? 'steam'} <steam@admin.jackz.me>`
-      })
+      await this.#commit(filePath, options)
+    }
+
+    async deleteFile(filePath: string, options: CommitOptions = {}): Promise<void> {
+      const newPath = await this.#getPath(filePath)
+      await unlink(newPath)
+      await this.#commit(filePath, options)
     }
 
     async pull(origin: string = "origin") {
-      await this.#git.pull(origin)
+      await this.#git.pull(origin, undefined, { theirs: 1 })
     }
 
 }

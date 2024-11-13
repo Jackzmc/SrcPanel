@@ -87,18 +87,18 @@ export default class DynamicServerManager {
         }
     }
 
-    async #getNextPort(template: DockerTemplateConfig) {
+    async #getNextPort(ofTemplate: DockerTemplateConfig) {
         const ports = []
         for await(const { containerInfo, container, template } of this.#getContainers()) {
-            if(template.config.id != template.config.id) continue
+            if(template.config.id != ofTemplate.id) continue
             const port = Number(containerInfo.Labels["panel.port"])
             ports.push(port)
         }
         ports.sort()
-        console.log(template.id, 'ports', ports)
+        console.log(ofTemplate.id, 'ports', ports)
 
         // Find next available, filling in gaps
-        let port = template.startPort;
+        let port = ofTemplate.startPort;
         if(ports.includes(port)) {
             while(ports.includes(port)) {
                 port++
@@ -106,6 +106,15 @@ export default class DynamicServerManager {
         }
         console.log('next port: ', port)
         return port
+    }
+
+    async #calculateCount(templateId: string) {
+        let i = 0 ;
+        for await(const { containerInfo, container, template } of this.#getContainers()) {
+            if(template.config.id != templateId) continue
+            i++
+        }
+        return i;
     }
 
     async createInstance(templateId: string) {
@@ -116,7 +125,8 @@ export default class DynamicServerManager {
         const templVars = {
             ip: template.config.ip,
             port,
-            id: template.config.id
+            id: template.config.id,
+            index: await this.#calculateCount(templateId)
         }
         let commands = Array.isArray(template.config.command) ? template.config.command : [template.config.command]
         commands = commands.map(cmd => DynamicServerGroup.formatTemplateVar(cmd, templVars))

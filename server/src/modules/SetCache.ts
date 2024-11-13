@@ -2,6 +2,7 @@ import { readFile, writeFile } from "fs/promises"
 import path from "path"
 
 let cacheObj = {}
+let _loaded = false
 
 export class SetCache<T> {
     set: Set<T>
@@ -53,11 +54,13 @@ export default {
     async Load() {
         try {
             cacheObj = JSON.parse(await readFile(_dataPath, "utf-8"))
+            _loaded = true
         } catch(err) {
             if(err.code != "ENOENT") console.warn(`SetCache.Load: Failed to read cache file: `, err)
         }
     },
     async Save() {
+        if(!_loaded) return
         await writeFile(_dataPath, JSON.stringify(cacheObj))
     }
 }

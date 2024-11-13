@@ -48,7 +48,7 @@ const envToLogger = {
 const app = Fastify({
     pluginTimeout: 20000,
     trustProxy: process.env.NODE_ENV === "production",
-    logger: envToLogger[process.env.NODE_ENV] ?? true
+    logger: envToLogger[process.env.NODE_ENV ?? "development"]
 })
 async function onSignal(signal: NodeJS.Signals) {
     console.log("GOT SIGNAL", signal, "-- SHUTTING DOWN")
