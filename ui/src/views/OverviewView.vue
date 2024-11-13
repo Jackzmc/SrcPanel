@@ -74,7 +74,7 @@ let countdownText = ref()
 
 const noticeText = computed(() => {
   if(!props.meta || !props.meta.settings['notice']) return
-  return marked(props.meta.settings['notice'])
+  return marked(props.meta.settings['notice'], { breaks: true })
 })
 
 function onServerRefresh(payload: { state: string, interval?: number }) {
