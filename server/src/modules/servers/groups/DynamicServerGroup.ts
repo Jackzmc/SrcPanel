@@ -121,7 +121,7 @@ export class DynamicServerGroup extends ServerGroup {
             console.warn(`[ServerManager] Warn: Could not resolve IP for hostname ${host}:\n`, err)
             return
         }
-        this._servers[id] = new DockerServer(this, {
+        const server = new DockerServer(this, {
                 id,
                 name: DynamicServerGroup.formatTemplateVar(this.#serverTemplate.name, vars),
                 ip: address,
@@ -133,6 +133,8 @@ export class DynamicServerGroup extends ServerGroup {
                 activityId: this.#serverTemplate.activityId,
                 sortOrder: this.#serverTemplate.sortOrder
             }, instance)
+        await server.init()
+        this._servers[id] = server
     }
 
     async createInstance() {
