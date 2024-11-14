@@ -6,7 +6,7 @@ import https from 'https';
 import { unlink } from 'fs/promises';
 import { WorkshopItem, SteamUserDetails } from '../../../common-types/Share.js'
 import { EventEmitter } from 'node:events';
-import LruCache, { LRUCache } from 'lru-cache'
+import QuickLRU from 'quick-lru';
 
 // How many bytes of progress to make before sending an update
 const PROGRES_MIN_BYTES = 10_000 // 10KB
@@ -17,16 +17,16 @@ export default class SteamAPI {
     #apikey: string
     #userAgent: string
     #appMap: Record<string, string>
-    #itemCache: LRUCache<string, WorkshopItem>
+    #itemCache: QuickLRU<string, WorkshopItem>
 
     public SteamAvailable: boolean = true
 
     constructor(apikey?: string, userAgent?: string) {
         this.#apikey = apikey ?? process.env.STEAM_WEB_APIKEY
         this.#userAgent = userAgent || "SrcdsDash-API-Client"
-        this.#itemCache = new LRUCache({
-            max: ITEM_CACHE_MAX_SIZE,
-            ttl: ITEM_CACHE_TTL
+        this.#itemCache = new QuickLRU({
+            maxSize: ITEM_CACHE_MAX_SIZE,
+            maxAge: ITEM_CACHE_TTL
         })
     }
 

@@ -57,7 +57,10 @@ export default class AuthManager {
             console.warn("[AuthManager] Warn: DEBUG_DISABLE_PERMISSION_SYSTEM set, permissions are ignored")
         }
         this.providerNameCache = new Map()
-        this.apikeysCache = new QuickLRU<string, APIKey>({ maxSize: 100 });
+        this.apikeysCache = new QuickLRU<string, APIKey>({ 
+            maxSize: 100, 
+            maxAge: 1000 * 60 * 60 * 24 * 7 * 1 
+        });
         this.#db = adminDatabase
         this.#dbna = sessionDatabase
         this.steam = steam
