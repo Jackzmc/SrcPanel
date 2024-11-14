@@ -21,14 +21,15 @@ if(process.env.INFLUX_URL && process.env.INFLUX_TOKEN) {
 }
 
 export function getWriter(): WriteApi | null {
+    if(!influx) return null
     if(!process.env.INFLUX_ORG || !process.env.INFLUX_BUCKET) {
         throw new Error("No INFLUX_ORG or INFLUX_BUCKET set")
     }
-    return influx ? influx.getWriteApi(process.env.INFLUX_ORG, process.env.INFLUX_BUCKET, "ms", {
+    return influx.getWriteApi(process.env.INFLUX_ORG, process.env.INFLUX_BUCKET, "ms", {
         defaultTags: {
             panel_hostname: hostname()
         },
         /* maximum time in millis to keep points in an unflushed batch, 0 means don't periodically flush */
         flushInterval: 30_000,
-    }) : null
+    })
 }
