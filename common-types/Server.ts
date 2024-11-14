@@ -102,6 +102,7 @@ export interface ServerAvailableFeatures {
     configs: boolean
     plugin: boolean,
     docker: boolean,
+    metrics: boolean
 
     performCommands: boolean
 } 

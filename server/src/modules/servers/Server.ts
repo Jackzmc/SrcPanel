@@ -154,6 +154,7 @@ export default abstract class Server implements IAction {
         console: this.Console?.available ?? false,
         configs: this.Configs?.available ?? false,
         plugin: this.Plugin?.available ?? false,
+        metrics: this.Metrics?.available ?? false,
         docker: false,
         performCommands: this.canPerformCommands
       }
