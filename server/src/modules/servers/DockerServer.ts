@@ -25,6 +25,13 @@ export default class DockerServer extends Server {
         return null
     }
 
+    get features() {
+        return {
+            ...super.features,
+            docker: true
+        }
+    }
+
     public get ContainerInstance() {
         return this.#instance
     }

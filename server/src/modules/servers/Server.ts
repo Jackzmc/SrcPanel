@@ -141,10 +141,10 @@ export default abstract class Server implements IAction {
     /** Returns all features server supports currently */
     public get features(): ServerAvailableFeatures {
       return {
-        rcon: this.Rcon?.available,
-        console: this.Console?.available,
-        configs: this.Configs?.available,
-        plugin: this.Plugin?.available,
+        rcon: this.Rcon?.available ?? false,
+        console: this.Console?.available ?? false,
+        configs: this.Configs?.available ?? false,
+        plugin: this.Plugin?.available ?? false,
         docker: false
       }
     }
