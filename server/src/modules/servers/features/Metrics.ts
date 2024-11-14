@@ -67,7 +67,6 @@ export default class MetricsFeature extends Feature {
 
       this.#influx.writePoint(point)
       this.#influx.flush()
-      console.debug('write metrics', this._server.id)
     }
 
 
