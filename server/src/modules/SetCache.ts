@@ -60,7 +60,6 @@ export default {
         }
     },
     async Save() {
-        if(!_loaded) return
         await writeFile(_dataPath, JSON.stringify(cacheObj))
     }
 }
