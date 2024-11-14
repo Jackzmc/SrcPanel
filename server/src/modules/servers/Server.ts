@@ -204,9 +204,8 @@ export default abstract class Server implements IAction {
       this._status.online = online
       this._status.data = data
       this._status.source = source
-      if(online && data && this.Metrics?.available) {
+      if(this.Metrics?.available) {
         this.Metrics.recordStatus(data, source)
-        this._status.data.map
       }
     }
 }

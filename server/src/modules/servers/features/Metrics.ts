@@ -28,31 +28,24 @@ export default class MetricsFeature extends Feature {
 
     async init() {
       if(!this.available) return
-      setInterval(() => {
-        this.#recordInfo()
-      }, Number(process.env.INFLUX_METRICS_INTERVAL) || 10_000)
+      // setInterval(() => {
+      //   this.#recordInfo()
+      // }, Number(process.env.INFLUX_METRICS_INTERVAL) || 10_000)
     }
 
-    #recordInfo() {
-      const point = new Point("info")
-
-      // point.intField("", this._server.Plugin.liveStatus.)
-      this.#addTags(point)
-    }
-
-    recordStatus(data: ServerStatusData, source: ServerStatusSource) {
-      const point = new Point("status")
-      point.intField("player_count", data.players.length)
-      if(this._server.uptime)
-        point.intField("uptime", this._server.uptime)
-      point.stringField("map", this._server.status.data.map)
-      point.stringField("gamemode", this._server.status.data.gamemode)
-      this.#addTags(point)
-
+    recordStatus(data: ServerStatusData | null, source: ServerStatusSource) {
+      const point = this.#createPoint("status")
+      point.intField("player_count", data ? data.players.length : 0)
+      if(data) {
+        if(this._server.uptime)
+          point.intField("uptime", this._server.uptime)
+        point.stringField("map", this._server.status.data.map)
+        point.stringField("gamemode", this._server.status.data.gamemode)
+      } 
       if(source == "live" && this._server.Plugin?.available) {
         const live = this._server.Plugin.liveStatus
         if(live) {
-          const point = new Point("live")
+          const point = this.#createPoint("live")
           point.stringField("difficulty", GAME_DIFFICULTY_STRINGS[live.game.difficulty])
           let survivors = 0, infected = 0
           for(const client of Object.values(live.clients)) {
@@ -70,10 +63,12 @@ export default class MetricsFeature extends Feature {
     }
 
 
-    #addTags(point: Point) {
+    #createPoint(measurement: string) : Point {
+      const point = new Point(measurement)
       point.tag("server_id", this._server.id)
       point.tag("server_ip", this._server.ip)
       point.tag("server_port", this._server.port.toString())
       point.tag("server_type", this._server.type)
+      return point
     }
 }
