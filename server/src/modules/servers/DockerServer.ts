@@ -66,7 +66,6 @@ export default class DockerServer extends Server implements IAction {
             stdout: true,
             stream: true
         })
-        let result: ActionResponse = null
         return new Promise((resolve, reject) => {
             stream.on('data', (chunk) => {
                 const msg = chunk.toString()
@@ -83,7 +82,7 @@ export default class DockerServer extends Server implements IAction {
                 reject(new Error("Action timed out"))
             }, PERFORM_ACTION_TIMEOUT)
 
-            stream.write(command)
+            stream.write(command + "\n")
         })
     }
 

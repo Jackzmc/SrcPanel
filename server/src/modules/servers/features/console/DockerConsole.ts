@@ -31,13 +31,12 @@ export default class DockerConsole extends Console {
 
         /** Reads all lines from start to end, keeping only last MAX_BUFFER_LINES */
     async readExisting() {
-        const logs = await this.#container.logs({ stdout: true, stderr: true })
+        const logs = await this.#container.logs({ stdout: true, stderr: true, tail: MAX_BUFFER_LINES })
         const lines = logs.toString().split("\n")
         for(const line of lines) {
             this.pushLine(line)
         }
-
-        
+        console.debug('docker console: read', lines.length, 'lines')
     }
 
     /**
@@ -47,6 +46,7 @@ export default class DockerConsole extends Console {
     async #createLogsReader() { 
       const reader = await this.#container.logs({ stdout: true, stderr: true, follow: true })
         let line: string
+        // TODO: verify??
         reader.on("data", (chunk) => {
             // Append to our buffer
             line += chunk.toString('utf8')
