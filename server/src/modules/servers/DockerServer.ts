@@ -1,16 +1,21 @@
+import { CommandResultType } from "../../../../common-types/Live.js";
 import { ServerAvailableFeatures } from "../../../../common-types/Server.js";
 import DynamicServerInstance from "./docker/DynamicServerInstance.js";
+import DockerConsole from "./features/console/DockerConsole.js";
 import ServerGroup from "./groups/ServerGroup.js";
-import { ActionResponse } from "./IAction.js";
+import { ActionResponse, getFallbackCommandForBuiltin, IAction } from "./IAction.js";
 import Server, { ServerExtendedData } from "./Server.js";
 
-export default class DockerServer extends Server {
+const PERFORM_ACTION_TIMEOUT = 20_000
+
+export default class DockerServer extends Server implements IAction {
     // TODO: merge DynamicServerInstance into this?
     // TODO: Console support
     #instance: DynamicServerInstance
     constructor(group: ServerGroup, server: ServerExtendedData, instance: DynamicServerInstance) {
         super(group, server)
         this.#instance = instance
+        this._console = new DockerConsole(this, this.#instance.Container)
     }
 
     get canPerformCommands() {
@@ -48,8 +53,40 @@ export default class DockerServer extends Server {
         return this.#instance.Stop(force)
     }
 
-    public performAction( command: string, namespace: string ): Promise<ActionResponse> {
-        throw new Error("not available")
+    public async performAction( command: string, namespace: string ): Promise<ActionResponse> {
+        if(namespace === "builtin") {
+            command = getFallbackCommandForBuiltin(command)
+            if(!command) throw new Error(`Unable to run builtin:${command} via docker`)
+        }
+        else if(namespace !== "default") {
+            throw new Error("Unsupported namespace")
+        }
+        const stream = await this.#instance.Container.attach({
+            stdin: true,
+            stdout: true,
+            stream: true
+        })
+        let result: ActionResponse = null
+        return new Promise((resolve, reject) => {
+            stream.on('data', (chunk) => {
+                const msg = chunk.toString()
+                stream.end()
+                resolve({
+                    type: CommandResultType.None,
+                    message: msg,
+                    result: 0
+                })
+            })
+
+            setTimeout(() => {
+                stream.end()
+                reject(new Error("Action timed out"))
+            }, PERFORM_ACTION_TIMEOUT)
+
+            stream.write(command)
+        })
+        
+        
     }
 
     public override async refreshStatus(bypassCache = false) {
