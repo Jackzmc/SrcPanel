@@ -1,4 +1,4 @@
-import { ServerAction, ServerAvailableFeatures, ServerInfo, ServerStatus, ServerStatusData, ServerStatusSource, ServerType } from "../../../../common-types/Server.js";
+import { ServerAction, ServerAvailableFeatures, ServerData, ServerInfo, ServerStatus, ServerStatusData, ServerStatusSource, ServerType } from "../../../../common-types/Server.js";
 import ConfigsFeature from "./features/Configs.js";
 import ConsoleFeature from "./features/console/Console.js";
 import MetricsFeature from "./features/Metrics.js";
@@ -53,8 +53,14 @@ export interface RconData {
   password: string
 }
 
+interface InternalServerInfo extends ServerData {
+    tags: string[],
+    status?: ServerStatus,
+    sortOrder: number,
+}
+
 export default abstract class Server implements IAction {
-    protected _info: ServerInfo
+    protected _info: InternalServerInfo
     protected _group: ServerGroup
     protected _logId: string | null
 
@@ -80,9 +86,7 @@ export default abstract class Server implements IAction {
           type: group.Type || /* legacy */ server.type,
           tags: server.tags,
           sortOrder: server.sortOrder,
-          actions: server.actions,
           // TODO: remove
-          features: {}
         }
         this._actions = group.Actions.map(a => {
           return {
@@ -91,7 +95,11 @@ export default abstract class Server implements IAction {
           } as ServerAction
         }).concat(server.actions)
         this._status = { data: null, online: false, source: "" }
+        if(server.cfgDirectory) {
+          this._configs = new ConfigsFeature(this, server.cfgDirectory)
+        }
         this._metrics = new MetricsFeature(this)
+        this._plugin = new PluginFeature(this)
     }
 
     async init(): Promise<void> {
@@ -123,6 +131,7 @@ export default abstract class Server implements IAction {
     get info() {
       return {
         ...this._info,
+        features: this.features,
         actions: this.actions
       }
     }
@@ -145,7 +154,8 @@ export default abstract class Server implements IAction {
         console: this.Console?.available ?? false,
         configs: this.Configs?.available ?? false,
         plugin: this.Plugin?.available ?? false,
-        docker: false
+        docker: false,
+        performCommands: this.canPerformCommands
       }
     }
 
@@ -199,44 +209,3 @@ export default abstract class Server implements IAction {
       }
     }
 }
-
-// export interface IServer {
-//     Console?: ConsoleFeature
-//     Rcon?: RconFeature
-//     Configs?: ConfigsFeature
-//     Plugin?: PluginFeature
-//     // Docker: DockerFeature // is feature?? no
-
-//     // TODO: move to server.info?
-//     id: string
-//     name: string
-//     domain: string
-//     ip: string
-//     port: number
-//     type: ServerType
-
-//     sortOrder: number
-//     group: string
-
-//     startTime: number
-//     uptime: number
-
-//     status: ServerStatus
-//     liveStatus?: LiveDataCache
-//     liveViewers: number
-
-//     activityLogId?: string
-//     cvars?: string[]
-
-//     start(): Promise<void>;
-//     stop(force: boolean): Promise<boolean>;
-//     stopWait(force: boolean, timeoutSeconds: number): Promise<boolean>;
-
-//     performAction(command: string, namespace: string): Promise<ActionResponse>;
-
-//     refreshStatus(bypassCache: boolean, includeExtra: boolean): Promise<void>;
-// }
-
-
-// server.console vs
-// server.features.console

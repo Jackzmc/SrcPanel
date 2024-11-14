@@ -1,15 +1,16 @@
 <template>
 <div>
   <div id="console" ref="consoleElem">
-    <Icon icon="spinner" spin v-if="liveReadyState !== 1">Connecting to server... ({{ errCount }} attempts)</Icon>
+    <Icon icon="spinner" spin v-if="liveReadyState !== 1">Starting log stream... ({{ errCount }} attempts)</Icon>
+    <Icon icon="spinner" spin v-else-if="logs.length === 0">No current logs, waiting for more...</Icon>
     <span v-show="isConnected" class="tag is-danger is-pulled-right" style="position: sticky; top: 0; right: 0;">Live</span>
     <div class="console-content" v-for="(line, i) of logs" :key="i">
       {{ line }}
     </div>
     <span v-if="!isConnected && logs.length > 0" class="has-text-danger"><Icon icon="warning">Disconnected from server, trying to reconnect...</Icon></span>
   </div>
-  <Field :icon-left="rconSupported ? 'terminal' : 'warning'" :icon-class="rconSupported ? 'has-text-white' : 'has-text-info'">
-    <template v-if="rconSupported">
+  <Field :icon-left="commandInputSupported ? 'terminal' : 'warning'" :icon-class="commandInputSupported ? 'has-text-white' : 'has-text-info'">
+    <template v-if="commandInputSupported">
       <input id="terminal-input" :class="['input','terminal-input',commandClass]" v-model="commandInput"
         placeholder="Enter a command" @keyup.enter="runCommand"
         :disabled="isConnected ? undefined : true"
@@ -18,7 +19,7 @@
         <option v-for="cmd in validCommands" :key="cmd" :value="cmd"></option>
       </datalist>
     </template>
-    <input v-else disabled class="input terminal-input" placeholder="Plugin not connected, cannot send commands">
+    <input v-else disabled class="input terminal-input" placeholder="Command support is not available at this time">
   </Field>
 </div>
 </template>
@@ -41,8 +42,8 @@ const props = defineProps<{
   server: ServerInfo
 }>()
 
-const rconSupported = computed(() => {
-  return props.server.features.plugin || props.server.features.rcon
+const commandInputSupported = computed(() => {
+  return props.server.features.performCommands
 })
 
 const isConnected = computed(() => {
@@ -118,6 +119,7 @@ function createLogsConnection() {
   }
   evtSource.onopen = () => {
     liveReadyState.value = EventSource.OPEN
+    console.log("open")
   }
   evtSource.onerror = (event) => {
     console.error("Disconnected", { errCount: errCount.value })

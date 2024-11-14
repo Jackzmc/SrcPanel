@@ -11,7 +11,7 @@ export type SubscribeCallback = (record: LiveRecord) => void
 export default class PluginFeature extends Feature implements IAction {
     #liveCache?: LiveDataCache
     #socket: PluginSocket | null = null
-    #subscribers: SubscribeCallback[]
+    #subscribers: SubscribeCallback[] = []
     #startTime: number
     #status: ServerStatus
     constructor(server: Server) {

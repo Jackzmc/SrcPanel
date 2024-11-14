@@ -1,7 +1,7 @@
 import { Rcon, RconOptions } from "rcon-client";
 import Feature from "./Feature.js";
 import Server from "../Server.js";
-import { ActionResponse, IAction } from "../IAction.js";
+import { ActionResponse, getFallbackCommandForBuiltin, IAction } from "../IAction.js";
 import { CommandResultType } from "../../../../../common-types/Live.js";
 
 export default class RconFeature extends Feature implements IAction {
@@ -65,38 +65,18 @@ export default class RconFeature extends Feature implements IAction {
     }
 
     async performAction(command: string, namespace = "default"): Promise<ActionResponse> {
-        const result = await this.#client.send(command)
-        return {
-          result: 1,
-          type: CommandResultType.None,
-          message: result
-        }
-    }
-
-    /**
-     * Converts built in command to actual command for given server. 
-     * This allows different game support if the command is different. (minecraft uses "stop" instead of "exit")
-     * @param command the built in command, without namespace
-     * @returns null for unknown built in
-     */
-    #getFallbackCommandForBuiltin(command: string): string | null {
-      switch(command) {
-        case "stop": {
-          return "exit"
-        }
-        case "request_stop": {
-          return "sm_panel_request_stop"
-        }
-        case "kick": {
-          return "sm_kick"
-        }
-        case "ban": {
-          return "sm_ban"
-        }
-        case "unreserve": {
-          return "sm_unreserve"
-        }
-        default: return null
+      if(namespace === "builtin") {
+        command = getFallbackCommandForBuiltin(command)
+        if(!command) throw new Error(`Unable to run builtin:${command} via rcon`)
+      }
+      else if(namespace !== "default") {
+        throw new Error("Unsupported namespace")
+      }
+      const result = await this.#client.send(command)
+      return {
+        result: 1,
+        type: CommandResultType.None,
+        message: result
       }
     }
 }

@@ -440,18 +440,20 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         if(!server) {
             failed = true
             eventHandler(`Unknown server`)
-        } else if(!server.Console?.available) {
+        } else if(!failed && !server.Console?.available) {
             failed = true
             eventHandler("Logs feature is unavailable or unconfigured")
+        } else if(!failed) {
+            const [code, granted] = req.user.requirePermission("servers.view_console", { resourceId: server.id })
+            if(!granted) {
+                failed = true
+                eventHandler(`You do not have permission to view the server console.`)
+            }
         }
-        const [code, granted] = req.user.requirePermission("servers.view_console", { resourceId: server.id })
-        if(!granted) {
-            failed = true
-            eventHandler(`You do not have permission to view the server console.`)
-        }
-
+       
         if(!failed) {
             // Send any stale data:
+            reply.raw.write(': heartbeat')
             for(const line of server.Console.logs) {
                 eventHandler(line)
             }

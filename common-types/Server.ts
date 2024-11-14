@@ -97,11 +97,12 @@ export interface ServerAction {
 export type BuiltInActions = "builtin:stop" | "builtin:request_stop" | "builtin:update" | "builtin:kick"
 
 export interface ServerAvailableFeatures {
-    rcon?: boolean
-    console?: boolean
-    configs?: boolean
-    systemd?: boolean
-    plugin?: boolean,
-    docker?: boolean
+    rcon: boolean
+    console: boolean
+    configs: boolean
+    plugin: boolean,
+    docker: boolean,
+
+    performCommands: boolean
 } 
 export type ServerFeature = keyof ServerAvailableFeatures

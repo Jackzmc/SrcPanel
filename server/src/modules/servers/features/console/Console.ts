@@ -7,8 +7,8 @@ const MAX_BUFFER_LINES = 100
 export type LineCallback = (line: string) => void
 
 export default abstract class Console extends Feature {
-    protected _lines: string[]
-    #subscribers: LineCallback[]
+    protected _lines: string[] = []
+    #subscribers: LineCallback[] = []
 
     constructor(server: Server) {
         super("Console", server)

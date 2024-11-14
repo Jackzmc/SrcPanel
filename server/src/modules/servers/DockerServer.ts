@@ -85,8 +85,6 @@ export default class DockerServer extends Server implements IAction {
 
             stream.write(command)
         })
-        
-        
     }
 
     public override async refreshStatus(bypassCache = false) {

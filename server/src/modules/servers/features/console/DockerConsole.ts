@@ -26,7 +26,7 @@ export default class DockerConsole extends Console {
     }
 
     public get logs() { 
-        return this._lines
+        return [...this._lines]
     }
 
         /** Reads all lines from start to end, keeping only last MAX_BUFFER_LINES */

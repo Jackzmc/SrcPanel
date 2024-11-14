@@ -2,6 +2,7 @@ import { LiveDataCache, LiveRecordResponse } from "../../../../common-types/Live
 import { ServerType, ServerStatus } from "../../../../common-types/Server.js";
 import ConfigsFeature from "./features/Configs.js";
 import Console from "./features/console/Console.js";
+import StandardConsole from "./features/console/StandardConsole.js";
 import PluginFeature from "./features/Plugin.js";
 import RconFeature from "./features/Rcon.js";
 import ServerGroup from "./groups/ServerGroup.js";
@@ -16,9 +17,6 @@ export default class StandardServer extends Server {
 
     constructor(group: ServerGroup, server: ServerExtendedData) {
         super(group, server)
-        if(server.cfgDirectory) {
-            this._configs = new ConfigsFeature(this, server.cfgDirectory)
-        }
 
         if(server.rcon) {
             let password: string
@@ -29,6 +27,9 @@ export default class StandardServer extends Server {
                 port: server.port,
                 password
             })
+        }
+        if(server.logsPath) {
+            this._console = new StandardConsole(this, server.logsPath)
         }
     }
 
