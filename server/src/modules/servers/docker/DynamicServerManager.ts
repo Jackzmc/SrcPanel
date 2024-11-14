@@ -151,7 +151,8 @@ export default class DynamicServerManager {
                 "NetworkMode": "host",
                 "Binds": template.config.volumes ?? [],
                 "RestartPolicy": {
-                    "Name": "unless-stopped",
+                    "Name": "on-failure",
+                    MaximumRetryCount: 3
                 }
                 // "PortBindings": { "27015/udp": [{ "HostPort": port.toString(), "HostIp": template.config.ip }] }
             },
