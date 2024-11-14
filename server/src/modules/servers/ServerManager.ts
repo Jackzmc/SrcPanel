@@ -158,6 +158,7 @@ export default class ServerManager {
 
   #onLiveClient(client: net.Socket) {
     this.#debugLive('client connected', client.remoteAddress)
+    console.log(client.remoteAddress, client.remotePort)
     const ps = new PluginSocket(client)
     this.#socketClients.set(client.remoteAddress, ps)
     
@@ -231,7 +232,8 @@ export default class ServerManager {
     setInterval(() => {
       for(const server of Object.values(this.getAll())) {
         // This triggers an OK packet
-        server?.Plugin?.Socket.send(LiveRecordResponse.OK, server.Plugin?.liveViewers)
+        if(server.Plugin?.Socket.Authenticated)
+          server.Plugin.Socket.send(LiveRecordResponse.OK, server.Plugin?.liveViewers)
       }
     }, LIVE_SOCKET_KEEPALIVE_INTERVAL)
   }
