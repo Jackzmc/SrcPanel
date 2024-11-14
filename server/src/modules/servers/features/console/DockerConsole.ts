@@ -22,6 +22,7 @@ export default class DockerConsole extends Console {
     }
 
     async init() {
+        console.log(this._server.id, 'init console')
         await this.readExisting()
         await this.#createLogsReader()
     }
