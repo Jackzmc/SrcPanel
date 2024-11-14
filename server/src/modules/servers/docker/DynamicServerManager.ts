@@ -74,8 +74,13 @@ export default class DynamicServerManager {
                     ...data as DockerTemplateConfig,
                     id
                 } as DockerTemplateConfig
-                this.#templates[id] = {
-                    config,
+                try {
+                    await this.#docker.pull(config.image)
+                    this.#templates[id] = {
+                        config,
+                    }
+                } catch(err) {
+                    console.error(`[ServerManager/docker] Failed to pull image \"${config.image}\":`, err)
                 }
             }
             console.debug('templates:', Object.keys(this.#templates).join(" "))
@@ -161,8 +166,15 @@ export default class DynamicServerManager {
         return instance
     }
 
+    getTemplate(templateId: string) {
+        return this.#templates[templateId]
+    }
 
-
+    async updateTemplate(template: DockerTemplateContainer) {
+        await this.#docker.pull(template.config.image)
+        // TODO: restart containers?
+        
+    }
     async #registerInstance(instance: DynamicServerInstance) {
         this.#instances[instance.ContainerName] = instance
     }

@@ -1,0 +1,22 @@
+{
+    "_type": "request",
+    "method": "POST",
+    "body": {
+        "mimeType": "No Body"
+    },
+    "url": "{{API_PROTOCOL}}:/{{API_DOMAIN}}/api/docker/templates/:template/update",
+    "sortOrder": 4,
+    "parameters": [],
+    "pathParameters": [
+        {
+            "name": "template",
+            "value": "l4d2-main"
+        }
+    ],
+    "headers": [
+        {
+            "name": "x-apikey",
+            "value": "{{API_TOKEN}}"
+        }
+    ]
+}

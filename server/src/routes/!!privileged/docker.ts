@@ -7,7 +7,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         return manager.Templates
     })
 
-    fastify.post('/templates/:templateId/create', async (req: FastifyRequest<{Params: {templateId: string}, Querystring: { start?: boolean }}>, reply) => {
+    fastify.post('/templates/:templateId/create-server', async (req: FastifyRequest<{Params: {templateId: string}, Querystring: { start?: boolean }}>, reply) => {
         if(!req.params.templateId) {
             return reply.code(400).send({
                 error: "MISSING_TEMPLATE_ID",
@@ -31,6 +31,25 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 message: err.message
             })
         }
+    })
+
+    fastify.post('/templates/:templateId/update', async (req: FastifyRequest<{Params: {templateId: string}}>, reply) => {
+        if(!req.params.templateId) {
+            return reply.code(400).send({
+                error: "MISSING_TEMPLATE_ID",
+                message: "A valid template id must be provided"
+            })
+        }
+        const template = manager.getTemplate(req.params.templateId)
+        if(!template) {
+            return reply.code(404).send({
+                error: "NO_TEMPLATE_FOUND",
+                message: "No template with that id was found"
+            })
+        }
+
+        await manager.updateTemplate(template)
+        return reply.code(200).send()
     })
 
     fastify.get('/instances/:id', async (req: FastifyRequest<{Params: {id: string}}>, reply) => {

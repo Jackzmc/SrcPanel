@@ -4,7 +4,7 @@
     "body": {
         "mimeType": "No Body"
     },
-    "url": "{{API_PROTOCOL}}:/{{API_DOMAIN}}/api/docker/templates/:template/create",
+    "url": "{{API_PROTOCOL}}:/{{API_DOMAIN}}/api/docker/templates/:template/create-server",
     "sortOrder": 3,
     "parameters": [],
     "pathParameters": [
