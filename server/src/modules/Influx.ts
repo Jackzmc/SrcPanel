@@ -10,21 +10,24 @@ process.on('exit', () => keepAliveAgent.destroy())
 
 let influx: InfluxDB
 if(process.env.INFLUX_URL && process.env.INFLUX_TOKEN) {
-    influx = new InfluxDB({
-        url: process.env.INFLUX_URL,
-        token: process.env.INFLUX_TOKEN,
-        transportOptions: {
-            agent: keepAliveAgent,
-        },
-    })
-    console.info('Influx connected to', process.env.INFLUX_URL)
+    if(!process.env.INFLUX_ORG || !process.env.INFLUX_BUCKET) {
+        console.error("[Influx] ERROR: No INFLUX_ORG or INFLUX_BUCKET set")
+    } else {
+        influx = new InfluxDB({
+            url: process.env.INFLUX_URL,
+            token: process.env.INFLUX_TOKEN,
+            transportOptions: {
+                agent: keepAliveAgent,
+            },
+        })
+        console.info('Influx connected to', process.env.INFLUX_URL)
+    }
+} else {
+    console.debug('Influx: no env variables found, disabled')
 }
 
 export function getWriter(): WriteApi | null {
     if(!influx) return null
-    if(!process.env.INFLUX_ORG || !process.env.INFLUX_BUCKET) {
-        throw new Error("No INFLUX_ORG or INFLUX_BUCKET set")
-    }
     return influx.getWriteApi(process.env.INFLUX_ORG, process.env.INFLUX_BUCKET, "ms", {
         defaultTags: {
             panel_hostname: hostname()
