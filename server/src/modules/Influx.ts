@@ -1,4 +1,6 @@
 import { InfluxDB, WriteApi } from "@influxdata/influxdb-client";
+import dotenv from 'dotenv'
+dotenv.config()
 
 import {Agent} from 'http'
 import { hostname } from "os";
