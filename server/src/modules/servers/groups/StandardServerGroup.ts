@@ -25,29 +25,32 @@ export class StandardServerGroup extends ServerGroup {
             .map(async ([id, server]) => {
                 const [, host, port] = server.ip.match(/([a-zA-Z0-9.]+):?(\d*)/)
                 const tags = server.tags ?? []
+                let address = server.ip
                 try {
                     const lookup = await DNS.lookup(host, { verbatim: false, family: 4 })
-                    const instance = new StandardServer(this, {
-                        actions: server.actions ?? [],
-                        id,
-                        name: server.name,
-                        domain: host,
-                        port: Number(port) ?? 27015,
-                        ip: lookup.address ?? null,
-                        type: server.type,
-                        tags: tags,
-                        cfgDirectory: server.cfgDirectory,
-                        logsPath: server.logsPath,
-                        activityId: server.activityId,
-                        rcon: server.rcon,
-                        systemd: server.systemd,
-                        sortOrder: server.sortOrder
-                    })
-                    await instance.init()
-                    this._servers[id] = instance
+                    address = lookup.address
                 } catch(err) {
                     console.warn(`[ServerManager] Warn: Could not resolve IP for hostname ${host}:\n`, err)
                 }
+
+                const instance = new StandardServer(this, {
+                    actions: server.actions ?? [],
+                    id,
+                    name: server.name,
+                    domain: host,
+                    port: Number(port) ?? 27015,
+                    ip: address,
+                    type: server.type,
+                    tags: tags,
+                    cfgDirectory: server.cfgDirectory,
+                    logsPath: server.logsPath,
+                    activityId: server.activityId,
+                    rcon: server.rcon,
+                    systemd: server.systemd,
+                    sortOrder: server.sortOrder
+                })
+                await instance.init()
+                this._servers[id] = instance
             })
         return await Promise.allSettled(promises)
     }

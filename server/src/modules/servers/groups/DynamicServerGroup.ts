@@ -43,7 +43,7 @@ export class DynamicServerGroup extends ServerGroup {
         this.#checkServers()
     }
 
-    async #checkServers() {
+    async *#iterateServers(): AsyncGenerator<[string, DockerServer]> {
         for(const [id, server] of Object.entries(this._servers)) {
             if(server instanceof DockerServer) {
                 const exists = await server.ContainerInstance.Exists()
@@ -51,8 +51,15 @@ export class DynamicServerGroup extends ServerGroup {
                     console.warn(`[Servers/${this.Id}]: Container gone for server ${id}, removing`)
                     this.#manager.unregisterInstance(server.ContainerInstance)
                     delete this._servers[id]
+                    continue
                 }
+                yield [id, server]
             }
+        }
+    }
+
+    async #checkServers() {
+        for await(const [id, server] of this.#iterateServers()) {
         }
         const instances = this.#manager.getInstancesForTemplate(this.#templateId)
         let activeCount = 0
@@ -78,6 +85,12 @@ export class DynamicServerGroup extends ServerGroup {
             await instance.Start()
         }
     }
+    
+    async update() {
+        for await(const [id, server] of this.#iterateServers()) {
+
+        }
+    }
 
     get TemplateId() {
         return this.#templateId
@@ -100,12 +113,18 @@ export class DynamicServerGroup extends ServerGroup {
         const id = `${this.Id}-${instance.Port}`
         const ip = DynamicServerGroup.formatTemplateVar(this.#serverTemplate.ip, vars)
         const [, host, port] = ip.match(/([a-zA-Z0-9.]+):?(\d*)/)
+        let address = instance.Ip
         try {
             const lookup = await DNS.lookup(host, { verbatim: false, family: 4 })
-            this._servers[id] = new DockerServer(this, {
+            address = lookup.address
+        } catch(err) {
+            console.warn(`[ServerManager] Warn: Could not resolve IP for hostname ${host}:\n`, err)
+            return
+        }
+        this._servers[id] = new DockerServer(this, {
                 id,
                 name: DynamicServerGroup.formatTemplateVar(this.#serverTemplate.name, vars),
-                ip: lookup.address,
+                ip: address,
                 domain: host,
                 port: instance.Port,
                 type: this.Type,
@@ -114,10 +133,6 @@ export class DynamicServerGroup extends ServerGroup {
                 activityId: this.#serverTemplate.activityId,
                 sortOrder: this.#serverTemplate.sortOrder
             }, instance)
-        } catch(err) {
-            console.warn(`[ServerManager] Warn: Could not resolve IP for hostname ${host}:\n`, err)
-        }
-        
     }
 
     async createInstance() {
