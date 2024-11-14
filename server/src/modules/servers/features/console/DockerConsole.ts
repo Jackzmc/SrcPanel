@@ -4,6 +4,7 @@ import Console from "./Console.js";
 import { Tail } from "tail";
 import Server from "../../Server.js";
 import { Container } from "dockerode";
+import { PassThrough, Stream } from "stream";
 
 /** The maximum number of lines to keep buffered */
 const MAX_BUFFER_LINES = 40
@@ -44,7 +45,9 @@ export default class DockerConsole extends Console {
      * @returns 
      */
     async #createLogsReader() { 
-      const reader = await this.#container.logs({ stdout: true, stderr: true, follow: true })
+        const stream = new Stream.PassThrough();
+        const reader = await this.#container.logs({ stdout: true, stderr: true, follow: true })
+        this.#container.modem.demuxStream(stream, reader, reader)
         let line: string
         // TODO: verify??
         reader.on("data", (chunk) => {
