@@ -1,4 +1,4 @@
-import { ServerAction, ServerAvailableFeatures, ServerInfo, ServerStatus, ServerType } from "../../../../common-types/Server.js";
+import { ServerAction, ServerAvailableFeatures, ServerInfo, ServerStatus, ServerStatusData, ServerStatusSource, ServerType } from "../../../../common-types/Server.js";
 import ConfigsFeature from "./features/Configs.js";
 import ConsoleFeature from "./features/console/Console.js";
 import PluginFeature from "./features/Plugin.js";
@@ -166,23 +166,26 @@ export default abstract class Server implements IAction {
               attemptTimeout: 5000,
             })
             const raw = state.raw as any
-            this._status.source = "gamedig"
-            this._status.data = {
+            this.updateStatus(true, {
               players: state.players
                 .filter(p => p.name.length > 0) // Some names are just "", assumingly bots?
                 .map(p => p.name),
               maxplayers: state.maxplayers,
               map: state.map,
               gamemode: raw.tags ? raw.tags[0] : undefined
-            }
-            this._status.online = true
+            }, "gamedig")
         } catch(err) {
           if(!err.message.includes("Failed all ")) {
             console.error(`[Server/${this.id}] refresh() Error:`, err)
           }
-          this._status.data = null
-          this._status.online = false
+          this.updateStatus(false)
         }
+    }
+
+    updateStatus(online: boolean, data: ServerStatusData = null, source: ServerStatusSource = "") {
+      this._status.online = online
+      this._status.data = data
+      this._status.source = source
     }
 }
 

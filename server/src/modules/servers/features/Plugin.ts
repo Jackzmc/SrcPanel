@@ -49,6 +49,9 @@ export default class PluginFeature extends Feature implements IAction {
 
     _setSocket(socket: PluginSocket | null) {
       this.#socket = socket
+      if(socket == null) {
+        this._server.updateStatus(false, null, "live")
+      }
     }
 
     async subscribe(callback: SubscribeCallback) {
@@ -96,11 +99,7 @@ export default class PluginFeature extends Feature implements IAction {
             if(record.type === LiveRecordType.Game) {
                 this.#startTime = record.startTime
             }
-            this.#status = {
-                source: "live",
-                data: this.#status.data ??  { players: [], maxplayers: 0, map: "", gamemode: "" },
-                online: true
-            } 
+            this._server.updateStatus(true, this.#status.data ??  { players: [], maxplayers: 0, map: "", gamemode: "" }, "live")
             if(this.#liveCache.game) {
                 this.#status.data.gamemode = this.#liveCache.game.gamemode
                 this.#status.data.map = this.#liveCache.game.map

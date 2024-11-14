@@ -1,15 +1,16 @@
 import { LiveDataCache } from "./Live.js"
 
-
+export type ServerStatusSource = "" | "live" | "gamedig"
 export interface ServerStatus {
-    source?: "live" | "gamedig",
-    data?: {
-      players: string[],
-      maxplayers: number,
-      map: string,
-      gamemode: string,
-    },
+    source?: ServerStatusSource,
+    data?: ServerStatusData,
     online: boolean
+}
+export interface ServerStatusData {
+    players: string[],
+    maxplayers: number,
+    map: string,
+    gamemode: string,
 }
   
 
