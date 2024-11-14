@@ -42,7 +42,7 @@ export default class MetricsFeature extends Feature {
 
     recordStatus(data: ServerStatusData, source: ServerStatusSource) {
       const point = new Point("status")
-      point.intField("count", data.players.length)
+      point.intField("player_count", data.players.length)
       if(this._server.uptime)
         point.intField("uptime", this._server.uptime)
       point.stringField("map", this._server.status.data.map)
