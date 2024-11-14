@@ -1,11 +1,13 @@
 import { ServerAction, ServerAvailableFeatures, ServerInfo, ServerStatus, ServerStatusData, ServerStatusSource, ServerType } from "../../../../common-types/Server.js";
 import ConfigsFeature from "./features/Configs.js";
 import ConsoleFeature from "./features/console/Console.js";
+import MetricsFeature from "./features/Metrics.js";
 import PluginFeature from "./features/Plugin.js";
 import RconFeature from "./features/Rcon.js";
 import ServerGroup from "./groups/ServerGroup.js";
 import { ActionResponse, IAction } from "./IAction.js";
 import Gamedig from 'gamedig';
+import {InfluxDB } from '@influxdata/influxdb-client'
 
 const MIN_REFRESH_TIME = 5000
 
@@ -60,6 +62,8 @@ export default abstract class Server implements IAction {
     protected _rcon?: RconFeature|null = null
     protected _configs?: ConfigsFeature|null = null
     protected _plugin?: PluginFeature|null = null
+    protected _metrics?: MetricsFeature|null = null
+
     protected _actions: ServerAction[] = []
 
     protected _status: ServerStatus
@@ -86,7 +90,8 @@ export default abstract class Server implements IAction {
             inherited: true 
           } as ServerAction
         }).concat(server.actions)
-        this._status = { data: null, online: false }
+        this._status = { data: null, online: false, source: "" }
+        this._metrics = new MetricsFeature(this)
     }
 
     async init(): Promise<void> {
@@ -94,7 +99,8 @@ export default abstract class Server implements IAction {
             this.Console?.init(),
             this.Rcon?.init(),
             this.Configs?.init(),
-            this.Plugin?.init()
+            this.Plugin?.init(),
+            this.Metrics?.init()
         ])
     }
 
@@ -102,6 +108,7 @@ export default abstract class Server implements IAction {
     get Rcon(): RconFeature | null { return this._rcon }
     get Configs(): ConfigsFeature | null { return this._configs }
     get Plugin(): PluginFeature | null { return this._plugin }
+    get Metrics(): MetricsFeature | null { return this._metrics }
     
     get id() { return this._info.id }
     get name() { return this._info.name }
@@ -186,6 +193,10 @@ export default abstract class Server implements IAction {
       this._status.online = online
       this._status.data = data
       this._status.source = source
+      if(online && data && this.Metrics?.available) {
+        this.Metrics.recordStatus(data, source)
+        this._status.data.map
+      }
     }
 }
 

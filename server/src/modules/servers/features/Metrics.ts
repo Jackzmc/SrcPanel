@@ -1,7 +1,10 @@
 import { Rcon, RconOptions } from "rcon-client";
 import Feature from "./Feature.js";
 import Server from "../Server.js";
-import Influx, { InfluxDB, ISingleHostConfig } from 'influx'
+import Influx, { InfluxDB, Point, WriteApi } from '@influxdata/influxdb-client'
+import { getWriter } from "../../../modules/Influx.js";
+import { ServerStatusData, ServerStatusSource } from "../../../../../common-types/Server.js";
+import { GAME_DIFFICULTY_STRINGS } from "../../../../../common-types/Live.js";
 
 export interface InfluxConfig {
   host: string,
@@ -11,41 +14,64 @@ export interface InfluxConfig {
 }
 
 export default class MetricsFeature extends Feature {
-    #influx: InfluxDB
-    #available: boolean
-    #connected: boolean
+    #influx: WriteApi | null = null
 
-    constructor(server: Server, options: InfluxConfig) {
+    constructor(server: Server) {
         super("Metrics", server)
-        this.#influx = new InfluxDB({
-          host: options.host,
-          port: options.port ?? 8086,
-          protocol: options.protocol ?? "http",
-          database: options.database,
-          schema: [
-            {
-              measurement: 'player_counts',
-              fields: {
-                count: Influx.FieldType.INTEGER
-              },
-              tags: [
-                'id'
-              ]
-            }
-          ]
-        })
+        this.#influx = getWriter()
     }
 
     get available() {
-        return true
+        return this.#influx != undefined
     }
 
 
     async init() {
+      if(!this.available) return
+      setInterval(() => {
+        this.#recordInfo()
+      }, Number(process.env.INFLUX_METRICS_INTERVAL) || 10_000)
     }
 
-    record({ count: number }) {
+    #recordInfo() {
+      const point = new Point("info")
 
+      // point.intField("", this._server.Plugin.liveStatus.)
+      this.#addTags(point)
     }
 
+    recordStatus(data: ServerStatusData, source: ServerStatusSource) {
+      const point = new Point("status")
+      point.intField("count", data.players.length)
+      point.intField("uptime", this._server.uptime)
+      point.stringField("map", this._server.status.data.map)
+      point.stringField("gamemode", this._server.status.data.gamemode)
+      this.#addTags(point)
+
+      if(source == "live" && this._server.Plugin?.available) {
+        const live = this._server.Plugin.liveStatus
+        if(live) {
+          const point = new Point("live")
+          point.stringField("difficulty", GAME_DIFFICULTY_STRINGS[live.game.difficulty])
+          let survivors = 0, infected = 0
+          for(const client of Object.values(live.clients)) {
+            if(client.infected) infected++
+            else if(client.survivor) survivors++
+          }
+          point.intField("survivor_count", survivors)
+          point.intField("infected_count", infected)
+          this.#influx.writePoint(point)
+        }
+      }
+
+      this.#influx.writePoint(point)
+    }
+
+
+    #addTags(point: Point) {
+      point.tag("server_id", this._server.id)
+      point.tag("server_ip", this._server.ip)
+      point.tag("server_port", this._server.port.toString())
+      point.tag("server_type", this._server.type)
+    }
 }

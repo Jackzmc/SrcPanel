@@ -96,11 +96,12 @@ export enum LiveRecordType {
 }
 
 export const enum GameDifficulty {
-    Easy,
-    Normal,
-    Advanced,
-    Expert
+    Easy = 0,
+    Normal = 1,
+    Advanced = 2,
+    Expert = 3
 }
+export const GAME_DIFFICULTY_STRINGS = ["easy", "normal", "advanced", "expert"]
 
 export enum RecordDataType {
     Byte,
