@@ -1,9 +1,42 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
 import { DynamicServerGroup } from '../../modules/servers/groups/DynamicServerGroup.js';
-import { hostname } from 'os';
+import SysInfo from 'systeminformation'
+
+const MIN_MEMORY_PERCENT_AVAILABLE = 0.25
+const MIN_CPU_PERCENT_FREE = 0.10
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
     fastify.post('/:groupId/servers', async (req: FastifyRequest<{Params: { groupId: string}, Querystring: { start: boolean }}>, reply) => {
+        // TODO: check for enough resources. ~300 MB (<= 2%), 1.5% cpu idle]
+        const cpu = await SysInfo.currentLoad()
+        if(cpu.avgLoad < MIN_CPU_PERCENT_FREE) {
+            return reply.status(403).send({
+                error: "NO_FREE_RESOURCES",
+                type: "CPU",
+                cpu: {
+                    avgLoad: cpu.avgLoad,
+                    currentLoad: cpu.currentLoad,
+                    threshold: MIN_CPU_PERCENT_FREE
+                },
+                message: "System CPU resources have reached their limit, no new servers can be created at this time."
+            })
+        }
+        const memory = await SysInfo.mem()
+        const memoryPercent = memory.available / memory.total
+        if(memoryPercent < MIN_MEMORY_PERCENT_AVAILABLE) {
+            return reply.status(403).send({
+                error: "NO_FREE_RESOURCES",
+                type: "MEMORY",
+                memory: {
+                    available: memory.available,
+                    total: memory.total,
+                    percentAvailable: memoryPercent,
+                    threshold: MIN_MEMORY_PERCENT_AVAILABLE
+                },
+                message: "System Memory resources have reached their limit, no new servers can be created at this time."
+            })
+        }
+
         let group = fastify.servers.getGroup(req.params.groupId)
         if(!group) {
             return reply.status(404).send({
