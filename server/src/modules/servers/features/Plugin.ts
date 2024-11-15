@@ -17,6 +17,12 @@ export default class PluginFeature extends Feature implements IAction {
     #status: ServerStatusData
     constructor(server: Server) {
         super("LivePlugin", server)
+        this.#status = {
+            players: [],
+            maxplayers: 0,
+            gamemode: "",
+            map: ""
+        }
     }
 
     async init() {
