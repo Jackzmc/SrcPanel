@@ -12,17 +12,18 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             })
         }
         if(group instanceof DynamicServerGroup) {
-            const instance = await group.createInstance()
+            const server = await group.createNewServer()
             if(req.query.start) {
-                await instance.Start()
+                await server.start()
             }
             return {
-                id: instance.ContainerId,
-                name: instance.ContainerName,
-                serverId: instance.ContainerName,
-                hostname: instance.Hostname,
-                ip: instance.Ip,
-                port: instance.Port,
+                id: server.ContainerInstance.ContainerId,
+                name: server.name,
+                serverId: server.id,
+                hostname: server.domain,
+                ip: server.ip,
+                port: server.port,
+                type: server.port,
             }
         } else {
             return reply.status(400).send({

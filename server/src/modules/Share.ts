@@ -131,7 +131,6 @@ export default class Share {
         console.timeEnd('getAddons:readdir')
         const results: (AddonInfo|AddonCollectionInfo)[] = []
         let collections: Record<string, AddonCollectionInfo> = {}
-                        const sleep = (time: number) => new Promise(res => setTimeout(res, time));
         for(const dirent of dirents) {
             if(dirent.isFile()) {
                 // Only check the specified extenstions

@@ -84,8 +84,8 @@ export class DynamicServerGroup extends ServerGroup {
         }
         for(let i = activeCount; i < this.#minServers; i++) {
             console.debug(`Creating new instance ${activeCount + 1}/${this.#minServers}`)
-            const instance = await this.createInstance()
-            await instance.Start()
+            const server = await this.createNewServer()
+            await server.start()
         }
     }
     
@@ -138,11 +138,12 @@ export class DynamicServerGroup extends ServerGroup {
             }, instance)
         await server.init()
         this._servers[id] = server
+        return server
     }
 
-    async createInstance() {
+    async createNewServer() {
         const instance = await this.#manager.createInstance(this.#templateId)
-        await this.#registerInstance(instance)
-        return instance
+        const server = await this.#registerInstance(instance)
+        return server
     }
 }

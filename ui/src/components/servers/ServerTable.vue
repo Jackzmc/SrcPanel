@@ -1,5 +1,6 @@
 <template>
   <div class="mb-4">
+    <CreateServerModal :group="group" :state="createInstanceData.state" :data="createInstanceData.data" v-if="createInstanceData" @close="createInstanceData = null" />
     <h4 class="title is-4">{{ group.name }}</h4>
     <p v-if="group.description" class="subtitle is-6">{{ group.description }}</p>
     <div class="table-container">
@@ -45,23 +46,43 @@
 import { ServerGroup } from '../../../../common-types/Server';
 import ServerRow from '@/components/servers/ServerRow.vue'
 import { request } from '@/js/util.js';
+import { LoadState } from '@/types/global.js';
 import { notify } from '@kyvg/vue3-notification';
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
+import CreateServerModal from './CreateServerModal.vue';
 
 const props = defineProps<{
   group: ServerGroup,
   manage?: boolean
 }>()
 
+let createInstanceData = ref<{
+  state: LoadState,
+  data: unknown
+}|null>(null)
+
 async function createInstance() {
-  const response = await request(`/api/groups/${props.group.id}/servers?start=1`, {
-    method: "POST"
-  })
-  if(response?.ok) {
-    await notify({
-      type: "success",
-      text: `Started new instance for ${props.group.name}`
+  createInstanceData.value = { state: LoadState.Loading, data: null }
+  try {
+    const response = await fetch(`/api/groups/${props.group.id}/servers?start=1`, {
+      method: "POST"
     })
+    if(response.ok) {
+      const json = await response.json()
+      createInstanceData.value.state = LoadState.Success
+      createInstanceData.value.data = json
+      notify({
+        type: "success",
+        text: `Started new instance for ${props.group.name}`
+      })
+    } else {
+      const json = await response.json()
+      createInstanceData.value.state = LoadState.Error
+      createInstanceData.value.data = json
+    }
+  } catch(err) {
+    createInstanceData.value.state = LoadState.Error
+    createInstanceData.value.data = (err as any).message
   }
 }
 
