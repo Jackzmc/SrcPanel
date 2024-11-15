@@ -113,8 +113,8 @@
                 <th style="border-style: none">Features</th>
                 <td style="border-style: none">
                   <div class="tags">
-                    <span class="tag" v-for="(t,feat) in serverInfo.features" :key="feat">
-                      <template v-if="feat">{{ feat }}</template>
+                    <span class="tag" v-for="(enabled,feat) in serverInfo.features" :key="feat">
+                      <template v-if="enabled">{{ feat }}</template>
                     </span>
                   </div>
                 </td>
