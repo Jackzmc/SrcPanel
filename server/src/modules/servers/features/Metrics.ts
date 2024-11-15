@@ -46,7 +46,9 @@ export default class MetricsFeature extends Feature {
         const live = this._server.Plugin.liveStatus
         if(live) {
           const point = this.#createPoint("live")
-          point.stringField("difficulty", GAME_DIFFICULTY_STRINGS[live.game.difficulty])
+          if(live.game) {
+            point.stringField("difficulty", GAME_DIFFICULTY_STRINGS[live.game.difficulty])
+          }
           let survivors = 0, infected = 0
           for(const client of Object.values(live.clients)) {
             if(client.infected) infected++
