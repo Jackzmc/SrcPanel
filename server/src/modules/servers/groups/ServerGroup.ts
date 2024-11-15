@@ -48,9 +48,7 @@ export default class ServerGroup<T extends Server = Server> {
     }
 
     getServerByPort(port: number) {
-        console.log('getServerByPort')
         for(const server of Object.values(this._servers)) {
-            console.log(server.id, server.port, port)
             if(server.port === port)
                 return server
         }

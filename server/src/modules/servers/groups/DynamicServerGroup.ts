@@ -27,7 +27,7 @@ export interface DynamicCreateGroupOptions extends CreateGroupOptions {
 // The number of seconds minimum that a server has to be detected empty, before it can be purged
 const MIN_EMPTY_TIME_FOR_PURGE = 1000 * 60 * 30
 // The interval of time to check that servers exist and to purge/start servers
-const CHECK_SERVER_INTERVAL = 1000 * 60
+const CHECK_SERVER_INTERVAL = 1000 * 60 * 5
 
 export class DynamicServerGroup extends ServerGroup<DockerServer> {
     #templateId: string
@@ -77,28 +77,29 @@ export class DynamicServerGroup extends ServerGroup<DockerServer> {
         }
         // Find any new instances
         const instances = this.#manager.getInstancesForTemplate(this.#templateId)
-        let activeCount = 0
+        // TODO: check for # of servers that are active
+        const servers = Object.values(this._servers).sort((a, b) => b.port - a.port)
         for(const instance of instances) {
             // Already configured, skip:
             if(instance.Server) continue
 
             await this.#registerInstance(instance)
-            const state = await instance.state()
-            if(state.Running) {
-                activeCount++;
-            } else if(activeCount < this.#minServers) {
-                console.debug(`Starting stopped existing instance ${activeCount + 1}/${this.#minServers}`)
-                // If we have servers but they aren't active, activate
-                if(await instance.tryStart()) {
-                    activeCount++
-                } else {
-                    console.error(`Failed to start instance ${instance.ContainerId}`)
-                }
-            }
+            // const state = await instance.state()
+            // if(state.Running) {
+            //     activeCount++;
+            // } else if(activeCount < this.#minServers) {
+            //     console.debug(`Starting stopped existing instance ${activeCount + 1}/${this.#minServers}`)
+            //     // If we have servers but they aren't active, activate
+            //     if(await instance.tryStart()) {
+            //         activeCount++
+            //     } else {
+            //         console.error(`Failed to start instance ${instance.ContainerId}`)
+            //     }
+            // }
         }
         // Ensure a minimum number of servers exist and are running
-        for(let i = activeCount; i < this.#minServers; i++) {
-            console.debug(`Creating new instance ${activeCount + 1}/${this.#minServers}`)
+        for(let i = servers.length; i < this.#minServers; i++) {
+            console.debug(`Creating new instance ${servers.length + 1}/${this.#minServers}`)
             const server = await this.createNewServer()
             await server.start()
         }
