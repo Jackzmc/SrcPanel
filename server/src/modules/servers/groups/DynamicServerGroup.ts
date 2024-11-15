@@ -78,7 +78,6 @@ export class DynamicServerGroup extends ServerGroup<DockerServer> {
         // Find any new instances
         const instances = this.#manager.getInstancesForTemplate(this.#templateId)
         // TODO: check for # of servers that are active
-        const servers = Object.values(this._servers).sort((a, b) => b.port - a.port)
         for(const instance of instances) {
             // Already configured, skip:
             if(instance.Server) continue
@@ -97,6 +96,8 @@ export class DynamicServerGroup extends ServerGroup<DockerServer> {
             //     }
             // }
         }
+        const servers = Object.values(this._servers).sort((a, b) => b.port - a.port)
+
         // Ensure a minimum number of servers exist and are running
         for(let i = servers.length; i < this.#minServers; i++) {
             console.debug(`Creating new instance ${servers.length + 1}/${this.#minServers}`)
