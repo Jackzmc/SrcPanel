@@ -31,13 +31,7 @@
           </div>
           <div class="level-right">
             <div class="buttons">
-              <template v-if="isLiveViewActive || serverInfo.features.plugin || serverInfo.features.rcon">
-                <a v-if="serverInfo.features.systemd && (!status || !status.online)" @click="performAction('start')" class="button is-success is-small">Start Server</a>
-                <template v-if="serverInfo.status?.online">
-                  <button :data-tooltip="action.description" :disabled="actionRunning" v-for="(action, i) in actions" :key="i" @click="performAction(action.command)" class="button is-dark is-small" :style="{'background-color': action.color}">{{ action.name }}</button>
-                </template>
-              </template>
-              <Icon v-else icon="fa-plug-circle-minus" data-tooltip="No connection to plugin, cannot perform actions at this time">Actions Unavailable</Icon>
+              <button :data-tooltip="action.description" :disabled="actionRunning" v-for="(action, i) in actions" :key="i" @click="performAction(action.command)" class="button is-dark is-small" :style="{'background-color': action.color}">{{ action.name }}</button>
             </div>
           </div>
         </div>
@@ -113,9 +107,9 @@
                 <th style="border-style: none">Features</th>
                 <td style="border-style: none">
                   <div class="tags">
-                    <span class="tag" v-for="(enabled,feat) in serverInfo.features" :key="feat">
-                      <template v-if="enabled">{{ feat }}</template>
-                    </span>
+                    <template v-for="(enabled,feat) in serverInfo.features" :key="feat">
+                      <span class="tag" v-if="enabled">{{ feat }}</span>
+                    </template>
                   </div>
                 </td>
               </tr>
@@ -331,9 +325,9 @@
             <div class="content">
               <p>An error occurred while trying to fetch server information from the admin panel. Please try again later.
               </p>
-              <p>Error Data:
+              <div>Error Data:
               <pre>{{ error }}</pre>
-              </p>
+              </div>
             </div>
             <p><a class="button is-info" @click="init">Retry</a></p>
           </div>
@@ -508,7 +502,7 @@ import { UserPrivilegeCode } from '../../../../common-types/Privileges';
 import { formatDate, getDuration } from '../../js/util.js';
 import UserComponent, { User } from '@/components/UserComponent.vue';
 import Console from '@/components/server/Console.vue'
-import { ServerData, ServerInfo, ServerDetailed } from '../../../../common-types/Server';
+import { ServerData, ServerInfo, ServerDetailed, ServerAvailableFeatures } from '../../../../common-types/Server';
 
 const FinaleStageName: Record<FinaleStage, string> = {
     [FinaleStage.Gauntlet]: "Gauntlet",
@@ -634,7 +628,25 @@ const cfgParentFolder = computed(() => {
 
 const actions = computed(() => {
   if(!serverInfo.value) return []
-  return serverInfo.value.actions.filter(action => shiftPressed.value || !action.isHidden)
+  return serverInfo.value.actions
+    // Filter out any actions that their required feature is not available
+    .filter(action => {
+      if(!action.requiresFeatures) return true
+      for(const feat of action.requiresFeatures) {
+        if(!serverInfo.value!.features[feat as keyof ServerAvailableFeatures]) {
+          return false
+        }
+      }
+      return true
+    })
+    // Filter out any action that aren't visible
+    .filter(action => {
+      if(action.showWhen === "any") return true
+      if(serverInfo.value!.status?.online && action.showWhen === "online") return true
+      else if(!serverInfo.value!.status?.online && action.showWhen === "offline") return true
+      else return false
+    })
+    .filter(action => shiftPressed.value || !action.isHidden)
 })
 const tab = computed(() => {
   return route.params.tab?.length > 0 ? route.params.tab : "overview"

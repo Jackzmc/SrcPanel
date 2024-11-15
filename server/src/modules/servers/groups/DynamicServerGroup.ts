@@ -20,7 +20,8 @@ export interface DynamicGroupServerTemplate {
 export interface DynamicCreateGroupOptions extends CreateGroupOptions {
     templateId: string,
     serverTemplate: Partial<DynamicGroupServerTemplate>,
-    minServers?: number
+    minServers?: number,
+    maxEmptyServers?: number
 }
 
 export class DynamicServerGroup extends ServerGroup {
@@ -28,6 +29,7 @@ export class DynamicServerGroup extends ServerGroup {
     #serverTemplate: DynamicGroupServerTemplate
     #minServers: number
     #manager: DynamicServerManager
+    #maxEmptyServers: number | null = null
 
     constructor(dynamicManager: DynamicServerManager, id: string, options: DynamicCreateGroupOptions) {
         super(id, options)
@@ -39,6 +41,7 @@ export class DynamicServerGroup extends ServerGroup {
             tags: options.serverTemplate.tags ?? []
         }
         this.#minServers = options.minServers || 0
+        this.#maxEmptyServers = options.maxEmptyServers
 
         this.#checkServers()
     }

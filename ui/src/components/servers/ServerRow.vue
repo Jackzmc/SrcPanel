@@ -29,7 +29,6 @@
       <td>
         <!-- <div class="buttons" v-if="server.features.includes('plugin')"> -->
         <div class="buttons">
-          <button :disabled="actionRunning" v-if="server.features.systemd || server.features.docker" @click="processAction(undefined, 'start')" class="button is-success">Start</button>
           <button v-for="(action, i) in actions" :key="i"
             :data-tooltip="action.description" :disabled="actionRunning"
             class="button is-dark" :style="{'background-color': action.color}"
@@ -70,7 +69,7 @@
 
 <script setup lang="ts">
 import { request } from '@/js/util.js';
-import { ServerInfo, ServerType, ServerAction } from '../../../../common-types/Server';
+import { ServerInfo, ServerType, ServerAction, ServerAvailableFeatures } from '../../../../common-types/Server';
 import { computed, ref } from 'vue';
 import { notify } from '@kyvg/vue3-notification';
 const props = defineProps<{
@@ -129,17 +128,24 @@ async function processAction(action?: ServerAction, command?: string) {
 
 const actions = computed(() => {
   return props.server.actions
-    .map(action => {
-      let isVisible = action.showWhen === "any"
-      if(props.server.status?.online && action.showWhen === "online") isVisible = true
-      else if(!props.server.status?.online && action.showWhen === "offline") isVisible = false
-      else isVisible = false
-      return {
-        ...action,
-        visible: isVisible
+    // Filter out any actions that their required feature is not available
+    .filter(action => {
+      if(!action.requiresFeatures) return true
+      for(const feat of action.requiresFeatures) {
+        if(!props.server!.features[feat as keyof ServerAvailableFeatures]) {
+          return false
+        }
       }
+      return true
     })
-    .filter(action => !action.isHidden && action.visible)
+    // Filter out any action that aren't visible
+    .filter(action => {
+      if(action.showWhen === "any") return true
+      if(props.server.status?.online && action.showWhen === "online") return true
+      else if(!props.server.status?.online && action.showWhen === "offline") return true
+      else return false
+    })
+    .filter(action => !action.isHidden)
 })
 
 const trClass = computed(() => {

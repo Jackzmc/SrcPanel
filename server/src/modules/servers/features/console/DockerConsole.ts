@@ -22,7 +22,6 @@ export default class DockerConsole extends Console {
     }
 
     async init() {
-        console.log(this._server.id, 'init console')
         await this.readExisting()
         await this.#createLogsReader()
     }
@@ -36,9 +35,9 @@ export default class DockerConsole extends Console {
         const logs = await this.#container.logs({ stdout: true, stderr: true, tail: MAX_BUFFER_LINES })
         const lines = logs.toString().split("\n")
         for(const line of lines) {
+            console.log(line)
             this.pushLine(line)
         }
-        console.debug('docker console: read', lines.length, 'lines')
     }
 
     /**

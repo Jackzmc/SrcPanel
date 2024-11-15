@@ -485,10 +485,6 @@ export default class ServerManager {
       this.addonShares[shareId.toLowerCase()] = new Share(db, this.#steam, share)
       console.info(`[ServerManager] Loaded share "${shareId}" with ${Object.keys(share.destinations).length} destinations, ${numServers} servers`)
     }
-
-    if(!shares["default"]) {
-      console.warn("Warn: No default share found (no key named \"default\")")
-    }
   }
 
   async #loadActions() {
@@ -517,6 +513,7 @@ export default class ServerManager {
       if(data.actionSources) {
         // Resolve [id1, id2] -> [action1, action2]
         actions = data.actionSources.reduce((list, actionGroupId) => {
+          if(!this.#actions[actionGroupId]) console.warn(`[ServerManager] WARN: Group ${groupId} references missing action group: ${actionGroupId}`)
           return list.concat(this.#actions[actionGroupId])
         }, [])
       }

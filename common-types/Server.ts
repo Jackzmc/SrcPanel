@@ -92,7 +92,8 @@ export interface ServerAction {
     description?: string,
 
     inherited?: boolean,
-    showWhen: "any" | "online" | "offline"
+    showWhen: "any" | "online" | "offline",
+    requiresFeatures?: string[]
 }
 export type BuiltInActions = "builtin:stop" | "builtin:request_stop" | "builtin:update" | "builtin:kick"
 
