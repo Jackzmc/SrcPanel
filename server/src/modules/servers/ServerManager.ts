@@ -146,7 +146,7 @@ export default class ServerManager {
           client.send(LiveRecordResponse.OK, server.Plugin?.liveViewers)
           this.#debugLive("Authenticated", client.IP)
         } else {
-          client.send(LiveRecordResponse.Error, "Invalid or unknown server: " + payload.sub)
+          client.send(LiveRecordResponse.Error, `Invalid or unknown id "${payload.sub}" (docker: ${payload.docker?'y':'n'})`)
           return
         }
       })
@@ -315,8 +315,10 @@ export default class ServerManager {
   public getServerForPlugin(payload: PluginTokenPayload, port: number) {
     if(!payload.docker) return this.getServer(payload.sub)
     for(const group of Object.values(this.#groups)) {
-      const server = group.getServerByPort(port)
-      if(server) return server
+      if(group.Id === payload.sub) {
+        const server = group.getServerByPort(port)
+        if(server) return server
+      }
     }
     return null
   }
