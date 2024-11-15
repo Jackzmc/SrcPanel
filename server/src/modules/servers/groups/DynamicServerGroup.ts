@@ -42,8 +42,10 @@ export class DynamicServerGroup extends ServerGroup<DockerServer> {
         this.#templateId = options.templateId
         this.#serverTemplate = {
             name: options.serverTemplate.name ?? this.Name,
+            // type: options.type,
+            activityId: options.serverTemplate.activityId,
             ip: options.serverTemplate.ip,
-            tags: options.serverTemplate.tags ?? []
+            tags: options.serverTemplate.tags ?? [],
         }
         this.#minServers = options.minServers || 0
         this.#maxEmptyServers = options.maxEmptyServers
