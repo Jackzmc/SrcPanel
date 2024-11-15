@@ -21,15 +21,9 @@ export interface ComputeStats {
     cpu_stats: CPUStats;
 }
 
-interface CPUUsage {
-    percpu_usage: number[];
-    usage_in_usermode: number;
-    total_usage: number;
-    usage_in_kernelmode: number;
-}
 
 export interface CPUStats {
-    cpu_usage: CPUUsage;
+    cpu_usage: number;
     system_cpu_usage: number;
     online_cpus: number;
 }

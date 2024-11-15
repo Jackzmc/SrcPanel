@@ -38,6 +38,7 @@ export default class MetricsFeature extends Feature {
       if(!this.available) return
       console.log('init', this._server.id, this._server instanceof DockerServer)
       if(this._server instanceof DockerServer) {
+        // TODO: replace interval with stream
         setInterval(async() => {
           await this.getComputeStats()
         }, RECORD_STATISTICS_INTERVAL)
@@ -54,20 +55,22 @@ export default class MetricsFeature extends Feature {
      */
     async getComputeStats(): Promise<ComputeStats> {
       if(this._server instanceof DockerServer) {
-        console.debug('computing stats', this._server.id)
-        const stats = await this._server.ContainerInstance.Container.stats()
+        const stats = await this._server.ContainerInstance.Container.stats({ "one-shot": true, stream: false })
+        const cpuDelta = stats.cpu_stats.cpu_usage.total_usage - stats.precpu_stats.cpu_usage.total_usage
+        const systemCpuDelta = stats.cpu_stats.system_cpu_usage - stats.precpu_stats.system_cpu_usage
         this.#computeStats = {
           collectionTime: Math.round(Date.now()/1000),
-          cpu_stats: {
-            cpu_usage: stats.cpu_stats.cpu_usage,
+          // https://docs.docker.com/reference/api/engine/version/v1.45/#tag/Container/operation/ContainerExport
+          cpu_stats: stats.cpu_stats ? {
+            cpu_usage: (cpuDelta / systemCpuDelta) * stats.cpu_stats.online_cpus * 100.0,
             system_cpu_usage: stats.cpu_stats.system_cpu_usage,
             online_cpus: stats.cpu_stats.online_cpus
-          },
-          memory_stats: {
+          } : null,
+          memory_stats: stats.memory_stats ? {
             max_usage: stats.memory_stats.max_usage,
-            usage: stats.memory_stats.usage,
+            usage: stats.memory_stats.usage - stats.memory_stats.stats.cache,
             limit: stats.memory_stats.limit
-          }
+          } : null
         }
         return this.#computeStats
       } else {
@@ -76,7 +79,7 @@ export default class MetricsFeature extends Feature {
     }
 
     get ComputeStats(): ComputeStats | null {
-      return null; //this.#computeStats
+      return this.#computeStats
     }
 
     recordStatus(data: ServerStatusData | null, source: ServerStatusSource) {
