@@ -550,7 +550,7 @@ export default class ServerManager {
 
     // await Promise.allSettled(serverPromises)
     const endTime = Date.now() - startTime
-    console.log(`[ServerManager] Loaded ${this.Count} servers in ${endTime.toFixed(1)} ms`)
+    console.log(`[ServerManager] Loaded ${Object.keys(this.#groups)} groups and total of ${this.Count} servers in ${endTime.toFixed(1)} ms`)
   }
 
   get Count() {

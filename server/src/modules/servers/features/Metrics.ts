@@ -33,12 +33,13 @@ export default class MetricsFeature extends Feature {
 
     async init() {
       if(!this.available) return
+      console.log('init', this._server.id, this._server instanceof DockerServer)
       if(this._server instanceof DockerServer) {
         setInterval(async() => {
           await this.getComputeStats()
         }, RECORD_STATISTICS_INTERVAL)
+        await this.getComputeStats()
       }
-      await this.getComputeStats()
       // setInterval(() => {
       //   this.#recordInfo()
       // }, Number(process.env.INFLUX_METRICS_INTERVAL) || 10_000)
@@ -50,6 +51,7 @@ export default class MetricsFeature extends Feature {
      */
     async getComputeStats(): Promise<ComputeStats> {
       if(this._server instanceof DockerServer) {
+        console.debug('computing stats', this._server.id)
         const stats = await this._server.ContainerInstance.Container.stats()
         this.#computeStats = {
           collectionTime: Math.round(Date.now()/1000),
@@ -71,7 +73,7 @@ export default class MetricsFeature extends Feature {
     }
 
     get ComputeStats(): ComputeStats | null {
-      return this.#computeStats
+      return null; //this.#computeStats
     }
 
     recordStatus(data: ServerStatusData | null, source: ServerStatusSource) {
