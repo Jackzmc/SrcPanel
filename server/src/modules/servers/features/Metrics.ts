@@ -4,7 +4,7 @@ import Server from "../Server.js";
 import Influx, { InfluxDB, Point, WriteApi } from '@influxdata/influxdb-client'
 import { getWriter } from "../../../modules/Influx.js";
 import { ServerStatusData, ServerStatusSource } from "../../../../../common-types/Server.js";
-import { GAME_DIFFICULTY_STRINGS } from "../../../../../common-types/Live.js";
+import { GAME_DIFFICULTY_STRINGS, GameState } from "../../../../../common-types/Live.js";
 
 export interface InfluxConfig {
   host: string,
@@ -34,17 +34,20 @@ export default class MetricsFeature extends Feature {
     }
 
     recordStatus(data: ServerStatusData | null, source: ServerStatusSource) {
-      const point = this.#createPoint("status")
+      const statusPoint = this.#createPoint("status")
+      let playerCount = null
       if(data) {
-        point.intField("player_count", data.players.length)
+        playerCount = data.players.length
         if(this._server.uptime)
-          point.intField("uptime", this._server.uptime)
-        point.stringField("map", this._server.status.data.map)
-        point.stringField("gamemode", this._server.status.data.gamemode)
+          statusPoint.intField("uptime", this._server.uptime)
+        statusPoint.stringField("map", this._server.status.data.map)
+        statusPoint.stringField("gamemode", this._server.status.data.gamemode)
       } 
       if(source == "live" && this._server.Plugin?.available) {
         const live = this._server.Plugin.liveStatus
         if(live) {
+          if(live.game.state === GameState.None) playerCount = Object.keys(live.clients).length
+          else playerCount = null
           const point = this.#createPoint("live")
           if(live.game) {
             point.stringField("difficulty", GAME_DIFFICULTY_STRINGS[live.game.difficulty])
@@ -59,8 +62,11 @@ export default class MetricsFeature extends Feature {
           this.#influx.writePoint(point)
         }
       }
+      if(playerCount != null) {
+        statusPoint.intField("player_count", playerCount)
+      }
 
-      this.#influx.writePoint(point)
+      this.#influx.writePoint(statusPoint)
       this.#influx.flush()
     }
 
