@@ -1,8 +1,8 @@
 import { LiveDataCache, LiveRecordResponse } from "../../../../common-types/Live.js";
 import { ServerType, ServerStatus } from "../../../../common-types/Server.js";
 import ConfigsFeature from "./features/Configs.js";
-import Console from "./features/console/Console.js";
-import StandardConsole from "./features/console/StandardConsole.js";
+import Logs from "./features/logs/Console.js";
+import StandardLogs from "./features/logs/StandardLogs.js";
 import PluginFeature from "./features/Plugin.js";
 import RconFeature from "./features/Rcon.js";
 import ServerGroup from "./groups/ServerGroup.js";
@@ -29,7 +29,7 @@ export default class StandardServer extends Server {
             })
         }
         if(server.logsPath) {
-            this._console = new StandardConsole(this, server.logsPath)
+            this._logs = new StandardLogs(this, server.logsPath)
         }
     }
 

@@ -1,6 +1,6 @@
 import { statSync } from "fs";
 import { open } from 'fs/promises'
-import Console from "./Console.js";
+import Logs from "./Console.js";
 import { Tail } from "tail";
 import Server from "../../Server.js";
 import { Container } from "dockerode";
@@ -9,7 +9,7 @@ import { PassThrough, Stream } from "stream";
 /** The maximum number of lines to keep buffered */
 const MAX_BUFFER_LINES = 40
 
-export default class DockerConsole extends Console {
+export default class DockerLogs extends Logs {
     #container: Container
 
     constructor(server: Server, container: Container) {

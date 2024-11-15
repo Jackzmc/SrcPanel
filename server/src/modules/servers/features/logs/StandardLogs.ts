@@ -1,10 +1,10 @@
 import { open, stat } from 'fs/promises'
-import Console from "./Console.js";
+import Logs from "./Console.js";
 import { Tail } from "tail";
 import Server from "../../Server.js";
 import { resolve } from "path";
 
-export default class StandardConsole extends Console {
+export default class StandardLogs extends Logs {
     #logPath: string
     #lines: string[] = []
     #available: boolean

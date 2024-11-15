@@ -42,7 +42,7 @@
   "scripts": {
     "build": "tsc",
     "start": "tsc && node dist/server/src/index.js",
-    "dev": "nodemon -e tsc --exec \"yarn start || exit 1\""
+    "dev": "nodemon -e ts --exec \"yarn start || exit 1\""
   },
   "type": "module",
   "devDependencies": {

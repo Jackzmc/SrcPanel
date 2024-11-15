@@ -1,7 +1,7 @@
 import { CommandResultType } from "../../../../common-types/Live.js";
 import { ServerAvailableFeatures } from "../../../../common-types/Server.js";
 import DynamicServerInstance from "./docker/DynamicServerInstance.js";
-import DockerConsole from "./features/console/DockerConsole.js";
+import DockerLogs from "./features/logs/DockerLogs.js";
 import ServerGroup from "./groups/ServerGroup.js";
 import { ActionResponse, getFallbackCommandForBuiltin, IAction } from "./IAction.js";
 import Server, { ServerExtendedData } from "./Server.js";
@@ -15,7 +15,7 @@ export default class DockerServer extends Server implements IAction {
     constructor(group: ServerGroup, server: ServerExtendedData, instance: DynamicServerInstance) {
         super(group, server)
         this.#instance = instance
-        this._console = new DockerConsole(this, this.#instance.Container)
+        this._logs = new DockerLogs(this, this.#instance.Container)
     }
 
     get canPerformCommands() {

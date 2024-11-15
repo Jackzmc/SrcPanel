@@ -1,6 +1,6 @@
 import { ServerAction, ServerAvailableFeatures, ServerData, ServerInfo, ServerStatus, ServerStatusData, ServerStatusSource, ServerType } from "../../../../common-types/Server.js";
 import ConfigsFeature from "./features/Configs.js";
-import ConsoleFeature from "./features/console/Console.js";
+import ConsoleFeature from "./features/logs/Console.js";
 import MetricsFeature from "./features/Metrics.js";
 import PluginFeature from "./features/Plugin.js";
 import RconFeature from "./features/Rcon.js";
@@ -64,7 +64,7 @@ export default abstract class Server implements IAction {
     protected _group: ServerGroup
     protected _logId: string | null
 
-    protected _console: ConsoleFeature|null = null
+    protected _logs: ConsoleFeature|null = null
     protected _rcon?: RconFeature|null = null
     protected _configs?: ConfigsFeature|null = null
     protected _plugin?: PluginFeature|null = null
@@ -112,7 +112,7 @@ export default abstract class Server implements IAction {
         ])
     }
 
-    get Console(): ConsoleFeature | null { return this._console }
+    get Console(): ConsoleFeature | null { return this._logs }
     get Rcon(): RconFeature | null { return this._rcon }
     get Configs(): ConfigsFeature | null { return this._configs }
     get Plugin(): PluginFeature | null { return this._plugin }
@@ -151,7 +151,7 @@ export default abstract class Server implements IAction {
     public get features(): ServerAvailableFeatures {
       return {
         rcon: this.Rcon?.available ?? false,
-        console: this.Console?.available ?? false,
+        logs: this.Console?.available ?? false,
         configs: this.Configs?.available ?? false,
         plugin: this.Plugin?.available ?? false,
         metrics: this.Metrics?.available ?? false,
