@@ -3,7 +3,7 @@ import { ActionResponse, IAction } from "../IAction.js";
 import Server from "../Server.js";
 import PluginSocket from "../PluginSocket.js";
 import Feature from "./Feature.js";
-import { ServerStatus } from "../../../../../common-types/Server.js";
+import { ServerStatus, ServerStatusData } from "../../../../../common-types/Server.js";
 import jwtPromise from "../../../jwt-promise.js";
 
 const LIVE_CACHE_TTL = 1000 * 60 * 3 // Live cache data expires after 3 minutes
@@ -14,7 +14,7 @@ export default class PluginFeature extends Feature implements IAction {
     #socket: PluginSocket | null = null
     #subscribers: SubscribeCallback[] = []
     #startTime: number
-    #status: ServerStatus
+    #status: ServerStatusData
     constructor(server: Server) {
         super("LivePlugin", server)
     }
@@ -89,7 +89,11 @@ export default class PluginFeature extends Feature implements IAction {
     }
 
     get status(): ServerStatus {
-        return this.#status
+        return {
+            online: this.authenticated,
+            data: this.#status,
+            source: "live"
+        }
     }
     
     async pushRecord(record: LiveRecord) {
@@ -100,17 +104,17 @@ export default class PluginFeature extends Feature implements IAction {
             if(record.type === LiveRecordType.Game) {
                 this.#startTime = record.startTime
             }
-            this._server.updateStatus(true, this.#status.data ??  { players: [], maxplayers: 0, map: "", gamemode: "" }, "live")
+            this._server.updateStatus(true, this.#status ??  { players: [], maxplayers: 0, map: "", gamemode: "" }, "live")
             if(this.#liveCache.game) {
-                this.#status.data.gamemode = this.#liveCache.game.gamemode
-                this.#status.data.map = this.#liveCache.game.map
+                this.#status.gamemode = this.#liveCache.game.gamemode
+                this.#status.map = this.#liveCache.game.map
                 // Only want to update maxplayers when transitioning or start of game?
                 // if(this.#liveCache.game.state !== 0)
-                this.#status.data.maxplayers = this.#liveCache.game.maxplayers || 4
+                this.#status.maxplayers = this.#liveCache.game.maxplayers || 4
             }
             if(this.#liveCache.clients) {
                 // only update if players is not hibernate/transitioning or unk game state
-                this.#status.data.players = Object.values(this.#liveCache.clients)
+                this.#status.players = Object.values(this.#liveCache.clients)
                     .filter(pl => pl.steamid != "BOT"/* && ('survivor' in pl || 'ínfected' in pl)*/)
                     .map(pl => pl.name)
                 // console.log(`LIVE players=${this.#status.data.players.length} / ${this.#status.data.maxplayers}`)

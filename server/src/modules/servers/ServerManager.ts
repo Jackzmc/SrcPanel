@@ -158,7 +158,6 @@ export default class ServerManager {
 
   #onLiveClient(client: net.Socket) {
     this.#debugLive('client connected', client.remoteAddress)
-    console.log(client.remoteAddress, client.remotePort)
     const ps = new PluginSocket(client)
     this.#socketClients.set(client.remoteAddress, ps)
     
