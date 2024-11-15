@@ -15,7 +15,7 @@ export default class StandardServer extends Server {
     #startTime: number | null
     #cvars: Record<string, string>
 
-    constructor(group: ServerGroup, server: ServerExtendedData) {
+    constructor(group: ServerGroup<Server>, server: ServerExtendedData) {
         super(group, server)
 
         if(server.rcon) {
@@ -39,10 +39,6 @@ export default class StandardServer extends Server {
 
     get startTime(): number | null {
         return this.#startTime
-    }
-    get uptime(): number {
-        if(!this.#startTime) return null
-        return (Date.now()/1000) - this.#startTime
     }
     get cvars() {
         return this.#cvars

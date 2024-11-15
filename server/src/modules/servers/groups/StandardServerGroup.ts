@@ -6,7 +6,7 @@ import DNS from 'dns/promises'
 
 const REQUIRED_SERVER_PROPERTIES = ["ip"]
 
-export class StandardServerGroup extends ServerGroup {
+export class StandardServerGroup extends ServerGroup<StandardServer> {
     constructor(id: string, options: CreateGroupOptions) {
         super(id, options)
     }

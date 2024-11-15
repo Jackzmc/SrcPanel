@@ -17,7 +17,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         try {
             const instance = await manager.createInstance(req.params.templateId)
             if(req.query.start) {
-                await instance.Start()
+                await instance.start()
             }
             return {
                 id: instance.ContainerId,
@@ -68,7 +68,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
         return {
             hostname: instance.Hostname,
-            state: await instance.State()
+            state: await instance.state()
         }
     })
 
@@ -88,7 +88,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             })
         }
         return {
-            logs: await instance.FetchLogs()
+            logs: await instance.fetchLogs()
         }
     })
 
@@ -106,7 +106,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 message: "No instance with id could be found. They will be in the format of panel-{templateId}-{port}"
             })
         }
-        await instance.Start()
+        await instance.start()
         return reply.status(204).send()
     })
 }

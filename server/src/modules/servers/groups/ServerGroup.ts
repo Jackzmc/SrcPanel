@@ -9,14 +9,14 @@ export interface CreateGroupOptions {
 }
 
 
-export default class ServerGroup {
+export default class ServerGroup<T extends Server = Server> {
     _id: string
     _name: string
     _type: string
     _description: string
     _actions: ServerAction[]
 
-    _servers: Record<string, Server> = {}
+    _servers: Record<string, T> = {}
     constructor(id: string, options: CreateGroupOptions) {
         this._id = id
         this._name = options.name ?? id

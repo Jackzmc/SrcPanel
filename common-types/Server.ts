@@ -3,8 +3,10 @@ import { LiveDataCache } from "./Live.js"
 export type ServerStatusSource = "" | "live" | "gamedig"
 export interface ServerStatus {
     source?: ServerStatusSource,
-    data?: ServerStatusData,
-    online: boolean
+    data?: ServerStatusData | null,
+    online: boolean,
+    lastStatusTime: number | null,
+    lastEmptyTime: number | null
 }
 export interface ServerStatusData {
     players: string[],

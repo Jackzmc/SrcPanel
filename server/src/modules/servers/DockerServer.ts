@@ -12,7 +12,7 @@ export default class DockerServer extends Server implements IAction {
     // TODO: merge DynamicServerInstance into this?
     // TODO: Console support
     #instance: DynamicServerInstance
-    constructor(group: ServerGroup, server: ServerExtendedData, instance: DynamicServerInstance) {
+    constructor(group: ServerGroup<DockerServer>, server: ServerExtendedData, instance: DynamicServerInstance) {
         super(group, server)
         this.#instance = instance
         this._logs = new DockerLogs(this, this.#instance.Container)
@@ -22,12 +22,8 @@ export default class DockerServer extends Server implements IAction {
         return true
     }
 
-    get uptime() {
-        return null
-    }
-
     get startTime() {
-        return null
+        return this.#instance.StartTime
     }
 
     get features() {
@@ -42,15 +38,15 @@ export default class DockerServer extends Server implements IAction {
     }
 
     public async start() {
-        return await this.#instance.Start()
+        return await this.#instance.start()
     }
 
-    public async stop() {
-        return await this.#instance.Stop()
+    public async stop(force: boolean = false) {
+        return await this.#instance.stop(force)
     }
 
     public async stopWait( force: boolean, timeoutSeconds?: number ): Promise<boolean> {
-        return this.#instance.Stop(force)
+        return this.#instance.stop(force)
     }
 
     public async performAction( command: string, namespace: string ): Promise<ActionResponse> {
@@ -88,7 +84,7 @@ export default class DockerServer extends Server implements IAction {
 
     public override async refreshStatus(bypassCache = false) {
         const ret = super.refreshStatus(bypassCache)
-        const state = await this.#instance.State()
+        const state = await this.#instance.state()
         this._status.online = state.Running
         return ret
     }

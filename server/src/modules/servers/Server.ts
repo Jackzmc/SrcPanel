@@ -96,7 +96,7 @@ export default abstract class Server implements IAction {
             inherited: true 
           } as ServerAction
         }).concat(server.actions)
-        this._status = { data: null, online: false, source: "" }
+        this._status = { data: null, online: false, source: "", lastStatusTime: null, lastEmptyTime: null }
         if(server.cfgDirectory) {
           this._configs = new ConfigsFeature(this, server.cfgDirectory)
         }
@@ -138,13 +138,49 @@ export default abstract class Server implements IAction {
       }
     }
 
+    /**
+     * Can this server perform commands (has rcon support, plugin support, or running on docker)
+     *
+     * @readonly
+     * @type {boolean}
+     */
     abstract get canPerformCommands(): boolean;
 
+    /**
+     * Returns the unix timestamp of when the server was started, if known.
+     * @readonly
+     */
     abstract get startTime(): number | null;
-    abstract get uptime(): number | null;
 
+    /**
+     * Returns the server uptime in seconds, if known
+     * @readonly
+     */
+    get uptime(): number | null {
+        if(!this.startTime) return null
+        return (Date.now()/1000) - this.startTime
+    }
+
+    /**
+     * Returns the unix timestamp of the last time the status was updated, if any.
+     * @readonly
+     */
+    get lastStatusTime(): number | null {
+      return this._status.lastStatusTime
+    }
+    
     get status(): ServerStatus {
         return this._status
+    }
+
+    /**
+     * The number of seconds that this server has been detected empty, if known
+     * @readonly
+     * @type {number}
+     */
+    get emptyTime(): number | null {
+      if(!this._status || !this._status.lastEmptyTime) return null
+      return (Date.now()/1000) - this._status.lastEmptyTime
     }
 
     get activityLogId() { return this._logId }
@@ -206,6 +242,12 @@ export default abstract class Server implements IAction {
       this._status.online = online
       this._status.data = data
       this._status.source = source
+      this._status.lastStatusTime = (Date.now() / 1000)
+      if(data && data.players.length === 0) {
+        this._status.lastEmptyTime = (Date.now() / 1000)
+      } else {
+        this._status.lastEmptyTime = null
+      }
       if(this.Metrics?.available) {
         this.Metrics.recordStatus(data, source)
       }
