@@ -1,0 +1,22 @@
+{
+    "_type": "request",
+    "method": "POST",
+    "body": {
+        "mimeType": "No Body"
+    },
+    "url": "{{API_PROTOCOL}}:/{{API_DOMAIN}}/api/groups/:groupId/servers",
+    "sortOrder": 0,
+    "parameters": [],
+    "pathParameters": [
+        {
+            "name": "groupId",
+            "value": "l4d2-test"
+        }
+    ],
+    "headers": [
+        {
+            "name": "x-apikey",
+            "value": "{{API_TOKEN}}"
+        }
+    ]
+}

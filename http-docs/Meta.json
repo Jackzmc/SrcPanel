@@ -5,7 +5,7 @@
         "mimeType": "No Body"
     },
     "url": "{{API_PROTOCOL}}://{{API_DOMAIN}}/api/meta",
-    "sortOrder": 2,
+    "sortOrder": 3,
     "parameters": [],
     "pathParameters": []
 }

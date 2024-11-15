@@ -5,7 +5,7 @@
         "mimeType": "No Body"
     },
     "url": "{{API_PROTOCOL}}:/{{API_DOMAIN}}/api/docker/templates/:template/update",
-    "sortOrder": 4,
+    "sortOrder": 5,
     "parameters": [],
     "pathParameters": [
         {
