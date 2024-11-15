@@ -267,7 +267,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
 
         try {
-            await server.refreshStatus()
+            await server.refreshStatus(true)
         } catch(err) {
 
         }

@@ -502,7 +502,7 @@ import { UserPrivilegeCode } from '../../../../common-types/Privileges';
 import { formatDate, getDuration } from '../../js/util.js';
 import UserComponent, { User } from '@/components/UserComponent.vue';
 import Console from '@/components/server/Console.vue'
-import { ServerData, ServerInfo, ServerDetailed, ServerAvailableFeatures } from '../../../../common-types/Server';
+import { ServerData, ServerInfo, ServerDetailed, ServerAvailableFeatures, ComputeStats } from '../../../../common-types/Server';
 
 const FinaleStageName: Record<FinaleStage, string> = {
     [FinaleStage.Gauntlet]: "Gauntlet",
@@ -602,6 +602,7 @@ const TABS: Record<string, { name: string, tag?: string, permission?: string, en
 }
 
 let starting = ref(false)
+let stats = ref<ComputeStats>()
 let lastRefreshTime = ref()
 let serverInfo = ref<ServerInfo>()
 let serverConfigs = ref()
@@ -788,6 +789,7 @@ async function fetchServerStatus() {
     if(response.ok && json) {
       status.value = json.status
       uptime.value = json.uptime
+      stats.value = json.stats
       activities.value = json.recentActivities?.map((act: any) => parseLog(act))
     } else {
       error.value = json.message

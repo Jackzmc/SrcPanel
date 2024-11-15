@@ -210,7 +210,7 @@ export default abstract class Server implements IAction {
         if(this.Plugin && this.Plugin.authenticated) return;
 
         const now = Date.now()
-        if(!bypassCache && now - this._lastRefresh < MIN_REFRESH_TIME) return
+        if(!bypassCache && !this._lastRefresh && now - this._lastRefresh < MIN_REFRESH_TIME) return
         this._lastRefresh = now
         try {
             const state = await Gamedig.query({
