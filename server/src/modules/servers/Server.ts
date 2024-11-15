@@ -90,6 +90,7 @@ export default abstract class Server implements IAction {
           sortOrder: server.sortOrder,
           // TODO: remove
         }
+        this._logId = server.activityId
         this._actions = group.Actions.map(a => {
           return {
             ...a, 
