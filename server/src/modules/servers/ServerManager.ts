@@ -139,7 +139,7 @@ export default class ServerManager {
     if(record.type != LiveRecordType.Auth) return console.warn("[ServerManager] Got non-auth packets when not-authenticated, ignoring")
     JWT.verify<PluginTokenPayload>(record.token, process.env.STATE_SECRET)
       .then(({payload}) => {
-        const server = this.getServer(payload.sub)
+        const server = this.getServerForPlugin(payload, record.port)
         if(server) {
           client._setServer(server)
           server.Plugin?._setSocket(client)
@@ -306,13 +306,16 @@ export default class ServerManager {
    * @returns 
    */
   public getServer(key: string) {
-    // TODO: re-implement when they share same interface
-    // // Is docker if starts with panel-
-    // if(key.startsWith("panel")) {
-    //   return this.#dynamicManager.getInstance(key)
-    // }
     for(const group of Object.values(this.#groups)) {
       const server = group.getServer(key)
+      if(server) return server
+    }
+    return null
+  }
+  public getServerForPlugin(payload: PluginTokenPayload, port: number) {
+    if(!payload.docker) return this.getServer(payload.sub)
+    for(const group of Object.values(this.#groups)) {
+      const server = group.getServerByPort(port)
       if(server) return server
     }
     return null

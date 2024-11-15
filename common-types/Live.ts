@@ -257,13 +257,15 @@ export interface LiveRecordCommandResponse {
 export const RecordAuthParseDef: RecordParserInterface<LiveRecordAuth> = {
     type: RecordDataType.Byte,
     version: RecordDataType.Byte,
-    token: RecordDataType.String
+    token: RecordDataType.String,
+    port: RecordDataType.Integer
 }
 
 export interface LiveRecordAuth {
     type: LiveRecordType.Auth,
     version: number,
-    token: string
+    token: string,
+    port: number
 }
 
 export const RecordMetaParseDef: RecordParserInterface<LiveRecordMeta> = {
@@ -429,5 +431,7 @@ export function updateLiveCache(cache: LiveDataCache | undefined, record: LiveRe
 
 export interface PluginTokenPayload {
     sub: string, // server id
-    iat: number, // issued
+    iat: number, // issued,
+    iss?: string,
+    docker?: boolean
 }

@@ -4,6 +4,7 @@ import Server from "../Server.js";
 import PluginSocket from "../PluginSocket.js";
 import Feature from "./Feature.js";
 import { ServerStatus } from "../../../../../common-types/Server.js";
+import jwtPromise from "../../../jwt-promise.js";
 
 const LIVE_CACHE_TTL = 1000 * 60 * 3 // Live cache data expires after 3 minutes
 export type SubscribeCallback = (record: LiveRecord) => void
@@ -128,5 +129,18 @@ export default class PluginFeature extends Feature implements IAction {
             result: response.result,
             message: response.message
         }
+    }
+
+    async generateToken(issuer?: string) {
+        if(!process.env.STATE_SECRET) {
+            throw new Error("No JWT secret provided in process.env.STATE_SECRET")
+        }
+        return await jwtPromise.sign({
+            // Use group for docker
+            sub: this._server.features.docker ? this._server.group.Id : this._server.id,
+            iat: Math.round(Date.now()/1000),
+            iss: issuer,
+            docker: this._server.features.docker
+        }, process.env.STATE_SECRET)
     }
 }

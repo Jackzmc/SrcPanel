@@ -13,8 +13,6 @@ const COMMENT_LINE_REGEX = new RegExp(/^\s*(\/\/|#)/)
 const HIDDEN_COMMANDS = [
     "rcon_password"
 ]
-const JWT_SECRET = process.env.STATE_SECRET
-
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
     fastify.addContentTypeParser(
         'text/plain',
@@ -289,10 +287,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         if(!server) return NOT_FOUND(reply, "Server")
         const [code, granted] = req.user.requirePermission("servers.generate_jwt", { resourceId: server.id })
         if(!granted) return NO_PERMISSION(reply, "You do not have permission to generate a JWT for this server", code)
-        const token = await JWT.sign({
-            sub: server.id,
-            iat: Math.round(Date.now()/1000)
-        }, JWT_SECRET)
+        const token = await server.Plugin.generateToken(req.user.steamid2)
         reply.header("Content-Type", "text/plain")
         return reply.code(200).send(token)
     })

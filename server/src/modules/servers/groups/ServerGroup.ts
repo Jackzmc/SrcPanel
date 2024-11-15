@@ -47,4 +47,12 @@ export default class ServerGroup {
         return this._servers[id]
     }
 
+    getServerByPort(port: number) {
+        for(const server of Object.values(this._servers)) {
+            if(server.port === port)
+                return server
+        }
+        return null
+    }
+
 }

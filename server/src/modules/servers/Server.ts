@@ -64,11 +64,13 @@ export default abstract class Server implements IAction {
     protected _group: ServerGroup
     protected _logId: string | null
 
-    protected _logs: ConsoleFeature|null = null
+    // Optional / non-universal features:
     protected _rcon?: RconFeature|null = null
     protected _configs?: ConfigsFeature|null = null
-    protected _plugin?: PluginFeature|null = null
-    protected _metrics?: MetricsFeature|null = null
+    protected _logs: ConsoleFeature|null = null
+    // Core universal features (initalized here):
+    protected _plugin?: PluginFeature
+    protected _metrics?: MetricsFeature
 
     protected _actions: ServerAction[] = []
 
@@ -115,8 +117,8 @@ export default abstract class Server implements IAction {
     get Console(): ConsoleFeature | null { return this._logs }
     get Rcon(): RconFeature | null { return this._rcon }
     get Configs(): ConfigsFeature | null { return this._configs }
-    get Plugin(): PluginFeature | null { return this._plugin }
-    get Metrics(): MetricsFeature | null { return this._metrics }
+    get Plugin(): PluginFeature { return this._plugin }
+    get Metrics(): MetricsFeature { return this._metrics }
     
     get id() { return this._info.id }
     get name() { return this._info.name }

@@ -159,11 +159,16 @@ export default class PluginSocket {
           }
         }
         case LiveRecordType.Auth: {
-          return {
+          const result = {
             type,
             version: reader.readByte(),
-            token: reader.readString()
+            token: reader.readString(),
+            port: 0
           }
+          if(!reader.isEOF) {
+            result.port = reader.readInt()
+          }
+          return result
         }
         default: {
         }
