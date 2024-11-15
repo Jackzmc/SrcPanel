@@ -98,7 +98,7 @@ export default class PluginFeature extends Feature implements IAction {
         return {
             online: this.authenticated,
             data: this.#status,
-            source: "live"
+            source: "live",
         }
     }
     

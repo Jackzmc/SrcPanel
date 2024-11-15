@@ -5,8 +5,8 @@ export interface ServerStatus {
     source?: ServerStatusSource,
     data?: ServerStatusData | null,
     online: boolean,
-    lastStatusTime: number | null,
-    lastEmptyTime: number | null
+    lastStatusTime?: number | null,
+    lastEmptyTime?: number | null
 }
 export interface ServerStatusData {
     players: string[],
