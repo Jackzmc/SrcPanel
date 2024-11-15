@@ -38,7 +38,6 @@ export default class DockerLogs extends Logs {
         const logs = await this.#container.logs({ stdout: true, stderr: true, tail: MAX_BUFFER_LINES })
         const lines = logs.toString().split("\n")
         for(const line of lines) {
-            console.log(line)
             this.pushLine(stripAnsi(line))
         }
     }
