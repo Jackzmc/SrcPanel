@@ -596,7 +596,7 @@ const TABS: Record<string, { name: string, tag?: string, permission?: string, en
     name: "Console",
     permission: "servers.action.<id>",
     enabled: () => {
-      return serverInfo.value?.features.console
+      return serverInfo.value?.features.logs
     }
   }
 }

@@ -6,8 +6,11 @@ import Server from "../../Server.js";
 import { Container } from "dockerode";
 import { PassThrough, Stream } from "stream";
 
+import stripAnsi from 'strip-ansi';
+
 /** The maximum number of lines to keep buffered */
 const MAX_BUFFER_LINES = 40
+
 
 export default class DockerLogs extends Logs {
     #container: Container
@@ -36,7 +39,7 @@ export default class DockerLogs extends Logs {
         const lines = logs.toString().split("\n")
         for(const line of lines) {
             console.log(line)
-            this.pushLine(line)
+            this.pushLine(stripAnsi(line))
         }
     }
 
@@ -59,7 +62,7 @@ export default class DockerLogs extends Logs {
                 // Loop through all the existing lines, in case there is 2+ new lines
                 while(lines.length > 1) {
                     const line = lines.shift()
-                    this.pushLine(line)
+                    this.pushLine(stripAnsi(line))
                 }
                 // Set our buffer to the very end
                 line = lines[0]

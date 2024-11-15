@@ -99,7 +99,7 @@ export type BuiltInActions = "builtin:stop" | "builtin:request_stop" | "builtin:
 
 export interface ServerAvailableFeatures {
     rcon: boolean
-    console: boolean
+    logs: boolean
     configs: boolean
     plugin: boolean,
     docker: boolean,

@@ -84,12 +84,9 @@ import { Tab, Tabs } from 'vue3-tabs-component'
 import ModalCard from '@/components/ModalCard.vue';
 import { computed, onMounted, ref, watch } from 'vue';
 import { GroupInfo, ServerAction, ServerInfo } from '../../../../../common-types/Server.js';
-import { ConfigServerData } from '../../../../../server/src/modules/servers/Server';
 // @ts-expect-error
 import BulmaTagsInput from '@creativebulma/bulma-tagsinput';
 import { request } from '@/js/util.js';
-import { LoadState } from '@/types/global.js';
-import debounce from '@/js/debounce.js';
 import { updatedDiff } from 'deep-object-diff';
 import { VueDraggableNext } from 'vue-draggable-next';
 import ActionModal from './ActionModal.vue'
@@ -152,7 +149,7 @@ function onActionSaved( action: ServerAction, oldId?: string) {
   if(!oldId) {
     group.value.actions.push(action)
   } else {
-    group.value.actions = group.value.actions.map(a => a.name === oldId ? action : a)
+    group.value.actions = group.value.actions.map((a: ServerAction) => a.name === oldId ? action : a)
   }
   selectedAction.value = null
   actionEditActive.value = false
