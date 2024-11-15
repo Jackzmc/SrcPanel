@@ -53,18 +53,14 @@
         <template v-if="status">
           <div class="notification is-danger has-text-centered" v-if="!status.online">
             The server is offline or is unreachable.
-            <span class="is-inline is-pulled-right no-border" data-tooltip="Time until next refresh">
-              <Icon icon="fa-spinner" spin v-if="nextRefreshCountdown == 0"></Icon>
-              <span v-else>{{ nextRefreshCountdown }}s</span>
-            </span>
           </div>
-          <p class="has-text-centered subtitle is-4 my-6 has-text-danger" v-else-if="status.error">{{  status.error }}</p>
+          <p class="has-text-centered subtitle is-4 my-6 has-text-danger" v-if="status.error">{{  status.error }}</p>
           <template v-else>
             <span class="is-inline is-pulled-right no-border pr-4" data-tooltip="Time until next refresh" style="width:10px">
               <Icon icon="fa-spinner" spin v-if="nextRefreshCountdown == 0"></Icon>
               <span v-else>{{ nextRefreshCountdown }}s</span>
             </span>
-            <table class="table is-fullwidth is-size-4" v-if="status.data">
+            <table class="table is-fullwidth is-size-4">
               <tr v-if="serverInfo.type === 'source'">
                 <th>Map</th>
                 <td v-if="mapInfo">
@@ -73,12 +69,12 @@
                   </h4>
                   <p>Chapter {{ mapInfo.chapterId }} - {{ mapInfo.chapterName }}</p>
                 </td>
-                <td v-else-if="status.data.map">{{ status.data.map }}</td>
+                <td v-else-if="status.data?.map">{{ status.data.map }}</td>
                 <td v-else><em data-tooltip="Unknown">-</em></td>
               </tr>
               <tr v-if="serverInfo.type === 'source'">
                 <th>Gamemode</th>
-                <td v-if="status.data.gamemode" :data-tooltip="status.data.gamemode">
+                <td v-if="status.data?.gamemode" :data-tooltip="status.data.gamemode">
                   {{ formatGamemode(status.data.gamemode) }}
                 </td>
                 <td v-else><em data-tooltip="Unknown">-</em></td>
@@ -88,10 +84,10 @@
                 <td v-if="uptime">{{ uptimeDuration }}</td>
                 <td v-else><em data-tooltip="Unknown">-</em></td>
               </tr>
-              <tr>
-                <th>Players ({{status.data.players.length}} / {{status.data.maxplayers}})</th>
+              <tr v-if="!status.online">
+                <th>Players ({{status.data?.players.length ?? '-'}} / {{status.data?.maxplayers ?? '-'}})</th>
                 <td >
-                  <ul v-if="status.data.players.length > 0">
+                  <ul v-if="status.data && status.data.players.length > 0">
                     <li v-for="player in status.data.players" :key="player">
                       {{ player }}
                     </li>
@@ -502,7 +498,7 @@ import { UserPrivilegeCode } from '../../../../common-types/Privileges';
 import { formatDate, getDuration } from '../../js/util.js';
 import UserComponent, { User } from '@/components/UserComponent.vue';
 import Console from '@/components/server/Console.vue'
-import { ServerData, ServerInfo, ServerDetailed, ServerAvailableFeatures, ComputeStats } from '../../../../common-types/Server';
+import { ServerData, ServerInfo, ServerDetailed, ServerAvailableFeatures, ComputeStats, ServerStatus } from '../../../../common-types/Server';
 
 const FinaleStageName: Record<FinaleStage, string> = {
     [FinaleStage.Gauntlet]: "Gauntlet",
@@ -601,13 +597,12 @@ const TABS: Record<string, { name: string, tag?: string, permission?: string, en
   }
 }
 
-let starting = ref(false)
 let stats = ref<ComputeStats>()
 let lastRefreshTime = ref()
 let serverInfo = ref<ServerInfo>()
 let serverConfigs = ref()
 let serverIds = ref()
-let status = ref()
+let status = ref<Partial<ServerStatus>&{error?:string}>()
 let liveStatus = ref<LiveDataCache>()
 let liveStatusNextRetryTime = ref<number>()
 let lastLiveUpdateTime = ref<string>()
@@ -985,7 +980,7 @@ function createLiveConnection() {
         uptime.value = (Date.now()/1000) - record.startTime
       }
       // If we have live connection, server is alive
-      status.value.online = true
+      status.value = { online: true }
     }
 
     clearTimeout(reconnectTimeout)
