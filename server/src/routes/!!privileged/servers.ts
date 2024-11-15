@@ -274,7 +274,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
         return {
             recentActivities,
-            stats: await server.Metrics?.ComputeStats,
+            stats: server.Metrics?.available ? server.Metrics.ComputeStats : null,
             uptime: server.uptime,
             status: server.status,
         }

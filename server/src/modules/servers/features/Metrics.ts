@@ -3,7 +3,7 @@ import Feature from "./Feature.js";
 import Server from "../Server.js";
 import Influx, { InfluxDB, Point, WriteApi } from '@influxdata/influxdb-client'
 import { getWriter } from "../../../modules/Influx.js";
-import { ServerStatusData, ServerStatusSource } from "../../../../../common-types/Server.js";
+import { ComputeStats, ServerStatusData, ServerStatusSource } from "../../../../../common-types/Server.js";
 import { GAME_DIFFICULTY_STRINGS, GameState } from "../../../../../common-types/Live.js";
 import DockerServer from "../DockerServer.js";
 import { ContainerStats } from "dockerode";
@@ -19,7 +19,7 @@ export interface InfluxConfig {
 
 export default class MetricsFeature extends Feature {
     #influx: WriteApi | null = null
-    #computeStats: ContainerStats | null = null
+    #computeStats: ComputeStats | null = null
 
     constructor(server: Server) {
         super("Metrics", server)
@@ -38,6 +38,7 @@ export default class MetricsFeature extends Feature {
           await this.getComputeStats()
         }, RECORD_STATISTICS_INTERVAL)
       }
+      await this.getComputeStats()
       // setInterval(() => {
       //   this.#recordInfo()
       // }, Number(process.env.INFLUX_METRICS_INTERVAL) || 10_000)
@@ -47,17 +48,29 @@ export default class MetricsFeature extends Feature {
      * Computes stats, if available. Currently only DockerServer supported
      * @returns
      */
-    async getComputeStats(): Promise<ContainerStats> {
+    async getComputeStats(): Promise<ComputeStats> {
       if(this._server instanceof DockerServer) {
         const stats = await this._server.ContainerInstance.Container.stats()
-        this.#computeStats = stats
-        return stats
+        this.#computeStats = {
+          collectionTime: Math.round(Date.now()/1000),
+          cpu_stats: {
+            cpu_usage: stats.cpu_stats.cpu_usage,
+            system_cpu_usage: stats.cpu_stats.system_cpu_usage,
+            online_cpus: stats.cpu_stats.online_cpus
+          },
+          memory_stats: {
+            max_usage: stats.memory_stats.max_usage,
+            usage: stats.memory_stats.usage,
+            limit: stats.memory_stats.limit
+          }
+        }
+        return this.#computeStats
       } else {
         return null
       }
     }
 
-    get ComputeStats(): ContainerStats | null {
+    get ComputeStats(): ComputeStats | null {
       return this.#computeStats
     }
 

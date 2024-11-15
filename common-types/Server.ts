@@ -15,6 +15,30 @@ export interface ServerStatusData {
     gamemode: string,
 }
   
+export interface ComputeStats {
+    collectionTime: number,
+    memory_stats: MemoryStats;
+    cpu_stats: CPUStats;
+}
+
+interface CPUUsage {
+    percpu_usage: number[];
+    usage_in_usermode: number;
+    total_usage: number;
+    usage_in_kernelmode: number;
+}
+
+export interface CPUStats {
+    cpu_usage: CPUUsage;
+    system_cpu_usage: number;
+    online_cpus: number;
+}
+
+interface MemoryStats {
+    max_usage: number;
+    usage: number;
+    limit: number;
+}
 
 export type PlayerAction = "kick"
 
