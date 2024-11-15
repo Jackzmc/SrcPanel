@@ -5,6 +5,10 @@ import Influx, { InfluxDB, Point, WriteApi } from '@influxdata/influxdb-client'
 import { getWriter } from "../../../modules/Influx.js";
 import { ServerStatusData, ServerStatusSource } from "../../../../../common-types/Server.js";
 import { GAME_DIFFICULTY_STRINGS, GameState } from "../../../../../common-types/Live.js";
+import DockerServer from "../DockerServer.js";
+import { ContainerStats } from "dockerode";
+
+const RECORD_STATISTICS_INTERVAL = 1000 * 60 * 1
 
 export interface InfluxConfig {
   host: string,
@@ -15,6 +19,7 @@ export interface InfluxConfig {
 
 export default class MetricsFeature extends Feature {
     #influx: WriteApi | null = null
+    #computeStats: ContainerStats | null = null
 
     constructor(server: Server) {
         super("Metrics", server)
@@ -28,9 +33,32 @@ export default class MetricsFeature extends Feature {
 
     async init() {
       if(!this.available) return
+      if(this._server instanceof DockerServer) {
+        setInterval(async() => {
+          await this.getComputeStats()
+        }, RECORD_STATISTICS_INTERVAL)
+      }
       // setInterval(() => {
       //   this.#recordInfo()
       // }, Number(process.env.INFLUX_METRICS_INTERVAL) || 10_000)
+    } 
+
+    /**
+     * Computes stats, if available. Currently only DockerServer supported
+     * @returns
+     */
+    async getComputeStats(): Promise<ContainerStats> {
+      if(this._server instanceof DockerServer) {
+        const stats = await this._server.ContainerInstance.Container.stats()
+        this.#computeStats = stats
+        return stats
+      } else {
+        return null
+      }
+    }
+
+    get ComputeStats(): ContainerStats | null {
+      return this.#computeStats
     }
 
     recordStatus(data: ServerStatusData | null, source: ServerStatusSource) {

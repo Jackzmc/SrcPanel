@@ -266,7 +266,6 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             recentActivities = rows
         }
 
-        let stats = null
         try {
             await server.refreshStatus(true)
         } catch(err) {
@@ -275,7 +274,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
         return {
             recentActivities,
-            stats,
+            stats: await server.Metrics?.ComputeStats,
             uptime: server.uptime,
             status: server.status,
         }
