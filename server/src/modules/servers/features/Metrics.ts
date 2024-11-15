@@ -27,9 +27,12 @@ export default class MetricsFeature extends Feature {
     }
 
     get available() {
-        return this.#influx != undefined
+        return this.hasInflux || this._server instanceof DockerServer
     }
 
+    get hasInflux() {
+      return this.#influx != undefined
+    }
 
     async init() {
       if(!this.available) return
@@ -115,6 +118,7 @@ export default class MetricsFeature extends Feature {
 
 
     #createPoint(measurement: string) : Point {
+      if(!this.hasInflux) throw new Error("No influx support enabled")
       const point = new Point(measurement)
       point.tag("server_id", this._server.id)
       point.tag("server_ip", this._server.ip)

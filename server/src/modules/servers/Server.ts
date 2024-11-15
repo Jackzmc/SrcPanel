@@ -248,7 +248,7 @@ export default abstract class Server implements IAction {
       } else {
         this._status.lastEmptyTime = null
       }
-      if(this.Metrics?.available) {
+      if(this.Metrics.available && this.Metrics.hasInflux) {
         this.Metrics.recordStatus(data, source)
       }
     }
