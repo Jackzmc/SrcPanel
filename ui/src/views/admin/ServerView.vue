@@ -65,7 +65,7 @@
                 <th>Map</th>
                 <td v-if="mapInfo">
                   <h4 class="title is-4">{{mapInfo.name}}
-                    <span class="is-inline is-pulled-right has-text-weight-normal is-size-6">{{ status.data.map }}</span>
+                    <span class="is-inline is-pulled-right has-text-weight-normal is-size-6">{{ status.data!.map }}</span>
                   </h4>
                   <p>Chapter {{ mapInfo.chapterId }} - {{ mapInfo.chapterName }}</p>
                 </td>
@@ -384,7 +384,8 @@
           </table>
           <div class="box has-background-info-light" v-else>No recent activity has been recorded</div>
         </template>
-        <div class="box has-background-warning-light" v-else>Recent activities is not supported on this server</div>
+        <div class="box has-background-warning-light" v-else-if="status">Recent activities is not supported on this server</div>
+        <div class="" v-else><Icon icon="fa-spinner" spin>Waiting for data...</Icon></div>
       </div>
       <div class="box" v-if="tab === 'live'">
         <!-- <span class="tag is-pulled-right is-danger has-tooltip-left" v-if="isLiveViewActive" data-tooltip="Connected to server, receiving live data">Live</span> -->
