@@ -24,13 +24,12 @@ export interface ComputeStats {
 
 export interface CPUStats {
     cpu_usage: number;
-    system_cpu_usage: number;
     online_cpus: number;
 }
 
 interface MemoryStats {
-    max_usage: number;
     usage: number;
+    usage_percent: number;
     limit: number;
 }
 

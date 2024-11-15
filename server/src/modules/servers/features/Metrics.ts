@@ -26,6 +26,14 @@ export default class MetricsFeature extends Feature {
         this.#influx = getWriter()
     }
 
+    get #dockerServer() : DockerServer | null {
+      if(this._server instanceof DockerServer) {
+        return this._server
+      } else {
+        return null
+      }
+    }
+
     get available() {
         return this.hasInflux || this._server instanceof DockerServer
     }
@@ -37,46 +45,29 @@ export default class MetricsFeature extends Feature {
     async init() {
       if(!this.available) return
       console.log('init', this._server.id, this._server instanceof DockerServer)
-      if(this._server instanceof DockerServer) {
-        // TODO: replace interval with stream
-        setInterval(async() => {
-          await this.getComputeStats()
-        }, RECORD_STATISTICS_INTERVAL)
-        await this.getComputeStats()
+      if(this.#dockerServer) {
+        const stream = await this.#dockerServer.ContainerInstance.Container.stats({ stream: true})
+        stream.on("data", async (data) => {
+          const stats: ContainerStats = JSON.parse(data.toString())
+          const cpuDelta = stats.cpu_stats.cpu_usage.total_usage - stats.precpu_stats.cpu_usage.total_usage
+          const systemCpuDelta = stats.cpu_stats.system_cpu_usage - stats.precpu_stats.system_cpu_usage
+          const memoryUsed = stats.memory_stats.usage - stats.memory_stats.stats?.inactive_file
+          this.#computeStats = {
+            collectionTime: Math.round(Date.now()/1000),
+            // https://docs.docker.com/reference/api/engine/version/v1.45/#tag/Container/operation/ContainerExport
+            cpu_stats: stats.cpu_stats ? {
+              cpu_usage: (cpuDelta / systemCpuDelta) * stats.cpu_stats.online_cpus * 100.0,
+              online_cpus: stats.cpu_stats.online_cpus
+            } : null,
+            memory_stats: stats.memory_stats ? {
+              usage: memoryUsed,
+              usage_percent: (memoryUsed / stats.memory_stats.limit) * 100.0,
+              limit: stats.memory_stats.limit
+            } : null
+          }
+        })
       }
-      // setInterval(() => {
-      //   this.#recordInfo()
-      // }, Number(process.env.INFLUX_METRICS_INTERVAL) || 10_000)
     } 
-
-    /**
-     * Computes stats, if available. Currently only DockerServer supported
-     * @returns
-     */
-    async getComputeStats(): Promise<ComputeStats> {
-      if(this._server instanceof DockerServer) {
-        const stats = await this._server.ContainerInstance.Container.stats({ "one-shot": true, stream: false })
-        const cpuDelta = stats.cpu_stats.cpu_usage.total_usage - stats.precpu_stats.cpu_usage.total_usage
-        const systemCpuDelta = stats.cpu_stats.system_cpu_usage - stats.precpu_stats.system_cpu_usage
-        this.#computeStats = {
-          collectionTime: Math.round(Date.now()/1000),
-          // https://docs.docker.com/reference/api/engine/version/v1.45/#tag/Container/operation/ContainerExport
-          cpu_stats: stats.cpu_stats ? {
-            cpu_usage: (cpuDelta / systemCpuDelta) * stats.cpu_stats.online_cpus * 100.0,
-            system_cpu_usage: stats.cpu_stats.system_cpu_usage,
-            online_cpus: stats.cpu_stats.online_cpus
-          } : null,
-          memory_stats: stats.memory_stats ? {
-            max_usage: stats.memory_stats.max_usage,
-            usage: stats.memory_stats.usage - stats.memory_stats.stats.cache,
-            limit: stats.memory_stats.limit
-          } : null
-        }
-        return this.#computeStats
-      } else {
-        return null
-      }
-    }
 
     get ComputeStats(): ComputeStats | null {
       return this.#computeStats
