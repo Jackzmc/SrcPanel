@@ -17,7 +17,7 @@ import PluginSocket from './PluginSocket.js';
 import JWT from '../../jwt-promise.js';
 import { WriteStream, createWriteStream } from 'fs';
 import dotenv from 'dotenv'
-import Gamedig from 'gamedig';
+import { GameDig, QueryOptions } from 'gamedig';
 import DynamicServerManager from './docker/DynamicServerManager.js';
 import ServerGroup from './groups/ServerGroup.js';
 import { DynamicServerGroup } from './groups/DynamicServerGroup.js';
@@ -561,13 +561,12 @@ export default class ServerManager {
     return count
   }
 
-  async queryHost(host: string, port: number, type: string, options: Partial<Gamedig.QueryOptions> = {}) {
-    return await Gamedig.query({
-      type: type as Gamedig.Type,
+  async queryHost(host: string, port: number, type: string, options: Partial<QueryOptions> = {}) {
+    return await GameDig.query({
+      type: type,
       host,
       port,
       givenPortOnly: true,
-      maxAttempts: 1,
       socketTimeout: 3000,
       attemptTimeout: 5000,
       ...options,

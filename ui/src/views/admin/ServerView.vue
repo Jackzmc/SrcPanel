@@ -984,7 +984,7 @@ function createLiveConnection() {
         uptime.value = (Date.now()/1000) - record.startTime
       }
       // If we have live connection, server is alive
-      status.value = { online: true }
+      online.value = true
     }
 
     clearTimeout(reconnectTimeout)

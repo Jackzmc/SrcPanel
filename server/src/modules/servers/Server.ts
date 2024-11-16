@@ -6,7 +6,7 @@ import PluginFeature from "./features/Plugin.js";
 import RconFeature from "./features/Rcon.js";
 import ServerGroup from "./groups/ServerGroup.js";
 import { ActionResponse, IAction } from "./IAction.js";
-import Gamedig from 'gamedig';
+import { GameDig } from 'gamedig';
 import {InfluxDB } from '@influxdata/influxdb-client'
 
 const MIN_REFRESH_TIME = 5000
@@ -220,12 +220,11 @@ export default abstract class Server implements IAction {
         if(!bypassCache && !this._lastRefresh && now - this._lastRefresh < MIN_REFRESH_TIME) return
         this._lastRefresh = now
         try {
-            const state = await Gamedig.query({
-              type: this.type as Gamedig.Type,
+            const state = await GameDig.query({
+              type: this.type,
               host: this.ip,
               port: this.port,
               givenPortOnly: true,
-              maxAttempts: 1,
               socketTimeout: 3000,
               attemptTimeout: 5000,
             })
