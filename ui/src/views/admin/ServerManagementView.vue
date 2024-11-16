@@ -92,7 +92,7 @@ async function stopServer(server: any) {
 function getServerClasses(server: any) {
   const classes = ['has-tooltip-arrow']
 
-  if(server.status.online) {
+  if(server.online) {
     if(server.status.data.players.length == 0) {
       classes.push('has-text-success')
       classes.push('has-tooltip-success')

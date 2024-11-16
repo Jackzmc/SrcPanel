@@ -18,8 +18,8 @@
       </span>
     </td>
     <td :class="manage ? undefined : 'has-text-centered'">
-      <template v-if="server.status?.online">
-        {{ server.status.data?.players.length }} / {{ server.status.data?.maxplayers }}
+      <template v-if="server.online">
+        {{ server.status?.data?.players.length }} / {{ server.status?.data?.maxplayers }}
       </template>
     </td>
     <template v-if="manage">
@@ -43,17 +43,17 @@
     <template v-else>
       <template v-if="type === 'source'">
         <td>
-          <template v-if="server.status?.online">
-            {{ server.status.data?.map }}
+          <template v-if="server.online">
+            {{ server.status?.data?.map }}
           </template>
         </td>
         <td>
-          <p @click="copyCommand" :class="{ 'has-text-grey': !server.status?.online }">
+          <p @click="copyCommand" :class="{ 'has-text-grey': !server.online }">
             connect {{ server.domain }}:{{ server.port }}
           </p>
         </td>
         <td>
-          <p @click="copyCommand" :class="{ 'has-text-grey': !server.status?.online }">
+          <p @click="copyCommand" :class="{ 'has-text-grey': !server.online }">
             mm_dedicated_force_servers {{ server.ip }}:{{ server.port }}
           </p>
         </td>
@@ -141,8 +141,8 @@ const actions = computed(() => {
     // Filter out any action that aren't visible
     .filter(action => {
       if(action.showWhen === "any") return true
-      if(props.server.status?.online && action.showWhen === "online") return true
-      else if(!props.server.status?.online && action.showWhen === "offline") return true
+      if(props.server.online && action.showWhen === "online") return true
+      else if(!props.server.online && action.showWhen === "offline") return true
       else return false
     })
     .filter(action => !action.isHidden)
@@ -151,15 +151,15 @@ const actions = computed(() => {
 const trClass = computed(() => {
   const classes: string[] = []
   if(props.manage) {
-    classes.push(props.server.status?.online ? "is-size-5" : "is-size-6")
+    classes.push(props.server.online ? "is-size-5" : "is-size-6")
   }
   return classes
 })
 const serverClasses = computed(() => {
   const classes = ["has-tooltip-arrow", "has-tooltip-right"];
 
-  if (props.server.status?.online) {
-    const count = props.server.status.data?.players.length
+  if (props.server.online) {
+    const count = props.server.status?.data?.players.length
     if (count && count > 0) {
       classes.push("has-text-info")
       if(!props.manage) classes.push("has-tooltip-info");
@@ -176,8 +176,8 @@ const serverClasses = computed(() => {
 })
 const tooltip = computed(() => {
   if(props.manage) return "Click to manage server"
-  if (props.server.status?.online) {
-    if(!props.server.status.data) return ""
+  if (props.server.online) {
+    if(!props.server.status?.data) return "Server is online, but cannot get data"
     return props.server.status.data.players.length == 0
       ? "Server is currently online & empty. Click to join"
       : "Server has players online. Click to join.";

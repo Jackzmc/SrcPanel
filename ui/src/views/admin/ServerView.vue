@@ -12,7 +12,7 @@
           <div class="tags is-pulled-right inline">
             <template v-if="status">
               <span class="tag is-danger is-medium has-tooltip-danger no-border" v-if="error || status.error" data-tooltip="An error occurred while fetching the server's status"><Icon icon="fa-exclamation-triangle">Error</Icon></span>
-              <span class="tag is-success  is-medium" v-else-if="status.online">Online</span>
+              <span class="tag is-success  is-medium" v-else-if="online">Online</span>
               <span class="tag is-danger  is-medium" v-else>Offline</span>
             </template>
             <span class="tag is-medium" v-else><Icon icon="fa-spinner" spin></Icon></span>
@@ -51,7 +51,7 @@
       </div>
       <div v-if="tab === 'overview'" class="box">
         <template v-if="status">
-          <div class="notification is-danger has-text-centered" v-if="!status.online">
+          <div class="notification is-danger has-text-centered" v-if="!online">
             The server is offline or is unreachable.
           </div>
           <p class="has-text-centered subtitle is-4 my-6 has-text-danger" v-if="status.error">{{  status.error }}</p>
@@ -84,7 +84,7 @@
                 <td v-if="uptime">{{ uptimeDuration }}</td>
                 <td v-else><em data-tooltip="Unknown">-</em></td>
               </tr>
-              <tr v-if="!status.online">
+              <tr v-if="!online">
                 <th>Players ({{status.data?.players.length ?? '-'}} / {{status.data?.maxplayers ?? '-'}})</th>
                 <td >
                   <ul v-if="status.data && status.data.players.length > 0">
@@ -133,7 +133,7 @@
         </div>
           <!-- show notice that server is offline, but only if there is also no live data -->
         <!-- server might be shown offline but actually is online and sending data (eg. map transitions) -->
-        <div class="notification is-danger has-text-centered" v-else-if="!status?.online && !liveStatus">
+        <div class="notification is-danger has-text-centered" v-else-if="!online && !liveStatus">
           The server is offline or is unreachable.
         </div>
         <div class="list has-visible-pointer-controls" v-if="liveStatus && Object.values(liveStatus.clients).length > 0">
@@ -604,6 +604,7 @@ let serverInfo = ref<ServerInfo>()
 let serverConfigs = ref()
 let serverIds = ref()
 let status = ref<Partial<ServerStatus>&{error?:string}>()
+let online = ref<boolean>()
 let liveStatus = ref<LiveDataCache>()
 let liveStatusNextRetryTime = ref<number>()
 let lastLiveUpdateTime = ref<string>()
@@ -639,8 +640,8 @@ const actions = computed(() => {
     // Filter out any action that aren't visible
     .filter(action => {
       if(action.showWhen === "any") return true
-      if(serverInfo.value!.status?.online && action.showWhen === "online") return true
-      else if(!serverInfo.value!.status?.online && action.showWhen === "offline") return true
+      if(serverInfo.value!.online && action.showWhen === "online") return true
+      else if(!serverInfo.value!.online && action.showWhen === "offline") return true
       else return false
     })
     .filter(action => shiftPressed.value || !action.isHidden)
@@ -761,6 +762,7 @@ async function fetchServerData() {
     const json = await response.json()
     if(response.ok) {
       const data = json as ServerDetailed
+      online.value = json.online
       liveStatus.value = data.live
       serverConfigs.value = data.configs
     } else {
@@ -783,6 +785,7 @@ async function fetchServerStatus() {
     const json = await response.json()
     isRefreshing = false
     if(response.ok && json) {
+      online.value = json.online
       status.value = json.status
       uptime.value = json.uptime
       stats.value = json.stats

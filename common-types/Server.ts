@@ -80,7 +80,7 @@ export interface PlayerStats {
 export interface ServerInfo extends ServerData {
     tags: string[],
     features: ServerAvailableFeatures
-    status?: ServerStatus,
+    status: ServerStatus,
     online: boolean,
     sortOrder: number,
     actions: ServerAction[],
