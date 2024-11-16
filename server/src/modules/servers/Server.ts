@@ -137,7 +137,8 @@ export default abstract class Server implements IAction {
         ...this._info,
         features: this.features,
         actions: this.actions,
-        online: this._online
+        online: this._online,
+        status: this._status
       }
     }
 
