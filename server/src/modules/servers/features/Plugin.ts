@@ -56,9 +56,9 @@ export default class PluginFeature extends Feature implements IAction {
 
     _setSocket(socket: PluginSocket | null) {
       this.#socket = socket
-      if(socket == null) {
-        this._server.updateStatus(false, null, "live")
-      }
+    //   if(socket == null) {
+    //     this._server.updateStatus(false, null, "live")
+    //   }
     }
 
     async subscribe(callback: SubscribeCallback) {
