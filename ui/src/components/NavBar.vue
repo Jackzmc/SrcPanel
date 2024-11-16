@@ -104,9 +104,9 @@
             <!-- <span v-if="privUser && privUser.openEventsCount > 0" class="tag is-rounded is-info">{{privUser.openEventsCount}}</span> -->
           </Icon>
         </router-link>
-        <!-- <a href="https://data.jackz.me/dashboard/1-public-dashboard" class="navbar-item">
+        <a href="https://data.jackz.me/dashboard/1-public-dashboard" class="navbar-item">
           <Icon icon="fa-chart-simple">Graphs</Icon>
-        </a> -->
+        </a>
       </div>
       <div class="navbar-end">
         <div class="navbar-item" v-if="updateInfo.updating">
