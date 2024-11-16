@@ -84,8 +84,8 @@ export default class DockerServer extends Server implements IAction {
 
     public override async refreshStatus(bypassCache = false) {
         const ret = super.refreshStatus(bypassCache)
-        const state = await this.#instance.state()
-        this._status.online = state.Running
+        // const state = await this.#instance.state()
+        // this._status.online = state.Running
         return ret
     }
 
