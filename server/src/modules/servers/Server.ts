@@ -249,11 +249,14 @@ export default abstract class Server implements IAction {
     updateStatus(data: ServerStatusData | null = null, source: ServerStatusSource = "") {
       this._status.data = data
       this._status.source = source
-      this._status.lastStatusTime = (Date.now() / 1000)
-      if(data && data.players.length === 0) {
-        this._status.lastEmptyTime = (Date.now() / 1000)
-      } else {
-        this._status.lastEmptyTime = null
+      if(data) {
+        this._status.lastStatusTime = (Date.now() / 1000)
+        if(data.players.length === 0) {
+          if(this._status.lastEmptyTime == null)
+            this._status.lastEmptyTime = data.players.length === 0 ? (Date.now() / 1000) : null
+        } else {
+          this._status.lastEmptyTime = null
+        }
       }
       if(this.Metrics.available && this.Metrics.hasInflux) {
         this.Metrics.recordStatus(data, source)
