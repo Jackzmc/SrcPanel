@@ -75,6 +75,7 @@ export default abstract class Server implements IAction {
     protected _actions: ServerAction[] = []
 
     protected _status: ServerStatus
+    protected _online: boolean;
     protected _lastRefresh: number
 
     constructor(group: ServerGroup, server: ServerExtendedData) {
@@ -97,7 +98,7 @@ export default abstract class Server implements IAction {
             inherited: true 
           } as ServerAction
         }).concat(server.actions)
-        this._status = { data: null, online: false, source: "", lastStatusTime: null, lastEmptyTime: null }
+        this._status = { data: null, source: "", lastStatusTime: null, lastEmptyTime: null }
         if(server.cfgDirectory) {
           this._configs = new ConfigsFeature(this, server.cfgDirectory)
         }
@@ -131,11 +132,12 @@ export default abstract class Server implements IAction {
     get sortOrder() { return this._info.sortOrder }
     get group() { return this._group }
     get tags(): string[] { return this._info.tags }
-    get info() {
+    get info(): ServerInfo {
       return {
         ...this._info,
         features: this.features,
-        actions: this.actions
+        actions: this.actions,
+        online: this._online
       }
     }
 
@@ -160,6 +162,10 @@ export default abstract class Server implements IAction {
     get uptime(): number | null {
         if(!this.startTime) return null
         return (Date.now()/1000) - this.startTime
+    }
+
+    get Online() {
+      return this._online;
     }
 
     /**
@@ -223,7 +229,7 @@ export default abstract class Server implements IAction {
               attemptTimeout: 5000,
             })
             const raw = state.raw as any
-            this.updateStatus(true, {
+            this.updateStatus({
               players: state.players
                 .filter(p => p.name.length > 0) // Some names are just "", assumingly bots?
                 .map(p => p.name),
@@ -235,12 +241,11 @@ export default abstract class Server implements IAction {
           if(!err.message.includes("Failed all ")) {
             console.error(`[Server/${this.id}] refresh() Error:`, err)
           }
-          this.updateStatus(false)
+          this.updateStatus(null)
         }
     }
 
-    updateStatus(online: boolean, data: ServerStatusData = null, source: ServerStatusSource = "") {
-      this._status.online = online
+    updateStatus(data: ServerStatusData | null = null, source: ServerStatusSource = "") {
       this._status.data = data
       this._status.source = source
       this._status.lastStatusTime = (Date.now() / 1000)

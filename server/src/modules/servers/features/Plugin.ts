@@ -96,7 +96,6 @@ export default class PluginFeature extends Feature implements IAction {
 
     get status(): ServerStatus {
         return {
-            online: this.authenticated,
             data: this.#status,
             source: "live",
         }
@@ -110,7 +109,7 @@ export default class PluginFeature extends Feature implements IAction {
             if(record.type === LiveRecordType.Game) {
                 this.#startTime = record.startTime
             }
-            this._server.updateStatus(true, this.#status ??  { players: [], maxplayers: 0, map: "", gamemode: "" }, "live")
+            this._server.updateStatus(this.#status ??  { players: [], maxplayers: 0, map: "", gamemode: "" }, "live")
             if(this.#liveCache.game) {
                 this.#status.gamemode = this.#liveCache.game.gamemode
                 this.#status.map = this.#liveCache.game.map

@@ -4,7 +4,6 @@ export type ServerStatusSource = "" | "live" | "gamedig"
 export interface ServerStatus {
     source?: ServerStatusSource,
     data?: ServerStatusData | null,
-    online: boolean,
     lastStatusTime?: number | null,
     lastEmptyTime?: number | null
 }
@@ -82,6 +81,7 @@ export interface ServerInfo extends ServerData {
     tags: string[],
     features: ServerAvailableFeatures
     status?: ServerStatus,
+    online: boolean,
     sortOrder: number,
     actions: ServerAction[],
 }

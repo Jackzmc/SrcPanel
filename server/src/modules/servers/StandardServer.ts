@@ -80,4 +80,9 @@ export default class StandardServer extends Server {
         }
     }
 
+    public override async refreshStatus(bypassCache = false) {
+        const ret = super.refreshStatus(bypassCache)
+        this._online = this._status.data != undefined
+        return ret
+    }
 }
