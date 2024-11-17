@@ -159,7 +159,7 @@ export default class ServerManager {
   #onLiveClient(client: net.Socket) {
     const clientHost = `${client.remoteAddress}:${client.remotePort}`
     if(this.#socketClients.has(clientHost)) this.#debugLive("warn: client already was connected", clientHost)
-    this.#debugLive('client connected', clientHost)
+    this.#debugLive('client connected', clientHost, 'waiting for auth')
     const ps = new PluginSocket(client)
     this.#socketClients.set(clientHost, ps)
     
