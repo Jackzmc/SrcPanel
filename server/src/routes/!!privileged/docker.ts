@@ -21,7 +21,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             }
             return {
                 id: instance.ContainerId,
-                ip: instance.Ip,
+                ip: instance.PublicIp,
                 port: instance.Port,
                 hostname: instance.Hostname
             }

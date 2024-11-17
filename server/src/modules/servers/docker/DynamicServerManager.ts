@@ -183,6 +183,7 @@ export default class DynamicServerManager {
         
     }
     async #registerInstance(instance: DynamicServerInstance) {
+        await instance.Init()
         this.#instances[instance.ContainerName] = instance
     }
 

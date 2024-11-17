@@ -83,10 +83,13 @@ export default class DockerServer extends Server implements IAction {
     }
 
     public override async refreshStatus(bypassCache = false) {
-        const ret = super.refreshStatus(bypassCache)
+        // Don't need to do a refresh if we have plugin data
+        if(this.Plugin && this.Plugin.authenticated) return;
+
+        await super.getStatus(bypassCache, this.type, this.ContainerInstance.InternalIp, this.port)
+
         const state = await this.#instance.state()
         this._online = state.Running
-        return ret
     }
 
 }

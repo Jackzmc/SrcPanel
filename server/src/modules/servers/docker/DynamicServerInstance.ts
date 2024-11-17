@@ -4,22 +4,35 @@ import DockerServer from "../DockerServer.js"
 
 export default class DynamicServerInstance {
     #template: DockerTemplateConfig
-    #ip: string
+    #publicIp: string
+    #internalIp: string
     #port: number
     #container: Container
     #server: DockerServer | null = null
 
     #startTime: number = null
 
-    constructor(template: DockerTemplateConfig, container: Container, ip: string, port: number) {
+    #init = false
+
+    constructor(template: DockerTemplateConfig, container: Container, publicIp: string, port: number) {
         this.#template = template
         this.#container = container
-        this.#ip = ip
+        this.#publicIp = publicIp
         this.#port = port
-        
-        this.state().then(state => {
-            this.#startTime = new Date(state.StartedAt).valueOf() / 1000
-        })
+    }
+
+    async Init(): Promise<void> {
+        if(this.#init) throw new Error("Already initalized")
+        this.#init = true
+
+        const state = await this.state()
+        this.#startTime = new Date(state.StartedAt).valueOf() / 1000
+
+        const inspect = await this.#container.inspect()
+        const network = inspect.NetworkSettings.Networks[this.#template.network]
+        // If there is no assigned IP, such as net=host, then fall back to public ip
+        const internalIp = network ? network.IPAddress : this.#template.ip
+        console.debug(this.#container.id, 'found internal ip:', internalIp)
     }
 
     get StartTime(): number | null {
@@ -34,14 +47,18 @@ export default class DynamicServerInstance {
         return this.#template.id
     }
 
-    get Ip() { 
-        return this.#ip
+    get PublicIp() { 
+        return this.#publicIp
+    }
+
+    get InternalIp() {
+        return this.#internalIp
     }
     get Port() {
         return this.#port
     }
     get Hostname() {
-        return `${this.Ip}:${this.Port}`
+        return `${this.PublicIp}:${this.Port}`
     }
     get ContainerId() {
         return this.#container.id

@@ -216,33 +216,37 @@ export default abstract class Server implements IAction {
         // Don't need to do a refresh if we have plugin data
         if(this.Plugin && this.Plugin.authenticated) return;
 
-        const now = Date.now()
-        if(!bypassCache && !this._lastRefresh && now - this._lastRefresh < MIN_REFRESH_TIME) return
-        this._lastRefresh = now
-        try {
-            const state = await GameDig.query({
-              type: this.type,
-              host: this.ip,
-              port: this.port,
-              givenPortOnly: true,
-              socketTimeout: 3000,
-              attemptTimeout: 5000,
-            })
-            const raw = state.raw as any
-            this.updateStatus({
-              players: state.players
-                .filter(p => p.name.length > 0) // Some names are just "", assumingly bots?
-                .map(p => p.name),
-              maxplayers: state.maxplayers,
-              map: state.map,
-              gamemode: raw.tags ? raw.tags[0] : undefined
-            }, "gamedig")
-        } catch(err) {
-          if(!err.message.includes("Failed all ")) {
-            console.error(`[Server/${this.id}] refresh() Error:`, err)
-          }
-          this.updateStatus(null)
+        return this.getStatus(bypassCache, this.type, this.ip, this.port)
+    }
+
+    protected async getStatus(bypassCache: boolean, type: string, host: string, port: number) {
+      const now = Date.now()
+      if(!bypassCache && !this._lastRefresh && now - this._lastRefresh < MIN_REFRESH_TIME) return
+      this._lastRefresh = now
+      try {
+          const state = await GameDig.query({
+            type: type,
+            host: host,
+            port: port,
+            givenPortOnly: true,
+            socketTimeout: 3000,
+            attemptTimeout: 5000,
+          })
+          const raw = state.raw as any
+          this.updateStatus({
+            players: state.players
+              .filter(p => p.name.length > 0) // Some names are just "", assumingly bots?
+              .map(p => p.name),
+            maxplayers: state.maxplayers,
+            map: state.map,
+            gamemode: raw.tags ? raw.tags[0] : undefined
+          }, "gamedig")
+      } catch(err) {
+        if(!err.message.includes("Failed all ")) {
+          console.error(`[Server/${this.id}] refresh() Error:`, err)
         }
+        this.updateStatus(null)
+      }
     }
 
     updateStatus(data: ServerStatusData | null = null, source: ServerStatusSource = "") {
