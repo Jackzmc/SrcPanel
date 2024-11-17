@@ -215,13 +215,15 @@ export default abstract class Server implements IAction {
     async refreshStatus( bypassCache: boolean = false): Promise<void> {
         // Don't need to do a refresh if we have plugin data
         if(this.Plugin && this.Plugin.authenticated) return;
-
-        return this.getStatus(bypassCache, this.type, this.ip, this.port)
+        console.log(this.id, 'Server:refreshStatus')
+        await this.getStatus(bypassCache, this.type, this.ip, this.port)
     }
 
     protected async getStatus(bypassCache: boolean, type: string, host: string, port: number) {
       const now = Date.now()
+      console.log(this.id, 'Server:getStatus - pre')
       if(!bypassCache && !this._lastRefresh && now - this._lastRefresh < MIN_REFRESH_TIME) return
+      console.log(this.id, 'Server:getStatus - post')
       this._lastRefresh = now
       try {
           const state = await GameDig.query({
