@@ -44,7 +44,6 @@ export default class MetricsFeature extends Feature {
 
     async init() {
       if(!this.available) return
-      console.log('init', this._server.id, this._server instanceof DockerServer)
       if(this.#dockerServer) {
         const stream = await this.#dockerServer.ContainerInstance.Container.stats({ stream: true})
         stream.on("data", async (data) => {
@@ -108,7 +107,6 @@ export default class MetricsFeature extends Feature {
 
       this.#influx.writePoint(statusPoint)
       this.#influx.flush()
-      .catch(err => {})
     }
 
 
