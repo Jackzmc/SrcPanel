@@ -75,7 +75,7 @@ export default abstract class Server implements IAction {
     protected _actions: ServerAction[] = []
 
     protected _status: ServerStatus
-    protected _online: boolean;
+    protected _online: boolean = false;
     protected _lastRefresh: number
 
     constructor(group: ServerGroup, server: ServerExtendedData) {

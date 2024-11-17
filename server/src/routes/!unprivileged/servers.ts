@@ -27,7 +27,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                     status: server.status,
                     sortOrder: server.sortOrder,
                     actions: server.actions,
-                    online: server.Online
+                    online: server.Online,
                 }
             }))
         }
