@@ -144,7 +144,7 @@ export default class ServerManager {
           client._setServer(server)
           server.Plugin?._setSocket(client)
           client.send(LiveRecordResponse.OK, server.Plugin?.liveViewers)
-          this.#debugLive("Authenticated", client.IP)
+          this.#debugLive("Authenticated", client.Host)
         } else {
           client.send(LiveRecordResponse.Error, `Invalid or unknown id "${payload.sub}" (docker: ${payload.docker?'y':'n'})`)
           return
@@ -158,6 +158,7 @@ export default class ServerManager {
 
   #onLiveClient(client: net.Socket) {
     const clientHost = `${client.remoteAddress}:${client.remotePort}`
+    if(this.#socketClients.has(clientHost)) this.#debugLive("warn: client already was connected", clientHost)
     this.#debugLive('client connected', clientHost)
     const ps = new PluginSocket(client)
     this.#socketClients.set(clientHost, ps)

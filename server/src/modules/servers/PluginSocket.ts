@@ -181,8 +181,8 @@ export default class PluginSocket {
     throw new Error(`Unknown record type: ${type}, offset ${reader.offset}\nbuffer:0x${reader.buffer.toString('hex')}${parentDebug}`)
   }
   
-  public get IP() {
-    return this.#socket.remoteAddress
+  public get Host() {
+    return `${this.#socket.remoteAddress}:${this.#socket.remotePort}`
   }
   
   public get Authenticated() {
