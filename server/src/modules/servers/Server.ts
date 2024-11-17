@@ -241,9 +241,9 @@ export default abstract class Server implements IAction {
             gamemode: raw.tags ? raw.tags[0] : undefined
           }, "gamedig")
       } catch(err) {
-        // if(!err.message.includes("Failed all ")) {
-          console.error(`[Server/${this.id}] refresh() Error:`, err)
-        // }
+        if(!err.message.includes("Failed all ")) {
+          console.error(`[Server/${this.id}] host=${host} getStatus error: `, err)
+        }
         this.updateStatus(null)
       }
     }
