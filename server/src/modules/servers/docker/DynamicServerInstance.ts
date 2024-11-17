@@ -32,7 +32,6 @@ export default class DynamicServerInstance {
         const network = inspect.NetworkSettings.Networks[this.#template.network]
         // If there is no assigned IP, such as net=host, then fall back to public ip
         this.#internalIp = network ? network.IPAddress : this.#template.ip
-        console.debug(this.#container.id, 'found internal ip:', this.#internalIp)
     }
 
     get StartTime(): number | null {
