@@ -86,7 +86,7 @@ export default class MetricsFeature extends Feature {
       if(source == "live" && this._server.Plugin?.available) {
         const live = this._server.Plugin.liveStatus
         if(live) {
-          if(live.game.state === GameState.None) playerCount = Object.keys(live.clients).length
+          if(live.game?.state === GameState.None) playerCount = Object.keys(live.clients).length
           else playerCount = null
           const point = this.#createPoint("live")
           if(live.game) {
