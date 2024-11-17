@@ -243,7 +243,8 @@ export default class ServerManager {
     if(this.#socket) {
       // Inform all clients that we are shutting down, try to reconnect
       for(const client of this.#socketClients.values()) {
-        client.send(LiveRecordResponse.Reconnect)
+        if(client.Authenticated)
+          client.send(LiveRecordResponse.Reconnect)
       }
       // Wait for socket to close:
       await new Promise((resolve) => this.#socket.close(resolve))
