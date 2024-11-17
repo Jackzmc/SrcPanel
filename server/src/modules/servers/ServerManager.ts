@@ -157,9 +157,10 @@ export default class ServerManager {
   }
 
   #onLiveClient(client: net.Socket) {
-    this.#debugLive('client connected', client.remoteAddress)
+    const clientHost = `${client.remoteAddress}:${client.remotePort}`
+    this.#debugLive('client connected', clientHost)
     const ps = new PluginSocket(client)
-    this.#socketClients.set(client.remoteAddress, ps)
+    this.#socketClients.set(clientHost, ps)
     
     client.on('data', (buf) => {
       const packetReader = new BufferReader(buf)
@@ -203,8 +204,8 @@ export default class ServerManager {
       const server = ps.Server
       server?.Plugin?._setSocket(null)
       ps._setServer(null)
-      this.#socketClients.delete(client.remoteAddress)
-      this.#debugLive('client disconnected', client.remoteAddress)
+      this.#socketClients.delete(clientHost)
+      this.#debugLive('client disconnected', clientHost)
     })
   }
 
