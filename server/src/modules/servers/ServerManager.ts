@@ -243,7 +243,8 @@ export default class ServerManager {
       for(const client of this.#socketClients.values()) {
         client.send(LiveRecordResponse.Reconnect)
       }
-      this.#socket.close()
+      // Wait for socket to close:
+      await new Promise((resolve) => this.#socket.close(resolve))
     }
 
     for(const group of Object.values(this.#groups)) {
