@@ -7,6 +7,7 @@ import ServerManager from '../ServerManager.js';
 import { DynamicServerGroup } from '../groups/DynamicServerGroup.js';
 export interface DockerTemplateConfig {
     id: string
+    network?: "host" | string,
     image: string,
     ip: string,
     startPort: number,
@@ -153,13 +154,13 @@ export default class DynamicServerManager {
             //     '27015/udp': {}
             // },
             HostConfig: {
-                "NetworkMode": "host",
+                "NetworkMode": template.config.network,
                 "Binds": template.config.volumes ?? [],
                 "RestartPolicy": {
-                    "Name": "on-failure",
+                    "Name": "unless-stopped",
                     MaximumRetryCount: 3
-                }
-                // "PortBindings": { "27015/udp": [{ "HostPort": port.toString(), "HostIp": template.config.ip }] }
+                },
+                "PortBindings": { "27015/udp": [{ "HostPort": port.toString(), "HostIp": template.config.ip }] }
             },
             Labels: {
                 "panel.template": templateId,
