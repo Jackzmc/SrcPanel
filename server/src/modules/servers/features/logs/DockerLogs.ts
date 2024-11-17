@@ -60,7 +60,7 @@ export default class DockerLogs extends Logs {
             if(lines.length > 1) {
                 // Loop through all the existing lines, in case there is 2+ new lines
                 while(lines.length > 1) {
-                    const line = lines.shift()
+                    const line = lines.shift()!
                     this.pushLine(stripAnsi(line))
                 }
                 // Set our buffer to the very end

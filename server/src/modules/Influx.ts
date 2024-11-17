@@ -30,7 +30,7 @@ if(process.env.INFLUX_URL && process.env.INFLUX_TOKEN) {
 
 export function getWriter(): WriteApi | null {
     if(!influx) return null
-    return influx.getWriteApi(process.env.INFLUX_ORG, process.env.INFLUX_BUCKET, "ms", {
+    return influx.getWriteApi(process.env.INFLUX_ORG!, process.env.INFLUX_BUCKET!, "ms", {
         defaultTags: {
             panel_hostname: hostname()
         },

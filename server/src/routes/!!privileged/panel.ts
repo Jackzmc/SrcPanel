@@ -13,10 +13,10 @@ let updateState: UpdateState = "NORMAL"
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
     fastify.get('/', async (req, reply) => {
-        if(!req.user.hasPermission("panel.view")) return NO_PERMISSION(reply)
+        if(!req.user!.hasPermission("panel.view")) return NO_PERMISSION(reply)
         let kv = {}
         for(const [key, config] of Object.entries(KVConfig)) {
-            if(config.flags & ~KeyFlags.Internal) {
+            if(config.flags && config.flags & ~KeyFlags.Internal) {
                 kv[key] = {
                     ...config,
                     value: await fastify.config.GetKV(key as ConfigKey, "")
@@ -54,7 +54,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     })
 
     fastify.post('/kv', async (req, reply) => {
-        if(!req.user.hasPermission("panel.manage")) return NO_PERMISSION(reply)
+        if(!req.user!.hasPermission("panel.manage")) return NO_PERMISSION(reply)
         if(req.headers['content-type']?.toLowerCase() !== "application/json") {
             return reply.status(400).send({
                 error: "INVALID_BODY",
@@ -63,7 +63,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
 
 
-        for(const [key, value] of Object.entries(req.body)) {
+        for(const [key, value] of Object.entries(req.body as Record<string, any>)) {
             if(!(key in KVConfig)) {
                 return reply.status(400).send({
                     error: "UNKNOWN_KV",
@@ -91,7 +91,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     })
 
     fastify.post('/update', async(req, reply) => {
-        if(!req.user.hasPermission("panel.update")) return NO_PERMISSION(reply)
+        if(!req.user!.hasPermission("panel.update")) return NO_PERMISSION(reply)
         console.log('cwd', process.cwd())
         if(updateState === "NORMAL") {
             let response = { stdout: "", stderr: "" }
@@ -110,7 +110,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
             try {
                 const timeGitPull = await doExec("GIT_PULL", 'git pull')
-                let timeRmNodeModules = null
+                let timeRmNodeModules: number = 0
                 if(response.stdout.includes("Already up to date.")) {
                     updateState = "NORMAL"
                     return reply.status(200).send({
@@ -176,7 +176,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     })
 
     fastify.post('/restart', async (req, reply) => {
-        if(!req.user.hasPermission("panel.restart")) return NO_PERMISSION(reply)
+        if(!req.user!.hasPermission("panel.restart")) return NO_PERMISSION(reply)
         await reply.status(204).send()
         await fastify.close()
         process.exit()

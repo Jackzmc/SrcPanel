@@ -15,8 +15,7 @@
                 "src/*"
             ]
         },
-        // TODO: ...
-        // "strictNullChecks": true,
+        "strictNullChecks": true,
         "baseUrl": "./src",
         "incremental": true
     },

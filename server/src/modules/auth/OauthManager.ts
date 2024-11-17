@@ -15,7 +15,7 @@ export interface OauthConfig {
         detailsUrl: string,
         redirectUrl?: string
     },
-    config?: ProviderConfig
+    config: ProviderConfig
 }
 
 export interface ProviderConfig {
@@ -44,7 +44,7 @@ export class OauthManager {
      * @param providerName the provider id
      * @returns Promise<OauthProviderUser> - instance of OauthProviderUser
      */
-    async getProvider(providerName: string): Promise<OauthProviderUser> {
+    async getProvider(providerName: string): Promise<OauthProviderUser|null> {
         const domain = await this.#config.GetKVNamespaced("domain")
         const clientId = await this.#config.GetKVNamespaced("providers", providerName, "clientId")
         const clientSecret = await this.#config.GetKVNamespaced("providers", providerName, "clientSecret")

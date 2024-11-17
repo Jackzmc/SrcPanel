@@ -9,7 +9,7 @@ export default class DynamicServerInstance {
     #container: Container
     #server: DockerServer | null = null
 
-    #startTime: number = null
+    #startTime: number|null = null
 
     constructor(template: DockerTemplateConfig, container: Container, ip: string, port: number) {
         this.#template = template

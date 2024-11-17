@@ -60,14 +60,14 @@ export default class ConfigsFeature extends Feature {
      * @param showHidden Should hidden files be included (see HIDDEN_CONFIG_FILES)
      * @returns string[]
      */
-    public async getConfigFiles(showHidden = false) {
-      if(!this.#cfgDir) return
+    public async getConfigFiles(showHidden = false): Promise<string[] | null> {
+      if(!this.#cfgDir) return null
       return await this.#recurseConfig(this.#cfgDir, showHidden)
     }
 
     async #recurseConfig(parentPath: string, showHidden: boolean, parent = "") {
       const dirents = await readdir(parentPath, { withFileTypes: true })
-      const files = []
+      const files: string[] = []
       for(const dirent of dirents) {
         const filepath = `${parent}${dirent.name}`
         if(dirent.isDirectory()) {
@@ -77,7 +77,7 @@ export default class ConfigsFeature extends Feature {
           if(!showHidden && await ServerManager.isFileIgnored(dirent.name)) continue
 
           const ext = dirent.name.split(".").pop()
-          if(VALID_CONFIG_EXTS.includes(ext)) {
+          if(ext && VALID_CONFIG_EXTS.includes(ext)) {
             files.push(filepath)
           }
         }

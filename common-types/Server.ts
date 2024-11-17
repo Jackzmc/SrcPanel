@@ -3,9 +3,9 @@ import { LiveDataCache } from "./Live.js"
 export type ServerStatusSource = "" | "live" | "gamedig"
 export interface ServerStatus {
     source?: ServerStatusSource,
-    data?: ServerStatusData | null,
-    lastStatusTime?: number | null,
-    lastEmptyTime?: number | null
+    data: ServerStatusData | null,
+    lastStatusTime: number | null,
+    lastEmptyTime: number | null
 }
 export interface ServerStatusData {
     players: string[],
@@ -16,8 +16,8 @@ export interface ServerStatusData {
   
 export interface ComputeStats {
     collectionTime: number,
-    memory_stats: MemoryStats;
-    cpu_stats: CPUStats;
+    memory_stats: MemoryStats | null;
+    cpu_stats: CPUStats | null;
 }
 
 
@@ -68,8 +68,8 @@ export interface ServerData {
 export interface ServerDetailed {
     server: ServerInfo
     live: LiveDataCache,
-    uptime: number
-    configs: any[]
+    uptime: number | null,
+    configs: null | any[]
 }
 
 export interface PlayerStats {

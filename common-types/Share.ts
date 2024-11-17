@@ -38,7 +38,7 @@ export interface AddonInfo {
     lastModified?: number,
     workshop?: AddonWorkshopInfo,
     installInfo: Record<string, boolean>,
-    collection?: WorkshopCollectionInfo,
+    collection: WorkshopCollectionInfo | null,
     chapterIds?: string[] | null
 }
 
@@ -134,4 +134,4 @@ export interface ItemWorkshopItem {
 }
 export type DetailWorkshopItem = CollectionWorkshopItem | ItemWorkshopItem
 
-export type DetailsResponse = DetailWorkshopItem | { item: null }
+export type DetailsResponse = DetailWorkshopItem | { item: null | undefined }

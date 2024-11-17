@@ -63,7 +63,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             [req.params.steamid]
         )
 
-        let ratings = 0, key: string = null
+        let ratings = 0, key: string|null = null
         let reputation = { thumbsUp: 0, thumbsDown: 0, sum: 0, total: 0 }
         if(notes.length > 0 /*  && !fastify.authmngr.isAdmin(req.params.steamid) */) {
             let totalRatings = 0
@@ -118,8 +118,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
 
 
-        const conditions = []
-        let data = []
+        const conditions: string[] = []
+        let data: (number|string)[] = []
 
         if(req.query.servers) {
             const servers = req.query.servers.split(",")

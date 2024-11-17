@@ -51,7 +51,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             }
         },
         async handler(req: FastifyRequest<{ Body: PUTBanBodyType, Params: { id: number } }>, reply) {
-            if(!req.user.hasPermission("bans.edit")) return NO_PERMISSION(reply)
+            if(!req.user!.hasPermission("bans.edit")) return NO_PERMISSION(reply)
             const [existing] = await fastify.db.execute<RowDataPacket[]>(`
                 SELECT * FROM bans WHERE id = ?`,
                 [req.params.id]
@@ -65,14 +65,14 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 })
             }
             // Check if they are creator or if CONSOLE (automatic ban), can always edit
-            const isCreator = existing[0].executor === "CONSOLE" || req.user.equals(existing[0].executor) 
-            const [code, granted] = req.user.requirePermission("bans.edit", { isCreator })
+            const isCreator = existing[0].executor === "CONSOLE" || req.user!.equals(existing[0].executor) 
+            const [code, granted] = req.user!.requirePermission("bans.edit", { isCreator })
             if(!granted) return NO_PERMISSION(reply)
 
             const ban = replaceObject<any>(existing[0], req.body)
             // Make the user claim any automatic bans they edit:
             if(existing[0].executor === "CONSOLE") {
-                ban.executor = req.user.steamid2
+                ban.executor = req.user!.steamid2
             }
 
             const [ok] = await fastify.db.execute<OkPacket>(`
@@ -97,12 +97,12 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 }
             }
 
-            if(req.body.flags & APIBanFlags.Suspended && ~existing[0].flags & APIBanFlags.Suspended) {
-                await req.user.log(existing[0].steamid, `%client% suspended ban #%id% for %target%`, logPayload)
-            } else if(~req.body.flags & APIBanFlags.Suspended && existing[0].flags & APIBanFlags.Suspended) {
-                await req.user.log(existing[0].steamid, `%client% reinstate ban #%id% for %target%`, logPayload)
+            if(req.body.flags && req.body.flags & APIBanFlags.Suspended && ~existing[0].flags & APIBanFlags.Suspended) {
+                await req.user!.log(existing[0].steamid, `%client% suspended ban #%id% for %target%`, logPayload)
+            } else if(req.body.flags && ~req.body.flags & APIBanFlags.Suspended && existing[0].flags & APIBanFlags.Suspended) {
+                await req.user!.log(existing[0].steamid, `%client% reinstate ban #%id% for %target%`, logPayload)
             } else {
-                await req.user.log(existing[0].steamid, `%client% edited ban #%id%'s details for %target%`, logPayload)
+                await req.user!.log(existing[0].steamid, `%client% edited ban #%id%'s details for %target%`, logPayload)
             }
 
             return {
@@ -113,7 +113,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     })
 
     fastify.post('/:steamid', async(req: FastifyRequest<{ Body: POSTBanBodyType, Params: { steamid: string } }>, reply) => {
-        if(!req.user.hasPermission("bans.create")) return NO_PERMISSION(reply)
+        if(!req.user!.hasPermission("bans.create")) return NO_PERMISSION(reply)
         if(!req.body.executor) {
             req.body.executor = req.session.user.steamid
         }
@@ -164,7 +164,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             }
         )
 
-        await req.user.log(req.params.steamid, `%client% banned user %target%`, {
+        await req.user!.log(req.params.steamid, `%client% banned user %target%`, {
             code: "bans.create",
             metadata: {
                 id: ok.insertId, 
@@ -201,7 +201,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         async handler(req: FastifyRequest<{ 
             Params: { id: number }
         }>, reply) {
-            if(!req.user.hasPermission("bans.delete")) return NO_PERMISSION(reply)
+            if(!req.user!.hasPermission("bans.delete")) return NO_PERMISSION(reply)
             const [existing] = await fastify.db.execute<RowDataPacket[]>(`
                 SELECT * FROM bans WHERE id = ?`,
                 [req.params.id]
@@ -215,8 +215,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 })
             }
             // Check if they can edit this
-            const isCreator = req.user.equals(existing[0].executor) 
-            const [code, granted] = req.user.requirePermission("bans.delete", { isCreator })
+            const isCreator = req.user!.equals(existing[0].executor) 
+            const [code, granted] = req.user!.requirePermission("bans.delete", { isCreator })
             if(!granted) return NO_PERMISSION(reply)
 
             const [ok] = await fastify.db.execute<OkPacket>(
@@ -224,7 +224,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 [req.params.id]
             )
 
-            await req.user.log(existing[0].steamid, `%client% removed ban #%id% for %target%`, {
+            await req.user!.log(existing[0].steamid, `%client% removed ban #%id% for %target%`, {
                 code,
                 metadata: {
                     id: existing[0].id, 

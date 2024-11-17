@@ -161,7 +161,7 @@ export default class AuthManager {
         return this.admins[steamid2.slice(10)]
     }
 
-    public getAdminExport(steamid2: string): ReadableAdminData | undefined {
+    public getAdminExport(steamid2: string): ReadableAdminData | null {
         if(!steamid2) throw new Error("steamid2 is not defined")
         const admin = this.admins[steamid2.slice(10)]
         if(!admin) return null
@@ -310,7 +310,7 @@ export default class AuthManager {
      * @param id the API key id
      * @returns 
      */
-    public async getAPIKey(id: string): Promise<APIKey> {
+    public async getAPIKey(id: string): Promise<APIKey|null> {
         let apikey = this.apikeysCache.get(id)
         if(!apikey) {
             const [rows] = await this.#db.execute<RowDataPacket[]>(`SELECT * FROM dash_apikeys WHERE id = ?`, [id])
@@ -332,7 +332,7 @@ export default class AuthManager {
      * @param steamid steamid2
      * @returns 
      */
-    public async getAPIKeyForUser(steamid: string): Promise<APIKey> {
+    public async getAPIKeyForUser(steamid: string): Promise<APIKey|null> {
         const [rows] = await this.#db.execute<RowDataPacket[]>(
             "SELECT * FROM dash_apikeys WHERE SUBSTRING(steamid, 11) = SUBSTRING(?, 11)",
             [ steamid ]
@@ -675,7 +675,7 @@ export default class AuthManager {
      * @param refreshToken The refresh token for the user's access
      * @returns 
      */
-    public async setProvider(steamid: string, providerName: OauthProvider, providerData: OauthProviderData) {
+    public async setProvider(steamid: string, providerName: OauthProvider, providerData: OauthProviderData | null) {
         if(providerData === null) {
             // TOOD: also revoke token
             return await this.#db.query<OkPacket>(
@@ -719,7 +719,7 @@ export default class AuthManager {
         return result
     }
 
-    public async fetchProviderAuthData(steamid: string, providerName: OauthProvider): Promise<OauthAuthData> {
+    public async fetchProviderAuthData(steamid: string, providerName: OauthProvider): Promise<OauthAuthData|null> {
         const [provider] = await this.#db.query<RowDataPacket[]>(
             "SELECT refresh_token, refresh_token_expired, access_token, access_token_expires FROM dash_providers WHERE SUBSTRING(steamid, 11) = SUBSTRING(?, 11) AND provider = ?",
             [ steamid, providerName ]
@@ -764,7 +764,7 @@ export default class AuthManager {
      * @param id id for provider service
      * @returns 
      */
-    public async getNameFromProvider(provider: OauthProvider, providerId: string): Promise<string> {
+    public async getNameFromProvider(provider: OauthProvider, providerId: string): Promise<string|null> {
         const cached = this.providerNameCache.get(`${provider}:${providerId}`)
         if(cached) return cached
         const [rows] = await this.#db.query<RowDataPacket[]>(
@@ -781,7 +781,7 @@ export default class AuthManager {
      * @param steamid2 
      * @returns 
      */
-    public async getProfileData(steamid2: string): Promise<UserProfileData> {
+    public async getProfileData(steamid2: string): Promise<UserProfileData|null> {
         const [rows] = await this.#db.query<RowDataPacket[]>("SELECT * FROM `left4dead2-admins`.panel_user_data WHERE steamid = ?", [ steamid2 ])
         if(rows.length == 0) return null
         return {
