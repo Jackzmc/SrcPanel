@@ -78,6 +78,7 @@ export class DynamicServerGroup extends ServerGroup<DockerServer> {
 
         }
         // Find any new instances
+        await this.#manager.findExisting()
         const instances = this.#manager.getInstancesForTemplate(this.#templateId)
         // TODO: check for # of servers that are active
         for(const instance of instances) {

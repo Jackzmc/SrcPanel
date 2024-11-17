@@ -184,7 +184,10 @@ export default class Share {
                         filename: dirent.name,
                         ...fsinfo,
                         installInfo: (await this.getInstallInfo(dirent.name)).states,
-                        chapterIds
+                        chapterIds,
+                        meta: {
+                            chapterIds
+                        }
                     })
                     await this.#addAddonEntry(dirent.name, fsinfo, wsDetails, undefined, chapterIds)
                 }
@@ -239,7 +242,7 @@ export default class Share {
      * @param filename filename with ext
      * @returns Promise<AddonInfo | undefined>
      */
-    public async getAddonInfo(filename: string): Promise<AddonInfo | undefined> {
+    public async getAddonInfo(filename: string): Promise<AddonInfo | null> {
         const info = await this.#db.get(SQL`SELECT * FROM addoncache WHERE filename = ${filename}`)
         if(!info) return null
         const installInfo = await this.getInstallInfo(filename)
@@ -254,7 +257,10 @@ export default class Share {
                 id: info.collection_id,
                 name: info.collection_name
             } : null,
-            chapterIds: info.chapter_ids?.split(",")
+            chapterIds: info.chapter_ids?.split(","),
+            meta: {
+                chapterIds: info.chapter_ids?.split(","),
+            }
         }
     }
 

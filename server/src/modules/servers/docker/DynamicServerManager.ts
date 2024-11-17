@@ -35,7 +35,7 @@ export default class DynamicServerManager {
 
     async Load() {
         await this.#loadTemplates()
-        await this.#findExisting()
+        await this.findExisting()
     }
 
     async *#getContainers() {
@@ -55,9 +55,14 @@ export default class DynamicServerManager {
         }
     }
 
-    async #findExisting() {
+    async findExisting() {
         for await(const { containerInfo, container, template } of this.#getContainers()) {
             const port = containerInfo.Labels["panel.port"]
+            const containerName = `panel-${template.config.id}-${port}`
+            if(this.#instances[containerName]) {
+                console.debug('debug: skipping existing registered container', containerName)
+                return;
+            }
             console.info(`[ServerManager/docker] Found existing container (${containerInfo.Id.slice(0, 12)}${containerInfo.Names.join('')})`)
             const instance = new DynamicServerInstance(template.config, container, template.config.ip, Number(port))
             await this.#registerInstance(instance)

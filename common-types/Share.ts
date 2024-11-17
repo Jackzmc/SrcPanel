@@ -34,12 +34,18 @@ export interface ExtendedShareInfo extends ShareInfo {
 export interface AddonInfo {
     filename: string,
     filesize?: number,
+    /** When addon was downloaded */
     downloaded?: number
+    /** When file was last modified */
     lastModified?: number,
     workshop?: AddonWorkshopInfo,
+    /** The destinations where addon is installed on */
     installInfo: Record<string, boolean>,
+    /** The collection this addon is a child of, if any */
     collection?: WorkshopCollectionInfo,
-    chapterIds?: string[] | null
+    
+    chapterIds?: string[] | null,
+    meta: Record<string, any>
 }
 
 export interface AddonCollectionInfo {
