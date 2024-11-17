@@ -108,6 +108,7 @@ export default class MetricsFeature extends Feature {
 
       this.#influx.writePoint(statusPoint)
       this.#influx.flush()
+      .catch(err => {})
     }
 
 
