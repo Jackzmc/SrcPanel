@@ -81,6 +81,7 @@ export default abstract class Server implements IAction {
     #gamedig: GameDig
 
     constructor(group: ServerGroup, server: ServerExtendedData, gamedig: GameDig) {
+        this.#gamedig = gamedig
         this._group = group
         this._info = {
           id: server.id,
