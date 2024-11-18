@@ -22,7 +22,8 @@ export type DownloadSource = "steam_workshop" | "direct"
  */
 
 const MIGRATIONS = [
-    "ALTER TABLE addoncache"
+    SQL`ALTER TABLE addoncache ADD metadata TEXT`,
+    // SQL`ALTER TABLE addoncache DELETE chapter_ids`
 ]
 
 export default class Share {
@@ -51,6 +52,11 @@ export default class Share {
         this.validExts = shareInfo.fileExts
         this.destinations = shareInfo.destinations || {}
         this.#description = shareInfo.description
+        db.exec(SQL`CREATE TABLE IF NOT EXISTS meta (
+            key VARCHAR(128) NOT NULL,
+            value VARCHAR(255) NOT NULL,
+            PRIMARY KEY(key) 
+        );`)
         db.exec(SQL`CREATE TABLE IF NOT EXISTS addoncache (
             filename VARCHAR(128) NOT NULL,
             filesize INT,
@@ -62,10 +68,27 @@ export default class Share {
             metadata TEXT,
             PRIMARY KEY (filename)
         );`)
-        db.exec(SQL`ALTER TABLE addoncache ADD metadata TEXT`).catch(() => {})
+        this.runMigrations()
         
         // db.exec(SQL`ALTER TABLE addoncache
         //     ADD COLUMN chapter_ids TEXT;`).catch(() => {})
+    }
+
+    async runMigrations() {
+        const result = await this.#db.get("SELECT value FROM meta WHERE key = 'current_migration'")
+        let currentMigration = result ? result.value : 0
+        if(currentMigration >= MIGRATIONS.length) return;
+        while(currentMigration < MIGRATIONS.length) {
+            try {
+                await this.#db.exec(SQL`ALTER TABLE addoncache ADD metadata TEXT`).catch(() => {})
+                currentMigration++
+            } catch(err) {
+                console.error(`[Share/${this.#id}] Migration #${currentMigration} failed: `, err)
+                return
+            }
+        }
+        await this.#db.run(`INSERT INTO meta (key, value) VALUES ('current_migration', ?)`, [ currentMigration ])
+        await this.#db.run(`UPDATE meta SET value = ? WHERE key = 'current_migration'`, [ currentMigration ])
     }
 
     public get id() { return this.#id }
@@ -185,30 +208,34 @@ export default class Share {
                         lastModified: Math.round(fstat.mtime.getTime() / 1000),
                     }
                     let meta = await this.#getMetadata(path.join(this.sourceFolder, dirent.name))
-                    let wsDetails = null
+                    let pendingResolve = false
                     if(ext === "vpk") {
                         // Check if this is a workshop addon, and fetch its details
                         const wsId = parseInt(dirent.name)
                         if(wsId) {
-                            wsDetails = await this.#steam.getItemDetails([wsId.toString()])
-                            if(wsDetails.length > 0) {
-                                wsDetails = Share.serializeWorkshopItem(wsDetails[0])
-                            } else {
-                                wsDetails = { deleted: true, publishedfileid: wsId }
-                            }
+                            pendingResolve = true
+                            this.#steam.addToWSResolveQueue(dirent.name, async (item) => {
+                                const details: AddonWorkshopInfo = item 
+                                    ? Share.serializeWorkshopItem(item)
+                                    : { deleted: true, publishedfileid: wsId }
+                                await this.#addAddonEntry(dirent.name, fsinfo, details, undefined, meta)
+                            })
+                            
                         }
                     }
-                   
                     results.push({
                         filename: dirent.name,
                         ...fsinfo,
                         installInfo: (await this.getInstallInfo(dirent.name)).states,
                         meta
                     })
-                    await this.#addAddonEntry(dirent.name, fsinfo, wsDetails, undefined, meta)
+                   
+                    if(!pendingResolve)
+                        await this.#addAddonEntry(dirent.name, fsinfo, null, undefined, meta)
                 }
             }
         }
+        await this.#steam.resolveWSQueue()
         // Calculate total file size for collections
         for(const collection of Object.values(collections)) {
             results.push({
@@ -245,7 +272,7 @@ export default class Share {
             // console.debug(`adding \"${filename}\" [fs=${fsInfo != null}] [workshop=${workshop != null}] [collection=${collection != null}]`)
             await this.#db.run(
                 SQL`REPLACE INTO addoncache 
-                    (filename, filesize, lastModified, ws_info, collection_id, collection_name, chapter_ids, metadata) 
+                    (filename, filesize, lastModified, ws_info, collection_id, collection_name, metadata) 
                     VALUES(${filename}, ${fsInfo?.filesize}, ${fsInfo?.lastModified}, ${workshop ? JSON.stringify(workshop) : null}, ${collection?.id}, ${collection?.name}, ${meta ? JSON.stringify(meta) : null})`
             )
         } catch(err) {

@@ -54,12 +54,12 @@ export interface AddonCollectionInfo {
 export interface AddonWorkshopInfo {
     publishedfileid: number
     deleted: boolean,
-    title: string,
-    filesize: number,
-    fileUrl: string,
-    previewUrl: string,
-    description: string,
-    lastUpdated: number
+    title?: string,
+    filesize?: number,
+    fileUrl?: string,
+    previewUrl?: string,
+    description?: string,
+    lastUpdated?: number
 }
 
 export interface AddonInstallInfo {
