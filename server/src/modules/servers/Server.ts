@@ -78,7 +78,9 @@ export default abstract class Server implements IAction {
     protected _online: boolean = false;
     protected _lastRefresh: number
 
-    constructor(group: ServerGroup, server: ServerExtendedData) {
+    #gamedig: GameDig
+
+    constructor(group: ServerGroup, server: ServerExtendedData, gamedig: GameDig) {
         this._group = group
         this._info = {
           id: server.id,
@@ -223,7 +225,7 @@ export default abstract class Server implements IAction {
       if(!bypassCache && !this._lastRefresh && now - this._lastRefresh < MIN_REFRESH_TIME) return
       this._lastRefresh = now
       try {
-          const state = await GameDig.query({
+          const state = await this.#gamedig.query({
             type: type,
             host: host,
             port: port,
