@@ -10,7 +10,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         // TODO: check for enough resources. ~300 MB (<= 2%), 1.5% cpu idle]
         const cpu = await SysInfo.currentLoad()
         const avgLoadPercent = cpu.avgLoad / 100
-        if(avgLoadPercent < MIN_CPU_PERCENT_FREE) {
+        if((1.0 - avgLoadPercent) < MIN_CPU_PERCENT_FREE) {
             return reply.status(403).send({
                 error: "NO_FREE_RESOURCES",
                 type: "CPU",
