@@ -49,7 +49,7 @@
     </p>
     <article class="message is-danger">
       <div class="message-body">
-       <pre class="mx-0 my-0" v-if="data">{{ JSON.stringify(data, null, 2) }}</pre>
+       <pre class="mx-0 my-0" v-if="data" style="text-wrap: auto">{{ JSON.stringify(data, null, 2) }}</pre>
        <span v-else>
         No information available
        </span>
