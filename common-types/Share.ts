@@ -43,8 +43,6 @@ export interface AddonInfo {
     installInfo: Record<string, boolean>,
     /** The collection this addon is a child of, if any */
     collection?: WorkshopCollectionInfo,
-    
-    chapterIds?: string[] | null,
     meta: Record<string, any>
 }
 

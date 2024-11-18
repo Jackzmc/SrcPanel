@@ -202,7 +202,7 @@ const viewMode = computed({
 const shownFileCount = computed(() => {
   if(!addons.value) return 0
   if(viewMode.value === "maps")
-    return addons.value.filter(a => a.chapterIds).length
+    return addons.value.filter(a => a.meta.chapterIds).length
   else
     return addons.value.length
 })

@@ -110,7 +110,7 @@
                 <li>
                   <Icon icon="file">{{ formatSize(map.filesize) }}</Icon>
                 </li>
-                <li>{{ map.chapterIds.length }} chapters</li>
+                <li>{{ map.meta.chapterIds.length }} chapters</li>
                 <li v-if="map.collection">{{ map.children.length }} parts</li>
               </ul>
             </div>
@@ -284,7 +284,7 @@ function filterAndSort() {
     return sort.value.direction === SortDirection.Ascending ? sortFn(a, b) : sortFn(b, a)
   }
   // Filter only maps
-  let filtered = props.addons.filter(addon => addon.chapterIds)
+  let filtered = props.addons.filter(addon => addon.meta.chapterIds)
   if(query) {
     filtered = filtered.filter(addon => {
       // Search the collection's name and it's children instead:
@@ -325,7 +325,7 @@ function formatDescription(content: string) {
 }
 function getStats(map: any) {
   if(!props.mapStats) return
-  const lastChapter = map.chapterIds?.at(-1)
+  const lastChapter = map.meta.chapterIds?.at(-1)
   if(!lastChapter) return
   return props.mapStats[lastChapter]
 }
