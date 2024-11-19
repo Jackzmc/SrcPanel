@@ -38,6 +38,23 @@
         <div class="box" v-else-if="currentStep === 1">
           <h4 class="title is-4">Server Plugins</h4>
           <p class="subtitle is-6">Subtitle</p>
+          <div class="grid is-col-min-12">
+            <div class="cell" v-for="(data, plugin) in Plugins" :key="plugin">
+              <div class="card has-background-info-light my-2 py-0 px-0"  style="border-radius: 1px">
+                <div class="card-content px-4 py-2">
+                  <h5 class="title is-5">{{ data.name ?? plugin}}</h5>
+                  <p class="subtitle is-6">
+                    v{{ data.version }} - Created by {{data.author}}
+                  </p>
+                  <div class="tags">
+                    <span class="tag" v-for="engine in data.engines" :key="engine">
+                      {{engine}}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
           <div class="columns">
             <div class="column is-4">
               <div class="card has-background-grey-lighter my-2 py-0 px-0">
@@ -111,6 +128,9 @@ import Field from '@/components/Field.vue';
 import { PrivilegedUser } from '@/js/User.js';
 import { computed, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+
+// TODO: pull from server instead
+import Plugins from '@/assets/plugins.tmp.json'
 
 const router = useRouter()
 const route = useRoute()

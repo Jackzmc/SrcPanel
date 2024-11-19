@@ -1,0 +1,1319 @@
+{
+  "200IQBots_FlyYouFools.sp": {
+    "engines": [],
+    "requires": [],
+    "includes": [
+      "sourcemod",
+      "sdktools"
+    ],
+    "includesOptional": [],
+    "name": "Fly You Fools",
+    "author": "ConnerRia & Jackzmc",
+    "description": "Survivor bots will retreat from tank. Improved version.",
+    "version": "1.5",
+    "url": "N/A"
+  },
+  "AutoWarpBot.sp": {
+    "engines": [],
+    "requires": [],
+    "includes": [
+      "sourcemod",
+      "sdktools",
+      "sdkhooks"
+    ],
+    "includesOptional": [],
+    "name": "L4D2 Auto Warp Survivors",
+    "author": "jackzmc",
+    "description": "",
+    "version": "1.0",
+    "url": ""
+  },
+  "BetterWitchAvoidance.sp": {
+    "engines": [],
+    "requires": [],
+    "includes": [
+      "sourcemod",
+      "sdktools",
+      "sdkhooks"
+    ],
+    "includesOptional": [],
+    "name": "Better Witch Avoidance",
+    "author": "jackzmc",
+    "description": "Makes bots avoid witches better",
+    "version": "1.0",
+    "url": ""
+  },
+  "Block3Person.sp": {
+    "engines": [],
+    "requires": [],
+    "includes": [
+      "sourcemod"
+    ],
+    "includesOptional": [],
+    "name": "Block3person",
+    "author": "Dragokas",
+    "description": "Block 3-rd person view by creating blindness",
+    "version": "1.1",
+    "url": "https://github.com/dragokas"
+  },
+  "BumpMineGiver.sp": {
+    "engines": [],
+    "requires": [],
+    "includes": [
+      "sourcemod",
+      "sdktools",
+      "cstrike",
+      "sdkhooks"
+    ],
+    "includesOptional": [],
+    "name": "BumpMineGiver",
+    "author": "",
+    "description": "",
+    "version": "0.00",
+    "url": ""
+  },
+  "EdictLimiter.sp": {
+    "engines": [],
+    "requires": [],
+    "includes": [
+      "sourcemod",
+      "sdktools",
+      "dhooks"
+    ],
+    "includesOptional": [],
+    "name": "L4D2 Edict Limiter",
+    "author": "Poggu, Jackz",
+    "description": "Prevents edict limit crashes, modified by jackz",
+    "version": "2.0.0"
+  },
+  "GrabEnt.sp": {
+    "engines": [],
+    "requires": [],
+    "includes": [
+      "sourcemod",
+      "sdktools",
+      "sdkhooks"
+    ],
+    "includesOptional": [],
+    "name": "GrabEnt",
+    "author": "Stugger",
+    "description": "Grab then Move, Push/Pull or Rotate the entity you're looking at until released",
+    "version": "2.2",
+    "url": ""
+  },
+  "L4D2FFKickProtection.sp": {
+    "engines": [],
+    "requires": [],
+    "includes": [
+      "sourcemod",
+      "sdktools",
+      "sdkhooks"
+    ],
+    "includesOptional": [],
+    "name": "L4D2 FF Kick Protection",
+    "author": "jackzmc",
+    "description": "Prevents friendly firing from players being voted off and admins from being kicked",
+    "version": "1.1",
+    "url": "https://github.com/Jackzmc/sourcemod-plugins"
+  },
+  "L4D2PreventBotMovement.sp": {
+    "engines": [],
+    "requires": [],
+    "includes": [
+      "sourcemod",
+      "sdktools",
+      "sdkhooks"
+    ],
+    "includesOptional": [],
+    "name": "L4D2 Prevent Bot Movement",
+    "author": "jackzmc",
+    "description": "Prevents bots from moving in the beginning of the round for a set period of time.",
+    "version": "1.0",
+    "url": ""
+  },
+  "L4D2Testing.sp": {
+    "engines": [],
+    "requires": [],
+    "includes": [
+      "sourcemod",
+      "sdktools",
+      "sdkhooks",
+      "l4d_info_editor",
+      "sceneprocessor",
+      "left4dhooks",
+      "l4d2hud",
+      "l4d2_usermsg",
+      "actions"
+    ],
+    "includesOptional": [],
+    "name": "L4D2Testing",
+    "author": "jackzmc",
+    "description": "",
+    "version": "1.0",
+    "url": ""
+  },
+  "L4D2Tools.sp": {
+    "engines": [],
+    "requires": [],
+    "includes": [
+      "sourcemod",
+      "sdkhooks",
+      "left4dhooks",
+      "multicolors",
+      "anymap"
+    ],
+    "includesOptional": [],
+    "name": "L4D2 Misc Tools",
+    "author": "Includes: Notice on laser use, Timer for gauntlet runs",
+    "description": "jackzmc",
+    "version": "1.0",
+    "url": "https://github.com/Jackzmc/sourcemod-plugins"
+  },
+  "abm.sp": {
+    "engines": [],
+    "requires": [],
+    "includes": [
+      "sourcemod",
+      "sdktools",
+      "sdkhooks",
+      "left4dhooks"
+    ],
+    "includesOptional": [
+      "CreateSurvivorBot"
+    ],
+    "name": "ABM",
+    "author": "Victor \\\"NgBUCKWANGS\\\" Gonzalez",
+    "description": "A 5+ Player Enhancement Plugin for L4D2",
+    "version": "0.1.97q",
+    "url": "https://gitlab.com/vbgunz/ABM",
+    "model": ""
+  },
+  "activitymonitor.sp": {
+    "engines": [],
+    "requires": [],
+    "includes": [
+      "sourcemod",
+      "sdktools",
+      "sdkhooks"
+    ],
+    "includesOptional": [],
+    "name": "Admin Activity Log",
+    "author": "jackzmc",
+    "description": "",
+    "version": "1.0",
+    "url": "https://github.com/Jackzmc/sourcemod-plugins"
+  },
+  "adminpanel.sp": {
+    "engines": [],
+    "requires": [],
+    "includes": [
+      "sourcemod",
+      "sdktools",
+      "ripext",
+      "left4dhooks",
+      "multicolors",
+      "jutils",
+      "socket"
+    ],
+    "includesOptional": [],
+    "name": "Admin Panel",
+    "author": "Jackz",
+    "description": "Plugin to integrate with admin panel",
+    "version": "1.0.0",
+    "url": "https://github.com/jackzmc/l4d2-admin-dash"
+  },
+  "basechat.sp": {
+    "engines": [],
+    "requires": [],
+    "includes": [
+      "sourcemod"
+    ],
+    "includesOptional": [],
+    "name": "Basic Chat+",
+    "author": "AlliedModders LLC",
+    "description": "Basic Communication Commands",
+    "url": "http://www.sourcemod.net/"
+  },
+  "disable_cameras.sp": {
+    "engines": [],
+    "requires": [],
+    "includes": [
+      "sourcemod",
+      "sdktools_functions",
+      "sdktools_entinput"
+    ],
+    "includesOptional": [],
+    "name": "[L4D/2] Unlink Camera Entities",
+    "author": "shqke",
+    "description": "Frees cached players from camera entity",
+    "version": "1.1",
+    "url": "https://github.com/shqke/sp_public"
+  },
+  "fwd_crash.sp": {
+    "engines": [],
+    "requires": [],
+    "includes": [
+      "sourcemod",
+      "sdktools",
+      "sdkhooks",
+      "fwd_crash_inc"
+    ],
+    "includesOptional": [],
+    "name": "crash",
+    "author": "",
+    "description": ""
+  },
+  "globalbans.sp": {
+    "engines": [],
+    "requires": [],
+    "includes": [
+      "sourcemod",
+      "sdktools"
+    ],
+    "includesOptional": [],
+    "name": "Global Bans",
+    "author": "jackzmc",
+    "description": "Manages bans via MySQL",
+    "version": "1.0",
+    "url": "https://github.com/Jackzmc/sourcemod-plugins",
+    "executor": "CONSOLE"
+  },
+  "l4d2-info-cmd.sp": {
+    "engines": [],
+    "requires": [],
+    "includes": [
+      "sourcemod",
+      "sdktools",
+      "sdkhooks"
+    ],
+    "includesOptional": [],
+    "name": "L4D2 Game Info",
+    "author": "jackzmc",
+    "description": "",
+    "version": "1.1",
+    "url": "https://github.com/Jackzmc/sourcemod-plugins",
+    "status": "alive"
+  },
+  "l4d2-manual-director.sp": {
+    "engines": [],
+    "requires": [],
+    "includes": [
+      "sourcemod",
+      "sdktools"
+    ],
+    "includesOptional": [],
+    "name": "L4D2 Manual Director",
+    "author": "jackzmc",
+    "description": "Tell the director to spawn specials manually, even bypassing limits",
+    "version": "1.2",
+    "url": "https://github.com/Jackzmc/sourcemod-plugins"
+  },
+  "l4d2_TKStopper.sp": {
+    "engines": [
+      "l4d2"
+    ],
+    "requires": [],
+    "includes": [
+      "sourcemod",
+      "sdktools",
+      "sdkhooks",
+      "left4dhooks",
+      "multicolors",
+      "jutils"
+    ],
+    "includesOptional": [],
+    "name": "TK Stopper",
+    "author": "jackzmc",
+    "description": "",
+    "version": "1.0",
+    "url": "https://github.com/Jackzmc/sourcemod-plugins"
+  },
+  "l4d2_ai_minigun.sp": {
+    "engines": [
+      "l4d2"
+    ],
+    "requires": [],
+    "includes": [
+      "sourcemod",
+      "sdktools",
+      "left4dhooks",
+      "sdkhooks"
+    ],
+    "includesOptional": [],
+    "name": "l4d2 ai minigun",
+    "author": "jackzmc",
+    "description": "",
+    "version": "1.0",
+    "url": "",
+    "wpn": "rifle_ak47"
+  },
+  "l4d2_ai_tweaks.sp": {
+    "engines": [
+      "l4d2"
+    ],
+    "requires": [],
+    "includes": [
+      "sourcemod",
+      "sdktools",
+      "actions",
+      "sdkhooks"
+    ],
+    "includesOptional": [],
+    "name": "L4D2 AI Tweaks",
+    "author": "jackzmc",
+    "description": "",
+    "version": "1.0",
+    "url": "https://github.com/Jackzmc/sourcemod-plugins"
+  },
+  "l4d2_autobotcrown.sp": {
+    "engines": [
+      "l4d2"
+    ],
+    "requires": [],
+    "includes": [
+      "sourcemod",
+      "sdktools",
+      "adt_array"
+    ],
+    "includesOptional": [],
+    "name": "L4D2 Auto Bot Witch Crown",
+    "author": "jackzmc",
+    "description": "Makes bots automatically crown a witch in cases where a witch is blocking the way",
+    "version": "1.0",
+    "url": "https://github.com/Jackzmc/sourcemod-plugins"
+  },
+  "l4d2_autorestart.sp": {
+    "engines": [
+      "l4d2"
+    ],
+    "requires": [],
+    "includes": [
+      "sourcemod",
+      "sdktools",
+      "sdkhooks"
+    ],
+    "includesOptional": [],
+    "name": "L4D2 Autorestart",
+    "author": "jackzmc",
+    "description": "",
+    "version": "1.0",
+    "url": "https://github.com/Jackzmc/sourcemod-plugins"
+  },
+  "l4d2_avoid_minigun.sp": {
+    "engines": [
+      "l4d2"
+    ],
+    "requires": [],
+    "includes": [
+      "sourcemod",
+      "sdktools",
+      "sdkhooks"
+    ],
+    "includesOptional": [],
+    "name": "L4D2 AI Avoid Minigun",
+    "author": "jackzmc",
+    "description": "Makes the ai avoid being infront of a minigun in use",
+    "version": "1.0",
+    "url": ""
+  },
+  "l4d2_crescendo_control.sp": {
+    "engines": [
+      "l4d2"
+    ],
+    "requires": [],
+    "includes": [
+      "sourcemod",
+      "sdktools",
+      "left4dhooks",
+      "sdkhooks"
+    ],
+    "includesOptional": [],
+    "name": "L4D2 Crescendo Control",
+    "author": "jackzmc",
+    "description": "Prevents players from starting crescendos early",
+    "version": "1.0",
+    "url": "https://github.com/Jackzmc/sourcemod-plugins"
+  },
+  "l4d2_custom.sp": {
+    "engines": [
+      "l4d2"
+    ],
+    "requires": [],
+    "includes": [
+      "sourcemod",
+      "sdktools",
+      "left4dhooks",
+      "clientprefs",
+      "jutils",
+      "multicolors",
+      "anymap"
+    ],
+    "includesOptional": [],
+    "name": "personal/custom",
+    "author": "jackzmc",
+    "description": "",
+    "version": "1.0",
+    "url": "",
+    "reason": "I shot you",
+    "classname": "*"
+  },
+  "l4d2_defense.sp": {
+    "engines": [
+      "l4d2"
+    ],
+    "requires": [],
+    "includes": [
+      "sourcemod",
+      "sdktools",
+      "sdkhooks",
+      "left4dhooks",
+      "jutils",
+      "navmesh",
+      "anymap"
+    ],
+    "includesOptional": [],
+    "name": "L4D2 Defense",
+    "author": "jackzmc",
+    "description": "",
+    "version": "1.0",
+    "url": "https://github.com/Jackzmc/sourcemod-plugins"
+  },
+  "l4d2_detections.sp": {
+    "engines": [
+      "l4d2"
+    ],
+    "requires": [],
+    "includes": [
+      "sourcemod",
+      "sdktools",
+      "left4dhooks",
+      "jutils",
+      "sdkhooks"
+    ],
+    "includesOptional": [],
+    "name": "L4D2 Detections",
+    "author": "jackzmc",
+    "description": "",
+    "version": "1.0",
+    "url": ""
+  },
+  "l4d2_drop_secondary.sp": {
+    "engines": [
+      "l4d2"
+    ],
+    "requires": [],
+    "includes": [
+      "sourcemod",
+      "sdktools"
+    ],
+    "includesOptional": [],
+    "name": "L4D2 Drop Secondary",
+    "author": "Jahze, Visor, NoBody & HarryPotter",
+    "version": "1.8",
+    "description": "Survivor players will drop their secondary weapon when they die",
+    "url": "https://github.com/Attano/Equilibrium"
+  },
+  "l4d2_editor.sp": {
+    "engines": [
+      "l4d2"
+    ],
+    "requires": [
+      "adminmenu"
+    ],
+    "includes": [
+      "sourcemod",
+      "sdktools",
+      "left4dhooks",
+      "clientprefs",
+      "jutils",
+      "multicolors",
+      "adminmenu",
+      "ripext",
+      "editor"
+    ],
+    "includesOptional": [],
+    "name": "L4D2 Hats & Editor",
+    "author": "jackzmc",
+    "description": "",
+    "version": "1.0",
+    "url": "https://github.com/Jackzmc/sourcemod-plugins"
+  },
+  "l4d2_extraplayeritems.sp": {
+    "engines": [
+      "l4d2"
+    ],
+    "requires": [],
+    "includes": [
+      "sourcemod",
+      "sdktools",
+      "sdkhooks",
+      "left4dhooks",
+      "l4d_info_editor",
+      "jutils",
+      "l4d2_weapon_stocks",
+      "multicolors"
+    ],
+    "includesOptional": [
+      "CreateSurvivorBot"
+    ],
+    "name": "L4D2 Extra Player Tools",
+    "author": "jackzmc",
+    "description": "Automatic system for management of 5+ player games. Provides extra kits, items, and more",
+    "version": "1.0",
+    "url": "https://github.com/Jackzmc/sourcemod-plugins",
+    "threshold": null
+  },
+  "l4d2_feedthetrolls.sp": {
+    "engines": [
+      "l4d2"
+    ],
+    "requires": [
+      "actionslib"
+    ],
+    "includes": [
+      "sourcemod",
+      "sdktools",
+      "sdkhooks",
+      "left4dhooks",
+      "jutils",
+      "basecomm",
+      "ftt",
+      "multicolors"
+    ],
+    "includesOptional": [],
+    "name": "L4D2 Feed The Trolls",
+    "author": "jackzmc",
+    "description": "https://forums.alliedmods.net/showthread.php?t=325331",
+    "version": "1.0",
+    "url": "https://github.com/Jackzmc/sourcemod-plugins"
+  },
+  "l4d2_forceset.sp": {
+    "engines": [
+      "l4d2"
+    ],
+    "requires": [],
+    "includes": [
+      "sourcemod",
+      "sdktools",
+      "left4dhooks"
+    ],
+    "includesOptional": [],
+    "name": "[L4D2] Survivor Set Enforcer",
+    "author": "DeathChaos, modified by Psyk0tik (Crasher_3637)",
+    "description": "Forces L4D2 survivor set.",
+    "version": "1.0",
+    "url": ""
+  },
+  "l4d2_fun.sp": {
+    "engines": [
+      "l4d2"
+    ],
+    "requires": [],
+    "includes": [
+      "sourcemod",
+      "sdktools",
+      "sdkhooks"
+    ],
+    "includesOptional": [],
+    "name": "L4D2 Fun",
+    "author": "jackzmc",
+    "description": "",
+    "version": "1.0",
+    "url": "https://github.com/Jackzmc/sourcemod-plugins"
+  },
+  "l4d2_guesswho.sp": {
+    "engines": [
+      "l4d2"
+    ],
+    "requires": [],
+    "includes": [
+      "sourcemod",
+      "sdktools",
+      "left4dhooks",
+      "sceneprocessor",
+      "multicolors"
+    ],
+    "includesOptional": [],
+    "name": "L4D2 Guess Who",
+    "author": "jackzmc",
+    "description": "",
+    "version": "1.0",
+    "url": "https://github.com/Jackzmc/sourcemod-plugins"
+  },
+  "l4d2_hats.sp": {
+    "engines": [
+      "l4d2"
+    ],
+    "requires": [],
+    "includes": [
+      "sourcemod",
+      "sdktools",
+      "clientprefs",
+      "jutils",
+      "multicolors",
+      "adminmenu"
+    ],
+    "includesOptional": [],
+    "name": "L4D2 Hats & Editor",
+    "author": "jackzmc",
+    "description": "",
+    "version": "1.0",
+    "url": "https://github.com/Jackzmc/sourcemod-plugins"
+  },
+  "l4d2_hideandseek.sp": {
+    "engines": [
+      "l4d2"
+    ],
+    "requires": [],
+    "includes": [
+      "sourcemod",
+      "sdktools",
+      "left4dhooks",
+      "sceneprocessor",
+      "multicolors"
+    ],
+    "includesOptional": [],
+    "name": "L4D2 Hide & Seek",
+    "author": "jackzmc",
+    "description": "",
+    "version": "1.0",
+    "url": "https://github.com/Jackzmc/sourcemod-plugins"
+  },
+  "l4d2_mimic.sp": {
+    "engines": [
+      "l4d2"
+    ],
+    "requires": [],
+    "includes": [
+      "sourcemod",
+      "sdktools",
+      "sdkhooks",
+      "jutils",
+      "left4dhooks"
+    ],
+    "includesOptional": [],
+    "name": "L4D2 Mimic",
+    "author": "jackzmc",
+    "description": "",
+    "version": "1.0",
+    "url": "https://github.com/Jackzmc/sourcemod-plugins"
+  },
+  "l4d2_overlay_client.sp": {
+    "engines": [
+      "l4d2"
+    ],
+    "requires": [],
+    "includes": [
+      "sourcemod",
+      "sdktools",
+      "overlay",
+      "sdkhooks"
+    ],
+    "includesOptional": [],
+    "name": "l4d2 overlay client",
+    "author": "jackzmc",
+    "description": "",
+    "version": "1.0",
+    "url": "https://github.com/Jackzmc/sourcemod-plugins"
+  },
+  "l4d2_perms.sp": {
+    "engines": [
+      "l4d2"
+    ],
+    "requires": [],
+    "includes": [
+      "sourcemod",
+      "sdktools",
+      "multicolors",
+      "jutils",
+      "l4d2_perms"
+    ],
+    "includesOptional": [],
+    "name": "L4D2 Perms",
+    "author": "jackzmc",
+    "description": "",
+    "version": "1.0",
+    "url": "https://github.com/Jackzmc/sourcemod-plugins"
+  },
+  "l4d2_population_control.sp": {
+    "engines": [
+      "l4d2"
+    ],
+    "requires": [],
+    "includes": [
+      "sourcemod",
+      "sdktools",
+      "sdkhooks",
+      "anymap"
+    ],
+    "includesOptional": [],
+    "name": "L4D2 Population Control",
+    "author": "jackzmc",
+    "description": "",
+    "version": "1.0",
+    "url": "https://github.com/Jackzmc/sourcemod-plugins"
+  },
+  "l4d2_profilerules.sp": {
+    "engines": [
+      "l4d2"
+    ],
+    "requires": [],
+    "includes": [
+      "sourcemod",
+      "sdktools",
+      "sdkhooks"
+    ],
+    "includesOptional": [],
+    "name": "L4D2 Rules / Profiles",
+    "author": "jackzmc",
+    "description": "",
+    "version": "1.0",
+    "url": "https://github.com/Jackzmc/sourcemod-plugins"
+  },
+  "l4d2_prophunt.sp": {
+    "engines": [
+      "l4d2"
+    ],
+    "requires": [],
+    "includes": [
+      "sourcemod",
+      "sdktools",
+      "sdkhooks",
+      "left4dhooks"
+    ],
+    "includesOptional": [],
+    "name": "Prophunt",
+    "author": "jackzmc",
+    "description": "",
+    "version": "1.0",
+    "url": "https://github.com/Jackzmc/sourcemod-plugins"
+  },
+  "l4d2_randomizer.sp": {
+    "engines": [
+      "l4d2"
+    ],
+    "requires": [],
+    "includes": [
+      "sourcemod",
+      "sdktools",
+      "sdkhooks",
+      "profiler",
+      "json",
+      "ripext",
+      "jutils",
+      "entitylump"
+    ],
+    "includesOptional": [
+      "editor"
+    ],
+    "name": "L4D2 Randomizer",
+    "author": "jackzmc",
+    "description": "",
+    "version": "1.0",
+    "url": "https://github.com/Jackzmc/sourcemod-plugins"
+  },
+  "l4d2_rollback.sp": {
+    "engines": [
+      "l4d2"
+    ],
+    "requires": [],
+    "includes": [
+      "sourcemod",
+      "sdktools",
+      "jutils",
+      "left4dhooks"
+    ],
+    "includesOptional": [],
+    "name": "L4D2 Rollback",
+    "author": "jackzmc",
+    "description": "System to save and rollback to states in the game, usually pre-troll",
+    "version": "1.0",
+    "url": "https://github.com/Jackzmc/sourcemod-plugins"
+  },
+  "l4d2_sb_fix.sp": {
+    "engines": [
+      "l4d2"
+    ],
+    "requires": [],
+    "includes": [
+      "sourcemod",
+      "sdktools",
+      "sdkhooks"
+    ],
+    "includesOptional": [],
+    "name": "L4D2 Survivor Bot Fix",
+    "author": "DingbatFlat",
+    "description": "Survivor Bot Fix. Improve Survivor Bot",
+    "version": "1.00",
+    "url": "https://github.com/Jackzmc/sourcemod-plugins"
+  },
+  "l4d2_skill_detect.sp": {
+    "engines": [
+      "l4d2"
+    ],
+    "requires": [],
+    "includes": [
+      "sourcemod",
+      "sdkhooks",
+      "sdktools",
+      "left4dhooks"
+    ],
+    "includesOptional": [],
+    "name": "Skill Detection (skeets, crowns, levels)",
+    "author": "Tabun",
+    "description": "Detects and reports skeets, crowns, levels, highpounces, etc.",
+    "version": "1.0",
+    "url": "https://github.com/Tabbernaut/L4D2-Plugins"
+  },
+  "l4d2_spawn_props.sp": {
+    "engines": [
+      "l4d2"
+    ],
+    "requires": [
+      "adminmenu"
+    ],
+    "includes": [
+      "sourcemod",
+      "sdktools",
+      "adminmenu"
+    ],
+    "includesOptional": [],
+    "name": "[L4D1/2] Objects Spawner",
+    "author": "honorcode23 & $atanic $pirit & HarryPotter",
+    "description": "Let admins spawn any kind of objects",
+    "version": "3.4",
+    "url": "http://forums.alliedmods.net/showthread.php?p=1186503"
+  },
+  "l4d2_special_control.sp": {
+    "engines": [
+      "l4d2"
+    ],
+    "requires": [],
+    "includes": [
+      "sourcemod",
+      "sdktools",
+      "left4dhooks",
+      "sdkhooks"
+    ],
+    "includesOptional": [],
+    "name": "L4D2 Special Control",
+    "author": "jackzmc",
+    "description": "",
+    "version": "1.0",
+    "url": ""
+  },
+  "l4d2_stats_recorder.sp": {
+    "engines": [
+      "l4d2"
+    ],
+    "requires": [],
+    "includes": [
+      "sourcemod",
+      "sdktools",
+      "geoip",
+      "sdkhooks",
+      "left4dhooks",
+      "jutils",
+      "l4d_info_editor"
+    ],
+    "includesOptional": [
+      "l4d2_skill_detect"
+    ],
+    "name": "L4D2 Stats Recorder",
+    "author": "jackzmc",
+    "description": "",
+    "version": "1.1",
+    "url": "https://github.com/Jackzmc/sourcemod-plugins"
+  },
+  "l4d2_swarm.sp": {
+    "engines": [
+      "l4d2"
+    ],
+    "requires": [],
+    "includes": [
+      "sourcemod",
+      "sdktools"
+    ],
+    "includesOptional": [],
+    "name": "L4D2 Swarm",
+    "author": "jackzmc",
+    "description": "Swarm a player with zombies to counter the trolls",
+    "version": "1.0",
+    "url": ""
+  },
+  "l4d2_tank_priority.sp": {
+    "engines": [
+      "l4d2"
+    ],
+    "requires": [],
+    "includes": [
+      "sourcemod",
+      "sdktools",
+      "left4dhooks",
+      "sdkhooks"
+    ],
+    "includesOptional": [],
+    "name": "L4D2 Tank Priority",
+    "author": "jackzmc",
+    "description": "",
+    "version": "1.0",
+    "url": "https://gi thub.com/Jackzmc/sourcemod-plugins"
+  },
+  "l4d2_target_test.sp": {
+    "engines": [
+      "l4d2"
+    ],
+    "requires": [],
+    "includes": [
+      "sourcemod",
+      "sdktools",
+      "left4dhooks"
+    ],
+    "includesOptional": [],
+    "name": "L4D2 target poo",
+    "author": "jackzmc",
+    "description": "",
+    "version": "1.0",
+    "url": ""
+  },
+  "l4d2_turret.sp": {
+    "engines": [
+      "l4d2"
+    ],
+    "requires": [],
+    "includes": [
+      "sourcemod",
+      "sdktools",
+      "sdkhooks",
+      "left4dhooks",
+      "jutils",
+      "profiler"
+    ],
+    "includesOptional": [],
+    "name": "l4d2 turret",
+    "author": "jackzmc",
+    "description": "",
+    "version": "2.0",
+    "url": "https://github.com/Jackzmc/sourcemod-plugins"
+  },
+  "l4d2_vocalize_control.sp": {
+    "engines": [
+      "l4d2"
+    ],
+    "requires": [],
+    "includes": [
+      "sourcemod",
+      "sdktools",
+      "sdkhooks"
+    ],
+    "includesOptional": [],
+    "name": "L4D2 Vocalize Control",
+    "author": "jackzmc",
+    "description": "",
+    "version": "1.0",
+    "url": ""
+  },
+  "l4d2_witch_force_attack_cmd.sp": {
+    "engines": [
+      "l4d2"
+    ],
+    "requires": [],
+    "includes": [
+      "sourcemod",
+      "sdktools",
+      "l4d2_behavior",
+      "actions"
+    ],
+    "includesOptional": []
+  },
+  "l4d_anti_rush.sp": {
+    "engines": [
+      "l4d",
+      "l4d2"
+    ],
+    "requires": [],
+    "includes": [
+      "sourcemod",
+      "sdktools",
+      "sdkhooks",
+      "left4dhooks",
+      "profiler"
+    ],
+    "includesOptional": [],
+    "name": "[L4D & L4D2] Anti Rush",
+    "author": "SilverShot",
+    "description": "Slowdown or teleport rushers and slackers back to the group. Uses flow distance for accuracy.",
+    "version": "1.19",
+    "url": "https://forums.alliedmods.net/showthread.php?t=322392"
+  },
+  "l4d_esfp.sp": {
+    "engines": [
+      "l4d",
+      "l4d2"
+    ],
+    "requires": [],
+    "includes": [
+      "sourcemod",
+      "sdktools",
+      "left4dhooks"
+    ],
+    "includesOptional": [],
+    "name": "[L4D/L4D2] Extra Survivor Finale Positions",
+    "author": "Psyk0tik (Crasher_3637)",
+    "description": "Spawns extra survivor positions for finale cutscenes.",
+    "version": "1.0",
+    "url": "https://forums.alliedmods.net/showthread.php?t=326643"
+  },
+  "l4d_reservetheserver.sp": {
+    "engines": [
+      "l4d",
+      "l4d2"
+    ],
+    "requires": [],
+    "includes": [
+      "sourcemod"
+    ],
+    "includesOptional": [],
+    "name": "Reserve The Server",
+    "author": "Jack'lul [Edited by Dosergen]",
+    "description": "Frees the server from all players and reserves it.",
+    "version": "1.1.0",
+    "url": "https://forums.alliedmods.net/showthread.php?p=2084993"
+  },
+  "l4d_survivor_identity_fix.sp": {
+    "engines": [
+      "l4d",
+      "l4d2"
+    ],
+    "requires": [],
+    "includes": [
+      "sourcemod",
+      "sdktools",
+      "dhooks",
+      "clientprefs",
+      "left4dhooks"
+    ],
+    "includesOptional": [],
+    "name": "[L4D1/2] Survivor Identity Fix for 5+ Survivors",
+    "author": "Merudo, Shadowysn",
+    "description": "Fix bug where a survivor will change identity when a player connects/disconnects if there are 5+ survivors",
+    "version": "1.6",
+    "url": "https://forums.alliedmods.net/showthread.php?p=2403731#post2403731"
+  },
+  "l4d_tank_hp_sprite.sp": {
+    "engines": [
+      "l4d",
+      "l4d2"
+    ],
+    "requires": [],
+    "includes": [
+      "sourcemod",
+      "sdktools",
+      "sdkhooks"
+    ],
+    "includesOptional": [],
+    "name": "[L4D1 & L4D2] Tank HP Sprite",
+    "author": "Mart",
+    "description": "Shows a sprite at the tank head that goes from green to red based on its HP",
+    "version": "1.0.5",
+    "url": "https://forums.alliedmods.net/showthread.php?t=330370"
+  },
+  "l4dunreservelobby.sp": {
+    "engines": [],
+    "requires": [],
+    "includes": [
+      "sourcemod",
+      "sdktools",
+      "left4dhooks"
+    ],
+    "includesOptional": [],
+    "name": "L4D1/2 Remove Lobby Reservation",
+    "author": "Downtown1",
+    "description": "Removes lobby reservation when server is full",
+    "version": "1.1.1",
+    "url": "http://forums.alliedmods.net/showthread.php?t=87759"
+  },
+  "sceneprocessor.sp": {
+    "engines": [],
+    "requires": [],
+    "includes": [
+      "sourcemod",
+      "sdktools",
+      "sdkhooks",
+      "sceneprocessor"
+    ],
+    "includesOptional": [],
+    "name": "Scene Processor",
+    "author": "Buster \\\"Mr. Zero\\\" Nielsen (Fork by cravenge & Dragokas)",
+    "description": "Provides Forwards and Natives For Scenes' Manipulation.",
+    "version": "1.33.2",
+    "url": "https://forums.alliedmods.net/showthread.php?t=241585"
+  },
+  "sm_cookietest.sp": {
+    "engines": [],
+    "requires": [],
+    "includes": [
+      "sourcemod",
+      "clientprefs"
+    ],
+    "includesOptional": []
+  },
+  "sm_cvar_locker.sp": {
+    "engines": [],
+    "requires": [],
+    "includes": [
+      "sourcemod",
+      "sdktools"
+    ],
+    "includesOptional": [],
+    "name": "Cvar Locker",
+    "author": "jackzmc",
+    "description": "",
+    "version": "0.00",
+    "url": ""
+  },
+  "sm_editor.sp": {
+    "engines": [],
+    "requires": [],
+    "includes": [
+      "sourcemod",
+      "sdktools",
+      "sdkhooks"
+    ],
+    "includesOptional": [],
+    "name": "SM Prop Editor & Spawner",
+    "author": "jackzmc",
+    "description": "",
+    "version": "1.0",
+    "url": "https://github.com/Jackzmc/sourcemod-plugins"
+  },
+  "sm_give.sp": {
+    "engines": [],
+    "requires": [],
+    "includes": [
+      "sourcemod",
+      "sdktools"
+    ],
+    "includesOptional": [],
+    "name": "sm_give",
+    "author": "def (user00111)",
+    "description": "Give yourself items/weapons at round start.",
+    "version": "1.0",
+    "url": "N/A"
+  },
+  "sm_namespamblock.sp": {
+    "engines": [],
+    "requires": [],
+    "includes": [
+      "sourcemod",
+      "sdktools",
+      "sdkhooks"
+    ],
+    "includesOptional": [],
+    "name": "Name change Block",
+    "author": "jackzmc",
+    "description": "",
+    "version": "1.0",
+    "url": "https://github.com/Jackzmc/sourcemod-plugins"
+  },
+  "sm_overlay.sp": {
+    "engines": [],
+    "requires": [],
+    "includes": [
+      "sourcemod",
+      "sdktools",
+      "sdkhooks",
+      "ripext",
+      "overlay"
+    ],
+    "includesOptional": [],
+    "name": "Overlay",
+    "author": "jackzmc",
+    "description": "",
+    "version": "1.0",
+    "url": "https://github.com/Jackzmc/sourcemod-plugins"
+  },
+  "sm_player_notes.sp": {
+    "engines": [],
+    "requires": [],
+    "includes": [
+      "sourcemod",
+      "sdktools",
+      "multicolors",
+      "jutils"
+    ],
+    "includesOptional": [
+      "feedthetrolls"
+    ],
+    "name": "Player Notes",
+    "author": "jackzmc",
+    "description": "",
+    "version": "1.0",
+    "url": "https://github.com/Jackzmc/sourcemod-plugins"
+  },
+  "sm_player_recorder.sp": {
+    "engines": [],
+    "requires": [],
+    "includes": [
+      "sourcemod",
+      "sdktools"
+    ],
+    "includesOptional": [],
+    "name": "SRCDS Player Count Recorder",
+    "author": "Jackz",
+    "description": "",
+    "version": "1.00",
+    "url": ""
+  },
+  "sm_tictactoe.sp": {
+    "engines": [],
+    "requires": [],
+    "includes": [
+      "sourcemod",
+      "sdktools",
+      "sdkhooks"
+    ],
+    "includesOptional": [],
+    "name": "Tic Tac Toe",
+    "author": "jackzmc",
+    "description": "",
+    "version": "1.0",
+    "url": "https://github.com/Jackzmc/sourcemod-plugins"
+  },
+  "spray_control.sp": {
+    "engines": [],
+    "requires": [],
+    "includes": [
+      "sourcemod",
+      "sdktools",
+      "system2"
+    ],
+    "includesOptional": [],
+    "name": "Spay Filter Control",
+    "author": "jackzmc",
+    "description": "",
+    "version": "0.00",
+    "url": ""
+  },
+  "ssh.sp": {
+    "engines": [],
+    "requires": [
+      "adminmenu"
+    ],
+    "includes": [
+      "sourcemod",
+      "sdktools",
+      "clientprefs",
+      "ssh",
+      "smlib"
+    ],
+    "includesOptional": [
+      "adminmenu"
+    ],
+    "name": "Super Spray Handler",
+    "description": "Ultimate Tool for Admins to manage Sprays on their servers.",
+    "author": "shavit, Nican132, CptMoore, Lebson506th, and TheWreckingCrew6",
+    "version": "1.2.3",
+    "url": "https://forums.alliedmods.net/member.php?u=163134"
+  }
+}
