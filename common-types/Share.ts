@@ -41,14 +41,9 @@ export interface AddonInfo {
     workshop?: AddonWorkshopInfo,
     /** The destinations where addon is installed on */
     installInfo: Record<string, boolean>,
-<<<<<<< HEAD
-    collection: WorkshopCollectionInfo | null,
-    chapterIds?: string[] | null
-=======
     /** The collection this addon is a child of, if any */
-    collection?: WorkshopCollectionInfo,
+    collection?: WorkshopCollectionInfo | null,
     meta: Record<string, any>
->>>>>>> 7804e44ecf92054452b39dd2bde80ec63ffe6a5d
 }
 
 export interface AddonCollectionInfo {
