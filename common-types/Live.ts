@@ -305,9 +305,9 @@ export const enum LiveRecordResponse {
 }
 
 export enum GameState {
-    None,
-    Transitioning,
-    Hibernating,
+    None = 0,
+    Transitioning = 1,
+    Hibernating = 2,
     NewGame
 }
 

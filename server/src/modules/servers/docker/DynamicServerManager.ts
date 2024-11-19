@@ -61,7 +61,6 @@ export default class DynamicServerManager {
             const port = containerInfo.Labels["panel.port"]
             const containerName = `panel-${template.config.id}-${port}`
             if(this.#instances[containerName]) {
-                console.debug('debug: skipping existing registered container', containerName)
                 return;
             }
             console.info(`[ServerManager/docker] Found existing container (${containerInfo.Id.slice(0, 12)}${containerInfo.Names.join('')})`)

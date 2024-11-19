@@ -144,7 +144,7 @@ export default class ServerManager {
           client._setServer(server)
           server.Plugin?._setSocket(client)
           client.send(LiveRecordResponse.OK, server.Plugin?.liveViewers)
-          this.#debugLive("Authenticated", client.Host)
+          this.#debugLive("Authenticated", `host=${client.Host} server=${server.id}`)
         } else {
           client.send(LiveRecordResponse.Error, `Invalid or unknown id "${payload.sub}" (docker: ${payload.docker?'y':'n'})`)
           return
