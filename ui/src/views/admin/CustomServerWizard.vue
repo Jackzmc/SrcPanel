@@ -1,28 +1,19 @@
 <template>
-<div class="container">
+<div class="container is-fluid mx-4">
   <div class="block">
-    <!-- <nav class="breadcrumb is-centered" aria-label="breadcrumbs">
-      <ul>
-        <li v-for="(step, i) in STEPS" :key="i" :class="{'is-active': currentStep === i }">
-          <a :class="{'has-text-black': currentStep < i}" href="#">
-            <Icon :icon="step.icon">{{ step.title }}</Icon>
-          </a>
-        </li>
-      </ul>
-    </nav> -->
     <div class="columns">
-      <div class="column is-8" v-if="currentStep === 0">
+      <div class="column is-8" >
           <div class="tabs is-toggle is-fullwidth is-large">
           <ul>
             <li v-for="(step, i) in STEPS" :key="i" :class="{'is-active': currentStep >= i }" >
-              <a @click="currentStep = i" :style="{'opacity': (i > highestStep) ? 0.5: undefined, cursor: i > highestStep ? 'not-allowed' : undefined }">
+              <a @click="setStep(i)" :style="{'opacity': (i > highestStep) ? 0.5: undefined, cursor: i > highestStep ? 'not-allowed' : undefined }">
                 <Icon :icon="step.icon"></Icon>
                 <span>{{ step.title }}</span>
               </a>
             </li>
           </ul>
         </div>
-        <div class="box">
+        <div class="box" v-if="currentStep === 0">
           <h4 class="title is-4">Server Settings</h4>
           <Field label="Name">
             <span class="help">Give your server a name</span>
@@ -44,15 +35,64 @@
             </div>
           </Field>
         </div>
+        <div class="box" v-else-if="currentStep === 1">
+          <h4 class="title is-4">Server Plugins</h4>
+          <p class="subtitle is-6">Subtitle</p>
+          <div class="columns">
+            <div class="column is-4">
+              <div class="card has-background-grey-lighter my-2 py-0 px-0">
+                <div class="card-content px-4 py-2">
+                  <h5 class="title is-5">Admin Panel</h5>
+                  <p class="subtitle is-6">
+                    v1.0.0 - Created by jackz
+                  </p>
+                </div>
+              </div>
+              <div class="card has-background-grey-lighter my-2 py-0 px-0">
+                <div class="card-content px-4 py-2">
+                  <h5 class="title is-5">Global Bans</h5>
+                  <p class="subtitle is-6">
+                    v1.0.0 - Created by jackz
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div class="column is-4">
+
+            </div>
+            <div class="column is-4">
+              <div class="card has-background-success-light my-2 py-0 px-0">
+                <div class="card-content px-4 py-2">
+                  <h5 class="title is-5">Admin Panel</h5>
+                  <p class="subtitle is-6">
+                    v1.0.0 - Created by jackz
+                  </p>
+                </div>
+              </div>
+              <div class="card has-background-success-light my-2 py-0 px-0">
+                <div class="card-content px-4 py-2">
+                  <h5 class="title is-5">Global Bans</h5>
+                  <p class="subtitle is-6">
+                    v1.0.0 - Created by jackz
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="box" v-else>
+          error.
+          step = {{currentStep}}
+        </div>
         <br>
-        <button class="button" @click="advStep(-1)" v-if="currentStep > 0">
+        <button class="button" @click="setStep(currentStep - 1)" v-if="currentStep > 0">
           <Icon icon="fa-chevron-left">Back</Icon>
         </button>
-        <button :class="['button','is-pulled-right',{'is-info': canAdvance}]" @click="advStep(1)" v-if="currentStep < STEPS.length - 1" :disabled="!canAdvance">
+        <button :class="['button','is-pulled-right',{'is-info': canAdvance}]" @click="setStep(currentStep + 1)" v-if="currentStep < STEPS.length - 1" :disabled="!canAdvance">
           <Icon icon="fa-chevron-right"  text-left="Next"></Icon>
         </button>
       </div>
-      <div class="column">
+      <div class="column is-3">
         <div class="box has-background-lighter" style="border-radius: 1px">
           <h4 class="title is-4 has-text-centered">Overview</h4>
           <ul>
@@ -78,7 +118,7 @@ const props = defineProps<{
   privUser: PrivilegedUser
 }>()
 
-const GAMES = { l4d2: "Left 4 Dead 2" }
+const GAMES: Record<string, string> = { l4d2: "Left 4 Dead 2" }
 
 interface Step {
   title: string,
@@ -95,14 +135,18 @@ const STEPS: Step[] = [
 
 interface CustomServer {
   name: string,
-  game: string
+  game: string,
+  enabledPlugins: string[],
+  enabledAddons: string[]
 }
 
-let currentStep = ref<number>(0)
+let currentStep = ref<number>(1)
 let highestStep = ref<number>(0)
 let form = ref<CustomServer>({
   name: "",
-  game: ""
+  game: "",
+  enabledPlugins: [],
+  enabledAddons: []
 })
 
 const canAdvance = computed(() => {
@@ -111,9 +155,8 @@ const canAdvance = computed(() => {
   return true
 })
 
-function advStep(dir: number) {
-  if(dir > 0 && canAdvance.value) return
-  let step = currentStep.value + dir
+function setStep(step: number) {
+  if(step > currentStep.value && !canAdvance.value) return
   step = Math.max(Math.min(step, STEPS.length - 1), 0)
   currentStep.value = step
   highestStep.value = Math.max(highestStep.value, step)
