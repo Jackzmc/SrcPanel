@@ -25,7 +25,9 @@ export default class SteamAPI {
     public SteamAvailable: boolean = true
 
     constructor(apikey?: string, userAgent?: string) {
-        this.#apikey = apikey ?? process.env.STEAM_WEB_APIKEY
+        apikey = apikey ?? process.env.STEAM_WEB_APIKEY
+        if(!apikey) throw new Error("Missing env STEAM_WEB_APIKEY")
+        this.#apikey = apikey
         this.#userAgent = userAgent || "SrcdsDash-API-Client"
         this.#itemCache = new QuickLRU({
             maxSize: ITEM_CACHE_MAX_SIZE,
@@ -60,7 +62,7 @@ export default class SteamAPI {
         return this.#appMap[id.toString()]
     }
 
-    async getUserDetails(steamids: (SteamID | string)[]): Promise<SteamUserDetails[]> {
+    async getUserDetails(steamids: (SteamID | string)[]): Promise<SteamUserDetails[]|null> {
         this.#checkKey()
         const ids = steamids.map(steamid => steamid instanceof SteamID ? steamid.getSteamID64() : steamid).slice(0, 100).join(",")
         const res = await fetch(`https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v2/?key=${this.#apikey}&format=json&steamids=${ids}`, {
@@ -79,7 +81,7 @@ export default class SteamAPI {
     }
 
     // Gets a collection's children items or null if is not a collection
-    async getCollectionChildren(fileid: string): Promise<string[]> {
+    async getCollectionChildren(fileid: string): Promise<string[]|null> {
         const response = await fetch('https://api.steampowered.com/ISteamRemoteStorage/GetCollectionDetails/v1/', {
             method: 'POST',
             headers: {

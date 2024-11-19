@@ -99,7 +99,7 @@ export default class DynamicServerManager {
     }
 
     async #getNextPort(ofTemplate: DockerTemplateConfig) {
-        const ports = []
+        const ports: number[] = []
         for await(const { containerInfo, container, template } of this.#getContainers()) {
             if(template.config.id != ofTemplate.id) continue
             const port = Number(containerInfo.Labels["panel.port"])

@@ -3,11 +3,12 @@ import { exec } from 'child_process'
 import FastifyMultipart from '@fastify/multipart'
 import { pipeline } from 'stream'
 import { promisify } from 'util'
-import { ChildWorkshopItem, DetailsResponse, ShareInfo } from '../../../../common-types/Share.js';
+import { AddonInfo, ChildWorkshopItem, DetailsResponse, ShareInfo } from '../../../../common-types/Share.js';
 import { NO_PERMISSION } from '../../responses.js';
 import { UserPrivilegeCode } from '../../../../common-types/Privileges.js';
 import { createReadStream } from 'fs';
 import path from 'path';
+import assert from 'assert';
 const pump = promisify(pipeline)
 
 const VALID_FILENAME_REGEX = new RegExp(/[a-z0-9_\- \.]+/i)
@@ -59,7 +60,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         if(!share) {
             return reply.status(404).send({
                 error: "Share Not Found", 
-                message: `No share with id \"${shareId.toLowerCase()}\" could be found. Share may be unavailable, incorrecty configured or does not exist`   
+                message: `No share with id \"${shareId!.toLowerCase()}\" could be found. Share may be unavailable, incorrecty configured or does not exist`   
             })
         }
         return {
@@ -84,7 +85,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         if(!share) {
             return reply.status(404).send({
                 error: "Share Not Found", 
-                message: `No share with id \"${shareId.toLowerCase()}\" could be found. Share may be unavailable, incorrecty configured or does not exist`   
+                message: `No share with id \"${shareId!.toLowerCase()}\" could be found. Share may be unavailable, incorrecty configured or does not exist`   
             })
         }
         return {
@@ -126,15 +127,20 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         const share = fastify.servers.getShare(shareId)
         if(!share) {
             return reply.status(404).send({
-                error: "Share Not Found", 
+                error: "SHARE_NOT_FOUND", 
                 message: `No share with id \"${shareId.toLowerCase()}\" could be found. Share may be unavailable, incorrecty configured or does not exist`   
+            })
+        } else if(!share.exts) {
+            return reply.status(401).send({
+                error: "SHARE_UPLOAD_EXT_MISSING", 
+                message: `Share does not have valid extensions setup, uploading is disabled`   
             })
         }
 
         const parts = req.files()
         for await (const part of parts) {
             const ext = part.filename.split(".").pop()
-            if(!share.exts.includes(ext)) {
+            if(!ext || !share.exts.includes(ext)) {
                 // TODO: Possibly req.user!.hasPermission check?
                 return reply.status(400).send({
                     error: "TYPE_NOT_ALLOWED",
@@ -276,7 +282,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             await send(payload, 404)
         } else if(!req.query.force && await share.isInstalled(`${req.params.workshopId}.vpk`)) {
             // This doesn't run when it is a collection, as collections themselves are not installed
-            const addonInfo = await share.getAddonInfo(`${req.params.workshopId}.vpk`)
+            const addonInfo = (await share.getAddonInfo(`${req.params.workshopId}.vpk`)) as AddonInfo // we check isInstalled
             if(addonInfo.workshop) {
                 const latestWs = await fastify.steam.getItemDetails([req.params.workshopId])
                 if(latestWs[0].time_updated == addonInfo.lastModified) {
@@ -305,6 +311,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             }
         } 
         if(allowDownload) {
+            assert(share != undefined)
             try {
                 sendSSE({state: "FETCH_INFO", message: "Fetching information from steam"})
                 const children = await fastify.steam.getCollectionChildren(req.params.workshopId)
@@ -374,10 +381,10 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                             })
 
                             await req.user!.log(null, `downloaded workshop addon \"%title%\" (%filename%) for %share%`, {
-                                code: "shares.addons.upload.steam_workshop." + share.id as UserPrivilegeCode,
+                                code: "shares.addons.upload.steam_workshop." + share!.id as UserPrivilegeCode,
                                 metadata: {
                                     type: "workshop",
-                                    share: share.id,
+                                    share: share!.id,
                                     server: null,
                                     filename: detail.publishedfileid + ".vpk",
                                     title: detail.title,
@@ -396,7 +403,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
                 sendSSE({ state: "INSTALLING", message: "Installing addons to specified destinations" })
 
-                let destResults: Record<string, Record<string, {result: "success" | "error", error?: string }>> = undefined
+                let destResults: undefined|Record<string, Record<string, {result: "success" | "error", error?: string }>> = undefined
                 if(req.query.destinations) {
                     destResults = {}
                     const dests = req.query.destinations.split(",")
@@ -405,14 +412,14 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                         for(const detail of details) {
                             try {
                                 const filename = `${detail.publishedfileid}.vpk`
-                                await share.install(filename, destKey)
+                                await share!.install(filename, destKey)
                                 destResults[destKey][detail.publishedfileid] = { 
                                     result: "success"
                                 }
                                 await req.user!.log(null, `enabled addon {filename} for "{share}/{server}"`, {
-                                    code: "shares.addons.edit." + share.id + "." + destKey as UserPrivilegeCode,
+                                    code: "shares.addons.edit." + share!.id + "." + destKey as UserPrivilegeCode,
                                     metadata: {
-                                        share: share.id,
+                                        share: share!.id,
                                         server: destKey,
                                         filename: filename
                                     }

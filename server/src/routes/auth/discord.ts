@@ -115,7 +115,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                     if(!admin) return reply.redirect(`${domain}/error?type=oauth_no_account&provider=${PROVIDER_NAME}`)
                     // We need to refresh steam info as well
                     const details = await fastify.steam.getUserDetails([ new SteamID(admin.steamid) ])
-                    if(details.length > 0) {
+                    if(details && details.length > 0) {
                         await provider.save(admin.steamid)
                         await fastify.authmngr.loginUser(req, admin, details[0])
                         await reply.redirect(returnUrl, 302)

@@ -36,7 +36,7 @@ export default class ActivityLog {
 
     //"Tank<146><BOT><>"
     //"soap suds<37><STEAM_1:1:223885525><>"
-    async logWeb(activator: User, target?: User, message?: string, payload?: LogData): Promise<number> {
+    async logWeb(activator: User, target?: User|null, message?: string, payload?: LogData): Promise<number> {
         let msg: string|null = null
         if(message) {
             msg = (message || "")

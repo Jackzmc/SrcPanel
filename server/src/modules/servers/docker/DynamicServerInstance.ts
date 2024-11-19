@@ -29,7 +29,7 @@ export default class DynamicServerInstance {
         this.#startTime = new Date(state.StartedAt).valueOf() / 1000
 
         const inspect = await this.#container.inspect()
-        const network = inspect.NetworkSettings.Networks[this.#template.network]
+        const network = inspect.NetworkSettings.Networks[this.#template.network!]
         // If there is no assigned IP, such as net=host, then fall back to public ip
         this.#internalIp = network ? network.IPAddress : this.#template.ip
     }

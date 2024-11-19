@@ -158,7 +158,7 @@ export interface UserProfileData {
 }
 export interface APIUser {
     id: string,
-    name: string
+    name: string | null
     avatarUrl: string
 }
 export interface AnalysisData {

@@ -124,7 +124,7 @@ export interface WorkshopItem {
 }
 
 export interface ExtendedWorkshopItem extends WorkshopItem {
-    consumer_app_title?: string,
+    consumer_app_title: string | null,
 }
 
 export interface CollectionWorkshopItem {

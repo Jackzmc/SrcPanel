@@ -74,7 +74,7 @@ export default class DiscussionManager {
                 userSelection.push(response.choice)
             }
         }
-        let usersResponse: APIUserWithChoice[] = undefined
+        let usersResponse: APIUserWithChoice[]|undefined = undefined
         if(flags & APIDiscussionFlags.RespondersPublic) {
             usersResponse = []
             const users = {}

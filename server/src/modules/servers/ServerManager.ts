@@ -364,7 +364,8 @@ export default class ServerManager {
     return this.addonShares[shareId.toLowerCase()] != undefined
   }
 
-  public getShare(shareId: string) {
+  public getShare(shareId?: string) {
+    if(!shareId) return undefined
     return this.addonShares[shareId.toLowerCase()]
   }
 

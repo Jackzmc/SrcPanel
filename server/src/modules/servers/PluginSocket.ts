@@ -208,8 +208,8 @@ export default class PluginSocket {
     } else {
       this.#server.Plugin?.pushRecord(record)
       // We use a timeout as many records can come at once, including a game record. So we wait for a gap of a second
-      if(record.type === LiveRecordType.Survivor && !this.#server.Plugin?.liveStatus.clients[record.userid.toString()]) {
-        if(!this.#server.Plugin?.liveStatus.game && Date.now() - this.#lastRefreshTime > MIN_REFRESH_TIME) {
+      if(record.type === LiveRecordType.Survivor && !this.#server.Plugin?.liveStatus?.clients[record.userid.toString()]) {
+        if(!this.#server.Plugin?.liveStatus?.game && Date.now() - this.#lastRefreshTime > MIN_REFRESH_TIME) {
           this.send(LiveRecordResponse.Refresh, record.userid)
         }
       }
