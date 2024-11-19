@@ -296,6 +296,15 @@ const routes = [
     }
   },
   {
+    name: 'create-custom-server',
+    path: '/admin/servers/new',
+    component: () => import('../views/admin/CustomServerWizard.vue'),
+    meta: {
+      title: 'Custom Servers',
+      authRequired: true,
+    },
+  },
+  {
     name: 'admin-server-view',
     path: '/admin/servers/:id/:tab?',
     component: () => import('../views/admin/ServerView.vue'),

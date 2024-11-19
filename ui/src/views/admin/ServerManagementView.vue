@@ -17,6 +17,18 @@
         <p>Only public support this (servers with <span class="tag">systemd</span> tag) as they are managed differently</p>
         <b>Unreserve</b> will remove the lobby reservation which allows others to join a 5+ game before the reservation is automatically removed (so when people are still loading in)
       </div>
+      <div class="box">
+        <h4 class="title is-4">Create custom server
+          <span class="tag is-warning">ALPHA</span>
+        </h4>
+        <div class="notification is-warning is-light">
+          This feature is a test and is in very early development. This may not work, servers may crash, etc.
+        </div>
+        <p class="subtitle is-6">
+          Do you want your own server? Create your own server with your selection of addons, plugins, and settings.
+        </p>
+        <router-link :to="{name: 'create-custom-server' }" class="button is-info">New Custom Server</router-link>
+      </div>
     </div>
   </div>
 </div>
@@ -72,21 +84,6 @@ async function processAction(server: any, type: string) {
   } else {
     const json = await response.json()
     notify({ type: 'error', text: json.message || json.error, title: `Server (${server.id})` })
-  }
-}
-async function stopServer(server: any) {
-  const es = new EventSource(`/api/servers/${server.id}/restart/sse`)
-  es.onmessage = (event) => {
-    const json = JSON.parse(event.data)
-    if(json.state === "done") {
-      es.close()
-      notify({ type: 'success', text: 'Server has been restarted', title: `Server (${server.id})` })
-    } else if(json.error) {
-      notify({ type: 'error', text: json.message ?? json.error, title: `Server (${server.id})` })
-      es.close()
-    } else if(json.state) {
-      server.status.state = json.state
-    }
   }
 }
 function getServerClasses(server: any) {
