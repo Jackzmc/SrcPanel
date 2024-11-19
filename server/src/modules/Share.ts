@@ -36,16 +36,17 @@ export default class Share {
     #git: SimpleGit
 
     constructor(db: sqlite.Database<sqlite3.Database, sqlite3.Statement>, steam: SteamAPI, shareInfo: Partial<ShareInfo>) {
-        this.#id = shareInfo.id
+        this.#id = shareInfo.id!
         this.#db = db
         this.#steam = steam
-        this.name = shareInfo.name ?? shareInfo.id,
+        this.name = shareInfo.name ?? this.#id!
+        if(!shareInfo.sourceFolder) throw new Error(`Share ${this.#id} is missing source folder`)
         this.sourceFolder = shareInfo.sourceFolder
         this.appId = shareInfo.appid
         this.downloadSources = shareInfo.downloadSources || {}
         this.validExts = shareInfo.fileExts
         this.destinations = shareInfo.destinations || {}
-        this.#description = shareInfo.description
+        this.#description = shareInfo.description ?? ""
         db.exec(SQL`CREATE TABLE IF NOT EXISTS addoncache (
             filename VARCHAR(128) NOT NULL,
             filesize INT,
@@ -92,7 +93,7 @@ export default class Share {
      * @param filepath 
      * @returns string[] map file names without .bsp ext (ex: ["c1m1_hotel", ...])
      */
-    #getChapterIds(filepath: string): string[] {
+    #getChapterIds(filepath: string): string[]|null {
         const vpk = new VPK(filepath)
         try {
             vpk.load()
@@ -135,7 +136,7 @@ export default class Share {
             if(dirent.isFile()) {
                 // Only check the specified extenstions
                 const ext = dirent.name.split(".").pop()
-                if(this.validExts && !this.validExts.includes(ext)) continue
+                if(!ext || this.validExts && !this.validExts.includes(ext)) continue
             
                 const addonInfo = await this.getAddonInfo(dirent.name)
                 if(addonInfo) {
@@ -413,9 +414,9 @@ export default class Share {
     }
 
     // Exports to a saveable object
-    public export(includeId = true): ShareInfo {
+    public export(): ShareInfo {
         return {
-            id: includeId ? this.id : undefined, 
+            id: this.id, 
             name: this.name,
             description: this.description,
             sourceFolder: this.sourceFolder,

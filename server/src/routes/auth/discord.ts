@@ -86,6 +86,10 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         if(!req.query.code) return reply.send("<h1>Missing code</h1>")
         if(!req.query.state) return reply.send("<h1>Missing state</h1>")
         const domain = await fastify.config.GetKV<string>("domain");
+        if(!domain) return reply.code(500).send({
+            error: "PROVIDER_SETUP_MISSING",
+            message: "This provider is not setup correctly, missing 'domain' setting"
+        })
         try {
             const jwt = await JWT.verify<StateJwtPayoad>(req.query.state, STATE_JWT_SECRET)
             const provider = await fastify.authmngr.oauth.getProvider(PROVIDER_NAME)

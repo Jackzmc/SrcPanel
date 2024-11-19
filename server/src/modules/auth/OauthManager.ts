@@ -19,7 +19,7 @@ export interface OauthConfig {
 }
 
 export interface ProviderConfig {
-    avatarFormat: string
+    avatarFormat: string | null
 }
 
 export class OauthManager {
@@ -51,10 +51,11 @@ export class OauthManager {
         if(!clientId || !clientSecret) {
             return null
         }
+        // Assume not null
         const urls = {
-            tokenUrl: await this.#config.GetKVNamespaced("providers", providerName, "token_url"),
-            revokeUrl: await this.#config.GetKVNamespaced("providers", providerName, "revoke_url"),
-            detailsUrl: await this.#config.GetKVNamespaced("providers", providerName, "user_url"),
+            tokenUrl: await this.#config.GetKVNamespaced("providers", providerName, "token_url") as string,
+            revokeUrl: await this.#config.GetKVNamespaced("providers", providerName, "revoke_url") as string,
+            detailsUrl: await this.#config.GetKVNamespaced("providers", providerName, "user_url") as string,
             redirectUrl: `${domain}/api/auth/${providerName}/callback`
         }
         

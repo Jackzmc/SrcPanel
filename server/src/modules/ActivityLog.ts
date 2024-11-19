@@ -37,7 +37,7 @@ export default class ActivityLog {
     //"Tank<146><BOT><>"
     //"soap suds<37><STEAM_1:1:223885525><>"
     async logWeb(activator: User, target?: User, message?: string, payload?: LogData): Promise<number> {
-        let msg = null
+        let msg: string|null = null
         if(message) {
             msg = (message || "")
                 .replace(/%client%/g, `"${await activator.name() ?? "Activator"}<0><${activator.steamid2}><>"`)
@@ -45,9 +45,11 @@ export default class ActivityLog {
         }
         
         // Legacy
-        let type = null
-        if('code' in payload) type = payload.code
-        else if('type' in payload) type = payload.type
+        let type:string|null = null
+        if(payload) {
+            if('code' in payload) type = payload.code
+            else if('type' in payload) type = payload.type
+        }
 
         const [r] = await this.#db.execute<OkPacket>(
             `INSERT INTO activity_log (server, type, client, target, message, timestamp, metadata) VALUES ('web', :type, :client, :target, :msg, UNIX_TIMESTAMP(), :metadata)`,
@@ -56,7 +58,7 @@ export default class ActivityLog {
                 target: target ? target.steamid2 : null,
                 msg,
                 type,
-                metadata: payload.metadata ? JSON.stringify(payload.metadata) : null
+                metadata: payload?.metadata ? JSON.stringify(payload.metadata) : null
             }
         )
 

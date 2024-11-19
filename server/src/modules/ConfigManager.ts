@@ -11,7 +11,7 @@ export interface RegisteredProvider {
 
 export default class ConfigManager {
     #db: sqlite.Database<sqlite3.Database, sqlite3.Statement>
-    #servers: any[] = null
+    #servers: any[]|null = null
     #dataDir: string
 
     public async Load(dataDir: string) {
@@ -54,9 +54,9 @@ export default class ConfigManager {
         for(const row of data) {
             const provider = row.key.split(".").shift()
             if(!providers.some(p => p.id === provider)) {
-                const name = await this.GetKVNamespaced("providers", provider, "name")
+                const name = await this.GetKVNamespaced("providers", provider!, "name")
                 providers.push({
-                    id: provider,
+                    id: provider!,
                     name: name ?? provider
                 })
             }
@@ -75,7 +75,7 @@ export default class ConfigManager {
         return data
     }
 
-    public async GetKV<T extends number | string | boolean = string>(key: ConfigKey, defaultValue?: T): Promise<T> {
+    public async GetKV<T extends number | string | boolean = string>(key: ConfigKey, defaultValue: T|null = null): Promise<T | null> {
         const data = await this.#db.get(SQL`SELECT value FROM keyvalues WHERE key = ${key}`)
         const config = KVConfig[key]
         if(!data) return defaultValue
@@ -89,8 +89,8 @@ export default class ConfigManager {
         return data.value as T ?? defaultValue
     }
 
-    public async GetKVNamespaced<T extends number | string = string>(...args: string[]): Promise<T> {
-        return this.GetKV(args.join(".") as ConfigKey, null)
+    public async GetKVNamespaced<T extends number | string | boolean = string>(...args: string[]): Promise<T | null> {
+        return await this.GetKV<T>(args.join(".") as ConfigKey, null)
     }
 
     public async HasKV(key: ConfigKey) {
@@ -116,9 +116,9 @@ export default class ConfigManager {
     }
 
     private async checkRequiredKeys() {
-        const missing = []
+        const missing: string[] = []
         for(const [key, data] of Object.entries(KVConfig)) {
-            if(data.flags & KeyFlags.Required) {
+            if(data.flags && data.flags & KeyFlags.Required) {
                 if(!await this.HasKV(key as ConfigKey)) {
                     missing.push(key)
                 }
