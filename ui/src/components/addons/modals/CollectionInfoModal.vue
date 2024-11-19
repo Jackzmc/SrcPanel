@@ -37,15 +37,15 @@
                   <th>File Size</th>
                   <td>{{ totalFileSize }}</td>
                 </tr>
-                <tr v-if="props.addon.chapterIds">
+                <tr v-if="props.addon.meta.chapterIds">
                   <th>Chapters</th>
                   <td>
                     <ul>
-                      <li v-for="chapter in props.addon.chapterIds" :key="chapter">{{ chapter }}</li>
+                      <li v-for="chapter in props.addon.meta.chapterIds" :key="chapter">{{ chapter }}</li>
                     </ul>
                   </td>
                 </tr>
-                <tr v-if="props.addon.chapterIds">
+                <tr v-if="props.addon.meta.chapterIds">
                   <th>Rating</th>
                   <td v-if="mapRating.loadState == LoadState.Success">
                     <template v-if="mapRating.data?.avgRating">
@@ -170,8 +170,8 @@ onBeforeMount(() => {
 async function fetchRating() {
   mapRating.value.data = undefined
   mapRating.value.loadState = LoadState.Loading
-  if(!props.addon.chapterIds) return
-  const response = await fetch(`https://stats.jackz.me/api/maps/${props.addon.chapterIds.at(-1)}`)
+  if(!props.addon.meta.chapterIds) return
+  const response = await fetch(`https://stats.jackz.me/api/maps/${props.addon.meta.chapterIds.at(-1)}`)
   if(response.ok) {
     mapRating.value.data = await response.json()
     mapRating.value.loadState = LoadState.Success

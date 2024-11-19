@@ -1,3 +1,4 @@
+import { GameDig } from "gamedig";
 import { CommandResultType } from "../../../../common-types/Live.js";
 import { ServerAvailableFeatures } from "../../../../common-types/Server.js";
 import DynamicServerInstance from "./docker/DynamicServerInstance.js";
@@ -13,7 +14,10 @@ export default class DockerServer extends Server implements IAction {
     // TODO: Console support
     #instance: DynamicServerInstance
     constructor(group: ServerGroup<DockerServer>, server: ServerExtendedData, instance: DynamicServerInstance) {
-        super(group, server)
+        // Game dig needs listen udp port to be set for bridged docker containers
+        super(group, server, new GameDig({
+            listenUdpPort: instance.Port
+        }))
         this.#instance = instance
         this._logs = new DockerLogs(this, this.#instance.Container)
     }
@@ -83,10 +87,12 @@ export default class DockerServer extends Server implements IAction {
     }
 
     public override async refreshStatus(bypassCache = false) {
-        const ret = super.refreshStatus(bypassCache)
+        // Don't need to do a refresh if we have plugin data
+        if(this.Plugin && this.Plugin.authenticated) return
+        await this.getStatus(bypassCache, this.type, this.ip, this.port)
+
         const state = await this.#instance.state()
         this._online = state.Running
-        return ret
     }
 
 }

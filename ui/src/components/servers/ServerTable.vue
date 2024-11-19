@@ -1,6 +1,6 @@
 <template>
   <div class="mb-4">
-    <CreateServerModal :group="group" :state="createInstanceData.state" :data="createInstanceData.data" v-if="createInstanceData" @close="createInstanceData = null" />
+    <CreateServerModal :group="group" v-if="createModal" @close="createModal = false" />
     <h4 class="title is-4">{{ group.name }}</h4>
     <p v-if="group.description" class="subtitle is-6">{{ group.description }}</p>
     <div class="table-container">
@@ -33,7 +33,7 @@
             <td style="vertical-align: middle">Create New Instance</td>
             <td colspan="2"></td>
             <td colspan="2">
-              <button type="button" class="button is-info is-small" @click="createInstance">New Instance</button>
+              <button type="button" class="button is-info is-small" @click="createModal = true">New Instance</button>
             </td>
           </tr>
         </tfoot>
@@ -56,35 +56,7 @@ const props = defineProps<{
   manage?: boolean
 }>()
 
-let createInstanceData = ref<{
-  state: LoadState,
-  data: unknown
-}|null>(null)
-
-async function createInstance() {
-  createInstanceData.value = { state: LoadState.Loading, data: null }
-  try {
-    const response = await fetch(`/api/groups/${props.group.id}/servers?start=1`, {
-      method: "POST"
-    })
-    if(response.ok) {
-      const json = await response.json()
-      createInstanceData.value.state = LoadState.Success
-      createInstanceData.value.data = json
-      notify({
-        type: "success",
-        text: `Started new instance for ${props.group.name}`
-      })
-    } else {
-      const json = await response.json()
-      createInstanceData.value.state = LoadState.Error
-      createInstanceData.value.data = json
-    }
-  } catch(err) {
-    createInstanceData.value.state = LoadState.Error
-    createInstanceData.value.data = (err as any).message
-  }
-}
+let createModal = ref(false)
 
 </script>
 

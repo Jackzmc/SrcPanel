@@ -10,6 +10,7 @@ import VPK from '@lowly1337/vpk'
 import { readFile } from 'node:fs/promises';
 import ValveKV from 'valve-kv'
 import { SimpleGit, simpleGit } from 'simple-git';
+import { getChapterIds, getSpFileInfo } from './ShareUtils.js';
 
 const DOWNLOAD_TIMEOUT = 1000 * 60 * 3
 
@@ -19,6 +20,11 @@ export type DownloadSource = "steam_workshop" | "direct"
  * "Installing" refers to symlinking the file from the source directory to the destination(s) specified. 
  * In the UI, this is enabling or disabling an addon/file. The source file is not deleted except by deleteAddon()
  */
+
+const MIGRATIONS = [
+    SQL`ALTER TABLE addoncache ADD metadata TEXT`,
+    // SQL`ALTER TABLE addoncache DELETE chapter_ids`
+]
 
 export default class Share {
     #id: string
@@ -55,11 +61,30 @@ export default class Share {
             collection_id VARCHAR(32),
             collection_name VARCHAR(64),
             chapter_ids TEXT,
+            metadata TEXT,
             PRIMARY KEY (filename)
         );`)
+        this.runMigrations()
         
         // db.exec(SQL`ALTER TABLE addoncache
         //     ADD COLUMN chapter_ids TEXT;`).catch(() => {})
+    }
+
+    async runMigrations() {
+        const result = await this.#db.get("SELECT value FROM meta WHERE key = 'current_migration'")
+        let currentMigration = result ? result.value : 0
+        if(currentMigration >= MIGRATIONS.length) return;
+        while(currentMigration < MIGRATIONS.length) {
+            try {
+                await this.#db.exec(SQL`ALTER TABLE addoncache ADD metadata TEXT`).catch(() => {})
+                currentMigration++
+            } catch(err) {
+                console.error(`[Share/${this.#id}] Migration #${currentMigration} failed: `, err)
+                return
+            }
+        }
+        await this.#db.run(`INSERT INTO meta (key, value) VALUES ('current_migration', ?)`, [ currentMigration ])
+        await this.#db.run(`UPDATE meta SET value = ? WHERE key = 'current_migration'`, [ currentMigration ])
     }
 
     public get id() { return this.#id }
@@ -122,6 +147,19 @@ export default class Share {
         return null
     }
 
+    async #getMetadata(filepath: string): Promise<Record<string, any>> {
+        if(filepath.endsWith(".vpk")) {
+            return {
+                chapterIds: getChapterIds(filepath)
+            }
+        } else if(filepath.endsWith(".sp")) {
+            return {
+                pluginInfo: await getSpFileInfo(filepath)
+            }
+        }
+        return {}
+    }
+
     /** 
      * Fetches all addons for this share, including returning if the destinations are 
      * Warn: Expensive, may take a long time for a large directory, and if no cache
@@ -148,10 +186,10 @@ export default class Share {
                         }
                         collections[addonInfo.collection.id].children.push(addonInfo)
                         // Merge child addon into collection's map list
-                        if(addonInfo.chapterIds) {
+                        if(addonInfo.meta.chapterIds) {
                             if(!collections[addonInfo.collection.id].chapterIds) collections[addonInfo.collection.id].chapterIds = []
                             // Convert to set and back to remove duplicates
-                            const set = new Set([...collections[addonInfo.collection.id].chapterIds, ...addonInfo.chapterIds])
+                            const set = new Set([...collections[addonInfo.collection.id].chapterIds, ...addonInfo.meta.chapterIds])
                             collections[addonInfo.collection.id].chapterIds = [...set]
                         }
                         delete addonInfo.collection
@@ -165,32 +203,35 @@ export default class Share {
                         filesize: fstat.size,
                         lastModified: Math.round(fstat.mtime.getTime() / 1000),
                     }
-                    let chapterIds = null
-                    let wsDetails = null
+                    let meta = await this.#getMetadata(path.join(this.sourceFolder, dirent.name))
+                    let pendingResolve = false
                     if(ext === "vpk") {
-                        chapterIds = this.#getChapterIds(path.join(this.sourceFolder, dirent.name))
                         // Check if this is a workshop addon, and fetch its details
                         const wsId = parseInt(dirent.name)
                         if(wsId) {
-                            wsDetails = await this.#steam.getItemDetails([wsId.toString()])
-                            if(wsDetails.length > 0) {
-                                wsDetails = Share.serializeWorkshopItem(wsDetails[0])
-                            } else {
-                                wsDetails = { deleted: true, publishedfileid: wsId }
-                            }
+                            pendingResolve = true
+                            this.#steam.addToWSResolveQueue(dirent.name, async (item) => {
+                                const details: AddonWorkshopInfo = item 
+                                    ? Share.serializeWorkshopItem(item)
+                                    : { deleted: true, publishedfileid: wsId }
+                                await this.#addAddonEntry(dirent.name, fsinfo, details, undefined, meta)
+                            })
+                            
                         }
                     }
-                   
                     results.push({
                         filename: dirent.name,
                         ...fsinfo,
                         installInfo: (await this.getInstallInfo(dirent.name)).states,
-                        chapterIds
+                        meta
                     })
-                    await this.#addAddonEntry(dirent.name, fsinfo, wsDetails, undefined, chapterIds)
+                   
+                    if(!pendingResolve)
+                        await this.#addAddonEntry(dirent.name, fsinfo, null, undefined, meta)
                 }
             }
         }
+        await this.#steam.resolveWSQueue()
         // Calculate total file size for collections
         for(const collection of Object.values(collections)) {
             results.push({
@@ -222,13 +263,13 @@ export default class Share {
      * @param workshop (optional) workshop item details info
      * @param collection (optional) workshop collection info (collection id and name)
      */
-    async #addAddonEntry(filename: string, fsInfo?: { filesize: number, lastModified: number }, workshop?: AddonWorkshopInfo, collection?: WorkshopCollectionInfo, chapterIds?: string[]) {
+    async #addAddonEntry(filename: string, fsInfo?: { filesize: number, lastModified: number }, workshop?: AddonWorkshopInfo, collection?: WorkshopCollectionInfo, meta: Record<string, any>|null = null) {
         try {
             // console.debug(`adding \"${filename}\" [fs=${fsInfo != null}] [workshop=${workshop != null}] [collection=${collection != null}]`)
             await this.#db.run(
                 SQL`REPLACE INTO addoncache 
-                    (filename, filesize, lastModified, ws_info, collection_id, collection_name, chapter_ids) 
-                    VALUES(${filename}, ${fsInfo?.filesize}, ${fsInfo?.lastModified}, ${workshop ? JSON.stringify(workshop) : null}, ${collection?.id}, ${collection?.name}, ${chapterIds?.join(",")})`
+                    (filename, filesize, lastModified, ws_info, collection_id, collection_name, metadata) 
+                    VALUES(${filename}, ${fsInfo?.filesize}, ${fsInfo?.lastModified}, ${workshop ? JSON.stringify(workshop) : null}, ${collection?.id}, ${collection?.name}, ${meta ? JSON.stringify(meta) : null})`
             )
         } catch(err) {
             console.error(`addAddonEntry failed for "${filename}"`, { fsInfo: fsInfo !== null, workshop: workshop !== undefined }, err)
@@ -240,7 +281,7 @@ export default class Share {
      * @param filename filename with ext
      * @returns Promise<AddonInfo | undefined>
      */
-    public async getAddonInfo(filename: string): Promise<AddonInfo | undefined> {
+    public async getAddonInfo(filename: string): Promise<AddonInfo | null> {
         const info = await this.#db.get(SQL`SELECT * FROM addoncache WHERE filename = ${filename}`)
         if(!info) return null
         const installInfo = await this.getInstallInfo(filename)
@@ -255,7 +296,9 @@ export default class Share {
                 id: info.collection_id,
                 name: info.collection_name
             } : null,
-            chapterIds: info.chapter_ids?.split(",")
+            meta: {
+                chapterIds: info.chapter_ids?.split(","),
+            }
         }
     }
 
@@ -408,7 +451,7 @@ export default class Share {
             this.#addAddonEntry(filename, {
                 filesize: item.file_size,
                 lastModified: item.time_updated
-            }, Share.serializeWorkshopItem(item), item.collection, chapterIds)
+            }, Share.serializeWorkshopItem(item), item.collection, { chapterIds })
         })
         return event
     }

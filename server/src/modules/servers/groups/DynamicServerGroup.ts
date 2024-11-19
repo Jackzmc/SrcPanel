@@ -78,6 +78,7 @@ export class DynamicServerGroup extends ServerGroup<DockerServer> {
 
         }
         // Find any new instances
+        await this.#manager.findExisting()
         const instances = this.#manager.getInstancesForTemplate(this.#templateId)
         // TODO: check for # of servers that are active
         for(const instance of instances) {
@@ -152,13 +153,13 @@ export class DynamicServerGroup extends ServerGroup<DockerServer> {
         const vars = {
             id: instance.TemplateId,
             index: Object.keys(this._servers).length + 1,
-            ip: instance.Ip,
+            ip: instance.PublicIp,
             port: instance.Port,
         }
         const id = `${this.Id}-${instance.Port}`
         const ip = DynamicServerGroup.formatTemplateVar(this.#serverTemplate.ip, vars)
         const [, host, port] = ip.match(/([a-zA-Z0-9.]+):?(\d*)/)
-        let address = instance.Ip
+        let address = instance.PublicIp
         try {
             const lookup = await DNS.lookup(host, { verbatim: false, family: 4 })
             address = lookup.address

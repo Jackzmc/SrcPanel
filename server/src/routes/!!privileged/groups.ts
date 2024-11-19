@@ -9,13 +9,14 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     fastify.post('/:groupId/servers', async (req: FastifyRequest<{Params: { groupId: string}, Querystring: { start: boolean }}>, reply) => {
         // TODO: check for enough resources. ~300 MB (<= 2%), 1.5% cpu idle]
         const cpu = await SysInfo.currentLoad()
-        if(cpu.avgLoad < MIN_CPU_PERCENT_FREE) {
+        const avgLoadPercent = cpu.avgLoad / 100
+        if((1.0 - avgLoadPercent) < MIN_CPU_PERCENT_FREE) {
             return reply.status(403).send({
                 error: "NO_FREE_RESOURCES",
                 type: "CPU",
                 cpu: {
-                    avgLoad: cpu.avgLoad,
-                    currentLoad: cpu.currentLoad,
+                    avgLoad: avgLoadPercent,
+                    currentLoad: cpu.currentLoad / 100,
                     threshold: MIN_CPU_PERCENT_FREE
                 },
                 message: "System CPU resources have reached their limit, no new servers can be created at this time."

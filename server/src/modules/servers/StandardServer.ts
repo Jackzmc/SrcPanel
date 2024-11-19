@@ -1,3 +1,4 @@
+import { GameDig } from "gamedig";
 import { LiveDataCache, LiveRecordResponse } from "../../../../common-types/Live.js";
 import { ServerType, ServerStatus } from "../../../../common-types/Server.js";
 import ConfigsFeature from "./features/Configs.js";
@@ -16,7 +17,7 @@ export default class StandardServer extends Server {
     #cvars: Record<string, string>
 
     constructor(group: ServerGroup<Server>, server: ServerExtendedData) {
-        super(group, server)
+        super(group, server, new GameDig())
 
         if(server.rcon) {
             let password: string
@@ -81,8 +82,7 @@ export default class StandardServer extends Server {
     }
 
     public override async refreshStatus(bypassCache = false) {
-        const ret = super.refreshStatus(bypassCache)
+        await super.refreshStatus(bypassCache)
         this._online = this._status.data != undefined
-        return ret
     }
 }

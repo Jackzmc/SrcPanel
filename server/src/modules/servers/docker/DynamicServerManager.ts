@@ -7,6 +7,7 @@ import ServerManager from '../ServerManager.js';
 import { DynamicServerGroup } from '../groups/DynamicServerGroup.js';
 export interface DockerTemplateConfig {
     id: string
+    network?: "host" | string,
     image: string,
     ip: string,
     startPort: number,
@@ -35,7 +36,7 @@ export default class DynamicServerManager {
 
     async Load() {
         await this.#loadTemplates()
-        await this.#findExisting()
+        await this.findExisting()
     }
 
     async *#getContainers() {
@@ -55,9 +56,14 @@ export default class DynamicServerManager {
         }
     }
 
-    async #findExisting() {
+    async findExisting() {
         for await(const { containerInfo, container, template } of this.#getContainers()) {
             const port = containerInfo.Labels["panel.port"]
+            const containerName = `panel-${template.config.id}-${port}`
+            if(this.#instances[containerName]) {
+                console.debug('debug: skipping existing registered container', containerName)
+                return;
+            }
             console.info(`[ServerManager/docker] Found existing container (${containerInfo.Id.slice(0, 12)}${containerInfo.Names.join('')})`)
             const instance = new DynamicServerInstance(template.config, container, template.config.ip, Number(port))
             await this.#registerInstance(instance)
@@ -148,13 +154,13 @@ export default class DynamicServerManager {
             //     '27015/udp': {}
             // },
             HostConfig: {
-                "NetworkMode": "host",
+                "NetworkMode": template.config.network,
                 "Binds": template.config.volumes ?? [],
                 "RestartPolicy": {
-                    "Name": "on-failure",
-                    MaximumRetryCount: 3
-                }
-                // "PortBindings": { "27015/udp": [{ "HostPort": port.toString(), "HostIp": template.config.ip }] }
+                    "Name": "unless-stopped",
+                    // MaximumRetryCount: 3
+                },
+                "PortBindings": { "27015/udp": [{ "HostPort": port.toString(), "HostIp": template.config.ip }] }
             },
             Labels: {
                 "panel.template": templateId,
@@ -177,6 +183,7 @@ export default class DynamicServerManager {
         
     }
     async #registerInstance(instance: DynamicServerInstance) {
+        await instance.Init()
         this.#instances[instance.ContainerName] = instance
     }
 

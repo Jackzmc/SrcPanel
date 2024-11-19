@@ -13,11 +13,14 @@ const PROGRES_MIN_BYTES = 10_000 // 10KB
 const ITEM_CACHE_MAX_SIZE = 20
 const ITEM_CACHE_TTL = 1000 * 60 * 10 // 10 min
 
+export type WSResolveCallback = (workshopInfo: WorkshopItem | null) => void
+
 export default class SteamAPI {
     #apikey: string
     #userAgent: string
     #appMap: Record<string, string>
     #itemCache: QuickLRU<string, WorkshopItem>
+    #workshopResolveQueue: Record<string, WSResolveCallback> = {}
 
     public SteamAvailable: boolean = true
 
@@ -128,6 +131,38 @@ export default class SteamAPI {
             }
         }
         return details
+    }
+
+    addToWSResolveQueue(workshopId: string, cb: WSResolveCallback) {
+        if(this.#itemCache[workshopId]) {
+            cb(this.#itemCache[workshopId])
+            return
+        }
+        this.#workshopResolveQueue[workshopId] = cb
+    }
+
+    async resolveWSQueue() {
+        const ids = Object.keys(this.#workshopResolveQueue)
+        if(ids.length === 0) return
+        while(ids.length > 0) {
+            const itemIds = ids.splice(0, 100)
+            const items = await this.getItemDetails(itemIds.map(s => s[0]))
+            for(const item of items) {
+                const callback = this.#workshopResolveQueue[item.publishedfileid]
+                if(!callback) continue
+                callback(item)
+                delete this.#workshopResolveQueue[item.publishedfileid]
+            }
+            // Check if we missed any item ids from our slice
+            for(const id of itemIds) {
+                const callback = this.#workshopResolveQueue[id]
+                if(callback) {
+                    console.log("Did not get data for", id)
+                    callback(null)
+                }
+                delete this.#workshopResolveQueue[id]
+            }
+        }
     }
 
     /**

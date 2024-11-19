@@ -51,7 +51,7 @@
               v-else :data-tooltip="getTooltip(addon)">
               {{addon.workshop ? addon.workshop.title : addon.filename}}
             </router-link>
-            <span class="tag is-success ml-1" v-if="addon.chapterIds">Map</span>
+            <span class="tag is-success ml-1" v-if="addon.meta.chapterIds">Map</span>
             <span class="tags is-inline is-pulled-right" v-if="!addon.collection">
               <span class="tag mr-1 is-rounded is-info" v-for="server in addon.enabledOn" :key="server">
                 {{ server }}
@@ -97,7 +97,7 @@
               </router-link>
               <router-link :to="getRoute(child)" v-else class="ml-5"
                 :data-tooltip="getTooltip(child)">{{child.filename}}</router-link>
-              <span class="tag is-small is-success ml-1" v-if="addon.chapterIds">Map</span>
+              <span class="tag is-small is-success ml-1" v-if="addon.meta.chapterIds">Map</span>
               <span class="tags is-inline is-pulled-right" v-if="!child.collection">
                 <span class="tag is-info is-rounded" v-for="server in child.enabledOn" :key="server">
                   {{ server }}

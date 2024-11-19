@@ -62,15 +62,15 @@
                 <th>Downloaded</th>
                 <td>{{ formatDate(props.addon.downloaded) }}</td>
               </tr>
-              <tr v-if="props.addon.chapterIds">
+              <tr v-if="props.addon.meta.chapterIds">
                 <th>Chapters</th>
                 <td>
                   <ul>
-                    <li v-for="chapter in props.addon.chapterIds" :key="chapter">{{ chapter }}</li>
+                    <li v-for="chapter in props.addon.meta.chapterIds" :key="chapter">{{ chapter }}</li>
                   </ul>
                 </td>
               </tr>
-              <tr v-if="props.addon.chapterIds">
+              <tr v-if="props.addon.meta.chapterIds">
                 <th>Rating <Icon icon-class="has-text-info has-tooltip-right" icon="fa-circle-info" data-tooltip="Ratings pulled from stats.jackz.me"></Icon></th>
                 <td v-if="mapRating.loadState == LoadState.Success">
                   <template v-if="mapRating.data?.avgRating">
@@ -162,7 +162,7 @@ let mapRating = ref<{data?:{
 onBeforeMount(() => {
   if(props.addon) {
     installInfo.value = Object.assign({}, props.addon.installInfo)
-    if(props.addon.chapterIds) {
+    if(props.addon.meta.chapterIds) {
       fetchRating()
     }
   }
@@ -282,8 +282,8 @@ async function deleteAddon() {
 async function fetchRating() {
   mapRating.value.data = undefined
   mapRating.value.loadState = LoadState.Loading
-  if(!props.addon.chapterIds) return
-  const response = await fetch(`https://stats.jackz.me/api/maps/${props.addon.chapterIds.at(-1)}`)
+  if(!props.addon.meta.chapterIds) return
+  const response = await fetch(`https://stats.jackz.me/api/maps/${props.addon.meta.chapterIds.at(-1)}`)
   if(response.ok) {
     mapRating.value.data = await response.json()
     mapRating.value.loadState = LoadState.Success
@@ -295,7 +295,7 @@ async function fetchRating() {
 }
 
 onActivated(() => {
-  if(props.addon.chapterIds)
+  if(props.addon.meta.chapterIds)
     fetchRating()
 })
 
