@@ -89,6 +89,7 @@
             </div>
           </div>
         </div>
+        <ManageAddons v-else-if="currentStep === 2" />
         <div class="box" v-else>
           error.
           step = {{currentStep}}
@@ -127,6 +128,7 @@ import { useRoute, useRouter } from 'vue-router';
 
 // TODO: pull from server instead
 import Plugins_ from '@/assets/plugins.tmp.json'
+import ManageAddons from '@/components/servers/custom-server/ManageAddons.vue';
 const Plugins = Plugins_ as Record<string, PluginMeta>
 
 const router = useRouter()
