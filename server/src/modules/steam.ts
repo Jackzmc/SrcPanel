@@ -101,6 +101,16 @@ export default class SteamAPI {
         return null
     }
 
+    async searchItems(query: string, appid: string): Promise<WorkshopItem[]> {
+        const resposne = await fetch("https://api.steampowered.com/IPublishedFileService/QueryFiles/v1/", {
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'User-Agent': this.#userAgent
+            },
+            body: `itemcount=${index}&${params.toString()}`
+        })
+    }
+
     async getItemDetails(fileids: string[]): Promise<WorkshopItem[]> {
         let details: WorkshopItem[] = []
         const params = new URLSearchParams()
