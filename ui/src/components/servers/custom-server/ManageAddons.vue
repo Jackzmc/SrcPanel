@@ -5,16 +5,18 @@
   <p class="">Hover over a box to view the description of the addon</p>
   <br>
   <div class="columns">
-    <div class="column">
-      <Field icon-left="fa-search">
-        <input v-model="searchQuery" type="text" class="input" placeholder="Search for an addon" />
+    <div class="column is-8">
+      <Field icon-left="fa-plus" label="Add Workshop Addon">
+        <input v-model="searchQuery" type="text" class="input" placeholder="https://steamcommunity.com/sharedfiles/filedetails/?id=0000000000" />
+        <p class="help">Enter a workshop url</p>
       </Field>
     </div>
     <div class="column">
 
     </div>
   </div>
-  <div class="fixed-grid has-3-cols">
+  <h5 class="title is-5 mb-2">Added Addons</h5>
+  <div class="fixed-grid has-2-cols">
     <div class="grid">
       <div v-for="(addon) in filteredAddons" :key="addon.filename" class="cell has-tooltip-right"
         :data-tooltip="addon.tooltip">
