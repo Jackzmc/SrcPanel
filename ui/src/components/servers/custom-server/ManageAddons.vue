@@ -78,6 +78,11 @@ async function fetchAddons() {
   }
 }
 
+async function addWorkshopEntry() {
+  // TODO: search _or_ url parse
+  const response = await fetch('/api/')
+}
+
 function toggleAddon(addonId: string) {
   if(!addons.value) return
   enabledAddons.value[addonId] = !enabledAddons.value[addonId]

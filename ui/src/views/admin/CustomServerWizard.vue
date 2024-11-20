@@ -137,6 +137,7 @@ const props = defineProps<{
   privUser: PrivilegedUser
 }>()
 
+// TODO: use appids.json, record appid as key
 const GAMES: Record<string, string> = { l4d2: "Left 4 Dead 2" }
 
 interface Step {
