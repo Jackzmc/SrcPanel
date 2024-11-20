@@ -246,6 +246,7 @@ export default abstract class Server implements IAction {
             map: state.map,
             gamemode: raw.tags ? raw.tags[0] : undefined
           }, "gamedig")
+          this._online = true
       } catch(err) {
         if(!err.message.includes("Failed all ")) {
           console.error(`[Server/${this.id}] host=${host} getStatus error: `, err)
