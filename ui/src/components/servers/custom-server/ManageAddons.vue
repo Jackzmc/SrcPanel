@@ -6,9 +6,9 @@
   <br>
   <div class="columns">
     <div class="column is-8">
-      <Field icon-left="fa-plus" label="Add Workshop Addon">
+      <Field icon-left="fa-plus" label="Add / Find Workshop Addon">
         <input v-model="searchQuery" type="text" class="input" placeholder="https://steamcommunity.com/sharedfiles/filedetails/?id=0000000000" />
-        <p class="help">Enter a workshop url</p>
+        <p class="help">Enter a workshop url or search for an addon by it's name</p>
       </Field>
     </div>
     <div class="column">
