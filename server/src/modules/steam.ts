@@ -102,13 +102,29 @@ export default class SteamAPI {
     }
 
     async searchItems(query: string, appid: string): Promise<WorkshopItem[]> {
-        const resposne = await fetch("https://api.steampowered.com/IPublishedFileService/QueryFiles/v1/", {
+        this.#checkKey()
+        const params = new URLSearchParams()
+        params.append("appid", appid)
+        params.append("key", this.#apikey)
+        params.append("numperpage", "30")
+        params.append("return_metadata", "1")
+        params.append("search_text", query)
+        const response = await fetch("https://api.steampowered.com/IPublishedFileService/QueryFiles/v1/", {
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
                 'User-Agent': this.#userAgent
             },
-            body: `itemcount=${index}&${params.toString()}`
+            body: `?${params.toString()}`
         })
+        if(response.ok) {
+            const json = await response.json() as any
+            const details = json.response.publishedfiledetails as WorkshopItem[]
+            for(const file of details) {
+                this.#itemCache.set(file.publishedfileid, file)
+            }
+            return details
+        }
+        throw new Error(`${response.statusText}: ${await response.text()}`)
     }
 
     async getItemDetails(fileids: string[]): Promise<WorkshopItem[]> {
