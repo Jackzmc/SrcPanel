@@ -54,6 +54,11 @@ export default class Share {
         this.validExts = shareInfo.fileExts
         this.destinations = shareInfo.destinations || {}
         this.#description = shareInfo.description ?? ""
+        db.exec(SQL`CREATE TABLE IF NOT EXISTS meta (
+            key VARCHAR(128) NOT  NULL,
+            value VARCHAR(128) NOT NULL,
+            PRIMARY KEY(key)
+        );`)
         db.exec(SQL`CREATE TABLE IF NOT EXISTS addoncache (
             filename VARCHAR(128) NOT NULL,
             filesize INT,
