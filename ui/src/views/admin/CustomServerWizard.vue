@@ -44,70 +44,34 @@
         </div>
         <div class="box" v-else-if="currentStep === 1">
           <h4 class="title is-4">Server Plugins</h4>
-          <p class="subtitle is-6">Subtitle</p>
+          <p class="">Select the plugins you want on the server by clicking on its box. You can always change plugins later.</p>
+          <p class="">Some plugins are required and cannot be disabled, others are recommended</p>
+          <p class="">Hover over a box to view the description of the plugin</p>
+          <br>
           <div class="grid is-col-min-12">
-            <div class="cell" v-for="(data, pluginId) in Plugins" :key="pluginId">
+            <div v-for="(plugin) in filteredPlugins" :key="plugin.id"
+              class="cell has-tooltip-right" :data-tooltip="plugin.tooltip"
+            >
               <div :class="['card','mt-2','py-0','px-0',{
-                  'is-clickable': !hasFlag(pluginId, PluginFlag.Required),
-                  'has-background-link-light': enabledPlugins[pluginId] && !hasFlag(pluginId, PluginFlag.Required),
+                  'is-clickable': !hasFlag(plugin.id, PluginFlag.Required),
+                  'has-background-link-light': enabledPlugins[plugin.id] && !hasFlag(plugin.id, PluginFlag.Required),
                   // 'has-background-primary': enabledPlugins[pluginId] && hasFlag(pluginId, PluginFlag.Required),
-                  'has-background-grey-lighter': !enabledPlugins[pluginId],
+                  'has-background-grey-lighter': !enabledPlugins[plugin.id],
                 }]"
-                style="border-radius: 1px; height:100%" @click="togglePlugin(pluginId)"
+                style="border-radius: 1px; height:100%" @click="togglePlugin(plugin.id)"
               >
                 <div class="card-content px-4 py-2">
                   <label class="checkbox">
-                    <input type="checkbox" v-model="enabledPlugins[pluginId]" :disabled="hasFlag(pluginId, PluginFlag.Required) ?? false" />
-                    &nbsp;<strong>{{ data.name ?? pluginId}}</strong>
+                    <input type="checkbox" v-model="enabledPlugins[plugin.id]" :disabled="hasFlag(plugin.id, PluginFlag.Required) ?? false" />
+                    &nbsp;<strong>{{ plugin.name ?? plugin.id}}</strong>
                   </label>
                   <p class="subtitle is-6 mb-2">
-                    v{{ data.version }} - Created by {{data.author}}
+                    v{{ plugin.version }} - Created by {{plugin.author}}
                   </p>
-                  <span class="tag is-danger" v-if="hasFlag(pluginId, PluginFlag.Required)">Required</span>
-                  <span class="tag is-primary" v-else-if="hasFlag(pluginId, PluginFlag.Recommended)">Recommended</span>
-                  <span class="tag is-primary" v-else-if="hasFlag(pluginId, PluginFlag.Recommended_ExtraPlayers) && formData.extraPlayers">Recommended for 5+</span>
-                  <span class="tag is-secondary" v-else-if="hasFlag(pluginId, PluginFlag.Library)">Library</span>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="columns">
-            <div class="column is-4">
-              <div class="card has-background-grey-lighter my-2 py-0 px-0">
-                <div class="card-content px-4 py-2">
-                  <h5 class="title is-5">Admin Panel</h5>
-                  <p class="subtitle is-6">
-                    v1.0.0 - Created by jackz
-                  </p>
-                </div>
-              </div>
-              <div class="card has-background-grey-lighter my-2 py-0 px-0">
-                <div class="card-content px-4 py-2">
-                  <h5 class="title is-5">Global Bans</h5>
-                  <p class="subtitle is-6">
-                    v1.0.0 - Created by jackz
-                  </p>
-                </div>
-              </div>
-            </div>
-            <div class="column is-4">
-
-            </div>
-            <div class="column is-4">
-              <div class="card has-background-success-light my-2 py-0 px-0">
-                <div class="card-content px-4 py-2">
-                  <h5 class="title is-5">Admin Panel</h5>
-                  <p class="subtitle is-6">
-                    v1.0.0 - Created by jackz
-                  </p>
-                </div>
-              </div>
-              <div class="card has-background-success-light my-2 py-0 px-0">
-                <div class="card-content px-4 py-2">
-                  <h5 class="title is-5">Global Bans</h5>
-                  <p class="subtitle is-6">
-                    v1.0.0 - Created by jackz
-                  </p>
+                  <span data-tooltip="This plugin is required and cannot be disabled" class="tag is-danger" v-if="plugin.flagKv.required">Required</span>
+                  <span data-tooltip="This plugin is recommended to be enabled" class="tag is-primary" v-else-if="plugin.flagKv.recommended">Recommended</span>
+                  <span data-tooltip="This plugin is recommended to be enabled when 5+ support is enabled" class="tag is-primary" v-else-if="plugin.flagKv.recommendedExtraPlayers && formData.extraPlayers">Recommended for 5+</span>
+                  <!-- <span class="tag is-secondary" v-else-if="hasFlag(plugin.id, PluginFlag.Library)">Library</span> -->
                 </div>
               </div>
             </div>
@@ -129,8 +93,11 @@
         <div class="box has-background-lighter" style="border-radius: 1px">
           <h4 class="title is-4 has-text-centered">Overview</h4>
           <ul>
-            <li><b>Name: </b>{{ formData.name }}</li>
-            <li><b>Game: </b>{{ formData.game ? GAMES[formData.game] : '' }}</li>
+            <li><b>Name: </b>{{ form.name }}</li>
+            <li><b>Game: </b>{{ form.game ? GAMES[form.game] : '' }}</li>
+            <li><b>Memory: </b> 500 MB</li>
+            <li><b>Plugins: </b> {{ form.enabledPlugins.length }} enabled</li>
+            <li><b>Addons: </b> {{ form.enabledAddons.length }} enabled</li>
           </ul>
         </div>
       </div>
@@ -221,12 +188,33 @@ let formData = ref({
 })
 let enabledPlugins = ref<Record<string, boolean>>({})
 
+const filteredPlugins = computed(() => {
+  return Object.entries(Plugins)
+    .filter(([id, data]) => {
+      return !data.flags || (~data.flags & PluginFlag.Library)
+    })
+    .map(([id, data]) => {
+      const flagKv = {
+        required: hasFlag(id, PluginFlag.Required),
+        recommended: hasFlag(id, PluginFlag.Recommended),
+        recommendedExtraPlayers: hasFlag(id, PluginFlag.Recommended_ExtraPlayers)
+      }
+
+      return {
+        id,
+        ...data,
+        flagKv,
+        tooltip: `${id} ${enabledPlugins.value[id] ? '(enabled)' : ''}\n\n${data.description}`
+      }
+    })
+})
+
 const form = computed(() => {
   return {
     name: formData.value.name,
     game: formData.value.game,
     extraPlayers: formData.value.extraPlayers,
-    enabledPlugins: Object.keys(enabledPlugins),
+    enabledPlugins: Object.keys(enabledPlugins.value),
     enabledAddons: []
   } as CustomServer
 })

@@ -114,8 +114,8 @@
     ],
     "includesOptional": [],
     "name": "L4D2 Misc Tools",
-    "author": "Includes: Notice on laser use, Timer for gauntlet runs",
-    "description": "jackzmc",
+    "description": "Includes: Notice on laser use, Timer for gauntlet runs",
+    "author": "jackzmc",
     "version": "1.0",
     "url": "https://github.com/Jackzmc/sourcemod-plugins"
   },
