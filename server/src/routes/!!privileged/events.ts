@@ -5,7 +5,7 @@ import { NOT_FOUND, NO_PERMISSION } from '../../responses.js';
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
     fastify.get('/', async (req, reply) => {
-        const domain = await fastify.config.GetKV("domain");
+        const domain = await fastify.config.GetKV("domain", "");
         const [rows] = await fastify.db.query<RowDataPacket[]>("SELECT e.*, u.name as creator_name FROM `left4dead2-admins`.dash_events e LEFT JOIN `left4dead2`.user_names u ON SUBSTRING(e.creator_id, 11) = u.steamid ORDER BY created_date desc", [])
         return {
             events: rows.map(row => {
@@ -28,7 +28,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         const [rows] = await fastify.db.query<RowDataPacket[]>("SELECT e.*, u.name as creator_name FROM `left4dead2-admins`.dash_events e LEFT JOIN `left4dead2`.user_names u ON SUBSTRING(e.creator_id, 11) = u.steamid WHERE id = ?", [req.params.id])
         if(rows.length > 0) {
             const row = rows[0]
-            const domain = await fastify.config.GetKV("domain");
+            const domain = await fastify.config.GetKV("domain", "");
             const [rawWeeks] = await fastify.db.query<RowDataPacket[]>("SELECT r.steamid, u.name as name, week_start, week_end, TO_BASE64(days) as base64 FROM `left4dead2-admins`.dash_event_responses r LEFT JOIN `left4dead2`.user_names u ON SUBSTRING(r.steamid, 11) = u.steamid WHERE event_id = ?", [req.params.id])  
             const weeks: Record<string, APIWeekAvailability<string>> = {}
             for(const row of rawWeeks) {

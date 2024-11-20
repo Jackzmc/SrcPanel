@@ -135,7 +135,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
         await conn.commit()
         conn.release()
-        const domain = await fastify.config.GetKV("domain");
+        const domain = await fastify.config.GetKV("domain", "");
         discManager.set(discuss.id, {
             id: discuss.id,
             title: discuss.title,
@@ -161,7 +161,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
 
     fastify.get('/:id', async (req: FastifyRequest<{Params: {id: string}}>, reply): Promise<APIDiscussionDetails> => {
-        const domain = await fastify.config.GetKV("domain");
+        const domain = await fastify.config.GetKV("domain", "");
         let discuss = discManager.get(Number(req.params.id))
         if(!discuss) {
             const [rows] = await fastify.db.execute<RowDataPacket[]>("SELECT * FROM `left4dead2-admins`.dash_discussions WHERE id = ?", [req.params.id])
@@ -231,7 +231,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         discuss.commentsCount++
         discManager.set(discuss.id, discuss)
         
-        const domain = await fastify.config.GetKV("domain");
+        const domain = await fastify.config.GetKV("domain", "");
 
         if(discuss.creator.id !== req.user!.steamid2) {
             await fastify.authmngr.addNotification(discuss.creator.id, `${await req.user!.name() ?? req.user!.steamid2} commented on your discussion \"${discuss.title}\"`, {
