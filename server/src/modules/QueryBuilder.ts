@@ -21,7 +21,7 @@ interface WhereConditionInternal {
 }
 export class QueryBuilder {
     #tableName: string
-    #tableAlias: string
+    #tableAlias?: string
     #data: any[] = []
     #sorts: Record<string, SortDirection> = {}
     #whereConditions: string[] = []
@@ -43,7 +43,9 @@ export class QueryBuilder {
     }
 
     select(column: string, alias?: string) {
-        this.#selects.push([escapeId(column), alias])
+        const select = [escapeId(column)]
+        if(alias) select.push(alias)
+        this.#selects.push(select)
         return this
     }
 
@@ -190,7 +192,7 @@ export class QueryBuilder {
 
     #buildSort(): string {
         if(Object.keys(this.#sorts).length === 0) return ""
-        const sortPieces = []
+        const sortPieces: string[] = []
         for(const [column, dir] of Object.entries(this.#sorts)) {
             sortPieces.push(`${escapeId(column)} ${dir == SortDirection.Ascending ? 'ASC' : 'DESC'}`)
         }

@@ -6,7 +6,7 @@ export interface SessionData {
     ip: string,
     loginTime: number,
     lastActive: number,
-    countryCode: string,
+    countryCode?: string,
     version?: string
 }
 interface BaseSession<T> {
@@ -23,7 +23,7 @@ export interface ImpersationData {
     }
 }
 export interface UserData<T> extends BaseSession<T> {
-    profile: UserProfileData,
+    profile: UserProfileData | null,
     isSessionOld: boolean,
     providers: UserOauthProviders,
     notifications: UserNotification[],
@@ -52,11 +52,15 @@ export interface RegisteredProvider {
     id: string
     name: string,
 }
-export interface ProviderConnectionData extends RegisteredProvider {
-    enabled: boolean,
+export interface ProviderConnectionDataEnabled extends RegisteredProvider {
+    enabled: true,
     expired: boolean,
-    data?: OauthProviderData
+    data: OauthProviderData
 }
+export interface ProviderConnectionDataDisabled extends RegisteredProvider {
+    enabled: false,
+}
+export type ProviderConnectionData = ProviderConnectionDataEnabled | ProviderConnectionDataDisabled
 
 export type UserOauthProviders = Partial<Record<OauthProvider, OauthProviderData>>
 
@@ -64,8 +68,8 @@ export interface SessionUser {
     steamid: string,
     accountid: string,
     name:  string,
-    profileurl: string,
-    avatarhash: string,
+    profileurl?: string,
+    avatarhash?: string,
 }
 
 export const FLAGS: Record<string, string> = {
@@ -154,7 +158,7 @@ export interface UserProfileData {
 }
 export interface APIUser {
     id: string,
-    name: string
+    name: string | null
     avatarUrl: string
 }
 export interface AnalysisData {

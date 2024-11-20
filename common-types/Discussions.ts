@@ -57,7 +57,7 @@ export interface APIDiscussionDetails extends APIDiscussion {
 }
 export interface APIComment {
     id: number,
-    creator: APIUser,
+    creator: APIUser | null, // null if comments private
     content: string,
     timestamp: number
 }

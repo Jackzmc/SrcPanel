@@ -53,11 +53,11 @@ export default class UserManager {
      * @param steamid Steamid2
      * @returns 
      */
-    async getUser(steamid: string): Promise<IUserData | undefined> {
+    async getUser(steamid: string): Promise<IUserData | null> {
         if(!steamid || !UserManager.isSteamID2(steamid)) return null
         const user = await this.getUserDirect(steamid)
         // Don't wait for the result, serve the stale data:
-        if(user && Date.now() - user.timestamp > STALE_USER_CACHE_TIME) this.fetchUser(new SteamID(steamid))
+        if(user && (!user.timestamp || Date.now() - user.timestamp > STALE_USER_CACHE_TIME)) this.fetchUser(new SteamID(steamid))
         return user
     }
 
@@ -81,7 +81,7 @@ export default class UserManager {
      * @param force force bypass cache fetching latest info
      * @returns 
      */
-    async fetchUser(steamid: SteamID, force = false): Promise<IUserData | undefined> {
+    async fetchUser(steamid: SteamID, force = false): Promise<IUserData | null> {
         const steamid2 = steamid.getSteam2RenderedID()
         let user = await this.getUserDirect(steamid2)
         const hasPrevious = user != undefined
@@ -110,9 +110,10 @@ export default class UserManager {
      */
     async fetchUsers(steamids: (SteamID)[]): Promise<IUserData[]> {
         if(steamids.length > 100) throw new Error("Too many ids, steam API only supports 100")
-        const expUsers = []
-        const insertPromises = []
+        const expUsers: IUserData[] = []
+        const insertPromises: Promise<void>[] = []
         const users = await this.#steam.getUserDetails(steamids)
+        if(!users) return []
         for(const user of users) {
             const expUser = {
                 // We use the right side of STEAM_#:#:#####

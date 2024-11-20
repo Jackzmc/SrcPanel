@@ -3,11 +3,12 @@ import { exec } from 'child_process'
 import FastifyMultipart from '@fastify/multipart'
 import { pipeline } from 'stream'
 import { promisify } from 'util'
-import { ChildWorkshopItem, DetailsResponse, ShareInfo } from '../../../../common-types/Share.js';
+import { AddonInfo, ChildWorkshopItem, DetailsResponse, ShareInfo } from '../../../../common-types/Share.js';
 import { NO_PERMISSION } from '../../responses.js';
 import { UserPrivilegeCode } from '../../../../common-types/Privileges.js';
 import { createReadStream } from 'fs';
 import path from 'path';
+import assert from 'assert';
 const pump = promisify(pipeline)
 
 const VALID_FILENAME_REGEX = new RegExp(/[a-z0-9_\- \.]+/i)
@@ -23,7 +24,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
 
     fastify.get('/workshop/:publishedfileid/details', async(req: FastifyRequest<{Params: { publishedfileid: string }}>, reply): Promise<DetailsResponse> => {
-        if(!req.user.hasPermission("shares.addons.view")) return NO_PERMISSION(reply)
+        if(!req.user!.hasPermission("shares.addons.view")) return NO_PERMISSION(reply)
         const results = await fastify.steam.getItemDetails([req.params.publishedfileid])
         if(results.length == 0) return { item: null }
         const children = await fastify.steam.getCollectionChildren(req.params.publishedfileid)
@@ -48,18 +49,18 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
 
     fastify.get('/', async(req: FastifyRequest, reply) => {
-        if(!req.user.hasPermission("shares.view")) return NO_PERMISSION(reply)
+        if(!req.user!.hasPermission("shares.view")) return NO_PERMISSION(reply)
         return fastify.servers.shares
     })
 
     fastify.get('/:shareId', async(req: FastifyRequest<{Params: {shareId?: string}}>, reply) => {
-        if(!req.user.hasPermission("shares.view", req.params.shareId)) return NO_PERMISSION(reply)
+        if(!req.user!.hasPermission("shares.view", req.params.shareId)) return NO_PERMISSION(reply)
         const shareId = req.params.shareId
         const share = fastify.servers.getShare(shareId)
         if(!share) {
             return reply.status(404).send({
                 error: "Share Not Found", 
-                message: `No share with id \"${shareId.toLowerCase()}\" could be found. Share may be unavailable, incorrecty configured or does not exist`   
+                message: `No share with id \"${shareId!.toLowerCase()}\" could be found. Share may be unavailable, incorrecty configured or does not exist`   
             })
         }
         return {
@@ -78,13 +79,13 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
 
     fastify.get('/:shareId/addons', async(req: FastifyRequest<{Params: {shareId?: string}}>, reply) => {
-        if(!req.user.hasPermission("shares.addons.view", req.params.shareId)) return NO_PERMISSION(reply)
+        if(!req.user!.hasPermission("shares.addons.view", req.params.shareId)) return NO_PERMISSION(reply)
         const shareId = req.params.shareId
         const share = fastify.servers.getShare(shareId)
         if(!share) {
             return reply.status(404).send({
                 error: "Share Not Found", 
-                message: `No share with id \"${shareId.toLowerCase()}\" could be found. Share may be unavailable, incorrecty configured or does not exist`   
+                message: `No share with id \"${shareId!.toLowerCase()}\" could be found. Share may be unavailable, incorrecty configured or does not exist`   
             })
         }
         return {
@@ -106,7 +107,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 message: `Filename is blank`   
             })
         }
-        if(!req.user.hasPermission("shares.addons.view", req.params.shareId, filename)) return NO_PERMISSION(reply)
+        if(!req.user!.hasPermission("shares.addons.view", req.params.shareId, filename)) return NO_PERMISSION(reply)
         const shareId = req.params.shareId
         const share = fastify.servers.getShare(shareId)
         if(!share) {
@@ -121,21 +122,26 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     })
 
     fastify.post('/:shareId/addons/upload',  async(req: FastifyRequest<{Params: {shareId: string}}>, reply) => {
-        if(!req.user.hasPermission("shares.addons.upload.direct", req.params.shareId)) return NO_PERMISSION(reply)
+        if(!req.user!.hasPermission("shares.addons.upload.direct", req.params.shareId)) return NO_PERMISSION(reply)
         const shareId = req.params.shareId
         const share = fastify.servers.getShare(shareId)
         if(!share) {
             return reply.status(404).send({
-                error: "Share Not Found", 
+                error: "SHARE_NOT_FOUND", 
                 message: `No share with id \"${shareId.toLowerCase()}\" could be found. Share may be unavailable, incorrecty configured or does not exist`   
+            })
+        } else if(!share.exts) {
+            return reply.status(401).send({
+                error: "SHARE_UPLOAD_EXT_MISSING", 
+                message: `Share does not have valid extensions setup, uploading is disabled`   
             })
         }
 
         const parts = req.files()
         for await (const part of parts) {
             const ext = part.filename.split(".").pop()
-            if(!share.exts.includes(ext)) {
-                // TODO: Possibly req.user.hasPermission check?
+            if(!ext || !share.exts.includes(ext)) {
+                // TODO: Possibly req.user!.hasPermission check?
                 return reply.status(400).send({
                     error: "TYPE_NOT_ALLOWED",
                     message: "The file type is not allowed for this share"
@@ -155,7 +161,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 reply.send(new fastify.multipartErrors.FilesLimitError());    
             }
 
-            await req.user.log(null, `uploaded addon %filename%`, {
+            await req.user!.log(null, `uploaded addon %filename%`, {
                 code: "shares.addons.upload.direct",
                 metadata: {
                     filename: part.filename
@@ -176,7 +182,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
 
         const shareId = req.params.shareId
-        const [code, granted] = req.user.requirePermission("shares.addons.view", { resourceId: shareId })
+        const [code, granted] = req.user!.requirePermission("shares.addons.view", { resourceId: shareId })
         if(!granted) return NO_PERMISSION(reply)
 
         const share = fastify.servers.getShare(shareId)
@@ -210,7 +216,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
 
         const shareId = req.params.shareId
-        const [code, granted] = req.user.requirePermission("shares.addons.delete", { resourceId: shareId })
+        const [code, granted] = req.user!.requirePermission("shares.addons.delete", { resourceId: shareId })
         if(!granted) return NO_PERMISSION(reply)
 
         const share = fastify.servers.getShare(shareId)
@@ -221,7 +227,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             })
         }
         await share.deleteAddon(filename)
-        await req.user.log(null, `deleted addon %filename%`, {
+        await req.user!.log(null, `deleted addon %filename%`, {
             code,
             metadata: {
                 filename
@@ -259,7 +265,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 reply.raw.write(': keepalive\n\n')
             }, 1000 * 30)
         }
-        if(!req.user.hasPermission("shares.addons.upload.steam_workshop", req.params.shareId)) {
+        if(!req.user!.hasPermission("shares.addons.upload.steam_workshop", req.params.shareId)) {
             await send({
                 error: "No Permission",
                 code: "NO_PERMISSION",
@@ -276,7 +282,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             await send(payload, 404)
         } else if(!req.query.force && await share.isInstalled(`${req.params.workshopId}.vpk`)) {
             // This doesn't run when it is a collection, as collections themselves are not installed
-            const addonInfo = await share.getAddonInfo(`${req.params.workshopId}.vpk`)
+            const addonInfo = (await share.getAddonInfo(`${req.params.workshopId}.vpk`)) as AddonInfo // we check isInstalled
             if(addonInfo.workshop) {
                 const latestWs = await fastify.steam.getItemDetails([req.params.workshopId])
                 if(latestWs[0].time_updated == addonInfo.lastModified) {
@@ -305,6 +311,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             }
         } 
         if(allowDownload) {
+            assert(share != undefined)
             try {
                 sendSSE({state: "FETCH_INFO", message: "Fetching information from steam"})
                 const children = await fastify.steam.getCollectionChildren(req.params.workshopId)
@@ -373,11 +380,11 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                                 message: `Downloaded <a href="https://steamcommunity.com/sharedfiles/filedetails/?id=${detail.publishedfileid}"><b>${detail.title}</b></a> (${humanFileSize(detail.file_size)})`
                             })
 
-                            await req.user.log(null, `downloaded workshop addon \"%title%\" (%filename%) for %share%`, {
-                                code: "shares.addons.upload.steam_workshop." + share.id as UserPrivilegeCode,
+                            await req.user!.log(null, `downloaded workshop addon \"%title%\" (%filename%) for %share%`, {
+                                code: "shares.addons.upload.steam_workshop." + share!.id as UserPrivilegeCode,
                                 metadata: {
                                     type: "workshop",
-                                    share: share.id,
+                                    share: share!.id,
                                     server: null,
                                     filename: detail.publishedfileid + ".vpk",
                                     title: detail.title,
@@ -396,7 +403,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
                 sendSSE({ state: "INSTALLING", message: "Installing addons to specified destinations" })
 
-                let destResults: Record<string, Record<string, {result: "success" | "error", error?: string }>> = undefined
+                let destResults: undefined|Record<string, Record<string, {result: "success" | "error", error?: string }>> = undefined
                 if(req.query.destinations) {
                     destResults = {}
                     const dests = req.query.destinations.split(",")
@@ -405,14 +412,14 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                         for(const detail of details) {
                             try {
                                 const filename = `${detail.publishedfileid}.vpk`
-                                await share.install(filename, destKey)
+                                await share!.install(filename, destKey)
                                 destResults[destKey][detail.publishedfileid] = { 
                                     result: "success"
                                 }
-                                await req.user.log(null, `enabled addon {filename} for "{share}/{server}"`, {
-                                    code: "shares.addons.edit." + share.id + "." + destKey as UserPrivilegeCode,
+                                await req.user!.log(null, `enabled addon {filename} for "{share}/{server}"`, {
+                                    code: "shares.addons.edit." + share!.id + "." + destKey as UserPrivilegeCode,
                                     metadata: {
-                                        share: share.id,
+                                        share: share!.id,
                                         server: destKey,
                                         filename: filename
                                     }
@@ -475,7 +482,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
     
         const shareId = req.params.shareId
-        const [code, granted] = req.user.requirePermission("shares.addons.edit", { resourceId: shareId })
+        const [code, granted] = req.user!.requirePermission("shares.addons.edit", { resourceId: shareId })
         if(!granted) return NO_PERMISSION(reply)
 
         const share = fastify.servers.getShare(shareId)
@@ -498,7 +505,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                     await share.install(filename, req.params.destKey)
                 else
                     await share.uninstall(filename, req.params.destKey)
-                await req.user.log(null, `${isInstall ? 'enabled' : 'disabled'} addon %filename% for %share%/%server%`, {
+                await req.user!.log(null, `${isInstall ? 'enabled' : 'disabled'} addon %filename% for %share%/%server%`, {
                     code,
                     metadata: {
                         share: share.id,

@@ -42,7 +42,7 @@ export interface AddonInfo {
     /** The destinations where addon is installed on */
     installInfo: Record<string, boolean>,
     /** The collection this addon is a child of, if any */
-    collection?: WorkshopCollectionInfo,
+    collection?: WorkshopCollectionInfo | null,
     meta: Record<string, any>
 }
 
@@ -124,7 +124,7 @@ export interface WorkshopItem {
 }
 
 export interface ExtendedWorkshopItem extends WorkshopItem {
-    consumer_app_title?: string,
+    consumer_app_title: string | null,
 }
 
 export interface CollectionWorkshopItem {
@@ -138,4 +138,4 @@ export interface ItemWorkshopItem {
 }
 export type DetailWorkshopItem = CollectionWorkshopItem | ItemWorkshopItem
 
-export type DetailsResponse = DetailWorkshopItem | { item: null }
+export type DetailsResponse = DetailWorkshopItem | { item: null | undefined }

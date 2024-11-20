@@ -157,7 +157,7 @@ export default class BufferReader {
     //   }
     // }
   
-    at(i: number): number {
+    at(i: number): number | undefined {
       return this.#buffer.at(i)
     }
   

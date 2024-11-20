@@ -15,11 +15,11 @@ export interface OauthConfig {
         detailsUrl: string,
         redirectUrl?: string
     },
-    config?: ProviderConfig
+    config: ProviderConfig
 }
 
 export interface ProviderConfig {
-    avatarFormat: string
+    avatarFormat: string | null
 }
 
 export class OauthManager {
@@ -44,17 +44,18 @@ export class OauthManager {
      * @param providerName the provider id
      * @returns Promise<OauthProviderUser> - instance of OauthProviderUser
      */
-    async getProvider(providerName: string): Promise<OauthProviderUser> {
+    async getProvider(providerName: string): Promise<OauthProviderUser|null> {
         const domain = await this.#config.GetKVNamespaced("domain")
         const clientId = await this.#config.GetKVNamespaced("providers", providerName, "clientId")
         const clientSecret = await this.#config.GetKVNamespaced("providers", providerName, "clientSecret")
         if(!clientId || !clientSecret) {
             return null
         }
+        // Assume not null
         const urls = {
-            tokenUrl: await this.#config.GetKVNamespaced("providers", providerName, "token_url"),
-            revokeUrl: await this.#config.GetKVNamespaced("providers", providerName, "revoke_url"),
-            detailsUrl: await this.#config.GetKVNamespaced("providers", providerName, "user_url"),
+            tokenUrl: await this.#config.GetKVNamespaced("providers", providerName, "token_url") as string,
+            revokeUrl: await this.#config.GetKVNamespaced("providers", providerName, "revoke_url") as string,
+            detailsUrl: await this.#config.GetKVNamespaced("providers", providerName, "user_url") as string,
             redirectUrl: `${domain}/api/auth/${providerName}/callback`
         }
         
@@ -63,7 +64,7 @@ export class OauthManager {
             clientSecret,
             urls,
             config: {
-                avatarFormat: await this.#config.GetKVNamespaced("providers", providerName, "avatar_url_format")
+                avatarFormat: await this.#config.GetKVNamespaced<string>("providers", providerName, "avatar_url_format") ?? null
             }
         }
         return new OauthProviderUser(providerName, oauthConfig, this.#authmngr)

@@ -103,18 +103,20 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                     // User's name is not cached, fetch it:
                     const steamid = new SteamID(ban.steamid)
                     const resolvedNames = await fastify.steam.getUserDetails([steamid])
-                    const name = resolvedNames[0].personaname.replace(NAME_INVALID_CHAR_REPLACE, '�')
-                    if(resolvedNames.length > 0) {
-                        ban.client = {
-                            id: ban.steamid,
-                            name,
-                            nameResolver: "name_db"
-                        }
-                        const accountid = steamid.getSteam2RenderedID().slice(10)
-                        try {
-                            await fastify.db.execute("INSERT INTO user_names (steamid, name) VALUES (?, ?)", [accountid, name])
-                        } catch(err) {
-                            console.warn(`Warn: Could not insert resolved name (${accountid}, name ${name}):`, err.sqlMessage)
+                    if(resolvedNames) {
+                        const name = resolvedNames[0].personaname.replace(NAME_INVALID_CHAR_REPLACE, '�')
+                        if(resolvedNames.length > 0) {
+                            ban.client = {
+                                id: ban.steamid,
+                                name,
+                                nameResolver: "name_db"
+                            }
+                            const accountid = steamid.getSteam2RenderedID().slice(10)
+                            try {
+                                await fastify.db.execute("INSERT INTO user_names (steamid, name) VALUES (?, ?)", [accountid, name])
+                            } catch(err) {
+                                console.warn(`Warn: Could not insert resolved name (${accountid}, name ${name}):`, err.sqlMessage)
+                            }
                         }
                     }
                 }

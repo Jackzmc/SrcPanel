@@ -30,19 +30,19 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             }
         },
         async handler(req: FastifyRequest<{ Body: POSTNotesType, Params: { steamid: string } }>, reply) {
-            if(!req.user.hasPermission("notes.create")) return NO_PERMISSION(reply)
+            if(!req.user!.hasPermission("notes.create")) return NO_PERMISSION(reply)
             const [ok] = await fastify.db.execute<OkPacket>(`
                 INSERT INTO notes (steamid, markedBy, content)
                 VALUES (:steamid, :markedBy, :content)`,
                 {
                     content: req.body.content,
                     steamid: req.params.steamid,
-                    markedBy: req.user.steamid2
+                    markedBy: req.user!.steamid2
                 }
             )
 
 
-            await req.user.log(req.params.steamid, `%client% created note #%id% for %target%`, {
+            await req.user!.log(req.params.steamid, `%client% created note #%id% for %target%`, {
                 code: "notes.create",
                 metadata: {
                     id: ok.insertId,
@@ -78,7 +78,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             }
         },
         async handler(req: FastifyRequest<{ Body: PUTNotesType, Params: { id: string } }>, reply) {
-            if(!req.user.hasPermission("notes.edit")) return NO_PERMISSION(reply)
+            if(!req.user!.hasPermission("notes.edit")) return NO_PERMISSION(reply)
             const [existing] = await fastify.db.execute<RowDataPacket[]>(`
                 SELECT * FROM notes WHERE id = ?`,
                 [req.params.id]
@@ -93,8 +93,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             }
 
             // Check if they can edit this
-            const isCreator = req.user.equals(existing[0].markedBy) 
-            const [code, granted] = req.user.requirePermission("notes.edit", {isCreator})
+            const isCreator = req.user!.equals(existing[0].markedBy) 
+            const [code, granted] = req.user!.requirePermission("notes.edit", {isCreator})
             if(!granted) return NO_PERMISSION(reply)
 
             const note: any = {
@@ -111,7 +111,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             )
 
 
-            await req.user.log(note.steamid, `%client% edited note #%id% for %target%`, {
+            await req.user!.log(note.steamid, `%client% edited note #%id% for %target%`, {
                 code,
                 metadata: {
                     id: note.id,
@@ -151,7 +151,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         async handler(req: FastifyRequest<{ 
             Params: { id: number }
         }>, reply) {
-            if(!req.user.hasPermission("notes.delete")) return NO_PERMISSION(reply)
+            if(!req.user!.hasPermission("notes.delete")) return NO_PERMISSION(reply)
             const [existing] = await fastify.db.execute<RowDataPacket[]>(`
                 SELECT * FROM notes WHERE id = ?`,
                 [req.params.id]
@@ -166,8 +166,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             }
 
             // Check if they can edit this
-            const isCreator = req.user.equals(existing[0].markedBy) 
-            const [code, granted] = req.user.requirePermission("notes.delete", {isCreator})
+            const isCreator = req.user!.equals(existing[0].markedBy) 
+            const [code, granted] = req.user!.requirePermission("notes.delete", {isCreator})
             if(!granted) return NO_PERMISSION(reply)
 
             const [ok] = await fastify.db.execute<OkPacket>(
@@ -175,7 +175,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 [req.params.id]
             )
 
-            await req.user.log(existing[0].steamid, `%client% deleted note #%id% for %target%`, {
+            await req.user!.log(existing[0].steamid, `%client% deleted note #%id% for %target%`, {
                 code,
                 metadata: {
                     id: req.params.id,

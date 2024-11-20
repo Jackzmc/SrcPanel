@@ -11,6 +11,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 console.log(req.id, json)
                 if(json.apikey) {
                     const apikey = await fastify.authmngr.getAPIKey(json.apikey)
+                    if(!apikey) return
                     socket.send(JSON.stringify({
                         steamid: apikey.steamid
                     }))

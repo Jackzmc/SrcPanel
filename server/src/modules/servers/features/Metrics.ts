@@ -73,13 +73,16 @@ export default class MetricsFeature extends Feature {
     }
 
     recordStatus(data: ServerStatusData | null, source: ServerStatusSource) {
+      if(!this.hasInflux) return
       const statusPoint = this.#createPoint("status")
-      let playerCount = null
+      let playerCount: number|null = null
       if(data) {
         playerCount = data.players.length
         if(this._server.uptime)
           statusPoint.intField("uptime", this._server.uptime)
-        statusPoint.stringField("map", this._server.status.data.map)
+        if(this._server.status.data?.map)
+          statusPoint.stringField("map", this._server.status.data.map)
+        if(this._server.status.data?.gamemode)
         statusPoint.stringField("gamemode", this._server.status.data.gamemode)
       } 
       if(source == "live" && this._server.Plugin?.available) {
@@ -98,15 +101,15 @@ export default class MetricsFeature extends Feature {
           }
           point.intField("survivor_count", survivors)
           point.intField("infected_count", infected)
-          this.#influx.writePoint(point)
+          this.#influx!.writePoint(point)
         }
       }
       if(playerCount != null) {
         statusPoint.intField("player_count", playerCount)
       }
 
-      this.#influx.writePoint(statusPoint)
-      this.#influx.flush()
+      this.#influx!.writePoint(statusPoint)
+      this.#influx!.flush()
     }
 
 

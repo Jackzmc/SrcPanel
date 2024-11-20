@@ -25,10 +25,10 @@ interface UserData {
 }
 
 export interface OauthAuthData {
-    refreshToken: string,
+    refreshToken: string | null,
     refreshTokenExpired: boolean,
-    accessToken: string
-    accessTokenExpires: number,
+    accessToken: string | null
+    accessTokenExpires: number | null,
 }
 
 // Buffer to pre-emptively refresh before this, to compensate for any latency
@@ -44,8 +44,8 @@ export class OauthProviderUser {
     #oauth: OauthConfig
     #providerName: string
     #steamid2: string
-    #authData: OauthAuthData
-    #userData: OauthProviderData
+    #authData: OauthAuthData | null
+    #userData: OauthProviderData | null
     #authManager: AuthManager
 
     constructor(providerName: string, oauthData: OauthConfig, authManager: AuthManager) {
@@ -60,6 +60,7 @@ export class OauthProviderUser {
     }
 
     async #fetchAccessToken(code?: string, redirectUrl?: string) {
+        if(!this.#authData) throw new Error("Provider has already been revoked")
         if(!code && !this.#authData.refreshToken) throw new Error('No code or refresh token provided. Either call .authorize(code) or .setUser(steamid) first')
         const params = new URLSearchParams()
         // params.append('client_id', this.#oauth.clientId)
@@ -111,7 +112,8 @@ export class OauthProviderUser {
     }
 
     async #getAccessToken() {
-        if(!this.#authData.accessToken || this.#authData.accessTokenExpires >= ((Date.now() / 1000) + EXPIRES_WINDOW_S)) {
+        if(!this.#authData) throw new Error("Provider has already been revoked")
+        if(!this.#authData.accessToken || this.#authData.accessTokenExpires! >= ((Date.now() / 1000) + EXPIRES_WINDOW_S)) {
             await this.#fetchAccessToken()
         }
         return this.#authData.accessToken
@@ -138,10 +140,10 @@ export class OauthProviderUser {
             throw new Error("No user data, either call .setUser() to get cached, or .fetchDetails to fetch")
         }
         await this.#authManager.setProvider(this.#steamid2, this.#providerName as OauthProvider, this.#userData)
-        await this.#authManager.setProviderAuthData(this.#steamid2, this.#providerName as OauthProvider, this.#authData)
+        await this.#authManager.setProviderAuthData(this.#steamid2, this.#providerName as OauthProvider, this.#authData!)
     }
 
-    public async fetchDetails(retry = false): Promise<OauthProviderData> {
+    public async fetchDetails(retry = false): Promise<OauthProviderData|null> {
         const accessToken = await this.#getAccessToken()
         if(!accessToken) return null
         const userResponse = await fetch(this.#oauth.urls.detailsUrl, {
@@ -153,7 +155,7 @@ export class OauthProviderUser {
         if(userResponse.ok) {
             const user: UserData = await userResponse.json()
             
-            let avatarUrl: string
+            let avatarUrl: string|undefined = undefined
             if(this.#oauth.config.avatarFormat) avatarUrl = this.#oauth.config.avatarFormat.replace("{id}", user.id).replace("{hash}", user.avatar)
             this.#userData = {
                 // email: this.#data.email,
@@ -169,7 +171,7 @@ export class OauthProviderUser {
                     console.error(`[oauth/${this.#providerName}] ${await userResponse.text()}`)
                     throw new Error(`Could not authenticate with ${this.#providerName}`)
                 }
-                this.#authData.accessToken = undefined
+                this.#authData!.accessToken = null
                 return this.fetchDetails(true)
             }
             console.error(`[oauth/${this.#providerName}] ${await userResponse.text()}`)
@@ -178,6 +180,8 @@ export class OauthProviderUser {
     }
 
     public async revoke(): Promise<void> {
+        if(!this.#authData) throw new Error("Provider has already been revoked")
+        if(!this.#authData?.refreshToken) throw new Error("No refresh token available")
         const params = new URLSearchParams()
         params.append('token', this.#authData.refreshToken)
         params.append('token_type_hint', "refresh_token")

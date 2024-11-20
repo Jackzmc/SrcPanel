@@ -2,8 +2,8 @@ export interface SteamInfo {
     steamid: string
     accountid: string
     name: string,
-    profileurl: string,
-    avatarhash: string
+    profileurl?: string,
+    avatarhash?: string
 }
 
 export const UserPrivilegeCodes = [

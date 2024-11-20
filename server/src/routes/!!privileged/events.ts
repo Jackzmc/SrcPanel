@@ -73,7 +73,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         const conn = await fastify.db.getConnection()
         await conn.beginTransaction()
         for(const week of req.body.weeks) {
-            await conn.execute("INSERT INTO `left4dead2-admins`.dash_event_responses (event_id, steamid, week_start, days) VALUES (?, ?, ?, FROM_BASE64(?)) ON DUPLICATE KEY UPDATE days = FROM_BASE64(?)", [req.params.id, req.user.steamid2, week.startDate, week.data, week.data])    
+            await conn.execute("INSERT INTO `left4dead2-admins`.dash_event_responses (event_id, steamid, week_start, days) VALUES (?, ?, ?, FROM_BASE64(?)) ON DUPLICATE KEY UPDATE days = FROM_BASE64(?)", [req.params.id, req.user!.steamid2, week.startDate, week.data, week.data])    
         }
         await conn.commit()
         conn.release()
@@ -83,7 +83,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
 // Converts every 8 booleans into one byte where each bit is its value
 function toBytes(array: boolean[]): Uint8Array {
-    let bytes = [];
+    let bytes: number[] = [];
     for(let i = 0; i < array.length; i += 8) {
       let value = 0
       for(let bit = 0; bit < 8; bit++) {
@@ -95,8 +95,8 @@ function toBytes(array: boolean[]): Uint8Array {
     }
     return new Uint8Array(bytes)
 }
-function fromBytes(bytes: Uint8Array): boolean[][] {
-    let array = []
+function fromBytes(bytes: Uint8Array): boolean[] {
+    let array: boolean[] = []
     for(let i = 0; i < bytes.length; i++) {
         for(let bit = 0; bit < 8; bit++) {
             let bitValue = 1 << bit;
@@ -108,7 +108,7 @@ function fromBytes(bytes: Uint8Array): boolean[][] {
 function serializeWeekData(array: boolean[]): string {
     return btoa(String.fromCharCode.apply(null, toBytes(array)))
 }
-function deserializeWeekData(base64: string): boolean[][] {
+function deserializeWeekData(base64: string): boolean[] {
     return fromBytes(new Uint8Array(atob(base64).split("").map(function(c) {
         return c.charCodeAt(0); })));
 }

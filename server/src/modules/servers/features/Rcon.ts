@@ -65,9 +65,10 @@ export default class RconFeature extends Feature implements IAction {
     }
 
     async performAction(command: string, namespace = "default"): Promise<ActionResponse> {
+      let cmd: string|null = command
       if(namespace === "builtin") {
-        command = getFallbackCommandForBuiltin(command)
-        if(!command) throw new Error(`Unable to run builtin:${command} via rcon`)
+        cmd = getFallbackCommandForBuiltin(command)
+        if(!cmd) throw new Error(`Unable to run builtin:${command} via rcon`)
       }
       else if(namespace !== "default") {
         throw new Error("Unsupported namespace")

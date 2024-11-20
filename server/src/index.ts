@@ -100,7 +100,7 @@ app.register(MiddleManager)
 .then(async() => {
     app.register(FastifyCookie)
     app.register(FastifySession, { 
-        secret: process.env.SESSION_SECRET,
+        secret: process.env.SESSION_SECRET as string,
         cookieName: 'srcds-sessid',
         cookie: { 
             secure: process.env.NODE_ENV === "production", 
@@ -150,7 +150,9 @@ app.register(MiddleManager)
                 await loadRoutes(prefix, path.join(folderPath, dirent.name))
                 
             } else if(dirent.isFile()) {
-                const [,name,ext] = dirent.name.match(/^(.+)\.(.+)$/)
+                const match = dirent.name.match(/^(.+)\.(.+)$/)
+                if(!match) return
+                const [,name,ext] = match
                 if(ext === "js" || ext === "ts") {
                     const prefix = (name === "index") ? rootPrefix : `${rootPrefix}${name}`
                     try {

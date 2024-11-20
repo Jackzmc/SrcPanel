@@ -48,7 +48,7 @@ interface DataCache {
 }
 
 // Cache data for partitions
-let partitionRowCache: Map<number | undefined, DataCache> = new Map()
+let partitionRowCache: Map<number | null, DataCache> = new Map()
 let lastMissingNameFetchTime = 0
 
 let serverFilterCache: SetCache<string>
@@ -81,7 +81,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     // Calculates current year in YYYY
     const CurrentYear = () => new Date().getFullYear()
 
-    async function getTotalRows(year: number | null): Promise<DataCache> {
+    async function getTotalRows(year: number | null): Promise<DataCache|undefined> {
         let value = partitionRowCache.get(year)
         // Fetch data if: 
         //  (1) no cached data 
@@ -96,7 +96,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                     lowestId: c[0].lowestId,
                     lastFetchTime: Date.now()
                 }
-                partitionRowCache.set(year, value)
+                partitionRowCache.set(null, value)
             } catch(err) {
                 // Ignore invalid partitions
                 if(err.code !== "ER_UNKNOWN_PARTITION") {
@@ -180,7 +180,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         const startTime = Date.now()
         let [logs] = (await query.execute(fastify.db))
 
-        let year = parseInt(req.query.source)
+        let year = parseInt(req.query.source as string)
         if(!year || isNaN(year)) year = CurrentYear()
         let cache = await getTotalRows(year)
         const missingNameSet = new Set<SteamID>()
@@ -195,7 +195,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 missingNameSet.add(new SteamID(log.target))
             }
             // Side effect, but update highest id recorded
-            if(log.id > cache.highestId) {
+            if(cache && log.id > cache.highestId) {
                 cache.highestId = log.id
             }
             return log
@@ -230,12 +230,12 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             timeTaken: Date.now() - startTime,
             cache,
             totals: {
-                total: cache.totalRows, // # of rows in entire data source
+                total: cache?.totalRows, // # of rows in entire data source
                 count: logs.length // # of rows + filtered + pagination (<= limit)
             },
             // pages: Math.ceil(count[0].count / limit),
             raw: process.env.NODE_ENV === "production" || req.query.raw ? null : {
-                cache: cache[tableName],
+                cache: cache ? cache[tableName] : undefined,
                 query: query.buildUnsafe(),
                 tableName
             }
@@ -243,7 +243,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     })
 
     fastify.post("/:id/redact", async(req: FastifyRequest<{Params: {id: 'string'}}>, reply) => {
-        if(!req.user.hasPermission("logs.redact")) return NO_PERMISSION(reply)
+        if(!req.user!.hasPermission("logs.redact")) return NO_PERMISSION(reply)
         if(!req.params.id) {
             return reply.code(404).send({
                 error: "NOT_FOUND",

@@ -20,9 +20,10 @@ export default class StandardServer extends Server {
         super(group, server, new GameDig())
 
         if(server.rcon) {
-            let password: string
+            let password: string | undefined
             if(server.rcon.password.value) password = server.rcon.password.value
             if(server.rcon.password.env) password = process.env[server.rcon.password.env]
+            if(!password) throw new Error(`No rcon password provided for ${server.id}`)
             this._rcon = new RconFeature(this, {
                 host: server.ip,
                 port: server.port,
@@ -35,7 +36,7 @@ export default class StandardServer extends Server {
     }
 
     get canPerformCommands() {
-        return this.Plugin?.available || this.Rcon?.available
+        return this.Plugin?.available == true || this.Rcon?.available == true
     }
 
     get startTime(): number | null {

@@ -4,7 +4,7 @@ import { ADMINS_DB } from '../!!privileged/admins.js';
 import SteamID from 'steamid';
 import { BanAppeal, FullAPIBan } from '../../../../common-types/Ban.js';
 import { NAME_INVALID_CHAR_REPLACE } from '../../routes/!unprivileged/bans.js';
-import { UserProfileData } from '../../../../common-types/User.js';
+import { ReadableAdminData, UserProfileData } from '../../../../common-types/User.js';
 import { NOT_FOUND, NO_PERMISSION } from '../../responses.js';
 
 
@@ -140,12 +140,12 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     })
 
     fastify.post('/:steamid/profile', async(req: FastifyRequest<{Params: { steamid: string }, Body: UserProfileData}>, reply): Promise<UserProfileData> => {
-        if(req.params.steamid !== req.user.steamid2) {
+        if(req.params.steamid !== req.user!.steamid2) {
             return NO_PERMISSION(reply, "You can only edit your own profile")
         }
         await fastify.db.query<OkPacket>(
             "INSERT INTO `left4dead2-admins`.panel_user_data (steamid, birth_date, birth_month) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE birth_date = ?, birth_month = ?",
-            [ req.user.steamid2, req.body.birthDate, req.body.birthMonth, req.body.birthDate, req.body.birthMonth ]
+            [ req.user!.steamid2, req.body.birthDate, req.body.birthMonth, req.body.birthDate, req.body.birthMonth ]
         )
         return reply.status(204).send()
     })
@@ -199,10 +199,9 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             }
         }
 
-        let adminData = undefined
+        let adminData: ReadableAdminData|null = null
         if(req.query.include === "admin") {
             adminData = fastify.authmngr.getAdminExport(req.params.steamid)
-            if(adminData) delete adminData.password
         }
 
         return {

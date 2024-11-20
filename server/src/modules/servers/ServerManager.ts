@@ -41,7 +41,7 @@ export interface ConfigStandaloneGroupData extends BaseConfigGroupData {
 }
 export interface ConfigDynamicGroupData extends BaseConfigGroupData {
   templateId: string,
-  serverTemplate?: ConfigServerData,
+  serverTemplate: ConfigServerData,
   minServers?: number
 }
 export type ConfigGroupData = ConfigStandaloneGroupData | ConfigDynamicGroupData
@@ -65,7 +65,7 @@ export default class ServerManager {
   private shortRefreshInterval: number
   private longRefreshInterval: number
   private refreshTimer: ReturnType<typeof setTimeout>
-  private refreshTimeout: ReturnType<typeof setTimeout> = null
+  private refreshTimeout: ReturnType<typeof setTimeout>|null = null
 
   #cfgManager: ConfigManager
   #socket: net.Server
@@ -137,7 +137,7 @@ export default class ServerManager {
     const record = PluginSocket.ParseRecord(reader)
     // skip any other type until authenticated
     if(record.type != LiveRecordType.Auth) return console.warn("[ServerManager] Got non-auth packets when not-authenticated, ignoring")
-    JWT.verify<PluginTokenPayload>(record.token, process.env.STATE_SECRET)
+    JWT.verify<PluginTokenPayload>(record.token, process.env.STATE_SECRET!)
       .then(({payload}) => {
         const server = this.getServerForPlugin(payload, record.port)
         if(server) {
@@ -234,7 +234,7 @@ export default class ServerManager {
       for(const server of Object.values(this.getAll())) {
         // This triggers an OK packet
         if(server.Plugin?.authenticated)
-          server.Plugin.Socket.send(LiveRecordResponse.OK, server.Plugin.liveViewers)
+          server.Plugin.Socket?.send(LiveRecordResponse.OK, server.Plugin.liveViewers)
       }
     }, LIVE_SOCKET_KEEPALIVE_INTERVAL)
   }
@@ -342,7 +342,7 @@ export default class ServerManager {
     const inShortRefresh = this.refreshTimeout != null
     // Kill the inactivity timeout if there was a request
     if(inShortRefresh) {
-      clearTimeout(this.refreshTimeout)
+      clearTimeout(this.refreshTimeout!)
     }
     this.refreshTimeout = setTimeout(() => {
       // Switch the timer from short -> long
@@ -364,7 +364,8 @@ export default class ServerManager {
     return this.addonShares[shareId.toLowerCase()] != undefined
   }
 
-  public getShare(shareId: string) {
+  public getShare(shareId?: string) {
+    if(!shareId) return undefined
     return this.addonShares[shareId.toLowerCase()]
   }
 
@@ -471,7 +472,7 @@ export default class ServerManager {
           }
         }
         if(dest.serverIds) {
-          const serverIds = []
+          const serverIds: string[] = []
           for(const id of dest.serverIds) {
             const _id = id.toLowerCase()
             if(this.getServer(_id)) {
@@ -491,7 +492,7 @@ export default class ServerManager {
         driver: sqlite3.Database
       })
       this.addonShares[shareId.toLowerCase()] = new Share(db, this.#steam, share)
-      console.info(`[ServerManager] Loaded share "${shareId}" with ${Object.keys(share.destinations).length} destinations, ${numServers} servers`)
+      console.info(`[ServerManager] Loaded share "${shareId}" with ${Object.keys(share.destinations!).length} destinations, ${numServers} servers`)
     }
   }
 
@@ -503,7 +504,6 @@ export default class ServerManager {
       for(const [key, actions] of Object.entries<ServerAction[]>(actionGroups)) {
         this.#actions[key] = actions.map(action => {
           return {
-            showWhen: "online",
             ...action
           }
         })
@@ -521,9 +521,12 @@ export default class ServerManager {
       if(data.actionSources) {
         // Resolve [id1, id2] -> [action1, action2]
         actions = data.actionSources.reduce((list, actionGroupId) => {
-          if(!this.#actions[actionGroupId]) console.warn(`[ServerManager] WARN: Group ${groupId} references missing action group: ${actionGroupId}`)
+          if(!this.#actions[actionGroupId]) {
+            console.warn(`[ServerManager] WARN: Group ${groupId} references missing action group: ${actionGroupId}`)
+            return list
+          }
           return list.concat(this.#actions[actionGroupId])
-        }, [])
+        }, [] as ServerAction[])
       }
       if('templateId' in data) {
         if(!this.#dynamicManager) {
