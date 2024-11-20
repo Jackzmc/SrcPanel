@@ -7,7 +7,10 @@
   <div class="columns">
     <div class="column is-8">
       <Field icon-left="fa-plus" label="Add / Find Workshop Addon">
-        <input v-model="searchQuery" type="text" class="input" placeholder="https://steamcommunity.com/sharedfiles/filedetails/?id=0000000000" />
+        <input v-model="searchQuery"
+          type="text" class="input" placeholder="https://steamcommunity.com/sharedfiles/filedetails/?id=0000000000"
+          @key.enter="addWorkshopEntry"
+        />
         <p class="help">Enter a workshop url or search for an addon by it's name</p>
       </Field>
     </div>
@@ -48,21 +51,23 @@
 </template>
 
 <script setup lang="ts">
+const URL_REGEX = new RegExp(/https:\/\/steamcommunity.com\/sharedfiles\/filedetails\/?id=(\d+)/)
+
 import { computed, onMounted, ref } from 'vue';
-import { AddonInfo } from '../../../../../common-types/Share.js';
+import { AddonInfo, WorkshopItem } from '../../../../../common-types/Share.js';
 import Field from '@/components/Field.vue';
 
 let searchQuery = ref()
 
 let enabledAddons = ref<Record<string, boolean>>({})
-let addons = ref<AddonInfo[]>()
+let addons = ref<WorkshopItem[]>([])
 const filteredAddons = computed(() => {
   if(!addons.value) return []
   return addons.value.map(addon => {
     return {
       ...addon,
-      name: addon.workshop?.title ?? addon.filename,
-      tooltip: `${addon.filename}\n\n${addon.workshop?.description??''}`
+      name: addon.title ?? addon.filename,
+      tooltip: `${addon.filename}\n\n${addon.description??''}`
     }
   })
 })
@@ -71,16 +76,33 @@ async function fetchAddons() {
   const response = await fetch('/api/shares/addons/addons')
   if(response.ok) {
     const json = await response.json()
-    addons.value = json.addons
-    for(const addon of addons.value!) {
-      enabledAddons.value[addon.filename] = false
+    for(const addon of json.addons) {
+      addItem(addon)
     }
   }
 }
+function addItem(addon: WorkshopItem) {
+  enabledAddons.value[addon.filename] = false
+  addons.value.push(addon)
+}
 
 async function addWorkshopEntry() {
-  // TODO: search _or_ url parse
-  const response = await fetch('/api/')
+  const wsLinkMatch = searchQuery.value.match(URL_REGEX)
+  if(wsLinkMatch) {
+    const response = await fetch(`/api/shares/workshop/${wsLinkMatch[1]}/details`)
+    if(response.ok) {
+      const json = await response.json()
+      if(json.item) {
+        addItem(json.item)
+      }
+    }
+  } else {
+    // const appid = 550
+    // const response = await fetch(`/api/shares/workshop/search/${appid}?query=${encodeURIComponent(searchQuery.value)}`)
+    // if(response.ok) {
+    //   const json = await response.json()
+    // }
+  }
 }
 
 function toggleAddon(addonId: string) {
