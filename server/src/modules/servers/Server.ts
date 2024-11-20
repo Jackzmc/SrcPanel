@@ -251,11 +251,11 @@ export default abstract class Server implements IAction {
         if(!err.message.includes("Failed all ")) {
           console.error(`[Server/${this.id}] host=${host} getStatus error: `, err)
         }
-        this.updateStatus(null)
+        this.updateStatus(null, "gamedig")
       }
     }
 
-    updateStatus(data: ServerStatusData | null = null, source: ServerStatusSource = "") {
+    updateStatus(data: ServerStatusData | null = null, source: ServerStatusSource) {
       this._status.data = data
       this._status.source = source
       if(data) {
