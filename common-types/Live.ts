@@ -342,7 +342,7 @@ export interface LiveClient extends LiveRecordClient {
 } 
 
 
-export function updateLiveCache(cache: LiveDataCache | undefined, record: LiveRecord): LiveDataCache {
+export function updateLiveCache(cache: LiveDataCache | null, record: LiveRecord): LiveDataCache {
     if(!cache) cache = {
         lastUpdate: 0,
         clients: {},

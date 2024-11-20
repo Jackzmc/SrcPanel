@@ -55,8 +55,9 @@ export default class DockerServer extends Server implements IAction {
 
     public async performAction( command: string, namespace: string ): Promise<ActionResponse> {
         if(namespace === "builtin") {
-            command = getFallbackCommandForBuiltin(command)
-            if(!command) throw new Error(`Unable to run builtin:${command} via docker`)
+            let cmd = getFallbackCommandForBuiltin(command)
+            if(!cmd) throw new Error(`Unable to run builtin:${command} via docker`)
+            command = cmd
         }
         else if(namespace !== "default") {
             throw new Error("Unsupported namespace")

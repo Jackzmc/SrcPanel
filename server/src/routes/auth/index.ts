@@ -7,46 +7,50 @@ import type { UserPrivilegeCode } from '../../../../common-types/Privileges.js';
 
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
+    // Ensure user is authenticated, thus req.user is defined
     fastify.addHook('preHandler', async(req, reply) => {
         await fastify.authmngr.verify(req, reply)
     })
 
     fastify.delete('/notifications', async(req, reply) => {
-        return await req.user.clearNotifications()
+        return await req.user!.clearNotifications()
     })
 
     fastify.get('/profile', async(req, reply): Promise<UserData<UserPrivilegeCode[]>> => {
-        const profile = await fastify.authmngr.getProfileData(req.user.steamid2)
+        const profile = await fastify.authmngr.getProfileData(req.user!.steamid2)
         return {
             profile,
             user: req.session.user,
             permissions: req.session.permissions,
             isSessionOld: req.session.version !== SESSION_VERSION,
-            providers: req.user.providers, // TODO: is this needed?
-            notifications: await req.user.getNotifications(),
-            openDiscussions: await req.user.getOpenDiscussionsCount(),
+            providers: req.user!.providers, // TODO: is this needed?
+            notifications: await req.user!.getNotifications(),
+            openDiscussions: await req.user!.getOpenDiscussionsCount(),
             impersonatingId: req.session.impersonate ? req.session.user.steamid : undefined
         }
     })
 
     fastify.get('/connections', async(req, reply) => {
         // Forces all providers to refetch user data, to ensure it's up to date.
-        await req.user.updateProviders()
+        await req.user!.updateProviders()
         const providerList = await fastify.authmngr.oauth.getProviders()
         let providers: Record<string, ProviderConnectionData> = {}
         for(const provider of providerList) {
-            providers[provider.id] = {
-                id: provider.id,
-                name: provider.name,
-                enabled: false,
-                expired: null,
-                data: null
-            }
             // Check if user has such provider setup
-            if(req.user.providers[provider.id] !== undefined) {
-                providers[provider.id].enabled = true
-                providers[provider.id].data = req.user.providers[provider.id]
-                providers[provider.id].expired = req.user.providers[provider.id] === null
+            if(req.user!.providers[provider.id] !== undefined) {
+                providers[provider.id] = {
+                    id: provider.id,
+                    name: provider.name ?? provider.id,
+                    enabled: true,
+                    data: req.user!.providers[provider.id],
+                    expired: req.user!.providers[provider.id] === null
+                }
+            } else {
+                providers[provider.id] = {
+                    id: provider.id,
+                    name: provider.name ?? provider.id,
+                    enabled: false
+                }
             }
         }
         return providers
@@ -78,7 +82,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     })
 
     fastify.get('/sessions', async(req, reply) => {
-        const sessions = await req.user.getSessions()
+        const sessions = await req.user!.getSessions()
 
         return { 
             sessions: sessions.map(session => { 

@@ -23,7 +23,7 @@ export class StandardServerGroup extends ServerGroup<StandardServer> {
                 return true
             })
             .map(async ([id, server]) => {
-                const [, host, port] = server.ip.match(/([a-zA-Z0-9.]+):?(\d*)/)
+                const [, host, port] = server.ip.match(/([a-zA-Z0-9.]+):?(\d*)/) ?? []
                 const tags = server.tags ?? []
                 let address = server.ip
                 try {

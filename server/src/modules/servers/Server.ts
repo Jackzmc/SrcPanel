@@ -12,7 +12,7 @@ import {InfluxDB } from '@influxdata/influxdb-client'
 const MIN_REFRESH_TIME = 5000
 
 export interface BaseServerData {
-  id? : string;
+  id : string;
   name: string;
   domain? : string;
   ip: string,
@@ -62,15 +62,15 @@ interface InternalServerInfo extends ServerData {
 export default abstract class Server implements IAction {
     protected _info: InternalServerInfo
     protected _group: ServerGroup
-    protected _logId: string | null
+    protected _logId?: string
 
     // Optional / non-universal features:
-    protected _rcon?: RconFeature|null = null
-    protected _configs?: ConfigsFeature|null = null
+    protected _rcon: RconFeature|null = null
+    protected _configs: ConfigsFeature|null = null
     protected _logs: ConsoleFeature|null = null
     // Core universal features (initalized here):
-    protected _plugin?: PluginFeature
-    protected _metrics?: MetricsFeature
+    protected _plugin: PluginFeature
+    protected _metrics: MetricsFeature
 
     protected _actions: ServerAction[] = []
 
@@ -91,7 +91,7 @@ export default abstract class Server implements IAction {
           port: server.port,
           type: group.Type || /* legacy */ server.type,
           tags: server.tags,
-          sortOrder: server.sortOrder,
+          sortOrder: server.sortOrder ?? 0,
           // TODO: remove
         }
         this._logId = server.activityId
@@ -100,7 +100,10 @@ export default abstract class Server implements IAction {
             ...a, 
             inherited: true 
           } as ServerAction
-        }).concat(server.actions)
+        })
+        if(server.actions) {
+          this._actions = this._actions.concat(server.actions)
+        }
         this._status = { data: null, source: "", lastStatusTime: null, lastEmptyTime: null }
         if(server.cfgDirectory) {
           this._configs = new ConfigsFeature(this, server.cfgDirectory)
@@ -237,8 +240,8 @@ export default abstract class Server implements IAction {
           const raw = state.raw as any
           this.updateStatus({
             players: state.players
-              .filter(p => p.name.length > 0) // Some names are just "", assumingly bots?
-              .map(p => p.name),
+              .filter(p => p.name && p.name.length > 0) // Some names are just "", assumingly bots?
+              .map(p => p.name!),
             maxplayers: state.maxplayers,
             map: state.map,
             gamemode: raw.tags ? raw.tags[0] : undefined

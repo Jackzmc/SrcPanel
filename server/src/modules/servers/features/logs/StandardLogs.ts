@@ -19,7 +19,7 @@ export default class StandardLogs extends Logs {
     }
 
     async init() {
-        if(!this.#logPath) return null
+        if(!this.#logPath) return
         try {
             const path = resolve(this.#logPath)
             await stat(path)

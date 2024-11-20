@@ -18,8 +18,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         const offset = (page - 1) * limit;
 
 
-        const queryConditions = []
-        const queryData = []
+        const queryConditions: string[] = []
+        const queryData: string[] = []
         for(const param in req.query) {
             let [key, column] = param.split("_")
             if(key === "search" && req.query[param] != "") {
@@ -144,7 +144,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
     const domain = await fastify.config.GetKV("domain")
     function formatNote(note: any): Note {
-        let action = null
+        let action = undefined
         if(note.content.startsWith("@") && note.content.length > 1) {
             action = note.content.slice(1).split(".")
         }

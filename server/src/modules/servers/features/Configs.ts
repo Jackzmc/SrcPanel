@@ -60,14 +60,14 @@ export default class ConfigsFeature extends Feature {
      * @param showHidden Should hidden files be included (see HIDDEN_CONFIG_FILES)
      * @returns string[]
      */
-    public async getConfigFiles(showHidden = false) {
-      if(!this.#cfgDir) return
+    public async getConfigFiles(showHidden = false): Promise<string[] | null> {
+      if(!this.#cfgDir) return null
       return await this.#recurseConfig(this.#cfgDir, showHidden)
     }
 
     async #recurseConfig(parentPath: string, showHidden: boolean, parent = "") {
       const dirents = await readdir(parentPath, { withFileTypes: true })
-      const files = []
+      const files: string[] = []
       for(const dirent of dirents) {
         const filepath = `${parent}${dirent.name}`
         if(dirent.isDirectory()) {
@@ -77,7 +77,7 @@ export default class ConfigsFeature extends Feature {
           if(!showHidden && await ServerManager.isFileIgnored(dirent.name)) continue
 
           const ext = dirent.name.split(".").pop()
-          if(VALID_CONFIG_EXTS.includes(ext)) {
+          if(ext && VALID_CONFIG_EXTS.includes(ext)) {
             files.push(filepath)
           }
         }
@@ -90,16 +90,16 @@ export default class ConfigsFeature extends Feature {
       if(!newPath.startsWith(this.configDir)) {
         throw new Error(`Path is invalid, cannot leave config directory`)
       }
-      if(!allowIgnored && this.HasGitSupport && await this.#git.checkIgnore([filePath])) {
+      if(!allowIgnored && this.HasGitSupport && await this.#git!.checkIgnore([filePath])) {
         throw new Error(`Path is ignored by git`)
       }
       return newPath
     }
 
     async #commit(filePath: string, options: CommitOptions) {
-      await this.#git.add(filePath)
+      await this.#git!.add(filePath)
       const msg = options.message ? `Admin panel: ${options.message}` : 'Edited by admin panel'
-      await this.#git.commit(msg, {
+      await this.#git!.commit(msg, {
         author: `${options.author ?? 'steam'} <steam@admin.jackz.me>`
       })
     }
@@ -122,7 +122,7 @@ export default class ConfigsFeature extends Feature {
     }
 
     async pull(origin: string = "origin") {
-      await this.#git.pull(origin, undefined, { theirs: 1 })
+      await this.#git?.pull(origin, undefined, { theirs: 1 })
     }
 
 }

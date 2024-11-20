@@ -19,7 +19,7 @@ export interface DynamicGroupServerTemplate {
 
 export interface DynamicCreateGroupOptions extends CreateGroupOptions {
     templateId: string,
-    serverTemplate: Partial<DynamicGroupServerTemplate>,
+    serverTemplate: DynamicGroupServerTemplate,
     minServers?: number,
     maxEmptyServers?: number
 }
@@ -48,7 +48,7 @@ export class DynamicServerGroup extends ServerGroup<DockerServer> {
             tags: options.serverTemplate.tags ?? [],
         }
         this.#minServers = options.minServers || 0
-        this.#maxEmptyServers = options.maxEmptyServers
+        this.#maxEmptyServers = options.maxEmptyServers ?? null
         if(this.#maxEmptyServers != undefined && this.#minServers > this.#maxEmptyServers) {
             console.warn(`[ServerGroup::Dynamic] Group \"${id}\" has minServers >= maxEmptyServers, clamping maxEmpty to `)
         }
@@ -115,7 +115,7 @@ export class DynamicServerGroup extends ServerGroup<DockerServer> {
             if(maxEmptyTarget >= 0) { 
                 for(const server of servers) {
                     // If there is no players and hasn't been for a while, we can purge this
-                    if(server.status.data?.players.length === 0 && server.emptyTime > MIN_EMPTY_TIME_FOR_PURGE) {
+                    if(server.status.data?.players.length === 0 && server.emptyTime && server.emptyTime > MIN_EMPTY_TIME_FOR_PURGE) {
                         console.info(`[ServerGroup::Dynamic] Purging empty server \"${server.id}\" (empty for ${server.emptyTime}sec)`)
                         try {
                             await server.stop(true)
@@ -158,23 +158,22 @@ export class DynamicServerGroup extends ServerGroup<DockerServer> {
         }
         const id = `${this.Id}-${instance.Port}`
         const ip = DynamicServerGroup.formatTemplateVar(this.#serverTemplate.ip, vars)
-        const [, host, port] = ip.match(/([a-zA-Z0-9.]+):?(\d*)/)
+        const [, host, port] = ip.match(/([a-zA-Z0-9.]+):?(\d*)/) ?? []
         let address = instance.PublicIp
         try {
             const lookup = await DNS.lookup(host, { verbatim: false, family: 4 })
             address = lookup.address
         } catch(err) {
             console.warn(`[ServerManager] Warn: Could not resolve IP for hostname ${host}:\n`, err)
-            return
         }
         const server = new DockerServer(this, {
                 id,
-                name: DynamicServerGroup.formatTemplateVar(this.#serverTemplate.name, vars),
+                name: DynamicServerGroup.formatTemplateVar(this.#serverTemplate.name ?? "", vars),
                 ip: address,
                 domain: host,
                 port: instance.Port,
                 type: this.Type,
-                tags: this.#serverTemplate.tags,
+                tags: this.#serverTemplate.tags ?? [],
                 actions: this.#serverTemplate.actions ?? [],
                 activityId: this.#serverTemplate.activityId,
                 sortOrder: this.#serverTemplate.sortOrder

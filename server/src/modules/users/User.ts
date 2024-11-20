@@ -63,7 +63,7 @@ export default class User {
      */
     get immunity() {
         if(!this.isAdmin) return null
-        return this.#adminData.permissions.immunityLevel
+        return this.#adminData!.permissions.immunityLevel
     }
 
     /**
@@ -71,7 +71,7 @@ export default class User {
      */
     get baseImmunity() {
         if(!this.isAdmin) return null
-        return this.#adminData.permissions.base.immunityLevel
+        return this.#adminData!.permissions.base.immunityLevel
     }
 
     /**
@@ -79,7 +79,7 @@ export default class User {
      */
     get hasRoot() {
         if(!this.isAdmin) return null
-        return this.#adminData.permissions.flags.includes('z')
+        return this.#adminData!.permissions.flags.includes('z')
     }
 
     /**
@@ -87,7 +87,7 @@ export default class User {
      */
     get baseFlags() {
         if(!this.isAdmin) return null
-        return this.#adminData.permissions.base.flags
+        return this.#adminData!.permissions.base.flags
     }
 
     /**
@@ -95,7 +95,7 @@ export default class User {
      */
     get flags() {
         if(!this.isAdmin) return null
-        return this.#adminData.permissions.flags
+        return this.#adminData!.permissions.flags
     }
 
     /**
@@ -106,7 +106,7 @@ export default class User {
     }
 
     get permCodes() {
-        return new Set([...this.#adminData.permissions.codes])
+        return new Set([...this.#adminData!.permissions.codes])
     }
 
     /**
@@ -149,7 +149,7 @@ export default class User {
         for(const resource of resourceIds) {
             permCode += `.${resource}`
         }
-        for(const perm of this.#adminData.permissions.codes) {
+        for(const perm of this.#adminData!.permissions.codes) {
             if(AuthManager.isPermissionGranted(permCode as UserPrivilegeCode, perm)) return true
         }
         return false
@@ -194,7 +194,7 @@ export default class User {
      * @returns ID number of log entry
      */
     async log(targetUser: User | string | null, message: string, payload?: LogData): Promise<number> {
-        let user: User = null
+        let user: User|null = null
         if(targetUser != null) {
             if(targetUser instanceof User) user = targetUser
             else user = new User(this.#fastify, targetUser) 

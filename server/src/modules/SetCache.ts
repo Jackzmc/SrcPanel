@@ -10,7 +10,7 @@ export class SetCache<T> {
     staleTime: number
     cacheKey: string
     #getData: () => Promise<Set<T>>
-    #isStaleFn: (fetchTime: number, staleTime: number) => boolean
+    #isStaleFn?: (fetchTime: number, staleTime: number) => boolean
     constructor(updateFn: () => Promise<Set<T>>, staleTime = 1000 * 60 * 60 * 4) {
         this.#getData = updateFn
         this.staleTime = staleTime

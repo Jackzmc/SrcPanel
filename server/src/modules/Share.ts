@@ -11,6 +11,7 @@ import { readFile } from 'node:fs/promises';
 import ValveKV from 'valve-kv'
 import { SimpleGit, simpleGit } from 'simple-git';
 import { getChapterIds, getSpFileInfo } from './ShareUtils.js';
+import assert from 'assert';
 
 const DOWNLOAD_TIMEOUT = 1000 * 60 * 3
 
@@ -42,21 +43,17 @@ export default class Share {
     #git: SimpleGit
 
     constructor(db: sqlite.Database<sqlite3.Database, sqlite3.Statement>, steam: SteamAPI, shareInfo: Partial<ShareInfo>) {
-        this.#id = shareInfo.id
+        this.#id = shareInfo.id!
         this.#db = db
         this.#steam = steam
-        this.name = shareInfo.name ?? shareInfo.id,
+        this.name = shareInfo.name ?? this.#id!
+        if(!shareInfo.sourceFolder) throw new Error(`Share ${this.#id} is missing source folder`)
         this.sourceFolder = shareInfo.sourceFolder
         this.appId = shareInfo.appid
         this.downloadSources = shareInfo.downloadSources || {}
         this.validExts = shareInfo.fileExts
         this.destinations = shareInfo.destinations || {}
-        this.#description = shareInfo.description
-        db.exec(SQL`CREATE TABLE IF NOT EXISTS meta (
-            key VARCHAR(128) NOT NULL,
-            value VARCHAR(255) NOT NULL,
-            PRIMARY KEY(key) 
-        );`)
+        this.#description = shareInfo.description ?? ""
         db.exec(SQL`CREATE TABLE IF NOT EXISTS addoncache (
             filename VARCHAR(128) NOT NULL,
             filesize INT,
@@ -122,7 +119,7 @@ export default class Share {
      * @param filepath 
      * @returns string[] map file names without .bsp ext (ex: ["c1m1_hotel", ...])
      */
-    #getChapterIds(filepath: string): string[] {
+    #getChapterIds(filepath: string): string[]|null {
         const vpk = new VPK(filepath)
         try {
             vpk.load()
@@ -178,7 +175,7 @@ export default class Share {
             if(dirent.isFile()) {
                 // Only check the specified extenstions
                 const ext = dirent.name.split(".").pop()
-                if(this.validExts && !this.validExts.includes(ext)) continue
+                if(!ext || this.validExts && !this.validExts.includes(ext)) continue
             
                 const addonInfo = await this.getAddonInfo(dirent.name)
                 if(addonInfo) {
@@ -193,7 +190,7 @@ export default class Share {
                         if(addonInfo.meta.chapterIds) {
                             if(!collections[addonInfo.collection.id].chapterIds) collections[addonInfo.collection.id].chapterIds = []
                             // Convert to set and back to remove duplicates
-                            const set = new Set([...collections[addonInfo.collection.id].chapterIds, ...addonInfo.meta.chapterIds])
+                            const set = new Set([...collections[addonInfo.collection.id].chapterIds!, ...addonInfo.meta.chapterIds])
                             collections[addonInfo.collection.id].chapterIds = [...set]
                         }
                         delete addonInfo.collection
@@ -226,12 +223,12 @@ export default class Share {
                     results.push({
                         filename: dirent.name,
                         ...fsinfo,
-                        installInfo: (await this.getInstallInfo(dirent.name)).states,
+                        installInfo: (await this.getInstallInfo(dirent.name))!.states,
                         meta
                     })
                    
                     if(!pendingResolve)
-                        await this.#addAddonEntry(dirent.name, fsinfo, null, undefined, meta)
+                        await this.#addAddonEntry(dirent.name, fsinfo, undefined, undefined, meta)
                 }
             }
         }
@@ -240,7 +237,7 @@ export default class Share {
         for(const collection of Object.values(collections)) {
             results.push({
                 ...collection,
-                filesize: collection.children.reduce((pv, child) => pv + child.filesize, 0)
+                filesize: collection.children.reduce((pv, child) => pv + (child.filesize ?? 0), 0)
             })
         }
 
@@ -289,6 +286,7 @@ export default class Share {
         const info = await this.#db.get(SQL`SELECT * FROM addoncache WHERE filename = ${filename}`)
         if(!info) return null
         const installInfo = await this.getInstallInfo(filename)
+        assert(installInfo != undefined, "addon info checked in cache")
         return {
             filename: info.filename,
             filesize: info.filesize ?? installInfo.size,
@@ -325,7 +323,7 @@ export default class Share {
      * Gets file info and any destinations this file is enabled on
      * @param filename 
      */
-    public async getInstallInfo(filename: string): Promise<{ states: Record<string, boolean>, created: number, modified: number, size: number }> {
+    public async getInstallInfo(filename: string): Promise<{ states: Record<string, boolean>, created: number, modified: number, size: number }|undefined> {
         const statInfo = await this.#getFileInfo(this.sourceFolder, filename)
         if(statInfo) {
             let states: Record<string, boolean> = {}
@@ -356,7 +354,7 @@ export default class Share {
         if(!this.validExts) return files
         return files.filter(filename => {
             const ext = filename.split(".").pop()
-            return this.validExts.includes(ext)
+            return ext && this.validExts!.includes(ext)
         })
     }
 
@@ -461,9 +459,9 @@ export default class Share {
     }
 
     // Exports to a saveable object
-    public export(includeId = true): ShareInfo {
+    public export(): ShareInfo {
         return {
-            id: includeId ? this.id : undefined, 
+            id: this.id, 
             name: this.name,
             description: this.description,
             sourceFolder: this.sourceFolder,

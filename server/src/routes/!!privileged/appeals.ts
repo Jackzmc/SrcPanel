@@ -7,7 +7,7 @@ import { NO_PERMISSION } from '../../responses.js';
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
     fastify.post('/:appealid/approve', async(req: FastifyRequest<{Params: { appealid: string }}>, reply) => {
-        if(!req.user.hasPermission("bans.appeals.manage")) return NO_PERMISSION(reply)
+        if(!req.user!.hasPermission("bans.appeals.manage")) return NO_PERMISSION(reply)
         // Suspend the ban by grabbing the id from appeal
         await fastify.db.execute(
             `UPDATE bans SET flags = ~flags & ${APIBanFlags.Suspended} WHERE id = (SELECT ban_id FROM ban_appeals WHERE id = ?)`,
@@ -19,7 +19,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             [ BanAppealState.Accepted ]
         )
 
-        await req.user.log(null, `approved appeal #%appealid%`, {
+        await req.user!.log(null, `approved appeal #%appealid%`, {
             code: "bans.appeals.manage",
             metadata: {
                 appealid: req.params.appealid
@@ -30,7 +30,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     })
 
     fastify.post('/:appealid/reject', async(req: FastifyRequest<{Params: { appealid: string }, Querystring: { reason: string }}>, reply) => {
-        if(!req.user.hasPermission("bans.appeals.manage")) return NO_PERMISSION(reply)
+        if(!req.user!.hasPermission("bans.appeals.manage")) return NO_PERMISSION(reply)
         if(!req.query.reason) {
             return reply.status(400).send({
                 error: "INVALID_REJECT",
@@ -42,7 +42,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             [ BanAppealState.Rejected, req.query.reason, req.session.user.steamid, req.params.appealid]
         )
 
-        await req.user.log(null, `rejected appeal #%appealid% for \"%reason%\"`, {
+        await req.user!.log(null, `rejected appeal #%appealid% for \"%reason%\"`, {
             code: "bans.appeals.manage",
             metadata: {
                 appealid: req.params.appealid,

@@ -48,14 +48,14 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     })
 
     fastify.get('/groups', async(req, reply) => {
-        const hasRoot = req.user.hasRoot;
+        const hasRoot = req.user!.hasRoot;
         const groups = fastify.authmngr.GroupsExport
             .map(group => {
-                let canApply = group.immunity < req.user.immunity && hasRoot
+                let canApply = group.immunity < (req.user!.immunity ?? 0) && hasRoot
                 if(!hasRoot) {
                     const flags: string[] = group.flags.split('')
                     // test if every flag in flags is in my flags
-                    canApply = flags.every((flag: string) => req.user.flags.includes(flag))
+                    canApply = flags.every((flag: string) => (req.user!.flags ?? "").includes(flag))
                 }
 
                 return {
@@ -74,13 +74,13 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         if(!inviteUri)
             reply.send("No discord invite link was set, sorry.")
         else
-            reply.redirect(process.env.DISCORD_INVITE_URI, 301)
+            reply.redirect(process.env.DISCORD_INVITE_URI!, 301)
     })
 
     fastify.delete('/:steamid', async(req: FastifyRequest<{
         Params: { steamid: string }
     }>, reply) => {
-        if(!req.user.hasPermission("admins.revoke")) return NO_PERMISSION(reply)
+        if(!req.user!.hasPermission("admins.revoke")) return NO_PERMISSION(reply)
         if(req.params.steamid.length > 10) {
             const admin = fastify.authmngr.getAdmin(req.params.steamid)
             if(admin) {
@@ -94,7 +94,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
                 await fastify.authmngr.revokeAdmin(admin.id)
 
-                await req.user.log(admin.identity, `%client% revoked admin from %target% (#%id%)`, {
+                await req.user!.log(admin.identity, `%client% revoked admin from %target% (#%id%)`, {
                     code: "admins.revoke",
                     metadata: {
                         id: admin.id,
@@ -122,7 +122,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         Params: { steamid: string },
         Body: PUTAdminType
     }>, reply) => {
-        if(!req.user.hasPermission("admins.edit.others")) return NO_PERMISSION(reply, "You do not have permission to edit other users", "admins.edit.others")
+        if(!req.user!.hasPermission("admins.edit.others")) return NO_PERMISSION(reply, "You do not have permission to edit other users", "admins.edit.others")
         if(req.params.steamid.length > 10) {
             const admin = fastify.authmngr.getAdmin(req.params.steamid)
             if(admin) {
@@ -135,7 +135,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                         message: 'Cannot edit an admin at or above your immunity level',
                         statusCode: 403
                     })
-                } else if(immunity >= req.session.permissions.immunityLevel) {
+                } else if(immunity && immunity >= req.session.permissions.immunityLevel) {
                     reply.code(403).send({
                         error: 'INVALID_IMMUNITY',
                         message: "Cannot set an admin's immunity to a level higher than your own",
@@ -155,7 +155,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 }
                 const newAdmin = await fastify.authmngr.editAdmin(admin.id, newAdminData)
 
-                await req.user.log(admin.identity, `%client% edited admin privileges #%id% for %target%`, {
+                await req.user!.log(admin.identity, `%client% edited admin privileges #%id% for %target%`, {
                     code: "admins.edit",
                     metadata: {
                         id: admin.id,
@@ -187,7 +187,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
     fastify.post('/impersonate/:steamid?', async(req: FastifyRequest<{ Params: { steamid: string } }>, reply) => {
         if(req.params.steamid) {
-            if(!req.user.hasPermission("admins.impersonate")) return NO_PERMISSION(reply)
+            if(!req.user!.hasPermission("admins.impersonate")) return NO_PERMISSION(reply)
             const user = fastify.authmngr.getAdminExport(req.params.steamid)
             if(!user) {
                 return reply.code(404).send({
@@ -207,8 +207,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 name: user.name,
                 steamid: user.steamid,
                 accountid: new SteamID(user.steamid).accountid.toString(),
-                avatarhash: userDetails.avatarHash,
-                profileurl: `https://avatars.steamstatic.com/${userDetails.avatarHash}_full.jpg`,
+                avatarhash: userDetails?.avatarHash,
+                profileurl: userDetails ? `https://avatars.steamstatic.com/${userDetails.avatarHash}_full.jpg` : undefined,
             }
             req.session.permissions = user.permissions
             return {
@@ -216,8 +216,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 permissions: req.session.permissions
             }
         } else {
-            req.session.user = req.session.impersonate.original.user
-            req.session.permissions = req.session.impersonate.original.permissions
+            req.session.user = req.session.impersonate!.original.user
+            req.session.permissions = req.session.impersonate!.original.permissions
             delete req.session.impersonate
             return {
                 user: req.session.user,
@@ -230,7 +230,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         Params: { steamid: string },
         Body: POSTAdminType
     }>, reply) => {
-        if(!req.user.hasPermission("admins.grant")) return NO_PERMISSION(reply)
+        if(!req.user!.hasPermission("admins.grant")) return NO_PERMISSION(reply)
         if(req.params.steamid.length > 10) {
             const steamid = req.params.steamid.slice(10)
             const [existing] = await fastify.db.execute<RowDataPacket[]>(`
@@ -264,11 +264,11 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                     name: req.body.name || "",
                     immunity,
                     flags: req.body.flags,
-                    codes: req.body.webCodes,
+                    codes: req.body.webCodes!,
                     groupIds
                 })
 
-                await req.user.log(req.params.steamid, `%client% granted admin to %target% (#%id%)`, {
+                await req.user!.log(req.params.steamid, `%client% granted admin to %target% (#%id%)`, {
                     code: "admins.grant",
                     metadata: {
                         id,

@@ -7,10 +7,10 @@ import { ServerStatus, ServerStatusData } from "../../../../../common-types/Serv
 import jwtPromise from "../../../jwt-promise.js";
 
 const LIVE_CACHE_TTL = 1000 * 60 * 3 // Live cache data expires after 3 minutes
-export type SubscribeCallback = (record: LiveRecord) => void
+export type SubscribeCallback = (record: LiveRecord|null) => void
 
 export default class PluginFeature extends Feature implements IAction {
-    #liveCache?: LiveDataCache
+    #liveCache: LiveDataCache | null = null
     #socket: PluginSocket | null = null
     #subscribers: SubscribeCallback[] = []
     #startTime: number
@@ -34,10 +34,10 @@ export default class PluginFeature extends Feature implements IAction {
     }
 
     get authenticated() {
-        return this.available && this.#socket.Authenticated
+        return this.available && this.#socket?.Authenticated
     }
 
-    get liveStatus(): LiveDataCache { 
+    get liveStatus(): LiveDataCache | null { 
       if(this.#liveCache) {
         if(Date.now() - this.#liveCache.lastUpdate > LIVE_CACHE_TTL) {
           this.#liveCache = null
@@ -76,7 +76,7 @@ export default class PluginFeature extends Feature implements IAction {
         return index
     }
 
-    #emit(record: LiveRecord) {
+    #emit(record: LiveRecord|null) {
         for(const subCb of this.#subscribers) {
             subCb(record)
         }
@@ -94,14 +94,7 @@ export default class PluginFeature extends Feature implements IAction {
         return this.#startTime
     }
 
-    get status(): ServerStatus {
-        return {
-            data: this.#status,
-            source: "live",
-        }
-    }
-    
-    async pushRecord(record: LiveRecord) {
+    async pushRecord(record: LiveRecord | null) {
         // If record is null, it means shutdown is happening
         this.#emit(record)
         if(record) {
@@ -131,7 +124,7 @@ export default class PluginFeature extends Feature implements IAction {
         if(!this.authenticated) {
             throw new Error("Not connected or authenticated to plugin socket")
         }
-        const response = await this.#socket.send(LiveRecordResponse.RunCommand, command, namespace)
+        const response = await this.#socket!.send(LiveRecordResponse.RunCommand, command, namespace)
         if(!response) throw new Error("Got no response")
         return {
             type: response.resultType,

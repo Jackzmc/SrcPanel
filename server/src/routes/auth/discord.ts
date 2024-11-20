@@ -34,17 +34,17 @@ interface StateJwtPayoad {
 }
 
 const STATE_SEED_LENGTH = Number(process.env.STATE_SEED_LENGTH) || 20
-const STATE_JWT_SECRET = process.env.STATE_SECRET
+const STATE_JWT_SECRET = process.env.STATE_SECRET as string
 const STATE_SEED = crypto.randomBytes(STATE_SEED_LENGTH).toString('hex')
 
 const PROVIDER_NAME = "discord"
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
     // Disable discord support if no secret
-    if(!STATE_JWT_SECRET) {
+    if(!process.env.STATE_SECRET) {
         fastify.get("*", async (req, reply) => {
             reply.type("text/html")
-            const domain = await fastify.config.GetKV("domain")
+            const domain = await fastify.config.GetKV("domain", "")
             return reply.redirect(`${domain}/error?type=oauth_error&provider=${PROVIDER_NAME}&oauth_error=provider_not_supported`)
         })
     }
@@ -56,7 +56,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         reply.type("text/html")
         const redirectUri = await getRedirectUri()
         const clientId = await fastify.config.GetKVNamespaced("providers", PROVIDER_NAME, "clientId")
-        const domain = await fastify.config.GetKV("domain")
+        const domain = await fastify.config.GetKV("domain", "")
         const authorizeUrl = await fastify.config.GetKVNamespaced("providers", PROVIDER_NAME, "authorize_url")
         if(!redirectUri || !clientId || !authorizeUrl) {
             return reply.redirect(`${domain}/error?type=oauth_error&provider=${PROVIDER_NAME}&oauth_error=provider_not_supported`)
@@ -76,7 +76,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         await fastify.authmngr.verify(req, reply)
         reply.type("text/html")
         // await req.user.notify(`Your ${PROVIDER_NAME} account ${userInfo.username} has been linked successfully.`)
-        await req.user.removeProvider(PROVIDER_NAME)
+        await req.user!.removeProvider(PROVIDER_NAME)
         // TODO: redirect back send notification
         return reply.send("<h1>Discord has been revoked</h1>")
     })
@@ -85,7 +85,11 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         reply.type("text/html")
         if(!req.query.code) return reply.send("<h1>Missing code</h1>")
         if(!req.query.state) return reply.send("<h1>Missing state</h1>")
-        const domain = await fastify.config.GetKV<string>("domain");
+        const domain = await fastify.config.GetKV<string, undefined>("domain", undefined);
+        if(!domain) return reply.code(500).send({
+            error: "PROVIDER_SETUP_MISSING",
+            message: "This provider is not setup correctly, missing 'domain' setting"
+        })
         try {
             const jwt = await JWT.verify<StateJwtPayoad>(req.query.state, STATE_JWT_SECRET)
             const provider = await fastify.authmngr.oauth.getProvider(PROVIDER_NAME)
@@ -100,18 +104,18 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 const returnUrl = req.query.return_uri ? `${domain}${req.query.return_uri}` : domain
                 if(jwt.payload.pub) {
                     // User is logged in already, is linking provider
-                    await provider.save(req.user.steamid2)
+                    await provider.save(req.user!.steamid2)
 
-                    await req.user.notify(`Your ${PROVIDER_NAME} account ${userInfo.username} has been linked successfully.`)
+                    await req.user!.notify(`Your ${PROVIDER_NAME} account ${userInfo!.username} has been linked successfully.`)
                     await reply.redirect(returnUrl, 302)
                 } else {
                     // User is logging in to their account via provider
                     // We need to find their steam account
-                    const admin = await fastify.authmngr.getAdminByProvider(PROVIDER_NAME, userInfo.id)
+                    const admin = await fastify.authmngr.getAdminByProvider(PROVIDER_NAME, userInfo!.id)
                     if(!admin) return reply.redirect(`${domain}/error?type=oauth_no_account&provider=${PROVIDER_NAME}`)
                     // We need to refresh steam info as well
                     const details = await fastify.steam.getUserDetails([ new SteamID(admin.steamid) ])
-                    if(details.length > 0) {
+                    if(details && details.length > 0) {
                         await provider.save(admin.steamid)
                         await fastify.authmngr.loginUser(req, admin, details[0])
                         await reply.redirect(returnUrl, 302)
@@ -130,7 +134,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     })
 
     async function getRedirectUri() {
-        const domain = await fastify.config.GetKV("domain")
+        const domain = await fastify.config.GetKV<string, undefined>("domain", undefined)
         if(!domain) return null
         return `${domain}/api/auth/${PROVIDER_NAME}/callback`
     }

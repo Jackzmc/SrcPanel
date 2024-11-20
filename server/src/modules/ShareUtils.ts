@@ -2,7 +2,7 @@ import VPK from '@lowly1337/vpk';
 import { readFile } from 'fs/promises';
 import ValveKV from 'valve-kv';
 
-export function getChapterIds(filepath: string): string[] {
+export function getChapterIds(filepath: string): string[] | null {
     const vpk = new VPK(filepath)
     vpk.load()
     for(const filepath of vpk.files) {

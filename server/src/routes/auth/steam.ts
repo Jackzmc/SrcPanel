@@ -84,7 +84,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                     const steamid2 = steamid.getSteam2RenderedID()
 
                     // Handle first time setup:
-                    const setupStage = await fastify.config.GetKV<number>("first_time_setup.stage")
+                    const setupStage = await fastify.config.GetKV<number>("first_time_setup.stage", 0)
                     if(setupStage == FirstTimeSetupStage.FirstSetupComplete) {
                         await fastify.authmngr.addAdmin({
                             authtype: 'steam',
@@ -149,7 +149,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     async function getUserDetails(steamid: SteamID) {
         try {
             const details = await fastify.steam.getUserDetails([steamid])
-            return details[0]
+            return details ? details[0] : null
         } catch(err) {
             console.error("auth/steam: getUserDetails error:\n", err) 
             return null

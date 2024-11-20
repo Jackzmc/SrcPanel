@@ -2,6 +2,7 @@ import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
 import { APIComment, APICountData, APIDiscussion, APIDiscussionCacheableData, APIDiscussionDetails, APIDiscussionFlags, APIDiscussionOption, APIDiscussionType, APIResponsesData } from '../../../../common-types/Discussions.js';
 import { OkPacket, RowDataPacket } from 'mysql2';
 import { NOT_FOUND, NO_PERMISSION } from '../../responses.js';
+import { APIUser } from '../../../../common-types/User.js';
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
     const discManager = fastify.managers.discussions
@@ -10,7 +11,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     fastify.get('/', async (req, reply): Promise<APIDiscussion[]> => {
         const discussions: APIDiscussion[] = []
         for(const discussion of discManager.getAll()) {
-            const responses = await discManager.getResponses(discussion.id, req.user, discussion.flags)
+            const responses = await discManager.getResponses(discussion.id, req.user!, discussion.flags)
             discussions.push({
                 ...discussion,
                 responses: responses.responses,
@@ -23,7 +24,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     fastify.post('/:id/choose', async (req: FastifyRequest<{Params: { id: string}}>, reply) => {
         const discuss = discManager.get(Number(req.params.id))
         if(!discuss) return NOT_FOUND(reply, req.params.id)
-        const body: { option?: string[]|string, text?: string } = req.body
+        const body: { option?: string[]|string, text?: string } = req.body as Record<string, any>
         if(discuss.closedAt) {
             if(Date.now() > discuss.closedAt*1000) {
                 return reply.status(400).send({
@@ -32,27 +33,27 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 })
             }
         }
-        await fastify.db.execute("DELETE FROM `left4dead2-admins`.dash_discussion_responses WHERE discussion_id = ? AND steamid = ?", [discuss.id, req.user.steamid2])
+        await fastify.db.execute("DELETE FROM `left4dead2-admins`.dash_discussion_responses WHERE discussion_id = ? AND steamid = ?", [discuss.id, req.user!.steamid2])
         if(discuss.type == APIDiscussionType.Radio) {
             // Insert new, or update existing
             if(!body.option || Array.isArray(body.option)) return reply.status(400).send({ error: "INVALID_OPTION", message: "Options must be a string for radio"})
             await fastify.db.execute(
                 "INSERT INTO `left4dead2-admins`.dash_discussion_responses (discussion_id, steamid, choice) VALUES (?, ?, ?)", 
-                [discuss.id, req.user.steamid2, body.option]
+                [discuss.id, req.user!.steamid2, body.option]
             )
         } else if(discuss.type == APIDiscussionType.Checkbox || discuss.type == APIDiscussionType.Selection) {
             if(!body.option || !Array.isArray(body.option)) return reply.status(400).send({ error: "INVALID_OPTION", message: "Options must be an array for checkbox or selection"})
             for(const option of body.option) {
                 await fastify.db.execute(
                     "INSERT INTO `left4dead2-admins`.dash_discussion_responses (discussion_id, steamid, choice) VALUES (?, ?, ?)", 
-                    [discuss.id, req.user.steamid2, option]
+                    [discuss.id, req.user!.steamid2, option]
                 )
             }
         } else if(discuss.type == APIDiscussionType.ShortText || discuss.type == APIDiscussionType.LongText) {
             if(!body.text || body.text == "") return reply.status(400).send({ error: "INVALID_CHOICE", message: "Must include the text of the choice"})
             await fastify.db.execute(
                 "INSERT INTO `left4dead2-admins`.dash_discussion_responses (discussion_id, steamid, text) VALUES (?, ?, ?)", 
-                [discuss.id, req.user.steamid2, body.text]
+                [discuss.id, req.user!.steamid2, body.text]
             )
         } else {
             return reply.status(501).send()
@@ -64,7 +65,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     fastify.put('/:id', async (req: FastifyRequest<{Params: { id: string}}>, reply) => {
         let discuss = discManager.get(Number(req.params.id))
         if(!discuss) return NOT_FOUND(reply, req.params.id)
-        else if(discuss.creator.id !== req.user.steamid2) {
+        else if(discuss.creator.id !== req.user!.steamid2) {
             return NO_PERMISSION(reply, "You can only edit your own discussions")
         }
         const newDiscuss = req.body as APIDiscussion
@@ -84,19 +85,21 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         )
 
         const [options] = await conn.query<RowDataPacket[]>("SELECT * FROM `left4dead2-admins`.dash_discussion_options WHERE discussion_id = ?", [req.params.id])
-        for(const option of discuss.options) {
-            const existingOption = options.find(o => o.id === option.id)
-            if(existingOption) {
-                if(existingOption.label === option.label) continue
-                await conn.query(
-                    "UPDATE `left4dead2-admins`.dash_discussion_options SET label = ? WHERE id = ?",
-                    [option.label, existingOption.id]
-                )
-            } else {
-                await conn.query(
-                    "INSERT INTO `left4dead2-admins`.dash_discussion_options (discussion_id, label) VALUES (?, ?)",
-                    [req.params.id, option.label]
-                )
+        if(discuss.options) {
+            for(const option of discuss.options) {
+                const existingOption = options.find(o => o.id === option.id)
+                if(existingOption) {
+                    if(existingOption.label === option.label) continue
+                    await conn.query(
+                        "UPDATE `left4dead2-admins`.dash_discussion_options SET label = ? WHERE id = ?",
+                        [option.label, existingOption.id]
+                    )
+                } else {
+                    await conn.query(
+                        "INSERT INTO `left4dead2-admins`.dash_discussion_options (discussion_id, label) VALUES (?, ?)",
+                        [req.params.id, option.label]
+                    )
+                }
             }
         }
         await conn.commit()
@@ -117,16 +120,18 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         await conn.beginTransaction()
         const [ok] = await conn.query<OkPacket>(
             "INSERT INTO`left4dead2-admins`.dash_discussions (title, description, creator, closed_at, type, flags) VALUES (?, ?, ?, ?, ?, ?)",
-            [discuss.title, discuss.description, req.user.steamid2, discuss.closedAt, discuss.type, discuss.flags]
+            [discuss.title, discuss.description, req.user!.steamid2, discuss.closedAt, discuss.type, discuss.flags]
         )
         discuss.id = ok.insertId
         // TODO: bulk options in one query
-        for(const option of discuss.options) {
-            //option.id here is a dummy value used by UI.
-            await conn.query(
-                "INSERT INTO `left4dead2-admins`.dash_discussion_options (discussion_id, label) VALUES (?, ?)",
-                [ok.insertId, option.label]
-            )
+        if(discuss.options) {
+            for(const option of discuss.options) {
+                //option.id here is a dummy value used by UI.
+                await conn.query(
+                    "INSERT INTO `left4dead2-admins`.dash_discussion_options (discussion_id, label) VALUES (?, ?)",
+                    [ok.insertId, option.label]
+                )
+            }
         }
         await conn.commit()
         conn.release()
@@ -137,9 +142,9 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             description: discuss.description,
             timestamp: Math.round(Date.now()/1000),
             creator: {
-                id: req.user.steamid2,
-                name: await req.user.name(),
-                avatarUrl: `${domain}/api/users/${req.user.steamid2}/avatar`
+                id: req.user!.steamid2,
+                name: await req.user!.name(),
+                avatarUrl: `${domain}/api/users/${req.user!.steamid2}/avatar`
             },
             closedAt: discuss.closedAt,
             type: discuss.type,
@@ -184,13 +189,13 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
        
         const [comments] = await fastify.db.execute<RowDataPacket[]>("SELECT com.id, com.creator, com.content, u.name as creator_name FROM `left4dead2-admins`.dash_discussion_comments com LEFT JOIN `left4dead2`.user_names u ON SUBSTRING(com.creator, 11) = u.steamid WHERE com.discussion_id = ? ", [discuss.id])
-        const responses = await discManager.getResponses(Number(req.params.id), req.user, discuss.flags)
+        const responses = await discManager.getResponses(Number(req.params.id), req.user!, discuss.flags)
         return {
             ...discuss,
             responses: responses.responses,
             commentsCount: comments.length,
             comments: comments.map(c => { 
-                let creator = undefined
+                let creator: APIUser|null = null
                 if(discuss.flags & APIDiscussionFlags.CommentsPublic) {
                     creator = { id: c.creator, name: c.creator_name, avatarUrl: `${domain}/api/users/${c.creator}/avatar` }
                 } 
@@ -216,11 +221,11 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 message: "This discussion has been archived, no new comments are accepted"
             })
         }
-        const comment: Record<string, any> = req.body
+        const comment: Record<string, any> = req.body as Record<string, any>
         const timestamp = Math.round(Date.now()/1000)
         const [ok] = await fastify.db.query<OkPacket>(
             "INSERT INTO `left4dead2-admins`.dash_discussion_comments (discussion_id, creator, content, timestamp) VALUES (?, ?, ?, UNIX_TIMESTAMP())",
-            [discuss.id, req.user.steamid2, comment.content]
+            [discuss.id, req.user!.steamid2, comment.content]
         )
         // Update cache
         discuss.commentsCount++
@@ -228,8 +233,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         
         const domain = await fastify.config.GetKV("domain");
 
-        if(discuss.creator.id !== req.user.steamid2) {
-            await fastify.authmngr.addNotification(discuss.creator.id, `${await req.user.name() ?? req.user.steamid2} commented on your discussion \"${discuss.title}\"`, {
+        if(discuss.creator.id !== req.user!.steamid2) {
+            await fastify.authmngr.addNotification(discuss.creator.id, `${await req.user!.name() ?? req.user!.steamid2} commented on your discussion \"${discuss.title}\"`, {
                 link: `${domain}/discuss/${discuss.id}`,
             })
         }
@@ -237,9 +242,9 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         return {
             id: ok.insertId,
             creator: {
-                id: req.user.steamid2,
-                name: await req.user.name(),
-                avatarUrl: `${domain}/api/users/${req.user.steamid2}/avatar`
+                id: req.user!.steamid2,
+                name: await req.user!.name(),
+                avatarUrl: `${domain}/api/users/${req.user!.steamid2}/avatar`
             },
             content: comment.content,
             timestamp
