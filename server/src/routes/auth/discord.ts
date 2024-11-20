@@ -44,7 +44,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     if(!process.env.STATE_SECRET) {
         fastify.get("*", async (req, reply) => {
             reply.type("text/html")
-            const domain = await fastify.config.GetKV("domain")
+            const domain = await fastify.config.GetKV("domain", "")
             return reply.redirect(`${domain}/error?type=oauth_error&provider=${PROVIDER_NAME}&oauth_error=provider_not_supported`)
         })
     }
@@ -56,7 +56,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         reply.type("text/html")
         const redirectUri = await getRedirectUri()
         const clientId = await fastify.config.GetKVNamespaced("providers", PROVIDER_NAME, "clientId")
-        const domain = await fastify.config.GetKV("domain")
+        const domain = await fastify.config.GetKV("domain", "")
         const authorizeUrl = await fastify.config.GetKVNamespaced("providers", PROVIDER_NAME, "authorize_url")
         if(!redirectUri || !clientId || !authorizeUrl) {
             return reply.redirect(`${domain}/error?type=oauth_error&provider=${PROVIDER_NAME}&oauth_error=provider_not_supported`)
@@ -85,7 +85,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         reply.type("text/html")
         if(!req.query.code) return reply.send("<h1>Missing code</h1>")
         if(!req.query.state) return reply.send("<h1>Missing state</h1>")
-        const domain = await fastify.config.GetKV<string>("domain");
+        const domain = await fastify.config.GetKV<string, undefined>("domain", undefined);
         if(!domain) return reply.code(500).send({
             error: "PROVIDER_SETUP_MISSING",
             message: "This provider is not setup correctly, missing 'domain' setting"
@@ -134,7 +134,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     })
 
     async function getRedirectUri() {
-        const domain = await fastify.config.GetKV("domain")
+        const domain = await fastify.config.GetKV<string, undefined>("domain", undefined)
         if(!domain) return null
         return `${domain}/api/auth/${PROVIDER_NAME}/callback`
     }

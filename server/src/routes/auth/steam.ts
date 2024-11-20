@@ -84,7 +84,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                     const steamid2 = steamid.getSteam2RenderedID()
 
                     // Handle first time setup:
-                    const setupStage = await fastify.config.GetKV<number>("first_time_setup.stage")
+                    const setupStage = await fastify.config.GetKV<number>("first_time_setup.stage", 0)
                     if(setupStage == FirstTimeSetupStage.FirstSetupComplete) {
                         await fastify.authmngr.addAdmin({
                             authtype: 'steam',

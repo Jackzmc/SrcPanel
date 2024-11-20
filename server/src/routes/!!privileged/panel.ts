@@ -220,13 +220,13 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
     fastify.get('/first-time-setup', async(req: FastifyRequest, reply ) => {
         return {
-            stage: Number(await fastify.config.GetKV("first-time-setup.stage", 0))
+            stage: Number(await fastify.config.GetKV<number>("first-time-setup.stage", 0))
         }
     })
 
     fastify.post('/first-time-setup', async(req: FastifyRequest<{ Querystring: { stage: number, [s: string]: any }}>, reply ) => {
         const stage = Number(req.query.stage)
-        const currentStage = await fastify.config.GetKV<number>("first-time-setup.stage")
+        const currentStage = await fastify.config.GetKV<number>("first-time-setup.stage", 0)
         if(currentStage == FirstTimeSetupStage.DONE) return reply.code(403).send({
             error: "SETUP_COMPLETE",
             message: "Setup has already been completed"

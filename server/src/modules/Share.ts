@@ -11,6 +11,7 @@ import { readFile } from 'node:fs/promises';
 import ValveKV from 'valve-kv'
 import { SimpleGit, simpleGit } from 'simple-git';
 import { getChapterIds, getSpFileInfo } from './ShareUtils.js';
+import assert from 'assert';
 
 const DOWNLOAD_TIMEOUT = 1000 * 60 * 3
 
@@ -189,7 +190,7 @@ export default class Share {
                         if(addonInfo.meta.chapterIds) {
                             if(!collections[addonInfo.collection.id].chapterIds) collections[addonInfo.collection.id].chapterIds = []
                             // Convert to set and back to remove duplicates
-                            const set = new Set([...collections[addonInfo.collection.id].chapterIds, ...addonInfo.meta.chapterIds])
+                            const set = new Set([...collections[addonInfo.collection.id].chapterIds!, ...addonInfo.meta.chapterIds])
                             collections[addonInfo.collection.id].chapterIds = [...set]
                         }
                         delete addonInfo.collection
@@ -222,12 +223,12 @@ export default class Share {
                     results.push({
                         filename: dirent.name,
                         ...fsinfo,
-                        installInfo: (await this.getInstallInfo(dirent.name)).states,
+                        installInfo: (await this.getInstallInfo(dirent.name))!.states,
                         meta
                     })
                    
                     if(!pendingResolve)
-                        await this.#addAddonEntry(dirent.name, fsinfo, null, undefined, meta)
+                        await this.#addAddonEntry(dirent.name, fsinfo, undefined, undefined, meta)
                 }
             }
         }
@@ -236,7 +237,7 @@ export default class Share {
         for(const collection of Object.values(collections)) {
             results.push({
                 ...collection,
-                filesize: collection.children.reduce((pv, child) => pv + child.filesize, 0)
+                filesize: collection.children.reduce((pv, child) => pv + (child.filesize ?? 0), 0)
             })
         }
 
@@ -285,6 +286,7 @@ export default class Share {
         const info = await this.#db.get(SQL`SELECT * FROM addoncache WHERE filename = ${filename}`)
         if(!info) return null
         const installInfo = await this.getInstallInfo(filename)
+        assert(installInfo != undefined, "addon info checked in cache")
         return {
             filename: info.filename,
             filesize: info.filesize ?? installInfo.size,
@@ -321,7 +323,7 @@ export default class Share {
      * Gets file info and any destinations this file is enabled on
      * @param filename 
      */
-    public async getInstallInfo(filename: string): Promise<{ states: Record<string, boolean>, created: number, modified: number, size: number }> {
+    public async getInstallInfo(filename: string): Promise<{ states: Record<string, boolean>, created: number, modified: number, size: number }|undefined> {
         const statInfo = await this.#getFileInfo(this.sourceFolder, filename)
         if(statInfo) {
             let states: Record<string, boolean> = {}
@@ -352,7 +354,7 @@ export default class Share {
         if(!this.validExts) return files
         return files.filter(filename => {
             const ext = filename.split(".").pop()
-            return this.validExts.includes(ext)
+            return ext && this.validExts!.includes(ext)
         })
     }
 

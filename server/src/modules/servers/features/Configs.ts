@@ -90,16 +90,16 @@ export default class ConfigsFeature extends Feature {
       if(!newPath.startsWith(this.configDir)) {
         throw new Error(`Path is invalid, cannot leave config directory`)
       }
-      if(!allowIgnored && this.HasGitSupport && await this.#git.checkIgnore([filePath])) {
+      if(!allowIgnored && this.HasGitSupport && await this.#git!.checkIgnore([filePath])) {
         throw new Error(`Path is ignored by git`)
       }
       return newPath
     }
 
     async #commit(filePath: string, options: CommitOptions) {
-      await this.#git.add(filePath)
+      await this.#git!.add(filePath)
       const msg = options.message ? `Admin panel: ${options.message}` : 'Edited by admin panel'
-      await this.#git.commit(msg, {
+      await this.#git!.commit(msg, {
         author: `${options.author ?? 'steam'} <steam@admin.jackz.me>`
       })
     }
@@ -122,7 +122,7 @@ export default class ConfigsFeature extends Feature {
     }
 
     async pull(origin: string = "origin") {
-      await this.#git.pull(origin, undefined, { theirs: 1 })
+      await this.#git?.pull(origin, undefined, { theirs: 1 })
     }
 
 }

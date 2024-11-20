@@ -58,7 +58,7 @@ export default class DiscussionManager {
 
     async getResponses(id: number, user: User, flags: APIDiscussionFlags): Promise<{ responses: APIResponsesData, userSelection: number[] }> {
         const totalUsers = this.#authmngr.AdminCount
-        const domain = await this.#config.GetKV("domain");
+        const domain = await this.#config.GetKV("domain", "");
         const [responses] = await this.#db.execute<RowDataPacket[]>(
             "SELECT res.steamid, res.choice, res.text, opt.label, u.name as name FROM `left4dead2-admins`.dash_discussion_responses res LEFT JOIN `left4dead2`.user_names u ON SUBSTRING(res.steamid, 11) = u.steamid LEFT JOIN `left4dead2-admins`.dash_discussion_options opt ON opt.id = res.choice WHERE res.discussion_id = ?", [id]
         )
@@ -108,7 +108,7 @@ export default class DiscussionManager {
 
     async fetchDiscussions() {
         const dis = new Map()
-        const domain = await this.#config.GetKV("domain");
+        const domain = await this.#config.GetKV("domain", "");
         let [rows] = await this.#db.execute<RowDataPacket[]>(`SELECT d.*, u.name as creator_name, (SELECT COUNT(*) FROM \`left4dead2-admins\`.dash_discussion_comments WHERE discussion_id = d.id) as comments FROM \`left4dead2-admins\`.dash_discussions d LEFT JOIN \`left4dead2\`.user_names u ON SUBSTRING(d.creator, 11) = u.steamid WHERE d.flags & ${APIDiscussionFlags.Archived} = 0 ORDER BY d.timestamp DESC`)
         for(const row of rows) {
             if(row.closed_at && Date.now() - (row.closed_at*1000) > AUTO_ARCHIVE_TIME) {

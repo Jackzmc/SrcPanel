@@ -64,7 +64,7 @@ export class OauthManager {
             clientSecret,
             urls,
             config: {
-                avatarFormat: await this.#config.GetKVNamespaced("providers", providerName, "avatar_url_format")
+                avatarFormat: await this.#config.GetKVNamespaced<string>("providers", providerName, "avatar_url_format") ?? null
             }
         }
         return new OauthProviderUser(providerName, oauthConfig, this.#authmngr)

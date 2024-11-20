@@ -22,7 +22,7 @@ interface AddAdmin {
     authtype: "steam" | "name" | "ip",
     identity: string,
     flags?: string,
-    password?: string,
+    password?: string | null,
     name: string,
     immunity: number,
     codes: (UserPrivilegeCode|string)[],
@@ -264,6 +264,7 @@ export default class AuthManager {
         // TODO: Add group support
         if(admin.identity.length < 10) throw new Error("Invalid admin identity")
         const details = await this.steam.getUserDetails([new SteamID(admin.identity)])
+        if(!details) throw new Error("Failed to get user details for " + admin.identity)
         try {
             await this.#dbna.execute("INSERT INTO user_names (steamid, name, avatar_hash) VALUES (?, ?, ?)", [admin.identity.slice(10), details[0].personaname, details[0].avatarhash])
         } catch(err) {
