@@ -13,7 +13,7 @@ const STEAM_ID_REGEX = new RegExp(/STEAM_\d:\d:\d+/)
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
     fastify.get('/recent/:server?', async(req: FastifyRequest<{Params: { server?: string }, Querystring: { limit?: number }}>, reply) => {
-        const domain = await fastify.config.GetKV("domain")
+        const domain = await fastify.config.GetKV("domain", "")
         let limit = Number(req.query.limit) ?? RECENT_DEFAULT_LIMIT
         if(limit < 0 || limit > 100) limit = RECENT_DEFAULT_LIMIT
         let server = req.params.server || null
