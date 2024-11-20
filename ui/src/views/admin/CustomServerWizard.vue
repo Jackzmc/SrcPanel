@@ -48,30 +48,42 @@
           <p class="">Some plugins are required and cannot be disabled, others are recommended</p>
           <p class="">Hover over a box to view the description of the plugin</p>
           <br>
-          <div class="grid is-col-min-12">
-            <div v-for="(plugin) in filteredPlugins" :key="plugin.id"
-              class="cell has-tooltip-right" :data-tooltip="plugin.tooltip"
-            >
-              <div :class="['card','mt-2','py-0','px-0',{
-                  'is-clickable': !hasFlag(plugin.id, PluginFlag.Required),
-                  'has-background-link-light': enabledPlugins[plugin.id] && !hasFlag(plugin.id, PluginFlag.Required),
-                  // 'has-background-primary': enabledPlugins[pluginId] && hasFlag(pluginId, PluginFlag.Required),
-                  'has-background-grey-lighter': !enabledPlugins[plugin.id],
-                }]"
-                style="border-radius: 1px; height:100%" @click="togglePlugin(plugin.id)"
+          <div class="columns">
+            <div class="column">
+              <Field icon-left="fa-search">
+                <input v-model="searchQuery" type="text" class="input" placeholder="Search for a plugin" />
+              </Field>
+            </div>
+            <div class="column">
+
+            </div>
+          </div>
+          <div class="fixed-grid has-3-cols">
+            <div class="grid">
+              <div v-for="(plugin) in filteredPlugins" :key="plugin.id"
+                class="cell has-tooltip-right" :data-tooltip="plugin.tooltip"
               >
-                <div class="card-content px-4 py-2">
-                  <label class="checkbox">
-                    <input type="checkbox" v-model="enabledPlugins[plugin.id]" :disabled="hasFlag(plugin.id, PluginFlag.Required) ?? false" />
-                    &nbsp;<strong>{{ plugin.name ?? plugin.id}}</strong>
-                  </label>
-                  <p class="subtitle is-6 mb-2">
-                    v{{ plugin.version }} - Created by {{plugin.author}}
-                  </p>
-                  <span data-tooltip="This plugin is required and cannot be disabled" class="tag is-danger" v-if="plugin.flagKv.required">Required</span>
-                  <span data-tooltip="This plugin is recommended to be enabled" class="tag is-primary" v-else-if="plugin.flagKv.recommended">Recommended</span>
-                  <span data-tooltip="This plugin is recommended to be enabled when 5+ support is enabled" class="tag is-primary" v-else-if="plugin.flagKv.recommendedExtraPlayers && formData.extraPlayers">Recommended for 5+</span>
-                  <!-- <span class="tag is-secondary" v-else-if="hasFlag(plugin.id, PluginFlag.Library)">Library</span> -->
+                <div :class="['card','mt-2','py-0','px-0',{
+                    'is-clickable': !hasFlag(plugin.id, PluginFlag.Required),
+                    'has-background-link-light': enabledPlugins[plugin.id] && !hasFlag(plugin.id, PluginFlag.Required),
+                    // 'has-background-primary': enabledPlugins[pluginId] && hasFlag(pluginId, PluginFlag.Required),
+                    'has-background-grey-lighter': !enabledPlugins[plugin.id],
+                  }]"
+                  style="border-radius: 1px; height:100%" @click="togglePlugin(plugin.id)"
+                >
+                  <div class="card-content px-4 py-2">
+                    <label class="checkbox">
+                      <input type="checkbox"  :checked="enabledPlugins[plugin.id]" :disabled="hasFlag(plugin.id, PluginFlag.Required) ?? false" />
+                      &nbsp;<strong>{{ plugin.name ?? plugin.id}}</strong>
+                    </label>
+                    <p class="subtitle is-6 mb-2">
+                      v{{ plugin.version }} - Created by {{plugin.author}}
+                    </p>
+                    <span data-tooltip="This plugin is required and cannot be disabled" class="tag is-danger" v-if="plugin.flagKv.required">Required</span>
+                    <span data-tooltip="This plugin is recommended to be enabled" class="tag is-primary" v-else-if="plugin.flagKv.recommended">Recommended</span>
+                    <span data-tooltip="This plugin is recommended to be enabled when 5+ support is enabled" class="tag is-primary" v-else-if="plugin.flagKv.recommendedExtraPlayers && formData.extraPlayers">Recommended for 5+</span>
+                    <!-- <span class="tag is-secondary" v-else-if="hasFlag(plugin.id, PluginFlag.Library)">Library</span> -->
+                  </div>
                 </div>
               </div>
             </div>
@@ -95,6 +107,7 @@
           <ul>
             <li><b>Name: </b>{{ form.name }}</li>
             <li><b>Game: </b>{{ form.game ? GAMES[form.game] : '' }}</li>
+            <li><b>5+ Support: </b>{{ form.extraPlayers ? 'Yes' : 'None' }}</li>
             <li><b>Memory: </b> 500 MB</li>
             <li><b>Plugins: </b> {{ form.enabledPlugins.length }} enabled</li>
             <li><b>Addons: </b> {{ form.enabledAddons.length }} enabled</li>
@@ -186,12 +199,18 @@ let formData = ref({
   game: "left4dead2",
   extraPlayers: true
 })
+let searchQuery = ref("")
 let enabledPlugins = ref<Record<string, boolean>>({})
 
 const filteredPlugins = computed(() => {
+  const query = searchQuery.value.toLowerCase()
   return Object.entries(Plugins)
     .filter(([id, data]) => {
-      return !data.flags || (~data.flags & PluginFlag.Library)
+      if(searchQuery.value != "") {
+        if(!id.includes(query) && (!data.name || !data.name?.toLocaleLowerCase().includes(query))) return false
+      }
+      if(!data.flags) return true
+      return enabledPlugins.value[id] || (~data.flags & PluginFlag.Library)
     })
     .map(([id, data]) => {
       const flagKv = {
@@ -204,7 +223,7 @@ const filteredPlugins = computed(() => {
         id,
         ...data,
         flagKv,
-        tooltip: `${id} ${enabledPlugins.value[id] ? '(enabled)' : ''}\n\n${data.description}`
+        tooltip: `${id} ${enabledPlugins.value[id] ? '(enabled)' : ''}\n\n${data.description??''}`
       }
     })
 })
@@ -243,8 +262,13 @@ function setStep(newStepIndex: number) {
 }
 
 function togglePlugin(pluginId: string) {
+  const plugin = Plugins[pluginId]
+  if(!plugin) return
   if(hasFlag(pluginId, PluginFlag.Required)) return
   enabledPlugins.value[pluginId] = !enabledPlugins.value[pluginId]
+  for(const required of plugin.includes) {
+    togglePlugin(required)
+  }
 }
 function hasFlag(pluginId: string, flag: PluginFlag): boolean | null {
   if(!Plugins[pluginId]) return null
