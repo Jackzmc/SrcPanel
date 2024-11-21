@@ -1,7 +1,7 @@
 <template>
 <div class="box">
   <h4 class="title is-4">Server Addons</h4>
-  <p class="">Select the addons you want on the server by clicking on its box. You can always change addons later.</p>
+  <p class="">Add any addons you want on the server by entering its workshop url below. You can always change addons later.</p>
   <p class="">Hover over a box to view the description of the addon</p>
   <br>
   <div class="columns">
@@ -29,15 +29,16 @@
     </div>
   </div>
   <h5 class="title is-5 mb-2">Added Addons</h5>
+  <p class="subtitle is-6" v-if="filteredAddons.length === 0">No addons have been added, add an addon by pasting a workshop url above.</p>
   <div class="fixed-grid has-2-cols">
     <div class="grid">
       <div v-for="(addon) in filteredAddons" :key="addon.id" class="cell has-tooltip-right"
         :data-tooltip="addon.item?.tooltip">
         <div :class="['card','mt-2','py-0','px-0',{
                     'is-clickable': true,
-                    'has-background-link-light': addon.item ? enabledAddons[addon.item?.filename] : false,
+                    'has-background-link-light': enabledAddons[addon.id],
                     // 'has-background-primary': enabledPlugins[pluginId] && hasFlag(pluginId, PluginFlag.Required),
-                    'has-background-grey-lighter': !addon.error && (!addon.item || !enabledAddons[addon.item.filename]),
+                    'has-background-grey-lighter': !addon.error && (!addon.item || !enabledAddons[addon.id]),
                     'has-background-danger-light': addon.error
                   }]" style="border-radius: 1px; height:100%" @click="toggleAddon(addon.id)">
           <div class="card-content px-4 py-2" v-if="addon.item">
@@ -45,6 +46,7 @@
               <input type="checkbox" :checked="enabledAddons[addon.id]" />
               &nbsp;<strong>{{ addon.name }}</strong>
             </label>
+            <button class="delete is-pulled-right" aria-label="close" @click="removeAddon(addon.id)" data-tooltip="Remove addon">x</button>
             <!-- <span data-tooltip="This plugin is required and cannot be disabled" class="tag is-danger"
               v-if="plugin.flagKv.required">Required</span>
             <span data-tooltip="This plugin is recommended to be enabled" class="tag is-primary"
@@ -76,10 +78,11 @@ import { AddonInfo, WorkshopItem } from '../../../../../common-types/Share.js';
 import Field from '@/components/Field.vue';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 
+const emit = defineEmits(["add-item", "del-item"])
+
 let searchQuery = ref()
 
 let enabledAddons = ref<Record<string, boolean>>({})
-let addonInfo = ref<Record<string, WorkshopItem>>({})
 let addons = ref<Record<string, { id: string, item?: WorkshopItem, error?: string }>>({})
 
 const isValidLink = computed(() => {
@@ -127,6 +130,7 @@ async function addWorkshopEntry() {
       if(response.ok) {
         const json = await response.json()
         if(json.item) {
+          emit("add-item", wsLinkMatch[1], json.item)
           addons.value[wsLinkMatch[1]].item = json.item
           // addItem(json.item)
         } else {
@@ -158,6 +162,12 @@ async function addWorkshopEntry() {
 function toggleAddon(addonId: string) {
   if(!addons.value) return
   enabledAddons.value[addonId] = !enabledAddons.value[addonId]
+}
+
+function removeAddon(addonId: string) {
+  delete addons.value[addonId]
+  delete enabledAddons.value[addonId]
+  emit("del-item", addonId)
 }
 
 onMounted(() => {

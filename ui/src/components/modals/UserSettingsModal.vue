@@ -203,7 +203,7 @@ async function revokeSession(id: string, i: number) {
     sessions.value.splice(i, 1);
   }
 }
-function formatCountry(code: string) {
+function formatCountry(code?: string) {
   return code ? intl.of(code) : "-";
 }
 

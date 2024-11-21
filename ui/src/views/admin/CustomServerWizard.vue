@@ -89,7 +89,7 @@
             </div>
           </div>
         </div>
-        <ManageAddons v-else-if="currentStep === 2" />
+        <ManageAddons v-else-if="currentStep === 2" @add-item="onAddonChange" @del-item="onAddonChange" />
         <div class="box" v-else>
           error.
           step = {{currentStep}}
@@ -129,6 +129,7 @@ import { useRoute, useRouter } from 'vue-router';
 // TODO: pull from server instead
 import Plugins_ from '@/assets/plugins.tmp.json'
 import ManageAddons from '@/components/servers/custom-server/ManageAddons.vue';
+import { WorkshopItem } from '../../../../common-types/Share.js';
 const Plugins = Plugins_ as Record<string, PluginMeta>
 
 const router = useRouter()
@@ -204,6 +205,7 @@ let formData = ref({
 })
 let searchQuery = ref("")
 let enabledPlugins = ref<Record<string, boolean>>({})
+let enabledAddons = ref<WorkshopItem[]>([])
 
 const filteredPlugins = computed(() => {
   const query = searchQuery.value.toLowerCase()
@@ -237,7 +239,7 @@ const form = computed(() => {
     game: formData.value.game,
     extraPlayers: formData.value.extraPlayers,
     enabledPlugins: Object.keys(enabledPlugins.value),
-    enabledAddons: []
+    enabledAddons: Object.keys(enabledAddons.value)
   } as CustomServer
 })
 
@@ -276,6 +278,17 @@ function togglePlugin(pluginId: string) {
 function hasFlag(pluginId: string, flag: PluginFlag): boolean | null {
   if(!Plugins[pluginId]) return null
   return Plugins[pluginId].flags != undefined && (Plugins[pluginId].flags & flag) == flag
+}
+
+function onAddonChange(addonId: string, addon?: WorkshopItem) {
+  if(addon != undefined) {
+    enabledAddons.value.push(addon)
+  } else {
+    const indexOf = enabledAddons.value.findIndex((addon) => addon.publishedfileid === addonId)
+    if(indexOf > -1) {
+      enabledAddons.value.splice(indexOf, 1)
+    }
+  }
 }
 
 onBeforeMount(() => {
