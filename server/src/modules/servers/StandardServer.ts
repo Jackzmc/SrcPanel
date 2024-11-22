@@ -17,7 +17,9 @@ export default class StandardServer extends Server {
     #cvars: Record<string, string>
 
     constructor(group: ServerGroup<Server>, server: ServerExtendedData) {
-        super(group, server, new GameDig())
+        super(group, server, new GameDig({
+            listenUdpPort: server.port
+        }))
 
         if(server.rcon) {
             let password: string | undefined
