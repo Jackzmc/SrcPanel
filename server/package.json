@@ -26,6 +26,7 @@
     "jsonwebtoken": "^9.0.0",
     "minimatch": "^9.0.2",
     "mysql2": "^2.3.3",
+    "nanoid": "^5.0.8",
     "openid": "^2.0.10",
     "pino-pretty": "^8.1.0",
     "quick-lru": "^6.1.0",
@@ -53,7 +54,6 @@
     "@types/node": "^20.11.30",
     "@types/steamid": "^2.0.1",
     "@types/tail": "^2.2.1",
-    "tsx": "^4.7.1",
     "typescript": "^5.6.3"
   }
 }
