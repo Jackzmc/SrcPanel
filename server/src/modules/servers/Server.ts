@@ -255,7 +255,7 @@ export default abstract class Server implements IAction {
     }
 
     updateStatus(data: ServerStatusData | null = null, source: ServerStatusSource) {
-      console.log(source, data)
+      console.log(this.id, source, data)
       this._status.data = data
       this._status.source = source
       this._status.lastStatusTime = (Date.now() / 1000)
