@@ -227,7 +227,6 @@ export default abstract class Server implements IAction {
     protected async getStatus(bypassCache: boolean, type: string, host: string, port: number) {
       const now = Date.now()
       if(!bypassCache && !this._lastRefresh && now - this._lastRefresh < MIN_REFRESH_TIME) return
-      this._lastRefresh = now
       try {
           const state = await this.#gamedig.query({
             type: type,
@@ -256,6 +255,7 @@ export default abstract class Server implements IAction {
     }
 
     updateStatus(data: ServerStatusData | null = null, source: ServerStatusSource) {
+      console.log(source, data)
       this._status.data = data
       this._status.source = source
       this._status.lastStatusTime = (Date.now() / 1000)
