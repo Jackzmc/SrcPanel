@@ -9,7 +9,7 @@ import { ActionResponse, IAction } from "./IAction.js";
 import { GameDig } from 'gamedig';
 import {InfluxDB } from '@influxdata/influxdb-client'
 
-const MIN_REFRESH_TIME = 5000
+const MIN_REFRESH_TIME = 8000
 
 export interface BaseServerData {
   id : string;
