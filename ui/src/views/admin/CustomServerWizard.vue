@@ -130,6 +130,8 @@ import { useRoute, useRouter } from 'vue-router';
 import Plugins_ from '@/assets/plugins.tmp.json'
 import ManageAddons from '@/components/servers/custom-server/ManageAddons.vue';
 import { WorkshopItem } from '../../../../common-types/Share.js';
+import PluginFeature from '../../../../server/src/modules/servers/features/Plugin';
+import { SMPluginMeta, SMPluginFlag } from '../../../../common-types/CustomServer.ts'
 const Plugins = Plugins_ as Record<string, PluginMeta>
 
 const router = useRouter()
@@ -175,23 +177,6 @@ interface CustomServer {
   extraPlayers: boolean
   enabledPlugins: string[],
   enabledAddons: string[]
-}
-interface PluginMeta {
-  version?: string,
-  author?: string,
-  description?: string,
-  name?: string,
-  engines: string[],
-  includes: string[],
-  includesOptional: string[],
-  flags?: PluginFlag
-}
-const enum PluginFlag {
-  None,
-  Required = 1,
-  Recommended = 2,
-  Recommended_ExtraPlayers = 4,
-  Library = 8
 }
 // note: l4d_survivor_identity_fix.sp should be required if no issues with non 5+
 // note: abm disable if custom epi

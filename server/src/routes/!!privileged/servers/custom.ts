@@ -1,4 +1,5 @@
 import { FastifyInstance, FastifyPluginOptions } from "fastify";
+import CustomServerBuilder from "../../../modules/servers/CustomServerBuilder.js";
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
     /* metadata route
@@ -27,6 +28,37 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     
     */
     fastify.post('/', async(req, reply) => {
-        return "5"
+        reply.raw.writeHead(200, {
+            'Cache-Control': 'no-cache,no-transform',
+            'Content-Type': 'text/event-stream',
+            'Connection': 'keep-alive',
+            'X-Accel-Buffering': 'no'
+        });
+        function send(msg: object, eventName?: string) {
+            if(eventName) reply.raw.write(`event: ${eventName}\n\n`)
+            reply.raw.write(`data: ${JSON.stringify(msg)}\n\n`)
+        }
+        reply.raw.flushHeaders()
+        reply.raw.write('retry: 5000\n\n')
+
+        const builder = new CustomServerBuilder("Test Server", {
+            extraPlayers: true,
+            pluginsIds: ["adminpanel.sp", "l4d2_extraplayeritems.sp"]
+        })
+        function onEvent(eventId: string, msg?: string) {
+            send({
+                event: eventId,
+                msg
+            })
+        }
+        try {
+            await builder.Create(onEvent)
+            reply.raw.end()
+        } catch(err) {
+            send({
+                error: err.message
+            })
+        }
+        reply.hijack()
     })
 }
