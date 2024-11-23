@@ -22,6 +22,7 @@ import DynamicServerManager from './docker/DynamicServerManager.js';
 import ServerGroup from './groups/ServerGroup.js';
 import { DynamicServerGroup } from './groups/DynamicServerGroup.js';
 import { StandardServerGroup } from './groups/StandardServerGroup.js';
+import { CustomServerGroup } from './groups/CustomServerGroup.js';
 
 
 // How long after no status requests to switch from short to long refresh
@@ -533,15 +534,27 @@ export default class ServerManager {
           console.warn(`[ServerManager] WARN: Found templated server config but docker support is not enabled (DOCKER_ENABLED set to 1); skipping`)
           continue;
         }
-        const group = new DynamicServerGroup(this.#dynamicManager, groupId, {
-          name: data.name,
-          type: data.type,
-          actions,
-          templateId: data.templateId,
-          serverTemplate: data.serverTemplate,
-          minServers: data.minServers
-        })
-        this.#groups[groupId] = group
+        if('groupType' in data && data.groupType === "custom") {
+          const group = new CustomServerGroup(this.#dynamicManager, groupId, {
+            name: data.name,
+            type: data.type,
+            actions,
+            templateId: data.templateId,
+            serverTemplate: data.serverTemplate,
+            minServers: data.minServers
+          })
+          this.#groups[groupId] = group
+        } else {
+          const group = new DynamicServerGroup(this.#dynamicManager, groupId, {
+            name: data.name,
+            type: data.type,
+            actions,
+            templateId: data.templateId,
+            serverTemplate: data.serverTemplate,
+            minServers: data.minServers
+          })
+          this.#groups[groupId] = group
+        }
       } else if('servers' in data) {
         const group = new StandardServerGroup(groupId, {
           name: data.name,

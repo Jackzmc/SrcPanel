@@ -127,7 +127,7 @@ export default class DynamicServerManager {
         return i;
     }
 
-    async createInstance(templateId: string) {
+    async createInstance(templateId: string, volumes: string[] = []) {
         const template = this.#templates[templateId]
         if(!template) throw new Error(`Unknown template id: \"${templateId}\"`)
         const port = await this.#getNextPort(template.config)
@@ -154,7 +154,7 @@ export default class DynamicServerManager {
             // },
             HostConfig: {
                 "NetworkMode": template.config.network,
-                "Binds": template.config.volumes ?? [],
+                "Binds": template.config.volumes?.concat(volumes) ?? [],
                 "RestartPolicy": {
                     "Name": "unless-stopped",
                     // MaximumRetryCount: 3

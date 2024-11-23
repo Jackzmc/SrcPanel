@@ -4,13 +4,14 @@ import { nanoid } from "nanoid"
 import path from 'path'
 import { SMPluginMeta } from '../../../../common-types/CustomServer';
 import User from "../../modules/users/User.js";
+import { CustomServerGroup } from "./groups/CustomServerGroup.js";
 
 export interface CustomServerOptions {
     extraPlayers?: boolean,
     pluginsIds?: string[],
     workshopLinks?: string[]
 }
-export type CreateServerEventState = "INIT" | "INIT_FOLDERS" | "INSTALL_METAMOD" | "INSTALL_SOURCEMOD" | "SETUP_SOURCEMOD" | "INSTALL_PLUGINS" | "INSTALL_ADDONS" | "SETUP_CONFIGS" | "ERROR"
+export type CreateServerEventState = "INIT" | "INIT_FOLDERS" | "INSTALL_METAMOD" | "INSTALL_SOURCEMOD" | "SETUP_SOURCEMOD" | "INSTALL_PLUGINS" | "INSTALL_ADDONS" | "SETUP_CONFIGS" | "PROVISION_SERVER" | "ERROR"
 
 
 const CUSTOMER_FOLDER_LOCATION = process.env.CUSTOM_SERVER_CUSTOMER_DIR!
@@ -30,6 +31,7 @@ export default class CustomServerBuilder {
 
     #root: string
     #eventCallback: CreateCallback
+    #group: CustomServerGroup
     constructor(name: string, options: CustomServerOptions = {}, variables: Record<string, string|number|boolean> = {}) {
         if(!CUSTOMER_FOLDER_LOCATION) throw new Error("Missing env: CUSTOM_SERVER_CUSTOMER_DIR")
         if(!TEMPLATE_FOLDER_LOCATION) throw new Error("Missing env: CUSTOM_SERVER_TEMPLATE_DIR")
@@ -50,10 +52,10 @@ export default class CustomServerBuilder {
         await unlink(this.#root)
     }
 
-    // TODO: cleanup on abort?
-    async Create(eventCb: CreateCallback, abortSignal: AbortSignal) {
+    async Create(eventCb: CreateCallback, abortSignal: AbortSignal, group: CustomServerGroup) {
         if(!CUSTOMER_FOLDER_LOCATION) throw new Error("Missing: " + "CUSTOMER_FOLDER_LOCATION")
         this.#eventCallback = eventCb
+        this.#group = group
 
         this.#id = nanoid(21)
         this.#variables.id = this.#id
@@ -77,10 +79,11 @@ export default class CustomServerBuilder {
                 abortSignal.throwIfAborted()
                 await func.bind(this)()
             } 
+            return await this.#registerServer()
         } catch(err) {
             console.error(`[CustomServerBuilder] Error: `, err)
-            this.#notify("ERROR", err.message)
             await this.#cleanup()
+            throw err
         }
     }
 
@@ -189,6 +192,15 @@ export default class CustomServerBuilder {
             content = content.replace(`%${key}%/g`, replacement.toString())
         }
         return content
+    }
+
+    async #registerServer() {
+        const server = await this.#group.createNewServer(this.#name, [
+            `${path.join(this.#root, 'cfg')}:/server/cfg`,
+            `${path.join(this.#root, 'addons')}:/server/addons`,
+        ])
+        // await server.start()
+        return server
     }
 }
 

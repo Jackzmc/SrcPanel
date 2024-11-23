@@ -1,5 +1,7 @@
 import { FastifyInstance, FastifyPluginOptions } from "fastify";
 import CustomServerBuilder from "../../../modules/servers/CustomServerBuilder.js";
+import { CustomServerGroup } from "../../../modules/servers/groups/CustomServerGroup.js";
+import { ServerInfo } from "../../../../../common-types/Server.js";
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
     /* metadata route
@@ -62,7 +64,19 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             //     done()
             // })
             console.log("creating from builder")
-            await builder.Create(onEvent, abort.signal)
+            const group = fastify.servers.getGroup("l4d2-custom") as CustomServerGroup
+            const server = await builder.Create(onEvent, abort.signal, group)
+            send({
+                server: {
+                    id: server.ContainerInstance.ContainerId,
+                    name: server.name,
+                    serverId: server.id,
+                    hostname: server.domain,
+                    ip: server.ip,
+                    port: server.port,
+                    type: server.port,
+                }
+            })
             reply.raw.end()
         } catch(err) {
             send({

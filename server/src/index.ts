@@ -106,6 +106,7 @@ app.register(fastifyWebsocket)
 import MiddleManager from './middlewares/managers.js'
 app.register(MiddleManager)
 .then(async() => {
+    if(hadSignal) return
     app.register(FastifyCookie)
     app.register(FastifySession, { 
         secret: process.env.SESSION_SECRET as string,
@@ -174,6 +175,7 @@ app.register(MiddleManager)
         }
 
     }
+    if(hadSignal) return
     await loadRoutes(mainPrefix, path.join(__dirname, './routes'))
     try {
         await app.listen({
