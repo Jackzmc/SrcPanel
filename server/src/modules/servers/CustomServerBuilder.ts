@@ -6,15 +6,14 @@ import path from 'path'
 export interface CustomServerOptions {
     extraPlayers?: boolean
 }
-
-export type CreateServerEventState = "INIT_FOLDERS" | "INSTALL_METAMOD" | "INSTALL_SOURCEMOD"
+export type CreateServerEventState = "INIT_FOLDERS" | "INSTALL_METAMOD" | "INSTALL_SOURCEMOD" | "SETUP_SOURCEMOD" | "INSTALL_PLUGINS" | "INSTALL_ADDONS"
 
 
 const CUSTOMER_FOLDER_LOCATION = process.env.CUSTOM_SERVER_CUSTOMER_DIR
 const TEMPLATE_FOLDER_LOCATION = process.env.CUSTOM_SERVER_TEMPLATE_DIR
 
-const METAMOD_FILE = "mmsource-1.11.0-git1156-linux.tar.gz"
-const SOURCEMOD_FILE = "sourcemod-1.12.0-git7169-linux.tar.gz"
+const METAMOD_FILE = process.env.CUSTOM_SERVER_METAMOD_PATH
+const SOURCEMOD_FILE = process.env.CUSTOM_SERVER_SOURCEMOD_PATH
 
 export type CreateCallback = (state: CreateServerEventState, msg?: string) => Promise<void>
 
@@ -39,6 +38,7 @@ export default class CustomServerBuilder {
 
         const id = nanoid(21)
         this.#root = path.join(CUSTOMER_FOLDER_LOCATION, id)
+        console.log('root', this.#root)
         
         await this.#initFolders()
         eventCb("INIT_FOLDERS")
