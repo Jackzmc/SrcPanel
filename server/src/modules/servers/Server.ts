@@ -7,14 +7,13 @@ import RconFeature from "./features/Rcon.js";
 import ServerGroup from "./groups/ServerGroup.js";
 import { ActionResponse, IAction } from "./IAction.js";
 import { GameDig } from 'gamedig';
-import {InfluxDB } from '@influxdata/influxdb-client'
 
 const MIN_REFRESH_TIME = 8000
 
 export interface BaseServerData {
   id : string;
   name: string;
-  domain? : string;
+  host: string,
   ip: string,
   port: number,
   type: string,
@@ -39,6 +38,7 @@ export interface BaseServerData {
 
 
 export interface ConfigServerData extends BaseServerData {
+  host: string, // required,
   systemd ? : {
     isUser: boolean;
     serviceName: string;
@@ -86,7 +86,7 @@ export default abstract class Server implements IAction {
         this._info = {
           id: server.id,
           name: server.name,
-          domain: server.domain,
+          host: server.host,
           ip: server.ip,
           port: server.port,
           type: group.Type || /* legacy */ server.type,
@@ -130,7 +130,7 @@ export default abstract class Server implements IAction {
     
     get id() { return this._info.id }
     get name() { return this._info.name }
-    get domain() { return this._info.domain }
+    get host() { return this._info.host }
     get ip() { return this._info.ip }
     get port() { return this._info.port }
     get type() { return this._info.type }

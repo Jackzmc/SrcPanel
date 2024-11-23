@@ -4,7 +4,7 @@ import ServerGroup, { CreateGroupOptions } from "./ServerGroup.js"
 import DNS from 'dns/promises'
 
 
-const REQUIRED_SERVER_PROPERTIES = ["ip"]
+const REQUIRED_SERVER_PROPERTIES = ["host"]
 
 export class StandardServerGroup extends ServerGroup<StandardServer> {
     constructor(id: string, options: CreateGroupOptions) {
@@ -23,23 +23,23 @@ export class StandardServerGroup extends ServerGroup<StandardServer> {
                 return true
             })
             .map(async ([id, server]) => {
-                const [, host, port] = server.ip.match(/([a-zA-Z0-9.]+):?(\d*)/) ?? []
                 const tags = server.tags ?? []
-                let address = server.ip
+                let address: string|undefined = undefined
                 try {
-                    const lookup = await DNS.lookup(host, { verbatim: false, family: 4 })
+                    const lookup = await DNS.lookup(server.host, { verbatim: false, family: 4 })
                     address = lookup.address
                 } catch(err) {
-                    console.warn(`[ServerManager] Warn: Could not resolve IP for hostname ${host}:\n`, err)
+                    console.warn(`[ServerManager] Error: Could not resolve IP for hostname ${server.host} (skipping):\n`, err)
+                    return null
                 }
 
                 const instance = new StandardServer(this, {
                     actions: server.actions ?? [],
                     id,
                     name: server.name,
-                    domain: host,
-                    port: Number(port) ?? 27015,
                     ip: address,
+                    port: Number(server.port) ?? 27015,
+                    host: server.host,
                     type: server.type,
                     tags: tags,
                     cfgDirectory: server.cfgDirectory,
@@ -51,7 +51,7 @@ export class StandardServerGroup extends ServerGroup<StandardServer> {
                 })
                 await instance.init()
                 this._servers[id] = instance
-            })
+            }).filter(s => s)
         return await Promise.allSettled(promises)
     }
 }

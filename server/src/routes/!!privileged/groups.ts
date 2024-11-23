@@ -54,7 +54,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 id: server.ContainerInstance.ContainerId,
                 name: server.name,
                 serverId: server.id,
-                hostname: server.domain,
+                hostname: server.host,
                 ip: server.ip,
                 port: server.port,
                 type: server.port,
