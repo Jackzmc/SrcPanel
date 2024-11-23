@@ -52,12 +52,12 @@ const app = Fastify({
 })
 async function onSignal(signal: NodeJS.Signals) {
     console.log("GOT SIGNAL", signal, "-- SHUTTING DOWN")
-    app.servers?.onShutdown()
+    await app.servers?.onShutdown()
     await SetCacheManager.Save()
-    app.close()
+    await app.close()
     setTimeout(() => {
         process.exit(0)
-    }, 1000)
+    }, 10_000)
 }
 ["SIGUSR2", "SIGINT", "SIGTERM"].map((signal) => {
     process.on(signal, onSignal)
