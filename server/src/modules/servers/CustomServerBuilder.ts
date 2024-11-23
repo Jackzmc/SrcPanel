@@ -1,15 +1,16 @@
 import { exec } from "child_process"
-import { cp, mkdir, readFile, writeFile } from "fs/promises"
+import { cp, mkdir, readdir, readFile, unlink, writeFile } from "fs/promises"
 import { nanoid } from "nanoid"
 import path from 'path'
 import { SMPluginMeta } from '../../../../common-types/CustomServer';
+import User from "../../modules/users/User.js";
 
 export interface CustomServerOptions {
     extraPlayers?: boolean,
     pluginsIds?: string[],
     workshopLinks?: string[]
 }
-export type CreateServerEventState = "INIT_FOLDERS" | "INSTALL_METAMOD" | "INSTALL_SOURCEMOD" | "SETUP_SOURCEMOD" | "INSTALL_PLUGINS" | "INSTALL_ADDONS" | "SETUP_CONFIGS"
+export type CreateServerEventState = "INIT" | "INIT_FOLDERS" | "INSTALL_METAMOD" | "INSTALL_SOURCEMOD" | "SETUP_SOURCEMOD" | "INSTALL_PLUGINS" | "INSTALL_ADDONS" | "SETUP_CONFIGS" | "ERROR"
 
 
 const CUSTOMER_FOLDER_LOCATION = process.env.CUSTOM_SERVER_CUSTOMER_DIR!
@@ -22,12 +23,14 @@ const SOURCEMOD_FILE = process.env.CUSTOM_SERVER_SOURCEMOD_PATH!
 export type CreateCallback = (state: CreateServerEventState, msg?: string) => Promise<void> | void
 
 export default class CustomServerBuilder {
+    #id: string
     #name: string
     #options: CustomServerOptions
+    #variables: Record<string, string|number|boolean> = {}
 
     #root: string
     #eventCallback: CreateCallback
-    constructor(name: string, options: CustomServerOptions = {}) {
+    constructor(name: string, options: CustomServerOptions = {}, variables: Record<string, string|number|boolean> = {}) {
         if(!CUSTOMER_FOLDER_LOCATION) throw new Error("Missing env: CUSTOM_SERVER_CUSTOMER_DIR")
         if(!TEMPLATE_FOLDER_LOCATION) throw new Error("Missing env: CUSTOM_SERVER_TEMPLATE_DIR")
         if(!PLUGIN_REPO_FOLDER_LOCATION) throw new Error("Missing env: CUSTOM_SERVER_REPO_DIR")
@@ -35,28 +38,50 @@ export default class CustomServerBuilder {
         if(!SOURCEMOD_FILE) throw new Error("Missing env: CUSTOM_SERVER_SOURCEMOD_PATH")
         this.#name = name
         this.#options = options
+        this.#variables = variables
     }
 
     #notify(state: CreateServerEventState, msg?: string) {
         this.#eventCallback(state, msg)
     }
 
-    async Create(eventCb: CreateCallback) {
+    async #cleanup() {
+        console.log("cleaning up builder for", this.#id)
+        await unlink(this.#root)
+    }
+
+    // TODO: cleanup on abort?
+    async Create(eventCb: CreateCallback, abortSignal: AbortSignal) {
         if(!CUSTOMER_FOLDER_LOCATION) throw new Error("Missing: " + "CUSTOMER_FOLDER_LOCATION")
         this.#eventCallback = eventCb
 
-        const id = nanoid(21)
-        this.#root = path.join(CUSTOMER_FOLDER_LOCATION, id)
+        this.#id = nanoid(21)
+        this.#variables.id = this.#id
+        this.#root = path.join(CUSTOMER_FOLDER_LOCATION, this.#id)
         console.log('root', this.#root)
+        this.#notify("INIT", this.#id)
+        const order = [
+            this.#initFolders,
+
+            this.#installSourcemod,
+            this.#setupSourcemod,
+            this.#applyTemplates,
+
+            this.#installPlugins,
+            this.#installAddons,
+        ]
         
-        await this.#initFolders()
-
-        await this.#installSourcemod()
-        await this.#setupSourcemod()
-        await this.#applyTemplates()
-
-        await this.#installPlugins()
-        await this.#installAddons()
+        abortSignal.throwIfAborted()
+        try {
+            for(const func of order) {
+                abortSignal.throwIfAborted()
+                await func.bind(this)()
+            } 
+        } catch(err) {
+            console.error(`[CustomServerBuilder] Error: `, err)
+            this.#notify("ERROR", err.message)
+            await this.#cleanup()
+        }
     }
 
     async #initFolders() {
@@ -140,7 +165,30 @@ export default class CustomServerBuilder {
 
     async #applyTemplates() {
         this.#notify("SETUP_CONFIGS", "Setting up server configurations")
+        const prefixLen = TEMPLATE_FOLDER_LOCATION.length + 1 // +1 to add trailign slash
+        for(const dirent of await readdir(TEMPLATE_FOLDER_LOCATION, { recursive: true, withFileTypes: true })) {
+            if(!dirent.isFile()) continue
+            const relParent = dirent.parentPath.substring(prefixLen)
+            // Create parent folders for id's folder
+            try {
+                await mkdir(path.join(this.#root, relParent), { recursive: true })
+            } catch(err) {
+                if(err.code !== "EEXISTS") throw err
+            }
+            console.log(`file=${dirent.name}`, `relParent=${relParent}`, `full=${path.join(this.#root, relParent, dirent.name)}`)
+            const content = this.#applyTemplate(await readFile(path.join(dirent.parentPath, dirent.name), 'utf-8'))
+            await writeFile(path.join(this.#root, relParent, dirent.name), content)
+            console.log("done", dirent.name)
+        }
+        console.log("templates applied")
         // TEMPLATE_FOLDER_LOCATION
+    }
+
+    #applyTemplate(content: string): string {
+        for(const [key, replacement] of Object.entries(this.#variables)) {
+            content = content.replace(`%${key}%/g`, replacement.toString())
+        }
+        return content
     }
 }
 

@@ -44,6 +44,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         const builder = new CustomServerBuilder("Test Server", {
             extraPlayers: true,
             pluginsIds: ["adminpanel.sp", "l4d2_extraplayeritems.sp"]
+        }, {
+            steamid2: req.user!.steamid2,
         })
         function onEvent(eventId: string, msg?: string) {
             send({
@@ -51,8 +53,16 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 msg
             })
         }
+        console.log("builder done")
         try {
-            await builder.Create(onEvent)
+            const abort = new AbortController()
+            // fastify.addHook("preClose", (done) => {
+            //     console.log("fastify is shutting down, triggering abort")
+            //     abort.abort("FASTIFY_SHUTDOWN")
+            //     done()
+            // })
+            console.log("creating from builder")
+            await builder.Create(onEvent, abort.signal)
             reply.raw.end()
         } catch(err) {
             send({
