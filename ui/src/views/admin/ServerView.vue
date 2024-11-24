@@ -20,7 +20,7 @@
           </div>
         </h3>
         <h4 class="subtitle is-4">
-          {{serverInfo.domain}}:{{serverInfo.port}}
+          {{serverInfo.host}}:{{serverInfo.port}}
           <Icon icon="fa-copy" data-tooltip="Copy to clipboard" @click="copyAddress"></Icon>
         </h4>
         <div class="level">
@@ -911,7 +911,7 @@ function formatGamemode(gamemode: string) {
 }
 
 async function copyAddress() {
-  await navigator.clipboard.writeText(`connect ${serverInfo.value!.domain}:${serverInfo.value!.port}`)
+  await navigator.clipboard.writeText(`connect ${serverInfo.value!.host}:${serverInfo.value!.port}`)
   notify({
     type: "success",
     text: "Copied to clipboard"
