@@ -53,6 +53,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import { CustomServerMetaInfo, SMPluginFlag } from '../../../../../common-types/CustomServer.js';
+import Field from '@/components/Field.vue';
 
 const model = defineModel<Record<string, boolean>>()
 

@@ -1,39 +1,75 @@
 <template>
 <div class="box">
   <div class="list has-visible-pointer-controls" >
-    <div class="list-item" v-for="(line, i) of lines" :key="i">
+    <!-- <div class="list-item" v-for="(line, i) of lines" :key="i">
       <div class="list-item-content">
           <div class="list-item-title">
             {{ line.event }}
           </div>
           <div class="list-item-description">
-            <slot name="description">
-              {{ line.msg }}
-            </slot>
+            {{ line.msg }}
           </div>
       </div>
 
       <div class="list-item-controls">
       </div>
+    </div> -->
+    <div class="list-item" v-if="lastLine">
+      <div class="list-item-content">
+        <div class="list-item-title">
+          {{ lastLine.event }}
+        </div>
+        <div class="list-item-description">
+          {{ lastLine.msg }}
+        </div>
+      </div>
+      <div class="list-item-controls">
+      </div>
     </div>
-    <button class="button is-info is-large" @click="create">Create</button>
+  </div>
+  <div class="buttons">
+    <button class="button is-info is-medium" @click="create" v-if="loadState == LoadState.Idle || loadState == LoadState.Loading" :disabled="loadState == LoadState.Loading">Create Server</button>
+    <button class="button is-medium" @click="cancel" v-if="loadState == LoadState.Loading">Cancel</button>
   </div>
 </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { CustomServerForm } from '../../../../../common-types/CustomServer';
+import { LoadState } from '@/types/global.js';
+
+const emit = defineEmits(["cancel"])
+
 const props = defineProps<{
   form: CustomServerForm
 }>()
 
 let lines = ref<any[]>([])
+let loadState = ref<LoadState>(LoadState.Idle)
+
+const lastLine = computed(() => {
+  return lines.value.at(-1)
+})
+
+let createSource: EventSource|null = null
 
 async function create() {
-  const evtSrc = new EventSource("/api/servers/custom/create")
+  if(loadState.value != LoadState.Idle) return
+  loadState.value = LoadState.Loading
+  const evtSrc = new EventSource("/api/servers/custom/create", {
+
+  })
+  createSource = evtSrc
   evtSrc.onmessage = (e) => {
     const payload = JSON.parse(e.data.toString())
+    if(payload.server) {
+      console.log('server', payload.server)
+      evtSrc.close()
+      lines.value.push({ event: "DONE", msg: `${payload.server}`})
+      loadState.value = LoadState.Success
+      return
+    }
     console.log(payload)
     lines.value.push(payload)
   }
@@ -41,7 +77,13 @@ async function create() {
 
   }
   evtSrc.onerror = (e) => {
-
+    loadState.value = LoadState.Error
+    evtSrc.close()
   }
+}
+
+function cancel() {
+  loadState.value = LoadState.Cancelled
+  createSource?.close()
 }
 </script>

@@ -10,6 +10,7 @@ import DockerServer from "../DockerServer.js";
 
 export interface DynamicGroupServerTemplate {
     name?: string,
+    host: string,
     ip: string,
     activityId?: string,
     tags?: string[],
@@ -38,6 +39,7 @@ export class CustomServerGroup extends ServerGroup<DockerServer> {
         this.#serverTemplate = {
             name: options.serverTemplate.name ?? this.Name,
             // type: options.type,
+            host: options.serverTemplate.host,
             activityId: options.serverTemplate.activityId,
             ip: options.serverTemplate.ip,
             tags: options.serverTemplate.tags ?? [],
@@ -85,7 +87,7 @@ export class CustomServerGroup extends ServerGroup<DockerServer> {
             name: customName
         }
         const id = `${this.Id}-${instance.Port}`
-        const ip = CustomServerGroup.formatTemplateVar(this.#serverTemplate.ip, vars)
+        const ip = CustomServerGroup.formatTemplateVar(this.#serverTemplate.host, vars)
         const [, host, port] = ip.match(/([a-zA-Z0-9.]+):?(\d*)/) ?? []
         let address = instance.PublicIp
         try {
@@ -98,7 +100,7 @@ export class CustomServerGroup extends ServerGroup<DockerServer> {
                 id,
                 name: CustomServerGroup.formatTemplateVar(this.#serverTemplate.name ?? "", vars),
                 ip: address,
-                domain: host,
+                host: host,
                 port: instance.Port,
                 type: this.Type,
                 tags: this.#serverTemplate.tags ?? [],

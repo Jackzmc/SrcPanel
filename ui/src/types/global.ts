@@ -3,7 +3,8 @@ export enum LoadState {
   Loading,
   Success,
   Error,
-  Updating
+  Updating,
+  Cancelled
 }
 export interface FetchData<T> {
   data: T | null | undefined,

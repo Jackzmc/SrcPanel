@@ -17,8 +17,9 @@
         <ManagePlugins v-else-if="currentStep === 1 && meta" :priv-user="privUser" :meta="meta" :form-data="formData" v-model="enabledPlugins" />
         <ManageAddons v-else-if="currentStep === 2" @add-item="onAddonChange" @del-item="onAddonChange" />
         <ConfirmPage v-else-if="currentStep === 3" :form="form" />
-        <div class="box" v-else>
-          <Icon icon="fa-spinner" spin>Loading...</Icon>
+        <div class="box has-background-info-light" v-else>
+          <h4 class="title is-3"><Icon icon="fa-spinner" icon-class="mr-2" spin >Loading</Icon></h4>
+          <p class="subtitle is-5">Please wait, fetching information...</p>
         </div>
         <br>
         <button class="button" @click="setStep(currentStep - 1)" v-if="currentStep > 0">
