@@ -1,9 +1,23 @@
 <template>
 <div class="box">
-  <span v-for="(line, i) in lines" :key="i">
-    {{ line }}
-  </span>
-  <button class="button is-info is-large" @click="create">Create</button>
+  <div class="list has-visible-pointer-controls" >
+    <div class="list-item" v-for="(line, i) of lines" :key="i">
+      <div class="list-item-content">
+          <div class="list-item-title">
+            {{ line.event }}
+          </div>
+          <div class="list-item-description">
+            <slot name="description">
+              {{ line.msg }}
+            </slot>
+          </div>
+      </div>
+
+      <div class="list-item-controls">
+      </div>
+    </div>
+    <button class="button is-info is-large" @click="create">Create</button>
+  </div>
 </div>
 </template>
 

@@ -1,5 +1,5 @@
 import { exec } from "child_process"
-import { cp, mkdir, readdir, readFile, unlink, writeFile } from "fs/promises"
+import { cp, mkdir, readdir, readFile, rmdir, unlink, writeFile } from "fs/promises"
 import { nanoid } from "nanoid"
 import path from 'path'
 import { SMPluginMeta } from '../../../../common-types/CustomServer';
@@ -51,7 +51,14 @@ export default class CustomServerBuilder {
 
     async #cleanup() {
         console.log("cleaning up builder for", this.#id)
-        await unlink(this.#root)
+        try {
+            await rmdir(this.#root)
+            if(this.#server) {
+                await this.#group.removeServer(this.#server)
+            }
+        } catch(err) {
+            if(err.code == "ENOENT") throw err
+        }
     }
 
     async Create(eventCb: CreateCallback, abortSignal: AbortSignal, group: CustomServerGroup) {

@@ -101,6 +101,10 @@ export default class DynamicServerInstance {
         return await (force ? this.#container.kill() : this.#container.stop())
     }
 
+    async delete() {
+        await this.#container.remove()
+    }
+
     async fetchLogs() {
         return (await this.#container.logs({ stdout: true, stderr: true })).toString()
     }

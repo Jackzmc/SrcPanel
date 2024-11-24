@@ -13,87 +13,12 @@
             </li>
           </ul>
         </div>
-        <div class="box" v-if="currentStep === 0">
-          <h4 class="title is-4">Server Settings</h4>
-          <Field label="Name">
-            <span class="help">Give your server a name</span>
-            <br>
-            <input class="input" type="text" v-model="formData.name" :placeholder="props.privUser.name + '\'s server'" />
-          </Field>
-          <br>
-          <Field label="Game">
-            <span class="help">Select the type of game this server is for</span>
-            <br>
-            <div class="tabs is-toggle is-medium">
-              <ul>
-                <li v-for="(game) in meta?.games" :key="game.appid" :class="{'is-active': formData.game && formData.game.appid === game.appid }">
-                  <a @click="formData.game = game">
-                    <span>{{ game.title }}</span>
-                  </a>
-                </li>
-              </ul>
-            </div>
-          </Field>
-          <br>
-          <Field label="Other Settings">
-            <label class="checkbox">
-              <input type="checkbox" v-model="formData.extraPlayers" />
-              Enable 5+ Game support
-            </label>
-          </Field>
-        </div>
-        <div class="box" v-else-if="currentStep === 1">
-          <h4 class="title is-4">Server Plugins</h4>
-          <p class="">Select the plugins you want on the server by clicking on its box. You can always change plugins later.</p>
-          <p class="">Some plugins are required and cannot be disabled, others are recommended</p>
-          <p class="">Hover over a box to view the description of the plugin</p>
-          <br>
-          <div class="columns">
-            <div class="column">
-              <Field icon-left="fa-search">
-                <input v-model="searchQuery" type="text" class="input" placeholder="Search for a plugin" />
-              </Field>
-            </div>
-            <div class="column">
-
-            </div>
-          </div>
-          <div class="fixed-grid has-3-cols">
-            <div class="grid">
-              <div v-for="(plugin) in filteredPlugins" :key="plugin.id"
-                class="cell has-tooltip-right" :data-tooltip="plugin.tooltip"
-              >
-                <div :class="['card','mt-2','py-0','px-0',{
-                    'is-clickable': !hasFlag(plugin.id, SMPluginFlag.Required),
-                    'has-background-link-light': enabledPlugins[plugin.id] && !hasFlag(plugin.id, SMPluginFlag.Required),
-                    // 'has-background-primary': enabledPlugins[pluginId] && hasFlag(pluginId, PluginFlag.Required),
-                    'has-background-grey-lighter': !enabledPlugins[plugin.id],
-                  }]"
-                  style="border-radius: 1px; height:100%" @click="togglePlugin(plugin.id)"
-                >
-                  <div class="card-content px-4 py-2">
-                    <label class="checkbox">
-                      <input type="checkbox"  :checked="enabledPlugins[plugin.id]" :disabled="hasFlag(plugin.id, SMPluginFlag.Required) ?? false" />
-                      &nbsp;<strong>{{ plugin.name ?? plugin.id}}</strong>
-                    </label>
-                    <p class="subtitle is-6 mb-2">
-                      v{{ plugin.version }} - Created by {{plugin.author}}
-                    </p>
-                    <span data-tooltip="This plugin is required and cannot be disabled" class="tag is-danger" v-if="plugin.flagKv.required">Required</span>
-                    <span data-tooltip="This plugin is recommended to be enabled" class="tag is-primary" v-else-if="plugin.flagKv.recommended">Recommended</span>
-                    <span data-tooltip="This plugin is recommended to be enabled when 5+ support is enabled" class="tag is-primary" v-else-if="plugin.flagKv.recommendedExtraPlayers && formData.extraPlayers">Recommended for 5+</span>
-                    <!-- <span class="tag is-secondary" v-else-if="hasFlag(plugin.id, PluginFlag.Library)">Library</span> -->
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        <SettingsPage v-if="currentStep === 0 && meta" :priv-user="privUser" :meta="meta" v-model="formData" />
+        <ManagePlugins v-else-if="currentStep === 1 && meta" :priv-user="privUser" :meta="meta" :form-data="formData" v-model="enabledPlugins" />
         <ManageAddons v-else-if="currentStep === 2" @add-item="onAddonChange" @del-item="onAddonChange" />
         <ConfirmPage v-else-if="currentStep === 3" :form="form" />
         <div class="box" v-else>
-          <b>Unknown state</b>
-          State={{currentStep}}
+          <Icon icon="fa-spinner" spin>Loading...</Icon>
         </div>
         <br>
         <button class="button" @click="setStep(currentStep - 1)" v-if="currentStep > 0">
@@ -108,7 +33,7 @@
           <h4 class="title is-4 has-text-centered">Overview</h4>
           <ul>
             <li><b>Name: </b>{{ form.name }}</li>
-            <li><b>Game: </b>{{ form.game ? GAMES[form.game] : '' }}</li>
+            <li><b>Game: </b><span v-if="formData.game">{{ formData.game.title }} ({{ formData.game.appid }})</span></li>
             <li><b>5+ Support: </b>{{ form.extraPlayers ? 'Yes' : 'None' }}</li>
             <li><b>Memory: </b> 500 MB</li>
             <li><b>Plugins: </b> {{ form.enabledPlugins.length }} enabled</li>
@@ -134,6 +59,8 @@ import PluginFeature from '../../../../server/src/modules/servers/features/Plugi
 import { SMPluginMeta, SMPluginFlag, CustomServerMetaInfo } from '../../../../common-types/CustomServer.js'
 import { CustomServerForm } from '../../../../common-types/CustomServer';
 import ConfirmPage from '@/components/servers/custom-server/ConfirmPage.vue';
+import SettingsPage from '@/components/servers/custom-server/SettingsPage.vue';
+import ManagePlugins from '@/components/servers/custom-server/ManagePlugins.vue';
 
 const router = useRouter()
 const route = useRoute()
@@ -190,33 +117,6 @@ let searchQuery = ref("")
 let enabledPlugins = ref<Record<string, boolean>>({})
 let enabledAddons = ref<WorkshopItem[]>([])
 
-const filteredPlugins = computed(() => {
-  if(!meta.value) return []
-  const query = searchQuery.value.toLowerCase()
-  return Object.entries(meta.value.plugins)
-    .filter(([id, data]) => {
-      if(searchQuery.value != "") {
-        if(!id.includes(query) && (!data.name || !data.name?.toLocaleLowerCase().includes(query))) return false
-      }
-      if(!data.flags) return true
-      return enabledPlugins.value[id] || (~data.flags & SMPluginFlag.Library)
-    })
-    .map(([id, data]) => {
-      const flagKv = {
-        required: hasFlag(id, SMPluginFlag.Required),
-        recommended: hasFlag(id, SMPluginFlag.Recommended),
-        recommendedExtraPlayers: hasFlag(id, SMPluginFlag.Recommended_ExtraPlayers)
-      }
-
-      return {
-        id,
-        ...data,
-        flagKv,
-        tooltip: `${id} ${enabledPlugins.value[id] ? '(enabled)' : ''}\n\n${data.description??''}`
-      }
-    })
-})
-
 const form = computed(() => {
   return {
     name: formData.value.name,
@@ -250,21 +150,6 @@ function setStep(newStepIndex: number) {
   highestStep.value = Math.max(highestStep.value, newStepIndex)
 }
 
-function togglePlugin(pluginId: string) {
-  const plugin = meta.value!.plugins[pluginId]
-  if(!plugin) return
-  if(hasFlag(pluginId, SMPluginFlag.Required)) return
-  enabledPlugins.value[pluginId] = !enabledPlugins.value[pluginId]
-  for(const required of plugin.includes) {
-    togglePlugin(required)
-  }
-}
-function hasFlag(pluginId: string, flag: SMPluginFlag): boolean | null {
-  if(!meta.value) return null
-  if(!meta.value.plugins[pluginId]) return null
-  return meta.value.plugins[pluginId].flags != undefined && (meta.value.plugins[pluginId].flags & flag) == flag
-}
-
 function onAddonChange(addonId: string, addon?: WorkshopItem) {
   if(addon != undefined) {
     enabledAddons.value.push(addon)
@@ -282,6 +167,12 @@ async function fetchMeta() {
     const json = await response.json()
     meta.value = json
   }
+}
+
+function hasFlag(pluginId: string, flag: SMPluginFlag): boolean | null {
+  if(!meta.value) return null
+  if(!meta.value.plugins[pluginId]) return null
+  return meta.value.plugins[pluginId].flags != undefined && (meta.value.plugins[pluginId].flags & flag) == flag
 }
 
 onBeforeMount(async() => {

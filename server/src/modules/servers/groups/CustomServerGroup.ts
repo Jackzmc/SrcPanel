@@ -117,4 +117,10 @@ export class CustomServerGroup extends ServerGroup<DockerServer> {
         const server = await this.#registerInstance(instance, customName)
         return server
     }
+
+    async removeServer(server: DockerServer) {
+        if(!this._servers[server.id]) throw new Error(`Server "${server.id}" is not registered for group (${this._id})`);
+        delete this._servers[server.id]
+        await server.ContainerInstance.delete();
+    }
 }

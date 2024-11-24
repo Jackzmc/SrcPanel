@@ -89,7 +89,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             reply.raw.end()
         } catch(err) {
             send({
-                error: err.message
+                event: "ERROR",
+                msg: err.message
             })
         }
         reply.hijack()
