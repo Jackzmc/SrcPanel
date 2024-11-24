@@ -19,7 +19,7 @@
       </div>
       <div class="columns">
         <div class="column is-6">
-          <Field label="IP Address / Domain*" :info="server.domain">
+          <Field label="IP Address / Domain*" :info="server.host">
             <template v-slot:hint_error v-if="!server.ip">
               <p class="help has-text-danger"><Icon icon="fa-exclamation-triangle">A valid domain or IP address is required</Icon></p>
             </template>
@@ -172,17 +172,16 @@ watch(() => props.data, () => {
   server.value = JSON.parse(JSON.stringify(props.data))
 })
 
-let server = ref<ServerInfo>({
+let server = ref<Partial<ServerInfo>>({
   id: '',
   name: '',
   ip: '',
-  domain: '',
+  host: '',
   type: '',
   tags: [''],
   port: 0,
 
   // Unused, just using ServerInfo
-  features: {},
   sortOrder: -1,
   actions: []
 })
@@ -262,7 +261,7 @@ async function validateAddress(ip: string, port: number) {
         if(!server.value.type)
           server.value.type = json.type
         server.value.ip = json.ip
-        server.value.domain = json.domain
+        server.value.host = json.host
         determiningType.value = LoadState.Success
       }
     } else {

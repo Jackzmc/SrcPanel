@@ -49,7 +49,7 @@
         </td>
         <td>
           <p @click="copyCommand" :class="{ 'has-text-grey': !server.online }">
-            connect {{ server.domain }}:{{ server.port }}
+            connect {{ server.host }}:{{ server.port }}
           </p>
         </td>
         <td>
@@ -60,7 +60,7 @@
       </template>
       <template v-else-if="type === 'minecraft'">
         <td>
-          {{ server.domain ?? server.ip }}:{{ server.port }}
+          {{ server.host ?? server.ip }}:{{ server.port }}
         </td>
       </template>
     </template>
