@@ -96,7 +96,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                     lowestId: c[0].lowestId,
                     lastFetchTime: Date.now()
                 }
-                partitionRowCache.set(null, value)
+                partitionRowCache.set(year, value)
             } catch(err) {
                 // Ignore invalid partitions
                 if(err.code !== "ER_UNKNOWN_PARTITION") {
@@ -110,7 +110,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     // Fetch null to get the complete number of rows
     await getTotalRows(null)
     const partitions = await partitionCache.fetch()
-    await Promise.all([...partitions.values()].map(part => getTotalRows(part)))
+    const a = await Promise.all([...partitions.values()].map(part => getTotalRows(part)))
     await SetCacheManager.Save()
 
     fastify.get('/data', async(req, reply) => {
