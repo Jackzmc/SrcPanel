@@ -127,7 +127,7 @@ export default class DynamicServerManager {
         return i;
     }
 
-    async createInstance(templateId: string, volumes: string[] = []) {
+    async createInstance(templateId: string, volumes: string[] = [], labels: Record<string, string|undefined> = {}) {
         const template = this.#templates[templateId]
         if(!template) throw new Error(`Unknown template id: \"${templateId}\"`)
         const port = await this.#getNextPort(template.config)
@@ -164,6 +164,7 @@ export default class DynamicServerManager {
             Labels: {
                 "panel.template": templateId,
                 "panel.port": port.toString(),
+                ...labels
             },
         }
         const container = await this.#docker.createContainer(config)

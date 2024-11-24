@@ -6,6 +6,7 @@ import DynamicServerInstance from "../docker/DynamicServerInstance.js";
 import DNS from 'dns/promises';
 import { ServerAction } from "../../../../../common-types/Server.js";
 import DockerServer from "../DockerServer.js";
+import User from '../../users/User';
 
 
 export interface DynamicGroupServerTemplate {
@@ -24,6 +25,10 @@ export interface DynamicCreateGroupOptions extends CreateGroupOptions {
     minServers?: number,
     maxEmptyServers?: number
 }
+
+// The maximum amount of time a server is empty before it is auto shutdown
+const MAX_EMPTY_AUTO_SHUTDOWN_TIME = 1000 * 60 * 24
+const CHECK_SERVER_INTERVAL = 1000 * 60 * 5
 
 export class CustomServerGroup extends ServerGroup<DockerServer> {
     #templateId: string
@@ -50,6 +55,8 @@ export class CustomServerGroup extends ServerGroup<DockerServer> {
             console.warn(`[ServerGroup::Dynamic] Group \"${id}\" has minServers >= maxEmptyServers, clamping maxEmpty to `)
         }
 
+        this.#checkServers()
+        setInterval(() => this.#checkServers(), CHECK_SERVER_INTERVAL)
     }
 
     async *#iterateServers(): AsyncGenerator<[string, DockerServer]> {
@@ -67,6 +74,40 @@ export class CustomServerGroup extends ServerGroup<DockerServer> {
         }
     }
 
+    async #checkServers() {
+        // Cleans up any servers with their container missing
+        for await(const [id, server] of this.#iterateServers()) {
+
+        }
+        // Find any new instances
+        await this.#manager.findExisting()
+        const instances = this.#manager.getInstancesForTemplate(this.#templateId)
+        // TODO: check for # of servers that are active
+        for(const instance of instances) {
+            // Already configured, skip:
+            if(instance.Server) continue
+            const labels = await instance.labels()
+            if(labels["panel.custom_server"]) continue
+
+            const owner = labels["panel.owner_steamid2"]
+            const name = labels["panel.name"]
+
+            await this.#registerInstance(instance, name)
+            // const state = await instance.state()
+            // if(state.Running) {
+            //     activeCount++;
+            // } else if(activeCount < this.#minServers) {
+            //     console.debug(`Starting stopped existing instance ${activeCount + 1}/${this.#minServers}`)
+            //     // If we have servers but they aren't active, activate
+            //     if(await instance.tryStart()) {
+            //         activeCount++
+            //     } else {
+            //         console.error(`Failed to start instance ${instance.ContainerId}`)
+            //     }
+            // }
+        }
+    }
+
     get TemplateId() {
         return this.#templateId
     }
@@ -74,6 +115,7 @@ export class CustomServerGroup extends ServerGroup<DockerServer> {
     static formatTemplateVar(template: string, variables: Record<string, string | number>) {
         return Object.entries(variables)
             .reduce((acc, [key, value]) => {
+                if(!value) return acc
                 return acc.replace(new RegExp(`%${key}%`, 'g'), value.toString())
             }, template)
     }
@@ -114,8 +156,13 @@ export class CustomServerGroup extends ServerGroup<DockerServer> {
         return server
     }
 
-    async createNewServer(customName: string, volumes: string[] = []) {
-        const instance = await this.#manager.createInstance(this.#templateId, volumes)
+    async createNewServer(customName: string, owner: User | null, volumes: string[] = []) {
+        const instance = await this.#manager.createInstance(this.#templateId, volumes, {
+            "panel.owner_steamid2": owner ? owner.steamid2 : undefined,
+            "panel.name": customName,
+            "panel.custom_server": "true",
+
+        })
         const server = await this.#registerInstance(instance, customName)
         return server
     }

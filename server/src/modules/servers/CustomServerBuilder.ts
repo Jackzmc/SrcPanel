@@ -43,6 +43,7 @@ export default class CustomServerBuilder {
     #group: CustomServerGroup
     #server: DockerServer
     #progress = { current: 0, total: 0 }
+    #user: User | null = null
     constructor(name: string, options: CustomServerOptions = {}, variables: Record<string, string|number|boolean> = {}) {
         if(!CUSTOMER_FOLDER_LOCATION) throw new Error("Missing env: CUSTOM_SERVER_CUSTOMER_DIR")
         if(!TEMPLATE_FOLDER_LOCATION) throw new Error("Missing env: CUSTOM_SERVER_TEMPLATE_DIR")
@@ -57,6 +58,9 @@ export default class CustomServerBuilder {
     #notify(state: CreateServerEventState, msg?: string) {
         this.#eventCallback(state, msg, this.#progress)
     }
+
+    get User(): User | null { return this.#user }
+    set User(user: User) { this.#user = user}
 
     async #cleanup() {
         console.log("cleaning up builder for", this.#id)
@@ -222,7 +226,7 @@ export default class CustomServerBuilder {
 
     async #registerServer() {
         this.#notify("PROVISION_SERVER", "Provisioning server")
-        const server = await this.#group.createNewServer(this.#name, [
+        const server = await this.#group.createNewServer(this.#name, this.#user, [
             `${path.join(this.#root, 'cfg')}:/server/cfg`,
             `${path.join(this.#root, 'addons')}:/server/addons`,
         ])

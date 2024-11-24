@@ -105,8 +105,9 @@ export default class DynamicServerInstance {
         await this.#container.remove()
     }
 
-    async fetchLogs() {
-        return (await this.#container.logs({ stdout: true, stderr: true })).toString()
+    async labels() {
+        const inspect = await this.#container.inspect()
+        return inspect.Config.Labels
     }
 
     setServer(server: DockerServer | null) {
