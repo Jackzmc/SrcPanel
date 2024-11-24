@@ -182,6 +182,7 @@ function hasFlag(pluginId: string, flag: SMPluginFlag): boolean | null {
 
 onBeforeMount(async() => {
   await fetchMeta()
+  if(!meta.value) return
   for(const [id, data] of Object.entries(meta.value!.plugins)) {
     enabledPlugins.value[id] = (hasFlag(id, SMPluginFlag.Recommended) || hasFlag(id, SMPluginFlag.Required)) ?? false
   }
