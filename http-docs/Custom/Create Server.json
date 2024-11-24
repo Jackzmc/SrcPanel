@@ -4,8 +4,8 @@
     "body": {
         "mimeType": "No Body"
     },
-    "url": "{{API_PROTOCOL}}://{{API_DOMAIN}}/api/servers/custom",
-    "sortOrder": 0,
+    "url": "{{API_PROTOCOL}}://{{API_DOMAIN}}/api/servers/custom/create",
+    "sortOrder": 1,
     "parameters": [],
     "pathParameters": [],
     "headers": [

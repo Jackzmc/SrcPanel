@@ -5,6 +5,7 @@ import path from 'path'
 import { SMPluginMeta } from '../../../../common-types/CustomServer';
 import User from "../../modules/users/User.js";
 import { CustomServerGroup } from "./groups/CustomServerGroup.js";
+import DockerServer from "./DockerServer.js";
 
 export interface CustomServerOptions {
     extraPlayers?: boolean,
@@ -32,6 +33,7 @@ export default class CustomServerBuilder {
     #root: string
     #eventCallback: CreateCallback
     #group: CustomServerGroup
+    #server: DockerServer
     constructor(name: string, options: CustomServerOptions = {}, variables: Record<string, string|number|boolean> = {}) {
         if(!CUSTOMER_FOLDER_LOCATION) throw new Error("Missing env: CUSTOM_SERVER_CUSTOMER_DIR")
         if(!TEMPLATE_FOLDER_LOCATION) throw new Error("Missing env: CUSTOM_SERVER_TEMPLATE_DIR")
@@ -58,13 +60,14 @@ export default class CustomServerBuilder {
         this.#group = group
 
         this.#id = nanoid(21)
-        this.#variables.id = this.#id
+        this.#variables = {
+            id: this.#id,
+            name: this.#name
+        }
         this.#root = path.join(CUSTOMER_FOLDER_LOCATION, this.#id)
         console.log('root', this.#root)
         this.#notify("INIT", this.#id)
         const order = [
-            this.#initFolders,
-
             this.#installSourcemod,
             this.#setupSourcemod,
             this.#applyTemplates,
@@ -75,11 +78,13 @@ export default class CustomServerBuilder {
         
         abortSignal.throwIfAborted()
         try {
+            await this.#initFolders()
+            this.#server = await this.#registerServer()
             for(const func of order) {
                 abortSignal.throwIfAborted()
                 await func.bind(this)()
             } 
-            return await this.#registerServer()
+            return this.#server
         } catch(err) {
             console.error(`[CustomServerBuilder] Error: `, err)
             await this.#cleanup()
@@ -199,6 +204,12 @@ export default class CustomServerBuilder {
             `${path.join(this.#root, 'cfg')}:/server/cfg`,
             `${path.join(this.#root, 'addons')}:/server/addons`,
         ])
+        this.#variables = {
+            ...this.#variables,
+            adminpanel_auth_token: await server.Plugin.generateToken("CUSTOM_BUILDER"),
+            server_ip: server.ip,
+            server_port: server.port
+        }
         // await server.start()
         return server
     }

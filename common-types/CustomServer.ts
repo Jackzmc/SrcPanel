@@ -16,3 +16,19 @@ export const enum SMPluginFlag {
   Recommended_ExtraPlayers = 4,
   Library = 8
 }
+export interface CustomServerForm {
+  name: string,
+  // appid: number;
+  game: number,
+  extraPlayers: boolean
+  enabledPlugins: string[],
+  enabledAddons: string[]
+}
+
+export interface CustomServerMetaInfo {
+  plugins: Record<string, SMPluginMeta>,
+  games: {
+    appid: number,
+    title: string
+  }[]
+}

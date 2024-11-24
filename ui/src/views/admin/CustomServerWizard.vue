@@ -26,9 +26,9 @@
             <br>
             <div class="tabs is-toggle is-medium">
               <ul>
-                <li v-for="(display, id) in GAMES" :key="id" :class="{'is-active': formData.game === id }">
-                  <a @click="formData.game = id">
-                    <span>{{ display }}</span>
+                <li v-for="(game) in meta?.games" :key="game.appid" :class="{'is-active': formData.game && formData.game.appid === game.appid }">
+                  <a @click="formData.game = game">
+                    <span>{{ game.title }}</span>
                   </a>
                 </li>
               </ul>
@@ -64,8 +64,8 @@
                 class="cell has-tooltip-right" :data-tooltip="plugin.tooltip"
               >
                 <div :class="['card','mt-2','py-0','px-0',{
-                    'is-clickable': !hasFlag(plugin.id, PluginFlag.Required),
-                    'has-background-link-light': enabledPlugins[plugin.id] && !hasFlag(plugin.id, PluginFlag.Required),
+                    'is-clickable': !hasFlag(plugin.id, SMPluginFlag.Required),
+                    'has-background-link-light': enabledPlugins[plugin.id] && !hasFlag(plugin.id, SMPluginFlag.Required),
                     // 'has-background-primary': enabledPlugins[pluginId] && hasFlag(pluginId, PluginFlag.Required),
                     'has-background-grey-lighter': !enabledPlugins[plugin.id],
                   }]"
@@ -73,7 +73,7 @@
                 >
                   <div class="card-content px-4 py-2">
                     <label class="checkbox">
-                      <input type="checkbox"  :checked="enabledPlugins[plugin.id]" :disabled="hasFlag(plugin.id, PluginFlag.Required) ?? false" />
+                      <input type="checkbox"  :checked="enabledPlugins[plugin.id]" :disabled="hasFlag(plugin.id, SMPluginFlag.Required) ?? false" />
                       &nbsp;<strong>{{ plugin.name ?? plugin.id}}</strong>
                     </label>
                     <p class="subtitle is-6 mb-2">
@@ -90,9 +90,10 @@
           </div>
         </div>
         <ManageAddons v-else-if="currentStep === 2" @add-item="onAddonChange" @del-item="onAddonChange" />
+        <ConfirmPage v-else-if="currentStep === 3" :form="form" />
         <div class="box" v-else>
-          error.
-          step = {{currentStep}}
+          <b>Unknown state</b>
+          State={{currentStep}}
         </div>
         <br>
         <button class="button" @click="setStep(currentStep - 1)" v-if="currentStep > 0">
@@ -127,12 +128,12 @@ import { computed, onBeforeMount, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
 // TODO: pull from server instead
-import Plugins_ from '@/assets/plugins.tmp.json'
 import ManageAddons from '@/components/servers/custom-server/ManageAddons.vue';
 import { WorkshopItem } from '../../../../common-types/Share.js';
 import PluginFeature from '../../../../server/src/modules/servers/features/Plugin';
-import { SMPluginMeta, SMPluginFlag } from '../../../../common-types/CustomServer.ts'
-const Plugins = Plugins_ as Record<string, PluginMeta>
+import { SMPluginMeta, SMPluginFlag, CustomServerMetaInfo } from '../../../../common-types/CustomServer.js'
+import { CustomServerForm } from '../../../../common-types/CustomServer';
+import ConfirmPage from '@/components/servers/custom-server/ConfirmPage.vue';
 
 const router = useRouter()
 const route = useRoute()
@@ -140,8 +141,7 @@ const props = defineProps<{
   privUser: PrivilegedUser
 }>()
 
-// TODO: use appids.json, record appid as key
-const GAMES: Record<string, string> = { l4d2: "Left 4 Dead 2" }
+let meta = ref<CustomServerMetaInfo>()
 
 interface Step {
   title: string,
@@ -154,13 +154,14 @@ interface Step {
 
 const STEPS: Step[] = [
   { title: "Settings", icon: "fa-gear",
-    validator: () => formData.value.name != "" && formData.value.game != "",
+    validator: () => formData.value.name != "" && formData.value.game != undefined,
   },
   { title: "Plugins", icon: "fa-puzzle-piece",
     onEnabled: () => {
-      for(const id of Object.keys(Plugins)) {
-        console.log(id, Plugins[id], hasFlag(id, PluginFlag.Recommended_ExtraPlayers))
-        if(hasFlag(id, PluginFlag.Recommended_ExtraPlayers)) {
+      if(!meta.value) return
+      for(const id of Object.keys(meta.value.plugins)) {
+        console.log(id, meta.value.plugins[id], hasFlag(id, SMPluginFlag.Recommended_ExtraPlayers))
+        if(hasFlag(id, SMPluginFlag.Recommended_ExtraPlayers)) {
           console.log(id, 'recommended 5+', formData.value.extraPlayers)
           enabledPlugins.value[id] = formData.value.extraPlayers ? true : false
         }
@@ -171,21 +172,18 @@ const STEPS: Step[] = [
   { title: "Review", icon: "fa-circle-info"},
 ]
 
-interface CustomServer {
-  name: string,
-  game: string,
-  extraPlayers: boolean
-  enabledPlugins: string[],
-  enabledAddons: string[]
-}
 // note: l4d_survivor_identity_fix.sp should be required if no issues with non 5+
 // note: abm disable if custom epi
 
 let currentStep = ref<number>(1)
 let highestStep = ref<number>(0)
-let formData = ref({
+let formData = ref<{
+  name: string,
+  game: { appid: number, title: string},
+  extraPlayers: boolean
+}>({
   name: "dummy",
-  game: "left4dead2",
+  game: {appid:550, title: "Left 4 Dead 2"},
   extraPlayers: true
 })
 let searchQuery = ref("")
@@ -193,20 +191,21 @@ let enabledPlugins = ref<Record<string, boolean>>({})
 let enabledAddons = ref<WorkshopItem[]>([])
 
 const filteredPlugins = computed(() => {
+  if(!meta.value) return []
   const query = searchQuery.value.toLowerCase()
-  return Object.entries(Plugins)
+  return Object.entries(meta.value.plugins)
     .filter(([id, data]) => {
       if(searchQuery.value != "") {
         if(!id.includes(query) && (!data.name || !data.name?.toLocaleLowerCase().includes(query))) return false
       }
       if(!data.flags) return true
-      return enabledPlugins.value[id] || (~data.flags & PluginFlag.Library)
+      return enabledPlugins.value[id] || (~data.flags & SMPluginFlag.Library)
     })
     .map(([id, data]) => {
       const flagKv = {
-        required: hasFlag(id, PluginFlag.Required),
-        recommended: hasFlag(id, PluginFlag.Recommended),
-        recommendedExtraPlayers: hasFlag(id, PluginFlag.Recommended_ExtraPlayers)
+        required: hasFlag(id, SMPluginFlag.Required),
+        recommended: hasFlag(id, SMPluginFlag.Recommended),
+        recommendedExtraPlayers: hasFlag(id, SMPluginFlag.Recommended_ExtraPlayers)
       }
 
       return {
@@ -221,11 +220,11 @@ const filteredPlugins = computed(() => {
 const form = computed(() => {
   return {
     name: formData.value.name,
-    game: formData.value.game,
+    game: formData.value.game.appid,
     extraPlayers: formData.value.extraPlayers,
     enabledPlugins: Object.keys(enabledPlugins.value),
     enabledAddons: Object.keys(enabledAddons.value)
-  } as CustomServer
+  } as CustomServerForm
 })
 
 const canAdvance = computed(() => {
@@ -252,17 +251,18 @@ function setStep(newStepIndex: number) {
 }
 
 function togglePlugin(pluginId: string) {
-  const plugin = Plugins[pluginId]
+  const plugin = meta.value!.plugins[pluginId]
   if(!plugin) return
-  if(hasFlag(pluginId, PluginFlag.Required)) return
+  if(hasFlag(pluginId, SMPluginFlag.Required)) return
   enabledPlugins.value[pluginId] = !enabledPlugins.value[pluginId]
   for(const required of plugin.includes) {
     togglePlugin(required)
   }
 }
-function hasFlag(pluginId: string, flag: PluginFlag): boolean | null {
-  if(!Plugins[pluginId]) return null
-  return Plugins[pluginId].flags != undefined && (Plugins[pluginId].flags & flag) == flag
+function hasFlag(pluginId: string, flag: SMPluginFlag): boolean | null {
+  if(!meta.value) return null
+  if(!meta.value.plugins[pluginId]) return null
+  return meta.value.plugins[pluginId].flags != undefined && (meta.value.plugins[pluginId].flags & flag) == flag
 }
 
 function onAddonChange(addonId: string, addon?: WorkshopItem) {
@@ -276,9 +276,18 @@ function onAddonChange(addonId: string, addon?: WorkshopItem) {
   }
 }
 
-onBeforeMount(() => {
-  for(const [id, data] of Object.entries(Plugins)) {
-    enabledPlugins.value[id] = (hasFlag(id, PluginFlag.Recommended) || hasFlag(id, PluginFlag.Required)) ?? false
+async function fetchMeta() {
+  const response = await fetch("/api/servers/custom/meta")
+  if(response.ok) {
+    const json = await response.json()
+    meta.value = json
+  }
+}
+
+onBeforeMount(async() => {
+  await fetchMeta()
+  for(const [id, data] of Object.entries(meta.value!.plugins)) {
+    enabledPlugins.value[id] = (hasFlag(id, SMPluginFlag.Recommended) || hasFlag(id, SMPluginFlag.Required)) ?? false
   }
 })
 </script>

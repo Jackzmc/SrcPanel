@@ -2,6 +2,10 @@ import { FastifyInstance, FastifyPluginOptions } from "fastify";
 import CustomServerBuilder from "../../../modules/servers/CustomServerBuilder.js";
 import { CustomServerGroup } from "../../../modules/servers/groups/CustomServerGroup.js";
 import { ServerInfo } from "../../../../../common-types/Server.js";
+import { readFile } from "node:fs/promises";
+import path from "node:path";
+
+const PLUGIN_REPO_FOLDER_LOCATION = process.env.CUSTOM_SERVER_REPO_DIR!
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
     /* metadata route
@@ -9,8 +13,13 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         
         /home/steam/custom-server-shared/{addons,plugins,extensions} <-- all symlinks
     */
-    fastify.get('/plugins', async(req, reply) => {
-
+    fastify.get('/meta', async(req, reply) => {
+        const pluginRepo = await JSON.parse(await readFile(path.join(PLUGIN_REPO_FOLDER_LOCATION, 'plugins.json'), 'utf-8'))
+        const { games } = await JSON.parse(await readFile(path.join(fastify.config.DataDirectory, '../config', 'custom_server.json'), 'utf-8'))
+        return {
+            plugins: pluginRepo,
+            games: games
+        }
     })
 
 
@@ -29,7 +38,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     8. done
     
     */
-    fastify.post('/', async(req, reply) => {
+    fastify.get('/create', async(req, reply) => {
         reply.raw.writeHead(200, {
             'Cache-Control': 'no-cache,no-transform',
             'Content-Type': 'text/event-stream',
