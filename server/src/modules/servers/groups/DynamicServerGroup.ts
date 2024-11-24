@@ -188,7 +188,9 @@ export class DynamicServerGroup extends ServerGroup<DockerServer> {
     }
 
     async createNewServer() {
-        const instance = await this.#manager.createInstance(this.#templateId)
+        const instance = await this.#manager.createInstance(this.#templateId, [], {
+            "panel.dynamic_server": "true"
+        })
         const server = await this.#registerInstance(instance)
         return server
     }

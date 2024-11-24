@@ -19,11 +19,9 @@ export interface DynamicGroupServerTemplate {
     actions?: ServerAction[]
 }
 
-export interface DynamicCreateGroupOptions extends CreateGroupOptions {
+export interface CustomCreateGroupOptions extends CreateGroupOptions {
     templateId: string,
     serverTemplate: DynamicGroupServerTemplate,
-    minServers?: number,
-    maxEmptyServers?: number
 }
 
 // The maximum amount of time a server is empty before it is auto shutdown
@@ -33,11 +31,9 @@ const CHECK_SERVER_INTERVAL = 1000 * 60 * 5
 export class CustomServerGroup extends ServerGroup<DockerServer> {
     #templateId: string
     #serverTemplate: DynamicGroupServerTemplate
-    #minServers: number
     #manager: DynamicServerManager
-    #maxEmptyServers: number | null = null
 
-    constructor(dynamicManager: DynamicServerManager, id: string, options: DynamicCreateGroupOptions) {
+    constructor(dynamicManager: DynamicServerManager, id: string, options: CustomCreateGroupOptions) {
         super(id, options)
         this.#manager = dynamicManager
         this.#templateId = options.templateId
@@ -49,12 +45,6 @@ export class CustomServerGroup extends ServerGroup<DockerServer> {
             ip: options.serverTemplate.ip,
             tags: options.serverTemplate.tags ?? [],
         }
-        this.#minServers = options.minServers || 0
-        this.#maxEmptyServers = options.maxEmptyServers ?? null
-        if(this.#maxEmptyServers != undefined && this.#minServers > this.#maxEmptyServers) {
-            console.warn(`[ServerGroup::Dynamic] Group \"${id}\" has minServers >= maxEmptyServers, clamping maxEmpty to `)
-        }
-
         this.#checkServers()
         setInterval(() => this.#checkServers(), CHECK_SERVER_INTERVAL)
     }
@@ -87,10 +77,11 @@ export class CustomServerGroup extends ServerGroup<DockerServer> {
             // Already configured, skip:
             if(instance.Server) continue
             const labels = await instance.labels()
-            if(labels["panel.custom_server"]) continue
+            if(!labels["panel.custom_server"]) continue
 
             const owner = labels["panel.owner_steamid2"]
             const name = labels["panel.name"]
+            console.log("registering existing", instance.ContainerId.substring(0, 12), name, labels)
 
             await this.#registerInstance(instance, name)
             // const state = await instance.state()

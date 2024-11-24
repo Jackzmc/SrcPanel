@@ -541,7 +541,6 @@ export default class ServerManager {
             actions,
             templateId: data.templateId,
             serverTemplate: data.serverTemplate,
-            minServers: data.minServers
           })
           this.#groups[groupId] = group
         } else {
