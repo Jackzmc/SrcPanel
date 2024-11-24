@@ -58,10 +58,11 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }, {
             steamid2: req.user!.steamid2,
         })
-        function onEvent(eventId: string, msg?: string) {
+        function onEvent(eventId: string, msg?: string, progress?: { current: number, total: number }) {
             send({
                 event: eventId,
-                msg
+                msg,
+                progress
             })
         }
         console.log("builder done")
@@ -83,7 +84,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                     hostname: server.host,
                     ip: server.ip,
                     port: server.port,
-                    type: server.port,
+                    type: server.type,
                 }
             })
             reply.raw.end()

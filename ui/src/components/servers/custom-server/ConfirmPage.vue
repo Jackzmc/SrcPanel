@@ -1,7 +1,8 @@
 <template>
 <div class="box">
+  <progress v-if="loadState == LoadState.Loading || loadState == LoadState.Success" :value="progress?.current" :max="progress?.total" class="progress" />
   <div class="list has-visible-pointer-controls" >
-    <!-- <div class="list-item" v-for="(line, i) of lines" :key="i">
+    <div class="list-item" v-for="(line, i) of lines" :key="i">
       <div class="list-item-content">
           <div class="list-item-title">
             {{ line.event }}
@@ -13,7 +14,7 @@
 
       <div class="list-item-controls">
       </div>
-    </div> -->
+    </div>
     <div class="list-item" v-if="lastLine">
       <div class="list-item-content">
         <div class="list-item-title">
@@ -39,7 +40,7 @@ import { computed, ref } from 'vue';
 import { CustomServerForm } from '../../../../../common-types/CustomServer';
 import { LoadState } from '@/types/global.js';
 
-const emit = defineEmits(["cancel"])
+const emit = defineEmits(["cancel", "server"])
 
 const props = defineProps<{
   form: CustomServerForm
@@ -53,6 +54,7 @@ const lastLine = computed(() => {
 })
 
 let createSource: EventSource|null = null
+let progress = ref<{ current: number, total: number}>()
 
 async function create() {
   if(loadState.value != LoadState.Idle) return
@@ -63,15 +65,19 @@ async function create() {
   createSource = evtSrc
   evtSrc.onmessage = (e) => {
     const payload = JSON.parse(e.data.toString())
+    if(payload.progress) {
+      progress.value = payload.progress
+    }
     if(payload.server) {
       console.log('server', payload.server)
       evtSrc.close()
-      lines.value.push({ event: "DONE", msg: `${payload.server}`})
+      emit("server", payload.server)
+      lines.value.unshift({ event: "DONE"})
       loadState.value = LoadState.Success
       return
     }
     console.log(payload)
-    lines.value.push(payload)
+    lines.value.unshift(payload)
   }
   evtSrc.onopen = (e) => {
 

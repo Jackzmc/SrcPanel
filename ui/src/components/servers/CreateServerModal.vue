@@ -27,7 +27,7 @@
         </tr>
         <tr>
           <th>IP</th>
-          <td>{{ data.hostname }}</td>
+          <td>{{ data.hostname }}:{{ data.port }}</td>
         </tr>
         <tr>
           <th>Type</th>
@@ -35,7 +35,7 @@
         </tr>
         <tr>
           <th>Connect with</th>
-          <td>connect {{ data.hostname }}</td>
+          <td>connect {{ data.hostname }}:{{ data.port }}</td>
         </tr>
         <tr>
           <th>Create lobby with</th>

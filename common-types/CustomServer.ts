@@ -32,3 +32,13 @@ export interface CustomServerMetaInfo {
     title: string
   }[]
 }
+
+export interface CustomServerInfo {
+  id: string,
+  name: string,
+  serverId: string,
+  hostname: string,
+  ip: string,
+  port: number,
+  type: string,
+}

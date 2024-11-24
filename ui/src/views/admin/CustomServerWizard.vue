@@ -3,10 +3,11 @@
   <div class="block">
     <div class="columns">
       <div class="column is-8" >
+          <DoneModal v-if="serverInfo" :server="serverInfo" />
           <div class="tabs is-toggle is-fullwidth is-large">
           <ul>
             <li v-for="(step, i) in STEPS" :key="i" :class="{'is-active': currentStep >= i }" >
-              <a @click="setStep(i)" :style="{'opacity': (i > highestStep) ? 0.5: undefined, cursor: i > highestStep ? 'not-allowed' : undefined }">
+              <a @click="setStep(i)" :style="{'opacity': (i > highestStep) ? 0.5: undefined, cursor: i > highestStep ? 'not-allowed' : undefined }" :disabled="!meta">
                 <Icon :icon="step.icon"></Icon>
                 <span>{{ step.title }}</span>
               </a>
@@ -16,16 +17,16 @@
         <SettingsPage v-if="currentStep === 0 && meta" :priv-user="privUser" :meta="meta" v-model="formData" />
         <ManagePlugins v-else-if="currentStep === 1 && meta" :priv-user="privUser" :meta="meta" :form-data="formData" v-model="enabledPlugins" />
         <ManageAddons v-else-if="currentStep === 2" @add-item="onAddonChange" @del-item="onAddonChange" />
-        <ConfirmPage v-else-if="currentStep === 3" :form="form" />
+        <ConfirmPage v-else-if="currentStep === 3 || currentStep === 4" :form="form" @server="(s: CustomServerInfo) => serverInfo = s"/>
         <div class="box has-background-info-light" v-else>
           <h4 class="title is-3"><Icon icon="fa-spinner" icon-class="mr-2" spin >Loading</Icon></h4>
           <p class="subtitle is-5">Please wait, fetching information...</p>
         </div>
         <br>
-        <button class="button" @click="setStep(currentStep - 1)" v-if="currentStep > 0">
+        <button class="button" @click="setStep(currentStep - 1)" v-if="meta && currentStep > 0">
           <Icon icon="fa-chevron-left">Back</Icon>
         </button>
-        <button :class="['button','is-pulled-right',{'is-info': canAdvance}]" @click="setStep(currentStep + 1)" v-if="currentStep < STEPS.length - 1" :disabled="!canAdvance">
+        <button :class="['button','is-pulled-right',{'is-info': canAdvance}]" @click="setStep(currentStep + 1)" v-if="meta && currentStep < STEPS.length - 1" :disabled="!canAdvance">
           <Icon icon="fa-chevron-right"  text-left="Next"></Icon>
         </button>
       </div>
@@ -57,11 +58,12 @@ import { useRoute, useRouter } from 'vue-router';
 import ManageAddons from '@/components/servers/custom-server/ManageAddons.vue';
 import { WorkshopItem } from '../../../../common-types/Share.js';
 import PluginFeature from '../../../../server/src/modules/servers/features/Plugin';
-import { SMPluginMeta, SMPluginFlag, CustomServerMetaInfo } from '../../../../common-types/CustomServer.js'
+import { SMPluginMeta, SMPluginFlag, CustomServerMetaInfo, CustomServerInfo } from '../../../../common-types/CustomServer.js'
 import { CustomServerForm } from '../../../../common-types/CustomServer';
 import ConfirmPage from '@/components/servers/custom-server/ConfirmPage.vue';
 import SettingsPage from '@/components/servers/custom-server/SettingsPage.vue';
 import ManagePlugins from '@/components/servers/custom-server/ManagePlugins.vue';
+import DoneModal from '@/components/servers/custom-server/DoneModal.vue';
 
 const router = useRouter()
 const route = useRoute()
@@ -70,6 +72,7 @@ const props = defineProps<{
 }>()
 
 let meta = ref<CustomServerMetaInfo>()
+let serverInfo = ref<CustomServerInfo>()
 
 interface Step {
   title: string,
@@ -135,6 +138,7 @@ const canAdvance = computed(() => {
 })
 
 function setStep(newStepIndex: number) {
+  if(!meta.value) return
   const prevStep = currentStep.value
   if(STEPS[prevStep].onDisabled) {
     STEPS[prevStep].onDisabled()

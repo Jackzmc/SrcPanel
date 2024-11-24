@@ -13,7 +13,15 @@ export interface CustomServerOptions {
     workshopLinks?: string[]
 }
 export type CreateServerEventState = "INIT" | "INIT_FOLDERS" | "INSTALL_METAMOD" | "INSTALL_SOURCEMOD" | "SETUP_SOURCEMOD" | "INSTALL_PLUGINS" | "INSTALL_ADDONS" | "SETUP_CONFIGS" | "PROVISION_SERVER" | "ERROR"
-
+const STATES = [
+    "INIT", 
+    "INIT_FOLDERS",
+    "INSTALL_METAMOD", "INSTALL_SOURCEMOD", 
+    "SETUP_SOURCEMOD", "INSTALL_PLUGINS",
+    "INSTALL_ADDONS", "SETUP_CONFIGS",
+    "PROVISION_SERVER", 
+    "ERROR"
+]
 
 const CUSTOMER_FOLDER_LOCATION = process.env.CUSTOM_SERVER_CUSTOMER_DIR!
 const TEMPLATE_FOLDER_LOCATION = process.env.CUSTOM_SERVER_TEMPLATE_DIR!
@@ -22,7 +30,7 @@ const PLUGIN_REPO_FOLDER_LOCATION = process.env.CUSTOM_SERVER_REPO_DIR!
 const METAMOD_FILE = process.env.CUSTOM_SERVER_METAMOD_PATH!
 const SOURCEMOD_FILE = process.env.CUSTOM_SERVER_SOURCEMOD_PATH!
 
-export type CreateCallback = (state: CreateServerEventState, msg?: string) => Promise<void> | void
+export type CreateCallback = (state: CreateServerEventState, msg?: string, meta?: Record<string, any>) => Promise<void> | void
 
 export default class CustomServerBuilder {
     #id: string
@@ -34,6 +42,7 @@ export default class CustomServerBuilder {
     #eventCallback: CreateCallback
     #group: CustomServerGroup
     #server: DockerServer
+    #progress = { current: 0, total: 0 }
     constructor(name: string, options: CustomServerOptions = {}, variables: Record<string, string|number|boolean> = {}) {
         if(!CUSTOMER_FOLDER_LOCATION) throw new Error("Missing env: CUSTOM_SERVER_CUSTOMER_DIR")
         if(!TEMPLATE_FOLDER_LOCATION) throw new Error("Missing env: CUSTOM_SERVER_TEMPLATE_DIR")
@@ -46,7 +55,7 @@ export default class CustomServerBuilder {
     }
 
     #notify(state: CreateServerEventState, msg?: string) {
-        this.#eventCallback(state, msg)
+        this.#eventCallback(state, msg, this.#progress)
     }
 
     async #cleanup() {
@@ -73,7 +82,7 @@ export default class CustomServerBuilder {
         }
         this.#root = path.join(CUSTOMER_FOLDER_LOCATION, this.#id)
         console.log('root', this.#root)
-        this.#notify("INIT", this.#id)
+        this.#notify("INIT", `ID: ${this.#id}`)
         const order = [
             this.#installSourcemod,
             this.#setupSourcemod,
@@ -82,15 +91,20 @@ export default class CustomServerBuilder {
             this.#installPlugins,
             this.#installAddons,
         ]
-        
         abortSignal.throwIfAborted()
+        this.#progress.total = order.length + 2
+        
         try {
             await this.#initFolders()
+            this.#progress.current++
             this.#server = await this.#registerServer()
+            this.#progress.current++
             for(const func of order) {
                 abortSignal.throwIfAborted()
                 await func.bind(this)()
+                this.#progress.current++
             } 
+            this.#progress.current = this.#progress.total
             return this.#server
         } catch(err) {
             console.error(`[CustomServerBuilder] Error: `, err)
@@ -207,6 +221,7 @@ export default class CustomServerBuilder {
     }
 
     async #registerServer() {
+        this.#notify("PROVISION_SERVER", "Provisioning server")
         const server = await this.#group.createNewServer(this.#name, [
             `${path.join(this.#root, 'cfg')}:/server/cfg`,
             `${path.join(this.#root, 'addons')}:/server/addons`,
