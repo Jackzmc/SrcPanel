@@ -17,12 +17,13 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             reply.send(fastify.servers.getAllGrouped((server: Server) => {
                 return {
                     name: server.name,
+                    host: server.host,
                     ip: server.ip,
                     port: server.port,
                     type: server.type,
                     tags: server.tags,
                     features: server.features,
-                    domain: server.domain,
+                    domain: server.host,
                     id: server.id,
                     status: server.status,
                     sortOrder: server.sortOrder,

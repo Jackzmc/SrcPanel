@@ -59,10 +59,10 @@ export type GroupInfo = StandardGroupInfo | DynamicGroupInfo
 export interface ServerData {
     id: string,
     name: string,
-    domain?: string,
+    host?: string,
+    ip: string,
     port: number,
     type: string,
-    ip: string,
 }
 
 export interface ServerDetailed {

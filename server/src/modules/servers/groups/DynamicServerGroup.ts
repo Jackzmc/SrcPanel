@@ -10,7 +10,8 @@ import DockerServer from "../DockerServer.js";
 
 export interface DynamicGroupServerTemplate {
     name?: string,
-    ip: string,
+    host: string,
+    ip?: string
     activityId?: string,
     tags?: string[],
     sortOrder?: number,
@@ -41,6 +42,7 @@ export class DynamicServerGroup extends ServerGroup<DockerServer> {
         this.#manager = dynamicManager
         this.#templateId = options.templateId
         this.#serverTemplate = {
+            host: options.serverTemplate.host,
             name: options.serverTemplate.name ?? this.Name,
             // type: options.type,
             activityId: options.serverTemplate.activityId,
@@ -157,20 +159,21 @@ export class DynamicServerGroup extends ServerGroup<DockerServer> {
             port: instance.Port,
         }
         const id = `${this.Id}-${instance.Port}`
-        const ip = DynamicServerGroup.formatTemplateVar(this.#serverTemplate.ip, vars)
-        const [, host, port] = ip.match(/([a-zA-Z0-9.]+):?(\d*)/) ?? []
-        let address = instance.PublicIp
+
+        const host = DynamicServerGroup.formatTemplateVar(this.#serverTemplate.host, vars)
+        let address: string|undefined = undefined
         try {
             const lookup = await DNS.lookup(host, { verbatim: false, family: 4 })
             address = lookup.address
         } catch(err) {
-            console.warn(`[ServerManager] Warn: Could not resolve IP for hostname ${host}:\n`, err)
+            throw new Error(`Could not resolve IP for hostname ${host}: ${err}`)
         }
+
         const server = new DockerServer(this, {
                 id,
                 name: DynamicServerGroup.formatTemplateVar(this.#serverTemplate.name ?? "", vars),
-                ip: address,
-                domain: host,
+                host,
+                ip: instance.PublicIp,
                 port: instance.Port,
                 type: this.Type,
                 tags: this.#serverTemplate.tags ?? [],

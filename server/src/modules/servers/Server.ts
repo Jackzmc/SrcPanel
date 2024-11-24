@@ -7,14 +7,13 @@ import RconFeature from "./features/Rcon.js";
 import ServerGroup from "./groups/ServerGroup.js";
 import { ActionResponse, IAction } from "./IAction.js";
 import { GameDig } from 'gamedig';
-import {InfluxDB } from '@influxdata/influxdb-client'
 
-const MIN_REFRESH_TIME = 5000
+const MIN_REFRESH_TIME = 8000
 
 export interface BaseServerData {
   id : string;
   name: string;
-  domain? : string;
+  host: string,
   ip: string,
   port: number,
   type: string,
@@ -39,6 +38,7 @@ export interface BaseServerData {
 
 
 export interface ConfigServerData extends BaseServerData {
+  host: string, // required,
   systemd ? : {
     isUser: boolean;
     serviceName: string;
@@ -86,7 +86,7 @@ export default abstract class Server implements IAction {
         this._info = {
           id: server.id,
           name: server.name,
-          domain: server.domain,
+          host: server.host,
           ip: server.ip,
           port: server.port,
           type: group.Type || /* legacy */ server.type,
@@ -130,7 +130,7 @@ export default abstract class Server implements IAction {
     
     get id() { return this._info.id }
     get name() { return this._info.name }
-    get domain() { return this._info.domain }
+    get host() { return this._info.host }
     get ip() { return this._info.ip }
     get port() { return this._info.port }
     get type() { return this._info.type }
@@ -226,7 +226,7 @@ export default abstract class Server implements IAction {
 
     protected async getStatus(bypassCache: boolean, type: string, host: string, port: number) {
       const now = Date.now()
-      if(!bypassCache && !this._lastRefresh && now - this._lastRefresh < MIN_REFRESH_TIME) return
+      if(!bypassCache && this._lastRefresh && now - this._lastRefresh < MIN_REFRESH_TIME) return
       this._lastRefresh = now
       try {
           const state = await this.#gamedig.query({
@@ -246,19 +246,21 @@ export default abstract class Server implements IAction {
             map: state.map,
             gamemode: raw.tags ? raw.tags[0] : undefined
           }, "gamedig")
+          this._online = true
       } catch(err) {
         if(!err.message.includes("Failed all ")) {
           console.error(`[Server/${this.id}] host=${host} getStatus error: `, err)
         }
-        this.updateStatus(null)
+        this.updateStatus(null, "gamedig")
       }
     }
 
-    updateStatus(data: ServerStatusData | null = null, source: ServerStatusSource = "") {
+    updateStatus(data: ServerStatusData | null = null, source: ServerStatusSource) {
+      // console.log(this.id, source, data)
       this._status.data = data
       this._status.source = source
+      this._status.lastStatusTime = (Date.now() / 1000)
       if(data) {
-        this._status.lastStatusTime = (Date.now() / 1000)
         if(data.players.length === 0) {
           if(this._status.lastEmptyTime == null)
             this._status.lastEmptyTime = data.players.length === 0 ? (Date.now() / 1000) : null

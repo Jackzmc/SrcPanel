@@ -17,7 +17,9 @@ export default class StandardServer extends Server {
     #cvars: Record<string, string>
 
     constructor(group: ServerGroup<Server>, server: ServerExtendedData) {
-        super(group, server, new GameDig())
+        super(group, server, new GameDig({
+            listenUdpPort: server.port
+        }))
 
         if(server.rcon) {
             let password: string | undefined
@@ -84,6 +86,5 @@ export default class StandardServer extends Server {
 
     public override async refreshStatus(bypassCache = false) {
         await super.refreshStatus(bypassCache)
-        this._online = this._status.data != undefined
     }
 }
