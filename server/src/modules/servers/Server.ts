@@ -8,7 +8,7 @@ import ServerGroup from "./groups/ServerGroup.js";
 import { ActionResponse, IAction } from "./IAction.js";
 import { GameDig } from 'gamedig';
 
-const MIN_REFRESH_TIME = 8000
+const MIN_REFRESH_TIME = 10_000
 
 export interface BaseServerData {
   id : string;
