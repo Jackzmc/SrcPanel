@@ -127,6 +127,7 @@ export default class SteamAPI {
         throw new Error(`${response.statusText}: ${await response.text()}`)
     }
 
+
     async getItemDetails(fileids: string[]): Promise<WorkshopItem[]> {
         let details: WorkshopItem[] = []
         const params = new URLSearchParams()
@@ -137,8 +138,8 @@ export default class SteamAPI {
             if(detail) details.push(detail)
             else params.append(`publishedfileids[${index++}]`, fileid)
         }
+    // Don't waste a fetch if all items are in the cache
         if(index > 0) {
-            // Don't waste a fetch if all items are in the cache
             console.log(`itemcount=${fileids.length}&${params.toString()}`)
             const response = await fetch('https://api.steampowered.com/ISteamRemoteStorage/GetPublishedFileDetails/v1/', {
                 method: 'POST',
@@ -197,17 +198,17 @@ export default class SteamAPI {
     /**
      * Downloads a workshop item, resolves on completition
      * @param item The workshop item
-     * @param destination The filepath to download the file to
+     * @param destFolder The filepath to download the file to
      * @param requestOptions  Any options to send to https.get()
      * @param filenameTemplate How the file should be namedm variables: %ID%, %TITLE%. Default is %ID%.vpk
      * @returns Promise<number> - bytes written
      */
-    static downloadItem(item: WorkshopItem, destination: string, requestOptions?: any, filenameTemplate: string = "%ID%.vpk"): Promise<number> {
+    static downloadItem(item: WorkshopItem, destFolder: string, requestOptions?: any, filenameTemplate: string = "%ID%.vpk"): Promise<number> {
         return new Promise((resolve, reject) => {
             const filename = filenameTemplate
                 .replace(/%ID%/g, item.publishedfileid)
                 .replace(/%TITLE%/g, item.title)
-            const filepath = path.join(destination, filename)
+            const filepath = path.join(destFolder, filename)
             const file = createWriteStream(filepath)
             https.get(item.file_url, requestOptions, (response) => {
                 file.on('finish', () => {

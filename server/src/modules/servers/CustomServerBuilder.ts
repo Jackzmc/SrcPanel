@@ -8,11 +8,12 @@ import { CustomServerGroup } from "./groups/CustomServerGroup.js";
 import DockerServer from "./DockerServer.js";
 import fastify from "fastify";
 import SteamAPI from "../../modules/steam.js";
+import { WorkshopItem } from "../../../../common-types/Share.js";
 
 export interface CustomServerOptions {
     extraPlayers?: boolean,
     pluginsIds?: string[],
-    workshopLinks?: string[],
+    workshopIds?: string[],
 
     signal?: AbortSignal
 }
@@ -33,6 +34,8 @@ const PLUGIN_REPO_FOLDER_LOCATION = process.env.CUSTOM_SERVER_REPO_DIR!
 
 const METAMOD_FILE = process.env.CUSTOM_SERVER_METAMOD_PATH!
 const SOURCEMOD_FILE = process.env.CUSTOM_SERVER_SOURCEMOD_PATH!
+
+const STEAM_DOWNLOAD_TIMEOUT = 1000 * 60 * 3
 
 export type CreateCallback = (state: CreateServerEventState, msg?: string, meta?: Record<string, any>) => Promise<void> | void
 
@@ -205,12 +208,22 @@ export default class CustomServerBuilder {
     }
 
     async #installAddons() {
-        this.#notify("INSTALL_ADDONS", "Resolving workshop links")
+        this.#notify("INSTALL_ADDONS", "Resolving workshop files")
+        if(!this.#options.workshopIds) return
+        const details: WorkshopItem[] = []
+        for(const wsId of this.#options.workshopIds) {
+            this.#steam.addToWSResolveQueue(wsId, (item) => {
+                if(item) details.push(item)
+            })
+        }
+        await this.#steam.resolveWSQueue()
         this.#notify("INSTALL_ADDONS", "Downloading addons from workshop")
-        if(!this.#options.workshopLinks) return
-
-        // const [details] = await 
+        for(const detail of details) {
+            const destPath = path.join(this.#root, "addons")
+            await SteamAPI.downloadItem(detail, destPath, { timeout: STEAM_DOWNLOAD_TIMEOUT })
+        }
     }
+
 
     async #applyTemplates() {
         this.#notify("SETUP_CONFIGS", "Setting up server configurations")
