@@ -15,7 +15,7 @@
 
     </div>
   </div>
-  <div class="fixed-grid has-3-cols">
+  <div class="fixed-grid has-2-cols">
     <div class="grid">
       <div v-for="(plugin) in filteredPlugins" :key="plugin.id" class="cell has-tooltip-right"
         :data-tooltip="plugin.tooltip">
@@ -34,6 +34,9 @@
             <p class="subtitle is-6 mb-2">
               v{{ plugin.version }} - Created by {{plugin.author}}
             </p>
+            <p class="subtitle is-6">
+              {{ plugin.description }}
+            </p>
             <span data-tooltip="This plugin is required and cannot be disabled" class="tag is-danger"
               v-if="plugin.flagKv.required">Required</span>
             <span data-tooltip="This plugin is recommended to be enabled" class="tag is-primary"
@@ -42,6 +45,17 @@
               class="tag is-primary"
               v-else-if="plugin.flagKv.recommendedExtraPlayers && formData.extraPlayers">Recommended for 5+</span>
             <!-- <span class="tag is-secondary" v-else-if="hasFlag(plugin.id, PluginFlag.Library)">Library</span> -->
+          </div>
+        </div>
+
+      </div>
+      <div class="cell">
+        <div class="card mt-2 py-0 px-0 has-background-primary-light" style="border-radius: 8px; height:100%">
+          <div class="card-content px-4 py-2">
+            <label class="label">More plugins</label>
+            <p class="subtitle is-6">Don't see the plugin you want? For now, you can contact me and I'll add them.</p>
+            <p class="subtitle is-6"></p>
+            <p></p>
           </div>
         </div>
       </div>

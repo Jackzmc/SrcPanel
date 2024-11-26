@@ -1,7 +1,28 @@
 <template>
 <div class="box">
   <progress v-if="loadState == LoadState.Loading || loadState == LoadState.Success" :value="progress?.current" :max="progress?.total" class="progress" />
-  <div class="list has-visible-pointer-controls" >
+  <div class="container" v-if="loadState == LoadState.Idle">
+    <h4 class="title is-3">Confirm Creation</h4>
+    <p class="subtitle is-4">
+      You are creating a server for the game <a :href="'https://store.steampowered.com/app/' + form.game">{{ formData.game.title }}</a>
+      <span v-if="form.extraPlayers"> with 5+ support</span>
+    </p>
+    <h4 class="title is-4 mt-5">Server Hosting Information</h4>
+    <p class="subtitle is-5">Please review the following information</p>
+    <div class="notification is-warning is-light">
+      The server is free of cost, but if the server remains inactive for a long duration of time, its subject to automatically be turned off.
+      The settings, enabled plugins, addons, will remain intact. You can start the server back up any time through this admin panel, with the Start button.
+    </div>
+    <div class="notification is-warning is-light">
+      The server is setup with a hard limit of 1 GB of memory, and is limited to one CPU core. It's unlikely this will ever cause problems, but if it reaches the limit the server will be restarted.
+    </div>
+    <div class="notification is-info is-light has-text-black">
+      When you press create, it should take at most 5 minutes to provision your server. A random port will be assigned and your server connect information will be given.
+      The server should automatically show up in the server panel, and you are given full permission to it. From the server management page, you can edit server config files.
+    </div>
+  </div>
+  <div class="list has-visible-pointer-controls" v-else>
+
     <div class="list-item" v-for="(line, i) of lines" :key="i">
       <div class="list-item-content">
           <div class="list-item-title">
@@ -28,6 +49,7 @@
       </div>
     </div>
   </div>
+  <br>
   <div class="buttons">
     <button class="button is-info is-medium" @click="create" v-if="loadState == LoadState.Idle || loadState == LoadState.Loading" :disabled="loadState == LoadState.Loading">Create Server</button>
     <button class="button is-medium" @click="cancel" v-if="loadState == LoadState.Loading">Cancel</button>
@@ -40,10 +62,15 @@ import { computed, ref } from 'vue';
 import { CustomServerForm } from '../../../../../common-types/CustomServer';
 import { LoadState } from '@/types/global.js';
 
-const emit = defineEmits(["cancel", "server"])
+const emit = defineEmits(["cancel", "server", "loadState"])
 
 const props = defineProps<{
-  form: CustomServerForm
+  form: CustomServerForm,
+  formData: {
+    name: string,
+    game: { appid: number, title: string},
+    extraPlayers: boolean
+  },
 }>()
 
 let lines = ref<any[]>([])
@@ -58,6 +85,7 @@ let progress = ref<{ current: number, total: number}>()
 
 async function create() {
   if(loadState.value != LoadState.Idle) return
+  emit("loadState", loadState.value)
   loadState.value = LoadState.Loading
   const evtSrc = new EventSource("/api/servers/custom/create", {
 
