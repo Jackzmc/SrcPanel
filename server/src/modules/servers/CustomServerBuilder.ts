@@ -6,11 +6,15 @@ import { SMPluginMeta } from '../../../../common-types/CustomServer';
 import User from "../../modules/users/User.js";
 import { CustomServerGroup } from "./groups/CustomServerGroup.js";
 import DockerServer from "./DockerServer.js";
+import fastify from "fastify";
+import SteamAPI from "../../modules/steam.js";
 
 export interface CustomServerOptions {
     extraPlayers?: boolean,
     pluginsIds?: string[],
-    workshopLinks?: string[]
+    workshopLinks?: string[],
+
+    signal?: AbortSignal
 }
 export type CreateServerEventState = "INIT" | "INIT_FOLDERS" | "INSTALL_METAMOD" | "INSTALL_SOURCEMOD" | "SETUP_SOURCEMOD" | "INSTALL_PLUGINS" | "INSTALL_ADDONS" | "SETUP_CONFIGS" | "PROVISION_SERVER" | "ERROR"
 const STATES = [
@@ -33,29 +37,33 @@ const SOURCEMOD_FILE = process.env.CUSTOM_SERVER_SOURCEMOD_PATH!
 export type CreateCallback = (state: CreateServerEventState, msg?: string, meta?: Record<string, any>) => Promise<void> | void
 
 export default class CustomServerBuilder {
+    #steam: SteamAPI
+    #group: CustomServerGroup
+
+    #eventCallback: CreateCallback
+
     #id: string
     #name: string
     #options: CustomServerOptions
     #variables: Record<string, string|number|boolean> = {}
 
     #root: string
-    #eventCallback: CreateCallback
-    #group: CustomServerGroup
+
     #server: DockerServer
     #progress = { current: 0, total: 0 }
     #user: User | null = null
-    constructor(name: string, options: CustomServerOptions = {}, variables: Record<string, string|number|boolean> = {}) {
+    constructor(steam: SteamAPI, group: CustomServerGroup) {
         if(!CUSTOMER_FOLDER_LOCATION) throw new Error("Missing env: CUSTOM_SERVER_CUSTOMER_DIR")
         if(!TEMPLATE_FOLDER_LOCATION) throw new Error("Missing env: CUSTOM_SERVER_TEMPLATE_DIR")
         if(!PLUGIN_REPO_FOLDER_LOCATION) throw new Error("Missing env: CUSTOM_SERVER_REPO_DIR")
         if(!METAMOD_FILE) throw new Error("Missing env: CUSTOM_SERVER_METAMOD_PATH")
         if(!SOURCEMOD_FILE) throw new Error("Missing env: CUSTOM_SERVER_SOURCEMOD_PATH")
-        this.#name = name
-        this.#options = options
-        this.#variables = variables
+        this.#steam = steam
+        this.#group = group
     }
 
     #notify(state: CreateServerEventState, msg?: string) {
+        if(!this.#eventCallback) return
         this.#eventCallback(state, msg, this.#progress)
     }
 
@@ -74,10 +82,15 @@ export default class CustomServerBuilder {
         }
     }
 
-    async Create(eventCb: CreateCallback, abortSignal: AbortSignal, group: CustomServerGroup) {
-        if(!CUSTOMER_FOLDER_LOCATION) throw new Error("Missing: " + "CUSTOMER_FOLDER_LOCATION")
+    SetEventCallback(eventCb: CreateCallback) {
         this.#eventCallback = eventCb
-        this.#group = group
+    }
+
+    async Create(name: string, options: CustomServerOptions = {}, variables: Record<string, string|number|boolean> = {}) {
+        if(!CUSTOMER_FOLDER_LOCATION) throw new Error("Missing: " + "CUSTOMER_FOLDER_LOCATION")
+        this.#name = name
+        this.#options = options
+        this.#variables = variables
 
         this.#id = nanoid(21)
         this.#variables = {
@@ -95,7 +108,7 @@ export default class CustomServerBuilder {
             this.#installPlugins,
             this.#installAddons,
         ]
-        abortSignal.throwIfAborted()
+        this.#options.signal?.throwIfAborted()
         this.#progress.total = order.length + 2
         
         try {
@@ -104,7 +117,7 @@ export default class CustomServerBuilder {
             this.#server = await this.#registerServer()
             this.#progress.current++
             for(const func of order) {
-                abortSignal.throwIfAborted()
+                this.#options.signal?.throwIfAborted()
                 await func.bind(this)()
                 this.#progress.current++
             } 
@@ -192,8 +205,11 @@ export default class CustomServerBuilder {
     }
 
     async #installAddons() {
+        this.#notify("INSTALL_ADDONS", "Resolving workshop links")
         this.#notify("INSTALL_ADDONS", "Downloading addons from workshop")
         if(!this.#options.workshopLinks) return
+
+        // const [details] = await 
     }
 
     async #applyTemplates() {

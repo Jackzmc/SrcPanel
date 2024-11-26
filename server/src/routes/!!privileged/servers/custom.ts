@@ -52,12 +52,9 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         reply.raw.flushHeaders()
         reply.raw.write('retry: 5000\n\n')
 
-        const builder = new CustomServerBuilder("Test Server", {
-            extraPlayers: true,
-            pluginsIds: ["adminpanel.sp", "l4d2_extraplayeritems.sp"]
-        }, {
-            steamid2: req.user!.steamid2,
-        })
+        const group = fastify.servers.getGroup("l4d2-custom") as CustomServerGroup
+        const builder = new CustomServerBuilder(fastify.steam, group)
+        builder.SetEventCallback(onEvent)
         function onEvent(eventId: string, msg?: string, progress?: { current: number, total: number }) {
             send({
                 event: eventId,
@@ -74,8 +71,13 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             //     done()
             // })
             console.log("creating from builder")
-            const group = fastify.servers.getGroup("l4d2-custom") as CustomServerGroup
-            const server = await builder.Create(onEvent, abort.signal, group)
+            const server = await builder.Create("Test Server", {
+            extraPlayers: true,
+            pluginsIds: ["adminpanel.sp", "l4d2_extraplayeritems.sp"],
+            signal: abort.signal
+        }, {
+            steamid2: req.user!.steamid2,
+        })
             send({
                 server: {
                     id: server.ContainerInstance.ContainerId,
