@@ -1,5 +1,5 @@
 {
     "version": 1,
     "name": "Admin Panel",
-    "currentEnvironment": "Development"
+    "currentEnvironment": "Development.template"
 }
