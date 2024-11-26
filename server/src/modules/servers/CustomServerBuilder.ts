@@ -159,6 +159,8 @@ export default class CustomServerBuilder {
             list[pluginFile] = true
             return
         }
+        if(pluginFile.includes("..")) throw new Error("Parent dir entry '..' is not allowed");
+        if(pluginFile.startsWith("/")) throw new Error("Plugin path must be relative")
         const meta = repo[pluginFile]
         if(!meta) return console.error("[CustomServerBuilder] Missing plugin: " + pluginFile)
         if(meta.requires) {
