@@ -51,7 +51,6 @@ export default class DockerLogs extends Logs {
         const reader = await this.#container.logs({ stdout: true, stderr: true, follow: true })
         this.#container.modem.demuxStream(stream, reader, reader)
         let line: string
-        // TODO: verify??
         reader.on("data", (chunk) => {
             // Append to our buffer
             line += chunk.toString('utf8')

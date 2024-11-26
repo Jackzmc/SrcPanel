@@ -7,26 +7,32 @@
           <div class="tabs is-toggle is-fullwidth is-large" v-if="!creationActive">
             <ul>
               <li v-for="(step, i) in STEPS" :key="i" :class="{'is-active': currentStep >= i }" >
-                <a @click="setStep(i)" :style="{'opacity': (i > highestStep) ? 0.5: undefined, cursor: i > highestStep ? 'not-allowed' : undefined }" :disabled="!meta">
+                <a @click="setStep(i)" :style="{'opacity': (i > highestStep) ? 0.5: undefined, cursor: i > highestStep ? 'not-allowed' : undefined }" :disabled="!meta.data">
                   <Icon :icon="step.icon"></Icon>
                   <span>{{ step.title }}</span>
                 </a>
               </li>
             </ul>
           </div>
-        <SettingsPage v-if="currentStep === 0 && meta" :priv-user="privUser" :meta="meta" v-model="formData" />
-        <ManagePlugins v-else-if="currentStep === 1 && meta" :priv-user="privUser" :meta="meta" :form-data="formData" v-model="enabledPlugins" />
+        <SettingsPage v-if="currentStep === 0 && meta.data" :priv-user="privUser" :meta="meta.data" v-model="formData" />
+        <ManagePlugins v-else-if="currentStep === 1 && meta.data" :priv-user="privUser" :meta="meta.data" :form-data="formData" v-model="enabledPlugins" />
         <ManageAddons v-else-if="currentStep === 2" @add-item="onAddonChange" @del-item="onAddonChange" />
         <ConfirmPage v-else-if="currentStep === 3 || currentStep === 4" :form-data="formData" :form="form" @server="(s: CustomServerInfo) => serverInfo = s" @loadState="onConfirmLoadState" />
+        <div class="box has-background-danger-light" v-else-if="meta.error">
+          <h4 class="title is-3">
+            <Icon icon="fa-exclamation-triangle" icon-class="mr-2">Failed to load information</Icon>
+          </h4>
+          <p class="subtitle is-5">{{ meta.error }}</p>
+        </div>
         <div class="box has-background-info-light" v-else>
           <h4 class="title is-3"><Icon icon="fa-spinner" icon-class="mr-2" spin >Loading</Icon></h4>
           <p class="subtitle is-5">Please wait, fetching information...</p>
         </div>
         <br>
-        <button class="button" @click="setStep(currentStep - 1)" v-if="meta && currentStep > 0">
+        <button class="button" @click="setStep(currentStep - 1)" v-if="meta.data && currentStep > 0">
           <Icon icon="fa-chevron-left">Back</Icon>
         </button>
-        <button :class="['button','is-pulled-right',{'is-info': canAdvance}]" @click="setStep(currentStep + 1)" v-if="meta && currentStep < STEPS.length - 1" :disabled="!canAdvance">
+        <button :class="['button','is-pulled-right',{'is-info': canAdvance}]" @click="setStep(currentStep + 1)" v-if="meta.data && currentStep < STEPS.length - 1" :disabled="!canAdvance">
           <Icon icon="fa-chevron-right"  text-left="Next"></Icon>
         </button>
       </div>
@@ -54,7 +60,6 @@ import { PrivilegedUser } from '@/js/User.js';
 import { computed, onBeforeMount, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
-// TODO: pull from server instead
 import ManageAddons from '@/components/servers/custom-server/ManageAddons.vue';
 import { WorkshopItem } from '../../../../common-types/Share.js';
 import PluginFeature from '../../../../server/src/modules/servers/features/Plugin';
@@ -72,7 +77,12 @@ const props = defineProps<{
   privUser: PrivilegedUser
 }>()
 
-let meta = ref<CustomServerMetaInfo>()
+export interface LoadedData<T> {
+  data?: T,
+  error?: string,
+}
+
+let meta = ref<LoadedData<CustomServerMetaInfo>>({})
 let serverInfo = ref<CustomServerInfo>()
 
 interface Step {
@@ -82,17 +92,15 @@ interface Step {
   onEnabled?: () => void,
   onDisabled?: () => void,
 }
-// TODO: set 5+ recom if sele
-
 const STEPS: Step[] = [
   { title: "Settings", icon: "fa-gear",
     validator: () => formData.value.name != "" && formData.value.game != undefined,
   },
   { title: "Plugins", icon: "fa-puzzle-piece",
     onEnabled: () => {
-      if(!meta.value) return
-      for(const id of Object.keys(meta.value.plugins)) {
-        console.log(id, meta.value.plugins[id], hasFlag(id, SMPluginFlag.Recommended_ExtraPlayers))
+      if(!meta.value.data) return
+      for(const id of Object.keys(meta.value.data.plugins)) {
+        console.log(id, meta.value.data.plugins[id], hasFlag(id, SMPluginFlag.Recommended_ExtraPlayers))
         if(hasFlag(id, SMPluginFlag.Recommended_ExtraPlayers)) {
           console.log(id, 'recommended 5+', formData.value.extraPlayers)
           enabledPlugins.value[id] = formData.value.extraPlayers ? true : false
@@ -168,18 +176,35 @@ function onAddonChange(addonId: string, addon?: WorkshopItem) {
   }
 }
 
-async function fetchMeta() {
-  const response = await fetch("/api/servers/custom/meta")
-  if(response.ok) {
+async function fetchData<T>(url: string, fetchOptions?: RequestInit): Promise<LoadedData<T>> {
+  try {
+    const response = await fetch(url, fetchOptions)
     const json = await response.json()
-    meta.value = json
+    if(response.ok) {
+      return {
+        data: json
+      }
+    } else {
+      return {
+        error: json.error ?? json.message
+      }
+    }
+  } catch(err) {
+      return {
+        error: (err as any)?.message ?? err
+      }
   }
 }
 
+async function fetchMeta() {
+  meta.value = {  }
+  meta.value = await fetchData("/api/servers/custom/meta")
+}
+
 function hasFlag(pluginId: string, flag: SMPluginFlag): boolean | null {
-  if(!meta.value) return null
-  if(!meta.value.plugins[pluginId]) return null
-  return meta.value.plugins[pluginId].flags != undefined && (meta.value.plugins[pluginId].flags & flag) == flag
+  if(!meta.value.data) return null
+  if(!meta.value.data.plugins[pluginId]) return null
+  return meta.value.data.plugins[pluginId].flags != undefined && (meta.value.data.plugins[pluginId].flags & flag) == flag
 }
 
 function onConfirmLoadState(loadState: LoadState) {
@@ -188,8 +213,8 @@ function onConfirmLoadState(loadState: LoadState) {
 
 onBeforeMount(async() => {
   await fetchMeta()
-  if(!meta.value) return
-  for(const [id, data] of Object.entries(meta.value!.plugins)) {
+  if(!meta.value.data) return
+  for(const [id, data] of Object.entries(meta.value.data.plugins)) {
     enabledPlugins.value[id] = (hasFlag(id, SMPluginFlag.Recommended) || hasFlag(id, SMPluginFlag.Required)) ?? false
   }
 })
