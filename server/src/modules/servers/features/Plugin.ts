@@ -102,7 +102,7 @@ export default class PluginFeature extends Feature implements IAction {
             if(record.type === LiveRecordType.Game) {
                 this.#startTime = record.startTime
             }
-            this._server.updateStatus(this.#status ??  { players: [], maxplayers: 0, map: "", gamemode: "" }, "live")
+            if(!this.#status) this.#status = { players: [], maxplayers: 0, map: "", gamemode: "" }
             if(this.#liveCache.game) {
                 this.#status.gamemode = this.#liveCache.game.gamemode
                 this.#status.map = this.#liveCache.game.map
@@ -117,6 +117,7 @@ export default class PluginFeature extends Feature implements IAction {
                     .map(pl => pl.name)
                 // console.log(`LIVE players=${this.#status.data.players.length} / ${this.#status.data.maxplayers}`)
             }
+            this._server.updateStatus(this.#status, "live")
         }
     }
 
