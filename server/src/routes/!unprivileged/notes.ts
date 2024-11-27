@@ -3,6 +3,7 @@ import { OkPacket, RowDataPacket } from 'mysql2';
 import { Static, Type } from '@sinclair/typebox'
 import { ADMINS_DB } from '../../routes/!!privileged/admins.js';
 import { Note } from '../../../../common-types/Note';
+import SteamID from 'steamid';
 
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
@@ -41,16 +42,30 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             whereCount = notesCount[0].count
         }
         const [notes] = await fastify.db.execute<RowDataPacket[]>(
-            `SELECT notes.id, notes.steamid, notes.markedBy, notes.content, u.last_alias as user, e.last_alias as executor, !b.expired as banned,
-            (SELECT COUNT(*) FROM ${ADMINS_DB}.sm_admins WHERE ${ADMINS_DB}.sm_admins.identity = u.steamid) as targetIsAdmin
+            `SELECT notes.id, notes.steamid, notes.markedBy, notes.content, u.last_name as user, e.last_name as executor, !b.expired as banned,
+            (SELECT COUNT(*) FROM ${ADMINS_DB}.sm_admins WHERE ${ADMINS_DB}.sm_admins.identity = notes.steamid) as targetIsAdmin
             FROM notes 
-            LEFT JOIN stats_users as u ON notes.steamid = u.steamid 
-            LEFT JOIN stats_users as e ON notes.markedBy = e.steamid 
+            LEFT JOIN view_panel_user u ON SUBSTRING(notes.steamid, 11) = u.account_id
+            LEFT JOIN view_panel_user e ON SUBSTRING(notes.markedBy, 11) = e.account_id
             LEFT JOIN bans as b ON notes.steamid = b.steamid 
             ${whereCondition}
             ORDER BY notes.id DESC LIMIT ?, ?`,
             [...queryData, offset, limit]
         )
+
+        const missingNameQueue = new Set<SteamID>()
+        for(const note of notes) {
+            if(!note.user) {
+                missingNameQueue.add(new SteamID(note.steamid))
+            }
+            if(!note.executor) {
+                missingNameQueue.add(new SteamID(note.markedBy))
+            }
+        }
+        // Lazy but just fetch them for the next request
+        if(missingNameQueue.size > 0) {
+            await fastify.users.fetchUsers([...missingNameQueue.values()])
+        }
 
         const [notesCount] = await fastify.db.execute<RowDataPacket[]>(`SELECT COUNT(*) as count FROM notes`)
 
