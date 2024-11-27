@@ -142,10 +142,10 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
         const query = new QueryBuilder(tableName, "l")
             .selectMultiple("id", "l.timestamp", "server", "type", "client", "target", "message", "metadata")
-            .select("s1.name", "clientName")
-            .select("s2.name", "targetName")
-            .leftJoin("user_names", "steamid", "=", "SUBSTRING(client, 11)", "s1", true)
-            .leftJoin("user_names", "steamid", "=", "SUBSTRING(target, 11)", "s2", true)
+            .select("s1.last_name", "clientName")
+            .select("s2.last_name", "targetName")
+            .leftJoin("view_panel_user", "account_id", "=", "SUBSTRING(client, 11)", "s1", true)
+            .leftJoin("view_panel_user", "account_id", "=", "SUBSTRING(target, 11)", "s2", true)
             .limit(limit)
             .sort('id', SortDirection.Descending)
 

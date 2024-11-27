@@ -266,7 +266,8 @@ export default class AuthManager {
         const details = await this.steam.getUserDetails([new SteamID(admin.identity)])
         if(!details) throw new Error("Failed to get user details for " + admin.identity)
         try {
-            await this.#dbna.execute("INSERT INTO user_names (steamid, name, avatar_hash) VALUES (?, ?, ?)", [admin.identity.slice(10), details[0].personaname, details[0].avatarhash])
+            await this.#dbna.execute("INSERT IGNORE INTO panel_user (account_id, avatar_hash) VALUES (?, ?, ?)", [admin.identity.slice(10), details[0].avatarhash])
+            await this.#dbna.execute("INSERT INTO panel_user_names (account_id, name, name_update_time) VALUES (?, ?, UNIX_TIMESTAMP())", [admin.identity.slice(10), details[0].personaname])
         } catch(err) {
             console.warn(`[AuthManager] WARN: Could not insert admin resolved name (${admin.identity.slice(10)}, name ${details[0].personaname}):`, err.sqlMessage)
         }

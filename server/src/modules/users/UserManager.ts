@@ -38,13 +38,23 @@ export default class UserManager {
      */
     async insertUser(user: IUserData) {
         if(user.steamid.length <= 10) throw new Error("steamid is invalid (bad length)")
-        // return await this.#db.query(SQL`INSERT INTO user_names (steamid, name, avatar_hash) VALUES (SUBSTRING(${user.steamid}, 11), ${user.name}, ${user.avatarHash})`)
     }
 
     async updateUser(user: IUserData) {
         if(user.steamid.length <= 10) throw new Error("steamid is invalid (bad length)")
         const accountId = user.steamid.substring(10)
-        return await this.#db.query(SQL`UPDATE user_names SET name = ${user.name}, avatar_hash = ${user.avatarHash} WHERE steamid = ${accountId}`)
+        const conn = await this.#db.getConnection()
+        await conn.beginTransaction()
+        await conn.query(SQL`UPDATE panel_user SET avatar_hash = ${user.avatarHash} WHERE account_id = ${accountId}`)
+        const [rows] = await conn.query<RowDataPacket[]>(SQL`SELECT last_name FROM view_panel_user WHERE account_id = ${accountId}`)
+        if(rows.length > 0) {
+            const lastName = rows[0].last_name
+            if(lastName != user.name) {
+                await conn.query(SQL`INSERT INTO panel_user_names (account_id, name) VALUES (${accountId}, ${user.name})`)
+            }
+        }
+        await conn.commit()
+        conn.release()
     }
 
     /**
@@ -62,14 +72,14 @@ export default class UserManager {
     }
 
     private async getUserDirect(steamid: string): Promise<IUserData|null> {
-        const [users] = await this.#db.execute<RowDataPacket[]>(SQL`SELECT * FROM user_names WHERE steamid = SUBSTRING(${steamid}, 11)`)
+        const [users] = await this.#db.execute<RowDataPacket[]>(SQL`SELECT * FROM view_panel_user WHERE account_id = SUBSTRING(${steamid}, 11)`)
         const user = users[0]
         if(user) {
             return {
-                steamid: user.steamid,
+                steamid: steamid,
                 avatarHash: user.avatar_hash,
-                name: user.name,
-                timestamp: user.timestamp
+                name: user.last_name,
+                timestamp: user.last_name_update_time
             }
         }
         return null
