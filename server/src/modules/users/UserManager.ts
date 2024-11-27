@@ -105,7 +105,7 @@ export default class UserManager {
             const users = await this.#steam.getUserDetails([ steamid ])
             if(users.length > 0) {
                 user = {
-                    accountId: steamid2,
+                    accountId: steamid2.slice(10),
                     name: users[0].personaname,
                     avatarHash: users[0].avatarhash
                 } as IUserData
@@ -124,29 +124,24 @@ export default class UserManager {
      * @param {SteamID} steamids - List of steamids instances or steamid64 strings
      * @returns {Promise<IUserData[]>}
      */
-    async fetchUsers(steamids: (SteamID)[]): Promise<IUserData[]> {
-        if(steamids.length > 100) throw new Error("Too many ids, steam API only supports 100")
+    async fetchUsers(steamids: SteamID[]): Promise<IUserData[]> {
         const expUsers: IUserData[] = []
-        const insertPromises: (Promise<void>)[] = []
-        const users = await this.#steam.getUserDetails(steamids)
-        if(!users) return []
-        console.log(users)
-        for(const user of users) {
-            const expUser = {
-                // We use the right side of STEAM_#:#:#####
-                accountId: new SteamID(user.steamid).getSteam2RenderedID().slice(10),
-                name: user.personaname,
-                avatarHash: user.avatarhash
+        while(steamids.length > 0 ) {
+            const slice = steamids.splice(0, 100)
+            const users = await this.#steam.getUserDetails(slice)
+            if(!users) break
+            for(const user of users) {
+                const expUser = {
+                    // We use the right side of STEAM_#:#:#####
+                    accountId: new SteamID(user.steamid).getSteam2RenderedID().slice(10),
+                    name: user.personaname,
+                    avatarHash: user.avatarhash
+                }
+                expUsers.push(expUser)
+                await this.insertUser(expUser).catch(err => {
+                    console.error("Failed to insert user", expUser.accountId, err)
+                })
             }
-            expUsers.push(expUser)
-            console.log(user.steamid, expUser )
-            insertPromises.push(this.insertUser(expUser))
-        }
-        try {
-            await Promise.allSettled(insertPromises)
-            console.log("stored steamids", insertPromises.length)
-        } catch(err) {
-            console.warn("[UserManager] Error inserting users:", err)
         }
         return expUsers
     }

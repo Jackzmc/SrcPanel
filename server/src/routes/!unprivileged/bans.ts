@@ -254,22 +254,16 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
         // For any names we did not find, we do bulk requests through Steam's API to resolve it
         const ids = [...bulkNameSteamIds.values()]
-        while(ids.length > 0) {
-
-            // Steam API only supports upto 100 ids at one
-            const sliceSteamids = ids.splice(0, 100)
-            // This does not return in the order of sliceSteamids!!
-            const resolvedUsers = await fastify.users.fetchUsers(sliceSteamids)
-            for(const user of resolvedUsers) {
-                const name = user.name.replace(NAME_INVALID_CHAR_REPLACE, '�')
-                // Update our local copy with the new name
-                for(let ban of bans) {
-                    if(ban.client.accountid == user.accountId) {
-                        ban.client.name = name
-                        ban.client.nameResolver = "steam"
-                    }
-                    // No break here, we want _all_ bans of user to be updated, in the event they got banned more than once
+        const resolvedUsers = await fastify.users.fetchUsers(ids)
+        for(const user of resolvedUsers) {
+            const name = user.name.replace(NAME_INVALID_CHAR_REPLACE, '�')
+            // Update our local copy with the new name
+            for(let ban of bans) {
+                if(ban.client.accountid == user.accountId) {
+                    ban.client.name = name
+                    ban.client.nameResolver = "steam"
                 }
+                // No break here, we want _all_ bans of user to be updated, in the event they got banned more than once
             }
         }
 
