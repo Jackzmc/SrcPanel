@@ -80,10 +80,10 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
     fastify.get('/user/:steamid', async (req: FastifyRequest<{ Params: { steamid: string } }>, reply) => {
         const [notes] = await fastify.db.execute<RowDataPacket[]>(
-            `SELECT notes.*, u.last_alias as user, e.last_alias as executor, !b.expired as banned 
+            `SELECT notes.*, u.last_name as user, e.last_name as executor, !b.expired as banned 
             FROM notes 
-            LEFT JOIN stats_users as u ON notes.steamid = u.steamid 
-            LEFT JOIN stats_users as e ON notes.markedBy = e.steamid 
+            LEFT JOIN view_panel_user as u ON SUBSTRING(notes.steamid, 11) = u.account_id 
+            LEFT JOIN view_panel_user as e ON SUBSTRING(notes.markedBy, 11) = e.account_id
             LEFT JOIN bans as b ON notes.steamid = b.steamid 
             WHERE SUBSTRING(notes.steamid, 11) = SUBSTRING(?, 11)
             ORDER BY notes.id DESC`,
@@ -99,10 +99,10 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
     fastify.get('/admins/:steamid', async (req: FastifyRequest<{ Params: { steamid: string } }>, reply) => {
         const [notes] = await fastify.db.execute<RowDataPacket[]>(
-            `SELECT notes.*, u.last_alias as user, e.last_alias as executor, !b.expired as banned 
+            `SELECT notes.*, u.last_name as user, e.last_name as executor, !b.expired as banned 
             FROM notes 
-            LEFT JOIN stats_users as u ON notes.steamid = u.steamid 
-            LEFT JOIN stats_users as e ON notes.markedBy = e.steamid 
+            LEFT JOIN view_panel_user as u ON SUBSTRING(notes.steamid, 11) = u.account_id 
+            LEFT JOIN view_panel_user as e ON SUBSTRING(notes.markedBy, 11) = e.account_id
             LEFT JOIN bans as b ON notes.steamid = b.steamid 
             WHERE notes.markedBy = ?
             ORDER BY notes.id DESC`,
@@ -141,10 +141,10 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             Params: { id: number }
         }>, reply) {
             const [notes] = await fastify.db.execute<RowDataPacket[]>(
-                `SELECT notes.*, u.last_alias as user, e.last_alias as executor, !b.expired as banned 
+                `SELECT notes.*, u.last_name as user, e.last_name as executor, !b.expired as banned 
                 FROM notes 
-                LEFT JOIN stats_users as u ON notes.steamid = u.steamid 
-                LEFT JOIN stats_users as e ON notes.markedBy = e.steamid 
+                LEFT JOIN view_panel_user as u ON SUBSTRING(notes.steamid, 11) = u.account_id 
+                LEFT JOIN view_panel_user as e ON SUBSTRING(notes.markedBy, 11) = e.account_id
                 LEFT JOIN bans as b ON notes.steamid = b.steamid 
                 WHERE id = ?
                 ORDER BY notes.id DESC`,
