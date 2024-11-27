@@ -90,6 +90,22 @@
       </router-link></div>
     </div>
   </template>
+  <template v-else-if="route.params.tab === 'names'">
+    <p class="subtitle">Showing all known names of user, sorted by recent first</p>
+    <template v-if="nameHistory.data">
+      <List v-if="nameHistory.data.length > 1">
+        <ListItem v-for="entry in nameHistory.data" :key="entry.timestamp">
+          <template #title>
+            {{ entry.name }}
+          </template>
+          <template #description>
+            {{ formatDate(entry.timestamp) }}
+          </template>
+        </ListItem>
+      </List>
+      <p v-else>User has not been recorded with any changed names</p>
+    </template>
+  </template>
   <template v-else-if="route.params.tab === 'profile'">
     <div class="box pt-0 has-background-primary-light">
       <figure class="image is-48x48 is-inline-block mr-3 is-round mt-4">
@@ -192,7 +208,7 @@
 import { ref, onMounted, computed, watch, onBeforeMount } from 'vue';
 import { User, PrivilegedUser, PlayerData } from '@/js/User'
 import { useRouter, useRoute } from 'vue-router'
-import { AdminData, UserProfileData, AnalysisData } from '../../../../../common-types/User';
+import { AdminData, UserProfileData, AnalysisData, UserNameEntry } from '../../../../../common-types/User';
 import { notify } from '@kyvg/vue3-notification';
 import SteamID from 'steamid';
 import { formatDate, getRelDate, request, getErrorReason } from '@/js/util';
@@ -201,12 +217,15 @@ import Field from '@/components/Field.vue';
 import { Tab } from 'vue3-tabs-component';
 import { convertSnakeToHuman } from '../../../js/util';
 import { FetchData, LoadState, GetDefaultFetchData } from '../../../types/global';
+import List from '@/components/List.vue';
+import ListItem from '@/components/ListItem.vue';
 
 const MONTHS = [ "January", "February", "March", "April", "May", "June",
 "July", "August", "September", "October", "November", "December" ];
 
 const TAB_DATA: { id: string, name: string, enableFn?: () => boolean }[] = [
   { id: "profile", name: 'Profile' },
+  { id: "names", name: "Names" },
   { id: "stats", name: 'Stats' },
   { id: "actions", name: 'Actions' }
 ]
@@ -224,9 +243,10 @@ const props = defineProps<{
   userAdminData: AdminData,
   user: PlayerData
 }>()
-let profile = ref<FetchData<UserProfileData>>(GetDefaultFetchData())
+let profile = ref<FetchData<UserProfileData>>(GetDefaultFetchData());
 
-let analysis = ref<FetchData<AnalysisData>>(GetDefaultFetchData())
+let analysis = ref<FetchData<AnalysisData>>(GetDefaultFetchData());
+let nameHistory = ref<FetchData<UserNameEntry[]>>(GetDefaultFetchData())
 let statsFailure = ref<string|undefined>()
 
 
@@ -262,6 +282,8 @@ async function onTab(tabId: string) {
     await Promise.allSettled([
       fetchStats(),
     ])
+  } else if(tabId === "names" && !nameHistory.value.data) {
+    await fetchNameHistoryData()
   } else if(tabId === "profile" && !profile.value.data) {
     await Promise.allSettled([
       fetchProfileData(),
@@ -294,6 +316,25 @@ async function setProfileData() {
     })
   }
 }
+async function fetchNameHistoryData() {
+  nameHistory.value.loadState = LoadState.Loading
+  const response = await fetch(`/api/users/${props.user.steamid}/names`)
+  if(response.ok) {
+    nameHistory.value.loadState = LoadState.Success
+    const json = await response.json()
+    nameHistory.value.data = json
+  } else if(response.status === 404) {
+    nameHistory.value.loadState = LoadState.Success
+    nameHistory.value.data = null
+  } else {
+    notify({
+      type: "error",
+      title: "Could not fetch user's name history",
+      text: await getErrorReason(response)
+    })
+  }
+}
+
 async function fetchProfileData() {
   profile.value.loadState = LoadState.Loading
   const response = await fetch(`/api/users/${props.user.steamid}/profile`)

@@ -161,6 +161,10 @@ export interface APIUser {
     name: string | null
     avatarUrl: string
 }
+export interface UserNameEntry {
+    name: string,
+    timestamp: number
+}
 export interface AnalysisData {
   client: APIUser,
   rating: { key: string, value: number },

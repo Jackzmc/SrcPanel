@@ -2,6 +2,7 @@ import SteamID from 'steamid';
 import SQL from 'sql-template-strings'
 import SteamAPI from '../../modules/steam.js'
 import { Pool, RowDataPacket } from 'mysql2/promise';
+import { UserNameEntry } from '../../../../common-types/User.js';
 
 interface IUserData {
     accountId: string,
@@ -157,6 +158,23 @@ export default class UserManager {
             [steamid]
         )
         return rows.length > 0 ? rows[0].last_alias : undefined
+    }
+
+    /**
+     * Returns a list of all user's names, with their respective timestamp
+     * @param steamid 
+     */
+    async getUserNameHistory(steamid: string): Promise<UserNameEntry[]> {
+        const [rows] = await this.#db.execute<RowDataPacket[]>(
+            "SELECT name, name_update_time FROM panel_user_names WHERE account_id = SUBSTRING(?, 11) ORDER BY name_update_time DESC",
+            [steamid]
+        )
+        return rows.map(row => {
+            return {
+                name: row.name,
+                timestamp: row.name_update_time
+            }
+        })
     }
 
 }

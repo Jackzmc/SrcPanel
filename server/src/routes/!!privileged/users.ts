@@ -4,7 +4,7 @@ import { ADMINS_DB } from '../!!privileged/admins.js';
 import SteamID from 'steamid';
 import { BanAppeal, FullAPIBan } from '../../../../common-types/Ban.js';
 import { NAME_INVALID_CHAR_REPLACE } from '../../routes/!unprivileged/bans.js';
-import { ReadableAdminData, UserProfileData } from '../../../../common-types/User.js';
+import { ReadableAdminData, UserNameEntry, UserProfileData } from '../../../../common-types/User.js';
 import { NOT_FOUND, NO_PERMISSION } from '../../responses.js';
 
 
@@ -117,6 +117,11 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         const profile = await fastify.authmngr.getProfileData(req.params.steamid)
         if(!profile) return NOT_FOUND(reply, "User has no profile data")
         return profile
+    })
+
+    fastify.get('/:steamid/names', async(req: FastifyRequest<{Params: { steamid: string }}>, reply): Promise<UserNameEntry[]> => {
+        const names = await fastify.users.getUserNameHistory(req.params.steamid)
+        return names
     })
 
     fastify.post('/:steamid/profile', async(req: FastifyRequest<{Params: { steamid: string }, Body: UserProfileData}>, reply): Promise<UserProfileData> => {
