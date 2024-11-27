@@ -221,11 +221,10 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             const fetchStart = Date.now()
 
             const [bans] = await fastify.db.execute<RowDataPacket[]>(
-                `SELECT times_tried, id, public_message, bans.flags, bans.steamid, bans.executor, bans.reason, expires, expired, bans.timestamp, u1.last_alias, names.name as resolved_name, u1.country, u2.last_alias AS executor_name, ip
+                `SELECT times_tried, id, public_message, bans.flags, bans.steamid, bans.executor, bans.reason, expires, expired, bans.timestamp, u1.last_name as client_name, u1.last_country as client_country, u2.last_name AS executor_name, ip
                 FROM bans 
-                LEFT JOIN stats_users AS u1 ON bans.steamid = u1.steamid 
-                LEFT JOIN stats_users AS u2 ON bans.executor = u2.steamid 
-                LEFT JOIN user_names as names on SUBSTRING(bans.steamid, 11) = names.steamid
+                LEFT JOIN view_panel_user AS u1 ON SUBSTRING(bans.steamid, 11) = u1.account_id,
+                LEFT JOIN view_panel_user AS u2 ON SUBSTRING(bans.executor, 11) = u2.account_id, 
                 WHERE SUBSTRING(bans.steamid, 11) = SUBSTRING(?, 11)`,
                 [ req.params.steamid ]
             )
@@ -240,34 +239,21 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 if(!authorized) delete ban.reason
                 
                 // Grab their name either from l4d2 stats or from the resolve cache
-                if(ban.last_alias) {
+                if(ban.client_name) {
                     ban.client = {
                         id: ban.steamid,
-                        name: ban.last_alias,
-                        nameResolver: "stats"
-                    }
-                } else if(ban.resolved_name) {
-                    ban.client = {
-                        id: ban.steamid,
-                        name: ban.resolved_name,
-                        nameResolver: "name_db"
+                        name: ban.client_name,
+                        nameResolver: "view_panel_user"
                     }
                 } else {
                     // User's name is not cached, fetch it:
                     const steamid = new SteamID(ban.steamid)
-                    const resolvedNames = await fastify.steam.getUserDetails([steamid])
-                    const name = resolvedNames[0].personaname.replace(NAME_INVALID_CHAR_REPLACE, '�')
-                    if(resolvedNames.length > 0) {
+                    const user = await fastify.users.fetchUser(steamid)
+                    if(user) {
                         ban.client = {
                             id: ban.steamid,
-                            name,
+                            name: user?.name.replace(NAME_INVALID_CHAR_REPLACE, '�'),
                             nameResolver: "name_db"
-                        }
-                        const accountid = steamid.getSteam2RenderedID().slice(10)
-                        try {
-                            await fastify.db.execute("INSERT INTO user_names (steamid, name) VALUES (?, ?)", [accountid, name])
-                        } catch(err) {
-                            console.warn(`Warn: Could not insert resolved name (${accountid}, name ${name}):`, err.sqlMessage)
                         }
                     }
                 }

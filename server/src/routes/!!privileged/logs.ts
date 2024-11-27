@@ -207,7 +207,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 const nameRecord: Record<string,string> = {}
                 // Push the array into a record
                 for(const user of newNames) {
-                    nameRecord[user.steamid] = user.name
+                    nameRecord[user.accountId] = user.name
                 }
                 // Iterate logs and replace
                 // TODO: this is failing to find and replace
