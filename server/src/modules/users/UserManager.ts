@@ -4,7 +4,7 @@ import SteamAPI from '../../modules/steam.js'
 import { Pool, RowDataPacket } from 'mysql2/promise';
 
 interface IUserData {
-    steamid: string,
+    accountId: string,
     name: string,
     avatarHash: string,
     timestamp?: number
@@ -37,12 +37,18 @@ export default class UserManager {
      * @returns 
      */
     async insertUser(user: IUserData) {
-        if(user.steamid.length <= 10) throw new Error("steamid is invalid (bad length)")
+        const accountId = user.accountId
+        const conn = await this.#db.getConnection()
+        await conn.beginTransaction()
+        await conn.query(SQL`INSERT INTO panel_user (account_id, avatar_hash) VALUES (${accountId}, ${user.avatarHash})`)
+        await conn.query(SQL`INSERT INTO panel_user_names (account_id, name) VALUES (${accountId}, ${user.name})`)
+        await conn.commit()
+        conn.release()
     }
 
     async updateUser(user: IUserData) {
-        if(user.steamid.length <= 10) throw new Error("steamid is invalid (bad length)")
-        const accountId = user.steamid.substring(10)
+        if(user.accountId.length <= 10) throw new Error("steamid is invalid (bad length)")
+        const accountId = user.accountId.substring(10)
         const conn = await this.#db.getConnection()
         await conn.beginTransaction()
         await conn.query(SQL`UPDATE panel_user SET avatar_hash = ${user.avatarHash} WHERE account_id = ${accountId}`)
@@ -76,7 +82,7 @@ export default class UserManager {
         const user = users[0]
         if(user) {
             return {
-                steamid: steamid,
+                accountId: steamid,
                 avatarHash: user.avatar_hash,
                 name: user.last_name,
                 timestamp: user.last_name_update_time
@@ -99,7 +105,7 @@ export default class UserManager {
             const users = await this.#steam.getUserDetails([ steamid ])
             if(users.length > 0) {
                 user = {
-                    steamid: steamid2,
+                    accountId: steamid2,
                     name: users[0].personaname,
                     avatarHash: users[0].avatarhash
                 } as IUserData
@@ -121,21 +127,24 @@ export default class UserManager {
     async fetchUsers(steamids: (SteamID)[]): Promise<IUserData[]> {
         if(steamids.length > 100) throw new Error("Too many ids, steam API only supports 100")
         const expUsers: IUserData[] = []
-        const insertPromises: Promise<void>[] = []
+        const insertPromises: (Promise<void>)[] = []
         const users = await this.#steam.getUserDetails(steamids)
         if(!users) return []
+        console.log(users)
         for(const user of users) {
             const expUser = {
                 // We use the right side of STEAM_#:#:#####
-                steamid: new SteamID(user.steamid).getSteam2RenderedID().slice(10),
+                accountId: new SteamID(user.steamid).getSteam2RenderedID().slice(10),
                 name: user.personaname,
                 avatarHash: user.avatarhash
             }
             expUsers.push(expUser)
+            console.log(user.steamid, expUser )
             insertPromises.push(this.insertUser(expUser))
         }
         try {
             await Promise.allSettled(insertPromises)
+            console.log("stored steamids", insertPromises.length)
         } catch(err) {
             console.warn("[UserManager] Error inserting users:", err)
         }
