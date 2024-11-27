@@ -27,12 +27,11 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                     WHERE SUBSTRING(${ADMINS_DB}.sm_admins.identity,11) = SUBSTRING(client, 11)
                     LIMIT 1
                 ) as isAdmin,
-                COALESCE(last_alias, user_names.name) as name, country, l.timestamp as lastJoinDate, created_date as firstJoinDate,
+                u.last_name as name, u.last_country as country, u.last_join_time as lastJoinDate,
                 server,
                 client as steamid
             FROM activity_log PARTITION (p${new Date().getFullYear()}) l 
-            LEFT JOIN user_names ON client = user_names.steamid
-            LEFT JOIN stats_users ON client = stats_users.steamid
+            LEFT JOIN view_panel_user u ON SUBSTRING(client, 11) = u.account_id
             WHERE
                 TYPE = 'QUIT' AND server = IFNULL(?,server) AND client != ? AND ISNULL(target) 
             ORDER BY l.timestamp DESC
@@ -40,28 +39,9 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             [server, req.session.user.steamid, limit]
         )
 
-        const bulkFetchSet = new Set<SteamID>()
-
         for(const row of rows) {
-            if(!row.name) {
-                bulkFetchSet.add(new SteamID(row.steamid))
-            }
             row.avatarUrl = `${domain}/api/users/${row.steamid}/avatar`
             row.isAdmin = row.isAdmin === 1
-        }
-
-        if(bulkFetchSet.size > 0) {
-            const users = await fastify.users.fetchUsers([...bulkFetchSet])
-            // Add the names to the missing entries
-            for(const row of rows) {
-                for(const user of users) {
-                    // user.steamid is their accountid, so we slice it off of steamid
-                    if(user.steamid == row.steamid.slice(10)) {
-                        row.name = user.name
-                        break
-                    }
-                }
-            }
         }
 
         return {
