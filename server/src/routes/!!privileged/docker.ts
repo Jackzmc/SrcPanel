@@ -72,25 +72,6 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
     })
 
-    // TEMP
-    fastify.get('/instances/:id/logs', async (req: FastifyRequest<{Params: {id: string}}>, reply) => {
-        if(!req.params.id) {
-            return reply.code(400).send({
-                error: "MISSING_INSTANCE_ID",
-                message: "A valid instance id must be provided. They will be in the format of panel-{templateId}-{port}"
-            })
-        }
-        const instance = manager.getInstance(req.params.id)
-        if(!instance) {
-            return reply.code(404).send({
-                error: "INVALID_INSTANCE_ID",
-                message: "No instance with id could be found. They will be in the format of panel-{templateId}-{port}"
-            })
-        }
-        return {
-            logs: await instance.fetchLogs()
-        }
-    })
 
     fastify.post('/instances/:id/start', async (req: FastifyRequest<{Params: {id: string}}>, reply) => {
         if(!req.params.id) {

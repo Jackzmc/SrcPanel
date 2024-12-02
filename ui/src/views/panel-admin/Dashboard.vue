@@ -11,6 +11,7 @@
             <a :disabled="canUpdate" :class="['button', {'is-loading': updateStatus.state === 'CHECKING'}]" @click="updateServer">Update Panel</a>
             <a :disabled="canUpdate" :class="['button']" @click="restartPanel">Restart Panel</a>
             <a :disabled="canUpdate" :class="['button']" @click="updateAdmins">Update Admins Cache</a>
+            <a :disabled="canUpdate" :class="['button']" @click="recreateDynamicServers">Recreate Servers</a>
           </div>
 
           <p class="has-text-danger" v-if="updateStatus.error">{{updateStatus.error}}</p>
@@ -104,6 +105,16 @@ async function updateServer() {
       state: "NORMAL"
     }
   }, 1000 * 7)
+}
+
+async function recreateDynamicServers() {
+  const response = await request('/api/panel/recreate-servers', { method: "POST"})
+  if(response?.ok) {
+    notify({
+      type: "success",
+      text: "Servers are being recreated",
+    })
+  }
 }
 
 async function restartPanel() {

@@ -74,6 +74,13 @@ export class DynamicServerGroup extends ServerGroup<DockerServer> {
         }
     }
 
+    async recreateServers() {
+        for await(const [id, server] of this.#iterateServers()) {
+            await this.removeServer(server)
+        }
+        await this.#checkServers()
+    }
+
     async #checkServers() {
         // Cleans up any servers with their container missing
         for await(const [id, server] of this.#iterateServers()) {
@@ -193,5 +200,11 @@ export class DynamicServerGroup extends ServerGroup<DockerServer> {
         })
         const server = await this.#registerInstance(instance)
         return server
+    }
+
+    async removeServer(server: DockerServer) {
+        if(!this._servers[server.id]) throw new Error(`Server "${server.id}" is not registered for group (${this._id})`);
+        delete this._servers[server.id]
+        await server.ContainerInstance.delete();
     }
 }

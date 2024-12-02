@@ -49,6 +49,15 @@ export class CustomServerGroup extends ServerGroup<DockerServer> {
         setInterval(() => this.#checkServers(), CHECK_SERVER_INTERVAL)
     }
 
+    async recreateServers() {
+        throw new Error("not implemented")
+        // TODO: impl 
+        for await(const [id, server] of this.#iterateServers()) {
+            await this.removeServer(server)
+        }
+        await this.#checkServers()
+    }
+
     async *#iterateServers(): AsyncGenerator<[string, DockerServer]> {
         for(const [id, server] of Object.entries(this._servers)) {
             if(server instanceof DockerServer) {
