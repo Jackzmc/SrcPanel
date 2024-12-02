@@ -1,7 +1,7 @@
 <template>
 <div class="user-tooltip">
   <component :is="steamid2 ? 'router-link' : 'a'" class="media" :to="{name:'manage-user',params:{ id: steamid2 }, query: { returnTo: $route.fullPath }}">
-    <figure class="media-left mr-2" v-if="clientAvatarSrc">
+    <figure class="media-left mr-2" v-if="!hideAvatar && clientAvatarSrc">
       <p class="image is-32x32">
         <LazyImage observer img-class="is-rounded" :src="clientAvatarSrc" placeholder-src="/img/steam_default_avatar.png" />
       </p>
