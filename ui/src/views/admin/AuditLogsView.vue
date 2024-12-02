@@ -459,7 +459,7 @@ async function getInfo() {
   }
 }
 
-const fetchDebounce = debounce(search, 1000)
+const fetchDebounce = debounce(search, 1200)
 async function search() {
   if(!cache.value) return
   loadingTime.value = Date.now()
