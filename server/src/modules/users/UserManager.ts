@@ -2,9 +2,10 @@ import SteamID from 'steamid';
 import SQL from 'sql-template-strings'
 import SteamAPI from '../../modules/steam.js'
 import { Pool, RowDataPacket } from 'mysql2/promise';
+import { UserNameEntry } from '../../../../common-types/User.js';
 
 interface IUserData {
-    steamid: string,
+    accountId: string,
     name: string,
     avatarHash: string,
     timestamp?: number
@@ -37,14 +38,30 @@ export default class UserManager {
      * @returns 
      */
     async insertUser(user: IUserData) {
-        if(user.steamid.length <= 10) throw new Error("steamid is invalid (bad length)")
-        // return await this.#db.query(SQL`INSERT INTO user_names (steamid, name, avatar_hash) VALUES (SUBSTRING(${user.steamid}, 11), ${user.name}, ${user.avatarHash})`)
+        const accountId = user.accountId
+        const conn = await this.#db.getConnection()
+        await conn.beginTransaction()
+        await conn.query(SQL`INSERT INTO panel_user (account_id, avatar_hash) VALUES (${accountId}, ${user.avatarHash})`)
+        await conn.query(SQL`INSERT INTO panel_user_names (account_id, name) VALUES (${accountId}, ${user.name})`)
+        await conn.commit()
+        conn.release()
     }
 
     async updateUser(user: IUserData) {
-        if(user.steamid.length <= 10) throw new Error("steamid is invalid (bad length)")
-        const accountId = user.steamid.substring(10)
-        return await this.#db.query(SQL`UPDATE user_names SET name = ${user.name}, avatar_hash = ${user.avatarHash} WHERE steamid = ${accountId}`)
+        if(user.accountId.length <= 10) throw new Error("steamid is invalid (bad length)")
+        const accountId = user.accountId.substring(10)
+        const conn = await this.#db.getConnection()
+        await conn.beginTransaction()
+        await conn.query(SQL`UPDATE panel_user SET avatar_hash = ${user.avatarHash} WHERE account_id = ${accountId}`)
+        const [rows] = await conn.query<RowDataPacket[]>(SQL`SELECT last_name FROM view_panel_user WHERE account_id = ${accountId}`)
+        if(rows.length > 0) {
+            const lastName = rows[0].last_name
+            if(lastName != user.name) {
+                await conn.query(SQL`INSERT INTO panel_user_names (account_id, name) VALUES (${accountId}, ${user.name})`)
+            }
+        }
+        await conn.commit()
+        conn.release()
     }
 
     /**
@@ -62,14 +79,14 @@ export default class UserManager {
     }
 
     private async getUserDirect(steamid: string): Promise<IUserData|null> {
-        const [users] = await this.#db.execute<RowDataPacket[]>(SQL`SELECT * FROM user_names WHERE steamid = SUBSTRING(${steamid}, 11)`)
+        const [users] = await this.#db.execute<RowDataPacket[]>(SQL`SELECT * FROM view_panel_user WHERE account_id = SUBSTRING(${steamid}, 11)`)
         const user = users[0]
         if(user) {
             return {
-                steamid: user.steamid,
+                accountId: steamid,
                 avatarHash: user.avatar_hash,
-                name: user.name,
-                timestamp: user.timestamp
+                name: user.last_name,
+                timestamp: user.last_name_update_time
             }
         }
         return null
@@ -89,7 +106,7 @@ export default class UserManager {
             const users = await this.#steam.getUserDetails([ steamid ])
             if(users.length > 0) {
                 user = {
-                    steamid: steamid2,
+                    accountId: steamid2.slice(10),
                     name: users[0].personaname,
                     avatarHash: users[0].avatarhash
                 } as IUserData
@@ -108,26 +125,24 @@ export default class UserManager {
      * @param {SteamID} steamids - List of steamids instances or steamid64 strings
      * @returns {Promise<IUserData[]>}
      */
-    async fetchUsers(steamids: (SteamID)[]): Promise<IUserData[]> {
-        if(steamids.length > 100) throw new Error("Too many ids, steam API only supports 100")
+    async fetchUsers(steamids: SteamID[]): Promise<IUserData[]> {
         const expUsers: IUserData[] = []
-        const insertPromises: Promise<void>[] = []
-        const users = await this.#steam.getUserDetails(steamids)
-        if(!users) return []
-        for(const user of users) {
-            const expUser = {
-                // We use the right side of STEAM_#:#:#####
-                steamid: new SteamID(user.steamid).getSteam2RenderedID().slice(10),
-                name: user.personaname,
-                avatarHash: user.avatarhash
+        while(steamids.length > 0 ) {
+            const slice = steamids.splice(0, 100)
+            const users = await this.#steam.getUserDetails(slice)
+            if(!users) break
+            for(const user of users) {
+                const expUser = {
+                    // We use the right side of STEAM_#:#:#####
+                    accountId: new SteamID(user.steamid).getSteam2RenderedID().slice(10),
+                    name: user.personaname,
+                    avatarHash: user.avatarhash
+                }
+                expUsers.push(expUser)
+                await this.insertUser(expUser).catch(err => {
+                    console.error("Failed to insert user", expUser.accountId, err)
+                })
             }
-            expUsers.push(expUser)
-            insertPromises.push(this.insertUser(expUser))
-        }
-        try {
-            await Promise.allSettled(insertPromises)
-        } catch(err) {
-            console.warn("[UserManager] Error inserting users:", err)
         }
         return expUsers
     }
@@ -143,6 +158,23 @@ export default class UserManager {
             [steamid]
         )
         return rows.length > 0 ? rows[0].last_alias : undefined
+    }
+
+    /**
+     * Returns a list of all user's names, with their respective timestamp
+     * @param steamid 
+     */
+    async getUserNameHistory(steamid: string): Promise<UserNameEntry[]> {
+        const [rows] = await this.#db.execute<RowDataPacket[]>(
+            "SELECT name, name_update_time FROM panel_user_names WHERE account_id = SUBSTRING(?, 11) ORDER BY name_update_time DESC",
+            [steamid]
+        )
+        return rows.map(row => {
+            return {
+                name: row.name,
+                timestamp: row.name_update_time
+            }
+        })
     }
 
 }

@@ -4,7 +4,7 @@ import { ADMINS_DB } from '../!!privileged/admins.js';
 import SteamID from 'steamid';
 import { BanAppeal, FullAPIBan } from '../../../../common-types/Ban.js';
 import { NAME_INVALID_CHAR_REPLACE } from '../../routes/!unprivileged/bans.js';
-import { ReadableAdminData, UserProfileData } from '../../../../common-types/User.js';
+import { ReadableAdminData, UserNameEntry, UserProfileData } from '../../../../common-types/User.js';
 import { NOT_FOUND, NO_PERMISSION } from '../../responses.js';
 
 
@@ -27,12 +27,11 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                     WHERE SUBSTRING(${ADMINS_DB}.sm_admins.identity,11) = SUBSTRING(client, 11)
                     LIMIT 1
                 ) as isAdmin,
-                COALESCE(last_alias, user_names.name) as name, country, l.timestamp as lastJoinDate, created_date as firstJoinDate,
+                u.last_name as name, u.last_country as country, u.last_join_time as lastJoinDate,
                 server,
                 client as steamid
             FROM activity_log PARTITION (p${new Date().getFullYear()}) l 
-            LEFT JOIN user_names ON client = user_names.steamid
-            LEFT JOIN stats_users ON client = stats_users.steamid
+            LEFT JOIN view_panel_user u ON SUBSTRING(client, 11) = u.account_id
             WHERE
                 TYPE = 'QUIT' AND server = IFNULL(?,server) AND client != ? AND ISNULL(target) 
             ORDER BY l.timestamp DESC
@@ -40,28 +39,9 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             [server, req.session.user.steamid, limit]
         )
 
-        const bulkFetchSet = new Set<SteamID>()
-
         for(const row of rows) {
-            if(!row.name) {
-                bulkFetchSet.add(new SteamID(row.steamid))
-            }
             row.avatarUrl = `${domain}/api/users/${row.steamid}/avatar`
             row.isAdmin = row.isAdmin === 1
-        }
-
-        if(bulkFetchSet.size > 0) {
-            const users = await fastify.users.fetchUsers([...bulkFetchSet])
-            // Add the names to the missing entries
-            for(const row of rows) {
-                for(const user of users) {
-                    // user.steamid is their accountid, so we slice it off of steamid
-                    if(user.steamid == row.steamid.slice(10)) {
-                        row.name = user.name
-                        break
-                    }
-                }
-            }
         }
 
         return {
@@ -137,6 +117,11 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         const profile = await fastify.authmngr.getProfileData(req.params.steamid)
         if(!profile) return NOT_FOUND(reply, "User has no profile data")
         return profile
+    })
+
+    fastify.get('/:steamid/names', async(req: FastifyRequest<{Params: { steamid: string }}>, reply): Promise<UserNameEntry[]> => {
+        const names = await fastify.users.getUserNameHistory(req.params.steamid)
+        return names
     })
 
     fastify.post('/:steamid/profile', async(req: FastifyRequest<{Params: { steamid: string }, Body: UserProfileData}>, reply): Promise<UserProfileData> => {
@@ -241,11 +226,10 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             const fetchStart = Date.now()
 
             const [bans] = await fastify.db.execute<RowDataPacket[]>(
-                `SELECT times_tried, id, public_message, bans.flags, bans.steamid, bans.executor, bans.reason, expires, expired, bans.timestamp, u1.last_alias, names.name as resolved_name, u1.country, u2.last_alias AS executor_name, ip
+                `SELECT times_tried, id, public_message, bans.flags, bans.steamid, bans.executor, bans.reason, expires, expired, bans.timestamp, u1.last_name as client_name, u1.last_country as client_country, u2.last_name AS executor_name, ip
                 FROM bans 
-                LEFT JOIN stats_users AS u1 ON bans.steamid = u1.steamid 
-                LEFT JOIN stats_users AS u2 ON bans.executor = u2.steamid 
-                LEFT JOIN user_names as names on SUBSTRING(bans.steamid, 11) = names.steamid
+                LEFT JOIN view_panel_user AS u1 ON SUBSTRING(bans.steamid, 11) = u1.account_id,
+                LEFT JOIN view_panel_user AS u2 ON SUBSTRING(bans.executor, 11) = u2.account_id, 
                 WHERE SUBSTRING(bans.steamid, 11) = SUBSTRING(?, 11)`,
                 [ req.params.steamid ]
             )
@@ -260,34 +244,21 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 if(!authorized) delete ban.reason
                 
                 // Grab their name either from l4d2 stats or from the resolve cache
-                if(ban.last_alias) {
+                if(ban.client_name) {
                     ban.client = {
                         id: ban.steamid,
-                        name: ban.last_alias,
-                        nameResolver: "stats"
-                    }
-                } else if(ban.resolved_name) {
-                    ban.client = {
-                        id: ban.steamid,
-                        name: ban.resolved_name,
-                        nameResolver: "name_db"
+                        name: ban.client_name,
+                        nameResolver: "view_panel_user"
                     }
                 } else {
                     // User's name is not cached, fetch it:
                     const steamid = new SteamID(ban.steamid)
-                    const resolvedNames = await fastify.steam.getUserDetails([steamid])
-                    const name = resolvedNames[0].personaname.replace(NAME_INVALID_CHAR_REPLACE, '�')
-                    if(resolvedNames.length > 0) {
+                    const user = await fastify.users.fetchUser(steamid)
+                    if(user) {
                         ban.client = {
                             id: ban.steamid,
-                            name,
+                            name: user?.name.replace(NAME_INVALID_CHAR_REPLACE, '�'),
                             nameResolver: "name_db"
-                        }
-                        const accountid = steamid.getSteam2RenderedID().slice(10)
-                        try {
-                            await fastify.db.execute("INSERT INTO user_names (steamid, name) VALUES (?, ?)", [accountid, name])
-                        } catch(err) {
-                            console.warn(`Warn: Could not insert resolved name (${accountid}, name ${name}):`, err.sqlMessage)
                         }
                     }
                 }

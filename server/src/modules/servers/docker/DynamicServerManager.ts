@@ -80,7 +80,7 @@ export default class DynamicServerManager {
                     id
                 } as DockerTemplateConfig
                 try {
-                    await this.#docker.pull(config.image)
+                    // await this.#docker.pull(config.image)
                     this.#templates[id] = {
                         config,
                     }
@@ -159,7 +159,10 @@ export default class DynamicServerManager {
                     "Name": "unless-stopped",
                     // MaximumRetryCount: 3
                 },
-                "PortBindings": { "27015/udp": [{ "HostPort": port.toString(), "HostIp": template.config.ip }] }
+                "PortBindings": { "27015/udp": [{ 
+                    "HostPort": port.toString(), 
+                    "HostIp": template.config.ip 
+                }] }
             },
             Labels: {
                 "panel.template": templateId,

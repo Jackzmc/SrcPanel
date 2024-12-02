@@ -18,7 +18,7 @@ export default class StandardServer extends Server {
 
     constructor(group: ServerGroup<Server>, server: ServerExtendedData) {
         super(group, server, new GameDig({
-            listenUdpPort: server.port
+            listenUdpPort: 27005
         }))
 
         if(server.rcon) {

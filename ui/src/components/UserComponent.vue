@@ -1,9 +1,9 @@
 <template>
 <div class="user-tooltip">
   <component :is="steamid2 ? 'router-link' : 'a'" class="media" :to="{name:'manage-user',params:{ id: steamid2 }, query: { returnTo: $route.fullPath }}">
-    <figure class="media-left mr-2" v-if="!hideAvatar && props.user.avatarUrl">
+    <figure class="media-left mr-2" v-if="!hideAvatar && clientAvatarSrc">
       <p class="image is-32x32">
-        <LazyImage observer img-class="is-rounded" :src="props.user.avatarUrl" placeholder-src="/img/steam_default_avatar.png" />
+        <LazyImage observer img-class="is-rounded" :src="clientAvatarSrc" placeholder-src="/img/steam_default_avatar.png" />
       </p>
     </figure>
     <div class="media-content">
@@ -14,8 +14,7 @@
   </component>
   <div class="user-tooltip-content">
     <figure class="image is-48x48 is-inline-block mr-3 is-round">
-      <LazyImage  v-if="props.user.avatarUrl" observer img-class="is-rounded" :src="props.user.avatarUrl" placeholder-src="/img/steam_default_avatar.png" />
-      <img v-else src="/img/steam_default_avatar.png" >
+      <LazyImage  v-if="clientAvatarSrc" observer img-class="is-rounded" :src="clientAvatarSrc" placeholder-src="/img/steam_default_avatar.png" />
     </figure>
     <div class="is-inline-block mt-0">
       <p class="title is-5 has-text-primary mt-0">{{ props.user.name }}</p>
@@ -48,9 +47,12 @@ export interface User {
   bansCount?: number
 }
 
-
+interface UserMeta {
+  name?: string,
+  avatarUrl?: string
+}
 const props = defineProps<{
-  user: User | APIUser | { steamid?: string, id?: string, name: string, avatarUrl?: string },
+  user: UserMeta & ({ steamid: string} | { id: string }),
   isAdmin?: boolean,
   hideAvatar?: boolean
 }>()
@@ -59,6 +61,14 @@ const id = computed(() => {
   if('steamid' in props.user) return props.user.steamid as string
   else if('id' in props.user) return props.user.id as string
   return null
+})
+
+const clientAvatarSrc = computed(() => {
+  if(!props.hideAvatar) return
+  if(props.user.avatarUrl) return props.user.avatarUrl
+  return (id.value)
+    ? `/api/users/${id.value}/avatar`
+    : "/img/steam_default_avatar.png"
 })
 
 const steamid2 = computed(() => {

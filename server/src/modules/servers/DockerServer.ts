@@ -16,7 +16,7 @@ export default class DockerServer extends Server implements IAction {
     constructor(group: ServerGroup<DockerServer>, server: ServerExtendedData, instance: DynamicServerInstance) {
         // Game dig needs listen udp port to be set for bridged docker containers
         super(group, server, new GameDig({
-            listenUdpPort: instance.Port
+            listenUdpPort: 27005
         }))
         this.#instance = instance
         this._logs = new DockerLogs(this, this.#instance.Container)

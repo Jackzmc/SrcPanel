@@ -1,18 +1,18 @@
 <template>
 <div class="list has-visible-pointer-controls">
   <div class="list-item" v-for="(comment, i) in comments" :key="i">
-    <div class="list-item-image" v-if="discussion.flags & APIDiscussionFlags.CommentsPublic">
+    <div class="list-item-image" v-if="discussion.flags & APIDiscussionFlags.CommentsPublic && comment.creator">
       <figure class="image is-32x32" :data-tooltip="comment.creator.name">
         <img class="is-rounded" :src="comment.creator.avatarUrl">
       </figure>
     </div>
     <div class="list-item-content">
       <div class="list-item-title">
-        <router-link v-if="discussion.flags & APIDiscussionFlags.CommentsPublic" :to="{ name: 'manage-user', params: { id: comment.creator.id }, query: { returnTo: $route.fullPath }}">
+        <router-link v-if="discussion.flags & APIDiscussionFlags.CommentsPublic && comment.creator" :to="{ name: 'manage-user', params: { id: comment.creator.id }, query: { returnTo: $route.fullPath }}">
           {{ comment.creator.name ?? comment.creator.id }}
         </router-link>
       </div>
-      <div class="list-item-content">
+      <div class="list-item-content" style="word-wrap:anywhere">
         {{ comment.content }}
       </div>
 

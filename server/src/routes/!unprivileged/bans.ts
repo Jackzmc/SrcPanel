@@ -66,11 +66,10 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             const fetchStart = Date.now()
 
             const [bans] = await fastify.db.execute<RowDataPacket[]>(
-                `SELECT times_tried, id, public_message, bans.flags, bans.steamid, bans.executor, bans.reason, expires, expired, bans.timestamp, u1.last_alias, names.name as resolved_name, u1.country, u2.last_alias AS executor_name, ip
+                `SELECT times_tried, id, public_message, bans.flags, bans.steamid, bans.executor, bans.reason, expires, expired, bans.timestamp, u1.last_name as client_name, u2.last_name AS executor_name, ip
                 FROM bans
-                LEFT JOIN stats_users AS u1 ON bans.steamid = u1.steamid 
-                LEFT JOIN stats_users AS u2 ON bans.executor = u2.steamid 
-                LEFT JOIN user_names as names on SUBSTRING(bans.steamid, 11) = names.steamid
+                LEFT JOIN view_panel_user u1 ON SUBSTRING(bans.steamid, 11) = u1.account_id 
+                LEFT JOIN view_panel_user u2 ON SUBSTRING(bans.executor, 11) = u1.account_id 
                 WHERE bans.id = ? or bans.steamid = ?`,
                 [id, id]
             )
@@ -189,8 +188,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
         const [bans] = await fastify.db.execute<RowDataPacket[]>(`
             SELECT 
-                n1.name as client_cachename,
-                n1.avatar_hash as client_avatar,
+                n1.last_name as client_name,
                 bans.id,
                 bans.steamid,
                 bans.reason,
@@ -198,16 +196,15 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 bans.flags,
                 bans.timestamp,
                 bans.executor,
-                n2.name as executor_cachename,
-                n2.avatar_hash as executor_avatar,
+                n2.last_name as executor_name,
                 bans.expires,
                 bans.expired,
                 bans.times_tried,
                 (SELECT COUNT(*) FROM ban_appeals WHERE ban_id = bans.id) as appeals,
                 (SELECT COUNT(*) FROM notes WHERE steamid = bans.steamid) as notes
             FROM bans
-                LEFT JOIN user_names as n1 on n1.steamid LIKE SUBSTRING(bans.steamid, 11) 
-                LEFT JOIN user_names as n2 on bans.executor != 'CONSOLE' AND n2.steamid LIKE SUBSTRING(bans.executor, 11)
+                LEFT JOIN view_panel_user n1 ON SUBSTRING(bans.steamid, 11) = n1.account_id
+                LEFT JOIN view_panel_user n2 ON bans.executor != 'CONSOLE' AND SUBSTRING(bans.executor, 11) = n2.account_id
             ${req.query.include !== "expired" ? 'WHERE bans.expired = 0' : ''}
             ORDER BY bans.timestamp DESC LIMIT ?, ?`, 
             [offset, limit]
@@ -216,51 +213,29 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         meta.fetchTime = Date.now() - profilerStart
         profilerStart = Date.now()
 
-        const bulkNameSteamIds: SteamID[] = []
+        const bulkNameSteamIds: Set<SteamID> = new Set()
 
         for(let i = 0; i < bans.length; i++) {
             let ban = bans[i]
-            const steamid = new SteamID(ban.steamid)
             ban.client = {
                 id: ban.steamid,
                 accountid: ban.steamid.slice(10),
-                nameResolver: "none",
-                avatarUrl: ban.client_avatar,
+                name: ban.client_name?.replace(NAME_INVALID_CHAR_REPLACE, '�'),
             }
-            /* We grab name from order of: 
-                1. stats (stats_users table)
-                2. user name cache (user_names)
-                3. bulk fetch from steam (see below)
-            */
-            if(ban.client_statsname) {
-                ban.client.name = ban.client_statsname.replace(NAME_INVALID_CHAR_REPLACE, '�')
-                ban.client.nameResolver = "stats"
-            } else if(ban.client_cachename) {
-                ban.client.name = ban.client_cachename.replace(NAME_INVALID_CHAR_REPLACE, '�')
-                ban.client.nameResolver = "name_db"
-            } else {
+            if(!ban.client.name && ban.client.id.startsWith("STEAM_")) {
                 // Optimize by having count of steamids so we can break in resolver quicker
-                bulkNameSteamIds.push(steamid)
+                bulkNameSteamIds.add(new SteamID(ban.steamid))
             }
 
             // Now we do the same for the executor (who created ban), 
             // We should always have their name in a cache, so need for bulk fetch, simplified logic
             ban.executor = {
                 id: ban.executor,
-                name: null,
-                nameResolver: "none",
-                avatarUrl: ban.executor_avatar,
-            }
-            if(ban.executor_statsname) {
-                ban.executor.name = ban.executor_statsname.replace(NAME_INVALID_CHAR_REPLACE, '�')
-                ban.executor.nameResolver = "stats"
-            } else if(ban.executor_cachename) {
-                ban.executor.name = ban.executor_cachename.replace(NAME_INVALID_CHAR_REPLACE, '�')
-                ban.executor.nameResolver = "name_db"
+                name: ban.executor_name?.replace(NAME_INVALID_CHAR_REPLACE, '�'),
             }
 
             // If we don't have a name, try to parse it as a provider (such as discord: )
-            if(!ban.executor.name) {
+            if(!ban.executor.name && !ban.executor.id.startsWith("STEAM_")) {
                 const [provider, id] = ban.executor.id.split(":")
                 if(provider && id) {
                     ban.executor.name = await fastify.authmngr.getNameFromProvider(provider, id)
@@ -278,31 +253,17 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         profilerStart = Date.now()
 
         // For any names we did not find, we do bulk requests through Steam's API to resolve it
-        while(bulkNameSteamIds.length > 0) {
-            // Steam API only supports upto 100 ids at one
-            const sliceSteamids = bulkNameSteamIds.splice(0, 100)
-            // This does not return in the order of sliceSteamids!!
-            const resolvedNames = await fastify.steam.getUserDetails(sliceSteamids)
-            for(const resolvedName of resolvedNames) {
-                // Stupid but i dont care, resolves the STEAM2 id, then slices what we use as account id
-                const accountid = new SteamID(resolvedName.steamid).getSteam2RenderedID().slice(10)
-                // VERY bad, but should only run on limited amounts
-                const name = resolvedName.personaname.replace(NAME_INVALID_CHAR_REPLACE, '�')
-                // Update our local copy with the new name
-                for(let ban of bans) {
-                    if(ban.client.accountid == accountid) {
-                        ban.client.name = name
-                        ban.client.nameResolver = "steam"
-                        ban.client.avatarUrl = resolvedName.avatarfull
-                    }
-                    // No break here, we want _all_ bans of user to be updated, in the event they got banned more than once
+        const ids = [...bulkNameSteamIds.values()]
+        const resolvedUsers = await fastify.users.fetchUsers(ids)
+        for(const user of resolvedUsers) {
+            const name = user.name.replace(NAME_INVALID_CHAR_REPLACE, '�')
+            // Update our local copy with the new name
+            for(let ban of bans) {
+                if(ban.client.accountid == user.accountId) {
+                    ban.client.name = name
+                    ban.client.nameResolver = "steam"
                 }
-
-                try {
-                    await fastify.db.execute("INSERT INTO user_names (steamid, name, avatar_hash) VALUES (?, ?, ?)", [accountid, name, resolvedName.avatarhash])
-                } catch(err) {
-                    console.warn(`Warn: Could not insert resolved name (${accountid}, name ${name}):`, err.sqlMessage)
-                }
+                // No break here, we want _all_ bans of user to be updated, in the event they got banned more than once
             }
         }
 
