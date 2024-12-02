@@ -28,10 +28,10 @@
                 :to="{name: 'manage-user-bans', params: { id: ban.client.id, banid: ban.id }, query: { returnTo: $route.fullPath }}"><em>{{ ban.client.id }}</em></router-link>
             </td>
             <td>
-              <!-- TODO: fix this error -->
-              <UserComponent :user="ban.executor" v-if="!ban.executor.provider" hide-avatar />
+              <em v-if="ban.executor.id === 'CONSOLE'">[Automatic]</em>
+              <UserComponent :user="ban.executor" v-else-if="!ban.executor.provider" hide-avatar />
               <template v-else>
-                <span v-if="ban.executor.id" class=''>{{ban.executor.id}}</span>
+                <span v-if="ban.executor.name" class=''>{{ban.executor.name}}</span>
               </template>
               <p class='has-text-info' v-if="ban.executor.provider && ban.executor.provider !== 'steam'"><em>via
                   {{ban.executor.provider}}</em></p>
@@ -201,7 +201,7 @@ async function fetchBans(resetPage = false) {
         ban.executor.nameResolver = "provider"
         ban.executor.provider = "discord"
       }
-      if(ban.executor.id === "CONSOLE") ban.executor.id = '[Automatic]'
+      // if(ban.executor.id === "CONSOLE") ban.executor.id = '[Automatic]'
       return {
         ...ban,
         relDate,

@@ -47,9 +47,12 @@ export interface User {
   bansCount?: number
 }
 
-
+interface UserMeta {
+  name?: string,
+  avatarUrl?: string
+}
 const props = defineProps<{
-  user: User | APIUser | { steamid: string, id?: string, name?: string, avatarUrl?: string },
+  user: UserMeta & ({ steamid: string} | { id: string }),
   isAdmin?: boolean,
   hideAvatar?: boolean
 }>()
