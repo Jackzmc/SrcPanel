@@ -3,7 +3,8 @@
   <div class="columns">
     <div class="column is-8 box" v-if="!entries || showLoading">
       <p class="has-text-centered is-size-5" style="margin-top:20%">
-        <Icon icon="spinner" spin>Loading...</Icon>
+        <Icon icon="spinner" spin v-if="logInfo.loading">Waiting for log metadata</Icon>
+        <Icon icon="spinner" spin v-else>Searching logs</Icon>
         <br>
         {{ loadingDuration }}s
       </p>
@@ -333,7 +334,14 @@ let infiniteScroll = ref()
 let infiniteScrollLoading = ref<"top"|"bottom">()
 
 let fetchAbort: AbortController | null = null
-let logInfo = ref<{servers: string[], cache:Record<string,{totalRows:number,highestId:number}>}>({servers:[],cache:{}})
+let logInfo = ref<{
+  servers: string[],
+  cache:Record<string,{
+    totalRows:number,
+    highestId:number
+  }>,
+  loading: boolean,
+}>({servers:[],cache:{}, loading: true})
 let firstLoad = false
 
 const highlightRegex = computed(() => {
@@ -445,6 +453,7 @@ async function getInfo() {
   if(response?.ok) {
     const json = await response.json()
     logInfo.value = json
+    logInfo.value.loading = false
   } else {
     throw Error(response?.statusText)
   }
@@ -477,7 +486,7 @@ async function loadTopContent() {
     return
   }
   if(infiniteScrollLoading.value || !entries.value || entries.value.length == 0 || loadingTime.value !== undefined) return
-  if(idMinMax.value[1] === cache.value.highestId) return
+  if(idMinMax.value[1] === cache.value?.highestId) return
   console.log('fetching top content')
   infiniteScrollLoading.value = "top"
   const newEntries = await fetchLogs(idMinMax.value[1] + 1, "after")
@@ -590,14 +599,15 @@ async function jumpTo(entry: any) {
   // We assign once to prevent any triggering of fetch before everything is set
   filters.value = {
     ...filters.value,
+    aroundId: entry.id,
     message: null,
   }
   router.replace({
     name: "logs-audit",
-    params: {
-      aroundId: entry.id,
-    },
-    query: route.query
+    query: {
+      ...route.query,
+      aroundId: entry.id
+    }
   })
   await fetchLogs(entry.id, 'around')
 }
@@ -632,7 +642,7 @@ onMounted(async() => {
   await getInfo()
 
   // If /admin/audit/:id is used, fetch that, and just grab filters, but wont be used
-  if(route.params.aroundId) {
+  if(route.query.aroundId) {
     const id = Number(route.params.aroundId)
     filters.value['aroundId'] = id.toString()
     entries.value = await fetchLogs(id, "around")
