@@ -12,6 +12,7 @@ export interface ShareData {
 export interface ShareDestination {
     name?: string,
     serverIds?: string[],
+    groupIds?: string[]
     paths: string[]
 }
 export type ShareDestinations = Record<string, ShareDestination>

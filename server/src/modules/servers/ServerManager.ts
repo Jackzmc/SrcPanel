@@ -1,6 +1,5 @@
 import { mkdir, readFile, stat, open } from 'fs/promises'
 import Json5 from 'json5'
-import DNS from 'dns'
 import Server, { ConfigServerData } from './Server'
 import Share from '../Share.js';
 import path, { join } from 'path';
@@ -445,7 +444,7 @@ export default class ServerManager {
       if(err.code != "EEXIST") throw err
     }
 
-    let numServers = 0
+    let numServers = 0, numGroups
 
     for(const shareId in shares) {
       let share = shares[shareId] as Partial<ShareInfo>
@@ -471,6 +470,19 @@ export default class ServerManager {
             console.warn(`[ServerManager] WARN: Share ${shareId}/${destKey} has invalid path "${path}" (ENOENT)`)
           }
         }
+        if(dest.groupIds) {
+          const groupIds: string[] = []
+          for(const groupId of dest.groupIds) {
+            if(this.#groups[groupId]) {
+              groupIds.push(groupId)
+              numGroups++
+            } else {
+               console.warn(`[ServerManager] WARN: Share ${shareId}/${destKey} includes non existent group id "${groupId}"`)
+              continue;
+            }
+          }
+          dest.groupIds = groupIds
+        }
         if(dest.serverIds) {
           const serverIds: string[] = []
           for(const id of dest.serverIds) {
@@ -479,8 +491,8 @@ export default class ServerManager {
               serverIds.push(_id)
               numServers++
             } else {
-              console.warn(`[ServerManager] WARN: Share ${shareId}/${destKey} includes non existent server id "${_id}"; skipping`)
-              continue shareLoop;
+              console.warn(`[ServerManager] WARN: Share ${shareId}/${destKey} includes non existent server id "${_id}"`)
+              continue;
             }
           }
           dest.serverIds = serverIds
@@ -492,7 +504,7 @@ export default class ServerManager {
         driver: sqlite3.Database
       })
       this.addonShares[shareId.toLowerCase()] = new Share(db, this.#steam, share)
-      console.info(`[ServerManager] Loaded share "${shareId}" with ${Object.keys(share.destinations!).length} destinations, ${numServers} servers`)
+      console.info(`[ServerManager] Loaded share "${shareId}" with ${Object.keys(share.destinations!).length} destinations, ${numServers} servers, ${numGroups} groups`)
     }
   }
 

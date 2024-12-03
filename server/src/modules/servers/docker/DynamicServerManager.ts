@@ -105,7 +105,6 @@ export default class DynamicServerManager {
             ports.push(port)
         }
         ports.sort()
-        console.log(ofTemplate.id, 'ports', ports)
 
         // Find next available, filling in gaps
         let port = ofTemplate.startPort;
@@ -114,7 +113,6 @@ export default class DynamicServerManager {
                 port++
             }
         }
-        console.log('next port: ', port)
         return port
     }
 
@@ -140,7 +138,7 @@ export default class DynamicServerManager {
         }
         let commands = Array.isArray(template.config.command) ? template.config.command : [template.config.command]
         commands = commands.map(cmd => DynamicServerGroup.formatTemplateVar(cmd, templVars))
-
+        console.log(template.config)
         const config = {
             name: `panel-${templateId}-${port}`,
             Image: template.config.image,
