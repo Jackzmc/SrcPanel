@@ -124,6 +124,7 @@ export interface ServerAvailableFeatures {
     docker: boolean,
     metrics: boolean
 
-    performCommands: boolean
+    performCommands: boolean,
+    canStart: boolean
 } 
 export type ServerFeature = keyof ServerAvailableFeatures

@@ -88,7 +88,6 @@ export default class DynamicServerManager {
                     console.error(`[ServerManager/docker] Failed to pull image \"${config.image}\":`, err)
                 }
             }
-            console.debug('templates:', Object.keys(this.#templates).join(" "))
             console.info(`[ServerManager/docker] Loaded ${Object.keys(this.#templates).length} templates`)
         } catch(err) {
             if(err.code == "ENOENT")
@@ -138,7 +137,6 @@ export default class DynamicServerManager {
         }
         let commands = Array.isArray(template.config.command) ? template.config.command : [template.config.command]
         commands = commands.map(cmd => DynamicServerGroup.formatTemplateVar(cmd, templVars))
-        console.log(template.config)
         const config = {
             name: `panel-${templateId}-${port}`,
             Image: template.config.image,

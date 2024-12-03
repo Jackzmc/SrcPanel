@@ -33,7 +33,9 @@ export default class DockerServer extends Server implements IAction {
     get features() {
         return {
             ...super.features,
-            docker: true
+
+            docker: true,
+            canStart: true
         }
     }
 
@@ -53,13 +55,35 @@ export default class DockerServer extends Server implements IAction {
         return this.#instance.stop(force)
     }
 
+    async #performBuiltin(command: string) {
+        switch(command) {
+            case "start": {
+                await this.start()
+                break
+            }
+            case "stop": {
+                await this.stop(false)
+                break
+            }
+            case "requestStop": {
+                await this.stop(true)
+                break
+            }
+            default:
+                return false
+        }
+        return true
+    }
+
     public async performAction( command: string, namespace: string ): Promise<ActionResponse> {
         if(namespace === "builtin") {
-            let cmd = getFallbackCommandForBuiltin(command)
-            if(!cmd) throw new Error(`Unable to run builtin:${command} via docker`)
-            command = cmd
-        }
-        else if(namespace !== "default") {
+            // Try to run built in directly, and fallback to alternative command sent to server instead
+            if(!await this.#performBuiltin(command)) {
+                let cmd = getFallbackCommandForBuiltin(command)
+                if(!cmd) throw new Error(`Unable to run builtin:${command} via docker (no available command)`)
+                command = cmd
+            }
+        } else if(namespace !== "default") {
             throw new Error("Unsupported namespace")
         }
         const stream = await this.#instance.Container.attach({

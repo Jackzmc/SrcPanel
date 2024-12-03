@@ -208,7 +208,9 @@ export default abstract class Server implements IAction {
         plugin: this.Plugin?.available ?? false,
         metrics: this.Metrics?.available ?? false,
         docker: false,
-        performCommands: this.canPerformCommands
+
+        performCommands: this.canPerformCommands,
+        canStart: false
       }
     }
 

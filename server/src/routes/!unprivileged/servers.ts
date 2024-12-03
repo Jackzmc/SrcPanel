@@ -20,7 +20,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                     host: server.host,
                     ip: server.ip,
                     port: server.port,
-                    type: server.type,
+                    type: SERVER_TYPE_MAP[server.type] ?? server.type,
                     tags: server.tags,
                     features: server.features,
                     domain: server.host,

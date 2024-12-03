@@ -133,6 +133,7 @@ const actions = computed(() => {
       if(!action.requiresFeatures) return true
       for(const feat of action.requiresFeatures) {
         if(!props.server!.features[feat as keyof ServerAvailableFeatures]) {
+           console.log(action.name, "Missing feat", feat)
           return false
         }
       }
