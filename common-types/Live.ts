@@ -258,14 +258,16 @@ export const RecordAuthParseDef: RecordParserInterface<LiveRecordAuth> = {
     type: RecordDataType.Byte,
     version: RecordDataType.Byte,
     token: RecordDataType.String,
-    port: RecordDataType.Integer
+    port: RecordDataType.OptionalShort,
+    gameVersion: RecordDataType.OptionalString
 }
 
 export interface LiveRecordAuth {
     type: LiveRecordType.Auth,
     version: number,
     token: string,
-    port: number
+    port: number,
+    gameVersion: string | null
 }
 
 export const RecordMetaParseDef: RecordParserInterface<LiveRecordMeta> = {
@@ -346,7 +348,7 @@ export function updateLiveCache(cache: LiveDataCache | null, record: LiveRecord)
     if(!cache) cache = {
         lastUpdate: 0,
         clients: {},
-        game: null
+        game: null,
     }
     cache.lastUpdate = Date.now()
     // If we get any other record, but we don't have the game we just ignore it

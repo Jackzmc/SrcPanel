@@ -63,6 +63,7 @@ export default abstract class Server implements IAction {
     protected _info: InternalServerInfo
     protected _group: ServerGroup
     protected _logId?: string
+    protected _gameVersion: string | null
 
     // Optional / non-universal features:
     protected _rcon: RconFeature|null = null
@@ -198,6 +199,13 @@ export default abstract class Server implements IAction {
     }
 
     get activityLogId() { return this._logId }
+
+    get GameVersion(): string | null {
+      return this._gameVersion
+    }
+    set GameVersion(version: string) {
+      this._gameVersion = version
+    }
 
     /** Returns all features server supports currently */
     public get features(): ServerAvailableFeatures {

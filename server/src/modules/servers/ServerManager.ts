@@ -140,8 +140,10 @@ export default class ServerManager {
       .then(({payload}) => {
         const server = this.getServerForPlugin(payload, record.port)
         if(server) {
-          client._setServer(server)
+          client._setServer(server,)
           server.Plugin?._setSocket(client)
+          if(record.gameVersion)
+            server.GameVersion = record.gameVersion
           client.send(LiveRecordResponse.OK, server.Plugin?.liveViewers)
           this.#debugLive("Authenticated", `host=${client.Host} server=${server.id}`)
         } else {

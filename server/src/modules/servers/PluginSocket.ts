@@ -163,10 +163,12 @@ export default class PluginSocket {
             type,
             version: reader.readByte(),
             token: reader.readString(),
-            port: 0
+            port: 0,
+            gameVersion: null as string | null
           }
           if(!reader.isEOF) {
-            result.port = reader.readInt()
+            result.port = reader.readShort()
+            result.gameVersion = reader.readString()
           }
           return result
         }
