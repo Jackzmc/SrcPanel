@@ -133,7 +133,6 @@ const actions = computed(() => {
       if(!action.requiresFeatures) return true
       for(const feat of action.requiresFeatures) {
         if(!props.server!.features[feat as keyof ServerAvailableFeatures]) {
-           console.log(action.name, "Missing feat", feat)
           return false
         }
       }
@@ -144,7 +143,9 @@ const actions = computed(() => {
       if(action.showWhen === "any") return true
       if(props.server.online && action.showWhen === "online") return true
       else if(!props.server.online && action.showWhen === "offline") return true
-      else return false
+
+      console.log(props.server.id, action.name, action.showWhen ?? "any", props.server.online)
+      return false
     })
     .filter(action => !action.isHidden)
 })

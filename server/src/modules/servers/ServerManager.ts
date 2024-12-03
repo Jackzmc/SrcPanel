@@ -514,10 +514,11 @@ export default class ServerManager {
       const actionGroups = Json5.parse(content)
 
       for(const [key, actions] of Object.entries<ServerAction[]>(actionGroups)) {
-        this.#actions[key] = actions.map(action => {
+        this.#actions[key] = actions.map((action: Partial<ServerAction>)  => {
           return {
+            showWhen: "online",
             ...action
-          }
+          } as ServerAction
         })
       }
     } catch(err) {
