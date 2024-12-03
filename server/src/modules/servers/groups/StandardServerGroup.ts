@@ -32,7 +32,6 @@ export class StandardServerGroup extends ServerGroup<StandardServer> {
                     console.warn(`[ServerManager] Error: Could not resolve IP for hostname ${server.host} (skipping):\n`, err)
                     return null
                 }
-
                 const instance = new StandardServer(this, {
                     actions: server.actions ?? [],
                     id,
@@ -52,6 +51,11 @@ export class StandardServerGroup extends ServerGroup<StandardServer> {
                 await instance.init()
                 this._servers[id] = instance
             }).filter(s => s)
-        return await Promise.allSettled(promises)
+        const results = await Promise.allSettled(promises)
+        for(const result of results) {
+            if(result.status === "rejected") {
+                console.error(`[ServerManager/${this.Id}] Failed to load server: ${result.reason}`)
+            }
+        }
     }
 }
