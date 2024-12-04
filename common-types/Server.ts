@@ -69,6 +69,7 @@ export interface ServerDetailed {
     server: ServerInfo
     live: LiveDataCache | null,
     uptime: number | null,
+    startTime: number | null,
     configs: null | any[]
 }
 

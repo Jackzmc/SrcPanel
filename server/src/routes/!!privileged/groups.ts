@@ -46,18 +46,26 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             })
         }
         if(group instanceof DynamicServerGroup) {
-            const server = await group.createNewServer()
-            if(req.query.start) {
-                await server.start()
-            }
-            return {
-                id: server.ContainerInstance.ContainerId,
-                name: server.name,
-                serverId: server.id,
-                hostname: server.host,
-                ip: server.ip,
-                port: server.port,
-                type: server.port,
+            try {
+                const server = await group.createNewServer()
+                if(req.query.start) {
+                    await server.start()
+                }
+                return {
+                    id: server.ContainerInstance.ContainerId,
+                    name: server.name,
+                    serverId: server.id,
+                    hostname: server.host,
+                    ip: server.ip,
+                    port: server.port,
+                    type: server.port,
+                }
+            } catch(err) {
+                console.error(`[API::groups/${req.params.groupId}] ERROR: Failed to create instance:`, err)
+                reply.status(500).send({
+                    error: "CREATE_ERROR",
+                    message: err.message
+                })
             }
         } else {
             return reply.status(400).send({

@@ -95,6 +95,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         return {
             server: server.info,
             uptime: server.uptime,
+            startTime: server.startTime,
             live: server.Plugin?.liveStatus,
             configs
         }
@@ -277,6 +278,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             recentActivities,
             stats: server.Metrics?.available ? server.Metrics.ComputeStats : null,
             uptime: server.uptime,
+            startTime: server.startTime,
             status: server.status,
             online: server.Online
         }

@@ -159,7 +159,9 @@ export class DynamicServerGroup extends ServerGroup<DockerServer> {
             port: instance.Port,
         }
         const id = `${this.Id}-${instance.Port}`
-
+        if(!this.#serverTemplate.host) {
+            throw new Error(`Server template for group ${this.Id} has missing \"host\"`)
+        }
         const host = DynamicServerGroup.formatTemplateVar(this.#serverTemplate.host, vars)
         let address: string|undefined = undefined
         try {
