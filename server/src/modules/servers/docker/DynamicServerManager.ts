@@ -155,7 +155,7 @@ export default class DynamicServerManager {
                     "Name": "unless-stopped",
                     // MaximumRetryCount: 3
                 },
-                "PortBindings": { "27015/udp": [{ 
+                "PortBindings": { [`${port.toString()}/udp`]: [{ 
                     "HostPort": port.toString(), 
                     "HostIp": template.config.ip 
                 }] }
