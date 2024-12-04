@@ -27,8 +27,7 @@ export default class DynamicServerInstance {
 
         const state = await this.state()
         const startDateTime = new Date(state.StartedAt).valueOf()
-        this.#startTime = startDateTime ? Math.round(startDateTime / 1000) : null
-        console.log(startDateTime, this.#startTime)
+        this.#startTime = startDateTime > 0 ? Math.round(startDateTime / 1000) : null
 
         const inspect = await this.#container.inspect()
         const network = inspect.NetworkSettings.Networks[this.#template.network!]
