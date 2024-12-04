@@ -9,6 +9,8 @@ import DockerServer from "../DockerServer.js";
 import { ContainerStats } from "dockerode";
 
 const RECORD_STATISTICS_INTERVAL = 1000 * 60 * 1
+// The maximum number of statistics to hold
+const MAX_STATS_HISTORY = 100
 
 export interface InfluxConfig {
   host: string,
@@ -20,6 +22,8 @@ export interface InfluxConfig {
 export default class MetricsFeature extends Feature {
     #influx: WriteApi | null = null
     #computeStats: ComputeStats | null = null
+
+    #computeStatsHistory: ComputeStats[] = []
 
     constructor(server: Server) {
         super("Metrics", server)
@@ -51,7 +55,7 @@ export default class MetricsFeature extends Feature {
           const cpuDelta = stats.cpu_stats.cpu_usage.total_usage - stats.precpu_stats.cpu_usage.total_usage
           const systemCpuDelta = stats.cpu_stats.system_cpu_usage - stats.precpu_stats.system_cpu_usage
           const memoryUsed = stats.memory_stats.usage - stats.memory_stats.stats?.inactive_file
-          this.#computeStats = {
+          const computeStats: ComputeStats = {
             collectionTime: Math.round(Date.now()/1000),
             // https://docs.docker.com/reference/api/engine/version/v1.45/#tag/Container/operation/ContainerExport
             cpu_stats: stats.cpu_stats ? {
@@ -64,12 +68,21 @@ export default class MetricsFeature extends Feature {
               limit: stats.memory_stats.limit
             } : null
           }
+          this.#computeStats = computeStats
+          this.#computeStatsHistory.push(computeStats)
+          if(this.#computeStatsHistory.length > MAX_STATS_HISTORY) {
+            this.#computeStatsHistory.splice(0, 1)
+          }
         })
       }
     } 
 
     get ComputeStats(): ComputeStats | null {
       return this.#computeStats
+    }
+
+    get ComputeStatsHistory(): ComputeStats[] {
+      return this.#computeStatsHistory
     }
 
     recordStatus(data: ServerStatusData | null, source: ServerStatusSource) {

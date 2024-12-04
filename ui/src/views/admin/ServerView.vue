@@ -308,6 +308,7 @@
       <div v-else-if="tab === 'console'" class="box">
         <Console :server="serverInfo" />
       </div>
+      <ServerMetricsTab v-else-if="tab === 'metrics'" :server="serverInfo" :metrics="metrics" />
     </div>
     <div class="column is-8" v-else-if="error">
       <div class="box">
@@ -500,6 +501,7 @@ import { formatDate, getDuration } from '../../js/util.js';
 import UserComponent, { User } from '@/components/UserComponent.vue';
 import Console from '@/components/server/Console.vue'
 import { ServerData, ServerInfo, ServerDetailed, ServerAvailableFeatures, ComputeStats, ServerStatus } from '../../../../common-types/Server';
+import ServerMetricsTab from '@/components/server/ServerMetricsTab.vue';
 
 const FinaleStageName: Record<FinaleStage, string> = {
     [FinaleStage.Gauntlet]: "Gauntlet",
@@ -595,9 +597,16 @@ const TABS: Record<string, { name: string, tag?: string, permission?: string, en
     enabled: () => {
       return serverInfo.value?.features.logs
     }
+  },
+  metrics: {
+    name: "Metrics",
+    enabled: () => {
+      return serverInfo.value?.features.metrics
+    }
   }
 }
 
+let metrics = ref<ComputeStats[]>([])
 let stats = ref<ComputeStats>()
 let lastRefreshTime = ref()
 let serverInfo = ref<ServerInfo>()
@@ -605,7 +614,7 @@ let serverConfigs = ref()
 let serverIds = ref()
 let status = ref<Partial<ServerStatus>&{error?:string}>()
 let online = ref<boolean>()
-let liveStatus = ref<LiveDataCache>()
+let liveStatus = ref<LiveDataCache|null>(null)
 let liveStatusNextRetryTime = ref<number>()
 let lastLiveUpdateTime = ref<string>()
 let uptime = ref<number>()
@@ -785,6 +794,7 @@ async function fetchServerStatus() {
     const json = await response.json()
     isRefreshing = false
     if(response.ok && json) {
+      metrics.value = json.stats
       online.value = json.online
       status.value = json.status
       uptime.value = json.uptime
