@@ -11,6 +11,8 @@ import { ContainerStats } from "dockerode";
 const RECORD_STATISTICS_INTERVAL = 1000 * 60 * 1
 // The maximum number of statistics to hold
 const MAX_STATS_HISTORY = 100
+// Number of miliseconds between every history addition
+const STATS_HISTORY_INTERVAL = 1000 * 30
 
 export interface InfluxConfig {
   host: string,
@@ -21,9 +23,10 @@ export interface InfluxConfig {
 
 export default class MetricsFeature extends Feature {
     #influx: WriteApi | null = null
-    #computeStats: ComputeStats | null = null
+    #latestComputeStats: ComputeStats | null = null
 
     #computeStatsHistory: ComputeStats[] = []
+    #lastHistoryTime: number = 0
 
     constructor(server: Server) {
         super("Metrics", server)
@@ -68,21 +71,31 @@ export default class MetricsFeature extends Feature {
               limit: stats.memory_stats.limit
             } : null
           }
-          this.#computeStats = computeStats
-          this.#computeStatsHistory.push(computeStats)
-          if(this.#computeStatsHistory.length > MAX_STATS_HISTORY) {
-            this.#computeStatsHistory.splice(0, 1)
-          }
+          this.#latestComputeStats = computeStats
+          // Only record every STATS_HISTORY_INTERVAL, as we don't want to store the last 100ms but the last 100 minutes
+          if(Date.now() - this.#lastHistoryTime > STATS_HISTORY_INTERVAL) {
+            console.log(new Date(), Date.now() - this.#lastHistoryTime)
+            this.#lastHistoryTime = Date.now()
+            // TODO: maybe avg?
+            this.#computeStatsHistory.push(computeStats)
+            if(this.#computeStatsHistory.length > MAX_STATS_HISTORY) {
+              this.#computeStatsHistory.splice(0, 1)
+            }
+        }
         })
       }
     } 
 
     get ComputeStats(): ComputeStats | null {
-      return this.#computeStats
+      return this.#latestComputeStats
     }
 
     get ComputeStatsHistory(): ComputeStats[] {
       return this.#computeStatsHistory
+    }
+
+    get ComputeStatsHistoryInterval() {
+      return STATS_HISTORY_INTERVAL
     }
 
     recordStatus(data: ServerStatusData | null, source: ServerStatusSource) {
