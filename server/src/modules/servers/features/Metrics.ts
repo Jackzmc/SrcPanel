@@ -10,7 +10,7 @@ import { ContainerStats } from "dockerode";
 
 const RECORD_STATISTICS_INTERVAL = 1000 * 60 * 1
 // The maximum number of statistics to hold
-const MAX_STATS_HISTORY = 100
+const MAX_STATS_HISTORY = 200
 // Number of miliseconds between every history addition
 const STATS_HISTORY_INTERVAL = 1000 * 30
 
@@ -69,7 +69,17 @@ export default class MetricsFeature extends Feature {
               usage: memoryUsed,
               usage_percent: (memoryUsed / stats.memory_stats.limit) * 100.0,
               limit: stats.memory_stats.limit
-            } : null
+            } : null,
+            network_stats: Object.fromEntries(Object.entries(stats.networks).map(([intf, net]) => {
+              return [intf, {
+                bytesRx: net.rx_bytes,
+                bytesTx: net.tx_bytes,
+                packetsRx: net.rx_packets,
+                packetsTx: net.tx_packets,
+                droppedTx: net.tx_errors,
+                droppedRx: net.rx_dropped
+              }]
+            })) ?? []
           }
           this.#latestComputeStats = computeStats
           // Only record every STATS_HISTORY_INTERVAL, as we don't want to store the last 100ms but the last 100 minutes

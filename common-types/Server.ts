@@ -18,6 +18,8 @@ export interface ComputeStats {
     collectionTime: number,
     memory_stats: MemoryStats | null;
     cpu_stats: CPUStats | null;
+    // Key is the network interface
+    network_stats: Record<string, NetworkStats>
 }
 
 
@@ -30,6 +32,16 @@ interface MemoryStats {
     usage: number;
     usage_percent: number;
     limit: number;
+}
+interface NetworkStats {
+    bytesRx: number,
+    bytesTx: number,
+
+    packetsRx: number,
+    packetsTx: number,
+
+    droppedTx: number,
+    droppedRx: number,
 }
 
 export type PlayerAction = "kick"
