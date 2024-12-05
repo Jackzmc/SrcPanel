@@ -103,14 +103,18 @@ export default class PluginFeature extends Feature implements IAction {
         if(record) {
             this.#liveCache = updateLiveCache(this.#liveCache, record)
             if(record.type === LiveRecordType.Game) {
-                this._server.Metrics.addAnnotationX({
-                    x: record.campaignStartTime,
-                    label: {
-                        text: record.state === GameState.EndGame ? `Game Ended` : "New Game Started"
-                    }
-                })
+                if(record.state === GameState.NewGame || record.state === GameState.EndGame) {
+                    console.log("recording annotation", record.state, record.campaignStartTime)
+                    this._server.Metrics.addAnnotationX({
+                        x: record.campaignStartTime,
+                        label: {
+                            text: record.state === GameState.EndGame ? `Game Ended` : "New Game Started"
+                        }
+                    })
+                }
                 if(record.state !== GameState.EndGame)
                     this.#startTime = record.startTime
+                
             }
             if(!this.#status) this.#status = { players: [], maxplayers: 0, map: "", gamemode: "" }
             if(this.#liveCache.game) {
