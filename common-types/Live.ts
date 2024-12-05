@@ -352,11 +352,12 @@ interface AnnotationBase {
             color?: string,
             background?: string
         }
-        text: string
+        text: string,
+        orientation?: "horizontal" | "vertical"
     }
 }
-export interface AnnotationX extends AnnotationBase { x: number }
-export interface AnnotationY extends AnnotationBase { y: number }
+export interface AnnotationX extends AnnotationBase { x: number, x2?: number }
+export interface AnnotationY extends AnnotationBase { y: number, y2?: number }
 export interface Annotation {
     xaxis: AnnotationX[],
     yaxis: AnnotationY[]

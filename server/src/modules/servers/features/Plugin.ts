@@ -121,12 +121,13 @@ export default class PluginFeature extends Feature implements IAction {
             case GameState.Transitioning:
                 text = "Level transition"
         }
-        if(!timestamp) timestamp = Math.round(Date.now()/1000)
+        if(!timestamp) timestamp = Date.now()
         console.log("recording annotation", record.state, record.campaignStartTime)
         this._server.Metrics.addAnnotationX({
-            x: timestamp!,
+            x: timestamp,
             label: {
-                text
+                text,
+                orientation: "horizontal"
             }
         })
     }
@@ -139,9 +140,10 @@ export default class PluginFeature extends Feature implements IAction {
             if(record.type === LiveRecordType.Game) {
                 this.#annotateGameState(record)
                 
-                if(record.state !== GameState.EndGame)
-                    this.#startTime = record.startTime
-                
+                if(record.state !== GameState.EndGame && this.#liveCache.game) {
+                    this.#liveCache.game.campaignStartTime = record.campaignStartTime
+                }
+                this.#startTime = record.startTime
             }
             if(!this.#status) this.#status = { players: [], maxplayers: 0, map: "", gamemode: "" }
             if(this.#liveCache.game) {
