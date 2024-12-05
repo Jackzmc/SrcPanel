@@ -310,7 +310,7 @@
       <div v-else-if="tab === 'console'" class="box">
         <Console :server="serverInfo" />
       </div>
-      <ServerMetricsTab v-else-if="tab === 'metrics'" :server="serverInfo" :metrics="metrics" />
+      <ServerMetricsTab v-else-if="tab === 'metrics'" :server="serverInfo" :metrics="metrics" :annotations="metricAnnotations" />
     </div>
     <div class="column is-8" v-else-if="error">
       <div class="box">
@@ -539,7 +539,7 @@ import { parseLog, getRelDate, request, formatSize } from '@/js/util';
 import LogMessage from "@/components/LogMessage.vue";
 import { useNotification } from "@kyvg/vue3-notification";
 import Field from '@/components/Field.vue';
-import { SurvivorId, FinaleStage, PlayerState, PlayerGameAction, PlayerMove, InfectedClass, LiveDataCache, LiveRecord, updateLiveCache, LiveSurvivor, LiveInfected, LiveRecordType, GameDifficulty, CommandResultType, GameState, ClientState, LiveClient } from '../../../../common-types/Live';
+import { SurvivorId, FinaleStage, PlayerState, PlayerGameAction, PlayerMove, InfectedClass, LiveDataCache, LiveRecord, updateLiveCache, LiveSurvivor, LiveInfected, LiveRecordType, GameDifficulty, CommandResultType, GameState, ClientState, LiveClient, AnnotationX, AnnotationY, Annotation } from '../../../../common-types/Live';
 import { UserPrivilegeCode } from '../../../../common-types/Privileges';
 import { formatDate, getDuration } from '../../js/util.js';
 import UserComponent, { User } from '@/components/UserComponent.vue';
@@ -650,6 +650,7 @@ const TABS: Record<string, { name: string, tag?: string, permission?: string, en
   }
 }
 
+let metricAnnotations = ref<Annotation>({ xaxis: [], yaxis: []})
 let latestMetric = ref<ComputeStats|null>(null)
 let metrics = ref<ComputeStats[]>([])
 let stats = ref<ComputeStats>()
@@ -841,6 +842,7 @@ async function fetchServerStatus() {
     if(response.ok) {
       latestMetric.value = json.metricLatest
       metrics.value = json.metricHistory
+      metricAnnotations.value = json.metricAnnotations
       online.value = json.online
       status.value = json.status
       uptime.value = json.uptime

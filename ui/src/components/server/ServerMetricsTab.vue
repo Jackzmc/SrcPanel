@@ -30,7 +30,7 @@ import Field from '@/components/Field.vue'
 import { formatDate, formatSize, request } from '@/js/util';
 import { notify } from '@kyvg/vue3-notification';
 import { ComputeStats, ServerInfo } from '../../../../common-types/Server';
-import { LiveRecordCommandResponse } from '../../../../common-types/Live';
+import { Annotation, LiveRecordCommandResponse } from '../../../../common-types/Live';
 import ApexCharts from "vue3-apexcharts";
 
 // import 'chartjs-adapter-date-fns';
@@ -61,7 +61,8 @@ const memMax = computed(() => {
 
 const props = defineProps<{
   server: ServerInfo,
-  metrics: ComputeStats[]
+  metrics: ComputeStats[],
+  annotations: Annotation
 }>()
 
 const cpuSeries = computed(() => {
@@ -113,6 +114,10 @@ const cpuOptions = computed(() => {
       min: 0,
       max: 100
     },
+    annotations: {
+      xaxis: props.annotations.xaxis,
+      yaxis: props.annotations.yaxis,
+    }
   }
 })
 
@@ -142,7 +147,8 @@ const memOptions = computed(() => {
       // stepSize: 500000
     },
     annotations: {
-      yaxis: [
+      xaxis: props.annotations.xaxis,
+      yaxis: [...props.annotations.yaxis,
         {
           y: memMax.value,
           borderColor: '#00E396',
@@ -208,6 +214,10 @@ const networkSeries = computed(() => {
           },
           min: 0,
         },
+        annotations: {
+          xaxis: props.annotations.xaxis,
+          yaxis: props.annotations.yaxis,
+        }
       }
     }
   })

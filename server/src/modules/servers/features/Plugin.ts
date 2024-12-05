@@ -1,4 +1,4 @@
-import { AnnotationX, AnnotationY, GameState, LiveDataCache, LiveRecord, LiveRecordCommandResponse, LiveRecordResponse, LiveRecordType, updateLiveCache } from "../../../../../common-types/Live.js";
+import { AnnotationX, AnnotationY, GameState, LiveDataCache, LiveRecord, LiveRecordCommandResponse, LiveRecordGame, LiveRecordResponse, LiveRecordType, updateLiveCache } from "../../../../../common-types/Live.js";
 import { ActionResponse, IAction } from "../IAction.js";
 import Server from "../Server.js";
 import PluginSocket from "../PluginSocket.js";
@@ -97,21 +97,48 @@ export default class PluginFeature extends Feature implements IAction {
         return this.#startTime
     }
 
+    #annotateGameState(record: LiveRecordGame) {
+        let text: string
+        let timestamp: number|undefined = undefined
+        switch(record.state) {
+            case GameState.None: {
+                if(this.#liveCache?.game?.state === GameState.Hibernating) {
+                    text = "Stopped hibernating"
+                } else {
+                    return
+                }
+            }
+            case GameState.NewGame: {
+                text = "New game started"
+                timestamp = record.campaignStartTime
+                break
+            } case GameState.Hibernating:
+                text = "Hibernating"
+                break
+            case GameState.EndGame:
+                text = "Game ended"
+                break
+            case GameState.Transitioning:
+                text = "Level transition"
+        }
+        if(!timestamp) timestamp = Math.round(Date.now()/1000)
+        console.log("recording annotation", record.state, record.campaignStartTime)
+        this._server.Metrics.addAnnotationX({
+            x: timestamp!,
+            label: {
+                text
+            }
+        })
+    }
+
     async pushRecord(record: LiveRecord | null) {
         // If record is null, it means shutdown is happening
         this.#emit(record)
         if(record) {
             this.#liveCache = updateLiveCache(this.#liveCache, record)
             if(record.type === LiveRecordType.Game) {
-                if(record.state === GameState.NewGame || record.state === GameState.EndGame) {
-                    console.log("recording annotation", record.state, record.campaignStartTime)
-                    this._server.Metrics.addAnnotationX({
-                        x: record.campaignStartTime,
-                        label: {
-                            text: record.state === GameState.EndGame ? `Game Ended` : "New Game Started"
-                        }
-                    })
-                }
+                this.#annotateGameState(record)
+                
                 if(record.state !== GameState.EndGame)
                     this.#startTime = record.startTime
                 

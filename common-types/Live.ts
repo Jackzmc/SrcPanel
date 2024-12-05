@@ -357,6 +357,10 @@ interface AnnotationBase {
 }
 export interface AnnotationX extends AnnotationBase { x: number }
 export interface AnnotationY extends AnnotationBase { y: number }
+export interface Annotation {
+    xaxis: AnnotationX[],
+    yaxis: AnnotationY[]
+}
 
 export function updateLiveCache(cache: LiveDataCache | null, record: LiveRecord): LiveDataCache {
     if(!cache) cache = {
