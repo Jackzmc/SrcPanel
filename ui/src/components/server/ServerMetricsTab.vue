@@ -127,12 +127,9 @@ const memOptions = computed(() => {
     xaxis: {
       type: 'datetime',
       labels: {
-        datetimeFormatter: {
-          year: 'yyyy',
-          month: 'MMM \'yy',
-          day: 'dd MMM',
-          hour: 'HH:mm'
-        }
+        formatter: function (value: number, timestamp: number) {
+          return new Date(timestamp).toLocaleTimeString()
+        },
       }
     },
     yaxis: {
@@ -198,12 +195,9 @@ const networkSeries = computed(() => {
         xaxis: {
           type: 'datetime',
           labels: {
-            datetimeFormatter: {
-              year: 'yyyy',
-              month: 'MMM \'yy',
-              day: 'dd MMM',
-              hour: 'HH:mm'
-            }
+            formatter: function (value: number, timestamp: number) {
+              return new Date(timestamp).toLocaleTimeString()
+            },
           }
         },
         yaxis: {
