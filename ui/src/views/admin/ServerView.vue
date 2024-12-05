@@ -1070,6 +1070,32 @@ function createLiveConnection() {
   }
 }
 
+let wsErrorCount = 0
+
+function connectWS() {
+  console.debug("connectWS", `${window.location.protocol}://${window.location.host}/api/servers/${route.params.id}/ws`)
+  const ws = new WebSocket(`${window.location.protocol}//${window.location.host}/api/servers/${route.params.id}/ws`);
+  ws.onmessage = (event) => {
+    const payload = JSON.parse(event.data)
+    console.debug("[WS] payload", payload)
+  }
+  ws.onopen = () => {
+    console.info("[WS] Connected", { ws })
+    wsErrorCount = 0
+  }
+  ws.onclose = () => {
+    wsErrorCount++
+    const retryTime = Math.min(1000 * (Math.pow(1.5, wsErrorCount ) + 3), MAX_BACKOFF)
+    console.debug("[WS] Closed, reconnecting in", retryTime/1000, "s", { errCount })
+    setTimeout(() => {
+      connectWS()
+    }, retryTime)
+  }
+  ws.onerror = (err) => {
+    console.error("[WS] Error:", err)
+  }
+}
+
 let refreshInterval: any = 0
 let nowInterval: any = 0
 async function init() {
@@ -1084,6 +1110,7 @@ async function init() {
     if(serverInfo.value?.type === "source")
       createLiveConnection()
   }
+  connectWS()
   refreshInterval = setInterval(fetchServerStatus, REFRESH_INTERVAL)
 }
 

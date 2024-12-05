@@ -7,6 +7,7 @@ import { ComputeStats, ServerStatusData, ServerStatusSource } from "../../../../
 import { AnnotationX, AnnotationY, GAME_DIFFICULTY_STRINGS, GameState } from "../../../../../common-types/Live.js";
 import DockerServer from "../DockerServer.js";
 import { ContainerStats } from "dockerode";
+import { Server_Metric, Server_MetricFull } from "../../../../../common-types/ServerWebsocket.js";
 
 const RECORD_STATISTICS_INTERVAL = 1000 * 60 * 1
 // The maximum number of statistics to hold
@@ -87,6 +88,10 @@ export default class MetricsFeature extends Feature {
           this.#latestComputeStats = computeStats
           // Only record every STATS_HISTORY_INTERVAL, as we don't want to store the last 100ms but the last 100 minutes
           if(Date.now() - this.#lastHistoryTime > STATS_HISTORY_INTERVAL) {
+            this._server.broadcastWS({
+              type: "metric",
+              metric: computeStats
+            } as Server_Metric)
             this.#lastHistoryTime = Date.now()
             // TODO: maybe avg?
             this.#computeStatsHistory.push(computeStats)
@@ -177,9 +182,15 @@ export default class MetricsFeature extends Feature {
     addAnnotationX(annotation: AnnotationX) {
         this.#annotationsX.push(annotation)
         this.#cleanupOldAnnotations()
+        this._server.broadcastWS({
+          type: "metric_full",
+          history: this.#computeStatsHistory,
+          annotations: this.Annotations
+        } as Server_MetricFull)
     }
     addAnnotationY(annotation: AnnotationY) {
         this.#annotationsY.push(annotation)
+        
     }
 
     #cleanupOldAnnotations() {

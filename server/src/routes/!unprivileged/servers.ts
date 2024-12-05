@@ -1,6 +1,7 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
 import { SERVER_TYPE_MAP } from '../../../../common-types/Server.js';
 import Server from '../../modules/servers/Server.js';
+import SocketClientUser from '../../modules/servers/SocketClientUser.js';
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
 
@@ -34,5 +35,24 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
         fastify.servers.resetInactivity()
     })
-    
+
+    fastify.get('/:id/ws', { websocket: true }, (socket, req: FastifyRequest<{Params: {id: string}}>) => {
+        if(!req.user) return socket.close(-1, "NOT_AUTHENTICATED");
+        const server = fastify.servers.getServer(req.params.id);
+        if(!server) return socket.close(-2, "SERVER_NOT_FOUND");
+        const client = new SocketClientUser(socket, req.user!, req)
+
+        server.addWSClient(client)
+
+        socket.on("close", (code, reason) => {
+            console.debug({ code, reason})
+            server.removeWSClient(client)
+        })
+
+        socket.on('message', message => {
+            console.log("msg", message)
+            // message.toString() === 'hi from client'
+            socket.send("{\"error\": \"UNSUPPORTED\"")
+        })
+    })
 }

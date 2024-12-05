@@ -362,6 +362,13 @@
   resolved "https://registry.yarnpkg.com/@types/tail/-/tail-2.2.3.tgz#e7701ae040d0aacf2d78d7cbb71e016f304bc446"
   integrity sha512-Hnf352egOlDR4nVTaGX0t/kmTNXHMdovF2C7PVDFtHTHJPFmIspOI1b86vEOxU7SfCq/dADS7ptbqgG/WGGxnA==
 
+"@types/ws@^8.5.13":
+  version "8.5.13"
+  resolved "https://registry.yarnpkg.com/@types/ws/-/ws-8.5.13.tgz#6414c280875e2691d0d1e080b05addbf5cb91e20"
+  integrity sha512-osM/gWBTPKgHV8XkTunnegTRIsvF6owmf5w+JtAfOw472dptdm0dlGv4xCt6GwQRcC2XVOvvRE/0bAoQcL2QkA==
+  dependencies:
+    "@types/node" "*"
+
 abbrev@1:
   version "1.1.1"
   resolved "https://registry.yarnpkg.com/abbrev/-/abbrev-1.1.1.tgz#f8f2c887ad10bf67f634f005b6987fed3179aac8"

@@ -9,6 +9,7 @@ import { LiveRecord, LiveRecordType } from '../../../../common-types/Live.js';
 import { UserPrivilegeCode } from '../../../../common-types/Privileges.js';
 import DNS from 'dns/promises'
 import assert from 'assert';
+import { WebSocket } from '@fastify/websocket';
 
 const COMMENT_LINE_REGEX = new RegExp(/^\s*(\/\/|#)/)
 const HIDDEN_COMMANDS = [
@@ -79,6 +80,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
         return server.info
     })
+
 
     fastify.get('/:id/data', async(req: FastifyRequest<{Params: { id: 'string' }}>, reply): Promise<ServerDetailed> => {
         const server = fastify.servers.getServer(req.params.id)

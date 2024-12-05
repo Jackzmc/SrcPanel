@@ -1,3 +1,4 @@
+import { Server_LogEntry } from "../../../../../../common-types/ServerWebsocket.js"
 import Server from "../../Server.js"
 import Feature from "../Feature.js"
 
@@ -53,5 +54,10 @@ export default abstract class Logs extends Feature {
         for(const subCb of this.#subscribers) {
             subCb(line)
         }
+        this._server.broadcastWS({
+            type: "log",
+            content: line,
+            timestamp: Math.round(Date.now()/1000)
+        } as Server_LogEntry)
     }
 }

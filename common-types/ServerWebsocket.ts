@@ -1,4 +1,4 @@
-import { Annotation, LiveRecord } from './Live.ts';
+import { Annotation, LiveRecord } from './Live.js';
 import { ComputeStats, ServerStatus } from './Server';
 
 ////////////////////////
@@ -35,5 +35,15 @@ export interface Server_Status {
     online: boolean,
     status: ServerStatus
 }
+export interface Server_LogEntry {
+    type: "log",
+    timestamp: number,
+    content: string
+}
+export interface Server_Error {
+    type: "error",
+    error?: string,
+    code?: string
+}
 
-export type ServerOutPayload = Server_Metric | Server_MetricFull | Server_Live | Server_Status
+export type ServerOutPayload = Server_Metric | Server_MetricFull | Server_Live | Server_Status | Server_LogEntry | Server_Error

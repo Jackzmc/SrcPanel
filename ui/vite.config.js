@@ -28,7 +28,8 @@ export default ({ mode }) => {
       proxy: {
         '^/api': {
           target: process.env.VITE_REALM,
-          changeOrigin: true
+          changeOrigin: true,
+          ws: true
         }
       }
     },
