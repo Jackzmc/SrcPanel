@@ -1,108 +1,165 @@
 <template>
-  <div class="box">
-    <Line :data="cpuDataFormat" :options="cpuOptions" />
-    <div class="box" v-for="metric in metrics" :key="metric.collectionTime">
-      {{formatDate(metric.collectionTime)}}<br>
-      {{metric.cpu_stats?.cpu_usage}}% cpu<br>
-      {{metric.memory_stats?.usage_percent}}% mem
+<div>
+  <div v-if="metrics.length > 0">
+    <div class="box">
+      <!-- <Line :data="cpuDataFormat" :options="cpuOptions" />`` -->
+      <ApexCharts type="line" :series="cpuSeries" :options="cpuOptions" height="300px" />
+    </div>
+    <div class="box">
+      <ApexCharts type="line" :series="memSeries" :options="memOptions" height="300px" />
     </div>
   </div>
+  <div class="box has-background-info-light" v-else>
+    <h4 class="title is-4 has-text-centered my-4">
+      <Icon icon="fa-spinner" spin>Waiting for metrics</Icon>
+    </h4>
+    <p class="subtitle is-5 has-text-centered my-4">
+      There are no metrics yet, this will update when metrics are available.
+    </p>
+  </div>
+</div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onBeforeMount, onUnmounted, nextTick, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import Field from '@/components/Field.vue'
-import { formatDate, request } from '@/js/util';
+import { formatDate, formatSize, request } from '@/js/util';
 import { notify } from '@kyvg/vue3-notification';
 import { ComputeStats, ServerInfo } from '../../../../common-types/Server';
 import { LiveRecordCommandResponse } from '../../../../common-types/Live';
+import ApexCharts from "vue3-apexcharts";
 
-import {
-  Chart as ChartJS,
-  Title,
-  Tooltip,
-  Legend,
-  LineElement,
-  CategoryScale,
-  PointElement,
-  LinearScale,
-} from 'chart.js'
-import { Line } from 'vue-chartjs'
+// import 'chartjs-adapter-date-fns';
+// import { enUS } from 'date-fns/locale';
+// import {
+//   Chart as ChartJS,
+//   Title,
+//   Tooltip,
+//   Legend,
+//   LineElement,
+//   CategoryScale,
+//   PointElement,
+//   LinearScale,
+//   TimeScale
+// } from 'chart.js'
+// import { Line } from 'vue-chartjs'
 
-ChartJS.register(CategoryScale, LinearScale, LineElement, Title, Tooltip, Legend, PointElement)
+// ChartJS.register(CategoryScale, LinearScale, LineElement, Title, Tooltip, Legend, PointElement, TimeScale)
 
 const route = useRoute()
 const router = useRouter()
+
+const memMax = computed(() => {
+  console.log("triggered")
+  if(props.metrics.length === 0) return 0
+  return props.metrics[0].memory_stats?.limit ?? 0
+})
 
 const props = defineProps<{
   server: ServerInfo,
   metrics: ComputeStats[]
 }>()
 
-const cpuDataFormat = computed(() => {
-  return {
-    labels: ['CPU %'],
-    datasets: [{
-        label: 'CPU %',
-        data: cpuData.value,
-        backgroundColor: 'transparent',
-        borderColor: 'red',
-        borderWidth: 2
-    }]
-  }
-  
-})
-const cpuData = computed(() => {
-  return props.metrics.map(met => {
-    return {
-      x: new Date(met.collectionTime*1000),
-      y: Math.random() * 100
+const cpuSeries = computed(() => {
+  return [
+    {
+      name: "CPU Usage (%)",
+      data: props.metrics
+        .filter(met => met.cpu_stats)
+        .map(met => [
+          met.collectionTime*1000,
+          met.cpu_stats!.cpu_usage / met.cpu_stats!.online_cpus
+        ])
     }
-  })
+  ]
+})
+const memSeries = computed(() => {
+  return [
+    {
+      name: "Memory Usage",
+      data: props.metrics
+        .filter(met => met.memory_stats != undefined)
+        .map(met => [
+          met.collectionTime*1000,
+          met.memory_stats!.usage
+        ])
+    }
+  ]
 })
 
 const cpuOptions = computed(() => {
   return {
     title: {
-      text: 'CPU Usage %',
-      subtext: 'Fake Data',
-      left: 'center'
+      text: "CPU Usage (%)"
     },
-    tooltip: {
-      trigger: 'item'
-    },
-    legend: {
-      orient: 'vertical',
-      left: 'left'
-    },
-    data: [
-      { value: 1048, name: 'Search Engine' },
-      { value: 735, name: 'Direct' },
-      { value: 580, name: 'Email' },
-      { value: 484, name: 'Union Ads' },
-      { value: 300, name: 'Video Ads' }
-    ],
-    series: [
-      {
-        name: 'CPU Usage %',
-        type: 'line',
-        data: [
-          { value: 1048, name: 'Search Engine' },
-          { value: 735, name: 'Direct' },
-          { value: 580, name: 'Email' },
-          { value: 484, name: 'Union Ads' },
-          { value: 300, name: 'Video Ads' }
-        ],
-        emphasis: {
-          itemStyle: {
-            shadowBlur: 10,
-            shadowOffsetX: 0,
-            shadowColor: 'rgba(0, 0, 0, 0.5)'
-          }
+    xaxis: {
+      type: 'datetime',
+      labels: {
+        datetimeFormatter: {
+          year: 'yyyy',
+          month: 'MMM \'yy',
+          day: 'dd MMM',
+          hour: 'HH:mm'
         }
       }
-    ]
+    },
+    yaxis: {
+      labels: {
+        formatter: function (value: number) {
+          return value.toFixed(1) + "%"
+        }
+      },
+      min: 0,
+      max: 100
+    },
+  }
+})
+
+const memOptions = computed(() => {
+  return {
+    title: {
+      text: "Memory Usage"
+    },
+    stroke: {
+      curve: 'stepline',
+    },
+    xaxis: {
+      type: 'datetime',
+      labels: {
+        datetimeFormatter: {
+          year: 'yyyy',
+          month: 'MMM \'yy',
+          day: 'dd MMM',
+          hour: 'HH:mm'
+        }
+      }
+    },
+    yaxis: {
+      labels: {
+        formatter: function (value: number) {
+          return formatSize(value, true)
+        }
+      },
+      min: 0,
+      // stepSize: 500000
+    },
+    annotations: {
+      yaxis: [
+        {
+          y: memMax.value,
+          borderColor: '#00E396',
+          label: {
+            borderColor: '#00E396',
+            style: {
+              color: '#fff',
+              background: '#00E396'
+            },
+            text: `Memory Limit`
+          }
+        },
+      ]
+    }
   }
 })
 
