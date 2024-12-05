@@ -85,7 +85,7 @@
                   <td v-if="uptime">{{ uptimeDuration }}</td>
                   <td v-else><em data-tooltip="Unknown">-</em></td>
                 </tr>
-                <tr v-if="!online">
+                <tr v-if="online">
                   <th>Players ({{status.data?.players.length ?? '-'}} / {{status.data?.maxplayers ?? '-'}})</th>
                   <td >
                     <ul v-if="status.data && status.data.players.length > 0">
@@ -792,10 +792,10 @@ async function fetchServerStatus() {
     if(id != route.params.id || isRefreshing) return // Ignore changes in id or if refreshing
     isRefreshing = true
     const response = await fetch(`/api/servers/${route.params.id}/status`)
-    lastRefreshTime.value = Date.now()
     const json = await response.json()
+    lastRefreshTime.value = Date.now()
     isRefreshing = false
-    if(response.ok && json) {
+    if(response.ok) {
       metrics.value = json.stats
       online.value = json.online
       status.value = json.status
