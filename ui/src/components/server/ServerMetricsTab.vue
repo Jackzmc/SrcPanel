@@ -8,6 +8,9 @@
     <div class="box">
       <ApexCharts type="line" :series="memSeries" :options="memOptions" height="300px" />
     </div>
+    <div class="box" v-for="(netSeries, i) in networkSeries" :key="i" >
+      <ApexCharts type="line" :series="netSeries.series" :options="netSeries.options" height="300px" />
+    </div>
   </div>
   <div class="box has-background-info-light" v-else>
     <h4 class="title is-4 has-text-centered my-4">
@@ -96,12 +99,9 @@ const cpuOptions = computed(() => {
     xaxis: {
       type: 'datetime',
       labels: {
-        datetimeFormatter: {
-          year: 'yyyy',
-          month: 'MMM \'yy',
-          day: 'dd MMM',
-          hour: 'HH:mm'
-        }
+        formatter: function (value: number, timestamp: number) {
+          return new Date(timestamp).toLocaleTimeString()
+        },
       }
     },
     yaxis: {
@@ -163,4 +163,59 @@ const memOptions = computed(() => {
   }
 })
 
+const networkInterfacesIds = computed(() => {
+  if(props.metrics.length === 0) return []
+  return Object.keys(props.metrics[0].network_stats)
+})
+
+const networkSeries = computed(() => {
+  return networkInterfacesIds.value.map(intf => {
+    return {
+      series: [
+        {
+          name: `Bytes Received`,
+          data: props.metrics
+            // .filter(met => met.network_stats != undefined)
+            .map(met => [
+              met.collectionTime*1000,
+              met.network_stats[intf].bytesRx
+            ])
+        },
+        {
+          name: `Bytes Sent`,
+          data: props.metrics
+            // .filter(met => met.network_stats != undefined)
+            .map(met => [
+              met.collectionTime*1000,
+              met.network_stats[intf].bytesTx
+            ])
+        },
+      ],
+      options: {
+        title: {
+          text: `Network Usage (Bytes I/O) [${intf}]`
+        },
+        xaxis: {
+          type: 'datetime',
+          labels: {
+            datetimeFormatter: {
+              year: 'yyyy',
+              month: 'MMM \'yy',
+              day: 'dd MMM',
+              hour: 'HH:mm'
+            }
+          }
+        },
+        yaxis: {
+          labels: {
+            formatter: function (value: number) {
+              return formatSize(value, true)
+            }
+          },
+          min: 0,
+        },
+      }
+    }
+  })
+})
 </script>
