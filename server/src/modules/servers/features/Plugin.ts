@@ -1,4 +1,4 @@
-import { LiveDataCache, LiveRecord, LiveRecordCommandResponse, LiveRecordResponse, LiveRecordType, updateLiveCache } from "../../../../../common-types/Live.js";
+import { AnnotationX, AnnotationY, GameState, LiveDataCache, LiveRecord, LiveRecordCommandResponse, LiveRecordResponse, LiveRecordType, updateLiveCache } from "../../../../../common-types/Live.js";
 import { ActionResponse, IAction } from "../IAction.js";
 import Server from "../Server.js";
 import PluginSocket from "../PluginSocket.js";
@@ -9,12 +9,15 @@ import jwtPromise from "../../../jwt-promise.js";
 const LIVE_CACHE_TTL = 1000 * 60 * 3 // Live cache data expires after 3 minutes
 export type SubscribeCallback = (record: LiveRecord|null) => void
 
+
+
 export default class PluginFeature extends Feature implements IAction {
     #liveCache: LiveDataCache | null = null
     #socket: PluginSocket | null = null
     #subscribers: SubscribeCallback[] = []
     #startTime: number
     #status: ServerStatusData
+
     constructor(server: Server) {
         super("LivePlugin", server)
         this.#status = {
@@ -100,7 +103,14 @@ export default class PluginFeature extends Feature implements IAction {
         if(record) {
             this.#liveCache = updateLiveCache(this.#liveCache, record)
             if(record.type === LiveRecordType.Game) {
-                this.#startTime = record.startTime
+                this._server.Metrics.addAnnotationX({
+                    x: record.campaignStartTime,
+                    label: {
+                        text: record.state === GameState.EndGame ? `Game Ended` : "New Game Started"
+                    }
+                })
+                if(record.state !== GameState.EndGame)
+                    this.#startTime = record.startTime
             }
             if(!this.#status) this.#status = { players: [], maxplayers: 0, map: "", gamemode: "" }
             if(this.#liveCache.game) {

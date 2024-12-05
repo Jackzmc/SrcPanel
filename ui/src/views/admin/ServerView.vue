@@ -474,15 +474,15 @@
               <div class="level-item has-text-centered">
                 <div>
                   <p class="heading">CPU Usage</p>
-                  <p class="title" v-if="latestMetric.cpu_stats?.cpu_usage != undefined">{{ Math.round(latestMetric.cpu_stats!.cpu_usage) }}%</p>
+                  <p class="title" v-if="latestMetric.cpu_stats?.cpu_usage != undefined">{{ Math.round(latestMetric.cpu_stats!.cpu_usage / latestMetric.cpu_stats!.online_cpus) }}%</p>
                   <p class="title" v-else>-%</p>
                 </div>
               </div>
               <div class="level-item has-text-centered">
                 <div>
                   <p class="heading">Memory Usage</p>
-                  <p class="title" v-if="latestMetric.memory_stats?.usage_percent != undefined">{{ Math.round(latestMetric.memory_stats?.usage_percent) }}%</p>
-                  <p class="title" v-else>-%</p>
+                  <p class="title" v-if="latestMetric.memory_stats?.usage_percent != undefined">{{ formatSize(latestMetric.memory_stats?.usage) }}</p>
+                  <p class="title" v-else>-</p>
 
                 </div>
               </div>

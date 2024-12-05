@@ -4,7 +4,7 @@ import Server from "../Server.js";
 import Influx, { InfluxDB, Point, WriteApi } from '@influxdata/influxdb-client'
 import { getWriter } from "../../../modules/Influx.js";
 import { ComputeStats, ServerStatusData, ServerStatusSource } from "../../../../../common-types/Server.js";
-import { GAME_DIFFICULTY_STRINGS, GameState } from "../../../../../common-types/Live.js";
+import { AnnotationX, AnnotationY, GAME_DIFFICULTY_STRINGS, GameState } from "../../../../../common-types/Live.js";
 import DockerServer from "../DockerServer.js";
 import { ContainerStats } from "dockerode";
 
@@ -27,6 +27,9 @@ export default class MetricsFeature extends Feature {
 
     #computeStatsHistory: ComputeStats[] = []
     #lastHistoryTime: number = 0
+
+    #annotationsX: AnnotationX[] = []
+    #annotationsY: AnnotationY[] = []
 
     constructor(server: Server) {
         super("Metrics", server)
@@ -108,6 +111,18 @@ export default class MetricsFeature extends Feature {
       return STATS_HISTORY_INTERVAL
     }
 
+    get Annotations() {
+      return {
+          xaxis: this.#annotationsX,
+          yaxis: this.#annotationsY,
+      }
+    }
+
+    /** Return this earliest timestamp of compute stats history */
+    get EarliestXTime() {
+      return this.#computeStatsHistory[0]?.collectionTime ?? 0
+    }
+
     recordStatus(data: ServerStatusData | null, source: ServerStatusSource) {
       if(!this.hasInflux) return
       const statusPoint = this.#createPoint("status")
@@ -157,5 +172,21 @@ export default class MetricsFeature extends Feature {
       point.tag("server_port", this._server.port.toString())
       point.tag("server_type", this._server.type)
       return point
+    }
+
+
+    addAnnotationX(annotation: AnnotationX) {
+        this.#annotationsX.push(annotation)
+        this.#cleanupOldAnnotations()
+    }
+    addAnnotationY(annotation: AnnotationY) {
+        this.#annotationsY.push(annotation)
+    }
+
+    #cleanupOldAnnotations() {
+      const earliestX = this._server.Metrics.EarliestXTime
+      this.#annotationsX = this.#annotationsX.filter(a => {
+          return a.x >= earliestX
+      })
     }
 }

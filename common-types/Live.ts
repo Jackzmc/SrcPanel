@@ -310,7 +310,8 @@ export enum GameState {
     None = 0,
     Transitioning = 1,
     Hibernating = 2,
-    NewGame
+    NewGame = 3,
+    EndGame = 4
 }
 
 export enum ClientState {
@@ -343,6 +344,19 @@ export interface LiveClient extends LiveRecordClient {
     totalHealth: number
 } 
 
+interface AnnotationBase {
+    borderColor?: string,
+    label: {
+        borderColor?: string,
+        style?: {
+            color?: string,
+            background?: string
+        }
+        text: string
+    }
+}
+export interface AnnotationX extends AnnotationBase { x: number }
+export interface AnnotationY extends AnnotationBase { y: number }
 
 export function updateLiveCache(cache: LiveDataCache | null, record: LiveRecord): LiveDataCache {
     if(!cache) cache = {
