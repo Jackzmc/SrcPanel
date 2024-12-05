@@ -439,29 +439,71 @@
           <p class="subtitle has-text-centered is-6 ">Not available for this server</p>
         </div>
       </div>
-      <div v-else-if="tab === 'console'" class="box">
-        <h5 class="title is-5">Console Help Information</h5>
-        <p>
-          Commands that you would use in chat such as <code>/slay</code> (or publicly <code>!slay</code>) use the <code>sm_</code> prefix in the console.
-          An example command <code>/slay jockey</code> would be <code>sm_slay jockey</code>.
-        </p>
-        <br>
-        <p>
-          Unknown commands will be shown as <span class="has-text-danger">red</span>, where known commands will show as white. Some commands may not be marked as known, but you can still attempt to enter them.
-        </p>
-        <br>
-        <p>
-          Some commands were not decided to run from console and can't be used, this includes any command that shows a menu (/fta, /notesdisconnected, etc).
-        </p>
-      </div>
-        <article class="message is-warning" v-if="tab === 'console'">
-        <div class="message-header">
-          <p>Notice</p>
+      <template v-else-if="tab === 'console'" >
+        <div class="box">
+          <h5 class="title is-5">Console Help Information</h5>
+          <p>
+            Commands that you would use in chat such as <code>/slay</code> (or publicly <code>!slay</code>) use the <code>sm_</code> prefix in the console.
+            An example command <code>/slay jockey</code> would be <code>sm_slay jockey</code>.
+          </p>
+          <br>
+          <p>
+            Unknown commands will be shown as <span class="has-text-danger">red</span>, where known commands will show as white. Some commands may not be marked as known, but you can still attempt to enter them.
+          </p>
+          <br>
+          <p>
+            Some commands were not decided to run from console and can't be used, this includes any command that shows a menu (/fta, /notesdisconnected, etc).
+          </p>
         </div>
-        <div class="message-body">
-          Please note that the console access gives you full access to the server and as such every command you run will be logged. Every command you use will be ran as "Console", not identified to you in-game in any way. Console access is a privilege, don't abuse it.
+        <article class="message is-warning">
+          <div class="message-header">
+            <p>Notice</p>
+          </div>
+          <div class="message-body">
+            Please note that the console access gives you full access to the server and as such every command you run will be
+            logged. Every command you use will be ran as "Console", not identified to you in-game in any way. Console access is
+            a privilege, don't abuse it.
+          </div>
+        </article>
+      </template>
+      <template v-else-if="tab === 'metrics'">
+        <div class="box">
+          <h5 class="title is-4">Current Metrics</h5>
+          <template v-if="latestMetric">
+            <nav class="level" >
+              <div class="level-item has-text-centered">
+                <div>
+                  <p class="heading">CPU Usage</p>
+                  <p class="title" v-if="latestMetric.cpu_stats?.cpu_usage != undefined">{{ Math.round(latestMetric.cpu_stats!.cpu_usage) }}%</p>
+                  <p class="title" v-else>-%</p>
+                </div>
+              </div>
+              <div class="level-item has-text-centered">
+                <div>
+                  <p class="heading">Memory Usage</p>
+                  <p class="title" v-if="latestMetric.memory_stats?.usage_percent != undefined">{{ Math.round(latestMetric.memory_stats?.usage_percent) }}%</p>
+                  <p class="title" v-else>-%</p>
+
+                </div>
+              </div>
+            </nav>
+            <nav class="level" v-for="(net, intf) in latestMetric.network_stats" :key="intf">
+              <div class="level-item has-text-centered" >
+                <div>
+                  <p class="heading"><Icon icon="arrow-down" /> Bytes In [{{ intf }}]</p>
+                  <p class="title">{{ formatSize(net.bytesRx) }}</p>
+                </div>
+              </div>
+              <div class="level-item has-text-centered">
+                <div>
+                  <p class="heading"><Icon icon="arrow-up" /> Bytes Out [{{ intf }}]</p>
+                  <p class="title">{{ formatSize(net.bytesTx) }}</p>
+                </div>
+              </div>
+            </nav>
+          </template>
         </div>
-      </article>
+      </template>
     </div>
     <div class="column" v-else-if="!error">
       <div class="field">
@@ -493,7 +535,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { ref, computed, onUnmounted, onBeforeUnmount, onMounted } from 'vue';
 import FolderBrower from'@/components/FolderBrowser.vue'
 import { PlayerData, PrivilegedUser } from '@/js/User';
-import { parseLog, getRelDate, request } from '@/js/util';
+import { parseLog, getRelDate, request, formatSize } from '@/js/util';
 import LogMessage from "@/components/LogMessage.vue";
 import { useNotification } from "@kyvg/vue3-notification";
 import Field from '@/components/Field.vue';
@@ -608,6 +650,7 @@ const TABS: Record<string, { name: string, tag?: string, permission?: string, en
   }
 }
 
+let latestMetric = ref<ComputeStats|null>(null)
 let metrics = ref<ComputeStats[]>([])
 let stats = ref<ComputeStats>()
 let lastRefreshTime = ref()
@@ -796,7 +839,8 @@ async function fetchServerStatus() {
     lastRefreshTime.value = Date.now()
     isRefreshing = false
     if(response.ok) {
-      metrics.value = json.stats
+      latestMetric.value = json.metricLatest
+      metrics.value = json.metricHistory
       online.value = json.online
       status.value = json.status
       uptime.value = json.uptime
