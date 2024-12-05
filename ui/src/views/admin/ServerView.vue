@@ -61,54 +61,56 @@
               <span v-else>{{ nextRefreshCountdown }}s</span>
             </span>
             <table class="table is-fullwidth is-size-4">
-              <tr v-if="serverInfo.type === 'source'">
-                <th>Map</th>
-                <td v-if="mapInfo">
-                  <h4 class="title is-4">{{mapInfo.name}}
-                    <span class="is-inline is-pulled-right has-text-weight-normal is-size-6">{{ status.data!.map }}</span>
-                  </h4>
-                  <p>Chapter {{ mapInfo.chapterId }} - {{ mapInfo.chapterName }}</p>
-                </td>
-                <td v-else-if="status.data?.map">{{ status.data.map }}</td>
-                <td v-else><em data-tooltip="Unknown">-</em></td>
-              </tr>
-              <tr v-if="serverInfo.type === 'source'">
-                <th>Gamemode</th>
-                <td v-if="status.data?.gamemode" :data-tooltip="status.data.gamemode">
-                  {{ formatGamemode(status.data.gamemode) }}
-                </td>
-                <td v-else><em data-tooltip="Unknown">-</em></td>
-              </tr>
-              <tr>
-                <th>Uptime</th>
-                <td v-if="uptime">{{ uptimeDuration }}</td>
-                <td v-else><em data-tooltip="Unknown">-</em></td>
-              </tr>
-              <tr v-if="!online">
-                <th>Players ({{status.data?.players.length ?? '-'}} / {{status.data?.maxplayers ?? '-'}})</th>
-                <td >
-                  <ul v-if="status.data && status.data.players.length > 0">
-                    <li v-for="player in status.data.players" :key="player">
-                      {{ player }}
-                    </li>
-                  </ul>
-                  <em v-else>no players online</em>
-                </td>
-              </tr>
-              <tr>
-                <th>Type</th>
-                <td>{{ serverInfo.type }}</td>
-              </tr>
-              <tr>
-                <th style="border-style: none">Features</th>
-                <td style="border-style: none">
-                  <div class="tags">
-                    <template v-for="(enabled,feat) in serverInfo.features" :key="feat">
-                      <span class="tag" v-if="enabled">{{ feat }}</span>
-                    </template>
-                  </div>
-                </td>
-              </tr>
+              <tbody>
+                <tr v-if="serverInfo.type === 'source'">
+                  <th>Map</th>
+                  <td v-if="mapInfo">
+                    <h4 class="title is-4">{{mapInfo.name}}
+                      <span class="is-inline is-pulled-right has-text-weight-normal is-size-6">{{ status.data!.map }}</span>
+                    </h4>
+                    <p>Chapter {{ mapInfo.chapterId }} - {{ mapInfo.chapterName }}</p>
+                  </td>
+                  <td v-else-if="status.data?.map">{{ status.data.map }}</td>
+                  <td v-else><em data-tooltip="Unknown">-</em></td>
+                </tr>
+                <tr v-if="serverInfo.type === 'source'">
+                  <th>Gamemode</th>
+                  <td v-if="status.data?.gamemode" :data-tooltip="status.data.gamemode">
+                    {{ formatGamemode(status.data.gamemode) }}
+                  </td>
+                  <td v-else><em data-tooltip="Unknown">-</em></td>
+                </tr>
+                <tr>
+                  <th>Uptime</th>
+                  <td v-if="uptime">{{ uptimeDuration }}</td>
+                  <td v-else><em data-tooltip="Unknown">-</em></td>
+                </tr>
+                <tr v-if="!online">
+                  <th>Players ({{status.data?.players.length ?? '-'}} / {{status.data?.maxplayers ?? '-'}})</th>
+                  <td >
+                    <ul v-if="status.data && status.data.players.length > 0">
+                      <li v-for="player in status.data.players" :key="player">
+                        {{ player }}
+                      </li>
+                    </ul>
+                    <em v-else>no players online</em>
+                  </td>
+                </tr>
+                <tr>
+                  <th>Type</th>
+                  <td>{{ serverInfo.type }}</td>
+                </tr>
+                <tr>
+                  <th style="border-style: none">Features</th>
+                  <td style="border-style: none">
+                    <div class="tags">
+                      <template v-for="(enabled,feat) in serverInfo.features" :key="feat">
+                        <span class="tag" v-if="enabled">{{ feat }}</span>
+                      </template>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
             </table>
             <br>
           </template>
