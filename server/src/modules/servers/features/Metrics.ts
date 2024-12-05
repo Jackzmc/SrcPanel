@@ -87,7 +87,6 @@ export default class MetricsFeature extends Feature {
           this.#latestComputeStats = computeStats
           // Only record every STATS_HISTORY_INTERVAL, as we don't want to store the last 100ms but the last 100 minutes
           if(Date.now() - this.#lastHistoryTime > STATS_HISTORY_INTERVAL) {
-            console.log(new Date(), Date.now() - this.#lastHistoryTime)
             this.#lastHistoryTime = Date.now()
             // TODO: maybe avg?
             this.#computeStatsHistory.push(computeStats)
