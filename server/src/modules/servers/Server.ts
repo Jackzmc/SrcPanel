@@ -1,4 +1,4 @@
-import { ServerAction, ServerAvailableFeatures, ServerData, ServerInfo, ServerStatus, ServerStatusData, ServerStatusSource, ServerType } from "../../../../common-types/Server.js";
+import { SERVER_TYPE_MAP, ServerAction, ServerAvailableFeatures, ServerData, ServerInfo, ServerStatus, ServerStatusData, ServerStatusSource, ServerType } from "../../../../common-types/Server.js";
 import ConfigsFeature from "./features/Configs.js";
 import ConsoleFeature from "./features/logs/Console.js";
 import MetricsFeature from "./features/Metrics.js";
@@ -142,6 +142,7 @@ export default abstract class Server implements IAction {
     get info(): ServerInfo {
       return {
         ...this._info,
+        type: SERVER_TYPE_MAP[this._info.type] ?? this._info.type,
         features: this.features,
         actions: this.actions,
         online: this._online,
