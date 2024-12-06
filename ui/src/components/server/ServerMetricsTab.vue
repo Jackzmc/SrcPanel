@@ -33,23 +33,6 @@ import { ComputeStats, ServerInfo } from '../../../../common-types/Server';
 import { Annotation, LiveRecordCommandResponse } from '../../../../common-types/Live';
 import ApexCharts from "vue3-apexcharts";
 
-// import 'chartjs-adapter-date-fns';
-// import { enUS } from 'date-fns/locale';
-// import {
-//   Chart as ChartJS,
-//   Title,
-//   Tooltip,
-//   Legend,
-//   LineElement,
-//   CategoryScale,
-//   PointElement,
-//   LinearScale,
-//   TimeScale
-// } from 'chart.js'
-// import { Line } from 'vue-chartjs'
-
-// ChartJS.register(CategoryScale, LinearScale, LineElement, Title, Tooltip, Legend, PointElement, TimeScale)
-
 const route = useRoute()
 const router = useRouter()
 
