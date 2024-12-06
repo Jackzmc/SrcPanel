@@ -11,7 +11,7 @@ import { Server_Metric, Server_MetricFull } from "../../../../../common-types/Se
 
 const RECORD_STATISTICS_INTERVAL = 1000 * 60 * 1
 // The maximum number of statistics to hold
-const MAX_STATS_HISTORY = 200
+const MAX_STATS_HISTORY = 400
 // Number of miliseconds between every history addition
 const STATS_HISTORY_INTERVAL = 1000 * 15
 
