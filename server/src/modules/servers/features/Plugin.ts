@@ -50,7 +50,14 @@ export default class PluginFeature extends Feature implements IAction {
     }
 
     _setSocket(socket: PluginSocket | null) {
-      this.#socket = socket
+        this._server.Metrics.addAnnotationX({
+            x: Date.now(),
+            label: {
+                text: socket != null ? "Plugin connected" : "Plugin disconnected",
+                orientation: "horizontal"
+            }
+        })
+        this.#socket = socket
     //   if(socket == null) {
     //     this._server.updateStatus(false, null, "live")
     //   }
