@@ -144,7 +144,7 @@ export default class ServerManager {
           server.Plugin?._setSocket(client)
           if(record.gameVersion)
             server.GameVersion = record.gameVersion
-          client.send(LiveRecordResponse.OK, server.Plugin?.liveViewers)
+          client.send(LiveRecordResponse.OK, server.WebsocketViewers)
           this.#debugLive("Authenticated", `host=${client.Host} server=${server.id}`)
         } else {
           client.send(LiveRecordResponse.Error, `Invalid or unknown id "${payload.sub}" (docker: ${payload.docker?'y':'n'})`)
@@ -235,7 +235,7 @@ export default class ServerManager {
       for(const server of Object.values(this.getAll())) {
         // This triggers an OK packet
         if(server.Plugin?.authenticated)
-          server.Plugin.Socket?.send(LiveRecordResponse.OK, server.Plugin.liveViewers)
+          server.Plugin.Socket?.send(LiveRecordResponse.OK, server.WebsocketViewers)
       }
     }, LIVE_SOCKET_KEEPALIVE_INTERVAL)
   }

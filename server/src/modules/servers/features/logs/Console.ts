@@ -10,7 +10,6 @@ export type LineCallback = (line: string) => void
 
 export default abstract class Logs extends Feature {
     protected _lines: { timestamp: number, content: string}[] = []
-    #subscribers: LineCallback[] = []
 
     constructor(server: Server) {
         super("Console", server)
@@ -21,27 +20,6 @@ export default abstract class Logs extends Feature {
     abstract get logs(): string[]
 
     abstract readExisting(): Promise<void>;
-
-    subscribe(cb: LineCallback) {
-        this.#subscribers.push(cb)
-    }
-
-    unsubscribe(cb: LineCallback) {
-        const index = this.#subscribers.findIndex(v => v === cb)
-        if(index > -1) {
-            this.#subscribers.splice(index, 1)
-        }
-        return index
-    }
-
-    /**
-     * Number of subscribers to log stream
-     *
-     * @readonly
-     * @memberof Console
-     */
-    get subscribers() { return this.#subscribers.length }
-
     
     /** Adds a line to the logs buffer, keeping only MAX_BUFFER_LINES recent entries
      * 
@@ -52,9 +30,6 @@ export default abstract class Logs extends Feature {
         this._lines.push(lineEntry)
         if(this._lines.length > MAX_BUFFER_LINES) {
             this._lines.splice(0, 1)
-        }
-        for(const subCb of this.#subscribers) {
-            subCb(line)
         }
         this._server.broadcastWS({
             type: "log",

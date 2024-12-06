@@ -28,7 +28,7 @@ export interface Server_MetricFull {
 }
 export interface Server_Live {
     type: "live",
-    record: LiveRecord
+    record: LiveRecord | null
 }
 export interface Server_Status {
     type: "status",

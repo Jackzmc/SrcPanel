@@ -248,7 +248,7 @@ export default class PluginSocket {
       let id = this.#id++
       switch(type) {
         case LiveRecordResponse.OK:
-          writer.writeByte(arg ?? this.#server?.Plugin?.liveViewers ?? 0)
+          writer.writeByte(arg ?? this.#server?.WebsocketViewers ?? 0)
           break
         case LiveRecordResponse.Error:
           writer.writeString(arg ?? "")

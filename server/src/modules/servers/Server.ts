@@ -182,6 +182,10 @@ export default abstract class Server implements IAction {
       return this._online;
     }
 
+    get WebsocketViewers() {
+      return this._wsClients.length
+    }
+
     /**
      * Returns the unix timestamp of the last time the status was updated, if any.
      * @readonly

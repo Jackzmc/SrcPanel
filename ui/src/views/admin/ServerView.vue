@@ -1001,7 +1001,7 @@ function onWSPayload(payload: ServerOutPacket) {
   lastPacketPing.value = Date.now() - payload.millis
   if(payload.type === "live") {
     liveStatus.value = updateLiveCache(liveStatus.value, payload.record as LiveRecord)
-    if(payload.record.type === LiveRecordType.Game) {
+    if(payload.record?.type === LiveRecordType.Game) {
       uptime.value = (Date.now()/1000) - payload.record.startTime
     }
     // If we have live connection, server is alive
