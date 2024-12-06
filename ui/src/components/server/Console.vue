@@ -4,6 +4,9 @@
     <div class="console-content" v-for="(line, i) of logs" :key="i">
       {{ line }}
     </div>
+    <span v-if="logs.length === 0">
+      <Icon icon="fa-spinner" spin><em>No log entries currently, this will update automatically.</em></Icon>
+    </span>
   </div>
   <Field :icon-left="commandInputSupported ? 'terminal' : 'warning'" :icon-class="commandInputSupported ? 'has-text-white' : 'has-text-info'">
     <template v-if="commandInputSupported">
