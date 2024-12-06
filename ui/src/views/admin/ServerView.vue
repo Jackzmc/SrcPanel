@@ -542,7 +542,7 @@ import UserComponent, { User } from '@/components/UserComponent.vue';
 import Console from '@/components/server/Console.vue'
 import { ServerData, ServerInfo, ServerDetailed, ServerAvailableFeatures, ComputeStats, ServerStatus } from '../../../../common-types/Server';
 import ServerMetricsTab from '@/components/server/ServerMetricsTab.vue';
-import { ClientOutPayload, ServerOutPacket, ServerOutPayload } from '../../../../../../../../../../home/jackz/Documents/Code/Projects/l4d2-admin-dash/common-types/ServerWebsocket';
+import { ClientOutPayload, ServerOutPacket, ServerOutPayload } from '../../../../common-types/ServerWebsocket';
 
 const MAX_LOGS_LINES = 350
 
