@@ -82,6 +82,9 @@ export default class PluginFeature extends Feature implements IAction {
                 text = "Game ended"
                 break
             case GameState.Transitioning:
+                // Only trigger once per transition
+                if(this.#liveCache?.game?.state === GameState.Transitioning) return
+                
                 text = "Level transition"
         }
         if(!timestamp) timestamp = Date.now()

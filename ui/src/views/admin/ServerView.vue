@@ -564,6 +564,7 @@ import ServerMetricsTab from '@/components/server/ServerMetricsTab.vue';
 import { ClientOutPayload, ServerOutPacket, ServerOutPayload } from '../../../../common-types/ServerWebsocket';
 
 const MAX_LOGS_LINES = 350
+const MAX_METRIC_HISTORY = 300
 
 const FinaleStageName: Record<FinaleStage, string> = {
     [FinaleStage.Gauntlet]: "Gauntlet",
@@ -1032,8 +1033,11 @@ function onWSPayload(payload: ServerOutPacket) {
     online.value = payload.online
     status.value = payload.status
   } else if(payload.type === "metric") {
-    metrics.value.push(payload.metric)
     latestMetric.value = payload.metric
+    metrics.value.push(payload.metric)
+    if(metrics.value.length > MAX_METRIC_HISTORY) {
+      metrics.value.splice(metrics.value.length, 1);
+    }
   } else if(payload.type === "metric_full") {
     metrics.value = payload.history
     metricAnnotations.value = payload.annotations
