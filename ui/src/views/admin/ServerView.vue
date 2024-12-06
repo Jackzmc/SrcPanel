@@ -999,7 +999,7 @@ function onWSPayload(payload: ServerOutPacket) {
     // If we have live connection, server is alive
     online.value = true
   } else if(payload.type === "log") {
-    serverConsole?.value.pushLine(payload.content)
+    serverConsole.value?.pushLine(payload.content)
   } else if(payload.type === "status") {
     online.value = payload.online
     status.value = payload.status
