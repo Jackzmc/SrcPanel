@@ -1063,7 +1063,10 @@ function connectWS() {
     console.info("[WS] Connected", { ws })
     wsErrorCount = 0
   }
-  ws.value.onclose = () => {
+  ws.value.onclose = (ev) => {
+    if(ev.code == 4000) {
+      throw new Error("Server returned fatal error: " + ev.reason)
+    }
     wsErrorCount++
     const retryTime = Math.min(1000 * (Math.pow(1.5, wsErrorCount ) + 3), MAX_BACKOFF)
     console.debug("[WS] Closed, reconnecting in", retryTime/1000, "s", { wsErrorCount })
