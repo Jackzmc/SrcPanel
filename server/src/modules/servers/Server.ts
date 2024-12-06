@@ -243,6 +243,14 @@ export default abstract class Server implements IAction {
     addWSClient(client: SocketClientUser) {
       console.log("added client", client.user.steamid2)
       this._wsClients.push(client)
+      // Send all data the client should know right away
+      this.broadcastWS({
+        type: "status",
+        status: this._status,
+        online: this.Online
+      } as Server_Status)
+      this.Metrics.broadcastWSFullMetrics()
+      this.Console?.sendHistory(client)
     }
     removeWSClient(client: SocketClientUser) {
       const indexOf = this._wsClients.indexOf(client)
@@ -255,7 +263,7 @@ export default abstract class Server implements IAction {
         millis: Date.now(),
       } as ServerOutPacket
       this._wsClients.forEach(client => {
-        client.send(packet)
+        client.sendPacket(packet)
       })
     }
 

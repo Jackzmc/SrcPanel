@@ -1,3 +1,4 @@
+import SocketClientUser from "../../../../modules/servers/SocketClientUser.js"
 import { Server_LogEntry } from "../../../../../../common-types/ServerWebsocket.js"
 import Server from "../../Server.js"
 import Feature from "../Feature.js"
@@ -8,7 +9,7 @@ const MAX_BUFFER_LINES = 100
 export type LineCallback = (line: string) => void
 
 export default abstract class Logs extends Feature {
-    protected _lines: string[] = []
+    protected _lines: { timestamp: number, content: string}[] = []
     #subscribers: LineCallback[] = []
 
     constructor(server: Server) {
@@ -47,7 +48,8 @@ export default abstract class Logs extends Feature {
      * @param line the line to add 
      */
     public pushLine(line: string) {
-        this._lines.push(line)
+        const lineEntry = { timestamp: Math.round(Date.now()/1000), content: line }
+        this._lines.push(lineEntry)
         if(this._lines.length > MAX_BUFFER_LINES) {
             this._lines.splice(0, 1)
         }
@@ -56,8 +58,16 @@ export default abstract class Logs extends Feature {
         }
         this._server.broadcastWS({
             type: "log",
-            content: line,
-            timestamp: Math.round(Date.now()/1000)
+            ...lineEntry
         } as Server_LogEntry)
+    }
+
+    sendHistory(client: SocketClientUser) {
+        for(const entry of this._lines) {
+            client.sendPayload({
+                type: "log",
+                ...entry
+            } as Server_LogEntry)
+        }
     }
 }

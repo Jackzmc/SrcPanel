@@ -182,11 +182,8 @@ export default class MetricsFeature extends Feature {
     addAnnotationX(annotation: AnnotationX) {
         this.#annotationsX.push(annotation)
         this.#cleanupOldAnnotations()
-        this._server.broadcastWS({
-          type: "metric_full",
-          history: this.#computeStatsHistory,
-          annotations: this.Annotations
-        } as Server_MetricFull)
+
+        this.broadcastWSFullMetrics()
     }
     addAnnotationY(annotation: AnnotationY) {
         this.#annotationsY.push(annotation)
@@ -198,5 +195,13 @@ export default class MetricsFeature extends Feature {
       this.#annotationsX = this.#annotationsX.filter(a => {
           return a.x >= earliestX
       })
+    }
+
+    broadcastWSFullMetrics() {
+      this._server.broadcastWS({
+        type: "metric_full",
+        history: this.#computeStatsHistory,
+        annotations: this.Annotations
+      } as Server_MetricFull)
     }
 }

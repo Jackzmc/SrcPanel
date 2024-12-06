@@ -30,7 +30,7 @@ export default class DockerLogs extends Logs {
     }
 
     public get logs() { 
-        return [...this._lines]
+        return [...this._lines.map(line => line.content)]
     }
 
         /** Reads all lines from start to end, keeping only last MAX_BUFFER_LINES */
