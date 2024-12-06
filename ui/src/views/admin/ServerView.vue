@@ -680,7 +680,7 @@ let serverIds = ref()
 let status = ref<Partial<ServerStatus>&{error?:string}>()
 let online = ref<boolean>()
 let liveStatus = ref<LiveDataCache|null>(null)
-let uptime = ref<number>()
+let uptime = ref<number|null>(null)
 let activities = ref()
 let cfg = ref<{
   selected?: { filename: string, path: string }, raw?: string, json?: any, loading: boolean }
@@ -828,6 +828,7 @@ async function fetchServerData() {
       online.value = json.online
       liveStatus.value = data.live
       serverConfigs.value = data.configs
+      uptime.value = data.uptime
     } else {
       error.value = json.message ?? json.err ?? json ?? await response.text()
     }
