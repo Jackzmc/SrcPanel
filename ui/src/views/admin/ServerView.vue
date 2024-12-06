@@ -104,7 +104,8 @@
                         {{ player }}
                       </li>
                     </ul>
-                    <em v-else>no players online</em>
+                    <em v-else-if="status.data">no players online</em>
+                    <span v-else>-</span>
                   </td>
                 </tr>
                 <tr>
@@ -1001,6 +1002,7 @@ function onWSPayload(payload: ServerOutPacket) {
     status.value = payload.status
   } else if(payload.type === "metric") {
     metrics.value.push(payload.metric)
+    latestMetric.value = payload.metric
   } else if(payload.type === "metric_full") {
     metrics.value = payload.history
     metricAnnotations.value = payload.annotations
