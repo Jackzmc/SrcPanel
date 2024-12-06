@@ -383,8 +383,7 @@
           </table>
           <div class="box has-background-info-light" v-else>No recent activity has been recorded</div>
         </template>
-        <div class="box has-background-warning-light" v-else-if="status">Recent activities is not supported on this server</div>
-        <div class="" v-else><Icon icon="fa-spinner" spin>Waiting for data...</Icon></div>
+        <div class="box has-background-warning-light" v-else>Recent activities is not supported on this server</div>
       </div>
       <div class="box" v-if="tab === 'live'">
         <!-- <span class="tag is-pulled-right is-danger has-tooltip-left" v-if="isLiveViewActive" data-tooltip="Connected to server, receiving live data">Live</span> -->
@@ -591,7 +590,7 @@ const PlayerMoveString: Record<PlayerMove, string> = {
   [PlayerMove.Crouched]: "Crouching",
   [PlayerMove.Ladder]: "Climbing",
 }
-const REFRESH_INTERVAL = 1000 * 15
+const FETCH_ACTIVITIES_INTERVAL = 1000 * 60 * 5
 
 const { notify } = useNotification();
 const props = defineProps<{
@@ -815,32 +814,17 @@ async function fetchServerData() {
   }
 }
 
-let isRefreshing = false
-async function fetchServerStatus() {
-  const id = route.params.id
+async function fetchServerActivities() {
   try {
-    if(id != route.params.id || isRefreshing) return // Ignore changes in id or if refreshing
-    isRefreshing = true
-    const response = await fetch(`/api/servers/${route.params.id}/status`)
+    const response = await fetch(`/api/servers/${route.params.id}/activities`)
     const json = await response.json()
-    isRefreshing = false
     if(response.ok) {
-      latestMetric.value = json.metricLatest
-      metrics.value = json.metricHistory
-      metricAnnotations.value = json.metricAnnotations
-      online.value = json.online
-      status.value = json.status
-      uptime.value = json.uptime
-      stats.value = json.stats
-      activities.value = json.recentActivities?.map((act: any) => parseLog(act))
+      activities.value = json.activities?.map((act: any) => parseLog(act))
     } else {
-      error.value = json.message
-      status.value = { error: json.message }
+      activities.value = undefined
     }
   } catch(err: any) {
-    error.value = err.message
-    status.value = { error: err.message }
-    isRefreshing = false
+    activities.value = undefined
   }
 }
 const SERVER_CACHE_EXP_TIME = 1000 * 60 * 60 * 24 // 1 day
@@ -1064,11 +1048,11 @@ async function init() {
   if(await fetchServerInfo()) {
     await Promise.any([
       fetchServerData(),
-      fetchServerStatus()
+      fetchServerActivities()
     ])
   }
   connectWS()
-  refreshInterval = setInterval(fetchServerStatus, REFRESH_INTERVAL)
+  refreshInterval = setInterval(fetchServerActivities, FETCH_ACTIVITIES_INTERVAL)
 }
 
 // nowInterval = setInterval(() => {

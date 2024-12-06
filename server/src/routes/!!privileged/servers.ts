@@ -244,8 +244,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         reply.hijack()
     })
 
-    fastify.get('/:id/status', async(req: FastifyRequest<{Params: { id: 'string' }}>, reply) => {
-
+    fastify.get('/:id/activities', async(req: FastifyRequest<{Params: { id: 'string' }}>, reply) => {
         const server = fastify.servers.getServer(req.params.id)
         if(!server) {
             return reply.code(404).send({
@@ -267,25 +266,14 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 LIMIT 5`,
             [server.activityLogId]
         )
+            return { activities: rows}
             recentActivities = rows
         }
 
-        try {
-            await server.refreshStatus(true)
-        } catch(err) {
-
-        }
-
-        return {
-            recentActivities,
-            metricLatest: server.Metrics.available ? server.Metrics.ComputeStats : null,
-            metricHistory: server.Metrics.available ? server.Metrics.ComputeStatsHistory : null,
-            metricAnnotations: server.Metrics?.available ? server.Metrics.Annotations : null,
-            uptime: server.uptime,
-            startTime: server.startTime,
-            status: server.status,
-            online: server.Online
-        }
+        return reply.code(403).send({
+            error: "SERVER_LACKS_ACTIVITY",
+            message: "Server does not support recent activity logs"
+        })
     })
 
     fastify.get('/:id/generate-jwt', async(req: FastifyRequest<{Params: { id: 'string'} }>, reply) => {
