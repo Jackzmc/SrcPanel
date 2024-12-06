@@ -73,7 +73,7 @@ export default class PluginFeature extends Feature implements IAction {
             }
             case GameState.NewGame: {
                 text = "New game started"
-                timestamp = record.campaignStartTime
+                timestamp = record.campaignStartTime * 1000 // convert to millis
                 break
             } case GameState.Hibernating:
                 text = "Hibernating"
@@ -84,7 +84,7 @@ export default class PluginFeature extends Feature implements IAction {
             case GameState.Transitioning:
                 // Only trigger once per transition
                 if(this.#liveCache?.game?.state === GameState.Transitioning) return
-                
+
                 text = "Level transition"
         }
         if(!timestamp) timestamp = Date.now()
