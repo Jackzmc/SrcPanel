@@ -1,19 +1,14 @@
 <template>
 <div>
   <div id="console" ref="consoleElem">
-    <Icon icon="spinner" spin v-if="liveReadyState !== 1">Starting log stream... ({{ errCount }} attempts)</Icon>
-    <Icon icon="spinner" spin v-else-if="logs.length === 0">No current logs, waiting for more...</Icon>
-    <span v-show="isConnected" class="tag is-danger is-pulled-right" style="position: sticky; top: 0; right: 0;">Live</span>
     <div class="console-content" v-for="(line, i) of logs" :key="i">
       {{ line }}
     </div>
-    <span v-if="!isConnected && logs.length > 0" class="has-text-danger"><Icon icon="warning">Disconnected from server, trying to reconnect...</Icon></span>
   </div>
   <Field :icon-left="commandInputSupported ? 'terminal' : 'warning'" :icon-class="commandInputSupported ? 'has-text-white' : 'has-text-info'">
     <template v-if="commandInputSupported">
       <input id="terminal-input" :class="['input','terminal-input',commandClass]" v-model="commandInput"
         placeholder="Enter a command" @keyup.enter="runCommand"
-        :disabled="isConnected ? undefined : true"
       >
       <datalist id="terminal-input">
         <option v-for="cmd in validCommands" :key="cmd" :value="cmd"></option>
@@ -46,11 +41,6 @@ const commandInputSupported = computed(() => {
   return props.server.features.performCommands
 })
 
-const isConnected = computed(() => {
-  if(liveStatusNextRetryTime.value) return false
-  return liveReadyState.value == EventSource.OPEN
-})
-
 const commandClass = computed(() => {
   if(currentCommandName.value && validCommands.value.has(currentCommandName.value)) {
     return ""
@@ -64,14 +54,10 @@ const currentCommandName = computed(() => {
   return split[0].toLowerCase()
 })
 
-let liveStatusNextRetryTime = ref<number>()
-let liveReadyState = ref<number>(0)
-let evtSource: EventSource
 let commandInput = ref<string>()
 let logs = ref<string[]>([])
 let validCommands = ref<Set<string>>(new Set())
 let consoleElem = ref()
-let errCount = ref(0)
 
 async function runCommand() {
   if(!commandInput.value) return
@@ -106,37 +92,7 @@ async function runCommand() {
   }
 }
 
-const MAX_BACKOFF = 1000 * 60 * 2
-let retryTimeout: any
-function createLogsConnection() {
-  if(errCount.value === -1) return // Unloading, do not connect again
-  liveReadyState.value = 0
-  evtSource = new EventSource(`/api/servers/${route.params.id}/logs/sse`);
-  evtSource.onmessage = (event) => {
-    errCount.value = 0
-    liveStatusNextRetryTime.value = undefined
-    pushLine(event.data)
-  }
-  evtSource.onopen = () => {
-    liveReadyState.value = EventSource.OPEN
-    console.log("open")
-  }
-  evtSource.onerror = (event) => {
-    console.error("Disconnected", { errCount: errCount.value })
-    errCount.value++
-    evtSource.close()
-    liveReadyState.value = EventSource.CLOSED
-    // Exponentional backoff:
-    const retryTime = Math.min(1000 * (Math.pow(1.5, errCount.value / 2) + 5), MAX_BACKOFF)
-    liveStatusNextRetryTime.value = Date.now() + retryTime
-    retryTimeout = setTimeout(() => {
-      createLogsConnection()
-    }, retryTime)
-    nextTick(() => {
-      consoleElem.value.scrollTop = consoleElem.value.scrollHeight;
-    })
-  }
-}
+defineExpose({ pushLine })
 
 function pushLine(line: string) {
   logs.value.push(decodeURIComponent(line))
@@ -166,6 +122,7 @@ async function fetchCommands() {
     console.error('could not fetch /data/commands.json', err)
   }
 
+  // TODO: fetch via appid?
   await getCommands("550_commands")
   await getCommands("extra_commands")
 }
@@ -183,13 +140,10 @@ async function getCommands(filename: string) {
 }
 
 onMounted(async() => {
-  createLogsConnection()
+  // createLogsConnection()
   await fetchCommands()
 })
 onUnmounted(() => {
-  errCount.value = -1
-  clearTimeout(retryTimeout)
-  evtSource?.close()
 })
 </script>
 

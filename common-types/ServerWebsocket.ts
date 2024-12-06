@@ -22,7 +22,7 @@ export interface Server_Metric {
 export interface Server_MetricFull {
     type: "metric_full",
     timestamp: number,
-    latset: ComputeStats,
+    latest: ComputeStats,
     history: ComputeStats[],
     annotations: Annotation
 }
@@ -40,10 +40,18 @@ export interface Server_LogEntry {
     timestamp: number,
     content: string
 }
+export interface Server_ActivityLog {
+    type: "audit_log",
+    // TODO:
+}
 export interface Server_Error {
     type: "error",
     error?: string,
     code?: string
 }
 
-export type ServerOutPayload = Server_Metric | Server_MetricFull | Server_Live | Server_Status | Server_LogEntry | Server_Error
+export type ServerOutPayload = Server_Metric | Server_MetricFull | Server_Live | Server_Status | Server_LogEntry | Server_ActivityLog | Server_Error
+export type ServerOutPacket = ServerOutPayload & {
+    type: string,
+    millis: number
+}

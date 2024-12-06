@@ -9,7 +9,7 @@ import ServerGroup from "./groups/ServerGroup.js";
 import { ActionResponse, IAction } from "./IAction.js";
 import { GameDig } from 'gamedig';
 import SocketClientUser from "./SocketClientUser.js";
-import { Server_Status, ServerOutPayload } from "../../../../common-types/ServerWebsocket.js";
+import { Server_Status, ServerOutPacket, ServerOutPayload } from "../../../../common-types/ServerWebsocket.js";
 
 const MIN_REFRESH_TIME = 10_000
 
@@ -250,8 +250,12 @@ export default abstract class Server implements IAction {
         this._wsClients.splice(indexOf, 1)
     }
     broadcastWS(payload: ServerOutPayload) {
+      const packet = {
+        ...payload,
+        millis: Date.now(),
+      } as ServerOutPacket
       this._wsClients.forEach(client => {
-        client.send(payload)
+        client.send(packet)
       })
     }
 

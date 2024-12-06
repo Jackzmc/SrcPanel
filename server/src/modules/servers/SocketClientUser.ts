@@ -1,6 +1,6 @@
 import { WebSocket } from "@fastify/websocket";
 import User from "../../modules/users/User.js";
-import { ServerOutPayload } from '../../../../common-types/ServerWebsocket';
+import { ServerOutPacket, ServerOutPayload } from '../../../../common-types/ServerWebsocket';
 import { FastifyRequest } from "fastify";
 
 export default class SocketClientUser {
@@ -21,7 +21,7 @@ export default class SocketClientUser {
         return this.#user;
     }
 
-    send(payload: ServerOutPayload) {
+    send(payload: ServerOutPacket) {
         this.socket.send(JSON.stringify(payload));
     }
 

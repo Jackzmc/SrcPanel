@@ -16,6 +16,17 @@
               <span class="tag is-danger  is-medium" v-else>Offline</span>
             </template>
             <span class="tag is-medium" v-else><Icon icon="fa-spinner" spin></Icon></span>
+
+            <span class="tag is-info is-medium" data-tooltip="Receiving live data" v-if="ws?.readyState === 1">
+              <Icon icon="fa-circle-check" icon-class="has-text-white">Live</Icon>
+            </span>
+            <span class="tag is-medium" data-tooltip="Connecting" v-else-if="ws?.readyState === 0">
+              <Icon icon="fa-spinner" spin icon-class="has-text-white">Live</Icon>
+            </span>
+            <span class="tag is-danger is-medium" data-tooltip="Not receiving live data" v-else>
+              <Icon icon="fa-triangle-exclamation" icon-class="has-text-white">Live</Icon>
+            </span>
+
             <span data-tooltip="Server ID" class="tag is-info is-medium no-border">{{serverInfo.id}}</span>
           </div>
         </h3>
@@ -56,10 +67,10 @@
           </div>
           <p class="has-text-centered subtitle is-4 my-6 has-text-danger" v-if="status.error">{{  status.error }}</p>
           <template v-else>
-            <span class="is-inline is-pulled-right no-border pr-4" data-tooltip="Time until next refresh" style="width:10px">
+            <!-- <span class="is-inline is-pulled-right no-border pr-4" data-tooltip="Time until next refresh" style="width:10px">
               <Icon icon="fa-spinner" spin v-if="nextRefreshCountdown == 0"></Icon>
               <span v-else>{{ nextRefreshCountdown }}s</span>
-            </span>
+            </span> -->
             <table class="table is-fullwidth is-size-4">
               <tbody>
                 <tr v-if="serverInfo.type === 'source'">
@@ -126,18 +137,6 @@
         <p class="has-text-centered subtitle is-4 my-6" v-else><Icon icon="fa-spinner" spin>Waiting for server status...</Icon></p>
       </div>
       <div v-else-if="tab === 'live'" class="box">
-        <span class="tag is-pulled-right is-danger" v-if="isLiveViewActive" data-tooltip="Connected to server, receiving live data">Live</span>
-        <div class="notification is-danger has-text-centered" v-else-if="liveStatusNextRetryTime !== undefined">
-          Lost connection with live server. Retrying in {{ nextLiveRetryTime }} seconds
-          <span class="is-inline is-pulled-right no-border" v-if="nextLiveRetryTime <= 1">
-            <Icon icon="fa-spinner" spin></Icon>
-          </span>
-        </div>
-          <!-- show notice that server is offline, but only if there is also no live data -->
-        <!-- server might be shown offline but actually is online and sending data (eg. map transitions) -->
-        <div class="notification is-danger has-text-centered" v-else-if="!online && !liveStatus">
-          The server is offline or is unreachable.
-        </div>
         <div class="list has-visible-pointer-controls" v-if="liveStatus && Object.values(liveStatus.clients).length > 0">
           <template v-for="player in livePlayers" :key="player.userid">
             <div class="list-item" v-if="true">
@@ -308,7 +307,7 @@
         </div>
       </div>
       <div v-else-if="tab === 'console'" class="box">
-        <Console :server="serverInfo" />
+        <Console ref="serverConsole" :server="serverInfo" />
       </div>
       <ServerMetricsTab v-else-if="tab === 'metrics'" :server="serverInfo" :metrics="metrics" :annotations="metricAnnotations" />
     </div>
@@ -334,6 +333,7 @@
       </div>
     </div>
     <div class="column is-8" v-else>
+
       <div class="box has-background-primary-90 has-text-centered">
         <h4 class='title is-4 my-6'>
           <Icon icon="spinner" spin>Fetching server information</Icon>
@@ -365,10 +365,6 @@
         </div>
       </div>
       <div class="box" v-if="tab === 'overview' || tab === 'live'">
-        <span class="is-inline is-pulled-right no-border pr-4" data-tooltip="Time until next refresh" style="width:10px">
-          <Icon icon="fa-spinner" spin v-if="nextRefreshCountdown == 0"></Icon>
-          <span v-else>{{ nextRefreshCountdown }}s</span>
-        </span>
         <h4 class="title is-5">Recent Activity</h4>
         <template v-if="activities">
           <table v-if="activities.length > 0" class="table is-fullwidth">
@@ -422,12 +418,12 @@
               <td class="has-text-right" v-if="liveStatus.game.campaignStartTime">{{ getDuration(liveStatus.game.campaignStartTime) }}</td>
               <td v-else>-</td>
             </tr>
-            <tr>
+            <!-- <tr>
               <th>Last Update</th>
               <td class="has-text-right">
                 <p>{{ lastLiveUpdateTime }}</p>
               </td>
-            </tr>
+            </tr> -->
           </tbody>
         </table>
         <p v-else>Game data will appear here when live data is available</p>
@@ -546,6 +542,7 @@ import UserComponent, { User } from '@/components/UserComponent.vue';
 import Console from '@/components/server/Console.vue'
 import { ServerData, ServerInfo, ServerDetailed, ServerAvailableFeatures, ComputeStats, ServerStatus } from '../../../../common-types/Server';
 import ServerMetricsTab from '@/components/server/ServerMetricsTab.vue';
+import { ClientOutPayload, ServerOutPacket, ServerOutPayload } from '../../../../../../../../../../home/jackz/Documents/Code/Projects/l4d2-admin-dash/common-types/ServerWebsocket';
 
 const FinaleStageName: Record<FinaleStage, string> = {
     [FinaleStage.Gauntlet]: "Gauntlet",
@@ -650,19 +647,17 @@ const TABS: Record<string, { name: string, tag?: string, permission?: string, en
   }
 }
 
+let serverConsole = ref()
 let metricAnnotations = ref<Annotation>({ xaxis: [], yaxis: []})
 let latestMetric = ref<ComputeStats|null>(null)
 let metrics = ref<ComputeStats[]>([])
 let stats = ref<ComputeStats>()
-let lastRefreshTime = ref()
 let serverInfo = ref<ServerInfo>()
 let serverConfigs = ref()
 let serverIds = ref()
 let status = ref<Partial<ServerStatus>&{error?:string}>()
 let online = ref<boolean>()
 let liveStatus = ref<LiveDataCache|null>(null)
-let liveStatusNextRetryTime = ref<number>()
-let lastLiveUpdateTime = ref<string>()
 let uptime = ref<number>()
 let activities = ref()
 let cfg = ref<{
@@ -707,15 +702,6 @@ const tab = computed(() => {
 const mapInfo = computed(() => {
   if(!status.value?.data) return
   return getMapDisplay(status.value.data.map)
-})
-const nextRefreshCountdown = computed(() => {
-  if(!lastRefreshTime.value || !now.value) return 0
-  return Math.max(Math.floor(((lastRefreshTime.value + REFRESH_INTERVAL) - now.value) / 1000), 0)
-})
-
-const nextLiveRetryTime = computed(() => {
-  if(liveStatusNextRetryTime.value === undefined || !now.value) return 0
-  return Math.max(Math.ceil((liveStatusNextRetryTime.value - now.value) / 1000), 0)
 })
 
 function isTabEnabled(data: any): boolean {
@@ -837,7 +823,6 @@ async function fetchServerStatus() {
     isRefreshing = true
     const response = await fetch(`/api/servers/${route.params.id}/status`)
     const json = await response.json()
-    lastRefreshTime.value = Date.now()
     isRefreshing = false
     if(response.ok) {
       latestMetric.value = json.metricLatest
@@ -997,10 +982,6 @@ const OfficialCampaignNames = [
   "The Last Stand"
 ]
 
-const isLiveViewActive = computed(() => {
-  if(liveStatusNextRetryTime.value) return false
-  return liveReadyState.value == EventSource.OPEN
-})
 const livePlayers = computed(() => {
   if(!liveStatus.value?.clients) return []
   return Object.values(liveStatus.value.clients)
@@ -1012,86 +993,64 @@ const livePlayers = computed(() => {
       return 0
     })
 })
-let errCount = 0
-let liveReadyState = ref<number>(0)
-let evtSource: EventSource
-let retryTimeout: any
-let reconnectTimeout: any
+
+let wsErrorCount = 0
+let wsReconnectTimeout: number
+let lastPacketPing = ref()
+let ws = ref<WebSocket|null>()
 
 const MAX_BACKOFF = 1000 * 60 * 2
 
-function createLiveConnection() {
-  if(errCount === -1) return // Unloading, dont start new
-  liveReadyState.value = EventSource.CONNECTING
-  evtSource = new EventSource(`/api/servers/${route.params.id}/live`);
-  evtSource.onmessage = (event) => {
-    errCount = 0
-    liveStatusNextRetryTime.value = undefined
-    if(!event.data) return
-    const json = JSON.parse(event.data)
-    if(json.state) {
-      if(json.state === "EXIT") {
-        evtSource.close()
-        return reconnect()
-      }
-    } else {
-      const record: LiveRecord = json
-      console.debug("got", LiveRecordType[record.type], record, 'pre=', Object.assign({}, liveStatus.value))
-      liveStatus.value = updateLiveCache(liveStatus.value, record)
-      if(record.type === LiveRecordType.Game) {
-        uptime.value = (Date.now()/1000) - record.startTime
-      }
-      // If we have live connection, server is alive
-      online.value = true
+function onWSPayload(payload: ServerOutPacket) {
+  lastPacketPing.value = Date.now() - payload.millis
+  if(payload.type === "live") {
+    liveStatus.value = updateLiveCache(liveStatus.value, payload.record as LiveRecord)
+    if(payload.record.type === LiveRecordType.Game) {
+      uptime.value = (Date.now()/1000) - payload.record.startTime
     }
-
-    clearTimeout(reconnectTimeout)
-    reconnectTimeout = setTimeout(() => {
-      console.debug("no msg in a while, reconnecting")
-      createLiveConnection()
-    }, 1000 * 60)
-  }
-  evtSource.onopen = () => {
-    liveReadyState.value = EventSource.OPEN
-    liveStatusNextRetryTime.value = undefined
-  }
-  evtSource.onerror = reconnect;
-  function reconnect() {
-    errCount++
-    console.error("Disconnected from live server", { errCount })
-    evtSource.close()
-    liveReadyState.value = EventSource.CLOSED
-    // Exponentional backoff:
-    const retryTime = Math.min(1000 * (Math.pow(1.5, errCount / 2) + 5), MAX_BACKOFF)
-    liveStatusNextRetryTime.value = Date.now() + retryTime
-    retryTimeout = setTimeout(() => {
-      createLiveConnection()
-    }, retryTime)
+    // If we have live connection, server is alive
+    online.value = true
+  } else if(payload.type === "log") {
+    serverConsole.value.pushLine(payload.content)
+  } else if(payload.type === "status") {
+    online.value = payload.online
+    status.value = payload.status
+  } else if(payload.type === "metric") {
+    metrics.value.push(payload.metric)
+  } else if(payload.type === "metric_full") {
+    metrics.value = payload.history
+    metricAnnotations.value = payload.annotations
+    latestMetric.value = payload.latest
+  } else {
+    console.error("OnWSPayload: unhandled payload type", payload.type, payload)
   }
 }
-
-let wsErrorCount = 0
-
+function sendWSPayload(payload: ClientOutPayload) {
+  if(!ws.value || !ws.value.OPEN) throw new Error("Websocket is not connected")
+  ws.value.send(JSON.stringify(payload))
+}
 function connectWS() {
   console.debug("connectWS", `${window.location.protocol}://${window.location.host}/api/servers/${route.params.id}/ws`)
-  const ws = new WebSocket(`${window.location.protocol}//${window.location.host}/api/servers/${route.params.id}/ws`);
-  ws.onmessage = (event) => {
+  ws.value?.close()
+  ws.value = new WebSocket(`${window.location.protocol}//${window.location.host}/api/servers/${route.params.id}/ws`);
+  ws.value.onmessage = (event) => {
     const payload = JSON.parse(event.data)
     console.debug("[WS] payload", payload)
+    onWSPayload(payload)
   }
-  ws.onopen = () => {
+  ws.value.onopen = () => {
     console.info("[WS] Connected", { ws })
     wsErrorCount = 0
   }
-  ws.onclose = () => {
+  ws.value.onclose = () => {
     wsErrorCount++
     const retryTime = Math.min(1000 * (Math.pow(1.5, wsErrorCount ) + 3), MAX_BACKOFF)
-    console.debug("[WS] Closed, reconnecting in", retryTime/1000, "s", { errCount })
-    setTimeout(() => {
+    console.debug("[WS] Closed, reconnecting in", retryTime/1000, "s", { wsErrorCount })
+    wsReconnectTimeout = setTimeout(() => {
       connectWS()
     }, retryTime)
   }
-  ws.onerror = (err) => {
+  ws.value.onerror = (err) => {
     console.error("[WS] Error:", err)
   }
 }
@@ -1107,23 +1066,20 @@ async function init() {
       fetchServerData(),
       fetchServerStatus()
     ])
-    if(serverInfo.value?.type === "source")
-      createLiveConnection()
   }
   connectWS()
   refreshInterval = setInterval(fetchServerStatus, REFRESH_INTERVAL)
 }
 
-nowInterval = setInterval(() => {
-  now.value = Date.now()
-  if(liveStatus.value)
-    lastLiveUpdateTime.value = getRelDate(liveStatus.value.lastUpdate / 1000)
-}, 1000)
+// nowInterval = setInterval(() => {
+//   now.value = Date.now()
+//   if(liveStatus.value)
+//     lastLiveUpdateTime.value = getRelDate(liveStatus.value.lastUpdate / 1000)
+// }, 1000)
 
 onMounted(async() => {
   document.addEventListener("keyup", _toggleShift)
   document.addEventListener("keydown", _toggleShift)
-  errCount = 0
   await fetchServersCompact()
   await init()
 })
@@ -1133,10 +1089,9 @@ function _toggleShift(e: any) {
 onBeforeUnmount(() => {
   document.removeEventListener("keyup", _toggleShift)
   document.removeEventListener("keydown", _toggleShift)
-  errCount = -1
   clearInterval(refreshInterval)
   clearInterval(nowInterval)
-  clearTimeout(retryTimeout)
+  clearTimeout(wsReconnectTimeout)
 })
 </script>
 
