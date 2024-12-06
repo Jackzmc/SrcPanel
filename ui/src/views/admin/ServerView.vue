@@ -15,7 +15,7 @@
               <span class="tag is-success  is-medium" v-else-if="online">Online</span>
               <span class="tag is-danger  is-medium" v-else>Offline</span>
             </template>
-            <span class="tag is-medium" v-else><Icon icon="fa-spinner" spin></Icon></span>
+            <span class="tag is-medium" v-else data-tooltip="Waiting for status"><Icon icon="fa-spinner" spin></Icon></span>
 
             <span class="tag is-info is-medium" data-tooltip="Receiving live data" v-if="ws?.readyState === 1">
               <Icon icon="fa-circle-check" icon-class="has-text-white">Live</Icon>

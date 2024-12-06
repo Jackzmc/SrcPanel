@@ -36,10 +36,10 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         fastify.servers.resetInactivity()
     })
 
-    fastify.get('/:id/ws', { websocket: true }, (socket, req: FastifyRequest<{Params: {id: string}}>) => {
-        if(!req.user) return socket.close(-1, "NOT_AUTHENTICATED");
+    fastify.get('/:id/ws', { websocket: true }, async (socket, req: FastifyRequest<{Params: {id: string}}>) => {
+        if(!req.user) return socket.close(4000, "NOT_AUTHENTICATED");
         const server = fastify.servers.getServer(req.params.id);
-        if(!server) return socket.close(-2, "SERVER_NOT_FOUND");
+        if(!server) return socket.close(4000, "SERVER_NOT_FOUND");
         const client = new SocketClientUser(socket, req.user!, req)
 
         server.addWSClient(client)
@@ -54,5 +54,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             // message.toString() === 'hi from client'
             socket.send("{\"error\": \"UNSUPPORTED\"")
         })
+
+        await server.refreshStatus(true)
     })
 }
