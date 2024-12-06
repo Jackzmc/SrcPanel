@@ -308,7 +308,9 @@
         </div>
       </div>
       <div v-else-if="tab === 'console'" class="box">
-        <Console ref="serverConsole" :server="serverInfo" />
+        <KeepAlive>
+          <Console ref="serverConsole" :server="serverInfo" />
+        </KeepAlive>
       </div>
       <ServerMetricsTab v-else-if="tab === 'metrics'" :server="serverInfo" :metrics="metrics" :annotations="metricAnnotations" />
     </div>
@@ -648,6 +650,7 @@ const TABS: Record<string, { name: string, tag?: string, permission?: string, en
 }
 
 let serverConsole = ref()
+let serverLogs = ref<string[]>()
 let metricAnnotations = ref<Annotation>({ xaxis: [], yaxis: []})
 let latestMetric = ref<ComputeStats|null>(null)
 let metrics = ref<ComputeStats[]>([])
@@ -996,7 +999,7 @@ function onWSPayload(payload: ServerOutPacket) {
     // If we have live connection, server is alive
     online.value = true
   } else if(payload.type === "log") {
-    serverConsole.value.pushLine(payload.content)
+    serverConsole?.value.pushLine(payload.content)
   } else if(payload.type === "status") {
     online.value = payload.online
     status.value = payload.status

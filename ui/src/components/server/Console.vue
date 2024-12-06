@@ -98,7 +98,7 @@ async function runCommand() {
 defineExpose({ pushLine })
 
 function pushLine(line: string) {
-  logs.value.push(decodeURIComponent(line))
+  logs.value.push(line)
   if(logs.value.length > MAX_LOGS_LINES) logs.value = logs.value.splice(0, 1)
   // Potentionally helps fix partial end of logs scroll
   nextTick(() => {
@@ -160,6 +160,9 @@ onUnmounted(() => {
   overflow-y: scroll;
   overscroll-behavior-y: contain;
   scroll-snap-type: y mandatory;
+}
+.console-content {
+  white-space: pre-wrap;
 }
 .terminal-input::placeholder {
   color: white;
