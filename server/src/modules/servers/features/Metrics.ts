@@ -3,7 +3,7 @@ import Feature from "./Feature.js";
 import Server from "../Server.js";
 import Influx, { InfluxDB, Point, WriteApi } from '@influxdata/influxdb-client'
 import { getWriter } from "../../../modules/Influx.js";
-import { ComputeStats, ServerStatusData, ServerStatusSource } from "../../../../../common-types/Server.js";
+import { ComputeStats, NetworkStats, ServerStatusData, ServerStatusSource } from "../../../../../common-types/Server.js";
 import { AnnotationX, AnnotationY, GAME_DIFFICULTY_STRINGS, GameState } from "../../../../../common-types/Live.js";
 import DockerServer from "../DockerServer.js";
 import { ContainerStats } from "dockerode";
@@ -13,7 +13,7 @@ const RECORD_STATISTICS_INTERVAL = 1000 * 60 * 1
 // The maximum number of statistics to hold
 const MAX_STATS_HISTORY = 200
 // Number of miliseconds between every history addition
-const STATS_HISTORY_INTERVAL = 1000 * 30
+const STATS_HISTORY_INTERVAL = 1000 * 15
 
 export interface InfluxConfig {
   host: string,
@@ -62,8 +62,9 @@ export default class MetricsFeature extends Feature {
           const cpuDelta = stats.cpu_stats.cpu_usage.total_usage - stats.precpu_stats.cpu_usage.total_usage
           const systemCpuDelta = stats.cpu_stats.system_cpu_usage - stats.precpu_stats.system_cpu_usage
           const memoryUsed = stats.memory_stats.usage - stats.memory_stats.stats?.inactive_file
+          const collectionTime = Math.round(Date.now()/1000)
           const computeStats: ComputeStats = {
-            collectionTime: Math.round(Date.now()/1000),
+            collectionTime,
             // https://docs.docker.com/reference/api/engine/version/v1.45/#tag/Container/operation/ContainerExport
             cpu_stats: stats.cpu_stats ? {
               cpu_usage: (cpuDelta / systemCpuDelta) * stats.cpu_stats.online_cpus * 100.0,
@@ -75,14 +76,26 @@ export default class MetricsFeature extends Feature {
               limit: stats.memory_stats.limit
             } : null,
             network_stats: Object.fromEntries(Object.entries(stats.networks).map(([intf, net]) => {
+              let rxRate = 0
+              let txRate = 0
+              if(this.#latestComputeStats?.network_stats) {
+                const timeDiff = this.#latestComputeStats.collectionTime - collectionTime
+                rxRate = (this.#latestComputeStats?.network_stats[intf].bytesRxTotal - net.rx_bytes) / timeDiff
+                txRate = (this.#latestComputeStats?.network_stats[intf].bytesTxTotal - net.tx_bytes) / timeDiff
+              }
+
               return [intf, {
-                bytesRx: net.rx_bytes,
-                bytesTx: net.tx_bytes,
+                bytesRxTotal: net.rx_bytes,
+                bytesTxTotal: net.tx_bytes,
+
+                bytesRxRate: rxRate,
+                bytesTxRate: txRate,
+
                 packetsRx: net.rx_packets,
                 packetsTx: net.tx_packets,
                 droppedTx: net.tx_errors,
                 droppedRx: net.rx_dropped
-              }]
+              } as NetworkStats]
             })) ?? []
           }
           this.#latestComputeStats = computeStats

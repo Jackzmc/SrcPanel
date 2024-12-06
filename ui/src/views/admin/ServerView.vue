@@ -487,17 +487,36 @@
               <div class="level-item has-text-centered" >
                 <div>
                   <p class="heading"><Icon icon="arrow-down" /> Bytes In [{{ intf }}]</p>
-                  <p class="title">{{ formatSize(net.bytesRx) }}</p>
+                  <p class="title">{{ formatSize(net.bytesRxRate) }}/s</p>
                 </div>
               </div>
               <div class="level-item has-text-centered">
                 <div>
                   <p class="heading"><Icon icon="arrow-up" /> Bytes Out [{{ intf }}]</p>
-                  <p class="title">{{ formatSize(net.bytesTx) }}</p>
+                  <p class="title">{{ formatSize(net.bytesTxRate) }}/s</p>
+                </div>
+              </div>
+            </nav>
+            <nav class="level" v-for="(net, intf) in latestMetric.network_stats" :key="intf">
+              <div class="level-item has-text-centered">
+                <div>
+                  <p class="heading">
+                    <Icon icon="arrow-down" /> Total Bytes In [{{ intf }}]
+                  </p>
+                  <p class="title">{{ formatSize(net.bytesRxTotal) }}</p>
+                </div>
+              </div>
+              <div class="level-item has-text-centered">
+                <div>
+                  <p class="heading">
+                    <Icon icon="arrow-up" /> Total Bytes Out [{{ intf }}]
+                  </p>
+                  <p class="title">{{ formatSize(net.bytesTxTotal) }}</p>
                 </div>
               </div>
             </nav>
           </template>
+          <span v-else>Waiting for metrics...</span>
         </div>
       </template>
     </div>

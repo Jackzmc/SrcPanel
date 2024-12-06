@@ -181,7 +181,7 @@ const networkSeries = computed(() => {
             // .filter(met => met.network_stats != undefined)
             .map(met => [
               met.collectionTime*1000,
-              met.network_stats[intf].bytesRx
+              met.network_stats[intf].bytesRxRate
             ])
         },
         {
@@ -190,13 +190,16 @@ const networkSeries = computed(() => {
             // .filter(met => met.network_stats != undefined)
             .map(met => [
               met.collectionTime*1000,
-              met.network_stats[intf].bytesTx
+              met.network_stats[intf].bytesTxRate
             ])
         },
       ],
       options: {
         title: {
           text: `Network Usage (Bytes I/O) [${intf}]`
+        },
+        stroke: {
+          curve: 'stepline',
         },
         xaxis: {
           type: 'datetime',

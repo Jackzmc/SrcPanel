@@ -33,9 +33,12 @@ interface MemoryStats {
     usage_percent: number;
     limit: number;
 }
-interface NetworkStats {
-    bytesRx: number,
-    bytesTx: number,
+export interface NetworkStats {
+    bytesRxTotal: number,
+    bytesTxTotal: number,
+
+    bytesRxRate: number,
+    bytesTxRate: number,
 
     packetsRx: number,
     packetsTx: number,
