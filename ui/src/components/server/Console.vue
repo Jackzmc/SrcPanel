@@ -36,8 +36,11 @@ const MAX_LOGS_LINES = 350
 const route = useRoute()
 const router = useRouter()
 
+const emit = defineEmits(["log"])
+
 const props = defineProps<{
-  server: ServerInfo
+  server: ServerInfo,
+  logs: string[]
 }>()
 
 const commandInputSupported = computed(() => {
@@ -58,7 +61,6 @@ const currentCommandName = computed(() => {
 })
 
 let commandInput = ref<string>()
-let logs = ref<string[]>([])
 let validCommands = ref<Set<string>>(new Set())
 let consoleElem = ref()
 
@@ -75,7 +77,7 @@ async function runCommand() {
     command = "sm_" + command.slice(1)
   }
 
-  pushLine(`> ${command}`)
+  emit("log", `> ${command}`)
   commandInput.value = undefined
   const response = await request(`/api/servers/${route.params.id}/cmd`, {
     method: "POST",
@@ -86,21 +88,18 @@ async function runCommand() {
     const json: LiveRecordCommandResponse = await response.json()
     // Rcon output is not shown to the main server logs, include here:
     if(!json.message) {
-      pushLine(``)
+      emit("log", ``)
     } else {
       for(const line of json.message.split(/\r?\n/)) {
-        pushLine(line)
+        emit("log", line);
       }
     }
   }
 }
 
-defineExpose({ pushLine })
+defineExpose({ jumpToBottom })
 
-function pushLine(line: string) {
-  logs.value.push(line)
-  if(logs.value.length > MAX_LOGS_LINES) logs.value = logs.value.splice(0, 1)
-  // Potentionally helps fix partial end of logs scroll
+function jumpToBottom() {
   nextTick(() => {
     consoleElem.value.scrollTop = consoleElem.value.scrollHeight;
   })

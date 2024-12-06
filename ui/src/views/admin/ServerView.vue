@@ -308,9 +308,7 @@
         </div>
       </div>
       <div v-else-if="tab === 'console'" class="box">
-        <KeepAlive>
-          <Console ref="serverConsole" :server="serverInfo" />
-        </KeepAlive>
+        <Console ref="serverConsole" :server="serverInfo" :logs="serverLogs" @line="pushConsoleLog" />
       </div>
       <ServerMetricsTab v-else-if="tab === 'metrics'" :server="serverInfo" :metrics="metrics" :annotations="metricAnnotations" />
     </div>
@@ -530,7 +528,7 @@
 
 <script setup lang="ts">
 import { useRoute, useRouter } from 'vue-router'
-import { ref, computed, onUnmounted, onBeforeUnmount, onMounted } from 'vue';
+import { ref, computed, onUnmounted, onBeforeUnmount, onMounted, nextTick } from 'vue';
 import FolderBrower from'@/components/FolderBrowser.vue'
 import { PlayerData, PrivilegedUser } from '@/js/User';
 import { parseLog, getRelDate, request, formatSize } from '@/js/util';
@@ -545,6 +543,8 @@ import Console from '@/components/server/Console.vue'
 import { ServerData, ServerInfo, ServerDetailed, ServerAvailableFeatures, ComputeStats, ServerStatus } from '../../../../common-types/Server';
 import ServerMetricsTab from '@/components/server/ServerMetricsTab.vue';
 import { ClientOutPayload, ServerOutPacket, ServerOutPayload } from '../../../../../../../../../../home/jackz/Documents/Code/Projects/l4d2-admin-dash/common-types/ServerWebsocket';
+
+const MAX_LOGS_LINES = 350
 
 const FinaleStageName: Record<FinaleStage, string> = {
     [FinaleStage.Gauntlet]: "Gauntlet",
@@ -649,8 +649,8 @@ const TABS: Record<string, { name: string, tag?: string, permission?: string, en
   }
 }
 
+let serverLogs = ref<string[]>([])
 let serverConsole = ref()
-let serverLogs = ref<string[]>()
 let metricAnnotations = ref<Annotation>({ xaxis: [], yaxis: []})
 let latestMetric = ref<ComputeStats|null>(null)
 let metrics = ref<ComputeStats[]>([])
@@ -989,6 +989,14 @@ let ws = ref<WebSocket|null>()
 
 const MAX_BACKOFF = 1000 * 60 * 2
 
+function pushConsoleLog(line: string) {
+  serverLogs.value.push(line)
+  if(serverLogs.value.length > MAX_LOGS_LINES) serverLogs.value.splice(0, 1)
+  // Potentionally helps fix partial end of logs scroll
+  if(serverConsole.value)
+    serverConsole.value.jumpToBottom()
+}
+
 function onWSPayload(payload: ServerOutPacket) {
   lastPacketPing.value = Date.now() - payload.millis
   if(payload.type === "live") {
@@ -999,7 +1007,7 @@ function onWSPayload(payload: ServerOutPacket) {
     // If we have live connection, server is alive
     online.value = true
   } else if(payload.type === "log") {
-    serverConsole.value?.pushLine(payload.content)
+    pushConsoleLog(payload.content)
   } else if(payload.type === "status") {
     online.value = payload.online
     status.value = payload.status
