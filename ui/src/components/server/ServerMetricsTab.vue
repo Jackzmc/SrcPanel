@@ -181,9 +181,9 @@ const networkSeries = computed(() => {
         title: {
           text: `Network Usage (Bytes I/O) [${intf}]`
         },
-        stroke: {
-          curve: 'stepline',
-        },
+        // stroke: {
+        //   curve: 'stepline',
+        // },
         xaxis: {
           type: 'datetime',
           labels: {
