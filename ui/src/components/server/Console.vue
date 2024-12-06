@@ -144,6 +144,7 @@ async function getCommands(filename: string) {
 onMounted(async() => {
   // createLogsConnection()
   await fetchCommands()
+  jumpToBottom()
 })
 onUnmounted(() => {
 })
