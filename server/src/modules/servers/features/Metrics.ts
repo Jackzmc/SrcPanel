@@ -75,7 +75,7 @@ export default class MetricsFeature extends Feature {
               usage_percent: (memoryUsed / stats.memory_stats.limit) * 100.0,
               limit: stats.memory_stats.limit
             } : null,
-            network_stats: Object.fromEntries(Object.entries(stats.networks).map(([intf, net]) => {
+            network_stats: stats.networks ? Object.fromEntries(Object.entries(stats.networks).map(([intf, net]) => {
               let rxRate = 0
               let txRate = 0
               if(this.#latestComputeStats?.network_stats) {
@@ -96,7 +96,7 @@ export default class MetricsFeature extends Feature {
                 droppedTx: net.tx_errors,
                 droppedRx: net.rx_dropped
               } as NetworkStats]
-            })) ?? []
+            })) : {}
           }
           this.#latestComputeStats = computeStats
           // Only record every STATS_HISTORY_INTERVAL, as we don't want to store the last 100ms but the last 100 minutes
