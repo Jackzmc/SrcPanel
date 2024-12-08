@@ -145,9 +145,9 @@ export default class DynamicServerManager {
             OpenStdin: true,
             // TODO: improve 
             Cmd: commands,
-            // ExposedPorts: {
-            //     '27015/udp': {}
-            // },
+            ExposedPorts: {
+                [`${port.toString()}/udp`]: {}
+            },
             HostConfig: {
                 "NetworkMode": template.config.network,
                 "Binds": template.config.volumes ?? [],
