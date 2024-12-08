@@ -165,6 +165,7 @@ export default class DynamicServerManager {
                 "panel.port": port.toString(),
             },
         }
+        console.log("config", config)
         const container = await this.#docker.createContainer(config)
         const instance =  new DynamicServerInstance(template.config, container, template.config.ip, port)
         await this.#registerInstance(instance)
