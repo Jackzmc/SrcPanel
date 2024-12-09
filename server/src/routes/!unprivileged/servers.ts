@@ -45,14 +45,15 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         server.addWSClient(client)
 
         socket.on("close", (code, reason) => {
-            console.debug({ code, reason})
             server.removeWSClient(client)
         })
 
         socket.on('message', message => {
             console.log("msg", message)
-            // message.toString() === 'hi from client'
-            socket.send("{\"error\": \"UNSUPPORTED\"")
+            client.sendPayload({
+                type: "error",
+                error: "UNSUPPORTED"
+            })
         })
 
         await server.refreshStatus(true)
