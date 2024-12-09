@@ -286,6 +286,25 @@ function isModalAllowed(name: string) {
   return true
 }
 
+function setupNotificationStream(errorCount: number = 0) {
+  const eve = new EventSource("/api/auth/notifications/sse")
+  eve.onmessage = (e) => {
+    console.log("message")
+    const json = JSON.parse(e.data)
+    userdata.value?.notifications.push(json)
+    errorCount = 0
+  }
+  eve.onerror = (e) => {
+    errorCount++
+    const nextTime = 1000 * Math.pow(2, errorCount )
+    console.error("notification error, reconncting", nextTime)
+    setTimeout(() => {
+      eve.close()
+      setupNotificationStream(errorCount)
+    }, nextTime)
+  }
+}
+
 onBeforeMount(async() => {
   document.addEventListener('swUpdated', updateAvailable, { once: true })
   document.addEventListener('swUpdating', () => updateInfo.value.updating = true, { once: true })
@@ -294,6 +313,7 @@ onBeforeMount(async() => {
     loadTour(route.query.tour as string)
   }
   await getMeta()
+  setupNotificationStream()
 })
 </script>
 <style src="./node_modules/bulma-list/css/bulma-list.css"></style>
