@@ -250,58 +250,7 @@
         </div>
       </div>
       <div v-else-if="tab === 'configs'" class="">
-        <div class="card" v-if="cfg.selected && !cfg.loading">
-          <header class="card-header">
-            <p class="card-header-title">{{ cfgParentFolder }}<span class="has-text-weight-light">{{ cfg.selected.filename }}</span></p>
-          </header>
-          <div class="card-content" v-if="cfg.selected">
-            <template v-if="cfg.json">
-              <Field label="Cvars">
-                <div class="columns " v-for="entry in cfg.json" :key="entry.command">
-                  <div class="column is-5">
-                    <input class="input is-expanded" type="text" :value="entry.cvar ?? entry.command" />
-                  </div>
-                  <div class="column is-6">
-                    <input v-if="entry.type === 'string'" class="input" type="text" :value="entry.value" />
-                    <input v-else-if="entry.type === 'number'" class="input" type="number" :value="entry.value" />
-                    <em v-else-if="entry.type === 'hidden'">(hidden)</em>
-                  </div>
-                  <div class="column is-1">
-                    <span v-if="entry.type === 'string'" class="tag is-primary is-large" data-tooltip="String">S</span>
-                    <span v-if="entry.type === 'number'" class="tag is-info is-large" data-tooltip="Number">N</span>
-                  </div>
-                </div>
-                <!-- <span class="has-text-dark">{{entry.cvar ?? entry.command}}</span>
-                        <span :class="{'config-string': entry.type === 'string', 'has-text-info': entry.type === 'number'}">
-                          {{entry.value}}
-                        </span> -->
-              </Field>
-              <Field label="Add New Cvar">
-                <div class="columns">
-                  <div class="column">
-                    <input class="input" type="text" />
-                  </div>
-                  <div class="column">
-                    <input class="input" type="text" />
-                  </div>
-                </div>
-              </Field>
-              <Field label="Add New Command">
-                <div class="columns">
-                  <div class="column">
-                    <input class="input" type="text" />
-                  </div>
-                  <div class="column">
-                    <input class="input" type="text" />
-                  </div>
-                </div>
-              </Field>
-            </template>
-            <pre class="box" v-if="cfg.raw">
-            {{ cfg.raw }}
-            </pre>
-          </div>
-        </div>
+        <ConfigFileEditor :parent-folder="cfgParentFolder" :cfg="cfg" v-if="cfg.selected && !cfg.loading" />
         <div class="box" v-else>
           <p class="has-text-centered subtitle is-4 my-6" v-if="cfg.loading"><Icon icon="spinner" spin>Loading configs</Icon></p>
           <p class="has-text-centered subtitle is-5 my-6" v-else>Select a config file on the right to view its content</p>
@@ -562,6 +511,7 @@ import Console from '@/components/server/Console.vue'
 import { ServerData, ServerInfo, ServerDetailed, ServerAvailableFeatures, ComputeStats, ServerStatus } from '../../../../common-types/Server';
 import ServerMetricsTab from '@/components/server/ServerMetricsTab.vue';
 import { ClientOutPayload, ServerOutPacket, ServerOutPayload } from '../../../../common-types/ServerWebsocket';
+import ConfigFileEditor from '@/components/server/ConfigFileEditor.vue';
 
 const MAX_LOGS_LINES = 350
 const MAX_METRIC_HISTORY = 300

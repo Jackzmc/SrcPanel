@@ -145,7 +145,7 @@ export interface UserNotification extends AddUserNotification {
     timestamp: number,
 }
 export interface AddUserNotification extends UserNotificationOptions {
-    message: number,
+    message: string,
 }
 export interface UserNotificationOptions {
     link?: string,

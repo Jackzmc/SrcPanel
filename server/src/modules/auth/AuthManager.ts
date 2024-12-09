@@ -37,6 +37,8 @@ export interface APIKey {
     lastUsed: number
 }
 
+export type NotificationCallback = (notification: UserNotification) => void
+
 
 export default class AuthManager {
     #db: Pool //left4dead2-admins
@@ -49,6 +51,8 @@ export default class AuthManager {
     #config: ConfigManager
     // Caches the resolved name of a ban source such as discord:DISCORD_ID
     private providerNameCache: Map<string, string>
+
+    #notificationSubscribers: Map<NotificationCallback, string> = new Map()
 
     #oauthManager: OauthManager
 
@@ -394,9 +398,24 @@ export default class AuthManager {
             return {
                 timestamp: row.timestamp,
                 message: row.message,
-                link: row.link
+                link: row.link,
+                level: row.level
             } 
         })
+    }
+
+    subscribeNotifications(steamid2: string, callback: NotificationCallback) {
+        this.#notificationSubscribers.set(callback, steamid2) 
+    }
+    unsubscribeNotifications(callback: NotificationCallback) {
+        this.#notificationSubscribers.delete(callback)
+    }
+    #notifyNotificationSubscribers(steamid2: string, notification: UserNotification) {
+        for(const [callback, steamid] of this.#notificationSubscribers.entries()) {
+            if(steamid === steamid2) {
+                callback(notification)
+            }
+        }
     }
 
 
@@ -413,6 +432,12 @@ export default class AuthManager {
             "INSERT INTO user_notifications (steamid, message, link) VALUES (?, ?, ?)",
             [ steamid2, message, options.link ?? null ]
         )
+        this.#notifyNotificationSubscribers(steamid2, {
+            timestamp: Math.round(Date.now()/1000),
+            message,
+            link: options.link,
+            level: options.level
+        })
     }
 
     /**
@@ -429,6 +454,12 @@ export default class AuthManager {
                 "INSERT INTO user_notifications (steamid, message, link) VALUES (?, ?, ?)",
                 [ steamid2, notification.message, notification.link ?? null ]
             )
+            this.#notifyNotificationSubscribers(steamid2, {
+                timestamp: Math.round(Date.now()/1000),
+                message: notification.message,
+                link: notification.link,
+                level: notification.level
+            })
         }
         await conn.commit()
         conn.release()
@@ -443,6 +474,7 @@ export default class AuthManager {
      * @memberof AuthManager
      */
     public async notifyAdmins(message: string, permission: string | null, options: UserNotificationOptions = {}) {
+        // We manually call pool because we are sending many in bulk
         const conn = await this.#db.getConnection()
         await conn.beginTransaction()
         for(const admin of Object.values(this.admins)) {
@@ -451,6 +483,11 @@ export default class AuthManager {
                     "INSERT INTO user_notifications (steamid, message, link) VALUES (?, ?, ?)",
                     [ admin.identity, message, options.link ?? null ]
                 )
+                this.#notifyNotificationSubscribers(admin.identity, {
+                    timestamp: Math.round(Date.now()/1000),
+                    message: message,
+                    link: options.link,
+                })
             }
         }
         await conn.commit()

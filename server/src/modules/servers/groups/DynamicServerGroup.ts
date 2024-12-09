@@ -15,7 +15,8 @@ export interface DynamicGroupServerTemplate {
     activityId?: string,
     tags?: string[],
     sortOrder?: number,
-    actions?: ServerAction[]
+    actions?: ServerAction[],
+    cfgDirectory?: string
 }
 
 export interface DynamicCreateGroupOptions extends CreateGroupOptions {
@@ -48,6 +49,7 @@ export class DynamicServerGroup extends ServerGroup<DockerServer> {
             activityId: options.serverTemplate.activityId,
             ip: options.serverTemplate.ip,
             tags: options.serverTemplate.tags ?? [],
+            cfgDirectory: options.serverTemplate.cfgDirectory
         }
         this.#minServers = options.minServers || 0
         this.#maxEmptyServers = options.maxEmptyServers ?? null
@@ -181,7 +183,8 @@ export class DynamicServerGroup extends ServerGroup<DockerServer> {
                 tags: this.#serverTemplate.tags ?? [],
                 actions: this.#serverTemplate.actions ?? [],
                 activityId: this.#serverTemplate.activityId,
-                sortOrder: this.#serverTemplate.sortOrder
+                sortOrder: this.#serverTemplate.sortOrder,
+                cfgDirectory: this.#serverTemplate.cfgDirectory
             }, instance)
         instance.setServer(server)
         await server.init()
