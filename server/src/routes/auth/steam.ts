@@ -123,6 +123,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                         }
                     }
                 } else {
+                    console.error("[auth/steam] VALIDATE_ERROR: ", req.query)
                     return reply.code(401).send({
                         error: 'VALIDATE_ERROR',
                         message: 'Could not validate user due to steam api response error',
@@ -135,9 +136,10 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 }
             }
 
+            console.error("[auth/steam] VALIDATE_ERROR: ", await validateRes.text())
             return reply.code(401).send({
                 error: 'VALIDATE_ERROR',
-                message: 'Could not validate user due to steam api error',
+                message: 'Could not validate user due to steam api error, steam may be unavailable.',
                 debug: {
                     query: req.query,
                     error: validateRes.statusText
