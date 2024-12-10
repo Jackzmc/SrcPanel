@@ -40,7 +40,9 @@ function selectFile(entry: FolderEntry) {
 function selectFolder(selectedFolder: string) {
   if(!folders.value) return
   for(const [folder, data] of Object.entries(folders.value)) {
-    data.active = folder === selectedFolder
+    if(folder === selectedFolder) {
+      data.active = !data.active
+    }
   }
 }
 
