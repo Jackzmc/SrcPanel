@@ -78,7 +78,7 @@ export default class MetricsFeature extends Feature {
             network_stats: stats.networks ? Object.fromEntries(Object.entries(stats.networks).map(([intf, net]) => {
               let rxRate = 0
               let txRate = 0
-              if(this.#latestComputeStats?.network_stats) {
+              if(this.#latestComputeStats?.network_stats[intf]) {
                 const timeDiff = this.#latestComputeStats.collectionTime - collectionTime
                 rxRate = (this.#latestComputeStats?.network_stats[intf].bytesRxTotal - net.rx_bytes) / timeDiff
                 txRate = (this.#latestComputeStats?.network_stats[intf].bytesTxTotal - net.tx_bytes) / timeDiff
