@@ -49,13 +49,14 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             }
         },
         async handler(req: FastifyRequest<{ Querystring: OpenIDQuery }>, reply: FastifyReply) {
-            console.log(req.query)
             if(req.query['openid.error']) {
                 return {
                     error: 'OPENID_ERROR',
                     message: req.query['openid.error']
                 }
             }
+            const url =  new URL(req.query.return_uri ?? req.query['openid.return_to'])
+            const prefix = `${url.protocol}//${url.host}`
 
             // Send data back to steam for validation
             const params = new URLSearchParams({...req.query})
@@ -103,41 +104,18 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                         if(setupStage == 1) {
                             await fastify.config.SetKV("first_time_setup.stage", FirstTimeSetupStage.SteamAdminCreated)
                         }
-                        return reply.redirect(req.query['openid.assoc_handle.return_to'])
+                        return reply.redirect(`${prefix}${req.query.return_uri}`)
                     } else {
-                        if(req.query.return_uri) {
-                            const redirectUri = process.env.STEAM_REDIRECT_URI || "http://localhost:8080"
-                            return reply.redirect(`${redirectUri}/login-required?type=1`)
-                        } else {
-                            return reply.code(401).send({
-                                error: 'UNAUTHORIZED',
-                                message: 'Account has not been granted admin.'
-                            })
-                        }
+                        return reply.redirect(`${prefix}/error?type=oauth_not_authorized&provider=steam&aoauth_error=UNAUTHORIZED&req_id=${req.id}`)
                     }
                 } else {
-                    console.error("[auth/steam] VALIDATE_ERROR: ", req.query)
-                    return reply.code(401).send({
-                        error: 'VALIDATE_ERROR',
-                        message: 'Could not validate user due to steam api response error',
-                        debug: {
-                            query: req.query,
-                            params: params.toString(),
-                            raw: text
-                        }
-                    })
+                    req.log.error("[auth/steam] VALIDATE_ERROR: ", req.query)
+                    return reply.redirect(`${prefix}/error?type=oauth_error&provider=steam&oauth_error=STEAM_VALIDATION_FAILED&req_id=${req.id}`)
                 }
             }
 
-            console.error("[auth/steam] VALIDATE_ERROR: ", await validateRes.text())
-            return reply.code(401).send({
-                error: 'VALIDATE_ERROR',
-                message: 'Could not validate user due to steam api error, steam may be unavailable.',
-                debug: {
-                    query: req.query,
-                    error: validateRes.statusText
-                }
-            })
+            req.log.error("[auth/steam] VALIDATE_ERROR: ", await validateRes.text())
+            return reply.redirect(`${prefix}/error?type=oauth_error&provider=steam&aoauth_error=STEAM_API_ERROR&req_id=${req.id}`)
         }
     })
 
