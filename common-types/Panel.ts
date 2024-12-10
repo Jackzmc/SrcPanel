@@ -18,6 +18,7 @@ export type KeysType = "string" | "integer" | "boolean" | "float" | "url" | "pat
 export type KeysRecords = Record<string, KeyConfig>
 export const KVConfig: KeysRecords = {
     "domain": { flags: KeyFlags.Public | KeyFlags.Required, type: "url", name: "Domain", description: "The domain used for return urls from Oauth2 login (discord)" },
+    "protocol": { flags: KeyFlags.Public | KeyFlags.Required, type: "string", name: "Protocol", description: "HTTP or HTTPs (lowercase)" },
     "discord.link": { type: "url", name: "Discord Invite Link", description: "The link to your discord server" },
     "servers.long_refresh_interval": { flags: KeyFlags.Public, type: "float", name: "Long Refresh Interval", description: "How often in seconds to refresh servers in seconds when no clients are detected", },
     "servers.short_refresh_interval": { flags: KeyFlags.Public, type: "float", name: "Short Refresh Interval", description: "How often in seconds to refresh servers in seconds when clients are detected"},

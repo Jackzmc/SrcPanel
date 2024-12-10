@@ -104,7 +104,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                         if(setupStage == 1) {
                             await fastify.config.SetKV("first_time_setup.stage", FirstTimeSetupStage.SteamAdminCreated)
                         }
-                        return reply.redirect(`${prefix}${req.query.return_uri}`)
+                        return reply.redirect(req.query.return_uri)
                     } else {
                         return reply.redirect(`${prefix}/error?type=oauth_not_authorized&provider=steam&aoauth_error=UNAUTHORIZED&req_id=${req.id}`)
                     }
