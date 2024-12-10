@@ -49,6 +49,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             }
         },
         async handler(req: FastifyRequest<{ Querystring: OpenIDQuery }>, reply: FastifyReply) {
+            console.log(req.query)
             if(req.query['openid.error']) {
                 return {
                     error: 'OPENID_ERROR',
@@ -102,15 +103,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                         if(setupStage == 1) {
                             await fastify.config.SetKV("first_time_setup.stage", FirstTimeSetupStage.SteamAdminCreated)
                         }
-                        if(req.query.return_uri) {
-                            const redirectUri = process.env.STEAM_REDIRECT_URI || "http://localhost:8080"
-                            return reply.redirect(`${redirectUri}${req.query.return_uri}`)
-                        } else {
-                            return {
-                                user: req.session.user,
-                                permissions: req.session.permissions
-                            }
-                        }
+                        return reply.redirect(req.query['openid.assoc_handle.return_to'])
                     } else {
                         if(req.query.return_uri) {
                             const redirectUri = process.env.STEAM_REDIRECT_URI || "http://localhost:8080"
