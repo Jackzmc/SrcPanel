@@ -1,15 +1,18 @@
 name: UI
 run-name: UI
-on: [push]
+on: 
+  push:
+    branches:
+      - main
 jobs:
   build:
     runs-on: docker
     steps:
       - uses: actions/checkout@v4
+      - run: cd ui
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: 'yarn'
-      - run: cd ui
       - run: yarn build
       
