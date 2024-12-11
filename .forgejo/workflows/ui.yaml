@@ -17,6 +17,7 @@ jobs:
           node-version: 22
           # cache-dependency-path: 'ui'
           # cache: 'yarn'
+      - run: yarn install --frozen-lockfile
       - run: ls
       - run: yarn build
       
