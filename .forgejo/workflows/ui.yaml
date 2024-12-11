@@ -17,5 +17,6 @@ jobs:
           node-version: 22
           # cache-dependency-path: 'ui'
           # cache: 'yarn'
+      - run: ls
       - run: yarn build
       
