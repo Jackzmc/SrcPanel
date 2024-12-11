@@ -3,7 +3,7 @@ run-name: UI
 on: 
   push:
     branches:
-      - main
+      - release
 jobs:
   build:
     runs-on: docker
