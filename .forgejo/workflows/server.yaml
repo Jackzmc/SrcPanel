@@ -1,0 +1,26 @@
+name: Server
+run-name: Server
+on: 
+  push:
+    branches:
+      - release
+defaults:
+  run:
+    working-directory: server
+jobs:
+  build:
+    runs-on: docker
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          # cache-dependency-path: 'ui'
+          # cache: 'yarn'
+      - run: yarn install --frozen-lockfile
+      - run: ls
+      - run: yarn build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist
