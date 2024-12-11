@@ -27,7 +27,6 @@ export default class DockerLogs extends Logs {
     async init() {
         await this.readExisting()
         await this.#createLogsReader()
-        this.#container.changes(())
     }
 
     public get logs() { 
