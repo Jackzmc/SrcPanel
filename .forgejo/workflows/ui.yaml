@@ -12,7 +12,6 @@ jobs:
     runs-on: docker
     steps:
       - uses: actions/checkout@v4
-      - run: cd ui
       - uses: actions/setup-node@v4
         with:
           node-version: 22
