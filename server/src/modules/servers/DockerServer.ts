@@ -20,6 +20,7 @@ export default class DockerServer extends Server implements IAction {
         }))
         this.#instance = instance
         this._logs = new DockerLogs(this, this.#instance.Container)
+        // this.#instance.emit("start")
     }
 
     get canPerformCommands() {

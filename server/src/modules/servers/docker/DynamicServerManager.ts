@@ -37,6 +37,26 @@ export default class DynamicServerManager {
     async Load() {
         await this.#loadTemplates()
         await this.findExisting()
+        const stream = await this.#docker.getEvents()
+        stream.on('data', (chunk) => {
+            const event = JSON.parse(chunk.toString());
+            // event.status === 'restart' or start
+            if(event.status === "start") {
+                // const container = this.#instances[]
+                const container = this.findContainerById(event.id)
+                // container._notifyState(?)
+            }
+            console.log(event);
+        });
+    }
+
+    findContainerById(id: string) {
+        for(const container of Object.values(this.#instances)) {
+            if(container.ContainerId === id) {
+                return container
+            }
+        }
+        return null
     }
 
     async *#getContainers() {
