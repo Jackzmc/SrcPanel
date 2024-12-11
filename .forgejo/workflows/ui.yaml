@@ -20,7 +20,7 @@ jobs:
       - run: yarn install --frozen-lockfile
       - run: ls
       - run: yarn build
-      - uses: actions/upload-artifact@v4
+      - uses: forgejo/upload-artifact@v4
         with:
           name: dist
           path: ui/dist
@@ -28,7 +28,7 @@ jobs:
     runs-on: docker
     needs: [build]
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: forgejo/download-artifact@v4
         with:
           name: dist
           path: dist
