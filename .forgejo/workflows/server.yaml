@@ -21,6 +21,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache-dependency-path: 'ui/yarn.lock'
+          cache: 'yarn'
       - run: yarn install --frozen-lockfile
       - run: yarn build
       - run: git rev-parse HEAD > dist/.git-commit
