@@ -21,8 +21,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache-dependency-path: 'server/yarn.lock'
-          cache: 'yarn'
       - run: yarn install --frozen-lockfile
       - run: yarn build
       - run: git rev-parse HEAD > dist/.git-commit
@@ -38,7 +36,7 @@ jobs:
         with:
           name: dist
           path: dist
-      - uses: https://git.jackz.me/jackz/ssh-scp-deploy.git@master
+      - uses: https://git.jackz.me/jackz/ssh-scp-deploy.git@v2
         with:
           src: dist
           remote: ${{ vars.SSH_SERVER_PATH }}
