@@ -24,10 +24,10 @@ jobs:
       - run: yarn install --frozen-lockfile
       - run: yarn build
       - run: git rev-parse HEAD > dist/.git-commit
-      - uses: actions/upload-artifact@v4
+      - uses: forgejo/upload-artifact@v4
         with:
           name: dist
-          path: dist
+          path: server/dist
   deploy:
     runs-on: docker
     needs: [build]
