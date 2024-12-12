@@ -3,8 +3,8 @@ run-name: Server
 on: 
   push:
     paths:
-      - 'server/*'
-      - 'common-types/*'
+      - 'server/**/*'
+      - 'common-types/**/*'
     branches:
       - release
   workflow_dispatch: {}
