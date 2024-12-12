@@ -29,3 +29,18 @@ jobs:
         with:
           name: dist
           path: dist
+  deploy:
+    runs-on: docker
+    needs: [build]
+    steps:
+      - uses: forgejo/download-artifact@v4
+        with:
+          name: dist
+          path: dist
+      - uses: https://git.jackz.me/jackz/ssh-scp-deploy.git@master
+        with:
+          src: dist
+          remote: ${{ vars.SSH_REMOTE_PATH }}
+          host: ${{ vars.SSH_HOST }}
+          user: ${{ vars.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
