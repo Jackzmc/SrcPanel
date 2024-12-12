@@ -7,6 +7,8 @@ on:
       - common-types
     branches:
       - release
+  workflow_dispatch: {}
+    
 defaults:
   run:
     working-directory: ui
