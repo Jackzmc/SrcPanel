@@ -24,7 +24,6 @@ jobs:
           # cache-dependency-path: 'ui'
           # cache: 'yarn'
       - run: yarn install --frozen-lockfile
-      - run: ls
       - run: yarn build
       - uses: actions/upload-artifact@v4
         with:
