@@ -35,8 +35,8 @@ jobs:
       - uses: https://github.com/garygrossgarten/github-action-scp@release
         with:
           local: dist
-          remote: ${{ secrets.SSH_REMOTE }}
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
+          remote: ${{ vars.SSH_REMOTE_PATH }}
+          host: ${{ vars.SSH_HOST }}
+          username: ${{ vars.SSH_USER }}
           privateKey: ${{ secrets.SSH_PRIVATE_KEY }}
           atomicPut: true
