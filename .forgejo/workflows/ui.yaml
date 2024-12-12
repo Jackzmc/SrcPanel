@@ -2,10 +2,10 @@ name: UI
 run-name: UI
 on: 
   push:
-    # paths:
-    #   - 'ui/**'
-    #   - 'common-types/**'
-    #   - '.forgejo/workflows/ui.yaml'
+    paths:
+      - 'ui/**'
+      - 'common-types/**'
+      - '.forgejo/workflows/ui.yaml'
     branches:
       - release
   workflow_dispatch: {}
@@ -39,7 +39,7 @@ jobs:
         with:
           name: dist
           path: dist
-      - uses: https://git.jackz.me/jackz/scp-deploy@master
+      - uses: https://git.jackz.me/jackz/ssh-scp-deploy@master
         with:
           src: dist
           remote: ${{ vars.SSH_REMOTE_PATH }}
