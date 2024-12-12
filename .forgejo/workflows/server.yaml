@@ -40,7 +40,7 @@ jobs:
       - uses: https://git.jackz.me/jackz/ssh-scp-deploy.git@master
         with:
           src: dist
-          remote: ${{ vars.SSH_REMOTE_PATH }}
+          remote: ${{ vars.SSH_SERVER_PATH }}
           host: ${{ vars.SSH_HOST }}
           user: ${{ vars.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
