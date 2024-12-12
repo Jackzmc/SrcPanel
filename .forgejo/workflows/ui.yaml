@@ -38,7 +38,7 @@ jobs:
         with:
           name: dist
           path: dist
-      - uses: https://git.jackz.me/jackz/ssh-scp-deploy.git@master
+      - uses: https://git.jackz.me/jackz/ssh-scp-deploy.git@d5370c265fa7e46e69fe66d38ed7b65d9c1d83ed
         with:
           src: dist
           remote: ${{ vars.SSH_UI_PATH }}
