@@ -32,11 +32,10 @@ jobs:
         with:
           name: dist
           path: dist
-      - uses: https://github.com/garygrossgarten/github-action-scp@release
+      - uses: https://github.com/nogsantos/scp-deploy@master
         with:
-          local: dist
+          src: dist
           remote: ${{ vars.SSH_REMOTE_PATH }}
           host: ${{ vars.SSH_HOST }}
-          username: ${{ vars.SSH_USER }}
-          privateKey: ${{ secrets.SSH_PRIVATE_KEY }}
-          atomicPut: true
+          user: ${{ vars.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
