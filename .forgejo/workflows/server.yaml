@@ -2,6 +2,9 @@ name: Server
 run-name: Server
 on: 
   push:
+    paths:
+      - server
+      - common-types
     branches:
       - release
 defaults:

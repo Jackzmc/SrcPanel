@@ -2,6 +2,9 @@ name: UI
 run-name: UI
 on: 
   push:
+    paths:
+      - ui
+      - common-types
     branches:
       - release
 defaults:
