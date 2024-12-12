@@ -20,6 +20,7 @@ jobs:
       - run: yarn install --frozen-lockfile
       - run: ls
       - run: yarn build
+      - run: git rev-parse HEAD > dist/.git-commit
       - uses: forgejo/upload-artifact@v4
         with:
           name: dist
@@ -32,7 +33,7 @@ jobs:
         with:
           name: dist
           path: dist
-      - uses: https://github.com/nogsantos/scp-deploy@master
+      - uses: https://git.jackz.me/jackz/scp-deploy@master
         with:
           src: dist
           remote: ${{ vars.SSH_REMOTE_PATH }}
