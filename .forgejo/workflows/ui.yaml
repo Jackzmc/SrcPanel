@@ -24,7 +24,6 @@ jobs:
           cache-dependency-path: 'ui'
           cache: 'yarn'
       - run: yarn install --frozen-lockfile
-      - run: ls
       - run: yarn build
       - run: git rev-parse HEAD > dist/.git-commit
       - uses: forgejo/upload-artifact@v4
