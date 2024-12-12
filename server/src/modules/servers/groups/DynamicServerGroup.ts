@@ -197,4 +197,11 @@ export class DynamicServerGroup extends ServerGroup<DockerServer> {
         const server = await this.#registerInstance(instance)
         return server
     }
+
+    getServerByContainerId(containerId: string) {
+        for(const server of Object.values(this._servers)) {
+            if(server.ContainerInstance.ContainerId === containerId) return server
+        }
+        return null
+    }
 }

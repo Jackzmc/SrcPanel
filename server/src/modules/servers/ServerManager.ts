@@ -326,6 +326,15 @@ export default class ServerManager {
     }
     return null
   }
+  public getServerByContainerId(containerId: string) {
+    for(const group of Object.values(this.#groups)) {
+      if(group instanceof DynamicServerGroup) {
+        const server = group.getServerByContainerId(containerId)
+        if(server) return server
+      }
+    }
+    return null
+  }
   public getGroup(id: string) {
     return this.#groups[id]
   }

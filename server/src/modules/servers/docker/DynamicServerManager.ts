@@ -5,6 +5,7 @@ import Json5 from 'json5';
 import DynamicServerInstance from './DynamicServerInstance.js';
 import ServerManager from '../ServerManager.js';
 import { DynamicServerGroup } from '../groups/DynamicServerGroup.js';
+import { ServerEvent } from '../DockerServer.js';
 export interface DockerTemplateConfig {
     id: string
     network?: "host" | string,
@@ -37,16 +38,21 @@ export default class DynamicServerManager {
     async Load() {
         await this.#loadTemplates()
         await this.findExisting()
+
         const stream = await this.#docker.getEvents()
         stream.on('data', (chunk) => {
             const event = JSON.parse(chunk.toString());
             // event.status === 'restart' or start
             if(event.status === "start") {
                 // const container = this.#instances[]
-                const container = this.findContainerById(event.id)
+                // const container = this.findContainerById(event.id)
+                const server = this.#srvManager.getServerByContainerId(event.id)
+                server?._notifyEvent(ServerEvent.Started)
                 // container._notifyState(?)
+            } else if(event.status === "stop") {
+                const server = this.#srvManager.getServerByContainerId(event.id)
+                server?._notifyEvent(ServerEvent.Stopped)
             }
-            console.log(event);
         });
     }
 
