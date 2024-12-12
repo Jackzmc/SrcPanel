@@ -3,8 +3,8 @@ run-name: UI
 on: 
   push:
     paths:
-      - ui
-      - common-types
+      - 'ui/*'
+      - 'common-types/*'
     branches:
       - release
   workflow_dispatch: {}
