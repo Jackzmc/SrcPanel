@@ -26,10 +26,12 @@ jobs:
       - run: yarn install --frozen-lockfile
       - run: yarn build
       - run: git rev-parse HEAD > dist/.git-commit
+      - name: 'Tar files'
+        run: tar -cvf dist.tar ui/dist
       - uses: forgejo/upload-artifact@v4
         with:
           name: dist
-          path: ui/dist
+          path: dist.tar.gz
   deploy:
     runs-on: docker
     needs: [build]
@@ -37,11 +39,12 @@ jobs:
       - uses: forgejo/download-artifact@v4
         with:
           name: dist
-          path: dist
-      - uses: https://git.jackz.me/jackz/ssh-scp-deploy.git@v2.1.2
+          path: dist.tar.gz
+      - uses: https://git.jackz.me/jackz/ssh-scp-deploy.git@v3
         with:
-          src: dist
+          src: dist.tar.gz
           remote: ${{ vars.SSH_UI_PATH }}
           host: ${{ vars.SSH_HOST }}
           user: ${{ vars.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
+          extract: true
