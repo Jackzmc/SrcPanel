@@ -25,7 +25,6 @@ jobs:
           cache: 'yarn'
       - run: yarn install --frozen-lockfile
       - run: yarn build
-      - run: git rev-parse HEAD > dist/.git-commit
       - name: 'Tar files'
         run: tar -cvf dist.tar.gz dist
       - uses: forgejo/upload-artifact@v4
