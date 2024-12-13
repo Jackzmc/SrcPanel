@@ -27,11 +27,11 @@ jobs:
       - run: yarn build
       - run: git rev-parse HEAD > dist/.git-commit
       - name: 'Tar files'
-        run: tar -cvf dist.tar ui/dist
+        run: tar -cvf dist.tar dist
       - uses: forgejo/upload-artifact@v4
         with:
           name: dist
-          path: dist.tar.gz
+          path: ui/dist.tar.gz
   deploy:
     runs-on: docker
     needs: [build]
