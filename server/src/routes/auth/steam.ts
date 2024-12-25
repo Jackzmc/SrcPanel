@@ -55,6 +55,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                     message: req.query['openid.error']
                 }
             }
+            req.log.debug(`return_uri=${req.query.return_uri} openid.return_to=${req.query['openid.return_to']}`)
             const url =  new URL(req.query.return_uri ?? req.query['openid.return_to'])
             const prefix = `${url.protocol}//${url.host}`
 
