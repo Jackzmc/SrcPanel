@@ -132,14 +132,16 @@ export default class UserManager {
             const users = await this.#steam.getUserDetails(slice)
             if(!users) break
             for(const user of users) {
+                const steamid2 = new SteamID(user.steamid).getSteam2RenderedID()
                 const expUser = {
                     // We use the right side of STEAM_#:#:#####
-                    accountId: new SteamID(user.steamid).getSteam2RenderedID().slice(10),
+                    accountId: steamid2.slice(10),
                     name: user.personaname,
                     avatarHash: user.avatarhash
                 }
                 expUsers.push(expUser)
-                await this.insertUser(expUser).catch(err => {
+                const cacheUser = await this.getUserDirect(steamid2)
+                await (cacheUser ? this.updateUser(expUser) : this.insertUser(expUser)).catch(err => {
                     console.error("Failed to insert user", expUser.accountId, err)
                 })
             }
