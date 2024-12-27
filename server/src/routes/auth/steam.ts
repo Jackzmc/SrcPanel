@@ -27,6 +27,19 @@ interface OpenIDQuery {
 
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
+    fastify.setErrorHandler(async (err, req: FastifyRequest<{Querystring: Record<string, any> }>, reply: FastifyReply) => {
+        fastify.log.error(`[auth/steam] Route error: ${err.stack}`)
+        const returnTo = req.query.return_uri ?? req.query['openid.return_to'] ?? await fastify.config.GetKV("domain", req.headers.host)
+        const url = new URL(returnTo)
+        const prefix = `${url.protocol}//${url.host}`
+        const params = new URLSearchParams()
+        params.append("type", "oauth_internal_error")
+        params.append("provider", "steam")
+        params.append("code", err.code ?? err.message)
+        params.append("req_id", req.id)
+        return reply.redirect(`${prefix}/error?${params.toString()}`)
+    })
+
     fastify.route({
         url: '/callback', 
         method: 'GET',
@@ -55,7 +68,9 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                     message: req.query['openid.error']
                 }
             }
-            const url =  new URL(req.query.return_uri ?? req.query['openid.return_to'])
+            req.log.debug(`return_uri=${req.query.return_uri} openid.return_to=${req.query['openid.return_to']}`)
+            const returnTo = req.query.return_uri ?? req.query['openid.return_to'] ?? await fastify.config.GetKV("domain", req.headers.host)
+            const url = new URL(returnTo)
             const prefix = `${url.protocol}//${url.host}`
 
             // Send data back to steam for validation
