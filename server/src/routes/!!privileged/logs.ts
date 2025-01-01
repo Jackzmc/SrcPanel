@@ -6,6 +6,7 @@ import { QueryBuilder, SortDirection } from '../../modules/QueryBuilder.js';
 import SteamID from 'steamid';
 import { open } from 'sqlite';
 import SetCacheManager, { SetCache } from '../../modules/SetCache.js';
+import { CronJob } from 'cron'
 
 const LogQuery = Type.Object({
     raw: Type.Optional(Type.Boolean({default: false})),
@@ -112,6 +113,18 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     const partitions = await partitionCache.fetch()
     const a = await Promise.all([...partitions.values()].map(part => getTotalRows(part)))
     await SetCacheManager.Save()
+
+    // Add new partition on new year
+    const job = new CronJob(
+        '0 0 1 1 *', // cronTime
+        async function () {
+            const year = CurrentYear() 
+            fastify.log.info("Adding partition to activity_log for " + year)
+            await fastify.db.execute(`ALTER TABLE activity_log ADD PARTITION ( PARTITION p${year} VALUES LESS THAN ( UNIX_TIMESTAMP('${year+1}-01-01 00:00') ) )`)
+        }, // onTick
+        null, // onComplete
+        true, // start
+    );
 
     fastify.get('/data', async(req, reply) => {
         const servers = await serverFilterCache.fetch()

@@ -14,6 +14,7 @@
     "@influxdata/influxdb-client": "^1.35.0",
     "@lowly1337/vpk": "^0.2.6",
     "@sinclair/typebox": "^0.23.4",
+    "cron": "^3.3.2",
     "dockerode": "^4.0.2",
     "dotenv": "^16.0.0",
     "express": "^4.17.3",
