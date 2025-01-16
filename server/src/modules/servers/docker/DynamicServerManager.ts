@@ -187,6 +187,7 @@ export default class DynamicServerManager {
                 }] },
                "LogConfig": {
                     Type: "local",
+                    Config: {}
                 },
             },
             Labels: {
