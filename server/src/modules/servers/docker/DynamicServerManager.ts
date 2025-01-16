@@ -184,7 +184,10 @@ export default class DynamicServerManager {
                 "PortBindings": { [`${port.toString()}/udp`]: [{ 
                     "HostPort": port.toString(), 
                     "HostIp": template.config.ip 
-                }] }
+                }] },
+               "LogConfig": {
+                    Type: "local",
+                },
             },
             Labels: {
                 "panel.template": templateId,
