@@ -24,7 +24,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         for(const param in req.query) {
             let [key, column] = param.split("_")
             if(key === "search" && req.query[param] != "") {
-                if(column == "user") column = 'u.last_alias'
+                if(column == "user") column = 'u.last_name'
                 queryConditions.push(`${column} LIKE ?`)
                 queryData.push(`%${req.query[param]}%`)
             }
