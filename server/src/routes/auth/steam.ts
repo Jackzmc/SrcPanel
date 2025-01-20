@@ -67,11 +67,17 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                     error: 'OPENID_ERROR',
                     message: req.query['openid.error']
                 }
-            }
-            req.log.debug(`return_uri=${req.query.return_uri} openid.return_to=${req.query['openid.return_to']}`)
+            } 
             const returnTo = req.query.return_uri ?? req.query['openid.return_to'] ?? await fastify.config.GetKV("domain", req.headers.host)
             const url = new URL(returnTo)
             const prefix = `${url.protocol}//${url.host}`
+
+            if(!req.query['openid.response_nonce']) {
+                req.log.error({ query: req.query }, "[auth/steam] Invalid callback, missing query")
+                return reply.redirect(`${prefix}/error?type=oauth_error&provider=steam&oauth_error=LOGIN_STALE_TRY_AGAIN&req_id=${req.id}`)
+            }
+            req.log.debug(`return_uri=${req.query.return_uri} openid.return_to=${req.query['openid.return_to']}`)
+
 
             // Send data back to steam for validation
             const params = new URLSearchParams({...req.query})
@@ -125,12 +131,12 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                     }
                 } else {
                     req.log.error("[auth/steam] VALIDATE_ERROR: " + JSON.stringify(req.query))
-                    req.log.error({ query: req.query }, "[auth/steam] VALIDATE_ERROR")
+                    req.log.error({ query: req.query, steamResponse: text }, "[auth/steam] VALIDATE_ERROR")
                     return reply.redirect(`${prefix}/error?type=oauth_error&provider=steam&oauth_error=STEAM_VALIDATION_FAILED&req_id=${req.id}`)
                 }
             }
 
-            req.log.error("[auth/steam] VALIDATE_ERROR: " + await validateRes.text())
+            req.log.error("[auth/steam] STEAM_ERROR: " + await validateRes.text())
             return reply.redirect(`${prefix}/error?type=oauth_error&provider=steam&aoauth_error=STEAM_API_ERROR&req_id=${req.id}`)
         }
     })
