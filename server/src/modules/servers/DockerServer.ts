@@ -121,4 +121,21 @@ export default class DockerServer extends Server implements IAction {
         this._online = state.Running
     }
 
+    _notifyEvent(event: ServerEvent) {
+        if(event === ServerEvent.Started) {
+            // Re-init console stream
+            this.Console?.init()
+            this.Metrics.addAnnotationX({
+                x: Date.now(),
+                label: {
+                    text: "Server started"
+                }
+            })
+        }
+    }
+}
+
+export enum ServerEvent {
+    Started,
+    Stopped,
 }

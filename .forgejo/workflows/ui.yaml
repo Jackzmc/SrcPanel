@@ -2,8 +2,14 @@ name: UI
 run-name: UI
 on: 
   push:
+    paths:
+      - 'ui/**'
+      - 'common-types/**'
+      - '.forgejo/workflows/ui.yaml'
     branches:
       - release
+  workflow_dispatch: {}
+    
 defaults:
   run:
     working-directory: ui
@@ -15,28 +21,30 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          # cache-dependency-path: 'ui'
-          # cache: 'yarn'
+          cache-dependency-path: 'ui/yarn.lock'
+          cache: 'yarn'
       - run: yarn install --frozen-lockfile
-      - run: ls
       - run: yarn build
-      - uses: actions/upload-artifact@v4
+      - run: git rev-parse HEAD > dist/.git-commit
+      - name: 'Tar files'
+        run: tar -cvf dist.tar dist
+      - uses: forgejo/upload-artifact@v4
         with:
           name: dist
-          path: dist
+          path: ui/dist.tar.gz
   deploy:
-    needs: build
     runs-on: docker
+    needs: [build]
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: forgejo/download-artifact@v4
         with:
           name: dist
-          path: dist
-      - uses: garygrossgarten/github-action-scp@release
+          path: dist.tar.gz
+      - uses: https://git.jackz.me/jackz/ssh-scp-deploy.git@v3
         with:
-          local: dist
-          remote: ${{ secrets.SSH_REMOTE }}
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          privateKey: ${{ secrets.SSH_PRIVATE_KEY }}
-          atomicPut: true
+          src: dist.tar.gz
+          remote: ${{ vars.SSH_UI_PATH }}
+          host: ${{ vars.SSH_HOST }}
+          user: ${{ vars.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          extract: true
