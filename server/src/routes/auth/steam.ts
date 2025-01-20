@@ -76,6 +76,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 req.log.error({ query: req.query }, "[auth/steam] Invalid callback, missing query")
                 return reply.redirect(`${prefix}/error?type=oauth_error&provider=steam&oauth_error=LOGIN_STALE_TRY_AGAIN&req_id=${req.id}`)
             }
+            req.log.debug({ query: req.query}, 'query')
             req.log.debug(`return_uri=${req.query.return_uri} openid.return_to=${req.query['openid.return_to']}`)
 
 
