@@ -8,6 +8,7 @@ TODO:
 import { OauthProvider, OauthProviderData } from "../../../../common-types/User.js";
 import { OauthConfig } from "./OauthManager.js";
 import AuthManager from "./AuthManager.js";
+import assert from "assert";
 
 interface AccessTokenResponse {
     access_token: string;
@@ -59,19 +60,7 @@ export class OauthProviderUser {
         return `Basic ${raw}`
     }
 
-    async #fetchAccessToken(code?: string, redirectUrl?: string) {
-        if(!this.#authData) throw new Error("Provider has already been revoked")
-        if(!code && !this.#authData.refreshToken) throw new Error('No code or refresh token provided. Either call .authorize(code) or .setUser(steamid) first')
-        const params = new URLSearchParams()
-        // params.append('client_id', this.#oauth.clientId)
-        // params.append('client_secret', this.#oauth.clientSecret)
-        params.append('grant_type', code ? 'authorization_code' : 'refresh_token')
-        if(code) {
-            params.append('code', code)
-            if(!redirectUrl) throw new Error("Oauth code was provided, but no redirect url was provided")
-            params.append('redirect_uri', redirectUrl)
-        }
-        else if(this.#authData.refreshToken) params.append('refresh_token', this.#authData.refreshToken)
+    async #fetchAccessToken(params: URLSearchParams) {
         const response = await fetch(this.#oauth.urls.tokenUrl, {
             method: 'POST',
             headers: {
@@ -106,25 +95,49 @@ export class OauthProviderUser {
         }
     }
 
+    /** Acquires first access token by exchanging for it with OAuth2's code
+    */
+    async authorizeWithCode(code: string, redirectUrl: string) {
+        if(!code) throw new Error('No code provided.');
+        if(!redirectUrl) throw new Error("Oauth code was provided, but no redirect url was provided")
+        const params = new URLSearchParams()
+        params.append('grant_type', 'authorization_code')
+        params.append('code', code)
+        params.append('redirect_uri', redirectUrl)
+        await this.#fetchAccessToken(params)
+    }
+
+    /** Acquires new access token by using refresh token. This does not check if the access key has expired, call getAccessToken */
+    async #refreshAccessToken(refreshToken: string) {
+        // if(!this.#authData) throw new Error("refreshAccessToken called with no auth data")
+        if(!refreshToken) throw new Error("refreshAccessToken called with no refresh token")
+        const params = new URLSearchParams()
+        // params.append('client_id', this.#oauth.clientId)
+        // params.append('client_secret', this.#oauth.clientSecret)
+        params.append('grant_type', 'refresh_token')
+        params.append('refresh_token', refreshToken)
+        return await this.#fetchAccessToken(params)
+    }
+
     get isExpired() {
         if(!this.#authData) return null
         return this.#authData.refreshTokenExpired
     }
 
+    /** Returns an valid access token, refreshing if needed. Will error if there is no access token */
     async #getAccessToken() {
-        if(!this.#authData) throw new Error("Provider has already been revoked")
+        if(!this.#authData) throw new Error("Provider has already been revoked, or not initialized")
         if(!this.#authData.accessToken || this.#authData.accessTokenExpires! >= ((Date.now() / 1000) + EXPIRES_WINDOW_S)) {
-            await this.#fetchAccessToken()
+            if(!this.#authData.refreshToken) throw new Error("Refresh token is invalid, cannot acquire access token")
+            await this.#refreshAccessToken(this.#authData.refreshToken)
+        }
+        if(!this.#authData.accessToken) {
+            throw new Error("No valid access token available")
         }
         return this.#authData.accessToken
     }
 
-    async authorize(code: string) {
-        const val = await this.#fetchAccessToken(code, this.#oauth.urls.redirectUrl)
-        if(!val) throw new Error("Failed to fetch access token")
-        return val
-    }
-
+    /** Initalizes a user by acquiring authentication data saved in auth manager */
     async setUser(steamid2: string) {
         this.#steamid2 = steamid2
         this.#authData = await this.#authManager.fetchProviderAuthData(steamid2, this.#providerName as OauthProvider)
@@ -132,6 +145,7 @@ export class OauthProviderUser {
         await this.#getAccessToken()
     }
 
+    /** Saves auth data for given user, if not provided will use previous used steamid */
     async save(steamid2?: string) {
         if(steamid2) this.#steamid2 = steamid2
         else if(!this.#steamid2) throw new Error("No steamid2 provided, fetch existing provider with .setUser(steamid) or call with one .save(steamid)")
@@ -143,9 +157,12 @@ export class OauthProviderUser {
         await this.#authManager.setProviderAuthData(this.#steamid2, this.#providerName as OauthProvider, this.#authData!)
     }
 
+    /** 
+        Fetches user's information from provider, using access token automatically. Must be called after .setUser or .authorizeWithCode 
+        @param retry {boolean} - if request failed due to expired access token, acquire a new one and retry request
+    */
     public async fetchDetails(retry = false): Promise<OauthProviderData|null> {
         const accessToken = await this.#getAccessToken()
-        if(!accessToken) return null
         const userResponse = await fetch(this.#oauth.urls.detailsUrl, {
             headers: {
                 Authorization: `Bearer ${accessToken}`,
@@ -165,14 +182,14 @@ export class OauthProviderUser {
             }
             return this.#userData
         } else {
-            // Our access token expired, retry
+            // Our access token expired, retry again with a new token
             if(userResponse.status === 401) {
                 if(retry) {
                     console.error(`[oauth/${this.#providerName}] ${await userResponse.text()}`)
                     throw new Error(`Could not authenticate with ${this.#providerName}`)
                 }
                 this.#authData!.accessToken = null
-                return this.fetchDetails(true)
+                return await this.fetchDetails(false) // do not retry loop
             }
             console.error(`[oauth/${this.#providerName}] ${await userResponse.text()}`)
             throw new Error(`fetchDetails for ${this.#providerName} returned error:`)

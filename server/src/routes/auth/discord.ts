@@ -94,14 +94,14 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             const jwt = await JWT.verify<StateJwtPayoad>(req.query.state, STATE_JWT_SECRET)
             const provider = await fastify.authmngr.oauth.getProvider(PROVIDER_NAME)
             if(!provider) {
-                return reply.redirect(`${domain}/error?type=oauth_error&provider=${PROVIDER_NAME}&oauth_error=provider_not_supported`)
+                return reply.redirect(`${domain}/error?type=oauth_error&provider=${PROVIDER_NAME}&oauth_error=PROVIDER_NOT_SUPPORTED`)
             }
             try {
+                const returnUrl = req.query.return_uri ? `${domain}${req.query.return_uri}` : domain
                 // Converts code into access token
-                await provider.authorize(req.query.code)
+                await provider.authorizeWithCode(req.query.code, returnUrl)
                 // We have an access token, so we can fetch details
                 const userInfo = await provider.fetchDetails()
-                const returnUrl = req.query.return_uri ? `${domain}${req.query.return_uri}` : domain
                 if(jwt.payload.pub) {
                     // User is logged in already, is linking provider
                     await provider.save(req.user!.steamid2)
