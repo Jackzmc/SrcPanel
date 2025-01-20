@@ -124,7 +124,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                         return reply.redirect(`${prefix}/error?type=oauth_not_authorized&provider=steam&aoauth_error=UNAUTHORIZED&req_id=${req.id}`)
                     }
                 } else {
-                    req.log.error("[auth/steam] VALIDATE_ERROR: " + req.query)
+                    req.log.error("[auth/steam] VALIDATE_ERROR: " + JSON.stringify(req.query))
+                    req.log.error({ query: req.query }, "[auth/steam] VALIDATE_ERROR")
                     return reply.redirect(`${prefix}/error?type=oauth_error&provider=steam&oauth_error=STEAM_VALIDATION_FAILED&req_id=${req.id}`)
                 }
             }
