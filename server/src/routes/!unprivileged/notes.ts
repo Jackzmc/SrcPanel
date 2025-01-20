@@ -35,7 +35,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             whereCondition = `WHERE ${queryConditions.join(' AND ')}`
             const [notesCount] = await fastify.db.execute<RowDataPacket[]>(`
                 SELECT COUNT(*) as count FROM notes 
-                LEFT JOIN stats_users as u ON notes.steamid = u.steamid
+                LEFT JOIN view_panel_user as u ON SUBSTRING(notes.steamid, 11) = u.account_id
                 ${whereCondition}`,
                 queryData
             )

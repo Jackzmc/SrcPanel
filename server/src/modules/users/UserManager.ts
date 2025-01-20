@@ -39,6 +39,7 @@ export default class UserManager {
      */
     async insertUser(user: IUserData) {
         const accountId = user.accountId
+        if(!accountId) throw new Error("No account id provided")
         const conn = await this.#db.getConnection()
         await conn.beginTransaction()
         await conn.query(SQL`INSERT INTO panel_user (account_id, avatar_hash) VALUES (${accountId}, ${user.avatarHash})`)
