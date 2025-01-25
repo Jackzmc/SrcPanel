@@ -113,7 +113,7 @@ export default class SteamAPI {
         }
         if(index > 0) {
             // Don't waste a fetch if all items are in the cache
-            console.log(`itemcount=${fileids.length}&${params.toString()}`)
+            // console.log(`itemcount=${fileids.length}&${params.toString()}`)
             const response = await fetch('https://api.steampowered.com/ISteamRemoteStorage/GetPublishedFileDetails/v1/', {
                 method: 'POST',
                 headers: {
@@ -136,7 +136,8 @@ export default class SteamAPI {
         return details
     }
 
-    addToWSResolveQueue(workshopId: string, cb: WSResolveCallback) {
+    addToWSResolveQueue(workshopId: number, cb: WSResolveCallback) {
+        if(isNaN(workshopId)) throw new Error("Workshop id must be a number")
         if(this.#itemCache[workshopId]) {
             cb(this.#itemCache[workshopId])
             return
@@ -149,7 +150,7 @@ export default class SteamAPI {
         if(ids.length === 0) return
         while(ids.length > 0) {
             const itemIds = ids.splice(0, 100)
-            const items = await this.getItemDetails(itemIds.map(s => s[0]))
+            const items = await this.getItemDetails(itemIds)
             for(const item of items) {
                 const callback = this.#workshopResolveQueue[item.publishedfileid]
                 if(!callback) continue

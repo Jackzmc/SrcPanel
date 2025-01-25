@@ -65,6 +65,11 @@ export default class Share {
             metadata TEXT,
             PRIMARY KEY (filename)
         );`)
+        db.exec(SQL`CREATE TABLE IF NOT EXISTS meta (
+            key VARCHAR(128) NOT NULL,
+            value VARCHAR(128) NOT NULL,
+            PRIMARY KEY (key)
+        );`)
         this.runMigrations()
         
         // db.exec(SQL`ALTER TABLE addoncache
@@ -211,7 +216,7 @@ export default class Share {
                         const wsId = parseInt(dirent.name)
                         if(wsId) {
                             pendingResolve = true
-                            this.#steam.addToWSResolveQueue(dirent.name, async (item) => {
+                            this.#steam.addToWSResolveQueue(wsId, async (item) => {
                                 const details: AddonWorkshopInfo = item 
                                     ? Share.serializeWorkshopItem(item)
                                     : { deleted: true, publishedfileid: wsId }
@@ -298,9 +303,7 @@ export default class Share {
                 id: info.collection_id,
                 name: info.collection_name
             } : null,
-            meta: {
-                chapterIds: info.chapter_ids?.split(","),
-            }
+            meta: info.metadata ? JSON.parse(info.metadata) : {}
         }
     }
 

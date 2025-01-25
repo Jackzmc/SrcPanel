@@ -43,7 +43,15 @@
       </div>
     </div>
   </div>
-  <div class="columns is-multiline is-1">
+  <div class="columns is-centered" v-if="filteredAddons.length === 0">
+    <div class="column is-6 has-text-centered" style="width:50%">
+      <div class="box has-background-light-grey py-6">
+        <p class="subtitle is-4">No maps were found</p>
+      </div>
+    </div>
+  </div>
+  <div class="columns is-multiline is-1" v-else>
+
     <div :class="['column','is-flex',cardSizeClass]" v-for="map in filteredAddons" :key="map.filename">
       <div class="card is-fullwidth">
         <div class="card-image">
@@ -93,14 +101,14 @@
                     {{ getRelDate(map.downloaded) }}
                   </Icon>
                 </li>
-                <template v-if="getStats(map)">
+                <template>
                   <li>
-                    <Icon icon="clock">Played
+                    <Icon icon="clock" v-if="getStats(map)">Played
                       {{ getRelDate(getStats(map).lastPlayedTime) }}
                     </Icon>
                   </li>
                   <li>
-                    <Icon icon="gamepad">Played {{ getStats(map).gamesPlayed.toLocaleString() }} times</Icon>
+                    <Icon icon="gamepad" v-if="getStats(map)">Played {{ getStats(map).gamesPlayed.toLocaleString() }} times</Icon>
                   </li>
                 </template>
               </ul>
@@ -110,8 +118,10 @@
                 <li>
                   <Icon icon="file">{{ formatSize(map.filesize) }}</Icon>
                 </li>
-                <li v-if="map.meta">{{ map.meta.chapterIds.length }} chapters</li>
-                <li v-if="map.collection">{{ map.children.length }} parts</li>
+                <li>
+                  <Icon icon="book" v-if="map.meta">{{ map.meta.chapterIds.length }} chapters</Icon>
+                </li>
+                <li><span v-if="map.collection">{{ map.children.length }} parts</span></li>
               </ul>
             </div>
           </div>
