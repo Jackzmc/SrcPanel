@@ -32,7 +32,7 @@
             </div>
           </Field>
           <Field>
-            <div class="select">
+            <div class="select" v-show="sort.id !== 'random'">
               <select v-model="sort.direction">
                 <option :value="SortDirection.Ascending">(↑) Ascending</option>
                 <option :value="SortDirection.Descending">(↓) Descending</option>
@@ -328,9 +328,17 @@ function getUpdateDuration(time: number) {
 }
 function formatDescription(content: string) {
   if(!content) return ""
-  let output = content.slice(0, 256)
+  let output = content
+    .replace(/[─\-=_]+/g, '') // clean up common dividers
+    .replace(/\[\/?[a-z0-9]+\]/g, ' ') // cleanup bb-code tags
+    .replace(/\s{2,}/, '') // clean up duplicate white space
+    .replace(/ ᠌/g, '') // cleanup some bad whitespace characters
+    .slice(0, 256) // keep it short
+
+  // do not cut off mid-word:
   output = output.substring(0, Math.min(output.length, output.lastIndexOf(" ")))
   if(content.length > 256) output += "..."
+
   return output
 }
 function getStats(map: any) {
