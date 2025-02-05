@@ -322,10 +322,6 @@ function filterAndSort() {
 }
 const filterAndSortDebounce = debounce(filterAndSort, 400)
 
-function getUpdateDuration(time: number) {
-  const seconds = (Date.now()/1000) - time
-  return seconds / 60 / 60 / 24
-}
 function formatDescription(content: string) {
   if(!content) return ""
   let output = content
