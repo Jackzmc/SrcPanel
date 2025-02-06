@@ -41,6 +41,12 @@ const USER_AGENT = 'admin-panel (admin.jackz.me, v1)'
 // TODO: use providers.<provider_name>
 // TODO: fallback to providers/<provider>.png if non exist
 
+export class TokenInvalid extends Error {
+    constructor(message: string) {
+        super(message)
+    }
+}
+
 export class OauthProviderUser {
     #oauth: OauthConfig
     #providerName: string
@@ -81,6 +87,7 @@ export class OauthProviderUser {
             return json
         } else {
             const json = await response.json()
+            // The token has expired or is not working, instaed of error return null so we can check:
             if(json.error === "invalid_grant" && !json.message) {
                 // Set error here
                 this.#authData = {
@@ -89,7 +96,7 @@ export class OauthProviderUser {
                     accessToken: null,
                     accessTokenExpires: null
                 }
-                return null
+                throw new TokenInvalid(json.error_description)
             }
             throw new Error(`fetchAccessToken for provider ${this.#providerName}: ${JSON.stringify(json)} ${response.statusText}`)
         }
@@ -128,7 +135,7 @@ export class OauthProviderUser {
     async #getAccessToken() {
         if(!this.#authData) throw new Error("Provider has already been revoked, or not initialized")
         if(!this.#authData.accessToken || this.#authData.accessTokenExpires! >= ((Date.now() / 1000) + EXPIRES_WINDOW_S)) {
-            if(!this.#authData.refreshToken) throw new Error("Refresh token is invalid, cannot acquire access token")
+            if(!this.#authData.refreshToken) throw new Error("Missing refresh token, unable to acquire access token")
             await this.#refreshAccessToken(this.#authData.refreshToken)
         }
         if(!this.#authData.accessToken) {
@@ -161,7 +168,7 @@ export class OauthProviderUser {
         Fetches user's information from provider, using access token automatically. Must be called after .setUser or .authorizeWithCode 
         @param retry {boolean} - if request failed due to expired access token, acquire a new one and retry request
     */
-    public async fetchDetails(retry = false): Promise<OauthProviderData|null> {
+    public async fetchDetails(retry: boolean = false): Promise<OauthProviderData|null> {
         const accessToken = await this.#getAccessToken()
         const userResponse = await fetch(this.#oauth.urls.detailsUrl, {
             headers: {
