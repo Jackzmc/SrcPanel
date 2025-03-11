@@ -90,6 +90,7 @@ export default abstract class Server implements IAction {
     #activeVoiceMembers: DiscordUser[]
 
     constructor(group: ServerGroup, server: ServerExtendedData, gamedig: GameDig) {
+      this.#activeVoiceMembers = []
         this.#gamedig = gamedig
         this._group = group
         this._info = {
