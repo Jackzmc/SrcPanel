@@ -1006,6 +1006,15 @@ function onWSPayload(payload: ServerOutPacket) {
     metrics.value = payload.history
     metricAnnotations.value = payload.annotations
     latestMetric.value = payload.latest
+  } else if(payload.type === "voice_state") {
+    const index = voiceMembers.value.findIndex(m => m.id == payload.userId)
+    if(payload.connected) {
+      if(index == -1) {
+        voiceMembers.value.push({ id: payload.userId, name: payload.userName })
+      }
+    } else if(index > -1) {
+      voiceMembers.value.splice(index, 1)
+    }
   } else {
     console.error("OnWSPayload: unhandled payload type", payload.type, payload)
   }

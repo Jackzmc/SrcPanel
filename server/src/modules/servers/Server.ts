@@ -336,11 +336,23 @@ export default abstract class Server implements IAction {
           if(memberIndex == -1) {
             this.#activeVoiceMembers.push(user)
             this.Plugin?.Socket?.send(LiveRecordResponse.VoiceState, user.id, user.name, true)
+            this.broadcastWS({
+              type: "voice_state",
+              userId: user.id,
+              userName: user.name,
+              connected: true
+            })
           }
       } else if(!connected && memberIndex > -1) {
           // Disconnected
           this.#activeVoiceMembers.splice(memberIndex, 1)
           this.Plugin?.Socket?.send(LiveRecordResponse.VoiceState, user.id, user.name, false)
+          this.broadcastWS({
+            type: "voice_state",
+            userId: user.id,
+            userName: user.name,
+            connected: false
+          })
       }
     }
 

@@ -49,8 +49,14 @@ export interface Server_Error {
     error?: string,
     code?: string
 }
+export interface Server_VoiceState {
+    type: "voice_state",
+    userId: string,
+    userName: string,
+    connected: boolean
+}
 
-export type ServerOutPayload = Server_Metric | Server_MetricFull | Server_Live | Server_Status | Server_LogEntry | Server_ActivityLog | Server_Error
+export type ServerOutPayload = Server_Metric | Server_MetricFull | Server_Live | Server_Status | Server_LogEntry | Server_ActivityLog | Server_Error | Server_VoiceState
 export type ServerOutPacket = ServerOutPayload & {
     type: string,
     millis: number
