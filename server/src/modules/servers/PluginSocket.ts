@@ -274,9 +274,10 @@ export default class PluginSocket {
           this.#lastRefreshTime = Date.now()
           break
         case LiveRecordResponse.VoiceState:
-          writer.writeByte(arg1 ? 1 : 0)
+          // args: voiceUserId: string, voiceName: string, connected: boolean
+          writer.writeByte(arg3 ? 1 : 0) 
+          writer.writeString(arg1)
           writer.writeString(arg2)
-          writer.writeString(arg3)
       }
       if(!this.#socket.write(writer.buffer)) return reject(new Error("Failed to write to socket"))
       if(type != LiveRecordResponse.RunCommand) return resolve()
