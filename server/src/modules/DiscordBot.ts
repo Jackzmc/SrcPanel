@@ -71,11 +71,11 @@ export class DiscordBot {
                     if(channel.name != server.name)
                         channel.setName(server.name)
                     reverseMap.set(serverId, id)
-                } else {
-                    // Server no longer exists
-                    await channel.delete("GAME_TO_VOICE_LINK_UPDATE")
+                    continue
                 }
             }
+            // Server does not exist, delete channel
+            await channel.delete("GAME_TO_VOICE_LINK_UPDATE")
         }
 
         // Create any missing servers
