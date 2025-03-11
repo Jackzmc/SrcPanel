@@ -235,7 +235,8 @@ export default class PluginSocket {
   send(type: LiveRecordResponse.Refresh, userid?: number): Promise<void>;
   /** Runs a game command or built in command on server  */
   send(type: LiveRecordResponse.RunCommand, command: string, namespace?: string): Promise<LiveRecordCommandResponse>;
-  async send(type: LiveRecordResponse, arg?: any, namespace?: string): Promise<void | LiveRecordCommandResponse> {
+  send(type: LiveRecordResponse.VoiceState, voiceUserId: string, voiceName: string, connected: boolean): Promise<void>
+  async send(type: LiveRecordResponse, arg1?: any, arg2?: any, arg3?: any): Promise<void | LiveRecordCommandResponse> {
     if(!this.Authenticated && type != LiveRecordResponse.OK && type != LiveRecordResponse.Error) {
       throw new Error("Not authenticated")
     }
@@ -248,20 +249,24 @@ export default class PluginSocket {
       let id = this.#id++
       switch(type) {
         case LiveRecordResponse.OK:
-          writer.writeByte(arg ?? this.#server?.WebsocketViewers ?? 0)
+          writer.writeByte(arg1 ?? this.#server?.WebsocketViewers ?? 0)
           break
         case LiveRecordResponse.Error:
-          writer.writeString(arg ?? "")
+          writer.writeString(arg1 ?? "")
           break
         case LiveRecordResponse.RunCommand:
           writer.writeByte(id)
-          writer.writeString(arg)
-          writer.writeString(namespace ?? "")
+          writer.writeString(arg1)
+          writer.writeString(arg2 ?? "")
           break
         case LiveRecordResponse.Refresh:
-          writer.writeByte(arg ?? 0)
+          writer.writeByte(arg1 ?? 0)
           this.#lastRefreshTime = Date.now()
           break
+        case LiveRecordResponse.VoiceState:
+          writer.writeByte(arg1 ? 1 : 0)
+          writer.writeString(arg2)
+          writer.writeString(arg3)
       }
       if(!this.#socket.write(writer.buffer)) return reject(new Error("Failed to write to socket"))
       if(type != LiveRecordResponse.RunCommand) return resolve()
