@@ -131,30 +131,33 @@ export default class ServerManager {
       console.debug("[ServerManager::Live]",...args)
   }
 
-  #authenticateSocket(client: PluginSocket, reader: BufferReader) {
+  async #authenticateSocket(client: PluginSocket, reader: BufferReader): Promise<boolean> {
     const size = reader.readShort() // We don't need size for authentication, but we need to read 2 bytes
     const record = PluginSocket.ParseRecord(reader)
     // skip any other type until authenticated
-    if(record.type != LiveRecordType.Auth) return console.warn("[ServerManager] Got non-auth packets when not-authenticated, ignoring")
-    JWT.verify<PluginTokenPayload>(record.token, process.env.STATE_SECRET!)
-      .then(({payload}) => {
-        const server = this.getServerForPlugin(payload, record.port)
-        if(server) {
-          client._setServer(server,)
-          server.Plugin?._setSocket(client)
-          if(record.gameVersion)
-            server.GameVersion = record.gameVersion
-          client.send(LiveRecordResponse.OK, server.WebsocketViewers)
-          this.#debugLive("Authenticated", `host=${client.Host} server=${server.id}`)
-        } else {
-          client.send(LiveRecordResponse.Error, `Invalid or unknown id "${payload.sub}" (docker: ${payload.docker?'y':'n'})`)
-          return
-        }
-      })
-      .catch(err => {
+    if(record.type != LiveRecordType.Auth) {
+      console.warn("[ServerManager] Got non-auth packets when not-authenticated, ignoring")
+      return false
+    }
+    try {
+      const {payload} = await JWT.verify<PluginTokenPayload>(record.token, process.env.STATE_SECRET!)
+      const server = this.getServerForPlugin(payload, record.port)
+      if(server) {
+        client._setServer(server,)
+        server.Plugin?._setSocket(client)
+        if(record.gameVersion)
+          server.GameVersion = record.gameVersion
+        this.#debugLive("Authenticated", `host=${client.Host} server=${server.id}`)
+        return true
+      } else {
+        client.send(LiveRecordResponse.Error, `Invalid or unknown id "${payload.sub}" (docker: ${payload.docker?'y':'n'})`)
+        return false
+      }
+    } catch(err) {
         console.error("[ServerManager] Auth Error: ", err)
         client.send(LiveRecordResponse.Error, err.message)
-      })
+        return false
+    }
   }
 
   #onLiveClient(client: net.Socket) {
@@ -164,16 +167,18 @@ export default class ServerManager {
     const ps = new PluginSocket(client)
     this.#socketClients.set(clientHost, ps)
     
-    client.on('data', (buf) => {
+    client.on('data', async(buf) => {
       const packetReader = new BufferReader(buf)
       // If we aren't authenticate, read packet as an authentication packet and try to authenticate
       if(!ps.Authenticated) {
         try {
-          return this.#authenticateSocket(ps, packetReader);
+          if(await this.#authenticateSocket(ps, packetReader)) {
+            await ps.sendInit()
+          }
         } catch(err) {
           console.error("[ServerManager] Bad Auth:", err);
-          return
         }
+        return
       }
 
       // Multiple records can be included in a packet, this returns an iteration of buffer readers that contain records

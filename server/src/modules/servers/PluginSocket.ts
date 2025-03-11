@@ -199,6 +199,16 @@ export default class PluginSocket {
     this.#server = server
   }
 
+  // Called when socket has connected to server, sending any necessary info
+  async sendInit() {
+    if(!this.#server) throw Error("sendInit() called with no server")
+    this.send(LiveRecordResponse.OK, this.#server.WebsocketViewers)
+    // Notify of whos connected to voice
+    for(const user of this.#server.voiceMembers) {
+      this.send(LiveRecordResponse.VoiceState, user.id, user.name, true)
+    }
+  }
+
   #refreshCheckTimeout: NodeJS.Timeout
   #lastRefreshTime: number
   
