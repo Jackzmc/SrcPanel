@@ -99,6 +99,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             uptime: server.uptime,
             startTime: server.startTime,
             live: server.Plugin?.liveStatus,
+            voiceMembers: server.voiceMembers,
             configs
         }
     })

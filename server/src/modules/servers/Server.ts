@@ -1,5 +1,5 @@
 import { WebSocket } from "@fastify/websocket";
-import { SERVER_TYPE_MAP, ServerAction, ServerAvailableFeatures, ServerData, ServerInfo, ServerStatus, ServerStatusData, ServerStatusSource, ServerType } from "../../../../common-types/Server.js";
+import { SERVER_TYPE_MAP, ServerAction, ServerAvailableFeatures, ServerData, ServerInfo, ServerStatus, ServerStatusData, ServerStatusSource, ServerType, VoiceUser } from "../../../../common-types/Server.js";
 import ConfigsFeature from "./features/Configs.js";
 import ConsoleFeature from "./features/logs/Console.js";
 import MetricsFeature from "./features/Metrics.js";
@@ -10,7 +10,6 @@ import { ActionResponse, IAction } from "./IAction.js";
 import { GameDig } from 'gamedig';
 import SocketClientUser from "./SocketClientUser.js";
 import { Server_Status, ServerOutPacket, ServerOutPayload } from "../../../../common-types/ServerWebsocket.js";
-import { DiscordUser } from "../../modules/DiscordBot.js";
 import { LiveRecordResponse } from "../../../../common-types/Live.js";
 
 const MIN_REFRESH_TIME = 10_000
@@ -87,7 +86,7 @@ export default abstract class Server implements IAction {
     #gamedig: GameDig
 
     protected _wsClients: SocketClientUser[] = []
-    #activeVoiceMembers: DiscordUser[]
+    #activeVoiceMembers: VoiceUser[]
 
     constructor(group: ServerGroup, server: ServerExtendedData, gamedig: GameDig) {
       this.#activeVoiceMembers = []
@@ -330,7 +329,7 @@ export default abstract class Server implements IAction {
       }
     }
 
-    markVoiceConnection(user: DiscordUser, connected: boolean) {
+    markVoiceConnection(user: VoiceUser, connected: boolean) {
       let memberIndex = this.#activeVoiceMembers.findIndex(m => m.id === user.id)
       if(connected) {
           // Connected
@@ -349,7 +348,7 @@ export default abstract class Server implements IAction {
       return this.#activeVoiceMembers.length > 0
     }
 
-    get voiceMembers(): DiscordUser[] {
+    get voiceMembers(): VoiceUser[] {
       return this.#activeVoiceMembers
     }
 

@@ -335,6 +335,17 @@
         </template>
         <div class="box has-background-warning-light" v-else>Recent activities is not supported on this server</div>
       </div>
+      <div class="box" v-if="tab === 'overview'">
+        <h4 class="title is-5">Voice Members ({{ voiceMembers.length }})</h4>
+        <p class="subtitle is-6 mb-1">In the <code>{{ serverInfo.name }}</code> voice channel on <a data-tooltip="Click to join the discord" href="/api/admins/discord" target="_blank">Discord</a></p>
+        <div class="list pb-0">
+          <ListItem v-for="user in voiceMembers" :key="user.id" class="pb-0">
+            <template #title>
+              <UserComponent :user="user" fallback-name="Discord User" />
+            </template>
+          </ListItem>
+        </div>
+      </div>
       <div class="box" v-if="tab === 'live'">
         <!-- <span class="tag is-pulled-right is-danger has-tooltip-left" v-if="isLiveViewActive" data-tooltip="Connected to server, receiving live data">Live</span> -->
         <h4 class="title is-5">Game Info</h4>
@@ -508,10 +519,11 @@ import { UserPrivilegeCode } from '../../../../common-types/Privileges';
 import { formatDate, getDuration } from '../../js/util.js';
 import UserComponent, { User } from '@/components/UserComponent.vue';
 import Console from '@/components/server/Console.vue'
-import { ServerData, ServerInfo, ServerDetailed, ServerAvailableFeatures, ComputeStats, ServerStatus } from '../../../../common-types/Server';
+import { ServerData, ServerInfo, ServerDetailed, ServerAvailableFeatures, ComputeStats, ServerStatus, VoiceUser } from '../../../../common-types/Server';
 import ServerMetricsTab from '@/components/server/ServerMetricsTab.vue';
 import { ClientOutPayload, ServerOutPacket, ServerOutPayload } from '../../../../common-types/ServerWebsocket';
 import ConfigFileEditor from '@/components/server/ConfigFileEditor.vue';
+import ListItem from '@/components/ListItem.vue';
 
 const MAX_LOGS_LINES = 350
 const MAX_METRIC_HISTORY = 300
@@ -633,6 +645,7 @@ let online = ref<boolean>()
 let liveStatus = ref<LiveDataCache|null>(null)
 let uptime = ref<number|null>(null)
 let activities = ref()
+let voiceMembers = ref<VoiceUser[]>([])
 let cfg = ref<{
   selected?: { filename: string, path: string }, raw?: string, json?: any, loading: boolean }
 >({ loading: false })
@@ -780,6 +793,7 @@ async function fetchServerData() {
       liveStatus.value = data.live
       serverConfigs.value = data.configs
       uptime.value = data.uptime
+      voiceMembers.value = data.voiceMembers ?? []
     } else {
       error.value = json.message ?? json.err ?? json ?? await response.text()
     }

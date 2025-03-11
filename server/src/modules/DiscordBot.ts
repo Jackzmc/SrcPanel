@@ -3,11 +3,8 @@ import { ChannelType, GatewayIntentBits, Routes } from 'discord-api-types/v10';
 import { BaseGuildVoiceChannel, CategoryChannel, Client, createChannel, GuildMember, TextChannel, User, VoiceBasedChannel, VoiceChannel } from 'discord.js';
 import ServerManager from './servers/ServerManager';
 import { readFile, writeFile } from 'fs/promises';
+import { VoiceUser } from '../../../common-types/Server.js';
 
-export interface DiscordUser {
-    id: string,
-    name: string,
-}
 
 export class DiscordBot {
     #client: Client
@@ -20,35 +17,48 @@ export class DiscordBot {
     constructor(serverManager: ServerManager, savePath: string, discordToken: string) {
         this.#token = discordToken
         this.#servers = serverManager
-        this.#client = new Client({ intents: [GatewayIntentBits.Guilds] })
+        this.#client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates] })
         this.#channelServerMap = new Map()
         this.#savePath = savePath
     }
 
     async init() {
         await this.#client.login(this.#token)
+        // TODO: check voice members on start
         this.#client.on("voiceStateUpdate", (oldState,newState) => {
-            if(!newState.channelId || !newState.member) return
-            const serverId = this.#channelServerMap[newState.channelId]
-            if(serverId) {
-                const server = this.#servers.getServer(serverId)
-                if(!server) {
-                    console.warn('[Discord] Could not find server: ', serverId)
-                    return
+            console.log("voiceState")
+            if(!newState.member) return
+            console.log(newState.member.id, oldState.channelId, newState.channelId)
+            // Fetch the servers that the channels map to
+            const channelServerIds = [
+                oldState?.channelId ? this.#channelServerMap[oldState.channelId] : null,
+                newState?.channelId ? this.#channelServerMap[newState.channelId] : null
+            ]
+            console.debug(channelServerIds)
+            const [oldStateServer, newStateServer] = channelServerIds.map(id => id ? this.#servers.getServer(id) : null)
+            console.debug(oldStateServer?.name, "\t", newStateServer?.name)
+
+            if(newStateServer && (!oldStateServer || oldStateServer.id != newState.id)) {
+                // User connected or switched channels
+                // Mark new as connected, old as disconnected
+                newStateServer.markVoiceConnection(DiscordBot.toPanelUser(newState.member), true)
+                console.debug(`informing ${newStateServer.name} client connected`)
+                if(oldStateServer) {
+                    oldStateServer.markVoiceConnection(DiscordBot.toPanelUser(newState.member), false)
+                    console.debug(`informing ${oldStateServer.name} client disconnected`)
                 }
-                
-                if(!oldState.channelId && newState.channelId) {
-                    server.markVoiceConnection(DiscordBot.toPanelUser(newState.member), true)
-                    // Connected
-                } else if(oldState.channelId && !newState.channelId) {
-                    // Disconnected
-                    server.markVoiceConnection(DiscordBot.toPanelUser(newState.member), false)
-                }
+            } else if(!newStateServer && oldStateServer) {
+                // User disconnected (from voice)
+                oldStateServer.markVoiceConnection(DiscordBot.toPanelUser(newState.member), false)
+                console.debug(`informing ${oldStateServer.name} client disconnected`)
             }
         })
         await this.load()
-        await this.updateChannels()
-        console.info("[Discord] Bot initalized")
+
+        this.#client.on("ready", async() => {
+            await this.updateChannels()
+            console.info("[Discord] Bot initalized")
+        })
     }
 
     async updateChannels() {
@@ -64,6 +74,7 @@ export class DiscordBot {
         // Delete any non existent servers and create reverse mapping
         const reverseMap = new Map<string, string>()
         for(const [id, channel] of category.children.cache.entries()) {
+            if(channel.type != ChannelType.GuildVoice) continue
             const serverId = this.#channelServerMap.get(id)
             if(serverId) {
                 const server = this.#servers.getServer(serverId as string)
@@ -71,6 +82,7 @@ export class DiscordBot {
                     if(channel.name != server.name)
                         channel.setName(server.name)
                     reverseMap.set(serverId, id)
+                    console.debug(`[Discord] found channel ${channel.id} --> server ${server.id}`)
                     continue
                 }
             }
@@ -94,15 +106,13 @@ export class DiscordBot {
                     type: ChannelType.GuildVoice
                 })
                 this.#channelServerMap.set(channel.id, server.id)
-                console.debug(`[Discord] channel ${channel.id} --> server ${server.id}`)
+                console.debug(`[Discord] created channel ${channel.id} --> server ${server.id}`)
             }
             channel.setPosition(pos)
             pos++
         }
         
-        // Update all servers positions
-
-        this.save()
+        await this.save()
     } 
 
     async save() {
@@ -116,13 +126,13 @@ export class DiscordBot {
         } catch(err) {
             if(err.code !== "ENOENT") {
                 console.warn("[Discord] Error loading channel mapping:\n", err)
-                console.warn("[Discord] Force recreating channels")
-                await this.updateChannels()
+                // console.warn("[Discord] Force recreating channels")
+                // await this.updateChannels()
             }
         }
     }
 
-    static toPanelUser(member: GuildMember | User): DiscordUser {
+    static toPanelUser(member: GuildMember | User): VoiceUser {
         return {
             id: member.id,
             name: member.displayName

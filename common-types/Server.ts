@@ -1,5 +1,10 @@
 import { LiveDataCache } from "./Live.js"
 
+export interface VoiceUser {
+    id: string,
+    name: string,
+}
+
 export type ServerStatusSource = "" | "live" | "gamedig"
 export interface ServerStatus {
     source?: ServerStatusSource,
@@ -85,7 +90,8 @@ export interface ServerDetailed {
     live: LiveDataCache | null,
     uptime: number | null,
     startTime: number | null,
-    configs: null | any[]
+    configs: null | any[],
+    voiceMembers: null | VoiceUser[]
 }
 
 export interface PlayerStats {

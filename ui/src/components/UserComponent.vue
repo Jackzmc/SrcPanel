@@ -19,7 +19,7 @@
     <div class="is-inline-block mt-0">
       <p class="title is-5 has-text-primary mt-0">{{ props.user.name }}</p>
       <p class="subtitle is-6 has-text-white" v-if="steamid2">{{ steamid2 }}</p>
-      <p class="subtitle is-6 has-text-white" v-else>BOT</p>
+      <p class="subtitle is-6 has-text-white" v-else>{{ props.fallbackName ?? "BOT" }}</p>
     </div>
     <template v-if="id">
       <br>
@@ -54,7 +54,10 @@ interface UserMeta {
 const props = defineProps<{
   user: UserMeta & ({ steamid: string} | { id: string }),
   isAdmin?: boolean,
-  hideAvatar?: boolean
+  hideAvatar?: boolean,
+
+  fallbackName?: string,
+  forceAvatar?: boolean
 }>()
 
 const id = computed(() => {
@@ -64,7 +67,7 @@ const id = computed(() => {
 })
 
 const clientAvatarSrc = computed(() => {
-  if(!props.hideAvatar) return
+  if(props.hideAvatar) return
   if(props.user.avatarUrl) return props.user.avatarUrl
   return (id.value)
     ? `/api/users/${id.value}/avatar`
