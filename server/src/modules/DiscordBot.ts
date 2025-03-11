@@ -26,31 +26,27 @@ export class DiscordBot {
         await this.#client.login(this.#token)
         // TODO: check voice members on start
         this.#client.on("voiceStateUpdate", (oldState,newState) => {
-            console.log("voiceState")
             if(!newState.member) return
-            console.log(newState.member.id, oldState.channelId, newState.channelId)
             // Fetch the servers that the channels map to
             const channelServerIds = [
-                oldState?.channelId ? this.#channelServerMap[oldState.channelId] : null,
-                newState?.channelId ? this.#channelServerMap[newState.channelId] : null
+                oldState.channelId ? this.#channelServerMap.get(oldState.channelId) : null,
+                newState.channelId ? this.#channelServerMap.get(newState.channelId) : null, 
             ]
-            console.debug(channelServerIds)
             const [oldStateServer, newStateServer] = channelServerIds.map(id => id ? this.#servers.getServer(id) : null)
-            console.debug(oldStateServer?.name, "\t", newStateServer?.name)
 
             if(newStateServer && (!oldStateServer || oldStateServer.id != newState.id)) {
                 // User connected or switched channels
                 // Mark new as connected, old as disconnected
                 newStateServer.markVoiceConnection(DiscordBot.toPanelUser(newState.member), true)
-                console.debug(`informing ${newStateServer.name} client connected`)
+                // console.debug(`informing ${newStateServer.name} client connected`)
                 if(oldStateServer) {
                     oldStateServer.markVoiceConnection(DiscordBot.toPanelUser(newState.member), false)
-                    console.debug(`informing ${oldStateServer.name} client disconnected`)
+                    // console.debug(`informing ${oldStateServer.name} client disconnected`)
                 }
             } else if(!newStateServer && oldStateServer) {
                 // User disconnected (from voice)
                 oldStateServer.markVoiceConnection(DiscordBot.toPanelUser(newState.member), false)
-                console.debug(`informing ${oldStateServer.name} client disconnected`)
+                // console.debug(`informing ${oldStateServer.name} client disconnected`)
             }
         })
         await this.load()
