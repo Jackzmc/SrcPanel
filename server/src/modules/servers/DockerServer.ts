@@ -70,6 +70,9 @@ export default class DockerServer extends Server implements IAction {
                 await this.stop(true)
                 break
             }
+            case "delete":
+                await this.stop(true)
+                // TODO: 
             default:
                 return false
         }

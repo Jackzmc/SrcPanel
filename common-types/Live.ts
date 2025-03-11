@@ -1,3 +1,4 @@
+
 export interface StatusFinaleInfo {
     escapeLeaving: boolean
     finaleStage: FinaleStage
@@ -92,7 +93,7 @@ export enum LiveRecordType {
 	SurvivorItems,
     CommandResponse,
     Auth,
-    Meta
+    Meta,
 }
 
 export const enum GameDifficulty {
@@ -280,6 +281,7 @@ export interface LiveRecordMeta {
     steamConnected: boolean
 }
 
+
 export type LiveRecord = LiveRecordGame | LiveRecordClient | LiveRecordSurvivor | LiveRecordInfected | LiveRecordFinaleInfo | LiveRecordSurvivorItems | LiveRecordCommandResponse | LiveRecordMeta | LiveRecordAuth
 export interface BaseLiveRecord {
     type: LiveRecordType
@@ -295,7 +297,8 @@ export const RecordParseConfig: Record<LiveRecordType, RecordParserInterface<Bas
     [LiveRecordType.Finale]: RecordFinaleInfoParseDef,
     [LiveRecordType.Meta]: RecordMetaParseDef,
     [LiveRecordType.Auth]: RecordAuthParseDef,
-    [LiveRecordType.CommandResponse]: RecordCommandResponseParseDef
+    [LiveRecordType.CommandResponse]: RecordCommandResponseParseDef,
+
 }
 
 export const enum LiveRecordResponse {
@@ -303,7 +306,8 @@ export const enum LiveRecordResponse {
     Reconnect,
     Error,
     Refresh,
-    RunCommand // RunCommand(byte) id(number) command(string)
+    RunCommand, // RunCommand(byte) id(number) command(string)
+    VoiceState
 }
 
 export enum GameState {
@@ -326,7 +330,7 @@ export interface LiveDataCache {
     game: LiveRecordGame | null,
     clients: Record<string, LiveClient>, // key is userid as string
     finale?: LiveRecordFinaleInfo,
-    lastUpdate: number,
+    lastUpdate: number
 }
 
 export interface LiveSurvivor extends LiveRecordSurvivor {

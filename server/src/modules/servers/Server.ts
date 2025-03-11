@@ -10,6 +10,8 @@ import { ActionResponse, IAction } from "./IAction.js";
 import { GameDig } from 'gamedig';
 import SocketClientUser from "./SocketClientUser.js";
 import { Server_Status, ServerOutPacket, ServerOutPayload } from "../../../../common-types/ServerWebsocket.js";
+import { DiscordUser } from "../../modules/DiscordBot.js";
+import { LiveRecordResponse } from "../../../../common-types/Live.js";
 
 const MIN_REFRESH_TIME = 10_000
 
@@ -85,6 +87,7 @@ export default abstract class Server implements IAction {
     #gamedig: GameDig
 
     protected _wsClients: SocketClientUser[] = []
+    #activeVoiceMembers: DiscordUser[]
 
     constructor(group: ServerGroup, server: ServerExtendedData, gamedig: GameDig) {
         this.#gamedig = gamedig
@@ -325,4 +328,28 @@ export default abstract class Server implements IAction {
         this.Metrics.recordStatus(data, source)
       }
     }
+
+    markVoiceConnection(user: DiscordUser, connected: boolean) {
+      let memberIndex = this.#activeVoiceMembers.findIndex(m => m.id === user.id)
+      if(connected) {
+          // Connected
+          if(memberIndex == -1) {
+            this.#activeVoiceMembers.push(user)
+            this.Plugin?.Socket?.send(LiveRecordResponse.VoiceState, user.id, user.name, true)
+          }
+      } else if(!connected && memberIndex > -1) {
+          // Disconnected
+          this.#activeVoiceMembers.splice(memberIndex, 1)
+          this.Plugin?.Socket?.send(LiveRecordResponse.VoiceState, user.id, user.name, false)
+      }
+    }
+
+    get isVoiceActive() {
+      return this.#activeVoiceMembers.length > 0
+    }
+
+    get voiceMembers(): DiscordUser[] {
+      return this.#activeVoiceMembers
+    }
+
 }

@@ -96,8 +96,14 @@ app.register(fastifyWebsocket)
   
 
 import MiddleManager from './middlewares/managers.js'
+import { DiscordBot } from './modules/DiscordBot.js'
 app.register(MiddleManager)
 .then(async() => {
+    if(process.env.DISCORD_API_TOKEN) {
+        const bot = new DiscordBot(app.servers, "data/server_voice_map.json", process.env.DISCORD_API_TOKEN as string)
+        await bot.init()
+    }
+
     app.register(FastifyCookie)
     app.register(FastifySession, { 
         secret: process.env.SESSION_SECRET as string,
