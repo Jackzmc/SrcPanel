@@ -6,6 +6,8 @@ import DockerLogs from "./features/logs/DockerLogs.js";
 import ServerGroup from "./groups/ServerGroup.js";
 import { ActionResponse, getFallbackCommandForBuiltin, IAction } from "./IAction.js";
 import Server, { ServerExtendedData } from "./Server.js";
+import DynamicServerManager from "./docker/DynamicServerManager.js";
+import ServerManager from "./ServerManager.js";
 
 const PERFORM_ACTION_TIMEOUT = 20_000
 
@@ -72,7 +74,9 @@ export default class DockerServer extends Server implements IAction {
             }
             case "delete":
                 await this.stop(true)
-                // TODO: 
+                DynamicServerManager.Instance.unregisterInstance(this.#instance)
+                await ServerManager.Instance.deleteServer(this.id)
+                await this.#instance.Container.remove()
             default:
                 return false
         }
