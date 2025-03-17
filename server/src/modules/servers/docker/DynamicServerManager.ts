@@ -21,6 +21,7 @@ export interface DockerTemplateContainer {
 }
 
 export default class DynamicServerManager {
+    static #instance: DynamicServerManager;
     #docker: Docker
     #templates: Record<string, DockerTemplateContainer> = {}
     #instances: Record<string, DynamicServerInstance> = {}
@@ -33,6 +34,11 @@ export default class DynamicServerManager {
             console.info(`[ServerManager/docker] Docker connected`)
         })
         this.#configDir = configDir
+        DynamicServerManager.#instance = this
+    }
+
+    static get Instance() {
+        return this.#instance
     }
 
     async Load() {
@@ -121,6 +127,7 @@ export default class DynamicServerManager {
             console.error("[ServerManager] Error: Failed to load templates.json: ", err)
         }
     }
+
 
     async #getNextPort(ofTemplate: DockerTemplateConfig) {
         const ports: number[] = []
@@ -214,6 +221,9 @@ export default class DynamicServerManager {
     async #registerInstance(instance: DynamicServerInstance) {
         await instance.Init()
         this.#instances[instance.ContainerName] = instance
+    }
+
+    async deleteInstance(instance: DynamicServerInstance) {
     }
 
     async unregisterInstance(instance: DynamicServerInstance) {

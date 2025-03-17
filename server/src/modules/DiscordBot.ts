@@ -5,6 +5,10 @@ import ServerManager from './servers/ServerManager';
 import { readFile, writeFile } from 'fs/promises';
 import { VoiceUser } from '../../../common-types/Server.js';
 
+interface ChannelData {
+    serverId: string,
+    channelInviteLink?: string
+}
 
 export class DiscordBot {
     #client: Client
@@ -13,13 +17,14 @@ export class DiscordBot {
 
     #savePath: string
 
-    #channelServerMap: Map<string, string> // <Discord channel Id, Server Id>
+    #channelData: Map<string, ChannelData>
     constructor(serverManager: ServerManager, savePath: string, discordToken: string) {
         this.#token = discordToken
         this.#servers = serverManager
         this.#client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates] })
-        this.#channelServerMap = new Map()
+        // this.#channelServerMap = new Map()
         this.#savePath = savePath
+        this.#channelData = new Map()
     }
 
     async init() {
@@ -28,11 +33,11 @@ export class DiscordBot {
         this.#client.on("voiceStateUpdate", (oldState,newState) => {
             if(!newState.member) return
             // Fetch the servers that the channels map to
-            const channelServerIds = [
-                oldState.channelId ? this.#channelServerMap.get(oldState.channelId) : null,
-                newState.channelId ? this.#channelServerMap.get(newState.channelId) : null, 
+            const channelData = [
+                oldState.channelId ? this.#channelData.get(oldState.channelId) : null,
+                newState.channelId ? this.#channelData.get(newState.channelId) : null, 
             ]
-            const [oldStateServer, newStateServer] = channelServerIds.map(id => id ? this.#servers.getServer(id) : null)
+            const [oldStateServer, newStateServer] = channelData.map(data => data ? this.#servers.getServer(data.serverId) : null)
 
             if(newStateServer && (!oldStateServer || oldStateServer.id != newState.id)) {
                 // User connected or switched channels
@@ -71,14 +76,18 @@ export class DiscordBot {
         const reverseMap = new Map<string, string>()
         for(const [id, channel] of category.children.cache.entries()) {
             if(channel.type != ChannelType.GuildVoice) continue
-            const serverId = this.#channelServerMap.get(id)
-            if(serverId) {
-                const server = this.#servers.getServer(serverId as string)
+            const data = this.#channelData.get(id)
+            if(data?.serverId) {
+                const server = this.#servers.getServer(data.serverId)
                 if(server) {
                     if(channel.name != server.name)
                         channel.setName(server.name)
-                    reverseMap.set(serverId, id)
+                    reverseMap.set(data.serverId, id)
                     console.debug(`[Discord] found channel ${channel.id} --> server ${server.id}`)
+                    if(!data.channelInviteLink) {
+                        const invite = await channel.createInvite()
+                        data.channelInviteLink = invite.url
+                    }
                     continue
                 }
             }
@@ -101,7 +110,11 @@ export class DiscordBot {
                     name: server.name,
                     type: ChannelType.GuildVoice
                 })
-                this.#channelServerMap.set(channel.id, server.id)
+                const invite = await channel.createInvite()
+                this.#channelData.set(channel.id, {
+                    serverId: server.id,
+                    channelInviteLink: invite.url
+                })
                 console.debug(`[Discord] created channel ${channel.id} --> server ${server.id}`)
             }
             channel.setPosition(pos)
@@ -112,13 +125,13 @@ export class DiscordBot {
     } 
 
     async save() {
-        await writeFile(this.#savePath, JSON.stringify(Object.fromEntries(this.#channelServerMap.entries())))
+        await writeFile(this.#savePath, JSON.stringify(Object.fromEntries(this.#channelData.entries())))
     }
 
     async load() {
         try {
             const content = await readFile(this.#savePath, 'utf-8')
-            this.#channelServerMap = new Map(Object.entries(JSON.parse(content)))
+            this.#channelData = new Map(Object.entries(JSON.parse(content)))
         } catch(err) {
             if(err.code !== "ENOENT") {
                 console.warn("[Discord] Error loading channel mapping:\n", err)

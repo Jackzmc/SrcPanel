@@ -36,6 +36,7 @@
           >
             {{ action.name }}
           </button>
+          <Icon data-tooltip="No live data available" size="xs" icon="fa-plug-circle-minus" icon-class="has-text-danger" />
         </div>
         <!-- <Icon class="is-size-6 no-border" v-else icon="fa-plug-circle-minus" data-tooltip="No connection to plugin, cannot perform actions at this time">Unavailable</Icon> -->
       </td>

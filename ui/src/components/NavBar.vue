@@ -69,7 +69,7 @@
               <Icon icon="fa-puzzle-piece">Addons / Files</Icon>
             </router-link>
             <router-link to="/admin/servers" class="navbar-item">
-              <Icon icon="fa-server">Servers</Icon>
+              <Icon icon="fa-server">Manage Servers</Icon>
             </router-link>
             <router-link to="/admin/audit" class="navbar-item">
               <Icon icon="list">Activity Log</Icon>
