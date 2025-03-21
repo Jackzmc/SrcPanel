@@ -108,8 +108,13 @@ export class DynamicServerGroup extends ServerGroup<DockerServer> {
         // Ensure a minimum number of servers exist and are running
         for(let i = servers.length; i < this.#minServers; i++) {
             console.debug(`Creating new instance ${servers.length + 1}/${this.#minServers}`)
-            const server = await this.createNewServer()
-            await server.start()
+            try {
+                const server = await this.createNewServer()
+                await server.start()
+            } catch(err) {
+                console.error(`[ServerGroup::Dynamic] Failed to start new server (#${i+1}), skipping to purge step.\n`, err)
+                break
+            }
         }
         // Ensure a maximum number of servers
         if(this.#maxEmptyServers) {

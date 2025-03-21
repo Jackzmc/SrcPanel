@@ -109,7 +109,7 @@
                   </td>
                 </tr>
                 <tr>
-                  <th>Type</th>
+                  <th>Server Type</th>
                   <td>{{ serverInfo.type }}</td>
                 </tr>
                 <tr>
