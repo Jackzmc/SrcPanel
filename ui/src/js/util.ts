@@ -93,7 +93,7 @@ export function parseParameters(cmd: any, propName: string) {
       command += char
     }
   }
-  return { command, params }
+  return { command: command.trim(), params }
 }
 
 export function formatParameters(cmd: { args: Record<string, any>, defaultValue?: any}) {
