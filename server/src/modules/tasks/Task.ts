@@ -1,8 +1,11 @@
 import { getUnixSeconds } from "./util.js"
 
 export type TaskFunction<T = {}> = (state: T|undefined) => Promise<any>|any
+export type NextDateFunction = (prevRunDate: Date) => Date | null
 
 export class Task<T> {
+    protected nextRun: Date | null = null
+    protected getNextRunDate: NextDateFunction | null = null
     protected id: string
     protected handler: TaskFunction<T>
     protected created: number
@@ -15,6 +18,24 @@ export class Task<T> {
         this.handler = handler
         this.created = getUnixSeconds()
         this.state = defaultState
+    }
+
+    /**
+     * Returns when this task will run next, if scheduled.
+     *
+     * @readonly
+     */
+    get NextRunDate() {
+        return this.nextRun
+    }
+
+    /**
+     * Returns if this task is scheduled and will repeat
+     *
+     * @readonly
+     */
+    get IsRepeating() {
+        return this.nextRun != null && this.getNextRunDate != null
     }
 
     /**
@@ -46,6 +67,33 @@ export class Task<T> {
 
         this.lastRan = getUnixSeconds()
         return duration
+    }
+
+    setSchedule(nextRun: Date, nextRunFn: NextDateFunction | null) {
+        this.nextRun = nextRun
+        this.getNextRunDate = nextRunFn
+    }
+
+    /**
+     * Sets the next scheduled run date - if repeat function is enabled.
+     * @returns bool - TRUE if scheduled false if not scheduled
+     */
+    reschedule() {
+        if(this.getNextRunDate && this.nextRun) {
+            this.nextRun = this.getNextRunDate(this.nextRun)
+            return true
+        }
+        return false
+    }
+
+    toJSON() {
+        return {
+            id: this.Id,
+            created: this.CreatedTimestamp,
+            lastRan: this.LastRanTimestamp,
+            nextRun: this.NextRunDate,
+            isRepeating: this.IsRepeating
+        }
     }
 }
 

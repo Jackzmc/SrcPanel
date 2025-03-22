@@ -2,12 +2,12 @@ import { DefinedTask, Task, TaskFunction, TempTask } from "./Task.js"
 import { calculateDate, TimeOptions } from "./util.js"
 
 
-interface ScheduleEntry {
-    nextRun: Date
-    // Calculates when it should run next. If never ran, prevRunDate will be date the task was created.
-    // Return of null ends the scheduling
-    getNextRunDate: (prevRunDate: Date) => Date | null,
-}
+// interface ScheduleEntry {
+//     nextRun: Date
+//     // Calculates when it should run next. If never ran, prevRunDate will be date the task was created.
+//     // Return of null ends the scheduling
+//     getNextRunDate: (prevRunDate: Date) => Date | null,
+// }
 
 interface TaskManagerOptions {
     /** The resolution of the schedule timer. This is how often tasks are evaluated to be run.
@@ -26,30 +26,33 @@ export default class TaskManager {
         return this.#instance
     }
 
-    #tasks: Task<unknown>[]
-    #schedule: Map<Task<unknown>, ScheduleEntry>
+    #tasks: Map<string, Task<unknown>>
+    // #tasks: Task<unknown>[]
+    #schedule: string[]
     #timer: NodeJS.Timeout
 
     constructor(options: TaskManagerOptions = {}) {
         TaskManager.#instance = this
-        this.#tasks = []
-        this.#schedule = new Map()
+        this.#tasks = new Map()
+        this.#schedule = []
         const tasksPerTick = options.tasksPerTick ?? 1
         this.#timer = setInterval(async () => {
             const now = new Date()
             let count = 0
-            for(const [task, entry] of this.#schedule.entries()) {
+            for(const [schedIndex, taskId] of this.#schedule.entries()) {
                 // console.debug({ id: task.Id, now: now, nextRun: entry.nextRun, nextNextRun: entry.getNextRunDate(entry.nextRun), compare: now >= entry.nextRun })
-                if(now >= entry.nextRun) {
+                const task = this.#tasks.get(taskId)
+                if(!task) {
+                    this.#schedule.splice(schedIndex, 1)
+                    continue // shouldn't happen
+                }
+                if(task.NextRunDate && now >= task.NextRunDate) {
                     count++
                     console.info(`[TaskManager] Running task \"${task.Id}\" [${count}/${tasksPerTick}]`)
                     await task.execute() // TODO: error handling?
-                    const nextRun = entry.getNextRunDate(entry.nextRun)
-                    if(nextRun) {
-                        entry.nextRun = nextRun
-                    } else {
-                        // No next date - task is over
-                        this.#schedule.delete(task)
+
+                    if(!task.reschedule()) {
+                        this.#schedule.splice(schedIndex, 1)
                     }
 
                     // Limit # of tasks in a tick
@@ -71,11 +74,12 @@ export default class TaskManager {
         if(this.get(name) != undefined) throw new Error("Task already registered")
         const task = new DefinedTask<T>(name, fn, defaultState)
         console.debug(`[TaskManager] Registered task \"${name}\"`)
-        this.#tasks.push(task)
+        this.#tasks.set(name, task)
         return task
     }
 
-    registerTemp<T = {}>(fn: TaskFunction<T>, defaultState?: T | undefined) {
+    /** Creates a new temporarily task */
+    temp<T = {}>(fn: TaskFunction<T>, defaultState?: T | undefined) {
         return new TempTask<T>(fn, defaultState)
     }
 
@@ -89,25 +93,28 @@ export default class TaskManager {
 
             task = checkTask as Task<T> // convert DefinedTask -> Task
         }
-        this.#schedule.delete(task)
-        const taskIndex = this.#tasks.findIndex(findTask => findTask.Id != task.Id)
-        if(taskIndex != -1) {
-            this.#tasks.splice(taskIndex, 1)
+        this.#tasks.delete(task.Id)
+
+        // Delete from schedule:
+        const schedIndex = this.#schedule.findIndex(taskId => taskId === task.Id)
+        if(schedIndex != -1) {
+            this.#schedule.splice(schedIndex, 1)
         }
     }
 
     getNamedTasks(): DefinedTask[] {
-        return this.#tasks.filter(task => task instanceof DefinedTask)
+        return [...this.#tasks.values()]
+            .filter(task => task instanceof DefinedTask)
     }
 
-    /** Returns a task by name (excluding TempTask) if exists */
+    /** Returns a task by name if exists */
     get(name: string) {
-        return this.getNamedTasks().find(task => task.Id === name)
+        return this.#tasks.get(name)
     }
 
-    get TaskCount() { return this.#tasks.length }
+    get TaskCount() { return this.#tasks.size }
     get NamedTaskCount() { return this.getNamedTasks().length }
-    get ScheduledTaskCount() { return this.#schedule.size }
+    get ScheduledTaskCount() { return this.#schedule.length }
     
     /**
      * Schedules a task to run once, relative from task creation date
@@ -135,11 +142,9 @@ export default class TaskManager {
             dateOrTime = calculateDate(startDate, dateOrTime)
         }
         console.debug(`[TaskManager] Scheduled \"${task.Id}\" for ${dateOrTime}`)
-        this.#schedule.set(task, {
-            nextRun: dateOrTime,
-            // Does not repeat, return null
-            getNextRunDate: (_) => null
-        })
+            // Does not repeat, set fn to null
+        task.setSchedule(dateOrTime, null)
+        this.#schedule.push(task.Id)
         return dateOrTime
     }
 
@@ -153,10 +158,8 @@ export default class TaskManager {
         const startDate = new Date(task.CreatedTimestamp * 1000)
         const nextRun = calculateDate(startDate, timeOptions)
         console.debug(`[TaskManager] Scheduled repeating \"${task.Id}\" for ${JSON.stringify(timeOptions)}`)
-        this.#schedule.set(task, {
-            nextRun,
-            getNextRunDate: (prevRunDate) => calculateDate(prevRunDate, timeOptions) 
-        })
+        task.setSchedule(nextRun, (prevRunDate) => calculateDate(prevRunDate, timeOptions) )
+        this.#schedule.push(task.Id)
         return nextRun
     }
     
