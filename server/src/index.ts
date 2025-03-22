@@ -24,6 +24,7 @@ import ConfigManager from './modules/ConfigManager.js';
 import FastifyHelmet from '@fastify/helmet'
 import DiscussionManager from './modules/DiscussionManager.js';
 import SetCacheManager from './modules/SetCache.js'
+import TaskManager from './modules/tasks/TaskManager.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -73,7 +74,8 @@ declare module 'fastify' {
     config: ConfigManager,
     managers: {
       discussions: DiscussionManager
-    }
+    },
+    jobs: TaskManager
   }
   export interface FastifyRequest {
     user?: User,
@@ -173,6 +175,7 @@ app.register(MiddleManager)
 
     }
     await loadRoutes(mainPrefix, path.join(__dirname, './routes'))
+
     try {
         await app.listen({
             port: Number(process.env.WEB_PORT) || 8081

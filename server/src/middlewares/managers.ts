@@ -17,6 +17,7 @@ import { SESSION_VERSION } from '../routes/auth/steam.js';
 import { NOT_LOGGED_IN } from '../responses.js';
 import DiscussionManager from '../modules/DiscussionManager.js';
 import SetCache from '../modules/SetCache.js';
+import TaskManager from '../modules/tasks/TaskManager.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -61,14 +62,16 @@ async function db(fastify: FastifyInstance) {
         authManager.Init(),
         serverManager.Load()
     ])
+    const jobScheduler = new TaskManager({ resolution: 1000 * 60 * 2 }) // Run every 2 minutes
     fastify.decorate('users', userManager)
     fastify.decorate('authmngr', authManager)
     fastify.decorate('db', db)
     fastify.decorate('steam', steam)
     fastify.decorate('servers', serverManager)
     fastify.decorate('config', configManager)
+    fastify.decorate('jobs', jobScheduler)
     fastify.decorate('managers', {
-        discussions: new DiscussionManager(db, configManager, authManager)
+        discussions: new DiscussionManager(fastify)
     })
     fastify.addHook('preHandler', async (req, reply) => {
         if(req.session?.user) {
