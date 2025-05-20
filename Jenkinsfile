@@ -13,7 +13,6 @@ pipeline {
                     agent {
                         docker {
                             image 'node:lts-bookworm'
-                            args '-v $HOME/.cache/yarn:/root/.cache/yarn'
                             reuseNode true
                         }
                     }
@@ -37,7 +36,6 @@ pipeline {
                     agent {
                         docker {
                             image 'node:lts-bookworm'
-                            args '-v $HOME/.cache/yarn:/root/.cache/yarn'
                             reuseNode true
                         }
                     }
@@ -63,7 +61,7 @@ pipeline {
                     //     ssh-keyscan -t rsa,dsa example.com >> ~/.ssh/known_hosts
                     //     ssh user@example.com ...
                     // '''
-                    sh 'scp -r ui/dist/ deploy-jenkins@${SERVER}:/tmp/${BUILD_TAG}/'
+                    sh 'scp -o StrictHostKeyChecking=no -r ui/dist/ deploy-jenkins@${SERVER}:/tmp/${BUILD_TAG}/'
                     sh 'ssh -o StrictHostKeyChecking=no -l deploy-jenkins@ovh1 ls /tmp/${BUILD_TAG}'
                 }
             }
