@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        SERVER = 'ovh1'
+        SERVER = 'ovh1.servers.jackz.me'
         DEPLOY_UI_PATH = '/var/www/admin.jackz.me.citest'
     }
 
