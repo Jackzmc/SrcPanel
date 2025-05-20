@@ -78,7 +78,7 @@ pipeline {
                     // Deploy to ${DEPLOY_SERVER_PATH}/dist, and rsync as server files should always be the same
                     sh 'ssh deploy-jenkins@${SERVER} "mkdir -p \"${DEPLOY_SERVER_PATH}\"/dist"'
                     sh 'rsync -r server/dist/* deploy-jenkins@${SERVER}:"${DEPLOY_SERVER_PATH}/dist"'
-                    sh 'ssh deploy-jenkins@${SERVER} "systemctl restart ${DEPLOY_SERVER_SERVICE_NAME}"'
+                    sh 'ssh deploy-jenkins@${SERVER} "sudo systemctl restart ${DEPLOY_SERVER_SERVICE_NAME}"'
                 }
             }
         }
