@@ -72,7 +72,7 @@ pipeline {
                     sh """ssh -o StrictHostKeyChecking=no deploy-jenkins@${SERVER} 'set -e; rm -rf "${DEPLOY_UI_PATH}.old" && mv -T "${DEPLOY_UI_PATH}" "${DEPLOY_UI_PATH}.old"; mkdir "${DEPLOY_UI_PATH}"; mv -T "/tmp/jenkins/${JOB_NAME}" "${DEPLOY_UI_PATH}"' """
                 }
                 sshagent(credentials: ['deploy-ssh']) {
-                    sh 'ssh -o StrictHostKeyChecking=no deploy-jenkins@${SERVER} "mkdir -p \"${DEPLOY_SERVER_PATH}\"'
+                    sh 'ssh -o StrictHostKeyChecking=no deploy-jenkins@${SERVER} "mkdir -p \"${DEPLOY_SERVER_PATH}\""'
                     sh 'scp -o StrictHostKeyChecking=no -r server/dist/* deploy-jenkins@${SERVER}:"${DEPLOY_SERVER_PATH}"'
                     sh 'ssh -o StrictHostKeyChecking=no deploy-jenkins@${SERVER} "systemctl restart ${DEPLOY_SERVER_SERVICE_NAME}"'
                 }
