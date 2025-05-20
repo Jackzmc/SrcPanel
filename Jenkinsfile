@@ -1,5 +1,5 @@
 pipeline {
-    agent none
+    agent any
 
     environment {
         SERVER = 'ovh1'
@@ -13,18 +13,20 @@ pipeline {
                     agent {
                         docker {
                             image 'node:lts-bookworm'
+                            args '-v $HOME/.yarn-cache:/root/.yarn-cache'
+                            reuseNode true
                         }
                     }
                     steps {
                         dir("ui") {
                             sh 'yarn install --frozen-lockfile' 
                             sh 'yarn build'
+                            sh 'tar -cvf web.tar.gz dist/*'
                         }
                     }
                     post {
                         success {
                             dir("ui") {
-                                sh 'tar -cvf web.tar.gz dist/*'
                                 archiveArtifacts artifacts: 'web.tar.gz', fingerprint: true
                             }
                         }
@@ -35,6 +37,8 @@ pipeline {
                     agent {
                         docker {
                             image 'node:lts-bookworm'
+                            args '-v $HOME/.yarn-cache:/root/.yarn-cache'
+                            reuseNode true
                         }
                     }
                     steps {
@@ -51,11 +55,6 @@ pipeline {
               expression {
                 currentBuild.result == null || currentBuild.result == 'SUCCESS' 
               }
-            }
-            agent {
-                docker {
-                    image 'node:lts-bookworm'
-                }
             }
             steps {
                 sshagent(credentials: ['deploy']) {
