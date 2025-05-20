@@ -13,7 +13,7 @@ pipeline {
                     agent {
                         docker {
                             image 'node:lts-bookworm'
-                            args '-v $HOME/.yarn-cache:/root/.yarn-cache'
+                            args '-v $HOME/.cache/yarn:/root/.cache/yarn'
                             reuseNode true
                         }
                     }
@@ -37,7 +37,7 @@ pipeline {
                     agent {
                         docker {
                             image 'node:lts-bookworm'
-                            args '-v $HOME/.yarn-cache:/root/.yarn-cache'
+                            args '-v $HOME/.cache/yarn:/root/.cache/yarn'
                             reuseNode true
                         }
                     }
