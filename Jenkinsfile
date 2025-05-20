@@ -21,11 +21,14 @@ pipeline {
                             sh 'yarn build'
                         }
                     }
-                    post success {
-                        dir("ui") {
-                            sh 'tar -cvf web.tar.gz dist/*'
-                            archiveArtifacts artifacts: 'web.tar.gz', fingerprint: true
+                    post {
+                        success {
+                            dir("ui") {
+                                sh 'tar -cvf web.tar.gz dist/*'
+                                archiveArtifacts artifacts: 'web.tar.gz', fingerprint: true
+                            }
                         }
+                       
                     }
                 }
                 stage('Build Server') { 
@@ -53,16 +56,16 @@ pipeline {
                 docker {
                     image 'node:lts-bookworm'
                 }
-                steps {
-                    sshagent(credentials: ['deploy']) {
-                        // sh '''
-                        //     [ -d ~/.ssh ] || mkdir ~/.ssh && chmod 0700 ~/.ssh
-                        //     ssh-keyscan -t rsa,dsa example.com >> ~/.ssh/known_hosts
-                        //     ssh user@example.com ...
-                        // '''
-                        sh 'scp -r ui/dist/ deploy-jenkins@${SERVER}:/tmp/${BUILD_TAG}/'
-                        sh 'ssh -o StrictHostKeyChecking=no -l deploy-jenkins@ovh1 ls /tmp/${BUILD_TAG}'
-                    }
+            }
+            steps {
+                sshagent(credentials: ['deploy']) {
+                    // sh '''
+                    //     [ -d ~/.ssh ] || mkdir ~/.ssh && chmod 0700 ~/.ssh
+                    //     ssh-keyscan -t rsa,dsa example.com >> ~/.ssh/known_hosts
+                    //     ssh user@example.com ...
+                    // '''
+                    sh 'scp -r ui/dist/ deploy-jenkins@${SERVER}:/tmp/${BUILD_TAG}/'
+                    sh 'ssh -o StrictHostKeyChecking=no -l deploy-jenkins@ovh1 ls /tmp/${BUILD_TAG}'
                 }
             }
         }
