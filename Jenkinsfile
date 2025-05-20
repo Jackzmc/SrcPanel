@@ -4,6 +4,8 @@ pipeline {
     environment {
         SERVER = 'ovh1.servers.jackz.me'
         DEPLOY_UI_PATH = '/var/www/admin.jackz.me.citest'
+        DEPLOY_SERVER_PATH = '/home/node/admin-panel'
+        DEPLOY_SERVER_SERVICE_NAME = 'admin-panel'
     }
 
     stages {
@@ -56,14 +58,14 @@ pipeline {
             }
             steps {
                 sshagent(credentials: ['deploy-ssh']) {
-                    // sh '''
-                    //     [ -d ~/.ssh ] || mkdir ~/.ssh && chmod 0700 ~/.ssh
-                    //     ssh-keyscan -t rsa,dsa example.com >> ~/.ssh/known_hosts
-                    //     ssh user@example.com ...
-                    // '''
                     sh 'ssh -o StrictHostKeyChecking=no deploy-jenkins@${SERVER} "mkdir -p \"/tmp/jenkins/${JOB_NAME}\""'
                     sh 'scp -o StrictHostKeyChecking=no -r ui/dist/* deploy-jenkins@${SERVER}:"/tmp/jenkins/${JOB_NAME}/"'
                     sh """ssh -o StrictHostKeyChecking=no deploy-jenkins@${SERVER} 'set -e; rm -rf "${DEPLOY_UI_PATH}.old" && mv -T "${DEPLOY_UI_PATH}" "${DEPLOY_UI_PATH}.old"; mkdir "${DEPLOY_UI_PATH}"; mv -T "/tmp/jenkins/${JOB_NAME}" "${DEPLOY_UI_PATH}"' """
+                }
+                sshagent(credentials: ['deploy-ssh']) {
+                    sh 'ssh -o StrictHostKeyChecking=no deploy-jenkins@${SERVER} "mkdir -p \"${DEPLOY_SERVER_PATH}\"'
+                    sh 'scp -o StrictHostKeyChecking=no -r server/dist/* deploy-jenkins@${SERVER}:"${DEPLOY_SERVER_PATH}"'
+                    sh 'ssh -o StrictHostKeyChecking=no deploy-jenkins@${SERVER} "systemctl restart ${DEPLOY_SERVER_SERVICE_NAME}"'
                 }
             }
         }
