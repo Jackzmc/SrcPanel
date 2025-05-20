@@ -45,7 +45,16 @@ pipeline {
                         dir("server") {
                             sh 'yarn install --frozen-lockfile' 
                             sh 'yarn build'
+                            sh 'tar -cvf server.tar.gz dist/*'
                         }
+                    }
+                    post {
+                        success {
+                            dir("server") {
+                                archiveArtifacts artifacts: 'server.tar.gz', fingerprint: true
+                            }
+                        }
+                       
                     }
                 }
             }
