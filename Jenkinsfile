@@ -61,8 +61,8 @@ pipeline {
                     //     ssh-keyscan -t rsa,dsa example.com >> ~/.ssh/known_hosts
                     //     ssh user@example.com ...
                     // '''
-                    sh 'ssh -o StrictHostKeyChecking=no deploy-jenkins@${SERVER} "mkdir -p \"/tmp/${JOB_NAME}\""'
-                    sh 'scp -o StrictHostKeyChecking=no -r ui/dist/ deploy-jenkins@${SERVER}:"/tmp/${JOB_NAME}/"'
+                    sh 'ssh -o StrictHostKeyChecking=no deploy-jenkins@${SERVER} "mkdir -p \"/tmp/jenkins/${JOB_NAME}\""'
+                    sh 'scp -o StrictHostKeyChecking=no -r ui/dist/* deploy-jenkins@${SERVER}:"/tmp/jenkins/${JOB_NAME}/"'
                     sh """ssh -o StrictHostKeyChecking=no deploy-jenkins@${SERVER} 'rm -rf "${DEPLOY_UI_PATH}.old" && mv -T "${DEPLOY_UI_PATH}" "${DEPLOY_UI_PATH}.old"; mv -T "/tmp/${JOB_NAME}" "${DEPLOY_UI_PATH}"' """
                 }
             }
