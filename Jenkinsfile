@@ -57,7 +57,7 @@ pipeline {
               }
             }
             steps {
-                sshagent(credentials: ['deploy']) {
+                sshagent(credentials: ['deploy-ssh']) {
                     // sh '''
                     //     [ -d ~/.ssh ] || mkdir ~/.ssh && chmod 0700 ~/.ssh
                     //     ssh-keyscan -t rsa,dsa example.com >> ~/.ssh/known_hosts
