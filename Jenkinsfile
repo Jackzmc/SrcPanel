@@ -63,7 +63,7 @@ pipeline {
                     // '''
                     sh 'ssh -o StrictHostKeyChecking=no deploy-jenkins@${SERVER} "mkdir -p \"/tmp/jenkins/${JOB_NAME}\""'
                     sh 'scp -o StrictHostKeyChecking=no -r ui/dist/* deploy-jenkins@${SERVER}:"/tmp/jenkins/${JOB_NAME}/"'
-                    sh """ssh -o StrictHostKeyChecking=no deploy-jenkins@${SERVER} 'set -e; rm -rf "${DEPLOY_UI_PATH}.old" && mv -T "${DEPLOY_UI_PATH}" "${DEPLOY_UI_PATH}.old"; mkdir "${DEPLOY_UI_PATH}"; mv -T "/tmp/${JOB_NAME}" "${DEPLOY_UI_PATH}"' """
+                    sh """ssh -o StrictHostKeyChecking=no deploy-jenkins@${SERVER} 'set -e; rm -rf "${DEPLOY_UI_PATH}.old" && mv -T "${DEPLOY_UI_PATH}" "${DEPLOY_UI_PATH}.old"; mkdir "${DEPLOY_UI_PATH}"; mv -T "/tmp/jenkins/${JOB_NAME}" "${DEPLOY_UI_PATH}"' """
                 }
             }
         }
