@@ -549,7 +549,12 @@ export default class ServerManager {
     for(const [groupId, data] of Object.entries<ConfigGroupData>(config)) {
       let actions: ServerAction[] = []
       if(data.actionSources) {
-        // Resolve [id1, id2] -> [action1, action2]
+        // Add 'docker' action group for docker server groups
+        if('templateId' in data) {
+          // Resolve [id1, id2] -> [action1, action2]
+          data.actionSources.push("docker")
+        }
+        
         actions = data.actionSources.reduce((list, actionGroupId) => {
           if(!this.#actions[actionGroupId]) {
             console.warn(`[ServerManager] WARN: Group ${groupId} references missing action group: ${actionGroupId}`)
