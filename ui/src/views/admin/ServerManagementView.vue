@@ -1,7 +1,7 @@
 <template>
-<div class="container is-fluid mx-4">
+<div class="container is-fluid">
   <div class="columns">
-    <div class="column is-8">
+    <div class="column is-8 mx-4">
       <p class="is-inline is-pulled-right" style="margin-right: 90px">
         <em v-if="lastRefresh">refreshing in {{lastRefresh}}s</em>
         <Icon icon="spinner" v-else spin >Refreshing</Icon>
@@ -17,7 +17,7 @@
         <p>Only public support this (servers with <span class="tag">systemd</span> tag) as they are managed differently</p>
         <b>Unreserve</b> will remove the lobby reservation which allows others to join a 5+ game before the reservation is automatically removed (so when people are still loading in)
       </div>
-      <div class="box">
+      <!-- <div class="box">
         <h4 class="title is-4">Create custom server
           <span class="tag is-warning">ALPHA</span>
         </h4>
@@ -28,7 +28,7 @@
           Do you want your own server? Create your own server with your selection of addons, plugins, and settings.
         </p>
         <router-link :to="{name: 'create-custom-server' }" class="button is-info">New Custom Server</router-link>
-      </div>
+      </div> -->
     </div>
   </div>
 </div>
