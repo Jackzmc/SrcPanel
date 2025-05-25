@@ -1045,7 +1045,7 @@ function connectWS() {
     console.debug("[WS] Closed, reconnecting in", retryTime/1000, "s", { wsErrorCount })
     wsReconnectTimeout = setTimeout(() => {
       connectWS()
-    }, retryTime)
+    }, retryTime) as unknown as number
   }
   ws.value.onerror = (err) => {
     console.error("[WS] Error:", err)
