@@ -100,7 +100,12 @@ export default class DynamicServerInstance {
     }
 
     async stop(force = false) {
-        return await (force ? this.#container.kill() : this.#container.stop())
+        if(force) {
+            // Ignore any error killing such as it not running
+            return await this.#container.kill().catch(() => {})
+        } else {
+            return await this.#container.stop()
+        }
     }
 
     async delete() {
