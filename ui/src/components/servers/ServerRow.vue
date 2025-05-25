@@ -36,6 +36,7 @@
           >
             {{ action.name }}
           </button>
+          <Icon data-tooltip="No live data available" size="xs" icon="fa-plug-circle-minus" icon-class="has-text-danger" />
         </div>
         <!-- <Icon class="is-size-6 no-border" v-else icon="fa-plug-circle-minus" data-tooltip="No connection to plugin, cannot perform actions at this time">Unavailable</Icon> -->
       </td>
@@ -143,7 +144,9 @@ const actions = computed(() => {
       if(action.showWhen === "any") return true
       if(props.server.online && action.showWhen === "online") return true
       else if(!props.server.online && action.showWhen === "offline") return true
-      else return false
+
+      console.log(props.server.id, action.name, action.showWhen ?? "any", props.server.online)
+      return false
     })
     .filter(action => !action.isHidden)
 })

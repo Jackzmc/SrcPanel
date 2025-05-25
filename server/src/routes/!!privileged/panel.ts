@@ -99,6 +99,13 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             memoryPercentage: process.memoryUsage().heapUsed / process.memoryUsage().heapTotal,
         }
     })
+    
+    fastify.get('/jobs', async(req, reply) => {
+        const jobs = fastify.jobs.getNamedTasks()
+        return {
+            jobs
+        }
+    })
 
     fastify.post('/update', async(req, reply) => {
         if(!req.user!.hasPermission("panel.update")) return NO_PERMISSION(reply)

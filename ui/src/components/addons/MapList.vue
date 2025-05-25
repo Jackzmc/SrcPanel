@@ -32,7 +32,7 @@
             </div>
           </Field>
           <Field>
-            <div class="select">
+            <div class="select" v-show="sort.id !== 'random'">
               <select v-model="sort.direction">
                 <option :value="SortDirection.Ascending">(↑) Ascending</option>
                 <option :value="SortDirection.Descending">(↓) Descending</option>
@@ -43,7 +43,15 @@
       </div>
     </div>
   </div>
-  <div class="columns is-multiline is-1">
+  <div class="columns is-centered" v-if="filteredAddons.length === 0">
+    <div class="column is-6 has-text-centered" style="width:50%">
+      <div class="box has-background-light-grey py-6">
+        <p class="subtitle is-4">No maps were found</p>
+      </div>
+    </div>
+  </div>
+  <div class="columns is-multiline is-1" v-else>
+
     <div :class="['column','is-flex',cardSizeClass]" v-for="map in filteredAddons" :key="map.filename">
       <div class="card is-fullwidth">
         <div class="card-image">
@@ -93,14 +101,14 @@
                     {{ getRelDate(map.downloaded) }}
                   </Icon>
                 </li>
-                <template v-if="getStats(map)">
+                <template>
                   <li>
-                    <Icon icon="clock">Played
+                    <Icon icon="clock" v-if="getStats(map)">Played
                       {{ getRelDate(getStats(map).lastPlayedTime) }}
                     </Icon>
                   </li>
                   <li>
-                    <Icon icon="gamepad">Played {{ getStats(map).gamesPlayed.toLocaleString() }} times</Icon>
+                    <Icon icon="gamepad" v-if="getStats(map)">Played {{ getStats(map).gamesPlayed.toLocaleString() }} times</Icon>
                   </li>
                 </template>
               </ul>
@@ -110,8 +118,10 @@
                 <li>
                   <Icon icon="file">{{ formatSize(map.filesize) }}</Icon>
                 </li>
-                <li v-if="map.meta">{{ map.meta.chapterIds.length }} chapters</li>
-                <li v-if="map.collection">{{ map.children.length }} parts</li>
+                <li>
+                  <Icon icon="book" v-if="map.meta">{{ map.meta.chapterIds.length }} chapters</Icon>
+                </li>
+                <li><span v-if="map.collection">{{ map.children.length }} parts</span></li>
               </ul>
             </div>
           </div>
@@ -312,15 +322,19 @@ function filterAndSort() {
 }
 const filterAndSortDebounce = debounce(filterAndSort, 400)
 
-function getUpdateDuration(time: number) {
-  const seconds = (Date.now()/1000) - time
-  return seconds / 60 / 60 / 24
-}
 function formatDescription(content: string) {
   if(!content) return ""
-  let output = content.slice(0, 256)
+  let output = content
+    .replace(/[─\-=_]+/g, '') // clean up common dividers
+    .replace(/\[\/?[a-z0-9]+\]/g, ' ') // cleanup bb-code tags
+    .replace(/\s{2,}/, '') // clean up duplicate white space
+    .replace(/ ᠌/g, '') // cleanup some bad whitespace characters
+    .slice(0, 256) // keep it short
+
+  // do not cut off mid-word:
   output = output.substring(0, Math.min(output.length, output.lastIndexOf(" ")))
   if(content.length > 256) output += "..."
+
   return output
 }
 function getStats(map: any) {

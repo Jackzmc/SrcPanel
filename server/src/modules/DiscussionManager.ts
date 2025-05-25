@@ -3,6 +3,9 @@ import ConfigManager from "./ConfigManager.js";
 import { Pool, RowDataPacket } from 'mysql2/promise';
 import User from "./users/User.js";
 import AuthManager from "./auth/AuthManager.js";
+import { DefinedTask } from "./tasks/Task.js";
+import TaskManager from "./tasks/TaskManager.js";
+import { FastifyInstance } from "fastify";
 
 const AUTO_ARCHIVE_TIME = 1000 * 60 * 60 * 24 * 10 // 10 days
 const CACHE_TTL = 1000 * 60 * 60 * 1
@@ -16,10 +19,19 @@ export default class DiscussionManager {
 
     #discussions = new Map<number, APIDiscussionCacheableData>()
 
-    constructor(db: Pool, config: ConfigManager, authManager: AuthManager) {
-        this.#db = db
-        this.#config = config
-        this.#authmngr = authManager
+    #fetchJob: DefinedTask
+
+    constructor(fastify: FastifyInstance) {
+        this.#db = fastify.db
+        this.#config = fastify.config
+        this.#authmngr = fastify.authmngr
+
+        const task = async () => {
+            this.#lastFetchTime = Date.now()
+            await this.fetchDiscussions()
+        }
+        this.#fetchJob = fastify.jobs.register("discussions.fetch", task.bind(this))
+        fastify.jobs.scheduleRepeating(this.#fetchJob, { minutes: 30 })
     }
 
     async #tryRefresh() {

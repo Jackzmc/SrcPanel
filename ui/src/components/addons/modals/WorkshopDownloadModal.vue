@@ -273,22 +273,23 @@ async function restartServers() {
     rejected: 0
   }
   for(const destId of installDestinations.value) {
-    const destInfo = props.share.destinations[destId]
-    if(destInfo.serverIds) {
-      const promises = destInfo.serverIds.map((serverId: string) => restartServer(serverId))
-      const results = await Promise.allSettled(promises)
-      const rejectedCount = results.reduce((pv, result) => {
-        if(result.status === "rejected") ++pv
-        return pv
-      }, 0)
-      if(rejectedCount > 0) {
-        console.error(`${destId}: ${rejectedCount} / ${promises.length} servers failed to restart`)
-      }
-      count.total += promises.length
-      count.success += promises.length - rejectedCount
-      count.rejected += rejectedCount
+    const response = await fetch(`/api/shares/${props.share.id}/destinations/${destId}/restart-servers`, {
+      method: "POST"
+    })
+    if(response.ok) {
+      const json = await response.json()
+      count.total += json.success.length + json.rejected.length
+      count.success += json.success.length
+      count.rejected += json.failed.length
+    } else {
+      notify({
+        type: "error",
+        title: "Failed to restart destination",
+        text: destId
+      })
     }
   }
+  console.error(`$${count.success} / ${count.total} servers restarted`)
 
   let msg = `${count.success} / ${count.total} servers restarted`
   if(count.rejected > 0) msg += "<br>See the console for more information"

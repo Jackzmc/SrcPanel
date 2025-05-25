@@ -1,3 +1,5 @@
+import SocketClientUser from "../../../../modules/servers/SocketClientUser.js"
+import { Server_LogEntry } from "../../../../../../common-types/ServerWebsocket.js"
 import Server from "../../Server.js"
 import Feature from "../Feature.js"
 
@@ -7,8 +9,7 @@ const MAX_BUFFER_LINES = 100
 export type LineCallback = (line: string) => void
 
 export default abstract class Logs extends Feature {
-    protected _lines: string[] = []
-    #subscribers: LineCallback[] = []
+    protected _lines: { timestamp: number, content: string}[] = []
 
     constructor(server: Server) {
         super("Console", server)
@@ -19,39 +20,29 @@ export default abstract class Logs extends Feature {
     abstract get logs(): string[]
 
     abstract readExisting(): Promise<void>;
-
-    subscribe(cb: LineCallback) {
-        this.#subscribers.push(cb)
-    }
-
-    unsubscribe(cb: LineCallback) {
-        const index = this.#subscribers.findIndex(v => v === cb)
-        if(index > -1) {
-            this.#subscribers.splice(index, 1)
-        }
-        return index
-    }
-
-    /**
-     * Number of subscribers to log stream
-     *
-     * @readonly
-     * @memberof Console
-     */
-    get subscribers() { return this.#subscribers.length }
-
     
     /** Adds a line to the logs buffer, keeping only MAX_BUFFER_LINES recent entries
      * 
      * @param line the line to add 
      */
     public pushLine(line: string) {
-        this._lines.push(line)
+        const lineEntry = { timestamp: Math.round(Date.now()/1000), content: line }
+        this._lines.push(lineEntry)
         if(this._lines.length > MAX_BUFFER_LINES) {
             this._lines.splice(0, 1)
         }
-        for(const subCb of this.#subscribers) {
-            subCb(line)
+        this._server.broadcastWS({
+            type: "log",
+            ...lineEntry
+        } as Server_LogEntry)
+    }
+
+    sendHistory(client: SocketClientUser) {
+        for(const entry of this._lines) {
+            client.sendPayload({
+                type: "log",
+                ...entry
+            } as Server_LogEntry)
         }
     }
 }

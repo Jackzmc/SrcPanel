@@ -15,7 +15,18 @@
               <span class="tag is-success  is-medium" v-else-if="online">Online</span>
               <span class="tag is-danger  is-medium" v-else>Offline</span>
             </template>
-            <span class="tag is-medium" v-else><Icon icon="fa-spinner" spin></Icon></span>
+            <span class="tag is-medium" v-else data-tooltip="Waiting for status"><Icon icon="fa-spinner" spin></Icon></span>
+
+            <span class="tag is-info is-medium" data-tooltip="Receiving live data" v-if="ws?.readyState === 1">
+              <Icon icon="fa-circle-check" icon-class="has-text-white">Live</Icon>
+            </span>
+            <span class="tag is-medium" data-tooltip="Connecting" v-else-if="ws?.readyState === 0">
+              <Icon icon="fa-spinner" spin icon-class="has-text-white">Live</Icon>
+            </span>
+            <span class="tag is-danger is-medium" data-tooltip="Not receiving live data" v-else>
+              <Icon icon="fa-triangle-exclamation" icon-class="has-text-white">Live</Icon>
+            </span>
+
             <span data-tooltip="Server ID" class="tag is-info is-medium no-border">{{serverInfo.id}}</span>
           </div>
         </h3>
@@ -56,59 +67,62 @@
           </div>
           <p class="has-text-centered subtitle is-4 my-6 has-text-danger" v-if="status.error">{{  status.error }}</p>
           <template v-else>
-            <span class="is-inline is-pulled-right no-border pr-4" data-tooltip="Time until next refresh" style="width:10px">
+            <!-- <span class="is-inline is-pulled-right no-border pr-4" data-tooltip="Time until next refresh" style="width:10px">
               <Icon icon="fa-spinner" spin v-if="nextRefreshCountdown == 0"></Icon>
               <span v-else>{{ nextRefreshCountdown }}s</span>
-            </span>
+            </span> -->
             <table class="table is-fullwidth is-size-4">
-              <tr v-if="serverInfo.type === 'source'">
-                <th>Map</th>
-                <td v-if="mapInfo">
-                  <h4 class="title is-4">{{mapInfo.name}}
-                    <span class="is-inline is-pulled-right has-text-weight-normal is-size-6">{{ status.data!.map }}</span>
-                  </h4>
-                  <p>Chapter {{ mapInfo.chapterId }} - {{ mapInfo.chapterName }}</p>
-                </td>
-                <td v-else-if="status.data?.map">{{ status.data.map }}</td>
-                <td v-else><em data-tooltip="Unknown">-</em></td>
-              </tr>
-              <tr v-if="serverInfo.type === 'source'">
-                <th>Gamemode</th>
-                <td v-if="status.data?.gamemode" :data-tooltip="status.data.gamemode">
-                  {{ formatGamemode(status.data.gamemode) }}
-                </td>
-                <td v-else><em data-tooltip="Unknown">-</em></td>
-              </tr>
-              <tr>
-                <th>Uptime</th>
-                <td v-if="uptime">{{ uptimeDuration }}</td>
-                <td v-else><em data-tooltip="Unknown">-</em></td>
-              </tr>
-              <tr v-if="!online">
-                <th>Players ({{status.data?.players.length ?? '-'}} / {{status.data?.maxplayers ?? '-'}})</th>
-                <td >
-                  <ul v-if="status.data && status.data.players.length > 0">
-                    <li v-for="player in status.data.players" :key="player">
-                      {{ player }}
-                    </li>
-                  </ul>
-                  <em v-else>no players online</em>
-                </td>
-              </tr>
-              <tr>
-                <th>Type</th>
-                <td>{{ serverInfo.type }}</td>
-              </tr>
-              <tr>
-                <th style="border-style: none">Features</th>
-                <td style="border-style: none">
-                  <div class="tags">
-                    <template v-for="(enabled,feat) in serverInfo.features" :key="feat">
-                      <span class="tag" v-if="enabled">{{ feat }}</span>
-                    </template>
-                  </div>
-                </td>
-              </tr>
+              <tbody>
+                <tr v-if="serverInfo.type === 'source'">
+                  <th>Map</th>
+                  <td v-if="mapInfo">
+                    <h4 class="title is-4">{{mapInfo.name}}
+                      <span class="is-inline is-pulled-right has-text-weight-normal is-size-6">{{ status.data!.map }}</span>
+                    </h4>
+                    <p>Chapter {{ mapInfo.chapterId }} - {{ mapInfo.chapterName }}</p>
+                  </td>
+                  <td v-else-if="status.data?.map">{{ status.data.map }}</td>
+                  <td v-else><em data-tooltip="Unknown">-</em></td>
+                </tr>
+                <tr v-if="serverInfo.type === 'source'">
+                  <th>Gamemode</th>
+                  <td v-if="status.data?.gamemode" :data-tooltip="status.data.gamemode">
+                    {{ formatGamemode(status.data.gamemode) }}
+                  </td>
+                  <td v-else><em data-tooltip="Unknown">-</em></td>
+                </tr>
+                <tr>
+                  <th>Uptime</th>
+                  <td v-if="uptime">{{ uptimeDuration }}</td>
+                  <td v-else><em data-tooltip="Unknown">-</em></td>
+                </tr>
+                <tr v-if="online">
+                  <th>Players ({{status.data?.players.length ?? '-'}} / {{status.data?.maxplayers ?? '-'}})</th>
+                  <td >
+                    <ul v-if="status.data && status.data.players.length > 0">
+                      <li v-for="player in status.data.players" :key="player">
+                        {{ player }}
+                      </li>
+                    </ul>
+                    <em v-else-if="status.data">no players online</em>
+                    <span v-else>-</span>
+                  </td>
+                </tr>
+                <tr>
+                  <th>Server Type</th>
+                  <td>{{ serverInfo.type }}</td>
+                </tr>
+                <tr>
+                  <th style="border-style: none">Features</th>
+                  <td style="border-style: none">
+                    <div class="tags">
+                      <template v-for="(enabled,feat) in serverInfo.features" :key="feat">
+                        <span class="tag" v-if="enabled">{{ feat }}</span>
+                      </template>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
             </table>
             <br>
           </template>
@@ -124,18 +138,6 @@
         <p class="has-text-centered subtitle is-4 my-6" v-else><Icon icon="fa-spinner" spin>Waiting for server status...</Icon></p>
       </div>
       <div v-else-if="tab === 'live'" class="box">
-        <span class="tag is-pulled-right is-danger" v-if="isLiveViewActive" data-tooltip="Connected to server, receiving live data">Live</span>
-        <div class="notification is-danger has-text-centered" v-else-if="liveStatusNextRetryTime !== undefined">
-          Lost connection with live server. Retrying in {{ nextLiveRetryTime }} seconds
-          <span class="is-inline is-pulled-right no-border" v-if="nextLiveRetryTime <= 1">
-            <Icon icon="fa-spinner" spin></Icon>
-          </span>
-        </div>
-          <!-- show notice that server is offline, but only if there is also no live data -->
-        <!-- server might be shown offline but actually is online and sending data (eg. map transitions) -->
-        <div class="notification is-danger has-text-centered" v-else-if="!online && !liveStatus">
-          The server is offline or is unreachable.
-        </div>
         <div class="list has-visible-pointer-controls" v-if="liveStatus && Object.values(liveStatus.clients).length > 0">
           <template v-for="player in livePlayers" :key="player.userid">
             <div class="list-item" v-if="true">
@@ -248,66 +250,16 @@
         </div>
       </div>
       <div v-else-if="tab === 'configs'" class="">
-        <div class="card" v-if="cfg.selected && !cfg.loading">
-          <header class="card-header">
-            <p class="card-header-title">{{ cfgParentFolder }}<span class="has-text-weight-light">{{ cfg.selected.filename }}</span></p>
-          </header>
-          <div class="card-content" v-if="cfg.selected">
-            <template v-if="cfg.json">
-              <Field label="Cvars">
-                <div class="columns " v-for="entry in cfg.json" :key="entry.command">
-                  <div class="column is-5">
-                    <input class="input is-expanded" type="text" :value="entry.cvar ?? entry.command" />
-                  </div>
-                  <div class="column is-6">
-                    <input v-if="entry.type === 'string'" class="input" type="text" :value="entry.value" />
-                    <input v-else-if="entry.type === 'number'" class="input" type="number" :value="entry.value" />
-                    <em v-else-if="entry.type === 'hidden'">(hidden)</em>
-                  </div>
-                  <div class="column is-1">
-                    <span v-if="entry.type === 'string'" class="tag is-primary is-large" data-tooltip="String">S</span>
-                    <span v-if="entry.type === 'number'" class="tag is-info is-large" data-tooltip="Number">N</span>
-                  </div>
-                </div>
-                <!-- <span class="has-text-dark">{{entry.cvar ?? entry.command}}</span>
-                        <span :class="{'config-string': entry.type === 'string', 'has-text-info': entry.type === 'number'}">
-                          {{entry.value}}
-                        </span> -->
-              </Field>
-              <Field label="Add New Cvar">
-                <div class="columns">
-                  <div class="column">
-                    <input class="input" type="text" />
-                  </div>
-                  <div class="column">
-                    <input class="input" type="text" />
-                  </div>
-                </div>
-              </Field>
-              <Field label="Add New Command">
-                <div class="columns">
-                  <div class="column">
-                    <input class="input" type="text" />
-                  </div>
-                  <div class="column">
-                    <input class="input" type="text" />
-                  </div>
-                </div>
-              </Field>
-            </template>
-            <pre class="box" v-if="cfg.raw">
-            {{ cfg.raw }}
-            </pre>
-          </div>
-        </div>
+        <ConfigFileEditor :parent-folder="cfgParentFolder" :cfg="cfg" v-if="cfg.selected && !cfg.loading" />
         <div class="box" v-else>
           <p class="has-text-centered subtitle is-4 my-6" v-if="cfg.loading"><Icon icon="spinner" spin>Loading configs</Icon></p>
           <p class="has-text-centered subtitle is-5 my-6" v-else>Select a config file on the right to view its content</p>
         </div>
       </div>
       <div v-else-if="tab === 'console'" class="box">
-        <Console :server="serverInfo" />
+        <Console ref="serverConsole" :server="serverInfo" :logs="serverLogs" @line="pushConsoleLog" />
       </div>
+      <ServerMetricsTab v-else-if="tab === 'metrics'" :server="serverInfo" :metrics="metrics" :annotations="metricAnnotations" />
     </div>
     <div class="column is-8" v-else-if="error">
       <div class="box">
@@ -331,6 +283,7 @@
       </div>
     </div>
     <div class="column is-8" v-else>
+
       <div class="box has-background-primary-90 has-text-centered">
         <h4 class='title is-4 my-6'>
           <Icon icon="spinner" spin>Fetching server information</Icon>
@@ -362,10 +315,6 @@
         </div>
       </div>
       <div class="box" v-if="tab === 'overview' || tab === 'live'">
-        <span class="is-inline is-pulled-right no-border pr-4" data-tooltip="Time until next refresh" style="width:10px">
-          <Icon icon="fa-spinner" spin v-if="nextRefreshCountdown == 0"></Icon>
-          <span v-else>{{ nextRefreshCountdown }}s</span>
-        </span>
         <h4 class="title is-5">Recent Activity</h4>
         <template v-if="activities">
           <table v-if="activities.length > 0" class="table is-fullwidth">
@@ -384,8 +333,18 @@
           </table>
           <div class="box has-background-info-light" v-else>No recent activity has been recorded</div>
         </template>
-        <div class="box has-background-warning-light" v-else-if="status">Recent activities is not supported on this server</div>
-        <div class="" v-else><Icon icon="fa-spinner" spin>Waiting for data...</Icon></div>
+        <div class="box has-background-warning-light" v-else>Recent activities is not supported on this server</div>
+      </div>
+      <div class="box" v-if="tab === 'overview'">
+        <h4 class="title is-5">Voice Members ({{ voiceMembers.length }})</h4>
+        <p class="subtitle is-6 mb-1">In the <code>{{ serverInfo.name }}</code> voice channel on <a data-tooltip="Click to join the discord" href="/api/admins/discord" target="_blank">Discord</a></p>
+        <div class="list pb-0">
+          <ListItem v-for="user in voiceMembers" :key="user.id" class="pb-0">
+            <template #title>
+              <UserComponent :user="user" fallback-name="Discord User" />
+            </template>
+          </ListItem>
+        </div>
       </div>
       <div class="box" v-if="tab === 'live'">
         <!-- <span class="tag is-pulled-right is-danger has-tooltip-left" v-if="isLiveViewActive" data-tooltip="Connected to server, receiving live data">Live</span> -->
@@ -419,12 +378,12 @@
               <td class="has-text-right" v-if="liveStatus.game.campaignStartTime">{{ getDuration(liveStatus.game.campaignStartTime) }}</td>
               <td v-else>-</td>
             </tr>
-            <tr>
+            <!-- <tr>
               <th>Last Update</th>
               <td class="has-text-right">
                 <p>{{ lastLiveUpdateTime }}</p>
               </td>
-            </tr>
+            </tr> -->
           </tbody>
         </table>
         <p v-else>Game data will appear here when live data is available</p>
@@ -436,29 +395,90 @@
           <p class="subtitle has-text-centered is-6 ">Not available for this server</p>
         </div>
       </div>
-      <div v-else-if="tab === 'console'" class="box">
-        <h5 class="title is-5">Console Help Information</h5>
-        <p>
-          Commands that you would use in chat such as <code>/slay</code> (or publicly <code>!slay</code>) use the <code>sm_</code> prefix in the console.
-          An example command <code>/slay jockey</code> would be <code>sm_slay jockey</code>.
-        </p>
-        <br>
-        <p>
-          Unknown commands will be shown as <span class="has-text-danger">red</span>, where known commands will show as white. Some commands may not be marked as known, but you can still attempt to enter them.
-        </p>
-        <br>
-        <p>
-          Some commands were not decided to run from console and can't be used, this includes any command that shows a menu (/fta, /notesdisconnected, etc).
-        </p>
-      </div>
-        <article class="message is-warning" v-if="tab === 'console'">
-        <div class="message-header">
-          <p>Notice</p>
+      <template v-else-if="tab === 'console'" >
+        <div class="box">
+          <h5 class="title is-5">Console Help Information</h5>
+          <p>
+            Commands that you would use in chat such as <code>/slay</code> (or publicly <code>!slay</code>) use the <code>sm_</code> prefix in the console.
+            An example command <code>/slay jockey</code> would be <code>sm_slay jockey</code>.
+          </p>
+          <br>
+          <p>
+            Unknown commands will be shown as <span class="has-text-danger">red</span>, where known commands will show as white. Some commands may not be marked as known, but you can still attempt to enter them.
+          </p>
+          <br>
+          <p>
+            Some commands were not decided to run from console and can't be used, this includes any command that shows a menu (/fta, /notesdisconnected, etc).
+          </p>
         </div>
-        <div class="message-body">
-          Please note that the console access gives you full access to the server and as such every command you run will be logged. Every command you use will be ran as "Console", not identified to you in-game in any way. Console access is a privilege, don't abuse it.
+        <article class="message is-warning">
+          <div class="message-header">
+            <p>Notice</p>
+          </div>
+          <div class="message-body">
+            Please note that the console access gives you full access to the server and as such every command you run will be
+            logged. Every command you use will be ran as "Console", not identified to you in-game in any way. Console access is
+            a privilege, don't abuse it.
+          </div>
+        </article>
+      </template>
+      <template v-else-if="tab === 'metrics'">
+        <div class="box">
+          <h5 class="title is-4">Current Metrics</h5>
+          <template v-if="latestMetric">
+            <nav class="level" >
+              <div class="level-item has-text-centered">
+                <div>
+                  <p class="heading">CPU Usage</p>
+                  <p class="title" v-if="latestMetric.cpu_stats?.cpu_usage != undefined">{{ Math.round(latestMetric.cpu_stats!.cpu_usage / latestMetric.cpu_stats!.online_cpus) }}%</p>
+                  <p class="title" v-else>-%</p>
+                </div>
+              </div>
+              <div class="level-item has-text-centered">
+                <div>
+                  <p class="heading">Memory Usage</p>
+                  <p class="title" v-if="latestMetric.memory_stats?.usage_percent != undefined">{{ formatSize(latestMetric.memory_stats?.usage) }}</p>
+                  <p class="title" v-else>-</p>
+
+                </div>
+              </div>
+            </nav>
+            <nav class="level" v-for="(net, intf) in latestMetric.network_stats" :key="intf">
+              <div class="level-item has-text-centered" >
+                <div>
+                  <p class="heading"><Icon icon="arrow-down" /> Bytes In [{{ intf }}]</p>
+                  <p class="title">{{ formatSize(net.bytesRxRate) }}/s</p>
+                </div>
+              </div>
+              <div class="level-item has-text-centered">
+                <div>
+                  <p class="heading"><Icon icon="arrow-up" /> Bytes Out [{{ intf }}]</p>
+                  <p class="title">{{ formatSize(net.bytesTxRate) }}/s</p>
+                </div>
+              </div>
+            </nav>
+            <nav class="level" v-for="(net, intf) in latestMetric.network_stats" :key="intf">
+              <div class="level-item has-text-centered">
+                <div>
+                  <p class="heading">
+                    <Icon icon="arrow-down" /> Total Bytes In [{{ intf }}]
+                  </p>
+                  <p class="title">{{ formatSize(net.bytesRxTotal) }}</p>
+                </div>
+              </div>
+              <div class="level-item has-text-centered">
+                <div>
+                  <p class="heading">
+                    <Icon icon="arrow-up" /> Total Bytes Out [{{ intf }}]
+                  </p>
+                  <p class="title">{{ formatSize(net.bytesTxTotal) }}</p>
+                </div>
+              </div>
+            </nav>
+          </template>
+          <span v-else>Waiting for metrics...</span>
         </div>
-      </article>
+      </template>
     </div>
     <div class="column" v-else-if="!error">
       <div class="field">
@@ -487,19 +507,26 @@
 
 <script setup lang="ts">
 import { useRoute, useRouter } from 'vue-router'
-import { ref, computed, onUnmounted, onBeforeUnmount, onMounted } from 'vue';
+import { ref, computed, onUnmounted, onBeforeUnmount, onMounted, nextTick } from 'vue';
 import FolderBrower from'@/components/FolderBrowser.vue'
 import { PlayerData, PrivilegedUser } from '@/js/User';
-import { parseLog, getRelDate, request } from '@/js/util';
+import { parseLog, getRelDate, request, formatSize } from '@/js/util';
 import LogMessage from "@/components/LogMessage.vue";
 import { useNotification } from "@kyvg/vue3-notification";
 import Field from '@/components/Field.vue';
-import { SurvivorId, FinaleStage, PlayerState, PlayerGameAction, PlayerMove, InfectedClass, LiveDataCache, LiveRecord, updateLiveCache, LiveSurvivor, LiveInfected, LiveRecordType, GameDifficulty, CommandResultType, GameState, ClientState, LiveClient } from '../../../../common-types/Live';
+import { SurvivorId, FinaleStage, PlayerState, PlayerGameAction, PlayerMove, InfectedClass, LiveDataCache, LiveRecord, updateLiveCache, LiveSurvivor, LiveInfected, LiveRecordType, GameDifficulty, CommandResultType, GameState, ClientState, LiveClient, AnnotationX, AnnotationY, Annotation } from '../../../../common-types/Live';
 import { UserPrivilegeCode } from '../../../../common-types/Privileges';
 import { formatDate, getDuration } from '../../js/util.js';
 import UserComponent, { User } from '@/components/UserComponent.vue';
 import Console from '@/components/server/Console.vue'
-import { ServerData, ServerInfo, ServerDetailed, ServerAvailableFeatures, ComputeStats, ServerStatus } from '../../../../common-types/Server';
+import { ServerData, ServerInfo, ServerDetailed, ServerAvailableFeatures, ComputeStats, ServerStatus, VoiceUser } from '../../../../common-types/Server';
+import ServerMetricsTab from '@/components/server/ServerMetricsTab.vue';
+import { ClientOutPayload, ServerOutPacket, ServerOutPayload } from '../../../../common-types/ServerWebsocket';
+import ConfigFileEditor from '@/components/server/ConfigFileEditor.vue';
+import ListItem from '@/components/ListItem.vue';
+
+const MAX_LOGS_LINES = 350
+const MAX_METRIC_HISTORY = 300
 
 const FinaleStageName: Record<FinaleStage, string> = {
     [FinaleStage.Gauntlet]: "Gauntlet",
@@ -548,7 +575,7 @@ const PlayerMoveString: Record<PlayerMove, string> = {
   [PlayerMove.Crouched]: "Crouching",
   [PlayerMove.Ladder]: "Climbing",
 }
-const REFRESH_INTERVAL = 1000 * 15
+const FETCH_ACTIVITIES_INTERVAL = 1000 * 60 * 5
 
 const { notify } = useNotification();
 const props = defineProps<{
@@ -595,21 +622,30 @@ const TABS: Record<string, { name: string, tag?: string, permission?: string, en
     enabled: () => {
       return serverInfo.value?.features.logs
     }
+  },
+  metrics: {
+    name: "Metrics",
+    enabled: () => {
+      return serverInfo.value?.features.metrics
+    }
   }
 }
 
+let serverLogs = ref<string[]>([])
+let serverConsole = ref()
+let metricAnnotations = ref<Annotation>({ xaxis: [], yaxis: []})
+let latestMetric = ref<ComputeStats|null>(null)
+let metrics = ref<ComputeStats[]>([])
 let stats = ref<ComputeStats>()
-let lastRefreshTime = ref()
 let serverInfo = ref<ServerInfo>()
 let serverConfigs = ref()
 let serverIds = ref()
 let status = ref<Partial<ServerStatus>&{error?:string}>()
 let online = ref<boolean>()
 let liveStatus = ref<LiveDataCache|null>(null)
-let liveStatusNextRetryTime = ref<number>()
-let lastLiveUpdateTime = ref<string>()
-let uptime = ref<number>()
+let uptime = ref<number|null>(null)
 let activities = ref()
+let voiceMembers = ref<VoiceUser[]>([])
 let cfg = ref<{
   selected?: { filename: string, path: string }, raw?: string, json?: any, loading: boolean }
 >({ loading: false })
@@ -652,15 +688,6 @@ const tab = computed(() => {
 const mapInfo = computed(() => {
   if(!status.value?.data) return
   return getMapDisplay(status.value.data.map)
-})
-const nextRefreshCountdown = computed(() => {
-  if(!lastRefreshTime.value || !now.value) return 0
-  return Math.max(Math.floor(((lastRefreshTime.value + REFRESH_INTERVAL) - now.value) / 1000), 0)
-})
-
-const nextLiveRetryTime = computed(() => {
-  if(liveStatusNextRetryTime.value === undefined || !now.value) return 0
-  return Math.max(Math.ceil((liveStatusNextRetryTime.value - now.value) / 1000), 0)
 })
 
 function isTabEnabled(data: any): boolean {
@@ -765,6 +792,8 @@ async function fetchServerData() {
       online.value = json.online
       liveStatus.value = data.live
       serverConfigs.value = data.configs
+      uptime.value = data.uptime
+      voiceMembers.value = data.voiceMembers ?? []
     } else {
       error.value = json.message ?? json.err ?? json ?? await response.text()
     }
@@ -774,30 +803,17 @@ async function fetchServerData() {
   }
 }
 
-let isRefreshing = false
-async function fetchServerStatus() {
-  const id = route.params.id
+async function fetchServerActivities() {
   try {
-    if(id != route.params.id || isRefreshing) return // Ignore changes in id or if refreshing
-    isRefreshing = true
-    const response = await fetch(`/api/servers/${route.params.id}/status`)
-    lastRefreshTime.value = Date.now()
+    const response = await fetch(`/api/servers/${route.params.id}/activities`)
     const json = await response.json()
-    isRefreshing = false
-    if(response.ok && json) {
-      online.value = json.online
-      status.value = json.status
-      uptime.value = json.uptime
-      stats.value = json.stats
-      activities.value = json.recentActivities?.map((act: any) => parseLog(act))
+    if(response.ok) {
+      activities.value = json.activities?.map((act: any) => parseLog(act))
     } else {
-      error.value = json.message
-      status.value = { error: json.message }
+      activities.value = undefined
     }
   } catch(err: any) {
-    error.value = err.message
-    status.value = { error: err.message }
-    isRefreshing = false
+    activities.value = undefined
   }
 }
 const SERVER_CACHE_EXP_TIME = 1000 * 60 * 60 * 24 // 1 day
@@ -939,10 +955,6 @@ const OfficialCampaignNames = [
   "The Last Stand"
 ]
 
-const isLiveViewActive = computed(() => {
-  if(liveStatusNextRetryTime.value) return false
-  return liveReadyState.value == EventSource.OPEN
-})
 const livePlayers = computed(() => {
   if(!liveStatus.value?.clients) return []
   return Object.values(liveStatus.value.clients)
@@ -954,61 +966,89 @@ const livePlayers = computed(() => {
       return 0
     })
 })
-let errCount = 0
-let liveReadyState = ref<number>(0)
-let evtSource: EventSource
-let retryTimeout: any
-let reconnectTimeout: any
+
+let wsErrorCount = 0
+let wsReconnectTimeout: number
+let lastPacketPing = ref()
+let ws = ref<WebSocket|null>()
 
 const MAX_BACKOFF = 1000 * 60 * 2
 
-function createLiveConnection() {
-  if(errCount === -1) return // Unloading, dont start new
-  liveReadyState.value = EventSource.CONNECTING
-  evtSource = new EventSource(`/api/servers/${route.params.id}/live`);
-  evtSource.onmessage = (event) => {
-    errCount = 0
-    liveStatusNextRetryTime.value = undefined
-    if(!event.data) return
-    const json = JSON.parse(event.data)
-    if(json.state) {
-      if(json.state === "EXIT") {
-        evtSource.close()
-        return reconnect()
-      }
-    } else {
-      const record: LiveRecord = json
-      console.debug("got", LiveRecordType[record.type], record, 'pre=', Object.assign({}, liveStatus.value))
-      liveStatus.value = updateLiveCache(liveStatus.value, record)
-      if(record.type === LiveRecordType.Game) {
-        uptime.value = (Date.now()/1000) - record.startTime
-      }
-      // If we have live connection, server is alive
-      online.value = true
-    }
+function pushConsoleLog(line: string) {
+  serverLogs.value.push(line)
+  if(serverLogs.value.length > MAX_LOGS_LINES) serverLogs.value.splice(0, 1)
+  // Potentionally helps fix partial end of logs scroll
+  if(serverConsole.value)
+    serverConsole.value.jumpToBottom()
+}
 
-    clearTimeout(reconnectTimeout)
-    reconnectTimeout = setTimeout(() => {
-      console.debug("no msg in a while, reconnecting")
-      createLiveConnection()
-    }, 1000 * 60)
+function onWSPayload(payload: ServerOutPacket) {
+  lastPacketPing.value = Date.now() - payload.millis
+  if(payload.type === "live") {
+    liveStatus.value = updateLiveCache(liveStatus.value, payload.record as LiveRecord)
+    if(payload.record?.type === LiveRecordType.Game) {
+      uptime.value = (Date.now()/1000) - payload.record.startTime
+    }
+    // If we have live connection, server is alive
+    online.value = true
+  } else if(payload.type === "log") {
+    pushConsoleLog(payload.content)
+  } else if(payload.type === "status") {
+    online.value = payload.online
+    status.value = payload.status
+  } else if(payload.type === "metric") {
+    latestMetric.value = payload.metric
+    metrics.value.push(payload.metric)
+    if(metrics.value.length > MAX_METRIC_HISTORY) {
+      metrics.value.splice(metrics.value.length, 1);
+    }
+  } else if(payload.type === "metric_full") {
+    metrics.value = payload.history
+    metricAnnotations.value = payload.annotations
+    latestMetric.value = payload.latest
+  } else if(payload.type === "voice_state") {
+    const index = voiceMembers.value.findIndex(m => m.id == payload.userId)
+    if(payload.connected) {
+      if(index == -1) {
+        voiceMembers.value.push({ id: payload.userId, name: payload.userName })
+      }
+    } else if(index > -1) {
+      voiceMembers.value.splice(index, 1)
+    }
+  } else {
+    console.error("OnWSPayload: unhandled payload type", payload.type, payload)
   }
-  evtSource.onopen = () => {
-    liveReadyState.value = EventSource.OPEN
-    liveStatusNextRetryTime.value = undefined
+}
+function sendWSPayload(payload: ClientOutPayload) {
+  if(!ws.value || !ws.value.OPEN) throw new Error("Websocket is not connected")
+  ws.value.send(JSON.stringify(payload))
+}
+function connectWS() {
+  console.debug("connectWS", `${window.location.protocol}://${window.location.host}/api/servers/${route.params.id}/ws`)
+  ws.value?.close()
+  ws.value = new WebSocket(`${window.location.protocol}//${window.location.host}/api/servers/${route.params.id}/ws`);
+  ws.value.onmessage = (event) => {
+    const payload = JSON.parse(event.data)
+    console.debug("[WS] payload", payload)
+    onWSPayload(payload)
   }
-  evtSource.onerror = reconnect;
-  function reconnect() {
-    errCount++
-    console.error("Disconnected from live server", { errCount })
-    evtSource.close()
-    liveReadyState.value = EventSource.CLOSED
-    // Exponentional backoff:
-    const retryTime = Math.min(1000 * (Math.pow(1.5, errCount / 2) + 5), MAX_BACKOFF)
-    liveStatusNextRetryTime.value = Date.now() + retryTime
-    retryTimeout = setTimeout(() => {
-      createLiveConnection()
+  ws.value.onopen = () => {
+    console.info("[WS] Connected", { ws })
+    wsErrorCount = 0
+  }
+  ws.value.onclose = (ev) => {
+    if(ev.code == 4000) {
+      throw new Error("Server returned fatal error: " + ev.reason)
+    }
+    wsErrorCount++
+    const retryTime = Math.min(1000 * (Math.pow(1.5, wsErrorCount ) + 3), MAX_BACKOFF)
+    console.debug("[WS] Closed, reconnecting in", retryTime/1000, "s", { wsErrorCount })
+    wsReconnectTimeout = setTimeout(() => {
+      connectWS()
     }, retryTime)
+  }
+  ws.value.onerror = (err) => {
+    console.error("[WS] Error:", err)
   }
 }
 
@@ -1021,24 +1061,22 @@ async function init() {
   if(await fetchServerInfo()) {
     await Promise.any([
       fetchServerData(),
-      fetchServerStatus()
+      fetchServerActivities()
     ])
-    if(serverInfo.value?.type === "source")
-      createLiveConnection()
   }
-  refreshInterval = setInterval(fetchServerStatus, REFRESH_INTERVAL)
+  connectWS()
+  refreshInterval = setInterval(fetchServerActivities, FETCH_ACTIVITIES_INTERVAL)
 }
 
-nowInterval = setInterval(() => {
-  now.value = Date.now()
-  if(liveStatus.value)
-    lastLiveUpdateTime.value = getRelDate(liveStatus.value.lastUpdate / 1000)
-}, 1000)
+// nowInterval = setInterval(() => {
+//   now.value = Date.now()
+//   if(liveStatus.value)
+//     lastLiveUpdateTime.value = getRelDate(liveStatus.value.lastUpdate / 1000)
+// }, 1000)
 
 onMounted(async() => {
   document.addEventListener("keyup", _toggleShift)
   document.addEventListener("keydown", _toggleShift)
-  errCount = 0
   await fetchServersCompact()
   await init()
 })
@@ -1048,10 +1086,9 @@ function _toggleShift(e: any) {
 onBeforeUnmount(() => {
   document.removeEventListener("keyup", _toggleShift)
   document.removeEventListener("keydown", _toggleShift)
-  errCount = -1
   clearInterval(refreshInterval)
   clearInterval(nowInterval)
-  clearTimeout(retryTimeout)
+  clearTimeout(wsReconnectTimeout)
 })
 </script>
 

@@ -1,5 +1,10 @@
 import { LiveDataCache } from "./Live.js"
 
+export interface VoiceUser {
+    id: string,
+    name: string,
+}
+
 export type ServerStatusSource = "" | "live" | "gamedig"
 export interface ServerStatus {
     source?: ServerStatusSource,
@@ -18,6 +23,8 @@ export interface ComputeStats {
     collectionTime: number,
     memory_stats: MemoryStats | null;
     cpu_stats: CPUStats | null;
+    // Key is the network interface
+    network_stats: Record<string, NetworkStats>
 }
 
 
@@ -30,6 +37,19 @@ interface MemoryStats {
     usage: number;
     usage_percent: number;
     limit: number;
+}
+export interface NetworkStats {
+    bytesRxTotal: number,
+    bytesTxTotal: number,
+
+    bytesRxRate: number,
+    bytesTxRate: number,
+
+    packetsRx: number,
+    packetsTx: number,
+
+    droppedTx: number,
+    droppedRx: number,
 }
 
 export type PlayerAction = "kick"
@@ -69,7 +89,9 @@ export interface ServerDetailed {
     server: ServerInfo
     live: LiveDataCache | null,
     uptime: number | null,
-    configs: null | any[]
+    startTime: number | null,
+    configs: null | any[],
+    voiceMembers: null | VoiceUser[]
 }
 
 export interface PlayerStats {
@@ -124,6 +146,7 @@ export interface ServerAvailableFeatures {
     docker: boolean,
     metrics: boolean
 
-    performCommands: boolean
+    performCommands: boolean,
+    canStart: boolean
 } 
 export type ServerFeature = keyof ServerAvailableFeatures

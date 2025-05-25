@@ -55,4 +55,11 @@ export default class ServerGroup<T extends Server = Server> {
         return null
     }
 
+    async performActionAll(command: string, namespace: string) {
+        for(const server of Object.values(this._servers)) {
+            await server.performAction(command, namespace)
+        }
+        return null
+    }
+
 }

@@ -85,6 +85,57 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
     })
 
+    fastify.post(':/shareId/restart-servers', async(req: FastifyRequest<{Params: {shareId: string, destId: string}}>, reply) => {
+        if(!req.user!.hasPermission("shares.view", req.params.shareId)) return NO_PERMISSION(reply)
+        const shareId = req.params.shareId
+        const share = fastify.servers.getShare(shareId)
+        if(!share) {
+            return reply.status(404).send({
+                error: "SHARE_NOT_FOUND", 
+                message: `No share with id \"${shareId!.toLowerCase()}\" could be found. Share may be unavailable, incorrecty configured or does not exist`   
+            })
+        } else if(!share.destinations[req.params.destId]) {
+             return reply.status(404).send({
+                error: "SHARE_DEST_NOT_FOUND", 
+                message: `Share has no destination id \"${shareId!.toLowerCase()}\"`   
+            })
+        }
+
+        const dest = share.destinations[req.params.destId]
+
+        const success: string[] = []
+        const failed: string[] = []
+
+        if(dest.groupIds) {
+            const promises = dest.groupIds.map(async(id) => {
+                const group = fastify.servers.getGroup(id)
+                if(!group) {
+                    failed.push(id)
+                    return null
+                }
+                await group.performActionAll("request_stop", "builtin")
+                success.push(id)
+            })
+            await Promise.allSettled(promises).catch(() => {})
+        }
+        if(dest.serverIds) {
+            const promises = dest.serverIds.map(async(id) => {
+                const server = fastify.servers.getServer(id)
+                if(!server) {
+                    failed.push(id)
+                    return null
+                }
+                await server.performAction("request_stop", "builtin")
+                success.push(id)
+            })
+            await Promise.allSettled(promises).catch(() => {})
+        }
+
+        return {
+            success,
+            failed
+        }
+    })
 
     fastify.get('/:shareId/addons', async(req: FastifyRequest<{Params: {shareId?: string}}>, reply) => {
         if(!req.user!.hasPermission("shares.addons.view", req.params.shareId)) return NO_PERMISSION(reply)

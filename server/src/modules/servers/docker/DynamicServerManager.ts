@@ -5,6 +5,7 @@ import Json5 from 'json5';
 import DynamicServerInstance from './DynamicServerInstance.js';
 import ServerManager from '../ServerManager.js';
 import { DynamicServerGroup } from '../groups/DynamicServerGroup.js';
+import { ServerEvent } from '../DockerServer.js';
 export interface DockerTemplateConfig {
     id: string
     network?: "host" | string,
@@ -20,6 +21,7 @@ export interface DockerTemplateContainer {
 }
 
 export default class DynamicServerManager {
+    static #instance: DynamicServerManager;
     #docker: Docker
     #templates: Record<string, DockerTemplateContainer> = {}
     #instances: Record<string, DynamicServerInstance> = {}
@@ -32,11 +34,41 @@ export default class DynamicServerManager {
             console.info(`[ServerManager/docker] Docker connected`)
         })
         this.#configDir = configDir
+        DynamicServerManager.#instance = this
+    }
+
+    static get Instance() {
+        return this.#instance
     }
 
     async Load() {
         await this.#loadTemplates()
         await this.findExisting()
+
+        const stream = await this.#docker.getEvents()
+        stream.on('data', (chunk) => {
+            const event = JSON.parse(chunk.toString());
+            // event.status === 'restart' or start
+            if(event.status === "start") {
+                // const container = this.#instances[]
+                // const container = this.findContainerById(event.id)
+                const server = this.#srvManager.getServerByContainerId(event.id)
+                server?._notifyEvent(ServerEvent.Started)
+                // container._notifyState(?)
+            } else if(event.status === "stop") {
+                const server = this.#srvManager.getServerByContainerId(event.id)
+                server?._notifyEvent(ServerEvent.Stopped)
+            }
+        });
+    }
+
+    findContainerById(id: string) {
+        for(const container of Object.values(this.#instances)) {
+            if(container.ContainerId === id) {
+                return container
+            }
+        }
+        return null
     }
 
     async *#getContainers() {
@@ -81,6 +113,7 @@ export default class DynamicServerManager {
                 } as DockerTemplateConfig
                 try {
                     // await this.#docker.pull(config.image)
+                    // await this.#docker.pull(config.image)
                     this.#templates[id] = {
                         config,
                     }
@@ -88,7 +121,6 @@ export default class DynamicServerManager {
                     console.error(`[ServerManager/docker] Failed to pull image \"${config.image}\":`, err)
                 }
             }
-            console.debug('templates:', Object.keys(this.#templates).join(" "))
             console.info(`[ServerManager/docker] Loaded ${Object.keys(this.#templates).length} templates`)
         } catch(err) {
             if(err.code == "ENOENT")
@@ -96,6 +128,7 @@ export default class DynamicServerManager {
             console.error("[ServerManager] Error: Failed to load templates.json: ", err)
         }
     }
+
 
     async #getNextPort(ofTemplate: DockerTemplateConfig) {
         const ports: number[] = []
@@ -105,7 +138,6 @@ export default class DynamicServerManager {
             ports.push(port)
         }
         ports.sort()
-        console.log(ofTemplate.id, 'ports', ports)
 
         // Find next available, filling in gaps
         let port = ofTemplate.startPort;
@@ -114,7 +146,6 @@ export default class DynamicServerManager {
                 port++
             }
         }
-        console.log('next port: ', port)
         return port
     }
 
@@ -140,7 +171,6 @@ export default class DynamicServerManager {
         }
         let commands = Array.isArray(template.config.command) ? template.config.command : [template.config.command]
         commands = commands.map(cmd => DynamicServerGroup.formatTemplateVar(cmd, templVars))
-
         const config = {
             name: `panel-${templateId}-${port}`,
             Image: template.config.image,
@@ -149,9 +179,9 @@ export default class DynamicServerManager {
             OpenStdin: true,
             // TODO: improve 
             Cmd: commands,
-            // ExposedPorts: {
-            //     '27015/udp': {}
-            // },
+            ExposedPorts: {
+                [`${port.toString()}/udp`]: {}
+            },
             HostConfig: {
                 "NetworkMode": template.config.network,
                 "Binds": template.config.volumes?.concat(volumes) ?? [],
@@ -159,10 +189,17 @@ export default class DynamicServerManager {
                     "Name": "unless-stopped",
                     // MaximumRetryCount: 3
                 },
-                "PortBindings": { "27015/udp": [{ 
+                "PortBindings": { [`${port.toString()}/udp`]: [{ 
+                    
                     "HostPort": port.toString(), 
+                    
                     "HostIp": template.config.ip 
-                }] }
+                
+                }] },
+               "LogConfig": {
+                    Type: "local",
+                    Config: {}
+                },
             },
             Labels: {
                 "panel.template": templateId,
@@ -170,6 +207,7 @@ export default class DynamicServerManager {
                 ...labels
             },
         }
+        console.log("config", config)
         const container = await this.#docker.createContainer(config)
         const instance =  new DynamicServerInstance(template.config, container, template.config.ip, port)
         await this.#registerInstance(instance)
@@ -188,6 +226,9 @@ export default class DynamicServerManager {
     async #registerInstance(instance: DynamicServerInstance) {
         await instance.Init()
         this.#instances[instance.ContainerName] = instance
+    }
+
+    async deleteInstance(instance: DynamicServerInstance) {
     }
 
     async unregisterInstance(instance: DynamicServerInstance) {

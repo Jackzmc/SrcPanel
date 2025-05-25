@@ -26,10 +26,10 @@ const props = defineProps<{
 
 const redirectUri = computed(() => {
   if(!props.meta) return
-  return `${props.meta.settings.domain}/api/auth/steam/callback?return_uri=${route.fullPath}`
+  return `${realm.value}/api/auth/steam/callback?return_uri=${realm.value}${route.fullPath}`
 })
 const realm = computed(() => {
-  if(!props.meta) return
-  return props.meta.settings.domain
+  const domain = location.host ?? props.meta?.settings.domain
+  return `${location.protocol}//${domain}`
 })
 </script>

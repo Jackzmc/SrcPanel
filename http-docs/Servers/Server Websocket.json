@@ -1,0 +1,20 @@
+{
+    "_type": "socket",
+    "sortOrder": 0,
+    "clients": [
+        {
+            "id": "HExfUJdrPlzpg1Is90EWf",
+            "url": "ws://{{API_DOMAIN}}/api/servers/l4d2-test-27015/ws",
+            "payloads": [
+                {
+                    "id": "fl00e_yCewSuLhPV7S-p6",
+                    "name": "Payload 1",
+                    "payload": "{\"test\": 1\"}"
+                }
+            ],
+            "currentPayloadId": "fl00e_yCewSuLhPV7S-p6",
+            "message": "{\"test\": 1\"}",
+            "visibility": "shown"
+        }
+    ]
+}

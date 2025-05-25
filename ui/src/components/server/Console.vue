@@ -1,19 +1,17 @@
 <template>
 <div>
   <div id="console" ref="consoleElem">
-    <Icon icon="spinner" spin v-if="liveReadyState !== 1">Starting log stream... ({{ errCount }} attempts)</Icon>
-    <Icon icon="spinner" spin v-else-if="logs.length === 0">No current logs, waiting for more...</Icon>
-    <span v-show="isConnected" class="tag is-danger is-pulled-right" style="position: sticky; top: 0; right: 0;">Live</span>
     <div class="console-content" v-for="(line, i) of logs" :key="i">
       {{ line }}
     </div>
-    <span v-if="!isConnected && logs.length > 0" class="has-text-danger"><Icon icon="warning">Disconnected from server, trying to reconnect...</Icon></span>
+    <span v-if="logs.length === 0">
+      <Icon icon="fa-spinner" spin><em>No log entries currently, this will update automatically.</em></Icon>
+    </span>
   </div>
   <Field :icon-left="commandInputSupported ? 'terminal' : 'warning'" :icon-class="commandInputSupported ? 'has-text-white' : 'has-text-info'">
     <template v-if="commandInputSupported">
       <input id="terminal-input" :class="['input','terminal-input',commandClass]" v-model="commandInput"
         placeholder="Enter a command" @keyup.enter="runCommand"
-        :disabled="isConnected ? undefined : true"
       >
       <datalist id="terminal-input">
         <option v-for="cmd in validCommands" :key="cmd" :value="cmd"></option>
@@ -38,17 +36,15 @@ const MAX_LOGS_LINES = 350
 const route = useRoute()
 const router = useRouter()
 
+const emit = defineEmits(["log"])
+
 const props = defineProps<{
-  server: ServerInfo
+  server: ServerInfo,
+  logs: string[]
 }>()
 
 const commandInputSupported = computed(() => {
   return props.server.features.performCommands
-})
-
-const isConnected = computed(() => {
-  if(liveStatusNextRetryTime.value) return false
-  return liveReadyState.value == EventSource.OPEN
 })
 
 const commandClass = computed(() => {
@@ -64,14 +60,9 @@ const currentCommandName = computed(() => {
   return split[0].toLowerCase()
 })
 
-let liveStatusNextRetryTime = ref<number>()
-let liveReadyState = ref<number>(0)
-let evtSource: EventSource
 let commandInput = ref<string>()
-let logs = ref<string[]>([])
 let validCommands = ref<Set<string>>(new Set())
 let consoleElem = ref()
-let errCount = ref(0)
 
 async function runCommand() {
   if(!commandInput.value) return
@@ -86,7 +77,7 @@ async function runCommand() {
     command = "sm_" + command.slice(1)
   }
 
-  pushLine(`> ${command}`)
+  emit("log", `> ${command}`)
   commandInput.value = undefined
   const response = await request(`/api/servers/${route.params.id}/cmd`, {
     method: "POST",
@@ -97,51 +88,18 @@ async function runCommand() {
     const json: LiveRecordCommandResponse = await response.json()
     // Rcon output is not shown to the main server logs, include here:
     if(!json.message) {
-      pushLine(``)
+      emit("log", ``)
     } else {
       for(const line of json.message.split(/\r?\n/)) {
-        pushLine(line)
+        emit("log", line);
       }
     }
   }
 }
 
-const MAX_BACKOFF = 1000 * 60 * 2
-let retryTimeout: any
-function createLogsConnection() {
-  if(errCount.value === -1) return // Unloading, do not connect again
-  liveReadyState.value = 0
-  evtSource = new EventSource(`/api/servers/${route.params.id}/logs/sse`);
-  evtSource.onmessage = (event) => {
-    errCount.value = 0
-    liveStatusNextRetryTime.value = undefined
-    pushLine(event.data)
-  }
-  evtSource.onopen = () => {
-    liveReadyState.value = EventSource.OPEN
-    console.log("open")
-  }
-  evtSource.onerror = (event) => {
-    console.error("Disconnected", { errCount: errCount.value })
-    errCount.value++
-    evtSource.close()
-    liveReadyState.value = EventSource.CLOSED
-    // Exponentional backoff:
-    const retryTime = Math.min(1000 * (Math.pow(1.5, errCount.value / 2) + 5), MAX_BACKOFF)
-    liveStatusNextRetryTime.value = Date.now() + retryTime
-    retryTimeout = setTimeout(() => {
-      createLogsConnection()
-    }, retryTime)
-    nextTick(() => {
-      consoleElem.value.scrollTop = consoleElem.value.scrollHeight;
-    })
-  }
-}
+defineExpose({ jumpToBottom })
 
-function pushLine(line: string) {
-  logs.value.push(decodeURIComponent(line))
-  if(logs.value.length > MAX_LOGS_LINES) logs.value = logs.value.splice(0, 1)
-  // Potentionally helps fix partial end of logs scroll
+function jumpToBottom() {
   nextTick(() => {
     consoleElem.value.scrollTop = consoleElem.value.scrollHeight;
   })
@@ -166,6 +124,7 @@ async function fetchCommands() {
     console.error('could not fetch /data/commands.json', err)
   }
 
+  // TODO: fetch via appid?
   await getCommands("550_commands")
   await getCommands("extra_commands")
 }
@@ -183,13 +142,11 @@ async function getCommands(filename: string) {
 }
 
 onMounted(async() => {
-  createLogsConnection()
+  // createLogsConnection()
   await fetchCommands()
+  jumpToBottom()
 })
 onUnmounted(() => {
-  errCount.value = -1
-  clearTimeout(retryTimeout)
-  evtSource?.close()
 })
 </script>
 
@@ -203,6 +160,9 @@ onUnmounted(() => {
   overflow-y: scroll;
   overscroll-behavior-y: contain;
   scroll-snap-type: y mandatory;
+}
+.console-content {
+  white-space: pre-wrap;
 }
 .terminal-input::placeholder {
   color: white;

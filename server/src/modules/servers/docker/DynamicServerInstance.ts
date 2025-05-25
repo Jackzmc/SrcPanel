@@ -26,7 +26,8 @@ export default class DynamicServerInstance {
         this.#init = true
 
         const state = await this.state()
-        this.#startTime = new Date(state.StartedAt).valueOf() / 1000
+        const startDateTime = new Date(state.StartedAt).valueOf()
+        this.#startTime = startDateTime > 0 ? Math.round(startDateTime / 1000) : null
 
         const inspect = await this.#container.inspect()
         const network = inspect.NetworkSettings.Networks[this.#template.network!]
@@ -86,7 +87,8 @@ export default class DynamicServerInstance {
     }
 
     async start() {
-        return await this.#container.start()
+        await this.#container.start()
+        this.#startTime = Math.round(Date.now()/1000)
     }
     async tryStart() {
         try { 

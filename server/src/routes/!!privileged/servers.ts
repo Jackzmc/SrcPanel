@@ -9,6 +9,7 @@ import { LiveRecord, LiveRecordType } from '../../../../common-types/Live.js';
 import { UserPrivilegeCode } from '../../../../common-types/Privileges.js';
 import DNS from 'dns/promises'
 import assert from 'assert';
+import { WebSocket } from '@fastify/websocket';
 
 const COMMENT_LINE_REGEX = new RegExp(/^\s*(\/\/|#)/)
 const HIDDEN_COMMANDS = [
@@ -80,6 +81,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         return server.info
     })
 
+
     fastify.get('/:id/data', async(req: FastifyRequest<{Params: { id: 'string' }}>, reply): Promise<ServerDetailed> => {
         const server = fastify.servers.getServer(req.params.id)
         if(!server) {
@@ -95,7 +97,9 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         return {
             server: server.info,
             uptime: server.uptime,
+            startTime: server.startTime,
             live: server.Plugin?.liveStatus,
+            voiceMembers: server.voiceMembers,
             configs
         }
     })
@@ -187,62 +191,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
     })
 
-    fastify.get('/:id/live', (req: FastifyRequest<{Params: { id: 'string' }}>, reply) => {
-        reply.raw.writeHead(200, {
-            'Cache-Control': 'no-cache,no-transform',
-            'Content-Type': 'text/event-stream',
-            'Connection': 'keep-alive',
-            'X-Accel-Buffering': 'no'
-        });
-        function send(msg: object, eventName?: string) {
-            if(eventName) reply.raw.write(`event: ${eventName}\n\n`)
-            reply.raw.write(`data: ${JSON.stringify(msg)}\n\n`)
-        }
-        reply.raw.flushHeaders()
-        reply.raw.write('retry: 5000\n\n')
-
-        const server = fastify.servers.getServer(req.params.id)
-
-        if(!server) {
-            send({
-                error: "Server Not Found",
-                code: "SERVER_NOT_FOUND",
-            })
-        } else if(!server.Plugin?.available) {
-            send({
-                error: "Live view unavailable",
-                code: "LIVE_VIEW_UNAVAILALBE",
-            })
-        } else {
-            const [code, granted] = req.user!.requirePermission("servers.view", { resourceId: server.id })
-            if(!granted) return NO_PERMISSION(reply,
-                "Cannot access server, no permission",
-                code,
-            )
-
-            function eventHandler(record: LiveRecord | null) {
-                if(record)
-                    send(record)
-                else
-                    send({ state: "EXIT" })
-            }
-
-            const heartbeatTimer = setInterval(() => {
-                reply.raw.write(': heartbeat\n\n')
-            }, 1000 * 15)
-            
-            server.Plugin.subscribe(eventHandler)
-            req.raw.on("close", () => {
-                server.Plugin.unsubscribe(eventHandler)
-                clearTimeout(heartbeatTimer)
-            })
-
-        }
-        reply.hijack()
-    })
-
-    fastify.get('/:id/status', async(req: FastifyRequest<{Params: { id: 'string' }}>, reply) => {
-
+    fastify.get('/:id/activities', async(req: FastifyRequest<{Params: { id: 'string' }}>, reply) => {
         const server = fastify.servers.getServer(req.params.id)
         if(!server) {
             return reply.code(404).send({
@@ -264,22 +213,14 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 LIMIT 5`,
             [server.activityLogId]
         )
+            return { activities: rows}
             recentActivities = rows
         }
 
-        try {
-            await server.refreshStatus(true)
-        } catch(err) {
-
-        }
-
-        return {
-            recentActivities,
-            stats: server.Metrics?.available ? server.Metrics.ComputeStats : null,
-            uptime: server.uptime,
-            status: server.status,
-            online: server.Online
-        }
+        return reply.code(403).send({
+            error: "SERVER_LACKS_ACTIVITY",
+            message: "Server does not support recent activity logs"
+        })
     })
 
     fastify.get('/:id/generate-jwt', async(req: FastifyRequest<{Params: { id: 'string'} }>, reply) => {
@@ -370,9 +311,9 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 cmd: req.body
             }
         })
-        await fastify.authmngr.notifyAdmins(`Admin ${req.user!.steamid2} ran server command \"${req.body}\" on server ${server.id}. Log entry: ${id}`, "notify_rcon_use", {
-            targetSteamid: req.user!.steamid2
-        })
+        // await fastify.authmngr.notifyAdmins(`Admin ${req.user!.steamid2} ran server command \"${req.body}\" on server ${server.id}. Log entry: ${id}`, "notify_rcon_use", {
+        //     targetSteamid: req.user!.steamid2
+        // })
         const response = await server.performAction(req.body, "default")
         if(req.query['no-response'])
             return reply.status(204).send()
@@ -424,55 +365,6 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
             
         return server.Console?.logs.join("\n")
-    })
-
-    fastify.get('/:id/logs/sse', async (req: FastifyRequest<{ Params: { id: 'string' } }>, reply) => {
-        reply.raw.writeHead(200, {
-            'Cache-Control': 'no-cache,no-transform',
-            'Content-Type': 'text/event-stream',
-            'Connection': 'keep-alive',
-            'X-Accel-Buffering': 'no'
-        });
-        reply.raw.flushHeaders()
-        function eventHandler(line: string) {
-            reply.raw.write(`data: ${encodeURIComponent(line)}\n\n`)
-        }
-        let failed = false
-        const server = fastify.servers.getServer(req.params.id)
-        if(!server) {
-            failed = true
-            eventHandler(`Unknown server`)
-        } else if(!failed && !server.Console?.available) {
-            failed = true
-            eventHandler("Logs feature is unavailable or unconfigured")
-        } else if(!failed) {
-            const [code, granted] = req.user!.requirePermission("servers.view_console", { resourceId: server.id })
-            if(!granted) {
-                failed = true
-                eventHandler(`You do not have permission to view the server console.`)
-            }
-        }
-       
-        if(!failed) {
-            assert(server && server.Console != null)
-            // Send any stale data:
-            reply.raw.write(': heartbeat')
-            for(const line of server.Console.logs) {
-                eventHandler(line)
-            }
-
-            const heartbeatTimer = setInterval(() => {
-                reply.raw.write(': heartbeat')
-            }, 1000 * 30)
-
-            server.Console.subscribe(eventHandler)
-            req.raw.on("close", () => {
-                assert(server.Console != null)
-                server.Console.unsubscribe(eventHandler)
-                clearTimeout(heartbeatTimer)
-            })
-        }
-        reply.hijack()
     })
 }
 

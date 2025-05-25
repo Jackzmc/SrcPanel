@@ -1,0 +1,49 @@
+name: Server
+run-name: Server
+on: 
+  push:
+    paths:
+      - 'server/**'
+      - 'common-types/**'
+      - '.forgejo/workflows/server.yaml'
+    branches:
+      - release
+  workflow_dispatch: {}
+
+defaults:
+  run:
+    working-directory: server
+jobs:
+  build:
+    runs-on: docker
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache-dependency-path: 'ui/yarn.lock'
+          cache: 'yarn'
+      - run: yarn install --frozen-lockfile
+      - run: yarn build
+      - name: 'Tar files'
+        run: tar -cvf dist.tar.gz dist
+      - uses: forgejo/upload-artifact@v4
+        with:
+          name: dist
+          path: server/dist.tar.gz
+  deploy:
+    runs-on: docker
+    needs: [build]
+    steps:
+      - uses: forgejo/download-artifact@v4
+        with:
+          name: dist
+          path: dist.tar.gz
+      - uses: https://git.jackz.me/jackz/ssh-scp-deploy.git@v3
+        with:
+          src: dist.tar.gz
+          remote: ${{ vars.SSH_SERVER_PATH }}
+          host: ${{ vars.SSH_HOST }}
+          user: ${{ vars.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          extract: true

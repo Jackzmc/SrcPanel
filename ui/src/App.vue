@@ -96,6 +96,7 @@ let privUser = shallowRef<PrivilegedUser>()
 let meta = ref<PanelMetaInfo>()
 let isBirthday = ref(false)
 let tour = ref<{name: string, steps: any[]}|undefined>()
+let notificationSSE: EventSource|null = null
 
 function reloadPage() {
   if (!updateInfo.value.registration || !updateInfo.value.registration.waiting) return console.warn("reloadPage() called when no sw update")
@@ -114,6 +115,9 @@ async function onAuthorized() {
       isBirthday.value = true
     }
   }
+  if(notificationSSE == null)
+    setupNotificationStream()
+
 }
 async function getMeta() {
   if(window.localStorage['srcds_meta_cache']) {
@@ -247,6 +251,10 @@ function onLogout() {
   window.sessionStorage.removeItem('srcds_userdata')
   userdata.value = undefined
   privUser.value = undefined
+  if(notificationSSE) {
+    notificationSSE.close()
+    notificationSSE = null
+  }
 }
 
 async function loadTour(tourId: string) {
@@ -284,6 +292,26 @@ function isModalAllowed(name: string) {
     return false
   }
   return true
+}
+
+function setupNotificationStream(errorCount: number = 0) {
+  const eve = new EventSource("/api/auth/notifications/sse")
+  notificationSSE = eve
+  eve.onmessage = (e) => {
+    console.log("message")
+    const json = JSON.parse(e.data)
+    userdata.value?.notifications.push(json)
+    errorCount = 0
+  }
+  eve.onerror = (e) => {
+    errorCount++
+    const nextTime = 1000 * Math.pow(2, errorCount )
+    console.error("notification error, reconncting", nextTime)
+    setTimeout(() => {
+      eve.close()
+      setupNotificationStream(errorCount)
+    }, nextTime)
+  }
 }
 
 onBeforeMount(async() => {

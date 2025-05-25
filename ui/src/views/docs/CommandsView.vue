@@ -1,6 +1,6 @@
 <template>
 <div class="container">
-    <CommandsModal v-if="selected" :cmd="selected" :prefix="prefix" @close='selected = null' />
+    <CommandsModal v-if="selected" :cmd="selected" :prefix="prefix" @close='showCommand(null)' />
     <div class="columns is-variable is-6">
         <div class="column is-7 content">
             <Field label="" icon-left="search">
@@ -127,11 +127,15 @@ import { PrivilegedUser } from '../../js/User';
 import Field from '@/components/Field.vue'
 import { notify } from '@kyvg/vue3-notification';
 import { parseParameters } from '../../js/util';
+import { useRouter, useRoute } from 'vue-router';
 
 const props = defineProps<{
   privUser: PrivilegedUser
 }>()
 const isLoggedIn = computed(() => props.privUser != null)
+
+const route = useRoute()
+const router = useRouter()
 
 let searchQuery = ref("")
 let commandViewmode = ref('private')
@@ -170,8 +174,31 @@ const showLockedCommands = computed(() => {
   return hideNoPermissionCommands.value.length > 0
 })
 
-function showCommand(cmd: any) {
-  selected.value = cmd
+function showCommand(cmd: any | null) {
+  if(cmd) {
+    router.replace({
+      params: {
+        command: cmd.name.toLowerCase()
+      }
+    })
+    selected.value = cmd
+  } else {
+    router.replace({
+      params: {
+        command: ""
+      }
+    })
+    selected.value = undefined
+  }
+
+}
+function getCommand(name: string) {
+  const query = name.toLocaleLowerCase()
+  for(const [, group] of Object.entries(groups.value)) {
+    const item = group.list.find((command: any) => command.name.toLowerCase().includes(query))
+    if(item) return item
+  }
+  return null
 }
 
 function formatDescription(command: any) {
@@ -180,10 +207,9 @@ function formatDescription(command: any) {
 
 onMounted(async () => {
   loading.value = true
-  try {
-    const response = await request(`../data/commands.json?t=${BUILD_TIMESTAMP}`)
+  const response = await request(`/data/commands.json?t=${BUILD_TIMESTAMP}`)
+  if(response) {
     const json = await response?.json()
-    if(!json) return
 
     for(const group in json) {
       const commands = []
@@ -201,15 +227,18 @@ onMounted(async () => {
         list: commands
       }
     }
-  } catch(err: any) {
-    notify({
-      type: "error",
-      text: err.message
-    })
-    console.error('Could not fetch commands, network error.', err)
-  } finally {
-    loading.value = false
+
+    if(route.params.command) {
+      const command = getCommand(route.params.command as string)
+      console.debug(route.params.command, command)
+      if(command) {
+        showCommand(command)
+      } else {
+        console.warn("Could not find command ", command)
+      }
+    }
   }
+  loading.value = false
 })
 
 </script>

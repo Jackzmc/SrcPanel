@@ -37,9 +37,10 @@
           <h6>To create a lobby to a server:</h6>
           <ul>
               <li>Create a normal lobby, <b>you need to be the host</b></li>
+              <li>Select <b>Best Available Dedicated</b> (not Official, or Local)</li>
               <li>Open the console <em>(see above for instructions)</em></li>
-              <li>Copy the <b>Create Lobby Command</b> <em>(on the left)</em> to the console</li>
-              <li>Start the lobby</li>
+              <li>Copy <b>Create Lobby Command</b> <em>(on the left)</em> and paste and enter in the console</li>
+              <li>Start the lobby when ready</li>
           </ul>
         </div>
         <div class="box has-background-info-light">

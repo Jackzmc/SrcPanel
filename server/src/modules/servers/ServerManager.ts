@@ -1,6 +1,5 @@
 import { mkdir, readFile, stat, open } from 'fs/promises'
 import Json5 from 'json5'
-import DNS from 'dns'
 import Server, { ConfigServerData } from './Server'
 import Share from '../Share.js';
 import path, { join } from 'path';
@@ -133,28 +132,33 @@ export default class ServerManager {
       console.debug("[ServerManager::Live]",...args)
   }
 
-  #authenticateSocket(client: PluginSocket, reader: BufferReader) {
+  async #authenticateSocket(client: PluginSocket, reader: BufferReader): Promise<boolean> {
     const size = reader.readShort() // We don't need size for authentication, but we need to read 2 bytes
     const record = PluginSocket.ParseRecord(reader)
     // skip any other type until authenticated
-    if(record.type != LiveRecordType.Auth) return console.warn("[ServerManager] Got non-auth packets when not-authenticated, ignoring")
-    JWT.verify<PluginTokenPayload>(record.token, process.env.STATE_SECRET!)
-      .then(({payload}) => {
-        const server = this.getServerForPlugin(payload, record.port)
-        if(server) {
-          client._setServer(server)
-          server.Plugin?._setSocket(client)
-          client.send(LiveRecordResponse.OK, server.Plugin?.liveViewers)
-          this.#debugLive("Authenticated", `host=${client.Host} server=${server.id}`)
-        } else {
-          client.send(LiveRecordResponse.Error, `Invalid or unknown id "${payload.sub}" (docker: ${payload.docker?'y':'n'})`)
-          return
-        }
-      })
-      .catch(err => {
+    if(record.type != LiveRecordType.Auth) {
+      console.warn("[ServerManager] Got non-auth packets when not-authenticated, ignoring")
+      return false
+    }
+    try {
+      const {payload} = await JWT.verify<PluginTokenPayload>(record.token, process.env.STATE_SECRET!)
+      const server = this.getServerForPlugin(payload, record.port)
+      if(server) {
+        client._setServer(server,)
+        server.Plugin?._setSocket(client)
+        if(record.gameVersion)
+          server.GameVersion = record.gameVersion
+        this.#debugLive("Authenticated", `host=${client.Host} server=${server.id}`)
+        return true
+      } else {
+        client.send(LiveRecordResponse.Error, `Invalid or unknown id "${payload.sub}" (docker: ${payload.docker?'y':'n'})`)
+        return false
+      }
+    } catch(err) {
         console.error("[ServerManager] Auth Error: ", err)
         client.send(LiveRecordResponse.Error, err.message)
-      })
+        return false
+    }
   }
 
   #onLiveClient(client: net.Socket) {
@@ -164,16 +168,18 @@ export default class ServerManager {
     const ps = new PluginSocket(client)
     this.#socketClients.set(clientHost, ps)
     
-    client.on('data', (buf) => {
+    client.on('data', async(buf) => {
       const packetReader = new BufferReader(buf)
       // If we aren't authenticate, read packet as an authentication packet and try to authenticate
       if(!ps.Authenticated) {
         try {
-          return this.#authenticateSocket(ps, packetReader);
+          if(await this.#authenticateSocket(ps, packetReader)) {
+            await ps.sendInit()
+          }
         } catch(err) {
           console.error("[ServerManager] Bad Auth:", err);
-          return
         }
+        return
       }
 
       // Multiple records can be included in a packet, this returns an iteration of buffer readers that contain records
@@ -235,7 +241,7 @@ export default class ServerManager {
       for(const server of Object.values(this.getAll())) {
         // This triggers an OK packet
         if(server.Plugin?.authenticated)
-          server.Plugin.Socket?.send(LiveRecordResponse.OK, server.Plugin.liveViewers)
+          server.Plugin.Socket?.send(LiveRecordResponse.OK, server.WebsocketViewers)
       }
     }, LIVE_SOCKET_KEEPALIVE_INTERVAL)
   }
@@ -321,6 +327,15 @@ export default class ServerManager {
     for(const group of Object.values(this.#groups)) {
       if(group.Id === payload.sub) {
         const server = group.getServerByPort(port)
+        if(server) return server
+      }
+    }
+    return null
+  }
+  public getServerByContainerId(containerId: string) {
+    for(const group of Object.values(this.#groups)) {
+      if(group instanceof DynamicServerGroup) {
+        const server = group.getServerByContainerId(containerId)
         if(server) return server
       }
     }
@@ -446,7 +461,7 @@ export default class ServerManager {
       if(err.code != "EEXIST") throw err
     }
 
-    let numServers = 0
+    let numServers = 0, numGroups
 
     for(const shareId in shares) {
       let share = shares[shareId] as Partial<ShareInfo>
@@ -472,6 +487,19 @@ export default class ServerManager {
             console.warn(`[ServerManager] WARN: Share ${shareId}/${destKey} has invalid path "${path}" (ENOENT)`)
           }
         }
+        if(dest.groupIds) {
+          const groupIds: string[] = []
+          for(const groupId of dest.groupIds) {
+            if(this.#groups[groupId]) {
+              groupIds.push(groupId)
+              numGroups++
+            } else {
+               console.warn(`[ServerManager] WARN: Share ${shareId}/${destKey} includes non existent group id "${groupId}"`)
+              continue;
+            }
+          }
+          dest.groupIds = groupIds
+        }
         if(dest.serverIds) {
           const serverIds: string[] = []
           for(const id of dest.serverIds) {
@@ -480,8 +508,8 @@ export default class ServerManager {
               serverIds.push(_id)
               numServers++
             } else {
-              console.warn(`[ServerManager] WARN: Share ${shareId}/${destKey} includes non existent server id "${_id}"; skipping`)
-              continue shareLoop;
+              console.warn(`[ServerManager] WARN: Share ${shareId}/${destKey} includes non existent server id "${_id}"`)
+              continue;
             }
           }
           dest.serverIds = serverIds
@@ -493,7 +521,7 @@ export default class ServerManager {
         driver: sqlite3.Database
       })
       this.addonShares[shareId.toLowerCase()] = new Share(db, this.#steam, share)
-      console.info(`[ServerManager] Loaded share "${shareId}" with ${Object.keys(share.destinations!).length} destinations, ${numServers} servers`)
+      console.info(`[ServerManager] Loaded share "${shareId}" with ${Object.keys(share.destinations!).length} destinations, ${numServers} servers, ${numGroups} groups`)
     }
   }
 
@@ -503,10 +531,11 @@ export default class ServerManager {
       const actionGroups = Json5.parse(content)
 
       for(const [key, actions] of Object.entries<ServerAction[]>(actionGroups)) {
-        this.#actions[key] = actions.map(action => {
+        this.#actions[key] = actions.map((action: Partial<ServerAction>)  => {
           return {
+            showWhen: "online",
             ...action
-          }
+          } as ServerAction
         })
       }
     } catch(err) {

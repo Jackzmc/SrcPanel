@@ -6,6 +6,15 @@
     <p class="subtitle is-4"><a @click="router.back()" v-if="hasHistory">Go back to previous page</a></p>
     <router-link to="/" class="button is-medium is-info  has-text-centered">To Homepage</router-link>
   </template>
+  <template v-else-if="errorType === 'oauth_not_authorized'">
+    <p class="subtitle is-4">Your {{ route.query.provider }} account is not authorized.</p>
+    <div class="container content box has-text-left" style="width:30%">
+      <p>Your account does not have access to this admin panel. You must be granted admin to access.</p>
+    </div>
+    <hr>
+    <p class="subtitle is-4"><a @click="router.back()" v-if="hasHistory">Go back to previous page</a></p>
+    <router-link to="/" class="button is-medium is-info  has-text-centered">To Homepage</router-link>
+  </template>
   <template v-else-if="errorType === 'oauth_no_account'">
     <p class="subtitle is-4">Your {{ route.query.provider }} account has not been linked.</p>
     <div class="container content box has-text-left" style="width:30%">

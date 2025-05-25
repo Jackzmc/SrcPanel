@@ -16,6 +16,32 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         return await req.user!.clearNotifications()
     })
 
+    fastify.get('/notifications/sse', async(req, reply) => {
+        reply.raw.writeHead(200, {
+            'Cache-Control': 'no-cache,no-transform',
+            'Content-Type': 'text/event-stream',
+            'Connection': 'keep-alive',
+            'X-Accel-Buffering': 'no'
+        });
+        reply.raw.flushHeaders()
+        reply.raw.write('retry: 10000\n\n')
+        // Send keep alive comments to prevent client from disconnecting
+        let keepAliveTimer = setInterval(() => {
+            reply.raw.write(': keepalive\n\n')
+        }, 1000 * 30)
+
+        function sendSSE(payload: any) {
+            return reply.raw.write(`data: ${JSON.stringify(payload)}\n\n`)
+        }
+
+        fastify.authmngr.subscribeNotifications(req.user!.steamid2, sendSSE)
+
+        reply.raw.on("close", () => {
+            clearInterval(keepAliveTimer)
+            fastify.authmngr.unsubscribeNotifications(sendSSE)
+        })
+    })
+
     fastify.get('/profile', async(req, reply): Promise<UserData<UserPrivilegeCode[]>> => {
         const profile = await fastify.authmngr.getProfileData(req.user!.steamid2)
         return {

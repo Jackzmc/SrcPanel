@@ -24,7 +24,7 @@ const routes = [
   },
   {
     name: "docs-commands",
-    path: '/docs/commands',
+    path: '/docs/commands/:command?',
     component: () => import('../views/docs/CommandsView.vue'),
     meta: {
       title: 'Commands',

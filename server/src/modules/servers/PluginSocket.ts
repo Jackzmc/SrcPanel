@@ -163,10 +163,12 @@ export default class PluginSocket {
             type,
             version: reader.readByte(),
             token: reader.readString(),
-            port: 0
+            port: 0,
+            gameVersion: null as string | null
           }
           if(!reader.isEOF) {
-            result.port = reader.readInt()
+            result.port = reader.readShort()
+            result.gameVersion = reader.readString()
           }
           return result
         }
@@ -195,6 +197,16 @@ export default class PluginSocket {
   
   _setServer(server: Server | null) {
     this.#server = server
+  }
+
+  // Called when socket has connected to server, sending any necessary info
+  async sendInit() {
+    if(!this.#server) throw Error("sendInit() called with no server")
+    this.send(LiveRecordResponse.OK, this.#server.WebsocketViewers)
+    // Notify of whos connected to voice
+    for(const user of this.#server.voiceMembers) {
+      this.send(LiveRecordResponse.VoiceState, user.id, user.name, true)
+    }
   }
 
   #refreshCheckTimeout: NodeJS.Timeout
@@ -233,7 +245,8 @@ export default class PluginSocket {
   send(type: LiveRecordResponse.Refresh, userid?: number): Promise<void>;
   /** Runs a game command or built in command on server  */
   send(type: LiveRecordResponse.RunCommand, command: string, namespace?: string): Promise<LiveRecordCommandResponse>;
-  async send(type: LiveRecordResponse, arg?: any, namespace?: string): Promise<void | LiveRecordCommandResponse> {
+  send(type: LiveRecordResponse.VoiceState, voiceUserId: string, voiceName: string, connected: boolean): Promise<void>
+  async send(type: LiveRecordResponse, arg1?: any, arg2?: any, arg3?: any): Promise<void | LiveRecordCommandResponse> {
     if(!this.Authenticated && type != LiveRecordResponse.OK && type != LiveRecordResponse.Error) {
       throw new Error("Not authenticated")
     }
@@ -246,20 +259,25 @@ export default class PluginSocket {
       let id = this.#id++
       switch(type) {
         case LiveRecordResponse.OK:
-          writer.writeByte(arg ?? this.#server?.Plugin?.liveViewers ?? 0)
+          writer.writeByte(arg1 ?? this.#server?.WebsocketViewers ?? 0)
           break
         case LiveRecordResponse.Error:
-          writer.writeString(arg ?? "")
+          writer.writeString(arg1 ?? "")
           break
         case LiveRecordResponse.RunCommand:
           writer.writeByte(id)
-          writer.writeString(arg)
-          writer.writeString(namespace ?? "")
+          writer.writeString(arg1)
+          writer.writeString(arg2 ?? "")
           break
         case LiveRecordResponse.Refresh:
-          writer.writeByte(arg ?? 0)
+          writer.writeByte(arg1 ?? 0)
           this.#lastRefreshTime = Date.now()
           break
+        case LiveRecordResponse.VoiceState:
+          // args: voiceUserId: string, voiceName: string, connected: boolean
+          writer.writeByte(arg3 ? 1 : 0) 
+          writer.writeString(arg1)
+          writer.writeString(arg2)
       }
       if(!this.#socket.write(writer.buffer)) return reject(new Error("Failed to write to socket"))
       if(type != LiveRecordResponse.RunCommand) return resolve()

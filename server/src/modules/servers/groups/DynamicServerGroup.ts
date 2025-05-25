@@ -15,7 +15,8 @@ export interface DynamicGroupServerTemplate {
     activityId?: string,
     tags?: string[],
     sortOrder?: number,
-    actions?: ServerAction[]
+    actions?: ServerAction[],
+    cfgDirectory?: string
 }
 
 export interface DynamicCreateGroupOptions extends CreateGroupOptions {
@@ -48,6 +49,7 @@ export class DynamicServerGroup extends ServerGroup<DockerServer> {
             activityId: options.serverTemplate.activityId,
             ip: options.serverTemplate.ip,
             tags: options.serverTemplate.tags ?? [],
+            cfgDirectory: options.serverTemplate.cfgDirectory
         }
         this.#minServers = options.minServers || 0
         this.#maxEmptyServers = options.maxEmptyServers ?? null
@@ -113,8 +115,13 @@ export class DynamicServerGroup extends ServerGroup<DockerServer> {
         // Ensure a minimum number of servers exist and are running
         for(let i = servers.length; i < this.#minServers; i++) {
             console.debug(`Creating new instance ${servers.length + 1}/${this.#minServers}`)
-            const server = await this.createNewServer()
-            await server.start()
+            try {
+                const server = await this.createNewServer()
+                await server.start()
+            } catch(err) {
+                console.error(`[ServerGroup::Dynamic] Failed to start new server (#${i+1}), skipping to purge step.\n`, err)
+                break
+            }
         }
         // Ensure a maximum number of servers
         if(this.#maxEmptyServers) {
@@ -166,7 +173,9 @@ export class DynamicServerGroup extends ServerGroup<DockerServer> {
             port: instance.Port,
         }
         const id = `${this.Id}-${instance.Port}`
-
+        if(!this.#serverTemplate.host) {
+            throw new Error(`Server template for group ${this.Id} has missing \"host\"`)
+        }
         const host = DynamicServerGroup.formatTemplateVar(this.#serverTemplate.host, vars)
         let address: string|undefined = undefined
         try {
@@ -186,7 +195,8 @@ export class DynamicServerGroup extends ServerGroup<DockerServer> {
                 tags: this.#serverTemplate.tags ?? [],
                 actions: this.#serverTemplate.actions ?? [],
                 activityId: this.#serverTemplate.activityId,
-                sortOrder: this.#serverTemplate.sortOrder
+                sortOrder: this.#serverTemplate.sortOrder,
+                cfgDirectory: this.#serverTemplate.cfgDirectory
             }, instance)
         instance.setServer(server)
         await server.init()
@@ -206,5 +216,12 @@ export class DynamicServerGroup extends ServerGroup<DockerServer> {
         if(!this._servers[server.id]) throw new Error(`Server "${server.id}" is not registered for group (${this._id})`);
         delete this._servers[server.id]
         await server.ContainerInstance.delete();
+    }
+
+    getServerByContainerId(containerId: string) {
+        for(const server of Object.values(this._servers)) {
+            if(server.ContainerInstance.ContainerId === containerId) return server
+        }
+        return null
     }
 }

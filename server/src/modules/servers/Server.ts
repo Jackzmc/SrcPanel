@@ -1,4 +1,5 @@
-import { ServerAction, ServerAvailableFeatures, ServerData, ServerInfo, ServerStatus, ServerStatusData, ServerStatusSource, ServerType } from "../../../../common-types/Server.js";
+import { WebSocket } from "@fastify/websocket";
+import { SERVER_TYPE_MAP, ServerAction, ServerAvailableFeatures, ServerData, ServerInfo, ServerStatus, ServerStatusData, ServerStatusSource, ServerType, VoiceUser } from "../../../../common-types/Server.js";
 import ConfigsFeature from "./features/Configs.js";
 import ConsoleFeature from "./features/logs/Console.js";
 import MetricsFeature from "./features/Metrics.js";
@@ -7,6 +8,9 @@ import RconFeature from "./features/Rcon.js";
 import ServerGroup from "./groups/ServerGroup.js";
 import { ActionResponse, IAction } from "./IAction.js";
 import { GameDig } from 'gamedig';
+import SocketClientUser from "./SocketClientUser.js";
+import { Server_Status, ServerOutPacket, ServerOutPayload } from "../../../../common-types/ServerWebsocket.js";
+import { LiveRecordResponse } from "../../../../common-types/Live.js";
 
 const MIN_REFRESH_TIME = 10_000
 
@@ -63,6 +67,7 @@ export default abstract class Server implements IAction {
     protected _info: InternalServerInfo
     protected _group: ServerGroup
     protected _logId?: string
+    protected _gameVersion: string | null
 
     // Optional / non-universal features:
     protected _rcon: RconFeature|null = null
@@ -80,7 +85,11 @@ export default abstract class Server implements IAction {
 
     #gamedig: GameDig
 
+    protected _wsClients: SocketClientUser[] = []
+    #activeVoiceMembers: VoiceUser[]
+
     constructor(group: ServerGroup, server: ServerExtendedData, gamedig: GameDig) {
+      this.#activeVoiceMembers = []
         this.#gamedig = gamedig
         this._group = group
         this._info = {
@@ -140,6 +149,7 @@ export default abstract class Server implements IAction {
     get info(): ServerInfo {
       return {
         ...this._info,
+        type: SERVER_TYPE_MAP[this._info.type] ?? this._info.type,
         features: this.features,
         actions: this.actions,
         online: this._online,
@@ -174,6 +184,10 @@ export default abstract class Server implements IAction {
       return this._online;
     }
 
+    get WebsocketViewers() {
+      return this._wsClients.length
+    }
+
     /**
      * Returns the unix timestamp of the last time the status was updated, if any.
      * @readonly
@@ -198,6 +212,13 @@ export default abstract class Server implements IAction {
 
     get activityLogId() { return this._logId }
 
+    get GameVersion(): string | null {
+      return this._gameVersion
+    }
+    set GameVersion(version: string) {
+      this._gameVersion = version
+    }
+
     /** Returns all features server supports currently */
     public get features(): ServerAvailableFeatures {
       return {
@@ -207,7 +228,9 @@ export default abstract class Server implements IAction {
         plugin: this.Plugin?.available ?? false,
         metrics: this.Metrics?.available ?? false,
         docker: false,
-        performCommands: this.canPerformCommands
+
+        performCommands: this.canPerformCommands,
+        canStart: false
       }
     }
 
@@ -222,6 +245,34 @@ export default abstract class Server implements IAction {
         if(this.Plugin && this.Plugin.authenticated) return;
         await this.getStatus(bypassCache, this.type, this.ip, this.port)
     }
+
+    addWSClient(client: SocketClientUser) {
+      console.log("added client", client.user.steamid2)
+      this._wsClients.push(client)
+      // Send all data the client should know right away
+      this.broadcastWS({
+        type: "status",
+        status: this._status,
+        online: this.Online
+      } as Server_Status)
+      this.Metrics.broadcastWSFullMetrics()
+      this.Console?.sendHistory(client)
+    }
+    removeWSClient(client: SocketClientUser) {
+      const indexOf = this._wsClients.indexOf(client)
+      if(indexOf > -1)
+        this._wsClients.splice(indexOf, 1)
+    }
+    broadcastWS(payload: ServerOutPayload) {
+      const packet = {
+        ...payload,
+        millis: Date.now(),
+      } as ServerOutPacket
+      this._wsClients.forEach(client => {
+        client.sendPacket(packet)
+      })
+    }
+
 
     protected async getStatus(bypassCache: boolean, type: string, host: string, port: number) {
       const now = Date.now()
@@ -259,6 +310,11 @@ export default abstract class Server implements IAction {
       this._status.data = data
       this._status.source = source
       this._status.lastStatusTime = (Date.now() / 1000)
+      this.broadcastWS({
+        type: "status",
+        status: this._status,
+        online: this.Online
+      } as Server_Status)
       if(data) {
         if(data.players.length === 0) {
           if(this._status.lastEmptyTime == null)
@@ -271,4 +327,40 @@ export default abstract class Server implements IAction {
         this.Metrics.recordStatus(data, source)
       }
     }
+
+    markVoiceConnection(user: VoiceUser, connected: boolean) {
+      let memberIndex = this.#activeVoiceMembers.findIndex(m => m.id === user.id)
+      if(connected) {
+          // Connected
+          if(memberIndex == -1) {
+            this.#activeVoiceMembers.push(user)
+            this.Plugin?.Socket?.send(LiveRecordResponse.VoiceState, user.id, user.name, true)
+            this.broadcastWS({
+              type: "voice_state",
+              userId: user.id,
+              userName: user.name,
+              connected: true
+            })
+          }
+      } else if(!connected && memberIndex > -1) {
+          // Disconnected
+          this.#activeVoiceMembers.splice(memberIndex, 1)
+          this.Plugin?.Socket?.send(LiveRecordResponse.VoiceState, user.id, user.name, false)
+          this.broadcastWS({
+            type: "voice_state",
+            userId: user.id,
+            userName: user.name,
+            connected: false
+          })
+      }
+    }
+
+    get isVoiceActive() {
+      return this.#activeVoiceMembers.length > 0
+    }
+
+    get voiceMembers(): VoiceUser[] {
+      return this.#activeVoiceMembers
+    }
+
 }

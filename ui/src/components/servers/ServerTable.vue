@@ -30,10 +30,10 @@
         </tbody>
         <tfoot v-if="manage && group.templateId">
           <tr class="has-background-lighter">
-            <td style="vertical-align: middle">Create New Instance</td>
+            <td style="vertical-align: middle"></td>
             <td colspan="2"></td>
             <td colspan="2">
-              <button type="button" class="button is-info is-small" @click="createModal = true">New Instance</button>
+              <button type="button" class="button is-info is-small" @click="createModal = true">Create New Instance</button>
             </td>
           </tr>
         </tfoot>

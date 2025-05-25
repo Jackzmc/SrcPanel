@@ -223,6 +223,7 @@ const BUTTON_MAP: Record<string, string> = {
   "{arrowleft}": "leftarrow",
   "{arrowright}": "rightarrow",
   "{arrowdown}": "downarrow",
+  "{numpaddecimal}": "kp_del"
 
 }
 onBeforeMount(() => {

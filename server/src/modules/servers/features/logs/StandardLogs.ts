@@ -6,7 +6,6 @@ import { resolve } from "path";
 
 export default class StandardLogs extends Logs {
     #logPath: string
-    #lines: string[] = []
     #available: boolean
 
     constructor(server: Server, logPath: string) {
@@ -36,7 +35,7 @@ export default class StandardLogs extends Logs {
     }
 
     public get logs() { 
-        return [...this.#lines]
+        return [...this._lines.map(line => line.content)]
     }
 
 

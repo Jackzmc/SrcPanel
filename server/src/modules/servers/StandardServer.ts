@@ -25,12 +25,15 @@ export default class StandardServer extends Server {
             let password: string | undefined
             if(server.rcon.password.value) password = server.rcon.password.value
             if(server.rcon.password.env) password = process.env[server.rcon.password.env]
-            if(!password) throw new Error(`No rcon password provided for ${server.id}`)
-            this._rcon = new RconFeature(this, {
-                host: server.ip,
-                port: server.port,
-                password
-            })
+            if(!password) {
+                console.warn(`[Server/${this.id}] WARN: No rcon password provided for ${server.id}. Rcon unavailable`)
+            } else {
+                this._rcon = new RconFeature(this, {
+                    host: server.ip,
+                    port: server.port,
+                    password
+                })
+            }
         }
         if(server.logsPath) {
             this._logs = new StandardLogs(this, server.logsPath)

@@ -39,6 +39,7 @@ export default class UserManager {
      */
     async insertUser(user: IUserData) {
         const accountId = user.accountId
+        if(!accountId) throw new Error("No account id provided")
         const conn = await this.#db.getConnection()
         await conn.beginTransaction()
         await conn.query(SQL`INSERT INTO panel_user (account_id, avatar_hash) VALUES (${accountId}, ${user.avatarHash})`)
@@ -48,8 +49,7 @@ export default class UserManager {
     }
 
     async updateUser(user: IUserData) {
-        if(user.accountId.length <= 10) throw new Error("steamid is invalid (bad length)")
-        const accountId = user.accountId.substring(10)
+        const accountId = user.accountId
         const conn = await this.#db.getConnection()
         await conn.beginTransaction()
         await conn.query(SQL`UPDATE panel_user SET avatar_hash = ${user.avatarHash} WHERE account_id = ${accountId}`)
@@ -132,14 +132,16 @@ export default class UserManager {
             const users = await this.#steam.getUserDetails(slice)
             if(!users) break
             for(const user of users) {
+                const steamid2 = new SteamID(user.steamid).getSteam2RenderedID()
                 const expUser = {
                     // We use the right side of STEAM_#:#:#####
-                    accountId: new SteamID(user.steamid).getSteam2RenderedID().slice(10),
+                    accountId: steamid2.slice(10),
                     name: user.personaname,
                     avatarHash: user.avatarhash
                 }
                 expUsers.push(expUser)
-                await this.insertUser(expUser).catch(err => {
+                const cacheUser = await this.getUserDirect(steamid2)
+                await (cacheUser ? this.updateUser(expUser) : this.insertUser(expUser)).catch(err => {
                     console.error("Failed to insert user", expUser.accountId, err)
                 })
             }

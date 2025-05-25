@@ -227,9 +227,9 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
             const [bans] = await fastify.db.execute<RowDataPacket[]>(
                 `SELECT times_tried, id, public_message, bans.flags, bans.steamid, bans.executor, bans.reason, expires, expired, bans.timestamp, u1.last_name as client_name, u1.last_country as client_country, u2.last_name AS executor_name, ip
-                FROM bans 
-                LEFT JOIN view_panel_user AS u1 ON SUBSTRING(bans.steamid, 11) = u1.account_id,
-                LEFT JOIN view_panel_user AS u2 ON SUBSTRING(bans.executor, 11) = u2.account_id, 
+                FROM bans
+                LEFT JOIN view_panel_user AS u1 ON SUBSTRING(bans.steamid, 11) = u1.account_id
+                LEFT JOIN view_panel_user AS u2 ON SUBSTRING(bans.executor, 11) = u2.account_id
                 WHERE SUBSTRING(bans.steamid, 11) = SUBSTRING(?, 11)`,
                 [ req.params.steamid ]
             )

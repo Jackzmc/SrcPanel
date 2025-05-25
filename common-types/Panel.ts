@@ -18,6 +18,7 @@ export type KeysType = "string" | "integer" | "boolean" | "float" | "url" | "pat
 export type KeysRecords = Record<string, KeyConfig>
 export const KVConfig: KeysRecords = {
     "domain": { flags: KeyFlags.Public | KeyFlags.Required, type: "url", name: "Domain", description: "The domain used for return urls from Oauth2 login (discord)" },
+    "protocol": { flags: KeyFlags.Public | KeyFlags.Required, type: "string", name: "Protocol", description: "HTTP or HTTPs (lowercase)" },
     "discord.link": { type: "url", name: "Discord Invite Link", description: "The link to your discord server" },
     "servers.long_refresh_interval": { flags: KeyFlags.Public, type: "float", name: "Long Refresh Interval", description: "How often in seconds to refresh servers in seconds when no clients are detected", },
     "servers.short_refresh_interval": { flags: KeyFlags.Public, type: "float", name: "Short Refresh Interval", description: "How often in seconds to refresh servers in seconds when clients are detected"},
@@ -25,7 +26,17 @@ export const KVConfig: KeysRecords = {
     "_version": { flags: KeyFlags.Internal, type: "string" },
     "first_time_setup.stage": { flags: KeyFlags.Internal, type: "integer" },
     "notice": { flags: KeyFlags.Public, type: "string", name: "Notice", description: "A notice to post" },
-    "notice.type": { flags: KeyFlags.Public, type: "string", "name": "Notice Type", description: "Class"}
+    "notice.type": { flags: KeyFlags.Public, type: "string", "name": "Notice Type", description: "Class"},
+    // TODO: prevent having to hard code providers?
+    // /.well-known/openid-configuration
+    "providers.discord.clientId": { flags: KeyFlags.Protected, type: "string", name: "Discord - Client Id"},
+    "providers.discord.authorize_url": { flags: KeyFlags.Protected, type: "string", name: "Discord - Authorize Url"},
+    "providers.discord.clientSecret": { flags: KeyFlags.Protected, type: "string", name: "Discord - Client Secret"},
+    "providers.discord.revoke_url": { flags: KeyFlags.Protected, type: "string", name: "Discord - Revoke Url"},
+    "providers.discord.token_url": { flags: KeyFlags.Protected, type: "string", name: "Discord - Token Url"},
+    "providers.discord.name": { flags: KeyFlags.Protected, type: "string", name: "Discord - Provider Name"},
+    "providers.discord.avatar_url_format": { flags: KeyFlags.Protected, type: "string", name: "Discord - URL Format String"},
+
 }
 export type ConfigKey = keyof typeof KVConfig //"domain" | "discord.link" | "servers.long_refresh_interval" | "servers.short_refresh_interval"
 export const PublicKeys = Object.entries(KVConfig)

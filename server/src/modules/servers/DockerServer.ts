@@ -6,6 +6,8 @@ import DockerLogs from "./features/logs/DockerLogs.js";
 import ServerGroup from "./groups/ServerGroup.js";
 import { ActionResponse, getFallbackCommandForBuiltin, IAction } from "./IAction.js";
 import Server, { ServerExtendedData } from "./Server.js";
+import DynamicServerManager from "./docker/DynamicServerManager.js";
+import ServerManager from "./ServerManager.js";
 
 const PERFORM_ACTION_TIMEOUT = 20_000
 
@@ -20,6 +22,7 @@ export default class DockerServer extends Server implements IAction {
         }))
         this.#instance = instance
         this._logs = new DockerLogs(this, this.#instance.Container)
+        // this.#instance.emit("start")
     }
 
     get canPerformCommands() {
@@ -33,7 +36,9 @@ export default class DockerServer extends Server implements IAction {
     get features() {
         return {
             ...super.features,
-            docker: true
+
+            docker: true,
+            canStart: true
         }
     }
 
@@ -53,13 +58,40 @@ export default class DockerServer extends Server implements IAction {
         return this.#instance.stop(force)
     }
 
+    async #performBuiltin(command: string) {
+        switch(command) {
+            case "start": {
+                await this.start()
+                break
+            }
+            case "stop": {
+                await this.stop(false)
+                break
+            }
+            case "requestStop": {
+                await this.stop(true)
+                break
+            }
+            case "delete":
+                await this.stop(true)
+                DynamicServerManager.Instance.unregisterInstance(this.#instance)
+                await ServerManager.Instance.deleteServer(this.id)
+                await this.#instance.Container.remove()
+            default:
+                return false
+        }
+        return true
+    }
+
     public async performAction( command: string, namespace: string ): Promise<ActionResponse> {
         if(namespace === "builtin") {
-            let cmd = getFallbackCommandForBuiltin(command)
-            if(!cmd) throw new Error(`Unable to run builtin:${command} via docker`)
-            command = cmd
-        }
-        else if(namespace !== "default") {
+            // Try to run built in directly, and fallback to alternative command sent to server instead
+            if(!await this.#performBuiltin(command)) {
+                let cmd = getFallbackCommandForBuiltin(command)
+                if(!cmd) throw new Error(`Unable to run builtin:${command} via docker (no available command)`)
+                command = cmd
+            }
+        } else if(namespace !== "default") {
             throw new Error("Unsupported namespace")
         }
         const stream = await this.#instance.Container.attach({
@@ -96,4 +128,21 @@ export default class DockerServer extends Server implements IAction {
         this._online = state.Running
     }
 
+    _notifyEvent(event: ServerEvent) {
+        if(event === ServerEvent.Started) {
+            // Re-init console stream
+            this.Console?.init()
+            this.Metrics.addAnnotationX({
+                x: Date.now(),
+                label: {
+                    text: "Server started"
+                }
+            })
+        }
+    }
+}
+
+export enum ServerEvent {
+    Started,
+    Stopped,
 }

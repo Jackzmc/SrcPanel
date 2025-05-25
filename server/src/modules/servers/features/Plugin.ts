@@ -1,4 +1,4 @@
-import { LiveDataCache, LiveRecord, LiveRecordCommandResponse, LiveRecordResponse, LiveRecordType, updateLiveCache } from "../../../../../common-types/Live.js";
+import { AnnotationX, AnnotationY, GameState, LiveDataCache, LiveRecord, LiveRecordCommandResponse, LiveRecordGame, LiveRecordResponse, LiveRecordType, updateLiveCache } from "../../../../../common-types/Live.js";
 import { ActionResponse, IAction } from "../IAction.js";
 import Server from "../Server.js";
 import PluginSocket from "../PluginSocket.js";
@@ -7,14 +7,13 @@ import { ServerStatus, ServerStatusData } from "../../../../../common-types/Serv
 import jwtPromise from "../../../jwt-promise.js";
 
 const LIVE_CACHE_TTL = 1000 * 60 * 3 // Live cache data expires after 3 minutes
-export type SubscribeCallback = (record: LiveRecord|null) => void
 
 export default class PluginFeature extends Feature implements IAction {
     #liveCache: LiveDataCache | null = null
     #socket: PluginSocket | null = null
-    #subscribers: SubscribeCallback[] = []
     #startTime: number
     #status: ServerStatusData
+
     constructor(server: Server) {
         super("LivePlugin", server)
         this.#status = {
@@ -46,60 +45,80 @@ export default class PluginFeature extends Feature implements IAction {
       return this.#liveCache
     }
 
-    get liveViewers() {
-        return this.#subscribers.length
-    }
-
     get Socket() {
         return this.#socket
     }
 
     _setSocket(socket: PluginSocket | null) {
-      this.#socket = socket
+        this._server.Metrics.addAnnotationX({
+            x: Date.now(),
+            label: {
+                text: socket != null ? "Plugin connected" : "Plugin disconnected",
+                orientation: "horizontal"
+            }
+        })
+        this.#socket = socket
     //   if(socket == null) {
     //     this._server.updateStatus(false, null, "live")
     //   }
     }
 
-    async subscribe(callback: SubscribeCallback) {
-        this.#subscribers.push(callback)
-        if(this.#socket && this.#socket.Authenticated) {
-            await this.#socket.send(LiveRecordResponse.OK, this.liveViewers)
-        }
-    }
-
-    unsubscribe(cb: SubscribeCallback) {
-        const index = this.#subscribers.findIndex(v => v === cb)
-        if(index > -1) {
-            this.#subscribers.splice(index, 1)
-        }
-        return index
-    }
-
-    #emit(record: LiveRecord|null) {
-        for(const subCb of this.#subscribers) {
-            subCb(record)
-        }
-    }
-
-    /**
-     * Number of subscribers to live view
-     *
-     * @readonly
-     * @memberof Console
-     */
-    get subscribers() { return this.#subscribers.length }
-
     get startTime() {
         return this.#startTime
     }
 
+    #annotateGameState(record: LiveRecordGame) {
+        let text: string
+        let timestamp: number|undefined = undefined
+        switch(record.state) {
+            case GameState.None: {
+                if(this.#liveCache?.game?.state === GameState.Hibernating) {
+                    text = "Stopped hibernating"
+                } else {
+                    return
+                }
+            }
+            case GameState.NewGame: {
+                text = "New game started"
+                timestamp = record.campaignStartTime * 1000 // convert to millis
+                break
+            } case GameState.Hibernating:
+                text = "Hibernating"
+                break
+            case GameState.EndGame:
+                text = "Game ended"
+                break
+            case GameState.Transitioning:
+                // Only trigger once per transition
+                if(this.#liveCache?.game?.state === GameState.Transitioning) return
+
+                text = "Level transition"
+        }
+        if(!timestamp) timestamp = Date.now()
+        console.log("recording annotation", record.state, record.campaignStartTime)
+        this._server.Metrics.addAnnotationX({
+            x: timestamp,
+            label: {
+                text,
+                orientation: "horizontal"
+            }
+        })
+    }
+
     async pushRecord(record: LiveRecord | null) {
         // If record is null, it means shutdown is happening
-        this.#emit(record)
+        this._server.broadcastWS({
+            type: "live",
+            record: record
+        })
         if(record) {
             this.#liveCache = updateLiveCache(this.#liveCache, record)
             if(record.type === LiveRecordType.Game) {
+                this.#annotateGameState(record)
+                
+                if(record.state !== GameState.EndGame && this.#liveCache.game) {
+                    this.#liveCache.game.campaignStartTime = record.campaignStartTime
+                }
                 this.#startTime = record.startTime
             }
             if(!this.#status) this.#status = { players: [], maxplayers: 0, map: "", gamemode: "" }
