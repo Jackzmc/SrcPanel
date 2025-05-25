@@ -214,7 +214,7 @@ export default class CustomServerBuilder {
         if(!this.#options.workshopIds) return
         const details: WorkshopItem[] = []
         for(const wsId of this.#options.workshopIds) {
-            this.#steam.addToWSResolveQueue(wsId, (item) => {
+            this.#steam.addToWSResolveQueue(Number(wsId), (item) => {
                 if(item) details.push(item)
             })
         }
