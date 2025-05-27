@@ -1,6 +1,6 @@
 <template>
 <div>
-<CreateServerModal />
+<CreateServerModal v-if="createModalActive" @close="createModalActive = false" />
 <div class="container is-fluid">
   <div class="box">
     <div class="is-fullwidth is-radiusless">
@@ -21,7 +21,7 @@
         </div>
         <div class="level-right">
           <div class="level-item">
-            <button class="button is-info">
+            <button class="button is-info" @click="createModalActive = true">
               New Server
             </button>
           </div>
@@ -195,7 +195,7 @@ const rawServers: ServerInfo[] = [
   }
 ]
 
-
+let createModalActive = ref(false)
 let servers = ref<UIServerInfo[]>([])
 let sort = ref<{field: string, descending: boolean, sortFn: (a: UIServerInfo, b: UIServerInfo) => any}|undefined>(undefined)
 

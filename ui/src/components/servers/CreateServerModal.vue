@@ -2,7 +2,7 @@
 <ModalCard active @close="emit('close')">
   <template #header>
     <p class="modal-card-title">
-      <Icon v-if="stateTitle.icon" :class="stateTitle.icon" :icon-class="stateTitle.iconClass" v-html="stateTitle.label"></Icon>
+      <Icon v-if="stateTitle.icon" :icon="stateTitle.icon" :icon-class="stateTitle.iconClass"><span  v-html="stateTitle.label"></span></Icon>
       <span v-else v-html="stateTitle.label"></span>
     </p>
     <button class="delete" aria-label="close" @click="emit('close')"></button>
@@ -15,11 +15,19 @@
         <div class="list-item-content">
           <div class="list-item-title">{{ group.name }}</div>
           <div class="list-item-description">
-            <div class="field is-grouped is-grouped-multiline">
-              <div class="control">
-                <div class="tags has-addons">
-                  <span class="tag is-dark">Game</span>
-                  <span class="tag is-info">{{ group.game }}</span>
+            <div class="level">
+              <div class="level-left">
+                <div class="level-item">
+                  <div class="tags has-addons">
+                    <span class="tag is-dark">Game</span>
+                    <span class="tag is-info">{{ group.game }}</span>
+                  </div>
+                </div>
+                <div class="level-item">
+                  <div class="tags has-addons">
+                    <span class="tag is-dark"># Instances</span>
+                    <span class="tag is-info">{{ group.currentInstances }}</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -27,6 +35,11 @@
         </div>
       </a>
     </div>
+    <br>
+    <p class="subtitle is-6">
+      Only docker-based server groups can be used to create new instances.<br>
+      You can create a new server group <a>in the panel management settings</a>
+    </p>
   </template>
   <template v-else-if="state === ModalState.StartingInstance">
     <p class="is-size-5">This shouldn't take too long.</p>
@@ -64,9 +77,36 @@
     </table>
   </template>
   <template v-else-if="state === ModalState.ConfirmCreateInstance">
-    <p class="is-size-5">You are creating a new instance of <b>{{ selectedGroup!.name}}</b>.</p>
+    <p class="is-size-5">You are creating a new instance of:</p>
+    <div class="list has-hoverable-list-items">
+      <a class="list-item has-background-info-light">
+        <div class="list-item-content">
+          <div class="list-item-title">{{ selectedGroup!.name }}</div>
+          <div class="list-item-description">
+            <div class="level">
+              <div class="level-left">
+                <div class="level-item">
+                  <div class="tags has-addons">
+                    <span class="tag is-dark">Game</span>
+                    <span class="tag is-info">{{ selectedGroup!.game }}</span>
+                  </div>
+                </div>
+                <div class="level-item">
+                  <div class="tags has-addons">
+                    <span class="tag is-dark"># Instances</span>
+                    <span class="tag is-info">{{ selectedGroup!.currentInstances }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </a>
+    </div>
+    <br>
     <!-- TODO: only show if another instance of group exists -->
-    <p class="is-size-5">Are you sure? If the other instance is just offline, it's preferable that you try starting it before creating a new instance</p>
+    <p class="is-size-5" v-if="selectedGroup!.currentInstances > 0">Are you sure? There are {{ selectedGroup!.currentInstances }} available instances already. It's preferable that you try starting them before creating a new instance</p>
+    <p class="is-size-5" v-else>Are you sure? </p>
     <br>
     <p class="is-size-5">New instances will automatically be reclaimed after they remain empty for some amount of time</p>
   </template>
@@ -162,11 +202,11 @@ const stateTitle = computed(() => {
   switch(state.value) {
     case ModalState.SelectGroup:
       return {
-        label: "Create New Server"
+        label: "Create new server"
       }
     case ModalState.ConfirmCreateInstance:
       return {
-        label: `New instance of <b>${ selectedGroup.value!.name }</b>`
+        label: `Confirm new instance`
       }
     case ModalState.StartingInstance:
       return {
@@ -183,7 +223,7 @@ const stateTitle = computed(() => {
       return {
         icon: "fa-times",
         iconClass: "has-text-danger",
-        label: `Error creating instance`
+        label: `Creating instance of <b>${ selectedGroup.value!.name}</b>`
       }
     default:
       return {
@@ -199,21 +239,25 @@ const serverGroups = ref([
     id: "l4d2-main",
     name: "L4D2 Main",
     game: "left4dead2",
+    currentInstances: 2
   },
   {
     id: "l4d2-randomizer",
     name: "L4D2 Randomizer",
     game: "left4dead2",
+    currentInstances: 1
   },
   {
     id: "l4d2-reserved",
     name: "L4D2 Reserved",
     game: "left4dead2",
+    currentInstances: 0
   },
   {
     id: "minecraft",
     name: "Minecraft",
     game: "minecraft",
+    currentInstances: 2
   }
 ])
 
