@@ -18,9 +18,7 @@
 
     </div>
     <div class="list-item-controls">
-      <div class="list-item-controls">
         <Icon icon="fa-clock">{{ formatDate(comment.timestamp) }}</Icon>
-      </div>
     </div>
   </div>
   <div class="list-item has-background-light" v-if="!isArchived">

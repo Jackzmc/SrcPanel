@@ -1,14 +1,14 @@
 <template>
 <div>
   <template v-if="servers">
-    <ServerTable v-for="group in servers" :key="group.id" :group="group"></ServerTable>
+    <ServerList v-for="group in servers" :key="group.id" :group="group"></ServerList>
   </template>
   <div class="table-container" v-else>
     <template  v-for="i in 3" :key="i">
       <div class="skeleton-lines mb-4">
         <div></div>
       </div>
-      <table class="table is-fullwidth is-skeleton is-bordered">
+      <table class="table is-fullwidth is-skeleton">
         <tbody>
           <tr v-for="j in 10" :key="j">
             <td></td>
@@ -25,6 +25,7 @@
 import { ref, watch, computed, onBeforeMount, onBeforeUnmount } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import ServerTable from "@/components/servers/ServerTable.vue";
+import ServerList from "./ServerList.vue";
 
 const REFRESH_INTERVAL = 1000 * 15;
 

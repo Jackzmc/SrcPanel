@@ -2,18 +2,37 @@
 <ModalCard active @close="emit('close')">
   <template #header>
     <p class="modal-card-title">
-      <template v-if="state === LoadState.Idle">New instance of <b>{{ props.group.name }}</b></template>
-      <Icon icon="fa-spinner" spin v-else-if="state === LoadState.Loading">Creating new instance of <b>{{ props.group.name }}</b></Icon>
-      <Icon icon="fa-check-circle" icon-class="has-text-success" v-else-if="state === LoadState.Success">Created <b>{{ data.name }}</b></Icon>
-      <Icon icon="fa-times" icon-class="has-text-danger" v-else>Error creating instance of <b>{{ props.group.name }}</b></Icon>
+      <Icon v-if="stateTitle.icon" :class="stateTitle.icon" :icon-class="stateTitle.iconClass" v-html="stateTitle.label"></Icon>
+      <span v-else v-html="stateTitle.label"></span>
     </p>
     <button class="delete" aria-label="close" @click="emit('close')"></button>
   </template>
-  <template v-if="state === LoadState.Loading">
+  <!-- MODAL BODY-->
+  <template v-if="state === ModalState.SelectGroup">
+    <h5 class="subtitle is-5">Select a server group</h5>
+    <div class="list has-hoverable-list-items has-visible-pointer-controls">
+      <a :class="['list-item',{'has-background-info-light': selectedGroup?.id === group.id}]" v-for="group in serverGroups" :key="group.id" @click="selectGroup(group)">
+        <div class="list-item-content">
+          <div class="list-item-title">{{ group.name }}</div>
+          <div class="list-item-description">
+            <div class="field is-grouped is-grouped-multiline">
+              <div class="control">
+                <div class="tags has-addons">
+                  <span class="tag is-dark">Game</span>
+                  <span class="tag is-info">{{ group.game }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </a>
+    </div>
+  </template>
+  <template v-else-if="state === ModalState.StartingInstance">
     <p class="is-size-5">This shouldn't take too long.</p>
     <p class="is-size-5">If it takes longer than 2 minutes, an issue may have occurred</p>
   </template>
-  <template v-else-if="state === LoadState.Success">
+  <template v-else-if="state === ModalState.InstanceReady">
     <table class="table">
       <tbody>
         <tr>
@@ -44,13 +63,14 @@
       </tbody>
     </table>
   </template>
-  <template v-else-if="state === LoadState.Idle">
-    <p class="is-size-5">You are creating a new instance of <b>{{ props.group.name}}</b>.</p>
+  <template v-else-if="state === ModalState.ConfirmCreateInstance">
+    <p class="is-size-5">You are creating a new instance of <b>{{ selectedGroup!.name}}</b>.</p>
+    <!-- TODO: only show if another instance of group exists -->
     <p class="is-size-5">Are you sure? If the other instance is just offline, it's preferable that you try starting it before creating a new instance</p>
     <br>
     <p class="is-size-5">New instances will automatically be reclaimed after they remain empty for some amount of time</p>
   </template>
-  <template v-else>
+  <template v-else-if="state === ModalState.InstanceFailed">
     <p class="subtitle is-5">
       An error occurred while trying to create a new instance:
     </p>
@@ -96,10 +116,22 @@
       </div>
     </article>
   </template>
+  <template v-else>
+    <article class="message is-danger">
+      <div class="message-body">
+        <b>Unknown error has occurred</b><br><span>Invalid modal state</span>
+      </div>
+    </article>
+  </template>
+  <!-- END MODAL BODY-->
   <template #buttons >
-    <template v-if="state == LoadState.Idle">
-    <button @click="createInstance" class="button is-success">Create Instance</button>
-    <button @click="emit('close')" class="button">Cancel</button>
+    <template v-if="state == ModalState.ConfirmCreateInstance">
+    <button @click="state = ModalState.SelectGroup" class="button">Back</button>
+    <button @click="createInstance" class="button is-info">Create Instance</button>
+    </template>
+    <template v-else-if="state === ModalState.SelectGroup">
+      <button @click="emit('close')" class="button">Cancel</button>
+      <button @click="confirmGroup" class="button is-info" :disabled="!selectedGroup">Next</button>
     </template>
     <template v-else>
       <button @click="emit('close')" class="button">Close</button>
@@ -118,35 +150,109 @@ import { formatSize } from '@/js/util.js';
 
 const emit = defineEmits(["close"])
 
-const props = defineProps<{
-  group: GroupInfo
-}>()
+enum ModalState {
+  SelectGroup,
+  ConfirmCreateInstance,
+  StartingInstance,
+  InstanceReady,
+  InstanceFailed
+}
 
-let state = ref<LoadState>(LoadState.Idle)
+const stateTitle = computed(() => {
+  switch(state.value) {
+    case ModalState.SelectGroup:
+      return {
+        label: "Create New Server"
+      }
+    case ModalState.ConfirmCreateInstance:
+      return {
+        label: `New instance of <b>${ selectedGroup.value!.name }</b>`
+      }
+    case ModalState.StartingInstance:
+      return {
+        icon: "fa-spinner",
+        label: `Creating instance of <b>${ selectedGroup.value!.name}</b>`
+      }
+    case ModalState.InstanceReady:
+      return {
+        icon: "fa-check-circle",
+        iconClass: "has-text-success",
+        label: `Created <b>${ data.value.name }</b>`
+      }
+    case ModalState.InstanceFailed:
+      return {
+        icon: "fa-times",
+        iconClass: "has-text-danger",
+        label: `Error creating instance`
+      }
+    default:
+      return {
+        icon: "fa-exclamation-triangle",
+        iconClass: "has-text-danger",
+        label: "Unknown Error"
+      }
+  }
+})
+
+const serverGroups = ref([
+  {
+    id: "l4d2-main",
+    name: "L4D2 Main",
+    game: "left4dead2",
+  },
+  {
+    id: "l4d2-randomizer",
+    name: "L4D2 Randomizer",
+    game: "left4dead2",
+  },
+  {
+    id: "l4d2-reserved",
+    name: "L4D2 Reserved",
+    game: "left4dead2",
+  },
+  {
+    id: "minecraft",
+    name: "Minecraft",
+    game: "minecraft",
+  }
+])
+
+let state = ref<ModalState>(ModalState.SelectGroup)
+let selectedGroup = ref<GroupInfo>()
 let data = ref<any|null>(null)
 
+function selectGroup(group: GroupInfo) {
+  selectedGroup.value = group
+}
+function confirmGroup() {
+  if(selectedGroup.value) {
+    state.value = ModalState.ConfirmCreateInstance
+  }
+}
+
 async function createInstance() {
-  state.value = LoadState.Loading
+  if(!selectedGroup.value) return console.error("createInstance() called with no group")
+  state.value = ModalState.StartingInstance
   data.value = null
   try {
-    const response = await fetch(`/api/groups/${props.group.id}/servers?start=1`, {
+    const response = await fetch(`/api/groups/${selectedGroup.value.id}/servers?start=1`, {
       method: "POST"
     })
     if(response.ok) {
       const json = await response.json()
-      state.value = LoadState.Success
+      state.value = ModalState.InstanceReady
       data.value = json
       notify({
         type: "success",
-        text: `Started new instance for ${props.group.name}`
+        text: `Started new instance for ${selectedGroup.value.name}`
       })
     } else {
       const json = await response.json()
-      state.value = LoadState.Error
+      state.value = ModalState.InstanceFailed
       data.value = json
     }
   } catch(err) {
-    state.value = LoadState.Error
+    state.value = ModalState.InstanceFailed
     data.value = (err as any).message
   }
 }

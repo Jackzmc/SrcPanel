@@ -62,6 +62,7 @@ import { computed, ref } from 'vue'
 import Servers from '../components/servers/Servers.vue'
 import { PanelMetaInfo } from '../../../common-types/Panel.js';
 
+//@ts-expect-error
 import { marked } from 'marked'
 
 const props = defineProps<{
@@ -95,7 +96,7 @@ function startCountdown() {
       clearInterval(interval.value as unknown as number)
       countdown.value = 0
     }
-    countdownText.value = `refreshing in ${countdown.value} seconds`
+    countdownText.value = ` `
   }, 1000)
 }
 </script>

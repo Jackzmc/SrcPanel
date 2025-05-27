@@ -10,7 +10,8 @@ const routes = [
     component: Overview,
     meta: {
       title: 'Overview',
-      description: 'Information & Administration Dashboard'
+      description: 'Information & Administration Dashboard',
+      hideHero: true
     }
   },
   {
@@ -315,11 +316,31 @@ const routes = [
     },
   },
   {
-    name: 'admin-servers',
-    path: '/admin/servers',
-    component: () => import('../views/admin/ServerManagementView.vue'),
+    name: 'admin-servers2',
+    path: '/admin/servers2',
+    component: () => import('../views/admin/ServerManagerView.vue'),
     meta: {
-      title: 'Server Management',
+      title: 'Manage Servers',
+      description: 'View all the servers and manage them, all in one place',
+      authRequired: true
+    },
+  },
+  {
+    name: 'manage-servers-group',
+    path: '/admin/servers2/:groupId',
+    component: () => import('../views/admin/ServerManagerView.vue'),
+    meta: {
+      title: 'Manage Servers',
+      description: 'View all the servers and manage them, all in one place',
+      authRequired: true
+    },
+  },
+  {
+    name: 'manage-servers-server',
+    path: '/admin/servers2/:groupId/:serverId',
+    component: () => import('../views/admin/ServerManagerView.vue'),
+    meta: {
+      title: 'Manage Servers',
       description: 'View all the servers and manage them, all in one place',
       authRequired: true
     },
