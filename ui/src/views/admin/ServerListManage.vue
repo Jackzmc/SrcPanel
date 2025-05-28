@@ -133,8 +133,8 @@
               <td>
                 <div class="buttons my-0">
                   <!-- TODO: pull priority? or action flag -->
-                  <a v-for="(action, i) in server.quickActions" :key="i"
-                    class="button is-small" @click="performAction([server], action)">{{ action.name }}</a>
+                  <a v-for="(action, i) in server.quickActions" :key="i" :data-tooltip="action.description"
+                    class="button is-small has-tooltip-multiline" @click="performAction([server], action)">{{ action.name }}</a>
                 </div>
                 <!-- <div class="buttons mt-2">
                   <a class="button is-small" @click="performAction([server], {})">Request Restart</a>
