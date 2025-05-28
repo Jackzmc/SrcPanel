@@ -71,7 +71,7 @@
             <router-link to="/admin/servers" class="navbar-item">
               <Icon icon="fa-server">Manage Servers</Icon>
             </router-link>
-            <router-link to="/admin/servers2" class="navbar-item">
+            <router-link :to="{'name':'servers-manage'}" class="navbar-item">
               <Icon icon="fa-server">Manage Servers <span class="tag is-warning is-tiny ml-1">BETA</span></Icon>
             </router-link>
             <router-link to="/admin/audit" class="navbar-item">

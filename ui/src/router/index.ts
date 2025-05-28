@@ -330,7 +330,7 @@ const routes = [
     path: '/admin/servers/manage',
     component: () => import('../views/admin/ServerListManage.vue'),
     meta: {
-      title: 'Manage Servers',
+      title: 'Server Instances',
       description: 'View all the servers and manage them, all in one place',
       authRequired: true
     },

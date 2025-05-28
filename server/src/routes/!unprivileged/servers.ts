@@ -38,9 +38,9 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     })
 
     fastify.get('/v2', (req: FastifyRequest<{Querystring: {'compact'?: boolean}}>, reply) => {
-        const servers = fastify.servers.getAll().map(server => {
+        const servers = fastify.servers.getAll().map((server, i) => {
             // FIXME: DEBUG TEST
-            if(Math.random() > 0.5) server.status.data = {
+            if(i <= 2) server.status.data = {
                 "players": [
                   "Disgruntled Pea",
                   "Lucario",

@@ -17,6 +17,17 @@
       A new server can be created for some supported server groups. This can allow you to play even if another party is playing on the server you want already.
     </p>
     <p>Extra servers that are unused & empty for a duration of time may be automatically removed</p>
+    <h4>Search</h4>
+    <p>Search will search the following properties:
+      <ul>
+        <li>Server Id</li>
+        <li>Server Name</li>
+        <li>Server IP</li>
+        <li>Server Port</li>
+        <li>Group Name</li>
+      </ul>
+      In addition, you can filter only servers of a certain group with <code>@groupid</code> or <code>@groupname</code>. (no spaces)
+    </p>
   </div>
   <template #buttons><!-- hide buttons, need non-empty template: --><template /></template>
 </ModalCard>
@@ -110,13 +121,13 @@
           <tbody>
             <tr v-for="server in filteredSortedServers" :key="server.data.id">
               <td><input v-model="server.checked" type="checkbox" /></td>
-              <td><router-link
+              <td><router-link :data-tooltip="server.data.id"
                   :to="{name: 'servers-manage-server', params: { groupId: server.group.id, serverId: server.data.id }}"
                   class="has-text-weight-semibold">{{ server.data.name }}</router-link>
                 <p>{{ server.data.host }}:{{ server.data.port }}</p>
               </td>
               <td>
-                <router-link
+                <router-link :data-tooltip="server.group.id"
                   :to="{name: 'servers-manage-group', params: { groupId: server.group.id }}">{{ server.group.name }}</router-link>
               </td>
               <td>
@@ -130,8 +141,9 @@
               </td>
               <td>
                 <div class="buttons">
-                  <a class="button is-small">Request Restart</a>
-                  <a class="button is-small">Unreserve</a>
+                  <!-- TODO: pull priority? or action flag -->
+                  <a class="button is-small" @click="performAction([server], {})">Request Restart</a>
+                  <a class="button is-small" @click="performAction([server], {})">Unreserve</a>
                 </div>
               </td>
             </tr>
@@ -269,11 +281,28 @@ const selectedServers = computed(() => {
   return serverList.value.filter(s => s.checked)
 })
 
+const SEARCH_REGEX_GROUP = new RegExp(/@([a-zA-Z0-9\-]+)?/)
+
 const filteredSortedServers = computed(() => {
   let result = serverList.value
-    .filter(server => {
-      return true
+  if(searchQuery.value != undefined) {
+    let query = searchQuery.value.toLowerCase().trim()
+    let groupMatch = query.match(SEARCH_REGEX_GROUP)
+    if(groupMatch) {
+      query = query.substring(0, groupMatch.index) + query.substring(groupMatch.index+groupMatch[0].length).trim()
+      groupMatch = groupMatch[1]
+    }
+    result = result.filter(server => {
+      return (
+        server.data.name.toLowerCase().includes(query)
+        || server.data.id.toLowerCase().includes(query)
+        || server.data.host.includes(query)
+        || server.data.port.toString().includes(query)
+      ) && (
+        !groupMatch || (server.group.id.startsWith(groupMatch) || server.group.name.startsWith(groupMatch))
+      )
     })
+  }
   if(sort.value != undefined) {
     result = result.sort((a,b) => {
       return sort.value!.descending ? sort.value!.sortFn(b, a) : sort.value!.sortFn(a, b)
