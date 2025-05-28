@@ -51,11 +51,12 @@ const app = Fastify({
     trustProxy: process.env.NODE_ENV === "production",
     logger: envToLogger[process.env.NODE_ENV ?? "development"]
 })
-let hadSignal = false
+let hadSignal = false, ready = false
 async function onSignal(signal: NodeJS.Signals) {
     // If already had a SIGTERM, just shut down instantly
-    if(hadSignal) {
+    if(hadSignal || !ready) {
         process.exit(0)
+        return
     }
     hadSignal = true
     console.log("\nGOT SIGNAL", signal, "-- SHUTTING DOWN")
@@ -194,4 +195,5 @@ app.register(MiddleManager)
         app.log.error(err)
         process.exit(1)
     }      
+    ready = true
 })

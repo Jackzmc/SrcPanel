@@ -316,9 +316,9 @@ const routes = [
     },
   },
   {
-    name: 'admin-servers2',
-    path: '/admin/servers2',
-    component: () => import('../views/admin/ServerManagerView.vue'),
+    name: 'servers',
+    path: '/admin/servers',
+    component: () => import('../views/admin/ServerListOverview.vue'),
     meta: {
       title: 'Manage Servers',
       description: 'View all the servers and manage them, all in one place',
@@ -326,9 +326,9 @@ const routes = [
     },
   },
   {
-    name: 'manage-servers-group',
-    path: '/admin/servers2/:groupId',
-    component: () => import('../views/admin/ServerManagerView.vue'),
+    name: 'servers-manage',
+    path: '/admin/servers/manage',
+    component: () => import('../views/admin/ServerListManage.vue'),
     meta: {
       title: 'Manage Servers',
       description: 'View all the servers and manage them, all in one place',
@@ -336,9 +336,19 @@ const routes = [
     },
   },
   {
-    name: 'manage-servers-server',
-    path: '/admin/servers2/:groupId/:serverId',
-    component: () => import('../views/admin/ServerManagerView.vue'),
+    name: 'servers-manage-group',
+    path: '/admin/servers/:groupId',
+    component: () => import('../views/admin/ServerListManage.vue'),
+    meta: {
+      title: 'Manage Servers',
+      description: 'View all the servers and manage them, all in one place',
+      authRequired: true
+    },
+  },
+  {
+    name: 'servers-manage-server',
+    path: '/admin/servers/:groupId/:serverId',
+    component: () => import('../views/admin/ServerView.vue'),
     meta: {
       title: 'Manage Servers',
       description: 'View all the servers and manage them, all in one place',

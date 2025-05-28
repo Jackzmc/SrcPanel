@@ -126,6 +126,9 @@ export default class ServerManager {
   public get Groups() {
     return Object.values(this.#groups)
   }
+  public get GroupsRecord() {
+    return {...this.#groups}
+  }
 
   #debugLive(...args: any[]) {
     if(DEBUG_LIVE_SOCKET)

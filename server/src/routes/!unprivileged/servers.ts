@@ -1,7 +1,8 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
-import { SERVER_TYPE_MAP } from '../../../../common-types/Server.js';
+import { APIListServersV2, APIListServersV2_Groups, APIListServersV2_GroupEntry, SERVER_TYPE_MAP, ServerAction, ServerStatus } from '../../../../common-types/Server.js';
 import Server from '../../modules/servers/Server.js';
 import SocketClientUser from '../../modules/servers/SocketClientUser.js';
+import { APIListServersV2_Server } from '../../../../common-types/Server';
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
 
@@ -33,6 +34,44 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 }
             }))
         }
+        fastify.servers.resetInactivity()
+    })
+
+    fastify.get('/v2', (req: FastifyRequest<{Querystring: {'compact'?: boolean}}>, reply) => {
+        const servers = fastify.servers.getAll().map(server => {
+            // FIXME: DEBUG TEST
+            if(Math.random() > 0.5) server.status.data = {
+                "players": [
+                  "Disgruntled Pea",
+                  "Lucario",
+                  "MeliLost-greenbean-dealer-",
+                  "Garfield The Grafted"
+                ],
+                "maxplayers": 4,
+                "gamemode": "coop",
+                "map": "c7m1_docks"
+            }
+            return {
+                id: server.id,
+                name: server.name,
+                groupId: server.group.Id,
+                status: server.status,
+                tags: server.tags,
+                actions: server.actions,
+                host: server.host,
+                port: server.port
+            } as APIListServersV2_Server
+        })
+        const groups = Object.fromEntries(Object.entries(fastify.servers.GroupsRecord).map(([id, data]) => {
+            return [id, {
+                name: data.Name,
+                game: data.Type,
+            } as APIListServersV2_GroupEntry]
+        })) as APIListServersV2_Groups
+        reply.send({
+            groups,
+            servers
+        } as APIListServersV2)
         fastify.servers.resetInactivity()
     })
 

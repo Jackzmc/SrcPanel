@@ -150,3 +150,31 @@ export interface ServerAvailableFeatures {
     canStart: boolean
 } 
 export type ServerFeature = keyof ServerAvailableFeatures
+export enum ServerState {
+    Offline = 0,
+    Online = 1,
+    Starting = 2,
+    Stopping = 3,
+    Updating = 4
+  }
+export interface APIListServersV2_GroupEntry {
+    name: string,
+    currentInstances: number,
+    game: string
+}
+
+export type APIListServersV2_Groups = Record<string, APIListServersV2_GroupEntry>
+export interface APIListServersV2_Server {
+    id: string,
+    name: string,
+    groupId: string,
+    status: ServerStatus,
+    tags: string[],
+    actions: ServerAction[],
+    host: string,
+    port: number
+}
+export interface APIListServersV2 {
+    groups: APIListServersV2_Groups,
+    servers: APIListServersV2_Server[]
+}

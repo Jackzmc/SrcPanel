@@ -11,35 +11,27 @@
   <template v-if="state === ModalState.SelectGroup">
     <h5 class="subtitle is-5">Select a server group</h5>
     <div class="list has-hoverable-list-items has-visible-pointer-controls">
-      <a :class="['list-item',{'has-background-info-light': selectedGroup?.id === group.id}]" v-for="group in serverGroups" :key="group.id" @click="selectGroup(group)">
-        <div class="list-item-content">
-          <div class="list-item-title">{{ group.name }}</div>
-          <div class="list-item-description">
-            <div class="level">
-              <div class="level-left">
-                <div class="level-item">
-                  <div class="tags has-addons">
-                    <span class="tag is-dark">Game</span>
-                    <span class="tag is-info">{{ group.game }}</span>
-                  </div>
-                </div>
-                <div class="level-item">
-                  <div class="tags has-addons">
-                    <span class="tag is-dark"># Instances</span>
-                    <span class="tag is-info">{{ group.currentInstances }}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </a>
+      <ServerGroupListItem v-for="group in serverGroups" :key="group.id" :group="group" selectable :selected="selectedGroup?.id === group.id" @select="selectGroup(group)" />
     </div>
     <br>
     <p class="subtitle is-6">
       Only docker-based server groups can be used to create new instances.<br>
       You can create a new server group <a>in the panel management settings</a>
     </p>
+  </template>
+  <template v-else-if="state === ModalState.ConfirmCreateInstance">
+    <p class="is-size-5">You are creating a new instance of:</p>
+    <div class="list has-hoverable-list-items">
+      <ServerGroupListItem :group="selectedGroup" selected />
+    </div>
+    <br>
+    <!-- TODO: only show if another instance of group exists -->
+    <p class="is-size-5" v-if="selectedGroup!.currentInstances > 0">Are you sure? There are
+      {{ selectedGroup!.currentInstances }} available instances already. It's preferable that you try starting them before
+      creating a new instance</p>
+    <p class="is-size-5" v-else>Are you sure? </p>
+    <br>
+    <p class="is-size-5">New instances will automatically be reclaimed after they remain empty for some amount of time</p>
   </template>
   <template v-else-if="state === ModalState.StartingInstance">
     <p class="is-size-5">This shouldn't take too long.</p>
@@ -75,40 +67,6 @@
         </tr>
       </tbody>
     </table>
-  </template>
-  <template v-else-if="state === ModalState.ConfirmCreateInstance">
-    <p class="is-size-5">You are creating a new instance of:</p>
-    <div class="list has-hoverable-list-items">
-      <a class="list-item has-background-info-light">
-        <div class="list-item-content">
-          <div class="list-item-title">{{ selectedGroup!.name }}</div>
-          <div class="list-item-description">
-            <div class="level">
-              <div class="level-left">
-                <div class="level-item">
-                  <div class="tags has-addons">
-                    <span class="tag is-dark">Game</span>
-                    <span class="tag is-info">{{ selectedGroup!.game }}</span>
-                  </div>
-                </div>
-                <div class="level-item">
-                  <div class="tags has-addons">
-                    <span class="tag is-dark"># Instances</span>
-                    <span class="tag is-info">{{ selectedGroup!.currentInstances }}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </a>
-    </div>
-    <br>
-    <!-- TODO: only show if another instance of group exists -->
-    <p class="is-size-5" v-if="selectedGroup!.currentInstances > 0">Are you sure? There are {{ selectedGroup!.currentInstances }} available instances already. It's preferable that you try starting them before creating a new instance</p>
-    <p class="is-size-5" v-else>Are you sure? </p>
-    <br>
-    <p class="is-size-5">New instances will automatically be reclaimed after they remain empty for some amount of time</p>
   </template>
   <template v-else-if="state === ModalState.InstanceFailed">
     <p class="subtitle is-5">
@@ -184,9 +142,10 @@
 import { LoadState } from '@/types/global.js';
 import ModalCard from '../ModalCard.vue';
 import { GroupInfo } from '../../../../common-types/Server.js';
-import { computed, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { notify } from '@kyvg/vue3-notification';
 import { formatSize } from '@/js/util.js';
+import ServerGroupListItem from './ServerGroupListItem.vue';
 
 const emit = defineEmits(["close"])
 
