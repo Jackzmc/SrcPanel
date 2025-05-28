@@ -291,11 +291,12 @@ let activeModal = ref<Modal>(Modal.None)
 let showActionDropdown = ref(false)
 let searchQuery = ref()
 let groups = ref<APIListServersV2_Groups>({})
-let serverList = ref<UIServerInfo[]>([])
+let serverMap = ref<Record<string, UIServerInfo>>({})
 let sort = ref<{field: string, descending: boolean, sortFn: (a: UIServerInfo, b: UIServerInfo) => any}|undefined>(undefined)
 let refreshingServers = ref(false)
 let refreshError = ref()
 
+const serverList = computed(() => Object.values(serverMap.value))
 const selectedServers = computed(() => {
   return serverList.value.filter(s => s.checked)
 })
@@ -417,11 +418,11 @@ async function fetchServers() {
     if(response.ok) {
       const json = await response.json() as APIListServersV2
       groups.value = json.groups
-      serverList.value = json.servers.map(server => {
+      for(const server of json.servers) {
         const state = server.status?.data ? ServerState.Online : ServerState.Offline
-        return {
+        serverMap.value[server.id] = {
           data: server,
-          checked: false,
+          checked: serverMap.value[server.id]?.checked ?? false,
           group: {
             id: server.groupId,
             name: groups.value[server.groupId]?.name ?? server.groupId
@@ -429,8 +430,8 @@ async function fetchServers() {
           state,
           stateData: StateMap[state],
           quickActions: server.actions.filter(a => a.inQuickAction)
-        } as UIServerInfo
-      })
+        }
+      }
       refreshingServers.value = false
       refreshError.value = undefined
       return true
