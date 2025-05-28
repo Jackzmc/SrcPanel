@@ -50,7 +50,7 @@
   </div>
   <footer class="footer custom-footer">
     <div class="content has-text-centered">
-      L4D2 Admin Dashboard - Updated {{lastUpdated}}
+      {{ SITE_TITLE }} - Updated {{lastUpdated}}
     </div>
   </footer>
 </div>
@@ -70,6 +70,7 @@ import { PanelMetaInfo } from '../../common-types/Panel.js';
 const BirthdayComponent = defineAsyncComponent(() => import("@/components/BirthdayComponent.vue"))
 
 const LAST_UPDATED = new Date(Number(BUILD_TIMESTAMP))
+const SITE_TITLE = import.meta.env.VITE_SITE_TITLE
 const lastUpdated = computed(() => {
   return LAST_UPDATED.toLocaleString()
 })

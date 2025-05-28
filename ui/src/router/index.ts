@@ -1,7 +1,7 @@
 import { RouteLocationNormalizedLoaded, createRouter, createWebHistory } from 'vue-router'
 import Overview from '../views/OverviewView.vue'
 
-const DEFAULT_TITLE = "L4D2 Admin Guide"
+const DEFAULT_TITLE = import.meta.env.VITE_SITE_TITLE
 
 const routes = [
   {
