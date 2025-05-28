@@ -42,16 +42,6 @@
               <input v-model="searchQuery" type="text" class="input" placeholder="Search..." />
             </Field>
           </div>
-          <!-- <div class="level-item">
-            <a class="button" :disabled="selectedServers.length === 0 ? true : undefined">
-              <Icon icon="fa-edit">Edit</Icon>
-            </a>
-          </div>
-          <div class="level-item">
-            <a class="button has-text-danger" :disabled="selectedServers.length === 0 ? true : undefined">
-              <Icon icon="fa-trash">Delete</Icon>
-            </a>
-          </div> -->
           <div class="level-item" @mouseleave="showActionDropdown = false" v-if="selectedServers.length > 0">
             <div :class="['dropdown',{'is-active': showActionDropdown}]">
               <div class="dropdown-trigger">
@@ -78,15 +68,10 @@
                 </div>
               </div>
             </div>
-            <!-- <div class="select">
-              <select>
-                <option>Start</option>
-                <option>Request Restart</option>
-                <option>Stop</option>
-              </select>
-            </div> -->
           </div>
-
+          <div class="level-item">
+            {{ filteredSortedServers.length }} <template v-if="filteredSortedServers.length != serverList.length">/ {{ serverList.length }}</template> servers
+          </div>
         </div>
         <div class="level-right">
           <div class="level-item">
@@ -149,6 +134,10 @@
             </tr>
           </tbody>
         </table>
+        <p class="has-text-centered py-6" v-if="filteredSortedServers.length === 0">
+          No servers found matching your query
+          <br>See <b>Search</b> section in <a @click="setModal(Modal.Help)">help</a> for more information
+        </p>
       </div>
     </div>
   </div>
