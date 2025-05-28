@@ -161,7 +161,8 @@ const stateTitle = computed(() => {
   switch(state.value) {
     case ModalState.SelectGroup:
       return {
-        label: "Create new server"
+        label: "Create new server",
+        icon: "fa-plus"
       }
     case ModalState.ConfirmCreateInstance:
       return {

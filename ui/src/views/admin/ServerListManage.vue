@@ -2,7 +2,7 @@
 <div>
 <CreateServerModal v-if="activeModal == Modal.NewServer" @close="setModal(null)" />
 <ModalCard v-if="activeModal == Modal.Help" @close="setModal(null)">
-  <template #title>Help</template>
+  <template #title><Icon icon="fa-circle-question">Help</Icon></template>
   <div class="content">
     <h4>Actions</h4>
     <ul>
@@ -113,7 +113,7 @@
               <td><router-link
                   :to="{name: 'servers-manage-server', params: { groupId: server.group.id, serverId: server.data.id }}"
                   class="has-text-weight-semibold">{{ server.data.name }}</router-link>
-                <p v-if="server.state === ServerState.Online">{{ server.data.host }}:{{ server.data.port }}</p>
+                <p>{{ server.data.host }}:{{ server.data.port }}</p>
               </td>
               <td>
                 <router-link
