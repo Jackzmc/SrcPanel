@@ -130,11 +130,16 @@
                 <p v-if="server.state === ServerState.Online">{{ server.data.status?.data?.players.length }} players online</p>
               </td>
               <td>
-                <div class="buttons">
+                <div class="buttons my-0">
                   <!-- TODO: pull priority? or action flag -->
                   <a class="button is-small" @click="performAction([server], {})">Request Restart</a>
                   <a class="button is-small" @click="performAction([server], {})">Unreserve</a>
                 </div>
+                <!-- <div class="buttons mt-2">
+                  <a class="button is-small" @click="performAction([server], {})">Request Restart</a>
+                  <a class="button is-small" @click="performAction([server], {})">Unreserve</a>
+
+                </div> -->
               </td>
             </tr>
           </tbody>
