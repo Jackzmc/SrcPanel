@@ -80,7 +80,7 @@
             </button>
           </div>
           <div class="level-item">
-            <button class="button is-info" @click="setModal(Modal.NewServer)" data-tooltip="Start a new server instance">
+            <button class="button is-info" :disabled="meta.settings['custom_servers.enabled'] ? undefined : true" @click="setModal(Modal.NewServer)" data-tooltip="Start a new server instance">
               <Icon icon="fa-plus">New Server</Icon>
             </button>
           </div>
@@ -132,8 +132,8 @@
               <td>
                 <div class="buttons my-0">
                   <!-- TODO: pull priority? or action flag -->
-                  <a class="button is-small" @click="performAction([server], {})">Request Restart</a>
-                  <a class="button is-small" @click="performAction([server], {})">Unreserve</a>
+                  <a v-for="(action, i) in server.quickActions" :key="i"
+                    class="button is-small" @click="performAction([server], action)">{{ action.name }}</a>
                 </div>
                 <!-- <div class="buttons mt-2">
                   <a class="button is-small" @click="performAction([server], {})">Request Restart</a>
@@ -169,6 +169,12 @@ import ModalCard from '@/components/ModalCard.vue'
 import CreateServerModal from '@/components/servers/CreateServerModal.vue'
 import { computed, onBeforeMount, onBeforeUnmount, onMounted, ref } from 'vue'
 import { APIListServersV2, APIListServersV2_Groups, APIListServersV2_Server, ServerAction, ServerState } from '../../../../common-types/Server.js'
+import { PanelMetaInfo } from '../../../../common-types/Panel.js'
+import { notify } from '@kyvg/vue3-notification'
+
+const props = defineProps<{
+  meta: PanelMetaInfo
+}>()
 
 // The number of ms to refresh server list
 const LIST_REFRESH_INTERVAL = 1000 * 8
@@ -232,7 +238,8 @@ interface UIServerInfo {
     label: string,
     icon: string,
     class: string
-  }
+  },
+  quickActions: ServerAction[]
 }
 
 
@@ -359,7 +366,38 @@ function setSort(field: string, fn: (a: UIServerInfo, b: UIServerInfo) => number
 
 async function performAction(servers: UIServerInfo[]|null, action: ServerAction) {
   if(!servers) servers = selectedServers.value
-  alert("Not implemented")
+  const promises = servers.map(async server => {
+    const response = await fetch(`/api/servers/${server.data.id}/action/${action.command}`, { method: "POST"})
+    if(response.ok) {
+      return true
+    } else if(response.headers.get("content-type")?.includes("application/json")) {
+      const json = await response.json()
+      throw new Error(`${json.error}: ${json.message}`)
+    } else {
+      throw new Error(`${response.status} ${response.statusText}`)
+    }
+  })
+  const results = await Promise.allSettled(promises)
+  const failed = results.filter(r => r.status == "rejected")
+  if(failed.length >= promises.length) {
+    notify({
+      type: "error",
+      title: `Action <b>${action.name}</b> failed`,
+      text: "All servers returned an error"
+    })
+  } else if(failed.length > 0) {
+    notify({
+      type: "warn",
+      title: `Action <b>${action.name}</b> had errors`,
+      text: `${failed.length} servers had errors performing action`
+    })
+  } else {
+    notify({
+      type: "success",
+      title: `Action <b>${action.name}</b> complete`,
+      text: `${promises.length} servers returned no errors`
+    })
+  }
 }
 
 function selectAllServers(event: Event) {
@@ -389,7 +427,8 @@ async function fetchServers() {
             name: groups.value[server.groupId]?.name ?? server.groupId
           },
           state,
-          stateData: StateMap[state]
+          stateData: StateMap[state],
+          quickActions: server.actions.filter(a => a.inQuickAction)
         } as UIServerInfo
       })
       refreshingServers.value = false
