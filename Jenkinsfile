@@ -76,7 +76,7 @@ pipeline {
                
                 sh 'ssh-keyscan -t rsa ${SERVER} >> ~/.ssh/known_hosts'
                 sh 'echo $BRANCH_NAME $JOB_NAME'
-                sh 'echo ${env.DEST_UI} ${env.DEST_SERVER}'
+                sh 'echo $DEST_UI $DEST_SERVER'
                 // Deploy UI
                 sshagent(credentials: ['deploy-ssh']) {
                     // Deploy to temp dir, once transferred swap live /var/www
@@ -88,9 +88,9 @@ pipeline {
                 // Deploy Server
                 sshagent(credentials: ['deploy-ssh']) {
                     // Deploy to ${DEPLOY_SERVER_PATH}/dist, and rsync as server files should always be the same
-                    sh 'ssh deploy-jenkins@${SERVER} "mkdir -p \"${env.DEST_SERVER}\"/dist"'
-                    sh 'rsync -r server/dist/* deploy-jenkins@${SERVER}:"${env.DEST_SERVER}/dist"'
-                    sh 'ssh deploy-jenkins@${SERVER} "sudo systemctl restart ${DEPLOY_SERVER_SERVICE_NAME}-${env.BRANCH_NAME}"'
+                    sh 'ssh deploy-jenkins@${SERVER} "mkdir -p \"$DEST_SERVER\"/dist"'
+                    sh 'rsync -r server/dist/* deploy-jenkins@${SERVER}:"$DEST_SERVER/dist"'
+                    sh 'ssh deploy-jenkins@${SERVER} "sudo systemctl restart $DEPLOY_SERVER_SERVICE_NAME-$BRANCH_NAME"'
                 }
             }
         }
