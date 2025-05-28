@@ -1,5 +1,5 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
-import { APIListServersV2, APIListServersV2_Groups, APIListServersV2_GroupEntry, SERVER_TYPE_MAP, ServerAction, ServerStatus } from '../../../../common-types/Server.js';
+import { APIListServersV2, APIListServersV2_Groups, APIListServersV2_GroupEntry, SERVER_TYPE_MAP, ServerAction, ServerStatus, APIListServerGroup} from '../../../../common-types/Server.js';
 import Server from '../../modules/servers/Server.js';
 import SocketClientUser from '../../modules/servers/SocketClientUser.js';
 import { APIListServersV2_Server } from '../../../../common-types/Server';
@@ -38,6 +38,12 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     })
 
     fastify.get('/v2', (req: FastifyRequest<{Querystring: {'compact'?: boolean}}>, reply) => {
+        const groups: APIListServersV2_Groups = Object.fromEntries(Object.entries(fastify.servers.GroupsRecord).map(([id, data]) => {
+            return [id, {
+                name: data.Name,
+                game: data.Type
+            }]
+        }))
         const servers = fastify.servers.getAll().map((server, i) => {
             // FIXME: DEBUG TEST
             if(i <= 2) server.status.data = {
@@ -62,17 +68,28 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 port: server.port
             } as APIListServersV2_Server
         })
-        const groups = Object.fromEntries(Object.entries(fastify.servers.GroupsRecord).map(([id, data]) => {
-            return [id, {
-                name: data.Name,
-                game: data.Type,
-            } as APIListServersV2_GroupEntry]
-        })) as APIListServersV2_Groups
         reply.send({
             groups,
             servers
         } as APIListServersV2)
         fastify.servers.resetInactivity()
+    })
+
+    fastify.get('/groups', async(req, reply) => {
+        const groups: Record<string, APIListServerGroup> = Object.fromEntries(Object.entries(fastify.servers.GroupsRecord).map(([id, data]) => {
+            return [id, {
+                id: id,
+                name: data.Name,
+                game: data.Type,
+                currentInstances: 0
+            }]
+        }))
+        for(const server of fastify.servers.getAll()) {
+            groups[server.group.Id].currentInstances ++
+        }
+        return {
+            groups: Object.values(groups)
+        } 
     })
 
     fastify.get('/:id/ws', { websocket: true }, async (socket, req: FastifyRequest<{Params: {id: string}}>) => {

@@ -1,6 +1,6 @@
 <template>
 <div>
-<CreateServerModal v-if="activeModal == Modal.NewServer" @close="setModal(null)" />
+<CreateServerModal v-if="activeModal == Modal.NewServer" @close="setModal(null); fetchServers()" />
 <ModalCard v-if="activeModal == Modal.Help" @close="setModal(null)">
   <template #title><Icon icon="fa-circle-question">Help</Icon></template>
   <div class="content">
@@ -74,6 +74,9 @@
           </div>
         </div>
         <div class="level-right">
+          <div class="level-">
+            <Icon v-if="refreshingServers" icon="fa-spinner" spin>Refreshing</Icon>
+          </div>
           <div class="level-item">
             <button class="button is-info" @click="setModal(Modal.NewServer)" data-tooltip="Start a new server instance">
               <Icon icon="fa-plus">New Server</Icon>
@@ -149,8 +152,11 @@
 import Field from '@/components/Field.vue'
 import ModalCard from '@/components/ModalCard.vue'
 import CreateServerModal from '@/components/servers/CreateServerModal.vue'
-import { computed, onBeforeMount, onMounted, ref } from 'vue'
+import { computed, onBeforeMount, onBeforeUnmount, onMounted, ref } from 'vue'
 import { APIListServersV2, APIListServersV2_Groups, APIListServersV2_Server, ServerAction, ServerState } from '../../../../common-types/Server.js'
+
+// The number of ms to refresh server list
+const LIST_REFRESH_INTERVAL = 1000 * 8
 
 interface FieldInfo {
   label: string,
@@ -265,6 +271,7 @@ let searchQuery = ref()
 let groups = ref<APIListServersV2_Groups>({})
 let serverList = ref<UIServerInfo[]>([])
 let sort = ref<{field: string, descending: boolean, sortFn: (a: UIServerInfo, b: UIServerInfo) => any}|undefined>(undefined)
+let refreshingServers = ref(false)
 
 const selectedServers = computed(() => {
   return serverList.value.filter(s => s.checked)
@@ -349,6 +356,7 @@ function selectAllServers(event: Event) {
 
 
 async function fetchServers() {
+  refreshingServers.value = true
   try {
     const response = await fetch("/api/servers/v2")
     if(response.ok) {
@@ -367,6 +375,7 @@ async function fetchServers() {
           stateData: StateMap[state]
         } as UIServerInfo
       })
+      refreshingServers.value = false
     } else {
       alert("fail")
     }
@@ -378,7 +387,16 @@ async function fetchServers() {
 onMounted(() => {
   fetchServers()
 })
+let refreshTimer: any
 
+onMounted(async () => {
+  await fetchServers()
+  refreshTimer = setInterval(() => fetchServers(), LIST_REFRESH_INTERVAL)
+})
+
+onBeforeUnmount(() => {
+  clearInterval(refreshTimer)
+})
 </script>
 
 <style scoped>

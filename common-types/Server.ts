@@ -159,6 +159,11 @@ export enum ServerState {
   }
 export interface APIListServersV2_GroupEntry {
     name: string,
+    game: string
+}
+export interface APIListServerGroup {
+    id: string,
+    name: string,
     currentInstances: number,
     game: string
 }

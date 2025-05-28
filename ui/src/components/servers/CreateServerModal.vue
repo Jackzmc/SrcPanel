@@ -21,8 +21,8 @@
   </template>
   <template v-else-if="state === ModalState.ConfirmCreateInstance">
     <p class="is-size-5">You are creating a new instance of:</p>
-    <div class="list has-hoverable-list-items">
-      <ServerGroupListItem :group="selectedGroup" selected />
+    <div class="list has-hoverable-list-items" >
+      <ServerGroupListItem :group="selectedGroup!" selected />
     </div>
     <br>
     <!-- TODO: only show if another instance of group exists -->
@@ -106,11 +106,12 @@
       </div>
     </article>
     <article class="message is-danger" v-else>
-      <div class="message-body">
-       <pre class="mx-0 my-0" v-if="data" style="text-wrap: auto">{{ JSON.stringify(data, null, 2) }}</pre>
-       <span v-else>
-        No information available
-       </span>
+      <div class="message-body" v-if="data">
+        <strong>{{ data.error }}</strong>:<br>
+        {{ data.message }}
+      </div>
+      <div class="message-body" v-else>
+      No information available
       </div>
     </article>
   </template>
@@ -139,9 +140,8 @@
 </template>
 
 <script setup lang="ts">
-import { LoadState } from '@/types/global.js';
 import ModalCard from '../ModalCard.vue';
-import { GroupInfo } from '../../../../common-types/Server.js';
+import { APIListServerGroup, GroupInfo } from '../../../../common-types/Server.js';
 import { computed, onMounted, ref } from 'vue';
 import { notify } from '@kyvg/vue3-notification';
 import { formatSize } from '@/js/util.js';
@@ -194,43 +194,52 @@ const stateTitle = computed(() => {
   }
 })
 
-const serverGroups = ref([
-  {
-    id: "l4d2-main",
-    name: "L4D2 Main",
-    game: "left4dead2",
-    currentInstances: 2
-  },
-  {
-    id: "l4d2-randomizer",
-    name: "L4D2 Randomizer",
-    game: "left4dead2",
-    currentInstances: 1
-  },
-  {
-    id: "l4d2-reserved",
-    name: "L4D2 Reserved",
-    game: "left4dead2",
-    currentInstances: 0
-  },
-  {
-    id: "minecraft",
-    name: "Minecraft",
-    game: "minecraft",
-    currentInstances: 2
-  }
-])
+// const serverGroups = ref([
+//   {
+//     id: "l4d2-main",
+//     name: "L4D2 Main",
+//     game: "left4dead2",
+//     currentInstances: 2
+//   },
+//   {
+//     id: "l4d2-randomizer",
+//     name: "L4D2 Randomizer",
+//     game: "left4dead2",
+//     currentInstances: 1
+//   },
+//   {
+//     id: "l4d2-reserved",
+//     name: "L4D2 Reserved",
+//     game: "left4dead2",
+//     currentInstances: 0
+//   },
+//   {
+//     id: "minecraft",
+//     name: "Minecraft",
+//     game: "minecraft",
+//     currentInstances: 2
+//   }
+// ])
 
+let serverGroups = ref<APIListServerGroup[]>([])
 let state = ref<ModalState>(ModalState.SelectGroup)
-let selectedGroup = ref<GroupInfo>()
+let selectedGroup = ref<APIListServerGroup>()
 let data = ref<any|null>(null)
 
-function selectGroup(group: GroupInfo) {
+function selectGroup(group: APIListServerGroup) {
   selectedGroup.value = group
 }
 function confirmGroup() {
   if(selectedGroup.value) {
     state.value = ModalState.ConfirmCreateInstance
+  }
+}
+
+async function fetchGroups() {
+  const response = await fetch("/api/servers/groups")
+  if(response.ok) {
+    const json = await response.json()
+    serverGroups.value = json.groups
   }
 }
 
@@ -260,5 +269,9 @@ async function createInstance() {
     data.value = (err as any).message
   }
 }
+
+onMounted(async () => {
+  await fetchGroups()
+})
 
 </script>

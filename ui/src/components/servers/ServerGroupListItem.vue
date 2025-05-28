@@ -26,14 +26,14 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import { GroupInfo } from '../../../../common-types/Server.js';
+import { APIListServerGroup} from '../../../../common-types/Server.js';
 
 const emit = defineEmits(["select"])
 
 const props = defineProps<{
-  group: GroupInfo,
-  selected: boolean,
-  selectable: boolean
+  group: APIListServerGroup,
+  selected?: boolean,
+  selectable?: boolean
 }>()
 
 const component = computed(() => {
