@@ -117,8 +117,9 @@
                 <p>{{ server.data.host }}:{{ server.data.port }}</p>
               </td>
               <td>
-                <router-link :data-tooltip="server.group.id"
-                  :to="{name: 'servers-manage-group', params: { groupId: server.group.id }}">{{ server.group.name }}</router-link>
+                <!-- <router-link :data-tooltip="server.group.id"
+                  :to="{name: 'servers-manage-group', params: { groupId: server.group.id }}">{{ server.group.name }}</router-link> -->
+                <a @click="searchQuery = '@' + server.group.id" :data-tooltip="server.group.id">{{ server.group.name }}</a>
               </td>
               <td>
                 <div class="tags">
