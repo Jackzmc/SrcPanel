@@ -43,7 +43,7 @@
         <tr>
           <th>Id</th>
           <td>
-            <router-link target="_blank" :to="{name: 'admin-server-view', params: { id: data.serverId, tab: 'overview',}}">
+            <router-link target="_blank" :to="{name: 'admin-server-view', params: { serverId: data.serverId, tab: 'overview',}}">
               {{ data.serverId }}
               <Icon icon="arrow-up-right-from-square" />
             </router-link>

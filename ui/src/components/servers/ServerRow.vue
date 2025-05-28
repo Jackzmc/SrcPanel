@@ -1,7 +1,7 @@
 <template>
   <tr :class="trClass">
     <td>
-      <router-link v-if="manage" :to="{name: 'admin-server-view', params: { id: server.id, tab: 'overview' }}" :data-tooltip="tooltip">
+      <router-link v-if="manage" :to="{name: 'admin-server-view', params: { serverId: server.id, tab: 'overview' }}" :data-tooltip="tooltip">
         <b :class="serverClasses" >{{server.name}}</b>
       </router-link>
       <a v-else-if="server.type === 'source'" :href="'steam://connect/' + server.ip + '/' + server.port">

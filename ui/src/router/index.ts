@@ -1,4 +1,4 @@
-import { RouteLocationNormalizedLoaded, createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHistory } from 'vue-router'
 import Overview from '../views/OverviewView.vue'
 
 const DEFAULT_TITLE = import.meta.env.VITE_SITE_TITLE
@@ -307,7 +307,7 @@ const routes = [
   },
   {
     name: 'admin-server-view',
-    path: '/admin/servers/:id/:tab?',
+    path: '/admin/servers/:serverId/:tab?',
     component: () => import('../views/admin/ServerView.vue'),
     meta: {
       title: 'Server View',
@@ -347,12 +347,12 @@ const routes = [
   },
   {
     name: 'servers-manage-server',
-    path: '/admin/servers/:groupId/:serverId',
+    path: '/admin/servers2/:groupId/:serverId',
     component: () => import('../views/admin/ServerView.vue'),
     meta: {
-      title: 'Manage Servers',
-      description: 'View all the servers and manage them, all in one place',
-      authRequired: true
+      title: 'Server View',
+      authRequired: true,
+      hideHero: true
     },
   },
   {

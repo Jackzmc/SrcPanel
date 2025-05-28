@@ -80,7 +80,7 @@
             </button>
           </div>
           <div class="level-item">
-            <button class="button is-info" :disabled="meta.settings['custom_servers.enabled'] ? undefined : true" @click="setModal(Modal.NewServer)" data-tooltip="Start a new server instance">
+            <button class="button is-info" :disabled="meta?.settings['custom_servers.enabled'] ? undefined : true" @click="setModal(Modal.NewServer)" data-tooltip="Start a new server instance">
               <Icon icon="fa-plus">New Server</Icon>
             </button>
           </div>
@@ -446,7 +446,6 @@ async function fetchServers() {
   } catch(err) {
     refreshingServers.value = false
     refreshError.value = (err as any).message
-    alert(err)
   }
   return false
 }
@@ -455,11 +454,17 @@ onMounted(() => {
   fetchServers()
 })
 let refreshTimer: any
+let ws = ref<WebSocket>()
+
+function setupWS() {
+
+}
 
 onMounted(async () => {
   if(await fetchServers()) { // only set timer on first success
     refreshTimer = setInterval(() => fetchServers(), LIST_REFRESH_INTERVAL)
   }
+
 })
 
 onBeforeUnmount(() => {

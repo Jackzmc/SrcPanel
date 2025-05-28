@@ -13,7 +13,7 @@
         <th>Id</th>
         <td>
           <router-link target="_blank"
-            :to="{name: 'admin-server-view', params: { id: server.serverId, tab: 'overview',}}">
+            :to="{name: 'admin-server-view', params: { serverId: server.serverId, tab: 'overview',}}">
             {{ server.serverId }}
             <Icon icon="arrow-up-right-from-square" />
           </router-link>
@@ -38,7 +38,7 @@
     </tbody>
   </table>
   <template #buttons>
-    <router-link class="button" :to="{name: 'admin-server-view', params: { id: server.serverId, tab: 'overview',}}">
+    <router-link class="button" :to="{name: 'admin-server-view', params: { serverId: server.serverId, tab: 'overview',}}">
       Close
     </router-link>
   </template>

@@ -487,7 +487,7 @@
           <select @change="onSelectNewServer">
             <option default v-if="!serverIds">Loading servers...</option>
             <option v-for="server2 in serverIds" :key="server2.id" :value="server2.id"
-              :selected="server2.id == route.params.id">
+              :selected="server2.id == route.params.serverId">
               {{server2.name}}
             </option>
           </select>
@@ -739,7 +739,7 @@ function getIconUrl(player: LiveClient) {
 async function onCfgChosen(entry: { path: string, filename: string }, raw = false) {
   cfg.value.selected = entry
   cfg.value.loading = true
-  const response = await fetch(`/api/servers/${route.params.id}/configs?path=${cfg.value.selected.path}${raw?'&raw=1':''}`)
+  const response = await fetch(`/api/servers/${route.params.serverId}/configs?path=${cfg.value.selected.path}${raw?'&raw=1':''}`)
   cfg.value.loading = false
   if(response.ok) {
     cfg.value.json = undefined
@@ -752,7 +752,7 @@ async function onCfgChosen(entry: { path: string, filename: string }, raw = fals
 }
 
 async function onSelectNewServer(event: any) {
-  await router.push({ name: 'admin-server-view', params: { tab: 'overview', id: event.target.value }})
+  await router.push({ name: 'admin-server-view', params: { tab: 'overview', serverId: event.target.value }})
   serverInfo.value = undefined
   activities.value = undefined
   // Delete old enables
@@ -761,9 +761,9 @@ async function onSelectNewServer(event: any) {
 }
 async function fetchServerInfo() {
   error.value = undefined
-  const id = route.params.id
-  const response = await fetch(`/api/servers/${route.params.id}`)
-  if(id != route.params.id) return // Ignore changes in id
+  const id = route.params.serverId
+  const response = await fetch(`/api/servers/${route.params.serverId}`)
+  if(id != route.params.serverId) return // Ignore changes in id
   try {
     const json = await response.json()
     if(response.ok) {
@@ -782,9 +782,9 @@ async function fetchServerInfo() {
 
 async function fetchServerData() {
   error.value = undefined
-  const id = route.params.id
-  const response = await fetch(`/api/servers/${route.params.id}/data`)
-  if(id != route.params.id) return // Ignore changes in id
+  const id = route.params.serverId
+  const response = await fetch(`/api/servers/${route.params.serverId}/data`)
+  if(id != route.params.serverId) return // Ignore changes in id
   try {
     const json = await response.json()
     if(response.ok) {
@@ -805,7 +805,7 @@ async function fetchServerData() {
 
 async function fetchServerActivities() {
   try {
-    const response = await fetch(`/api/servers/${route.params.id}/activities`)
+    const response = await fetch(`/api/servers/${route.params.serverId}/activities`)
     const json = await response.json()
     if(response.ok) {
       activities.value = json.activities?.map((act: any) => parseLog(act))
@@ -1024,9 +1024,9 @@ function sendWSPayload(payload: ClientOutPayload) {
   ws.value.send(JSON.stringify(payload))
 }
 function connectWS() {
-  console.debug("connectWS", `${window.location.protocol}://${window.location.host}/api/servers/${route.params.id}/ws`)
+  console.debug("connectWS", `${window.location.protocol}://${window.location.host}/api/servers/${route.params.serverId}/ws`)
   ws.value?.close()
-  ws.value = new WebSocket(`${window.location.protocol}//${window.location.host}/api/servers/${route.params.id}/ws`);
+  ws.value = new WebSocket(`${window.location.protocol}//${window.location.host}/api/servers/${route.params.serverId}/ws`);
   ws.value.onmessage = (event) => {
     const payload = JSON.parse(event.data)
     console.debug("[WS] payload", payload)
