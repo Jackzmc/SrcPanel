@@ -74,8 +74,10 @@
           </div>
         </div>
         <div class="level-right">
-          <div class="level-">
-            <Icon v-if="refreshingServers" icon="fa-spinner" spin>Refreshing</Icon>
+          <div class="level-item">
+            <button :class="['button',{'is-loading': refreshingServers}]" @click="fetchServers">
+              <Icon icon="fa-sync"></Icon>
+            </button>
           </div>
           <div class="level-item">
             <button class="button is-info" @click="setModal(Modal.NewServer)" data-tooltip="Start a new server instance">
@@ -137,7 +139,15 @@
             </tr>
           </tbody>
         </table>
-        <p class="has-text-centered py-6" v-if="filteredSortedServers.length === 0">
+        <div class="py-2 columns is-centered" v-if="refreshError">
+          <article class="column message is-half is-danger">
+            <div class="message-body">
+              <strong>Failed to fetch servers</strong><br>
+              <p>{{ refreshError }}</p>
+            </div>
+          </article>
+        </div>
+        <p class="has-text-centered py-6" v-else-if="filteredSortedServers.length === 0">
           No servers found matching your query
           <br>See <b>Search</b> section in <a @click="setModal(Modal.Help)">help</a> for more information
         </p>
@@ -272,6 +282,7 @@ let groups = ref<APIListServersV2_Groups>({})
 let serverList = ref<UIServerInfo[]>([])
 let sort = ref<{field: string, descending: boolean, sortFn: (a: UIServerInfo, b: UIServerInfo) => any}|undefined>(undefined)
 let refreshingServers = ref(false)
+let refreshError = ref()
 
 const selectedServers = computed(() => {
   return serverList.value.filter(s => s.checked)
@@ -357,6 +368,7 @@ function selectAllServers(event: Event) {
 
 async function fetchServers() {
   refreshingServers.value = true
+
   try {
     const response = await fetch("/api/servers/v2")
     if(response.ok) {
@@ -376,12 +388,22 @@ async function fetchServers() {
         } as UIServerInfo
       })
       refreshingServers.value = false
+      refreshError.value = undefined
+      return true
+    } else if(response.headers.get("Content-Type")?.startsWith("application/json")) {
+      const json = await response.json()
+      refreshingServers.value = false
+      refreshError.value = `Server returned error \"${json.message}\" code ${json.error}`
     } else {
-      alert("fail")
+      refreshingServers.value = false
+      refreshError.value = `Server returned an error: ${response.status} ${response.statusText}`
     }
   } catch(err) {
+    refreshingServers.value = false
+    refreshError.value = (err as any).message
     alert(err)
   }
+  return false
 }
 
 onMounted(() => {
@@ -390,8 +412,9 @@ onMounted(() => {
 let refreshTimer: any
 
 onMounted(async () => {
-  await fetchServers()
-  refreshTimer = setInterval(() => fetchServers(), LIST_REFRESH_INTERVAL)
+  if(await fetchServers()) { // only set timer on first success
+    refreshTimer = setInterval(() => fetchServers(), LIST_REFRESH_INTERVAL)
+  }
 })
 
 onBeforeUnmount(() => {
