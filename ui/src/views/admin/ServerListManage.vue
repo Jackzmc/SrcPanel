@@ -32,6 +32,54 @@
   <template #buttons><!-- hide buttons, need non-empty template: --><template /></template>
 </ModalCard>
 <div class="container is-fluid">
+  <div class="columns is-multiline">
+    <!-- <article class="column is-6 message is-danger">
+      <div class="message-body">
+        <button class="delete is-inline is-pulled-right"></button>
+        <h5 class="title is-5">Action(s) Failed</h5>
+        <table class="table is-narrow ">
+          <thead>
+            <tr>
+              <th>Server</th>
+              <th>Error Code</th>
+              <th>Message</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Server 1</td>
+              <td>ERROR_CODE</td>
+              <td>an error message here</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </article> -->
+    <div v-for="notification,i in notifications" :key="i" class="column is-6">
+      <div :class="['notification','is-'+notification.type,'is-light']">
+      <button class="delete" @click="notifications.splice(i,1)"></button>
+      <h5 class="title is-5">Action Error</h5>
+      <p class="subtitle">{{ notification.message }}</p>
+      <table :class="'table is-narrow is-fullwidth has-background-' + notification.type + '-light'">
+        <thead>
+          <tr>
+            <th>Server</th>
+            <th>Error Code</th>
+            <th>Message</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="action,i in notification.errors" :key="i">
+            <td>{{ action.groupId }}/{{ action.serverId }}</td>
+            <td>{{ action.code }}</td>
+            <td>{{ action.message }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    </div>
+
+  </div>
   <div class="box">
     <div class="is-fullwidth is-radiusless">
       <nav class="level">
@@ -174,7 +222,7 @@ import { PanelMetaInfo } from '../../../../common-types/Panel.js'
 import { notify } from '@kyvg/vue3-notification'
 
 const props = defineProps<{
-  meta: PanelMetaInfo
+  meta?: PanelMetaInfo
 }>()
 
 // The number of ms to refresh server list
@@ -297,6 +345,8 @@ let sort = ref<{field: string, descending: boolean, sortFn: (a: UIServerInfo, b:
 let refreshingServers = ref(false)
 let refreshError = ref()
 
+let notifications = ref<{ errors: { groupId: string, serverId: string, code: string, message: string }[], message?: string, type: string, expireOn: number }[]>([])
+
 const serverList = computed(() => Object.values(serverMap.value))
 const selectedServers = computed(() => {
   return serverList.value.filter(s => s.checked)
@@ -366,33 +416,76 @@ function setSort(field: string, fn: (a: UIServerInfo, b: UIServerInfo) => number
   sort.value.descending = !sort.value.descending
 }
 
+class ActionError extends Error {
+  groupId: string;
+  serverId: string;
+  code: string;
+  constructor(groupId: string, serverId: string, errorCode: string, message: string) {
+    super(message)
+    this.groupId = groupId
+    this.serverId = serverId
+    this.code = errorCode
+  }
+  get name() { return "ActionError"}
+}
+
 async function performAction(servers: UIServerInfo[]|null, action: ServerAction) {
   if(!servers) servers = selectedServers.value
   const promises = servers.map(async server => {
-    const response = await fetch(`/api/servers/${server.data.id}/action/${action.command}`, { method: "POST"})
-    if(response.ok) {
-      return true
-    } else if(response.headers.get("content-type")?.includes("application/json")) {
-      const json = await response.json()
-      throw new Error(`${json.error}: ${json.message}`)
-    } else {
-      throw new Error(`${response.status} ${response.statusText}`)
+    try {
+      const response = await fetch(`/api/servers/${server.data.id}/action/${action.command}`, { method: "POST"})
+      if(response.ok) {
+        return true
+      } else if(response.headers.get("content-type")?.includes("application/json")) {
+        const json = await response.json()
+        throw new ActionError(server.data.groupId, server.data.id, json.error, json.message)
+      } else {
+        throw new ActionError(server.data.groupId, server.data.id, response.status.toString(), response.statusText)
+      }
+    } catch(err) {
+      throw new ActionError(server.data.groupId, server.data.id, "FETCH_ERROR", (err as any).message)
     }
   })
   const results = await Promise.allSettled(promises)
   const failed = results.filter(r => r.status == "rejected")
   if(failed.length >= promises.length) {
-    notify({
-      type: "error",
-      title: `Action <b>${action.name}</b> failed`,
-      text: "All servers returned an error"
+    notifications.value.push({
+      type: "danger",
+      errors: failed.map(p => {
+        return {
+          groupId: p.reason.groupId,
+          serverId: p.reason.serverId,
+          code: p.reason.code,
+          message: p.reason.message
+        }
+      }),
+      message: "All servers returned an error",
+      expireOn: Date.now() + 1000 * 30,
     })
+    // notify({
+    //   type: "error",
+    //   title: `Action <b>${action.name}</b> failed`,
+    //   text: "All servers returned an error, click for more information",
+    // })
   } else if(failed.length > 0) {
-    notify({
-      type: "warn",
-      title: `Action <b>${action.name}</b> had errors`,
-      text: `${failed.length} servers had errors performing action`
+    notifications.value.push({
+      type: "warning",
+      errors: failed.map(p => {
+        return {
+          groupId: p.reason.groupId,
+          serverId: p.reason.serverId,
+          code: p.reason.code,
+          message: p.reason.message
+        }
+      }),
+      message: `${failed.length} servers had errors performing action`,
+      expireOn: Date.now() + 1000 * 30,
     })
+    // notify({
+    //   type: "warn",
+    //   title: `Action <b>${action.name}</b> had errors`,
+    //   text: `${failed.length} servers had errors performing action, click for more information`
+    // })
   } else {
     notify({
       type: "success",
@@ -413,6 +506,12 @@ function selectAllServers(event: Event) {
 
 async function fetchServers() {
   refreshingServers.value = true
+
+  for(const [i,notify] of notifications.value.entries()) {
+    if(notify.expireOn <= Date.now()) {
+      notifications.value.splice(i, 1)
+    }
+  }
 
   try {
     const response = await fetch("/api/servers/v2")

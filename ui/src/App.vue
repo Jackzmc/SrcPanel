@@ -3,7 +3,7 @@
   <div>
     <!-- <v-tour v-if="tour" :name="tour.name" :steps="tour.steps"></v-tour> -->
     <BirthdayComponent v-if="isBirthday" @close="closeBirthday" />
-    <Notifications position="top center" :duration=7000 @start="onNotificationShown" />
+    <Notifications position="top center" :duration=7000 @start="onNotificationShown" @click="(event: any) => event.data?.click()" />
     <NavBar v-if="!route.meta.hideNav" @logout="onLogout" :update-info="updateInfo" :priv-user="privUser" :meta="meta" />
     <br v-if="!route.meta.hideNav">
     <br v-if="route.meta.hideHero">
