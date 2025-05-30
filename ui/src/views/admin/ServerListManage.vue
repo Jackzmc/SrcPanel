@@ -80,7 +80,7 @@
             </button>
           </div>
           <div class="level-item">
-            <button class="button is-info" :disabled="meta?.settings['custom_servers.enabled'] ? undefined : true" @click="setModal(Modal.NewServer)" data-tooltip="Start a new server instance">
+            <button class="button is-info" :disabled="meta?.settings['custom_servers.enabled'] ? undefined : true" @click="setModal(Modal.NewServer)" data-tooltip="Start a new server instance (in development)">
               <Icon icon="fa-plus">New Server</Icon>
             </button>
           </div>

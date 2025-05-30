@@ -1,6 +1,6 @@
 <template>
 <div>
-  <div id="app">
+  <div>
     <!-- <v-tour v-if="tour" :name="tour.name" :steps="tour.steps"></v-tour> -->
     <BirthdayComponent v-if="isBirthday" @close="closeBirthday" />
     <Notifications position="top center" :duration=7000 @start="onNotificationShown" />
