@@ -45,18 +45,6 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             }]
         }))
         const servers = fastify.servers.getAll().map((server, i) => {
-            // FIXME: DEBUG TEST
-            if(i <= 2) server.status.data = {
-                "players": [
-                  "Disgruntled Pea",
-                  "Lucario",
-                  "MeliLost-greenbean-dealer-",
-                  "Garfield The Grafted"
-                ],
-                "maxplayers": 4,
-                "gamemode": "coop",
-                "map": "c7m1_docks"
-            }
             return {
                 id: server.id,
                 name: server.name,
