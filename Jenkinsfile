@@ -68,12 +68,9 @@ pipeline {
                     currentBuild.result == null || currentBuild.result == 'SUCCESS'  
                 }
             }
-            environment {
-                DEST_UI = '${DEPLOY_UI_PATH}/${env.BRANCH_NAME}'
-                DEST_SERVER = '${DEPLOY_SERVER_PATH}/${env.BRANCH_NAME}'
-            }
             steps {
-               
+                sh "export DEST_UI = '${DEPLOY_UI_PATH}/${env.BRANCH_NAME}'"
+                sh "export DEST_SERVER = '${DEPLOY_SERVER_PATH}/${env.BRANCH_NAME}'"
                 sh 'ssh-keyscan -t rsa ${SERVER} >> ~/.ssh/known_hosts'
                 sh 'echo $BRANCH_NAME $JOB_NAME'
                 sh 'echo $DEST_UI $DEST_SERVER'
