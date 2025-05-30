@@ -31,7 +31,7 @@
       <div class="list-item-title">
         Submit New Comment <template v-if="~discussion.flags & APIDiscussionFlags.CommentsPublic">(anonymously)</template>
       </div>
-      <div class="list-item-description" @mouseover="newComment.hovered = true" @mouseout="newComment.hovered = false">
+      <div class="list-item-description" @focus="newComment.hovered = true" @blur="newComment.hovered = false">
         <textarea v-model="newComment.content" type="text" @focus="newComment.focused = true" @blur="newComment.focused = false" :class="['input', {'expanded-box': newComment.focused || newComment.hovered }]" placeholder="Enter a comment" style="width:70%" cols=10 :rows="10"></textarea>
         <br>
         <div class="buttons mt-3">
