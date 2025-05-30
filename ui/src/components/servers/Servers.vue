@@ -1,7 +1,7 @@
 <template>
 <div>
   <template v-if="servers">
-    <ServerList v-for="group in servers" :key="group.id" :group="group"></ServerList>
+    <ServerTable v-for="group in servers" :key="group.id" :group="group"></ServerTable>
   </template>
   <div class="table-container" v-else>
     <template  v-for="i in 3" :key="i">
