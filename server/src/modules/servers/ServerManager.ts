@@ -22,6 +22,7 @@ import ServerGroup from './groups/ServerGroup.js';
 import { DynamicServerGroup } from './groups/DynamicServerGroup.js';
 import { StandardServerGroup } from './groups/StandardServerGroup.js';
 import { CustomServerGroup } from './groups/CustomServerGroup.js';
+import yaml from 'yaml'
 
 
 // How long after no status requests to switch from short to long refresh
@@ -528,22 +529,35 @@ export default class ServerManager {
     }
   }
 
+  #parseAction(action: any): ServerAction {
+    const requiredProperties = ["name", "command"]
+    for(const prop of requiredProperties) {
+      if(action[prop] == undefined) {
+        throw new Error(`Action is missing property \"${prop}\"` + action)
+      }
+    }
+    return {
+      name: action.name!,
+      command: action.command!,
+      isHidden: action.isHidden || false,
+      showWhen: action.showWhen || 'online',
+      color: action.color,
+      requiresFeatures: action.requires || [],
+      inQuickAction: action.inQuickAction || false
+    }
+  }
+
   async #loadActions() {
     try {
-      const content = await readFile(path.join(this.configDir, "actions.json"), 'utf-8')
-      const actionGroups = Json5.parse(content)
+      const content = await readFile(path.join(this.configDir, "actions.yml"), 'utf-8')
+      const actionGroups = yaml.parse(content)
 
       for(const [key, actions] of Object.entries<ServerAction[]>(actionGroups)) {
-        this.#actions[key] = actions.map((action: Partial<ServerAction>)  => {
-          return {
-            showWhen: "online",
-            ...action
-          } as ServerAction
-        })
+        this.#actions[key] = actions.map(this.#parseAction)
       }
     } catch(err) {
       if(err.code == "ENOENT") return
-      throw err
+      console.error(`[ServerManager] Parsing actions failed: `, err)
     }
   }
 
