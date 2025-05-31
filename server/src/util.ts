@@ -1,3 +1,5 @@
+import { stat } from "fs/promises"
+
 // Replaces any member of T that is set in replace, ignoring undefined
 export function replaceObject<T>(original: T, replace: Partial<T>): T {
     let obj = original
@@ -23,4 +25,14 @@ export class GenericError extends Error {
     constructor(message: string, public code: string, options?: ErrorOptions) {
         super(message, options)
     }
+}
+
+export async function doesFileExist(filename: string) {
+  try {
+    await stat(filename)
+    return true
+  } catch(err) {
+    if(err.code === "ENOENT") return false
+    throw err
+  }
 }

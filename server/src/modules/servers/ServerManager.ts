@@ -1,7 +1,7 @@
 import { mkdir, readFile, stat, open } from 'fs/promises'
 import Json5 from 'json5'
 import Server, { ConfigServerData } from './Server'
-import Share from '../Share.js';
+import Share from '../shares/Share.js';
 import path, { join } from 'path';
 import { open as sqliteOpen } from 'sqlite'
 import sqlite3 from 'sqlite3'
@@ -23,6 +23,7 @@ import { DynamicServerGroup } from './groups/DynamicServerGroup.js';
 import { StandardServerGroup } from './groups/StandardServerGroup.js';
 import { CustomServerGroup } from './groups/CustomServerGroup.js';
 import yaml from 'yaml'
+import { loadShares } from '../shares/index.js';
 
 
 // How long after no status requests to switch from short to long refresh
@@ -57,7 +58,7 @@ let _instance: ServerManager
 
 export default class ServerManager {
   // private servers: Record<string, Server> = {}
-  private addonShares: Record<string, Share> = {}
+  private fileShares: Record<string, Share> = {}
 
   private dataDir: string;
   private configDir: string;
@@ -381,20 +382,20 @@ export default class ServerManager {
   }
 
   public hasShare(shareId: string) {
-    return this.addonShares[shareId.toLowerCase()] != undefined
+    return this.fileShares[shareId.toLowerCase()] != undefined
   }
 
   public getShare(shareId?: string) {
     if(!shareId) return undefined
-    return this.addonShares[shareId.toLowerCase()]
+    return this.fileShares[shareId.toLowerCase()]
   }
 
   public get shares() {
-    return Object.values(this.addonShares).map(share => share.export())
+    return Object.values(this.fileShares).map(share => share.export())
   }
 
   public get shareIds() { 
-    return Object.keys(this.addonShares)
+    return Object.keys(this.fileShares)
   }
 
   async deleteGroup(groupId: string) {
@@ -430,16 +431,8 @@ export default class ServerManager {
       const servers = await readFile(path.join(this.configDir, "servers.json"), 'utf-8')
       await this.#loadGroups(Json5.parse(servers))
 
-      try {
-        const shares = await readFile(path.join(this.configDir, "shares.json"), 'utf-8')
-        await this.loadShares(Json5.parse(shares))
-      } catch(err) {
-        if(err.code !== "ENOENT") {
-          throw err
-        } else {
-          console.warn("[Warn] No shares.json file found, no shares will be loaded.", err.message)
-        }
-      }
+      this.fileShares = await loadShares(this.configDir, this.dataDir, this.#steam)
+
       // We don't need to await refresh
       this.#createLiveServer()
       this.refresh()
@@ -453,87 +446,11 @@ export default class ServerManager {
     }
   }
 
-  private async loadShares(shares: any) {
-    if(!shares) {
-      console.warn("[Warn] No shares to load")
-      return
-    }
-
-    try {
-      await mkdir(join(this.dataDir, "shares"))
-    } catch(err) {
-      if(err.code != "EEXIST") throw err
-    }
-
-    let numServers = 0, numGroups
-
-    for(const shareId in shares) {
-      let share = shares[shareId] as Partial<ShareInfo>
-      share.id = shareId
-      if(!share.sourceFolder) {
-        console.warn(`[ServerManager] WARN: Skipping share \"${shareId}\": Missing property 'sourceFolder' in config`)
-        continue
-      }
-      
-      if(!await doesFileExist(share.sourceFolder)) {
-        console.warn(`[ServerManager] WARN: Share \"${shareId}\": source folder does not exist (ENOENT)`)
-      }
-
-      const destinations = share.destinations as ShareDestinations || {}
-      shareLoop:
-      for(let [destKey, dest] of Object.entries(destinations)) {
-        if(!dest.paths || dest.paths.length === 0) {
-          console.warn(`[ServerManager] WARN: Share ${shareId}/${destKey} has no paths; skipping`)
-          continue shareLoop;
-        }
-        for(const path of dest.paths) {
-          if(!await doesFileExist(path)) {
-            console.warn(`[ServerManager] WARN: Share ${shareId}/${destKey} has invalid path "${path}" (ENOENT)`)
-          }
-        }
-        if(dest.groupIds) {
-          const groupIds: string[] = []
-          for(const groupId of dest.groupIds) {
-            if(this.#groups[groupId]) {
-              groupIds.push(groupId)
-              numGroups++
-            } else {
-               console.warn(`[ServerManager] WARN: Share ${shareId}/${destKey} includes non existent group id "${groupId}"`)
-              continue;
-            }
-          }
-          dest.groupIds = groupIds
-        }
-        if(dest.serverIds) {
-          const serverIds: string[] = []
-          for(const id of dest.serverIds) {
-            const _id = id.toLowerCase()
-            if(this.getServer(_id)) {
-              serverIds.push(_id)
-              numServers++
-            } else {
-              console.warn(`[ServerManager] WARN: Share ${shareId}/${destKey} includes non existent server id "${_id}"`)
-              continue;
-            }
-          }
-          dest.serverIds = serverIds
-        }
-      }
-
-      const db = await sqliteOpen({
-        filename: join(this.dataDir, `shares/${shareId.toLowerCase()}_cache.db`),
-        driver: sqlite3.Database
-      })
-      this.addonShares[shareId.toLowerCase()] = new Share(db, this.#steam, share)
-      console.info(`[ServerManager] Loaded share "${shareId}" with ${Object.keys(share.destinations!).length} destinations, ${numServers} servers, ${numGroups} groups`)
-    }
-  }
-
   #parseAction(action: any): ServerAction {
     const requiredProperties = ["name", "command"]
     for(const prop of requiredProperties) {
       if(action[prop] == undefined) {
-        throw new Error(`Action is missing property \"${prop}\"` + action)
+        throw new Error(`Action is missing property \"${prop}\" ` + JSON.stringify(action))
       }
     }
     return {
