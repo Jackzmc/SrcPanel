@@ -50,7 +50,7 @@ export type ConfigGroupData = ConfigStandaloneGroupData | ConfigDynamicGroupData
 // BECAUSE FOR SOME **** REASON THIS ISNT LOADING HERE:
 
 dotenv.config()
-const DEBUG_LIVE_SOCKET = process.env.DEBUG_LIVE_SOCKET != undefined
+const DebugLivePlugin = process.env.LIVE_PLUGIN_DEBUG != undefined
 
 let _instance: ServerManager
 
@@ -82,7 +82,7 @@ export default class ServerManager {
     this.dataDir = dataDir
     this.configDir = configDir
     this.#cfgManager = configManager
-    if(process.env.DOCKER_ENABLED) {
+    if(process.env.DOCKER_ENABLE) {
       this.#dynamicManager = new DynamicServerManager(this, configDir, {
         protocol: process.env.DOCKER_FORCE_PROTOCOL as "http" | "https" | "ssh" | undefined,
         host: process.env.DOCKER_HOST,
@@ -131,7 +131,7 @@ export default class ServerManager {
   }
 
   #debugLive(...args: any[]) {
-    if(DEBUG_LIVE_SOCKET)
+    if(DebugLivePlugin)
       console.debug("[ServerManager::Live]",...args)
   }
 
@@ -223,8 +223,8 @@ export default class ServerManager {
   #createLiveServer() {
     this.#socketClients = new Map()
     this.#liveErrors = createWriteStream(path.join(this.dataDir, "live_errors.log"))
-    const liveHost = process.env.PLUGIN_SOCKET_HOSTNAME || "127.0.0.1";
-    const livePort = process.env.PLUGIN_SOCKET_PORT ? parseInt(process.env.PLUGIN_SOCKET_PORT) ?? 7888 : 7888
+    const liveHost = process.env.LIVE_PLUGIN_HOSTNAME || "127.0.0.1";
+    const livePort = process.env.LIVE_PLUGIN_PORT ? parseInt(process.env.LIVE_PLUGIN_PORT) ?? 7888 : 7888
     // Create TCP socket
     this.#socket = net.createServer({
       keepAlive : true,
