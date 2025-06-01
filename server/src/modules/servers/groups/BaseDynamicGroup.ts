@@ -39,8 +39,6 @@ export default abstract class BaseDynamicServerGroup extends ServerGroup<DockerS
     }
 
     protected async registerInstance(instance: DynamicServerInstance, variables: Record<string, any> = {}) {
-        if(!this.template) this.template = this.manager.getTemplate(this.TemplateId)
-        if(!this.template) throw new Error(`Template ${this.TemplateId} not found`)
         const vars = {
             id: instance.TemplateId,
             index: Object.keys(this.servers).length + 1,

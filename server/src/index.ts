@@ -174,7 +174,7 @@ app.register(MiddleManager)
                 if(ext === "js" || ext === "ts") {
                     const prefix = (name === "index") ? rootPrefix : `${rootPrefix}${name}`
                     try {
-                        app.register(import(`file://${path.join(folderPath, dirent.name)}`), { prefix })
+                        await app.register(import(`file://${path.join(folderPath, dirent.name)}`), { prefix })
                     } catch(err) {
                         app.log.fatal(`Could not load route ${name}. prefix=${prefix}\n${err.stack}`)
                         process.exit(1)
@@ -186,7 +186,6 @@ app.register(MiddleManager)
     }
     if(hadSignal) return
     await loadRoutes(mainPrefix, path.join(__dirname, './routes'))
-
     try {
         await app.listen({
             port: Number(process.env.WEB_PORT) || 8081

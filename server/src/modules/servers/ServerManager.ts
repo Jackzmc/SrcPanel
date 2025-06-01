@@ -424,26 +424,21 @@ export default class ServerManager {
   async Load() {
     this.longRefreshInterval = await this.#cfgManager.GetKV<number>("servers.long_refresh_interval", 600)
     this.shortRefreshInterval = await this.#cfgManager.GetKV<number>("servers.short_refresh_interval", 30)
-    if(this.#dynamicManager)
+    if(this.#dynamicManager) {
       await this.#dynamicManager.Load()
-    try {
-      this.#actions = await this.#loadActions()
-
-      const groups = await loadGroups(this.configDir, this.#dynamicManager, this.#actions)
-
-      this.fileShares = await loadShares(this.configDir, this.dataDir, this.#steam)
-
-      // We don't need to await refresh
-      this.#createLiveServer()
-      this.refresh()
-      this.refreshTimer = setInterval(() => this.refresh(), this.longRefreshInterval)
-    } catch(err) {
-      if(err.code !== "ENOENT") {
-        throw err
-      } else {
-        console.warn("[Warn] No servers.json file found, no servers or shares will be loaded.", err.message)
-      }
     }
+    this.#actions = await this.#loadActions()
+
+    this.#groups = await loadGroups(this.configDir, this.#dynamicManager, this.#actions)
+
+
+    // We don't need to await refresh
+    this.#createLiveServer()
+    this.refresh()
+    this.refreshTimer = setInterval(() => this.refresh(), this.longRefreshInterval)
+
+    this.fileShares = await loadShares(this.configDir, this.dataDir, this.#steam)
+    console.log("[ServerManager] Done loading")
   }
 
   #parseAction(action: any): ServerAction {
