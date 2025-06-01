@@ -62,17 +62,15 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             }
         },
         async handler(req: FastifyRequest<{ Querystring: OpenIDQuery }>, reply: FastifyReply) {
-            if(req.query['openid.error']) {
-                return {
-                    error: 'OPENID_ERROR',
-                    message: req.query['openid.error']
-                }
-            } 
+
             const returnTo = req.query.return_uri ?? req.query['openid.return_to'] ?? await fastify.config.GetKV("domain", req.headers.host)
             const url = new URL(returnTo)
             const prefix = `${url.protocol}//${url.host}`
 
-            if(!req.query['openid.response_nonce']) {
+            if(req.query['openid.error']) {
+                req.log.error({ query: req.query, error: req.query['openid.error'] }, "[auth/steam] Openid error")
+                return reply.redirect(`${prefix}/error?type=oauth_error&provider=steam&oauth_error=GENERIC_OAUTH_ERROR&req_id=${req.id}`)
+            } else if(!req.query['openid.response_nonce']) {
                 req.log.error({ query: req.query }, "[auth/steam] Invalid callback, missing query")
                 return reply.redirect(`${prefix}/error?type=oauth_error&provider=steam&oauth_error=LOGIN_STALE_WAIT_AND_TRY_AGAIN&req_id=${req.id}`)
             }
@@ -98,11 +96,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
                     const userDetails = await getUserDetails(steamid)
                     if(!userDetails) {
-                         return reply.code(500).send({
-                            error: 'STEAM_API_ERROR',
-                            message: 'Could not get user details from Steam API',
-                            steamid: req.query['openid.identity']
-                        })
+                        req.log.error({ query: req.query}, "[auth/steam] User details failed")
+                        return reply.redirect(`${prefix}/error?type=oauth_error&provider=steam&oauth_error=STEAM_GET_USER_INFO_FAILED&req_id=${req.id}`)
                     }
 
                     const steamid2 = steamid.getSteam2RenderedID()
