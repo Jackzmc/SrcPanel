@@ -143,6 +143,14 @@
     <br>
     <div class="columns">
       <div class="column is-12">
+        <div class="py-2 columns is-centered" v-if="refreshError">
+          <article class="column message is-half is-danger">
+            <div class="message-body">
+              <strong>Failed to fetch servers</strong><br>
+              <p>{{ refreshError }}</p>
+            </div>
+          </article>
+        </div>
         <table class="table is-fullwidth is-hoverable">
           <thead>
             <tr class="header">
@@ -193,15 +201,7 @@
             </tr>
           </tbody>
         </table>
-        <div class="py-2 columns is-centered" v-if="refreshError">
-          <article class="column message is-half is-danger">
-            <div class="message-body">
-              <strong>Failed to fetch servers</strong><br>
-              <p>{{ refreshError }}</p>
-            </div>
-          </article>
-        </div>
-        <p class="has-text-centered py-6" v-else-if="filteredSortedServers.length === 0">
+        <p class="has-text-centered py-6" v-if="filteredSortedServers.length === 0">
           No servers found matching your query
           <br>See <b>Search</b> section in <a @click="setModal(Modal.Help)">help</a> for more information
         </p>

@@ -59,11 +59,13 @@ export default abstract class BaseDynamicServerGroup extends ServerGroup<DockerS
         const server = new DockerServer(this, {
                 id,
                 name: BaseDynamicServerGroup.formatTemplateVar(this.ServerTemplate.name ?? "", vars),
-                hostname: {
-                    public: instance.PublicIp,
-                    internal: instance.InternalIp
+                public: {
+                    host: instance.PublicIp,
+                    port: instance.Port
                 },
-                port: instance.Port,
+                internal: {
+                    host: instance.InternalIp
+                },
                 game: this.Game!, // is required and checked in groups/index
                 tags: this.ServerTemplate.tags ?? [],
                 activityId: this.ServerTemplate.activityId,

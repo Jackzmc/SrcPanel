@@ -1,10 +1,10 @@
 <template>
-  <div class="mb-4 box is-radiusless">
+  <div class="mb-4is-radiusless">
     <CreateServerModal :group="group" v-if="createModal" @close="createModal = false" />
     <h4 class="title is-4 mx-4">{{ group.name }}</h4>
     <p v-if="group.description" class="subtitle is-6">{{ group.description }}</p>
     <div class="table-container">
-      <table :class="['table','is-fullwidth']">
+      <table :class="['table','is-fullwidth','is-bordered']">
         <thead>
           <tr>
             <th>Name</th>
@@ -39,6 +39,7 @@
         </tfoot>
       </table>
     </div>
+    <br>
   </div>
 </template>
 

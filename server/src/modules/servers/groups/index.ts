@@ -21,6 +21,8 @@ async function loadData(configDir: string): Promise<{[key: string]: any}> {
 
 export async function loadGroups(configDir: string, dynamicManager: DynamicServerManager, actions: Record<string, ServerAction>) {
     const startTime = performance.now()
+
+    console.info("Actions: " + Object.keys(actions).join(" "))
     
     const raw = await loadData(configDir)
     const groups = {}
@@ -57,11 +59,14 @@ export interface ListGroupConfig extends BaseGroupConfig {
 export interface ListGroupConfig_Server {
     id: string,
     name?: string,
-    hostname: {
-        public: string,
-        internal?: string
+    public: {
+        host: string,
+        port: number
     },
-    port: number,
+    internal?: {
+        host?: string,
+        port?: number
+    },
     tags?: string[],
 
     game?: string,
@@ -90,9 +95,16 @@ function parseGroup(id: string, data: Record<string, any>): GroupConfig {
     if(data.servers) {
         const servers: Record<string, ListGroupConfig_Server> = Object.fromEntries(Object.entries<{[i:string]: any}>(data.servers)
             .map(([id, server]) => {
-                if(!server.hostname) throw new Error("Missing property 'server.hostname' in " + JSON.stringify(server))
-                const port = parseInt(server.port)
-                if(isNaN(port) || port <= 0 || port >= 65535) throw new Error("Port is invalid number, must be between 1 and 65535, is " + port)
+                if(!server.public) throw new Error("Missing property 'server.public' in " + JSON.stringify(server))
+                if(!server.public.host) throw new Error("Missing property 'server.public.host' in " + JSON.stringify(server))
+                if(!server.public.port) throw new Error("Missing property 'server.public.port' in " + JSON.stringify(server))
+
+                const pubPort = parseInt(server.public.port)
+                if(isNaN(pubPort) || pubPort <= 0 || pubPort >= 65535) throw new Error("'server.public.port' is invalid number, must be between 1 and 65535, is " + pubPort)
+                if(server.internal?.port) {
+                    const port = parseInt(server.internal.port)
+                    if(isNaN(port) || port <= 0 || port >= 65535) throw new Error("'server.internal.port' is invalid number, must be between 1 and 65535, is " + port)
+                }
                 if(server.rcon) {
                     if(server.rcon.password_env) {
                         server.rcon.password = process.env[server.rcon.password_env]
@@ -103,12 +115,15 @@ function parseGroup(id: string, data: Record<string, any>): GroupConfig {
                 const ret: ListGroupConfig_Server = {
                     id,
                     name: server.name,
-                    hostname: {
-                        public: server.hostname.public,
-                        internal: server.hostname.internal
+                    public: {
+                        host: server.public.host,
+                        port: server.public.port
+                    },
+                    internal: server.internal && {
+                        host: server.internal.host,
+                        port: server.internal.port
                     },
                     game: server.game,
-                    port: server.port,
                     tags: server.tags ?? [],
 
                     actionsIds: server.actions ?? [],
@@ -133,7 +148,7 @@ function parseGroup(id: string, data: Record<string, any>): GroupConfig {
         if(!data.game) throw new Error("Missing property 'docker.game' in " + JSON.stringify(data))
         const ret: DockerGroupConfig = {
             ...base,
-            actionsIds: [...base.actionsIds, "docker"],
+            actionsIds: [...base.actionsIds],
             game: data.game,
             docker: {
                 template: data.docker.template,
@@ -156,7 +171,6 @@ function parseGroup(id: string, data: Record<string, any>): GroupConfig {
 
 async function loadGroup(dynamicGroupManager: DynamicServerManager, actions: Record<string, ServerAction>, group: GroupConfig): Promise<ServerGroup> {
     const actionsList = resolveActions(actions, group)
-
 
     if('docker' in group) {
         const template = dynamicGroupManager.getTemplate(group.docker.template)
@@ -182,6 +196,8 @@ function resolveActions(actions: Record<string, ServerAction>, group: GroupConfi
     for(const actionId of group.actionsIds) {
         if(actions[actionId]) {
             list.push(actions[actionId])
+        } else {
+            console.warn(`Group ${group.id}: unknown action ${actionId}`)
         }
     }
     return list

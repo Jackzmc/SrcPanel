@@ -58,11 +58,15 @@ export interface ServerExtendedData extends BaseServerData {
 export interface CreateServerOptions {
   id : string;
   name?: string;
-  hostname: {
-    public: string,
-    internal?: string
+  public: {
+    host: string,
+    port: number
   },
-  port: number,
+  /// Optional, overrides public host and/or port when used for internal purposes (ex: status) 
+  internal?: {
+    host?: string,
+    port?: number
+  }
   game?: string,
   cfgDirectory?: string,
   logsPath?: string,
@@ -106,24 +110,24 @@ export default abstract class Server implements IAction {
   protected _wsClients: SocketClientUser[] = []
   #activeVoiceMembers: VoiceUser[]
 
-  protected publicHost: string // the IP or domain to show to end users
-  protected publicIp: string // the IP to show end users
-  protected internalIp: string   // the IP to use if set for internal requests (status) instead of internal
+  protected publicIp: string // the resolved IP to show end users
+  protected internalIp?: string   // the resolved IP to use if set for internal requests (status) instead of internal
 
     constructor(group: ServerGroup, server: CreateServerOptions, gamedig: GameDig) {
       this.#activeVoiceMembers = []
       this.#gamedig = gamedig
       this._group = group
-      this.publicHost = server.hostname.public
       this._options = {
         id: server.id,
         name: server.name,
-        hostname: server.hostname,
-        port: server.port,
+        public: server.public,
+        internal: server.internal,
         game: server.game,
         tags: server.tags,
         sortOrder: server.sortOrder,
       }
+      this._actions = [...group.Actions ]
+      if(server.actions) this._actions = [...this._actions, ...server.actions]
       // this._actions = group.Actions.map(a => {
       //   return {
       //     ...a, 
@@ -139,7 +143,7 @@ export default abstract class Server implements IAction {
       }
       if(server.rcon) {
         this._rcon = new RconFeature(this, {
-          host: server.rcon.ip || this.internalIp,
+          host: server.rcon.ip || this.InternalIp,
           password: server.rcon.password,
           port: server.rcon.port
         })
@@ -150,8 +154,8 @@ export default abstract class Server implements IAction {
 
     async Init(): Promise<void> {
       // Resolve hostnames to IPa ddresses
-      this.publicIp = await resolveIPv4(this._options.hostname.public)
-      if(this._options.hostname.internal) this.internalIp = await resolveIPv4(this._options.hostname.internal)
+      this.publicIp = await resolveIPv4(this._options.public.host)
+      if(this._options.internal?.host) this.internalIp = await resolveIPv4(this._options.internal?.host)
 
       await Promise.allSettled([
           this.Console?.init(),
@@ -172,15 +176,18 @@ export default abstract class Server implements IAction {
     get InternalIp() {
       return this.internalIp ?? this.publicIp
     }
+    get InternalPort() {
+      return this._options.internal?.port ?? this._options.public.port
+    }
     get PublicIp() {
       return this.publicIp
     }
     
     get id(): string { return this._options.id }
     get name(): string|undefined { return this._options.name }
-    get host(): string { return this.publicHost }
+    get host(): string { return this._options.public.host }
     get ip(): string { return this.publicIp }
-    get port(): number { return this._options.port }
+    get port(): number { return this._options.public.port }
     get game(): string { return this._options.game ?? this._group.Game! }
     get actions(): ServerAction[] { return this._actions }
     get sortOrder(): number { return this._options.sortOrder ?? 0 }
@@ -196,7 +203,7 @@ export default abstract class Server implements IAction {
         status: this._status,
         tags: this.tags,
         sortOrder: this.sortOrder,
-        port: this._options.port,
+        port: this._options.public.port,
         id: this._options.id,
         name: this._options.name,
         ip: this.ip
@@ -290,7 +297,7 @@ export default abstract class Server implements IAction {
     async refreshStatus( bypassCache: boolean = false): Promise<void> {
         // Don't need to do a refresh if we have plugin data
         if(this.Plugin && this.Plugin.authenticated) return;
-        await this.getStatus(bypassCache, this.game, this.ip, this.port)
+        await this.getStatus(bypassCache, this.game, this.InternalIp, this.InternalPort)
     }
 
     addWSClient(client: SocketClientUser) {
