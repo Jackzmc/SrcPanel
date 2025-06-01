@@ -123,7 +123,6 @@ export default class DynamicServerManager {
         try {
             const templatesFile = await readFile(path.join(this.#configDir, "templates.yml"), 'utf-8')
             const templates = yaml.parse(templatesFile)
-            console.log('templates', templates)
             for(const [id, data] of Object.entries(templates)) {
                 // if(!data.serverTemplate) throw new Error(`Template ${id} missing 'server_template' field`)
                 // TODO: verify

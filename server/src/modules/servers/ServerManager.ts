@@ -1,16 +1,12 @@
 import { mkdir, readFile, stat, open } from 'fs/promises'
-import Json5 from 'json5'
 import Server, { ConfigServerData } from './Server'
 import Share from '../shares/Share.js';
-import path, { join } from 'path';
-import { open as sqliteOpen } from 'sqlite'
-import sqlite3 from 'sqlite3'
+import path from 'path';
 import SteamAPI from '../steam.js'
-import { ShareDestinations, ShareInfo } from '../../../../common-types/Share.js'
 import ConfigManager from '../ConfigManager.js'
-import { GroupInfo, ServerAction, ServerType, SERVER_TYPE_MAP, DynamicGroupInfo, StandardGroupInfo } from '../../../../common-types/Server.js'
+import { ServerAction, ServerType } from '../../../../common-types/Server.js'
 import net from 'net'
-import { LiveRecordType, LiveRecordGame, LiveRecord, LiveRecordResponse, LiveRecordSurvivor, LiveRecordClient, LiveRecordInfected, LiveRecordFinaleInfo, LiveRecordSurvivorItems, LiveRecordCommandResponse, PluginTokenPayload } from '../../../../common-types/Live.js';
+import { LiveRecordType, LiveRecordResponse,PluginTokenPayload } from '../../../../common-types/Live.js';
 import BufferReader from '../BufferReader.js';
 import PluginSocket from './PluginSocket.js';
 import JWT from '../../jwt-promise.js';
@@ -20,8 +16,6 @@ import { GameDig, QueryOptions } from 'gamedig';
 import DynamicServerManager from './docker/DynamicServerManager.js';
 import ServerGroup from './groups/ServerGroup.js';
 import { DynamicServerGroup } from './groups/DynamicServerGroup.js';
-import { StandardServerGroup } from './groups/StandardServerGroup.js';
-import { CustomServerGroup } from './groups/CustomServerGroup.js';
 import yaml from 'yaml'
 import { loadShares } from '../shares/index.js';
 import { loadGroups } from './groups/index.js';
@@ -399,24 +393,6 @@ export default class ServerManager {
     return Object.keys(this.fileShares)
   }
 
-  async deleteGroup(groupId: string) {
-    delete this.#groups[groupId]
-  }
-  async setGroup(id: string, group: string) {
-
-  }
-  async addGroup(group: string) {
-
-  }
-
-  async deleteServer(server: string) {
-
-  }
-
-  async putServer(serveR: Server) {
-
-  }
-
   /**
    * Loads all servers and shares from their respective json files
    */
@@ -477,68 +453,6 @@ export default class ServerManager {
     }
   }
 
-  // async #loadGroups(config: any) {
-  //   const startTime = Date.now()
-  //   for(const [groupId, data] of Object.entries<ConfigGroupData>(config)) {
-  //     let actions: ServerAction[] = []
-  //     if(data.actionSources) {
-  //       // Add 'docker' action group for docker server groups
-  //       if('templateId' in data) {
-  //         // Resolve [id1, id2] -> [action1, action2]
-  //         data.actionSources.push("docker")
-  //       }
-        
-  //       actions = data.actionSources.reduce((list, actionGroupId) => {
-  //         if(!this.#actions[actionGroupId]) {
-  //           console.warn(`[ServerManager] WARN: Group ${groupId} references missing action group: ${actionGroupId}`)
-  //           return list
-  //         }
-  //         return list.concat(this.#actions[actionGroupId])
-  //       }, [] as ServerAction[])
-  //     }
-  //     if('templateId' in data) {
-  //       if(!this.#dynamicManager) {
-  //         console.warn(`[ServerManager] WARN: Found templated server config but docker support is not enabled (DOCKER_ENABLED set to 1); skipping`)
-  //         continue;
-  //       }
-  //       if('groupType' in data && data.groupType === "custom") {
-  //         const group = new CustomServerGroup(this.#dynamicManager, groupId, {
-  //           name: data.name,
-  //           type: data.type,
-  //           actions,
-  //           templateId: data.templateId,
-  //           serverTemplate: data.serverTemplate,
-  //         })
-  //         this.#groups[groupId] = group
-  //       } else {
-  //         const group = new DynamicServerGroup(this.#dynamicManager, groupId, {
-  //           name: data.name,
-  //           type: data.type,
-  //           actions,
-  //           templateId: data.templateId,
-  //           serverTemplate: data.serverTemplate,
-  //           minServers: data.minServers
-  //         })
-  //         this.#groups[groupId] = group
-  //       }
-  //     } else if('servers' in data) {
-  //       const group = new StandardServerGroup(groupId, {
-  //         name: data.name,
-  //         type: data.type,
-  //         actions
-  //       })
-  //       await group.ParseServers(data.servers)
-  //       this.#groups[groupId] = group
-  //     } else {
-  //       console.error(`[ServerManager] ERROR: Unknown group type for group \"${groupId}\" (no 'templateId' or 'servers')`)
-  //     }
-  //   }
-
-  //   // await Promise.allSettled(serverPromises)
-  //   const endTime = Date.now() - startTime
-  //   console.log(`[ServerManager] Loaded ${Object.keys(this.#groups).length} groups and total of ${this.Count} servers in ${endTime.toFixed(1)} ms`)
-  // }
-
   get Count() {
     let count = 0
     for(const group of Object.values(this.#groups)) {
@@ -557,15 +471,5 @@ export default class ServerManager {
       attemptTimeout: 5000,
       ...options,
     })
-  }
-}
-
-async function doesFileExist(filename: string) {
-  try {
-    await stat(filename)
-    return true
-  } catch(err) {
-    if(err.code === "ENOENT") return false
-    throw err
   }
 }

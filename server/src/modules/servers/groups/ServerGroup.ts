@@ -55,6 +55,10 @@ export default class ServerGroup<T extends Server = Server> {
         return null
     }
 
+    removeServer(server: T) {
+        delete this.servers[server.id]
+    }
+
     async performActionAll(command: string, namespace: string) {
         for(const server of Object.values(this.servers)) {
             await server.performAction(command, namespace)
