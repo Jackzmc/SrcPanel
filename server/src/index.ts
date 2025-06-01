@@ -173,7 +173,8 @@ app.register(MiddleManager)
     await loadRoutes(mainPrefix, path.join(__dirname, './routes'))
     try {
         await app.listen({
-            port: Number(process.env.WEB_PORT) || 8081
+            host: process.env.LISTEN_HOST,
+            port: Number(process.env.LISTEN_PORT) || 8081
         })
     } catch (err) {
         app.log.error(err)
