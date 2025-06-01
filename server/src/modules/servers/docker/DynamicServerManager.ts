@@ -6,6 +6,7 @@ import DynamicServerInstance from './DynamicServerInstance.js';
 import ServerManager from '../ServerManager.js';
 import { DynamicServerGroup } from '../groups/DynamicServerGroup.js';
 import { ServerEvent } from '../DockerServer.js';
+import yaml from 'yaml';
 export interface DockerTemplateConfig {
     id: string
     network?: "host" | string,
@@ -19,6 +20,7 @@ export interface DockerTemplateConfig {
 export interface ServerTemplate {
     name?: string,
     tags?: string[],
+    host?: string
 
     game?: string,
     sortOrder?: number,
@@ -119,9 +121,11 @@ export default class DynamicServerManager {
 
     async #loadTemplates() {
         try {
-            const templatesFile = await readFile(path.join(this.#configDir, "templates.json"), 'utf-8')
-            const templates = Json5.parse(templatesFile)
+            const templatesFile = await readFile(path.join(this.#configDir, "templates.yml"), 'utf-8')
+            const templates = yaml.parse(templatesFile)
+            console.log('templates', templates)
             for(const [id, data] of Object.entries(templates)) {
+                // if(!data.serverTemplate) throw new Error(`Template ${id} missing 'server_template' field`)
                 // TODO: verify
                 const config = {
                     ...data as DockerTemplateConfig,
@@ -139,9 +143,7 @@ export default class DynamicServerManager {
             }
             console.info(`[ServerManager/docker] Loaded ${Object.keys(this.#templates).length} templates`)
         } catch(err) {
-            if(err.code == "ENOENT")
-                return null
-            console.error("[ServerManager] Error: Failed to load templates.json: ", err)
+            console.error("[ServerManager] Error: Failed to load templates.yaml: ", err)
         }
     }
 

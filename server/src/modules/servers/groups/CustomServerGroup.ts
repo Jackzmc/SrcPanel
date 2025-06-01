@@ -14,7 +14,6 @@ import BaseDynamicServerGroup from './BaseDynamicGroup.js';
 export interface DynamicGroupServerTemplate {
     name?: string,
     host: string,
-    ip: string,
     activityId?: string,
     tags?: string[],
     sortOrder?: number,
@@ -32,8 +31,8 @@ const MAX_EMPTY_AUTO_SHUTDOWN_TIME = 1000 * 60 * 24
 const CHECK_SERVER_INTERVAL = 1000 * 60 * 5
 
 export class CustomServerGroup extends BaseDynamicServerGroup {
-    constructor(dynamicManager: DynamicServerManager, group: DockerGroupConfig, actions: ServerAction[] = []) {
-        super(dynamicManager, group, actions)
+    constructor(dynamicManager: DynamicServerManager, group: DockerGroupConfig, template: DockerTemplateContainer, actions: ServerAction[] = []) {
+        super(dynamicManager, group, template, actions)
         this.#checkServers()
         setInterval(() => this.#checkServers(), CHECK_SERVER_INTERVAL)
     }

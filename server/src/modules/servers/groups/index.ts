@@ -90,10 +90,9 @@ function parseGroup(id: string, data: Record<string, any>): GroupConfig {
     if(data.servers) {
         const servers: Record<string, ListGroupConfig_Server> = Object.fromEntries(Object.entries<{[i:string]: any}>(data.servers)
             .map(([id, server]) => {
-                if(!server.hostname) throw new Error("Missing property server in " + JSON.stringify(server))
-                if(!server.hostname) throw new Error("Missing property server.hostname in " + JSON.stringify(server))
+                if(!server.hostname) throw new Error("Missing property 'server.hostname' in " + JSON.stringify(server))
                 const port = parseInt(server.port)
-                if(isNaN(port) || port <= 0 || port >= 65535) throw new Error("Port is invalid number, must be between 1 and 65535")
+                if(isNaN(port) || port <= 0 || port >= 65535) throw new Error("Port is invalid number, must be between 1 and 65535, is " + port)
                 if(server.rcon) {
                     if(server.rcon.password_env) {
                         server.rcon.password = process.env[server.rcon.password_env]
@@ -142,10 +141,10 @@ function parseGroup(id: string, data: Record<string, any>): GroupConfig {
             }
         }
         if(ret.docker.custom) {
-            ret.docker.min = parseInt(data.docker.min)
-            ret.docker.max = parseInt(data.docker.max)
-            if(isNaN(ret.docker.min) || ret.docker.min < 0) throw new Error("Property 'docker.min' is invalid, it must be a number >= 0")
-            if(isNaN(ret.docker.max) || ret.docker.max < 0) throw new Error("Property 'docker.max' is invalid, it must be a number >= 0")
+            ret.docker.min = data.docker.min ? parseInt(data.docker.min) : 0
+            ret.docker.max = ret.docker.max && parseInt(data.docker.max)
+            if(isNaN(ret.docker.min) || ret.docker.min < 0) throw new Error("Property 'docker.min' is invalid, it must be a number >= 0, in " + JSON.stringify(data))
+            if(ret.docker.max && (isNaN(ret.docker.max) || ret.docker.max < 0)) throw new Error("Property 'docker.max' is invalid, it must be a number >= 0, in " + JSON.stringify(data))
             if(ret.docker.max != undefined && ret.docker.min != undefined && ret.docker.max < ret.docker.min) 
                 throw new Error("Property 'docker.max' must be greater than 'docker.min'")
             
@@ -158,11 +157,15 @@ function parseGroup(id: string, data: Record<string, any>): GroupConfig {
 async function loadGroup(dynamicGroupManager: DynamicServerManager, actions: Record<string, ServerAction>, group: GroupConfig): Promise<ServerGroup> {
     const actionsList = resolveActions(actions, group)
 
-    if('docker' in group) {1
+
+    if('docker' in group) {
+        const template = dynamicGroupManager.getTemplate(group.docker.template)
+        if(!template) throw new Error(`Group docker template ${group.docker.template} not found`)
+
         if(group.docker.custom) {
-            return new CustomServerGroup(dynamicGroupManager, group, actionsList)
+            return new CustomServerGroup(dynamicGroupManager, group, template, actionsList)
         } else {
-            return new DynamicServerGroup(dynamicGroupManager, group, actionsList)
+            return new DynamicServerGroup(dynamicGroupManager, group, template, actionsList)
         }
     } else if('servers' in group) {
         const instance = new StandardServerGroup(group, actionsList)

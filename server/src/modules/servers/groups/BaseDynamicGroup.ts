@@ -8,15 +8,14 @@ import ServerGroup from "./ServerGroup.js"
 import DNS from 'dns/promises';
 
 export default abstract class BaseDynamicServerGroup extends ServerGroup<DockerServer> {
-    protected template: DockerTemplateContainer
-    protected serverTemplate: DynamicGroupServerTemplate
     protected manager: DynamicServerManager
+    protected template: DockerTemplateContainer
 
 
-    constructor(dynamicManager: DynamicServerManager, group: DockerGroupConfig, actions: ServerAction[] = []) {
+    constructor(dynamicManager: DynamicServerManager, group: DockerGroupConfig, template: DockerTemplateContainer, actions: ServerAction[] = []) {
         super(group.id, group, actions)
         this.manager = dynamicManager
-        this.template = dynamicManager.getTemplate(group.docker.template)
+        this.template = template
     }
 
     get TemplateId() {
@@ -24,7 +23,11 @@ export default abstract class BaseDynamicServerGroup extends ServerGroup<DockerS
     }
 
     get TemplateConfig() {
-        return this.template.config
+        return this.template?.config
+    }
+
+    get ServerTemplate() {
+        return this.template?.config.serverTemplate ?? {}
     }
 
     static formatTemplateVar(template: string, variables: Record<string, string | number>) {
@@ -36,6 +39,8 @@ export default abstract class BaseDynamicServerGroup extends ServerGroup<DockerS
     }
 
     protected async registerInstance(instance: DynamicServerInstance, variables: Record<string, any> = {}) {
+        if(!this.template) this.template = this.manager.getTemplate(this.TemplateId)
+        if(!this.template) throw new Error(`Template ${this.TemplateId} not found`)
         const vars = {
             id: instance.TemplateId,
             index: Object.keys(this.servers).length + 1,
@@ -44,7 +49,7 @@ export default abstract class BaseDynamicServerGroup extends ServerGroup<DockerS
             ...variables,
         }
         const id = `${this.Id}-${instance.Port}`
-        const ip = BaseDynamicServerGroup.formatTemplateVar(this.serverTemplate.host, vars)
+        const ip = BaseDynamicServerGroup.formatTemplateVar(this.ServerTemplate.host ?? "%ip%", vars)
         const [, host, port] = ip.match(/([a-zA-Z0-9.]+):?(\d*)/) ?? []
         let address = instance.PublicIp
         try {
@@ -55,17 +60,16 @@ export default abstract class BaseDynamicServerGroup extends ServerGroup<DockerS
         }
         const server = new DockerServer(this, {
                 id,
-                name: BaseDynamicServerGroup.formatTemplateVar(this.serverTemplate.name ?? "", vars),
+                name: BaseDynamicServerGroup.formatTemplateVar(this.ServerTemplate.name ?? "", vars),
                 hostname: {
                     public: instance.PublicIp,
                     internal: instance.InternalIp
                 },
                 port: instance.Port,
                 game: this.Game!, // is required and checked in groups/index
-                tags: this.serverTemplate.tags ?? [],
-                actions: this.serverTemplate.actions ?? [],
-                activityId: this.serverTemplate.activityId,
-                sortOrder: this.serverTemplate.sortOrder
+                tags: this.ServerTemplate.tags ?? [],
+                activityId: this.ServerTemplate.activityId,
+                sortOrder: this.ServerTemplate.sortOrder
             }, instance)
         instance.setServer(server)
         await server.Init()

@@ -120,7 +120,7 @@ export default abstract class Server implements IAction {
         name: server.name,
         hostname: server.hostname,
         port: server.port,
-        game: this._options.game,
+        game: server.game,
         tags: server.tags,
         sortOrder: server.sortOrder,
       }

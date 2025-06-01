@@ -8,6 +8,7 @@ import { ServerAction } from "../../../../../common-types/Server.js";
 import DockerServer from "../DockerServer.js";
 import { DockerGroupConfig } from "./index.js";
 import BaseDynamicServerGroup from "./BaseDynamicGroup.js";
+import { DockerTemplateContainer } from '../docker/DynamicServerManager';
 
 
 export interface DynamicGroupServerTemplate {
@@ -34,12 +35,12 @@ const MIN_EMPTY_TIME_FOR_PURGE = 1000 * 60 * 30
 const CHECK_SERVER_INTERVAL = 1000 * 60 * 5
 
 export class DynamicServerGroup extends BaseDynamicServerGroup {
-    #minServers: number
+    #minServers: number 
     #maxEmptyServers: number | null = null
 
  
-    constructor(dynamicManager: DynamicServerManager, group: DockerGroupConfig, actions: ServerAction[]) {
-        super(dynamicManager, group, actions)
+    constructor(dynamicManager: DynamicServerManager, group: DockerGroupConfig, template: DockerTemplateContainer, actions: ServerAction[]) {
+        super(dynamicManager, group, template, actions)
         this.#minServers = group.docker.min || 0
         this.#maxEmptyServers = group.docker.max ?? null
 
