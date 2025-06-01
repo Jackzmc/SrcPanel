@@ -1,9 +1,6 @@
 import pino from 'pino';
 import { mkdir } from 'fs'
 
-mkdir("logs", (e) => {})
-
-
 const envToLogger = {
   development: {
     transport: {
@@ -15,13 +12,6 @@ const envToLogger = {
             ignore: 'pid,hostname',
           },
         }
-        // {
-        //   level: 'debug',
-        //   target: "pino/file",
-        //   options: {
-        //     destination: process.env.LOG_PATH || "logs/output.log",
-        //   },
-        // }
       ]
     },
     level: process.env.FASTIFY_DEBUG_LEVEL || 'debug'
@@ -37,13 +27,6 @@ const envToLogger = {
             translateTime: 'SYS:hh:MM',
             ignore: 'pid,hostname',
           },
-        },
-        {
-          level: 'debug',
-          target: "pino/file",
-          options: {
-            destination: process.env.LOG_PATH || "/var/log/admin-panel.log",
-          },
         }
       ]
     },
@@ -51,7 +34,20 @@ const envToLogger = {
   test: false,
 }
 
-const logger = pino(envToLogger[process.env.NODE_ENV ?? "development"]);
+const logObj = envToLogger[process.env.NODE_ENV ?? "development"]
+if(process.env.LOG_PATH) {
+
+  mkdir("logs", (e) => {})
+  logObj.transport.targets.push({
+    level: 'debug',
+    target: "pino/file",
+    options: {
+      destination: process.env.LOG_PATH,
+    },
+  })
+  console.debug("logging to", process.env.LOG_PATH)
+}
+const logger = pino(logObj);
 
 
 export default logger;
