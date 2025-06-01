@@ -2,6 +2,6 @@ dist/
 node_modules/
 .env
 config/*
-!config/*.sample.json
+!config/*.sample.yml
 data/
 content
