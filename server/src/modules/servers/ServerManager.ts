@@ -19,6 +19,9 @@ import { DynamicServerGroup } from './groups/DynamicServerGroup.js';
 import yaml from 'yaml'
 import { loadShares } from '../shares/index.js';
 import { loadGroups } from './groups/index.js';
+import logger from '../../logger.js'
+const log = logger.child({ name: "ServerManager" })
+const liveLog = log.child({ name: "ServerManager/Live" })
 
 
 // How long after no status requests to switch from short to long refresh
@@ -129,7 +132,7 @@ export default class ServerManager {
 
   #debugLive(...args: any[]) {
     if(DebugLivePlugin)
-      console.debug("[ServerManager::Live]",...args)
+      liveLog.debug("",...args)
   }
 
   async #authenticateSocket(client: PluginSocket, reader: BufferReader): Promise<boolean> {
@@ -137,7 +140,7 @@ export default class ServerManager {
     const record = PluginSocket.ParseRecord(reader)
     // skip any other type until authenticated
     if(record.type != LiveRecordType.Auth) {
-      console.warn("[ServerManager] Got non-auth packets when not-authenticated, ignoring")
+      log.warn("Got non-auth packets when not-authenticated, ignoring")
       return false
     }
     try {
@@ -155,7 +158,7 @@ export default class ServerManager {
         return false
       }
     } catch(err) {
-        console.error("[ServerManager] Auth Error: ", err)
+        log.error("Live auth Error: ", err)
         client.send(LiveRecordResponse.Error, err.message)
         return false
     }
@@ -177,7 +180,7 @@ export default class ServerManager {
             await ps.sendInit()
           }
         } catch(err) {
-          console.error("[ServerManager] Bad Auth:", err);
+          log.error("Bad live auth:", err);
         }
         return
       }
@@ -196,7 +199,7 @@ export default class ServerManager {
           }
         } catch(err) {
           this.#liveErrors.write(`buffer: ${reader.buffer.toString('hex')}\n`)
-          console.warn(`[ServerManager] bad packet: ${err}\nbuffer: ${reader.buffer.toString('hex')}`, err.stack)
+          liveLog.warn(`bad packet: ${err}\nbuffer: ${reader.buffer.toString('hex')}`, err.stack)
           continue
         }
 
@@ -228,11 +231,11 @@ export default class ServerManager {
     }, this.#onLiveClient.bind(this))
       .on('error', (err) => {
         // socket.send(SocketResponse.Error.toString())
-        console.error(`[ServerManager::Live] Live server error: \n${err}`)
+        liveLog.error(`server error: \n${err}`)
       })
 
       .listen(livePort, liveHost, () => {
-        console.info(`[ServerManager::Live] Live server listening on ${liveHost}:${livePort}`)
+        liveLog.info(`server listening on ${liveHost}:${livePort}`)
       })
     this.#socket.maxConnections = MAX_SOCKET_CONNECTIONS
 
@@ -414,7 +417,7 @@ export default class ServerManager {
     this.refreshTimer = setInterval(() => this.refresh(), this.longRefreshInterval)
 
     this.fileShares = await loadShares(this.configDir, this.dataDir, this.#steam)
-    console.log("[ServerManager] Done loading")
+    log.info("Done loading")
   }
 
   #parseAction(action: any): ServerAction {

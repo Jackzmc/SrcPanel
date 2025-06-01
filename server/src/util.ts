@@ -49,3 +49,4 @@ export async function resolveIPv4(host: string): Promise<string> {
     const lookup = await DNS.lookup(host, { verbatim: false, family: 4 })
     return lookup.address
 }
+

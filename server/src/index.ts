@@ -30,26 +30,11 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const MySQLStore = MySQLSession(FastifySession )
 
-const envToLogger = {
-  development: {
-    transport: {
-      target: 'pino-pretty',
-      options: {
-        translateTime: 'HH:MM:ss Z',
-        ignore: 'pid,hostname',
-      },
-    },
-    level: process.env.FASTIFY_DEBUG_LEVEL || 'debug'
-  },
-  production: {
-    level: process.env.FASTIFY_DEBUG_LEVEL || 'warn'
-  },
-  test: false,
-}
+import loggerInstance from './logger.js'
 const app = Fastify({
     pluginTimeout: 20000,
     trustProxy: process.env.NODE_ENV === "production",
-    logger: envToLogger[process.env.NODE_ENV ?? "development"]
+    loggerInstance
 })
 let hadSignal = false, ready = false
 async function onSignal(signal: NodeJS.Signals) {
