@@ -109,8 +109,8 @@
                   </td>
                 </tr>
                 <tr>
-                  <th>Server Type</th>
-                  <td>{{ serverInfo.type }}</td>
+                  <th>Game</th>
+                  <td>{{ serverInfo.game }}</td>
                 </tr>
                 <tr>
                   <th style="border-style: none">Features</th>
