@@ -31,6 +31,7 @@ const REQUIRED_PROPERTIES = ["name", "sourceFolder"]
 export async function loadShares(configDir: string, dataDir: string, steam: SteamAPI): Promise<Record<string, Share>> {
     const startTime = performance.now()
     await setupShareFolder(dataDir)
+    
     const raw = await loadShareData(configDir)
 
     const shares = {}

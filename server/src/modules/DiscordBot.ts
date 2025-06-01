@@ -81,7 +81,7 @@ export class DiscordBot {
                 const server = this.#servers.getServer(data.serverId)
                 if(server) {
                     if(channel.name != server.name)
-                        channel.setName(server.name)
+                        channel.setName(server.name ?? server.id)
                     reverseMap.set(data.serverId, id)
                     console.debug(`[Discord] found channel ${channel.id} --> server ${server.id}`)
                     if(!data.channelInviteLink) {
@@ -107,7 +107,7 @@ export class DiscordBot {
             if(!channel) {
                 // If there's no channel for this server, create it
                 channel = await category.children.create({
-                    name: server.name,
+                    name: server.name ?? server.id,
                     type: ChannelType.GuildVoice
                 })
                 const invite = await channel.createInvite()

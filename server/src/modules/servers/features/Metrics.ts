@@ -187,7 +187,7 @@ export default class MetricsFeature extends Feature {
       point.tag("server_id", this._server.id)
       point.tag("server_ip", this._server.ip)
       point.tag("server_port", this._server.port.toString())
-      point.tag("server_type", this._server.type)
+      point.tag("server_type", this._server.game)
       return point
     }
 

@@ -11,14 +11,17 @@ import { GameDig } from 'gamedig';
 import SocketClientUser from "./SocketClientUser.js";
 import { Server_Status, ServerOutPacket, ServerOutPayload } from "../../../../common-types/ServerWebsocket.js";
 import { LiveRecordResponse } from "../../../../common-types/Live.js";
+import { resolveIPv4, tryResolveIPv4 } from "../../util.js";
 
 const MIN_REFRESH_TIME = 10_000
 
 export interface BaseServerData {
   id : string;
   name: string;
-  host: string,
-  ip: string,
+  hostname: {
+    public: string,
+    internal?: string
+  },
   port: number,
   type: string,
   cfgDirectory?: string,
@@ -30,10 +33,8 @@ export interface BaseServerData {
     serviceName: string;
   },
   rcon? : {
-    password: {
-      env?: string,
-      value?: string
-    },
+    ip?: string
+    password?: string
     port?: number
   },
   tags: string[],
@@ -53,81 +54,112 @@ export interface ServerExtendedData extends BaseServerData {
   actions?: ServerAction[]
 }
 
-export interface RconData {
-  password: string
-}
 
-interface InternalServerInfo extends ServerData {
-    tags: string[],
-    status?: ServerStatus,
-    sortOrder: number,
+export interface CreateServerOptions {
+  id : string;
+  name?: string;
+  hostname: {
+    public: string,
+    internal?: string
+  },
+  port: number,
+  game?: string,
+  cfgDirectory?: string,
+  logsPath?: string,
+  activityId?: string,
+  sortOrder?: number,
+  systemd? : {
+    isUser: boolean;
+    serviceName: string;
+  },
+  rcon? : {
+    ip?: string
+    password: string
+    port?: number
+  },
+  tags?: string[],
+  actions?: ServerAction[]
 }
 
 export default abstract class Server implements IAction {
-    protected _info: InternalServerInfo
-    protected _group: ServerGroup
-    protected _logId?: string
-    protected _gameVersion: string | null
+  protected _options: CreateServerOptions
+  protected _group: ServerGroup
 
-    // Optional / non-universal features:
-    protected _rcon: RconFeature|null = null
-    protected _configs: ConfigsFeature|null = null
-    protected _logs: ConsoleFeature|null = null
-    // Core universal features (initalized here):
-    protected _plugin: PluginFeature
-    protected _metrics: MetricsFeature
+  // Optional / non-universal features:
+  protected _rcon: RconFeature|null = null
+  protected _configs: ConfigsFeature|null = null
+  protected _logs: ConsoleFeature|null = null
+  // Core universal features (initalized here):
+  protected _plugin: PluginFeature
+  protected _metrics: MetricsFeature
 
-    protected _actions: ServerAction[] = []
+  protected _actions: ServerAction[] = []
 
-    protected _status: ServerStatus
-    protected _online: boolean = false;
-    protected _lastRefresh: number
+  protected _status: ServerStatus
+  protected _online: boolean = false;
+  protected _lastRefresh: number
+  protected _gameVersion: string | null
 
-    #gamedig: GameDig
 
-    protected _wsClients: SocketClientUser[] = []
-    #activeVoiceMembers: VoiceUser[]
+  #gamedig: GameDig
 
-    constructor(group: ServerGroup, server: ServerExtendedData, gamedig: GameDig) {
+  protected _wsClients: SocketClientUser[] = []
+  #activeVoiceMembers: VoiceUser[]
+
+  protected publicHost: string // the IP or domain to show to end users
+  protected publicIp: string // the IP to show end users
+  protected internalIp: string   // the IP to use if set for internal requests (status) instead of internal
+
+    constructor(group: ServerGroup, server: CreateServerOptions, gamedig: GameDig) {
       this.#activeVoiceMembers = []
-        this.#gamedig = gamedig
-        this._group = group
-        this._info = {
-          id: server.id,
-          name: server.name,
-          host: server.host,
-          ip: server.ip,
-          port: server.port,
-          type: group.Type || /* legacy */ server.type,
-          tags: server.tags,
-          sortOrder: server.sortOrder ?? 0,
-        }
-        this._logId = server.activityId
-        this._actions = group.Actions.map(a => {
-          return {
-            ...a, 
-            inherited: true 
-          } as ServerAction
+      this.#gamedig = gamedig
+      this._group = group
+      this.publicHost = server.hostname.public
+      this._options = {
+        id: server.id,
+        name: server.name,
+        hostname: server.hostname,
+        port: server.port,
+        game: this._options.game,
+        tags: server.tags,
+        sortOrder: server.sortOrder,
+      }
+      // this._actions = group.Actions.map(a => {
+      //   return {
+      //     ...a, 
+      //     inherited: true 
+      //   } as ServerAction
+      // })
+        // if(server.actions) {
+        //   this._actions = this._actions.concat(server.actions)
+        // }
+      this._status = { data: null, source: "", lastStatusTime: null, lastEmptyTime: null }
+      if(server.cfgDirectory) {
+        this._configs = new ConfigsFeature(this, server.cfgDirectory)
+      }
+      if(server.rcon) {
+        this._rcon = new RconFeature(this, {
+          host: server.rcon.ip || this.internalIp,
+          password: server.rcon.password,
+          port: server.rcon.port
         })
-        if(server.actions) {
-          this._actions = this._actions.concat(server.actions)
-        }
-        this._status = { data: null, source: "", lastStatusTime: null, lastEmptyTime: null }
-        if(server.cfgDirectory) {
-          this._configs = new ConfigsFeature(this, server.cfgDirectory)
-        }
-        this._metrics = new MetricsFeature(this)
-        this._plugin = new PluginFeature(this)
+      }
+      this._metrics = new MetricsFeature(this)
+      this._plugin = new PluginFeature(this)
     }
 
-    async init(): Promise<void> {
-        await Promise.allSettled([
-            this.Console?.init(),
-            this.Rcon?.init(),
-            this.Configs?.init(),
-            this.Plugin?.init(),
-            this.Metrics?.init()
-        ])
+    async Init(): Promise<void> {
+      // Resolve hostnames to IPa ddresses
+      this.publicIp = await resolveIPv4(this._options.hostname.public)
+      if(this._options.hostname.internal) this.internalIp = await resolveIPv4(this._options.hostname.internal)
+
+      await Promise.allSettled([
+          this.Console?.init(),
+          this.Rcon?.init(),
+          this.Configs?.init(),
+          this.Plugin?.init(),
+          this.Metrics?.init()
+      ])
     }
 
     get Console(): ConsoleFeature | null { return this._logs }
@@ -135,25 +167,39 @@ export default abstract class Server implements IAction {
     get Configs(): ConfigsFeature | null { return this._configs }
     get Plugin(): PluginFeature { return this._plugin }
     get Metrics(): MetricsFeature { return this._metrics }
+
+    /** If an internal ip is set, returns that, otherwise public IP */
+    get InternalIp() {
+      return this.internalIp ?? this.publicIp
+    }
+    get PublicIp() {
+      return this.publicIp
+    }
     
-    get id() { return this._info.id }
-    get name() { return this._info.name }
-    get host() { return this._info.host }
-    get ip() { return this._info.ip }
-    get port() { return this._info.port }
-    get type() { return this._info.type }
-    get actions() { return this._actions }
-    get sortOrder() { return this._info.sortOrder }
+    get id(): string { return this._options.id }
+    get name(): string|undefined { return this._options.name }
+    get host(): string { return this.publicHost }
+    get ip(): string { return this.publicIp }
+    get port(): number { return this._options.port }
+    get game(): string { return this._options.game ?? this._group.Game! }
+    get actions(): ServerAction[] { return this._actions }
+    get sortOrder(): number { return this._options.sortOrder ?? 0 }
     get group() { return this._group }
-    get tags(): string[] { return this._info.tags }
+    get tags(): string[] { return this._options.tags ?? [] }
     get info(): ServerInfo {
       return {
-        ...this._info,
-        type: SERVER_TYPE_MAP[this._info.type] ?? this._info.type,
+        game: this.game,
+        type: this.game,
         features: this.features,
         actions: this.actions,
         online: this._online,
-        status: this._status
+        status: this._status,
+        tags: this.tags,
+        sortOrder: this.sortOrder,
+        port: this._options.port,
+        id: this._options.id,
+        name: this._options.name,
+        ip: this.ip
       }
     }
 
@@ -210,8 +256,9 @@ export default abstract class Server implements IAction {
       return (Date.now()/1000) - this._status.lastEmptyTime
     }
 
-    get activityLogId() { return this._logId }
+    get activityLogId() { return this._options.activityId }
 
+    /** Current version of game server, if detected from status / docker / etc */
     get GameVersion(): string | null {
       return this._gameVersion
     }
@@ -243,7 +290,7 @@ export default abstract class Server implements IAction {
     async refreshStatus( bypassCache: boolean = false): Promise<void> {
         // Don't need to do a refresh if we have plugin data
         if(this.Plugin && this.Plugin.authenticated) return;
-        await this.getStatus(bypassCache, this.type, this.ip, this.port)
+        await this.getStatus(bypassCache, this.game, this.ip, this.port)
     }
 
     addWSClient(client: SocketClientUser) {

@@ -6,6 +6,8 @@ import DynamicServerInstance from "../docker/DynamicServerInstance.js";
 import DNS from 'dns/promises';
 import { ServerAction } from "../../../../../common-types/Server.js";
 import DockerServer from "../DockerServer.js";
+import { DockerGroupConfig } from "./index.js";
+import BaseDynamicServerGroup from "./BaseDynamicGroup.js";
 
 
 export interface DynamicGroupServerTemplate {
@@ -31,44 +33,28 @@ const MIN_EMPTY_TIME_FOR_PURGE = 1000 * 60 * 30
 // The interval of time to check that servers exist and to purge/start servers
 const CHECK_SERVER_INTERVAL = 1000 * 60 * 5
 
-export class DynamicServerGroup extends ServerGroup<DockerServer> {
-    #templateId: string
-    #serverTemplate: DynamicGroupServerTemplate
+export class DynamicServerGroup extends BaseDynamicServerGroup {
     #minServers: number
-    #manager: DynamicServerManager
     #maxEmptyServers: number | null = null
 
-    constructor(dynamicManager: DynamicServerManager, id: string, options: DynamicCreateGroupOptions) {
-        super(id, options)
-        this.#manager = dynamicManager
-        this.#templateId = options.templateId
-        this.#serverTemplate = {
-            host: options.serverTemplate.host,
-            name: options.serverTemplate.name ?? this.Name,
-            // type: options.type,
-            activityId: options.serverTemplate.activityId,
-            ip: options.serverTemplate.ip,
-            tags: options.serverTemplate.tags ?? [],
-            cfgDirectory: options.serverTemplate.cfgDirectory
-        }
-        this.#minServers = options.minServers || 0
-        this.#maxEmptyServers = options.maxEmptyServers ?? null
-        if(this.#maxEmptyServers != undefined && this.#minServers > this.#maxEmptyServers) {
-            console.warn(`[ServerGroup::Dynamic] Group \"${id}\" has minServers >= maxEmptyServers, clamping maxEmpty to `)
-        }
+ 
+    constructor(dynamicManager: DynamicServerManager, group: DockerGroupConfig, actions: ServerAction[]) {
+        super(dynamicManager, group, actions)
+        this.#minServers = group.docker.min || 0
+        this.#maxEmptyServers = group.docker.max ?? null
 
         this.#checkServers()
         setInterval(() => this.#checkServers(), CHECK_SERVER_INTERVAL)
     }
 
     async *#iterateServers(): AsyncGenerator<[string, DockerServer]> {
-        for(const [id, server] of Object.entries(this._servers)) {
+        for(const [id, server] of Object.entries(this.servers)) {
             if(server instanceof DockerServer) {
                 const exists = await server.ContainerInstance.exists()
                 if(!exists)  {
                     console.warn(`[Servers/${this.Id}]: Container gone for server ${id}, removing`)
-                    this.#manager.unregisterInstance(server.ContainerInstance)
-                    delete this._servers[id]
+                    this.manager.unregisterInstance(server.ContainerInstance)
+                    delete this.servers[id]
                     continue
                 }
                 yield [id, server]
@@ -89,14 +75,14 @@ export class DynamicServerGroup extends ServerGroup<DockerServer> {
 
         }
         // Find any new instances
-        await this.#manager.findExisting()
-        const instances = this.#manager.getInstancesForTemplate(this.#templateId)
+        await this.manager.findExisting()
+        const instances = this.manager.getInstancesForTemplate(this.TemplateId)
         // TODO: check for # of servers that are active
         for(const instance of instances) {
             // Already configured, skip:
             if(instance.Server) continue
 
-            await this.#registerInstance(instance)
+            await this.registerInstance(instance)
             // const state = await instance.state()
             // if(state.Running) {
             //     activeCount++;
@@ -110,7 +96,7 @@ export class DynamicServerGroup extends ServerGroup<DockerServer> {
             //     }
             // }
         }
-        const servers = Object.values(this._servers).sort((a, b) => b.port - a.port)
+        const servers = Object.values(this.servers).sort((a, b) => b.port - a.port)
 
         // Ensure a minimum number of servers exist and are running
         for(let i = servers.length; i < this.#minServers; i++) {
@@ -126,7 +112,7 @@ export class DynamicServerGroup extends ServerGroup<DockerServer> {
         // Ensure a maximum number of servers
         if(this.#maxEmptyServers) {
             // Sort sorts descendingly by port, we want the latest created servers
-            const servers = Object.values(this._servers).sort((a, b) => b.port - a.port)
+            const servers = Object.values(this.servers).sort((a, b) => b.port - a.port)
             let maxEmptyTarget = Math.max(this.#maxEmptyServers, servers.length - this.#minServers) // number of servers we can purge
             if(maxEmptyTarget >= 0) { 
                 for(const server of servers) {
@@ -154,72 +140,18 @@ export class DynamicServerGroup extends ServerGroup<DockerServer> {
         }
     }
 
-    get TemplateId() {
-        return this.#templateId
-    }
-
-    static formatTemplateVar(template: string, variables: Record<string, string | number>) {
-        return Object.entries(variables)
-            .reduce((acc, [key, value]) => {
-                return acc.replace(new RegExp(`%${key}%`, 'g'), value.toString())
-            }, template)
-    }
-
-    async #registerInstance(instance: DynamicServerInstance) {
-        const vars = {
-            id: instance.TemplateId,
-            index: Object.keys(this._servers).length + 1,
-            ip: instance.PublicIp,
-            port: instance.Port,
-        }
-        const id = `${this.Id}-${instance.Port}`
-        if(!this.#serverTemplate.host) {
-            throw new Error(`Server template for group ${this.Id} has missing \"host\"`)
-        }
-        const host = DynamicServerGroup.formatTemplateVar(this.#serverTemplate.host, vars)
-        let address: string|undefined = undefined
-        try {
-            const lookup = await DNS.lookup(host, { verbatim: false, family: 4 })
-            address = lookup.address
-        } catch(err) {
-            throw new Error(`Could not resolve IP for hostname ${host}: ${err}`)
-        }
-
-        const server = new DockerServer(this, {
-                id,
-                name: DynamicServerGroup.formatTemplateVar(this.#serverTemplate.name ?? "", vars),
-                host,
-                ip: instance.PublicIp,
-                port: instance.Port,
-                type: this.Type,
-                tags: this.#serverTemplate.tags ?? [],
-                actions: this.#serverTemplate.actions ?? [],
-                activityId: this.#serverTemplate.activityId,
-                sortOrder: this.#serverTemplate.sortOrder,
-                cfgDirectory: this.#serverTemplate.cfgDirectory
-            }, instance)
-        instance.setServer(server)
-        await server.init()
-        this._servers[id] = server
-        return server
-    }
-
-    async createNewServer() {
-        const instance = await this.#manager.createInstance(this.#templateId, [], {
-            "panel.dynamic_server": "true"
-        })
-        const server = await this.#registerInstance(instance)
-        return server
-    }
-
     async removeServer(server: DockerServer) {
-        if(!this._servers[server.id]) throw new Error(`Server "${server.id}" is not registered for group (${this._id})`);
-        delete this._servers[server.id]
+        if(!this.servers[server.id]) throw new Error(`Server "${server.id}" is not registered for group (${this.id})`);
+        delete this.servers[server.id]
         await server.ContainerInstance.delete();
     }
 
+    async createNewServer() {
+        return this._createNewServer()
+    }
+
     getServerByContainerId(containerId: string) {
-        for(const server of Object.values(this._servers)) {
+        for(const server of Object.values(this.servers)) {
             if(server.ContainerInstance.ContainerId === containerId) return server
         }
         return null

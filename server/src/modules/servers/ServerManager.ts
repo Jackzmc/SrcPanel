@@ -24,6 +24,7 @@ import { StandardServerGroup } from './groups/StandardServerGroup.js';
 import { CustomServerGroup } from './groups/CustomServerGroup.js';
 import yaml from 'yaml'
 import { loadShares } from '../shares/index.js';
+import { loadGroups } from './groups/index.js';
 
 
 // How long after no status requests to switch from short to long refresh
@@ -76,7 +77,7 @@ export default class ServerManager {
   #dynamicManager: DynamicServerManager
 
   #groups: Record<string, ServerGroup> = {}
-  #actions: Record<string, ServerAction[]> = {}
+  #actions: Record<string, ServerAction> = {}
   // Maps a server to a specific connection, this assumes there should never be more than one socket per server
 
   constructor(steam: SteamAPI, dataDir: string, configDir: string, configManager: ConfigManager) {
@@ -298,7 +299,7 @@ export default class ServerManager {
           id: group.Id,
           name: group.Name,
           description: group.Description,
-          type: SERVER_TYPE_MAP[group.Type] ?? group.Type,
+          game: group.Game,
           templateId: templateId,
           servers: Object.fromEntries(Object.values(group.Servers)
             .sort((server1, server2) => this.sortServer(server1, server2))
@@ -426,10 +427,9 @@ export default class ServerManager {
     if(this.#dynamicManager)
       await this.#dynamicManager.Load()
     try {
-      await this.#loadActions()
+      this.#actions = await this.#loadActions()
 
-      const servers = await readFile(path.join(this.configDir, "servers.json"), 'utf-8')
-      await this.#loadGroups(Json5.parse(servers))
+      const groups = await loadGroups(this.configDir, this.#dynamicManager, this.#actions)
 
       this.fileShares = await loadShares(this.configDir, this.dataDir, this.#steam)
 
@@ -464,81 +464,85 @@ export default class ServerManager {
     }
   }
 
-  async #loadActions() {
+  // TODO: move to own file, separate parse and load
+  async #loadActions(): Promise<Record<string, ServerAction>> {
     try {
       const content = await readFile(path.join(this.configDir, "actions.yml"), 'utf-8')
       const actionGroups = yaml.parse(content)
 
-      for(const [key, actions] of Object.entries<ServerAction[]>(actionGroups)) {
-        this.#actions[key] = actions.map(this.#parseAction)
+      const kv = {}
+
+      for(const [id, data] of Object.entries<ServerAction>(actionGroups)) {
+        kv[id] = this.#parseAction(data)
       }
+      return kv
     } catch(err) {
-      if(err.code == "ENOENT") return
-      console.error(`[ServerManager] Parsing actions failed: `, err)
+      if(err.code == "ENOENT") return {}
+      throw err
     }
   }
 
-  async #loadGroups(config: any) {
-    const startTime = Date.now()
-    for(const [groupId, data] of Object.entries<ConfigGroupData>(config)) {
-      let actions: ServerAction[] = []
-      if(data.actionSources) {
-        // Add 'docker' action group for docker server groups
-        if('templateId' in data) {
-          // Resolve [id1, id2] -> [action1, action2]
-          data.actionSources.push("docker")
-        }
+  // async #loadGroups(config: any) {
+  //   const startTime = Date.now()
+  //   for(const [groupId, data] of Object.entries<ConfigGroupData>(config)) {
+  //     let actions: ServerAction[] = []
+  //     if(data.actionSources) {
+  //       // Add 'docker' action group for docker server groups
+  //       if('templateId' in data) {
+  //         // Resolve [id1, id2] -> [action1, action2]
+  //         data.actionSources.push("docker")
+  //       }
         
-        actions = data.actionSources.reduce((list, actionGroupId) => {
-          if(!this.#actions[actionGroupId]) {
-            console.warn(`[ServerManager] WARN: Group ${groupId} references missing action group: ${actionGroupId}`)
-            return list
-          }
-          return list.concat(this.#actions[actionGroupId])
-        }, [] as ServerAction[])
-      }
-      if('templateId' in data) {
-        if(!this.#dynamicManager) {
-          console.warn(`[ServerManager] WARN: Found templated server config but docker support is not enabled (DOCKER_ENABLED set to 1); skipping`)
-          continue;
-        }
-        if('groupType' in data && data.groupType === "custom") {
-          const group = new CustomServerGroup(this.#dynamicManager, groupId, {
-            name: data.name,
-            type: data.type,
-            actions,
-            templateId: data.templateId,
-            serverTemplate: data.serverTemplate,
-          })
-          this.#groups[groupId] = group
-        } else {
-          const group = new DynamicServerGroup(this.#dynamicManager, groupId, {
-            name: data.name,
-            type: data.type,
-            actions,
-            templateId: data.templateId,
-            serverTemplate: data.serverTemplate,
-            minServers: data.minServers
-          })
-          this.#groups[groupId] = group
-        }
-      } else if('servers' in data) {
-        const group = new StandardServerGroup(groupId, {
-          name: data.name,
-          type: data.type,
-          actions
-        })
-        await group.ParseServers(data.servers)
-        this.#groups[groupId] = group
-      } else {
-        console.error(`[ServerManager] ERROR: Unknown group type for group \"${groupId}\" (no 'templateId' or 'servers')`)
-      }
-    }
+  //       actions = data.actionSources.reduce((list, actionGroupId) => {
+  //         if(!this.#actions[actionGroupId]) {
+  //           console.warn(`[ServerManager] WARN: Group ${groupId} references missing action group: ${actionGroupId}`)
+  //           return list
+  //         }
+  //         return list.concat(this.#actions[actionGroupId])
+  //       }, [] as ServerAction[])
+  //     }
+  //     if('templateId' in data) {
+  //       if(!this.#dynamicManager) {
+  //         console.warn(`[ServerManager] WARN: Found templated server config but docker support is not enabled (DOCKER_ENABLED set to 1); skipping`)
+  //         continue;
+  //       }
+  //       if('groupType' in data && data.groupType === "custom") {
+  //         const group = new CustomServerGroup(this.#dynamicManager, groupId, {
+  //           name: data.name,
+  //           type: data.type,
+  //           actions,
+  //           templateId: data.templateId,
+  //           serverTemplate: data.serverTemplate,
+  //         })
+  //         this.#groups[groupId] = group
+  //       } else {
+  //         const group = new DynamicServerGroup(this.#dynamicManager, groupId, {
+  //           name: data.name,
+  //           type: data.type,
+  //           actions,
+  //           templateId: data.templateId,
+  //           serverTemplate: data.serverTemplate,
+  //           minServers: data.minServers
+  //         })
+  //         this.#groups[groupId] = group
+  //       }
+  //     } else if('servers' in data) {
+  //       const group = new StandardServerGroup(groupId, {
+  //         name: data.name,
+  //         type: data.type,
+  //         actions
+  //       })
+  //       await group.ParseServers(data.servers)
+  //       this.#groups[groupId] = group
+  //     } else {
+  //       console.error(`[ServerManager] ERROR: Unknown group type for group \"${groupId}\" (no 'templateId' or 'servers')`)
+  //     }
+  //   }
 
-    // await Promise.allSettled(serverPromises)
-    const endTime = Date.now() - startTime
-    console.log(`[ServerManager] Loaded ${Object.keys(this.#groups).length} groups and total of ${this.Count} servers in ${endTime.toFixed(1)} ms`)
-  }
+  //   // await Promise.allSettled(serverPromises)
+  //   const endTime = Date.now() - startTime
+  //   console.log(`[ServerManager] Loaded ${Object.keys(this.#groups).length} groups and total of ${this.Count} servers in ${endTime.toFixed(1)} ms`)
+  // }
 
   get Count() {
     let count = 0

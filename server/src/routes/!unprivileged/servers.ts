@@ -22,7 +22,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                     host: server.host,
                     ip: server.ip,
                     port: server.port,
-                    type: SERVER_TYPE_MAP[server.type] ?? server.type,
+                    type: SERVER_TYPE_MAP[server.game] ?? server.game,
                     tags: server.tags,
                     features: server.features,
                     domain: server.host,
@@ -41,7 +41,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         const groups: APIListServersV2_Groups = Object.fromEntries(Object.entries(fastify.servers.GroupsRecord).map(([id, data]) => {
             return [id, {
                 name: data.Name,
-                game: data.Type
+                game: data.Game
             }]
         }))
         const servers = fastify.servers.getAll().map((server, i) => {
@@ -68,7 +68,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             return [id, {
                 id: id,
                 name: data.Name,
-                game: data.Type,
+                game: data.Game,
                 currentInstances: 0
             }]
         }))

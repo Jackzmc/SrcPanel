@@ -1,54 +1,54 @@
 import { ServerAction } from "../../../../../common-types/Server.js"
 import Server from "../Server.js"
+import { BaseGroupConfig } from "./index.js"
 
 export interface CreateGroupOptions {
     name?: string
-    type: string,
+    game?: string,
     description?: string
-    actions?: ServerAction[]
 }
 
 
 export default class ServerGroup<T extends Server = Server> {
-    _id: string
-    _name: string
-    _type: string
-    _description: string
-    _actions: ServerAction[]
+    protected id: string
+    protected name: string
+    protected game?: string
+    protected description: string
+    protected actions: ServerAction[]
+    protected servers: Record<string, T> = {}
 
-    _servers: Record<string, T> = {}
-    constructor(id: string, options: CreateGroupOptions) {
-        this._id = id
-        this._name = options.name ?? id
-        this._type = options.type
-        this._actions = options.actions ?? []
-        this._description = options.description ?? ""
+    constructor(id: string, options: CreateGroupOptions, actions: ServerAction[] = []) {
+        this.id = id
+        this.name = options.name ?? id
+        this.game = options.game
+        this.description = options.description ?? ""
+        this.actions = actions
     }
 
-    get Id() { return this._id }
-    get Name() { return this._name }
-    get Description() { return this._description }
-    get Type() { return this._type }
-    get Actions() { return [...this._actions] }
+    get Id() { return this.id }
+    get Name() { return this.name }
+    get Description() { return this.description }
+    get Game() { return this.game }
+    get Actions() { return [...this.actions] }
 
-    get ServerCount() { return Object.keys(this._servers).length }
+    get ServerCount() { return Object.keys(this.servers).length }
 
     get Servers() {
-        return Object.values(this._servers)
+        return Object.values(this.servers)
     }
 
     async onShutdown() {
-        for(const server of Object.values(this._servers)) {
+        for(const server of Object.values(this.servers)) {
             server?.Plugin?.pushRecord(null)
         }
     }
 
     getServer(id: string) {
-        return this._servers[id]
+        return this.servers[id]
     }
 
     getServerByPort(port: number) {
-        for(const server of Object.values(this._servers)) {
+        for(const server of Object.values(this.servers)) {
             if(server.port === port)
                 return server
         }
@@ -56,7 +56,7 @@ export default class ServerGroup<T extends Server = Server> {
     }
 
     async performActionAll(command: string, namespace: string) {
-        for(const server of Object.values(this._servers)) {
+        for(const server of Object.values(this.servers)) {
             await server.performAction(command, namespace)
         }
         return null

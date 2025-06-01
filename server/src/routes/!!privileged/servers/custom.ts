@@ -86,7 +86,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                     hostname: server.host,
                     ip: server.ip,
                     port: server.port,
-                    type: server.type,
+                    type: server.game,
                 }
             })
             reply.raw.end()

@@ -1,4 +1,5 @@
 import { stat } from "fs/promises"
+import DNS from 'dns/promises';
 
 // Replaces any member of T that is set in replace, ignoring undefined
 export function replaceObject<T>(original: T, replace: Partial<T>): T {
@@ -35,4 +36,16 @@ export async function doesFileExist(filename: string) {
     if(err.code === "ENOENT") return false
     throw err
   }
+}
+
+export async function tryResolveIPv4(host: string): Promise<string|null> {
+    try {
+        return resolveIPv4(host)
+    } catch(err) {
+        return null
+    }
+}
+export async function resolveIPv4(host: string): Promise<string> {
+    const lookup = await DNS.lookup(host, { verbatim: false, family: 4 })
+    return lookup.address
 }

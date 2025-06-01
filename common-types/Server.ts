@@ -78,11 +78,13 @@ export type GroupInfo = StandardGroupInfo | DynamicGroupInfo
 
 export interface ServerData {
     id: string,
-    name: string,
+    name?: string,
     host?: string,
     ip: string,
     port: number,
-    type: string,
+    /** @deprecated use 'game' */
+    type: string, 
+    game: string,
 }
 
 export interface ServerDetailed {
@@ -160,13 +162,13 @@ export enum ServerState {
   }
 export interface APIListServersV2_GroupEntry {
     name: string,
-    game: string
+    game?: string
 }
 export interface APIListServerGroup {
     id: string,
     name: string,
     currentInstances: number,
-    game: string
+    game?: string
 }
 
 export type APIListServersV2_Groups = Record<string, APIListServersV2_GroupEntry>
@@ -177,6 +179,7 @@ export interface APIListServersV2_Server {
     status: ServerStatus,
     tags: string[],
     actions: ServerAction[],
+    game: string
     host: string,
     port: number
 }

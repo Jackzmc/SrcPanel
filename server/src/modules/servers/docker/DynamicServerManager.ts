@@ -10,11 +10,27 @@ export interface DockerTemplateConfig {
     id: string
     network?: "host" | string,
     image: string,
-    ip: string,
-    startPort: number,
-    minInstances?: number
+    bindIp: string,
+    ports: { start: number, end?: number },
     volumes?: string[],
-    command: string | string[]
+    command: string,
+    serverTemplate?: ServerTemplate
+}
+export interface ServerTemplate {
+    name?: string,
+    tags?: string[],
+
+    game?: string,
+    sortOrder?: number,
+    cfgDirectory?: string,
+    activityId?: string,
+    logsPath?: string,
+    rcon?: {
+        ip?: string,
+        port?: number,
+        password?: string
+    },
+    actionsIds?: string[]
 }
 export interface DockerTemplateContainer {
     config: DockerTemplateConfig,
@@ -96,7 +112,7 @@ export default class DynamicServerManager {
                 return;
             }
             console.info(`[ServerManager/docker] Found existing container (${containerInfo.Id.slice(0, 12)}${containerInfo.Names.join('')})`)
-            const instance = new DynamicServerInstance(template.config, container, template.config.ip, Number(port))
+            const instance = new DynamicServerInstance(template.config, container, template.config.bindIp, Number(port))
             await this.#registerInstance(instance)
         }
     }
@@ -140,11 +156,14 @@ export default class DynamicServerManager {
         ports.sort()
 
         // Find next available, filling in gaps
-        let port = ofTemplate.startPort;
+        let port = ofTemplate.ports.start;
         if(ports.includes(port)) {
             while(ports.includes(port)) {
                 port++
             }
+        }
+        if(ofTemplate.ports.end != undefined && port >= ofTemplate.ports.end) {
+            throw new Error("No more available ports")
         }
         return port
     }
@@ -164,7 +183,7 @@ export default class DynamicServerManager {
         const port = await this.#getNextPort(template.config)
 
         const templVars = {
-            ip: template.config.ip,
+            ip: template.config.bindIp,
             port,
             id: template.config.id,
             index: await this.#calculateCount(templateId)
@@ -193,7 +212,7 @@ export default class DynamicServerManager {
                     
                     "HostPort": port.toString(), 
                     
-                    "HostIp": template.config.ip 
+                    "HostIp": template.config.bindIp
                 
                 }] },
                "LogConfig": {
@@ -209,7 +228,7 @@ export default class DynamicServerManager {
         }
         console.log("config", config)
         const container = await this.#docker.createContainer(config)
-        const instance =  new DynamicServerInstance(template.config, container, template.config.ip, port)
+        const instance =  new DynamicServerInstance(template.config, container, template.config.bindIp, port)
         await this.#registerInstance(instance)
         return instance
     }
