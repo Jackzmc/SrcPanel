@@ -91,7 +91,6 @@ async function init(fastify: FastifyInstance) {
         // Any other year, the data will/should never change, as its old data.
         if(!value || (!year || year == CurrentYear()) && Date.now() - value.lastFetchTime > LOG_TOTAL_ROW_CACHE_TIME) {
             try {
-                // console.log(`SELECT COUNT(*) AS count, MAX(id) as highestId, MIN(id) as lowestId from ${ACTIVITY_LOG_TABLE_NAME} ${year != null ? `PARTITION (p${year})` : ''}`)
                 const [c] = await fastify.db.execute<RowDataPacket[]>(`SELECT COUNT(*) AS count, MAX(id) as highestId, MIN(id) as lowestId from ${ACTIVITY_LOG_TABLE_NAME} ${year != null ? `PARTITION (p${year})` : ''}`)
                 value = {
                     totalRows: c[0].count,
