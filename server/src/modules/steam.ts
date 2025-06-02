@@ -7,6 +7,8 @@ import { unlink } from 'fs/promises';
 import { WorkshopItem, SteamUserDetails } from '../../../common-types/Share.js'
 import { EventEmitter } from 'node:events';
 import QuickLRU from 'quick-lru';
+import logger from '../logger.js'
+const log = logger.child({ name: "steam" })
 
 // How many bytes of progress to make before sending an update
 const PROGRES_MIN_BYTES = 10_000 // 10KB
@@ -65,6 +67,7 @@ export default class SteamAPI {
     async getUserDetails(steamids: (SteamID | string)[]): Promise<SteamUserDetails[]> {
         this.#checkKey()
         const ids = steamids.map(steamid => steamid instanceof SteamID ? steamid.getSteamID64() : steamid).slice(0, 100).join(",")
+        log.trace(`GetPlayerSummaries ids=${ids}`)
         const res = await fetch(`https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v2/?key=${this.#apikey}&format=json&steamids=${ids}`, {
             headers: { 'User-Agent': this.#userAgent }
         })
@@ -74,15 +77,19 @@ export default class SteamAPI {
             if(users) {
                 return users as SteamUserDetails[]
             }
+            log.warn(`GetUserDetails: Invalid data`, json)
             // TODO: verify if this is a problem:
             throw new Error("API Did not return player data")
         }
         // TODO: if down mark unavailable
-        throw new Error(`${res.statusText}: ${await res.text()}`)
+        const error = `${res.statusText}: ${await res.text()}`
+        log.warn(`GetUserDetails: ${error}`)
+        throw new Error(error)
     }
 
     // Gets a collection's children items or null if is not a collection
     async getCollectionChildren(fileid: string): Promise<string[]|null> {
+        log.trace("getCollectionChildren %s", fileid)
         const response = await fetch('https://api.steampowered.com/ISteamRemoteStorage/GetCollectionDetails/v1/', {
             method: 'POST',
             headers: {
@@ -98,6 +105,7 @@ export default class SteamAPI {
                     .map(child => child.publishedfileid)
             }
         }
+        log.trace("getCollectionChildren %s not a collection", fileid)
         return null
     }
 
@@ -109,6 +117,7 @@ export default class SteamAPI {
         params.append("numperpage", "30")
         params.append("return_metadata", "1")
         params.append("search_text", query)
+        log.trace({ fn: "searchItems", appid, query })
         const response = await fetch("https://api.steampowered.com/IPublishedFileService/QueryFiles/v1/", {
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
@@ -138,6 +147,7 @@ export default class SteamAPI {
             if(detail) details.push(detail)
             else params.append(`publishedfileids[${index++}]`, fileid)
         }
+        log.trace({ fn: "getItemDetails", params: params })
     // Don't waste a fetch if all items are in the cache
         if(index > 0) {
             // Don't waste a fetch if all items are in the cache
@@ -157,8 +167,11 @@ export default class SteamAPI {
                     this.#itemCache.set(file.publishedfileid, file)
                 }
                 details = [...details, ...files]
+                log.trace({fn: "getItemDetails", details })
             } else {
-                throw new Error(`${response.statusText}: ${await response.text()}`)
+                const error = `${response.statusText}: ${await response.text()}`
+                log.error("getItemDetails %s", error)
+                throw new Error(error)
             }
         }
         return details
@@ -167,10 +180,12 @@ export default class SteamAPI {
     addToWSResolveQueue(workshopId: number, cb: WSResolveCallback) {
         if(isNaN(workshopId)) throw new Error("Workshop id must be a number")
         if(this.#itemCache[workshopId]) {
+            log.trace({ fn: "addToWSResolveQueue", workshopId, state: "resolved"})
             cb(this.#itemCache[workshopId])
             return
         }
         this.#workshopResolveQueue[workshopId] = cb
+        log.trace({ fn: "addToWSResolveQueue", workshopId, state: "queued"})
     }
 
     async resolveWSQueue() {
@@ -178,6 +193,7 @@ export default class SteamAPI {
         if(ids.length === 0) return
         while(ids.length > 0) {
             const itemIds = ids.splice(0, 100)
+            log.trace({ fn: "resolveWSQueue", itemIds, state: "processing"})
             const items = await this.getItemDetails(itemIds)
             for(const item of items) {
                 const callback = this.#workshopResolveQueue[item.publishedfileid]
@@ -189,7 +205,7 @@ export default class SteamAPI {
             for(const id of itemIds) {
                 const callback = this.#workshopResolveQueue[id]
                 if(callback) {
-                    console.log("Did not get data for", id)
+                    log.error("resolveWSQueue: Did not get data for %s", id)
                     callback(null)
                 }
                 delete this.#workshopResolveQueue[id]

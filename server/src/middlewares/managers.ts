@@ -25,9 +25,9 @@ async function db(fastify: FastifyInstance) {
     const ASSETS_FOLDER = join(__dirname, '/../../../../assets')
     const DATA_FOLDER = join(__dirname, '/../../../../data')
     const CONFIG_FOLDER = join(__dirname, '/../../../../config')
-    fastify.log.debug('assets', ASSETS_FOLDER)
-    fastify.log.debug('data', DATA_FOLDER)
-    fastify.log.debug('config', CONFIG_FOLDER)
+    fastify.log.debug('assets %s', ASSETS_FOLDER)
+    fastify.log.debug('data %s', DATA_FOLDER)
+    fastify.log.debug('config %s', CONFIG_FOLDER)
     try {
         await mkdir(DATA_FOLDER)
     } catch(_) { }
@@ -91,7 +91,7 @@ async function db(fastify: FastifyInstance) {
     })
     fastify.addHook("onClose", (inst, done) => {
         serverManager.onShutdown()
-        console.log("Shutdown complete")
+        fastify.log.info("Shutdown complete")
         done()
     })
 }
