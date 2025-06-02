@@ -1,4 +1,3 @@
-import { WebSocket } from "@fastify/websocket";
 import { SERVER_TYPE_MAP, ServerAction, ServerAvailableFeatures, ServerData, ServerInfo, ServerStatus, ServerStatusData, ServerStatusSource, ServerType, VoiceUser } from "../../../../common-types/Server.js";
 import ConfigsFeature from "./features/Configs.js";
 import ConsoleFeature from "./features/logs/Console.js";
@@ -12,6 +11,8 @@ import SocketClientUser from "./SocketClientUser.js";
 import { Server_Status, ServerOutPacket, ServerOutPayload } from "../../../../common-types/ServerWebsocket.js";
 import { LiveRecordResponse } from "../../../../common-types/Live.js";
 import { resolveIPv4, tryResolveIPv4 } from "../../util.js";
+import logger from '../../logger.js'
+import { Logger } from "pino";
 
 const MIN_REFRESH_TIME = 10_000
 
@@ -86,6 +87,7 @@ export interface CreateServerOptions {
 }
 
 export default abstract class Server implements IAction {
+  protected _log: Logger;
   protected _options: CreateServerOptions
   protected _group: ServerGroup
 
@@ -114,6 +116,7 @@ export default abstract class Server implements IAction {
   protected internalIp?: string   // the resolved IP to use if set for internal requests (status) instead of internal
 
     constructor(group: ServerGroup, server: CreateServerOptions, gamedig: GameDig) {
+    this._log = logger.child({ name: `Server/${server.id}` })
       this.#activeVoiceMembers = []
       this.#gamedig = gamedig
       this._group = group
@@ -150,6 +153,7 @@ export default abstract class Server implements IAction {
       }
       this._metrics = new MetricsFeature(this)
       this._plugin = new PluginFeature(this)
+      this._log.debug("created")
     }
 
     async Init(): Promise<void> {
@@ -164,6 +168,7 @@ export default abstract class Server implements IAction {
           this.Plugin?.init(),
           this.Metrics?.init()
       ])
+      this._log.debug({ features: this.features, actions: this._actions.map(a => a.name) }, "initialized")
     }
 
     get Console(): ConsoleFeature | null { return this._logs }
@@ -301,7 +306,7 @@ export default abstract class Server implements IAction {
     }
 
     addWSClient(client: SocketClientUser) {
-      console.log("added client", client.user.steamid2)
+      this._log.debug("added client", client.user.steamid2)
       this._wsClients.push(client)
       // Send all data the client should know right away
       this.broadcastWS({
@@ -314,8 +319,10 @@ export default abstract class Server implements IAction {
     }
     removeWSClient(client: SocketClientUser) {
       const indexOf = this._wsClients.indexOf(client)
-      if(indexOf > -1)
+      if(indexOf > -1) {
+       this._log.debug("removed client", client.user.steamid2)
         this._wsClients.splice(indexOf, 1)
+      }
     }
     broadcastWS(payload: ServerOutPayload) {
       const packet = {
@@ -333,6 +340,7 @@ export default abstract class Server implements IAction {
       if(!bypassCache && this._lastRefresh && now - this._lastRefresh < MIN_REFRESH_TIME) return
       this._lastRefresh = now
       try {
+          this._log.trace("querying status via gamedig")
           const state = await this.#gamedig.query({
             type: type,
             host: host,
@@ -353,7 +361,7 @@ export default abstract class Server implements IAction {
           this._online = true
       } catch(err) {
         if(!err.message.includes("Failed all ")) {
-          console.error(`[Server/${this.id}] host=${host} getStatus error: `, err)
+          this._log.error(`host=${host} getStatus error: `, err)
         }
         this.updateStatus(null, "gamedig")
       }

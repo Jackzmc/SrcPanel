@@ -9,6 +9,8 @@ import DockerServer from "./DockerServer.js";
 import fastify from "fastify";
 import SteamAPI from "../../modules/steam.js";
 import { WorkshopItem } from "../../../../common-types/Share.js";
+import logger from '../../logger.js'
+const log = logger.child({ name: "CustomServerBuilder" })
 
 export interface CustomServerOptions {
     extraPlayers?: boolean,
@@ -67,6 +69,7 @@ export default class CustomServerBuilder {
 
     #notify(state: CreateServerEventState, msg?: string) {
         if(!this.#eventCallback) return
+        log.debug({ state, msg })
         this.#eventCallback(state, msg, this.#progress)
     }
 
@@ -74,7 +77,7 @@ export default class CustomServerBuilder {
     set User(user: User) { this.#user = user}
 
     async #cleanup() {
-        console.log("cleaning up builder for", this.#id)
+        log.debug("cleaning up builder for", this.#id)
         try {
             await rmdir(this.#root)
             if(this.#server) {
@@ -101,7 +104,7 @@ export default class CustomServerBuilder {
             name: this.#name
         }
         this.#root = path.join(CUSTOMER_FOLDER_LOCATION, this.#id)
-        console.log('root', this.#root)
+        log.debug('root', this.#root)
         this.#notify("INIT", `ID: ${this.#id}`)
         const order = [
             this.#installSourcemod,
@@ -127,7 +130,7 @@ export default class CustomServerBuilder {
             this.#progress.current = this.#progress.total
             return this.#server
         } catch(err) {
-            console.error(`[CustomServerBuilder] Error: `, err)
+            log.error(`Error: `, err)
             await this.#cleanup()
             throw err
         }
@@ -180,11 +183,11 @@ export default class CustomServerBuilder {
         if(!this.#options.pluginsIds) return
         const pluginRepo: Record<string, SMPluginMeta> = JSON.parse(await readFile(path.join(PLUGIN_REPO_FOLDER_LOCATION!, "plugins.json"), 'utf-8'))
         const plugins: Record<string, SMPluginMeta|true> = {}
-        console.debug('resolving', this.#options.pluginsIds.length, 'plugins')
+        log.debug('resolving', this.#options.pluginsIds.length, 'plugins')
         for(const pluginFilename of this.#options.pluginsIds) {
             this.#resolvePlugin(plugins, pluginRepo, pluginFilename)
         }
-        console.debug('installing', Object.keys(plugins).length, 'plugins')
+        log.debug('installing', Object.keys(plugins).length, 'plugins')
         this.#notify("INSTALL_PLUGINS", "Installing plugins")
         for(const [filepath, meta] of Object.entries(plugins)) {
             if(filepath.endsWith(".so")) {
@@ -206,7 +209,7 @@ export default class CustomServerBuilder {
                 throw new Error("Unknown file type: " + filepath)
             }
         }
-        console.debug('done installing plugins')
+        log.debug('done installing plugins')
     }
 
     async #installAddons() {
@@ -239,12 +242,12 @@ export default class CustomServerBuilder {
             } catch(err) {
                 if(err.code !== "EEXISTS") throw err
             }
-            console.log(`file=${dirent.name}`, `relParent=${relParent}`, `full=${path.join(this.#root, relParent, dirent.name)}`)
+            log.debug(`file=${dirent.name}`, `relParent=${relParent}`, `full=${path.join(this.#root, relParent, dirent.name)}`)
             const content = this.#applyTemplate(await readFile(path.join(dirent.parentPath, dirent.name), 'utf-8'))
             await writeFile(path.join(this.#root, relParent, dirent.name), content)
-            console.log("done", dirent.name)
+            log.debug("done", dirent.name)
         }
-        console.log("templates applied")
+        log.debug("templates applied")
         // TEMPLATE_FOLDER_LOCATION
     }
 
