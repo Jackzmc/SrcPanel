@@ -7,6 +7,8 @@ import { CustomServerGroup } from "./CustomServerGroup.js";
 import { DynamicServerGroup } from "./DynamicServerGroup.js";
 import { StandardServerGroup } from "./StandardServerGroup.js";
 import { ServerAction } from "../../../../../common-types/Server.js";
+import logger from '../../../logger.js'
+const log = logger.child({ name: "groups/index" })
 
 const CONFIG_FILE = "server_groups.yml"
 
@@ -19,20 +21,25 @@ async function loadData(configDir: string): Promise<{[key: string]: any}> {
     }
 }
 
-export async function loadGroups(configDir: string, dynamicManager: DynamicServerManager, actions: Record<string, ServerAction>) {
+export async function loadGroups(configDir: string, dynamicManager: DynamicServerManager | undefined, actions: Record<string, ServerAction>) {
     const startTime = performance.now()
 
-    console.info("Actions: " + Object.keys(actions).join(" "))
+    log.info("Actions: " + Object.keys(actions).join(" "))
     
     const raw = await loadData(configDir)
     const groups = {}
     
     for(const [groupId, data] of Object.entries(raw)) {
-        const group = await loadGroup(dynamicManager, actions, parseGroup(groupId, data))
+        const parsedGroup = parseGroup(groupId, data)
+        if('docker' in parsedGroup && !dynamicManager) {
+            log.warn(`Skipping group \"${groupId}\" (docker not enabled)`)
+            continue
+        }
+        const group = await loadGroup(dynamicManager, actions, parsedGroup)
         groups[groupId] = group
     }
     const time = performance.now() - startTime
-    console.info(`[ServerManager] Loaded ${Object.keys(groups).length} groups in ${time.toFixed(1)} ms`)
+    log.info(`[ServerManager] Loaded ${Object.keys(groups).length} groups in ${time.toFixed(1)} ms`)
     return groups
 }
 
@@ -169,10 +176,13 @@ function parseGroup(id: string, data: Record<string, any>): GroupConfig {
     throw new Error("Invalid group entry, must include a 'servers' section or 'docker' section")
 } 
 
-async function loadGroup(dynamicGroupManager: DynamicServerManager, actions: Record<string, ServerAction>, group: GroupConfig): Promise<ServerGroup> {
+async function loadGroup(dynamicGroupManager: DynamicServerManager | undefined, actions: Record<string, ServerAction>, group: GroupConfig): Promise<ServerGroup> {
     const actionsList = resolveActions(actions, group)
 
     if('docker' in group) {
+        if(!dynamicGroupManager) {
+            throw new Error("Docker support not available")
+        }
         const template = dynamicGroupManager.getTemplate(group.docker.template)
         if(!template) throw new Error(`Group docker template ${group.docker.template} not found`)
 
