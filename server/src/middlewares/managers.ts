@@ -25,9 +25,9 @@ async function db(fastify: FastifyInstance) {
     const ASSETS_FOLDER = join(__dirname, '/../../../../assets')
     const DATA_FOLDER = join(__dirname, '/../../../../data')
     const CONFIG_FOLDER = join(__dirname, '/../../../../config')
-    console.log('assets', ASSETS_FOLDER)
-    console.log('data', DATA_FOLDER)
-    console.log('config', CONFIG_FOLDER)
+    fastify.log.debug('assets', ASSETS_FOLDER)
+    fastify.log.debug('data', DATA_FOLDER)
+    fastify.log.debug('config', CONFIG_FOLDER)
     try {
         await mkdir(DATA_FOLDER)
     } catch(_) { }

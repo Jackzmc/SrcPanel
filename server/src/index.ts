@@ -36,6 +36,12 @@ const app = Fastify({
     trustProxy: process.env.NODE_ENV === "production",
     loggerInstance
 })
+// app.log.trace("trace")
+// app.log.debug("debug")
+// app.log.info("info")
+// app.log.warn("warn")
+// app.log.error("error")
+// app.log.fatal("fatal")
 let hadSignal = false, ready = false
 async function onSignal(signal: NodeJS.Signals) {
     // If already had a SIGTERM, just shut down instantly
@@ -44,14 +50,14 @@ async function onSignal(signal: NodeJS.Signals) {
         return
     }
     hadSignal = true
-    console.log("\nGOT SIGNAL", signal, "-- SHUTTING DOWN")
+    app.log.info(`GOT SIGNAL ${signal} -- SHUTTING DOWN`)
     setTimeout(() => {
-        console.log("Timed out, forcing shutdown")
+        app.log.error("Timed out, forcing shutdown")
         process.exit(0)
     }, 20_000)
     await app.servers?.onShutdown()
     await SetCacheManager.Save()
-    console.log("Closing fastify")
+    app.log.info("Closing fastify")
     await app.close()
 }
 ["SIGUSR2", "SIGINT", "SIGTERM"].map((signal) => {

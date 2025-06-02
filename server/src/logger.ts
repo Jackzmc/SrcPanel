@@ -6,10 +6,11 @@ const envToLogger = {
     transport: {
       targets: [
         {
+          level: process.env.FASTIFY_DEBUG_LEVEL || 'debug',
           target: 'pino-pretty',
           options: {
             translateTime: 'SYS:hh:MM',
-            ignore: 'pid,hostname',
+            ignore: 'pid,hostname,time',
           },
         }
       ]
@@ -33,7 +34,6 @@ const envToLogger = {
   },
   test: false,
 }
-
 const logObj = envToLogger[process.env.NODE_ENV ?? "development"]
 if(process.env.LOG_PATH) {
 
