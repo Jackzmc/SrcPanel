@@ -18,7 +18,7 @@
     </p>
     <p>Extra servers that are unused & empty for a duration of time may be automatically removed</p>
     <h4>Search</h4>
-    <p>Search will search the following properties:
+    <div><p>Search will search the following properties:</p>
       <ul>
         <li>Server Id</li>
         <li>Server Name</li>
@@ -26,8 +26,8 @@
         <li>Server Port</li>
         <li>Group Name</li>
       </ul>
-      In addition, you can filter only servers of a certain group with <code>@groupid</code> or <code>@groupname</code>. (no spaces)
-    </p>
+      <p>In addition, you can filter only servers of a certain group with <code>@groupid</code> or <code>@groupname</code>. (no spaces)</p>
+    </div>
   </div>
   <template #buttons><!-- hide buttons, need non-empty template: --><template /></template>
 </ModalCard>
