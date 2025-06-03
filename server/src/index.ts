@@ -1,5 +1,4 @@
-import dotenv from 'dotenv'
-dotenv.config()
+import 'dotenv/config'
 import Fastify, { FastifyInstance } from 'fastify'
 import FastifySession from '@fastify/session'
 import FastifyCookie from '@fastify/cookie'

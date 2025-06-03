@@ -19,7 +19,7 @@
     "discord-api-types": "^0.37.119",
     "discord.js": "^14.18.0",
     "dockerode": "^4.0.2",
-    "dotenv": "^16.0.0",
+    "dotenv": "^16.5.0",
     "express": "^4.17.3",
     "express-mysql-session": "^2.1.7",
     "fast-geoip": "^1.1.64",
