@@ -12,8 +12,8 @@ export default abstract class BaseDynamicServerGroup extends ServerGroup<DockerS
     protected template: DockerTemplateContainer
 
 
-    constructor(dynamicManager: DynamicServerManager, group: DockerGroupConfig, template: DockerTemplateContainer, actions: ServerAction[] = []) {
-        super(group.id, group, actions)
+    constructor(type: string, dynamicManager: DynamicServerManager, group: DockerGroupConfig, template: DockerTemplateContainer, actions: ServerAction[] = []) {
+        super(type, group.id, group, actions)
         this.manager = dynamicManager
         this.template = template
     }

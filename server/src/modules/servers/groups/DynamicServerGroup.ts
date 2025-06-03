@@ -40,7 +40,7 @@ export class DynamicServerGroup extends BaseDynamicServerGroup {
 
  
     constructor(dynamicManager: DynamicServerManager, group: DockerGroupConfig, template: DockerTemplateContainer, actions: ServerAction[]) {
-        super(dynamicManager, group, template, actions)
+        super("docker", dynamicManager, group, template, actions)
         this.#minServers = group.docker.min || 0
         this.#maxEmptyServers = group.docker.max ?? null
 

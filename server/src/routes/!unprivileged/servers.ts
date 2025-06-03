@@ -3,6 +3,7 @@ import { APIListServersV2, APIListServersV2_Groups, APIListServersV2_GroupEntry,
 import Server from '../../modules/servers/Server.js';
 import SocketClientUser from '../../modules/servers/SocketClientUser.js';
 import { APIListServersV2_Server } from '../../../../common-types/Server';
+import { Type } from '@sinclair/typebox';
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
 
@@ -64,11 +65,12 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     })
 
     fastify.get('/groups', async(req, reply) => {
-        const groups: Record<string, APIListServerGroup> = Object.fromEntries(Object.entries(fastify.servers.GroupsRecord).map(([id, data]) => {
+        const groups: Record<string, APIListServerGroup> = Object.fromEntries(Object.entries(fastify.servers.GroupsRecord).map(([id, group]) => {
             return [id, {
                 id: id,
-                name: data.Name,
-                game: data.Game,
+                name: group.Name,
+                game: group.Game,
+                type: group.Type,
                 currentInstances: 0
             }]
         }))

@@ -168,7 +168,8 @@ export interface APIListServerGroup {
     id: string,
     name: string,
     currentInstances: number,
-    game?: string
+    game?: string,
+    type?: "docker" | "list" | "custom"
 }
 
 export type APIListServersV2_Groups = Record<string, APIListServersV2_GroupEntry>

@@ -9,8 +9,10 @@ import { ServerAction } from "../../../../../common-types/Server.js";
 const REQUIRED_SERVER_PROPERTIES = ["host"]
 
 export class StandardServerGroup extends ServerGroup<StandardServer> {
+
+
     constructor(group: ListGroupConfig, actions: ServerAction[] = []) {
-        super(group.id, group, actions)
+        super("list", group.id, group, actions)
     }
 
 

@@ -16,8 +16,10 @@ export default class ServerGroup<T extends Server = Server> {
     protected description: string
     protected actions: ServerAction[]
     protected servers: Record<string, T> = {}
+    protected type: string
 
-    constructor(id: string, options: CreateGroupOptions, actions: ServerAction[] = []) {
+    constructor(type: string, id: string, options: CreateGroupOptions, actions: ServerAction[] = []) {
+        this.type = type
         this.id = id
         this.name = options.name ?? id
         this.game = options.game
@@ -25,6 +27,7 @@ export default class ServerGroup<T extends Server = Server> {
         this.actions = actions
     }
 
+    get Type() { return this.type }
     get Id() { return this.id }
     get Name() { return this.name }
     get Description() { return this.description }
