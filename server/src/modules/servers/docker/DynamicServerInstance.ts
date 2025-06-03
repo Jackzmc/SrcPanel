@@ -1,5 +1,5 @@
 import { Container, ContainerInspectInfo } from "dockerode"
-import { DockerTemplateConfig } from "./DynamicServerManager.js"
+import { DOCKER_NAME_PREFIX, DockerTemplateConfig } from "./DynamicServerManager.js"
 import DockerServer from "../DockerServer.js"
 
 export default class DynamicServerInstance {
@@ -65,7 +65,7 @@ export default class DynamicServerInstance {
     }
 
     get ContainerName() {
-        return `panel-${this.#template.id}-${this.#port}`
+        return `${DOCKER_NAME_PREFIX}-${this.#template.id}-${this.#port}`
     }
 
     get Server(): DockerServer | null {

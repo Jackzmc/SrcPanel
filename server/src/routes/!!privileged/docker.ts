@@ -1,4 +1,5 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
+import { DOCKER_NAME_PREFIX } from '../../modules/servers/docker/DynamicServerManager.js';
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
     const manager = fastify.servers.Docker
@@ -57,14 +58,14 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         if(!req.params.id) {
             return reply.code(400).send({
                 error: "MISSING_INSTANCE_ID",
-                message: "A valid instance id must be provided. They will be in the format of panel-{templateId}-{port}"
+                message: `A valid instance id must be provided. They will be in the format of ${DOCKER_NAME_PREFIX}-{templateId}-{port}`
             })
         }
         const instance = manager!.getInstance(req.params.id)
         if(!instance) {
             return reply.code(404).send({
                 error: "INVALID_INSTANCE_ID",
-                message: "No instance with id could be found. They will be in the format of panel-{templateId}-{port}"
+                message: `No instance with id could be found. They will be in the format of ${DOCKER_NAME_PREFIX}-{templateId}-{port}`
             })
         }
         return {
@@ -78,14 +79,14 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         if(!req.params.id) {
             return reply.code(400).send({
                 error: "MISSING_INSTANCE_ID",
-                message: "A valid instance id must be provided. They will be in the format of panel-{templateId}-{port}"
+                message: `No instance with id could be found. They will be in the format of ${DOCKER_NAME_PREFIX}-{templateId}-{port}`
             })
         }
         const instance = manager!.getInstance(req.params.id)
         if(!instance) {
             return reply.code(404).send({
                 error: "INVALID_INSTANCE_ID",
-                message: "No instance with id could be found. They will be in the format of panel-{templateId}-{port}"
+                message: `No instance with id could be found. They will be in the format of ${DOCKER_NAME_PREFIX}-{templateId}-{port}`
             })
         }
         await instance.start()
