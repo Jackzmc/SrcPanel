@@ -207,7 +207,7 @@ function resolveActions(actions: Record<string, ServerAction>, group: GroupConfi
         if(actions[actionId]) {
             list.push(actions[actionId])
         } else {
-            console.warn(`Group ${group.id}: unknown action ${actionId}`)
+            log.warn(`Group ${group.id}: unknown action ${actionId}`)
         }
     }
     return list
