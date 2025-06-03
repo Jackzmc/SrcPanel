@@ -71,7 +71,7 @@ export default class ServerManager {
   #socket: net.Server
   #socketClients: Map<string, PluginSocket>
   #liveErrors: WriteStream
-  #dynamicManager: DynamicServerManager
+  #dynamicManager: DynamicServerManager | undefined
 
   #groups: Record<string, ServerGroup> = {}
   #actions: Record<string, ServerAction> = {}
@@ -83,6 +83,7 @@ export default class ServerManager {
     this.configDir = configDir
     this.#cfgManager = configManager
     if(process.env.DOCKER_ENABLE) {
+      log.debug("Docker enabled, initalzing dynamic server manager")
       this.#dynamicManager = new DynamicServerManager(this, configDir, {
         protocol: process.env.DOCKER_FORCE_PROTOCOL as "http" | "https" | "ssh" | undefined,
         host: process.env.DOCKER_HOST,
