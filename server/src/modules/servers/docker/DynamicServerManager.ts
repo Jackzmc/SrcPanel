@@ -7,6 +7,11 @@ import ServerManager from '../ServerManager.js';
 import { DynamicServerGroup } from '../groups/DynamicServerGroup.js';
 import { ServerEvent } from '../DockerServer.js';
 import yaml from 'yaml';
+import logger from '../../../logger.js'
+
+const log = logger.child({ name: "DynamicServerManager"})
+
+
 export interface DockerTemplateConfig {
     id: string
     network?: "host" | string,
@@ -51,7 +56,7 @@ export default class DynamicServerManager {
         this.#srvManager = serverManager
         this.#docker = new Docker(dockerConfig)
         this.#docker.info().then(() => {
-            console.info(`[ServerManager/docker] Docker connected`)
+            log.info(`Docker connected, using prefix ${DOCKER_NAME_PREFIX}`)
         })
         this.#configDir = configDir
         DynamicServerManager.#instance = this
@@ -99,7 +104,7 @@ export default class DynamicServerManager {
             if(containerInfo.Labels["panel.template"]) {
                 const template = this.#templates[containerInfo.Labels["panel.template"]]
                 if(!template) {
-                    console.warn(`[ServerManager/docker] Warn: Found existing container (${containerInfo.Id.slice(0, 12)}${containerInfo.Names.join('')}) but does not match any template. skipping`)
+                    log.warn(`Found existing container (${containerInfo.Id.slice(0, 12)}${containerInfo.Names.join('')}) but does not match any template. skipping`)
                     continue
                 }
                 const container = this.#docker.getContainer(containerInfo.Id)
@@ -115,7 +120,7 @@ export default class DynamicServerManager {
             if(this.#instances[containerName]) {
                 return;
             }
-            console.info(`[ServerManager/docker] Found existing container (${containerInfo.Id.slice(0, 12)}${containerInfo.Names.join('')})`)
+            log.info(`Found existing container (${containerInfo.Id.slice(0, 12)}${containerInfo.Names.join('')})`)
             const instance = new DynamicServerInstance(template.config, container, template.config.bindIp, Number(port))
             await this.#registerInstance(instance)
         }
@@ -138,13 +143,14 @@ export default class DynamicServerManager {
                     this.#templates[id] = {
                         config,
                     }
+                    log.debug({ config }, `Loaded template ${id}`)
                 } catch(err) {
-                    console.error(`[ServerManager/docker] Failed to pull image \"${config.image}\":`, err)
+                    log.error(`Failed to pull image \"${config.image}\":`, err)
                 }
             }
-            console.info(`[ServerManager/docker] Loaded ${Object.keys(this.#templates).length} templates`)
+            log.info(`Loaded ${Object.keys(this.#templates).length} templates`)
         } catch(err) {
-            console.error("[ServerManager] Error: Failed to load templates.yaml: ", err)
+            log.error("Failed to load templates.yaml: ", err)
         }
     }
 
@@ -160,6 +166,7 @@ export default class DynamicServerManager {
 
         // Find next available, filling in gaps
         let port = ofTemplate.ports.start;
+        log.trace("finding available port from " + ofTemplate.ports.start)
         if(ports.includes(port)) {
             while(ports.includes(port)) {
                 port++
@@ -229,7 +236,7 @@ export default class DynamicServerManager {
                 ...labels
             },
         }
-        console.log("config", config)
+        log.debug("config", config)
         const container = await this.#docker.createContainer(config)
         const instance =  new DynamicServerInstance(template.config, container, template.config.bindIp, port)
         await this.#registerInstance(instance)
