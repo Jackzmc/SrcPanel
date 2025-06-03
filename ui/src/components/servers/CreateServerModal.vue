@@ -146,6 +146,7 @@ import { computed, onMounted, ref } from 'vue';
 import { notify } from '@kyvg/vue3-notification';
 import { formatSize } from '@/js/util.js';
 import ServerGroupListItem from './ServerGroupListItem.vue';
+import { APIListServersV2_Groups } from '../../../../common-types/Server';
 
 const emit = defineEmits(["close"])
 
@@ -242,8 +243,8 @@ function confirmGroup() {
 async function fetchGroups() {
   const response = await fetch("/api/servers/groups")
   if(response.ok) {
-    const json = await response.json()
-    serverGroups.value = json.groups
+    const json: { groups: APIListServerGroup[] } = await response.json()
+    serverGroups.value = json.groups.filter(g => g.type === 'docker' || g.type === 'custom')
   }
 }
 
