@@ -64,8 +64,12 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         fastify.servers.resetInactivity()
     })
 
-    fastify.get('/groups', async(req, reply) => {
-        const groups: Record<string, APIListServerGroup> = Object.fromEntries(Object.entries(fastify.servers.GroupsRecord).map(([id, group]) => {
+    fastify.get('/groups', async(req: FastifyRequest<{Querystring: { type?: string }}>, reply) => {
+        let groupsEntries = Object.entries(fastify.servers.GroupsRecord)
+        if(req.query.type) {
+            groupsEntries = groupsEntries.filter(([_, group]) => group.Type === req.query.type?.toLowerCase())
+        }
+        const groups: Record<string, APIListServerGroup> = Object.fromEntries(groupsEntries.map(([id, group]) => {
             return [id, {
                 id: id,
                 name: group.Name,
