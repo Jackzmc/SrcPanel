@@ -157,6 +157,10 @@ enum ModalState {
   InstanceFailed
 }
 
+const props = defineProps<{
+  group: GroupInfo
+}>()
+
 const stateTitle = computed(() => {
   switch(state.value) {
     case ModalState.SelectGroup:
@@ -272,6 +276,14 @@ async function createInstance() {
 
 onMounted(async () => {
   await fetchGroups()
+  if(props.group) {
+    const group = serverGroups.value.find(g => g.id === props.group.id)
+    if(!group) console.warn("could not find prop group in fetched groups")
+    else {
+      selectedGroup.value = group
+      state.value = ModalState.ConfirmCreateInstance
+    }
+  }
 })
 
 </script>
