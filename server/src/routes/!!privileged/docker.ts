@@ -2,9 +2,10 @@ import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
     const manager = fastify.servers.Docker
+    if(!manager) return // TODO: make catch all to inform not supported?
 
     fastify.get('/templates', (req, reply) => {
-        return manager.Templates
+        return manager!.Templates
     })
 
     fastify.post('/templates/:templateId/create-server', async (req: FastifyRequest<{Params: {templateId: string}, Querystring: { start?: boolean }}>, reply) => {
@@ -15,7 +16,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             })
         }
         try {
-            const instance = await manager.createInstance(req.params.templateId)
+            const instance = await manager!.createInstance(req.params.templateId)
             if(req.query.start) {
                 await instance.start()
             }
@@ -40,7 +41,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 message: "A valid template id must be provided"
             })
         }
-        const template = manager.getTemplate(req.params.templateId)
+        const template = manager!.getTemplate(req.params.templateId)
         if(!template) {
             return reply.code(404).send({
                 error: "NO_TEMPLATE_FOUND",
@@ -48,7 +49,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             })
         }
 
-        await manager.updateTemplate(template)
+        await manager!.updateTemplate(template)
         return reply.code(200).send()
     })
 
@@ -59,7 +60,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 message: "A valid instance id must be provided. They will be in the format of panel-{templateId}-{port}"
             })
         }
-        const instance = manager.getInstance(req.params.id)
+        const instance = manager!.getInstance(req.params.id)
         if(!instance) {
             return reply.code(404).send({
                 error: "INVALID_INSTANCE_ID",
@@ -80,7 +81,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 message: "A valid instance id must be provided. They will be in the format of panel-{templateId}-{port}"
             })
         }
-        const instance = manager.getInstance(req.params.id)
+        const instance = manager!.getInstance(req.params.id)
         if(!instance) {
             return reply.code(404).send({
                 error: "INVALID_INSTANCE_ID",

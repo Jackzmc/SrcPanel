@@ -38,6 +38,8 @@ export interface DockerTemplateContainer {
     config: DockerTemplateConfig,
 }
 
+export const DOCKER_NAME_PREFIX = process.env.DOCKER_NAME_PREFIX ?? "panel"
+
 export default class DynamicServerManager {
     static #instance: DynamicServerManager;
     #docker: Docker
@@ -91,7 +93,7 @@ export default class DynamicServerManager {
 
     async *#getContainers() {
         const containers = await this.#docker.listContainers({ all: true, filters: {
-            "label": ["panel.template"]
+            "label": [`${DOCKER_NAME_PREFIX}.template`]
         }})
         for(const containerInfo of containers) {
             if(containerInfo.Labels["panel.template"]) {
@@ -108,8 +110,8 @@ export default class DynamicServerManager {
 
     async findExisting() {
         for await(const { containerInfo, container, template } of this.#getContainers()) {
-            const port = containerInfo.Labels["panel.port"]
-            const containerName = `panel-${template.config.id}-${port}`
+            const port = containerInfo.Labels[`${DOCKER_NAME_PREFIX}.port`]
+            const containerName = `${DOCKER_NAME_PREFIX}-${template.config.id}-${port}`
             if(this.#instances[containerName]) {
                 return;
             }
@@ -151,7 +153,7 @@ export default class DynamicServerManager {
         const ports: number[] = []
         for await(const { containerInfo, container, template } of this.#getContainers()) {
             if(template.config.id != ofTemplate.id) continue
-            const port = Number(containerInfo.Labels["panel.port"])
+            const port = Number(containerInfo.Labels[`${DOCKER_NAME_PREFIX}.port`])
             ports.push(port)
         }
         ports.sort()
@@ -178,7 +180,7 @@ export default class DynamicServerManager {
         return i;
     }
 
-    async createInstance(templateId: string, volumes: string[] = [], labels: Record<string, string|undefined> = {}) {
+    async createInstance(templateId: string, volumes: string[] = [], labels: Record<string, string> = {}) {
         const template = this.#templates[templateId]
         if(!template) throw new Error(`Unknown template id: \"${templateId}\"`)
         const port = await this.#getNextPort(template.config)
@@ -192,7 +194,7 @@ export default class DynamicServerManager {
         let commands = Array.isArray(template.config.command) ? template.config.command : [template.config.command]
         commands = commands.map(cmd => DynamicServerGroup.formatTemplateVar(cmd, templVars))
         const config = {
-            name: `panel-${templateId}-${port}`,
+            name: `${DOCKER_NAME_PREFIX}-${templateId}-${port}`,
             Image: template.config.image,
             AttachStdin: true,
             Tty: true,
@@ -222,8 +224,8 @@ export default class DynamicServerManager {
                 },
             },
             Labels: {
-                "panel.template": templateId,
-                "panel.port": port.toString(),
+                [`${DOCKER_NAME_PREFIX}.template`]: templateId,
+                [`${DOCKER_NAME_PREFIX}.port`]: port.toString(),
                 ...labels
             },
         }
