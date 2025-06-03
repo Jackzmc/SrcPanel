@@ -31,7 +31,7 @@
       creating a new instance</p>
     <p class="is-size-5" v-else>Are you sure? </p>
     <br>
-    <p class="is-size-5">New instances will automatically be reclaimed after they remain empty for some amount of time</p>
+    <p class="is-size-5">New instances may automatically be removed after they remain empty for some amount of time</p>
   </template>
   <template v-else-if="state === ModalState.StartingInstance">
     <p class="is-size-5">This shouldn't take too long.</p>
