@@ -6,7 +6,7 @@ const envToLogger = {
     transport: {
       targets: [
         {
-          level: process.env.FASTIFY_DEBUG_LEVEL || 'debug',
+          level: process.env.LOG_LEVEL || 'debug',
           target: 'pino-pretty',
           options: {
             translateTime: 'SYS:hh:MM',
@@ -15,10 +15,10 @@ const envToLogger = {
         }
       ]
     },
-    level: process.env.FASTIFY_DEBUG_LEVEL || 'debug'
+    level: process.env.LOG_LEVEL || 'debug'
   },
   production: {
-    level: process.env.FASTIFY_DEBUG_LEVEL || 'info',
+    level: process.env.LOG_LEVEL || 'info',
     redact: ['req.headers.authorization', "req.headers['x-apikey']"],
     transport: {
       targets: [
