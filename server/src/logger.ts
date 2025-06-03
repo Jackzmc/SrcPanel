@@ -18,7 +18,7 @@ const envToLogger = {
     level: process.env.FASTIFY_DEBUG_LEVEL || 'debug'
   },
   production: {
-    level: process.env.FASTIFY_DEBUG_LEVEL || 'warn',
+    level: process.env.FASTIFY_DEBUG_LEVEL || 'info',
     redact: ['req.headers.authorization', "req.headers['x-apikey']"],
     transport: {
       targets: [
