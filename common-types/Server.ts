@@ -168,8 +168,7 @@ export interface APIListServerGroup {
     id: string,
     name: string,
     currentInstances: number,
-    game: string,
-    type?: string
+    game?: string,
 }
 
 export type APIListServersV2_Groups = Record<string, APIListServersV2_GroupEntry>

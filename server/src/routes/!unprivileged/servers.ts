@@ -74,7 +74,6 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 id: id,
                 name: group.Name,
                 game: group.Game,
-                type: group.Type,
                 currentInstances: 0
             }]
         }))
