@@ -54,7 +54,7 @@ import { computed, ref } from 'vue';
 import { notify } from '@kyvg/vue3-notification';
 const props = defineProps<{
   server: ServerInfo,
-  type: ServerType,
+  game: string,
   manage?: boolean
 }>()
 

@@ -58,7 +58,7 @@ export type PlayerAction = "kick"
 interface BaseGroupInfo {
     id: string,
     name: string,
-    type: ServerType,
+    game: string,
     actions?: ServerAction[]
 }
 export interface StandardGroupInfo extends BaseGroupInfo {
@@ -83,7 +83,7 @@ export interface ServerData {
     ip: string,
     port: number,
     /** @deprecated use 'game' */
-    type: string, 
+    type?: string, 
     game: string,
 }
 
@@ -122,7 +122,7 @@ export interface ServerGroup {
     name: string,
     description: string,
     servers: Record<string, ServerInfo>,
-    type: ServerType,
+    game: string,
     templateId?: string
 }
 
@@ -168,8 +168,8 @@ export interface APIListServerGroup {
     id: string,
     name: string,
     currentInstances: number,
-    game?: string,
-    type: string
+    game: string,
+    type?: string
 }
 
 export type APIListServersV2_Groups = Record<string, APIListServersV2_GroupEntry>
@@ -187,4 +187,16 @@ export interface APIListServersV2_Server {
 export interface APIListServersV2 {
     groups: APIListServersV2_Groups,
     servers: APIListServersV2_Server[]
+}
+
+export type GAME_TYPE = "source" | "minecraft" | "other"
+export const GAME_TYPE_MAP: Record<string, GAME_TYPE> = {
+    l4d2: "source",
+    tf2: "source",
+    csgo: "source",
+    cs2: "source",
+    minecraft: "minecraft"
+}
+export const GAME_TYPE_CONFIG: { [key: string] : { hasMap: boolean }} = {
+    ["source"]: { hasMap: true },
 }

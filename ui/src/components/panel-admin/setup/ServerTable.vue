@@ -21,7 +21,7 @@
         <td class="valign" style="width:1%"><Icon class="handle" icon="fa-bars"></Icon></td>
         <td class="valign">{{ server.id }}</td>
         <td class="valign">{{ server.name }}</td>
-        <td class="valign">{{ server.type }}</td>
+        <td class="valign">{{ server.game }}</td>
         <td class="valign">{{ server.ip }}</td>
         <td class="valign">{{ server.port }}</td>
         <td>

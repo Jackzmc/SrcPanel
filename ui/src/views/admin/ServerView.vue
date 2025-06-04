@@ -73,7 +73,7 @@
             </span> -->
             <table class="table is-fullwidth is-size-4">
               <tbody>
-                <tr v-if="serverInfo.type === 'source'">
+                <tr v-if="gameType === 'source'">
                   <th>Map</th>
                   <td v-if="mapInfo">
                     <h4 class="title is-4">{{mapInfo.name}}
@@ -84,7 +84,7 @@
                   <td v-else-if="status.data?.map">{{ status.data.map }}</td>
                   <td v-else><em data-tooltip="Unknown">-</em></td>
                 </tr>
-                <tr v-if="serverInfo.type === 'source'">
+                <tr v-if="gameType === 'source'">
                   <th>Gamemode</th>
                   <td v-if="status.data?.gamemode" :data-tooltip="status.data.gamemode">
                     {{ formatGamemode(status.data.gamemode) }}
@@ -519,7 +519,7 @@ import { UserPrivilegeCode } from '../../../../common-types/Privileges';
 import { formatDate, getDuration } from '../../js/util.js';
 import UserComponent, { User } from '@/components/UserComponent.vue';
 import Console from '@/components/server/Console.vue'
-import { ServerData, ServerInfo, ServerDetailed, ServerAvailableFeatures, ComputeStats, ServerStatus, VoiceUser } from '../../../../common-types/Server';
+import { ServerData, ServerInfo, ServerDetailed, ServerAvailableFeatures, ComputeStats, ServerStatus, VoiceUser, GAME_TYPE_MAP, GAME_TYPE_CONFIG } from '../../../../common-types/Server';
 import ServerMetricsTab from '@/components/server/ServerMetricsTab.vue';
 import { ClientOutPayload, ServerOutPacket, ServerOutPayload } from '../../../../common-types/ServerWebsocket';
 import ConfigFileEditor from '@/components/server/ConfigFileEditor.vue';
@@ -527,6 +527,14 @@ import ListItem from '@/components/ListItem.vue';
 
 const MAX_LOGS_LINES = 350
 const MAX_METRIC_HISTORY = 300
+
+const gameType = computed(() => {
+  return serverInfo.value && GAME_TYPE_MAP[serverInfo.value?.game]
+})
+const gameConfig = computed(() => {
+  return gameType.value && GAME_TYPE_CONFIG[gameType.value]
+})
+
 
 const FinaleStageName: Record<FinaleStage, string> = {
     [FinaleStage.Gauntlet]: "Gauntlet",

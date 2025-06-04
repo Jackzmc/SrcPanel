@@ -40,5 +40,5 @@ export interface CustomServerInfo {
   hostname: string,
   ip: string,
   port: number,
-  type: string,
+  game: string,
 }

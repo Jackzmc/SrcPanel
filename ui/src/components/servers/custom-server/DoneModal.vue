@@ -24,8 +24,8 @@
         <td>{{ server.hostname }}:{{ server.port }}</td>
       </tr>
       <tr>
-        <th>Type</th>
-        <td>{{ server.type }}</td>
+        <th>Game</th>
+        <td>{{ server.game }}</td>
       </tr>
       <tr>
         <th>Connect with</th>
