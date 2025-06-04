@@ -33,6 +33,9 @@
               <Icon icon="wrench">Cvars</Icon>
             </router-link>
             <hr class="navbar-divider">
+            <router-link to="/docs/maps" class="navbar-item">
+              Maps
+            </router-link>
             <router-link to="/docs/ftt" class="navbar-item">
               Feed The Trolls
             </router-link>

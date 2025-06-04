@@ -42,6 +42,15 @@ const routes = [
     }
   },
   {
+    name: "docs-maps",
+    path: '/docs/maps',
+    component: () => import('../views/docs/MapsView.vue'),
+    meta: {
+      title: "L4D2 Maps",
+      description: ""
+    }
+  },
+  {
     name: 'docs-ftt',
     path: '/docs/ftt',
     component: () => import('../views/docs/FeedTheTrollsView.vue'),
