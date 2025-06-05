@@ -521,7 +521,7 @@ import UserComponent, { User } from '@/components/UserComponent.vue';
 import Console from '@/components/server/Console.vue'
 import { ServerData, ServerInfo, ServerDetailed, ServerAvailableFeatures, ComputeStats, ServerStatus, VoiceUser, GAME_TYPE_MAP, GAME_TYPE_CONFIG } from '../../../../common-types/Server';
 import ServerMetricsTab from '@/components/server/ServerMetricsTab.vue';
-import { ClientOutPayload, ServerOutPacket, ServerOutPayload } from '../../../../common-types/ServerWebsocket';
+import { ClientOutPayload, ServerOutPacket } from '../../../../common-types/ServerWebsocket';
 import ConfigFileEditor from '@/components/server/ConfigFileEditor.vue';
 import ListItem from '@/components/ListItem.vue';
 
@@ -532,7 +532,7 @@ const gameType = computed(() => {
   return serverInfo.value && GAME_TYPE_MAP[serverInfo.value?.game]
 })
 const gameConfig = computed(() => {
-  return gameType.value && GAME_TYPE_CONFIG[gameType.value]
+  return (gameType.value && GAME_TYPE_CONFIG[gameType.value]) || {}
 })
 
 

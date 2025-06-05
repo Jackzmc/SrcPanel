@@ -29,6 +29,8 @@ export interface DynamicCreateGroupOptions extends CreateGroupOptions {
     maxEmptyServers?: number
 }
 
+const DOCKER_SERVER_READ_ONLY = process.env.DOCKER_SERVER_READ_ONLY
+
 // The number of seconds minimum that a server has to be detected empty, before it can be purged
 const MIN_EMPTY_TIME_FOR_PURGE = 1000 * 60 * 30
 // The interval of time to check that servers exist and to purge/start servers
@@ -98,6 +100,7 @@ export class DynamicServerGroup extends BaseDynamicServerGroup {
             // }
         }
         const servers = Object.values(this.servers).sort((a, b) => b.port - a.port)
+        if(DOCKER_SERVER_READ_ONLY) return
 
         // Ensure a minimum number of servers exist and are running
         for(let i = servers.length; i < this.#minServers; i++) {

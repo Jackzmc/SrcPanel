@@ -56,6 +56,7 @@ export default abstract class BaseDynamicServerGroup extends ServerGroup<DockerS
         } catch(err) {
             console.warn(`[ServerManager] Warn: Could not resolve IP for hostname ${host}:\n`, err)
         }
+        /// This is where server template gets applied
         const server = new DockerServer(this, {
                 id,
                 name: BaseDynamicServerGroup.formatTemplateVar(this.ServerTemplate.name ?? "", vars),

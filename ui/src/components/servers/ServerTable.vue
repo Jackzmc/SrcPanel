@@ -61,7 +61,7 @@ const gameType = computed(() => {
   return GAME_TYPE_MAP[props.group.game]
 })
 const gameConfig = computed(() => {
-  return gameType.value && GAME_TYPE_CONFIG[gameType.value]
+  return (gameType.value && GAME_TYPE_CONFIG[gameType.value]) || {}
 })
 
 let createModal = ref(false)

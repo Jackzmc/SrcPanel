@@ -168,7 +168,7 @@ export default abstract class Server implements IAction {
           this.Plugin?.init(),
           this.Metrics?.init()
       ])
-      this._log.info({ info: this.info, features: this.features, actions: this._actions.map(a => a.name) }, "initialized")
+      this._log.info({ activityId: this.activityLogId, info: this.info, features: this.features, actions: this._actions.map(a => a.name) }, "initialized")
     }
 
     get Console(): ConsoleFeature | null { return this._logs }

@@ -585,6 +585,7 @@ onMounted(async () => {
 })
 
 onBeforeUnmount(() => {
+  console.debug("clear", refreshTimer)
   clearInterval(refreshTimer)
 })
 </script>
