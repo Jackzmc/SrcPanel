@@ -55,7 +55,7 @@
         </table>
       </div>
     </article> -->
-    <div v-for="notification,i in notifications" :key="i" class="column is-6">
+    <div v-for="notification,i in notifications" :key="i" class="column is-10">
       <div :class="['notification','is-'+notification.type,'is-light']">
       <button class="delete" @click="notifications.splice(i,1)"></button>
       <h5 class="title is-5">Action Error</h5>
