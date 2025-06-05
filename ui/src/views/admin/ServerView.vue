@@ -507,7 +507,7 @@
 
 <script setup lang="ts">
 import { useRoute, useRouter } from 'vue-router'
-import { ref, computed, onUnmounted, onBeforeUnmount, onMounted, nextTick } from 'vue';
+import { ref, computed, onUnmounted, onBeforeUnmount, onMounted, nextTick, onDeactivated, onActivated } from 'vue';
 import FolderBrower from'@/components/FolderBrowser.vue'
 import { PlayerData, PrivilegedUser } from '@/js/User';
 import { parseLog, getRelDate, request, formatSize } from '@/js/util';
@@ -1076,13 +1076,7 @@ async function init() {
   refreshInterval = setInterval(fetchServerActivities, FETCH_ACTIVITIES_INTERVAL)
 }
 
-// nowInterval = setInterval(() => {
-//   now.value = Date.now()
-//   if(liveStatus.value)
-//     lastLiveUpdateTime.value = getRelDate(liveStatus.value.lastUpdate / 1000)
-// }, 1000)
-
-onMounted(async() => {
+onActivated(async() => {
   document.addEventListener("keyup", _toggleShift)
   document.addEventListener("keydown", _toggleShift)
   await fetchServersCompact()
@@ -1091,7 +1085,7 @@ onMounted(async() => {
 function _toggleShift(e: any) {
   shiftPressed.value = !!e.shiftKey
 }
-onBeforeUnmount(() => {
+onDeactivated(() => {
   document.removeEventListener("keyup", _toggleShift)
   document.removeEventListener("keydown", _toggleShift)
   clearInterval(refreshInterval)

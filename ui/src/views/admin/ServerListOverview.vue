@@ -41,7 +41,7 @@
 import ServerTable from '@/components/servers/ServerTable.vue';
 import { request } from '@/js/util';
 import { notify } from '@kyvg/vue3-notification';
-import { ref, computed, onMounted, onDeactivated, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onDeactivated, onUnmounted, onBeforeUnmount, onActivated } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 
 const REFRESH_SECONDS = 6
@@ -119,25 +119,37 @@ async function refreshServers(notify = false) {
   }
 }
 
-onUnmounted(() => {
-  clearInterval(refreshTimer.value)
-  clearInterval(secondsTimer.value)
-})
-
-
 function startCountdown() {
   lastRefresh.value = REFRESH_SECONDS
   secondsTimer.value = setInterval(() => {
     if(--lastRefresh.value! <= 0) {
-      clearTimeout(secondsTimer.value)
+      clearInterval(secondsTimer.value)
     }
   }, 1000)
 }
 
-onMounted(() => {
-  refreshServers(true)
-  refreshTimer.value = setInterval(() => {
-    refreshServers()
-  }, REFRESH_INTERVAL)
+onActivated(() => {
+  setTimers(true)
 })
+onDeactivated(() => {
+  setTimers(false)
+})
+
+function setTimers(active = false) {
+  console.debug("setTimers", active)
+  if(active) {
+    if(refreshTimer.value != undefined) return // already started
+    refreshServers(true)
+    clearInterval(refreshTimer.value)
+    refreshTimer.value = setInterval(() => {
+      console.log("TIMER")
+      refreshServers()
+    }, REFRESH_INTERVAL)
+  } else {
+    clearInterval(refreshTimer.value)
+    clearInterval(secondsTimer.value)
+    refreshTimer.value = undefined
+  }
+}
+
 </script>

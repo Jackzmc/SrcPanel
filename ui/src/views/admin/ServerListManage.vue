@@ -221,7 +221,7 @@
 import Field from '@/components/Field.vue'
 import ModalCard from '@/components/ModalCard.vue'
 import CreateServerModal from '@/components/servers/CreateServerModal.vue'
-import { computed, onBeforeMount, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, onActivated, onBeforeMount, onBeforeUnmount, onDeactivated, onMounted, ref } from 'vue'
 import { APIListServersCompactV2, APIListServersV2, APIListServersV2_Groups, APIListServersV2_Server, ServerAction } from '../../../../common-types/Server.js'
 import { PanelMetaInfo } from '../../../../common-types/Panel.js'
 import { notify } from '@kyvg/vue3-notification'
@@ -572,19 +572,16 @@ async function fetchServers(compact = false) {
   return false
 }
 
-onMounted(() => {
-  fetchServers(false)
-})
 let refreshTimer: any
 
-onMounted(async () => {
+onActivated(async () => {
   if(await fetchServers()) { // only set timer on first success
     refreshTimer = setInterval(() => fetchServers(true), LIST_REFRESH_INTERVAL)
   }
 
 })
 
-onBeforeUnmount(() => {
+onDeactivated(() => {
   console.debug("clear", refreshTimer)
   clearInterval(refreshTimer)
 })
