@@ -123,7 +123,7 @@
         </div>
         <div class="level-right">
           <div class="level-item">
-            <button :class="['button',{'is-loading': refreshingServers}]" @click="fetchServers">
+            <button :class="['button',{'is-loading': refreshingServers}]" @click="fetchServers(false)">
               <Icon icon="fa-sync"></Icon>
             </button>
           </div>
@@ -220,7 +220,7 @@ import Field from '@/components/Field.vue'
 import ModalCard from '@/components/ModalCard.vue'
 import CreateServerModal from '@/components/servers/CreateServerModal.vue'
 import { computed, onBeforeMount, onBeforeUnmount, onMounted, ref } from 'vue'
-import { APIListServersV2, APIListServersV2_Groups, APIListServersV2_Server, ServerAction } from '../../../../common-types/Server.js'
+import { APIListServersCompactV2, APIListServersV2, APIListServersV2_Groups, APIListServersV2_Server, ServerAction } from '../../../../common-types/Server.js'
 import { PanelMetaInfo } from '../../../../common-types/Panel.js'
 import { notify } from '@kyvg/vue3-notification'
 
@@ -511,7 +511,7 @@ function selectAllServers(event: Event) {
 }
 
 
-async function fetchServers() {
+async function fetchServers(compact = false) {
   refreshingServers.value = true
 
   for(const [i,notify] of notifications.value.entries()) {
@@ -521,22 +521,31 @@ async function fetchServers() {
   }
 
   try {
-    const response = await fetch("/api/servers/v2")
+    const response = await fetch(compact ? "/api/servers/v2/compact" : "/api/servers/v2")
     if(response.ok) {
-      const json = await response.json() as APIListServersV2
-      groups.value = json.groups
+      const json = await response.json() as APIListServersV2 | APIListServersCompactV2
+      if('groups' in json) {
+        groups.value = json.groups
+      }
       for(const server of json.servers) {
         const state = server.online ? ServerState.Online : ServerState.Offline
-        serverMap.value[server.id] = {
-          data: server,
-          checked: serverMap.value[server.id]?.checked ?? false,
-          group: {
-            id: server.groupId,
-            name: groups.value[server.groupId]?.name ?? server.groupId
-          },
-          state,
-          stateData: StateMap[state],
-          quickActions: server.actions.filter(a => a.inQuickAction)
+        if('host' in server) {
+          // Not compact, full refresh
+          serverMap.value[server.id] = {
+            data: server,
+            checked: serverMap.value[server.id]?.checked ?? false,
+            group: {
+              id: server.groupId,
+              name: groups.value[server.groupId]?.name ?? server.groupId
+            },
+            state,
+            stateData: StateMap[state],
+            quickActions: server.actions.filter(a => a.inQuickAction)
+          }
+        } else {
+          // Compact, only update status / online
+          serverMap.value[server.id].data.status = server.status
+          serverMap.value[server.id].state = state
         }
       }
       refreshingServers.value = false
@@ -558,13 +567,13 @@ async function fetchServers() {
 }
 
 onMounted(() => {
-  fetchServers()
+  fetchServers(false)
 })
 let refreshTimer: any
 
 onMounted(async () => {
   if(await fetchServers()) { // only set timer on first success
-    refreshTimer = setInterval(() => fetchServers(), LIST_REFRESH_INTERVAL)
+    refreshTimer = setInterval(() => fetchServers(true), LIST_REFRESH_INTERVAL)
   }
 
 })
