@@ -161,7 +161,10 @@ export interface APIListServerGroup {
     id: string,
     name: string,
     currentInstances: number,
+    /** A group might not have a game attached, but its servers will */
     game?: string,
+    /** server type NOT game - docker, custom, list **/
+    type: string
 }
 
 export type APIListServersV2_Groups = Record<string, APIListServersV2_GroupEntry>

@@ -229,7 +229,7 @@ const stateTitle = computed(() => {
 //   }
 // ])
 
-let serverGroups = ref<APIListServerGroup[]>(undefined)
+let serverGroups = ref<APIListServerGroup[]|undefined>(undefined)
 let state = ref<ModalState>(ModalState.SelectGroup)
 let selectedGroup = ref<APIListServerGroup>()
 let data = ref<any|null>(null)

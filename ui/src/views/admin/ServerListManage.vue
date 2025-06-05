@@ -91,15 +91,15 @@
             </Field>
           </div>
           <div class="level-item" @mouseleave="showActionDropdown = false" v-if="selectedServers.length > 0">
-            <div :class="['dropdown',{'is-active': showActionDropdown}]">
+            <div class="dropdown">
               <div class="dropdown-trigger">
-                <button class="button" aria-haspopup="true" aria-controls="dropdown-menu" @click="showActionDropdown = !showActionDropdown">
+                <button :class="['button',{'is-loading': pendingAction}]" :disabled="pendingAction?true:undefined" aria-haspopup="true" aria-controls="dropdown-menu" @click="showActionDropdown = !showActionDropdown">
                   <Icon icon="fa-chevron-down" text-left="Perform action"></Icon>
                 </button>
               </div>
               <div class="dropdown-menu" id="dropdown-menu" role="menu">
                 <div class="dropdown-content">
-                  <a class="dropdown-item" v-for="action in allActions" :key="action.name"
+                  <a :class="['dropdown-item',{'is-loading': pendingAction}]" v-for="action in allActions" :key="action.name"
                     @click="performAction(null, action)"
                     :style="{ color: action.color }"
                     :data-tooltip="action.description || undefined"
@@ -161,7 +161,7 @@
                   <Icon :icon="getSortIcon(field.label)"></Icon>
                 </a>
               </th>
-              <th>Actions</th>
+              <th>Quick Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -193,7 +193,9 @@
                 <div class="buttons my-0">
                   <!-- TODO: pull priority? or action flag -->
                   <a v-for="(action, i) in server.quickActions" :key="i" :data-tooltip="action.description"
-                    class="button is-small has-tooltip-multiline" @click="performAction([server], action)">{{ action.name }}</a>
+                    :class="['button','is-small','has-tooltip-multiline',{'is-loading': pendingAction}]"
+                    @click="performAction([server], action)"
+                  >{{ action.name }}</a>
                 </div>
                 <!-- <div class="buttons mt-2">
                   <a class="button is-small" @click="performAction([server], {})">Request Restart</a>
@@ -351,6 +353,7 @@ let serverMap = ref<Record<string, UIServerInfo>>({})
 let sort = ref<{field: string, descending: boolean, sortFn: (a: UIServerInfo, b: UIServerInfo) => any}|undefined>(undefined)
 let refreshingServers = ref(false)
 let refreshError = ref()
+let pendingAction = ref(false)
 
 let notifications = ref<{ errors: { groupId: string, serverId: string, code: string, message: string }[], message?: string, type: string, expireOn: number }[]>([])
 
@@ -437,6 +440,8 @@ class ActionError extends Error {
 }
 
 async function performAction(servers: UIServerInfo[]|null, action: ServerAction) {
+  if(pendingAction.value) return console.warn("performAction not ready")
+  pendingAction.value = true
   if(!servers) servers = selectedServers.value
   const promises = servers.map(async server => {
     try {
@@ -454,6 +459,7 @@ async function performAction(servers: UIServerInfo[]|null, action: ServerAction)
     }
   })
   const results = await Promise.allSettled(promises)
+  pendingAction.value = false
   const failed = results.filter(r => r.status == "rejected")
   if(failed.length >= promises.length) {
     notifications.value.push({
