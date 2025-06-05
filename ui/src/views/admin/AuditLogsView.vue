@@ -42,7 +42,7 @@
           </a>
         </div>
         <template v-for="entry in entries" :key="entry.id">
-          <div :class="['list-item', {'has-background-primary': entry.id == Number(filters.aroundId)}]" @mouseenter="hoverId = entry.id">
+          <div :class="['list-item', {'has-background-primary-light': entry.id == Number(filters.aroundId)}]" @mouseenter="hoverId = entry.id">
             <div class="list-item-image" v-if="entry.client.avatarUrl || entry.target.avatarUrl">
               <figure class="image is-48x48">
                 <img class="is-rounded" :src="entry.client.avatarUrl || entry.target.avatarUrl">
@@ -455,6 +455,7 @@ async function getInfo() {
     logInfo.value = json
     logInfo.value.loading = false
   } else {
+    logInfo.value.loading = false
     throw Error(response?.statusText)
   }
 }
@@ -609,7 +610,8 @@ async function jumpTo(entry: any) {
       aroundId: entry.id
     }
   })
-  await fetchLogs(entry.id, 'around')
+  // await fetchLogs(entry.id, 'around')
+  await search()
 }
 
 function getShareLink(entry: LogEntry) {
