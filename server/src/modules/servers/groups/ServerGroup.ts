@@ -27,6 +27,7 @@ export default class ServerGroup<T extends Server = Server> {
         this.actions = actions
     }
 
+    /** The type (not game) of server, such as 'docker', 'list', 'custom' */
     get Type() { return this.type }
     get Id() { return this.id }
     get Name() { return this.name }
