@@ -11,6 +11,7 @@
             <a :disabled="canUpdate" :class="['button', {'is-loading': updateStatus.state === 'CHECKING'}]" @click="updateServer">Update Panel</a>
             <a :disabled="canUpdate" :class="['button']" @click="restartPanel">Restart Panel</a>
             <a :disabled="canUpdate" :class="['button']" @click="updateAdmins">Update Admins Cache</a>
+            <a :disabled="canUpdate" :class="['button']" @click="recreateDynamicServers">Recreate Servers</a>
           </div>
 
           <p class="has-text-danger" v-if="updateStatus.error">{{updateStatus.error}}</p>
@@ -36,7 +37,7 @@
 import { PrivilegedUser } from "@/js/User";
 import { request } from "@/js/util";
 import { notify } from "@kyvg/vue3-notification";
-import { ref, computed, onBeforeMount, onMounted, onUnmounted, defineAsyncComponent } from "vue"
+import { ref, computed, onBeforeMount, onMounted, onUnmounted, defineAsyncComponent, onActivated, onDeactivated } from "vue"
 import { HealthReport, UpdateState } from "../../../../common-types/Panel.js";
 import ConfigEditor from "@/components/panel-admin/ConfigEditor.vue";
 //@ts-ignore
@@ -106,6 +107,16 @@ async function updateServer() {
   }, 1000 * 7)
 }
 
+async function recreateDynamicServers() {
+  const response = await request('/api/panel/recreate-servers', { method: "POST"})
+  if(response?.ok) {
+    notify({
+      type: "success",
+      text: "Servers are being recreated",
+    })
+  }
+}
+
 async function restartPanel() {
   const response = await request('/api/panel/restart', { method: "POST"})
   if(response?.ok) {
@@ -140,11 +151,11 @@ onMounted(async () => {
   }
 })
 let refreshTimer = ref()
-onMounted(() => {
+onActivated(() => {
   refreshTimer.value = setInterval(fetchServerHealth, POLL_SERVER_HEALTH_INTERVAL)
   fetchServerHealth()
 })
-onUnmounted(() => {
+onDeactivated(() => {
   clearInterval(refreshTimer.value)
   refreshTimer.value = null
 })

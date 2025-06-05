@@ -15,7 +15,7 @@
   <FormatText class="subtitle" :text="discuss.description" markdown v-if="discuss.description" />
   <div class="columns is-mobile" v-if="discuss.type == APIDiscussionType.Radio || discuss.type == APIDiscussionType.Checkbox">
     <div class="column is-6">
-      <div :class="['box','field',{'is-clickable': canInteract}]" v-for="option of getOptions(0)" :key="option.id" @click="selectChoice(option)">
+      <div style="height:100%" :class="['box','field',{'is-clickable': canInteract}]" v-for="option of getOptions(0)" :key="option.id" @click="selectChoice(option)">
         <input v-if="canInteract && isSelection && 'selected' in discuss" v-model="discuss.selected" readonly :value="option" :id="option.id.toString()" class="is-checkradio" :type="optionType" :name="'choice' + discuss.id">
         <label :for="option.id.toString()">{{ option.label }}</label>
         <span v-if="showPercents" class="is-pulled-right has-text-info">
@@ -23,8 +23,8 @@
         </span>
       </div>
     </div>
-    <div class="column is-6">
-      <div :class="['box','field',{'is-clickable': canInteract}]" v-for="option of getOptions(1)" :key="option.id" @click="selectChoice(option)">
+    <div class="column is-6" >
+      <div style="height:100%" :class="['box','field',{'is-clickable': canInteract}]" v-for="option of getOptions(1)" :key="option.id" @click="selectChoice(option)">
         <input v-if="canInteract && isSelection && 'selected' in discuss" v-model="discuss.selected" readonly :value="option" :id="option.id.toString()" class="is-checkradio" :type="optionType" :name="'choice' + discuss.id">
         <label :for="option.id.toString()">{{ option.label }}</label>
         <span v-if="showPercents" class="is-pulled-right has-text-info">

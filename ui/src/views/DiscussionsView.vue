@@ -1,7 +1,8 @@
 <template>
-<div class="container">
+<div class="container is-fluid">
   <div class="columns">
-    <div class="column is-8">
+    <div class="column is-1"></div>
+    <div class="column is-7">
       <template v-if="selectedDiscussion">
         <div class="block mb-2">
           <router-link :to="{params: { id: '', title: '' }}"><Icon icon="fa-arrow-left" class="is-pulled-left" text="Back to discussions" /></router-link>
@@ -44,11 +45,14 @@
         </div>
       </div>
     </div>
-    <div class="column is-offset-1" v-else>
-      <Field label="Start A New Discussion" icon-left="far fa-comment" info="Press enter to continue">
-        <input type="text" class="input is-rounded" placeholder="Enter a title"  @keyup.enter="startNewDiscussion">
-      </Field>
+    <div class="column " v-else>
+      <div class="box">
+        <Field label="Start a new discussion" icon-left="far fa-comment" info="Press enter to continue">
+          <input type="text" class="input is-rounded" placeholder="My new discussion" @keyup.enter="startNewDiscussion">
+        </Field>
+      </div>
     </div>
+    <div class="column is-1"></div>
   </div>
 </div>
 </template>

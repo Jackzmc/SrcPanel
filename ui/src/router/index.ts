@@ -1,7 +1,7 @@
-import { RouteLocationNormalizedLoaded, createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHistory } from 'vue-router'
 import Overview from '../views/OverviewView.vue'
 
-const DEFAULT_TITLE = "L4D2 Admin Guide"
+const DEFAULT_TITLE = import.meta.env.VITE_SITE_TITLE
 
 const routes = [
   {
@@ -10,7 +10,8 @@ const routes = [
     component: Overview,
     meta: {
       title: 'Overview',
-      description: 'Information & Administration Dashboard'
+      description: 'Information & Administration Dashboard',
+      hideHero: true
     }
   },
   {
@@ -38,6 +39,15 @@ const routes = [
     meta: {
       title: 'Cvars',
       description: 'All the cvars you may want to change up the gameplay'
+    }
+  },
+  {
+    name: "docs-maps",
+    path: '/docs/maps',
+    component: () => import('../views/docs/MapsView.vue'),
+    meta: {
+      title: "L4D2 Maps",
+      description: ""
     }
   },
   {
@@ -296,8 +306,17 @@ const routes = [
     }
   },
   {
+    name: 'create-custom-server',
+    path: '/admin/create-server',
+    component: () => import('../views/admin/CustomServerWizard.vue'),
+    meta: {
+      title: 'Custom Servers',
+      authRequired: true,
+    },
+  },
+  {
     name: 'admin-server-view',
-    path: '/admin/servers/:id/:tab?',
+    path: '/admin/servers/:serverId/:tab?',
     component: () => import('../views/admin/ServerView.vue'),
     meta: {
       title: 'Server View',
@@ -306,13 +325,43 @@ const routes = [
     },
   },
   {
-    name: 'admin-servers',
+    name: 'servers',
     path: '/admin/servers',
-    component: () => import('../views/admin/ServerManagementView.vue'),
+    component: () => import('../views/admin/ServerListOverview.vue'),
     meta: {
-      title: 'Server Management',
+      title: 'Manage Servers',
       description: 'View all the servers and manage them, all in one place',
       authRequired: true
+    },
+  },
+  {
+    name: 'servers-manage',
+    path: '/admin/servers/manage',
+    component: () => import('../views/admin/ServerListManage.vue'),
+    meta: {
+      title: 'Server Instances',
+      description: 'View all the servers and manage them, all in one place',
+      authRequired: true
+    },
+  },
+  {
+    name: 'servers-manage-group',
+    path: '/admin/servers/:groupId',
+    component: () => import('../views/admin/ServerListManage.vue'),
+    meta: {
+      title: 'Manage Servers',
+      description: 'View all the servers and manage them, all in one place',
+      authRequired: true
+    },
+  },
+  {
+    name: 'servers-manage-server',
+    path: '/admin/servers2/:groupId/:serverId',
+    component: () => import('../views/admin/ServerView.vue'),
+    meta: {
+      title: 'Server View',
+      authRequired: true,
+      hideHero: true
     },
   },
   {

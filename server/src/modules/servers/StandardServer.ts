@@ -9,6 +9,7 @@ import RconFeature from "./features/Rcon.js";
 import ServerGroup from "./groups/ServerGroup.js";
 import { ActionResponse } from "./IAction.js";
 import Server, { ServerExtendedData } from "./Server.js";
+import { ListGroupConfig, ListGroupConfig_Server } from "./groups/index.js";
 
 const sleep = (time: number) => new Promise(res => setTimeout(res, time));
 
@@ -16,25 +17,11 @@ export default class StandardServer extends Server {
     #startTime: number | null
     #cvars: Record<string, string>
 
-    constructor(group: ServerGroup<Server>, server: ServerExtendedData) {
+    constructor(group: ServerGroup<Server>, server: ListGroupConfig_Server) {
         super(group, server, new GameDig({
             listenUdpPort: 27005
         }))
 
-        if(server.rcon) {
-            let password: string | undefined
-            if(server.rcon.password.value) password = server.rcon.password.value
-            if(server.rcon.password.env) password = process.env[server.rcon.password.env]
-            if(!password) {
-                console.warn(`[Server/${this.id}] WARN: No rcon password provided for ${server.id}. Rcon unavailable`)
-            } else {
-                this._rcon = new RconFeature(this, {
-                    host: server.ip,
-                    port: server.port,
-                    password
-                })
-            }
-        }
         if(server.logsPath) {
             this._logs = new StandardLogs(this, server.logsPath)
         }

@@ -33,6 +33,9 @@
               <Icon icon="wrench">Cvars</Icon>
             </router-link>
             <hr class="navbar-divider">
+            <router-link to="/docs/maps" class="navbar-item">
+              Maps
+            </router-link>
             <router-link to="/docs/ftt" class="navbar-item">
               Feed The Trolls
             </router-link>
@@ -64,12 +67,15 @@
           <a class="navbar-link">
             <Icon icon="toolbox">Administration</Icon>
           </a>
-          <div class="navbar-dropdown is-left" style="width:110%">
+          <div class="navbar-dropdown is-left" style="width:140%">
             <router-link :to="{name: 'admin-shares'}" class="navbar-item">
               <Icon icon="fa-puzzle-piece">Addons / Files</Icon>
             </router-link>
             <router-link to="/admin/servers" class="navbar-item">
               <Icon icon="fa-server">Manage Servers</Icon>
+            </router-link>
+            <router-link :to="{'name':'servers-manage'}" class="navbar-item">
+              <Icon icon="fa-server">Manage Servers <span class="tag is-warning is-tiny ml-1">BETA</span></Icon>
             </router-link>
             <router-link to="/admin/audit" class="navbar-item">
               <Icon icon="list">Activity Log</Icon>
@@ -82,7 +88,7 @@
             </router-link>
             <hr class="navbar-divider">
             <div class="navbar-item">
-              <a href="/api/admins/discord" class="button" style="background-color: #5865F2; color: white;">
+              <a href="/api/admins/discord" class="button" style="background-color: #5865F2; color: white; width:100%">
                 <span class="icon">
                   <FontAwesomeIcon icon="fab fa-discord" />
                 </span>

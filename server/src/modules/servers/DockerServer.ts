@@ -5,9 +5,10 @@ import DynamicServerInstance from "./docker/DynamicServerInstance.js";
 import DockerLogs from "./features/logs/DockerLogs.js";
 import ServerGroup from "./groups/ServerGroup.js";
 import { ActionResponse, getFallbackCommandForBuiltin, IAction } from "./IAction.js";
-import Server, { ServerExtendedData } from "./Server.js";
+import Server, { CreateServerOptions, ServerExtendedData } from "./Server.js";
 import DynamicServerManager from "./docker/DynamicServerManager.js";
 import ServerManager from "./ServerManager.js";
+import { DynamicServerGroup } from "./groups/DynamicServerGroup.js";
 
 const PERFORM_ACTION_TIMEOUT = 20_000
 
@@ -15,7 +16,7 @@ export default class DockerServer extends Server implements IAction {
     // TODO: merge DynamicServerInstance into this?
     // TODO: Console support
     #instance: DynamicServerInstance
-    constructor(group: ServerGroup<DockerServer>, server: ServerExtendedData, instance: DynamicServerInstance) {
+    constructor(group: ServerGroup<DockerServer>, server: CreateServerOptions, instance: DynamicServerInstance) {
         // Game dig needs listen udp port to be set for bridged docker containers
         super(group, server, new GameDig({
             listenUdpPort: 27005
@@ -75,7 +76,7 @@ export default class DockerServer extends Server implements IAction {
             case "delete":
                 await this.stop(true)
                 DynamicServerManager.Instance.unregisterInstance(this.#instance)
-                await ServerManager.Instance.deleteServer(this.id)
+                this.#instance.Server!.group.removeServer(this)
                 await this.#instance.Container.remove()
             default:
                 return false
@@ -122,7 +123,7 @@ export default class DockerServer extends Server implements IAction {
     public override async refreshStatus(bypassCache = false) {
         // Don't need to do a refresh if we have plugin data
         if(!this.Plugin || !this.Plugin.authenticated)
-            await this.getStatus(bypassCache, this.type, this.ip, this.port)
+            await this.getStatus(bypassCache, this.game, this.ip, this.port)
 
         const state = await this.#instance.state()
         this._online = state.Running

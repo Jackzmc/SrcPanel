@@ -3,7 +3,7 @@ import { exec } from 'child_process'
 import FastifyMultipart from '@fastify/multipart'
 import { pipeline } from 'stream'
 import { promisify } from 'util'
-import { AddonInfo, ChildWorkshopItem, DetailsResponse, ShareInfo } from '../../../../common-types/Share.js';
+import { AddonInfo, ChildWorkshopItem, DetailsResponse, ShareInfo, WorkshopItem } from '../../../../common-types/Share.js';
 import { NO_PERMISSION } from '../../responses.js';
 import { UserPrivilegeCode } from '../../../../common-types/Privileges.js';
 import { createReadStream } from 'fs';
@@ -44,6 +44,14 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 item,
                 type: "item"
             }
+        }
+    })
+
+    fastify.get('/workshop/search/:appid', async(req: FastifyRequest<{Params: { appid: string }, Querystring: { query: string }}>, reply): Promise<{ results: WorkshopItem[] }> => {
+        if(!req.user!.hasPermission("shares.addons.view")) return NO_PERMISSION(reply)
+        const results = await fastify.steam.searchItems(req.query.query, req.params.appid)
+        return {
+            results: results
         }
     })
 

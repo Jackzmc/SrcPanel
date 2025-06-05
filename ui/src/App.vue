@@ -1,9 +1,9 @@
 <template>
 <div>
-  <div id="app">
+  <div>
     <!-- <v-tour v-if="tour" :name="tour.name" :steps="tour.steps"></v-tour> -->
     <BirthdayComponent v-if="isBirthday" @close="closeBirthday" />
-    <Notifications position="top center" :duration=7000 @start="onNotificationShown" />
+    <Notifications position="top center" :duration=7000 @start="onNotificationShown" @click="(event: any) => event.data?.click()" />
     <NavBar v-if="!route.meta.hideNav" @logout="onLogout" :update-info="updateInfo" :priv-user="privUser" :meta="meta" />
     <br v-if="!route.meta.hideNav">
     <br v-if="route.meta.hideHero">
@@ -50,7 +50,7 @@
   </div>
   <footer class="footer custom-footer">
     <div class="content has-text-centered">
-      L4D2 Admin Dashboard - Updated {{lastUpdated}}
+      {{ SITE_TITLE }} - Updated {{lastUpdated}}
     </div>
   </footer>
 </div>
@@ -70,6 +70,7 @@ import { PanelMetaInfo } from '../../common-types/Panel.js';
 const BirthdayComponent = defineAsyncComponent(() => import("@/components/BirthdayComponent.vue"))
 
 const LAST_UPDATED = new Date(Number(BUILD_TIMESTAMP))
+const SITE_TITLE = import.meta.env.VITE_SITE_TITLE
 const lastUpdated = computed(() => {
   return LAST_UPDATED.toLocaleString()
 })

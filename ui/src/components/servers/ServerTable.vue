@@ -1,32 +1,32 @@
 <template>
-  <div class="mb-4">
+  <div class="mb-4is-radiusless">
     <CreateServerModal :group="group" v-if="createModal" @close="createModal = false" />
-    <h4 class="title is-4">{{ group.name }}</h4>
+    <h4 class="title is-4 mx-4">{{ group.name }}</h4>
     <p v-if="group.description" class="subtitle is-6">{{ group.description }}</p>
     <div class="table-container">
-      <table :class="['table','is-fullwidth',{'is-bordered': !manage}]">
+      <table :class="['table','is-fullwidth','is-bordered']">
         <thead>
           <tr>
             <th>Name</th>
             <th :class="manage ? undefined : 'has-text-centered'">Players</th>
             <template v-if="manage">
-              <th v-if="group.type === 'source'">Current Map</th>
+              <th v-if="gameConfig.hasMap">Current Map</th>
               <th>Actions</th>
             </template>
             <template v-else>
-              <template v-if="group.type === 'source'">
+              <template v-if="gameType === 'source'">
                 <th>Current Map</th>
                 <th>Direct Connect Command</th>
                 <th>Create Lobby Command</th>
               </template>
-              <template v-else-if="group.type === 'minecraft'">
+              <template v-else-if="gameType === 'minecraft'">
                 <th>IP</th>
               </template>
             </template>
           </tr>
         </thead>
         <tbody>
-          <ServerRow v-for="server in group.servers" :key="server.id" :server="server" :type="group.type" :manage="manage"></ServerRow>
+          <ServerRow v-for="server in group.servers" :key="server.id" :server="server" :game="group.game" :manage="manage"></ServerRow>
         </tbody>
         <tfoot v-if="manage && group.templateId">
           <tr class="has-background-lighter">
@@ -39,11 +39,12 @@
         </tfoot>
       </table>
     </div>
+    <br>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ServerGroup } from '../../../../common-types/Server';
+import { GAME_TYPE_MAP, ServerGroup, GAME_TYPE_CONFIG } from '../../../../common-types/Server';
 import ServerRow from '@/components/servers/ServerRow.vue'
 import { request } from '@/js/util.js';
 import { LoadState } from '@/types/global.js';
@@ -55,6 +56,13 @@ const props = defineProps<{
   group: ServerGroup,
   manage?: boolean
 }>()
+
+const gameType = computed(() => {
+  return GAME_TYPE_MAP[props.group.game]
+})
+const gameConfig = computed(() => {
+  return (gameType.value && GAME_TYPE_CONFIG[gameType.value]) || {}
+})
 
 let createModal = ref(false)
 

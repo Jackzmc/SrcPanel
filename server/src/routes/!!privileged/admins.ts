@@ -69,12 +69,12 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
     })
 
-    fastify.get('/discord', (req, reply) => {
-        const inviteUri = fastify.config.GetKV("discord.link", process.env.DISCORD_INVITE_URI)
-        if(!inviteUri)
+    fastify.get('/discord', async (req, reply) => {
+        const inviteUrl = await fastify.config.GetKV("discord.link", undefined)
+        if(!inviteUrl)
             reply.send("No discord invite link was set, sorry.")
         else
-            reply.redirect(process.env.DISCORD_INVITE_URI!, 301)
+            reply.redirect(inviteUrl, 301)
     })
 
     fastify.delete('/:steamid', async(req: FastifyRequest<{

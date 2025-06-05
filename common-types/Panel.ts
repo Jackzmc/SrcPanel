@@ -36,7 +36,7 @@ export const KVConfig: KeysRecords = {
     "providers.discord.token_url": { flags: KeyFlags.Protected, type: "string", name: "Discord - Token Url"},
     "providers.discord.name": { flags: KeyFlags.Protected, type: "string", name: "Discord - Provider Name"},
     "providers.discord.avatar_url_format": { flags: KeyFlags.Protected, type: "string", name: "Discord - URL Format String"},
-
+    "custom_servers.enabled": { flags: KeyFlags.Public, type: "boolean" }
 }
 export type ConfigKey = keyof typeof KVConfig //"domain" | "discord.link" | "servers.long_refresh_interval" | "servers.short_refresh_interval"
 export const PublicKeys = Object.entries(KVConfig)

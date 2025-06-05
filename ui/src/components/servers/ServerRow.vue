@@ -1,10 +1,10 @@
 <template>
   <tr :class="trClass">
     <td>
-      <router-link v-if="manage" :to="{name: 'admin-server-view', params: { id: server.id, tab: 'overview' }}" :data-tooltip="tooltip">
+      <router-link v-if="manage" :to="{name: 'admin-server-view', params: { serverId: server.id, tab: 'overview' }}" :data-tooltip="tooltip">
         <b :class="serverClasses" >{{server.name}}</b>
       </router-link>
-      <a v-else-if="server.type === 'source'" :href="'steam://connect/' + server.ip + '/' + server.port">
+      <a v-else-if="gameType === 'source'" :href="'steam://connect/' + server.ip + '/' + server.port">
         <b :data-tooltip="tooltip" :class="serverClasses">
           {{ server.name }}
         </b>
@@ -23,7 +23,7 @@
       </template>
     </td>
     <template v-if="manage">
-      <td v-if="server.type === 'source'">
+      <td v-if="gameType === 'source'">
         {{ server.status?.data?.map }}
       </td>
       <td>
@@ -42,7 +42,7 @@
       </td>
     </template>
     <template v-else>
-      <template v-if="type === 'source'">
+      <template v-if="gameType === 'source'">
         <td>
           <template v-if="server.online">
             {{ server.status?.data?.map }}
@@ -59,7 +59,7 @@
           </p>
         </td>
       </template>
-      <template v-else-if="type === 'minecraft'">
+      <template v-else-if="gameType === 'minecraft'">
         <td>
           {{ server.host ?? server.ip }}:{{ server.port }}
         </td>
@@ -70,14 +70,22 @@
 
 <script setup lang="ts">
 import { request } from '@/js/util.js';
-import { ServerInfo, ServerType, ServerAction, ServerAvailableFeatures } from '../../../../common-types/Server';
+import { ServerInfo, ServerType, ServerAction, ServerAvailableFeatures, GAME_TYPE_MAP, GAME_TYPE_CONFIG } from '../../../../common-types/Server';
 import { computed, ref } from 'vue';
 import { notify } from '@kyvg/vue3-notification';
 const props = defineProps<{
   server: ServerInfo,
-  type: ServerType,
+  game: string,
   manage?: boolean
 }>()
+
+const gameType = computed(() => {
+  return GAME_TYPE_MAP[props.game]
+})
+const gameConfig = computed(() => {
+  return (gameType.value && GAME_TYPE_CONFIG[gameType.value]) || {}
+})
+
 
 let actionRunning = ref(false)
 

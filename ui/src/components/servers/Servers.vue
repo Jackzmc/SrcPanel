@@ -8,7 +8,7 @@
       <div class="skeleton-lines mb-4">
         <div></div>
       </div>
-      <table class="table is-fullwidth is-skeleton is-bordered">
+      <table class="table is-fullwidth is-skeleton">
         <tbody>
           <tr v-for="j in 10" :key="j">
             <td></td>
@@ -25,6 +25,7 @@
 import { ref, watch, computed, onBeforeMount, onBeforeUnmount } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import ServerTable from "@/components/servers/ServerTable.vue";
+import ServerList from "./ServerList.vue";
 
 const REFRESH_INTERVAL = 1000 * 15;
 

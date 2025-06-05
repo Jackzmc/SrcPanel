@@ -6,19 +6,44 @@ import DynamicServerInstance from './DynamicServerInstance.js';
 import ServerManager from '../ServerManager.js';
 import { DynamicServerGroup } from '../groups/DynamicServerGroup.js';
 import { ServerEvent } from '../DockerServer.js';
+import yaml from 'yaml';
+import logger from '../../../logger.js'
+
+const log = logger.child({ name: "DynamicServerManager"})
+
+
 export interface DockerTemplateConfig {
     id: string
     network?: "host" | string,
     image: string,
-    ip: string,
-    startPort: number,
-    minInstances?: number
+    bindIp: string,
+    ports: { start: number, end?: number },
     volumes?: string[],
-    command: string | string[]
+    command: string,
+    serverTemplate?: ServerTemplate
+}
+export interface ServerTemplate {
+    name?: string,
+    tags?: string[],
+    host?: string
+
+    game?: string,
+    sortOrder?: number,
+    cfgDirectory?: string,
+    activityId?: string,
+    logsPath?: string,
+    rcon?: {
+        ip?: string,
+        port?: number,
+        password?: string
+    },
+    actionsIds?: string[]
 }
 export interface DockerTemplateContainer {
     config: DockerTemplateConfig,
 }
+
+export const DOCKER_NAME_PREFIX = process.env.DOCKER_NAME_PREFIX ?? "panel"
 
 export default class DynamicServerManager {
     static #instance: DynamicServerManager;
@@ -31,7 +56,7 @@ export default class DynamicServerManager {
         this.#srvManager = serverManager
         this.#docker = new Docker(dockerConfig)
         this.#docker.info().then(() => {
-            console.info(`[ServerManager/docker] Docker connected`)
+            log.info(`Docker connected, using prefix ${DOCKER_NAME_PREFIX}`)
         })
         this.#configDir = configDir
         DynamicServerManager.#instance = this
@@ -73,13 +98,13 @@ export default class DynamicServerManager {
 
     async *#getContainers() {
         const containers = await this.#docker.listContainers({ all: true, filters: {
-            "label": ["panel.template"]
+            "label": [`${DOCKER_NAME_PREFIX}.template`]
         }})
         for(const containerInfo of containers) {
             if(containerInfo.Labels["panel.template"]) {
                 const template = this.#templates[containerInfo.Labels["panel.template"]]
                 if(!template) {
-                    console.warn(`[ServerManager/docker] Warn: Found existing container (${containerInfo.Id.slice(0, 12)}${containerInfo.Names.join('')}) but does not match any template. skipping`)
+                    log.warn(`Found existing container (${containerInfo.Id.slice(0, 12)}${containerInfo.Names.join('')}) but does not match any template. skipping`)
                     continue
                 }
                 const container = this.#docker.getContainer(containerInfo.Id)
@@ -90,22 +115,23 @@ export default class DynamicServerManager {
 
     async findExisting() {
         for await(const { containerInfo, container, template } of this.#getContainers()) {
-            const port = containerInfo.Labels["panel.port"]
-            const containerName = `panel-${template.config.id}-${port}`
+            const port = containerInfo.Labels[`${DOCKER_NAME_PREFIX}.port`]
+            const containerName = `${DOCKER_NAME_PREFIX}-${template.config.id}-${port}`
             if(this.#instances[containerName]) {
                 return;
             }
-            console.info(`[ServerManager/docker] Found existing container (${containerInfo.Id.slice(0, 12)}${containerInfo.Names.join('')})`)
-            const instance = new DynamicServerInstance(template.config, container, template.config.ip, Number(port))
+            log.info(`Found existing container (${containerInfo.Id.slice(0, 12)}${containerInfo.Names.join('')})`)
+            const instance = new DynamicServerInstance(template.config, container, template.config.bindIp, Number(port))
             await this.#registerInstance(instance)
         }
     }
 
     async #loadTemplates() {
         try {
-            const templatesFile = await readFile(path.join(this.#configDir, "templates.json"), 'utf-8')
-            const templates = Json5.parse(templatesFile)
+            const templatesFile = await readFile(path.join(this.#configDir, "templates.yml"), 'utf-8')
+            const templates = yaml.parse(templatesFile)
             for(const [id, data] of Object.entries(templates)) {
+                // if(!data.serverTemplate) throw new Error(`Template ${id} missing 'server_template' field`)
                 // TODO: verify
                 const config = {
                     ...data as DockerTemplateConfig,
@@ -113,18 +139,18 @@ export default class DynamicServerManager {
                 } as DockerTemplateConfig
                 try {
                     // await this.#docker.pull(config.image)
+                    // await this.#docker.pull(config.image)
                     this.#templates[id] = {
                         config,
                     }
+                    log.debug({ config }, `Loaded template ${id}`)
                 } catch(err) {
-                    console.error(`[ServerManager/docker] Failed to pull image \"${config.image}\":`, err)
+                    log.error(`Failed to pull image \"${config.image}\":`, err)
                 }
             }
-            console.info(`[ServerManager/docker] Loaded ${Object.keys(this.#templates).length} templates`)
+            log.info(`Loaded ${Object.keys(this.#templates).length} templates`)
         } catch(err) {
-            if(err.code == "ENOENT")
-                return null
-            console.error("[ServerManager] Error: Failed to load templates.json: ", err)
+            log.error("Failed to load templates.yaml: ", err)
         }
     }
 
@@ -133,17 +159,21 @@ export default class DynamicServerManager {
         const ports: number[] = []
         for await(const { containerInfo, container, template } of this.#getContainers()) {
             if(template.config.id != ofTemplate.id) continue
-            const port = Number(containerInfo.Labels["panel.port"])
+            const port = Number(containerInfo.Labels[`${DOCKER_NAME_PREFIX}.port`])
             ports.push(port)
         }
         ports.sort()
 
         // Find next available, filling in gaps
-        let port = ofTemplate.startPort;
+        let port = ofTemplate.ports.start;
+        log.trace("finding available port from " + ofTemplate.ports.start)
         if(ports.includes(port)) {
             while(ports.includes(port)) {
                 port++
             }
+        }
+        if(ofTemplate.ports.end != undefined && port >= ofTemplate.ports.end) {
+            throw new Error("No more available ports")
         }
         return port
     }
@@ -157,13 +187,13 @@ export default class DynamicServerManager {
         return i;
     }
 
-    async createInstance(templateId: string) {
+    async createInstance(templateId: string, volumes: string[] = [], labels: Record<string, string> = {}) {
         const template = this.#templates[templateId]
         if(!template) throw new Error(`Unknown template id: \"${templateId}\"`)
         const port = await this.#getNextPort(template.config)
 
         const templVars = {
-            ip: template.config.ip,
+            ip: template.config.bindIp,
             port,
             id: template.config.id,
             index: await this.#calculateCount(templateId)
@@ -171,7 +201,7 @@ export default class DynamicServerManager {
         let commands = Array.isArray(template.config.command) ? template.config.command : [template.config.command]
         commands = commands.map(cmd => DynamicServerGroup.formatTemplateVar(cmd, templVars))
         const config = {
-            name: `panel-${templateId}-${port}`,
+            name: `${DOCKER_NAME_PREFIX}-${templateId}-${port}`,
             Image: template.config.image,
             AttachStdin: true,
             Tty: true,
@@ -183,14 +213,17 @@ export default class DynamicServerManager {
             },
             HostConfig: {
                 "NetworkMode": template.config.network,
-                "Binds": template.config.volumes ?? [],
+                "Binds": template.config.volumes?.concat(volumes) ?? [],
                 "RestartPolicy": {
                     "Name": "unless-stopped",
                     // MaximumRetryCount: 3
                 },
                 "PortBindings": { [`${port.toString()}/udp`]: [{ 
+                    
                     "HostPort": port.toString(), 
-                    "HostIp": template.config.ip 
+                    
+                    "HostIp": template.config.bindIp
+                
                 }] },
                "LogConfig": {
                     Type: "local",
@@ -198,13 +231,14 @@ export default class DynamicServerManager {
                 },
             },
             Labels: {
-                "panel.template": templateId,
-                "panel.port": port.toString(),
+                [`${DOCKER_NAME_PREFIX}.template`]: templateId,
+                [`${DOCKER_NAME_PREFIX}.port`]: port.toString(),
+                ...labels
             },
         }
-        console.log("config", config)
+        log.debug("config", config)
         const container = await this.#docker.createContainer(config)
-        const instance =  new DynamicServerInstance(template.config, container, template.config.ip, port)
+        const instance =  new DynamicServerInstance(template.config, container, template.config.bindIp, port)
         await this.#registerInstance(instance)
         return instance
     }

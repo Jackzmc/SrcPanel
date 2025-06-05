@@ -31,7 +31,7 @@
           </div>
         </h3>
         <h4 class="subtitle is-4">
-          {{serverInfo.host}}:{{serverInfo.port}}
+          {{serverInfo.host ?? serverInfo.ip}}:{{serverInfo.port}}
           <Icon icon="fa-copy" data-tooltip="Copy to clipboard" @click="copyAddress"></Icon>
         </h4>
         <div class="level">
@@ -73,7 +73,7 @@
             </span> -->
             <table class="table is-fullwidth is-size-4">
               <tbody>
-                <tr v-if="serverInfo.type === 'source'">
+                <tr v-if="gameType === 'source'">
                   <th>Map</th>
                   <td v-if="mapInfo">
                     <h4 class="title is-4">{{mapInfo.name}}
@@ -84,7 +84,7 @@
                   <td v-else-if="status.data?.map">{{ status.data.map }}</td>
                   <td v-else><em data-tooltip="Unknown">-</em></td>
                 </tr>
-                <tr v-if="serverInfo.type === 'source'">
+                <tr v-if="gameType === 'source'">
                   <th>Gamemode</th>
                   <td v-if="status.data?.gamemode" :data-tooltip="status.data.gamemode">
                     {{ formatGamemode(status.data.gamemode) }}
@@ -109,8 +109,8 @@
                   </td>
                 </tr>
                 <tr>
-                  <th>Server Type</th>
-                  <td>{{ serverInfo.type }}</td>
+                  <th>Game</th>
+                  <td>{{ serverInfo.game }}</td>
                 </tr>
                 <tr>
                   <th style="border-style: none">Features</th>
@@ -487,7 +487,7 @@
           <select @change="onSelectNewServer">
             <option default v-if="!serverIds">Loading servers...</option>
             <option v-for="server2 in serverIds" :key="server2.id" :value="server2.id"
-              :selected="server2.id == route.params.id">
+              :selected="server2.id == route.params.serverId">
               {{server2.name}}
             </option>
           </select>
@@ -507,7 +507,7 @@
 
 <script setup lang="ts">
 import { useRoute, useRouter } from 'vue-router'
-import { ref, computed, onUnmounted, onBeforeUnmount, onMounted, nextTick } from 'vue';
+import { ref, computed, onUnmounted, onBeforeUnmount, onMounted, nextTick, onDeactivated, onActivated } from 'vue';
 import FolderBrower from'@/components/FolderBrowser.vue'
 import { PlayerData, PrivilegedUser } from '@/js/User';
 import { parseLog, getRelDate, request, formatSize } from '@/js/util';
@@ -519,14 +519,22 @@ import { UserPrivilegeCode } from '../../../../common-types/Privileges';
 import { formatDate, getDuration } from '../../js/util.js';
 import UserComponent, { User } from '@/components/UserComponent.vue';
 import Console from '@/components/server/Console.vue'
-import { ServerData, ServerInfo, ServerDetailed, ServerAvailableFeatures, ComputeStats, ServerStatus, VoiceUser } from '../../../../common-types/Server';
+import { ServerData, ServerInfo, ServerDetailed, ServerAvailableFeatures, ComputeStats, ServerStatus, VoiceUser, GAME_TYPE_MAP, GAME_TYPE_CONFIG } from '../../../../common-types/Server';
 import ServerMetricsTab from '@/components/server/ServerMetricsTab.vue';
-import { ClientOutPayload, ServerOutPacket, ServerOutPayload } from '../../../../common-types/ServerWebsocket';
+import { ClientOutPayload, ServerOutPacket } from '../../../../common-types/ServerWebsocket';
 import ConfigFileEditor from '@/components/server/ConfigFileEditor.vue';
 import ListItem from '@/components/ListItem.vue';
 
 const MAX_LOGS_LINES = 350
 const MAX_METRIC_HISTORY = 300
+
+const gameType = computed(() => {
+  return serverInfo.value && GAME_TYPE_MAP[serverInfo.value?.game]
+})
+const gameConfig = computed(() => {
+  return (gameType.value && GAME_TYPE_CONFIG[gameType.value]) || {}
+})
+
 
 const FinaleStageName: Record<FinaleStage, string> = {
     [FinaleStage.Gauntlet]: "Gauntlet",
@@ -739,7 +747,7 @@ function getIconUrl(player: LiveClient) {
 async function onCfgChosen(entry: { path: string, filename: string }, raw = false) {
   cfg.value.selected = entry
   cfg.value.loading = true
-  const response = await fetch(`/api/servers/${route.params.id}/configs?path=${cfg.value.selected.path}${raw?'&raw=1':''}`)
+  const response = await fetch(`/api/servers/${route.params.serverId}/configs?path=${cfg.value.selected.path}${raw?'&raw=1':''}`)
   cfg.value.loading = false
   if(response.ok) {
     cfg.value.json = undefined
@@ -752,7 +760,7 @@ async function onCfgChosen(entry: { path: string, filename: string }, raw = fals
 }
 
 async function onSelectNewServer(event: any) {
-  await router.push({ name: 'admin-server-view', params: { tab: 'overview', id: event.target.value }})
+  await router.push({ name: 'admin-server-view', params: { tab: 'overview', serverId: event.target.value }})
   serverInfo.value = undefined
   activities.value = undefined
   // Delete old enables
@@ -761,9 +769,9 @@ async function onSelectNewServer(event: any) {
 }
 async function fetchServerInfo() {
   error.value = undefined
-  const id = route.params.id
-  const response = await fetch(`/api/servers/${route.params.id}`)
-  if(id != route.params.id) return // Ignore changes in id
+  const id = route.params.serverId
+  const response = await fetch(`/api/servers/${route.params.serverId}`)
+  if(id != route.params.serverId) return // Ignore changes in id
   try {
     const json = await response.json()
     if(response.ok) {
@@ -782,9 +790,9 @@ async function fetchServerInfo() {
 
 async function fetchServerData() {
   error.value = undefined
-  const id = route.params.id
-  const response = await fetch(`/api/servers/${route.params.id}/data`)
-  if(id != route.params.id) return // Ignore changes in id
+  const id = route.params.serverId
+  const response = await fetch(`/api/servers/${route.params.serverId}/data`)
+  if(id != route.params.serverId) return // Ignore changes in id
   try {
     const json = await response.json()
     if(response.ok) {
@@ -805,7 +813,7 @@ async function fetchServerData() {
 
 async function fetchServerActivities() {
   try {
-    const response = await fetch(`/api/servers/${route.params.id}/activities`)
+    const response = await fetch(`/api/servers/${route.params.serverId}/activities`)
     const json = await response.json()
     if(response.ok) {
       activities.value = json.activities?.map((act: any) => parseLog(act))
@@ -1024,9 +1032,9 @@ function sendWSPayload(payload: ClientOutPayload) {
   ws.value.send(JSON.stringify(payload))
 }
 function connectWS() {
-  console.debug("connectWS", `${window.location.protocol}://${window.location.host}/api/servers/${route.params.id}/ws`)
+  console.debug("connectWS", `${window.location.protocol}://${window.location.host}/api/servers/${route.params.serverId}/ws`)
   ws.value?.close()
-  ws.value = new WebSocket(`${window.location.protocol}//${window.location.host}/api/servers/${route.params.id}/ws`);
+  ws.value = new WebSocket(`${window.location.protocol}//${window.location.host}/api/servers/${route.params.serverId}/ws`);
   ws.value.onmessage = (event) => {
     const payload = JSON.parse(event.data)
     console.debug("[WS] payload", payload)
@@ -1045,7 +1053,7 @@ function connectWS() {
     console.debug("[WS] Closed, reconnecting in", retryTime/1000, "s", { wsErrorCount })
     wsReconnectTimeout = setTimeout(() => {
       connectWS()
-    }, retryTime)
+    }, retryTime) as unknown as number
   }
   ws.value.onerror = (err) => {
     console.error("[WS] Error:", err)
@@ -1068,13 +1076,7 @@ async function init() {
   refreshInterval = setInterval(fetchServerActivities, FETCH_ACTIVITIES_INTERVAL)
 }
 
-// nowInterval = setInterval(() => {
-//   now.value = Date.now()
-//   if(liveStatus.value)
-//     lastLiveUpdateTime.value = getRelDate(liveStatus.value.lastUpdate / 1000)
-// }, 1000)
-
-onMounted(async() => {
+onActivated(async() => {
   document.addEventListener("keyup", _toggleShift)
   document.addEventListener("keydown", _toggleShift)
   await fetchServersCompact()
@@ -1083,7 +1085,7 @@ onMounted(async() => {
 function _toggleShift(e: any) {
   shiftPressed.value = !!e.shiftKey
 }
-onBeforeUnmount(() => {
+onDeactivated(() => {
   document.removeEventListener("keyup", _toggleShift)
   document.removeEventListener("keydown", _toggleShift)
   clearInterval(refreshInterval)

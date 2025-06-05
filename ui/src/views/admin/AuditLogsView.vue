@@ -42,7 +42,7 @@
           </a>
         </div>
         <template v-for="entry in entries" :key="entry.id">
-          <div :class="['list-item', {'has-background-primary': entry.id == Number(filters.aroundId)}]" @mouseenter="hoverId = entry.id">
+          <div :class="['list-item', {'has-background-primary-light': entry.id == Number(filters.aroundId)}]" @mouseenter="hoverId = entry.id">
             <div class="list-item-image" v-if="entry.client.avatarUrl || entry.target.avatarUrl">
               <figure class="image is-48x48">
                 <img class="is-rounded" :src="entry.client.avatarUrl || entry.target.avatarUrl">
@@ -245,7 +245,7 @@
 <script setup lang="ts">
 import { useNotification } from '@kyvg/vue3-notification';
 import { PrivilegedUser } from '@/js/User';
-import { ref, onBeforeMount, computed, onBeforeUnmount, onUnmounted, onMounted } from 'vue';
+import { ref, onBeforeMount, computed, onBeforeUnmount, onUnmounted, onMounted, onActivated, onDeactivated } from 'vue';
 import { formatDate, getRelDate, request, requestTimeout } from '@/js/util';
 import LogMessage from '@/components/LogMessage.vue';
 import Field from '@/components/Field.vue';
@@ -455,6 +455,7 @@ async function getInfo() {
     logInfo.value = json
     logInfo.value.loading = false
   } else {
+    logInfo.value.loading = false
     throw Error(response?.statusText)
   }
 }
@@ -609,7 +610,8 @@ async function jumpTo(entry: any) {
       aroundId: entry.id
     }
   })
-  await fetchLogs(entry.id, 'around')
+  // await fetchLogs(entry.id, 'around')
+  await search()
 }
 
 function getShareLink(entry: LogEntry) {
@@ -632,7 +634,7 @@ async function copyShareLink(entry: any) {
 
 let refreshTimer: any
 let nowTimer: any
-onMounted(async() => {
+onActivated(async() => {
   now.value = Date.now()
   nowTimer = setInterval(() => {
     now.value = Date.now()
@@ -683,7 +685,7 @@ onMounted(async() => {
   }, REFRESH_INTERVAL)
 })
 
-onUnmounted(() => {
+onDeactivated(() => {
   clearInterval(nowTimer)
   clearInterval(refreshTimer)
 })

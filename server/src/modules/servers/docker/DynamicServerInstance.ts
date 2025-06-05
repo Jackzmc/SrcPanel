@@ -1,5 +1,5 @@
 import { Container, ContainerInspectInfo } from "dockerode"
-import { DockerTemplateConfig } from "./DynamicServerManager.js"
+import { DOCKER_NAME_PREFIX, DockerTemplateConfig } from "./DynamicServerManager.js"
 import DockerServer from "../DockerServer.js"
 
 export default class DynamicServerInstance {
@@ -32,7 +32,7 @@ export default class DynamicServerInstance {
         const inspect = await this.#container.inspect()
         const network = inspect.NetworkSettings.Networks[this.#template.network!]
         // If there is no assigned IP, such as net=host, then fall back to public ip
-        this.#internalIp = network ? network.IPAddress : this.#template.ip
+        this.#internalIp = network ? network.IPAddress : this.#template.bindIp
     }
 
     get StartTime(): number | null {
@@ -65,7 +65,7 @@ export default class DynamicServerInstance {
     }
 
     get ContainerName() {
-        return `panel-${this.#template.id}-${this.#port}`
+        return `${DOCKER_NAME_PREFIX}-${this.#template.id}-${this.#port}`
     }
 
     get Server(): DockerServer | null {
@@ -100,11 +100,21 @@ export default class DynamicServerInstance {
     }
 
     async stop(force = false) {
-        return await (force ? this.#container.kill() : this.#container.stop())
+        if(force) {
+            // Ignore any error killing such as it not running
+            return await this.#container.kill().catch(() => {})
+        } else {
+            return await this.#container.stop()
+        }
     }
 
-    async fetchLogs() {
-        return (await this.#container.logs({ stdout: true, stderr: true })).toString()
+    async delete() {
+        await this.#container.remove()
+    }
+
+    async labels() {
+        const inspect = await this.#container.inspect()
+        return inspect.Config.Labels
     }
 
     setServer(server: DockerServer | null) {

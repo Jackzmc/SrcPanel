@@ -1,0 +1,25 @@
+my_share_id: # id of share
+  name: My Nice Name
+  description: Description for share
+  # The folder where the files are stored
+  sourceFolder: "/data/shares/my_share"
+  # Optional. the list of file extenstions that are valid, used for uploading and scanning
+  validExts:
+  - vpk
+  # Optional. The steam game this is share is meant for
+  appid: 550
+  # Optional. The options to have files
+  downloadSources:
+    steam_workshop: false # Allow downloading from steam workshop
+    upload: false # Allow uploading file directly
+  # List of destinations to symlink to
+  destinations:
+    # The id of destination
+    dest_id_1:
+      # Optional. List of server ids or group ids to restart when new file added. Servers are specified in group_id/server_id format
+      restartTargets: 
+        - group1
+        - group2/server1
+      # List of paths to symlink files to
+      paths:
+      - "/home/steam/l4d2/main/addons/"

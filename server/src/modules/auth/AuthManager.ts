@@ -18,6 +18,9 @@ import { OauthAuthData } from './OauthProvider.js';
 import path from 'path'
 import { readFile, writeFile } from "fs/promises";
 
+import logger from '../../logger.js'
+const log = logger.child({ name: "AuthManager" })
+
 interface AddAdmin {
     authtype: "steam" | "name" | "ip",
     identity: string,
@@ -58,7 +61,7 @@ export default class AuthManager {
 
     constructor(adminDatabase: Pool, sessionDatabase: Pool, steam: SteamAPI, configManager: ConfigManager) {
         if(process.env.DEBUG_DISABLE_PERMISSION_SYSTEM) {
-            console.warn("[AuthManager] Warn: DEBUG_DISABLE_PERMISSION_SYSTEM set, permissions are ignored")
+            log.warn("DEBUG_DISABLE_PERMISSION_SYSTEM set, permissions are ignored")
         }
         this.providerNameCache = new Map()
         this.apikeysCache = new QuickLRU<string, APIKey>({ 
@@ -79,7 +82,7 @@ export default class AuthManager {
             const json = JSON.parse(file)
             this.groups = json.groups
             this.admins = json.admins
-            console.info("[AuthManager] Cache loaded successfully")
+            log.info("Cache loaded successfully")
         } catch(e) {
             // Ignore, cache is a bonus
         }
@@ -93,7 +96,7 @@ export default class AuthManager {
                 groups: this.groups
             }))
         } catch(err) {
-            console.warn(`[AuthManager] WARN: Failed to save auth cache (${err.message})`)
+            log.warn(`Failed to save auth cache (${err.message})`)
         }
     }
 
@@ -110,7 +113,7 @@ export default class AuthManager {
     }
 
     async FullRefresh() {
-        console.log("[AuthManager] Performing full refresh")
+        log.debug("Performing full refresh")
         let startTime = Date.now()
         await this.refreshGroups()
         const fetchGroupsTime = Date.now() - startTime
@@ -119,8 +122,8 @@ export default class AuthManager {
         await this.refreshAdmins()
         const fetchAdminsTime = Date.now() - startTime
 
-        console.info(`[AuthManager] Fetched ${Object.keys(this.admins).length} admins in ${(fetchAdminsTime).toFixed(1)} ms`)
-        console.info(`[AuthManager] Fetched ${Object.keys(this.groups).length} groups in ${(fetchGroupsTime).toFixed(1)} ms`)
+        log.info(`Fetched ${Object.keys(this.admins).length} admins in ${(fetchAdminsTime).toFixed(1)} ms`)
+        log.info(`Fetched ${Object.keys(this.groups).length} groups in ${(fetchGroupsTime).toFixed(1)} ms`)
         await this.#saveCache()
     }
 
@@ -273,7 +276,7 @@ export default class AuthManager {
             await this.#dbna.execute("INSERT IGNORE INTO panel_user (account_id, avatar_hash) VALUES (?, ?, ?)", [admin.identity.slice(10), details[0].avatarhash])
             await this.#dbna.execute("INSERT INTO panel_user_names (account_id, name, name_update_time) VALUES (?, ?, UNIX_TIMESTAMP())", [admin.identity.slice(10), details[0].personaname])
         } catch(err) {
-            console.warn(`[AuthManager] WARN: Could not insert admin resolved name (${admin.identity.slice(10)}, name ${details[0].personaname}):`, err.sqlMessage)
+            log.warn(`Could not insert admin resolved name (${admin.identity.slice(10)}, name ${details[0].personaname}):`, err.sqlMessage)
         }
 
         const conn = await this.#db.getConnection()
@@ -538,7 +541,7 @@ export default class AuthManager {
             if(group.parentId) {
                 const parent = groups[group.parentId]
                 if(!parent) {
-                    console.warn(`[AuthManager] WARN: Group \"${group.id}\" has parent that does not exist (${group.parentId}), ignoring`)
+                    log.warn(`Group \"${group.id}\" has parent that does not exist (${group.parentId}), ignoring`)
                     continue
                 }
                 this._mergeGroup(parent, group)
@@ -612,7 +615,7 @@ export default class AuthManager {
             if(row.group_id && !admins[accountId].groups[row.group_id]) {
                 const group = this.groups[row.group_id]
                 if(!group) {
-                    console.warn(`[AuthManager] WARN: Admin \"${row.id}\" has group that does not exist (${row.group_id}), ignoring`)
+                    log.warn(`Admin \"${row.id}\" has group that does not exist (${row.group_id}), ignoring`)
                 } else {
                     admins[accountId].groups.push(group)
                     // Resolve group permissions

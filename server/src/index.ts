@@ -1,5 +1,4 @@
-import dotenv from 'dotenv'
-dotenv.config()
+import 'dotenv/config'
 import Fastify, { FastifyInstance } from 'fastify'
 import FastifySession from '@fastify/session'
 import FastifyCookie from '@fastify/cookie'
@@ -16,7 +15,7 @@ import cors from '@fastify/cors'
 
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
-import { FastifyPluginOptions } from 'fastify';
+import fastify, { FastifyPluginOptions } from 'fastify';
 import { CustomFastifySession } from '../../common-types/User.js'
 import User from './modules/users/User.js';
 import ConfigManager from './modules/ConfigManager.js';
@@ -26,39 +25,41 @@ import DiscussionManager from './modules/DiscussionManager.js';
 import SetCacheManager from './modules/SetCache.js'
 import TaskManager from './modules/tasks/TaskManager.js'
 
+
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const MySQLStore = MySQLSession(FastifySession )
 
-const envToLogger = {
-  development: {
-    transport: {
-      target: 'pino-pretty',
-      options: {
-        translateTime: 'HH:MM:ss Z',
-        ignore: 'pid,hostname',
-      },
-    },
-    level: process.env.FASTIFY_DEBUG_LEVEL || 'debug'
-  },
-  production: {
-    level: process.env.FASTIFY_DEBUG_LEVEL || 'warn'
-  },
-  test: false,
-}
+import loggerInstance from './logger.js'
 const app = Fastify({
     pluginTimeout: 20000,
     trustProxy: process.env.NODE_ENV === "production",
-    logger: envToLogger[process.env.NODE_ENV ?? "development"]
+    loggerInstance
 })
+console.log = loggerInstance.debug
+// app.log.trace("trace")
+// app.log.debug("debug")
+// app.log.info("info")
+// app.log.warn("warn")
+// app.log.error("error")
+// app.log.fatal("fatal")
+let hadSignal = false, ready = false
 async function onSignal(signal: NodeJS.Signals) {
-    console.log("GOT SIGNAL", signal, "-- SHUTTING DOWN")
-    app.servers?.onShutdown()
-    await SetCacheManager.Save()
-    app.close()
-    setTimeout(() => {
+    // If already had a SIGTERM, just shut down instantly
+    if(hadSignal || !ready) {
         process.exit(0)
-    }, 1000)
+        return
+    }
+    hadSignal = true
+    app.log.info(`GOT SIGNAL ${signal} -- SHUTTING DOWN`)
+    setTimeout(() => {
+        app.log.error("Timed out, forcing shutdown")
+        process.exit(0)
+    }, 20_000)
+    await app.servers?.onShutdown()
+    await SetCacheManager.Save()
+    app.log.info("Closing fastify")
+    await app.close()
 }
 ["SIGUSR2", "SIGINT", "SIGTERM"].map((signal) => {
     process.on(signal, onSignal)
@@ -101,6 +102,7 @@ import MiddleManager from './middlewares/managers.js'
 import { DiscordBot } from './modules/DiscordBot.js'
 app.register(MiddleManager)
 .then(async() => {
+    if(hadSignal) return
     if(process.env.DISCORD_API_TOKEN) {
         const bot = new DiscordBot(app.servers, "data/server_voice_map.json", process.env.DISCORD_API_TOKEN as string)
         await bot.init()
@@ -164,7 +166,7 @@ app.register(MiddleManager)
                 if(ext === "js" || ext === "ts") {
                     const prefix = (name === "index") ? rootPrefix : `${rootPrefix}${name}`
                     try {
-                        app.register(import(`file://${path.join(folderPath, dirent.name)}`), { prefix })
+                        await app.register(import(`file://${path.join(folderPath, dirent.name)}`), { prefix })
                     } catch(err) {
                         app.log.fatal(`Could not load route ${name}. prefix=${prefix}\n${err.stack}`)
                         process.exit(1)
@@ -174,14 +176,16 @@ app.register(MiddleManager)
         }
 
     }
+    if(hadSignal) return
     await loadRoutes(mainPrefix, path.join(__dirname, './routes'))
-
     try {
         await app.listen({
-            port: Number(process.env.WEB_PORT) || 8081
+            host: process.env.LISTEN_HOST,
+            port: Number(process.env.LISTEN_PORT) || 8081
         })
     } catch (err) {
         app.log.error(err)
         process.exit(1)
     }      
+    ready = true
 })

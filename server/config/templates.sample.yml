@@ -1,0 +1,14 @@
+my_template_id: # ID for template
+  image: debian:12 # the docker image to use
+  bindIp: 127.0.0.1 # the IP to bind to
+  ports:
+    start: 27015 # The port number to start with, each instance will add one to start
+    #end: 27018  # Optional, sets the last available port. Creation will fail if all ports occupied
+  volumes:
+  - "/home/steam/l4d2/main/addons:/server/addons"
+  command: bash
+  serverTemplate: 
+    host: test.localhost
+    name: test[#%id%] - %port%
+    type: l4d2
+    cfgDir: "/home/jackz/Documents/Code/Projects/l4d2-admin-dash/server/data/servers/test/cfg"

@@ -55,9 +55,10 @@ let lastMissingNameFetchTime = 0
 let serverFilterCache: SetCache<string>
 let partitionCache: SetCache<number>
 
+let ready = false
 
-export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
-    // Must load before defining set cache
+// TODO: fix very slow query, resolve in cron job? or have a cache table?
+async function init(fastify: FastifyInstance) {
     await SetCacheManager.Load()
     // Set of all server column values in activity log table
     serverFilterCache = new SetCache<string>(
@@ -107,7 +108,15 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
         return value
     }
+    return {
+        getTotalRows,
+        CurrentYear,
+        serverFilterCache,
+        partitionCache
+    }
+}
 
+async function load(fastify: FastifyInstance, { getTotalRows, CurrentYear }) {
     // Fetch null to get the complete number of rows
     await getTotalRows(null)
     const partitions = await partitionCache.fetch()
@@ -115,7 +124,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     await SetCacheManager.Save()
 
     // Add new partition on new year
-    const job = new CronJob(
+    new CronJob(
         '0 0 1 1 *', // cronTime
         async function () {
             const year = CurrentYear() 
@@ -126,7 +135,25 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         true, // start
     );
 
+    ready = true
+    fastify.log.info("Logs: Ready")
+    return {
+        getTotalRows
+    }
+}
+
+
+export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
+    const data = await init(fastify)
+    const { getTotalRows, CurrentYear } = data
+    // do not wait for data:
+    load(fastify, data)
+
     fastify.get('/data', async(req, reply) => {
+        if(!ready) return reply.status(503).send({
+            error: "NOT_READY",
+            message: "Logs is not yet ready, try again later"
+        })
         const servers = await serverFilterCache.fetch()
         // make sure the latest year and all row data is always up to date and force refresh:
         await getTotalRows(null)
@@ -141,6 +168,10 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
     const VALID_TYPES = ["before","after","around"]
     fastify.get('/:type/:id', async (req: FastifyRequest<{ Querystring: LogQueryType, Params: { type: string, id: number}}>, reply) => {
+        if(!ready) return reply.status(503).send({
+            error: "NOT_READY",
+            message: "Logs is not yet ready, try again later"
+        })
         const type = req.params.type
         if(!VALID_TYPES.includes(type)) {
             return reply.status(400).send({

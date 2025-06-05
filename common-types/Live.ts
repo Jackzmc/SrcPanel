@@ -387,7 +387,6 @@ export function updateLiveCache(cache: LiveDataCache | null, record: LiveRecord)
             }
             cache.game = record
             // Start time of 0 is end of game
-            console.log("game record", `state=${record.state} maxplayers=${record.maxplayers} players=${Object.keys(cache.clients)}`)
             // if(record.startTime == 0 || cache.game.state != GameState.None) {
                 // cache.clients = {}
             // }

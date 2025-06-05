@@ -202,7 +202,6 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         const [code, granted] = req.user!.requirePermission("servers.view", { resourceId: server.id })
         if(!granted) return NO_PERMISSION(reply, "You do not have permission to view this server", code)
 
-        let recentActivities: any[]|null = null
         if(server.activityLogId) {
             const [rows] = await fastify.db.execute<RowDataPacket[]>(`SELECT client, target, type, id, message, timestamp, s1.last_alias as clientName, s2.last_alias as targetName
                 FROM activity_log PARTITION (p${new Date().getFullYear()})
@@ -214,7 +213,6 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             [server.activityLogId]
         )
             return { activities: rows}
-            recentActivities = rows
         }
 
         return reply.code(403).send({

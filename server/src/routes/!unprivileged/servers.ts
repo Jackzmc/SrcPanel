@@ -1,7 +1,9 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
-import { SERVER_TYPE_MAP } from '../../../../common-types/Server.js';
+import { APIListServersV2, APIListServersV2_Groups, APIListServersV2_GroupEntry, SERVER_TYPE_MAP, ServerAction, ServerStatus, APIListServerGroup, APIListServersCompactV2_Server, APIListServersCompactV2} from '../../../../common-types/Server.js';
 import Server from '../../modules/servers/Server.js';
 import SocketClientUser from '../../modules/servers/SocketClientUser.js';
+import { APIListServersV2_Server } from '../../../../common-types/Server';
+import { Type } from '@sinclair/typebox';
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
 
@@ -21,7 +23,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                     host: server.host,
                     ip: server.ip,
                     port: server.port,
-                    type: SERVER_TYPE_MAP[server.type] ?? server.type,
+                    type: SERVER_TYPE_MAP[server.game] ?? server.game,
                     tags: server.tags,
                     features: server.features,
                     domain: server.host,
@@ -34,6 +36,69 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             }))
         }
         fastify.servers.resetInactivity()
+    })
+
+    fastify.get('/v2', (req: FastifyRequest, reply) => {
+        const groups: APIListServersV2_Groups = Object.fromEntries(Object.entries(fastify.servers.GroupsRecord).map(([id, data]) => {
+            return [id, {
+                name: data.Name,
+                game: data.Game
+            }]
+        }))
+        const servers = fastify.servers.getAll().map((server, i) => {
+            return {
+                id: server.id,
+                name: server.name,
+                groupId: server.group.Id,
+                status: server.status,
+                online: server.Online,
+                tags: server.tags,
+                actions: server.actions,
+                host: server.host,
+                port: server.port,
+            } as APIListServersV2_Server
+        })
+        reply.send({
+            groups,
+            servers
+        } as APIListServersV2)
+        fastify.servers.resetInactivity()
+    })
+    fastify.get('/v2/compact', (req: FastifyRequest, reply) => {
+        const servers = fastify.servers.getAll().map((server, i) => {
+            return {
+                id: server.id,
+                groupId: server.group.Id,
+                status: server.status,
+                online: server.Online,
+            } as APIListServersCompactV2_Server
+        })
+        reply.send({
+            servers
+        } as APIListServersCompactV2)
+        fastify.servers.resetInactivity()
+    })
+
+    fastify.get('/groups', async(req: FastifyRequest<{Querystring: { type?: string }}>, reply) => {
+        let groupsEntries = Object.entries(fastify.servers.GroupsRecord)
+        if(req.query.type) {
+            groupsEntries = groupsEntries.filter(([_, group]) => group.Type === req.query.type?.toLowerCase())
+        }
+        const groups: Record<string, APIListServerGroup> = Object.fromEntries(groupsEntries.map(([id, group]) => {
+            return [id, {
+                id: id,
+                name: group.Name,
+                game: group.Game,
+                type: group.Type,
+                currentInstances: 0
+            }]
+        }))
+        for(const server of fastify.servers.getAll()) {
+            groups[server.group.Id].currentInstances ++
+        }
+        return {
+            groups: Object.values(groups)
+        } 
     })
 
     fastify.get('/:id/ws', { websocket: true }, async (socket, req: FastifyRequest<{Params: {id: string}}>) => {

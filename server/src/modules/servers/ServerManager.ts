@@ -1,16 +1,12 @@
 import { mkdir, readFile, stat, open } from 'fs/promises'
-import Json5 from 'json5'
 import Server, { ConfigServerData } from './Server'
-import Share from '../Share.js';
-import path, { join } from 'path';
-import { open as sqliteOpen } from 'sqlite'
-import sqlite3 from 'sqlite3'
+import Share from '../shares/Share.js';
+import path from 'path';
 import SteamAPI from '../steam.js'
-import { ShareDestinations, ShareInfo } from '../../../../common-types/Share.js'
 import ConfigManager from '../ConfigManager.js'
-import { GroupInfo, ServerAction, ServerType, SERVER_TYPE_MAP, DynamicGroupInfo, StandardGroupInfo } from '../../../../common-types/Server.js'
+import { ServerAction, ServerType } from '../../../../common-types/Server.js'
 import net from 'net'
-import { LiveRecordType, LiveRecordGame, LiveRecord, LiveRecordResponse, LiveRecordSurvivor, LiveRecordClient, LiveRecordInfected, LiveRecordFinaleInfo, LiveRecordSurvivorItems, LiveRecordCommandResponse, PluginTokenPayload } from '../../../../common-types/Live.js';
+import { LiveRecordType, LiveRecordResponse,PluginTokenPayload } from '../../../../common-types/Live.js';
 import BufferReader from '../BufferReader.js';
 import PluginSocket from './PluginSocket.js';
 import JWT from '../../jwt-promise.js';
@@ -20,7 +16,12 @@ import { GameDig, QueryOptions } from 'gamedig';
 import DynamicServerManager from './docker/DynamicServerManager.js';
 import ServerGroup from './groups/ServerGroup.js';
 import { DynamicServerGroup } from './groups/DynamicServerGroup.js';
-import { StandardServerGroup } from './groups/StandardServerGroup.js';
+import yaml from 'yaml'
+import { loadShares } from '../shares/index.js';
+import { loadGroups } from './groups/index.js';
+import logger from '../../logger.js'
+const log = logger.child({ name: "ServerManager" })
+const liveLog = log.child({ name: "ServerManager/Live" })
 
 
 // How long after no status requests to switch from short to long refresh
@@ -49,13 +50,13 @@ export type ConfigGroupData = ConfigStandaloneGroupData | ConfigDynamicGroupData
 // BECAUSE FOR SOME **** REASON THIS ISNT LOADING HERE:
 
 dotenv.config()
-const DEBUG_LIVE_SOCKET = process.env.DEBUG_LIVE_SOCKET != undefined
+const DebugLivePlugin = process.env.LIVE_PLUGIN_DEBUG != undefined
 
 let _instance: ServerManager
 
 export default class ServerManager {
   // private servers: Record<string, Server> = {}
-  private addonShares: Record<string, Share> = {}
+  private fileShares: Record<string, Share> = {}
 
   private dataDir: string;
   private configDir: string;
@@ -70,10 +71,10 @@ export default class ServerManager {
   #socket: net.Server
   #socketClients: Map<string, PluginSocket>
   #liveErrors: WriteStream
-  #dynamicManager: DynamicServerManager
+  #dynamicManager: DynamicServerManager | undefined
 
   #groups: Record<string, ServerGroup> = {}
-  #actions: Record<string, ServerAction[]> = {}
+  #actions: Record<string, ServerAction> = {}
   // Maps a server to a specific connection, this assumes there should never be more than one socket per server
 
   constructor(steam: SteamAPI, dataDir: string, configDir: string, configManager: ConfigManager) {
@@ -81,7 +82,8 @@ export default class ServerManager {
     this.dataDir = dataDir
     this.configDir = configDir
     this.#cfgManager = configManager
-    if(process.env.DOCKER_ENABLED) {
+    if(process.env.DOCKER_ENABLE) {
+      log.debug("Docker enabled, initalzing dynamic server manager")
       this.#dynamicManager = new DynamicServerManager(this, configDir, {
         protocol: process.env.DOCKER_FORCE_PROTOCOL as "http" | "https" | "ssh" | undefined,
         host: process.env.DOCKER_HOST,
@@ -125,10 +127,13 @@ export default class ServerManager {
   public get Groups() {
     return Object.values(this.#groups)
   }
+  public get GroupsRecord() {
+    return {...this.#groups}
+  }
 
   #debugLive(...args: any[]) {
-    if(DEBUG_LIVE_SOCKET)
-      console.debug("[ServerManager::Live]",...args)
+    if(DebugLivePlugin)
+      liveLog.debug("",...args)
   }
 
   async #authenticateSocket(client: PluginSocket, reader: BufferReader): Promise<boolean> {
@@ -136,7 +141,7 @@ export default class ServerManager {
     const record = PluginSocket.ParseRecord(reader)
     // skip any other type until authenticated
     if(record.type != LiveRecordType.Auth) {
-      console.warn("[ServerManager] Got non-auth packets when not-authenticated, ignoring")
+      log.warn("Got non-auth packets when not-authenticated, ignoring")
       return false
     }
     try {
@@ -154,7 +159,7 @@ export default class ServerManager {
         return false
       }
     } catch(err) {
-        console.error("[ServerManager] Auth Error: ", err)
+        log.error("Live auth Error: ", err)
         client.send(LiveRecordResponse.Error, err.message)
         return false
     }
@@ -176,7 +181,7 @@ export default class ServerManager {
             await ps.sendInit()
           }
         } catch(err) {
-          console.error("[ServerManager] Bad Auth:", err);
+          log.error("Bad live auth:", err);
         }
         return
       }
@@ -195,7 +200,7 @@ export default class ServerManager {
           }
         } catch(err) {
           this.#liveErrors.write(`buffer: ${reader.buffer.toString('hex')}\n`)
-          console.warn(`[ServerManager] bad packet: ${err}\nbuffer: ${reader.buffer.toString('hex')}`, err.stack)
+          liveLog.warn(`bad packet: ${err}\nbuffer: ${reader.buffer.toString('hex')}`, err.stack)
           continue
         }
 
@@ -219,19 +224,19 @@ export default class ServerManager {
   #createLiveServer() {
     this.#socketClients = new Map()
     this.#liveErrors = createWriteStream(path.join(this.dataDir, "live_errors.log"))
-    const liveHost = process.env.PLUGIN_SOCKET_HOSTNAME || "127.0.0.1";
-    const livePort = process.env.PLUGIN_SOCKET_PORT ? parseInt(process.env.PLUGIN_SOCKET_PORT) ?? 7888 : 7888
+    const liveHost = process.env.LIVE_PLUGIN_HOSTNAME || "127.0.0.1";
+    const livePort = process.env.LIVE_PLUGIN_PORT ? parseInt(process.env.LIVE_PLUGIN_PORT) ?? 7888 : 7888
     // Create TCP socket
     this.#socket = net.createServer({
       keepAlive : true,
     }, this.#onLiveClient.bind(this))
       .on('error', (err) => {
         // socket.send(SocketResponse.Error.toString())
-        console.error(`[ServerManager::Live] Live server error: \n${err}`)
+        liveLog.error(`server error: \n${err}`)
       })
 
       .listen(livePort, liveHost, () => {
-        console.info(`[ServerManager::Live] Live server listening on ${liveHost}:${livePort}`)
+        liveLog.info(`server listening on ${liveHost}:${livePort}`)
       })
     this.#socket.maxConnections = MAX_SOCKET_CONNECTIONS
 
@@ -292,7 +297,7 @@ export default class ServerManager {
           id: group.Id,
           name: group.Name,
           description: group.Description,
-          type: SERVER_TYPE_MAP[group.Type] ?? group.Type,
+          game: group.Game,
           templateId: templateId,
           servers: Object.fromEntries(Object.values(group.Servers)
             .sort((server1, server2) => this.sortServer(server1, server2))
@@ -376,38 +381,20 @@ export default class ServerManager {
   }
 
   public hasShare(shareId: string) {
-    return this.addonShares[shareId.toLowerCase()] != undefined
+    return this.fileShares[shareId.toLowerCase()] != undefined
   }
 
   public getShare(shareId?: string) {
     if(!shareId) return undefined
-    return this.addonShares[shareId.toLowerCase()]
+    return this.fileShares[shareId.toLowerCase()]
   }
 
   public get shares() {
-    return Object.values(this.addonShares).map(share => share.export())
+    return Object.values(this.fileShares).map(share => share.export())
   }
 
   public get shareIds() { 
-    return Object.keys(this.addonShares)
-  }
-
-  async deleteGroup(groupId: string) {
-    delete this.#groups[groupId]
-  }
-  async setGroup(id: string, group: string) {
-
-  }
-  async addGroup(group: string) {
-
-  }
-
-  async deleteServer(server: string) {
-
-  }
-
-  async putServer(serveR: Server) {
-
+    return Object.keys(this.fileShares)
   }
 
   /**
@@ -417,176 +404,57 @@ export default class ServerManager {
   async Load() {
     this.longRefreshInterval = await this.#cfgManager.GetKV<number>("servers.long_refresh_interval", 600)
     this.shortRefreshInterval = await this.#cfgManager.GetKV<number>("servers.short_refresh_interval", 30)
-    if(this.#dynamicManager)
+    if(this.#dynamicManager) {
       await this.#dynamicManager.Load()
-    try {
-      await this.#loadActions()
+    }
+    this.#actions = await this.#loadActions()
 
-      const servers = await readFile(path.join(this.configDir, "servers.json"), 'utf-8')
-      await this.#loadGroups(Json5.parse(servers))
+    this.#groups = await loadGroups(this.configDir, this.#dynamicManager, this.#actions)
 
-      try {
-        const shares = await readFile(path.join(this.configDir, "shares.json"), 'utf-8')
-        await this.loadShares(Json5.parse(shares))
-      } catch(err) {
-        if(err.code !== "ENOENT") {
-          throw err
-        } else {
-          console.warn("[Warn] No shares.json file found, no shares will be loaded.", err.message)
-        }
+
+    // We don't need to await refresh
+    this.#createLiveServer()
+    this.refresh()
+    this.refreshTimer = setInterval(() => this.refresh(), this.longRefreshInterval)
+
+    this.fileShares = await loadShares(this.configDir, this.dataDir, this.#steam)
+    log.info("Done loading")
+  }
+
+  #parseAction(action: any): ServerAction {
+    const requiredProperties = ["name", "command"]
+    for(const prop of requiredProperties) {
+      if(action[prop] == undefined) {
+        throw new Error(`Action is missing property \"${prop}\" ` + JSON.stringify(action))
       }
-      // We don't need to await refresh
-      this.#createLiveServer()
-      this.refresh()
-      this.refreshTimer = setInterval(() => this.refresh(), this.longRefreshInterval)
-    } catch(err) {
-      if(err.code !== "ENOENT") {
-        throw err
-      } else {
-        console.warn("[Warn] No servers.json file found, no servers or shares will be loaded.", err.message)
-      }
+    }
+    return {
+      name: action.name!,
+      command: action.command!,
+      isHidden: action.isHidden || false,
+      showWhen: action.showWhen || 'online',
+      color: action.color,
+      requiresFeatures: action.requires || [],
+      inQuickAction: action.inQuickAction || false
     }
   }
 
-  private async loadShares(shares: any) {
-    if(!shares) {
-      console.warn("[Warn] No shares to load")
-      return
-    }
-
+  // TODO: move to own file, separate parse and load
+  async #loadActions(): Promise<Record<string, ServerAction>> {
     try {
-      await mkdir(join(this.dataDir, "shares"))
+      const content = await readFile(path.join(this.configDir, "actions.yml"), 'utf-8')
+      const actionGroups = yaml.parse(content)
+
+      const kv = {}
+
+      for(const [id, data] of Object.entries<ServerAction>(actionGroups)) {
+        kv[id] = this.#parseAction(data)
+      }
+      return kv
     } catch(err) {
-      if(err.code != "EEXIST") throw err
-    }
-
-    let numServers = 0, numGroups
-
-    for(const shareId in shares) {
-      let share = shares[shareId] as Partial<ShareInfo>
-      share.id = shareId
-      if(!share.sourceFolder) {
-        console.warn(`[ServerManager] WARN: Skipping share \"${shareId}\": Missing property 'sourceFolder' in config`)
-        continue
-      }
-      
-      if(!await doesFileExist(share.sourceFolder)) {
-        console.warn(`[ServerManager] WARN: Share \"${shareId}\": source folder does not exist (ENOENT)`)
-      }
-
-      const destinations = share.destinations as ShareDestinations || {}
-      shareLoop:
-      for(let [destKey, dest] of Object.entries(destinations)) {
-        if(!dest.paths || dest.paths.length === 0) {
-          console.warn(`[ServerManager] WARN: Share ${shareId}/${destKey} has no paths; skipping`)
-          continue shareLoop;
-        }
-        for(const path of dest.paths) {
-          if(!await doesFileExist(path)) {
-            console.warn(`[ServerManager] WARN: Share ${shareId}/${destKey} has invalid path "${path}" (ENOENT)`)
-          }
-        }
-        if(dest.groupIds) {
-          const groupIds: string[] = []
-          for(const groupId of dest.groupIds) {
-            if(this.#groups[groupId]) {
-              groupIds.push(groupId)
-              numGroups++
-            } else {
-               console.warn(`[ServerManager] WARN: Share ${shareId}/${destKey} includes non existent group id "${groupId}"`)
-              continue;
-            }
-          }
-          dest.groupIds = groupIds
-        }
-        if(dest.serverIds) {
-          const serverIds: string[] = []
-          for(const id of dest.serverIds) {
-            const _id = id.toLowerCase()
-            if(this.getServer(_id)) {
-              serverIds.push(_id)
-              numServers++
-            } else {
-              console.warn(`[ServerManager] WARN: Share ${shareId}/${destKey} includes non existent server id "${_id}"`)
-              continue;
-            }
-          }
-          dest.serverIds = serverIds
-        }
-      }
-
-      const db = await sqliteOpen({
-        filename: join(this.dataDir, `shares/${shareId.toLowerCase()}_cache.db`),
-        driver: sqlite3.Database
-      })
-      this.addonShares[shareId.toLowerCase()] = new Share(db, this.#steam, share)
-      console.info(`[ServerManager] Loaded share "${shareId}" with ${Object.keys(share.destinations!).length} destinations, ${numServers} servers, ${numGroups} groups`)
-    }
-  }
-
-  async #loadActions() {
-    try {
-      const content = await readFile(path.join(this.configDir, "actions.json"), 'utf-8')
-      const actionGroups = Json5.parse(content)
-
-      for(const [key, actions] of Object.entries<ServerAction[]>(actionGroups)) {
-        this.#actions[key] = actions.map((action: Partial<ServerAction>)  => {
-          return {
-            showWhen: "online",
-            ...action
-          } as ServerAction
-        })
-      }
-    } catch(err) {
-      if(err.code == "ENOENT") return
+      if(err.code == "ENOENT") return {}
       throw err
     }
-  }
-
-  async #loadGroups(config: any) {
-    const startTime = Date.now()
-    for(const [groupId, data] of Object.entries<ConfigGroupData>(config)) {
-      let actions: ServerAction[] = []
-      if(data.actionSources) {
-        // Resolve [id1, id2] -> [action1, action2]
-        actions = data.actionSources.reduce((list, actionGroupId) => {
-          if(!this.#actions[actionGroupId]) {
-            console.warn(`[ServerManager] WARN: Group ${groupId} references missing action group: ${actionGroupId}`)
-            return list
-          }
-          return list.concat(this.#actions[actionGroupId])
-        }, [] as ServerAction[])
-      }
-      if('templateId' in data) {
-        if(!this.#dynamicManager) {
-          console.warn(`[ServerManager] WARN: Found templated server config but docker support is not enabled (DOCKER_ENABLED set to 1); skipping`)
-          continue;
-        }
-        const group = new DynamicServerGroup(this.#dynamicManager, groupId, {
-          name: data.name,
-          type: data.type,
-          actions,
-          templateId: data.templateId,
-          serverTemplate: data.serverTemplate,
-          minServers: data.minServers
-        })
-        this.#groups[groupId] = group
-      } else if('servers' in data) {
-        const group = new StandardServerGroup(groupId, {
-          name: data.name,
-          type: data.type,
-          actions
-        })
-        await group.ParseServers(data.servers)
-        this.#groups[groupId] = group
-      } else {
-        console.error(`[ServerManager] ERROR: Unknown group type for group \"${groupId}\" (no 'templateId' or 'servers')`)
-      }
-    }
-
-    // await Promise.allSettled(serverPromises)
-    const endTime = Date.now() - startTime
-    console.log(`[ServerManager] Loaded ${Object.keys(this.#groups).length} groups and total of ${this.Count} servers in ${endTime.toFixed(1)} ms`)
   }
 
   get Count() {
@@ -607,15 +475,5 @@ export default class ServerManager {
       attemptTimeout: 5000,
       ...options,
     })
-  }
-}
-
-async function doesFileExist(filename: string) {
-  try {
-    await stat(filename)
-    return true
-  } catch(err) {
-    if(err.code === "ENOENT") return false
-    throw err
   }
 }

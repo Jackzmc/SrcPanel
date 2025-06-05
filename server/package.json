@@ -19,7 +19,7 @@
     "discord-api-types": "^0.37.119",
     "discord.js": "^14.18.0",
     "dockerode": "^4.0.2",
-    "dotenv": "^16.0.0",
+    "dotenv": "^16.5.0",
     "express": "^4.17.3",
     "express-mysql-session": "^2.1.7",
     "fast-geoip": "^1.1.64",
@@ -43,7 +43,8 @@
     "steamid": "^2.0.0",
     "systeminformation": "^5.23.5",
     "tail": "^2.2.6",
-    "valve-kv": "^1.2.1"
+    "valve-kv": "^1.2.1",
+    "yaml": "^2.8.0"
   },
   "scripts": {
     "build": "tsc",

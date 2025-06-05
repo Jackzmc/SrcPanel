@@ -11,8 +11,13 @@ export interface ShareData {
 
 export interface ShareDestination {
     name?: string,
+    /** The targets to restart, such as 'group' or 'group/specific-server' */
+    restartTargets?: string[]
+    /** @deprecated Replaced by restartTargets */
     serverIds?: string[],
+    /** @deprecated Replaced by restartTargets */
     groupIds?: string[]
+    /** The folders to symlink files to */
     paths: string[]
 }
 export type ShareDestinations = Record<string, ShareDestination>

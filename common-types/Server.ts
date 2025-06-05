@@ -58,7 +58,7 @@ export type PlayerAction = "kick"
 interface BaseGroupInfo {
     id: string,
     name: string,
-    type: ServerType,
+    game: string,
     actions?: ServerAction[]
 }
 export interface StandardGroupInfo extends BaseGroupInfo {
@@ -78,11 +78,13 @@ export type GroupInfo = StandardGroupInfo | DynamicGroupInfo
 
 export interface ServerData {
     id: string,
-    name: string,
+    name?: string,
     host?: string,
     ip: string,
     port: number,
-    type: string,
+    /** @deprecated use 'game' */
+    type?: string, 
+    game: string,
 }
 
 export interface ServerDetailed {
@@ -120,7 +122,7 @@ export interface ServerGroup {
     name: string,
     description: string,
     servers: Record<string, ServerInfo>,
-    type: ServerType,
+    game: string,
     templateId?: string
 }
 
@@ -134,7 +136,8 @@ export interface ServerAction {
 
     inherited?: boolean,
     showWhen: "any" | "online" | "offline",
-    requiresFeatures?: string[]
+    requiresFeatures?: string[],
+    inQuickAction?: boolean
 }
 export type BuiltInActions = "builtin:stop" | "builtin:request_stop" | "builtin:update" | "builtin:kick"
 
@@ -150,3 +153,50 @@ export interface ServerAvailableFeatures {
     canStart: boolean
 } 
 export type ServerFeature = keyof ServerAvailableFeatures
+export interface APIListServersV2_GroupEntry {
+    name: string,
+    game?: string
+}
+export interface APIListServerGroup {
+    id: string,
+    name: string,
+    currentInstances: number,
+    /** A group might not have a game attached, but its servers will */
+    game?: string,
+    /** server type NOT game - docker, custom, list **/
+    type: string
+}
+
+export type APIListServersV2_Groups = Record<string, APIListServersV2_GroupEntry>
+export interface APIListServersV2_Server extends APIListServersCompactV2_Server {
+    name: string,
+    tags: string[],
+    actions: ServerAction[],
+    game: string
+    host: string,
+    port: number
+}
+export interface APIListServersCompactV2_Server {
+    id: string,
+    groupId: string,
+    status: ServerStatus,
+    online: boolean,
+}
+export interface APIListServersV2 {
+    groups: APIListServersV2_Groups,
+    servers: APIListServersV2_Server[]
+}
+export interface APIListServersCompactV2 {
+    servers: APIListServersCompactV2_Server[]
+}
+export type GAME_TYPE = "source" | "minecraft" | "other"
+export const GAME_TYPE_MAP: Record<string, GAME_TYPE> = {
+    l4d2: "source",
+    tf2: "source",
+    csgo: "source",
+    cs2: "source",
+    minecraft: "minecraft"
+}
+export const GAME_TYPE_CONFIG: { [key: string] : { hasMap: boolean }} = {
+    ["source"]: { hasMap: true },
+}

@@ -12621,7 +12621,7 @@ label.panel-block:hover {
   --bulma-footer-color: false;
   --bulma-footer-padding: 3rem 1.5rem 6rem;
   background-color: var(--bulma-footer-background-color);
-  padding: var(--bulma-footer-padding);
+  /* padding: var(--bulma-footer-padding); */
 }
 
 .hero {

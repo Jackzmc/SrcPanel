@@ -8,6 +8,8 @@ import { exec } from 'child_process';
 import { UpdateState } from '../../../../common-types/Panel.js';
 import { rm, unlink } from 'fs/promises';
 import Server from '../../modules/servers/Server.js';
+import { CustomServerGroup } from '../../modules/servers/groups/CustomServerGroup.js';
+import { DynamicServerGroup } from '../../modules/servers/groups/DynamicServerGroup.js';
 
 let updateState: UpdateState = "NORMAL"
 
@@ -38,6 +40,14 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             if(err.code === "ENOENT")
                 return reply.status(404).send()
             throw err
+        }
+    })
+
+    fastify.post('/recreate-servers', async (req: FastifyRequest, reply) => {
+        for(const group of fastify.servers.Groups) {
+            if(group instanceof CustomServerGroup || group instanceof DynamicServerGroup) {
+                await group.recreateServers()
+            }
         }
     })
 
@@ -217,7 +227,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 host: server.host,
                 ip: server.ip,
                 port: server.port,
-                type: server.type,
+                type: server.game,
                 tags: server.tags,
                 features: server.features,
                 domain: server.host,

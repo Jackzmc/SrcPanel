@@ -110,7 +110,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, computed, onBeforeMount, onMounted } from 'vue'
+import { ref, watch, computed, onBeforeMount, onMounted, onActivated, onDeactivated } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import Sugar from 'sugar'
 import { ListAPIBan } from '../../../common-types/Ban.js';
@@ -211,8 +211,9 @@ async function fetchBans(resetPage = false) {
     error.value = "An error occurred"
   }
 }
+let refreshTimer = ref()
 
-onMounted(() => {
+onActivated(() => {
   document.onkeydown = (e) => {
     shiftPressed.value = !!e.shiftKey
   }
@@ -220,8 +221,11 @@ onMounted(() => {
     shiftPressed.value = !!e.shiftKey
   }
   fetchBans()
-  setInterval(() => {
+  refreshTimer.value = setInterval(() => {
     fetchBans()
   }, AUTO_REFRESH_INTERVAL)
+})
+onDeactivated(() => {
+  clearInterval(refreshTimer.value)
 })
 </script>
