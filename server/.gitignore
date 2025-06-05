@@ -5,3 +5,5 @@ config/*
 !config/*.sample.yml
 data/
 content
+start.sh
+update.sh
