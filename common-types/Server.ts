@@ -153,13 +153,6 @@ export interface ServerAvailableFeatures {
     canStart: boolean
 } 
 export type ServerFeature = keyof ServerAvailableFeatures
-export enum ServerState {
-    Offline = 0,
-    Online = 1,
-    Starting = 2,
-    Stopping = 3,
-    Updating = 4
-  }
 export interface APIListServersV2_GroupEntry {
     name: string,
     game?: string
@@ -172,22 +165,27 @@ export interface APIListServerGroup {
 }
 
 export type APIListServersV2_Groups = Record<string, APIListServersV2_GroupEntry>
-export interface APIListServersV2_Server {
-    id: string,
+export interface APIListServersV2_Server extends APIListServersCompactV2_Server {
     name: string,
-    groupId: string,
-    status: ServerStatus,
     tags: string[],
     actions: ServerAction[],
     game: string
     host: string,
     port: number
 }
+export interface APIListServersCompactV2_Server {
+    id: string,
+    groupId: string,
+    status: ServerStatus,
+    online: boolean,
+}
 export interface APIListServersV2 {
     groups: APIListServersV2_Groups,
     servers: APIListServersV2_Server[]
 }
-
+export interface APIListServersCompactV2 {
+    servers: APIListServersCompactV2_Server[]
+}
 export type GAME_TYPE = "source" | "minecraft" | "other"
 export const GAME_TYPE_MAP: Record<string, GAME_TYPE> = {
     l4d2: "source",

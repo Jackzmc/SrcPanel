@@ -1,5 +1,5 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
-import { APIListServersV2, APIListServersV2_Groups, APIListServersV2_GroupEntry, SERVER_TYPE_MAP, ServerAction, ServerStatus, APIListServerGroup} from '../../../../common-types/Server.js';
+import { APIListServersV2, APIListServersV2_Groups, APIListServersV2_GroupEntry, SERVER_TYPE_MAP, ServerAction, ServerStatus, APIListServerGroup, APIListServersCompactV2_Server, APIListServersCompactV2} from '../../../../common-types/Server.js';
 import Server from '../../modules/servers/Server.js';
 import SocketClientUser from '../../modules/servers/SocketClientUser.js';
 import { APIListServersV2_Server } from '../../../../common-types/Server';
@@ -38,7 +38,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         fastify.servers.resetInactivity()
     })
 
-    fastify.get('/v2', (req: FastifyRequest<{Querystring: {'compact'?: boolean}}>, reply) => {
+    fastify.get('/v2', (req: FastifyRequest, reply) => {
         const groups: APIListServersV2_Groups = Object.fromEntries(Object.entries(fastify.servers.GroupsRecord).map(([id, data]) => {
             return [id, {
                 name: data.Name,
@@ -51,16 +51,31 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 name: server.name,
                 groupId: server.group.Id,
                 status: server.status,
+                online: server.Online,
                 tags: server.tags,
                 actions: server.actions,
                 host: server.host,
-                port: server.port
+                port: server.port,
             } as APIListServersV2_Server
         })
         reply.send({
             groups,
             servers
         } as APIListServersV2)
+        fastify.servers.resetInactivity()
+    })
+    fastify.get('/v2/compact', (req: FastifyRequest, reply) => {
+        const servers = fastify.servers.getAll().map((server, i) => {
+            return {
+                id: server.id,
+                groupId: server.group.Id,
+                status: server.status,
+                online: server.Online,
+            } as APIListServersCompactV2_Server
+        })
+        reply.send({
+            servers
+        } as APIListServersCompactV2)
         fastify.servers.resetInactivity()
     })
 

@@ -184,7 +184,10 @@
               </td>
               <td>
                 <Icon :icon="server.stateData.icon" :class="server.stateData.class">{{ server.stateData.label }}</Icon>
-                <p v-if="server.state === ServerState.Online">{{ server.data.status?.data?.players.length }} players online</p>
+                <p v-if="server.data.status.data">
+                  {{ server.data.status?.data?.players.length }} players online
+                </p>
+                <p v-else-if="server.state === ServerState.Online"><em>No status available</em></p>
               </td>
               <td>
                 <div class="buttons my-0">
@@ -217,7 +220,7 @@ import Field from '@/components/Field.vue'
 import ModalCard from '@/components/ModalCard.vue'
 import CreateServerModal from '@/components/servers/CreateServerModal.vue'
 import { computed, onBeforeMount, onBeforeUnmount, onMounted, ref } from 'vue'
-import { APIListServersV2, APIListServersV2_Groups, APIListServersV2_Server, ServerAction, ServerState } from '../../../../common-types/Server.js'
+import { APIListServersV2, APIListServersV2_Groups, APIListServersV2_Server, ServerAction } from '../../../../common-types/Server.js'
 import { PanelMetaInfo } from '../../../../common-types/Panel.js'
 import { notify } from '@kyvg/vue3-notification'
 
@@ -247,6 +250,10 @@ const FIELDS: FieldInfo[] = [
     sortFn: (a,b) => a.state - b.state
   },
 ]
+enum ServerState {
+  Offline,
+  Online
+}
 const StateMap: Record<ServerState, { label: string, icon: string, class: string }> = {
   [ServerState.Offline]: {
     label: 'Offline',
@@ -258,21 +265,21 @@ const StateMap: Record<ServerState, { label: string, icon: string, class: string
     icon: 'fa-circle',
     class: 'has-text-success'
   },
-  [ServerState.Starting]: {
-    label: 'Starting',
-    icon: 'fa-diamond',
-    class: 'has-text-pending'
-  },
-  [ServerState.Stopping]: {
-    label: 'Stopping',
-    icon: 'fa-diamond',
-    class: 'has-text-pending'
-  },
-  [ServerState.Updating]: {
-    label: '',
-    icon: 'fa-hourglass',
-    class: 'has-text-info'
-  }
+  // [ServerState.Starting]: {
+  //   label: 'Starting',
+  //   icon: 'fa-diamond',
+  //   class: 'has-text-pending'
+  // },
+  // [ServerState.Stopping]: {
+  //   label: 'Stopping',
+  //   icon: 'fa-diamond',
+  //   class: 'has-text-pending'
+  // },
+  // [ServerState.Updating]: {
+  //   label: '',
+  //   icon: 'fa-hourglass',
+  //   class: 'has-text-info'
+  // }
 }
 
 interface UIServerInfo {
@@ -519,7 +526,7 @@ async function fetchServers() {
       const json = await response.json() as APIListServersV2
       groups.value = json.groups
       for(const server of json.servers) {
-        const state = server.status?.data ? ServerState.Online : ServerState.Offline
+        const state = server.online ? ServerState.Online : ServerState.Offline
         serverMap.value[server.id] = {
           data: server,
           checked: serverMap.value[server.id]?.checked ?? false,
@@ -554,11 +561,6 @@ onMounted(() => {
   fetchServers()
 })
 let refreshTimer: any
-let ws = ref<WebSocket>()
-
-function setupWS() {
-
-}
 
 onMounted(async () => {
   if(await fetchServers()) { // only set timer on first success
