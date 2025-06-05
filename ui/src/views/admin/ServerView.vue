@@ -31,7 +31,7 @@
           </div>
         </h3>
         <h4 class="subtitle is-4">
-          {{serverInfo.host}}:{{serverInfo.port}}
+          {{serverInfo.host ?? serverInfo.ip}}:{{serverInfo.port}}
           <Icon icon="fa-copy" data-tooltip="Copy to clipboard" @click="copyAddress"></Icon>
         </h4>
         <div class="level">
