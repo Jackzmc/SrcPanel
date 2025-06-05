@@ -149,6 +149,7 @@ export default class User {
         for(const resource of resourceIds) {
             permCode += `.${resource}`
         }
+        if(!this.#adminData!.permissions.codes) return false
         for(const perm of this.#adminData!.permissions.codes) {
             if(AuthManager.isPermissionGranted(permCode as UserPrivilegeCode, perm)) return true
         }
