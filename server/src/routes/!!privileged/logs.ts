@@ -7,6 +7,11 @@ import SteamID from 'steamid';
 import { open } from 'sqlite';
 import SetCacheManager, { SetCache } from '../../modules/SetCache.js';
 import { CronJob } from 'cron'
+import { Pool } from 'mysql2/promise.js';
+import logger from '../../logger.js'
+import { APILogData, APILogQueryResult, LogEntry } from '../../../../common-types/Logs';
+
+const log = logger.child({ name: "logs" })
 
 const LogQuery = Type.Object({
     raw: Type.Optional(Type.Boolean({default: false})),
@@ -57,117 +62,213 @@ let partitionCache: SetCache<number>
 
 let ready = false
 
-// TODO: fix very slow query, resolve in cron job? or have a cache table?
-async function init(fastify: FastifyInstance) {
-    await SetCacheManager.Load()
-    // Set of all server column values in activity log table
-    serverFilterCache = new SetCache<string>(
-        async () => {
-            const [rows] = await fastify.db.query<RowDataPacket[]>(`SELECT DISTINCT server FROM ${ACTIVITY_LOG_TABLE_NAME} ORDER BY timestamp DESC`)
-            const list: string[] = rows.filter(row => row.server).map(row => row.server)
-            return new Set(list)
-        }
-    ).setDiskCacheKey("servers")
-    // Set of all partitions for activity log table
-    partitionCache = new SetCache<number>(
-        async () => {
-            const [rows] = await fastify.db.query<RowDataPacket[]>(`SELECT YEAR(FROM_UNIXTIME(timestamp)) as year FROM left4dead2.activity_log GROUP BY YEAR(FROM_UNIXTIME(timestamp))`, [])
-            if(rows.length === 0) return new Set([new Date().getFullYear()])
-            return new Set(rows.map(row => Number(row.year)))
-        }
-    ).setStaleFunction((lastFetched, staleTime) => {
-        // Partitions should only need to be updated once every year
-        return new Date(lastFetched).getFullYear() > new Date().getFullYear()
-    }).setDiskCacheKey("partitions")
+// // TODO: fix very slow query, resolve in cron job? or have a cache table?
+// async function init(fastify: FastifyInstance) {
+//     await SetCacheManager.Load()
+//     // Set of all server column values in activity log table
+//     serverFilterCache = new SetCache<string>(
+//         async () => {
+//             const [rows] = await fastify.db.query<RowDataPacket[]>(`SELECT DISTINCT server FROM ${ACTIVITY_LOG_TABLE_NAME} ORDER BY timestamp DESC`)
+//             const list: string[] = rows.filter(row => row.server).map(row => row.server)
+//             return new Set(list)
+//         }
+//     ).setDiskCacheKey("servers")
+//     // Set of all partitions for activity log table
+//     partitionCache = new SetCache<number>(
+//         async () => {
+//             const [rows] = await fastify.db.query<RowDataPacket[]>(`SELECT YEAR(FROM_UNIXTIME(timestamp)) as year FROM left4dead2.activity_log GROUP BY YEAR(FROM_UNIXTIME(timestamp))`, [])
+//             if(rows.length === 0) return new Set([new Date().getFullYear()])
+//             return new Set(rows.map(row => Number(row.year)))
+//         }
+//     ).setStaleFunction((lastFetched, staleTime) => {
+//         // Partitions should only need to be updated once every year
+//         return new Date(lastFetched).getFullYear() > new Date().getFullYear()
+//     }).setDiskCacheKey("partitions")
 
-    // Calculates current year in YYYY
-    const CurrentYear = () => new Date().getFullYear()
+//     // Calculates current year in YYYY
+//     const CurrentYear = () => new Date().getFullYear()
 
-    async function getTotalRows(year: number | null): Promise<DataCache|undefined> {
-        let value = partitionRowCache.get(year)
-        // Fetch data if: 
-        //  (1) no cached data 
-        //  (2) if data is for this year or total rows (null) and exceeds LOG_TOTAL_ROW_CACHE_TIME
-        // Any other year, the data will/should never change, as its old data.
-        if(!value || (!year || year == CurrentYear()) && Date.now() - value.lastFetchTime > LOG_TOTAL_ROW_CACHE_TIME) {
-            try {
-                const [c] = await fastify.db.execute<RowDataPacket[]>(`SELECT COUNT(*) AS count, MAX(id) as highestId, MIN(id) as lowestId from ${ACTIVITY_LOG_TABLE_NAME} ${year != null ? `PARTITION (p${year})` : ''}`)
-                value = {
-                    totalRows: c[0].count,
-                    highestId: c[0].highestId,
-                    lowestId: c[0].lowestId,
-                    lastFetchTime: Date.now()
-                }
-                partitionRowCache.set(year, value)
-            } catch(err) {
-                // Ignore invalid partitions
-                if(err.code !== "ER_UNKNOWN_PARTITION") {
-                    throw err
-                }
-            }
-        }
-        return value
-    }
-    return {
-        getTotalRows,
-        CurrentYear,
-        serverFilterCache,
-        partitionCache
-    }
+//     async function getTotalRows(year: number | null): Promise<DataCache|undefined> {
+//         let value = partitionRowCache.get(year)
+//         // Fetch data if: 
+//         //  (1) no cached data 
+//         //  (2) if data is for this year or total rows (null) and exceeds LOG_TOTAL_ROW_CACHE_TIME
+//         // Any other year, the data will/should never change, as its old data.
+//         if(!value || (!year || year == CurrentYear()) && Date.now() - value.lastFetchTime > LOG_TOTAL_ROW_CACHE_TIME) {
+//             try {
+//                 const [c] = await fastify.db.execute<RowDataPacket[]>(`SELECT COUNT(*) AS count, MAX(id) as highestId, MIN(id) as lowestId from ${ACTIVITY_LOG_TABLE_NAME} ${year != null ? `PARTITION (p${year})` : ''}`)
+//                 value = {
+//                     totalRows: c[0].count,
+//                     highestId: c[0].highestId,
+//                     lowestId: c[0].lowestId,
+//                     lastFetchTime: Date.now()
+//                 }
+//                 partitionRowCache.set(year, value)
+//             } catch(err) {
+//                 // Ignore invalid partitions
+//                 if(err.code !== "ER_UNKNOWN_PARTITION") {
+//                     throw err
+//                 }
+//             }
+//         }
+//         return value
+//     }
+//     return {
+//         getTotalRows,
+//         CurrentYear,
+//         serverFilterCache,
+//         partitionCache
+//     }
+// }
+
+const currentYear = () => new Date().getFullYear()
+
+
+// async function load(fastify: FastifyInstance, { getTotalRows, CurrentYear }) {
+//     // Fetch null to get the complete number of rows
+//     await getTotalRows(null)
+//     const partitions = await partitionCache.fetch()
+//     const a = await Promise.all([...partitions.values()].map(part => getTotalRows(part)))
+//     await SetCacheManager.Save()
+
+//     // Add new partition on new year
+//     new CronJob(
+//         '0 0 1 1 *', // cronTime
+//         async function () {
+//             const year = CurrentYear() 
+//             fastify.log.info("Adding partition to activity_log for " + year)
+//             await fastify.db.execute(`ALTER TABLE activity_log ADD PARTITION ( PARTITION p${year} VALUES LESS THAN ( UNIX_TIMESTAMP('${year+1}-01-01 00:00') ) )`)
+//         }, // onTick
+//         null, // onComplete
+//         true, // start
+//     );
+
+//     ready = true
+//     fastify.log.info("Logs: Ready")
+//     return {
+//         getTotalRows
+//     }
+// }
+
+interface PartitionData {
+    minId: number,
+    maxId: number,
+    count?: number,
+    fetchTime: number
 }
 
-async function load(fastify: FastifyInstance, { getTotalRows, CurrentYear }) {
-    // Fetch null to get the complete number of rows
-    await getTotalRows(null)
-    const partitions = await partitionCache.fetch()
-    const a = await Promise.all([...partitions.values()].map(part => getTotalRows(part)))
-    await SetCacheManager.Save()
+// Default values, will fetch full data after
 
-    // Add new partition on new year
-    new CronJob(
-        '0 0 1 1 *', // cronTime
-        async function () {
-            const year = CurrentYear() 
-            fastify.log.info("Adding partition to activity_log for " + year)
-            await fastify.db.execute(`ALTER TABLE activity_log ADD PARTITION ( PARTITION p${year} VALUES LESS THAN ( UNIX_TIMESTAMP('${year+1}-01-01 00:00') ) )`)
-        }, // onTick
-        null, // onComplete
-        true, // start
-    );
+const availableServers = new Set(["web"])   // List of all distinct 'server' values
 
+// Map of partitions to its min and max ids, and later count
+const yearData: Map<number | null, PartitionData> = new Map()
+
+/**
+ * Fetches all distinct servers from all years
+ * IS SLOW
+ * @param pool 
+ * @returns 
+ */
+async function fetchServers(pool: Pool): Promise<Set<string>> {
+    const [rows] = await pool.query<RowDataPacket[]>(`SELECT DISTINCT server FROM activity_log ORDER BY timestamp DESC`)
+    const list: string[] = rows.filter(row => row.server).map(row => row.server)
+    for(const item of list) {
+        availableServers.add(item)
+    }
+    return availableServers
+}
+
+/**
+ * Fetches partitions, their lowest and highest ids, and the number of rows. 
+ * IS SLOW
+ * @param pool 
+ * @returns 
+ */
+async function getPartitions(pool: Pool): Promise<Map<number|null, PartitionData>> {
+    console.time("getPartitions")
+    const [rows] = await pool.query<RowDataPacket[]>(`SELECT 
+        MAX(id) as highestId, MIN(id) as lowestId, COUNT(*) as count, YEAR(from_unixtime(timestamp)) year
+        FROM activity_log
+        GROUP BY year`
+    )
+    console.timeEnd("getPartitions")
+    log.debug( rows )
+    for(const row of rows) {
+        yearData.set(row.year, {
+            minId: row.lowestId,
+            maxId: row.highestId,
+            count: row.count,
+            fetchTime: Date.now()
+        })
+    }
+    console.log("resolved all partitions")
+    return yearData
+}
+
+/**
+ * Fetches min and max id for year, but not count. Is not slow like above functions
+ * @param pool 
+ * @param year 
+ * @returns 
+ */
+async function fetchYearDataQuick(pool: Pool, year: number): Promise<PartitionData> {
+    const [rows] = await pool.query<RowDataPacket[]>(`SELECT MAX(id) as highestId, MIN(id) as lowestId FROM activity_log PARTITION (p${year})`)
+    const row = rows[0]
+    const out = row && {
+        minId: row.lowestId,
+        maxId: row.highestId,
+        fetchTime: Date.now()
+    }
+    yearData.set(year, out)
+    return out
+}
+
+async function getYearData(pool: Pool, year: number) {
+    let data = yearData.get(year)
+    if(!data || Date.now() - data.fetchTime >= LOG_TOTAL_ROW_CACHE_TIME ) {
+        await getPartitions(pool)
+        data = yearData.get(year)
+    }
+    return data
+}
+
+
+
+async function fetchFullData(pool: Pool) {
+    log.debug("START FETCH FUL")
+    await Promise.allSettled([
+        fetchServers(pool),
+        getPartitions(pool)
+    ])
+    log.debug("END FETCH FUL")
     ready = true
-    fastify.log.info("Logs: Ready")
-    return {
-        getTotalRows
-    }
 }
-
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
-    const data = await init(fastify)
-    const { getTotalRows, CurrentYear } = data
-    // do not wait for data:
-    load(fastify, data)
+    // Quick initalize
+    await fetchYearDataQuick(fastify.db, currentYear())
+    // Don't wait for full data to resolve
+    fetchFullData(fastify.db)
 
-    fastify.get('/data', async(req, reply) => {
-        if(!ready) return reply.status(503).send({
-            error: "NOT_READY",
-            message: "Logs is not yet ready, try again later"
-        })
-        const servers = await serverFilterCache.fetch()
-        // make sure the latest year and all row data is always up to date and force refresh:
-        await getTotalRows(null)
-        await getTotalRows(CurrentYear())
-
-        const partitions = Object.fromEntries(partitionRowCache)
+    fastify.get('/data', async(req, reply): Promise<APILogData> => {
+        // if(!ready) return reply.status(503).send({
+        //     error: "NOT_READY",
+        //     message: "Logs is not yet ready, try again later"
+        // })
+        const years: Record<number, PartitionData> = Object.fromEntries(yearData.entries());
+        const computedTotal = Object.values(years).reduce((pv, cv) => (cv.count ?? 0) + pv, 0)
         return {
-            servers: [...servers],
-            cache: partitions
+            servers: [...availableServers],
+            years,
+            computedTotal,
+            
+            fullyLoaded: ready
         }
     })
 
     const VALID_TYPES = ["before","after","around"]
-    fastify.get('/:type/:id', async (req: FastifyRequest<{ Querystring: LogQueryType, Params: { type: string, id: number}}>, reply) => {
+    fastify.get('/:type/:id', async (req: FastifyRequest<{ Querystring: LogQueryType, Params: { type: string, id: number}}>, reply): Promise<APILogQueryResult> => {
         if(!ready) return reply.status(503).send({
             error: "NOT_READY",
             message: "Logs is not yet ready, try again later"
@@ -222,14 +323,14 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
         
         const startTime = Date.now()
-        let [logs] = (await query.execute(fastify.db))
+        let [rawLogs] = (await query.execute(fastify.db))
 
         let year = parseInt(req.query.source as string)
-        if(!year || isNaN(year)) year = CurrentYear()
-        let cache = await getTotalRows(year)
+        if(!year || isNaN(year)) year = currentYear()
+        let yearInfo = await getYearData(fastify.db, year)
         const missingNameSet = new Set<SteamID>()
 
-        logs = logs.map(log => {
+        const logs = rawLogs.map(log => {
             if(log.metadata) log.metadata = JSON.parse(log.metadata)
             // If its a valid user but no name, then put it in a list to be updated:
             if(!log.clientName && log.client?.startsWith("STEAM_")) {
@@ -239,10 +340,10 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 missingNameSet.add(new SteamID(log.target))
             }
             // Side effect, but update highest id recorded
-            if(cache && log.id > cache.highestId) {
-                cache.highestId = log.id
+            if(yearInfo && log.id > yearInfo.maxId) {
+                yearInfo.maxId = log.id
             }
-            return log
+            return log as LogEntry
         })
         // If we have missing names, fetch it in bulk (only every MISSING_NAME_MIN_INTERVAL ms)
         if(missingNameSet.size > 0 && Date.now() - lastMissingNameFetchTime > MISSING_NAME_MIN_INTERVAL) {
@@ -272,14 +373,13 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         return {
             logs,
             timeTaken: Date.now() - startTime,
-            cache,
-            totals: {
-                total: cache?.totalRows, // # of rows in entire data source
-                count: logs.length // # of rows + filtered + pagination (<= limit)
+            yearInfo: yearInfo,
+            counts: {
+                queryRows: logs.length
             },
             // pages: Math.ceil(count[0].count / limit),
             raw: process.env.NODE_ENV === "production" || req.query.raw ? null : {
-                cache: cache ? cache[tableName] : undefined,
+                cache: yearInfo ? yearInfo[tableName] : undefined,
                 query: query.buildUnsafe(),
                 tableName
             }

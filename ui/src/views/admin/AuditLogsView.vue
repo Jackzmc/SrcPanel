@@ -17,7 +17,7 @@
           </p>
         </div>
       </div>
-      <InfiniteLoading @infinite="loadTopContent" />
+      <InfiniteLoading @infinite="loadContent('top')" />
       <div class="has-text-centered is-size-5" v-if="entries.length === 0" style="margin-top:12%">
         <p>No entries were found within year {{ dataSource }}</p>
         <p>Try searching in a different year</p>
@@ -139,7 +139,7 @@
           </div>
         </template>
       </div>
-      <InfiniteLoading @infinite="loadBottomContent"  />
+      <InfiniteLoading @infinite="loadContent('bottom')"  />
       <div class="list-item message is-info" ref="infiniteScroll" v-show="infiniteScrollLoading === 'bottom'">
         <div class="list-item-content has-text-centered" style="text-decoration: none">
           <p>
@@ -151,7 +151,8 @@
     <div class="column">
       <div class="box" style="position: sticky; top: 4em">
         <h4 class="title is-4">
-          {{ totalEntries.toLocaleString() }} entries
+          <span v-if="totalEntries">{{ totalEntries.toLocaleString() }} entries</span>
+          <span v-else><Icon icon="fa-spinner" spin></Icon> entries</span>
           <a :disabled="loadingTime" :class="['button','is-pulled-right','is-info',{'is-loading': loadingTime || !entries}]" @click="search">
             <Icon icon="refresh">Refresh</Icon>
           </a>
@@ -256,6 +257,7 @@ import SimpleTypeahead from 'vue3-simple-typeahead';
 import 'vue3-simple-typeahead/dist/vue3-simple-typeahead.css'
 //@ts-ignore
 import InfiniteLoading from "v3-infinite-loading";
+import { APILogData, APILogQueryResult } from '../../../../common-types/Logs';
 
 const route = useRoute()
 const router = useRouter()
@@ -301,7 +303,7 @@ let showLoading = ref<boolean>(true)
 let hoverId = ref()
 let limit = ref(DEFAULT_LIMIT);
 let totalEntries = ref(0)
-let entries = ref<LogEntry[]>()
+let entries = ref<UILogEntry[]>()
 let dataSource = ref<number>(new Date().getFullYear())
 let filters = ref<Record<string, string|string[]|null>>({
   servers: DEFAULT_SERVERS,
@@ -315,7 +317,7 @@ interface LogEntryUser {
   name: string,
   avatarUrl?: string
 }
-interface LogEntry {
+interface UILogEntry {
   id: number,
   timestamp: number,
   server: string,
@@ -329,19 +331,15 @@ interface LogEntry {
   rawMessage: string,
   showDetails: boolean
 }
-let pendingEntries = ref<LogEntry[]>([])
+let pendingEntries = ref<UILogEntry[]>([])
 let infiniteScroll = ref()
 let infiniteScrollLoading = ref<"top"|"bottom">()
 
 let fetchAbort: AbortController | null = null
-let logInfo = ref<{
-  servers: string[],
-  cache:Record<string,{
-    totalRows:number,
-    highestId:number
-  }>,
-  loading: boolean,
-}>({servers:[],cache:{}, loading: true})
+interface LogInfo extends APILogData {
+  loading: boolean
+}
+let logInfo = ref<LogInfo>({ servers:[], years:{}, fullyLoaded: false, loading: true })
 let firstLoad = false
 
 const highlightRegex = computed(() => {
@@ -352,10 +350,10 @@ const loadingDuration = computed(() => {
   return Math.max(((now.value - loadingTime.value) / 1000), 0).toFixed(1)
 })
 const dataSources = computed(() => {
-  if(!logInfo.value?.cache) return []
+  if(!logInfo.value?.years) return []
   // A cache value of null is provided for absolute totals, we ignore it
   // The list is also ascending, so just reverse it. Maybe in future order it just in case
-  return Object.keys(logInfo.value.cache).filter(key => key != "null").reverse()
+  return Object.keys(logInfo.value.years).filter(key => key != "null").reverse()
 })
 
 async function searchUsers(e: any) {
@@ -442,17 +440,20 @@ function updateParams() {
 
 const cache = computed({
   get() {
-    return logInfo.value.cache[dataSource.value]
+    return logInfo.value.years[dataSource.value]
   },
   set(newValue) {
-    logInfo.value.cache[dataSource.value] = newValue
+    logInfo.value.years[dataSource.value] = newValue
   }
 })
 async function getInfo() {
+  logInfo.value.loading = true
   const response = await request("/api/logs/data")
   if(response?.ok) {
-    const json = await response.json()
-    logInfo.value = json
+    const json: APILogData = await response.json()
+    logInfo.value.fullyLoaded = json.fullyLoaded
+    logInfo.value.servers = json.servers
+    logInfo.value.years = json.years
     logInfo.value.loading = false
   } else {
     logInfo.value.loading = false
@@ -468,33 +469,40 @@ async function search() {
   if(filters.value.aroundId)
     entries.value = await fetchLogs(Number(filters.value.aroundId), "around")
   else
-    entries.value = await fetchLogs(cache.value.highestId, "before")
+    entries.value = await fetchLogs(cache.value.maxId, "before")
   loadingTime.value = undefined
 }
-async function loadBottomContent() {
+
+async function loadContent(side: "top" | "bottom") {
   // Do not fire if loading, or if there is no content available
   if(infiniteScrollLoading.value || !entries.value || entries.value.length == 0 || loadingTime.value !== undefined) return
-  console.log('fetching bottom content')
-  infiniteScrollLoading.value = "bottom"
-  const newEntries = await fetchLogs(idMinMax.value[0] - 1, "before")
-  entries.value = [...entries.value, ...newEntries]
-  infiniteScrollLoading.value = undefined
-}
-async function loadTopContent() {
-  // Do not fire if loading, or if there is no content available
-  if(!firstLoad) {
-    firstLoad = true
-    return
+  let id, mode: "before"|"after"
+  if(side == "top") {
+    // Do not trigger on first load
+    if(!firstLoad) {
+      firstLoad = true
+      return
+    }
+    // Do not load if already at top
+    if(idMinMax.value[1] === cache.value?.maxId) return
+
+    id = idMinMax.value[1] + 1
+    mode = "after"
+  } else if(side == "bottom") {
+    id = idMinMax.value[0] - 1
+    mode = "before"
+  } else { throw new Error("invalid side")}
+
+  infiniteScrollLoading.value = side
+  const newEntries = await fetchLogs(id, mode)
+  if(newEntries) {
+    entries.value = [...entries.value, ...newEntries]
   }
-  if(infiniteScrollLoading.value || !entries.value || entries.value.length == 0 || loadingTime.value !== undefined) return
-  if(idMinMax.value[1] === cache.value?.highestId) return
-  console.log('fetching top content')
-  infiniteScrollLoading.value = "top"
-  const newEntries = await fetchLogs(idMinMax.value[1] + 1, "after")
-  entries.value = [...entries.value, ...newEntries]
   infiniteScrollLoading.value = undefined
+  console.log('fetching content from', side)
 }
-async function fetchLogs(id: number, mode: "before" | "after" | "around") {
+async function fetchLogs(id: number, mode: "before" | "after" | "around"): Promise<UILogEntry[]|undefined> {
+  if(id == undefined) throw new Error("Id is undefined")
   // Wait for previous request
   loadingTime.value = Date.now()
   const params = updateParams()
@@ -516,8 +524,11 @@ async function fetchLogs(id: number, mode: "before" | "after" | "around") {
   }
 
   if(response?.ok) {
-    const json = await response.json()
-    totalEntries.value = json.cache.totalRows
+    const json: APILogQueryResult = await response.json()
+    if(json.yearInfo?.count) {
+      totalEntries.value = json.yearInfo.count
+      cache.value.maxId = json.yearInfo.maxId
+    }
     const newEntries = json.logs.map((entry: any) => {
       let message = entry.message
       if(entry.metadata && entry.message) {
@@ -546,7 +557,7 @@ async function fetchLogs(id: number, mode: "before" | "after" | "around") {
       }
       const hasValidClient = entry.client?.startsWith("STEAM_")
       const hasValidTarget = entry.target?.startsWith("STEAM_")
-      return {
+      const ret: UILogEntry = {
         id: entry.id,
         timestamp: entry.timestamp,
         server: entry.server,
@@ -565,11 +576,12 @@ async function fetchLogs(id: number, mode: "before" | "after" | "around") {
         },
         metadata: entry.metadata,
         message,
-        rawMessage: entry.message
+        rawMessage: entry.message,
+        showDetails: false
       }
+      return ret
     })
 
-    cache.value.highestId = json.cache.highestId
     console.info('Fetch', mode, 'took', json.timeTaken, 'ms')
     loadingTime.value = undefined
     showLoading.value = false
@@ -579,18 +591,18 @@ async function fetchLogs(id: number, mode: "before" | "after" | "around") {
 const isTopOfList = computed(() => {
   if(!cache.value) return
   // If our highest id is greater than the cached, its some bug - just act like its the latest
-  return idMinMax.value[1] >= cache.value.highestId
+  return idMinMax.value[1] >= cache.value.maxId
 })
 const idMinMax = computed(() => {
   if(!entries.value || entries.value.length === 0) return [-1, -1]
-  let lowestId = -1, highestId = -1
+  let lowestId = -1, maxId = -1
   for(const row of entries.value) {
-    if(row.id > highestId || highestId === -1) highestId = row.id
+    if(row.id > maxId || maxId === -1) maxId = row.id
     else if(row.id < lowestId || lowestId === -1) lowestId = row.id
   }
-  return [ lowestId, highestId ]
+  return [ lowestId, maxId ]
 })
-function addPendingEntries(entries: LogEntry[]) {
+function addPendingEntries(entries: UILogEntry[]) {
   if(!entries) return
   pendingEntries.value = [ ...pendingEntries.value, ...entries]
 }
@@ -614,12 +626,12 @@ async function jumpTo(entry: any) {
   await search()
 }
 
-function getShareLink(entry: LogEntry) {
+function getShareLink(entry: UILogEntry) {
   const params = getParams()
   params.set('aroundId', entry.id.toString())
   return `${location.protocol}//${window.location.host}${window.location.pathname}/${entry.id}`
 }
-function getTimestamp(entry: LogEntry) {
+function getTimestamp(entry: UILogEntry) {
   const date = new Date(entry.timestamp * 1000)
   return `${date.toLocaleDateString('sv-SE')} at ${date.toLocaleTimeString()}`
 }
@@ -670,16 +682,17 @@ onActivated(async() => {
   }
 
   // We already jumped using "around", so don't fetch before
-  if(!route.params.aroundId) entries.value = await fetchLogs(cache.value.highestId, "before")
+  if(!route.params.aroundId) entries.value = await fetchLogs(cache.value.maxId, "before")
 
 
   refreshTimer = setInterval(async () => {
     // Only check for new values IF we not full, not searching, and at the top of list
     if(isTopOfList.value && fetchAbort == null && pendingEntries.value.length < limit.value) {
-      const newEntries = await fetchLogs(cache.value.highestId, "after")
-
-      // don't replace, append non duplicates
-      addPendingEntries(newEntries)
+      const newEntries = await fetchLogs(cache.value.maxId, "after")
+      if(newEntries) {
+        // don't replace, append non duplicates
+        addPendingEntries(newEntries)
+      }
     }
 
   }, REFRESH_INTERVAL)

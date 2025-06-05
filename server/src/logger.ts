@@ -1,5 +1,5 @@
 import pino from 'pino';
-import { mkdir } from 'fs'
+import { mkdir, unlinkSync, writeFileSync } from 'fs'
 
 const envToLogger = {
   development: {
@@ -36,8 +36,10 @@ const envToLogger = {
 }
 const logObj = envToLogger[process.env.NODE_ENV ?? "development"]
 if(process.env.LOG_PATH) {
-
   mkdir("logs", (e) => {})
+  if(process.env.LOG_WIPE_PREVIOUS) {
+    writeFileSync(process.env.LOG_PATH, "")
+  }
   logObj.transport.targets.push({
     level: 'debug',
     target: "pino/file",
