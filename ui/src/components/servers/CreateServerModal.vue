@@ -10,6 +10,9 @@
   <!-- MODAL BODY-->
   <template v-if="state === ModalState.SelectGroup">
     <h5 class="subtitle is-5">Select a server group</h5>
+    <div class="my-6 mx-4" v-if="!serverGroups">
+      <Icon icon="fa-spinner" spin>Fetching groups</Icon>
+    </div>
     <div class="list has-hoverable-list-items has-visible-pointer-controls">
       <ServerGroupListItem v-for="group in serverGroups" :key="group.id" :group="group" selectable :selected="selectedGroup?.id === group.id" @select="selectGroup(group)" />
     </div>
@@ -226,7 +229,7 @@ const stateTitle = computed(() => {
 //   }
 // ])
 
-let serverGroups = ref<APIListServerGroup[]>([])
+let serverGroups = ref<APIListServerGroup[]>(undefined)
 let state = ref<ModalState>(ModalState.SelectGroup)
 let selectedGroup = ref<APIListServerGroup>()
 let data = ref<any|null>(null)
@@ -277,7 +280,7 @@ async function createInstance() {
 
 onMounted(async () => {
   await fetchGroups()
-  if(props.group) {
+  if(props.group && serverGroups.value != undefined) {
     const group = serverGroups.value.find(g => g.id === props.group!.id)
     if(!group) console.warn("could not find prop group in fetched groups")
     else {
