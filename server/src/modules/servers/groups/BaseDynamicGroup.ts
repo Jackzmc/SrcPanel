@@ -50,6 +50,7 @@ export default abstract class BaseDynamicServerGroup extends ServerGroup<DockerS
         const publicHost = BaseDynamicServerGroup.formatTemplateVar(this.ServerTemplate.host ?? "%ip%", vars)
         const name = this.ServerTemplate.name && BaseDynamicServerGroup.formatTemplateVar(this.ServerTemplate.name ?? "", vars)
         /// This is where server template gets applied
+        console.debug("registerInstance", this.ServerTemplate, publicHost)
         const server = new DockerServer(this, {
                 id,
                 name,
