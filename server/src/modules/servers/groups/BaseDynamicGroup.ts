@@ -47,21 +47,13 @@ export default abstract class BaseDynamicServerGroup extends ServerGroup<DockerS
             ...variables,
         }
         const id = `${this.Id}-${instance.Port}`
-        const ip = BaseDynamicServerGroup.formatTemplateVar(this.ServerTemplate.host ?? "%ip%", vars)
-        const [, host, port] = ip.match(/([a-zA-Z0-9.]+):?(\d*)/) ?? []
-        let address = instance.PublicIp
-        try {
-            const lookup = await DNS.lookup(host, { verbatim: false, family: 4 })
-            address = lookup.address
-        } catch(err) {
-            console.warn(`[ServerManager] Warn: Could not resolve IP for hostname ${host}:\n`, err)
-        }
+        const publicHost = BaseDynamicServerGroup.formatTemplateVar(this.ServerTemplate.host ?? "%ip%", vars)
         /// This is where server template gets applied
         const server = new DockerServer(this, {
                 id,
                 name: BaseDynamicServerGroup.formatTemplateVar(this.ServerTemplate.name ?? "", vars),
                 public: {
-                    host: this.ServerTemplate.host ?? instance.PublicIp,
+                    host: publicHost,
                     port: instance.Port
                 },
                 internal: {
