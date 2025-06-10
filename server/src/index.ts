@@ -36,7 +36,6 @@ const app = Fastify({
     trustProxy: process.env.NODE_ENV === "production",
     loggerInstance
 })
-console.log = loggerInstance.debug
 // app.log.trace("trace")
 // app.log.debug("debug")
 // app.log.info("info")
