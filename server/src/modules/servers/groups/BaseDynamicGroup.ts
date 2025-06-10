@@ -61,7 +61,7 @@ export default abstract class BaseDynamicServerGroup extends ServerGroup<DockerS
                 id,
                 name: BaseDynamicServerGroup.formatTemplateVar(this.ServerTemplate.name ?? "", vars),
                 public: {
-                    host: instance.PublicIp,
+                    host: this.ServerTemplate.host ?? instance.PublicIp,
                     port: instance.Port
                 },
                 internal: {
