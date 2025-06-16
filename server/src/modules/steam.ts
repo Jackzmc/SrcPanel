@@ -125,7 +125,7 @@ export default class SteamAPI {
     }
 
     /** Get a single user's information */
-    async getUserDetail(steamid: SteamID|string): Promise<SteamUserDetails|null> {
+    async getUserDetail(steamid: SteamID|string): Promise<SteamUserDetails> {
         const details = await this.getUserDetails([steamid])
         if(details.length === 0) throw new SteamAPIError("Invalid response returned, no users details given", 500, "")
         return details[0]

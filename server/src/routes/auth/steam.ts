@@ -6,8 +6,10 @@ import User from '../../modules/users/User.js';
 import { SteamInfo } from '../../../../common-types/Privileges.js';
 import { FirstTimeSetupStage } from '../../../../common-types/Panel.js';
 import { SteamAPIError } from '../../modules/steam.js';
+import { ErrorWithCode } from '../../util.js';
 
 export const SESSION_VERSION = "3.0"
+const RouteError = ErrorWithCode
 
 interface OpenIDQuery {
     'openid.ns': string,
@@ -145,12 +147,4 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             throw new RouteError("STEAM_API_ERROR", "Could not contact Steam API, try again later")
         }
     })
-}
-
-class RouteError extends Error {
-    code: string
-    constructor(_code: string, message: string) {
-        super(message)
-        this.code = _code
-    }
 }
