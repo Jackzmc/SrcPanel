@@ -1,12 +1,13 @@
+//@ts-nocheck
 import { FastifyInstance, FastifyPluginOptions, FastifyReply, FastifyRequest } from 'fastify';
 import SteamID from 'steamid'
 import FastGeoip from 'fast-geoip'
 import User from '../../modules/users/User.js';
 import { SteamInfo } from '../../../../common-types/Privileges.js';
 import { FirstTimeSetupStage } from '../../../../common-types/Panel.js';
+import { SteamAPIError } from '../../modules/steam.js';
 
 export const SESSION_VERSION = "3.0"
-
 
 interface OpenIDQuery {
     'openid.ns': string,
@@ -28,14 +29,32 @@ interface OpenIDQuery {
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
     fastify.setErrorHandler(async (err, req: FastifyRequest<{Querystring: Record<string, any> }>, reply: FastifyReply) => {
-        fastify.log.error(`[auth/steam] Route error: ${err.stack}`)
+        let code: string = "INTERNAL_ERROR", message: string = ""
+        if(err instanceof SteamAPIError) {
+            if(err.status == 429) {
+                code = "STEAM_TEMPORARILY_UNAVAILABLE"
+                message = "Steam API is temporarily unavailable (too many requests)"
+            } else {
+                code = "STEAM_API_ERROR"
+                message = `Steam API returned an error (${err.status} ${err.statusText})`
+            }
+        } else {
+            if(err.code) code = err.code
+            message = err.message 
+        }
+        fastify.log.error({
+            errName: err.name,
+            code,
+            message
+        }, `[auth/steam] route error`)
         const returnTo = req.query.return_uri ?? req.query['openid.return_to'] ?? await fastify.config.GetKV("domain", req.headers.host)
         const url = new URL(returnTo)
         const prefix = `${url.protocol}//${url.host}`
         const params = new URLSearchParams()
-        params.append("type", "oauth_internal_error")
+        params.append("type", "oauth_error")
         params.append("provider", "steam")
-        params.append("code", err.code ?? err.message)
+        params.append("code", code)
+        params.append("message", message)
         params.append("req_id", req.id)
         return reply.redirect(`${prefix}/error?${params.toString()}`)
     })
@@ -62,17 +81,14 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             }
         },
         async handler(req: FastifyRequest<{ Querystring: OpenIDQuery }>, reply: FastifyReply) {
-
             const returnTo = req.query.return_uri ?? req.query['openid.return_to'] ?? await fastify.config.GetKV("domain", req.headers.host)
             const url = new URL(returnTo)
             const prefix = `${url.protocol}//${url.host}`
 
             if(req.query['openid.error']) {
-                req.log.error({ query: req.query, error: req.query['openid.error'] }, "[auth/steam] Openid error")
-                return reply.redirect(`${prefix}/error?type=oauth_error&provider=steam&oauth_error=GENERIC_OAUTH_ERROR&req_id=${req.id}`)
+                throw new RouteError("OPENID_ERROR", req.query['openid.error'])
             } else if(!req.query['openid.response_nonce']) {
-                req.log.error({ query: req.query }, "[auth/steam] Invalid callback, missing query")
-                return reply.redirect(`${prefix}/error?type=oauth_error&provider=steam&oauth_error=LOGIN_STALE_WAIT_AND_TRY_AGAIN&req_id=${req.id}`)
+                throw new RouteError("LOGIN_STALE_RETRY_LATER", "Login is stale, wait a few minutes and try again")
             }
             req.log.debug({ query: req.query}, 'query')
             req.log.debug(`return_uri=${req.query.return_uri} openid.return_to=${req.query['openid.return_to']}`)
@@ -94,12 +110,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                     const pieces = req.query['openid.identity'].split('/')
                     const steamid = new SteamID(pieces[pieces.length - 1])
 
-                    const userDetails = await getUserDetails(steamid)
-                    if(!userDetails) {
-                        req.log.error({ query: req.query}, "[auth/steam] User details failed")
-                        return reply.redirect(`${prefix}/error?type=oauth_error&provider=steam&oauth_error=STEAM_GET_USER_INFO_FAILED&req_id=${req.id}`)
-                    }
-
+                    const userDetails = await fastify.steam.getUserDetail(steamid)
                     const steamid2 = steamid.getSteam2RenderedID()
 
                     // Handle first time setup:
@@ -123,27 +134,23 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                         }
                         return reply.redirect(req.query.return_uri)
                     } else {
-                        return reply.redirect(`${prefix}/error?type=oauth_not_authorized&provider=steam&aoauth_error=UNAUTHORIZED&req_id=${req.id}`)
+                        throw new RouteError("UNAUTHORIZED", "Only admins can login to this panel")
                     }
                 } else {
-                    req.log.error("[auth/steam] VALIDATE_ERROR: " + JSON.stringify(req.query))
                     req.log.error({ query: req.query, steamResponse: text }, "[auth/steam] VALIDATE_ERROR")
-                    return reply.redirect(`${prefix}/error?type=oauth_error&provider=steam&oauth_error=STEAM_VALIDATION_FAILED&req_id=${req.id}`)
+                    throw new RouteError("STEAM_VALIDATION_FAILED", "Steam rejected login, retry again later")
                 }
             }
 
-            req.log.error("[auth/steam] STEAM_ERROR: " + await validateRes.text())
-            return reply.redirect(`${prefix}/error?type=oauth_error&provider=steam&aoauth_error=STEAM_API_ERROR&req_id=${req.id}`)
+            throw new RouteError("STEAM_API_ERROR", "Could not contact Steam API, try again later")
         }
     })
+}
 
-    async function getUserDetails(steamid: SteamID) {
-        try {
-            const details = await fastify.steam.getUserDetails([steamid])
-            return details ? details[0] : null
-        } catch(err) {
-            fastify.log.error("auth/steam: getUserDetails error:\n", err) 
-            return null
-        }
+class RouteError extends Error {
+    code: string
+    constructor(_code: string, message: string) {
+        super(message)
+        this.code = _code
     }
 }

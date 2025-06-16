@@ -36,7 +36,18 @@
     <h4 class="title is-4 has-text-danger">Login Error</h4>
     <p class="subtitle is-4 mb-0">Could not link or login to {{ route.query.provider }} due to an error.</p>
     <p class="subtitle is-4">Try again or please report the issue if it persists.</p>
-    <p><em>Error code: {{ route.query.oauth_error ?? ('(none)') }}</em></p>
+    <div class="notification ">
+      <p class="is-size-5">{{ route.query.message }}</p>
+      <br>
+      <div>
+        <ul>
+          <li><b>Code: </b>{{ route.query.code ?? route.query.oauth_error }}</li>
+          <li><b>Request Id: </b>{{ route.query.req_id }}</li>
+          <li><b>Oauth Provider: </b>{{ route.query.provider }}</li>
+        </ul>
+      </div>
+    </div>
+    <p>This error has been logged, please provide the request Id for help</p>
     <br>
     <router-link :to="returnTo ?? '/'" class="button is-medium is-info">Home</router-link>
   </template>

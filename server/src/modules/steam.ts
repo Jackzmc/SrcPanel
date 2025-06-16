@@ -18,8 +18,8 @@ const ITEM_CACHE_TTL = 1000 * 60 * 10 // 10 min
 export type WSResolveCallback = (workshopInfo: WorkshopItem | null) => void
 
 export class SteamAPIError extends Error {
-    StatusCode: number
-    StatusText: string|undefined
+    status: number
+    statusText: string|undefined
 
     /**
      * Throw this error if response.ok is false, returning either JSON error code or raw text
@@ -53,8 +53,8 @@ export class SteamAPIError extends Error {
 
     constructor(message: string, httpCode: number, httpMessage?: string) {
         super(message)
-        this.StatusCode = httpCode
-        this.StatusText = httpMessage
+        this.status = httpCode
+        this.statusText = httpMessage
     }
 }
 
@@ -122,6 +122,13 @@ export default class SteamAPI {
         log.warn(`GetUserDetails: Invalid data`, json)
         // TODO: verify if this is a problem:
         throw new Error("API Did not return player data")
+    }
+
+    /** Get a single user's information */
+    async getUserDetail(steamid: SteamID|string): Promise<SteamUserDetails|null> {
+        const details = await this.getUserDetails([steamid])
+        if(details.length === 0) throw new SteamAPIError("Invalid response returned, no users details given", 500, "")
+        return details[0]
     }
 
     // Gets a collection's children items or null if is not a collection
