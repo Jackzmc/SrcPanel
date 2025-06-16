@@ -233,7 +233,17 @@ async function getYearData(pool: Pool, year: number) {
     return data
 }
 
-
+async function quickInit(pool: Pool) {
+    try {
+        await fetchYearDataQuick(pool, currentYear())
+    } catch(err) {
+        if(err.code === "ER_UNKNOWN_PARTITION") {
+            log.warn({}, "quickInit: No partition for current year")
+        } else {
+            throw err
+        }
+    }
+}
 
 async function fetchFullData(pool: Pool) {
     log.debug("START FETCH FUL")
@@ -247,7 +257,7 @@ async function fetchFullData(pool: Pool) {
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
     // Quick initalize
-    await fetchYearDataQuick(fastify.db, currentYear())
+    await quickInit(fastify.db)
     // Don't wait for full data to resolve
     fetchFullData(fastify.db)
 
