@@ -571,7 +571,11 @@ async function fetchLogs(id: number, mode: "before" | "after" | "around"): Promi
     const json: APILogQueryResult = await response.json()
     if(json.yearInfo?.count) {
       totalEntries.value = json.yearInfo.count
-      cache.value.maxId = json.yearInfo.maxId
+      if(!cache.value) {
+        console.warn("cache.value undefined, should not happen")
+      } else {
+        cache.value.maxId = json.yearInfo.maxId
+      }
     }
     // Format log entries for UI purposes
     const newEntries = json.logs.map((entry: any) => {
@@ -743,6 +747,26 @@ function checkRouteParams() {
   }
 }
 
+/**
+ * Returns the closest available year to the current year
+ * If current year unavailable, the closestt year (in lower first) is picked
+ * @returns year to use or null if no years to pick from
+ */
+function getClosestYear(): number | null {
+  const currentYear = new Date().getFullYear()
+  if(dataSources.value.length === 0) return null
+  if(dataSources.value.includes(currentYear.toString())) return currentYear
+
+  let closest = Number(dataSources.value[0])
+  for(const year of Object.keys(dataSource.value)) {
+    if(Math.abs(currentYear - Number(year)) < Math.abs(currentYear - closest)) {
+      closest = Number(year)
+    }
+  }
+
+  return closest
+}
+
 let refreshTimer: any
 let nowTimer: any
 onActivated(async() => {
@@ -755,6 +779,11 @@ onActivated(async() => {
   // Acquire required log data
   showLoading.value = true
   await getInfo()
+  const year = getClosestYear()
+  // TODO: error screen if no data source
+  if(!year) return console.error("fatal: no data sources loaded / found, nothing to load")
+  dataSource.value = year
+  if(!cache.value) return console.error("fatal: cache.value undefined, no data for current year, should not happen")
 
   // Process route parameters
   // If specified, fetch entries around id instead
