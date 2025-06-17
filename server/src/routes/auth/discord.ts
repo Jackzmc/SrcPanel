@@ -4,6 +4,7 @@ import crypto from 'node:crypto'
 import User from '../../modules/users/User.js';
 import { SteamInfo } from '../../../../common-types/Privileges';
 import SteamID from 'steamid';
+import { ErrorWithCode } from '../../util.js';
 
 interface OauthTokenResponse {
     access_token: string;
@@ -38,6 +39,7 @@ const STATE_JWT_SECRET = process.env.STATE_SECRET as string
 const STATE_SEED = crypto.randomBytes(STATE_SEED_LENGTH).toString('hex')
 
 const PROVIDER_NAME = "discord"
+const RouteError = ErrorWithCode
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
     // Disable discord support if no secret
@@ -50,6 +52,37 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     }
     else fastify.log.info(`[Oauth] Provider "${PROVIDER_NAME}" available`)
 
+    fastify.setErrorHandler(async (err, req: FastifyRequest<{Querystring: Record<string, any> }>, reply: FastifyReply) => {
+            let code: string = "INTERNAL_ERROR", message: string = ""
+            /*if(err instanceof ProviderAPIError) {
+                if(err.status == 429) {
+                    code = "STEAM_TEMPORARILY_UNAVAILABLE"
+                    message = "Steam API is temporarily unavailable (too many requests)"
+                } else {
+                    code = "STEAM_API_ERROR"
+                    message = `Steam API returned an error (${err.status} ${err.statusText})`
+                }
+            } else {*/
+                if(err.code) code = err.code
+                message = err.message 
+            /*}*/
+            fastify.log.error({
+                errName: err.name,
+                code,
+                message
+            }, `[auth/${PROVIDER_NAME}] route error`)
+            const returnTo = req.query.return_uri ?? req.query['openid.return_to'] ?? await fastify.config.GetKV("domain", req.headers.host)
+            const url = new URL(returnTo)
+            const prefix = `${url.protocol}//${url.host}`
+            const params = new URLSearchParams()
+            params.append("type", "oauth_error")
+            params.append("provider", PROVIDER_NAME)
+            params.append("code", code)
+            params.append("message", message)
+            params.append("req_id", req.id)
+            return reply.redirect(`${prefix}/error?${params.toString()}`)
+        })
+
 
     const loginLinkHandler = async (req, reply) => {
         const isLink = req.url.endsWith("/link")
@@ -59,7 +92,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         const domain = await fastify.config.GetKV("domain", "")
         const authorizeUrl = await fastify.config.GetKVNamespaced("providers", PROVIDER_NAME, "authorize_url")
         if(!redirectUri || !clientId || !authorizeUrl) {
-            return reply.redirect(`${domain}/error?type=oauth_error&provider=${PROVIDER_NAME}&oauth_error=provider_not_supported`)
+            throw new RouteError("PROVIDER_NOT_SUPPORTED", "Login provider is not configured and cannot be used")
         }
         const params = new URLSearchParams({
             client_id: clientId,
@@ -90,13 +123,15 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             error: "PROVIDER_SETUP_MISSING",
             message: "This provider is not setup correctly, missing 'domain' setting"
         })
+            
+        if(!domain) throw new RouteError("PROVIDER_ERROR_NO_DOMAIN", "Login provider is not configured correctly and cannot be used")
         // this route - /api/auth/callback
         const redirectUri = await getRedirectUri() as string
         try {
             const jwt = await JWT.verify<StateJwtPayoad>(req.query.state, STATE_JWT_SECRET)
             const provider = await fastify.authmngr.oauth.getProvider(PROVIDER_NAME)
             if(!provider) {
-                return reply.redirect(`${domain}/error?type=oauth_error&provider=${PROVIDER_NAME}&oauth_error=PROVIDER_NOT_SUPPORTED`)
+                throw new RouteError("PROVIDER_NOT_SUPPORTED", "Provider is unknown or unsupported")
             }
             try {
                 // where to return user
@@ -115,24 +150,19 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                     // User is logging in to their account via provider
                     // We need to find their steam account
                     const admin = await fastify.authmngr.getAdminByProvider(PROVIDER_NAME, userInfo!.id)
-                    if(!admin) return reply.redirect(`${domain}/error?type=oauth_no_account&provider=${PROVIDER_NAME}`)
+                    if(!admin) throw new RouteError("NO_ACCOUNT_FOUND", `No steam account is linked to this ${PROVIDER_NAME} account. A steam account must be linked to login with ${PROVIDER_NAME}`)
+
                     // We need to refresh steam info as well
-                    const details = await fastify.steam.getUserDetails([ new SteamID(admin.steamid) ])
-                    if(details && details.length > 0) {
-                        await provider.save(admin.steamid)
-                        await fastify.authmngr.loginUser(req, admin, details[0])
-                        await reply.redirect(returnUrl, 302)
-                    } else {
-                        return reply.send("<h1>Error: Cannot access steam account information, cannot login.</h1>")
-                    }
+                    const details = await fastify.steam.getUserDetail(new SteamID(admin.steamid))
+                    await provider.save(admin.steamid)
+                    await fastify.authmngr.loginUser(req, admin, details)
+                    await reply.redirect(returnUrl, 302)
                 }
             } catch(err) {
-                req.log.error(`Provider (${PROVIDER_NAME}) token error:` + err.stack)
-                return reply.redirect(`${domain}/error?type=oauth_error&provider=${PROVIDER_NAME}&oauth_error=token_error`)
+                throw new RouteError("TOKEN_ERROR", "An error occurred while logging in to provider")
             }
         } catch(err) {
-            req.log.error(err)
-            return reply.redirect(`${domain}/error?type=oauth_error&provider=${PROVIDER_NAME}&oauth_error=login_token_expired`)
+            throw new RouteError("STATE_EXPIRED", "Request has expired, please try again")
         }
     })
 

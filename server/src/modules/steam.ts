@@ -17,6 +17,47 @@ const ITEM_CACHE_TTL = 1000 * 60 * 10 // 10 min
 
 export type WSResolveCallback = (workshopInfo: WorkshopItem | null) => void
 
+export class SteamAPIError extends Error {
+    status: number
+    statusText: string|undefined
+
+    /**
+     * Throw this error if response.ok is false, returning either JSON error code or raw text
+     * @param response 
+     */
+    static async throwIfResponseError(response: Response, logData?: object) {
+        if(!response.ok) {
+            let message: string = "";
+
+            if(!response.bodyUsed) {
+                if(response.headers.get("content-type")?.includes("application/json")) {
+                    const json = await response.json()
+                    message = `${json.error}: ${json.message}`
+                } else {
+                    const text = await response.text()
+                    message = text
+                }
+            }
+
+            if(!message) message = "Unknown error"
+
+            log.warn({
+                status: response.status,
+                statusText: response.statusText,
+                ...logData
+            }, message)
+
+            throw new SteamAPIError(message, response.status, response.statusText)
+        }
+    }
+
+    constructor(message: string, httpCode: number, httpMessage?: string) {
+        super(message)
+        this.status = httpCode
+        this.statusText = httpMessage
+    }
+}
+
 export default class SteamAPI {
     #apikey: string
     #userAgent: string
@@ -67,24 +108,27 @@ export default class SteamAPI {
     async getUserDetails(steamids: (SteamID | string)[]): Promise<SteamUserDetails[]> {
         this.#checkKey()
         const ids = steamids.map(steamid => steamid instanceof SteamID ? steamid.getSteamID64() : steamid).slice(0, 100).join(",")
-        log.trace(`GetPlayerSummaries ids=${ids}`)
+        log.debug(`GetPlayerSummaries ids=${ids}`)
         const res = await fetch(`https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v2/?key=${this.#apikey}&format=json&steamids=${ids}`, {
             headers: { 'User-Agent': this.#userAgent }
         })
-        if(res.ok) {
-            const json: any = await res.json()
-            const users = json.response?.players
-            if(users) {
-                return users as SteamUserDetails[]
-            }
-            log.warn(`GetUserDetails: Invalid data`, json)
-            // TODO: verify if this is a problem:
-            throw new Error("API Did not return player data")
+        await SteamAPIError.throwIfResponseError(res, { fn: "getUserDetails", ids })
+
+        const json: any = await res.json()
+        const users = json.response?.players
+        if(users) {
+            return users as SteamUserDetails[]
         }
-        // TODO: if down mark unavailable
-        const error = `${res.statusText}: ${await res.text()}`
-        log.warn(`GetUserDetails: ${error}`)
-        throw new Error(error)
+        log.warn(`GetUserDetails: Invalid data`, json)
+        // TODO: verify if this is a problem:
+        throw new Error("API Did not return player data")
+    }
+
+    /** Get a single user's information */
+    async getUserDetail(steamid: SteamID|string): Promise<SteamUserDetails> {
+        const details = await this.getUserDetails([steamid])
+        if(details.length === 0) throw new SteamAPIError("Invalid response returned, no users details given", 500, "")
+        return details[0]
     }
 
     // Gets a collection's children items or null if is not a collection
@@ -125,15 +169,14 @@ export default class SteamAPI {
             },
             body: `?${params.toString()}`
         })
-        if(response.ok) {
-            const json = await response.json() as any
-            const details = json.response.publishedfiledetails as WorkshopItem[]
-            for(const file of details) {
-                this.#itemCache.set(file.publishedfileid, file)
-            }
-            return details
+        await SteamAPIError.throwIfResponseError(response, { fn: "searchItems", appid, query })
+
+        const json = await response.json() as any
+        const details = json.response.publishedfiledetails as WorkshopItem[]
+        for(const file of details) {
+            this.#itemCache.set(file.publishedfileid, file)
         }
-        throw new Error(`${response.statusText}: ${await response.text()}`)
+        return details
     }
 
 
@@ -160,19 +203,16 @@ export default class SteamAPI {
                 },
                 body: `itemcount=${index}&${params.toString()}`
             })
-            if(response.ok) {
-                const json = await response.json() as any
-                const files = json.response.publishedfiledetails as WorkshopItem[]
-                for(const file of files) {
-                    this.#itemCache.set(file.publishedfileid, file)
-                }
-                details = [...details, ...files]
-                log.trace({fn: "getItemDetails", details })
-            } else {
-                const error = `${response.statusText}: ${await response.text()}`
-                log.error("getItemDetails %s", error)
-                throw new Error(error)
+
+            await SteamAPIError.throwIfResponseError(response, { fn: "getItemDetails", params })
+
+            const json = await response.json() as any
+            const files = json.response.publishedfiledetails as WorkshopItem[]
+            for(const file of files) {
+                this.#itemCache.set(file.publishedfileid, file)
             }
+            details = [...details, ...files]
+            log.trace({fn: "getItemDetails", details })
         }
         return details
     }

@@ -50,3 +50,10 @@ export async function resolveIPv4(host: string): Promise<string> {
     return lookup.address
 }
 
+export class ErrorWithCode extends Error {
+    code: string
+    constructor(_code: string, message: string) {
+        super(message)
+        this.code = _code
+    }
+}

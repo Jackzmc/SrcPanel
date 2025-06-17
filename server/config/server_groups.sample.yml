@@ -21,6 +21,15 @@ list-group-example:
     # ID of server
     my-server-1:
       name: My Server 1 # Optional. Display name
+      # Required, the IP and port. This will be displayed to end users, but if an different IP should be used internally, see internal
+      public:
+        host: myserverip.ordomain.com
+        port: 27015
+      # Optional, if not set, host and port inherit from 'public'.
+      # These values will be used for all internal uses (status, rcon, etc), public will only be displayed.
+      internal:
+        host: localhost
+        port: 270111
       hostname: 
         public: myserver.example.com # The public IP or domain, shown to end users.
         internal: localhost # Optional. For server statuses or any other internal connections an IP or domain to use. Defaults to public

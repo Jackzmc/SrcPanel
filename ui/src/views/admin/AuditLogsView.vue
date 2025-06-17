@@ -304,6 +304,9 @@ let hoverId = ref()
 let limit = ref(DEFAULT_LIMIT);
 let totalEntries = ref(0)
 let entries = ref<UILogEntry[]>()
+/** The name of selected data source (partition server side), currently divided into full years.
+  * We default to current year, as we expect there to be entries here
+*/
 let dataSource = ref<number>(new Date().getFullYear())
 let filters = ref<Record<string, string|string[]|null>>({
   servers: DEFAULT_SERVERS,
@@ -353,17 +356,23 @@ const dataSources = computed(() => {
   if(!logInfo.value?.years) return []
   // A cache value of null is provided for absolute totals, we ignore it
   // The list is also ascending, so just reverse it. Maybe in future order it just in case
-  return Object.keys(logInfo.value.years).filter(key => key != "null").reverse()
+  return Object.keys(logInfo.value.years)
+    .sort((a,b) => Number(a) - Number(b)) // should already be sorted in ascending, but just in case
 })
 
-async function searchUsers(e: any) {
-  if(!e.input || e.input.length < 3) return userSearchItems.value = []
-  const response = await request(`/api/users/search/${e.input}`)
+/**
+ * Searches for a specific user, for search box typeaheads
+ * @param event
+ */
+async function searchUsers(event: any) {
+  if(!event.input || event.input.length < 3) return userSearchItems.value = []
+  const response = await request(`/api/users/search/${event.input}`)
   if(response?.ok) {
     const json = await response.json()
     userSearchItems.value = json.users
   }
 }
+/** Returns display label for typeahead entries */
 function projectUser(user: any) {
   return `${user.name} (${user.steamid})`
 }
@@ -388,15 +397,14 @@ function selectAllFilter(filter: string) {
   updateParams()
   search()
 }
-
+/** Move and merge pending entries onto the view */
 function viewPendingEntries() {
   if(!entries.value) return
   entries.value = [...pendingEntries.value, ...entries.value.slice(0, -pendingEntries.value.length) ]
   pendingEntries.value = []
 }
-
+/** Toggle a filter on or off */
 function toggleFilter(filter: string, key: string) {
-  console.log("toggling", filter, key)
   if(filters.value[filter] && Array.isArray(filters.value[filter])) {
     let v = filters.value[filter] as string[]
     let index = v.indexOf(key)
@@ -409,12 +417,14 @@ function toggleFilter(filter: string, key: string) {
   }
   fetchDebounce()
 }
+/** Returns the color a filter should show */
 function getFilterColor(filter: string, key: string) {
   if(!filters.value[filter] || !Array.isArray(filters.value[filter])) return
   if(!filters.value[filter]!.includes(key)) return
   return FILTER_DATA[filter][key] ?? "is-info"
 }
 
+/** Returns a new URLSearchParams with all fetch configurations */
 function getParams() {
   // if(!entries.value) return ''
   const searchParams = new URLSearchParams()
@@ -432,12 +442,17 @@ function getParams() {
   }
   return searchParams
 }
+/** Updates the current url (in the browser address bar) to value from getParams() */
 function updateParams() {
   const params = getParams()
   router.replace({ query: Object.fromEntries(params) })
   return params.toString()
 }
 
+/**
+ * Returns log info for the specific year selected.
+ * Will be null before getInfo() called, thus no data source selected
+ */
 const cache = computed({
   get() {
     return logInfo.value.years[dataSource.value]
@@ -446,6 +461,11 @@ const cache = computed({
     logInfo.value.years[dataSource.value] = newValue
   }
 })
+
+/**
+ * Acquires log data (is server ready, the server names, and all the year data)
+ * This initializes cache.value
+ */
 async function getInfo() {
   logInfo.value.loading = true
   const response = await request("/api/logs/data")
@@ -461,7 +481,12 @@ async function getInfo() {
   }
 }
 
+/** Performs a logs fetch but only ever 1200 ms  */
 const fetchDebounce = debounce(search, 1200)
+/**
+ * When user clicks search icon, performs a search either around or normal before query
+ * Calls fetchLogs with right parameters
+ */
 async function search() {
   if(!cache.value) return
   loadingTime.value = Date.now()
@@ -473,6 +498,12 @@ async function search() {
   loadingTime.value = undefined
 }
 
+/**
+ * Loads content (fetchLogs) from a certain side, either:
+ * "top" - for new log entries since fetched
+ * "bottom" - when user is scrolling down, get the next set
+ * @param side
+ */
 async function loadContent(side: "top" | "bottom") {
   // Do not fire if loading, or if there is no content available
   if(infiniteScrollLoading.value || !entries.value || entries.value.length == 0 || loadingTime.value !== undefined) return
@@ -501,13 +532,26 @@ async function loadContent(side: "top" | "bottom") {
   infiniteScrollLoading.value = undefined
   console.log('fetching content from', side)
 }
+
+/**
+ * Fetches logs before, around, or after an id.
+ *
+ * Only one request can be in flight, previous request will be cancelled
+ *
+ * Request will time out after MAX_REQUEST_TIME (set to below cloudflare timeout)
+ *
+ * This should be called from search() or loadContent(side)
+ * @param id
+ * @param mode
+ */
 async function fetchLogs(id: number, mode: "before" | "after" | "around"): Promise<UILogEntry[]|undefined> {
   if(id == undefined) throw new Error("Id is undefined")
-  // Wait for previous request
+  // Cancel previous request if any
   loadingTime.value = Date.now()
   const params = updateParams()
   fetchAbort?.abort()
 
+  // Setup cancellation and request timeout
   let response
   try {
     const responseHandle = requestTimeout(`/api/logs/${mode}/${id}?${params}`, MAX_REQUEST_TIME, undefined, {
@@ -529,23 +573,29 @@ async function fetchLogs(id: number, mode: "before" | "after" | "around"): Promi
       totalEntries.value = json.yearInfo.count
       cache.value.maxId = json.yearInfo.maxId
     }
+    // Format log entries for UI purposes
     const newEntries = json.logs.map((entry: any) => {
       let message = entry.message
       if(entry.metadata && entry.message) {
+        // Replace all variable placeholders %var% with keys from metadata json
         for(const key in entry.metadata) {
           message = message.replace(new RegExp(`(%${key}%|{${key}})`, 'g'), `<b data-tooltip="${key}">${entry.metadata[key]}</b>`)
         }
       }
-      if(entry.type === 'JOIN') message = " joined"
+
+      if(entry.type === 'JOIN') message = " joined" // join has no message, add one to it shows <PLAYER> joined
       else if(entry.type === 'ACTION') {
+        // Check if entry is from admin chat, and switch it to chat
         const match = entry.message.match(ADMINCHAT_REGEX)
         if(match) {
           entry.adminChat = true
           entry.type = 'CHAT'
           message = match[2]
         }
+
       }
       if(entry.server === 'web' && entry.metata?.cmd && entry.type.startsWith("servers.rcon.")) {
+        // If entry was performed from web, and was a 'say' command, log it as them chatting via rcon
         const match = entry.metadata.cmd.match(CONSOLE_SAY_REGEX)
         if(match) {
           entry.adminChat = true
@@ -555,8 +605,10 @@ async function fetchLogs(id: number, mode: "before" | "after" | "around"): Promi
           message = match[2]
         }
       }
+      // 'client' and 'target' can be any arbitary string such as CONSOLE, or a bot name, so check if its a player
       const hasValidClient = entry.client?.startsWith("STEAM_")
       const hasValidTarget = entry.target?.startsWith("STEAM_")
+
       const ret: UILogEntry = {
         id: entry.id,
         timestamp: entry.timestamp,
@@ -588,11 +640,19 @@ async function fetchLogs(id: number, mode: "before" | "after" | "around"): Promi
     return newEntries
   }
 }
+/**
+ * Returns if we are at the top list,
+ * such that the highest ID of our fetched log entries is equal to the server's highest log entry id
+ */
 const isTopOfList = computed(() => {
   if(!cache.value) return
   // If our highest id is greater than the cached, its some bug - just act like its the latest
   return idMinMax.value[1] >= cache.value.maxId
 })
+/**
+ * Returns an array of the lowest and highest id of current fetched log entries
+ * @return {[number,number]} [lowestID, highestID]
+ */
 const idMinMax = computed(() => {
   if(!entries.value || entries.value.length === 0) return [-1, -1]
   let lowestId = -1, maxId = -1
@@ -602,11 +662,19 @@ const idMinMax = computed(() => {
   }
   return [ lowestId, maxId ]
 })
+/**
+ * Internal: Merges new entries into pending entries
+ * @param entries new entries
+ */
 function addPendingEntries(entries: UILogEntry[]) {
   if(!entries) return
   pendingEntries.value = [ ...pendingEntries.value, ...entries]
 }
 
+/**
+ * Jumps to a certain entry, and fetches logs around it
+ * @param entry
+ */
 async function jumpTo(entry: any) {
   // Clear any set messages
   // We assign once to prevent any triggering of fetch before everything is set
@@ -625,16 +693,24 @@ async function jumpTo(entry: any) {
   // await fetchLogs(entry.id, 'around')
   await search()
 }
-
+/**
+ * Returns a share link to exact message ID
+ * @param entry
+ */
 function getShareLink(entry: UILogEntry) {
   const params = getParams()
   params.set('aroundId', entry.id.toString())
   return `${location.protocol}//${window.location.host}${window.location.pathname}/${entry.id}`
 }
+/**
+ * Returns a human readable timestamp in local date "at" local time
+ * @param entry
+ */
 function getTimestamp(entry: UILogEntry) {
   const date = new Date(entry.timestamp * 1000)
   return `${date.toLocaleDateString('sv-SE')} at ${date.toLocaleTimeString()}`
 }
+/** Copy share link from getShareLink(entry) to clipboard */
 async function copyShareLink(entry: any) {
   const link = getShareLink(entry)
   await window.navigator.clipboard.writeText(link)
@@ -644,25 +720,10 @@ async function copyShareLink(entry: any) {
   })
 }
 
-let refreshTimer: any
-let nowTimer: any
-onActivated(async() => {
-  now.value = Date.now()
-  nowTimer = setInterval(() => {
-    now.value = Date.now()
-  }, 100)
-
-  showLoading.value = true
-  await getInfo()
-
-  // If /admin/audit/:id is used, fetch that, and just grab filters, but wont be used
-  if(route.query.aroundId) {
-    const id = Number(route.params.aroundId)
-    filters.value['aroundId'] = id.toString()
-    entries.value = await fetchLogs(id, "around")
-  }
-
+/** Checks filters and other query parameters and validates them */
+function checkRouteParams() {
   if(route.query.limit) limit.value = Number(route.query.limit) || DEFAULT_LIMIT
+
   if(route.query.source) {
     const year = parseInt(route.query.source as string)
     if(!isNaN(year)) dataSource.value = year
@@ -680,11 +741,35 @@ onActivated(async() => {
       }
     }
   }
+}
 
-  // We already jumped using "around", so don't fetch before
+let refreshTimer: any
+let nowTimer: any
+onActivated(async() => {
+  // Required for showing how long a fetch is taking
+  now.value = Date.now()
+  nowTimer = setInterval(() => {
+    now.value = Date.now()
+  }, 100)
+
+  // Acquire required log data
+  showLoading.value = true
+  await getInfo()
+
+  // Process route parameters
+  // If specified, fetch entries around id instead
+  if(route.query.aroundId) {
+    const id = Number(route.params.aroundId)
+    filters.value['aroundId'] = id.toString()
+    entries.value = await fetchLogs(id, "around")
+  }
+
+  checkRouteParams()
+
+  // If we already jumped using ?aroundId, skip fetching entries
   if(!route.params.aroundId) entries.value = await fetchLogs(cache.value.maxId, "before")
 
-
+  // Setup timer that performs periodic fetch for new entries
   refreshTimer = setInterval(async () => {
     // Only check for new values IF we not full, not searching, and at the top of list
     if(isTopOfList.value && fetchAbort == null && pendingEntries.value.length < limit.value) {
