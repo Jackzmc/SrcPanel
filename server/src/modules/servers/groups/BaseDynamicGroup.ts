@@ -2,10 +2,12 @@ import { ServerAction } from "../../../../../common-types/Server.js"
 import DynamicServerInstance from "../docker/DynamicServerInstance.js"
 import DynamicServerManager, { DockerTemplateContainer } from "../docker/DynamicServerManager.js"
 import DockerServer from "../DockerServer.js"
-import { DynamicGroupServerTemplate } from "./CustomServerGroup.js"
-import { BaseGroupConfig, DockerGroupConfig } from "./index.js"
+import { DockerGroupConfig } from "./index.js"
 import ServerGroup from "./ServerGroup.js"
-import DNS from 'dns/promises';
+import logger from '../../../logger.js'
+
+const log = logger.child({name: "BaseDynamicGroup"})
+
 
 export default abstract class BaseDynamicServerGroup extends ServerGroup<DockerServer> {
     protected manager: DynamicServerManager
@@ -81,3 +83,24 @@ export default abstract class BaseDynamicServerGroup extends ServerGroup<DockerS
         return server
     }
 }
+/**
+const SERVER_INIT_ERROR_AS_FATAL: boolean = process.env.SERVERS_IGNORE_ERRORS != undefined
+ const logData = {
+                templateId: this.TemplateId,
+                serverType: this.type,
+                groupId: this.id,
+                groupName: this.name
+            }
+const logData = {
+                templateId: this.TemplateId,
+                serverType: this.type,
+                groupId: this.id,
+                groupName: this.name
+            }
+            if(SERVER_INIT_ERROR_AS_FATAL) {
+                log.fatal(logData, "failed to create new server instance: " + err)
+                throw err
+            } else {
+                log.warn(logData, "failed to create new server instance: " + err)
+                return null
+            }*/
