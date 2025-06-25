@@ -31,5 +31,13 @@ export default class SocketClientUser {
         });
     }
 
+    sendError(errorCode: string, message?: string) {
+        this.sendPayload({
+            type: "error",
+            error: errorCode,
+            message
+        })
+    }
+
     
 }
