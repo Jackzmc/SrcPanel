@@ -38,16 +38,17 @@ export async function doesFileExist(filename: string) {
   }
 }
 
-export async function tryResolveIPv4(host: string): Promise<string|null> {
-    try {
-        return resolveIPv4(host)
-    } catch(err) {
-        return null
-    }
-}
 export async function resolveIPv4(host: string): Promise<string> {
     const lookup = await DNS.lookup(host, { verbatim: false, family: 4 })
     return lookup.address
+}
+export async function tryResolveIPv4(host: string): Promise<string|null> {
+    try {
+        return await resolveIPv4(host)
+    } catch(err) {
+        if(err.code != "ENOTFOUND") throw err
+        return null
+    }
 }
 
 export class ErrorWithCode extends Error {

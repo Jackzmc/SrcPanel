@@ -45,6 +45,7 @@ export interface DockerTemplateContainer {
 
 export const DOCKER_NAME_PREFIX = process.env.DOCKER_NAME_PREFIX ?? "panel"
 
+
 export default class DynamicServerManager {
     static #instance: DynamicServerManager;
     #docker: Docker
@@ -113,6 +114,11 @@ export default class DynamicServerManager {
         }
     }
 
+    /**
+     * Finds existing docker containers and recreates their instance if missing
+     * It uses DOCKERNAMEPREFIX.port label to get port
+     * @returns 
+     */
     async findExisting() {
         for await(const { containerInfo, container, template } of this.#getContainers()) {
             const port = containerInfo.Labels[`${DOCKER_NAME_PREFIX}.port`]
@@ -154,7 +160,14 @@ export default class DynamicServerManager {
         }
     }
 
-
+    /**
+     * Finds the next available port based on template settings
+     * This only detects port is occupied by another internally managed instance
+     * If a port is used externally (by another process), it will still try to use that port
+     * @throws fails if confnigured port range exhausted
+     * @param ofTemplate
+     * @returns 
+     */
     async #getNextPort(ofTemplate: DockerTemplateConfig) {
         const ports: number[] = []
         for await(const { containerInfo, container, template } of this.#getContainers()) {
@@ -178,6 +191,11 @@ export default class DynamicServerManager {
         return port
     }
 
+    /**
+     * Returns the number of containers that exist for this template
+     * @param templateId 
+     * @returns 
+     */
     async #calculateCount(templateId: string) {
         let i = 0 ;
         for await(const { containerInfo, container, template } of this.#getContainers()) {
