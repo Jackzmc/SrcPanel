@@ -9,7 +9,11 @@ export interface Client_Command {
     namespace?: string,
     command: string,
 }
-export type ClientOutPayload = Client_Command
+export interface Client_RequestLogs {
+    type: "req_logs",
+    since?: number
+}
+export type ClientOutPayload = Client_Command | Client_RequestLogs
 
 
 ////////////////////////
@@ -47,7 +51,7 @@ export interface Server_ActivityLog {
 export interface Server_Error {
     type: "error",
     error?: string,
-    code?: string
+    message?: string
 }
 export interface Server_VoiceState {
     type: "voice_state",

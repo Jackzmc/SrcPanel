@@ -113,12 +113,16 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             server.removeWSClient(client)
         })
 
-        socket.on('message', message => {
-            console.log("msg", message)
-            client.sendPayload({
-                type: "error",
-                error: "UNSUPPORTED"
-            })
+        socket.on('message', (data, isBinary) => {
+            if(isBinary) return client.sendError("INVALID_PAYLOAD", "Binary messages are not supported")
+            let json
+            try {
+                json = JSON.parse(data.toString())
+                if(!json.type) throw new Error("Payload is missing 'type' field")
+            } catch(err) {
+                return client.sendError("INVALID_PAYLOAD", "Parse error: " + err.toString())
+            }
+            server.processInPayload(client, json)
         })
 
         await server.refreshStatus(true)

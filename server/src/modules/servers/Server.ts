@@ -8,7 +8,7 @@ import ServerGroup from "./groups/ServerGroup.js";
 import { ActionResponse, IAction } from "./IAction.js";
 import { GameDig } from 'gamedig';
 import SocketClientUser from "./SocketClientUser.js";
-import { Server_Status, ServerOutPacket, ServerOutPayload } from "../../../../common-types/ServerWebsocket.js";
+import { ClientOutPayload, Server_Status, ServerOutPacket, ServerOutPayload } from "../../../../common-types/ServerWebsocket.js";
 import { LiveRecordResponse } from "../../../../common-types/Live.js";
 import { resolveIPv4, tryResolveIPv4 } from "../../util.js";
 import logger from '../../logger.js'
@@ -315,7 +315,6 @@ export default abstract class Server implements IAction {
         online: this.Online
       } as Server_Status)
       this.Metrics.broadcastWSFullMetrics()
-      this.Console?.sendHistory(client)
     }
     removeWSClient(client: SocketClientUser) {
       const indexOf = this._wsClients.indexOf(client)
@@ -332,6 +331,14 @@ export default abstract class Server implements IAction {
       this._wsClients.forEach(client => {
         client.sendPacket(packet)
       })
+    }
+    processInPayload(client: SocketClientUser, payload: ClientOutPayload) {
+      switch(payload.type) {
+      // this.Console?.sendHistory(client)
+        case "req_logs": 
+          this.Console?.sendHistory(client)
+          break
+      }
     }
 
 

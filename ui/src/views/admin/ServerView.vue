@@ -1043,6 +1043,10 @@ function connectWS() {
   ws.value.onopen = () => {
     console.info("[WS] Connected", { ws })
     wsErrorCount = 0
+    // If we have no logs, ask for the previous history
+    if(serverLogs.value.length === 0) {
+      sendWSPayload({ type: "req_logs" })
+    }
   }
   ws.value.onclose = (ev) => {
     if(ev.code == 4000) {
@@ -1069,7 +1073,7 @@ async function init() {
   if(await fetchServerInfo()) {
     await Promise.any([
       fetchServerData(),
-      fetchServerActivities()
+      fetchServerActivities(),
     ])
   }
   connectWS()
