@@ -85,7 +85,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             const admin = fastify.authmngr.getAdmin(req.params.steamid)
             if(admin) {
                 if(admin.permissions.immunityLevel >= req.session.permissions.immunityLevel) {
-                    reply.code(403).send({
+                    return reply.code(403).send({
                         error: 'INVALID_IMMUNITY',
                         message: "Cannot revoke an admin who's immune to you",
                         statusCode: 403
@@ -94,7 +94,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
                 await fastify.authmngr.revokeAdmin(admin.id)
 
-                await req.user!.log(admin.identity, `%client% revoked admin from %target% (#%id%)`, {
+                await req.user!.log(admin.identity, `%client% revoked admin #%id% for %target%`, {
                     code: "admins.revoke",
                     metadata: {
                         id: admin.id,
@@ -155,7 +155,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 }
                 const newAdmin = await fastify.authmngr.editAdmin(admin.id, newAdminData)
 
-                await req.user!.log(admin.identity, `%client% edited admin privileges #%id% for %target%`, {
+                await req.user!.log(admin.identity, `%client% edited admin #%id%'s privileges for %target%`, {
                     code: "admins.edit",
                     metadata: {
                         id: admin.id,
