@@ -138,15 +138,15 @@
             </div>
           </div>
         </template>
-      </div>
-      <InfiniteLoading @infinite="loadContent('bottom')"  />
-      <div class="list-item message is-info" ref="infiniteScroll" v-show="infiniteScrollLoading === 'bottom'">
-        <div class="list-item-content has-text-centered" style="text-decoration: none">
-          <p>
-            <Icon icon="spinner" spin>Fetching older entries...</Icon>
-          </p>
+        <div class="list-item  message has-background-info-light" ref="infiniteScroll">
+          <a class="list-item-content has-text-centered" style="text-decoration: none" @click="viewPendingEntries">
+            <p class="">
+              <Icon icon="spinner" spin>Fetching older entries...</Icon>
+            </p>
+          </a>
         </div>
       </div>
+      <InfiniteLoading @infinite="loadContent('bottom')"  />
     </div>
     <div class="column">
       <div class="box" style="position: sticky; top: 4em">

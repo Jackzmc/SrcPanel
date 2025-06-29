@@ -45,11 +45,16 @@ export default class ActivityLog {
         }
         
         // Legacy
-        let type:string|null = null
+        let permission:string|null = null
         if(payload) {
-            if('code' in payload) type = payload.code
-            else if('type' in payload) type = payload.type
+            if('code' in payload) permission = payload.code
+            else if('type' in payload) permission = payload.type
         }
+
+        let metadata = payload?.metadata
+
+        if(!metadata) metadata = {}
+        metadata.permission = permission
 
         const [r] = await this.#db.execute<OkPacket>(
             `INSERT INTO activity_log (server, type, client, target, message, timestamp, metadata) VALUES ('web', :type, :client, :target, :msg, UNIX_TIMESTAMP(), :metadata)`,
@@ -57,8 +62,8 @@ export default class ActivityLog {
                 client: activator.steamid2,
                 target: target ? target.steamid2 : null,
                 msg,
-                type,
-                metadata: payload?.metadata ? JSON.stringify(payload.metadata) : null
+                type: "web",
+                metadata: JSON.stringify(metadata)
             }
         )
 
