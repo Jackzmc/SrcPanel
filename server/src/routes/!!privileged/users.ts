@@ -33,7 +33,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             FROM activity_log PARTITION (p${new Date().getFullYear()}) l 
             LEFT JOIN view_panel_user u ON SUBSTRING(client, 11) = u.account_id
             WHERE
-                TYPE = 'QUIT' AND server = IFNULL(?,server) AND client != ? AND ISNULL(target) 
+                TYPE = 'JOIN' AND server = IFNULL(?,server) AND client != ? AND ISNULL(target) 
             ORDER BY l.timestamp DESC
             LIMIT ?`, 
             [server, req.session.user.steamid, limit]
