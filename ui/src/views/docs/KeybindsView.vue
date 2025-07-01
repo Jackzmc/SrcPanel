@@ -68,10 +68,10 @@ let numpad = ref()
 let numpadEnd = ref()
 
 let keybinds = ref<any[]>([])
-let command = ref("sm_example_command")
+let command = ref<string|null>("sm_example_command")
 
 const isInvalidCommand = computed(() => {
-  return command.value.startsWith('/') || command.value.startsWith('!')
+  return command.value != undefined && (command.value.startsWith('/') || command.value.startsWith('!'))
 })
 
 onMounted(() => {
@@ -166,8 +166,17 @@ function onKeyPress(button: string) {
     }
     button = orgButton
   }
-  keybinds.value.splice(0, 0, `bind ${button} "${command.value}"`)
-  save()
+  if(button == "`") {
+    if(!confirm("Warning: Using the ` backtick key will remove the default keybind to open the developer console.\n\nYou can restore the keybind if you launch the game with '-console' and enter 'bind ` toggleconsole'")) {
+      return
+    }
+  }
+  const promptButtonText = button == orgButton ? button : `${orgButton} (${button})`
+  command.value = prompt(`Enter command for ${promptButtonText}`, command.value ?? "")
+  if(command.value) {
+    keybinds.value.splice(0, 0, `bind ${button} "${command.value}"`)
+    save()
+  }
 }
 
 function save() {
@@ -223,15 +232,27 @@ const BUTTON_MAP: Record<string, string> = {
   "{arrowleft}": "leftarrow",
   "{arrowright}": "rightarrow",
   "{arrowdown}": "downarrow",
-  "{numpaddecimal}": "kp_del"
-
+  "{numpaddecimal}": "kp_del",
+  "{f1}": "f1",
+  "{f2}": "f2",
+  "{f3}": "f3",
+  "{f4}": "f4",
+  "{f5}": "f5",
+  "{f6}": "f6",
+  "{f7}": "f7",
+  "{f8}": "f8",
+  "{f9}": "f9",
+  "{f10}": "f10",
+  "{f11}": "f11",
+  "{f12}": "f12",
+  "{numlock}": "numlock"
 }
 onBeforeMount(() => {
   load()
 })
 </script>
 
-<style scoped>
+<style>
 .keyboardContainer {
   display: flex;
   background-color: rgba(0, 0, 0, 0.1);
@@ -356,5 +377,12 @@ onBeforeMount(() => {
 .hg-button.hg-functionBtn.hg-button-space {
   width: 350px;
 }
-
+/** Unsupported buttons: */
+.hg-button-fnkey {
+  display: none !important;
+  opacity: 20%;
+}
+.hg-button-prtscr {
+  opacity: 20%;
+}
 </style>
