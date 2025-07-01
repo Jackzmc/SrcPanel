@@ -127,7 +127,7 @@ import Field from '@/components/Field.vue'
 import SplitTable from '@/components/SplitTable.vue'
 
 const AUTO_REFRESH_INTERVAL_MINUTES = 1
-const RECENT_LIMIT = 25
+const RECENT_LIMIT = 40
 const STEAM_PROFILE_URL_REGEX = new RegExp(/https?:\/\/steamcommunity.com\/profiles\/(\d+)/)
 
 const router = useRouter()

@@ -115,7 +115,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 code,
                 metadata: {
                     id: note.id,
-                    content: req.body.content,
+                    oldContent: existing[0].content,
+                    newContent: req.body.content,
                     markedBy: req.body.markedBy
                 }
             })
