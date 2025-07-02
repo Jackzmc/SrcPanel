@@ -22,7 +22,7 @@
                       <div class="field is-narrow">
                         <div class="control">
                           <div class="select">
-                            <select @change="getRecentPlayers" v-model="recentPlayers.server">
+                            <select @change="getRecentPlayers()" v-model="recentPlayers.server">
                               <option :value="null">All Servers</option>
                               <option v-for="server in servers" :key="server" :value="server">
                                 {{ server}}
@@ -35,7 +35,7 @@
                   </div>
                 </div>
                 <div class="level-item">
-                  <a :class="['button','is-info',{'is-loading': recentPlayers.loading}]" @click="getRecentPlayers" >Refresh</a>
+                  <a :class="['button','is-info',{'is-loading': recentPlayers.loading}]" @click="getRecentPlayers()" >Refresh</a>
                 </div>
               </div>
               <div class="level-right">
@@ -48,6 +48,7 @@
         </div>
         <br>
         <UserSelection :priv-user="privUser" :users="recentPlayers.list" @manual="onManualSelected" />
+        <button :class="['button',{'is-loading': recentPlayers.loading}]" @click="getRecentPlayers(recentPlayers.currentOffset)">Load more entries</button>
       </Tab>
       <Tab name="Search for a User" id="search">
         <div class="card">
@@ -142,11 +143,12 @@ let search = ref({
   query: '',
   func: () => {},
 })
-let recentPlayers = ref<{server: string|null, list: PlayerData[], loading: boolean}>
+let recentPlayers = ref<{server: string|null, list: PlayerData[], loading: boolean, currentOffset:  number}>
 ({
   server: null,
   list: [],
-  loading: false
+  loading: false,
+  currentOffset: 0
 })
 let manualInput = ref<string>()
 let selectedId = ref<string>()
@@ -205,13 +207,15 @@ async function fetchAdmins() {
     admins.value = json.admins as ReadableAdminData[]
   }
 }
-async function getRecentPlayers() {
+async function getRecentPlayers(offset = 0) {
   recentPlayers.value.loading = true
-  const resp = await request(`/api/users/recent/${recentPlayers.value.server || ''}?limit=${RECENT_LIMIT}`)
+  const resp = await request(`/api/users/recent/${recentPlayers.value.server || ''}?limit=${RECENT_LIMIT}&offset=${offset}`)
   recentPlayers.value.loading = false
   if(resp?.ok) {
     const json = await resp.json()
-    recentPlayers.value.list = []
+    if(offset === 0)
+      recentPlayers.value.list = []
+    recentPlayers.value.currentOffset = json.meta.nextOffset
 
     for(const user of json.users) {
       let existing = false

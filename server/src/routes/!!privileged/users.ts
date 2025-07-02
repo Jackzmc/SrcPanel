@@ -12,10 +12,14 @@ const RECENT_DEFAULT_LIMIT = 25
 const STEAM_ID_REGEX = new RegExp(/STEAM_\d:\d:\d+/)
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
-    fastify.get('/recent/:server?', async(req: FastifyRequest<{Params: { server?: string }, Querystring: { limit?: number }}>, reply) => {
+    fastify.get('/recent/:server?', async(req: FastifyRequest<{Params: { server?: string }, Querystring: { limit?: number, offset?: string }}>, reply) => {
         const domain = await fastify.config.GetKV("domain", "")
         let limit = Number(req.query.limit) ?? RECENT_DEFAULT_LIMIT
         if(limit < 0 || limit > 100) limit = RECENT_DEFAULT_LIMIT
+        
+        let offset = req.query.offset ? (parseInt(req.query.offset) ?? 0) : 0
+        if(offset <= 0) offset = 0
+
         let server = req.params.server || null
         if(server === "all") server = null
         const start = Date.now()
@@ -35,8 +39,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             WHERE
                 TYPE = 'JOIN' AND server = IFNULL(?,server) AND client != ? AND ISNULL(target) 
             ORDER BY l.timestamp DESC
-            LIMIT ?`, 
-            [server, req.session.user.steamid, limit]
+            LIMIT ?,?`, 
+            [server, req.session.user.steamid, offset, limit]
         )
 
         for(const row of rows) {
@@ -46,7 +50,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
         return {
             meta: {
-                queryTimeSec: Date.now() - start
+                queryTimeSec: Date.now() - start,
+                nextOffset: offset + rows.length
             },
             users: rows
         }
