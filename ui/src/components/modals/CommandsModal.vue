@@ -2,7 +2,7 @@
 <Modal :active="active" v-if="cmd" :closable="true" @close="emit('close')">
   <div class="modal-card">
     <header class="modal-card-head">
-      <p class="modal-card-title"><b>{{prefix}}{{cmd.name}}</b> Command</p>
+      <p class="modal-card-title"><b>{{prefix}}{{cmd.name}}</b></p>
 
       <button class="delete" aria-label="close" @click='close'></button>
     </header>
@@ -33,21 +33,27 @@
       <br>
       <div class="block">
         <h5 class="title is-5 mb-2"><Icon icon="fa-bars-staggered">Arguments</Icon></h5>
-        <table class="table is-fullwidth" v-if="Object.keys(props.cmd.args).length > 0">
-          <thead>
-            <tr>
-              <th>Parameter</th>
-              <th>Allowed Values</th>
-              <th v-if="anyDefaults">Default Value</th>
-            </tr>
-            <tr v-for="(data, param) of props.cmd.args" :key="param">
-              <td><span :class="['tag',{'is-link': data.required, 'is-secondary': !data.required}]">{{ param }}</span></td>
-              <td v-if="data.allowedValues">{{ data.allowedValues.join(", ")}}</td>
-              <td v-else>{{ data.type }}</td>
-              <td v-if="anyDefaults">{{ data.defaultValue }}</td>
-            </tr>
-          </thead>
-        </table>
+        <template v-if="Object.keys(props.cmd.args).length > 0">
+          <table class="table is-fullwidth mb-2" v-if="Object.keys(props.cmd.args).length > 0">
+            <thead>
+              <tr>
+                <th>Parameter</th>
+                <th>Allowed Values</th>
+                <th v-if="anyDefaults">Default Value</th>
+              </tr>
+              <tr v-for="(data, param) of props.cmd.args" :key="param">
+                <td><span :class="['tag',{'is-link': data.required, 'is-secondary': !data.required}]">{{ param }}</span></td>
+                <td v-if="data.allowedValues">{{ data.allowedValues.join(", ")}}</td>
+                <td v-else>{{ data.type }}</td>
+                <td v-if="anyDefaults">{{ data.defaultValue }}</td>
+              </tr>
+            </thead>
+          </table>
+          <div class="block is-size-7 has-background-info-light px-2 py-2">
+            <span class="tag is-link is-small">parameter</span> is required
+            <span class="is-pulled-right"><span class="tag is-secondary is-small">parameter</span> is optional</span>
+          </div>
+        </template>
         <p v-else class="ml-5">Command has no arguments</p>
       </div>
       <template v-if="cmd.examples?.length > 0">
