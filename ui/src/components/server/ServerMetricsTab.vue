@@ -37,7 +37,6 @@ const route = useRoute()
 const router = useRouter()
 
 const memMax = computed(() => {
-  console.log("triggered")
   if(props.metrics.length === 0) return 0
   return props.metrics[0].memory_stats?.limit ?? 0
 })

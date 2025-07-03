@@ -1013,7 +1013,7 @@ function onWSPayload(payload: ServerOutPacket) {
   } else if(payload.type === "metric_full") {
     metrics.value = payload.history
     metricAnnotations.value = payload.annotations
-    latestMetric.value = payload.latest
+    if(payload.latest) latestMetric.value = payload.latest
   } else if(payload.type === "voice_state") {
     const index = voiceMembers.value.findIndex(m => m.id == payload.userId)
     if(payload.connected) {
