@@ -219,7 +219,7 @@ export default class AuthManager {
         await conn.execute<OkPacket>("DELETE FROM dash_permissions WHERE admin_id = ?", [id])
         await conn.commit()
         conn.release()
-        delete this.admins[id]
+        delete this.admins[id.toString()]
     }
 
     public async editAdmin(id: number, data: Partial<AddAdmin>) {
