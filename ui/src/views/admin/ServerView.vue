@@ -42,7 +42,16 @@
           </div>
           <div class="level-right">
             <div class="buttons">
-              <button :data-tooltip="action.description" :disabled="actionRunning" v-for="(action, i) in actions" :key="i" @click="performAction(action.command)" class="button is-dark is-small" :style="{'background-color': action.color}">{{ action.name }}</button>
+              <button :data-tooltip="action.description" :disabled="actionRunning" v-for="(action, i) in alwaysShownActions" :key="i" @click="performAction(action.command)" class="button is-dark is-small" :style="{'background-color': action.color}">{{ action.name }}</button>
+
+              <template v-if="shiftPressed">
+                <button :data-tooltip="action.description" :disabled="actionRunning" v-for="(action, i) in hiddenActions" :key="i"
+                  @click="performAction(action.command)" class="button is-dark is-small"
+                  :style="{'background-color': action.color}">{{ action.name }}</button>
+              </template>
+              <div class="button is-small" :data-tooltip="(shiftPressed ? 'Hide' : 'Show') + ' hidden actions'" @click="shiftPressed = !shiftPressed">
+                <Icon :icon="!shiftPressed ? 'fa-angle-left' : 'fa-angle-right'"></Icon>
+              </div>
             </div>
           </div>
         </div>
@@ -668,7 +677,7 @@ const cfgParentFolder = computed(() => {
   return cfg.value.selected.path.substring(0, cfg.value.selected.path.length - cfg.value.selected.filename.length)
 })
 
-const actions = computed(() => {
+const availableActions = computed(() => {
   if(!serverInfo.value) return []
   return serverInfo.value.actions
     // Filter out any actions that their required feature is not available
@@ -688,7 +697,12 @@ const actions = computed(() => {
       else if(!serverInfo.value!.online && action.showWhen === "offline") return true
       else return false
     })
-    .filter(action => shiftPressed.value || !action.isHidden)
+})
+const alwaysShownActions = computed(() => {
+  return availableActions.value.filter(action => !action.isHidden)
+})
+const hiddenActions = computed(() => {
+  return availableActions.value.filter(action => action.isHidden)
 })
 const tab = computed(() => {
   return route.params.tab?.length > 0 ? route.params.tab : "overview"
@@ -1095,6 +1109,7 @@ onDeactivated(() => {
   clearInterval(refreshInterval)
   clearInterval(nowInterval)
   clearTimeout(wsReconnectTimeout)
+
 })
 </script>
 

@@ -4,6 +4,7 @@ import Server from '../../modules/servers/Server.js';
 import SocketClientUser from '../../modules/servers/SocketClientUser.js';
 import { APIListServersV2_Server } from '../../../../common-types/Server';
 import { Type } from '@sinclair/typebox';
+import { ClientOutPayload } from '../../../../common-types/ServerWebsocket.js';
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
 
@@ -115,7 +116,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
         socket.on('message', (data, isBinary) => {
             if(isBinary) return client.sendError("INVALID_PAYLOAD", "Binary messages are not supported")
-            let json
+            let json: ClientOutPayload
             try {
                 json = JSON.parse(data.toString())
                 if(!json.type) throw new Error("Payload is missing 'type' field")
@@ -126,5 +127,6 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         })
 
         await server.refreshStatus(true)
+
     })
 }

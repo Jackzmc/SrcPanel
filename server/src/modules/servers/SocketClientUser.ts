@@ -24,6 +24,7 @@ export default class SocketClientUser {
     sendPacket(packet: ServerOutPacket) {
         this.socket.send(JSON.stringify(packet));
     }
+    
     sendPayload(payload: ServerOutPayload) {
         this.sendPacket({
             millis: Date.now(),
