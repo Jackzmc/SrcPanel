@@ -11,7 +11,8 @@
   <Field :icon-left="commandInputSupported ? 'terminal' : 'warning'" :icon-class="commandInputSupported ? 'has-text-white' : 'has-text-info'">
     <template v-if="commandInputSupported">
       <input id="terminal-input" :class="['input','terminal-input',commandClass]" v-model="commandInput"
-        placeholder="Enter a command" @keyup.enter="runCommand"
+        placeholder="Enter a command"
+        @keyup.enter="runCommand" @keyup.up="loadHistoryEntry(1)" @keyup.down="loadHistoryEntry(-1)"
       >
       <datalist id="terminal-input">
         <option v-for="cmd in validCommands" :key="cmd" :value="cmd"></option>
@@ -30,8 +31,6 @@ import { request } from '@/js/util';
 import { notify } from '@kyvg/vue3-notification';
 import { ServerInfo } from '../../../../common-types/Server';
 import { LiveRecordCommandResponse } from '../../../../common-types/Live';
-
-const MAX_LOGS_LINES = 350
 
 const route = useRoute()
 const router = useRouter()
@@ -64,6 +63,9 @@ let commandInput = ref<string>()
 let validCommands = ref<Set<string>>(new Set())
 let consoleElem = ref()
 
+let commandHistory: string[] = []
+let historyIndex: number = -1 // from the bottom of list
+
 async function runCommand() {
   if(!commandInput.value) return
   let command = commandInput.value.trim()
@@ -85,6 +87,8 @@ async function runCommand() {
   })
 
   if(response?.ok) {
+    pushCommandHistory(command)
+
     const json: LiveRecordCommandResponse = await response.json()
     // Rcon output is not shown to the main server logs, include here:
     if(!json.message) {
@@ -141,7 +145,36 @@ async function getCommands(filename: string) {
   }
 }
 
+function loadHistoryEntry(direction: number) {
+  if(direction > 0) {
+    // up
+    if(Math.abs(historyIndex) < commandHistory.length) {
+      historyIndex--
+    }
+  } else {
+    // down
+    if(historyIndex < -1) {
+      historyIndex++
+    }
+  }
+  commandInput.value = commandHistory.at(historyIndex)
+}
+
+function loadCommandHistory() {
+  if(localStorage['srcds_console_history']) {
+    const list = JSON.parse(localStorage['srcds_console_history'])
+    commandHistory = list ?? []
+  }
+}
+
+function pushCommandHistory(cmd: string) {
+  commandHistory.push(cmd)
+  historyIndex = 0 // reset index
+  localStorage['srcds_console_history'] = JSON.stringify(commandHistory)
+}
+
 onMounted(async() => {
+  loadCommandHistory()
   // createLogsConnection()
   await fetchCommands()
   jumpToBottom()
