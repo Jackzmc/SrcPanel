@@ -12,7 +12,7 @@
           <div class="tags is-pulled-right inline">
             <template v-if="status">
               <span class="tag is-danger is-medium has-tooltip-danger no-border" v-if="error || status.error" data-tooltip="An error occurred while fetching the server's status"><Icon icon="fa-exclamation-triangle">Error</Icon></span>
-              <span class="tag is-success  is-medium" v-else-if="online">Online</span>
+              <span class="tag is-success  is-medium" v-else-if="online"><Icon icon="fa-circle-check" icon-class="has-text-white">Online</Icon></span>
               <span class="tag is-danger  is-medium" v-else>Offline</span>
             </template>
             <span class="tag is-medium" v-else data-tooltip="Waiting for status"><Icon icon="fa-spinner" spin></Icon></span>
