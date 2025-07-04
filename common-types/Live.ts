@@ -259,8 +259,9 @@ export const RecordAuthParseDef: RecordParserInterface<LiveRecordAuth> = {
     type: RecordDataType.Byte,
     version: RecordDataType.Byte,
     token: RecordDataType.String,
-    port: RecordDataType.OptionalShort,
-    gameVersion: RecordDataType.OptionalString
+    port: RecordDataType.Integer,
+    gameVersion: RecordDataType.String,
+    appid: RecordDataType.Integer
 }
 
 export interface LiveRecordAuth {
@@ -268,7 +269,8 @@ export interface LiveRecordAuth {
     version: number,
     token: string,
     port: number,
-    gameVersion: string | null
+    gameVersion: string,
+    appid: number
 }
 
 export const RecordMetaParseDef: RecordParserInterface<LiveRecordMeta> = {

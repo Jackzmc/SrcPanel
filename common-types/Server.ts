@@ -93,7 +93,7 @@ export interface ServerDetailed {
     uptime: number | null,
     startTime: number | null,
     configs: null | any[],
-    voiceMembers: null | VoiceUser[]
+    voiceMembers: null | VoiceUser[],
 }
 
 export interface PlayerStats {
@@ -108,6 +108,8 @@ export interface ServerInfo extends ServerData {
     online: boolean,
     sortOrder: number,
     actions: ServerAction[],
+    version: string|null,
+    appid: number|null,
 }
 
 export type ServerType = "source" | "left4dead2" | "minecraft"

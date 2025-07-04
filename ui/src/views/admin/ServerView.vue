@@ -85,10 +85,9 @@
                 <tr v-if="gameType === 'source'">
                   <th>Map</th>
                   <td v-if="mapInfo">
-                    <h4 class="title is-4">{{mapInfo.name}}
-                      <span class="is-inline is-pulled-right has-text-weight-normal is-size-6">{{ status.data!.map }}</span>
-                    </h4>
-                    <p>Chapter {{ mapInfo.chapterId }} - {{ mapInfo.chapterName }}</p>
+                    <h4 class="title is-4">{{mapInfo.name}}</h4>
+                    <p class="is-inline-block">Chapter {{ mapInfo.chapterId }} - {{ mapInfo.chapterName }}</p>
+                    <p class="is-size-6 is-inline">c11m5_runway</p>
                   </td>
                   <td v-else-if="status.data?.map">{{ status.data.map }}</td>
                   <td v-else><em data-tooltip="Unknown">-</em></td>
@@ -119,7 +118,12 @@
                 </tr>
                 <tr>
                   <th>Game</th>
-                  <td>{{ serverInfo.game }}</td>
+                  <td v-if="serverInfo.appid">
+                    <a :href="'https://store.steampowered.com/app/' + serverInfo.appid">
+                      {{ serverInfo.game }}
+                    </a> version {{ serverInfo.version }}
+                  </td>
+                  <td v-else>{{ serverInfo.game }}</td>
                 </tr>
                 <tr>
                   <th style="border-style: none">Features</th>

@@ -150,9 +150,8 @@ export default class ServerManager {
       if(server) {
         client._setServer(server,)
         server.Plugin?._setSocket(client)
-        if(record.gameVersion)
-          server.GameVersion = record.gameVersion
-        this.#debugLive("Authenticated", `host=${client.Host} server=${server.id}`)
+        server._setGameInfo(record.appid, record.gameVersion)
+        this.#debugLive("Authenticated", `host=${client.Host} server=${server.id} appid=${record.appid}/${record.gameVersion}`)
         return true
       } else {
         client.send(LiveRecordResponse.Error, `Invalid or unknown id "${payload.sub}" (docker: ${payload.docker?'y':'n'})`)

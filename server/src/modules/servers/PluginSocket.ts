@@ -4,8 +4,10 @@ import Server from './Server.js'
 import BufferReader from '../BufferReader.js'
 import JWT from '../../jwt-promise.js'
 
-const RESPONSE_TIMEOUT = 1000 * 60
-const MIN_REFRESH_TIME = 1000 * 60 * 60
+/** How long to wait in milliseconds for a command response payload to be received */
+const RESPONSE_TIMEOUT_MS = 1000 * 60
+/** The number of milliseconds of no packets received to send a refresh */
+const MIN_REFRESH_TIME_MS = 1000 * 60 * 60
 
 export default class PluginSocket {
   #socket: Socket
@@ -163,12 +165,9 @@ export default class PluginSocket {
             type,
             version: reader.readByte(),
             token: reader.readString(),
-            port: 0,
-            gameVersion: null as string | null
-          }
-          if(!reader.isEOF) {
-            result.port = reader.readShort()
-            result.gameVersion = reader.readString()
+            port: reader.readShort(),
+            gameVersion: reader.readString(),
+            appid: reader.readInt()
           }
           return result
         }
@@ -199,7 +198,9 @@ export default class PluginSocket {
     this.#server = server
   }
 
-  // Called when socket has connected to server, sending any necessary info
+  /** Called when the plugin on the server connects
+  *   Sends any data that the plugin needs 
+  */
   async sendInit() {
     if(!this.#server) throw Error("sendInit() called with no server")
     this.send(LiveRecordResponse.OK, this.#server.WebsocketViewers)
@@ -211,24 +212,28 @@ export default class PluginSocket {
 
   #refreshCheckTimeout: NodeJS.Timeout
   #lastRefreshTime: number
-  
+
+  /** Process an incoming record */
   onRecord(record: LiveRecord) {
     if(record.type === LiveRecordType.CommandResponse) {
       const cb = this.#responseQueue.shift()
       if(cb) cb(record)
       else console.error("PluginSocket: got command response but no callback is ready")
     } else {
+      // Inform the admin panel server of record 
       this.#server?.Plugin?.pushRecord(record)
-      // We use a timeout as many records can come at once, including a game record. So we wait for a gap of a second
+
+      // We use a timeout, as many records can come at once, including a game record. So we wait for a gap of a second
       if(record.type === LiveRecordType.Survivor && !this.#server?.Plugin?.liveStatus?.clients[record.userid.toString()]) {
-        if(!this.#server?.Plugin?.liveStatus?.game && Date.now() - this.#lastRefreshTime > MIN_REFRESH_TIME) {
+        if(!this.#server?.Plugin?.liveStatus?.game && Date.now() - this.#lastRefreshTime > MIN_REFRESH_TIME_MS) {
           this.send(LiveRecordResponse.Refresh, record.userid)
         }
       }
+      // Reset the refresh timer, so we only send refresh response on MIN_REFRESH_TIME ms of inactivity
       clearTimeout(this.#refreshCheckTimeout)
       this.#refreshCheckTimeout = setTimeout(() => {
         // If we have live status, but no game record, send a refresh if we haven't already
-        if(this.#server?.Plugin?.liveStatus && !this.#server.Plugin?.liveStatus.game && Date.now() - this.#lastRefreshTime > MIN_REFRESH_TIME) {
+        if(this.#server?.Plugin?.liveStatus && !this.#server.Plugin?.liveStatus.game && Date.now() - this.#lastRefreshTime > MIN_REFRESH_TIME_MS) {
           console.info("[PluginSocket] No game packet, sending a Refresh response")
           this.send(LiveRecordResponse.Refresh)
         }
@@ -245,7 +250,9 @@ export default class PluginSocket {
   send(type: LiveRecordResponse.Refresh, userid?: number): Promise<void>;
   /** Runs a game command or built in command on server  */
   send(type: LiveRecordResponse.RunCommand, command: string, namespace?: string): Promise<LiveRecordCommandResponse>;
+  /** Updates if a user connects/disconnects from voice */
   send(type: LiveRecordResponse.VoiceState, voiceUserId: string, voiceName: string, connected: boolean): Promise<void>
+  /** Send a live record response to the plugin */
   async send(type: LiveRecordResponse, arg1?: any, arg2?: any, arg3?: any): Promise<void | LiveRecordCommandResponse> {
     if(!this.Authenticated && type != LiveRecordResponse.OK && type != LiveRecordResponse.Error) {
       throw new Error("Not authenticated")
@@ -284,7 +291,7 @@ export default class PluginSocket {
       // For RunCommand, we wait for a response:
       let rejectTimeout = setTimeout(() => {
         reject(new Error("Response timed out"))
-      }, RESPONSE_TIMEOUT)
+      }, RESPONSE_TIMEOUT_MS)
       this.#responseQueue.push((record) => {
         clearTimeout(rejectTimeout)
         resolve(record)

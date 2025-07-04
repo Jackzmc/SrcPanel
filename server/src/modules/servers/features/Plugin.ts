@@ -27,15 +27,16 @@ export default class PluginFeature extends Feature implements IAction {
     async init() {
 
     }
-
+    /** Are we connected to game plugin? */
     get available() {
         return this.#socket != undefined
     }
-
+    /** Are we authenticated (and ready) with plugin? */
     get authenticated() {
         return this.available && this.#socket?.Authenticated
     }
 
+    /** Current live data */
     get liveStatus(): LiveDataCache | null { 
       if(this.#liveCache) {
         if(Date.now() - this.#liveCache.lastUpdate > LIVE_CACHE_TTL) {
@@ -45,6 +46,7 @@ export default class PluginFeature extends Feature implements IAction {
       return this.#liveCache
     }
 
+    /** The PluginSocket instance this feature belongs to */
     get Socket() {
         return this.#socket
     }
@@ -58,15 +60,13 @@ export default class PluginFeature extends Feature implements IAction {
             }
         })
         this.#socket = socket
-    //   if(socket == null) {
-    //     this._server.updateStatus(false, null, "live")
-    //   }
     }
 
     get startTime() {
         return this.#startTime
     }
 
+    /** Adds an annotation to metric feature on game state changes */
     #annotateGameState(record: LiveRecordGame) {
         let text: string
         let timestamp: number|undefined = undefined
@@ -105,6 +105,7 @@ export default class PluginFeature extends Feature implements IAction {
         })
     }
 
+    /** Process a new incoming record, typically from PluginSocket */
     async pushRecord(record: LiveRecord | null) {
         // If record is null, it means shutdown is happening
         this._server.broadcastWS({
@@ -115,13 +116,15 @@ export default class PluginFeature extends Feature implements IAction {
             this.#liveCache = updateLiveCache(this.#liveCache, record)
             if(record.type === LiveRecordType.Game) {
                 this.#annotateGameState(record)
-                
+                // campaignStartTime is the end time for GameState.EndGame, instead of normal start time
                 if(record.state !== GameState.EndGame && this.#liveCache.game) {
                     this.#liveCache.game.campaignStartTime = record.campaignStartTime
                 }
                 this.#startTime = record.startTime
             }
+            // Reset server status with dummy data
             if(!this.#status) this.#status = { players: [], maxplayers: 0, map: "", gamemode: "" }
+
             if(this.#liveCache.game) {
                 this.#status.gamemode = this.#liveCache.game.gamemode
                 this.#status.map = this.#liveCache.game.map
@@ -129,6 +132,7 @@ export default class PluginFeature extends Feature implements IAction {
                 // if(this.#liveCache.game.state !== 0)
                 this.#status.maxplayers = this.#liveCache.game.maxplayers || 4
             }
+            // Calculate the number of players online
             if(this.#liveCache.clients) {
                 // only update if players is not hibernate/transitioning or unk game state
                 this.#status.players = Object.values(this.#liveCache.clients)
@@ -140,6 +144,7 @@ export default class PluginFeature extends Feature implements IAction {
         }
     }
 
+    /** Perform an action via game plugin */
     async performAction(command: string, namespace = "default"): Promise<ActionResponse> {
         if(!this.authenticated) {
             throw new Error("Not connected or authenticated to plugin socket")
@@ -153,6 +158,7 @@ export default class PluginFeature extends Feature implements IAction {
         }
     }
 
+    /** Generates a token to authenticate a game plugin and map game server to panel server */
     async generateToken(issuer?: string) {
         if(!process.env.STATE_SECRET) {
             throw new Error("No JWT secret provided in process.env.STATE_SECRET")
@@ -162,6 +168,7 @@ export default class PluginFeature extends Feature implements IAction {
             sub: this._server.features.docker ? this._server.group.Id : this._server.id,
             iat: Math.round(Date.now()/1000),
             iss: issuer,
+            // Mark if this is a docker server, which means to check port rather than map 1:1
             docker: this._server.features.docker
         }, process.env.STATE_SECRET)
     }

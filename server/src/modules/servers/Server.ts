@@ -105,6 +105,7 @@ export default abstract class Server implements IAction {
   protected _online: boolean = false;
   protected _lastRefresh: number
   protected _gameVersion: string | null
+  protected _appId: number | null
 
 
   #gamedig: GameDig
@@ -211,7 +212,9 @@ export default abstract class Server implements IAction {
         port: this._options.public.port,
         id: this._options.id,
         name: this._options.name,
-        ip: this.ip
+        ip: this.ip,
+        appid: this.AppId,
+        version: this.GameVersion
       }
     }
 
@@ -270,12 +273,20 @@ export default abstract class Server implements IAction {
 
     get activityLogId() { return this._options.activityId }
 
-    /** Current version of game server, if detected from status / docker / etc */
+    /** Current version of game server reported by the game plugin if available */
     get GameVersion(): string | null {
       return this._gameVersion
     }
-    set GameVersion(version: string) {
-      this._gameVersion = version
+
+    /** The appid reported by the game plugin if available */
+    get AppId(): number | null {
+      return this._appId;
+    }
+    
+
+    _setGameInfo(appid: number, version: string) {
+      this._appId = appid;
+      this._gameVersion = version;
     }
 
     /** Returns all features server supports currently */
