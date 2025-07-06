@@ -103,6 +103,7 @@ const steamid2 = computed(() => {
 .user-tooltip {
   position: relative;
   display: inline-block;
+  z-index: 1000;
 }
 .user-tooltip .user-tooltip-content {
   /* display: hidden; */

@@ -180,10 +180,10 @@ function onKeyPress(button: string) {
 }
 
 function save() {
-  window.localStorage.setItem('panel_keybinds', JSON.stringify(keybinds.value))
+  window.localStorage.setItem('srcds_keybinds', JSON.stringify(keybinds.value))
 }
 function load() {
-  const data = window.localStorage.getItem("panel_keybinds")
+  const data = window.localStorage.getItem("srcds_keybinds")
   if(data) {
     keybinds.value = JSON.parse(data)
   }

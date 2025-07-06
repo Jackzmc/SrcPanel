@@ -271,9 +271,9 @@ async function clearNotifications() {
 }
 
 onBeforeMount(() => {
-  if(window.localStorage['srcds-theme']) {
-    document.documentElement.setAttribute("data-theme", window.localStorage['srcds-theme']);
-    darkMode.value = window.localStorage['srcds-theme'] === "dark"
+  if(window.localStorage['srcds_theme']) {
+    document.documentElement.setAttribute("data-theme", window.localStorage['srcds_theme']);
+    darkMode.value = window.localStorage['srcds_theme'] === "dark"
   }
 })
 </script>
