@@ -34,6 +34,13 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             return reply.raw.write(`data: ${JSON.stringify(payload)}\n\n`)
         }
 
+        // Send any previous notifications
+        const notifications = await req.user!.getNotifications()
+        for(const notification of notifications) {
+            sendSSE(notification)
+        }
+        
+
         fastify.authmngr.subscribeNotifications(req.user!.steamid2, sendSSE)
 
         reply.raw.on("close", () => {
@@ -49,7 +56,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             user: req.session.user,
             permissions: req.session.permissions,
             providers: req.user!.providers, // TODO: is this needed?
-            notifications: await req.user!.getNotifications(),
+            notifications: [],
             openDiscussions: await req.user!.getOpenDiscussionsCount(),
             impersonatingId: req.session.impersonate ? req.session.user.steamid : undefined
         }

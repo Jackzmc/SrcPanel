@@ -824,7 +824,7 @@ export default class AuthManager {
      * @returns 
      */
     public async getProfileData(steamid2: string): Promise<UserProfileData|null> {
-        const [rows] = await this.#db.query<RowDataPacket[]>("SELECT * FROM `left4dead2-admins`.panel_user_data WHERE steamid = ?", [ steamid2 ])
+        const [rows] = await this.#db.query<RowDataPacket[]>("SELECT * FROM `left4dead2-admins`.panel_user_data WHERE steamid = ? LIMIT 1", [ steamid2 ])
         if(rows.length == 0) return null
         return {
             birthDate: rows[0].birth_date,
