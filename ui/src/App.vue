@@ -291,8 +291,10 @@ function setupNotificationStream(errorCount: number = 0) {
 }
 
 onBeforeMount(async() => {
-  await getMeta()
-  await getAuth()
+  await Promise.allSettled([
+    await getMeta(),
+    await getAuth()
+  ])
   if(route.query.tour) {
     loadTour(route.query.tour as string)
   }
