@@ -115,11 +115,6 @@
         </a>
       </div>
       <div class="navbar-end">
-        <div class="navbar-item" v-if="updateInfo.updating">
-          <Icon icon="fa-solid fa-spinner" spin>
-            <span class="ml-2">Updating UI...</span>
-          </Icon>
-        </div>
         <div class="navbar-item has-tooltip-bottom" :data-tooltip="darkMode ? 'Turn dark mode off' : 'Turn dark mode on'">
           <a class="button" @click="toggleTheme">
             <Icon :icon="themeIcon"></Icon>
@@ -197,7 +192,6 @@ const LAST_UPDATED = new Date(Number(BUILD_TIMESTAMP))
 
 const props = defineProps<{
   privUser?: PrivilegedUser,
-  updateInfo: any,
   meta?: PanelMetaInfo
 }>()
 

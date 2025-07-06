@@ -4,7 +4,7 @@
     <!-- <v-tour v-if="tour" :name="tour.name" :steps="tour.steps"></v-tour> -->
     <BirthdayComponent v-if="isBirthday" @close="closeBirthday" />
     <Notifications position="top center" :duration=7000 @start="onNotificationShown" @click="(event: any) => event.data?.click()" />
-    <NavBar v-if="!route.meta.hideNav" @logout="onLogout" :update-info="updateInfo" :priv-user="privUser" :meta="meta" />
+    <NavBar v-if="!route.meta.hideNav" @logout="onLogout" :priv-user="privUser" :meta="meta" />
     <br v-if="!route.meta.hideNav">
     <br v-if="route.meta.hideHero">
     <section v-else class="hero is-info has-text-centered">
@@ -87,11 +87,6 @@ const nextRoute = computed(() => {
   return route.meta.nextRoute
 })
 
-let updateInfo = ref<{
-  registration?: any,
-  updating: boolean
-}>({updating: false})
-
 let userdata = ref<ClientUserData>()
 let privUser = shallowRef<PrivilegedUser>()
 let meta = ref<PanelMetaInfo>()
@@ -99,15 +94,6 @@ let isBirthday = ref(false)
 let tour = ref<{name: string, steps: any[]}|undefined>()
 let notificationSSE: EventSource|null = null
 
-function reloadPage() {
-  if (!updateInfo.value.registration || !updateInfo.value.registration.waiting) return console.warn("reloadPage() called when no sw update")
-  updateInfo.value.registration.waiting.postMessage({ type: 'SKIP_WAITING' })
-  window.location.reload()
-}
-function updateAvailable(event: any) {
-  updateInfo.value.registration = event.detail
-  reloadPage()
-}
 async function onAuthorized() {
   if(!userdata.value) return
   if(isModalAllowed("birthday")) {
@@ -316,13 +302,11 @@ function setupNotificationStream(errorCount: number = 0) {
 }
 
 onBeforeMount(async() => {
-  document.addEventListener('swUpdated', updateAvailable, { once: true })
-  document.addEventListener('swUpdating', () => updateInfo.value.updating = true, { once: true })
+  await getMeta()
   await getAuth()
   if(route.query.tour) {
     loadTour(route.query.tour as string)
   }
-  await getMeta()
 })
 </script>
 <style src="./node_modules/bulma-list/css/bulma-list.css"></style>
