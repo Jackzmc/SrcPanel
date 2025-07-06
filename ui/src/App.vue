@@ -127,42 +127,30 @@ async function getMeta() {
   }
 }
 async function getAuth() {
-  // We fetch cache to populate user name / icon
-  const userData = window.sessionStorage.getItem('srcds_userdata')
-  if(userData) {
-    userdata.value = JSON.parse(userData)
-    if(userdata.value) {
-      privUser.value = new PrivilegedUser(userdata.value)
-      console.debug('using cached user data')
-    }
-  }
-  // Fetch profile even if cached, to verify its valid and to get notifications
+  window.sessionStorage.removeItem('srcds_userdata')
   const response = await fetch(`/api/auth/profile`, {
     credentials: 'include'
   })
   if(response.ok) {
+    // Successfully authenticated
     const json = await response.json()
     userdata.value = json as ClientUserData
     privUser.value = new PrivilegedUser(userdata.value)
-    window.sessionStorage.setItem('srcds_userdata', JSON.stringify(userdata.value))
-    if(json.isSessionOld) { //
-      notify({
-        type: "warn",
-        text: "Your session has expired, please login again.",
-      })
-    } else {
-      await onAuthorized()
-    }
+    // window.sessionStorage.setItem('srcds_userdata', JSON.stringify(userdata.value))
     console.log('Authorized: Hello', json.user.name)
+    await onAuthorized()
   } else if(response.status === 401 || response.status === 403) {
+    // session is invalid or expired, or not logged in
     userdata.value = undefined
+    window.sessionStorage.removeItem('srcds_userdata')
+    privUser.value = undefined
     if(window.sessionStorage['srcds_userdata']) {
       notify({
         type: "error",
         text: "Your session has expired"
       })
     }
-    window.sessionStorage.removeItem('srcds_userdata')
+    // If on a page that requires authentication, boot them to the login page
     if(route.meta.authRequired && !userdata) {
       router.push({
         name: 'authrequired',
@@ -172,6 +160,7 @@ async function getAuth() {
       })
     }
   } else {
+    // request failed
     let error, code
     if(response.headers.get("content-type")?.includes("application/json")) {
       const json = await response.json()

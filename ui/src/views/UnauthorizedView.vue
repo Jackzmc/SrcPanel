@@ -36,7 +36,7 @@ function onIsLoggedIn() {
   const params = new URLSearchParams(window.location.search);
   if(params.has('type')) type.value = Number(params.get('type'))
   if(props.privUser && type.value == 0) {
-    // router.push(params.get('return') || '/')
+    router.push(params.get('return') || '/')
   }
 }
 

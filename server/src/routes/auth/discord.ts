@@ -155,7 +155,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                     // We need to refresh steam info as well
                     const details = await fastify.steam.getUserDetail(new SteamID(admin.steamid))
                     await provider.save(admin.steamid)
-                    await fastify.authmngr.loginUser(req, admin, details)
+                    await fastify.authmngr.loginUser(req, reply, admin, details)
                     await reply.redirect(returnUrl, 302)
                 }
             } catch(err) {

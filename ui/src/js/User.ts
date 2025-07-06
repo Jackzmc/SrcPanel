@@ -73,7 +73,7 @@ export class PrivilegedUser {
   #webCodes: Set<UserPrivilegeCode> = new Set()
 
   constructor(session: UserData<UserPrivilegeCode[]>) {
-    if(!session) throw new Error("Session is empty")
+    if(!session || !session.permissions) throw new Error("Session is empty or invalid")
     this.#data = session
     if(Array.isArray(session.permissions.codes))
       this.#webCodes = new Set(session.permissions.codes)
@@ -168,10 +168,6 @@ export class PrivilegedUser {
       this.#updateCache()
     } else
       return null
-  }
-
-  get isSessionOld() {
-    return this.#data.isSessionOld
   }
 
   get providers() {

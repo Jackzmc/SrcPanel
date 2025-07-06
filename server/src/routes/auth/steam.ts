@@ -130,7 +130,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
                     const admin = fastify.authmngr.getAdminExport(steamid2)
                     if(admin) {
-                        await fastify.authmngr.loginUser(req, admin, userDetails)
+                        await fastify.authmngr.loginUser(req, reply, admin, userDetails)
                         if(setupStage == 1) {
                             await fastify.config.SetKV("first_time_setup.stage", FirstTimeSetupStage.SteamAdminCreated)
                         }

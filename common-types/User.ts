@@ -24,7 +24,6 @@ export interface ImpersationData {
 }
 export interface UserData<T> extends BaseSession<T> {
     profile: UserProfileData | null,
-    isSessionOld: boolean,
     providers: UserOauthProviders,
     notifications: UserNotification[],
     openDiscussions: number,

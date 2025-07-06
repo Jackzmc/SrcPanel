@@ -107,7 +107,9 @@ app.register(MiddleManager)
         await bot.init()
     }
 
-    app.register(FastifyCookie)
+    app.register(FastifyCookie, {
+        secret: process.env.SESSION_SECRET as string,
+    })
     app.register(FastifySession, { 
         secret: process.env.SESSION_SECRET as string,
         cookieName: 'srcds-sessid',

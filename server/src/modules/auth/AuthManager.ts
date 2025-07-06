@@ -832,7 +832,7 @@ export default class AuthManager {
         }
     }
     
-    public async loginUser(req: FastifyRequest, admin: ReadableAdminData, steamDetails?: SteamUserDetails) {
+    public async loginUser(req: FastifyRequest, reply: FastifyReply, admin: ReadableAdminData, steamDetails?: SteamUserDetails) {
         const steamInfo: SteamInfo = {
             steamid: admin.steamid,
             accountid: new SteamID(admin.steamid).accountid.toString(),
@@ -848,6 +848,12 @@ export default class AuthManager {
         req.session.loginTime = Math.round(Date.now() / 1000)
         req.session.lastActive = Math.round(Date.now() / 1000)
         req.session.version = SESSION_VERSION
+
+        // reply.setCookie('srcds-sessdata', JSON.stringify({
+        //     steamid: steamInfo.steamid,
+        //     name: steamInfo.name,
+        //     avatarhash: steamInfo.avatarhash
+        // }))
     }
 
     public hasPermission(admin: AdminData, permission: string) {

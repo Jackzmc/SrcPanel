@@ -140,12 +140,6 @@
                 <Icon icon="fa-sitemap" text="Panel Administration" />
               </router-link>
               <hr class="navbar-divider">
-              <p class="navbar-item" v-if="privUser.isSessionOld">
-                <span class="tag is-warning">
-                  <Icon icon="fa-exclamation-triangle" icon-class="mr-2" />
-                  Outdated session, please relogin
-                </span>
-              </p>
               <a class="navbar-item has-text-danger" @click="logout">
                 <Icon icon="fa-arrow-right-from-bracket">Logout</Icon>
               </a>
