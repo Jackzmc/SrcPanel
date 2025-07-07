@@ -59,6 +59,7 @@
     </div>
   </div>
 
+  {{ ReadyState[readyState] }}
   <footer class="footer custom-footer">
     <div class="content has-text-centered">
       {{ SITE_TITLE }} - Updated {{lastUpdatedText}}
@@ -166,11 +167,12 @@ async function getAuth() {
     // session is invalid or expired, or not logged in
     userdata.value = undefined
     privUser.value = undefined
-    readyState.value = ReadyState.NeedsAuth
-    window.sessionStorage.removeItem('srcds_userdata')
+    // If needs auth, then show login part
+    // If auth not required, we are good
+    readyState.value = readyState.value == ReadyState.WaitingForAuth ? ReadyState.NeedsAuth : ReadyState.Show
   } else {
     // request failed
-    readyState.value = ReadyState.NeedsAuth
+    readyState.value = readyState.value == ReadyState.WaitingForAuth ? ReadyState.NeedsAuth : ReadyState.Show
     let error, code
     if(response.headers.get("content-type")?.includes("application/json")) {
       const json = await response.json()
@@ -315,8 +317,9 @@ onMounted(async() => {
   // Check if route once available requires auth, if not, then we can show the UI
   // If it does, then set it into waiting for auth state
   // At any time, getAuth() from earlier can return, even before this, doesn't matter.
-  if(route.name && readyState.value == ReadyState.None) {
+  if(readyState.value == ReadyState.None) {
     readyState.value = route.meta.authRequired ? ReadyState.WaitingForAuth : ReadyState.Show
+    console.debug("readyState set to", ReadyState[readyState.value])
   }
 })
 </script>
