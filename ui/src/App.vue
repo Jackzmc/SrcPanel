@@ -4,10 +4,13 @@
     <!-- <v-tour v-if="tour" :name="tour.name" :steps="tour.steps"></v-tour> -->
     <BirthdayComponent v-if="isBirthday" @close="closeBirthday" />
     <Notifications position="top center" :duration=7000 @start="onNotificationShown" @click="(event: any) => event.data?.click()" />
-    <NavBar v-if="!route.meta.hideNav" @logout="onLogout" :priv-user="privUser" :meta="meta" />
+
+    <NavBar v-if="!route.meta.hideNav" @logout="onLogout" :priv-user="privUser" :meta="meta" :hide-login="readyState != ReadyState.Show" />
+
     <br v-if="!route.meta.hideNav">
     <br v-if="route.meta.hideHero">
-    <section v-else class="hero is-info has-text-centered">
+
+    <section v-else class="hero is-info has-text-centered" v-show="readyState == ReadyState.Show">
       <div class="hero-body pb-5">
         <router-link v-if="prevRoute" :to="{ name: prevRoute }" class="is-pulled-left is-light is-rounded button" ><Icon icon="fa-chevron-left">Back</Icon></router-link>
         <p class="title has-text-white" >
@@ -21,11 +24,18 @@
     </section>
 
     <!-- <br> -->
-    <router-view v-slot="{ Component }" class="mt-4">
+    <router-view v-slot="{ Component }" class="mt-4" v-if="readyState == ReadyState.Show">
       <keep-alive  :max="2">
         <component :is="Component" :priv-user="privUser" :meta="meta" class="px-2" />
       </keep-alive>
     </router-view>
+    <div v-else-if="readyState === ReadyState.NeedsAuth" class="mt-1">
+     <NotLoggedInComponent :meta="meta" />
+    </div>
+    <div v-else-if="readyState === ReadyState.WaitingForAuth" class="mt-6 has-text-centered">
+     <p>Retrieving session data from server...</p>
+    </div>
+
     <br>
     <div class="impersonate-overlay" v-if="privUser?.isImpersonating">
       <nav class="level">
@@ -48,16 +58,17 @@
       </nav>
     </div>
   </div>
+
   <footer class="footer custom-footer">
     <div class="content has-text-centered">
-      {{ SITE_TITLE }} - Updated {{lastUpdated}}
+      {{ SITE_TITLE }} - Updated {{lastUpdatedText}}
     </div>
   </footer>
 </div>
 </template>
 
 <script setup lang="ts">
-import { onBeforeMount, ref, computed, defineAsyncComponent, markRaw, shallowRef } from 'vue';
+import { onBeforeMount, ref, computed, defineAsyncComponent, markRaw, shallowRef, onMounted } from 'vue';
 import NavBar from '@/components/NavBar.vue'
 import { useRoute, useRouter } from 'vue-router';
 import { PrivilegedUser} from '@/js/User'
@@ -66,12 +77,13 @@ import { ClientUserData } from '../../common-types/User';
 import * as Sentry from "@sentry/vue";
 import { request } from './js/util.js';
 import { PanelMetaInfo } from '../../common-types/Panel.js';
+import NotLoggedInComponent from './components/NotLoggedInComponent.vue';
 
 const BirthdayComponent = defineAsyncComponent(() => import("@/components/BirthdayComponent.vue"))
 
 const LAST_UPDATED = new Date(Number(BUILD_TIMESTAMP))
 const SITE_TITLE = import.meta.env.VITE_SITE_TITLE
-const lastUpdated = computed(() => {
+const lastUpdatedText = computed(() => {
   return LAST_UPDATED.toLocaleString()
 })
 
@@ -87,6 +99,13 @@ const nextRoute = computed(() => {
   return route.meta.nextRoute
 })
 
+enum ReadyState {
+  None,
+  WaitingForAuth,
+  NeedsAuth,
+  Show
+}
+
 let userdata = ref<ClientUserData>()
 let privUser = shallowRef<PrivilegedUser>()
 let meta = ref<PanelMetaInfo>()
@@ -94,8 +113,11 @@ let isBirthday = ref(false)
 let tour = ref<{name: string, steps: any[]}|undefined>()
 let notificationSSE: EventSource|null = null
 
+let readyState = ref<ReadyState>(ReadyState.None)
+
 async function onAuthorized() {
   if(!userdata.value) return
+
   if(isModalAllowed("birthday")) {
     const date = new Date()
     if(userdata.value.profile && userdata.value.profile.birthMonth === date.getMonth() && userdata.value.profile.birthDate === date.getDate()) {
@@ -133,34 +155,22 @@ async function getAuth() {
   })
   if(response.ok) {
     // Successfully authenticated
-    const json = await response.json()
-    userdata.value = json as ClientUserData
+    const json: ClientUserData = await response.json()
+    userdata.value = json
     privUser.value = new PrivilegedUser(userdata.value)
+    readyState.value = ReadyState.Show
     // window.sessionStorage.setItem('srcds_userdata', JSON.stringify(userdata.value))
-    console.log('Authorized: Hello', json.user.name)
+    console.log('Authenticated as', json.user.name, json.user.accountid)
     await onAuthorized()
   } else if(response.status === 401 || response.status === 403) {
     // session is invalid or expired, or not logged in
     userdata.value = undefined
-    window.sessionStorage.removeItem('srcds_userdata')
     privUser.value = undefined
-    if(window.sessionStorage['srcds_userdata']) {
-      notify({
-        type: "error",
-        text: "Your session has expired"
-      })
-    }
-    // If on a page that requires authentication, boot them to the login page
-    if(route.meta.authRequired && !userdata) {
-      router.push({
-        name: 'authrequired',
-        query: {
-          return: route.fullPath
-        }
-      })
-    }
+    readyState.value = ReadyState.NeedsAuth
+    window.sessionStorage.removeItem('srcds_userdata')
   } else {
     // request failed
+    readyState.value = ReadyState.NeedsAuth
     let error, code
     if(response.headers.get("content-type")?.includes("application/json")) {
       const json = await response.json()
@@ -227,6 +237,7 @@ function onLogout() {
   window.sessionStorage.removeItem('srcds_userdata')
   userdata.value = undefined
   privUser.value = undefined
+  window.location.reload() // hacky
   if(notificationSSE) {
     notificationSSE.close()
     notificationSSE = null
@@ -297,6 +308,15 @@ onBeforeMount(async() => {
   ])
   if(route.query.tour) {
     loadTour(route.query.tour as string)
+  }
+})
+onMounted(async() => {
+  await router.isReady()
+  // Check if route once available requires auth, if not, then we can show the UI
+  // If it does, then set it into waiting for auth state
+  // At any time, getAuth() from earlier can return, even before this, doesn't matter.
+  if(route.name && readyState.value == ReadyState.None) {
+    readyState.value = route.meta.authRequired ? ReadyState.WaitingForAuth : ReadyState.Show
   }
 })
 </script>

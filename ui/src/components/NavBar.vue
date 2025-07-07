@@ -146,7 +146,7 @@
             </div>
           </div>
         </template>
-        <template v-else-if="meta">
+        <template v-else-if="meta && !hideLogin">
           <div class="navbar-item">
             <DiscordLoginButton :meta="meta" />
           </div>
@@ -186,7 +186,8 @@ const LAST_UPDATED = new Date(Number(BUILD_TIMESTAMP))
 
 const props = defineProps<{
   privUser?: PrivilegedUser,
-  meta?: PanelMetaInfo
+  meta?: PanelMetaInfo,
+  hideLogin?: boolean
 }>()
 
 let showModal = ref<string>()

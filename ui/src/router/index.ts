@@ -384,14 +384,6 @@ const routes = [
     }
   },
   {
-    name: 'authrequired',
-    path: '/login-required',
-    component: () => import('../views/UnauthorizedView.vue'),
-    meta: {
-      hideHero: true
-    }
-  },
-  {
     name: 'errorview',
     path: '/error',
     component: () => import('../views/ErrorView.vue'),
@@ -420,8 +412,8 @@ const router = createRouter({
 })
 
 router.beforeEach((to, from) => {
-  if(to.meta.authRequired && window.sessionStorage.getItem("srcds_userdata") == null) {
-    return "/login-required?return=" + encodeURIComponent(to.fullPath)
+  if(to.meta.authRequired) {
+    // return "/login-required?return=" + encodeURIComponent(to.fullPath)
   }
 })
 

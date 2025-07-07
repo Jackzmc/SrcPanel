@@ -36,7 +36,9 @@ function onIsLoggedIn() {
   const params = new URLSearchParams(window.location.search);
   if(params.has('type')) type.value = Number(params.get('type'))
   if(props.privUser && type.value == 0) {
-    router.push(params.get('return') || '/')
+    const returnTo = params.get('return') || '/'
+    console.info("User authenticated, redirecting back to page", returnTo)
+    router.push(returnTo)
   }
 }
 
