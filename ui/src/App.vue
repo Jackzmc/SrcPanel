@@ -59,7 +59,6 @@
     </div>
   </div>
 
-  {{ ReadyState[readyState] }}
   <footer class="footer custom-footer">
     <div class="content has-text-centered">
       {{ SITE_TITLE }} - Updated {{lastUpdatedText}}
