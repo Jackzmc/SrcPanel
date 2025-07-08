@@ -91,10 +91,14 @@
             </Field>
           </div>
           <div class="level-item" @mouseleave="showActionDropdown = false" v-if="selectedServers.length > 0">
-            <div class="dropdown">
+            <div :class="['dropdown',{'is-active': showActionDropdown}]">
               <div class="dropdown-trigger">
-                <button :class="['button',{'is-loading': pendingAction}]" :disabled="pendingAction?true:undefined" aria-haspopup="true" aria-controls="dropdown-menu" @click="showActionDropdown = !showActionDropdown">
-                  <Icon icon="fa-chevron-down" text-left="Perform action"></Icon>
+                <button :class="['button',{'is-loading': pendingAction}]"
+                  :disabled="pendingAction?true:undefined"
+                  aria-haspopup="true" aria-controls="dropdown-menu"
+                  @click="showActionDropdown = !showActionDropdown"
+                >
+                  <Icon icon="fa-chevron-down" text-left="Perform an action"></Icon>
                 </button>
               </div>
               <div class="dropdown-menu" id="dropdown-menu" role="menu">
@@ -106,6 +110,7 @@
                   >
                     {{ action.name }}
                   </a>
+                  <a class="dropdown-item is-disabled" disabled v-if="allActions.length === 0">No actions available</a>
                   <!-- <a class="dropdown-item"> Start </a>
                   <a class="dropdown-item"> Request Restart </a>
                   <a class="dropdown-item"> Stop </a>
