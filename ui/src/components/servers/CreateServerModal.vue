@@ -9,7 +9,7 @@
   </template>
   <!-- MODAL BODY-->
   <template v-if="state === ModalState.SelectGroup">
-    <h5 class="subtitle is-5">Select a server group</h5>
+    <h5 class="subtitle is-5">Select a server group to continue</h5>
     <div class="my-6 mx-4" v-if="!serverGroups">
       <Icon icon="fa-spinner" spin>Fetching groups</Icon>
     </div>
@@ -18,7 +18,7 @@
     </div>
     <br>
     <p class="subtitle is-6">
-      Only docker-based server groups can be used to create new instances.<br>
+      Only dynamic based server groups can be used to create new instances.<br>
       You can create a new server group <a>in the panel management settings</a>
     </p>
   </template>
@@ -129,7 +129,11 @@
   <template #buttons >
     <template v-if="state == ModalState.ConfirmCreateInstance">
     <button @click="state = ModalState.SelectGroup" class="button">Back</button>
-    <button @click="createInstance" class="button is-info">Create Instance</button>
+    <button @click="createInstance" class="button is-info" v-if="confirmDelayCountdown === 0">Create
+      Instance</button>
+    <button class="button is-info" v-else disabled data-tooltip="Please read above before confirming">
+      <Icon icon="fa-hourglass">{{ confirmDelayCountdown }}s</Icon>
+    </button>
     </template>
     <template v-else-if="state === ModalState.SelectGroup">
       <button @click="emit('close')" class="button">Cancel</button>
@@ -169,7 +173,7 @@ const stateTitle = computed(() => {
   switch(state.value) {
     case ModalState.SelectGroup:
       return {
-        label: "Create new server",
+        label: "Create new server instance",
         icon: "fa-plus"
       }
     case ModalState.ConfirmCreateInstance:
@@ -233,9 +237,13 @@ let serverGroups = ref<APIListServerGroup[]|undefined>(undefined)
 let state = ref<ModalState>(ModalState.SelectGroup)
 let selectedGroup = ref<APIListServerGroup>()
 let data = ref<any|null>(null)
+let confirmDelayCountdown = ref(0)
 
 function selectGroup(group: APIListServerGroup) {
   selectedGroup.value = group
+  state.value = ModalState.ConfirmCreateInstance
+  confirmDelayCountdown.value = 5
+  nextConfirmCountdown()
 }
 function confirmGroup() {
   if(selectedGroup.value) {
@@ -284,10 +292,18 @@ onMounted(async () => {
     const group = serverGroups.value.find(g => g.id === props.group!.id)
     if(!group) console.warn("could not find prop group in fetched groups")
     else {
-      selectedGroup.value = group
-      state.value = ModalState.ConfirmCreateInstance
+      selectGroup(group)
     }
   }
 })
+
+function nextConfirmCountdown() {
+  setTimeout(() => {
+    confirmDelayCountdown.value = confirmDelayCountdown.value - 1
+    if(confirmDelayCountdown.value > 0) {
+      nextConfirmCountdown()
+    }
+  }, 1000)
+}
 
 </script>

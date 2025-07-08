@@ -81,6 +81,12 @@
 
   </div>
   <div class="box">
+    <Icon icon="fa-hourglass">fa-hourglass</Icon>
+    <Icon icon="fa-hourglass1">fa-hourglass1</Icon>
+    <Icon icon="fa-hourglass2">fa-hourglass2</Icon>
+    <Icon icon="fa-hourglass3">fa-hourglass3</Icon>
+    <Icon icon="fa-hourglass-half">fa-hourglass-half</Icon>
+    <Icon icon="fa-hourglass-start">fa-hourglass-start</Icon>
     <div class="is-fullwidth is-radiusless">
       <nav class="level">
         <!-- Left side -->
@@ -134,7 +140,7 @@
           </div>
           <div class="level-item">
             <button class="button is-info" @click="setModal(Modal.NewServer)" data-tooltip="Start a new server instance">
-              <Icon icon="fa-plus">New Server</Icon>
+              <Icon icon="fa-plus">Start New Server</Icon>
             </button>
           </div>
           <div class="level-item">
