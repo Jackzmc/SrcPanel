@@ -2,7 +2,7 @@
 <ModalCard active @close="emit('close')">
   <template #header>
     <p class="modal-card-title">
-      <Icon v-if="stateTitle.icon" :icon="stateTitle.icon" :icon-class="stateTitle.iconClass"><span  v-html="stateTitle.label"></span></Icon>
+      <Icon v-if="stateTitle.icon" :icon="stateTitle.icon" :icon-class="stateTitle.iconClass" :spinning="stateTitle.spinning"><span  v-html="stateTitle.label"></span></Icon>
       <span v-else v-html="stateTitle.label"></span>
     </p>
     <button class="delete" aria-label="close" @click="emit('close')"></button>
@@ -183,6 +183,7 @@ const stateTitle = computed(() => {
     case ModalState.StartingInstance:
       return {
         icon: "fa-spinner",
+        spinning: true,
         label: `Creating instance of <b>${ selectedGroup.value!.name}</b>`
       }
     case ModalState.InstanceReady:
