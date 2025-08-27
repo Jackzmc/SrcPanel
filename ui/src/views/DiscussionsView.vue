@@ -5,14 +5,14 @@
     <div class="column is-7" style="height:100%">
       <template v-if="selectedDiscussion">
         <div class="block mb-2">
-          <router-link :to="{params: { id: '', title: '' }}"><Icon icon="fa-arrow-left" class="is-pulled-left" text="Back to discussions" /></router-link>
+          <router-link :to="{params: { id: '', title: '' }}"><Icon icon="fa-arrow-left" class="is-pulled-left" text="Back to discussions list" /></router-link>
         </div>
         <br>
-        <b>Creator</b>
+        <b>Discussion started by</b>
         <div><UserComponent :user="selectedDiscussion.creator"></UserComponent></div>
         <DiscussionBox :priv-user="privUser" v-model="selectedDiscussion" selected :responses="responses" />
         <div class="box">
-          <h4 class="title is-4 mb-0"><Icon icon="far fa-comment">Discussion</Icon></h4>
+          <h4 class="title is-4 mb-2"><Icon icon="far fa-comment">Comments</Icon></h4>
           <Comments v-if="comments" :priv-user="privUser" :comments="comments" :discussion="selectedDiscussion" @comment="onSubmitComment"></Comments>
           <p class="has-text-centered my-3" v-else><Icon icon="fa-spinner" spin>Loading comments...</Icon></p>
         </div>
@@ -27,6 +27,7 @@
     </div>
     <div class="column" v-if="selectedDiscussion">
       <h4 class="title is-4">Respondants ({{ selectedDiscussion.responses.totalCount }}) ({{ Math.round(selectedDiscussion.responses.percentVoted * 100) }}%)</h4>
+      <p class="subtitle is-5" v-if="!(selectedDiscussion.flags & APIDiscussionFlags.ResponsesPublic)">Responses are hidden</p>
       <div class="list has-visible-pointer-controls" v-if="selectedDiscussion.responses.users">
         <div class="list-item" v-for="(user, i) in selectedDiscussion.responses.users" :key="i">
           <div class="list-item-image">
