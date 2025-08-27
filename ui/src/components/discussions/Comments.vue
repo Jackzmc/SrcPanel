@@ -11,14 +11,18 @@
         <router-link v-if="discussion.flags & APIDiscussionFlags.CommentsPublic && comment.creator" :to="{ name: 'manage-user', params: { id: comment.creator.id }, query: { returnTo: $route.fullPath }}">
           {{ comment.creator.name ?? comment.creator.id }}
         </router-link>
+        <span class="is-pulled-right">
+          <Icon icon="fa-clock">{{ formatDate(comment.timestamp) }}</Icon>
+        </span>
       </div>
       <div class="list-item-content" style="word-wrap:anywhere">
-        {{ comment.content }}
+        <div>
+          {{ comment.content }}
+        </div>
       </div>
 
     </div>
     <div class="list-item-controls">
-        <Icon icon="fa-clock">{{ formatDate(comment.timestamp) }}</Icon>
     </div>
   </div>
   <div class="list-item has-background-light" v-if="!isArchived">

@@ -12,7 +12,7 @@
         <div><UserComponent :user="selectedDiscussion.creator"></UserComponent></div>
         <DiscussionBox :priv-user="privUser" v-model="selectedDiscussion" selected :responses="responses" />
         <div class="box">
-          <h4 class="title is-4 mb-2"><Icon icon="far fa-comment">Comments</Icon></h4>
+          <h4 class="title is-4 mb-2"><Icon icon="far fa-comment">Comments ({{ comments?.length ?? 0 }})</Icon></h4>
           <Comments v-if="comments" :priv-user="privUser" :comments="comments" :discussion="selectedDiscussion" @comment="onSubmitComment"></Comments>
           <p class="has-text-centered my-3" v-else><Icon icon="fa-spinner" spin>Loading comments...</Icon></p>
         </div>
