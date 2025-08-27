@@ -13,24 +13,15 @@
   </div>
   <h5 class="title is-5"><b>Discuss:</b> {{ discuss.title }}</h5>
   <FormatText class="subtitle" :text="discuss.description" markdown v-if="discuss.description" />
-  <div class="columns is-mobile" v-if="discuss.type == APIDiscussionType.Radio || discuss.type == APIDiscussionType.Checkbox">
-    <div class="column is-6">
-      <div style="height:100%" :class="['box','field',{'is-clickable': canInteract}]" v-for="option of getOptions(0)" :key="option.id" @click="selectChoice(option)">
-        <input v-if="canInteract && isSelection && 'selected' in discuss" v-model="discuss.selected" readonly :value="option" :id="option.id.toString()" class="is-checkradio" :type="optionType" :name="'choice' + discuss.id">
-        <label :for="option.id.toString()">{{ option.label }}</label>
-        <span v-if="showPercents" class="is-pulled-right has-text-info">
-          {{ Math.round((responses!.counts![option.id.toString()]?.percent || 0) * 100) }}%
-        </span>
-      </div>
-    </div>
-    <div class="column is-6" >
-      <div style="height:100%" :class="['box','field',{'is-clickable': canInteract}]" v-for="option of getOptions(1)" :key="option.id" @click="selectChoice(option)">
-        <input v-if="canInteract && isSelection && 'selected' in discuss" v-model="discuss.selected" readonly :value="option" :id="option.id.toString()" class="is-checkradio" :type="optionType" :name="'choice' + discuss.id">
-        <label :for="option.id.toString()">{{ option.label }}</label>
-        <span v-if="showPercents" class="is-pulled-right has-text-info">
-          {{ Math.round((responses!.counts![option.id.toString()]?.percent || 0) * 100) }}%
-        </span>
 
+  <div class="columns is-mobile is-multiline" v-if="discuss.type == APIDiscussionType.Radio || discuss.type == APIDiscussionType.Checkbox">
+    <div class="column is-6" v-for="option of discuss.options" :key="option.id">
+      <div style="height:100%" :class="['box','field',{'is-clickable': canInteract}]"  @click="selectChoice(option)">
+        <input v-if="canInteract && isSelection && 'selected' in discuss" v-model="discuss.selected" readonly :value="option" :id="option.id.toString()" class="is-checkradio" :type="optionType" :name="'choice' + discuss.id">
+        <label :for="option.id.toString()">{{ option.label }}</label>
+        <span v-if="showPercents" class="is-pulled-right has-text-info">
+          {{ Math.round((responses!.counts![option.id.toString()]?.percent || 0) * 100) }}%
+        </span>
       </div>
     </div>
   </div>
@@ -129,14 +120,6 @@ const canInteract = computed(() => {
   return !(discuss.value.flags & APIDiscussionFlags.Archived) && !isClosed.value
 })
 
-function getOptions(column: number) {
-  let options = discuss.value.options
-  if(column == 0) {
-    return options!.filter((v, i) => !(i % 2))
-  } else {
-    return options!.filter((v, i) => i % 2)
-  }
-}
 function escapeHtml(unsafe: string) {
     return unsafe.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#039;');
 }

@@ -2,7 +2,7 @@
 <div class="container is-fluid">
   <div class="columns">
     <div class="column is-1"></div>
-    <div class="column is-7">
+    <div class="column is-7" style="height:100%">
       <template v-if="selectedDiscussion">
         <div class="block mb-2">
           <router-link :to="{params: { id: '', title: '' }}"><Icon icon="fa-arrow-left" class="is-pulled-left" text="Back to discussions" /></router-link>
@@ -54,6 +54,7 @@
     </div>
     <div class="column is-1"></div>
   </div>
+  <br>
 </div>
 </template>
 
