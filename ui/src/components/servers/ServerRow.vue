@@ -47,7 +47,7 @@
           <div @click="copyCommand" :class="[{ 'has-text-grey': !server.online },'is-inline']">
             connect {{ server.host }}:{{ server.port }}
           </div>
-          <a class="is-pulled-right" v-if="gameType === 'source'" :href="'steam://connect/' + server.ip + '/' + server.port">[Join]</a>
+          <a class="is-pulled-right" v-if="server.online" :href="'steam://connect/' + server.ip + '/' + server.port">[Join]</a>
         </td>
         <td>
           <p @click="copyCommand" :class="{ 'has-text-grey': !server.online }">

@@ -28,16 +28,32 @@
         </footer>
       </div>
     </div>
-    <router-link :data-tooltip="scEvent.creator.id" :to="{ name: 'manage-user', params: { id: scEvent.creator.id }, query: { returnTo: $route.fullPath }}">
-      <figure class="image is-32x32 is-inline-block">
-        <img class="is-rounded" :src="scEvent.creator.avatarUrl">
-      </figure>
-      <p class="is-inline is-size-5 mt-0 ml-1" style="top:-8px;position:relative">{{ scEvent.creator.name }}</p>
-    </router-link>
-    <h4 class="title is-4">
-      <b>Event: </b>{{ scEvent.name }}
-    </h4>
-    <p class="subtitle">{{ scEvent.description }}</p>
+    <div class="columns">
+      <div class="column is-4 has-text-left">
+        <h4 class="title is-4">
+          <b>Event: </b>{{ scEvent.name }}
+        </h4>
+        <p class="subtitle">{{ scEvent.description }}</p>
+      </div>
+      <div class="column is-4 has-text-centered">
+        <h6 class="title is-6 mb-2">Respondants</h6>
+        <UserComponent v-for="user in respondedUsers" :key="user.id" :user="user" hide-name />
+        <!-- <img v-for="user in respondedUsers" :key="user.id" :src="user.avatarUrl" /> -->
+      </div>
+      <div class="column is-4 has-text-right">
+        <h6 class="title is-6 mb-2">Event Creator</h6>
+        <router-link :data-tooltip="scEvent.creator.id"
+          :to="{ name: 'manage-user', params: { id: scEvent.creator.id }, query: { returnTo: $route.fullPath }}">
+          <figure class="image is-32x32 is-inline-block">
+            <img class="is-rounded" :src="scEvent.creator.avatarUrl">
+          </figure>
+          <p class="is-inline is-size-5 mt-0 ml-1" style="top:-8px;position:relative">{{ scEvent.creator.name }}</p>
+        </router-link>
+      </div>
+
+    </div>
+
+
     <div class="columns">
       <div class="column">
         <nav class="pagination is-rounded" role="navigation" aria-label="pagination">
@@ -128,6 +144,8 @@ import { EventDataSubmission, APIEventDetailed, APIWeekAvailability } from '../.
 import { useRoute, useRouter } from 'vue-router';
 import { request } from '@/js/util.js'
 import { PrivilegedUser } from '@/js/User.js';
+import { APIUser } from '../../../common-types/User.js';
+import UserComponent from '@/components/UserComponent.vue';
 
 const router = useRouter()
 const route = useRoute()
@@ -177,6 +195,19 @@ const userAvailability = computed(() => {
 
 const isEditing = computed(() => {
   return editCurrentWeek.value != undefined
+})
+
+const respondedUsers = computed(() => {
+  if(!scEvent.value) return []
+  const users = new Map<string, APIUser>()
+  for(const week of scEvent.value.weeks) {
+    for(const entry of week.availability) {
+      if(!users.has(entry.user.id)) {
+        users.set(entry.user.id, Object.assign({}, entry.user))
+      }
+    }
+  }
+  return users.values()
 })
 
 async function toggleEditing() {

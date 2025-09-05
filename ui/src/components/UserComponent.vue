@@ -6,7 +6,7 @@
         <LazyImage observer img-class="is-rounded" :src="clientAvatarSrc" placeholder-src="/img/steam_default_avatar.png" />
       </p>
     </figure>
-    <div class="media-content">
+    <div class="media-content" v-if="!hideName">
       <div class="content mt-1 pr-0">
         {{ props.user.name ?? id }}
       </div>
@@ -52,9 +52,10 @@ interface UserMeta {
   avatarUrl?: string
 }
 const props = defineProps<{
-  user: UserMeta & ({ steamid: string} | { id: string }),
+  user: APIUser | UserMeta & ({ steamid: string} | { id: string }),
   isAdmin?: boolean,
   hideAvatar?: boolean,
+  hideName?: boolean
 
   fallbackName?: string,
   forceAvatar?: boolean
