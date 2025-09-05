@@ -6,8 +6,7 @@
         <em v-if="lastRefresh">refreshing in {{lastRefresh}}s</em>
         <Icon icon="spinner" v-else spin >Refreshing</Icon>
       </p>
-      <ServerTable v-for="group in sortedServers" :key="group.id" :group="group" manage>
-      </ServerTable>
+      <ServerTable :priv-user="privUser" v-for="group in sortedServers" :key="group.id" :group="group" manage></ServerTable>
     </div>
     <div class="column">
       <div class="box">
@@ -39,6 +38,7 @@
 
 <script setup lang="ts">
 import ServerTable from '@/components/servers/ServerTable.vue';
+import { PrivilegedUser } from '@/js/User.js';
 import { request } from '@/js/util';
 import { notify } from '@kyvg/vue3-notification';
 import { ref, computed, onMounted, onDeactivated, onUnmounted, onBeforeUnmount, onActivated } from 'vue'
@@ -46,6 +46,10 @@ import { useRouter, useRoute } from 'vue-router'
 
 const REFRESH_SECONDS = 6
 const REFRESH_INTERVAL = 1000 * REFRESH_SECONDS
+
+const props = defineProps<{
+  privUser: PrivilegedUser
+}>()
 
 let servers = ref<any[]>([])
 let shiftPressed = ref(false)

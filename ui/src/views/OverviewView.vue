@@ -14,7 +14,7 @@
         <em v-if="countdownText">{{countdownText}}</em>
         <Icon icon="spinner" v-else spin />
       </div>
-      <Servers @refresh="onServerRefresh" />
+      <Servers :priv-user="privUser" @refresh="onServerRefresh" />
     </div>
     <div class="column is-3">
       <div class="content">
@@ -64,9 +64,11 @@ import { PanelMetaInfo } from '../../../common-types/Panel.js';
 
 //@ts-expect-error
 import { marked } from 'marked'
+import { PrivilegedUser } from '@/js/User.js';
 
 const props = defineProps<{
-  meta?: PanelMetaInfo
+  meta?: PanelMetaInfo,
+  privUser: PrivilegedUser
 }>()
 
 let countdown = ref<number>(0)

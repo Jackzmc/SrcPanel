@@ -1,17 +1,12 @@
 <template>
   <tr :class="trClass">
     <td>
-      <router-link v-if="manage" :to="{name: 'admin-server-view', params: { serverId: server.id, tab: 'overview' }}" :data-tooltip="tooltip">
-        <b :class="serverClasses" >{{server.name}}</b>
+      <router-link :class="serverClasses" v-if="privUser" :to="{name: 'admin-server-view', params: { serverId: server.id, tab: 'overview' }}" :data-tooltip="tooltip">
+        <b>{{server.name}}</b>
       </router-link>
-      <a v-else-if="gameType === 'source'" :href="'steam://connect/' + server.ip + '/' + server.port">
-        <b :data-tooltip="tooltip" :class="serverClasses">
-          {{ server.name }}
-        </b>
-      </a>
-      <b v-else :data-tooltip="tooltip" :class="serverClasses">
-        {{ server.name }}
-      </b>
+      <div v-else :class="serverClasses" :data-tooltip="tooltip">
+        <b>{{server.name}}</b>
+      </div>
       <span class="tags">
         <span class="tag" v-if="server.tags.includes('5+')">5+</span>
         <span class="tag" v-if="server.tags.includes('customs')">Custom Maps</span>
@@ -49,9 +44,10 @@
           </template>
         </td>
         <td>
-          <p @click="copyCommand" :class="{ 'has-text-grey': !server.online }">
+          <div @click="copyCommand" :class="[{ 'has-text-grey': !server.online },'is-inline']">
             connect {{ server.host }}:{{ server.port }}
-          </p>
+          </div>
+          <a class="is-pulled-right" v-if="gameType === 'source'" :href="'steam://connect/' + server.ip + '/' + server.port">[Join]</a>
         </td>
         <td>
           <p @click="copyCommand" :class="{ 'has-text-grey': !server.online }">
@@ -73,10 +69,12 @@ import { request } from '@/js/util.js';
 import { ServerInfo, ServerType, ServerAction, ServerAvailableFeatures, GAME_TYPE_MAP, GAME_TYPE_CONFIG } from '../../../../common-types/Server';
 import { computed, ref } from 'vue';
 import { notify } from '@kyvg/vue3-notification';
+import { PrivilegedUser } from '@/js/User.js';
 const props = defineProps<{
   server: ServerInfo,
   game: string,
-  manage?: boolean
+  manage?: boolean,
+  privUser: PrivilegedUser
 }>()
 
 const gameType = computed(() => {
@@ -186,12 +184,18 @@ const serverClasses = computed(() => {
   return classes;
 })
 const tooltip = computed(() => {
-  if(props.manage) return "Click to manage server"
+  let output = ""
   if (props.server.online) {
-    if(!props.server.status?.data) return "Server is online, but cannot get data"
-    return props.server.status.data.players.length == 0
-      ? "Server is currently online & empty. Click to join"
-      : "Server has players online. Click to join.";
-  } else return "Server is offline, unresponsive, or unreachable";
+    if(!props.server.status?.data) output = "Server is online, but cannot get data"
+    else {
+      output = props.server.status.data.players.length == 0
+        ? "Server is empty"
+        : "Server has players online";
+    }
+  } else {
+    output = "Server is offline, unresponsive, or unreachable";
+  }
+  if(props.privUser) output += "\nClick to manage"
+  return output
 })
 </script>

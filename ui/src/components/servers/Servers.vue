@@ -1,7 +1,7 @@
 <template>
 <div>
   <template v-if="servers">
-    <ServerTable v-for="group in servers" :key="group.id" :group="group"></ServerTable>
+    <ServerTable :priv-user="privUser" v-for="group in servers" :key="group.id" :group="group"></ServerTable>
   </template>
   <div class="table-container" v-else>
     <template  v-for="i in 3" :key="i">
@@ -26,10 +26,15 @@ import { ref, watch, computed, onBeforeMount, onBeforeUnmount } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import ServerTable from "@/components/servers/ServerTable.vue";
 import ServerList from "./ServerList.vue";
+import { PrivilegedUser } from "@/js/User.js";
 
 const REFRESH_INTERVAL = 1000 * 15;
 
 const emit = defineEmits(["refresh"]);
+
+const props = defineProps<{
+  privUser: PrivilegedUser
+}>()
 
 let servers = ref<any[]>();
 let refreshTimer: any = null

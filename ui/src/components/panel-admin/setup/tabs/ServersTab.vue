@@ -3,7 +3,7 @@
   <template v-if="loadState === LoadState.Success">
     <div class="block" v-for="group in groups" :key="group.id">
       <h6 class="title is-4">{{ group.name }}</h6>
-      <ServerTable :group="group" @delete="onServerDelete" @update="onServerUpdate" :meta="meta" />
+      <ServerTable :priv-user="privUser" :group="group" @delete="onServerDelete" @update="onServerUpdate" :meta="meta" />
     </div>
   </template>
   <div v-else-if="loadState === LoadState.Loading">
@@ -32,9 +32,11 @@ import { request } from '@/js/util.js';
 import ServerTable from '@/components/panel-admin/setup/ServerTable.vue'
 import { LoadState } from '@/types/global.js';
 import { PanelMetaInfo } from '../../../../../../common-types/Panel';
+import { PrivilegedUser } from '@/js/User.js';
 
 const props = defineProps<{
-  meta: PanelMetaInfo
+  meta: PanelMetaInfo,
+  privUser: PrivilegedUser
 }>()
 
 let groups = ref<ServerGroup[]>()

@@ -26,7 +26,7 @@
           </tr>
         </thead>
         <tbody>
-          <ServerRow v-for="server in group.servers" :key="server.id" :server="server" :game="group.game" :manage="manage"></ServerRow>
+          <ServerRow :priv-user="privUser" v-for="server in group.servers" :key="server.id" :server="server" :game="group.game" :manage="manage"></ServerRow>
         </tbody>
         <tfoot v-if="manage && group.templateId">
           <tr class="has-background-lighter">
@@ -51,10 +51,12 @@ import { LoadState } from '@/types/global.js';
 import { notify } from '@kyvg/vue3-notification';
 import { computed, ref } from 'vue';
 import CreateServerModal from './CreateServerModal.vue';
+import { PrivilegedUser } from '@/js/User.js';
 
 const props = defineProps<{
   group: ServerGroup,
-  manage?: boolean
+  manage?: boolean,
+  privUser: PrivilegedUser
 }>()
 
 const gameType = computed(() => {
