@@ -77,7 +77,12 @@ export default class DockerServer extends Server implements IAction {
                 await this.stop(true)
                 DynamicServerManager.Instance.unregisterInstance(this.#instance)
                 this.#instance.Server!.group.removeServer(this)
+                try {
                 await this.#instance.Container.remove()
+                } catch(err) {
+                    // weird error of already deleting, ignore
+                    if(!err.message.includes("removal of container")) throw err
+                }
             default:
                 return false
         }
