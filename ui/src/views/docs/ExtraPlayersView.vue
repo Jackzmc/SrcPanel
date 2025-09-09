@@ -3,11 +3,12 @@
   <div class="columns">
     <div class="column is-8">
       <div class="content">
-        <p>Only servers tagged with <span class="tag is-dark">5+</span> support more than 4 players in campaign. Upto 16ish people can join, the first 4 via lobby, the rest from direct connect <code>connect l4d2.jackz.me</code></p>
+        <p>Only servers tagged with <span class="tag is-dark">5+</span> support more than 4 players in campaign. Upto 14ish people can join, the first 4 via lobby, the rest from direct connect <code>connect l4d2.jackz.me</code> or via the steam group</p>
         <h5 class="title is-5">8-Player Lobby Setup Instructions</h5>
-        <p>If you want to make it easier you can set up an 8 player lobby using this addon & then follow the steps below:
-        <a href="https://steamcommunity.com/sharedfiles/filedetails/?id=2276071285">https://steamcommunity.com/sharedfiles/filedetails/?id=2276071285</a>
-        </p>
+        <p>If you want to make it easier for everyone to join, you can set up an 8 player lobby using <a
+          href="https://steamcommunity.com/sharedfiles/filedetails/?id=2276071285">8 Player Lobby Addon</a> & then follow the steps below.</p>
+        <p>It is not necessary to make an 8 player lobby, any lobby will work, this just allows more than 4 people to be in a lobby.</p>
+
         <ol>
             <li>In the main menu, select Mutations -> Change Mutation</li>
             <li>Select <b>8 Player Lobby</b></li>
@@ -18,11 +19,10 @@
             </li>
             <li>
               Set the server the lobby connects to by typing this in console:
-              <p><code>mm_dedicated_force_servers 74.91.114.239</code></p>
+              <p><code>mm_dedicated_force_servers 147.135.1.163:27015</code></p>
               <p><em>The above IP is for the main 5+ server</em></p>
             </li>
         </ol>
-        <p>You can even have two separate lobbies of 8 and 8 connect and they will merge into the server!</p>
         <article class="message is-warning">
             <div class="message-body">
                 <p>
