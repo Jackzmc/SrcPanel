@@ -7,7 +7,7 @@
         <h5 class="title is-5">8-Player Lobby Setup Instructions</h5>
         <p>If you want to make it easier for everyone to join, you can set up an 8 player lobby using <a
           href="https://steamcommunity.com/sharedfiles/filedetails/?id=2276071285">8 Player Lobby Addon</a> & then follow the steps below.</p>
-        <p>It is not necessary to make an 8 player lobby, any lobby will work, this just allows more than 4 people to be in a lobby.</p>
+        <p>It is not necessary to make an 8 player lobby, any lobby will work, this just allows more than 4 people to be in a lobby.The 5+ servers are always 5+ capable, even without this addon.</p>
 
         <ol>
             <li>In the main menu, select Mutations -> Change Mutation</li>
