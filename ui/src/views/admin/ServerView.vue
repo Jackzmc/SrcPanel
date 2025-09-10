@@ -87,7 +87,7 @@
                   <td v-if="mapInfo">
                     <h4 class="title is-4">{{mapInfo.name}}</h4>
                     <p class="is-inline-block">Chapter {{ mapInfo.chapterId }} - {{ mapInfo.chapterName }}</p>
-                    <p class="is-size-6 is-inline">c11m5_runway</p>
+                    <p class="is-size-6 is-inline ml-2">c11m5_runway</p>
                   </td>
                   <td v-else-if="status.data?.map">{{ status.data.map }}</td>
                   <td v-else><em data-tooltip="Unknown">-</em></td>
