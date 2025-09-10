@@ -377,7 +377,7 @@
               <td class="has-text-right">{{ DIFFICULTY_NAME[liveStatus.game.difficulty] }}</td>
             </tr>
             <tr v-if="liveStatus.finale && liveStatus.finale.stage !== FinaleStage.Unknown">
-              <th>Finale Info</th>
+              <th>Finale Stage</th>
               <td class="has-text-right" v-if="liveStatus.finale.escapeInProgress">Escaping</td>
               <td class="has-text-right" v-else>{{ FinaleStageName[liveStatus.finale.stage] }}</td>
             </tr>
