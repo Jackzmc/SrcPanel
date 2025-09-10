@@ -145,7 +145,6 @@ export default class DynamicServerManager {
                 } as DockerTemplateConfig
                 try {
                     // await this.#docker.pull(config.image)
-                    // await this.#docker.pull(config.image)
                     this.#templates[id] = {
                         config,
                     }

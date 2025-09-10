@@ -129,6 +129,7 @@ export default abstract class Server implements IAction {
         game: server.game,
         tags: server.tags,
         sortOrder: server.sortOrder,
+        activityId: server.activityId
       }
       this._actions = [...group.Actions ]
       if(server.actions) this._actions = [...this._actions, ...server.actions]
