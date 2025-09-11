@@ -170,7 +170,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="server in filteredSortedServers" :key="server.data.id">
+            <tr v-for="server in filteredSortedServers" :key="server.data.id" :class="['server-entry',{'new-group': !server.showBorder}]">
               <td><input v-model="server.checked" type="checkbox" /></td>
               <td><router-link :data-tooltip="server.data.id"
                   :to="{name: 'servers-manage-server', params: { groupId: server.group.id, serverId: server.data.id }}"
@@ -199,6 +199,7 @@
                   <!-- TODO: pull priority? or action flag -->
                   <a v-for="(action, i) in server.quickActions" :key="i" :data-tooltip="action.description"
                     :class="['button','is-small','has-tooltip-multiline',{'is-loading': pendingAction}]"
+                    :disabled="pendingAction?true:undefined"
                     @click="performAction([server], action)"
                   >{{ action.name }}</a>
                 </div>
@@ -272,26 +273,12 @@ const StateMap: Record<ServerState, { label: string, icon: string, class: string
     icon: 'fa-circle',
     class: 'has-text-success'
   },
-  // [ServerState.Starting]: {
-  //   label: 'Starting',
-  //   icon: 'fa-diamond',
-  //   class: 'has-text-pending'
-  // },
-  // [ServerState.Stopping]: {
-  //   label: 'Stopping',
-  //   icon: 'fa-diamond',
-  //   class: 'has-text-pending'
-  // },
-  // [ServerState.Updating]: {
-  //   label: '',
-  //   icon: 'fa-hourglass',
-  //   class: 'has-text-info'
-  // }
 }
 
 interface UIServerInfo {
   data: APIListServersV2_Server
   checked: boolean,
+  showBorder: boolean
   group: {
     id: string,
     name: string
@@ -304,45 +291,6 @@ interface UIServerInfo {
   },
   quickActions: ServerAction[]
 }
-
-
-// const rawServers: ServerInfo[] = [
-//   {
-//     id: "l4d2-main-27015",
-//     name: "L4D2 Main 27015",
-//     groupId: "l4d2",
-//     tags: ["docker", "5+", "customs"],
-//     state: ServerState.Online,
-//   },
-//   {
-//     id: "l4d2-main-27101",
-//     name: "L4D2 Randomizer 27101",
-//     groupId: "l4d2",
-//     tags: ["docker", "5+"],
-//     state: ServerState.Online,
-//   },
-//   {
-//     id: "mc-1",
-//     name: "Minecraft 1",
-//     groupId: "minecraft",
-//     tags: ["docker"],
-//     state: ServerState.Online,
-//   },
-//   {
-//     id: "mc-2",
-//     name: "Minecraft 2",
-//     groupId: "minecraft",
-//     tags: ["docker"],
-//     state: ServerState.Offline,
-//   },
-//   {
-//     id: "mc-3",
-//     name: "Minecraft 3",
-//     groupId: "minecraft",
-//     tags: ["docker"],
-//     state: ServerState.Starting,
-//   }
-// ]
 
 
 enum Modal {
@@ -371,13 +319,17 @@ const SEARCH_REGEX_GROUP = new RegExp(/@([a-zA-Z0-9\-]+)?/)
 
 const filteredSortedServers = computed(() => {
   let result = serverList.value
+  // Filter out entries
   if(searchQuery.value != undefined) {
     let query = searchQuery.value.toLowerCase().trim()
+
+    // Search groups ('@groupname')
     let groupMatch = query.match(SEARCH_REGEX_GROUP)
     if(groupMatch) {
       query = query.substring(0, groupMatch.index) + query.substring(groupMatch.index+groupMatch[0].length).trim()
       groupMatch = groupMatch[1]
     }
+
     result = result.filter(server => {
       return (
         server.data.name.toLowerCase().includes(query)
@@ -389,10 +341,22 @@ const filteredSortedServers = computed(() => {
       )
     })
   }
+  // Sort list
   if(sort.value != undefined) {
     result = result.sort((a,b) => {
       return sort.value!.descending ? sort.value!.sortFn(b, a) : sort.value!.sortFn(a, b)
     })
+  }
+
+  // Add borders to separate groups
+  let lastGroupId;
+  for(const server of result) {
+    if(server.group.id !== lastGroupId) {
+      if(lastGroupId != undefined) {
+        server.showBorder = true
+      }
+      lastGroupId = server.group.id
+    }
   }
   return result
 })
@@ -551,7 +515,8 @@ async function fetchServers(compact = false) {
             },
             state,
             stateData: StateMap[state],
-            quickActions: server.actions.filter(a => a.inQuickAction)
+            quickActions: server.actions.filter(a => a.inQuickAction),
+            showBorder: false
           }
         } else {
           // Compact, only update status / online
@@ -619,4 +584,11 @@ input[type="checkbox"] {
   transform: scale(1.5);
   padding: 10px;
 }
+tr.server-entry:not(:first-child) {
+  border-top: 3px solid lightgray
+}
+tr.server-entry.new-group:not(:first-child) {
+  border-top: 3px dotted hsl(221, 14%, 86%)
+}
+
 </style>

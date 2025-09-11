@@ -176,8 +176,8 @@
                   <div class="progressbar" style="width:50%"  v-if="player.isAlive" :data-label="player.infected.health + '/' + player.infected.maxHealth + ' HP'">
                     <div :class="['permhealth',getHealthClass(100 * player.totalHealth)]" :style="{width: (player.totalHealth) + '%' }"></div>
                   </div>
+                  <span class="has-text-info is-small" v-if="player.steamid === 'BOT'">[BOT]&nbsp;</span>
                   {{ player.name }}
-                  &nbsp;<span class="has-text-info is-small" v-if="player.steamid === 'BOT'">[BOT]</span>
                 </div>
                 <div class="list-item-description has-text-black" v-if="player.survivor">
                   <template v-if="player.isAlive">
@@ -316,19 +316,22 @@
     </div>
 
     <div class="column" v-if="serverInfo">
-      <div class="field">
-        <label class="label">View another server:&nbsp;</label>
-        <div class="select">
-          <select @change="onSelectNewServer">
-            <option default v-if="!serverIds">Loading servers...</option>
-            <option v-for="server2 in serverIds" :key="server2.id" :value="server2.id" :selected="server2.id == serverInfo.id">
-              {{server2.name}}
-            </option>
-          </select>
+      <div class="field has-addons">
+        <div class="control is-expanded">
+          <label class="label">View another server:&nbsp;</label>
+          <div class="select is-fullwidth">
+            <select @change="onSelectNewServer">
+              <option default v-if="!serverIds">Loading servers...</option>
+              <option v-for="server2 in serverIds" :key="server2.id" :value="server2.id"
+                :selected="server2.id == route.params.serverId">
+                {{server2.name}}
+              </option>
+            </select>
+          </div>
         </div>
       </div>
       <div class="box" v-if="tab === 'overview' || tab === 'live'">
-        <h4 class="title is-5">Recent Activity</h4>
+        <h4 class="title is-5 mb-2">Recent Activity</h4>
         <template v-if="activities">
           <table v-if="activities.length > 0" class="table is-fullwidth">
             <thead>
@@ -349,7 +352,7 @@
         <div class="box has-background-warning-light" v-else>Recent activities is not supported on this server</div>
       </div>
       <div class="box" v-if="tab === 'overview'">
-        <h4 class="title is-5">Voice Members ({{ voiceMembers.length }})</h4>
+        <h4 class="title is-5 mb-2">Voice Members ({{ voiceMembers.length }})</h4>
         <p class="subtitle is-6 mb-1">In the <code>{{ serverInfo.name }}</code> voice channel on <a data-tooltip="Click to join the discord" href="/api/admins/discord" target="_blank">Discord</a></p>
         <div class="list pb-0">
           <ListItem v-for="user in voiceMembers" :key="user.id" class="pb-0">
@@ -494,16 +497,18 @@
       </template>
     </div>
     <div class="column" v-else-if="!error">
-      <div class="field">
-        <label class="label">View another server:&nbsp;</label>
-        <div class="select">
-          <select @change="onSelectNewServer">
-            <option default v-if="!serverIds">Loading servers...</option>
-            <option v-for="server2 in serverIds" :key="server2.id" :value="server2.id"
-              :selected="server2.id == route.params.serverId">
-              {{server2.name}}
-            </option>
-          </select>
+      <div class="field has-addons">
+        <div class="control is-expanded">
+          <label class="label">View another server:&nbsp;</label>
+          <div class="select is-fullwidth">
+            <select @change="onSelectNewServer">
+              <option default v-if="!serverIds">Loading servers...</option>
+              <option v-for="server2 in serverIds" :key="server2.id" :value="server2.id"
+                :selected="server2.id == route.params.serverId">
+                {{server2.name}}
+              </option>
+            </select>
+          </div>
         </div>
       </div>
       <div class="box">
@@ -625,7 +630,7 @@ const TABS: Record<string, { name: string, tag?: string, permission?: string, en
     name: "Overview",
   },
   live: {
-    name: "Live View",
+    name: "Game View",
     enabled: () => {
       return serverInfo.value?.features.plugin
     }
@@ -987,8 +992,8 @@ const livePlayers = computed(() => {
     // temp fix, don't show "inbetween" clients
     .filter(a => a.infected || a.survivor)
     .sort((a, b) => {
-      if('survivor' in a) return 1
-      else if('survivor' in b) return -1
+      if('survivor' in a) return -1
+      else if('survivor' in b) return 1
       return 0
     })
 })
