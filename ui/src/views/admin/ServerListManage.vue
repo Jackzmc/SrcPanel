@@ -190,7 +190,10 @@
               <td>
                 <Icon :icon="server.stateData.icon" :class="server.stateData.class">{{ server.stateData.label }}</Icon>
                 <p v-if="server.data.status.data">
-                  {{ server.data.status?.data?.players.length }} players online
+                  <template v-if="server.data.status?.data?.players.length > 0">
+                    <b>{{ server.data.status?.data?.players.length }}</b> players online
+                  </template>
+                  <template v-else>0 players online</template>
                 </p>
                 <p v-else-if="server.state === ServerState.Online"><em>No status available</em></p>
               </td>
