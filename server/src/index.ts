@@ -25,7 +25,6 @@ import DiscussionManager from './modules/DiscussionManager.js';
 import SetCacheManager from './modules/SetCache.js'
 import TaskManager from './modules/tasks/TaskManager.js'
 
-
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const MySQLStore = MySQLSession(FastifySession )
@@ -36,6 +35,10 @@ const app = Fastify({
     trustProxy: process.env.NODE_ENV === "production",
     loggerInstance
 })
+
+process.on('unhandledRejection', (reason: any, promise ) => {
+  app.log.fatal('Unhandled promise rejection:\n' + reason.stack);
+});
 // app.log.trace("trace")
 // app.log.debug("debug")
 // app.log.info("info")
