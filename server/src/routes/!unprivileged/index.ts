@@ -1,13 +1,8 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
-import { OkPacket, RowDataPacket } from 'mysql2';
-import { Static, Type } from '@sinclair/typebox'
-import { ACTIVITY_LOG_TABLE_NAME } from '../!!privileged/logs.js';
-import { generateParams } from '../!!privileged/logs.js';
-import { ServerStatus } from '../../../../common-types/Server.js';
+import { RowDataPacket } from 'mysql2';
 import { readFileSync } from 'fs';
 const data = JSON.parse(readFileSync('assets/data.json', 'utf-8'))
 import Sentiment from 'sentiment'
-import SteamID from 'steamid';
 import { PanelMetaInfo } from '../../../../common-types/Panel.js';
 import { AnalysisData } from '../../../../common-types/User.js';
 
@@ -17,39 +12,6 @@ const analyzeOptions = {
   extras: data.sentimentWords
 };
 
-const LimitedLogQuery = Type.Object({
-    servers: Type.Optional(Type.String()),
-    types: Type.Optional(Type.String()),
-    client: Type.Optional(Type.String()),
-    target: Type.Optional(Type.String()),
-    timestamp: Type.Optional(Type.Integer()),
-    timestampBefore: Type.Optional(Type.Boolean()),
-    orderByColumn: Type.Optional(Type.String()),
-    orderByAscending: Type.Optional(Type.Boolean()),
-    searchMessage: Type.Optional(Type.String()),
-    search_message: Type.Optional(Type.String()),
-    fetchAll: Type.Optional(Type.Boolean()),
-    timestampOnly: Type.Optional(Type.Boolean({ default: false }))
-})
-type LimitedLogQueryType = Static<typeof LimitedLogQuery>
-
-const GRAPH_WHITELIST = {
-    "types": ["ACTION", "STATE", "QUIT", "JOIN"]
-};
-
-
-interface DisplayedServer extends CompactDisplayedServer {
-    domain ? : string;
-    ip: string,
-    port: number,
-    type: string,
-    tags: Readonly<string[]>,
-    status: ServerStatus
-}
-interface CompactDisplayedServer {
-    id: string,
-    name: string
-}
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions)  {
     fastify.get('/analyze/:steamid', async(req: FastifyRequest<{Params: { 'steamid': string }}>, reply): Promise<AnalysisData> => {
         const [notes] = await fastify.db.execute<RowDataPacket[]>(
