@@ -113,6 +113,9 @@
         <a href="https://data.jackz.me/public/dashboard/295194e5-e4c3-41a9-9298-0ea2a895f881" class="navbar-item">
           <Icon icon="fa-chart-simple">Graphs</Icon>
         </a>
+        <a href="https://steamcommunity.com/groups/jackzl4d2" class="navbar-item">
+          <Icon icon="fa-chart-simple">Steam Group</Icon>
+        </a>
       </div>
       <div class="navbar-end">
         <div class="navbar-item has-tooltip-bottom" :data-tooltip="darkMode ? 'Turn dark mode off' : 'Turn dark mode on'">
