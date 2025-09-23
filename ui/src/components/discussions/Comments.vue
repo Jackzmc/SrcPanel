@@ -15,8 +15,8 @@
           Anonymous
         </span>
         <span class="is-pulled-right has-text-weight-normal tag">
-          <Icon icon="fa-clock" class="no-border" :data-tooltip="formatDate(comment.timestamp)">
-            {{ new Sugar.Date(comment.timestamp*1000).relative() }}
+          <Icon icon="fa-clock" class="no-border" :data-tooltip="'on ' + formatDate(comment.timestamp)">
+            {{ getRelDate(comment.timestamp) }}
           </Icon>
         </span>
       </div>
@@ -61,11 +61,9 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import { PrivilegedUser } from '../../js/User';
-import { formatDate, request } from '@/js/util.js';
+import { formatDate, getRelDate, request } from '@/js/util.js';
 import { APIComment, Discussion, APIDiscussionFlags } from '../../../../common-types/Discussions';
 import { notify } from '@kyvg/vue3-notification';
-import Sugar from 'sugar'
-
 
 const emit = defineEmits(["comment"])
 

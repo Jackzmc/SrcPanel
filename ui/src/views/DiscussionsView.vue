@@ -4,13 +4,36 @@
     <div class="column is-1"></div>
     <div class="column is-7" style="height:100%">
       <template v-if="selectedDiscussion">
-        <div class="block mb-2">
+        <div class="block mb-3">
           <router-link :to="{params: { id: '', title: '' }}"><Icon icon="fa-arrow-left" class="is-pulled-left" text="Back to discussions list" /></router-link>
+
+          <router-link v-if="privUser.equals(selectedDiscussion.creator.id)"
+            :to="{name: 'discuss-edit', params:{id: selectedDiscussion.id.toString()}}" class="is-small is-pulled-right mr-2">
+            <Icon icon="fa-edit" text="Edit Discussion" />
+          </router-link>
         </div>
         <br>
-        <b>Discussion started by</b>
-        <div><UserComponent :user="selectedDiscussion.creator"></UserComponent></div>
+        <div class="fixed-grid has-4-cols mb-4">
+          <div class="grid">
+            <div class="cell is-col-span-1">
+              <b>Discussion started by</b>
+              <div class="pt-1">
+                <UserComponent :user="selectedDiscussion.creator"></UserComponent>
+              </div>
+            </div>
+            <div class="cell is-col-span-1">
+              <b>Discussion started</b>
+              <div class="pt-1">
+                <Icon icon="fa fa-clock" class="no-border" :data-tooltip="'on ' + formatDate(selectedDiscussion.timestamp)">
+                  {{ getRelDate(selectedDiscussion.timestamp) }}
+                </Icon>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <DiscussionBox :priv-user="privUser" v-model="selectedDiscussion" selected :responses="responses" />
+
         <div class="box">
           <h4 class="title is-4 mb-2">
             <Icon icon="far fa-comment">Comments</Icon>
@@ -70,7 +93,7 @@ import { useRoute, useRouter } from 'vue-router';
 import DiscussionBox from '@/components/discussions/DiscussionBox.vue'
 import Comments from '@/components/discussions/Comments.vue'
 import { APIDiscussionFlags, APIDiscussionType, APIDiscussion, APIDiscussionOption, DiscussionState, Discussion, APIDiscussionDetails, DiscussionDetailed, APIResponsesData, APIComment, APIUserWithChoice } from '../../../common-types/Discussions';
-import { request } from '@/js/util.js';
+import { formatDate, getRelDate, request } from '@/js/util.js';
 import Field from '@/components/Field.vue';
 import UserComponent from '@/components/UserComponent.vue';
 
