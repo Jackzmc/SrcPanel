@@ -277,8 +277,8 @@ const StateMap: Record<ServerState, { label: string, icon: string, statusClass: 
   [ServerState.Online]: {
     label: 'Online',
     icon: 'fa-circle',
-    statusClass: 'has-text-danger',
-    labelClass: 'has-text-danger'
+    statusClass: 'has-text-success',
+    labelClass: 'has-text-success'
   },
   [ServerState.OnlinePlayers]: {
     label: 'Online',
