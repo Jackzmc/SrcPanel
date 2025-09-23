@@ -39,8 +39,12 @@ export default class PluginFeature extends Feature implements IAction {
     /** Current live data */
     get liveStatus(): LiveDataCache | null { 
       if(this.#liveCache) {
+        // Purge cache if no update in a while
         if(Date.now() - this.#liveCache.lastUpdate > LIVE_CACHE_TTL) {
           this.#liveCache = null
+          // Purge status if we recorded it
+          if(this._server.status.source === "live")
+            this._server.status.data = null
         }
       }
       return this.#liveCache
