@@ -244,7 +244,11 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         const domain = await fastify.config.GetKV("domain", "");
 
         if(discuss.creator.id !== req.user!.steamid2) {
-            await fastify.authmngr.addNotification(discuss.creator.id, `${await req.user!.name() ?? req.user!.steamid2} commented on your discussion \"${discuss.title}\"`, {
+            const name = (discuss.flags & APIDiscussionFlags.CommentsPublic)
+                ? await req.user!.name() ?? req.user!.steamid2
+                : "Anonymous"
+
+            await fastify.authmngr.addNotification(discuss.creator.id, `${name} commented on your discussion \"${discuss.title}\"`, {
                 link: `${domain}/discuss/${discuss.id}`,
             })
         }
