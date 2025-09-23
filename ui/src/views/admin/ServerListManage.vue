@@ -174,7 +174,7 @@
               <td><input v-model="server.checked" type="checkbox" /></td>
               <td><router-link :data-tooltip="server.data.id"
                   :to="{name: 'servers-manage-server', params: { groupId: server.group.id, serverId: server.data.id }}"
-                  :class="['has-text-weight-semibold', server.stateData.class]">{{ server.data.name }}</router-link>
+                  :class="['has-text-weight-semibold', server.stateData.labelClass]">{{ server.data.name }}</router-link>
                 <p>{{ server.data.host }}:{{ server.data.port }}</p>
               </td>
               <td>
@@ -188,7 +188,7 @@
                 </div>
               </td>
               <td>
-                <Icon :icon="server.stateData.icon" :class="server.stateData.class">{{ server.stateData.label }}</Icon>
+                <Icon :icon="server.stateData.icon" :class="server.stateData.statusClass">{{ server.stateData.label }}</Icon>
                 <p v-if="server.data.status.data">
                   <template v-if="server.data.status?.data?.players.length > 0">
                     <b>{{ server.data.status?.data?.players.length }} players online</b>
@@ -263,18 +263,28 @@ const FIELDS: FieldInfo[] = [
 ]
 enum ServerState {
   Offline,
-  Online
+  Online,
+  OnlinePlayers
 }
-const StateMap: Record<ServerState, { label: string, icon: string, class: string }> = {
+const StateMap: Record<ServerState, { label: string, icon: string, statusClass: string, labelClass: string }> = {
   [ServerState.Offline]: {
     label: 'Offline',
     icon: 'fa-square',
-    class: 'has-text-danger'
+    statusClass: 'has-text-danger',
+    labelClass: 'has-text-danger',
+
   },
   [ServerState.Online]: {
     label: 'Online',
     icon: 'fa-circle',
-    class: 'has-text-success'
+    statusClass: 'has-text-danger',
+    labelClass: 'has-text-danger'
+  },
+  [ServerState.OnlinePlayers]: {
+    label: 'Online',
+    icon: 'fa-circle',
+    statusClass: 'has-text-success',
+    labelClass: "has-text-info"
   },
 }
 
@@ -290,7 +300,8 @@ interface UIServerInfo {
   stateData: {
     label: string,
     icon: string,
-    class: string
+    statusClass: string,
+    labelClass: string,
   },
   quickActions: ServerAction[]
 }
@@ -506,7 +517,10 @@ async function fetchServers(compact = false) {
         groups.value = json.groups
       }
       for(const server of json.servers) {
-        const state = server.online ? ServerState.Online : ServerState.Offline
+        let state = ServerState.Offline
+        if(server.online) {
+          state = server.status.data?.players.length ? ServerState.OnlinePlayers : ServerState.Online
+        }
         if('host' in server) {
           // Not compact, full refresh
           serverMap.value[server.id] = {
