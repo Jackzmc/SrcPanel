@@ -8,9 +8,12 @@
     </div>
     <div class="list-item-content">
       <div class="list-item-title">
-        <router-link v-if="discussion.flags & APIDiscussionFlags.CommentsPublic && comment.creator" :to="{ name: 'manage-user', params: { id: comment.creator.id }, query: { returnTo: $route.fullPath }}">
+        <router-link v-if="hasCommentsPublic && comment.creator" :to="{ name: 'manage-user', params: { id: comment.creator.id }, query: { returnTo: $route.fullPath }}">
           {{ comment.creator.name ?? comment.creator.id }}
         </router-link>
+        <span v-else>
+          Anonymous
+        </span>
         <span class="is-pulled-right">
           <Icon icon="fa-clock">{{ formatDate(comment.timestamp) }}</Icon>
         </span>
@@ -25,21 +28,24 @@
     <div class="list-item-controls">
     </div>
   </div>
-  <div class="list-item has-background-light" v-if="!isArchived">
-    <div class="list-item-image" v-if="discussion.flags & APIDiscussionFlags.CommentsPublic">
-      <figure class="image is-32x32" :data-tooltip="privUser.name">
-        <img class="is-rounded" :src="'/api/users/' + privUser.id + '/avatar'">
-      </figure>
-    </div>
+  <div class="list-item has-background-light py-4 px-4" v-if="!isArchived">
     <div class="list-item-content">
-      <div class="list-item-title">
-        Submit New Comment <template v-if="~discussion.flags & APIDiscussionFlags.CommentsPublic">(anonymously)</template>
+      <div class="list-item-title mb-3">
+        <div>
+            <figure v-if="hasCommentsPublic" class="image is-32x32 avatar" :data-tooltip="privUser.name">
+              <img class="is-rounded" :src="'/api/users/' + privUser.id + '/avatar'">
+            </figure>
+            Respond to discussion
+            <template v-if="!hasCommentsPublic">(as anonymous)</template>
+            <template v-else>(as {{ privUser.name }})</template>
+        </div>
+
       </div>
       <div class="list-item-description" @focus="newComment.hovered = true" @blur="newComment.hovered = false">
-        <textarea v-model="newComment.content" type="text" @focus="newComment.focused = true" @blur="newComment.focused = false" :class="['input', {'expanded-box': newComment.focused || newComment.hovered }]" placeholder="Enter a comment" style="width:70%" cols=10 :rows="10"></textarea>
+        <textarea v-model="newComment.content" type="text" @focus="newComment.focused = true" @blur="newComment.focused = false" :class="['input', {'expanded-box': true }]" placeholder="Enter a reply to the discussion" cols=10 :rows="10"></textarea>
         <br>
         <div class="buttons mt-3">
-          <a class="button is-success" v-if="newComment.content != ''" @click="submit">Submit</a>
+          <a class="button is-info" :disabled="newComment.content === '' ? true : undefined" @click="submit">Submit Reply</a>
         </div>
       </div>
     </div>
@@ -72,6 +78,10 @@ const isClosed = computed(() => {
 
 const isArchived = computed(() => {
   return (props.discussion.flags & APIDiscussionFlags.Archived) != 0
+})
+
+const hasCommentsPublic = computed(() => {
+  return (props.discussion.flags & APIDiscussionFlags.CommentsPublic) != 0
 })
 
 let newComment = ref({
