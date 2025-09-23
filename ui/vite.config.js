@@ -23,6 +23,7 @@ export default ({ mode }) => {
       vue({ defineModel: true }),
     ],
     server: {
+      host: true,
       port: 8080,
       allowedHosts: "all",
       proxy: {
