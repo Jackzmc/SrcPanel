@@ -1,7 +1,7 @@
 <template>
 <div class="content">
   <span v-for="(piece, i) in pieces" :key="i">
-    <UserComponent hide-avatar v-if="piece.user" :user="piece.user" />
+    <UserComponent :hide-avatar="hideAvatar" v-if="piece.user" :user="piece.user" />
     <span v-else-if="piece.html" v-html="piece.html"></span>
     <template v-else>{{ piece.text }}</template>
   </span>
@@ -24,7 +24,8 @@ marked.use({renderer:{
 
 const props = defineProps<{
   text: string,
-  markdown?: boolean
+  markdown?: boolean,
+  hideAvatar?: boolean
 }>()
 
 let pieces = ref<{ user?: APIUser, text?: string, html?: string }[]>([])

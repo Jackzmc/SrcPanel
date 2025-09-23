@@ -53,7 +53,7 @@ export interface APICountData {
     percent: number
 }
 export interface APIDiscussionDetails extends APIDiscussion {
-    comments: APIComment[]
+    // comments: APIComment[]
 }
 export interface APIComment {
     id: number,

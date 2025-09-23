@@ -164,7 +164,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         const domain = await fastify.config.GetKV("domain", "");
         let discuss = discManager.get(Number(req.params.id))
         if(!discuss) {
-            const [rows] = await fastify.db.execute<RowDataPacket[]>("SELECT * FROM `left4dead2-admins`.dash_discussions WHERE id = ?", [req.params.id])
+            const [rows] = await fastify.db.execute<RowDataPacket[]>("SELECT d.*, COUNT(c.id) as comment_count FROM `left4dead2-admins`.dash_discussions d right join `left4dead2-admins`.dash_discussion_comments c on c.discussion_id = d.id WHERE d.id = 24", [req.params.id])
             if(rows.length == 0) {
                 return NOT_FOUND(reply, req.params.id)
             }
@@ -179,7 +179,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 type: row.type,
                 options: options.map(o => ({ id: o.id, label: o.label })),
                 flags: row.flags,
-                commentsCount: 0, // We don't fetch it here as we are fetching the full comment list anyway below.
+                commentsCount: row.comment_count,
                 creator: {
                     id: row.creator,
                     name: row.creator_name,
@@ -188,26 +188,36 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             } 
         }
        
-        const [comments] = await fastify.db.execute<RowDataPacket[]>("SELECT com.id, com.creator, com.content, u.last_name as creator_name FROM `left4dead2-admins`.dash_discussion_comments com LEFT JOIN `left4dead2`.view_panel_user u ON SUBSTRING(com.creator, 11) = u.account_id WHERE com.discussion_id = ? ", [discuss.id])
         const responses = await discManager.getResponses(Number(req.params.id), req.user!, discuss.flags)
         return {
             ...discuss,
             responses: responses.responses,
-            commentsCount: comments.length,
-            comments: comments.map(c => { 
-                let creator: APIUser|null = null
-                if(discuss.flags & APIDiscussionFlags.CommentsPublic) {
-                    creator = { id: c.creator, name: c.creator_name, avatarUrl: `${domain}/api/users/${c.creator}/avatar` }
-                } 
-                return {
-                    id: c.id,
-                    timestamp: c.timestamp,
-                    creator,
-                    content: c.content
-                }
-            }),
             userSelection: responses.userSelection
         }
+    })
+
+    fastify.get('/:id/comments', async (req: FastifyRequest<{Params: {id: string}}>, reply): Promise<APIComment[]> => {
+        const domain = await fastify.config.GetKV("domain", "");
+
+        const discuss = discManager.get(Number(req.params.id))
+        if(!discuss) {
+            return NOT_FOUND(reply, req.params.id)
+        }
+        
+        const [comments] = await fastify.db.execute<RowDataPacket[]>("SELECT com.id, com.timestamp, com.creator, com.content, u.last_name as creator_name FROM `left4dead2-admins`.dash_discussion_comments com LEFT JOIN `left4dead2`.view_panel_user u ON SUBSTRING(com.creator, 11) = u.account_id WHERE com.discussion_id = ? ", [discuss.id])
+
+        return comments.map(c => { 
+            let creator: APIUser|null = null
+            if(discuss.flags & APIDiscussionFlags.CommentsPublic) {
+                creator = { id: c.creator, name: c.creator_name, avatarUrl: `${domain}/api/users/${c.creator}/avatar` }
+            } 
+            return {
+                id: c.id,
+                timestamp: c.timestamp,
+                creator,
+                content: c.content
+            }
+        })
     })
 
     fastify.post('/:id/comments', async (req: FastifyRequest<{Params: {id: string}}>, reply): Promise<APIComment> => {

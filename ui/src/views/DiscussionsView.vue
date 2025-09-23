@@ -16,8 +16,8 @@
             <Icon icon="far fa-comment">Comments</Icon>
             <span class="tag is-rounded ml-2 is-info" style="vertical-align: top;">{{ comments?.length ?? 0 }}</span>
           </h4>
-          <Comments v-if="comments" :priv-user="privUser" :comments="comments" :discussion="selectedDiscussion" @comment="onSubmitComment"></Comments>
-          <p class="has-text-centered my-3" v-else><Icon icon="fa-spinner" spin>Loading comments...</Icon></p>
+          <Comments id="comments" v-if="comments" :priv-user="privUser" :comments="comments" :discussion="selectedDiscussion" @comment="onSubmitComment"></Comments>
+          <p class="has-text-centered my-3 py-4 is-size-5" v-else><Icon icon="fa-spinner" spin></Icon></p>
         </div>
       </template>
       <template v-else-if="discussions">
@@ -102,13 +102,24 @@ async function selectDiscussion(id: number) {
   selectedDiscussion.value = discussions.value?.find(discuss => discuss.id == id)
   comments.value = undefined
   responses.value = undefined
+  await Promise.allSettled([
+    fetchDiscussionDetails(id),
+    fetchComments(id)
+  ])
+}
+async function fetchDiscussionDetails(id: number) {
   const response = await request(`/api/discussions/${id}`)
   if(response?.ok) {
     const json: APIDiscussionDetails = await response.json()
-    // @ts-expect-error close enough... in case its new, where its not in cache.
     selectedDiscussion.value = json as Discussion
-    comments.value = json.comments
     responses.value = json.responses
+  }
+}
+async function fetchComments(id: number) {
+  const response = await request(`/api/discussions/${id}/comments`, undefined, { title: "Failed to fetch comments" })
+  if(response?.ok) {
+    const json: APIComment[] = await response.json()
+    comments.value = json
   }
 }
 async function fetchDiscussions() {

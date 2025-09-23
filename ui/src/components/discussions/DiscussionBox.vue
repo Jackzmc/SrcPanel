@@ -1,6 +1,10 @@
 <template>
 <div class="box question-box">
   <div class="taglist">
+    <router-link :to="{params:{id: discuss.id.toString(), title: urlTitle }, hash: '#comments' }" v-if="discuss.commentsCount > 0" class="ml-3 tag is-pulled-right is-inline is-white"
+      data-tooltip="Number of comments">
+      <Icon icon="far fa-comment">{{ discuss.commentsCount }}</Icon>
+    </router-link>
     <template v-if="discuss.closedAt">
       <span v-if="isClosed" class="tag is-danger is-inline is-pulled-right">
         <Icon icon="fa-clock">Closed</Icon>
@@ -9,7 +13,6 @@
         <Icon icon="fa-clock">Closes {{ expiresText }}</Icon>
       </span>
     </template>
-    <span class="mr-3 tag is-pulled-right is-inline" v-if="discuss.commentsCount > 0" data-tooltip="Number of comments"><Icon icon="far fa-comment">{{ discuss.commentsCount }}</Icon></span>
   </div>
   <h5 class="title is-5"><b>Discuss:</b> {{ discuss.title }}</h5>
   <FormatText class="subtitle" :text="discuss.description" markdown v-if="discuss.description" />

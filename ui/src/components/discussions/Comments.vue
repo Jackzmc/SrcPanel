@@ -14,11 +14,13 @@
         <span v-else>
           Anonymous
         </span>
-        <span class="is-pulled-right">
-          <Icon icon="fa-clock">{{ formatDate(comment.timestamp) }}</Icon>
+        <span class="is-pulled-right has-text-weight-normal tag">
+          <Icon icon="fa-clock" class="no-border" :data-tooltip="formatDate(comment.timestamp)">
+            {{ new Sugar.Date(comment.timestamp*1000).relative() }}
+          </Icon>
         </span>
       </div>
-      <div class="list-item-content" style="word-wrap:anywhere">
+      <div class="list-item-content py-1 pt-2" style="word-wrap:anywhere">
         <div>
           {{ comment.content }}
         </div>
@@ -28,7 +30,7 @@
     <div class="list-item-controls">
     </div>
   </div>
-  <div class="list-item has-background-light py-4 px-4" v-if="!isArchived">
+  <div class="list-item has-background-light py-4 px-4" style="border-top: 4px solid rgb(219, 219, 219)" v-if="!isArchived">
     <div class="list-item-content">
       <div class="list-item-title mb-3">
         <div>
@@ -62,6 +64,8 @@ import { PrivilegedUser } from '../../js/User';
 import { formatDate, request } from '@/js/util.js';
 import { APIComment, Discussion, APIDiscussionFlags } from '../../../../common-types/Discussions';
 import { notify } from '@kyvg/vue3-notification';
+import Sugar from 'sugar'
+
 
 const emit = defineEmits(["comment"])
 
