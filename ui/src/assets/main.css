@@ -22465,3 +22465,8 @@ kbd {
 .is-info {
     color:white;
 }
+
+figure.image.avatar {
+  display: inline-block;
+  vertical-align: middle;
+}
