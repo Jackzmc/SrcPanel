@@ -13,8 +13,8 @@
     </div>
   </component>
   <div class="user-tooltip-content">
-    <figure class="image is-48x48 is-inline-block mr-3 is-round">
-      <LazyImage  v-if="clientAvatarSrc" observer img-class="is-rounded" :src="clientAvatarSrc" placeholder-src="/img/steam_default_avatar.png" />
+    <figure class="image is-48x48 is-inline-block mr-3 is-round"  v-if="clientAvatarSrc" >
+      <LazyImage observer img-class="is-rounded" :src="clientAvatarSrc" placeholder-src="/img/steam_default_avatar.png" />
     </figure>
     <div class="is-inline-block mt-0">
       <p class="title is-5 has-text-primary mt-0">{{ props.user.name }}</p>
