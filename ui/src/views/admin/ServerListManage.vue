@@ -174,7 +174,7 @@
               <td><input v-model="server.checked" type="checkbox" /></td>
               <td><router-link :data-tooltip="server.data.id"
                   :to="{name: 'servers-manage-server', params: { groupId: server.group.id, serverId: server.data.id }}"
-                  class="has-text-weight-semibold">{{ server.data.name }}</router-link>
+                  :class="['has-text-weight-semibold', server.stateData.class]">{{ server.data.name }}</router-link>
                 <p>{{ server.data.host }}:{{ server.data.port }}</p>
               </td>
               <td>
