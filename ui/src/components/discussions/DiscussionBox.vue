@@ -15,7 +15,7 @@
     </template>
   </div>
   <h5 class="title is-5"><b>Discuss:</b> {{ discuss.title }}</h5>
-  <FormatText class="subtitle" :text="discuss.description" markdown v-if="discuss.description" />
+  <FormatText class="subtitle mt-1" :text="discuss.description" markdown v-if="discuss.description" />
 
   <div class="columns is-mobile is-multiline" v-if="discuss.type == APIDiscussionType.Radio || discuss.type == APIDiscussionType.Checkbox">
     <div class="column is-6" v-for="option of discuss.options" :key="option.id" @click="selectChoice(option)">

@@ -13,7 +13,7 @@
           </router-link>
         </div>
         <br>
-        <div class="fixed-grid has-4-cols mb-4">
+        <div class="fixed-grid has-4-cols-tablet mb-4">
           <div class="grid">
             <div class="cell is-col-span-1">
               <b>Discussion started by</b>
