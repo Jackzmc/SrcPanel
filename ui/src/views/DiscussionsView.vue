@@ -5,7 +5,7 @@
     <div class="column is-7" style="height:100%">
       <template v-if="selectedDiscussion">
         <div class="block mb-3">
-          <router-link :to="{params: { id: '', title: '' }}"><Icon icon="fa-arrow-left" class="is-pulled-left" text="Back to discussions list" /></router-link>
+          <router-link :to="{name: 'discuss', params: { id: '', title: '' }}"><Icon icon="fa-arrow-left" class="is-pulled-left" text="Back to discussions list" /></router-link>
 
           <router-link v-if="privUser.equals(selectedDiscussion.creator.id)"
             :to="{name: 'discuss-edit', params:{id: selectedDiscussion.id.toString()}}" class="is-small is-pulled-right mr-2">
@@ -74,10 +74,11 @@
     </div>
     <div class="column " v-else>
       <div class="box">
-        <Field label="Start a new discussion" icon-left="fas fa-message">
-          <input type="text" class="input is-rounded" placeholder="My new discussion" @keyup.enter="startNewDiscussion">
+        <h4 class="title is-4 mb-4">Start a discussion</h4>
+        <Field label="Disccusion topic / title" icon-left="fas fa-message">
+          <input v-model="newDiscussionTitle" type="text" class="input is-rounded" placeholder="Ask a question" @keyup.enter="startNewDiscussion">
         </Field>
-        <div class="button is-link">Go</div>
+        <div class="button is-link" @click="startNewDiscussion">Start</div>
       </div>
     </div>
     <div class="column is-1"></div>
@@ -112,15 +113,10 @@ let selectedDiscussion = ref<Discussion>()
 let comments = ref<APIComment[]>()
 let responses = ref<APIResponsesData>()
 
-watch(() => route.params.id, async (val) => {
-  console.log(route.name, route.params, val)
-  if(route.name !== 'discuss') return
-  const id = Number(val)
-  if(val && !isNaN(id)) {
-    await selectDiscussion(id)
-  } else {
-    selectedDiscussion.value = undefined
-  }
+let newDiscussionTitle = ref("")
+
+watch(() => route.name, async (val) => {
+  init()
 })
 async function selectDiscussion(id: number) {
   selectedDiscussion.value = discussions.value?.find(discuss => discuss.id == id)
@@ -171,13 +167,13 @@ async function fetchDiscussions() {
     })
   }
 }
-function startNewDiscussion(event: KeyboardEvent) {
-  const target = event.target as HTMLInputElement
-  if(!target.value || target.value == "") return
+function startNewDiscussion() {
+  const title = newDiscussionTitle.value
+  if(!title || title == "") return
   router.push({
     name: "discuss-new",
     query: {
-      title: target.value
+      title: title
     }
   })
 }
@@ -187,12 +183,23 @@ function onSubmitComment(comment: APIComment) {
 }
 
 onActivated(async () => {
-  console.log("activated")
-  await fetchDiscussions()
-  if(route.params.id) {
-    await selectDiscussion(Number(route.params.id))
-  }
+  init()
 })
+
+async function init() {
+  console.log("init")
+  if(route.name === "discuss-view") {
+    const id = Number(route.params.id)
+    if(isNaN(id)) {
+      console.error("Invalid ID", route.params.id, "for discussion; redirecting to list")
+      return router.push({ name: "discuss-list" })
+    }
+    await selectDiscussion(id)
+  } else {
+    selectedDiscussion.value = undefined
+    await fetchDiscussions()
+  }
+}
 
 
 </script>

@@ -100,7 +100,7 @@
         <router-link to="/notes" class="navbar-item">
           <Icon icon="fa-note-sticky">Player Notes</Icon>
         </router-link>
-        <router-link to="/discuss" class="navbar-item">
+        <router-link :to="{name: 'discuss'}" class="navbar-item">
           <Icon icon="fas fa-message">Discuss
             <span v-if="privUser && privUser.openDiscussionCount > 0" class="tag is-rounded is-info">{{privUser.openDiscussionCount}}</span>
           </Icon>

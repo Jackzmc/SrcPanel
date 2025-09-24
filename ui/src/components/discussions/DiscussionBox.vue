@@ -1,7 +1,7 @@
 <template>
 <div class="box question-box">
   <div class="taglist">
-    <router-link :to="{params:{id: discuss.id.toString(), title: urlTitle }, hash: '#comments' }" v-if="discuss.commentsCount > 0" class="ml-3 tag is-pulled-right is-inline is-white"
+    <router-link :to="{name: 'discuss-view', params:{id: discuss.id.toString(), title: urlTitle }, hash: '#comments' }" v-if="discuss.commentsCount > 0" class="ml-3 tag is-pulled-right is-inline is-white"
       data-tooltip="Number of comments">
       <Icon icon="far fa-comments" >{{ discuss.commentsCount }}</Icon>
     </router-link>
@@ -55,7 +55,7 @@
       </div>
     </div>
     <div class="column is-4">
-      <router-link :to="{params:{id: discuss.id.toString(), title: urlTitle }}" class="is-small is-pulled-right"><Icon icon="fa-arrow-right" text-left="View responses" /></router-link>
+      <router-link :to="{name: 'discuss-view',params:{id: discuss.id.toString(), title: urlTitle }}" class="is-small is-pulled-right"><Icon icon="fa-arrow-right" text-left="View responses" /></router-link>
       <router-link v-if="privUser.equals(discuss.creator.id)" :to="{name: 'discuss-edit', params:{id: discuss.id.toString()}}" class="is-small is-pulled-right mr-2"><Icon icon="fa-edit" text="Edit" /></router-link>
     </div>
   </div>

@@ -131,31 +131,51 @@ const routes = [
     }
   },
   {
-    name: 'discuss-new',
-    path: '/discuss/new',
-    component: () => import('../views/DiscussionEdit.vue'),
-    meta: {
-      authRequired: true,
-      prevRoute: "discuss"
-    },
-  },
-  {
-    name: 'discuss-edit',
-    path: '/discuss/edit/:id',
-    component: () => import('../views/DiscussionEdit.vue'),
-    meta: {
-      authRequired: true,
-      prevRoute: "discuss"
-    },
-  },
-  {
     name: 'discuss',
-    path: '/discuss/:id?/:title?',
-    component: () => import('../views/DiscussionsView.vue'),
+    path: '/discuss',
     meta: {
       title: "Discussions",
       authRequired: true,
     },
+    redirect: { name: "discuss-list" },
+    children: [
+      {
+        name: "discuss-list",
+        path: '',
+        component: () => import('../views/DiscussionsView.vue'),
+        meta: {
+          title: "Discussions",
+          authRequired: true,
+        },
+      },
+      {
+        name: 'discuss-new',
+        path: 'new',
+        component: () => import('../views/DiscussionEdit.vue'),
+        meta: {
+          authRequired: true,
+          prevRoute: "discuss"
+        },
+      },
+      {
+        name: 'discuss-edit',
+        path: ':id/edit',
+        component: () => import('../views/DiscussionEdit.vue'),
+        meta: {
+          authRequired: true,
+          prevRoute: "discuss"
+        },
+      },
+      {
+        name: "discuss-view",
+        path: ':id/:title?',
+        component: () => import('../views/DiscussionsView.vue'),
+        meta: {
+          title: "Discussions",
+          authRequired: true,
+        },
+      },
+    ]
   },
   {
     name: 'events',
@@ -408,7 +428,8 @@ const routes = [
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes,
-  linkExactActiveClass: "is-active"
+  linkExactActiveClass: "is-active",
+  linkActiveClass: "is-active"
 })
 
 router.beforeEach((to, from) => {
