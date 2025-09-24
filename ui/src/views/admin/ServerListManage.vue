@@ -31,30 +31,8 @@
   </div>
   <template #buttons><!-- hide buttons, need non-empty template: --><template /></template>
 </ModalCard>
-<div class="container is-fluid">
+<div class="container">
   <div class="columns is-multiline">
-    <!-- <article class="column is-6 message is-danger">
-      <div class="message-body">
-        <button class="delete is-inline is-pulled-right"></button>
-        <h5 class="title is-5">Action(s) Failed</h5>
-        <table class="table is-narrow ">
-          <thead>
-            <tr>
-              <th>Server</th>
-              <th>Error Code</th>
-              <th>Message</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>Server 1</td>
-              <td>ERROR_CODE</td>
-              <td>an error message here</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </article> -->
     <div v-for="notification,i in notifications" :key="i" class="column is-10">
       <div :class="['notification','is-'+notification.type,'is-light']">
       <button class="delete" @click="notifications.splice(i,1)"></button>
@@ -81,71 +59,68 @@
 
   </div>
   <div class="box">
-    <div class="is-fullwidth is-radiusless">
-      <nav class="level">
-        <!-- Left side -->
-        <div class="level-left">
-          <div class="level-item">
-            <Field icon-left="fa-search">
-              <input v-model="searchQuery" type="text" class="input" placeholder="Search..." />
-            </Field>
-          </div>
-          <div class="level-item" @mouseleave="showActionDropdown = false" v-if="selectedServers.length > 0">
-            <div :class="['dropdown',{'is-active': showActionDropdown}]">
-              <div class="dropdown-trigger">
-                <button :class="['button',{'is-loading': pendingAction}]"
-                  :disabled="pendingAction?true:undefined"
-                  aria-haspopup="true" aria-controls="dropdown-menu"
-                  @click="showActionDropdown = !showActionDropdown"
+    <nav class="level">
+      <!-- Left side -->
+      <div class="level-left">
+        <div class="level-item">
+          <Field icon-left="fa-search">
+            <input v-model="searchQuery" type="text" class="input" placeholder="Search..." />
+          </Field>
+        </div>
+        <div class="level-item" @mouseleave="showActionDropdown = false" v-if="selectedServers.length > 0">
+          <div :class="['dropdown',{'is-active': showActionDropdown}]">
+            <div class="dropdown-trigger">
+              <button :class="['button',{'is-loading': pendingAction}]"
+                :disabled="pendingAction?true:undefined"
+                aria-haspopup="true" aria-controls="dropdown-menu"
+                @click="showActionDropdown = !showActionDropdown"
+              >
+                <Icon icon="fa-chevron-down" text-left="Perform an action"></Icon>
+              </button>
+            </div>
+            <div class="dropdown-menu" id="dropdown-menu" role="menu">
+              <div class="dropdown-content">
+                <a :class="['dropdown-item',{'is-loading': pendingAction}]" v-for="action in allActions" :key="action.name"
+                  @click="performAction(null, action)"
+                  :style="{ color: action.color }"
+                  :data-tooltip="action.description || undefined"
                 >
-                  <Icon icon="fa-chevron-down" text-left="Perform an action"></Icon>
-                </button>
-              </div>
-              <div class="dropdown-menu" id="dropdown-menu" role="menu">
-                <div class="dropdown-content">
-                  <a :class="['dropdown-item',{'is-loading': pendingAction}]" v-for="action in allActions" :key="action.name"
-                    @click="performAction(null, action)"
-                    :style="{ color: action.color }"
-                    :data-tooltip="action.description || undefined"
-                  >
-                    {{ action.name }}
-                  </a>
-                  <a class="dropdown-item is-disabled" disabled v-if="allActions.length === 0">No actions available</a>
-                  <!-- <a class="dropdown-item"> Start </a>
-                  <a class="dropdown-item"> Request Restart </a>
-                  <a class="dropdown-item"> Stop </a>
-                  <hr class="dropdown-divider" />
-                  <a class="dropdown-item"> Unreserve </a>
-                  <hr class="dropdown-divider" />
-                  <a class="dropdown-item has-text-danger"> Delete </a> -->
-                </div>
+                  {{ action.name }}
+                </a>
+                <a class="dropdown-item is-disabled" disabled v-if="allActions.length === 0">No actions available</a>
+                <!-- <a class="dropdown-item"> Start </a>
+                <a class="dropdown-item"> Request Restart </a>
+                <a class="dropdown-item"> Stop </a>
+                <hr class="dropdown-divider" />
+                <a class="dropdown-item"> Unreserve </a>
+                <hr class="dropdown-divider" />
+                <a class="dropdown-item has-text-danger"> Delete </a> -->
               </div>
             </div>
           </div>
-          <div class="level-item">
-            {{ filteredSortedServers.length }} <template v-if="filteredSortedServers.length != serverList.length">/ {{ serverList.length }}</template> servers
-          </div>
         </div>
-        <div class="level-right">
-          <div class="level-item">
-            <button :class="['button',{'is-loading': refreshingServers}]" @click="fetchServers(false)">
-              <Icon icon="fa-sync"></Icon>
-            </button>
-          </div>
-          <div class="level-item">
-            <button class="button is-info" @click="setModal(Modal.NewServer)" data-tooltip="Start a new server instance">
-              <Icon icon="fa-plus">Start New Server</Icon>
-            </button>
-          </div>
-          <div class="level-item">
-            <button class="button" data-tooltip="Help" @click="setModal(Modal.Help)">
-              <Icon icon="fa-circle-question">Help</Icon>
-            </button>
-          </div>
+        <div class="level-item">
+          {{ filteredSortedServers.length }} <template v-if="filteredSortedServers.length != serverList.length">/ {{ serverList.length }}</template> servers
         </div>
-      </nav>
-    </div>
-    <br>
+      </div>
+      <div class="level-right">
+        <div class="level-item">
+          <button :class="['button',{'is-loading': refreshingServers}]" @click="fetchServers(false)">
+            <Icon icon="fa-sync"></Icon>
+          </button>
+        </div>
+        <div class="level-item">
+          <button class="button is-info" @click="setModal(Modal.NewServer)" data-tooltip="Start a new server instance">
+            <Icon icon="fa-plus">Start New Server</Icon>
+          </button>
+        </div>
+        <div class="level-item">
+          <button class="button" data-tooltip="Help" @click="setModal(Modal.Help)">
+            <Icon icon="fa-circle-question">Help</Icon>
+          </button>
+        </div>
+      </div>
+    </nav>
     <div class="columns">
       <div class="column is-12">
         <div class="py-2 columns is-centered" v-if="refreshError">
@@ -156,6 +131,8 @@
             </div>
           </article>
         </div>
+        <div class="table-container">
+
         <table class="table is-fullwidth is-hoverable">
           <thead>
             <tr class="header">
@@ -215,6 +192,7 @@
             </tr>
           </tbody>
         </table>
+        </div>
         <p class="has-text-centered py-6" v-if="filteredSortedServers.length === 0">
           No servers found matching your query
           <br>See <b>Search</b> section in <a @click="setModal(Modal.Help)">help</a> for more information
