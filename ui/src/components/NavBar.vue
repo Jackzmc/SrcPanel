@@ -68,6 +68,10 @@
             <Icon icon="toolbox">Administration</Icon>
           </a>
           <div class="navbar-dropdown is-left" style="width:140%">
+            <router-link to="/admin/audit" class="navbar-item">
+              <Icon icon="list">Activity Log</Icon>
+            </router-link>
+            <hr class="navbar-divider">
             <router-link :to="{name: 'admin-shares'}" class="navbar-item">
               <Icon icon="fa-puzzle-piece">Addons / Files</Icon>
             </router-link>
@@ -75,16 +79,17 @@
               <Icon icon="fa-server">Manage Servers</Icon>
             </router-link>
             <router-link :to="{'name':'servers-manage'}" class="navbar-item">
-              <Icon icon="fa-server">Manage Servers <span class="tag is-warning is-tiny ml-1">BETA</span></Icon>
+              <Icon icon="fa-server">Manage Servers v2<span class="tag is-warning is-tiny ml-1">BETA</span></Icon>
             </router-link>
-            <router-link to="/admin/audit" class="navbar-item">
-              <Icon icon="list">Activity Log</Icon>
-            </router-link>
+            <hr class="navbar-divider">
             <router-link to="/admin/players" class="navbar-item">
-              <Icon icon="users-gear">Manage Players</Icon>
+              <Icon icon="users-gear">Players</Icon>
             </router-link>
             <router-link to="/bans" class="navbar-item">
-              <Icon icon="fa-gavel">Bans</Icon>
+              <Icon icon="fa-gavel">Player Bans</Icon>
+            </router-link>
+            <router-link to="/notes" class="navbar-item">
+              <Icon icon="fa-note-sticky">Player Notes</Icon>
             </router-link>
             <hr class="navbar-divider">
             <div class="navbar-item">
@@ -97,9 +102,34 @@
             </div>
           </div>
         </div>
-        <router-link to="/notes" class="navbar-item">
-          <Icon icon="fa-note-sticky">Player Notes</Icon>
-        </router-link>
+        <div class="navbar-item has-dropdown is-hoverable">
+          <a class="navbar-link">
+            <Icon icon="link">Links</Icon>
+          </a>
+          <div class="navbar-dropdown is-left"  style="width:180%">
+            <a href="https://stats.jackz.me" class="navbar-item">
+              <Icon icon="fa-chart-simple">Game Stats</Icon>
+            </a>
+            <a href="https://data.jackz.me/public/dashboard/295194e5-e4c3-41a9-9298-0ea2a895f881" class="navbar-item">
+              <Icon icon="fa-chart-simple">Extended Stats</Icon>
+            </a>
+
+            <hr class="navbar-divider">
+
+            <a href="https://steamcommunity.com/groups/jackzl4d2" class="navbar-item">
+              <Icon icon="fab fa-steam">Steam Group</Icon>
+            </a>
+            <div class="navbar-item">
+              <a href="/api/admins/discord" class="button" style="background-color: #5865F2; color: white; width:100%">
+                <span class="icon">
+                  <FontAwesomeIcon icon="fab fa-discord" />
+                </span>
+                <span>Join the Discord</span>
+              </a>
+            </div>
+
+          </div>
+        </div>
         <router-link :to="{name: 'discuss'}" class="navbar-item">
           <Icon icon="fas fa-message">Discuss
             <span v-if="privUser && privUser.openDiscussionCount > 0" class="tag is-rounded is-info">{{privUser.openDiscussionCount}}</span>
@@ -110,12 +140,6 @@
             <!-- <span v-if="privUser && privUser.openEventsCount > 0" class="tag is-rounded is-info">{{privUser.openEventsCount}}</span> -->
           </Icon>
         </router-link>
-        <a href="https://data.jackz.me/public/dashboard/295194e5-e4c3-41a9-9298-0ea2a895f881" class="navbar-item">
-          <Icon icon="fa-chart-simple">Graphs</Icon>
-        </a>
-        <a href="https://steamcommunity.com/groups/jackzl4d2" class="navbar-item">
-          <Icon icon="fa-chart-simple">Steam Group</Icon>
-        </a>
       </div>
       <div class="navbar-end">
         <div class="navbar-item has-tooltip-bottom" :data-tooltip="darkMode ? 'Turn dark mode off' : 'Turn dark mode on'">
