@@ -1,9 +1,13 @@
 <template>
 <span ref="elem">
-  <img v-if="loadState == LoadState.Loading || (loadState == LoadState.Error && !props.errorSrc)" :class="imgClass" :src="props.placeholderSrc">
-  <img v-else-if="loadState == LoadState.Error && props.errorSrc" :class="imgClass" :src="props.errorSrc" loading="lazy">
+  <img v-if="loadState == LoadState.Loading || (loadState == LoadState.Error && !props.errorSrc)"
+    alt="Loading image" :class="imgClass" :src="props.placeholderSrc">
+  <img v-else-if="loadState == LoadState.Error && props.errorSrc"
+    alt="Failed to load image" :class="imgClass" :src="props.errorSrc" loading="lazy">
   <img ref="image" fetchpriority="low"
-    v-show="loadState == LoadState.Success" v-if="startLoading && loadState != LoadState.Error && props.src"
+    :alt="alt"
+    @load="onLoad"
+    v-show="loadState === LoadState.Success" v-if="startLoading && loadState != LoadState.Error && props.src"
     :class="imgClass" :src="props.src"
     @error="loadState = LoadState.Error"
   >
@@ -14,6 +18,7 @@
 import { LoadState } from '@/types/global.js';
 import { ref, onMounted, onUnmounted, watch } from 'vue';
 const props = defineProps<{
+  alt?: string
   src?: string | null,
   placeholderSrc: string,
   errorSrc?: string,
@@ -26,10 +31,11 @@ const startLoading = ref(false)
 let loadState = ref<LoadState>(LoadState.Loading)
 let observer: IntersectionObserver
 
-watch(() => image.value?.complete, () => {
-  if(loadState.value == LoadState.Loading)
-    loadState.value = LoadState.Success
-})
+// watch(() => image.value?.complete, () => {
+//   console.log(image.value, image.value?.complete, loadState.value)
+//   if(image.value?.complete && loadState.value == LoadState.Loading)
+//     loadState.value = LoadState.Success
+// })
 
 onMounted(() => {
   startLoading.value = !Boolean(props.observer)
@@ -47,6 +53,12 @@ onMounted(() => {
     observer.observe(elem.value)
   }
 })
+
+function onLoad() {
+  if(image.value?.complete && loadState.value == LoadState.Loading)
+    loadState.value = LoadState.Success
+}
+
 onUnmounted(() => {
   if(observer) observer.disconnect()
 })
