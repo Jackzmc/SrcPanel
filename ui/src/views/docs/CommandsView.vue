@@ -68,14 +68,14 @@
                       <option value="public">chat, publicly</option>
                   </select>
               </div>
-              <p>
+              <div>
                 There are three different methods to input commands:
                 <ol>
                   <li>From the dev console, usually with the prefix <code>sm_</code></li>
                   <li>In the chat, publicly by using <code>!</code></li>
                   <li>In chat, privately by using <code>/</code> (forward slash) <b class='tag is-dark'>Recommended</b> </li>
                 </ol>
-              </p>
+              </div>
             </div>
             <div class="box has-background-info-light">
               <h5 class="title is-5">Parameter Info</h5>
@@ -102,16 +102,16 @@
                   <li><b class="tag is-link">user</b> means a required user while <b class="tag is-secondary">user</b> means an optional user.</li>
                   <li>I want to kick jackz, the command is <code>{{prefix}}kick &lt;player&gt; [reason]</code>, I don’t need to input a reason so I will just type in: <code>{{prefix}}kick jackz</code></li>
                   <li>I want to kick a troll, and I want to state why. <code>{{ prefix }}kick JimmyTheTroll "goodbye troll"</code></li>
-                  <li><p>
-                      I want to respawn disgruntled pea, the problem is that he has a space in his name. You can either:
-                      <ol type="a">
+                  <li><div>
+                      <p class="mb-2">I want to respawn disgruntled pea, the problem is that he has a space in his name. You can either:</p>
+                      <ol type="a" class="mt-2">
                         <li>Surround his name with quotes, “Disgruntled pea”</li>
                         <li>Only mention part of his name (disgruntled, or pea):
                           <br><code>/respawn “disgruntled pea”</code> or <code>/respawn disgruntled</code> or even <code>/respawn pea</code>
                         </li>
                       </ol>
                       <br>
-                  </p></li>
+                  </div></li>
               </ol>
             </div>
         </div>
