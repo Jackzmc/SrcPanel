@@ -3,6 +3,7 @@ import Fastify, { FastifyInstance } from 'fastify'
 import FastifySession from '@fastify/session'
 import FastifyCookie from '@fastify/cookie'
 import fastifyWebsocket from '@fastify/websocket'
+import FastifyEtag from '@fastify/etag'
 import MySQLSession from 'express-mysql-session'
 import { Pool } from 'mysql2/promise';
 import SteamAPI from './modules/steam.js'
@@ -94,10 +95,10 @@ app.register(cors, {
     methods: ["GET","POST","PATCH","UPDATE","DELETE"]
 })
 
-app.register(
-    FastifyHelmet,
-)
+app.register(FastifyHelmet)
+app.register(FastifyEtag)
 app.register(fastifyWebsocket)
+
   
 
 import MiddleManager from './middlewares/managers.js'

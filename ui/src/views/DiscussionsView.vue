@@ -58,7 +58,7 @@
         <div class="list-item" v-for="(user, i) in selectedDiscussion.responses.users" :key="i">
           <div class="list-item-image">
             <figure class="image is-32x32" :data-tooltip="user.name">
-                <img class="is-rounded" :src="user.avatarUrl">
+                <LazyImage LazyImage alt="User's avatar" img-class="is-rounded" :src="user.avatarUrl" placeholder-src="/img/steam_default_avatar.png" />
               </figure>
           </div>
           <div class="list-item-content">
@@ -98,6 +98,7 @@ import { APIDiscussionFlags, APIDiscussionType, APIDiscussion, APIDiscussionOpti
 import { formatDate, getRelDate, request } from '@/js/util.js';
 import Field from '@/components/Field.vue';
 import UserComponent from '@/components/UserComponent.vue';
+import LazyImage from '@/components/LazyImage.vue';
 
 
 const route = useRoute()

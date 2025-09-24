@@ -46,7 +46,8 @@
       <div class="columns is-gapless is-mobile" v-if="discuss.responses.users">
         <div class="column is-narrow" v-for="(user, i) in discuss.responses.users.slice(0, MAX_DISCUSSION_AVATARS)" :key="i">
           <figure class="image is-32x32" :data-tooltip="user.name">
-            <img class="is-rounded" :src="'/api/users/' + user.id + '/avatar'">
+              <LazyImage LazyImage alt="User's avatar" img-class="is-rounded" :src="user.avatarUrl"
+                placeholder-src="/img/steam_default_avatar.png" />
           </figure>
         </div>
         <div class="column mx-2 mt-2" v-if="discuss.responses.totalCount > MAX_DISCUSSION_AVATARS">
@@ -83,6 +84,7 @@ import Sugar from 'sugar'
 import { PrivilegedUser } from '../../js/User';
 import Field from '@/components/Field.vue'
 import FormatText from '@/components/FormatText.vue'
+import LazyImage from '../LazyImage.vue';
 
 const MAX_DISCUSSION_AVATARS = 10
 const DISCUSSION_SAVE_NOTIFICATION_DURATION = 1000 * 3

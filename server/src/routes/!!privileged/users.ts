@@ -121,6 +121,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     fastify.get('/:steamid/profile', async(req: FastifyRequest<{Params: { steamid: string }}>, reply): Promise<UserProfileData> => {
         const profile = await fastify.authmngr.getProfileData(req.params.steamid)
         if(!profile) return NOT_FOUND(reply, "User has no profile data")
+        reply.header("cache-control", "max-age 86400,stale-while-revalidate 0")
         return profile
     })
 
@@ -193,6 +194,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         if(req.query.include === "admin") {
             adminData = fastify.authmngr.getAdminExport(req.params.steamid)
         }
+
+        reply.header("cache-control", "max-age 86400,stale-while-revalidate 0")
 
         return {
             user: {

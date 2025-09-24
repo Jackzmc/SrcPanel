@@ -32,7 +32,7 @@ let pieces = ref<{ user?: APIUser, text?: string, html?: string }[]>([])
 
 const STEAMID_REGEX = new RegExp(/STEAM_\d:\d:\d+/g)
 
-const userNames: Record<string, string> = {}
+let userNames: Record<string, string> = {}
 
 function appendTextSlice(slice: string) {
   if(props.markdown) {
@@ -78,7 +78,6 @@ async function getPieces() {
 
       for(const piece of pieces.value) {
         if(piece.user) {
-          console.log(userNames, piece.user.id)
           piece.user.name = userNames[piece.user.id]
         }
       }
@@ -91,12 +90,14 @@ onBeforeMount(async () => {
 
 watch(() => props.text, getPieces)
 
+
 async function fetchUserName(steamid: string) {
-  const response = await fetch(`/api/users/${steamid}`)
+  const response = await fetch(`/api/users/${steamid}`, { cache: "force-cache" })
   if(response.ok) {
     const json = await response.json()
     userNames[steamid] = json.user.name
     return json.user.name
   }
+  return null
 }
 </script>
