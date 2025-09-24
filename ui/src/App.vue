@@ -5,7 +5,7 @@
     <BirthdayComponent v-if="isBirthday" @close="closeBirthday" />
     <Notifications position="top center" :duration=7000 @start="onNotificationShown" @click="(event: any) => event.data?.click()" />
 
-    <NavBar v-if="!route.meta.hideNav" @logout="onLogout" :priv-user="privUser" :meta="meta" :hide-login="readyState != ReadyState.Show" />
+    <NavBar v-if="!route.meta.hideNav" @toggle-theme="onToggleTheme" @logout="onLogout" :theme="activeTheme" :priv-user="privUser" :meta="meta" :hide-login="readyState != ReadyState.Show" />
 
     <br v-if="!route.meta.hideNav">
     <br v-if="route.meta.hideHero">
@@ -112,6 +112,7 @@ let meta = ref<PanelMetaInfo>()
 let isBirthday = ref(false)
 let tour = ref<{name: string, steps: any[]}|undefined>()
 let notificationSSE: EventSource|null = null
+let activeTheme = ref<string>("light")
 
 let readyState = ref<ReadyState>(ReadyState.None)
 
@@ -311,11 +312,23 @@ function applyTheme() {
   }
   console.debug("applying theme", preferredTheme)
 
+  activeTheme.value = preferredTheme
   document.documentElement.setAttribute("data-theme", preferredTheme);
+}
+
+function onToggleTheme() {
+  const newTheme = (activeTheme.value === "dark") ? "light" : "dark"
+  activeTheme.value = newTheme
+
+  document.documentElement.setAttribute("data-theme", newTheme);
+  window.localStorage.setItem("srcds-theme", newTheme)
 }
 
 onBeforeMount(async() => {
   applyTheme()
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+    applyTheme()
+  });
 
   await Promise.allSettled([
     await getMeta(),

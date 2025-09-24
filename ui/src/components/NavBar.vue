@@ -174,12 +174,12 @@ import UserSettingsModal from './modals/UserSettingsModal.vue';
 import NotificationsModal from './modals/NotificationsModal.vue'
 import { PanelMetaInfo } from '../../../common-types/Panel.js';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
-let darkMode = ref(false)
+
 let active = ref(false)
 
 const router = useRouter()
 const route = useRoute()
-const emit = defineEmits(['logout', 'notifications:clear'])
+const emit = defineEmits(['logout', 'notifications:clear', "toggle-theme"])
 
 watch(() => route.fullPath, () => {
   active.value = false
@@ -190,7 +190,8 @@ const LAST_UPDATED = new Date(Number(BUILD_TIMESTAMP))
 const props = defineProps<{
   privUser?: PrivilegedUser,
   meta?: PanelMetaInfo,
-  hideLogin?: boolean
+  hideLogin?: boolean,
+  theme: string
 }>()
 
 let showModal = ref<string>()
@@ -200,17 +201,16 @@ const avatarUrl = computed(() => {
   return props.privUser ? props.privUser.avatarUrl : ""
 })
 
-const updateTooltip = computed(() => {
-  return `${LAST_UPDATED.toLocaleDateString()} at ${LAST_UPDATED.toLocaleTimeString()}`
-})
 const themeIcon = computed(() => {
   return darkMode.value ? "fa-sun" : "fa-moon"
 })
 
+const darkMode = computed(() => {
+  return props.theme === "dark"
+})
+
 function toggleTheme() {
-  darkMode.value = !darkMode.value
-  document.documentElement.setAttribute("data-theme", darkMode.value ? "dark" : "light");
-  window.localStorage.setItem("srcds-theme", darkMode.value ? "dark" : "light")
+  emit("toggle-theme")
   active.value = false
 }
 
