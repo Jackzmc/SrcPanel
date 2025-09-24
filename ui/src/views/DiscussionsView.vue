@@ -205,14 +205,6 @@ async function init() {
 
 </script>
 
-<style scoped>
-.question-box {
-  background-color: rgb(204, 240, 255);
-}
-
-[data-theme=dark] .question-box {
-  background-color: #24292E;
-  color: white;
-}
+<style>
 
 </style>
