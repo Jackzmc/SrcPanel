@@ -302,7 +302,21 @@ function setupNotificationStream(errorCount: number = 0) {
   }
 }
 
+function applyTheme() {
+  let preferredTheme = window.localStorage.getItem("srcds-theme")
+  if(!preferredTheme) {
+    preferredTheme = (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)
+      ? "dark"
+      : "light"
+  }
+  console.debug("applying theme", preferredTheme)
+
+  document.documentElement.setAttribute("data-theme", preferredTheme);
+}
+
 onBeforeMount(async() => {
+  applyTheme()
+
   await Promise.allSettled([
     await getMeta(),
     await getAuth()
