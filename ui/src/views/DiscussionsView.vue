@@ -118,6 +118,7 @@ let newDiscussionTitle = ref("")
 watch(() => route.name, async (val) => {
   init()
 })
+
 async function selectDiscussion(id: number) {
   selectedDiscussion.value = discussions.value?.find(discuss => discuss.id == id)
   comments.value = undefined
@@ -187,7 +188,6 @@ onActivated(async () => {
 })
 
 async function init() {
-  console.log("init")
   if(route.name === "discuss-view") {
     const id = Number(route.params.id)
     if(isNaN(id)) {
