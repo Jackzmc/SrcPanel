@@ -55,8 +55,8 @@
               </p>
             </div>
             <div class="message-body">
-              <p>While fetching player notes, an error occurred:</p>
-              <p><pre>{{ fetchError }}</pre></p>
+              <div class="block">While fetching player notes, an error occurred:</div>
+              <div class="block"><pre>{{ fetchError }}</pre></div>
             </div>
           </article>
         </div>
@@ -107,7 +107,7 @@ const analyzeOptions = {
 };
 
 const props = defineProps<{
-  privUser: PrivilegedUser
+  privUser?: PrivilegedUser
 }>()
 
 let page = ref(1)
