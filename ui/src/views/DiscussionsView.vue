@@ -36,7 +36,7 @@
 
         <div class="box">
           <h4 class="title is-4 mb-2">
-            <Icon icon="far fa-comment">Comments</Icon>
+            <Icon icon="fas fa-comments" icon-class="mr-2">Comments</Icon>
             <span class="tag is-rounded ml-2 is-info" style="vertical-align: top;">{{ comments?.length ?? 0 }}</span>
           </h4>
           <Comments id="comments" v-if="comments" :priv-user="privUser" :comments="comments" :discussion="selectedDiscussion" @comment="onSubmitComment"></Comments>
@@ -74,9 +74,10 @@
     </div>
     <div class="column " v-else>
       <div class="box">
-        <Field label="Start a new discussion" icon-left="far fa-comment" info="Press enter to continue">
+        <Field label="Start a new discussion" icon-left="fas fa-message">
           <input type="text" class="input is-rounded" placeholder="My new discussion" @keyup.enter="startNewDiscussion">
         </Field>
+        <div class="button is-link">Go</div>
       </div>
     </div>
     <div class="column is-1"></div>
@@ -199,7 +200,6 @@ onActivated(async () => {
 <style scoped>
 .question-box {
   background-color: rgb(204, 240, 255);
-
 }
 
 [data-theme=dark] .question-box {

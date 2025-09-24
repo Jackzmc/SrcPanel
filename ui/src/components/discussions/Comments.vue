@@ -30,7 +30,7 @@
     <div class="list-item-controls">
     </div>
   </div>
-  <div class="list-item has-background-light py-4 px-4" style="border-top: 4px solid rgb(219, 219, 219)" v-if="!isArchived">
+  <div class="comment-reply-box list-item py-4 px-4" v-if="!isArchived">
     <div class="list-item-content">
       <div class="list-item-title mb-3">
         <div>
@@ -116,5 +116,6 @@ async function submit() {
 <style scoped>
 .expanded-box {
   height: 100px;
-}
+};
+
 </style>

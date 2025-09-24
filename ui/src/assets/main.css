@@ -22468,3 +22468,16 @@ figure.image.avatar {
   display: inline-block;
   vertical-align: middle;
 }
+
+[data-theme=dark] .list-item-title, .list-item-description, .list-item-content {
+  color: var(--bulma-body-color)
+}
+
+.comment-reply-box {
+  border-top: 4px solid rgb(219, 219, 219);
+  background-color: hsl(var(--bulma-light-h), var(--bulma-light-s), calc(var(--bulma-light-l)));
+}
+
+[data-theme="dark"] .comment-reply-box {
+  background-color: hsl(0, 0%, 21%);
+}

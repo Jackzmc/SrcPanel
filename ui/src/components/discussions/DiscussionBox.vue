@@ -3,7 +3,7 @@
   <div class="taglist">
     <router-link :to="{params:{id: discuss.id.toString(), title: urlTitle }, hash: '#comments' }" v-if="discuss.commentsCount > 0" class="ml-3 tag is-pulled-right is-inline is-white"
       data-tooltip="Number of comments">
-      <Icon icon="far fa-comment">{{ discuss.commentsCount }}</Icon>
+      <Icon icon="far fa-comments" >{{ discuss.commentsCount }}</Icon>
     </router-link>
     <template v-if="discuss.closedAt">
       <span v-if="isClosed" class="tag is-danger is-inline is-pulled-right">
