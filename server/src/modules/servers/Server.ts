@@ -318,7 +318,7 @@ export default abstract class Server implements IAction {
     }
 
     addWSClient(client: SocketClientUser) {
-      this._log.debug("added client", client.user.steamid2)
+      this._log.debug("added client " + client.user.steamid2)
       this._wsClients.push(client)
       // Send all data the client should know right away
       this.broadcastWS({
@@ -331,7 +331,7 @@ export default abstract class Server implements IAction {
     removeWSClient(client: SocketClientUser) {
       const indexOf = this._wsClients.indexOf(client)
       if(indexOf > -1) {
-       this._log.debug("removed client", client.user.steamid2)
+       this._log.debug("removed client " + client.user.steamid2)
         this._wsClients.splice(indexOf, 1)
       }
     }

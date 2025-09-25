@@ -253,7 +253,7 @@ export default class DynamicServerManager {
                 ...labels
             },
         }
-        log.debug("config", config)
+        log.debug({ config }, "config")
         const container = await this.#docker.createContainer(config)
         const instance =  new DynamicServerInstance(template.config, container, template.config.bindIp, port)
         await this.#registerInstance(instance)

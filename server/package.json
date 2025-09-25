@@ -5,7 +5,7 @@
   "types": "fastify.d.ts",
   "license": "MIT",
   "dependencies": {
-    "@discordjs/rest": "^2.4.3",
+    "@discordjs/rest": "^2.6.0",
     "@fastify/cookie": "^11.0.2",
     "@fastify/cors": "^10.0.1",
     "@fastify/etag": "^6.0.3",
@@ -17,7 +17,7 @@
     "@lowly1337/vpk": "^0.2.6",
     "@sinclair/typebox": "^0.23.4",
     "cron": "^3.3.2",
-    "discord-api-types": "^0.37.119",
+    "discord-api-types": "^0.37.120",
     "discord.js": "^14.18.0",
     "dockerode": "^4.0.2",
     "dotenv": "^16.5.0",
@@ -25,6 +25,7 @@
     "express-mysql-session": "^2.1.7",
     "fast-geoip": "^1.1.64",
     "fastify": "^5.1.0",
+    "fastify-plugin": "^5.0.1",
     "gamedig": "^5.1.4",
     "jdenticon": "^3.2.0",
     "json5": "^2.2.3",
@@ -33,6 +34,7 @@
     "mysql2": "^2.3.3",
     "nanoid": "^5.0.9",
     "openid": "^2.0.10",
+    "pino": "^9.11.0",
     "pino-pretty": "^8.1.0",
     "quick-lru": "^6.1.0",
     "rcon-client": "^4.2.4",
@@ -42,6 +44,7 @@
     "sqlite": "^5.1.1",
     "sqlite3": "^5.1.7",
     "steamid": "^2.0.0",
+    "strip-ansi": "^7.1.2",
     "systeminformation": "^5.23.5",
     "tail": "^2.2.6",
     "valve-kv": "^1.2.1",
@@ -50,7 +53,7 @@
   "scripts": {
     "build": "tsc",
     "start": "tsc && node dist/server/src/index.js",
-    "dev": "nodemon -e ts --exec \"yarn start || exit 1\""
+    "dev": "nodemon -e ts --exec \"pnpm run start || exit 1\""
   },
   "type": "module",
   "devDependencies": {

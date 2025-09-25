@@ -106,9 +106,9 @@ export class DiscordBot {
             }
             if(!channel) {
                 // If there's no channel for this server, create it
-                channel = await category.children.create({
+                channel = await category.children.create<ChannelType.GuildVoice>({
+                    /* @ts-ignore-error - should allow these options */
                     name: server.name ?? server.id,
-                    type: ChannelType.GuildVoice
                 })
                 const invite = await channel.createInvite()
                 this.#channelData.set(channel.id, {

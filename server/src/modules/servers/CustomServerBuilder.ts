@@ -77,7 +77,7 @@ export default class CustomServerBuilder {
     set User(user: User) { this.#user = user}
 
     async #cleanup() {
-        log.debug("cleaning up builder for", this.#id)
+        log.debug({}, "cleaning up builder for", this.#id)
         try {
             await rmdir(this.#root)
             if(this.#server) {
@@ -104,7 +104,7 @@ export default class CustomServerBuilder {
             name: this.#name
         }
         this.#root = path.join(CUSTOMER_FOLDER_LOCATION, this.#id)
-        log.debug('root', this.#root)
+        log.debug({}, 'root', this.#root)
         this.#notify("INIT", `ID: ${this.#id}`)
         const order = [
             this.#installSourcemod,
@@ -183,11 +183,11 @@ export default class CustomServerBuilder {
         if(!this.#options.pluginsIds) return
         const pluginRepo: Record<string, SMPluginMeta> = JSON.parse(await readFile(path.join(PLUGIN_REPO_FOLDER_LOCATION!, "plugins.json"), 'utf-8'))
         const plugins: Record<string, SMPluginMeta|true> = {}
-        log.debug('resolving', this.#options.pluginsIds.length, 'plugins')
+        log.debug(`resolving ${this.#options.pluginsIds.length} plugins`)
         for(const pluginFilename of this.#options.pluginsIds) {
             this.#resolvePlugin(plugins, pluginRepo, pluginFilename)
         }
-        log.debug('installing', Object.keys(plugins).length, 'plugins')
+        log.debug(`installing ${Object.keys(plugins).length} plugins`)
         this.#notify("INSTALL_PLUGINS", "Installing plugins")
         for(const [filepath, meta] of Object.entries(plugins)) {
             if(filepath.endsWith(".so")) {
@@ -242,10 +242,10 @@ export default class CustomServerBuilder {
             } catch(err) {
                 if(err.code !== "EEXISTS") throw err
             }
-            log.debug(`file=${dirent.name}`, `relParent=${relParent}`, `full=${path.join(this.#root, relParent, dirent.name)}`)
+            log.debug(`file=${dirent.name} relParent=${relParent} full=${path.join(this.#root, relParent, dirent.name)}`)
             const content = this.#applyTemplate(await readFile(path.join(dirent.parentPath, dirent.name), 'utf-8'))
             await writeFile(path.join(this.#root, relParent, dirent.name), content)
-            log.debug("done", dirent.name)
+            log.debug("done " + dirent.name)
         }
         log.debug("templates applied")
         // TEMPLATE_FOLDER_LOCATION

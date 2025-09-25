@@ -44,7 +44,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from "@vue/reactivity";
+import { computed, ref } from "vue";
 import UserComponent from "@/components/UserComponent.vue";
 import { PrivilegedUser } from "@/js/User.js";
 const emit = defineEmits(["set-filter", "redact-id"]);
