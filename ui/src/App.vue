@@ -61,7 +61,7 @@
 
   <footer class="footer custom-footer">
     <div class="content has-text-centered">
-      {{ SITE_TITLE }} - Updated {{lastUpdatedText}}
+      {{ SITE_TITLE }} - Updated {{lastUpdatedText}} - <a @click="showBuildInfo">Build Info</a>
     </div>
   </footer>
 </div>
@@ -75,7 +75,7 @@ import { PrivilegedUser} from '@/js/User'
 import { NotificationItem, notify } from '@kyvg/vue3-notification';
 import { ClientUserData } from '../../common-types/User';
 import * as Sentry from "@sentry/vue";
-import { request } from './js/util.js';
+import { formatDate, request } from './js/util.js';
 import { PanelMetaInfo } from '../../common-types/Panel.js';
 import NotLoggedInComponent from './components/NotLoggedInComponent.vue';
 
@@ -115,6 +115,16 @@ let notificationSSE: EventSource|null = null
 let activeTheme = ref<string>("light")
 
 let readyState = ref<ReadyState>(ReadyState.None)
+
+function showBuildInfo() {
+  const lines = [
+    `BRANCH: ${import.meta.env.VITE_GIT_BRANCH_NAME}`,
+    `DATE: ${import.meta.env.VITE_GIT_COMMIT_DATE}`,
+    `COMMIT: ${import.meta.env.VITE_GIT_COMMIT_HASH}`,
+    `\t${import.meta.env.VITE_GIT_LAST_COMMIT_MESSAGE}`
+  ]
+  alert(lines.join("\n"))
+}
 
 async function onAuthorized() {
   if(!userdata.value) return

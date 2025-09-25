@@ -2,13 +2,17 @@ import { defineConfig, loadEnv } from 'vite';
 import path from 'path';
 import vue from '@vitejs/plugin-vue'
 import { sentryVitePlugin } from "@sentry/vite-plugin";
-
+import { execSync } from 'child_process'
 
 export default ({ mode }) => {
   process.env = {...process.env, ...loadEnv(mode, process.cwd(), '')};
+
+  loadGitInfo()
+
   if(!process.env.VITE_REALM) {
     throw new Error("No VITE_REALM environment variable set")
   }
+
   return defineConfig({
     plugins: [
       sentryVitePlugin({
@@ -53,4 +57,16 @@ export default ({ mode }) => {
     }
   });
 
+}
+
+function loadGitInfo() {
+  const commitDate = execSync('git log -1 --format=%cI').toString().trimEnd();
+  const branchName = execSync('git rev-parse --abbrev-ref HEAD').toString().trimEnd();
+  const commitHash = execSync('git rev-parse HEAD').toString().trimEnd();
+  const lastCommitMessage = execSync('git show -s --format=%s').toString().trimEnd();
+
+  process.env.VITE_GIT_COMMIT_DATE = commitDate;
+  process.env.VITE_GIT_BRANCH_NAME = branchName;
+  process.env.VITE_GIT_COMMIT_HASH = commitHash;
+  process.env.VITE_GIT_LAST_COMMIT_MESSAGE = lastCommitMessage;
 }
