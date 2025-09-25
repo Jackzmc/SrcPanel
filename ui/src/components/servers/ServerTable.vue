@@ -56,7 +56,7 @@ import { PrivilegedUser } from '@/js/User.js';
 const props = defineProps<{
   group: ServerGroup,
   manage?: boolean,
-  privUser: PrivilegedUser
+  privUser?: PrivilegedUser
 }>()
 
 const gameType = computed(() => {

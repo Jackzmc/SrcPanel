@@ -33,7 +33,7 @@ const REFRESH_INTERVAL = 1000 * 15;
 const emit = defineEmits(["refresh"]);
 
 const props = defineProps<{
-  privUser: PrivilegedUser
+  privUser?: PrivilegedUser
 }>()
 
 let servers = ref<any[]>();

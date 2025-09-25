@@ -68,7 +68,7 @@ import { PrivilegedUser } from '@/js/User.js';
 
 const props = defineProps<{
   meta?: PanelMetaInfo,
-  privUser: PrivilegedUser
+  privUser?: PrivilegedUser
 }>()
 
 let countdown = ref<number>(0)

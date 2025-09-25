@@ -74,7 +74,7 @@ const props = defineProps<{
   server: ServerInfo,
   game: string,
   manage?: boolean,
-  privUser: PrivilegedUser
+  privUser?: PrivilegedUser
 }>()
 
 const gameType = computed(() => {
