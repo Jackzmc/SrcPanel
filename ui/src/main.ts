@@ -5,6 +5,7 @@ import router from './router'
 
 import '@/assets/main.scss'
 import '@creativebulma/bulma-tooltip/dist/bulma-tooltip.min.css'
+import 'bulma-list/css/bulma-list.css'
 
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { faEllipsisV, faChevronDown, faChevronUp, faSpinner, faUser, faCog, faSitemap, faInfoCircle, faExclamationCircle, faExclamationTriangle, faArrowRightFromBracket, faUsersCog, faServer, faList, faPuzzlePiece, faWrench, faGavel ,faToolbox, faNoteSticky, faChartSimple, faUserCheck, faUserPlus, faUserPen, faTimes, faUpload, faPlus, faEdit, faTrash, faCheck, faSearch, faMessage, faFolder, faDownload, faLock, faSync, faCloud, faThumbsUp, faThumbsDown, faQuestionCircle, faCopy, faChevronLeft, faChevronRight, faTerminal, faBell, faKeyboard, faCircleQuestion, faVideo, faFont, faCircleCheck, faArrowRight, faArrowLeft, faClock, faEye, faEyeSlash, faLockOpen, faBoxArchive, faCalendar, faMoon, faSun, faBarsStaggered, faPlug, faPlugCircleMinus, faBan, faBars, faArrowUpRightFromSquare, faStar as fasStar, faAsterisk, faFileAlt, faArrowTurnUp, faGamepad, faFile, faArrowUp, faArrowDown, faBook, faSquarePlus, faCircle, faSquare, faDiamond, faHourglass, faSortUp, faSortDown, faSort, faAngleDown, faAngleLeft, faAngleRight, faComments, faLink } from '@fortawesome/free-solid-svg-icons'

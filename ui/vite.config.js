@@ -45,7 +45,7 @@ export default ({ mode }) => {
     build: {
       sourcemap: true,
       chunkSizeWarningLimit: 600,
-      // cssCodeSplit: false
+      cssCodeSplit: false
     },
     define: {
       BUILD_TIMESTAMP: Date.now(),

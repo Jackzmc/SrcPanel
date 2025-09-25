@@ -349,26 +349,7 @@ onMounted(async() => {
   }
 })
 </script>
-<style src="./node_modules/bulma-list/css/bulma-list.css"></style>
 <style>
-.impersonate-overlay {
-  position: fixed;
-  bottom: 0;
-  background-color: #c42dbf;
-  padding: 1.25rem;
-  width: 100%;
-  color: white;
-}
-.custom-footer {
-  position: absolute;
-  bottom: 0;
-  width: 100%;
-  height: 4rem;
-  padding: 1rem;
-}
-body {
-  min-height: 100vh;
-}
 #app {
   position: relative;
   padding-bottom: 4rem;
