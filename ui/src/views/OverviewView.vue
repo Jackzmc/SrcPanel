@@ -17,7 +17,7 @@
       <Servers :priv-user="privUser" @refresh="onServerRefresh" />
     </div>
     <div class="column is-3">
-      <div class="content">
+      <div class="content has-text-black">
         <div class="box has-background-info-light">
           <h6>Enabling & opening the dev console:</h6>
           <ol>

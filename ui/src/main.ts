@@ -3,6 +3,7 @@ import App from './App.vue';
 import Notifications from '@kyvg/vue3-notification'
 import router from './router'
 
+import '@/assets/main.scss'
 import '@creativebulma/bulma-tooltip/dist/bulma-tooltip.min.css'
 
 import { library } from '@fortawesome/fontawesome-svg-core'
