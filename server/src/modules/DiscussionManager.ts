@@ -31,7 +31,7 @@ export default class DiscussionManager {
             await this.fetchDiscussions()
         }
         this.#fetchJob = fastify.jobs.register("discussions.fetch", task.bind(this))
-        fastify.jobs.scheduleRepeating(this.#fetchJob, { minutes: 30 })
+        fastify.jobs.scheduleRepeating(this.#fetchJob, { hours: 2 })
     }
 
     async #tryRefresh() {
