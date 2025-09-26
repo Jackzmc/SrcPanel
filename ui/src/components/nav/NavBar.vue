@@ -38,11 +38,11 @@
         </template>
       </div>
       <div class="navbar-end">
-        <!-- <div class="navbar-item">
+        <div class="navbar-item">
           <Field icon-left="fa-search">
             <input type="text" class="input" placeholder="Search..." v-model="searchQuery" @keyup.enter.prevent="performSearch" />
           </Field>
-        </div> -->
+        </div>
         <div class="navbar-item has-tooltip-bottom" :data-tooltip="darkMode ? 'Turn dark mode off' : 'Turn dark mode on'">
           <a class="button" @click="toggleTheme">
             <Icon :icon="themeIcon"></Icon>
