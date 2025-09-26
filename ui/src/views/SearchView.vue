@@ -40,6 +40,28 @@
                   <h5 class="">{{ result.data.title }}</h5>
                   <p class="subtitle"><FormatText :text="result.data.description" /></p>
                 </div>
+                <div class="content" v-else-if="result.type === 'user'">
+                  <table class='table is-fullwidth'>
+                    <tr>
+                      <th>Joined</th>
+                      <td>{{ formatDate(result.data.create_time) }}</td>
+                    </tr>
+                    <tr>
+                      <th>Last Seen</th>
+                      <td>{{ formatDate(result.data.create_time) }}</td>
+                    </tr>
+                    <tr>
+                      <th>Last Location</th>
+                      <td v-if="result.data.last_region">{{ result.data.last_region }}, {{  result.data.last_country }}</td>
+                      <td v-else>{{ result.data.last_country }}</td>
+                    </tr>
+                    <tr>
+                      <th>Last IP</th>
+                      <td>{{ result.data.last_ip }}</td>
+                    </tr>
+                  </table>
+                </div>
+                <!-- TODO: UI for: events, notes, bans, -->
                 <pre v-else>{{ result.data }}</pre>
               </template>
               <template v-else>
@@ -88,6 +110,7 @@ import SteamID from 'steamid';
 import LogMessage from '@/components/LogMessage.vue';
 import { PrivilegedUser } from '@/js/User.js';
 import { APILogData } from '../../../common-types/Logs.js';
+import { formatDate } from '@/js/util.js';
 
 const route = useRoute()
 const router = useRouter()
