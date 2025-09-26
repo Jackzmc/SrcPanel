@@ -342,7 +342,9 @@
             </thead>
             <tbody>
               <tr v-for="activity in activities" :key="activity.id">
-                <LogMessage :log="activity" :priv-user="privUser" />
+                <td>
+                  <LogMessage :log="activity" :priv-user="privUser" />
+                </td>
                 <td>{{ new Date(activity.timestampRaw * 1000).toLocaleTimeString()}}</td>
               </tr>
             </tbody>

@@ -64,7 +64,7 @@
               </div>
               <div class="list-item-description">
                 <LogMessage :log="entry" :priv-user="privUser" :hover-id="hoverId" :highlight-regex="highlightRegex" />
-                </div>
+              </div>
             </div>
 
             <div class="list-item-controls">

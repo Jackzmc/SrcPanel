@@ -1,46 +1,44 @@
 <template>
-  <td>
-    <span v-if="props.log.adminChat" class="tag is-pulled-left is-warning mr-2 mt-1" data-tooltip="Message was sent in the admin chat">
-      <Icon :icon="icon" v-if="icon" icon-class="pr-1" />CHAT</span>
-    <span v-else :class="['tag', 'is-pulled-left mr-2 mt-1', FILTER_DATA.types[props.log.type]]">
-      <Icon :icon="icon" v-if="icon" icon-class="pr-1" />
-      {{ props.log.type }}
-    </span>
-    <template v-if="props.log.type === 'CHAT'">
-      <b><UserComponent hide-avatar :user="props.log.client" type="client" @set-filter="setFilter"/>: </b>
-      <span :class="{'tag is-warning': props.log.adminChat}" v-html="chatMessage" />
-    </template>
-    <template v-else>
-      <b v-if="LPieceCount == 0 && props.log.client.steamid">
-        <UserComponent hide-avatar :user="props.log.client" type="client" @set-filter="setFilter" />&nbsp;
+  <span v-if="props.log.adminChat" class="tag is-pulled-left is-warning mr-2 mt-1" data-tooltip="Message was sent in the admin chat">
+    <Icon :icon="icon" v-if="icon" icon-class="pr-1" />CHAT</span>
+  <span v-else :class="['tag', 'is-pulled-left mr-2 mt-1', FILTER_DATA.types[props.log.type]]">
+    <Icon :icon="icon" v-if="icon" icon-class="pr-1" />
+    {{ props.log.type }}
+  </span>
+  <template v-if="props.log.type === 'CHAT'">
+    <b><UserComponent hide-avatar :user="props.log.client" type="client" @set-filter="setFilter"/>: </b>
+    <span :class="{'tag is-warning': props.log.adminChat}" v-html="chatMessage" />
+  </template>
+  <template v-else>
+    <b v-if="LPieceCount == 0 && props.log.client.steamid">
+      <UserComponent hide-avatar :user="props.log.client" type="client" @set-filter="setFilter" />&nbsp;
+    </b>
+    <b v-else-if="LPieceCount == 0 && !props.log.client.steamid && props.log.target.steamid">
+      <UserComponent hide-avatar type="target" :user="props.log.target" @set-filter="setFilter" />
+    </b>
+    <template v-for="m in messagePieces" :key="m">
+      <b v-if="m.LMatch">
+        <UserComponent hide-avatar v-if="m.user" :user="m.user" :type="m.type" @set-filter="setFilter" />
       </b>
-      <b v-else-if="LPieceCount == 0 && !props.log.client.steamid && props.log.target.steamid">
-        <UserComponent hide-avatar type="target" :user="props.log.target" @set-filter="setFilter" />
-      </b>
-      <template v-for="m in messagePieces" :key="m">
-        <b v-if="m.LMatch">
-          <UserComponent hide-avatar v-if="m.user" :user="m.user" :type="m.type" @set-filter="setFilter" />
-        </b>
-        <span v-else v-html="m.content" :class="{
-          'has-text-danger': props.log.type === 'QUIT',
-          'has-text-success': props.log.type === 'JOIN',
-          'has-text-info': props.log.type === 'INFO',
-          'has-text-weight-bold': props.log.type === 'INFO'
-        }"></span>
-      </template>
+      <span v-else v-html="m.content" :class="{
+        'has-text-danger': props.log.type === 'QUIT',
+        'has-text-success': props.log.type === 'JOIN',
+        'has-text-info': props.log.type === 'INFO',
+        'has-text-weight-bold': props.log.type === 'INFO'
+      }"></span>
     </template>
-    <span v-if="log.via === 'rcon'" class="has-text-info ml-1">(via console)&nbsp;</span>
-    <span v-if="
-        !props.log.redacted &&
-        props.hoverId == props.log.id &&
-        props.log.type === 'CHAT' &&
-        props.log.client?.steamid === privUser.id"
-      >
-      <a data-tooltip="Redact your own message" class="has-text-danger" @click="redactID(log.id)">
-        (redact)
-      </a>
-    </span>
-  </td>
+  </template>
+  <span v-if="log.via === 'rcon'" class="has-text-info ml-1">(via console)&nbsp;</span>
+  <span v-if="
+      !props.log.redacted &&
+      props.hoverId == props.log.id &&
+      props.log.type === 'CHAT' &&
+      props.log.client?.steamid === privUser?.id"
+    >
+    <a data-tooltip="Redact your own message" class="has-text-danger" @click="redactID(log.id)">
+      (redact)
+    </a>
+  </span>
 </template>
 
 <script setup lang="ts">
@@ -51,7 +49,7 @@ const emit = defineEmits(["set-filter", "redact-id"]);
 const props = defineProps<{
   log: any,
   hoverId?: number,
-  privUser: PrivilegedUser
+  privUser?: PrivilegedUser
   highlightRegex?: RegExp
 }>()
 
