@@ -99,7 +99,7 @@ const steamid2 = computed(() => {
 } */
 .media {
   width: max-content;
-  margin-bottom: 0;
+  margin-bottom: 0 !important;
 }
 .user-tooltip {
   position: relative;

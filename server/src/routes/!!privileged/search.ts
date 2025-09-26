@@ -20,9 +20,9 @@ const SEARCH_QUERY = SEARCH_QUERIES
 // TODO: add servers
 
 const SEARCH_DETAIL_QUERY_MAP: Record<SearchType, string> = {
-    activity_log: "SELECT * FROM activity_log WHERE id = ? LIMIT 1",
+    activity_log: "SELECT l.*, u1.last_name client_name, u2.last_name target_name FROM activity_log l LEFT JOIN view_panel_user u1 ON u1.account_id = SUBSTRING(l.client, 11) LEFT JOIN view_panel_user u2 ON u2.account_id = SUBSTRING(l.target, 11)  WHERE id = ? LIMIT 1",
     user: "SELECT * FROM view_panel_user WHERE account_id = ? LIMIT 1",
-    note: "SELECT * FROM notes WHERE id = ? LIMIT 1",
+    note: "SELECT notes.*, u1.last_name client_name, u2.last_name markedBy_name FROM notes JOIN view_panel_user u1 ON u1.account_id = SUBSTRING(notes.steamid, 11) JOIN view_panel_user u2 ON u2.account_id = SUBSTRING(notes.steamid, 11) WHERE id = ? LIMIT 1",
     ban: "SELECT * FROM bans WHERE id = ? LIMIT 1",
     discuss: "SELECT * FROM `left4dead2-admins`.dash_discussions WHERE id = ? LIMIT 1",
     event: "SELECT * FROM `left4dead2-admins`.dash_events WHERE id = ? LIMIT 1"
@@ -45,6 +45,12 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             'X-Accel-Buffering': 'no'
         });
         reply.raw.flushHeaders()
+        reply.hijack()
+        const abort = new AbortController()
+        req.raw.on("close", () => {
+            abort.abort("socket closed")
+        })
+
 
         function sendSSE(payload: any) {
             return reply.raw.write(`data: ${JSON.stringify(payload)}\n\n`)
@@ -60,15 +66,22 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         const limit = pLimit(SEARCH_MAX_INNER_RESOLVE_CONCURRENT)
 
         const detailQueries = rows.map(async result => {
+            abort.signal.throwIfAborted()
             return limit(async () => {
-                const data = await getFullResult(result)
-                sendSSE({ type: result.type, id: result.id, data: data, timeTaken: performance.now() - mainQueryTime } as APISearchDetailResult<object>)
+                abort.signal.throwIfAborted()
+                try {
+                    const data = await getFullResult(result)
+                    sendSSE({ type: result.type, id: result.id, data: data, timeTaken: performance.now() - mainQueryTime } as APISearchDetailResult<object>)
+                } catch(error) {
+                    fastify.log.error({ error }, "search getFullResult error")
+                    return { error }
+                }
             })
         })
 
-        await Promise.allSettled(detailQueries)
+        await Promise.all(detailQueries)
 
-        return reply.status(204).send()
+        return reply.status(204)
     })
 
     async function getFullResult<T>(result: SearchRawResult): Promise<T | null> {

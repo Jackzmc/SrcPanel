@@ -4,7 +4,7 @@ import { toPng } from 'jdenticon'
 const IDENTICON_VERSION = "2"
 const IDENTICON_SIZE = 150
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions)  {
-    fastify.get("/:steamid/avatar", async (req: FastifyRequest<{Querystring: { noCache?: boolean }, Params: {steamid: string }}>, reply) => {
+    fastify.get("/:steamid/avatar", { logLevel: "warn" }, async (req: FastifyRequest<{Querystring: { noCache?: boolean }, Params: {steamid: string }}>, reply) => {
         const user = await fastify.users.getUser(req.params.steamid)
         reply.header("access-control-allow-origin", "*")
         reply.header("cross-origin-resource-policy", "cross-origin")

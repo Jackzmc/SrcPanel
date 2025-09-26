@@ -19,7 +19,7 @@
       <h4 class="title is-4 has-text-centered">Objects</h4>
       <div class="grid is-col-min-12 is-multiline">
         <div :class="['cell',{'is-col-span-2': result.type == 'activity_log'}]" v-for="(result, id) of results" :key="id">
-          <div :class="['card', result.type]">
+          <div :class="['card', result.type]" style="height:100%" >
             <header class="card-header">
               <p class="card-header-title mb-0">
                 <template v-if="result.userData">
@@ -44,8 +44,8 @@
               </template>
               <template v-else>
                 <span>{{ result.partialContent }}</span>
-                <div class="block">
-                  <Icon icon="fa-spinner" spin>Waiting</Icon>
+                <div class="block pt-2">
+                  <Icon v-if="!result.data"  icon="fa-spinner" spin>Waiting for full result</Icon>
                 </div>
               </template>
             </div>
@@ -227,11 +227,11 @@ async function getResults() {
           ...json.data,
           client: json.data.client && {
             steamid: json.data.client,
-            name: json.data.client
+            name: json.data.client_name ?? json.data.client
           },
           target: json.data.target && {
             steamid: json.data.target,
-            name: json.data.target
+            name: json.data.target_name ?? json.data.target
           },
 
         }
@@ -256,10 +256,4 @@ onMounted(() => {
 </script>
 
 <style>
-.card-header-title .user-tooltip .media {
-  margin-bottom: 0
-}
-.card.activity_log .card-content {
-  padding-bottom: 0;
-}
 </style>
