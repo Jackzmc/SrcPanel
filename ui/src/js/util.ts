@@ -35,7 +35,7 @@ export function parseParameters(cmd: any, propName: string) {
   const params: Record<string, any> = {}
   const chars = cmd[propName].trim().split('')
   let mode = ParseNode.None
-  let lastChar = null, letters = "", type = "", defaultValue
+  let lastChar: string|null = null, letters = "", type = "", defaultValue
   let ignore = false
   let command = ""
 
