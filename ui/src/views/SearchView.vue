@@ -19,7 +19,7 @@
       <h4 class="title is-4 has-text-centered">Objects</h4>
       <div class="grid is-col-min-12 is-multiline">
         <div :class="['cell',{'is-col-span-2': result.type == 'activity_log'}]" v-for="(result, id) of results" :key="id">
-          <div class="card">
+          <div :class="['card', result.type]">
             <header class="card-header">
               <p class="card-header-title mb-0">
                 <template v-if="result.userData">
@@ -36,6 +36,10 @@
             <div class="card-content">
               <template v-if="result.data">
                 <LogMessage v-if="'logData' in result" :log="result.logData" :priv-user="privUser" />
+                <div class="content" v-else-if="result.type === 'discuss'">
+                  <h5 class="">{{ result.data.title }}</h5>
+                  <p class="subtitle"><FormatText :text="result.data.description" /></p>
+                </div>
                 <pre v-else>{{ result.data }}</pre>
               </template>
               <template v-else>
@@ -128,7 +132,7 @@ const RESULT_TYPE: Record<SearchType, { icon?: string, title: string }> = {
 interface SearchResultData {
   type: SearchType,
   partialContent: string|null,
-  data: unknown|null,
+  data: Record<string, any>|null,
   // Custom parsed data for some objects
   userData?: APIUser,
   logData?: APILogData
@@ -252,7 +256,10 @@ onMounted(() => {
 </script>
 
 <style>
-.card-header-title .media {
+.card-header-title .user-tooltip .media {
   margin-bottom: 0
+}
+.card.activity_log .card-content {
+  padding-bottom: 0;
 }
 </style>
