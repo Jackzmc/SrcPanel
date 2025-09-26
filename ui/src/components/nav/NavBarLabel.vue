@@ -1,9 +1,9 @@
 <template>
-  <Icon v-if="route.meta?.nav?.icon" :icon="route.meta.nav.icon">
+  <Icon v-if="route.meta?.icon" :icon="route.meta.icon" class="no-border has-tooltip-right" :data-tooltip="route.meta?.description">
     {{ labelText}}
     <span v-if="route.meta?.nav?.tagHtml" v-html="route.meta?.nav?.tagHtml" />
   </Icon>
-  <span v-else>
+  <span v-else class="no-border has-tooltip-right" :data-tooltip="route.meta?.description">
     {{ labelText }}
     <span v-if="route.meta?.nav?.tagHtml" v-html="route.meta?.nav?.tagHtml" />
   </span>
