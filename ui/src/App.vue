@@ -69,7 +69,7 @@
 
 <script setup lang="ts">
 import { onBeforeMount, ref, computed, defineAsyncComponent, markRaw, shallowRef, onMounted } from 'vue';
-import NavBar from '@/components/NavBar.vue'
+import NavBar from '@/components/nav/NavBar.vue'
 import { useRoute, useRouter } from 'vue-router';
 import { PrivilegedUser} from '@/js/User'
 import { NotificationItem, notify } from '@kyvg/vue3-notification';

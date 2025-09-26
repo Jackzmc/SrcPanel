@@ -10,8 +10,9 @@
 
 <script setup lang="ts">
 import UserComponent from '@/components/UserComponent.vue'
-import { computed, ref, onBeforeMount, watch } from 'vue';
+import { computed, ref, onBeforeMount, watch, useSlots } from 'vue';
 import { APIUser } from '../../../common-types/User';
+
 //@ts-expect-error
 import { marked } from 'marked';
 marked.use({renderer:{
@@ -50,12 +51,15 @@ function appendTextSlice(slice: string) {
 async function getPieces() {
     pieces.value = []
 
-    const matches = props.text.matchAll(STEAMID_REGEX)
+    const text = props.text
+    if(!text) return
+
+    const matches = text.matchAll(STEAMID_REGEX)
     const nameQueue = []
     let lastIndex = 0
     for(const match of matches) {
       // Append previous text
-      appendTextSlice(props.text.slice(lastIndex, match.index))
+      appendTextSlice(text.slice(lastIndex, match.index))
 
       // Append the user
       nameQueue.push(match[0]) // Add to list of steamids to resolve

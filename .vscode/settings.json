@@ -5,7 +5,7 @@
                 {
                     "name": "ui",
                     /* sometimes first command gets skipped */
-                    "commands": ["echo", "cd ui", "yarn", "yarn serve"]
+                    "commands": ["echo", "cd ui", "pnpm i", "pnpm serve"]
                 }
             ]
         },
@@ -14,7 +14,7 @@
                 {
                     "name": "server",
                     /* sometimes first command gets skipped */
-                    "commands": ["echo", "cd server", "yarn", "yarn dev"]
+                    "commands": ["echo", "cd server", "pnpm i", "pnpm dev"]
                 },
             ]
         }
