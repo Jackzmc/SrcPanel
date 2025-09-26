@@ -82,11 +82,6 @@ const query = computed(() => {
   return q.trim().toLocaleLowerCase()
 })
 
-interface RouteMeta {
-  keywords?: string[],
-  description?: string
-}
-
 
 const routes = router.getRoutes()
 
@@ -95,7 +90,7 @@ const URL_PARAM_REGEX = new RegExp(/:([a-zA-Z0-9-_]+)\??/g)
 const filteredRoutes = computed(() => {
   return routes
     .filter(route => {
-      const meta = route.meta as RouteMeta
+      const meta = route.meta
       // Hide unsearchable routes
       if(route.meta?.searchable === false) return false
 

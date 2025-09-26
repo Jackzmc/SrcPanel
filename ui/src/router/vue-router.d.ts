@@ -12,8 +12,6 @@ interface NavOptions {
   section?: number,
   /* Overwrite the text of nav item with this */
   labelText?: string,
-  /* Icon to show */
-  icon?: string,
   /* An optional tag html to insert */
   tagHtml?: string,
 
@@ -35,6 +33,11 @@ declare module 'vue-router' {
     title?: string,
     /** Inheritted by nav / hero if not overwritten */
     description?: string,
+
+    icon?: string
+
+    /* List of keywords for search */
+    keywords?: string[]
 
     /** Does this route require user to be logged in? If set, nav will be hidden if not logged in */
     requiresAuth?: boolean,

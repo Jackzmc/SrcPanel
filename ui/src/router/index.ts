@@ -23,6 +23,7 @@ const routes: RouteRecordRaw[] = [
     meta: {
       title: 'Search Results',
       hideHero: true,
+      searchable: false
     },
   },
   {
@@ -30,9 +31,9 @@ const routes: RouteRecordRaw[] = [
     path: "/docs",
     meta: {
       title: "Documentation",
-      dropdown: true,
+      description: "General documentation for in-game commands, settings and features",
+      icon: "fa-info-circle",
       nav: {
-        icon: "fa-info-circle"
       },
       topLevel: true,
     },
@@ -44,8 +45,8 @@ const routes: RouteRecordRaw[] = [
           meta: {
             title: 'Commands',
             description: 'All the information to have fun, and manage those troublemakers',
+            icon: "fa-asterisk",
             nav: {
-              icon: "fa-asterisk",
               section: 0
             }
           }
@@ -57,8 +58,8 @@ const routes: RouteRecordRaw[] = [
           meta: {
             title: 'Cvars',
             description: 'All the cvars you may want to change up the gameplay',
+            icon: "fa-wrench",
             nav: {
-              icon: "fa-wrench",
               section: 0
             }
           }
@@ -69,7 +70,7 @@ const routes: RouteRecordRaw[] = [
           component: () => import('../views/docs/MapsView.vue'),
           meta: {
             title: "L4D2 Maps",
-            description: "",
+            description: "A list of all L4D2 official maps and a random map picker",
             nav: {
               section: 1
             }
@@ -116,7 +117,7 @@ const routes: RouteRecordRaw[] = [
           component: () => import('../views/docs/NotesView.vue'),
           meta: {
             title: "Player Notes",
-            description: "",
+            description: "Information about the player notes feature",
             nav: {
               section: 1
             }
@@ -128,7 +129,7 @@ const routes: RouteRecordRaw[] = [
           component: () => import('../views/docs/PropSpawnerView.vue'),
           meta: {
             title: "Prop Spawner",
-            description: "",
+            description: "Cheat sheat on how to use the new prop spawner",
             nav: {
               section: 1
             }
@@ -140,7 +141,7 @@ const routes: RouteRecordRaw[] = [
           component: () => import('../views/docs/RulesAndInfoView.vue'),
           meta: {
             title: 'Procedures & Rules',
-            description: "Because it's a necessary",
+            description: "Because it's necessary",
             nav: {
               section: 1
             }
@@ -152,9 +153,9 @@ const routes: RouteRecordRaw[] = [
           component: () => import('../views/docs/KeybindsView.vue'),
           meta: {
             title: "Keybinds",
-            description: "",
+            description: "List of all L4D2 keybind codes and tool to create keybinds",
+            icon: "keyboard",
             nav: {
-              icon: "keyboard",
               section: 2
             }
           }
@@ -166,9 +167,9 @@ const routes: RouteRecordRaw[] = [
           component: () => import('../views/docs/TutorialsView.vue'),
           meta: {
             title: "Tutorials",
-            description: "",
+            description: "Tutorials on how to use the admin panel",
+            icon: "circle-question",
             nav: {
-              icon: "circle-question",
               section: 2
             }
           }
@@ -181,8 +182,9 @@ const routes: RouteRecordRaw[] = [
     meta: {
       requiresAuth: true,
       title: "Administration",
+      description: "Administrative pages",
+      icon: "fa-toolbox",
       nav: {
-        icon: "fa-toolbox",
       },
       topLevel: true,
     },
@@ -194,9 +196,10 @@ const routes: RouteRecordRaw[] = [
         meta: {
           title: 'Activity Log',
           description: 'View all actions inside and outside the game',
+          icon: "list",
+          keywords: ["activity", "audit", "logs"],
           authRequired: true,
           nav: {
-            icon: "list",
             section: 0,
           }
         }
@@ -209,9 +212,9 @@ const routes: RouteRecordRaw[] = [
           title: 'Shares',
           description: 'View all the installed custom maps (and some non-map addons)',
           authRequired: true,
+          icon: "fa-puzzle-piece",
           nav: {
             labelText: "Addons / Files",
-            icon: "fa-puzzle-piece",
             section: 1
           }
         }
@@ -222,10 +225,10 @@ const routes: RouteRecordRaw[] = [
         component: () => import('../views/admin/ServerListOverview.vue'),
         meta: {
           title: 'Manage Servers',
+          icon: "fa-server",
           description: 'View all the servers and manage them, all in one place',
           authRequired: true,
           nav: {
-            icon: "fa-server",
             section: 1,
           }
         },
@@ -249,10 +252,10 @@ const routes: RouteRecordRaw[] = [
         meta: {
           title: 'Server Instances',
           description: 'View all the servers and manage them, all in one place',
+          icon: "fa-server",
           authRequired: true,
           nav: {
             section: 1,
-            icon: "fa-server",
             labelText: "Manage Servers v2",
             tagHtml: `<span class="tag is-warning is-tiny ml-1">BETA</span>`
           }
@@ -266,7 +269,8 @@ const routes: RouteRecordRaw[] = [
           title: 'Addons / Files',
           description: 'View all the installed custom maps (and some non-map addons)',
           authRequired: true,
-          section: 1
+          section: 1,
+          searchable: false,
         },
         children: [
           {
@@ -313,9 +317,9 @@ const routes: RouteRecordRaw[] = [
         meta: {
           title: 'Player Management',
           description: 'View all players and manage them, all in one place',
+          icon: "users-gear",
           authRequired: true,
           nav: {
-            icon: "users-gear",
             labelText: "Players",
             section: 2
           }
@@ -380,9 +384,9 @@ const routes: RouteRecordRaw[] = [
         component: () => import('../views/BansView.vue'),
         meta: {
           title: 'Player Bans',
+          icon: "fa-gavel",
           nav: {
             section: 2,
-            icon: "fa-gavel"
           }
         },
       },
@@ -394,8 +398,8 @@ const routes: RouteRecordRaw[] = [
         meta: {
           title: 'Player Notes',
           description: 'View notes that admins have left on players',
+          icon: "fa-note-sticky",
           nav: {
-            icon: "fa-note-sticky",
             section: 2,
           }
         }
@@ -407,6 +411,8 @@ const routes: RouteRecordRaw[] = [
         meta: {
           title: 'Custom Servers',
           authRequired: true,
+          // TODO: remove until impl
+          searchable: false
         },
       },
       {
@@ -416,7 +422,8 @@ const routes: RouteRecordRaw[] = [
         meta: {
           title: 'Manage Servers',
           description: 'View all the servers and manage them, all in one place',
-          authRequired: true
+          authRequired: true,
+          searchable: false
         },
       },
       {
@@ -426,7 +433,8 @@ const routes: RouteRecordRaw[] = [
         meta: {
           title: 'Server View',
           authRequired: true,
-          hideHero: true
+          hideHero: true,
+          searchable: false
         },
       },
     ]
@@ -435,8 +443,8 @@ const routes: RouteRecordRaw[] = [
     name: "Links",
     path: "/links",
     meta: {
+      icon: "fa-link",
       nav: {
-        icon: "fa-link"
       },
       topLevel: true
     },
@@ -446,9 +454,10 @@ const routes: RouteRecordRaw[] = [
         path: "game-stats",
         redirect: "https://stats.jackz.me/",
         meta: {
+          icon: "fa-chart-simple",
+          description: "Link to in-game statistics",
           nav: {
             isExternalLink: true,
-            icon: "fa-chart-simple"
           }
         }
       },
@@ -457,9 +466,10 @@ const routes: RouteRecordRaw[] = [
         path: "metabase-stats",
         redirect: "https://data.jackz.me/public/dashboard/295194e5-e4c3-41a9-9298-0ea2a895f881",
         meta: {
+          icon: "fa-chart-simple",
+          description: "Link to extended statistics",
           nav: {
             isExternalLink: true,
-            icon: "fa-chart-simple"
           }
         }
       },
@@ -468,9 +478,10 @@ const routes: RouteRecordRaw[] = [
         path: "steam-group",
         redirect: "https://steamcommunity.com/groups/jackzl4d2",
         meta: {
+          icon: "fab fa-steam",
+          description: "Link to the steam group for joining 5+ games",
           nav: {
             isExternalLink: true,
-            icon: "fab fa-steam",
             section: 1
           }
         }
@@ -480,9 +491,10 @@ const routes: RouteRecordRaw[] = [
         path: "discord",
         redirect: "/api/admins/discord",
         meta: {
+          icon: "fab fa-discord",
+          description: "Link to the discord server",
           nav: {
             isExternalLink: true,
-            icon: "fab fa-discord",
             section: 1
           }
         }
@@ -494,9 +506,10 @@ const routes: RouteRecordRaw[] = [
     path: '/discuss',
     meta: {
       title: "Discussions",
+      description: "Vote on topics",
       authRequired: true,
+      icon: "fa-message",
       nav: {
-        icon: "fa-message",
         labelText: "Discuss"
       },
       topLevel: true
@@ -509,6 +522,7 @@ const routes: RouteRecordRaw[] = [
         component: () => import('../views/DiscussionsView.vue'),
         meta: {
           title: "Discussions",
+          searchable: false,
           authRequired: true,
         },
       },
@@ -517,6 +531,9 @@ const routes: RouteRecordRaw[] = [
         path: 'new',
         component: () => import('../views/DiscussionEdit.vue'),
         meta: {
+          title: "Create New Discussion",
+          description: "Create a new public discussion",
+          icon: "message-plus",
           authRequired: true,
           prevRoute: "discuss"
         },
@@ -527,7 +544,8 @@ const routes: RouteRecordRaw[] = [
         component: () => import('../views/DiscussionEdit.vue'),
         meta: {
           authRequired: true,
-          prevRoute: "discuss"
+          prevRoute: "discuss",
+          searchable: false
         },
       },
       {
@@ -537,6 +555,7 @@ const routes: RouteRecordRaw[] = [
         meta: {
           title: "Discussions",
           authRequired: true,
+          searchable: false
         },
       },
     ]
@@ -547,9 +566,10 @@ const routes: RouteRecordRaw[] = [
     component: () => import('../views/EventsView.vue'),
     meta: {
       title: "Events",
+      description: "Schedule time when everyone can participate in an activity",
+      icon: "fa-calendar",
       authRequired: true,
       nav: {
-        icon: "fa-calendar"
       },
       topLevel: true
     },
@@ -561,7 +581,8 @@ const routes: RouteRecordRaw[] = [
         meta: {
           title: "Event Scheduler",
           prevRoute: "events",
-          authRequired: true
+          authRequired: true,
+          searchable: false
         }
       },
     ]
@@ -572,7 +593,8 @@ const routes: RouteRecordRaw[] = [
     component: () => import('../views/panel-admin/Dashboard.vue'),
     meta: {
       title: "Panel Admin",
-      authRequired: true
+      authRequired: true,
+      searchable: false
     }
   },
   {
@@ -582,7 +604,8 @@ const routes: RouteRecordRaw[] = [
     meta: {
       title: "First Time Setup",
       authRequired: true,
-      hideNav: true
+      hideNav: true,
+      searchable: false
     }
   },
   {
@@ -591,6 +614,7 @@ const routes: RouteRecordRaw[] = [
     component: () => import('../views/ErrorView.vue'),
     meta: {
       hideHero: true,
+      searchable: false
     }
   },
   {
@@ -601,7 +625,8 @@ const routes: RouteRecordRaw[] = [
       status: 404,
       hideHero: false,
       title: '404 Not Found',
-      description: "The requested resource could not be found"
+      description: "The requested resource could not be found",
+      searchable: false
     }
   }
 ]
