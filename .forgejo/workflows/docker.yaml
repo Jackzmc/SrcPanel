@@ -31,4 +31,5 @@ jobs:
         with:
           push: true
           context: . # need to keep .git folder
-          tags: git.jackz.me/${{ github.repository_owner }}/admin-panel:latest
+          # change branch slashes to dash
+          tags: git.jackz.me/${{ github.repository_owner }}/admin-panel:${FORGEJO_REF_NAME////-}
