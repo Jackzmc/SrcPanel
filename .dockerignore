@@ -1,0 +1,10 @@
+.*
+!.git
+http-docs
+test
+**/dist
+**/node_modules
+server/data
+server/config
+server/logs
+server/.env
