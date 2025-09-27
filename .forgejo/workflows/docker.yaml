@@ -8,6 +8,7 @@ on:
       - '.forgejo/workflows/docker.yaml'
     branches:
       - release
+      - feat/*
   workflow_dispatch: {}
 
 jobs:
