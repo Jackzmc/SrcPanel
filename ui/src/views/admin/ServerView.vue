@@ -1057,9 +1057,10 @@ function sendWSPayload(payload: ClientOutPayload) {
   ws.value.send(JSON.stringify(payload))
 }
 function connectWS() {
-  console.debug("connectWS", `${window.location.protocol}://${window.location.host}/api/servers/${route.params.serverId}/ws`)
-  ws.value?.close()
-  ws.value = new WebSocket(`${window.location.protocol}//${window.location.host}/api/servers/${route.params.serverId}/ws`);
+  const url = `${window.location.protocol}://${window.location.host}/api/servers/${route.params.serverId}/ws`
+  console.debug("connectWS", url)
+  ws.value?.close(1000)
+  ws.value = new WebSocket(url);
   ws.value.onmessage = (event) => {
     const payload = JSON.parse(event.data)
     console.debug("[WS] payload", payload)
@@ -1074,12 +1075,13 @@ function connectWS() {
     }
   }
   ws.value.onclose = (ev) => {
-    if(ev.code == 4000) {
+    if(ev.code === 100) return
+    if(ev.code === 4000) {
       throw new Error("Server returned fatal error: " + ev.reason)
     }
     wsErrorCount++
     const retryTime = Math.min(1000 * (Math.pow(1.5, wsErrorCount ) + 3), MAX_BACKOFF)
-    console.debug("[WS] Closed, reconnecting in", retryTime/1000, "s", { wsErrorCount })
+    console.debug("[WS] Closed, reconnecting in", retryTime/1000, "s", { wsErrorCount, reason: ev.reason })
     wsReconnectTimeout = setTimeout(() => {
       connectWS()
     }, retryTime) as unknown as number
