@@ -26,10 +26,12 @@ jobs:
         # uses: docker/setup-qemu-action@v3
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
+      - name: Set ENV
+        run: TAG=${FORGEJO_REF_NAME////-}
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
           push: true
           context: . # need to keep .git folder
           # change branch slashes to dash
-          tags: git.jackz.me/${{ github.repository_owner }}/admin-panel:${FORGEJO_REF_NAME////-}
+          tags: git.jackz.me/${{ github.repository_owner }}/admin-panel:$TAG
