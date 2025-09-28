@@ -6,9 +6,9 @@ on:
       - 'ui/**'
       - 'common-types/**'
       - '.forgejo/workflows/docker.yaml'
-    branches:
-      - release
-      - feat/*
+    # branches:
+      # - release
+      # - feat/*
   workflow_dispatch: {}
 
 jobs:
