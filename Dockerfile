@@ -5,7 +5,7 @@ ENV PATH="$PNPM_HOME:$PATH"
 WORKDIR /app
 
 # Build time dependencies
-RUN apt update && apt install -y git && npm i -g pnpm@10
+RUN apt-get update && apt-get install -y git && npm i -g pnpm@10
 COPY . /app
 
 # Setup dependencies
