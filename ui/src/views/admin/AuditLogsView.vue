@@ -420,8 +420,12 @@ function toggleFilter(filter: string, key: string) {
 /** Returns the color a filter should show */
 function getFilterColor(filter: string, key: string) {
   if(!filters.value[filter] || !Array.isArray(filters.value[filter])) return
-  if(!filters.value[filter]!.includes(key)) return
-  return FILTER_DATA[filter][key] ?? "is-info"
+  const filterColor = FILTER_DATA[filter][key] ?? "is-info"
+  const isEnabled = filters.value[filter].includes(key)
+  // if(!filterColor) return
+  return isEnabled ? [filterColor] : [filterColor,'is-outlined','is-light']
+  // if(!filters.value[filter]!.includes(key)) return
+  // return FILTER_DATA[filter][key] ?? "is-info"
 }
 
 /** Returns a new URLSearchParams with all fetch configurations */
