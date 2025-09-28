@@ -1,6 +1,6 @@
 packages:
-  - ui/**
-  - server/**
+  - ui
+  - server
 
 ignoredBuiltDependencies:
   - cpu-features

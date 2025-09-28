@@ -36,7 +36,7 @@ interface SearchRawResult extends RowDataPacket {
 }
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
-    fastify.get('/', async(req: FastifyRequest<{Querystring: { q: string }}>, reply) => {
+    fastify.get('/', { config: { rateLimit: { max: 3, timeWindow: 1000 } } }, async(req: FastifyRequest<{Querystring: { q: string }}>, reply) => {
         const time = performance.now()
 
         reply.raw.writeHead(200, {
@@ -93,5 +93,3 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         return rows.length > 0 ? rows[0] as T : null
     }
 }
-
-export const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
