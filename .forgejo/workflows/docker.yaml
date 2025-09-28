@@ -34,4 +34,4 @@ jobs:
           push: true
           context: . # need to keep .git folder
           # change branch slashes to dash
-          tags: git.jackz.me/${{ github.repository_owner }}/admin-panel:$TAG
+          tags: git.jackz.me/${{ github.repository_owner }}/admin-panel:${{ env.TAG }}
