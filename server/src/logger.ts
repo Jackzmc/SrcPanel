@@ -36,7 +36,7 @@ const envToLogger = {
 }
 const logObj = envToLogger[process.env.NODE_ENV ?? "development"]
 if(process.env.LOG_PATH) {
-  mkdir("logs", (e) => {})
+  mkdir("logs", (e: any) => { if(e.code != "EEXISTS") throw e }) // make 'logs' folder, ignore if it already exists
   if(process.env.LOG_WIPE_PREVIOUS) {
     writeFileSync(process.env.LOG_PATH, "")
   }
