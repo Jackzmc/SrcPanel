@@ -13,6 +13,7 @@
     "@fastify/multipart": "^9.0.1",
     "@fastify/rate-limit": "^10.3.0",
     "@fastify/session": "^11.0.1",
+    "@fastify/static": "^8.2.0",
     "@fastify/websocket": "^11.0.1",
     "@influxdata/influxdb-client": "^1.35.0",
     "@lowly1337/vpk": "^0.2.6",

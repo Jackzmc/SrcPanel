@@ -140,6 +140,11 @@ app.register(MiddleManager)
         return next()
     })
 
+    await app.register(import('@fastify/static'), {
+        root: process.env.STATIC_PATH ?? path.join(import.meta.dirname, 'public'),
+        prefix: '/'
+    })
+
 
     const mainPrefix = `/api/`
 
