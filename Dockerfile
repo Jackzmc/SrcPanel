@@ -22,18 +22,20 @@ RUN cd /app/server/ && pnpm build
 
 FROM $IMAGE AS prod
 
-COPY --from=prod-deps /app/node_modules /app/node_modules
+COPY --from=prod-deps --chown=node /app/node_modules /app/node_modules
 
-COPY --from=build /app/server /app/server
-COPY --from=build /app/ui/dist /app/ui
+COPY --from=build --chown=node /app/server /app/server
+COPY --from=build --chown=node /app/ui/dist /app/ui
 
+# RUN chown -R node:node /app
 
 WORKDIR /app/server
+
+USER node
 
 ENV NODE_ENV=production
 ENV STATIC_PATH=/app/ui/
 
-USER node
 
 EXPOSE 80
 CMD ["node", "/app/server/dist/server/src/index.js"]

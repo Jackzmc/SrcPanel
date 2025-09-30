@@ -1,5 +1,6 @@
 import pino from 'pino';
-import { mkdir, unlinkSync, writeFileSync } from 'fs'
+import path from 'path'
+import { mkdir, mkdirSync, unlinkSync, writeFileSync } from 'fs'
 
 const envToLogger = {
   development: {
@@ -36,7 +37,14 @@ const envToLogger = {
 }
 const logObj = envToLogger[process.env.NODE_ENV ?? "development"]
 if(process.env.LOG_PATH) {
-  mkdir("logs", (e: any) => { if(e.code != "EEXISTS") throw e }) // make 'logs' folder, ignore if it already exists
+  // make 'logs' folder, ignore if it already exists
+  const folder = path.parse(process.env.LOG_PATH).dir
+  try {
+    mkdirSync(folder ?? "logs", { recursive: true })
+  } catch(err) {
+    if(err.code != "EEXISTS") throw err
+  } 
+
   if(process.env.LOG_WIPE_PREVIOUS) {
     writeFileSync(process.env.LOG_PATH, "")
   }

@@ -27,6 +27,7 @@ import SetCacheManager from './modules/SetCache.js'
 import TaskManager from './modules/tasks/TaskManager.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
+process.chdir(import.meta.dirname)
 
 const MySQLStore = MySQLSession(FastifySession )
 
