@@ -48,11 +48,7 @@ jobs:
           known_hosts: ${{ secrets.KNOWN_HOSTS }}
       - name: Update container (staging)
         if: ${{ github.ref == 'refs/heads/master' }}
-        env:
-          DOCKER_HOST: "ssh://deploy@${{ secrets.REMOTE_HOST }}"
-        run: cd /home/deploy/composes/admin-panel/staging && docker compose up -d --pull always
+        run: ssh deploy@${{ secrets.REMOTE_HOST }} -C "docker compose up -d --pull always -f /home/deploy/composes/admin-panel/staging"
       - name: Update container (production)
         if: ${{ github.ref == 'refs/heads/release' }}
-        env:
-          DOCKER_HOST: "ssh://deploy@${{ secrets.REMOTE_HOST }}"
-        run: cd /home/deploy/composes/admin-panel/production && docker compose up -d --pull always
+        run:  ssh deploy@${{ secrets.REMOTE_HOST }} -C "docker compose up -d --pull always -f /home/deploy/composes/admin-panel/production"
