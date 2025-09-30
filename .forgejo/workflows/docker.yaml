@@ -35,3 +35,24 @@ jobs:
           context: . # need to keep .git folder
           # change branch slashes to dash
           tags: git.jackz.me/${{ github.repository_owner }}/admin-panel:${{ env.TAG }}
+  deploy:
+    runs-on: ubuntu-full
+    needs: build
+    if: forge.ref == 'refs/heads/master' || forge.ref == 'refs/heads/release'
+    steps:
+      - name: Install SSH Key
+        uses: https://github.com/shimataro/ssh-key-action@v2.7.0
+        with:
+          key: ${{ secrets.REMOTE_PRIVATE_KEY }}
+          name: id_rsa # optional
+          known_hosts: ${{ secrets.KNOWN_HOSTS }}
+      - name: Update container (staging)
+        if: ${{ github.ref == 'refs/heads/master' }}
+        env:
+          DOCKER_HOST: "ssh://deploy@${{ secrets.REMOTE_HOST }}:/home/deploy/composes/admin-panel/staging"
+        run: docker compose up -d --pull always
+      - name: Update container (production)
+        if: ${{ github.ref == 'refs/heads/release' }}
+        env:
+          DOCKER_HOST: "ssh://deploy@${{ secrets.REMOTE_HOST }}:/home/deploy/composes/admin-panel/production"
+        run: docker compose up -d --pull always
