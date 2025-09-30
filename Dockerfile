@@ -31,7 +31,7 @@ COPY --from=build /app/ui/dist /app/ui
 WORKDIR /app/server
 
 ENV NODE_ENV=production
-ENV STATIC_PATH=/app/server/static
+ENV STATIC_PATH=/app/ui/
 
 USER node
 
