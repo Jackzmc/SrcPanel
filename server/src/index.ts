@@ -94,15 +94,13 @@ app.register(cors, {
     origin: CORS_WHITELIST,
     methods: ["GET","POST","PATCH","UPDATE","DELETE"]
 })
-
 app.register(FastifyHelmet)
 app.register(FastifyEtag)
 app.register(fastifyWebsocket)
 
-  
-
 import MiddleManager from './middlewares/managers.js'
 import { DiscordBot } from './modules/DiscordBot.js'
+import { sleep } from './util.js'
 app.register(MiddleManager)
 .then(async() => {
     if(hadSignal) return
@@ -110,6 +108,10 @@ app.register(MiddleManager)
         const bot = new DiscordBot(app.servers, "data/server_voice_map.json", process.env.DISCORD_API_TOKEN as string)
         await bot.init()
     }
+
+    app.register(import('@fastify/rate-limit'), { 
+        global: true,
+    })
 
     app.register(FastifyCookie, {
         secret: process.env.SESSION_SECRET as string,
@@ -182,7 +184,10 @@ app.register(MiddleManager)
 
     }
     if(hadSignal) return
+
     await loadRoutes(mainPrefix, path.join(__dirname, './routes'))
+
+    await setupNotFound(app)
     try {
         await app.listen({
             host: process.env.LISTEN_HOST,
@@ -194,3 +199,22 @@ app.register(MiddleManager)
     }      
     ready = true
 })
+
+async function setupNotFound(app: FastifyInstance) {
+    // HACK: app.rateLimit isn't defined until a period of time (usually 1-3ms)
+    // Despite the github issue about it needing to be await'd, it still occurs
+    const TIMEOUT = 1000
+    const time = Date.now()
+    while(!app.rateLimit || Date.now() - time > TIMEOUT) {
+        await sleep(10)
+    }
+
+    // If exceed timeout, just let it crash from the error, just in case it magically worked anyway
+    app.setNotFoundHandler({
+        // @ts-expect-error not setting a handler function still works - but TS types complain
+        preHandler: app.rateLimit({
+            max: 4,
+            timeWindow: 500
+        })
+    })
+}

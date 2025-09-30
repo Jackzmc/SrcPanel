@@ -58,3 +58,5 @@ export class ErrorWithCode extends Error {
         this.code = _code
     }
 }
+
+export const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
