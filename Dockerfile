@@ -2,19 +2,24 @@ ARG IMAGE=node:24-slim
 FROM $IMAGE AS base
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
+
 WORKDIR /app
 
 # Build time dependencies
-RUN apt-get update && apt-get install -y git && npm i -g pnpm@10
-COPY . /app
+RUN apt-get update && apt-get install -y git
+RUN corepack enable pnpm && corepack install -g pnpm@latest-10
+
+COPY pnpm-lock.yaml pnpm-workspace.yaml ./
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm fetch --frozen-lockfile
 
 # Setup dependencies
 FROM base AS prod-deps
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --prod --frozen-lockfile
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --prod --offline -r
 
 FROM base AS build
+COPY . /app
 COPY .git/ .git/
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
+RUN pnpm install -r --offline
 
 # Build
 RUN cd /app/ui/ && pnpm build
@@ -31,7 +36,6 @@ COPY --from=build --chown=node /app/ui/dist /app/ui
 
 WORKDIR /app/server
 
-USER node
 
 ENV NODE_ENV=production
 ENV STATIC_PATH=/app/ui/

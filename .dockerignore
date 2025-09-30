@@ -4,6 +4,7 @@ http-docs
 test
 **/dist
 **/node_modules
+node_modules/
 server/data
 server/config
 server/logs
