@@ -66,10 +66,10 @@ interface PartitionData {
 
 // Default values, will fetch full data after
 
-const availableServers = new Set(["web"])   // List of all distinct 'server' values
+let availableServers = new Set(["web"])   // List of all distinct 'server' values
 
 // Map of partitions to its min and max ids, and later count
-const yearData: Map<number | null, PartitionData> = new Map()
+let yearData: Map<number | null, PartitionData> = new Map()
 
 /**
  * Fetches all distinct servers from all years
@@ -140,9 +140,13 @@ async function getYearData(pool: Pool, year: number) {
     return data
 }
 
-async function quickInit(pool: Pool) {
+async function quickInit(fastify: FastifyInstance) {
     try {
-        await fetchYearDataQuick(pool, currentYear())
+        const cacheServers = await fastify.cache.get<typeof availableServers>("log.servers")
+        const cachePartitions = await fastify.cache.get<typeof yearData>("log.partitions")
+        if(cacheServers) availableServers = cacheServers
+        if(cachePartitions) yearData = cachePartitions
+        await fetchYearDataQuick(fastify.db, currentYear())
     } catch(err) {
         if(err.code === "ER_UNKNOWN_PARTITION") {
             log.warn({}, "quickInit: No partition for current year")
@@ -152,21 +156,25 @@ async function quickInit(pool: Pool) {
     }
 }
 
-async function fetchFullData(pool: Pool) {
+async function fetchFullData(fastify: FastifyInstance) {
     log.debug("START FETCH FULL")
     await Promise.allSettled([
-        fetchServers(pool),
-        getPartitions(pool)
+        fetchServers(fastify.db),
+        getPartitions(fastify.db)
     ])
+
     log.debug("END FETCH FULL")
     ready = true
+
+    await fastify.cache.set("logs.partitions", yearData)
+    await fastify.cache.set("logs.servers", availableServers)
 }
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
     // Quick initalize
-    await quickInit(fastify.db)
+    await quickInit(fastify)
     // Don't wait for full data to resolve
-    fetchFullData(fastify.db)
+    fetchFullData(fastify)
 
     fastify.get('/data', async(req, reply): Promise<APILogData> => {
         // if(!ready) return reply.status(503).send({
