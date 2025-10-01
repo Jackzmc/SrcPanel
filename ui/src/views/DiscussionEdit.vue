@@ -6,29 +6,29 @@
         <a @click="confirmCancel"><Icon icon="fa-arrow-left" class="is-pulled-left" text="Back to discussions (cancel)" /></a>
       </div>
       <br>
-      <div class="box question-box" v-if="loadState == LoadState.Success">
+      <div v-if="loadState == LoadState.Success" class="box question-box">
         <h5 class="title is-5"><b>Discuss:</b> <span class="has-tooltip-left" data-tooltip="Click to edit" contenteditable @blur="(event) => saveText('title', event as FocusEvent)" @keydown.enter.prevent="(event) => saveText('title', event as KeyboardEvent)">{{ discuss.title }}</span></h5>
         <!-- <p data-tooltip="Click to edit" class="subtitle" contenteditable @blur="(event) => saveText('description', event as FocusEvent)" @keydown.enter.prevent="(event) => saveText('description', event as KeyboardEvent)" @click="onDescriptionClick">
           <template v-if="discuss.description != ''">{{ discuss.description }}</template>
           <em v-else>Click here to add a description</em>
         </p> -->
-        <input ref="descriptionForm" type="text" class="input subtitle is-small" v-model="discuss.description" placeholder="Add a description" v-if="editingDesc" @keyup.enter="setEditingDesc(false)" @blur="setEditingDesc(false)" />
-        <FormatText markdown data-tooltip="Click to edit" class="subtitle has-tooltip-left" v-else-if="discuss.description" :text="discuss.description" @click="setEditingDesc(true)" />
+        <input v-if="editingDesc" ref="descriptionForm" v-model="discuss.description" type="text" class="input subtitle is-small" placeholder="Add a description" @keyup.enter="setEditingDesc(false)" @blur="setEditingDesc(false)" />
+        <FormatText v-else-if="discuss.description" markdown data-tooltip="Click to edit" class="subtitle has-tooltip-left" :text="discuss.description" @click="setEditingDesc(true)" />
         <p v-else class="subtitle is-clickable" @click="setEditingDesc(true)"><em>Click here to add a description</em></p>
-        <div class="columns" v-if="discuss.type == APIDiscussionType.Radio || discuss.type == APIDiscussionType.Checkbox">
+        <div v-if="discuss.type == APIDiscussionType.Radio || discuss.type == APIDiscussionType.Checkbox" class="columns">
           <div class="column is-6">
-            <div class="box field is-clickable" v-for="option of getOptions(0)" :key="option.id" @click="editOption(option)">
+            <div v-for="option of getOptions(0)" :key="option.id" class="box field is-clickable" @click="editOption(option)">
               <label>{{ option.label }}</label>
             </div>
-            <a class="box field is-clickable has-background-info has-text-white has-text-centered" v-if="leftColumn&&!previouslyClosed" @click="editOption()" data-tooltip="Click to create a new option">
+            <a v-if="leftColumn&&!previouslyClosed" class="box field is-clickable has-background-info has-text-white has-text-centered" data-tooltip="Click to create a new option" @click="editOption()">
               <Icon icon="fa-plus">New Option</Icon>
             </a>
           </div>
           <div class="column is-6">
-            <div class="box field is-clickable" v-for="option of getOptions(1)" :key="option.id" @click="editOption(option)">
+            <div v-for="option of getOptions(1)" :key="option.id" class="box field is-clickable" @click="editOption(option)">
               <label>{{ option.label }}</label>
             </div>
-            <a class="box field is-clickable has-background-info has-text-white has-text-centered" v-if="!leftColumn&&!previouslyClosed" @click="editOption()" data-tooltip="Click to create a new option">
+            <a v-if="!leftColumn&&!previouslyClosed" class="box field is-clickable has-background-info has-text-white has-text-centered" data-tooltip="Click to create a new option" @click="editOption()">
               <Icon icon="fa-plus">New Option</Icon>
             </a>
           </div>
@@ -44,17 +44,17 @@
           </Field>
         </div>
       </div>
-      <div class="box question-box" v-else>
+      <div v-else class="box question-box">
         <router-link :to="{name: 'discuss'}"><Icon icon="fa-arrow-left" class="is-pulled-left" text="Back to discussions" /></router-link>
         <br>
-        <p class="is-size-3 has-text-centered my-4" v-if="loadState == LoadState.Loading"><Icon icon="fa-spinner" icon-class="mr-4" spin>Fetching discussion...</Icon></p>
-        <p class="is-size-4 has-text-centered has-text-danger my-4" v-else><Icon icon="fa-times">An error occurred. Could not fetch discussion.</Icon></p>
+        <p v-if="loadState == LoadState.Loading" class="is-size-3 has-text-centered my-4"><Icon icon="fa-spinner" icon-class="mr-4" spin>Fetching discussion...</Icon></p>
+        <p v-else class="is-size-4 has-text-centered has-text-danger my-4"><Icon icon="fa-times">An error occurred. Could not fetch discussion.</Icon></p>
       </div>
-      <p class="has-text-danger" v-for="(error, i) in validationErrors" :key="i">
+      <p v-for="(error, i) in validationErrors" :key="i" class="has-text-danger">
         <Icon icon="fa-exclamation-triangle">{{ error }}</Icon>
       </p>
     </div>
-    <div class="column" v-if="loadState == LoadState.Success">
+    <div v-if="loadState == LoadState.Success" class="column">
       <h4 class="title is-4 mb-2">Discussion Settings</h4>
       <div class="list has-visible-pointer-controls has-hoverable-list-items">
         <div class="list-item">
@@ -73,7 +73,7 @@
             </div>
           </div>
         </div>
-        <div class="list-item" v-if="!previouslyClosed">
+        <div v-if="!previouslyClosed" class="list-item">
           <div class="list-item-content">
             <div class="list-item-title">
               <Icon icon="fa-info-circle" icon-class="has-text-info no-border" text-left="Closes" data-tooltip="An optional time for the discussion to automatically close"></Icon>
@@ -81,24 +81,24 @@
           </div>
           <div class="list-item-controls">
             <template v-if="discuss.closedAt">
-              <input style="width:inherit" :step="60*60" :min="new Date().toISOString().slice(0, -8)" class="input" type="datetime-local" v-model="closedAt">
-              <p><a @click="discuss.closedAt = 0" class="is-pulled-right">clear date</a></p>
+              <input v-model="closedAt" style="width:inherit" :step="60*60" :min="new Date().toISOString().slice(0, -8)" class="input" type="datetime-local">
+              <p><a class="is-pulled-right" @click="discuss.closedAt = 0">clear date</a></p>
             </template>
             <span v-else>Never <a class="ml-4 button is-small is-info" @click="setClosedAt">Set Date</a></span>
           </div>
         </div>
-        <div class="list-item" v-if="!isNew">
+        <div v-if="!isNew" class="list-item">
           <div class="list-item-content">
             <div class="list-item-title">
               <Icon icon="fa-info-circle" icon-class="has-text-info no-border" text-left="Voting" data-tooltip="If voting is open"></Icon>
             </div>
           </div>
-          <div class="list-item-controls" v-if="previouslyClosed">
+          <div v-if="previouslyClosed" class="list-item-controls">
             <span class="tag is-danger is-inline is-pulled-right">
               <Icon icon="fa-clock">Closed</Icon>
             </span>
           </div>
-          <div class="list-item-controls" v-else>
+          <div v-else class="list-item-controls">
             <a @click="closeVoting"><Icon icon="fa-lock-open">Active</Icon> (click to close now)</a>
           </div>
         </div>
@@ -123,7 +123,7 @@
             </div>
           </div>
         </div>
-        <div class="list-item" v-if="(discuss.flags & APIDiscussionFlags.RespondersPublic) != 0">
+        <div v-if="(discuss.flags & APIDiscussionFlags.RespondersPublic) != 0" class="list-item">
           <div class="list-item-content">
             <div class="list-item-title">
               <Icon icon="fa-info-circle" icon-class="has-text-info no-border" text-left="Responses" data-tooltip="Should the users' responses be public?"></Icon>
@@ -144,7 +144,7 @@
             </div>
           </div>
         </div>
-        <div class="list-item" v-if="(discuss.flags & APIDiscussionFlags.RespondersPublic) != 0">
+        <div v-if="(discuss.flags & APIDiscussionFlags.RespondersPublic) != 0" class="list-item">
           <div class="list-item-content">
             <div class="list-item-title">
               <Icon icon="fa-info-circle" icon-class="has-text-info no-border" text-left="Comments" data-tooltip="Should comments be anonymous?"></Icon>
@@ -168,7 +168,7 @@
       </div>
       <br>
       <div class="buttons">
-        <a :class="['button','is-success','has-text-white',{'is-loading': isSaving }]" @click="save" :disabled="canSave ? undefined : true ">{{ isNew ? 'Create Discussion' : 'Save Changes' }}</a>
+        <a :class="['button','is-success','has-text-white',{'is-loading': isSaving }]" :disabled="canSave ? undefined : true " @click="save">{{ isNew ? 'Create Discussion' : 'Save Changes' }}</a>
         <a class="button" @click="confirmCancel">Cancel</a>
         <a v-if="!isNew" class="button is-warning" @click="archive"><Icon icon="fa-box-archive">Archive</Icon></a>
       </div>

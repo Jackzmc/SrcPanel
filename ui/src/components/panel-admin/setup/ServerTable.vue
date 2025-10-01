@@ -1,7 +1,7 @@
 <template>
 <div>
-  <ServerModal v-if="editModalActive" :data="selectedServer" @close="closeModal" @save="onSave" @delete="deleteServer" :meta="meta" />
-  <ConfirmModal title="Delete Confirmation" v-if="deleteModalActive&&selectedServer" @cancel="deleteModalActive = false" @confirm="deleteServerConfirm">
+  <ServerModal v-if="editModalActive" :data="selectedServer" :meta="meta" @close="closeModal" @save="onSave" @delete="deleteServer" />
+  <ConfirmModal v-if="deleteModalActive&&selectedServer" title="Delete Confirmation" @cancel="deleteModalActive = false" @confirm="deleteServerConfirm">
     <p>Are you sure you want to delete the server:<br><b>{{ selectedServer.name }}</b> <span>({{ selectedServer.id }})</span>?</p>
   </ConfirmModal>
   <table class="table is-fullwidth is-bordered">

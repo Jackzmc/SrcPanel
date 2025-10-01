@@ -1,7 +1,7 @@
 <template>
 <div>
   <div id="console" ref="consoleElem">
-    <div class="console-content" v-for="(line, i) of logs" :key="i">
+    <div v-for="(line, i) of logs" :key="i" class="console-content">
       {{ line }}
     </div>
     <span v-if="logs.length === 0">
@@ -10,7 +10,7 @@
   </div>
   <Field :icon-left="commandInputSupported ? 'terminal' : 'warning'" :icon-class="commandInputSupported ? 'has-text-white' : 'has-text-info'">
     <template v-if="commandInputSupported">
-      <input id="terminal-input" :class="['input','terminal-input',commandClass]" v-model="commandInput"
+      <input id="terminal-input" v-model="commandInput" :class="['input','terminal-input',commandClass]"
         placeholder="Enter a command"
         @keyup.enter="runCommand" @keyup.up="loadHistoryEntry(1)" @keyup.down="loadHistoryEntry(-1)"
       >

@@ -9,7 +9,7 @@
         <p class="subtitle is-5">Login with either Steam or Discord (if linked) on the right to continue</p>
       </div>
     </div>
-    <div class="column" v-if="meta">
+    <div v-if="meta" class="column">
       <div class="block"><SteamLoginButton size="large" :meta="meta" /></div>
       <div class="block" data-tooltip="Only if you have linked to a steam account"><DiscordLoginButton size="large" :meta="meta" /></div>
     </div>

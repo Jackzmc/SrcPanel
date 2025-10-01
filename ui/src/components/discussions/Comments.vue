@@ -1,7 +1,7 @@
 <template>
 <div class="list has-visible-pointer-controls">
-  <div class="list-item" v-for="(comment, i) in comments" :key="i">
-    <div class="list-item-image" v-if="discussion.flags & APIDiscussionFlags.CommentsPublic && comment.creator">
+  <div v-for="(comment, i) in comments" :key="i" class="list-item">
+    <div v-if="discussion.flags & APIDiscussionFlags.CommentsPublic && comment.creator" class="list-item-image">
       <figure class="image is-32x32" :data-tooltip="comment.creator.name">
         <img class="is-rounded" :src="comment.creator.avatarUrl">
       </figure>
@@ -30,7 +30,7 @@
     <div class="list-item-controls">
     </div>
   </div>
-  <div class="comment-reply-box list-item py-4 px-4" v-if="!isArchived">
+  <div v-if="!isArchived" class="comment-reply-box list-item py-4 px-4">
     <div class="list-item-content">
       <div class="list-item-title mb-3">
         <div>
@@ -44,7 +44,7 @@
 
       </div>
       <div class="list-item-description" @focus="newComment.hovered = true" @blur="newComment.hovered = false">
-        <textarea v-model="newComment.content" type="text" @focus="newComment.focused = true" @blur="newComment.focused = false" :class="['input', {'expanded-box': true }]" placeholder="Enter a reply to the discussion" cols=10 :rows="10"></textarea>
+        <textarea v-model="newComment.content" type="text" :class="['input', {'expanded-box': true }]" placeholder="Enter a reply to the discussion" cols=10 :rows="10" @focus="newComment.focused = true" @blur="newComment.focused = false"></textarea>
         <br>
         <div class="buttons mt-3">
           <a class="button is-info" :disabled="newComment.content === '' ? true : undefined" @click="submit">Submit Reply</a>
@@ -52,7 +52,7 @@
       </div>
     </div>
   </div>
-  <p class="has-text-danger" v-if="isArchived">
+  <p v-if="isArchived" class="has-text-danger">
     <Icon icon="fa-box-archive"> This discussion has been archived, no more comments can be submitted.</Icon>
   </p>
 </div>

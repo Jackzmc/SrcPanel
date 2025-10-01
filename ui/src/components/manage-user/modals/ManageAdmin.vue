@@ -1,6 +1,6 @@
 <template>
 <section>
-  <article class="message is-danger" v-if="!canEdit && props.userAdminData">
+  <article v-if="!canEdit && props.userAdminData" class="message is-danger">
     <div class="message-body">
       <b>Editing disabled for the following reasons:</b>
       <div class="content">
@@ -16,7 +16,7 @@
     </div>
   </article>
   <div class="level">
-    <div class="level-item has-text-centered" v-if="userAdminData">
+    <div v-if="userAdminData" class="level-item has-text-centered">
       <div class="field">
         <label class="label">Admin Id</label>
         <span>
@@ -40,7 +40,7 @@
         </span>
       </div>
     </div>
-    <div class="level-item has-text-centered" v-if="userAdminData">
+    <div v-if="userAdminData" class="level-item has-text-centered">
       <div class="field">
         <label class="label" data-tooltip="You can only affect admins under your immunity level">Immunity</label>
         <span>
@@ -48,7 +48,7 @@
         </span>
       </div>
     </div>
-    <div class="level-item has-text-centered" v-if="userAdminData">
+    <div v-if="userAdminData" class="level-item has-text-centered">
       <div class="field">
         <label class="label">Flags</label>
         <span v-if="userAdminData.permissions.flags.length > 0">
@@ -59,7 +59,7 @@
     </div>
   </div>
   <Tabs inner-wrapper-class="tabs" :options="{useUrlFragment:false}">
-    <Tab name="Overview" v-if="userAdminData">
+    <Tab v-if="userAdminData" name="Overview">
       <div class="columns">
         <div class="column">
           <h6 class="title is-6">Game Permissions</h6>
@@ -74,11 +74,11 @@
       </div>
     </Tab>
     <Tab name="Groups">
-      <div class="has-text-centered" v-if="loading.groups">
+      <div v-if="loading.groups" class="has-text-centered">
         <p>Fetching admin groups...</p>
         <img src="@/assets/loader.gif" style="height:128px" />
       </div>
-      <table class="table is-fullwidth" v-else>
+      <table v-else class="table is-fullwidth">
         <thead>
           <tr>
             <th style="width:8em"></th>
@@ -91,18 +91,18 @@
           <template v-for="group in groups" :key="group.id">
             <tr>
               <td>
-                <a @click="expandGroup(group.id)" class="button is-small has-tooltip-right" data-tooltip="View group flags & privileges">
+                <a class="button is-small has-tooltip-right" data-tooltip="View group flags & privileges" @click="expandGroup(group.id)">
                   <template v-if="expandedGroup?.id == group.id">⮟</template>
                   <template v-else>⮞</template>
                 </a>
                 &nbsp;
                 <input
                   :id="'group.'+group.id.toString()"
+                  v-model="selectedgroupIds"
                   type="checkbox"
                   :value="group.id"
                   class="is-checkradio is-medium is-info"
                   :disabled="!canEdit"
-                  v-model="selectedgroupIds"
                 >
                 <label :for="'group.'+group.id.toString()"></label>
               </td>
@@ -135,37 +135,37 @@
         <label class="label">Base Immunity</label>
         <div class="control">
           <input
+            v-model="form.immunity"
             type="number"
             class="input"
-            v-model="form.immunity"
             min="0" :max="privUser.immunityLevel - 1"
             :disabled="!canEdit"
           />
         </div>
-        <p class="help has-text-danger" v-if="form.immunity >= privUser.immunityLevel">The maximum immunity level you can apply is {{ privUser.immunityLevel - 1 }}, which is below yours ({{ privUser.immunityLevel }})</p>
-        <p class="help has-text-info" v-else>Will only be used if it's greater than user's groups' immunity</p>
+        <p v-if="form.immunity >= privUser.immunityLevel" class="help has-text-danger">The maximum immunity level you can apply is {{ privUser.immunityLevel - 1 }}, which is below yours ({{ privUser.immunityLevel }})</p>
+        <p v-else class="help has-text-info">Will only be used if it's greater than user's groups' immunity</p>
       </div>
       <h6 class="title is-6">Base Flags</h6>
       <p class="subtitle is-6">Permission flags for in-game. Only flags you have access to can be added</p>
       <div class="field">
         <input
           id="z"
+          v-model="form.flags"
           type="checkbox"
           value="z"
           class="is-checkradio"
-          v-model="form.flags"
           :disabled="!hasRoot"
           data-tooltip="Only superadmins have permission to add other root users"
         >
         <label>Root (All Permissions)</label>
       </div>
-      <div class="field" v-for="(name, flag) in FLAGS" :key="flag">
+      <div v-for="(name, flag) in FLAGS" :key="flag" class="field">
         <input
           :id="flag"
+          v-model="form.flags"
           type="checkbox"
           :value="flag"
           class="is-checkradio has-tooltip-right"
-          v-model="form.flags"
           :disabled="!canEdit || !hasRoot && privUser.flags.indexOf(flag) === -1"
         >
         <label :for="flag">{{ name }}  <span class="tag">{{ flag }}</span></label>
@@ -175,13 +175,13 @@
       </Field>
     </Tab>
     <Tab name="Actions">
-      <div class="field" v-if="userAdminData">
+      <div v-if="userAdminData" class="field">
         <div class="control">
           <a class="button is-danger" @click='revoke'>Revoke Admin</a>
         </div>
         <p class="help has-text-danger">This will remove all admin privileges, for the web and in-game.</p>
       </div>
-      <div class="field" v-if="privUser.hasPermission('admins.disable_policy_check')">
+      <div v-if="privUser.hasPermission('admins.disable_policy_check')" class="field">
         <div class="control">
           <a :class="['button',{'is-danger': form.policyCheck, 'is-info': !form.policyCheck}]" @click='togglePolicyCheck'>
             <template v-if="form.policyCheck">Disable policy checks</template>
@@ -190,7 +190,7 @@
         </div>
         <p class="help has-text-danger">This will disable any policy checks, and allow granting or editing admins. Does not disable immunity checks</p>
       </div>
-      <div class="field" v-if="userAdminData && !privUser.equals(user.steamid) && privUser.hasPermission('admins.impersonate')">
+      <div v-if="userAdminData && !privUser.equals(user.steamid) && privUser.hasPermission('admins.impersonate')" class="field">
         <div class="control">
           <a class="button" style="background-color: #c42dbf; color: white;" @click='impersonate'>
             <template v-if='privUser.ImpersonatingSteamId === userAdminData.steamid'>
@@ -208,7 +208,7 @@
   </Tabs>
   <hr>
   <!-- TODO: Add a computed policy system -->
-  <article class="message is-danger" v-if="policyFailures.length > 0">
+  <article v-if="policyFailures.length > 0" class="message is-danger">
     <div class="message-body content">
       <b>Player cannot be made an admin due to the following reasons:</b>
       <ul>
@@ -216,13 +216,13 @@
       </ul>
     </div>
   </article>
-  <article class="message is-warning" v-if="noPermsGiven">
+  <article v-if="noPermsGiven" class="message is-warning">
     <div class="message-body">
       <p><b>Warning:</b> No permissions have been granted to the user. The user will not have any admin privileges in game and limited access to the admin panel.</p>
       <p>Apply a permission group, apply some base permissions, or some panel permissions.</p>
     </div>
   </article>
-  <article class="message is-warning" v-if="!form.policyCheck">
+  <article v-if="!form.policyCheck" class="message is-warning">
     <div class="message-body">
       <p><b>Warning:</b> Policy checks have been ignored. </p>
     </div>

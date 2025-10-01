@@ -6,21 +6,21 @@
           <div class="columns">
             <div class="column is-6">
               <Field label="Id*">
-                <template #hint_error v-if="!group.id">
+                <template v-if="!group.id" #hint_error>
                   <p class="help has-text-danger"><Icon icon="fa-exclamation-triangle">Required</Icon></p>
                 </template>
-                <input required :class="['input',{'is-danger': !group.id }]" type="text" placeholder="A unique identifier" v-model="group.id" />
+                <input v-model="group.id" required :class="['input',{'is-danger': !group.id }]" type="text" placeholder="A unique identifier" />
               </Field>
             </div>
             <div class="column is-6">
               <Field label="Name">
-                <input required class="input" type="text" placeholder="An optional friendly name" v-model="group.name" @change="onEnterName" />
+                <input v-model="group.name" required class="input" type="text" placeholder="An optional friendly name" @change="onEnterName" />
               </Field>
             </div>
           </div>
           <Field label="Type*">
             <div :class="['select']">
-              <select required v-model="group.game">
+              <select v-model="group.game" required>
                 <option value="left4dead2">Left 4 Dead 2</option>
                 <option value="source">Generic Source Engine</option>
                 <option value="minecraft">Minecraft</option>
@@ -60,7 +60,7 @@
       <nav class="level">
         <div class="level-left">
           <div class="level-item">
-            <button class="button is-success has-text-white" :disabled="!canSubmit" v-if="hasEdited" @click="save">{{ data ? 'Save Changes' : 'Add Group' }}</button>
+            <button v-if="hasEdited" class="button is-success has-text-white" :disabled="!canSubmit" @click="save">{{ data ? 'Save Changes' : 'Add Group' }}</button>
           </div>
           <div class="level-item">
             <button :class="['button',{'is-warning': hasEdited}]" @click="cancel">{{ hasEdited ? 'Cancel' : 'Close' }}</button>
@@ -68,7 +68,7 @@
         </div>
         <div class="level-right">
           <div class="level-item">
-            <button class="button is-danger has-text-white" v-if="props.data" @click="emit('delete', props.data)"><Icon icon="fa-trash">Delete</Icon></button>
+            <button v-if="props.data" class="button is-danger has-text-white" @click="emit('delete', props.data)"><Icon icon="fa-trash">Delete</Icon></button>
           </div>
         </div>
       </nav>

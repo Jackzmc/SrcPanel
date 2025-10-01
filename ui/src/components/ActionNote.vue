@@ -8,13 +8,13 @@
         </div>
         </div>
         <div class="control">
-        <div class="tags has-addons" v-if="action[1]">
+        <div v-if="action[1]" class="tags has-addons">
             <span class="tag is-info">Key</span>
             <span :class="secondaryClass">{{ format(action[1]) }}</span>
         </div>
         </div>
         <div class="control">
-        <div class="tags has-addons" v-if="action[2]">
+        <div v-if="action[2]" class="tags has-addons">
             <span class="tag is-success">Value</span>
             <span :class="secondaryClass">{{ format(action[2]) }}</span>
         </div>

@@ -1,7 +1,7 @@
 <template>
 <div class="box question-box">
   <div class="taglist">
-    <router-link :to="{name: 'discuss-view', params:{id: discuss.id.toString(), title: urlTitle }, hash: '#comments' }" v-if="discuss.commentsCount > 0" class="ml-3 tag is-pulled-right is-inline is-white"
+    <router-link v-if="discuss.commentsCount > 0" :to="{name: 'discuss-view', params:{id: discuss.id.toString(), title: urlTitle }, hash: '#comments' }" class="ml-3 tag is-pulled-right is-inline is-white"
       data-tooltip="Number of comments">
       <Icon icon="far fa-comments">{{ discuss.commentsCount }}</Icon>
     </router-link>
@@ -15,12 +15,12 @@
     </template>
   </div>
   <h5 class="title is-5"><b>Discuss:</b> {{ discuss.title }}</h5>
-  <FormatText class="subtitle mt-1" :text="discuss.description" markdown v-if="discuss.description" />
+  <FormatText v-if="discuss.description" class="subtitle mt-1" :text="discuss.description" markdown />
 
-  <div class="columns is-mobile is-multiline" v-if="discuss.type == APIDiscussionType.Radio || discuss.type == APIDiscussionType.Checkbox">
-    <div class="column is-6" v-for="option of discuss.options" :key="option.id" @click="selectChoice(option)">
+  <div v-if="discuss.type == APIDiscussionType.Radio || discuss.type == APIDiscussionType.Checkbox" class="columns is-mobile is-multiline">
+    <div v-for="option of discuss.options" :key="option.id" class="column is-6" @click="selectChoice(option)">
       <div style="height:100%" :class="['box','field',{'is-clickable': canInteract}]">
-        <input v-if="canInteract && isSelection && 'selected' in discuss" v-model="discuss.selected" readonly :value="option" :id="option.id.toString()" class="is-checkradio" :type="optionType" :name="'choice' + discuss.id">
+        <input v-if="canInteract && isSelection && 'selected' in discuss" :id="option.id.toString()" v-model="discuss.selected" readonly :value="option" class="is-checkradio" :type="optionType" :name="'choice' + discuss.id">
         <label :for="option.id.toString()">{{ option.label }}</label>
         <span v-if="showPercents" class="is-pulled-right has-text-info">
           {{ Math.round((responses!.counts![option.id.toString()]?.percent || 0) * 100) }}%
@@ -30,27 +30,27 @@
   </div>
   <div v-else-if="discuss.type == APIDiscussionType.ShortText">
     <Field>
-      <input type="text" class="input" placeholder="Enter your submission" v-model.trim="discuss.value" @input="submitChoiceDebounceMultiOrText">
+      <input v-model.trim="discuss.value" type="text" class="input" placeholder="Enter your submission" @input="submitChoiceDebounceMultiOrText">
     </Field>
   </div>
   <div v-else-if="discuss.type == APIDiscussionType.LongText">
     <Field>
-      <textarea class="textarea" placeholder="Enter your submission" v-model="discuss.value" @input="submitChoiceDebounceMultiOrText"></textarea>
+      <textarea v-model="discuss.value" class="textarea" placeholder="Enter your submission" @input="submitChoiceDebounceMultiOrText"></textarea>
     </Field>
   </div>
   <div v-else>
    Unsupported Discussion Type
   </div>
-  <div class="columns mt-3 actions" v-if="!selected">
+  <div v-if="!selected" class="columns mt-3 actions">
     <div class="column">
-      <div class="columns is-gapless is-mobile" v-if="discuss.responses.users">
-        <div class="column is-narrow" v-for="(user, i) in discuss.responses.users.slice(0, MAX_DISCUSSION_AVATARS)" :key="i">
+      <div v-if="discuss.responses.users" class="columns is-gapless is-mobile">
+        <div v-for="(user, i) in discuss.responses.users.slice(0, MAX_DISCUSSION_AVATARS)" :key="i" class="column is-narrow">
           <figure class="image is-32x32" :data-tooltip="user.name">
               <LazyImage alt="User's avatar" img-class="is-rounded" :src="user.avatarUrl"
                 placeholder-src="/img/steam_default_avatar.png" />
           </figure>
         </div>
-        <div class="column mx-2 mt-2" v-if="discuss.responses.totalCount > MAX_DISCUSSION_AVATARS">
+        <div v-if="discuss.responses.totalCount > MAX_DISCUSSION_AVATARS" class="column mx-2 mt-2">
           <p>... and {{ discuss.responses.totalCount - MAX_DISCUSSION_AVATARS }} more</p>
         </div>
       </div>
@@ -60,13 +60,13 @@
       <router-link v-if="privUser.equals(discuss.creator.id)" :to="{name: 'discuss-edit', params:{id: discuss.id.toString()}}" class="is-small is-pulled-right mr-2"><Icon icon="fa-edit" text="Edit" /></router-link>
     </div>
   </div>
-  <p class="has-text-danger" v-if="selected && isClosed">
+  <p v-if="selected && isClosed" class="has-text-danger">
     <Icon icon="fa-clock"> This discussion has closed and no more responses are accepted</Icon>
   </p>
-  <p class="has-text-success" v-if="discuss.state == DiscussionState.SavedSuccess">
+  <p v-if="discuss.state == DiscussionState.SavedSuccess" class="has-text-success">
     <Icon icon="fa-circle-check"> Choice saved successfully</Icon>
   </p>
-  <p class="has-text-danger" v-else-if="discuss.state == DiscussionState.SavedError">
+  <p v-else-if="discuss.state == DiscussionState.SavedError" class="has-text-danger">
     <Icon icon="fa-times"> Could not save your choice. Please try again later.</Icon>
   </p>
   <p v-else-if="discuss.state == DiscussionState.Saving">

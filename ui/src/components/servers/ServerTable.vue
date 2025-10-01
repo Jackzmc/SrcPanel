@@ -1,6 +1,6 @@
 <template>
   <div class="mb-4is-radiusless">
-    <CreateServerModal :group="group" v-if="createModal" @close="createModal = false" />
+    <CreateServerModal v-if="createModal" :group="group" @close="createModal = false" />
     <h4 class="title is-4 mx-4">{{ group.name }}</h4>
     <p v-if="group.description" class="subtitle is-6">{{ group.description }}</p>
     <div class="table-container">
@@ -26,7 +26,7 @@
           </tr>
         </thead>
         <tbody>
-          <ServerRow :priv-user="privUser" v-for="server in group.servers" :key="server.id" :server="server" :game="group.game" :manage="manage"></ServerRow>
+          <ServerRow v-for="server in group.servers" :key="server.id" :priv-user="privUser" :server="server" :game="group.game" :manage="manage"></ServerRow>
         </tbody>
         <tfoot v-if="manage && group.templateId">
           <tr class="has-background-lighter">

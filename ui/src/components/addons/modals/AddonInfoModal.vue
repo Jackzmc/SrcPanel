@@ -1,19 +1,19 @@
 <template>
   <Modal active closable @close="close">
     <div class="modal-card">
-      <header class="modal-card-head" v-if="share && addon">
+      <header v-if="share && addon" class="modal-card-head">
         <p class="modal-card-title">{{ addonName }}
           <span class="tag is-info has-tooltip-bottom is-pulled-right mr-2 is-rounded" data-tooltip="The target share">{{ share.id }}</span>
         </p>
         <button class="delete" aria-label="close" @click='close()'></button>
       </header>
-      <header class="modal-card-head" v-else>
+      <header v-else class="modal-card-head">
         <p class="modal-card-title">
           <Icon icon="spinner" spin>Loading...</Icon>
         </p>
         <button class="delete" aria-label="close" @click='close()'></button>
       </header>
-      <section class="modal-card-body pt-1" v-if="addon">
+      <section v-if="addon" class="modal-card-body pt-1">
         <Tabs inner-wrapper-class="tabs" :options="{ useUrlFragment: false }">
         <Tab name="Overview">
           <div class="buttons">
@@ -74,8 +74,8 @@
                 <th>Rating <Icon icon-class="has-text-info has-tooltip-right" icon="fa-circle-info" data-tooltip="Ratings pulled from stats.jackz.me"></Icon></th>
                 <td v-if="mapRating.loadState == LoadState.Success">
                   <template v-if="mapRating.data?.avgRating">
-                    <Icon size="is-small" icon="fas star" v-for=" i in Math.round( mapRating.data.avgRating ) " :key="i" />
-                    <Icon size="is-small" icon="far star" v-for=" i in 5 - Math.round( mapRating.data.avgRating ) " :key="i + 10" />
+                    <Icon v-for=" i in Math.round( mapRating.data.avgRating ) " :key="i" size="is-small" icon="fas star" />
+                    <Icon v-for=" i in 5 - Math.round( mapRating.data.avgRating ) " :key="i + 10" size="is-small" icon="far star" />
                     {{ Number( mapRating.data.avgRating ).toFixed( 1 ) }}
                   </template>
                   <template v-else>
@@ -89,7 +89,7 @@
               </tr>
             </tbody>
           </table>
-          <article class="message" v-if="parsedDescriptionHTML">
+          <article v-if="parsedDescriptionHTML" class="message">
             <div class="message-body content is-size-7">
               <h4>Description</h4>
               <!-- eslint-disable-next-line vue/no-v-html -- is sanitied -->
@@ -110,7 +110,7 @@
               <tr v-for="(installed, dest) in installInfo" :key="dest">
                 <td>
                   <input :id="dest" type="checkbox" class="switch is-rtl" :checked="installed == true"
-                    @click="enableAddon(dest, installed ? 'disable' : 'enable')" :disabled="installed == null">
+                    :disabled="installed == null" @click="enableAddon(dest, installed ? 'disable' : 'enable')">
                     <label :for="dest"></label>
                     <!----<label class="checkbox">
                     <input type="checkbox" :checked="installed == true" @click="enableAddon(dest, installed ? 'disable' : 'enable')" :disabled="installed == null" />

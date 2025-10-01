@@ -8,10 +8,10 @@
   </div>
   <template v-if="route.params.tab === 'stats'">
     <h5 class="title is-5">Player Statistics</h5>
-    <div class="container has-text-centered" v-if="!info">
+    <div v-if="!info" class="container has-text-centered">
       <br>
-      <p class="has-text-danger" v-if="statsFailure"><b>Error:</b> {{ statsFailure }}</p>
-      <Icon icon="spinner" spin v-else>Fetching player statistics... please wait</Icon>
+      <p v-if="statsFailure" class="has-text-danger"><b>Error:</b> {{ statsFailure }}</p>
+      <Icon v-else icon="spinner" spin>Fetching player statistics... please wait</Icon>
       <br>
     </div>
     <template v-else>
@@ -145,23 +145,23 @@
       </div>
       <template v-if="userAdminData">
         <hr>
-        <article class="message is-danger" v-if="profile.loadState == LoadState.Error">
+        <article v-if="profile.loadState == LoadState.Error" class="message is-danger">
           <div class="message-body">
             Could not fetch user's profile data at this time.
           </div>
         </article>
-        <div class="has-text-centered my-5" v-else-if="profile.loadState == LoadState.Loading">
+        <div v-else-if="profile.loadState == LoadState.Loading" class="has-text-centered my-5">
           <Icon icon="fa-spinner" icon-class="mr-2" class="is-size-4" spin>Fetching user's profile</Icon>
         </div>
-        <div class="columns mt-2" v-else-if="profile.data">
+        <div v-else-if="profile.data" class="columns mt-2">
           <div class="column is-6">
             <Field label="Birthday">
               <p v-if="!profile.editing">
                 <template v-if="profile.data.birthMonth">{{ MONTHS[profile.data.birthMonth] }}</template><em v-else>(not set)</em>
                 <span class="ml-1"><template v-if="profile.data.birthDate">{{ profile.data.birthDate }}</template><em v-else>(not set)</em></span>
-                <a class="ml-1" v-if="isSelfProfile" @click="profile.editing = true">(Change)</a>
+                <a v-if="isSelfProfile" class="ml-1" @click="profile.editing = true">(Change)</a>
               </p>
-              <Teleport to="#manage-user-footer" v-if="profile.editing">
+              <Teleport v-if="profile.editing" to="#manage-user-footer">
                 <button
                   :class="['button','has-tooltip-top']"
                   @click="profile.editing = false"
@@ -171,7 +171,7 @@
                   @click="setProfileData"
                 >Save Profile Changes</button>
               </Teleport>
-              <div class="field is-grouped" v-if="isSelfProfile && profile.editing">
+              <div v-if="isSelfProfile && profile.editing" class="field is-grouped">
                 <div class="control">
                   <div class="select">
                     <select v-model="profile.data.birthMonth">
@@ -180,13 +180,13 @@
                   </div>
                 </div>
                 <p class="control">
-                  <input style="width:6rem" class="input" type="number" :min="1" :max="30" placeholder="Day" v-model="profile.data.birthDate" />
+                  <input v-model="profile.data.birthDate" style="width:6rem" class="input" type="number" :min="1" :max="30" placeholder="Day" />
                 </p>
               </div>
             </Field>
           </div>
         </div>
-        <div class="content mt-2" v-else-if="userAdminData">
+        <div v-else-if="userAdminData" class="content mt-2">
           <article class="message is-primary">
             <div class="message-body">
               User has not setup a profile
@@ -198,7 +198,7 @@
   </template>
   <template v-else-if="route.params.tab === 'actions'">
     <div class="buttons">
-      <button class="button is-pulled-right has-tooltip-right" @click="updateSteamInfo" data-tooltip="Updates our local copy of their name and avatar">Update Steam Info</button>
+      <button class="button is-pulled-right has-tooltip-right" data-tooltip="Updates our local copy of their name and avatar" @click="updateSteamInfo">Update Steam Info</button>
     </div>
 </template>
 </section>

@@ -3,26 +3,26 @@
   <div class="container">
     <h4 class="title is-4">Select a share</h4>
     <div class="columns">
-      <div class="column is-6" v-for="share in shares" :key="share.id">
+      <div v-for="share in shares" :key="share.id" class="column is-6">
         <router-link class="box has-background-info-light" :to="{name: 'admin-share-detail', params: { shareId: share.id, viewMode: 'files' }}">
           <h4 class="title is-4">{{ share.name }} <span v-if="share.appid" data-tooltip="The steam appid for this share"
               class="tag is-dark is-pulled-right">{{ share.appid }}</span></h4>
           <p class="subtitle is-6">{{ share.description ?? '&nbsp;' }}</p>
           <div class="tags" data-tooltip="Install destinations">
-            <span class="tag is-dark" v-for="(dest, id) in share.destinations" :key="id">
+            <span v-for="(dest, id) in share.destinations" :key="id" class="tag is-dark">
               {{ id }}
             </span>
           </div>
           <div class="level mt-1 is-mobile">
             <div class="level-left" data-tooltip="Supported file sources">
-              <div class="level-item" v-for="(enabled, source) in share.downloadSources" :key="source">
+              <div v-for="(enabled, source) in share.downloadSources" :key="source" class="level-item">
                 <span class="tag is-info">
                   {{ source.replace(/_/g, ' ') }}
                 </span>
               </div>
             </div>
             <div class="level-right" data-tooltip="Supported file extensions">
-              <div class="level-item" v-for="ext in share.fileExts" :key="ext">
+              <div v-for="ext in share.fileExts" :key="ext" class="level-item">
                 <span class="tag is-info">
                   {{ ext }}
                 </span>

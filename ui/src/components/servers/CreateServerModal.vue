@@ -12,7 +12,7 @@
   <!-- MODAL BODY-->
   <template v-if="state === ModalState.SelectGroup">
     <h5 class="subtitle is-5">Select a server group to continue</h5>
-    <div class="my-6 mx-4" v-if="!serverGroups">
+    <div v-if="!serverGroups" class="my-6 mx-4">
       <Icon icon="fa-spinner" spin>Fetching groups</Icon>
     </div>
     <div class="list has-hoverable-list-items has-visible-pointer-controls">
@@ -31,10 +31,10 @@
     </div>
     <br>
     <!-- TODO: only show if another instance of group exists -->
-    <p class="is-size-5" v-if="selectedGroup!.currentInstances > 0">Are you sure? There are
+    <p v-if="selectedGroup!.currentInstances > 0" class="is-size-5">Are you sure? There are
       {{ selectedGroup!.currentInstances }} available instances already. It's preferable that you try starting them before
       creating a new instance</p>
-    <p class="is-size-5" v-else>Are you sure? </p>
+    <p v-else class="is-size-5">Are you sure? </p>
     <br>
     <p class="is-size-5">New instances may automatically be removed after they remain empty for some amount of time</p>
   </template>
@@ -77,7 +77,7 @@
     <p class="subtitle is-5">
       An error occurred while trying to create a new instance:
     </p>
-    <article class="message is-danger" v-if="data.error === 'NO_FREE_RESOURCES'">
+    <article v-if="data.error === 'NO_FREE_RESOURCES'" class="message is-danger">
       <div class="message-body">
         <p>There are not enough system resources available at this time to create a new instance.</p>
         <br>
@@ -86,13 +86,13 @@
           <b>Thresholds:</b>
           <ul>
             <li>- Current {{ (data.cpu.currentLoad*100).toFixed(2) }}% &gt; {{ (data.cpu.threshold*100).toFixed(2) }}%
-              <Icon icon="fa-circle-exclamation" icon-class="has-text-danger" v-if="data.cpu.currentLoad > data.cpu.threshold"></Icon>
-              <Icon icon="fa-circle-check" icon-class="has-text-success" v-else-if="(data.cpu.currentLoad+0.02) < data.cpu.threshold"></Icon>
+              <Icon v-if="data.cpu.currentLoad > data.cpu.threshold" icon="fa-circle-exclamation" icon-class="has-text-danger"></Icon>
+              <Icon v-else-if="(data.cpu.currentLoad+0.02) < data.cpu.threshold" icon="fa-circle-check" icon-class="has-text-success"></Icon>
             </li>
             <li>- Average
               {{ (data.cpu.avgLoad*100).toFixed(2) }}% > {{ (data.cpu.threshold*100).toFixed(2) }}%
-              <Icon icon="fa-circle-exclamation" icon-class="has-text-danger" v-if="data.cpu.avgLoad > data.cpu.threshold"></Icon>
-              <Icon icon="fa-circle-check" icon-class="has-text-success" v-else-if="(data.cpu.avgLoad+0.02) < data.cpu.threshold"></Icon>
+              <Icon v-if="data.cpu.avgLoad > data.cpu.threshold" icon="fa-circle-exclamation" icon-class="has-text-danger"></Icon>
+              <Icon v-else-if="(data.cpu.avgLoad+0.02) < data.cpu.threshold" icon="fa-circle-check" icon-class="has-text-success"></Icon>
             </li>
           </ul>
         </div>
@@ -101,8 +101,8 @@
           <li><b>Available: </b>{{ formatSize(data.memory.available) }} / {{ formatSize(data.memory.total) }}</li>
           <li>
             <b>Threshold: </b> {{ (data.memory.percentAvailable*100).toFixed(2) }}% &lt; {{ (data.memory.threshold*100).toFixed(2) }}%
-            <Icon icon="fa-circle-exclamation" icon-class="has-text-danger" v-if="data.memory.percentAvailable < data.memory.threshold"></Icon>
-            <Icon icon="fa-circle-check" icon-class="has-text-success" v-else></Icon>
+            <Icon v-if="data.memory.percentAvailable < data.memory.threshold" icon="fa-circle-exclamation" icon-class="has-text-danger"></Icon>
+            <Icon v-else icon="fa-circle-check" icon-class="has-text-success"></Icon>
           </li>
           </ul>
         </div>
@@ -110,12 +110,12 @@
         <p>Try again later when resources are available</p>
       </div>
     </article>
-    <article class="message is-danger" v-else>
-      <div class="message-body" v-if="data">
+    <article v-else class="message is-danger">
+      <div v-if="data" class="message-body">
         <strong>{{ data.error }}</strong>:<br>
         {{ data.message }}
       </div>
-      <div class="message-body" v-else>
+      <div v-else class="message-body">
       No information available
       </div>
     </article>
@@ -130,19 +130,19 @@
   <!-- END MODAL BODY-->
   <template #buttons>
     <template v-if="state == ModalState.ConfirmCreateInstance">
-    <button @click="state = ModalState.SelectGroup" class="button">Back</button>
-    <button @click="createInstance" class="button is-info" v-if="confirmDelayCountdown === 0">Create
+    <button class="button" @click="state = ModalState.SelectGroup">Back</button>
+    <button v-if="confirmDelayCountdown === 0" class="button is-info" @click="createInstance">Create
       Instance</button>
-    <button class="button is-info" v-else disabled data-tooltip="Please read above before confirming">
+    <button v-else class="button is-info" disabled data-tooltip="Please read above before confirming">
       <Icon icon="fa-hourglass">{{ confirmDelayCountdown }}s</Icon>
     </button>
     </template>
     <template v-else-if="state === ModalState.SelectGroup">
-      <button @click="emit('close')" class="button">Cancel</button>
-      <button @click="confirmGroup" class="button is-info" :disabled="!selectedGroup">Next</button>
+      <button class="button" @click="emit('close')">Cancel</button>
+      <button class="button is-info" :disabled="!selectedGroup" @click="confirmGroup">Next</button>
     </template>
     <template v-else>
-      <button @click="emit('close')" class="button">Close</button>
+      <button class="button" @click="emit('close')">Close</button>
     </template>
   </template>
 </ModalCard>

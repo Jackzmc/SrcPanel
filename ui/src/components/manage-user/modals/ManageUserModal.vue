@@ -3,17 +3,17 @@
     <div class="modal-background"></div>
     <div class="modal-card">
       <header class="modal-card-head">
-        <p class="modal-card-title" v-if="user">
+        <p v-if="user" class="modal-card-title">
           <image class="image is-24x24 is-inline-block mr-2">
             <img :src="'/api/users/' + user.steamid + '/avatar'" />
           </image>
           <b>{{ user.name }}</b> <br class="is-hidden is-flex-touch"> <span class="is-pulled-right">{{ user.steamid }}</span>
         </p>
         <p v-else-if="fetchError" class="modal-card-title has-text-danger">Error</p>
-        <Icon icon="spinner" v-else spin class="is-size-4">Fetching user details</Icon>
+        <Icon v-else icon="spinner" spin class="is-size-4">Fetching user details</Icon>
         &nbsp;&nbsp;
       </header>
-      <section class="modal-card-body" v-if="fetchError">
+      <section v-if="fetchError" class="modal-card-body">
         <article class="message is-danger">
           <div class="message-body">
             {{ fetchError }}
@@ -23,14 +23,14 @@
       <section class="modal-card-body px-0 pt-4">
         <div class="tabs is-fullwidth is-boxed is-centered">
           <ul>
-            <router-link :to="{ name: 'manage-user-overview', params: { tab: 'stats' } }" v-slot="{ href, navigate}" custom>
+            <router-link v-slot="{ href, navigate}" :to="{ name: 'manage-user-overview', params: { tab: 'stats' } }" custom>
               <li :class="{'is-active': route.name === 'manage-user-overview' }">
                 <a :href="href" @click="navigate">
                   <Icon icon="fa-info-circle">Overview</Icon>
                 </a>
               </li>
             </router-link>
-            <router-link v-if="privUser.hasPermission('admins.view')" :to="{ name: 'manage-user-admin' }" v-slot="{ href, navigate, isExactActive }" custom>
+            <router-link v-if="privUser.hasPermission('admins.view')" v-slot="{ href, navigate, isExactActive }" :to="{ name: 'manage-user-admin' }" custom>
               <li :class="{'is-active': isExactActive, 'has-text-grey-dark': true }">
                 <a :href="href" @click="navigate">
                   <Icon :icon="userAdminData ? 'fa-user-pen' : 'fa-user-plus'">Privileges&nbsp;</Icon>
@@ -39,14 +39,14 @@
                 </a>
               </li>
             </router-link>
-            <router-link v-if="privUser.hasPermission('notes.view')" :to="{ name: 'manage-user-notes' }" v-slot="{ href, navigate, isExactActive }" custom>
+            <router-link v-if="privUser.hasPermission('notes.view')" v-slot="{ href, navigate, isExactActive }" :to="{ name: 'manage-user-notes' }" custom>
               <li :class="{'is-active': isExactActive }">
                 <a :href="href" @click="navigate">
                   <Icon icon="fa-note-sticky">Notes <span class="tag ml-1 is-rounded">{{ user?.notesCount ?? 0 }}</span></Icon>
                 </a>
               </li>
             </router-link>
-            <router-link v-if="privUser.hasPermission('bans.view')" :to="{ name: 'manage-user-bans' }" v-slot="{ href, navigate }" custom>
+            <router-link v-if="privUser.hasPermission('bans.view')" v-slot="{ href, navigate }" :to="{ name: 'manage-user-bans' }" custom>
               <li :class="{'is-active': route.name === 'manage-user-bans' }">
                 <a :href="href" @click="navigate">
                   <Icon icon="fa-gavel">
@@ -58,8 +58,8 @@
             </router-link>
           </ul>
         </div>
-        <router-view class="block px-6" :priv-user="privUser" :user="user" :user-admin-data="userAdminData" @close="router.push(routerHref)" @update-user="onUserUpdate" v-if="user" />
-        <div class="block px-6" v-else>
+        <router-view v-if="user" class="block px-6" :priv-user="privUser" :user="user" :user-admin-data="userAdminData" @close="router.push(routerHref)" @update-user="onUserUpdate" />
+        <div v-else class="block px-6">
           <div class="block skeleton-lines">
             <div></div>
             <div></div>
@@ -81,7 +81,7 @@
         <img src="@/assets/loader.gif" />
       </section> -->
       <footer class="modal-card-foot">
-        <div class="buttons" id="manage-user-footer">
+        <div id="manage-user-footer" class="buttons">
           <router-link class="button" :to="routerHref">
             <Icon icon="close">Close</Icon>
           </router-link>

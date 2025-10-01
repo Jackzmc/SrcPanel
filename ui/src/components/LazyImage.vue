@@ -4,11 +4,11 @@
     alt="Loading image" :class="imgClass" :src="props.placeholderSrc">
   <img v-else-if="loadState == LoadState.Error && props.errorSrc"
     alt="Failed to load image" :class="imgClass" :src="props.errorSrc" loading="lazy">
-  <img ref="image" fetchpriority="low"
-    :alt="alt"
-    @load="onLoad"
-    v-show="loadState === LoadState.Success" v-if="startLoading && loadState != LoadState.Error && props.src"
-    :class="imgClass" :src="props.src"
+  <img v-show="loadState === LoadState.Success" v-if="startLoading && loadState != LoadState.Error && props.src"
+    ref="image"
+    fetchpriority="low"
+    :alt="alt" :class="imgClass"
+    :src="props.src" @load="onLoad"
     @error="loadState = LoadState.Error"
   >
 </span>

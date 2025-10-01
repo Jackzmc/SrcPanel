@@ -16,28 +16,28 @@
       <div class="columns">
         <div class="column is-6">
           <Field label="Id*">
-            <template #hint_error v-if="!destId">
+            <template v-if="!destId" #hint_error>
               <p class="help has-text-danger"><Icon icon="fa-exclamation-triangle">Required</Icon></p>
             </template>
-            <input required :class="['input',{'is-danger': !destId }]" type="text" placeholder="A unique identifier" v-model="destId" />
+            <input v-model="destId" required :class="['input',{'is-danger': !destId }]" type="text" placeholder="A unique identifier" />
           </Field>
         </div>
         <div class="column is-6">
           <Field label="Name">
-            <input required class="input" type="text" placeholder="An optional friendly name" v-model="destination.name" @change="onEnterName" />
+            <input v-model="destination.name" required class="input" type="text" placeholder="An optional friendly name" @change="onEnterName" />
           </Field>
         </div>
       </div>
 
       <Field label="Paths*">
         <Field>
-          <input required type="text" :class="['input',{'is-danger': destination.paths.length === 0 || destination.paths[0] == ''}]" placeholder="/var/shares/my-share/addons" v-model="destination!.paths[0]">
-          <p class="help has-text-danger" v-if="destination.paths.length === 0 || destination.paths[0] == ''"><Icon icon="fa-exclamation-triangle">At least one path is required</Icon></p>
+          <input v-model="destination!.paths[0]" required type="text" :class="['input',{'is-danger': destination.paths.length === 0 || destination.paths[0] == ''}]" placeholder="/var/shares/my-share/addons">
+          <p v-if="destination.paths.length === 0 || destination.paths[0] == ''" class="help has-text-danger"><Icon icon="fa-exclamation-triangle">At least one path is required</Icon></p>
         </Field>
         <template v-if="destination.paths.length > 1">
-          <div class="field has-addons" v-for="i in destination.paths.length - 2" :key="i">
+          <div v-for="i in destination.paths.length - 2" :key="i" class="field has-addons">
             <div class="control is-expanded">
-              <input required type="text" :class="['input',{'is-danger': destination.paths[i+1] == ''}]" placeholder="/var/shares/my-share/addons" v-model="destination.paths[i+1]">
+              <input v-model="destination.paths[i+1]" required type="text" :class="['input',{'is-danger': destination.paths[i+1] == ''}]" placeholder="/var/shares/my-share/addons">
             </div>
             <div class="control">
               <button class="button is-danger" @click="destination!.paths.splice(i+1, 1)">
@@ -53,7 +53,7 @@
         <div :class="['control',{'is-loading': !availableServers}]">
           <!-- FIXME: when destination.serverIds changes, the list doesn't update -->
           <!-- Possibly v-if to reset it, or rerun js-->
-          <select ref="element" v-if="destination.serverIds" :disabled="!availableServers" multiple data-type="tags" data-placeholder="Choose Tags" v-model="destination.serverIds" data-selectable="false" :data-source="availableServers">
+          <select v-if="destination.serverIds" ref="element" v-model="destination.serverIds" :disabled="!availableServers" multiple data-type="tags" data-placeholder="Choose Tags" data-selectable="false" :data-source="availableServers">
             <option v-for="(server) in availableServers" :key="server.id" :value="server.id" selected>{{ server.name ?? server.id }}</option>
           </select>
         </div>
@@ -67,7 +67,7 @@
 
     <template #buttons>
       <template v-if="selectedId">
-        <button class="button is-success has-text-white" :disabled="!canSubmit" v-if="hasEdited">Save Changes</button>
+        <button v-if="hasEdited" class="button is-success has-text-white" :disabled="!canSubmit">Save Changes</button>
         <button :class="['button',{'is-warning': hasEdited}]" @click="cancel">{{ hasEdited ? 'Cancel' : 'Close' }}</button>
       </template>
       <template v-else>

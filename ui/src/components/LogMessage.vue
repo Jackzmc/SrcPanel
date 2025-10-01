@@ -1,8 +1,8 @@
 <template>
   <span v-if="props.log.adminChat" class="tag is-pulled-left is-warning mr-2 mt-1" data-tooltip="Message was sent in the admin chat">
-    <Icon :icon="icon" v-if="icon" icon-class="pr-1" />CHAT</span>
+    <Icon v-if="icon" :icon="icon" icon-class="pr-1" />CHAT</span>
   <span v-else :class="['tag', 'is-pulled-left mr-2 mt-1', FILTER_DATA.types[props.log.type]]">
-    <Icon :icon="icon" v-if="icon" icon-class="pr-1" />
+    <Icon v-if="icon" :icon="icon" icon-class="pr-1" />
     {{ props.log.type }}
   </span>
   <template v-if="props.log.type === 'CHAT'">
@@ -19,15 +19,15 @@
     </b>
     <template v-for="m in messagePieces" :key="m">
       <b v-if="m.LMatch">
-        <UserComponent hide-avatar v-if="m.user" :user="m.user" :type="m.type" @set-filter="setFilter" />
+        <UserComponent v-if="m.user" hide-avatar :user="m.user" :type="m.type" @set-filter="setFilter" />
       </b>
       <!-- eslint-disable vue/no-v-html -- sanitized -->
-      <span v-else v-html="m.content" :class="{
+      <span v-else :class="{
         'has-text-danger': props.log.type === 'QUIT',
         'has-text-success': props.log.type === 'JOIN',
         'has-text-info': props.log.type === 'INFO',
         'has-text-weight-bold': props.log.type === 'INFO'
-      }"></span>
+      }" v-html="m.content"></span>
     </template>
   </template>
   <span v-if="log.via === 'rcon'" class="has-text-info ml-1">(via console)&nbsp;</span>

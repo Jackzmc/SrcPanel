@@ -4,35 +4,35 @@
     <div class="columns">
       <div class="column is-8">
           <DoneModal v-if="serverInfo" :server="serverInfo" />
-          <div class="tabs is-toggle is-fullwidth is-large" v-if="!creationActive">
+          <div v-if="!creationActive" class="tabs is-toggle is-fullwidth is-large">
             <ul>
               <li v-for="(step, i) in STEPS" :key="i" :class="{'is-active': currentStep >= i }">
-                <a @click="setStep(i)" :style="{'opacity': (i > highestStep) ? 0.5: undefined, cursor: i > highestStep ? 'not-allowed' : undefined }" :disabled="!meta.data">
+                <a :style="{'opacity': (i > highestStep) ? 0.5: undefined, cursor: i > highestStep ? 'not-allowed' : undefined }" :disabled="!meta.data" @click="setStep(i)">
                   <Icon :icon="step.icon"></Icon>
                   <span>{{ step.title }}</span>
                 </a>
               </li>
             </ul>
           </div>
-        <SettingsPage v-if="currentStep === 0 && meta.data" :priv-user="privUser" :meta="meta.data" v-model="formData" />
-        <ManagePlugins v-else-if="currentStep === 1 && meta.data" :priv-user="privUser" :meta="meta.data" :form-data="formData" v-model="enabledPlugins" />
+        <SettingsPage v-if="currentStep === 0 && meta.data" v-model="formData" :priv-user="privUser" :meta="meta.data" />
+        <ManagePlugins v-else-if="currentStep === 1 && meta.data" v-model="enabledPlugins" :priv-user="privUser" :meta="meta.data" :form-data="formData" />
         <ManageAddons v-else-if="currentStep === 2" @add-item="onAddonChange" @del-item="onAddonChange" />
         <ConfirmPage v-else-if="currentStep === 3 || currentStep === 4" :form-data="formData" :form="form" @server="(s: CustomServerInfo) => serverInfo = s" @loadState="onConfirmLoadState" />
-        <div class="box has-background-danger-light" v-else-if="meta.error">
+        <div v-else-if="meta.error" class="box has-background-danger-light">
           <h4 class="title is-3">
             <Icon icon="fa-exclamation-triangle" icon-class="mr-2">Failed to load information</Icon>
           </h4>
           <p class="subtitle is-5">{{ meta.error }}</p>
         </div>
-        <div class="box has-background-info-light" v-else>
+        <div v-else class="box has-background-info-light">
           <h4 class="title is-3"><Icon icon="fa-spinner" icon-class="mr-2" spin>Loading</Icon></h4>
           <p class="subtitle is-5">Please wait, fetching information...</p>
         </div>
         <br>
-        <button class="button" @click="setStep(currentStep - 1)" v-if="meta.data && currentStep > 0">
+        <button v-if="meta.data && currentStep > 0" class="button" @click="setStep(currentStep - 1)">
           <Icon icon="fa-chevron-left">Back</Icon>
         </button>
-        <button :class="['button','is-pulled-right',{'is-info': canAdvance}]" @click="setStep(currentStep + 1)" v-if="meta.data && currentStep < STEPS.length - 1" :disabled="!canAdvance">
+        <button v-if="meta.data && currentStep < STEPS.length - 1" :class="['button','is-pulled-right',{'is-info': canAdvance}]" :disabled="!canAdvance" @click="setStep(currentStep + 1)">
           <Icon icon="fa-chevron-right" text-left="Next"></Icon>
         </button>
       </div>

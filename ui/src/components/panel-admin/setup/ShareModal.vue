@@ -10,23 +10,23 @@
     <div class="columns">
       <div class="column is-6">
         <Field label="Id*">
-          <template #hint_error v-if="!share.id">
+          <template v-if="!share.id" #hint_error>
             <p class="help has-text-danger"><Icon icon="fa-exclamation-triangle">Required</Icon></p>
           </template>
-          <input required :class="['input',{'is-danger': !share.id }]" type="text" placeholder="A unique identifier" v-model="share.id" />
+          <input v-model="share.id" required :class="['input',{'is-danger': !share.id }]" type="text" placeholder="A unique identifier" />
         </Field>
       </div>
       <div class="column is-6">
         <Field label="Name">
-          <input required class="input" type="text" placeholder="An optional friendly name" v-model="share.name" @change="onEnterName" />
+          <input v-model="share.name" required class="input" type="text" placeholder="An optional friendly name" @change="onEnterName" />
         </Field>
       </div>
     </div>
     <Field label="Source Directory Path*">
-      <template #hint_error v-if="!share.sourceFolder">
+      <template v-if="!share.sourceFolder" #hint_error>
         <p class="help has-text-danger"><Icon icon="fa-exclamation-triangle">Required</Icon></p>
       </template>
-      <input required :class="['input',{'is-danger': !share.sourceFolder}]" type="text" placeholder="/home/steam/content/addons" v-model="share.sourceFolder" />
+      <input v-model="share.sourceFolder" required :class="['input',{'is-danger': !share.sourceFolder}]" type="text" placeholder="/home/steam/content/addons" />
     </Field>
   </Template>
   <template v-if="selectedTab === 'sources'">
@@ -41,7 +41,7 @@
         </Field>
       </div>
       <div class="column is-6">
-        <Field label="App Id" info="The appid for steam workshop downloading" v-show="enabledSources['steam_workshop']">
+        <Field v-show="enabledSources['steam_workshop']" label="App Id" info="The appid for steam workshop downloading">
           <input type="number" class="input" placeholder="550">
         </Field>
       </div>
@@ -56,7 +56,7 @@
         </Field>
       </div>
       <div class="column is-6">
-        <Field label="Allowed File Extenstions" info="Comma,separated" v-show="enabledSources['direct']">
+        <Field v-show="enabledSources['direct']" label="Allowed File Extenstions" info="Comma,separated">
           <input data-type="tags" class="input" type="text" placeholder=".vpk, .smx">
         </Field>
       </div>

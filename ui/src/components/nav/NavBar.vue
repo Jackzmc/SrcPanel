@@ -27,7 +27,7 @@
               </a>
               <div class="navbar-dropdown is-left" style="width: max-content">
                 <template v-for="child in navRoute.children" :key="child.name">
-                  <hr class="navbar-divider" v-if="child.showDivider">
+                  <hr v-if="child.showDivider" class="navbar-divider">
                   <NavBarItem :route="child" />
                 </template>
               </div>
@@ -40,7 +40,7 @@
       <div class="navbar-end">
         <div class="navbar-item">
           <Field icon-left="fa-search">
-            <input type="text" class="input" placeholder="Search..." v-model="searchQuery" @keyup.enter.prevent="performSearch" />
+            <input v-model="searchQuery" type="text" class="input" placeholder="Search..." @keyup.enter.prevent="performSearch" />
           </Field>
         </div>
         <div class="navbar-item has-tooltip-bottom" :data-tooltip="darkMode ? 'Turn dark mode off' : 'Turn dark mode on'">
@@ -49,7 +49,7 @@
           </a>
         </div>
         <template v-if="privUser">
-          <a :class="['navbar-item',{loading: notificationsClearing }]" v-if="privUser.notifications.length > 0" @click="showModal = 'notifications'">
+          <a v-if="privUser.notifications.length > 0" :class="['navbar-item',{loading: notificationsClearing }]" @click="showModal = 'notifications'">
             <Icon icon="bell">{{ privUser.notifications.length }}</Icon>
           </a>
           <div class="navbar-item has-dropdown is-hoverable ">
@@ -64,7 +64,7 @@
               <a class="navbar-item" @click="showModal = 'settings'">
                 <Icon icon="fa-gear" text="User Settings" />
               </a>
-              <router-link class="navbar-item" to="/panel/dashboard" v-if="privUser!.hasPermission('panel.view')">
+              <router-link v-if="privUser!.hasPermission('panel.view')" class="navbar-item" to="/panel/dashboard">
                 <Icon icon="fa-sitemap" text="Panel Administration" />
               </router-link>
               <hr class="navbar-divider">

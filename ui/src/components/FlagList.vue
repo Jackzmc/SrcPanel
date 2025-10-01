@@ -3,21 +3,21 @@
   <div class="field">
     <input
       id="z"
+      v-model="editedFlags"
       type="checkbox"
       value="z"
       :class="['is-checkradio',,{'has-no-border': !editable}]"
-      v-model="editedFlags"
       :disabled="!hasRoot"
     >
     <label>Root (All Permissions)</label>
   </div>
-  <div class="field" v-for="(name, flag) in shownFlags" :key="flag">
+  <div v-for="(name, flag) in shownFlags" :key="flag" class="field">
     <input
       :id="flag"
+      v-model="editedFlags"
       type="checkbox"
       :value="flag"
       :class="['is-checkradio',{'has-no-border': !editable}]"
-      v-model="editedFlags"
       :disabled="!hasRoot && privUser.flags.indexOf(flag) === -1"
     >
     <label :for="flag">{{ name }} <span class="tag">{{ flag }}</span></label>

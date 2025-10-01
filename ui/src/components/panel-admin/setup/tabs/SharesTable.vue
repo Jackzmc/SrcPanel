@@ -1,7 +1,7 @@
 <template>
   <div>
     <ShareModal v-if="modalActive" :data="selectedShare" @close="closeModal" @save="onSave" />
-    <table class="table is-fullwidth is-bordered" v-if="loadState == LoadState.Success">
+    <table v-if="loadState == LoadState.Success" class="table is-fullwidth is-bordered">
       <thead>
         <tr>
         <th></th>
@@ -19,7 +19,7 @@
           <td class="valign">{{ share.name }}</td>
           <td class="valign">
             <div class="tags">
-              <span class="tag" v-for="source in getEnabledSources(share)" :key="source">
+              <span v-for="source in getEnabledSources(share)" :key="source" class="tag">
                 {{ source }}
               </span>
             </div>
@@ -42,7 +42,7 @@
     </table>
     <div v-else-if="loadState === LoadState.Loading">
       <p class="has-text-centered is-size-3"><Icon icon="fa-spinner" spin icon-class="mr-4">Loading</Icon></p>
-      <div class="skeleton-block" v-for="i in 6" :key="i"></div>
+      <div v-for="i in 6" :key="i" class="skeleton-block"></div>
     </div>
     <div v-else-if="loadState === LoadState.Error">
       <article class="message is-danger">

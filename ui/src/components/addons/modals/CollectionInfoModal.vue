@@ -49,8 +49,8 @@
                   <th>Rating</th>
                   <td v-if="mapRating.loadState == LoadState.Success">
                     <template v-if="mapRating.data?.avgRating">
-                      <Icon size="is-small" icon="fas star" v-for=" i in Math.round( mapRating.data.avgRating ) " :key="i" />
-                      <Icon size="is-small" icon="far star" v-for=" i in 5 - Math.round( mapRating.data.avgRating ) " :key="i + 10" />
+                      <Icon v-for=" i in Math.round( mapRating.data.avgRating ) " :key="i" size="is-small" icon="fas star" />
+                      <Icon v-for=" i in 5 - Math.round( mapRating.data.avgRating ) " :key="i + 10" size="is-small" icon="far star" />
                       {{ Number( mapRating.data.avgRating ).toFixed( 1 ) }}
                     </template>
                     <template v-else>
@@ -99,7 +99,7 @@
                 <tr v-for="(installed, dest) in installInfo.collection" :key="dest">
                   <td>
                     <input :id="dest" type="checkbox" class="switch is-rtl" :checked="installed == true"
-                      @click="enableAddons(dest, installed ? 'disable' : 'enable')" :disabled="installed == null">
+                      :disabled="installed == null" @click="enableAddons(dest, installed ? 'disable' : 'enable')">
                     <label :for="dest"></label>
                     <!----<label class="checkbox">
                                 <input type="checkbox" :checked="installed == true" @click="enableAddon(dest, installed ? 'disable' : 'enable')" :disabled="installed == null" />

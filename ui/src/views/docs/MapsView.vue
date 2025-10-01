@@ -3,7 +3,7 @@
   <div class="columns">
     <div class="column">
       <div class="list">
-        <div class="list-item" v-for="map in CAMPAIGNS" :key="map.name">
+        <div v-for="map in CAMPAIGNS" :key="map.name" class="list-item">
           <div class="list-item-content">
             <div class="list-item-title">
               {{ map.name }}

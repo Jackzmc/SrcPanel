@@ -3,7 +3,7 @@
   <Tabs inner-wrapper-class="tabs" :options="{useUrlFragment:false}">
     <Tab name="General">
       <Field label="Name">
-        <input type="text" class="input" v-model="action.name" placeholder="My Action" />
+        <input v-model="action.name" type="text" class="input" placeholder="My Action" />
       </Field>
       <div class="columns">
         <div class="column">
@@ -18,33 +18,33 @@
           </Field>
         </div>
         <div class="column">
-          <Field label="Custom Namespace" v-if="!command.namespaceSelect">
-            <input type="text" class="input" v-model="command.namespace" placeholder="builtin" />
+          <Field v-if="!command.namespaceSelect" label="Custom Namespace">
+            <input v-model="command.namespace" type="text" class="input" placeholder="builtin" />
           </Field>
         </div>
       </div>
       <Field label="Command">
-        <input type="text" class="input" v-model="command.command" placeholder="stop" />
+        <input v-model="command.command" type="text" class="input" placeholder="stop" />
       </Field>
       <template #buttons>
-        <button class="button is-success has-text-white" :disabled="!canSubmit" v-if="hasEdited" @click="save">{{ data ? 'Save Changes' : 'Add Action' }}</button>
+        <button v-if="hasEdited" class="button is-success has-text-white" :disabled="!canSubmit" @click="save">{{ data ? 'Save Changes' : 'Add Action' }}</button>
         <button :class="['button',{'is-warning': hasEdited}]" @click="cancel">{{ hasEdited ? 'Cancel' : 'Close' }}</button>
       </template>
     </Tab>
     <Tab name="Advanced">
       <Field label="Description" info="A brief description, used in tooltips">
-        <input type="text" class="input" v-model="action.description" />
+        <input v-model="action.description" type="text" class="input" />
       </Field>
       <Field label="" info="Should this action be visible in server management views">
         <input
           id="isHidden"
+          v-model="action.isHidden"
           type="checkbox"
-          class="is-checkradio"
-          v-model="action.isHidden">
+          class="is-checkradio">
         <label for="isHidden">Show in UI?</label>
       </Field>
       <Field label="Color Hexcode" info="Leave blank to use default">
-        <input type="text" class="input" v-model="action.color" placeholder="#FFF" />
+        <input v-model="action.color" type="text" class="input" placeholder="#FFF" />
       </Field>
     </Tab>
   </Tabs>

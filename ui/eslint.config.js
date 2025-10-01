@@ -39,7 +39,7 @@ export default defineConfig(
       "prefer-const": "off",
       "vue/multi-word-component-names": "off",
       "semi": "off",
-      "vue/no-template-key": "off",
+      // "vue/no-template-key": "off",
       "vue/no-v-for-template-key": "off",
       "vue/fist-attribute-linebreak": "off",
       'vue/require-default-prop': "off",
@@ -51,11 +51,10 @@ export default defineConfig(
       "vue/html-quotes": "off",
       "vue/multiline-html-element-content-newline": "off",
       "vue/singleline-html-element-content-newline": "off",
-      // TODO: maybe re-enable
+      "vue/html-self-closing": "off",
       "vue/html-indent": "off",
       "vue/max-attributes-per-line": "off",
-      // "vue/html-self-closing": "off",
-      "vue/attributes-order": "off",
+      // "vue/attributes-order": "off",
     },
   }
 )

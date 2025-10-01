@@ -4,7 +4,7 @@
     <div class="list-item-title">
       <template v-if="edit">
         <label class="label">Marked By:</label>
-        <input type="text" class="input" style="width:50%" v-model="edit.markedBy" />
+        <input v-model="edit.markedBy" type="text" class="input" style="width:50%" />
       </template>
       <span v-else>
         <router-link :to="routeHref">
@@ -17,7 +17,7 @@
     <div class="list-item-description has-text-black">
       <template v-if="edit">
         <label class="label">Content:</label>
-        <input type="text" class="input" v-model="edit.content" />
+        <input v-model="edit.content" type="text" class="input" />
       </template>
       <template v-else>
         <span :class="note.content.startsWith('@') ? 'tag is-dark' : ''" :data-tooltip="note.content.startsWith('@') ? 'Is an automatic action' : undefined">
@@ -37,18 +37,18 @@
         <span @click="entry.showDetails = !entry.showDetails">Details</span>
       </button> -->
       <span v-if="edit">
-        <button class="button is-inverted is-success has-tooltip-success" @click="saveNote" data-tooltip="Save changes">
+        <button class="button is-inverted is-success has-tooltip-success" data-tooltip="Save changes" @click="saveNote">
           <Icon icon-class="is-small" icon="check" />
         </button>
-        <button class="button is-inverted is-black" @click="edit = undefined" data-tooltip="Discard changes">
+        <button class="button is-inverted is-black" data-tooltip="Discard changes" @click="edit = undefined">
           <Icon icon-class="is-small" icon="times" />
         </button>
-        <button class="button  is-inverted is-danger has-tooltip-danger" @click="deleteNote" data-tooltip="Delete note">
+        <button class="button  is-inverted is-danger has-tooltip-danger" data-tooltip="Delete note" @click="deleteNote">
           <Icon icon-class="is-small" icon="trash" />
         </button>
       </span>
       <template v-else>
-        <button class="button is-inverted is-outlined is-black" @click="startEdit" v-if="canEdit">
+        <button v-if="canEdit" class="button is-inverted is-outlined is-black" @click="startEdit">
           <Icon icon-class="is-small has-text-black" icon="edit" />
         </button>
       </template>

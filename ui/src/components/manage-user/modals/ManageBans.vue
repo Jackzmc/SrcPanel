@@ -1,12 +1,12 @@
 <template>
 <section>
-  <div class="tabs" v-if="bans.length > 0 || canAddBan">
+  <div v-if="bans.length > 0 || canAddBan" class="tabs">
     <ul>
       <li v-for="userBan in bans" :key="userBan.id" :class="{'is-active': ban && ban.id === userBan.id, 'striked': userBan?.expired}" @click="selectBan(userBan)">
-        <a>#{{ userBan.id }}&nbsp;<span class="tag is-info" v-if="userBan.activeAppeal">Appeal</span></a>
+        <a>#{{ userBan.id }}&nbsp;<span v-if="userBan.activeAppeal" class="tag is-info">Appeal</span></a>
       </li>
-      <li :class="{'is-active': isNewBan }" @click="selectBan()" v-if="canAddBan"><a>Add Ban</a></li>
-      <li :class="{'is-active': showAppeals }" @click="showAppealsList" v-if="bans.length > 0"><a>Appeals ({{ appeals.length }})</a></li>
+      <li v-if="canAddBan" :class="{'is-active': isNewBan }" @click="selectBan()"><a>Add Ban</a></li>
+      <li v-if="bans.length > 0" :class="{'is-active': showAppeals }" @click="showAppealsList"><a>Appeals ({{ appeals.length }})</a></li>
     </ul>
   </div>
   <Teleport to="#manage-user-footer">
@@ -18,19 +18,19 @@
   <template v-if="showAppeals">
     <p v-if="appeals.length == 0" class="has-text-centered my-6">User has no ban appeals</p>
     <template v-else>
-    <div class="notification" v-for="appeal in appeals" :key="appeal.id">
+    <div v-for="appeal in appeals" :key="appeal.id" class="notification">
         <div class="tags is-inline">
           <span class="tag is-primary has-tooltip-right" data-tooltip="ID of the appeal">{{ appeal.id }}</span>
-          <span class="tag is-dark has-tooltip-right" data-tooltip="IP Address that submitted appeal" v-if="appeal.ip">{{ appeal.ip }}</span>
+          <span v-if="appeal.ip" class="tag is-dark has-tooltip-right" data-tooltip="IP Address that submitted appeal">{{ appeal.ip }}</span>
           <span :class="['tag', { 'is-success': appeal.state == 1, 'is-danger': appeal.state == 2, 'is-info': appeal.state == 0}]">{{ getAppealState(appeal.state) }}</span>
         </div>
         <span class="is-pulled-right is-inline"> {{ formatDate(appeal.created) }}</span>
         <div class="content">
           {{ appeal.message }}
 
-          <p class="has-text-danger" v-if="appeal.state == 2"><b>Rejected by {{ appeal.rejecter_id }}: </b><br>{{ appeal.reject_reason }}</p>
+          <p v-if="appeal.state == 2" class="has-text-danger"><b>Rejected by {{ appeal.rejecter_id }}: </b><br>{{ appeal.reject_reason }}</p>
 
-          <div class="buttons mt-2" v-if="appeal.state == 0">
+          <div v-if="appeal.state == 0" class="buttons mt-2">
             <a class="button is-success is-outlined is-small" @click="answerAppeal(appeal.id, true)">Appeal Ban</a>
             <a class="button is-danger is-outlined is-small" @click="answerAppeal(appeal.id, false)">Reject</a>
           </div>
@@ -39,7 +39,7 @@
     </template>
   </template>
   <template v-else-if="ban">
-    <article class="message is-link" v-if="!isNewBan && ban.activeAppeal">
+    <article v-if="!isNewBan && ban.activeAppeal" class="message is-link">
       <div class="message-body">
         <h6 class="title is-6">
           User wishes to appeal this ban:
@@ -56,20 +56,20 @@
       </div>
     </article>
     <div class="columns is-multiline is-centered">
-      <div class="column" v-if="!isNewBan">
+      <div v-if="!isNewBan" class="column">
         <div class="field">
           <label class="label">ID</label>
           <p>{{ ban.id }}</p>
         </div>
       </div>
-      <div class="column" v-if="!isNewBan">
+      <div v-if="!isNewBan" class="column">
         <div class="field">
           <label class="label">IP</label>
           <p v-if="ban.ip">{{ ban.ip }}</p>
           <em v-else>(no ip recorded)</em>
         </div>
       </div>
-      <div class="column" v-if="!isNewBan">
+      <div v-if="!isNewBan" class="column">
         <div class="field">
           <label class="label">Join Attempts</label>
           <p>{{ ban.joinAttempts }}</p>
@@ -129,9 +129,9 @@
               </select>
             </div>
           </div>
-          <p class="help has-text-danger" v-if="ban.expired">Ban has expired</p>
-          <p class="help" v-else-if="ban.expires">Will expire on {{ formatDate(ban.expires) }}</p>
-          <p class="help" v-else>Ban will never expire</p>
+          <p v-if="ban.expired" class="help has-text-danger">Ban has expired</p>
+          <p v-else-if="ban.expires" class="help">Will expire on {{ formatDate(ban.expires) }}</p>
+          <p v-else class="help">Ban will never expire</p>
         </div>
       </div>
 
@@ -167,14 +167,14 @@
         <div class="field">
           <label class="label">Flags</label>
           <div class="buttons">
-            <div class="button is-warning" v-if="edited.flags & APIBanFlags.Suspended" @click="toggleFlag(APIBanFlags.Suspended)" data-tooltip="Click to resume this ban">Suspended</div>
-            <div class="button is-light" v-else @click="toggleFlag(APIBanFlags.Suspended)" data-tooltip="Click to suspend this ban">Suspend</div>
-            <div class="button is-info" v-if="edited.flags & APIBanFlags.IPBan" @click="toggleFlag(APIBanFlags.IPBan)" data-tooltip="Click to disable the ip ban">IP Banned</div>
-            <div class="button is-light" v-else @click="toggleFlag(APIBanFlags.IPBan)" data-tooltip="Click to enable ip ban">IP Ban</div>
+            <div v-if="edited.flags & APIBanFlags.Suspended" class="button is-warning" data-tooltip="Click to resume this ban" @click="toggleFlag(APIBanFlags.Suspended)">Suspended</div>
+            <div v-else class="button is-light" data-tooltip="Click to suspend this ban" @click="toggleFlag(APIBanFlags.Suspended)">Suspend</div>
+            <div v-if="edited.flags & APIBanFlags.IPBan" class="button is-info" data-tooltip="Click to disable the ip ban" @click="toggleFlag(APIBanFlags.IPBan)">IP Banned</div>
+            <div v-else class="button is-light" data-tooltip="Click to enable ip ban" @click="toggleFlag(APIBanFlags.IPBan)">IP Ban</div>
           </div>
         </div>
       </div>
-      <div class="column is-5" v-if="!isNewBan">
+      <div v-if="!isNewBan" class="column is-5">
         <div class="field">
           <label class="label">Danger Zone</label>
           <div class="control">

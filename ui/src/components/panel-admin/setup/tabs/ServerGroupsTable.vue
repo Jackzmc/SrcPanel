@@ -1,12 +1,12 @@
 <template>
 <div>
   <ServerGroupModal v-if="editModalActive" :data="selectedGroup" @close="closeModal" @save="onSave" @delete="deleteGroup" />
-  <ConfirmModal title="Delete Confirmation" v-if="deleteModalActive&&selectedGroup" @cancel="deleteModalActive = false" @confirm="deleteGroupConfirm">
+  <ConfirmModal v-if="deleteModalActive&&selectedGroup" title="Delete Confirmation" @cancel="deleteModalActive = false" @confirm="deleteGroupConfirm">
     <p>Are you sure you want to delete the group:<br><b>{{ selectedGroup.name }}</b> <span>({{ selectedGroup.id }})</span>?</p>
     <br>
     <p>This will delete all servers that are in that group.</p>
   </ConfirmModal>
-  <table class="table is-fullwidth is-bordered" v-if="loadState == LoadState.Success">
+  <table v-if="loadState == LoadState.Success" class="table is-fullwidth is-bordered">
     <thead>
       <tr>
         <th style="width:0%"></th>
@@ -41,7 +41,7 @@
   </table>
   <div v-else-if="loadState === LoadState.Loading">
     <p class="has-text-centered is-size-3"><Icon icon="fa-spinner" spin icon-class="mr-4">Loading</Icon></p>
-    <div class="skeleton-block" v-for="i in 6" :key="i"></div>
+    <div v-for="i in 6" :key="i" class="skeleton-block"></div>
   </div>
   <div v-else-if="loadState === LoadState.Error">
     <article class="message is-danger">

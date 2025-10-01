@@ -5,10 +5,10 @@
     <span class="has-text-weight-normal">{{ cfg.selected.filename }}</span>
     <span class="has-text-weight-light is-pulled-right">f8eb84f7421c4</span>
   </header>
-  <div class="card-content" v-if="cfg.selected">
+  <div v-if="cfg.selected" class="card-content">
     <template v-if="cfg.json">
       <Field label="Cvars">
-        <div class="columns " v-for="entry in cfg.json" :key="entry.command">
+        <div v-for="entry in cfg.json" :key="entry.command" class="columns ">
           <div class="column is-5">
             <input class="input is-expanded" type="text" :value="entry.cvar ?? entry.command" />
           </div>
@@ -48,7 +48,7 @@
         </div>
       </Field>
     </template>
-    <pre class="box" v-if="cfg.raw">
+    <pre v-if="cfg.raw" class="box">
     {{ cfg.raw }}
     </pre>
   </div>

@@ -2,9 +2,9 @@
   <div class="container is-fluid">
     <div class="columns">
       <div class="column is-9">
-        <div class="box" v-if="notes">
+        <div v-if="notes" class="box">
           <Pagination :page="page" :limit="limit" :count="notesCount" @page="setPage"></pagination>
-          <div class="table-container" v-if="notes">
+          <div v-if="notes" class="table-container">
             <table class="table is-fullwidth">
               <thead>
                 <tr>
@@ -26,7 +26,7 @@
                   <td>
                     <UserComponent :user="note.markedBy" />
                   </td>
-                  <ActionNote :action="note.action" v-if="note.action" />
+                  <ActionNote v-if="note.action" :action="note.action" />
                   <td v-else>{{ note.content }}</td>
                   <td>
                     <div class="tags">
@@ -43,11 +43,11 @@
             </table>
           </div>
           <template v-else>
-            <div class="skeleton-block" v-for="i in 20" :key="i"></div>
+            <div v-for="i in 20" :key="i" class="skeleton-block"></div>
           </template>
           <Pagination :page="page" :limit="limit" :count="notesCount" @page="setPage"></pagination>
         </div>
-        <div class="mx-4" v-else-if="fetchError">
+        <div v-else-if="fetchError" class="mx-4">
           <article class="message is-danger">
             <div class="message-header">
               <p>
@@ -60,18 +60,18 @@
             </div>
           </article>
         </div>
-        <div class="box has-text-centered py-6" v-else>
+        <div v-else class="box has-text-centered py-6">
           <p class="subtitle is-2"><Icon icon="spinner" spin icon-class="mr-4">Fetching notes</Icon></p>
         </div>
       </div>
       <div class="column is-3">
         <div class="box has-background-info-light">
-          <h3 class="title is-4" v-if="notes">
-            Showing <input type="number" class="input" min=20 max=1000 step=10 style="width:6rem" v-model="limit"
+          <h3 v-if="notes" class="title is-4">
+            Showing <input v-model="limit" type="number" class="input" min=20 max=1000 step=10 style="width:6rem"
               @blur="changeLimit" /> / {{ totalNotesCount.toLocaleString() }} Notes
-            <em class="subtitle is-4" v-if="hasSearchQuery">({{ notesCount }} filtered)</em>
+            <em v-if="hasSearchQuery" class="subtitle is-4">({{ notesCount }} filtered)</em>
           </h3>
-          <h3 class="title is-3" v-else>
+          <h3 v-else class="title is-3">
             Showing - / - Notes
           </h3>
           <p class="subtitle mt-2">
@@ -79,10 +79,10 @@
           </p>
           <div class="box">
             <Field icon-left="fa-user" label="Search By User">
-              <input class="input" v-model="search.user" :disabled="!notes" />
+              <input v-model="search.user" class="input" :disabled="!notes" />
             </Field>
             <Field icon-left="fa-message" label="Search Note Message">
-              <input class="input" v-model="search.content" :disabled="!notes" />
+              <input v-model="search.content" class="input" :disabled="!notes" />
             </Field>
           </div>
         </div>

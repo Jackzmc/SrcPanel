@@ -1,7 +1,7 @@
 <template>
 <div class="box">
   <progress v-if="loadState == LoadState.Loading || loadState == LoadState.Success" :value="progress?.current" :max="progress?.total" class="progress" />
-  <div class="container" v-if="loadState == LoadState.Idle">
+  <div v-if="loadState == LoadState.Idle" class="container">
     <h4 class="title is-3">Confirm Creation</h4>
     <p class="subtitle is-4">
       You are creating a server for the game <a :href="'https://store.steampowered.com/app/' + form.game">{{ formData.game.title }}</a>
@@ -21,9 +21,9 @@
       The server should automatically show up in the server panel, and you are given full permission to it. From the server management page, you can edit server config files.
     </div>
   </div>
-  <div class="list has-visible-pointer-controls" v-else>
+  <div v-else class="list has-visible-pointer-controls">
 
-    <div class="list-item" v-for="(line, i) of lines" :key="i">
+    <div v-for="(line, i) of lines" :key="i" class="list-item">
       <div class="list-item-content">
           <div class="list-item-title">
             {{ line.event }}
@@ -36,7 +36,7 @@
       <div class="list-item-controls">
       </div>
     </div>
-    <div class="list-item" v-if="lastLine">
+    <div v-if="lastLine" class="list-item">
       <div class="list-item-content">
         <div class="list-item-title">
           {{ lastLine.event }}
@@ -51,8 +51,8 @@
   </div>
   <br>
   <div class="buttons">
-    <button class="button is-info is-medium" @click="create" v-if="loadState == LoadState.Idle || loadState == LoadState.Loading" :disabled="loadState == LoadState.Loading">Create Server</button>
-    <button class="button is-medium" @click="cancel" v-if="loadState == LoadState.Loading">Cancel</button>
+    <button v-if="loadState == LoadState.Idle || loadState == LoadState.Loading" class="button is-info is-medium" :disabled="loadState == LoadState.Loading" @click="create">Create Server</button>
+    <button v-if="loadState == LoadState.Loading" class="button is-medium" @click="cancel">Cancel</button>
   </div>
 </div>
 </template>

@@ -6,7 +6,7 @@
         <Icon :icon="icon" />
       </button>
     </div>
-    <div :class="computedBodyClass" v-show="showDetails">
+    <div v-show="showDetails" :class="computedBodyClass">
       <slot></slot>
     </div>
   </article>

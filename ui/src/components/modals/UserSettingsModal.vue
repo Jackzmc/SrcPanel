@@ -60,7 +60,7 @@
               <ProviderCard :provider="dummySteamProvider" provider-image-src="/img/providers/steam.png">
                 Cannot unlink
               </ProviderCard>
-              <span class="has-text-centered is-size-4 mt-3" v-if="!providers">Loading...</span>
+              <span v-if="!providers" class="has-text-centered is-size-4 mt-3">Loading...</span>
               <ProviderCard v-for="provider in providers" :key="provider.id" :provider="provider" :provider-image-src="'/img/providers/' + provider.id + '.svg'">
                 <a v-if="provider.enabled" target="_blank" :href="'/api/auth/' + provider.id + '/revoke'" class="button has-text-white" style="background-color:#5865F2">
                   <Icon icon="fab fa-discord">Unlink {{ provider.name }} Account</Icon>
@@ -73,12 +73,12 @@
           </Tab>
           <Tab name="Developer">
             <p class="title is-5">API Key</p>
-            <p class="subtitle is-6" v-if="api.data">
+            <p v-if="api.data" class="subtitle is-6">
               <b>Created: </b>{{ formatDate(api.data.created) }}
               <span class="is-pulled-right"><b>Last Active: </b>{{ formatDate(api.data.lastUsed) }}</span>
             </p>
             <template v-if="api.data">
-              <input type="text" class="input" readonly v-model="api.data.id">
+              <input v-model="api.data.id" type="text" class="input" readonly>
               <br>
               <a class="is-danger is-small" @click="createApiKey">regenerate</a>
             </template>

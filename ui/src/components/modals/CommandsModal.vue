@@ -1,5 +1,5 @@
 <template>
-<Modal :active="active" v-if="cmd" :closable="true" @close="emit('close')">
+<Modal v-if="cmd" :active="active" :closable="true" @close="emit('close')">
   <div class="modal-card">
     <header class="modal-card-head">
       <p class="modal-card-title"><b>{{ prefix }}{{ cmd.name }}</b></p>
@@ -17,8 +17,8 @@
         <div class="control">
           <div class="tags has-addons">
             <span class="tag is-dark">Has Permission</span>
-            <span class="tag is-success" v-if="cmd.hasPermission">Yes</span>
-            <span class="tag is-danger" v-else>No</span>
+            <span v-if="cmd.hasPermission" class="tag is-success">Yes</span>
+            <span v-else class="tag is-danger">No</span>
           </div>
         </div>
       </div>
@@ -34,7 +34,7 @@
       <div class="block">
         <h5 class="title is-5 mb-2"><Icon icon="fa-bars-staggered">Arguments</Icon></h5>
         <template v-if="Object.keys(props.cmd.args).length > 0">
-          <table class="table is-fullwidth mb-2" v-if="Object.keys(props.cmd.args).length > 0">
+          <table v-if="Object.keys(props.cmd.args).length > 0" class="table is-fullwidth mb-2">
             <thead>
               <tr>
                 <th>Parameter</th>

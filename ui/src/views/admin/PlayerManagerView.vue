@@ -2,8 +2,8 @@
 <div>
   <router-view :priv-user="privUser" />
   <div class="container">
-    <Tabs inner-wrapper-class="tabs is-large" @changed="setTab" :dummy="Date.now()">
-      <Tab name="Recently Played With" id="recent">
+    <Tabs inner-wrapper-class="tabs is-large" :dummy="Date.now()" @changed="setTab">
+      <Tab id="recent" name="Recently Played With">
         <div class="card">
           <header class="card-header">
             <p class="card-header-title">
@@ -22,7 +22,7 @@
                       <div class="field is-narrow">
                         <div class="control">
                           <div class="select">
-                            <select @change="getRecentPlayers()" v-model="recentPlayers.server">
+                            <select v-model="recentPlayers.server" @change="getRecentPlayers()">
                               <option :value="null">All Servers</option>
                               <option v-for="server in servers" :key="server" :value="server">
                                 {{ server }}
@@ -50,7 +50,7 @@
         <UserSelection :priv-user="privUser" :users="recentPlayers.list" @manual="onManualSelected" />
         <button :class="['button',{'is-loading': recentPlayers.loading}]" @click="getRecentPlayers(recentPlayers.currentOffset)">Load more entries</button>
       </Tab>
-      <Tab name="Search for a User" id="search">
+      <Tab id="search" name="Search for a User">
         <div class="card">
           <header class="card-header">
             <p class="card-header-title">
@@ -58,15 +58,15 @@
             </p>
           </header>
           <div class="card-content">
-            <input v-model="search.query" @input="search.func" class="input" type="text" placeholder="STEAM_1:1:####### or a name" style="width:30%">
+            <input v-model="search.query" class="input" type="text" placeholder="STEAM_1:1:####### or a name" style="width:30%" @input="search.func">
           </div>
         </div>
         <br>
         <UserSelection has-manual :priv-user="privUser" :users="users" @manual="onManualSelected" />
-        <p class="has-text-centered my-6 is-size-5" v-if="!search.query">Enter a search query</p>
-        <p class="has-text-centered my-6 is-size-5" v-else-if="users.length === 0">No players found</p>
+        <p v-if="!search.query" class="has-text-centered my-6 is-size-5">Enter a search query</p>
+        <p v-else-if="users.length === 0" class="has-text-centered my-6 is-size-5">No players found</p>
       </Tab>
-      <Tab name="Admins" id="admins" v-if="privUser.hasPermission('admins.view')" @selected="fetchAdmins">
+      <Tab v-if="privUser.hasPermission('admins.view')" id="admins" name="Admins" @selected="fetchAdmins">
       <div class="card">
           <header class="card-header">
             <p class="card-header-title">
@@ -74,12 +74,12 @@
             </p>
           </header>
           <div class="card-content">
-            <input v-model="search.query" @input="search.func" class="input" type="text" placeholder="STEAM_1:1:####### or a name" style="width:30%">
+            <input v-model="search.query" class="input" type="text" placeholder="STEAM_1:1:####### or a name" style="width:30%" @input="search.func">
           </div>
         </div>
         <br>
         <div class="columns is-multiline">
-          <SplitTable :items-per-column="10" :data="filteredAdmins" v-slot="slotProps">
+          <SplitTable v-slot="slotProps" :items-per-column="10" :data="filteredAdmins">
             <div class="column is-4">
               <table class="table is-bordered is-fullwidth">
                 <thead>

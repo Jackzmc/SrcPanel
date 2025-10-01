@@ -5,12 +5,12 @@
     <BirthdayComponent v-if="isBirthday" @close="closeBirthday" />
     <Notifications position="top center" :duration=7000 @start="onNotificationShown" @click="(event: any) => event.data?.click()" />
 
-    <NavBar v-if="!route.meta.hideNav" @toggle-theme="onToggleTheme" @logout="onLogout" :theme="activeTheme" :priv-user="privUser" :meta="meta" :hide-login="readyState != ReadyState.Show" />
+    <NavBar v-if="!route.meta.hideNav" :theme="activeTheme" :priv-user="privUser" :meta="meta" :hide-login="readyState != ReadyState.Show" @toggle-theme="onToggleTheme" @logout="onLogout" />
 
     <br v-if="!route.meta.hideNav">
     <br v-if="route.meta.hideHero">
 
-    <section v-else class="hero is-info has-text-centered" v-show="readyState == ReadyState.Show">
+    <section v-else v-show="readyState == ReadyState.Show" class="hero is-info has-text-centered">
       <div class="hero-body pb-5">
         <router-link v-if="prevRoute" :to="{ name: prevRoute }" class="is-pulled-left is-light is-rounded button"><Icon icon="fa-chevron-left">Back</Icon></router-link>
         <p class="title has-text-white">
@@ -24,7 +24,7 @@
     </section>
 
     <!-- <br> -->
-    <router-view v-slot="{ Component }" class="mt-4" v-if="readyState == ReadyState.Show">
+    <router-view v-if="readyState == ReadyState.Show" v-slot="{ Component }" class="mt-4">
       <keep-alive :max="2">
         <component :is="Component" :priv-user="privUser" :meta="meta" class="px-2" />
       </keep-alive>
@@ -37,7 +37,7 @@
     </div>
 
     <br>
-    <div class="impersonate-overlay" v-if="privUser?.isImpersonating">
+    <div v-if="privUser?.isImpersonating" class="impersonate-overlay">
       <nav class="level">
         <div class="level-left">
           <div class="level-item">

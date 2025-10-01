@@ -5,25 +5,25 @@
     <router-link to="/admin/servers" class="">🠐 back to servers list</router-link>
   </div>
   <div class="columns">
-    <div class="column is-8" v-if="serverInfo">
+    <div v-if="serverInfo" class="column is-8">
       <div class="box has-background-primary-90">
         <h3 class="title is-3">
           {{ serverInfo.name }}
           <div class="tags is-pulled-right inline">
             <template v-if="status">
-              <span class="tag is-danger is-medium has-tooltip-danger no-border" v-if="error || status.error" data-tooltip="An error occurred while fetching the server's status"><Icon icon="fa-exclamation-triangle">Error</Icon></span>
-              <span class="tag is-success  is-medium" v-else-if="online"><Icon icon="fa-circle-check" icon-class="has-text-white">Online</Icon></span>
-              <span class="tag is-danger  is-medium" v-else>Offline</span>
+              <span v-if="error || status.error" class="tag is-danger is-medium has-tooltip-danger no-border" data-tooltip="An error occurred while fetching the server's status"><Icon icon="fa-exclamation-triangle">Error</Icon></span>
+              <span v-else-if="online" class="tag is-success  is-medium"><Icon icon="fa-circle-check" icon-class="has-text-white">Online</Icon></span>
+              <span v-else class="tag is-danger  is-medium">Offline</span>
             </template>
-            <span class="tag is-medium" v-else data-tooltip="Waiting for status"><Icon icon="fa-spinner" spin></Icon></span>
+            <span v-else class="tag is-medium" data-tooltip="Waiting for status"><Icon icon="fa-spinner" spin></Icon></span>
 
-            <span class="tag is-info is-medium" data-tooltip="Receiving live data" v-if="ws?.readyState === 1">
+            <span v-if="ws?.readyState === 1" class="tag is-info is-medium" data-tooltip="Receiving live data">
               <Icon icon="fa-circle-check" icon-class="has-text-white">Live</Icon>
             </span>
-            <span class="tag is-medium" data-tooltip="Connecting" v-else-if="ws?.readyState === 0">
+            <span v-else-if="ws?.readyState === 0" class="tag is-medium" data-tooltip="Connecting">
               <Icon icon="fa-spinner" spin icon-class="has-text-white">Live</Icon>
             </span>
-            <span class="tag is-danger is-medium" data-tooltip="Not receiving live data" v-else>
+            <span v-else class="tag is-danger is-medium" data-tooltip="Not receiving live data">
               <Icon icon="fa-triangle-exclamation" icon-class="has-text-white">Live</Icon>
             </span>
 
@@ -42,12 +42,12 @@
           </div>
           <div class="level-right">
             <div class="buttons">
-              <button :data-tooltip="action.description" :disabled="actionRunning" v-for="(action, i) in alwaysShownActions" :key="i" @click="performAction(action.command)" class="button is-dark is-small" :style="{'background-color': action.color}">{{ action.name }}</button>
+              <button v-for="(action, i) in alwaysShownActions" :key="i" :data-tooltip="action.description" :disabled="actionRunning" class="button is-dark is-small" :style="{'background-color': action.color}" @click="performAction(action.command)">{{ action.name }}</button>
 
               <template v-if="shiftPressed">
-                <button :data-tooltip="action.description" :disabled="actionRunning" v-for="(action, i) in hiddenActions" :key="i"
-                  @click="performAction(action.command)" class="button is-dark is-small"
-                  :style="{'background-color': action.color}">{{ action.name }}</button>
+                <button v-for="(action, i) in hiddenActions" :key="i" :data-tooltip="action.description" :disabled="actionRunning"
+                  class="button is-dark is-small" :style="{'background-color': action.color}"
+                  @click="performAction(action.command)">{{ action.name }}</button>
               </template>
               <div class="button is-small" :data-tooltip="(shiftPressed ? 'Hide' : 'Show') + ' hidden actions'" @click="shiftPressed = !shiftPressed">
                 <Icon :icon="!shiftPressed ? 'fa-angle-left' : 'fa-angle-right'"></Icon>
@@ -60,21 +60,21 @@
         <ul>
           <li v-for="(data, id) in TABS" :key="id" :class="{'is-active': tab === id}">
             <router-link
-              :to="{params:{tab: id, id: serverInfo.id }}"
               v-if="isTabEnabled(data)"
+              :to="{params:{tab: id, id: serverInfo.id }}"
             >
               {{ data.name }}&nbsp;
-              <span class="tag is-info is-small" v-if="data.tag">{{ data.tag }}</span>
+              <span v-if="data.tag" class="tag is-info is-small">{{ data.tag }}</span>
             </router-link>
           </li>
         </ul>
       </div>
       <div v-if="tab === 'overview'" class="box">
         <template v-if="status">
-          <div class="notification is-danger has-text-centered" v-if="!online">
+          <div v-if="!online" class="notification is-danger has-text-centered">
             The server is offline or is unreachable.
           </div>
-          <p class="has-text-centered subtitle is-4 my-6 has-text-danger" v-if="status.error">{{ status.error }}</p>
+          <p v-if="status.error" class="has-text-centered subtitle is-4 my-6 has-text-danger">{{ status.error }}</p>
           <template v-else>
             <!-- <span class="is-inline is-pulled-right no-border pr-4" data-tooltip="Time until next refresh" style="width:10px">
               <Icon icon="fa-spinner" spin v-if="nextRefreshCountdown == 0"></Icon>
@@ -130,7 +130,7 @@
                   <td style="border-style: none">
                     <div class="tags">
                       <template v-for="(enabled,feat) in serverInfo.features" :key="feat">
-                        <span class="tag" v-if="enabled">{{ feat }}</span>
+                        <span v-if="enabled" class="tag">{{ feat }}</span>
                       </template>
                     </div>
                   </td>
@@ -140,7 +140,7 @@
             <br>
           </template>
         </template>
-        <article class="message is-danger" v-else-if="error">
+        <article v-else-if="error" class="message is-danger">
           <div class="message-header">
             <p><Icon icon="fa-exclamation-triangle">An error occurred while fetching server information</Icon></p>
           </div>
@@ -148,12 +148,12 @@
             {{ error }}
           </div>
         </article>
-        <p class="has-text-centered subtitle is-4 my-6" v-else><Icon icon="fa-spinner" spin>Waiting for server status...</Icon></p>
+        <p v-else class="has-text-centered subtitle is-4 my-6"><Icon icon="fa-spinner" spin>Waiting for server status...</Icon></p>
       </div>
       <div v-else-if="tab === 'live'" class="box">
-        <div class="list has-visible-pointer-controls" v-if="liveStatus && Object.values(liveStatus.clients).length > 0">
+        <div v-if="liveStatus && Object.values(liveStatus.clients).length > 0" class="list has-visible-pointer-controls">
           <template v-for="player in livePlayers" :key="player.userid">
-            <div class="list-item" v-if="true">
+            <div v-if="true" class="list-item">
               <div class="list-item-image">
                 <figure class="image is-48x48">
                   <img :src="getIconUrl(player)" />
@@ -161,7 +161,7 @@
               </div>
               <div class="list-item-content">
                 <div v-if="player.survivor" :class="['list-item-title', {'has-text-danger': !player.isAlive }]">
-                  <div class="progressbar" style="width:50%" v-if="player.isAlive" :data-label="player.totalHealth + ' HP'">
+                  <div v-if="player.isAlive" class="progressbar" style="width:50%" :data-label="player.totalHealth + ' HP'">
                     <div :class="['permhealth',getHealthClass(player.totalHealth)]" :style="{width: player.survivor.permHealth + '%' }"></div>
                     <div :class="['temphealth',getHealthClass(player.totalHealth)]" :style="{width: player.survivor.tempHealth + '%' }"></div>
                   </div>
@@ -169,32 +169,32 @@
                     <div class="flow-progress" :style="{width: player.survivor.flowPercent + '%'}"></div>
                   </div>
                   <UserComponent :class="{'has-text-crossed': !player.isAlive}" :user="player as User" />
-                  &nbsp;<span class="tag is-warning is-small" v-if="player.state == ClientState.Idle">Idle</span>
-                  &nbsp;<span class="has-text-info is-small" v-else-if="player.steamid === 'BOT'">[BOT]</span>
+                  &nbsp;<span v-if="player.state == ClientState.Idle" class="tag is-warning is-small">Idle</span>
+                  &nbsp;<span v-else-if="player.steamid === 'BOT'" class="has-text-info is-small">[BOT]</span>
                 </div>
                 <div v-else-if="player.infected" :class="['list-item-title', {'has-text-crossed': !player.isAlive }]">
-                  <div class="progressbar" style="width:50%" v-if="player.isAlive" :data-label="player.infected.health + '/' + player.infected.maxHealth + ' HP'">
+                  <div v-if="player.isAlive" class="progressbar" style="width:50%" :data-label="player.infected.health + '/' + player.infected.maxHealth + ' HP'">
                     <div :class="['permhealth',getHealthClass(100 * player.totalHealth)]" :style="{width: (player.totalHealth) + '%' }"></div>
                   </div>
-                  <span class="has-text-info is-small" v-if="player.steamid === 'BOT'">[BOT]&nbsp;</span>
+                  <span v-if="player.steamid === 'BOT'" class="has-text-info is-small">[BOT]&nbsp;</span>
                   {{ player.name }}
                 </div>
-                <div class="list-item-description has-text-black" v-if="player.survivor">
+                <div v-if="player.survivor" class="list-item-description has-text-black">
                   <template v-if="player.isAlive">
                     <div class="tags">
                       <span class="tag">{{ PlayerMoveString[player.survivor.move] }}</span>
-                      <span class="tag is-info" v-if="player.survivor.action">{{ PlayerGameActionString[player.survivor.action] }}</span>
-                      <span class="tag is-primary" v-for="state in getPlayerStates(player)" :key="state">
+                      <span v-if="player.survivor.action" class="tag is-info">{{ PlayerGameActionString[player.survivor.action] }}</span>
+                      <span v-for="state in getPlayerStates(player)" :key="state" class="tag is-primary">
                         {{ state }}
                       </span>
-                      <span class="tag is-dark" v-for="item in getPlayerWeaponNames(player)" :key="item">
+                      <span v-for="item in getPlayerWeaponNames(player)" :key="item" class="tag is-dark">
                         {{ item }}
                       </span>
                     </div>
                   </template>
                   <span v-else>Dead</span>
                 </div>
-                <div class="list-item-description has-text-black" v-else-if="player.infected">
+                <div v-else-if="player.infected" class="list-item-description has-text-black">
                   <div class="tags">
                   </div>
                   <span v-if="player.infected.pinnedPlayer">Pinned <b>{{ player.infected.pinnedPlayer?.name }}</b></span>
@@ -208,7 +208,7 @@
                 </div>
               </div>
             </div>
-            <div class="list-item  px-0 mx-0 my-0 py-0" v-if="showDetailsId && showDetailsId === player.userid">
+            <div v-if="showDetailsId && showDetailsId === player.userid" class="list-item  px-0 mx-0 my-0 py-0">
               <div class="list-item-content has-background-light-gray">
                 <table class="table is-bordered is-fullwidth">
                   <tbody>
@@ -263,10 +263,10 @@
         </div>
       </div>
       <div v-else-if="tab === 'configs'" class="">
-        <ConfigFileEditor :parent-folder="cfgParentFolder" :cfg="cfg" v-if="cfg.selected && !cfg.loading" />
-        <div class="box" v-else>
-          <p class="has-text-centered subtitle is-4 my-6" v-if="cfg.loading"><Icon icon="spinner" spin>Loading configs</Icon></p>
-          <p class="has-text-centered subtitle is-5 my-6" v-else>Select a config file on the right to view its content</p>
+        <ConfigFileEditor v-if="cfg.selected && !cfg.loading" :parent-folder="cfgParentFolder" :cfg="cfg" />
+        <div v-else class="box">
+          <p v-if="cfg.loading" class="has-text-centered subtitle is-4 my-6"><Icon icon="spinner" spin>Loading configs</Icon></p>
+          <p v-else class="has-text-centered subtitle is-5 my-6">Select a config file on the right to view its content</p>
         </div>
       </div>
       <div v-else-if="tab === 'console'" class="box">
@@ -274,9 +274,9 @@
       </div>
       <ServerMetricsTab v-else-if="tab === 'metrics'" :server="serverInfo" :metrics="metrics" :annotations="metricAnnotations" />
     </div>
-    <div class="column is-8" v-else-if="error">
+    <div v-else-if="error" class="column is-8">
       <div class="box">
-        <article class="message is-danger" v-if="error && !serverInfo">
+        <article v-if="error && !serverInfo" class="message is-danger">
           <div class="message-header">
             <p>
               <Icon icon="fa-exclamation-triangle" icon-class="has-text-white">Could not fetch server information</Icon>
@@ -295,7 +295,7 @@
         </article>
       </div>
     </div>
-    <div class="column is-8" v-else>
+    <div v-else class="column is-8">
 
       <div class="box has-background-primary-90 has-text-centered">
         <h4 class='title is-4 my-6'>
@@ -315,13 +315,13 @@
       </div>
     </div>
 
-    <div class="column" v-if="serverInfo">
+    <div v-if="serverInfo" class="column">
       <div class="field has-addons">
         <div class="control is-expanded">
           <label class="label">View another server:&nbsp;</label>
           <div class="select is-fullwidth">
             <select @change="onSelectNewServer">
-              <option default v-if="!serverIds">Loading servers...</option>
+              <option v-if="!serverIds" default>Loading servers...</option>
               <option v-for="server2 in serverIds" :key="server2.id" :value="server2.id"
                 :selected="server2.id == route.params.serverId">
                 {{ server2.name }}
@@ -330,7 +330,7 @@
           </div>
         </div>
       </div>
-      <div class="box" v-if="tab === 'overview' || tab === 'live'">
+      <div v-if="tab === 'overview' || tab === 'live'" class="box">
         <h4 class="title is-5 mb-2">Recent Activity</h4>
         <template v-if="activities">
           <table v-if="activities.length > 0" class="table is-fullwidth">
@@ -349,11 +349,11 @@
               </tr>
             </tbody>
           </table>
-          <div class="box has-background-info-light" v-else>No recent activity has been recorded</div>
+          <div v-else class="box has-background-info-light">No recent activity has been recorded</div>
         </template>
-        <div class="box has-background-warning-light" v-else>Recent activities is not supported on this server</div>
+        <div v-else class="box has-background-warning-light">Recent activities is not supported on this server</div>
       </div>
-      <div class="box" v-if="tab === 'overview'">
+      <div v-if="tab === 'overview'" class="box">
         <h4 class="title is-5 mb-2">Voice Members ({{ voiceMembers.length }})</h4>
         <p class="subtitle is-6 mb-1">In the <code>{{ serverInfo.name }}</code> voice channel on <a data-tooltip="Click to join the discord" href="/api/admins/discord" target="_blank">Discord</a></p>
         <div class="list pb-0">
@@ -364,10 +364,10 @@
           </ListItem>
         </div>
       </div>
-      <div class="box" v-if="tab === 'live'">
+      <div v-if="tab === 'live'" class="box">
         <!-- <span class="tag is-pulled-right is-danger has-tooltip-left" v-if="isLiveViewActive" data-tooltip="Connected to server, receiving live data">Live</span> -->
         <h4 class="title is-5">Game Info</h4>
-        <table class="table is-fullwidth" v-if="liveStatus?.game">
+        <table v-if="liveStatus?.game" class="table is-fullwidth">
           <tbody>
             <tr>
               <th>Campaign</th>
@@ -383,17 +383,17 @@
             </tr>
             <tr v-if="liveStatus.finale && liveStatus.finale.stage !== FinaleStage.Unknown">
               <th>Finale Stage</th>
-              <td class="has-text-right" v-if="liveStatus.finale.escapeInProgress">Escaping</td>
-              <td class="has-text-right" v-else>{{ FinaleStageName[liveStatus.finale.stage] }}</td>
+              <td v-if="liveStatus.finale.escapeInProgress" class="has-text-right">Escaping</td>
+              <td v-else class="has-text-right">{{ FinaleStageName[liveStatus.finale.stage] }}</td>
             </tr>
             <tr>
               <th>Server Uptime</th>
-              <td class="has-text-right" v-if="liveStatus.game.startTime">{{ getDuration(liveStatus.game.startTime) }}</td>
+              <td v-if="liveStatus.game.startTime" class="has-text-right">{{ getDuration(liveStatus.game.startTime) }}</td>
               <td v-else>-</td>
             </tr>
             <tr>
               <th>Campaign Duration</th>
-              <td class="has-text-right" v-if="liveStatus.game.campaignStartTime">{{ getDuration(liveStatus.game.campaignStartTime) }}</td>
+              <td v-if="liveStatus.game.campaignStartTime" class="has-text-right">{{ getDuration(liveStatus.game.campaignStartTime) }}</td>
               <td v-else>-</td>
             </tr>
             <!-- <tr>
@@ -408,8 +408,8 @@
       </div>
       <div v-else-if="tab === 'configs'" class="box">
         <h5 class="title is-5 mb-2">Config Files</h5>
-        <FolderBrower v-if="serverConfigs" @select="onCfgChosen" :paths="serverConfigs" />
-        <div class="box has-background-danger-light" v-else>
+        <FolderBrower v-if="serverConfigs" :paths="serverConfigs" @select="onCfgChosen" />
+        <div v-else class="box has-background-danger-light">
           <p class="subtitle has-text-centered is-6 ">Not available for this server</p>
         </div>
       </div>
@@ -448,20 +448,20 @@
               <div class="level-item has-text-centered">
                 <div>
                   <p class="heading">CPU Usage</p>
-                  <p class="title" v-if="latestMetric.cpu_stats?.cpu_usage != undefined">{{ Math.round(latestMetric.cpu_stats!.cpu_usage / latestMetric.cpu_stats!.online_cpus) }}%</p>
-                  <p class="title" v-else>-%</p>
+                  <p v-if="latestMetric.cpu_stats?.cpu_usage != undefined" class="title">{{ Math.round(latestMetric.cpu_stats!.cpu_usage / latestMetric.cpu_stats!.online_cpus) }}%</p>
+                  <p v-else class="title">-%</p>
                 </div>
               </div>
               <div class="level-item has-text-centered">
                 <div>
                   <p class="heading">Memory Usage</p>
-                  <p class="title" v-if="latestMetric.memory_stats?.usage_percent != undefined">{{ formatSize(latestMetric.memory_stats?.usage) }}</p>
-                  <p class="title" v-else>-</p>
+                  <p v-if="latestMetric.memory_stats?.usage_percent != undefined" class="title">{{ formatSize(latestMetric.memory_stats?.usage) }}</p>
+                  <p v-else class="title">-</p>
 
                 </div>
               </div>
             </nav>
-            <nav class="level" v-for="(net, intf) in latestMetric.network_stats" :key="intf">
+            <nav v-for="(net, intf) in latestMetric.network_stats" :key="intf" class="level">
               <div class="level-item has-text-centered">
                 <div>
                   <p class="heading"><Icon icon="arrow-down" /> Bytes In [{{ intf }}]</p>
@@ -475,7 +475,7 @@
                 </div>
               </div>
             </nav>
-            <nav class="level" v-for="(net, intf) in latestMetric.network_stats" :key="intf">
+            <nav v-for="(net, intf) in latestMetric.network_stats" :key="intf" class="level">
               <div class="level-item has-text-centered">
                 <div>
                   <p class="heading">
@@ -498,13 +498,13 @@
         </div>
       </template>
     </div>
-    <div class="column" v-else-if="!error">
+    <div v-else-if="!error" class="column">
       <div class="field has-addons">
         <div class="control is-expanded">
           <label class="label">View another server:&nbsp;</label>
           <div class="select is-fullwidth">
             <select @change="onSelectNewServer">
-              <option default v-if="!serverIds">Loading servers...</option>
+              <option v-if="!serverIds" default>Loading servers...</option>
               <option v-for="server2 in serverIds" :key="server2.id" :value="server2.id"
                 :selected="server2.id == route.params.serverId">
                 {{ server2.name }}

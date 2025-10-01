@@ -1,10 +1,10 @@
 <template>
 <div>
-  <JsonEditorVue v-model="json" boxed @change="hasChanges = true" v-if="json" />
-  <p class="has-text-centered py-5" v-else>Loading...</p>
+  <JsonEditorVue v-if="json" v-model="json" boxed @change="hasChanges = true" />
+  <p v-else class="has-text-centered py-5">Loading...</p>
   <div class="mt-2 buttons">
-    <a :class="['button','is-success',saveTooltipClass]" @click="save" :disabled="hasChanges?undefined:true" :data-tooltip="canSaveTooltip">Save Changes</a>
-    <a class="button is-danger has-tooltip-danger" @click="reset" :disabled="(json && hasChanges) ? undefined : true" data-tooltip="Reset all changes">Reset</a>
+    <a :class="['button','is-success',saveTooltipClass]" :disabled="hasChanges?undefined:true" :data-tooltip="canSaveTooltip" @click="save">Save Changes</a>
+    <a class="button is-danger has-tooltip-danger" :disabled="(json && hasChanges) ? undefined : true" data-tooltip="Reset all changes" @click="reset">Reset</a>
   </div>
 </div>
 </template>

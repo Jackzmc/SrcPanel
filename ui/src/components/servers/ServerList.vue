@@ -18,7 +18,7 @@
       <ServerListItem v-for="server in group.servers" :key="server.id" :server="server" :game="group.game" :manage="manage">
       </ServerListItem>
     </div>
-    <p class="subtitle mb-0 pl-4 has-text-grey" v-if="Object.keys(group.servers).length === 0">No servers in this group</p>
+    <p v-if="Object.keys(group.servers).length === 0" class="subtitle mb-0 pl-4 has-text-grey">No servers in this group</p>
     <div class="list"></div>
   </div>
 </template>

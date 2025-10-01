@@ -1,5 +1,5 @@
 <template>
-<input type="text" class="input" v-model="edit" v-if="edit" @blur="update" ref="input" />
+<input v-if="edit" ref="input" v-model="edit" type="text" class="input" @blur="update" />
 <span v-else @click="startEdit">{{ modelValue }}</span>
 </template>
 

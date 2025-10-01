@@ -2,12 +2,12 @@
 <div class="dropdown is-active">
   <div class="dropdown-trigger">
     <slot>
-      <input :class="inputClass" type="text" :placeholder="placeholder" v-model="textInput" @input="onInputDebounce">
+      <input v-model="textInput" :class="inputClass" type="text" :placeholder="placeholder" @input="onInputDebounce">
     </slot>
   </div>
-  <div class="dropdown-menu" role="menu" v-if="filteredItems.length > 0">
+  <div v-if="filteredItems.length > 0" class="dropdown-menu" role="menu">
     <div class="dropdown-content">
-      <a href="#" class="dropdown-item" v-for="item of filteredItems" :key="item.id" @click="select(item)">
+      <a v-for="item of filteredItems" :key="item.id" href="#" class="dropdown-item" @click="select(item)">
         <slot name="item" :item="item">
           {{ item.label }}
         </slot>

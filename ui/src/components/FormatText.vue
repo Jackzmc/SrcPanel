@@ -1,7 +1,7 @@
 <template>
 <div class="content">
   <span v-for="(piece, i) in pieces" :key="i">
-    <UserComponent :hide-avatar="hideAvatar" v-if="piece.user" :user="piece.user" />
+    <UserComponent v-if="piece.user" :hide-avatar="hideAvatar" :user="piece.user" />
       <!-- eslint-disable vue/no-v-html -- sanitized -->
       <span v-else-if="piece.html" v-html="piece.html"></span>
       <template v-else>{{ piece.text }}</template>

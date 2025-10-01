@@ -1,10 +1,10 @@
 <template>
-<div class="box" v-if="model">
+<div v-if="model" class="box">
   <h4 class="title is-4">Server Settings</h4>
   <Field label="Name">
     <span class="help">Give your server a name</span>
     <br>
-    <input class="input" type="text" v-model="model.name" :placeholder="props.privUser.name + '\'s server'" />
+    <input v-model="model.name" class="input" type="text" :placeholder="props.privUser.name + '\'s server'" />
   </Field>
   <br>
   <Field label="Game">
@@ -24,7 +24,7 @@
   <br>
   <Field label="Other Settings">
     <label class="checkbox">
-      <input type="checkbox" v-model="model.extraPlayers" />
+      <input v-model="model.extraPlayers" type="checkbox" />
       Enable 5+ Game support
     </label>
   </Field>

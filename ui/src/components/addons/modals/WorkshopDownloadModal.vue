@@ -7,12 +7,12 @@
       </p>
       <button v-if="downloadState == DownloadState.Idle || downloadState == DownloadState.PromptRedownload" class="delete" aria-label="close" @click='close'></button>
     </header>
-    <section class="modal-card-body" v-if="downloadState == DownloadState.Idle">
+    <section v-if="downloadState == DownloadState.Idle" class="modal-card-body">
       <div class="field">
         <label class="label">Enter a workshop link</label>
         <div class="control">
-          <input class="input" type="text" v-model="link" @input="verifyLinkDebounce" placeholder="https://steamcommunity.com/sharedfiles/filedetails/?id=######" />
-          <p class="help has-text-danger" v-if="!workshopId">
+          <input v-model="link" class="input" type="text" placeholder="https://steamcommunity.com/sharedfiles/filedetails/?id=######" @input="verifyLinkDebounce" />
+          <p v-if="!workshopId" class="help has-text-danger">
             Not a valid steam workshop url
           </p>
         </div>
@@ -23,7 +23,7 @@
           {{ workshopDetails.item.title }}
           <span data-tooltip="Workshop Id" class="tag is-dark">{{ workshopId }}</span>
         </h4>
-        <p class="subtitle is-6" v-if="isAddonValid">
+        <p v-if="isAddonValid" class="subtitle is-6">
           <template v-if="workshopDetails.type === 'collection'">
             Collection -
           </template>
@@ -32,10 +32,10 @@
             {{ workshopDetails.item.consumer_app_title }}
           </a></b>
         </p>
-        <p class="subtitle is-6" v-else-if="workshopDetails.item.result === 9"><b>Game: </b>
+        <p v-else-if="workshopDetails.item.result === 9" class="subtitle is-6"><b>Game: </b>
           Addon is either private, friends-only, or does not exist.
         </p>
-        <p class="subtitle is-6 has-text-danger" v-else>
+        <p v-else class="subtitle is-6 has-text-danger">
           Addon is for <b><a :href="'https://store.steampowered.com/app/' + workshopDetails.item.consumer_app_id">
             {{ workshopDetails.item.consumer_app_title }}
           </a></b>, but only addons for <b><a :href="'https://store.steampowered.com/app/' + props.share.appid">
@@ -45,23 +45,23 @@
 
         <hr>
       </template>
-      <p class="has-text-centered is-size-5 mt-2" v-if="!workshopDetails && workshopId">
-        <span class="has-text-danger" v-if="inputState == InputState.FetchError">
+      <p v-if="!workshopDetails && workshopId" class="has-text-centered is-size-5 mt-2">
+        <span v-if="inputState == InputState.FetchError" class="has-text-danger">
           Could not fetch workshop item
         </span>
-        <Icon icon="fa-solid fa-spinner" spin v-else>
+        <Icon v-else icon="fa-solid fa-spinner" spin>
           <span class="ml-2">Fetching Workshop Item</span>
         </Icon>
       </p>
-      <div class="field" v-if="inputState === InputState.ChoosingChildren && workshopDetails?.type === 'collection'">
+      <div v-if="inputState === InputState.ChoosingChildren && workshopDetails?.type === 'collection'" class="field">
         <label class="label">Select collection children</label>
-        <div class="field" v-for="child in workshopDetails.children" :key="child.publishedfileid">
+        <div v-for="child in workshopDetails.children" :key="child.publishedfileid" class="field">
           <input
             :id="child.publishedfileid"
+            v-model="acceptedChildren"
             type="checkbox"
             :value="child.publishedfileid"
             class="is-checkradio has-tooltip-right"
-            v-model="acceptedChildren"
           >
           <label :for="child.publishedfileid">
             <b><a :href="getWorkshopUrl(child.publishedfileid)" target="_blank">
@@ -71,15 +71,15 @@
           </label>
         </div>
       </div>
-      <div class="field" v-else-if="inputState === InputState.ChoosingDestinations">
+      <div v-else-if="inputState === InputState.ChoosingDestinations" class="field">
         <label class="label">Install To:</label>
-        <div class="field" v-for="(dest, id) in props.share.destinations" :key="id">
+        <div v-for="(dest, id) in props.share.destinations" :key="id" class="field">
           <input
             :id="id"
+            v-model="installDestinations"
             type="checkbox"
             :value="id"
             class="is-checkradio has-tooltip-right"
-            v-model="installDestinations"
           >
           <label :for="id">
             <span v-if="dest.name"><b>{{ dest.name }}</b> (<em>{{ id }}</em>)</span>
@@ -89,14 +89,14 @@
         </div>
       </div>
     </section>
-    <section class="modal-card-body" v-else>
-      <p class="has-text-centered" v-if="downloadLog.length == 0">
+    <section v-else class="modal-card-body">
+      <p v-if="downloadLog.length == 0" class="has-text-centered">
         Update in progress, this might take a while...
       </p>
       <div class="content">
         <h4 class="title">Downloads</h4>
-        <div class="list has-visible-pointer-controls" v-if="Object.keys(downloads).length > 0">
-          <div class="list-item" v-for="(download, id) in downloads" :key="id">
+        <div v-if="Object.keys(downloads).length > 0" class="list has-visible-pointer-controls">
+          <div v-for="(download, id) in downloads" :key="id" class="list-item">
             <div class="list-item-content">
               <div class="list-item-title"><a :href="download.url"><b>{{ download.entryTitle }}</b></a></div>
               <div class="list-item-description">
@@ -128,14 +128,14 @@
     <footer class="modal-card-foot">
       <div class="buttons">
         <template v-if="downloadState == DownloadState.Done || !isAddonValid">
-          <button class="button is-info" @click="retryDownload" v-if="inputState == InputState.FetchError">
+          <button v-if="inputState == InputState.FetchError" class="button is-info" @click="retryDownload">
             Retry
           </button>
           <button class="button is-success" @click="close">
             Close
           </button>
 
-          <button v-if="isAddonValid" @click="restartServers" :class="['button','is-info', {'is-loading': downloadState == DownloadState.RestartingServers }]">
+          <button v-if="isAddonValid" :class="['button','is-info', {'is-loading': downloadState == DownloadState.RestartingServers }]" @click="restartServers">
             Restart Servers
           </button>
         </template>

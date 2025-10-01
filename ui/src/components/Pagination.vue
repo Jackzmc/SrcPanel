@@ -29,7 +29,7 @@
       </li>
       </template>
     </ul>
-    <input :disabled="disabled" type="number" class="input pagination-previous limit-input" style="width:12%" min=1 :max="maxPages" step=1 v-model="pageInput" @blur="setPage(pageInput)" />
+    <input v-model="pageInput" :disabled="disabled" type="number" class="input pagination-previous limit-input" style="width:12%" min=1 :max="maxPages" step=1 @blur="setPage(pageInput)" />
   </nav>
 </template>
 

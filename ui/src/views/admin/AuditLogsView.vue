@@ -1,16 +1,16 @@
 <template>
 <div class="container is-fluid">
   <div class="columns">
-    <div class="column is-8 box" v-if="!entries || showLoading">
+    <div v-if="!entries || showLoading" class="column is-8 box">
       <p class="has-text-centered is-size-5" style="margin-top:20%">
-        <Icon icon="spinner" spin v-if="logInfo.loading">Waiting for log metadata</Icon>
-        <Icon icon="spinner" spin v-else>Searching logs</Icon>
+        <Icon v-if="logInfo.loading" icon="spinner" spin>Waiting for log metadata</Icon>
+        <Icon v-else icon="spinner" spin>Searching logs</Icon>
         <br>
         {{ loadingDuration }}s
       </p>
     </div>
-    <div class="column is-8 box" v-else style="vertical-align: middle">
-      <div class="list-item message is-info" ref="infiniteScroll" v-show="infiniteScrollLoading === 'top'">
+    <div v-else class="column is-8 box" style="vertical-align: middle">
+      <div v-show="infiniteScrollLoading === 'top'" ref="infiniteScroll" class="list-item message is-info">
         <div class="list-item-content has-text-centered" style="text-decoration: none">
           <p>
             <Icon icon="spinner" spin>Fetching newer entries...</Icon>
@@ -18,7 +18,7 @@
         </div>
       </div>
       <InfiniteLoading @infinite="loadContent('top')" />
-      <div class="has-text-centered is-size-5" v-if="entries.length === 0" style="margin-top:12%">
+      <div v-if="entries.length === 0" class="has-text-centered is-size-5" style="margin-top:12%">
         <p>No entries were found within year {{ dataSource }}</p>
         <p>Try searching in a different year</p>
         <br>
@@ -33,8 +33,8 @@
             </div>
           </Field>
       </div>
-      <div class="list has-visible-pointer-controls has-hoverable-list-items" v-else>
-        <div class="list-item  message has-background-info-light" v-if="pendingEntries.length > 0">
+      <div v-else class="list has-visible-pointer-controls has-hoverable-list-items">
+        <div v-if="pendingEntries.length > 0" class="list-item  message has-background-info-light">
           <a class="list-item-content has-text-centered" style="text-decoration: none" @click="viewPendingEntries">
             <p class="">
               <Icon icon="fa-message" />{{ pendingEntries.length }}{{ pendingEntries.length >= limit ? '+' : '' }}  new entries are available, click here to view
@@ -43,7 +43,7 @@
         </div>
         <template v-for="entry in entries" :key="entry.id">
           <div :class="['list-item', {'has-background-primary-light': entry.id == Number(filters.aroundId)}]" @mouseenter="hoverId = entry.id">
-            <div class="list-item-image" v-if="entry.client.avatarUrl || entry.target.avatarUrl">
+            <div v-if="entry.client.avatarUrl || entry.target.avatarUrl" class="list-item-image">
               <figure class="image is-48x48">
                 <img class="is-rounded" :src="entry.client.avatarUrl || entry.target.avatarUrl">
               </figure>
@@ -75,7 +75,7 @@
               </div>
             </div>
           </div>
-          <div class="list-item  px-0 mx-0 my-0 py-0" v-if="entry.showDetails">
+          <div v-if="entry.showDetails" class="list-item  px-0 mx-0 my-0 py-0">
 
             <div class="list-item-content has-background-light-gray">
                 <table class="table is-bordered is-fullwidth">
@@ -87,13 +87,13 @@
                       <td class="">
                         <span class="mr-2">#{{ entry.id }}</span>
                         <div class="buttons is-inline">
-                          <a class="button is-small" @click="copyShareLink(entry)" data-tooltip="Click to copy a shareable link">
+                          <a class="button is-small" data-tooltip="Click to copy a shareable link" @click="copyShareLink(entry)">
                             <span class="icon is-medium">
                               <Icon icon="fa-copy" />
                             </span>
                             <span>Share</span>
                           </a>
-                          <a class="ml-2 button is-small is-info" @click="jumpTo(entry)" data-tooltip="Shows messages around this message, ignoring filters">find nearby entries</a>
+                          <a class="ml-2 button is-small is-info" data-tooltip="Shows messages around this message, ignoring filters" @click="jumpTo(entry)">find nearby entries</a>
                         </div>
                       </td>
                     </tr>
@@ -138,7 +138,7 @@
             </div>
           </div>
         </template>
-        <div class="list-item  message has-background-info-light" ref="infiniteScroll">
+        <div ref="infiniteScroll" class="list-item  message has-background-info-light">
           <a class="list-item-content has-text-centered" style="text-decoration: none" @click="viewPendingEntries">
             <p class="">
               <Icon icon="spinner" spin>Fetching older entries...</Icon>
@@ -161,10 +161,10 @@
         <SimpleTypeahead
           placeholder="Search for a client"
           class="input"
-          @onInput="searchUsers"
-          @selectItem="onSelectUser('client', $event)"
           :items="userSearchItems"
           :item-projection="projectUser"
+          @onInput="searchUsers"
+          @selectItem="onSelectUser('client', $event)"
           @onBlur="onUserSearchBlur('client', $event)"
         />
       </Field>
@@ -172,15 +172,15 @@
         <SimpleTypeahead
           placeholder="Search for a target"
           class="input"
-          @onInput="searchUsers"
-          @selectItem="onSelectUser('target', $event)"
           :items="userSearchItems"
           :item-projection="projectUser"
+          @onInput="searchUsers"
+          @selectItem="onSelectUser('target', $event)"
           @onBlur="onUserSearchBlur('target', $event)"
         />
       </Field>
       <Field label="Search Message" icon-left="search">
-        <input type="text" class="input" placeholder="Search messages" v-model="filters.message" @change="fetchDebounce" />
+        <input v-model="filters.message" type="text" class="input" placeholder="Search messages" @change="fetchDebounce" />
       </Field>
       <Field>
         <label class="label">
@@ -217,7 +217,7 @@
       <div class="columns">
         <div class="column is-4">
           <Field label="Around Id">
-            <input v-model="filters.aroundId" type="number" class="input" min="0" @change="fetchDebounce" placeholder="####" />
+            <input v-model="filters.aroundId" type="number" class="input" min="0" placeholder="####" @change="fetchDebounce" />
           </Field>
         </div>
         <div class="column is-6">

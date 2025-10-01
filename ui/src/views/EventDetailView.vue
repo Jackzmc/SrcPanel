@@ -1,10 +1,10 @@
 <template>
 <div>
-  <div class="container is-fluid" v-if="scEvent">
+  <div v-if="scEvent" class="container is-fluid">
     <!-- <div class="block mb-4">
       <router-link :to="{name: 'events', params: { id: null }}"><Icon icon="fa-arrow-left" class="is-pulled-left" text="Back to events list" /></router-link>
     </div> -->
-    <div class="modal is-active" v-if="showingEditTutorial">
+    <div v-if="showingEditTutorial" class="modal is-active">
       <div class="modal-background"></div>
       <div class="modal-card">
         <header class="modal-card-head">
@@ -65,11 +65,11 @@
         </nav>
       </div>
       <div class="column has-text-centered">
-        <a class="button is-info" disabled v-if="editSubmitting">Submitting changes...</a>
-        <a class="button is-info" v-else @click="toggleEditing">{{ editCurrentWeek ? 'Stop Editing' : 'Edit My Availability' }}</a>
+        <a v-if="editSubmitting" class="button is-info" disabled>Submitting changes...</a>
+        <a v-else class="button is-info" @click="toggleEditing">{{ editCurrentWeek ? 'Stop Editing' : 'Edit My Availability' }}</a>
       </div>
       <div class="column has-text-right">
-        <a class="button is-rounded has-tooltip-left" @click="copyPrev" v-if="editPrevWeek" data-tooltip="Copies all your available times from the previous week to this week"><Icon icon="fa-copy">Copy From Previous Week</Icon></a>
+        <a v-if="editPrevWeek" class="button is-rounded has-tooltip-left" data-tooltip="Copies all your available times from the previous week to this week" @click="copyPrev"><Icon icon="fa-copy">Copy From Previous Week</Icon></a>
       </div>
     </div>
     <table class="table is-fullwidth is-bordered is-narrow" @mouseleave="hoveredElement = undefined">
@@ -90,9 +90,9 @@
               @mouseover="e => onMouseOver(e, [day, hour])" @mousedown="e => onMouseDown(e, [day, hour])"
             >
               {{ hourData.label }}
-              <span class="is-pulled-right" v-if="availabilityPercents && !isEditing">{{ Math.round(availabilityPercents[day*24+hour]*100) }}%</span>
+              <span v-if="availabilityPercents && !isEditing" class="is-pulled-right">{{ Math.round(availabilityPercents[day*24+hour]*100) }}%</span>
               <!-- On hover popup: -->
-              <div class="box hover-box px-0 py-0" v-if="!isEditing && hoveredElement && hoveredElement[0] == day && hoveredElement[1] == hour">
+              <div v-if="!isEditing && hoveredElement && hoveredElement[0] == day && hoveredElement[1] == hour" class="box hover-box px-0 py-0">
                 <h6 class="title is-6 px-4 pt-2 mb-2">Availabilities:</h6>
                 <List>
                   <template v-for="(res, i) in selectedWeek?.availability" :key="i">
@@ -119,7 +119,7 @@
       </tbody>
     </table>
   </div>
-  <div class="container" v-else-if="error">
+  <div v-else-if="error" class="container">
     <article class="message is-danger">
       <div class="message-header">
         <p><Icon icon="fa-exclamation-triangle">Error</Icon></p>
@@ -129,7 +129,7 @@
       </div>
     </article>
   </div>
-  <div class="container" v-else>
+  <div v-else class="container">
     <div class="box has-text-centered is-size-4">
       <Icon icon="fa-spinner" spin>Fetching event</Icon>
     </div>

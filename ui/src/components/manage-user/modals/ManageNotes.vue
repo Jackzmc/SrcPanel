@@ -1,6 +1,6 @@
 <template>
 <section class="modal-card-body">
-  <div class="container has-text-centered" v-if="loading">
+  <div v-if="loading" class="container has-text-centered">
     <br>
     <Icon icon="spinner" spin icon-class="mr-2">Fetching notes... please wait</Icon>
     <br>
@@ -9,13 +9,13 @@
     <div class="field">
       <label class="label">Message</label>
       <div class="control">
-        <textarea class="textarea" rows=2 placeholder="Enter note content" v-model="newNote.content"></textarea>
+        <textarea v-model="newNote.content" class="textarea" rows=2 placeholder="Enter note content"></textarea>
       </div>
     </div>
     <div class="field is-grouped">
       <div class="control">
-        <a class="button is-primary" @click="addNote" v-if="canAddNote">Add Note</a>
-        <span class="has-text-danger" v-else>Something went wrong, you don't have access to create notes</span>
+        <a v-if="canAddNote" class="button is-primary" @click="addNote">Add Note</a>
+        <span v-else class="has-text-danger">Something went wrong, you don't have access to create notes</span>
       </div>
       <div class="control">
         <button class="button is-link is-light" @click='newNote = undefined'>Cancel</button>
@@ -23,7 +23,7 @@
     </div>
   </template>
   <template v-else>
-    <div class="container has-text-centered" v-if="notes.length == 0">
+    <div v-if="notes.length == 0" class="container has-text-centered">
       <br>
       <p>User has no attached notes.</p>
       <p v-if="canAddNote"><a @click="startNewNote">Add a new note</a></p>
@@ -33,23 +33,23 @@
     <div class="mb-5 level">
       <div class="level-left">
         <p v-if="notes.length > 0" class="level-item">
-          <a class="button has-tooltip-danger has-tooltip-right" @click="startNewNote"
-            :disabled="canAddNote ? undefined : true"
+          <a class="button has-tooltip-danger has-tooltip-right" :disabled="canAddNote ? undefined : true"
             :data-tooltip="canAddNote ? undefined : 'You lack the permissions to add notes'"
+            @click="startNewNote"
           ><Icon icon-class="has-text-success" icon="fa-note-sticky" button>New Note</Icon></a>
         </p>
       </div>
       <div class="level-right">
         <p class="level-item has-tooltip-left has-tooltip-success" data-tooltip="Rate this player as good/helpful/friendly">
-          <a @click="setRating(1)"
-            :class="['button', {'is-active': rating.mine?.value === 1, 'is-loading': rating.loading, 'is-success': rating.mine?.value === 1 }]"
+          <a :class="['button', {'is-active': rating.mine?.value === 1, 'is-loading': rating.loading, 'is-success': rating.mine?.value === 1 }]"
+            @click="setRating(1)"
           >
             <Icon icon="fa-thumbs-up" button>{{ rating.thumbsUp }}</Icon>
           </a>
         </p>
         <p class="level-item has-tooltip-left has-tooltip-danger" data-tooltip="Rate this player as bad/unfriendly">
-          <a @click="setRating(-1)"
-            :class="['button', {'is-active': rating.mine?.value === -1, 'is-loading': rating.loading, 'is-danger': rating.mine?.value === -1 }]"
+          <a :class="['button', {'is-active': rating.mine?.value === -1, 'is-loading': rating.loading, 'is-danger': rating.mine?.value === -1 }]"
+            @click="setRating(-1)"
           >
             <Icon icon="fa-thumbs-down" button>{{ rating.thumbsDown }}</Icon>
           </a>

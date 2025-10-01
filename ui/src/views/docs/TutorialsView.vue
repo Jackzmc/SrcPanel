@@ -5,7 +5,7 @@
       <template v-if="selectedTutorial">
         <h4 class="title is-4">{{ selectedTutorial.title }}</h4>
         <video v-if="selectedTutorial.videoSrc" :src="selectedTutorial.videoSrc" controls autoplay />
-        <span class="content box" v-if="htmlContent" v-html="htmlContent"></span>
+        <span v-if="htmlContent" class="content box" v-html="htmlContent"></span>
       </template>
       <template v-else>
         <h4 class="title mt-6 is-4 has-text-centered">Select a tutorial</h4>
@@ -19,7 +19,7 @@
         <p class="panel-heading">
           Tutorials
         </p>
-        <div class="panel-block" v-if="!tutorials">
+        <div v-if="!tutorials" class="panel-block">
           <Icon icon="spinner" spin>Loading tutorials...</Icon>
         </div>
         <template v-else>
@@ -29,7 +29,7 @@
             <Icon icon-class="is-left" icon="fa-search" />
           </p>
         </div>
-        <a :class="['panel-block', {'is-active': selectedTutorial == tutorial}]" v-for="tutorial in filteredTutorials" :key="tutorial.title" @click="selectTutorial(tutorial)">
+        <a v-for="tutorial in filteredTutorials" :key="tutorial.title" :class="['panel-block', {'is-active': selectedTutorial == tutorial}]" @click="selectTutorial(tutorial)">
           <span class="panel-icon">
             <FontAwesomeIcon v-if="tutorial.type === 'video'" icon="fa-video" />
             <FontAwesomeIcon v-else-if="tutorial.type === 'text'" icon="fa-font" />
@@ -41,7 +41,7 @@
         </div>
         </template>
       </nav>
-      <div class="box content" v-if="selectedTutorial?.description">
+      <div v-if="selectedTutorial?.description" class="box content">
         <h4 class="title is-4">Tutorial Description</h4>
         <!-- eslint-disable-next-line vue/no-v-html -- pulled from local dev file -->
         <p v-html="selectedTutorial.description"></p>

@@ -8,11 +8,11 @@
     <div class="box">
       <ApexCharts type="line" :series="memSeries" :options="memOptions" height="300px" />
     </div>
-    <div class="box" v-for="(netSeries, i) in networkSeries" :key="i">
+    <div v-for="(netSeries, i) in networkSeries" :key="i" class="box">
       <ApexCharts type="line" :series="netSeries.series" :options="netSeries.options" height="300px" />
     </div>
   </div>
-  <div class="box has-background-info-light" v-else>
+  <div v-else class="box has-background-info-light">
     <h4 class="title is-4 has-text-centered my-4">
       <Icon icon="fa-spinner" spin>Waiting for metrics</Icon>
     </h4>

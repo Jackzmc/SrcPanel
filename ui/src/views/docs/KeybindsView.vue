@@ -31,14 +31,14 @@
         <span class="is-inline">Keybinds</span>
       </div>
       <div class="column is-3">
-        <input :class="['input','is-inline','is-small','is-inline',{'is-danger': isInvalidCommand}]" style="width:100%" type="text" v-model="command" >
-        <p class="help is-danger" v-if="isInvalidCommand">
+        <input v-model="command" :class="['input','is-inline','is-small','is-inline',{'is-danger': isInvalidCommand}]" style="width:100%" type="text">
+        <p v-if="isInvalidCommand" class="help is-danger">
           Keybinds require the console command prefix <b>sm_</b>. Replace <b>/</b> or <b>!</b> with <b>sm_</b>
         </p>
       </div>
     </div>
     <div class="list has-hoverable-list-items">
-        <div class="list-item" v-for="(keybind, i) in keybinds" :key="keybind">
+        <div v-for="(keybind, i) in keybinds" :key="keybind" class="list-item">
           <div class="list-item-content" style="text-decoration: none">
             {{ keybind }}
           </div>

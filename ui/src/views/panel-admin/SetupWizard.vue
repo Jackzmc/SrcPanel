@@ -1,19 +1,19 @@
 <template>
 <div>
-  <div class="container" v-if="!meta">
+  <div v-if="!meta" class="container">
     <h1 class="title is-1"><Icon icon="fa-spinner" spin>Setup Loading</Icon></h1>
     <p class="subtitle">
       Please wait, waiting for server information
     </p>
   </div>
-  <div class="container" v-if="currentStage == FirstTimeSetupStage.DONE">
+  <div v-if="currentStage == FirstTimeSetupStage.DONE" class="container">
     <h1 class="title is-1">Setup Complete</h1>
     <p class="subtitle">
       First time setup has already been completed.
     </p>
     <p><router-link to="/" class="button is-large">Homepage</router-link></p>
   </div>
-  <div class="container" style="min-height:400px" v-else>
+  <div v-else class="container" style="min-height:400px">
     <ul class="steps has-content-centered">
       <li v-for="(step, i) in STEPS" :key="i" :class="['steps-segment',{'is-active': i == highestStep }]">
         <router-link :to="{ hash: step.id }" class="has-text-dark">
@@ -29,10 +29,10 @@
       <component :is="currentStepData.component" :meta="meta" :stage="currentStage" @stage="(s:FirstTimeSetupStage) => currentStage = s" />
     </KeepAlive>
     <div class="block mt-4 mb-6">
-      <div class="button is-previous is-medium is-pulled-left" @click="advStep(-1)" v-if="canStepBack">
+      <div v-if="canStepBack" class="button is-previous is-medium is-pulled-left" @click="advStep(-1)">
         <Icon icon="fa-chevron-left">Previous Step</Icon>
       </div>
-      <div class="button is-previous is-info is-medium is-pulled-right" @click="advStep(1)" v-if="canStepNext">
+      <div v-if="canStepNext" class="button is-previous is-info is-medium is-pulled-right" @click="advStep(1)">
         <Icon icon="fa-chevron-right" text-left="Next Step"></Icon>
       </div>
     </div>

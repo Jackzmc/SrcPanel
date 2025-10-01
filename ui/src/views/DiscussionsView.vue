@@ -32,30 +32,30 @@
           </div>
         </div>
 
-        <DiscussionBox :priv-user="privUser" v-model="selectedDiscussion" selected :responses="responses" />
+        <DiscussionBox v-model="selectedDiscussion" :priv-user="privUser" selected :responses="responses" />
 
         <div class="box">
           <h4 class="title is-4 mb-2">
             <Icon icon="fas fa-comments" icon-class="mr-2">Comments</Icon>
             <span class="tag is-rounded ml-2 is-info" style="vertical-align: top;">{{ comments?.length ?? 0 }}</span>
           </h4>
-          <Comments id="comments" v-if="comments" :priv-user="privUser" :comments="comments" :discussion="selectedDiscussion" @comment="onSubmitComment"></Comments>
-          <p class="has-text-centered my-3 py-4 is-size-5" v-else><Icon icon="fa-spinner" spin></Icon></p>
+          <Comments v-if="comments" id="comments" :priv-user="privUser" :comments="comments" :discussion="selectedDiscussion" @comment="onSubmitComment"></Comments>
+          <p v-else class="has-text-centered my-3 py-4 is-size-5"><Icon icon="fa-spinner" spin></Icon></p>
         </div>
       </template>
       <template v-else-if="discussions">
-        <DiscussionBox :priv-user="privUser" v-for="(discuss, index) in discussions" :key="discuss.id" v-model="discussions[index]" :responses="discuss.responses" />
-        <p class="has-text-centered my-3 is-size-3" v-if="discussions.length === 0">There are no active discussions, start one!</p>
+        <DiscussionBox v-for="(discuss, index) in discussions" :key="discuss.id" v-model="discussions[index]" :priv-user="privUser" :responses="discuss.responses" />
+        <p v-if="discussions.length === 0" class="has-text-centered my-3 is-size-3">There are no active discussions, start one!</p>
       </template>
-      <p class="mt-5 has-text-centered is-size-4" v-else>
+      <p v-else class="mt-5 has-text-centered is-size-4">
         <Icon icon="fa-spinner" spin>Loading discussions...</Icon>
       </p>
     </div>
-    <div class="column" v-if="selectedDiscussion">
+    <div v-if="selectedDiscussion" class="column">
       <h4 class="title is-4">Respondants ({{ selectedDiscussion.responses.totalCount }}) ({{ Math.round(selectedDiscussion.responses.percentVoted * 100) }}%)</h4>
-      <p class="subtitle is-5" v-if="!(selectedDiscussion.flags & APIDiscussionFlags.ResponsesPublic)">Responses are hidden</p>
-      <div class="list has-visible-pointer-controls" v-if="selectedDiscussion.responses.users">
-        <div class="list-item" v-for="(user, i) in selectedDiscussion.responses.users" :key="i">
+      <p v-if="!(selectedDiscussion.flags & APIDiscussionFlags.ResponsesPublic)" class="subtitle is-5">Responses are hidden</p>
+      <div v-if="selectedDiscussion.responses.users" class="list has-visible-pointer-controls">
+        <div v-for="(user, i) in selectedDiscussion.responses.users" :key="i" class="list-item">
           <div class="list-item-image">
             <figure class="image is-32x32" :data-tooltip="user.name">
                 <LazyImage alt="User's avatar" img-class="is-rounded" :src="user.avatarUrl" placeholder-src="/img/steam_default_avatar.png" />
@@ -66,13 +66,13 @@
               {{ user.name }}
             </div>
           </div>
-          <div class="list-item-controls" v-if="selectedDiscussion.flags & APIDiscussionFlags.ResponsesPublic">
+          <div v-if="selectedDiscussion.flags & APIDiscussionFlags.ResponsesPublic" class="list-item-controls">
             {{ user.choices?.join(', ') }}
           </div>
         </div>
       </div>
     </div>
-    <div class="column " v-else>
+    <div v-else class="column ">
       <div class="box">
         <h4 class="title is-4 mb-4">Start a discussion</h4>
         <Field label="Disccusion topic / title" icon-left="fas fa-message">

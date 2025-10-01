@@ -1,36 +1,36 @@
 <template>
 <div>
-  <router-view :share="shareInfo" :addon="prefetch" @update="onChildUpdate" @close="onChildClose" v-if="shareInfo && (!route.meta.needsPrefetch || prefetch) && route.meta && route.meta.modal"></router-view>
+  <router-view v-if="shareInfo && (!route.meta.needsPrefetch || prefetch) && route.meta && route.meta.modal" :share="shareInfo" :addon="prefetch" @update="onChildUpdate" @close="onChildClose"></router-view>
   <div class="container is-fluid">
     <div class="columns">
       <div class="column px-0 mx-90">
         <template v-if="shareInfo">
-          <FileList :share-info="shareInfo" :addons="addons" v-if="viewMode === 'files'" />
-          <MapList :share-info="shareInfo" :addons="addons" :map-stats="mapStats" v-else-if="viewMode === 'maps'" />
-          <div class="has-text-centered box has-background-warning-light" v-else>
+          <FileList v-if="viewMode === 'files'" :share-info="shareInfo" :addons="addons" />
+          <MapList v-else-if="viewMode === 'maps'" :share-info="shareInfo" :addons="addons" :map-stats="mapStats" />
+          <div v-else class="has-text-centered box has-background-warning-light">
             <p class="title is-4 mt-4">
               Unknown view mode
             </p>
             <p class="subtitle is-4 mt-4 mb-4">No view <b>{{ viewMode }}</b> is known, change the mode to a valid mode on the right.</p>
           </div>
         </template>
-        <div class="has-text-centered box has-background-danger-light" v-else-if="error">
+        <div v-else-if="error" class="has-text-centered box has-background-danger-light">
           <p class="title is-3 mt-4"><Icon icon="exclamation-triangle" icon-class="pr-6 has-text-danger">Loading Files Failed</Icon></p>
           <p class="subtitle is-4 mt-4 mb-4">{{ error }}</p>
         </div>
-        <div class="has-text-centered box has-background-info-light" v-else style="vertical-align: middle">
+        <div v-else class="has-text-centered box has-background-info-light" style="vertical-align: middle">
           <p class="title is-3 mt-4"><Icon icon="spinner" spin icon-class="pr-6">Loading files...</Icon></p>
           <p class="subtitle is-4 mt-4 mb-4">This may take some time, please wait...</p>
         </div>
       </div>
       <div class="column is-3">
         <div class="box">
-          <h5 class="title is-4" v-if="ready">{{ shownFileCount }} files
-              <a class="button is-info is-pulled-right is-inline" @click="fetchAddons()" :disabled="ready ? undefined : true">
+          <h5 v-if="ready" class="title is-4">{{ shownFileCount }} files
+              <a class="button is-info is-pulled-right is-inline" :disabled="ready ? undefined : true" @click="fetchAddons()">
                 <Icon icon="fa-sync"></Icon>
               </a>
           </h5>
-          <h5 class="title is-4" v-else>- files
+          <h5 v-else class="title is-4">- files
             <a class="button is-info is-pulled-right is-inline" disabled>
               <Icon icon="fa-sync"></Icon>
             </a>
@@ -44,7 +44,7 @@
               </select>
             </div>
           </Field>
-            <div class="buttons" v-if="ready">
+            <div v-if="ready" class="buttons">
               <router-link :to="{ name: 'workshop-download', params: route.params }" class="button is-info is-fullwidth" data-tooltip="Download a workshop addon">
                 <Icon icon="fa-plus">Workshop Addon</Icon>
               </router-link>

@@ -15,7 +15,7 @@
       <li><b class="has-text-info">If disconnected: </b> <code>/notedisconnected</code>, opens up a list of previous players. Select the player's name, and then send a chat message to create the note message.</li>
     </ul>
     <hr>
-    <h4 class="title is-4 mb-2" id="actions">Note Actions</h4>
+    <h4 id="actions" class="title is-4 mb-2">Note Actions</h4>
     <p>
       Another feature of player notes is the ability to activate automatic actions that occur when the player joins. This can do things such as automatically muting the player (from voice chat or vocalizing), punishing them, or make them immune to automatic systems (auto reverse ff, teamkiller detection).
     </p>

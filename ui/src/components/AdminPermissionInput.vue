@@ -9,7 +9,7 @@
       <em>No permissions granted</em>
     </p>
     <Field :error="formError">
-      <input placeholder="Add new panel permission" list="codes" type="text" :class="['input', {'is-danger': isNewCodeValid === false, 'is-success': isNewCodeValid === true}]" v-model="newCode" @keydown.enter="addCode">
+      <input v-model="newCode" placeholder="Add new panel permission" list="codes" type="text" :class="['input', {'is-danger': isNewCodeValid === false, 'is-success': isNewCodeValid === true}]" @keydown.enter="addCode">
       <datalist id="codes">
         <option v-for="code in UserPrivilegeCodes" :key="code">
           {{ code }}

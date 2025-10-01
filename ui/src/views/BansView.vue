@@ -3,7 +3,7 @@
   <div class="columns">
     <div class="column">
       <Pagination :page="page" :limit="limit" :count="bansCount" @page="setPage"></pagination>
-      <table class="table is-fullwidth" v-if="!loading&&!error">
+      <table v-if="!loading&&!error" class="table is-fullwidth">
         <thead>
           <th style="width:0">Player</th>
           <th>Banned By</th>
@@ -29,11 +29,11 @@
             </td>
             <td>
               <em v-if="ban.executor.id === 'CONSOLE'">[Automatic]</em>
-              <UserComponent :user="ban.executor" v-else-if="!ban.executor.provider" hide-avatar />
+              <UserComponent v-else-if="!ban.executor.provider" :user="ban.executor" hide-avatar />
               <template v-else>
                 <span v-if="ban.executor.name" class=''>{{ ban.executor.name }}</span>
               </template>
-              <p class='has-text-info' v-if="ban.executor.provider && ban.executor.provider !== 'steam'"><em>via
+              <p v-if="ban.executor.provider && ban.executor.provider !== 'steam'" class='has-text-info'><em>via
                   {{ ban.executor.provider }}</em></p>
             </td>
             <td v-if="privUser">
@@ -58,7 +58,7 @@
           </tr>
         </tbody>
       </table>
-      <div class="mx-4" v-else-if="error">
+      <div v-else-if="error" class="mx-4">
         <article class="message is-danger">
           <div class="message-header">
             <p>
@@ -73,7 +73,7 @@
           </div>
         </article>
       </div>
-      <div class="box has-text-centered py-6" v-else>
+      <div v-else class="box has-text-centered py-6">
         <p class="subtitle is-2">
           <Icon icon="spinner" spin icon-class="mr-4">Fetching bans</Icon>
         </p>
@@ -82,11 +82,11 @@
     </div>
     <div class="column is-3">
       <div class="box has-background-info-light">
-        <h4 class="title is-4" v-if="bans">
-          Showing <input type="number" class="input" min=20 max=1000 step=10 style="width:6rem" v-model="limit"
+        <h4 v-if="bans" class="title is-4">
+          Showing <input v-model="limit" type="number" class="input" min=20 max=1000 step=10 style="width:6rem"
             @blur="changeLimit" /> / {{ totalBansCount.toLocaleString() }} Bans
         </h4>
-        <h3 class="title is-3" v-else>
+        <h3 v-else class="title is-3">
           Showing - / - Bans
         </h3>
         <p class="subtitle mt-2">
@@ -94,13 +94,13 @@
         </p>
         <div class="box">
           <div class="field">
-            <input id="showExpiredButton" type="checkbox" class="switch is-danger" v-model="showExpired"
+            <input id="showExpiredButton" v-model="showExpired" type="checkbox" class="switch is-danger"
               @change="fetchBans(true)">
             <label for="showExpiredButton">Include Expired Bans</label>
           </div>
         </div>
       </div>
-      <div class="box" v-if="appeals.length > 0">
+      <div v-if="appeals.length > 0" class="box">
         <h4 class="title is-4 has-text-primary"><Icon icon="fa-circle-exclamation">0 pending appeals</Icon></h4>
 
         <!-- TODO: implement -->

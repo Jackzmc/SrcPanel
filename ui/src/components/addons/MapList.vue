@@ -3,7 +3,7 @@
   <div class="columns">
     <div class="column">
       <Field icon-left="search" style="float: bottom">
-        <input type="text" class="input" placeholder="Search maps" v-model="search" @input="filterAndSortDebounce" />
+        <input v-model="search" type="text" class="input" placeholder="Search maps" @input="filterAndSortDebounce" />
       </Field>
     </div>
     <div class="column">
@@ -12,7 +12,7 @@
           <label class="label">Size</label>
         </div>
         <div class="field-body">
-          <input type="range" id="volume" name="volume" min="0" :max="CARD_SIZES.length - 1" v-model="cardSizeIndex" />
+          <input id="volume" v-model="cardSizeIndex" type="range" name="volume" min="0" :max="CARD_SIZES.length - 1" />
         </div>
       </div>
     </div>
@@ -32,7 +32,7 @@
             </div>
           </Field>
           <Field>
-            <div class="select" v-show="sort.id !== 'random'">
+            <div v-show="sort.id !== 'random'" class="select">
               <select v-model="sort.direction">
                 <option :value="SortDirection.Ascending">(↑) Ascending</option>
                 <option :value="SortDirection.Descending">(↓) Descending</option>
@@ -43,16 +43,16 @@
       </div>
     </div>
   </div>
-  <div class="columns is-centered" v-if="filteredAddons.length === 0">
+  <div v-if="filteredAddons.length === 0" class="columns is-centered">
     <div class="column is-6 has-text-centered" style="width:50%">
       <div class="box has-background-light-grey py-6">
         <p class="subtitle is-4">No maps were found</p>
       </div>
     </div>
   </div>
-  <div class="columns is-multiline is-1" v-else>
+  <div v-else class="columns is-multiline is-1">
 
-    <div :class="['column','is-flex',cardSizeClass]" v-for="map in filteredAddons" :key="map.filename">
+    <div v-for="map in filteredAddons" :key="map.filename" :class="['column','is-flex',cardSizeClass]">
       <div class="card is-fullwidth">
         <div class="card-image">
           <figure class="image is-5by3">
@@ -64,7 +64,7 @@
               <!-- <span class="rating-overlay" v-if="getStats(map)">
                 <Icon icon="fa-star" size="sm" v-for="i in Number(getStats(map).avgRating)" :key="i"></Icon>
               </span> -->
-              <span class="rating-overlay" v-if="getStats(map)?.numRatings > 0">
+              <span v-if="getStats(map)?.numRatings > 0" class="rating-overlay">
                 {{ Number(getStats(map).avgRating) }} <Icon icon="fa-star"></Icon>
               </span>
             </router-link>
@@ -74,18 +74,18 @@
           <div class="media">
             <div class="media-content">
               <p class="title is-5"><router-link :to="getRoute(map)">{{ map.collection?.name ?? map.workshop?.title ?? map.filename }}</router-link>
-                <span class="ml-2 tag is-black" v-if="map.collection">Collection</span>
+                <span v-if="map.collection" class="ml-2 tag is-black">Collection</span>
                  <!-- <span class="is-pulled-right" v-if="getStats(map)">
                     <Icon icon="fa-star" size="sm" v-for="i in Number(getStats(map).avgRating)" :key="i"></Icon>
                  </span> -->
               </p>
-              <p class="subtitle is-6" v-if="map.workshop && map.workshop.deleted">
+              <p v-if="map.workshop && map.workshop.deleted" class="subtitle is-6">
                 Addon has been removed from Steam Workshop.
               </p>
-              <p class="subtitle is-6" v-else-if="!map.workshop && !map.collection">
+              <p v-else-if="!map.workshop && !map.collection" class="subtitle is-6">
                 No workshop information available
               </p>
-              <p class="subtitle is-6" v-else-if="cardSizeIndex > 0">
+              <p v-else-if="cardSizeIndex > 0" class="subtitle is-6">
                 {{ formatDescription((map.collection ? map.children[0] : map).workshop?.description) }}
               </p>
             </div>
@@ -95,19 +95,19 @@
             <div :class="cardSizeIndex > 0 ? ['column'] : []">
               <ul>
                 <li>
-                  <Icon icon="clock" v-if="map.workshop || map.collection">Updated {{ getRelDate((map.collection ? map.children[0].workshop?.lastUpdated : map.workshop?.lastUpdated) ?? map.lastUpdated) }}</Icon>
+                  <Icon v-if="map.workshop || map.collection" icon="clock">Updated {{ getRelDate((map.collection ? map.children[0].workshop?.lastUpdated : map.workshop?.lastUpdated) ?? map.lastUpdated) }}</Icon>
                   <!-- no workshop data, not collection, fallback to file info: -->
-                  <Icon icon="clock" v-else>Downloaded
+                  <Icon v-else icon="clock">Downloaded
                     {{ getRelDate(map.downloaded) }}
                   </Icon>
                 </li>
                 <li>
-                  <Icon icon="clock" v-if="getStats(map)">Played
+                  <Icon v-if="getStats(map)" icon="clock">Played
                     {{ getRelDate(getStats(map).lastPlayedTime) }}
                   </Icon>
                 </li>
                 <li>
-                  <Icon icon="gamepad" v-if="getStats(map)">Played {{ getStats(map).gamesPlayed.toLocaleString() }} times</Icon>
+                  <Icon v-if="getStats(map)" icon="gamepad">Played {{ getStats(map).gamesPlayed.toLocaleString() }} times</Icon>
                 </li>
               </ul>
             </div>
@@ -117,7 +117,7 @@
                   <Icon icon="file">{{ formatSize(map.filesize) }}</Icon>
                 </li>
                 <li>
-                  <Icon icon="book" v-if="map.meta">{{ map.meta.chapterIds.length }} chapters</Icon>
+                  <Icon v-if="map.meta" icon="book">{{ map.meta.chapterIds.length }} chapters</Icon>
                 </li>
                 <li><span v-if="map.collection">{{ map.children.length }} parts</span></li>
               </ul>

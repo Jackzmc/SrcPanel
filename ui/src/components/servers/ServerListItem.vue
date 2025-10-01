@@ -9,7 +9,7 @@
         ></Icon>{{ server.name }}</div>
       <div class="list-item-description">
         <div class="tags is-inline-flex mb-0">
-          <span class="tag is-info" v-if="server.online">
+          <span v-if="server.online" class="tag is-info">
             <Icon icon="fa fa-user"></Icon>
             {{ server.status?.data?.players.length ?? 0 }}/{{ server.status?.data?.maxplayers ?? 0 }} players
           </span>

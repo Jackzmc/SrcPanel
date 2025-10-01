@@ -9,7 +9,7 @@
             <br>
             <span v-for="(group, id) in filteredGroups" :key="id">
                 <h4 class="title is-4 has-text-link has-text-centered">{{ group.name }}</h4>
-                <p class="has-text-centered is-size-6" v-if="!showLockedCommands && group.list.filter((cmd: any) => cmd.hasPermission).length === 0">
+                <p v-if="!showLockedCommands && group.list.filter((cmd: any) => cmd.hasPermission).length === 0" class="has-text-centered is-size-6">
                   You do not have access to any commands in this category
                 </p>
                 <ul class="is-unstyled">
@@ -35,7 +35,7 @@
                               <template v-if="!cmd.hidePrefix">{{ prefix }}</template>{{ cmd.name }}
                               </component>&nbsp;
                               <!-- eslint-disable-next-line vue/no-v-html -- pulled from commands.json local file -->
-                              <span v-html="formatParameters(cmd)" class="is-size-5"></span>
+                              <span class="is-size-5" v-html="formatParameters(cmd)"></span>
                             </component>
                              - {{ formatDescription(cmd) }}
                             <div v-if="cmd.note">
@@ -53,8 +53,8 @@
           <div class="box has-background-white-ter">
             <div class="field has-tooltip-left"
               :data-tooltip="isLoggedIn ? 'Show all commands, even if you don\'t have access to them' : 'Login and uncheck to show only commands you have access to'">
-              <input class="is-checkradio disabled" id="showlocked" type="checkbox" name="showlocked" value="locked"
-                v-model="hideNoPermissionCommands" :disabled="!isLoggedIn">
+              <input id="showlocked" v-model="hideNoPermissionCommands" class="is-checkradio disabled" type="checkbox" name="showlocked"
+                value="locked" :disabled="!isLoggedIn">
               <label for="showlocked">Show All Commands</label>
             </div>
           </div>
@@ -63,7 +63,7 @@
               <!-- <p>Inputting Commands</p> -->
               <label for="cmdViewmode" class="is-size-5"><b>I want to enter commands via </b></label>
               <div class="select is-info is-small mb-4">
-                  <select name="cmdViewmode" id="cmdViewmode" v-model="commandViewmode">
+                  <select id="cmdViewmode" v-model="commandViewmode" name="cmdViewmode">
                       <option value="console">console</option>
                       <option value="private">chat, privately</option>
                       <option value="public">chat, publicly</option>

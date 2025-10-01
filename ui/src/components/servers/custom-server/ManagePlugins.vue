@@ -1,5 +1,5 @@
 <template>
-<div class="box" v-if="model">
+<div v-if="model" class="box">
   <h4 class="title is-4">Server Plugins</h4>
   <p class="">Select the plugins you want on the server by clicking on its box. You can always change plugins later.</p>
   <p class="">Some plugins are required and cannot be disabled, others are recommended</p>
@@ -37,13 +37,13 @@
             <p class="subtitle is-6">
               {{ plugin.description }}
             </p>
-            <span data-tooltip="This plugin is required and cannot be disabled" class="tag is-danger"
-              v-if="plugin.flagKv.required">Required</span>
-            <span data-tooltip="This plugin is recommended to be enabled" class="tag is-primary"
-              v-else-if="plugin.flagKv.recommended">Recommended</span>
-            <span data-tooltip="This plugin is recommended to be enabled when 5+ support is enabled"
-              class="tag is-primary"
-              v-else-if="plugin.flagKv.recommendedExtraPlayers && formData.extraPlayers">Recommended for 5+</span>
+            <span v-if="plugin.flagKv.required" data-tooltip="This plugin is required and cannot be disabled"
+              class="tag is-danger">Required</span>
+            <span v-else-if="plugin.flagKv.recommended" data-tooltip="This plugin is recommended to be enabled"
+              class="tag is-primary">Recommended</span>
+            <span v-else-if="plugin.flagKv.recommendedExtraPlayers && formData.extraPlayers"
+              data-tooltip="This plugin is recommended to be enabled when 5+ support is enabled"
+              class="tag is-primary">Recommended for 5+</span>
             <!-- <span class="tag is-secondary" v-else-if="hasFlag(plugin.id, PluginFlag.Library)">Library</span> -->
           </div>
         </div>

@@ -11,7 +11,7 @@
         <p class="subtitle is-5">Login with either Steam or Discord (if linked) on the right to continue</p>
       </div>
     </div>
-    <div class="column" v-if="meta&&!hideButtons">
+    <div v-if="meta&&!hideButtons" class="column">
       <div class="block">
         <SteamLoginButton size="large" :meta="meta" />
       </div>
@@ -19,7 +19,7 @@
         <DiscordLoginButton size="large" :meta="meta" />
       </div>
     </div>
-    <div class="column" v-if="meta&&hideButtons">
+    <div v-if="meta&&hideButtons" class="column">
       <Icon icon="fa-spinner" spin>Waiting for server</Icon>
     </div>
   </div>

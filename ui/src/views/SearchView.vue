@@ -18,7 +18,7 @@
     <div class="mt-4">
       <h4 class="title is-4 has-text-centered">Objects</h4>
       <div class="grid is-col-min-12 is-multiline">
-        <div :class="['cell',{'is-col-span-2': result.type == 'activity_log'}]" v-for="(result, id) of results" :key="id">
+        <div v-for="(result, id) of results" :key="id" :class="['cell',{'is-col-span-2': result.type == 'activity_log'}]">
           <div :class="['card', result.type]" style="height:100%">
             <header class="card-header">
               <p class="card-header-title mb-0">
@@ -36,11 +36,11 @@
             <div class="card-content">
               <template v-if="result.data">
                 <LogMessage v-if="'logData' in result" :log="result.logData" :priv-user="privUser" />
-                <div class="content" v-else-if="result.type === 'discuss'">
+                <div v-else-if="result.type === 'discuss'" class="content">
                   <h5 class="">{{ result.data.title }}</h5>
                   <p class="subtitle"><FormatText :text="result.data.description" /></p>
                 </div>
-                <div class="content" v-else-if="result.type === 'user'">
+                <div v-else-if="result.type === 'user'" class="content">
                   <table class='table is-fullwidth'>
                     <tr>
                       <th>Joined</th>

@@ -38,7 +38,7 @@
                 {{ i+1 }}. {{ troll.name }}
               </component> - {{ troll.description }}
             </p>
-            <div class="content" v-if="troll.subnotes">
+            <div v-if="troll.subnotes" class="content">
               <ol class="is-lower-alpha">
                 <li v-for="note in troll.subnotes" :key="note">
                   {{ note }}

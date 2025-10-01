@@ -1,9 +1,9 @@
 <template>
 <div>
   <template v-if="servers">
-    <ServerTable :priv-user="privUser" v-for="group in servers" :key="group.id" :group="group"></ServerTable>
+    <ServerTable v-for="group in servers" :key="group.id" :priv-user="privUser" :group="group"></ServerTable>
   </template>
-  <div class="table-container" v-else>
+  <div v-else class="table-container">
     <template v-for="i in 3" :key="i">
       <div class="skeleton-lines mb-4">
         <div></div>

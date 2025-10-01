@@ -1,13 +1,13 @@
 <template>
 <div>
   <template v-if="loadState === LoadState.Success">
-    <div class="block" v-for="group in groups" :key="group.id">
+    <div v-for="group in groups" :key="group.id" class="block">
       <h6 class="title is-4">{{ group.name }}</h6>
-      <ServerTable :priv-user="privUser" :group="group" @delete="onServerDelete" @update="onServerUpdate" :meta="meta" />
+      <ServerTable :priv-user="privUser" :group="group" :meta="meta" @delete="onServerDelete" @update="onServerUpdate" />
     </div>
   </template>
   <div v-else-if="loadState === LoadState.Loading">
-    <div class="block" v-for="i in 3" :key="i">
+    <div v-for="i in 3" :key="i" class="block">
       <h6 class="title has-skeleton">Group</h6>
       <div class="skeleton-block">
         <span v-for="j in 8" :key="j"> Please wait while we fetch all the server groups. This should take very little time, in fact, it should already be loaded. You shouldn't be able to even read this, unless you are reading the source code.</span>

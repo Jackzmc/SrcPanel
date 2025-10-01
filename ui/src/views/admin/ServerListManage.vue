@@ -71,7 +71,7 @@
             <input v-model="searchQuery" type="text" class="input" placeholder="Search..." />
           </Field>
         </div>
-        <div class="level-item" @mouseleave="showActionDropdown = false" v-if="selectedServers.length > 0">
+        <div v-if="selectedServers.length > 0" class="level-item" @mouseleave="showActionDropdown = false">
           <div :class="['dropdown',{'is-active': showActionDropdown}]">
             <div class="dropdown-trigger">
               <button :class="['button',{'is-loading': pendingAction}]"
@@ -82,16 +82,16 @@
                 <Icon icon="fa-chevron-down" text-left="Perform an action"></Icon>
               </button>
             </div>
-            <div class="dropdown-menu" id="dropdown-menu" role="menu">
+            <div id="dropdown-menu" class="dropdown-menu" role="menu">
               <div class="dropdown-content">
-                <a :class="['dropdown-item',{'is-loading': pendingAction}]" v-for="action in allActions" :key="action.name"
-                  @click="performAction(null, action)"
+                <a v-for="action in allActions" :key="action.name" :class="['dropdown-item',{'is-loading': pendingAction}]"
                   :style="{ color: action.color }"
                   :data-tooltip="action.description || undefined"
+                  @click="performAction(null, action)"
                 >
                   {{ action.name }}
                 </a>
-                <a class="dropdown-item is-disabled" disabled v-if="allActions.length === 0">No actions available</a>
+                <a v-if="allActions.length === 0" class="dropdown-item is-disabled" disabled>No actions available</a>
                 <!-- <a class="dropdown-item"> Start </a>
                 <a class="dropdown-item"> Request Restart </a>
                 <a class="dropdown-item"> Stop </a>
@@ -114,7 +114,7 @@
           </button>
         </div>
         <div class="level-item">
-          <button class="button is-info" @click="setModal(Modal.NewServer)" data-tooltip="Start a new server instance">
+          <button class="button is-info" data-tooltip="Start a new server instance" @click="setModal(Modal.NewServer)">
             <Icon icon="fa-plus">Start New Server</Icon>
           </button>
         </div>
@@ -127,7 +127,7 @@
     </nav>
     <div class="columns">
       <div class="column is-12">
-        <div class="py-2 columns is-centered" v-if="refreshError">
+        <div v-if="refreshError" class="py-2 columns is-centered">
           <article class="column message is-half is-danger">
             <div class="message-body">
               <strong>Failed to fetch servers</strong><br>
@@ -161,11 +161,11 @@
               <td>
                 <!-- <router-link :data-tooltip="server.group.id"
                   :to="{name: 'servers-manage-group', params: { groupId: server.group.id }}">{{ server.group.name }}</router-link> -->
-                <a @click="searchQuery = '@' + server.group.id" :data-tooltip="server.group.id">{{ server.group.name }}</a>
+                <a :data-tooltip="server.group.id" @click="searchQuery = '@' + server.group.id">{{ server.group.name }}</a>
               </td>
               <td>
                 <div class="tags">
-                  <span class="tag" v-for="tag in server.data.tags" :key="tag">{{ tag }}</span>
+                  <span v-for="tag in server.data.tags" :key="tag" class="tag">{{ tag }}</span>
                 </div>
               </td>
               <td>
@@ -197,7 +197,7 @@
           </tbody>
         </table>
         </div>
-        <p class="has-text-centered py-6" v-if="filteredSortedServers.length === 0">
+        <p v-if="filteredSortedServers.length === 0" class="has-text-centered py-6">
           No servers found matching your query
           <br>See <b>Search</b> section in <a @click="setModal(Modal.Help)">help</a> for more information
         </p>

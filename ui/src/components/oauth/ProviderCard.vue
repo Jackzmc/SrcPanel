@@ -9,13 +9,13 @@
     <div class="list-item-title">
       {{ provider.name }}
     </div>
-    <div class="list-item-description has-text-danger" v-if="provider.expired">
+    <div v-if="provider.expired" class="list-item-description has-text-danger">
       Link has expired, please relogin.
     </div>
-    <div class="list-item-description" v-else-if="provider.enabled">
+    <div v-else-if="provider.enabled" class="list-item-description">
       {{ provider.data?.username }}
     </div>
-    <div class="list-item-description" v-else>
+    <div v-else class="list-item-description">
       <em>Not Linked</em>
     </div>
   </template>

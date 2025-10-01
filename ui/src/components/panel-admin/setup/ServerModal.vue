@@ -5,39 +5,39 @@
       <div class="columns">
         <div class="column is-6">
           <Field label="Id*">
-            <template #hint_error v-if="!server.id">
+            <template v-if="!server.id" #hint_error>
               <p class="help has-text-danger"><Icon icon="fa-exclamation-triangle">Required</Icon></p>
             </template>
-            <input required :class="['input',{'is-danger': !server.id }]" type="text" placeholder="A unique identifier" v-model="server.id" />
+            <input v-model="server.id" required :class="['input',{'is-danger': !server.id }]" type="text" placeholder="A unique identifier" />
           </Field>
         </div>
         <div class="column is-6">
           <Field label="Name">
-            <input required class="input" type="text" placeholder="An optional friendly name" v-model="server.name" @change="onEnterName" />
+            <input v-model="server.name" required class="input" type="text" placeholder="An optional friendly name" @change="onEnterName" />
           </Field>
         </div>
       </div>
       <div class="columns">
         <div class="column is-6">
           <Field label="IP Address / Domain*" :info="server.host">
-            <template #hint_error v-if="!server.ip">
+            <template v-if="!server.ip" #hint_error>
               <p class="help has-text-danger"><Icon icon="fa-exclamation-triangle">A valid domain or IP address is required</Icon></p>
             </template>
-            <input required :class="['input',{'is-danger': !server.ip }]" type="text" placeholder="127.0.0.1, localhost, your.domain" v-model="server.ip" @input="onAddrChangedDebounce" />
+            <input v-model="server.ip" required :class="['input',{'is-danger': !server.ip }]" type="text" placeholder="127.0.0.1, localhost, your.domain" @input="onAddrChangedDebounce" />
           </Field>
         </div>
         <div class="column is-6">
           <Field label="Port*">
-            <template #hint_error v-if="!server.port">
+            <template v-if="!server.port" #hint_error>
               <p class="help has-text-danger"><Icon icon="fa-exclamation-triangle">A valid port is required</Icon></p>
             </template>
-            <input required :class="['input',{'is-danger': !server.port }]" type="number" placeholder="27015" v-model="server.port" @input="onAddrChangedDebounce" />
+            <input v-model="server.port" required :class="['input',{'is-danger': !server.port }]" type="number" placeholder="27015" @input="onAddrChangedDebounce" />
           </Field>
         </div>
       </div>
       <Field label="Type" info="Automatic will try to detect the type based on the given ip and port">
         <div :class="['select',{'is-loading': determiningType === LoadState.Loading}]">
-          <select required :disabled="determiningType === LoadState.Loading" v-model="server.type" @change="onTypeSelected">
+          <select v-model="server.type" required :disabled="determiningType === LoadState.Loading" @change="onTypeSelected">
             <option :value="null">Automatic</option>
             <option value="left4dead2">Left 4 Dead 2</option>
             <option value="source">Generic Source Engine</option>
@@ -45,10 +45,10 @@
           </select>
         </div>
         <p class="help">This will overrule the type defined in the group. It's not recommended, as group type determines layout of server tables.</p>
-        <p class="help has-text-danger" v-if="determiningType === LoadState.Error">Could not automatically determine server type</p>
+        <p v-if="determiningType === LoadState.Error" class="help has-text-danger">Could not automatically determine server type</p>
       </Field>
       <Field label="Tags (Comma separated)" info="These are generic tags used to categorize servers">
-        <input data-type="tags" class="input" type="text" placeholder="custom-maps, my-supported-gamemode, etc" v-model="server.tags">
+        <input v-model="server.tags" data-type="tags" class="input" type="text" placeholder="custom-maps, my-supported-gamemode, etc">
       </Field>
     </Tab>
     <Tab name="Plugins">
@@ -87,16 +87,16 @@
           <li :class="{'is-active': rconState === 'env'}"><a @click="rconState = 'env'">From ENV Variable</a></li>
         </ul>
       </div>
-      <Field label="Rcon Password" info="Stored as plaintext in the servers.json" v-if="rconState === 'plaintext'">
+      <Field v-if="rconState === 'plaintext'" label="Rcon Password" info="Stored as plaintext in the servers.json">
         <input type="text" class="input" />
       </Field>
-      <Field label="ENV Variable Name" info="The full environmental variable that contains the rcon password" v-else-if="rconState === 'env'">
+      <Field v-else-if="rconState === 'env'" label="ENV Variable Name" info="The full environmental variable that contains the rcon password">
         <input type="text" class="input" />
       </Field>
       <br>
     </Tab>
     <Tab name="Actions">
-      <ActionModal v-if="actionEditActive" :data="selectedAction" @save="onActionSaved" @close="actionEditActive = false" :meta="meta" />
+      <ActionModal v-if="actionEditActive" :data="selectedAction" :meta="meta" @save="onActionSaved" @close="actionEditActive = false" />
       <p>Actions will be inherrited from the group this server belongs in, but here you can add actions specific to this server only.</p>
       <table class="table is-fullwidth">
         <thead>
@@ -127,7 +127,7 @@
       <nav class="level">
         <div class="level-left">
           <div class="level-item">
-            <button class="button is-success has-text-white" :disabled="!canSubmit" v-if="hasEdited" @click="save">{{ data ? 'Save Changes' : 'Add Server' }}</button>
+            <button v-if="hasEdited" class="button is-success has-text-white" :disabled="!canSubmit" @click="save">{{ data ? 'Save Changes' : 'Add Server' }}</button>
           </div>
           <div class="level-item">
             <button :class="['button',{'is-warning': hasEdited}]" @click="cancel">{{ hasEdited ? 'Cancel' : 'Close' }}</button>
@@ -135,7 +135,7 @@
         </div>
         <div class="level-right">
           <div class="level-item">
-            <button class="button is-danger has-text-white" v-if="props.data" @click="emit('delete', props.data)"><Icon icon="fa-trash">Delete</Icon></button>
+            <button v-if="props.data" class="button is-danger has-text-white" @click="emit('delete', props.data)"><Icon icon="fa-trash">Delete</Icon></button>
           </div>
         </div>
       </nav>

@@ -2,7 +2,7 @@
 <div class="container is-fluid">
   <div class="columns">
     <div class="column">
-      <div class="notification is-warning" v-if="meta && !meta.steamAvailable">
+      <div v-if="meta && !meta.steamAvailable" class="notification is-warning">
         <button class="delete"></button>
         Steam servers are currently offline, most likely due to weekly scheduled maintenance. You won't be able to join servers until they come back online. <a href="https://steamstat.us/">Check the status live at steamstat.us</a>
       </div>
@@ -13,7 +13,7 @@
       </div>
       <div class="is-pulled-right mt-2" style="margin-right: 10px">
         <em v-if="countdownText">{{ countdownText }}</em>
-        <Icon icon="spinner" v-else spin />
+        <Icon v-else icon="spinner" spin />
       </div>
       <Servers :priv-user="privUser" @refresh="onServerRefresh" />
     </div>

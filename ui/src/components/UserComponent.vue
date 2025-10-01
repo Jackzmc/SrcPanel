@@ -1,32 +1,32 @@
 <template>
 <div class="user-tooltip">
   <component :is="steamid2 ? 'router-link' : 'a'" class="media" :to="{name:'manage-user',params:{ id: steamid2 }, query: { returnTo: $route.fullPath }}">
-    <figure class="media-left mr-2" v-if="!hideAvatar && clientAvatarSrc">
+    <figure v-if="!hideAvatar && clientAvatarSrc" class="media-left mr-2">
       <p class="image is-32x32">
         <LazyImage alt="User's avatar" observer img-class="is-rounded" :src="clientAvatarSrc" placeholder-src="/img/steam_default_avatar.png" />
       </p>
     </figure>
-    <div class="media-content" v-if="!hideName">
+    <div v-if="!hideName" class="media-content">
       <div class="content mt-1 pr-0">
         {{ props.user.name ?? id }}
       </div>
     </div>
   </component>
   <div class="user-tooltip-content">
-    <figure class="image is-48x48 is-inline-block mr-3 is-round" v-if="clientAvatarSrc">
+    <figure v-if="clientAvatarSrc" class="image is-48x48 is-inline-block mr-3 is-round">
       <LazyImage alt="User's avatar" observer img-class="is-rounded" :src="clientAvatarSrc" placeholder-src="/img/steam_default_avatar.png" />
     </figure>
     <div class="is-inline-block mt-0">
       <p class="title is-5 has-text-primary mt-0">{{ props.user.name }}</p>
-      <p class="subtitle is-6 has-text-white" v-if="steamid2">{{ steamid2 }}</p>
-      <p class="subtitle is-6 has-text-white" v-else>{{ props.fallbackName ?? "BOT" }}</p>
+      <p v-if="steamid2" class="subtitle is-6 has-text-white">{{ steamid2 }}</p>
+      <p v-else class="subtitle is-6 has-text-white">{{ props.fallbackName ?? "BOT" }}</p>
     </div>
     <template v-if="id">
       <br>
       <span class="tags">
-        <span class="tag is-info" v-if="isAdmin">Admin</span>
-        <span class="tag is-danger" v-if="'bansCount' in props.user && props.user.bansCount != null">{{ props.user.bansCount }} Ban(s)</span>
-        <span class="tag" v-if="'notesCount' in props.user && props.user.notesCount != null">{{ props.user.notesCount }} Notes(s)</span>
+        <span v-if="isAdmin" class="tag is-info">Admin</span>
+        <span v-if="'bansCount' in props.user && props.user.bansCount != null" class="tag is-danger">{{ props.user.bansCount }} Ban(s)</span>
+        <span v-if="'notesCount' in props.user && props.user.notesCount != null" class="tag">{{ props.user.notesCount }} Notes(s)</span>
       </span>
     </template>
   </div>

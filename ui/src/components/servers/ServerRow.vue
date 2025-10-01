@@ -1,15 +1,15 @@
 <template>
   <tr :class="trClass">
     <td>
-      <router-link :class="serverClasses" v-if="privUser" :to="{name: 'admin-server-view', params: { serverId: server.id, tab: 'overview' }}" :data-tooltip="tooltip">
+      <router-link v-if="privUser" :class="serverClasses" :to="{name: 'admin-server-view', params: { serverId: server.id, tab: 'overview' }}" :data-tooltip="tooltip">
         <b>{{ server.name }}</b>
       </router-link>
       <div v-else :class="serverClasses" :data-tooltip="tooltip">
         <b>{{ server.name }}</b>
       </div>
       <span class="tags">
-        <span class="tag" v-if="server.tags.includes('5+')">5+</span>
-        <span class="tag" v-if="server.tags.includes('customs')">Custom Maps</span>
+        <span v-if="server.tags.includes('5+')" class="tag">5+</span>
+        <span v-if="server.tags.includes('customs')" class="tag">Custom Maps</span>
       </span>
     </td>
     <td :class="manage ? undefined : 'has-text-centered'">
@@ -44,13 +44,13 @@
           </template>
         </td>
         <td>
-          <div @click="copyCommand" :class="[{ 'has-text-grey': !server.online },'is-inline']">
+          <div :class="[{ 'has-text-grey': !server.online },'is-inline']" @click="copyCommand">
             connect {{ server.host }}:{{ server.port }}
           </div>
-          <a data-tooltip="Click to join game" class="is-pulled-right" v-if="server.online" :href="'steam://connect/' + server.ip + '/' + server.port">[Join]</a>
+          <a v-if="server.online" data-tooltip="Click to join game" class="is-pulled-right" :href="'steam://connect/' + server.ip + '/' + server.port">[Join]</a>
         </td>
         <td>
-          <p @click="copyCommand" :class="{ 'has-text-grey': !server.online }">
+          <p :class="{ 'has-text-grey': !server.online }" @click="copyCommand">
             mm_dedicated_force_servers {{ server.ip }}:{{ server.port }}
           </p>
         </td>

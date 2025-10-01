@@ -4,7 +4,7 @@
       <tr>
         <th style="min-width:400px">
           <Field icon-left="search">
-            <input type="text" class="input" placeholder="Search for a file" v-model="search"
+            <input v-model="search" type="text" class="input" placeholder="Search for a file"
               @input="filterAndSortDebounce" />
           </Field>
         </th>
@@ -46,14 +46,14 @@
               <b class="has-text-dark is-underlined">{{ addon.collection.name }}</b>&nbsp;
               <span class="tag is-dark is-pulled-right">Collection</span>
             </router-link>
-            <router-link :to="getRoute(addon)"
-              :class="{'has-text-weight-light': addon.enabledOn.length === 0, 'has-text-grey': addon.enabledOn.length === 0 }"
-              v-else :data-tooltip="getTooltip(addon)">
+            <router-link v-else
+              :to="getRoute(addon)"
+              :class="{'has-text-weight-light': addon.enabledOn.length === 0, 'has-text-grey': addon.enabledOn.length === 0 }" :data-tooltip="getTooltip(addon)">
               {{ addon.workshop ? addon.workshop.title : addon.filename }}
             </router-link>
-            <span class="tag is-success ml-1" v-if="addon.meta?.chapterIds">Map</span>
-            <span class="tags is-inline is-pulled-right" v-if="!addon.collection">
-              <span class="tag mr-1 is-rounded is-info" v-for="server in addon.enabledOn" :key="server">
+            <span v-if="addon.meta?.chapterIds" class="tag is-success ml-1">Map</span>
+            <span v-if="!addon.collection" class="tags is-inline is-pulled-right">
+              <span v-for="server in addon.enabledOn" :key="server" class="tag mr-1 is-rounded is-info">
                 {{ server }}
               </span>
             </span>
@@ -61,7 +61,7 @@
           </td>
           <td v-if="hasAnyWorkshop">
             <template v-if="addon.workshop">
-              <span class="has-text-danger" v-if="addon.workshop.delete"
+              <span v-if="addon.workshop.delete" class="has-text-danger"
                 data-tooltip="Item has been deleted or private">Deleted</span>
               <a v-else :href="addon.workshop.url" class="button is-small" target="_blank"
                 data-tooltip="Open a new tab to the workshop entry page">
@@ -95,11 +95,11 @@
                 :data-tooltip="getTooltip(child)">
                 <b>{{ child.workshop.title }} </b>
               </router-link>
-              <router-link :to="getRoute(child)" v-else class="ml-5"
+              <router-link v-else :to="getRoute(child)" class="ml-5"
                 :data-tooltip="getTooltip(child)">{{ child.filename }}</router-link>
-              <span class="tag is-small is-success ml-1" v-if="addon.meta?.chapterIds">Map</span>
-              <span class="tags is-inline is-pulled-right" v-if="!child.collection">
-                <span class="tag is-info is-rounded" v-for="server in child.enabledOn" :key="server">
+              <span v-if="addon.meta?.chapterIds" class="tag is-small is-success ml-1">Map</span>
+              <span v-if="!child.collection" class="tags is-inline is-pulled-right">
+                <span v-for="server in child.enabledOn" :key="server" class="tag is-info is-rounded">
                   {{ server }}
                 </span>
               </span>

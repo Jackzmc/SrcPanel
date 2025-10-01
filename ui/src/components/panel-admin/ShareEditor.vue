@@ -31,26 +31,26 @@
           </template>
         </ul>
       </nav>
-      <div class="box" v-if="selectedDest">
+      <div v-if="selectedDest" class="box">
         <h4 class="title is-4">Destination <button class="button is-danger" @click="deleteDest"><Icon icon="fa-trash"></Icon></button></h4>
         <h5 class="subtitle is-5">{{ selectedDest.name }}</h5>
         <Field label="Id*">
-          <input type="text" class="input" placeholder="Id of the share" v-model="selectedDestId" required @input="onChangeDestId">
+          <input v-model="selectedDestId" type="text" class="input" placeholder="Id of the share" required @input="onChangeDestId">
         </Field>
         <Field label="Name">
-          <input type="text" class="input" placeholder="Name of the destination" v-model="selectedDest.name">
+          <input v-model="selectedDest.name" type="text" class="input" placeholder="Name of the destination">
         </Field>
         <Field label="Paths">
             <!-- <p class="control" >
             </p> -->
           <div class="columns is-multiline">
             <div class="column is-12">
-              <div class="field has-addons" v-for="(path, i) in selectedDest?.paths" :key="i">
+              <div v-for="(path, i) in selectedDest?.paths" :key="i" class="field has-addons">
                 <div class="control" style="width:100%">
                   <input v-model="selectedDest!.paths[i]" type="text" class="input" style="width:100%" placeholder="/var/share1/dest1" required>
                 </div>
                 <div class="control">
-                  <a class="button is-danger" @click="selectedDest.paths.splice(i, 1)" v-if="selectedDest!.paths.length > 1">
+                  <a v-if="selectedDest!.paths.length > 1" class="button is-danger" @click="selectedDest.paths.splice(i, 1)">
                     <Icon icon="fa-trash"></Icon>
                   </a>
                 </div>
@@ -68,17 +68,17 @@
           <Vue3TagsInput :tags="selectedDest?.serverIds" placeholder="server1" />
         </Field>
       </div>
-      <div class="box" v-else>
+      <div v-else class="box">
         <h4 class="title is-4">Share</h4>
         <p class="subtitle">* marks a required field</p>
         <Field label="Name*" :info="shareId ? `Id: ${shareId}` : ''">
-          <input type="text" class="input" placeholder="Name of the share" v-model="share.name" required>
+          <input v-model="share.name" type="text" class="input" placeholder="Name of the share" required>
         </Field>
         <Field label="Share Source Folder*" info="Where all addon files are stored">
-          <input type="text" class="input" placeholder="Source Folder" v-model="share.sourceFolder" required>
+          <input v-model="share.sourceFolder" type="text" class="input" placeholder="Source Folder" required>
         </Field>
         <Field label="Restrict to Steam Game">
-          <Autocomplete input-class="input" placeholder="Enter a steam game name" :items="appids" :min-length="4" v-if="appids" v-model="share.appid" />
+          <Autocomplete v-if="appids" v-model="share.appid" input-class="input" placeholder="Enter a steam game name" :items="appids" :min-length="4" />
 
           <p class="help has-text-info">Restrict share for workshop addons only for this appid. Optional</p>
           <template v-if="appTitle !== null">
@@ -95,7 +95,7 @@
         </Field>
         <Field label="Download Sources" info="How files can be added. If none, will be read-only">
           <div class="field has-addons">
-            <p class="control" v-for="source in DownloadSources" :key="source">
+            <p v-for="source in DownloadSources" :key="source" class="control">
               <button :class="['button', {'has-background-info': share.downloadSources![source], 'has-text-white': share.downloadSources![source] }]" @click="toggleDownloadSource(source)">
                 {{ DownloadSourceNames[source] }}
               </button>

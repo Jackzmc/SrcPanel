@@ -15,9 +15,9 @@
             <a :disabled="canUpdate" :class="['button']" @click="reloadConfig">Reload Config</a>
           </div>
 
-          <p class="has-text-danger" v-if="updateStatus.error">{{ updateStatus.error }}</p>
-          <p class="has-text-info" v-else-if="updateStatus.upToDate">Server is already up to date.</p>
-          <p class="has-text-success" v-else-if="updateStatus.state === 'SUCCESS'">Server has been updated successfully.</p>
+          <p v-if="updateStatus.error" class="has-text-danger">{{ updateStatus.error }}</p>
+          <p v-else-if="updateStatus.upToDate" class="has-text-info">Server is already up to date.</p>
+          <p v-else-if="updateStatus.state === 'SUCCESS'" class="has-text-success">Server has been updated successfully.</p>
     </Tab>
     <Tab name="Servers">
       <JsonConfigEditor v-if="tab == 'Servers'" filename="servers.json" />

@@ -1,5 +1,5 @@
 <template>
-  <form method="post" action="https://steamcommunity.com/openid/login" v-if="props.meta">
+  <form v-if="props.meta" method="post" action="https://steamcommunity.com/openid/login">
     <input type="hidden" name="openid.realm" :value="realm" />
     <input type="hidden" name="openid.return_to" :value="redirectUri" />
     <input type="hidden" name="openid.mode" value="checkid_setup" />

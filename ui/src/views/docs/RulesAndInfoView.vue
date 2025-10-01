@@ -24,7 +24,7 @@
         </ol>
       </div>
     </div>
-    <div class="column is-6" id="guidelines">
+    <div id="guidelines" class="column is-6">
       <div class="box content">
         <h4>Command Use Guidelines</h4>
         <p>The following guidelines are intended for using commands in <b>official campaign maps</b>. In custom maps, its less of an issue.</p>

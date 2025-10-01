@@ -9,10 +9,10 @@
             <li v-for="cvar in filteredCvars" :key="cvar.cvar">
               <b class="is-size-5">
                 <component
-                  @click='showExamples(cvar)'
                   :is="cvar.examples && cvar.examples.length > 0 ? 'a' : 'span'"
                   class="is-size-5 has-tooltip-success"
                   :data-tooltip="cvar.examples && cvar.examples.length > 0 ? 'Click to view examples' : null"
+                  @click='showExamples(cvar)'
                 >
                   {{ cvar.name }}
                 </component>&nbsp;

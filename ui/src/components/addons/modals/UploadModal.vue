@@ -10,7 +10,7 @@
     <section class="modal-card-body">
       <div class="file has-name is-boxed">
         <label class="file-label">
-          <input class="file-input" type="file" ref="filePicker" @change="onFileUploaded" :accept="validFiles">
+          <input ref="filePicker" class="file-input" type="file" :accept="validFiles" @change="onFileUploaded">
           <span class="file-cta">
             <span class="file-icon">
               <Icon icon="fas fa-upload" />
@@ -19,21 +19,21 @@
               Choose an addon
             </span>
           </span>
-          <span class="file-name" v-if="filename">
+          <span v-if="filename" class="file-name">
             {{ filename }}
           </span>
         </label>
       </div>
       <br>
-      <div class="field" v-if="filename">
+      <div v-if="filename" class="field">
         <label class="label">Install Destinations</label>
-        <div class="field" v-for="(dest, id) in props.share.destinations" :key="id">
+        <div v-for="(dest, id) in props.share.destinations" :key="id" class="field">
           <input
             :id="id"
+            v-model="installDestinations"
             type="checkbox"
             :value="id"
             class="is-checkradio has-tooltip-right"
-            v-model="installDestinations"
           >
           <label :for="id">
             <span v-if="dest.name"><b>{{ dest.name }}</b> (<em>{{ id }}</em>)</span>
@@ -47,7 +47,7 @@
     <footer class="modal-card-foot">
       <div class="buttons">
         <template v-if="uploadState > 1">
-          <button @click="restartServers" :class="['button','is-info', {'is-loading': uploadState === 3}]">
+          <button :class="['button','is-info', {'is-loading': uploadState === 3}]" @click="restartServers">
             Restart Servers
           </button>
         </template>

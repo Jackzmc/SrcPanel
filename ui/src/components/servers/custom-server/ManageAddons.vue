@@ -29,7 +29,7 @@
     </div>
   </div>
   <h5 class="title is-5 mb-2">Added Addons</h5>
-  <p class="subtitle is-6" v-if="filteredAddons.length === 0">No addons have been added, add an addon by pasting a workshop url above.</p>
+  <p v-if="filteredAddons.length === 0" class="subtitle is-6">No addons have been added, add an addon by pasting a workshop url above.</p>
   <div class="fixed-grid has-2-cols">
     <div class="grid">
       <div v-for="(addon) in filteredAddons" :key="addon.id" class="cell has-tooltip-right"
@@ -41,12 +41,12 @@
                     'has-background-grey-lighter': !addon.error && (!addon.item || !enabledAddons[addon.id]),
                     'has-background-danger-light': addon.error
                   }]" style="border-radius: 1px; height:100%" @click="toggleAddon(addon.id)">
-          <div class="card-content px-4 py-2" v-if="addon.item">
+          <div v-if="addon.item" class="card-content px-4 py-2">
             <label class="checkbox">
               <input type="checkbox" :checked="enabledAddons[addon.id]" />
               &nbsp;<strong>{{ addon.name }}</strong>
             </label>
-            <button class="delete is-pulled-right" aria-label="close" @click="removeAddon(addon.id)" data-tooltip="Remove addon">x</button>
+            <button class="delete is-pulled-right" aria-label="close" data-tooltip="Remove addon" @click="removeAddon(addon.id)">x</button>
             <!-- <span data-tooltip="This plugin is required and cannot be disabled" class="tag is-danger"
               v-if="plugin.flagKv.required">Required</span>
             <span data-tooltip="This plugin is recommended to be enabled" class="tag is-primary"
@@ -56,11 +56,11 @@
               v-else-if="plugin.flagKv.recommendedExtraPlayers && formData.extraPlayers">Recommended for 5+</span>
             <span class="tag is-secondary" v-else-if="hasFlag(plugin.id, PluginFlag.Library)">Library</span> -->
           </div>
-          <div class="card-content px-4 py-2" v-else-if="addon.error">
+          <div v-else-if="addon.error" class="card-content px-4 py-2">
             <h6 class="title is-6">{{ addon.id }}</h6>
             <p>Failed to find addon: {{ addon.error }}</p>
           </div>
-          <div class="card-content px-4 py-2" v-else>
+          <div v-else class="card-content px-4 py-2">
             <h6 class="title is-6"><Icon icon="fa-spinner" spin>{{ addon.id }}</Icon></h6>
           </div>
         </div>
