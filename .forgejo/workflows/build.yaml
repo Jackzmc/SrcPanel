@@ -39,3 +39,24 @@ jobs:
           name: server.zip
           path: server
           if-no-files-found: error
+
+  deploy:
+    runs-on: ubuntu-full
+    needs: build
+    steps:
+      - name: Pull Artifacts
+        # Automatically uploads an artifact from the './_site' directory by default
+        uses: https://data.forgejo.org/forgejo/download-artifact@v4
+      - name: Install SSH Key
+        uses: https://github.com/shimataro/ssh-key-action@v2.7.0
+        with:
+          key: ${{ secrets.REMOTE_PRIVATE_KEY }}
+          name: id_rsa # optional
+          known_hosts: ${{ secrets.KNOWN_HOSTS }}
+      - run: ls -l
+      - name: Rsync UI Files (Staging)
+        if: ${{ github.ref == 'refs/heads/master' }}
+        run: rsync --verbose --archive --delete ui/ deploy@${{ secrets.REMOTE_HOST }}:/var/www/admin-panel/staging
+      # - name: Rsync Server Files (Staging)
+      #   if: ${{ github.ref == 'refs/heads/master' }}
+      #   run: rsync --verbose --archive --delete server/ deploy@${{ secrets.REMOTE_HOST }}:/node/admin-panel/server/
