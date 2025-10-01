@@ -12,6 +12,7 @@
     "sourceMap": true,
     "baseUrl": ".",
     "resolveJsonModule": true,
+    "allowJs": true,
     "types": [
       "vite/client"
     ],

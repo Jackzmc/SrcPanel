@@ -3,6 +3,7 @@ import path from 'path';
 import vue from '@vitejs/plugin-vue'
 import { sentryVitePlugin } from "@sentry/vite-plugin";
 import { execSync } from 'child_process'
+import checker from 'vite-plugin-checker'
 
 export default ({ mode }) => {
   process.env = {...process.env, ...loadEnv(mode, process.cwd(), '')};
@@ -15,6 +16,10 @@ export default ({ mode }) => {
 
   return defineConfig({
     plugins: [
+      checker({
+        // e.g. use TypeScript check
+        typescript: true,
+      }),
       sentryVitePlugin({
         disable: mode != "build" || process.env.SENTRY_AUTH_TOKEN === undefined,
         authToken: process.env.SENTRY_AUTH_TOKEN,
