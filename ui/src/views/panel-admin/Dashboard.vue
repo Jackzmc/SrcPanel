@@ -19,9 +19,6 @@
           <p class="has-text-info" v-else-if="updateStatus.upToDate">Server is already up to date.</p>
           <p class="has-text-success" v-else-if="updateStatus.state === 'SUCCESS'">Server has been updated successfully.</p>
     </Tab>
-    <Tab name="Panel Config">
-      <ConfigEditor />
-    </Tab>
     <Tab name="Servers">
       <JsonConfigEditor v-if="tab == 'Servers'" filename="servers.json" />
     </Tab>
