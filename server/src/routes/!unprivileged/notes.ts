@@ -157,7 +157,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
     })
 
-    const domain = await fastify.config.GetKV("domain", "")
+    const domain = fastify.config.Domain
     function formatNote(note: any): Note {
         let action = undefined
         if(note.content.startsWith("@") && note.content.length > 1) {

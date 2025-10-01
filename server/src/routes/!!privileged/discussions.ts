@@ -135,7 +135,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
         await conn.commit()
         conn.release()
-        const domain = await fastify.config.GetKV("domain", "");
+        const domain = fastify.config.Domain
         discManager.set(discuss.id, {
             id: discuss.id,
             title: discuss.title,
@@ -161,7 +161,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
 
     fastify.get('/:id', async (req: FastifyRequest<{Params: {id: string}}>, reply): Promise<APIDiscussionDetails> => {
-        const domain = await fastify.config.GetKV("domain", "");
+        const domain = fastify.config.Domain
         let discuss = discManager.get(Number(req.params.id))
         if(!discuss) {
             const [rows] = await fastify.db.execute<RowDataPacket[]>("SELECT d.*, COUNT(c.id) as comment_count FROM `left4dead2-admins`.dash_discussions d right join `left4dead2-admins`.dash_discussion_comments c on c.discussion_id = d.id WHERE d.id = 24", [req.params.id])
@@ -197,7 +197,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     })
 
     fastify.get('/:id/comments', async (req: FastifyRequest<{Params: {id: string}}>, reply): Promise<APIComment[]> => {
-        const domain = await fastify.config.GetKV("domain", "");
+        const domain = fastify.config.Domain
 
         const discuss = discManager.get(Number(req.params.id))
         if(!discuss) {
@@ -241,7 +241,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         discuss.commentsCount++
         discManager.set(discuss.id, discuss)
         
-        const domain = await fastify.config.GetKV("domain", "");
+        const domain = fastify.config.Domain
 
         if(discuss.creator.id !== req.user!.steamid2) {
             const name = (discuss.flags & APIDiscussionFlags.CommentsPublic)

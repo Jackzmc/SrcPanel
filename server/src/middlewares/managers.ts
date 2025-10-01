@@ -70,8 +70,7 @@ async function db(fastify: FastifyInstance) {
     })
 
     const userManager = new UserManager(db, steam)
-    const configManager = new ConfigManager()
-    await configManager.Load(DATA_FOLDER)
+    const configManager = await ConfigManager.Load(CONFIG_FOLDER)
     const authManager = new AuthManager(admindb, db, steam, configManager, cacheManager)
     const serverManager = new ServerManager(steam, DATA_FOLDER, CONFIG_FOLDER, configManager)
     SetCache.Init(DATA_FOLDER)

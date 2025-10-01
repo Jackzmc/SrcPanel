@@ -46,7 +46,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     if(!process.env.STATE_SECRET) {
         fastify.get("*", async (req, reply) => {
             reply.type("text/html")
-            const domain = await fastify.config.GetKV("domain", "")
+            const domain = fastify.config.Domain
             return reply.redirect(`${domain}/error?type=oauth_error&provider=${PROVIDER_NAME}&oauth_error=provider_not_supported`)
         })
     }
@@ -71,7 +71,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 code,
                 message
             }, `[auth/${PROVIDER_NAME}] route error`)
-            const returnTo = req.query.return_uri ?? req.query['openid.return_to'] ?? await fastify.config.GetKV("domain", req.headers.host)
+            const returnTo = req.query.return_uri ?? req.query['openid.return_to'] ?? fastify.config.Domain
             const url = new URL(returnTo)
             const prefix = `${url.protocol}//${url.host}`
             const params = new URLSearchParams()
@@ -88,20 +88,18 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         const isLink = req.url.endsWith("/link")
         reply.type("text/html")
         const redirectUri = await getRedirectUri()
-        const clientId = await fastify.config.GetKVNamespaced("providers", PROVIDER_NAME, "clientId")
-        const domain = await fastify.config.GetKV("domain", "")
-        const authorizeUrl = await fastify.config.GetKVNamespaced("providers", PROVIDER_NAME, "authorize_url")
-        if(!redirectUri || !clientId || !authorizeUrl) {
+        const provider = fastify.config.GetProvider(PROVIDER_NAME)
+        if(!provider || !redirectUri) {
             throw new RouteError("PROVIDER_NOT_SUPPORTED", "Login provider is not configured and cannot be used")
         }
         const params = new URLSearchParams({
-            client_id: clientId,
+            client_id: provider.client_id,
             scope: "identify",
             response_type: "code",
             redirect_uri: redirectUri,
             state: await generateState(isLink ? req.user : null)
         })
-        return reply.redirect(`${authorizeUrl}?${params.toString()}`)
+        return reply.redirect(`${provider.authorize_url}?${params.toString()}`)
     }
     ["/login", "/link"].forEach(url => fastify.get.bind(fastify)(url, loginLinkHandler))
 
@@ -118,7 +116,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         reply.type("text/html")
         if(!req.query.code) return reply.send("<h1>Missing code</h1>")
         if(!req.query.state) return reply.send("<h1>Missing state</h1>")
-        const domain = await fastify.config.GetKV<string, undefined>("domain", undefined);
+        const domain = fastify.config.Domain;
         if(!domain) return reply.code(500).send({
             error: "PROVIDER_SETUP_MISSING",
             message: "This provider is not setup correctly, missing 'domain' setting"
@@ -167,7 +165,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     })
 
     async function getRedirectUri() {
-        const domain = await fastify.config.GetKV<string, undefined>("domain", undefined)
+        const domain = fastify.config.Domain
         if(!domain) return null
         return `${domain}/api/auth/${PROVIDER_NAME}/callback`
     }

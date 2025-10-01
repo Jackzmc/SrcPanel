@@ -70,7 +70,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     })
 
     fastify.get('/discord', async (req, reply) => {
-        const inviteUrl = await fastify.config.GetKV("discord.link", undefined)
+        const inviteUrl = fastify.config.Config.discord?.link
         if(!inviteUrl)
             reply.send("No discord invite link was set, sorry.")
         else

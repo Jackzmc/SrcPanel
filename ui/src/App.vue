@@ -151,7 +151,7 @@ async function getMeta() {
 
   const response = await fetch('/api/meta')
   if(response.ok) {
-    const json = await response.json()
+    const json: PanelMetaInfo = await response.json()
     window.localStorage['srcds_meta_cache'] = JSON.stringify({
       data: json,
       timestamp: Date.now()

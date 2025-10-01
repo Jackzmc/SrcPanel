@@ -15,7 +15,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     */
     fastify.get('/meta', async(req, reply) => {
         const pluginRepo = await JSON.parse(await readFile(path.join(PLUGIN_REPO_FOLDER_LOCATION, 'plugins.json'), 'utf-8'))
-        const { games } = await JSON.parse(await readFile(path.join(fastify.config.DataDirectory, '../config', 'custom_server.json'), 'utf-8'))
+        const { games } = await JSON.parse(await readFile(path.join(fastify.paths.config, '../config', 'custom_server.json'), 'utf-8'))
         return {
             plugins: pluginRepo,
             games: games

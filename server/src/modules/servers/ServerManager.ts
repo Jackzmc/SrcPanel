@@ -401,8 +401,8 @@ export default class ServerManager {
    */
   
   async Load() {
-    this.longRefreshInterval = await this.#cfgManager.GetKV<number>("servers.long_refresh_interval", 600)
-    this.shortRefreshInterval = await this.#cfgManager.GetKV<number>("servers.short_refresh_interval", 30)
+    this.longRefreshInterval = 600 // await this.#cfgManager.GetKV<number>("servers.long_refresh_interval", 600)
+    this.shortRefreshInterval = 30 // await this.#cfgManager.GetKV<number>("servers.short_refresh_interval", 30)
     if(this.#dynamicManager) {
       await this.#dynamicManager.Load()
     }

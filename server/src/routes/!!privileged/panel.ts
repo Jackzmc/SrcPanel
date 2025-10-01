@@ -1,5 +1,5 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
-import { ConfigKey, FirstTimeSetupStage, KVConfig, KeyConfig, KeyFlags } from '../../../../common-types/Panel.js';
+import { FirstTimeSetupStage } from '../../../../common-types/Panel.js';
 import { NO_PERMISSION } from '../../responses.js';
 import path from 'node:path';
 import Json5 from 'json5'
@@ -16,19 +16,7 @@ let updateState: UpdateState = "NORMAL"
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
     fastify.get('/', async (req, reply) => {
         if(!req.user!.hasPermission("panel.view")) return NO_PERMISSION(reply)
-        let kv = {}
-        for(const [key, config] of Object.entries(KVConfig)) {
-            if(config.flags && config.flags & ~KeyFlags.Internal) {
-                kv[key] = {
-                    ...config,
-                    value: await fastify.config.GetKV(key as ConfigKey, "")
-                }
-            }
-        }
-        
-        return {
-            keys: kv
-        }
+        return fastify.config.Config
     })
 
     fastify.get('/config/:filename', async (req: FastifyRequest<{ Params: { filename: string }}>, reply) => {
@@ -62,31 +50,6 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             throw err
         }
     })
-
-    fastify.post('/kv', async (req, reply) => {
-        if(!req.user!.hasPermission("panel.manage")) return NO_PERMISSION(reply)
-        if(req.headers['content-type']?.toLowerCase() !== "application/json") {
-            return reply.status(400).send({
-                error: "INVALID_BODY",
-                message: "The body of the request must be a json object of key value pairs"
-            })
-        }
-
-
-        for(const [key, value] of Object.entries(req.body as Record<string, any>)) {
-            if(!(key in KVConfig)) {
-                return reply.status(400).send({
-                    error: "UNKNOWN_KV",
-                    message: `The key "${key}" is not a valid keyvalue key`
-                })
-            }
-
-            await fastify.config.SetKV(key as ConfigKey, value)
-        }
-
-        return reply.status(204).send()
-    })
-
     fastify.get('/health', async(req, reply) => {
         return {
             currentState: updateState,
@@ -238,27 +201,27 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
     fastify.get('/first-time-setup', async(req: FastifyRequest, reply ) => {
         return {
-            stage: Number(await fastify.config.GetKV<number>("first-time-setup.stage", 0))
+            stage: -1
         }
     })
 
     fastify.post('/first-time-setup', async(req: FastifyRequest<{ Querystring: { stage: number, [s: string]: any }}>, reply ) => {
-        const stage = Number(req.query.stage)
-        const currentStage = await fastify.config.GetKV<number>("first-time-setup.stage", 0)
-        if(currentStage == FirstTimeSetupStage.DONE) return reply.code(403).send({
-            error: "SETUP_COMPLETE",
-            message: "Setup has already been completed"
-        })
-        if(stage === FirstTimeSetupStage.FirstSetupComplete) {
-            console.log("setting domain", req.query.domain)
-            // await fastify.config.SetKV("domain", req.query.domain)
-        } else {
-            return reply.code(400).send({
-                error: "INVALID_STAGE",
-                message: "Invalid stage"
-            })
-        }
-        await fastify.config.SetKV("first-time-setup.stage", stage)
+        // const stage = Number(req.query.stage)
+        // const currentStage = await fastify.config.GetKV<number>("first-time-setup.stage", 0)
+        // if(currentStage == FirstTimeSetupStage.DONE) return reply.code(403).send({
+        //     error: "SETUP_COMPLETE",
+        //     message: "Setup has already been completed"
+        // })
+        // if(stage === FirstTimeSetupStage.FirstSetupComplete) {
+        //     console.log("setting domain", req.query.domain)
+        //     // await fastify.config.SetKV("domain", req.query.domain)
+        // } else {
+        //     return reply.code(400).send({
+        //         error: "INVALID_STAGE",
+        //         message: "Invalid stage"
+        //     })
+        // }
+        // await fastify.config.SetKV("first-time-setup.stage", stage)
         return reply.status(204).send()
     })
 }

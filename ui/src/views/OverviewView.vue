@@ -6,7 +6,7 @@
         <button class="delete"></button>
         Steam servers are currently offline, most likely due to weekly scheduled maintenance. You won't be able to join servers until they come back online. <a href="https://steamstat.us/">Check the status live at steamstat.us</a>
       </div>
-      <div v-if="meta && meta.settings.notice" :class="['notification', meta.settings['notice.type']]" >
+      <div v-if="noticeText" :class="['notification', meta?.settings.notice?.class]" >
         <button class="delete"></button>
         <span v-html="noticeText" />
       </div>
@@ -77,8 +77,8 @@ let interval = ref<ReturnType<typeof setInterval>>()
 let countdownText = ref()
 
 const noticeText = computed(() => {
-  if(!props.meta || !props.meta.settings['notice']) return
-  return marked(props.meta.settings['notice'], { breaks: true })
+  if(!props.meta?.settings.notice || !props.meta.settings.notice.enabled || props.meta.settings.notice.text === "") return
+  return marked(props.meta.settings.notice.text, { breaks: true })
 })
 
 function onServerRefresh(payload: { state: string, interval?: number }) {

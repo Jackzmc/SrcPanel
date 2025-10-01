@@ -95,9 +95,9 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         })
     })
     
-    fastify.get('/meta', async(req, reply): Promise<PanelMetaInfo> => {
+    fastify.get('/meta', (req, reply): PanelMetaInfo => {
         return {
-            settings: await fastify.config.GetPublicKeyvalues(),
+            settings: fastify.config.PublicMeta,
             steamAvailable: fastify.steam.SteamAvailable
         }
     })

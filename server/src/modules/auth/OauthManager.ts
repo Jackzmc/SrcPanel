@@ -3,6 +3,7 @@ import { OauthProvider } from "../../../../common-types/User.js";
 import { OauthProviderUser } from './OauthProvider.js';
 import AuthManager from "./AuthManager.js";
 import ConfigManager, { RegisteredProvider } from "../ConfigManager.js";
+import assert from "node:assert";
 
 export interface OauthConfig {
     clientId: string,
@@ -36,7 +37,13 @@ export class OauthManager {
      * @returns Promise<RegisteredProvider>
      */
     async getProviders(): Promise<RegisteredProvider[]> {
-        return await this.#config.FindProviders()
+        return Object.entries(this.#config.Providers)
+            .map(([id, data]) => {
+                return {
+                    id,
+                    ...data
+                }
+            })
     }
 
     /**
@@ -45,26 +52,23 @@ export class OauthManager {
      * @returns Promise<OauthProviderUser> - instance of OauthProviderUser
      */
     async getProvider(providerName: string): Promise<OauthProviderUser|null> {
-        const domain = await this.#config.GetKVNamespaced("domain")
-        const clientId = await this.#config.GetKVNamespaced("providers", providerName, "clientId")
-        const clientSecret = await this.#config.GetKVNamespaced("providers", providerName, "clientSecret")
-        if(!clientId || !clientSecret) {
-            return null
-        }
+        const domain = this.#config.Domain
+        const provider = this.#config.GetProvider(providerName)
+        assert(provider != null)
         // Assume not null
         const urls = {
-            tokenUrl: await this.#config.GetKVNamespaced("providers", providerName, "token_url") as string,
-            revokeUrl: await this.#config.GetKVNamespaced("providers", providerName, "revoke_url") as string,
-            detailsUrl: await this.#config.GetKVNamespaced("providers", providerName, "user_url") as string,
+            tokenUrl: provider.token_url,
+            revokeUrl: provider.revoke_url,
+            detailsUrl: provider.user_url,
             redirectUrl: `${domain}/api/auth/${providerName}/callback`
         }
         
         const oauthConfig: OauthConfig = {
-            clientId,
-            clientSecret,
+            clientId: provider.client_id,
+            clientSecret: provider.client_secret,
             urls,
             config: {
-                avatarFormat: await this.#config.GetKVNamespaced<string>("providers", providerName, "avatar_url_format") ?? null
+                avatarFormat: provider.avatar_url_format ?? null
             }
         }
         return new OauthProviderUser(providerName, oauthConfig, this.#authmngr)

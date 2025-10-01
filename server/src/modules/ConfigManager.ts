@@ -1,140 +1,124 @@
 import sqlite3 from 'sqlite3'
 import sqlite, { open } from 'sqlite'
 import SQL from 'sql-template-strings';
-import { join } from 'path';
-import { KeyFlags, ConfigKey, KVConfig, PublicKeys } from '../../../common-types/Panel.js';
+import path, { join } from 'path';
+import { PanelConfigProvider, PublicConfigMeta } from '../../../common-types/Panel.js';
+import yaml from 'yaml'
+import { readFile } from 'fs/promises';
+import { PanelConfig } from '../../../common-types/Panel';
+import Logger from '../logger.js'
+const log = Logger.child({ name: "config" })
 
 export interface RegisteredProvider {
     id: string
     name?: string,
 }
 
+export class ParseError extends Error {
+    constructor(field: string, message: string) {
+        super(`Parse failed on ${field}: ${message}`)
+    }
+}
+
 export default class ConfigManager {
-    #db: sqlite.Database<sqlite3.Database, sqlite3.Statement>
-    #servers: any[]|null = null
-    #dataDir: string
+    #filepath: string
+    #config: PanelConfig
 
-    public async Load(dataDir: string) {
-        this.#db = await open({
-            filename: join(dataDir, "config.db"),
-            driver: sqlite3.Database
-        })
-        this.#dataDir = dataDir
-        await this.SetupDatabase()
+    constructor(configFilepath: string, config: PanelConfig) {
+        this.#filepath = configFilepath
+        this.#config = config
     }
 
-    public get DataDirectory () { return this.#dataDir }
+    public static async Load(configFolder: string) {
+        const filepath = path.join(configFolder, "panel.yml")
+        const config = await ConfigManager.#ParseFile(filepath)
 
-    public async SetupDatabase() {
-        const check = await this.#db.get("SELECT count(*) as setup FROM sqlite_master WHERE type='table' AND name='keyvalues'")
-        if(!check.setup) {
-            console.info("[ConfigManager] Keyvalues table does not exist, creating...")
-            await this.#db.run(SQL`create table if not exists keyvalues
-            (
-                key varchar(64) not null,
-                value smalltext not null,
-                constraint keyvalues_pk
-                    primary key (key)
-            );`)
-            await this.#db.run(SQL`INSERT INTO keyvalues (key, value) VALUES ('domain', 'http://localhost:8080')`)
+        return new ConfigManager(filepath, config)
+    }
+
+    static async #ParseFile(filepath: string): Promise<PanelConfig> {
+        const contents = await readFile(filepath, 'utf-8')
+        const raw = yaml.parse(contents)
+
+        if(!raw.general.public_url) {
+            throw new ParseError("public_url", "required field missing")
         }
-        await this.checkRequiredKeys()
-    }
-    public async GetPublicKeyvalues() {
-        let kv = {}
-        for(const key of PublicKeys) {
-            kv[key] = await this.GetKV(key, undefined)
+        let listenPort: number|null = null
+        if(raw.general.listen && raw.general.listen.port) {
+            const port = parseInt(raw.general.listen.port)
+            if(isNaN(port)) throw new ParseError("general.listen.port", "Invalid port number")
+            listenPort = port
         }
-        return kv
-    }
+        if(!raw.general.public_url) throw new ParseError("general.public_url", "required field missing")
+        if(!raw.general.public_url.startsWith("http")) throw new ParseError("general.public_url", "public url must include protocol")
 
-    public async FindProviders() {
-        const providers: RegisteredProvider[] = []
-        const data: {key: string}[] = await this.#db.all(SQL`SELECT SUBSTRING(key,11) as key FROM keyvalues WHERE key LIKE "providers.%"`)
-        for(const row of data) {
-            const provider = row.key.split(".").shift()
-            if(!providers.some(p => p.id === provider)) {
-                const name = await this.GetKVNamespaced("providers", provider!, "name")
-                providers.push({
-                    id: provider!,
-                    name: name ?? provider
-                })
-            }
-        }
-        return providers
-    }
-
-    /**
-     * Returns a list of all keys from a parent. 
-     * @example GetKVChildren("policy") will return "policy.X", "policy.YYY.ZZ", etc..
-     * @param parents list of parents, like KVNamespaced
-     * @returns list of { key, value }
-     */
-    public async GetKVChildren(...parents: string[]): Promise<{key: string, value: string}[]> {
-        const data = await this.#db.all(SQL`SELECT key, value FROM keyvalues WHERE key LIKE '${parents.join(".")}.%'`)
-        return data
-    }
-
-    public async GetKV<T extends number | string | boolean = string, R extends  number | string | boolean |undefined = T>(key: ConfigKey, defaultValue: R): Promise<T | R> {
-        const data = await this.#db.get(SQL`SELECT value FROM keyvalues WHERE key = ${key}`)
-        const config = KVConfig[key]
-        if(!data) return defaultValue
-        if(config) {
-            switch(config.type) {
-                case "float": return parseFloat(data) as T
-                case "integer": return parseInt(data) as T
-                case "boolean": return Boolean(data) as T
-            }
-        }
-        return data.value as T ?? defaultValue
-    }
-
-    public async GetKVNamespaced<T extends number | string | boolean = string>(...args: string[]): Promise<T | undefined> {
-        return await this.GetKV<T, undefined>(args.join(".") as ConfigKey, undefined)
-    }
-
-    public async HasKV(key: ConfigKey) {
-        return await this.GetKV(key, undefined) != undefined 
-    }
-
-    public async SetKV(key: ConfigKey, value: string | number) {
-        if(value == null || value == undefined) await this.deleteKV(key)
-        else await this.#db.run(SQL`REPLACE INTO keyvalues (key, value) VALUES (${key}, ${value})`)
-    }
-    /**
-     * Similar to GetKVNamespaced, but the key must be in its own array
-     * @param args 
-     */
-    public async SetKVNamespaced(key: string[], value: string | number) {
-        const dbKey = key.join(".") as ConfigKey
-        if(value == null || value == undefined) await this.deleteKV(dbKey)
-        else await this.#db.run(SQL`REPLACE INTO keyvalues (key, value) VALUES (${dbKey}, ${value})`)
-    }
-
-    private async deleteKV(key: ConfigKey) {
-        await this.#db.run(SQL`DELETE FROM keyvalues WHERE key = ${key}`)
-    }
-
-    private async checkRequiredKeys() {
-        const missing: string[] = []
-        for(const [key, data] of Object.entries(KVConfig)) {
-            if(data.flags && data.flags & KeyFlags.Required) {
-                if(!await this.HasKV(key as ConfigKey)) {
-                    missing.push(key)
+        const providers: Record<string, PanelConfigProvider> = {}
+        if(raw.providers) {
+            const requiredFields = ["client_id", "client_secret", "token_url", "revoke_url", "user_url", "authorize_url", "avatar_url_format"]
+            for(const [key, data] of Object.entries<any>(raw.providers)) {
+                const provider: Partial<PanelConfigProvider> = {
+                    name: data.name,
                 }
+                for(const field of requiredFields) {
+                    if(!data[field]) throw new ParseError(`providers.${key}.${field}`, "required field missing")
+                    if(typeof data[field] !== "string") throw new ParseError(`providers.${key}.${field}`, "field must be type string")
+                    provider[field] = data[field]
+                }
+
+                providers[key] = provider as PanelConfigProvider
             }
         }
 
-        if(missing.length > 0) {
-            console.warn(`[ConfigManager] WARNING: Missing ${missing.length} required configurations:`)
-            for(const key of missing) {
-                if(KVConfig[key].description)
-                    console.warn(`  ${key} [${KVConfig[key].type}] - ${KVConfig[key].description}`)
-                else
-                    console.warn(`  ${key} [${KVConfig[key].type}]`)
-
-            }
+        const out: PanelConfig = {
+            general: {
+                listen: raw.listen && {
+                    host: raw.listen.host,
+                    port: listenPort
+                },
+                public_url: raw.public_url
+            },
+            stats_url: raw.stats_url,
+            notice: raw.notice && {
+                enabled: Boolean(raw.notice.enabled),
+                text: raw.notice.text,
+                class: raw.notice.class ?? ""
+            } || { enabled: false, text: "", class: "" },
+            providers
         }
+        return out
+    }
 
+
+    public async Reload() {
+        try {
+            const newConfig = await ConfigManager.#ParseFile(this.#filepath)
+            this.#config = newConfig
+        } catch(err) {
+            log.error("reload failed: " + err.message)
+        }
+    }
+
+    public get Config(): PanelConfig {
+        return this.#config
+    }
+
+    public get PublicMeta(): PublicConfigMeta {
+        return {
+            notice: this.#config.notice,
+            stats_url: this.#config.stats_url,
+            domain: this.#config.general.public_url
+        }
+    }
+
+    public get Domain() {
+        return this.#config.general.public_url
+    }
+
+    public get Providers() {
+        return this.#config.providers
+    }
+
+    public GetProvider(key: string): PanelConfigProvider|null {
+        return this.#config.providers[key] ?? null
     }
 }

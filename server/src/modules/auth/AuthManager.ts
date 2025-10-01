@@ -81,7 +81,7 @@ export default class AuthManager {
 
     async #loadCache() {
         try {
-            const json = await this.#cache.get<any>("authdata")
+            const json = await this.#cache.get<any>("auth.data")
             // const file = await readFile(path.join(this.#config.DataDirectory, 'auth_cache.json'), 'utf-8')
             // const json = JSON.parse(file)
             this.groups = json.groups
@@ -94,7 +94,7 @@ export default class AuthManager {
 
     async #saveCache() {
         try {
-            await this.#cache.set("authdata", {
+            await this.#cache.set("auth.data", {
                 timestamp_ms: Date.now,
                 admins: this.admins,
                 groups: this.groups
