@@ -53,7 +53,7 @@ jobs:
           known_hosts: ${{ secrets.KNOWN_HOSTS }}
       - name: Update container (staging)
         if: ${{ github.ref == 'refs/heads/master' }}
-        run: ssh deploy@${{ secrets.REMOTE_HOST }} -C "docker compose up -d --pull always -f /home/deploy/composes/admin-panel/staging"
+        run: ssh -v -i ~/.ssh/id_rsa deploy@${{ secrets.REMOTE_HOST }} -C "docker compose up -d --pull always -f /home/deploy/composes/admin-panel/staging"
       - name: Update container (production)
         if: ${{ github.ref == 'refs/heads/release' }}
         run:  ssh -v -i ~/.ssh/id_rsa deploy@${{ secrets.REMOTE_HOST }} -C "docker compose up -d --pull always -f /home/deploy/composes/admin-panel/production"
