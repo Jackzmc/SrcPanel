@@ -39,9 +39,6 @@ export default defineConfig(
       "prefer-const": "off",
       "vue/multi-word-component-names": "off",
       "semi": "off",
-      // "vue/no-template-key": "off",
-      "vue/no-v-for-template-key": "off",
-      "vue/fist-attribute-linebreak": "off",
       'vue/require-default-prop': "off",
       'vue/first-attribute-linebreak': "off",
       "vue/no-template-shadow": "off", // Useful, but is OK majority of time
@@ -54,7 +51,6 @@ export default defineConfig(
       "vue/html-self-closing": "off",
       "vue/html-indent": "off",
       "vue/max-attributes-per-line": "off",
-      // "vue/attributes-order": "off",
     },
   }
 )
