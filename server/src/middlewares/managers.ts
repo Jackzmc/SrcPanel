@@ -34,13 +34,12 @@ async function tryMkdir(dir: string) {
 }
 
 async function db(fastify: FastifyInstance) {
-    const ASSETS_FOLDER = join(__dirname, '/../../../../assets')
     const DATA_FOLDER = join(__dirname, '/../../../../data')
     const CACHE_FOLDER = join(DATA_FOLDER, "cache")
     const CONFIG_FOLDER = join(__dirname, '/../../../../config')
-    fastify.log.debug('assets %s', ASSETS_FOLDER)
     fastify.log.debug('data %s', DATA_FOLDER)
     fastify.log.debug('config %s', CONFIG_FOLDER)
+    fastify.log.debug('cache %s', CACHE_FOLDER)
     await tryMkdir(DATA_FOLDER)
     await tryMkdir(CACHE_FOLDER)
     
@@ -77,6 +76,11 @@ async function db(fastify: FastifyInstance) {
         serverManager.Load()
     ])
     const jobScheduler = new TaskManager({ resolution: 1000 * 60 * 2 }) // Run every 2 minutes
+    fastify.decorate("paths", { 
+        config: CONFIG_FOLDER,
+        cache: CACHE_FOLDER,
+        data: DATA_FOLDER
+    })
     fastify.decorate('users', userManager)
     fastify.decorate('authmngr', authManager)
     fastify.decorate('db', db)

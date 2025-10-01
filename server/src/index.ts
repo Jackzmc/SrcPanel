@@ -79,7 +79,12 @@ declare module 'fastify' {
     managers: {
       discussions: DiscussionManager
     },
-    jobs: TaskManager
+    jobs: TaskManager,
+    paths: {
+        config: string,
+        data: string,
+        cache: string
+    }
   }
   export interface FastifyRequest {
     user?: User,

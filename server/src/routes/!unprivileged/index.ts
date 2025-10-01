@@ -1,18 +1,47 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
 import { RowDataPacket } from 'mysql2';
-import { readFileSync } from 'fs';
+import { createReadStream, readFileSync } from 'fs';
 const data = JSON.parse(readFileSync('assets/data.json', 'utf-8'))
 import Sentiment from 'sentiment'
 import { PanelMetaInfo } from '../../../../common-types/Panel.js';
 import { AnalysisData } from '../../../../common-types/User.js';
+import { readFile } from 'fs/promises';
+import path from 'path';
+import readline from 'readline';
 
 
-const sentiment = new Sentiment();
-const analyzeOptions = {
-  extras: data.sentimentWords
-};
+
+
+async function loadSentiments(configFolder: string) {
+    const filename = path.join(configFolder, "sentiment-words.csv")
+    const fileStream = createReadStream(filename);
+    const rl = readline.createInterface({
+        input: fileStream,
+        crlfDelay: Infinity
+    });
+
+    const words = {}
+    for await (const line of rl) {
+        const [word, value] = line.split(",")
+        words[word] = Number(value)
+    }
+    return words
+}
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions)  {
+    const sentiment = new Sentiment();
+    const analyzeOptions = {
+        extras: await loadSentiments(fastify.paths.config)
+    };
+    
+    function computeRating(content: string) {
+        content = content.toLowerCase()
+        .replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,"")
+        .replace(/\s{2,}/g," ");
+        const { score } = sentiment.analyze(content, analyzeOptions)
+        return { value: score }
+    }
+
     fastify.get('/analyze/:steamid', async(req: FastifyRequest<{Params: { 'steamid': string }}>, reply): Promise<AnalysisData> => {
         const [notes] = await fastify.db.execute<RowDataPacket[]>(
             `SELECT notes.*, u.last_alias as user, e.last_alias as executor, !b.expired as banned
@@ -75,12 +104,4 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
     })
 
-}
-
-function computeRating(content: string) {
-    content = content.toLowerCase()
-      .replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,"")
-      .replace(/\s{2,}/g," ");
-    const { score } = sentiment.analyze(content, analyzeOptions)
-    return { value: score }
 }
