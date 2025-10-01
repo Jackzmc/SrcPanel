@@ -112,7 +112,6 @@ app.register(MiddleManager)
     app.register(import('@fastify/rate-limit'), { 
         global: true,
     })
-
     app.register(FastifyCookie, {
         secret: process.env.SESSION_SECRET as string,
     })
