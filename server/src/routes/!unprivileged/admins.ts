@@ -1,5 +1,4 @@
-import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
-import { OkPacket, RowDataPacket } from 'mysql2';
+import { FastifyInstance, FastifyPluginOptions } from 'fastify';
 
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {

@@ -1,12 +1,8 @@
-import Server, { ConfigServerData } from "../Server"
 import StandardServer from "../StandardServer.js"
-import ServerGroup, { CreateGroupOptions } from "./ServerGroup.js"
-import DNS from 'dns/promises'
+import ServerGroup from "./ServerGroup.js"
 import { ListGroupConfig, ListGroupConfig_Server } from './index';
 import { ServerAction } from "../../../../../common-types/Server.js";
 
-
-const REQUIRED_SERVER_PROPERTIES = ["host"]
 
 export class StandardServerGroup extends ServerGroup<StandardServer> {
 

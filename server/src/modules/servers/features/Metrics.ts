@@ -1,7 +1,6 @@
-import { Rcon, RconOptions } from "rcon-client";
 import Feature from "./Feature.js";
 import Server from "../Server.js";
-import Influx, { InfluxDB, Point, WriteApi } from '@influxdata/influxdb-client'
+import { Point, WriteApi } from '@influxdata/influxdb-client'
 import { getWriter } from "../../../modules/Influx.js";
 import { ComputeStats, NetworkStats, ServerStatusData, ServerStatusSource } from "../../../../../common-types/Server.js";
 import { AnnotationX, AnnotationY, GAME_DIFFICULTY_STRINGS, GameState } from "../../../../../common-types/Live.js";
@@ -9,7 +8,6 @@ import DockerServer from "../DockerServer.js";
 import { ContainerStats } from "dockerode";
 import { Server_Metric, Server_MetricFull } from "../../../../../common-types/ServerWebsocket.js";
 
-const RECORD_STATISTICS_INTERVAL = 1000 * 60 * 1
 // The maximum number of statistics to hold
 const MAX_STATS_HISTORY = 400
 // Number of miliseconds between every history addition

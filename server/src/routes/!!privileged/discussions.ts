@@ -1,5 +1,5 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
-import { APIComment, APICountData, APIDiscussion, APIDiscussionCacheableData, APIDiscussionDetails, APIDiscussionFlags, APIDiscussionOption, APIDiscussionType, APIResponsesData } from '../../../../common-types/Discussions.js';
+import { APIComment, APIDiscussion, APIDiscussionDetails, APIDiscussionFlags, APIDiscussionType } from '../../../../common-types/Discussions.js';
 import { OkPacket, RowDataPacket } from 'mysql2';
 import { NOT_FOUND, NO_PERMISSION } from '../../responses.js';
 import { APIUser } from '../../../../common-types/User.js';
@@ -248,7 +248,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 ? await req.user!.name() ?? req.user!.steamid2
                 : "Anonymous"
 
-            await fastify.authmngr.addNotification(discuss.creator.id, `${name} commented on your discussion \"${discuss.title}\"`, {
+            await fastify.authmngr.addNotification(discuss.creator.id, `${name} commented on your discussion "${discuss.title}"`, {
                 link: `${domain}/discuss/${discuss.id}`,
             })
         }

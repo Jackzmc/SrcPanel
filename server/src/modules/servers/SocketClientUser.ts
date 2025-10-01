@@ -6,6 +6,7 @@ import { FastifyRequest } from "fastify";
 export default class SocketClientUser {
     #socket: WebSocket
     #user: User
+    // eslint-disable-next-line no-unused-private-class-members
     #req: FastifyRequest
     constructor(socket: WebSocket, user: User, req: FastifyRequest) {
         this.#socket = socket;

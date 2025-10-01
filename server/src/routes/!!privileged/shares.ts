@@ -1,9 +1,8 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
-import { exec } from 'child_process'
 import FastifyMultipart from '@fastify/multipart'
 import { pipeline } from 'stream'
 import { promisify } from 'util'
-import { AddonInfo, ChildWorkshopItem, DetailsResponse, ShareInfo, WorkshopItem } from '../../../../common-types/Share.js';
+import { AddonInfo, ChildWorkshopItem, DetailsResponse,WorkshopItem } from '../../../../common-types/Share.js';
 import { NO_PERMISSION } from '../../responses.js';
 import { UserPrivilegeCode } from '../../../../common-types/Privileges.js';
 import { createReadStream } from 'fs';
@@ -11,7 +10,7 @@ import path from 'path';
 import assert from 'assert';
 const pump = promisify(pipeline)
 
-const VALID_FILENAME_REGEX = new RegExp(/[a-z0-9_\- \.]+/i)
+const VALID_FILENAME_REGEX = new RegExp(/[a-z0-9_\- .]+/i)
 const UPLOAD_MAX_FILESIZE_BYTES = 1000 * 1000 * 1000 * 5 // 5 GB
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions)  {
@@ -68,7 +67,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         if(!share) {
             return reply.status(404).send({
                 error: "Share Not Found", 
-                message: `No share with id \"${shareId!.toLowerCase()}\" could be found. Share may be unavailable, incorrecty configured or does not exist`   
+                message: `No share with id "${shareId!.toLowerCase()}" could be found. Share may be unavailable, incorrecty configured or does not exist`   
             })
         }
         return {
@@ -92,12 +91,12 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         if(!share) {
             return reply.status(404).send({
                 error: "SHARE_NOT_FOUND", 
-                message: `No share with id \"${shareId!.toLowerCase()}\" could be found. Share may be unavailable, incorrecty configured or does not exist`   
+                message: `No share with id "${shareId!.toLowerCase()}" could be found. Share may be unavailable, incorrecty configured or does not exist`   
             })
         } else if(!share.destinations[req.params.destId]) {
              return reply.status(404).send({
                 error: "SHARE_DEST_NOT_FOUND", 
-                message: `Share has no destination id \"${shareId!.toLowerCase()}\"`   
+                message: `Share has no destination id "${shareId!.toLowerCase()}"`   
             })
         }
 
@@ -144,7 +143,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         if(!share) {
             return reply.status(404).send({
                 error: "Share Not Found", 
-                message: `No share with id \"${shareId!.toLowerCase()}\" could be found. Share may be unavailable, incorrecty configured or does not exist`   
+                message: `No share with id "${shareId!.toLowerCase()}" could be found. Share may be unavailable, incorrecty configured or does not exist`   
             })
         }
         return {
@@ -172,7 +171,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         if(!share) {
             return reply.status(404).send({
                 error: "Share Not Found", 
-                message: `No share with id \"${shareId.toLowerCase()}\" could be found. Share may be unavailable, incorrecty configured or does not exist`   
+                message: `No share with id "${shareId.toLowerCase()}" could be found. Share may be unavailable, incorrecty configured or does not exist`   
             })
         }
         return {
@@ -187,7 +186,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         if(!share) {
             return reply.status(404).send({
                 error: "SHARE_NOT_FOUND", 
-                message: `No share with id \"${shareId.toLowerCase()}\" could be found. Share may be unavailable, incorrecty configured or does not exist`   
+                message: `No share with id "${shareId.toLowerCase()}" could be found. Share may be unavailable, incorrecty configured or does not exist`   
             })
         } else if(!share.exts) {
             return reply.status(401).send({
@@ -248,14 +247,14 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         if(!share) {
             return reply.status(404).send({
                 error: "Share Not Found", 
-                message: `No share with id \"${shareId.toLowerCase()}\" could be found. Share may be unavailable, incorrecty configured or does not exist`   
+                message: `No share with id "${shareId.toLowerCase()}" could be found. Share may be unavailable, incorrecty configured or does not exist`   
             })
         }
         const addonInfo = await share.isInstalled(filename)
         if(!addonInfo) {
             return reply.status(404).send({
                 error: "Addon Not Found", 
-                message: `No addon with filename \"${filename} for share \"${shareId.toLowerCase()}\" could be found.`   
+                message: `No addon with filename "${filename} for share "${shareId.toLowerCase()}" could be found.`   
             })
         }
 
@@ -282,7 +281,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         if(!share) {
             return reply.status(404).send({
                 error: "Share Not Found", 
-                message: `No share with id \"${shareId.toLowerCase()}\" could be found. Share may be unavailable, incorrecty configured or does not exist`   
+                message: `No share with id "${shareId.toLowerCase()}" could be found. Share may be unavailable, incorrecty configured or does not exist`   
             })
         }
         await share.deleteAddon(filename)
@@ -336,7 +335,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             const payload = {
                 error: "Share Not Found", 
                 code: "SHARE_NOT_FOUND",
-                message: `No share with id \"${req.params.shareId.toLowerCase()}\" could be found. Share may be unavailable, incorrecty configured or does not exist`   
+                message: `No share with id "${req.params.shareId.toLowerCase()}" could be found. Share may be unavailable, incorrecty configured or does not exist`   
             }
             await send(payload, 404)
         } else if(!req.query.force && await share.isInstalled(`${req.params.workshopId}.vpk`)) {
@@ -439,7 +438,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                                 message: `Downloaded <a href="https://steamcommunity.com/sharedfiles/filedetails/?id=${detail.publishedfileid}"><b>${detail.title}</b></a> (${humanFileSize(detail.file_size)})`
                             })
 
-                            await req.user!.log(null, `downloaded workshop addon \"%title%\" (%filename%) for %share%`, {
+                            await req.user!.log(null, `downloaded workshop addon "%title%" (%filename%) for %share%`, {
                                 code: "shares.addons.upload.steam_workshop." + share!.id as UserPrivilegeCode,
                                 metadata: {
                                     type: "workshop",
@@ -548,16 +547,16 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         if(!share) {
             return reply.status(404).send({
                 error: "SHARE_NOT_FOUND", 
-                message: `No share with id \"${shareId.toLowerCase()}\" could be found. Share may be unavailable, incorrecty configured or does not exist`   
+                message: `No share with id "${shareId.toLowerCase()}" could be found. Share may be unavailable, incorrecty configured or does not exist`   
             })
         } else if(!share.destinations[req.params.destKey]) {
             return reply.status(404).send({
                 error: "SHARE_DEST_NOT_FOUND", 
-                message: `Share does not have a destination of id \"${req.params.destKey}\".`   
+                message: `Share does not have a destination of id "${req.params.destKey}".`   
             })
         }
         // Verify that the filename exists in the src:
-        let addonInfo = await share.getAddonInfo(filename)
+        const addonInfo = await share.getAddonInfo(filename)
         if(addonInfo) {
             try {
                 if(isInstall)
@@ -586,7 +585,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         } else {
             return reply.status(404).send({
                 error: "File not found", 
-                message: `Share does not have a downloaded filename \"${filename}\".`   
+                message: `Share does not have a downloaded filename "${filename}".`   
             })
         }
     })

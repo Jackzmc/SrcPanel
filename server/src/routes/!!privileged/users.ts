@@ -248,7 +248,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
             const parseStart = Date.now()
 
-            for(let ban of bans) {
+            for(const ban of bans) {
                 if(!authorized) delete ban.reason
                 
                 // Grab their name either from l4d2 stats or from the resolve cache

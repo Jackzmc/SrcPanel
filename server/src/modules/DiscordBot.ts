@@ -1,8 +1,7 @@
-import { REST } from '@discordjs/rest';
-import { ChannelType, GatewayIntentBits, Routes } from 'discord-api-types/v10';
-import { BaseGuildVoiceChannel, CategoryChannel, Client, createChannel, GuildMember, TextChannel, User, VoiceBasedChannel, VoiceChannel } from 'discord.js';
+import { ChannelType, GatewayIntentBits } from 'discord-api-types/v10';
+import { CategoryChannel, Client, GuildMember, User, VoiceChannel } from 'discord.js';
 import ServerManager from './servers/ServerManager';
-import { readFile, unlink, writeFile } from 'fs/promises';
+import { readFile, unlink } from 'fs/promises';
 import { VoiceUser } from '../../../common-types/Server.js';
 import CacheManager from './CacheManager.js';
 
@@ -101,7 +100,7 @@ export class DiscordBot {
         // Create any missing servers
         let pos = 0
         for(const server of this.#servers.getAll()) {
-            let channelId = reverseMap.get(server.id)
+            const channelId = reverseMap.get(server.id)
             let channel: VoiceChannel | null = null
             if(channelId) {
                 // Don't fetch() as it should be cached from above

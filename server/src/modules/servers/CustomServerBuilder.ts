@@ -1,12 +1,11 @@
 import { exec } from "child_process"
-import { cp, mkdir, readdir, readFile, rmdir, unlink, writeFile } from "fs/promises"
+import { cp, mkdir, readdir, readFile, rmdir, writeFile } from "fs/promises"
 import { nanoid } from "nanoid"
 import path from 'path'
 import { SMPluginMeta } from '../../../../common-types/CustomServer';
 import User from "../../modules/users/User.js";
 import { CustomServerGroup } from "./groups/CustomServerGroup.js";
 import DockerServer from "./DockerServer.js";
-import fastify from "fastify";
 import SteamAPI from "../../modules/steam.js";
 import { WorkshopItem } from "../../../../common-types/Share.js";
 import logger from '../../logger.js'
@@ -20,15 +19,6 @@ export interface CustomServerOptions {
     signal?: AbortSignal
 }
 export type CreateServerEventState = "INIT" | "INIT_FOLDERS" | "INSTALL_METAMOD" | "INSTALL_SOURCEMOD" | "SETUP_SOURCEMOD" | "INSTALL_PLUGINS" | "INSTALL_ADDONS" | "SETUP_CONFIGS" | "PROVISION_SERVER" | "ERROR"
-const STATES = [
-    "INIT", 
-    "INIT_FOLDERS",
-    "INSTALL_METAMOD", "INSTALL_SOURCEMOD", 
-    "SETUP_SOURCEMOD", "INSTALL_PLUGINS",
-    "INSTALL_ADDONS", "SETUP_CONFIGS",
-    "PROVISION_SERVER", 
-    "ERROR"
-]
 
 const CUSTOMER_FOLDER_LOCATION = process.env.CUSTOM_SERVER_CUSTOMER_DIR!
 const TEMPLATE_FOLDER_LOCATION = process.env.CUSTOM_SERVER_TEMPLATE_DIR!

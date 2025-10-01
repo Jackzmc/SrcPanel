@@ -1,6 +1,6 @@
 import pino from 'pino';
 import path from 'path'
-import { mkdir, mkdirSync, unlinkSync, writeFileSync } from 'fs'
+import {  mkdirSync, writeFileSync } from 'fs'
 
 const envToLogger = {
   development: {

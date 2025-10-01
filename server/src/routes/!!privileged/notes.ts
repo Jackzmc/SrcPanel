@@ -1,20 +1,16 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
 import { OkPacket, RowDataPacket } from 'mysql2';
-import { Static, Type } from '@sinclair/typebox'
 import { NO_PERMISSION } from '../../responses.js';
 
-const POSTNotes = Type.Object({
-    content: Type.String(),
-});
 
-type POSTNotesType = Static<typeof POSTNotes>;
+interface POSTNotesType {
+    content: string
+}
 
-const PUTNotes = Type.Object({
-    markedBy: Type.String(),
-    content: Type.String(),
-});
-
-type PUTNotesType = Static<typeof PUTNotes>;
+interface PUTNotesType {
+    markedBy: string,
+    content: string
+}
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
     fastify.route({

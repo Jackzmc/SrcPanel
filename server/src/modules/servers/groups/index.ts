@@ -32,7 +32,7 @@ export async function loadGroups(configDir: string, dynamicManager: DynamicServe
     for(const [groupId, data] of Object.entries(raw)) {
         const parsedGroup = parseGroup(groupId, data)
         if('docker' in parsedGroup && !dynamicManager) {
-            log.warn(`Skipping group \"${groupId}\" (docker not enabled)`)
+            log.warn(`Skipping group ${groupId} (docker not enabled)`)
             continue
         }
         const group = await loadGroup(dynamicManager, actions, parsedGroup)
@@ -115,7 +115,7 @@ function parseGroup(id: string, data: Record<string, any>): GroupConfig {
                 if(server.rcon) {
                     if(server.rcon.password_env) {
                         server.rcon.password = process.env[server.rcon.password_env]
-                        if(!server.rcon.password) throw new Error(`Could not find env variable \"${server.rcon.password_env}\" for rcon password in ` + JSON.stringify(server))
+                        if(!server.rcon.password) throw new Error(`Could not find env variable ${server.rcon.password_env} for rcon password in ` + JSON.stringify(server))
                     }
                 }
                 if(!server.game && !base.game) throw new Error("Missing 'game' property, either add to server or group")

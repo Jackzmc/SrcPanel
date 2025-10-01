@@ -75,7 +75,7 @@ export default class BufferReader {
     }
   
     readString(): string {
-        let start = this.#offset
+        const start = this.#offset
         // Read until null term
         while(this.#offset < this.#length) {
             if(this.#curChar === 0x0) {

@@ -1,9 +1,5 @@
 import { CreateGroupOptions } from "./ServerGroup.js"
-import ServerGroup from "./ServerGroup.js"
 import DynamicServerManager from '../docker/DynamicServerManager';
-import Server from "../Server.js";
-import DynamicServerInstance from "../docker/DynamicServerInstance.js";
-import DNS from 'dns/promises';
 import { ServerAction } from "../../../../../common-types/Server.js";
 import DockerServer from "../DockerServer.js";
 import { DockerGroupConfig } from "./index.js";
@@ -75,7 +71,7 @@ export class DynamicServerGroup extends BaseDynamicServerGroup {
     async #checkServers() {
         // Cleans up any servers with their container missing
         for await(const [id, server] of this.#iterateServers()) {
-
+            // TODO: impl
         }
         // Find any new instances
         await this.manager.findExisting()
@@ -122,14 +118,14 @@ export class DynamicServerGroup extends BaseDynamicServerGroup {
                 for(const server of servers) {
                     // If there is no players and hasn't been for a while, we can purge this
                     if(server.status.data?.players.length === 0 && server.emptyTime && server.emptyTime > MIN_EMPTY_TIME_FOR_PURGE) {
-                        console.info(`[ServerGroup::Dynamic] Purging empty server \"${server.id}\" (empty for ${server.emptyTime}sec)`)
+                        console.info(`[ServerGroup::Dynamic] Purging empty server "${server.id}" (empty for ${server.emptyTime}sec)`)
                         try {
                             await server.stop(true)
                             await server.ContainerInstance.Container.remove()
                             maxEmptyTarget--
                             if(maxEmptyTarget == 0) break
                         } catch(err) {
-                            console.error(`[ServerGroup::Dynamic] ERROR while purging \"${server.id}\":`, err)
+                            console.error(`[ServerGroup::Dynamic] ERROR while purging "${server.id}":`, err)
                             break
                         }
                     }
@@ -140,7 +136,7 @@ export class DynamicServerGroup extends BaseDynamicServerGroup {
 
     async update() {
         for await(const [id, server] of this.#iterateServers()) {
-
+            // TODO: impl
         }
     }
 

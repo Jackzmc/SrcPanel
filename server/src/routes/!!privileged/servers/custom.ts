@@ -1,7 +1,6 @@
 import { FastifyInstance, FastifyPluginOptions } from "fastify";
 import CustomServerBuilder from "../../../modules/servers/CustomServerBuilder.js";
 import { CustomServerGroup } from "../../../modules/servers/groups/CustomServerGroup.js";
-import { ServerInfo } from "../../../../../common-types/Server.js";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 

@@ -1,9 +1,8 @@
-import { mkdir, readFile, stat, open } from 'fs/promises'
+import { readFile, open } from 'fs/promises'
 import Server, { ConfigServerData } from './Server'
 import Share from '../shares/Share.js';
 import path from 'path';
 import SteamAPI from '../steam.js'
-import ConfigManager from '../ConfigManager.js'
 import { ServerAction, ServerType } from '../../../../common-types/Server.js'
 import net from 'net'
 import { LiveRecordType, LiveRecordResponse,PluginTokenPayload } from '../../../../common-types/Live.js';
@@ -65,7 +64,6 @@ export default class ServerManager {
   private refreshTimer: ReturnType<typeof setTimeout>
   private refreshTimeout: ReturnType<typeof setTimeout>|null = null
 
-  #cfgManager: ConfigManager
   #socket: net.Server
   #socketClients: Map<string, PluginSocket>
   #liveErrors: WriteStream
@@ -77,11 +75,10 @@ export default class ServerManager {
   static #instance: ServerManager
   // Maps a server to a specific connection, this assumes there should never be more than one socket per server
 
-  constructor(steam: SteamAPI, dataDir: string, configDir: string, configManager: ConfigManager) {
+  constructor(steam: SteamAPI, dataDir: string, configDir: string) {
     this.#steam = steam
     this.dataDir = dataDir
     this.configDir = configDir
-    this.#cfgManager = configManager
     if(process.env.DOCKER_ENABLE) {
       log.debug("Docker enabled, initalzing dynamic server manager")
       this.#dynamicManager = new DynamicServerManager(this, configDir, {
@@ -136,7 +133,7 @@ export default class ServerManager {
   }
 
   async #authenticateSocket(client: PluginSocket, reader: BufferReader): Promise<boolean> {
-    const size = reader.readShort() // We don't need size for authentication, but we need to read 2 bytes
+    const _ = reader.readShort() // We don't need size for authentication, but we need to read 2 bytes
     const record = PluginSocket.ParseRecord(reader)
     // skip any other type until authenticated
     if(record.type != LiveRecordType.Auth) {
@@ -423,7 +420,7 @@ export default class ServerManager {
     const requiredProperties = ["name", "command"]
     for(const prop of requiredProperties) {
       if(action[prop] == undefined) {
-        throw new Error(`Action is missing property \"${prop}\" ` + JSON.stringify(action))
+        throw new Error(`Action is missing property "${prop}" ` + JSON.stringify(action))
       }
     }
     return {

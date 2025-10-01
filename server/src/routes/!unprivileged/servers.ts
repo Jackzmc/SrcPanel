@@ -1,9 +1,8 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
-import { APIListServersV2, APIListServersV2_Groups, APIListServersV2_GroupEntry, SERVER_TYPE_MAP, ServerAction, ServerStatus, APIListServerGroup, APIListServersCompactV2_Server, APIListServersCompactV2} from '../../../../common-types/Server.js';
+import { APIListServersV2, APIListServersV2_Groups, SERVER_TYPE_MAP, APIListServerGroup, APIListServersCompactV2_Server, APIListServersCompactV2} from '../../../../common-types/Server.js';
 import Server from '../../modules/servers/Server.js';
 import SocketClientUser from '../../modules/servers/SocketClientUser.js';
 import { APIListServersV2_Server } from '../../../../common-types/Server';
-import { Type } from '@sinclair/typebox';
 import { ClientOutPayload } from '../../../../common-types/ServerWebsocket.js';
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {

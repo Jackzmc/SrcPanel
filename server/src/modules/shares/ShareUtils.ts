@@ -44,8 +44,8 @@ export async function getSpFileInfo(filePath: string): Promise<SpInfo> {
     const content = await readFile(filePath, 'utf-8');
     const lines = content.split(/\r?\n/)
     let foundInfo = false
-    let info = {}
-    let defines = {}
+    const info = {}
+    const defines = {}
     for(const line of lines) {
         const defineMatch = line.match(definePattern)
         if(defineMatch) {

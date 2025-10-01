@@ -15,8 +15,6 @@ import { minimatch } from 'minimatch'
 import { OauthManager } from "./OauthManager.js";
 import ConfigManager from "../ConfigManager.js";
 import { OauthAuthData } from './OauthProvider.js';
-import path from 'path'
-import { readFile, writeFile } from "fs/promises";
 
 import logger from '../../logger.js'
 import CacheManager from "../../modules/CacheManager.js";
@@ -230,7 +228,7 @@ export default class AuthManager {
     public async editAdmin(id: number, data: Partial<AddAdmin>) {
         const [rows] = await this.#db.execute<RowDataPacket[]>(`SELECT * FROM sm_admins WHERE id = ?`, [id])
         if(rows.length == 0) throw new Error("No admin with specified id exists")
-        let newAdminData = rows[0]
+        const newAdminData = rows[0]
 
         for(const key in data) {
             if(data[key]) {
@@ -546,7 +544,7 @@ export default class AuthManager {
             if(group.parentId) {
                 const parent = groups[group.parentId]
                 if(!parent) {
-                    log.warn(`Group \"${group.id}\" has parent that does not exist (${group.parentId}), ignoring`)
+                    log.warn(`Group "${group.id}" has parent that does not exist (${group.parentId}), ignoring`)
                     continue
                 }
                 this._mergeGroup(parent, group)
@@ -620,7 +618,7 @@ export default class AuthManager {
             if(row.group_id && !admins[accountId].groups[row.group_id]) {
                 const group = this.groups[row.group_id]
                 if(!group) {
-                    log.warn(`Admin \"${row.id}\" has group that does not exist (${row.group_id}), ignoring`)
+                    log.warn(`Admin "${row.id}" has group that does not exist (${row.group_id}), ignoring`)
                 } else {
                     admins[accountId].groups.push(group)
                     // Resolve group permissions
@@ -701,7 +699,7 @@ export default class AuthManager {
             "SELECT provider, provider_id, username, avatar_url FROM dash_providers WHERE SUBSTRING(steamid, 11) = SUBSTRING(?, 11)",
             [ steamid ]
         )
-        let result: UserOauthProviders = {}
+        const result: UserOauthProviders = {}
         for(const row of providers) {
             const data: OauthProviderData = {
                 id: row.provider_id,
@@ -745,7 +743,7 @@ export default class AuthManager {
     */
     public async updateProviders(steamid: string): Promise<UserOauthProviders> {
         const providers = await this.getProviders(steamid)
-        let result: UserOauthProviders = {}
+        const result: UserOauthProviders = {}
         for(const providerName of Object.keys(providers)) {
             const provider = await this.oauth.getProvider(providerName)
             // Set the user, so we can fetch their access/refresh token

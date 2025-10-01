@@ -1,8 +1,7 @@
 import { SessionStore } from '@fastify/session';
-import { FastifyInstance, FastifyPluginOptions, FastifyReply, FastifyRequest } from 'fastify';
+import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
 import { RowDataPacket } from 'mysql2';
-import type { OauthProviderData, ProviderConnectionData, SessionData, UserData } from '../../../../common-types/User';
-import { SESSION_VERSION } from './steam.js';
+import type { ProviderConnectionData, SessionData, UserData } from '../../../../common-types/User';
 import type { UserPrivilegeCode } from '../../../../common-types/Privileges.js';
 
 
@@ -26,7 +25,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         reply.raw.flushHeaders()
         reply.raw.write('retry: 10000\n\n')
         // Send keep alive comments to prevent client from disconnecting
-        let keepAliveTimer = setInterval(() => {
+        const keepAliveTimer = setInterval(() => {
             reply.raw.write(': keepalive\n\n')
         }, 1000 * 30)
 
@@ -66,7 +65,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         // Forces all providers to refetch user data, to ensure it's up to date.
         await req.user!.updateProviders()
         const providerList = await fastify.authmngr.oauth.getProviders()
-        let providers: Record<string, ProviderConnectionData> = {}
+        const providers: Record<string, ProviderConnectionData> = {}
         for(const provider of providerList) {
             // Check if user has such provider setup
             if(req.user!.providers[provider.id] !== undefined) {

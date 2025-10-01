@@ -1,4 +1,4 @@
-import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
+import { FastifyInstance } from 'fastify';
 import FastifyPlugin from 'fastify-plugin'
 import AuthManager from '../modules/auth/AuthManager.js';
 
@@ -12,7 +12,6 @@ import ServerManager from '../modules/servers/ServerManager.js';
 import SteamAPI from '../modules/steam.js'
 import User from '../modules/users/User.js';
 import ConfigManager from '../modules/ConfigManager.js';
-import { UserPrivilegeCode } from '../../../common-types/Privileges.js';
 import { SESSION_VERSION } from '../routes/auth/steam.js';
 import { NOT_LOGGED_IN } from '../responses.js';
 import DiscussionManager from '../modules/DiscussionManager.js';
@@ -68,7 +67,7 @@ async function db(fastify: FastifyInstance) {
     const userManager = new UserManager(db, steam)
     const configManager = await ConfigManager.Load(CONFIG_FOLDER)
     const authManager = new AuthManager(admindb, db, steam, configManager, cacheManager)
-    const serverManager = new ServerManager(steam, DATA_FOLDER, CONFIG_FOLDER, configManager)
+    const serverManager = new ServerManager(steam, DATA_FOLDER, CONFIG_FOLDER)
     await Promise.all([
         authManager.Init(),
         serverManager.Load()

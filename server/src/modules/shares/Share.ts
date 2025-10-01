@@ -2,14 +2,12 @@ import { stat, readdir, unlink, symlink } from 'fs/promises';
 import { createWriteStream } from 'fs'
 import path from 'path'
 import SteamAPI from '../steam.js';
-import { AddonCollectionInfo, AddonInfo, AddonWorkshopInfo, ChildWorkshopItem, DownloadSourceRecord, ShareDestination, ShareDestinations, ShareInfo, WorkshopCollectionInfo, WorkshopItem } from '../../../../common-types/Share.js'
+import { AddonCollectionInfo, AddonInfo, AddonWorkshopInfo, ChildWorkshopItem, DownloadSourceRecord, ShareDestinations, ShareInfo, WorkshopCollectionInfo, WorkshopItem } from '../../../../common-types/Share.js'
 import sqlite3 from 'sqlite3'
 import sqlite from 'sqlite'
 import SQL from 'sql-template-strings';
 import VPK from '@lowly1337/vpk'
-import { readFile } from 'node:fs/promises';
 import ValveKV from 'valve-kv'
-import { SimpleGit, simpleGit } from 'simple-git';
 import { getChapterIds, getSpFileInfo } from './ShareUtils.js';
 import assert from 'assert';
 
@@ -178,7 +176,7 @@ export default class Share {
         const dirents = await readdir(this.sourceFolder, { withFileTypes: true }) 
         console.timeEnd('getAddons:readdir')
         const results: (AddonInfo|AddonCollectionInfo)[] = []
-        let collections: Record<string, AddonCollectionInfo> = {}
+        const collections: Record<string, AddonCollectionInfo> = {}
         for(const dirent of dirents) {
             if(dirent.isFile()) {
                 // Only check the specified extenstions
@@ -212,7 +210,7 @@ export default class Share {
                         filesize: fstat.size,
                         lastModified: Math.round(fstat.mtime.getTime() / 1000),
                     }
-                    let meta = await this.#getMetadata(path.join(this.sourceFolder, dirent.name))
+                    const meta = await this.#getMetadata(path.join(this.sourceFolder, dirent.name))
                     let pendingResolve = false
                     if(ext === "vpk") {
                         // Check if this is a workshop addon, and fetch its details
@@ -332,7 +330,7 @@ export default class Share {
     public async getInstallInfo(filename: string): Promise<{ states: Record<string, boolean>, created: number, modified: number, size: number }|undefined> {
         const statInfo = await this.#getFileInfo(this.sourceFolder, filename)
         if(statInfo) {
-            let states: Record<string, boolean> = {}
+            const states: Record<string, boolean> = {}
             if(this.destinations) {
                 for(const [id, dest] of Object.entries(this.destinations)) {
                     // We just use the first path

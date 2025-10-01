@@ -8,7 +8,6 @@ TODO:
 import { OauthProvider, OauthProviderData } from "../../../../common-types/User.js";
 import { OauthConfig } from "./OauthManager.js";
 import AuthManager from "./AuthManager.js";
-import assert from "assert";
 
 interface AccessTokenResponse {
     access_token: string;

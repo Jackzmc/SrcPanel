@@ -1,7 +1,6 @@
-import Docker, { Container } from 'dockerode'
+import Docker from 'dockerode'
 import { readFile } from 'fs/promises'
 import path from 'path'
-import Json5 from 'json5';
 import DynamicServerInstance from './DynamicServerInstance.js';
 import ServerManager from '../ServerManager.js';
 import { DynamicServerGroup } from '../groups/DynamicServerGroup.js';
@@ -150,7 +149,7 @@ export default class DynamicServerManager {
                     }
                     log.trace({ config }, `Loaded template ${id}`)
                 } catch(err) {
-                    log.error(`Failed to pull image \"${config.image}\":`, err)
+                    log.error(`Failed to pull image "${config.image}":`, err)
                 }
             }
             log.info(`Loaded ${Object.keys(this.#templates).length} templates`)
@@ -169,7 +168,7 @@ export default class DynamicServerManager {
      */
     async #getNextPort(ofTemplate: DockerTemplateConfig) {
         const ports: number[] = []
-        for await(const { containerInfo, container, template } of this.#getContainers()) {
+        for await(const { containerInfo, template } of this.#getContainers()) {
             if(template.config.id != ofTemplate.id) continue
             const port = Number(containerInfo.Labels[`${DOCKER_NAME_PREFIX}.port`])
             ports.push(port)
@@ -197,7 +196,7 @@ export default class DynamicServerManager {
      */
     async #calculateCount(templateId: string) {
         let i = 0 ;
-        for await(const { containerInfo, container, template } of this.#getContainers()) {
+        for await(const { template } of this.#getContainers()) {
             if(template.config.id != templateId) continue
             i++
         }
@@ -206,7 +205,7 @@ export default class DynamicServerManager {
 
     async createInstance(templateId: string, volumes: string[] = [], labels: Record<string, string> = {}) {
         const template = this.#templates[templateId]
-        if(!template) throw new Error(`Unknown template id: \"${templateId}\"`)
+        if(!template) throw new Error(`Unknown template id: "${templateId}"`)
         const port = await this.#getNextPort(template.config)
 
         const templVars = {

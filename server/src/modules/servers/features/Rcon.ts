@@ -23,7 +23,7 @@ export default class RconFeature extends Feature implements IAction {
     }
 
     async init() {
-        let pass = this.#options.password
+        const pass = this.#options.password
         if(!pass) {
             console.warn(`[Server/${this._server.id}] No rcon password provided or found`)
             this.#available = false

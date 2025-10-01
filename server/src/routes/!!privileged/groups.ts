@@ -38,7 +38,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             })
         }
 
-        let group = fastify.servers.getGroup(req.params.groupId)
+        const group = fastify.servers.getGroup(req.params.groupId)
         if(!group) {
             return reply.status(404).send({
                 error: "INVALID_GROUP",

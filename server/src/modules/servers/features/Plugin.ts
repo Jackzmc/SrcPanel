@@ -1,9 +1,9 @@
-import { AnnotationX, AnnotationY, GameState, LiveDataCache, LiveRecord, LiveRecordCommandResponse, LiveRecordGame, LiveRecordResponse, LiveRecordType, updateLiveCache } from "../../../../../common-types/Live.js";
+import { GameState, LiveDataCache, LiveRecord, LiveRecordGame, LiveRecordResponse, LiveRecordType, updateLiveCache } from "../../../../../common-types/Live.js";
 import { ActionResponse, IAction } from "../IAction.js";
 import Server from "../Server.js";
 import PluginSocket from "../PluginSocket.js";
 import Feature from "./Feature.js";
-import { ServerStatus, ServerStatusData } from "../../../../../common-types/Server.js";
+import { ServerStatusData } from "../../../../../common-types/Server.js";
 import jwtPromise from "../../../jwt-promise.js";
 
 const LIVE_CACHE_TTL = 1000 * 60 * 3 // Live cache data expires after 3 minutes

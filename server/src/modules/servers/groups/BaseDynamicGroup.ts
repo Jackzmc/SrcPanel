@@ -8,7 +8,6 @@ import logger from '../../../logger.js'
 
 const log = logger.child({name: "BaseDynamicGroup"})
 
-
 export default abstract class BaseDynamicServerGroup extends ServerGroup<DockerServer> {
     protected manager: DynamicServerManager
     protected template: DockerTemplateContainer
@@ -52,7 +51,7 @@ export default abstract class BaseDynamicServerGroup extends ServerGroup<DockerS
         const publicHost = BaseDynamicServerGroup.formatTemplateVar(this.ServerTemplate.host ?? "%ip%", vars)
         const name = this.ServerTemplate.name && BaseDynamicServerGroup.formatTemplateVar(this.ServerTemplate.name ?? "", vars)
         /// This is where server template gets applied
-        console.debug("registerInstance", this.ServerTemplate, publicHost)
+        log.debug({}, "registerInstance", this.ServerTemplate, publicHost)
         const server = new DockerServer(this, {
                 id,
                 name,
@@ -83,24 +82,3 @@ export default abstract class BaseDynamicServerGroup extends ServerGroup<DockerS
         return server
     }
 }
-/**
-const SERVER_INIT_ERROR_AS_FATAL: boolean = process.env.SERVERS_IGNORE_ERRORS != undefined
- const logData = {
-                templateId: this.TemplateId,
-                serverType: this.type,
-                groupId: this.id,
-                groupName: this.name
-            }
-const logData = {
-                templateId: this.TemplateId,
-                serverType: this.type,
-                groupId: this.id,
-                groupName: this.name
-            }
-            if(SERVER_INIT_ERROR_AS_FATAL) {
-                log.fatal(logData, "failed to create new server instance: " + err)
-                throw err
-            } else {
-                log.warn(logData, "failed to create new server instance: " + err)
-                return null
-            }*/

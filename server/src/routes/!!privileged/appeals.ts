@@ -1,7 +1,4 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
-import { OkPacket, RowDataPacket } from 'mysql2';
-import { Static, Type } from '@sinclair/typebox'
-import SteamID from 'steamid'
 import { APIBanFlags, BanAppealState } from '../../../../common-types/Ban.js';
 import { NO_PERMISSION } from '../../responses.js';
 
@@ -42,7 +39,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             [ BanAppealState.Rejected, req.query.reason, req.session.user.steamid, req.params.appealid]
         )
 
-        await req.user!.log(null, `rejected appeal #%appealid% for \"%reason%\"`, {
+        await req.user!.log(null, `rejected appeal #%appealid% for "%reason%"`, {
             code: "bans.appeals.manage",
             metadata: {
                 appealid: req.params.appealid,

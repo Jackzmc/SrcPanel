@@ -1,13 +1,11 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
 import { OkPacket, RowDataPacket } from 'mysql2';
 import { Static, Type } from '@sinclair/typebox'
-import SteamID from 'steamid'
-import { FullAPIBan, APIBanFlags } from '../../../../common-types/Ban.js';
+import { APIBanFlags } from '../../../../common-types/Ban.js';
 import { computeChanges, replaceObject } from '../../util.js';
 import { NO_PERMISSION } from '../../responses.js';
 
-const STEAM_WEB_APIKEY = process.env.STEAM_WEB_APIKEY
-
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const PUTBanBody = Type.Object({
     steamid: Type.String(),
     executor: Type.Optional(Type.String()),
@@ -19,6 +17,7 @@ const PUTBanBody = Type.Object({
 
 type PUTBanBodyType = Static<typeof PUTBanBody>;
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const POSTBanBody = Type.Object({
     executor: Type.Optional(Type.String()),
     reason: Type.Optional(Type.String()),

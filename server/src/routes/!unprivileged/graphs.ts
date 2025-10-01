@@ -1,4 +1,4 @@
-import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
+import { FastifyInstance, FastifyPluginOptions } from 'fastify';
 import { RowDataPacket } from 'mysql2';
 
 const TROLL_NAME_REGEX = new RegExp(/activated (troll )?"([a-zA-Z 0-9]+)"/)

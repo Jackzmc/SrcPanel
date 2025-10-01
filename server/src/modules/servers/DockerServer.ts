@@ -1,14 +1,11 @@
 import { GameDig } from "gamedig";
 import { CommandResultType } from "../../../../common-types/Live.js";
-import { ServerAvailableFeatures } from "../../../../common-types/Server.js";
 import DynamicServerInstance from "./docker/DynamicServerInstance.js";
 import DockerLogs from "./features/logs/DockerLogs.js";
 import ServerGroup from "./groups/ServerGroup.js";
 import { ActionResponse, getFallbackCommandForBuiltin, IAction } from "./IAction.js";
-import Server, { CreateServerOptions, ServerExtendedData } from "./Server.js";
+import Server, { CreateServerOptions } from "./Server.js";
 import DynamicServerManager from "./docker/DynamicServerManager.js";
-import ServerManager from "./ServerManager.js";
-import { DynamicServerGroup } from "./groups/DynamicServerGroup.js";
 
 const PERFORM_ACTION_TIMEOUT = 20_000
 
@@ -94,7 +91,7 @@ export default class DockerServer extends Server implements IAction {
         if(namespace === "builtin") {
             // Try to run built in directly, and fallback to alternative command sent to server instead
             if(!await this.#performBuiltin(command)) {
-                let cmd = getFallbackCommandForBuiltin(command)
+                const cmd = getFallbackCommandForBuiltin(command)
                 if(!cmd) throw new Error(`Unable to run builtin:${command} via docker (no available command)`)
                 command = cmd
             }

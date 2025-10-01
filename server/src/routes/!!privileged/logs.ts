@@ -10,6 +10,7 @@ import { APILogData, APILogQueryResult, LogEntry } from '../../../../common-type
 
 const log = logger.child({ name: "logs" })
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const LogQuery = Type.Object({
     raw: Type.Optional(Type.Boolean({default: false})),
     servers: Type.Optional(Type.String()),
@@ -42,13 +43,6 @@ export const ACTIVITY_LOG_TABLE_NAME = 'activity_log'
 const LOG_TOTAL_ROW_CACHE_TIME = 20_000 //ms
 // Do not fetch if last fetch was between this
 const MISSING_NAME_MIN_INTERVAL = 1000 * 20 
-
-interface DataCache {
-    totalRows: number,
-    highestId: number,
-    lowestId: number,
-    lastFetchTime: number
-}
 
 // Cache data for partitions
 let lastMissingNameFetchTime = 0
@@ -208,7 +202,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
         const limit = req.query.limit ?? 30 
 
-        let tableName = ACTIVITY_LOG_TABLE_NAME
+        const tableName = ACTIVITY_LOG_TABLE_NAME
 
         const query = new QueryBuilder(tableName, "l")
             .selectMultiple("id", "l.timestamp", "server", "type", "client", "target", "message", "metadata")
@@ -248,11 +242,11 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
         
         const startTime = Date.now()
-        let [rawLogs] = (await query.execute(fastify.db))
+        const [rawLogs] = (await query.execute(fastify.db))
 
         let year = parseInt(req.query.source as string)
         if(!year || isNaN(year)) year = currentYear()
-        let yearInfo = await getYearData(fastify.db, year)
+        const yearInfo = await getYearData(fastify.db, year)
         const missingNameSet = new Set<SteamID>()
 
         const logs = rawLogs.map(log => {

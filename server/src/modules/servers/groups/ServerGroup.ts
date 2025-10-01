@@ -1,6 +1,5 @@
 import { ServerAction } from "../../../../../common-types/Server.js"
 import Server from "../Server.js"
-import { BaseGroupConfig } from "./index.js"
 
 export interface CreateGroupOptions {
     name?: string

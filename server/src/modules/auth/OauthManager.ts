@@ -1,5 +1,3 @@
-import User from "../users/User.js";
-import { OauthProvider } from "../../../../common-types/User.js";
 import { OauthProviderUser } from './OauthProvider.js';
 import AuthManager from "./AuthManager.js";
 import ConfigManager, { RegisteredProvider } from "../ConfigManager.js";

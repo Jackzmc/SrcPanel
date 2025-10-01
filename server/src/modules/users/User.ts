@@ -1,7 +1,7 @@
-import { AdminData, OauthProvider, OauthProviderData, SessionData, SessionUser, UserNotification, UserNotificationOptions, UserOauthProviders } from '../../../../common-types/User';
+import { AdminData, OauthProvider, OauthProviderData, UserNotification, UserNotificationOptions, UserOauthProviders } from '../../../../common-types/User';
 import { UserPrivilegeCode } from '../../../../common-types/Privileges.js';
 import AuthManager from '../auth/AuthManager.js';
-import { FastifyInstance, Session } from 'fastify';
+import { FastifyInstance } from 'fastify';
 import UserManager from './UserManager.js';
 import SteamID from 'steamid';
 

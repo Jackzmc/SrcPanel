@@ -3,7 +3,7 @@ import Server from "../Server.js";
 import Feature from "./Feature.js";
 import { readdir, readFile, stat, unlink, writeFile } from "fs/promises";
 import ServerManager from "../ServerManager.js";
-import { simpleGit, SimpleGit, SimpleGitOptions } from 'simple-git';
+import { simpleGit, SimpleGit } from 'simple-git';
 
 const VALID_CONFIG_EXTS = ["cfg", "toml", "yml", "json"]
 

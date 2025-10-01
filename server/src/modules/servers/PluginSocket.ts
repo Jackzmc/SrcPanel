@@ -1,8 +1,7 @@
 import { Socket } from 'net'
-import { CommandResultType, LiveRecord, LiveRecordCommandResponse, LiveRecordGame, LiveRecordClient, LiveRecordResponse, LiveRecordType, RecordGameParseDef, RecordDataType, RecordParseConfig } from '../../../../common-types/Live.js'
+import { CommandResultType, LiveRecord, LiveRecordCommandResponse, LiveRecordClient, LiveRecordResponse, LiveRecordType, RecordDataType, RecordParseConfig } from '../../../../common-types/Live.js'
 import Server from './Server.js'
 import BufferReader from '../BufferReader.js'
-import JWT from '../../jwt-promise.js'
 
 /** How long to wait in milliseconds for a command response payload to be received */
 const RESPONSE_TIMEOUT_MS = 1000 * 60
@@ -88,7 +87,7 @@ export default class PluginSocket {
           } as LiveRecord
         }
         case LiveRecordType.Player: {
-          let record: LiveRecordClient = {
+          const record: LiveRecordClient = {
             type,
             userid: reader.readInt(),
             steamid: reader.readString(),
@@ -136,20 +135,20 @@ export default class PluginSocket {
           }
         }
         case LiveRecordType.CommandResponse: {
-          let res: Partial<LiveRecordCommandResponse> = {
+          const res: Partial<LiveRecordCommandResponse> = {
             type,
             id: reader.readByte(),
             resultType: reader.readByte(),
           }
           switch(res.resultType) {
             case CommandResultType.Boolean: 
-            res.result = reader.readByte() > 0
-            break
+              res.result = reader.readByte() > 0
+              break
             case CommandResultType.Float:
-            res.result = reader.readFloat()
-            break
+              res.result = reader.readFloat()
+              break
             default:
-            res.result = reader.readInt()
+              res.result = reader.readInt()
           }
           res.message = reader.readString()
           return res as LiveRecordCommandResponse
@@ -172,14 +171,14 @@ export default class PluginSocket {
           return result
         }
         default: {
+          const parentDebug = reader.parent ? '\nparent: ' + reader.parent.toString('hex') : ''
+          throw new Error(`Unknown record type: ${type}, offset ${reader.offset}\nbuffer:0x${reader.buffer.toString('hex')}${parentDebug}`)
         }
       }
     } catch(err) {
       const parentDebug = reader.parent ? '\nparent: ' + reader.parent.toString('hex') : ''
       throw new Error(`error reading record of type ${LiveRecordType[type]}(${type}) offset ${reader.offset}\n0x` + reader.buffer.toString('hex') + parentDebug + '\n' + err)
     }
-    const parentDebug = reader.parent ? '\nparent: ' + reader.parent.toString('hex') : ''
-    throw new Error(`Unknown record type: ${type}, offset ${reader.offset}\nbuffer:0x${reader.buffer.toString('hex')}${parentDebug}`)
   }
   
   public get Host() {
@@ -263,7 +262,7 @@ export default class PluginSocket {
       // if(type == LiveRecordResponse.Error && arg) length += arg.length
       const writer = BufferReader.new(2)
       writer.writeByte(type)
-      let id = this.#id++
+      const id = this.#id++
       switch(type) {
         case LiveRecordResponse.OK:
           writer.writeByte(arg1 ?? this.#server?.WebsocketViewers ?? 0)
@@ -289,7 +288,7 @@ export default class PluginSocket {
       if(!this.#socket.write(writer.buffer)) return reject(new Error("Failed to write to socket"))
       if(type != LiveRecordResponse.RunCommand) return resolve()
       // For RunCommand, we wait for a response:
-      let rejectTimeout = setTimeout(() => {
+      const rejectTimeout = setTimeout(() => {
         reject(new Error("Response timed out"))
       }, RESPONSE_TIMEOUT_MS)
       this.#responseQueue.push((record) => {

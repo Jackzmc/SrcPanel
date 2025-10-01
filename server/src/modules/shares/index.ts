@@ -58,7 +58,7 @@ export function parseShare(shareId: string, data: Record<string, any>): ShareInf
     // Check all required properties exist
     for(const prop of REQUIRED_PROPERTIES) {
         if(data[prop] == undefined) {
-            log.error(`Share \"${shareId}\" missing required property \"${prop}\"`)
+            log.error(`Share "${shareId}" missing required property "${prop}"`)
             throw new Error("Missing property " + prop)
         }
     }

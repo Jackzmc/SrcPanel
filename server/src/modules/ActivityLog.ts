@@ -1,21 +1,6 @@
 import { Pool, OkPacket } from "mysql2/promise";
 import User, { LogData } from "./users/User.js";
 
-interface LogEntry {
-    id: number,
-    timestamp: number,
-    server: string,
-    type: string,
-    client: string,
-    target: string,
-    message: string
-}
-
-interface WebLogEntry extends LogEntry {
-    type: "ACT",
-    server: "web"
-}
-
 /*
 id        bigint auto_increment
         primary key,

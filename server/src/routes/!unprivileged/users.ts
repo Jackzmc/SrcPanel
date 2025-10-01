@@ -1,7 +1,6 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
 import { toPng } from 'jdenticon'
 
-const IDENTICON_VERSION = "2"
 const IDENTICON_SIZE = 150
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions)  {
     fastify.get("/:steamid/avatar", { logLevel: "warn" }, async (req: FastifyRequest<{Querystring: { noCache?: boolean }, Params: {steamid: string }}>, reply) => {

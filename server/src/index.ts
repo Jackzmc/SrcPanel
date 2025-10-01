@@ -16,7 +16,7 @@ import cors from '@fastify/cors'
 
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
-import fastify, { FastifyPluginOptions } from 'fastify';
+import { FastifyPluginOptions } from 'fastify';
 import { CustomFastifySession } from '../../common-types/User.js'
 import User from './modules/users/User.js';
 import ConfigManager from './modules/ConfigManager.js';

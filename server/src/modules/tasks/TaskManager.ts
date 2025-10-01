@@ -157,18 +157,10 @@ export default class TaskManager {
     scheduleRepeating(task: Task<unknown>, timeOptions: TimeOptions): Date {
         const startDate = new Date(task.CreatedTimestamp * 1000)
         const nextRun = calculateDate(startDate, timeOptions)
-        console.debug(`[TaskManager] Scheduled repeating \"${task.Id}\" for ${JSON.stringify(timeOptions)}`)
+        console.debug(`[TaskManager] Scheduled repeating "${task.Id}" for ${JSON.stringify(timeOptions)}`)
         task.setSchedule(nextRun, (prevRunDate) => calculateDate(prevRunDate, timeOptions) )
         this.#schedule.push(task.Id)
         return nextRun
     }
     
-}
-
-function test() {
-    const tasks = new TaskManager()
-    const task = tasks.register("resolve_names", () => {
-        //...
-    })
-    tasks.schedule(task, { minutes: 30 })
 }

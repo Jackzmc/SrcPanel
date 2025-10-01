@@ -1,15 +1,11 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
-import { OkPacket, RowDataPacket } from 'mysql2';
+import { RowDataPacket } from 'mysql2';
 import { join } from 'path';
 import { readFile } from 'fs/promises';
 import { NO_PERMISSION, NOT_FOUND } from '../../responses.js';
-import JWT from '../../jwt-promise.js'
-import { PlayerAction, ServerData, ServerDetailed, ServerInfo } from '../../../../common-types/Server.js';
-import { LiveRecord, LiveRecordType } from '../../../../common-types/Live.js';
+import { ServerDetailed, ServerInfo } from '../../../../common-types/Server.js';
 import { UserPrivilegeCode } from '../../../../common-types/Privileges.js';
 import DNS from 'dns/promises'
-import assert from 'assert';
-import { WebSocket } from '@fastify/websocket';
 
 const COMMENT_LINE_REGEX = new RegExp(/^\s*(\/\/|#)/)
 const HIDDEN_COMMANDS = [
@@ -135,7 +131,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             try {
                 if(req.query.raw) return await readFile(path, 'utf-8')
                 const lines = (await readFile(path, 'utf-8')).split("\n")
-                let records: {command: string, type: string, value: string, cvar?: string}[] = []
+                const records: {command: string, type: string, value: string, cvar?: string}[] = []
                 for(const line of lines) {
                     // Ignore comments
                     if(COMMENT_LINE_REGEX.test(line) || line.trim() == "") continue
@@ -302,7 +298,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             })
         }
 
-        const id = await req.user!.log(null, `%client% ran command %cmd% on %server%`, {
+        await req.user!.log(null, `%client% ran command %cmd% on %server%`, {
             code,
             metadata: {
                 server: server.id,
@@ -365,5 +361,3 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         return server.Console?.logs.join("\n")
     })
 }
-
-const sleep = (time: number) => new Promise(res => setTimeout(res, time));

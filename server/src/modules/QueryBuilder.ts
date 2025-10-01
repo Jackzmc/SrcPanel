@@ -240,7 +240,7 @@ export class QueryBuilder {
 
 }
 
-const ESCAPE_REGEX = new RegExp(/([^a-zA-Z_\.0-9])/g)
+const ESCAPE_REGEX = new RegExp(/([^a-zA-Z_.0-9])/g)
 export function escapeId(id: string) {
     const pieces = id.split(".")
     return pieces.map(_escapeId).join(".")

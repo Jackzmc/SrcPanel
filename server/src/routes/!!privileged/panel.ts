@@ -1,12 +1,11 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
-import { FirstTimeSetupStage } from '../../../../common-types/Panel.js';
 import { NO_PERMISSION } from '../../responses.js';
 import path from 'node:path';
 import Json5 from 'json5'
 import { readFile, writeFile } from 'node:fs/promises';
 import { exec } from 'child_process';
 import { UpdateState } from '../../../../common-types/Panel.js';
-import { rm, unlink } from 'fs/promises';
+import { rm } from 'fs/promises';
 import Server from '../../modules/servers/Server.js';
 import { CustomServerGroup } from '../../modules/servers/groups/CustomServerGroup.js';
 import { DynamicServerGroup } from '../../modules/servers/groups/DynamicServerGroup.js';

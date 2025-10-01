@@ -1,7 +1,7 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from "fastify";
 import { RowDataPacket } from "mysql2";
 import pLimit from "p-limit";
-import { ISearchPartialResult, SearchType, APISearchPartialResults, APISearchDetailResult } from '../../../../common-types/Search';
+import { SearchType, APISearchPartialResults, APISearchDetailResult } from '../../../../common-types/Search';
 import { APIDiscussionFlags } from "../../../../common-types/Discussions.js";
 
 /// The maximum number of search inner queries to resolve concurrently

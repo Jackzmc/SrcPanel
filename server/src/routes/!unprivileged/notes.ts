@@ -1,6 +1,5 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
-import { OkPacket, RowDataPacket } from 'mysql2';
-import { Static, Type } from '@sinclair/typebox'
+import {  RowDataPacket } from 'mysql2';
 import { ADMINS_DB } from '../../routes/!!privileged/admins.js';
 import { Note } from '../../../../common-types/Note';
 import SteamID from 'steamid';

@@ -34,7 +34,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     
     function computeRating(content: string) {
         content = content.toLowerCase()
-        .replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,"")
+        .replace(/[.,/#!$%^&*;:{}=\-_`~()]/g,"")
         .replace(/\s{2,}/g," ");
         const { score } = sentiment.analyze(content, analyzeOptions)
         return { value: score }
@@ -53,7 +53,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         )
 
         let ratings = 0, key: string|null = null
-        let reputation = { thumbsUp: 0, thumbsDown: 0, sum: 0, total: 0 }
+        const reputation = { thumbsUp: 0, thumbsDown: 0, sum: 0, total: 0 }
         if(notes.length > 0 /*  && !fastify.authmngr.isAdmin(req.params.steamid) */) {
             let totalRatings = 0
 

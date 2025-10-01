@@ -1,5 +1,5 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
-import { OkPacket, RowDataPacket } from 'mysql2';
+import { RowDataPacket } from 'mysql2';
 import { Static, Type } from '@sinclair/typebox'
 import SteamID from 'steamid';
 import { AdminData, ReadableAdminData } from '../../../../common-types/User';
@@ -7,6 +7,7 @@ import { APIBanFlags } from '../../../../common-types/Ban.js';
 import { computeChanges } from '../../util.js';
 import { NO_PERMISSION } from '../../responses.js';
 
+/* eslint-disable @typescript-eslint/no-unused-vars */
 const POSTAdmin = Type.Object({
     immunityLevel: Type.Number(),
     flags: Type.String(),
@@ -23,6 +24,7 @@ const PUTAdmin = Type.Object({
     webCodes: Type.Optional(Type.Array(Type.String())),
     name: Type.Optional(Type.String())
 })
+/* eslint-enable @typescript-eslint/no-unused-vars */
 
 export type POSTAdminType = Static<typeof POSTAdmin>
 export type PUTAdminType = Static<typeof PUTAdmin>
@@ -144,7 +146,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 }
 
                 const newAdminData = {
-                    authtype: "steam" as "steam",
+                    authtype: "steam" as const,
                     identity: req.params.steamid,
                     password: null,
                     name: req.body.name || "",
@@ -258,7 +260,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
                 const groupIds = req.body.groupIds ? req.body.groupIds.split(',') : []
                 const id = await fastify.authmngr.addAdmin({
-                    authtype: "steam" as "steam",
+                    authtype: "steam" as const,
                     identity: `STEAM_1:0:${steamid}`,
                     password: null,
                     name: req.body.name || "",

@@ -1,7 +1,7 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
-import { OkPacket, RowDataPacket } from 'mysql2';
+import { RowDataPacket } from 'mysql2';
 import { APIEvent, APIEventDetailed, APIWeekAvailability, EventDataSubmission } from '../../../../common-types/Event.js';
-import { NOT_FOUND, NO_PERMISSION } from '../../responses.js';
+import { NOT_FOUND } from '../../responses.js';
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
     fastify.get('/', async (req, reply) => {
@@ -79,36 +79,4 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         conn.release()
         return reply.status(204).send()
     })
-}
-
-// Converts every 8 booleans into one byte where each bit is its value
-function toBytes(array: boolean[]): Uint8Array {
-    let bytes: number[] = [];
-    for(let i = 0; i < array.length; i += 8) {
-      let value = 0
-      for(let bit = 0; bit < 8; bit++) {
-        if(array[i+bit]) {
-          value |= (1 << bit);
-        }
-      }
-      bytes.push(value)
-    }
-    return new Uint8Array(bytes)
-}
-function fromBytes(bytes: Uint8Array): boolean[] {
-    let array: boolean[] = []
-    for(let i = 0; i < bytes.length; i++) {
-        for(let bit = 0; bit < 8; bit++) {
-            let bitValue = 1 << bit;
-            array.push((bytes[i] & bitValue) == bitValue)
-        }
-    }
-    return array
-}
-function serializeWeekData(array: boolean[]): string {
-    return btoa(String.fromCharCode.apply(null, toBytes(array)))
-}
-function deserializeWeekData(base64: string): boolean[] {
-    return fromBytes(new Uint8Array(atob(base64).split("").map(function(c) {
-        return c.charCodeAt(0); })));
 }

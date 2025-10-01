@@ -2,31 +2,8 @@ import { FastifyInstance, FastifyPluginOptions, FastifyReply, FastifyRequest } f
 import JWT from '../../jwt-promise.js'
 import crypto from 'node:crypto'
 import User from '../../modules/users/User.js';
-import { SteamInfo } from '../../../../common-types/Privileges';
 import SteamID from 'steamid';
 import { ErrorWithCode } from '../../util.js';
-
-interface OauthTokenResponse {
-    access_token: string;
-    token_type: string;
-    expires_in: number;
-    refresh_token: string;
-    scope: string;
-}
-
-interface DiscordUser {
-    id: string;
-    username: string;
-    discriminator: string;
-    avatar: string;
-    verified: boolean;
-    email?: string;
-    flags: number;
-    banner: string;
-    accent_color: number;
-    premium_type: number;
-    public_flags: number;
-}
 
 interface StateJwtPayoad {
     seed: string,

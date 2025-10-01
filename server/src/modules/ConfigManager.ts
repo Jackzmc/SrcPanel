@@ -1,7 +1,4 @@
-import sqlite3 from 'sqlite3'
-import sqlite, { open } from 'sqlite'
-import SQL from 'sql-template-strings';
-import path, { join } from 'path';
+import path from 'path';
 import { PanelConfigProvider, PublicConfigMeta } from '../../../common-types/Panel.js';
 import yaml from 'yaml'
 import { readFile } from 'fs/promises';

@@ -1,9 +1,5 @@
 import { CreateGroupOptions } from "./ServerGroup.js"
-import ServerGroup from "./ServerGroup.js"
-import DynamicServerManager, { DockerTemplateConfig, DockerTemplateContainer } from '../docker/DynamicServerManager.js';
-import Server from "../Server.js";
-import DynamicServerInstance from "../docker/DynamicServerInstance.js";
-import DNS from 'dns/promises';
+import DynamicServerManager, { DockerTemplateContainer } from '../docker/DynamicServerManager.js';
 import { ServerAction } from "../../../../../common-types/Server.js";
 import DockerServer from "../DockerServer.js";
 import User from '../../users/User';
@@ -64,7 +60,7 @@ export class CustomServerGroup extends BaseDynamicServerGroup {
     async #checkServers() {
         // Cleans up any servers with their container missing
         for await(const [id, server] of this.#iterateServers()) {
-
+            // TODO: impl
         }
         // Find any new instances
         await this.manager.findExisting()
@@ -76,7 +72,7 @@ export class CustomServerGroup extends BaseDynamicServerGroup {
             const labels = await instance.labels()
             if(!labels["panel.custom_server"]) continue
 
-            const owner = labels["panel.owner_steamid2"]
+            const _owner = labels["panel.owner_steamid2"]
             const name = labels["panel.name"]
             console.log("registering existing", instance.ContainerId.substring(0, 12), name, labels)
 

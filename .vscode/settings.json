@@ -22,5 +22,14 @@
     "vue3snippets.enable-compile-vue-file-on-did-save-code": false,
     "cmake.configureOnOpen": false,
     "typescript.format.enable": false,
-    "javascript.format.enable": false
+    "javascript.format.enable": false,
+    "eslint.enable": true,
+    "eslint.format.enable": true,
+    "eslint.validate": [
+        "javascript",
+        "typescript"
+    ],
+    "editor.codeActionsOnSave": {
+        "source.fixAll.eslint": "explicit"
+    }
 }

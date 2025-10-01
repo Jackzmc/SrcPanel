@@ -1,4 +1,4 @@
-import { SERVER_TYPE_MAP, ServerAction, ServerAvailableFeatures, ServerData, ServerInfo, ServerStatus, ServerStatusData, ServerStatusSource, ServerType, VoiceUser } from "../../../../common-types/Server.js";
+import { ServerAction, ServerAvailableFeatures, ServerInfo, ServerStatus, ServerStatusData, ServerStatusSource,VoiceUser } from "../../../../common-types/Server.js";
 import ConfigsFeature from "./features/Configs.js";
 import ConsoleFeature from "./features/logs/Console.js";
 import MetricsFeature from "./features/Metrics.js";
@@ -10,7 +10,7 @@ import { GameDig } from 'gamedig';
 import SocketClientUser from "./SocketClientUser.js";
 import { ClientOutPayload, Server_Status, ServerOutPacket, ServerOutPayload } from "../../../../common-types/ServerWebsocket.js";
 import { LiveRecordResponse } from "../../../../common-types/Live.js";
-import { resolveIPv4, tryResolveIPv4 } from "../../util.js";
+import { resolveIPv4 } from "../../util.js";
 import logger from '../../logger.js'
 import { Logger } from "pino";
 
@@ -410,7 +410,7 @@ export default abstract class Server implements IAction {
     }
 
     markVoiceConnection(user: VoiceUser, connected: boolean) {
-      let memberIndex = this.#activeVoiceMembers.findIndex(m => m.id === user.id)
+      const memberIndex = this.#activeVoiceMembers.findIndex(m => m.id === user.id)
       if(connected) {
           // Connected
           if(memberIndex == -1) {
