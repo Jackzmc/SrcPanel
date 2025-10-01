@@ -1,0 +1,26 @@
+general:
+  listen: 
+    host: 0.0.0.0
+    port: 8081
+  public_url: https://panel.example.com:8080
+
+discord:
+  link: https://discord.gg/mydiscordserver
+
+stats_url: https://stats.example.com
+
+notice:
+  enabled: false
+  text: ""
+  class: "is-warning"
+
+providers:
+  discord:
+    name: Discord
+    client_id: ###########
+    client_secret: #####
+    token_url: https://discord.com/api/oauth2/token
+    revoke_url: https://discord.com/api/oauth2/token/revoke
+    user_url: https://discord.com/api/users/@me
+    authorize_url: https://discord.com/oauth2/authorize
+    avatar_url_format: https://cdn.discordapp.com/avatars/{id}/{hash}.png
