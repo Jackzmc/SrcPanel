@@ -1,6 +1,7 @@
 import Logs from "./Console.js";
 import Server from "../../Server.js";
 import { Container } from "dockerode";
+import Stream from 'node:stream'
 
 import stripAnsi from 'strip-ansi';
 
