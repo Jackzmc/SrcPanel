@@ -21,19 +21,33 @@ import TaskManager from '../modules/tasks/TaskManager.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
+/**
+ * Tries to create a directory, does not error if exists
+ * @param dir directory to create
+ */
+async function tryMkdir(dir: string) {
+    try {
+        await mkdir(dir)
+    } catch(e) {
+        if(e.code !== "EEXIST") throw e
+    }
+}
+
 async function db(fastify: FastifyInstance) {
     const ASSETS_FOLDER = join(__dirname, '/../../../../assets')
     const DATA_FOLDER = join(__dirname, '/../../../../data')
+    const CACHE_FOLDER = join(DATA_FOLDER, "cache")
     const CONFIG_FOLDER = join(__dirname, '/../../../../config')
     fastify.log.debug('assets %s', ASSETS_FOLDER)
     fastify.log.debug('data %s', DATA_FOLDER)
     fastify.log.debug('config %s', CONFIG_FOLDER)
-    try {
-        await mkdir(DATA_FOLDER)
-    } catch(_) { }
+    await tryMkdir(DATA_FOLDER)
+    await tryMkdir(CACHE_FOLDER)
     
     const steam = new SteamAPI()
-    await steam.loadAppIdFile(join(ASSETS_FOLDER, 'steam_appids.json'))
+    await steam.InitCache(CACHE_FOLDER)
+    await steam.getAppName(550)
+    // await steam.loadAppIdFile(join(CACHE_FOLDER, 'steam_appids.json'))
 
     const db = mysql.createPool({
         socketPath: process.env.MYSQL_SOCKET_PATH,

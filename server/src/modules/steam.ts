@@ -8,6 +8,10 @@ import { WorkshopItem, SteamUserDetails } from '../../../common-types/Share.js'
 import { EventEmitter } from 'node:events';
 import QuickLRU from 'quick-lru';
 import logger from '../logger.js'
+import { Database, open as sqliteOpen } from 'sqlite'
+import sqlite3 from 'sqlite3';
+import { join } from 'node:path';
+import SQL from 'sql-template-strings';
 const log = logger.child({ name: "steam" })
 
 // How many bytes of progress to make before sending an update
@@ -61,9 +65,9 @@ export class SteamAPIError extends Error {
 export default class SteamAPI {
     #apikey: string
     #userAgent: string
-    #appMap: Record<string, string>
     #itemCache: QuickLRU<string, WorkshopItem>
     #workshopResolveQueue: Record<string, WSResolveCallback> = {}
+    #db: Database
 
     public SteamAvailable: boolean = true
 
@@ -81,28 +85,61 @@ export default class SteamAPI {
     get UserAgent() { return this.#userAgent }
     set UserAgent(value: string) { this.#userAgent = value }
 
-    get AppTitles() {
-        return {...this.#appMap}
-    }
-
     #checkKey() {
         if(!this.#apikey) {
             throw new Error("Missing steam api key. Provide in constructor or in env STEAM_WEB_APIKEY")
         }
     }
 
-    public async loadAppIdFile(path: string) {
-        const json = JSON.parse(await readFile(path, 'utf-8'))
-        this.#appMap = {}
-        for(const entry of json.apps) {
-            if(entry.name != '') this.#appMap[entry.appid.toString()] = entry.name
+    /** Initalizes a cache for appids */
+    public async InitCache(cacheFolder: string) {
+        const filename = join(cacheFolder, 'steam.db')
+        try {
+            const db = await sqliteOpen({
+                filename,
+                driver: sqlite3.Database
+            })
+            await db.exec(SQL`CREATE TABLE IF NOT EXISTS appids (
+                appid INT NOT NULL,
+                title TEXT NOT NULL,
+                fetch_date INT NOT NULL,
+                PRIMARY KEY(appid)
+            );`)
+            this.#db = db
+            log.info("cache ready")
+        } catch(err) {
+            throw new Error(`Failed to initalize cache at ${filename}`, { cause: err })
         }
     }
 
     async getAppName(id: number) {
         if(!id) throw new Error("App id is null: " + id)
-        if(!this.#appMap) throw new Error("App map is not initialized, use loadAppIdFile(path_to_db_file) to initalize")
-        return this.#appMap[id.toString()]
+        if(!this.#db) throw new Error("Cache hasn't been initalized. Call .InitCache()")
+        const result = await this.#db.get("SELECT title FROM appids WHERE appid = ?", [ id ])  
+        let name = result?.title
+        if(!name) {
+            log.debug({ id }, "fetching app name from steam")
+            name = await this.#fetchAppName(id)            
+        }
+        return name
+    }
+
+    async #fetchAppName(id: number) {
+        const res = await fetch(`https://store.steampowered.com/api/appdetails?format=json&appids=${id}`, {
+            headers: { 'User-Agent': this.#userAgent }
+        })
+        if(res.ok) {
+            const json = await res.json()
+            const entry = json[id]
+            if(entry?.success) {
+                const unixTs = Math.round(Date.now()/1000)
+                log.debug([id, entry.data.name, unixTs], "insert into appids (appid,title,fetch_date) VALUES (?,?,?)")
+                await this.#db.run("insert into appids (appid,title,fetch_date) VALUES (?,?,?)", [id, entry.data.name, unixTs])
+                return entry.data.name
+            }
+        }
+        await SteamAPIError.throwIfResponseError(res, { fn: "fetchAppName", id })
+        throw new SteamAPIError("unexpected response from steam", 500)
     }
 
     async getUserDetails(steamids: (SteamID | string)[]): Promise<SteamUserDetails[]> {
@@ -191,7 +228,7 @@ export default class SteamAPI {
             else params.append(`publishedfileids[${index++}]`, fileid)
         }
         log.trace({ fn: "getItemDetails", params: params })
-    // Don't waste a fetch if all items are in the cache
+        // Don't waste a fetch if all items are in the cache
         if(index > 0) {
             // Don't waste a fetch if all items are in the cache
             // console.log(`itemcount=${fileids.length}&${params.toString()}`)

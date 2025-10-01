@@ -67,10 +67,6 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             reputation
         })
     })
-
-    fastify.get('/appids', async(req, reply) => {
-        return fastify.steam.AppTitles
-    })
     
     fastify.get('/meta', async(req, reply): Promise<PanelMetaInfo> => {
         return {

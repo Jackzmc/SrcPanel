@@ -37,9 +37,9 @@ const app = Fastify({
     loggerInstance
 })
 
-process.on('unhandledRejection', (reason: any, promise ) => {
-  app.log.fatal('Unhandled promise rejection:\n' + reason.stack);
-});
+// process.on('unhandledRejection', (reason: any, promise ) => {
+//   app.log.fatal('Unhandled promise rejection:\n' + reason.stack);
+// });
 // app.log.trace("trace")
 // app.log.debug("debug")
 // app.log.info("info")
