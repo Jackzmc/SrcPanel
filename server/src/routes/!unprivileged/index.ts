@@ -1,11 +1,9 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
 import { RowDataPacket } from 'mysql2';
-import { createReadStream, readFileSync } from 'fs';
-const data = JSON.parse(readFileSync('assets/data.json', 'utf-8'))
+import { createReadStream } from 'fs';
 import Sentiment from 'sentiment'
 import { PanelMetaInfo } from '../../../../common-types/Panel.js';
 import { AnalysisData } from '../../../../common-types/User.js';
-import { readFile } from 'fs/promises';
 import path from 'path';
 import readline from 'readline';
 
