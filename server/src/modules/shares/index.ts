@@ -1,12 +1,15 @@
 import yaml from 'yaml'
 import { join } from 'path'
-import { readFile, mkdir } from 'fs/promises'
+import { readFile, mkdir, copyFile, unlink } from 'fs/promises'
 import { ShareDestination, ShareInfo } from '../../../../common-types/Share.js'
 import { doesFileExist } from '../../util.js'
 import { open as sqliteOpen } from 'sqlite'
 import Share from './Share.js'
 import sqlite3 from 'sqlite3';
 import SteamAPI from '../../modules/steam.js'
+import Logger from '../../logger.js'
+
+const log = Logger.child({ name: "shares" })
 
 
 async function loadShareData(configDir: string): Promise<{[key: string]: any}> {
@@ -41,7 +44,7 @@ export async function loadShares(configDir: string, dataDir: string, steam: Stea
         shares[shareId] = share
     }
     const time = performance.now() - startTime
-    console.info(`[Shares] Loaded ${Object.keys(shares).length} shares in ${time.toFixed(1)} ms`)
+    log.info(`Loaded ${Object.keys(shares).length} shares in ${time.toFixed(1)} ms`)
     return shares
 }
 
@@ -55,7 +58,7 @@ export function parseShare(shareId: string, data: Record<string, any>): ShareInf
     // Check all required properties exist
     for(const prop of REQUIRED_PROPERTIES) {
         if(data[prop] == undefined) {
-            console.error(`[Shares] ERROR: Share \"${shareId}\" missing required property \"${prop}\"`)
+            log.error(`Share \"${shareId}\" missing required property \"${prop}\"`)
             throw new Error("Missing property " + prop)
         }
     }
@@ -98,10 +101,24 @@ export async function loadShare(dataDir: string, steam: SteamAPI, share: ShareIn
         }
     }
 
+    await migrateShare(dataDir, share)
+
     const db = await sqliteOpen({
-        filename: join(dataDir, "shares", `${share.id.toLowerCase()}_cache.db`),
+        filename: join(share.sourceFolder, `share_data.db`),
         driver: sqlite3.Database
     })
 
     return new Share(db, steam, share)
+}
+
+async function migrateShare(dataDir: string, share: ShareInfo) {
+    try {
+        const oldPath = join(dataDir, "shares", `${share.id.toLowerCase()}_cache.db`)
+        const newPath = join(share.sourceFolder, `panel_share.db`)
+        await copyFile(oldPath, newPath)
+        await unlink(oldPath)
+        log.info(`Migrated share ${share.id} [${oldPath}] -> [${newPath}]`)
+    } catch(err) {
+        if(err.code != "ENOENT") throw err
+    }
 }
