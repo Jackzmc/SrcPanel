@@ -1,0 +1,32 @@
+name: Lint
+
+on:
+  push:
+    branches:
+      - release
+      - master
+  pull_request:
+    branches:
+      - release
+      - master
+      
+
+jobs:
+  lint:
+    name: Run linters
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v4
+
+      - name: 🔧 Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Lint code (server)
+        run: cd server && pnpm lint
