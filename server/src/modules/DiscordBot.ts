@@ -2,8 +2,9 @@ import { REST } from '@discordjs/rest';
 import { ChannelType, GatewayIntentBits, Routes } from 'discord-api-types/v10';
 import { BaseGuildVoiceChannel, CategoryChannel, Client, createChannel, GuildMember, TextChannel, User, VoiceBasedChannel, VoiceChannel } from 'discord.js';
 import ServerManager from './servers/ServerManager';
-import { readFile, writeFile } from 'fs/promises';
+import { readFile, unlink, writeFile } from 'fs/promises';
 import { VoiceUser } from '../../../common-types/Server.js';
+import CacheManager from './CacheManager.js';
 
 interface ChannelData {
     serverId: string,
@@ -14,11 +15,13 @@ export class DiscordBot {
     #client: Client
     #token: string
     #servers: ServerManager
+    #cache: CacheManager
 
     #savePath: string
 
     #channelData: Map<string, ChannelData>
-    constructor(serverManager: ServerManager, savePath: string, discordToken: string) {
+    constructor(serverManager: ServerManager, cacheManager: CacheManager, savePath: string, discordToken: string) {
+        this.#cache = cacheManager
         this.#token = discordToken
         this.#servers = serverManager
         this.#client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates] })
@@ -125,12 +128,24 @@ export class DiscordBot {
     } 
 
     async save() {
-        await writeFile(this.#savePath, JSON.stringify(Object.fromEntries(this.#channelData.entries())))
+        await this.#cache.set("discord.voice_chnl_map", JSON.stringify(Object.fromEntries(this.#channelData.entries())))
+    }
+
+    async #migrateOld() {
+        try {
+            const content = await readFile(this.#savePath, 'utf-8')
+            await this.#cache.set("discord.voice_chnl_map", content)
+            await unlink(this.#savePath)
+        } catch(err) {
+            if(err.code !== "ENOENT") throw err
+        }
     }
 
     async load() {
         try {
-            const content = await readFile(this.#savePath, 'utf-8')
+            await this.#migrateOld()
+            const content = await this.#cache.get<string>("discord.voice_chnl_map")
+            if(!content) return {}
             this.#channelData = new Map(Object.entries(JSON.parse(content)))
         } catch(err) {
             if(err.code !== "ENOENT") {

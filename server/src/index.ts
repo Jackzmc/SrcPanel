@@ -112,7 +112,7 @@ app.register(MiddleManager)
 .then(async() => {
     if(hadSignal) return
     if(process.env.DISCORD_API_TOKEN) {
-        const bot = new DiscordBot(app.servers, "data/server_voice_map.json", process.env.DISCORD_API_TOKEN as string)
+        const bot = new DiscordBot(app.servers, app.cache, "data/server_voice_map.json", process.env.DISCORD_API_TOKEN as string)
         await bot.init()
     }
 
