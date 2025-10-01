@@ -3,6 +3,8 @@ import { Database, open as sqliteOpen } from 'sqlite'
 import sqlite3 from 'sqlite3';
 import SQL from "sql-template-strings";
 import { unixTimestamp } from "../util.js";
+import Logger from '../logger.js'
+const log = Logger.child({ name: "cache" })
 
 enum RecordType {
     Number = 0,
@@ -13,7 +15,7 @@ enum RecordType {
 
 interface RecordRow {
     key: string,
-    value: ValidType,
+    data: ValidType,
     type: number,
     updated_at: number
 }
@@ -66,27 +68,29 @@ export default class CacheManager {
             default:
                 throw new Error("Unsupported type " + typeof(value))
         }
+        log.debug({ key, type }, "set")
         this.#db.run(
             "INSERT OR REPLACE INTO cache (key,data,type,updated_at) VALUES (?,?,?,?)",
             [key, value, type, unixTimestamp()]
         )
     }
 
+    async getRawRecord(key: string): Promise<RecordRow | null> {
+        return await this.#db.get<RecordRow>("SELECT * FROM cache WHERE key = ?", [ key ]) ?? null
+    }
+
     async get<T extends ValidType>(key: string): Promise<T | null> {
         const entry = await this.getRawRecord(key)
+        log.debug({ key, type: entry?.type, updated: entry?.updated_at }, "get")
         if(!entry) return null
         switch(entry.type) {
             case RecordType.Json:
-                return JSON.parse(entry.value as string)
+                return JSON.parse(entry.data as string)
             case RecordType.Boolean:
-                return Boolean(entry.value) as T
+                return Boolean(entry.data) as T
             default:
-                return entry.value as T
+                return entry.data as T
         }
-    }
-
-    async getRawRecord(key: string): Promise<RecordRow | null> {
-        return await this.#db.get<RecordRow>(key) ?? null
     }
 
     async isStale(key: string, maxExpires: number): Promise<boolean | null> {

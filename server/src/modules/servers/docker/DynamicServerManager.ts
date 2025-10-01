@@ -148,7 +148,7 @@ export default class DynamicServerManager {
                     this.#templates[id] = {
                         config,
                     }
-                    log.debug({ config }, `Loaded template ${id}`)
+                    log.trace({ config }, `Loaded template ${id}`)
                 } catch(err) {
                     log.error(`Failed to pull image \"${config.image}\":`, err)
                 }

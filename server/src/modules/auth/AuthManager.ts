@@ -19,6 +19,7 @@ import path from 'path'
 import { readFile, writeFile } from "fs/promises";
 
 import logger from '../../logger.js'
+import CacheManager from "../../modules/CacheManager.js";
 const log = logger.child({ name: "AuthManager" })
 
 interface AddAdmin {
@@ -52,6 +53,7 @@ export default class AuthManager {
     private actLog: ActivityLog
     private steam: SteamAPI
     #config: ConfigManager
+    #cache: CacheManager
     // Caches the resolved name of a ban source such as discord:DISCORD_ID
     private providerNameCache: Map<string, string>
 
@@ -59,7 +61,7 @@ export default class AuthManager {
 
     #oauthManager: OauthManager
 
-    constructor(adminDatabase: Pool, sessionDatabase: Pool, steam: SteamAPI, configManager: ConfigManager) {
+    constructor(adminDatabase: Pool, sessionDatabase: Pool, steam: SteamAPI, configManager: ConfigManager, cacheManager: CacheManager) {
         if(process.env.DEBUG_DISABLE_PERMISSION_SYSTEM) {
             log.warn("DEBUG_DISABLE_PERMISSION_SYSTEM set, permissions are ignored")
         }
@@ -68,6 +70,7 @@ export default class AuthManager {
             maxSize: 100, 
             maxAge: 1000 * 60 * 60 * 24 * 7 * 1 
         });
+        this.#cache = cacheManager
         this.#db = adminDatabase
         this.#dbna = sessionDatabase
         this.steam = steam
@@ -78,23 +81,29 @@ export default class AuthManager {
 
     async #loadCache() {
         try {
-            const file = await readFile(path.join(this.#config.DataDirectory, 'auth_cache.json'), 'utf-8')
-            const json = JSON.parse(file)
+            const json = await this.#cache.get<any>("authdata")
+            // const file = await readFile(path.join(this.#config.DataDirectory, 'auth_cache.json'), 'utf-8')
+            // const json = JSON.parse(file)
             this.groups = json.groups
             this.admins = json.admins
             log.info("Cache loaded successfully")
-        } catch(e) {
-            // Ignore, cache is a bonus
+        } catch(err) {
+            log.warn("failed to load cache: " + err)
         }
     }
 
     async #saveCache() {
         try {
-            await writeFile(path.join(this.#config.DataDirectory, 'auth_cache.json'), JSON.stringify({
+            await this.#cache.set("authdata", {
                 timestamp_ms: Date.now,
                 admins: this.admins,
                 groups: this.groups
-            }))
+            })
+            // await writeFile(path.join(this.#config.DataDirectory, 'auth_cache.json'), JSON.stringify({
+            //     timestamp_ms: Date.now,
+            //     admins: this.admins,
+            //     groups: this.groups
+            // }))
         } catch(err) {
             log.warn(`Failed to save auth cache (${err.message})`)
         }

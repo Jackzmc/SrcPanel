@@ -12,6 +12,7 @@ import { Database, open as sqliteOpen } from 'sqlite'
 import sqlite3 from 'sqlite3';
 import { join } from 'node:path';
 import SQL from 'sql-template-strings';
+import CacheManager from './CacheManager';
 const log = logger.child({ name: "steam" })
 
 // How many bytes of progress to make before sending an update
@@ -67,7 +68,7 @@ export default class SteamAPI {
     #userAgent: string
     #itemCache: QuickLRU<string, WorkshopItem>
     #workshopResolveQueue: Record<string, WSResolveCallback> = {}
-    #db: Database
+    #cache: Database
 
     public SteamAvailable: boolean = true
 
@@ -105,7 +106,7 @@ export default class SteamAPI {
                 fetch_date INT NOT NULL,
                 PRIMARY KEY(appid)
             );`)
-            this.#db = db
+            this.#cache = db
             log.info("cache ready")
         } catch(err) {
             throw new Error(`Failed to initalize cache at ${filename}`, { cause: err })
@@ -114,8 +115,8 @@ export default class SteamAPI {
 
     async getAppName(id: number) {
         if(!id) throw new Error("App id is null: " + id)
-        if(!this.#db) throw new Error("Cache hasn't been initalized. Call .InitCache()")
-        const result = await this.#db.get("SELECT title FROM appids WHERE appid = ?", [ id ])  
+        if(!this.#cache) throw new Error("Cache hasn't been initalized. Call .InitCache()")
+        const result = await this.#cache.get("SELECT title FROM appids WHERE appid = ?", [ id ])  
         let name = result?.title
         if(!name) {
             log.debug({ id }, "fetching app name from steam")
@@ -134,7 +135,7 @@ export default class SteamAPI {
             if(entry?.success) {
                 const unixTs = Math.round(Date.now()/1000)
                 log.debug([id, entry.data.name, unixTs], "insert into appids (appid,title,fetch_date) VALUES (?,?,?)")
-                await this.#db.run("insert into appids (appid,title,fetch_date) VALUES (?,?,?)", [id, entry.data.name, unixTs])
+                await this.#cache.run("insert into appids (appid,title,fetch_date) VALUES (?,?,?)", [id, entry.data.name, unixTs])
                 return entry.data.name
             }
         }
