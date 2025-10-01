@@ -60,3 +60,5 @@ export class ErrorWithCode extends Error {
 }
 
 export const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+export const unixTimestamp = () => Math.floor(Date.now() / 1000)

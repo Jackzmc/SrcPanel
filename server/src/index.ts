@@ -25,6 +25,7 @@ import FastifyHelmet from '@fastify/helmet'
 import DiscussionManager from './modules/DiscussionManager.js';
 import SetCacheManager from './modules/SetCache.js'
 import TaskManager from './modules/tasks/TaskManager.js'
+import CacheManager from './modules/CacheManager.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -84,7 +85,8 @@ declare module 'fastify' {
         config: string,
         data: string,
         cache: string
-    }
+    },
+    cache: CacheManager
   }
   export interface FastifyRequest {
     user?: User,

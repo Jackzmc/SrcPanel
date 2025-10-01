@@ -18,6 +18,7 @@ import { NOT_LOGGED_IN } from '../responses.js';
 import DiscussionManager from '../modules/DiscussionManager.js';
 import SetCache from '../modules/SetCache.js';
 import TaskManager from '../modules/tasks/TaskManager.js';
+import CacheManager from '../modules/CacheManager.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -42,6 +43,8 @@ async function db(fastify: FastifyInstance) {
     fastify.log.debug('cache %s', CACHE_FOLDER)
     await tryMkdir(DATA_FOLDER)
     await tryMkdir(CACHE_FOLDER)
+
+    fastify.decorate("cache", await CacheManager.Create(CACHE_FOLDER))
     
     const steam = new SteamAPI()
     await steam.InitCache(CACHE_FOLDER)
