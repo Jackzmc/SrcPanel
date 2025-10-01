@@ -28,5 +28,8 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
-      - name: Lint code (server)
+      - name: Lint Server
         run: cd server && pnpm lint
+
+      - name: Lint UI
+        run: cd ui && pnpm lint

@@ -1,6 +1,6 @@
 {
-  "name": "l4d2-admin-guide",
-  "version": "0.1.0",
+  "name": "panel-ui",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
     "preview": "vite preview",
