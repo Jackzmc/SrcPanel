@@ -14,12 +14,12 @@
                   class="is-size-5 has-tooltip-success"
                   :data-tooltip="cvar.examples && cvar.examples.length > 0 ? 'Click to view examples' : null"
                 >
-                  {{cvar.name}}
+                  {{ cvar.name }}
                 </component>&nbsp;
                 <!-- eslint-disable-next-line vue/no-v-html -- pulled from cvars.json local file -->
                 <span v-html="formatParameters(cvar)" />
               </b>
-                - {{cvar.description}}
+                - {{ cvar.description }}
             </li>
           </ul>
         </div>

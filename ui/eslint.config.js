@@ -27,15 +27,8 @@ export default defineConfig(
       },
     },
     rules: {
-      "@typescript-eslint/no-unused-vars": [ "warn", {
-          args: "none",
-          argsIgnorePattern: "^_",
-          caughtErrors: "none",
-          caughtErrorsIgnorePattern: "^_",
-          destructuredArrayIgnorePattern: ".*",
-          varsIgnorePattern: "^_",
-          ignoreRestSiblings: true
-      }],
+      "vue/no-unused-vars": "warn",
+      "@typescript-eslint/no-unused-vars": "off",
       "@typescript-eslint/no-explicit-any": "off",
       "@typescript-eslint/prefer-as-const": "warn",
       "no-useless-escape": "warn",
@@ -43,6 +36,7 @@ export default defineConfig(
       "no-empty": "warn",
       "no-unused-private-class-members": "warn",
 
+      "prefer-const": "off",
       "vue/multi-word-component-names": "off",
       "semi": "off",
       "vue/no-template-key": "off",
@@ -53,15 +47,15 @@ export default defineConfig(
       "vue/no-template-shadow": "off", // Useful, but is OK majority of time
       "vue/html-closing-bracket-newline": "off",
       "vue/no-v-html": ["error", { "ignorePattern": "(^html|HTML\(.*\))" }],
+      "vue/v-on-event-hyphenation": "off",
+      "vue/html-quotes": "off",
+      "vue/multiline-html-element-content-newline": "off",
+      "vue/singleline-html-element-content-newline": "off",
       // TODO: maybe re-enable
       "vue/html-indent": "off",
       "vue/max-attributes-per-line": "off",
-      "vue/html-self-closing": "off",
+      // "vue/html-self-closing": "off",
       "vue/attributes-order": "off",
-      "vue/singleline-html-element-content-newline": "off",
-      "vue/multiline-html-element-content-newline": "off",
-      "vue/html-quotes": "off",
-      "vue/v-on-event-hyphenation": "off"
     },
   }
 )

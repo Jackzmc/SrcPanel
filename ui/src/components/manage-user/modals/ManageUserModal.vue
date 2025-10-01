@@ -7,7 +7,7 @@
           <image class="image is-24x24 is-inline-block mr-2">
             <img :src="'/api/users/' + user.steamid + '/avatar'" />
           </image>
-          <b>{{user.name}}</b> <br class="is-hidden is-flex-touch"> <span class="is-pulled-right">{{user.steamid}}</span>
+          <b>{{ user.name }}</b> <br class="is-hidden is-flex-touch"> <span class="is-pulled-right">{{ user.steamid }}</span>
         </p>
         <p v-else-if="fetchError" class="modal-card-title has-text-danger">Error</p>
         <Icon icon="spinner" v-else spin class="is-size-4">Fetching user details</Icon>
@@ -16,7 +16,7 @@
       <section class="modal-card-body" v-if="fetchError">
         <article class="message is-danger">
           <div class="message-body">
-            {{fetchError}}
+            {{ fetchError }}
           </div>
         </article>
       </section>

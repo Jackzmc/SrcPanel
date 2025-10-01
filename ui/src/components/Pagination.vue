@@ -12,20 +12,20 @@
         </li>
       </template>
       <li v-if="prevPage">
-        <a :disabled="disabled" class="pagination-link" @click="setPage(prevPage)">{{prevPage}}</a>
+        <a :disabled="disabled" class="pagination-link" @click="setPage(prevPage)">{{ prevPage }}</a>
       </li>
       <li>
-        <a :disabled="disabled" class="pagination-link is-current" aria-current="page" @click="setPage(page)">{{page}}</a>
+        <a :disabled="disabled" class="pagination-link is-current" aria-current="page" @click="setPage(page)">{{ page }}</a>
       </li>
       <li v-if="nextPage">
-        <a :disabled="disabled" class="pagination-link" @click="setPage(nextPage)">{{nextPage}}</a>
+        <a :disabled="disabled" class="pagination-link" @click="setPage(nextPage)">{{ nextPage }}</a>
       </li>
       <template v-if="nextPage">
       <li>
         <span class="pagination-ellipsis">&hellip;</span>
       </li>
       <li>
-        <a :disabled="disabled" class="pagination-link" @click="setPage(maxPages)">{{maxPages.toLocaleString()}}</a>
+        <a :disabled="disabled" class="pagination-link" @click="setPage(maxPages)">{{ maxPages.toLocaleString() }}</a>
       </li>
       </template>
     </ul>

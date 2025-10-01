@@ -16,7 +16,7 @@
         </template>
         <div class="has-text-centered box has-background-danger-light" v-else-if="error">
           <p class="title is-3 mt-4"><Icon icon="exclamation-triangle" icon-class="pr-6 has-text-danger">Loading Files Failed</Icon></p>
-          <p class="subtitle is-4 mt-4 mb-4">{{error}}</p>
+          <p class="subtitle is-4 mt-4 mb-4">{{ error }}</p>
         </div>
         <div class="has-text-centered box has-background-info-light" v-else style="vertical-align: middle">
           <p class="title is-3 mt-4"><Icon icon="spinner" spin icon-class="pr-6">Loading files...</Icon></p>
@@ -39,7 +39,7 @@
             <div class="select">
               <select v-model="selectedShare">
                 <option v-for="share in shares" :key="share.name" :value="share.id">
-                  {{share.name}}
+                  {{ share.name }}
                 </option>
               </select>
             </div>

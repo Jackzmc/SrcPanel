@@ -5,7 +5,7 @@
       <h4 class="title is-4">Admin Panel Control</h4>
           <p>{{ serverHealth.currentState }}</p>
           <p>{{ uptime }} uptime</p>
-          <p>Node.JS Version {{serverHealth?.versions?.node}}</p>
+          <p>Node.JS Version {{ serverHealth?.versions?.node }}</p>
           <br>
           <div class="buttons">
             <a :disabled="canUpdate" :class="['button', {'is-loading': updateStatus.state === 'CHECKING'}]" @click="updateServer">Update Panel</a>
@@ -15,7 +15,7 @@
             <a :disabled="canUpdate" :class="['button']" @click="reloadConfig">Reload Config</a>
           </div>
 
-          <p class="has-text-danger" v-if="updateStatus.error">{{updateStatus.error}}</p>
+          <p class="has-text-danger" v-if="updateStatus.error">{{ updateStatus.error }}</p>
           <p class="has-text-info" v-else-if="updateStatus.upToDate">Server is already up to date.</p>
           <p class="has-text-success" v-else-if="updateStatus.state === 'SUCCESS'">Server has been updated successfully.</p>
     </Tab>
@@ -37,7 +37,6 @@ import { request } from "@/js/util";
 import { notify } from "@kyvg/vue3-notification";
 import { ref, computed, onMounted, defineAsyncComponent, onActivated, onDeactivated } from "vue"
 import { HealthReport, UpdateState } from "../../../../common-types/Panel.js";
-import ConfigEditor from "@/components/panel-admin/ConfigEditor.vue";
 //@ts-expect-error missing type
 import { Tab, Tabs } from 'vue3-tabs-component'
 import SharesEditor from "@/components/panel-admin/ShareEditor.vue";

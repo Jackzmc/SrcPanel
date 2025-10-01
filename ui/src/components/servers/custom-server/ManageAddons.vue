@@ -58,7 +58,7 @@
           </div>
           <div class="card-content px-4 py-2" v-else-if="addon.error">
             <h6 class="title is-6">{{ addon.id }}</h6>
-            <p>Failed to find addon: {{ addon.error}}</p>
+            <p>Failed to find addon: {{ addon.error }}</p>
           </div>
           <div class="card-content px-4 py-2" v-else>
             <h6 class="title is-6"><Icon icon="fa-spinner" spin>{{ addon.id }}</Icon></h6>

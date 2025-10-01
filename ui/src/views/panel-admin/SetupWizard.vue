@@ -29,8 +29,12 @@
       <component :is="currentStepData.component" :meta="meta" :stage="currentStage" @stage="(s:FirstTimeSetupStage) => currentStage = s" />
     </KeepAlive>
     <div class="block mt-4 mb-6">
-      <div class="button is-previous is-medium is-pulled-left" @click="advStep(-1)" v-if="canStepBack"><Icon icon="fa-chevron-left">Previous Step</Icon></div>
-      <div class="button is-previous is-info is-medium is-pulled-right" @click="advStep(1)" v-if="canStepNext"><Icon icon="fa-chevron-right" text-left="Next Step"></Icon> </div>
+      <div class="button is-previous is-medium is-pulled-left" @click="advStep(-1)" v-if="canStepBack">
+        <Icon icon="fa-chevron-left">Previous Step</Icon>
+      </div>
+      <div class="button is-previous is-info is-medium is-pulled-right" @click="advStep(1)" v-if="canStepNext">
+        <Icon icon="fa-chevron-right" text-left="Next Step"></Icon>
+      </div>
     </div>
     <br>
   </div>

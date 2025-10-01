@@ -43,7 +43,7 @@
           <div class="level-item">
             <p>
               Impersonating as <router-link class="has-text-white" :to="{ name: 'manage-user', params: { id: privUser.id }}">
-                <b>{{privUser.name}}</b>
+                <b>{{ privUser.name }}</b>
               </router-link>
             </p>
           </div>
@@ -61,7 +61,7 @@
 
   <footer class="footer custom-footer">
     <div class="content has-text-centered">
-      {{ SITE_TITLE }} - Updated {{lastUpdatedText}} - <a @click="showBuildInfo">Build Info</a>
+      {{ SITE_TITLE }} - Updated {{ lastUpdatedText }} - <a @click="showBuildInfo">Build Info</a>
     </div>
   </footer>
 </div>

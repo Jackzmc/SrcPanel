@@ -27,12 +27,12 @@
     </b>
     <ul>
       <li v-for="action in actions" :key="action.id" style="white-space: ">
-        @<b>{{action.action}}</b>
+        @<b>{{ action.action }}</b>
         <!-- Showing <required> or [optional] for keys -->
         <!-- This is messy, but don't want whitespace to show up. -->
-        <template v-if="action.key">.<b :class="{'has-text-info': action.keyFlags & ActionFlag.IsVariable}"><template v-if="action.keyFlags & (ActionFlag.IsVariable)">{{ action.keyFlags & ActionFlag.IsRequired ? '&lt;' : '[' }}</template>{{action.key}}<template v-if="action.keyFlags & (ActionFlag.IsVariable)">{{ action.keyFlags & ActionFlag.IsRequired ? '&gt;' : ']' }}</template></b>
+        <template v-if="action.key">.<b :class="{'has-text-info': action.keyFlags & ActionFlag.IsVariable}"><template v-if="action.keyFlags & (ActionFlag.IsVariable)">{{ action.keyFlags & ActionFlag.IsRequired ? '&lt;' : '[' }}</template>{{ action.key }}<template v-if="action.keyFlags & (ActionFlag.IsVariable)">{{ action.keyFlags & ActionFlag.IsRequired ? '&gt;' : ']' }}</template></b>
           <!-- Showing <required> or [optional] for values -->
-          <template v-if="action.value">.<b :class="{'has-text-success': action.valueFlags & ActionFlag.IsVariable}"><template v-if="action.valueFlags & (ActionFlag.IsVariable)">{{ action.valueFlags & ActionFlag.IsRequired ? '&lt;' : '[' }}</template>{{action.value}}<template v-if="action.valueFlags & (ActionFlag.IsVariable)">{{ action.valueFlags & ActionFlag.IsRequired ? '&gt;' : ']' }}</template></b>
+          <template v-if="action.value">.<b :class="{'has-text-success': action.valueFlags & ActionFlag.IsVariable}"><template v-if="action.valueFlags & (ActionFlag.IsVariable)">{{ action.valueFlags & ActionFlag.IsRequired ? '&lt;' : '[' }}</template>{{ action.value }}<template v-if="action.valueFlags & (ActionFlag.IsVariable)">{{ action.valueFlags & ActionFlag.IsRequired ? '&gt;' : ']' }}</template></b>
           </template>
         <!-- eslint-disable-next-line vue/no-v-html -- pulled from local notes.json file -->
         </template> - <span v-html="action.description" />

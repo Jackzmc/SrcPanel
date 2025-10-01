@@ -58,7 +58,6 @@ import { useRoute, useRouter } from 'vue-router';
 import { request } from '@/js/util.js';
 //@ts-expect-error missing types
 import { marked } from 'marked'
-import ActionNote from '@/components/ActionNote.vue';
 
 const route = useRoute()
 const router = useRouter()

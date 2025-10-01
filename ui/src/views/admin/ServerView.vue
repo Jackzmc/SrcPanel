@@ -8,7 +8,7 @@
     <div class="column is-8" v-if="serverInfo">
       <div class="box has-background-primary-90">
         <h3 class="title is-3">
-          {{serverInfo.name}}
+          {{ serverInfo.name }}
           <div class="tags is-pulled-right inline">
             <template v-if="status">
               <span class="tag is-danger is-medium has-tooltip-danger no-border" v-if="error || status.error" data-tooltip="An error occurred while fetching the server's status"><Icon icon="fa-exclamation-triangle">Error</Icon></span>
@@ -27,17 +27,17 @@
               <Icon icon="fa-triangle-exclamation" icon-class="has-text-white">Live</Icon>
             </span>
 
-            <span data-tooltip="Server ID" class="tag is-info is-medium no-border">{{serverInfo.id}}</span>
+            <span data-tooltip="Server ID" class="tag is-info is-medium no-border">{{ serverInfo.id }}</span>
           </div>
         </h3>
         <h4 class="subtitle is-4">
-          {{serverInfo.host ?? serverInfo.ip}}:{{serverInfo.port}}
+          {{ serverInfo.host ?? serverInfo.ip }}:{{ serverInfo.port }}
           <Icon icon="fa-copy" data-tooltip="Copy to clipboard" @click="copyAddress"></Icon>
         </h4>
         <div class="level">
           <div class="level-left">
             <div class="tags">
-              <span v-for="tag in serverInfo.tags" :key="tag" class="tag is-dark" data-tooltip="Server tag">{{tag}}</span>
+              <span v-for="tag in serverInfo.tags" :key="tag" class="tag is-dark" data-tooltip="Server tag">{{ tag }}</span>
             </div>
           </div>
           <div class="level-right">
@@ -63,7 +63,7 @@
               :to="{params:{tab: id, id: serverInfo.id }}"
               v-if="isTabEnabled(data)"
             >
-              {{data.name}}&nbsp;
+              {{ data.name }}&nbsp;
               <span class="tag is-info is-small" v-if="data.tag">{{ data.tag }}</span>
             </router-link>
           </li>
@@ -85,7 +85,7 @@
                 <tr v-if="gameType === 'source'">
                   <th>Map</th>
                   <td v-if="mapInfo">
-                    <h4 class="title is-4">{{mapInfo.name}}</h4>
+                    <h4 class="title is-4">{{ mapInfo.name }}</h4>
                     <p class="is-inline-block">Chapter {{ mapInfo.chapterId }} - {{ mapInfo.chapterName }}</p>
                     <p class="is-size-6 is-inline ml-2">c11m5_runway</p>
                   </td>
@@ -105,7 +105,7 @@
                   <td v-else><em data-tooltip="Unknown">-</em></td>
                 </tr>
                 <tr v-if="online">
-                  <th>Players ({{status.data?.players.length ?? '-'}} / {{status.data?.maxplayers ?? '-'}})</th>
+                  <th>Players ({{ status.data?.players.length ?? '-' }} / {{ status.data?.maxplayers ?? '-' }})</th>
                   <td>
                     <ul v-if="status.data && status.data.players.length > 0">
                       <li v-for="player in status.data.players" :key="player">
@@ -235,7 +235,7 @@
                     </tr>
                     <tr>
                       <th>Raw</th>
-                      <td><pre>{{JSON.stringify(player, null, 2)}}</pre></td>
+                      <td><pre>{{ JSON.stringify(player, null, 2) }}</pre></td>
                     </tr>
                   </tbody>
                 </table>
@@ -324,7 +324,7 @@
               <option default v-if="!serverIds">Loading servers...</option>
               <option v-for="server2 in serverIds" :key="server2.id" :value="server2.id"
                 :selected="server2.id == route.params.serverId">
-                {{server2.name}}
+                {{ server2.name }}
               </option>
             </select>
           </div>
@@ -345,7 +345,7 @@
                 <td>
                   <LogMessage :log="activity" :priv-user="privUser" />
                 </td>
-                <td>{{ new Date(activity.timestampRaw * 1000).toLocaleTimeString()}}</td>
+                <td>{{ new Date(activity.timestampRaw * 1000).toLocaleTimeString() }}</td>
               </tr>
             </tbody>
           </table>
@@ -507,7 +507,7 @@
               <option default v-if="!serverIds">Loading servers...</option>
               <option v-for="server2 in serverIds" :key="server2.id" :value="server2.id"
                 :selected="server2.id == route.params.serverId">
-                {{server2.name}}
+                {{ server2.name }}
               </option>
             </select>
           </div>

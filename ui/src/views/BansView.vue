@@ -31,16 +31,16 @@
               <em v-if="ban.executor.id === 'CONSOLE'">[Automatic]</em>
               <UserComponent :user="ban.executor" v-else-if="!ban.executor.provider" hide-avatar />
               <template v-else>
-                <span v-if="ban.executor.name" class=''>{{ban.executor.name}}</span>
+                <span v-if="ban.executor.name" class=''>{{ ban.executor.name }}</span>
               </template>
               <p class='has-text-info' v-if="ban.executor.provider && ban.executor.provider !== 'steam'"><em>via
-                  {{ban.executor.provider}}</em></p>
+                  {{ ban.executor.provider }}</em></p>
             </td>
             <td v-if="privUser">
-              {{ban.reason}}
+              {{ ban.reason }}
             </td>
             <td>
-              {{ban.publicReason}}
+              {{ ban.publicReason }}
             </td>
             <td>
               <!-- eslint-disable-next-line vue/no-v-html -- pulled from function so it can include tags -->
@@ -48,11 +48,11 @@
             </td>
             <td>
               <span v-if="ban.expired" class="has-text-danger">Expired</span>
-              <span v-else>{{formatDaysAgo(ban.expires) || 'Never'}}</span>
+              <span v-else>{{ formatDaysAgo(ban.expires) || 'Never' }}</span>
             </td>
-            <td>{{ban.joinAttempts}}</td>
+            <td>{{ ban.joinAttempts }}</td>
             <td :data-tooltip="formatDate(ban.timestamp)">
-              <p>{{ban.relDate}}</p>
+              <p>{{ ban.relDate }}</p>
               <p class="has-text-grey">{{ new Date(ban.timestamp * 1000).toLocaleDateString() }}</p>
             </td>
           </tr>

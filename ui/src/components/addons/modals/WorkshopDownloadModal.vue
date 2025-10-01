@@ -3,7 +3,7 @@
   <div class="modal-card">
     <header class="modal-card-head">
       <p class="modal-card-title">Install Workshop Addon
-        <span class="tag is-info has-tooltip-bottom is-pulled-right mr-2 is-rounded" data-tooltip="The target share">{{props.share.id}}</span>
+        <span class="tag is-info has-tooltip-bottom is-pulled-right mr-2 is-rounded" data-tooltip="The target share">{{ props.share.id }}</span>
       </p>
       <button v-if="downloadState == DownloadState.Idle || downloadState == DownloadState.PromptRedownload" class="delete" aria-label="close" @click='close'></button>
     </header>
@@ -20,7 +20,7 @@
       <template v-if="workshopDetails">
       <br>
         <h4 class="title is-4">
-          {{workshopDetails.item.title}}
+          {{ workshopDetails.item.title }}
           <span data-tooltip="Workshop Id" class="tag is-dark">{{ workshopId }}</span>
         </h4>
         <p class="subtitle is-6" v-if="isAddonValid">
@@ -29,7 +29,7 @@
           </template>
           For app
           <b><a :data-tooltip="workshopDetails.item.consumer_app_id" :href="'https://store.steampowered.com/app/' + workshopDetails.item.consumer_app_id">
-            {{workshopDetails.item.consumer_app_title}}
+            {{ workshopDetails.item.consumer_app_title }}
           </a></b>
         </p>
         <p class="subtitle is-6" v-else-if="workshopDetails.item.result === 9"><b>Game: </b>
@@ -37,9 +37,9 @@
         </p>
         <p class="subtitle is-6 has-text-danger" v-else>
           Addon is for <b><a :href="'https://store.steampowered.com/app/' + workshopDetails.item.consumer_app_id">
-            {{workshopDetails.item.consumer_app_title}}
+            {{ workshopDetails.item.consumer_app_title }}
           </a></b>, but only addons for <b><a :href="'https://store.steampowered.com/app/' + props.share.appid">
-            {{props.share.appTitle}}
+            {{ props.share.appTitle }}
           </a></b> are allowed
         </p>
 
@@ -82,9 +82,9 @@
             v-model="installDestinations"
           >
           <label :for="id">
-            <span v-if="dest.name"><b>{{dest.name}}</b> (<em>{{id}}</em>)</span>
-            <span v-else>{{id}}</span>
-            &nbsp;<span class="tag is-info has-tooltip-right is-small is-rounded" data-tooltip="Number of servers that share this destination">{{dest.serverIds?.length ?? 0}} Servers</span>
+            <span v-if="dest.name"><b>{{ dest.name }}</b> (<em>{{ id }}</em>)</span>
+            <span v-else>{{ id }}</span>
+            &nbsp;<span class="tag is-info has-tooltip-right is-small is-rounded" data-tooltip="Number of servers that share this destination">{{ dest.serverIds?.length ?? 0 }} Servers</span>
           </label>
         </div>
       </div>
@@ -115,7 +115,7 @@
         <h4 class="title">Logs</h4>
         <p v-for="(entry, i) in downloadLog" :key="i">
           <span :class="['tag',{'is-link': !entry.error&&!entry.success, 'is-danger': entry.error, 'is-success': entry.success}]">
-            {{entry.state}}
+            {{ entry.state }}
           </span>&nbsp;
           <!-- eslint-disable-next-line vue/no-v-html -- from server -->
           <span v-html="entry.message" />

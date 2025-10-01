@@ -3,7 +3,7 @@
     <div class="modal-card">
       <header class="modal-card-head" v-if="share && addon">
         <p class="modal-card-title">{{ addonName }}
-          <span class="tag is-info has-tooltip-bottom is-pulled-right mr-2 is-rounded" data-tooltip="The target share">{{share.id}}</span>
+          <span class="tag is-info has-tooltip-bottom is-pulled-right mr-2 is-rounded" data-tooltip="The target share">{{ share.id }}</span>
         </p>
         <button class="delete" aria-label="close" @click='close()'></button>
       </header>
@@ -35,7 +35,7 @@
             <tbody>
               <tr>
                 <th>Filename</th>
-                <td>{{props.addon.filename}}</td>
+                <td>{{ props.addon.filename }}</td>
               </tr>
               <tr v-if="props.addon.workshop">
                 <th>Workshop</th>

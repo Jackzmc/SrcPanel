@@ -2,7 +2,7 @@
 <Modal :active="active" v-if="cmd" :closable="true" @close="emit('close')">
   <div class="modal-card">
     <header class="modal-card-head">
-      <p class="modal-card-title"><b>{{prefix}}{{cmd.name}}</b></p>
+      <p class="modal-card-title"><b>{{ prefix }}{{ cmd.name }}</b></p>
 
       <button class="delete" aria-label="close" @click='close'></button>
     </header>
@@ -27,7 +27,7 @@
         <h5 class="title is-5"><Icon icon="fa-circle-question">Description</Icon></h5>
         <p>{{ cmd.description }}</p>
         <div v-if="cmd.note">
-          <em :class="{'has-text-grey': !cmd.hasPermission}"><span class="tag is-warning"><b>Note</b></span> {{cmd.note}}</em>
+          <em :class="{'has-text-grey': !cmd.hasPermission}"><span class="tag is-warning"><b>Note</b></span> {{ cmd.note }}</em>
         </div>
       </div>
       <br>
@@ -43,7 +43,7 @@
               </tr>
               <tr v-for="(data, param) of props.cmd.args" :key="param">
                 <td><span :class="['tag',{'is-link': data.required, 'is-secondary': !data.required}]">{{ param }}</span></td>
-                <td v-if="data.allowedValues">{{ data.allowedValues.join(", ")}}</td>
+                <td v-if="data.allowedValues">{{ data.allowedValues.join(", ") }}</td>
                 <td v-else>{{ data.type }}</td>
                 <td v-if="anyDefaults">{{ data.defaultValue }}</td>
               </tr>

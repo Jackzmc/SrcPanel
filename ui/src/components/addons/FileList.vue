@@ -17,24 +17,24 @@
       <tr>
         <th><a @click="setSortFunc('filename', SORT_NAME)">
             File <span v-if="hasAnyWorkshop">/ Workshop </span>Name
-            <span v-if="sort?.id === 'filename'">{{sortSymbol}}</span>
+            <span v-if="sort?.id === 'filename'">{{ sortSymbol }}</span>
             <span class="is-pulled-right">Enabled On</span>
           </a></th>
         <th v-if="hasAnyWorkshop" style="width:0"><a @click="setSortFunc('isWorkshop', SORT_WORKSHOP)">
             Workshop
-            <span v-if="sort?.id === 'isWorkshop'">{{sortSymbol}}</span>
+            <span v-if="sort?.id === 'isWorkshop'">{{ sortSymbol }}</span>
           </a></th>
         <th><a @click="setSortFunc('filesize', SORT_FILE_SIZE)">
             File Size
-            <span v-if="sort?.id === 'filesize'">{{sortSymbol}}</span>
+            <span v-if="sort?.id === 'filesize'">{{ sortSymbol }}</span>
           </a></th>
         <th><a @click="setSortFunc('lastUpdated', SORT_LAST_UPDATED)">
             Last Updated
-            <span v-if="sort?.id === 'lastUpdated'">{{sortSymbol}}</span>
+            <span v-if="sort?.id === 'lastUpdated'">{{ sortSymbol }}</span>
           </a></th>
         <th><a @click="setSortFunc('downloaded', SORT_DOWNLOADED)">
             <Icon icon="fa-download">Downloaded</Icon>
-            <span v-if="sort?.id === 'downloaded'">{{sortSymbol}}</span>
+            <span v-if="sort?.id === 'downloaded'">{{ sortSymbol }}</span>
           </a></th>
       </tr>
     </thead>
@@ -43,13 +43,13 @@
         <tr :class="{'has-background-info-light': addon.collection }">
           <td>
             <router-link v-if="addon.collection" :to="getRoute(addon)">
-              <b class="has-text-dark is-underlined">{{addon.collection.name}}</b>&nbsp;
+              <b class="has-text-dark is-underlined">{{ addon.collection.name }}</b>&nbsp;
               <span class="tag is-dark is-pulled-right">Collection</span>
             </router-link>
             <router-link :to="getRoute(addon)"
               :class="{'has-text-weight-light': addon.enabledOn.length === 0, 'has-text-grey': addon.enabledOn.length === 0 }"
               v-else :data-tooltip="getTooltip(addon)">
-              {{addon.workshop ? addon.workshop.title : addon.filename}}
+              {{ addon.workshop ? addon.workshop.title : addon.filename }}
             </router-link>
             <span class="tag is-success ml-1" v-if="addon.meta?.chapterIds">Map</span>
             <span class="tags is-inline is-pulled-right" v-if="!addon.collection">
@@ -75,15 +75,15 @@
             </a>
           </td>
           <td :colspan="addon.collection ? 3 : 1">
-            <span>{{formatSize(addon.workshop?.filesize ?? addon.filesize, true, 0)}}</span>
+            <span>{{ formatSize(addon.workshop?.filesize ?? addon.filesize, true, 0) }}</span>
           </td>
           <template v-if="!addon.collection">
             <td>
               <span
-                :data-tooltip="formatDate(addon.workshop?.lastUpdated ?? addon.lastModified)">{{formatDate(addon.workshop?.lastUpdated ?? addon.lastModified, true)}}</span>
+                :data-tooltip="formatDate(addon.workshop?.lastUpdated ?? addon.lastModified)">{{ formatDate(addon.workshop?.lastUpdated ?? addon.lastModified, true) }}</span>
             </td>
             <td>
-              <span :data-tooltip="formatDate(addon.downloaded)">{{formatDate(addon.downloaded, true)}}</span>
+              <span :data-tooltip="formatDate(addon.downloaded)">{{ formatDate(addon.downloaded, true) }}</span>
             </td>
           </template>
         </tr>
@@ -93,10 +93,10 @@
               <Icon icon="arrow-turn-up" rotate="90" />
               <router-link v-if="child.workshop" class="has-text-info" :to="getRoute(child)"
                 :data-tooltip="getTooltip(child)">
-                <b>{{child.workshop.title}} </b>
+                <b>{{ child.workshop.title }} </b>
               </router-link>
               <router-link :to="getRoute(child)" v-else class="ml-5"
-                :data-tooltip="getTooltip(child)">{{child.filename}}</router-link>
+                :data-tooltip="getTooltip(child)">{{ child.filename }}</router-link>
               <span class="tag is-small is-success ml-1" v-if="addon.meta?.chapterIds">Map</span>
               <span class="tags is-inline is-pulled-right" v-if="!child.collection">
                 <span class="tag is-info is-rounded" v-for="server in child.enabledOn" :key="server">
@@ -112,14 +112,14 @@
             </td>
             <td>
               <span
-                :data-tooltip="formatSize(child.workshop?.filesize ?? child.filesize, true, 2)">{{formatSize(child.workshop?.filesize ?? child.filesize, true, 0)}}</span>
+                :data-tooltip="formatSize(child.workshop?.filesize ?? child.filesize, true, 2)">{{ formatSize(child.workshop?.filesize ?? child.filesize, true, 0) }}</span>
             </td>
             <td>
               <span
-                :data-tooltip="formatDate(child.workshop?.lastUpdated ?? child.lastModified)">{{formatDate(child.workshop?.lastUpdated ?? child.lastModified, true)}}</span>
+                :data-tooltip="formatDate(child.workshop?.lastUpdated ?? child.lastModified)">{{ formatDate(child.workshop?.lastUpdated ?? child.lastModified, true) }}</span>
             </td>
             <td>
-              <span :data-tooltip="formatDate(child.downloaded)">{{formatDate(child.downloaded, true)}}</span>
+              <span :data-tooltip="formatDate(child.downloaded)">{{ formatDate(child.downloaded, true) }}</span>
             </td>
           </tr>
         </template>

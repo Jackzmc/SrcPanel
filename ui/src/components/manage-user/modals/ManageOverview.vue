@@ -21,7 +21,7 @@
             <label class="label">Playtime</label>
             <span>
               <p v-if="info">
-                {{playtime}} hours
+                {{ playtime }} hours
               </p>
               <em v-else>(no recorded statistics found)</em>
             </span>
@@ -32,7 +32,7 @@
             <label class="label">First Joined</label>
             <span v-if="info">
               <template v-if="info.created_date">
-                {{formatDate(info.created_date)}}
+                {{ formatDate(info.created_date) }}
                 <p>{{ getRelDate(info.created_date) }}</p>
               </template>
               <em v-else>unknown</em>
@@ -45,7 +45,7 @@
             <label class="label">Last Online</label>
             <span v-if="info">
               <template v-if="info.last_join_date">
-                {{formatDate(info.last_join_date)}}
+                {{ formatDate(info.last_join_date) }}
                 <p>{{ getRelDate(info.last_join_date) }}</p>
               </template>
               <em v-else>unknown</em>
@@ -58,25 +58,25 @@
         <div class="level-item has-text-centered">
           <div class="field">
             <label class="label">Country</label>
-            <span>{{info.country}}</span>
+            <span>{{ info.country }}</span>
           </div>
         </div>
         <div class="level-item has-text-centered">
           <div class="field">
             <label class="label">Friendly Fires</label>
-            <span>{{info.survivor_ff.toLocaleString()}}</span>
+            <span>{{ info.survivor_ff.toLocaleString() }}</span>
           </div>
         </div>
         <div class="level-item has-text-centered">
           <div class="field">
             <label class="label" data-tooltip="Self heals compared to healing other players">Heal Ratio</label>
-            <span>{{info.heal_self.toLocaleString() }} : {{ info.heal_others.toLocaleString() }}</span>
+            <span>{{ info.heal_self.toLocaleString() }} : {{ info.heal_others.toLocaleString() }}</span>
           </div>
         </div>
         <div class="level-item has-text-centered">
           <div class="field">
             <label class="label">Team kills</label>
-            <span>{{info.ff_kills.toLocaleString()}}</span>
+            <span>{{ info.ff_kills.toLocaleString() }}</span>
           </div>
         </div>
       </div>

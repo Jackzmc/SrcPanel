@@ -3,7 +3,7 @@
   <div class="modal-card">
     <header class="modal-card-head">
       <p class="modal-card-title">Upload Addon
-        <span class="tag is-info has-tooltip-bottom is-pulled-right mr-2 is-rounded" data-tooltip="The target share">{{props.share.id}}</span>
+        <span class="tag is-info has-tooltip-bottom is-pulled-right mr-2 is-rounded" data-tooltip="The target share">{{ props.share.id }}</span>
       </p>
       <button class="delete" aria-label="close" @click='close'></button>
     </header>
@@ -36,9 +36,9 @@
             v-model="installDestinations"
           >
           <label :for="id">
-            <span v-if="dest.name"><b>{{dest.name}}</b> (<em>{{id}}</em>)</span>
-            <span v-else>{{id}}</span>
-            &nbsp;<span class="tag is-info has-tooltip-right is-small is-rounded" data-tooltip="Number of servers that share this destination">{{dest.serverIds?.length ?? 0}} Servers</span>
+            <span v-if="dest.name"><b>{{ dest.name }}</b> (<em>{{ id }}</em>)</span>
+            <span v-else>{{ id }}</span>
+            &nbsp;<span class="tag is-info has-tooltip-right is-small is-rounded" data-tooltip="Number of servers that share this destination">{{ dest.serverIds?.length ?? 0 }} Servers</span>
           </label>
         </div>
       </div>

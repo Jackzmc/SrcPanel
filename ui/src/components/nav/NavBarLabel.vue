@@ -1,7 +1,7 @@
 <template>
   <!-- eslint-disable vue/no-v-html -- pulled from route meta (router/index.js) -->
   <Icon v-if="route.meta?.icon" :icon="route.meta.icon" class="no-border has-tooltip-right" :data-tooltip="route.meta?.description">
-    {{ labelText}}
+    {{ labelText }}
     <span v-if="route.meta?.nav?.tagHtml" v-html="route.meta?.nav?.tagHtml" />
   </Icon>
   <span v-else class="no-border has-tooltip-right" :data-tooltip="route.meta?.description">

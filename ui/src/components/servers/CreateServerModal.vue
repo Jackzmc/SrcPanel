@@ -81,16 +81,16 @@
       <div class="message-body">
         <p>There are not enough system resources available at this time to create a new instance.</p>
         <br>
-        <p><b>Resource:</b> {{data.type}}</p>
+        <p><b>Resource:</b> {{ data.type }}</p>
         <div v-if="'cpu' in data">
           <b>Thresholds:</b>
           <ul>
-            <li>- Current {{(data.cpu.currentLoad*100).toFixed(2)}}% &gt; {{(data.cpu.threshold*100).toFixed(2)}}%
+            <li>- Current {{ (data.cpu.currentLoad*100).toFixed(2) }}% &gt; {{ (data.cpu.threshold*100).toFixed(2) }}%
               <Icon icon="fa-circle-exclamation" icon-class="has-text-danger" v-if="data.cpu.currentLoad > data.cpu.threshold"></Icon>
               <Icon icon="fa-circle-check" icon-class="has-text-success" v-else-if="(data.cpu.currentLoad+0.02) < data.cpu.threshold"></Icon>
             </li>
             <li>- Average
-              {{(data.cpu.avgLoad*100).toFixed(2)}}% > {{(data.cpu.threshold*100).toFixed(2)}}%
+              {{ (data.cpu.avgLoad*100).toFixed(2) }}% > {{ (data.cpu.threshold*100).toFixed(2) }}%
               <Icon icon="fa-circle-exclamation" icon-class="has-text-danger" v-if="data.cpu.avgLoad > data.cpu.threshold"></Icon>
               <Icon icon="fa-circle-check" icon-class="has-text-success" v-else-if="(data.cpu.avgLoad+0.02) < data.cpu.threshold"></Icon>
             </li>
@@ -98,7 +98,7 @@
         </div>
         <div v-else-if="'memory' in data">
           <ul>
-          <li><b>Available: </b>{{ formatSize(data.memory.available) }} / {{ formatSize(data.memory.total)}}</li>
+          <li><b>Available: </b>{{ formatSize(data.memory.available) }} / {{ formatSize(data.memory.total) }}</li>
           <li>
             <b>Threshold: </b> {{ (data.memory.percentAvailable*100).toFixed(2) }}% &lt; {{ (data.memory.threshold*100).toFixed(2) }}%
             <Icon icon="fa-circle-exclamation" icon-class="has-text-danger" v-if="data.memory.percentAvailable < data.memory.threshold"></Icon>

@@ -55,7 +55,7 @@
           <div class="navbar-item has-dropdown is-hoverable ">
             <a class="navbar-link">
               <img class="mx-2" :src="avatarUrl" />
-              <span>{{privUser.name}}</span>
+              <span>{{ privUser.name }}</span>
             </a>
             <div class="navbar-dropdown is-right" style="width:140%">
               <router-link class="navbar-item" :to="{ name: 'manage-user', params: { id: privUser.id }, query: { returnTo: route.fullPath }}">

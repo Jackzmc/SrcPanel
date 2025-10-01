@@ -8,7 +8,7 @@
             </Field>
             <br>
             <span v-for="(group, id) in filteredGroups" :key="id">
-                <h4 class="title is-4 has-text-link has-text-centered">{{group.name}}</h4>
+                <h4 class="title is-4 has-text-link has-text-centered">{{ group.name }}</h4>
                 <p class="has-text-centered is-size-6" v-if="!showLockedCommands && group.list.filter((cmd: any) => cmd.hasPermission).length === 0">
                   You do not have access to any commands in this category
                 </p>
@@ -32,14 +32,14 @@
                               >
                               <Icon v-if="!cmd.hasPermission" icon="fa-lock" size="xs" container-class="has-tooltip-right has-tooltip-danger" button data-tooltip="You lack the permission for this command">
                               </Icon>
-                              <template v-if="!cmd.hidePrefix">{{prefix}}</template>{{cmd.name}}
+                              <template v-if="!cmd.hidePrefix">{{ prefix }}</template>{{ cmd.name }}
                               </component>&nbsp;
                               <!-- eslint-disable-next-line vue/no-v-html -- pulled from commands.json local file -->
                               <span v-html="formatParameters(cmd)" class="is-size-5"></span>
                             </component>
-                             - {{formatDescription(cmd)}}
+                             - {{ formatDescription(cmd) }}
                             <div v-if="cmd.note">
-                              <em :class="{'has-text-grey': !cmd.hasPermission}"><span class="tag is-warning"><b>Note</b></span> {{cmd.note}}</em>
+                              <em :class="{'has-text-grey': !cmd.hasPermission}"><span class="tag is-warning"><b>Note</b></span> {{ cmd.note }}</em>
                             </div>
                         </div>
 
@@ -101,7 +101,7 @@
               <h5 class="title is-5">Examples</h5>
               <ol>
                   <li><b class="tag is-link">user</b> means a required user while <b class="tag is-secondary">user</b> means an optional user.</li>
-                  <li>I want to kick jackz, the command is <code>{{prefix}}kick &lt;player&gt; [reason]</code>, I don’t need to input a reason so I will just type in: <code>{{prefix}}kick jackz</code></li>
+                  <li>I want to kick jackz, the command is <code>{{ prefix }}kick &lt;player&gt; [reason]</code>, I don’t need to input a reason so I will just type in: <code>{{ prefix }}kick jackz</code></li>
                   <li>I want to kick a troll, and I want to state why. <code>{{ prefix }}kick JimmyTheTroll "goodbye troll"</code></li>
                   <li><div>
                       <p class="mb-2">I want to respawn disgruntled pea, the problem is that he has a space in his name. You can either:</p>

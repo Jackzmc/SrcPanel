@@ -82,7 +82,7 @@
 
           <p class="help has-text-info">Restrict share for workshop addons only for this appid. Optional</p>
           <template v-if="appTitle !== null">
-            <p v-if="appTitle" class="help has-text-success">App: {{appTitle}}</p>
+            <p v-if="appTitle" class="help has-text-success">App: {{ appTitle }}</p>
             <p v-else class="help has-text-danger">No steam app found</p>
           </template>
         </Field>

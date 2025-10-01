@@ -29,10 +29,10 @@
             <label class="checkbox">
               <input type="checkbox" :checked="model[plugin.id]"
                 :disabled="hasFlag(plugin.id, SMPluginFlag.Required) ?? false" />
-              &nbsp;<strong>{{ plugin.name ?? plugin.id}}</strong>
+              &nbsp;<strong>{{ plugin.name ?? plugin.id }}</strong>
             </label>
             <p class="subtitle is-6 mb-2">
-              v{{ plugin.version }} - Created by {{plugin.author}}
+              v{{ plugin.version }} - Created by {{ plugin.author }}
             </p>
             <p class="subtitle is-6">
               {{ plugin.description }}

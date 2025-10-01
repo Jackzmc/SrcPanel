@@ -37,7 +37,7 @@
         <div class="list-item  message has-background-info-light" v-if="pendingEntries.length > 0">
           <a class="list-item-content has-text-centered" style="text-decoration: none" @click="viewPendingEntries">
             <p class="">
-              <Icon icon="fa-message" />{{ pendingEntries.length }}{{ pendingEntries.length >= limit ? '+' : ''}}  new entries are available, click here to view
+              <Icon icon="fa-message" />{{ pendingEntries.length }}{{ pendingEntries.length >= limit ? '+' : '' }}  new entries are available, click here to view
             </p>
           </a>
         </div>

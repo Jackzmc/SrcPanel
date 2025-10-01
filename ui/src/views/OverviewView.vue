@@ -12,7 +12,7 @@
         <span v-html="noticeText" />
       </div>
       <div class="is-pulled-right mt-2" style="margin-right: 10px">
-        <em v-if="countdownText">{{countdownText}}</em>
+        <em v-if="countdownText">{{ countdownText }}</em>
         <Icon icon="spinner" v-else spin />
       </div>
       <Servers :priv-user="privUser" @refresh="onServerRefresh" />

@@ -18,7 +18,7 @@
               <tbody>
                 <tr v-for="note in notes" :key="note.id">
                   <td class="has-tooltip-right" :data-tooltip="'Rating: ' + note.rating.value">
-                    <span :class="note.class">{{note.id}}</span>
+                    <span :class="note.class">{{ note.id }}</span>
                   </td>
                   <td>
                     <UserComponent :user="note.client" />
@@ -27,7 +27,7 @@
                     <UserComponent :user="note.markedBy" />
                   </td>
                   <ActionNote :action="note.action" v-if="note.action" />
-                  <td v-else>{{note.content}}</td>
+                  <td v-else>{{ note.content }}</td>
                   <td>
                     <div class="tags">
                       <span v-if="note.action" class="tag is-success" data-tooltip="Has an automatic action">Action</span>

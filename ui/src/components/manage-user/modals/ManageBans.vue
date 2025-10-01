@@ -24,7 +24,7 @@
           <span class="tag is-dark has-tooltip-right" data-tooltip="IP Address that submitted appeal" v-if="appeal.ip">{{ appeal.ip }}</span>
           <span :class="['tag', { 'is-success': appeal.state == 1, 'is-danger': appeal.state == 2, 'is-info': appeal.state == 0}]">{{ getAppealState(appeal.state) }}</span>
         </div>
-        <span class="is-pulled-right is-inline"> {{ formatDate(appeal.created)}}</span>
+        <span class="is-pulled-right is-inline"> {{ formatDate(appeal.created) }}</span>
         <div class="content">
           {{ appeal.message }}
 
@@ -46,7 +46,7 @@
           <span class="is-pulled-right has-text-weight-normal">{{ formatDate(ban.activeAppeal.created) }}</span>
         </h6>
 
-        {{ban.activeAppeal.message}}
+        {{ ban.activeAppeal.message }}
         <span v-if="ban.activeAppeal.ip" data-tooltip="IP address of appeal" class="tag is-pulled-right has-text-weight-normal is-dark">{{ ban.activeAppeal.ip }}</span>
         <br><br>
         <div class="buttons">
@@ -59,26 +59,26 @@
       <div class="column" v-if="!isNewBan">
         <div class="field">
           <label class="label">ID</label>
-          <p>{{ban.id}}</p>
+          <p>{{ ban.id }}</p>
         </div>
       </div>
       <div class="column" v-if="!isNewBan">
         <div class="field">
           <label class="label">IP</label>
-          <p v-if="ban.ip">{{ban.ip}}</p>
+          <p v-if="ban.ip">{{ ban.ip }}</p>
           <em v-else>(no ip recorded)</em>
         </div>
       </div>
       <div class="column" v-if="!isNewBan">
         <div class="field">
           <label class="label">Join Attempts</label>
-          <p>{{ban.joinAttempts}}</p>
+          <p>{{ ban.joinAttempts }}</p>
         </div>
       </div>
       <div class="column">
         <div class="field">
           <label class="label">Country</label>
-          <p v-if="props.user.country">{{props.user.country}}</p>
+          <p v-if="props.user.country">{{ props.user.country }}</p>
           <em v-else>unknown</em>
         </div>
       </div>
@@ -89,14 +89,14 @@
         <div class="field">
           <label class="label">Banned By</label>
           <span v-if="isNewBan">
-            <p>{{privUser.name}}</p>
-            ({{privUser.id}})
+            <p>{{ privUser.name }}</p>
+            ({{ privUser.id }})
           </span>
           <template v-else>
             <input v-if="edited.executorId" v-model="edited.executorId" class="input" type="text" @blur="onExEditBlur" />
             <span v-else @click="edited.executorId = ban!.executor!.id">
-              <p>{{ban!.executor!.name}}</p>
-              ({{ban!.executor!.id}})
+              <p>{{ ban!.executor!.name }}</p>
+              ({{ ban!.executor!.id }})
             </span>
           </template>
         </div>
@@ -107,8 +107,8 @@
           <label class="label">Timestamp</label>
           <p v-if="isNewBan">{{ formatDate() }}</p>
           <template v-else>
-            <p>{{formatDate(ban.timestamp)}}</p>
-            <em>about {{relDate}}</em>
+            <p>{{ formatDate(ban.timestamp) }}</p>
+            <em>about {{ relDate }}</em>
           </template>
         </div>
       </div>
@@ -130,7 +130,7 @@
             </div>
           </div>
           <p class="help has-text-danger" v-if="ban.expired">Ban has expired</p>
-          <p class="help" v-else-if="ban.expires">Will expire on {{formatDate(ban.expires)}}</p>
+          <p class="help" v-else-if="ban.expires">Will expire on {{ formatDate(ban.expires) }}</p>
           <p class="help" v-else>Ban will never expire</p>
         </div>
       </div>

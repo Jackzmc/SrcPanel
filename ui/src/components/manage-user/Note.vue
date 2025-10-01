@@ -11,7 +11,7 @@
           {{ note.markedBy.name }}:
         </router-link>
         <span class="ml-2 has-text-grey-light is-inline subtitle is-6">{{ note.markedBy.id }}</span>
-        <span class="tag is-pulled-right is-info">#{{note.id}}</span>
+        <span class="tag is-pulled-right is-info">#{{ note.id }}</span>
       </span>
     </div>
     <div class="list-item-description has-text-black">

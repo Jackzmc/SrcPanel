@@ -5,7 +5,7 @@
     <div class="modal-content">
       <div class="box">
         <h3 class="title is-3">
-          Flags for {{modal.troll}}
+          Flags for {{ modal.troll }}
           <button class="delete is-inline is-pulled-right" aria-label="close" @click="modal.content = undefined"></button>
         </h3>
         <hr>
@@ -26,7 +26,7 @@
         <br>
       </p>
       <div v-for="(list, category) in trollList" :key="category">
-        <h4 class="title is-4">{{category}}</h4>
+        <h4 class="title is-4">{{ category }}</h4>
         <ul>
           <li v-for="(troll, i) in list" :key="troll.name">
             <p>
@@ -35,13 +35,13 @@
                 :data-tooltip="getTooltip(troll)"
                 @click="showFlags(troll)"
               >
-                {{i+1}}. {{troll.name}}
-              </component> - {{troll.description}}
+                {{ i+1 }}. {{ troll.name }}
+              </component> - {{ troll.description }}
             </p>
             <div class="content" v-if="troll.subnotes">
               <ol class="is-lower-alpha">
                 <li v-for="note in troll.subnotes" :key="note">
-                  {{note}}
+                  {{ note }}
                 </li>
               </ol>
             </div>
@@ -55,10 +55,10 @@
       <p class="subtitle">These combos will apply multiple trolls at once for your convienence.</p>
       <p class="subtitle">Use the <b>ftc</b> command to apply these combinations.</p>
       <div v-for="(trolls, combo) in combos" :key="combo">
-        <h5 class="title is-5">{{combo}}</h5>
+        <h5 class="title is-5">{{ combo }}</h5>
         <ul>
           <li v-for="(trollName) in trolls" :key="trollName">
-            <p><a class='has-tooltip-left' :data-tooltip="getComboTooltip(trollName)">{{trollName}}</a></p>
+            <p><a class='has-tooltip-left' :data-tooltip="getComboTooltip(trollName)">{{ trollName }}</a></p>
           </li>
         </ul>
         <br>

@@ -17,16 +17,16 @@
         <td class="sel-user-component">
           <UserComponent :user="user" />
         </td>
-        <td><span v-if="user.country">{{user.country}}</span><em v-else>(unknown)</em></td>
+        <td><span v-if="user.country">{{ user.country }}</span><em v-else>(unknown)</em></td>
         <td>
-          <span :class="{'has-text-grey-lighter': user.bansCount == 0}">{{user.bansCount}}</span>
+          <span :class="{'has-text-grey-lighter': user.bansCount == 0}">{{ user.bansCount }}</span>
         </td>
         <td>
-          <span :class="{'has-text-grey-lighter': user.notesCount == 0}">{{user.notesCount}}</span>
+          <span :class="{'has-text-grey-lighter': user.notesCount == 0}">{{ user.notesCount }}</span>
         </td>
-        <td><span v-if="user.firstJoinDate">{{formatDate(user.firstJoinDate)}}</span><em v-else>(user has not joined)</em></td>
-        <td><span v-if="user.lastJoinDate" :data-tooltip="formatDate(user.lastJoinDate)">{{getRelDate(user.lastJoinDate)}}</span><em v-else>(user has not joined)</em></td>
-        <td v-if="!hasManual">{{user.server}}</td>
+        <td><span v-if="user.firstJoinDate">{{ formatDate(user.firstJoinDate) }}</span><em v-else>(user has not joined)</em></td>
+        <td><span v-if="user.lastJoinDate" :data-tooltip="formatDate(user.lastJoinDate)">{{ getRelDate(user.lastJoinDate) }}</span><em v-else>(user has not joined)</em></td>
+        <td v-if="!hasManual">{{ user.server }}</td>
       </tr>
     </tbody>
   </table>

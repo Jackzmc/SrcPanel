@@ -26,7 +26,7 @@
             <div class="select">
               <select v-model="sort.id">
                 <option v-for="(data, id) in SORT_OPTIONS" :key="id" :value="id">
-                {{data.label}}
+                {{ data.label }}
                 </option>
               </select>
             </div>

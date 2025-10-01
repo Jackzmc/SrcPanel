@@ -3,7 +3,7 @@
     <div class="modal-card">
       <header class="modal-card-head">
         <p class="modal-card-title">{{ addonName }}
-          <span class="tag is-info has-tooltip-bottom is-pulled-right mr-2 is-rounded" data-tooltip="The target share">{{props.share.id}}</span>
+          <span class="tag is-info has-tooltip-bottom is-pulled-right mr-2 is-rounded" data-tooltip="The target share">{{ props.share.id }}</span>
         </p>
         <button class="delete" aria-label="close" @click='close(false)'></button>
       </header>
@@ -22,7 +22,7 @@
               <tbody>
                 <tr>
                   <th>Collection ID</th>
-                  <td>{{props.addon.collection.id}}</td>
+                  <td>{{ props.addon.collection.id }}</td>
                 </tr>
                 <tr>
                   <th>Workshop</th>

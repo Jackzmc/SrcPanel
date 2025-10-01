@@ -25,7 +25,7 @@
                             <select @change="getRecentPlayers()" v-model="recentPlayers.server">
                               <option :value="null">All Servers</option>
                               <option v-for="server in servers" :key="server" :value="server">
-                                {{ server}}
+                                {{ server }}
                               </option>
                             </select>
                           </div>

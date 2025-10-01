@@ -2,10 +2,10 @@
   <tr :class="trClass">
     <td>
       <router-link :class="serverClasses" v-if="privUser" :to="{name: 'admin-server-view', params: { serverId: server.id, tab: 'overview' }}" :data-tooltip="tooltip">
-        <b>{{server.name}}</b>
+        <b>{{ server.name }}</b>
       </router-link>
       <div v-else :class="serverClasses" :data-tooltip="tooltip">
-        <b>{{server.name}}</b>
+        <b>{{ server.name }}</b>
       </div>
       <span class="tags">
         <span class="tag" v-if="server.tags.includes('5+')">5+</span>

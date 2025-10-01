@@ -5,14 +5,14 @@
       <li>
         <a
           @click="selectFolder(folder)">
-          <Icon icon="folder">{{folder}}/</Icon>
+          <Icon icon="folder">{{ folder }}/</Icon>
         </a>
       </li>
       <template v-if="data.active">
         <li v-if="data.files.length === 0"><a class="ml-5 has-text-black has-text-centered" disabled><em>Directory is empty</em></a></li>
         <li v-for="entry in data.files" :key="entry.path" class="ml-5">
           <a @click="selectFile(entry)" :class="{'is-active': selected === entry }">
-            <Icon icon="file-alt">{{entry.filename}}</Icon>
+            <Icon icon="file-alt">{{ entry.filename }}</Icon>
           </a>
         </li>
       </template>

@@ -20,7 +20,7 @@
       <div class="field">
         <label class="label">Admin Id</label>
         <span>
-          {{userAdminData.id}}
+          {{ userAdminData.id }}
         </span>
       </div>
     </div>
@@ -29,7 +29,7 @@
         <label class="label">Playtime</label>
         <span>
           <p v-if="stats">
-            {{playtime}} hours
+            {{ playtime }} hours
             <b
               v-if="hoursPlayed < MIN_HOURS_PLAYTIME"
               class="has-text-danger has-tooltip-bottom has-tooltip-danger"
@@ -44,7 +44,7 @@
       <div class="field">
         <label class="label" data-tooltip="You can only affect admins under your immunity level">Immunity</label>
         <span>
-          {{userAdminData.permissions.immunityLevel || 0}}
+          {{ userAdminData.permissions.immunityLevel || 0 }}
         </span>
       </div>
     </div>
@@ -52,7 +52,7 @@
       <div class="field">
         <label class="label">Flags</label>
         <span v-if="userAdminData.permissions.flags.length > 0">
-          {{userAdminData.permissions.flags}}
+          {{ userAdminData.permissions.flags }}
         </span>
         <em v-else>(none)</em>
       </div>
@@ -106,9 +106,9 @@
                 >
                 <label :for="'group.'+group.id.toString()"></label>
               </td>
-              <td :data-tooltip="'Group #' + group.id">{{group.name}}</td>
-              <td>{{group.flags}}</td>
-              <td>{{group.immunity}}</td>
+              <td :data-tooltip="'Group #' + group.id">{{ group.name }}</td>
+              <td>{{ group.flags }}</td>
+              <td>{{ group.immunity }}</td>
             </tr>
             <tr v-if="expandedGroup?.id == group.id" style="width:100%" class="has-background-light">
               <td colspan="2">
@@ -142,7 +142,7 @@
             :disabled="!canEdit"
           />
         </div>
-        <p class="help has-text-danger" v-if="form.immunity >= privUser.immunityLevel">The maximum immunity level you can apply is {{privUser.immunityLevel - 1}}, which is below yours ({{privUser.immunityLevel}})</p>
+        <p class="help has-text-danger" v-if="form.immunity >= privUser.immunityLevel">The maximum immunity level you can apply is {{ privUser.immunityLevel - 1 }}, which is below yours ({{ privUser.immunityLevel }})</p>
         <p class="help has-text-info" v-else>Will only be used if it's greater than user's groups' immunity</p>
       </div>
       <h6 class="title is-6">Base Flags</h6>
@@ -168,7 +168,7 @@
           v-model="form.flags"
           :disabled="!canEdit || !hasRoot && privUser.flags.indexOf(flag) === -1"
         >
-        <label :for="flag">{{name}}  <span class="tag">{{flag}}</span></label>
+        <label :for="flag">{{ name }}  <span class="tag">{{ flag }}</span></label>
       </div>
       <Field>
         <AdminPermissionInput v-model="webCodes" />
@@ -212,7 +212,7 @@
     <div class="message-body content">
       <b>Player cannot be made an admin due to the following reasons:</b>
       <ul>
-        <li v-for="policy in policyFailures" :key="policy">{{policy}}</li>
+        <li v-for="policy in policyFailures" :key="policy">{{ policy }}</li>
       </ul>
     </div>
   </article>
