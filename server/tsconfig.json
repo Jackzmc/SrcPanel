@@ -17,7 +17,7 @@
         },
         "strictNullChecks": true,
         "baseUrl": "./src",
-        "incremental": true
+        // "incremental": true
     },
     "include": [
         "src/**/*",

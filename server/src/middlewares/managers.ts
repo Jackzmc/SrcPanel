@@ -16,7 +16,6 @@ import { UserPrivilegeCode } from '../../../common-types/Privileges.js';
 import { SESSION_VERSION } from '../routes/auth/steam.js';
 import { NOT_LOGGED_IN } from '../responses.js';
 import DiscussionManager from '../modules/DiscussionManager.js';
-import SetCache from '../modules/SetCache.js';
 import TaskManager from '../modules/tasks/TaskManager.js';
 import CacheManager from '../modules/CacheManager.js';
 
@@ -73,7 +72,6 @@ async function db(fastify: FastifyInstance) {
     const configManager = await ConfigManager.Load(CONFIG_FOLDER)
     const authManager = new AuthManager(admindb, db, steam, configManager, cacheManager)
     const serverManager = new ServerManager(steam, DATA_FOLDER, CONFIG_FOLDER, configManager)
-    SetCache.Init(DATA_FOLDER)
     await Promise.all([
         authManager.Init(),
         serverManager.Load()

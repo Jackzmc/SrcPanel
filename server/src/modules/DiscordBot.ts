@@ -130,7 +130,7 @@ export class DiscordBot {
     async save() {
         await this.#cache.set("discord.voice_chnl_map", JSON.stringify(Object.fromEntries(this.#channelData.entries())))
     }
-
+    // TODO: remove this system
     async #migrateOld() {
         try {
             const content = await readFile(this.#savePath, 'utf-8')

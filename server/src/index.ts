@@ -23,7 +23,6 @@ import ConfigManager from './modules/ConfigManager.js';
 
 import FastifyHelmet from '@fastify/helmet'
 import DiscussionManager from './modules/DiscussionManager.js';
-import SetCacheManager from './modules/SetCache.js'
 import TaskManager from './modules/tasks/TaskManager.js'
 import CacheManager from './modules/CacheManager.js'
 
@@ -61,9 +60,9 @@ async function onSignal(signal: NodeJS.Signals) {
         process.exit(0)
     }, 20_000)
     await app.servers?.onShutdown()
-    await SetCacheManager.Save()
     app.log.info("Closing fastify")
     await app.close()
+    process.exit(0)
 }
 ["SIGUSR2", "SIGINT", "SIGTERM"].map((signal) => {
     process.on(signal, onSignal)
