@@ -146,7 +146,7 @@
           </a>
         </div>
       </div>
-      <InfiniteLoading @infinite="loadContent('bottom')"  />
+      <InfiniteLoading @infinite="loadContent('bottom')" />
     </div>
     <div class="column">
       <div class="box" style="position: sticky; top: 4em">
@@ -207,7 +207,7 @@
         <div class="buttons has-addons">
           <a
             v-for="(key) of logInfo.servers" :key="key"
-            :class="['button', 'is-small',  getFilterColor('servers', key)]"
+            :class="['button', 'is-small', getFilterColor('servers', key)]"
             @click="toggleFilter('servers', key)"
           >
             {{ key }}

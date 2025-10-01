@@ -105,7 +105,7 @@
                       <div class="list-item-content">
                         <div :class="['list-item-title', {'has-text-grey-lighter': !res.data[hoveredElement[0]*24+hoveredElement[1]]}]" style="font-weight:normal !important">
                           {{ res.user.name }}
-                          <Icon  v-if="res.data[hoveredElement[0]*24+hoveredElement[1]]" icon="fa-check-circle" class="is-pulled-right ml-2" style="color: hsl(141, 53%, 53%)"></Icon>
+                          <Icon v-if="res.data[hoveredElement[0]*24+hoveredElement[1]]" icon="fa-check-circle" class="is-pulled-right ml-2" style="color: hsl(141, 53%, 53%)"></Icon>
                         </div>
                       </div>
                     </div>

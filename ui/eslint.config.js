@@ -51,6 +51,8 @@ export default defineConfig(
       'vue/require-default-prop': "off",
       'vue/first-attribute-linebreak': "off",
       "vue/no-template-shadow": "off", // Useful, but is OK majority of time
+      "vue/html-closing-bracket-newline": "off",
+      "vue/no-v-html": ["error", { "ignorePattern": "(^html|HTML\(.*\))" }],
       // TODO: maybe re-enable
       "vue/html-indent": "off",
       "vue/max-attributes-per-line": "off",

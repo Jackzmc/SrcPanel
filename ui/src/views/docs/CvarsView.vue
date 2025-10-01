@@ -16,6 +16,7 @@
                 >
                   {{cvar.name}}
                 </component>&nbsp;
+                <!-- eslint-disable-next-line vue/no-v-html -- pulled from cvars.json local file -->
                 <span v-html="formatParameters(cvar)" />
               </b>
                 - {{cvar.description}}
@@ -60,7 +61,6 @@
               0.0 or 1.0 is a float but can also be parsed as an integer or a string. Just be careful with the parameters.</em>
             </p>
           </div>
-
         </div>
     </div>
 </div>

@@ -58,7 +58,7 @@
       </div>
       <div class="tabs is-large">
         <ul>
-          <li v-for="(data, id) in TABS" :key="id"  :class="{'is-active': tab === id}">
+          <li v-for="(data, id) in TABS" :key="id" :class="{'is-active': tab === id}">
             <router-link
               :to="{params:{tab: id, id: serverInfo.id }}"
               v-if="isTabEnabled(data)"
@@ -74,7 +74,7 @@
           <div class="notification is-danger has-text-centered" v-if="!online">
             The server is offline or is unreachable.
           </div>
-          <p class="has-text-centered subtitle is-4 my-6 has-text-danger" v-if="status.error">{{  status.error }}</p>
+          <p class="has-text-centered subtitle is-4 my-6 has-text-danger" v-if="status.error">{{ status.error }}</p>
           <template v-else>
             <!-- <span class="is-inline is-pulled-right no-border pr-4" data-tooltip="Time until next refresh" style="width:10px">
               <Icon icon="fa-spinner" spin v-if="nextRefreshCountdown == 0"></Icon>
@@ -106,7 +106,7 @@
                 </tr>
                 <tr v-if="online">
                   <th>Players ({{status.data?.players.length ?? '-'}} / {{status.data?.maxplayers ?? '-'}})</th>
-                  <td >
+                  <td>
                     <ul v-if="status.data && status.data.players.length > 0">
                       <li v-for="player in status.data.players" :key="player">
                         {{ player }}
@@ -161,7 +161,7 @@
               </div>
               <div class="list-item-content">
                 <div v-if="player.survivor" :class="['list-item-title', {'has-text-danger': !player.isAlive }]">
-                  <div class="progressbar" style="width:50%"  v-if="player.isAlive" :data-label="player.totalHealth + ' HP'">
+                  <div class="progressbar" style="width:50%" v-if="player.isAlive" :data-label="player.totalHealth + ' HP'">
                     <div :class="['permhealth',getHealthClass(player.totalHealth)]" :style="{width: player.survivor.permHealth + '%' }"></div>
                     <div :class="['temphealth',getHealthClass(player.totalHealth)]" :style="{width: player.survivor.tempHealth + '%' }"></div>
                   </div>
@@ -173,7 +173,7 @@
                   &nbsp;<span class="has-text-info is-small" v-else-if="player.steamid === 'BOT'">[BOT]</span>
                 </div>
                 <div v-else-if="player.infected" :class="['list-item-title', {'has-text-crossed': !player.isAlive }]">
-                  <div class="progressbar" style="width:50%"  v-if="player.isAlive" :data-label="player.infected.health + '/' + player.infected.maxHealth + ' HP'">
+                  <div class="progressbar" style="width:50%" v-if="player.isAlive" :data-label="player.infected.health + '/' + player.infected.maxHealth + ' HP'">
                     <div :class="['permhealth',getHealthClass(100 * player.totalHealth)]" :style="{width: (player.totalHealth) + '%' }"></div>
                   </div>
                   <span class="has-text-info is-small" v-if="player.steamid === 'BOT'">[BOT]&nbsp;</span>
@@ -408,12 +408,12 @@
       </div>
       <div v-else-if="tab === 'configs'" class="box">
         <h5 class="title is-5 mb-2">Config Files</h5>
-        <FolderBrower v-if="serverConfigs" @select="onCfgChosen" :paths="serverConfigs"/>
+        <FolderBrower v-if="serverConfigs" @select="onCfgChosen" :paths="serverConfigs" />
         <div class="box has-background-danger-light" v-else>
           <p class="subtitle has-text-centered is-6 ">Not available for this server</p>
         </div>
       </div>
-      <template v-else-if="tab === 'console'" >
+      <template v-else-if="tab === 'console'">
         <div class="box">
           <h5 class="title is-5">Console Help Information</h5>
           <p>
@@ -444,7 +444,7 @@
         <div class="box">
           <h5 class="title is-4">Current Metrics</h5>
           <template v-if="latestMetric">
-            <nav class="level" >
+            <nav class="level">
               <div class="level-item has-text-centered">
                 <div>
                   <p class="heading">CPU Usage</p>
@@ -462,7 +462,7 @@
               </div>
             </nav>
             <nav class="level" v-for="(net, intf) in latestMetric.network_stats" :key="intf">
-              <div class="level-item has-text-centered" >
+              <div class="level-item has-text-centered">
                 <div>
                   <p class="heading"><Icon icon="arrow-down" /> Bytes In [{{ intf }}]</p>
                   <p class="title">{{ formatSize(net.bytesRxRate) }}/s</p>

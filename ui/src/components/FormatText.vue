@@ -2,8 +2,9 @@
 <div class="content">
   <span v-for="(piece, i) in pieces" :key="i">
     <UserComponent :hide-avatar="hideAvatar" v-if="piece.user" :user="piece.user" />
-    <span v-else-if="piece.html" v-html="piece.html"></span>
-    <template v-else>{{ piece.text }}</template>
+      <!-- eslint-disable vue/no-v-html -- sanitized -->
+      <span v-else-if="piece.html" v-html="piece.html"></span>
+      <template v-else>{{ piece.text }}</template>
   </span>
 </div>
 </template>
@@ -15,6 +16,7 @@ import { APIUser } from '../../../common-types/User';
 
 //@ts-expect-error missing types
 import { marked } from 'marked';
+import DOMPurify from 'dompurify';
 marked.use({renderer:{
   image(src: string, title: string, alt: string) {
     return `<figure class="image is-256x256">
@@ -51,7 +53,7 @@ function appendTextSlice(slice: string) {
 async function getPieces() {
     pieces.value = []
 
-    const text = props.text
+    const text = DOMPurify.sanitize(props.text)
     if(!text) return
 
     const matches = text.matchAll(STEAMID_REGEX)

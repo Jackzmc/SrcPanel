@@ -8,7 +8,7 @@
     <div class="box">
       <ApexCharts type="line" :series="memSeries" :options="memOptions" height="300px" />
     </div>
-    <div class="box" v-for="(netSeries, i) in networkSeries" :key="i" >
+    <div class="box" v-for="(netSeries, i) in networkSeries" :key="i">
       <ApexCharts type="line" :series="netSeries.series" :options="netSeries.options" height="300px" />
     </div>
   </div>

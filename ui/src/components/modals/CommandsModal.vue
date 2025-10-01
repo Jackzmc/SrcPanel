@@ -60,6 +60,7 @@
         <div class="content">
           <h5>Examples</h5>
           <ol>
+            <!-- eslint-disable vue/no-v-html -- pulled from commands.json in parent prop -->
             <li v-for="(example, i) in cmd.examples" :key="i" v-html="format(example)">
             </li>
           </ol>

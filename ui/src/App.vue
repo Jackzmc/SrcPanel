@@ -12,20 +12,20 @@
 
     <section v-else class="hero is-info has-text-centered" v-show="readyState == ReadyState.Show">
       <div class="hero-body pb-5">
-        <router-link v-if="prevRoute" :to="{ name: prevRoute }" class="is-pulled-left is-light is-rounded button" ><Icon icon="fa-chevron-left">Back</Icon></router-link>
-        <p class="title has-text-white" >
+        <router-link v-if="prevRoute" :to="{ name: prevRoute }" class="is-pulled-left is-light is-rounded button"><Icon icon="fa-chevron-left">Back</Icon></router-link>
+        <p class="title has-text-white">
           {{ route.meta.title }}
         </p>
         <p class="subtitle has-text-white">
           {{ route.meta.description }}
         </p>
-        <router-link v-if="nextRoute" :to="{ name: nextRoute }" class="is-pulled-left is-light is-rounded button" ><Icon icon="fa-chevron-left">Next</Icon></router-link>
+        <router-link v-if="nextRoute" :to="{ name: nextRoute }" class="is-pulled-left is-light is-rounded button"><Icon icon="fa-chevron-left">Next</Icon></router-link>
       </div>
     </section>
 
     <!-- <br> -->
     <router-view v-slot="{ Component }" class="mt-4" v-if="readyState == ReadyState.Show">
-      <keep-alive  :max="2">
+      <keep-alive :max="2">
         <component :is="Component" :priv-user="privUser" :meta="meta" class="px-2" />
       </keep-alive>
     </router-view>

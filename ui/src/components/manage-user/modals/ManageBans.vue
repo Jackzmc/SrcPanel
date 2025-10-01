@@ -20,7 +20,7 @@
     <template v-else>
     <div class="notification" v-for="appeal in appeals" :key="appeal.id">
         <div class="tags is-inline">
-          <span class="tag is-primary has-tooltip-right" data-tooltip="ID of the appeal" >{{ appeal.id }}</span>
+          <span class="tag is-primary has-tooltip-right" data-tooltip="ID of the appeal">{{ appeal.id }}</span>
           <span class="tag is-dark has-tooltip-right" data-tooltip="IP Address that submitted appeal" v-if="appeal.ip">{{ appeal.ip }}</span>
           <span :class="['tag', { 'is-success': appeal.state == 1, 'is-danger': appeal.state == 2, 'is-info': appeal.state == 0}]">{{ getAppealState(appeal.state) }}</span>
         </div>

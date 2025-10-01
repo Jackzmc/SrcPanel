@@ -34,6 +34,7 @@
                               </Icon>
                               <template v-if="!cmd.hidePrefix">{{prefix}}</template>{{cmd.name}}
                               </component>&nbsp;
+                              <!-- eslint-disable-next-line vue/no-v-html -- pulled from commands.json local file -->
                               <span v-html="formatParameters(cmd)" class="is-size-5"></span>
                             </component>
                              - {{formatDescription(cmd)}}
@@ -62,7 +63,7 @@
               <!-- <p>Inputting Commands</p> -->
               <label for="cmdViewmode" class="is-size-5"><b>I want to enter commands via </b></label>
               <div class="select is-info is-small mb-4">
-                  <select name="cmdViewmode" id="cmdViewmode"  v-model="commandViewmode">
+                  <select name="cmdViewmode" id="cmdViewmode" v-model="commandViewmode">
                       <option value="console">console</option>
                       <option value="private">chat, privately</option>
                       <option value="public">chat, publicly</option>

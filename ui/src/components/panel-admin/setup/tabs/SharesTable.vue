@@ -12,7 +12,7 @@
         <th></th>
       </tr>
       </thead>
-      <VueDraggableNext :list="shares" tag="tbody" handle=".handle" >
+      <VueDraggableNext :list="shares" tag="tbody" handle=".handle">
         <tr v-for="(share) in shares" :key="share.id">
           <td class="valign" style="width:1%"><Icon class="handle" icon="fa-bars"></Icon></td>
           <td class="valign">{{ share.id }}</td>

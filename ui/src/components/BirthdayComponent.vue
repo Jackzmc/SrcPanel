@@ -1,5 +1,5 @@
 <template>
-  <div class="modal is-active"  @click="close">
+  <div class="modal is-active" @click="close">
     <div class="modal-background"></div>
     <div class="modal-content box has-text-centered">
       <h1 class="title is-1">HAPPY BIRTHDAY</h1>

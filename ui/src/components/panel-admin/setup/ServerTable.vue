@@ -16,7 +16,7 @@
         <th>Actions</th>
       </tr>
     </thead>
-    <VueDraggableNext :list="Object.values(group.servers)" tag="tbody" handle=".handle" >
+    <VueDraggableNext :list="Object.values(group.servers)" tag="tbody" handle=".handle">
       <tr v-for="(server) in group.servers" :key="server.id">
         <td class="valign" style="width:1%"><Icon class="handle" icon="fa-bars"></Icon></td>
         <td class="valign">{{ server.id }}</td>

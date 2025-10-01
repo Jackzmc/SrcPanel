@@ -75,7 +75,7 @@
                 <td v-if="mapRating.loadState == LoadState.Success">
                   <template v-if="mapRating.data?.avgRating">
                     <Icon size="is-small" icon="fas star" v-for=" i in Math.round( mapRating.data.avgRating ) " :key="i" />
-                    <Icon size="is-small" icon="far star" v-for=" i in 5 - Math.round( mapRating.data.avgRating )  " :key="i + 10" />
+                    <Icon size="is-small" icon="far star" v-for=" i in 5 - Math.round( mapRating.data.avgRating ) " :key="i + 10" />
                     {{ Number( mapRating.data.avgRating ).toFixed( 1 ) }}
                   </template>
                   <template v-else>
@@ -89,10 +89,11 @@
               </tr>
             </tbody>
           </table>
-          <article class="message" v-if="parsedDescription">
+          <article class="message" v-if="parsedDescriptionHTML">
             <div class="message-body content is-size-7">
               <h4>Description</h4>
-              <span style="white-space: pre-wrap" v-html="parsedDescription" />
+              <!-- eslint-disable-next-line vue/no-v-html -- is sanitied -->
+              <span style="white-space: pre-wrap" v-html="parsedDescriptionHTML" />
             </div>
           </article>
         </Tab>
@@ -143,6 +144,7 @@ import { formatDate, formatSize, request, restartServer } from '@/js/util.js'
 // @ts-expect-error no types
 import { Tab, Tabs } from "vue3-tabs-component";
 import { LoadState } from '@/types/global.js';
+import DOMPurify from 'dompurify';
 
 const emit = defineEmits(['close', 'update'])
 const { notify }  = useNotification()
@@ -231,8 +233,8 @@ const downloadUrl = computed(() => {
   return `/api/shares/${props.share.id}/addons/${props.addon.filename}/download`
 })
 
-const parsedDescription = computed(() => {
-  return props.addon.workshop?.description
+const parsedDescriptionHTML = computed(() => {
+  return DOMPurify.sanitize(props.addon.workshop?.description)
     .replace(/\[b\]/gi, '<b>')
     .replace(/\[u\]/gi, '<u>')
     .replace(/\[i\]/gi, '<i>')

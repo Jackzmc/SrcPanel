@@ -8,6 +8,7 @@
       </div>
       <div v-if="noticeText" :class="['notification', meta?.settings.notice?.class]">
         <button class="delete"></button>
+        <!-- eslint-disable-next-line vue/no-v-html -- pulled from /api/meta -->
         <span v-html="noticeText" />
       </div>
       <div class="is-pulled-right mt-2" style="margin-right: 10px">

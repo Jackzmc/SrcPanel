@@ -180,7 +180,7 @@
                   </div>
                 </div>
                 <p class="control">
-                  <input style="width:6rem" class="input" type="number" :min="1" :max="30" placeholder="Day" v-model="profile.data.birthDate"/>
+                  <input style="width:6rem" class="input" type="number" :min="1" :max="30" placeholder="Day" v-model="profile.data.birthDate" />
                 </p>
               </div>
             </Field>

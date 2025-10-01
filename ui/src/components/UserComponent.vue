@@ -13,7 +13,7 @@
     </div>
   </component>
   <div class="user-tooltip-content">
-    <figure class="image is-48x48 is-inline-block mr-3 is-round"  v-if="clientAvatarSrc" >
+    <figure class="image is-48x48 is-inline-block mr-3 is-round" v-if="clientAvatarSrc">
       <LazyImage alt="User's avatar" observer img-class="is-rounded" :src="clientAvatarSrc" placeholder-src="/img/steam_default_avatar.png" />
     </figure>
     <div class="is-inline-block mt-0">

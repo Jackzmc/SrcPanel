@@ -43,7 +43,8 @@
               {{ban.publicReason}}
             </td>
             <td>
-              <div class="tags" v-html="getBanFlags(ban)"></div>
+              <!-- eslint-disable-next-line vue/no-v-html -- pulled from function so it can include tags -->
+              <div class="tags" v-html="getBanFlagsHTML(ban)"></div>
             </td>
             <td>
               <span v-if="ban.expired" class="has-text-danger">Expired</span>
@@ -157,7 +158,7 @@ const filteredBans = computed(() => {
   })
 })
 
-function getBanFlags(ban: Ban) {
+function getBanFlagsHTML(ban: Ban) {
   let str = ""
   if(ban.flags & APIBanFlags.IPBan) str += `<span class='tag' data-tooltip='Player is IP banned'>IP</span>`
   if(ban.flags & APIBanFlags.Suspended) str += `<span class='tag is-warning' data-tooltip='Ban is no longer in effect'>S</span>`

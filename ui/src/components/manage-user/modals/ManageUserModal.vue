@@ -81,7 +81,7 @@
         <img src="@/assets/loader.gif" />
       </section> -->
       <footer class="modal-card-foot">
-        <div class="buttons"  id="manage-user-footer">
+        <div class="buttons" id="manage-user-footer">
           <router-link class="button" :to="routerHref">
             <Icon icon="close">Close</Icon>
           </router-link>

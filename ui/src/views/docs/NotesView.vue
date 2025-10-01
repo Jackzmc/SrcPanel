@@ -34,6 +34,7 @@
           <!-- Showing <required> or [optional] for values -->
           <template v-if="action.value">.<b :class="{'has-text-success': action.valueFlags & ActionFlag.IsVariable}"><template v-if="action.valueFlags & (ActionFlag.IsVariable)">{{ action.valueFlags & ActionFlag.IsRequired ? '&lt;' : '[' }}</template>{{action.value}}<template v-if="action.valueFlags & (ActionFlag.IsVariable)">{{ action.valueFlags & ActionFlag.IsRequired ? '&gt;' : ']' }}</template></b>
           </template>
+        <!-- eslint-disable-next-line vue/no-v-html -- pulled from local notes.json file -->
         </template> - <span v-html="action.description" />
       </li>
     </ul>

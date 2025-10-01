@@ -47,7 +47,7 @@
         <p class="help">This will overrule the type defined in the group. It's not recommended, as group type determines layout of server tables.</p>
         <p class="help has-text-danger" v-if="determiningType === LoadState.Error">Could not automatically determine server type</p>
       </Field>
-      <Field label="Tags (Comma separated)" info="These are generic tags used to categorize servers" >
+      <Field label="Tags (Comma separated)" info="These are generic tags used to categorize servers">
         <input data-type="tags" class="input" type="text" placeholder="custom-maps, my-supported-gamemode, etc" v-model="server.tags">
       </Field>
     </Tab>

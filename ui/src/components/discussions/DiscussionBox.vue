@@ -3,7 +3,7 @@
   <div class="taglist">
     <router-link :to="{name: 'discuss-view', params:{id: discuss.id.toString(), title: urlTitle }, hash: '#comments' }" v-if="discuss.commentsCount > 0" class="ml-3 tag is-pulled-right is-inline is-white"
       data-tooltip="Number of comments">
-      <Icon icon="far fa-comments" >{{ discuss.commentsCount }}</Icon>
+      <Icon icon="far fa-comments">{{ discuss.commentsCount }}</Icon>
     </router-link>
     <template v-if="discuss.closedAt">
       <span v-if="isClosed" class="tag is-danger is-inline is-pulled-right">
@@ -19,7 +19,7 @@
 
   <div class="columns is-mobile is-multiline" v-if="discuss.type == APIDiscussionType.Radio || discuss.type == APIDiscussionType.Checkbox">
     <div class="column is-6" v-for="option of discuss.options" :key="option.id" @click="selectChoice(option)">
-      <div style="height:100%" :class="['box','field',{'is-clickable': canInteract}]" >
+      <div style="height:100%" :class="['box','field',{'is-clickable': canInteract}]">
         <input v-if="canInteract && isSelection && 'selected' in discuss" v-model="discuss.selected" readonly :value="option" :id="option.id.toString()" class="is-checkradio" :type="optionType" :name="'choice' + discuss.id">
         <label :for="option.id.toString()">{{ option.label }}</label>
         <span v-if="showPercents" class="is-pulled-right has-text-info">

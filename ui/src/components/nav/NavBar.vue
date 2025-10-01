@@ -52,7 +52,7 @@
           <a :class="['navbar-item',{loading: notificationsClearing }]" v-if="privUser.notifications.length > 0" @click="showModal = 'notifications'">
             <Icon icon="bell">{{ privUser.notifications.length }}</Icon>
           </a>
-          <div class="navbar-item has-dropdown is-hoverable " >
+          <div class="navbar-item has-dropdown is-hoverable ">
             <a class="navbar-link">
               <img class="mx-2" :src="avatarUrl" />
               <span>{{privUser.name}}</span>

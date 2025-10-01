@@ -17,7 +17,7 @@
       </div>
     </div>
     <div class="column is-3">
-      <img src="/img/mousedef.jpg" >
+      <img src="/img/mousedef.jpg">
       <p>
         You can also bind to certain mouse buttons. Use <code>MOUSE#</code> where # is the number in the above image.
       </p>
@@ -31,7 +31,7 @@
         <span class="is-inline">Keybinds</span>
       </div>
       <div class="column is-3">
-        <input :class="['input','is-inline','is-small','is-inline',{'is-danger': isInvalidCommand}]" style="width:100%" type="text"  v-model="command" />
+        <input :class="['input','is-inline','is-small','is-inline',{'is-danger': isInvalidCommand}]" style="width:100%" type="text" v-model="command" />
         <p class="help is-danger" v-if="isInvalidCommand">
           Keybinds require the console command prefix <b>sm_</b>. Replace <b>/</b> or <b>!</b> with <b>sm_</b>
         </p>

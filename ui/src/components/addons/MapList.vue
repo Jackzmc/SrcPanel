@@ -95,7 +95,7 @@
             <div :class="cardSizeIndex > 0 ? ['column'] : []">
               <ul>
                 <li>
-                  <Icon icon="clock"  v-if="map.workshop || map.collection">Updated {{ getRelDate((map.collection ? map.children[0].workshop?.lastUpdated : map.workshop?.lastUpdated) ?? map.lastUpdated) }}</Icon>
+                  <Icon icon="clock" v-if="map.workshop || map.collection">Updated {{ getRelDate((map.collection ? map.children[0].workshop?.lastUpdated : map.workshop?.lastUpdated) ?? map.lastUpdated) }}</Icon>
                   <!-- no workshop data, not collection, fallback to file info: -->
                   <Icon icon="clock" v-else>Downloaded
                     {{ getRelDate(map.downloaded) }}

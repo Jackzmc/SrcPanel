@@ -2,8 +2,10 @@
 <ModalCard active @close="emit('close')">
   <template #header>
     <p class="modal-card-title">
-      <Icon v-if="stateTitle.icon" :icon="stateTitle.icon" :icon-class="stateTitle.iconClass" :spinning="stateTitle.spinning"><span  v-html="stateTitle.label"></span></Icon>
-      <span v-else v-html="stateTitle.label"></span>
+      <!-- eslint-disable vue/no-v-html -- pulled from hardcoded computed val -->
+      <Icon v-if="stateTitle.icon" :icon="stateTitle.icon" :icon-class="stateTitle.iconClass" :spinning="stateTitle.spinning"><span v-html="stateTitle.htmlLabel"></span></Icon>
+      <span v-else v-html="stateTitle.htmlLabel"></span>
+      <!-- eslint-enable vue/no-v-html -->
     </p>
     <button class="delete" aria-label="close" @click="emit('close')"></button>
   </template>
@@ -24,7 +26,7 @@
   </template>
   <template v-else-if="state === ModalState.ConfirmCreateInstance">
     <p class="is-size-5">You are creating a new instance of:</p>
-    <div class="list has-hoverable-list-items" >
+    <div class="list has-hoverable-list-items">
       <ServerGroupListItem :group="selectedGroup!" selected />
     </div>
     <br>
@@ -126,7 +128,7 @@
     </article>
   </template>
   <!-- END MODAL BODY-->
-  <template #buttons >
+  <template #buttons>
     <template v-if="state == ModalState.ConfirmCreateInstance">
     <button @click="state = ModalState.SelectGroup" class="button">Back</button>
     <button @click="createInstance" class="button is-info" v-if="confirmDelayCountdown === 0">Create
@@ -173,66 +175,39 @@ const stateTitle = computed(() => {
   switch(state.value) {
     case ModalState.SelectGroup:
       return {
-        label: "Create new server instance",
+        htmlLabel: "Create new server instance",
         icon: "fa-plus"
       }
     case ModalState.ConfirmCreateInstance:
       return {
-        label: `Confirm new instance`
+        htmlLabel: `Confirm new instance`
       }
     case ModalState.StartingInstance:
       return {
         icon: "fa-spinner",
         spinning: true,
-        label: `Creating instance of <b>${ selectedGroup.value!.name}</b>`
+        htmlLabel: `Creating instance of <b>${ selectedGroup.value!.name}</b>`
       }
     case ModalState.InstanceReady:
       return {
         icon: "fa-check-circle",
         iconClass: "has-text-success",
-        label: `Created <b>${ data.value.name }</b>`
+        htmlLabel: `Created <b>${ data.value.name }</b>`
       }
     case ModalState.InstanceFailed:
       return {
         icon: "fa-times",
         iconClass: "has-text-danger",
-        label: `Creating instance of <b>${ selectedGroup.value!.name}</b>`
+        htmlLabel: `Creating instance of <b>${ selectedGroup.value!.name}</b>`
       }
     default:
       return {
         icon: "fa-exclamation-triangle",
         iconClass: "has-text-danger",
-        label: "Unknown Error"
+        htmlLabel: "Unknown Error"
       }
   }
 })
-
-// const serverGroups = ref([
-//   {
-//     id: "l4d2-main",
-//     name: "L4D2 Main",
-//     game: "left4dead2",
-//     currentInstances: 2
-//   },
-//   {
-//     id: "l4d2-randomizer",
-//     name: "L4D2 Randomizer",
-//     game: "left4dead2",
-//     currentInstances: 1
-//   },
-//   {
-//     id: "l4d2-reserved",
-//     name: "L4D2 Reserved",
-//     game: "left4dead2",
-//     currentInstances: 0
-//   },
-//   {
-//     id: "minecraft",
-//     name: "Minecraft",
-//     game: "minecraft",
-//     currentInstances: 2
-//   }
-// ])
 
 let serverGroups = ref<APIListServerGroup[]|undefined>(undefined)
 let state = ref<ModalState>(ModalState.SelectGroup)

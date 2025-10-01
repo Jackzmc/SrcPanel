@@ -50,7 +50,7 @@
                   <td v-if="mapRating.loadState == LoadState.Success">
                     <template v-if="mapRating.data?.avgRating">
                       <Icon size="is-small" icon="fas star" v-for=" i in Math.round( mapRating.data.avgRating ) " :key="i" />
-                      <Icon size="is-small" icon="far star" v-for=" i in 5 - Math.round( mapRating.data.avgRating )  " :key="i + 10" />
+                      <Icon size="is-small" icon="far star" v-for=" i in 5 - Math.round( mapRating.data.avgRating ) " :key="i + 10" />
                       {{ Number( mapRating.data.avgRating ).toFixed( 1 ) }}
                     </template>
                     <template v-else>

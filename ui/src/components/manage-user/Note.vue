@@ -37,14 +37,14 @@
         <span @click="entry.showDetails = !entry.showDetails">Details</span>
       </button> -->
       <span v-if="edit">
-        <button class="button is-inverted is-success has-tooltip-success" @click="saveNote" data-tooltip="Save changes" >
-          <Icon icon-class="is-small" icon="check"/>
+        <button class="button is-inverted is-success has-tooltip-success" @click="saveNote" data-tooltip="Save changes">
+          <Icon icon-class="is-small" icon="check" />
         </button>
-        <button class="button is-inverted is-black" @click="edit = undefined" data-tooltip="Discard changes" >
-          <Icon icon-class="is-small" icon="times"/>
+        <button class="button is-inverted is-black" @click="edit = undefined" data-tooltip="Discard changes">
+          <Icon icon-class="is-small" icon="times" />
         </button>
         <button class="button  is-inverted is-danger has-tooltip-danger" @click="deleteNote" data-tooltip="Delete note">
-          <Icon icon-class="is-small" icon="trash"/>
+          <Icon icon-class="is-small" icon="trash" />
         </button>
       </span>
       <template v-else>

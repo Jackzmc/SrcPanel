@@ -5,7 +5,7 @@
       <template v-if="selectedTutorial">
         <h4 class="title is-4">{{ selectedTutorial.title }}</h4>
         <video v-if="selectedTutorial.videoSrc" :src="selectedTutorial.videoSrc" controls autoplay />
-        <span class="content box" v-if="content" v-html="content"></span>
+        <span class="content box" v-if="htmlContent" v-html="htmlContent"></span>
       </template>
       <template v-else>
         <h4 class="title mt-6 is-4 has-text-centered">Select a tutorial</h4>
@@ -43,6 +43,7 @@
       </nav>
       <div class="box content" v-if="selectedTutorial?.description">
         <h4 class="title is-4">Tutorial Description</h4>
+        <!-- eslint-disable-next-line vue/no-v-html -- pulled from local dev file -->
         <p v-html="selectedTutorial.description"></p>
       </div>
     </div>
@@ -72,7 +73,7 @@ interface Tutorial {
 }
 let tutorials = ref<Tutorial[]>()
 let searchQuery = ref()
-let content = ref()
+let htmlContent = ref()
 let selectedTutorial = ref<Tutorial>()
 
 const filteredTutorials = computed(() => {
@@ -88,7 +89,7 @@ async function selectTutorial(tutorial: Tutorial) {
   // Prevent double clicking making redudant requests
   if(tutorial == selectedTutorial.value) return
   selectedTutorial.value = tutorial
-  content.value = undefined
+  htmlContent.value = undefined
   if(selectedTutorial.value.filename) {
     await fetchTutorialText(selectedTutorial.value.filename)
   }
@@ -122,11 +123,11 @@ watch(() => route.params.id, (id) => {
 async function fetchTutorialText(filename: string) {
   const response = await fetch(`/data/tutorials/${filename}?t=${BUILD_TIMESTAMP}`)
   if(response?.ok) {
-    content.value = marked(await response.text())
+    htmlContent.value = marked(await response.text())
   } else if(response && response.status == 404) {
-    content.value = "<span class='has-text-danger'>Tutorial file is missing</span>"
+    htmlContent.value = "<span class='has-text-danger'>Tutorial file is missing</span>"
   } else {
-    content.value = `<span class='has-text-danger'>An error occurred</span>`
+    htmlContent.value = `<span class='has-text-danger'>An error occurred</span>`
   }
 }
 </script>

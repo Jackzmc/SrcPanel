@@ -31,11 +31,11 @@
 
       <Field label="Paths*">
         <Field>
-          <input required type="text" :class="['input',{'is-danger': destination.paths.length === 0 || destination.paths[0] == ''}]" placeholder="/var/shares/my-share/addons" v-model="destination!.paths[0]" >
-          <p class="help has-text-danger" v-if="destination.paths.length === 0 || destination.paths[0] == ''" ><Icon icon="fa-exclamation-triangle">At least one path is required</Icon></p>
+          <input required type="text" :class="['input',{'is-danger': destination.paths.length === 0 || destination.paths[0] == ''}]" placeholder="/var/shares/my-share/addons" v-model="destination!.paths[0]">
+          <p class="help has-text-danger" v-if="destination.paths.length === 0 || destination.paths[0] == ''"><Icon icon="fa-exclamation-triangle">At least one path is required</Icon></p>
         </Field>
         <template v-if="destination.paths.length > 1">
-          <div class="field has-addons" v-for="i in destination.paths.length - 2" :key="i" >
+          <div class="field has-addons" v-for="i in destination.paths.length - 2" :key="i">
             <div class="control is-expanded">
               <input required type="text" :class="['input',{'is-danger': destination.paths[i+1] == ''}]" placeholder="/var/shares/my-share/addons" v-model="destination.paths[i+1]">
             </div>

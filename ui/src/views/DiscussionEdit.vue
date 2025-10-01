@@ -3,7 +3,7 @@
   <div class="columns">
     <div class="column is-8">
       <div class="block mb-2">
-        <a @click="confirmCancel"><Icon icon="fa-arrow-left"  class="is-pulled-left" text="Back to discussions (cancel)" /></a>
+        <a @click="confirmCancel"><Icon icon="fa-arrow-left" class="is-pulled-left" text="Back to discussions (cancel)" /></a>
       </div>
       <br>
       <div class="box question-box" v-if="loadState == LoadState.Success">
@@ -13,14 +13,14 @@
           <em v-else>Click here to add a description</em>
         </p> -->
         <input ref="descriptionForm" type="text" class="input subtitle is-small" v-model="discuss.description" placeholder="Add a description" v-if="editingDesc" @keyup.enter="setEditingDesc(false)" @blur="setEditingDesc(false)" />
-        <FormatText markdown data-tooltip="Click to edit"  class="subtitle has-tooltip-left" v-else-if="discuss.description" :text="discuss.description" @click="setEditingDesc(true)" />
-        <p v-else  class="subtitle is-clickable" @click="setEditingDesc(true)"><em>Click here to add a description</em></p>
+        <FormatText markdown data-tooltip="Click to edit" class="subtitle has-tooltip-left" v-else-if="discuss.description" :text="discuss.description" @click="setEditingDesc(true)" />
+        <p v-else class="subtitle is-clickable" @click="setEditingDesc(true)"><em>Click here to add a description</em></p>
         <div class="columns" v-if="discuss.type == APIDiscussionType.Radio || discuss.type == APIDiscussionType.Checkbox">
           <div class="column is-6">
             <div class="box field is-clickable" v-for="option of getOptions(0)" :key="option.id" @click="editOption(option)">
               <label>{{ option.label }}</label>
             </div>
-            <a class="box field is-clickable has-background-info has-text-white has-text-centered" v-if="leftColumn&&!previouslyClosed" @click="editOption()"  data-tooltip="Click to create a new option">
+            <a class="box field is-clickable has-background-info has-text-white has-text-centered" v-if="leftColumn&&!previouslyClosed" @click="editOption()" data-tooltip="Click to create a new option">
               <Icon icon="fa-plus">New Option</Icon>
             </a>
           </div>

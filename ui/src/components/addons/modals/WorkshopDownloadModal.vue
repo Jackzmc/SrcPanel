@@ -19,7 +19,7 @@
       </div>
       <template v-if="workshopDetails">
       <br>
-        <h4 class="title is-4" >
+        <h4 class="title is-4">
           {{workshopDetails.item.title}}
           <span data-tooltip="Workshop Id" class="tag is-dark">{{ workshopId }}</span>
         </h4>
@@ -117,6 +117,7 @@
           <span :class="['tag',{'is-link': !entry.error&&!entry.success, 'is-danger': entry.error, 'is-success': entry.success}]">
             {{entry.state}}
           </span>&nbsp;
+          <!-- eslint-disable-next-line vue/no-v-html -- from server -->
           <span v-html="entry.message" />
           <router-link v-if="downloadState == DownloadState.PromptRedownload && entry.state == 'INFO'"
             :to="{name: 'file-info', params: {id: share.id, filename: entry.filename}}"

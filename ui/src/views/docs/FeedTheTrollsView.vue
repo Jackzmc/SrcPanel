@@ -9,6 +9,7 @@
           <button class="delete is-inline is-pulled-right" aria-label="close" @click="modal.content = undefined"></button>
         </h3>
         <hr>
+        <!-- eslint-disable-next-line vue/no-v-html -- pulled from ftt.json data file -->
         <div class="content" v-html="modal.content" />
       </div>
     </div>
@@ -27,7 +28,7 @@
       <div v-for="(list, category) in trollList" :key="category">
         <h4 class="title is-4">{{category}}</h4>
         <ul>
-          <li v-for="(troll, i) in list" :key="troll.name" >
+          <li v-for="(troll, i) in list" :key="troll.name">
             <p>
               <component :is="troll.prompts ? 'a' : 'span'"
                 :class="['has-text-link','has-tooltip-right',{'has-text-weight-bold': troll.prompts}]"
@@ -37,7 +38,7 @@
                 {{i+1}}. {{troll.name}}
               </component> - {{troll.description}}
             </p>
-            <div class="content"  v-if="troll.subnotes" >
+            <div class="content" v-if="troll.subnotes">
               <ol class="is-lower-alpha">
                 <li v-for="note in troll.subnotes" :key="note">
                   {{note}}
@@ -56,7 +57,7 @@
       <div v-for="(trolls, combo) in combos" :key="combo">
         <h5 class="title is-5">{{combo}}</h5>
         <ul>
-          <li v-for="(trollName) in trolls" :key="trollName" >
+          <li v-for="(trollName) in trolls" :key="trollName">
             <p><a class='has-tooltip-left' :data-tooltip="getComboTooltip(trollName)">{{trollName}}</a></p>
           </li>
         </ul>

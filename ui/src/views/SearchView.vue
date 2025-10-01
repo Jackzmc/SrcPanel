@@ -19,7 +19,7 @@
       <h4 class="title is-4 has-text-centered">Objects</h4>
       <div class="grid is-col-min-12 is-multiline">
         <div :class="['cell',{'is-col-span-2': result.type == 'activity_log'}]" v-for="(result, id) of results" :key="id">
-          <div :class="['card', result.type]" style="height:100%" >
+          <div :class="['card', result.type]" style="height:100%">
             <header class="card-header">
               <p class="card-header-title mb-0">
                 <template v-if="result.userData">
@@ -52,7 +52,7 @@
                     </tr>
                     <tr>
                       <th>Last Location</th>
-                      <td v-if="result.data.last_region">{{ result.data.last_region }}, {{  result.data.last_country }}</td>
+                      <td v-if="result.data.last_region">{{ result.data.last_region }}, {{ result.data.last_country }}</td>
                       <td v-else>{{ result.data.last_country }}</td>
                     </tr>
                     <tr>
@@ -67,7 +67,7 @@
               <template v-else>
                 <span>{{ result.partialContent }}</span>
                 <div class="block pt-2">
-                  <Icon v-if="!result.data"  icon="fa-spinner" spin>Waiting for full result</Icon>
+                  <Icon v-if="!result.data" icon="fa-spinner" spin>Waiting for full result</Icon>
                 </div>
               </template>
             </div>
@@ -82,7 +82,7 @@
         <router-link v-for="pgRoute in filteredRoutes" :key="pgRoute.path" :to="pgRoute.path" class="column is-6">
           <div class="card">
             <header class="card-header">
-              <NavBarLabel :route="pgRoute" class="card-header-title"  />
+              <NavBarLabel :route="pgRoute" class="card-header-title" />
             </header>
             <div class="card-content has-text-left">
               <p>{{ pgRoute.meta.description }}</p>

@@ -5,7 +5,7 @@
       <input :class="inputClass" type="text" :placeholder="placeholder" v-model="textInput" @input="onInputDebounce">
     </slot>
   </div>
-  <div class="dropdown-menu"  role="menu" v-if="filteredItems.length > 0">
+  <div class="dropdown-menu" role="menu" v-if="filteredItems.length > 0">
     <div class="dropdown-content">
       <a href="#" class="dropdown-item" v-for="item of filteredItems" :key="item.id" @click="select(item)">
         <slot name="item" :item="item">

@@ -47,7 +47,7 @@
     <footer class="modal-card-foot">
       <div class="buttons">
         <template v-if="uploadState > 1">
-          <button  @click="restartServers" :class="['button','is-info', {'is-loading': uploadState === 3}]">
+          <button @click="restartServers" :class="['button','is-info', {'is-loading': uploadState === 3}]">
             Restart Servers
           </button>
         </template>

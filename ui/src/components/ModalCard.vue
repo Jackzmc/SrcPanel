@@ -15,8 +15,8 @@
       <slot name="footer">
       <div class="buttons">
         <slot name="buttons">
-          <button class="button is-success"  @click="emit('save')">Save changes</button>
-          <button class="button"  @click="emit('close')">Cancel</button>
+          <button class="button is-success" @click="emit('save')">Save changes</button>
+          <button class="button" @click="emit('close')">Cancel</button>
         </slot>
       </div>
     </slot>

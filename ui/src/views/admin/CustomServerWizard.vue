@@ -2,11 +2,11 @@
 <div class="container is-fluid mx-4">
   <div class="block">
     <div class="columns">
-      <div class="column is-8" >
+      <div class="column is-8">
           <DoneModal v-if="serverInfo" :server="serverInfo" />
           <div class="tabs is-toggle is-fullwidth is-large" v-if="!creationActive">
             <ul>
-              <li v-for="(step, i) in STEPS" :key="i" :class="{'is-active': currentStep >= i }" >
+              <li v-for="(step, i) in STEPS" :key="i" :class="{'is-active': currentStep >= i }">
                 <a @click="setStep(i)" :style="{'opacity': (i > highestStep) ? 0.5: undefined, cursor: i > highestStep ? 'not-allowed' : undefined }" :disabled="!meta.data">
                   <Icon :icon="step.icon"></Icon>
                   <span>{{ step.title }}</span>
@@ -25,7 +25,7 @@
           <p class="subtitle is-5">{{ meta.error }}</p>
         </div>
         <div class="box has-background-info-light" v-else>
-          <h4 class="title is-3"><Icon icon="fa-spinner" icon-class="mr-2" spin >Loading</Icon></h4>
+          <h4 class="title is-3"><Icon icon="fa-spinner" icon-class="mr-2" spin>Loading</Icon></h4>
           <p class="subtitle is-5">Please wait, fetching information...</p>
         </div>
         <br>
@@ -33,7 +33,7 @@
           <Icon icon="fa-chevron-left">Back</Icon>
         </button>
         <button :class="['button','is-pulled-right',{'is-info': canAdvance}]" @click="setStep(currentStep + 1)" v-if="meta.data && currentStep < STEPS.length - 1" :disabled="!canAdvance">
-          <Icon icon="fa-chevron-right"  text-left="Next"></Icon>
+          <Icon icon="fa-chevron-right" text-left="Next"></Icon>
         </button>
       </div>
       <div class="column is-3">

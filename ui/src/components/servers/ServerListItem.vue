@@ -6,7 +6,7 @@
           :icon="server.online?'fa-circle':'fa-square'"
           :class="serverClasses"
           :data-tooltip="tooltip"
-        ></Icon>{{  server.name }}</div>
+        ></Icon>{{ server.name }}</div>
       <div class="list-item-description">
         <div class="tags is-inline-flex mb-0">
           <span class="tag is-info" v-if="server.online">

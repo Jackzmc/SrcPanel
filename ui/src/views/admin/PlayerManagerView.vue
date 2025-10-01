@@ -35,7 +35,7 @@
                   </div>
                 </div>
                 <div class="level-item">
-                  <a :class="['button','is-info',{'is-loading': recentPlayers.loading}]" @click="getRecentPlayers()" >Refresh</a>
+                  <a :class="['button','is-info',{'is-loading': recentPlayers.loading}]" @click="getRecentPlayers()">Refresh</a>
                 </div>
               </div>
               <div class="level-right">

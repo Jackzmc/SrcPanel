@@ -52,7 +52,7 @@
     <router-link :to="returnTo ?? '/'" class="button is-medium is-info">Home</router-link>
   </template>
   <template v-else>
-    <div class="container"  style="width:50%">
+    <div class="container" style="width:50%">
       <article class="message is-danger">
         <div class="message-header">
           <p><Icon icon="fa-exclamation-triangle">{{ route.query.error ?? "Internal Server Error" }}</Icon></p>
