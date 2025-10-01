@@ -1,0 +1,41 @@
+name: Build Image
+on: 
+  push:
+    paths:
+      - 'server/**'
+      - 'ui/**'
+      - 'common-types/**'
+      - '.forgejo/workflows/build.yaml'
+    # branches:
+      # - release
+      # - feat/*
+  workflow_dispatch: {}
+
+env:
+  IMAGE_NAME: git.jackz.me/${{ github.repository_owner }}/admin-panel
+
+jobs:
+  build:
+    runs-on: ubuntu-full
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - run: pnpm i --frozen-lockfile
+      - run: cd server && pnpm build
+      - run: cd ui && pnpm build
+      - name: Upload UI artifacts
+        # Automatically uploads an artifact from the './_site' directory by default
+        uses: https://data.forgejo.org/forgejo/upload-artifact@v4
+        with:
+          name: ui.zip
+          path: ui/dist
+          if-no-files-found: error
+      - name: Upload Server artifacts
+        # Automatically uploads an artifact from the './_site' directory by default
+        uses: https://data.forgejo.org/forgejo/upload-artifact@v4
+        with:
+          name: server.zip
+          path: server
+          if-no-files-found: error
