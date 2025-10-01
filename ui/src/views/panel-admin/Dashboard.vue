@@ -12,6 +12,7 @@
             <a :disabled="canUpdate" :class="['button']" @click="restartPanel">Restart Panel</a>
             <a :disabled="canUpdate" :class="['button']" @click="updateAdmins">Update Admins Cache</a>
             <a :disabled="canUpdate" :class="['button']" @click="recreateDynamicServers">Recreate Servers</a>
+            <a :disabled="canUpdate" :class="['button']" @click="reloadConfig">Reload Config</a>
           </div>
 
           <p class="has-text-danger" v-if="updateStatus.error">{{updateStatus.error}}</p>
@@ -79,6 +80,16 @@ function onTabChanged(selectedTab: any) {
   tab.value = selectedTab.tab.name
 }
 
+async function reloadConfig() {
+  const response = await request('/api/panel/reload-config', { method: "POST"})
+  if(response?.ok) {
+    notify({
+      type: "success",
+      text: "Config reloaded",
+      duration: -1
+    })
+  }
+}
 
 async function updateServer() {
   updateStatus.value = {

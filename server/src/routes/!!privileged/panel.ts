@@ -155,6 +155,19 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
     })
 
+    fastify.post('/reload-config', async (req, reply) => {
+        try {
+            await fastify.config.Reload()
+            return reply.status(204).send() 
+        } catch(err) {
+            fastify.log.error("Reload failed: " + err)
+            return reply.status(500).send({
+                error: "RELOAD_FAILED",
+                message: err.message
+            })
+        }
+    })
+
     fastify.post('/restart', async (req, reply) => {
         if(!req.user!.hasPermission("panel.restart")) return NO_PERMISSION(reply)
         await reply.status(204).send()
