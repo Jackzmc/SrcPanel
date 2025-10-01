@@ -82,8 +82,6 @@ export default class AuthManager {
     async #loadCache() {
         try {
             const json = await this.#cache.get<any>("auth.data")
-            // const file = await readFile(path.join(this.#config.DataDirectory, 'auth_cache.json'), 'utf-8')
-            // const json = JSON.parse(file)
             this.groups = json.groups
             this.admins = json.admins
             for(const admin of Object.values(this.admins)) {
@@ -102,11 +100,6 @@ export default class AuthManager {
                 admins: this.admins,
                 groups: this.groups
             })
-            // await writeFile(path.join(this.#config.DataDirectory, 'auth_cache.json'), JSON.stringify({
-            //     timestamp_ms: Date.now,
-            //     admins: this.admins,
-            //     groups: this.groups
-            // }))
         } catch(err) {
             log.warn(`Failed to save auth cache (${err.message})`)
         }
