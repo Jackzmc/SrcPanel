@@ -1,14 +1,12 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
 import { NO_PERMISSION } from '../../responses.js';
 import path from 'node:path';
-import Json5 from 'json5'
-import { readFile, writeFile } from 'node:fs/promises';
-import { exec } from 'child_process';
 import { UpdateState } from '../../../../common-types/Panel.js';
 import { rm } from 'fs/promises';
 import Server from '../../modules/servers/Server.js';
 import { CustomServerGroup } from '../../modules/servers/groups/CustomServerGroup.js';
 import { DynamicServerGroup } from '../../modules/servers/groups/DynamicServerGroup.js';
+import { exec } from 'node:child_process';
 
 let updateState: UpdateState = "NORMAL"
 
@@ -16,18 +14,6 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     fastify.get('/', async (req, reply) => {
         if(!req.user!.hasPermission("panel.view")) return NO_PERMISSION(reply)
         return fastify.config.Config
-    })
-
-    fastify.get('/config/:filename', async (req: FastifyRequest<{ Params: { filename: string }}>, reply) => {
-        try {
-            let content = await readFile(path.resolve('config/', req.params.filename), 'utf-8') 
-            content = Json5.parse(content)
-            return reply.send(content)
-        } catch(err: any) {
-            if(err.code === "ENOENT")
-                return reply.status(404).send()
-            throw err
-        }
     })
 
     fastify.post('/recreate-servers', async (req: FastifyRequest, reply) => {
@@ -38,17 +24,6 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
     })
 
-    fastify.post('/config/:filename', async (req: FastifyRequest<{ Params: { filename: string }}>, reply) => {
-        try {
-            const prettyJson = JSON.stringify(req.body, null, 2)
-            await writeFile(path.resolve('config/', req.params.filename), prettyJson,  { encoding: 'utf-8' })
-            return reply.code(204).send()
-        } catch(err: any) {
-            if(err.code === "ENOENT")
-                return reply.status(404).send()
-            throw err
-        }
-    })
     fastify.get('/health', async(req, reply) => {
         return {
             currentState: updateState,
