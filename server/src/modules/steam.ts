@@ -68,11 +68,12 @@ export default class SteamAPI {
     #userAgent: string
     #itemCache: QuickLRU<string, WorkshopItem>
     #workshopResolveQueue: Record<string, WSResolveCallback> = {}
-    #cache: Database
+    #cache: CacheManager
 
     public SteamAvailable: boolean = true
 
-    constructor(apikey?: string, userAgent?: string) {
+    constructor( cache: CacheManager, apikey?: string, userAgent?: string) {
+        this.#cache = cache
         apikey = apikey ?? process.env.STEAM_WEB_APIKEY
         if(!apikey) throw new Error("Missing env STEAM_WEB_APIKEY")
         this.#apikey = apikey
@@ -92,32 +93,9 @@ export default class SteamAPI {
         }
     }
 
-    /** Initalizes a cache for appids */
-    public async InitCache(cacheFolder: string) {
-        const filename = join(cacheFolder, 'steam.db')
-        try {
-            const db = await sqliteOpen({
-                filename,
-                driver: sqlite3.Database
-            })
-            await db.exec(SQL`CREATE TABLE IF NOT EXISTS appids (
-                appid INT NOT NULL,
-                title TEXT NOT NULL,
-                fetch_date INT NOT NULL,
-                PRIMARY KEY(appid)
-            );`)
-            this.#cache = db
-            log.info("cache ready")
-        } catch(err) {
-            throw new Error(`Failed to initalize cache at ${filename}`, { cause: err })
-        }
-    }
-
     async getAppName(id: number) {
         if(!id) throw new Error("App id is null: " + id)
-        if(!this.#cache) throw new Error("Cache hasn't been initalized. Call .InitCache()")
-        const result = await this.#cache.get("SELECT title FROM appids WHERE appid = ?", [ id ])  
-        let name = result?.title
+        let name = await this.#cache.get<string>(`steam.apptitles.${id}`)
         if(!name) {
             log.debug({ id }, "fetching app name from steam")
             name = await this.#fetchAppName(id)            
@@ -133,9 +111,7 @@ export default class SteamAPI {
             const json = await res.json()
             const entry = json[id]
             if(entry?.success) {
-                const unixTs = Math.round(Date.now()/1000)
-                log.debug([id, entry.data.name, unixTs], "insert into appids (appid,title,fetch_date) VALUES (?,?,?)")
-                await this.#cache.run("insert into appids (appid,title,fetch_date) VALUES (?,?,?)", [id, entry.data.name, unixTs])
+                await this.#cache.set(`steam.apptitles.${id}`, entry.data.name)
                 return entry.data.name
             }
         }

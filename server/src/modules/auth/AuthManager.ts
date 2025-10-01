@@ -86,6 +86,9 @@ export default class AuthManager {
             // const json = JSON.parse(file)
             this.groups = json.groups
             this.admins = json.admins
+            for(const admin of Object.values(this.admins)) {
+                admin.permissions.codes = new Set(admin.permissions.codes)
+            }
             log.info("Cache loaded successfully")
         } catch(err) {
             log.warn("failed to load cache: " + err)

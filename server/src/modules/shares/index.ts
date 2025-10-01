@@ -104,7 +104,7 @@ export async function loadShare(dataDir: string, steam: SteamAPI, share: ShareIn
     await migrateShare(dataDir, share)
 
     const db = await sqliteOpen({
-        filename: join(share.sourceFolder, `share_data.db`),
+        filename: join(share.sourceFolder, `panel_share.db`),
         driver: sqlite3.Database
     })
 

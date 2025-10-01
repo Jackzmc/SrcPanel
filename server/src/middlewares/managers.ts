@@ -46,10 +46,7 @@ async function db(fastify: FastifyInstance) {
     const cacheManager = await CacheManager.Create(CACHE_FOLDER)
     fastify.decorate("cache", cacheManager)
     
-    const steam = new SteamAPI()
-    await steam.InitCache(CACHE_FOLDER)
-    await steam.getAppName(550)
-    // await steam.loadAppIdFile(join(CACHE_FOLDER, 'steam_appids.json'))
+    const steam = new SteamAPI(cacheManager)
 
     const db = mysql.createPool({
         socketPath: process.env.MYSQL_SOCKET_PATH,

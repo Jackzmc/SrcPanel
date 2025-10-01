@@ -63,7 +63,8 @@ export default class CacheManager {
                 break
             case "object":
                 type = RecordType.Json
-                value = JSON.stringify(value)
+                // stringify - with support of Set -> []
+                value = JSON.stringify(value, (_key, value) => (value instanceof Set ? [...value] : value))
                 break
             default:
                 throw new Error("Unsupported type " + typeof(value))
