@@ -32,4 +32,4 @@ jobs:
         run: cd server && pnpm lint
 
       - name: Lint UI
-        run: cd ui && pnpm lint
+        run: cd ui && pnpm lint && pnpm tsc

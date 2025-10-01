@@ -6,7 +6,7 @@
     "preview": "vite preview",
     "build": "vite build",
     "serve": "vite",
-    "lint": "eslint"
+    "lint": "eslint && tsc"
   },
   "type": "module",
   "dependencies": {
