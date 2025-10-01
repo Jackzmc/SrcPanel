@@ -56,10 +56,12 @@
   "scripts": {
     "build": "tsc",
     "start": "tsc && node dist/server/src/index.js",
-    "dev": "nodemon -e ts --exec \"pnpm run start || exit 1\""
+    "dev": "nodemon -e ts --exec \"pnpm run start || exit 1\"",
+    "lint": "eslint"
   },
   "type": "module",
   "devDependencies": {
+    "@eslint/js": "^9.36.0",
     "@types/dockerode": "^3.3.44",
     "@types/gamedig": "^5.0.3",
     "@types/jsonwebtoken": "^9.0.10",
@@ -67,7 +69,11 @@
     "@types/steamid": "^2.0.4",
     "@types/tail": "^2.2.3",
     "@types/ws": "^8.18.1",
+    "eslint": "^9.36.0",
+    "eslint-plugin-unused-imports": "^4.2.0",
+    "eslint-typescript": "^1.1.0",
     "tsx": "^4.20.6",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.45.0"
   }
 }

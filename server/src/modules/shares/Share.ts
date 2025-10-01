@@ -32,7 +32,6 @@ export default class Share {
     public name: string
     public sourceFolder: string
     public destinations: ShareDestinations = {}
-    #destinationsGit: Record<string, SimpleGit> = {}
     public appId?: number
     #db: sqlite.Database<sqlite3.Database, sqlite3.Statement>
     #steam: SteamAPI
@@ -40,7 +39,6 @@ export default class Share {
     private validExts?: string[]
     private downloadSources: DownloadSourceRecord
     #description: string
-    #git: SimpleGit
 
     constructor(db: sqlite.Database<sqlite3.Database, sqlite3.Statement>, steam: SteamAPI, shareInfo: Partial<ShareInfo>) {
         this.#id = shareInfo.id!
@@ -185,7 +183,7 @@ export default class Share {
             if(dirent.isFile()) {
                 // Only check the specified extenstions
                 const ext = dirent.name.split(".").pop()
-                if(!ext || this.validExts && !this.validExts.includes(ext)) continue
+                if(!ext || ext == "db" || this.validExts && !this.validExts.includes(ext)) continue
             
                 const addonInfo = await this.getAddonInfo(dirent.name)
                 if(addonInfo) {
@@ -388,7 +386,7 @@ export default class Share {
         if(!dest) throw new Error(`Destination "${destinationKey}" does not exist`)
         
         if(!this.#getFileInfo(this.sourceFolder, filename)) {
-            throw new Error(`File \"${filename}\" does not exist in ${this.sourceFolder}`)
+            throw new Error(`File "${filename}" does not exist in ${this.sourceFolder}`)
         }
         try {
             for(const destPath of dest.paths) {
@@ -413,7 +411,7 @@ export default class Share {
         if(!dest) throw new Error(`Destination "${destinationKey}" does not exist`)
         
         if(!this.#getFileInfo(this.sourceFolder, filename)) {
-            throw new Error(`File \"${filename}\" does not exist in ${this.sourceFolder}`)
+            throw new Error(`File "${filename}" does not exist in ${this.sourceFolder}`)
         }
 
         try {

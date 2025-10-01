@@ -48,7 +48,7 @@ export default class TaskManager {
                 }
                 if(task.NextRunDate && now >= task.NextRunDate) {
                     count++
-                    console.info(`[TaskManager] Running task \"${task.Id}\" [${count}/${tasksPerTick}]`)
+                    console.info(`[TaskManager] Running task "${task.Id}" [${count}/${tasksPerTick}]`)
                     await task.execute() // TODO: error handling?
 
                     if(!task.reschedule()) {
@@ -70,16 +70,16 @@ export default class TaskManager {
         clearInterval(this.#timer)
     }
 
-    register<T = {}>(name: string, fn: TaskFunction<T>, defaultState?: T | undefined) {
+    register<T = object>(name: string, fn: TaskFunction<T>, defaultState?: T | undefined) {
         if(this.get(name) != undefined) throw new Error("Task already registered")
         const task = new DefinedTask<T>(name, fn, defaultState)
-        console.debug(`[TaskManager] Registered task \"${name}\"`)
+        console.debug(`[TaskManager] Registered task "${name}"`)
         this.#tasks.set(name, task)
         return task
     }
 
     /** Creates a new temporarily task */
-    temp<T = {}>(fn: TaskFunction<T>, defaultState?: T | undefined) {
+    temp<T = object>(fn: TaskFunction<T>, defaultState?: T | undefined) {
         return new TempTask<T>(fn, defaultState)
     }
 
@@ -141,7 +141,7 @@ export default class TaskManager {
         if(!(dateOrTime instanceof Date)) {
             dateOrTime = calculateDate(startDate, dateOrTime)
         }
-        console.debug(`[TaskManager] Scheduled \"${task.Id}\" for ${dateOrTime}`)
+        console.debug(`[TaskManager] Scheduled "${task.Id}" for ${dateOrTime}`)
             // Does not repeat, set fn to null
         task.setSchedule(dateOrTime, null)
         this.#schedule.push(task.Id)

@@ -1,17 +1,12 @@
 import SteamID from 'steamid'
 import path from 'path';
 import  { createWriteStream } from 'fs';
-import { readFile } from 'fs/promises'
 import https from 'https';
 import { unlink } from 'fs/promises';
 import { WorkshopItem, SteamUserDetails } from '../../../common-types/Share.js'
 import { EventEmitter } from 'node:events';
 import QuickLRU from 'quick-lru';
 import logger from '../logger.js'
-import { Database, open as sqliteOpen } from 'sqlite'
-import sqlite3 from 'sqlite3';
-import { join } from 'node:path';
-import SQL from 'sql-template-strings';
 import CacheManager from './CacheManager';
 const log = logger.child({ name: "steam" })
 

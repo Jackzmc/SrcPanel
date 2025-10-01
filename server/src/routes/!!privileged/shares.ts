@@ -398,7 +398,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
 
                 const downloadPromises = details.map(detail => {
-                    return new Promise(async(resolve, reject) => {
+                    return new Promise((resolve, reject) => {
                         if(!detail || !detail.file_url) {
                             sendSSE({
                                 state: "DOWNLOADING",

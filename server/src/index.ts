@@ -91,6 +91,7 @@ declare module 'fastify' {
     user?: User,
   }
   // I dont know how to do this properly, its a fucking pain
+  // eslint-disable-next-line -- this works for typescript
   interface Session extends CustomFastifySession {}
 }
 

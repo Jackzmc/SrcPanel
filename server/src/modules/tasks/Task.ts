@@ -1,6 +1,6 @@
 import { getUnixSeconds } from "./util.js"
 
-export type TaskFunction<T = {}> = (state: T|undefined) => Promise<any>|any
+export type TaskFunction<T = object> = (state: T|undefined) => Promise<any>|any
 export type NextDateFunction = (prevRunDate: Date) => Date | null
 
 export class Task<T> {
@@ -98,14 +98,14 @@ export class Task<T> {
 }
 
 let _temp_task_id = 0
-export class TempTask<T = {}> extends Task<T> {
+export class TempTask<T = object> extends Task<T> {
     constructor(handler: TaskFunction<T>, defaultState?: T) {
-        let id = _temp_task_id++
+        const id = _temp_task_id++
         super(`_TEMP${id}`, handler, defaultState)
     }
 }
 
-export class DefinedTask<T = {}> extends Task<T> {
+export class DefinedTask<T = object> extends Task<T> {
     constructor(name: string, handler: TaskFunction<T>, defaultState?: T) {
         super(name, handler, defaultState)
     }

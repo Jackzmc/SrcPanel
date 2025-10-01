@@ -82,10 +82,12 @@ export default class PluginFeature extends Feature implements IAction {
                     return
                 }
             }
+            /* eslint-disable no-fallthrough -- bad check from eslint */
             case GameState.NewGame: {
                 text = "New game started"
                 timestamp = record.campaignStartTime * 1000 // convert to millis
                 break
+            /* eslint-enable no-fallthrough */
             } case GameState.Hibernating:
                 text = "Hibernating"
                 break

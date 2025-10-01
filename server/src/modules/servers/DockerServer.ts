@@ -83,6 +83,7 @@ export default class DockerServer extends Server implements IAction {
                     // weird error of already deleting, ignore
                     if(!err.message.includes("removal of container")) throw err
                 }
+                break
             default:
                 return false
         }

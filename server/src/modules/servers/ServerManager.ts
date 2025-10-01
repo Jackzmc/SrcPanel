@@ -52,8 +52,6 @@ export type ConfigGroupData = ConfigStandaloneGroupData | ConfigDynamicGroupData
 dotenv.config()
 const DebugLivePlugin = process.env.LIVE_PLUGIN_DEBUG != undefined
 
-let _instance: ServerManager
-
 export default class ServerManager {
   // private servers: Record<string, Server> = {}
   private fileShares: Record<string, Share> = {}
@@ -75,6 +73,8 @@ export default class ServerManager {
 
   #groups: Record<string, ServerGroup> = {}
   #actions: Record<string, ServerAction> = {}
+
+  static #instance: ServerManager
   // Maps a server to a specific connection, this assumes there should never be more than one socket per server
 
   constructor(steam: SteamAPI, dataDir: string, configDir: string, configManager: ConfigManager) {
@@ -91,8 +91,7 @@ export default class ServerManager {
         version: process.env.DOCKER_VERSION
       })
     }
-
-    _instance = this
+    ServerManager.#instance = this
   }
 
   public get Docker() {
@@ -100,7 +99,7 @@ export default class ServerManager {
   }
 
   public static get Instance(): ServerManager { 
-    return _instance 
+    return ServerManager.#instance 
   }
 
   public static async isFileIgnored(filepath: string): Promise<boolean> {

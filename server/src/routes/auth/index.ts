@@ -134,7 +134,6 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     fastify.get('/logout', async (req, reply) => {
         await req.session.destroy()
         reply.code(204).send()
-        req.sessionStore
     })
 
     async function deleteSession(sessionStore: SessionStore, sessionId: string) {

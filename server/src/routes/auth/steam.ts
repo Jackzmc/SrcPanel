@@ -1,9 +1,5 @@
-//@ts-nocheck
 import { FastifyInstance, FastifyPluginOptions, FastifyReply, FastifyRequest } from 'fastify';
 import SteamID from 'steamid'
-import FastGeoip from 'fast-geoip'
-import User from '../../modules/users/User.js';
-import { SteamInfo } from '../../../../common-types/Privileges.js';
 import { FirstTimeSetupStage } from '../../../../common-types/Panel.js';
 import { SteamAPIError } from '../../modules/steam.js';
 import { ErrorWithCode } from '../../util.js';
@@ -49,7 +45,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             code,
             message
         }, `[auth/steam] route error`)
-        const returnTo = req.query.return_uri ?? req.query['openid.return_to'] ?? await fastify.config.GetKV("domain", req.headers.host)
+        const returnTo = req.query.return_uri ?? req.query['openid.return_to'] ?? fastify.config.Domain
         const url = new URL(returnTo)
         const prefix = `${url.protocol}//${url.host}`
         const params = new URLSearchParams()
@@ -83,9 +79,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             }
         },
         async handler(req: FastifyRequest<{ Querystring: OpenIDQuery }>, reply: FastifyReply) {
-            const returnTo = req.query.return_uri ?? req.query['openid.return_to'] ?? await fastify.config.GetKV("domain", req.headers.host)
-            const url = new URL(returnTo)
-            const prefix = `${url.protocol}//${url.host}`
+            const returnTo = req.query.return_uri ?? req.query['openid.return_to'] ?? fastify.config.Domain
 
             if(req.query['openid.error']) {
                 throw new RouteError("OPENID_ERROR", req.query['openid.error'])
@@ -116,25 +110,25 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                     const steamid2 = steamid.getSteam2RenderedID()
 
                     // Handle first time setup:
-                    const setupStage = await fastify.config.GetKV<number>("first_time_setup.stage", 0)
-                    if(setupStage == FirstTimeSetupStage.FirstSetupComplete) {
-                        await fastify.authmngr.addAdmin({
-                            authtype: 'steam',
-                            identity: steamid2,
-                            name: userDetails.personaname,
-                            immunity: 10,
-                            codes: ["*"]
-                        })
-                    }
+                    // const setupStage = await fastify.config.GetKV<number>("first_time_setup.stage", 0)
+                    // if(setupStage == FirstTimeSetupStage.FirstSetupComplete) {
+                    //     await fastify.authmngr.addAdmin({
+                    //         authtype: 'steam',
+                    //         identity: steamid2,
+                    //         name: userDetails.personaname,
+                    //         immunity: 10,
+                    //         codes: ["*"]
+                    //     })
+                    // }
                     
 
                     const admin = fastify.authmngr.getAdminExport(steamid2)
                     if(admin) {
                         await fastify.authmngr.loginUser(req, reply, admin, userDetails)
-                        if(setupStage == 1) {
-                            await fastify.config.SetKV("first_time_setup.stage", FirstTimeSetupStage.SteamAdminCreated)
-                        }
-                        return reply.redirect(req.query.return_uri)
+                        // if(setupStage == 1) {
+                        //     await fastify.config.SetKV("first_time_setup.stage", FirstTimeSetupStage.SteamAdminCreated)
+                        // }
+                        return reply.redirect(returnTo)
                     } else {
                         throw new RouteError("UNAUTHORIZED", "Only admins can login to this panel")
                     }
