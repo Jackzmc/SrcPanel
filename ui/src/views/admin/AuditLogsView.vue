@@ -229,7 +229,7 @@
                 </option>
               </select>
             </div>
-            <template v-slot:hint_info>
+            <template #hint_info>
               Fetch data from a certain year
             </template>
           </Field>
@@ -252,10 +252,9 @@ import LogMessage from '@/components/LogMessage.vue';
 import Field from '@/components/Field.vue';
 import debounce from '@/js/debounce';
 import { useRoute, useRouter } from 'vue-router';
-//@ts-ignore
+//@ts-expect-error no types
 import SimpleTypeahead from 'vue3-simple-typeahead';
 import 'vue3-simple-typeahead/dist/vue3-simple-typeahead.css'
-//@ts-ignore
 import InfiniteLoading from "v3-infinite-loading";
 import { APILogData, APILogQueryResult } from '../../../../common-types/Logs';
 

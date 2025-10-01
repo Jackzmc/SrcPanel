@@ -17,7 +17,11 @@ export default defineConfig(
     languageOptions: {
       ecmaVersion: 'latest',
       sourceType: 'module',
-      globals: globals.browser,
+      globals: {
+        ...globals.browser,
+        BUILD_TIMESTAMP: "readonly",
+        "RequestInit": "readonly"
+      },
       parserOptions: {
         parser: typescriptEslint.parser,
       },
@@ -42,7 +46,20 @@ export default defineConfig(
       "vue/multi-word-component-names": "off",
       "semi": "off",
       "vue/no-template-key": "off",
-      "vue/no-v-for-template-key": "off"
+      "vue/no-v-for-template-key": "off",
+      "vue/fist-attribute-linebreak": "off",
+      'vue/require-default-prop': "off",
+      'vue/first-attribute-linebreak': "off",
+      "vue/no-template-shadow": "off", // Useful, but is OK majority of time
+      // TODO: maybe re-enable
+      "vue/html-indent": "off",
+      "vue/max-attributes-per-line": "off",
+      "vue/html-self-closing": "off",
+      "vue/attributes-order": "off",
+      "vue/singleline-html-element-content-newline": "off",
+      "vue/multiline-html-element-content-newline": "off",
+      "vue/html-quotes": "off",
+      "vue/v-on-event-hyphenation": "off"
     },
   }
 )

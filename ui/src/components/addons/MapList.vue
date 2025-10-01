@@ -101,16 +101,14 @@
                     {{ getRelDate(map.downloaded) }}
                   </Icon>
                 </li>
-                <template>
-                  <li>
-                    <Icon icon="clock" v-if="getStats(map)">Played
-                      {{ getRelDate(getStats(map).lastPlayedTime) }}
-                    </Icon>
-                  </li>
-                  <li>
-                    <Icon icon="gamepad" v-if="getStats(map)">Played {{ getStats(map).gamesPlayed.toLocaleString() }} times</Icon>
-                  </li>
-                </template>
+                <li>
+                  <Icon icon="clock" v-if="getStats(map)">Played
+                    {{ getRelDate(getStats(map).lastPlayedTime) }}
+                  </Icon>
+                </li>
+                <li>
+                  <Icon icon="gamepad" v-if="getStats(map)">Played {{ getStats(map).gamesPlayed.toLocaleString() }} times</Icon>
+                </li>
               </ul>
             </div>
             <div :class="cardSizeIndex > 0 ? ['column','is-4','has-text-right'] : []">

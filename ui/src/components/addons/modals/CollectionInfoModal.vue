@@ -132,7 +132,7 @@ import Modal from '@/components/Modal.vue'
 import { useNotification } from "@kyvg/vue3-notification";
 import { computed, ref, onBeforeMount } from 'vue';
 import { LiveRecordCommandResponse } from '../../../../../common-types/Live';
-// @ts-ignore
+// @ts-expect-error no types
 import { Tab, Tabs } from "vue3-tabs-component";
 import { LoadState } from '@/types/global.js';
 
@@ -287,7 +287,7 @@ async function deleteAddon(id: string) {
     if(response.ok) {
       notify({
         type: 'success',
-        text: `Deleted ${addonName}`
+        text: `Deleted ${addonName.value}`
       })
       close(true)
     } else {

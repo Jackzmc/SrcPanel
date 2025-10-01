@@ -19,21 +19,21 @@
     <div :class="['navbar-menu',{'is-active': active}]">
       <div class="navbar-start">
         <!-- TODO: merge as NavBarItem ?-->
-        <template v-for="route in shownRoutes" :key="route.name">
-          <template v-if="!route.meta?.requiresAuth || privUser != undefined">
-            <div v-if="route.children.length > 0" class="navbar-item has-dropdown is-hoverable">
+        <template v-for="navRoute in shownRoutes" :key="navRoute.name">
+          <template v-if="!navRoute.meta?.requiresAuth || privUser != undefined">
+            <div v-if="navRoute.children.length > 0" class="navbar-item has-dropdown is-hoverable">
               <a class="navbar-link">
-                <NavBarLabel :route="route" />
+                <NavBarLabel :route="navRoute" />
               </a>
               <div class="navbar-dropdown is-left" style="width: max-content">
-                <template v-for="child in route.children" :key="child.name">
+                <template v-for="child in navRoute.children" :key="child.name">
                   <hr class="navbar-divider" v-if="child.showDivider">
                   <NavBarItem :route="child" />
                 </template>
               </div>
             </div>
 
-            <NavBarItem v-else :route="route" />
+            <NavBarItem v-else :route="navRoute" />
           </template>
         </template>
       </div>

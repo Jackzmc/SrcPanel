@@ -250,7 +250,7 @@ import { User, PrivilegedUser, PlayerData } from '@/js/User'
 import { useRouter, useRoute } from 'vue-router'
 import { FLAGS, AdminGroup, ReadableAdminData } from '../../../../../common-types/User';
 import FlagList from '@/components/FlagList.vue'
-// @ts-ignore
+// @ts-expect-error no types
 import { Tab, Tabs } from 'vue3-tabs-component'
 import { notify } from '@kyvg/vue3-notification';
 import { request } from '@/js/util';
@@ -320,11 +320,11 @@ const hasRoot = computed(() => {
   return canEdit.value && props.privUser.flags?.includes('z')
 })
 const hoursPlayed = computed(() => {
-  if(!stats) return 0
-  return Math.round(stats.value?.minutes_played as number / 60)
+  if(!stats.value) return 0
+  return Math.round(stats.value.minutes_played as number / 60)
 })
 const playtime = computed(() => {
-  if(!stats) return
+  if(!stats.value) return
   if(hoursPlayed.value > 0) return hoursPlayed.value.toLocaleString()
   return "< 0"
 })

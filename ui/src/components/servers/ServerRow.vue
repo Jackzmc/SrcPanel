@@ -88,20 +88,13 @@ const gameConfig = computed(() => {
 let actionRunning = ref(false)
 
 function copyCommand(event: any) {
-  //@ts-ignore
-  if (document.selection) {
-    // IE
-    //@ts-ignore
-    const range = document.body.createTextRange();
-    range.moveToElementText(event.target);
-    range.select();
-  } else if (window.getSelection) {
+  if(window.getSelection) {
+    const sel = window.getSelection()
+    if(!sel) return
     const range = document.createRange();
     range.selectNode(event.target);
-    //@ts-ignore
-    window.getSelection().removeAllRanges();
-    //@ts-ignore
-    window.getSelection().addRange(range);
+    sel.removeAllRanges();
+    sel.addRange(range);
   }
 }
 

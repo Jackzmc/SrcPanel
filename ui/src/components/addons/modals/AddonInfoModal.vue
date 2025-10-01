@@ -140,7 +140,7 @@ import Modal from '@/components/Modal.vue'
 import { useNotification } from "@kyvg/vue3-notification";
 import { computed, ref, onBeforeMount, onActivated } from 'vue';
 import { formatDate, formatSize, request, restartServer } from '@/js/util.js'
-// @ts-ignore
+// @ts-expect-error no types
 import { Tab, Tabs } from "vue3-tabs-component";
 import { LoadState } from '@/types/global.js';
 

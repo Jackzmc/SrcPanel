@@ -16,7 +16,7 @@
       <div class="columns">
         <div class="column is-6">
           <Field label="Id*">
-            <template v-slot:hint_error v-if="!destId">
+            <template #hint_error v-if="!destId">
               <p class="help has-text-danger"><Icon icon="fa-exclamation-triangle">Required</Icon></p>
             </template>
             <input required :class="['input',{'is-danger': !destId }]" type="text" placeholder="A unique identifier" v-model="destId" />
@@ -80,13 +80,11 @@
 
 <script setup lang="ts">
 import Field from '@/components/Field.vue'
-// @ts-expect-error
-import { Tab, Tabs } from 'vue3-tabs-component'
 import ModalCard from '@/components/ModalCard.vue';
 import { ShareDestination, ShareInfo } from '../../../../../common-types/Share.js';
 import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue';
 import { updatedDiff } from 'deep-object-diff'
-// @ts-expect-error
+// @ts-expect-error no types
 import BulmaTagsInput from '@creativebulma/bulma-tagsinput';
 import { request } from '@/js/util.js';
 

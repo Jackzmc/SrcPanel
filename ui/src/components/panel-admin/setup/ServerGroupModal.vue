@@ -6,7 +6,7 @@
           <div class="columns">
             <div class="column is-6">
               <Field label="Id*">
-                <template v-slot:hint_error v-if="!group.id">
+                <template #hint_error v-if="!group.id">
                   <p class="help has-text-danger"><Icon icon="fa-exclamation-triangle">Required</Icon></p>
                 </template>
                 <input required :class="['input',{'is-danger': !group.id }]" type="text" placeholder="A unique identifier" v-model="group.id" />
@@ -20,7 +20,7 @@
           </div>
           <Field label="Type*">
             <div :class="['select']">
-              <select required v-model="group.type">
+              <select required v-model="group.game">
                 <option value="left4dead2">Left 4 Dead 2</option>
                 <option value="source">Generic Source Engine</option>
                 <option value="minecraft">Minecraft</option>
@@ -56,7 +56,7 @@
         </Tab>
       </Tabs>
     </form>
-    <template v-slot:footer>
+    <template #footer>
       <nav class="level">
         <div class="level-left">
           <div class="level-item">
@@ -79,12 +79,12 @@
 
 <script setup lang="ts">
 import Field from '@/components/Field.vue'
-// @ts-ignore
+// @ts-expect-error no types
 import { Tab, Tabs } from 'vue3-tabs-component'
 import ModalCard from '@/components/ModalCard.vue';
 import { computed, onMounted, ref, watch } from 'vue';
 import { GroupInfo, ServerAction, ServerInfo } from '../../../../../common-types/Server.js';
-// @ts-expect-error
+// @ts-expect-error no types
 import BulmaTagsInput from '@creativebulma/bulma-tagsinput';
 import { request } from '@/js/util.js';
 import { updatedDiff } from 'deep-object-diff';

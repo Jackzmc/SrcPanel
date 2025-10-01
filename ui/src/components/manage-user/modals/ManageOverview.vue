@@ -205,16 +205,14 @@
 </template>
 
 <script setup lang='ts'>
-import { ref, onMounted, computed, watch, onBeforeMount } from 'vue';
-import { User, PrivilegedUser, PlayerData } from '@/js/User'
+import { ref, computed, watch, onBeforeMount } from 'vue';
+import { PrivilegedUser, PlayerData } from '@/js/User'
 import { useRouter, useRoute } from 'vue-router'
 import { AdminData, UserProfileData, AnalysisData, UserNameEntry } from '../../../../../common-types/User';
 import { notify } from '@kyvg/vue3-notification';
 import SteamID from 'steamid';
 import { formatDate, getRelDate, request, getErrorReason } from '@/js/util';
 import Field from '@/components/Field.vue';
-//@ts-expect-error
-import { Tab } from 'vue3-tabs-component';
 import { convertSnakeToHuman } from '../../../js/util';
 import { FetchData, LoadState, GetDefaultFetchData } from '../../../types/global';
 import List from '@/components/List.vue';
@@ -297,7 +295,7 @@ watch(() => route.params.tab, async (tab) => {
 })
 
 async function setProfileData() {
-  profile.value.loadState == LoadState.Updating
+  profile.value.loadState = LoadState.Updating
   const response = await request(`/api/users/${props.user.steamid}/profile`, {
     method: "POST",
     headers: {
@@ -305,7 +303,7 @@ async function setProfileData() {
     },
     body: JSON.stringify(profile.value.data)
   })
-  profile.value.loadState == LoadState.Success
+  profile.value.loadState = LoadState.Success
   profile.value.editing = false
   if(response?.ok) {
     const json = await response.json()

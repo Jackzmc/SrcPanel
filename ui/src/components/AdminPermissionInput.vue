@@ -24,7 +24,7 @@ import { UserPrivilegeCodes } from '../../../common-types/Privileges'
 import Field from '@/components/Field.vue'
 import { ref, computed } from 'vue'
 
-const VALID_CODE_REGEX = new RegExp(/^([a-z_0-9]+)(\.([a-z_\*0-9]+))+$/)
+const VALID_CODE_REGEX = new RegExp(/^([a-z_0-9]+)(\.([a-z_*0-9]+))+$/)
 
 const props = defineProps<{
   modelValue: string[],

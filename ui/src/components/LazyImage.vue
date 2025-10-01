@@ -29,28 +29,22 @@ const elem = ref()
 let image = ref()
 const startLoading = ref(false)
 let loadState = ref<LoadState>(LoadState.Loading)
-let observer: IntersectionObserver
-
-// watch(() => image.value?.complete, () => {
-//   console.log(image.value, image.value?.complete, loadState.value)
-//   if(image.value?.complete && loadState.value == LoadState.Loading)
-//     loadState.value = LoadState.Success
-// })
+let viewObserver: IntersectionObserver|undefined = undefined
 
 onMounted(() => {
-  startLoading.value = !Boolean(props.observer)
+  startLoading.value = !props.observer
   if(props.observer) {
-    observer = new IntersectionObserver((entries) => {
+    viewObserver = new IntersectionObserver((entries) => {
       const [entry] = entries
       if(entry.isIntersecting) {
         startLoading.value = true
-        observer.disconnect()
+        viewObserver!.disconnect()
       }
     }, {
       rootMargin: "0px",
       threshold: 0.2,
     });
-    observer.observe(elem.value)
+    viewObserver.observe(elem.value)
   }
 })
 
@@ -60,6 +54,6 @@ function onLoad() {
 }
 
 onUnmounted(() => {
-  if(observer) observer.disconnect()
+  if(viewObserver) viewObserver.disconnect()
 })
 </script>

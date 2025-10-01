@@ -71,7 +71,7 @@
       <div class="box" v-else>
         <h4 class="title is-4">Share</h4>
         <p class="subtitle">* marks a required field</p>
-        <Field label="Name*" :info="id ? `Id: ${id}` : ''">
+        <Field label="Name*" :info="shareId ? `Id: ${shareId}` : ''">
           <input type="text" class="input" placeholder="Name of the share" v-model="share.name" required>
         </Field>
         <Field label="Share Source Folder*" info="Where all addon files are stored">
@@ -114,7 +114,7 @@
 import Field from '@/components/Field.vue'
 import { ref, computed, onBeforeMount, watch, onMounted } from 'vue';
 import { ShareInfo, DownloadSource, DownloadSources, ShareDestination } from '../../../../common-types/Share';
-//@ts-expect-error
+//@ts-expect-error no types
 import Vue3TagsInput from 'vue3-tags-input';
 import Autocomplete from '../Autocomplete.vue';
 
@@ -140,8 +140,8 @@ let appids = ref<{ id: string, label: string}[]>()
 
 let selectedDest = ref<ShareDestination>()
 
-const id = computed(() => {
-  return share.value.name?.toLocaleLowerCase().trim().replace(/\s/g, '-').replace(/^[^a-zA-Z0-9\-]/g, '') ?? ""
+const shareId = computed(() => {
+  return share.value.name?.toLocaleLowerCase().trim().replace(/\s/g, '-').replace(/^[^a-zA-Z0-9-]/g, '') ?? ""
 })
 
 const appTitle = computed(() => {
@@ -180,7 +180,7 @@ function onChangeDestId() {
   share.value.destinations![selectedDestId.value] = selectedDest.value!
 }
 watch(() => selectedDestId.value, (cur, prev) => {
-  if(!cur || !selectedDest || !prev) return
+  if(!cur || !selectedDest.value || !prev) return
   prevDestId = prev
 })
 

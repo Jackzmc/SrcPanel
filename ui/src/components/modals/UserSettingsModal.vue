@@ -103,7 +103,7 @@ import { PrivilegedUser } from "@/js/User";
 import { formatDate, getRelDate, request, sleep } from "@/js/util";
 import { ref, watch, computed, onBeforeMount, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
-// @ts-ignore
+// @ts-expect-error no types
 import { Tab, Tabs } from "vue3-tabs-component";
 import { SessionData, ProviderConnectionData } from '../../../../common-types/User';
 import ProviderCard from "@/components/oauth/ProviderCard.vue";

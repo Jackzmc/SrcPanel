@@ -178,7 +178,7 @@ const debounceFetchNotes = debounce(fetchNotes, 800)
 
 function computeRating(content: string) {
   content = content.toLowerCase()
-    .replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,"")
+    .replace(/[.,/#!$%^&*;:{}=\-_`~()]/g,"")
     .replace(/\s{2,}/g," ");
 
   // Ideally analyzeOptions's extraWords should catch these, but its not:

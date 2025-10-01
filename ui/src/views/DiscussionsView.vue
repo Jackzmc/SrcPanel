@@ -58,7 +58,7 @@
         <div class="list-item" v-for="(user, i) in selectedDiscussion.responses.users" :key="i">
           <div class="list-item-image">
             <figure class="image is-32x32" :data-tooltip="user.name">
-                <LazyImage LazyImage alt="User's avatar" img-class="is-rounded" :src="user.avatarUrl" placeholder-src="/img/steam_default_avatar.png" />
+                <LazyImage alt="User's avatar" img-class="is-rounded" :src="user.avatarUrl" placeholder-src="/img/steam_default_avatar.png" />
               </figure>
           </div>
           <div class="list-item-content">

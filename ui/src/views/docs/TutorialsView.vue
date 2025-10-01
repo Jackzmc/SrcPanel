@@ -55,7 +55,7 @@ import { ref, onMounted, computed, onBeforeMount, watchEffect, watch } from 'vue
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { useRoute, useRouter } from 'vue-router';
 import { request } from '@/js/util.js';
-//@ts-expect-error
+//@ts-expect-error missing types
 import { marked } from 'marked'
 import ActionNote from '@/components/ActionNote.vue';
 

@@ -6,7 +6,7 @@
         <button class="delete"></button>
         Steam servers are currently offline, most likely due to weekly scheduled maintenance. You won't be able to join servers until they come back online. <a href="https://steamstat.us/">Check the status live at steamstat.us</a>
       </div>
-      <div v-if="noticeText" :class="['notification', meta?.settings.notice?.class]" >
+      <div v-if="noticeText" :class="['notification', meta?.settings.notice?.class]">
         <button class="delete"></button>
         <span v-html="noticeText" />
       </div>
@@ -62,7 +62,7 @@ import { computed, ref } from 'vue'
 import Servers from '../components/servers/Servers.vue'
 import { PanelMetaInfo } from '../../../common-types/Panel.js';
 
-//@ts-expect-error
+//@ts-expect-error missing types
 import { marked } from 'marked'
 import { PrivilegedUser } from '@/js/User.js';
 

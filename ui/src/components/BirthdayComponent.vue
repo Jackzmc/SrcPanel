@@ -10,7 +10,7 @@
 
 <script setup lang="ts">
 import { onMounted } from 'vue';
-//@ts-expect-error
+//@ts-expect-error missing types
 import confetti from "canvas-confetti"
 const emit = defineEmits(["close"])
 

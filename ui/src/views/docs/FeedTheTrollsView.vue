@@ -24,7 +24,7 @@
         <br>Use the <b>fta</b> command to apply one of these trolls:
         <br>
       </p>
-      <div v-for="(list, category) in trolls" :key="category">
+      <div v-for="(list, category) in trollList" :key="category">
         <h4 class="title is-4">{{category}}</h4>
         <ul>
           <li v-for="(troll, i) in list" :key="troll.name" >
@@ -86,7 +86,7 @@ import { useRoute, useRouter } from 'vue-router'
 
 const LAST_UPDATED = new Date(Number(BUILD_TIMESTAMP))
 
-let trolls = ref<Record<string,any>>({})
+let trollList = ref<Record<string,any>>({})
 let combos = ref<Record<string,any>>({})
 let modal = ref<{content?: string, troll?: any}>({})
 
@@ -113,7 +113,7 @@ function getComboTooltip(trollName: string) {
 }
 
 function getTroll(trollName: string) {
-  for(const combo of Object.values(trolls.value)) {
+  for(const combo of Object.values(trollList.value)) {
     for(const troll of combo) {
       if(trollName.startsWith(troll.name.toLowerCase())) {
         return troll
@@ -153,9 +153,9 @@ onMounted(() => {
     fetch(`../data/ftt.json?t=${LAST_UPDATED}`)
     .then(response => response.json())
     .then(json => {
-      trolls.value = json
+      trollList.value = json
       combos.value = json._Combos_
-      delete trolls.value._Combos_
+      delete trollList.value._Combos_
     })
     .catch(err => {
         console.error('Could not fetch trolls, network error.', err)

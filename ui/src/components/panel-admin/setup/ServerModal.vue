@@ -5,7 +5,7 @@
       <div class="columns">
         <div class="column is-6">
           <Field label="Id*">
-            <template v-slot:hint_error v-if="!server.id">
+            <template #hint_error v-if="!server.id">
               <p class="help has-text-danger"><Icon icon="fa-exclamation-triangle">Required</Icon></p>
             </template>
             <input required :class="['input',{'is-danger': !server.id }]" type="text" placeholder="A unique identifier" v-model="server.id" />
@@ -20,7 +20,7 @@
       <div class="columns">
         <div class="column is-6">
           <Field label="IP Address / Domain*" :info="server.host">
-            <template v-slot:hint_error v-if="!server.ip">
+            <template #hint_error v-if="!server.ip">
               <p class="help has-text-danger"><Icon icon="fa-exclamation-triangle">A valid domain or IP address is required</Icon></p>
             </template>
             <input required :class="['input',{'is-danger': !server.ip }]" type="text" placeholder="127.0.0.1, localhost, your.domain" v-model="server.ip" @input="onAddrChangedDebounce" />
@@ -28,7 +28,7 @@
         </div>
         <div class="column is-6">
           <Field label="Port*">
-            <template v-slot:hint_error v-if="!server.port">
+            <template #hint_error v-if="!server.port">
               <p class="help has-text-danger"><Icon icon="fa-exclamation-triangle">A valid port is required</Icon></p>
             </template>
             <input required :class="['input',{'is-danger': !server.port }]" type="number" placeholder="27015" v-model="server.port" @input="onAddrChangedDebounce" />
@@ -123,7 +123,7 @@
       </table>
     </Tab>
   </Tabs>
-  <template v-slot:footer>
+  <template #footer>
       <nav class="level">
         <div class="level-left">
           <div class="level-item">
@@ -146,12 +146,12 @@
 
 <script setup lang="ts">
 import Field from '@/components/Field.vue'
-// @ts-ignore
+// @ts-expect-error no types
 import { Tab, Tabs } from 'vue3-tabs-component'
 import ModalCard from '@/components/ModalCard.vue';
 import { computed, onMounted, ref, watch } from 'vue';
 import { ServerAction, ServerData, ServerInfo } from '../../../../../common-types/Server.js';
-// @ts-expect-error
+// @ts-expect-error no types
 import BulmaTagsInput from '@creativebulma/bulma-tagsinput';
 import { request } from '@/js/util.js';
 import { LoadState } from '@/types/global.js';

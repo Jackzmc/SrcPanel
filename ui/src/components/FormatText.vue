@@ -10,10 +10,10 @@
 
 <script setup lang="ts">
 import UserComponent from '@/components/UserComponent.vue'
-import { computed, ref, onBeforeMount, watch, useSlots } from 'vue';
+import { ref, onBeforeMount, watch } from 'vue';
 import { APIUser } from '../../../common-types/User';
 
-//@ts-expect-error
+//@ts-expect-error missing types
 import { marked } from 'marked';
 marked.use({renderer:{
   image(src: string, title: string, alt: string) {

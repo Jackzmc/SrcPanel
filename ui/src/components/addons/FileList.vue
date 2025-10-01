@@ -170,7 +170,7 @@ let error = ref<string>()
 let hasAnyWorkshop = ref(false)
 let sort = ref<{
   id: string,
-  func: Function,
+  func: (a: object, b: object) => number,
   descending: boolean
 } | undefined>()
 
@@ -243,7 +243,7 @@ function setSort(id: string, column: string) {
     return a[column][id] - b[column][id]
   })
 }
-function setSortFunc(id: string, sortFunc: Function) {
+function setSortFunc(id: string, sortFunc: (a: object, b: object) => number) {
   if(sort.value && (!sort.value.descending || sort.value.id != id)) sort.value = undefined
   else if(sort.value) {
     sort.value.descending = false
@@ -266,7 +266,7 @@ function filterAndSort() {
       if(a.collection && a.children.length > 0) a = a.children[0]
       if(b.collection && b.children.length > 0) b = b.children[0]
 
-      const { id, descending, func } = sort.value! as { column: string, id: string, descending: boolean, func: Function }
+      const { id, descending, func } = sort.value! as { column: string, id: string, descending: boolean, func: (a: object, b: object) => number }
       if(descending) {
         return func(b, a)
       } else {

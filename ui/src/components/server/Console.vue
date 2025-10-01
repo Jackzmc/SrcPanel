@@ -141,7 +141,8 @@ async function getCommands(filename: string) {
       if(command.startsWith("#")) continue
       validCommands.value.add(command)
     }
-  } catch(err) {
+  } catch(_) {
+    // continue regardless
   }
 }
 

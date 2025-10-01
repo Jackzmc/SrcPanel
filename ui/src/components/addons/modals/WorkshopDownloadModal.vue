@@ -226,7 +226,7 @@ const isAddonValid = computed(() => {
 })
 
 async function verifyLink(test: any) {
-  inputState.value == InputState.Idle
+  inputState.value = InputState.Idle
   const match = test.target.value.match(WORKSHOP_LINK_REGEX)
   if(match) {
     workshopId.value = match[2]

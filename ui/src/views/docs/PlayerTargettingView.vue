@@ -45,8 +45,7 @@
         The <b>first number</b> is their user id. To use it, simply use <b>#NUMBERHERE</b> <em>(in this example, #20)</em> in replacement of
         their name. User ID won't change until the user disconnects from the server, or a new map starts.
       </p>
-        <p>Example: <code>sm_slay #20</code>
-      </p>
+      <p>Example: <code>sm_slay #20</code> </p>
     </div>
     <br>
 </div>

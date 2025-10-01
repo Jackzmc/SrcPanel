@@ -100,7 +100,7 @@ import { ref, onMounted, computed, onBeforeMount, watch, onBeforeUnmount } from 
 import { User, PrivilegedUser, PlayerData } from '@/js/User'
 import { useRouter, useRoute } from 'vue-router'
 import { AdminData } from '../../../../../common-types/User';
-// @ts-ignore
+// @ts-expect-error no type
 import { Tab, Tabs } from 'vue3-tabs-component'
 import { notify } from '@kyvg/vue3-notification';
 
@@ -182,7 +182,7 @@ onMounted(async () => {
 })
 onBeforeUnmount(() => {
   document.removeEventListener('keydown', closeModal)
-}),
+})
 
 
 

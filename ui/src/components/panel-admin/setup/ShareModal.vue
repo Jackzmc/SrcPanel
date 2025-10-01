@@ -10,7 +10,7 @@
     <div class="columns">
       <div class="column is-6">
         <Field label="Id*">
-          <template v-slot:hint_error v-if="!share.id">
+          <template #hint_error v-if="!share.id">
             <p class="help has-text-danger"><Icon icon="fa-exclamation-triangle">Required</Icon></p>
           </template>
           <input required :class="['input',{'is-danger': !share.id }]" type="text" placeholder="A unique identifier" v-model="share.id" />
@@ -23,7 +23,7 @@
       </div>
     </div>
     <Field label="Source Directory Path*">
-      <template v-slot:hint_error v-if="!share.sourceFolder">
+      <template #hint_error v-if="!share.sourceFolder">
         <p class="help has-text-danger"><Icon icon="fa-exclamation-triangle">Required</Icon></p>
       </template>
       <input required :class="['input',{'is-danger': !share.sourceFolder}]" type="text" placeholder="/home/steam/content/addons" v-model="share.sourceFolder" />
@@ -65,7 +65,7 @@
 <template v-if="selectedTab === 'destinations'">
   <ShareDestinationModal :share="share" @close="selectTab('general')" />
 </template>
-  <template v-slot:buttons>
+  <template #buttons>
     <button class="button is-success has-text-white" :disabled="!canSubmit">Add Share</button>
     <button class="button" @click="emit('close')">Cancel</button>
   </template>
@@ -78,7 +78,7 @@ import ModalCard from '@/components/ModalCard.vue';
 import ShareDestinationModal from '@/components/panel-admin/setup/ShareDestinationModal.vue'
 import { computed, onMounted, ref, watch } from 'vue';
 import { ShareInfo } from '../../../../../common-types/Share.js';
-// @ts-expect-error
+// @ts-expect-error no tags
 import BulmaTagsInput from '@creativebulma/bulma-tagsinput';
 import { DownloadSource } from '../../../../../common-types/Share';
 

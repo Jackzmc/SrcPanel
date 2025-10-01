@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-empty-object-type */
+
 import Vue, { VNode } from 'vue'
 
 declare global {

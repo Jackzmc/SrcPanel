@@ -38,11 +38,8 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, markRaw, Raw, shallowRef, watch, computed } from 'vue';
-import { ServerGroup, ServerInfo } from '../../../../common-types/Server.js';
-import { request } from '@/js/util.js';
+import { onMounted, ref, Raw, shallowRef, watch, computed } from 'vue';
 import { PrivilegedUser } from '@/js/User.js';
-import { ShareInfo } from '../../../../common-types/Share.js';
 import ServersTab from '@/components/panel-admin/setup/tabs/ServersTab.vue'
 import ServerGroupsTable from '@/components/panel-admin/setup/tabs/ServerGroupsTable.vue'
 import SharesTable from '@/components/panel-admin/setup/tabs/SharesTable.vue'

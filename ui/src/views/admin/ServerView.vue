@@ -627,7 +627,7 @@ const DIFFICULTY_NAME: { [key in GameDifficulty]?: string } = {
   [GameDifficulty.Expert]: "Expert",
 }
 
-const TABS: Record<string, { name: string, tag?: string, permission?: string, enabled?: Function }> = {
+const TABS: Record<string, { name: string, tag?: string, permission?: string, enabled?: () => boolean | undefined }> = {
   overview: {
     name: "Overview",
   },
@@ -869,7 +869,7 @@ async function fetchServersCompact() {
 }
 
 async function kickPlayer(player: LiveClient) {
-  const reason = prompt(`Enter a reason to kick \"${player.name}\":`)
+  const reason = prompt(`Enter a reason to kick "${player.name}":`)
   if(!reason) {
     return notify({
       type: "warning",

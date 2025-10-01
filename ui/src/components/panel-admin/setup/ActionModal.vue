@@ -57,7 +57,7 @@ import Field from '@/components/Field.vue'
 import { computed, onMounted, ref, watch } from 'vue';
 import { ServerAction } from '../../../../../common-types/Server.js';
 import { updatedDiff } from 'deep-object-diff';
-// @ts-ignore
+// @ts-expect-error no types
 import { Tab, Tabs } from 'vue3-tabs-component'
 
 const emit = defineEmits(["close", "save"])
@@ -70,6 +70,7 @@ let action = ref<ServerAction>( {
   description: "",
   command: "",
   isHidden: false,
+  showWhen: "any"
 })
 let command = ref<{ namespace: string, command: string, namespaceSelect: string }>( {
   namespace: "default",

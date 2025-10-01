@@ -42,7 +42,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, onBeforeMount, ref } from "vue";
 import UserComponent from "@/components/UserComponent.vue";
 import { PrivilegedUser } from "@/js/User.js";
 const emit = defineEmits(["set-filter", "redact-id"]);
@@ -89,10 +89,21 @@ const chatMessage = computed(() => {
   if(props.highlightRegex) message = message.replace(props.highlightRegex, '<b>$1</b>')
   return message
 })
-const messagePieces = computed(() => {
+interface Piece {
+  content: string,
+  LMatch?: boolean,
+  steamid?: string,
+  user?: { name: string, steamid: string },
+  type?: PieceType
+}
+type PieceType = "client" | "target" | undefined
+const messagePieces = ref<Piece[]>()
+
+
+onBeforeMount(() => {
   if(!props.log.message || props.log.type === "CHAT") return []
 
-  const pieces = [];
+  const pieces: Piece[] = [];
   let lPieceCount = 0
   let index = 0;
   for (let i = 0; i < 2; i++) {
@@ -105,7 +116,7 @@ const messagePieces = computed(() => {
         content: prevSlice
       });
 
-      let type, user
+      let type: PieceType = undefined, user
       let [, name, steamid] = match
 
       if((steamid === "BOT" && i === 0) || props.log.client.steamid === steamid) {
@@ -137,7 +148,6 @@ const messagePieces = computed(() => {
   let message = props.log.message.slice(index)
   if(props.highlightRegex) message = message.replace(props.highlightRegex, "<b>$1</b>")
   pieces.push({ content: message });
-  return pieces;
-});
-
+  messagePieces.value = pieces
+})
 </script>

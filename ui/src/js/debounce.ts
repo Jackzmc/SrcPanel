@@ -1,8 +1,9 @@
-export default function (callback: Function, delay=300) {
+type Callback = () => void
+export default function (callback: Callback, delay=300) {
   let timeout: number
   return (...args: any[]) => {
       clearTimeout(timeout)
-      //@ts-ignore next-line
+      /* eslint-disable */
       const context = this
       timeout = setTimeout(() => callback.apply(context, args), delay)
   }

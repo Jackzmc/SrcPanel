@@ -66,7 +66,3 @@
     </div>
   </div>
 </template>
-
-<script setup lang="ts">
-const LAST_UPDATED = new Date(Number(BUILD_TIMESTAMP))
-</script>

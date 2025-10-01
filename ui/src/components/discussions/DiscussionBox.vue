@@ -46,7 +46,7 @@
       <div class="columns is-gapless is-mobile" v-if="discuss.responses.users">
         <div class="column is-narrow" v-for="(user, i) in discuss.responses.users.slice(0, MAX_DISCUSSION_AVATARS)" :key="i">
           <figure class="image is-32x32" :data-tooltip="user.name">
-              <LazyImage LazyImage alt="User's avatar" img-class="is-rounded" :src="user.avatarUrl"
+              <LazyImage alt="User's avatar" img-class="is-rounded" :src="user.avatarUrl"
                 placeholder-src="/img/steam_default_avatar.png" />
           </figure>
         </div>
@@ -97,7 +97,7 @@ const isSelection = computed(() => {
 })
 
 const urlTitle = computed(() => {
-  return discuss.value.title.toLocaleLowerCase().trim().replace(/\s/g,'-').replace(/[^a-zA-Z0-9\-]/g,'')
+  return discuss.value.title.toLocaleLowerCase().trim().replace(/\s/g,'-').replace(/[^a-zA-Z0-9-]/g,'')
 })
 
 const props = defineProps<{

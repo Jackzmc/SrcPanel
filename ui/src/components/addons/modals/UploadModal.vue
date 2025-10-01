@@ -160,7 +160,7 @@ async function startUpload() {
     uploadState.value = 2
     notify({
       type: "success",
-      text: `Uploaded \"${filename.value}\"`
+      text: `Uploaded "${filename.value}"`
     })
     emit("refresh")
   } else {

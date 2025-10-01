@@ -29,7 +29,11 @@
       <p>In addition, you can filter only servers of a certain group with <code>@groupid</code> or <code>@groupname</code>. (no spaces)</p>
     </div>
   </div>
-  <template #buttons><!-- hide buttons, need non-empty template: --><template /></template>
+  <template #buttons>
+    <!-- eslint-disable -- want to hide buttons, needs a non empty template section. -->
+    <template />
+    <!-- eslint-enable -->
+  </template>
 </ModalCard>
 <div class="container">
   <div class="columns is-multiline">
@@ -47,7 +51,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="action,i in notification.errors" :key="i">
+          <tr v-for="action,j in notification.errors" :key="j">
             <td>{{ action.groupId }}/{{ action.serverId }}</td>
             <td>{{ action.code }}</td>
             <td>{{ action.message }}</td>
@@ -307,7 +311,7 @@ const selectedServers = computed(() => {
   return serverList.value.filter(s => s.checked)
 })
 
-const SEARCH_REGEX_GROUP = new RegExp(/@([a-zA-Z0-9\-]+)?/)
+const SEARCH_REGEX_GROUP = new RegExp(/@([a-zA-Z0-9-]+)?/)
 
 const filteredSortedServers = computed(() => {
   let result = serverList.value
@@ -525,7 +529,7 @@ async function fetchServers(compact = false) {
     } else if(response.headers.get("Content-Type")?.startsWith("application/json")) {
       const json = await response.json()
       refreshingServers.value = false
-      refreshError.value = `Server returned error \"${json.message}\" code ${json.error}`
+      refreshError.value = `Server returned error "${json.message}" code ${json.error}`
     } else {
       refreshingServers.value = false
       refreshError.value = `Server returned an error: ${response.status} ${response.statusText}`

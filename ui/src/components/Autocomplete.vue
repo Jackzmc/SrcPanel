@@ -24,15 +24,15 @@ const props = withDefaults(defineProps<{
   modelValue: any,
   inputClass?: string,
   placeholder?: string
-  minLength: number
+  minLength?: number
   items: {id: string, label: string}[]
 }>(), { minLength: 2 })
 const emit = defineEmits(['update:modelValue'])
 let textInput = ref<string>()
 let filteredItems = ref<{id: string, label: string}[]>([])
-function onInput(event: any) {
+function onInput() {
   if(!textInput.value) return
-  const input = event.target.value.toLocaleLowerCase().trim()
+  const input = textInput.value.toLocaleLowerCase().trim()
   if(input.length < props.minLength) return
   filteredItems.value = props.items
     .filter(item => item.label.toLowerCase().includes(input))

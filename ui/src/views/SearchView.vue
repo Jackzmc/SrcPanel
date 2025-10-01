@@ -79,14 +79,14 @@
       <template v-if="filteredRoutes.length > 0">
       <h4 class="title is-4 has-text-centered">Pages</h4>
       <div class="columns is-multiline">
-        <router-link  v-for="route in filteredRoutes" :to="route.path" class="column is-6">
+        <router-link v-for="pgRoute in filteredRoutes" :key="pgRoute.path" :to="pgRoute.path" class="column is-6">
           <div class="card">
             <header class="card-header">
-              <NavBarLabel :route="route" class="card-header-title"  />
+              <NavBarLabel :route="pgRoute" class="card-header-title"  />
             </header>
             <div class="card-content has-text-left">
-              <p>{{ route.meta.description }}</p>
-              <p><code>{{ route.path }}</code></p>
+              <p>{{ pgRoute.meta.description }}</p>
+              <p><code>{{ pgRoute.path }}</code></p>
             </div>
           </div>
         </router-link>

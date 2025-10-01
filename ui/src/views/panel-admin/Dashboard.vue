@@ -35,10 +35,10 @@
 import { PrivilegedUser } from "@/js/User";
 import { request } from "@/js/util";
 import { notify } from "@kyvg/vue3-notification";
-import { ref, computed, onBeforeMount, onMounted, onUnmounted, defineAsyncComponent, onActivated, onDeactivated } from "vue"
+import { ref, computed, onMounted, defineAsyncComponent, onActivated, onDeactivated } from "vue"
 import { HealthReport, UpdateState } from "../../../../common-types/Panel.js";
 import ConfigEditor from "@/components/panel-admin/ConfigEditor.vue";
-//@ts-ignore
+//@ts-expect-error missing type
 import { Tab, Tabs } from 'vue3-tabs-component'
 import SharesEditor from "@/components/panel-admin/ShareEditor.vue";
 const JsonConfigEditor = defineAsyncComponent(() => import("@/components/panel-admin/JsonConfigEditor.vue"))

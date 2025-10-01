@@ -341,7 +341,7 @@ async function save() {
     if(isNew.value) {
       router.push({ name: "discuss", params: {
         id: Number(id),
-        title: discuss.value.title.toLocaleLowerCase().trim().replace(/\s/g,'-').replace(/[^a-zA-Z_\-]/g,'-')} })
+        title: discuss.value.title.toLocaleLowerCase().trim().replace(/\s/g,'-').replace(/[^a-zA-Z_-]/g,'-')} })
     } else {
       router.push({ name: "discuss" })
     }
@@ -350,7 +350,7 @@ async function save() {
 }
 
 function saveText(field: keyof APIDiscussionBase, event: any) {
-  //@ts-ignore stupid indexing by a string
+  //@ts-expect-error annoying index as string
   discuss.value[field] = event.target.innerText.trim() ?? ""
   event.target.blur()
 }
