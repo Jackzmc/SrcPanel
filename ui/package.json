@@ -74,31 +74,6 @@
     "vite-plugin-vue-devtools": "^8.0.2",
     "vue-eslint-parser": "^10.2.0"
   },
-  "eslintConfig": {
-    "root": true,
-    "env": {
-      "node": true
-    },
-    "extends": [
-      "plugin:vue/essential",
-      "@vue/typescript"
-    ],
-    "parserOptions": {
-      "parser": "@typescript-eslint/parser"
-    },
-    "rules": {
-      "vue/multi-word-component-names": "off",
-      "semi": "off",
-      "vue/no-template-key": "off",
-      "vue/no-v-for-template-key": "off"
-    }
-  },
-  "browserslist": [
-    "> 1%",
-    "last 2 versions",
-    "not dead",
-    "not ie 11"
-  ],
   "gitHooks": {
     "pre-commit": "lint-staged"
   },
