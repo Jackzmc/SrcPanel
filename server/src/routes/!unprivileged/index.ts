@@ -11,19 +11,25 @@ import readline from 'readline';
 
 
 async function loadSentiments(configFolder: string) {
-    const filename = path.join(configFolder, "sentiment-words.csv")
-    const fileStream = createReadStream(filename);
-    const rl = readline.createInterface({
-        input: fileStream,
-        crlfDelay: Infinity
-    });
+    try {
+        const filename = path.join(configFolder, "sentiment-words.csv")
+        const fileStream = createReadStream(filename);
+        const rl = readline.createInterface({
+            input: fileStream,
+            crlfDelay: Infinity
+        });
 
-    const words = {}
-    for await (const line of rl) {
-        const [word, value] = line.split(",")
-        words[word] = Number(value)
+        const words = {}
+        for await (const line of rl) {
+            const [word, value] = line.split(",")
+            words[word] = Number(value)
+        }
+        return words
+    } catch(err) {
+        // Ignore if file doesn't exist
+        if(err.code !== "ENOENT") throw err
+        return []
     }
-    return words
 }
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions)  {
