@@ -211,7 +211,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             return { activities: rows}
         }
 
-        return reply.code(403).send({
+        return reply.code(404).send({
             error: "SERVER_LACKS_ACTIVITY",
             message: "Server does not support recent activity logs"
         })
