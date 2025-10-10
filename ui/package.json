@@ -40,6 +40,7 @@
     "sugar": "^2.0.6",
     "v3-infinite-loading": "^1.3.2",
     "vanilla-jsoneditor": "^0.18.13",
+    "vite-plugin-checker": "^0.11.0",
     "vue": "^3.5.22",
     "vue-draggable-next": "^2.3.0",
     "vue-router": "^4.5.1",
