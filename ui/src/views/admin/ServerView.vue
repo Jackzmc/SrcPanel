@@ -1057,7 +1057,7 @@ function sendWSPayload(payload: ClientOutPayload) {
   ws.value.send(JSON.stringify(payload))
 }
 function connectWS() {
-  const protocol = window.location.protocol == "http" ? "ws" : "wss"
+  const protocol = window.location.protocol == "http:" ? "ws" : "wss"
   const url = `${protocol}://${window.location.host}/api/servers/${route.params.serverId}/ws`
   console.debug("connectWS", url)
   ws.value?.close(1000)
