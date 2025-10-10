@@ -26,7 +26,7 @@
           </tr>
         </thead>
         <tbody>
-          <ServerRow v-for="server in group.servers" :key="server.id" :priv-user="privUser" :server="server" :game="group.game" :manage="manage"></ServerRow>
+          <ServerRow v-for="server in group.servers" :key="server.id" :priv-user="privUser" :server="server" :group="group" :manage="manage"></ServerRow>
         </tbody>
         <tfoot v-if="manage && group.templateId">
           <tr class="has-background-lighter">
@@ -46,9 +46,6 @@
 <script setup lang="ts">
 import { GAME_TYPE_MAP, ServerGroup, GAME_TYPE_CONFIG } from '../../../../common-types/Server';
 import ServerRow from '@/components/servers/ServerRow.vue'
-import { request } from '@/js/util.js';
-import { LoadState } from '@/types/global.js';
-import { notify } from '@kyvg/vue3-notification';
 import { computed, ref } from 'vue';
 import CreateServerModal from './CreateServerModal.vue';
 import { PrivilegedUser } from '@/js/User.js';

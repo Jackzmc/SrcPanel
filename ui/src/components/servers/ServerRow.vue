@@ -1,9 +1,11 @@
 <template>
   <tr :class="trClass">
     <td>
-      <router-link v-if="privUser" :class="serverClasses" :to="{name: 'admin-server-view', params: { serverId: server.id, tab: 'overview' }}" :data-tooltip="tooltip">
+      <router-link v-if="privUser" :class="serverClasses"  :data-tooltip="tooltip"
+        :to="{name: 'servers-manage-server', params: { groupId: props.group.id, serverId: server.id, tab: 'overview' }}">
         <b>{{ server.name }}</b>
       </router-link>
+
       <div v-else :class="serverClasses" :data-tooltip="tooltip">
         <b>{{ server.name }}</b>
       </div>
@@ -66,19 +68,19 @@
 
 <script setup lang="ts">
 import { request } from '@/js/util.js';
-import { ServerInfo, ServerType, ServerAction, ServerAvailableFeatures, GAME_TYPE_MAP, GAME_TYPE_CONFIG } from '../../../../common-types/Server';
+import { ServerInfo, ServerType, ServerAction, ServerAvailableFeatures, GAME_TYPE_MAP, GAME_TYPE_CONFIG, ServerGroup } from '../../../../common-types/Server';
 import { computed, ref } from 'vue';
 import { notify } from '@kyvg/vue3-notification';
 import { PrivilegedUser } from '@/js/User.js';
 const props = defineProps<{
   server: ServerInfo,
-  game: string,
   manage?: boolean,
-  privUser?: PrivilegedUser
+  privUser?: PrivilegedUser,
+  group: ServerGroup
 }>()
 
 const gameType = computed(() => {
-  return GAME_TYPE_MAP[props.game]
+  return GAME_TYPE_MAP[props.group.game]
 })
 const gameConfig = computed(() => {
   return (gameType.value && GAME_TYPE_CONFIG[gameType.value]) || {}
