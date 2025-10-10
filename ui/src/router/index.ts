@@ -221,7 +221,7 @@ const routes: RouteRecordRaw[] = [
       },
       {
         name: 'servers',
-        path: 'servers',
+        path: 'servers-legacy',
         component: () => import('../views/admin/ServerListOverview.vue'),
         meta: {
           title: 'Manage Servers',
@@ -231,23 +231,11 @@ const routes: RouteRecordRaw[] = [
           nav: {
             section: 1,
           }
-        },
-        children: [
-          {
-            name: 'admin-server-view',
-            path: ':serverId/:tab?',
-            component: () => import('../views/admin/ServerView.vue'),
-            meta: {
-              title: 'Server View',
-              authRequired: true,
-              hideHero: true
-            },
-          },
-        ]
+        }
       },
       {
         name: 'servers-manage',
-        path: 'servers/manage',
+        path: 'servers',
         component: () => import('../views/admin/ServerListManage.vue'),
         meta: {
           title: 'Server Instances',
@@ -259,6 +247,28 @@ const routes: RouteRecordRaw[] = [
             labelText: "Manage Servers v2",
             tagHtml: `<span class="tag is-warning is-tiny ml-1">BETA</span>`
           }
+        },
+      },
+      {
+        name: 'servers-manage-group',
+        path: 'servers/:groupId',
+        component: () => import('../views/admin/ServerListManage.vue'),
+        meta: {
+          title: 'Manage Servers',
+          description: 'View all the servers and manage them, all in one place',
+          authRequired: true,
+          searchable: false
+        }
+      },
+      {
+        name: 'servers-manage-server',
+        path: 'servers/:groupId/:serverId',
+        component: () => import('../views/admin/ServerView.vue'),
+        meta: {
+          title: 'Server View',
+          authRequired: true,
+          hideHero: true,
+          searchable: false
         },
       },
       {
@@ -414,29 +424,7 @@ const routes: RouteRecordRaw[] = [
           // TODO: remove until impl
           searchable: false
         },
-      },
-      {
-        name: 'servers-manage-group',
-        path: 'servers/:groupId',
-        component: () => import('../views/admin/ServerListManage.vue'),
-        meta: {
-          title: 'Manage Servers',
-          description: 'View all the servers and manage them, all in one place',
-          authRequired: true,
-          searchable: false
-        },
-      },
-      {
-        name: 'servers-manage-server',
-        path: 'servers2/:groupId/:serverId',
-        component: () => import('../views/admin/ServerView.vue'),
-        meta: {
-          title: 'Server View',
-          authRequired: true,
-          hideHero: true,
-          searchable: false
-        },
-      },
+      }
     ]
   },
   {
