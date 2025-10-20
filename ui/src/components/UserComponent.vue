@@ -69,7 +69,7 @@ const id = computed(() => {
 
 const clientAvatarSrc = computed(() => {
   if(props.hideAvatar) return
-  if(props.user.avatarUrl) return props.user.avatarUrl
+  // if(props.user.avatarUrl) return props.user.avatarUrl
   return (id.value)
     ? `/api/users/${id.value}/avatar`
     : "/img/steam_default_avatar.png"
