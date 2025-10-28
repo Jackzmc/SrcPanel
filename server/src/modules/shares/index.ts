@@ -92,7 +92,7 @@ export function parseShare(shareId: string, data: Record<string, any>): ShareInf
 export async function loadShare(dataDir: string, steam: SteamAPI, share: ShareInfo): Promise<Share> {
     // Check if source folder is valid
     if(!await doesFileExist(share.sourceFolder)) {
-        throw new Error("Source folder does not exist")
+        throw new Error(`Source folder for share "${share.id}" does not exist (${share.sourceFolder})`)
     }
 
     for(const [destId, dest] of Object.entries(share.destinations)) {

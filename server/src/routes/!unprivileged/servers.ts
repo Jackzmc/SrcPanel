@@ -126,6 +126,6 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         })
 
         await server.refreshStatus(true)
-
+        
     })
 }

@@ -159,6 +159,7 @@ export default abstract class Server implements IAction {
     }
 
     async Init(): Promise<void> {
+      console.debug("INIT", this.id)
       // Resolve hostnames to IPa ddresses
       this.publicIp = await resolveIPv4(this._options.public.host)
       if(this._options.internal?.host) this.internalIp = await resolveIPv4(this._options.internal?.host)

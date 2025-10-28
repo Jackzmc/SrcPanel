@@ -25,8 +25,8 @@ export default abstract class Logs extends Feature {
      * 
      * @param line the line to add 
      */
-    public pushLine(line: string) {
-        const lineEntry = { timestamp: Math.round(Date.now()/1000), content: line }
+    public pushLine(line: string, timestamp: Date = new Date()) {
+        const lineEntry = { timestamp: Math.round(timestamp.valueOf()/1000), content: line }
         this._lines.push(lineEntry)
         if(this._lines.length > MAX_BUFFER_LINES) {
             this._lines.splice(0, 1)

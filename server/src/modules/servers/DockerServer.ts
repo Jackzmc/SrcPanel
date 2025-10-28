@@ -135,7 +135,7 @@ export default class DockerServer extends Server implements IAction {
     _notifyEvent(event: ServerEvent) {
         if(event === ServerEvent.Started) {
             // Re-init console stream
-            this.Console?.init()
+            // this.Console?.init()
             this.Metrics.addAnnotationX({
                 x: Date.now(),
                 label: {
