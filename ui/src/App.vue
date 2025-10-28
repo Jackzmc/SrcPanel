@@ -306,8 +306,8 @@ function setupNotificationStream(errorCount: number = 0) {
     errorCount++
     const nextTime = 1000 * Math.pow(2, errorCount )
     console.error("notification error, reconncting", nextTime)
+    eve.close()
     setTimeout(() => {
-      eve.close()
       setupNotificationStream(errorCount)
     }, nextTime)
   }
