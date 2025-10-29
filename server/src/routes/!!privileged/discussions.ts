@@ -164,7 +164,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         const domain = fastify.config.Domain
         let discuss = discManager.get(Number(req.params.id))
         if(!discuss) {
-            const [rows] = await fastify.db.execute<RowDataPacket[]>("SELECT d.*, COUNT(c.id) as comment_count FROM `left4dead2-admins`.dash_discussions d right join `left4dead2-admins`.dash_discussion_comments c on c.discussion_id = d.id WHERE d.id = 24", [req.params.id])
+            const [rows] = await fastify.db.execute<RowDataPacket[]>("SELECT d.*, COUNT(c.id) as comment_count FROM `left4dead2-admins`.dash_discussions d right join `left4dead2-admins`.dash_discussion_comments c on c.discussion_id = d.id WHERE d.id = ?", [req.params.id])
             if(rows.length == 0) {
                 return NOT_FOUND(reply, req.params.id)
             }
