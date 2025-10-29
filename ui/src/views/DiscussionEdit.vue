@@ -112,7 +112,7 @@
             <div class="field has-addons">
               <p class="control">
                 <button :class="['button', {'is-info': hasFlag(APIDiscussionFlags.RespondersPublic)}]" @click="setFlag(APIDiscussionFlags.RespondersPublic, true)">
-                  <Icon icon="fa-eye">Public</Icon>
+                  <Icon icon="fa-eye">Show Names</Icon>
                 </button>
               </p>
               <p class="control">
@@ -126,14 +126,14 @@
         <div v-if="(discuss.flags & APIDiscussionFlags.RespondersPublic) != 0" class="list-item">
           <div class="list-item-content">
             <div class="list-item-title">
-              <Icon icon="fa-info-circle" icon-class="has-text-info no-border" text-left="Responses" data-tooltip="Should the users' responses be public?"></Icon>
+              <Icon icon="fa-info-circle" icon-class="has-text-info no-border" text-left="Responses" data-tooltip="Should the users' responses / vote be public?"></Icon>
             </div>
           </div>
           <div class="list-item-controls">
             <div class="field has-addons">
               <p class="control">
                 <button :class="['button', {'is-info': hasFlag(APIDiscussionFlags.ResponsesPublic)}]" @click="setFlag(APIDiscussionFlags.ResponsesPublic, true)">
-                  <Icon icon="fa-eye">Public</Icon>
+                  <Icon icon="fa-eye">Show</Icon>
                 </button>
               </p>
               <p class="control">
@@ -144,10 +144,10 @@
             </div>
           </div>
         </div>
-        <div v-if="(discuss.flags & APIDiscussionFlags.RespondersPublic) != 0" class="list-item">
+        <div class="list-item">
           <div class="list-item-content">
             <div class="list-item-title">
-              <Icon icon="fa-info-circle" icon-class="has-text-info no-border" text-left="Comments" data-tooltip="Should comments be anonymous?"></Icon>
+              <Icon icon="fa-info-circle" icon-class="has-text-info no-border" text-left="Comments" data-tooltip="Should comments author be shown or anonymous?"></Icon>
             </div>
           </div>
           <div class="list-item-controls">
