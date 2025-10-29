@@ -8,7 +8,7 @@
     </div>
     <div class="list-item-content">
       <div class="list-item-title">
-        <router-link v-if="comment.creator.id" :to="{ name: 'manage-user', params: { id: comment.creator.id }, query: { returnTo: $route.fullPath }}">
+        <router-link v-if="comment.creator.id" :to="{ name: 'manage-user', params: { id: comment.creator.id }, query: { returnTo: route.fullPath }}">
           {{ comment.creator.name ?? comment.creator.id }}
         </router-link>
         <span v-else>
@@ -63,9 +63,10 @@ import { PrivilegedUser } from '../../js/User';
 import { formatDate, getRelDate, request } from '@/js/util.js';
 import { APIComment, Discussion, APIDiscussionFlags } from '../../../../common-types/Discussions';
 import { notify } from '@kyvg/vue3-notification';
+import { useRoute } from 'vue-router';
 
 const emit = defineEmits(["comment"])
-
+const route = useRoute()
 
 const props = defineProps<{
   privUser: PrivilegedUser,

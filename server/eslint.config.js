@@ -5,7 +5,8 @@ import tseslint from 'typescript-eslint';
 
 export default defineConfig(
     {
-        ignores: ['**/*.js']
+        ignores: ['**/*.js'],
+        tsconfigRootDir: import.meta.dirname
     },
     globalIgnores(["dist/**/*"], "Ignore Build Directory"),
     eslint.configs.recommended,
@@ -29,6 +30,11 @@ export default defineConfig(
             "no-empty": "warn",
             "no-unused-private-class-members": "warn",
             
+        },
+        languageOptions: {
+            parserOptions: {
+                tsconfigRootDir: import.meta.dirname
+            }
         }
     }
     // f  tseslint.configs.stylistic,

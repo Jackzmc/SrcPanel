@@ -5,9 +5,8 @@ import globals from 'globals'
 import typescriptEslint from 'typescript-eslint';
 
 export default defineConfig(
-  { ignores: ['*.d.ts', '**/coverage', '**/dist'] },
-
   {
+    ignores: ['*.d.ts', '**/coverage', '**/dist'],
     extends: [
        eslint.configs.recommended,
       ...typescriptEslint.configs.recommended,
@@ -24,6 +23,7 @@ export default defineConfig(
       },
       parserOptions: {
         parser: typescriptEslint.parser,
+        tsconfigRootDir: import.meta.dirname
       },
     },
     rules: {
