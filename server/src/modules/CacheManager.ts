@@ -19,11 +19,23 @@ interface RecordRow {
     key: string,
     data: ValidType,
     type: number,
-    updated_at: number
+    updated_at: number,
+    expires_at: number
+}
+
+export interface RecordOptions {
+    /** How many seconds until this record should expire */
+    ttl?: number
 }
 
 export type ValidType = number | string | object | boolean | Map<any, any> | Set<any>
 
+/**
+ * A persistent keyvalue cache manager, supporting saving Maps, Sets, JSON, booleans directly 
+ *
+ * @export
+ * @class CacheManager
+ */
 export default class CacheManager {
     #db: Database<sqlite3.Database, sqlite3.Statement>;
     constructor(db: Database) {
@@ -42,6 +54,7 @@ export default class CacheManager {
                 data TEXT NOT NULL,
                 type INT NOT NULL,
                 updated_at INT NOT NULL,
+                expires_at INT
                 PRIMARY KEY(key)
             );`)
             return new CacheManager(db)
@@ -50,7 +63,16 @@ export default class CacheManager {
         }
     }
 
-    async set(key: string, value: ValidType): Promise<void> {
+    
+    /**
+     * Sets a key to value. The value will persist restarts.  Supports Map, Set, Boolean, Json, and number/string
+     *
+     * @param {string} key
+     * @param {ValidType} value
+     * @param {RecordOptions} options any extra options to set
+     * @return {*}  {Promise<void>}
+     */
+    async set(key: string, value: ValidType, options: RecordOptions = {}): Promise<void> {
         let type: RecordType
         switch(typeof value) {
             case "number":
@@ -79,17 +101,41 @@ export default class CacheManager {
             default:
                 throw new Error("Unsupported type " + typeof(value))
         }
-        log.debug({ key, type }, "set")
+
+        const expiresAt = options.ttl ? unixTimestamp() + options.ttl : null
+
         this.#db.run(
-            "INSERT OR REPLACE INTO cache (key,data,type,updated_at) VALUES (?,?,?,?)",
-            [key, value, type, unixTimestamp()]
+            "INSERT OR REPLACE INTO cache (key,data,type,updated_at,expires_at) VALUES (?,?,?,?,?)",
+            [key, value, type, unixTimestamp(), expiresAt]
         )
     }
 
+    /**
+     * Returns the raw unprocessed value of the specified key
+     *
+     * @param {string} key
+     * @return {*}  {(Promise<RecordRow | null>)}
+     */
     async getRawRecord(key: string): Promise<RecordRow | null> {
-        return await this.#db.get<RecordRow>("SELECT * FROM cache WHERE key = ?", [ key ]) ?? null
+        const row = await this.#db.get<RecordRow>("SELECT * FROM cache WHERE key = ?", [ key ]) ?? null
+
+        // Check if record expired
+        if(row && row.expires_at >= unixTimestamp()) {
+            await this.delete(row.key)
+            return null
+        }
+
+        return row
     }
 
+    
+    /**
+     * Returns the value of specified key. Supports Map, Set, Boolean, Json, and number/string
+     *
+     * @template T
+     * @param {string} key
+     * @return {*}  {(Promise<T | null>)}
+     */
     async get<T extends ValidType>(key: string): Promise<T | null> {
         const entry = await this.getRawRecord(key)
         log.debug({ key, type: entry?.type, updated: entry?.updated_at }, "get")
@@ -110,11 +156,6 @@ export default class CacheManager {
             default:
                 return entry.data as T
         }
-    }
-
-    async isStale(key: string, maxExpires: number): Promise<boolean | null> {
-        const entry = await this.getRawRecord(key) 
-        return entry && unixTimestamp() - entry.updated_at >= maxExpires  
     }
 
     async delete(key: string) {
