@@ -189,6 +189,8 @@ onActivated(async () => {
 })
 
 async function init() {
+  // TODO: fix - discussion box radio buttons missing because 'selected' data is only sent on fetchDiscussions - not individual
+  await fetchDiscussions()
   if(route.name === "discuss-view") {
     const id = Number(route.params.id)
     if(isNaN(id)) {
@@ -198,7 +200,6 @@ async function init() {
     await selectDiscussion(id)
   } else {
     selectedDiscussion.value = undefined
-    await fetchDiscussions()
   }
 }
 
