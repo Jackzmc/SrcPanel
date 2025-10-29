@@ -2,7 +2,7 @@ import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
 import { APIComment, APIDiscussion, APIDiscussionDetails, APIDiscussionFlags, APIDiscussionType } from '../../../../common-types/Discussions.js';
 import { OkPacket, RowDataPacket } from 'mysql2';
 import { NOT_FOUND, NO_PERMISSION } from '../../responses.js';
-import { APIUser } from '../../../../common-types/User.js';
+import { APIPlayer, APIUser } from '../../../../common-types/User.js';
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
     const discManager = fastify.managers.discussions
@@ -197,8 +197,6 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     })
 
     fastify.get('/:id/comments', async (req: FastifyRequest<{Params: {id: string}}>, reply): Promise<APIComment[]> => {
-        const domain = fastify.config.Domain
-
         const discuss = discManager.get(Number(req.params.id))
         if(!discuss) {
             return NOT_FOUND(reply, req.params.id)
@@ -207,10 +205,13 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         const [comments] = await fastify.db.execute<RowDataPacket[]>("SELECT com.id, com.timestamp, com.creator, com.content, u.last_name as creator_name FROM `left4dead2-admins`.dash_discussion_comments com LEFT JOIN `left4dead2`.view_panel_user u ON SUBSTRING(com.creator, 11) = u.account_id WHERE com.discussion_id = ? ", [discuss.id])
 
         return comments.map(c => { 
-            let creator: APIUser|null = null
+            let creator: APIPlayer
             if(discuss.flags & APIDiscussionFlags.CommentsPublic) {
-                creator = { id: c.creator, name: c.creator_name, avatarUrl: `${domain}/api/users/${c.creator}/avatar` }
-            } 
+                creator = { id: c.creator, name: c.creator_name }
+            } else {
+                creator = { id: null, name: "Anonymous" }
+            }
+            
             return {
                 id: c.id,
                 timestamp: c.timestamp,
@@ -231,11 +232,18 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 message: "This discussion has been archived, no new comments are accepted"
             })
         }
+
+        const hasCommentsPublic = (discuss.flags & APIDiscussionFlags.CommentsPublic)
+
+        const creator: APIPlayer = {
+            id: hasCommentsPublic ? req.user!.steamid2 : null,
+            name: hasCommentsPublic ? (await req.user!.name() ?? req.user!.steamid2) : "Anonymous"
+        }
         const comment: Record<string, any> = req.body as Record<string, any>
         const timestamp = Math.round(Date.now()/1000)
         const [ok] = await fastify.db.query<OkPacket>(
             "INSERT INTO `left4dead2-admins`.dash_discussion_comments (discussion_id, creator, content, timestamp) VALUES (?, ?, ?, UNIX_TIMESTAMP())",
-            [discuss.id, req.user!.steamid2, comment.content]
+            [discuss.id, creator.id, comment.content]
         )
         // Update cache
         discuss.commentsCount++
@@ -244,22 +252,14 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         const domain = fastify.config.Domain
 
         if(discuss.creator.id !== req.user!.steamid2) {
-            const name = (discuss.flags & APIDiscussionFlags.CommentsPublic)
-                ? await req.user!.name() ?? req.user!.steamid2
-                : "Anonymous"
-
-            await fastify.authmngr.addNotification(discuss.creator.id, `${name} commented on your discussion "${discuss.title}"`, {
+            await fastify.authmngr.addNotification(discuss.creator.id, `${creator.name} commented on your discussion "${discuss.title}"`, {
                 link: `${domain}/discuss/${discuss.id}`,
             })
         }
         
         return {
             id: ok.insertId,
-            creator: {
-                id: req.user!.steamid2,
-                name: await req.user!.name(),
-                avatarUrl: `${domain}/api/users/${req.user!.steamid2}/avatar`
-            },
+            creator,
             content: comment.content,
             timestamp
         }

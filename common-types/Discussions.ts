@@ -1,4 +1,4 @@
-import { APIUser } from "./User.js"
+import { APIPlayer, APIUser } from "./User.js"
 
 export enum APIDiscussionFlags {
     None = 0,
@@ -57,7 +57,7 @@ export interface APIDiscussionDetails extends APIDiscussion {
 }
 export interface APIComment {
     id: number,
-    creator: APIUser | null, // null if comments private
+    creator: APIPlayer, // null if comments are anonymous
     content: string,
     timestamp: number
 }

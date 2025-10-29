@@ -155,10 +155,28 @@ export interface UserProfileData {
     birthDate?: number,
     birthMonth?: number // 0 indexed. 11 is dec
 }
-export interface APIUser {
+/**
+ * Represents a real user, one who has a valid SteamID2, and who may have a name
+ *
+ * @export
+ * @interface APIUser
+ * @extends {APIPlayer}
+ */
+export interface APIUser extends APIPlayer {
     id: string,
+}
+/**
+ * Represents a player / user entry. This entry may not be a real human, but a bot. 
+ * As such the id field can be null, and the name can be unknown.
+ * At least ID or Name SHOULD exist
+ */
+export interface APIPlayer {
+    /** The ID, typically SteamID2 of entry */ 
+    id: string | null,
+    /** The name, if known of entry */
     name: string | null
-    avatarUrl: string
+    /** @deprecated Avatar URL, use /api/users/:id/avatar. Overwrites automatic avatar urls */
+    avatarUrl?: string | null
 }
 export interface UserNameEntry {
     name: string,

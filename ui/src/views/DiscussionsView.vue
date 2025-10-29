@@ -90,7 +90,7 @@
 <script setup lang="ts">
 import { useNotification } from '@kyvg/vue3-notification';
 import { PrivilegedUser } from '@/js/User';
-import { ref, onBeforeMount, computed, onBeforeUnmount, onUnmounted, onMounted, watch, onActivated } from 'vue';
+import { ref, watch, onActivated } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import DiscussionBox from '@/components/discussions/DiscussionBox.vue'
 import Comments from '@/components/discussions/Comments.vue'
@@ -103,7 +103,6 @@ import LazyImage from '@/components/LazyImage.vue';
 
 const route = useRoute()
 const router = useRouter()
-const { notify } = useNotification();
 
 const props = defineProps<{
   privUser: PrivilegedUser

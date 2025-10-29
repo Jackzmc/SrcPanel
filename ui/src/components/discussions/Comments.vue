@@ -1,14 +1,14 @@
 <template>
 <div class="list has-visible-pointer-controls">
   <div v-for="(comment, i) in comments" :key="i" class="list-item">
-    <div v-if="discussion.flags & APIDiscussionFlags.CommentsPublic && comment.creator" class="list-item-image">
-      <figure class="image is-32x32" :data-tooltip="comment.creator.name">
-        <img class="is-rounded" :src="comment.creator.avatarUrl">
+    <div v-if="discussion.flags & APIDiscussionFlags.CommentsPublic && comment.creator?.id" class="list-item-image">
+      <figure class="image is-32x32" :data-tooltip="comment.creator.name + 's avatar'">
+        <img class="is-rounded" :src="'/api/users/' + comment.creator.id + '/avatar'">
       </figure>
     </div>
     <div class="list-item-content">
       <div class="list-item-title">
-        <router-link v-if="hasCommentsPublic && comment.creator" :to="{ name: 'manage-user', params: { id: comment.creator.id }, query: { returnTo: $route.fullPath }}">
+        <router-link v-if="comment.creator.id" :to="{ name: 'manage-user', params: { id: comment.creator.id }, query: { returnTo: $route.fullPath }}">
           {{ comment.creator.name ?? comment.creator.id }}
         </router-link>
         <span v-else>
@@ -41,7 +41,6 @@
             <template v-if="!hasCommentsPublic">(as anonymous)</template>
             <template v-else>(as {{ privUser.name }})</template>
         </div>
-
       </div>
       <div class="list-item-description" @focus="newComment.hovered = true" @blur="newComment.hovered = false">
         <textarea v-model="newComment.content" type="text" :class="['input', {'expanded-box': true }]" placeholder="Enter a reply to the discussion" cols=10 :rows="10" @focus="newComment.focused = true" @blur="newComment.focused = false"></textarea>
