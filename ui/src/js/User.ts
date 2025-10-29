@@ -54,7 +54,7 @@ export class User {
   }
 
   static async getStats(id: string) {
-    const response = await fetch(`https://stats.jackz.me/api/user/${id}`)
+    const response = await fetch(`https://stats.jackz.me/api/users/${id}`)
     if(response.ok) {
       const json = await response.json()
       if(json.user) {

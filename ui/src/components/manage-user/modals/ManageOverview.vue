@@ -116,7 +116,7 @@
         <p class="subtitle is-6">{{ props.user.steamid }}</p>
       </div>
       <div class="is-inline is-pulled-right mt-2">
-        <div><a :href="'https://stats.jackz.me/user/' + props.user.steamid" target="_blank">Stats Profile</a></div>
+        <div><a :href="'https://stats.jackz.me/users/' + props.user.steamid + '/overview'" target="_blank">Stats Profile</a></div>
         <div><a :href="'https://steamcommunity.com/profiles/' + steamid64" target="_blank">Steam Profile</a></div>
         <div><router-link :to="{ name: 'logs-audit', query: { client: props.user.steamid } }" target="_blank">
         View Logs
@@ -389,7 +389,7 @@ async function fetchAnalysis() {
 }
 async function fetchStats() {
   try {
-    const response = await fetch(`https://stats.jackz.me/api/user/${props.user.steamid}`)
+    const response = await fetch(`https://stats.jackz.me/api/users/${props.user.steamid}`)
     const json = await response.json()
     if(response.ok) {
       info.value = json.user
