@@ -83,7 +83,7 @@
     </template>
     <br>
     <div class="level is-size-4">
-      <div class="level-item"><a :href="'https://stats.jackz.me/user/' + props.user.steamid" target="_blank">Stats Profile</a></div>
+      <div class="level-item"><a :href="'https://stats.jackz.me/users/' + props.user.steamid + '/overview'" target="_blank">Stats Profile</a></div>
       <div class="level-item"><a :href="'https://steamcommunity.com/profiles/' + steamid64" target="_blank">Steam Profile</a></div>
       <div class="level-item"><router-link :to="{ name: 'logs-audit', query: { client: props.user.steamid } }" target="_blank">
         View Logs

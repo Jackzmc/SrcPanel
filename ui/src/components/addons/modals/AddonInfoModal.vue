@@ -145,6 +145,7 @@ import { formatDate, formatSize, request, restartServer } from '@/js/util.js'
 import { Tab, Tabs } from "vue3-tabs-component";
 import { LoadState } from '@/types/global.js';
 import DOMPurify from 'dompurify';
+import { MapInfo } from '@/types/stats.js';
 
 const emit = defineEmits(['close', 'update'])
 const { notify }  = useNotification()
@@ -155,11 +156,7 @@ const props = defineProps<{
 let previewImageLoaded = ref(false)
 let pendingRestarts = ref<string[]>([])
 let installInfo = ref<Record<string, boolean|null>>()
-let hasUpdated = false
-let mapRating = ref<{data?:{
-  avgRating: number,
-  ratings: {user:{id:string,name:string},value: number}[]
-}, loadState: LoadState}>({ loadState: LoadState.Idle })
+let mapRating = ref<{data?: MapInfo, loadState: LoadState}>({ loadState: LoadState.Idle })
 
 onBeforeMount(() => {
   if(props.addon) {
