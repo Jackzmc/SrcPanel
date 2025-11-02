@@ -8,6 +8,7 @@ import { UserPrivilegeCode } from '../../../../common-types/Privileges.js';
 import { createReadStream } from 'fs';
 import path from 'path';
 import assert from 'assert';
+import { log } from 'console';
 const pump = promisify(pipeline)
 
 const VALID_FILENAME_REGEX = new RegExp(/[a-z0-9_\- .]+/i)
@@ -346,12 +347,17 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 if(latestWs[0].time_updated == addonInfo.lastModified) {
                     // File is the same - ask for redownload
                     allowDownload = false
-                    
                 } else {
                     sendSSE({
                         code: 'NOTICE',
-                        message: `Addon is already installed but our version is out of date, updating...`
+                        message: `Addon is already installed but our version (${addonInfo.lastModified}) is out of date (${latestWs[0].time_updated}), updating...`
                     })
+                    req.log.info({ 
+                        ourVersion: addonInfo.lastModified, 
+                        wsVersion: latestWs[0].time_updated, 
+                        ourVersionDate: new Date(addonInfo.lastModified ?? 0),
+                        wsVersionDate: new Date(latestWs[0].time_updated)
+                    }, "existing but outdated")
                 }
             } else {
                 // Ask for confirm to redownload if it's not a workshop item
