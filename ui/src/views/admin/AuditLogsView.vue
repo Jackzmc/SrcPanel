@@ -443,6 +443,7 @@ function getParams() {
       searchParams.append(`search_${filter}`, val)
     }
   }
+  if(route.query.raw) searchParams.append("raw", "1")
   return searchParams
 }
 /** Updates the current url (in the browser address bar) to value from getParams() */
