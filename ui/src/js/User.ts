@@ -57,12 +57,7 @@ export class User {
     const response = await fetch(`https://stats.jackz.me/api/users/${id}`)
     if(response.ok) {
       const json = await response.json()
-      if(json.user) {
-        return json.user as Record<string, string|number>
-      } else {
-        console.error('No stats found for user')
-        return null
-      }
+      return json as Record<string, string|number>
     }
     throw new Error(`${response.status} ${response.statusText}: ${await response.text()}`)
   }
