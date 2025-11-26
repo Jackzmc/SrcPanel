@@ -73,10 +73,11 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
     fastify.get('/discord', async (req, reply) => {
         const inviteUrl = fastify.config.Config.discord?.link
-        if(!inviteUrl)
-            reply.send("No discord invite link was set, sorry.")
-        else
+        if(!inviteUrl) {
+            reply.status(404).send("No discord invite link was set, sorry.")
+        } else {
             reply.redirect(inviteUrl, 301)
+        }
     })
 
     fastify.delete('/:steamid', async(req: FastifyRequest<{

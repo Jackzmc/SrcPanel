@@ -74,6 +74,9 @@ export default class ConfigManager {
                 },
                 public_url: raw.public_url
             },
+            discord: {
+                link: raw.discord?.link
+            },
             stats_url: raw.stats_url,
             notice: raw.notice && {
                 enabled: Boolean(raw.notice.enabled),
