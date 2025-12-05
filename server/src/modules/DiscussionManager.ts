@@ -47,7 +47,8 @@ export default class DiscussionManager {
 
     getAll() {
         this.#tryRefresh()
-        return [...this.#discussions.values()].sort((b,a) => b.timestamp - a.timestamp)
+        return [...this.#discussions.values()]
+            .sort((a,b) => b.timestamp - a.timestamp)
     }
 
     set(id: number, discussion: APIDiscussionCacheableData) {
