@@ -8,7 +8,8 @@ export enum APIDiscussionFlags {
     Archived = 2,
     /** Should the actual choices / response be visible? (Requires RespondersPublic) */
     ResponsesPublic = 4,
-    CommentsPublic = 8
+    CommentsPublic = 8,
+    PercentsPublic = 16
 }
 
 export enum APIDiscussionType {

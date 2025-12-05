@@ -165,6 +165,27 @@
             </div>
           </div>
         </div>
+        <div class="list-item">
+          <div class="list-item-content">
+            <div class="list-item-title">
+              <Icon icon="fa-info-circle" icon-class="has-text-info no-border" text-left="Results" data-tooltip="Should the voting results / percents be shown?"></Icon>
+            </div>
+          </div>
+          <div class="list-item-controls">
+            <div class="field has-addons">
+              <p class="control">
+                <button :class="['button', {'is-info': hasFlag(APIDiscussionFlags.PercentsPublic)}]" @click="setFlag(APIDiscussionFlags.PercentsPublic, true)">
+                  <Icon icon="fa-eye">Show</Icon>
+                </button>
+              </p>
+              <p class="control">
+                <button :class="['button', {'is-info': !hasFlag(APIDiscussionFlags.PercentsPublic)}]" @click="setFlag(APIDiscussionFlags.PercentsPublic, false)">
+                  <Icon icon="fa-eye-slash">Hidden</Icon>
+                </button>
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
       <br>
       <div class="buttons">
@@ -250,7 +271,7 @@ const discuss = ref<APIDiscussionBase>({
   closedAt: 0,
   timestamp: Date.now(),
   options: [],
-  flags: APIDiscussionFlags.CommentsPublic | APIDiscussionFlags.RespondersPublic,
+  flags: APIDiscussionFlags.CommentsPublic | APIDiscussionFlags.RespondersPublic | APIDiscussionFlags.PercentsPublic,
 })
 const isSaving = ref(false)
 const editingDesc = ref(false)
