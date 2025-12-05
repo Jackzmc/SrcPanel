@@ -216,7 +216,7 @@ export function getRelDate(timestamp: number) : string {
   const yearsDiff = Math.round(monthsDiff / 12)
   if(yearsDiff > 0) return `${yearsDiff} year${yearsDiff == 1 ? "" : "s"} ago`
   if(monthsDiff > 0) return `${monthsDiff} month${monthsDiff == 1 ? "" : "s"} ago`
-  if (isNaN(dayDiff) || dayDiff < 0 || dayDiff >= 31) return "<invalid date>"
+  if (isNaN(dayDiff) || dayDiff < 0 || dayDiff >= 31) return "in the future"
 
   return dayDiff == 0 && (
     secondsDiff < 0 && "just now" || secondsDiff < 60 && `${Math.ceil(secondsDiff)} seconds ago` || secondsDiff < 120 && "1 minute ago" || secondsDiff < 3600 && Math.floor(secondsDiff / 60) + " minutes ago" || secondsDiff < 7200 && "1 hour ago" || secondsDiff < 86400 && Math.floor(secondsDiff / 3600) + " hours ago") || dayDiff == 1 && "yesterday" || dayDiff < 7 && dayDiff + " days ago" || dayDiff < 31 && Math.ceil(dayDiff / 7) + " weeks ago"
