@@ -69,7 +69,6 @@ export default class DiscussionManager {
 
     async getResponses(id: number, user: User, flags: APIDiscussionFlags): Promise<{ responses: APIResponsesData, userSelection: number[] }> {
         const totalUsers = this.#authmngr.AdminCount
-        const domain = await this.#config.Domain
         const [responses] = await this.#db.execute<RowDataPacket[]>(
             "SELECT res.steamid, res.choice, res.text, opt.label, u.last_name as name FROM `left4dead2-admins`.dash_discussion_responses res LEFT JOIN `left4dead2`.view_panel_user u ON SUBSTRING(res.steamid, 11) = u.account_id LEFT JOIN `left4dead2-admins`.dash_discussion_options opt ON opt.id = res.choice WHERE res.discussion_id = ?", [id]
         )
@@ -95,7 +94,6 @@ export default class DiscussionManager {
                     users[response.steamid] = { 
                         id: response.steamid, 
                         name: response.name, 
-                        avatarUrl: `${domain}/api/users/${response.steamid}/avatar` ,
                         choices: flags & APIDiscussionFlags.RespondersPublic ? [] : undefined
                     }
                 }
@@ -119,7 +117,6 @@ export default class DiscussionManager {
 
     async fetchDiscussions() {
         const dis = new Map()
-        const domain = await this.#config.Domain
         const [rows] = await this.#db.execute<RowDataPacket[]>(`SELECT d.*, u.last_name as creator_name, (SELECT COUNT(*) FROM \`left4dead2-admins\`.dash_discussion_comments WHERE discussion_id = d.id) as comments FROM \`left4dead2-admins\`.dash_discussions d LEFT JOIN \`left4dead2\`.view_panel_user u ON SUBSTRING(d.creator, 11) = u.account_id WHERE d.flags & ${APIDiscussionFlags.Archived} = 0 ORDER BY d.timestamp DESC`)
         for(const row of rows) {
             if(row.closed_at && Date.now() - (row.closed_at*1000) > AUTO_ARCHIVE_TIME) {
@@ -142,7 +139,6 @@ export default class DiscussionManager {
                 creator: {
                     id: row.creator,
                     name: row.creator_name,
-                    avatarUrl: `${domain}/api/users/${row.creator}/avatar`
                 },
             })
         }

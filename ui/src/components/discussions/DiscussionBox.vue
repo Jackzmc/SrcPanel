@@ -45,9 +45,8 @@
     <div class="column">
       <div v-if="discuss.responses.users" class="columns is-gapless is-mobile">
         <div v-for="(user, i) in discuss.responses.users.slice(0, MAX_DISCUSSION_AVATARS)" :key="i" class="column is-narrow">
-          <figure class="image is-32x32" :data-tooltip="user.name">
-              <LazyImage alt="User's avatar" img-class="is-rounded" :src="user.avatarUrl"
-                placeholder-src="/img/steam_default_avatar.png" />
+          <figure class="image is-32x32">
+              <UserComponent hide-name alt="User's avatar" img-class="is-rounded" :user="user" />
           </figure>
         </div>
         <div v-if="discuss.responses.totalCount > MAX_DISCUSSION_AVATARS" class="column mx-2 mt-2">
@@ -85,6 +84,7 @@ import { PrivilegedUser } from '../../js/User';
 import Field from '@/components/Field.vue'
 import FormatText from '@/components/FormatText.vue'
 import LazyImage from '../LazyImage.vue';
+import UserComponent from '../UserComponent.vue';
 
 const MAX_DISCUSSION_AVATARS = 10
 const DISCUSSION_SAVE_NOTIFICATION_DURATION = 1000 * 3

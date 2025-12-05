@@ -29,6 +29,7 @@ export interface RecordOptions {
 }
 
 export type ValidType = number | string | object | boolean | Map<any, any> | Set<any>
+type DatabaseType = Database<sqlite3.Database, sqlite3.Statement>
 
 /**
  * A persistent keyvalue cache manager, supporting saving Maps, Sets, JSON, booleans directly 
@@ -37,29 +38,43 @@ export type ValidType = number | string | object | boolean | Map<any, any> | Set
  * @class CacheManager
  */
 export default class CacheManager {
-    #db: Database<sqlite3.Database, sqlite3.Statement>;
+    #db: DatabaseType;
     constructor(db: Database) {
         this.#db = db
     }
 
     static async Create(cacheFolder: string): Promise<CacheManager> {
-        const filename = join(cacheFolder, 'cache.db')
+        const filepath = join(cacheFolder, 'cache.db')
+        log.debug({ filepath }, "cache path")
+        const db = await this.#openDb(filepath)
+        await this.#initDb(db)
+        return new CacheManager(db)
+    }
+
+    static async #openDb(filepath: string): Promise<DatabaseType> {
         try {
             const db = await sqliteOpen({
-                filename,
+                filename: filepath,
                 driver: sqlite3.Database
             })
+            return db
+        } catch(err) {
+            throw new Error(`Failed to load cache ${filepath}`, { cause: err })
+        }
+    }
+
+    static async #initDb(db: DatabaseType) {
+        try {
             await db.exec(SQL`CREATE TABLE IF NOT EXISTS cache (
                 key TEXT NOT NULL,
                 data TEXT NOT NULL,
                 type INT NOT NULL,
                 updated_at INT NOT NULL,
-                expires_at INT
+                expires_at INT,
                 PRIMARY KEY(key)
-            );`)
-            return new CacheManager(db)
+            );`);
         } catch(err) {
-            throw new Error(`Failed to initalize cache at ${filename}`, { cause: err })
+            throw new Error(`Failed to run database initalization scripts`, { cause: err })
         }
     }
 

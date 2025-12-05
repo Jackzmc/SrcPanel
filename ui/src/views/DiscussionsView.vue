@@ -57,8 +57,8 @@
       <div v-if="selectedDiscussion.responses.users" class="list has-visible-pointer-controls">
         <div v-for="(user, i) in selectedDiscussion.responses.users" :key="i" class="list-item">
           <div class="list-item-image">
-            <figure class="image is-32x32" :data-tooltip="user.name">
-                <LazyImage alt="User's avatar" img-class="is-rounded" :src="user.avatarUrl" placeholder-src="/img/steam_default_avatar.png" />
+            <figure class="image is-32x32">
+                <UserComponent img-class="is-rounded" :user="user" hide-name hide-tooltip />
               </figure>
           </div>
           <div class="list-item-content">

@@ -12,7 +12,7 @@
       </div>
     </div>
   </component>
-  <div class="user-tooltip-content">
+  <div class="user-tooltip-content" v-if="!hideTooltip">
     <figure v-if="clientAvatarSrc" class="image is-48x48 is-inline-block mr-3 is-round">
       <LazyImage alt="User's avatar" observer img-class="is-rounded" :src="clientAvatarSrc" placeholder-src="/img/steam_default_avatar.png" />
     </figure>
@@ -56,6 +56,7 @@ const props = defineProps<{
   isAdmin?: boolean,
   hideAvatar?: boolean,
   hideName?: boolean
+  hideTooltip?: boolean
 
   fallbackName?: string,
   forceAvatar?: boolean
