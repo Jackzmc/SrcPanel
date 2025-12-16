@@ -31,5 +31,23 @@
     ],
     "editor.codeActionsOnSave": {
         "source.fixAll.eslint": "explicit"
-    }
+    },
+    "terminals.terminals": [
+        {
+            "name": "UI",
+            "commands": [
+                "cd ui",
+                "pnpm i",
+                "pnpm serve"
+            ]
+        },
+        {
+            "name": "Server",
+            "commands": [
+                "cd server",
+                "pnpm i",
+                "pnpm dev"
+            ]
+        }
+    ]
 }

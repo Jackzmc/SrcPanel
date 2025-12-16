@@ -359,7 +359,7 @@ export default abstract class Server implements IAction {
       if(!bypassCache && this._lastRefresh && now - this._lastRefresh < MIN_REFRESH_TIME) return
       this._lastRefresh = now
       try {
-          this._log.trace("querying status via gamedig")
+          this._log.trace({ id: this.id, host, port, type }, "querying status via gamedig")
           const state = await this.#gamedig.query({
             type: type,
             host: host,
@@ -379,6 +379,7 @@ export default abstract class Server implements IAction {
           }, "gamedig")
           this._online = true
       } catch(err) {
+        this._log.trace({ id: this.id, host, port, type }, "gamedig", err.stack)
         if(!err.message.includes("Failed all ")) {
           this._log.error(`host=${host} getStatus error: `, err)
         }
