@@ -11,6 +11,7 @@
                   <th>ID</th>
                   <th>User</th>
                   <th>Added By</th>
+                  <th>Created</th>
                   <th>Note</th>
                   <th></th>
                 </tr>
@@ -26,6 +27,7 @@
                   <td>
                     <UserComponent :user="note.markedBy" />
                   </td>
+                  <td>{{ note.createdAt ? getRelDate(note.createdAt) : 'Unknown' }}</td>
                   <ActionNote v-if="note.action" :action="note.action" />
                   <td v-else>{{ note.content }}</td>
                   <td>
@@ -101,6 +103,7 @@ import Sentiment from 'sentiment'
 import debounce from '@/js/debounce';
 import { PrivilegedUser } from '@/js/User'
 import UserComponent from '@/components/UserComponent.vue'
+import { formatDate, getRelDate } from '@/js/util.js'
 const sentiment = new Sentiment();
 const analyzeOptions = {
   extras: data.sentimentWords

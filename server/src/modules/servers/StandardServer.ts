@@ -13,7 +13,8 @@ export default class StandardServer extends Server {
 
     constructor(group: ServerGroup<Server>, server: ListGroupConfig_Server) {
         super(group, server, new GameDig({
-            // listenUdpPort: 27005
+            // listenUdpPort: 27005 
+            // TODO: enable in docker
         }))
 
         if(server.logsPath) {

@@ -41,7 +41,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             whereCount = notesCount[0].count
         }
         const [notes] = await fastify.db.execute<RowDataPacket[]>(
-            `SELECT notes.id, notes.steamid, notes.markedBy, notes.content, u.last_name as user, e.last_name as executor, !b.expired as banned,
+            `SELECT notes.id, notes.steamid, notes.createdAt, notes.markedBy, notes.content, u.last_name as user, e.last_name as executor, !b.expired as banned,
             (SELECT COUNT(*) FROM ${ADMINS_DB}.sm_admins WHERE ${ADMINS_DB}.sm_admins.identity = notes.steamid) as targetIsAdmin
             FROM notes 
             LEFT JOIN view_panel_user u ON SUBSTRING(notes.steamid, 11) = u.account_id
@@ -156,7 +156,6 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
     })
 
-    const domain = fastify.config.Domain
     function formatNote(note: any): Note {
         let action = undefined
         if(note.content.startsWith("@") && note.content.length > 1) {
@@ -168,14 +167,13 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             client: {
                 id: note.steamid,
                 name: note.user,
-                avatarUrl: `${domain}/api/users/${note.steamid}/avatar`,
                 isAdmin: note.targetIsAdmin == 1
             },
             markedBy: {
                 id: note.markedBy,
                 name: note.executor,
-                avatarUrl: `${domain}/api/users/${note.markedBy}/avatar`,
             },
+            createdAt: note.createdAt,
             banned: note.banned == 1,
             action
         }
