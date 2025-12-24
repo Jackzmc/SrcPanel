@@ -1,31 +1,25 @@
 <template>
 <div class="container">
   <div class="columns is-multiline">
-    <div class="column is-6">
-      <div class="box content">
-        <h4>Adding Players to the Group</h4>
-        <p>If you think someone should be invited to the group chat and most people seem to be on the same page then start a discussion where everyone can vote on their addition.</p>
+    <div class="column">
+      <div id="add-to-chat-group" class="box content">
+        <h4>Adding Players to the Chat Group</h4>
+        <p>If you think someone should be invited to the <b>chat</b> group and you believe most people seem to be on the same page then you may start a discussion where everyone can vote on them being added.</p>
         <p>If anyone has something to say, they can leave a comment. Recommended to keep discussion on <b>Single Choice</b>, add "Yes" and "No" options, and keep <b>Respondants</b> <em>hidden</em>.</p>
-        <router-link :to="{ name: 'discuss-new', query: { title: 'Add a Player', comments: 'hide', respondants: 'hide', responses: 'hide' }}">Click here to start a discussion</router-link>
+        <p>If you add their steamid2 (STEAM_#:#:######) to description, it will show a user tooltip for them</p>
+
+        <div class="block">
+          <router-link :to="{ name: 'discuss-new', query: { title: 'Add a Player', comments: 'hide', respondants: 'hide', responses: 'hide' }}">Click here to start a discussion</router-link>
+        </div>
+
+        <h5>Critera for adding a player</h5>
+        <ul>
+          <li>They must have already played minimum of 25 hours on the server</li>
+          <li>If they were previously discussed on, it has been a month since then the vote ended</li>
+          <li>The vote must last minimum 2 weeks</li>
+        </ul>
       </div>
-    </div>
-    <div class="column is-6">
-      <div class="box content">
-        <h4>Rules</h4>
-        <ol>
-          <li>Please don't send NSFW content outside NSFW channels.</li>
-          <li>Don't be a dick.</li>
-          <li>Admin powers are a privilege, please be courtesy of others and not abuse them.
-            <ul class="mt-0">
-              <li>This includes doing things that can hinder someone's fun, such as incapping them purposefully, ruining their gameplay, etc.</li>
-            </ul>
-          </li>
-          <li>Have fun</li>
-        </ol>
-      </div>
-    </div>
-    <div id="guidelines" class="column is-6">
-      <div class="box content">
+      <div id="guidelines" class="box content">
         <h4>Command Use Guidelines</h4>
         <p>The following guidelines are intended for using commands in <b>official campaign maps</b>. In custom maps, its less of an issue.</p>
         <p>These are guidelines, not rules, as they are not intended to never allow you to do these things. There are always exceptions, these are just meant to have everyone on the same page of what is okay and what is not.</p>
@@ -85,7 +79,65 @@
           </ul>
         </ul>
       </div>
+      <div id="add-to-steam-group" class="box content">
+        <h4>Adding Players to the Steam Group</h4>
+        <p>If you think someone should be invited to the <b>steam</b> group, as you think they have potential you may add them to the steam group at your discretion. The steam group allows us to get used to them and see if they fit.</p>
+        <p>To add them, send them the group link <code>https://steamcommunity.com/groups/jackzl4d2</code> and tell them to request to join. Then someone with access must accept their invite</p>
+        <p>We can also grant them some limited admin powers (chat, kick, and seeing admin activity) if we think they are a good player</p>
+      </div>
+      <div id="rules" class="box content">
+        <h4>Rules</h4>
+        <ol>
+          <li>Please don't send NSFW content outside NSFW channels.</li>
+          <li>Don't be a dick.</li>
+          <li>Admin powers are a privilege, please be courtesy of others and not abuse them.
+            <ul class="mt-0">
+              <li>This includes doing things that can hinder someone's fun, such as incapping them purposefully, ruining their gameplay, etc.</li>
+            </ul>
+          </li>
+          <li>Have fun</li>
+        </ol>
+      </div>
+    </div>
+    <div class="column is-4">
+      <div class="box">
+        <Field icon-left="search">
+          <input type="text" class="input" placeholder="Search for an item" />
+        </Field>
+        <aside class="menu">
+          <p class="menu-label">Procedures</p>
+          <ul class="menu-list">
+            <li><a>Adding Players to the Chat Group</a></li>
+            <li><a>Adding Players to the Steam Group</a></li>
+          </ul>
+          <p class="menu-label">Rules</p>
+          <ul class="menu-list">
+            <li><a>General Rules</a></li>
+            <li><a>Command Use Guidelines</a></li>
+          </ul>
+        </aside>
+      </div>
     </div>
   </div>
 </div>
 </template>
+
+<script setup lang="ts">
+import Field from '@/components/Field.vue';
+import { request } from '@/js/util.js';
+import { onMounted, ref } from 'vue';
+
+const items = ref<Record<string, any>[]>([])
+
+async function fetchContent() {
+  const response = await request("/api/cms/rules_procedures")
+  if(response?.ok) {
+    const json = await response.json()
+    items.value = json.data
+  }
+}
+
+onMounted(() => {
+  fetchContent()
+})
+</script>
