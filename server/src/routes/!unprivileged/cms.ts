@@ -1,14 +1,14 @@
 import { WebSocket } from '@fastify/websocket';
 import { FastifyInstance, FastifyPluginOptions, FastifyReply, FastifyRequest } from 'fastify';
 
-const CMS_DOMAIN = process.env.CMS_DOMAIN
+const CMS_HOST = process.env.CMS_HOST
 const CMS_APIKEY = process.env.CMS_APIKEY
 
 const COLLECTION_KEY_REGEX = new RegExp(/[a-zA-Z_]+/)
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions)  {
-    if(!CMS_DOMAIN || !CMS_APIKEY) {
-        fastify.log.info("CMS: Not enabled (not configured; set CMS_DOMAIN, CMS_APIKEY)")
+    if(!CMS_HOST || !CMS_APIKEY) {
+        fastify.log.info("CMS: Not enabled (not configured; set CMS_HOST, CMS_APIKEY)")
         return
     }
     fastify.get('/:collection', async (req: FastifyRequest<{ Params: { collection: string }}>, reply: FastifyReply) => {
@@ -21,13 +21,33 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             })
         }
 
-        const url = new URL(`/items/${req.params.collection}`, CMS_DOMAIN)
-        url.searchParams = req.raw.que
+        const params = new URLSearchParams(req.query as Record<string, any>)
 
-
-        const res = await fetch(`${CMS_DOMAIN}/items/${req.params.collection}`)
-        if(res.ok) {
-            return await res.json()
+        const url = `${CMS_HOST}/items/${req.params.collection}?${params.toString()}`
+        req.log.debug({ url }, "/api/cms/:collection url")
+        try {
+            const res = await fetch(url, {
+                headers: {
+                    'Authorization': `Bearer ${CMS_APIKEY}`
+                }
+            })
+            if(res.ok) {
+                const json = await res.json()
+                req.log.debug({ json }, "/api/cms/:collection json")
+                return json.data
+            } else {
+                return reply.status(500).send({
+                    error: "CMS_ERROR",
+                    status: res.status,
+                    message: `CMS returned ${res.status} ${res.statusText}`
+                })
+            }
+        } catch(err) {
+            req.log.error({ error: err }, "CMS Error")
+            return reply.status(503).send({
+                error: "CMS_ERROR",
+                message: `Failed to contact CMS: ${err.message}`
+            })
         }
     })
 }
