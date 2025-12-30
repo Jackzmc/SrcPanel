@@ -22,18 +22,21 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
 
         const params = new URLSearchParams(req.query as Record<string, any>)
-
         const url = `${CMS_HOST}/items/${req.params.collection}?${params.toString()}`
-        req.log.debug({ url }, "/api/cms/:collection url")
+
+        return await doCmsRequest(reply, url, "GET")
+    })
+
+    async function doCmsRequest<T>(reply: FastifyReply, path: string, method: string = "GET"): Promise<T|undefined> {
         try {
-            const res = await fetch(url, {
+            const res = await fetch(`${CMS_HOST}${path}`, {
                 headers: {
                     'Authorization': `Bearer ${CMS_APIKEY}`
-                }
+                },
+                method
             })
             if(res.ok) {
                 const json = await res.json()
-                req.log.debug({ json }, "/api/cms/:collection json")
                 return json.data
             } else {
                 return reply.status(500).send({
@@ -43,11 +46,11 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 })
             }
         } catch(err) {
-            req.log.error({ error: err }, "CMS Error")
+            reply.log.error({ error: err }, "CMS Error")
             return reply.status(503).send({
                 error: "CMS_ERROR",
                 message: `Failed to contact CMS: ${err.message}`
             })
         }
-    })
+    }
 }
