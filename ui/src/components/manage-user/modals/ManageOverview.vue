@@ -257,8 +257,8 @@ const steamid64 = computed(() => {
 })
 const playtime = computed(() => {
   if(!info.value) return "0"
-  if(info.value.minutes_played > 0) return Math.round(info.value.minutes_played / 60).toLocaleString()
-  return "< 0"
+  if(info.value.seconds_total > 60) return Math.round(info.value.seconds_total / 60 / 60 ).toLocaleString()
+  return "< 1"
 })
 
 watch(() => props.user.steamid, () => {
