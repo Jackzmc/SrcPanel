@@ -39,6 +39,11 @@ export async function loadShares(configDir: string, dataDir: string, steam: Stea
 
     const shares = {}
 
+    if(!raw) {
+        log.warn(`shares.yml is empty, no shares loaded`)
+        return shares // Empty file
+    }
+
     for(const [shareId, data] of Object.entries(raw)) {
         const share = await loadShare(dataDir, steam, parseShare(shareId, data))
         shares[shareId] = share
