@@ -277,9 +277,7 @@ async function onTab(tabId: string) {
     return
   }
   if(tabId === "stats" && !info.value) {
-    await Promise.allSettled([
-      fetchStats(),
-    ])
+    await fetchStats()
   } else if(tabId === "names" && !nameHistory.value.data) {
     await fetchNameHistoryData()
   } else if(tabId === "profile" && !profile.value.data) {
@@ -392,12 +390,13 @@ async function fetchStats() {
     const response = await fetch(`https://stats.jackz.me/api/users/${props.user.steamid}`)
     const json = await response.json()
     if(response.ok) {
-      info.value = json.user
-      if(json.not_found) {
-        statsFailure.value = "No statistics found for user"
-      }
+      info.value = json
     } else {
-      statsFailure.value = json.message ?? json.error
+      if(response.status == 404) {
+        statsFailure.value = "No statistics found for user"
+      } else {
+        statsFailure.value = json.message ?? json.error
+      }
       notify({
         type: "error",
         title: 'Error fetching player statistics',

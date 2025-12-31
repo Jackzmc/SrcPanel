@@ -320,11 +320,11 @@ const hasRoot = computed(() => {
   return canEdit.value && props.privUser.flags?.includes('z')
 })
 const hoursPlayed = computed(() => {
-  if(!stats.value) return 0
-  return Math.round(stats.value.minutes_played as number / 60)
+  if(!stats.value) return -1
+  return Math.round(stats.value.seconds_total as number / 60)
 })
 const playtime = computed(() => {
-  if(!stats.value) return
+  if(!stats.value) return "-"
   if(hoursPlayed.value > 0) return hoursPlayed.value.toLocaleString()
   return "< 0"
 })
@@ -344,10 +344,6 @@ const noPermsGiven = computed(() => {
 })
 
 
-function formatTime(time: number | string) {
-  const date = new Date(Number(time)*1000)
-  return date.toLocaleDateString()
-}
 function expandGroup(id: number) {
   if(expandedGroup.value?.id === id)
     expandedGroup.value = undefined
