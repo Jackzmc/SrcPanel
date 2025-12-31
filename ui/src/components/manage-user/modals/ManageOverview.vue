@@ -64,19 +64,19 @@
         <div class="level-item has-text-centered">
           <div class="field">
             <label class="label">Friendly Fires</label>
-            <span>{{ info.survivor_ff.toLocaleString() }}</span>
+            <span>{{ info.damage_dealt_friendly_count.toLocaleString() }}</span>
           </div>
         </div>
         <div class="level-item has-text-centered">
           <div class="field">
             <label class="label" data-tooltip="Self heals compared to healing other players">Heal Ratio</label>
-            <span>{{ info.heal_self.toLocaleString() }} : {{ info.heal_others.toLocaleString() }}</span>
+            <span>{{ info.used_kit_self.toLocaleString() }} : {{ info.used_kit_other.toLocaleString() }}</span>
           </div>
         </div>
         <div class="level-item has-text-centered">
           <div class="field">
             <label class="label">Team kills</label>
-            <span>{{ info.ff_kills.toLocaleString() }}</span>
+            <span>{{ info.kills_friendly.toLocaleString() }}</span>
           </div>
         </div>
       </div>
