@@ -110,6 +110,8 @@ import { DiscordBot } from './modules/DiscordBot.js'
 import { sleep } from './util.js'
 app.register(MiddleManager)
 .then(async() => {
+    scheduleActivityLogPartition(app);
+
     if(hadSignal) return
     if(process.env.DISCORD_API_TOKEN) {
         const bot = new DiscordBot(app.servers, app.cache, "data/server_voice_map.json", process.env.DISCORD_API_TOKEN as string)
@@ -228,4 +230,37 @@ async function setupNotFound(app: FastifyInstance) {
             timeWindow: 500
         })
     })
+}
+
+/**
+ * Schedules to add new partition to activity_log in a yearly basis
+ */
+function scheduleActivityLogPartition(app: FastifyInstance) {
+    const endOfYear = new Date()
+    endOfYear.setUTCMonth(11) // dec
+    endOfYear.setUTCDate(31)
+    endOfYear.setUTCHours(0)
+
+    function nextDate(prev: Date) {
+        prev.setFullYear(prev.getFullYear() + 1)
+        return prev
+    }
+
+    const job = app.jobs.register("activity_log.add_year_partition", async () => {
+        // This runs on Dec 31 of current year
+        const nextYear = new Date()
+        nextYear.setFullYear(nextYear.getFullYear() + 1) // get next year
+
+        const nextNextYear = new Date()
+        nextYear.setFullYear(nextYear.getFullYear() + 2) // get next year twice
+
+
+        await app.db.query(`ALTER TABLE activity_log ADD PARTITION 
+            ( PARTITION p${nextYear.getFullYear()} VALUES LESS THAN ( UNIX_TIMESTAMP('${nextNextYear.getFullYear()}-01-01 00:00') ) )`)
+
+        app.log.info(`Added p${nextYear.getFullYear()} partition to activity log`)
+    })
+
+
+    app.jobs.scheduleRepeatingCustom(job, endOfYear, nextDate)
 }

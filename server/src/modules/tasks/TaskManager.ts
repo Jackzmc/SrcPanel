@@ -162,5 +162,17 @@ export default class TaskManager {
         this.#schedule.push(task.Id)
         return nextRun
     }
+
+    /**
+     * Schedules a task to run repeately, with start date
+     * @param {Task} task The task to run
+     * @param {Date} startDate the first date to start running
+     * @param nextDateFn function that is given last date to schedule next date
+     */
+    scheduleRepeatingCustom(task: Task<unknown>, startDate: Date, nextDateFn: (prevDate: Date) => Date) {
+        console.debug(`[TaskManager] Scheduled repeating "${task.Id}" for ${startDate}`)
+        task.setSchedule(startDate, nextDateFn)
+        this.#schedule.push(task.Id)
+    }
     
 }

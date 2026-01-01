@@ -18,6 +18,7 @@
     "@influxdata/influxdb-client": "^1.35.0",
     "@lowly1337/vpk": "^0.2.6",
     "@sinclair/typebox": "^0.23.5",
+    "cron": "^4.4.0",
     "discord-api-types": "^0.37.120",
     "discord.js": "^14.22.1",
     "dockerode": "^4.0.9",
