@@ -22,7 +22,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
 
         const params = new URLSearchParams(req.query as Record<string, any>)
-        const url = `${CMS_HOST}/items/${req.params.collection}?${params.toString()}`
+        const url = `/items/${req.params.collection}?${params.toString()}`
 
         return await doCmsRequest(reply, url, "GET")
     })
@@ -39,6 +39,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 const json = await res.json()
                 return json.data
             } else {
+                reply.log.error(`CMS Error: ${res.status} ${res.statusText}`)
                 return reply.status(500).send({
                     error: "CMS_ERROR",
                     status: res.status,
@@ -46,7 +47,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 })
             }
         } catch(err) {
-            reply.log.error({ error: err }, "CMS Error")
+            console.error("cms", err)
+            reply.log.error({ cause: err.cause }, "CMS Error: " +  err.message)
             return reply.status(503).send({
                 error: "CMS_ERROR",
                 message: `Failed to contact CMS: ${err.message}`
