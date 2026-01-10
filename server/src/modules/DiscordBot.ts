@@ -59,7 +59,7 @@ export class DiscordBot {
         })
         await this.load()
 
-        this.#client.on("ready", async() => {
+        this.#client.on("clientReady", async() => {
             await this.updateChannels()
             console.info("[Discord] Bot initalized")
         })
@@ -67,8 +67,11 @@ export class DiscordBot {
 
     async #findExisting(category: CategoryChannel, reverseMap: Map<string, string>) {
         // Delete any non existent servers and create reverse mapping
-        for(const [id, channel] of category.children.cache.entries()) {
-            if(channel.type != ChannelType.GuildVoice) continue
+        for(const [id, channel] of category.children.cache) {
+            if(channel.type != ChannelType.GuildVoice) {
+                console.warn("Bad Channel: ", channel.id, channel.name)
+                continue
+            }
             const data = this.#channelData.get(id)
             if(data?.serverId) {
                 const group = this.#servers.getGroup(data.groupId)
@@ -133,8 +136,8 @@ export class DiscordBot {
         const reverseMap = new Map<string, string>()
 
         await this.#findExisting(category, reverseMap)
-
-
+        
+        await this.#createMissing(category, reverseMap)
         
         
         await this.save()
