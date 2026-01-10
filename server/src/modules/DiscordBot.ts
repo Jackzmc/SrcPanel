@@ -6,6 +6,7 @@ import { VoiceUser } from '../../../common-types/Server.js';
 import CacheManager from './CacheManager.js';
 
 interface ChannelData {
+    groupId: string,
     serverId: string,
     channelInviteLink?: string
 }
@@ -64,23 +65,14 @@ export class DiscordBot {
         })
     }
 
-    async updateChannels() {
-        if(!process.env.DISCORD_VOICELINK_CATEGORY_ID) {
-            return console.warn("[Discord] Voice <==> Server link not available: no DISCORD_VOICELINK_CATEGORY_ID")
-        }
-        const category = await this.#client.channels.fetch(process.env.DISCORD_VOICELINK_CATEGORY_ID as string)
-        if(!category) throw new Error("Category not found")
-        if(!(category instanceof CategoryChannel)) {
-            throw new Error("Category ID is not a category channel")
-        }
-
+    async #findExisting(category: CategoryChannel, reverseMap: Map<string, string>) {
         // Delete any non existent servers and create reverse mapping
-        const reverseMap = new Map<string, string>()
         for(const [id, channel] of category.children.cache.entries()) {
             if(channel.type != ChannelType.GuildVoice) continue
             const data = this.#channelData.get(id)
             if(data?.serverId) {
-                const server = this.#servers.getServer(data.serverId)
+                const group = this.#servers.getGroup(data.groupId)
+                const server = group?.getServer(data.serverId)
                 if(server) {
                     if(channel.name != server.name)
                         channel.setName(server.name ?? server.id)
@@ -96,7 +88,9 @@ export class DiscordBot {
             // Server does not exist, delete channel
             await channel.delete("GAME_TO_VOICE_LINK_UPDATE")
         }
+    }
 
+    async #createMissing(category: CategoryChannel, reverseMap: Map<string, string>) {
         // Create any missing servers
         let pos = 0
         for(const server of this.#servers.getAll()) {
@@ -108,12 +102,14 @@ export class DiscordBot {
             }
             if(!channel) {
                 // If there's no channel for this server, create it
-                channel = await category.children.create<ChannelType.GuildVoice>({
-                    /* @ts-expect-error - should allow these options */
+                channel = await category.children.create({
                     name: server.name ?? server.id,
-                })
+                    type: ChannelType.GuildVoice,
+                }) as unknown as VoiceChannel /** bad types in discord.js -_- */
+                if(!channel) throw new Error("Could not create channel (channel null)")
                 const invite = await channel.createInvite()
                 this.#channelData.set(channel.id, {
+                    groupId: server.group.Id,
                     serverId: server.id,
                     channelInviteLink: invite.url
                 })
@@ -122,6 +118,24 @@ export class DiscordBot {
             channel.setPosition(pos)
             pos++
         }
+    }
+
+    async updateChannels() {
+        if(!process.env.DISCORD_VOICELINK_CATEGORY_ID) {
+            return console.warn("[Discord] Voice <==> Server link not available: no DISCORD_VOICELINK_CATEGORY_ID")
+        }
+        const category = await this.#client.channels.fetch(process.env.DISCORD_VOICELINK_CATEGORY_ID as string)
+        if(!category) throw new Error("Category not found")
+        if(!(category instanceof CategoryChannel)) {
+            throw new Error("Category ID is not a category channel")
+        }
+
+        const reverseMap = new Map<string, string>()
+
+        await this.#findExisting(category, reverseMap)
+
+
+        
         
         await this.save()
     } 
@@ -129,20 +143,9 @@ export class DiscordBot {
     async save() {
         await this.#cache.set("discord.voice_chnl_map", JSON.stringify(Object.fromEntries(this.#channelData.entries())))
     }
-    // TODO: remove this system
-    async #migrateOld() {
-        try {
-            const content = await readFile(this.#savePath, 'utf-8')
-            await this.#cache.set("discord.voice_chnl_map", content)
-            await unlink(this.#savePath)
-        } catch(err) {
-            if(err.code !== "ENOENT") throw err
-        }
-    }
 
     async load() {
         try {
-            await this.#migrateOld()
             const content = await this.#cache.get<string>("discord.voice_chnl_map")
             if(!content) return {}
             this.#channelData = new Map(Object.entries(JSON.parse(content)))

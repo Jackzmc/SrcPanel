@@ -46,7 +46,7 @@ export default class ServerGroup<T extends Server = Server> {
         }
     }
 
-    getServer(id: string) {
+    getServer(id: string): Server | undefined {
         return this.servers[id]
     }
 

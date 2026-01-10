@@ -340,7 +340,7 @@ export default class ServerManager {
     }
     return null
   }
-  public getGroup(id: string) {
+  public getGroup(id: string): ServerGroup | undefined {
     return this.#groups[id]
   }
   /**
