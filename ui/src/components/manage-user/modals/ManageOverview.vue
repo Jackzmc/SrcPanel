@@ -64,19 +64,19 @@
         <div class="level-item has-text-centered">
           <div class="field">
             <label class="label">Friendly Fires</label>
-            <span>{{ info.survivor_ff.toLocaleString() }}</span>
+            <span>{{ info.damage_dealt_friendly_count.toLocaleString() }}</span>
           </div>
         </div>
         <div class="level-item has-text-centered">
           <div class="field">
             <label class="label" data-tooltip="Self heals compared to healing other players">Heal Ratio</label>
-            <span>{{ info.heal_self.toLocaleString() }} : {{ info.heal_others.toLocaleString() }}</span>
+            <span>{{ info.used_kit_self.toLocaleString() }} : {{ info.used_kit_other.toLocaleString() }}</span>
           </div>
         </div>
         <div class="level-item has-text-centered">
           <div class="field">
             <label class="label">Team kills</label>
-            <span>{{ info.ff_kills.toLocaleString() }}</span>
+            <span>{{ info.kills_friendly.toLocaleString() }}</span>
           </div>
         </div>
       </div>
@@ -257,8 +257,8 @@ const steamid64 = computed(() => {
 })
 const playtime = computed(() => {
   if(!info.value) return "0"
-  if(info.value.minutes_played > 0) return Math.round(info.value.minutes_played / 60).toLocaleString()
-  return "< 0"
+  if(info.value.seconds_total > 60) return Math.round(info.value.seconds_total / 60 / 60 ).toLocaleString()
+  return "< 1"
 })
 
 watch(() => props.user.steamid, () => {
@@ -277,9 +277,7 @@ async function onTab(tabId: string) {
     return
   }
   if(tabId === "stats" && !info.value) {
-    await Promise.allSettled([
-      fetchStats(),
-    ])
+    await fetchStats()
   } else if(tabId === "names" && !nameHistory.value.data) {
     await fetchNameHistoryData()
   } else if(tabId === "profile" && !profile.value.data) {
@@ -392,12 +390,13 @@ async function fetchStats() {
     const response = await fetch(`https://stats.jackz.me/api/users/${props.user.steamid}`)
     const json = await response.json()
     if(response.ok) {
-      info.value = json.user
-      if(json.not_found) {
-        statsFailure.value = "No statistics found for user"
-      }
+      info.value = json
     } else {
-      statsFailure.value = json.message ?? json.error
+      if(response.status == 404) {
+        statsFailure.value = "No statistics found for user"
+      } else {
+        statsFailure.value = json.message ?? json.error
+      }
       notify({
         type: "error",
         title: 'Error fetching player statistics',

@@ -15,6 +15,7 @@ export default class DockerLogs extends Logs {
     #lastLogTime: Date
     // line buffer
     #line: string = ""
+    #reader: NodeJS.ReadableStream | null
 
     constructor(server: Server, container: Container) {
         super(server)
@@ -55,13 +56,16 @@ export default class DockerLogs extends Logs {
         this.#container.modem.demuxStream(stream, reader, reader)
         reader.on("data", chunk => this.#onLogChunk(chunk))
 
-        reader.on("close", () => {
+        reader.on("end", () => {
             this.#lastLogTime = new Date()
             this.pushLine("--- END OF PROCESS ---\n", this.#lastLogTime)
             this.#line = ""
-            // reader.removeAllListeners()
-            // console.log("Logs ended, recreate")
+
+            reader.removeAllListeners()
+            this.#createLogsReader()
         })
+
+        this.#reader = reader
     }
 
     #onLogChunk(chunk: any) {

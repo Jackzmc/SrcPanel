@@ -1,11 +1,15 @@
 import { ChannelType, GatewayIntentBits } from 'discord-api-types/v10';
-import { CategoryChannel, Client, GuildMember, User, VoiceChannel } from 'discord.js';
+import { BaseGuildVoiceChannel, CategoryChannel, Client, GuildChannel, GuildMember, User, VoiceChannel } from 'discord.js';
 import ServerManager from './servers/ServerManager';
 import { readFile, unlink } from 'fs/promises';
 import { VoiceUser } from '../../../common-types/Server.js';
 import CacheManager from './CacheManager.js';
 
+import Logger from '../logger.js'
+const log = Logger.child({ name: "discord" })
+
 interface ChannelData {
+    groupId: string,
     serverId: string,
     channelInviteLink?: string
 }
@@ -45,47 +49,42 @@ export class DiscordBot {
                 // User connected or switched channels
                 // Mark new as connected, old as disconnected
                 newStateServer.markVoiceConnection(DiscordBot.toPanelUser(newState.member), true)
-                // console.debug(`informing ${newStateServer.name} client connected`)
+                // log.debug(`informing ${newStateServer.name} client connected`)
                 if(oldStateServer) {
                     oldStateServer.markVoiceConnection(DiscordBot.toPanelUser(newState.member), false)
-                    // console.debug(`informing ${oldStateServer.name} client disconnected`)
+                    // log.debug(`informing ${oldStateServer.name} client disconnected`)
                 }
             } else if(!newStateServer && oldStateServer) {
                 // User disconnected (from voice)
                 oldStateServer.markVoiceConnection(DiscordBot.toPanelUser(newState.member), false)
-                // console.debug(`informing ${oldStateServer.name} client disconnected`)
+                // log.debug(`informing ${oldStateServer.name} client disconnected`)
             }
         })
         await this.load()
 
-        this.#client.on("ready", async() => {
+        this.#client.on("clientReady", async() => {
             await this.updateChannels()
-            console.info("[Discord] Bot initalized")
+            log.info("[Discord] Bot initalized")
         })
     }
 
-    async updateChannels() {
-        if(!process.env.DISCORD_VOICELINK_CATEGORY_ID) {
-            return console.warn("[Discord] Voice <==> Server link not available: no DISCORD_VOICELINK_CATEGORY_ID")
-        }
-        const category = await this.#client.channels.fetch(process.env.DISCORD_VOICELINK_CATEGORY_ID as string)
-        if(!category) throw new Error("Category not found")
-        if(!(category instanceof CategoryChannel)) {
-            throw new Error("Category ID is not a category channel")
-        }
-
+    async #findExisting(category: CategoryChannel, reverseMap: Map<string, string>) {
         // Delete any non existent servers and create reverse mapping
-        const reverseMap = new Map<string, string>()
-        for(const [id, channel] of category.children.cache.entries()) {
-            if(channel.type != ChannelType.GuildVoice) continue
+        for(const [id, channel] of category.children.cache) {
+            if(channel.type != ChannelType.GuildVoice) {
+                log.warn({ id: channel.id, name: channel.name}, "Bad channel type")
+                // channel.delete("GAME_TO_VOICE_LINK_INVALID_CHANNEL")
+                continue
+            }
             const data = this.#channelData.get(id)
             if(data?.serverId) {
-                const server = this.#servers.getServer(data.serverId)
+                const group = this.#servers.getGroup(data.groupId)
+                const server = group?.getServer(data.serverId)
                 if(server) {
                     if(channel.name != server.name)
                         channel.setName(server.name ?? server.id)
                     reverseMap.set(data.serverId, id)
-                    console.debug(`[Discord] found channel ${channel.id} --> server ${server.id}`)
+                    log.debug(`found channel ${channel.id} --> server ${server.id}`)
                     if(!data.channelInviteLink) {
                         const invite = await channel.createInvite()
                         data.channelInviteLink = invite.url
@@ -96,7 +95,9 @@ export class DiscordBot {
             // Server does not exist, delete channel
             await channel.delete("GAME_TO_VOICE_LINK_UPDATE")
         }
+    }
 
+    async #createMissing(category: CategoryChannel, reverseMap: Map<string, string>) {
         // Create any missing servers
         let pos = 0
         for(const server of this.#servers.getAll()) {
@@ -108,20 +109,40 @@ export class DiscordBot {
             }
             if(!channel) {
                 // If there's no channel for this server, create it
-                channel = await category.children.create<ChannelType.GuildVoice>({
-                    /* @ts-expect-error - should allow these options */
+                channel = await category.guild.channels.create({
                     name: server.name ?? server.id,
-                })
+                    type: ChannelType.GuildVoice,
+                    parent: category.id,
+                }) as unknown as VoiceChannel /* discord.js type failures */;
+                if(!channel) throw new Error("Could not create channel (channel null)")
+                log.debug({ id: channel.id, type: channel.type }, 'create channel')
                 const invite = await channel.createInvite()
                 this.#channelData.set(channel.id, {
+                    groupId: server.group.Id,
                     serverId: server.id,
                     channelInviteLink: invite.url
                 })
-                console.debug(`[Discord] created channel ${channel.id} --> server ${server.id}`)
+                log.info(`created channel ${channel.id} --> server ${server.id}`)
             }
             channel.setPosition(pos)
             pos++
         }
+    }
+
+    async updateChannels() {
+        if(!process.env.DISCORD_VOICELINK_CATEGORY_ID) {
+            return log.warn("Voice <==> Server link not available: no DISCORD_VOICELINK_CATEGORY_ID")
+        }
+        const category = await this.#client.channels.fetch(process.env.DISCORD_VOICELINK_CATEGORY_ID as string)
+        if(!category) throw new Error("Category not found")
+        if(!(category instanceof CategoryChannel)) {
+            throw new Error("Category ID is not a category channel")
+        }
+
+        const reverseMap = new Map<string, string>()
+
+        await this.#findExisting(category, reverseMap)
+        await this.#createMissing(category, reverseMap)
         
         await this.save()
     } 
@@ -129,27 +150,16 @@ export class DiscordBot {
     async save() {
         await this.#cache.set("discord.voice_chnl_map", JSON.stringify(Object.fromEntries(this.#channelData.entries())))
     }
-    // TODO: remove this system
-    async #migrateOld() {
-        try {
-            const content = await readFile(this.#savePath, 'utf-8')
-            await this.#cache.set("discord.voice_chnl_map", content)
-            await unlink(this.#savePath)
-        } catch(err) {
-            if(err.code !== "ENOENT") throw err
-        }
-    }
 
     async load() {
         try {
-            await this.#migrateOld()
             const content = await this.#cache.get<string>("discord.voice_chnl_map")
             if(!content) return {}
             this.#channelData = new Map(Object.entries(JSON.parse(content)))
         } catch(err) {
             if(err.code !== "ENOENT") {
-                console.warn("[Discord] Error loading channel mapping:\n", err)
-                // console.warn("[Discord] Force recreating channels")
+                log.warn("Error loading channel mapping:\n", err)
+                // log.warn("[Discord] Force recreating channels")
                 // await this.updateChannels()
             }
         }

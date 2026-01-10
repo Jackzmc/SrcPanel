@@ -557,8 +557,9 @@ const routes: RouteRecordRaw[] = [
       description: "Schedule time when everyone can participate in an activity",
       icon: "fa-calendar",
       authRequired: true,
-      nav: {
-      },
+      // nav: {
+        
+      // },
       topLevel: true
     },
     children: [
