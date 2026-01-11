@@ -1,0 +1,12 @@
+opencollection: 1.0.0
+info:
+  name: "Admin Panel"
+  type: workspace
+
+collections:
+  - name: "Imported Collection"
+    path: "collections/Imported Collection"
+
+specs:
+
+docs: ''

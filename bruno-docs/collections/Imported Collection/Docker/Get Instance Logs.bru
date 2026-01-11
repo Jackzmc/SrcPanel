@@ -1,0 +1,24 @@
+meta {
+  name: Get Instance Logs
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{API_PROTOCOL}}://{{API_DOMAIN}}/api/docker/instances/:id/logs
+  body: text
+  auth: inherit
+}
+
+params:path {
+  id: 
+}
+
+headers {
+  x-apikey: {{API_TOKEN}}
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

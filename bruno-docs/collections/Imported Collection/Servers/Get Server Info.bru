@@ -1,0 +1,19 @@
+meta {
+  name: Get Server Info
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{API_PROTOCOL}}:/{{API_DOMAIN}}/api/servers/:id
+  body: text
+  auth: inherit
+}
+
+headers {
+  x-apikey: {{API_TOKEN}}
+}
+
+settings {
+  encodeUrl: true
+}

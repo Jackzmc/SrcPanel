@@ -1,0 +1,15 @@
+meta {
+  name: Meta
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{API_PROTOCOL}}://{{API_DOMAIN}}/api/meta
+  body: text
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+}
