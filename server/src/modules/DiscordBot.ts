@@ -38,6 +38,7 @@ export class DiscordBot {
         // TODO: check voice members on start
         this.#client.on("voiceStateUpdate", (oldState,newState) => {
             if(!newState.member) return
+            if(newState.channelId == oldState.channelId) return // incase we didnt get mapping, just prevent other state changes
             // Fetch the servers that the channels map to
             const channelData = [
                 oldState.channelId ? this.#channelData.get(oldState.channelId) : null,
