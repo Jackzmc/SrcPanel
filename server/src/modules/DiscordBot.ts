@@ -46,18 +46,20 @@ export class DiscordBot {
             ]
             const [oldStateServer, newStateServer] = channelData.map(data => data ? this.#servers.getServer(data.serverId) : null)
 
+            const member = DiscordBot.toPanelUser(newState.member)
+
             if(newStateServer && (!oldStateServer || oldStateServer.id != newState.id)) {
                 // User connected or switched channels
                 // Mark new as connected, old as disconnected
-                newStateServer.markVoiceConnection(DiscordBot.toPanelUser(newState.member), true)
+                newStateServer.markVoiceConnection(member, true)
                 // log.debug(`informing ${newStateServer.name} client connected`)
                 if(oldStateServer) {
-                    oldStateServer.markVoiceConnection(DiscordBot.toPanelUser(newState.member), false)
+                    oldStateServer.markVoiceConnection(member, false)
                     // log.debug(`informing ${oldStateServer.name} client disconnected`)
                 }
             } else if(!newStateServer && oldStateServer) {
                 // User disconnected (from voice)
-                oldStateServer.markVoiceConnection(DiscordBot.toPanelUser(newState.member), false)
+                oldStateServer.markVoiceConnection(member, false)
                 // log.debug(`informing ${oldStateServer.name} client disconnected`)
             }
         })
