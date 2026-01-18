@@ -1,4 +1,4 @@
-import Docker from 'dockerode'
+import Docker, { ContainerCreateOptions } from 'dockerode'
 import { readFile } from 'fs/promises'
 import path from 'path'
 import DynamicServerInstance from './DynamicServerInstance.js';
@@ -19,6 +19,7 @@ export interface DockerTemplateConfig {
     ports: { start: number, end?: number },
     volumes?: string[],
     command: string,
+    user?: string
     serverTemplate?: ServerTemplate
 }
 export interface ServerTemplate {
@@ -216,7 +217,7 @@ export default class DynamicServerManager {
         }
         let commands = Array.isArray(template.config.command) ? template.config.command : [template.config.command]
         commands = commands.map(cmd => DynamicServerGroup.formatTemplateVar(cmd, templVars))
-        const config = {
+        const config: ContainerCreateOptions = {
             name: `${DOCKER_NAME_PREFIX}-${templateId}-${port}`,
             Image: template.config.image,
             AttachStdin: true,
@@ -235,9 +236,7 @@ export default class DynamicServerManager {
                     // MaximumRetryCount: 3
                 },
                 "PortBindings": { [`${port.toString()}/udp`]: [{ 
-                    
                     "HostPort": port.toString(), 
-                    
                     "HostIp": template.config.bindIp
                 
                 }] },
@@ -246,6 +245,7 @@ export default class DynamicServerManager {
                     Config: {}
                 },
             },
+            User: template.config.user,
             Labels: {
                 [`${DOCKER_NAME_PREFIX}.template`]: templateId,
                 [`${DOCKER_NAME_PREFIX}.port`]: port.toString(),
