@@ -1097,6 +1097,9 @@ let nowInterval: any = 0
 async function init() {
   status.value = undefined
   error.value = undefined
+  // reset some data on new server
+  serverLogs.value = []
+  metrics.value = []
   clearInterval(refreshInterval)
   if(await fetchServerInfo()) {
     await Promise.any([
