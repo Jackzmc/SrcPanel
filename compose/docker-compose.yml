@@ -1,0 +1,13 @@
+services:
+  app:
+    image: admin-panel:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ../server/config:/app/server/config
+      - ../server/data:/app/server/data
+      - ../server/.env:/app/server/.env
+      - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - 8081:80
