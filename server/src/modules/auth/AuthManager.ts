@@ -547,6 +547,7 @@ export default class AuthManager {
                     log.warn(`Group "${group.id}" has parent that does not exist (${group.parentId}), ignoring`)
                     continue
                 }
+                log.debug(`merging group ${parent.id} -> ${group.id}`)
                 this._mergeGroup(parent, group)
             }
         }
