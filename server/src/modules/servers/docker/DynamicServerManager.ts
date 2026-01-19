@@ -1,4 +1,4 @@
-import Docker from 'dockerode'
+import Docker, { ContainerCreateOptions } from 'dockerode'
 import { readFile } from 'fs/promises'
 import path from 'path'
 import DynamicServerInstance from './DynamicServerInstance.js';
@@ -20,6 +20,15 @@ export interface DockerTemplateConfig {
   volumes?: string[],
   command: string,
   serverTemplate?: ServerTemplate
+    id: string
+    network?: "host" | string,
+    image: string,
+    bindIp: string,
+    ports: { start: number, end?: number },
+    volumes?: string[],
+    command: string,
+    user?: string
+    serverTemplate?: ServerTemplate
 }
 export interface ServerTemplate {
   name?: string,
@@ -134,25 +143,169 @@ export default class DynamicServerManager {
     }
   }
 
-  async #loadTemplates() {
-    try {
-      const templatesFile = await readFile(path.join(this.#configDir, "templates.yml"), 'utf-8')
-      const templates = yaml.parse(templatesFile)
-      for (const [id, data] of Object.entries(templates)) {
-        // if(!data.serverTemplate) throw new Error(`Template ${id} missing 'server_template' field`)
-        // TODO: verify
-        const config = {
-          ...data as DockerTemplateConfig,
-          id
-        } as DockerTemplateConfig
+    findContainerById(id: string) {
+        for(const container of Object.values(this.#instances)) {
+            if(container.ContainerId === id) {
+                return container
+            }
+        }
+        return null
+    }
+
+    async *#getContainers() {
+        const containers = await this.#docker.listContainers({ all: true, filters: {
+            "label": [`${DOCKER_NAME_PREFIX}.template`]
+        }})
+        for(const containerInfo of containers) {
+            if(containerInfo.Labels["panel.template"]) {
+                const template = this.#templates[containerInfo.Labels["panel.template"]]
+                if(!template) {
+                    log.warn(`Found existing container (${containerInfo.Id.slice(0, 12)}${containerInfo.Names.join('')}) but does not match any template. skipping`)
+                    continue
+                }
+                const container = this.#docker.getContainer(containerInfo.Id)
+                yield {containerInfo, container, template}
+            }
+        }
+    }
+
+    /**
+     * Finds existing docker containers and recreates their instance if missing
+     * It uses DOCKERNAMEPREFIX.port label to get port
+     * @returns 
+     */
+    async findExisting() {
+        for await(const { containerInfo, container, template } of this.#getContainers()) {
+            const port = containerInfo.Labels[`${DOCKER_NAME_PREFIX}.port`]
+            const containerName = `${DOCKER_NAME_PREFIX}-${template.config.id}-${port}`
+            if(this.#instances[containerName]) {
+                return;
+            }
+            log.info(`Found existing container (${containerInfo.Id.slice(0, 12)}${containerInfo.Names.join('')})`)
+            const instance = new DynamicServerInstance(template.config, container, template.config.bindIp, Number(port))
+            await this.#registerInstance(instance)
+        }
+    }
+
+    async #loadTemplates() {
         try {
-          // await this.#docker.pull(config.image)
-          this.#templates[id] = {
-            config,
-          }
-          log.trace({ config }, `Loaded template ${id}`)
-        } catch (err) {
-          log.error(`Failed to pull image "${config.image}":`, err)
+            const templatesFile = await readFile(path.join(this.#configDir, "templates.yml"), 'utf-8')
+            const templates = yaml.parse(templatesFile)
+            for(const [id, data] of Object.entries(templates)) {
+                // if(!data.serverTemplate) throw new Error(`Template ${id} missing 'server_template' field`)
+                // TODO: verify
+                const config = {
+                    ...data as DockerTemplateConfig,
+                    id
+                } as DockerTemplateConfig
+                try {
+                    // await this.#docker.pull(config.image)
+                    this.#templates[id] = {
+                        config,
+                    }
+                    log.trace({ config }, `Loaded template ${id}`)
+                } catch(err) {
+                    log.error(`Failed to pull image "${config.image}":`, err)
+                }
+            }
+            log.info(`Loaded ${Object.keys(this.#templates).length} templates`)
+        } catch(err) {
+            log.error("Failed to load templates.yaml: ", err)
+        }
+    }
+
+    /**
+     * Finds the next available port based on template settings
+     * This only detects port is occupied by another internally managed instance
+     * If a port is used externally (by another process), it will still try to use that port
+     * @throws fails if confnigured port range exhausted
+     * @param ofTemplate
+     * @returns 
+     */
+    async #getNextPort(ofTemplate: DockerTemplateConfig) {
+        const ports: number[] = []
+        for await(const { containerInfo, template } of this.#getContainers()) {
+            if(template.config.id != ofTemplate.id) continue
+            const port = Number(containerInfo.Labels[`${DOCKER_NAME_PREFIX}.port`])
+            ports.push(port)
+        }
+        ports.sort()
+
+        // Find next available, filling in gaps
+        let port = ofTemplate.ports.start;
+        log.trace("finding available port from " + ofTemplate.ports.start)
+        if(ports.includes(port)) {
+            while(ports.includes(port)) {
+                port++
+            }
+        }
+        if(ofTemplate.ports.end != undefined && port >= ofTemplate.ports.end) {
+            throw new Error("No more available ports")
+        }
+        return port
+    }
+
+    /**
+     * Returns the number of containers that exist for this template
+     * @param templateId 
+     * @returns 
+     */
+    async #calculateCount(templateId: string) {
+        let i = 0 ;
+        for await(const { template } of this.#getContainers()) {
+            if(template.config.id != templateId) continue
+            i++
+        }
+        return i;
+    }
+
+    async createInstance(templateId: string, volumes: string[] = [], labels: Record<string, string> = {}) {
+        const template = this.#templates[templateId]
+        if(!template) throw new Error(`Unknown template id: "${templateId}"`)
+        const port = await this.#getNextPort(template.config)
+
+        const templVars = {
+            ip: template.config.bindIp,
+            port,
+            id: template.config.id,
+            index: await this.#calculateCount(templateId)
+        }
+        let commands = Array.isArray(template.config.command) ? template.config.command : [template.config.command]
+        commands = commands.map(cmd => DynamicServerGroup.formatTemplateVar(cmd, templVars))
+        const config: ContainerCreateOptions = {
+            name: `${DOCKER_NAME_PREFIX}-${templateId}-${port}`,
+            Image: template.config.image,
+            AttachStdin: true,
+            Tty: true,
+            OpenStdin: true,
+            // TODO: improve 
+            Cmd: commands,
+            ExposedPorts: {
+                [`${port.toString()}/udp`]: {}
+            },
+            HostConfig: {
+                "NetworkMode": template.config.network,
+                "Binds": template.config.volumes?.concat(volumes) ?? [],
+                "RestartPolicy": {
+                    "Name": "unless-stopped",
+                    // MaximumRetryCount: 3
+                },
+                "PortBindings": { [`${port.toString()}/udp`]: [{ 
+                    "HostPort": port.toString(), 
+                    "HostIp": template.config.bindIp
+                
+                }] },
+               "LogConfig": {
+                    Type: "local",
+                    Config: {}
+                },
+            },
+            User: template.config.user,
+            Labels: {
+                [`${DOCKER_NAME_PREFIX}.template`]: templateId,
+                [`${DOCKER_NAME_PREFIX}.port`]: port.toString(),
+                ...labels
+            },
         }
       }
       log.info(`Loaded ${Object.keys(this.#templates).length} templates`)
