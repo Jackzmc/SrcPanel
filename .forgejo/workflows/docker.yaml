@@ -1,14 +1,14 @@
 name: Build Image
 on: 
-  # push:
-  #   paths:
-  #     - 'server/**'
-  #     - 'ui/**'
-  #     - 'common-types/**'
-  #     - '.forgejo/workflows/docker.yaml'
-  #   # branches:
-  #     # - release
-  #     # - feat/*
+  push:
+    paths:
+      - 'server/**'
+      - 'ui/**'
+      - 'common-types/**'
+      - '.forgejo/workflows/docker.yaml'
+    # branches:
+      # - release
+      # - feat/*
   workflow_dispatch: {}
 
 env:
