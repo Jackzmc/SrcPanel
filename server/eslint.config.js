@@ -6,7 +6,6 @@ import tseslint from 'typescript-eslint';
 export default defineConfig(
     {
         ignores: ['**/*.js'],
-        tsconfigRootDir: import.meta.dirname
     },
     globalIgnores(["dist/**/*"], "Ignore Build Directory"),
     eslint.configs.recommended,
@@ -33,7 +32,6 @@ export default defineConfig(
         },
         languageOptions: {
             parserOptions: {
-                tsconfigRootDir: import.meta.dirname
             }
         }
     }

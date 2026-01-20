@@ -23,7 +23,6 @@ export default defineConfig(
       },
       parserOptions: {
         parser: typescriptEslint.parser,
-        tsconfigRootDir: import.meta.dirname
       },
     },
     rules: {
