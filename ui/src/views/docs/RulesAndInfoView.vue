@@ -17,6 +17,7 @@
     <div class="column" v-else>
       <div v-for="item in itemsFiltered" :key="item.slug" :id="item.slug" class="box content">
         <h4>{{ item.title }}</h4>
+        <!-- eslint-disable-next-line vue/no-v-html -- OK: trusted from server / CMS -->
         <span v-html="item.content" />
       </div>
     </div>
