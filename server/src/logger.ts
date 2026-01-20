@@ -39,6 +39,7 @@ const envToLogger = {
 const LOG_TO_FILE = Number(process.env.LOG_TO_FILE) || 1
 const logObj = envToLogger[process.env.NODE_ENV as string] ?? envToLogger["development"]
 if(process.env.LOG_PATH && LOG_TO_FILE) {
+  console.debug({ env: process.env.NODE_ENV ?? "development", path: process.env.LOG_PATH }, "logging to", process.env.LOG_PATH)
   // make 'logs' folder, ignore if it already exists
   const folder = path.parse(process.env.LOG_PATH).dir || "logs"
   try {
@@ -60,7 +61,6 @@ if(process.env.LOG_PATH && LOG_TO_FILE) {
       destination: process.env.LOG_PATH,
     },
   })
-  console.debug("logging to", folder, process.env.LOG_PATH)
 }
 const logger = pino(logObj);
 
