@@ -146,7 +146,7 @@ async function updateAdmins() {
 
 
 async function fetchServerHealth() {
-  const response = await fetch('/api/panel/health')
+  const response = await fetch('/api/health')
   if(response.ok) {
     serverHealth.value = await response.json()
   }
