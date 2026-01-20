@@ -40,11 +40,14 @@ const LOG_TO_FILE = Number(process.env.LOG_TO_FILE) || 1
 const logObj = envToLogger[process.env.NODE_ENV ?? "development"]
 if(process.env.LOG_PATH && LOG_TO_FILE) {
   // make 'logs' folder, ignore if it already exists
-  const folder = path.parse(process.env.LOG_PATH).dir
+  const folder = path.parse(process.env.LOG_PATH).dir || "logs"
   try {
-    mkdirSync(folder ?? "logs", { recursive: true })
+    mkdirSync(folder, { recursive: true })
   } catch(err) {
-    if(err.code != "EEXISTS") throw err
+    if(err.code != "EEXISTS") {
+      console.error(`logger: failed to make logs folder "${folder}"`, err)
+      throw err
+    }
   } 
 
   if(process.env.LOG_WIPE_PREVIOUS) {
@@ -57,7 +60,7 @@ if(process.env.LOG_PATH && LOG_TO_FILE) {
       destination: process.env.LOG_PATH,
     },
   })
-  console.debug("logging to", process.env.LOG_PATH)
+  console.debug("logging to", folder, process.env.LOG_PATH)
 }
 const logger = pino(logObj);
 
