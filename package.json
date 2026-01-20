@@ -1,0 +1,11 @@
+{
+    "pnpm": {
+        "packageExtensions": {
+            "@fastify/session@11.1.0": {
+                "dependencies": {
+                    "@fastify/cookie": "*"
+                }
+            }
+        }
+    }
+}

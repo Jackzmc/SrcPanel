@@ -1,7 +1,7 @@
 import 'dotenv/config'
 import Fastify, { FastifyInstance } from 'fastify'
-import FastifySession from '@fastify/session'
 import FastifyCookie from '@fastify/cookie'
+import FastifySession from '@fastify/session'
 import fastifyWebsocket from '@fastify/websocket'
 import FastifyEtag from '@fastify/etag'
 import MySQLSession from 'express-mysql-session'

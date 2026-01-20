@@ -2,12 +2,15 @@ services:
   app:
     image: admin-panel:latest
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ../
     volumes:
-      - ../server/config:/app/server/config
+      - ./config:/app/server/config
       - ../server/data:/app/server/data
-      - ../server/.env:/app/server/.env
       - /var/run/docker.sock:/var/run/docker.sock
     ports:
       - 8081:80
+    env_file: .env
+
+    # tty: true
+    # stdin_open: true
+    # command: /bin/bash

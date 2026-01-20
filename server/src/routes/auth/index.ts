@@ -1,4 +1,4 @@
-import { SessionStore } from '@fastify/session';
+import type { SessionStore } from '@fastify/session';
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
 import { RowDataPacket } from 'mysql2';
 import type { ProviderConnectionData, SessionData, UserData } from '../../../../common-types/User';

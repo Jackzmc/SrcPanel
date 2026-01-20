@@ -14,7 +14,7 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm fetch --frozen-lockfile
 
 # Setup dependencies
 FROM base AS prod-deps
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --prod --offline -r
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --prod --offline  -r
 
 FROM base AS build
 COPY . /app
@@ -34,7 +34,7 @@ COPY --from=build --chown=node /app/ui/dist /app/ui
 
 # RUN chown -R node:node /app
 
-WORKDIR /app/server
+WORKDIR /app
 
 
 ENV NODE_ENV=production

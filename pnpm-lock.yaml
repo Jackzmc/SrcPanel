@@ -4,7 +4,11 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+packageExtensionsChecksum: sha256-+97w0jf4r+OyCeFNoY8/CDCKJOru+ae3u8EU3tEZhpc=
+
 importers:
+
+  .: {}
 
   server:
     dependencies:
@@ -6374,6 +6378,7 @@ snapshots:
 
   '@fastify/session@11.1.0':
     dependencies:
+      '@fastify/cookie': 11.0.2
       fastify-plugin: 5.1.0
       safe-stable-stringify: 2.5.0
 
