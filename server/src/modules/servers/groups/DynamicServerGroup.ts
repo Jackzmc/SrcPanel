@@ -142,6 +142,12 @@ export class DynamicServerGroup extends BaseDynamicServerGroup {
 
     async removeServer(server: DockerServer) {
         if(!this.servers[server.id]) throw new Error(`Server "${server.id}" is not registered for group (${this.id})`);
+        // Try to stop, ignore errors
+        try {
+            await server.ContainerInstance.stop(true)
+        } catch(_) {
+
+        }
         delete this.servers[server.id]
         await server.ContainerInstance.delete();
     }
