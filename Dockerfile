@@ -27,6 +27,9 @@ RUN cd /app/server/ && pnpm build
 
 FROM $IMAGE AS prod
 
+# not sure if can improve 
+RUN apt-get update && apt-get install -y curl && apt-get clean
+
 COPY --from=prod-deps --chown=node /app/node_modules /app/node_modules
 
 COPY --from=build --chown=node /app/server /app/server
