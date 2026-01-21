@@ -170,7 +170,7 @@
                   </div>
                   <UserComponent :class="{'has-text-crossed': !player.isAlive}" :user="player as User" />
                   &nbsp;<span v-if="player.state == ClientState.Idle" class="tag is-warning is-small">Idle</span>
-                  &nbsp;<span v-else-if="player.steamid === 'BOT'" class="has-text-info is-small">[BOT]</span>
+                  &nbsp;<span v-if="player.steamid === 'BOT'" class="has-text-info is-small">[BOT]</span>
                 </div>
                 <div v-else-if="player.infected" :class="['list-item-title', {'has-text-crossed': !player.isAlive }]">
                   <div v-if="player.isAlive" class="progressbar" style="width:50%" :data-label="player.infected.health + '/' + player.infected.maxHealth + ' HP'">

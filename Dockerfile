@@ -6,7 +6,7 @@ ENV PATH="$PNPM_HOME:$PATH"
 WORKDIR /app
 
 # Build time dependencies
-RUN apt-get update && apt-get install -y git
+RUN apt-get update && apt-get install -y git curl
 RUN corepack enable pnpm && corepack install -g pnpm@latest-10
 
 COPY pnpm-lock.yaml pnpm-workspace.yaml ./
