@@ -1,5 +1,5 @@
 import 'dotenv/config'
-import Fastify, { FastifyInstance } from 'fastify'
+import Fastify, { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify'
 import FastifyCookie from '@fastify/cookie'
 import FastifySession from '@fastify/session'
 import fastifyWebsocket from '@fastify/websocket'
@@ -111,6 +111,7 @@ app.register(fastifyWebsocket)
 import MiddleManager from './middlewares/managers.js'
 import { DiscordBot } from './modules/DiscordBot.js'
 import { sleep } from './util.js'
+import { log } from 'console'
 app.register(MiddleManager)
 .then(async() => {
     scheduleActivityLogPartition(app);
@@ -151,10 +152,12 @@ app.register(MiddleManager)
         return next()
     })
 
+    const staticPath = process.env.STATIC_PATH ? path.resolve(process.env.STATIC_PATH) : path.join(import.meta.dirname, 'public')
     await app.register(import('@fastify/static'), {
-        root: process.env.STATIC_PATH ?? path.join(import.meta.dirname, 'public'),
+        root: staticPath,
         prefix: '/'
     })
+    app.log.info({ path: staticPath }, "serving static files from ")
 
 
     const mainPrefix = `/api/`
@@ -227,11 +230,20 @@ async function setupNotFound(app: FastifyInstance) {
 
     // If exceed timeout, just let it crash from the error, just in case it magically worked anyway
     app.setNotFoundHandler({
-        // @ts-expect-error not setting a handler function still works - but TS types complain
         preHandler: app.rateLimit({
             max: 4,
             timeWindow: 500
-        })
+        }),
+    }, (req: FastifyRequest, reply: FastifyReply) => {
+        if(req.url.startsWith("/api")) {
+            return reply.status(404).send({
+                error: "NOT_FOUND",
+                message: `Route ${req.method} "${req.url}" not found`
+            })
+        } else {
+            // for UI files, serve /index.html always as last resort
+            return reply.sendFile('/index.html')
+        }
     })
 }
 
