@@ -101,7 +101,10 @@ app.register(cors, {
     origin: CORS_WHITELIST,
     methods: ["GET","POST","PATCH","UPDATE","DELETE"]
 })
-app.register(FastifyHelmet)
+app.register(FastifyHelmet, {
+    // TODO: proper impl
+    contentSecurityPolicy: false 
+})
 app.register(FastifyEtag)
 app.register(fastifyWebsocket)
 
