@@ -48,7 +48,7 @@ jobs:
   #   steps:
   #     - name: Update container (staging)
   #       if: ${{ github.ref == 'refs/heads/master' }}
-  #       run: curl 
+  #       run: ssh deploy@${{ secrets.REMOTE_HOST }}  -C "docker compose -f /data/stacks/admin-panel-staging/docker-compose.yml up -d --pull always --quiet-pull"
   #     - name: Update container (production)
   #       if: ${{ github.ref == 'refs/heads/release' }}
-  #       run: curl
+  #       run: ssh deploy@${{ secrets.REMOTE_HOST }}  -C "docker compose -f /data/stacks/admin-panel-production/docker-compose.yml up -d --pull always --quiet-pull"
