@@ -29,7 +29,9 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
     async function doCmsRequest<T>(reply: FastifyReply, path: string, method: string = "GET"): Promise<T|undefined> {
         try {
-            const res = await fetch(`${CMS_HOST}${path}`, {
+            const url = `${CMS_HOST}${path}`
+            reply.log.debug({}, 'url', url)
+            const res = await fetch(url, {
                 headers: {
                     'Authorization': `Bearer ${CMS_APIKEY}`
                 },
@@ -48,7 +50,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             }
         } catch(err) {
             console.error("cms", err)
-            reply.log.error({ cause: err.cause }, "CMS Error: " +  err.message)
+            reply.log.error({ cause: err.cause }, "CMS Error: ", err)
             return reply.status(503).send({
                 error: "CMS_ERROR",
                 message: `Failed to contact CMS: ${err.message}`

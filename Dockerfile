@@ -43,5 +43,6 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV STATIC_PATH=/app/ui/
 
-EXPOSE 80
+EXPOSE 8080
+EXPOSE 7676
 CMD ["node", "/app/server/dist/server/src/index.js"]
