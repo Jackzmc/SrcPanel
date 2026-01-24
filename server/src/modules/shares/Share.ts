@@ -10,6 +10,7 @@ import VPK from '@lowly1337/vpk'
 import ValveKV from 'valve-kv'
 import { getChapterIds, getSpFileInfo } from './ShareUtils.js';
 import assert from 'assert';
+import Logger from '../../logger.js'
 
 const DOWNLOAD_TIMEOUT = 1000 * 60 * 3
 
@@ -37,8 +38,10 @@ export default class Share {
     private validExts?: string[]
     private downloadSources: DownloadSourceRecord
     #description: string
+    #log: typeof Logger
 
     constructor(db: sqlite.Database<sqlite3.Database, sqlite3.Statement>, steam: SteamAPI, shareInfo: Partial<ShareInfo>) {
+        this.#log = Logger.child({name: `Share/${shareInfo.id}`})
         this.#id = shareInfo.id!
         this.#db = db
         this.#steam = steam
@@ -82,11 +85,13 @@ export default class Share {
         let currentMigration = result ? result.value : 0
         if(currentMigration >= MIGRATIONS.length) return;
         while(currentMigration < MIGRATIONS.length) {
+            this.#log.debug(`Running migration #${currentMigration}`)
             try {
                 await this.#db.exec(SQL`ALTER TABLE addoncache ADD metadata TEXT`).catch(() => {})
                 currentMigration++
+                this.#log.info(`Migration #${currentMigration}: OK`)
             } catch(err) {
-                console.error(`[Share/${this.#id}] Migration #${currentMigration} failed: `, err)
+                this.#log.error(`Migration #${currentMigration}: Error:`, err)
                 return
             }
         }
@@ -149,7 +154,7 @@ export default class Share {
                 }
             }
         } catch(err) {
-            console.warn(`[Share/${this.name}] Skipping vpk with error at ${filepath}:\n`, err.message)
+            this.#log.warn(`Skipping vpk with error at ${filepath}:\n`, err.message)
         }
         return null
     }
@@ -279,7 +284,7 @@ export default class Share {
                     VALUES(${filename}, ${fsInfo?.filesize}, ${fsInfo?.lastModified}, ${workshop ? JSON.stringify(workshop) : null}, ${collection?.id}, ${collection?.name}, ${meta ? JSON.stringify(meta) : null})`
             )
         } catch(err) {
-            console.error(`addAddonEntry failed for "${filename}"`, { fsInfo: fsInfo !== null, workshop: workshop !== undefined }, err)
+            this.#log.error({fsInfo: fsInfo !== null, workshop: workshop !== undefined }, `addAddonEntry failed for "${filename}"`, err)
         }
     }
 
@@ -321,6 +326,7 @@ export default class Share {
         await unlink(path.join(this.sourceFolder, filename))
         // Remove cache from database
         await this.#db.exec(SQL`DELETE FROM addoncache WHERE filename = ${filename}`)
+        this.#log.debug({filename}, "deleted addon")
     }
 
     /**
@@ -331,11 +337,13 @@ export default class Share {
         const statInfo = await this.#getFileInfo(this.sourceFolder, filename)
         if(statInfo) {
             const states: Record<string, boolean> = {}
+            this.#log.debug({destinations: Object.keys(this.#description)}, "checking destinations for", filename)
             if(this.destinations) {
                 for(const [id, dest] of Object.entries(this.destinations)) {
                     // We just use the first path
-                    if(!dest.paths) continue
-                    states[id] = dest.paths.length > 0 ? await this.#getFileInfo(dest.paths[0], filename) !== null : false
+                    if(!dest.paths || dest.paths.length < 1) continue
+                    states[id] = await this.#getFileInfo(dest.paths[0], filename) !== null
+                    this.#log.debug({ id, dest, path: dest.paths[0], state: states[id] }, "destination")
                 }
             }
             return { 
@@ -429,10 +437,12 @@ export default class Share {
      * @returns Promise<Stats>
      */
     async #getFileInfo(folder: string, file: string) {
+        this.#log.trace({ folder, file }, "getFileInfo")
         try {
           return await stat(path.join(folder, file))
         } catch(err) {
           if(err.code === "ENOENT") {
+            this.#log.trace("getFileInfo ENOENT", err)
             return null
           } else 
             throw err
