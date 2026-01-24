@@ -337,13 +337,11 @@ export default class Share {
         const statInfo = await this.#getFileInfo(this.sourceFolder, filename)
         if(statInfo) {
             const states: Record<string, boolean> = {}
-            this.#log.debug({destinations: Object.keys(this.#description)}, "checking destinations for", filename)
             if(this.destinations) {
                 for(const [id, dest] of Object.entries(this.destinations)) {
                     // We just use the first path
                     if(!dest.paths || dest.paths.length < 1) continue
                     states[id] = await this.#getFileInfo(dest.paths[0], filename) !== null
-                    this.#log.debug({ id, dest, path: dest.paths[0], state: states[id] }, "destination")
                 }
             }
             return { 
@@ -442,7 +440,7 @@ export default class Share {
           return await stat(path.join(folder, file))
         } catch(err) {
           if(err.code === "ENOENT") {
-            this.#log.trace("getFileInfo ENOENT", err)
+            this.#log.trace({}, "getFileInfo ENOENT", err)
             return null
           } else 
             throw err
