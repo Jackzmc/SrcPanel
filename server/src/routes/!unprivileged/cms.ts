@@ -1,60 +1,34 @@
-import { WebSocket } from '@fastify/websocket';
 import { FastifyInstance, FastifyPluginOptions, FastifyReply, FastifyRequest } from 'fastify';
+import { NOT_FOUND } from '../../responses.js';
+import QuickLRU from 'quick-lru';
+const CMS_CONFIG = {
+    tables: {
+        'rules_procedures': {
+            title: "Rules & Procedures",
+            columns: {
+                'slug': { primary: true },
+            }
+        }
+    }
+}
 
-const CMS_HOST = process.env.CMS_HOST
-const CMS_APIKEY = process.env.CMS_APIKEY
-
-const COLLECTION_KEY_REGEX = new RegExp(/[a-zA-Z_]+/)
+export const ADMINS_DB = process.env.MYSQL_ADMINS_DB ? `\`${process.env.MYSQL_ADMINS_DB}\`` : null
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions)  {
-    if(!CMS_HOST || !CMS_APIKEY) {
-        fastify.log.info("CMS: Not enabled (not configured; set CMS_HOST, CMS_APIKEY)")
-        return
-    }
-    fastify.get('/:collection', async (req: FastifyRequest<{ Params: { collection: string }}>, reply: FastifyReply) => {
-        // check that its a simple id, so they can't screw up our fetch
-        if(!COLLECTION_KEY_REGEX.test(req.params.collection)) {
-            return reply.status(400).send({
-                error: "BAD_REQUEST",
-                param: "collection",
-                message: "Collection param is invalid"
-            })
-        }
-
-        const params = new URLSearchParams(req.query as Record<string, any>)
-        const url = `/items/${req.params.collection}?${params.toString()}`
-
-        return await doCmsRequest(reply, url, "GET")
+    const cache = new QuickLRU({
+        maxSize: 10,
+        maxAge: 1000 * 60 * 2 // 2 min
     })
 
-    async function doCmsRequest<T>(reply: FastifyReply, path: string, method: string = "GET"): Promise<T|undefined> {
-        try {
-            const url = `${CMS_HOST}${path}`
-            reply.log.debug({}, 'url', url)
-            const res = await fetch(url, {
-                headers: {
-                    'Authorization': `Bearer ${CMS_APIKEY}`
-                },
-                method
-            })
-            if(res.ok) {
-                const json = await res.json()
-                return json.data
-            } else {
-                reply.log.error(`CMS Error: ${res.status} ${res.statusText}`)
-                return reply.status(500).send({
-                    error: "CMS_ERROR",
-                    status: res.status,
-                    message: `CMS returned ${res.status} ${res.statusText}`
-                })
-            }
-        } catch(err) {
-            console.error("cms", err)
-            reply.log.error({ cause: err.cause }, "CMS Error: ", err)
-            return reply.status(503).send({
-                error: "CMS_ERROR",
-                message: `Failed to contact CMS: ${err.message}`
-            })
+    fastify.get('/:table', async (req: FastifyRequest<{ Params: { table: string }}>, reply: FastifyReply) => {
+        if(!Object.keys(CMS_CONFIG.tables).includes(req.params.table)) {
+            return NOT_FOUND(reply, req.params.table, "CMS table not found")
         }
-    }
+        if(cache.has(req.params.table)) {
+            return cache.get(req.params.table)
+        }
+        const [rows] = await fastify.db.query(`SELECT * FROM ${ADMINS_DB}.${req.params.table}`)
+        cache.set(req.params.table, rows)
+        return rows
+    })
 }
