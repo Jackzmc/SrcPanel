@@ -18,6 +18,21 @@ const envToLogger = {
     },
     level: process.env.LOG_LEVEL || 'debug'
   },
+  staging: {
+    transport: {
+      targets: [
+        {
+          level: process.env.LOG_LEVEL || 'debug',
+          target: 'pino-pretty',
+          options: {
+            translateTime: 'SYS:hh:MM',
+            ignore: 'pid,hostname,time',
+          },
+        }
+      ]
+    },
+    level: process.env.LOG_LEVEL || 'debug'
+  },
   production: {
     level: process.env.LOG_LEVEL || 'info',
     redact: ['req.headers.authorization', "req.headers['x-apikey']"],
