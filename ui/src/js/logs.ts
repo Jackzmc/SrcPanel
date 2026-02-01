@@ -147,8 +147,8 @@ function resolveUserParts(parts: LogMessagePart[], client?: LogEntryUser, target
             }
         } else if(unknownPartCount == 2) {
             // Lastly, if it's 2 bots that remain, do same as above
-            markPart(unknownParts[0], "client", client!)
-            markPart(unknownParts[1], "target", target!)
+            markPart(unknownParts[0], "client", client)
+            markPart(unknownParts[1], "target", target)
         }
     }
 
