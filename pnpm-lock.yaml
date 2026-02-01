@@ -365,6 +365,9 @@ importers:
       sass:
         specifier: ^1.93.2
         version: 1.93.2
+      tsx:
+        specifier: ^4.20.6
+        version: 4.20.6
       typescript:
         specifier: ^5.9.2
         version: 5.9.3
@@ -5299,6 +5302,7 @@ packages:
   tar@6.2.1:
     resolution: {integrity: sha512-DZ4yORTwrbTj/7MZYq2w+/ZFdI6OZ/f9SFHR+71gIVUZhOQPHzVCLpvRnPgyaMpfWxxk/4ONva3GQSyNIKRv6A==}
     engines: {node: '>=10'}
+    deprecated: Old versions of tar are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exhorbitant rates) by contacting i@izs.me
 
   telnet-client@2.2.6:
     resolution: {integrity: sha512-ZUYrLsPtQupQww3eSEORDVOb6ztdtKEghya6TVXPo2tg/UQq2pn5rHhvwuUvyYpbnsoqdNY1fyD1GNkXHR8dYA==}

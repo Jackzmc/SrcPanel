@@ -257,6 +257,7 @@ import SimpleTypeahead from 'vue3-simple-typeahead';
 import 'vue3-simple-typeahead/dist/vue3-simple-typeahead.css'
 import InfiniteLoading from "v3-infinite-loading";
 import { APILogData, APILogQueryResult } from '../../../../common-types/Logs';
+import { LogEntryUser } from '@/js/logs.js';
 
 const route = useRoute()
 const router = useRouter()
@@ -314,12 +315,8 @@ let filters = ref<Record<string, string|string[]|null>>({
   target: null,
   aroundId: null
 });
-interface LogEntryUser {
-  steamid: string,
-  name: string,
-  avatarUrl?: string
-}
-interface UILogEntry {
+
+export interface UILogEntry {
   id: number,
   timestamp: number,
   server: string,
@@ -331,7 +328,8 @@ interface UILogEntry {
   metadata: Record<string, any>,
   message: string,
   rawMessage: string,
-  showDetails: boolean
+  showDetails: boolean,
+  redacted?: boolean
 }
 let pendingEntries = ref<UILogEntry[]>([])
 let infiniteScroll = ref()

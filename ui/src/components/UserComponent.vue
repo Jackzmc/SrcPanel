@@ -52,7 +52,7 @@ interface UserMeta {
   avatarUrl?: string
 }
 const props = defineProps<{
-  user: APIUser | UserMeta & ({ steamid: string} | { id: string }),
+  user: APIUser | UserMeta & ({ steamid: string | null | undefined } | { id: string }),
   isAdmin?: boolean,
   hideAvatar?: boolean,
   hideName?: boolean

@@ -17,8 +17,8 @@
     <b v-else-if="LPieceCount == 0 && !props.log.client.steamid && props.log.target.steamid">
       <UserComponent hide-avatar type="target" :user="props.log.target" @set-filter="setFilter" />
     </b>
-    <template v-for="m in messagePieces" :key="m">
-      <b v-if="m.LMatch">
+    <template v-for="m in msgParts" :key="m">
+      <b v-if="m.user">
         <UserComponent v-if="m.user" hide-avatar :user="m.user" :type="m.type" @set-filter="setFilter" />
       </b>
       <!-- eslint-disable vue/no-v-html -- sanitized -->
@@ -48,9 +48,11 @@ import { computed, onBeforeMount, ref } from "vue";
 import UserComponent from "@/components/UserComponent.vue";
 import { PrivilegedUser } from "@/js/User.js";
 import DOMPurify from 'dompurify'
+import { UILogEntry } from "@/views/admin/AuditLogsView.vue";
+import { LogMessagePart, parseLogMessage } from "@/js/logs.js";
 const emit = defineEmits(["set-filter", "redact-id"]);
 const props = defineProps<{
-  log: any,
+  log: UILogEntry,
   hoverId?: number,
   privUser?: PrivilegedUser
   highlightRegex?: RegExp
@@ -85,23 +87,14 @@ const icon = computed(() => {
   }
   return null
 })
-const FULLNAME_REGEX = /"([^"<>]+)<\d+><(STEAM_\d:\d:\d+|Console|BOT)><(Console)?>"/;
 const chatMessage = computed(() => {
   if(!props.log.message || props.log.type !== "CHAT") return
   let message = props.log.message
   if(props.highlightRegex) message = message.replace(props.highlightRegex, '<b>$1</b>')
   return message
 })
-interface Piece {
-  content: string,
-  LMatch?: boolean,
-  steamid?: string,
-  user?: { name: string, steamid: string | null },
-  type?: PieceType,
-  isBold?: boolean
-}
-type PieceType = "client" | "target" | undefined
-const messagePieces = ref<Piece[]>()
+
+const msgParts = ref<LogMessagePart[]>()
 
 
 onBeforeMount(() => {
@@ -109,52 +102,9 @@ onBeforeMount(() => {
 
   const msg = DOMPurify.sanitize(props.log.message)
 
-  const pieces: Piece[] = [];
-  let lPieceCount = 0
-  let index = 0;
-  for (let i = 0; i < 2; i++) {
-    const match = msg.slice(index).match(FULLNAME_REGEX);
-    if (match) {
-      let prevSlice: string = msg.slice(index, index + match.index!)
-      if(prevSlice[0] !== " ") prevSlice = " " + prevSlice
-      if(props.highlightRegex) prevSlice = prevSlice.replace(props.highlightRegex, "<b>$1</b>")
-      pieces.push({
-        content: prevSlice,
-      });
-
-      let type: PieceType = undefined
-      let user = undefined
-      let [, name, steamid=null] = match
-
-      if((steamid === "BOT" && i === 0) || props.log.client.steamid === steamid) {
-        type = "client"
-        if(steamid === "BOT") steamid = null
-        user = { name: props.log.client.name || name, steamid }
-      } else if((steamid === "BOT" && i === 1) || props.log.target.steamid === steamid) {
-        type = "target"
-        if(steamid === "BOT") steamid = null
-        user = { name: props.log.target.name || name, steamid }
-      }
-      if(user) {
-        lPieceCount++;
-      }
-
-      pieces.push({
-        content: match[0],
-        LMatch: true,
-        steamid: match[2],
-        user,
-        type
-      });
-      index = match.index! + match[0].length + index;
-    } else {
-      break;
-    }
-  }
+  const { parts, lPieceCount } = parseLogMessage(msg, props.log.client, props.log.target, props.highlightRegex)
+  msgParts.value = parts
   LPieceCount.value = lPieceCount
-  let message = props.log.message.slice(index)
-  if(props.highlightRegex) message = message.replace(props.highlightRegex, "<b>$1</b>")
-  pieces.push({ content: message });
-  messagePieces.value = pieces
 })
+
 </script>
