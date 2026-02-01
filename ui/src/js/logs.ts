@@ -44,8 +44,9 @@ function splitLogMessage(msg: string, highlightRegex?: RegExp): LogMessagePart[]
     const [content, name, steamid] = match as [string, string, string|null]
 
     // If anything before LPiece, add to parts
-    if(index > 0) {
-        let prevSlice: string = msg.slice(index, index + match.index!)
+    let prevSlice: string = msg.slice(index, index + match.index!)
+    if(prevSlice.length > 0) {
+        // Add an extra spacing to fix some bad log messages
         if(prevSlice[0] !== " ") prevSlice = " " + prevSlice
         if(highlightRegex) prevSlice = prevSlice.replace(highlightRegex, "<b>$1</b>")
 
