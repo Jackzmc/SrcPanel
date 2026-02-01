@@ -1,6 +1,6 @@
-import { AdminData} from '../../../common-types/User';
-import type  { UserData, ClientUserData, OauthProviderData } from '../../../common-types/User';
-import { UserPrivilegeCode } from '../../../common-types/Privileges';
+import { AdminData} from '../../../common-types/User.js';
+import type  { UserData, ClientUserData, OauthProviderData } from '../../../common-types/User.js';
+import { UserPrivilegeCode } from '../../../common-types/Privileges.js';
 import { minimatch } from 'minimatch'
 
 export interface PlayerData {

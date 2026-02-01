@@ -1,7 +1,7 @@
 import { createApp } from 'vue';
 import App from './App.vue';
 import Notifications from '@kyvg/vue3-notification'
-import router from './router'
+import router from './router/index.js'
 
 import '@/assets/main.scss'
 import '@creativebulma/bulma-tooltip/dist/bulma-tooltip.min.css'
@@ -20,6 +20,7 @@ library.add(faSteam, faDiscord)
 library.add(faEllipsisV, faChevronDown, faChevronUp, faSpinner, faUser, faCog, faSitemap, faInfoCircle, faExclamationTriangle, faExclamationCircle, faArrowRightFromBracket, faUsersCog, faServer, faList, faPuzzlePiece,  faWrench, faAsterisk, faGavel, faToolbox,faNoteSticky, faChartSimple, faUserCheck, faUserPlus, faUserPen, faTimes, faUpload, faPlus, faEdit, faTrash, faCheck, faSearch, faMessage, faFolder, faDownload, faLock, faSync, faComment, faCloud, faThumbsUp, faThumbsDown, faQuestionCircle, faCopy, faChevronLeft, faChevronRight, faTerminal, faBell, faKeyboard, faCircleQuestion, faVideo, faFont, faCircleCheck, faArrowRight, faClock, faArrowLeft, faEye, faEyeSlash, faLockOpen, faBoxArchive, faCalendar, faMoon, faSun, faBarsStaggered, faPlug, faPlugCircleMinus, faBan, faBars, faArrowUpRightFromSquare, fasStar, farStar, faFileAlt, faArrowTurnUp, faGamepad, faFile, faSquarePlus, faArrowUp, faArrowDown, faBook, faCircle, faSquare, faDiamond, faHourglass, faSortUp, faSortDown, faSort, faAngleDown, faAngleLeft, faAngleRight, faComments, farComments, faLink )
 
 const app = createApp(App)
+//@ts-expect-error this works fine
   .use(Notifications)
   .component('Icon', Icon)
 
