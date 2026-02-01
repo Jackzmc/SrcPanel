@@ -100,9 +100,17 @@ const msgParts = ref<LogMessagePart[]>()
 onBeforeMount(() => {
   if(!props.log.message || props.log.type === "CHAT") return []
 
-  const msg = DOMPurify.sanitize(props.log.message)
+  const { parts, lPieceCount } = parseLogMessage(props.log.message, props.log.client, props.log.target, props.highlightRegex)
 
-  const { parts, lPieceCount } = parseLogMessage(msg, props.log.client, props.log.target, props.highlightRegex)
+  // Need to sanitize after we parse to retain < and >. 
+  parts.forEach(part => {
+    part.content = DOMPurify.sanitize(part.content)
+    if(part.user) {
+      part.user.name = DOMPurify.sanitize(part.user.name)
+      if(part.user.steamid) part.user.steamid = DOMPurify.sanitize(part.user.steamid)
+    }
+  })
+  
   msgParts.value = parts
   LPieceCount.value = lPieceCount
 })
