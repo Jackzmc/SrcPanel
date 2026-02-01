@@ -1,27 +1,30 @@
+import { expect, describe, test } from 'vitest'
 import { LogEntryUser, parseLogMessage } from '@/js/logs.js'
-import { test } from 'node:test'
 
-test("detects no lpieces", t => {
-    const { parts, lPieceCount } = parseLogMessage("this message has no lpieces")
+describe("parse log messages", () => {
+    test("detects no lpieces", t => {
+        const { parts, lPieceCount } = parseLogMessage("this message has no lpieces")
 
-    t.assert.equal(parts.length, 1, "one msg part") // only 1 normal msg
-    t.assert.equal(lPieceCount, 0, "zero lpieces found")
+        expect(parts.length, "one msg part").toBe(1) // only 1 normal msg
+        expect(lPieceCount, "zero lpieces found").toBe(0)
+    })
+
+    test("one lpiece of client, as bot", t => {
+        const { parts, lPieceCount } = parseLogMessage(`"Name<20><BOT><>" ran a command "sm_blah"`)
+
+        console.log(parts)
+
+        expect(parts.length, "two parts").toBe(2) // only 1 normal msg
+        expect(lPieceCount, "one lpiece found").toBe(1)
+
+        expect(parts[0].type, "first part is client").toBe("client")
+        // It should guess that it's a client
+        expect(parts[0].user?.steamid, "first part is bot").toBe("BOT")
+        expect(parts[1].type, "last part is msg").toBe("none")
+
+    })
 })
 
-test("one lpiece of client, as bot", t => {
-    const { parts, lPieceCount } = parseLogMessage(`"Name<20><BOT><>" ran a command "sm_blah"`)
-
-    console.log(parts)
-
-    t.assert.equal(parts.length, 2, "two parts") // only 1 normal msg
-    t.assert.equal(lPieceCount, 1, "one lpiece found")
-
-    t.assert.equal(parts[0].type, "client", "first part is client")
-    // It should guess that it's a client
-    t.assert.equal( parts[0].user?.steamid, "BOT", "first part is bot")
-    t.assert.equal(parts[1].type, "none", "last part is msg")
-
-})
 
 // test("two lpiece of client and target", t => {
 //     const { parts, lPieceCount } = parseLogMessage(`"Name<20><BOT><>" did something to "Other Name<30><STEAM_0:1:010101010><>"`)

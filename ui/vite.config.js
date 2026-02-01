@@ -59,7 +59,7 @@ export default ({ mode }) => {
     define: {
       BUILD_TIMESTAMP: Date.now(),
       __VUE_PROD_DEVTOOLS__: process.env.NODE_ENV !== 'production'
-    }
+    },
   });
 
 }
