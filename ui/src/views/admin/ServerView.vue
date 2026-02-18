@@ -529,19 +529,19 @@
 import { useRoute, useRouter } from 'vue-router'
 import { ref, computed, onUnmounted, onBeforeUnmount, onMounted, nextTick, onDeactivated, onActivated } from 'vue';
 import FolderBrower from'@/components/FolderBrowser.vue'
-import { PlayerData, PrivilegedUser } from '@/js/User';
-import { parseLog, getRelDate, request, formatSize } from '@/js/util';
+import { PlayerData, PrivilegedUser } from '@/js/User.js';
+import { parseLog, getRelDate, request, formatSize } from '@/js/util.js';
 import LogMessage from "@/components/LogMessage.vue";
 import { useNotification } from "@kyvg/vue3-notification";
 import Field from '@/components/Field.vue';
-import { SurvivorId, FinaleStage, PlayerState, PlayerGameAction, PlayerMove, InfectedClass, LiveDataCache, LiveRecord, updateLiveCache, LiveSurvivor, LiveInfected, LiveRecordType, GameDifficulty, CommandResultType, GameState, ClientState, LiveClient, AnnotationX, AnnotationY, Annotation } from '../../../../common-types/Live';
-import { UserPrivilegeCode } from '../../../../common-types/Privileges';
+import { SurvivorId, FinaleStage, PlayerState, PlayerGameAction, PlayerMove, InfectedClass, LiveDataCache, LiveRecord, updateLiveCache, LiveSurvivor, LiveInfected, LiveRecordType, GameDifficulty, CommandResultType, GameState, ClientState, LiveClient, AnnotationX, AnnotationY, Annotation } from '../../../../common-types/Live.js';
+import { UserPrivilegeCode } from '../../../../common-types/Privileges.js';
 import { formatDate, getDuration } from '../../js/util.js';
 import UserComponent, { User } from '@/components/UserComponent.vue';
 import Console from '@/components/server/Console.vue'
-import { ServerData, ServerInfo, ServerDetailed, ServerAvailableFeatures, ComputeStats, ServerStatus, VoiceUser, GAME_TYPE_MAP, GAME_TYPE_CONFIG } from '../../../../common-types/Server';
+import { ServerData, ServerInfo, ServerDetailed, ServerAvailableFeatures, ComputeStats, ServerStatus, VoiceUser, GAME_TYPE_MAP, GAME_TYPE_CONFIG } from '../../../../common-types/Server.js';
 import ServerMetricsTab from '@/components/server/ServerMetricsTab.vue';
-import { ClientOutPayload, ServerOutPacket } from '../../../../common-types/ServerWebsocket';
+import { ClientOutPayload, ServerOutPacket } from '../../../../common-types/ServerWebsocket.js';
 import ConfigFileEditor from '@/components/server/ConfigFileEditor.vue';
 import ListItem from '@/components/ListItem.vue';
 

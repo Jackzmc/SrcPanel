@@ -42,7 +42,7 @@ import { ref, watch, computed, onBeforeMount, onMounted, markRaw, shallowRef } f
 import { onBeforeRouteUpdate, useRoute, useRouter } from 'vue-router'
 import Field from '@/components/Field.vue'
 import { formatDate, formatSize } from '@/js/util.js'
-import { ShareInfo, WorkshopItem } from '../../../../common-types/Share';
+import { ShareInfo, WorkshopItem } from '../../../../common-types/Share.js';
 import debounce from '@/js/debounce.js';
 import { notify } from '@kyvg/vue3-notification';
 
