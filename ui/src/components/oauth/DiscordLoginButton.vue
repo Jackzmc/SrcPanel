@@ -16,6 +16,6 @@ const props = defineProps<{
 }>()
 const loginUri = computed(() => {
   if(!props.meta) return
-  return `${props.meta.settings.domain}/api/auth/discord/login?return_uri=${route.fullPath}`
+  return `${props.meta.settings.domain ?? `${window.location.protocol}//${window.location.host}`}/api/auth/discord/login?return_uri=${route.fullPath}`
 })
 </script>
