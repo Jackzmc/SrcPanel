@@ -11,19 +11,19 @@
     </div>
     <div v-if="meta" class="column">
       <div class="block"><SteamLoginButton size="large" :meta="meta" /></div>
-      <div class="block" data-tooltip="Only if you have linked to a steam account"><DiscordLoginButton size="large" :meta="meta" /></div>
+      <!-- <div class="block" data-tooltip="Only if you have linked to a steam account"><FluxerLoginButton size="large" :meta="meta" /></div> -->
     </div>
   </div>
 </div>
 </template>
 
 <script setup lang="ts">
-import { PrivilegedUser } from '@/js/User';
+import { PrivilegedUser } from '@/js/User.js';
 import { ref, onBeforeMount, watch } from 'vue'
 import { useRouter } from 'vue-router';
-import DiscordLoginButton from '@/components/oauth/DiscordLoginButton.vue';
 import SteamLoginButton from '@/components/oauth/SteamLoginButton.vue';
 import { PanelMetaInfo } from '../../../common-types/Panel.js';
+import FluxerLoginButton from '@/components/oauth/FluxerLoginButton.vue';
 
 const router = useRouter()
 const props = defineProps<{

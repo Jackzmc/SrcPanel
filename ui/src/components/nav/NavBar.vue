@@ -76,7 +76,7 @@
         </template>
         <template v-else-if="meta && !hideLogin">
           <div class="navbar-item">
-            <DiscordLoginButton :meta="meta" />
+            <!-- <FluxerLoginButton :meta="meta" /> -->
           </div>
           <div class="navbar-item">
             <SteamLoginButton :meta="meta" />
@@ -91,10 +91,9 @@
 <script setup lang="ts">
 import { computed, ref, onMounted, onBeforeMount, watch } from 'vue';
 import SteamLoginButton from '@/components/oauth/SteamLoginButton.vue'
-import DiscordLoginButton from '@/components/oauth/DiscordLoginButton.vue'
 import { useRoute, useRouter } from 'vue-router';
 import { notify } from '@kyvg/vue3-notification';
-import { PrivilegedUser } from '@/js/User';
+import { PrivilegedUser } from '@/js/User.js';
 import UserSettingsModal from '@/components/modals/UserSettingsModal.vue';
 import NotificationsModal from '@/components/modals/NotificationsModal.vue'
 import { PanelMetaInfo } from '../../../../common-types/Panel.js';
@@ -102,6 +101,7 @@ import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import Field from '@/components/Field.vue';
 import NavBarItem from './NavBarItem.vue';
 import NavBarLabel from './NavBarLabel.vue';
+import FluxerLoginButton from '../oauth/FluxerLoginButton.vue';
 
 let active = ref(false)
 let searchQuery = ref()

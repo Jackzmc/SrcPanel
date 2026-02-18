@@ -16,7 +16,7 @@
         <SteamLoginButton size="large" :meta="meta" />
       </div>
       <div class="block" data-tooltip="Only if you have linked to a steam account">
-        <DiscordLoginButton size="large" :meta="meta" />
+        <!-- <FluxerLoginButton size="large" :meta="meta" /> -->
       </div>
     </div>
     <div v-if="meta&&hideButtons" class="column">
@@ -27,9 +27,9 @@
 </template>
 
 <script setup lang="ts">
-  import DiscordLoginButton from '@/components/oauth/DiscordLoginButton.vue';
   import SteamLoginButton from '@/components/oauth/SteamLoginButton.vue';
   import { PanelMetaInfo } from '../../../common-types/Panel.js';
+import FluxerLoginButton from './oauth/FluxerLoginButton.vue';
 
   const props = defineProps<{
     meta?: PanelMetaInfo,
