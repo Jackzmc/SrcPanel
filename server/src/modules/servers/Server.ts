@@ -10,7 +10,7 @@ import { GameDig } from 'gamedig';
 import SocketClientUser from "./SocketClientUser.js";
 import { ClientOutPayload, Server_Status, ServerOutPacket, ServerOutPayload } from "../../../../common-types/ServerWebsocket.js";
 import { LiveRecordResponse } from "../../../../common-types/Live.js";
-import { resolveIPv4 } from "../../util.js";
+import { resolveIPv4, tryResolveIPv4 } from "../../util.js";
 import logger from '../../logger.js'
 import { Logger } from "pino";
 
@@ -160,8 +160,8 @@ export default abstract class Server implements IAction {
 
     async Init(): Promise<void> {
       // Resolve hostnames to IPa ddresses
-      this.publicIp = await resolveIPv4(this._options.public.host)
-      if(this._options.internal?.host) this.internalIp = await resolveIPv4(this._options.internal?.host)
+      this.publicIp = await tryResolveIPv4(this._options.public.host) ?? this._options.public.host
+      if(this._options.internal?.host) this.internalIp = await tryResolveIPv4(this._options.internal?.host) ?? undefined
 
       await Promise.allSettled([
           this.Console?.init(),

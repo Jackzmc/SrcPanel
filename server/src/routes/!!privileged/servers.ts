@@ -5,7 +5,7 @@ import { readFile } from 'fs/promises';
 import { NO_PERMISSION, NOT_FOUND } from '../../responses.js';
 import { ServerDetailed, ServerInfo } from '../../../../common-types/Server.js';
 import { UserPrivilegeCode } from '../../../../common-types/Privileges.js';
-import DNS from 'dns/promises'
+import { tryResolveIPv4 } from '../../util.js';
 
 const COMMENT_LINE_REGEX = new RegExp(/^\s*(\/\/|#)/)
 const HIDDEN_COMMANDS = [
@@ -28,25 +28,26 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
 
         let foundType: string | undefined = undefined
-
-        const { address: ip } = await DNS.lookup(host)
-
-        async function tryType(type: string) {
-            try {
-                const a = await fastify.servers.queryHost(ip, parseInt(port), type)
-                console.log(a)
-                foundType = type
-                return true
-            } catch(err) {
-                console.log(err.cause)
-                // Underlying errors aren't exposed annoyingly...
-                if(err.stack.includes("Error: No protocols succeeded")) return false
-                throw err
+        console.debug('resolving', host)
+        const ip = await tryResolveIPv4(host)
+        
+        if(ip != null) {
+            async function tryType(type: string) {
+                try {
+                    const a = await fastify.servers.queryHost(ip!, parseInt(port), type)
+                    console.log(a)
+                    foundType = type
+                    return true
+                } catch(err) {
+                    console.log(err.cause)
+                    // Underlying errors aren't exposed annoyingly...
+                    if(err.stack.includes("Error: No protocols succeeded")) return false
+                    throw err
+                }
             }
-        }
-
-        for (const type of ["minecraft", "left4dead2"]) {
-            if(await tryType(type)) break
+            for (const type of ["minecraft", "left4dead2"]) {
+                if(await tryType(type)) break
+            }
         }
         if(foundType) {
             return {

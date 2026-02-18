@@ -1,6 +1,6 @@
 <template>
 <div class="user-tooltip">
-  <component :is="steamid2 ? 'router-link' : 'a'" class="media" :to="{name:'manage-user',params:{ id: steamid2 }, query: { returnTo: $route.fullPath }}">
+  <component :is="steamid2 ? 'router-link' : 'a'" class="media" :to="{name:'manage-user',params:{ id: steamid2 }, query: { returnTo: route.fullPath }}">
     <figure v-if="!hideAvatar && clientAvatarSrc" class="media-left mr-2">
       <p class="image is-32x32">
         <LazyImage alt="User's avatar" observer img-class="is-rounded" :src="clientAvatarSrc" placeholder-src="/img/steam_default_avatar.png" />
@@ -36,8 +36,11 @@
 <script setup lang="ts">
 import SteamID from 'steamid'
 import { ref, computed } from 'vue'
-import { APIUser } from '../../../common-types/User';
+import { APIUser } from '../../../common-types/User.js';
 import LazyImage from '@/components/LazyImage.vue'
+import { useRoute } from 'vue-router';
+
+const route = useRoute()
 
 export interface User {
   steamid: string,
