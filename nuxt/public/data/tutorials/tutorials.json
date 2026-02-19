@@ -1,0 +1,27 @@
+[
+    {
+        "id": "5plus",
+        "title": "5 Player Tutorial Video",
+        "videoSrc": "https://cdn.jackz.me/videos/tutorial-8player.mp4",
+        "type": "video",
+        "description": "Requires the [8 Player Lobby Addon](https://steamcommunity.com/sharedfiles/filedetails/?id=2276071285)"
+    },
+    {
+        "id": "addons",
+        "title": "Addon Installing Video",
+        "videoSrc": "https://i.jackz.me/2023/09/DimwittedVuByh.mp4",
+        "type": "video"
+    },
+    {
+        "id": "autoexec",
+        "title": "Automatic Lobby Setup (autoexec)",
+        "type": "text",
+        "filename": "autoexec.md"
+    },
+    {
+        "id": "sprays",
+        "title": "Creating & Adding Sprays",
+        "type": "text",
+        "filename": "sprays.md"
+    }
+]

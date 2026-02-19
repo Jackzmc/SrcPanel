@@ -1,0 +1,14 @@
+{
+    "minecraft": {
+        "default_port": 25565,
+        "supports": ["rcon"]
+    },
+    "left4dead2": {
+        "default_port": 27015,
+        "supports": ["rcon", "plugin", "activity_log"]
+    },
+    "tf2": {
+        "default_port": 27015,
+        "supports": ["rcon"]
+    }
+}

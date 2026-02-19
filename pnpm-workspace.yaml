@@ -1,7 +1,7 @@
 packages:
   - ui
   - server
-
+  - rewrite
 ignoredBuiltDependencies:
   - cpu-features
   - protobufjs
@@ -9,3 +9,4 @@ ignoredBuiltDependencies:
 
 onlyBuiltDependencies:
   - sqlite3
+  - esbuild
