@@ -12,7 +12,7 @@
         :ui="{
           link: 'text-white',
           linkTrailingBadge: 'bg-black',
-          linkLeadingIcon: 'text-white'
+          linkLeadingIcon: 'text-white',
         }"
       />
     </template>
@@ -24,27 +24,86 @@
         placeholder="Search"
         icon="ri:search-2-line"
       />
-      <UColorModeButton />
-      <UDropdown>
-        <UButton
-          class="w-46"
-          color="neutral"
-          variant="ghost"
-          block
-          trailing-icon="i-lucide-chevron-down"
+      <UColorModeButton class="text-white" />
+      <template v-if="isLoggedIn">
+        <UDropdownMenu
+          :items="USER_DROPDOWN"
+          :ui="{
+            content: 'w-48 px-2',
+            item: 'py-2',
+          }"
         >
-          <UAvatar src="https://github.com/benjamincanac.png" />
-          Jackzie
+          <UButton
+            class="hover:bg-white/15 w-46 text-white"
+            variant="ghost"
+            block
+            trailing-icon="i-lucide-chevron-down"
+          >
+            <UAvatar :src="false && user!.user.avatarhash ? `https://avatars.akamai.steamstatic.com/${user!.user.avatarhash}_medium.jpg` : undefined" />
+            {{ user!.user.name }}
+          </UButton>
+        </UDropdownMenu>
+      </template>
+      <template v-else>
+        <UButton to="/login" color="neutral" variant="subtle" class="text-white">
+          Login
         </UButton>
-      </UDropdown>
+      </template>
     </template>
   </UHeader>
 </template>
 
 <script setup lang="ts">
+import type { DropdownMenuItem } from '@nuxt/ui/runtime/components/DropdownMenu.vue.js';
 import type { NavigationMenuItem } from '@nuxt/ui/runtime/components/NavigationMenu.vue.js';
 
-const ROUTES: NavigationMenuItem[] = [
+const { user, isLoggedIn, logout } = useAuth()
+
+const USER_DROPDOWN: DropdownMenuItem[][] = [
+  [
+    {
+      href: "/users/@me",
+      label: "My Profile"
+    },
+    {
+      href: "#settings",
+      label: "Settings"
+    },
+    {
+      href: "/panel/overview",
+      label: "Panel Administration"
+    }
+  ],
+  [
+    {
+      label: "Logout",
+      class: "text-error",
+      onSelect: logout,
+    }
+  ]
+]
+
+const ADMIN_DROPDOWN: NavigationMenuItem = {
+  href: "/admin",
+  label: "Administration",
+  description: "Admin tools",
+  icon: "lucide:toolbox",
+  children: [
+    {
+      href: "/admin/logs",
+      label: "Audit Logs",
+      icon: "ri:file-list-3-line"
+    },
+    {
+      href: "/admin/players/recent",
+      label: "Manage Players",
+      icon: "ri:group-line"
+    }
+  ]
+}
+
+
+const ROUTES = computed<NavigationMenuItem[]>(() => [
   {
     href: "/",
     label: "Overview",
@@ -92,27 +151,10 @@ const ROUTES: NavigationMenuItem[] = [
       }
     ]
   },
-  {
-    href: "/admin",
-    label: "Administration",
-    description: "Admin tools",
-    icon: "ri:tools-line",
-    children: [
-      {
-        href: "/admin/logs",
-        label: "Audit Logs",
-        icon: "ri:file-list-3-line"
-      },
-      {
-        href: "/admin/players/recent",
-        label: "Manage Players",
-        icon: "ri:group-line"
-      }
-    ]
-  },
+  ...(isLoggedIn.value ? [ADMIN_DROPDOWN] : []),
   { label: "Links", description: "External links" },
-  { href: "/discuss", label: "Discuss", description: "Admin panel discussions" }
-]
+  { href: "/discuss", label: "Discuss", description: "Admin panel discussions" },
+])
 </script>
 
 <style>
