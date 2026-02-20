@@ -6,7 +6,7 @@ export default defineAppConfig({
     },
     header: {
       slots: {
-        root: 'bg-primary/75 text-white backdrop-blur border-b border-default h-(--ui-header-height) sticky top-0 z-50'
+        root: 'bg-primary/90 text-white backdrop-blur border-b border-default h-(--ui-header-height) sticky top-0 z-50'
       }
     }
   }

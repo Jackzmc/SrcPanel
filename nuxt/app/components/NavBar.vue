@@ -30,7 +30,7 @@
           :items="USER_DROPDOWN"
           :ui="{
             content: 'w-48 px-2',
-            item: 'py-2',
+            item: 'py-2'
           }"
         >
           <UButton
@@ -45,17 +45,16 @@
         </UDropdownMenu>
       </template>
       <template v-else>
-        <UButton to="/login" color="neutral" variant="subtle" class="text-white">
-          Login
-        </UButton>
+        <SteamLoginButton />
       </template>
     </template>
   </UHeader>
 </template>
 
 <script setup lang="ts">
-import type { DropdownMenuItem } from '@nuxt/ui/runtime/components/DropdownMenu.vue.js';
-import type { NavigationMenuItem } from '@nuxt/ui/runtime/components/NavigationMenu.vue.js';
+import type { DropdownMenuItem } from '@nuxt/ui/runtime/components/DropdownMenu.vue.js'
+import type { NavigationMenuItem } from '@nuxt/ui/runtime/components/NavigationMenu.vue.js'
+import SteamLoginButton from './oauth/SteamLoginButton.vue'
 
 const { user, isLoggedIn, logout } = useAuth()
 

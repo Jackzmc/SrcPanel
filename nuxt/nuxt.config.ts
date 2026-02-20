@@ -1,3 +1,5 @@
+import { resolve } from 'path'
+
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   modules: [
@@ -5,11 +7,41 @@ export default defineNuxtConfig({
     '@nuxt/ui',
   ],
 
+  alias: {
+    '@common': resolve(__dirname, '../common-types'),
+  },
+
   devtools: {
     enabled: true,
   },
 
   css: ['~/assets/css/main.css',],
+
+  icon: {
+    serverBundle: {
+      collections: ['lucide', 'ri', 'simple-icons'],
+    },
+    clientBundle: {
+      scan: true,
+      // Nuxt UI internal icons that the scanner won't find in node_modules
+      icons: [
+        'lucide:sun',
+        'lucide:moon',
+        'lucide:menu',
+        'lucide:chevron-down',
+        'lucide:chevron-right',
+        'lucide:chevron-left',
+        'lucide:chevron-up',
+        'lucide:x',
+        'lucide:check',
+        'lucide:circle-check',
+        'lucide:circle-x',
+        'lucide:info',
+        'lucide:loader-circle',
+        'lucide:search',
+      ],
+    },
+  },
 
   runtimeConfig: {
     apiInternalUrl: 'http://localhost:8081',
@@ -26,6 +58,8 @@ export default defineNuxtConfig({
 
   nitro: {
     routeRules: {
+      // Exclude Nuxt's internal icon endpoint from being proxied to Fastify
+      '/api/_nuxt_icon/**': {},
       '/api/**': { proxy: 'http://localhost:8081/api/**', },
     },
   },
