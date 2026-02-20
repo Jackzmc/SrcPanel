@@ -1,6 +1,10 @@
 @import "tailwindcss";
 @import "@nuxt/ui";
 
+:root {
+  --ui-container: max-w-7xl;
+}
+
 @theme static {
   --font-sans: 'Public Sans', sans-serif;
 

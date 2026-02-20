@@ -39,7 +39,7 @@
             block
             trailing-icon="i-lucide-chevron-down"
           >
-            <UAvatar :src="false && user!.user.avatarhash ? `https://avatars.akamai.steamstatic.com/${user!.user.avatarhash}_medium.jpg` : undefined" />
+            <UAvatar :src="user!.user.avatarhash ? `https://avatars.akamai.steamstatic.com/${user!.user.avatarhash}_medium.jpg` : undefined" />
             {{ user!.user.name }}
           </UButton>
         </UDropdownMenu>
