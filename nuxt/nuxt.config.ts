@@ -1,4 +1,14 @@
 import { resolve } from 'path'
+import { execSync } from 'child_process'
+
+const buildDate = new Date().toISOString()
+const buildCommit = (() => {
+  try {
+    return execSync('git rev-parse --short HEAD').toString().trim()
+  } catch {
+    return 'DEV'
+  }
+})()
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
@@ -6,6 +16,13 @@ export default defineNuxtConfig({
     '@nuxt/eslint',
     '@nuxt/ui',
   ],
+
+  vite: {
+    define: {
+      __BUILD_DATE__: JSON.stringify(buildDate),
+      __BUILD_COMMIT__: JSON.stringify(buildCommit),
+    },
+  },
 
   alias: {
     '@common': resolve(__dirname, '../common-types'),

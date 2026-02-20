@@ -1,5 +1,5 @@
 <template>
-  <UCard :class="server.online ? 'bg-emerald-50' : 'bg-yellow-50'">
+  <UCard :class="cardClass">
     <div class="flex items-center justify-between">
       <div class="flex items-center gap-2">
         <span class="font-medium">{{ server.name }}</span>
@@ -56,19 +56,37 @@
       </div>
     </div>
 
-    <div v-if="server.tags?.length" class="mt-2 flex flex-wrap gap-1">
-      <UBadge v-for="tag in server.tags" :key="tag" color="neutral" variant="outline" size="md">
-        {{ tag }}
-      </UBadge>
-    </div>
+    <UTooltip
+      text="Server tags"
+      :content="{
+        align: 'center',
+        side: 'left',
+        sideOffset: 8
+      }"
+    >
+      <div v-if="server.tags?.length" class="mt-2 flex flex-wrap gap-1">
+        <UBadge v-for="tag in server.tags" :key="tag" color="neutral" variant="outline" size="md">
+          {{ tag }}
+        </UBadge>
+      </div>
+    </UTooltip>
   </UCard>
 </template>
 
 <script setup lang="ts">
 import type { APIListServersV1_Group, GroupInfo, ServerInfo } from '@common/Server'
 
-defineProps<{
+const props = defineProps<{
   group: GroupInfo | APIListServersV1_Group
   server: ServerInfo
 }>()
+
+const cardClass = computed(() => {
+  if (props.server.online) {
+    return props.server.status.data && props.server.status.data?.players.length > 0
+      ? "bg-info-50"
+      : "bg-emerald-50"
+  }
+  return "bg-yellow-50"
+})
 </script>
