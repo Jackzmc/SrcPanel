@@ -2,9 +2,12 @@
   <UCard :class="cardClass">
     <div class="flex items-center justify-between">
       <div class="flex items-center gap-2">
-        <span class="font-medium">{{ server.name }}</span>
+        <a class="font-medium">{{ server.name }}</a>
         <UButton color="info" variant="outline" size="xs">
           <a :href="'steam://connect/' + server.ip + '/' + server.port">Join</a>
+        </UButton>
+        <UButton color="neutral" variant="outline" size="xs">
+          <a :href="'/servers/' + group.id + '/' + server.id">Manage</a>
         </UButton>
       </div>
       <UBadge :color="server.online ? 'success' : 'neutral'" variant="subtle">
