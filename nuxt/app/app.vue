@@ -1,4 +1,6 @@
-<script setup>
+<script setup lang="ts">
+import type { TooltipProps } from '@nuxt/ui/runtime/components/Tooltip.vue.js'
+
 useHead({
   meta: [
     { name: 'viewport', content: 'width=device-width, initial-scale=1' }
@@ -23,12 +25,13 @@ useSeoMeta({
   twitterImage: 'https://ui.nuxt.com/assets/templates/nuxt/starter-light.png',
   twitterCard: 'summary_large_image'
 })
+
 </script>
 
 <template>
-  <div>
+  <UApp>
     <NuxtLayout>
       <NuxtPage />
     </NuxtLayout>
-  </div>
+  </UApp>
 </template>
