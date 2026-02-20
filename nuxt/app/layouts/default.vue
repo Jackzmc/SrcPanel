@@ -1,6 +1,22 @@
 <template>
   <div>
     <NavBar />
+    <!-- Notification banners -->
+    <UBanner
+      v-if="!steamOnline"
+      icon="i-lucide-circle-alert"
+      color="warning"
+      title="Notice: Steam appears to be down. You will not be able to join games until it's back online."
+      close
+    />
+    <UBanner
+      v-if="notice"
+      icon="i-lucide-circle-alert"
+      :color="notice.class as any"
+      :title="notice.text"
+      close
+    />
+
     <div class="py-6">
       <slot />
     </div>
@@ -21,4 +37,6 @@ declare const __BUILD_COMMIT__: string
 
 const commit = __BUILD_COMMIT__
 const date = new Date(__BUILD_DATE__).toLocaleString()
+
+const { steamOnline, notice } = await useMeta()
 </script>

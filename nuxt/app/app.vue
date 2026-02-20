@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import type { TooltipProps } from '@nuxt/ui/runtime/components/Tooltip.vue.js'
-
 useHead({
   meta: [
     { name: 'viewport', content: 'width=device-width, initial-scale=1' }

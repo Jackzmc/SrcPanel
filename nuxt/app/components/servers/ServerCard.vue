@@ -3,6 +3,7 @@
     <div class="flex items-center justify-between">
       <div class="flex items-center gap-2">
         <a class="font-medium">{{ server.name }}</a>
+        <!-- buttons -->
         <UButton color="info" variant="outline" size="xs">
           <a :href="'steam://connect/' + server.ip + '/' + server.port">Join</a>
         </UButton>
@@ -10,6 +11,7 @@
           <a :href="'/servers/' + group.id + '/' + server.id">Manage</a>
         </UButton>
       </div>
+      <!-- Status -->
       <UBadge :color="server.online ? 'success' : 'neutral'" variant="subtle">
         <UIcon
           :name="server.online ? 'i-lucide-circle' : 'i-lucide-square'"
@@ -21,6 +23,7 @@
     </div>
 
     <div class="mt-2 text-sm text-muted space-y-1">
+      <!-- Direct connect command -->
       <UTooltip
         text="Direct connect command. Click to copy"
         :content="{
@@ -38,6 +41,7 @@
           </code>
         </div>
       </UTooltip>
+      <!-- Create lobby command -->
       <UTooltip
         text="Create lobby command. Click to copy"
         :content="{
@@ -55,13 +59,13 @@
           </code>
         </div>
       </UTooltip>
+      <!-- Playing [gamemode] on [map] -->
       <div v-if="server.status?.data" class="flex items-center gap-1">
         <UIcon name="i-lucide-map" class="size-4" />
         <span>Playing</span>
         <b>{{ server.status.data.gamemode }}</b>
         <span>on</span>
         <b>{{ server.status.data.map }}</b>
-
       </div>
     </div>
 
