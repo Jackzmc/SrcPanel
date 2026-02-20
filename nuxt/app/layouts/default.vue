@@ -1,18 +1,15 @@
 <template>
   <div>
     <NavBar />
-    <slot />
+    <div class="py-6">
+      <slot />
+    </div>
     <USeparator icon="i-simple-icons-nuxtdotjs" />
     <UFooter>
-      <template #left>
+      <template #default>
         <p class="text-sm text-muted">
-          Built with Nuxt UI • © {{ new Date().getFullYear() }}
+          <b>jzPanel</b> v2.0.0. Commit <b>DEV</b>. Built <b>{{new Date().toLocaleString()}}</b>
         </p>
-      </template>
-
-      <template #right>
-        <UButton to="https://github.com/nuxt-ui-templates/starter" target="_blank" icon="i-simple-icons-github"
-          aria-label="GitHub" color="neutral" variant="ghost" />
       </template>
     </UFooter>
   </div>
