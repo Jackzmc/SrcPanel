@@ -83,7 +83,6 @@ const USER_DROPDOWN: DropdownMenuItem[][] = [
 ]
 
 const ADMIN_DROPDOWN: NavigationMenuItem = {
-  href: "/admin",
   label: "Administration",
   description: "Admin tools",
   icon: "lucide:toolbox",
@@ -101,6 +100,23 @@ const ADMIN_DROPDOWN: NavigationMenuItem = {
   ]
 }
 
+const EXTERNAL_LINKS: NavigationMenuItem[] = [
+  {
+    href: "https://stats.jackz.me/",
+    label: "Game Stats",
+    icon: "lucide:chart-pie"
+  },
+  {
+    href: "https://data.jackz.me/public/dashboard/295194e5-e4c3-41a9-9298-0ea2a895f881",
+    label: "Extended Stats",
+    icon: "lucide:chart-column-big"
+  },
+  {
+    href: "https://steamcommunity.com/groups/jackzl4d2",
+    label: "Steam Group",
+    icon: "simple-icons:steam"
+  }
+]
 
 const ROUTES = computed<NavigationMenuItem[]>(() => [
   {
@@ -151,7 +167,11 @@ const ROUTES = computed<NavigationMenuItem[]>(() => [
     ]
   },
   ...(isLoggedIn.value ? [ADMIN_DROPDOWN] : []),
-  { label: "Links", description: "External links" },
+  {
+    label: "Links",
+    description: "External links",
+    children: EXTERNAL_LINKS
+  },
   { href: "/discuss", label: "Discuss", description: "Admin panel discussions" },
 ])
 </script>
