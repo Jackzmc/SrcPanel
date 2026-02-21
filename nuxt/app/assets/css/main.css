@@ -1,7 +1,16 @@
 @import "tailwindcss";
 @import "@nuxt/ui";
 
-:root {
+.bg-light-blue {
+  background-color: light-dark(#dbeafe, #1e3a5f);
+}
+
+.tooltip-dark {
+  background-color: light-dark(#1f2937, #111827);
+  color: white;
+}
+
+.fluid {
   --ui-container: max-w-7xl;
 }
 

@@ -5,22 +5,20 @@
       <div class="grid grid-cols-2 gap-4">
         <div>
           <UContainer>
-            <UInput class="w-full" icon="i-lucide-search" placeholder="Search for a command" />
+            <UInput v-model="searchQuery" class="w-full" icon="i-lucide-search" placeholder="Search for a command" />
           </UContainer>
-          <div class="bg-error-50 p-6 my-6" v-if="error">
+          <div v-if="error" class="bg-error-50 p-6 my-6">
             {{ error }}
           </div>
-          <div v-for="(group, groupId) in groups" :key="groupId" class="py-6">
+          <div v-for="(group, groupId) in filteredGroups" :key="groupId" class="py-6">
             <h3 class="text-xl font-semibold text-center text-primary">
               {{ group.name }}
             </h3>
             <ul>
-              <li v-for="(cmd, i) in group.commands" :key="i" >
-                <button href="#" class="p-2 hover:bg-neutral-100 w-full text-left cursor-pointer">
+              <li v-for="(cmd, i) in group.commands" :key="i">
+                <button href="#" class="p-1 hover:bg-neutral-100 hover:dark:text-black w-full text-left cursor-pointer">
                   <strong>
-                    <template v-if="!cmd.consoleOnly && !cmd.hidePrefix">
-                      {{ cmdPrefix }}
-                    </template>{{ cmd.command }}
+                    <CmdNode :cmd="cmd" :prefix="cmdPrefix" />
                   </strong>
                   <div class="text-sm">{{ cmd.description }}</div>
                 </button>
@@ -29,10 +27,10 @@
           </div>
         </div>
         <div class="space-y-6">
-          <UCard>
+          <UCard class="light:bg-amber-50 dark:text-black">
             <UCheckbox v-model="showLockedCommands" label="Show all commands" />
           </UCard>
-          <UCard class="bg-primary-50">
+          <UCard class="bg-light-blue">
             <h3 class="text-lg font-semibold">
               I want to enter commands via
               <USelect v-model="cmdPrefix" :items="VISIBILITIES" class="w-48" />
@@ -48,7 +46,7 @@
               </li>
             </ol>
           </UCard>
-          <UCard class="bg-primary-50">
+          <UCard class="bg-light-blue">
             <h3 class="text-lg font-semibold">
               Parameter Info
             </h3>
@@ -119,8 +117,12 @@
 <script setup lang="ts">
 import Hero from '~/components/Hero.vue'
 import CmdArg from '~/components/commands/CmdArg.vue'
+import CmdNode from '~/components/commands/CmdNode.vue'
 import type { SelectItem } from '@nuxt/ui'
+import { parseCommand, parseCommandString } from '@common/methods/cmds'
 
+/** From the commands.json file */
+type CommandGroups = Record<string, CommandGroup>
 interface CommandGroup {
   name: string
   commands: {
@@ -128,14 +130,15 @@ interface CommandGroup {
     description?: string
     perm?: string
     consoleOnly?: boolean
-    hidePrefix?: boolean
+    hidePrefix?: boolean,
+    args?: Record<string, {
+      allowed_values?: string[]
+    }>
+    examples?: string[]
   }[]
 }
-type CommandData = Record<string, CommandGroup>
 
 declare const __BUILD_DATE__: string
-
-
 
 const VISIBILITIES: SelectItem[] = [
   { value: "sm_", label: "console" },
@@ -144,11 +147,40 @@ const VISIBILITIES: SelectItem[] = [
 ]
 const cmdPrefix = ref<string>("/")
 const showLockedCommands = ref<boolean>(false)
+const searchQuery = ref<string>("")
 
 // Lets server fetch in SSR
 const baseURL = import.meta.server
   ? useRequestURL().origin
   : useRuntimeConfig().app.baseURL
-const { data: groups, error } = await useFetch<CommandData>(`/data/commands.json?t=${__BUILD_DATE__}`, { key: "commands", immediate: true, baseURL })
+const { data: groups, error } = await useFetch<CommandGroups>(`/data/commands.json?t=${__BUILD_DATE__}`, { key: "commands", immediate: true, baseURL })
 
+const parsedGroups = computed(() => {
+  if (groups == undefined || groups.value == undefined) return []
+  return Object.entries(groups.value).map(([groupId, group]) => {
+    return {
+      id: groupId,
+      name: group.name,
+      commands: group.commands.map(parseCommand)
+    }
+  })
+})
+
+const filteredGroups = computed(() => {
+  const query = searchQuery.value.toLowerCase()
+  if(!query) return parsedGroups.value
+  return parsedGroups.value
+    .map(group => {
+      const commands = group.commands.filter(command => {
+        return command.name.toLowerCase().includes(query)
+          || command.description?.toLowerCase().includes(query)
+      })
+      return {
+        id: group.id,
+        name: group.name,
+        commands
+      }
+    })
+    .filter(group => group.commands.length > 0)
+})
 </script>
