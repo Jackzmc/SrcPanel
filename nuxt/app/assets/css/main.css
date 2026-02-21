@@ -24,3 +24,14 @@
 html {
   font-size: 18px;
 }
+
+.list-alphabetic {
+  list-style-type: lower-alpha;
+}
+
+pre,
+code {
+  color: rgb(204, 0, 41);
+  background-color: white;
+  padding: 0.25em;
+}

@@ -1,5 +1,5 @@
 <template>
-  <UContainer>
+  <UContainer class="py-6">
     <div class="grid grid-cols-3 gap-6">
       <div class="col-span-2">
         <div v-if="pending" class="flex justify-center py-12">

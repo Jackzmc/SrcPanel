@@ -6,7 +6,9 @@ export default withNuxt(
   {
     rules: {
       "@stylistic/quotes": 'off',
-      "vue/max-attributes-per-line": ["error", { singleline: 5, multiline: 1 }]
+      "vue/max-attributes-per-line": ["error", { singleline: 5, multiline: 1 }],
+      "@eslint/no-explicit-any": "off",
+      "vue/multiline-html-element-content-newline": "off"
     }
   }
 )

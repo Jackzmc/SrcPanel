@@ -17,10 +17,10 @@
       close
     />
 
-    <div class="py-6">
+    <div>
       <slot />
     </div>
-    <USeparator icon="i-simple-icons-nuxtdotjs" />
+    <USeparator class="mt-6" icon="i-simple-icons-nuxtdotjs" />
     <UFooter>
       <template #default>
         <p class="text-sm text-muted">
