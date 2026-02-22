@@ -81,6 +81,9 @@
 </template>
 
 <script setup lang="ts">
+useHead({
+  title: "Cvars - Docs"
+})
 import Hero from '~/components/Hero.vue'
 import { parseCommandString } from '@common/methods/cmds/util'
 import CmdArg from "~/components/commands/CmdArg.vue"

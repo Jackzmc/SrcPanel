@@ -14,7 +14,8 @@ useHead({
 const title = 'Jz Panel'
 const description = ''
 useSeoMeta({
-  title,
+  titleTemplate: (chunk) => chunk ? `${chunk} | ${title}` : title,
+  title: undefined, // let each page set its own
   description,
   ogTitle: title,
   ogDescription: description,

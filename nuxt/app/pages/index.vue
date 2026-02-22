@@ -39,6 +39,9 @@
 </template>
 
 <script setup lang="ts">
+useHead({
+  title: "Overview"
+})
 import type { APIListServersV1 } from '@common/Server'
 
 const api = useApi()

@@ -18,7 +18,17 @@ export function useAuth() {
     await navigateTo('/login')
   }
 
+  /**
+   * Requires user to be logged in. If not redirects to login page (that will redirect back when logged in)
+   */
+  async function requireAuth() {
+    const loc = useRequestURL()
+    if (!isLoggedIn.value) {
+      await navigateTo('/login?return_to=' + encodeURIComponent(loc.pathname))
+    }
+  }
+
   const isLoggedIn = computed(() => user.value !== null)
 
-  return { user, isLoggedIn, fetchUser, logout }
+  return { user, isLoggedIn, fetchUser, logout, requireAuth }
 }

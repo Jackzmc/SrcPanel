@@ -50,7 +50,9 @@
 </template>
 
 <script setup lang="ts">
-
+useHead({
+  title: "Keybind Generator - Docs"
+})
 import { ref, onMounted, onBeforeMount, computed } from 'vue';
 
 let keyboard = ref()

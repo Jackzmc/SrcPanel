@@ -117,6 +117,9 @@
 </template>
 
 <script setup lang="ts">
+useHead({
+  title: "Commands - Docs"
+})
 import Hero from '~/components/Hero.vue'
 import CmdArg from '~/components/commands/CmdArg.vue'
 import CmdNode from '~/components/commands/CmdNode.vue'

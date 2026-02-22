@@ -6,6 +6,7 @@
 </template>
 
 <script setup lang="ts">
+
 import { parseCommand, type Command } from '@common/methods/cmds/util'
 import type { CommandGroups } from '@common/methods/cmds/data'
 import CmdModal from '~/components/commands/CmdModal.vue'
@@ -13,6 +14,10 @@ import CmdModal from '~/components/commands/CmdModal.vue'
 const route = useRoute()
 const router = useRouter()
 const cmdName = route.params.cmd as string
+
+useHead({
+  title: cmdName + ' - Commands - Docs'
+})
 
 declare const __BUILD_DATE__: string
 
