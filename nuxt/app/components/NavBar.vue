@@ -88,15 +88,35 @@ const ADMIN_DROPDOWN: NavigationMenuItem = {
   icon: "lucide:toolbox",
   children: [
     {
-      href: "/admin/logs",
+      href: "/admin/audit",
       label: "Audit Logs",
-      icon: "ri:file-list-3-line"
+      icon: "lucide:logs"
+    },
+    {
+      href: "/admin/shares",
+      label: "Addons & Files",
+      icon: "lucide:folder-tree"
+    },
+    {
+      href: "/admin/servers",
+      label: "Manage Servers",
+      icon: "lucide:server"
     },
     {
       href: "/admin/players/recent",
       label: "Manage Players",
-      icon: "ri:group-line"
-    }
+      icon: "lucide:users"
+    },
+    {
+      href: "/admin/bans",
+      label: "Player Bans",
+      icon: "lucide:gavel"
+    },
+    {
+      href: "/admin/addons",
+      label: "Player Notes",
+      icon: "lucide:sticky-note"
+    },
   ]
 }
 

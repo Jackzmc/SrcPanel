@@ -2,7 +2,7 @@
   <UCard :class="cardClass">
     <div class="flex items-center justify-between">
       <div class="flex items-center gap-2">
-        <a class="font-medium">{{ server.name }}</a>
+        <a class="font-medium text-black">{{ server.name }}</a>
         <!-- buttons -->
         <UButton color="info" variant="outline" size="xs">
           <a :href="'steam://connect/' + server.ip + '/' + server.port">Join</a>
@@ -12,7 +12,7 @@
         </UButton>
       </div>
       <!-- Status -->
-      <UBadge :color="server.online ? 'success' : 'neutral'" variant="subtle">
+      <UBadge :color="server.online ? 'neutral' : 'neutral'" variant="soft" class="text">
         <UIcon
           :name="server.online ? 'i-lucide-circle' : 'i-lucide-square'"
           :class="server.online ? 'text-success' : 'text-error'"
@@ -60,7 +60,7 @@
         </div>
       </UTooltip>
       <!-- Playing [gamemode] on [map] -->
-      <div v-if="server.status?.data" class="flex items-center gap-1">
+      <div v-if="server.status?.data" class="flex items-center gap-1 text-black">
         <UIcon name="i-lucide-map" class="size-4" />
         <span>Playing</span>
         <b>{{ server.status.data.gamemode }}</b>
@@ -92,19 +92,19 @@
 </template>
 
 <script setup lang="ts">
-import type { APIListServersV1_Group, GroupInfo, ServerInfo } from '@common/Server'
+import type { APIListServersV1_Group, APIListServersV1_Server, GroupInfo, ServerInfo } from '@common/Server'
 import ClickCopy from '@/components/ClickCopy.vue'
 
 const props = defineProps<{
   group: GroupInfo | APIListServersV1_Group
-  server: ServerInfo
+  server: ServerInfo | APIListServersV1_Server
 }>()
 
 const cardClass = computed(() => {
   if (props.server.online) {
     return props.server.status.data && props.server.status.data?.players.length > 0
-      ? "bg-info-50"
-      : "bg-emerald-50"
+      ? "bg-info-100 text-black"
+      : "bg-emerald-200 text-black"
   }
   return "bg-yellow-50"
 })

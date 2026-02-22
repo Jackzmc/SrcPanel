@@ -29,6 +29,9 @@ importers:
       nuxt:
         specifier: ^4.3.1
         version: 4.3.1(@parcel/watcher@2.5.6)(@vue/compiler-sfc@3.5.28)(cac@6.7.14)(db0@0.3.4)(eslint@10.0.0(jiti@2.6.1))(ioredis@5.9.3)(lightningcss@1.31.1)(magicast@0.5.2)(optionator@0.9.4)(rollup@4.57.1)(terser@5.46.0)(typescript@5.9.3)(vite@7.3.1(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.46.0)(yaml@2.8.2))(vue-tsc@3.2.4(typescript@5.9.3))(yaml@2.8.2)
+      simple-keyboard:
+        specifier: ^3.8.111
+        version: 3.8.111
       tailwindcss:
         specifier: ^4.1.18
         version: 4.1.18
@@ -4693,6 +4696,9 @@ packages:
 
   simple-git@3.31.1:
     resolution: {integrity: sha512-oiWP4Q9+kO8q9hHqkX35uuHmxiEbZNTrZ5IPxgMGrJwN76pzjm/jabkZO0ItEcqxAincqGAzL3QHSaHt4+knBg==}
+
+  simple-keyboard@3.8.111:
+    resolution: {integrity: sha512-aEsaCDPxVbCwBZ/JlCgnY87JwKyBcRTtWNHz4y2ag9A5xnxwYW309YcgQnD6LT+F96ChlCr/bR8gqx1i2YdORQ==}
 
   sirv@3.0.2:
     resolution: {integrity: sha512-2wcC/oGxHis/BoHkkPwldgiPSYcpZK3JU28WoMVv55yHJgcZ8rlXvuG9iZggz+sU1d4bRgIGASwyWqjxu3FM0g==}
@@ -10435,6 +10441,8 @@ snapshots:
       debug: 4.4.3
     transitivePeerDependencies:
       - supports-color
+
+  simple-keyboard@3.8.111: {}
 
   sirv@3.0.2:
     dependencies:
