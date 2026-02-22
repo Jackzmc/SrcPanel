@@ -21,7 +21,7 @@
 </template>
 
 <script setup lang="ts">
-import type { ParamType } from '@common/methods/cmds';
+import type { ParamType } from '@common/methods/cmds/util';
 
 const iconMap: Record<ParamType, string|undefined> = {
   text: 'i-lucide-type',
@@ -30,6 +30,7 @@ const iconMap: Record<ParamType, string|undefined> = {
   boolean: 'i-lucide-check',
   player: 'i-lucide-user',
   players: 'i-lucide-users',
+  any: 'i-lucide-asterik'
 }
 
 const props = defineProps<{

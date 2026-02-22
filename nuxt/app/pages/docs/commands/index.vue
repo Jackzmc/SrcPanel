@@ -134,7 +134,6 @@ const VISIBILITIES: SelectItem[] = [
 const cmdPrefix = ref<string>("/")
 const showLockedCommands = ref<boolean>(false)
 const searchQuery = ref<string>("")
-const shownCommand = ref<Command|undefined>()
 
 // Lets server fetch in SSR
 const baseURL = import.meta.server

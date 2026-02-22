@@ -33,7 +33,7 @@ export interface ParsedCommand {
   params: ParamData[]
 }
 
-export type ParamType = "integer" | "decimal" | "text" | "boolean" | "player" | "players"
+export type ParamType = "any" | "integer" | "decimal" | "text" | "boolean" | "player" | "players"
 export interface ParamData {
   name: string,
   required?: boolean,
