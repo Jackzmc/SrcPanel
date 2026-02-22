@@ -1,5 +1,7 @@
 <template>
   <div>
+    <!-- TODO: re add permission check -->
+    <NuxtPage />
     <Hero title="Commands" subtitle="All the information to have fun, and manage those troublemakers" />
     <UContainer>
       <div class="grid grid-cols-2 gap-4">
@@ -16,9 +18,9 @@
             </h3>
             <ul>
               <li v-for="(cmd, i) in group.commands" :key="i">
-                <button href="#" class="p-1 hover:bg-neutral-100 hover:dark:text-black w-full text-left cursor-pointer">
+                <button @click="showCmd(cmd)" class="p-1 hover:bg-neutral-100 hover:dark:text-black w-full text-left cursor-pointer">
                   <strong>
-                    <CmdNode :cmd="cmd" :prefix="cmdPrefix" />
+                    <CmdNode :cmd="cmd" :prefix="cmdPrefix"/>
                   </strong>
                   <div class="text-sm">{{ cmd.description }}</div>
                 </button>
@@ -119,24 +121,8 @@ import Hero from '~/components/Hero.vue'
 import CmdArg from '~/components/commands/CmdArg.vue'
 import CmdNode from '~/components/commands/CmdNode.vue'
 import type { SelectItem } from '@nuxt/ui'
-import { parseCommand, parseCommandString } from '@common/methods/cmds'
-
-/** From the commands.json file */
-type CommandGroups = Record<string, CommandGroup>
-interface CommandGroup {
-  name: string
-  commands: {
-    command: string
-    description?: string
-    perm?: string
-    consoleOnly?: boolean
-    hidePrefix?: boolean,
-    args?: Record<string, {
-      allowed_values?: string[]
-    }>
-    examples?: string[]
-  }[]
-}
+import { parseCommand, type Command } from '@common/methods/cmds/util'
+import type { CommandGroups } from '@common/methods/cmds/data'
 
 declare const __BUILD_DATE__: string
 
@@ -148,6 +134,7 @@ const VISIBILITIES: SelectItem[] = [
 const cmdPrefix = ref<string>("/")
 const showLockedCommands = ref<boolean>(false)
 const searchQuery = ref<string>("")
+const shownCommand = ref<Command|undefined>()
 
 // Lets server fetch in SSR
 const baseURL = import.meta.server
@@ -183,4 +170,9 @@ const filteredGroups = computed(() => {
     })
     .filter(group => group.commands.length > 0)
 })
+
+const router = useRouter()
+function showCmd(cmd: Command) {
+  router.push(`/docs/commands/${cmd.name}`)
+}
 </script>

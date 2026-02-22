@@ -132,7 +132,8 @@ export interface Command {
   description?: string
   perm?: string
   consoleOnly: boolean
-  hidePrefix: boolean
+  hidePrefix: boolean,
+  examples?: string[]
 }
 export function parseCommand(item: any) {
   if (!item.command) throw new Error('Command property is required')
@@ -143,7 +144,8 @@ export function parseCommand(item: any) {
     description: item.description,
     perm: item.perm,
     consoleOnly: !!item.consoleOnly,
-    hidePrefix: !!item.hidePrefix
+    hidePrefix: !!item.hidePrefix,
+    examples: item.examples
   }
 }
 
