@@ -2,11 +2,8 @@
   <div>
     <Hero title="Shares" subtitle="" />
     <UContainer>
-      <div class="grid grid-cols-2 gap-4">
-        <UCard v-for="share of shares" :key="share.id">
-          <h3>{{ share.title }}</h3>
-          {{JSON.stringify(share)}}
-        </UCard>
+      <div class="grid grid-cols-4 gap-4">
+        <ShareCard v-for="share in shares" :key="share.id" :share="share" />
       </div>
     </UContainer>
   </div>
@@ -16,12 +13,14 @@
 useHead({
   title: "Shares"
 })
+import { type ShareData } from '@common/Share.js'
+import ShareCard from '~/components/shares/ShareCard.vue'
 const { requireAuth } = useAuth()
 await requireAuth()
 
 const api = useApi()
 
-const { data: shares, pending, error } = await useAsyncData<any>(
+const { data: shares, pending, error } = await useAsyncData<ShareData[]>(
   'shares',
   () => api('/shares')
 )
