@@ -1,6 +1,11 @@
 @import "tailwindcss";
 @import "@nuxt/ui";
 
+.icon-text {
+  vertical-align: -0.125rem;
+  margin-right: .1rem;
+}
+
 .bg-light-blue {
   background-color: light-dark(#dbeafe, #1e3a5f);
 }

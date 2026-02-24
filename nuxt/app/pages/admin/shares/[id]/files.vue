@@ -14,6 +14,10 @@ const props = defineProps<{
   status: AsyncDataRequestStatus
 }>()
 
+useHead({
+  title: `Maps - ${props.share.name} - Shares`
+})
+
 const columns: TableColumn<AddonInfo>[] = [
   {
     accessorKey: 'filename',

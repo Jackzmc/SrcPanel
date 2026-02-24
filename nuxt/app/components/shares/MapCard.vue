@@ -1,16 +1,52 @@
 <template>
-  <UCard>
-    {{ map.filename }}
+  <UCard :ui="{ header: 'p-0 m-0 px-0 sm:px-0', body: 'py-2 sm:py-2 px-3 sm:px-3' }">
+    <template #header class="">
+      <NuxtImg :src="map.workshop?.previewUrl" alt="Map Thumbnail"
+        class="w-full object-cover aspect-square max-h-60"
+        placeholder loading="lazy" fetchpriority="low" />
+    </template>
+    <h2 class="text-lg font-bold">
+      <ULink :to="{ name: 'admin-shares-id-filename', params: { id: share.id, filename: map.filename } }" class="text-primary">
+        {{ map.workshop?.title || map.filename }}
+      </ULink>
+    </h2>
+    <p class="text-sm text-gray-500">
+      {{ description }}
+    </p>
+    <div class="grid grid-cols-2 mt-4">
+      <IconText v-if="lastUpdatedText" icon="lucide:clock" :text="lastUpdatedText" tooltip="When addon last downloaded" />
+      <IconText class="text-right" icon="lucide:file" :text="formatSize(map.filesize ?? 0)" tooltip="Size of the addon" />
+      <div></div>
+      <IconText class="text-right" v-if="map.meta.chapterIds" icon="lucide:book"
+        :text="map.meta.chapterIds.length + ' chapters'"
+        tooltip="Number of chapters in the map" />
+    </div>
   </UCard>
 </template>
 
 <script setup lang="ts">
-import type { AddonInfo } from '@common/Share';
+import { formatSize, getRelDate } from '@common/methods/format';
+import type { AddonInfo, ShareInfo } from '@common/Share';
+const MAX_DESCRIPTION_LENGTH = 300;
 
-defineProps<{
+const props = defineProps<{
   map: AddonInfo;
+  share: ShareInfo
 }>();
-</script>
 
-<style scoped>
-</style>
+const description = computed(() => {
+  if(props.map.workshop?.description) {
+    if(props.map.workshop.description.length > MAX_DESCRIPTION_LENGTH) {
+      return props.map.workshop.description.substring(0, MAX_DESCRIPTION_LENGTH) + '...';
+    }
+    return props.map.workshop.description;
+  }
+  return 'No description available';
+})
+
+const lastUpdatedText = computed(() => {
+  const timestamp = props.map.workshop?.lastUpdated || props.map.lastModified
+  if(!timestamp) return null
+  return "Updated " + getRelDate(timestamp)
+})
+</script>
