@@ -1,5 +1,11 @@
 <template>
-  <UTable :data="addons" :columns="columns" :loading="status === 'pending'" sticky="header" />
+  <div class="">
+    <div class="flex flex-col gap-4 mb-6">
+      <UInput v-model="searchQuery" placeholder="Search maps..." icon="i-lucide-search" class="flex-1 w-lg" />
+    </div>
+
+    <UTable :data="addons" :columns="columns" :loading="status === 'pending'" sticky="header" v-model:global-filter="searchQuery"/>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -17,15 +23,33 @@ const props = defineProps<{
 useHead({
   title: `Maps - ${props.share.name} - Shares`
 })
+const sortHeader = (label: string) => (({ column }: { column: any } ) => {
+  const isSorted = column.getIsSorted()
+
+  /** @ts-expect-error is defined */
+  return h(UButton, {
+    color: 'neutral',
+    variant: 'ghost',
+    label: 'Name',
+    icon: isSorted
+      ? isSorted === 'asc'
+        ? 'i-lucide-arrow-up-narrow-wide'
+        : 'i-lucide-arrow-down-wide-narrow'
+      : 'i-lucide-arrow-up-down',
+    class: '-mx-2.5',
+    onClick: () => column.toggleSorting(column.getIsSorted() === 'asc')
+  })
+})
 
 const columns: TableColumn<AddonInfo>[] = [
   {
     accessorKey: 'filename',
-    header: 'Name',
+    // header: 'Name',
     cell: ({ row }) => h('a', {
       href: `/admin/addons/${row.original.filename}`,
       class: Object.entries(row.original.installInfo).filter(([id,enabled]) => enabled).length > 0 ? "text-blue" : "text-black",
     }, row.original.workshop?.title ?? row.original.filename),
+    header: sortHeader("Name"),
     meta: {
       class: {
         th: "whitespace-normal w-1/3",
@@ -50,7 +74,7 @@ const columns: TableColumn<AddonInfo>[] = [
   },
   {
     accessorKey: 'filesize',
-    header: 'File Size',
+    header: sortHeader("File Size"),
     cell: ({ row }) => formatSize(row.getValue('filesize')),
     meta: {
       class: {
@@ -60,7 +84,7 @@ const columns: TableColumn<AddonInfo>[] = [
   },
   {
     accessorKey: 'lastModified',
-    header: 'Modified At',
+    header: sortHeader("Modified At"),
     cell: ({ row }) => formatDate(row.getValue('lastModified'), true),
     meta: {
       class: {
@@ -70,7 +94,7 @@ const columns: TableColumn<AddonInfo>[] = [
   },
   {
     accessorKey: 'downloaded',
-    header: 'Downloaded At',
+    header: sortHeader("Downloaded At"),
     cell: ({ row }) => formatDate(row.getValue('downloaded'), true),
     meta: {
       class: {
@@ -79,4 +103,6 @@ const columns: TableColumn<AddonInfo>[] = [
     }
   },
 ]
+
+const searchQuery = ref<string|undefined>()
 </script>
