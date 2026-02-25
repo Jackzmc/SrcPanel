@@ -149,4 +149,4 @@ export interface ItemWorkshopItem {
 }
 export type DetailWorkshopItem = CollectionWorkshopItem | ItemWorkshopItem
 
-export type DetailsResponse = DetailWorkshopItem | { item: null | undefined }
+export type DetailsResponse = CollectionWorkshopItem | ItemWorkshopItem | { item: null | undefined, type: "none" }

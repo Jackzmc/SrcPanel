@@ -1,6 +1,7 @@
 <template>
   <div v-if="share">
     <Hero :title="`Shares / ${ route.params.id }`" />
+    <Component v-if="modal" :is="modal" :share="share" @close="modal = null" />
     <UContainer class="fluid">
       <div v-if="status === 'pending'" class="flex justify-center py-12">
         <div class="flex flex-col items-center">
@@ -27,11 +28,11 @@
               />
             </UCard>
             <div class="flex flex-col gap-2">
-              <UButton color="primary" size="lg">
+              <UButton color="primary" size="lg" @click="modal = AddWorkshopModal">
                 <UIcon name="i-lucide-plus" />
                 Workshop Addon
               </UButton>
-              <UButton color="primary" size="lg">
+              <UButton color="primary" size="lg" @click="modal = UploadModal">
                 <UIcon name="i-lucide-upload" />
                 Upload
               </UButton>
@@ -47,6 +48,8 @@
 import { type AddonInfo, type APIShareAddons, type ShareData } from '@common/Share.js'
 import { formatDate, formatSize } from '@common/methods/format'
 import type { TableColumn } from '@nuxt/ui'
+import AddWorkshopModal from '~/components/shares/AddWorkshopModal.vue'
+import UploadModal from '~/components/shares/UploadModal.vue'
 
 const tabs = [
   {
@@ -78,6 +81,9 @@ watch(data, (val) => {
 })
 const share = computed(() => data.value?.shareInfo)
 const addons = computed(() => data.value?.addons)
+
+const modal = shallowRef<null | Component>(null)
+
 // const { shareInfo: share, addons } = data.value
 
 
