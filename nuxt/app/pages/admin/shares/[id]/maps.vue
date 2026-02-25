@@ -15,12 +15,14 @@
           <span class="text-sm">{{ gridCols }}</span>
         </div>
         <!-- TODO -->
-        <USelect v-model="sortBy" class="w-48" />
-        <UButton
-          :icon="sortDir === SortDirection.Ascending ? 'i-lucide-arrow-up' : 'i-lucide-arrow-down'"
-          @click="sortDir = (sortDir === SortDirection.Ascending) ? SortDirection.Descending : SortDirection.Ascending"
-          variant="outline"
-        />
+        <USelectMenu v-model="sortBy" :items="SORT_OPTIONS" class="w-48" :searchInput="false" />
+        <UTooltip :text="sortTooltipText">
+          <UButton
+            :icon="sortDir === SortDirection.Ascending ? 'i-lucide-arrow-up' : 'i-lucide-arrow-down'"
+            @click="sortDir = (sortDir === SortDirection.Ascending) ? SortDirection.Descending : SortDirection.Ascending"
+            variant="outline"
+          />
+        </UTooltip>
       </div>
 
     </div>
@@ -37,13 +39,15 @@ import type { AsyncDataRequestStatus } from '#app';
 import MapCard from '~/components/shares/MapCard.vue';
 
 enum SortDirection { Ascending, Descending }
-const SORT_OPTIONS: Record<string, { label: string, sortFn: (a: any, b: any) => number, defaultDirection: SortDirection }> = {
-  none: {
+const SORT_OPTIONS: { value: string, label: string, sortFn: (a: any, b: any) => number, defaultDirection: SortDirection }[] = [
+  {
+    value: "none",
     label: "Default",
     defaultDirection: SortDirection.Ascending,
     sortFn: ( a, b) => 0
   },
-  lastUpdated: {
+  {
+    value: "lastUpdated",
     label: "Last Updated",
     defaultDirection: SortDirection.Descending,
     sortFn: (a, b) => a.lastUpdated - b.lastUpdated
@@ -72,23 +76,26 @@ const SORT_OPTIONS: Record<string, { label: string, sortFn: (a: any, b: any) => 
   //     return Number(aStats.avgRating) - Number(bStats.avgRating)
   //   }
   // },
-  title: {
+  {
+    value: "title",
     label: "Title",
     defaultDirection: SortDirection.Ascending,
     sortFn: (a, b) => {
+
       const aName: string = a.collection?.name ?? a.workshop?.title ?? a.filename
       const bName: string = b.collection?.name ?? b.workshop?.title ?? b.filename
       return aName.localeCompare(bName)
     }
   },
-  random: {
+  {
+    value: "random",
     label: "Random",
     defaultDirection: SortDirection.Ascending,
     sortFn: (a, b) => {
       return Math.random() ? 1 : -1
     }
   }
-}
+]
 
 const props = defineProps<{
   share: ShareInfo,
@@ -100,10 +107,28 @@ useHead({
   title: `Maps - ${props.share.name} - Shares`
 })
 
-const maps = props.addons.filter(addon => addon.meta.chapterIds != undefined)
+const maps = computed(() => {
+  const query = searchQuery.value?.toLocaleLowerCase()
+  return props.addons
+    .filter(addon => addon.meta.chapterIds != undefined)
+    .filter(addon => {
+      if(!query) return true
+      return addon.filename.toLocaleLowerCase().includes(query)
+        || (addon.workshop && addon.workshop.title?.toLocaleLowerCase().includes(query))
+    })
+    .sort((a, b) => {
+      if(!sortBy.value) return 0
+      if(sortDir.value == SortDirection.Ascending) return sortBy.value.sortFn(a, b)
+      else return sortBy.value.sortFn(b, a)
+    })
+})
+const sortTooltipText = computed(() => {
+  return `Toggle sort direction (is ${sortDir.value == SortDirection.Ascending ? 'Ascending' : 'Descending'})`
+})
+
 const gridCols = ref(3)
 const searchQuery = ref<string | undefined>()
-const sortBy = ref<string>("none")
+const sortBy = ref(SORT_OPTIONS[0])
 const sortDir = ref<SortDirection>(SortDirection.Ascending)
 
 </script>
