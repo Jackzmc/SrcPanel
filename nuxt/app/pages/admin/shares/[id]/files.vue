@@ -1,10 +1,14 @@
 <template>
-  <div class="">
+  <div>
     <div class="flex flex-col gap-4 mb-6">
       <UInput v-model="searchQuery" placeholder="Search files..." icon="i-lucide-search" class="flex-1 w-lg" />
     </div>
 
-    <UTable :data="addons" :columns="columns" :loading="status === 'pending'" sticky="header" v-model:global-filter="searchQuery"/>
+    <UTable :data="addons" :columns="columns"
+      :loading="status === 'pending'"
+      sticky="header"
+      v-model:global-filter="searchQuery"
+    />
   </div>
 </template>
 

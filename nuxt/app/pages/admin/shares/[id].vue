@@ -45,9 +45,7 @@
 </template>
 
 <script setup lang="ts">
-import { type AddonInfo, type APIShareAddons, type ShareData } from '@common/Share.js'
-import { formatDate, formatSize } from '@common/methods/format'
-import type { TableColumn } from '@nuxt/ui'
+import { type APIShareAddons, type ShareData } from '@common/Share.js'
 import AddWorkshopModal from '~/components/shares/AddWorkshopModal.vue'
 import UploadModal from '~/components/shares/UploadModal.vue'
 

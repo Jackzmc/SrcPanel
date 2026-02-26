@@ -3,6 +3,7 @@ import FastifyMultipart from '@fastify/multipart'
 import { pipeline } from 'stream'
 import { promisify } from 'util'
 import { AddonInfo, ChildWorkshopItem, DetailsResponse, WorkshopItem } from '../../../../common-types/Share.js';
+import type { APIDownloadAddonsMessage } from '../../../../common-types/share/downloadWS.js'
 import { NO_PERMISSION } from '../../responses.js';
 import { UserPrivilegeCode } from '../../../../common-types/Privileges.js';
 import { createReadStream } from 'fs';
@@ -230,6 +231,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     reply.send()
   })
 
+  // TODO: major refactor, but at very least, fix the message types, it's terrible.
   fastify.get('/:shareId/addons/:filename/download', async (req: FastifyRequest<{ Params: { shareId: string, filename: string } }>, reply) => {
     // Filter out ../ or ..\
     const filename = req.params.filename.replace(/\.\.(\/|\\|$)+/, '')
@@ -305,7 +307,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
       if (!useSSE) return
       return reply.raw.write(`data: ${JSON.stringify(payload)}\n\n`)
     }
-    async function send(payload: any, statusCode: number) {
+    async function send(payload: APIDownloadAddonsMessage, statusCode: number) {
       if (useSSE) return sendSSE(payload)
       else return await reply.status(statusCode).send(payload)
     }
@@ -399,6 +401,16 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
               }
               return detail
             })
+        }
+
+        if (details.length == 0) {
+          const payload = {
+            error: "No items to download",
+            code: "NO_ITEMS",
+            message: `No items were queued to download`
+          }
+          await send(payload, 400)
+          return
         }
 
 
@@ -507,9 +519,10 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
           }
         }
       } catch (error) {
+        req.log.error({}, error.message)
         const payload = {
           code: 'STEAM_ERROR',
-          error,
+          error: error.message,
           message: "An error occurred while fetching info or downloading the addon",
         }
         await send(payload, 500)
