@@ -50,7 +50,7 @@ const columns: TableColumn<AddonInfo>[] = [
     accessorKey: 'filename',
     // header: 'Name',
     cell: ({ row }) => h('a', {
-      href: `/admin/addons/${row.original.filename}`,
+      href: `/admin/addons/${props.share.id}/files?file=${row.original.filename}`,
       class: Object.entries(row.original.installInfo).filter(([id,enabled]) => enabled).length > 0 ? "text-blue" : "text-black",
     }, row.original.workshop?.title ?? row.original.filename),
     header: sortHeader("Name"),

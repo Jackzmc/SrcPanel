@@ -1,5 +1,5 @@
 <template>
-  <UModal open title="Add Workshop Addon">
+  <UModal open title="Add Workshop Addon" @update:open="$emit('close')">
     <template #body>
       <div class="">
         <template v-if="step == Step.Input">

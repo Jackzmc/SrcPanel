@@ -1,7 +1,14 @@
 <template>
   <div v-if="share">
     <Hero :title="`Shares / ${ route.params.id }`" />
-    <Component v-if="modal" :is="modal" :share="share" @close="modal = null" />
+    <InfoModal v-if="modals.file"
+      :share="share"
+      :loading="modals.file.loading"
+      :id="modals.file.id"
+      :addon="modals.file.addon"
+      @close="closeModal"
+    />
+    <Component v-if="modal" :is="modal" :share="share" @close="closeModal" />
     <UContainer class="fluid">
       <div v-if="status === 'pending'" class="flex justify-center py-12">
         <div class="flex flex-col items-center">
@@ -47,6 +54,7 @@
 <script setup lang="ts">
 import { type APIShareAddons, type ShareData } from '@common/Share.js'
 import AddWorkshopModal from '~/components/shares/AddWorkshopModal.vue'
+import InfoModal from '~/components/shares/InfoModal.vue'
 import UploadModal from '~/components/shares/UploadModal.vue'
 
 const tabs = [
@@ -62,9 +70,24 @@ const tabs = [
   }
 ]
 
+const modals = computed(() => ({
+  file: route.query.file && {
+    loading: status.value !== "success",
+    id: route.query.file as string,
+    addon: addons.value?.find(addon => addon.filename === route.query.file)
+  },
+  upload: 'upload' in route.query,
+  workshop: route.query.workshop && {
+    idOrUrl: route.query.workshop as string,
+    destinations: route.query.dests as string | undefined
+  },
+}))
+
+
 const { data: shares } = await useFetch<ShareData[]>(`/api/shares`, { key: `shares` })
 
 const route = useRoute()
+const router = useRouter()
 
 const selectedShare = ref<string>(route.params.id as string)
 
@@ -84,8 +107,11 @@ const modal = shallowRef<null | Component>(null)
 
 // const { shareInfo: share, addons } = data.value
 
-
 async function onChangeShare() {
   await navigateTo(`/admin/shares/${selectedShare.value}`)
+}
+function closeModal() {
+  modal.value = null
+  router.replace({ query: { }})
 }
 </script>

@@ -1,12 +1,14 @@
 <template>
   <UCard :ui="{ header: 'p-0 m-0 px-0 sm:px-0', body: 'py-2 sm:py-2 px-3 sm:px-3' }">
     <template #header class="">
-      <NuxtImg :src="map.workshop?.previewUrl" alt="Map Thumbnail"
-        class="w-full object-cover aspect-square max-h-60"
-        placeholder loading="lazy" fetchpriority="low" />
+      <ULink :to="linkTo" class="text-primary">
+        <NuxtImg :src="map.workshop?.previewUrl" alt="Map Thumbnail"
+          class="w-full object-cover aspect-square max-h-60"
+          placeholder loading="lazy" fetchpriority="low" />
+      </ULink>
     </template>
     <h2 class="text-lg font-bold">
-      <ULink :to="{ name: 'admin-shares-id-filename', params: { id: share.id, filename: map.filename } }" class="text-primary">
+      <ULink :to="linkTo" class="text-primary">
         {{ map.workshop?.title || map.filename }}
       </ULink>
     </h2>
@@ -33,6 +35,10 @@ const props = defineProps<{
   map: AddonInfo;
   share: ShareInfo
 }>();
+
+const linkTo = computed(() => {
+  return { name: 'admin-shares-id-maps', params: { id: props.share.id }, query: { file: props.map.filename } }
+})
 
 const description = computed(() => {
   if(props.map.workshop?.description) {
