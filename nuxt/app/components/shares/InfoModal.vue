@@ -82,12 +82,20 @@
         <p class="text-md">Enable or disable addon for following share destinations</p>
         <p class="text-md">Any changes require the server to be restarted before they are applied</p>
 
-        <div class="py-2 px-4">
+        <div class="py-2 px-4" v-if="checkedDestinations">
           <!-- TODO: checkedDestinations, checkboxgroup -->
           <UCheckbox v-for="(dest,id) in props.share.destinations" :key="id"
+            v-model="checkedDestinations[id]"
+            @change="toggleDest(id, checkedDestinations[id]!)"
             :label="dest.name ?? id"
              size="xl"
           />
+        </div>
+
+        <div class="py-2">
+          <UButton v-if="destinationsChanged" size="lg">
+            Restart Servers
+          </UButton>
         </div>
       </div>
       <div v-else>
@@ -99,12 +107,16 @@
 </template>
 
 <script setup lang="ts">
+// TODO: find out why this doesn't show when addons is loading
 import { formatSize } from '@common/methods/format';
 import type { AddonInfo, ShareInfo } from '@common/Share';
 import type { TableColumn, TabsItem } from '@nuxt/ui';
 
+const emit = defineEmits(['refresh'])
+
 const route = useRoute()
 const router = useRouter()
+const toast = useToast()
 
 const items: TabsItem[] = [
   {
@@ -147,7 +159,41 @@ const description = computed(() => {
   return `${props.share.id} / ${props.id}`
 })
 
+const destinationsChanged = computed(() => {
+  if(!props.addon || !checkedDestinations.value) return false
+  return Object.entries(checkedDestinations.value)
+    .some(([id,enabled]) => enabled !== props.addon!.installInfo[id])
+})
+
 const rating = ref()
 // TODO: prefill
-const checkedDestinations = ref()
+const checkedDestinations = ref<Record<string, boolean>>({})
+
+watch(() => props.addon?.installInfo, (_, installInfo) => {
+  if (!props.addon || !installInfo) return
+  checkedDestinations.value = installInfo ?? {}
+})
+
+async function toggleDest(destId: string, enabled: boolean) {
+  const mode = enabled ? "enable" : "disable"
+  const response = await request(`/api/shares/${props.share.id}/addons/${props.id}/${mode}/${destId}`, { method: 'POST' })
+  if('body' in response) {
+    // Update local copy
+    emit("refresh")
+    toast.add({
+      title: `${enabled ? 'Enabled' : 'Disabled'} ${props.id} on ${destId}`,
+      description: `${enabled ? 'Enabled' : 'Disabled'} ${props.id} on share ${props.share.name??props.share.id} / ${destId}`,
+      color: "success",
+      icon: enabled && "lucide:check"
+    })
+  } else {
+    toast.add({
+      title: `Error ${enabled ? 'enabling' : 'disabling'} ${props.id} on ${destId}`,
+      description: response.error.message,
+      color: "error",
+      icon: enabled && "lucide:check"
+    })
+    checkedDestinations.value[destId] = props.addon!.installInfo[destId] ?? false
+  }
+}
 </script>
