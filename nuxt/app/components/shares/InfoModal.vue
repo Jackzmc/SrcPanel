@@ -2,7 +2,7 @@
   <UModal open
     :title="title"
     :description="description"
-    @update:open="$emit('close')"
+    @update:open="emit('close')"
   >
     <template #body>
       <UTabs v-model="active" :items="items" class="w-full" />
@@ -11,14 +11,6 @@
         <h2 class="text-xl">Fetching workshop item details...</h2>
       </div>
       <div v-else-if="props.addon && active == 'overview'" class="space-y-2">
-        <div class="flex items-center justify-center gap-2">
-          <UTooltip text="Download addon served by workshop. May be newer.">
-            <UButton>Download (via Workshop)</UButton>
-          </UTooltip>
-          <UTooltip text="Download addon directly from panel">
-            <UButton variant="outline">Download (Direct Download)</UButton>
-          </UTooltip>
-        </div>
         <NuxtImg v-if="props.addon.workshop" :src="props.addon?.workshop?.previewUrl" />
         <table class="table-auto w-full border-collapse">
           <tbody>
@@ -98,6 +90,37 @@
           </UButton>
         </div>
       </div>
+      <div v-else-if="props.addon && active === 'actions'">
+        <div class="grid grid-rows-1 gap-2 p-2">
+          <UTooltip v-if="props.addon.workshop" text="Download addon served by workshop. May be newer.">
+            <UButton leading-icon="lucide:download"
+              as="a"
+              target="_blank"
+              :href="props.addon.workshop.fileUrl"
+            >
+              Download (via Workshop)
+            </UButton>
+          </UTooltip>
+          <UTooltip text="Download addon directly from panel">
+            <UButton leading-icon="lucide:download"
+              variant="outline"
+              as="a"
+              target="_blank"
+              :href="`/api/shares/${props.share.id}/addons/${props.addon.filename}/download`"
+            >
+              Download (Direct Download)
+            </UButton>
+          </UTooltip>
+          <UTooltip text="Delete addon">
+            <UButton leading-icon="lucide:trash"
+              color="error"
+              @click="deleteAddon"
+            >
+              Delete Addon
+            </UButton>
+          </UTooltip>
+        </div>
+      </div>
       <div v-else>
         <h4 class="text-lg font-medium">No Addon Info</h4>
         <p>No addon was found</p>
@@ -112,7 +135,7 @@ import { formatSize } from '@common/methods/format';
 import type { AddonInfo, ShareInfo } from '@common/Share';
 import type { TableColumn, TabsItem } from '@nuxt/ui';
 
-const emit = defineEmits(['refresh'])
+const emit = defineEmits(['refresh', 'close'])
 
 const route = useRoute()
 const router = useRouter()
@@ -128,6 +151,10 @@ const items: TabsItem[] = [
     label: 'Destinations',
     icon: 'i-lucide-server',
     value: 'destinations'
+  },
+  {
+    label: 'Actions',
+    value: 'actions'
   }
 ]
 
@@ -191,9 +218,39 @@ async function toggleDest(destId: string, enabled: boolean) {
       title: `Error ${enabled ? 'enabling' : 'disabling'} ${props.id} on ${destId}`,
       description: response.error.message,
       color: "error",
-      icon: enabled && "lucide:check"
+      icon: "lucide:circle-alert"
     })
     checkedDestinations.value[destId] = props.addon!.installInfo[destId] ?? false
+  }
+}
+
+const { promptConfirm } = useModal()
+
+async function deleteAddon() {
+  const result = await promptConfirm({
+    title: "Delete Addon",
+    description: `Are you sure you want to delete ${props.id} from ${props.share.name??props.share.id}?`,
+    okText: "Delete",
+    okColor: "error",
+  })
+  if(!result) return
+  const response = await request(`/api/shares/${props.share.id}/addons/${props.id}`, { method: 'DELETE' })
+  if('body' in response) {
+    // Update local copy
+    emit("refresh")
+    toast.add({
+      title: `Deleted ${props.id} from ${props.share.name??props.share.id}`,
+      description: `Deleted ${props.id} from share ${props.share.name??props.share.id}`,
+      color: "success",
+      icon: "lucide:trash"
+    })
+  } else {
+    toast.add({
+      title: `Error deleting ${props.id} from ${props.share.name??props.share.id}`,
+      description: response.error.message,
+      color: "error",
+      icon: "lucide:circle-alert"
+    })
   }
 }
 </script>

@@ -45,14 +45,17 @@ const sortHeader = (label: string) => (({ column }: { column: any } ) => {
   })
 })
 
+// This is to stop TS from complaining about use in h()
+import ULink from '@nuxt/ui/components/Link.vue'
+
 const columns: TableColumn<AddonInfo>[] = [
   {
     accessorKey: 'filename',
     // header: 'Name',
-    cell: ({ row }) => h('a', {
-      href: `/admin/addons/${props.share.id}/files?file=${row.original.filename}`,
+    cell: ({ row }) => h(ULink, {
+      to: { name: 'admin-shares-id-files', params: { id: props.share.id }, query: { file: row.original.filename } },
       class: Object.entries(row.original.installInfo).filter(([id,enabled]) => enabled).length > 0 ? "text-blue" : "text-black",
-    }, row.original.workshop?.title ?? row.original.filename),
+    }, () => row.original.workshop?.title ?? row.original.filename),
     header: sortHeader("Name"),
     meta: {
       class: {
