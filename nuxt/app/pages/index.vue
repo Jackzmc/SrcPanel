@@ -2,7 +2,7 @@
   <UContainer class="py-6 fluid">
     <div class="grid grid-cols-3 gap-6">
       <div class="col-span-2">
-        <div v-if="pending" class="flex justify-center py-12">
+        <div v-if="!groups&&pending" class="flex justify-center py-12">
           <UIcon name="i-lucide-loader-circle" class="animate-spin size-8" />
         </div>
         <div v-else-if="error" class="py-12">
@@ -43,6 +43,8 @@ useHead({
   title: "Overview"
 })
 import type { APIListServersV1 } from '@common/Server'
+
+const REFRESH_INTERVAL = 1000 * 20
 
 const api = useApi()
 
@@ -90,8 +92,12 @@ const FAQ: FAQEntry[] = [
   }
 ]
 
-const { data: groups, pending, error } = await useAsyncData<APIListServersV1>(
+const { data: groups, pending, error, refresh } = await useAsyncData<APIListServersV1>(
   'servers',
   () => api('/servers')
 )
+
+onMounted(() => {
+  setInterval(() => refresh(), REFRESH_INTERVAL)
+})
 </script>

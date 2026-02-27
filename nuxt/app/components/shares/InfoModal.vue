@@ -11,7 +11,12 @@
         <h2 class="text-xl">Fetching workshop item details...</h2>
       </div>
       <div v-else-if="props.addon && active == 'overview'" class="space-y-2">
-        <NuxtImg v-if="props.addon.workshop" :src="props.addon?.workshop?.previewUrl" />
+        <UBanner v-if="props.addon.workshop && props.addon.workshop.deleted"
+          color="warning"
+          icon="i-lucide-triangle-alert"
+          title="Addon may have been deleted since downloaded"
+        />
+        <NuxtImg v-if="props.addon.workshop?.previewUrl" :src="props.addon?.workshop?.previewUrl" />
         <table class="table-auto w-full border-collapse">
           <tbody>
             <tr class="border-b odd:bg-gray-100 even:bg-white">
@@ -21,7 +26,7 @@
             <tr v-if='props.addon.workshop' class="border-b  odd:bg-gray-100 even:bg-white">
               <th class="text-left py-2 px-3">Workshop</th>
               <td class="py-2 px-3 text-primary">
-                <a href="`https://steamcommunity.com/sharedfiles/filedetails/?id=${ props.addon.workshop.id }`" target="_blank">
+                <a :href="`https://steamcommunity.com/sharedfiles/filedetails/?id=${ props.addon.workshop.publishedfileid }`" target="_blank">
                   Open Workshop Page
                   <UIcon class="align-middle" name="lucide:square-arrow-out-up-right" />
                 </a>
@@ -92,7 +97,7 @@
       </div>
       <div v-else-if="props.addon && active === 'actions'">
         <div class="grid grid-rows-1 gap-2 p-2">
-          <UTooltip v-if="props.addon.workshop" text="Download addon served by workshop. May be newer.">
+          <UTooltip v-if="props.addon.workshop?.fileUrl" text="Download addon served by workshop. May be newer.">
             <UButton leading-icon="lucide:download"
               as="a"
               target="_blank"
@@ -135,6 +140,20 @@ import { formatSize } from '@common/methods/format';
 import type { AddonInfo, ShareInfo } from '@common/Share';
 import type { TableColumn, TabsItem } from '@nuxt/ui';
 
+const props = defineProps<{
+  loading: boolean,
+  addon: AddonInfo | undefined,
+  id: string,
+  share: ShareInfo
+}>()
+
+useHead({
+  title: computed(() => `${props.id} - ${props.share.id} Shares`),
+  meta: [
+    { name: 'description', content: 'Info Modal' }
+  ]
+})
+
 const emit = defineEmits(['refresh', 'close'])
 
 const route = useRoute()
@@ -171,12 +190,7 @@ const active = computed({
   }
 })
 
-const props = defineProps<{
-  loading: boolean,
-  addon: AddonInfo | undefined,
-  id: string,
-  share: ShareInfo
-}>()
+
 
 const title = computed(() => {
   return props.addon?.workshop?.title ?? props.addon?.filename ?? props.id
