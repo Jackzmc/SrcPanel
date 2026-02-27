@@ -4,7 +4,14 @@
       <UInput v-model="searchQuery" placeholder="Search files..." icon="i-lucide-search" class="flex-1 w-lg" />
     </div>
 
+    <div v-if="rows && rows.length > 0" class="flex gap-2">
+      <UBadge> {{ rows.length }} selected</UBadge>
+      <UButton leading-icon="i-lucide-trash" color="error" size="sm" @click="deleteSelected">Delete Selected</UButton>
+    </div>
+
     <UTable :data="addons" :columns="columns"
+      ref="table"
+      checkable
       :loading="status === 'pending'"
       sticky="header"
       v-model:global-filter="searchQuery"
@@ -47,8 +54,27 @@ const sortHeader = (label: string) => (({ column }: { column: any } ) => {
 
 // This is to stop TS from complaining about use in h()
 import ULink from '@nuxt/ui/components/Link.vue'
+import UCheckbox from '@nuxt/ui/components/Checkbox.vue'
 
 const columns: TableColumn<AddonInfo>[] = [
+  {
+    id: 'select',
+    header: ({ table }) =>
+      h(UCheckbox, {
+        modelValue: table.getIsSomePageRowsSelected()
+          ? 'indeterminate'
+          : table.getIsAllPageRowsSelected(),
+        'onUpdate:modelValue': (value: boolean | 'indeterminate') =>
+          table.toggleAllPageRowsSelected(!!value),
+        'aria-label': 'Select all'
+      }),
+    cell: ({ row }) =>
+      h(UCheckbox, {
+        modelValue: row.getIsSelected(),
+        'onUpdate:modelValue': (value: boolean | 'indeterminate') => row.toggleSelected(!!value),
+        'aria-label': 'Select row'
+      })
+  },
   {
     accessorKey: 'filename',
     // header: 'Name',
@@ -111,5 +137,69 @@ const columns: TableColumn<AddonInfo>[] = [
   },
 ]
 
+const rows = computed(() => {
+  if(!table.value) return;
+  return table.value.tableApi.getSelectedRowModel().rows;
+})
+
+// fix TS errors
+import type { Table } from '@tanstack/vue-table'
+import { UProgress } from '#components';
+
+const table = useTemplateRef<{ tableApi: Table<AddonInfo> }>('table')
 const searchQuery = ref<string|undefined>()
+
+const { promptConfirm } = useModal()
+
+const toast = useToast()
+
+async function deleteSelected() {
+  if(!rows.value) return
+  const addons = rows.value
+
+  if(!await promptConfirm({
+    title: `Confirm action`,
+    description: `Are you sure you want to delete ${addons.length} addons?`,
+    okText: "Delete",
+    okColor: "error"
+  })) return
+
+  const abort = new AbortController()
+
+  const instance = toast.add({
+    title: `Deleting ${rows.value.length} addons`,
+    description: () => h(UProgress, { modelValue: 0, max: addons.length }),
+    icon: `lucide:trash`,
+    color: 'primary',
+    duration: 0,
+    progress: true,
+    close: false,
+    actions: [
+      {
+        label: "Cancel",
+        color: "error",
+        onClick: () => {
+          abort.abort()
+          toast.remove(instance.id)
+        }
+      }
+    ]
+  })
+
+  let count = 0;
+  const updateProgress = () => {
+    toast.update(instance.id, {
+      description: () => h(UProgress, { modelValue: count, max: addons.length })
+    })
+  }
+
+  await Promise.all(addons.map(async (addon) => {
+    // TODO: impl fetch()
+    await fetch(`/api/shares/${props.share.id}/addons/${addon.id}`, { method: "DELETE" })
+    count++
+    updateProgress()
+  }))
+
+  toast.remove(instance.id)
+}
 </script>

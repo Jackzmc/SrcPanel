@@ -17,6 +17,7 @@
     "@nuxt/a11y": "1.0.0-alpha.1",
     "@nuxt/image": "2.0.0",
     "@nuxt/ui": "^4.4.0",
+    "@tanstack/vue-table": "^8.21.3",
     "nuxt": "^4.3.1",
     "simple-keyboard": "^3.8.111",
     "tailwindcss": "^4.1.18"
