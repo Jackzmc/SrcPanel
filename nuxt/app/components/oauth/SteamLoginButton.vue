@@ -1,6 +1,6 @@
 <template>
   <form method="post" action="https://steamcommunity.com/openid/login">
-    <input type="hidden" name="openid.realm" :value="realm" />
+    <input type="hidden" name="openid.realm" :value="apiOrigin" />
     <input type="hidden" name="openid.return_to" :value="redirectUri" />
     <input type="hidden" name="openid.mode" value="checkid_setup" />
     <input type="hidden" name="openid.identity" value="http://specs.openid.net/auth/2.0/identifier_select">
@@ -21,10 +21,14 @@
 import { computed } from 'vue'
 
 const url = useRequestURL()
+const config = useRuntimeConfig()
 
-const realm = computed(() => `${url.protocol}//${url.host}`)
+const uiOrigin = `${url.protocol}//${url.host}`
+// In dev, apiPublicUrl points to Fastify directly so it sets the cookie itself.
+// In prod, it's empty and falls back to same origin (nginx handles /api proxy).
+const apiOrigin = config.public.apiPublicUrl || uiOrigin
 
 const redirectUri = computed(() => {
-  return `${realm.value}/api/auth/steam/callback?return_uri=${realm.value}${url.pathname}`
+  return `${apiOrigin}/api/auth/steam/callback?return_uri=${uiOrigin}${url.pathname}`
 })
 </script>
