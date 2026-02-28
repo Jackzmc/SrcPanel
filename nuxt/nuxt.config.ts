@@ -46,6 +46,8 @@ export default defineNuxtConfig({
         'lucide:chevron-right',
         'lucide:chevron-left',
         'lucide:chevron-up',
+        'lucide:chevrons-left',
+        'lucide:chevrons-right',
         'lucide:x',
         'lucide:check',
         'lucide:circle-check',

@@ -24,6 +24,7 @@ import { formatDate, formatSize } from '@common/methods/format'
 import type { TableColumn } from '@nuxt/ui'
 import type { AddonInfo, ShareInfo } from '@common/Share';
 import type { AsyncDataRequestStatus } from '#app';
+import { sortHeader } from '#imports';
 
 const props = defineProps<{
   share: ShareInfo,
@@ -33,23 +34,6 @@ const props = defineProps<{
 
 useHead({
   title: `Maps - ${props.share.name} - Shares`
-})
-const sortHeader = (label: string) => (({ column }: { column: any } ) => {
-  const isSorted = column.getIsSorted()
-
-  /** @ts-expect-error is defined */
-  return h(UButton, {
-    color: 'neutral',
-    variant: 'ghost',
-    label: 'Name',
-    icon: isSorted
-      ? isSorted === 'asc'
-        ? 'i-lucide-arrow-up-narrow-wide'
-        : 'i-lucide-arrow-down-wide-narrow'
-      : 'i-lucide-arrow-up-down',
-    class: '-mx-2.5',
-    onClick: () => column.toggleSorting(column.getIsSorted() === 'asc')
-  })
 })
 
 // This is to stop TS from complaining about use in h()
