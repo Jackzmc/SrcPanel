@@ -4,7 +4,7 @@
     <UContainer class="fluid">
       <div class="grid grid-cols-5 gap-2">
         <div class="col-span-4">
-          <div class="flex justify-left border-t border-default pt-4 px-4">
+          <div class="flex justify-left px-4">
             <UPagination
               v-model:page="page"
               :items-per-page="limit"
@@ -38,14 +38,13 @@
               </div>
             </template>
           </UTable>
-          <!-- @row-click="handleRowClick" -->
         </div>
         <div>
           <UCard class="bg-light-blue ">
             <h2 class="text-lg font-bold">
               Showing
               <UInput type="number" min="1" max="100" v-model.lazy="limit" />
-              / {{ data?.totalBans }} bans
+              / {{ (data?.totalBans ?? 0).toLocaleString() }} bans
             </h2>
             <p>
               Click a user's name to view more detailed ban information
@@ -163,6 +162,7 @@ const { data, refresh } = await useAsyncData<UIBanResponse>(
     })),
   }) }
 )
+
 
 watch([limit, page], () => refresh())
 

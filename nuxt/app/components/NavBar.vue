@@ -113,7 +113,7 @@ const ADMIN_DROPDOWN: NavigationMenuItem = {
       icon: "lucide:gavel"
     },
     {
-      href: "/admin/addons",
+      href: "/admin/notes",
       label: "Player Notes",
       icon: "lucide:sticky-note"
     },

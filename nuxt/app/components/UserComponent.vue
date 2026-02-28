@@ -1,13 +1,12 @@
 <template>
   <UPopover v-if="!hideTooltip" mode="hover" :open-delay="200">
     <ULink :to="id ? { path: `/users/${id}`, query: { returnTo: route.fullPath } } : undefined" class="flex items-center gap-1.5">
-      <UAvatar v-if="!hideAvatar && clientAvatarSrc" :src="clientAvatarSrc" :alt="props.user.name" size="xs" />
+      <UAvatar v-if="!hideAvatar && clientAvatarSrc" :src="clientAvatarSrc" :alt="props.user.name ?? id!" size="md" loading="lazy" :as="{ img: 'img' }"  />
       <span v-if="!hideName">{{ props.user.name ?? id }}</span>
     </ULink>
-
     <template #content>
       <div class="flex items-start gap-3 p-3 w-72">
-        <UAvatar v-if="clientAvatarSrc" :src="clientAvatarSrc" :alt="props.user.name" size="md" />
+        <UAvatar v-if="clientAvatarSrc" :src="clientAvatarSrc" :alt="props.user.name ?? id!" size="md" :as="{ img: 'img' }"  />
         <div class="min-w-0 flex-1">
           <p class="font-bold text-highlighted text-lg">{{ props.user.name }}</p>
           <p class="text-md text-muted font-mono">{{ steamid2 ?? props.fallbackName ?? 'BOT' }}</p>
