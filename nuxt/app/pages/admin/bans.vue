@@ -64,7 +64,7 @@ useHead({ title: 'Bans' })
 import type { TableColumn } from '@nuxt/ui'
 import { APIBanFlags, type APIBanResponse, type ListAPIBan } from '@common/Ban.js'
 import UCheckbox from '@nuxt/ui/components/Checkbox.vue'
-import { getRelDate } from '@common/methods/format';
+import { formatDate, getRelDate } from '@common/methods/format';
 
 const api = useApi()
 const route = useRoute()
@@ -109,7 +109,12 @@ const columns: TableColumn<UIBan>[] = [
   {
     accessorKey: 'reason',
     header: "Reason",
-    cell: ({ row }) => h("div", { class: "truncate max-w-[180px]", title: row.original.reason }, row.original.reason)
+    cell: ({ row }) => h("div", { class: "truncate max-w-[180px]", title: row.original.reason }, row.original.reason),
+    meta: {
+      class: {
+        td: "whitespace-normal"
+      }
+    }
   },
   {
     accessorKey: 'flags',
@@ -125,8 +130,8 @@ const columns: TableColumn<UIBan>[] = [
     accessorKey: 'expires',
     header: "Expires",
     cell: ({ row }) => row.original.expires
-      ? h("span", { class: "text-xs" }, getRelDate(row.original.expires / 1000))
-      : h("span", { class: "text-muted text-xs" }, "Permanent")
+      ? h("span", { class: "text-xs font-semibold", title: new Date(row.original.expires*1000) }, formatDate(row.original.expires, true))
+      : h("span", { class: "text-muted-600/25 text-xs" }, "Permanent")
   },
   {
     accessorKey: 'timestamp',

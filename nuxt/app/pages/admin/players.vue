@@ -39,7 +39,7 @@ const tabs = [
 
 const route = useRoute()
 
-const tabId = computed(() => route.name?.toString().split('-').pop())
+const tabId = computed(() => route.path.split('/').pop())
 const tab = computed(() => tabs.find(t => t.value === tabId.value) ?? tabs[0]!)
 
 useHead({

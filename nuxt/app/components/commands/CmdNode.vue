@@ -12,7 +12,7 @@
 </template>
 
 <script setup lang="ts">
-import { type Command } from '@common/methods/cmds'
+import { type Command } from '@common/methods/cmds/util'
 import CmdArg from './CmdArg.vue'
 
 const props = withDefaults(defineProps<{

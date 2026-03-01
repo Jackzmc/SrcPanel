@@ -16,7 +16,7 @@
             :data="data.notes"
             :columns="columns"
             class="text-sm w-full"
-            :ui="{ td: 'p-0 py-1 px-0', th: 'py-1 px-0' }"
+            :ui="{ td: 'p-0 py-1 px-1', th: 'py-1 px-1' }"
           />
           <div class="flex justify-left pt-4 px-4">
             <UPagination
@@ -100,7 +100,7 @@ const columns: TableColumn<Note>[] = [
     cell: ({ row }) => row.original.content,
     meta: {
       class: {
-        th: "whitespace-nowrap",
+        td: "whitespace-normal"
       }
     }
   },
@@ -123,7 +123,7 @@ const params = computed(() => {
 })
 
 const { data, refresh } = await useAsyncData<APINotesResponse>(
-  'bans',
+  'notes',
   () => api(`/notes?${params.value.toString()}`),
 )
 
