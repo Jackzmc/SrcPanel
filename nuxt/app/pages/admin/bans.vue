@@ -4,7 +4,7 @@
     <UContainer class="fluid">
       <div class="grid grid-cols-5 gap-2">
         <div class="col-span-4">
-          <div class="flex justify-left px-4">
+          <div class="flex justify-left px-4 mb-3">
             <UPagination
               v-model:page="page"
               :items-per-page="limit"
@@ -60,7 +60,12 @@
 </template>
 
 <script setup lang="ts">
-useHead({ title: 'Bans' })
+useHead({
+  title: 'Bans',
+  meta: [
+    { name: "robots", content: "noindex,nosnippet" }
+  ]
+})
 import type { TableColumn } from '@nuxt/ui'
 import { APIBanFlags, type APIBanResponse, type ListAPIBan } from '@common/Ban.js'
 import UCheckbox from '@nuxt/ui/components/Checkbox.vue'

@@ -44,6 +44,7 @@ export class ResponseError extends Error {
   }
 }
 
+export type RequestResult<T> = { body: T } | { error: ResponseError }
 /**
  * Performs a API request, throwing ResponseError if any errors (network error, OR non 200/204 status)
  * @param url
@@ -51,8 +52,7 @@ export class ResponseError extends Error {
  * @throws ResponseError
  * @returns valid json
  */
-export async function request<T extends Record<string, any>>(url: string, options?: RequestInit)
-  : Promise<{ body: T } | { error: ResponseError }> {
+export async function request<T extends Record<string, any>>(url: string, options?: RequestInit): Promise<RequestResult<T>> {
   try {
     const res = await fetch(url, options)
 

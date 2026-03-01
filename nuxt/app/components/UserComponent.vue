@@ -1,12 +1,12 @@
 <template>
-  <UPopover v-if="!hideTooltip" mode="hover" :open-delay="200">
+  <UPopover v-if="!hideTooltip" mode="hover" :open-delay="200" @update:open="onPopover">
     <ULink :to="id ? { path: `/users/${id}`, query: { returnTo: route.fullPath } } : undefined" class="flex items-center gap-1.5">
       <UAvatar v-if="!hideAvatar && clientAvatarSrc" :src="clientAvatarSrc" :alt="props.user.name ?? id!" size="md" loading="lazy" :as="{ img: 'img' }"  />
       <span v-if="!hideName">{{ props.user.name ?? id }}</span>
     </ULink>
     <template #content>
       <div class="flex items-start gap-3 p-3 w-72">
-        <UAvatar v-if="clientAvatarSrc" :src="clientAvatarSrc" :alt="props.user.name ?? id!" size="md" :as="{ img: 'img' }"  />
+        <UAvatar v-if="clientAvatarSrc" :src="clientAvatarSrc" :alt="props.user.name ?? id!" size="md":as="{ img: 'img' }"  />
         <div class="min-w-0 flex-1">
           <p class="font-bold text-highlighted text-lg">{{ props.user.name }}</p>
           <p class="text-md text-muted font-mono">{{ steamid2 ?? props.fallbackName ?? 'BOT' }}</p>
@@ -18,6 +18,40 @@
             <UBadge v-if="'notesCount' in props.user && props.user.notesCount != null" color="neutral" variant="subtle">
               {{ props.user.notesCount }} Note(s)
             </UBadge>
+          </div>
+          <div v-if="details" class="flex flex-wrap gap-1 mt-2">
+            <template v-if="'body' in details">
+              <UBadge v-if="details.body.user.isAdmin" color="info" variant="subtle">Admin</UBadge>
+              <UBadge v-if="details.body.user.bansCount != null" color="error" variant="subtle">
+                {{ details.body.user.bansCount }} Ban(s)
+              </UBadge>
+              <UBadge v-if="details.body.user.notesCount != null" color="neutral" variant="subtle">
+                {{ details.body.user.notesCount }} Note(s)
+              </UBadge>
+
+              <div v-if="details.body.user.lastJoinDate">
+                <b>Last seen</b>
+                <span class="ml-1">{{ getRelDate(details.body.user.lastJoinDate) }}</span>
+              </div>
+              <div v-else>
+                Has never joined server
+              </div>
+
+              <div v-if="details.body.profile">
+                <b>Birthday</b>
+                <span class="ml-1">
+                  {{ birthDate }}
+                </span>
+              </div>
+            </template>
+            <UAlert color="error" v-else>
+              <Icon name="lucide:triangle-alert" />
+              {{ details.error }}
+            </UAlert>
+          </div>
+          <div v-else>
+            <Icon name="lucide:refresh-ccw" class="animate-spin align-middle mb-1" />
+            Loading user details...
           </div>
         </div>
       </div>
@@ -33,7 +67,8 @@
 
 <script setup lang="ts">
 import SteamID from 'steamid'
-import { type APIUser } from '@common/User.js'
+import { type APIUser, type APIUserDetails } from '@common/User.js'
+import { getRelDate } from '@common/methods/format'
 
 const route = useRoute()
 
@@ -59,7 +94,6 @@ const id = computed(() => {
 })
 
 const clientAvatarSrc = computed(() => {
-  if (props.hideAvatar) return null
   return id.value ? `/api/users/${id.value}/avatar` : '/img/steam_default_avatar.png'
 })
 
@@ -72,4 +106,29 @@ const steamid2 = computed(() => {
     return null
   }
 })
+
+const birthDate = computed(() => {
+  if (!details.value || 'error' in details.value) return null
+  const profile = details.value.body.profile
+  if(!profile) return null
+  const date = new Date(2000, profile.birthMonth ?? 0, profile.birthDate)
+  if(profile.birthMonth) {
+    return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric'  })
+  } else if(profile.birthDate) {
+    return date.toLocaleDateString('en-US', { day: 'numeric' })
+  }
+})
+
+const details = ref<RequestResult<APIUserDetails>|null>(null)
+
+async function getDetails() {
+  if(!steamid2.value) return
+  details.value = await request<APIUserDetails>(`/api/users/${steamid2.value}?include=profile`)
+}
+
+function onPopover(open: boolean) {
+  if (open) getDetails()
+  else details.value = null
+}
+
 </script>

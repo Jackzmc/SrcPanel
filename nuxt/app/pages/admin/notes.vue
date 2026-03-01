@@ -54,7 +54,12 @@
 </template>
 
 <script setup lang="ts">
-useHead({ title: 'Notes' })
+useHead({
+  title: 'Notes',
+  meta: [
+    { name: "robots", content: "noindex,nosnippet" }
+  ]
+})
 import type { TableColumn } from '@nuxt/ui'
 import { getRelDate } from '@common/methods/format';
 import type { APINotesResponse, Note } from '@common/Note.js';

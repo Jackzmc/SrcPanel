@@ -4,7 +4,7 @@ import { ADMINS_DB } from '../!!privileged/admins.js';
 import SteamID from 'steamid';
 import { BanAppeal, FullAPIBan } from '../../../../common-types/Ban.js';
 import { NAME_INVALID_CHAR_REPLACE } from '../../routes/!unprivileged/bans.js';
-import { APIListPlayersResponse, PlayerEntry, ReadableAdminData, UserNameEntry, UserProfileData } from '../../../../common-types/User.js';
+import { APIListPlayersResponse, APIUserDetails, PlayerEntry, PlayerRecentEntry, ReadableAdminData, UserNameEntry, UserProfileData } from '../../../../common-types/User.js';
 import { NOT_FOUND, NO_PERMISSION } from '../../responses.js';
 
 
@@ -12,7 +12,7 @@ const RECENT_DEFAULT_LIMIT = 25
 const STEAM_ID_REGEX = new RegExp(/STEAM_\d:\d:\d+/)
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
-  fastify.get('/recent/:server?', async (req: FastifyRequest<{ Params: { server?: string }, Querystring: { limit?: number, offset?: string } }>, reply): Promise<APIListPlayersResponse> => {
+  fastify.get('/recent/:server?', async (req: FastifyRequest<{ Params: { server?: string }, Querystring: { limit?: number, offset?: string } }>, reply): Promise<APIListPlayersResponse<PlayerRecentEntry>> => {
     let limit = Number(req.query.limit) || RECENT_DEFAULT_LIMIT
     if (limit < 0 || limit > 100) limit = RECENT_DEFAULT_LIMIT
 
@@ -61,7 +61,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         queryTimeSec: Date.now() - start,
         nextOffset: offset + rows.length
       },
-      users: rows as APIListPlayersResponse['users']
+      users: rows as APIListPlayersResponse<PlayerRecentEntry>['users']
     }
   })
 
@@ -159,7 +159,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     Querystring: {
       include?: string,
     }
-  }>, reply) => {
+  }>, reply): Promise<APIUserDetails> => {
     if (!req.params.steamid || req.params.steamid.length < 10) {
       return reply.status(400).send({
         error: "INVALID_STEAMID",
@@ -167,58 +167,67 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
       })
     }
 
-    const [[userdata], [stats]] = await Promise.all([
-      fastify.db.execute<RowDataPacket[]>(
+    const includes = req.query.include ? req.query.include.split(',') : []
+
+    const userStart = Date.now()
+    const [[userdata]] = await Promise.all([
+      fastify.db.execute<(RowDataPacket & { accountId: number, name: string, createTime?: number, lastJoinTime?: number, lastRegion?: string, notesCount: number, bansCount: number, isAdmin: number })[]>(
         `SELECT
-                    steamid, last_alias as name, country, last_join_date as lastJoinDate, created_date as firstJoinDate
-                FROM stats_users
-                WHERE SUBSTRING(steamid,11) = SUBSTRING(:steamid, 11) LIMIT 1`,
-        { steamid: req.params.steamid }
-      ),
-      fastify.db.execute<RowDataPacket[]>(
-        `SELECT
-                (SELECT COUNT(*) FROM notes WHERE SUBSTRING(notes.steamid,11) = SUBSTRING(:steamid, 11)) as notesCount,
-                (SELECT COUNT(*) FROM bans WHERE SUBSTRING(bans.steamid,11) = SUBSTRING(:steamid, 11)) as bansCount,
-                (SELECT COUNT(*) FROM ${ADMINS_DB}.sm_admins WHERE ${ADMINS_DB}.sm_admins.identity = :steamid) as isAdmin
-                LIMIT 1`,
+          account_id accountId, last_name name, create_time firstJoinDate, last_join_time lastJoinDate, last_country country, last_region region,
+          (SELECT COUNT(*) FROM notes WHERE SUBSTRING(notes.steamid,11) = SUBSTRING(:steamid, 11)) as notesCount,
+          (SELECT COUNT(*) FROM bans WHERE SUBSTRING(bans.steamid,11) = SUBSTRING(:steamid, 11)) as bansCount,
+          (SELECT COUNT(*) FROM ${ADMINS_DB}.sm_admins WHERE ${ADMINS_DB}.sm_admins.identity = :steamid) as isAdmin
+        FROM view_panel_user
+        WHERE account_id = SUBSTRING(:steamid, 11)
+        LIMIT 1`,
         { steamid: req.params.steamid }
       )
     ])
-
-    let userInfo = {}
-
-    if (userdata.length > 0) {
-      userInfo = userdata[0]
-    } else if (STEAM_ID_REGEX.test(req.params.steamid)) {
-      const steamid = new SteamID(req.params.steamid)
-      const userInfos = await fastify.steam.getUserDetails([steamid])
-      if (userInfos.length > 0) {
-        userInfo = {
-          steamid: steamid.getSteam2RenderedID(),
-          name: userInfos[0].personaname,
-          country: null,
-          lastJoinDate: null,
-          firstJoinDate: null,
-        }
-      }
+    if (userdata.length == 0) {
+      return reply.status(404).send({
+        error: "NO_USER_FOUND",
+        message: "Steamid did not match any users."
+      })
     }
 
-    let adminData: ReadableAdminData | null = null
-    if (req.query.include === "admin") {
-      adminData = fastify.authmngr.getAdminExport(req.params.steamid)
+    const user: PlayerEntry = {
+      ...userdata[0],
+      id: SteamID.fromIndividualAccountID(userdata[0].accountId).getSteam2RenderedID(),
+      isAdmin: userdata[0].isAdmin === 1,
+    }
+
+    const result: APIUserDetails = {
+      meta: {
+        includes: {
+          profile: false,
+          admin: false,
+          names: false,
+        },
+        times: {
+          user: Date.now() - userStart
+        }
+      },
+      user
+    }
+
+    if (includes.includes("admin")) {
+      result.admin = fastify.authmngr.getAdminExport(req.params.steamid)
+      result.meta.includes.admin = true
+    }
+    if (includes.includes("profile")) {
+      const profile = await fastify.authmngr.getProfileData(req.params.steamid)
+      result.profile = profile
+      result.meta.includes.profile = true
+    }
+    if (includes.includes("names")) {
+      const names = await fastify.users.getUserNameHistory(req.params.steamid)
+      result.names = names
+      result.meta.includes.names = true
     }
 
     reply.header("cache-control", "max-age 86400,stale-while-revalidate 0")
 
-    return {
-      user: {
-        ...userInfo,
-        notesCount: stats[0].notesCount,
-        bansCount: stats[0].bansCount,
-        isAdmin: stats[0].isAdmin
-      },
-      adminData
-    }
+    return result
   })
 
   fastify.route({

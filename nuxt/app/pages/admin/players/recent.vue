@@ -20,7 +20,7 @@
 </template>
 
 <script setup lang="ts">
-import type { APIListPlayersResponse } from '@common/User'
+import type { APIListPlayersResponse, PlayerRecentEntry } from '@common/User'
 import type { APILogData } from '@common/Logs'
 import type { SelectItem } from '@nuxt/ui'
 
@@ -46,7 +46,7 @@ const servers = computed<SelectItem[]>(() => {
 })
 const server = ref<{ label: string; value: string }>(servers.value[0] as { label: string, value: string })
 
-const { data, refresh, status, error, execute } = await useFetch<APIListPlayersResponse>(() => `/api/users/recent/${server.value!.value}`, { key: "players.recent" })
+const { data, refresh, status, error, execute } = await useFetch<APIListPlayersResponse<PlayerRecentEntry>>(() => `/api/users/recent/${server.value!.value}`, { key: "players.recent" })
 
 watch(server, () => execute())
 

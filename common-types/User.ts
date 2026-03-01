@@ -191,22 +191,42 @@ export interface AnalysisData {
   reputation: { thumbsUp: number, thumbsDown: number, sum: number, total: number }
 }
 
-export interface PlayerEntry {
+/** Represents player for /users/ queries  */
+export interface PlayerEntry extends APIPlayer {
   notesCount: number,
   bansCount: number,
   isAdmin: boolean,
-  name: string,
   country?: string | null,
   firstJoinDate?: number | null,
   lastJoinDate?: number | null,
-  server: string,
-  steamid: string,
 }
 
-export interface APIListPlayersResponse {
+export interface PlayerRecentEntry extends PlayerEntry {
+  server: string,
+}
+
+export interface APIListPlayersResponse<T extends PlayerEntry = PlayerEntry> {
   meta: {
     queryTimeSec: number,
     nextOffset?: number
   },
-  users: PlayerEntry[]
+  users: T[]
+}
+
+/** GET /api/users/:steamid*/
+export interface APIUserDetails {
+  meta: {
+    includes: {
+      profile: boolean,
+      admin: boolean,
+      names: boolean
+    }
+    times: {
+      user: number
+    }
+  },
+  user: PlayerEntry,
+  profile?: UserProfileData | null,
+  admin?: ReadableAdminData | null,
+  names?: UserNameEntry[]
 }
