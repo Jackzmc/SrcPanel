@@ -193,17 +193,17 @@ export interface PlayerEntry {
   bansCount: number,
   isAdmin: boolean,
   name: string,
-  country: string,
-  firstJoinDate: number,
-  lastJoinDate: number,
+  country?: string | null,
+  firstJoinDate?: number | null,
+  lastJoinDate?: number | null,
   server: string,
   steamid: string,
 }
 
-export interface APIRecentUsersResponse {
+export interface APIListPlayersResponse {
   meta: {
     queryTimeSec: number,
-    nextOffset: number
+    nextOffset?: number
   },
   users: PlayerEntry[]
 }

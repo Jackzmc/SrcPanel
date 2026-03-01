@@ -4,7 +4,7 @@ import { ADMINS_DB } from '../!!privileged/admins.js';
 import SteamID from 'steamid';
 import { BanAppeal, FullAPIBan } from '../../../../common-types/Ban.js';
 import { NAME_INVALID_CHAR_REPLACE } from '../../routes/!unprivileged/bans.js';
-import { APIRecentUsersResponse, ReadableAdminData, UserNameEntry, UserProfileData } from '../../../../common-types/User.js';
+import { APIListPlayersResponse, PlayerEntry, ReadableAdminData, UserNameEntry, UserProfileData } from '../../../../common-types/User.js';
 import { NOT_FOUND, NO_PERMISSION } from '../../responses.js';
 
 
@@ -12,7 +12,7 @@ const RECENT_DEFAULT_LIMIT = 25
 const STEAM_ID_REGEX = new RegExp(/STEAM_\d:\d:\d+/)
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
-  fastify.get('/recent/:server?', async (req: FastifyRequest<{ Params: { server?: string }, Querystring: { limit?: number, offset?: string } }>, reply): Promise<APIRecentUsersResponse> => {
+  fastify.get('/recent/:server?', async (req: FastifyRequest<{ Params: { server?: string }, Querystring: { limit?: number, offset?: string } }>, reply): Promise<APIListPlayersResponse> => {
     let limit = Number(req.query.limit) || RECENT_DEFAULT_LIMIT
     if (limit < 0 || limit > 100) limit = RECENT_DEFAULT_LIMIT
 
@@ -24,25 +24,35 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     const start = Date.now()
     const [rows] = await fastify.db.execute<RowDataPacket[]>(
       `SELECT
-                (SELECT COUNT(*) FROM notes WHERE notes.steamid = client) as notesCount,
-                (SELECT COUNT(*) FROM bans WHERE bans.steamid = client) as bansCount,
-                (SELECT COUNT(*) FROM ${ADMINS_DB}.sm_admins
-                    WHERE SUBSTRING(${ADMINS_DB}.sm_admins.identity,11) = SUBSTRING(client, 11)
-                    LIMIT 1
-                ) as isAdmin,
-                u.last_name as name, u.last_country as country, u.create_time as firstJoinDate, u.last_join_time as lastJoinDate,
-                server,
-                client as steamid
-            FROM activity_log PARTITION (p${new Date().getFullYear()}) l
-            LEFT JOIN view_panel_user u ON SUBSTRING(client, 11) = u.account_id
-            WHERE
-                TYPE = 'JOIN' AND server = IFNULL(?,server) AND client != ? AND ISNULL(target)
-            ORDER BY l.timestamp DESC
-            LIMIT ?,?`,
+        client as steamid,
+        u.last_name as name, u.last_country as country, u.create_time as firstJoinDate, u.last_join_time as lastJoinDate,
+        server,
+        (SELECT COUNT(*) FROM notes WHERE notes.steamid = client) as notesCount,
+        (SELECT COUNT(*) FROM bans WHERE bans.steamid = client) as bansCount,
+        (SELECT COUNT(*) FROM ${ADMINS_DB}.sm_admins
+            WHERE SUBSTRING(${ADMINS_DB}.sm_admins.identity,11) = SUBSTRING(client, 11)
+            LIMIT 1
+        ) as isAdmin
+      FROM activity_log PARTITION (p${new Date().getFullYear()}) l
+      LEFT JOIN view_panel_user u ON SUBSTRING(client, 11) = u.account_id
+      WHERE
+          TYPE = 'JOIN' AND server = IFNULL(?,server) AND client != ? AND ISNULL(target)
+      ORDER BY l.timestamp DESC
+      LIMIT ?,?`,
       [server, req.session.user.steamid, offset, limit]
     )
 
-    for (const row of rows) {
+    const steamids: string[] = []
+
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i]
+      // Filter out steamids with newest being kept
+      if (steamids.includes(row.steamid)) {
+        rows.splice(i, 1)
+        continue
+      }
+      steamids.push(row.steamid)
+
       row.isAdmin = row.isAdmin === 1
     }
 
@@ -51,14 +61,16 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         queryTimeSec: Date.now() - start,
         nextOffset: offset + rows.length
       },
-      users: rows as APIRecentUsersResponse['users']
+      users: rows as APIListPlayersResponse['users']
     }
   })
 
 
-  fastify.get('/search/:query', async (req: FastifyRequest<{ Params: { query: string } }>, reply) => {
-    const query = req.params.query
+  fastify.get('/search/:query?', async (req: FastifyRequest<{ Params: { query?: string }, Querystring: { query?: string } }>, reply): Promise<APIListPlayersResponse> => {
+    const query = req.params.query || req.query.query
+    if (!query) return reply.status(400).send({ error: 'MISISNG_PARAM', message: "Query (route OR query) parameter missing" })
     const fuzzyQuery = `%${query}%`
+    const start = Date.now()
     const [rows] = await fastify.db.execute<RowDataPacket[]>(
       `SELECT
             (SELECT COUNT(*) FROM notes WHERE notes.steamid = stats_users.steamid) as notesCount,
@@ -74,7 +86,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
       { query, fuzzyQuery }
     )
 
-    if (STEAM_ID_REGEX.test(req.params.query) && rows.length === 0) {
+    if (STEAM_ID_REGEX.test(query) && rows.length === 0) {
       const steamid = new SteamID(req.params.query)
       const userInfos = await fastify.steam.getUserDetails([steamid])
       if (userInfos.length > 0) {
@@ -93,11 +105,14 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     }
 
     return {
+      meta: {
+        queryTimeSec: Date.now() - start,
+      },
       users: rows.map(row => {
         return {
           ...row,
           country: row.country?.length > 0 ? row.country : null
-        }
+        } as PlayerEntry
       })
     }
   })
