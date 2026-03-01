@@ -105,6 +105,9 @@ export interface AdminData extends BaseAdminData<AdminGroup, Set<UserPrivilegeCo
   identity: string,
   password: string | null,
 }
+export interface APIListAdmins {
+  admins: ReadableAdminData[]
+}
 export interface ReadableAdminData extends BaseAdminData<ReadableAdminGroup, UserPrivilegeCode[]> {
   steamid: string,
 }
