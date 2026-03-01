@@ -72,6 +72,12 @@ const columns: TableColumn<Note>[] = [
     accessorKey: 'id',
     header: "Id",
     // cell: ({ row }) => h(UserComponent, { class: "text-primary font-bold", user: row.original.client })
+    meta: {
+      class: {
+        th: "px-4",
+        td: "px-4"
+      }
+    }
   },
   {
     accessorKey: 'client',
