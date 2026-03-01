@@ -17,7 +17,7 @@
     </div>
 
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-      <ItemSplitter v-if="data" :items-per-column="10" :data="data.admins" v-slot="slotProps">
+      <ItemSplitter v-if="filtered" :items-per-column="10" :data="filtered" v-slot="slotProps">
         <div class="overflow-x-auto min-w-0">
           <UTable
             :data="slotProps.data"
@@ -44,6 +44,13 @@ import type { TableColumn } from '@nuxt/ui'
 const query = ref<string>("")
 
 const { data, error, status } = await useFetch<APIListAdmins>('/api/admins', { key: "players.admins" })
+
+const filtered = computed(() => {
+  if(!data.value) return undefined
+  if(!query.value) return data.value.admins
+  const q = query.value.toLowerCase()
+  return data.value.admins.filter(admin => admin.name.toLowerCase().includes(q) || admin.steamid.toLowerCase().includes(q))
+})
 
 const columns: TableColumn<ReadableAdminData>[] = [
   {
