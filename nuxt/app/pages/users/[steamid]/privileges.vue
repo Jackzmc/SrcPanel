@@ -1,12 +1,24 @@
 <template>
   <div class="flex gap-4 mt-4">
-    <UNavigationMenu
-      orientation="vertical"
-      :items="items"
-      class="w-48 shrink-0"
-    />
+    <div>
+      <UNavigationMenu
+        orientation="vertical"
+        :items="items"
+        class="w-48 shrink-0"
+        default-value="item-0"
+        type="single"
+      />
+      <div v-if="hasChanges" class="flex flex-col p-2 gap-2">
+        <UButton color="success" leading-icon="lucide:save" @click="saveChanges">
+          Save Changes
+        </UButton>
+        <UButton color="warning" leading-icon="lucide:undo-2" @click="revertChanges">
+          Revert Changes
+        </UButton>
+      </div>
+    </div>
     <div class="flex-1 min-w-0">
-      <NuxtPage :steamid="steamid" :data="data" />
+      <NuxtPage :steamid="steamid" :data="data" @changes="(val: boolean) => hasChanges = val" />
     </div>
   </div>
 </template>
@@ -23,9 +35,19 @@ const props = defineProps<{
 }>()
 
 const items = [
-  { label: 'Overview',          icon: 'i-lucide-info',          to: `/users/${props.steamid}/privileges/overview` },
-  { label: 'Groups',            icon: 'i-lucide-users',         to: `/users/${props.steamid}/privileges/groups` },
-  { label: 'Base Permissions',  icon: 'i-lucide-shield',        to: `/users/${props.steamid}/privileges/base-permissions` },
-  { label: 'Actions',           icon: 'i-lucide-wrench',        to: `/users/${props.steamid}/privileges/actions` },
+  { id: "overview", label: 'Overview', icon: 'i-lucide-info', to: `/users/${props.steamid}/privileges/overview` },
+  { id: "groups", label: 'Groups', icon: 'i-lucide-users', to: `/users/${props.steamid}/privileges/groups` },
+  { id: "base-permissions", label: 'Base Permissions', icon: 'i-lucide-shield', to: `/users/${props.steamid}/privileges/base-permissions` },
+  { id: "actions", label: 'Actions', icon: 'i-lucide-wrench', to: `/users/${props.steamid}/privileges/actions` },
 ]
+
+const hasChanges = ref(false)
+
+function saveChanges() {
+  // TODO: impl
+}
+
+function revertChanges() {
+  // TODO: impl
+}
 </script>

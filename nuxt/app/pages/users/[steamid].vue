@@ -1,13 +1,21 @@
 <template>
   <div>
-    <Hero v-if="data" :title="title" :subtitle="steamid" :avatar="{ alt: data.user.name ?? steamid, id: steamid }" />
+    <Hero v-if="data" :title="title" :subtitle="ids.steamid2" :avatar="{ alt: data.user.name ?? ids.steamid2, id: ids.steamid2 }">
+      <template #subtitle>
+        <div class="flex text-center justify-center items-center gap-4 pt-2">
+          <UTooltip v-for="(value, type) in ids" :key="type" :text="type">
+            <span>{{ value }}</span>
+          </UTooltip>
+        </div>
+      </template>
+    </Hero>
     <UContainer v-if="data">
       <UTabs class="mt-4"
         :items="tabs"
         :model-value="tabId"
-        @update:model-value="tab => navigateTo(`/users/${steamid}/${tab}`)"
+        @update:model-value="tab => navigateTo(`/users/${ids.steamid2}/${tab}`)"
       />
-      <NuxtPage :steamid="steamid" :data="data" />
+      <NuxtPage :steamids="ids" :steamid="ids.steamid2" :data="data" />
       <UFooter>
         <p class="text-xs text-muted">Profile fetched in {{ data.meta.times.user }} ms</p>
       </UFooter>
@@ -16,7 +24,7 @@
       <div class="my-6 mx-2 text-center">
         <UCard>
           <h2 class="text-lg font-bold">User not found</h2>
-          <p class="py-2">No user found matching <b>{{ steamid }}</b></p>
+          <p class="py-2">No user found matching <b>{{ route.params.steamid }}</b></p>
 
           <div class="flex justify-center gap-2 pt-4">
             <UButton to="/admin/players/recent">Recent Players</UButton>
@@ -32,16 +40,27 @@
 
 <script setup lang="ts">
 import { type APIUserDetails } from '@common/User'
+import SteamID from 'steamid'
 
 const route = useRoute()
 const { requireAuth, user: myUser } = useAuth()
-const steamid = computed(() => route.params.steamid as string)
-if(steamid.value === "@me" && myUser.value) navigateTo(`/users/${myUser.value?.user.steamid}/overview`)
+if(route.params.value === "@me" && myUser.value) navigateTo(`/users/${myUser.value?.user.steamid}/overview`)
 
-const { data } = await useFetch<APIUserDetails>(() => `/api/users/${steamid.value}?include=admin,profile,names`, { key: `users.${steamid.value} `})
+const ids = computed(() => {
+  const steamid = new SteamID(route.params.steamid as string)
+  return {
+    steamid3: steamid.getSteam3RenderedID(),
+    steamid2: steamid.getSteam2RenderedID(),
+    steamid64: steamid.getSteamID64(),
+  }
+})
+// const steamid = computed(() => route.params.steamid as string)
+if(route.params.value === "@me" && myUser.value) navigateTo(`/users/${myUser.value?.user.steamid}/overview`)
+
+const { data } = await useFetch<APIUserDetails>(() => `/api/users/${ids.value.steamid2}?include=admin,profile,names`, { key: `users.${ids.value.steamid2} `})
 
 const title = computed(() => {
-  return data.value?.user.name ?? steamid.value
+  return data.value?.user.name ?? ids.value.steamid2
 })
 
 const tabs = [
@@ -71,6 +90,6 @@ const tabs = [
 const tabId = computed(() => route.meta.tab as string)
 
 useHead({
-  title: computed(() => data.value ? `${data.value?.user.name} - ${steamid.value} - Players` : `${steamid.value} - Players`)
+  title: computed(() => data.value ? `${data.value?.user.name} - ${ids.value.steamid2} - Players` : `Players`)
 })
 </script>

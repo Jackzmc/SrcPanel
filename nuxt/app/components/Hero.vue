@@ -4,9 +4,11 @@
       <UAvatar v-if="avatar" :src="avatarUrl" :text="avatar.text" :alt="avatar.alt" loading="lazy" :as="{ img: 'img' }" />
       {{ title }}
     </h2>
-    <p class="text-lg text-gray-100">
-      {{ subtitle }}
-    </p>
+    <slot name="subtitle">
+      <p class="text-lg text-gray-100">
+        {{ subtitle }}
+      </p>
+    </slot>
   </div>
 </template>
 

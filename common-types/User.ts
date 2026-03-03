@@ -231,3 +231,7 @@ export interface APIUserDetails {
   admin?: ReadableAdminData | null,
   names?: UserNameEntry[]
 }
+
+export interface APIListAdminGroupsResponse {
+  groups: ReadableAdminGroup[]
+}

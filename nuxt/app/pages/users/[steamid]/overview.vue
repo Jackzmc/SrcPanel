@@ -18,8 +18,8 @@ definePageMeta({
 import type { APIUserDetails } from '@common/User'
 
 const props = defineProps<{
-  steamid: string
-  data: APIUserDetails
+  steamid: string,
+  data: APIUserDetails,
 }>()
 
 const items = [
