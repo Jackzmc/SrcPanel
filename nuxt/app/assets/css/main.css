@@ -19,6 +19,11 @@
   --ui-container: max-w-7xl;
 }
 
+.impersonate {
+  background-color: #c42dbf;
+  color: white;
+}
+
 @theme static {
   --font-sans: 'Public Sans', sans-serif;
 

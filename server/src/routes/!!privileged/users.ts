@@ -53,6 +53,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
       }
       steamids.push(row.steamid)
 
+      row.steamid2 = row.id
       row.isAdmin = row.isAdmin === 1
     }
 
@@ -92,7 +93,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
       if (userInfos.length > 0) {
         const userInfo = userInfos[0]
         rows.push({
-          steamid: steamid.getSteam2RenderedID(),
+          id: steamid.getSteam2RenderedID(),
+          steamid2: steamid.getSteam2RenderedID(),
           name: userInfo.personaname,
           country: null,
           lastJoinDate: null,
@@ -190,9 +192,11 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
       })
     }
 
+    const id = SteamID.fromIndividualAccountID(userdata[0].accountId).getSteam2RenderedID()
     const user: PlayerEntry = {
       ...userdata[0],
-      id: SteamID.fromIndividualAccountID(userdata[0].accountId).getSteam2RenderedID(),
+      id,
+      steamid2: id,
       isAdmin: userdata[0].isAdmin === 1,
     }
 

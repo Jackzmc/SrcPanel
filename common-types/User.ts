@@ -167,6 +167,7 @@ export interface UserProfileData {
  */
 export interface APIUser extends APIPlayer {
   id: string,
+  steamid2?: string
 }
 /**
  * Represents a player / user entry. This entry may not be a real human, but a bot.
@@ -192,7 +193,7 @@ export interface AnalysisData {
 }
 
 /** Represents player for /users/ queries  */
-export interface PlayerEntry extends APIPlayer {
+export interface PlayerEntry extends APIUser {
   notesCount: number,
   bansCount: number,
   isAdmin: boolean,

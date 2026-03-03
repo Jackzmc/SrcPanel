@@ -50,7 +50,7 @@
             </UAlert>
           </div>
           <div v-else>
-            <Icon name="lucide:refresh-ccw" class="animate-spin align-middle mb-1" />
+            <Icon name="i-lucide-loader-circle" class="animate-spin align-middle mb-1" />
             Loading user details...
           </div>
         </div>
@@ -60,7 +60,7 @@
 
   <!-- No tooltip variant -->
   <ULink v-else :to="id ? { path: `/users/${id}`, query: { returnTo: route.fullPath } } : undefined" class="flex items-center gap-1.5">
-    <UAvatar v-if="!hideAvatar && clientAvatarSrc" :src="clientAvatarSrc" :alt="props.user.name" size="xs" />
+    <UAvatar v-if="!hideAvatar && clientAvatarSrc" :src="clientAvatarSrc" :alt="props.user.name ?? id!" size="xs" />
     <span v-if="!hideName">{{ props.user.name ?? id }}</span>
   </ULink>
 </template>
