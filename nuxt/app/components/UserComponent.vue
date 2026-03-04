@@ -6,7 +6,7 @@
     </ULink>
     <template #content>
       <div class="flex items-start gap-3 p-3 w-72">
-        <UAvatar v-if="clientAvatarSrc" :src="clientAvatarSrc" :alt="props.user.name ?? id!" size="md":as="{ img: 'img' }"  />
+        <UAvatar v-if="clientAvatarSrc" :src="clientAvatarSrc" :alt="props.user.name ?? id!" size="md" :as="{ img: 'img' }"  />
         <div class="min-w-0 flex-1">
           <p class="font-bold text-highlighted text-lg">{{ props.user.name }}</p>
           <p class="text-md text-muted font-mono">{{ steamid2 ?? props.fallbackName ?? 'BOT' }}</p>

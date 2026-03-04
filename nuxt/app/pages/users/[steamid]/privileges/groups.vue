@@ -1,12 +1,17 @@
 <template>
   <div>
-    <UAlert v-if="error" color="error" title="Error while getting admin groups" :description="error" />
-    <UTable v-else :data="groups" :columns="columns" checkable v-model:row-selection="rowSelection" :getRowId="(row) => row.id.toString()" />
+    <UAlert v-if="error" color="error" title="Error while getting admin groups" :description="error.message" />
+    <UTable v-else :data="groups" :columns="columns" checkable v-model:row-selection="rowSelection" :getRowId="(row) => row.id.toString()">
+      <template #expanded="{ row }">
+        <PermissionsList :codes="row.original.codes" :flags="row.original.flags" />
+      </template>
+    </UTable>
   </div>
 </template>
 
 <script setup lang="ts">
-import type { APIListAdminGroupsResponse, APIUserDetails } from '@common/User'
+import { FLAGS, type APIListAdminGroupsResponse, type APIUserDetails } from '@common/User'
+import PermissionsList from "@/components/users/permissions/PermissionsList.vue"
 import type { TableColumn } from '@nuxt/ui';
 
 const emit = defineEmits<{
@@ -17,6 +22,8 @@ const props = defineProps<{
   steamid: string
   data: APIUserDetails
 }>()
+
+const { editData } = inject('editData')
 
 const { data: groups, error } = await useFetch(() => `/api/admins/groups`, {
   transform: (res: APIListAdminGroupsResponse) => res.groups
@@ -53,6 +60,24 @@ const columns: TableColumn<APIListAdminGroupsResponse['groups'][0]>[] = [
         modelValue: row.getIsSelected(),
         'onUpdate:modelValue': (value: boolean | 'indeterminate') => row.toggleSelected(!!value),
         'aria-label': 'Select row'
+      })
+  },
+  {
+    id: 'expand',
+    cell: ({ row }) =>
+      h(UButton, {
+        color: 'neutral',
+        variant: 'ghost',
+        icon: 'i-lucide-chevron-down',
+        square: true,
+        'aria-label': 'Expand',
+        ui: {
+          leadingIcon: [
+            'transition-transform',
+            row.getIsExpanded() ? 'duration-200 rotate-180' : ''
+          ]
+        },
+        onClick: () => row.toggleExpanded()
       })
   },
   {

@@ -41,7 +41,39 @@ const items = [
   { id: "actions", label: 'Actions', icon: 'i-lucide-wrench', to: `/users/${props.steamid}/privileges/actions` },
 ]
 
-const hasChanges = ref(false)
+const editData = ref({
+  groups: props.data.admin?.groups.map(group => group.id) ?? [],
+  base: {
+    immunityLevel: props.data.admin?.permissions.base.immunityLevel ?? 0,
+    flags: props.data.admin?.permissions.base.flags ?? "",
+    codes: props.data.admin?.permissions.base.codes ?? []
+  }
+})
+// TODO: ignore order, better compare
+const isGroupsDirty = computed(() => editData.value.groups !== (props.data.admin?.groups.map(g => g.id) || []))
+const isBaseDirty = computed(() => editData.value.base.immunityLevel != props.data.admin?.permissions.base.immunityLevel
+  || editData.value.base.flags != props.data.admin?.permissions.base.flags
+  || editData.value.base.codes != props.data.admin?.permissions.base.codes)
+
+
+async function saveEdits() {
+  // TODO: impl
+  alert("Not implemented")
+}
+function resetEdits() {
+  editData.value = {
+    groups: props.data.admin?.groups.map(group => group.id) ?? [],
+    base: {
+      immunityLevel: props.data.admin?.permissions.base.immunityLevel ?? 0,
+      flags: props.data.admin?.permissions.base.flags ?? "",
+      codes: props.data.admin?.permissions.base.codes ?? []
+    }
+  }
+}
+
+provide('editData', { editData, save: saveEdits, reset: resetEdits, isGroupsDirty, isBaseDirty })
+
+const hasChanges = computed(() => isBaseDirty.value || isGroupsDirty.value)
 
 function saveChanges() {
   // TODO: impl
