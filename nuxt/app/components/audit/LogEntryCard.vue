@@ -11,7 +11,6 @@
           </div>
           <div class="space-x-2 flex items-start">
             <UBadge :style="typeStyle" :leading-icon="typeData?.icon" :class="typeData?.className">{{ typeData?.label ?? entry.type }}</UBadge>
-            <!-- <span class="text-wrap">{{ entry.message }}</span> -->
             <LogMessage :message="entry.message" :client="client" :target="target" :metadata="entry.metadata" />
           </div>
         </div>
