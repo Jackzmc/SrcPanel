@@ -19,6 +19,27 @@ const SM_ACTION_REGEX = new RegExp(/"([^"<>]+)<\d+><(STEAM_\d:\d:\d+|Console|BOT
 const METADATA_VAR_REGEX = new RegExp(/%([a-zA-Z_]+)%/)
 
 /**
+ * Iterates all given regexes and returns the regex & match that comes first
+ * @param content the content to match against
+ * @param regexes list of regexes to match
+ * @returns if at least one matches, the regex and its match
+ */
+function findFirstMatch(content: string, regexes: RegExp[]) {
+  let lowestIndex = Infinity, chosen
+  for (const regex of regexes) {
+    const match = content.match(regex)
+    if (match && match.index! <= lowestIndex) {
+      lowestIndex = match.index!
+      chosen = {
+        regex,
+        match
+      }
+    }
+  }
+  return chosen
+}
+
+/**
  * Splits a message into pieces, including normal text, upto 1 client, and 1 target piece
  * @param msg the raw message to parse and split
  * @param highlightRegex if provided and matches, replaces whatever with <b>$1</b>
@@ -37,23 +58,13 @@ function splitLogMessage(msg: string, highlightRegex?: RegExp): LogMessagePart[]
     })
   }
 
-  // TODO: add pieces for %vars%
-
-  // Only need two pieces: client, target
-  // for (let i = 0; i < 2; i++) {
   while (index <= msg.length) {
-    // Look for sourcemod action tag
-    const actionMatch = msg.slice(index).match(SM_ACTION_REGEX);
-    const varMatch = actionMatch ? msg.slice(index).match(METADATA_VAR_REGEX) : undefined // skip if actionmatch matched
-    if (!actionMatch && !varMatch) break;
+    // Find first match
+    const result = findFirstMatch(msg.slice(index), [SM_ACTION_REGEX, METADATA_VAR_REGEX])
+    if (!result) break
+    const { match, regex } = result
 
-    let match
-    if (actionMatch && varMatch) match = actionMatch.index! < varMatch.index! ? actionMatch : varMatch
-    else match = actionMatch || varMatch!
-
-    const isActionMatch = match == actionMatch
-
-    // If anything before LPiece, add to parts
+    // If anything before match, add to parts
     let prevSlice: string = msg.slice(index, index + match.index!)
     if (prevSlice.length > 0) {
       // Add an extra spacing to fix some bad log messages
@@ -63,23 +74,24 @@ function splitLogMessage(msg: string, highlightRegex?: RegExp): LogMessagePart[]
       addPiece(prevSlice)
     }
 
-    if (isActionMatch) {
-      const [content, name, steamid] = actionMatch as [string, string, string | null]
+    if (regex == SM_ACTION_REGEX) {
+      const [content, name, steamid] = result.match as [string, string, string | null]
 
       const user: LogEntryUser = {
         name,
         steamid
       }
       addPiece(content, "unknown", user)
-    } else if (varMatch) {
-      addPiece(varMatch[1]!, "variable")
+    } else if (regex == METADATA_VAR_REGEX) {
+      const [_, variableName] = result.match as [string, string]
+      addPiece(variableName, "variable")
     }
 
     // Skip what we matched for next iteration
     index += match.index! + match[0].length
   }
 
-  // If anything remains after matching two lpieces, add it
+  // If anything remains after all matches add it
   if (index < msg.length) {
     let message = msg.slice(index)
     if (highlightRegex) message = message.replace(highlightRegex, "<b>$1</b>")
