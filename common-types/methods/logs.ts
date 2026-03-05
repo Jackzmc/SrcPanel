@@ -123,10 +123,9 @@ function resolveUserParts(parts: LogMessagePart[], client?: LogEntryUser, target
   }
 
   const unknownParts = parts.filter(part => part.type === "unknown")
-  const unknownPartCount = unknownParts.length
 
   // Try a best guess of client and target
-  if (unknownPartCount > 0) {
+  if (unknownParts.length > 0) {
     // Easy: things we know 98% sure. if one found but not other
     if (clientState === PieceTypeState.ShouldHave && targetState === PieceTypeState.Found) {
       unknownParts.forEach(part => markPart(part, "client", client!)) // we know for certain client exists (enum derived from)
@@ -134,11 +133,11 @@ function resolveUserParts(parts: LogMessagePart[], client?: LogEntryUser, target
       unknownParts.forEach(part => markPart(part, "target", target!)) // we know for certain target exists (enum derived from)
     }
     // Easy: same as above, but for bots
-    else if (unknownParts[0].user?.steamid === "BOT") {
-      if (clientState === PieceTypeState.Found) markPart(unknownParts[0], "target", target)
-      else if (targetState === PieceTypeState.Found) markPart(unknownParts[0], "client", client)
+    else if (unknownParts[0]!.user?.steamid === "BOT") {
+      if (clientState === PieceTypeState.Found) markPart(unknownParts[0]!, "target", target)
+      else if (targetState === PieceTypeState.Found) markPart(unknownParts[0]!, "client", client)
       // We gonna hope that its <CLIENT> did X, rather than <TARGET> had this:
-      else markPart(unknownParts[0], "client", client)
+      else markPart(unknownParts[0]!, "client", client)
     }
 
     // Most likely 2 LPieces from here (but could if someone forgot to pass a client or target)
@@ -148,10 +147,10 @@ function resolveUserParts(parts: LogMessagePart[], client?: LogEntryUser, target
         if (clientState === PieceTypeState.ShouldHave) markPart(part, "client", client!)
         else markPart(part, "target", target!)
       }
-    } else if (unknownPartCount == 2) {
+    } else if (unknownParts.length == 2) {
       // Lastly, if it's 2 bots that remain, do same as above
-      markPart(unknownParts[0], "client", client)
-      markPart(unknownParts[1], "target", target)
+      markPart(unknownParts[0]!, "client", client)
+      markPart(unknownParts[1]!, "target", target)
     }
   }
 

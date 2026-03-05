@@ -1,24 +1,25 @@
 <template>
   <UCard :ui="{ body: 'p-3 sm:p-2' }">
     <div class="flex justify-between">
-      <div class="flex flex-row gap-2">
+      <div class="flex flex-row gap-2 items-center">
         <UAvatar v-if="entry.type != 'INFO'" :src="avatarUrl"  :as="{ img: 'img' }" size="3xl" />
         <div class="flex flex-col gap-1">
-          <div class="space-x-2">
+          <div class="space-x-2 text-xs">
             <UBadge variant="outline"> #{{ entry.id }} </UBadge>
             <strong>{{ formatDate(entry.timestamp) }}</strong>
             <span class="text-muted">{{ getRelDate(entry.timestamp) }}</span>
           </div>
           <div class="space-x-2 flex items-start">
-            <UBadge :style="typeStyle" :leading-icon="typeData?.icon" :class="typeData?.className">{{ entry.type }}</UBadge>
-            <span class="text-wrap">{{ entry.message }}</span>
+            <UBadge :style="typeStyle" :leading-icon="typeData?.icon" :class="typeData?.className">{{ typeData?.label ?? entry.type }}</UBadge>
+            <!-- <span class="text-wrap">{{ entry.message }}</span> -->
+            <LogMessage :message="entry.message" :client="client" :target="target" :metadata="entry.metadata" />
           </div>
         </div>
       </div>
       <div class="flex items-center gap-2">
         <UTooltip text="Server event occurred on">
           <UBadge v-if="entry.server" size="md">{{ entry.server ?? '?' }}</UBadge>
-          <UBadge v-else size="md" variant="outline">Unknown</UBadge>
+          <UBadge v-else size="md" variant="outline">Unknown Server</UBadge>
         </UTooltip>
         <UTooltip :text="expanded ? 'Click to hide details' : 'Click to show more details'">
           <UButton
@@ -48,10 +49,10 @@
         {{ formatDate(entry.timestamp) }}
       </KeyValueRow>
       <KeyValueRow label="Client Id">
-        {{ entry.client }}
+        {{ entry.client ?? '-' }}
       </KeyValueRow>
       <KeyValueRow label="Target Id">
-        {{ entry.target }}
+        {{ entry.target ?? '-' }}
       </KeyValueRow>
       <KeyValueRow label="Raw Message" value-class="!px-2 bg-neutral-100">
         <pre class="text-wrap">{{ entry.message }}</pre>
@@ -64,19 +65,20 @@
         </KeyValueTable>
       </KeyValueRow>
     </KeyValueTable>
-    <pre>{{ JSON.stringify(entry, null, 2) }}</pre>
   </UCard>
 </template>
 
 <script setup lang="ts">
 import type { LogEntry } from '@common/Logs';
+import { parseLogMessage, type LogEntryUser } from '@common/methods/logs'
 import KeyValueTable from '../table/KeyValueTable.vue';
 import KeyValueRow from '../table/KeyValueRow.vue';
 import { formatDate, getRelDate } from '@common/methods/format';
+import LogMessage from './LogMessage.vue';
 
 const toast = useToast()
 
-const TYPE_MAP: Record<string, { icon: string, color?: string, className?: string }> = {
+const TYPE_MAP: Record<string, { icon: string, color?: string, className?: string, label?: string }> = {
   "INFO": {
     icon: "lucide:info",
     color: "var(--ui-info)",
@@ -104,6 +106,10 @@ const TYPE_MAP: Record<string, { icon: string, color?: string, className?: strin
   "CHAT": {
     icon: "lucide:message-circle",
     className: "bg-neutral-200 text-black"
+  },
+  "web": {
+    icon: "lucide:globe",
+    label: "WEB"
   }
 }
 
@@ -130,6 +136,10 @@ const typeStyle = computed(() => {
   }
   return undefined
 })
+
+// TODO: replace by server
+const client = computed<LogEntryUser|undefined>(() => props.entry.client && props.entry.client.startsWith('STEAM_') ? { steamid: props.entry.client, name: props.entry.clientName! } : undefined)
+const target = computed<LogEntryUser|undefined>(() => props.entry.target && props.entry.target.startsWith('STEAM_') ? { steamid: props.entry.target, name: props.entry.targetName! } : undefined)
 
 const expanded = ref(false)
 
