@@ -4,7 +4,7 @@ export interface LogEntryUser {
   avatarUrl?: string
 }
 
-type PieceType = "client" | "target" | "none" | "unknown"
+type PieceType = "client" | "target" | "none" | "unknown" | "variable"
 export interface LogMessagePart {
   content: string,
   user?: { name: string, steamid: string | null },
@@ -15,6 +15,8 @@ export interface LogMessagePart {
 // "NAME<USERID><STEAMID><CONSOLE>". Either "Name<##><STEAM_#:#:#######><>" or if console "Console<0><Console><Console>"
 // Here we consider any of these as an "L Piece"
 const SM_ACTION_REGEX = new RegExp(/"([^"<>]+)<\d+><(STEAM_\d:\d:\d+|Console|BOT)><(Console)?>"/);
+
+const METADATA_VAR_REGEX = new RegExp(/%([a-zA-Z_]+)%/)
 
 /**
  * Splits a message into pieces, including normal text, upto 1 client, and 1 target piece
@@ -38,12 +40,18 @@ function splitLogMessage(msg: string, highlightRegex?: RegExp): LogMessagePart[]
   // TODO: add pieces for %vars%
 
   // Only need two pieces: client, target
-  for (let i = 0; i < 2; i++) {
+  // for (let i = 0; i < 2; i++) {
+  while (index <= msg.length) {
     // Look for sourcemod action tag
-    const match = msg.slice(index).match(SM_ACTION_REGEX);
-    if (!match) break;
+    const actionMatch = msg.slice(index).match(SM_ACTION_REGEX);
+    const varMatch = actionMatch ? msg.slice(index).match(METADATA_VAR_REGEX) : undefined // skip if actionmatch matched
+    if (!actionMatch && !varMatch) break;
 
-    const [content, name, steamid] = match as [string, string, string | null]
+    let match
+    if (actionMatch && varMatch) match = actionMatch.index! < varMatch.index! ? actionMatch : varMatch
+    else match = actionMatch || varMatch!
+
+    const isActionMatch = match == actionMatch
 
     // If anything before LPiece, add to parts
     let prevSlice: string = msg.slice(index, index + match.index!)
@@ -55,11 +63,17 @@ function splitLogMessage(msg: string, highlightRegex?: RegExp): LogMessagePart[]
       addPiece(prevSlice)
     }
 
-    const user: LogEntryUser = {
-      name,
-      steamid
+    if (isActionMatch) {
+      const [content, name, steamid] = actionMatch as [string, string, string | null]
+
+      const user: LogEntryUser = {
+        name,
+        steamid
+      }
+      addPiece(content, "unknown", user)
+    } else if (varMatch) {
+      addPiece(varMatch[1]!, "variable")
     }
-    addPiece(content, "unknown", user)
 
     // Skip what we matched for next iteration
     index += match.index! + match[0].length

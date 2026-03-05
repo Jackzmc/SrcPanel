@@ -5,7 +5,7 @@
         <UAvatar v-if="entry.type != 'INFO'" :src="avatarUrl"  :as="{ img: 'img' }" size="3xl" />
         <div class="flex flex-col gap-1">
           <div class="space-x-2 text-xs">
-            <UBadge variant="outline"> #{{ entry.id }} </UBadge>
+            <UBadge variant="outline" size="sm"> #{{ entry.id }} </UBadge>
             <strong>{{ formatDate(entry.timestamp) }}</strong>
             <span class="text-muted">{{ getRelDate(entry.timestamp) }}</span>
           </div>
