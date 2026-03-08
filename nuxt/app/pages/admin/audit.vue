@@ -116,7 +116,7 @@ const TYPES: SelectItem[] = Object.entries(TYPE_MAP).map(([id, data]) => {
 const route = useRoute()
 const router = useRouter()
 
-const { data } = useLazyFetch<APILogData>("/api/logs/data")
+const { data } = await useFetch<APILogData>("/api/logs/data", { key: "logs-data" })
 
 const query = computed(() => {
   const params = new URLSearchParams()
@@ -128,16 +128,6 @@ const query = computed(() => {
   if(searchTarget.value) params.append('search_target', searchTarget.value)
   if(searchMessage.value) params.append('search_message', searchMessage.value)
   return params
-  // for(const [filter, val] of Object.entries(filters.value)) {
-  //   if(!val) continue
-  //   if(Array.isArray(val)) {
-  //     if(val.length > 0)
-  //       searchParams.append(filter, val.join("+"))
-  //   } else {
-  //     searchParams.append(`search_${filter}`, val)
-  //   }
-  // }
-  // if(route.query.raw) searchParams.append("raw", "1")
 })
 
 const dataSources = computed(() => data.value ? Object.keys(data.value?.years) : undefined)
@@ -148,7 +138,7 @@ const limit = ref<number>(route.query.limit ? parseInt(route.query.limit as stri
 const dataSource = ref<string>(route.query.source as string || new Date().getFullYear().toString())
 const order = ref<string>(aroundId.value ? "around" : route.query.dir as string || 'after')
 const selectedTypes = ref<string[]>(route.query.types ? (route.query.types as string).split(',') : ["action","chat","state","quit","join","info"])
-const selectedSources = ref<string[]>(route.query.servers ? (route.query.servers as string).split(',') : [])
+const selectedSources = ref<string[]>(route.query.servers ? (route.query.servers as string).split(',') : (data.value?.servers ?? []))
 const searchClient = ref<string|undefined>(route.query.client as string)
 const searchTarget = ref<string|undefined>(route.query.target as string)
 const searchMessage = ref<string|undefined>(route.query.msg as string)
