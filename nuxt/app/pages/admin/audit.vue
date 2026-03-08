@@ -10,9 +10,24 @@
             </template>
           </UAlert>
         </a>
-        <AuditTable v-if="logData && status == 'success'" :entries="logData.logs">
-
-        </AuditTable>
+        <template v-if="logData && status == 'success'">
+          <AuditTable v-if="logData.logs.length > 0" :entries="logData.logs" @find-nearby="findNearby" />
+          <UCard v-else variant="subtle">
+            <div class="p-6 text-center">
+              <h3 class="text-xl font-bold">
+                No entries found
+              </h3>
+              <p class="text-md">
+                Adjust the filters and search options,
+                <br />or change the data source that's selected
+              </p>
+              <br />
+              <div class="text-center">
+                <USelect v-model="dataSource" :items="dataSources" :loading="!dataSources" class="w-30" />
+              </div>
+            </div>
+          </UCard>
+        </template>
         <UAlert v-else-if="status == 'error'" color="error" title="Error fetching logs" :description="error?.message" />
         <UCard v-else>
           <div class="m-6 p-6 text-center">
@@ -31,23 +46,25 @@
           <div class="space-y-2">
             <h3 class="text-lg py-2">{{ logData?.counts.queryRows  }} / <span class="font-bold">{{ (logData?.yearInfo?.count || 0).toLocaleString() }} entries</span></h3>
             <UFormField label="Search Client" :ui="{ label: 'font-semibold' }">
-              <UInput type="text" leading-icon="lucide:search" placeholder="Search for a client name or steamid" class="w-full" />
+              <UInputMenu v-model="searchClient" v-model:search-term="searchUser" @input="() => searchUserExecuteDebounce()" ignore-filter type="text" leading-icon="lucide:user" placeholder="Search for player name or steamid" class="w-full"
+                :items="searchUserItems" clear value-key="value" autocomplete="autocomplete" />
             </UFormField>
             <UFormField label="Search Target" :ui="{ label: 'font-semibold' }">
-              <UInput type="text" leading-icon="lucide:search" placeholder="Search for a target name or steamid" class="w-full" />
+              <UInputMenu v-model="searchTarget" v-model:search-term="searchUser" @input="() => searchUserExecuteDebounce()" ignore-filter type="text" leading-icon="lucide:user" placeholder="Search for player name or steamid" class="w-full"
+                :items="searchTargetItems" clear value-key="value" autocomplete="autocomplete" />
             </UFormField>
             <UFormField label="Search Message" :ui="{ label: 'font-semibold' }">
-              <UInput type="text" leading-icon="lucide:search" placeholder="Search by message content" class="w-full" />
+              <UInput v-model="searchMessage" type="text" leading-icon="lucide:search" placeholder="Search by message content" class="w-full" />
             </UFormField>
             <UFormField label="Enabled Types" :ui="{ label: 'font-semibold' }">
-              <USelectMenu class="w-full"></USelectMenu>
+              <USelectMenu v-model="selectedTypes" class="w-full" multiple :items="TYPES" />
             </UFormField>
             <UFormField label="Enabled Sources" :ui="{ label: 'font-semibold' }">
-              <USelectMenu :loading="!data" :items="data?.servers" class="w-full" :disabled="!data"></USelectMenu>
+              <USelectMenu v-model="selectedSources" :loading="!data" :items="data?.servers" class="w-full" :disabled="!data" multiple />
             </UFormField>
             <div class="flex justify-between gap-2">
               <UFormField label="Around Id" :ui="{ label: 'font-semibold' }">
-                <UInput type="number" placeholder="####" />
+                <UInput v-model="aroundId" type="number" placeholder="####" />
               </UFormField>
               <UFormField label="Data Year" :ui="{ label: 'font-semibold' }">
                 <USelect v-model="dataSource" :items="dataSources" :loading="!dataSources" class="w-30" />
@@ -82,8 +99,19 @@ useHead({
 })
 import Hero from '@/components/Hero.vue';
 import AuditTable from '@/components/audit/AuditTable.vue'
-import { type APILogData, type APILogQueryResult, type LogEntry } from '@common/Logs';
+import { TYPE_MAP, type APILogData, type APILogQueryResult, type LogEntry } from '@common/Logs';
+import type { APIListPlayersResponse } from '@common/User';
+import debounce from '@common/methods/debounce';
+import { type InputMenuItem, type SelectItem } from '@nuxt/ui';
 
+const TYPES: SelectItem[] = Object.entries(TYPE_MAP).map(([id, data]) => {
+  id = id.toLocaleLowerCase()
+  return {
+    label: id.charAt(0).toUpperCase() + id.slice(1),
+    icon: data.icon,
+    value: id
+  }
+})
 
 const route = useRoute()
 const router = useRouter()
@@ -94,6 +122,11 @@ const query = computed(() => {
   const params = new URLSearchParams()
   params.append("limit", limit.value.toString())
   params.append("source", dataSource.value.toString())
+  if(selectedSources.value.length > 0) params.append("servers", selectedSources.value.join(','))
+  if(selectedTypes.value.length > 0) params.append("types", selectedTypes.value.join(','))
+  if(searchClient.value) params.append('search_client', searchClient.value)
+  if(searchTarget.value) params.append('search_target', searchTarget.value)
+  if(searchMessage.value) params.append('search_message', searchMessage.value)
   return params
   // for(const [filter, val] of Object.entries(filters.value)) {
   //   if(!val) continue
@@ -109,18 +142,18 @@ const query = computed(() => {
 
 const dataSources = computed(() => data.value ? Object.keys(data.value?.years) : undefined)
 
-const id = computed({
-  get: () => route.query.id ? parseInt(route.query.id as string) : 1,
-  set: (id: number) => setQuery('id', id)
-})
-const limit = computed({
-  get: () => route.query.limit ? parseInt(route.query.limit as string) : 30,
-  set: (limit: number) => setQuery('limit', Math.min(Math.max(limit, 100), 10))
-})
-const dataSource = computed({
-  get: (): string => route.query.source as string || new Date().getFullYear().toString(),
-  set: (source: string) => setQuery('source', source)
-})
+const id = ref<number>(route.query.id ? parseInt(route.query.id as string) : 1)
+const aroundId = ref<number|undefined>(route.query.aroundId ? parseInt(route.query.aroundId as string) : undefined)
+const limit = ref<number>(route.query.limit ? parseInt(route.query.limit as string) : 30)
+const dataSource = ref<string>(route.query.source as string || new Date().getFullYear().toString())
+const order = ref<string>(aroundId.value ? "around" : route.query.dir as string || 'after')
+const selectedTypes = ref<string[]>(route.query.types ? (route.query.types as string).split(',') : ["action","chat","state","quit","join","info"])
+const selectedSources = ref<string[]>(route.query.servers ? (route.query.servers as string).split(',') : [])
+const searchClient = ref<string|undefined>(route.query.client as string)
+const searchTarget = ref<string|undefined>(route.query.target as string)
+const searchMessage = ref<string|undefined>(route.query.msg as string)
+
+const searchUser = ref<string>("")
 
 const fetchTimeElapsed = computed(() => {
   if(!startLoadingTime.value) return "-"
@@ -137,12 +170,26 @@ const api = useApi()
 const { data: logData, refresh, execute, status, error } = useLazyAsyncData<APILogQueryResult>(
   () => 'logs?' + query.value.toString(),
   async() => {
+    console.debug('fetching')
     startLoadingTime.value = Date.now()
-    const val: APILogQueryResult = await api(`/logs/after/${id.value}?${query.value.toString()}`)
+    const val: APILogQueryResult = await api(`/logs/${order.value}/${id.value}?${query.value.toString()}`)
     startLoadingTime.value = undefined
     return val
   }
 )
+
+function searchUserTransform(res: APIListPlayersResponse & { value: string }): InputMenuItem[] {
+  return res.users.map(user => {
+    return {
+      label: user.name ?? user.steamid,
+      description: user.steamid + (user.isAdmin ? ` - Admin` : ''),
+      value: user.steamid
+    }
+  })
+}
+
+const { data: searchUserItems, execute: searchUserExecute } = useLazyFetch(() => `/api/users/search?query=${searchUser.value}`, { transform: searchUserTransform, immediate: false })
+const searchUserExecuteDebounce = debounce(searchUserExecute, 400)
 
 // If user hasn't specified an id, switch them to the current highest ID of selected data source, if any
 watch(() => data.value, () => {
@@ -154,14 +201,45 @@ watch(() => data.value, () => {
   }
 }, { immediate: true })
 
+const updateUrlDebounced = debounce(updateUrl, 800)
+
+function updateUrl() {
+  router.replace({
+    path: route.path,
+    query: {
+      ...route.query,
+      id: id.value,
+      limit: limit.value,
+      source: dataSource.value,
+      order: order.value,
+      types: selectedTypes.value.join(','),
+      servers: selectedSources.value.join(','),
+      client: searchClient.value,
+      target: searchTarget.value,
+      msg: searchMessage.value
+    }
+  })
+}
+
+watch([ id, limit, dataSource, order, selectedTypes, selectedSources, searchClient, searchTarget, searchMessage ], () => {
+  updateUrlDebounced()
+})
+
+watch(() => route.query, () => execute())
+
 // const { data: logData, refresh, status, error } = useFetch<APILogQueryResult>(() => `/api/logs/after/${id.value}?${query.value.toString()}`, { lazy: true, immediate: false })
+
+function findNearby(jumpId: number) {
+  order.value = 'around'
+  id.value = jumpId
+}
 
 async function fetchMore() {
 
 }
 
 function setQuery(key: string, value: any) {
-  router.replace({ path: route.path, query: { ...route.query, [key]: value } });
+  // router.replace({ path: route.path, query: { ...route.query, [key]: value } });
 }
 onMounted(() => {
   // update now.value every second, so it updates fetchTimeElapsed properly

@@ -41,7 +41,7 @@
         <div class="flex gap-2">
           <UBadge variant="outline"> #{{ entry.id }} </UBadge>
           <UButton leading-icon="lucide:copy" color="neutral" variant="outline" @click="copyId">Share</UButton>
-          <UButton>find nearby entries</UButton>
+          <UButton @click="findNearby">find nearby entries</UButton>
         </div>
       </KeyValueRow>
       <KeyValueRow label="Timestamp">
@@ -68,49 +68,18 @@
 </template>
 
 <script setup lang="ts">
-import type { LogEntry } from '@common/Logs';
+import { TYPE_MAP, type LogEntry } from '@common/Logs';
 import { parseLogMessage, type LogEntryUser } from '@common/methods/logs'
 import KeyValueTable from '../table/KeyValueTable.vue';
 import KeyValueRow from '../table/KeyValueRow.vue';
 import { formatDate, getRelDate } from '@common/methods/format';
 import LogMessage from './LogMessage.vue';
 
-const toast = useToast()
+const emit = defineEmits<{
+  (e: 'find-nearby', id: number): void
+}>()
 
-const TYPE_MAP: Record<string, { icon: string, color?: string, className?: string, label?: string }> = {
-  "INFO": {
-    icon: "lucide:info",
-    color: "var(--ui-info)",
-    className: "bg-info"
-  },
-  "QUIT": {
-    icon: "lucide:door-open",
-    color: "var(--ui-error)",
-    className: "bg-error"
-  },
-  "JOIN": {
-    icon: "lucide:plus",
-    color: "var(--ui-success)",
-    className: "bg-success"
-  },
-  "ACTION": {
-    icon: "lucide:sparkle",
-    color: "var(--ui-warning)",
-    className: "bg-warning"
-  },
-  "STATE": {
-    icon: "lucide:activity",
-    className: "bg-light-blue text-black dark:text-white"
-  },
-  "CHAT": {
-    icon: "lucide:message-circle",
-    className: "bg-neutral-200 text-black"
-  },
-  "web": {
-    icon: "lucide:globe",
-    label: "WEB"
-  }
-}
+const toast = useToast()
 
 const props = defineProps<{
   entry: LogEntry
@@ -150,5 +119,9 @@ async function copyId() {
     title: "Copied to clipboard",
     description: link
   })
+}
+
+function findNearby() {
+  emit("find-nearby", props.entry.id)
 }
 </script>

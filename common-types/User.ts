@@ -167,7 +167,7 @@ export interface UserProfileData {
  */
 export interface APIUser extends APIPlayer {
   id: string,
-  steamid2?: string
+  steamid?: string
 }
 /**
  * Represents a player / user entry. This entry may not be a real human, but a bot.
@@ -179,7 +179,7 @@ export interface APIPlayer {
   id: string | null,
   /** The name, if known of entry */
   name: string | null
-  /** @deprecated Avatar URL, use /api/users/:id/avatar. Overwrites automatic avatar urls */
+  /** @deprecated Avatar URL, use /:id/avatar. Overwrites automatic avatar urls */
   avatarUrl?: string | null
 }
 export interface UserNameEntry {
