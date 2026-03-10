@@ -9,9 +9,9 @@
             <strong>{{ formatDate(entry.timestamp) }}</strong>
             <span class="text-muted">{{ getRelDate(entry.timestamp) }}</span>
           </div>
-          <div class="space-x-2 flex items-start">
-            <UBadge :style="typeStyle" :leading-icon="typeData?.icon" :class="typeData?.className">{{ typeData?.label ?? entry.type }}</UBadge>
-            <LogMessage :message="entry.message" :client="client" :target="target" :metadata="entry.metadata" />
+          <div class="gap-x-1 flex items-start flex-wrap text-wrap">
+            <UBadge :style="typeStyle" :leading-icon="typeData?.icon" :class="typeData?.className" size="md">{{ typeData?.label ?? entry.type }}</UBadge>
+            <LogMessage :type="entry.type" :message="entry.message" :client="client" :target="target" :metadata="entry.metadata" />
           </div>
         </div>
       </div>
@@ -69,7 +69,7 @@
 
 <script setup lang="ts">
 import { TYPE_MAP, type LogEntry } from '@common/Logs';
-import { parseLogMessage, type LogEntryUser } from '@common/methods/logs'
+import { type LogEntryUser } from '@common/methods/logs'
 import KeyValueTable from '../table/KeyValueTable.vue';
 import KeyValueRow from '../table/KeyValueRow.vue';
 import { formatDate, getRelDate } from '@common/methods/format';
@@ -92,11 +92,13 @@ const avatarUrl = computed(() => {
 })
 
 const typeData = computed(() => {
+  if(props.entry.type == 'CHAT' && props.entry.metadata?.admin_chat)
+    return TYPE_MAP["ADMIN_CHAT"]
   return TYPE_MAP[props.entry.type as string]
 })
 
 const typeStyle = computed(() => {
-  const data = TYPE_MAP[props.entry.type as string]
+  const data = typeData.value
   if(data) {
     return {
       'background-color': data.color

@@ -196,7 +196,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     const user: PlayerEntry = {
       ...userdata[0],
       id,
-      steamid2: id,
+      steamid: id,
       isAdmin: userdata[0].isAdmin === 1,
     }
 

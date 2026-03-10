@@ -3,14 +3,23 @@
     <Hero title="Audit Logs" />
     <UContainer class="fluid grid grid-cols-4 gap-4">
       <div class="col-span-3">
-        <a @click="fetchMore" class="cursor-pointer">
-          <UAlert class="bg-light-blue text-black dark:text-white my-3 py-5 rounded-2xl" icon="lucide:info">
+        <!-- TODO: check periodically for entries -->
+        <template v-if="logData && logData.logs.length > 0 && newerEntries > 0">
+          <UAlert v-if="loadingSide == 'top'" class="bg-light-blue text-black dark:text-white my-3 py-5 rounded-2xl">
             <template #description>
-              <b>20</b> new entries are available. Click here to load
+              <b>{{ newerEntries.toLocaleString() }}</b> new entries are available. Click here to load
             </template>
           </UAlert>
-        </a>
+          <a v-else @click="fetchMore" class="cursor-pointer">
+            <UAlert class="bg-light-blue text-black dark:text-white my-3 py-5 rounded-2xl" icon="lucide:info">
+              <template #description>
+                <b>{{ newerEntries.toLocaleString() }}</b> new entries are available. Click here to load
+              </template>
+            </UAlert>
+          </a>
+        </template>
         <template v-if="logData && status == 'success'">
+          current {{ dataRange}} - available { lowest: {{ currentSource?.minId }}, highest: {{ currentSource?.maxId }} }
           <AuditTable v-if="logData.logs.length > 0" :entries="logData.logs" @find-nearby="findNearby" />
           <UCard v-else variant="subtle">
             <div class="p-6 text-center">
@@ -51,7 +60,7 @@
             </UFormField>
             <UFormField label="Search Target" :ui="{ label: 'font-semibold' }">
               <UInputMenu v-model="searchTarget" v-model:search-term="searchUser" @input="() => searchUserExecuteDebounce()" ignore-filter type="text" leading-icon="lucide:user" placeholder="Search for player name or steamid" class="w-full"
-                :items="searchTargetItems" clear value-key="value" autocomplete="autocomplete" />
+                :items="searchUserItems" clear value-key="value" autocomplete="autocomplete" />
             </UFormField>
             <UFormField label="Search Message" :ui="{ label: 'font-semibold' }">
               <UInput v-model="searchMessage" type="text" leading-icon="lucide:search" placeholder="Search by message content" class="w-full" />
@@ -104,6 +113,12 @@ import type { APIListPlayersResponse } from '@common/User';
 import debounce from '@common/methods/debounce';
 import { type InputMenuItem, type SelectItem } from '@nuxt/ui';
 
+const toast = useToast()
+/// How often to check for new entries
+const REFRESH_INTERVAL = 1000 * 60 * 2
+/// Maximum amount to keep in buffer, entries in opposite direction removed
+const MAX_ENTRIES_IN_BUFFER = 100
+
 const TYPES: SelectItem[] = Object.entries(TYPE_MAP).map(([id, data]) => {
   id = id.toLocaleLowerCase()
   return {
@@ -116,7 +131,7 @@ const TYPES: SelectItem[] = Object.entries(TYPE_MAP).map(([id, data]) => {
 const route = useRoute()
 const router = useRouter()
 
-const { data } = await useFetch<APILogData>("/api/logs/data", { key: "logs-data" })
+const { data, refresh: refreshMetaData } = await useFetch<APILogData>("/api/logs/data", { key: "logs-data" })
 
 const query = computed(() => {
   const params = new URLSearchParams()
@@ -132,9 +147,29 @@ const query = computed(() => {
 
 const dataSources = computed(() => data.value ? Object.keys(data.value?.years) : undefined)
 
+const currentSource = computed(() => {
+  return data.value?.years[dataSource.value]
+})
+
+const newerEntries = computed(() => {
+  if(!currentSource.value) return 0
+  return currentSource.value.maxId - dataRange.value.highest
+})
+
+const dataRange = computed(() => {
+  if(!logData.value) return { lowest: 0, highest: 0 }
+  let lowest = Infinity, highest = 0
+  for(const entry of logData.value.logs) {
+    lowest = Math.min(lowest, entry.id)
+    highest = Math.max(highest, entry.id)
+  }
+  return { lowest, highest }
+})
+
+const loadingSide = ref<"bottom" | "top" | undefined>()
 const id = ref<number>(route.query.id ? parseInt(route.query.id as string) : 1)
 const aroundId = ref<number|undefined>(route.query.aroundId ? parseInt(route.query.aroundId as string) : undefined)
-const limit = ref<number>(route.query.limit ? parseInt(route.query.limit as string) : 30)
+const limit = ref<number>(route.query.limit ? parseInt(route.query.limit as string) : 100)
 const dataSource = ref<string>(route.query.source as string || new Date().getFullYear().toString())
 const order = ref<string>(aroundId.value ? "around" : route.query.dir as string || 'after')
 const selectedTypes = ref<string[]>(route.query.types ? (route.query.types as string).split(',') : ["action","chat","state","quit","join","info"])
@@ -157,13 +192,32 @@ const startLoadingTime = ref<number|undefined>()
 
 const api = useApi()
 
-const { data: logData, refresh, execute, status, error } = useLazyAsyncData<APILogQueryResult>(
-  () => 'logs?' + query.value.toString(),
+const fullLogEntries = ref<LogEntry[]>([])
+
+const { data: logData, refresh, status, error } = useLazyAsyncData<APILogQueryResult>(
+  () => 'logs',
   async() => {
     console.debug('fetching')
+    // merge with prev result
+    // avoid unnecessary sort by checking order.value for direction to push into
     startLoadingTime.value = Date.now()
     const val: APILogQueryResult = await api(`/logs/${order.value}/${id.value}?${query.value.toString()}`)
+    // fullLogEntries.value = fullLogEntries.value.concat(val.logs)
+    // Small little optimization, append to either top or bottom of list depending on order
+    console.debug('new results', val.logs.length, 'existing results', logData.value?.logs.length)
+    if(logData.value) val.logs = order.value == 'before' ? fullLogEntries.value.concat(logData.value?.logs ?? []) : val.logs.concat(logData.value?.logs ?? [])
+    if(val.logs.length > MAX_ENTRIES_IN_BUFFER) {
+      const toRemove = val.logs.length - MAX_ENTRIES_IN_BUFFER
+      if(order.value == 'before') {
+        val.logs.splice(val.logs.length - toRemove - 1, toRemove)
+      } else {
+        val.logs.splice(0, toRemove)
+      }
+    }
+    val.logs = val.logs.sort((a,b) => a.id - b.id)
     startLoadingTime.value = undefined
+    loadingSide.value = undefined
+    // TODO: MAX_ENTRIES_IN_BUFFER
     return val
   }
 )
@@ -215,8 +269,6 @@ watch([ id, limit, dataSource, order, selectedTypes, selectedSources, searchClie
   updateUrlDebounced()
 })
 
-watch(() => route.query, () => execute())
-
 // const { data: logData, refresh, status, error } = useFetch<APILogQueryResult>(() => `/api/logs/after/${id.value}?${query.value.toString()}`, { lazy: true, immediate: false })
 
 function findNearby(jumpId: number) {
@@ -225,14 +277,24 @@ function findNearby(jumpId: number) {
 }
 
 async function fetchMore() {
-
+  if(!currentSource.value) return toast.add({
+    color: "error",
+    title: "Unable to fetch more entries",
+    description: "No data source was found"
+  })
+  loadingSide.value = "top"
+  id.value = currentSource.value.maxId
+  order.value = 'after'
+  updateUrlDebounced()
 }
 
-function setQuery(key: string, value: any) {
-  // router.replace({ path: route.path, query: { ...route.query, [key]: value } });
-}
 onMounted(() => {
   // update now.value every second, so it updates fetchTimeElapsed properly
   setInterval(() => now.value = Date.now(), 100)
+  setInterval(() => {
+    console.info('refreshing metadata')
+    console.debug('prev range:', dataRange.value)
+    // refreshMetaData()
+  }, REFRESH_INTERVAL)
 })
 </script>

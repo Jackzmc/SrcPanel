@@ -99,5 +99,10 @@ export const TYPE_MAP: Record<string, { icon: string, color?: string, className?
   "web": {
     icon: "lucide:globe",
     label: "WEB"
+  },
+  'ADMIN_CHAT': {
+    icon: 'lucide:message-circle-more',
+    className: 'bg-amber-200 text-black',
+    label: 'ADMIN CHAT'
   }
 }

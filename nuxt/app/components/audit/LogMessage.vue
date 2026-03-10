@@ -32,9 +32,11 @@ const props = defineProps<{
   target?: LogEntryUser,
   message?: string,
   metadata?: Record<string, any>
+  type?: string
 }>()
 
 const parseResult = computed(() => {
-  return props.message && parseLogMessage(props.message, props.client, props.target )
+  const msg = (props.type == 'CHAT' && props.metadata?.admin_chat) ? '%text%' : props.message
+  return msg && parseLogMessage(msg, props.client, props.target )
 })
 </script>
