@@ -4,13 +4,18 @@
     <UContainer class="fluid grid grid-cols-4 gap-4">
       <div class="col-span-3">
         <!-- TODO: check periodically for entries -->
+
+        <!-- Top Loading -->
         <template v-if="logData && logData.logs.length > 0 && newerEntries > 0">
           <UAlert v-if="loadingSide == 'top'" class="bg-light-blue text-black dark:text-white my-3 py-5 rounded-2xl">
             <template #description>
-              <b>{{ newerEntries.toLocaleString() }}</b> new entries are available. Click here to load
+              <h3 class="text-xl font-bold">
+                <Icon name="i-lucide-loader-circle" class="animate-spin align-middle mb-1" />
+                Fetching more entries...
+              </h3>
             </template>
           </UAlert>
-          <a v-else @click="fetchMore" class="cursor-pointer">
+          <a v-else @click="fetchMoreTop" class="cursor-pointer">
             <UAlert class="bg-light-blue text-black dark:text-white my-3 py-5 rounded-2xl" icon="lucide:info">
               <template #description>
                 <b>{{ newerEntries.toLocaleString() }}</b> new entries are available. Click here to load
@@ -18,7 +23,8 @@
             </UAlert>
           </a>
         </template>
-        <template v-if="logData && status == 'success'">
+        <!-- Main -->
+        <template v-if="logData">
           current {{ dataRange}} - available { lowest: {{ currentSource?.minId }}, highest: {{ currentSource?.maxId }} }
           <AuditTable v-if="logData.logs.length > 0" :entries="logData.logs" @find-nearby="findNearby" />
           <UCard v-else variant="subtle">
@@ -49,7 +55,25 @@
             <p class="text-lg">{{ fetchTimeElapsed }}</p>
           </div>
         </UCard>
+
+        <!-- Bottom Loader -->
+        <UCard v-if="loadingSide == 'bottom'" class="bg-light-blue my-6">
+          <div class="text-center p-3">
+            <h3 class="text-xl font-bold">
+              <Icon name="i-lucide-loader-circle" class="animate-spin align-middle mb-1" />
+              Fetching more entries...
+            </h3>
+          </div>
+        </UCard>
+        <UCard v-else class="bg-light-blue my-6">
+          <div class="text-center p-3">
+            <UButton size="xl" variant="outline" color="neutral" @click="fetchMoreBottom()">
+              Fetch more
+            </UButton>
+          </div>
+        </UCard>
       </div>
+
       <div>
         <UCard>
           <div class="space-y-2">
@@ -167,11 +191,13 @@ const dataRange = computed(() => {
 })
 
 const loadingSide = ref<"bottom" | "top" | undefined>()
-const id = ref<number>(route.query.id ? parseInt(route.query.id as string) : 1)
+const id = ref<number>(1)
+const order = ref<"before"|"after"|"around">("after")
+
+// Query parameters
 const aroundId = ref<number|undefined>(route.query.aroundId ? parseInt(route.query.aroundId as string) : undefined)
-const limit = ref<number>(route.query.limit ? parseInt(route.query.limit as string) : 100)
+const limit = ref<number>(route.query.limit ? parseInt(route.query.limit as string) : 30)
 const dataSource = ref<string>(route.query.source as string || new Date().getFullYear().toString())
-const order = ref<string>(aroundId.value ? "around" : route.query.dir as string || 'after')
 const selectedTypes = ref<string[]>(route.query.types ? (route.query.types as string).split(',') : ["action","chat","state","quit","join","info"])
 const selectedSources = ref<string[]>(route.query.servers ? (route.query.servers as string).split(',') : (data.value?.servers ?? []))
 const searchClient = ref<string|undefined>(route.query.client as string)
@@ -192,8 +218,6 @@ const startLoadingTime = ref<number|undefined>()
 
 const api = useApi()
 
-const fullLogEntries = ref<LogEntry[]>([])
-
 const { data: logData, refresh, status, error } = useLazyAsyncData<APILogQueryResult>(
   () => 'logs',
   async() => {
@@ -205,22 +229,51 @@ const { data: logData, refresh, status, error } = useLazyAsyncData<APILogQueryRe
     // fullLogEntries.value = fullLogEntries.value.concat(val.logs)
     // Small little optimization, append to either top or bottom of list depending on order
     console.debug('new results', val.logs.length, 'existing results', logData.value?.logs.length)
-    if(logData.value) val.logs = order.value == 'before' ? fullLogEntries.value.concat(logData.value?.logs ?? []) : val.logs.concat(logData.value?.logs ?? [])
-    if(val.logs.length > MAX_ENTRIES_IN_BUFFER) {
-      const toRemove = val.logs.length - MAX_ENTRIES_IN_BUFFER
-      if(order.value == 'before') {
-        val.logs.splice(val.logs.length - toRemove - 1, toRemove)
-      } else {
-        val.logs.splice(0, toRemove)
-      }
-    }
-    val.logs = val.logs.sort((a,b) => a.id - b.id)
+    mergeLogs(logData.value?.logs, val.logs, order.value)
     startLoadingTime.value = undefined
     loadingSide.value = undefined
     // TODO: MAX_ENTRIES_IN_BUFFER
     return val
-  }
+  },
+  { server: false, timeout: 60000 }
 )
+
+const logEntryIds = computed(() => {
+  return new Set(
+    logData.value?.logs.map(log => log.id)
+  )
+})
+
+function mergeLogs(source: LogEntry[] = [], newLogs: LogEntry[], direction: string) {
+  // If direction is 'around', we just push and sort anyway
+
+  // Logs are descending order
+  for(const log of newLogs) {
+    // Skip existing ids
+    if(logEntryIds.value.has(log.id)) continue
+
+    if(direction == 'before') {
+      // Loading new entries on bottom, so they are older, append to front of list
+      source.unshift(log)
+    } else {
+      source.push(log)
+    }
+  }
+
+  // Keep under maximum
+  // TODO: verify that we keep limit + 5 (buffer), so you see previous fetched entry + new
+  if(source.length > MAX_ENTRIES_IN_BUFFER) {
+    const toRemove = source.length - MAX_ENTRIES_IN_BUFFER
+    if(order.value == 'before') {
+      source.splice(source.length - toRemove - 1, toRemove)
+    } else {
+      source.splice(0, toRemove)
+    }
+  }
+
+  // Re-sort descending, ideally nothing changes
+  source = source.sort((a,b) => a.id - b.id)
+}
 
 function searchUserTransform(res: APIListPlayersResponse & { value: string }): InputMenuItem[] {
   return res.users.map(user => {
@@ -274,18 +327,33 @@ watch([ id, limit, dataSource, order, selectedTypes, selectedSources, searchClie
 function findNearby(jumpId: number) {
   order.value = 'around'
   id.value = jumpId
+  refresh()
 }
 
-async function fetchMore() {
+async function fetchMoreTop() {
   if(!currentSource.value) return toast.add({
     color: "error",
     title: "Unable to fetch more entries",
     description: "No data source was found"
   })
+
   loadingSide.value = "top"
   id.value = currentSource.value.maxId
   order.value = 'after'
-  updateUrlDebounced()
+  refresh()
+}
+
+async function fetchMoreBottom() {
+  if(!currentSource.value) return toast.add({
+    color: "error",
+    title: "Unable to fetch more entries",
+    description: "No data source was found"
+  })
+
+  loadingSide.value = "bottom"
+  id.value = dataRange.value.lowest
+  order.value = 'before'
+  refresh()
 }
 
 onMounted(() => {

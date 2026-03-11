@@ -29,7 +29,7 @@ useSeoMeta({
 <template>
   <UApp :toaster="{ position: 'top-center'}">
     <NuxtLayout>
-      <NuxtPage />
+      <NuxtPage :page-key="route => route.path" />
     </NuxtLayout>
   </UApp>
 </template>
