@@ -233,13 +233,13 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     if (types) {
       // type in (?,?,?) OR server = 'web' AND server IN (?,?,?)
       query.whereIn('type', types)
-      if (servers?.includes('web')) {
-        // TODO: if .servers includes 'web', do AND type IN () OR server = 'web'
-        // query.where('server', 'web')
-        query.or([
-          ['server', '=', 'web']
-        ])
-      }
+      // if (servers?.includes('web')) {
+      //   // TODO: if .servers includes 'web', do AND type IN () OR server = 'web'
+      //   // query.where('server', 'web')
+      //   query.or([
+      //     ['server', '=', 'web']
+      //   ])
+      // }
     }
 
     const startTime = Date.now()

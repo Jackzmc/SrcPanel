@@ -55,6 +55,12 @@ export default defineNuxtConfig({
         'lucide:info',
         'lucide:loader-circle',
         'lucide:search',
+        'lucide:door-open',
+        'lucide:sparkle',
+        'lucide:activity',
+        'lucide:message-circle',
+        'lucide:message-circle-more',
+        'lucide:globe'
       ],
     },
   },
