@@ -139,7 +139,8 @@ useHead({
 })
 import Hero from '@/components/Hero.vue';
 import AuditTable from '@/components/audit/AuditTable.vue'
-import { TYPE_MAP, type APILogData, type APILogQueryResult, type LogEntry } from '@common/Logs';
+import { type APILogData, type APILogQueryResult, type LogEntry } from '@common/Logs';
+import { TYPE_MAP } from '#shared/types/logs'
 import type { APIListPlayersResponse } from '@common/User';
 import debounce from '@common/methods/debounce';
 import { type InputMenuItem, type SelectItem } from '@nuxt/ui';
@@ -148,7 +149,7 @@ const toast = useToast()
 /// How often to check for new entries
 const REFRESH_INTERVAL = 1000 * 60 * 2
 /// Maximum amount to keep in buffer, entries in opposite direction removed
-const MAX_ENTRIES_IN_BUFFER = 100
+const MAX_ENTRIES_IN_BUFFER = 50
 
 const TYPES: SelectItem[] = Object.entries(TYPE_MAP).map(([id, data]) => {
   id = id.toLocaleLowerCase()
@@ -246,9 +247,11 @@ const { data: logData, refresh, status, error } = useLazyAsyncData<APILogQueryRe
     // Small little optimization, append to either top or bottom of list depending on order
     console.debug('new results', val.logs.length, 'existing results', logData.value?.logs.length)
     val.logs = mergeLogs(logData.value?.logs, val.logs, order.value)
+    requestAnimationFrame(() => {
+      loadingSide.value = undefined
+    })
     startLoadingTime.value = undefined
-    loadingSide.value = undefined
-    // TODO: MAX_ENTRIES_IN_BUFFER
+
     return val
   },
   { server: false, timeout: 60000 }
@@ -262,34 +265,41 @@ const logEntryIds = computed(() => {
 
 function mergeLogs(source: LogEntry[] = [], newLogs: LogEntry[], direction: string) {
   // If direction is 'around', we just push and sort anyway
-
   // Logs are descending order
-  for(const log of newLogs) {
-    // Skip existing ids
-    if(logEntryIds.value.has(log.id)) continue
-
-    if(direction == 'before') {
-      // Loading new entries on bottom, so they are older, append to front of list
-      source.unshift(log)
-    } else {
-      source.push(log)
-    }
+  const logs = newLogs.filter(log => !logEntryIds.value.has(log.id))
+  let buffer: LogEntry[]
+  if(direction == 'before') {
+    // Loading new entries on bottom, so they are older, append to front of list
+    buffer = [...logs, ...source]
+  } else {
+    buffer = [...source, ...logs]
   }
+  // for(const log of newLogs) {
+  //   // Skip existing ids
+  //   if() continue
+
+  //   if(direction == 'before') {
+  //     // Loading new entries on bottom, so they are older, append to front of list
+  //     source.unshift(log)
+  //   } else {
+  //     source.push(log)
+  //   }
+  // }
 
   // Keep under maximum
   // TODO: verify that we keep limit + 5 (buffer), so you see previous fetched entry + new
-  if(source.length > MAX_ENTRIES_IN_BUFFER) {
-    const toRemove = source.length - MAX_ENTRIES_IN_BUFFER
-    console.debug('removing', toRemove, 'prelen=', source.length)
+  if(buffer.length > MAX_ENTRIES_IN_BUFFER) {
+    const toRemove = buffer.length - MAX_ENTRIES_IN_BUFFER
+    console.debug('removing', toRemove, 'prelen=', buffer.length)
     if(order.value == 'before') {
-      source.splice(source.length - toRemove - 1, toRemove)
+      buffer.splice(buffer.length - toRemove - 1, toRemove)
     } else {
-      source.splice(0, toRemove)
+      buffer.splice(0, toRemove)
     }
   }
 
   // Re-sort descending, ideally nothing changes
-  return source.sort((a,b) => b.timestamp - a.timestamp)
+  return buffer.sort((a,b) => b.timestamp - a.timestamp)
 }
 
 function searchUserTransform(res: APIListPlayersResponse & { value: string }): InputMenuItem[] {
@@ -334,7 +344,8 @@ function updateUrl() {
   })
 }
 
-watch([ id, limit, dataSource, order, selectedTypes, selectedSources, searchClient, searchTarget, searchMessage ], () => {
+watch([ limit, dataSource, selectedTypes, selectedSources, searchClient, searchTarget, searchMessage ], () => {
+  // clear()
   updateUrlDebounced()
 })
 

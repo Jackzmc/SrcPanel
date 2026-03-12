@@ -2,7 +2,7 @@
   <UCard :ui="{ body: 'p-3 sm:p-2' }">
     <div class="flex justify-between">
       <div class="flex flex-row gap-2 items-center">
-        <UAvatar v-if="entry.type != 'INFO'" :src="avatarUrl"  :as="{ img: 'img' }" size="3xl" />
+        <UAvatar v-if="entry.type != 'INFO'" :src="avatarUrl"  :as="{ img: 'img' }" size="3xl" :alt="(entry.clientName || entry.client) ?? (entry.target || entry.targetName)" />
         <div class="flex flex-col gap-1">
           <div class="space-x-2 text-xs">
             <UBadge variant="outline" size="sm"> #{{ entry.id }} </UBadge>
@@ -10,7 +10,7 @@
             <span class="text-muted">{{ getRelDate(entry.timestamp) }}</span>
           </div>
           <div class="gap-x-1 flex items-start flex-wrap text-wrap">
-            <UBadge :style="typeStyle" :leading-icon="typeData?.icon" :class="typeData?.className" size="md">{{ typeData?.label ?? entry.type }}</UBadge>
+            <UBadge :leading-icon="typeData?.icon" :class="typeData?.className" size="md">{{ typeData?.label ?? entry.type }}</UBadge>
             <LogMessage :type="entry.type" :message="entry.message" :client="client" :target="target" :metadata="entry.metadata" />
           </div>
         </div>
@@ -29,11 +29,6 @@
         </UTooltip>
       </div>
     </div>
-    <!-- <div v-if="expanded" class="p-2">
-      <div class=" border-t-2 border-t-gray-200">
-        EXTRA STUFF HERE
-      </div>
-    </div> -->
   </UCard>
   <UCard v-if="expanded" class="mt-1 mb-4 ml-5" variant="subtle" :ui="{ body: 'p-0 sm:p-0' }">
     <KeyValueTable>
@@ -68,12 +63,13 @@
 </template>
 
 <script setup lang="ts">
-import { TYPE_MAP, type LogEntry } from '@common/Logs';
+import { type LogEntry } from '@common/Logs';
 import { type LogEntryUser } from '@common/methods/logs'
 import KeyValueTable from '../table/KeyValueTable.vue';
 import KeyValueRow from '../table/KeyValueRow.vue';
 import { formatDate, getRelDate } from '@common/methods/format';
 import LogMessage from './LogMessage.vue';
+import { TYPE_MAP } from '#shared/types/logs'
 
 const emit = defineEmits<{
   (e: 'find-nearby', id: number): void
