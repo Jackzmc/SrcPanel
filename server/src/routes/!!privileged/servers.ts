@@ -225,6 +225,12 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         const [code, granted] = req.user!.requirePermission("servers.generate_jwt", { resourceId: server.id })
         if(!granted) return NO_PERMISSION(reply, "You do not have permission to generate a JWT for this server", code)
         const token = await server.Plugin.generateToken(req.user!.steamid2)
+        await req.user!.log(null, `%client% generated auth token for %server%`, {
+                code,
+                metadata: {
+                    server: server.id,
+                }
+            })
         reply.header("Content-Type", "text/plain")
         return reply.code(200).send(token)
     })
@@ -237,6 +243,14 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         if(!granted) return NO_PERMISSION(reply, "You do not have permission to start this server", code)
         try {
             await server.start()
+            await req.user!.log(null, `%client% ran action %namespace%:%command%`, {
+                code,
+                metadata: {
+                    server: server.id,
+                    namespace: 'builtin',
+                    command: 'start'
+                }
+            })
             reply.status(204).send()
         } catch(err) {
             return reply.code(500).send({
@@ -271,6 +285,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         await req.user!.log(null, `%client% ran action %namespace%:%command%`, {
             code,
             metadata: {
+                server: server.id,
                 namespace,
                 command
             }
@@ -326,6 +341,14 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         if(!granted) return NO_PERMISSION(reply, "You do not have permission to stop this server", code)
         try {
             await server.stop(Boolean(req.query.force))
+            await req.user!.log(null, `%client% ran action %namespace%:%command%`, {
+                code,
+                metadata: {
+                    server: server.id,
+                    namespace: 'builtin',
+                    command: req.query.force ? 'request_stop' : 'stop'
+                }
+            })
             // If not systemd, hope server auto restarts
             reply.status(204).send()
         } catch(err) {
