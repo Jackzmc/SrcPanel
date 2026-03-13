@@ -274,17 +274,6 @@ function mergeLogs(source: LogEntry[] = [], newLogs: LogEntry[], direction: stri
   } else {
     buffer = [...source, ...logs]
   }
-  // for(const log of newLogs) {
-  //   // Skip existing ids
-  //   if() continue
-
-  //   if(direction == 'before') {
-  //     // Loading new entries on bottom, so they are older, append to front of list
-  //     source.unshift(log)
-  //   } else {
-  //     source.push(log)
-  //   }
-  // }
 
   // Keep under maximum
   // TODO: verify that we keep limit + 5 (buffer), so you see previous fetched entry + new
@@ -374,11 +363,11 @@ async function fetchDirection(dir: 'top' | 'bottom') {
 onMounted(() => {
   // update now.value every second, so it updates fetchTimeElapsed properly
   setInterval(() => now.value = Date.now(), 100)
-  // setInterval(() => {
-  //   console.info('refreshing metadata')
-  //   console.debug('prev range:', dataRange.value)
-  //   refreshMetaData()
-  // }, REFRESH_INTERVAL)
+  setInterval(() => {
+    console.info('refreshing metadata')
+    console.debug('prev range:', dataRange.value)
+    refreshMetaData()
+  }, REFRESH_INTERVAL)
 
   // Check if loading from server initially and trigger
   if (!data.value) refresh()
