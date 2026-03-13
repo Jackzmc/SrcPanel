@@ -1,5 +1,5 @@
 <template>
-  <UCard :ui="{ body: 'p-3 sm:p-2' }">
+  <UCard :ui="{ body: 'p-3 sm:p-2' }" class="log-card">
     <div class="flex justify-between">
       <div class="flex flex-row gap-2 items-center">
         <UAvatar v-if="entry.type != 'INFO'" :src="avatarUrl"  :as="{ img: 'img' }" size="3xl" :alt="(entry.clientName || entry.client) ?? (entry.target || entry.targetName)" />
@@ -123,3 +123,20 @@ function findNearby() {
   emit("find-nearby", props.entry.id)
 }
 </script>
+
+<style>
+.log-card {
+  animation: pop 3s;
+}
+
+@keyframes pop {
+  0% {
+    opacity: 0.5;
+    border: 1px solid var(--color-blue-300);
+  }
+  100% {
+    opacity: 1;
+    border: none;
+  }
+}
+</style>
