@@ -60,7 +60,9 @@ export default defineNuxtConfig({
         'lucide:activity',
         'lucide:message-circle',
         'lucide:message-circle-more',
-        'lucide:globe'
+        'lucide:globe',
+        'lucide:edit',
+        'lucide:move-right',
       ],
     },
   },

@@ -16,8 +16,8 @@
       {{ description }}
     </p>
     <div class="grid grid-cols-2 mt-4">
-      <IconText v-if="lastUpdatedText" icon="lucide:clock" :text="lastUpdatedText" tooltip="When addon last downloaded" />
-      <IconText class="text-right" icon="lucide:file" :text="formatSize(map.filesize ?? 0)" tooltip="Size of the addon" />
+      <IconText v-if="lastUpdatedText" leading-icon="lucide:clock" :text="lastUpdatedText" tooltip="When addon last downloaded" />
+      <IconText class="text-right" leading-icon="lucide:file" :text="formatSize(map.filesize ?? 0)" tooltip="Size of the addon" />
       <div></div>
       <IconText class="text-right" v-if="map.meta.chapterIds" icon="lucide:book"
         :text="map.meta.chapterIds.length + ' chapters'"

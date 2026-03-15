@@ -45,10 +45,7 @@
                   </span>
                 </div>
               </template>
-              <UAlert color="error" v-else>
-                <Icon name="lucide:triangle-alert" />
-                {{ details.error }}
-              </UAlert>
+              <UAlert color="error" v-else leading-icon="lucide:triange-alert" description="Could not fetch user details" />
             </div>
             <div v-else>
               <Icon name="i-lucide-loader-circle" class="animate-spin align-middle mb-1" />
@@ -126,6 +123,9 @@ const details = ref<RequestResult<APIUserDetails>|null>(null)
 async function getDetails() {
   if(!steamid2.value) return
   details.value = await request<APIUserDetails>(`/api/users/${steamid2.value}?include=profile`)
+  if('error' in details.value) {
+    console.error(`Error fetching user details:`, details.value.error)
+  }
 }
 
 function onPopover(open: boolean) {
