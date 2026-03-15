@@ -25,7 +25,7 @@
 import { type APIDiscussion } from '@common/Discussions';
 import DiscussCard from '~/components/discuss/DiscussCard.vue';
 
-const { data, refresh, error } = await useFetch<APIDiscussion[]>('/api/discussions')
+const { data, refresh, error } = await useFetch<APIDiscussion[]>('/api/discussions', { key: 'discuss.list' })
 
 const startDiscussionTitle = ref("")
 
