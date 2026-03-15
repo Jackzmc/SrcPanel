@@ -52,13 +52,13 @@ export type RequestResult<T> = { body: T } | { error: ResponseError }
  * @throws ResponseError
  * @returns valid json
  */
-export async function request<T extends Record<string, any>>(url: string, options?: RequestInit): Promise<RequestResult<T>> {
+export async function request<T extends Record<string, any> | null>(url: string, options?: RequestInit): Promise<RequestResult<T | null>> {
   try {
     const res = await fetch(url, options)
 
     await ResponseError.throwIfError(res)
 
-    return { body: await res.json() as T }
+    return res.status === 204 ? { body: null } : { body: await res.json() as T }
   } catch (err) {
     if (err instanceof Error) {
       return { error: new ResponseError({ message: err.message, cause: err }) }

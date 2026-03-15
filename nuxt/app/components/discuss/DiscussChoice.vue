@@ -1,18 +1,14 @@
 <template>
-  <a>
-    <!-- <UCard>
-      {{ option.label }}
-    </UCard> -->
-    <!-- <UCheckbox :label="option.label" variant="card" /> -->
-    <!-- <URadio :label="option.label" variant="card" /> -->
-    <UCard>
+  <a class="cursor-pointer" @click="onClick">
+    <UCard class="bg-light-blue">
       <div class="flex justify-between items-start gap-3">
-        <div class="flex justify-start gap-2">
+        <div class="flex justify-start items-start gap-2">
           <input
             :type="inputType"
-            class="accent-primary-500"
+            :checked="selected"
+            class="accent-primary-500 mt-2"
           />
-          <span class="text-lg">
+          <span class="text-md">
             {{ entry.option.label }}
           </span>
         </div>
@@ -28,12 +24,25 @@
 import { APIDiscussionType, type APIDiscussionOption } from '@common/Discussions';
 import type { DiscussOptionEntry } from '~~/shared/types/discuss';
 
+const emit = defineEmits<{
+  (e: "select", optionId: number): void;
+}>()
+
 const props = defineProps<{
   entry: DiscussOptionEntry,
-  type: APIDiscussionType
+  type: APIDiscussionType,
+  userSelection: number[]
 }>()
 
 const inputType = computed(() => {
   return props.type == APIDiscussionType.Checkbox ? 'checkbox' : 'radio'
 })
+
+const selected = computed(() => {
+  return props.userSelection.includes(props.entry.option.id)
+})
+
+function onClick() {
+  emit("select", props.entry.option.id)
+}
 </script>

@@ -2,8 +2,10 @@
   <UTooltip :text="tooltip">
     <div>
       <UIcon v-if="leadingIcon" :name="leadingIcon" class="icon-text" />
-      <slot>{{ text }}</slot>
-      <UIcon v-if="trailingIcon" :name="trailingIcon" class="icon-text ml-1" />
+      <span class="mx-1">
+        <slot>{{ text }}</slot>
+      </span>
+      <UIcon v-if="trailingIcon" :name="trailingIcon" class="icon-text" />
     </div>
   </UTooltip>
 </template>
