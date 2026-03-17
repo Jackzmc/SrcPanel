@@ -74,7 +74,10 @@ const options = computed(() => {
     const id = option.id.toString()
     return {
       option,
-      count: props.discuss.responses.counts[id],
+      count: props.discuss.responses.counts[id] ?? {
+        count: 0,
+        percent: 0
+      },
       users: props.discuss.responses.users?.filter(user => user.choices?.includes(id))
     }
   })

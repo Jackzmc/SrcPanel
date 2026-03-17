@@ -23,7 +23,7 @@
             </h3>
           </div>
           <UTextarea v-model="submitCommentText" placeholder="Your comment here..." :rows="5" required autocorrect tabindex="1" @keydown.enter.prevent.ctrl="submitComment" :disabled="submitCommentLoading" />
-          <UButton type="submit" class="w-fit" trailing-icon="lucide:send" :disabled="!submitCommentText" :loading="submitCommentLoading" tabindex="2">Submit Reply</UButton>
+          <UButton type="submit" class="w-fit" trailing-icon="lucide:send" :disabled="submitCommentText.length === 0" :loading="submitCommentLoading" tabindex="2">Submit Reply</UButton>
         </div>
       </UCard>
     </form>
@@ -41,7 +41,7 @@ const props = defineProps<{
   discuss: APIDiscussion
 }>()
 
-const { data: comments, error, refresh, status } = await useFetch<APIComment[]>(`/api/discussions/${props.discuss.id}/comments`, { key: `discuss.${props.discuss.id}.comments`})
+const { data: comments, error, refresh, status } = await useLazyFetch<APIComment[]>(`/api/discussions/${props.discuss.id}/comments`, { key: `discuss.${props.discuss.id}.comments`})
 
 const submitCommentText = ref("")
 const submitCommentLoading = ref(false)
