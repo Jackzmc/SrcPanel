@@ -5,25 +5,28 @@
         <IconText leading-icon="lucide:message-square" text="Comments"" />
       </h3>
       <UBadge :label="discuss.commentsCount" variant="subtle" />
+      <IconText v-if="status === 'pending'" leading-icon="i-lucide-loader-circle" leading-icon-class="animate-spin" class="ml-2" />
     </div>
     <div v-if="comments" class="flex flex-col my-3 mx-2">
-      <Comment v-for="comment in comments" :key="comment.id" :comment="comment" class="border-b border-b-neutral-300 py-2" />
+      <Comment v-for="comment in comments" :key="comment.id" :comment="comment" class="border-b border-b-neutral-300 py-2 last:border-b-0" />
     </div>
     <UAlert v-else-if="error" color="error" :description="error.message" />
 
-    <UCard variant="subtle">
-      <div class="flex flex-col gap-2">
-        <div class="flex gap-1">
-          <UserComponent :user="user!.user" hide-name hide-tooltip />
-          <h3 class="text-lg font-bold">
-            Respond to discussion
-            <span class="text-neutral-500 dark:text-neutral-300">(as {{ user!.user.name }})</span>
-          </h3>
+    <form @submit.prevent="submitComment">
+      <UCard variant="subtle">
+        <div class="flex flex-col gap-2">
+          <div class="flex gap-1">
+            <UserComponent :user="user!.user" hide-name hide-tooltip />
+            <h3 class="text-lg font-bold">
+              Respond to discussion
+              <span class="text-neutral-500 dark:text-neutral-300">(as {{ user!.user.name }})</span>
+            </h3>
+          </div>
+          <UTextarea v-model="submitCommentText" placeholder="Your comment here..." :rows="5" required autocorrect tabindex="1" @keydown.enter.prevent.ctrl="submitComment" :disabled="submitCommentLoading" />
+          <UButton type="submit" class="w-fit" trailing-icon="lucide:send" :disabled="!submitCommentText" :loading="submitCommentLoading" tabindex="2">Submit Reply</UButton>
         </div>
-        <UTextarea v-model="submitCommentText" placeholder="Your comment here..." rows=5 />
-        <UButton @click="submitComment" class="w-40" trailing-icon="lucide:send">Submit Reply</UButton>
-      </div>
-    </UCard>
+      </UCard>
+    </form>
   </UCard>
 </template>
 
@@ -32,16 +35,36 @@ import type { APIComment, APIDiscussion } from '@common/Discussions';
 import Comment from './Comment.vue';
 
 const { user } = useAuth()
+const toast = useToast()
 
 const props = defineProps<{
   discuss: APIDiscussion
 }>()
 
-const { data: comments, error, status } = await useFetch<APIComment[]>(`/api/discussions/${props.discuss.id}/comments`, { key: `discuss.${props.discuss.id}.comments`})
+const { data: comments, error, refresh, status } = await useFetch<APIComment[]>(`/api/discussions/${props.discuss.id}/comments`, { key: `discuss.${props.discuss.id}.comments`})
 
 const submitCommentText = ref("")
+const submitCommentLoading = ref(false)
 
 async function submitComment() {
-
+  if(!submitCommentText.value) return
+  submitCommentLoading.value = true
+  const result = await request(`/api/discussions/${props.discuss.id}/comments`, {
+    method: 'POST',
+    body: JSON.stringify({
+      content: submitCommentText.value
+    },)
+  })
+  if ('error' in result) {
+    toast.add({
+      color: "error",
+      title: "Failed to submit comment",
+      description: result.error.message,
+    })
+  } else {
+    submitCommentText.value = ""
+    refresh()
+  }
+  submitCommentLoading.value = false
 }
 </script>

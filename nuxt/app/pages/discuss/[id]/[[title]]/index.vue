@@ -6,14 +6,14 @@
         <div>
           <NuxtLink to="/discuss" class="text-md text-primary">← Back to discussions list</NuxtLink>
         </div>
-        <div v-if="discuss" class="flex justify-start gap-5 mt-3 mb-5 ">
-          <div class="space-y-1">
+        <div v-if="discuss" class="flex justify-start gap-5  mt-3 mb-5 ">
+          <div class="flex flex-col">
             <h2 class="text-md font-bold">Discussion started by</h2>
             <p class="text-sm">
-              <UserComponent :user="discuss.creator" class="text-primary" />
+              <UserComponent :user="discuss.creator" class="text-primary" size="xs" />
             </p>
           </div>
-          <div class="space-y-1">
+          <div class="flex flex-col">
             <h2 class="text-md font-bold">Discussion started</h2>
             <p class="text-sm">
               <IconText leading-icon="lucide:clock" :text="getRelDate(discuss.timestamp)" />
@@ -38,9 +38,9 @@
         <div>
           <table v-if="discuss?.responses.users?.length" class="table-auto w-full">
             <tbody>
-              <tr v-for="user in discuss.responses.users" :key="user.id" class="border-b border-b-neutral-400">
+              <tr v-for="user in discuss.responses.users" :key="user.id" class="border-b border-b-neutral-400 last:border-b-0">
                 <td class="py-2">
-                  <UserComponent :user="user" class="text-black font-semibold text-sm" hide-tooltip />
+                  <UserComponent :user="user" name-class="text-black font-semibold text-sm" hide-tooltip />
                 </td>
                 <td>
                   <div v-for="choice in user.choices" :key="choice" class="text-xs text-muted">{{ choice }}</div>

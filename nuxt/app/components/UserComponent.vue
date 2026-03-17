@@ -1,12 +1,12 @@
 <template>
   <UPopover v-if="!hideTooltip" mode="hover" :open-delay="200" @update:open="onPopover">
     <ULink :to="steamid2 ? { path: `/users/${id}`, query: { returnTo: route.fullPath } } : undefined" class="flex items-center gap-1.5">
-      <UAvatar v-if="!hideAvatar && clientAvatarSrc" :src="clientAvatarSrc" :alt="props.user.name ?? id!" size="md" loading="lazy" :as="{ img: 'img' }"  />
-      <span v-if="!hideName">{{ props.user.name || id }}</span>
+      <UAvatar v-if="!hideAvatar && clientAvatarSrc" :src="clientAvatarSrc" :alt="props.user.name ?? id!" :size="size" loading="lazy" :as="{ img: 'img' }"  />
+      <span v-if="!hideName" :class="nameClass">{{ props.user.name || id }}</span>
     </ULink>
     <template #content>
       <div class="flex items-start gap-3 p-3 w-72">
-        <UAvatar v-if="clientAvatarSrc" :src="clientAvatarSrc" :alt="props.user.name ?? id!" size="md" :as="{ img: 'img' }"  />
+        <UAvatar v-if="clientAvatarSrc" :src="clientAvatarSrc" :alt="props.user.name ?? id!" :size="size" :as="{ img: 'img' }"  />
         <div class="min-w-0 flex-1">
           <p class="font-bold text-highlighted text-lg">{{ props.user.name }}</p>
           <p class="text-md text-muted font-mono">{{ steamid2 ?? props.fallbackName ?? 'BOT' }}</p>
@@ -60,7 +60,7 @@
   <!-- No tooltip variant -->
   <ULink v-else :to="steamid2 ? { path: `/users/${id}`, query: { returnTo: route.fullPath } } : undefined" class="flex items-center gap-1.5">
     <UAvatar v-if="!hideAvatar && clientAvatarSrc" :src="clientAvatarSrc" :alt="props.user.name ?? id!" size="md" loading="lazy" :as="{ img: 'img' }"  />
-    <span v-if="!hideName">{{ props.user.name || id }}</span>
+    <span v-if="!hideName" :class="nameClass">{{ props.user.name || id }}</span>
   </ULink>
 </template>
 
@@ -76,15 +76,21 @@ interface UserMeta {
   avatarUrl?: string
 }
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   user: APIUser | APIPlayer | (UserMeta & ({ steamid: string | null | undefined } | { id: string }))
   isAdmin?: boolean
   hideAvatar?: boolean
   hideName?: boolean
   hideTooltip?: boolean
   hideTooltipDetails?: boolean,
-  fallbackName?: string
-}>()
+  fallbackName?: string,
+
+  size?: "sm" | "md",
+
+  nameClass?: string
+}>(), {
+  size: "md",
+})
 
 const id = computed(() => {
   if (!props.user) return null
