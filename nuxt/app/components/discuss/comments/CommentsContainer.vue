@@ -16,10 +16,10 @@
       <UCard variant="subtle">
         <div class="flex flex-col gap-2">
           <div class="flex gap-1">
-            <UserComponent :user="user!.user" hide-name hide-tooltip />
+            <UserComponent v-if="props.discuss.flags & APIDiscussionFlags.CommentsPublic" :user="user!.user" hide-name hide-tooltip />
             <h3 class="text-lg font-bold">
               Respond to discussion
-              <span class="text-neutral-500 dark:text-neutral-300">(as {{ user!.user.name }})</span>
+              <span class="text-neutral-500 dark:text-neutral-300">(as {{ (props.discuss.flags & APIDiscussionFlags.CommentsPublic) ? user!.user.name : 'anonymous' }})</span>
             </h3>
           </div>
           <UTextarea v-model="submitCommentText" placeholder="Your comment here..." :rows="5" required autocorrect tabindex="1" @keydown.enter.prevent.ctrl="submitComment" :disabled="submitCommentLoading" />
@@ -31,7 +31,7 @@
 </template>
 
 <script setup lang="ts">
-import type { APIComment, APIDiscussion } from '@common/Discussions';
+import { APIDiscussionFlags, type APIComment, type APIDiscussion } from '@common/Discussions';
 import Comment from './Comment.vue';
 
 const { user } = useAuth()
