@@ -28,7 +28,7 @@
         <IconText v-else text="Error while submitting vote" leading-icon="lucide:x" class="text-error" />
       </p>
 
-      <div class="flex justify-between items-end">
+      <div v-if="inList" class="flex justify-between items-end">
         <div>
           <UAvatarGroup v-if="discuss.responses.users" max="8">
             <UserComponent v-for="user in discuss.responses.users" :key="user.id" :user="user" hide-name />
@@ -38,7 +38,7 @@
           <NuxtLink v-if="discuss.creator?.id == user?.user.steamid " :to="`/discuss/${discuss.id}/edit`" class="btn btn-sm btn-ghost text-primary">
             <IconText leading-icon="lucide:edit" text="Edit" />
           </NuxtLink>
-          <NuxtLink :to="`/discuss/${discuss.id}`" class="btn btn-sm btn-ghost text-primary">
+          <NuxtLink :to="`/discuss/${discuss.id}/${slugify(discuss.title)}`" class="btn btn-sm btn-ghost text-primary">
             <IconText trailing-icon="lucide:move-right" text="View discussion" />
           </NuxtLink>
         </div>
@@ -54,6 +54,7 @@ import IconText from '@/components/IconText.vue'
 import DiscussChoice from './DiscussChoice.vue';
 import type { DiscussOptionEntry } from '#shared/types/discuss'
 import debounce from '@common/methods/debounce';
+import { slugify } from '@common/methods/format';
 
 const enum VoteState {
   Inactive,
@@ -62,7 +63,8 @@ const enum VoteState {
 }
 
 const props = defineProps<{
-  discuss: APIDiscussion
+  discuss: APIDiscussion,
+  inList?: boolean
 }>()
 
 const { user } = useAuth()

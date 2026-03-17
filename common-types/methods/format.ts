@@ -41,15 +41,14 @@ export function getRelDate(timestamp: number): string {
     || "Unknown"
 }
 
-export function getDuration(timestamp: number) {
-  const date = timestamp ? new Date(timestamp * 1000) : new Date();
-  const duration = intervalToDuration({
-    start: date,
-    end: new Date()
-  })
-  return formatDuration(duration)
-}
-
 export function convertSnakeToHuman(input: string) {
   return input.replace(/^_*(.)|_+(.)/g, (s, c, d) => c ? c.toUpperCase() : ' ' + d.toUpperCase())
+}
+
+export function slugify(input: string) {
+  return input
+    .toLocaleLowerCase()
+    .trim()
+    .replace(/\s/g, '-')
+    .replace(/[^a-zA-Z_-]/g, '-')
 }

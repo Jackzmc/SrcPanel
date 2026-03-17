@@ -4,10 +4,10 @@
     <div class="grid grid-cols-3 gap-4">
       <UAlert v-if="error" class="space-y-2 col-span-2" color="error" title="Error occurred" :description="error.message" />
       <div v-else class="space-y-2 col-span-2">
-        <DiscussCard v-for="discuss in data" :key="discuss.id" :discuss="discuss" />
+        <DiscussCard v-for="discuss in data" :key="discuss.id" :discuss="discuss" in-list />
       </div>
       <div>
-        <UCard>
+        <UCard class="bg-light-blue">
           <div class="space-y-2">
             <h2 class="text-xl font-bold">Start a discussion</h2>
             <UFormField label="Discussion topic / title">
@@ -22,6 +22,9 @@
 </template>
 
 <script setup lang="ts">
+useHead({
+  title: 'Discussions',
+})
 import { type APIDiscussion } from '@common/Discussions';
 import DiscussCard from '~/components/discuss/DiscussCard.vue';
 

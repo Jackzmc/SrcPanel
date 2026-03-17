@@ -19,8 +19,8 @@
               {{ props.user.notesCount }} Note(s)
             </UBadge>
           </div>
-          <template v-if="steamid2">
-            <div v-if="details" class="flex flex-wrap gap-1 mt-2">
+          <template v-if="!hideTooltipDetails && steamid2">
+            <div v-if="details && 'body' in details && details.body" class="flex flex-wrap gap-1 mt-2">
               <template v-if="'body' in details">
                 <UBadge v-if="details.body.user.isAdmin" color="info" variant="subtle">Admin</UBadge>
                 <UBadge v-if="details.body.user.bansCount != null" color="error" variant="subtle">
@@ -58,15 +58,15 @@
   </UPopover>
 
   <!-- No tooltip variant -->
-  <ULink v-else :to="id ? { path: `/users/${id}`, query: { returnTo: route.fullPath } } : undefined" class="flex items-center gap-1.5">
-    <UAvatar v-if="!hideAvatar && clientAvatarSrc" :src="clientAvatarSrc" :alt="props.user.name ?? id!" size="xs" />
-    <span v-if="!hideName">{{ props.user.name ?? id }}</span>
+  <ULink v-else :to="steamid2 ? { path: `/users/${id}`, query: { returnTo: route.fullPath } } : undefined" class="flex items-center gap-1.5">
+    <UAvatar v-if="!hideAvatar && clientAvatarSrc" :src="clientAvatarSrc" :alt="props.user.name ?? id!" size="md" loading="lazy" :as="{ img: 'img' }"  />
+    <span v-if="!hideName">{{ props.user.name || id }}</span>
   </ULink>
 </template>
 
 <script setup lang="ts">
 import SteamID from 'steamid'
-import { type APIUser, type APIUserDetails } from '@common/User.js'
+import { type APIPlayer, type APIUser, type APIUserDetails } from '@common/User.js'
 import { getRelDate } from '@common/methods/format'
 
 const route = useRoute()
@@ -77,11 +77,12 @@ interface UserMeta {
 }
 
 const props = defineProps<{
-  user: APIUser | (UserMeta & ({ steamid: string | null | undefined } | { id: string }))
+  user: APIUser | APIPlayer | (UserMeta & ({ steamid: string | null | undefined } | { id: string }))
   isAdmin?: boolean
   hideAvatar?: boolean
   hideName?: boolean
   hideTooltip?: boolean
+  hideTooltipDetails?: boolean,
   fallbackName?: string
 }>()
 
@@ -108,7 +109,7 @@ const steamid2 = computed(() => {
 
 const birthDate = computed(() => {
   if (!details.value || 'error' in details.value) return null
-  const profile = details.value.body.profile
+  const profile = details.value.body?.profile
   if(!profile) return null
   const date = new Date(2000, profile.birthMonth ?? 0, profile.birthDate)
   if(profile.birthMonth) {
@@ -118,11 +119,11 @@ const birthDate = computed(() => {
   }
 })
 
-const details = ref<RequestResult<APIUserDetails>|null>(null)
+const details = ref<RequestResult<APIUserDetails|null>|null>(null)
 
 async function getDetails() {
-  if(!steamid2.value) return
-  details.value = await request<APIUserDetails>(`/api/users/${steamid2.value}?include=profile`)
+  if(!steamid2.value || props.hideTooltipDetails) return
+  details.value = await request<APIUserDetails|null>(`/api/users/${steamid2.value}?include=profile`)
   if('error' in details.value) {
     console.error(`Error fetching user details:`, details.value.error)
   }
