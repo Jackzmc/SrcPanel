@@ -7,8 +7,10 @@
       <UBadge :label="discuss.commentsCount" variant="subtle" />
       <IconText v-if="status === 'pending'" leading-icon="i-lucide-loader-circle" leading-icon-class="animate-spin" class="ml-2" />
     </div>
+
     <div v-if="comments" class="flex flex-col my-3 mx-2">
       <Comment v-for="comment in comments" :key="comment.id" :comment="comment" class="border-b border-b-neutral-300 py-2 last:border-b-0" />
+      <p class="text-muted">No comments here, be the first</p>
     </div>
     <UAlert v-else-if="error" color="error" :description="error.message" />
 

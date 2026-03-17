@@ -31,7 +31,8 @@ const emit = defineEmits<{
 const props = defineProps<{
   entry: DiscussOptionEntry,
   type: APIDiscussionType,
-  userSelection: number[]
+  userSelection: number[],
+  editable?: boolean
 }>()
 
 const inputType = computed(() => {

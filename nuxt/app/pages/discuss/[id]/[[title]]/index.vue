@@ -23,7 +23,7 @@
 
         <UAlert v-if="error"  color="error" title="Error occurred" :description="error.message" />
         <template v-if="discuss">
-          <DiscussCard :key="discuss.id" :discuss="discuss" />
+          <DiscussCard :key="discuss.id" :discuss="discuss" type="details"/>
           <CommentsContainer :discuss="discuss" />
         </template>
       </div>

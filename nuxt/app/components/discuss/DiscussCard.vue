@@ -6,11 +6,21 @@
           <strong class="font-bold text-xl">Discuss: </strong>
           {{ discuss.title }}
         </h2>
-        <UBadge class="align-right" leading-icon="lucide:message-square" variant="outline" color="neutral">
-          <UTooltip label="Number of comments">
-            {{ discuss.commentsCount }}
-          </UTooltip>
-        </UBadge>
+        <div class="flex gap-2">
+          <template v-if="discuss.closedAt">
+            <UBadge v-if="isClosed" leading-icon="lucide:clock" color="error">
+              Closed
+            </UBadge>
+            <UBadge v-else leading-icon="lucide:clock" class="bg-primary">
+              Closes {{ expiresText }}
+            </UBadge>
+          </template>
+          <UBadge class="align-right" leading-icon="lucide:message-square" variant="outline" color="neutral">
+            <UTooltip label="Number of comments">
+              {{ discuss.commentsCount }}
+            </UTooltip>
+          </UBadge>
+        </div>
       </div>
       <p class="text-sm">{{ discuss.description }}</p>
 
@@ -18,6 +28,7 @@
         <DiscussChoice v-for="entry in options" :key="entry.option.id"
           :entry="entry"
           :type="discuss.type"
+          :editable="type == 'edit'"
           :user-selection="userSelection"
           @select="onSelectOption"
         />
@@ -28,7 +39,7 @@
         <IconText v-else text="Error while submitting vote" leading-icon="lucide:x" class="text-error" />
       </p>
 
-      <div v-if="inList" class="flex justify-between items-end">
+      <div v-if="type == 'list'" class="flex justify-between items-end">
         <div>
           <UAvatarGroup v-if="discuss.responses.users" max="8">
             <UserComponent v-for="user in discuss.responses.users" :key="user.id" :user="user" hide-name />
@@ -54,7 +65,7 @@ import IconText from '@/components/IconText.vue'
 import DiscussChoice from './DiscussChoice.vue';
 import type { DiscussOptionEntry } from '#shared/types/discuss'
 import debounce from '@common/methods/debounce';
-import { slugify } from '@common/methods/format';
+import { formatRelTime, getRelDate, slugify } from '@common/methods/format';
 
 const enum VoteState {
   Inactive,
@@ -64,7 +75,7 @@ const enum VoteState {
 
 const props = defineProps<{
   discuss: APIDiscussion,
-  inList?: boolean
+  type: "list" | "details" | "edit"
 }>()
 
 const { user } = useAuth()
@@ -81,6 +92,13 @@ const options = computed(() => {
       users: props.discuss.responses.users?.filter(user => user.choices?.includes(id))
     }
   })
+})
+
+const expiresText = computed(() => {
+  return props.discuss.closedAt ? formatRelTime(props.discuss.closedAt) : null
+})
+const isClosed = computed(() => {
+  return props.discuss.closedAt && (props.discuss.closedAt*1000) < Date.now()
 })
 
 const userSelection = ref<number[]>(props.discuss.userSelection)
