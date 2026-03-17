@@ -35,6 +35,9 @@
             ({{ Math.round(100 * (discuss?.responses.percentVoted ?? 0)) }}%)
           </UTooltip>
         </h2>
+        <p v-if="!discuss || !(discuss.flags & APIDiscussionFlags.RespondersPublic)">Responses are hidden</p>
+        <p v-else-if="discuss?.responses.users?.length === 0">No respondants yet.</p>
+
         <div>
           <table v-if="discuss?.responses.users?.length" class="table-auto w-full">
             <tbody>
@@ -55,7 +58,7 @@
 </template>
 
 <script setup lang="ts">
-import { type APIDiscussion } from '@common/Discussions';
+import { APIDiscussionFlags, type APIDiscussion } from '@common/Discussions';
 import { getRelDate } from '@common/methods/format';
 import DiscussCard from '~/components/discuss/DiscussCard.vue';
 import CommentsContainer from '~/components/discuss/comments/CommentsContainer.vue';

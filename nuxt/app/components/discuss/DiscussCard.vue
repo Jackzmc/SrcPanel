@@ -1,5 +1,5 @@
 <template>
-  <UCard>
+  <UCard class="bg-gray-50 dark:bg-gray-950">
     <div>
       <div class="flex justify-between gap-3 items-start">
         <h2 class="text-lg font-semibold">

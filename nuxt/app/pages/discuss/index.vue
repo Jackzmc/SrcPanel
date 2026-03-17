@@ -3,17 +3,17 @@
   <UContainer>
     <div class="grid grid-cols-3 gap-4">
       <UAlert v-if="error" class="space-y-2 col-span-2" color="error" title="Error occurred" :description="error.message" />
-      <div v-else class="space-y-2 col-span-2">
+      <div v-else class="space-y-4 col-span-2">
         <DiscussCard v-for="discuss in data" :key="discuss.id" :discuss="discuss" in-list />
       </div>
       <div>
         <UCard class="bg-light-blue">
           <div class="space-y-2">
             <h2 class="text-xl font-bold">Start a discussion</h2>
-            <UFormField label="Discussion topic / title">
-              <UInput v-model="startDiscussionTitle" placeholder="Ask a question" leading-icon="lucide:message-square" />
+            <UFormField label="Discussion topic / title" :ui="{ label: 'font-semibold' }">
+              <UInput v-model="startDiscussionTitle" placeholder="Ask a question" leading-icon="lucide:message-square" class="w-full rounded-4xl" @keydown.enter="startDiscussion" />
             </UFormField>
-            <UButton :disabled="!startDiscussionTitle" @click="startDiscussion">Start discussion</UButton>
+            <UButton :disabled="startDiscussionTitle.length === 0" @click="startDiscussion" trailing-icon="lucide:arrow-right" >Start discussion</UButton>
           </div>
         </UCard>
       </div>
