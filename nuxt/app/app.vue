@@ -1,4 +1,4 @@
-n<script setup lang="ts">
+<script setup lang="ts">
 useHead({
   meta: [
     { name: 'viewport', content: 'width=device-width, initial-scale=1' }
@@ -27,7 +27,7 @@ useSeoMeta({
 </script>
 
 <template>
-  <UApp :toaster="{ position: 'top-center'}">
+  <UApp :toaster="{ position: 'top-center' }" :tooltip="{ delayDuration: 400 }">
     <NuxtLayout>
       <NuxtPage :page-key="route => route.path" />
     </NuxtLayout>

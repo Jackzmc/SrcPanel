@@ -16,7 +16,7 @@
             </UBadge>
           </template>
           <UBadge class="align-right" leading-icon="lucide:message-square" variant="outline" color="neutral">
-            <UTooltip label="Number of comments">
+            <UTooltip text="Number of comments">
               {{ discuss.commentsCount }}
             </UTooltip>
           </UBadge>

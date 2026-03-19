@@ -3,6 +3,7 @@
     :close="{ onClick: () => emit('close', false) }"
     :title="title"
     :description="description"
+    aria-describedby="Confirmation Modal"
   >
     <template #footer>
       <div class="flex gap-2">
@@ -14,9 +15,9 @@
 </template>
 
 <script setup lang="ts">
-import type { PromptOptions } from '~/composables/useModal';
+import type { PromptConfirmOptions } from '~/composables/useModal';
 
-withDefaults(defineProps<PromptOptions>(), {
+withDefaults(defineProps<PromptConfirmOptions>(), {
   okText: "Okay",
   okColor: "primary",
   cancelText: 'Cancel',

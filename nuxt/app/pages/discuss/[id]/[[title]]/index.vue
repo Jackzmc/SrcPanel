@@ -30,8 +30,8 @@
       <div>
         <h2 class="text-xl font-bold">
           Respondants
-          <UTooltip label="# of admins who voted">({{ discuss?.responses.totalCount ?? 0 }})</UTooltip>
-          <UTooltip label="Percentage of admins who voted">
+          <UTooltip text="# of admins who voted">({{ discuss?.responses.totalCount ?? 0 }})</UTooltip>
+          <UTooltip text="Percentage of admins who voted">
             ({{ Math.round(100 * (discuss?.responses.percentVoted ?? 0)) }}%)
           </UTooltip>
         </h2>
