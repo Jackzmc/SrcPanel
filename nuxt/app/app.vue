@@ -28,7 +28,7 @@ useSeoMeta({
 
 <template>
   <UApp :toaster="{ position: 'top-center' }" :tooltip="{ delayDuration: 400 }">
-    <NuxtLayout>
+    <NuxtLayout class="min-h-screen">
       <NuxtPage :page-key="route => route.path" />
     </NuxtLayout>
   </UApp>

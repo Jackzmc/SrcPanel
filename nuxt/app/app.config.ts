@@ -6,7 +6,6 @@ export default defineAppConfig({
     colors: {
       primary: 'blue',
       neutral: 'slate',
-      info: 'bg-light-blue'
     },
     header: {
       slots: {

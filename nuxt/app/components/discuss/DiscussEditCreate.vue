@@ -1,20 +1,22 @@
 <template>
-  <Hero title="Discussions" />
-  <UContainer>
-    <div class="grid grid-cols-3 gap-4">
-      <div class="space-y-4 col-span-2">
-        <DiscussCardEdit :discuss="editDiscuss" type="edit"
-          @option:add="onAddOption"
-          @option:del="onRemoveOption"
-        />
-      </div>
-      <div>
-        <UCard class="bg-light-blue">
+  <div>
+    <Hero :title="title" />
+    <UContainer>
+      <div class="grid grid-cols-3 gap-4">
+        <div class="space-y-4 col-span-2">
+          <DiscussCardEdit :discuss="editDiscuss" type="edit"
+            @option:add="onAddOption"
+            @option:del="onRemoveOption"
+          />
+        </div>
+        <div>
+          <UCard class="bg-light-blue">
 
-        </UCard>
+          </UCard>
+        </div>
       </div>
-    </div>
-  </UContainer>
+    </UContainer>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -26,8 +28,9 @@ const props = defineProps<{
   mode: "new" | "edit"
 }>()
 
+const title = computed(() => props.mode == "new" ? 'New Discussion' : 'Edit Discussion')
 useHead({
-  title: () => props.mode == "new" ? 'New Discussion' : 'Edit Discussion',
+  title: title,
 })
 
 const editDiscuss = ref<APIDiscussionBase>({
