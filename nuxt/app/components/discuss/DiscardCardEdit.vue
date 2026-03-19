@@ -21,7 +21,7 @@
         </UCard> -->
         <div v-for="option in discuss.options" :key="option.id" class="bg-light-blue text-white items-center p-6 rounded-xl" @click="addOption">
           <div class="flex justify-between">
-            <h4 class="text-lg">{{ option.label }}</h4>
+            <h4 class="text-lg light:text-black">{{ option.label }}</h4>
             <UTooltip text="Remove option">
               <UButton class="mt-2 cursor-pointer" size="sm" color="error" @click="emit('option:del', option.id)" leading-icon="lucide:trash" />
             </UTooltip>
@@ -63,9 +63,5 @@ async function addOption() {
   if (value) {
     emit("option:add", value)
   }
-}
-
-function onAddOption(value: string) {
-  emit("option:del", value)
 }
 </script>
