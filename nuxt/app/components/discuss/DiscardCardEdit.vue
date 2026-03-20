@@ -4,10 +4,12 @@
       <div class="flex justify-between gap-3 items-start">
         <h2 class="text-lg font-semibold">
           <strong class="font-bold text-xl">Discuss: </strong>
-          {{ discuss.title }}
+          <EditText v-model="discuss.title" placeholder="Click to add a title" input-placeholder="Enter a title" />
         </h2>
       </div>
-      <p class="text-sm">{{ discuss.description }}</p>
+      <p class="text-sm">
+        <EditText v-model="discuss.description" placeholder="Click to add a description" input-placeholder="Enter a description" />
+      </p>
 
       <div class="grid grid-cols-2 gap-4 py-4">
          <!-- <UCard v-for="option in discuss.options" :key="option.id" class="bg-light-blue">
@@ -40,6 +42,7 @@
 
 <script setup lang="ts">
 import { type APIDiscussion, type APIDiscussionBase } from '@common/Discussions'
+import EditText from './EditText.vue'
 
 const modal = useModal()
 

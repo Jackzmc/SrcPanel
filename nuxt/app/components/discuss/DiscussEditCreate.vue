@@ -7,6 +7,7 @@
           <div>
             <NuxtLink to="/discuss" class="text-md text-primary">← Back to discussions list (cancel)</NuxtLink>
           </div>
+          <p>Click on the discussion title or description to add or change the text.</p>
           <DiscussCardEdit :discuss="editDiscuss" type="edit"
             @option:add="onAddOption"
             @option:del="onRemoveOption"
