@@ -10,7 +10,7 @@ const route = useRoute()
 const defaultDiscuss: APIDiscussionBase = {
   title: route.query.title as string,
   timestamp: Date.now(),
-  closedAt: undefined,
+  closedAt: 0,
   type: APIDiscussionType.Radio,
   description: route.query.description as string,
   options: [],
