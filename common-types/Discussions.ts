@@ -93,3 +93,7 @@ export interface DiscussionText<T extends APIDiscussionType> extends BaseDiscuss
 }
 export type Discussion = DiscussionRadio | DiscussionMulti<APIDiscussionType.Selection> | DiscussionMulti<APIDiscussionType.Checkbox> | DiscussionText<APIDiscussionType.LongText> | DiscussionText<APIDiscussionType.ShortText>
 export type DiscussionDetailed = Discussion & APIDiscussionDetails
+
+export interface APIDiscussionCreateResponse {
+  id: number
+}

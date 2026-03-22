@@ -4,7 +4,7 @@
     <UContainer>
       <div class="grid grid-cols-3 gap-4">
         <div class="space-y-4 col-span-2">
-          <div>
+          <div class="my-0">
             <NuxtLink to="/discuss" class="text-md text-primary">← Back to discussions list (cancel)</NuxtLink>
           </div>
           <p>Click on the discussion title or description to add or change the text.</p>
@@ -63,7 +63,7 @@
             />
           </div>
           <div class="flex gap-4 my-5">
-            <UButton color="primary" size="xl" :disabled="canCreate ? undefined : true">Create Discussion</UButton>
+            <UButton color="primary" size="xl" :disabled="canCreate ? undefined : true" @click="create">Create Discussion</UButton>
             <UButton variant="outline" size="xl">Cancel</UButton>
           </div>
         </div>
@@ -73,7 +73,7 @@
 </template>
 
 <script setup lang="ts">
-import { APIDiscussionFlags, APIDiscussionType, type APIDiscussion, type APIDiscussionBase } from '@common/Discussions';
+import { APIDiscussionFlags, APIDiscussionType, type APIDiscussion, type APIDiscussionBase, type APIDiscussionCreateResponse, type BaseDiscussion } from '@common/Discussions';
 import DiscussCardEdit from '@/components/discuss/DiscardCardEdit.vue'
 import type { SelectItem, TabsItem } from '@nuxt/ui';
 import type { SettingEntry } from '~~/shared/types/discuss';
@@ -81,6 +81,8 @@ import DiscussSettingsEntry from '@/components/discuss/edit/DiscussSettingsEntry
 import DiscussSettingsFlagEntry from '@/components/discuss/edit/DiscussSettingsFlagEntry.vue'
 import { fromAbsolute, now, ZonedDateTime } from '@internationalized/date';
 import { formatDate } from '@common/methods/format';
+
+const toast = useToast()
 
 const props = defineProps<{
   discuss: APIDiscussionBase,
@@ -90,8 +92,8 @@ const props = defineProps<{
 const discussionTypes: SelectItem[] = [
   { label: "Single Choice (Radio)", value: APIDiscussionType.Radio },
   { label: "Multiple Choice (Checkbox)", value: APIDiscussionType.Checkbox },
-  { label: "Short Text", value: APIDiscussionType.ShortText },
-  { label: "Long Text", value: APIDiscussionType.LongText },
+  // { label: "Short Text", value: APIDiscussionType.ShortText },
+  // { label: "Long Text", value: APIDiscussionType.LongText },
 ]
 
 const responsesOptions: SettingEntry[] = [
@@ -168,5 +170,24 @@ function setExpiresDate() {
 function onRemoveOption(id: number) {
   if(!editDiscuss.value.options) return
   editDiscuss.value.options.splice(id, 1)
+}
+
+async function create() {
+  const result = await request<APIDiscussionCreateResponse>(`/api/discussions`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(editDiscuss.value as BaseDiscussion)
+  })
+  if ('error' in result) {
+    toast.add({
+      color: "error",
+      title: "Failed to create discussion",
+      description: result.error.message,
+    })
+  } else {
+    navigateTo(`/discuss/${result.body!.id}`)
+  }
 }
 </script>
