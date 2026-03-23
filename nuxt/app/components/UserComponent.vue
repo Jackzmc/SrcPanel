@@ -85,7 +85,7 @@ const props = withDefaults(defineProps<{
   hideTooltipDetails?: boolean,
   fallbackName?: string,
 
-  size?: "sm" | "md",
+  size?: "sm" | "md" | "xs",
 
   nameClass?: string
 }>(), {

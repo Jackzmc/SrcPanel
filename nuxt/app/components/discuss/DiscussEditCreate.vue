@@ -63,8 +63,10 @@
             />
           </div>
           <div class="flex gap-4 my-5">
-            <UButton color="primary" size="xl" :disabled="canCreate ? undefined : true" @click="create">Create Discussion</UButton>
-            <UButton variant="outline" size="xl">Cancel</UButton>
+            <UButton color="primary" size="xl" :disabled="canCreate ? undefined : true" @click="saveChanges">
+              {{ props.mode == 'new' ? 'Create Discussion' : 'Save Changes' }}
+            </UButton>
+            <UButton variant="outline" size="xl" to="/discuss">Cancel</UButton>
           </div>
         </div>
       </div>
@@ -83,9 +85,10 @@ import { fromAbsolute, now, ZonedDateTime } from '@internationalized/date';
 import { formatDate } from '@common/methods/format';
 
 const toast = useToast()
+const router = useRouter()
 
 const props = defineProps<{
-  discuss: APIDiscussionBase,
+  discuss: APIDiscussionBase | APIDiscussion,
   mode: "new" | "edit"
 }>()
 
@@ -172,9 +175,10 @@ function onRemoveOption(id: number) {
   editDiscuss.value.options.splice(id, 1)
 }
 
-async function create() {
+async function createDiscussion() {
+  // TODO: PUT for edits
   const result = await request<APIDiscussionCreateResponse>(`/api/discussions`, {
-    method: 'POST',
+    method: props.mode == 'new' ? 'POST' : 'PUT',
     headers: {
       'Content-Type': 'application/json',
     },
@@ -188,6 +192,35 @@ async function create() {
     })
   } else {
     navigateTo(`/discuss/${result.body!.id}`)
+  }
+}
+
+async function putDiscussion() {
+  // TODO: PUT for edits
+  if(!props.discuss || !('id' in props.discuss)) return
+  const result = await request<null>(`/api/discussions/${props.discuss.id}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(editDiscuss.value as BaseDiscussion)
+  })
+  if ('error' in result) {
+    toast.add({
+      color: "error",
+      title: "Failed to create discussion",
+      description: result.error.message,
+    })
+  } else {
+    navigateTo(`/discuss/${props.discuss.id}`)
+  }
+}
+
+async function saveChanges() {
+  if (props.mode == 'new') {
+    await createDiscussion()
+  } else {
+    await putDiscussion()
   }
 }
 </script>

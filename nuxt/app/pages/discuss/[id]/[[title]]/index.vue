@@ -3,8 +3,9 @@
   <UContainer>
     <div class="grid grid-cols-3 gap-4">
       <div class="space-y-2 col-span-2">
-        <div>
+        <div class="flex gap-4">
           <NuxtLink to="/discuss" class="text-md text-primary">← Back to discussions list</NuxtLink>
+          <NuxtLink v-if="discuss?.creator.id == user?.user.steamid" :to="`/discuss/${route.params.id}/edit`" class="text-md text-primary"><IconText leading-icon="lucide:edit" text="Edit Discussion" /></NuxtLink>
         </div>
         <div v-if="discuss" class="flex justify-start gap-5  mt-3 mb-5 ">
           <div class="flex flex-col">
@@ -65,6 +66,9 @@ import CommentsContainer from '~/components/discuss/comments/CommentsContainer.v
 
 
 const route = useRoute()
+const { user, requireAuth } = useAuth()
+
+await requireAuth()
 
 const { data: discuss, refresh, error } = await useFetch<APIDiscussion>(() => `/api/discussions/${route.params.id}`, { key: `discuss.${route.params.id}` })
 

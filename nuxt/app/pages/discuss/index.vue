@@ -28,6 +28,9 @@ useHead({
 import { type APIDiscussion } from '@common/Discussions';
 import DiscussCard from '~/components/discuss/DiscussCard.vue';
 
+const { requireAuth } = useAuth()
+await requireAuth()
+
 const { data, error } = await useFetch<APIDiscussion[]>('/api/discussions', { key: 'discuss.list' })
 
 const startDiscussionTitle = ref("")

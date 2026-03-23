@@ -6,6 +6,8 @@
 import { APIDiscussionFlags, APIDiscussionType, type APIDiscussionBase } from '@common/Discussions';
 
 const route = useRoute()
+const { requireAuth } = useAuth()
+await requireAuth()
 
 const defaultDiscuss: APIDiscussionBase = {
   title: route.query.title as string,
