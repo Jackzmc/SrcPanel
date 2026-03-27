@@ -42,12 +42,12 @@
         <div>
           <table v-if="discuss?.responses.users?.length" class="table-auto w-full">
             <tbody>
-              <tr v-for="user in discuss.responses.users" :key="user.id" class="border-b border-b-neutral-400 last:border-b-0">
+              <tr v-for="respondant in discuss.responses.users" :key="respondant.id" class="border-b border-b-neutral-400 last:border-b-0">
                 <td class="py-2">
-                  <UserComponent :user="user" name-class="text-black font-semibold text-sm" hide-tooltip />
+                  <UserComponent :user="respondant" name-class="text-black font-semibold text-sm" hide-tooltip />
                 </td>
                 <td>
-                  <div v-for="choice in user.choices" :key="choice" class="text-xs text-muted">{{ choice }}</div>
+                  <div v-for="choice in respondant.choices" :key="choice" class="text-xs text-muted">{{ choice }}</div>
                 </td>
               </tr>
             </tbody>
@@ -70,22 +70,21 @@ const { user, requireAuth } = useAuth()
 
 await requireAuth()
 
-const { data: discuss, refresh, error } = await useFetch<APIDiscussion>(() => `/api/discussions/${route.params.id}`, { key: `discuss.${route.params.id}` })
-
+const { data: discuss, status, error } = await useAsyncData<APIDiscussion>(
+  `discuss.${route.params.id}`,
+  () => $fetch(`/api/discussions/${route.params.id}`)
+)
 useHead({
   title: () => {
     const id = `Discussion #${route.params.id}`
+    console.log('TITLE', discuss.value, discuss.value?.title, route.params.id)
     return discuss.value ? `${discuss.value.title} - ${id}` : id
-  }
+  },
 })
 
 watch(discuss, (val) => {
-  if (!val) {
+  if (!val && status.value === 'success') {
     throw createError({ statusCode: 404, statusMessage: 'Discussion not found' })
   }
 })
-
-async function startDiscussion() {
-  await navigateTo('/discuss/new')
-}
 </script>

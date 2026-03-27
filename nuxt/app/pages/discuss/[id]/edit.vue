@@ -14,4 +14,8 @@ if(!discuss.value) throw createError({
   status: 404,
   statusText: 'Discussion Not Found',
 })
+
+useHead({
+  title: `Edit Discussion #${discuss.value.id}`,
+})
 </script>

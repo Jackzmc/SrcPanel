@@ -18,4 +18,8 @@ const defaultDiscuss: APIDiscussionBase = {
   options: [],
   flags: APIDiscussionFlags.None
 }
+
+useHead({
+  title: `Create Discussion`,
+})
 </script>

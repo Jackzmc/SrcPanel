@@ -15,6 +15,11 @@
               Closes {{ expiresText }}
             </UBadge>
           </template>
+          <UBadge v-if="(discuss.flags & APIDiscussionFlags.RespondersPublic) && discuss.responses.totalCount > 0"class="align-right" leading-icon="lucide:users" variant="outline" color="neutral">
+            <UTooltip text="Number of respondants">
+              {{ discuss.responses.totalCount }}
+            </UTooltip>
+          </UBadge>
           <UBadge class="align-right" leading-icon="lucide:message-square" variant="outline" color="neutral">
             <UTooltip text="Number of comments">
               {{ discuss.commentsCount }}
@@ -59,7 +64,7 @@
 </template>
 
 <script setup lang="ts">
-import { APIDiscussionType, type APIDiscussion } from '@common/Discussions'
+import { APIDiscussionFlags, APIDiscussionType, type APIDiscussion } from '@common/Discussions'
 import UserComponent from '@/components/UserComponent.vue'
 import IconText from '@/components/IconText.vue'
 import DiscussChoice from './DiscussChoice.vue';

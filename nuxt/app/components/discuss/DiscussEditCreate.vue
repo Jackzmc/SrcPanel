@@ -22,12 +22,12 @@
             <DiscussSettingsEntry label="Type">
               <USelect v-model="editDiscuss.type" :items="discussionTypes" class="w-60" />
             </DiscussSettingsEntry>
-            <DiscussSettingsFlagEntry label="Responses"
-              :flags="editDiscuss.flags" :items="responsesOptions"
+            <DiscussSettingsFlagEntry label="Respondants"
+              :flags="editDiscuss.flags" :items="respondantsOptions"
               @update:flags="i => editDiscuss.flags = i"
             />
-            <DiscussSettingsFlagEntry v-show="editDiscuss.flags & APIDiscussionFlags.RespondersPublic" label="Respondants"
-              :flags="editDiscuss.flags" :items="respondantsOptions"
+            <DiscussSettingsFlagEntry v-show="editDiscuss.flags & APIDiscussionFlags.RespondersPublic" label="Responses"
+              :flags="editDiscuss.flags" :items="responsesOptions"
               @update:flags="i => editDiscuss.flags = i"
             />
             <DiscussSettingsEntry label="Closes">
@@ -82,7 +82,7 @@ import type { SettingEntry } from '~~/shared/types/discuss';
 import DiscussSettingsEntry from '@/components/discuss/edit/DiscussSettingsEntry.vue'
 import DiscussSettingsFlagEntry from '@/components/discuss/edit/DiscussSettingsFlagEntry.vue'
 import { fromAbsolute, now, ZonedDateTime } from '@internationalized/date';
-import { formatDate } from '@common/methods/format';
+import { formatDate, slugify } from '@common/methods/format';
 
 const toast = useToast()
 const router = useRouter()
@@ -99,12 +99,12 @@ const discussionTypes: SelectItem[] = [
   // { label: "Long Text", value: APIDiscussionType.LongText },
 ]
 
-const responsesOptions: SettingEntry[] = [
+const respondantsOptions: SettingEntry[] = [
   { label: "Only Names", set: APIDiscussionFlags.RespondersPublic, icon: 'lucide:eye' },
   { label: "Hidden", unset: [APIDiscussionFlags.RespondersPublic, APIDiscussionFlags.ResponsesPublic], icon: 'lucide:eye-off' },
 ]
 
-const respondantsOptions: SettingEntry[] = [
+const responsesOptions: SettingEntry[] = [
   { label: "Show", set: APIDiscussionFlags.ResponsesPublic, icon: 'lucide:eye' },
   { label: "Hidden", unset: APIDiscussionFlags.ResponsesPublic, icon: 'lucide:eye-off' },
 ]
@@ -191,7 +191,12 @@ async function createDiscussion() {
       description: result.error.message,
     })
   } else {
-    navigateTo(`/discuss/${result.body!.id}`)
+    toast.add({
+      color: "success",
+      title: `Discussion #${result.body!.id}`,
+      description: "Discussion created successfully.",
+    })
+    await navigateTo(`/discuss/${result.body!.id}/${slugify(editDiscuss.value.title)}`, { replace: true })
   }
 }
 
@@ -212,7 +217,13 @@ async function putDiscussion() {
       description: result.error.message,
     })
   } else {
-    navigateTo(`/discuss/${props.discuss.id}`)
+    toast.add({
+      color: "success",
+      title: `Discussion #${props.discuss.id}`,
+      description: "Your changes have been saved.",
+    })
+    await navigateTo(`/discuss/${props.discuss.id}/${slugify(props.discuss.title)}`, { replace: true })
+    // nextTick(() => refreshNuxtData(`discuss.${props.discuss.id}`))
   }
 }
 

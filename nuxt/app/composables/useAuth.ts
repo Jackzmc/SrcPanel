@@ -3,6 +3,7 @@ import type { ClientUserData } from '../../../common-types/User'
 export function useAuth() {
   // useState key is shared across SSR → client hydration
   const user = useState<ClientUserData | null>('auth.user', () => null)
+  const privUser = user
 
   async function fetchUser() {
     try {
@@ -22,13 +23,13 @@ export function useAuth() {
    * Requires user to be logged in. If not redirects to login page (that will redirect back when logged in)
    */
   async function requireAuth() {
-    const loc = useRequestURL()
     if (!isLoggedIn.value) {
-      await navigateTo('/login?return_to=' + encodeURIComponent(loc.pathname))
+      const route = useRoute()
+      await navigateTo('/login?return_to=' + encodeURIComponent(route.path))
     }
   }
 
   const isLoggedIn = computed(() => user.value !== null)
 
-  return { user, isLoggedIn, fetchUser, logout, requireAuth }
+  return { user, privUser, isLoggedIn, fetchUser, logout, requireAuth }
 }

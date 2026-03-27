@@ -56,9 +56,6 @@ const props = defineProps<{
   type: "list" | "details" | "edit"
 }>()
 
-const title = ref(props.discuss.title)
-const description = ref(props.discuss.description)
-
 async function addOption() {
   const value = await modal.promptInput({
     title: "Enter Option Name"
