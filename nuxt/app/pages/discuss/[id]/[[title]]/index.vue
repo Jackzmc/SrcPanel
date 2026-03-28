@@ -70,9 +70,11 @@ const { user, requireAuth } = useAuth()
 
 await requireAuth()
 
+const api = useApi()
+
 const { data: discuss, status, error } = await useAsyncData<APIDiscussion>(
   `discuss.${route.params.id}`,
-  () => $fetch(`/api/discussions/${route.params.id}`)
+  () => api(`/discussions/${route.params.id}`)
 )
 useHead({
   title: () => {

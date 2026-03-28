@@ -43,9 +43,11 @@ const props = defineProps<{
   discuss: APIDiscussion
 }>()
 
+const api = useApi()
+
 const { data: comments, error, refresh, status } = useLazyAsyncData<APIComment[]>(
   `discuss.${props.discuss.id}.comments`,
-  () => $fetch(`/api/discussions/${props.discuss.id}/comments`)
+  () => api(`/discussions/${props.discuss.id}/comments`)
 )
 const submitCommentText = ref("")
 const submitCommentLoading = ref(false)
