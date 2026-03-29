@@ -38,18 +38,43 @@ useHead({
   title: "Manage Servers"
 })
 
+interface UIServer extends APIListServersV2_Server {
+  statusClass?: string
+}
+
 const { requireAuth } = useAuth();
 
 await requireAuth();
 
 const { data, status, error, refresh } = await useFetch<APIListServersV2>('/api/servers/v2', { key: "servers_v2" });
 
-const filteredServers = computed(() => {
+const filteredServers = computed<UIServer[]>(() => {
   if(!data.value) return []
+  if(search.value == "") return data.value.servers.map(transform)
+  const lowerSearch = search.value.toLowerCase()
   return data.value.servers
+    .filter(server => server.name.toLowerCase().includes(lowerSearch)
+      || server.tags.some(tag => tag.toLowerCase().includes(lowerSearch))
+      || server.groupId.toLowerCase().includes(lowerSearch)
+      || (data.value!.groups[server.groupId] && data.value!.groups[server.groupId]!.name.toLowerCase().includes(lowerSearch))
+    )
+    .map(transform)
 })
 
-const columns: TableColumn<APIListServersV2_Server>[] = [
+function transform(server: APIListServersV2_Server): UIServer {
+  let statusClass
+  if(server.online) {
+    statusClass = (server.status.data && server.status.data?.players.length > 0) ? 'text-primary' : 'text-success'
+  } else {
+    statusClass = 'text-error'
+  }
+  return {
+    ...server,
+    statusClass
+  }
+}
+
+const columns: TableColumn<UIServer>[] = [
   {
     id: 'select',
     header: ({ table }) =>
@@ -75,7 +100,7 @@ const columns: TableColumn<APIListServersV2_Server>[] = [
        { text: row.original.id },
        () => h(ULink, {
          to: `/admin/servers/${row.original.groupId}/${row.original.id}`,
-         class: ['font-bold text-lg flex-col', row.original.online ? 'text-success' : 'text-error']
+         class: ['font-bold text-lg flex-col', row.original.statusClass]
        }, () => row.original.name ?? row.original.id),
       ),
       h("div", `${row.original.host}:${row.original.port}`),
@@ -102,7 +127,7 @@ const columns: TableColumn<APIListServersV2_Server>[] = [
     header: sortHeader("State"),
     cell: ({ row }) => h("div", { class: "flex-col" }, [
       h("div",
-        { class: row.original.online ? 'text-success' : 'text-error' },
+        { class: row.original.statusClass },
         h(IconText,
           {
             'leading-icon': row.original.online ? 'lucide-circle' : 'lucide-square',
@@ -112,7 +137,7 @@ const columns: TableColumn<APIListServersV2_Server>[] = [
         )
       ),
       h("div",
-        {},
+        { class: (row.original.status.data && row.original.status.data.players.length > 0 ? 'font-semibold' : '') },
         (row.original.status.data) ? `${row.original.status.data.players.length} players online` : '',
       )
     ]),
