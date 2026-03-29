@@ -3,12 +3,25 @@
     <Hero title="Manage Servers" />
     <UContainer>
       <UAlert v-if="error" :message="error.message" type="error" />
-      <UTable v-else-if="data" :data="data.servers" :columns="columns"
-        ref="table"
-        checkable
-        :loading="status === 'pending'"
-        sticky="header"
-      />
+      <UCard>
+        <div class="flex justify-between">
+          <div class="flex gap-2 items-center">
+            <UInput v-model="search" placeholder="Search" leading-icon="lucide:search" class="w-64" />
+            <span>{{ filteredServers.length }} servers</span>
+          </div>
+          <div class="flex gap-2">
+            <UButton leading-icon="lucide:refresh-ccw" variant="outline" color="neutral" @click="refresh()"></UButton>
+            <UButton leading-icon="lucide:plus" @click="startNewServerModal()">Start New Server</UButton>
+            <UButton leading-icon="lucide:circle-question-mark" variant="outline" color="neutral" @click="openHelpModal()">Help</UButton>
+          </div>
+        </div>
+        <UTable :data="filteredServers" :columns="columns"
+          ref="table"
+          checkable
+          :loading="status === 'pending'"
+          sticky="header"
+        />
+      </UCard>
     </UContainer>
   </div>
 </template>
@@ -19,12 +32,22 @@ import Hero from '@/components/Hero.vue';
 import { type APIListServersV2, type APIListServersV2_Server } from '@common/Server';
 import type { TableColumn } from '@nuxt/ui';
 import { sortHeader } from '#imports';
+import ActionButton from '~/components/servers/ActionButton.vue';
 
 useHead({
   title: "Manage Servers"
 })
 
-const { data, status, error } = await useFetch<APIListServersV2>('/api/servers/v2', { key: "servers_v2" });
+const { requireAuth } = useAuth();
+
+await requireAuth();
+
+const { data, status, error, refresh } = await useFetch<APIListServersV2>('/api/servers/v2', { key: "servers_v2" });
+
+const filteredServers = computed(() => {
+  if(!data.value) return []
+  return data.value.servers
+})
 
 const columns: TableColumn<APIListServersV2_Server>[] = [
   {
@@ -71,7 +94,7 @@ const columns: TableColumn<APIListServersV2_Server>[] = [
   },
   {
     accessorKey: 'tags',
-    cell: ({ row }) => h("div", { class: "flex gap-4" }, row.original.tags.map(tag => h(UBadge, { color: "neutral", variant: "outline" }, () => tag))),
+    cell: ({ row }) => h("div", { class: "flex gap-4" }, row.original.tags.map(tag => h(UBadge, { size: "sm", color: "neutral", variant: "outline" }, () => tag))),
     header: "Tags"
   },
   {
@@ -84,7 +107,8 @@ const columns: TableColumn<APIListServersV2_Server>[] = [
           {
             'leading-icon': row.original.online ? 'lucide-circle' : 'lucide-square',
             text: row.original.online ? "Online" : "Offline",
-          }
+          },
+          () => null
         )
       ),
       h("div",
@@ -95,7 +119,22 @@ const columns: TableColumn<APIListServersV2_Server>[] = [
   },
   {
     header: "Actions",
-    cell: ({ row }) => h("div", { class: "flex gap-4" }, row.original.actions.map(action => h("div", action))),
+    cell: ({ row }) => h("div",
+      { class: "flex gap-2 flex-wrap" },
+      row.original.actions
+        .filter(action => action.inQuickAction)
+        .map(action => h(ActionButton, { server: row.original, action: action }))
+    ),
   }
 ]
+
+const search = ref("")
+
+function startNewServerModal() {
+
+}
+
+function openHelpModal() {
+
+}
 </script>
