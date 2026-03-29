@@ -50,6 +50,8 @@ export default defineNuxtConfig({
         'lucide:chevrons-right',
         'lucide:x',
         'lucide:check',
+        'lucide:circle',
+        'lucide:square',
         'lucide:circle-check',
         'lucide:circle-x',
         'lucide:info',
