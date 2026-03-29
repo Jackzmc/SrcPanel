@@ -1,7 +1,7 @@
 <template>
  <UContainer class="mt-3">
    <div class="grid grid-cols-3">
-     <div class="col-span-2">
+     <div class="col-span-2 flex flex-col gap-4">
        <ULink to="/admin/servers" class="text-primary">← back to manage servers list</ULink>
        <div v-if="data" class="bg-light-blue p-4 rounded-2xl">
          <div class="flex justify-between">
@@ -35,7 +35,12 @@
                 <UTooltip text="Server Id"><UBadge variant="outline" color="neutral">{{ data.server.id }}</UBadge></UTooltip>
               </div>
               <!-- Actions -->
-              <div>Buttons</div>
+              <div class="flex gap-1">
+                <ActionButton v-for="action in data.server.actions" :key="action.name"
+                  :server-id="data.server.id"
+                  :action="action"
+                  size="xs" />
+              </div>
             </div>
          </div>
        </div>
@@ -46,7 +51,8 @@
 </template>
 
 <script setup lang="ts">
-import { type ServerData, type ServerDetailed } from '@common/Server';
+import { type ServerDetailed } from '@common/Server';
+import ActionButton from '@/components/servers/ActionButton.vue'
 
 const toast = useToast()
 

@@ -1,20 +1,22 @@
 <template>
-  <UButton variant="outline" color="neutral" :size="size" :loading="loading" @click="executeAction()">
+  <UButton v-show="!props.action.isHidden || props.showHidden" variant="outline" color="neutral" :size="size" :loading="loading" @click="executeAction()">
     {{ props.action.name }}
   </UButton>
 </template>
 
 <script setup lang="ts">
-import type { APIListServersV2_Server, ServerAction } from '@common/Server';
+import type { ServerAction } from '@common/Server';
 
 const toast = useToast();
 
 const props = withDefaults(defineProps<{
-  server: APIListServersV2_Server,
+  serverId: string,
   action: ServerAction,
-  size?: "sm" | "lg"
+  size?: "sm" | "lg" | "xs",
+  showHidden?: boolean
 }>(), {
   size: "sm",
+  showHidden: false
 })
 
 const loading = ref(false)
@@ -22,7 +24,7 @@ const loading = ref(false)
 async function executeAction() {
   if(loading.value) return
   loading.value = true
-  const response = await request(`/api/servers/${props.server.id}/action/${props.action.command}`, { method: "POST" })
+  const response = await request(`/api/servers/${props.serverId}/action/${props.action.command}`, { method: "POST" })
   loading.value = false
   if ('error' in response) {
     toast.add({

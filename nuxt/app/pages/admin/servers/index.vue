@@ -148,7 +148,7 @@ const columns: TableColumn<UIServer>[] = [
       { class: "flex gap-2 flex-wrap" },
       row.original.actions
         .filter(action => action.inQuickAction)
-        .map(action => h(ActionButton, { server: row.original, action: action }))
+        .map(action => h(ActionButton, { serverId: row.original.id, action: action }))
     ),
   }
 ]
