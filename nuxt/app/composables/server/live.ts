@@ -1,18 +1,20 @@
+import type { ServerDetailed, VoiceUser } from '@common/Server.js';
 import type { ClientOutPayload, ServerOutPacket } from '../../../../common-types/ServerWebsocket.js';
 
 const MAX_BACKOFF_MS = 1000 * 60 * 2
 
 export type LiveServerStatus = 'connecting' | 'connected' | 'disconnected'
 
-export function useLiveServer(serverId: string) {
+export function useLiveServer(data: ServerDetailed) {
   const status = ref<LiveServerStatus>('disconnected')
   const logs = ref<string[]>([])
+  const voiceMembers = ref<VoiceUser[] | null>(data.voiceMembers ?? null)
 
   let socket: WebSocket | null = null;
   let reconnectTimeout: any = undefined;
   let errCount = 0;
 
-  const prefix = `[Live/${serverId}]`
+  const prefix = `[Live/${data.server.id}]`
   const config = useRuntimeConfig()
 
   function connect() {
@@ -23,7 +25,7 @@ export function useLiveServer(serverId: string) {
     if (import.meta.dev && config.public.apiPublicUrl) {
       urlPrefix = config.public.apiPublicUrl
     }
-    const url = `${urlPrefix.replace('http', 'ws')}/api/servers/${serverId}/ws`
+    const url = `${urlPrefix.replace('http', 'ws')}/api/servers/${data.server.id}/ws`
     console.debug(prefix, 'connecting to', url)
     const ws = new WebSocket(url)
 

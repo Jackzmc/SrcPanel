@@ -1,5 +1,5 @@
 <template>
- <UContainer class="mt-3">
+ <UContainer class="mt-3 bg-neutral-100 p-4 rounded-4xl" style="min-height: 600px">
    <div class="grid grid-cols-3 gap-6">
      <!-- left column -->
      <div class="col-span-2 flex flex-col gap-4">
@@ -14,6 +14,10 @@
             @update:modelValue="onChangeServerSelected"
           />
        </UFormField>
+
+       <RecentActivity :server-id="serverId as string" />
+
+       <VoiceMembers :server-id="serverId as string" :voice-members="data?.voiceMembers" />
      </div>
    </div>
  </UContainer>
@@ -23,6 +27,8 @@
 import { type APIListServersV1_Compact, type ServerDetailed } from '@common/Server';
 import ServerBanner from '@/components/servers/ServerBanner.vue'
 import { useLiveServer } from '~/composables/server/live';
+import RecentActivity from '@/components/servers/manage/RecentActivity.vue'
+import VoiceMembers from '@/components/servers/manage/VoiceMembers.vue'
 
 
 const toast = useToast()
@@ -43,7 +49,7 @@ const { data: servers } = await useFetch(
   }
 );
 
-const live = reactive(useLiveServer(serverId as string))
+const live = reactive(useLiveServer(data.value!))
 
 function onChangeServerSelected(id: string) {
   if(!servers.value) return
