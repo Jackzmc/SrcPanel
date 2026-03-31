@@ -23,12 +23,18 @@
       <div class="flex flex-col justify-between items-end">
         <!-- Upper status badges -->
         <div class="flex gap-1">
-          <UBadge
-            :leading-icon="server.online ? 'lucide:circle' : 'lucide:square'"
-            :color="server.online ? 'success' : 'error'"
-          >{{ server.online ? 'Online' : 'Offline' }}</UBadge>
-          <UBadge color="primary" leading-icon="lucide:circle-check">Live</UBadge>
-          <UTooltip text="Server Id"><UBadge variant="outline" color="neutral">{{ server.id }}</UBadge></UTooltip>
+          <ClientOnly>
+            <UBadge
+              :leading-icon="server.online ? 'lucide:circle' : 'lucide:square'"
+              :color="server.online ? 'success' : 'error'"
+            >{{ server.online ? 'Online' : 'Offline' }}</UBadge>
+            <!-- TODO: live status. hydration mismatch -->
+            <UBadge color="primary"
+              :leading-icon="liveStatusAttr.leadingIcon"
+              :ui="liveStatusAttr.ui"
+            >Live</UBadge>
+            <UTooltip text="Server Id"><UBadge variant="outline" color="neutral">{{ server.id }}</UBadge></UTooltip>
+          </ClientOnly>
         </div>
         <!-- Actions -->
         <div class="flex gap-1">
@@ -52,12 +58,24 @@
 <script setup lang="ts">
 import type { ServerInfo } from '@common/Server';
 import ActionButton from '@/components/servers/ActionButton.vue'
+import type { LiveServerStatus } from '~/composables/server/live';
 
 const toast = useToast()
 
 const props = defineProps<{
   server: ServerInfo,
+  liveStatus: LiveServerStatus
 }>()
+
+const liveStatusAttr = computed(() => {
+  const connected = import.meta.client && props.liveStatus == 'connected'
+  return {
+    ui: {
+      leadingIcon: connected ? '' : 'animate-spin'
+    },
+    leadingIcon: connected ? 'lucide:circle-check' : 'lucide:loader-circle'
+  }
+})
 
 const showHiddenActions = ref(false)
 

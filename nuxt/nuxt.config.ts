@@ -90,7 +90,7 @@ export default defineNuxtConfig({
   nitro: {
     routeRules: {
       '/api/_nuxt_icon/**': {},
-      '/api/**': { proxy: 'http://localhost:8081/api/**', }
+      '/api/**': { proxy: 'http://localhost:8081/api/**' }
     }
   },
 
@@ -100,6 +100,5 @@ export default defineNuxtConfig({
         braceStyle: '1tbs',
       }
     }
-  }
-
+  },
 })

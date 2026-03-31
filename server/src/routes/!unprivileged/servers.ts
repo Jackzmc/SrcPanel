@@ -1,5 +1,5 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
-import { APIListServersV2, APIListServersV2_Groups, SERVER_TYPE_MAP, APIListServerGroup, APIListServersCompactV2_Server, APIListServersCompactV2, APIListServersV1, APIListServersV1_Server } from '../../../../common-types/Server.js';
+import { APIListServersV2, APIListServersV2_Groups, SERVER_TYPE_MAP, APIListServerGroup, APIListServersCompactV2_Server, APIListServersCompactV2, APIListServersV1, APIListServersV1_Server, APIListServersV1_Compact } from '../../../../common-types/Server.js';
 import Server from '../../modules/servers/Server.js';
 import SocketClientUser from '../../modules/servers/SocketClientUser.js';
 import { APIListServersV2_Server } from '../../../../common-types/Server';
@@ -13,8 +13,9 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
       reply.send(servers.map(server => {
         return {
           id: server.id,
+          groupId: server.group.Id,
           name: server.name,
-        }
+        } as APIListServersV1_Compact
       }))
     } else {
       reply.send(fastify.servers.getAllGrouped((server: Server): APIListServersV1_Server => {

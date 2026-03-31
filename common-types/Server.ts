@@ -178,6 +178,11 @@ export interface APIListServersV2_Server extends APIListServersCompactV2_Server 
   host: string,
   port: number
 }
+export interface APIListServersV1_Compact {
+  id: string,
+  groupId: string,
+  name: string
+}
 export interface APIListServersCompactV2_Server {
   id: string,
   groupId: string,
