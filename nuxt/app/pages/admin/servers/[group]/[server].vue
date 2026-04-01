@@ -66,7 +66,7 @@ const { data: servers } = await useFetch(
 
 const tabs: TabsItem[] = [
   { label: 'Overview', value: 'overview' },
-  { label: 'Game View', value: 'live' },
+  { label: 'Manage', value: 'manage' },
   { label: 'Metrics',   value: 'metrics' },
 ]
 

@@ -5,9 +5,12 @@
     :description="description"
     aria-describedby="Confirmation Modal"
   >
+    <template #body>
+      <Fragment v-if="body" v-html="body" />
+    </template>
     <template #footer>
       <div class="flex gap-2">
-        <UButton :color="okColor" :label="okText" @click="emit('close', true)" />
+        <UButton v-if="okShown" :color="okColor" :label="okText" @click="emit('close', true)" />
         <UButton :color="cancelColor" :label="cancelText" @click="emit('close', false)" />
       </div>
     </template>
@@ -20,6 +23,7 @@ import type { PromptConfirmOptions } from '~/composables/useModal';
 withDefaults(defineProps<PromptConfirmOptions>(), {
   okText: "Okay",
   okColor: "primary",
+  okShown: true,
   cancelText: 'Cancel',
   cancelColor: "neutral"
 })

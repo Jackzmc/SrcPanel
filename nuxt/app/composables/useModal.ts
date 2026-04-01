@@ -4,10 +4,17 @@ export interface PromptConfirmOptions {
   title: string,
   description?: string,
 
+  body?: string,
+
   okText?: string,
   okColor?: "primary" | "neutral" | "secondary" | "success" | "info" | "warning" | "error" | undefined,
+  /** default true. set to false to hide ok button button */
+  okShown?: boolean,
+
   cancelText?: string
-  cancelColor?: "primary" | "neutral" | "secondary" | "success" | "info" | "warning" | "error" | undefined
+  cancelColor?: "primary" | "neutral" | "secondary" | "success" | "info" | "warning" | "error" | undefined,
+
+
 }
 
 export interface PromptInputOptions {

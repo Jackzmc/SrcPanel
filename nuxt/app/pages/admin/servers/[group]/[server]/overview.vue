@@ -1,18 +1,19 @@
 <template>
   <div class="flex flex-col gap-4">
-    <ServerConsole :data="data" />
+    <UCard>Game Info</UCard>
+    <UCard>Players list</UCard>
   </div>
 
   <ClientOnly>
     <Teleport to="#sidebar">
-      <UCard>Console Info</UCard>
+      <VoiceMembers :server-id="data.server.id" :voice-members="data?.voiceMembers" />
     </Teleport>
   </ClientOnly>
 </template>
 
 <script setup lang="ts">
 import type { ServerDetailed } from '@common/Server';
-import ServerConsole from '@/components/servers/ServerConsole.vue'
+import VoiceMembers from '@/components/servers/manage/VoiceMembers.vue'
 
 const props = defineProps<{
   data: ServerDetailed;
