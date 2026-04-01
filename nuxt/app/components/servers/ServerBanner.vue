@@ -1,5 +1,5 @@
 <template>
-  <div class="bg-light-blue p-4 rounded-2xl">
+  <div class="bg-light-blue p-4 rounded-2xl" :style="{ 'background-url': `url('~/assets/server-bg/550.png')` }">
     <div class="flex justify-between">
       <!-- Left side -->
       <div class="flex flex-col">
@@ -15,9 +15,7 @@
         </div>
 
         <!-- Tags -->
-        <div class="flex gap-1 mt-4">
-          <UBadge v-for="tag in server.tags" :key="tag" color="neutral">{{ tag }}</UBadge>
-        </div>
+
       </div>
       <!-- Right side -->
       <div class="flex flex-col justify-between items-end">
@@ -38,7 +36,17 @@
         </div>
         <!-- Actions -->
         <div class="flex gap-1">
-          <ActionButton v-for="action in server.actions" :key="action.name"
+          <div class="flex gap-1">
+            <UTooltip text="tag">
+               <UBadge v-for="tag in server.tags" :key="tag" color="neutral">{{ tag }}</UBadge>
+            </UTooltip>
+            <UTooltip v-for="(enabled, key) in server.features" :key="key" text="feature">
+              <UBadge v-if="enabled" variant="outline">
+                {{ key }}
+              </UBadge>
+            </UTooltip>
+          </div>
+          <!-- <ActionButton v-for="action in server.actions" :key="action.name"
             :server-id="server.id"
             :action="action"
             :show-hidden="showHiddenActions"
@@ -48,7 +56,7 @@
               size="xs"
               :leading-icon="showHiddenActions ? 'lucide:chevron-left' : 'lucide:chevron-right'"
               @click="showHiddenActions = !showHiddenActions" />
-          </UTooltip>
+          </UTooltip> -->
         </div>
       </div>
     </div>
