@@ -4,7 +4,7 @@
      <!-- left column -->
      <div class="col-span-2 flex flex-col gap-4">
       <ULink to="/admin/servers" class="text-primary">← back to manage servers list</ULink>
-      <ServerBanner v-if="data" :server="data.server" :live-status="live.status" />
+      <ServerBanner v-if="data" :data="data" :live-status="live.status" />
       <GameOverview v-if="data" :data="data" />
 
       <UTabs :default-value="activeTab" :items="tabs" :content="false" variant="pill"

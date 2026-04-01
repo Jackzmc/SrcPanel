@@ -13,17 +13,22 @@
         <div class="flex flex-col items-center justify-center">
           <p class="text-xs text-muted">Gamemode</p>
           <p v-if="data.server.status.data" class="font-semibold text-md">{{ data.server.status.data?.gamemode }}</p>
-          <p v-else class="text-md text-muteed">-</p>
+          <p v-else class="text-md text-muted">-</p>
         </div>
         <div class="flex flex-col items-center justify-center">
           <p class="text-xs text-muted">Difficulty</p>
-          <p v-if="data.server.status.data" class="font-semibold text-md">Expert</p>
-          <p v-else class="text-md text-muteed">-</p>
+          <p v-if="data.live?.game" class="font-semibold text-md">{{ difficulty }}</p>
+          <p v-else class="text-md text-muted">-</p>
+        </div>
+        <div class="flex flex-col items-center justify-center">
+          <p class="text-xs text-muted">Uptime</p>
+          <p v-if="data.live?.game" class="font-semibold text-md">{{ uptime }}d</p>
+          <p v-else class="text-md text-muted">-</p>
         </div>
         <div class="flex flex-col items-center justify-center">
           <p class="text-xs text-muted">Players</p>
           <p v-if="data.server.status.data" class="font-semibold text-md">0 / 4</p>
-          <p v-else class="text-md text-muteed">-</p>
+          <p v-else class="text-md text-muted">-</p>
         </div>
         <div class="flex flex-col items-center justify-center">
           <p class="text-xs text-muted">In Voice</p>
@@ -35,9 +40,28 @@
 </template>
 
 <script setup lang="ts">
+import { GameDifficulty } from '@common/Live';
 import type { ServerDetailed } from '@common/Server';
 
 const props = defineProps<{
   data: ServerDetailed;
 }>()
+
+const uptime = computed(() => {
+  if (!props.data.live?.game) return '-';
+  const now = new Date();
+  const started = new Date(props.data.live.game.startTime * 1000);
+  const diff = now.getTime() - started.getTime();
+  return Math.floor(diff / (1000 * 60 * 60 * 24));
+})
+
+const difficulty = computed(() => {
+  if (!props.data.live?.game) return '-';
+  switch(props.data.live.game.difficulty) {
+    case GameDifficulty.Easy: return "Easy"
+    case GameDifficulty.Normal: return "Normal"
+    case GameDifficulty.Advanced: return "Advanced"
+    case GameDifficulty.Expert: return "Expert"
+  }
+})
 </script>

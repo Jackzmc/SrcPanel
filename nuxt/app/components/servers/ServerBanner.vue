@@ -5,9 +5,9 @@
       <div class="flex flex-col">
         <!-- Title/desc -->
         <div class="flex flex-col">
-          <h2 class="text-2xl font-bold">{{ server?.name }}</h2>
+          <h2 class="text-2xl font-bold">{{ data.server?.name }}</h2>
           <p class="text-gray-600 dark:text-gray-400">
-            {{ server?.ip }}:{{ server?.port }}
+            {{ data.server?.ip }}:{{ data.server?.port }}
             <UTooltip text="Click to copy IP">
               <UIcon class="cursor-pointer" name="lucide-copy" @click="copyIp" />
             </UTooltip>
@@ -23,24 +23,27 @@
         <div class="flex gap-1">
           <ClientOnly>
             <UBadge
-              :leading-icon="server.online ? 'lucide:circle' : 'lucide:square'"
-              :color="server.online ? 'success' : 'error'"
-            >{{ server.online ? 'Online' : 'Offline' }}</UBadge>
+              :leading-icon="data.server.online ? 'lucide:circle' : 'lucide:square'"
+              :color="data.server.online ? 'success' : 'error'"
+            >{{ data.server.online ? 'Online' : 'Offline' }}</UBadge>
             <!-- TODO: live status. hydration mismatch -->
-            <UBadge color="primary"
+            <UBadge
+              :variant="liveStatusAttr.variant ?? 'solid'"
+              :color="liveStatusAttr.color ?? 'primary'"
               :leading-icon="liveStatusAttr.leadingIcon"
               :ui="liveStatusAttr.ui"
-            >Live</UBadge>
-            <UTooltip text="Server Id"><UBadge variant="outline" color="neutral">{{ server.id }}</UBadge></UTooltip>
+              :class="liveStatusAttr.class"
+            >{{ liveStatusAttr.text }}</UBadge>
+            <UTooltip text="Server Id"><UBadge variant="outline" color="neutral">{{ data.server.id }}</UBadge></UTooltip>
           </ClientOnly>
         </div>
         <!-- Actions -->
         <div class="flex gap-1">
           <div class="flex gap-1">
             <UTooltip text="tag">
-               <UBadge v-for="tag in server.tags" :key="tag" color="neutral">{{ tag }}</UBadge>
+               <UBadge v-for="tag in data.server.tags" :key="tag" color="neutral">{{ tag }}</UBadge>
             </UTooltip>
-            <UTooltip v-for="(enabled, key) in server.features" :key="key" text="feature">
+            <UTooltip v-for="(enabled, key) in data.server.features" :key="key" text="feature">
               <UBadge v-if="enabled" variant="outline">
                 {{ key }}
               </UBadge>
@@ -64,31 +67,57 @@
 </template>
 
 <script setup lang="ts">
-import type { ServerInfo } from '@common/Server';
+import type { ServerDetailed, ServerInfo } from '@common/Server';
 import ActionButton from '@/components/servers/ActionButton.vue'
 import type { LiveServerStatus } from '~/composables/server/live';
 
 const toast = useToast()
 
 const props = defineProps<{
-  server: ServerInfo,
+  data: ServerDetailed,
   liveStatus: LiveServerStatus
 }>()
 
 const liveStatusAttr = computed(() => {
-  const connected = import.meta.client && props.liveStatus == 'connected'
+  if(import.meta.client) {
+      if(props.liveStatus == 'connecting') {
+      return {
+        ui: {
+          leadingIcon: 'animate-spin'
+        },
+        variant: 'subtle',
+        leadingIcon: 'lucide:loader-circle',
+        text: "Connecting"
+      }
+    } else if(props.liveStatus == 'connected') {
+      if(props.data.live != null) {
+        return {
+          leadingIcon: 'lucide:radio',
+          text: "Live"
+        }
+      } else {
+        return {
+          ui: {
+            leadingIcon: 'animate-pulse'
+          },
+          variant: 'subtle',
+          leadingIcon: 'lucide:radio',
+          text: "No Data"
+        }
+      }
+    }
+  }
   return {
-    ui: {
-      leadingIcon: connected ? '' : 'animate-spin'
-    },
-    leadingIcon: connected ? 'lucide:circle-check' : 'lucide:loader-circle'
+    color: 'error',
+    leadingIcon: 'lucide:radio-off',
+    text: "Disconnected"
   }
 })
 
 const showHiddenActions = ref(false)
 
 async function copyIp() {
-  await navigator.clipboard.writeText(`${props.server.ip}:${props.server.port}`);
+  await navigator.clipboard.writeText(`${props.data.server.ip}:${props.data.server.port}`);
   toast.add({
     color: 'info',
     description: 'Server IP copied to clipboard',
