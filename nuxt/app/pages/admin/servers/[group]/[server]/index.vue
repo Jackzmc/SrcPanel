@@ -1,10 +1,20 @@
 <template>
- <UContainer class="mt-3 bg-neutral-100 p-4 rounded-4xl" style="min-height: 600px">
+ <UContainer class="mt-3 bg-neutral-100 dark:bg-neutral-950 p-4 rounded-4xl" style="min-height: 600px">
    <div class="grid grid-cols-3 gap-6">
      <!-- left column -->
      <div class="col-span-2 flex flex-col gap-4">
        <ULink to="/admin/servers" class="text-primary">← back to manage servers list</ULink>
        <ServerBanner v-if="data" :server="data.server" :live-status="live.status" />
+       <GameOverview v-if="data" :data="data" />
+
+
+      <UTabs :items="tabs" variant="pill"
+        :ui="{ list: 'bg-white dark:bg-black rounded-xl', label: 'data-[state=inactive]:text-black cursor-pointer', trigger: 'data-[state=active]:hover:bg-primary-400' }"
+        default-value="overview"
+      />
+
+      <OverviewTab v-if="data" :data="data" />
+
      </div>
      <!-- right column -->
      <div class="col-span-1 flex flex-col gap-4 mt-10">
@@ -16,8 +26,6 @@
        </UFormField>
 
        <RecentActivity :server-id="serverId as string" />
-
-       <VoiceMembers :server-id="serverId as string" :voice-members="data?.voiceMembers" />
      </div>
    </div>
  </UContainer>
@@ -29,7 +37,9 @@ import ServerBanner from '@/components/servers/ServerBanner.vue'
 import { useLiveServer } from '~/composables/server/live';
 import RecentActivity from '@/components/servers/manage/RecentActivity.vue'
 import VoiceMembers from '@/components/servers/manage/VoiceMembers.vue'
-
+import type { TabsItem } from '@nuxt/ui';
+import OverviewTab from '@/components/servers/manage/tabs/OverviewTab.vue'
+import GameOverview from '@/components/servers/manage/GameOverview.vue'
 
 const toast = useToast()
 
@@ -48,6 +58,13 @@ const { data: servers } = await useFetch(
     transform: (data: APIListServersV1_Compact[]) => data.map(({ id, name, groupId }) => ({ label: name, value: id, groupId })),
   }
 );
+
+const tabs: TabsItem[] = [
+  { label: 'Overview', value: 'overview' },
+  { label: 'Game View', value: 'live' },
+  { label: 'Console', value: 'console' },
+  { label: "Metrics", value: 'metrics' }
+]
 
 const live = reactive(useLiveServer(data.value!))
 

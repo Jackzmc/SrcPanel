@@ -6,7 +6,7 @@
         <!-- Title/desc -->
         <div class="flex flex-col">
           <h2 class="text-2xl font-bold">{{ server?.name }}</h2>
-          <p class="text-gray-600">
+          <p class="text-gray-600 dark:text-gray-400">
             {{ server?.ip }}:{{ server?.port }}
             <UTooltip text="Click to copy IP">
               <UIcon class="cursor-pointer" name="lucide-copy" @click="copyIp" />

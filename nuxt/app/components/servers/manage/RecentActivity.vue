@@ -11,7 +11,10 @@
         No recent activity has been recorded
       </UCard>
     </div>
-    <UCard v-if="isUnsupported" class="bg-sky-300 dark:bg-sky-500 my-1 mx-2">
+    <UCard v-if="isUnsupported"
+      class="bg-sky-300 dark:bg-sky-500 my-1 mx-2 text-sm"
+      :ui="{ body: 'p-4 md:p-4' }"
+    >
       Server does not support or is not configured for activity logs
     </UCard>
     <UAlert v-else-if="error" color="error"
