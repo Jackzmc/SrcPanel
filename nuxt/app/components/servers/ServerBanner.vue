@@ -1,5 +1,5 @@
 <template>
-  <div class="bg-light-blue p-4 rounded-2xl" :style="{ 'background-url': `url('~/assets/server-bg/550.png')` }">
+  <div class="bg-light-blue p-4 rounded-2xl">
     <div class="flex justify-between">
       <!-- Left side -->
       <div class="flex flex-col">
