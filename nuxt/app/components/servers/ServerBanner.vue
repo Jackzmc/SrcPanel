@@ -27,13 +27,14 @@
               :color="data.server.online ? 'success' : 'error'"
             >{{ data.server.online ? 'Online' : 'Offline' }}</UBadge>
             <!-- TODO: live status. hydration mismatch -->
-            <UBadge
-              :variant="liveStatusAttr.variant ?? 'solid'"
-              :color="liveStatusAttr.color ?? 'primary'"
-              :leading-icon="liveStatusAttr.leadingIcon"
-              :ui="liveStatusAttr.ui"
-              :class="liveStatusAttr.class"
-            >{{ liveStatusAttr.text }}</UBadge>
+            <UTooltip :text="liveStatusAttr.tooltipText">
+              <UBadge
+                :variant="liveStatusAttr.variant as any ?? 'solid'"
+                :color="liveStatusAttr.color as any ?? 'primary'"
+                :leading-icon="liveStatusAttr.leadingIcon"
+                :ui="liveStatusAttr.ui"
+              >{{ liveStatusAttr.text }}</UBadge>
+            </UTooltip>
             <UTooltip text="Server Id"><UBadge variant="outline" color="neutral">{{ data.server.id }}</UBadge></UTooltip>
           </ClientOnly>
         </div>
@@ -87,7 +88,7 @@ const liveStatusAttr = computed(() => {
         },
         variant: 'subtle',
         leadingIcon: 'lucide:loader-circle',
-        text: "Connecting"
+        text: "Connecting",
       }
     } else if(props.liveStatus == 'connected') {
       if(props.data.live != null) {
@@ -102,7 +103,8 @@ const liveStatusAttr = computed(() => {
           },
           variant: 'subtle',
           leadingIcon: 'lucide:radio',
-          text: "No Data"
+          text: "No Data",
+          tooltipText: 'Connected but no data received'
         }
       }
     }

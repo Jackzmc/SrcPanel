@@ -3,7 +3,9 @@
    <div class="grid grid-cols-3 gap-6">
      <!-- left column -->
      <div class="col-span-2 flex flex-col gap-4">
-      <ULink to="/admin/servers" class="text-primary">← back to manage servers list</ULink>
+      <div>
+        <ULink to="/admin/servers" class="text-primary">← back to manage servers list</ULink>
+      </div>
       <ServerBanner v-if="data" :data="data" :live-status="live.status" />
       <GameOverview v-if="data" :data="data" />
 
@@ -52,6 +54,9 @@ if (!data) createError({
   statusMessage: 'Server not found',
 })
 
+import live2 from '@/assets/test_data/live/live2.json'
+
+data.value!.live = live2 as any
 useHead({
   title: `${data.value?.server.name} - Server Info`
 })

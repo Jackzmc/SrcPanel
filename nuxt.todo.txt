@@ -31,3 +31,12 @@
   - finale info
     : stage
 - list of voice members
+
+
+tab 1:
+  console               console info
+tab 2:
+  game info             voice members
+  players / live
+tab 3: metrics
+  graphs                averages
