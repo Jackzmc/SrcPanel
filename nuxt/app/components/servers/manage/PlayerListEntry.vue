@@ -12,21 +12,7 @@
       }]"
     />
     <div class="flex flex-col w-full gap-1">
-      <span class="text-sm">{{ healthbar }}</span>
-      <div class="flex gap-0">
-        <UProgress :modelValue="healthbar.perm.value" :min="0" :max="healthbar.perm.value" :color="healthbar.color as any"
-          animation="elastic" class="rounded-none p-0 m-0 w-20"
-          :style="{ width: `${healthbar.permWidth}%` }"
-        />
-        <UProgress v-if="healthbar.temp" :modelValue="healthbar.temp.value" :min="0" :max="healthbar.temp.max" :color="healthbar.color as any"
-          animation="elastic" :class="['rounded-none p-0 m-0 opacity-25', {'temp-health': healthbar.temp.value > 0 }]"
-          :style="{ width: `${healthbar.tempWidth}%` }"
-        />
-        <!-- <UProgress v-if="healthbar.temp" :modelValue="0" :min="0" :max="100"
-          animation="elastic" :class="['rounded-none p-0 m-0 opacity-25']"
-          :style="{ width: `${100.0-healthbar.tempWidth}%` }"
-        /> -->
-      </div>
+      <HealthBarComponent :healthbar="healthbar" />
       <div class="flex justify-between items-center gap-4 text-nowrap">
         <!-- Name row (Name, #uid, BOT, IDLE) -->
         <span class="flex items-center gap-2">
@@ -62,21 +48,22 @@
             ·
           </template>
           <span>{{ playerStates.join(', ')}}</span>
-          ·
-          <span class="flex gap-1">
-            <UBadge v-for="item in items" :key="item" size="sm" color='neutral' variant="subtle">
-              {{ item }}
-            </UBadge>
-          </span>
+          <template v-if="items.length > 0">
+            ·
+            <span class="flex gap-1">
+              <UBadge v-for="item in items" :key="item" size="sm" color='neutral' variant="subtle">
+                {{ item }}
+              </UBadge>
+            </span>
+          </template>
         </div>
         <!-- Map flow progress on right side -->
-        <UTooltip v-if="client.survivor" text="Percent progress through map">
-         <div class="flex gap-1">
-           <b>{{ Math.round(client.survivor?.flowPercent*100) }}%</b>
+        <UTooltip v-if="client.survivor" text="Percentage of progress through map">
+         <div>
+           <b>{{ Math.round(client.survivor?.flowPercent*100) }}</b>
+           <span class="text-muted">% progress</span>
          </div>
         </UTooltip>
-      </div>
-      <div class="flex">
       </div>
     </div>
   </div>
@@ -85,6 +72,8 @@
 <script setup lang="ts">
 import { ClientState, InfectedClass, PlayerGameAction, PlayerMove, PlayerState, type LiveClient } from '@common/Live';
 import { IconText } from '#components';
+import type { HealthBar } from '#shared/types/server'
+import HealthBarComponent from './HealthBar.vue'
 
 const props = defineProps<{
   client: LiveClient
@@ -146,14 +135,7 @@ const imageSrc = computed(() => {
   return '/img/survivors/random.png'
 })
 
-const maxHealth = computed(() => {
-  if(!props.client.isAlive) return 0
-  if(props.client.survivor) return props.client.survivor.permHealth
-  if(props.client.infected) return props.client.infected.maxHealth || 100
-  return props.client.totalHealth
-})
-
-const healthbar = computed(() => {
+const healthbar = computed<HealthBar>(() => {
   const perm = {
     value: props.client.survivor?.permHealth ?? 0,
     max: props.client.infected?.maxHealth ?? 100.0,
@@ -161,14 +143,7 @@ const healthbar = computed(() => {
   const temp = props.client.survivor ? {
     value: props.client.survivor.tempHealth,
     max: 100.0,
-  } : null
-  const permWidth = Math.ceil(perm.value / perm.max * 100)
-  const tempWidth = 100.0 - permWidth
-
-  const perc = (perm.value / perm.max) * 100
-  let color = "success"
-  if(perc < 10.0) color = "error"
-  else if(perc < 30.0) color = "warning"
+  } : undefined
 
   const full = {
     value: perm.value + (temp?.value ?? 0),
@@ -179,10 +154,6 @@ const healthbar = computed(() => {
     perm,
     temp,
     full,
-
-    permWidth,
-    tempWidth,
-    color
   }
 })
 
