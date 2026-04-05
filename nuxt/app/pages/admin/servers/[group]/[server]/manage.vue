@@ -1,6 +1,6 @@
 <template>
   <div class="flex flex-col gap-4">
-    <ServerConsole :data="data" />
+    <ServerConsole :data="data" :logs="ws?.logs" />
 
     <UAlert color="warning"
       title="Console gives you full acess to the server with every command available to you. Every command you use does not run as you but as the server. Access is a privilege and every command used is logged."
@@ -17,9 +17,11 @@
 <script setup lang="ts">
 import type { ServerDetailed } from '@common/Server';
 import ServerConsole from '@/components/servers/ServerConsole.vue'
+import type { LiveExport } from '~/composables/server/live';
 
 const props = defineProps<{
   data: ServerDetailed;
+  ws: LiveExport
 }>()
 
 useHead({

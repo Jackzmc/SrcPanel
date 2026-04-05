@@ -76,12 +76,12 @@ const toast = useToast()
 
 const props = defineProps<{
   data: ServerDetailed,
-  liveStatus: LiveServerStatus
+  wsStatus: LiveServerStatus
 }>()
 
 const liveStatusAttr = computed(() => {
   if(import.meta.client) {
-      if(props.liveStatus == 'connecting') {
+      if(props.wsStatus == 'connecting') {
       return {
         ui: {
           leadingIcon: 'animate-spin'
@@ -90,7 +90,7 @@ const liveStatusAttr = computed(() => {
         leadingIcon: 'lucide:loader-circle',
         text: "Connecting",
       }
-    } else if(props.liveStatus == 'connected') {
+    } else if(props.wsStatus == 'connected') {
       if(props.data.live != null) {
         return {
           leadingIcon: 'lucide:radio',

@@ -6,7 +6,7 @@
       <div>
         <ULink to="/admin/servers" class="text-primary">← back to manage servers list</ULink>
       </div>
-      <ServerBanner v-if="data" :data="data" :live-status="live.status" />
+      <ServerBanner v-if="data" :data="data" :ws-status="ws.status" />
       <GameOverview v-if="data" :data="data" />
 
       <UTabs :default-value="activeTab" :items="tabs" :content="false" variant="pill"
@@ -18,8 +18,7 @@
         }"
       />
 
-      <NuxtPage v-if="data" :data="data" />
-
+      <NuxtPage v-if="data" :data="data" :ws="ws" />
      </div>
      <!-- right column -->
      <div class="col-span-1 flex flex-col gap-4 mt-10">
@@ -41,7 +40,7 @@
 <script setup lang="ts">
 import { type APIListServersV1_Compact, type ServerDetailed } from '@common/Server';
 import ServerBanner from '@/components/servers/ServerBanner.vue'
-import { useLiveServer } from '~/composables/server/live';
+import { useServerWebsocket } from '~/composables/server/live';
 import RecentActivity from '@/components/servers/manage/RecentActivity.vue'
 import type { TabsItem } from '@nuxt/ui';
 import GameOverview from '@/components/servers/manage/GameOverview.vue'
@@ -87,7 +86,7 @@ const activeTab = computed({
   }
 })
 
-const live = reactive(useLiveServer(data.value!))
+const ws = reactive(useServerWebsocket(data.value!))
 
 function onChangeServerSelected(id: string) {
   if(!servers.value) return
@@ -97,6 +96,6 @@ function onChangeServerSelected(id: string) {
 }
 
 onMounted(() => {
-  live.connect()
+  ws.connect()
 })
 </script>

@@ -5,7 +5,9 @@ const MAX_BACKOFF_MS = 1000 * 60 * 2
 
 export type LiveServerStatus = 'connecting' | 'connected' | 'disconnected'
 
-export function useLiveServer(data: ServerDetailed) {
+export type LiveExport = ReturnType<typeof useServerWebsocket>
+
+export function useServerWebsocket(data: ServerDetailed) {
   const status = ref<LiveServerStatus>('disconnected')
   const logs = ref<string[]>([])
   const voiceMembers = ref<VoiceUser[] | null>(data.voiceMembers ?? null)

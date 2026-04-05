@@ -1,15 +1,18 @@
 <template>
   <div>
+    <!-- Console Output -->
     <div class="bg-black dark:bg-blue-950 text-white h-80 rounded-t-md p-4 text-xs font-mono">
-      <div>
-        <IconText leading-icon="lucide:loader-circle" leading-icon-class="animate-spin" text="Fetching logs..." />
+      <div v-if="logs == undefined">
+        <IconText leading-icon="lucide:loader-circle" leading-icon-class="animate-spin" text="Fetching logs..."  class="text-neutral-300" />
       </div>
-      <div>
+      <div v-else-if="logs.length === 0" class="text-neutral-300">
         No current log entries. New entries will appear here as they are received.
       </div>
-
-
+      <span v-for="(entry, i) in logs" :key="i">
+        {{ entry }}
+      </span>
     </div>
+    <!-- Console Input -->
     <div class="flex">
       <UInput
         type="text"
@@ -34,7 +37,8 @@ import type { ServerDetailed } from '@common/Server';
 const modal = useModal()
 
 const props = defineProps<{
-  data: ServerDetailed
+  data: ServerDetailed,
+  logs?: string[]
 }>()
 
 const loading = ref(true)
