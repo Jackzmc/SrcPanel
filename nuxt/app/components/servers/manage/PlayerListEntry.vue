@@ -1,69 +1,102 @@
 <template>
-  <div
-    class="flex items-center gap-2 not-last:border-b border-b-neutral-300 py-2"
-  >
-    <img :src="imageSrc" alt="character"
-      :class="['w-8 h-8 rounded-full border-sold', {
-        'opacity-50': !client.isAlive,
-        'border-error': !client.isAlive,
-        'border-2': !client.isAlive,
-        'border': client.isAlive,
-        ' border-black': client.isAlive
-      }]"
-    />
-    <div class="flex flex-col w-full gap-1">
-      <HealthBarComponent :healthbar="healthbar" />
-      <div class="flex justify-between items-center gap-4 text-nowrap">
-        <!-- Name row (Name, #uid, BOT, IDLE) -->
-        <span class="flex items-center gap-2">
-          <span :class="[{'font-bold': client.isAlive, 'line-through': !client.isAlive, 'text-error': !client.isAlive}]">
-            {{ client.name }}
+  <div>
+    <div
+      class="flex items-center gap-2 not-last:border-b border-b-neutral-300 py-2"
+    >
+      <img :src="imageSrc" alt="character"
+        :class="['w-12 h-12 rounded-full border-sold', {
+          'opacity-50': !client.isAlive,
+          'border-error': !client.isAlive,
+          'border-2': !client.isAlive,
+          'border': client.isAlive,
+          ' border-black': client.isAlive
+        }]"
+      />
+      <!-- TODO: add btn for details / actions -->
+      <div class="flex flex-col w-full gap-1">
+        <HealthBarComponent v-if="client.isAlive" :healthbar="healthbar" />
+        <div class="flex justify-between items-center gap-4 text-nowrap">
+          <!-- Name row (Name, #uid, BOT, IDLE) -->
+          <span class="flex items-center gap-2">
+            <span :class="[{'font-bold': client.isAlive, 'line-through': !client.isAlive, 'text-error': !client.isAlive}]">
+              {{ client.name }}
+            </span>
+            <UTooltip text="User ID">
+              <span :class="client.isAlive ? 'text-muted' : 'text-error-300'">#{{ client.userid }}</span>
+            </UTooltip>
+            <UBadge v-if="isBot" size="xs">BOT</UBadge>
+            <UBadge v-if="!isBot && client.state & ClientState.Idle" size="xs" color="warning">IDLE</UBadge>
           </span>
-          <UTooltip text="User ID">
-            <span :class="client.isAlive ? 'text-muted' : 'text-error-300'">#{{ client.userid }}</span>
-          </UTooltip>
-          <UBadge v-if="isBot" size="xs">BOT</UBadge>
-          <UBadge v-if="!isBot && client.state & ClientState.Idle" size="xs" color="warning">IDLE</UBadge>
-        </span>
-        <!-- Health text -->
-        <span v-if="client.isAlive" class="text-sm w-20 text-right">
-          <b v-if="!client.survivor">{{ healthbar.full.value }}</b>
-          <template v-else>
-            <b>{{ healthbar.perm.value }} </b>
-            <span v-if="healthbar.temp && healthbar.temp.value > 0">
-              + <span class="font-semibold">{{ healthbar.temp.value }}</span>
-            </span>
-          </template>
+          <!-- Health text -->
+          <span class="flex items-center gap-1">
+            <span v-if="client.isAlive" class="text-sm w-20 text-right">
+              <b v-if="!client.survivor">{{ healthbar.full.value }}</b>
+              <template v-else>
+                <b>{{ healthbar.perm.value }} </b>
+                <span v-if="healthbar.temp && healthbar.temp.value > 0">
+                  + <span class="font-semibold">{{ healthbar.temp.value }}</span>
+                </span>
+              </template>
 
-          <span v-if="client.infected" class="text-muted"> / {{ healthbar.full.max }}</span>
-          <span class="text-muted"> HP</span>
-        </span>
-        <UBadge v-else size="xs" color="error">Dead</UBadge>
-      </div>
-      <div class="flex justify-between">
-        <div class="flex text-muted items-center gap-1">
-          <!-- <span v-for="state in states" :key="state">{{ state }}</span> -->
-          <template v-if="moveState">
-            <IconText :leading-icon="moveState.iconLeft" :trailing-icon="moveState.iconRight" :text="moveState.label" />
-            ·
-          </template>
-          <span>{{ playerStates.join(', ')}}</span>
-          <template v-if="items.length > 0">
-            ·
-            <span class="flex gap-1">
-              <UBadge v-for="item in items" :key="item" size="sm" color='neutral' variant="subtle">
-                {{ item }}
-              </UBadge>
+              <span v-if="client.infected" class="text-muted"> / {{ healthbar.full.max }}</span>
+              <span class="text-muted"> HP</span>
             </span>
-          </template>
+            <UBadge v-else size="xs" color="error">Dead</UBadge>
+            <UTooltip text="Show details">
+              <UButton size="xs" variant="outline" :leading-icon="showDetails ? 'lucide:chevron-up' : 'lucide:chevron-down'"
+                @click="showDetails = !showDetails">
+              </UButton>
+            </UTooltip>
+          </span>
         </div>
-        <!-- Map flow progress on right side -->
-        <UTooltip v-if="client.survivor" text="Percentage of progress through map">
-         <div>
-           <b>{{ Math.round(client.survivor?.flowPercent*100) }}</b>
-           <span class="text-muted">% progress</span>
-         </div>
-        </UTooltip>
+        <div class="flex justify-between">
+          <div class="flex text-muted items-center gap-1">
+            <!-- <span v-for="state in states" :key="state">{{ state }}</span> -->
+            <template v-if="moveState">
+              <IconText :leading-icon="moveState.iconLeft" :trailing-icon="moveState.iconRight" :text="moveState.label" />
+              ·
+            </template>
+            <span>{{ playerStates.join(', ')}}</span>
+            <template v-if="items.length > 0">
+              ·
+              <span class="flex gap-1">
+                <UBadge v-for="item in items" :key="item" size="sm" color='neutral' variant="subtle">
+                  {{ item }}
+                </UBadge>
+              </span>
+            </template>
+          </div>
+          <!-- Map flow progress on right side -->
+          <UTooltip v-if="client.survivor" text="Percentage of progress through map">
+           <div class="text-sm">
+             <b>{{ Math.round(client.survivor?.flowPercent*100) }}</b>
+             <span class="text-muted">% progress</span>
+           </div>
+          </UTooltip>
+        </div>
+      </div>
+    </div>
+    <div v-if="showDetails" class="bg-light-blue p-3 ml-6 border border-gray-200 flex flex-col gap-4">
+      <div>
+        <h3 class="text-md font-semibold">Details</h3>
+        <KeyValueTable class="my-2">
+          <KeyValueRow label="SteamID">
+            {{ client.steamid }}
+          </KeyValueRow>
+          <KeyValueRow label="User ID">
+            #{{ client.userid }} <span class="text-sm text-muted float-right">Changes each campaign</span>
+          </KeyValueRow>
+          <KeyValueRow label="Updated">
+            {{ getRelDate(client.timestamp) }}
+          </KeyValueRow>
+        </KeyValueTable>
+      </div>
+
+      <div>
+        <h3 class="text-md font-semibold">Actions</h3>
+        <div class="flex gap-4 flex-wrap mx-2 py-3">
+          <ActionButton v-for="action in actionButtons" :server-id="server.id" :action="action" show-hidden />
+        </div>
       </div>
     </div>
   </div>
@@ -74,10 +107,18 @@ import { ClientState, InfectedClass, PlayerGameAction, PlayerMove, PlayerState, 
 import { IconText } from '#components';
 import type { HealthBar } from '#shared/types/server'
 import HealthBarComponent from './HealthBar.vue'
+import KeyValueTable from '~/components/table/KeyValueTable.vue';
+import KeyValueRow from '~/components/table/KeyValueRow.vue';
+import { getRelDate } from '@common/methods/format';
+import ActionButton from '../ActionButton.vue';
+import type { ServerAction, ServerInfo } from '@common/Server';
 
 const props = defineProps<{
-  client: LiveClient
+  client: LiveClient,
+  server: ServerInfo
 }>()
+
+const showDetails = ref(false)
 
 const isBot = computed(() => {
   return props.client.steamid == 'BOT'
@@ -136,6 +177,12 @@ const imageSrc = computed(() => {
 })
 
 const healthbar = computed<HealthBar>(() => {
+  if(!props.client.isAlive) {
+    return {
+      perm: { value: 0.0, max: 100.0 },
+      full: { value: 0.0, max: 100.0 }
+    }
+  }
   const perm = {
     value: props.client.survivor?.permHealth ?? 0,
     max: props.client.infected?.maxHealth ?? 100.0,
@@ -179,6 +226,20 @@ const items = computed(() => {
   return props.client.survivor.items
     .filter(item => item != '')
     .map(item => item.replace(/_/g, ' '))
+})
+
+const actionButtons = computed(() => {
+  const actions: ServerAction[] = [
+    {
+      name: "Kick player",
+      command: `sm_kick #${props.client.userid}`,
+      permission: 'k',
+      description: 'Kick client',
+      // If set, prompt for confirmation before executing
+      isHidden: true
+    }
+  ]
+  return actions
 })
 </script>
 

@@ -48,6 +48,11 @@ async function executeAction() {
       cancelText: 'No',
     })
     if(!result) {
+      toast.add({
+        color: 'info',
+        description: 'Action cancelled',
+        duration: 1200
+      })
       loading.value = false
       return
     }

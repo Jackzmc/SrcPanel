@@ -133,11 +133,11 @@ export interface ServerAction {
   command: string,
   permission?: string,
   color?: string,
-  isHidden: boolean,
+  isHidden?: boolean,
   description?: string,
 
   inherited?: boolean,
-  showWhen: "any" | "online" | "offline",
+  showWhen?: "any" | "online" | "offline",
   requiresFeatures?: string[],
   inQuickAction?: boolean
 }

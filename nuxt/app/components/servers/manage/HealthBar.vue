@@ -28,7 +28,10 @@ const props = defineProps<{
 }>()
 
 
-const permWidth = computed(() => Math.ceil(props.healthbar.perm.value / props.healthbar.perm.max * 100))
+const permWidth = computed(() => {
+  if(props.healthbar.perm.value === 0) return 100.0
+  return Math.ceil(props.healthbar.perm.value / props.healthbar.perm.max * 100)
+})
 const tempWidth = computed(() => 100.0 - permWidth.value)
 const tempEmptyWidth = computed(() => 100.0 - permWidth.value - tempWidth.value)
 

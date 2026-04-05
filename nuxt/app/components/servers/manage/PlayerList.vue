@@ -2,6 +2,7 @@
   <div class="flex flex-col gap-1">
     <PlayerListEntry v-for="client in clients"
       :key="client.userid"
+      :server="data.server"
       :client="client"
     />
   </div>

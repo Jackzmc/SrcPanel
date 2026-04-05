@@ -38,14 +38,16 @@
       </div>
     </div>
     <template #footer>
-      <div class="bg-cyan-100 text-cyan-800 dark:bg-cyan-900 dark:text-cyan-200 text-xs px-4 py-1 flex justify-between">
-        <div v-if="campaignDuration">
-          Current campaign duration · {{ campaignDuration }}
+      <ClientOnly>
+        <div class="bg-cyan-100 text-cyan-800 dark:bg-cyan-900 dark:text-cyan-200 text-xs px-4 py-1 flex justify-between">
+          <div v-if="campaignDuration">
+            Current campaign duration · {{ campaignDuration }}
+          </div>
+          <div v-if="uptime != '-'">
+            Server uptime · {{ uptime }}
+          </div>
         </div>
-        <div v-if="uptime != '-'">
-          Server uptime · {{ uptime }}
-        </div>
-      </div>
+      </ClientOnly>
     </template>
   </UCard>
 </template>
