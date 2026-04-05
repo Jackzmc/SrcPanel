@@ -82,6 +82,33 @@ export function formatRelTime(relative: Date | number, pivot: Date = new Date(),
   return formatRelTimeDuration(elapsed, lang, style);
 }
 
+/**
+ * Given a date, returns compact difference in hours from pivot
+ * @param relative
+ * @param pivot
+ * @returns 1w 2d 1h 20m 40s
+ */
+export function formatRelTimeCompact(relative: Date | number, pivot: Date = new Date()) {
+  const relDate = relative instanceof Date ? relative : new Date(relative * 1000)
+  const abs = Math.abs(relDate.getTime() - pivot.getTime())
+
+  const w = Math.floor(abs / 604800000)
+  const d = Math.floor((abs % 604800000) / 86400000)
+  const h = Math.floor((abs % 86400000) / 3600000)
+  const m = Math.floor((abs % 3600000) / 60000)
+  const s = Math.floor((abs % 60000) / 1000)
+
+  const parts = [
+    w && `${w}w`,
+    d && `${d}d`,
+    h && `${h}h`,
+    m && `${m}m`,
+    s && `${s}s`,
+  ].filter(Boolean)
+
+  return parts.length ? parts.join(' ') : '0s'
+}
+
 export function convertSnakeToHuman(input: string) {
   return input.replace(/^_*(.)|_+(.)/g, (s, c, d) => c ? c.toUpperCase() : ' ' + d.toUpperCase())
 }

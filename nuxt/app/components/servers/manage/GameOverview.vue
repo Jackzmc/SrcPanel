@@ -1,9 +1,15 @@
 <template>
-  <UCard :ui="{ body: '!p-4 !sm:p-6 mx-2 py-0 my-0 !py-1' }">
+  <UCard :ui="{
+    body: '!p-4 !sm:p-6 mx-2 py-0 my-0 !py-1',
+    footer: 'p-0! rounded-b-4xl' }
+  ">
     <div class="flex gap-4">
-      <div  v-if="data.server.status.data" class="pr-20 my-2 border-r border-r-gray-200">
-        <h2 class="text-sm font-bold text-nowrap">Death Toll</h2>
-        <p class="text-xs text-nowrap">Chapter 5 - BoatHouse</p>
+      <div  v-if="data.server.status.data" class="min-w-3/12 my-2 border-r border-r-gray-200">
+        <h2 v-if="mapDetails?.name" class="text-sm font-bold text-nowrap">{{ mapDetails?.name }}</h2>
+        <h2 v-else-if="mapDetails" class="text-sm font-bold text-nowrap">{{ mapDetails.officialMap ? 'Official Map' : 'Custom Map' }}</h2>
+        <p class="text-xs text-nowrap">{{ mapDetails?.chapterName }} - Chapter {{ mapDetails?.chapterId }}</p>
+        <p v-if="mapDetails" class="text-xs text-nowrap"><code class="p-0! dark:bg-black!">{{ mapDetails.id }}</code></p>
+        <p v-else class="text-md text-muted">-</p>
       </div>
       <div v-else class="pr-20 my-2 border-r border-r-gray-200">
         <h2 class="text-sm font-bold text-nowrap">No Data</h2>
@@ -21,11 +27,6 @@
           <p v-else class="text-md text-muted">-</p>
         </div>
         <div class="flex flex-col items-center justify-center">
-          <p class="text-xs text-muted">Uptime</p>
-          <p v-if="data.live?.game" class="font-semibold text-md">{{ uptime }}d</p>
-          <p v-else class="text-md text-muted">-</p>
-        </div>
-        <div class="flex flex-col items-center justify-center">
           <p class="text-xs text-muted">Players</p>
           <p v-if="data.server.status.data" class="font-semibold text-md">0 / 4</p>
           <p v-else class="text-md text-muted">-</p>
@@ -36,11 +37,22 @@
         </div>
       </div>
     </div>
+    <template #footer>
+      <div class="bg-cyan-100 text-cyan-800 dark:bg-cyan-900 dark:text-cyan-200 text-xs px-4 py-1 flex justify-between">
+        <div v-if="campaignDuration">
+          Current campaign duration · {{ campaignDuration }}
+        </div>
+        <div v-if="uptime != '-'">
+          Server uptime · {{ uptime }}
+        </div>
+      </div>
+    </template>
   </UCard>
 </template>
 
 <script setup lang="ts">
 import { GameDifficulty } from '@common/Live';
+import { formatDate, formatRelTimeCompact } from '@common/methods/format';
 import type { ServerDetailed } from '@common/Server';
 
 const props = defineProps<{
@@ -49,10 +61,12 @@ const props = defineProps<{
 
 const uptime = computed(() => {
   if (!props.data.live?.game) return '-';
-  const now = new Date();
-  const started = new Date(props.data.live.game.startTime * 1000);
-  const diff = now.getTime() - started.getTime();
-  return Math.floor(diff / (1000 * 60 * 60 * 24));
+  return formatRelTimeCompact(props.data.live.game.startTime)
+})
+
+const campaignDuration = computed(() => {
+  if (!props.data.live?.game) return '-';
+  return formatRelTimeCompact(props.data.live.game.campaignStartTime)
 })
 
 const difficulty = computed(() => {
@@ -62,6 +76,41 @@ const difficulty = computed(() => {
     case GameDifficulty.Normal: return "Normal"
     case GameDifficulty.Advanced: return "Advanced"
     case GameDifficulty.Expert: return "Expert"
+  }
+})
+
+const OfficialCampaignNames = [
+  "Dead Center",
+  "Dark Carnival",
+  "Swamp Fever",
+  "Hard Rain",
+  "The Parish",
+  "The Passing",
+  "The Sacrifice",
+  "No Mercy",
+  "Crash Course",
+  "Death Toll",
+  "Dead Air",
+  "Blood Harvest",
+  "Cold Stream",
+  "The Last Stand"
+]
+
+const mapDetails = computed(() => {
+  if(!props.data.server.status.data?.map) return null
+  const match = props.data.server.status.data.map.match(/c(\d{1,2})m(\d)_(.*)/)
+  if(match && match.length == 4) {
+    return {
+      officialMap: true,
+      id: props.data.server.status.data?.map,
+      name: OfficialCampaignNames[Number(match[1]) - 1],
+      chapterId: match[2]!,
+      chapterName: match[3]!.charAt(0).toUpperCase() + match[3]!.slice(1)
+    }
+  }
+  return {
+    officialMap: false,
+    id: props.data.server.status.data?.map
   }
 })
 </script>
