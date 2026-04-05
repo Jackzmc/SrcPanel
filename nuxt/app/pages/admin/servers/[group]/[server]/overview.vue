@@ -1,6 +1,5 @@
 <template>
   <div class="flex flex-col gap-4">
-    <UCard>Game Info</UCard>
     <UCard>
       <PlayerList :data="props.data" />
     </UCard>

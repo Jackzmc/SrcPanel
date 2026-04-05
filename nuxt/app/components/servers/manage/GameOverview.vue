@@ -43,6 +43,9 @@
           <div v-if="campaignDuration">
             Current campaign duration · {{ campaignDuration }}
           </div>
+          <div v-if="finaleStageName">
+            Finale · {{ finaleStageName }}
+          </div>
           <div v-if="uptime != '-'">
             Server uptime · {{ uptime }}
           </div>
@@ -53,7 +56,7 @@
 </template>
 
 <script setup lang="ts">
-import { GameDifficulty } from '@common/Live';
+import { FinaleStage, GameDifficulty } from '@common/Live';
 import { formatDate, formatRelTimeCompact } from '@common/methods/format';
 import type { ServerDetailed } from '@common/Server';
 
@@ -98,6 +101,28 @@ const OfficialCampaignNames = [
   "The Last Stand"
 ]
 
+const FinaleStageName: Record<FinaleStage, string> = {
+    [FinaleStage.Gauntlet]: "Gauntlet",
+    [FinaleStage.Unknown]: "Not started",
+    [FinaleStage.Gauntlet2]: "Gauntlet",
+    [FinaleStage.HordeWave1]: "Horde Wave",
+    [FinaleStage.FirstBoss]: "First Tank",
+    [FinaleStage.GauntletHorde]: "Gauntlet: Horde",
+    [FinaleStage.GauntletHordeBonusTime]: "Gauntlet: Over Time",
+    [FinaleStage.GauntletHordeBossIncoming]: "Gauntlet: Tank Incoming",
+    [FinaleStage.GauntletBoss]: "Gauntlet: Tank",
+    [FinaleStage.GauntletEscape]: "Gauntlet: Escape",
+    [FinaleStage.GauntletStart]: "Gauntlet",
+    [FinaleStage.HordeWave2]: "Horde Wave",
+    [FinaleStage.FinalBoss]: "Final Boss",
+    [FinaleStage.CustomPanic]: "Panic",
+    [FinaleStage.CustomTank]: "Tank",
+    [FinaleStage.CustomScripted]: "Scripted",
+    [FinaleStage.CustomDelay]: "Intermission",
+    [FinaleStage.CustomClearout]: "Clearout",
+    [FinaleStage.HordeEscape]: "Horde Escape",
+}
+
 const mapDetails = computed(() => {
   if(!props.data.server.status.data?.map) return null
   const match = props.data.server.status.data.map.match(/c(\d{1,2})m(\d)_(.*)/)
@@ -114,5 +139,10 @@ const mapDetails = computed(() => {
     officialMap: false,
     id: props.data.server.status.data?.map
   }
+})
+
+const finaleStageName = computed(() => {
+  if(!props.data.live?.finale) return null
+  return FinaleStageName[props.data.live.finale.stage]
 })
 </script>
