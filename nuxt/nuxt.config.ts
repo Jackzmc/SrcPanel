@@ -65,6 +65,12 @@ export default defineNuxtConfig({
         'lucide:globe',
         'lucide:edit',
         'lucide:move-right',
+        'lucide:heart-pulse',
+        'lucide:hand',
+        'lucide:arrow-big-right',
+        'lucide:arrow-big-right-dash',
+        'lucide:eye-off',
+        'lucide:circle-small'
       ],
     },
   },
