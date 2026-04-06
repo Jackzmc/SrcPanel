@@ -6,7 +6,7 @@
       <div>
         <ULink to="/admin/servers" class="text-primary">← back to manage servers list</ULink>
       </div>
-      <ServerBanner v-if="data" :data="data" :ws-status="ws.status" />
+      <ServerBanner v-if="data" :data="data" :ws-status="ws.wsStatus" />
       <GameOverview v-if="data" :data="data" />
 
       <UTabs :default-value="activeTab" :items="tabs" :content="false" variant="pill"
@@ -18,7 +18,7 @@
         }"
       />
 
-      <NuxtPage v-if="data" :data="data" :ws="ws" />
+      <NuxtPage v-if="data" :data="data" :ws="ws" :ws-status="ws.wsStatus" :logs="ws.logs" />
      </div>
      <!-- right column -->
      <div class="col-span-1 flex flex-col gap-4 mt-10">
@@ -86,7 +86,8 @@ const activeTab = computed({
   }
 })
 
-const ws = reactive(useServerWebsocket(data.value!))
+const ws = useServerWebsocket(data.value!)
+provide('ws', ws)
 
 function onChangeServerSelected(id: string) {
   if(!servers.value) return

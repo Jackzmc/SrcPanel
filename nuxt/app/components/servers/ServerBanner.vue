@@ -70,13 +70,13 @@
 <script setup lang="ts">
 import type { ServerDetailed, ServerInfo } from '@common/Server';
 import ActionButton from '@/components/servers/ActionButton.vue'
-import type { LiveServerStatus } from '~/composables/server/live';
+import type { WebsocketStatus } from '~/composables/server/live';
 
 const toast = useToast()
 
 const props = defineProps<{
   data: ServerDetailed,
-  wsStatus: LiveServerStatus
+  wsStatus: WebsocketStatus
 }>()
 
 const liveStatusAttr = computed(() => {
@@ -93,6 +93,9 @@ const liveStatusAttr = computed(() => {
     } else if(props.wsStatus == 'connected') {
       if(props.data.live != null) {
         return {
+          ui: {
+            leadingIcon: 'animate-pulse animate-slow'
+          },
           leadingIcon: 'lucide:radio',
           text: "Live"
         }
@@ -128,3 +131,9 @@ async function copyIp() {
   })
 }
 </script>
+
+<style>
+.animate-slow {
+  animation-duration: 4s;
+}
+</style>

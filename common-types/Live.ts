@@ -369,12 +369,19 @@ export interface Annotation {
   yaxis: AnnotationY[]
 }
 
-export function updateLiveCache(cache: LiveDataCache | null, record: LiveRecord): LiveDataCache {
+export function updateLiveCache(cache: LiveDataCache | null, record: LiveRecord | null): LiveDataCache {
+  // Initialize cache
   if (!cache) cache = {
     lastUpdate: 0,
     clients: {},
     game: null,
   }
+
+  // Server is shutting down (empty record). Serve stale
+  if (!record) {
+    return cache
+  }
+
   cache.lastUpdate = Date.now()
   // If we get any other record, but we don't have the game we just ignore it
   switch (record.type) {
