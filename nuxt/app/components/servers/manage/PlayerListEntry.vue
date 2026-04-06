@@ -1,7 +1,7 @@
 <template>
-  <div>
+  <div class="not-last:border-b border-b-neutral-300">
     <div
-      class="flex items-center gap-2 not-last:border-b border-b-neutral-300 py-2"
+      class="flex items-center gap-2 py-2"
     >
       <img :src="imageSrc" alt="character"
         :class="['w-12 h-12 rounded-full border-sold', {
