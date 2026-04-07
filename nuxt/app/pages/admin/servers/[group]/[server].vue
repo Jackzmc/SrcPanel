@@ -6,7 +6,7 @@
       <div>
         <ULink to="/admin/servers" class="text-primary">← back to manage servers list</ULink>
       </div>
-      <ServerBanner v-if="data" :data="data" :ws-status="ws.wsStatus" />
+      <ServerBanner v-if="data" :data="data" :ws="ws" />
       <GameOverview v-if="data" :data="data" />
 
       <UTabs :default-value="activeTab" :items="tabs" :content="false" variant="pill"
@@ -40,7 +40,7 @@
 <script setup lang="ts">
 import { type APIListServersV1_Compact, type ServerDetailed } from '@common/Server';
 import ServerBanner from '@/components/servers/ServerBanner.vue'
-import { useServerWebsocket } from '~/composables/server/live';
+import { useServerWebsocket, type WebsocketExportProp } from '~/composables/server/live';
 import RecentActivity from '@/components/servers/manage/RecentActivity.vue'
 import type { TabsItem } from '@nuxt/ui';
 import GameOverview from '@/components/servers/manage/GameOverview.vue'
@@ -87,7 +87,6 @@ const activeTab = computed({
 })
 
 const ws = useServerWebsocket(data.value!)
-provide('ws', ws)
 
 function onChangeServerSelected(id: string) {
   if(!servers.value) return

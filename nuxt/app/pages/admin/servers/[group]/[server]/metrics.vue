@@ -26,15 +26,16 @@ import type { ServerDetailed } from '@common/Server';
 import type { MetricData, WebsocketExport, WebsocketExportProp } from '~/composables/server/live';
 import ApexCharts from "vue3-apexcharts";
 import type { ApexOptions } from 'apexcharts';
+import { Annotation } from '@common/Live';
 
 const props = defineProps<{
   data: ServerDetailed;
-  ws: WebsocketExportProp
+  ws: WebsocketExport
 }>()
 
 const metrics = computed(() => {
   if(!props.ws.metrics) return []
-  return props.ws.metrics.stats
+  return props.ws.metrics.value.stats
 })
 
 const latestMetric = computed(() => {
@@ -43,9 +44,8 @@ const latestMetric = computed(() => {
 })
 
 const annotations = computed(() => {
-  console.log(props.ws.metrics, props.ws.metrics.annotations)
-  if(!props.ws.metrics) return []
-  return props.ws.metrics.annotations
+  if(!props.ws.metrics.value) return { xaxis: [], yaxis: [] }
+  return props.ws.metrics.value.annotations
 })
 
 const memMax = computed(() => {

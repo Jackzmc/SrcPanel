@@ -8,7 +8,7 @@
     <template v-if="healthbar.temp">
       <!-- Always full, but width is based on how much temp health -->
       <UProgress v-if="healthbar.temp.value > 0" :modelValue="100" :min="0" :max="100" :color="color as any"
-        animation="elastic" class="rounded-none p-0 m-0 opacity-25 temp-health"
+        animation="elastic" class="rounded-none p-0 m-0 opacity-50 temp-health"
         :style="{ width: `${tempWidth}%` }"
       />
       <!-- Always empty, fills remaining space without temp-health styling -->
@@ -42,3 +42,34 @@ const color = computed(() => {
   return "success"
 })
 </script>
+
+
+<style>
+.temp-health {
+  height: 100%;
+  width: 100%;
+  background: #4caf50;
+  border-radius: 10px;
+  position: relative;
+}
+.temp-health::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: repeating-linear-gradient(
+    -45deg,
+    transparent 0px,
+    transparent 8px,
+    #000 11px,
+    #000 14px
+  );
+  background-size: 20px 100%; /* Every 10px creates a 2px wide tick */
+  pointer-events: none;
+  z-index: 2;
+  opacity: 0.75;
+}
+
+</style>

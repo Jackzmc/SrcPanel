@@ -1,6 +1,6 @@
 <template>
   <div class="flex flex-col gap-4">
-    <ServerConsole :data="data" :logs="logs" :ws-status="wsStatus" />
+    <ServerConsole :data="data" :ws="ws" />
 
     <UAlert color="warning"
       title="Console gives you full acess to the server with every command available to you. Every command you use does not run as you but as the server. Access is a privilege and every command used is logged."
@@ -21,9 +21,9 @@ import type { WebsocketExport, WebsocketExportProp, WebsocketStatus } from '~/co
 
 const props = defineProps<{
   data: ServerDetailed;
-  ws: WebsocketExportProp;
-  logs?: string[],
-  wsStatus: WebsocketStatus
+  ws: WebsocketExport;
+  // logs?: string[],
+  // wsStatus: WebsocketStatus
 }>()
 
 useHead({

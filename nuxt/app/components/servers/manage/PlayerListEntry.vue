@@ -242,33 +242,3 @@ const actionButtons = computed(() => {
   return actions
 })
 </script>
-
-<style>
-.temp-health {
-  height: 100%;
-  width: 100%;
-  background: #4caf50;
-  border-radius: 10px;
-  position: relative;
-}
-.temp-health::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-image: repeating-linear-gradient(
-    -45deg,
-    transparent 0px,
-    transparent 8px,
-    #000 11px,
-    #000 14px
-  );
-  background-size: 20px 100%; /* Every 10px creates a 2px wide tick */
-  pointer-events: none;
-  z-index: 2;
-  opacity: 0.50;
-}
-
-</style>

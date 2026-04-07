@@ -35,8 +35,8 @@
                 :ui="liveStatusAttr.ui"
               >{{ liveStatusAttr.text }}</UBadge>
             </UTooltip>
-            <UTooltip text="Server Id"><UBadge variant="outline" color="neutral">{{ data.server.id }}</UBadge></UTooltip>
           </ClientOnly>
+          <UTooltip text="Server Id"><UBadge variant="outline" color="neutral">{{ data.server.id }}</UBadge></UTooltip>
         </div>
         <!-- Actions -->
         <div class="flex gap-1">
@@ -70,18 +70,18 @@
 <script setup lang="ts">
 import type { ServerDetailed, ServerInfo } from '@common/Server';
 import ActionButton from '@/components/servers/ActionButton.vue'
-import type { WebsocketStatus } from '~/composables/server/live';
+import type { WebsocketExport, WebsocketExportProp, WebsocketStatus } from '~/composables/server/live';
 
 const toast = useToast()
 
 const props = defineProps<{
   data: ServerDetailed,
-  wsStatus: WebsocketStatus
+  ws: WebsocketExport
 }>()
 
 const liveStatusAttr = computed(() => {
   if(import.meta.client) {
-      if(props.wsStatus == 'connecting') {
+      if(props.ws.wsStatus.value == 'connecting') {
       return {
         ui: {
           leadingIcon: 'animate-spin'
@@ -90,7 +90,7 @@ const liveStatusAttr = computed(() => {
         leadingIcon: 'lucide:loader-circle',
         text: "Connecting",
       }
-    } else if(props.wsStatus == 'connected') {
+    } else if(props.ws.wsStatus.value == 'connected') {
       if(props.data.live != null) {
         return {
           ui: {

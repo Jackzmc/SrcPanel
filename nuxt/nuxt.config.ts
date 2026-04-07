@@ -70,7 +70,9 @@ export default defineNuxtConfig({
         'lucide:arrow-big-right',
         'lucide:arrow-big-right-dash',
         'lucide:eye-off',
-        'lucide:circle-small'
+        'lucide:circle-small',
+        'lucide:radio-off',
+        'lucide:radio'
       ],
     },
   },

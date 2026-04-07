@@ -2,17 +2,17 @@
   <div>
     <!-- Console Output -->
     <div class="bg-black dark:bg-blue-950 text-white h-80 rounded-t-md p-4 text-xs font-mono">
-      <div v-if="wsStatus == 'connecting'">
+      <div v-if="ws.wsStatus.value == 'connecting'">
         <IconText leading-icon="lucide:loader-circle" leading-icon-class="animate-spin" text="Fetching logs..."  class="text-neutral-300" />
       </div>
-      <div v-else-if="logs.length === 0" class="text-neutral-300">
+      <div v-else-if="ws.logs.value.length === 0" class="text-neutral-300">
         <IconText
           leading-icon="lucide:radio"
           leading-icon-class="animate-pulse"
           text="No logs to show, new entries will appear here as they are received."
           class="text-neutral-300" />
       </div>
-      <span v-for="(entry, i) in logs" :key="i">
+      <span v-for="(entry, i) in ws.logs.value" :key="i">
         {{ entry }}
       </span>
     </div>
@@ -24,7 +24,7 @@
         leading-icon="lucide:terminal"
         placeholder="Enter a command"
         :loading="commandLoading"
-        :disabled="wsStatus != 'connected' || !data.server.features.performCommands"
+        :disabled="ws.wsStatus.value != 'connected' || !data.server.features.performCommands"
         v-model="commandInput"
         :ui="{ root: 'w-full', base: 'py-2 px-2 rounded-none bg-black dark:bg-blue-950 text-white' }"
         @keyup.enter="sendCommand"
@@ -50,7 +50,7 @@
 import type { LiveRecordCommandResponse } from '@common/Live';
 import type { ServerDetailed } from '@common/Server';
 import { IconText } from '#components';
-import type { WebsocketExport, WebsocketStatus } from '~/composables/server/live';
+import type { WebsocketExport, WebsocketExportProp, WebsocketStatus } from '~/composables/server/live';
 
 const modal = useModal()
 const toast = useToast()
@@ -60,8 +60,7 @@ const emit = defineEmits<{
 
 const props = defineProps<{
   data: ServerDetailed,
-  logs: string[],
-  wsStatus: WebsocketStatus
+  ws: WebsocketExport
 }>()
 
 const commandLoading = ref(false)
