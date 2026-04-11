@@ -118,8 +118,12 @@ app.register(MiddleManager)
 
     if (hadSignal) return
     if (process.env.FLUXER_API_TOKEN) {
-      const bot = new FluxerBot(app.servers, app.cache, process.env.FLUXER_API_TOKEN as string)
-      await bot.init()
+      try {
+        const bot = new FluxerBot(app.servers, app.cache, process.env.FLUXER_API_TOKEN as string)
+        await bot.init()
+      } catch (err) {
+        app.log.error({}, "fluxer unavailable, error: ", err)
+      }
     }
 
     app.register(import('@fastify/rate-limit'), {

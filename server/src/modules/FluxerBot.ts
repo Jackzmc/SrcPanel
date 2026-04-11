@@ -7,11 +7,6 @@ import CacheManager from './CacheManager.js';
 import Logger from '../logger.js'
 const log = Logger.child({ name: "fluxer" })
 
-const CATEGORY_ID = process.env.FLUXER_VOICELINK_CATEGORY_ID
-if (!CATEGORY_ID) {
-  throw new Error("FLUXER_VOICELINK_CATEGORY_ID not set")
-}
-
 interface ChannelData {
   groupId: string,
   serverId: string,
@@ -29,7 +24,15 @@ export class FluxerBot {
   #category: CategoryChannel
   #guild: Guild
 
+  #categoryId: string
+
   constructor(serverManager: ServerManager, cacheManager: CacheManager, discordToken: string) {
+    const categoryId = process.env.FLUXER_VOICELINK_CATEGORY_ID
+    if (!this.#categoryId) {
+      throw new Error("FLUXER_VOICELINK_CATEGORY_ID not set")
+    }
+    this.#categoryId = categoryId!
+
     this.#cache = cacheManager
     this.#token = discordToken
     this.#servers = serverManager
@@ -86,7 +89,7 @@ export class FluxerBot {
     await this.load()
 
     this.#client.events.Ready(async () => {
-      const category = await this.#client.channels.fetch(CATEGORY_ID!)
+      const category = await this.#client.channels.fetch(this.#categoryId)
       if (!(category instanceof CategoryChannel)) {
         throw new Error("Category ID does not map to a category channel")
       }
