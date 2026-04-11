@@ -13,26 +13,26 @@ on:
   workflow_dispatch: {}
 
 env:
-  IMAGE_NAME: git.jackz.me/${{ github.repository_owner }}/admin-panel
+  IMAGE_NAME: https://git.jackz.me/${{ github.repository_owner }}/admin-panel
 
 jobs:
   build:
     runs-on: ubuntu-full
     steps:
-      - uses: git.jackz.me/actions/checkout@v4
+      - uses: https://git.jackz.me/actions/checkout@v4
       - name: Login to Container Registry
-        uses: git.jackz.me/actions/docker-login-action@v3
+        uses: https://git.jackz.me/actions/docker-login-action@v3
         with:
-          registry: git.jackz.me
+          registry: https://git.jackz.me
           username: ${{ github.repository_owner }}
           password: ${{ secrets.REGISTRY_TOKEN }}
       - name: Set up Docker Buildx
-        uses: git.jackz.me/actions/docker-setup-buildx-action@v3
+        uses: https://git.jackz.me/actions/docker-setup-buildx-action@v3
       # replace / with - for tag
       - name: Set ENV
         run: echo "TAG=${FORGEJO_REF_NAME////-}" >> "$GITHUB_ENV"
       - name: Build and push
-        uses: git.jackz.me/actions/docker-build-push-action@v6
+        uses: https://git.jackz.me/actions/docker-build-push-action@v6
         with:
           push: true
           context: . # need to keep .git folder
