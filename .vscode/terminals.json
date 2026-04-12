@@ -1,0 +1,17 @@
+{
+  "autorun": false,
+  "terminals": [
+    {
+      "name": "UI (Nuxt)",
+      "onlySingle": true,
+      "persistent": "ui",
+      "command": "cd nuxt; pnpm dev --host 127.0.0.1"
+    },
+    {
+      "name": "Server",
+      "onlySingle": true,
+      "persistent": "server",
+      "command": "cd server; pnpm dev"
+    }
+  ]
+}

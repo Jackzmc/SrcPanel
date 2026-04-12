@@ -6,7 +6,8 @@
       <div>
         <ULink to="/admin/servers" class="text-primary">← back to manage servers list</ULink>
       </div>
-      <ServerBanner v-if="data" :data="data" :ws="ws" />
+      <UAlert v-if="error" title="Cannot fetch server information" :description="error.message" color="error" />
+      <ServerBanner v-if="data&&ws" :data="data" :ws="ws" />
       <GameOverview v-if="data" :data="data" />
 
       <UTabs :default-value="activeTab" :items="tabs" :content="false" variant="pill"
@@ -18,7 +19,7 @@
         }"
       />
 
-      <NuxtPage v-if="data" :data="data" :ws="ws" :ws-status="ws.wsStatus" :logs="ws.logs" />
+      <NuxtPage v-if="data&&ws" :data="data" :ws="ws" :ws-status="ws.wsStatus" :logs="ws.logs" />
      </div>
      <!-- right column -->
      <div class="col-span-1 flex flex-col gap-4 mt-10">
@@ -47,17 +48,18 @@ import GameOverview from '@/components/servers/manage/GameOverview.vue'
 
 const { group: groupId, server: serverId } = useRoute().params;
 
-const { data } = await useFetch<ServerDetailed>(`/api/servers/${serverId}/data`, { key: 'servers.' + serverId });
-if (!data) createError({
+const { data, error } = await useFetch<ServerDetailed>(`/api/servers/${serverId}/data`, { key: 'servers.' + serverId });
+if (!data) throw createError({
   statusCode: 404,
   statusMessage: 'Server not found',
+  fatal: true
 })
 
 import live2 from '@/assets/test_data/live/live2.json'
 
-data.value!.live = live2 as any
+if(data.value) data.value.live = live2 as any
 useHead({
-  title: `${data.value?.server.name} - Server Info`
+  title: data.value ? `${data.value.server.name} - Server Info` : 'Server Info'
 })
 
 const { data: servers } = await useFetch(
@@ -86,7 +88,7 @@ const activeTab = computed({
   }
 })
 
-const ws = useServerWebsocket(data.value!)
+const ws = data.value ? useServerWebsocket(data.value) : null
 
 function onChangeServerSelected(id: string) {
   if(!servers.value) return
@@ -96,6 +98,6 @@ function onChangeServerSelected(id: string) {
 }
 
 onMounted(() => {
-  ws.connect()
+  ws?.connect()
 })
 </script>
