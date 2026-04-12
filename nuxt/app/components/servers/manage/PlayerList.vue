@@ -11,14 +11,16 @@
 <script setup lang="ts">
 import type { ServerDetailed } from '@common/Server';
 import PlayerListEntry from './PlayerListEntry.vue';
+import type { WebsocketExport } from '~/composables/server/live.js';
 
 const props = defineProps<{
   data: ServerDetailed
+  ws: WebsocketExport
 }>()
 
 const clients = computed(() => {
-  if(!props.data.live) return []
-  return Object.values(props.data.live.clients)
+  if(!props.ws.live.value?.clients) return []
+  return Object.values(props.ws.live.value.clients)
     .map((client) => {
       let team = 0
       if(client.survivor) team = 1

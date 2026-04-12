@@ -1,7 +1,7 @@
 <template>
   <div class="flex flex-col gap-4">
     <UCard>
-      <PlayerList :data="props.data" />
+      <PlayerList :data="props.data" :ws="ws" />
     </UCard>
   </div>
 
@@ -16,9 +16,11 @@
 import type { ServerDetailed } from '@common/Server';
 import VoiceMembers from '@/components/servers/manage/VoiceMembers.vue'
 import PlayerList from '@/components/servers/manage/PlayerList.vue'
+import type { WebsocketExport } from '~/composables/server/live.js';
 
 const props = defineProps<{
   data: ServerDetailed;
+  ws: WebsocketExport
 }>()
 
 useHead({

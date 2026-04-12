@@ -8,7 +8,9 @@
       </div>
       <UAlert v-if="error" title="Cannot fetch server information" :description="error.message" color="error" />
       <ServerBanner v-if="data&&ws" :data="data" :ws="ws" />
-      <GameOverview v-if="data" :data="data" />
+      <GameOverview v-if="data&&ws" :data="data" :ws="ws" />
+
+      <pre>{{ Object.values(ws?.live.value?.clients ?? {}) }}</pre>
 
       <UTabs :default-value="activeTab" :items="tabs" :content="false" variant="pill"
         @update:model-value="tab => navigateTo(`/admin/servers/${groupId}/${serverId}/${tab}`)"
@@ -57,7 +59,7 @@ if (!data) throw createError({
 
 import live2 from '@/assets/test_data/live/live2.json'
 
-if(data.value) data.value.live = live2 as any
+// if(data.value) data.value.live = live2 as any
 useHead({
   title: data.value ? `${data.value.server.name} - Server Info` : 'Server Info'
 })

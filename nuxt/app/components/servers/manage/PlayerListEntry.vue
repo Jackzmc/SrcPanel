@@ -54,11 +54,11 @@
             <!-- <span v-for="state in states" :key="state">{{ state }}</span> -->
             <template v-if="moveState">
               <IconText :leading-icon="moveState.iconLeft" :trailing-icon="moveState.iconRight" :text="moveState.label" />
-              ·
+              <span v-if="playerStates.length > 0">•</span>
             </template>
-            <span>{{ playerStates.join(', ')}}</span>
+            <span v-if="playerStates.length > 0">{{ playerStates.join(', ')}}</span>
+            <span v-if="items.length > 0">•</span>
             <template v-if="items.length > 0">
-              ·
               <span class="flex gap-1">
                 <UBadge v-for="item in items" :key="item" size="sm" color='neutral' variant="subtle">
                   {{ item }}
@@ -69,7 +69,7 @@
           <!-- Map flow progress on right side -->
           <UTooltip v-if="client.survivor" text="Percentage of progress through map">
            <div class="text-sm">
-             <b>{{ Math.round(client.survivor?.flowPercent*100) }}</b>
+             <b>{{ Math.round(client.survivor?.flowPercent) }}</b>
              <span class="text-muted">% progress</span>
            </div>
           </UTooltip>

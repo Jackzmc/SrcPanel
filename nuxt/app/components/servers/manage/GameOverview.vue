@@ -28,7 +28,10 @@
         </div>
         <div class="flex flex-col items-center justify-center">
           <p class="text-xs text-muted">Players</p>
-          <p v-if="data.server.status.data" class="font-semibold text-md">0 / 4</p>
+          <p v-if="ws.playerCount != undefined" class="text-md">
+            <span class="font-semibold">{{ ws.playerCount }}</span>
+             / 4
+          </p>
           <p v-else class="text-md text-muted">-</p>
         </div>
         <div class="flex flex-col items-center justify-center">
@@ -59,9 +62,11 @@
 import { FinaleStage, GameDifficulty } from '@common/Live';
 import { formatDate, formatRelTimeCompact } from '@common/methods/format';
 import type { ServerDetailed } from '@common/Server';
+import type { WebsocketExport } from '~/composables/server/live.js';
 
 const props = defineProps<{
   data: ServerDetailed;
+  ws: WebsocketExport
 }>()
 
 const uptime = computed(() => {

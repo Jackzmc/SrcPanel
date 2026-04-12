@@ -22,8 +22,14 @@ export function useServerWebsocket(data: ServerDetailed) {
   const voiceMembers = ref<VoiceUser[] | null>(data.voiceMembers ?? null)
   const metrics = ref<MetricData>({ stats: [], annotations: { xaxis: [], yaxis: [] } })
   const live = ref<LiveDataCache | null>(data.live)
-  // const auditLogs = ref<LogEntry[]>([])
 
+  const playerCount = computed(() => {
+    if(live.value) return Object.values(live.value.clients)
+        .filter(client => client.steamid != 'BOT')
+        .length
+    if(serverStatus.value) return serverStatus.value.data?.players.length
+    return null
+  })
 
   let socket: WebSocket | null = null;
   let reconnectTimeout: any = undefined;
@@ -34,7 +40,6 @@ export function useServerWebsocket(data: ServerDetailed) {
 
   function connect() {
     wsStatus.value = 'connecting'
-    // TODO: can't connect via nuxt server
     console.log('env', import.meta.env.NUXT_PUBLIC_API_PUBLIC_URL)
     let urlPrefix = `${window.location.protocol}//${window.location.host}`
     if (import.meta.dev && config.public.apiPublicUrl) {
@@ -145,6 +150,7 @@ export function useServerWebsocket(data: ServerDetailed) {
   onUnmounted(() => disconnect())
 
   return {
+    // REFS
     logs,
     wsStatus,
     serverStatus,
@@ -152,7 +158,12 @@ export function useServerWebsocket(data: ServerDetailed) {
     metrics,
     voiceMembers,
     live,
-    connect, disconnect, send
+    // COMPUTED
+    playerCount,
+    // METHODS
+    connect, 
+    disconnect, 
+    send
   }
 }
 
