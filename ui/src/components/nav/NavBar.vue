@@ -76,7 +76,7 @@
         </template>
         <template v-else-if="meta && !hideLogin">
           <div class="navbar-item">
-            <!-- <FluxerLoginButton :meta="meta" /> -->
+             <FluxerLoginButton :meta="meta" />
           </div>
           <div class="navbar-item">
             <SteamLoginButton :meta="meta" />

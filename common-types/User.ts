@@ -31,7 +31,7 @@ export interface UserData<T> extends BaseSession<T> {
 }
 export type ClientUserData = UserData<UserPrivilegeCode[]>
 
-export type OauthProvider = "discord"
+export type OauthProvider = "discord" | "fluxer"
 
 export interface OauthTokenResponse {
     access_token: string;
@@ -94,7 +94,7 @@ export const FLAGS: Record<string, string> = {
     't': 'Custom 6',
 }
 
-interface BaseAdminData<T,P> { 
+interface BaseAdminData<T,P> {
     id: number,
     name: string,
     permissions: AdminPermissions<P>
@@ -166,12 +166,12 @@ export interface APIUser extends APIPlayer {
     id: string,
 }
 /**
- * Represents a player / user entry. This entry may not be a real human, but a bot. 
+ * Represents a player / user entry. This entry may not be a real human, but a bot.
  * As such the id field can be null, and the name can be unknown.
  * At least ID or Name SHOULD exist
  */
 export interface APIPlayer {
-    /** The ID, typically SteamID2 of entry */ 
+    /** The ID, typically SteamID2 of entry */
     id: string | null,
     /** The name, if known of entry */
     name: string | null

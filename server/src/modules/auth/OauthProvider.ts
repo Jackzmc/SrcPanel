@@ -75,6 +75,11 @@ export class OauthProviderUser {
             },
             body: params
         })
+        const responseType = response.headers.get("content-type")
+        if(!responseType || !responseType.startsWith("application/json")) {
+            const txt = await response.text()
+            throw new Error("Invalid token exchange response: " + txt)
+        }
         if(response.ok) {
             const json: AccessTokenResponse = await response.json()
             this.#authData = {
