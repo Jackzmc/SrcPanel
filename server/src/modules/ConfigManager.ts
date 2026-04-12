@@ -68,11 +68,11 @@ export default class ConfigManager {
 
     const out: PanelConfig = {
       general: {
-        listen: raw.listen && {
-          host: raw.listen.host,
+        listen: raw.general.listen && {
+          host: raw.general.listen.host,
           port: listenPort
         },
-        public_url: raw.public_url
+        public_url: raw.general.public_url
       },
       discord: {
         link: raw.discord?.link
@@ -106,7 +106,7 @@ export default class ConfigManager {
     return {
       notice: this.#config.notice,
       stats_url: this.#config.stats_url,
-      domain: this.#config.general.public_url
+      domain: this.#config.general.public_url,
     }
   }
 
