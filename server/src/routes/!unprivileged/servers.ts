@@ -7,7 +7,7 @@ import { ClientOutPayload } from '../../../../common-types/ServerWebsocket.js';
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
 
-    fastify.get('/', (req: FastifyRequest<{Querystring: {'compact'?: boolean}}>, reply) =>  {
+    fastify.get('/', { logLevel: "warn" },  (req: FastifyRequest<{Querystring: {'compact'?: boolean}}>, reply) =>  {
         if(req.query.compact) {
             const servers = fastify.servers.getAll()
             reply.send(servers.map(server => {
@@ -38,7 +38,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         fastify.servers.resetInactivity()
     })
 
-    fastify.get('/v2', (req: FastifyRequest, reply) => {
+    fastify.get('/v2', { logLevel: "warn" },  (req: FastifyRequest, reply) => {
         const groups: APIListServersV2_Groups = Object.fromEntries(Object.entries(fastify.servers.GroupsRecord).map(([id, data]) => {
             return [id, {
                 name: data.Name,
@@ -64,7 +64,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         } as APIListServersV2)
         fastify.servers.resetInactivity()
     })
-    fastify.get('/v2/compact', (req: FastifyRequest, reply) => {
+    fastify.get('/v2/compact', { logLevel: "warn" }, (req: FastifyRequest, reply) => {
         const servers = fastify.servers.getAll().map((server, i) => {
             return {
                 id: server.id,
@@ -79,7 +79,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         fastify.servers.resetInactivity()
     })
 
-    fastify.get('/groups', async(req: FastifyRequest<{Querystring: { type?: string }}>, reply) => {
+    fastify.get('/groups', { logLevel: "warn" },  async(req: FastifyRequest<{Querystring: { type?: string }}>, reply) => {
         let groupsEntries = Object.entries(fastify.servers.GroupsRecord)
         if(req.query.type) {
             groupsEntries = groupsEntries.filter(([_, group]) => group.Type === req.query.type?.toLowerCase())
@@ -101,7 +101,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         } 
     })
 
-    fastify.get('/:id/ws', { websocket: true }, async (socket, req: FastifyRequest<{Params: {id: string}}>) => {
+    fastify.get('/:id/ws', { websocket: true, logLevel: "warn" }, async (socket, req: FastifyRequest<{Params: {id: string}}>) => {
         if(!req.user) return socket.close(4000, "NOT_AUTHENTICATED");
         const server = fastify.servers.getServer(req.params.id);
         if(!server) return socket.close(4000, "SERVER_NOT_FOUND");

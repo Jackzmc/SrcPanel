@@ -61,8 +61,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                     type: server.port,
                 }
             } catch(err) {
-                console.error(`[API::groups/${req.params.groupId}] ERROR: Failed to create instance:`, err)
-                reply.status(500).send({
+                req.log.error(`[groups/${req.params.groupId}] ERROR: Failed to create instance:`, err)
+                return reply.status(500).send({
                     error: "CREATE_ERROR",
                     message: err.message
                 })
