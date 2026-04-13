@@ -282,7 +282,7 @@ export default class DynamicServerManager {
           Config: {},
         },
         CpuShares: template.config.cpuShares,
-        Memory: template.config.memLimit,
+        Memory: template.config.memLimit ? 1024 * 1024 * template.config.memLimit : undefined,
       },
       User: template.config.user,
       Labels: {
