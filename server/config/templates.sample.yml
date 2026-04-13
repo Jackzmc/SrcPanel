@@ -12,3 +12,5 @@ my_template_id: # ID for template
     name: test[#%id%] - %port%
     type: l4d2
     cfgDir: "/home/jackz/Documents/Code/Projects/l4d2-admin-dash/server/data/servers/test/cfg"
+  # cpuShares:  # Optional, the cpu share ratio
+  # memLimit: 1024 # Optional, max memory in megabytes (SI) 
