@@ -25,7 +25,7 @@
               <span :class="client.isAlive ? 'text-muted' : 'text-error-300'">#{{ client.userid }}</span>
             </UTooltip>
             <UBadge v-if="isBot" size="xs">BOT</UBadge>
-            <UBadge v-if="!isBot && client.state & ClientState.Idle" size="xs" color="warning">IDLE</UBadge>
+            <UBadge v-if="!isBot && (client.state & ClientState.Idle) == ClientState.Idle" size="xs" color="warning">IDLE</UBadge>
           </span>
           <!-- Health text -->
           <span class="flex items-center gap-1">
@@ -170,7 +170,7 @@ const imageSrc = computed(() => {
     } else {
       return '/img/survivors/infected.png'
     }
-  } else if(props.client.survivor?.survivor) {
+  } else if(props.client.survivor?.survivor != undefined) {
     return `/img/survivors/${SURVIVOR_IDS[props.client.survivor.survivor]}.png`
   }
   return '/img/survivors/random.png'

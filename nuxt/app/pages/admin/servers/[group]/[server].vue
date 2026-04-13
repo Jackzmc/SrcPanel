@@ -10,8 +10,6 @@
       <ServerBanner v-if="data&&ws" :data="data" :ws="ws" />
       <GameOverview v-if="data&&ws" :data="data" :ws="ws" />
 
-      <pre>{{ Object.values(ws?.live.value?.clients ?? {}) }}</pre>
-
       <UTabs :default-value="activeTab" :items="tabs" :content="false" variant="pill"
         @update:model-value="tab => navigateTo(`/admin/servers/${groupId}/${serverId}/${tab}`)"
         :ui="{
