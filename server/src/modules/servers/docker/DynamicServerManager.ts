@@ -254,7 +254,6 @@ export default class DynamicServerManager {
     const config: ContainerCreateOptions = {
       name: `${DOCKER_NAME_PREFIX}-${templateId}-${port}`,
       Image: template.config.image,
-      AttachStdin: true,
       Tty: true,
       OpenStdin: true,
       // TODO: improve
@@ -282,7 +281,7 @@ export default class DynamicServerManager {
           Config: {},
         },
         CpuShares: template.config.cpuShares,
-        Memory: template.config.memLimit,
+        Memory: template.config.memLimit ? 1024 * 1024 * template.config.memLimit : undefined,
       },
       User: template.config.user,
       Labels: {

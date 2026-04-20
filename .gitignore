@@ -3,3 +3,6 @@
 test
 .yarn
 node_modules
+
+nuxt/.nuxt
+nuxt/.env

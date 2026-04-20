@@ -80,6 +80,15 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     }
   })
 
+  fastify.get('/fluxer', async (req, reply) => {
+    const inviteUrl = fastify.config.Config.fluxer?.link
+    if (!inviteUrl) {
+      reply.status(404).send("No fluxer invite link was set, sorry.")
+    } else {
+      reply.redirect(inviteUrl, 301)
+    }
+  })
+
   fastify.delete('/:steamid', async (req: FastifyRequest<{
     Params: { steamid: string }
   }>, reply) => {

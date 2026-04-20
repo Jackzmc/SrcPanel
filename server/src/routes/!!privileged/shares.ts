@@ -2,8 +2,7 @@ import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
 import FastifyMultipart from '@fastify/multipart'
 import { pipeline } from 'stream'
 import { promisify } from 'util'
-import { AddonInfo, ChildWorkshopItem, DetailsResponse, WorkshopItem } from '../../../../common-types/Share.js';
-import type { APIDownloadAddonsMessage } from '../../../../common-types/share/downloadWS.js'
+import { AddonCollectionInfo, AddonInfo, ChildWorkshopItem, DetailsResponse, WorkshopItem } from '../../../../common-types/Share.js';
 import { NO_PERMISSION } from '../../responses.js';
 import { UserPrivilegeCode } from '../../../../common-types/Privileges.js';
 import { createReadStream } from 'fs';
@@ -27,7 +26,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
   fastify.get('/workshop/:publishedfileid/details', async (req: FastifyRequest<{ Params: { publishedfileid: string } }>, reply): Promise<DetailsResponse> => {
     if (!req.user!.hasPermission("shares.addons.view")) return NO_PERMISSION(reply)
     const results = await fastify.steam.getItemDetails([req.params.publishedfileid])
-    if (results.length == 0) return { item: null, type: "none" }
+    if (results.length == 0) return { item: null }
     const children = await fastify.steam.getCollectionChildren(req.params.publishedfileid)
     const item = {
       ...results[0],
@@ -148,14 +147,24 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         message: `No share with id "${shareId!.toLowerCase()}" could be found. Share may be unavailable, incorrecty configured or does not exist`
       })
     }
+
+    let addons: (AddonInfo | AddonCollectionInfo)[]
+    try {
+      addons = await share.getAddons();
+    } catch (err) {
+      req.log.error({}, "getAddons error", err)
+      return reply.status(500).send({
+        error: "LIST_ADDONS_ERROR",
+        message: "Error occurred while returning list of addons"
+      })
+    }
     return {
-      addons: await share.getAddons(),
+      addons,
       shareInfo: {
         ...share.export(),
         appTitle: (share.appId ? await fastify.steam.getAppName(share.appId) : null),
       }
     }
-
   })
 
   fastify.get('/:shareId/addons/:filename', async (req: FastifyRequest<{ Params: { shareId: string, filename: string } }>, reply) => {
@@ -231,7 +240,6 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     reply.send()
   })
 
-  // TODO: major refactor, but at very least, fix the message types, it's terrible.
   fastify.get('/:shareId/addons/:filename/download', async (req: FastifyRequest<{ Params: { shareId: string, filename: string } }>, reply) => {
     // Filter out ../ or ..\
     const filename = req.params.filename.replace(/\.\.(\/|\\|$)+/, '')
@@ -307,7 +315,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
       if (!useSSE) return
       return reply.raw.write(`data: ${JSON.stringify(payload)}\n\n`)
     }
-    async function send(payload: APIDownloadAddonsMessage, statusCode: number) {
+    async function send(payload: any, statusCode: number) {
       if (useSSE) return sendSSE(payload)
       else return await reply.status(statusCode).send(payload)
     }
@@ -519,10 +527,9 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
           }
         }
       } catch (error) {
-        req.log.error({}, error.message)
         const payload = {
           code: 'STEAM_ERROR',
-          error: error.message,
+          error,
           message: "An error occurred while fetching info or downloading the addon",
         }
         await send(payload, 500)

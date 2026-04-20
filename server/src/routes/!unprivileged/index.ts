@@ -102,14 +102,14 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     })
   })
 
-  fastify.get('/meta', (req, reply): PanelMetaInfo => {
+  fastify.get('/meta', { logLevel: "warn" }, (req, reply): PanelMetaInfo => {
     return {
       settings: fastify.config.PublicMeta,
       steamAvailable: fastify.steam.SteamAvailable
     }
   })
 
-  fastify.get('/health', async (req, reply) => {
+  fastify.get('/health', { logLevel: "warn" }, async (req, reply) => {
     return {
       currentState: getUpdateState(),
       uptime: process.uptime(),

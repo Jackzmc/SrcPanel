@@ -31,7 +31,7 @@ export interface UserData<T> extends BaseSession<T> {
 }
 export type ClientUserData = UserData<UserPrivilegeCode[]>
 
-export type OauthProvider = "discord"
+export type OauthProvider = "discord" | "fluxer"
 
 export interface OauthTokenResponse {
   access_token: string;
@@ -170,6 +170,7 @@ export interface APIUser extends APIPlayer {
   steamid?: string
 }
 /**
+ * Represents a player / user entry. This entry may not be a real human, but a bot.
  * Represents a player / user entry. This entry may not be a real human, but a bot.
  * As such the id field can be null, and the name can be unknown.
  * At least ID or Name SHOULD exist

@@ -29,7 +29,7 @@ export class OauthManager {
         this.#authmngr = authManager
         this.#config = configManager
     }
-    
+
     /**
      * Returns an array of registered provider ids and names
      * @returns Promise<RegisteredProvider>
@@ -60,7 +60,7 @@ export class OauthManager {
             detailsUrl: provider.user_url,
             redirectUrl: `${domain}/api/auth/${providerName}/callback`
         }
-        
+
         const oauthConfig: OauthConfig = {
             clientId: provider.client_id,
             clientSecret: provider.client_secret,

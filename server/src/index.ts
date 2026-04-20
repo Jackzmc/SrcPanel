@@ -110,7 +110,7 @@ app.register(FastifyEtag)
 app.register(fastifyWebsocket)
 
 import MiddleManager from './middlewares/managers.js'
-import { DiscordBot } from './modules/DiscordBot.js'
+import { FluxerBot } from './modules/FluxerBot.js'
 import { sleep } from './util.js'
 import { log } from 'console'
 import { DataManagerInstance } from './modules/DataManager.js'
@@ -118,10 +118,14 @@ app.register(MiddleManager)
   .then(async () => {
     scheduleActivityLogPartition(app);
 
-    if (hadSignal) return
-    if (process.env.DISCORD_API_TOKEN) {
-      const bot = new DiscordBot(app.servers, app.cache, "data/server_voice_map.json", process.env.DISCORD_API_TOKEN as string)
+    if  (hadSignal) return
+    if  (process.env.FLUXER_API_TOKEN) {
+      try {
+      const bot = new FluxerBot(app.servers, app.cache, process.env.FLUXER_API_TOKEN as string)
       await bot.init()
+      } catch (err) {
+        app.log.error({}, "fluxer unavailable, error: ", err)
+      }
     }
 
     app.register(import('@fastify/rate-limit'), {
@@ -219,16 +223,16 @@ app.register(MiddleManager)
       process.exit(1)
     }
     ready = true
-  })
+})
 
 async function setupNotFound(app: FastifyInstance) {
-  // HACK: app.rateLimit isn't defined until a period of time (usually 1-3ms)
-  // Despite the github issue about it needing to be await'd, it still occurs
-  const TIMEOUT = 1000
-  const time = Date.now()
-  while (!app.rateLimit || Date.now() - time > TIMEOUT) {
-    await sleep(10)
-  }
+    // HACK: app.rateLimit isn't defined until a period of time (usually 1-3ms)
+    // Despite the github issue about it needing to be await'd, it still occurs
+    const TIMEOUT = 1000
+    const time = Date.now()
+    while(!app.rateLimit || Date.now() - time > TIMEOUT) {
+        await sleep(10)
+    }
 
   // If exceed timeout, just let it crash from the error, just in case it magically worked anyway
   app.setNotFoundHandler({

@@ -38,142 +38,142 @@ const routes: RouteRecordRaw[] = [
       topLevel: true,
     },
     children: [
-        {
-          name: "docs-commands",
-          path: 'commands/:command?',
-          component: () => import('../views/docs/CommandsView.vue'),
-          meta: {
-            title: 'Commands',
-            description: 'All the information to have fun, and manage those troublemakers',
-            icon: "fa-asterisk",
-            nav: {
-              section: 0
-            }
+      {
+        name: "docs-commands",
+        path: 'commands/:command?',
+        component: () => import('../views/docs/CommandsView.vue'),
+        meta: {
+          title: 'Commands',
+          description: 'All the information to have fun, and manage those troublemakers',
+          icon: "fa-asterisk",
+          nav: {
+            section: 0
           }
-        },
-        {
-          name: "docs-cvars",
-          path: 'cvars',
-          component: () => import('../views/docs/CvarsView.vue'),
-          meta: {
-            title: 'Cvars',
-            description: 'All the cvars you may want to change up the gameplay',
-            icon: "fa-wrench",
-            nav: {
-              section: 0
-            }
+        }
+      },
+      {
+        name: "docs-cvars",
+        path: 'cvars',
+        component: () => import('../views/docs/CvarsView.vue'),
+        meta: {
+          title: 'Cvars',
+          description: 'All the cvars you may want to change up the gameplay',
+          icon: "fa-wrench",
+          nav: {
+            section: 0
           }
-        },
-        {
-          name: "docs-maps",
-          path: 'maps',
-          component: () => import('../views/docs/MapsView.vue'),
-          meta: {
-            title: "L4D2 Maps",
-            description: "A list of all L4D2 official maps and a random map picker",
-            nav: {
-              section: 1
-            }
+        }
+      },
+      {
+        name: "docs-maps",
+        path: 'maps',
+        component: () => import('../views/docs/MapsView.vue'),
+        meta: {
+          title: "L4D2 Maps",
+          description: "A list of all L4D2 official maps and a random map picker",
+          nav: {
+            section: 1
           }
-        },
-        {
-          name: 'docs-ftt',
-          path: 'ftt',
-          component: () => import('../views/docs/FeedTheTrollsView.vue'),
-          meta: {
-            title: 'Feed The Trolls',
-            description: 'The anti-troll arsenal',
-            nav: {
-              section: 1
-            }
+        }
+      },
+      {
+        name: 'docs-ftt',
+        path: 'ftt',
+        component: () => import('../views/docs/FeedTheTrollsView.vue'),
+        meta: {
+          title: 'Feed The Trolls',
+          description: 'The anti-troll arsenal',
+          nav: {
+            section: 1
           }
-        },
-        {
-          name: 'docs-5plus',
-          path: 'extraplayers',
-          component: () => import('../views/docs/ExtraPlayersView.vue'),
-          meta: {
-            title: '5+ Games',
-            description: 'How to setup 5+ games, including 8 player lobbies',
-            nav: {
-              section: 1
-            }
+        }
+      },
+      {
+        name: 'docs-5plus',
+        path: 'extraplayers',
+        component: () => import('../views/docs/ExtraPlayersView.vue'),
+        meta: {
+          title: '5+ Games',
+          description: 'How to setup 5+ games, including 8 player lobbies',
+          nav: {
+            section: 1
           }
-        },
-        {
-          name: 'docs-targetting',
-          path: 'targetting',
-          component: () => import('../views/docs/PlayerTargettingView.vue'),
-          meta: {
-            title: 'Player Targetting',
-            nav: {
-              section: 1
-            }
+        }
+      },
+      {
+        name: 'docs-targetting',
+        path: 'targetting',
+        component: () => import('../views/docs/PlayerTargettingView.vue'),
+        meta: {
+          title: 'Player Targetting',
+          nav: {
+            section: 1
           }
-        },
-        {
-          name: 'docs-notes',
-          path: 'notes',
-          component: () => import('../views/docs/NotesView.vue'),
-          meta: {
-            title: "Player Notes",
-            description: "Information about the player notes feature",
-            nav: {
-              section: 1
-            }
+        }
+      },
+      {
+        name: 'docs-notes',
+        path: 'notes',
+        component: () => import('../views/docs/NotesView.vue'),
+        meta: {
+          title: "Player Notes",
+          description: "Information about the player notes feature",
+          nav: {
+            section: 1
           }
-        },
-        {
-          name: 'docs-props',
-          path: 'props',
-          component: () => import('../views/docs/PropSpawnerView.vue'),
-          meta: {
-            title: "Prop Spawner",
-            description: "Cheat sheat on how to use the new prop spawner",
-            nav: {
-              section: 1
-            }
+        }
+      },
+      {
+        name: 'docs-props',
+        path: 'props',
+        component: () => import('../views/docs/PropSpawnerView.vue'),
+        meta: {
+          title: "Prop Spawner",
+          description: "Cheat sheat on how to use the new prop spawner",
+          nav: {
+            section: 1
           }
-        },
-        {
-          name: "docs-rules",
-          path: 'rules',
-          component: () => import('../views/docs/RulesAndInfoView.vue'),
-          meta: {
-            title: 'Procedures & Rules',
-            description: "Because it's necessary",
-            nav: {
-              section: 1
-            }
+        }
+      },
+      {
+        name: "docs-rules",
+        path: 'rules',
+        component: () => import('../views/docs/RulesAndInfoView.vue'),
+        meta: {
+          title: 'Procedures & Rules',
+          description: "Because it's necessary",
+          nav: {
+            section: 1
           }
-        },
-        {
-          name: "docs-keybinds",
-          path: 'keybinds',
-          component: () => import('../views/docs/KeybindsView.vue'),
-          meta: {
-            title: "Keybinds",
-            description: "List of all L4D2 keybind codes and tool to create keybinds",
-            icon: "keyboard",
-            nav: {
-              section: 2
-            }
+        }
+      },
+      {
+        name: "docs-keybinds",
+        path: 'keybinds',
+        component: () => import('../views/docs/KeybindsView.vue'),
+        meta: {
+          title: "Keybinds",
+          description: "List of all L4D2 keybind codes and tool to create keybinds",
+          icon: "keyboard",
+          nav: {
+            section: 2
           }
-        },
-        {
-          name: "docs-tutorials",
-          path: 'tutorials/:id?',
-          alias: 'tutorial/:id?',
-          component: () => import('../views/docs/TutorialsView.vue'),
-          meta: {
-            title: "Tutorials",
-            description: "Tutorials on how to use the admin panel",
-            icon: "circle-question",
-            nav: {
-              section: 2
-            }
+        }
+      },
+      {
+        name: "docs-tutorials",
+        path: 'tutorials/:id?',
+        alias: 'tutorial/:id?',
+        component: () => import('../views/docs/TutorialsView.vue'),
+        meta: {
+          title: "Tutorials",
+          description: "Tutorials on how to use the admin panel",
+          icon: "circle-question",
+          nav: {
+            section: 2
           }
-        },
+        }
+      },
     ]
   },
   {
@@ -189,7 +189,7 @@ const routes: RouteRecordRaw[] = [
       topLevel: true,
     },
     children: [
-            {
+      {
         name: 'logs-audit',
         path: 'audit/:aroundId?',
         component: () => import('../views/admin/AuditLogsView.vue'),
@@ -343,7 +343,7 @@ const routes: RouteRecordRaw[] = [
               title: 'Manage User',
               authRequired: true
             },
-            redirect: { name: "manage-user-overview"},
+            redirect: { name: "manage-user-overview" },
             children: [
               {
                 name: "manage-user-default",
@@ -387,7 +387,7 @@ const routes: RouteRecordRaw[] = [
           }
         ]
       },
-            {
+      {
         name: 'bans',
         path: 'bans',
         alias: '/bans',
@@ -475,12 +475,12 @@ const routes: RouteRecordRaw[] = [
         }
       },
       {
-        name: "Discord",
-        path: "discord",
-        redirect: "/api/admins/discord",
+        name: "Fluxer",
+        path: "fluxer",
+        redirect: "/api/admins/fluxer",
         meta: {
-          icon: "fab fa-discord",
-          description: "Link to the discord server",
+          icon: "fa-message",
+          description: "Link to the fluxer.app server",
           nav: {
             isExternalLink: true,
             section: 1
@@ -558,7 +558,7 @@ const routes: RouteRecordRaw[] = [
       icon: "fa-calendar",
       authRequired: true,
       // nav: {
-        
+
       // },
       topLevel: true
     },
@@ -629,7 +629,7 @@ const router = createRouter({
 })
 
 router.beforeEach((to, from) => {
-  if(to.meta.authRequired) {
+  if (to.meta.authRequired) {
     // return "/login-required?return=" + encodeURIComponent(to.fullPath)
   }
 })
