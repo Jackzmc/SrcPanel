@@ -254,7 +254,6 @@ export default class DynamicServerManager {
     const config: ContainerCreateOptions = {
       name: `${DOCKER_NAME_PREFIX}-${templateId}-${port}`,
       Image: template.config.image,
-      AttachStdin: true,
       Tty: true,
       OpenStdin: true,
       // TODO: improve
