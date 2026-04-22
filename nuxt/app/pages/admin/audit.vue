@@ -143,7 +143,7 @@ import { type APILogData, type APILogQueryResult, type LogEntry } from '@common/
 import { TYPE_MAP } from '#shared/types/logs'
 import type { APIListPlayersResponse } from '@common/User';
 import debounce from '@common/methods/debounce';
-import { type InputMenuItem, type SelectItem } from '@nuxt/ui';
+import type { InputMenuItem, SelectItem } from '@nuxt/ui';
 
 const toast = useToast()
 /// How often to check for new entries
