@@ -1,7 +1,7 @@
 packages:
   - ui
   - server
-  - rewrite
+  - nuxt
 ignoredBuiltDependencies:
   - cpu-features
   - protobufjs
