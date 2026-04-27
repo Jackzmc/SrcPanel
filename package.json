@@ -7,8 +7,5 @@
                 }
             }
         }
-    },
-    "dependencies": {
-        "lucide-svelte": "^0.574.0"
     }
 }

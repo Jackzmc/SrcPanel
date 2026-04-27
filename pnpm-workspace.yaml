@@ -1,5 +1,5 @@
 packages:
-  - ui
+  - common-types
   - server
   - nuxt
 ignoredBuiltDependencies:

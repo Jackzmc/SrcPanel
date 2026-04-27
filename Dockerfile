@@ -5,44 +5,65 @@ ENV PATH="$PNPM_HOME:$PATH"
 
 WORKDIR /app
 
-# Build time dependencies
+# Use Corepack for pnpm
 RUN apt-get update && apt-get install -y git
 RUN corepack enable pnpm && corepack install -g pnpm@latest-10
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
+COPY common-types common-types/
 
-COPY pnpm-lock.yaml pnpm-workspace.yaml ./
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm fetch --frozen-lockfile
+RUN pnpm store path 
+RUN --mount=type=cache,target=/pnpm/store pnpm fetch --frozen-lockfile -r
 
-# Setup dependencies
-FROM base AS prod-deps
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --prod --offline  -r
+# Builder stage for Nuxt UI
+FROM base AS builder-ui
+WORKDIR /app
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
+COPY common-types common-types/
+COPY nuxt nuxt/
 
-FROM base AS build
-COPY . /app
-COPY .git/ .git/
-RUN pnpm install -r --offline
+RUN --mount=type=cache,target=/pnpm/store pnpm install --frozen-lockfile --offline
+WORKDIR /app/nuxt
+RUN pnpm build
 
-# Build
-RUN cd /app/ui/ && pnpm build
-RUN cd /app/server/ && pnpm build
+# Builder stage for Server
+FROM base AS builder-server
+WORKDIR /app
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
+COPY common-types common-types/
+COPY server server/
 
-FROM $IMAGE AS prod
+RUN --mount=type=cache,target=/pnpm/store pnpm install --frozen-lockfile --offline
+WORKDIR /app/server
+RUN pnpm build
 
-# not sure if can improve 
+
+# Production image for Server
+FROM $IMAGE AS final-server
+
 RUN apt-get update && apt-get install -y curl && apt-get clean
 
-COPY --from=prod-deps --chown=node /app/node_modules /app/node_modules
-
-COPY --from=build --chown=node /app/server /app/server
-COPY --from=build --chown=node /app/ui/dist /app/ui
-
-# RUN chown -R node:node /app
-
 WORKDIR /app
-
+COPY --from=builder-server /app/node_modules ./node_modules
+COPY --from=builder-server /app/server ./server/
+COPY --from=base /app/common-types ./common-types
 
 ENV NODE_ENV=production
-ENV STATIC_PATH=/app/ui/
+
+# We run as root - needs docker access anyway
 
 EXPOSE 8080
 EXPOSE 7676
-CMD ["node", "/app/server/dist/server/src/index.js"]
+CMD ["node", "--abort-on-uncaught-exception", "--trace-warnings", "server/dist/server/src/index.js"]
+
+# Production image for Nuxt UI
+FROM $IMAGE AS final-ui
+WORKDIR /app
+COPY --from=builder-ui /app/node_modules ./node_modules
+COPY --from=builder-ui /app/nuxt/ ./ui/
+COPY --from=base /app/common-types common-types/
+
+WORKDIR /app/ui
+
+EXPOSE 3000
+CMD ["./.output/server/index.mjs"]
+# CMD ["serve", "-s", "-p", "3000", "dist"]
