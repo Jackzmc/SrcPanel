@@ -65,5 +65,8 @@ COPY --from=base /app/common-types common-types/
 WORKDIR /app/ui
 
 EXPOSE 3000
+ENV NITRO_HOST=0.0.0.0
+ENV NITRO_PORT=3000
+ENV NUXT_PUBLIC_API_PUBLIC_URL=http://localhost:8080
 CMD ["./.output/server/index.mjs"]
 # CMD ["serve", "-s", "-p", "3000", "dist"]
