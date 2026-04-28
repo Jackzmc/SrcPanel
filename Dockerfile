@@ -53,20 +53,23 @@ ENV NODE_ENV=production
 
 EXPOSE 8080
 EXPOSE 7676
-CMD ["node", "--abort-on-uncaught-exception", "--trace-warnings", "server/dist/server/src/index.js"]
+CMD ["node", "--abort-on-uncaught-exception", "server/dist/server/src/index.js"]
 
 # Production image for Nuxt UI
 FROM $IMAGE AS final-ui
 WORKDIR /app
-COPY --from=builder-ui /app/node_modules ./node_modules
-COPY --from=builder-ui /app/nuxt/ ./ui/
-COPY --from=base /app/common-types common-types/
+USER node
+COPY --from=builder-ui --chown=node /app/node_modules ./node_modules
+COPY --from=builder-ui --chown=node /app/nuxt/ ./ui/
+COPY --from=base --chown=node /app/common-types common-types/
 
 WORKDIR /app/ui
 
 EXPOSE 3000
 ENV NITRO_HOST=0.0.0.0
 ENV NITRO_PORT=3000
-ENV NUXT_PUBLIC_API_PUBLIC_URL=http://localhost:8080
+ENV NUXT_API_INTERNAL_URL=http://localhost:8080
+ENV NUXT_PUBLIC_API_PUBLIC_URL=
+ENV NUXT_PUBLIC_API_AUTH_URL=http://localhost:8080
 CMD ["./.output/server/index.mjs"]
 # CMD ["serve", "-s", "-p", "3000", "dist"]

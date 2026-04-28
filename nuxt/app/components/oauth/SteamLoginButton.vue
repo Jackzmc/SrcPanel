@@ -26,7 +26,7 @@ const config = useRuntimeConfig()
 const uiOrigin = `${url.protocol}//${url.host}`
 // In dev, apiPublicUrl points to Fastify directly so it sets the cookie itself.
 // In prod, it's empty and falls back to same origin (nginx handles /api proxy).
-const apiOrigin = config.public.apiPublicUrl || uiOrigin
+const apiOrigin = config.public.apiAuthUrl || config.public.apiPublicUrl || uiOrigin
 
 const redirectUri = computed(() => {
   return `${apiOrigin}/api/auth/steam/callback?return_uri=${uiOrigin}${url.pathname}`

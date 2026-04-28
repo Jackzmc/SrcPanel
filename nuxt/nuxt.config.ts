@@ -84,12 +84,13 @@ export default defineNuxtConfig({
       // In dev, steam auth must go directly to the API server so Fastify sets
       // the session cookie itself (same localhost, shared across ports).
       // In prod, nginx proxies /api so this should be left unset/empty.
-      apiPublicUrl: ''
+      apiPublicUrl: '',
+      apiAuthUrl: '' // same as apiPublicUrl if not set
     },
   },
 
   routeRules: {
-    '/': { prerender: true, }
+    '/docs/**': { prerender: true, }
   },
 
 
@@ -98,7 +99,7 @@ export default defineNuxtConfig({
   nitro: {
     routeRules: {
       '/api/_nuxt_icon/**': {},
-      '/api/**': { proxy: 'http://localhost:8081/api/**' }
+      // '/api/**': { proxy: 'http://localhost:8081/api/**' }
     }
   },
 
@@ -108,5 +109,5 @@ export default defineNuxtConfig({
         braceStyle: '1tbs',
       }
     }
-  },
+  }
 })

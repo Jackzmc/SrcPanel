@@ -1,13 +1,13 @@
 <template>
   <a v-if="props.meta" type="submit" :class="['button','has-text-white','is-dark',{'is-large': size === 'large', 'is-medium': size === 'medium', 'is-small': size === 'small'}]" style="background-color:#5865F2" :href="loginUri">
-    <Icon leading-icon="fab fa-discord">Login with Discord</Icon>
+    <IconText leading-icon="fab fa-discord">Login with Discord</IconText>
   </a>
 </template>
 
 <script setup lang="ts">
 import { inject, computed} from 'vue'
 import { useRoute } from 'vue-router'
-import { PanelMetaInfo } from '../../../../common-types/Panel.js';
+import type { PanelMetaInfo } from '../../../../common-types/Panel.js';
 const route = useRoute()
 
 const props = defineProps<{

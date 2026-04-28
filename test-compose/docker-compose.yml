@@ -1,0 +1,48 @@
+services:
+  server:
+    image: git.jackz.me/jackz/admin-panel-server:latest
+    pull_policy: never
+    env_file: .env
+    volumes:
+      - ../server/config:/app/server/config:r
+      - ../server/data:/app/server/data
+      - /home/jackz/Games/left4dead2/addons/workshop:/home/jackz/Games/left4dead2/addons/workshop
+      - /home/jackz/Documents/Sourcepawn/scripting:/home/jackz/Documents/Sourcepawn/scripting
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      NODE_ENV: staging
+      LISTEN_HOST: 0.0.0.0
+      LISTEN_PORT: 8080
+      DOCKER_SERVER_READ_ONLY: 1
+    ports:
+      - 8081:8080
+      - 7889:7888
+    cpu_shares: 256
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+        reservations:
+          memory: 256M
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  ui:
+    image: git.jackz.me/jackz/admin-panel-ui:latest
+    pull_policy: never
+    environment:
+      NUXT_API_INTERNAL_URL: http://server:8080
+      NUXT_PUBLIC_API_AUTH_URL: http://localhost:8081
+      NUXT_PUBLIC_API_PUBLIC_URL: ""
+    ports:
+      - 3000:3000
+    cpu_shares: 256
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+        reservations:
+          memory: 256M
+
