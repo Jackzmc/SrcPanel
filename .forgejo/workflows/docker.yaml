@@ -3,7 +3,7 @@ on:
   push:
     paths:
       - 'server/**'
-      - 'ui/**'
+      - 'nuxt/**'
       - 'common-types/**'
       - '.forgejo/workflows/docker.yaml'
       - Dockerfile
@@ -19,7 +19,8 @@ jobs:
   build:
     runs-on: ubuntu-full
     steps:
-      - uses: https://git.jackz.me/actions/checkout@v4
+      - name: Checkout
+        uses: https://git.jackz.me/actions/checkout@v4
       - name: Login to Container Registry
         uses: https://git.jackz.me/actions/docker-login-action@v3
         with:
@@ -31,22 +32,21 @@ jobs:
       # replace / with - for tag
       - name: Set ENV
         run: echo "TAG=${FORGEJO_REF_NAME////-}" >> "$GITHUB_ENV"
-      - name: Build and push
+      - name: Build and push (server)
         uses: https://git.jackz.me/actions/docker-build-push-action@v6
         with:
           push: true
           context: . # need to keep .git folder
           cache-from: type=registry,ref=${{ env.IMAGE_NAME }}:buildcache
           cache-to: type=registry,ref=${{ env.IMAGE_NAME }}:buildcache,mode=max
-          tags: ${{ env.IMAGE_NAME }}:${{ env.TAG }}
-  # deploy:
-  #   runs-on: ubuntu-full
-  #   needs: build
-  #   if: forge.ref == 'refs/heads/master' || forge.ref == 'refs/heads/release'
-  #   steps:
-  #     - name: Update container (staging)
-  #       if: ${{ github.ref == 'refs/heads/master' }}
-  #       run: ssh deploy@${{ secrets.REMOTE_HOST }}  -C "docker compose -f /data/stacks/admin-panel-staging/docker-compose.yml up -d --pull always --quiet-pull"
-  #     - name: Update container (production)
-  #       if: ${{ github.ref == 'refs/heads/release' }}
-  #       run: ssh deploy@${{ secrets.REMOTE_HOST }}  -C "docker compose -f /data/stacks/admin-panel-production/docker-compose.yml up -d --pull always --quiet-pull"
+          tags: ${{ env.IMAGE_NAME }}-server:${{ env.TAG }}
+          target: final-server
+      - name: Build and push (ui)
+        uses: https://git.jackz.me/actions/docker-build-push-action@v6
+        with:
+          push: true
+          context: . # need to keep .git folder
+          cache-from: type=registry,ref=${{ env.IMAGE_NAME }}:buildcache
+          cache-to: type=registry,ref=${{ env.IMAGE_NAME }}:buildcache,mode=max
+          tags: ${{ env.IMAGE_NAME }}-ui:${{ env.TAG }}
+          target: final-ui
