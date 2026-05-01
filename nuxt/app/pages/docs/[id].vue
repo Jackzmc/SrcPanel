@@ -21,7 +21,7 @@
                             </div>
                             <div v-if="data.body.toc&&data.body.toc.links.length > 0" class="not-last:border-b border-b-neutral-300 flex flex-col justify-between">
                                 <IconText leading-icon="lucide:table-of-contents"><b>Sections</b></IconText>
-                                <UContentToc title=" " :links="data.body.toc.links" :ui="{container:'w-max !py-0',root:'!p-0 !ml-2'}">
+                                <UContentToc title=" " :links="data.body.toc.links" :ui="{container:'w-max !py-0',root:'!p-0 !mx-2'}">
                                     <template #link="slotProps">
                                         {{ Array(slotProps.link.depth).fill('#').join('') }} {{ slotProps.link.text }}
                                     </template>
