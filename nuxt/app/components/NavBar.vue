@@ -1,5 +1,5 @@
 <template>
-  <UHeader title="admin.jackz.me">
+  <UHeader>
     <template #left>
       <strong class="text-white font-sans text-2xl">JzPanel</strong>
       <UNavigationMenu
