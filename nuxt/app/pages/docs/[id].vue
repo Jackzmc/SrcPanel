@@ -5,7 +5,7 @@
             <div class="grid grid-cols-3 gap-4">
                 <ContentRenderer class="col-span-2" :value="data" />
                 <div>
-                    <UCard class="w-max">
+                    <UCard class="w-max sticky top-20">
                         <div class="flex flex-col gap-2">
                             <span class="flex justify-between gap-4 pb-2 not-last:border-b border-b-neutral-300">
                                 <IconText leading-icon="lucide:calendar"><b>Updated</b></IconText>
@@ -19,14 +19,13 @@
                                   </li>
                                 </ul>
                             </div>
-                            <div v-if="data.body.toc" class="pb-2 not-last:border-b border-b-neutral-300 flex flex-col justify-between">
+                            <div v-if="data.body.toc" class="not-last:border-b border-b-neutral-300 flex flex-col justify-between">
                                 <IconText leading-icon="lucide:table-of-contents"><b>Sections</b></IconText>
-                                <ul class="list-none list-inside ml-2">
-                                  <li v-for="entry in data.body.toc.links" :key="entry.id" class="flex gap-1">
-                                    <span class="text-muted">#</span>
-                                    <a :href="`#${entry.id}`" class="text-info whitespace-break-spaces">{{ entry.text }}</a>
-                                  </li>
-                                </ul>
+                                <UContentToc title=" " :links="data.body.toc.links" :ui="{container:'w-max !py-0',root:'!p-0 !ml-2'}">
+                                    <template #link="slotProps">
+                                        {{ Array(slotProps.link.depth).fill('#').join('') }} {{ slotProps.link.text }}
+                                    </template>
+                                </UContentToc>
                             </div>
                         </div>
                     </UCard>
