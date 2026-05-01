@@ -150,10 +150,6 @@ const ROUTES = computed<NavigationMenuItem[]>(() => [
     icon: "ri:file-line",
     children: [
       {
-        href: "/docs/maps",
-        label: "L4D2 Maps"
-      },
-      {
         href: "/docs/ftt",
         label: "Feed The Trolls",
         icon: ""
@@ -173,6 +169,11 @@ const ROUTES = computed<NavigationMenuItem[]>(() => [
         href: "/docs/cvars",
         label: "Cvars",
         icon: "ri:settings-2-line"
+      },
+      {
+        href: "/docs/maps",
+        label: "L4D2 Maps",
+        icon: 'ri:map'
       },
       {
         href: "/docs/keybinds",
