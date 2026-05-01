@@ -38,7 +38,10 @@
 
 <script setup lang="ts">
 const route = useRoute()
-const { data } = await useAsyncData(() => queryCollection('docs').path(route.path).first())
+const { data } = await useAsyncData(
+    `docs-${route.params.id}`,
+    () => queryCollection('docs').path(route.path).first()
+)
 if(!data.value) {
     throw createError({ statusCode: 404, statusMessage: 'Page not found' })
 }
