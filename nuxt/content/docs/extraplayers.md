@@ -35,9 +35,3 @@ It is not necessary to make an 8 player lobby, any lobby will work, this just al
         </p>
     </div>
 </article>
-
-#sidebar
-
-::u-button{href="https://steamcommunity.com/sharedfiles/filedetails/?id=2276071285",variant="outline"}
-8 Player Lobby Addon - Workshop Page
-::
