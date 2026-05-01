@@ -149,8 +149,20 @@ const ROUTES = computed<NavigationMenuItem[]>(() => [
   },
   {
     label: "Docs",
-    description: "Simple tools",
+    description: "Documentation pages for various things",
     icon: "lucide:book",
+    children: docs.map(doc => {
+      return {
+        href: doc.path,
+        label: doc.title,
+        // icon: doc.icon
+      }
+    })
+  },
+  {
+    label: "Tools",
+    description: "Simple tools",
+    icon: "lucide:component",
     children: [
       {
         href: "/docs/commands",
@@ -178,18 +190,6 @@ const ROUTES = computed<NavigationMenuItem[]>(() => [
         icon: "ri:question-fill"
       }
     ]
-  },
-    {
-    label: "Tools",
-    description: "Documentation pages for various things",
-    icon: "lucide:component",
-    children: docs.map(doc => {
-      return {
-        href: doc.path,
-        label: doc.title,
-        // icon: doc.icon
-      }
-    })
   },
   ...(isLoggedIn.value ? [ADMIN_DROPDOWN] : []),
   {
