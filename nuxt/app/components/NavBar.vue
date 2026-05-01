@@ -10,9 +10,9 @@
         variant="pill"
         class="navbar"
         :ui="{
-          link: 'text-white',
+          link: 'text-white group',
           linkTrailingBadge: 'bg-black',
-          linkLeadingIcon: 'text-white',
+          linkLeadingIcon: 'text-white light:group-data-[active]:text-black',
         }"
       />
     </template>

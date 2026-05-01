@@ -5,9 +5,9 @@
             <div class="grid grid-cols-3 gap-4">
                 <ContentRenderer class="col-span-2" :value="data" />
                 <div>
-                    <UCard class="w-max sticky top-20">
+                    <UCard v-if="sidebar" class="w-max sticky top-20">
                         <div class="flex flex-col gap-2">
-                            <span class="flex justify-between gap-4 pb-2 not-last:border-b border-b-neutral-300">
+                            <span v-if="data.updated" class="flex justify-between gap-4 pb-2 not-last:border-b border-b-neutral-300">
                                 <IconText leading-icon="lucide:calendar"><b>Updated</b></IconText>
                                 <span>{{ data.updated }}</span>
                             </span>
@@ -19,7 +19,7 @@
                                   </li>
                                 </ul>
                             </div>
-                            <div v-if="data.body.toc" class="not-last:border-b border-b-neutral-300 flex flex-col justify-between">
+                            <div v-if="data.body.toc&&data.body.toc.links.length > 0" class="not-last:border-b border-b-neutral-300 flex flex-col justify-between">
                                 <IconText leading-icon="lucide:table-of-contents"><b>Sections</b></IconText>
                                 <UContentToc title=" " :links="data.body.toc.links" :ui="{container:'w-max !py-0',root:'!p-0 !ml-2'}">
                                     <template #link="slotProps">
@@ -44,6 +44,14 @@ const { data } = await useAsyncData(
 if(!data.value) {
     throw createError({ statusCode: 404, statusMessage: 'Page not found' })
 }
+
+const sidebar = computed(() => {
+    return data.value && (
+        data.value.updated
+        || data.value.links
+        || (data.value.body.toc && data.value.body.toc.links.length > 0)
+    )
+})
 
 useSeoMeta({
     title: data.value.title,
