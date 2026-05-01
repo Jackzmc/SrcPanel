@@ -13,7 +13,8 @@ export default defineContentConfig({
         links: z.array(z.object({
             href: z.string(),
             label: z.string()
-        })).optional()
+        })).optional(),
+        icon: z.string().optional()
       })
     })
   }

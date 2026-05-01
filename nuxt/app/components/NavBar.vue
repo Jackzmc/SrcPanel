@@ -58,6 +58,8 @@ import SteamLoginButton from './oauth/SteamLoginButton.vue'
 
 const { user, isLoggedIn, logout } = useAuth()
 
+const docs = await queryCollection("docs").all()
+
 const USER_DROPDOWN: DropdownMenuItem[][] = [
   [
     {
@@ -142,23 +144,13 @@ const ROUTES = computed<NavigationMenuItem[]>(() => [
   {
     href: "/",
     label: "Overview",
-    description: "Server status & instructions"
-  },
-  {
-    href: "/docs",
-    label: "Info",
-    icon: "ri:file-line",
-    children: [
-      {
-        href: "/docs/ftt",
-        label: "Feed The Trolls",
-        icon: ""
-      }
-    ]
+    description: "Server status & instructions",
+    icon: "lucide:house"
   },
   {
     label: "Docs",
-    description: "Documentation",
+    description: "Simple tools",
+    icon: "lucide:book",
     children: [
       {
         href: "/docs/commands",
@@ -173,7 +165,7 @@ const ROUTES = computed<NavigationMenuItem[]>(() => [
       {
         href: "/docs/maps",
         label: "L4D2 Maps",
-        icon: 'ri:map'
+        icon: 'ri:map-line'
       },
       {
         href: "/docs/keybinds",
@@ -187,10 +179,23 @@ const ROUTES = computed<NavigationMenuItem[]>(() => [
       }
     ]
   },
+    {
+    label: "Tools",
+    description: "Documentation pages for various things",
+    icon: "lucide:component",
+    children: docs.map(doc => {
+      return {
+        href: doc.path,
+        label: doc.title,
+        // icon: doc.icon
+      }
+    })
+  },
   ...(isLoggedIn.value ? [ADMIN_DROPDOWN] : []),
   {
     label: "Links",
     description: "External links",
+    icon: "lucide:link",
     children: EXTERNAL_LINKS
   },
   { href: "/discuss", label: "Discuss", description: "Admin panel discussions" },
