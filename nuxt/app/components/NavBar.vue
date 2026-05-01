@@ -157,7 +157,12 @@ const ROUTES = computed<NavigationMenuItem[]>(() => [
         label: doc.title,
         // icon: doc.icon
       }
-    })
+    }).concat([
+      {
+        href: "/docs/info",
+        label: "Rules & Procedures"
+      }
+    ])
   },
   {
     label: "Tools",

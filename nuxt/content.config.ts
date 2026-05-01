@@ -16,6 +16,14 @@ export default defineContentConfig({
         })).optional(),
         icon: z.string().optional()
       })
+    }),
+    docs_rules: defineCollection({
+      type: 'page',
+      source: 'docs/rules/*.md',
+      schema: z.object({
+        title: z.string(),
+        type: z.enum(["rule", "procedure"])
+      })
     })
   }
 })
