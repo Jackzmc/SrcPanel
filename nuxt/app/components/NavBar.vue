@@ -1,5 +1,5 @@
 <template>
-  <UHeader>
+  <UHeader :ui="{ container: 'max-w-none' }">
     <template #left>
       <strong class="text-white font-sans text-2xl">JzPanel</strong>
       <UNavigationMenu
