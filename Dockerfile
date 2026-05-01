@@ -20,6 +20,7 @@ WORKDIR /app
 COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
 COPY common-types common-types/
 COPY nuxt nuxt/
+COPY .git .git/
 
 RUN --mount=type=cache,target=/pnpm/store pnpm install --frozen-lockfile --offline
 WORKDIR /app/nuxt
