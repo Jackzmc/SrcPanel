@@ -159,9 +159,13 @@ const ROUTES = computed<NavigationMenuItem[]>(() => [
       }
     }).concat([
       {
+        href: "/docs/ftt",
+        label: "Feed The Trolls",
+      },
+      {
         href: "/docs/info",
         label: "Rules & Procedures"
-      }
+      },
     ])
   },
   {
