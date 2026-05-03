@@ -24,7 +24,7 @@
         placeholder="Search"
         icon="ri:search-2-line"
       />
-      <UColorModeButton class="text-white" />
+      <UColorModeButton class="light:text-white hover:light:text-muted" />
       <template v-if="isLoggedIn">
         <UDropdownMenu
           :items="userDropdown"
