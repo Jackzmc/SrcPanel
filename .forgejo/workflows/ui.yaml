@@ -12,7 +12,7 @@ on:
   workflow_dispatch: {}
 
 env:
-  IMAGE_NAME: git.jackz.me/${{ github.repository_owner }}/admin-panel
+  BASE_IMAGE_NAME: git.jackz.me/${{ github.repository_owner }}/admin-panel
 
 jobs:
   build:
@@ -36,7 +36,7 @@ jobs:
         with:
           push: true
           context: . # need to keep .git folder
-          cache-from: type=registry,ref=${{ env.IMAGE_NAME }}-ui:buildcache
-          cache-to: type=registry,ref=${{ env.IMAGE_NAME }}-ui:buildcache,mode=max
-          tags: ${{ env.IMAGE_NAME }}-ui:${{ env.TAG }}
+          cache-from: type=registry,ref=${{ env.BASE_IMAGE_NAME }}-ui:buildcache
+          cache-to: type=registry,ref=${{ env.BASE_IMAGE_NAME }}-ui:buildcache,mode=max
+          tags: ${{ env.BASE_IMAGE_NAME }}-ui:${{ env.TAG }}
           target: final-ui
