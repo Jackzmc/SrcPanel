@@ -23,5 +23,6 @@
     }
   ],
   "ignorePaths": ["ui/**"]
-  "labels": ["dependencies"]
+  "labels": ["dependencies"],
+  "patch": { "enabled": false }
 }
