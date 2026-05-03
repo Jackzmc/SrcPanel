@@ -15,9 +15,7 @@
                 "src/*"
             ]
         },
-        "strictNullChecks": true,
-        "baseUrl": "./src",
-        // "incremental": true
+        "strictNullChecks": true
     },
     "include": [
         "src/**/*",
