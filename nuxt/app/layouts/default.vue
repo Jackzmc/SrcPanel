@@ -1,5 +1,10 @@
 <template>
   <div>
+    <UBanner
+      icon="i-lucide-circle-alert"
+      color="warning"
+      title="Pre-release build - Features are not complete or are missing, bugs may occur, nothing is final.""
+    />
     <NavBar />
     <!-- Notification banners -->
     <UBanner

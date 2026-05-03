@@ -1,6 +1,10 @@
 @import "tailwindcss";
 @import "@nuxt/ui";
 
+:root:not(.dark) {
+  --ui-warning: var(--ui-color-warning-400);
+}
+
 .icon-text {
   vertical-align: -0.125rem;
   margin-right: .1rem;
@@ -26,6 +30,7 @@
 
 @theme static {
   --font-sans: 'Public Sans', sans-serif;
+  
 
   --color-green-50: #EFFDF5;
   --color-green-100: #D9FBE8;
