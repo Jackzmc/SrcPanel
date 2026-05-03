@@ -8,9 +8,6 @@
           <UContainer>
             <UInput v-model="searchQuery" class="w-full" icon="i-lucide-search" placeholder="Search for a cvar" />
           </UContainer>
-          <div v-if="error" class="bg-error-50 p-6 my-6">
-            {{ error }}
-          </div>
           <ul class="py-6">
             <li v-for="cvar in filteredCvars" :key="cvar.name" class="p-1 hover:bg-neutral-100 hover:dark:text-black w-full text-left">
               <strong class="text-lg font-semibold">
@@ -88,7 +85,8 @@ import Hero from '~/components/Hero.vue'
 import { parseCommandString } from '@common/methods/cmds/util'
 import CmdArg from "~/components/commands/CmdArg.vue"
 
-declare const __BUILD_DATE__: string
+import CVAR_DATA from '~/assets/data/cvars.json'
+const cvars = CVAR_DATA as RawCvar[]
 
 interface RawCvar {
   cvar: string,
@@ -98,15 +96,9 @@ interface RawCvar {
 
 const searchQuery = ref<string>("")
 
-// Lets server fetch in SSR
-const baseURL = import.meta.server
-  ? useRequestURL().origin
-  : useRuntimeConfig().app.baseURL
-const { data: cvars, error } = await useFetch<RawCvar[]>(`/data/cvars.json?t=${__BUILD_DATE__}`, { key: "cvars", immediate: true, baseURL })
-
 const parsedCvars = computed(() => {
-  if(!cvars.value) return []
-  return cvars.value.map(cvar => {
+  if(!cvars) return []
+  return cvars.map(cvar => {
     const result = parseCommandString(cvar.cvar)
     return {
       name: result.name,

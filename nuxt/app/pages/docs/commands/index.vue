@@ -9,9 +9,6 @@
           <UContainer>
             <UInput v-model="searchQuery" class="w-full" icon="i-lucide-search" placeholder="Search for a command" />
           </UContainer>
-          <div v-if="error" class="bg-error-50 p-6 my-6">
-            {{ error }}
-          </div>
           <div v-for="(group, groupId) in filteredGroups" :key="groupId" class="py-6">
             <h3 class="text-xl font-semibold text-center text-primary">
               {{ group.name }}
@@ -127,7 +124,8 @@ import type { SelectItem } from '@nuxt/ui'
 import { parseCommand, type Command } from '@common/methods/cmds/util'
 import type { CommandGroups } from '@common/methods/cmds/data'
 
-declare const __BUILD_DATE__: string
+import CMD_DATA from '~/assets/data/commands.json'
+const groups = CMD_DATA as CommandGroups
 
 const VISIBILITIES: SelectItem[] = [
   { value: "sm_", label: "console" },
@@ -138,15 +136,9 @@ const cmdPrefix = ref<string>("/")
 const showLockedCommands = ref<boolean>(false)
 const searchQuery = ref<string>("")
 
-// Lets server fetch in SSR
-const baseURL = import.meta.server
-  ? useRequestURL().origin
-  : useRuntimeConfig().app.baseURL
-const { data: groups, error } = await useFetch<CommandGroups>(`/data/commands.json?t=${__BUILD_DATE__}`, { key: "commands", immediate: true, baseURL })
-
 const parsedGroups = computed(() => {
-  if (groups == undefined || groups.value == undefined) return []
-  return Object.entries(groups.value).map(([groupId, group]) => {
+  if (groups == undefined ) return []
+  return Object.entries(groups).map(([groupId, group]) => {
     return {
       id: groupId,
       name: group.name,

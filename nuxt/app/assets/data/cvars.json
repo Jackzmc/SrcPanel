@@ -1,0 +1,158 @@
+[
+    {
+        "cvar": "l4d2_population_clowns <0.0 – 1.0:int>",
+        "description": "This will change the % of clowns that spawn. It needs a percentage as a decimal (so between 0.0 and 1.0), example 50% would be l4d2_population_clowns 0.",
+        "default": 0.0
+    },
+    {
+        "cvar": "z_gun_swing_coop_min_penalty <0-Infinity:int>",
+        "description": "This sets the minimum amount of swings until your shoves slow down. Default is 5, recommended for clowns is 20",
+        "default": 5
+    },
+    {
+        "cvar": "z_gun_swing_coop_max_penalty <0-Infinity:int> ",
+        "description": "This sets the absolute maximum amount of swings until you cannot shove anymore. Default is 15, recommended for clowns is 40",
+        "default": 15
+    },
+    {
+        "cvar": "l4d_anti_rush_allow <0 / 1:boolean>",
+        "description": "This will turn on or off the antirush prevention plugin. 0 disables, 1 enables. Default is set to 1.",
+        "default": 1
+    },
+    {
+        "cvar": "sb_all_bot_game <0 / 1:boolean>",
+        "description": "Will make bots play without any players, instead of restarting when all real players die. For some reason something keeps turning it to 1, so if you ever want to force level to reset set to 0.",
+        "default": 0
+    },
+    {
+        "cvar": "l4d2_eft_chance <0.0 - 1.0:float>",
+        "description": "The chance that each extra tank should spawn",
+        "default": 0.0
+    },
+    {
+        "cvar": "l4d2_eft_count <0-Infinity:int>",
+        "description": "The amount of extra tanks that should spawn",
+        "default": 1
+    },
+    {
+        "cvar": "epi_item_chance <0.0 - 1.0:float>",
+        "description": "The base chance (multiplied by player count) of an extra item being spawned for games that contain > 4 survivors. Default is 0.056",
+        "default": 0.056
+    },
+    {
+        "cvar": "sm_ftt_magnet_chance <0.0 - 1.0:float>",
+        "description": "% of the time that a magnet will work on a player. Default is 1.0 or 100%",
+        "default": 1.0
+    },
+    {
+        "cvar": "sm_ftt_autopunish_action <#:int>",
+        "description": "Setup automatic punishment of players. Add bits together\n0=Disabled, 1=Tank magnet, 2=Special magnet, 4=Swarm, 8=InstantVomit. Default is 7",
+        "default": 7
+    },
+    {
+        "cvar": "sm_ftt_autopunish_expire <0-Infinity:int>",
+        "description": "How many minutes of gametime until autopunish is turned off? 0 for never."
+    },
+    {
+        "cvar": "sm_ftt_magnet_targetting <0/1/2/3:int>",
+        "description": "Determines how specials will target magnetted players. 0 will target any alive magnetted players, 1 will make specials ignore incapped, 2 will make tanks ignore incapped, and 3 will do both. Default is 1",
+        "default": 1
+    },
+    {
+        "cvar": "sm_ftt_witch_target_incapped <0/1:boolean>",
+        "description": "Should the witch target any witch magnet victims who are incapped?. 0 no, 1 yes",
+        "default": 0
+    },
+    {
+        "cvar": "l4d_force_survivorset <0/1/2:int>",
+        "description": "Sets the survivor set. Allows l4d2 characters in l4d1 if set to 2",
+        "default": 0
+    },
+    {
+        "cvar": "sm_ftt_badthrow_fail_chance <0.0 - 1.0:float>",
+        "description": "The % chance that on a throw, they will instead hit themselves. 0 to disable",
+        "default": 1
+    },
+    {
+        "cvar": "abm_autohard <0/1:boolean>",
+        "description": "Only valid for 5+: Enables increased difficulty when there is > 4 players. See below for specials. Use -l# (ex -l1) to lock it between chapters",
+        "default": 1
+    },
+    {
+        "cvar": "abm_spawninterval <0/18/36/48:int>",
+        "description": "Will set the spawn interval of the extra specials. Recommended 48, 36, or 18. 18 Being the hardest, 48 being easier. 0 turns off spawning of extras. Use -l# (ex -l48) to lock it between chapters",
+        "default": 48
+    },
+    {
+        "cvar": "l4d2_tk_auto_ff_ignore_admins <0/1:boolean>",
+        "description": "Should automatic reverse ff ignore admins? 0 = Admins are subjected, 1 = Admins are excempt"
+    },
+    {
+        "cvar": "sm_ftt_bot_defend <0/1/2:int>",
+        "description": "Should bots automatically defend themselves and shoot back at attackers? 0: No, 1: Only against non-admins, 2: Anyone"
+    },
+    {
+        "cvar": "epi_extra_tanks <0/1/2/3:int>",
+        "description": "Add bits together. 0: Normal vanilla behavior, 1: Non finale split tanks (half hp), 2: Split finale tank (full hp)",
+        "default": 3
+    },
+    {
+        "cvar": "epi_splittank_chance <0.0 - 1.0:float>",
+        "description": "The chance a tank will split (Only applies in non finale, and when >= 7 players",
+        "default": 3
+    },
+    {
+        "cvar": "l4d2_honk_mode <0/1/2:int>",
+        "description": "Will activate honk mode - includes live counter. 0=OFF, 1=At 40%, 2=Randomly changing percent"
+    },
+    {
+        "cvar": "sm_player_limit <0-Infinity:int>",
+        "description": "Sets the player limit. 0 = default limit, default.",
+        "default": 0
+    },
+    {
+        "cvar": "scuffle_enabled <0/1:bool>",
+        "default": 1,
+        "description": "Only available on main server and on by default. 0 to disable self revive"
+    },
+    {
+        "cvar": "sm_hats_enabled <0/1/2:int>",
+        "default": 1,
+        "description": "Enables hats. 0 = OFF, 1 = Admins Only, 2 = Anyone"
+    },
+    {
+        "cvar": "epi_hudstate <0/1/2:int>",
+        "default": 1,
+        "description": "Controls the 5+ hud. 0: OFF, 1: Only when 6+ players, 2: Always"
+    },
+    {
+        "cvar": "l4d_barricade_allow  <0/1:bool>",
+        "default": 0,
+        "description": "Allows barricading doors and windows. Off by default, 1 to enable"
+    },
+    {
+        "cvar": "l4d2_tk_auto_ff_activate_types <0/1/2/3:int>",
+        "default": 2,
+        "description": "Determines what damage types triggers auto reverse ff. Add bits together. 0 = Direct only, 1 = Admin Damage, 2 = Blast Damage, 3 = Fire Damage "
+    },
+    {
+        "cvar": "turret_auto_damage <0-Infinity:int>",
+        "default": 50,
+        "description": "The amount of damage an auto turret does."
+    },
+    {
+        "cvar": "turret_manual_damage <0-Infinity:int>",
+        "default": 100,
+        "description": "The amount of damage an manual turret does."
+    },
+    {
+        "cvar": "l4d2_crescendo_control <0/1/2:int>",
+        "default": 1,
+        "description": "Disables players from running far head and starting events. 1 = On, 2 = Admins bypass only can start events"
+    },
+    {
+        "cvar": "sm_autoidle_ping_max <0.0-1000.0:float>",
+        "default": 420.0,
+        "description": "If non-zero, will automatically make players idle when their ping averages to over this threshold."
+    }
+]

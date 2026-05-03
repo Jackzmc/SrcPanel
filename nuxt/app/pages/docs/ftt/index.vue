@@ -12,12 +12,9 @@
             <UTabs :items="items" :content="false" class="w-full" size="md"
               v-model="view"
             />
-            <UInput v-model="searchQuery" class="w-full" icon="i-lucide-search" placeholder="Search for an item" />
+            <UInput v-model="searchQuery" class="w-full" icon="lucide:search" placeholder="Search for an item" />
           </div>
-          <div v-if="error" class="bg-error-50 p-6 my-6">
-              {{ error }}
-            </div>
-          <div v-else-if="view == 'trolls'">
+          <div v-if="view == 'trolls'">
             <div v-for="(trolls, category) in filtered" :key="category" class="py-2">
               <h3 class="text-xl font-semibold text-primary">
                 {{ category }}
@@ -69,10 +66,10 @@ useHead({
   title: "Feed The Trolls"
 })
 import type { SelectMenuItem, TabsItem } from '@nuxt/ui'
-import CmdNode from '~/components/commands/CmdNode.vue'
 import Hero from '~/components/Hero.vue'
 
-declare const __BUILD_DATE__: string
+import FTT_DATA from '~/assets/data/ftt.json'
+const data = FTT_DATA as FttData
 
 interface FttData {
   trolls: Record<string, {
@@ -104,20 +101,20 @@ const searchQuery = ref<string>("")
 const view = ref<"combos"|"trolls">("trolls")
 
 const filtered = computed(() => {
-  if(!data.value) return []
+  if(!data) return []
   if(view.value == "combos") {
-    if(!searchQuery.value) return data.value.combos
+    if(!searchQuery.value) return data.combos
     const query = searchQuery.value.toLowerCase()
-    return Object.fromEntries(Object.entries(data.value.combos)
+    return Object.fromEntries(Object.entries(data.combos)
 
       .filter(([key, list]) => {
         return key.toLowerCase().includes(query)
           || list.some(item => item.toLowerCase().includes(query))
       }))
   } else if(view.value == "trolls") {
-    if(!searchQuery.value) return data.value.trolls
+    if(!searchQuery.value) return data.trolls
     const query = searchQuery.value.toLowerCase()
-    return Object.fromEntries(Object.entries(data.value.trolls)
+    return Object.fromEntries(Object.entries(data.trolls)
       // Return for each category list of filtered out trolls
       .map(([category, trolls]) => {
         const list = trolls.filter(troll => {
@@ -133,13 +130,14 @@ const filtered = computed(() => {
   }
 })
 
-// Lets server fetch in SSR
-const baseURL = import.meta.server
-  ? useRequestURL().origin
-  : useRuntimeConfig().app.baseURL
-const { data, error } = await useFetch<FttData>(`/data/ftt.json?t=${__BUILD_DATE__}`, { key: "ftt", immediate: true, baseURL })
 
-const router = useRouter()
+// // Lets server fetch in SSR
+// const baseURL = import.meta.server
+//   ? useRequestURL().origin
+//   : useRuntimeConfig().app.baseURL
+// const { data, error } = await useFetch<FttData>(`/data/ftt.json?t=${__BUILD_DATE__}`, { key: "ftt", immediate: true, baseURL,  })
+
+// const router = useRouter()
 // function showCmd(cmd: Command) {
 //   router.push(`/docs/commands/${cmd.name}`)
 // }
