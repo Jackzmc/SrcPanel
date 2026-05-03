@@ -1,11 +1,10 @@
-name: Build Image
+name: Build UI Image
 on:
   push:
     paths:
-      - 'server/**'
       - 'nuxt/**'
       - 'common-types/**'
-      - '.forgejo/workflows/docker.yaml'
+      - '.forgejo/workflows/ui.yaml'
       - Dockerfile
     # branches:
     #   - release
@@ -32,16 +31,7 @@ jobs:
       # replace / with - for tag
       - name: Set ENV
         run: echo "TAG=${FORGEJO_REF_NAME////-}" >> "$GITHUB_ENV"
-      - name: Build and push (server)
-        uses: https://git.jackz.me/actions/docker-build-push-action@v6
-        with:
-          push: true
-          context: . # need to keep .git folder
-          cache-from: type=registry,ref=${{ env.IMAGE_NAME }}-server:buildcache
-          cache-to: type=registry,ref=${{ env.IMAGE_NAME }}-server:buildcache,mode=max
-          tags: ${{ env.IMAGE_NAME }}-server:${{ env.TAG }}
-          target: final-server
-      - name: Build and push (ui)
+      - name: Build and push
         uses: https://git.jackz.me/actions/docker-build-push-action@v6
         with:
           push: true
