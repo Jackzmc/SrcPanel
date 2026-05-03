@@ -12,16 +12,16 @@
         "resolveJsonModule": true,
         "paths": {
             "*": [
-                "src/*"
+                "./src/*"
             ]
         },
         "strictNullChecks": true
     },
     "include": [
-        "src/**/*",
+        "./src/**/*",
     ],
     "exclude": [
-        "node_modules"
+        "./node_modules"
     ],
     "ts-node": {
         "swc": true
