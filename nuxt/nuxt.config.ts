@@ -19,6 +19,11 @@ export default defineNuxtConfig({
       __BUILD_DATE__: JSON.stringify(buildDate),
       __BUILD_COMMIT__: JSON.stringify(buildCommit),
     },
+    optimizeDeps: {
+      include: [
+        'steamid'
+      ]
+    }
   },
 
   alias: {

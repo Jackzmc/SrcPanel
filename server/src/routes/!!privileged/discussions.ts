@@ -256,7 +256,10 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     const comment: Record<string, any> = req.body as Record<string, any>
     const timestamp = Math.round(Date.now() / 1000)
     const [ok] = await fastify.db.query<OkPacket>(
-      "INSERT INTO `left4dead2-admins`.dash_discussion_comments (discussion_id, creator, content, timestamp) VALUES (?, ?, ?, UNIX_TIMESTAMP())",
+      `INSERT INTO \`left4dead2-admins\`.dash_discussion_comments 
+        (discussion_id, creator, content, timestamp) 
+      VALUES 
+        (?, ?, ?, UNIX_TIMESTAMP())`,
       [discuss.id, creator.id, comment.content]
     )
     // Update cache

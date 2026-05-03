@@ -10,7 +10,7 @@
 
     <div v-if="comments" class="flex flex-col my-3 mx-2">
       <Comment v-for="comment in comments" :key="comment.id" :comment="comment" class="border-b border-b-neutral-300 py-2 last:border-b-0" />
-      <p class="text-muted">No comments here, be the first</p>
+      <p v-if="comments.length === 0" class="text-muted">No comments here, be the first</p>
     </div>
     <UAlert v-else-if="error" color="error" :description="error.message" />
 
@@ -57,9 +57,12 @@ async function submitComment() {
   submitCommentLoading.value = true
   const result = await request(`/api/discussions/${props.discuss.id}/comments`, {
     method: 'POST',
+    headers: {
+      'content-type': 'application/json'
+    },
     body: JSON.stringify({
       content: submitCommentText.value
-    },)
+    })
   })
   if ('error' in result) {
     toast.add({
