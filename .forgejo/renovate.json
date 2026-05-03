@@ -6,15 +6,21 @@
   "prHourlyLimit": 10,
   "packageRules": [
     {
-      "matchPaths": ["nuxt/**"],
+      "matchFileNames": [
+        "nuxt/**"
+      ],
       "groupName": "nuxt dependencies"
     },
     {
-      "matchPaths": ["server/**"],
+      "matchFileNames": [
+        "server/**"
+      ],
       "groupName": "fastify server dependencies"
     },
     {
-      "matchPaths": ["common-types/**"],
+      "matchFileNames": [
+        "common-types/**"
+      ],
       "groupName": "shared types dependencies"
     },
     {
