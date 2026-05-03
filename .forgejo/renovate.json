@@ -1,0 +1,26 @@
+{
+  "extends": [
+    "config:recommended"
+  ],
+  "automerge": false,
+  "prHourlyLimit": 10,
+  "packageRules": [
+    {
+      "matchPaths": ["nuxt/**"],
+      "groupName": "nuxt dependencies"
+    },
+    {
+      "matchPaths": ["server/**"],
+      "groupName": "fastify server dependencies"
+    },
+    {
+      "matchPaths": ["common-types/**"],
+      "groupName": "shared types dependencies"
+    },
+    {
+      "matchDepTypes": ["devDependencies"],
+      "automerge": true
+    }
+  ],
+  "labels": ["dependencies"]
+}
