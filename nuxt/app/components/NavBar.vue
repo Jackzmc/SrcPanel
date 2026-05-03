@@ -27,7 +27,7 @@
       <UColorModeButton class="text-white" />
       <template v-if="isLoggedIn">
         <UDropdownMenu
-          :items="USER_DROPDOWN"
+          :items="userDropdown"
           :ui="{
             content: 'w-48 px-2',
             item: 'py-2'
@@ -60,31 +60,31 @@ const { user, isLoggedIn, logout } = useAuth()
 
 const docs = await queryCollection("docs").all()
 
-const USER_DROPDOWN: DropdownMenuItem[][] = [
-  [
-    {
-      href: "/users/@me",
-      label: "My Profile"
-    },
-    {
-      href: "#settings",
-      label: "Settings"
-    },
-    {
-      href: "/panel/overview",
-      label: "Panel Administration"
-    }
-  ],
-  [
-    {
-      label: "Logout",
-      class: "text-error",
-      onSelect: logout,
-    }
-  ]
-]
+const docsDropdown = computed(() => {
+  return {
+    label: "Docs",
+    description: "Documentation pages for various things",
+    icon: "lucide:book",
+    children: docs.map(doc => {
+      return {
+        href: doc.path,
+        label: doc.title,
+        // icon: doc.icon
+      }
+    }).concat([
+      {
+        href: "/docs/ftt",
+        label: "Feed The Trolls",
+      },
+      {
+        href: "/docs/info",
+        label: "Rules & Procedures"
+      },
+    ])
+  }
+})
 
-const ADMIN_DROPDOWN: NavigationMenuItem = {
+const adminDropdown: NavigationMenuItem = {
   label: "Administration",
   description: "Admin tools",
   icon: "lucide:toolbox",
@@ -122,23 +122,42 @@ const ADMIN_DROPDOWN: NavigationMenuItem = {
   ]
 }
 
-const EXTERNAL_LINKS: NavigationMenuItem[] = [
-  {
-    href: "https://stats.jackz.me/",
-    label: "Game Stats",
-    icon: "lucide:chart-pie"
-  },
-  {
-    href: "https://data.jackz.me/public/dashboard/295194e5-e4c3-41a9-9298-0ea2a895f881",
-    label: "Extended Stats",
-    icon: "lucide:chart-column-big"
-  },
-  {
-    href: "https://steamcommunity.com/groups/jackzl4d2",
-    label: "Steam Group",
-    icon: "simple-icons:steam"
+const linksDropdown = computed(() => {
+  const list: NavigationMenuItem[] = [
+    {
+      href: "https://stats.jackz.me/",
+      label: "Game Stats",
+      icon: "lucide:chart-pie"
+    },
+    {
+      href: "https://data.jackz.me/public/dashboard/295194e5-e4c3-41a9-9298-0ea2a895f881",
+      label: "Extended Stats",
+      icon: "lucide:chart-column-big"
+    },
+    {
+      href: "https://steamcommunity.com/groups/jackzl4d2",
+      label: "Steam Group",
+      icon: "simple-icons:steam"
+    },
+    {
+      href: "https://fluxer.gg/7opLPRTU",
+      label: "Fluxer.gg Server",
+      admin: true
+    },
+    {
+      href: "https://app.youform.com/forms/uzxsbsaf",
+      label: "Anonymous Report Form",
+      icon: "lucide:form",
+      admin: true
+    }
+  ]
+  return {
+    label: "Links",
+    description: "External links",
+    icon: "lucide:link",
+    children: list.filter(item => isLoggedIn.value || !item.admin)
   }
-]
+})
 
 const ROUTES = computed<NavigationMenuItem[]>(() => [
   {
@@ -147,27 +166,7 @@ const ROUTES = computed<NavigationMenuItem[]>(() => [
     description: "Server status & instructions",
     icon: "lucide:house"
   },
-  {
-    label: "Docs",
-    description: "Documentation pages for various things",
-    icon: "lucide:book",
-    children: docs.map(doc => {
-      return {
-        href: doc.path,
-        label: doc.title,
-        // icon: doc.icon
-      }
-    }).concat([
-      {
-        href: "/docs/ftt",
-        label: "Feed The Trolls",
-      },
-      {
-        href: "/docs/info",
-        label: "Rules & Procedures"
-      },
-    ])
-  },
+  docsDropdown.value,
   {
     label: "Tools",
     description: "Simple tools",
@@ -200,15 +199,34 @@ const ROUTES = computed<NavigationMenuItem[]>(() => [
       }
     ]
   },
-  ...(isLoggedIn.value ? [ADMIN_DROPDOWN] : []),
-  {
-    label: "Links",
-    description: "External links",
-    icon: "lucide:link",
-    children: EXTERNAL_LINKS
-  },
+  ...(isLoggedIn.value ? [adminDropdown] : []),
+  linksDropdown.value,
   { href: "/discuss", label: "Discuss", description: "Admin panel discussions" },
 ])
+
+const userDropdown: DropdownMenuItem[][] = [
+  [
+    {
+      href: "/users/@me",
+      label: "My Profile"
+    },
+    {
+      href: "#settings",
+      label: "Settings"
+    },
+    {
+      href: "/panel/overview",
+      label: "Panel Administration"
+    }
+  ],
+  [
+    {
+      label: "Logout",
+      class: "text-error",
+      onSelect: logout,
+    }
+  ]
+]
 </script>
 
 <style>
