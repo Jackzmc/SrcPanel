@@ -17,7 +17,7 @@ env:
 
 jobs:
   build:
-    runs-on: ubuntu-full
+    runs-on: debian-latest
     steps:
       - name: Checkout
         uses: https://git.jackz.me/actions/checkout@v4
