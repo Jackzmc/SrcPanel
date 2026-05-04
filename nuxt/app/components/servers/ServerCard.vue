@@ -2,9 +2,9 @@
   <UCard :class="cardClass">
     <div class="flex items-center justify-between pb-2 border-b border-b-black">
       <div class="flex items-center gap-2">
-        <a class="text-lg text-black">{{ server.name }}</a>
+        <a class="text-md md:text-lg text-black">{{ server.name }}</a>
         <!-- buttons -->
-        <UBadge :color="server.online ? 'neutral' : 'neutral'" variant="outline" class="text">
+        <UBadge :color="server.online ? 'neutral' : 'neutral'" variant="outline" class="hidden md:block">
           <UIcon
             :name="server.online ? 'i-lucide-circle' : 'i-lucide-square'"
             :class="server.online ? 'text-success' : 'text-error'"
@@ -14,7 +14,7 @@
         </UBadge>
       </div>
       <!-- Status -->
-      <span v-if="server.online && server.status.data" class="ml-auto text-black text-lg">
+      <span v-if="server.online && server.status.data" class="ml-auto text-black text-s md:text-lg">
         <IconText leading-icon="lucide:users" >
           <span :class="['font-semibold', {
             'text-black': server.online && server.status.data.players.length === 0,

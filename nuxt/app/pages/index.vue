@@ -1,6 +1,6 @@
 <template>
   <UContainer class="py-6 fluid">
-    <div class="grid grid-cols-3 gap-6">
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
       <div class="col-span-2">
         <div v-if="!groups&&pending" class="flex justify-center py-12">
           <UIcon name="i-lucide-loader-circle" class="animate-spin size-8" />
@@ -14,25 +14,27 @@
         <h2 class="text-xl font-semibold mb-4">
           FAQ
         </h2>
-        <UCard v-for="(entry, i) in FAQ" :key="i" class="bg-info/20">
-          <h3 class="text-l mb-4 font-semibold">
-            {{ entry.title }}
-          </h3>
-          <ul>
-            <!-- eslint-disable vue/no-v-html -->
-            <li
-              v-for="(item, j) in entry.list"
-              :key="j"
-              :class="[
-                'text-m',
-                entry.listStyle ?? 'list-none',
-                { 'ml-5': entry.listStyle && entry.listStyle != 'list-none' }
-              ]"
-              v-html="item"
-            />
-          </ul>
-          <!-- eslint-enable vue/no-v-html -->
-        </UCard>
+        <div class="flex flex-row flex-wrap gap-2">
+          <UCard v-for="(entry, i) in FAQ" :key="i" class="bg-info/20">
+            <h3 class="text-l mb-4 font-semibold">
+              {{ entry.title }}
+            </h3>
+            <ul>
+              <!-- eslint-disable vue/no-v-html -->
+              <li
+                v-for="(item, j) in entry.list"
+                :key="j"
+                :class="[
+                  'text-m',
+                  entry.listStyle ?? 'list-none',
+                  { 'ml-5': entry.listStyle && entry.listStyle != 'list-none' }
+                ]"
+                v-html="item"
+              />
+            </ul>
+            <!-- eslint-enable vue/no-v-html -->
+          </UCard>
+        </div>
       </div>
     </div>
   </UContainer>

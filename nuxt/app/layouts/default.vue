@@ -9,6 +9,7 @@
     <NavBar />
     <!-- Notification banners -->
     <UBanner
+      v-if="!steamOnline"
       icon="i-lucide-circle-alert"
       color="warning"
       title="Notice: Steam appears to be down, most likely for maintenance. You will not be able to join games until it's back online."

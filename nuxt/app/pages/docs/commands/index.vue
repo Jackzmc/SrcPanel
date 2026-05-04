@@ -4,8 +4,8 @@
     <NuxtPage />
     <Hero title="Commands" subtitle="All the information to have fun, and manage those troublemakers" />
     <UContainer>
-      <div class="grid grid-cols-2 gap-4">
-        <div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div class="sm:order-1 order-2">
           <UContainer>
             <UInput v-model="searchQuery" class="w-full" icon="i-lucide-search" placeholder="Search for a command" />
           </UContainer>
@@ -25,7 +25,7 @@
             </ul>
           </div>
         </div>
-        <div class="space-y-6">
+        <div class="space-y-6 sm:order-2 order-1">
           <UCard class="light:bg-amber-50 dark:text-black">
             <UCheckbox v-model="showLockedCommands" label="Show all commands" />
           </UCard>

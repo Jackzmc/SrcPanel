@@ -3,8 +3,8 @@
     <NuxtPage />
     <Hero title="Cvars" subtitle="All the cvars you may want to change up the gameplay" />
     <UContainer>
-      <div class="grid grid-cols-2 gap-4">
-        <div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div class="sm:order-1 order-2">
           <UContainer>
             <UInput v-model="searchQuery" class="w-full" icon="i-lucide-search" placeholder="Search for a cvar" />
           </UContainer>
@@ -17,7 +17,7 @@
             </li>
           </ul>
         </div>
-        <div class="space-y-6">
+        <div class="space-y-6 sm:order-2 order-1">
           <UCard class="bg-light-blue">
             <h3 class="text-xl font-semibold">
               Cvar Info
