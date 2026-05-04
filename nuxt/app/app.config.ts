@@ -5,8 +5,8 @@ export default defineAppConfig({
     },
     banner: {
       slots: {
-        icon: 'light:text-black',
-        title: 'light:text-black'
+        icon: 'text-black',
+        title: 'text-black'
       }
     },
     colors: {
@@ -15,7 +15,9 @@ export default defineAppConfig({
     },
     header: {
       slots: {
-        root: 'bg-primary/90 text-white backdrop-blur border-b border-default h-(--ui-header-height) sticky top-0 z-50'
+        root: 'group-header bg-primary/90 text-white backdrop-blur border-b border-default h-(--ui-header-height) sticky top-0 z-50',
+        title: 'text-white',
+        body: 'bg-white dark:bg-gray-900'
       }
     },
     formField: {
