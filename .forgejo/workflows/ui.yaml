@@ -27,7 +27,7 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.REGISTRY_TOKEN }}
       - name: Login to docker.io Container Registry
-        uses: https://git.jackz.me/actions/docker-logni-action@v3
+        uses: https://git.jackz.me/actions/docker-login-action@v3
         with:
           username: ${{ vars.DOCKER_IO_REGISTRY_USER }}
           apssword: ${{ secrets.DOCKER_IO_REGISTRY_TOKEN }}
