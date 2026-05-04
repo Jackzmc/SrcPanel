@@ -30,7 +30,7 @@ jobs:
         uses: https://git.jackz.me/actions/docker-login-action@v3
         with:
           username: ${{ vars.DOCKER_IO_REGISTRY_USER }}
-          apssword: ${{ secrets.DOCKER_IO_REGISTRY_TOKEN }}
+          password: ${{ secrets.DOCKER_IO_REGISTRY_TOKEN }}
       - name: Set up Docker Buildx
         uses: https://git.jackz.me/actions/docker-setup-buildx-action@v3
       # replace / with - for tag
