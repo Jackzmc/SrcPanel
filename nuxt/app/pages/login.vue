@@ -32,9 +32,9 @@ import SteamLoginButton from '~/components/oauth/SteamLoginButton.vue';
 const { isLoggedIn } = useAuth()
 const route = useRoute()
 
-// if(isLoggedIn.value) {
-//     await navigate()
-// }
+if(isLoggedIn.value) {
+    await navigate()
+}
 
 async function navigate()  {
     await navigateTo(route.query.return_to as string ?? '/')

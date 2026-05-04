@@ -16,10 +16,10 @@ jobs:
 
     steps:
       - name: Check out Git repository
-        uses: actions/checkout@v4
+        uses: https://git.jackz.me/actions/checkout@v4
 
       - name: 🔧 Install pnpm
-        uses: pnpm/action-setup@v4
+        uses: https://git.jackz.me/actions/pnpm-action-setup@v4
         with:
           version: 10
 
