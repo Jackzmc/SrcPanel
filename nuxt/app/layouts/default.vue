@@ -3,16 +3,17 @@
     <UBanner
       icon="i-lucide-circle-alert"
       color="warning"
-      title="Pre-release build - Features are not complete or are missing, bugs may occur, nothing is final.""
+      title="Pre-release build - Features are not complete or are missing, bugs may occur, nothing is final."
+      :ui="{title:'whitespace-normal text-xs sm:text-sm',root:'py-2 sm:py-0'}"
     />
     <NavBar />
     <!-- Notification banners -->
     <UBanner
-      v-if="!steamOnline"
       icon="i-lucide-circle-alert"
       color="warning"
-      title="Notice: Steam appears to be down. You will not be able to join games until it's back online."
+      title="Notice: Steam appears to be down, most likely for maintenance. You will not be able to join games until it's back online."
       close
+      :ui="{title:'whitespace-normal text-xs sm:text-sm',root:'py-2 sm:py-0'}"
     />
     <UBanner
       v-if="notice"
@@ -20,6 +21,7 @@
       :color="notice.class as any"
       :title="notice.text"
       close
+      :ui="{title:'whitespace-normal text-xs sm:text-sm',root:'py-2 sm:py-0'}"
     />
 
     <div>
