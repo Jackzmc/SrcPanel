@@ -22,10 +22,9 @@
         variant="pill"
         class="navbar hidden md:block"
         :ui="{
-          root: 'group-header-data-[state=open]:text-black',
-          link: 'text-white group ',
+          link: 'text-white group',
           linkTrailingBadge: 'bg-black',
-          linkLeadingIcon: 'text-white',
+          linkLeadingIcon: 'group-data-[active]:text-black dark:group-data-[active]:text-white text-white'
         }"
       />
     </template>
@@ -40,10 +39,8 @@
         variant="pill"
         class="navbar"
         :ui="{
-          root: 'group-header-data-[state=open]:text-black',
-          link: 'group ',
+          link: '',
           linkTrailingBadge: 'bg-black',
-          linkLeadingIcon: '',
         }"
       />
     </template>

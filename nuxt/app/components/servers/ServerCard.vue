@@ -45,7 +45,7 @@
       >
         <div class="flex items-center gap-1 border-b border-b-neutral-400">
           <UIcon name="i-lucide-play" class="size-4 text-black" />
-          <code :class="['!bg-inherit p-1',textColor]">
+          <code :class="['bg-inherit! p-1',textColor]">
             <ClickCopy :text="connectCommand">
               <b>connect</b> {{ server.host }}:{{ server.port }}
             </ClickCopy>
@@ -63,7 +63,7 @@
       >
         <div class="flex items-center gap-1 border-b border-b-neutral-400">
           <UIcon name="i-lucide-list" class="size-4 text-black" />
-          <code :class="['!bg-inherit p-1',textColor]">
+          <code :class="['bg-inherit! p-1',textColor]">
             <ClickCopy :text="createLobbyCommand">
               <b>mm_dedicated_force_servers</b> {{ server.ip }}:{{ server.port }}
             </ClickCopy>
