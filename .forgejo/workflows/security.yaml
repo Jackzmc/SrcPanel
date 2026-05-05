@@ -12,10 +12,15 @@ jobs:
     steps:
     - name: Checkout code
       uses: https://git.jackz.me/actions/checkout@v4
-
+    - name: Setup Trivy
+      uses: https://github.com/aquasecurity/setup-trivy@v0.2.0
+      with:
+        cache: true
+        version: v0.70.0
     - name: Trivy scanner (fs mode)
       uses: https://git.jackz.me/actions/trivy-action@v0.36.0
       with:
         scan-type: 'fs'
         scan-ref: '.'
         trivy-config: trivy.yaml
+        skip-setup-trivy: true
