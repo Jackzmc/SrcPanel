@@ -1,0 +1,21 @@
+name: Vunerability Scan
+on:
+  push:
+    branches:
+    - main
+    - nuxt-rewrite
+  pull_request:
+jobs:
+  trivy:
+    name: Trivy (fs mode)
+    runs-on: debian-latest
+    steps:
+    - name: Checkout code
+      uses: https://git.jackz.me/actions/checkout@v4
+
+    - name: Run Trivy vulnerability scanner in fs mode
+      uses: aquasecurity/trivy-action@v0.36.0
+      with:
+        scan-type: 'fs'
+        scan-ref: '.'
+        trivy-config: trivy.yaml
