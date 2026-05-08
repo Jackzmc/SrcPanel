@@ -65,7 +65,7 @@ ENV NODE_ENV=production
 
 EXPOSE 8080
 EXPOSE 7676
-CMD ["node", "--abort-on-uncaught-exception", "server/dist/server/src/index.js"]
+CMD ["node", "--abort-on-uncaught-exception", "server/dist/src/index.js"]
 
 # Production image for Nuxt UI
 FROM $IMAGE AS final-ui
