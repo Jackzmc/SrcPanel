@@ -14,11 +14,21 @@ COPY common-types common-types/
 RUN pnpm store path 
 RUN --mount=type=cache,target=/pnpm/store pnpm fetch --frozen-lockfile -r
 
-# Builder stage for Nuxt UI
-FROM base AS builder-ui
+FROM base AS builder-common
 WORKDIR /app
 COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
 COPY common-types common-types/
+
+RUN --mount=type=cache,target=/pnpm/store pnpm install --frozen-lockfile --offline
+WORKDIR /app/common-types
+RUN pnpm build
+
+# Builder stage for Nuxt UI
+FROM base AS builder-ui
+WORKDIR /app
+COPY --from=builder-common /app/common-types/dist /app/common-types/dist/
+COPY --from=builder-common /app/common-types/package.json /app/common-types/
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
 COPY nuxt nuxt/
 COPY .git .git/
 
@@ -30,10 +40,8 @@ WORKDIR /app/nuxt
 RUN pnpm build
 
 # Builder stage for Server
-FROM base AS builder-server
+FROM builder-common AS builder-server
 WORKDIR /app
-COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
-COPY common-types common-types/
 COPY server server/
 
 RUN --mount=type=cache,target=/pnpm/store pnpm install --frozen-lockfile --offline
