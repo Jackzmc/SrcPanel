@@ -40,8 +40,8 @@
 </template>
 
 <script setup lang="ts">
-import { formatDate, getRelDate } from '@common/methods/format'
-import type { StatsAPI_UserDetails } from '@common/Stats'
+import { formatDate, getRelDate } from '@jzpanel/common/methods/format'
+import type { StatsAPI_UserDetails } from '@jzpanel/common/Stats'
 
 const props = defineProps<{
   steamid: string

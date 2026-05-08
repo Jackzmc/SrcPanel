@@ -8,7 +8,7 @@
 definePageMeta({
   tab: "notes"
 })
-import type { APIUserDetails } from '@common/User'
+import type { APIUserDetails } from '@jzpanel/common/User'
 
 defineProps<{
   steamid: string

@@ -20,7 +20,7 @@
 </template>
 
 <script setup lang="ts">
-import { FLAGS } from '@common/User';
+import { FLAGS } from '@jzpanel/common/User';
 
 const props = defineProps<{
   edit?: boolean,

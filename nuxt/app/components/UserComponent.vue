@@ -66,8 +66,8 @@
 
 <script setup lang="ts">
 import SteamID from 'steamid'
-import { type APIPlayer, type APIUser, type APIUserDetails } from '@common/User.js'
-import { getRelDate } from '@common/methods/format'
+import type { APIPlayer, APIUser, APIUserDetails } from '@jzpanel/common/User'
+import { getRelDate } from '@jzpanel/common/format'
 
 const route = useRoute()
 

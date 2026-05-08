@@ -39,7 +39,7 @@
 </template>
 
 <script setup lang="ts">
-import { type APIUserDetails } from '@common/User'
+import { type APIUserDetails } from '@jzpanel/common/User'
 import SteamID from 'steamid'
 
 const route = useRoute()

@@ -1,4 +1,4 @@
-import type { PanelMetaInfo } from '@common/Panel'
+import type { PanelMetaInfo } from '@jzpanel/common/Panel'
 
 export async function useMeta() {
   const api = useApi()

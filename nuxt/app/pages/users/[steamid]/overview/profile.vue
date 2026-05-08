@@ -40,11 +40,11 @@
 </template>
 
 <script setup lang="ts">
-import type { APIUserDetails, UserNameEntry } from '@common/User'
+import type { APIUserDetails, UserNameEntry } from '@jzpanel/common/User'
 import PlayerStats from '@/components/users/overview/PlayerStats.vue'
 import SteamID from 'steamid';
 import type { TableColumn } from '@nuxt/ui';
-import { formatDate } from '@common/methods/format';
+import { formatDate } from '@jzpanel/common/methods/format';
 
 const props = defineProps<{
   steamid: string

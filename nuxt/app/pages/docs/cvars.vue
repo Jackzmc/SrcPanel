@@ -82,7 +82,7 @@ useHead({
   title: "Cvars - Docs"
 })
 import Hero from '~/components/Hero.vue'
-import { parseCommandString } from '@common/methods/cmds/util'
+import { parseCommandString } from '@jzpanel/common/methods/cmds/util'
 import CmdArg from "~/components/commands/CmdArg.vue"
 
 import CVAR_DATA from '~/assets/data/cvars.json'

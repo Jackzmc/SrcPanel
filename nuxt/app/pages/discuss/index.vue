@@ -25,7 +25,7 @@
 useHead({
   title: 'Discussions',
 })
-import { type APIDiscussion } from '@common/Discussions';
+import { type APIDiscussion } from '@jzpanel/common/Discussions';
 import DiscussCard from '~/components/discuss/DiscussCard.vue';
 
 const { requireAuth } = useAuth()

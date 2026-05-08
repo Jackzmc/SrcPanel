@@ -103,15 +103,15 @@
 </template>
 
 <script setup lang="ts">
-import { ClientState, InfectedClass, PlayerGameAction, PlayerMove, PlayerState, type LiveClient } from '@common/Live';
+import { ClientState, InfectedClass, PlayerGameAction, PlayerMove, PlayerState, type LiveClient } from '@jzpanel/common/Live';
 import { IconText } from '#components';
 import type { HealthBar } from '#shared/types/server'
 import HealthBarComponent from './HealthBar.vue'
 import KeyValueTable from '~/components/table/KeyValueTable.vue';
 import KeyValueRow from '~/components/table/KeyValueRow.vue';
-import { getRelDate } from '@common/methods/format';
+import { getRelDate } from '@jzpanel/common/methods/format';
 import ActionButton from '../ActionButton.vue';
-import type { ServerAction, ServerInfo } from '@common/Server';
+import type { ServerAction, ServerInfo } from '@jzpanel/common/Server';
 
 const props = defineProps<{
   client: LiveClient,

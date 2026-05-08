@@ -139,10 +139,10 @@ useHead({
 })
 import Hero from '@/components/Hero.vue';
 import AuditTable from '@/components/audit/AuditTable.vue'
-import { type APILogData, type APILogQueryResult, type LogEntry } from '@common/Logs';
+import { type APILogData, type APILogQueryResult, type LogEntry } from '@jzpanel/common/Logs';
 import { TYPE_MAP } from '#shared/types/logs'
-import type { APIListPlayersResponse } from '@common/User';
-import debounce from '@common/methods/debounce';
+import type { APIListPlayersResponse } from '@jzpanel/common/User';
+import debounce from '@jzpanel/common/methods/debounce';
 import type { InputMenuItem, SelectItem } from '@nuxt/ui';
 
 const toast = useToast()

@@ -100,7 +100,7 @@
 </template>
 
 <script setup lang="ts">
-import type { APIListServersV1_Group, APIListServersV1_Server, GroupInfo, ServerInfo } from '@common/Server'
+import type { APIListServersV1_Group, APIListServersV1_Server, GroupInfo, ServerInfo } from '@jzpanel/common/Server'
 import ClickCopy from '@/components/ClickCopy.vue'
 
 const props = defineProps<{

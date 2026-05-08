@@ -9,7 +9,7 @@
 </template>
 
 <script setup lang="ts">
-import type { ServerDetailed } from '@common/Server';
+import type { ServerDetailed } from '@jzpanel/common/Server';
 import PlayerListEntry from './PlayerListEntry.vue';
 import type { WebsocketExport } from '~/composables/server/live.js';
 

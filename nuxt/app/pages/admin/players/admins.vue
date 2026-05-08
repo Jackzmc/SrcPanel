@@ -38,7 +38,7 @@
 
 <script setup lang="ts">
 import { UserComponent } from '#components'
-import type { APIListAdmins, ReadableAdminData } from '@common/User'
+import type { APIListAdmins, ReadableAdminData } from '@jzpanel/common/User'
 import type { TableColumn } from '@nuxt/ui'
 
 const query = ref<string>("")

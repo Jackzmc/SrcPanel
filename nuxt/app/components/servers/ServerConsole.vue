@@ -47,8 +47,8 @@
 </template>
 
 <script setup lang="ts">
-import type { LiveRecordCommandResponse } from '@common/Live';
-import type { ServerDetailed } from '@common/Server';
+import type { LiveRecordCommandResponse } from '@jzpanel/common/Live';
+import type { ServerDetailed } from '@jzpanel/common/Server';
 import { IconText } from '#components';
 import type { WebsocketExport, WebsocketExportProp, WebsocketStatus } from '~/composables/server/live';
 

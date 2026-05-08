@@ -7,8 +7,8 @@
 
 <script setup lang="ts">
 
-import { parseCommand, type Command } from '@common/methods/cmds/util'
-import type { CommandGroups } from '@common/methods/cmds/data'
+import { parseCommand, type Command } from '@jzpanel/common/methods/cmds/util'
+import type { CommandGroups } from '@jzpanel/common/methods/cmds/data'
 import CmdModal from '~/components/commands/CmdModal.vue'
 
 const route = useRoute()

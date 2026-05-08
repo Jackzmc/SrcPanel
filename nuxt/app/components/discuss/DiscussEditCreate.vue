@@ -75,14 +75,14 @@
 </template>
 
 <script setup lang="ts">
-import { APIDiscussionFlags, APIDiscussionType, type APIDiscussion, type APIDiscussionBase, type APIDiscussionCreateResponse, type BaseDiscussion } from '@common/Discussions';
+import { APIDiscussionFlags, APIDiscussionType, type APIDiscussion, type APIDiscussionBase, type APIDiscussionCreateResponse, type BaseDiscussion } from '@jzpanel/common/Discussions';
 import DiscussCardEdit from '@/components/discuss/DiscardCardEdit.vue'
 import type { SelectItem, TabsItem } from '@nuxt/ui';
 import type { SettingEntry } from '~~/shared/types/discuss';
 import DiscussSettingsEntry from '@/components/discuss/edit/DiscussSettingsEntry.vue'
 import DiscussSettingsFlagEntry from '@/components/discuss/edit/DiscussSettingsFlagEntry.vue'
 import { fromAbsolute, now, ZonedDateTime } from '@internationalized/date';
-import { formatDate, slugify } from '@common/methods/format';
+import { formatDate, slugify } from '@jzpanel/common/methods/format';
 
 const toast = useToast()
 const router = useRouter()

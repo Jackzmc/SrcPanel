@@ -67,9 +67,9 @@ useHead({
   ]
 })
 import type { TableColumn } from '@nuxt/ui'
-import { APIBanFlags, type APIBanResponse, type ListAPIBan } from '@common/Ban.js'
+import { APIBanFlags, type APIBanResponse, type ListAPIBan } from '@jzpanel/common/Ban'
 import UCheckbox from '@nuxt/ui/components/Checkbox.vue'
-import { formatDate, getRelDate } from '@common/methods/format';
+import { formatDate, getRelDate } from '@jzpanel/common/methods/format';
 
 const api = useApi()
 const route = useRoute()

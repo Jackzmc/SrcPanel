@@ -14,7 +14,7 @@
 </template>
 
 <script setup lang="ts">
-import type { ServerAction } from '@common/Server';
+import type { ServerAction } from '@jzpanel/common/Server';
 
 const toast = useToast();
 const { promptConfirm } = useModal();

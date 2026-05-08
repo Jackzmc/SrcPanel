@@ -11,7 +11,7 @@
 </template>
 
 <script setup lang="ts">
-import type { APIUserDetails } from '@common/User'
+import type { APIUserDetails } from '@jzpanel/common/User'
 import PermissionsList from '@/components/users/permissions/PermissionsList.vue'
 
 defineProps<{

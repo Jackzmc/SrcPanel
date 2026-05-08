@@ -10,7 +10,7 @@
 </template>
 
 <script setup lang="ts">
-import { FLAGS, type APIListAdminGroupsResponse, type APIUserDetails } from '@common/User'
+import { FLAGS, type APIListAdminGroupsResponse, type APIUserDetails } from '@jzpanel/common/User'
 import PermissionsList from "@/components/users/permissions/PermissionsList.vue"
 import type { TableColumn } from '@nuxt/ui';
 

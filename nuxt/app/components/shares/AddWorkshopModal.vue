@@ -131,11 +131,11 @@
 </template>
 
 <script setup lang="ts">
-import type { CollectionWorkshopItem, DetailsResponse, ShareInfo } from '@common/Share';
-import debounce from '@common/methods/debounce';
-import { formatSize } from '@common/methods/format';
+import type { CollectionWorkshopItem, DetailsResponse, ShareInfo } from '@jzpanel/common/Share';
+import debounce from '@jzpanel/common/methods/debounce';
+import { formatSize } from '@jzpanel/common/methods/format';
 import type { TableColumn } from '@nuxt/ui';
-import type { APIDownloadAddonsMessage } from '@common/share/downloadWS';
+import type { APIDownloadAddonsMessage } from '@jzpanel/common/share/downloadWS';
 
 const WORKSHOP_LINK_REGEX = new RegExp(/https:\/\/steamcommunity\.com\/(sharedfiles|workshop)\/filedetails\/\?id=(\d*)/)
 

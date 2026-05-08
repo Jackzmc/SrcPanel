@@ -21,12 +21,12 @@
 </template>
 
 <script setup lang="ts">
-import { formatSize } from '@common/methods/format';
-import type { ServerDetailed } from '@common/Server';
+import { formatSize } from '@jzpanel/common/methods/format';
+import type { ServerDetailed } from '@jzpanel/common/Server';
 import type { MetricData, WebsocketExport, WebsocketExportProp } from '~/composables/server/live';
 import ApexCharts from "vue3-apexcharts";
 import type { ApexOptions } from 'apexcharts';
-import { Annotation } from '@common/Live';
+import { Annotation } from '@jzpanel/common/Live';
 
 const props = defineProps<{
   data: ServerDetailed;

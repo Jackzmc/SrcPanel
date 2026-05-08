@@ -27,7 +27,7 @@
 definePageMeta({
   tab: "privileges"
 })
-import type { APIUserDetails } from '@common/User'
+import type { APIUserDetails } from '@jzpanel/common/User'
 
 const props = defineProps<{
   steamid: string

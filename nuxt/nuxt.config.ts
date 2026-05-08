@@ -26,10 +26,6 @@ export default defineNuxtConfig({
     }
   },
 
-  alias: {
-    '@common': resolve(__dirname, '../common-types'),
-  },
-
   devtools: {
     enabled: true,
   },

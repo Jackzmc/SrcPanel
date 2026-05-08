@@ -15,7 +15,7 @@
 </template>
 
 <script setup lang="ts">
-import type { ServerDetailed } from '@common/Server';
+import type { ServerDetailed } from '@jzpanel/common/Server';
 import ServerConsole from '@/components/servers/ServerConsole.vue'
 import type { WebsocketExport, WebsocketExportProp, WebsocketStatus } from '~/composables/server/live';
 

@@ -44,7 +44,7 @@
 useHead({
   title: "Overview"
 })
-import type { APIListServersV1 } from '@common/Server'
+import type { APIListServersV1 } from '@jzpanel/common/Server'
 
 const REFRESH_INTERVAL = 1000 * 20
 

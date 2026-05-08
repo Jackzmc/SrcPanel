@@ -61,8 +61,8 @@ useHead({
   ]
 })
 import type { TableColumn } from '@nuxt/ui'
-import { getRelDate } from '@common/methods/format';
-import type { APINotesResponse, Note } from '@common/Note.js';
+import { getRelDate } from '@jzpanel/common/methods/format';
+import type { APINotesResponse, Note } from '@jzpanel/common/Note';
 
 const api = useApi()
 const route = useRoute()
@@ -70,7 +70,7 @@ const route = useRoute()
 const UButton = resolveComponent('UButton')
 
 import UserComponent from '@/components/UserComponent.vue'
-import debounce from '@common/methods/debounce';
+import debounce from '@jzpanel/common/methods/debounce';
 
 const columns: TableColumn<Note>[] = [
   {

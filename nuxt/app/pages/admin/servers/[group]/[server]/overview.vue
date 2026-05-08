@@ -13,7 +13,7 @@
 </template>
 
 <script setup lang="ts">
-import type { ServerDetailed } from '@common/Server';
+import type { ServerDetailed } from '@jzpanel/common/Server';
 import VoiceMembers from '@/components/servers/manage/VoiceMembers.vue'
 import PlayerList from '@/components/servers/manage/PlayerList.vue'
 import type { WebsocketExport } from '~/composables/server/live.js';

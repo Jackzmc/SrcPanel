@@ -2,7 +2,7 @@
   <DiscussEditCreate :discuss="discuss!" mode="edit" />
 </template>
 <script setup lang="ts">
-import type { APIDiscussion } from '@common/Discussions';
+import type { APIDiscussion } from '@jzpanel/common/Discussions';
 import DiscussEditCreate from '@/components/discuss/DiscussEditCreate.vue';
 
 const { requireAuth } = useAuth()

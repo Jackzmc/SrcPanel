@@ -13,7 +13,7 @@
 useHead({
   title: "Shares"
 })
-import { type ShareData } from '@common/Share.js'
+import { type ShareData } from '@jzpanel/common/Share'
 import ShareCard from '~/components/shares/ShareCard.vue'
 const { requireAuth } = useAuth()
 await requireAuth()

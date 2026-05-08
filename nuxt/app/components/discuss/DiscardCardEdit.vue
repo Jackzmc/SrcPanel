@@ -41,7 +41,7 @@
 </template>
 
 <script setup lang="ts">
-import { type APIDiscussion, type APIDiscussionBase } from '@common/Discussions'
+import { type APIDiscussion, type APIDiscussionBase } from '@jzpanel/common/Discussions'
 import EditText from './EditText.vue'
 
 const modal = useModal()

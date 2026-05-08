@@ -18,7 +18,7 @@
 </template>
 
 <script setup lang="ts">
-import type { APIListServerGroup } from '@common/Server.js';
+import type { APIListServerGroup } from '@jzpanel/common/Server';
 
 const emit = defineEmits(["select"])
 

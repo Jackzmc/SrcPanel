@@ -59,9 +59,9 @@
 </template>
 
 <script setup lang="ts">
-import { FinaleStage, GameDifficulty } from '@common/Live';
-import { formatDate, formatRelTimeCompact } from '@common/methods/format';
-import type { ServerDetailed } from '@common/Server';
+import { FinaleStage, GameDifficulty } from '@jzpanel/common/Live';
+import { formatDate, formatRelTimeCompact } from '@jzpanel/common/methods/format';
+import type { ServerDetailed } from '@jzpanel/common/Server';
 import type { WebsocketExport } from '~/composables/server/live.js';
 
 const props = defineProps<{

@@ -31,7 +31,7 @@
 </template>
 
 <script setup lang="ts">
-import { FLAGS, type APIUserDetails } from '@common/User'
+import { FLAGS, type APIUserDetails } from '@jzpanel/common/User'
 import PermissionsList from '@/components/users/permissions/PermissionsList.vue'
 
 const props = defineProps<{

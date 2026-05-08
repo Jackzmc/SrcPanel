@@ -15,8 +15,8 @@
 </div>
 </template>
 <script setup lang="ts">
-import type { APIComment } from '@common/Discussions';
-import { getRelDate } from '@common/methods/format';
+import type { APIComment } from '@jzpanel/common/Discussions';
+import { getRelDate } from '@jzpanel/common/methods/format';
 
 const props = defineProps<{
   comment: APIComment

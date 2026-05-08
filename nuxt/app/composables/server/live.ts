@@ -1,9 +1,9 @@
-import type { ComputeStats, ServerDetailed, ServerStatus, VoiceUser } from '@common/Server.js';
+import type { ComputeStats, ServerDetailed, ServerStatus, VoiceUser } from '@jzpanel/common/Server';
 import type { ClientOutPayload, ServerOutPacket } from '../../../../common-types/ServerWebsocket.js';
 import { ref } from 'vue'
 import type { UnwrapRef } from 'vue'
-import { updateLiveCache, type Annotation, type LiveDataCache } from '@common/Live.js';
-import type { LogEntry } from '@common/Logs.js';
+import { updateLiveCache, type Annotation, type LiveDataCache } from '@jzpanel/common/Live';
+import type { LogEntry } from '@jzpanel/common/Logs';
 
 const MAX_BACKOFF_MS = 1000 * 60 * 2
 const MAX_AUDIT_LOG_ENTRIES = 20

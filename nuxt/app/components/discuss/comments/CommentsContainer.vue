@@ -33,7 +33,7 @@
 </template>
 
 <script setup lang="ts">
-import { APIDiscussionFlags, type APIComment, type APIDiscussion } from '@common/Discussions';
+import { APIDiscussionFlags, type APIComment, type APIDiscussion } from '@jzpanel/common/Discussions';
 import Comment from './Comment.vue';
 
 const { user } = useAuth()

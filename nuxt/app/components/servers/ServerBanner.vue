@@ -68,7 +68,7 @@
 </template>
 
 <script setup lang="ts">
-import type { ServerDetailed, ServerInfo } from '@common/Server';
+import type { ServerDetailed, ServerInfo } from '@jzpanel/common/Server';
 import ActionButton from '@/components/servers/ActionButton.vue'
 import type { WebsocketExport, WebsocketExportProp, WebsocketStatus } from '~/composables/server/live';
 

@@ -13,7 +13,7 @@
 </template>
 
 <script setup lang="ts">
-import type { APIListServersV1 } from '@common/Server'
+import type { APIListServersV1 } from '@jzpanel/common/Server'
 
 defineProps<{
   groups: APIListServersV1
