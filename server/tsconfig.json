@@ -8,9 +8,10 @@
         "target": "es2022",
         "noImplicitAny": false,
         "moduleResolution": "nodenext",
-        "inlineSourceMap": true,
-        "outDir": "dist",
-        "rootDir": "./",
+        "sourceMap": true,
+        // "inlineSourceMap": true,
+        "rootDir": ".",
+        "outDir": "./dist",
         "allowJs": true,
         "resolveJsonModule": true,
         "paths": {

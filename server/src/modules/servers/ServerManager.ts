@@ -1,11 +1,11 @@
 import { readFile, open } from 'fs/promises'
-import Server, { ConfigServerData } from './Server'
+import Server, { ConfigServerData } from './Server.js'
 import Share from '../shares/Share.js';
 import path from 'path';
 import SteamAPI from '../steam.js'
-import { ServerAction, ServerType } from '../../../../common-types/Server.js'
+import { ServerAction, ServerType } from '@jzpanel/common/Server'
 import net from 'net'
-import { LiveRecordType, LiveRecordResponse,PluginTokenPayload } from '../../../../common-types/Live.js';
+import { LiveRecordType, LiveRecordResponse,PluginTokenPayload } from '@jzpanel/common/Live';
 import BufferReader from '../BufferReader.js';
 import PluginSocket from './PluginSocket.js';
 import JWT from '../../jwt-promise.js';
@@ -61,12 +61,12 @@ export default class ServerManager {
 
   private shortRefreshInterval: number
   private longRefreshInterval: number
-  private refreshTimer: ReturnType<typeof setTimeout>
+  private refreshTimer: ReturnType<typeof setTimeout>|undefined = undefined
   private refreshTimeout: ReturnType<typeof setTimeout>|null = null
 
-  #socket: net.Server
-  #socketClients: Map<string, PluginSocket>
-  #liveErrors: WriteStream
+  #socket: net.Server|undefined = undefined
+  #socketClients: Map<string, PluginSocket> = new Map()
+  #liveErrors: WriteStream | undefined = undefined
   #dynamicManager: DynamicServerManager | undefined
 
   #groups: Record<string, ServerGroup> = {}
@@ -76,6 +76,8 @@ export default class ServerManager {
   // Maps a server to a specific connection, this assumes there should never be more than one socket per server
 
   constructor(steam: SteamAPI, dataDir: string, configDir: string) {
+    this.longRefreshInterval = 600 // await this.#cfgManager.GetKV<number>("servers.long_refresh_interval", 600)
+    this.shortRefreshInterval = 30 // await this.#cfgManager.GetKV<number>("servers.short_refresh_interval", 30)
     this.#steam = steam
     this.dataDir = dataDir
     this.configDir = configDir
@@ -114,7 +116,7 @@ export default class ServerManager {
       }
       await file.close()
       return result
-    } catch(err) {
+    } catch(err: any) {
       if(err.code == "ENOENT") return false
       throw err
     }
@@ -153,7 +155,7 @@ export default class ServerManager {
         client.send(LiveRecordResponse.Error, `Invalid or unknown id "${payload.sub}" (docker: ${payload.docker?'y':'n'})`)
         return false
       }
-    } catch(err) {
+    } catch(err: any) {
         log.error("Live auth Error: ", err)
         client.send(LiveRecordResponse.Error, err.message)
         return false
@@ -175,7 +177,7 @@ export default class ServerManager {
           if(await this.#authenticateSocket(ps, packetReader)) {
             await ps.sendInit()
           }
-        } catch(err) {
+        } catch(err: any) {
           log.error("Bad live auth:", err);
         }
         return
@@ -193,8 +195,8 @@ export default class ServerManager {
           if(record.type === LiveRecordType.Meta) {
             this.#steam.SteamAvailable = record.steamConnected
           }
-        } catch(err) {
-          this.#liveErrors.write(`buffer: ${reader.buffer.toString('hex')}\n`)
+        } catch(err: any) {
+          this.#liveErrors?.write(`buffer: ${reader.buffer.toString('hex')}\n`)
           liveLog.warn(`bad packet: ${err}\nbuffer: ${reader.buffer.toString('hex')}`, err.stack)
           continue
         }
@@ -217,7 +219,6 @@ export default class ServerManager {
   }
 
   #createLiveServer() {
-    this.#socketClients = new Map()
     this.#liveErrors = createWriteStream(path.join(this.dataDir, "live_errors.log"))
     const liveHost = process.env.LIVE_PLUGIN_HOSTNAME || "127.0.0.1";
     const livePort = process.env.LIVE_PLUGIN_PORT ? parseInt(process.env.LIVE_PLUGIN_PORT) ?? 7888 : 7888
@@ -253,7 +254,7 @@ export default class ServerManager {
           client.send(LiveRecordResponse.Reconnect)
       }
       // Wait for socket to close:
-      await new Promise((resolve) => this.#socket.close(resolve))
+      await new Promise((resolve) => this.#socket?.close(resolve))
     }
 
     for(const group of Object.values(this.#groups)) {
@@ -397,15 +398,12 @@ export default class ServerManager {
    */
   
   async Load() {
-    this.longRefreshInterval = 600 // await this.#cfgManager.GetKV<number>("servers.long_refresh_interval", 600)
-    this.shortRefreshInterval = 30 // await this.#cfgManager.GetKV<number>("servers.short_refresh_interval", 30)
     if(this.#dynamicManager) {
       await this.#dynamicManager.Load()
     }
     this.#actions = await this.#loadActions()
 
     this.#groups = await loadGroups(this.configDir, this.#dynamicManager, this.#actions)
-
 
     // We don't need to await refresh
     this.#createLiveServer()
@@ -446,7 +444,7 @@ export default class ServerManager {
         kv[id] = this.#parseAction(data)
       }
       return kv
-    } catch(err) {
+    } catch(err: any) {
       if(err.code == "ENOENT") return {}
       throw err
     }

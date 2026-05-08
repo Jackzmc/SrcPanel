@@ -1,4 +1,4 @@
-import { ServerAction } from "../../../../../common-types/Server.js"
+import { ServerAction } from "@jzpanel/common/Server"
 import DynamicServerInstance from "../docker/DynamicServerInstance.js"
 import DynamicServerManager, { DockerTemplateContainer } from "../docker/DynamicServerManager.js"
 import DockerServer from "../DockerServer.js"

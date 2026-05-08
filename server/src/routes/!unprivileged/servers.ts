@@ -1,9 +1,10 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
-import { APIListServersV2, APIListServersV2_Groups, SERVER_TYPE_MAP, APIListServerGroup, APIListServersCompactV2_Server, APIListServersCompactV2, APIListServersV1, APIListServersV1_Server, APIListServersV1_Compact } from '../../../../common-types/Server.js';
+import type { APIListServersV2, APIListServersV2_Groups, APIListServerGroup, APIListServersCompactV2_Server, APIListServersCompactV2, APIListServersV1_Server, APIListServersV1_Compact } from '@jzpanel/common/Server';
+import { SERVER_TYPE_MAP } from '@jzpanel/common/Server';
 import Server from '../../modules/servers/Server.js';
 import SocketClientUser from '../../modules/servers/SocketClientUser.js';
-import { APIListServersV2_Server } from '../../../../common-types/Server';
-import { ClientOutPayload } from '../../../../common-types/ServerWebsocket.js';
+import type { APIListServersV2_Server } from '@jzpanel/common/Server';
+import type { ClientOutPayload } from '@jzpanel/common/ServerWebsocket';
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
 
@@ -120,7 +121,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
       try {
         json = JSON.parse(data.toString())
         if (!json.type) throw new Error("Payload is missing 'type' field")
-      } catch (err) {
+      } catch (err: any) {
         return client.sendError("INVALID_PAYLOAD", "Parse error: " + err.toString())
       }
       server.processInPayload(client, json)

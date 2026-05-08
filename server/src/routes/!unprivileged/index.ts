@@ -2,8 +2,8 @@ import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
 import { RowDataPacket } from 'mysql2';
 import { createReadStream } from 'fs';
 import Sentiment from 'sentiment'
-import { PanelMetaInfo } from '../../../../common-types/Panel.js';
-import { AnalysisData } from '../../../../common-types/User.js';
+import { PanelMetaInfo } from '@jzpanel/common/Panel';
+import { AnalysisData } from '@jzpanel/common/User';
 import path from 'path';
 import readline from 'readline';
 import { getUpdateState } from '../../routes/!!privileged/panel.js';

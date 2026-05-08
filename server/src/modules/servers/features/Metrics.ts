@@ -2,11 +2,11 @@ import Feature from "./Feature.js";
 import Server from "../Server.js";
 import { Point, WriteApi } from '@influxdata/influxdb-client'
 import { getWriter } from "../../../modules/Influx.js";
-import { ComputeStats, NetworkStats, ServerStatusData, ServerStatusSource } from "../../../../../common-types/Server.js";
-import { AnnotationX, AnnotationY, GAME_DIFFICULTY_STRINGS, GameState } from "../../../../../common-types/Live.js";
+import { ComputeStats, NetworkStats, ServerStatusData, ServerStatusSource } from "@jzpanel/common/Server";
+import { AnnotationX, AnnotationY, GAME_DIFFICULTY_STRINGS, GameState } from "@jzpanel/common/Live";
 import DockerServer from "../DockerServer.js";
 import { ContainerStats } from "dockerode";
-import { Server_Metric, Server_MetricFull } from "../../../../../common-types/ServerWebsocket.js";
+import { Server_Metric, Server_MetricFull } from "@jzpanel/common/ServerWebsocket";
 
 // The maximum number of statistics to hold
 const MAX_STATS_HISTORY = 400

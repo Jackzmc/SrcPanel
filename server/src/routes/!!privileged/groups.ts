@@ -1,7 +1,7 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
 import { DynamicServerGroup } from '../../modules/servers/groups/DynamicServerGroup.js';
 import SysInfo from 'systeminformation'
-import type { APICreateGroupInstanceResult } from '../../../../common-types/Server.js';
+import type { APICreateGroupInstanceResult } from '@jzpanel/common/Server';
 
 const MIN_MEMORY_PERCENT_AVAILABLE = 0.25
 const MIN_CPU_PERCENT_FREE = 0.10

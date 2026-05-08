@@ -1,5 +1,5 @@
 import { Socket } from 'net'
-import { CommandResultType, LiveRecord, LiveRecordCommandResponse, LiveRecordClient, LiveRecordResponse, LiveRecordType, RecordDataType, RecordParseConfig } from '../../../../common-types/Live.js'
+import { CommandResultType, LiveRecord, LiveRecordCommandResponse, LiveRecordClient, LiveRecordResponse, LiveRecordType, RecordDataType, RecordParseConfig } from '@jzpanel/common/Live'
 import Server from './Server.js'
 import BufferReader from '../BufferReader.js'
 
@@ -10,8 +10,8 @@ const MIN_REFRESH_TIME_MS = 1000 * 60 * 60
 
 export default class PluginSocket {
   #socket: Socket
-  #server: Server | null
-  #id: number
+  #server: Server | null = null
+  #id: number = 0
   
   #responseQueue: ((arg0: LiveRecordCommandResponse)=>void)[] = []
   

@@ -1,8 +1,8 @@
 import SteamID from 'steamid';
-import SQL from 'sql-template-strings'
+import { SQL } from 'sql-template-strings'
 import SteamAPI from '../../modules/steam.js'
 import { Pool, RowDataPacket } from 'mysql2/promise';
-import { UserNameEntry } from '../../../../common-types/User.js';
+import { UserNameEntry } from '@jzpanel/common/User';
 
 interface IUserData {
   accountId: string,

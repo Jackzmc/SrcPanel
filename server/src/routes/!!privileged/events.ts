@@ -1,6 +1,6 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
 import { RowDataPacket } from 'mysql2';
-import { APIEvent, APIEventDetailed, APIWeekAvailability, EventDataSubmission } from '../../../../common-types/Event.js';
+import { APIEvent, APIEventDetailed, APIWeekAvailability, EventDataSubmission } from '@jzpanel/common/Event';
 import { NOT_FOUND } from '../../responses.js';
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {

@@ -2,9 +2,9 @@ import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
 import { OkPacket, RowDataPacket } from 'mysql2';
 import { ADMINS_DB } from '../!!privileged/admins.js';
 import SteamID from 'steamid';
-import { BanAppeal, FullAPIBan } from '../../../../common-types/Ban.js';
+import { BanAppeal, FullAPIBan } from '@jzpanel/common/Ban';
 import { NAME_INVALID_CHAR_REPLACE } from '../../routes/!unprivileged/bans.js';
-import { APIListPlayersResponse, APIUserDetails, PlayerEntry, PlayerRecentEntry, ReadableAdminData, UserNameEntry, UserProfileData } from '../../../../common-types/User.js';
+import { APIListPlayersResponse, APIUserDetails, PlayerEntry, PlayerRecentEntry, ReadableAdminData, UserNameEntry, UserProfileData } from '@jzpanel/common/User';
 import { NOT_FOUND, NO_PERMISSION } from '../../responses.js';
 
 

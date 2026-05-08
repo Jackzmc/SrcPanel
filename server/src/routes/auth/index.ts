@@ -1,8 +1,8 @@
 import type { SessionStore } from '@fastify/session';
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
 import { RowDataPacket } from 'mysql2';
-import type { ProviderConnectionData, SessionData, UserData } from '../../../../common-types/User';
-import type { UserPrivilegeCode } from '../../../../common-types/Privileges.js';
+import type { ProviderConnectionData, SessionData, UserData } from '@jzpanel/common/User';
+import type { UserPrivilegeCode } from '@jzpanel/common/Privileges';
 
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {

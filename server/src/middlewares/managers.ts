@@ -34,9 +34,9 @@ async function tryMkdir(dir: string) {
 }
 
 async function db(fastify: FastifyInstance) {
-  const DATA_FOLDER = join(__dirname, '/../../../../data')
+  const DATA_FOLDER = join(__dirname, '/../../../data')
   const CACHE_FOLDER = join(DATA_FOLDER, "cache")
-  const CONFIG_FOLDER = join(__dirname, '/../../../../config')
+  const CONFIG_FOLDER = join(__dirname, '/../../../config')
   fastify.log.debug('data %s', DATA_FOLDER)
   fastify.log.debug('config %s', CONFIG_FOLDER)
   fastify.log.debug('cache %s', CACHE_FOLDER)

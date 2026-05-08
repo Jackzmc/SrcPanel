@@ -6,7 +6,7 @@ import DynamicServerManager from "../docker/DynamicServerManager.js";
 import { CustomServerGroup } from "./CustomServerGroup.js";
 import { DynamicServerGroup } from "./DynamicServerGroup.js";
 import { StandardServerGroup } from "./StandardServerGroup.js";
-import { ServerAction } from "../../../../../common-types/Server.js";
+import { ServerAction } from "@jzpanel/common/Server";
 import logger from '../../../logger.js'
 const log = logger.child({ name: "groups/index" })
 

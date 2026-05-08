@@ -1,5 +1,5 @@
-import { AdminData, OauthProvider, OauthProviderData, UserNotification, UserNotificationOptions, UserOauthProviders } from '../../../../common-types/User';
-import { UserPrivilegeCode } from '../../../../common-types/Privileges.js';
+import type { AdminData, OauthProvider, OauthProviderData, UserNotification, UserNotificationOptions, UserOauthProviders } from '@jzpanel/common/User';
+import { UserPrivilegeCode } from '@jzpanel/common/Privileges';
 import AuthManager from '../auth/AuthManager.js';
 import { FastifyInstance } from 'fastify';
 import UserManager from './UserManager.js';

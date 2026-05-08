@@ -1,7 +1,7 @@
 import { join } from "path"
 import { Database, open as sqliteOpen } from 'sqlite'
 import sqlite3 from 'sqlite3';
-import SQL from "sql-template-strings";
+import { SQL } from "sql-template-strings";
 import { unixTimestamp } from "../util.js";
 import Logger from '../logger.js'
 const log = Logger.child({ name: "cache" })

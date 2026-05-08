@@ -1,5 +1,5 @@
 import { Annotation, LiveRecord } from './Live.js';
-import { ComputeStats, ServerStatus } from './Server';
+import { ComputeStats, ServerStatus } from './Server.js';
 
 ////////////////////////
 // CLIENT -> Server

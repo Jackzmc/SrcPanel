@@ -1,7 +1,7 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
 import { RowDataPacket } from 'mysql2';
 import { ADMINS_DB } from '../../routes/!!privileged/admins.js';
-import { APINotesResponse, Note } from '../../../../common-types/Note.js';
+import { APINotesResponse, Note } from '@jzpanel/common/Note';
 import SteamID from 'steamid';
 
 

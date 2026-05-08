@@ -60,7 +60,7 @@ const units: { unit: Intl.RelativeTimeFormatUnit; ms: number }[] = [
  * Taken from https://stackoverflow.com/a/66390028
  * @param elapsed   - the elapsed time in milliseconds
  */
-export function formatRelTimeDuration(elapsed: number, lang = "en", style = "long"): string {
+export function formatRelTimeDuration(elapsed: number, lang = "en", style: Intl.RelativeTimeFormatStyle = "long"): string {
   const rtf = new Intl.RelativeTimeFormat(lang, { style });
   for (const { unit, ms } of units) {
     if (Math.abs(elapsed) >= ms || unit === "second") {
@@ -75,7 +75,7 @@ export function formatRelTimeDuration(elapsed: number, lang = "en", style = "lon
  * @param relative  - the relative dateTime, generally is in the past or future. Date or number of seconds (unix timestamp)
  * @param pivot     - the dateTime of reference, generally is the current time
  */
-export function formatRelTime(relative: Date | number, pivot: Date = new Date(), lang = "en", style = "long"): string {
+export function formatRelTime(relative: Date | number, pivot: Date = new Date(), lang = "en", style: Intl.RelativeTimeFormatStyle = "long"): string {
   let relDate = relative instanceof Date ? relative : new Date(relative * 1000)
 
   const elapsed = relDate.getTime() - pivot.getTime();
