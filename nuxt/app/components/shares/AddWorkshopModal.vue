@@ -132,8 +132,8 @@
 
 <script setup lang="ts">
 import type { CollectionWorkshopItem, DetailsResponse, ShareInfo } from '@jzpanel/common/Share';
-import debounce from '@jzpanel/common/methods/debounce';
-import { formatSize } from '@jzpanel/common/methods/format';
+import { debounce } from '@jzpanel/common/util'
+import { formatSize } from '@jzpanel/common/format';
 import type { TableColumn } from '@nuxt/ui';
 import type { APIDownloadAddonsMessage } from '@jzpanel/common/share/downloadWS';
 

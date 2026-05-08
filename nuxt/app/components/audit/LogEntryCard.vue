@@ -64,10 +64,10 @@
 
 <script setup lang="ts">
 import { type LogEntry } from '@jzpanel/common/Logs';
-import { type LogEntryUser } from '@jzpanel/common/methods/logs'
+import { type LogEntryUser } from '@jzpanel/common/logs'
 import KeyValueTable from '../table/KeyValueTable.vue';
 import KeyValueRow from '../table/KeyValueRow.vue';
-import { formatDate, getRelDate } from '@jzpanel/common/methods/format';
+import { formatDate, getRelDate } from '@jzpanel/common/format';
 import LogMessage from './LogMessage.vue';
 import { TYPE_MAP } from '#shared/types/logs'
 

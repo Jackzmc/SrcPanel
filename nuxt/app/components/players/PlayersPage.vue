@@ -37,7 +37,7 @@
 
 <script setup lang="ts">
 import { UserComponent } from '#components'
-import { getRelDate } from '@jzpanel/common/methods/format'
+import { getRelDate } from '@jzpanel/common/format'
 import type { PlayerEntry } from '@jzpanel/common/User'
 import type { TableColumn } from '@nuxt/ui'
 

@@ -136,7 +136,7 @@
 
 <script setup lang="ts">
 // TODO: find out why this doesn't show when addons is loading
-import { formatSize } from '@jzpanel/common/methods/format';
+import { formatSize } from '@jzpanel/common/format';
 import type { AddonInfo, ShareInfo } from '@jzpanel/common/Share';
 import type { TableColumn, TabsItem } from '@nuxt/ui';
 

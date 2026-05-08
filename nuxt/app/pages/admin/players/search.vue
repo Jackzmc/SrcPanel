@@ -18,7 +18,7 @@
 <script setup lang="ts">
 import type { APIListPlayersResponse } from '@jzpanel/common/User'
 import PlayersPage from '@/components/players/PlayersPage.vue'
-import debounce from '@jzpanel/common/methods/debounce'
+import { debounce } from '@jzpanel/common/util'
 
 const route = useRoute()
 

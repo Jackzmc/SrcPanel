@@ -5,7 +5,7 @@
 </template>
 
 <script setup lang="ts">
-import { formatDate, getRelDate } from '@jzpanel/common/methods/format';
+import { formatDate, getRelDate } from '@jzpanel/common/format';
 import type { APIUserDetails, UserNameEntry } from '@jzpanel/common/User'
 import type { TableColumn } from '@nuxt/ui';
 

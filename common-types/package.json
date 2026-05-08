@@ -6,11 +6,11 @@
         "build": "tsc"
     },
     "exports": {
-        "./logs": "./src/logs.js",
-        "./util": "./src/util.js",
-        "./format": "./src/format.js",
-        "./cmds/data": "./src/cmds/data.js",
-        "./cmds/util": "./src/cmds/util.js",
+        "./logs": "./dist/logs.js",
+        "./util": "./dist/util.js",
+        "./format": "./dist/format.js",
+        "./cmds/data": "./dist/cmds/data.js",
+        "./cmds/util": "./dist/cmds/util.js",
         "./Ban": "./dist/types/Ban.js",
         "./CustomServer": "./dist/types/CustomServer.js",
         "./Discussions": "./dist/types/Discussions.js",

@@ -1,5 +1,5 @@
 type Callback = (...args: any[]) => (void | Promise<void>)
-export default function (callback: Callback, delay = 300) {
+export function debounce(callback: Callback, delay = 300) {
   let timeout: ReturnType<typeof setTimeout>
   return (...args: any[]) => {
     clearTimeout(timeout)

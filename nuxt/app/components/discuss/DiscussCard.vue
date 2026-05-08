@@ -69,8 +69,8 @@ import UserComponent from '@/components/UserComponent.vue'
 import IconText from '@/components/IconText.vue'
 import DiscussChoice from './DiscussChoice.vue';
 import type { DiscussOptionEntry } from '#shared/types/discuss'
-import debounce from '@jzpanel/common/methods/debounce';
-import { formatRelTime, getRelDate, slugify } from '@jzpanel/common/methods/format';
+import { debounce } from '@jzpanel/common/util'
+import { formatRelTime, getRelDate, slugify } from '@jzpanel/common/format';
 
 const enum VoteState {
   Inactive,

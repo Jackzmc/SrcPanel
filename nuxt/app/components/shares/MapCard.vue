@@ -27,7 +27,7 @@
 </template>
 
 <script setup lang="ts">
-import { formatSize, getRelDate } from '@jzpanel/common/methods/format';
+import { formatSize, getRelDate } from '@jzpanel/common/format';
 import type { AddonInfo, ShareInfo } from '@jzpanel/common/Share';
 const MAX_DESCRIPTION_LENGTH = 300;
 

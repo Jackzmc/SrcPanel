@@ -121,8 +121,8 @@ import Hero from '~/components/Hero.vue'
 import CmdArg from '~/components/commands/CmdArg.vue'
 import CmdNode from '~/components/commands/CmdNode.vue'
 import type { SelectItem } from '@nuxt/ui'
-import { parseCommand, type Command } from '@jzpanel/common/methods/cmds/util'
-import type { CommandGroups } from '@jzpanel/common/methods/cmds/data'
+import { parseCommand, type Command } from '@jzpanel/common/cmds/util'
+import type { CommandGroups } from '@jzpanel/common/cmds/data'
 
 import CMD_DATA from '~/assets/data/commands.json'
 const groups = CMD_DATA as CommandGroups

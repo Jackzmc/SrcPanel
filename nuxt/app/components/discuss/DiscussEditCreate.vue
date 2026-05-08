@@ -82,7 +82,7 @@ import type { SettingEntry } from '~~/shared/types/discuss';
 import DiscussSettingsEntry from '@/components/discuss/edit/DiscussSettingsEntry.vue'
 import DiscussSettingsFlagEntry from '@/components/discuss/edit/DiscussSettingsFlagEntry.vue'
 import { fromAbsolute, now, ZonedDateTime } from '@internationalized/date';
-import { formatDate, slugify } from '@jzpanel/common/methods/format';
+import { formatDate, slugify } from '@jzpanel/common/format';
 
 const toast = useToast()
 const router = useRouter()

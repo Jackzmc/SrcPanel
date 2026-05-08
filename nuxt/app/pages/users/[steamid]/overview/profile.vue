@@ -44,7 +44,7 @@ import type { APIUserDetails, UserNameEntry } from '@jzpanel/common/User'
 import PlayerStats from '@/components/users/overview/PlayerStats.vue'
 import SteamID from 'steamid';
 import type { TableColumn } from '@nuxt/ui';
-import { formatDate } from '@jzpanel/common/methods/format';
+import { formatDate } from '@jzpanel/common/format';
 
 const props = defineProps<{
   steamid: string

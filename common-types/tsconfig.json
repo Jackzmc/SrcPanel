@@ -12,13 +12,13 @@
         "sourceMap": true,
         // "inlineSourceMap": true,
         "resolveJsonModule": true,
-        "rootDir": "./src",
+        "rootDir": "lib",
         "outDir": "./dist",
         "strictNullChecks": true,
         // "incremental": true
     },
     "include": [
-        "./src/**/*",
+        "lib/**/*",
     ],
     "ts-node": {
         "swc": true
