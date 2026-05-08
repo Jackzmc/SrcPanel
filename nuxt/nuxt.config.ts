@@ -23,6 +23,14 @@ export default defineNuxtConfig({
       include: [
         'steamid'
       ]
+    },
+    build: {
+      sourcemap: false,
+      rollupOptions: {
+        output: {
+          manualChunks: undefined // let Rollup decide, can help memory
+        }
+      }
     }
   },
 

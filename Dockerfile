@@ -33,10 +33,10 @@ COPY nuxt nuxt/
 COPY .git .git/
 
 # Use 6GB heap space cuz nuxt be like that ig
-ENV NODE_OPTIONS="--max-old-space-size=6144"
 
 RUN --mount=type=cache,target=/pnpm/store pnpm install --frozen-lockfile --offline
 WORKDIR /app/nuxt
+ENV NODE_OPTIONS="--max-old-space-size=6144"
 RUN pnpm build
 
 # Builder stage for Server
