@@ -48,14 +48,14 @@ const columns: TableColumn<AddonInfo>[] = [
         modelValue: table.getIsSomePageRowsSelected()
           ? 'indeterminate'
           : table.getIsAllPageRowsSelected(),
-        'onUpdate:modelValue': (value: boolean | 'indeterminate') =>
+        'onUpdate:modelValue': (value) =>
           table.toggleAllPageRowsSelected(!!value),
         'aria-label': 'Select all'
       }),
     cell: ({ row }) =>
       h(UCheckbox, {
         modelValue: row.getIsSelected(),
-        'onUpdate:modelValue': (value: boolean | 'indeterminate') => row.toggleSelected(!!value),
+        'onUpdate:modelValue': (value) => row.toggleSelected(!!value),
         'aria-label': 'Select row'
       })
   },

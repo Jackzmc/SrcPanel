@@ -5,7 +5,7 @@
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <ContentRenderer class="col-span-2 sm:order-1 order-2" :value="data" />
                 <div class="sm:order-2 order-1">
-                    <UCard v-if="sidebar" class="w-max sticky top-20">
+                    <UCard v-if="sidebar" class="w-full sm:w-max sticky top-20">
                         <div class="flex flex-col gap-2">
                             <span v-if="data.updated" class="flex justify-between gap-4 pb-2 not-last:border-b border-b-neutral-300">
                                 <IconText leading-icon="lucide:calendar"><b>Updated</b></IconText>

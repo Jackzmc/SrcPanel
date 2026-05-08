@@ -15,7 +15,7 @@
           FAQ
         </h2>
         <div class="flex flex-row flex-wrap gap-2">
-          <UCard v-for="(entry, i) in FAQ" :key="i" class="bg-info/20">
+          <UCard v-for="(entry, i) in FAQ" :key="i" class="bg-info/20 w-full">
             <h3 class="text-l mb-4 font-semibold">
               {{ entry.title }}
             </h3>
@@ -68,7 +68,7 @@ const FAQ: FAQEntry[] = [
   {
     title: "Server notes",
     list: [
-      "Only servers marked <span class=\"tag\">5+</span> support 5+ campaign",
+      "Only servers marked <b>5+</b> support 5+ campaign",
       "Directly connecting does not start matchmaking - the server will not be public. See the below section on how to create a lobby:"
     ],
     listStyle: "list-disc"

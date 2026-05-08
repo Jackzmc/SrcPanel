@@ -2,27 +2,27 @@
     "compilerOptions": {
         "preserveSymlinks": true,
         "skipLibCheck": true,
-        "module": "es2020",
+        "module": "node20",
         "esModuleInterop": true,
         "allowSyntheticDefaultImports": true,
         "target": "es2022",
         "noImplicitAny": false,
-        "moduleResolution": "node",
+        "moduleResolution": "nodenext",
         "inlineSourceMap": true,
         "outDir": "dist",
+        "rootDir": "./",
         "allowJs": true,
         "resolveJsonModule": true,
         "paths": {
             "*": [
-                "src/*"
+                "./src/*"
             ]
         },
         "strictNullChecks": true,
-        "baseUrl": "./src",
         // "incremental": true
     },
     "include": [
-        "src/**/*",
+        "./src/**/*",
     ],
     "exclude": [
         "node_modules"

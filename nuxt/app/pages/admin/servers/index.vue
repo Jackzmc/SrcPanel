@@ -1,5 +1,7 @@
 <template>
   <div>
+    <StartServerModal v-if="createModalOpen" @close="createModalOpen = false" />
+    <ListHelpModal v-if="helpModalOpen" @close="helpModalOpen = false" />
     <Hero title="Manage Servers" />
     <UContainer>
       <UAlert v-if="error" :message="error.message" type="error" />
@@ -11,8 +13,8 @@
           </div>
           <div class="flex gap-2">
             <UButton leading-icon="lucide:refresh-ccw" variant="outline" color="neutral" @click="refresh()"></UButton>
-            <UButton leading-icon="lucide:plus" @click="startNewServerModal()">Start New Server</UButton>
-            <UButton leading-icon="lucide:circle-question-mark" variant="outline" color="neutral" @click="openHelpModal()">Help</UButton>
+            <UButton leading-icon="lucide:plus" @click="createModalOpen = true">Start New Server</UButton>
+            <UButton leading-icon="lucide:circle-question-mark" variant="outline" color="neutral" @click="helpModalOpen = true">Help</UButton>
           </div>
         </div>
         <UTable :data="filteredServers" :columns="columns"
@@ -33,6 +35,8 @@ import { type APIListServersV2, type APIListServersV2_Server } from '@common/Ser
 import type { TableColumn } from '@nuxt/ui';
 import { sortHeader } from '#imports';
 import ActionButton from '~/components/servers/ActionButton.vue';
+import StartServerModal from '~/components/servers/StartServerModal.vue';
+import ListHelpModal from '~/components/servers/ListHelpModal.vue';
 
 useHead({
   title: "Manage Servers"
@@ -82,14 +86,14 @@ const columns: TableColumn<UIServer>[] = [
         modelValue: table.getIsSomePageRowsSelected()
           ? 'indeterminate'
           : table.getIsAllPageRowsSelected(),
-        'onUpdate:modelValue': (value: boolean | 'indeterminate') =>
+        'onUpdate:modelValue': (value) =>
           table.toggleAllPageRowsSelected(!!value),
         'aria-label': 'Select all'
       }),
     cell: ({ row }) =>
       h(UCheckbox, {
         modelValue: row.getIsSelected(),
-        'onUpdate:modelValue': (value: boolean | 'indeterminate') => row.toggleSelected(!!value),
+        'onUpdate:modelValue': (value) => row.toggleSelected(!!value),
         'aria-label': 'Select row'
       })
   },
@@ -154,12 +158,6 @@ const columns: TableColumn<UIServer>[] = [
 ]
 
 const search = ref("")
-
-function startNewServerModal() {
-
-}
-
-function openHelpModal() {
-
-}
+const createModalOpen = ref(false)
+const helpModalOpen = ref(false)
 </script>

@@ -1,4 +1,4 @@
-import { LiveDataCache } from "./Live.js"
+import type { LiveDataCache } from "./Live.js"
 
 export interface VoiceUser {
   id: string,
@@ -232,4 +232,45 @@ export interface APIListServersV1_Server {
   sortOrder: number,
   actions: ServerAction[],
   online: boolean
+}
+
+export type APICreateGroupInstanceResult = APICreateGroupInstanceResult_Ok | APICreateGroupInstanceResult_Error
+export type APICreateGroupInstanceResult_Error = APICreateGroupInstanceResult_BaseError | APICreateGroupInstanceResult_ErrorCPU | APICreateGroupInstanceResult_ErrorMemory
+
+export interface APICreateGroupInstanceResult_Ok {
+    id: string,
+    name?: string,
+    serverId: string,
+    hostname?: string,
+    ip: string,
+    port: number,
+    type: string
+}
+
+export interface APICreateGroupInstanceResult_BaseError {
+    error: string,
+    message: string
+}
+
+export interface APICreateGroupInstanceResult_ErrorCPU {
+    error: "NO_FREE_RESOURCES" | string,
+    type: "CPU",
+    cpu: {
+        avgLoad: number,
+        currentLoad: number,
+        threshold: number
+    },
+    message: string
+}
+
+export interface APICreateGroupInstanceResult_ErrorMemory {
+    error: "NO_FREE_RESOURCES" | string,
+    type: "MEMORY",
+    memory: {
+        available: number,
+        total: number,
+        percentAvailable: number,
+        threshold: number
+    },
+    message: string
 }
