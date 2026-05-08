@@ -1,0 +1,8 @@
+{
+  "folders": [
+    { "name": "server", "path": "./server" },
+    { "name": "nuxt", "path": "./nuxt" },
+    { "name": "ui (old,v1)", "path": "./ui" },
+    { "name": "common", "path": "./common-types" }
+  ]
+}
