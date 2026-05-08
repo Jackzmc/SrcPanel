@@ -99,7 +99,7 @@ export default defineNuxtConfig({
   },
 
   routeRules: {
-    '/docs/**': { prerender: true, }
+    // '/docs/**': { prerender: true, }
   },
 
 
