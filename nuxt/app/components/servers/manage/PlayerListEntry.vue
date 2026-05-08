@@ -103,8 +103,7 @@
 </template>
 
 <script setup lang="ts">
-import { ClientState, PlayerState } from '@jzpanel/common/Live';
-import type { InfectedClass, PlayerGameAction, PlayerMove,  LiveClient } from '@jzpanel/common/Live';
+import { ClientState, PlayerState, PlayerMove, PlayerGameAction, InfectedClass, type LiveClient } from '@jzpanel/common/Live';
 import { IconText } from '#components';
 import type { HealthBar } from '#shared/types/server'
 import HealthBarComponent from './HealthBar.vue'

@@ -4,7 +4,7 @@ export interface StatusFinaleInfo {
   finaleStage: FinaleStage
 }
 
-export const enum PlayerState {
+export enum PlayerState {
   None = 0,
   Alive = 32,
   BlackAndWhite = 1,
@@ -14,7 +14,7 @@ export const enum PlayerState {
   IsPinned = 16
 }
 
-export const enum PlayerMove {
+export enum PlayerMove {
   UnderAttack = -3,
   Hanging = -2,
   Incapped = -1,
@@ -25,7 +25,7 @@ export const enum PlayerMove {
   Ladder = 4
 }
 
-export const enum PlayerGameAction {
+export enum PlayerGameAction {
   BeingHealed = -1,
   None = 0,	// No use action active
   Healing = 1,	// Includes healing yourself or a teammate.
@@ -40,7 +40,7 @@ export const enum PlayerGameAction {
   UsePointScript = 11	// When using a "point_script_use_target" entity
 }
 
-export const enum SurvivorId {
+export enum SurvivorId {
   Nick = 0,
   Rochelle = 1,
   Coach = 2,
@@ -51,7 +51,7 @@ export const enum SurvivorId {
   Louis = 7,
 }
 
-export const enum InfectedClass {
+export enum InfectedClass {
   Smoker = 1,
   Boomer = 2,
   Hunter = 3,
@@ -62,7 +62,7 @@ export const enum InfectedClass {
   Tank = 8,
 }
 
-export const enum FinaleStage {
+export enum FinaleStage {
   Gauntlet = 0,
   HordeWave1 = 1,
   FirstBoss = 2,
@@ -96,7 +96,7 @@ export enum LiveRecordType {
   Meta,
 }
 
-export const enum GameDifficulty {
+export enum GameDifficulty {
   Easy = 0,
   Normal = 1,
   Advanced = 2,
