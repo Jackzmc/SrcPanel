@@ -25,17 +25,13 @@ export default defineNuxtConfig({
       ]
     },
     build: {
-      sourcemap: false,
+      sourcemap: process.env.NODE_ENV != 'production',
       rollupOptions: {
         output: {
           manualChunks: undefined // let Rollup decide, can help memory
         }
       }
     }
-  },
-
-  devtools: {
-    enabled: true,
   },
 
   css: ['~/assets/css/main.css',],
