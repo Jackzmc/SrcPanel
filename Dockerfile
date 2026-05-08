@@ -36,7 +36,7 @@ COPY .git .git/
 
 RUN --mount=type=cache,target=/pnpm/store pnpm install --frozen-lockfile --offline
 WORKDIR /app/nuxt
-ENV NODE_OPTIONS="--max-old-space-size=8192"
+ENV NODE_OPTIONS="--max-old-space-size=12288"
 RUN pnpm build
 
 # Builder stage for Server
