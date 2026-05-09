@@ -40,8 +40,11 @@ ENV NODE_OPTIONS="--max-old-space-size=12288"
 RUN pnpm build
 
 # Builder stage for Server
-FROM builder-common AS builder-server
+FROM base AS builder-server
 WORKDIR /app
+COPY --from=builder-common /app/common-types/dist /app/common-types/dist/
+COPY --from=builder-common /app/common-types/package.json /app/common-types/
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
 COPY server server/
 
 RUN --mount=type=cache,target=/pnpm/store pnpm install --frozen-lockfile --offline
@@ -57,7 +60,7 @@ RUN apt-get update && apt-get install -y curl && apt-get clean
 WORKDIR /app
 COPY --from=builder-server /app/node_modules ./node_modules
 COPY --from=builder-server /app/server ./server/
-COPY --from=base /app/common-types ./common-types
+COPY --from=builder-server /app/common-types ./common-types
 
 ENV NODE_ENV=production
 
@@ -65,7 +68,7 @@ ENV NODE_ENV=production
 
 EXPOSE 8080
 EXPOSE 7676
-CMD ["node", "--abort-on-uncaught-exception", "server/dist/src/index.js"]
+CMD ["node", "server/dist/src/index.js"]
 
 # Production image for Nuxt UI
 FROM $IMAGE AS final-ui
@@ -73,7 +76,7 @@ WORKDIR /app
 USER node
 COPY --from=builder-ui --chown=node /app/node_modules ./node_modules
 COPY --from=builder-ui --chown=node /app/nuxt/ ./ui/
-COPY --from=base --chown=node /app/common-types common-types/
+COPY --from=builder-ui --chown=node /app/common-types common-types/
 
 WORKDIR /app/ui
 
