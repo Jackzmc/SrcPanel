@@ -59,7 +59,7 @@
 </template>
 
 <script setup lang="ts">
-import type { FinaleStage, GameDifficulty } from '@jzpanel/common/Live';
+import { FinaleStage, GameDifficulty } from '@jzpanel/common/Live';
 import { formatRelTimeCompact } from '@jzpanel/common/format';
 import type { ServerDetailed } from '@jzpanel/common/Server';
 import type { WebsocketExport } from '~/composables/server/live.js';
