@@ -4,21 +4,17 @@
     title="User Settings"
     default-open
     aria-describedby="User Settings Modal"
-    class="w-max max-w-none" 
+    class="w-max max-w-none md:min-w-lg" 
   >
     <template #description>
       <UTabs v-model="currentTab" :items="tabs" :content="false" value-key="label" class="w-full" />
     </template>
     <template #body>
-      <template v-if="currentTab == 'Sessions'">
-        <SessionsTab :profile="data" />
-      </template>
+      <SessionsTab v-if="currentTab == 'Sessions'" :profile="data" />
       <template v-else-if="currentTab == 'Connections'">
         Connections
       </template>
-      <template v-else-if="currentTab == 'Developer'">
-        Developer
-      </template>
+      <DeveloperTab v-else-if="currentTab == 'Developer'" :profile="data" />
     </template>
     <template #footer>
       <div id="footer">
@@ -33,6 +29,7 @@ import type { UserPrivilegeCode } from '@jzpanel/common/Privileges';
 import type { UserData } from '@jzpanel/common/User';
 import type { TableColumn, TabsItem } from '@nuxt/ui';
 import SessionsTab from './settings/SessionsTab.vue';
+import DeveloperTab from './settings/DeveloperTab.vue';
 
 const api = useApi()
 const emit = defineEmits<{

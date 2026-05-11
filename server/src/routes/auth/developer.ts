@@ -1,8 +1,9 @@
+import { APIDeveloperGenerateKeyResponse, APIDeveloperResponse } from '@jzpanel/common/User';
 import { FastifyInstance, FastifyPluginOptions } from 'fastify';
 
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
-    fastify.get('/', async(req, reply) => {
+    fastify.get('/', async(req, reply): Promise<APIDeveloperResponse> => {
         await fastify.authmngr.verify(req, reply)
         return {
             apikey: await req.user!.getApiKey(),
@@ -10,7 +11,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
     })
 
-    fastify.post('/apikey', async (req, reply) => {
+    fastify.post('/apikey', async (req, reply): Promise<APIDeveloperGenerateKeyResponse> => {
         await fastify.authmngr.verify(req, reply)
         const newApikey = await req.user!.regenerateApiKey()
         return {

@@ -241,3 +241,20 @@ export interface APISessionList {
   sessions: SessionData[]
   currentSessionId: string
 }
+
+export interface APIDeveloperResponse {
+  apikey: APIKey | null,
+  apps: {}
+}
+
+export interface APIDeveloperGenerateKeyResponse {
+  apikey: APIKey,
+}
+
+export interface APIKey {
+    id: string,
+    steamid: string,
+    perms: number,
+    created: number,
+    lastUsed: number
+}
