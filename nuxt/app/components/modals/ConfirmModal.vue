@@ -6,7 +6,7 @@
     aria-describedby="Confirmation Modal"
   >
     <template v-if="body" #body>
-      <Fragment v-html="body" />
+      <span v-html="body" />
     </template>
     <template #footer>
       <div class="flex gap-2">
