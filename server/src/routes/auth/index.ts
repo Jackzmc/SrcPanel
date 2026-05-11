@@ -1,7 +1,7 @@
 import type { SessionStore } from '@fastify/session';
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
 import { RowDataPacket } from 'mysql2';
-import type { APISessionList, ProviderConnectionData, SessionData, UserData } from '@jzpanel/common/User';
+import type { APIConnections, APISessionList, ProviderConnectionData, SessionData, UserData } from '@jzpanel/common/User';
 import type { UserPrivilegeCode } from '@jzpanel/common/Privileges';
 
 
@@ -61,7 +61,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
     })
 
-    fastify.get('/connections', async(req, reply) => {
+    fastify.get('/connections', async(req, reply): Promise<APIConnections> => {
         // Forces all providers to refetch user data, to ensure it's up to date.
         await req.user!.updateProviders()
         const providerList = await fastify.authmngr.oauth.getProviders()

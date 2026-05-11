@@ -1,4 +1,4 @@
-import type { ClientUserData } from '../../../common-types/User'
+import type { ClientUserData } from "@jzpanel/common/User"
 
 export function useAuth() {
   // useState key is shared across SSR → client hydration

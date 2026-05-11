@@ -11,9 +11,7 @@
     </template>
     <template #body>
       <SessionsTab v-if="currentTab == 'Sessions'" :profile="data" />
-      <template v-else-if="currentTab == 'Connections'">
-        Connections
-      </template>
+      <ConnectionsTab v-else-if="currentTab == 'Connections'" :profile="data" />
       <DeveloperTab v-else-if="currentTab == 'Developer'" :profile="data" />
     </template>
     <template #footer>
@@ -30,6 +28,7 @@ import type { UserData } from '@jzpanel/common/User';
 import type { TableColumn, TabsItem } from '@nuxt/ui';
 import SessionsTab from './settings/SessionsTab.vue';
 import DeveloperTab from './settings/DeveloperTab.vue';
+import ConnectionsTab from './settings/ConnectionsTab.vue';
 
 const api = useApi()
 const emit = defineEmits<{

@@ -258,3 +258,5 @@ export interface APIKey {
     created: number,
     lastUsed: number
 }
+
+export type APIConnections = Record<string, ProviderConnectionData>
