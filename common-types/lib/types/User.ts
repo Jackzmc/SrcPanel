@@ -236,3 +236,8 @@ export interface APIUserDetails {
 export interface APIListAdminGroupsResponse {
   groups: ReadableAdminGroup[]
 }
+
+export interface APISessionList {
+  sessions: SessionData[]
+  currentSessionId: string
+}

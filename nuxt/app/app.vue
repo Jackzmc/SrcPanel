@@ -1,4 +1,16 @@
+<template>
+  <UApp :toaster="{ position: 'top-center' }" :tooltip="{ delayDuration: 400 }">
+    <NuxtLayout class="min-h-screen">
+      <SettingsModal />
+      <NuxtPage :page-key="route => route.path" />
+    </NuxtLayout>
+  </UApp>
+</template>
+
+
 <script setup lang="ts">
+import SettingsModal from './components/modals/SettingsModal.vue';
+
 useHead({
   meta: [
     { name: 'viewport', content: 'width=device-width, initial-scale=1' }
@@ -22,11 +34,3 @@ useSeoMeta({
 })
 
 </script>
-
-<template>
-  <UApp :toaster="{ position: 'top-center' }" :tooltip="{ delayDuration: 400 }">
-    <NuxtLayout class="min-h-screen">
-      <NuxtPage :page-key="route => route.path" />
-    </NuxtLayout>
-  </UApp>
-</template>

@@ -1,7 +1,7 @@
 import type { SessionStore } from '@fastify/session';
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
 import { RowDataPacket } from 'mysql2';
-import type { ProviderConnectionData, SessionData, UserData } from '@jzpanel/common/User';
+import type { APISessionList, ProviderConnectionData, SessionData, UserData } from '@jzpanel/common/User';
 import type { UserPrivilegeCode } from '@jzpanel/common/Privileges';
 
 
@@ -103,7 +103,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             try {
                 await deleteSession(req.sessionStore, req.session.sessionId)
                 reply.code(204).send()
-            } catch(err) {
+            } catch(err: any) {
                 return reply.code(500).send({
                     error: "INTERNAL_SERVER_ERROR",
                     message: err.message
@@ -112,7 +112,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
     })
 
-    fastify.get('/sessions', async(req, reply) => {
+    fastify.get('/sessions', async(req, reply): Promise<APISessionList> => {
         const sessions = await req.user!.getSessions()
 
         return { 
