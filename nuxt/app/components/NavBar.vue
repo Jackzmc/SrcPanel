@@ -86,6 +86,8 @@ import type { DropdownMenuItem } from '@nuxt/ui/runtime/components/DropdownMenu.
 import type { NavigationMenuItem } from '@nuxt/ui/runtime/components/NavigationMenu.vue.js'
 import SteamLoginButton from './oauth/SteamLoginButton.vue'
 
+const emit = defineEmits(["open-settings"])
+
 const { user, isLoggedIn, logout } = useAuth()
 
 const docs = await queryCollection("docs").all()

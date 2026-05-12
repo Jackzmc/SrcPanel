@@ -1,7 +1,6 @@
 <template>
   <UApp :toaster="{ position: 'top-center' }" :tooltip="{ delayDuration: 400 }">
     <NuxtLayout class="min-h-screen">
-      <SettingsModal />
       <NuxtPage :page-key="route => route.path" />
     </NuxtLayout>
   </UApp>

@@ -19,12 +19,13 @@
                     <pre class="text-wrap">{{ data.apikey.id }}</pre>
                 </div>
             </template>
-            <div>
+            <div class="mt-1">
                 <UButton leading-icon="lucide:rotate-ccw-key" 
                     variant="outline" 
                     :loading="apikeyRolling"
-                    @click="regenerate">
-                    Regenerate
+                    @click="regenerate"
+                >
+                    {{ data?.apikey ? 'Regenerate' : 'Generate' }}
                 </UButton>
             </div>
         </div>

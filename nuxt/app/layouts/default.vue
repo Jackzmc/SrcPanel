@@ -6,6 +6,7 @@
       title="Pre-release build - Features are not complete or are missing, bugs may occur, nothing is final."
       :ui="{title:'whitespace-normal text-xs sm:text-sm',root:'py-2 sm:py-0'}"
     />
+    <SettingsModal v-if="settingsOpen" @close="closeSettingsModal()" />
     <NavBar />
     <!-- Notification banners -->
     <UBanner
@@ -47,4 +48,13 @@ const commit = __BUILD_COMMIT__
 const date = new Date(__BUILD_DATE__).toLocaleString()
 
 const { steamOnline, notice } = await useMeta()
+const route = useRoute()
+
+const settingsOpen = computed(() => {
+  return route.hash = "#settings"
+})
+
+async function closeSettingsModal() {
+  await navigateTo({ hash: "" })
+}
 </script>
