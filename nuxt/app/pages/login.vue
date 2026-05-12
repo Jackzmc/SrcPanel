@@ -32,6 +32,10 @@
 import FluxerLoginButton from '~/components/oauth/FluxerLoginButton.vue';
 import SteamLoginButton from '~/components/oauth/SteamLoginButton.vue';
 
+useHead({
+    title: "Login"
+})
+
 const { isLoggedIn } = useAuth()
 const route = useRoute()
 
