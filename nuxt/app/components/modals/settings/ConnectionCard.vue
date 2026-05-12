@@ -14,11 +14,11 @@
                 </div>
             </div>
             <template v-if="enabled">
-                <template v-if="name != 'Steam'">
+                <template v-if="!primary">
                     <UButton v-if="data">Link Account</UButton>
                     <UButton v-else variant="outline">Unlink Account</UButton>
                 </template>
-                <p v-else class="text-muted text-sm">Cannot unlink</p>
+                <p v-else class="text-muted text-sm">Primary</p>
             </template>
         </div>
     </UCard>
@@ -33,7 +33,8 @@ const props = withDefaults(defineProps<{
     name: string,
     imageName: string,
     expired?: boolean,
-    data?: OauthProviderData | null
+    data?: OauthProviderData | null,
+    primary?: boolean
 }>(), { enabled: true })
 
 const cardClass = computed(() => {

@@ -6,6 +6,11 @@
         ref="table"
         :ui="{ td: 'p-0 py-1 px-2', th: 'py-1 px-2' }"
     />
+    <IconText v-else
+      leading-icon="lucide:loader-circle" leading-icon-class="animate-spin" 
+      class="p-6 text-center" 
+      text="Loading sessions" 
+    />
     <Teleport to="#footer">
         <UButton v-if="rows?.length > 0" color="error" @click="revokeSelected">Revoke</UButton>
     </Teleport>
@@ -18,6 +23,7 @@ import { formatDate } from '@jzpanel/common/format';
 import type { UserPrivilegeCode } from '@jzpanel/common/Privileges';
 import type { APISessionList, SessionData, UserData } from '@jzpanel/common/User';
 import type { TableColumn } from '@nuxt/ui';
+import IconText from '~/components/IconText.vue';
 
 const { promptConfirm } = useModal()
 const toast = useToast()

@@ -41,6 +41,8 @@
 </template>
 
 <script setup lang="ts">
+import SettingsModal from '~/components/modals/SettingsModal.vue'
+
 declare const __BUILD_DATE__: string
 declare const __BUILD_COMMIT__: string
 
@@ -51,7 +53,7 @@ const { steamOnline, notice } = await useMeta()
 const route = useRoute()
 
 const settingsOpen = computed(() => {
-  return route.hash = "#settings"
+  return import.meta.client && route.hash == "#settings"
 })
 
 async function closeSettingsModal() {

@@ -1,11 +1,16 @@
 <template>
     <UCard>
         <h3 class="text-lg font-bold">API Key</h3>
-        <p v-if="!data?.apikey" class="text-muted text-sm">
+        <IconText v-if="!data || status == 'pending'" 
+            leading-icon="lucide:loader-circle" leading-icon-class="animate-spin" 
+            text="Loading" 
+        />
+        <p v-else-if="!data.apikey" class="text-muted text-sm">
             No key has been created yet
         </p>
-        <div class="flex flex-col">
-            <template v-if="data?.apikey">
+        
+        <div v-if="data" class="flex flex-col">
+            <template v-if="data.apikey">
                 <div class="flex justify-between">
                     <IconText leading-icon="lucide:calendar"><b>Created </b></IconText>
                     <span>{{ formatDate(data.apikey?.created) }} </span>
@@ -25,7 +30,7 @@
                     :loading="apikeyRolling"
                     @click="regenerate"
                 >
-                    {{ data?.apikey ? 'Regenerate' : 'Generate' }}
+                    {{ data.apikey ? 'Regenerate' : 'Generate' }}
                 </UButton>
             </div>
         </div>
@@ -47,7 +52,7 @@ const props = defineProps<{
    profile?: UserData<UserPrivilegeCode[]> 
 }>()
 
-const { data, refresh } = await useAsyncData(
+const { data, refresh, status } = useAsyncData(
     () => api<APIDeveloperResponse>("/auth/developer")
 )
 
