@@ -75,7 +75,11 @@
         </UDropdownMenu>
       </template>
       <template v-else>
-        <SteamLoginButton />
+        <UButton leading-icon="lucide:user-circle" 
+          color="neutral" 
+          size="lg"
+          to="/login"
+        >Login</UButton>
       </template>
     </template>
   </UHeader>
@@ -84,7 +88,6 @@
 <script setup lang="ts">
 import type { DropdownMenuItem } from '@nuxt/ui/runtime/components/DropdownMenu.vue.js'
 import type { NavigationMenuItem } from '@nuxt/ui/runtime/components/NavigationMenu.vue.js'
-import SteamLoginButton from './oauth/SteamLoginButton.vue'
 
 const emit = defineEmits(["open-settings"])
 
