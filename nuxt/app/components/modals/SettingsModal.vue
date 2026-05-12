@@ -4,7 +4,7 @@
     title="User Settings"
     default-open
     aria-describedby="User Settings Modal"
-    class="w-max max-w-none md:min-w-lg" 
+    class="sm:w-max max-w-none md:min-w-lg" 
   >
     <template #description>
       <UTabs :items="tabs" :content="false" value-key="value" class="w-full" 
@@ -13,9 +13,11 @@
       />
     </template>
     <template #body>
-      <SessionsTab v-if="settingsTab == 'sessions'" :profile="data" />
-      <ConnectionsTab v-else-if="settingsTab == 'connections'" :profile="data" />
-      <DeveloperTab v-else-if="settingsTab == 'dev'" :profile="data" />
+      <div>
+        <SessionsTab v-if="settingsTab == 'sessions'" :profile="data" />
+        <ConnectionsTab v-else-if="settingsTab == 'connections'" :profile="data" />
+        <DeveloperTab v-else-if="settingsTab == 'dev'" :profile="data" />
+      </div>
     </template>
     <template #footer>
       <div id="footer">
