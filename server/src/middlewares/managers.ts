@@ -28,7 +28,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 async function tryMkdir(dir: string) {
   try {
     await mkdir(dir)
-  } catch (e) {
+  } catch (e: any) {
     if (e.code !== "EEXIST") throw e
   }
 }

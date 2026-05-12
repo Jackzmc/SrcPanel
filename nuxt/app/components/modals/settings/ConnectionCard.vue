@@ -1,5 +1,5 @@
 <template>
-    <UCard :ui="{ body: cardClass }">
+    <UCard :ui="{ body: 'py-2!' }">
         <div class="flex flex-row items-center justify-between">
             <div class="flex flex-row items-center gap-4">
                 <img :src="`/img/providers/${imageName}`" class="w-8 h-8" />
@@ -9,17 +9,14 @@
                     <template v-else-if="data">
                         <p class="text-md text-muted">{{ data.username }}</p>
                     </template>
-                    <p v-else-if="enabled" class="text-md text-muted">Not connected</p>
-                    <p v-else class="text-md text-muted">Unavailable</p>
+                    <p v-else class="text-md text-dimmed">Not connected</p>
                 </div>
             </div>
-            <template v-if="enabled">
-                <template v-if="!primary">
-                    <UButton v-if="data">Link Account</UButton>
-                    <UButton v-else variant="outline">Unlink Account</UButton>
-                </template>
-                <p v-else class="text-muted text-sm">Primary</p>
+            <template v-if="!primary">
+                <UButton v-if="!data" @click="link()">Link Account</UButton>
+                <UButton v-else variant="outline" @click="unlink()" :loading="unlinking">Unlink Account</UButton>
             </template>
+            <p v-else class="text-muted text-sm">Primary</p>
         </div>
     </UCard>
 </template>
@@ -28,7 +25,14 @@
 <script setup lang="ts">
 import type { OauthProvider, OauthProviderData } from '@jzpanel/common/User';
 
+const { promptConfirm } = useModal() 
+const toast = useToast()
+const route = useRoute()
+
+const emit = defineEmits(["refresh"])
+
 const props = withDefaults(defineProps<{
+    id: string,
     enabled?: boolean,
     name: string,
     imageName: string,
@@ -37,7 +41,35 @@ const props = withDefaults(defineProps<{
     primary?: boolean
 }>(), { enabled: true })
 
-const cardClass = computed(() => {
-    return ['py-2!', props.enabled ? '' : 'opacity-40']
-})
+const unlinking = ref(false)
+
+async function link() {
+    location.href = `/api/auth/${props.id}/link?return_to=${encodeURI(route.path)}`
+}
+
+async function unlink() {
+    unlinking.value = true
+    if(await promptConfirm({
+        title: `Unlink ${props.name} account?`,
+        description: `You will need to relogin with ${props.name} to sign in with this account to use it in the future.`,
+        okText: 'Unlink',
+        okColor: 'warning'
+    })) {
+        const result = await request(`/api/auth/${props.id}/revoke?json=1`)
+        if('body' in result) {
+            toast.add({
+                title: `${props.name} unlinked successfully`,
+                color: 'success'
+            })
+            emit('refresh')
+        } else {
+            toast.add({
+                title: `Unlinking ${props.name} failed`,
+                description: result.error.message,
+                color: 'error'
+            })
+        }
+    }
+    unlinking.value = false
+}
 </script>

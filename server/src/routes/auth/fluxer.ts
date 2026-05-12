@@ -77,13 +77,12 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     }
     ["/login", "/link"].forEach(url => fastify.get.bind(fastify)(url, loginLinkHandler))
 
-    fastify.get('/revoke', async (req, reply) => {
+    fastify.get('/revoke', async (req: FastifyRequest<{ Querystring: { json?: boolean }}>, reply) => {
         await fastify.authmngr.verify(req, reply)
-        reply.type("text/html")
-        // await req.user.notify(`Your ${PROVIDER_NAME} account ${userInfo.username} has been linked successfully.`)
+        if(!req.query.json)
+            reply.type("text/html")
         await req.user!.removeProvider(PROVIDER_NAME)
-        // TODO: redirect back send notification
-        return reply.send("<h1>Discord has been revoked</h1>")
+        return req.query.json ? reply.status(204).send() : reply.send("<h1>Discord has been revoked</h1>")
     })
 
     fastify.get('/callback', async (req: FastifyRequest<{ Querystring: { code: string, state: string, return_uri?: string }}>, reply) => {

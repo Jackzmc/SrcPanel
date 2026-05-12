@@ -2,6 +2,7 @@
     <div class="flex flex-col gap-4">
         <p>Steam accounts are the primary connection and cannot be unlinked</p>
         <ConnectionCard
+            id="steam"
             name="Steam"
             image-name="steam.png"
             :data="steamData"
@@ -14,11 +15,13 @@
             text="Loading connections" 
         />
         <ConnectionCard v-for="provider in data" :key="provider.id" 
+            :id="provider.id"
             :enabled="provider.enabled"
             :name="provider.name" 
             :image-name="provider.id + '.svg'"
             :expired="provider.enabled && provider.expired"
             :data="provider.enabled ? provider.data : undefined"
+            @refresh="refresh()"
         />
     </div>
 </template>
@@ -36,7 +39,7 @@ const props = defineProps<{
 }>()
 const { user } = useAuth()
 
-const { data, status } = useAsyncData(
+const { data, status, refresh } = useAsyncData(
     () => api<APIConnections>("/auth/connections")
 )
 

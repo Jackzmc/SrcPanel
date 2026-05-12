@@ -25,13 +25,15 @@
                 </div>
             </template>
             <div class="mt-1">
-                <UButton leading-icon="lucide:rotate-ccw-key" 
-                    variant="outline" 
-                    :loading="apikeyRolling"
-                    @click="regenerate"
-                >
-                    {{ data.apikey ? 'Regenerate' : 'Generate' }}
-                </UButton>
+                <UTooltip text="Generate a new API Key, invalidating any older key">
+                    <UButton leading-icon="lucide:rotate-ccw-key" 
+                        variant="outline" 
+                        :loading="apikeyRolling"
+                        @click="regenerate"
+                    >
+                        {{ data.apikey ? 'Regenerate' : 'Generate' }}
+                    </UButton>
+                </UTooltip>
             </div>
         </div>
     </UCard>

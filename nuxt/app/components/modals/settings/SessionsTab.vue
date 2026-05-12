@@ -4,7 +4,7 @@
         :columns="sessionsColumns" 
         checkable
         ref="table"
-        :ui="{ td: 'p-0 py-1 px-2', th: 'py-1 px-2' }"
+        :ui="{ td: 'p-0 py-2 px-3', th: 'py-1 px-3' }"
     />
     <IconText v-else
       leading-icon="lucide:loader-circle" leading-icon-class="animate-spin" 
@@ -19,7 +19,7 @@
 
 <script setup lang="ts">
 import { UButton, UCheckbox } from '#components';
-import { formatDate } from '@jzpanel/common/format';
+import { formatDate, getRelDate } from '@jzpanel/common/format';
 import type { UserPrivilegeCode } from '@jzpanel/common/Privileges';
 import type { APISessionList, SessionData, UserData } from '@jzpanel/common/User';
 import type { TableColumn } from '@nuxt/ui';
@@ -62,17 +62,26 @@ const sessionsColumns: TableColumn<SessionData>[] = [
   {
     accessorKey: 'countryCode',
     header: 'Location',
-    cell: ({row}) => h('span', {class: { 'font-semibold text-primary': row.original.id === data.value?.currentSessionId }}, row.original.countryCode)
+    cell: ({row}) => h('div', { class: 'flex flex-col'}, [
+      h('span', {class: { 'font-semibold': true, 'text-primary': row.original.id === data.value?.currentSessionId }}, row.original.countryCode),
+      h('span', {class: 'text-muted'}, row.original.ip)
+    ])
   },
   {
     accessorKey: 'loginTime',
     header: 'First Seen',
-    cell: ({row}) => h('span', {class: { 'font-semibold text-primary': row.original.id === data.value?.currentSessionId }}, formatDate(row.original.loginTime))
+    cell: ({row}) => h('div', { class: 'flex flex-col'}, [
+      h('span', {class: { 'font-semibold': true, 'text-primary': row.original.id === data.value?.currentSessionId }}, formatDate(row.original.loginTime)),
+      h('span', {class: 'text-muted'}, getRelDate(row.original.loginTime))
+    ])
   },
   {
     accessorKey: 'lastActive',
     header: 'Last Seen',
-    cell: ({row}) => row.original.id === data.value?.currentSessionId ? h('span', { class: 'text-primary font-semibold'}, 'Now') : formatDate(row.original.loginTime)
+    cell: ({row}) => h('div', { class: 'flex flex-col'}, [
+      h('span', {class: { 'font-semibold': true, 'text-primary': row.original.id === data.value?.currentSessionId }}, row.original.id === data.value?.currentSessionId ? 'Current Session' : formatDate(row.original.lastActive)),
+      h('span', {class: 'text-muted'}, getRelDate(row.original.lastActive))
+    ])
   },
 //   {
 //     header: ' ',
@@ -80,7 +89,7 @@ const sessionsColumns: TableColumn<SessionData>[] = [
 //   }
 ]
 
-const { data, refresh } = await useAsyncData(
+const { data, refresh } = useAsyncData(
     () => api<APISessionList>("/auth/sessions")
 )
 

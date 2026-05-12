@@ -6,7 +6,7 @@
       title="Pre-release build - Features are not complete or are missing, bugs may occur, nothing is final."
       :ui="{title:'whitespace-normal text-xs sm:text-sm',root:'py-2 sm:py-0'}"
     />
-    <SettingsModal v-if="settingsOpen" @close="closeSettingsModal()" />
+    <SettingsModal v-if="settingsTab" @close="closeSettingsModal()" />
     <NavBar />
     <!-- Notification banners -->
     <UBanner
@@ -52,8 +52,8 @@ const date = new Date(__BUILD_DATE__).toLocaleString()
 const { steamOnline, notice } = await useMeta()
 const route = useRoute()
 
-const settingsOpen = computed(() => {
-  return import.meta.client && route.hash == "#settings"
+const settingsTab = computed(() => {
+  return import.meta.client && route.hash.startsWith("#settings")
 })
 
 async function closeSettingsModal() {

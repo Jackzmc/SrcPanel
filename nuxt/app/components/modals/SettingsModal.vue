@@ -7,12 +7,15 @@
     class="w-max max-w-none md:min-w-lg" 
   >
     <template #description>
-      <UTabs v-model="currentTab" :items="tabs" :content="false" value-key="label" class="w-full" />
+      <UTabs :items="tabs" :content="false" value-key="value" class="w-full" 
+        :modelValue="settingsTab"
+        @update:model-value="v => onSwitchTab(v)"
+      />
     </template>
     <template #body>
-      <SessionsTab v-if="currentTab == 'Sessions'" :profile="data" />
-      <ConnectionsTab v-else-if="currentTab == 'Connections'" :profile="data" />
-      <DeveloperTab v-else-if="currentTab == 'Developer'" :profile="data" />
+      <SessionsTab v-if="settingsTab == 'sessions'" :profile="data" />
+      <ConnectionsTab v-else-if="settingsTab == 'connections'" :profile="data" />
+      <DeveloperTab v-else-if="settingsTab == 'dev'" :profile="data" />
     </template>
     <template #footer>
       <div id="footer">
@@ -35,22 +38,34 @@ const emit = defineEmits<{
   (e: 'close', value?: string): void,
 }>()
 
+const route = useRoute()
+
 const tabs: TabsItem[] = [
   {
-    label: "Sessions"
+    label: "Sessions",
+    value: 'sessions',
   },
   {
-    label: "Connections"
+    label: "Connections",
+    value: 'connections'
   },
   {
-    label: "Developer"
+    label: "Developer",
+    value: 'dev'
   }
 ]
 
-const currentTab = ref("Sessions")
+const settingsTab = computed(() => {
+  const split = route.hash.split(":")
+  const tab = import.meta.client && tabs.find(tab => tab.value === split[1]) 
+  return tab ? tab.value : "sessions"
+})
 
 const { data } = useAsyncData(
   () => api<UserData<UserPrivilegeCode[]>>("/auth/profile")
 )
 
+function onSwitchTab(tab: string|number) {
+  location.hash = `#settings:${tab}`
+}
 </script>
