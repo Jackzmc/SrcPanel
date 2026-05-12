@@ -2,10 +2,10 @@
   <div>
     <Hero title="Keybinds" subtitle="List of all L4D2 keybind codes and tool to create keybinds" />
     <UContainer>
-      <div class="grid grid-cols-4 gap-4">
+      <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
         <div class="space-y-4 col-span-3">
           <h4 class="text-lg font-semibold">Select a key to set a keybind</h4>
-          <div class="keyboardContainer">
+          <div class="keyboardContainer hidden! sm:block!">
             <div class="simple-keyboard-main"></div>
 
             <div class="controlArrows">
@@ -18,10 +18,13 @@
               <div class="simple-keyboard-numpadEnd"></div>
             </div>
           </div>
+          <div class="block sm:hidden">
+            <p class="p-6">Sorry, keybind tool only available on larger displays</p>
+          </div>
           <div class="my-4 p-2">
             <h4 class="text-lg">Keybinds</h4>
             <ul>
-              <div v-for="(keybind, i) in keybinds" :key="keybind" class="list-disc list-inside grid grid-cols-2 py-1">
+              <div v-for="(keybind, i) in keybinds" :key="keybind" class="list-disc list-inside grid grid-cols-1 sm:grid-cols-2 py-1">
                 <div>
                   <code>{{ keybind }}</code>
                 </div>

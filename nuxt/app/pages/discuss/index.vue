@@ -1,7 +1,7 @@
 <template>
   <Hero title="Discussions" />
   <UContainer>
-    <div class="grid grid-cols-3 gap-4">
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
       <UAlert v-if="error" class="space-y-2 col-span-2" color="error" title="Error occurred" :description="error.message" />
       <div v-else class="space-y-4 col-span-2">
         <DiscussCard v-for="discuss in data" :key="discuss.id" :discuss="discuss" type="list" />

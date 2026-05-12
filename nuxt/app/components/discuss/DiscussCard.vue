@@ -1,12 +1,12 @@
 <template>
   <UCard class="bg-gray-50 dark:bg-gray-950">
     <div>
-      <div class="flex justify-between gap-3 items-start">
+      <div class="flex justify-between gap-3 items-start flex-wrap">
         <h2 class="text-lg font-semibold">
           <strong class="font-bold text-xl">Discuss: </strong>
           {{ discuss.title }}
         </h2>
-        <div class="flex gap-2">
+        <div class="flex gap-1 sm:gap-2">
           <template v-if="discuss.closedAt">
             <UBadge v-if="isClosed" leading-icon="lucide:clock" color="error">
               Closed
@@ -29,7 +29,7 @@
       </div>
       <p class="text-sm">{{ discuss.description }}</p>
 
-      <div class="grid grid-cols-2 gap-4 py-4">
+      <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-4 py-4">
         <DiscussChoice v-for="entry in options" :key="entry.option.id"
           :entry="entry"
           :type="discuss.type"
