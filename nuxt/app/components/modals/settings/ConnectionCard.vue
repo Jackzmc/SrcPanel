@@ -1,7 +1,7 @@
 <template>
     <UCard :ui="{ body: 'py-2!' }">
         <div class="flex flex-row items-center justify-between">
-            <div class="flex flex-row items-center gap-4">
+            <div class="flex flex-row items-center gap-2 sm:gap-4">
                 <img :src="`/img/providers/${imageName}`" class="w-8 h-8" />
                 <div>
                     <h3 class="text-lg font-bold">{{ name }}</h3>
@@ -13,8 +13,15 @@
                 </div>
             </div>
             <template v-if="!primary">
-                <UButton v-if="!data" @click="link()">Link Account</UButton>
-                <UButton v-else variant="outline" @click="unlink()" :loading="unlinking">Unlink Account</UButton>
+                <template v-if="!data">
+                    <UButton @click="link()" class="hidden sm:block">Link Account</UButton>
+                    <UButton @click="link()" class="sm:hidden" size="sm">Link</UButton>
+                </template>
+                <template v-else>
+                    <UButton variant="outline" @click="unlink()" :loading="unlinking" class="hidden sm:block">Unlink Account</UButton>
+                    <UButton variant="outline" @click="unlink()" :loading="unlinking" size="sm" class="sm:hidden">Unlink</UButton>
+                </template>
+
             </template>
             <p v-else class="text-muted text-sm">Primary</p>
         </div>
