@@ -62,9 +62,10 @@ const tabs: TabsItem[] = [
 ]
 
 const settingsTab = computed(() => {
-  const split = route.hash.split(":")
-  const tab = import.meta.client && tabs.find(tab => tab.value === split[1]) 
-  return tab ? tab.value : "sessions"
+  const hash = route.hash
+  const split = hash.split(":")
+  const tab = tabs.find(t => t.value === split[1])
+  return tab?.value ?? "sessions"
 })
 
 const { data } = useAsyncData(
