@@ -13,11 +13,15 @@
       />
     </template>
     <template #body>
-      <div>
-        <SessionsTab v-if="settingsTab == 'sessions'" :profile="data" />
-        <ConnectionsTab v-else-if="settingsTab == 'connections'" :profile="data" />
-        <DeveloperTab v-else-if="settingsTab == 'dev'" :profile="data" />
-      </div>
+      <Transition :key="settingsTab" mode="out-in" appear>
+        <KeepAlive>
+          <div>
+            <SessionsTab v-if="settingsTab == 'sessions'" :profile="data" />
+            <ConnectionsTab v-else-if="settingsTab == 'connections'" :profile="data" />
+            <DeveloperTab v-else-if="settingsTab == 'dev'" :profile="data" />
+          </div>
+        </KeepAlive>
+      </Transition>
     </template>
     <template #footer>
       <div id="footer">
@@ -68,6 +72,6 @@ const { data } = useAsyncData(
 )
 
 function onSwitchTab(tab: string|number) {
-  location.hash = `#settings:${tab}`
+  navigateTo({ path: route.path, hash: `#settings:${tab}` }, { replace: true })
 }
 </script>

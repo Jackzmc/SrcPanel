@@ -11,7 +11,7 @@
       class="p-6 text-center" 
       text="Loading sessions" 
     />
-    <Teleport to="#footer">
+    <Teleport to="#footer" defer>
         <UButton v-if="rows?.length > 0" color="error" @click="revokeSelected">Revoke</UButton>
     </Teleport>
 </template>

@@ -21,7 +21,7 @@
                 </div>
                 <div class="flex flex-col justify-between">
                     <IconText leading-icon="lucide:key-square"><b>Key</b></IconText>
-                    <pre class="text-wrap">{{ data.apikey.id }}</pre>
+                    <pre class="text-wrap text-xs">{{ data.apikey.id }}</pre>
                 </div>
             </template>
             <div class="mt-1">
@@ -37,8 +37,6 @@
             </div>
         </div>
     </UCard>
-    <Teleport to="#footer">
-    </Teleport>
 </template>
 
 
