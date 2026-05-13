@@ -67,7 +67,7 @@ export function getRelDate(timestamp: number): string {
   if (isNaN(dayDiff) || dayDiff < 0 || dayDiff >= 31) return `in the future`
 
   return dayDiff == 0 && (
-    secondsDiff < 0 && "just now" 
+    secondsDiff < 60 && "just now" 
     || secondsDiff < 60 && `${Math.ceil(secondsDiff)} seconds ago` 
     || secondsDiff < 120 && "1 minute ago" 
     || secondsDiff < 3600 && Math.floor(secondsDiff / 60) + " minutes ago" 
