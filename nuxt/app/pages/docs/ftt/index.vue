@@ -2,7 +2,6 @@
   <div>
     <!-- TODO: re add permission check -->
     <NuxtPage />
-    <Hero title="Feed The Trolls" subtitle="The anti-troll arsenal" />
     <UContainer class="space-y-2">
       
       <div class="grid grid-cols-3 gap-4">
@@ -64,6 +63,11 @@
 <script setup lang="ts">
 useHead({
   title: "Feed The Trolls"
+})
+definePageMeta({
+  title: "Feed The Trolls",
+  description: "The anti-troll arsenal",
+  hero: "default"
 })
 import type { SelectMenuItem, TabsItem } from '@nuxt/ui'
 import Hero from '~/components/Hero.vue'

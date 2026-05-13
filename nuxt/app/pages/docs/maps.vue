@@ -1,6 +1,5 @@
 <template>
     <div>
-        <Hero title="Campaigns" subtitle="" />
         <UContainer>
             <div class="grid grid-cols-4 justify-between gap-4">
                 <div class="flex flex-col gap-2 col-span-3">
@@ -33,6 +32,11 @@
 </template>
 
 <script setup lang="ts">
+definePageMeta({
+  title: "L4D2 Maps",
+  description: "List of official maps for L4D2 and random map picker",
+  hero: "default"
+})
 const CAMPAIGNS = [
   {
     name: "Dead Center",

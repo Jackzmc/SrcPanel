@@ -55,7 +55,8 @@
 definePageMeta({
   title: "Keybind Generator - Tools",
   pageTitle: 'Keybinds',
-  description: 'List of all L4D2 keybind codes and tool to create keybinds'
+  description: 'List of all L4D2 keybind codes and tool to create keybinds',
+  hero: 'default'
 })
 import { ref, onMounted, onBeforeMount, computed } from 'vue';
 

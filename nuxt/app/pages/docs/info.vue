@@ -37,7 +37,8 @@
 definePageMeta({
     title: "Rules & Procedures - Docs",
     pageTitle: "Rules & Procedures",
-    description: "Because it's necessary"
+    description: "Because it's necessary",
+    hero: "default"
 })
 import type { NavigationMenuItem } from '@nuxt/ui';
 import type { DocsRulesCollectionItem } from '@nuxt/content'
