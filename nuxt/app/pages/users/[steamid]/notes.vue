@@ -1,5 +1,6 @@
 <template>
   <div class="mt-4">
+    <p class="py-2">Showing {{  data?.notes.length }} notes</p>
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
       <UAlert v-if="error" color="error" title="Error" :description="error.message" />
       <UCard :ui="{body:'p-3!'}" class="border border-dashed">
