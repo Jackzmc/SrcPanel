@@ -51,7 +51,7 @@ declare const __BUILD_COMMIT__: string
 const commit = __BUILD_COMMIT__
 const date = new Date(__BUILD_DATE__).toLocaleString()
 
-const { steamOnline, notice } = await useMeta()
+const { steamOnline, notice } = await usePanelMeta()
 const route = useRoute()
 
 const settingsTab = computed(() => {
@@ -59,21 +59,28 @@ const settingsTab = computed(() => {
 })
 
 const hero = computed(() => {
-  if(route.meta.hero === null) return null
-  // if undefined, default to title/desc
+  if(!route.meta.hero) return null
+  let title = route.meta.pageTitle ?? route.meta.title ?? "JzPanel"
+  let subtitle = route.meta.description
+  if(route.meta.hero != "default") {
+    if(route.meta.hero.title) title = route.meta.hero.title
+    if(route.meta.hero.subtitle) subtitle = route.meta.hero.subtitle
+  }
   return {
-    title: route.meta.hero?.title ?? route.meta.pageTitle ?? route.meta.title ?? "JzPanel",
-    subtitle: route.meta.hero?.subtitle ?? route.meta.description
+    title,
+    subtitle
   }
 })
 
-async function closeSettingsModal() {
-  await navigateTo({ hash: "" })
-}
 
 useSeoMeta({
   title: route.meta.title,
   ogTitle: route.meta.pageTitle ?? route.meta.title,
   description: route.meta.description
 })
+
+async function closeSettingsModal() {
+  await navigateTo({ hash: "" })
+}
+
 </script>

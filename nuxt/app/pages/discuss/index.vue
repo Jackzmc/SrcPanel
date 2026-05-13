@@ -1,5 +1,4 @@
 <template>
-  <Hero title="Discussions" />
   <UContainer>
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
       <UAlert v-if="error" class="space-y-2 col-span-2" color="error" title="Error occurred" :description="error.message" />
@@ -22,8 +21,9 @@
 </template>
 
 <script setup lang="ts">
-useHead({
+usePageHead({
   title: 'Discussions',
+  description: 'Vote and discuss anything'
 })
 import { type APIDiscussion } from '@jzpanel/common/Discussions';
 import DiscussCard from '~/components/discuss/DiscussCard.vue';
@@ -38,4 +38,5 @@ const startDiscussionTitle = ref("")
 async function startDiscussion() {
   await navigateTo(`/discuss/new?title=${encodeURIComponent(startDiscussionTitle.value)}`)
 }
+
 </script>

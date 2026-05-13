@@ -44,6 +44,11 @@ const { data } = await useAsyncData(
 if(!data.value) {
     throw createError({ statusCode: 404, statusMessage: 'Page not found' })
 }
+useSeoMeta({
+    title: data.value.title,
+    ogTitle: data.value.title,
+    description: data.value.description,
+})
 
 const sidebar = computed(() => {
     return data.value && (
@@ -53,10 +58,5 @@ const sidebar = computed(() => {
     )
 })
 
-useSeoMeta({
-    title: data.value.title,
-    ogTitle: data.value.title,
-    description: data.value.description,
-    ogDescription: data.value.description,
-})
+
 </script>

@@ -9,7 +9,7 @@ declare module '#app' {
     hero?: {
         title?: string,
         subtitle?: string,
-    } | null
+    } | "default" | null
   }
 }
 

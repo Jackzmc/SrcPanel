@@ -77,13 +77,11 @@
 </template>
 
 <script setup lang="ts">
-useHead({
-  title: "Cvars - Docs"
-})
 definePageMeta({
   title: "Cvars - Tools",
   pageTitle: "Cvars",
-  description: "All the cvars you may want to change up the gameplay" 
+  description: "All the cvars you may want to change up the gameplay",
+  hero: "default"
 })
 import Hero from '~/components/Hero.vue'
 import { parseCommandString } from '@jzpanel/common/cmds/util'

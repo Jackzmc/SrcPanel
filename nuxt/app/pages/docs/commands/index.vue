@@ -116,9 +116,9 @@
 definePageMeta({
   title: 'Commands - Tools',
   pageTitle: 'Commands',
-  description: "All the information to have fun, and manage those troublemakers"
+  description: "All the information to have fun, and manage those troublemakers",
+  hero: "default"
 })
-import Hero from '~/components/Hero.vue'
 import CmdArg from '~/components/commands/CmdArg.vue'
 import CmdNode from '~/components/commands/CmdNode.vue'
 import type { SelectItem } from '@nuxt/ui'

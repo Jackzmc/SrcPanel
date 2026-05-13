@@ -1,6 +1,6 @@
 import type { PanelMetaInfo } from '@jzpanel/common/Panel'
 
-export async function useMeta() {
+export async function usePanelMeta() {
   const api = useApi()
 
   // Same key = single fetch, shared across all components
