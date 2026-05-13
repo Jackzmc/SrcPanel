@@ -27,13 +27,14 @@
     />
 
     <div>
+      <Hero v-if="hero" :title="hero.title" :subtitle="hero.subtitle" />
       <slot />
     </div>
     <USeparator class="mt-6" icon="i-simple-icons-nuxtdotjs" />
     <UFooter>
       <template #default>
         <p class="text-sm text-muted">
-          <b>jzPanel</b> v2.0.0. Commit <b>{{ commit }}</b>. Built <b>{{ date }}</b>
+          <b>jzPanel</b> v{{  pkg.version }}. Commit <b>{{ commit }}</b>. Built <b>{{ date }}</b>
         </p>
       </template>
     </UFooter>
@@ -42,6 +43,7 @@
 
 <script setup lang="ts">
 import SettingsModal from '~/components/modals/SettingsModal.vue'
+import pkg from '../../package.json'
 
 declare const __BUILD_DATE__: string
 declare const __BUILD_COMMIT__: string
@@ -56,7 +58,22 @@ const settingsTab = computed(() => {
   return import.meta.client && route.hash.startsWith("#settings")
 })
 
+const hero = computed(() => {
+  if(route.meta.hero === null) return null
+  // if undefined, default to title/desc
+  return {
+    title: route.meta.hero?.title ?? route.meta.pageTitle ?? route.meta.title ?? "JzPanel",
+    subtitle: route.meta.hero?.subtitle ?? route.meta.description
+  }
+})
+
 async function closeSettingsModal() {
   await navigateTo({ hash: "" })
 }
+
+useSeoMeta({
+  title: route.meta.title,
+  ogTitle: route.meta.pageTitle ?? route.meta.title,
+  description: route.meta.description
+})
 </script>

@@ -28,7 +28,7 @@ useSeoMeta({
   titleTemplate: (chunk) => chunk ? `${chunk} | ${title}` : title,
   title: undefined, // let each page set its own
   description,
-  ogTitle: title,
+  ogTitle: undefined,
   ogDescription: description,
 })
 

@@ -1,6 +1,5 @@
 <template>
     <div>
-        <Hero title="Rules & Procedures" subtitle="Because it's necessary" />
         <UContainer>
             <div class="grid grid-cols-3 gap-4">
                 <div class="col-span-2 flex flex-col gap-4">
@@ -35,6 +34,11 @@
 </template>
 
 <script setup lang="ts">
+definePageMeta({
+    title: "Rules & Procedures - Docs",
+    pageTitle: "Rules & Procedures",
+    description: "Because it's necessary"
+})
 import type { NavigationMenuItem } from '@nuxt/ui';
 import type { DocsRulesCollectionItem } from '@nuxt/content'
 

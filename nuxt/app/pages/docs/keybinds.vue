@@ -1,6 +1,5 @@
 <template>
   <div>
-    <Hero title="Keybinds" subtitle="List of all L4D2 keybind codes and tool to create keybinds" />
     <UContainer>
       <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
         <div class="space-y-4 col-span-3">
@@ -53,8 +52,10 @@
 </template>
 
 <script setup lang="ts">
-useHead({
-  title: "Keybind Generator - Docs"
+definePageMeta({
+  title: "Keybind Generator - Tools",
+  pageTitle: 'Keybinds',
+  description: 'List of all L4D2 keybind codes and tool to create keybinds'
 })
 import { ref, onMounted, onBeforeMount, computed } from 'vue';
 

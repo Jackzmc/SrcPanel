@@ -41,8 +41,11 @@
 </template>
 
 <script setup lang="ts">
-useHead({
-  title: "Overview"
+useSeoMeta({
+  title: 'Overview',
+  ogTitle: 'Overview',
+  description: 'Game server administration panel',
+  ogDescription: 'Game server administration panel',
 })
 import type { APIListServersV1 } from '@jzpanel/common/Server'
 

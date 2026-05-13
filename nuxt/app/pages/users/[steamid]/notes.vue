@@ -36,8 +36,9 @@
 
 <script setup lang="ts">
 definePageMeta({
-  tab: "notes"
+  tab: "notes",
 })
+
 import { type APICreateNoteResponse, type APIListUserNotes, type APINotesResponse } from '@jzpanel/common/Note';
 import type { APIUserDetails } from '@jzpanel/common/User'
 import NoteCard from '~/components/users/NoteCard.vue';
@@ -49,8 +50,14 @@ const { user } = useAuth()
 
 const props = defineProps<{
   steamid: string
+  playerName: string,
   data: APIUserDetails
 }>()
+
+useSeoMeta({
+  description: `Admin notes for ${props.playerName}`,
+  ogDescription: `Admin notes for ${props.playerName}`
+})
 
 const { data, refresh, error } = await useAsyncData<APIListUserNotes>(
   `notes.${props.steamid}`,

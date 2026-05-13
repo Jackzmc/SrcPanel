@@ -32,10 +32,6 @@
 import FluxerLoginButton from '~/components/oauth/FluxerLoginButton.vue';
 import SteamLoginButton from '~/components/oauth/SteamLoginButton.vue';
 
-useHead({
-    title: "Login"
-})
-
 const { isLoggedIn } = useAuth()
 const route = useRoute()
 
@@ -43,9 +39,26 @@ if(isLoggedIn.value) {
     await navigate()
 }
 
+const title = computed(() => {
+    if(route.query.return_to) return "Login required"
+    return `Login to admin panel`
+})
+
 const description = computed(() => {
     if(route.query.return_to) return "Page requires you to login to view."
     return "Login to admin panel with steam or other login"
+})
+
+useSeoMeta({
+    title: 'Login',
+    ogTitle: title.value,
+    description: description.value,
+    ogDescription: description.value,
+    robots: {
+        noarchive: true,
+        nofollow: true,
+        noindex: true,
+    }
 })
 
 async function navigate()  {

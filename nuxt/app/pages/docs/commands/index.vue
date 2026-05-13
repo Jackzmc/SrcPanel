@@ -2,7 +2,6 @@
   <div>
     <!-- TODO: re add permission check -->
     <NuxtPage />
-    <Hero title="Commands" subtitle="All the information to have fun, and manage those troublemakers" />
     <UContainer>
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div class="sm:order-1 order-2">
@@ -114,8 +113,10 @@
 </template>
 
 <script setup lang="ts">
-useHead({
-  title: "Commands - Docs"
+definePageMeta({
+  title: 'Commands - Tools',
+  pageTitle: 'Commands',
+  description: "All the information to have fun, and manage those troublemakers"
 })
 import Hero from '~/components/Hero.vue'
 import CmdArg from '~/components/commands/CmdArg.vue'

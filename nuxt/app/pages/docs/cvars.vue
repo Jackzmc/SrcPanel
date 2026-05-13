@@ -1,7 +1,6 @@
 <template>
   <div>
     <NuxtPage />
-    <Hero title="Cvars" subtitle="All the cvars you may want to change up the gameplay" />
     <UContainer>
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div class="sm:order-1 order-2">
@@ -80,6 +79,11 @@
 <script setup lang="ts">
 useHead({
   title: "Cvars - Docs"
+})
+definePageMeta({
+  title: "Cvars - Tools",
+  pageTitle: "Cvars",
+  description: "All the cvars you may want to change up the gameplay" 
 })
 import Hero from '~/components/Hero.vue'
 import { parseCommandString } from '@jzpanel/common/cmds/util'

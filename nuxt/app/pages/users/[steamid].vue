@@ -2,7 +2,7 @@
   <div>
     <Hero v-if="data" :title="title" :avatar="ids&&data ? { alt: data.user.name ?? ids?.steamid2, id: ids.steamid2 } : undefined">
       <template #subtitle>
-        <div class="flex text-center justify-center items-center gap-4 pt-2">
+        <div class="flex flex-wrap text-center justify-center items-center gap-4 pt-2">
           <UTooltip v-for="(value, type) in ids" :key="type" :text="type">
             <span>{{ value }}</span>
           </UTooltip>
@@ -15,7 +15,7 @@
         :model-value="tabId"
         @update:model-value="tab => navigateTo(`/users/${ids!.steamid2}/${tab}`)"
       />
-      <NuxtPage :steamids="ids" :steamid="ids.steamid2" :data="data" />
+      <NuxtPage :steamids="ids" :steamid="ids.steamid2" :player-name="playerName" :data="data" />
       <UFooter>
         <p class="text-xs text-muted">Profile fetched in {{ data.meta.times.user }} ms</p>
       </UFooter>
@@ -94,14 +94,30 @@ const tabs = [
 
 
 const tabId = computed(() => route.meta.tab as string)
+const tab = computed(() => tabs.find(tab => tab.value === tabId.value))
+const playerName = computed(() => {
+  return data.value?.user.name ?? data.value?.user.id ?? route.params.steamid
+})
 
 useHead({
   title: computed(() => {
+    const name = tab.value?.label ?? 'Players'
     if(data.value && ids.value) {
-      if(data.value.user.name) return `${data.value.user.name} - ${ids.value.steamid2} - Players`
-      return `${ids.value.steamid2} - Players`
+      if(data.value.user.name) return `${name} - ${data.value.user.name} - ${ids.value.steamid2}`
+      return `${name} - ${ids.value.steamid2}`
     }
-    return "Players"
+    return name
   })
+})
+useSeoMeta({
+  ogTitle: computed(() => {
+    const name = tab.value?.label ?? 'Players'
+    if(data.value && ids.value) {
+      if(data.value.user.name) return `Player ${name} - ${data.value.user.name} - ${ids.value.steamid2}`
+      return `Player ${name} - ${ids.value.steamid2}`
+    }
+    return name
+  }),
+  description: `Player info for ${playerName.value}`
 })
 </script>

@@ -55,6 +55,8 @@ const sidebar = computed(() => {
 
 useSeoMeta({
     title: data.value.title,
-    description: data.value.description
+    ogTitle: data.value.title,
+    description: data.value.description,
+    ogDescription: data.value.description,
 })
 </script>
