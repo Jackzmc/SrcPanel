@@ -1,3 +1,9 @@
+/**
+ * Converts a unix seconds timestamp to locale user's date and time
+ * @param timestamp unix seconds timestamp or undefined for now
+ * @param onlyDate default false, if set, does not include time
+ * @returns 
+ */
 export function formatDate(timestamp?: number, onlyDate = false) {
   const d = timestamp ? new Date(timestamp * 1000) : new Date();
   let output = d.toISOString().split('T')[0]
@@ -6,6 +12,25 @@ export function formatDate(timestamp?: number, onlyDate = false) {
   });
   return output
 }
+
+/**
+ * Formats a unix seconds timestamp to relative time (getRelDate) if within maxSecsForRel seconds, or formats as date (formatDate) otherwise
+ * @param timestamp unix seconds timestamp
+ * @param maxTimeForRel amount of seconds where if duration exceeded to format as a date. Defaults to 1 week
+ */
+export function formatDateSmart(timestamp: number, maxSecsForRel: number = 604_800) {
+  const rel = Date.now() - (timestamp*1000)
+  if(rel > maxSecsForRel) return formatDate(timestamp)
+  return getRelDate(timestamp)
+}
+
+/**
+ * Format bytes into human readable size
+ * @param bytes 
+ * @param si true: 1024, false: 1000
+ * @param dp decimal points
+ * @returns 
+ */
 export function formatSize(bytes: number, si = false, dp = 1) {
   const thresh = si ? 1000 : 1024;
 
@@ -42,7 +67,15 @@ export function getRelDate(timestamp: number): string {
   if (isNaN(dayDiff) || dayDiff < 0 || dayDiff >= 31) return `in the future`
 
   return dayDiff == 0 && (
-    secondsDiff < 0 && "just now" || secondsDiff < 60 && `${Math.ceil(secondsDiff)} seconds ago` || secondsDiff < 120 && "1 minute ago" || secondsDiff < 3600 && Math.floor(secondsDiff / 60) + " minutes ago" || secondsDiff < 7200 && "1 hour ago" || secondsDiff < 86400 && Math.floor(secondsDiff / 3600) + " hours ago") || dayDiff == 1 && "yesterday" || dayDiff < 7 && dayDiff + " days ago" || dayDiff < 31 && Math.ceil(dayDiff / 7) + " weeks ago"
+    secondsDiff < 0 && "just now" 
+    || secondsDiff < 60 && `${Math.ceil(secondsDiff)} seconds ago` 
+    || secondsDiff < 120 && "1 minute ago" 
+    || secondsDiff < 3600 && Math.floor(secondsDiff / 60) + " minutes ago" 
+    || secondsDiff < 7200 && "1 hour ago" 
+    || secondsDiff < 86400 && Math.floor(secondsDiff / 3600) + " hours ago"
+  ) 
+    || dayDiff == 1 && "yesterday" || dayDiff < 7 && dayDiff + " days ago" 
+    || dayDiff < 31 && Math.ceil(dayDiff / 7) + " weeks ago"
     || "Unknown"
 }
 
