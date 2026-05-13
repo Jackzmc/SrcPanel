@@ -23,7 +23,7 @@ const props = defineProps<{
 }>()
 
 const items = [
-  { label: 'Profile',  icon: 'i-lucide-user',          to: `/users/${props.steamid}/overview/profile` },
-  { label: 'Names',    icon: 'i-lucide-text',          to: `/users/${props.steamid}/overview/names` },
+  { label: 'Profile',  icon: 'i-lucide-user', to: `/users/${props.steamid}/overview/profile` },
+  { label: 'Names',    icon: 'i-lucide-text', to: `/users/${props.steamid}/overview/names` },
 ]
 </script>

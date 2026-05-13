@@ -1,14 +1,14 @@
 <template>
   <div class="grid grid-cols-3 gap-2">
     <div class="col-span-2 space-y-2">
-      <div>
+      <UCard>
         <h3 class="text-lg font-semibold">Player Statistics</h3>
         <PlayerStats :steamid="props.steamid" />
-      </div>
-      <div>
+      </UCard>
+      <UCard>
         <h3 class="text-lg font-semibold">Logs</h3>
-        <div class="p-6"><em>Unavailable. Coming soon</em></div>
-      </div>
+        <UBadge class="text-warning">Available in future updates</UBadge>
+      </UCard>
     </div>
     <div class="space-y-2">
       <UCard class="bg-light-blue">
@@ -43,8 +43,6 @@
 import type { APIUserDetails, UserNameEntry } from '@jzpanel/common/User'
 import PlayerStats from '@/components/users/overview/PlayerStats.vue'
 import SteamID from 'steamid';
-import type { TableColumn } from '@nuxt/ui';
-import { formatDate } from '@jzpanel/common/format';
 
 const props = defineProps<{
   steamid: string

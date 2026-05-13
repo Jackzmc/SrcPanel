@@ -96,6 +96,12 @@ const tabs = [
 const tabId = computed(() => route.meta.tab as string)
 
 useHead({
-  title: computed(() => data.value&&ids.value ? `${data.value.user.name} - ${ids.value.steamid2} - Players` : `Players`)
+  title: computed(() => {
+    if(data.value && ids.value) {
+      if(data.value.user.name) return `${data.value.user.name} - ${ids.value.steamid2} - Players`
+      return `${ids.value.steamid2} - Players`
+    }
+    return "Players"
+  })
 })
 </script>

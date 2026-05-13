@@ -20,3 +20,11 @@ export interface APINotesResponse {
   notesCount: number,
   notes: Note[]
 }
+export interface APIListUserNotes {
+    notes: Note[]
+}
+
+export interface APICreateNoteResponse {
+  /** ID of new note */
+  id: number
+}

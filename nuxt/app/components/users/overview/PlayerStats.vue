@@ -1,5 +1,5 @@
 <template>
-  <div v-if="stats" class="flex flex-row gap-6 p-6 flex-wrap">
+  <div v-if="stats" class="flex justify-around flex-row gap-6 py-4 flex-wrap">
     <div>
       <h4 class="text-md font-semibold">Playtime</h4>
       <p>{{ playtime }}</p>
@@ -21,11 +21,11 @@
       <p>{{ stats.country }}</p>
       <p>{{ stats.region }}</p>
     </div>
-    <div>
+    <!-- <div>
       <h4 class="text-md font-semibold">Friendly Fires</h4>
       <p>{{ stats.damage_dealt_friendly_count }}x</p>
       <p>{{ stats.damage_dealt_friendly }} HP</p>
-    </div>
+    </div> -->
   </div>
   <div v-else-if="statsStatus == 'pending'" class="p-4">
     <Icon name="i-lucide-loader-circle" class="animate-spin align-middle mb-1" />

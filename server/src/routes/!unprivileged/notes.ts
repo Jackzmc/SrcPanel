@@ -1,7 +1,7 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
 import { RowDataPacket } from 'mysql2';
 import { ADMINS_DB } from '../../routes/!!privileged/admins.js';
-import { APINotesResponse, Note } from '@jzpanel/common/Note';
+import { APIListUserNotes, APINotesResponse, Note } from '@jzpanel/common/Note';
 import SteamID from 'steamid';
 
 
@@ -98,7 +98,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     })
   })
 
-  fastify.get('/admins/:steamid', async (req: FastifyRequest<{ Params: { steamid: string } }>, reply) => {
+  fastify.get('/admins/:steamid', async (req: FastifyRequest<{ Params: { steamid: string } }>, reply): Promise<APIListUserNotes> => {
     const [notes] = await fastify.db.execute<RowDataPacket[]>(
       `SELECT notes.*, u.last_name as user, e.last_name as executor, !b.expired as banned
             FROM notes
