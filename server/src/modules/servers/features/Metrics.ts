@@ -33,7 +33,10 @@ export default class MetricsFeature extends Feature {
 
     constructor(server: Server) {
         super("Metrics", server)
-        this.#metric = new NamespacedMetric(`servers`, { server_id: server.id, game: server.game })
+        this.#metric = new NamespacedMetric(`servers`, { 
+          server_id: server.id, 
+          game: server.game 
+        })
     }
 
     get #dockerServer() : DockerServer | null {
@@ -152,6 +155,7 @@ export default class MetricsFeature extends Feature {
       if(data) {
         playerCount = data.players.length
         const difficulty = this._server.Plugin?.liveStatus?.game?.difficulty
+        // TODO: maybe solution incase there is no uptime?
         if(this._server.uptime)
           this.#metric.send("uptime_secs", this._server.uptime, {
             map: this._server.status.data?.map, 

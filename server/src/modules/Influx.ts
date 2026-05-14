@@ -100,7 +100,7 @@ export function sendMetric(field: string, value: number, labels: MetricLabels = 
         pt.stringField(field, value)
     }
     _writer.writePoint(pt)
-    log.debug({ labels, value, measurement: `${NAMESPACE}_${field}` }, `writing point`)
+    log.trace({ labels, value, measurement: `${NAMESPACE}_${field}` }, `writing point`)
 }
 
 function writeTags(point: Point, labels: MetricLabels) {
@@ -145,7 +145,7 @@ export class NamespacedMetric {
             pt.stringField(measurement, value)
         }
         _writer.writePoint(pt)
-        log.debug({ labels: mergedLabels, measurement, value, prefix: this.metricPrefix }, `NamespacedMetric: writing point`)
+        log.trace({ labels: mergedLabels, measurement, value, prefix: this.metricPrefix }, `NamespacedMetric: writing point`)
         return true
     }
 
