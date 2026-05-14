@@ -18,7 +18,7 @@ import { OauthAuthData } from './OauthProvider.js';
 
 import logger from '../../logger.js'
 import CacheManager from "../../modules/CacheManager.js";
-import { sendMetric } from "modules/Influx.js";
+import { sendMetric } from "../Influx.js";
 const log = logger.child({ name: "AuthManager" })
 
 interface AddAdmin {

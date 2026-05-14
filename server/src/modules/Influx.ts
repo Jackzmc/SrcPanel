@@ -1,6 +1,8 @@
 import { InfluxDB, Point, WriteApi } from "@influxdata/influxdb-client";
 import dotenv from 'dotenv'
-import pkg from '../../package.json'
+import pkg from '../../package.json' with { type: "json" }
+import logger from '../logger.js'
+const log = logger.child({ name: "influx" })
 dotenv.config()
 
 import {Agent} from 'http'
@@ -11,10 +13,11 @@ const keepAliveAgent = new Agent({
 })
 process.on('exit', () => keepAliveAgent.destroy())
 
-let influx: InfluxDB
-if(process.env.INFLUX_URL && process.env.INFLUX_TOKEN) {
+let influx: InfluxDB;
+let _writer: WriteApi | null;
+if(process.env.INFLUX_URL) {
     if(!process.env.INFLUX_ORG || !process.env.INFLUX_BUCKET) {
-        console.error("[Influx] ERROR: No INFLUX_ORG or INFLUX_BUCKET set")
+        log.error("No INFLUX_ORG or INFLUX_BUCKET set")
     } else {
         influx = new InfluxDB({
             url: process.env.INFLUX_URL,
@@ -23,16 +26,26 @@ if(process.env.INFLUX_URL && process.env.INFLUX_TOKEN) {
                 agent: keepAliveAgent,
             },
         })
-        console.info('Influx connected to', process.env.INFLUX_URL)
+        log.info({ url: process.env.INFLUX_URL }, 'Influx connected')
+        _writer = createWriter()
     }
 } else {
-    console.debug('Influx: no env variables found, disabled')
+    log.warn('not available - no env variables found')
 }
 
-export function getWriter(defaultTags: Record<string, string> = {}): WriteApi | null {
-    if(!influx) return null
+export function getGlobalWriter(): WriteApi | null {
+    return _writer
+}
+
+/** create a new writer instance. MUST be closed manually */
+export function createWriter(defaultTags: Record<string, string> = {}): WriteApi | null {
+    if(!influx) {
+        log.debug('getWriter: influx not available, ignoring')
+        return null
+    }
     return influx.getWriteApi(process.env.INFLUX_ORG!, process.env.INFLUX_BUCKET!, "ms", {
         defaultTags: {
+            panel_id: process.env.INFLUX_ID ?? '',
             panel_hostname: hostname(),
             panel_version: pkg.version,
             panel_env: process.env.NODE_ENV ?? '',
@@ -45,8 +58,7 @@ export function getWriter(defaultTags: Record<string, string> = {}): WriteApi | 
     })
 }
 export function sendMetric(metric: string, value: string | number | boolean, labels: Record<string, string> = {}) {
-    const writer = getWriter()
-    if(!writer) return
+    if(!_writer) return
     const pt = new Point(metric)
     for(const [label, value] of Object.entries(labels)) {
         pt.tag(label, value)
@@ -56,27 +68,40 @@ export function sendMetric(metric: string, value: string | number | boolean, lab
     } else {
         pt.stringField(metric, value)
     }
-    writer.writePoint(pt)
+    _writer.writePoint(pt)
+    log.debug({ labels, value, measurement: metric }, `writing point`)
 }
 
+// uses global writer
 export class NamespacedMetric {
     metricPrefix: string;
-    #writer: WriteApi | null
+    globalLabels: Record<string, string> = {}
     constructor(metricPrefix: string, labels: Record<string, string> = {}) {
         this.metricPrefix = metricPrefix
-        this.#writer = getWriter(labels)
+        this.globalLabels = labels
     }
 
     /** is influxdb available */
     get available() {
-        return this.#writer != null
+        return _writer != null
+    }
+
+    label(key: string, value: string) {
+        this.globalLabels[key] = value
     }
 
     /** Attempts to send metric. 'measurement' is added to metricPrefix, metricPrefix_measurement' */
     send(measurement: string, value: string | number | boolean, labels: Record<string, string> = {}): boolean {
-        if(!this.#writer) return false
+        if(!_writer) {
+            log.debug('NamespacedMetric.send(): influx not available, ignoring')
+            return false
+        }
         const pt = new Point(this.metricPrefix)
-        for(const [label, value] of Object.entries(labels)) {
+        const mergedLabels = {
+            ...this.globalLabels,
+            ...labels
+        }
+        for(const [label, value] of Object.entries(mergedLabels)) {
             pt.tag(label, value)
         }
         if(typeof(value) == "number") {
@@ -84,7 +109,8 @@ export class NamespacedMetric {
         } else {
             pt.stringField(measurement, value)
         }
-        this.#writer.writePoint(pt)
+        _writer.writePoint(pt)
+        log.debug({ labels: mergedLabels, measurement, value, prefix: this.metricPrefix }, `NamespacedMetric: writing point`)
         return true
     }
 }

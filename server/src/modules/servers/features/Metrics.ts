@@ -1,7 +1,7 @@
 import Feature from "./Feature.js";
 import Server from "../Server.js";
 import { Point, WriteApi } from '@influxdata/influxdb-client'
-import { getWriter } from "../../../modules/Influx.js";
+import { getGlobalWriter, NamespacedMetric } from "../../../modules/Influx.js";
 import { ComputeStats, NetworkStats, ServerStatusData, ServerStatusSource } from "@jzpanel/common/Server";
 import { AnnotationX, AnnotationY, GAME_DIFFICULTY_STRINGS, GameState } from "@jzpanel/common/Live";
 import DockerServer from "../DockerServer.js";
@@ -21,7 +21,6 @@ export interface InfluxConfig {
 }
 
 export default class MetricsFeature extends Feature {
-    #influx: WriteApi | null = null
     #latestComputeStats: ComputeStats | null = null
 
     #computeStatsHistory: ComputeStats[] = []
@@ -30,9 +29,11 @@ export default class MetricsFeature extends Feature {
     #annotationsX: AnnotationX[] = []
     #annotationsY: AnnotationY[] = []
 
+    #metric: NamespacedMetric
+
     constructor(server: Server) {
         super("Metrics", server)
-        this.#influx = getWriter()
+        this.#metric = new NamespacedMetric(`servers`, { server_id: server.id, game: server.game })
     }
 
     get #dockerServer() : DockerServer | null {
@@ -48,7 +49,7 @@ export default class MetricsFeature extends Feature {
     }
 
     get hasInflux() {
-      return this.#influx != undefined
+      return getGlobalWriter() != null
     }
 
     async init() {
@@ -156,26 +157,26 @@ export default class MetricsFeature extends Feature {
         if(live) {
           if(live.game?.state === GameState.None) playerCount = Object.keys(live.clients).length
           else playerCount = null
-          const point = this.#createPoint("live")
-          if(live.game) {
-            point.stringField("difficulty", GAME_DIFFICULTY_STRINGS[live.game.difficulty])
-          }
+
+          const difficulty = live.game?.difficulty
           let survivors = 0, infected = 0
           for(const client of Object.values(live.clients)) {
             if(client.infected) infected++
             else if(client.survivor) survivors++
           }
-          point.intField("survivor_count", survivors)
-          point.intField("infected_count", infected)
-          this.#influx!.writePoint(point)
+          this.#metric.send("survivor_count", survivors, { 
+            difficulty: difficulty?.valueOf().toString() ?? '',
+            difficulty_str: difficulty ? GAME_DIFFICULTY_STRINGS[difficulty]! : ''
+          })
+          this.#metric.send("infected_count", survivors, { 
+            difficulty: difficulty?.valueOf().toString() ?? '',
+            difficulty_str: difficulty ? GAME_DIFFICULTY_STRINGS[difficulty]! : ''
+          })
         }
       }
       if(playerCount != null) {
-        statusPoint.intField("player_count", playerCount)
+        this.#metric.send("infected_count", playerCount)
       }
-
-      this.#influx!.writePoint(statusPoint)
-      this.#influx!.flush()
     }
 
 

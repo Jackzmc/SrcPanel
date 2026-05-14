@@ -26,6 +26,14 @@ import DiscussionManager from './modules/DiscussionManager.js';
 import TaskManager from './modules/tasks/TaskManager.js'
 import CacheManager from './modules/CacheManager.js'
 
+import MiddleManager from './middlewares/managers.js'
+import { FluxerBot } from './modules/FluxerBot.js'
+import { sleep } from './util.js'
+import { DataManagerInstance } from './modules/DataManager.js'
+import { getGlobalWriter, sendMetric } from './modules/Influx.js'
+
+const START_TIME = performance.now()
+
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const MySQLStore = MySQLSession(FastifySession)
@@ -60,6 +68,8 @@ async function onSignal(signal: NodeJS.Signals) {
     process.exit(0)
   }, 20_000)
   await app.servers?.onShutdown()
+  const writer = getGlobalWriter()
+  if(writer) await writer.close()
   app.log.info("Closing fastify")
   await app.close()
   process.exit(0)
@@ -109,10 +119,7 @@ app.register(FastifyHelmet, {
 app.register(FastifyEtag)
 app.register(fastifyWebsocket)
 
-import MiddleManager from './middlewares/managers.js'
-import { FluxerBot } from './modules/FluxerBot.js'
-import { sleep } from './util.js'
-import { DataManagerInstance } from './modules/DataManager.js'
+
 app.register(MiddleManager)
   .then(async () => {
     scheduleActivityLogPartition(app);
@@ -217,6 +224,7 @@ app.register(MiddleManager)
         host: process.env.LISTEN_HOST,
         port: Number(process.env.LISTEN_PORT) || 8081
       })
+      sendMetric("startup_time", performance.now() - START_TIME)
     } catch (err) {
       app.log.error(err)
       process.exit(1)

@@ -4,7 +4,7 @@ import crypto from 'node:crypto'
 import User from '../../modules/users/User.js';
 import SteamID from 'steamid';
 import { ErrorWithCode } from '../../util.js';
-import { sendMetric } from 'modules/Influx.js';
+import { sendMetric } from '../../modules/Influx.js';
 
 interface StateJwtPayoad {
     seed: string,

@@ -4,7 +4,7 @@ import { OkPacket, RowDataPacket } from 'mysql2';
 import { NOT_FOUND, NO_PERMISSION } from '../../responses.js';
 import { APIPlayer, APIUser } from '@jzpanel/common/User';
 import { Static, Type } from '@sinclair/typebox';
-import { getWriter, NamespacedMetric, sendMetric } from 'modules/Influx.js';
+import { NamespacedMetric, sendMetric } from './../../modules/Influx.js';
 
 const metric = new NamespacedMetric("discuss")
 
