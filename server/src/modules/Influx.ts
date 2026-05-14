@@ -1,5 +1,6 @@
 import { InfluxDB, Point, WriteApi } from "@influxdata/influxdb-client";
 import dotenv from 'dotenv'
+import pkg from '../../package.json'
 dotenv.config()
 
 import {Agent} from 'http'
@@ -33,6 +34,10 @@ export function getWriter(defaultTags: Record<string, string> = {}): WriteApi | 
     return influx.getWriteApi(process.env.INFLUX_ORG!, process.env.INFLUX_BUCKET!, "ms", {
         defaultTags: {
             panel_hostname: hostname(),
+            panel_version: pkg.version,
+            panel_env: process.env.NODE_ENV ?? '',
+            panel_ip: process.env.LISTEN_HOST ?? '',
+            panel_port: process.env.LISTEN_PORT ?? "8081",
             ...defaultTags
         },
         /* maximum time in millis to keep points in an unflushed batch, 0 means don't periodically flush */
