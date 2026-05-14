@@ -5,13 +5,27 @@ import logger from '../logger.js'
 const log = logger.child({ name: "influx" })
 dotenv.config()
 
-import {Agent} from 'http'
-import { hostname } from "os";
-const keepAliveAgent = new Agent({
+const FLUSH_INTERVAL = process.env.INFLUX_FLUSH_INTERVAL_MS ? parseInt(process.env.INFLUX_FLUSH_INTERVAL_MS) : 30_000
+
+import { Agent as httpAgent } from 'http'
+import { AgentOptions, Agent as httpsAgent } from 'https'
+
+const KEEP_ALIVE_OPTIONS: AgentOptions = {
   keepAlive: true, // reuse existing connections
   keepAliveMsecs: 20 * 1000, // 20 seconds keep alive
-})
+}
+
+import { hostname } from "os";
+const keepAliveAgent = new httpsAgent()
 process.on('exit', () => keepAliveAgent.destroy())
+
+function getAgent(url: string, options: AgentOptions) {
+    if(url.startsWith("http"))
+        return new httpAgent(options)
+    else if(url.startsWith("https"))
+        return new httpsAgent(options)
+    throw new Error("invalid protocol")
+}
 
 let influx: InfluxDB;
 let _writer: WriteApi | null;
@@ -23,7 +37,7 @@ if(process.env.INFLUX_URL) {
             url: process.env.INFLUX_URL,
             token: process.env.INFLUX_TOKEN,
             transportOptions: {
-                agent: keepAliveAgent,
+                agent: getAgent(process.env.INFLUX_URL, KEEP_ALIVE_OPTIONS),
             },
         })
         log.info({ url: process.env.INFLUX_URL }, 'Influx connected')
@@ -43,18 +57,20 @@ export function createWriter(defaultTags: Record<string, string> = {}): WriteApi
         log.debug('getWriter: influx not available, ignoring')
         return null
     }
+    const tags = {
+        panel_id: process.env.INFLUX_ID ?? '',
+        panel_hostname: hostname(),
+        panel_version: pkg.version,
+        panel_env: process.env.NODE_ENV ?? 'development',
+        panel_ip: process.env.LISTEN_HOST ?? '127.0.0.1',
+        panel_port: process.env.LISTEN_PORT ?? "8081",
+        ...defaultTags
+    }
+    log.debug({ defaultTags: tags, flushInterval: FLUSH_INTERVAL }, 'createWriter')
     return influx.getWriteApi(process.env.INFLUX_ORG!, process.env.INFLUX_BUCKET!, "ms", {
-        defaultTags: {
-            panel_id: process.env.INFLUX_ID ?? '',
-            panel_hostname: hostname(),
-            panel_version: pkg.version,
-            panel_env: process.env.NODE_ENV ?? '',
-            panel_ip: process.env.LISTEN_HOST ?? '',
-            panel_port: process.env.LISTEN_PORT ?? "8081",
-            ...defaultTags
-        },
+        defaultTags: tags,
         /* maximum time in millis to keep points in an unflushed batch, 0 means don't periodically flush */
-        flushInterval: 30_000,
+        flushInterval: FLUSH_INTERVAL,
     })
 }
 export function sendMetric(metric: string, value: string | number | boolean, labels: Record<string, string> = {}) {
@@ -111,6 +127,18 @@ export class NamespacedMetric {
         }
         _writer.writePoint(pt)
         log.debug({ labels: mergedLabels, measurement, value, prefix: this.metricPrefix }, `NamespacedMetric: writing point`)
+        return true
+    }
+
+    sendMultiple(measurements: [string, string|number|boolean][], labels: Record<string, string> = {}): boolean {
+        if(!_writer) {
+            log.debug('NamespacedMetric.send(): influx not available, ignoring')
+            return false
+        }
+        // TODO: possibly use _writer.writePoints
+        for(const [measurement, value] of measurements) {
+            this.send(measurement, value, labels)
+        }
         return true
     }
 }
