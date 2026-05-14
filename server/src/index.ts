@@ -30,7 +30,7 @@ import MiddleManager from './middlewares/managers.js'
 import { FluxerBot } from './modules/FluxerBot.js'
 import { sleep } from './util.js'
 import { DataManagerInstance } from './modules/DataManager.js'
-import { getGlobalWriter, sendMetric } from './modules/Influx.js'
+import { getGlobalWriter, sendMetric } from './modules/metrics/influx.js'
 
 const START_TIME = performance.now()
 const FORCE_SHUTDOWN_TIMEOUT = 20_000
@@ -129,6 +129,8 @@ app.register(FastifyHelmet, {
 app.register(FastifyEtag)
 app.register(fastifyWebsocket)
 
+import internalMetrics from './hooks/metrics.js'
+app.register(internalMetrics)
 
 app.register(MiddleManager)
   .then(async () => {

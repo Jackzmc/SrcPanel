@@ -2,7 +2,7 @@ import { FastifyInstance, FastifyPluginOptions, FastifyReply, FastifyRequest } f
 import SteamID from 'steamid'
 import { SteamAPIError } from '../../modules/steam.js';
 import { ErrorWithCode } from '../../util.js';
-import { sendMetric } from '../../modules/Influx.js';
+import { sendMetric } from '../../modules/metrics/influx.js';
 
 export const SESSION_VERSION = "3.0"
 const RouteError = ErrorWithCode

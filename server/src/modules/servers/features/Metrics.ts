@@ -1,7 +1,7 @@
 import Feature from "./Feature.js";
 import Server from "../Server.js";
 import { Point, WriteApi } from '@influxdata/influxdb-client'
-import { getGlobalWriter, NamespacedMetric } from "../../../modules/Influx.js";
+import { getGlobalWriter, NamespacedMetric } from "../../metrics/influx.js";
 import { ComputeStats, NetworkStats, ServerStatusData, ServerStatusSource } from "@jzpanel/common/Server";
 import { AnnotationX, AnnotationY, GAME_DIFFICULTY_STRINGS, GameState, InfectedClass, PlayerGameAction, PlayerMove, PlayerState } from "@jzpanel/common/Live";
 import DockerServer from "../DockerServer.js";

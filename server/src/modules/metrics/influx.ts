@@ -1,12 +1,12 @@
 import { InfluxDB, Point, WriteApi } from "@influxdata/influxdb-client";
 import dotenv from 'dotenv'
-import pkg from '../../package.json' with { type: "json" }
-import logger from '../logger.js'
+import pkg from '../../../package.json' with { type: "json" }
+import logger from '../../logger.js'
 const log = logger.child({ name: "influx" })
 dotenv.config()
 
 const FLUSH_INTERVAL = process.env.INFLUX_FLUSH_INTERVAL_MS ? parseInt(process.env.INFLUX_FLUSH_INTERVAL_MS) : 30_000
-const BATCH_SIZE = 4 // we don't write points often
+const BATCH_SIZE = 30 // we don't write points often
 const NAMESPACE = process.env.INFLUX_NAMESPACEs ?? "panel"
 
 import { Agent as httpAgent } from 'http'
