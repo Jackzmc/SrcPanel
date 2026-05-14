@@ -18,6 +18,7 @@ import { OauthAuthData } from './OauthProvider.js';
 
 import logger from '../../logger.js'
 import CacheManager from "../../modules/CacheManager.js";
+import { sendMetric } from "modules/Influx.js";
 const log = logger.child({ name: "AuthManager" })
 
 interface AddAdmin {
@@ -91,7 +92,7 @@ export default class AuthManager {
                 admins: this.admins,
                 groups: this.groups
             })
-        } catch(err) {
+        } catch(err: any) {
             log.warn(`Failed to save auth cache (${err.message})`)
         }
     }
@@ -271,7 +272,7 @@ export default class AuthManager {
         try {
             await this.#dbna.execute("INSERT IGNORE INTO panel_user (account_id, avatar_hash) VALUES (?, ?, ?)", [admin.identity.slice(10), details[0].avatarhash])
             await this.#dbna.execute("INSERT INTO panel_user_names (account_id, name, name_update_time) VALUES (?, ?, UNIX_TIMESTAMP())", [admin.identity.slice(10), details[0].personaname])
-        } catch(err) {
+        } catch(err: any) {
             log.warn(`Could not insert admin resolved name (${admin.identity.slice(10)}, name ${details[0].personaname}):`, err.sqlMessage)
         }
 
@@ -830,6 +831,7 @@ export default class AuthManager {
     }
     
     public async loginUser(req: FastifyRequest, reply: FastifyReply, admin: ReadableAdminData, steamDetails?: SteamUserDetails) {
+        sendMetric("oauth_login", 1)
         const steamInfo: SteamInfo = {
             steamid: admin.steamid,
             accountid: new SteamID(admin.steamid).accountid.toString(),

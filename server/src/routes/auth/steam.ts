@@ -2,6 +2,7 @@ import { FastifyInstance, FastifyPluginOptions, FastifyReply, FastifyRequest } f
 import SteamID from 'steamid'
 import { SteamAPIError } from '../../modules/steam.js';
 import { ErrorWithCode } from '../../util.js';
+import { sendMetric } from 'modules/Influx.js';
 
 export const SESSION_VERSION = "3.0"
 const RouteError = ErrorWithCode
@@ -124,6 +125,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                     const admin = fastify.authmngr.getAdminExport(steamid2)
                     if(admin) {
                         await fastify.authmngr.loginUser(req, reply, admin, userDetails)
+                        sendMetric("oauth_steam_login", 1)
                         // if(setupStage == 1) {
                         //     await fastify.config.SetKV("first_time_setup.stage", FirstTimeSetupStage.SteamAdminCreated)
                         // }

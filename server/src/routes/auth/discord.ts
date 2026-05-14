@@ -4,6 +4,7 @@ import crypto from 'node:crypto'
 import User from '../../modules/users/User.js';
 import SteamID from 'steamid';
 import { ErrorWithCode } from '../../util.js';
+import { sendMetric } from 'modules/Influx.js';
 
 interface StateJwtPayoad {
     seed: string,
@@ -130,6 +131,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                     const details = await fastify.steam.getUserDetail(new SteamID(admin.steamid))
                     await provider.save(admin.steamid)
                     await fastify.authmngr.loginUser(req, reply, admin, details)
+                    sendMetric(`oauth_${PROVIDER_NAME}_login`, 1)
                     await reply.redirect(returnUrl, 302)
                 }
             } catch(err) {

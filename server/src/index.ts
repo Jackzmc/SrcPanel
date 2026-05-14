@@ -112,7 +112,6 @@ app.register(fastifyWebsocket)
 import MiddleManager from './middlewares/managers.js'
 import { FluxerBot } from './modules/FluxerBot.js'
 import { sleep } from './util.js'
-import { log } from 'console'
 import { DataManagerInstance } from './modules/DataManager.js'
 app.register(MiddleManager)
   .then(async () => {

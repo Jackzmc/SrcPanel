@@ -21,9 +21,10 @@
 </template>
 
 <script setup lang="ts">
-usePageHead({
+definePageMeta({
   title: 'Discussions',
-  description: 'Vote and discuss anything'
+  description: 'Vote and discuss anything',
+  hero: "default"
 })
 import { type APIDiscussion } from '@jzpanel/common/Discussions';
 import DiscussCard from '~/components/discuss/DiscussCard.vue';

@@ -4,6 +4,9 @@ import { OkPacket, RowDataPacket } from 'mysql2';
 import { NOT_FOUND, NO_PERMISSION } from '../../responses.js';
 import { APIPlayer, APIUser } from '@jzpanel/common/User';
 import { Static, Type } from '@sinclair/typebox';
+import { getWriter, NamespacedMetric, sendMetric } from 'modules/Influx.js';
+
+const metric = new NamespacedMetric("discuss")
 
 const CreateDiscussion = Type.Strict(Type.Object({
   title: Type.String(),
@@ -153,6 +156,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     }
     await conn.commit()
     conn.release()
+    metric.send("created", 1)
     discManager.set(id, {
       id: id,
       title: discuss.title,
@@ -262,6 +266,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         (?, ?, ?, UNIX_TIMESTAMP())`,
       [discuss.id, creator.id, comment.content]
     )
+
+    metric.send("comment_created", 1)
     // Update cache
     discuss.commentsCount++
     discManager.set(discuss.id, discuss)

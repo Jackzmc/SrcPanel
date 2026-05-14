@@ -4,7 +4,6 @@ import { ADMINS_DB } from '../../routes/!!privileged/admins.js';
 import { APIListUserNotes, APINotesResponse, Note } from '@jzpanel/common/Note';
 import SteamID from 'steamid';
 
-
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
   fastify.get('/', async (req: FastifyRequest<{
     Querystring: {
