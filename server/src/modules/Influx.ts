@@ -112,25 +112,48 @@ function writeTags(point: Point, labels: MetricLabels) {
     }
 }
 
-// uses global writer
+/**
+ * Allows sending metrics with a prefix, such as panel_%PREFIX%_%METRIC%
+ * Labels are always written as tags/strings, booleans converted to 1/0
+ * Metrics written as float 
+ * Uses global writer
+ */
 export class NamespacedMetric {
     metricPrefix: string;
     globalLabels: Record<string, string> = {}
+    /**
+     * 
+     * @param metricPrefix the prefix/type of metric, eventually becomes panel_%PREFIX%_%METRIC%
+     * @param labels any additional labels that are merged with individual ones. booleans converted to 1/0
+     */
     constructor(metricPrefix: string, labels: Record<string, string> = {}) {
         this.metricPrefix = `panel_${metricPrefix}`
         this.globalLabels = labels
     }
 
-    /** is influxdb available */
+    /**
+     * Is influxDB configured and available?
+     */
     get available() {
         return _writer != null
     }
 
+    /**
+     * Add/set a global label to value
+     * @param key
+     * @param value 
+     */
     label(key: string, value: string) {
         this.globalLabels[key] = value
     }
 
-    /** Attempts to send metric. 'measurement' is added to metricPrefix, metricPrefix_measurement' */
+    /**
+     * Send metric. 
+     * @param measurement name of measurement to append
+     * @param value string values are dropped in victoriametrics
+     * @param labels any labels to send
+     * @returns true if sent, false if influx not available
+     */
     send(measurement: string, value: string | number | boolean, labels: MetricLabels = {}): boolean {
         if(!_writer) {
             log.debug('NamespacedMetric.send(): influx not available, ignoring')
@@ -142,16 +165,19 @@ export class NamespacedMetric {
             ...labels
         }
         writeTags(pt, mergedLabels)
-        if(typeof(value) == "number") {
-            pt.floatField(measurement, value)
-        } else {
-            pt.stringField(measurement, value)
-        }
+        if(typeof value === "boolean") pt.booleanField(measurement, value ? "1" : "0")
+        else if(typeof(value) == "number") pt.floatField(measurement, value)
         _writer.writePoint(pt)
         log.trace({ labels: mergedLabels, measurement, value, prefix: this.metricPrefix }, `NamespacedMetric: writing point`)
         return true
     }
 
+    /**
+     * Send multiple metrics at once
+     * @param measurements and array of [key, value] arrays
+     * @param labels any labels to send
+     * @returns true if sent, false if influx not available
+     */
     sendMultiple(measurements: [string, number][], labels: MetricLabels = {}): boolean {
         if(!_writer) {
             log.debug('NamespacedMetric.send(): influx not available, ignoring')

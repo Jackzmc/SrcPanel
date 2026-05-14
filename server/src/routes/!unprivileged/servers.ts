@@ -104,6 +104,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
   })
 
   fastify.get('/:id/ws', { websocket: true, logLevel: "warn" }, async (socket, req: FastifyRequest<{ Params: { id: string } }>) => {
+    // We handle auth checks differently to respond via socket
     if (!req.user) return socket.close(4000, "NOT_AUTHENTICATED");
     const server = fastify.servers.getServer(req.params.id);
     if (!server) return socket.close(4000, "SERVER_NOT_FOUND");

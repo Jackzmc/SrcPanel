@@ -150,6 +150,7 @@ export default class MetricsFeature extends Feature {
     // Called periodically by gamedig check system
     recordStatus(data: ServerStatusData | null, source: ServerStatusSource) {
       if(!this.hasInflux) return
+
       // Defaults to gamedig's value, but overwritten by live as source of truth
       let playerCount: number|null = null
       if(data) {
@@ -237,7 +238,14 @@ export default class MetricsFeature extends Feature {
       } as Server_MetricFull)
     }
 
-    recordClientCount(count: number) {
+    recordViewerCount(count: number) {
       this.#metric.send("live_viewers", count)
+    }
+
+    recordRecordCounts(tx: number, rx: number) {
+      this.#metric.sendMultiple([
+        ["records_recv", rx],
+        ["records_sent", tx]
+      ])
     }
 }

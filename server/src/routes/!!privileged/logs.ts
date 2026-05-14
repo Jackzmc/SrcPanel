@@ -141,7 +141,7 @@ async function quickInit(fastify: FastifyInstance) {
     if (cacheServers) availableServers = cacheServers
     if (cachePartitions) yearData = cachePartitions
     await fetchYearDataQuick(fastify.db, currentYear())
-  } catch (err) {
+  } catch (err: any) {
     if (err.code === "ER_UNKNOWN_PARTITION") {
       log.warn({}, "quickInit: No partition for current year")
     } else {
@@ -298,7 +298,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
           }
         }
         lastMissingNameFetchTime = Date.now()
-      } catch (err) {
+      } catch (err: any) {
         fastify.log.warn(`[logs] Could not fetch missing names (${[...missingNameSet].toString()}):`, err)
       }
     }

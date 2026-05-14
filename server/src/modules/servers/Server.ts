@@ -86,6 +86,8 @@ export interface CreateServerOptions {
   actions?: ServerAction[]
 }
 
+const METRIC_INTERVAL_TIME = 1000 * 30 // 30s
+
 export default abstract class Server implements IAction {
   protected _log: Logger;
   protected _options: CreateServerOptions
@@ -103,17 +105,18 @@ export default abstract class Server implements IAction {
 
   protected _status: ServerStatus
   protected _online: boolean = false;
-  protected _lastRefresh: number
-  protected _gameVersion: string | null
-  protected _appId: number | null
-
+  protected _lastRefresh: number|null = null
+  protected _gameVersion: string | null = null
+  protected _appId: number | null = null
 
   #gamedig: GameDig
 
   protected _wsClients: SocketClientUser[] = []
   #activeVoiceMembers: VoiceUser[]
 
-  protected publicIp: string // the resolved IP to show end users
+  #metricsTimer: ReturnType<typeof setInterval>
+
+  protected publicIp: string | null = null // the resolved IP to show end users
   protected internalIp?: string   // the resolved IP to use if set for internal requests (status) instead of internal
 
     constructor(group: ServerGroup, server: CreateServerOptions, gamedig: GameDig) {
@@ -155,6 +158,7 @@ export default abstract class Server implements IAction {
       }
       this._metrics = new MetricsFeature(this)
       this._plugin = new PluginFeature(this)
+      this.#metricsTimer = setInterval(() => this.#recordMetrics(), METRIC_INTERVAL_TIME)
       this._log.debug("created")
     }
 
@@ -173,6 +177,14 @@ export default abstract class Server implements IAction {
       // this._log.trace({ activityId: this.activityLogId, info: this.info, features: this.features, actions: this._actions.map(a => a.name) }, "initialized")
     }
 
+    // Called by metrics timer every METRIC_INTERVAL_TIME ms
+    #recordMetrics() {
+      const [tx, rx] = [this._plugin.totalRecordsSent, this._plugin.totalRecordsReceived]
+      this._metrics.recordRecordCounts(tx, rx)
+
+      this._metrics.recordViewerCount(this._wsClients.length)
+    }
+
     get Console(): ConsoleFeature | null { return this._logs }
     get Rcon(): RconFeature | null { return this._rcon }
     get Configs(): ConfigsFeature | null { return this._configs }
@@ -180,10 +192,10 @@ export default abstract class Server implements IAction {
     get Metrics(): MetricsFeature { return this._metrics }
 
     /** If an internal ip is set, returns that, otherwise public IP */
-    get InternalIp() {
-      return this.internalIp ?? this.publicIp
+    get InternalIp(): string {
+      return this.internalIp ?? this.publicIp!
     }
-    get InternalPort() {
+    get InternalPort(): number {
       return this._options.internal?.port ?? this._options.public.port
     }
     get PublicIp() {
@@ -193,7 +205,7 @@ export default abstract class Server implements IAction {
     get id(): string { return this._options.id }
     get name(): string|undefined { return this._options.name }
     get host(): string { return this._options.public.host }
-    get ip(): string { return this.publicIp }
+    get ip(): string { return this.publicIp! }
     get port(): number { return this._options.public.port }
     get game(): string { return this._options.game ?? this._group.Game! }
     get actions(): ServerAction[] { return this._actions }
@@ -327,14 +339,18 @@ export default abstract class Server implements IAction {
         online: this.Online
       } as Server_Status)
       this.Metrics.broadcastWSFullMetrics()
+      this.Metrics.recordViewerCount(this._wsClients.length)
     }
+
     removeWSClient(client: SocketClientUser) {
       const indexOf = this._wsClients.indexOf(client)
       if(indexOf > -1) {
        this._log.debug("removed client " + client.user.steamid2)
         this._wsClients.splice(indexOf, 1)
       }
+      this.Metrics.recordViewerCount(this._wsClients.length)
     }
+
     broadcastWS(payload: ServerOutPayload) {
       const packet = {
         ...payload,
@@ -344,6 +360,8 @@ export default abstract class Server implements IAction {
         client.sendPacket(packet)
       })
     }
+
+    // Handles incoming requests from websocket client
     processInPayload(client: SocketClientUser, payload: ClientOutPayload) {
       switch(payload.type) {
       // this.Console?.sendHistory(client)
@@ -352,7 +370,6 @@ export default abstract class Server implements IAction {
           break
       }
     }
-
 
     protected async getStatus(bypassCache: boolean, type: string, host: string, port: number) {
       const now = Date.now()
@@ -378,7 +395,7 @@ export default abstract class Server implements IAction {
             gamemode: raw.tags ? raw.tags[0] : undefined
           }, "gamedig")
           this._online = true
-      } catch(err) {
+      } catch(err: any) {
         this._log.trace({ id: this.id, host, port, type }, "gamedig", err.stack)
         if(!err.message.includes("Failed all ")) {
           this._log.error(`host=${host} getStatus error: `, err)

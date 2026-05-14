@@ -11,8 +11,10 @@ const LIVE_CACHE_TTL = 1000 * 60 * 3 // Live cache data expires after 3 minutes
 export default class PluginFeature extends Feature implements IAction {
     #liveCache: LiveDataCache | null = null
     #socket: PluginSocket | null = null
-    #startTime: number
+    #startTime: number|null = null
     #status: ServerStatusData
+    #totalRecordsReceived: number = 0
+    #totalRecordsSent: number = 0
 
     constructor(server: Server) {
         super("LivePlugin", server)
@@ -34,6 +36,14 @@ export default class PluginFeature extends Feature implements IAction {
     /** Are we authenticated (and ready) with plugin? */
     get authenticated() {
         return this.available && this.#socket?.Authenticated
+    }
+
+    get totalRecordsReceived() {
+        return this.#totalRecordsReceived
+    }
+
+    get totalRecordsSent() {
+        return this.#totalRecordsSent
     }
 
     /** Current live data */
@@ -118,6 +128,7 @@ export default class PluginFeature extends Feature implements IAction {
             type: "live",
             record: record
         })
+        this.#totalRecordsReceived++
         if(record) {
             this.#liveCache = updateLiveCache(this.#liveCache, record)
             if(record.type === LiveRecordType.Game) {
@@ -156,6 +167,7 @@ export default class PluginFeature extends Feature implements IAction {
             throw new Error("Not connected or authenticated to plugin socket")
         }
         const response = await this.#socket!.send(LiveRecordResponse.RunCommand, command, namespace)
+        this.#totalRecordsSent++
         if(!response) throw new Error("Got no response")
         return {
             type: response.resultType,

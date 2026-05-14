@@ -38,7 +38,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
           console.log(a)
           foundType = type
           return true
-        } catch (err) {
+        } catch (err: any) {
           console.log(err.cause)
           // Underlying errors aren't exposed annoyingly...
           if (err.stack.includes("Error: No protocols succeeded")) return false
@@ -166,7 +166,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
           }
         }
         return records
-      } catch (err) {
+      } catch (err: any) {
         if (err.code == "ENOENT") {
           return reply.code(404).send({
             error: "INVALID_PATH",
@@ -253,7 +253,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
       })
       reply.status(204).send()
-    } catch (err) {
+    } catch (err: any) {
       return reply.code(500).send({
         error: "SERVER_ERROR",
         message: "Server returned an error: " + err.message,
@@ -352,7 +352,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
       })
       // If not systemd, hope server auto restarts
       reply.status(204).send()
-    } catch (err) {
+    } catch (err: any) {
       console.log('error', err)
       return reply.code(500).send({
         error: "SERVER_ERROR",
