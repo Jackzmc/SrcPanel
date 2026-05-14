@@ -89,12 +89,11 @@ export function createWriter(defaultTags: Record<string, string> = {}): WriteApi
         flushInterval: FLUSH_INTERVAL,
     })
 }
-export function sendMetric(field: string, value: number, labels: Record<string, string> = {}) {
+type MetricLabels = Record<string, string|boolean|number|undefined>
+export function sendMetric(field: string, value: number, labels: MetricLabels = {}) {
     if(!_writer) return
     const pt = new Point(NAMESPACE)
-    for(const [label, value] of Object.entries(labels)) {
-        pt.tag(label, value)
-    }
+    writeTags(pt, labels)
     if(typeof(value) == "number") {
         pt.floatField(field, value)
     } else {
@@ -102,6 +101,12 @@ export function sendMetric(field: string, value: number, labels: Record<string, 
     }
     _writer.writePoint(pt)
     log.debug({ labels, value, measurement: `${NAMESPACE}_${field}` }, `writing point`)
+}
+
+function writeTags(point: Point, labels: MetricLabels) {
+    for(const [label, value] of Object.entries(labels)) {
+        if(value != undefined) point.tag(label, value.toString())
+    }
 }
 
 // uses global writer
@@ -123,7 +128,7 @@ export class NamespacedMetric {
     }
 
     /** Attempts to send metric. 'measurement' is added to metricPrefix, metricPrefix_measurement' */
-    send(measurement: string, value: string | number | boolean, labels: Record<string, string> = {}): boolean {
+    send(measurement: string, value: string | number | boolean, labels: MetricLabels = {}): boolean {
         if(!_writer) {
             log.debug('NamespacedMetric.send(): influx not available, ignoring')
             return false
@@ -133,9 +138,7 @@ export class NamespacedMetric {
             ...this.globalLabels,
             ...labels
         }
-        for(const [label, value] of Object.entries(mergedLabels)) {
-            pt.tag(label, value)
-        }
+        writeTags(pt, mergedLabels)
         if(typeof(value) == "number") {
             pt.floatField(measurement, value)
         } else {
@@ -146,7 +149,7 @@ export class NamespacedMetric {
         return true
     }
 
-    sendMultiple(measurements: [string, number][], labels: Record<string, string> = {}): boolean {
+    sendMultiple(measurements: [string, number][], labels: MetricLabels = {}): boolean {
         if(!_writer) {
             log.debug('NamespacedMetric.send(): influx not available, ignoring')
             return false

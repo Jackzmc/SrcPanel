@@ -3,7 +3,7 @@ import Server from "../Server.js";
 import { Point, WriteApi } from '@influxdata/influxdb-client'
 import { getGlobalWriter, NamespacedMetric } from "../../../modules/Influx.js";
 import { ComputeStats, NetworkStats, ServerStatusData, ServerStatusSource } from "@jzpanel/common/Server";
-import { AnnotationX, AnnotationY, GAME_DIFFICULTY_STRINGS, GameState } from "@jzpanel/common/Live";
+import { AnnotationX, AnnotationY, GAME_DIFFICULTY_STRINGS, GameState, InfectedClass, PlayerGameAction, PlayerMove, PlayerState } from "@jzpanel/common/Live";
 import DockerServer from "../DockerServer.js";
 import { ContainerStats } from "dockerode";
 import { Server_Metric, Server_MetricFull } from "@jzpanel/common/ServerWebsocket";
@@ -139,57 +139,73 @@ export default class MetricsFeature extends Feature {
       return this.#computeStatsHistory[0]?.collectionTime ?? 0
     }
 
+    /**
+     * Records metrics for current status
+     * @param data 
+     * @param source 
+     */
+    // Called periodically by gamedig check system
     recordStatus(data: ServerStatusData | null, source: ServerStatusSource) {
       if(!this.hasInflux) return
-      const statusPoint = this.#createPoint("status")
+      // Defaults to gamedig's value, but overwritten by live as source of truth
       let playerCount: number|null = null
       if(data) {
         playerCount = data.players.length
+        const difficulty = this._server.Plugin?.liveStatus?.game?.difficulty
         if(this._server.uptime)
-          statusPoint.intField("uptime", this._server.uptime)
-        if(this._server.status.data?.map)
-          statusPoint.stringField("map", this._server.status.data.map)
-        if(this._server.status.data?.gamemode)
-        statusPoint.stringField("gamemode", this._server.status.data.gamemode)
+          this.#metric.send("uptime_secs", this._server.uptime, {
+            map: this._server.status.data?.map, 
+            gamemode: this._server.status.data?.gamemode,
+            difficulty: difficulty?.valueOf().toString(),
+            difficulty_str: difficulty ? GAME_DIFFICULTY_STRINGS[difficulty]! : undefined
+          })
       } 
       if(source == "live" && this._server.Plugin?.available) {
         const live = this._server.Plugin.liveStatus
         if(live) {
+          // Overwrite player count with live as source of truth
           if(live.game?.state === GameState.None) playerCount = Object.keys(live.clients).length
           else playerCount = null
 
-          const difficulty = live.game?.difficulty
-          let survivors = 0, infected = 0
-          for(const client of Object.values(live.clients)) {
-            if(client.infected) infected++
-            else if(client.survivor) survivors++
+          const survivors = Object.values(live.clients).filter(cl => 'survivor' in cl && cl.survivor)
+          const realClients = Object.values(live.clients).filter(cl => cl.steamid != 'BOT')
+
+          // Only record game_duration if we actually got clients
+          if(live.game && realClients.length > 0) {
+            // campaignStartTime is in milliseconds
+            const durationSec = (Date.now()/1000) - live.game.campaignStartTime
+            this.#metric.send("game_duration_sec", Math.round(durationSec))
           }
-          this.#metric.send("survivor_count", survivors, { 
-            difficulty: difficulty?.valueOf().toString() ?? '',
-            difficulty_str: difficulty ? GAME_DIFFICULTY_STRINGS[difficulty]! : ''
-          })
-          this.#metric.send("infected_count", survivors, { 
-            difficulty: difficulty?.valueOf().toString() ?? '',
-            difficulty_str: difficulty ? GAME_DIFFICULTY_STRINGS[difficulty]! : ''
-          })
+
+          const tanksInPlay = Object.values(live.clients).reduce((pv, cv) => 'infected' in cv && cv.infected?.class == InfectedClass.Tank ? pv + 1 : pv, 0)
+          this.#metric.send("tanks_in_play", tanksInPlay, { finale: live.finale != undefined})
+          const playersIncapped = Object.values(survivors).reduce((pv, cv) => cv.survivor!.move == PlayerMove.Incapped ? pv + 1 : pv, 0)
+          this.#metric.send("players_incapped", playersIncapped)
+          if(survivors.length > 0) {
+            const avgSurvFlow = Object.values(survivors).reduce((pv, cv) => pv + cv.survivor!.flowPercent, 0)
+            this.#metric.send("map_avg_flow", avgSurvFlow / survivors.length)
+          }
+
+          if(live.finale) {
+            this.#metric.send("finale_stage", live.finale.stage, { 
+              difficulty: live.game?.difficulty.valueOf().toString() 
+            })
+          }
+
+          const counts = { survivors: 0, infected: 0 }
+          for(const client of Object.values(live.clients)) {
+            if(client.infected) counts.infected++
+            else if(client.survivor) counts.survivors++
+          }
+          this.#metric.send("survivor_count", counts.survivors)
+          this.#metric.send("infected_count", counts.infected)
         }
       }
+      // We know player count from live OR gamedig - so we can always send it
       if(playerCount != null) {
-        this.#metric.send("infected_count", playerCount)
+        this.#metric.send("player_count", playerCount)
       }
     }
-
-
-    #createPoint(measurement: string) : Point {
-      if(!this.hasInflux) throw new Error("No influx support enabled")
-      const point = new Point(measurement)
-      point.tag("server_id", this._server.id)
-      point.tag("server_ip", this._server.ip)
-      point.tag("server_port", this._server.port.toString())
-      point.tag("server_type", this._server.game)
-      return point
-    }
-
 
     addAnnotationX(annotation: AnnotationX) {
         this.#annotationsX.push(annotation)
