@@ -6,6 +6,8 @@ const log = logger.child({ name: "influx" })
 dotenv.config()
 
 const FLUSH_INTERVAL = process.env.INFLUX_FLUSH_INTERVAL_MS ? parseInt(process.env.INFLUX_FLUSH_INTERVAL_MS) : 30_000
+const BATCH_SIZE = 4 // we don't write points often
+const NAMESPACE = process.env.INFLUX_NAMESPACEs ?? "panel"
 
 import { Agent as httpAgent } from 'http'
 import { AgentOptions, Agent as httpsAgent } from 'https'
@@ -16,14 +18,12 @@ const KEEP_ALIVE_OPTIONS: AgentOptions = {
 }
 
 import { hostname } from "os";
-const keepAliveAgent = new httpsAgent()
-process.on('exit', () => keepAliveAgent.destroy())
 
 function getAgent(url: string, options: AgentOptions) {
-    if(url.startsWith("http"))
-        return new httpAgent(options)
-    else if(url.startsWith("https"))
+    if(url.startsWith("https"))
         return new httpsAgent(options)
+    else if(url.startsWith("http"))
+        return new httpAgent(options)
     throw new Error("invalid protocol")
 }
 
@@ -33,14 +33,28 @@ if(process.env.INFLUX_URL) {
     if(!process.env.INFLUX_ORG || !process.env.INFLUX_BUCKET) {
         log.error("No INFLUX_ORG or INFLUX_BUCKET set")
     } else {
+        const proxyUrl =
+            process.env.HTTP_PROXY ||
+            process.env.http_proxy
+
+        const agent = getAgent(process.env.INFLUX_URL, KEEP_ALIVE_OPTIONS)
+        agent.on("response", (err) => {
+            log.error({}, "agent res" + err)
+        })
+        agent.on("close", () => {
+            log.debug({}, "agent close early")
+        })
         influx = new InfluxDB({
             url: process.env.INFLUX_URL,
             token: process.env.INFLUX_TOKEN,
+            proxyUrl,
             transportOptions: {
-                agent: getAgent(process.env.INFLUX_URL, KEEP_ALIVE_OPTIONS),
+                redirect: 'error',
+                timeout: 10_000,
+                agent,
             },
         })
-        log.info({ url: process.env.INFLUX_URL }, 'Influx connected')
+        log.info({ url: process.env.INFLUX_URL, proxy: proxyUrl }, 'Influx connected')
         _writer = createWriter()
     }
 } else {
@@ -66,26 +80,28 @@ export function createWriter(defaultTags: Record<string, string> = {}): WriteApi
         panel_port: process.env.LISTEN_PORT ?? "8081",
         ...defaultTags
     }
-    log.debug({ defaultTags: tags, flushInterval: FLUSH_INTERVAL }, 'createWriter')
+    log.debug({ defaultTags: tags, flushInterval: FLUSH_INTERVAL, batchSize: BATCH_SIZE }, 'createWriter')
     return influx.getWriteApi(process.env.INFLUX_ORG!, process.env.INFLUX_BUCKET!, "ms", {
+        batchSize: BATCH_SIZE,
+
         defaultTags: tags,
         /* maximum time in millis to keep points in an unflushed batch, 0 means don't periodically flush */
         flushInterval: FLUSH_INTERVAL,
     })
 }
-export function sendMetric(metric: string, value: string | number | boolean, labels: Record<string, string> = {}) {
+export function sendMetric(field: string, value: number, labels: Record<string, string> = {}) {
     if(!_writer) return
-    const pt = new Point(metric)
+    const pt = new Point(NAMESPACE)
     for(const [label, value] of Object.entries(labels)) {
         pt.tag(label, value)
     }
     if(typeof(value) == "number") {
-        pt.floatField(metric, value)
+        pt.floatField(field, value)
     } else {
-        pt.stringField(metric, value)
+        pt.stringField(field, value)
     }
     _writer.writePoint(pt)
-    log.debug({ labels, value, measurement: metric }, `writing point`)
+    log.debug({ labels, value, measurement: `${NAMESPACE}_${field}` }, `writing point`)
 }
 
 // uses global writer
@@ -93,7 +109,7 @@ export class NamespacedMetric {
     metricPrefix: string;
     globalLabels: Record<string, string> = {}
     constructor(metricPrefix: string, labels: Record<string, string> = {}) {
-        this.metricPrefix = metricPrefix
+        this.metricPrefix = `panel_${metricPrefix}`
         this.globalLabels = labels
     }
 
@@ -130,7 +146,7 @@ export class NamespacedMetric {
         return true
     }
 
-    sendMultiple(measurements: [string, string|number|boolean][], labels: Record<string, string> = {}): boolean {
+    sendMultiple(measurements: [string, number][], labels: Record<string, string> = {}): boolean {
         if(!_writer) {
             log.debug('NamespacedMetric.send(): influx not available, ignoring')
             return false
@@ -139,6 +155,7 @@ export class NamespacedMetric {
         for(const [measurement, value] of measurements) {
             this.send(measurement, value, labels)
         }
+        _writer.flush()
         return true
     }
 }

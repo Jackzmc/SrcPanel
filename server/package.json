@@ -7,7 +7,9 @@
   "scripts": {
     "build": "tsc",
     "start": "node dist/src/index.js",
-    "dev": "nodemon -e ts --exec \"pnpm run build && pnpm run start || exit 1\"",
+    "start:proxy": "NODE_USE_ENV_PROXY=1 HTTPS_PROXY=http://localhost:8080 HTTP_PROXY=http://localhost:8080 pnpm start --use-env-proxy",
+    "dev": "nodemon --signal SIGTERM -e ts --exec \"pnpm run build && pnpm run start || exit 1\"",
+    "dev:proxy": "nodemon --signal SIGTERM -e ts --exec \"pnpm run build && pnpm run start:proxy || exit 1\"",
     "lint": "eslint"
   },
   "dependencies": {
@@ -25,6 +27,7 @@
     "@fluxerjs/types": "^1.2.4",
     "@fluxerjs/voice": "^1.2.4",
     "@influxdata/influxdb-client": "^1.35.0",
+    "@jzpanel/common": "workspace:",
     "@lowly1337/vpk": "^0.2.6",
     "@sinclair/typebox": "^0.23.5",
     "discord-api-types": "^0.37.120",
@@ -56,8 +59,7 @@
     "systeminformation": "^5.27.10",
     "tail": "^2.2.6",
     "valve-kv": "^1.2.1",
-    "yaml": "^2.8.1",
-    "@jzpanel/common": "workspace:"
+    "yaml": "^2.8.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.36.0",

@@ -33,6 +33,7 @@ import { DataManagerInstance } from './modules/DataManager.js'
 import { getGlobalWriter, sendMetric } from './modules/Influx.js'
 
 const START_TIME = performance.now()
+const FORCE_SHUTDOWN_TIMEOUT = 20_000
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -62,17 +63,26 @@ async function onSignal(signal: NodeJS.Signals) {
     return
   }
   hadSignal = true
-  app.log.info(`GOT SIGNAL ${signal} -- SHUTTING DOWN`)
-  setTimeout(() => {
-    app.log.error("Timed out, forcing shutdown")
-    process.exit(0)
-  }, 20_000)
-  await app.servers?.onShutdown()
-  const writer = getGlobalWriter()
-  if(writer) await writer.close()
+  
+  app.log.info(`SIGNAL ${signal} -- SHUTTING DOWN`)
+  // Handle shutdown logic
+  
+  await Promise.allSettled([
+    await app.servers?.onShutdown(),
+    // flush & close influxdb global writer
+    (async() => {
+      const writer = getGlobalWriter()
+      if(writer) await writer.close()
+    })
+  ])
   app.log.info("Closing fastify")
   await app.close()
   process.exit(0)
+
+  setTimeout(() => {
+    app.log.error("Timed out, forcing shutdown")
+    process.exit(1)
+  }, FORCE_SHUTDOWN_TIMEOUT)
 }
 ["SIGUSR2", "SIGINT", "SIGTERM"].map((signal) => {
   process.on(signal, onSignal)
@@ -224,7 +234,7 @@ app.register(MiddleManager)
         host: process.env.LISTEN_HOST,
         port: Number(process.env.LISTEN_PORT) || 8081
       })
-      sendMetric("startup_time", performance.now() - START_TIME)
+      sendMetric("startup_time_ms", performance.now() - START_TIME)
     } catch (err) {
       app.log.error(err)
       process.exit(1)
