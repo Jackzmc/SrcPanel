@@ -105,7 +105,10 @@ export function sendMetric(field: string, value: number, labels: MetricLabels = 
 
 function writeTags(point: Point, labels: MetricLabels) {
     for(const [label, value] of Object.entries(labels)) {
-        if(value != undefined) point.tag(label, value.toString())
+        if(value == undefined) continue
+        // Record booleans as "1"/"0" rather than "true"/"false"
+        if(typeof value === "boolean") point.tag(label, value ? "1" : "0")
+        else point.tag(label, value.toString())
     }
 }
 
