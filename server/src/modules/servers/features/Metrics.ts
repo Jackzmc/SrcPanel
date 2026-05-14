@@ -236,4 +236,8 @@ export default class MetricsFeature extends Feature {
         annotations: this.Annotations
       } as Server_MetricFull)
     }
+
+    recordClientCount(count: number) {
+      this.#metric.send("live_viewers", count)
+    }
 }
