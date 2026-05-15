@@ -1,6 +1,6 @@
 <template>
   <div>
-    <p class="text-muted">Profile</p>
+    <p class="text-muted">Create New Ban!</p>
   </div>
 </template>
 

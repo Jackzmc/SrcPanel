@@ -1,24 +1,130 @@
 <template>
-  <div class="flex gap-4 mt-4">
-    <UNavigationMenu
-      orientation="vertical"
-      :items="items"
-      class="w-48 shrink-0"
+  <div class="mt-4">
+    <p class="py-2">Showing {{  data?.bans.length }} bans</p>
+    {{  routeId }}
+    <UTabs :items="tabs" 
+      variant="link" 
+      :content="false" 
+      :model-value="routeId"
+      value-key="value"
+      @update:model-value="tab => navigateTo(`/users/${props.steamid}/bans/${tab}`)"
     />
-    <div class="flex-1 min-w-0">
-    </div>
+    <NuxtPage :steamid="steamid" :data="data" />
   </div>
 </template>
 
 <script setup lang="ts">
 definePageMeta({
-  tab: "bans"
+  tab: "bans",
 })
+
+import { APIBanFlags, type APIBanResponse, type ListAPIBan } from '@jzpanel/common/Ban';
+import { type APICreateNoteResponse, type APIListUserNotes, type APINotesResponse } from '@jzpanel/common/Note';
 import type { APIUserDetails } from '@jzpanel/common/User'
+import type { TabsItem } from '@nuxt/ui';
+import BanCard from '~/components/users/BanCard.vue';
+
+const api = useApi()
+const toast = useToast()
+
+const { user } = useAuth()
 
 const props = defineProps<{
   steamid: string
+  playerName: string,
   data: APIUserDetails
 }>()
 
+useSeoMeta({
+  description: `Bans for ${props.playerName}`,
+  ogDescription: `Bans for ${props.playerName}`
+})
+
+const { data, refresh, error } = await useAsyncData<APIBanResponse>(
+  `bans.${props.steamid}`,
+  () => api(`/bans/${props.steamid}`)
+)
+
+
+function getBadge(ban: ListAPIBan): TabsItem['badge'] | undefined {
+  if(ban.flags & APIBanFlags.Suspended) {
+    return {
+      color: 'error',
+      label: 'Suspended'
+    }
+  } else if(ban.flags & APIBanFlags.AppealBanned) {
+    return {
+      color: 'success',
+      label: 'Appealed'
+    }
+  } else if(ban.expired) {
+    return {
+      color: 'error',
+      label: 'Expired'
+    }
+  }
+}
+
+
+const tabs = computed(() => {
+  const bans: TabsItem[] = data.value ? data.value.bans.map(ban => {
+    const badge = getBadge(ban)
+    const isActive = badge === undefined
+    return {
+      label: `#${ban.id}`,
+      value: ban.id.toString(), // toString important, route.path is always gonna be string
+      badge,
+      ui: {
+        label: isActive ? 'text-black hover:text-muted' : 'line-through text-dimmed hover:text-muted'
+      }
+    }
+  }) : []
+  return [
+    ...bans,
+    {
+      label: 'Add Ban',
+      value: 'create',
+      icon: 'lucide:gavel'
+    }
+  ]
+})
+const route = useRoute()
+const routeId = computed(() => {
+  return route.path.split('/').pop()
+})
+
+
+// async function createNote() {
+//   if(!canSubmit.value) return
+//   newNoteSubmitting.value = true
+
+//   const result = await request<APICreateNoteResponse>(`/api/notes/${props.steamid}`, {
+//     method: "POST",
+//     headers: {
+//       "Content-Type": "application/json"
+//     },
+//     body: JSON.stringify({
+//       content: newNoteContent.value
+//     })
+//   })
+
+//   if('body' in result) {
+//     toast.add({
+//       title: `Note submitted for ${props.data.user.name ?? props.data.user.id}`,
+//       description: `Note #${result.body?.id}`,
+//       color: 'success',
+//       icon: "lucide:note"
+//     })
+//     newNoteContent.value = ""
+//     refresh()
+//   } else {
+//     toast.add({
+//       title: `Note submission failed`,
+//       description: result.error.message,
+//       color: 'error',
+//       icon: "lucide:note"
+//     })
+//   }
+//   newNoteSubmitting.value = false
+// }
 </script>

@@ -44,6 +44,7 @@ if(process.env.INFLUX_URL) {
         agent.on("close", () => {
             log.debug({}, "agent close early")
         })
+        agent.on("error", (e) => console.log('e?', e))
         influx = new InfluxDB({
             url: process.env.INFLUX_URL,
             token: process.env.INFLUX_TOKEN,
