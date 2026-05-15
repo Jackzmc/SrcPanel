@@ -1,46 +1,46 @@
 <template>
     <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
-        <UCard class="col-span-3">
-            <h3 class="text-sm font-bold mb-2 text-muted">EDIT BAN</h3>
-            <div class="flex flex-col gap-4">
-                <div class="flex flex-col gap-4">
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <UFormField label="Private Reason">
-                            <UTextarea v-model="editBan.reason" placeholder="Banned" class="w-full" size="lg" :rows="2" />
-                        </UFormField>
-                        <UFormField label="Public Reason">
-                            <UTextarea v-model="editBan.publicReason" placeholder="Banned" class="w-full" size="lg" :rows="2" />
-                        </UFormField>
+        <UCard class="col-span-3 grow">
+            <h3 class="text-sm font-bold mb-3 text-muted">EDIT BAN</h3>
+            <div class="flex flex-col gap-6">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <UFormField label="Private Reason">
+                        <UTextarea v-model="editBan.reason" placeholder="Banned" class="w-full" size="lg" :rows="2" />
+                    </UFormField>
+                    <UFormField label="Public Reason">
+                        <UTextarea v-model="editBan.publicReason" placeholder="Banned" class="w-full" size="lg" :rows="2" />
+                    </UFormField>
+                </div>
+                <UFormField label="Expires">
+                    <USelect variant="subtle" placeholder="Set expires date" />
+                </UFormField>
+                <UFormField label="Flags">
+                    <div class="flex flex-row gap-1">
+                        <UButton color="error" size="lg"
+                            :variant="editBan.flags & APIBanFlags.Suspended ? 'solid' : 'outline'"  
+                            @click="toggleFlag(APIBanFlags.Suspended)"
+                        >Suspend</UButton>
+                        <UButton color="neutral" size="lg"
+                            :variant="editBan.flags & APIBanFlags.IPBan ? 'solid' : 'outline'"  
+                            @click="toggleFlag(APIBanFlags.IPBan)"
+                        >IP Ban</UButton>
                     </div>
-                    <UFormField label="Expires">
-                        <USelect variant="subtle" placeholder="Set expires date" />
-                    </UFormField>
-                    <UFormField label="Flags">
-                        <div class="flex flex-row gap-1">
-                            <UButton color="error" size="lg"
-                                :variant="editBan.flags & APIBanFlags.Suspended ? 'solid' : 'outline'"  
-                                @click="toggleFlag(APIBanFlags.Suspended)"
-                            >Suspend</UButton>
-                            <UButton color="neutral" size="lg"
-                                :variant="editBan.flags & APIBanFlags.IPBan ? 'solid' : 'outline'"  
-                                @click="toggleFlag(APIBanFlags.IPBan)"
-                            >IP Ban</UButton>
-                        </div>
-                    </UFormField>
-                    <hr class="text-neutral-300 py-1 mt-4">
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
-                        <div class="flex items-center">
-                            <UButton size="xl" class="my-2">Save Changes</UButton>
-                        </div>
-                        
-                        <div class="flex items-center">
-                            <UFormField label="Danger Zone" class="border-dashed rounded-lg border py-2 px-4 w-full" orientation="horizontal">
-                                <UButton color="error">Delete Ban</UButton>
-                            </UFormField>
-                        </div>
+                </UFormField>
+            </div>
+            <br><br><br>
+            <template #footer>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
+                    <div class="flex items-center">
+                        <UButton size="xl" class="my-2" :loading="saveActive" @click="save()" :disabled="!canSave">Save Changes</UButton>
+                    </div>
+                    
+                    <div class="flex items-start">
+                        <UFormField label="Danger Zone" orientation="horizontal" class="py-2 px-4 border-dashed rounded-lg border w-full" :ui="{root:'items-center'}">
+                            <UButton color="error" :loading="saveActive||deleteActive" @click="deleteBan()">Delete Ban</UButton>
+                        </UFormField>
                     </div>
                 </div>
-            </div>
+            </template>
         </UCard>
         <div class="flex flex-col gap-2">
             <UCard class="grow">
@@ -104,17 +104,89 @@
 import { APIBanFlags, type FullAPIBan, type ListAPIBan } from '@jzpanel/common/Ban';
 import { formatDate, formatDateSmart, formatRelTime, getRelDate } from '@jzpanel/common/format';
 
+const toast = useToast()
+const { promptConfirm } = useModal()
+
 const props = defineProps<{
     ban: FullAPIBan
 }>()
 
+const hasChanges = computed(() => {
+    return props.ban.expires !== editBan.value.expires
+        || props.ban.publicReason !== editBan.value.publicReason
+        || props.ban.reason !== editBan.value.reason
+        || props.ban.flags !== editBan.value.flags
+})
+
+const canSave = computed(() => {
+    return hasChanges.value === true
+})
+
 const editBan = ref<FullAPIBan>(props.ban)
+const saveActive = ref(false)
+const deleteActive = ref(false)
 
 function toggleFlag(flag: APIBanFlags) {
     if(editBan.value.flags & flag) {
         editBan.value.flags &= ~flag
     } else {
         editBan.value.flags |= flag
+    }
+}
+
+async function save() {
+    if(!canSave.value) return console.warn('save() called when canSave is false')
+    saveActive.value = true
+    const result = await request(`/api/bans/${editBan.value.id}`, {
+        method: "PUT",
+        headers: {
+            'content-type': 'application/json'
+        },
+        body: JSON.stringify(editBan.value)
+    })
+    saveActive.value = false
+    if('body' in result) {
+        toast.add({
+            title: `Ban #${editBan.value.id} updated successfully`,
+            color: 'success'
+        })
+    } else {
+        toast.add({
+            title: `Ban #${editBan.value.id} update failed`,
+            description: result.error.message,
+            color: 'error'
+        })
+    }
+}
+
+async function deleteBan() {
+    deleteActive.value = true
+    if(await promptConfirm({
+        title: 'Confirm deletion',
+        description: 'This will completely purge ban from the records, intended for unintentional bans. It is preferred to suspend the ban instead if the ban is to no longer be active. Are you sure you want to continue?',
+        okColor: 'error',
+        okText: 'Delete'
+    })) {
+        const result = await request(`/api/bans/${editBan.value.id}`, {
+            method: "DELETE",
+            headers: {
+                'content-type': 'application/json'
+            },
+        })
+        deleteActive.value = false
+        if('body' in result) {
+            toast.add({
+                title: `Ban #${editBan.value.id} deleted`,
+                color: 'success'
+            })
+            await navigateTo(`/users/${props.ban.client.id}/bans`)
+        } else {
+            toast.add({
+                title: `Ban #${editBan.value.id} deletion failed`,
+                description: result.error.message,
+                color: 'error'
+            })
+        }
     }
 }
 </script>
