@@ -35,15 +35,15 @@ const props = defineProps<{
   data: APIUserDetails
 }>()
 
-useSeoMeta({
-  description: `Bans for ${props.playerName}`,
-  ogDescription: `Bans for ${props.playerName}`
-})
-
 const { data, refresh, error } = await useAsyncData<APIBanResponse>(
   `bans.${props.steamid}`,
   () => api(`/bans/${props.steamid}`)
 )
+
+useSeoMeta({
+  description: `Bans for ${props.playerName}`,
+  ogDescription: `Bans for ${props.playerName}`
+})
 
 
 function getBadge(ban: ListAPIBan): TabsItem['badge'] | undefined {

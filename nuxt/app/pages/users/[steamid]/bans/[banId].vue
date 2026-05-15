@@ -6,7 +6,7 @@
 </template>
 
 <script setup lang="ts">
-import type { FullAPIBan } from '@jzpanel/common/Ban';
+import type { APIBanDetailsResponse } from '@jzpanel/common/Ban';
 import type { APIUserDetails } from '@jzpanel/common/User'
 import BanCard from '~/components/users/BanCard.vue';
 
@@ -18,12 +18,18 @@ const props = defineProps<{
   data: APIUserDetails
 }>()
 
-const { data: ban, refresh, error } = await useAsyncData<FullAPIBan>(
+const { data, refresh, error } = await useAsyncData<APIBanDetailsResponse>(
   `bans.${props.steamid}.${route.params.banId}`,
   () => api(`/bans/${route.params.banId}`)
 )
-if(!ban.value) createError({
+if(!data.value) createError({
   status: 404,
   message: 'Ban not found'
+})
+
+const ban = computed(() => data.value?.bans[0])
+
+useSeoMeta({
+  title: `Ban #${ban.value!.id}`,
 })
 </script>

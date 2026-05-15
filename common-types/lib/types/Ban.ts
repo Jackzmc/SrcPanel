@@ -60,3 +60,8 @@ export interface APIBanResponse {
   bans: ListAPIBan[],
   totalBans: number
 }
+export interface APIBanDetailsResponse {
+  meta: Record<string, number>,
+  bans: ListAPIBan[],
+  appeals: BanAppeal[]
+}
