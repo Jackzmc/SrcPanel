@@ -66,10 +66,10 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
       const [bans] = await fastify.db.execute<RowDataPacket[]>(
         `SELECT times_tried, id, public_message, bans.flags, bans.steamid, bans.executor, bans.reason, expires, expired, bans.timestamp, u1.last_name as client_name, u2.last_name AS executor_name, ip
-                FROM bans
-                LEFT JOIN view_panel_user u1 ON SUBSTRING(bans.steamid, 11) = u1.account_id
-                LEFT JOIN view_panel_user u2 ON SUBSTRING(bans.executor, 11) = u1.account_id
-                WHERE bans.id = ? or bans.steamid = ?`,
+        FROM bans
+        LEFT JOIN view_panel_user u1 ON u1.account_id = SUBSTRING(bans.steamid, 11)
+        LEFT JOIN view_panel_user u2 ON u2.account_id = SUBSTRING(bans.executor, 11)
+        WHERE bans.id = ? or bans.steamid = ?`,
         [id, id]
       )
 
@@ -112,7 +112,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
               const accountid = steamid.getSteam2RenderedID().slice(10)
               try {
                 await fastify.db.execute("INSERT INTO user_names (steamid, name) VALUES (?, ?)", [accountid, name])
-              } catch (err) {
+              } catch (err: any) {
                 console.warn(`Warn: Could not insert resolved name (${accountid}, name ${name}):`, err.sqlMessage)
               }
             }
