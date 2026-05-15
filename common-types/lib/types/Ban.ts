@@ -62,6 +62,6 @@ export interface APIBanResponse {
 }
 export interface APIBanDetailsResponse {
   meta: Record<string, number>,
-  bans: ListAPIBan[],
+  bans: FullAPIBan[],
   appeals: BanAppeal[]
 }

@@ -1,14 +1,14 @@
 <template>
-  <div class="mt-4">
-    <p class="py-2">Showing {{  data?.bans.length }} bans</p>
-    {{  routeId }}
-    <UTabs :items="tabs" 
-      variant="link" 
-      :content="false" 
-      :model-value="routeId"
-      value-key="value"
-      @update:model-value="tab => navigateTo(`/users/${props.steamid}/bans/${tab}`)"
-    />
+  <div class="mt-4 space-y-2">
+    <div class="flex">
+      <UTabs :items="tabs" 
+        variant="link" 
+        :content="false" 
+        :model-value="routeId"
+        value-key="value"
+        @update:model-value="tab => navigateTo(`/users/${props.steamid}/bans/${tab}`)"
+      />
+    </div>
     <NuxtPage :steamid="steamid" :data="data" />
   </div>
 </template>
@@ -84,7 +84,10 @@ const tabs = computed(() => {
     {
       label: 'Add Ban',
       value: 'create',
-      icon: 'lucide:gavel'
+      icon: 'lucide:gavel',
+      ui: {
+        trigger: 'rounded-xl border-neutral-200 border-1 px-2 py-1'
+      }
     }
   ]
 })
