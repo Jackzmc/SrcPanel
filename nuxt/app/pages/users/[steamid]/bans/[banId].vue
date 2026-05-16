@@ -1,7 +1,7 @@
 <template>
   <div>
     <UAlert v-if="error" color="error" title="Error" :description="error.message" />
-    <BanCard v-if="ban" :ban="ban" />
+    <BanCard v-if="ban" :steamid="steamid"  :ban="ban" />
   </div>
 </template>
 

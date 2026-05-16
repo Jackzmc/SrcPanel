@@ -1,11 +1,12 @@
 <template>
   <div>
-    <p class="text-muted">Create New Ban!</p>
+    <BanCard :steamid="steamid" />
   </div>
 </template>
 
 <script setup lang="ts">
 import type { APIUserDetails } from '@jzpanel/common/User'
+import BanCard from '~/components/users/BanCard.vue';
 
 defineProps<{
   steamid: string

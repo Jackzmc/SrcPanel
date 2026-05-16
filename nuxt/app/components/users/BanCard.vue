@@ -1,7 +1,7 @@
 <template>
     <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
         <UCard class="col-span-3 grow">
-            <h3 class="text-sm font-bold mb-3 text-muted">EDIT BAN</h3>
+            <h3 class="text-sm font-bold mb-3 text-muted">{{ ban ? 'EDIT BAN' : 'NEW BAN' }}</h3>
             <div class="flex flex-col gap-6">
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <UFormField label="Private Reason">
@@ -29,9 +29,12 @@
             </div>
             <br><br><br>
             <template #footer>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
-                    <div class="flex items-center">
-                        <UButton size="xl" class="my-2" :loading="saveActive" @click="save()" :disabled="!canSave">Save Changes</UButton>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 items-center">
+                    <div class="flex items-center col-span-2 gap-1">
+                        <UButton size="xl" class="my-2" :loading="saveActive" @click="save()" :disabled="!canSave">
+                            {{ ban ? 'Save Changes' : 'Ban Player' }}
+                        </UButton>
+                        <UButton size="xl" class="my-2" :loading="saveActive" @click="reset()" :disabled="hasChanges" variant="outline" color="neutral">Reset</UButton>
                     </div>
                     
                     <div class="flex items-start">
@@ -46,7 +49,7 @@
             <UCard class="grow">
                 <h3 class="text-sm font-bold mb-2 text-muted">DETAILS</h3>
                 <div class="flex flex-col justify-around gap-1">
-                    <div v-if="ban !== null" class="flex flex-row justify-between">
+                    <div v-if="ban" class="flex flex-row justify-between">
                         <h4 class="text-lg font-semibold text-dimmed">Id</h4>
                         <p class="text-black">#{{ ban.id }}</p>
                     </div>
@@ -112,12 +115,13 @@ const { user } = useAuth()
 type EditBan = Omit<FullAPIBan, 'id'>
 
 const props = defineProps<{
-    ban: FullAPIBan | null
+    ban?: FullAPIBan,
+    steamid: string
 }>()
 
 
 const hasChanges = computed(() => {
-    if(props.ban === null) return true
+    if(!props.ban) return true
     return props.ban.expires !== editBan.value.expires
         || props.ban.publicReason !== editBan.value.publicReason
         || props.ban.reason !== editBan.value.reason
@@ -125,14 +129,14 @@ const hasChanges = computed(() => {
 })
 
 const canSave = computed(() => {
-    if(props.ban === null) {
+    if(!props.ban) {
         return editBan.value.reason != ""
             && editBan.value.client.id 
     }
     return hasChanges.value === true
 })
 
-const editBan = ref<EditBan>(props.ban || defaultBan())
+const editBan = ref<EditBan>(props.ban ? JSON.parse(JSON.stringify(props.ban)) : defaultBan())
 const saveActive = ref(false)
 const deleteActive = ref(false)
 
@@ -144,8 +148,36 @@ function toggleFlag(flag: APIBanFlags) {
     }
 }
 
+function defaultBan(): EditBan {
+    return {
+        reason: '',
+        publicReason: '',
+        ip: undefined,
+        flags: 0,
+        client: {
+            id: '',
+        },
+        executor: {
+            id: user.value?.user.steamid!,
+            name: user.value?.user.name
+        },
+        expires: 0,
+        expired: false,
+        joinAttempts: 0,
+        timestamp: Math.ceil(Date.now()/1000)
+    }
+}
+
+function reset() {
+    if(props.ban === null) {
+        editBan.value = defaultBan()
+    } else {
+        editBan.value = JSON.parse(JSON.stringify(props.ban))
+    }
+}
+
 async function save() {
-    if(props.ban === null) return
+    if(!props.ban) return
     if(!canSave.value) return console.warn('save() called when canSave is false')
     saveActive.value = true
     const result = await request(`/api/bans/${props.ban.id}`, {
@@ -170,28 +202,8 @@ async function save() {
     }
 }
 
-function defaultBan(): EditBan {
-    return {
-        reason: '',
-        publicReason: '',
-        ip: undefined,
-        flags: 0,
-        client: {
-            id: '',
-        },
-        executor: {
-            id: user.value?.user.steamid!,
-            name: user.value?.user.name
-        },
-        expires: 0,
-        expired: false,
-        joinAttempts: 0,
-        timestamp: Math.ceil(Date.now()/1000)
-    }
-}
-
 async function deleteBan() {
-    if(props.ban === null) return
+    if(!props.ban) return
     deleteActive.value = true
     if(await promptConfirm({
         title: 'Confirm deletion',
