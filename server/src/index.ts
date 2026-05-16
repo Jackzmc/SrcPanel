@@ -32,6 +32,8 @@ import { sleep } from './util.js'
 import { DataManagerInstance } from './modules/DataManager.js'
 import { getGlobalWriter, sendMetric } from './modules/metrics/influx.js'
 
+import './sentry.js'
+
 const START_TIME = performance.now()
 const FORCE_SHUTDOWN_TIMEOUT = 20_000
 
@@ -45,6 +47,8 @@ const app = Fastify({
   trustProxy: process.env.NODE_ENV === "production",
   loggerInstance
 })
+import * as Sentry from '@sentry/node' 
+Sentry.setupFastifyErrorHandler(app);
 
 process.on('unhandledRejection', (reason: any, promise ) => {
   app.log.fatal('Unhandled promise rejection:\n' + reason.stack);
