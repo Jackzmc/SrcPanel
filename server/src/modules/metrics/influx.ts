@@ -188,7 +188,6 @@ export class NamespacedMetric {
         for(const [measurement, value] of measurements) {
             this.send(measurement, value, labels)
         }
-        _writer.flush()
         return true
     }
 }
