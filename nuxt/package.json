@@ -21,9 +21,11 @@
     "@nuxt/content": "3.13.0",
     "@nuxt/image": "2.0.0",
     "@nuxt/ui": "^4.7.1",
+    "@sentry/nuxt": "^10.53.1",
     "@tanstack/vue-table": "^8.21.3",
     "apexcharts": "^5.10.4",
     "better-sqlite3": "^12.9.0",
+    "import-in-the-middle": "^3.0.1",
     "nuxt": "^4.4.4",
     "simple-keyboard": "^3.8.111",
     "steamid": "^2.1.0",
@@ -37,5 +39,10 @@
     "typescript": "^5.9.3",
     "vue-tsc": "^3.2.4"
   },
-  "packageManager": "pnpm@10.29.3"
+  "packageManager": "pnpm@10.29.3",
+  "pnpm": {
+    "overrides": {
+      "@vercel/nft": "^0.27.4"
+    }
+  }
 }

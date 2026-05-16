@@ -12,7 +12,13 @@ const buildCommit = (() => {
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-  modules: ['@nuxt/eslint', '@nuxt/ui', '@nuxt/image', '@nuxt/content'],
+  modules: [
+    '@nuxt/eslint',
+    '@nuxt/ui',
+    '@nuxt/image',
+    '@nuxt/content',
+    '@sentry/nuxt/module',
+  ],
 
   vite: {
     define: {
@@ -98,7 +104,6 @@ export default defineNuxtConfig({
     // '/docs/**': { prerender: true, }
   },
 
-
   compatibilityDate: '2025-01-15',
 
   nitro: {
@@ -114,5 +119,14 @@ export default defineNuxtConfig({
         braceStyle: '1tbs',
       }
     }
-  }
+  },
+
+  sentry: {
+    org: 'jackzmc',
+    project: 'admin-panel-ui',
+  },
+
+  sourcemap: {
+    client: 'hidden',
+  },
 })
