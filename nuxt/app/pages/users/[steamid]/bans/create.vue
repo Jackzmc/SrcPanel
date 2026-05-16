@@ -1,12 +1,12 @@
 <template>
   <div>
-    <BanCard :steamid="steamid" />
+    <BanContainer :steamid="steamid" />
   </div>
 </template>
 
 <script setup lang="ts">
 import type { APIUserDetails } from '@jzpanel/common/User'
-import BanCard from '~/components/users/BanCard.vue';
+import BanContainer from '~/components/users/BanContainer.vue';
 
 defineProps<{
   steamid: string

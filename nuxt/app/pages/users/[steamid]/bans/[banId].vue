@@ -1,14 +1,15 @@
 <template>
   <div>
     <UAlert v-if="error" color="error" title="Error" :description="error.message" />
-    <BanCard v-if="ban" :steamid="steamid"  :ban="ban" />
+    <BanContainer v-if="ban" :steamid="steamid"  :ban="ban" />
   </div>
 </template>
 
 <script setup lang="ts">
 import type { APIBanDetailsResponse } from '@jzpanel/common/Ban';
 import type { APIUserDetails } from '@jzpanel/common/User'
-import BanCard from '~/components/users/BanCard.vue';
+import BanContainer from '~/components/users/BanContainer.vue';
+
 
 const route = useRoute()
 const api = useApi()

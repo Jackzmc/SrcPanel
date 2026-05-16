@@ -19,15 +19,10 @@ definePageMeta({
 })
 
 import { APIBanFlags, type APIBanResponse, type ListAPIBan } from '@jzpanel/common/Ban';
-import { type APICreateNoteResponse, type APIListUserNotes, type APINotesResponse } from '@jzpanel/common/Note';
 import type { APIUserDetails } from '@jzpanel/common/User'
 import type { TabsItem } from '@nuxt/ui';
-import BanCard from '~/components/users/BanCard.vue';
 
 const api = useApi()
-const toast = useToast()
-
-const { user } = useAuth()
 
 const props = defineProps<{
   steamid: string
@@ -55,14 +50,21 @@ function getBadge(ban: ListAPIBan): TabsItem['badge'] | undefined {
   } else if(ban.flags & APIBanFlags.AppealBanned) {
     return {
       color: 'success',
-      label: 'Appealed'
+      label: 'Appealed',
+      variant: 'soft'
     }
   } else if(ban.expired) {
     return {
       color: 'error',
-      label: 'Expired'
+      label: 'Expired',
+      variant: 'soft'
     }
   }
+  // return {
+  //   color: 'primary',
+  //   label: 'Active',
+  //   variant: 'soft'
+  // }
 }
 
 
