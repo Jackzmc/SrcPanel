@@ -12,5 +12,3 @@ Sentry.init({
   environment: process.env.SENTRY_ENV ?? process.env.NODE_ENV ?? 'development',
   sendDefaultPii: true // Using glitchtip, its ok
 });
-
-Sentry.captureMessage("Test message from Node.js");
