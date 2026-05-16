@@ -46,20 +46,21 @@
             <UCard class="grow">
                 <h3 class="text-sm font-bold mb-2 text-muted">DETAILS</h3>
                 <div class="flex flex-col justify-around gap-1">
-                    <div class="flex flex-row justify-between">
+                    <div v-if="ban !== null" class="flex flex-row justify-between">
                         <h4 class="text-lg font-semibold text-dimmed">Id</h4>
                         <p class="text-black">#{{ ban.id }}</p>
                     </div>
                     <div class="flex flex-row justify-between">
                         <h4 class="text-lg font-semibold text-dimmed">State</h4>
-                        <UBadge v-if="ban.expired" color="error" variant="subtle">Expired</UBadge>
+                        <UBadge v-if="!ban" color="primary">New</UBadge>
+                        <UBadge v-else-if="ban.expired" color="error" variant="subtle">Expired</UBadge>
                         <UBadge v-else-if="ban.flags & APIBanFlags.Suspended" color="error" variant="subtle">Suspended</UBadge>
                         <UBadge v-else-if="ban.flags & APIBanFlags.AppealBanned" color="success" variant="subtle">Appealed</UBadge>
                         <UBadge v-else color="primary" variant="subtle">Active</UBadge>
                     </div>
                     <div class="flex flex-row justify-between">
                         <h4 class="text-lg font-semibold text-dimmed">IP</h4>
-                        <p v-if="ban.ip" class="text-black">{{ ban.ip }}</p>
+                        <p v-if="editBan.ip" class="text-black">{{ editBan.ip }}</p>
                         <p class="text-muted">--</p>
                     </div>
                     <div class="flex flex-row justify-between">
@@ -73,12 +74,12 @@
                     </div>
                     <div class="flex flex-row justify-between">
                         <h4 class="text-lg font-semibold text-dimmed">Country</h4>
-                        <p v-if="ban.client.country" class="text-black">{{ ban.client.country }}</p>
+                        <p v-if="editBan.client.country" class="text-black">{{ editBan.client.country }}</p>
                         <p class="text-muted">--</p>
                     </div>
                     <div class="flex flex-row justify-between">
                         <h4 class="text-lg font-semibold text-dimmed">Join Attempts</h4>
-                        <p class="text-black">{{ ban.joinAttempts }}</p>
+                        <p class="text-black">{{ editBan.joinAttempts }}</p>
                     </div>
                     
                 </div>
@@ -86,13 +87,13 @@
             <UCard>
                 <div class="flex flex-col gap-2">
                     <h4 class="text-sm font-semibold text-muted">BANNED BY</h4>
-                    <UserComponent class=" text-black" :user="ban.executor" />
+                    <UserComponent class=" text-black" :user="editBan.executor" />
                 </div>
                 <template #footer>
                     <h4 class="text-sm font-semibold text-dimmed">ISSUED</h4>
                     <div class="my-2 space-y-1 text-sm">
-                        <p class="text-black">{{ formatDateSmart(ban.timestamp) }}</p>
-                        <p class="text-xs text-muted">{{ getRelDate(ban.timestamp) }}</p>
+                        <p class="text-black">{{ formatDateSmart(editBan.timestamp) }}</p>
+                        <p class="text-xs text-muted">{{ getRelDate(editBan.timestamp) }}</p>
                     </div>
                 </template>
             </UCard>
@@ -106,12 +107,17 @@ import { formatDate, formatDateSmart, formatRelTime, getRelDate } from '@jzpanel
 
 const toast = useToast()
 const { promptConfirm } = useModal()
+const { user } = useAuth()
+
+type EditBan = Omit<FullAPIBan, 'id'>
 
 const props = defineProps<{
-    ban: FullAPIBan
+    ban: FullAPIBan | null
 }>()
 
+
 const hasChanges = computed(() => {
+    if(props.ban === null) return true
     return props.ban.expires !== editBan.value.expires
         || props.ban.publicReason !== editBan.value.publicReason
         || props.ban.reason !== editBan.value.reason
@@ -119,10 +125,14 @@ const hasChanges = computed(() => {
 })
 
 const canSave = computed(() => {
+    if(props.ban === null) {
+        return editBan.value.reason != ""
+            && editBan.value.client.id 
+    }
     return hasChanges.value === true
 })
 
-const editBan = ref<FullAPIBan>(props.ban)
+const editBan = ref<EditBan>(props.ban || defaultBan())
 const saveActive = ref(false)
 const deleteActive = ref(false)
 
@@ -135,9 +145,10 @@ function toggleFlag(flag: APIBanFlags) {
 }
 
 async function save() {
+    if(props.ban === null) return
     if(!canSave.value) return console.warn('save() called when canSave is false')
     saveActive.value = true
-    const result = await request(`/api/bans/${editBan.value.id}`, {
+    const result = await request(`/api/bans/${props.ban.id}`, {
         method: "PUT",
         headers: {
             'content-type': 'application/json'
@@ -147,19 +158,40 @@ async function save() {
     saveActive.value = false
     if('body' in result) {
         toast.add({
-            title: `Ban #${editBan.value.id} updated successfully`,
+            title: `Ban #${props.ban.id} updated successfully`,
             color: 'success'
         })
     } else {
         toast.add({
-            title: `Ban #${editBan.value.id} update failed`,
+            title: `Ban #${props.ban.id} update failed`,
             description: result.error.message,
             color: 'error'
         })
     }
 }
 
+function defaultBan(): EditBan {
+    return {
+        reason: '',
+        publicReason: '',
+        ip: undefined,
+        flags: 0,
+        client: {
+            id: '',
+        },
+        executor: {
+            id: user.value?.user.steamid!,
+            name: user.value?.user.name
+        },
+        expires: 0,
+        expired: false,
+        joinAttempts: 0,
+        timestamp: Math.ceil(Date.now()/1000)
+    }
+}
+
 async function deleteBan() {
+    if(props.ban === null) return
     deleteActive.value = true
     if(await promptConfirm({
         title: 'Confirm deletion',
@@ -167,7 +199,7 @@ async function deleteBan() {
         okColor: 'error',
         okText: 'Delete'
     })) {
-        const result = await request(`/api/bans/${editBan.value.id}`, {
+        const result = await request(`/api/bans/${props.ban.id}`, {
             method: "DELETE",
             headers: {
                 'content-type': 'application/json'
@@ -176,13 +208,13 @@ async function deleteBan() {
         deleteActive.value = false
         if('body' in result) {
             toast.add({
-                title: `Ban #${editBan.value.id} deleted`,
+                title: `Ban #${props.ban.id} deleted`,
                 color: 'success'
             })
             await navigateTo(`/users/${props.ban.client.id}/bans`)
         } else {
             toast.add({
-                title: `Ban #${editBan.value.id} deletion failed`,
+                title: `Ban #${props.ban.id} deletion failed`,
                 description: result.error.message,
                 color: 'error'
             })
