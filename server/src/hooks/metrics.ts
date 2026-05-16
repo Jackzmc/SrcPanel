@@ -1,4 +1,3 @@
-import { ServerMetricsCounters } from "@jzpanel/common/Panel";
 import { FastifyInstance } from "fastify";
 import fastifyPlugin from "fastify-plugin";
 import { getGlobalWriter, sendMetric } from "../modules/metrics/influx.js";
