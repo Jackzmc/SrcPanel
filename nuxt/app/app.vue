@@ -8,7 +8,7 @@
 
 
 <script setup lang="ts">
-import SettingsModal from './components/modals/SettingsModal.vue';
+const { user } = useAuth()
 
 useHead({
   meta: [
@@ -30,6 +30,12 @@ useSeoMeta({
   description,
   ogTitle: undefined,
   ogDescription: description,
+})
+
+import * as Sentry from '@sentry/nuxt'
+if(user.value) Sentry.setUser({
+  id: user.value.user.steamid,
+  username: user.value.user.name,
 })
 
 </script>

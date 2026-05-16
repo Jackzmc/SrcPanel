@@ -19,6 +19,8 @@ import TaskManager from '../modules/tasks/TaskManager.js';
 import CacheManager from '../modules/CacheManager.js';
 import DataManager from '../modules/DataManager.js'
 
+import * as Sentry from '@sentry/node'
+
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 /**
@@ -97,6 +99,11 @@ async function db(fastify: FastifyInstance) {
         return NOT_LOGGED_IN(reply, "SESSION_EXPIRED", `Session has expired (target:${SESSION_VERSION}, cur:${req.session.version})`)
       }
       req.user = new User(fastify, req.session.user.steamid)
+      Sentry.setUser({
+        id: req.user.steamid2,
+        username: req.user.cachedName,
+        ip: req.ip
+      })
     } else if (req.headers['x-apikey'] || req.headers['authorization']) {
       let token: string;
       if (req.headers['authorization']) {

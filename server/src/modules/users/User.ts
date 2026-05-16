@@ -27,8 +27,8 @@ export interface RequirePermissionOptions {
 
 export default class User {
     #adminData?: AdminData
-    #providers: UserOauthProviders
-    #name: string
+    #providers?: UserOauthProviders = undefined
+    #name?: string = undefined
     #fastify: FastifyInstance
 
     public steamid2: string
@@ -48,6 +48,13 @@ export default class User {
         const user = await UserManager.instance.fetchUser(new SteamID(this.steamid2))
         if(!user) return null
         this.#name = user.name
+        return this.#name
+    }
+
+    /**
+     * Returns user's cached name, if exists 
+     */
+    get cachedName() {
         return this.#name
     }
 
@@ -209,7 +216,7 @@ export default class User {
 
     async getProvider(provider: OauthProvider) {
         if(!this.#providers) await this.getProviders()
-        return this.#providers[provider]
+        return this.#providers![provider]
     }
 
     /**
