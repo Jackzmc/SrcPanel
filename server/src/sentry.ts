@@ -10,5 +10,6 @@ Sentry.init({
   tracesSampleRate: 0.01, // 1% of transactions — adjust to your needs
   autoSessionTracking: false, // GlitchTip does not support sessions
   environment: process.env.SENTRY_ENV ?? process.env.NODE_ENV ?? 'development',
-  sendDefaultPii: true // Using glitchtip, its ok
+  sendDefaultPii: true, // Using glitchtip, its ok
+  enableLogs: true,
 });
