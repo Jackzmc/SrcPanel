@@ -129,11 +129,6 @@ export default class ServerManager {
     return {...this.#groups}
   }
 
-  #debugLive(...args: any[]) {
-    if(DebugLivePlugin)
-      liveLog.debug("",...args)
-  }
-
   async #authenticateSocket(client: PluginSocket, reader: BufferReader): Promise<boolean> {
     const _ = reader.readShort() // We don't need size for authentication, but we need to read 2 bytes
     const record = PluginSocket.ParseRecord(reader)
@@ -149,7 +144,7 @@ export default class ServerManager {
         client._setServer(server,)
         server.Plugin?._setSocket(client)
         server._setGameInfo(record.appid, record.gameVersion)
-        this.#debugLive("Authenticated", `host=${client.Host} server=${server.id} appid=${record.appid}/${record.gameVersion}`)
+        liveLog.info({ host: client.Host, server: server.id, appid: `${record.appid}/${record.gameVersion}`}, 'authenticated')
         return true
       } else {
         client.send(LiveRecordResponse.Error, `Invalid or unknown id "${payload.sub}" (docker: ${payload.docker?'y':'n'})`)
@@ -164,8 +159,8 @@ export default class ServerManager {
 
   #onLiveClient(client: net.Socket) {
     const clientHost = `${client.remoteAddress}:${client.remotePort}`
-    if(this.#socketClients.has(clientHost)) this.#debugLive("warn: client already was connected", clientHost)
-    this.#debugLive('client connected', clientHost, 'waiting for auth')
+    if(this.#socketClients.has(clientHost)) liveLog.warn({ clientHost }, 'client already was connected')
+    liveLog.debug({ clientHost}, 'client connected - pending auth')
     const ps = new PluginSocket(client)
     this.#socketClients.set(clientHost, ps)
     
@@ -214,7 +209,7 @@ export default class ServerManager {
       server?.Plugin?._setSocket(null)
       ps._setServer(null)
       this.#socketClients.delete(clientHost)
-      this.#debugLive('client disconnected', clientHost)
+      liveLog.info({ clientHost}, 'client disconnected')
     })
   }
 
