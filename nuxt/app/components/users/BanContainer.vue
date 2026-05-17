@@ -56,7 +56,7 @@
             <template #footer>
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 items-center">
                     <div class="flex items-center col-span-2 gap-1">
-                        <UButton size="xl" class="my-2" :loading="saveActive" @click="save()" :disabled="!canSave">
+                        <UButton size="xl" class="my-2" :loading="saveActive" @click="saveOrAdd()" :disabled="!canSave">
                             {{ ban ? 'Save Changes' : 'Ban Player' }}
                         </UButton>
                         <UButton size="xl" class="my-2" :loading="saveActive" @click="reset()" :disabled="hasChanges" variant="outline" color="neutral">Reset</UButton>
@@ -132,7 +132,7 @@
 </template>
 
 <script setup lang="ts">
-import { APIBanFlags, type FullAPIBan, type ListAPIBan } from '@jzpanel/common/Ban';
+import { APIBanFlags, type APICreateBanResponse, type FullAPIBan, type ListAPIBan } from '@jzpanel/common/Ban';
 import { formatDate, formatDateSmart, formatRelTime, formatRelTimeDuration, getRelDate } from '@jzpanel/common/format';
 import type { SelectItem } from '@nuxt/ui';
 
@@ -245,6 +245,14 @@ function reset() {
     }
 }
 
+async function saveOrAdd() {
+    if(props.ban) {
+        await save()
+    } else {
+        await createBan()
+    }
+}
+
 async function save() {
     if(!props.ban) return
     if(!canSave.value) return console.warn('save() called when canSave is false')
@@ -265,6 +273,33 @@ async function save() {
     } else {
         toast.add({
             title: `Ban #${props.ban.id} update failed`,
+            description: result.error.message,
+            color: 'error'
+        })
+    }
+}
+
+async function createBan() {
+    if(props.ban) return console.warn('createBan called on edited ban')
+    saveActive.value = true
+    const result = await request<APICreateBanResponse>(`/api/bans/${props.steamid}`, {
+        method: "POST",
+        headers: {
+            'content-type': 'application/json'
+        },
+        body: JSON.stringify(editBan.value)
+    })
+    saveActive.value = false
+    if('body' in result) {
+        if(!result.body) throw Error("createBan with empty body")
+        toast.add({
+            title: `Ban #${result.body.banId} created`,
+            color: 'success'
+        })
+        await navigateTo(`/users/${props.steamid}/bans/${result.body.banId}`)
+    } else {
+        toast.add({
+            title: `Failed to ban player`,
             description: result.error.message,
             color: 'error'
         })

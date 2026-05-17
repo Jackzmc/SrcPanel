@@ -65,3 +65,8 @@ export interface APIBanDetailsResponse {
   bans: FullAPIBan[],
   appeals: BanAppeal[]
 }
+
+export interface APICreateBanResponse {
+  banId: number
+  success: true
+}
