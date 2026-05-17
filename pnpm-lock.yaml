@@ -199,6 +199,9 @@ importers:
       pino-pretty:
         specifier: ^8.1.0
         version: 8.1.0
+      pino-sentry-transport:
+        specifier: ^1.6.0
+        version: 1.6.0(@sentry/node@10.53.1)(pino@9.12.0)
       quick-lru:
         specifier: ^6.1.2
         version: 6.1.2
@@ -6035,6 +6038,10 @@ packages:
   lodash.defaults@4.2.0:
     resolution: {integrity: sha512-qjxPLHd3r5DnsdGacqOMU6pb/avJzdh9tFX2ymgoZE27BmjXrNy/y4LoaiTeAb+O3gL8AfpJGtqfX/ae2leYYQ==}
 
+  lodash.get@4.4.2:
+    resolution: {integrity: sha512-z+Uw/vLuy6gQe8cfaFWD7p0wVv8fJl3mbzXh33RS+0oW2wvUqiRXiQ69gLWSLpgB5/6sU+r6BlQR0MBILadqTQ==}
+    deprecated: This package is deprecated. Use the optional chaining (?.) operator instead.
+
   lodash.includes@4.3.0:
     resolution: {integrity: sha512-W3Bx6mdkRTGtlJISOvVD/lbqjTlPPUDTMnlXZFnVwi9NKJ6tiAk6LVdlhZMm17VZisqhKcgzpO5Wz91PCt5b0w==}
 
@@ -6868,6 +6875,13 @@ packages:
   pino-pretty@8.1.0:
     resolution: {integrity: sha512-oKfI8qKXR2a3haHs/X8iB6QSnWLqoOGAjwxIAXem4+XOGIGNw7IKpozId1uE7j89Rj46HIfWnGbAgmQmr8+yRw==}
     hasBin: true
+
+  pino-sentry-transport@1.6.0:
+    resolution: {integrity: sha512-UyV2TlTn7sL7Rinr69vGzpGBOhh/ueuMrFz3qASauHDHfklDFXfH+6Hc11EXSVH86nxHgF8kx6/fAOgQJhcsIQ==}
+    engines: {node: '> 14'}
+    peerDependencies:
+      '@sentry/node': ^7.0.0 || ^8.0.0 || ^9.0.0 || ^10.0.0
+      pino: ^7.0.0 || ^8.0.0 || ^9.0.0 || ^10.0.0
 
   pino-std-serializers@7.0.0:
     resolution: {integrity: sha512-e906FRY0+tV27iq4juKzSYPbUj2do2X2JX4EzSca1631EB2QJQUqGbDuERal7LCtOpxl6x3+nvo9NPZcmjkiFA==}
@@ -15094,6 +15108,8 @@ snapshots:
 
   lodash.defaults@4.2.0: {}
 
+  lodash.get@4.4.2: {}
+
   lodash.includes@4.3.0: {}
 
   lodash.isarguments@3.1.0: {}
@@ -16404,6 +16420,13 @@ snapshots:
       secure-json-parse: 2.7.0
       sonic-boom: 3.8.1
       strip-json-comments: 3.1.1
+
+  pino-sentry-transport@1.6.0(@sentry/node@10.53.1)(pino@9.12.0):
+    dependencies:
+      '@sentry/node': 10.53.1
+      lodash.get: 4.4.2
+      pino: 9.12.0
+      pino-abstract-transport: 1.2.0
 
   pino-std-serializers@7.0.0: {}
 

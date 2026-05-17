@@ -54,12 +54,12 @@ const envToLogger = {
 const LOG_TO_FILE = Number(process.env.LOG_TO_FILE) || 1
 const logObj = envToLogger[process.env.NODE_ENV as string] ?? envToLogger["development"]
 if(process.env.LOG_PATH && LOG_TO_FILE) {
-  console.debug({ env: process.env.NODE_ENV ?? "development", path: process.env.LOG_PATH }, "logging to", process.env.LOG_PATH)
+  console.debug({ env: process.env.NODE_ENV ?? "development", path: process.env.LOG_PATH }, "logging: using pino/file ")
   // make 'logs' folder, ignore if it already exists
   const folder = path.parse(process.env.LOG_PATH).dir || "logs"
   try {
     mkdirSync(folder, { recursive: true })
-  } catch(err) {
+  } catch(err: any) {
     if(err.code != "EEXISTS") {
       console.error(`logger: failed to make logs folder "${folder}"`, err)
       throw err
@@ -76,6 +76,26 @@ if(process.env.LOG_PATH && LOG_TO_FILE) {
       destination: process.env.LOG_PATH,
     },
   })
+}
+
+if(process.env.SENTRY_DSN) {
+  logObj.transport.targets.push({
+    level: 'warn',
+    target: 'pino-sentry-transport',
+    options: {
+      sentry: {
+        dsn: process.env.SENTRY_DSN,
+        environment: process.env.SENTRY_ENV ?? process.env.NODE_ENV ?? "development"
+      },
+      withLogRecord: true,
+      // sentry tags to add to the event, uses `lodash.get` to get the value from the log record
+      tags: ['level'],
+      context: [],
+      minLevel: 40, // WARN
+      expectPinoConfig: true,
+    }
+  })
+  console.log({  }, 'logger: using pino-sentry-transport')
 }
 const logger = pino(logObj);
 

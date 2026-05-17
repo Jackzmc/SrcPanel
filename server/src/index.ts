@@ -49,6 +49,7 @@ const app = Fastify({
 })
 import * as Sentry from '@sentry/node' 
 Sentry.setupFastifyErrorHandler(app);
+Sentry.setup
 
 process.on('unhandledRejection', (reason: any, promise ) => {
   app.log.fatal('Unhandled promise rejection:\n' + reason.stack);
