@@ -17,7 +17,7 @@
                     <!-- <USelect v-model="extendExpires" :placeholder="ban && ban.expires > 0 ? 'Extend expiry date' : 'Set expiry date'" :items="expiresOptions" /> -->
                     <div class="py-1 mb-1">
                         <span v-if="editBan.expires == 0">Ban is set to never expire</span>
-                        <UBadge v-else variant="soft" color="neutral" size="lg">Ban will expire <b>{{ formatRelTime(editBan.expires) }}</b> on <b>{{ formatDate(editBan.expires)  }}</b></UBadge>
+                        <UBadge v-else variant="soft" color="neutral" size="lg">Ban {{ hasExpiredEdit ? 'expired' : 'will expire' }} <b>{{ formatRelTime(editBan.expires) }}</b> on <b>{{ formatDate(editBan.expires)  }}</b></UBadge>
                     </div>
                     <div class="flex gap-1">
                         <UButton v-for="option in expiresOptions" :key="option.value" 
@@ -147,6 +147,10 @@ const props = defineProps<{
     steamid: string
 }>()
 
+const hasExpiredEdit = computed(() => {
+    return editBan.value.expires > 0 && (editBan.value.expires*1000 <= Date.now())
+})
+
 const expiresOptions = computed(() => {
     // value is number of minutes
     return  [
@@ -210,7 +214,8 @@ function extendExpires(minutes: number) {
     if(minutes == 0) {
         editBan.value.expires = 0
     } else {
-        if(editBan.value.expires == 0) {
+        // If no expires OR has already expired, reset to current time + now
+        if(editBan.value.expires == 0 || hasExpiredEdit.value) {
             editBan.value.expires = Math.floor(Date.now()/1000)
         }
         editBan.value.expires += (60*minutes)
