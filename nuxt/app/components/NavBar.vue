@@ -13,7 +13,7 @@
 
     <template #left>
       <strong :class="['font-sans text-2xl',openClassText]">JzPanel</strong>
-        <UNavigationMenu
+      <UNavigationMenu
         :items="ROUTES"
         popover
         tooltip
@@ -94,8 +94,6 @@ const emit = defineEmits(["open-settings"])
 const { user, isLoggedIn, logout } = useAuth()
 
 const docs = await queryCollection("docs").all()
-
-const open = ref(false)
 
 const openClassText = computed(() => {
   return open.value ? "text-black dark:text-white" : "text-white"
@@ -268,6 +266,8 @@ const userDropdown: DropdownMenuItem[][] = [
     }
   ]
 ]
+
+const open = ref(false)
 </script>
 
 <style>
