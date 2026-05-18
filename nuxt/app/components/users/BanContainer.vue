@@ -1,5 +1,5 @@
 <template>
-    <div class="grid grid-cols-1 sm:grid-cols-4 gap-y-4">
+    <div class="grid grid-cols-1 sm:grid-cols-4 gap-y-4 gap-0 sm:gap-4">
         <UCard class="col-span-3 grow">
             <h3 class="text-sm font-bold mb-3 text-muted">{{ ban ? 'EDIT BAN' : 'NEW BAN' }}</h3>
             <div class="flex flex-col gap-6">
