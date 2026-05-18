@@ -69,6 +69,10 @@ async function onSignal(signal: NodeJS.Signals) {
   hadSignal = true
   
   app.log.info(`SIGNAL ${signal} -- SHUTTING DOWN`)
+  setTimeout(() => {
+    app.log.error("Timed out, forcing shutdown")
+    process.exit(1)
+  }, FORCE_SHUTDOWN_TIMEOUT)
   // Handle shutdown logic
   
   await Promise.allSettled([
@@ -83,10 +87,7 @@ async function onSignal(signal: NodeJS.Signals) {
   await app.close()
   process.exit(0)
 
-  setTimeout(() => {
-    app.log.error("Timed out, forcing shutdown")
-    process.exit(1)
-  }, FORCE_SHUTDOWN_TIMEOUT)
+
 }
 ["SIGUSR2", "SIGINT", "SIGTERM"].map((signal) => {
   process.on(signal, onSignal)
