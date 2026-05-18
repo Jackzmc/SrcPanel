@@ -1,5 +1,5 @@
 <template>
-    <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
+    <div class="grid grid-cols-1 sm:grid-cols-4 gap-y-4">
         <UCard class="col-span-3 grow">
             <h3 class="text-sm font-bold mb-3 text-muted">{{ ban ? 'EDIT BAN' : 'NEW BAN' }}</h3>
             <div class="flex flex-col gap-6">
@@ -70,13 +70,13 @@
                 </div>
             </template>
         </UCard>
-        <div class="flex flex-col gap-2">
+        <div class="flex flex-col gap-y-4">
             <UCard class="grow">
                 <h3 class="text-sm font-bold mb-2 text-muted">DETAILS</h3>
                 <div class="flex flex-col justify-around gap-1">
                     <div v-if="ban" class="flex flex-row justify-between items-center">
                         <h4 class="text-lg font-semibold text-dimmed">Id</h4>
-                        <p class="text-black">#{{ ban.id }}</p>
+                        <p class="text-black dark:text-white">#{{ ban.id }}</p>
                     </div>
                     <div class="flex flex-row justify-between items-center">
                         <h4 class="text-lg font-semibold text-dimmed">State</h4>
@@ -88,41 +88,41 @@
                     </div>
                     <div class="flex flex-row justify-between items-center">
                         <h4 class="text-lg font-semibold text-dimmed">IP</h4>
-                        <p v-if="editBan.ip" class="text-black">{{ editBan.ip }}</p>
+                        <p v-if="editBan.ip" class="text-black dark:text-white">{{ editBan.ip }}</p>
                         <p v-else class="text-muted">--</p>
                     </div>
                     <div class="flex flex-row justify-between items-center">
                         <h4 class="text-lg font-semibold text-dimmed">Country</h4>
-                        <p v-if="editBan.client.country" class="text-black">{{ editBan.client.country }}</p>
+                        <p v-if="editBan.client.country" class="text-black dark:text-white">{{ editBan.client.country }}</p>
                         <p v-else class="text-muted">--</p>
                     </div>
                     <div class="flex flex-row justify-between items-center">
                         <h4 class="text-lg font-semibold text-dimmed">Join Attempts</h4>
-                        <p v-if="ban" class="text-black">{{ editBan.joinAttempts }}</p>
-                        <p class="text-muted">--</p>
+                        <p v-if="ban" class="text-black dark:text-white">{{ editBan.joinAttempts }}</p>
+                        <p v-else class="text-muted">--</p>
 
                     </div>
                 </div>
                 <template v-if="ban" #footer>
                     <h4 class="text-sm font-semibold text-dimmed">EXPIRES</h4>
                     <div class="my-2 space-y-1 text-sm">
-                        <p v-if="ban.expires" class="text-black text-sm">{{ formatDate(editBan.expires) }}</p>
+                        <p v-if="ban.expires" class="text-black dark:text-white text-sm">{{ formatDate(editBan.expires) }}</p>
                         <p v-if="ban.expires" class="text-xs text-muted">{{ formatRelTime(editBan.expires) }}</p>
                         <!-- <p class="text-black">{{ formatDateSmart(editBan.timestamp) }}</p> -->
                         <!-- <p class="text-xs text-muted">{{ getRelDate(editBan.timestamp) }}</p> -->
-                        <p v-else class="text-black">Permanent</p>
+                        <p v-else class="text-black dark:text-white">Permanent</p>
                     </div>
                 </template>
             </UCard>
             <UCard>
                 <div class="flex flex-col gap-2">
                     <h4 class="text-sm font-semibold text-muted">BANNED BY</h4>
-                    <UserComponent class=" text-black" :user="editBan.executor" />
+                    <UserComponent class=" text-black dark:text-white" name-class="ml-2" :user="editBan.executor" />
                 </div>
                 <template v-if="ban" #footer>
                     <h4 class="text-sm font-semibold text-dimmed">ISSUED</h4>
                     <div class="my-2 space-y-1 text-sm">
-                        <p class="text-black">{{ formatDateSmart(editBan.timestamp) }}</p>
+                        <p class="text-black dark:text-white">{{ formatDateSmart(editBan.timestamp) }}</p>
                         <p class="text-xs text-muted">{{ getRelDate(editBan.timestamp) }}</p>
                     </div>
                 </template>
