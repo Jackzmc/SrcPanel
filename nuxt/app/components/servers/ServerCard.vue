@@ -2,7 +2,7 @@
   <UCard :class="cardClass">
     <div class="flex items-center justify-between pb-2 border-b border-b-black">
       <div class="flex items-center gap-2">
-        <a class="text-md md:text-lg text-black">{{ server.name }}</a>
+        <a :class="['text-md md:text-lg',cardTextColor]">{{ server.name }}</a>
         <!-- buttons -->
         <UBadge :color="server.online ? 'neutral' : 'neutral'" variant="outline" class="hidden md:block">
           <UIcon
@@ -14,10 +14,10 @@
         </UBadge>
       </div>
       <!-- Status -->
-      <span v-if="server.online && server.status.data" class="ml-auto text-black text-s md:text-lg">
+      <span v-if="server.online && server.status.data" :class="['ml-auto text-s md:text-lg',cardTextColor]">
         <IconText leading-icon="lucide:users" >
           <span :class="['font-semibold', {
-            'text-black': server.online && server.status.data.players.length === 0,
+            'text-black dark:text-white': server.online && server.status.data.players.length === 0,
             'text-info': server.status.data.players.length > 0
           }]">
           {{ server.status.data.players.length }}</span>/{{ server.status.data.maxplayers }} <span class="text-sm">players</span>
@@ -27,8 +27,8 @@
 
     <div class="mt-2 text-sm text-muted space-y-1">
       <!-- Playing [gamemode] on [map] -->
-      <div v-if="server.status?.data" class="flex items-center gap-1 pb-2 text-black border-b border-b-neutral-400">
-        <UIcon name="i-lucide-map" class="size-4 text-black" />
+      <div v-if="server.status?.data" :class="['flex items-center gap-1 pb-2 border-b border-b-neutral-400',cardTextColor]">
+        <UIcon name="i-lucide-map" :class="['size-4',cardTextColor]" />
         <span>Playing</span>
         <b>{{ server.status.data.gamemode }}</b>
         <span>on</span>
@@ -44,7 +44,7 @@
         }"
       >
         <div class="flex items-center gap-1 border-b border-b-neutral-400">
-          <UIcon name="i-lucide-play" class="size-4 text-black" />
+          <UIcon name="i-lucide-play" :class="['size-4',cardTextColor]" />
           <code :class="['bg-inherit! p-1',textColor]">
             <ClickCopy :text="connectCommand">
               <b>connect</b> {{ server.host }}:{{ server.port }}
@@ -62,7 +62,7 @@
         }"
       >
         <div class="flex items-center gap-1 border-b border-b-neutral-400">
-          <UIcon name="i-lucide-list" class="size-4 text-black" />
+          <UIcon name="i-lucide-list" :class="['size-4',cardTextColor]" />
           <code :class="['bg-inherit! p-1',textColor]">
             <ClickCopy :text="createLobbyCommand">
               <b>mm_dedicated_force_servers</b> {{ server.ip }}:{{ server.port }}
@@ -111,10 +111,13 @@ const props = defineProps<{
 const cardClass = computed(() => {
   if (props.server.online) {
     return props.server.status.data && props.server.status.data?.players.length > 0
-      ? "bg-info-100 text-black"
-      : "bg-emerald-200 text-black"
+      ? "bg-info-100 dark:bg-info-900  text-black"
+      : "bg-emerald-200 dark:bg-emerald-800 text-black"
   }
-  return "bg-yellow-50"
+  return "bg-yellow-50 dark:bg-neutral-900"
+})
+const cardTextColor = computed(() => {
+  return 'text-black dark:text-white'
 })
 
 const connectCommand = computed(() => {
@@ -131,8 +134,8 @@ const numPlayers = computed(() => {
 })
 
 const textColor = computed(() => {
-  if(numPlayers.value == undefined) return "!text-black"
-  if(numPlayers.value === 0) return "!text-black"
+  if(numPlayers.value == undefined) return "!text-black dark:text-white!"
+  if(numPlayers.value === 0) return "!text-black dark:text-neutral-300!"
   return "!text-info"
 })
 </script>
