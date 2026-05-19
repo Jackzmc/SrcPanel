@@ -16,7 +16,7 @@
                 <UFormField label="Expires">
                     <!-- <USelect v-model="extendExpires" :placeholder="ban && ban.expires > 0 ? 'Extend expiry date' : 'Set expiry date'" :items="expiresOptions" /> -->
                     <div class="py-1 mb-1">
-                        <span v-if="editBan.expires == 0">Ban is set to never expire</span>
+                        <span v-if="!editBan.expires">Ban is set to never expire</span>
                         <UBadge v-else variant="soft" color="neutral" size="lg">Ban {{ hasExpiredEdit ? 'expired' : 'will expire' }} <b>{{ formatRelTime(editBan.expires) }}</b> on <b>{{ formatDate(editBan.expires)  }}</b></UBadge>
                     </div>
                     <div class="flex gap-1">
