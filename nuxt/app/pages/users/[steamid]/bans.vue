@@ -77,7 +77,7 @@ const tabs = computed(() => {
       value: ban.id.toString(), // toString important, route.path is always gonna be string
       badge,
       ui: {
-        label: isActive ? 'text-black hover:text-muted' : 'line-through text-dimmed hover:text-muted'
+        label: isActive ? 'text-black dark:text-white hover:text-muted' : 'line-through text-dimmed hover:text-muted'
       }
     }
   }) : []
