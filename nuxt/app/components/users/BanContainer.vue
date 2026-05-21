@@ -39,7 +39,7 @@
                                 :variant="editBan.flags & APIBanFlags.Suspended ? 'solid' : 'outline'"  
                                 @click="toggleFlag(APIBanFlags.Suspended)"
                                 :leading-icon="editBan.flags & APIBanFlags.Suspended ? 'lucide:circle-check' : undefined"
-                            >Suspended</UButton>
+                            >Suspend</UButton>
                         </UTooltip>
                         <UTooltip text="Ban by IP Address">
                             <UButton color="neutral" size="lg"
@@ -117,7 +117,7 @@
             <UCard>
                 <div class="flex flex-col gap-2">
                     <h4 class="text-sm font-semibold text-muted">BANNED BY</h4>
-                    <UserComponent class=" text-black dark:text-white" name-class="ml-2" :user="editBan.executor" />
+                    <UserComponent class=" text-black dark:text-white" name-class="ml-2 py-2" :user="editBan.executor" />
                 </div>
                 <template v-if="ban" #footer>
                     <h4 class="text-sm font-semibold text-dimmed">ISSUED</h4>

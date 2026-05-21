@@ -147,7 +147,7 @@ const mapDetails = computed(() => {
 })
 
 const finaleStageName = computed(() => {
-  if(!props.data.live?.finale) return null
+  if(!props.data.live?.finale || props.data.live.finale.stage === FinaleStage.Unknown) return null
   return FinaleStageName[props.data.live.finale.stage]
 })
 </script>

@@ -12,8 +12,10 @@
           text="No logs to show, new entries will appear here as they are received."
           class="text-neutral-300" />
       </div>
-      <span v-for="(entry, i) in ws.logs.value" :key="i">
-        {{ entry }}
+      <span class="flex flex-col text-wrap">
+        <span v-for="(entry, i) in ws.logs.value" :key="i">
+          {{ entry }}
+        </span>
       </span>
     </div>
     <!-- Console Input -->

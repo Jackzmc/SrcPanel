@@ -152,8 +152,8 @@ const PlayerMoveData: Record<PlayerMove, { label: string, iconLeft?: string, ico
   [PlayerMove.Hanging]: { label: "Hanging", iconLeft: "lucide:triangle-alert" },
   [PlayerMove.Incapped]: { label: "Incapped", iconLeft: "lucide:heart-pulse" },
   [PlayerMove.Idle]: { label: "Standing", iconLeft: 'lucide:circle-small' },
-  [PlayerMove.Walk]: { label: "Moving", iconRight: "lucide:arrow-big-right" },
-  [PlayerMove.Run]: { label: "Running", iconRight: "lucide:arrow-big-right-dash" },
+  [PlayerMove.Walk]: { label: "Walking", iconRight: "lucide:arrow-big-right" },
+  [PlayerMove.Run]: { label: "Moving", iconRight: "lucide:arrow-big-right-dash" },
   [PlayerMove.Crouched]: { label: "Crouching", iconLeft: "lucide:eye-off" },
   [PlayerMove.Ladder]: { label: "Climbing", iconLeft: "lucide:hand" },
 }
