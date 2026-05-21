@@ -64,7 +64,7 @@ const cpuSeries = computed(() => {
         .filter(met => met.cpu_stats)
         .map(met => [
           met.collectionTime*1000,
-          met.cpu_stats!.cpu_usage / met.cpu_stats!.online_cpus
+          (met.cpu_stats!.cpu_usage / met.cpu_stats!.online_cpus).toPrecision(4)
         ])
     }
   ]
