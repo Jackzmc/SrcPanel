@@ -18,12 +18,12 @@
       <div class="flex gap-6 items-center justify-between w-full">
         <div class="flex flex-col items-center justify-center">
           <p class="text-xs text-muted">Gamemode</p>
-          <p v-if="data.server.status.data" class="font-semibold text-md">{{ data.server.status.data?.gamemode }}</p>
+          <p v-if="gamemode" class="font-semibold text-md">{{ gamemode}}</p>
           <p v-else class="text-md text-muted">-</p>
         </div>
         <div class="flex flex-col items-center justify-center">
           <p class="text-xs text-muted">Difficulty</p>
-          <p v-if="data.live?.game" class="font-semibold text-md">{{ difficulty }}</p>
+          <p v-if="difficultyText" class="font-semibold text-md">{{ difficultyText }}</p>
           <p v-else class="text-md text-muted">-</p>
         </div>
         <div class="flex flex-col items-center justify-center">
@@ -70,23 +70,27 @@ const props = defineProps<{
 }>()
 
 const uptime = computed(() => {
-  if (!props.data.live?.game) return '-';
-  return formatRelTimeCompact(props.data.live.game.startTime)
+  if (!props.ws.live.value?.game) return '-';
+  return formatRelTimeCompact(props.ws.live.value?.game.startTime)
 })
 
 const campaignDuration = computed(() => {
-  if (!props.data.live?.game) return '-';
-  return formatRelTimeCompact(props.data.live.game.campaignStartTime)
+  if (!props.ws.live.value?.game) return '-';
+  return formatRelTimeCompact(props.ws.live.value?.game?.campaignStartTime)
 })
 
-const difficulty = computed(() => {
-  if (!props.data.live?.game) return '-';
-  switch(props.data.live.game.difficulty) {
+const difficultyText = computed(() => {
+  if (!props.ws.live.value?.game) return '-';
+  switch(props.ws.live.value?.game.difficulty) {
     case GameDifficulty.Easy: return "Easy"
     case GameDifficulty.Normal: return "Normal"
     case GameDifficulty.Advanced: return "Advanced"
     case GameDifficulty.Expert: return "Expert"
   }
+})
+
+const gamemode = computed(() => {
+  return props.ws.live.value?.game?.gamemode ?? props.data.server.status.data?.gamemode
 })
 
 const OfficialCampaignNames = [
@@ -128,9 +132,13 @@ const FinaleStageName: Record<FinaleStage, string> = {
     [FinaleStage.HordeEscape]: "Horde Escape",
 }
 
+const mapId = computed(() => {
+  return props.ws.live.value?.game?.map ?? props.data.server.status.data?.map
+})
+
 const mapDetails = computed(() => {
-  if(!props.data.server.status.data?.map) return null
-  const match = props.data.server.status.data.map.match(/c(\d{1,2})m(\d)_(.*)/)
+  if(!mapId.value) return null
+  const match = mapId.value.match(/c(\d{1,2})m(\d)_(.*)/)
   if(match && match.length == 4) {
     return {
       officialMap: true,
@@ -147,7 +155,7 @@ const mapDetails = computed(() => {
 })
 
 const finaleStageName = computed(() => {
-  if(!props.data.live?.finale || props.data.live.finale.stage === FinaleStage.Unknown) return null
-  return FinaleStageName[props.data.live.finale.stage]
+  if(!props.ws.live?.value?.finale || props.ws.live?.value.finale.stage === FinaleStage.Unknown) return null
+  return FinaleStageName[props.ws.live.value.finale.stage]
 })
 </script>
