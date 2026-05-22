@@ -90,7 +90,7 @@ const liveStatusAttr = computed(() => {
         text: "Connecting",
       }
     } else if(props.ws.wsStatus.value == 'connected') {
-      if(props.data.live != null) {
+      if(props.ws.live.value != null) {
         return {
           ui: {
             leadingIcon: 'animate-pulse animate-slow'
