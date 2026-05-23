@@ -9,7 +9,9 @@ async function hook(fastify: FastifyInstance) {
         })
     })
     fastify.addHook('onResponse', (req, reply) => {
-        sendMetric("req_time", reply.elapsedTime, { url: req.url })
+        // Do not include query params - do not want to record them, especially for oauth/activity logs
+        const url = new URL(req.url)
+        sendMetric("req_time", reply.elapsedTime, { path: url.pathname })
     })
     fastify.addHook('onError', (req, reply) => {
         sendMetric("errors", 1, { statusCode: reply.statusCode })
