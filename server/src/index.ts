@@ -13,6 +13,7 @@ import UserManager from './modules/users/UserManager.js';
 import { readdir } from 'fs/promises';
 import path from 'path'
 import cors from '@fastify/cors'
+import fastifyUrlData from '@fastify/url-data'
 
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
@@ -133,6 +134,7 @@ app.register(FastifyHelmet, {
 })
 app.register(FastifyEtag)
 app.register(fastifyWebsocket)
+app.register(fastifyUrlData)
 
 import internalMetrics from './hooks/metrics.js'
 app.register(internalMetrics)

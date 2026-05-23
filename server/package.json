@@ -65,6 +65,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.36.0",
+    "@fastify/url-data": "^6.0.3",
     "@sentry/types": "^10.53.1",
     "@types/dockerode": "^3.3.44",
     "@types/gamedig": "^5.0.3",
