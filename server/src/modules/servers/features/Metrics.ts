@@ -187,12 +187,31 @@ export default class MetricsFeature extends Feature {
           this.#metric.send("tanks_in_play", tanksInPlay, { ...labels, finale: live.finale?.stage !== FinaleStage.Unknown })
 
           if(survivors.length > 0) {
-            const avgSurvFlow = Object.values(survivors).reduce((pv, cv) => pv + cv.survivor!.flowPercent, 0)
-            this.#metric.send("survivor_avg_mapflow", avgSurvFlow / survivors.length, labels)
-            const avgSurvHealth = Object.values(survivors).reduce((pv, cv) => pv + cv.survivor!.permHealth, 0)
-            this.#metric.send("survivor_avg_health", avgSurvHealth / survivors.length, labels)
-            const playersIncapped = Object.values(survivors).reduce((pv, cv) => cv.survivor!.move == PlayerMove.Incapped ? pv + 1 : pv, 0)
-            this.#metric.send("players_incapped", playersIncapped, labels)
+            const values = {
+              flowsSum: 0,
+              healthSum: 0,
+              incapped: 0,
+              alive: 0,
+              dead: 0
+            }
+            for(const client of survivors) {
+              if(!client.survivor) continue // filtered out already, just to be sure
+              values.flowsSum += client.survivor.flowPercent
+              values.healthSum += client.survivor.permHealth
+              if(client.isAlive) {
+                if(client.survivor!.move == PlayerMove.Incapped)
+                  values.incapped++
+                else
+                  values.alive++
+              } else {
+                values.dead++
+              }
+            }
+            this.#metric.send("survivor_avg_mapflow", values.flowsSum / survivors.length, labels)
+            this.#metric.send("survivor_avg_health", values.healthSum / survivors.length, labels)
+            this.#metric.send("survivor_states", values.alive, { ...labels, "state": "alive" })
+            this.#metric.send("survivor_states", values.dead, { ...labels, "state": "dead" })
+            this.#metric.send("survivor_states", values.incapped, { ...labels, "state": "incapped" })
           }
 
           if(live.finale) {
