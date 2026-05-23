@@ -3,7 +3,7 @@ import Server from "../Server.js";
 import { Point, WriteApi } from '@influxdata/influxdb-client'
 import { getGlobalWriter, NamespacedMetric } from "../../metrics/influx.js";
 import { ComputeStats, NetworkStats, ServerStatusData, ServerStatusSource } from "@jzpanel/common/Server";
-import { AnnotationX, AnnotationY, GAME_DIFFICULTY_STRINGS, GameState, InfectedClass, PlayerGameAction, PlayerMove, PlayerState } from "@jzpanel/common/Live";
+import { AnnotationX, AnnotationY, FinaleStage, GAME_DIFFICULTY_STRINGS, GameState, InfectedClass, PlayerGameAction, PlayerMove, PlayerState } from "@jzpanel/common/Live";
 import DockerServer from "../DockerServer.js";
 import { ContainerStats } from "dockerode";
 import { Server_Metric, Server_MetricFull } from "@jzpanel/common/ServerWebsocket";
@@ -155,16 +155,17 @@ export default class MetricsFeature extends Feature {
       let playerCount: number|null = null
       if(data) {
         playerCount = data.players.length
-        const difficulty = this._server.Plugin?.liveStatus?.game?.difficulty
         // TODO: maybe solution incase there is no uptime?
         if(this._server.uptime)
-          this.#metric.send("uptime_secs", this._server.uptime, {
-            map: this._server.status.data?.map, 
-            gamemode: this._server.status.data?.gamemode,
-            difficulty: difficulty?.valueOf().toString(),
-            difficulty_str: difficulty ? GAME_DIFFICULTY_STRINGS[difficulty]! : undefined
-          })
+          this.#metric.send("uptime_secs", this._server.uptime)
       } 
+      const difficulty = this._server.Plugin?.liveStatus?.game?.difficulty
+      const labels = {
+        map: this._server.status.data?.map, 
+        gamemode: this._server.status.data?.gamemode,
+        difficulty: difficulty?.valueOf().toString(),
+        difficulty_str: difficulty ? GAME_DIFFICULTY_STRINGS[difficulty]! : undefined
+      }
       if(source == "live" && this._server.Plugin?.available) {
         const live = this._server.Plugin.liveStatus
         if(live) {
@@ -179,25 +180,23 @@ export default class MetricsFeature extends Feature {
           if(live.game && realClients.length > 0) {
             // campaignStartTime is in milliseconds
             const durationSec = (Date.now()/1000) - live.game.campaignStartTime
-            this.#metric.send("game_duration_sec", Math.round(durationSec))
+            this.#metric.send("game_duration_sec", Math.round(durationSec), labels)
           }
 
           const tanksInPlay = Object.values(live.clients).reduce((pv, cv) => 'infected' in cv && cv.infected?.class == InfectedClass.Tank ? pv + 1 : pv, 0)
-          this.#metric.send("tanks_in_play", tanksInPlay, { finale: live.finale != undefined})
+          this.#metric.send("tanks_in_play", tanksInPlay, { ...labels, finale: live.finale?.stage !== FinaleStage.Unknown })
 
           if(survivors.length > 0) {
             const avgSurvFlow = Object.values(survivors).reduce((pv, cv) => pv + cv.survivor!.flowPercent, 0)
-            this.#metric.send("survivor_avg_mapflow", avgSurvFlow / survivors.length)
+            this.#metric.send("survivor_avg_mapflow", avgSurvFlow / survivors.length, labels)
             const avgSurvHealth = Object.values(survivors).reduce((pv, cv) => pv + cv.survivor!.permHealth, 0)
-            this.#metric.send("survivor_avg_health", avgSurvHealth / survivors.length)
+            this.#metric.send("survivor_avg_health", avgSurvHealth / survivors.length, labels)
             const playersIncapped = Object.values(survivors).reduce((pv, cv) => cv.survivor!.move == PlayerMove.Incapped ? pv + 1 : pv, 0)
-            this.#metric.send("players_incapped", playersIncapped)
+            this.#metric.send("players_incapped", playersIncapped, labels)
           }
 
           if(live.finale) {
-            this.#metric.send("finale_stage", live.finale.stage, { 
-              difficulty: live.game?.difficulty.valueOf().toString() 
-            })
+            this.#metric.send("finale_stage", live.finale.stage, labels)
           }
 
           const counts = { survivors: 0, infected: 0 }
@@ -205,13 +204,13 @@ export default class MetricsFeature extends Feature {
             if(client.infected) counts.infected++
             else if(client.survivor) counts.survivors++
           }
-          this.#metric.send("survivor_count", counts.survivors)
-          this.#metric.send("infected_count", counts.infected)
+          this.#metric.send("survivor_count", counts.survivors, labels)
+          this.#metric.send("infected_count", counts.infected, labels)
         }
       }
       // We know player count from live OR gamedig - so we can always send it
       if(playerCount != null) {
-        this.#metric.send("player_count", playerCount)
+        this.#metric.send("player_count", playerCount, labels)
       }
     }
 
