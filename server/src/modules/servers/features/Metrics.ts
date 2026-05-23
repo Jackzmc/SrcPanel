@@ -184,11 +184,14 @@ export default class MetricsFeature extends Feature {
 
           const tanksInPlay = Object.values(live.clients).reduce((pv, cv) => 'infected' in cv && cv.infected?.class == InfectedClass.Tank ? pv + 1 : pv, 0)
           this.#metric.send("tanks_in_play", tanksInPlay, { finale: live.finale != undefined})
-          const playersIncapped = Object.values(survivors).reduce((pv, cv) => cv.survivor!.move == PlayerMove.Incapped ? pv + 1 : pv, 0)
-          this.#metric.send("players_incapped", playersIncapped)
+
           if(survivors.length > 0) {
             const avgSurvFlow = Object.values(survivors).reduce((pv, cv) => pv + cv.survivor!.flowPercent, 0)
-            this.#metric.send("map_avg_flow", avgSurvFlow / survivors.length)
+            this.#metric.send("survivor_avg_mapflow", avgSurvFlow / survivors.length)
+            const avgSurvHealth = Object.values(survivors).reduce((pv, cv) => pv + cv.survivor!.permHealth, 0)
+            this.#metric.send("survivor_avg_health", avgSurvHealth / survivors.length)
+            const playersIncapped = Object.values(survivors).reduce((pv, cv) => cv.survivor!.move == PlayerMove.Incapped ? pv + 1 : pv, 0)
+            this.#metric.send("players_incapped", playersIncapped)
           }
 
           if(live.finale) {
