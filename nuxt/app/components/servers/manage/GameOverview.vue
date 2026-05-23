@@ -142,7 +142,7 @@ const mapDetails = computed(() => {
   if(match && match.length == 4) {
     return {
       officialMap: true,
-      id: props.data.server.status.data?.map,
+      id: mapId.value,
       name: OfficialCampaignNames[Number(match[1]) - 1],
       chapterId: match[2]!,
       chapterName: match[3]!.charAt(0).toUpperCase() + match[3]!.slice(1)
@@ -150,7 +150,7 @@ const mapDetails = computed(() => {
   }
   return {
     officialMap: false,
-    id: props.data.server.status.data?.map
+    id: mapId.value
   }
 })
 
