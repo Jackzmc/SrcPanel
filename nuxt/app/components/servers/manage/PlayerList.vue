@@ -5,6 +5,7 @@
       :server="data.server"
       :client="client"
     />
+    <p v-if="clients.length === 0" class="text-muted text-center p-4">No players connected</p>
   </div>
 </template>
 
