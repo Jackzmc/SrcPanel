@@ -21,20 +21,23 @@
       title="Unable to retrieve activities"
       :description="errorMessage"
     />
-    <div v-else>
+    <div class="mx-4">
       <IconText leading-icon="lucide:loader-circle" leading-icon-class="animate-spin" text="Loading entries"></IconText>
     </div>
   </UCard>
 </template>
 
 <script setup lang="ts">
+
+const REFRESH_INTERVAL_MS = 1000 * 60 * 5
+
 const props = defineProps<{
   serverId: string
 }>()
 import { type LogEntry } from '@jzpanel/common/Logs'
-const { data, error } = await useLazyFetch<LogEntry[]>(
+const { data, error, refresh } = await useLazyFetch<LogEntry[]>(
   `/api/servers/${props.serverId}/activities`,
-  { key: 'servers.' + props.serverId + '.activities' }
+  { key: 'servers.' + props.serverId + '.activities', immediate: true, server: false }
 )
 
 const isUnsupported = computed(() => {
@@ -59,6 +62,16 @@ const errorMessage = computed(() => {
      return cause.data.error + ": " + cause.data.message
     }
   }
+})
+
+let timer: ReturnType<typeof setInterval>
+
+onMounted(() => {
+  timer = setInterval(() => refresh(), REFRESH_INTERVAL_MS)
+})
+
+onUnmounted(() => {
+  clearInterval(timer)
 })
 
 // TODO: auto refresh

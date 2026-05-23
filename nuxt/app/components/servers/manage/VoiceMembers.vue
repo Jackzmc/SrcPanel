@@ -7,7 +7,7 @@
       <!-- <p class="text-gray-100">In the </p> -->
     </template>
     <div v-if="voiceMembers?.length === 0">
-      <p>No voice members are currently connected.</p>
+      <p class="text-muted">No voice members are currently connected.</p>
     </div>
     <div v-else>
       <ul>
