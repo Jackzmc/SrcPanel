@@ -14,7 +14,8 @@
       />
       <!-- TODO: add btn for details / actions -->
       <div class="flex flex-col w-full gap-1">
-        <HealthBarComponent v-if="client.isAlive" :healthbar="healthbar" />
+        <!-- Only show for survivors / infected. Spectators are 'alive' so need to filter-->
+        <HealthBarComponent v-if="client.isAlive && (client.survivor || client.infected)" :healthbar="healthbar" />
         <div class="flex justify-between items-center gap-4 text-nowrap">
           <!-- Name row (Name, #uid, BOT, IDLE) -->
           <span class="flex items-center gap-2">
