@@ -78,7 +78,7 @@
           <a :href="'steam://connect/' + server.ip + '/' + server.port">Join</a>
         </UButton>
         <UButton color="neutral" variant="outline" size="md">
-          <a :href="'/servers/' + group.id + '/' + server.id">Manage</a>
+          <a :href="'/admin/servers/' + group.id + '/' + server.id">Manage</a>
         </UButton>
       </div>
       <UTooltip
