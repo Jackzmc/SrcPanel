@@ -37,8 +37,8 @@ const tempEmptyWidth = computed(() => 100.0 - permWidth.value - tempWidth.value)
 
 const color = computed(() => {
   const perc = (props.healthbar.perm.value / props.healthbar.perm.max) * 100
-  if(perc < 10.0) return "error"
-  if(perc < 30.0) return "warning"
+  if(perc <= 10.0) return "error"
+  if(perc <= 30.0) return "warning"
   return "success"
 })
 </script>
