@@ -19,11 +19,11 @@
     />
     <UBanner
       v-if="notice"
-      icon="i-lucide-circle-alert"
-      :color="notice.class as any"
+      icon="lucide:circle-alert"
+      color="info"
       :title="notice.text"
       close
-      :ui="{title:'whitespace-normal text-xs sm:text-sm',root:'py-2 sm:py-0'}"
+      :ui="{title:'whitespace-normal text-xs sm:text-sm text-white dark:text-black', icon: 'text-white dark:text-black', root:'py-2 sm:py-0'}"
     />
 
     <div>
