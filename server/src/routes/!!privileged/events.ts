@@ -29,7 +29,13 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         if(rows.length > 0) {
             const row = rows[0]
             const domain = await fastify.config.Domain
-            const [rawWeeks] = await fastify.db.query<RowDataPacket[]>("SELECT r.steamid, u.last_name as name, week_start, week_end, TO_BASE64(days) as base64 FROM `left4dead2-admins`.dash_event_responses r LEFT JOIN `left4dead2`.view_panel_user u ON SUBSTRING(r.steamid, 11) = u.account_id WHERE event_id = ?", [req.params.id])  
+            const [rawWeeks] = await fastify.db.query<RowDataPacket[]>(`
+                SELECT r.steamid, u.last_name as name, week_start, week_end, TO_BASE64(days) as base64 
+                FROM \`left4dead2-admins\`.dash_event_responses r 
+                LEFT JOIN \`left4dead2\`.view_panel_user u ON SUBSTRING(r.steamid, 11) = u.account_id 
+                WHERE event_id = ?`, 
+                [req.params.id]
+            )  
             const weeks: Record<string, APIWeekAvailability<string>> = {}
             for(const row of rawWeeks) {
                 if(!weeks[row.week_start]) weeks[row.week_start] = {

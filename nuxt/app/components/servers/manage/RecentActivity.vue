@@ -35,7 +35,7 @@ const props = defineProps<{
   serverId: string
 }>()
 import { type LogEntry } from '@jzpanel/common/Logs'
-const { data, error, refresh } = await useLazyFetch<LogEntry[]>(
+const { data, error, refresh } = useLazyFetch<LogEntry[]>(
   `/api/servers/${props.serverId}/activities`,
   { key: 'servers.' + props.serverId + '.activities', immediate: true, server: false }
 )

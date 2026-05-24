@@ -201,13 +201,14 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
 
     if (server.activityLogId) {
-      const [rows] = await fastify.db.execute<RowDataPacket[]>(`SELECT client, target, type, id, message, timestamp, s1.last_alias as clientName, s2.last_alias as targetName
-                FROM activity_log PARTITION (p${new Date().getFullYear()})
-                LEFT JOIN stats_users as s1 ON s1.steamid = client
-                LEFT JOIN stats_users as s2 ON s2.steamid = target
-                WHERE server = ? AND FROM_UNIXTIME(timestamp) >= CURDATE() AND FROM_UNIXTIME(timestamp) < CURDATE() + INTERVAL 1 DAY
-                ORDER BY timestamp DESC
-                LIMIT 5`,
+      const [rows] = await fastify.db.execute<RowDataPacket[]>(`SELECT client, target, type, id, message, timestamp, s1.last_name as clientName, s2.last_name as targetName
+        FROM activity_log PARTITION (p${new Date().getFullYear()})
+        LEFT JOIN view_panel_user as u1 ON u1.account_id = SUBSTRING(client, 11)
+        LEFT JOIN view_panel_user as u2 ON u2.account_id = SUBSTRING(target, 11)
+        WHERE server = ? AND FROM_UNIXTIME(timestamp) >= CURDATE() 
+          AND FROM_UNIXTIME(timestamp) < CURDATE() + INTERVAL 1 DAY
+        ORDER BY timestamp DESC
+        LIMIT 5`,
         [server.activityLogId]
       )
       return { activities: rows }
