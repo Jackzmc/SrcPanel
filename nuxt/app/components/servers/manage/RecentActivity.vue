@@ -3,25 +3,25 @@
     <template #header>
       <h3 class="text-lg font-bold">Recent Activity</h3>
     </template>
-    <div v-if="data">
-      <div v-for="entry in data" :key="entry.id">
-        <div>{{ entry.id }}</div>
-      </div>
-      <UCard v-if="data.length == 0" class="bg-light-blue">
-        No recent activity has been recorded
-      </UCard>
-    </div>
-    <UCard v-if="isUnsupported"
+    <UAlert v-if="error" color="error"
+      title="Unable to retrieve activities"
+      :description="errorMessage"
+    />
+    <UCard v-else-if="isUnsupported"
       class="bg-sky-300 dark:bg-sky-500 my-1 mx-2 text-sm"
       :ui="{ body: 'p-4 md:p-4' }"
     >
       Server does not support or is not configured for activity logs
     </UCard>
-    <UAlert v-else-if="error" color="error"
-      title="Unable to retrieve activities"
-      :description="errorMessage"
-    />
-    <div class="mx-4">
+    <div v-else-if="data">
+      <div v-for="entry in data" :key="entry.id">
+        <div>{{ entry.id }}</div>
+      </div>
+      <UCard v-if="data.length === 0" class="bg-light-blue">
+        No recent activity has been recorded
+      </UCard>
+    </div>
+    <div v-else class="mx-4">
       <IconText leading-icon="lucide:loader-circle" leading-icon-class="animate-spin" text="Loading entries"></IconText>
     </div>
   </UCard>

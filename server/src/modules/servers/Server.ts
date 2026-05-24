@@ -409,6 +409,7 @@ export default abstract class Server implements IAction {
       this._status.data = data
       this._status.source = source
       this._status.lastStatusTime = (Date.now() / 1000)
+      // Currently each record causes "live" + "status" payloads to be sent, possibly ignore?
       this.broadcastWS({
         type: "status",
         status: this._status,
