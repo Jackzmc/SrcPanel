@@ -219,7 +219,7 @@ export default class MetricsFeature extends Feature {
           charger: 0
         }
       }
-      let numSurvviors = 0
+      let numSurvivors = 0
       let hasRealPlayers = false
 
       for(const client of Object.values(live.clients)) {
@@ -236,7 +236,7 @@ export default class MetricsFeature extends Feature {
           } else {
             values.survivors.dead++
           }
-          numSurvviors++
+          numSurvivors++
         }
 
         if(client.infected) {
@@ -254,8 +254,10 @@ export default class MetricsFeature extends Feature {
 
       }
 
-      values.survivors.avgFlow /= numSurvviors
-      values.survivors.avgHealth /= numSurvviors
+      if(numSurvivors > 0) {
+        values.survivors.avgFlow /= numSurvivors
+        values.survivors.avgHealth /= numSurvivors
+      }
       // Only return if we have real players
       if(!hasRealPlayers) return values
     }
