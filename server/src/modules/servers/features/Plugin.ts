@@ -13,8 +13,6 @@ export default class PluginFeature extends Feature implements IAction {
     #socket: PluginSocket | null = null
     #startTime: number|null = null
     #status: ServerStatusData
-    #totalRecordsReceived: number = 0
-    #totalRecordsSent: number = 0
 
     constructor(server: Server) {
         super("LivePlugin", server)
@@ -43,11 +41,11 @@ export default class PluginFeature extends Feature implements IAction {
     }
 
     get totalRecordsReceived() {
-        return this.#totalRecordsReceived
+        return this.#socket?.totalRecordsReceived ?? 0
     }
 
     get totalRecordsSent() {
-        return this.#totalRecordsSent
+        return this.#socket?.totalRecordsSent ?? 0
     }
 
     /** Current live data */
@@ -132,7 +130,6 @@ export default class PluginFeature extends Feature implements IAction {
             type: "live",
             record: record
         })
-        this.#totalRecordsReceived++
         if(record) {
             this.#liveCache = updateLiveCache(this.#liveCache, record)
             if(record.type === LiveRecordType.Game) {
@@ -171,7 +168,6 @@ export default class PluginFeature extends Feature implements IAction {
             throw new Error("Not connected or authenticated to plugin socket")
         }
         const response = await this.#socket!.send(LiveRecordResponse.RunCommand, command, namespace)
-        this.#totalRecordsSent++
         if(!response) throw new Error("Got no response")
         return {
             type: response.resultType,

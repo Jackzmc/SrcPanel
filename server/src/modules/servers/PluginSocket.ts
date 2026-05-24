@@ -12,6 +12,9 @@ export default class PluginSocket {
   #socket: Socket
   #server: Server | null = null
   #id: number = 0
+
+  #totalRecordsReceived: number = 0
+  #totalRecordsSent: number = 0
   
   #responseQueue: ((arg0: LiveRecordCommandResponse)=>void)[] = []
   
@@ -192,6 +195,14 @@ export default class PluginSocket {
   public get Server() {
     return this.#server
   }
+
+  get totalRecordsReceived() {
+    return this.#totalRecordsReceived
+  }
+
+  get totalRecordsSent() {
+    return this.#totalRecordsSent
+  }
   
   _setServer(server: Server | null) {
     this.#server = server
@@ -209,11 +220,12 @@ export default class PluginSocket {
     }
   }
 
-  #refreshCheckTimeout: NodeJS.Timeout
-  #lastRefreshTime: number
+  #refreshCheckTimeout?: ReturnType<typeof setTimeout> = undefined
+  #lastRefreshTime?: number
 
   /** Process an incoming record */
   onRecord(record: LiveRecord) {
+    this.#totalRecordsReceived++
     if(record.type === LiveRecordType.CommandResponse) {
       const cb = this.#responseQueue.shift()
       if(cb) cb(record)
@@ -222,9 +234,11 @@ export default class PluginSocket {
       // Inform the admin panel server of record 
       this.#server?.Plugin?.pushRecord(record)
 
+      const shouldRefresh = this.#lastRefreshTime == undefined || Date.now() - this.#lastRefreshTime > MIN_REFRESH_TIME_MS
+
       // We use a timeout, as many records can come at once, including a game record. So we wait for a gap of a second
       if(record.type === LiveRecordType.Survivor && !this.#server?.Plugin?.liveStatus?.clients[record.userid.toString()]) {
-        if(!this.#server?.Plugin?.liveStatus?.game && Date.now() - this.#lastRefreshTime > MIN_REFRESH_TIME_MS) {
+        if(!this.#server?.Plugin?.liveStatus?.game && shouldRefresh) {
           this.send(LiveRecordResponse.Refresh, record.userid)
         }
       }
@@ -232,7 +246,7 @@ export default class PluginSocket {
       clearTimeout(this.#refreshCheckTimeout)
       this.#refreshCheckTimeout = setTimeout(() => {
         // If we have live status, but no game record, send a refresh if we haven't already
-        if(this.#server?.Plugin?.liveStatus && !this.#server.Plugin?.liveStatus.game && Date.now() - this.#lastRefreshTime > MIN_REFRESH_TIME_MS) {
+        if(this.#server?.Plugin?.liveStatus && shouldRefresh) {
           console.info("[PluginSocket] No game packet, sending a Refresh response")
           this.send(LiveRecordResponse.Refresh)
         }
@@ -286,6 +300,7 @@ export default class PluginSocket {
           writer.writeString(arg2)
       }
       if(!this.#socket.write(writer.buffer)) return reject(new Error("Failed to write to socket"))
+      this.#totalRecordsSent++
       if(type != LiveRecordResponse.RunCommand) return resolve()
       // For RunCommand, we wait for a response:
       const rejectTimeout = setTimeout(() => {
