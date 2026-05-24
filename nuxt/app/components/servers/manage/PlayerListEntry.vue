@@ -15,7 +15,7 @@
       <!-- TODO: add btn for details / actions -->
       <div class="flex flex-col w-full gap-1">
         <!-- Only show for survivors / infected. Spectators are 'alive' so need to filter-->
-        <HealthBarComponent v-if="client.isAlive && (client.survivor || client.infected)" :healthbar="healthbar" />
+        <HealthBarComponent v-if="client.isAlive && !isSpectator" :healthbar="healthbar" />
         <div class="flex justify-between items-center gap-4 text-nowrap">
           <!-- Name row (Name, #uid, BOT, IDLE) -->
           <span class="flex items-center gap-2">
@@ -51,7 +51,8 @@
           </span>
         </div>
         <div class="flex justify-between">
-          <div class="flex text-muted items-center gap-1">
+          <!-- If dead, just have empty div for spacing-->
+          <div v-if="client.isAlive" class="flex text-muted items-center gap-1">
             <!-- <span v-for="state in states" :key="state">{{ state }}</span> -->
             <template v-if="moveState">
               <IconText :leading-icon="moveState.iconLeft" :trailing-icon="moveState.iconRight" :text="moveState.label" />
@@ -67,6 +68,7 @@
               </span>
             </template>
           </div>
+          <div v-else />
           <!-- Map flow progress on right side -->
           <UTooltip v-if="client.survivor" text="Percentage of progress through map">
            <div class="text-sm">
@@ -227,6 +229,10 @@ const items = computed(() => {
   return props.client.survivor.items
     .filter(item => item != '')
     .map(item => item.replace(/_/g, ' '))
+})
+
+const isSpectator = computed(() => {
+  return !props.client.infected && !props.client.survivor
 })
 
 const actionButtons = computed(() => {
