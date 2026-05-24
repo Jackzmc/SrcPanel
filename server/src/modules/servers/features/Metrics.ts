@@ -3,7 +3,7 @@ import Server from "../Server.js";
 import { Point, WriteApi } from '@influxdata/influxdb-client'
 import { getGlobalWriter, NamespacedMetric } from "../../metrics/influx.js";
 import { ComputeStats, NetworkStats, ServerStatusData, ServerStatusSource } from "@jzpanel/common/Server";
-import { AnnotationX, AnnotationY, FinaleStage, GAME_DIFFICULTY_STRINGS, GameState, InfectedClass, PlayerGameAction, PlayerMove, PlayerState } from "@jzpanel/common/Live";
+import { AnnotationX, AnnotationY, FinaleStage, GAME_DIFFICULTY_STRINGS, GameState, InfectedClass, LiveDataCache, PlayerGameAction, PlayerMove, PlayerState } from "@jzpanel/common/Live";
 import DockerServer from "../DockerServer.js";
 import { ContainerStats } from "dockerode";
 import { Server_Metric, Server_MetricFull } from "@jzpanel/common/ServerWebsocket";
@@ -151,86 +151,113 @@ export default class MetricsFeature extends Feature {
     recordStatus(data: ServerStatusData | null, source: ServerStatusSource) {
       if(!this.hasInflux) return
 
+      if(this._server.uptime)
+        this.#metric.send("uptime_secs", this._server.uptime)
+
       // Defaults to gamedig's value, but overwritten by live as source of truth
-      let playerCount: number|null = null
-      if(data) {
-        playerCount = data.players.length
-        // TODO: maybe solution incase there is no uptime?
-        if(this._server.uptime)
-          this.#metric.send("uptime_secs", this._server.uptime)
-      } 
-      const difficulty = this._server.Plugin?.liveStatus?.game?.difficulty
-      const labels = {
-        map: this._server.status.data?.map, 
-        gamemode: this._server.status.data?.gamemode,
-        difficulty: difficulty?.valueOf().toString(),
-        difficulty_str: difficulty ? GAME_DIFFICULTY_STRINGS[difficulty]! : undefined
-      }
-      if(source == "live" && this._server.Plugin?.available) {
-        const live = this._server.Plugin.liveStatus
-        if(live) {
-          // Overwrite player count with live as source of truth
-          if(live.game?.state === GameState.None) playerCount = Object.keys(live.clients).length
-          else playerCount = null
+      let playerCount: number|undefined = data?.players.length
 
-          const survivors = Object.values(live.clients).filter(cl => 'survivor' in cl && cl.survivor)
-          const realClients = Object.values(live.clients).filter(cl => cl.steamid != 'BOT')
+      // We only log live status stuff when it's updated
+      if(source == "live" && this._server.Plugin.HasData) {
+        const live = this._server.Plugin.liveStatus!
+        const difficulty = this._server.Plugin?.liveStatus?.game?.difficulty
+        const labels = {
+          map: this._server.status.data?.map, 
+          gamemode: this._server.status.data?.gamemode,
+          difficulty: difficulty?.valueOf().toString(),
+          difficulty_str: difficulty ? GAME_DIFFICULTY_STRINGS[difficulty]! : undefined
+        }
 
-          // Only record game_duration if we actually got clients
-          if(live.game && realClients.length > 0) {
-            // campaignStartTime is in milliseconds
-            const durationSec = (Date.now()/1000) - live.game.campaignStartTime
+        // Overwrite player count with live as source of truth
+        if(live.game?.state === GameState.None) playerCount = Object.keys(live.clients).length
+        else playerCount = undefined
+
+        const values = this.getMetricValues(live)
+        if(values) {
+            if(live.game) {
+          const durationSec = (Date.now()/1000) - live.game?.campaignStartTime
             this.#metric.send("game_duration_sec", Math.round(durationSec), labels)
           }
+          // Send infected counts for every class
+          for(const [key, count] of Object.entries(values.infected))
+            this.#metric.send("infected_count", count, { class: key })
 
-          const tanksInPlay = Object.values(live.clients).reduce((pv, cv) => 'infected' in cv && cv.infected?.class == InfectedClass.Tank ? pv + 1 : pv, 0)
-          this.#metric.send("tanks_in_play", tanksInPlay, { ...labels, finale: live.finale?.stage !== FinaleStage.Unknown })
+          this.#metric.send("survivor_avg_mapflow", values.survivors.avgFlow, labels)
+          this.#metric.send("survivor_avg_health", values.survivors.avgFlow, labels)
+          this.#metric.send("survivor_states", values.survivors.alive, { ...labels, "state": "alive" })
+          this.#metric.send("survivor_states", values.survivors.dead, { ...labels, "state": "dead" })
+          this.#metric.send("survivor_states", values.survivors.incapped, { ...labels, "state": "incapped" })
+        }
 
-          if(survivors.length > 0) {
-            const values = {
-              flowsSum: 0,
-              healthSum: 0,
-              incapped: 0,
-              alive: 0,
-              dead: 0
-            }
-            for(const client of survivors) {
-              if(!client.survivor) continue // filtered out already, just to be sure
-              values.flowsSum += client.survivor.flowPercent
-              values.healthSum += client.survivor.permHealth
-              if(client.isAlive) {
-                if(client.survivor!.move == PlayerMove.Incapped)
-                  values.incapped++
-                else
-                  values.alive++
-              } else {
-                values.dead++
-              }
-            }
-            this.#metric.send("survivor_avg_mapflow", values.flowsSum / survivors.length, labels)
-            this.#metric.send("survivor_avg_health", values.healthSum / survivors.length, labels)
-            this.#metric.send("survivor_states", values.alive, { ...labels, "state": "alive" })
-            this.#metric.send("survivor_states", values.dead, { ...labels, "state": "dead" })
-            this.#metric.send("survivor_states", values.incapped, { ...labels, "state": "incapped" })
-          }
-
-          if(live.finale) {
-            this.#metric.send("finale_stage", live.finale.stage, labels)
-          }
-
-          const counts = { survivors: 0, infected: 0 }
-          for(const client of Object.values(live.clients)) {
-            if(client.infected) counts.infected++
-            else if(client.survivor) counts.survivors++
-          }
-          this.#metric.send("survivor_count", counts.survivors, labels)
-          this.#metric.send("infected_count", counts.infected, labels)
+        if(live.finale) {
+          this.#metric.send("finale_stage", live.finale.stage, labels)
         }
       }
       // We know player count from live OR gamedig - so we can always send it
+      // We don't send labels as if no lvie data, we would have nothing for difficulty
       if(playerCount != null) {
-        this.#metric.send("player_count", playerCount, labels)
+        this.#metric.send("player_count", playerCount)
       }
+    }
+
+    getMetricValues(live: LiveDataCache) {
+      const values = {
+        survivors: {
+          avgFlow: 0,
+          avgHealth: 0,
+          incapped: 0,
+          alive: 0,
+          dead: 0,
+        },
+        infected: {
+          tank: 0,
+          boomer: 0,
+          spitter: 0,
+          hunter: 0,
+          jockey: 0,
+          smoker: 0,
+          charger: 0
+        }
+      }
+      let numSurvviors = 0
+      let hasRealPlayers = false
+
+      for(const client of Object.values(live.clients)) {
+        if(!hasRealPlayers && client.steamid !== 'BOT') hasRealPlayers = true
+
+        if(client.survivor) {
+          values.survivors.avgFlow += client.survivor.flowPercent
+          values.survivors.avgHealth += client.survivor.permHealth
+          if(client.isAlive) {
+            if(client.survivor!.move == PlayerMove.Incapped)
+              values.survivors.incapped++
+            else
+              values.survivors.alive++
+          } else {
+            values.survivors.dead++
+          }
+          numSurvviors++
+        }
+
+        if(client.infected) {
+          switch(client.infected.class) {
+            case InfectedClass.Boomer: values.infected.boomer++; break
+            case InfectedClass.Spitter: values.infected.spitter++; break
+            case InfectedClass.Hunter: values.infected.hunter++; break
+            case InfectedClass.Smoker: values.infected.smoker++; break
+            case InfectedClass.Charger: values.infected.charger++; break
+            case InfectedClass.Jockey: values.infected.jockey++; break
+            case InfectedClass.Tank: values.infected.tank++; break
+          }
+        }
+
+
+      }
+
+      values.survivors.avgFlow /= numSurvviors
+      values.survivors.avgHealth /= numSurvviors
+      // Only return if we have real players
+      if(!hasRealPlayers) return values
     }
 
     addAnnotationX(annotation: AnnotationX) {

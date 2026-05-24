@@ -29,6 +29,10 @@ export default class PluginFeature extends Feature implements IAction {
     async init() {
 
     }
+    /** Are we currently active and have data? */
+    get HasData() {
+        return this.available && this.liveStatus !== null
+    }
     /** Are we connected to game plugin? */
     get available() {
         return this.#socket != undefined
