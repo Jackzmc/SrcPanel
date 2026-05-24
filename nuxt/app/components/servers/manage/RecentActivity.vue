@@ -37,7 +37,7 @@ const props = defineProps<{
 import { type LogEntry } from '@jzpanel/common/Logs'
 const { data, error, refresh } = useLazyFetch<LogEntry[]>(
   `/api/servers/${props.serverId}/activities`,
-  { key: 'servers.' + props.serverId + '.activities', immediate: true, server: false }
+  { key: 'servers.' + props.serverId + '.activities', immediate: true, server: false, timeout: 8_000 }
 )
 
 const isUnsupported = computed(() => {
