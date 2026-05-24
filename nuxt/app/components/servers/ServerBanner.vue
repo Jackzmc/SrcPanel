@@ -80,14 +80,16 @@ const props = defineProps<{
 
 const liveStatusAttr = computed(() => {
   if(import.meta.client) {
-      if(props.ws.wsStatus.value == 'connecting') {
+    if(props.ws.wsStatus.value == 'connecting') {
+      const prevConnected = props.ws.live.value?.lastUpdate != undefined
       return {
         ui: {
           leadingIcon: 'animate-spin'
         },
+        color: prevConnected ? 'error' : '',
         variant: 'subtle',
         leadingIcon: 'lucide:loader-circle',
-        text: "Connecting",
+        text: prevConnected? 'Disconnected' : "Connecting",
       }
     } else if(props.ws.wsStatus.value == 'connected') {
       if(props.ws.live.value != null) {

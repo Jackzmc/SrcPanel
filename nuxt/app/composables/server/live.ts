@@ -1,5 +1,5 @@
 import type { ComputeStats, ServerDetailed, ServerStatus, VoiceUser } from '@jzpanel/common/Server';
-import type { ClientOutPayload, ServerOutPacket } from '../../../../common-types/ServerWebsocket.js';
+import type { ClientOutPayload, ServerOutPacket } from '@jzpanel/common/ServerWebsocket'
 import { ref } from 'vue'
 import type { UnwrapRef } from 'vue'
 import { updateLiveCache, type Annotation, type LiveDataCache } from '@jzpanel/common/Live';
