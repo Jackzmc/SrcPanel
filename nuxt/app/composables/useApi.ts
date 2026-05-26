@@ -4,7 +4,7 @@ export function useApi() {
 
   const prefix = import.meta.server ? config.apiInternalUrl : config.public.apiPublicUrl
   
-  console.log('useApi', `server=${import.meta.server}`, `${prefix}${config.public.apiBase}`)
+  // console.debyg('useApi', `server=${import.meta.server}`, `${prefix}${config.public.apiBase}`)
 
   return $fetch.create({
     // SSR: direct to fastify with /api prefix
