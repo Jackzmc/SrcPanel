@@ -92,7 +92,7 @@ const router = useRouter()
 
 const selectedShare = ref<string>(route.params.id as string)
 
-const { data, status, refresh } = await useLazyFetch<APIShareAddons>(`/api/shares/${route.params.id}/addons`, { key: `shares.${route.params.id}` })
+const { data, status, refresh } = useLazyFetch<APIShareAddons>(`/api/shares/${route.params.id}/addons`, { key: `shares.${route.params.id}` })
 // if(!data.value?.shareInfo) {
 //   throw createError({ statusCode: 404, statusMessage: 'Share not found' })
 // }
