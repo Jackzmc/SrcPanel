@@ -74,7 +74,7 @@ export function createWriter(defaultTags: Record<string, string> = {}): WriteApi
     }
     const tags = {
         panel_id: process.env.INFLUX_ID ?? '',
-        panel_hostname: hostname(),
+        // panel_hostname: hostname(),
         panel_version: pkg.version,
         panel_env: process.env.NODE_ENV ?? 'development',
         panel_ip: process.env.LISTEN_HOST ?? '127.0.0.1',
