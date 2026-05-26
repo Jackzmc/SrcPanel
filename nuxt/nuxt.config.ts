@@ -83,7 +83,8 @@ export default defineNuxtConfig({
         'lucide:eye-off',
         'lucide:circle-small',
         'lucide:radio-off',
-        'lucide:radio'
+        'lucide:radio',
+        'lucide:arrow-up-down',
       ],
     },
   },
