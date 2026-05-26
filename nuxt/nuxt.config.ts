@@ -20,10 +20,17 @@ export default defineNuxtConfig({
     '@sentry/nuxt/module',
   ],
 
+  vue: {
+    compilerOptions: {
+      isCustomElement: (tag) => false, // optional, just showing the nested config
+    },
+  },
   vite: {
     define: {
       __BUILD_DATE__: JSON.stringify(buildDate),
       __BUILD_COMMIT__: JSON.stringify(buildCommit),
+      __VUE_PROD_DEVTOOLS__: true,
+      __VUE_PROD_HYDRATION_MISMATCH_DETAILS__: true,
     },
     optimizeDeps: {
       include: [
