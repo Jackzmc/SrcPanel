@@ -194,7 +194,7 @@ export default class Share {
           if (addonInfo.collection) {
             if (!collections[addonInfo.collection.id]) collections[addonInfo.collection.id] = {
               collection: addonInfo.collection,
-              children: []
+              children: [],
             }
             collections[addonInfo.collection.id].children.push(addonInfo)
             // Merge child addon into collection's map list
@@ -248,7 +248,8 @@ export default class Share {
     for (const collection of Object.values(collections)) {
       results.push({
         ...collection,
-        filesize: collection.children.reduce((pv, child) => pv + (child.filesize ?? 0), 0)
+        filesize: collection.children.reduce((pv, child) => pv + (child.filesize ?? 0), 0),
+        meta: {}
       })
     }
 
