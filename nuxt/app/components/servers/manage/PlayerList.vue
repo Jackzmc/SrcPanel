@@ -37,6 +37,7 @@ const clients = computed(() => {
       if(a.team === b.team) {
         if(a.isBot && !b.isBot) return 1
         if(!a.isBot && b.isBot) return -1
+        return a.userid - b.userid // Ensure sorted by userid
       }
 
       return a.team - b.team
