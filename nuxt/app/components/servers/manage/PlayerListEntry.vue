@@ -225,7 +225,7 @@ const playerStates = computed(() => {
 })
 
 const items = computed(() => {
-  if(!props.client.survivor || !props.client.survivor.items) return []
+  if(!props.client.survivor?.items) return []
   return props.client.survivor.items
     .filter(item => item != '')
     .map(item => item.replace(/_/g, ' '))

@@ -189,7 +189,7 @@ export default class MetricsFeature extends Feature {
           this.#metric.send("survivor_states", values.survivors.incapped, { ...labels, "state": "incapped" })
         }
 
-        if(live.finale) {
+        if(live.finale && live.finale.stage != FinaleStage.Unknown) {
           this.#metric.send("finale_stage", live.finale.stage, labels)
         }
       }
