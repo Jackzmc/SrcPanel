@@ -33,21 +33,25 @@ Some categories have a secondary category inside (Bodies)
 <h2 id="keybinds" class="my-1">Keybind Cheat Sheet</h2>
 
 ### Global
-- :u-kbd[ZOOM (Scope in)] - Change mode (Move/Rotate, Color, Freelook)
-- :u-kbd[Use] - Place
-- :u-kbd[Shift + Use] - Cancel placement
-- :u-kbd[Ctrl + Use] - Change placement mode
+- :u-kbd[ZOOM(MMM) (Scope in)] - Change mode (Move/Rotate, Color, Freelook)
+- :u-kbd[Use(E)] - Place
+- :u-kbd[Walk(Shift) + Use(E)] - Cancel placement
+- :u-kbd[Duck(Ctrl) + Use(E)] - Change placement mode (physics, dynamic)
 ### Move / Rotate
-- :u-kbd[Left Mouse] - Push away from you
-- :u-kbd[Right Mouse] - Bring closer to you
-- :u-kbd[Shift + B] - Toggle collision on/off
-- :u-kbd[Ctrl + B] - Toggle collision rotating on/off
+- :u-kbd[Attack(LMM)] - Push away from you
+- :u-kbd[Shove(RMM)] - Bring closer to you
+- :u-kbd[Reload(R)] - Hold to rotate object, moving horizontally OR vertically
+- :u-kbd[Reload(R) + Attack(LMM)] - Cycle axis of rotation
+- :u-kbd[Reload(R) + Shove(RMM)] - Cycle snapping angle
+- :u-kbd[Walk(Shift) + Reload(R)] - Toggle collision on/off
+- :u-kbd[Duck(Ctrl) + Reload(R)] - Toggle auto-rotate on/off
+- :u-kbd[Jump(SPACE) + Reload(R)] - Cycle stacker modes
 <!-- - :u-kbd[Space + B] - Toggles stacker tool -->
 
 ### Scale
 
 ### Color
-- :u-kbd[Use] - change color component (in order; **R**ed, **G**reen, **B**lue, **A**lpha)
-- :u-kbd[Left Mouse] - decrease value of color component
-- :u-kbd[Right Mouse] - increase value of color component
+- :u-kbd[Use(E)] - cycle to next color component (in order; **R**ed, **G**reen, **B**lue, **A**lpha)
+- :u-kbd[Attack(LMM)] - decrease value of color component
+- :u-kbd[Attack(RMM)] - increase value of color component
 ::
