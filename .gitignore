@@ -9,3 +9,4 @@ nuxt/.env
 
 deploy.sh
 http-docs
+test-compose
