@@ -13,10 +13,15 @@ This project contains 3 separate parts:
 * Web Server (Fastify server)
 * UI Server (nuxt) - handles serving SSR and CMS functionality
 * Sourcemod Plugins - adds functionality to panel 
-    * `adminpanel.smx` - live socket, handles commands from panel, sending live data
-    * `globalbans.smx` - optional, records bans to DB for use across multiple servers
-    * `sm_player_notes.sp` - optional
-    * `l4d2-stats` - optional, for extended information about players and links to their pages
+    * Required
+        * `adminpanel.smx` - live socket, handles commands from panel, sending live data
+        * `admin-sql-threaded.smx` - for sourcemod admins
+        * `activitymonitor.smx` - record in-game actions/messages
+    * Optional
+        * `globalbans.smx` - records bans to DB for use across multiple servers
+        * `sm_player_notes.smx`
+        * `l4d2-stats-plugin.smx` - [l4d2-stats](https://git.jackz.me/l4d2-stats) plugin for extended information about players and links to their pages
+
 
 The server and its plugins only supports MariaDB, Postgres is unfortunately not supported at this time. 
 
