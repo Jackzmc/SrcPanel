@@ -6,6 +6,30 @@ This tool has been developed over many years for my own server and has served me
 
 A demo site is avaialble at https://demo.example.com
 
-## AI Disclaimer
+## Parts
 
-The only use of AI in this project is for consulting ways over blockers, ways to fix bugs, and as a rubber duck. AI was used intially for the Nuxt UI rewrite purely for templating, getting started and learning Nuxt. AI has not ever been used on the server or plugin side, and is not used often for the above reasons for the UI side.
+This project contains 3 separate parts:
+
+* Web Server (Fastify server)
+* UI Server (nuxt) - handles serving SSR and CMS functionality
+* Sourcemod Plugins - adds functionality to panel 
+    * `adminpanel.smx` - live socket, handles commands from panel, sending live data
+    * `globalbans.smx` - optional, records bans to DB for use across multiple servers
+    * `sm_player_notes.sp` - optional
+    * `l4d2-stats` - optional, for extended information about players and links to their pages
+
+The server and its plugins only supports MariaDB, Postgres is unfortunately not supported at this time. 
+
+## License
+
+Everything in repo except for `sourcemod` folder, is licensed under the [GNU Affero General Public License v3.0](https://choosealicense.com/licenses/agpl-3.0/). 
+
+## Contributing
+
+Contributions are welcome and appreciated. AI use itself is okay if the code is well reviewed, but "vibe-coded" (under my determinations) development is not welcome. 
+
+It is recommend to first open an issue before creating any large PR to discuss it first.
+
+## AI Use Disclaimer
+
+The only use of AI in this project is for consulting ways over blockers, ways to fix bugs, and as a rubber duck. AI was used intially for the Nuxt UI rewrite for templating, getting started and learning Nuxt. AI has not ever been used on the server or plugin side.
