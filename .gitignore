@@ -6,3 +6,6 @@ node_modules
 
 nuxt/.nuxt
 nuxt/.env
+
+deploy.sh
+http-docs
