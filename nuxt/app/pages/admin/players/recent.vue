@@ -29,7 +29,7 @@ const AUTO_REFRESH_INTERVAL = 1000 * 60
 useHead({
   title: "Recent - Players"
 })
-const { data: serverIds } = await useFetch("/api/logs/data", {
+const { data: serverIds } = useFetch("/api/logs/data", {
   key: "logs.data",
   transform: (res: APILogData) => res.servers
     .filter((s: string) => s !== "web" && s !== "unknown")
@@ -46,7 +46,7 @@ const servers = computed<SelectItem[]>(() => {
 })
 const server = ref<{ label: string; value: string }>(servers.value[0] as { label: string, value: string })
 
-const { data, refresh, status, error, execute } = await useFetch<APIListPlayersResponse<PlayerRecentEntry>>(() => `/api/users/recent/${server.value!.value}`, { key: "players.recent" })
+const { data, refresh, status, error, execute } = useFetch<APIListPlayersResponse<PlayerRecentEntry>>(() => `/api/users/recent/${server.value!.value}`, { key: "players.recent" })
 
 watch(server, () => execute())
 

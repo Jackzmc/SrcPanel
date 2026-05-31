@@ -153,7 +153,7 @@ export default class Share {
           return sorted
         }
       }
-    } catch (err) {
+    } catch (err: any) {
       this.#log.warn(`Skipping vpk with error at ${filepath}:\n`, err.message)
     }
     return null
@@ -397,7 +397,7 @@ export default class Share {
       for (const destPath of dest.paths) {
         await symlink(path.join(this.sourceFolder, filename), path.join(destPath, filename))
       }
-    } catch (err) {
+    } catch (err: any) {
       // Ignore already installed
       if (err.code == "EEXIST")
         return
@@ -423,7 +423,7 @@ export default class Share {
       for (const destPath of dest.paths) {
         await unlink(path.join(destPath, filename))
       }
-    } catch (err) {
+    } catch (err: any) {
       // Do not fail if its not installed already, just ignore
       if (err.code !== "ENOENT") throw err
     }
@@ -439,7 +439,7 @@ export default class Share {
     this.#log.trace({ folder, file }, "getFileInfo")
     try {
       return await stat(path.join(folder, file))
-    } catch (err) {
+    } catch (err: any) {
       if (err.code === "ENOENT") {
         this.#log.trace({}, "getFileInfo ENOENT", err)
         return null

@@ -64,7 +64,7 @@ const ids = computed(() => {
   }
 })
 
-const { data } = await useFetch<APIUserDetails>(() => `/api/users/${ids.value?.steamid2 ?? route.params.steamid}?include=admin,profile,names`, { key: `users.${ids.value?.steamid2 ?? route.params.steamid} `})
+const { data } = useFetch<APIUserDetails>(() => `/api/users/${ids.value?.steamid2 ?? route.params.steamid}?include=admin,profile,names`, { key: `users.${ids.value?.steamid2 ?? route.params.steamid} `})
 const title = computed(() => {
   return data.value?.user.name ?? ids.value?.steamid2 ?? "Invalid User"
 })
