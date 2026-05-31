@@ -1,5 +1,6 @@
 .idea
 *.log
+.zed
 test
 .yarn
 node_modules
