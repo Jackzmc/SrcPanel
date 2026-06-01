@@ -26,7 +26,9 @@
 import type { AdminPermissions, APIUserDetails } from '@jzpanel/common/User'
 import type { UserPrivilegeCode } from '@jzpanel/common/Privileges'
 import PermissionsList from '@/components/users/permissions/PermissionsList.vue'
-import { Base } from '#components';
+
+const { alert } = useModal()
+const toast = useToast()
 
 const props = defineProps<{
   steamid: string
@@ -34,6 +36,13 @@ const props = defineProps<{
 }>()
 
 // const { editData } = inject('editData')
+
+const addAdminErrors = computed(() => {
+  const list: string[] = [
+    "Not implemented"
+  ]
+  return list
+})
 
 const hasChanges = computed(() => {
   return props.data.admin?.permissions.base.flags != editData.value.flags
@@ -50,17 +59,48 @@ const permissionsDiffer = computed(() => {
 })
 
 const editData = ref<AdminPermissions<UserPrivilegeCode[]>['base']>(getResetData())
-
-
-
+const loading = ref(false)
 
 function getResetData() {
   return JSON.parse(JSON.stringify(props.data.admin?.permissions.base))
 }
 
 async function saveChanges() {
-  if(!hasChanges.value) return
+  if(addAdminErrors.value.length > 0) {
+    return alert({
+      title: 'Unable to grant admin',
+      subtitle: `${addAdminErrors.value.length} problems prevent you from continuing`,
+      body: addAdminErrors.value.join('\n *')
+    })
+  }
 
+  loading.value = true;
+  const result = await request<{ id: string }>(`/api/admins/${props.steamid}`, {
+    method: props.data.admin ? 'PUT': 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      immunityLevel: editData.value.immunityLevel,
+      flags: editData.value.immunityLevel,
+      codes: editData.value.codes
+    })
+  })
+
+  if('body' in result) {
+    toast.add({
+      title: props.data.admin ? 'Admin permissions changed' : 'Admin powers granted',
+      description: props.data.admin ? `Admin #${props.data.admin.id}` : `Admin #${result.body?.id}`,
+      color: 'success'
+    })
+  } else {
+    toast.add({
+      title: props.data.admin ? 'Updating admin permissions failed' : 'Error granting admin',
+      description: result.error.message,
+      color: 'error'
+    })
+  }
+  loading.value = false
 }
 
 function revertChanges() {
