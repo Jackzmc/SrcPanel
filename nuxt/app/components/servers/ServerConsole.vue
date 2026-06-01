@@ -13,7 +13,7 @@
           class="text-neutral-300" />
       </div>
       <span 
-        class="flex flex-col h-full text-wrap overflow-y-scroll" 
+        class="flex flex-col h-full text-wrap overflow-x-hidden overflow-y-scroll" 
         ref="consoleElem"
         @scroll="onScroll"
       >

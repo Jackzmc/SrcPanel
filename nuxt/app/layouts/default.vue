@@ -23,6 +23,7 @@
       color="info"
       :title="notice.text"
       close
+      class="border-b border-b-white dark:border-b-black"
       :ui="{title:'whitespace-normal text-xs sm:text-sm text-white dark:text-black', icon: 'text-white dark:text-black', root:'py-2 sm:py-0 -z-1'}"
     />
 
