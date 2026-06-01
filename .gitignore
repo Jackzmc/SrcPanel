@@ -4,5 +4,8 @@ test
 .yarn
 node_modules
 
-nuxt/.nuxt
-nuxt/.env
+# legacy ignores
+nuxt
+.zed
+common-types/dist
+test-compose
