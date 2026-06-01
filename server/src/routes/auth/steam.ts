@@ -26,7 +26,7 @@ interface OpenIDQuery {
 
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
-    fastify.setErrorHandler(async (err, req: FastifyRequest<{Querystring: Record<string, any> }>, reply: FastifyReply) => {
+    fastify.setErrorHandler(async (err: any, req: FastifyRequest<{Querystring: Record<string, any> }>, reply: FastifyReply) => {
         let code: string = "INTERNAL_ERROR", message: string = ""
         if(err instanceof SteamAPIError) {
             if(err.status == 429) {

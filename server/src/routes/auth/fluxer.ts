@@ -30,7 +30,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     }
     else fastify.log.info(`[Oauth] Provider "${PROVIDER_NAME}" available`)
 
-    fastify.setErrorHandler(async (err, req: FastifyRequest<{Querystring: Record<string, any> }>, reply: FastifyReply) => {
+    fastify.setErrorHandler(async (err: any, req: FastifyRequest<{Querystring: Record<string, any> }>, reply: FastifyReply) => {
         let code: string = "INTERNAL_ERROR", message: string = ""
         /*if(err instanceof ProviderAPIError) {
             if(err.status == 429) {
