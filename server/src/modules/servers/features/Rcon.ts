@@ -2,7 +2,7 @@ import { Rcon, RconOptions } from "rcon-client";
 import Feature from "./Feature.js";
 import Server from "../Server.js";
 import { ActionResponse, getFallbackCommandForBuiltin, IAction } from "../IAction.js";
-import { CommandResultType } from "../../../../../common-types/Live.js";
+import { CommandResultType } from "@jzpanel/common/Live";
 
 export default class RconFeature extends Feature implements IAction {
     #client: Rcon

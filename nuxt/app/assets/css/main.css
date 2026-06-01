@@ -1,0 +1,74 @@
+@import "tailwindcss";
+@import "@nuxt/ui";
+
+:root:not(.dark) {
+  --ui-warning: var(--ui-color-warning-400);
+}
+
+.icon-text {
+  vertical-align: -0.125rem;
+  margin-right: .1rem;
+}
+
+.bg-light-blue {
+  background-color: light-dark(#dbeafe, #1e3a5f);
+}
+
+.tooltip-dark {
+  background-color: light-dark(#1f2937, #111827);
+  color: white;
+}
+
+.fluid {
+  --ui-container: max-w-7xl;
+}
+
+.impersonate {
+  background-color: #c42dbf;
+  color: white;
+}
+
+@theme static {
+  --font-sans: 'Public Sans', sans-serif;
+  
+
+  --color-green-50: #EFFDF5;
+  --color-green-100: #D9FBE8;
+  --color-green-200: #B3F5D1;
+  --color-green-300: #75EDAE;
+  --color-green-400: #00DC82;
+  --color-green-500: #00C16A;
+  --color-green-600: #00A155;
+  --color-green-700: #007F45;
+  --color-green-800: #016538;
+  --color-green-900: #0A5331;
+  --color-green-950: #052E16;
+}
+
+html {
+  font-size: 18px;
+}
+
+html,
+body {
+  background-color: light-dark(#fffb, #000);
+}
+
+.list-alphabetic {
+  list-style-type: lower-alpha;
+}
+
+pre,
+code {
+  color: rgb(204, 0, 41);
+  background-color: white;
+  padding: 0.25em;
+}
+
+@layer base {
+   button,
+   [role="button"] {
+      @apply cursor-pointer;
+      @apply disabled:cursor-not-allowed;
+   }
+}

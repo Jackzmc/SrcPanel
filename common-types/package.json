@@ -1,0 +1,33 @@
+{
+    "name": "@jzpanel/common",
+    "type": "module",
+    "version": "1.0.0",
+    "scripts": {
+        "build": "tsc"
+    },
+    "exports": {
+        "./logs": "./dist/logs.js",
+        "./util": "./dist/util.js",
+        "./format": "./dist/format.js",
+        "./cmds/data": "./dist/cmds/data.js",
+        "./cmds/util": "./dist/cmds/util.js",
+        "./Ban": "./dist/types/Ban.js",
+        "./CustomServer": "./dist/types/CustomServer.js",
+        "./Discussions": "./dist/types/Discussions.js",
+        "./Event": "./dist/types/Event.js",
+        "./Live": "./dist/types/Live.js",
+        "./Logs": "./dist/types/Logs.js",
+        "./Note": "./dist/types/Note.js",
+        "./Panel": "./dist/types/Panel.js",
+        "./Privileges": "./dist/types/Privileges.js",
+        "./Search": "./dist/types/Search.js",
+        "./Server": "./dist/types/Server.js",
+        "./ServerWebsocket": "./dist/types/ServerWebsocket.js",
+        "./Share": "./dist/types/Share.js",
+        "./Stats": "./dist/types/Stats.js",
+        "./User": "./dist/types/User.js"
+    },
+    "devDependencies": {
+        "typescript": "^5.9.3"
+    }
+}

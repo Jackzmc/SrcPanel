@@ -6,6 +6,11 @@
                     "@fastify/cookie": "*"
                 }
             }
-        }
+        },
+        "onlyBuiltDependencies": [
+            "better-sqlite3",
+            "esbuild",
+            "sqlite3"
+        ]
     }
 }

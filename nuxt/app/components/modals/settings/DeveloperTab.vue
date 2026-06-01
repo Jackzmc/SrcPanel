@@ -1,0 +1,81 @@
+<template>
+    <UCard>
+        <h3 class="text-lg font-bold">API Key</h3>
+        <IconText v-if="!data || status == 'pending'" 
+            leading-icon="lucide:loader-circle" leading-icon-class="animate-spin" 
+            text="Loading" 
+        />
+        <p v-else-if="!data.apikey" class="text-muted text-sm">
+            No key has been created yet
+        </p>
+        
+        <div v-if="data" class="flex flex-col">
+            <template v-if="data.apikey">
+                <div class="flex justify-between">
+                    <IconText leading-icon="lucide:calendar"><b>Created </b></IconText>
+                    <span>{{ formatDate(data.apikey?.created) }} </span>
+                </div>
+                <div class="flex justify-between">
+                    <IconText leading-icon="lucide:calendar-clock"><b>Last Activity </b></IconText>
+                    <span>{{ formatDate(data.apikey?.lastUsed) }} </span>
+                </div>
+                <div class="flex flex-col justify-between">
+                    <IconText leading-icon="lucide:key-square"><b>Key</b></IconText>
+                    <pre class="text-wrap text-xs">{{ data.apikey.id }}</pre>
+                </div>
+            </template>
+            <div class="mt-1">
+                <UTooltip text="Generate a new API Key, invalidating any older key">
+                    <UButton leading-icon="lucide:rotate-ccw-key" 
+                        variant="outline" 
+                        :loading="apikeyRolling"
+                        @click="regenerate"
+                    >
+                        {{ data.apikey ? 'Regenerate' : 'Generate' }}
+                    </UButton>
+                </UTooltip>
+            </div>
+        </div>
+    </UCard>
+</template>
+
+
+<script setup lang="ts">
+import { UButton, UCheckbox } from '#components';
+import { formatDate } from '@jzpanel/common/format';
+import type { UserPrivilegeCode } from '@jzpanel/common/Privileges';
+import type { APIDeveloperGenerateKeyResponse, APIDeveloperResponse, APISessionList, SessionData, UserData } from '@jzpanel/common/User';
+
+const api = useApi()
+const toast = useToast()
+const props = defineProps<{
+   profile?: UserData<UserPrivilegeCode[]> 
+}>()
+
+const { data, refresh, status } = useAsyncData(
+    () => api<APIDeveloperResponse>("/auth/developer")
+)
+
+const apikeyRolling = ref(false)
+
+async function regenerate() {
+    apikeyRolling.value = true
+    const response = await request<APIDeveloperGenerateKeyResponse>(`/api/auth/developer/apikey`, {
+        method: "POST"
+    })
+    apikeyRolling.value = false
+    if('body' in response) {
+        refresh()
+        toast.add({
+            title: "API Key rotated",
+            description: response.body!.apikey!.id
+        })
+    } else {
+        toast.add({
+            title: "Failed to roll API Key",
+            color: "error",
+            description: response.error.message
+        })
+    }
+}
+</script>

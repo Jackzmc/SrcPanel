@@ -2,10 +2,10 @@ import { Pool, RowDataPacket, OkPacket } from "mysql2/promise";
 import QuickLRU from 'quick-lru'
 import { FastifyReply, FastifyRequest } from 'fastify';
 import ActivityLog from "../ActivityLog.js";
-import { AdminData, AdminGroup, OauthProvider, SessionData, ReadableAdminGroup, UserNotification, UserNotificationOptions, AddUserNotification, UserProfileData } from '../../../../common-types/User.js';
-import { ReadableAdminData, UserOauthProviders, OauthProviderData } from '../../../../common-types/User.js';
-import { SteamInfo, UserPrivilegeCode } from  '../../../../common-types/Privileges.js';
-import { SteamUserDetails } from '../../../../common-types/Share.js';
+import { AdminData, AdminGroup, OauthProvider, SessionData, ReadableAdminGroup, UserNotification, UserNotificationOptions, AddUserNotification, UserProfileData, APIKey } from '@jzpanel/common/User';
+import { ReadableAdminData, UserOauthProviders, OauthProviderData } from '@jzpanel/common/User';
+import { SteamInfo, UserPrivilegeCode } from  '@jzpanel/common/Privileges';
+import { SteamUserDetails } from '@jzpanel/common/Share';
 import SteamID from "steamid";
 import FastGeoip from 'fast-geoip';
 import { SESSION_VERSION } from '../../routes/auth/steam.js';
@@ -18,6 +18,7 @@ import { OauthAuthData } from './OauthProvider.js';
 
 import logger from '../../logger.js'
 import CacheManager from "../../modules/CacheManager.js";
+import { sendMetric } from "../metrics/influx.js";
 const log = logger.child({ name: "AuthManager" })
 
 interface AddAdmin {
@@ -31,13 +32,6 @@ interface AddAdmin {
     groupIds?: string[]
 }
 
-export interface APIKey {
-    id: string,
-    steamid: string,
-    perms: number,
-    created: number,
-    lastUsed: number
-}
 
 export type NotificationCallback = (notification: UserNotification) => void
 
@@ -98,7 +92,7 @@ export default class AuthManager {
                 admins: this.admins,
                 groups: this.groups
             })
-        } catch(err) {
+        } catch(err: any) {
             log.warn(`Failed to save auth cache (${err.message})`)
         }
     }
@@ -278,7 +272,7 @@ export default class AuthManager {
         try {
             await this.#dbna.execute("INSERT IGNORE INTO panel_user (account_id, avatar_hash) VALUES (?, ?, ?)", [admin.identity.slice(10), details[0].avatarhash])
             await this.#dbna.execute("INSERT INTO panel_user_names (account_id, name, name_update_time) VALUES (?, ?, UNIX_TIMESTAMP())", [admin.identity.slice(10), details[0].personaname])
-        } catch(err) {
+        } catch(err: any) {
             log.warn(`Could not insert admin resolved name (${admin.identity.slice(10)}, name ${details[0].personaname}):`, err.sqlMessage)
         }
 
@@ -837,6 +831,7 @@ export default class AuthManager {
     }
     
     public async loginUser(req: FastifyRequest, reply: FastifyReply, admin: ReadableAdminData, steamDetails?: SteamUserDetails) {
+        sendMetric("oauth_login", 1)
         const steamInfo: SteamInfo = {
             steamid: admin.steamid,
             accountid: new SteamID(admin.steamid).accountid.toString(),

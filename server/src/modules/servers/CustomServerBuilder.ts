@@ -2,12 +2,12 @@ import { exec } from "child_process"
 import { cp, mkdir, readdir, readFile, rmdir, writeFile } from "fs/promises"
 import { nanoid } from "nanoid"
 import path from 'path'
-import { SMPluginMeta } from '../../../../common-types/CustomServer';
+import type { SMPluginMeta } from '@jzpanel/common/CustomServer';
 import User from "../../modules/users/User.js";
 import { CustomServerGroup } from "./groups/CustomServerGroup.js";
 import DockerServer from "./DockerServer.js";
 import SteamAPI from "../../modules/steam.js";
-import { WorkshopItem } from "../../../../common-types/Share.js";
+import type { WorkshopItem } from "@jzpanel/common/Share";
 import logger from '../../logger.js'
 const log = logger.child({ name: "CustomServerBuilder" })
 

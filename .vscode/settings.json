@@ -3,9 +3,9 @@
         {
             "splitTerminals": [
                 {
-                    "name": "ui",
+                    "name": "nuxt",
                     /* sometimes first command gets skipped */
-                    "commands": ["echo", "cd ui", "pnpm i", "pnpm serve"]
+                    "commands": ["echo", "cd nuxt", "pnpm i", "pnpm dev --host 127.0.0.1"]
                 }
             ]
         },
@@ -21,8 +21,8 @@
     ],
     "vue3snippets.enable-compile-vue-file-on-did-save-code": false,
     "cmake.configureOnOpen": false,
-    "typescript.format.enable": false,
-    "javascript.format.enable": false,
+    "js.format.enable": false,
+    "ts.format.enable": false,
     "eslint.enable": true,
     "eslint.format.enable": true,
     "eslint.validate": [

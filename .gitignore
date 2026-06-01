@@ -1,8 +1,13 @@
 .idea
 *.log
+.zed
 test
 .yarn
 node_modules
 
 nuxt/.nuxt
 nuxt/.env
+
+deploy.sh
+http-docs
+test-compose

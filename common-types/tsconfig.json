@@ -1,0 +1,26 @@
+{
+    "compilerOptions": {
+        "module": "node20",
+        "target": "es2022",
+        "moduleResolution": "nodenext",
+        "preserveSymlinks": true,
+        "skipLibCheck": true,
+        "esModuleInterop": true,
+        "allowSyntheticDefaultImports": true,
+        "noImplicitAny": false,
+        "declaration": true,
+        "sourceMap": true,
+        // "inlineSourceMap": true,
+        "resolveJsonModule": true,
+        "rootDir": "lib",
+        "outDir": "./dist",
+        "strictNullChecks": true,
+        // "incremental": true
+    },
+    "include": [
+        "lib/**/*",
+    ],
+    "ts-node": {
+        "swc": true
+    }
+}

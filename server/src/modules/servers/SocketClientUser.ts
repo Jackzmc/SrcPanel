@@ -1,6 +1,6 @@
 import { WebSocket } from "@fastify/websocket";
 import User from "../../modules/users/User.js";
-import { ServerOutPacket, ServerOutPayload } from '../../../../common-types/ServerWebsocket';
+import type { ServerOutPacket, ServerOutPayload } from '@jzpanel/common/ServerWebsocket';
 import { FastifyRequest } from "fastify";
 
 export default class SocketClientUser {

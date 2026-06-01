@@ -1,13 +1,17 @@
 {
     "compilerOptions": {
-        "module": "es2020",
+        "preserveSymlinks": true,
+        "skipLibCheck": true,
+        "module": "node20",
         "esModuleInterop": true,
         "allowSyntheticDefaultImports": true,
         "target": "es2022",
         "noImplicitAny": false,
-        "moduleResolution": "node",
-        "inlineSourceMap": true,
-        "outDir": "dist",
+        "moduleResolution": "nodenext",
+        "sourceMap": true,
+        // "inlineSourceMap": true,
+        "rootDir": ".",
+        "outDir": "./dist",
         "allowJs": true,
         "resolveJsonModule": true,
         "paths": {
@@ -15,13 +19,14 @@
                 "./src/*"
             ]
         },
-        "strictNullChecks": true
+        "strictNullChecks": true,
+        // "incremental": true
     },
     "include": [
         "./src/**/*",
     ],
     "exclude": [
-        "./node_modules"
+        "node_modules"
     ],
     "ts-node": {
         "swc": true

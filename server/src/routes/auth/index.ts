@@ -1,8 +1,8 @@
 import type { SessionStore } from '@fastify/session';
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
 import { RowDataPacket } from 'mysql2';
-import type { ProviderConnectionData, SessionData, UserData } from '../../../../common-types/User';
-import type { UserPrivilegeCode } from '../../../../common-types/Privileges.js';
+import type { APIConnections, APISessionList, ProviderConnectionData, SessionData, UserData } from '@jzpanel/common/User';
+import type { UserPrivilegeCode } from '@jzpanel/common/Privileges';
 
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
@@ -54,27 +54,28 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             profile,
             user: req.session.user,
             permissions: req.session.permissions,
-            providers: req.user!.providers, // TODO: is this needed?
+            providers: req.user!.providers!, // TODO: is this needed?
             notifications: [],
             openDiscussions: await req.user!.getOpenDiscussionsCount(),
             impersonatingId: req.session.impersonate ? req.session.user.steamid : undefined
         }
     })
 
-    fastify.get('/connections', async(req, reply) => {
+    fastify.get('/connections', async(req, reply): Promise<APIConnections> => {
         // Forces all providers to refetch user data, to ensure it's up to date.
-        await req.user!.updateProviders()
+        if(!req.user) throw new Error("Missing user")
+        await req.user.updateProviders()
         const providerList = await fastify.authmngr.oauth.getProviders()
         const providers: Record<string, ProviderConnectionData> = {}
         for(const provider of providerList) {
             // Check if user has such provider setup
-            if(req.user!.providers[provider.id] !== undefined) {
+            if(req.user.providers![provider.id] !== undefined) {
                 providers[provider.id] = {
                     id: provider.id,
                     name: provider.name ?? provider.id,
                     enabled: true,
-                    data: req.user!.providers[provider.id],
-                    expired: req.user!.providers[provider.id] === null
+                    data: req.user!.providers![provider.id],
+                    expired: req.user!.providers![provider.id] === null
                 }
             } else {
                 providers[provider.id] = {
@@ -103,7 +104,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             try {
                 await deleteSession(req.sessionStore, req.session.sessionId)
                 reply.code(204).send()
-            } catch(err) {
+            } catch(err: any) {
                 return reply.code(500).send({
                     error: "INTERNAL_SERVER_ERROR",
                     message: err.message
@@ -112,7 +113,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
     })
 
-    fastify.get('/sessions', async(req, reply) => {
+    fastify.get('/sessions', async(req, reply): Promise<APISessionList> => {
         const sessions = await req.user!.getSessions()
 
         return { 

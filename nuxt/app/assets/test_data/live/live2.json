@@ -1,0 +1,208 @@
+{
+  "clients": {
+    "908": {
+      "isAlive": true,
+      "name": "Jackzie ❤",
+      "state": 0,
+      "steamid": "STEAM_1:0:49243767",
+      "survivor": {
+        "action": 0,
+        "flowPercent": 0,
+        "isAlive": true,
+        "items": [
+          "",
+          "pistol",
+          "",
+          "",
+          ""
+        ],
+        "move": 0,
+        "name": "Jackzie ❤",
+        "permHealth": 70.0,
+        "state": 0,
+        "states": 34,
+        "steamid": "STEAM_1:0:49243767",
+        "survivor": 0,
+        "tempHealth": 0,
+        "timestamp": 1775358559,
+        "totalHealth": 100,
+        "type": 2,
+        "userid": 908
+      },
+      "timestamp": 1775358559,
+      "totalHealth": 100,
+      "type": 1,
+      "userid": 908
+    },
+    "909": {
+      "isAlive": false,
+      "name": "Ellis",
+      "state": 1,
+      "steamid": "BOT",
+      "survivor": {
+        "action": 5,
+        "flowPercent": 0.2,
+        "isAlive": true,
+        "items": [
+          "sniper_military",
+          "pistol",
+          "",
+          "first_aid_kit",
+          ""
+        ],
+        "move": 0,
+        "name": "Ellis",
+        "permHealth": 60,
+        "state": 1,
+        "states": 34,
+        "steamid": "BOT",
+        "survivor": 3,
+        "tempHealth": 20,
+        "timestamp": 1775358633,
+        "totalHealth": 100,
+        "type": 2,
+        "userid": 909
+      },
+      "timestamp": 1775358633,
+      "totalHealth": 100,
+      "type": 1,
+      "userid": 909
+    },
+    "910": {
+      "isAlive": true,
+      "name": "Coach",
+      "state": 1,
+      "steamid": "BOT",
+      "survivor": {
+        "action": 0,
+        "flowPercent": 0.95,
+        "isAlive": true,
+        "items": [
+          "rifle_ak47",
+          "pistol",
+          "",
+          "first_aid_kit",
+          ""
+        ],
+        "move": 1,
+        "name": "Coach",
+        "permHealth": 23,
+        "state": 1,
+        "states": 34,
+        "steamid": "BOT",
+        "survivor": 2,
+        "tempHealth": 50,
+        "timestamp": 1775358633,
+        "totalHealth": 100,
+        "type": 2,
+        "userid": 910
+      },
+      "timestamp": 1775358633,
+      "totalHealth": 100,
+      "type": 1,
+      "userid": 910
+    },
+    "911": {
+      "isAlive": true,
+      "name": "Rochelle",
+      "state": 1,
+      "steamid": "BOT",
+      "survivor": {
+        "action": 0,
+        "flowPercent": 0.54,
+        "isAlive": true,
+        "items": [
+          "rifle_desert",
+          "pistol",
+          "",
+          "first_aid_kit",
+          ""
+        ],
+        "move": 0,
+        "name": "Rochelle",
+        "permHealth": 1.0,
+        "state": 1,
+        "states": 34,
+        "steamid": "BOT",
+        "survivor": 1,
+        "tempHealth": 88.0,
+        "timestamp": 1775358633,
+        "totalHealth": 100,
+        "type": 2,
+        "userid": 911
+      },
+      "timestamp": 1775358633,
+      "totalHealth": 100,
+      "type": 1,
+      "userid": 911
+    },
+    "913": {
+      "isAlive": true,
+      "name": "Disgruntled Pea",
+      "state": 1,
+      "steamid": "STEAM_1:1:10882645 ",
+      "survivor": {
+        "action": 0,
+        "flowPercent": 0.54,
+        "isAlive": true,
+        "items": [
+          "rifle_desert",
+          "pistol",
+          "",
+          "first_aid_kit",
+          ""
+        ],
+        "move": -1,
+        "name": "Disgruntled Pea",
+        "permHealth": 1.0,
+        "state": 1,
+        "states": 34,
+        "steamid": "STEAM_1:1:10882645 ",
+        "survivor": 1,
+        "tempHealth": 238.0,
+        "timestamp": 1775358633,
+        "totalHealth": 100,
+        "type": 2,
+        "userid": 911
+      },
+      "timestamp": 1775358633,
+      "totalHealth": 100,
+      "type": 1,
+      "userid": 911
+    },
+    "915": {
+      "isAlive": true,
+      "name": "Hunter",
+      "state": 1,
+      "steamid": "BOT",
+      "infected": {
+        "class": 3,
+        "timestamp": 1775358633,
+        "totalHealth": 100,
+        "health": 70,
+        "type": 2,
+        "userid": 911
+      },
+      "timestamp": 1775358633,
+      "totalHealth": 100,
+      "type": 1,
+      "userid": 911
+    }
+  },
+  "finale": {
+    "escapeInProgress": false,
+    "stage": 18,
+    "type": 4
+  },
+  "game": {
+    "campaignStartTime": 1775345167,
+    "difficulty": 2,
+    "gamemode": "coop",
+    "map": "c2m5_concert",
+    "maxplayers": 4,
+    "startTime": 1775345167,
+    "state": 0,
+    "type": 0
+  },
+  "lastUpdate": 1775358644206
+}

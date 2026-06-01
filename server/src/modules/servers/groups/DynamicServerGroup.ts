@@ -1,10 +1,10 @@
 import { CreateGroupOptions } from "./ServerGroup.js"
-import DynamicServerManager from '../docker/DynamicServerManager';
-import { ServerAction } from "../../../../../common-types/Server.js";
+import DynamicServerManager from '../docker/DynamicServerManager.js';
+import { ServerAction } from "@jzpanel/common/Server";
 import DockerServer from "../DockerServer.js";
 import { DockerGroupConfig } from "./index.js";
 import BaseDynamicServerGroup from "./BaseDynamicGroup.js";
-import { DockerTemplateContainer } from '../docker/DynamicServerManager';
+import type { DockerTemplateContainer } from '../docker/DynamicServerManager.js';
 
 
 export interface DynamicGroupServerTemplate {

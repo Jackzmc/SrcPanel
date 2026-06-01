@@ -2,10 +2,10 @@ import { stat, readdir, unlink, symlink } from 'fs/promises';
 import { createWriteStream } from 'fs'
 import path from 'path'
 import SteamAPI from '../steam.js';
-import { AddonCollectionInfo, AddonInfo, AddonWorkshopInfo, ChildWorkshopItem, DownloadSourceRecord, ShareDestinations, ShareInfo, WorkshopCollectionInfo, WorkshopItem } from '../../../../common-types/Share.js'
+import type { AddonCollectionInfo, AddonInfo, AddonWorkshopInfo, ChildWorkshopItem, DownloadSourceRecord, ShareDestinations, ShareInfo, WorkshopCollectionInfo, WorkshopItem } from '@jzpanel/common/Share'
 import sqlite3 from 'sqlite3'
 import sqlite from 'sqlite'
-import SQL from 'sql-template-strings';
+import { SQL } from 'sql-template-strings';
 import VPK from '@lowly1337/vpk'
 import ValveKV from 'valve-kv'
 import { getChapterIds, getSpFileInfo } from './ShareUtils.js';
@@ -90,7 +90,7 @@ export default class Share {
         await this.#db.exec(SQL`ALTER TABLE addoncache ADD metadata TEXT`).catch(() => { })
         currentMigration++
         this.#log.info(`Migration #${currentMigration}: OK`)
-      } catch (err) {
+      } catch (err: any) {
         this.#log.error(`Migration #${currentMigration}: Error:`, err)
         return
       }
@@ -153,7 +153,7 @@ export default class Share {
           return sorted
         }
       }
-    } catch (err) {
+    } catch (err: any) {
       this.#log.warn(`Skipping vpk with error at ${filepath}:\n`, err.message)
     }
     return null
@@ -194,7 +194,7 @@ export default class Share {
           if (addonInfo.collection) {
             if (!collections[addonInfo.collection.id]) collections[addonInfo.collection.id] = {
               collection: addonInfo.collection,
-              children: []
+              children: [],
             }
             collections[addonInfo.collection.id].children.push(addonInfo)
             // Merge child addon into collection's map list
@@ -248,7 +248,8 @@ export default class Share {
     for (const collection of Object.values(collections)) {
       results.push({
         ...collection,
-        filesize: collection.children.reduce((pv, child) => pv + (child.filesize ?? 0), 0)
+        filesize: collection.children.reduce((pv, child) => pv + (child.filesize ?? 0), 0),
+        meta: {}
       })
     }
 
@@ -396,7 +397,7 @@ export default class Share {
       for (const destPath of dest.paths) {
         await symlink(path.join(this.sourceFolder, filename), path.join(destPath, filename))
       }
-    } catch (err) {
+    } catch (err: any) {
       // Ignore already installed
       if (err.code == "EEXIST")
         return
@@ -422,7 +423,7 @@ export default class Share {
       for (const destPath of dest.paths) {
         await unlink(path.join(destPath, filename))
       }
-    } catch (err) {
+    } catch (err: any) {
       // Do not fail if its not installed already, just ignore
       if (err.code !== "ENOENT") throw err
     }
@@ -438,7 +439,7 @@ export default class Share {
     this.#log.trace({ folder, file }, "getFileInfo")
     try {
       return await stat(path.join(folder, file))
-    } catch (err) {
+    } catch (err: any) {
       if (err.code === "ENOENT") {
         this.#log.trace({}, "getFileInfo ENOENT", err)
         return null

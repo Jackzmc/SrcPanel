@@ -1,7 +1,7 @@
 import { CategoryChannel, Client, Guild, GuildMember, User, VoiceChannel } from '@fluxerjs/core';
-import ServerManager from './servers/ServerManager';
+import ServerManager from './servers/ServerManager.js';
 import { GatewayVoiceStateUpdateDispatchData, APIGuildMember, ChannelType, GatewayOpcodes, GatewayPresenceUpdateData } from '@fluxerjs/types'
-import { VoiceUser } from '../../../common-types/Server.js';
+import type { VoiceUser } from '@jzpanel/common/Server';
 import CacheManager from './CacheManager.js';
 
 import Logger from '../logger.js'
@@ -28,7 +28,7 @@ export class FluxerBot {
 
   constructor(serverManager: ServerManager, cacheManager: CacheManager, discordToken: string) {
     const categoryId = process.env.FLUXER_VOICELINK_CATEGORY_ID
-    if (!this.#categoryId) {
+    if (!categoryId) {
       throw new Error("FLUXER_VOICELINK_CATEGORY_ID not set")
     }
     this.#categoryId = categoryId!

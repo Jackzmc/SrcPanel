@@ -1,0 +1,29 @@
+import { defineContentConfig, defineCollection } from '@nuxt/content'
+import { z } from 'zod'
+
+export default defineContentConfig({
+  collections: {
+    docs: defineCollection({
+      type: 'page',
+      source: 'docs/*.md',
+      schema: z.object({
+        title: z.string(),
+        description: z.string().optional(),
+        updated: z.date().optional(),
+        links: z.array(z.object({
+            href: z.string(),
+            label: z.string()
+        })).optional(),
+        icon: z.string().optional()
+      })
+    }),
+    docs_rules: defineCollection({
+      type: 'page',
+      source: 'docs/rules/*.md',
+      schema: z.object({
+        title: z.string(),
+        type: z.enum(["rule", "procedure"])
+      })
+    })
+  }
+})

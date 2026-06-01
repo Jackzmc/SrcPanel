@@ -1,12 +1,12 @@
 import Feature from "./Feature.js";
 import Server from "../Server.js";
 import { Point, WriteApi } from '@influxdata/influxdb-client'
-import { getWriter } from "../../../modules/Influx.js";
-import { ComputeStats, NetworkStats, ServerStatusData, ServerStatusSource } from "../../../../../common-types/Server.js";
-import { AnnotationX, AnnotationY, GAME_DIFFICULTY_STRINGS, GameState } from "../../../../../common-types/Live.js";
+import { getGlobalWriter, NamespacedMetric } from "../../metrics/influx.js";
+import { ComputeStats, NetworkStats, ServerStatusData, ServerStatusSource } from "@jzpanel/common/Server";
+import { AnnotationX, AnnotationY, FinaleStage, GAME_DIFFICULTY_STRINGS, GameState, InfectedClass, LiveDataCache, PlayerGameAction, PlayerMove, PlayerState } from "@jzpanel/common/Live";
 import DockerServer from "../DockerServer.js";
 import { ContainerStats } from "dockerode";
-import { Server_Metric, Server_MetricFull } from "../../../../../common-types/ServerWebsocket.js";
+import { Server_Metric, Server_MetricFull } from "@jzpanel/common/ServerWebsocket";
 
 // The maximum number of statistics to hold
 const MAX_STATS_HISTORY = 400
@@ -21,7 +21,6 @@ export interface InfluxConfig {
 }
 
 export default class MetricsFeature extends Feature {
-    #influx: WriteApi | null = null
     #latestComputeStats: ComputeStats | null = null
 
     #computeStatsHistory: ComputeStats[] = []
@@ -30,9 +29,14 @@ export default class MetricsFeature extends Feature {
     #annotationsX: AnnotationX[] = []
     #annotationsY: AnnotationY[] = []
 
+    #metric: NamespacedMetric
+
     constructor(server: Server) {
         super("Metrics", server)
-        this.#influx = getWriter()
+        this.#metric = new NamespacedMetric(`servers`, { 
+          server_id: server.id, 
+          game: server.game 
+        })
     }
 
     get #dockerServer() : DockerServer | null {
@@ -48,7 +52,7 @@ export default class MetricsFeature extends Feature {
     }
 
     get hasInflux() {
-      return this.#influx != undefined
+      return getGlobalWriter() != null
     }
 
     async init() {
@@ -138,57 +142,125 @@ export default class MetricsFeature extends Feature {
       return this.#computeStatsHistory[0]?.collectionTime ?? 0
     }
 
+    /**
+     * Records metrics for current status
+     * @param data 
+     * @param source 
+     */
+    // Called periodically by gamedig check system
     recordStatus(data: ServerStatusData | null, source: ServerStatusSource) {
       if(!this.hasInflux) return
-      const statusPoint = this.#createPoint("status")
-      let playerCount: number|null = null
-      if(data) {
-        playerCount = data.players.length
-        if(this._server.uptime)
-          statusPoint.intField("uptime", this._server.uptime)
-        if(this._server.status.data?.map)
-          statusPoint.stringField("map", this._server.status.data.map)
-        if(this._server.status.data?.gamemode)
-        statusPoint.stringField("gamemode", this._server.status.data.gamemode)
-      } 
-      if(source == "live" && this._server.Plugin?.available) {
-        const live = this._server.Plugin.liveStatus
-        if(live) {
-          if(live.game?.state === GameState.None) playerCount = Object.keys(live.clients).length
-          else playerCount = null
-          const point = this.#createPoint("live")
-          if(live.game) {
-            point.stringField("difficulty", GAME_DIFFICULTY_STRINGS[live.game.difficulty])
+
+      if(this._server.uptime)
+        this.#metric.send("uptime_secs", this._server.uptime)
+
+      // Defaults to gamedig's value, but overwritten by live as source of truth
+      let playerCount: number|undefined = data?.players.length
+
+      // We only log live status stuff when it's updated
+      if(source == "live" && this._server.Plugin.HasData) {
+        const live = this._server.Plugin.liveStatus!
+        const difficulty = this._server.Plugin?.liveStatus?.game?.difficulty
+        const labels = {
+          map: this._server.status.data?.map, 
+          gamemode: this._server.status.data?.gamemode,
+          difficulty: difficulty?.valueOf().toString(),
+          difficulty_str: difficulty ? GAME_DIFFICULTY_STRINGS[difficulty]! : undefined
+        }
+
+        // Overwrite player count with live as source of truth
+        if(live.game?.state === GameState.None) playerCount = Object.keys(live.clients).length
+        else playerCount = undefined
+
+        const values = this.getMetricValues(live)
+        if(values) {
+            if(live.game) {
+          const durationSec = (Date.now()/1000) - live.game?.campaignStartTime
+            this.#metric.send("game_duration_sec", Math.round(durationSec), labels)
           }
-          let survivors = 0, infected = 0
-          for(const client of Object.values(live.clients)) {
-            if(client.infected) infected++
-            else if(client.survivor) survivors++
-          }
-          point.intField("survivor_count", survivors)
-          point.intField("infected_count", infected)
-          this.#influx!.writePoint(point)
+          // Send infected counts for every class
+          for(const [key, count] of Object.entries(values.infected))
+            this.#metric.send("infected_count", count, { class: key })
+
+          this.#metric.send("survivor_avg_mapflow", values.survivors.avgFlow, labels)
+          this.#metric.send("survivor_avg_health", values.survivors.avgFlow, labels)
+          this.#metric.send("survivor_states", values.survivors.alive, { ...labels, "state": "alive" })
+          this.#metric.send("survivor_states", values.survivors.dead, { ...labels, "state": "dead" })
+          this.#metric.send("survivor_states", values.survivors.incapped, { ...labels, "state": "incapped" })
+        }
+
+        if(live.finale && live.finale.stage != FinaleStage.Unknown) {
+          this.#metric.send("finale_stage", live.finale.stage, labels)
         }
       }
+      // We know player count from live OR gamedig - so we can always send it
+      // We don't send labels as if no lvie data, we would have nothing for difficulty
       if(playerCount != null) {
-        statusPoint.intField("player_count", playerCount)
+        this.#metric.send("player_count", playerCount)
+      }
+    }
+
+    getMetricValues(live: LiveDataCache) {
+      const values = {
+        survivors: {
+          avgFlow: 0,
+          avgHealth: 0,
+          incapped: 0,
+          alive: 0,
+          dead: 0,
+        },
+        infected: {
+          tank: 0,
+          boomer: 0,
+          spitter: 0,
+          hunter: 0,
+          jockey: 0,
+          smoker: 0,
+          charger: 0
+        }
+      }
+      let numSurvivors = 0
+      let hasRealPlayers = false
+
+      for(const client of Object.values(live.clients)) {
+        if(!hasRealPlayers && client.steamid !== 'BOT') hasRealPlayers = true
+
+        if(client.survivor) {
+          values.survivors.avgFlow += client.survivor.flowPercent
+          values.survivors.avgHealth += client.survivor.permHealth
+          if(client.isAlive) {
+            if(client.survivor!.move == PlayerMove.Incapped)
+              values.survivors.incapped++
+            else
+              values.survivors.alive++
+          } else {
+            values.survivors.dead++
+          }
+          numSurvivors++
+        }
+
+        if(client.infected) {
+          switch(client.infected.class) {
+            case InfectedClass.Boomer: values.infected.boomer++; break
+            case InfectedClass.Spitter: values.infected.spitter++; break
+            case InfectedClass.Hunter: values.infected.hunter++; break
+            case InfectedClass.Smoker: values.infected.smoker++; break
+            case InfectedClass.Charger: values.infected.charger++; break
+            case InfectedClass.Jockey: values.infected.jockey++; break
+            case InfectedClass.Tank: values.infected.tank++; break
+          }
+        }
+
+
       }
 
-      this.#influx!.writePoint(statusPoint)
-      this.#influx!.flush()
+      if(numSurvivors > 0) {
+        values.survivors.avgFlow /= numSurvivors
+        values.survivors.avgHealth /= numSurvivors
+      }
+      // Only return if we have real players
+      if(!hasRealPlayers) return values
     }
-
-
-    #createPoint(measurement: string) : Point {
-      if(!this.hasInflux) throw new Error("No influx support enabled")
-      const point = new Point(measurement)
-      point.tag("server_id", this._server.id)
-      point.tag("server_ip", this._server.ip)
-      point.tag("server_port", this._server.port.toString())
-      point.tag("server_type", this._server.game)
-      return point
-    }
-
 
     addAnnotationX(annotation: AnnotationX) {
         this.#annotationsX.push(annotation)
@@ -214,5 +286,16 @@ export default class MetricsFeature extends Feature {
         history: this.#computeStatsHistory,
         annotations: this.Annotations
       } as Server_MetricFull)
+    }
+
+    recordViewerCount(count: number) {
+      this.#metric.send("live_viewers", count)
+    }
+
+    recordRecordCounts(tx: number, rx: number) {
+      this.#metric.sendMultiple([
+        ["records_recv", rx],
+        ["records_sent", tx]
+      ])
     }
 }

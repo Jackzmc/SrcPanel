@@ -1,7 +1,7 @@
 import StandardServer from "../StandardServer.js"
 import ServerGroup from "./ServerGroup.js"
-import { ListGroupConfig, ListGroupConfig_Server } from './index';
-import { ServerAction } from "../../../../../common-types/Server.js";
+import { ListGroupConfig, ListGroupConfig_Server } from './index.js';
+import type { ServerAction } from "@jzpanel/common/Server";
 
 
 export class StandardServerGroup extends ServerGroup<StandardServer> {

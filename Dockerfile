@@ -5,44 +5,86 @@ ENV PATH="$PNPM_HOME:$PATH"
 
 WORKDIR /app
 
-# Build time dependencies
+# Use Corepack for pnpm
 RUN apt-get update && apt-get install -y git
 RUN corepack enable pnpm && corepack install -g pnpm@latest-10
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
+COPY common-types common-types/
 
-COPY pnpm-lock.yaml pnpm-workspace.yaml ./
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm fetch --frozen-lockfile
+RUN pnpm store path 
+RUN --mount=type=cache,target=/pnpm/store pnpm fetch --frozen-lockfile -r
 
-# Setup dependencies
-FROM base AS prod-deps
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --prod --offline  -r
+FROM base AS builder-common
+WORKDIR /app
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
+COPY common-types common-types/
 
-FROM base AS build
-COPY . /app
-COPY .git/ .git/
-RUN pnpm install -r --offline
+RUN --mount=type=cache,target=/pnpm/store pnpm install --frozen-lockfile --offline
+WORKDIR /app/common-types
+RUN pnpm build
 
-# Build
-RUN cd /app/ui/ && pnpm build
-RUN cd /app/server/ && pnpm build
+# Builder stage for Nuxt UI
+FROM base AS builder-ui
+WORKDIR /app
+COPY --from=builder-common /app/common-types/dist /app/common-types/dist/
+COPY --from=builder-common /app/common-types/package.json /app/common-types/
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
+COPY nuxt nuxt/
+COPY .git .git/
 
-FROM $IMAGE AS prod
+# Use 6GB heap space cuz nuxt be like that ig
 
-# not sure if can improve 
+RUN --mount=type=cache,target=/pnpm/store pnpm install --frozen-lockfile --offline
+WORKDIR /app/nuxt
+ENV NODE_OPTIONS="--max-old-space-size=12288"
+RUN pnpm build
+
+# Builder stage for Server
+FROM base AS builder-server
+WORKDIR /app
+COPY --from=builder-common /app/common-types/dist /app/common-types/dist/
+COPY --from=builder-common /app/common-types/package.json /app/common-types/
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
+COPY server server/
+
+RUN --mount=type=cache,target=/pnpm/store pnpm install --frozen-lockfile --offline
+WORKDIR /app/server
+RUN pnpm build
+
+
+# Production image for Server
+FROM $IMAGE AS final-server
+
 RUN apt-get update && apt-get install -y curl && apt-get clean
 
-COPY --from=prod-deps --chown=node /app/node_modules /app/node_modules
-
-COPY --from=build --chown=node /app/server /app/server
-COPY --from=build --chown=node /app/ui/dist /app/ui
-
-# RUN chown -R node:node /app
-
 WORKDIR /app
-
+COPY --from=builder-server /app/node_modules ./node_modules
+COPY --from=builder-server /app/server ./server/
+COPY --from=builder-server /app/common-types ./common-types
 
 ENV NODE_ENV=production
-ENV STATIC_PATH=/app/ui/
+
+# We run as root - needs docker access anyway
 
 EXPOSE 8080
 EXPOSE 7676
-CMD ["node", "/app/server/dist/server/src/index.js"]
+CMD ["node", "server/dist/src/index.js"]
+
+# Production image for Nuxt UI
+FROM $IMAGE AS final-ui
+WORKDIR /app
+USER node
+COPY --from=builder-ui --chown=node /app/node_modules ./node_modules
+COPY --from=builder-ui --chown=node /app/nuxt/ ./ui/
+COPY --from=builder-ui --chown=node /app/common-types common-types/
+
+WORKDIR /app/ui
+
+EXPOSE 3000
+ENV NITRO_HOST=0.0.0.0
+ENV NITRO_PORT=3000
+ENV NUXT_API_INTERNAL_URL=http://localhost:8080
+ENV NUXT_PUBLIC_API_PUBLIC_URL=
+ENV NUXT_PUBLIC_API_AUTH_URL=http://localhost:8080
+CMD ["./.output/server/index.mjs"]
+# CMD ["serve", "-s", "-p", "3000", "dist"]

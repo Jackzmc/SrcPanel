@@ -2,8 +2,8 @@ import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
 import { RowDataPacket } from 'mysql2';
 import { Static, Type } from '@sinclair/typebox'
 import SteamID from 'steamid';
-import { AdminData, ReadableAdminData } from '../../../../common-types/User';
-import { APIBanFlags } from '../../../../common-types/Ban.js';
+import type { AdminData, APIListAdminGroupsResponse, ReadableAdminData } from '@jzpanel/common/User';
+import { APIBanFlags } from '@jzpanel/common/Ban';
 import { computeChanges } from '../../util.js';
 import { NO_PERMISSION } from '../../responses.js';
 
@@ -49,7 +49,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     }
   })
 
-  fastify.get('/groups', async (req, reply) => {
+  fastify.get('/groups', async (req, reply): Promise<APIListAdminGroupsResponse> => {
     const hasRoot = req.user!.hasRoot;
     const groups = fastify.authmngr.GroupsExport
       .map(group => {

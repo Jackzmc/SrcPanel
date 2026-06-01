@@ -1,5 +1,5 @@
 import SocketClientUser from "../../../../modules/servers/SocketClientUser.js"
-import { Server_LogEntry } from "../../../../../../common-types/ServerWebsocket.js"
+import { Server_LogEntry } from "@jzpanel/common/ServerWebsocket"
 import Server from "../../Server.js"
 import Feature from "../Feature.js"
 

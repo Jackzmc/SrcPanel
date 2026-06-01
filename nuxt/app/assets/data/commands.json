@@ -1,0 +1,414 @@
+{
+  "troll": {
+    "name": "Troll Commands",
+    "commands": [
+      {
+        "command": "fta [player:player] [category:string]",
+        "description": "Will apply a troll mode (See 'Feed The Trolls') to a player, shows a menu of options. Both player and category are optional. Will jump to category and player respectively.",
+        "perm": "c"
+      },
+      {
+        "command": "ftr <player(s):players>",
+        "description": "Will reset all troll modes on a player",
+        "perm": "b"
+      },
+      {
+        "command": "ftl [player:player]",
+        "description": "Will list all users & the modes that are applied on them. If a player is provided, more details are shown such the names of the enabled flag(s)",
+        "perm": "b"
+      },
+      {
+        "command": "ftt",
+        "description": "Shows all the feedthetrolls commands incase you forget in game.",
+        "perm": "b"
+      },
+      {
+        "command": "ftc",
+        "description": "Activates manual auto punishment on the last person to start a crescendo",
+        "perm": "c"
+      },
+      {
+        "command": "mark <player(s):players>",
+        "description": "Marks the player to be banned when they leave, and prevents any friendly fire. Run again to unmark.",
+        "perm": "c"
+      }
+    ]
+  },
+  "player": {
+    "name": "Player Commands",
+    "commands": [
+      {
+        "command": "vomitplayer <player(s):players>",
+        "description": "Not as subtle as swarming a player, will just blind them like they got boomed on, and attract commons to them obviously",
+        "perm": "e"
+      },
+      {
+        "command": "sethpplayer <player(s):players> <health:int>",
+        "description": "Sets the player’s permanent health to this amount. < 0 will give them insane amount of health, 100 can give them extra as temporary health is added on.",
+        "perm": "e"
+      },
+      {
+        "command": "slay <player(s):players>",
+        "description": "Kills the given player(s)",
+        "perm": "f"
+      },
+      {
+        "command": "stagger <player(s):players>",
+        "description": "Staggers the given player(s)",
+        "perm": "c"
+      },
+      {
+        "command": "charge <player(s):players>",
+        "description": "Make the player get shoved like a charger charged them",
+        "perm": "e"
+      },
+      {
+        "command": "slap <player(s):players> [health:int]",
+        "description": "Slaps the player around, optionally dealing damage",
+        "perm": "f"
+      },
+      {
+        "command": "respawn <player(s):players>",
+        "description": "Respawns the player at wherever you are looking.",
+        "note": "Will respawn (& reset) alive players!!! Will reset their inventory and health",
+        "perm": "n"
+      },
+      {
+        "command": "model <survivor_name:string> [player(s):players]",
+        "description": "Sets your model or optionally, another player's model to the survivor specified.",
+        "args": {
+          "survivor_name": {
+            "allowed_values": [
+              "nick",
+              "ellis",
+              "rochelle",
+              "coach",
+              "bill",
+              "francis",
+              "zoey",
+              "louis"
+            ]
+          }
+        },
+        "examples": [
+          "<code>%cmd% roch grace</code> - Sets the player's model that has the name 'grace' to rochelle",
+          "<code>%cmd% z</code> - Sets your model to zoey"
+        ],
+        "perm": "c"
+      },
+      {
+        "command": "note <player:player> [message:string]",
+        "description": "Add a note to a player",
+        "perm": "k"
+      },
+      {
+        "command": "notes <player:player>",
+        "description": "View notes for a player",
+        "perm": "k"
+      },
+      {
+        "command": "rff <player:player> <amount:int> [modifiers:string] [modifiers:string]",
+        "args": {
+          "modifiers": {
+            "allowed_values": [
+              "fire",
+              "explosion"
+            ]
+          },
+          "amount": {
+            "allowed_values": [
+              "0",
+              "0.5",
+              "1",
+              "2",
+              "3"
+            ]
+          }
+        },
+        "description": "Quicky applies the inputted reverse friendly fire amountt",
+        "perm": "k"
+      },
+      {
+        "command": "sorry <player:player> [reason:string=\"shot you\"]",
+        "description": "Send an apology to a player, reason being inserted \"Sorry I (reason here) shot you (player name)"
+      },
+      {
+        "command": "sorrymenu",
+        "description": "Opens a menu, letting you select the player to apology to"
+      },
+      {
+        "command": "csplat <target:player> [top/front/back:string]",
+        "description": "Spawns a car on a player from the given direction. If no direction provided, will show a menu",
+        "perm": "k"
+      }
+    ]
+  },
+  "users": {
+    "name": "User Management",
+    "commands": [
+      {
+        "command": "ban <player(s):players> [minutes=0:int] [reason message:string]",
+        "description": "Bans the player(s) for the optional specified time. A time of 0 makes the ban permament.",
+        "args": {
+          "minutes=0": {
+            "allowed_values": ">= 0"
+          }
+        },
+        "perm": "d"
+      },
+      {
+        "command": "kick <player(s):players> [reason message:string]",
+        "description": "Kicks the player(s) for the specified optional reason.",
+        "note": "On 5+ servers, it may cause their bot to reset with full health and no items",
+        "perm": "c"
+      },
+      {
+        "command": "bandisconnected",
+        "description": "Will open a menu listing all the recently disconnected players, letting you ban them after they already left.",
+        "perm": "d"
+      },
+      {
+        "command": "ignore <player(s):players> <tk/rff:string>",
+        "description": "Will make the player immune to being banned for friendly fire or auto reverse ff. (Only lasts one session, will clear any pending bans)",
+        "perm": "c"
+      },
+      {
+        "command": "mute <player(s):players>",
+        "description": "Mutes them from voice chat, resets on map change. Use 'Voice Mute' troll for persistance",
+        "perm": "j"
+      },
+      {
+        "command": "gag <player(s):players>",
+        "description": "Mutes them from text chat",
+        "perm": "j"
+      },
+      {
+        "command": "vgag <player(s):players>",
+        "description": "Will mute all vocalizations from this player only for you. For global gags use troll mode vocalize gag"
+      },
+      {
+        "command": "perms [public/notify/admins/private]",
+        "description": "Sets the server's permission level. It will kick players with \"Server is Reserved\" when they join if in admins-only or private. Notify will only notify all players when a player is connecting.",
+        "perm": "c"
+      },
+      {
+        "command": "free <player:player>",
+        "description": "Kicks a player with a predefined message of \"Sorry, this server is reserved\" and indicates to others you kicked them to free a slot.",
+        "perm": "c"
+      },
+      {
+        "command": "review [player:player]",
+        "description": "Shows information about friendly fire, auto rff, immunity status, and more of a player.",
+        "perm": "c"
+      },
+      {
+        "command": "rename <player:player> <new name:string>",
+        "description": "Temporarily change the specified player's name, resets the next chapter. You can use @me to specify yourself",
+        "perm": "f",
+        "examples": [
+          "<code>%cmd% @me \"My New Name\"</code> - Change your name to <b>My New Name</b>"
+        ]
+      }
+    ]
+  },
+  "specials": {
+    "name": "Special Commands",
+    "commands": [
+      {
+        "command": "forcespecial <special:string> [amount:int] ",
+        "description": "Will force the director to spawn X whatever special normally, bypassing normal limits",
+        "args": {
+          "amount": {
+            "allowed_values": ">= 0"
+          }
+        },
+        "examples": [
+          "<code>%cmd% smoker 5</code> - Spawns 5 smokers in the area"
+        ],
+        "perm": "n"
+      },
+      {
+        "command": "insta <player(s):players> [special:string]",
+        "description": "Will spawn specified special near the specified player, with target only on them. Defaults to jockey if no special specified.",
+        "examples": [
+          "<code>%cmd% insta pea jockey</code> - Spawns a jockey near pea"
+        ],
+        "perm": "c"
+      },
+      {
+        "command": "inface <player(s):players> [special:string=jockey]",
+        "description": "Will spawn specified special as close as possible to them. Basically on top",
+        "examples": [
+          "<code>%cmd% insta pea jockey</code> - Spawns a jockey on pea"
+        ],
+        "perm": "c"
+      },
+      {
+        "command": "forcecursor <special:string> [amount:int] ",
+        "description": "Will force the director to spawn X at your cursor at set amount",
+        "args": {
+          "amount": {
+            "allowed_values": ">= 0"
+          }
+        },
+        "perm": "n"
+      },
+      {
+        "command": "forcemenu",
+        "description": "Shows GUI of specials to spawn bypassing director limits",
+        "perm": "n"
+      },
+      {
+        "command": "cursormenu",
+        "description": "Shows GUI of specials to spawn at your cursor",
+        "perm": "n"
+      },
+      {
+        "command": "witch_attack <player:player>",
+        "description": "Makes all witches attack the victim",
+        "perm": "d"
+      }
+    ]
+  },
+  "default": {
+    "name": "Miscellaneous",
+    "commands": [
+      {
+        "command": "admin",
+        "description": "Opens an admin menu with some menus such as voting, player interactions, weapon spawning, etc"
+      },
+      {
+        "command": "respawn_all",
+        "description": "Will make all dead players respawn at the next available respawn closet. It won’t work for already opened rooms, even if door is closed. ",
+        "perm": "n"
+      },
+      {
+        "command": "forcespecial <special:string> [amount:int] ",
+        "description": "Will force the director to spawn X whatever special normally, bypassing normal limits",
+        "args": {
+          "amount": {
+            "allowed_values": ">= 0"
+          }
+        },
+        "perm": "n"
+      },
+      {
+        "command": "panic",
+        "description": "Forces a panic event, can be used in addition to swarm or vomitplayer commands.",
+        "perm": "e"
+      },
+      {
+        "command": "spawnweapon <weapon:string> [amount:int]",
+        "description": "Will spawn any amount of a specified weapon wherever your mouse is pointing at.  Weapon names must be exact, unlike give.",
+        "args": {
+          "amount": {
+            "allowed_values": ">= 0"
+          }
+        },
+        "examples": [
+          "<b>Spawn shotgun:</b> <code>%cmd% shotgun<code>",
+          "<b>Spawn a kit:</b> <code>%cmd% first_aid_kit</code>",
+          "<b>Spawns a bile</b> <code>%cmd% vomitjar</code>",
+          "<b>Spawn adrendaline: </b> <code>%cmd% adrendaline</code>",
+          "Discover item ids by googling l4d2 item ids, or by typing give in console, then whatever autocompletes put into sm_give (give != sm_give)"
+        ],
+        "perm": "n"
+      },
+      {
+        "command": "give <weapon:string>",
+        "description": "Same as above, except will directly put them in your hand, or drops on ground if you have no free hand",
+        "examples": [
+          "<b>Spawn shotgun:</b> <code>%cmd% shotgun<code>",
+          "<b>Spawn a kit:</b> <code>%cmd% first_aid_kit</code>",
+          "<b>Spawns a bile</b> <code>%cmd% vomitjar</code>",
+          "<b>Spawn adrendaline: </b> <code>%cmd% adrendaline</code>",
+          "Discover item ids by googling l4d2 item ids, or by typing give in console, then whatever autocompletes put into sm_give (give != sm_give)"
+        ],
+        "perm": "n"
+      },
+      {
+        "command": "populations",
+        "description": "Will show the population of all uncommon special types (ex. clowns)"
+      },
+      {
+        "command": "status",
+        "description": "Will print out (very hard to understand text) information about every player, their full ping, user id, etc. Only can be used in console",
+        "hidePrefix": true,
+        "consoleOnly": true
+      },
+      {
+        "command": "execcfg honks.cfg",
+        "description": "Sets up honks (sets population to 40%, sets the max shove timeout up)",
+        "perm": "i"
+      },
+      {
+        "command": "playsound <player(s):players> <soundpath:string>",
+        "description": "Plays the specified soundpath to specified player(s). Automatically stops last sound",
+        "examples": [
+          "To play <b>mariokartmusic.mp3</b>: <code>%cmd% jackz custom/mariokartmusic.mp3</code>"
+        ],
+        "perm": "c"
+      },
+      {
+        "command": "stopsound <player(s):players> [soundpath:string]",
+        "description": "Stops the soundpath for the selected player(s). If blank will stop last played sound",
+        "perm": "c"
+      },
+      {
+        "command": "swap <player:player> [player:player]",
+        "description": "Swaps the two players' locations. If second player not filled in, it will be yourself.",
+        "perm": "c"
+      },
+      {
+        "command": "unreserve",
+        "description": "Removes the lobby reservation, which allows extra players to join (on improved+)",
+        "perm": "d"
+      },
+      {
+        "command": "settings",
+        "description": "Opens a menu to select clientside options, such as disallowing being a player hat"
+      }
+    ]
+  },
+  "hats": {
+    "name": "Hats & Entity Editing",
+    "commands": [
+      {
+        "command": "hat",
+        "description": "Will hat whatever entity / player you are looking at, or if hatted / hatting, return them to where you picked them up"
+      },
+      {
+        "command": "hat y[eet]",
+        "description": "Will yeet the hat forwards, if hat was a player, they will get a few seconds of invincibility"
+      },
+      {
+        "command": "hat p[lace]",
+        "description": "Instead of returning to where picked up, this will place the hat right infront of you."
+      },
+      {
+        "command": "hat c[ursor]",
+        "description": "Places the hat where your cursor is, this does not rotate the entity which can help in moving items"
+      },
+      {
+        "command": "hat a[ttach]",
+        "description": "Selects the location where the hat is mounted on you. "
+      },
+      {
+        "command": "edit cu[rsor]",
+        "description": "Starts editing entity you are looking at"
+      },
+      {
+        "command": "edit ca[ncel]",
+        "description": "Cancels entity edit or wall creation"
+      },
+      {
+        "command": "edit done",
+        "description": "Completes the wall creation or entity edit (can also use %prefix%edit build)"
+      },
+      {
+        "command": "edit copy",
+        "description": "Duplicates the entity you are currently editing, and starts editing the copy"
+      }
+    ]
+  }
+}

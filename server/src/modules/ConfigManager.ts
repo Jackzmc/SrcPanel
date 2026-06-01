@@ -1,8 +1,8 @@
 import path from 'path';
-import { PanelConfigProvider, PublicConfigMeta } from '../../../common-types/Panel.js';
+import type { PanelConfigProvider, PublicConfigMeta } from '@jzpanel/common/Panel';
 import yaml from 'yaml'
 import { readFile } from 'fs/promises';
-import { PanelConfig } from '../../../common-types/Panel';
+import type { PanelConfig } from '@jzpanel/common/Panel';
 import Logger from '../logger.js'
 const log = Logger.child({ name: "config" })
 
@@ -93,7 +93,7 @@ export default class ConfigManager {
     try {
       const newConfig = await ConfigManager.#ParseFile(this.#filepath)
       this.#config = newConfig
-    } catch (err) {
+    } catch (err: any) {
       log.error("reload failed: " + err.message)
     }
   }

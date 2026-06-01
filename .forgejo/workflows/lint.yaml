@@ -12,22 +12,24 @@ on:
 jobs:
   lint:
     name: Run linters
-    runs-on: ubuntu-full
+    runs-on: debian-latest
 
     steps:
       - name: Check out Git repository
-        uses: actions/checkout@v6
+        uses: https://git.jackz.me/actions/checkout@v4
 
       - name: 🔧 Install pnpm
-        uses: pnpm/action-setup@v6
+        uses: https://git.jackz.me/actions/pnpm-action-setup@v4
         with:
           version: 10
 
       - name: Install dependencies
         run: pnpm install
 
+      - name: Lint Common
+        run: cd common-types && pnpm tsc
       - name: Lint Server
         run: cd server && pnpm lint
-
       - name: Lint UI
-        run: cd ui && pnpm lint && pnpm tsc
+        run: cd nuxt && pnpm lint && pnpm tsc
+

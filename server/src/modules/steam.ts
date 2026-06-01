@@ -3,11 +3,11 @@ import path from 'path';
 import  { createWriteStream } from 'fs';
 import https from 'https';
 import { unlink } from 'fs/promises';
-import { WorkshopItem, SteamUserDetails } from '../../../common-types/Share.js'
+import { WorkshopItem, SteamUserDetails } from '@jzpanel/common/Share'
 import { EventEmitter } from 'node:events';
 import QuickLRU from 'quick-lru';
 import logger from '../logger.js'
-import CacheManager from './CacheManager';
+import CacheManager from './CacheManager.js';
 const log = logger.child({ name: "steam" })
 
 // How many bytes of progress to make before sending an update

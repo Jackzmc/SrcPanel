@@ -13,11 +13,12 @@ import UserManager from './modules/users/UserManager.js';
 import { readdir } from 'fs/promises';
 import path from 'path'
 import cors from '@fastify/cors'
+import fastifyUrlData from '@fastify/url-data'
 
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { FastifyPluginOptions } from 'fastify';
-import { CustomFastifySession } from '../../common-types/User.js'
+import { CustomFastifySession } from '@jzpanel/common/User'
 import User from './modules/users/User.js';
 import ConfigManager from './modules/ConfigManager.js';
 
@@ -25,6 +26,17 @@ import FastifyHelmet from '@fastify/helmet'
 import DiscussionManager from './modules/DiscussionManager.js';
 import TaskManager from './modules/tasks/TaskManager.js'
 import CacheManager from './modules/CacheManager.js'
+
+import MiddleManager from './middlewares/managers.js'
+import { FluxerBot } from './modules/FluxerBot.js'
+import { sleep } from './util.js'
+import { DataManagerInstance } from './modules/DataManager.js'
+import { getGlobalWriter, sendMetric } from './modules/metrics/influx.js'
+
+import './sentry.js'
+
+const START_TIME = performance.now()
+const FORCE_SHUTDOWN_TIMEOUT = 20_000
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -36,10 +48,12 @@ const app = Fastify({
   trustProxy: process.env.NODE_ENV === "production",
   loggerInstance
 })
+import * as Sentry from '@sentry/node' 
+Sentry.setupFastifyErrorHandler(app);
 
-// process.on('unhandledRejection', (reason: any, promise ) => {
-//   app.log.fatal('Unhandled promise rejection:\n' + reason.stack);
-// });
+process.on('unhandledRejection', (reason: any, promise ) => {
+  app.log.fatal('Unhandled promise rejection:\n' + reason.stack);
+});
 // app.log.trace("trace")
 // app.log.debug("debug")
 // app.log.info("info")
@@ -54,15 +68,27 @@ async function onSignal(signal: NodeJS.Signals) {
     return
   }
   hadSignal = true
-  app.log.info(`GOT SIGNAL ${signal} -- SHUTTING DOWN`)
+  
+  app.log.info(`SIGNAL ${signal} -- SHUTTING DOWN`)
   setTimeout(() => {
     app.log.error("Timed out, forcing shutdown")
-    process.exit(0)
-  }, 20_000)
-  await app.servers?.onShutdown()
+    process.exit(1)
+  }, FORCE_SHUTDOWN_TIMEOUT)
+  // Handle shutdown logic
+  
+  await Promise.allSettled([
+    await app.servers?.onShutdown(),
+    // flush & close influxdb global writer
+    (async() => {
+      const writer = getGlobalWriter()
+      if(writer) await writer.close()
+    })
+  ])
   app.log.info("Closing fastify")
   await app.close()
   process.exit(0)
+
+
 }
 ["SIGUSR2", "SIGINT", "SIGTERM"].map((signal) => {
   process.on(signal, onSignal)
@@ -71,6 +97,7 @@ async function onSignal(signal: NodeJS.Signals) {
 declare module 'fastify' {
   export interface FastifyInstance {
     db: Pool;
+    data: DataManagerInstance,
     steam: SteamAPI,
     authmngr: AuthManager,
     servers: ServerManager,
@@ -107,20 +134,20 @@ app.register(FastifyHelmet, {
 })
 app.register(FastifyEtag)
 app.register(fastifyWebsocket)
+app.register(fastifyUrlData)
 
-import MiddleManager from './middlewares/managers.js'
-import { FluxerBot } from './modules/FluxerBot.js'
-import { sleep } from './util.js'
-import { log } from 'console'
+import internalMetrics from './hooks/metrics.js'
+app.register(internalMetrics)
+
 app.register(MiddleManager)
   .then(async () => {
     scheduleActivityLogPartition(app);
 
-    if (hadSignal) return
-    if (process.env.FLUXER_API_TOKEN) {
+    if  (hadSignal) return
+    if  (process.env.FLUXER_API_TOKEN) {
       try {
-        const bot = new FluxerBot(app.servers, app.cache, process.env.FLUXER_API_TOKEN as string)
-        await bot.init()
+      const bot = new FluxerBot(app.servers, app.cache, process.env.FLUXER_API_TOKEN as string)
+      await bot.init()
       } catch (err) {
         app.log.error({}, "fluxer unavailable, error: ", err)
       }
@@ -216,21 +243,22 @@ app.register(MiddleManager)
         host: process.env.LISTEN_HOST,
         port: Number(process.env.LISTEN_PORT) || 8081
       })
+      sendMetric("startup_time_ms", performance.now() - START_TIME)
     } catch (err) {
       app.log.error(err)
       process.exit(1)
     }
     ready = true
-  })
+})
 
 async function setupNotFound(app: FastifyInstance) {
-  // HACK: app.rateLimit isn't defined until a period of time (usually 1-3ms)
-  // Despite the github issue about it needing to be await'd, it still occurs
-  const TIMEOUT = 1000
-  const time = Date.now()
-  while (!app.rateLimit || Date.now() - time > TIMEOUT) {
-    await sleep(10)
-  }
+    // HACK: app.rateLimit isn't defined until a period of time (usually 1-3ms)
+    // Despite the github issue about it needing to be await'd, it still occurs
+    const TIMEOUT = 1000
+    const time = Date.now()
+    while(!app.rateLimit || Date.now() - time > TIMEOUT) {
+        await sleep(10)
+    }
 
   // If exceed timeout, just let it crash from the error, just in case it magically worked anyway
   app.setNotFoundHandler({

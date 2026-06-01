@@ -1,7 +1,9 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
 import { OkPacket, RowDataPacket } from 'mysql2';
 import { NO_PERMISSION } from '../../responses.js';
+import { NamespacedMetric } from '../../modules/metrics/influx.js';
 
+const metric = new NamespacedMetric("notes")
 
 interface POSTNotesType {
     content: string
@@ -37,7 +39,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 }
             )
 
-
+            metric.send("created", 1)
             await req.user!.log(req.params.steamid, `%client% created note #%id% for %target%`, {
                 code: "notes.create",
                 metadata: {
@@ -106,7 +108,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 note
             )
 
-
+            metric.send("updated", 1)
             await req.user!.log(note.steamid, `%client% edited note #%id% for %target%`, {
                 code,
                 metadata: {
@@ -172,6 +174,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 [req.params.id]
             )
 
+            metric.send("deleted", 1)
             await req.user!.log(existing[0].steamid, `%client% deleted note #%id% for %target%`, {
                 code,
                 metadata: {

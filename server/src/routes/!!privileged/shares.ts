@@ -2,9 +2,9 @@ import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
 import FastifyMultipart from '@fastify/multipart'
 import { pipeline } from 'stream'
 import { promisify } from 'util'
-import { AddonCollectionInfo, AddonInfo, ChildWorkshopItem, DetailsResponse, WorkshopItem } from '../../../../common-types/Share.js';
+import { AddonCollectionInfo, AddonInfo, ChildWorkshopItem, DetailsResponse, WorkshopItem } from '@jzpanel/common/Share';
 import { NO_PERMISSION } from '../../responses.js';
-import { UserPrivilegeCode } from '../../../../common-types/Privileges.js';
+import { UserPrivilegeCode } from '@jzpanel/common/Privileges';
 import { createReadStream } from 'fs';
 import path from 'path';
 import assert from 'assert';
@@ -26,7 +26,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
   fastify.get('/workshop/:publishedfileid/details', async (req: FastifyRequest<{ Params: { publishedfileid: string } }>, reply): Promise<DetailsResponse> => {
     if (!req.user!.hasPermission("shares.addons.view")) return NO_PERMISSION(reply)
     const results = await fastify.steam.getItemDetails([req.params.publishedfileid])
-    if (results.length == 0) return { item: null }
+    if (results.length == 0) return { type: "none", item: null }
     const children = await fastify.steam.getCollectionChildren(req.params.publishedfileid)
     const item = {
       ...results[0],
@@ -409,6 +409,16 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
               }
               return detail
             })
+        }
+
+        if (details.length == 0) {
+          const payload = {
+            error: "No items to download",
+            code: "NO_ITEMS",
+            message: `No items were queued to download`
+          }
+          await send(payload, 400)
+          return
         }
 
 

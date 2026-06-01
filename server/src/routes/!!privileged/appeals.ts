@@ -1,5 +1,5 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
-import { APIBanFlags, BanAppealState } from '../../../../common-types/Ban.js';
+import { APIBanFlags, BanAppealState } from '@jzpanel/common/Ban';
 import { NO_PERMISSION } from '../../responses.js';
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
