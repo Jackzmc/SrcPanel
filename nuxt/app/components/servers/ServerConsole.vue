@@ -12,10 +12,15 @@
           text="No logs to show, new entries will appear here as they are received."
           class="text-neutral-300" />
       </div>
-      <span class="flex flex-col h-full text-wrap overflow-y-scroll">
+      <span 
+        class="flex flex-col h-full text-wrap overflow-y-scroll" 
+        ref="consoleElem"
+        @scroll="onScroll"
+      >
         <span v-for="(entry, i) in ws.logs.value" :key="i">
           {{ entry }}
         </span>
+        <div ref="scrollAnchor" />
       </span>
     </div>
     <!-- Console Input -->
@@ -60,6 +65,8 @@ const emit = defineEmits<{
   (e: 'log', msg: string): void
 }>()
 
+const SCROLL_THRESHOLD = 50 // px tolerance for "at bottom"
+
 const props = defineProps<{
   data: ServerDetailed,
   ws: WebsocketExport
@@ -82,6 +89,8 @@ const currentCommandName = computed(() => {
 let commandInput = ref<string>()
 let validCommands = ref<Set<string>>(new Set())
 let consoleElem = ref()
+let scrollAnchor = ref<HTMLElement>()
+let isAtBottom = ref(true)
 
 let commandHistory: string[] = []
 let historyIndex: number = -1 // from the bottom of list
@@ -97,10 +106,27 @@ function showHelp() {
   })
 }
 
+watch(
+  () => props.ws.logs.value.length,
+  () => {
+    jumpToBottom()
+  }
+)
+
+function onScroll() {
+  const el = consoleElem.value
+  if (!el) return
+  isAtBottom.value =
+    el.scrollHeight - el.scrollTop - el.clientHeight < SCROLL_THRESHOLD
+}
+
 function jumpToBottom() {
-  nextTick(() => {
-    consoleElem.value.scrollTop = consoleElem.value.scrollHeight;
-  })
+  if(isAtBottom.value) {
+    nextTick(() => {
+      scrollAnchor.value?.scrollIntoView({ behavior: 'smooth' })
+      // consoleElem.value.scrollTop = consoleElem.value.scrollHeight;
+    })
+  }
 }
 
 async function sendCommand() {
