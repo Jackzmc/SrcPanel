@@ -25,6 +25,12 @@ This project contains 3 separate parts:
 
 The server and its plugins only supports MariaDB, Postgres is unfortunately not supported at this time. 
 
+## Supporting
+
+If you want to show your support, I would appreciate it. 
+
+You can support me on [Github Sponsors](https://github.com/sponsors/Jackzmc) or [Ko-fi](https://ko-fi.com/jackzmc).
+
 ## License
 
 Everything in repo except for `sourcemod` folder, is licensed under the [GNU Affero General Public License v3.0](https://choosealicense.com/licenses/agpl-3.0/). 
