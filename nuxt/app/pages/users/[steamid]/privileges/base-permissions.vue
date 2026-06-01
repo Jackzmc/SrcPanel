@@ -26,10 +26,10 @@
     </div>
   </div>
   <Teleport to="#buttons">
-    <UButton color="success" leading-icon="lucide:save" @click="saveChanges" :disabled="!hasChanges">
+    <UButton v-if="hasChanges" color="success" leading-icon="lucide:save" @click="saveChanges" :disabled="adminErrors.length > 0">
       {{ props.data.admin ? 'Save Changes' : 'Grant Admin' }}
     </UButton>
-    <UButton color="warning" leading-icon="lucide:undo-2" @click="revertChanges"  :disabled="!hasChanges">
+    <UButton v-if="hasChanges" color="neutral" variant="outline" leading-icon="lucide:undo-2" @click="revertChanges">
       Revert Changes
     </UButton>
   </Teleport>
