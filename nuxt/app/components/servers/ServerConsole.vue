@@ -12,7 +12,7 @@
           text="No logs to show, new entries will appear here as they are received."
           class="text-neutral-300" />
       </div>
-      <span class="flex flex-col text-wrap">
+      <span class="flex flex-col h-full text-wrap overflow-y-scroll">
         <span v-for="(entry, i) in ws.logs.value" :key="i">
           {{ entry }}
         </span>
