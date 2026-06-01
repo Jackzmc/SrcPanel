@@ -13,7 +13,7 @@ import { type UserPrivilegeCode } from "@jzpanel/common/Privileges";
 const emit = defineEmits<{
   (e: 'add:code', code: UserPrivilegeCode): void,
   (e: 'del:code', code: UserPrivilegeCode): void,
-  (e: 'update:flag', flag: string, enabled: boolean): void,
+  (e: 'update:flags', flags: string): void,
 }>()
 
 const props = defineProps<{
@@ -23,7 +23,11 @@ const props = defineProps<{
 }>()
 
 function onFlagToggled(flag: string, enabled: boolean) {
-  emit('update:flag', flag, enabled)
+  if(enabled) {
+    emit('update:flags', (props.flags??'') + flag)
+  } else {
+    emit('update:flags', props.flags?.replace(flag, '') ?? '')
+  }
 }
 
 function onAdd(code: string) {

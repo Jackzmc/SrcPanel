@@ -30,7 +30,7 @@ export interface PromptInputOptions {
 export interface PromptAlertOptions {
   title: string,
   subtitle: string,
-  body: string,
+  body: string | VNode,
   okText?: string,
   okColor?: ButtonColor
 }

@@ -14,7 +14,7 @@
   </div>
   <Teleport to="#buttons">
     <UButton color="success" leading-icon="lucide:save" @click="saveChanges" :disabled="!hasChanges">
-      Save Changes
+      {{ props.data.admin ? 'Save Changes' : 'Grant Admin' }}
     </UButton>
     <UButton color="warning" leading-icon="lucide:undo-2" @click="revertChanges"  :disabled="!hasChanges">
       Revert Changes
@@ -65,12 +65,14 @@ function getResetData() {
   return JSON.parse(JSON.stringify(props.data.admin?.permissions.base))
 }
 
+
 async function saveChanges() {
-  if(addAdminErrors.value.length > 0) {
+  if(!props.data.admin && addAdminErrors.value.length > 0) {
     return alert({
       title: 'Unable to grant admin',
       subtitle: `${addAdminErrors.value.length} problems prevent you from continuing`,
-      body: addAdminErrors.value.join('\n *')
+      body: h('ul', { class: 'list-inside list-disc'}, addAdminErrors.value.map((line: string) => h('li', {}, line))),
+      okColor: 'error'
     })
   }
 
