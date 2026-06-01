@@ -1,4 +1,6 @@
-import { LazyModalsConfirmModal, LazyModalsInputModal } from "#components"
+import { LazyModalsConfirmModal, LazyModalsInputModal, LazyModalsAlertModal } from "#components"
+
+type ButtonColor = "primary" | "neutral" | "secondary" | "success" | "info" | "warning" | "error" | undefined
 
 export interface PromptConfirmOptions {
   title: string,
@@ -7,14 +9,12 @@ export interface PromptConfirmOptions {
   body?: string,
 
   okText?: string,
-  okColor?: "primary" | "neutral" | "secondary" | "success" | "info" | "warning" | "error" | undefined,
+  okColor?: ButtonColor,
   /** default true. set to false to hide ok button button */
   okShown?: boolean,
 
   cancelText?: string
-  cancelColor?: "primary" | "neutral" | "secondary" | "success" | "info" | "warning" | "error" | undefined,
-
-
+  cancelColor?: ButtonColor,
 }
 
 export interface PromptInputOptions {
@@ -27,10 +27,19 @@ export interface PromptInputOptions {
   type?: "number" | "text"
 }
 
+export interface PromptAlertOptions {
+  title: string,
+  subtitle: string,
+  body: string,
+  okText?: string,
+  okColor?: ButtonColor
+}
+
 export function useModal() {
   const overlay = useOverlay()
   const confirmModal = overlay.create(LazyModalsConfirmModal)
   const inputModal = overlay.create(LazyModalsInputModal)
+  const alertModal = overlay.create(LazyModalsAlertModal)
 
   // Modals return a value with emit('close', value
 
@@ -57,5 +66,11 @@ export function useModal() {
     return result
   }
 
-  return { promptConfirm, promptInput }
+  async function alert(options: PromptAlertOptions): Promise<undefined> {
+    const instance = alertModal.open(options)
+    const result = await instance.result
+    return result
+  }
+
+  return { promptConfirm, promptInput, alert }
 }
