@@ -8,13 +8,8 @@
         default-value="item-0"
         type="single"
       />
-      <div v-if="hasChanges" class="flex flex-col p-2 gap-2">
-        <UButton color="success" leading-icon="lucide:save" @click="saveChanges">
-          Save Changes
-        </UButton>
-        <UButton color="warning" leading-icon="lucide:undo-2" @click="revertChanges">
-          Revert Changes
-        </UButton>
+      <div v-if="hasChanges" class="flex flex-col p-2 gap-2" id="buttons">
+        
       </div>
     </div>
     <div class="flex-1 min-w-0">
