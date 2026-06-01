@@ -1,5 +1,18 @@
 <template>
   <div>
+    <UAlert v-if="adminErrors.length > 0" 
+      :title="data.admin ? 'Cannot edit admin due to the following reasons:' : 'Cannot grant admin due to the following reasons:'" 
+      color="error"
+      class="mb-1"
+    >
+      <template #description>
+        <ul class="list-disc list-inside">
+          <li v-for="error,i in adminErrors" :key="i">
+            {{ error }}
+          </li>
+        </ul>
+      </template>
+    </UAlert>
     <UFormField label="Base Immunity Level">
       <UInput v-model="editData.immunityLevel" type="number" :min="0" />
     </UFormField>
@@ -29,6 +42,7 @@ import PermissionsList from '@/components/users/permissions/PermissionsList.vue'
 
 const { alert } = useModal()
 const toast = useToast()
+const { user, hasPermission } = useAuth()
 
 const props = defineProps<{
   steamid: string
@@ -37,10 +51,13 @@ const props = defineProps<{
 
 // const { editData } = inject('editData')
 
-const addAdminErrors = computed(() => {
-  const list: string[] = [
-    "Not implemented"
-  ]
+const adminErrors = computed(() => {
+  const list: string[] = []
+  if(user.value && user.value.user.steamid === props.steamid) list.push("Cannot edit your own profile")
+  if(!hasPermission("admins.edit")) list.push("You lack the privileges to edit privileges")
+  if(props.data.admin && props.data.admin.permissions.immunityLevel < editData.value.immunityLevel) list.push("Immunity level cannot be equal or above to your current level")
+  if(props.data.user.bansCount > 0) list.push("Player has bans on record")
+  // TODO: add stats hours
   return list
 })
 
@@ -67,11 +84,11 @@ function getResetData() {
 
 
 async function saveChanges() {
-  if(!props.data.admin && addAdminErrors.value.length > 0) {
+  if(!props.data.admin && adminErrors.value.length > 0) {
     return alert({
       title: 'Unable to grant admin',
-      subtitle: `${addAdminErrors.value.length} problems prevent you from continuing`,
-      body: h('ul', { class: 'list-inside list-disc'}, addAdminErrors.value.map((line: string) => h('li', {}, line))),
+      subtitle: `${adminErrors.value.length} problems prevent you from continuing`,
+      body: h('ul', { class: 'list-inside list-disc'}, adminErrors.value.map((line: string) => h('li', {}, line))),
       okColor: 'error'
     })
   }

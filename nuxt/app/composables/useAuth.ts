@@ -1,3 +1,4 @@
+import type { UserPrivilegeCode } from "@jzpanel/common/Privileges"
 import type { ClientUserData } from "@jzpanel/common/User"
 
 export function useAuth() {
@@ -29,7 +30,11 @@ export function useAuth() {
     }
   }
 
+  function hasPermission(code: UserPrivilegeCode): boolean {
+    return user.value != null && user.value.permissions.codes.includes(code)
+  }
+
   const isLoggedIn = computed(() => user.value !== null)
 
-  return { user, privUser, isLoggedIn, fetchUser, logout, requireAuth }
+  return { user, privUser, isLoggedIn, fetchUser, logout, requireAuth, hasPermission }
 }
