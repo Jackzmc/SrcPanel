@@ -1,7 +1,7 @@
 <template>
   <table class="w-full border-collapse my-2">
     <tbody>
-      <tr v-for="(desc,flag) in FLAGS" :key="flag" class="border-b bg-gray-100">
+      <tr v-for="(desc,flag) in FLAGS" :key="flag" class="border-b bg-gray-100 dark:bg-gray-600">
         <th class="text-left px-5 py-2">{{ desc }}</th>
         <td v-if="edit">
           <UCheckbox :checked="flags && (hasRoot || flags.includes(flag))" label="Granted" size="lg" variant="card" class="bg-neutral-50" />
