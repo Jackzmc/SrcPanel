@@ -28,6 +28,6 @@
         "./User": "./dist/types/User.js"
     },
     "devDependencies": {
-        "typescript": "^5.9.3"
+        "typescript": "^6.0.0"
     }
 }
