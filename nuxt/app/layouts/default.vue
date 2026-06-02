@@ -1,11 +1,5 @@
 <template>
   <div>
-    <UBanner
-      icon="i-lucide-circle-alert"
-      color="warning"
-      title="Pre-release build - Features are not complete or are missing, bugs may occur, nothing is final."
-      :ui="{title:'whitespace-normal text-xs sm:text-sm',root:'py-2 sm:py-0'}"
-    />
     <SettingsModal v-if="settingsTab" @close="closeSettingsModal()" />
     <NavBar />
     <!-- Notification banners -->
