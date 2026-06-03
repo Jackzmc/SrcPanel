@@ -44,7 +44,7 @@
         <IconText v-else text="Error while submitting vote" leading-icon="lucide:x" class="text-error" />
       </p>
 
-      <div v-if="type == 'list'" class="flex justify-between items-end">
+      <div v-if="type == 'list'" class="flex flex-wrap justify-between items-end">
         <div>
           <UAvatarGroup v-if="discuss.responses.users" max="8">
             <UserComponent v-for="user in discuss.responses.users" :key="user.id" :user="user" hide-name />

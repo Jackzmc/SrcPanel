@@ -1,8 +1,8 @@
 <template>
   <div class="space-y-3">
     <UCard class="shadow-md">
-      <div class="flex justify-between items-end">
-        <div class="flex items-end gap-2 align-bottom">
+      <div class="flex flex-wrap justify-between items-end">
+        <div class="flex flex-wrap items-end gap-2 align-bottom">
           <slot name="bar-left" />
         </div>
         <div>
@@ -56,7 +56,7 @@ const columns = computed(() => {
       cell: ({row}) => h(UserComponent, {
         user: {
           steamid: row.original.steamid,
-          name: row.original.name,
+          name: row.original.name ?? undefined,
         },
         class: "text-primary font-bold"
       }),
