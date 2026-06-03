@@ -2,7 +2,7 @@
   <div>
     <Hero title="Shares" subtitle="" />
     <UContainer>
-      <div class="grid grid-cols-4 gap-4">
+      <div class="grid sm:grid-cols-4 grid-cols-1 gap-4">
         <ShareCard v-for="share in shares" :key="share.id" :share="share" />
       </div>
     </UContainer>
@@ -10,8 +10,9 @@
 </template>
 
 <script setup lang="ts">
-useHead({
-  title: "Shares"
+useSeoMeta({
+  title: "Shares",
+  description: 'Manage addons and files'
 })
 import { type ShareData } from '@jzpanel/common/Share'
 import ShareCard from '~/components/shares/ShareCard.vue'

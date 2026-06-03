@@ -1,7 +1,7 @@
 <template>
   <div>
     <Hero title="Audit Logs" />
-    <UContainer class="fluid grid grid-cols-4 gap-4">
+    <UContainer class="fluid grid grid-cols-1 sm:grid-cols-4 gap-4">
       <div class="col-span-3">
         <!-- TODO: check periodically for entries -->
 
@@ -27,7 +27,7 @@
         </ClientOnly>
         <!-- Main -->
         <template v-if="logData">
-          <b>id</b> {{ id }} <b>order</b> {{ order }} <b>current</b> {{ dataRange}} - <b>available</b> { lowest: {{ currentSource?.minId }}, highest: {{ currentSource?.maxId }} }
+          <!-- <b>id</b> {{ id }} <b>order</b> {{ order }} <b>current</b> {{ dataRange}} - <b>available</b> { lowest: {{ currentSource?.minId }}, highest: {{ currentSource?.maxId }} } -->
           <AuditTable v-if="logData.logs.length > 0" :entries="logData.logs" @find-nearby="findNearby" />
           <UCard v-else variant="subtle">
             <div class="p-6 text-center">
@@ -87,11 +87,11 @@
             <h3 class="text-lg py-2">{{ logData?.counts.queryRows  }} / <span class="font-bold">{{ (logData?.yearInfo?.count || 0).toLocaleString() }} entries</span></h3>
             <UFormField label="Search Client" :ui="{ label: 'font-semibold' }">
               <UInputMenu v-model="searchClient" v-model:search-term="searchUser" @input="() => searchUserExecuteDebounce()" ignore-filter type="text" leading-icon="lucide:user" placeholder="Search for player name or steamid" class="w-full"
-                :items="searchUserItems" clear value-key="value" autocomplete="autocomplete" />
+                :items="searchUserItems" clear value-key="value" autocomplete />
             </UFormField>
             <UFormField label="Search Target" :ui="{ label: 'font-semibold' }">
               <UInputMenu v-model="searchTarget" v-model:search-term="searchUser" @input="() => searchUserExecuteDebounce()" ignore-filter type="text" leading-icon="lucide:user" placeholder="Search for player name or steamid" class="w-full"
-                :items="searchUserItems" clear value-key="value" autocomplete="autocomplete" />
+                :items="searchUserItems" clear value-key="value" autocomplete />
             </UFormField>
             <UFormField label="Search Message" :ui="{ label: 'font-semibold' }">
               <UInput v-model="searchMessage" type="text" leading-icon="lucide:search" placeholder="Search by message content" class="w-full" />

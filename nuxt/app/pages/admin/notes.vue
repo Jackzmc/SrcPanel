@@ -2,8 +2,8 @@
   <div>
     <Hero title="Notes" subtitle="" />
     <UContainer class="fluid">
-      <div class="grid grid-cols-4 gap-2">
-        <div class="col-span-3">
+      <div class="grid grid-cols-0 sm:grid-cols-4 gap-2">
+        <div class="col-span-3 order-2 sm:order-1">
           <div class="flex justify-left px-4 mb-2">
             <UPagination
               v-model:page="page"
@@ -26,7 +26,7 @@
             />
           </div>
         </div>
-        <div>
+        <div class="order-1 sm:order-2">
           <UCard class="bg-light-blue">
             <h2 class="text-lg font-bold">
               Showing
@@ -130,6 +130,7 @@ const params = computed(() => {
 const { data, refresh } = await useAsyncData<APINotesResponse>(
   'notes',
   () => api(`/notes?${params.value.toString()}`),
+  { timeout: 10_000 }
 )
 
 const refreshDebounce = debounce(refresh, 500)

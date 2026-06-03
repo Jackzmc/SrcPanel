@@ -1,34 +1,35 @@
 <template>
-    <div>
-        <UContainer>
-            <div class="grid grid-cols-4 justify-between gap-4">
-                <div class="flex flex-col gap-2 col-span-3">
-                    <div v-for="map in CAMPAIGNS" :key="map.name" class="not-last:border-b border-y-neutral-400 pb-2">
-                        <h3 class="text-lg font-bold">
-                            {{ map.name }}
-                        </h3>
-                        <p class="flex items-start gap-4 text-muted text-sm">
-                            <span v-for="chapter in map.maps" :key="chapter">
-                                {{ chapter }}
-                            </span>
-                        </p>
-                    </div>
-                </div>
-                <div class="flex items-center flex-col gap-2 text-center">
-                    <UButton size="xl" leading-icon="lucide:dices" @click="random" variant="outline">Reroll</UButton>
-                    <UCard class="bg-light-blue w-full">
-                        <h3 class="text-md font-semibold">Random Map</h3>
-                        <h2 class="text-2xl font-bold p-4 my-2 border border-neutral-400 rounded-2xl">{{  randomMap.name }}</h2>
-                        <ul class="text-sm">
-                            <li v-for="map in randomMap.maps" :key="map" >
-                                {{ map }}
-                            </li>
-                        </ul>
-                    </UCard>
-                </div>
+  <div>
+    <UContainer>
+      <div class="grid justify-between grid-cols-0 sm:grid-cols-4 gap-4">
+        <div class="flex flex-col gap-2 col-span-3 sm:order-1 order-2">
+            <div v-for="map in CAMPAIGNS" :key="map.name" class="not-last:border-b border-y-neutral-400 pb-2">
+                <h3 class="text-lg font-bold">
+                    {{ map.name }}
+                </h3>
+                <p class="flex flex-wrap items-start gap-4 text-muted text-sm">
+                    <span v-for="chapter in map.maps" :key="chapter">
+                        {{ chapter }}
+                    </span>
+                </p>
             </div>
-        </UContainer>
-    </div>
+        </div>
+        <!-- Sidebar -->
+        <div class="flex items-center text-center flex-col gap-2  sm:order-2 order-1">
+            <UButton size="xl" leading-icon="lucide:dices" @click="random" variant="outline">Reroll</UButton>
+            <UCard class="bg-light-blue w-full">
+                <h3 class="text-md font-semibold">Random Map</h3>
+                <h2 class="text-2xl font-bold p-4 my-2 border border-neutral-400 rounded-2xl">{{  randomMap.name }}</h2>
+                <ul class="text-sm">
+                    <li v-for="map in randomMap.maps" :key="map">
+                        {{ map }}
+                    </li>
+                </ul>
+            </UCard>
+        </div>
+      </div>
+    </UContainer>
+  </div>
 </template>
 
 <script setup lang="ts">

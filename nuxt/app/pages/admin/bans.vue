@@ -2,8 +2,8 @@
   <div>
     <Hero title="Bans" subtitle="" />
     <UContainer class="fluid">
-      <div class="grid grid-cols-5 gap-2">
-        <div class="col-span-4">
+      <div class="grid grid-cols-0 sm:grid-cols-5 gap-2">
+        <div class="col-span-4 order-2 sm:order-1">
           <div class="flex justify-left px-4 mb-3">
             <UPagination
               v-model:page="page"
@@ -39,7 +39,7 @@
             </template>
           </UTable>
         </div>
-        <div>
+        <div class="order-1 sm:order-2">
           <UCard class="bg-light-blue ">
             <h2 class="text-lg font-bold">
               Showing

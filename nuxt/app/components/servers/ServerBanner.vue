@@ -1,6 +1,6 @@
 <template>
   <div class="bg-light-blue p-4 rounded-2xl">
-    <div class="flex justify-between">
+    <div class="flex flex-col sm:flex-row justify-between gap-1">
       <!-- Left side -->
       <div class="flex flex-col">
         <!-- Title/desc -->

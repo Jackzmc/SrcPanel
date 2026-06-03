@@ -1,6 +1,6 @@
 <template>
  <UContainer class="mt-3 bg-neutral-100 dark:bg-neutral-950 p-4 rounded-4xl" style="min-height: 600px">
-   <div class="grid grid-cols-3 gap-6">
+   <div class="grid grid-cols-1 gap-0 sm:grid-cols-3 sm:gap-6 ">
      <!-- left column -->
      <div class="col-span-2 flex flex-col gap-4">
       <div>

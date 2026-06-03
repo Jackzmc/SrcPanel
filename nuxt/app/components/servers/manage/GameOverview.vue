@@ -3,7 +3,7 @@
     body: '!p-4 !sm:p-6 mx-2 py-0 my-0 !py-1',
     footer: 'p-0! rounded-b-4xl' }
   ">
-    <div class="flex gap-4">
+    <div class="grid grid-rows sm:grid-cols-4 gap-0 sm:gap-4">
       <div  v-if="data.server.status.data" class="min-w-3/12 my-2 border-r border-r-gray-200">
         <h2 v-if="mapDetails?.name" class="text-sm font-bold text-nowrap">{{ mapDetails?.name }}</h2>
         <h2 v-else-if="mapDetails" class="text-sm font-bold text-nowrap">{{ mapDetails.officialMap ? 'Official Map' : 'Custom Map' }}</h2>
