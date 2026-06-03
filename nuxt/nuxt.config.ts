@@ -1,7 +1,6 @@
-import { resolve } from 'path'
 import { execSync } from 'child_process'
 
-const buildDate = new Date().toISOString()
+const buildDate = new Date().toLocaleString("en-US", { timeZone: 'UTC' })
 const buildCommit = (() => {
   try {
     return execSync('git rev-parse --short HEAD').toString().trim()
