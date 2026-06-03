@@ -44,7 +44,7 @@ declare const __BUILD_DATE__: string
 declare const __BUILD_COMMIT__: string
 
 const commit = __BUILD_COMMIT__
-const date = new Date(__BUILD_DATE__).toLocaleString()
+const date = __BUILD_DATE__
 
 const { steamOnline, notice } = await usePanelMeta()
 const route = useRoute()
