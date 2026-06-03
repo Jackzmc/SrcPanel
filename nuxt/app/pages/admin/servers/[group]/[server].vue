@@ -48,6 +48,10 @@ import GameOverview from '@/components/servers/manage/GameOverview.vue'
 
 const { group: groupId, server: serverId } = useRoute().params;
 
+const { requireAuth } = useAuth();
+
+await requireAuth();
+
 const { data, error } = await useFetch<ServerDetailed>(`/api/servers/${serverId}/data`, { key: 'servers.' + serverId });
 if (!data) throw createError({
   statusCode: 404,
