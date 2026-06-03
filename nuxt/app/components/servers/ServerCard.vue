@@ -77,7 +77,7 @@
         <UButton color="info" variant="outline" size="md">
           <a :href="'steam://connect/' + server.ip + '/' + server.port">Join</a>
         </UButton>
-        <UButton color="neutral" variant="outline" size="md">
+        <UButton v-if="isLoggedIn" color="neutral" variant="outline" size="md">
           <a :href="'/admin/servers/' + group.id + '/' + server.id">Manage</a>
         </UButton>
       </div>
@@ -102,6 +102,8 @@
 <script setup lang="ts">
 import type { APIListServersV1_Group, APIListServersV1_Server, GroupInfo, ServerInfo } from '@jzpanel/common/Server'
 import ClickCopy from '@/components/ClickCopy.vue'
+
+const { isLoggedIn } = useAuth()
 
 const props = defineProps<{
   group: GroupInfo | APIListServersV1_Group
