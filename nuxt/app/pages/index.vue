@@ -1,6 +1,6 @@
 <template>
   <UContainer class="py-6 fluid">
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+    <div class="grid grid-cols-1 sm:gap-6 sm:grid-cols-3">
       <div class="col-span-2">
         <div v-if="!groups&&pending" class="flex justify-center py-12">
           <UIcon name="i-lucide-loader-circle" class="animate-spin size-8" />
