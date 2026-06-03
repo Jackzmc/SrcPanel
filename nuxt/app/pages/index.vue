@@ -8,9 +8,12 @@
         <div v-else-if="error" class="py-12">
           <UAlert color="error" title="Failed to load servers" :description="error.message" />
         </div>
-        <ServersServerGroupList v-else-if="groups" :groups="groups" />
+        <template v-else-if="groups">
+          <ServerCardList v-if="viewMode == 'cards'" :groups="groups" />
+        </template>
       </div>
       <div class="space-y-4">
+        <!-- <UTabs v-model="viewMode" :items="tabs" value-key="value" /> -->
         <h2 class="text-xl font-semibold mb-4">
           FAQ
         </h2>
@@ -41,16 +44,33 @@
 </template>
 
 <script setup lang="ts">
+import type { APIListServersV1 } from '@jzpanel/common/Server'
+import ServerCardList from '~/components/servers/ServerCardList.vue'
+import type { TabsItem } from '@nuxt/ui'
+
 definePageMeta({
   title: 'Overview',
   description: 'Game server administration panel',
 })
-import type { APIListServersV1 } from '@jzpanel/common/Server'
 
 const REFRESH_INTERVAL = 1000 * 20
 
 const api = useApi()
+const route = useRoute()
+const router = useRouter()
 
+const tabs: TabsItem[] = [
+  { 
+    label: 'Cards',
+    value: 'cards',
+    icon: 'lucide:id-card'
+  },
+  {
+    label: 'Table',
+    value: 'table',
+    icon: 'lucide:table',
+  }
+]
 interface FAQEntry {
   title: string
   list: string[]
@@ -99,6 +119,15 @@ const { data: groups, pending, error, refresh } = await useAsyncData<APIListServ
   'servers',
   () => api('/servers')
 )
+
+const viewMode = computed({
+  get() {
+    return route.query.view ? route.query.view as string : 'cards'
+  },
+  set(mode) {
+    router.replace({ query: { ...route.query, view: mode }, params:  route.params })
+  }
+})
 
 onMounted(() => {
   setInterval(() => refresh(), REFRESH_INTERVAL)
