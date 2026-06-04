@@ -9,11 +9,11 @@
           <UAlert color="error" title="Failed to load servers" :description="error.message" />
         </div>
         <template v-else-if="groups">
-          <ServerCardList v-if="viewMode == 'cards'" :groups="groups" />
+          <ServerCardList :view="viewMode" :groups="groups" />
         </template>
       </div>
       <div class="space-y-4">
-        <!-- <UTabs v-model="viewMode" :items="tabs" value-key="value" /> -->
+        <UTabs v-model="viewMode" :items="tabs" value-key="value" />
         <h2 class="text-xl font-semibold mb-4">
           FAQ
         </h2>
@@ -122,7 +122,8 @@ const { data: groups, pending, error, refresh } = await useAsyncData<APIListServ
 
 const viewMode = computed({
   get() {
-    return route.query.view ? route.query.view as string : 'cards'
+    if(!route.query.view || (route.query.view !== 'cards' && route.query.view !== 'table')) return 'cards'
+    return route.query.view
   },
   set(mode) {
     router.replace({ query: { ...route.query, view: mode }, params:  route.params })

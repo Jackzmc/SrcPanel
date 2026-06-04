@@ -125,10 +125,11 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                     const admin = fastify.authmngr.getAdminExport(steamid2)
                     if(admin) {
                         await fastify.authmngr.loginUser(req, reply, admin, userDetails)
-                        req.log.info({ steamid: steamid2 }, 'user logged in via steam')
+                        req.log.info({ steamid: steamid2, returnTo }, 'user logged in via steam')
                         // if(setupStage == 1) {
                         //     await fastify.config.SetKV("first_time_setup.stage", FirstTimeSetupStage.SteamAdminCreated)
                         // }
+                        // TODO: return to /auth/return with ?return_to
                         return reply.redirect(returnTo)
                     } else {
                         throw new RouteError("UNAUTHORIZED", "Only admins can login to this panel")

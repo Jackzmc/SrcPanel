@@ -36,7 +36,7 @@ const { isLoggedIn } = useAuth()
 const route = useRoute()
 
 if(isLoggedIn.value) {
-    await navigate()
+    await navigateTo(route.query.return_to as string ?? '/')
 }
 
 const title = computed(() => {
@@ -60,8 +60,4 @@ useSeoMeta({
         noindex: true,
     }
 })
-
-async function navigate()  {
-    await navigateTo(route.query.return_to as string ?? '/')
-}
 </script>

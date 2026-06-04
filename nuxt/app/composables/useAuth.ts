@@ -9,7 +9,8 @@ export function useAuth() {
   async function fetchUser() {
     try {
       user.value = await useApi()<ClientUserData>('/auth/profile')
-    } catch {
+    } catch (e) {
+      console.error('profile fetch error', e)
       user.value = null
     }
   }
