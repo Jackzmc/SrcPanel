@@ -17,6 +17,7 @@
                         side: 'top',
                         sideOffset: 8
                     }"
+                    arrow
                 >
                     <code :class="['bg-inherit! p-0! text-muted!']">
                         <ClickCopy :text="createLobbyCommand" />
@@ -29,6 +30,7 @@
                         side: 'bottom',
                         sideOffset: 8
                     }"
+                    arrow
                 >
                     <code :class="['bg-inherit! p-0! text-muted!']">
                         <ClickCopy :text="connectCommand" />
@@ -39,11 +41,26 @@
         <td class="py-3">
             <div v-if="server.online" class="flex flex-col text-center">
                 <span>{{ server.status.data?.map }}</span>
-                <span>
-                    <span class="font-semibold">{{ server.status.data?.players.length }}</span>
-                    / 
-                    <span class="text-muted">{{ server.status.data?.maxplayers }}</span>
-                </span>
+                <UTooltip
+                    :ui="{
+                        content: 'h-full',
+                    }"
+                    arrow
+                >
+                    <template #content>
+                        <ul v-if="server.status.data && server.status.data.players.length > 0" class="list-inside list-disc">
+                            <li v-for="player,i in server.status.data.players" :key="i">
+                                {{ player }}
+                            </li>
+                        </ul>
+                        <p v-else>No players online</p>
+                    </template>
+                    <span>
+                        <span class="font-semibold">{{ server.status.data?.players.length }}</span>
+                        / 
+                        <span class="text-muted">{{ server.status.data?.maxplayers }}</span>
+                    </span>
+                </UTooltip>
             </div>
             <div v-else class="text-center text-error-400 dark:text-error-200">
                 <UIcon
