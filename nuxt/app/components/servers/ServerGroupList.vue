@@ -17,7 +17,6 @@
 </template>
 
 <script setup lang="ts">
-import type td from '#build/ui/prose/td.js';
 import type { APIListServersV1 } from '@jzpanel/common/Server'
 import ServerTable from './ServerTable.vue';
 
@@ -25,6 +24,6 @@ withDefaults(defineProps<{
   groups: APIListServersV1,
   view: "cards" | "table"
 }>(), {
-  view: "cards"
+  view: "table"
 })
 </script>

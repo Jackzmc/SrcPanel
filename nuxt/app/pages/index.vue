@@ -9,7 +9,7 @@
           <UAlert color="error" title="Failed to load servers" :description="error.message" />
         </div>
         <template v-else-if="groups">
-          <ServerCardList :view="viewMode" :groups="groups" />
+          <ServerGroupList :view="viewMode" :groups="groups" />
         </template>
       </div>
       <div class="space-y-4">
@@ -45,7 +45,7 @@
 
 <script setup lang="ts">
 import type { APIListServersV1 } from '@jzpanel/common/Server'
-import ServerCardList from '~/components/servers/ServerCardList.vue'
+import ServerGroupList from '~/components/servers/ServerGroupList.vue'
 import type { TabsItem } from '@nuxt/ui'
 
 definePageMeta({
@@ -122,7 +122,7 @@ const { data: groups, pending, error, refresh } = await useAsyncData<APIListServ
 
 const viewMode = computed({
   get() {
-    if(!route.query.view || (route.query.view !== 'cards' && route.query.view !== 'table')) return 'cards'
+    if(!route.query.view || (route.query.view !== 'cards' && route.query.view !== 'table')) return 'table'
     return route.query.view
   },
   set(mode) {
