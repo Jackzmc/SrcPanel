@@ -29,7 +29,7 @@
     <UFooter>
       <template #default>
         <p class="text-sm text-muted">
-          <b>jzPanel</b> v{{  pkg.version }}. Commit <b>{{ commit }}</b>. Built <b>{{ date }}</b>
+          <b>jzPanel</b> v{{  pkg.version }}. Commit <b>{{ commit }}</b>. Built <b>{{ date }} UTC</b>
         </p>
       </template>
     </UFooter>
