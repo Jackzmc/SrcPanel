@@ -4,7 +4,13 @@
     <UContainer class="fluid grid grid-cols-1 sm:grid-cols-4 gap-4">
       <div class="col-span-3">
         <!-- TODO: check periodically for entries -->
-
+        <!-- <pre>{{ JSON.stringify({
+            dataRange,
+            dataSource,
+            currentSource,
+            order,
+            id
+          }, null, 2) }}</pre> -->
         <!-- Top Loading -->
         <ClientOnly>
           <template v-if="logData && logData.logs.length > 0 && newerEntries > 0">
@@ -242,23 +248,23 @@ const { data: logData, refresh, status, error } = useLazyAsyncData<APILogQueryRe
     // avoid unnecessary sort by checking order.value for direction to push into
     startLoadingTime.value = Date.now()
     const queryUrl = `/logs/${order.value}/${id.value}?${query.value.toString()}`
-    console.debug('fetch', queryUrl)
-    const val: APILogQueryResult = await api(queryUrl)
+    console.debug('fetch url', queryUrl)
+    const newLogs: APILogQueryResult = await api(queryUrl)
 
-    console.debug(logData.value, val)
+    console.debug(logData.value, newLogs)
     // fullLogEntries.value = fullLogEntries.value.concat(val.logs)
     // Small little optimization, append to either top or bottom of list depending on order
-    console.debug('new results', val.logs.length, 'existing results', logData.value?.logs.length)
-    val.logs = mergeLogs(logData.value?.logs, val.logs, order.value)
+    console.debug('new results', newLogs.logs.length, 'existing results', logData.value?.logs.length)
+    newLogs.logs = mergeLogs(logData.value?.logs, newLogs.logs, order.value)
     requestAnimationFrame(() => {
       loadingSide.value = undefined
     })
     startLoadingTime.value = undefined
     
 
-    return val
+    return newLogs
   },
-  { server: false, timeout: 90_000 }
+  { server: false, timeout: 90_000, watch: undefined }
 )
 
 const logEntryIds = computed(() => {
@@ -267,17 +273,21 @@ const logEntryIds = computed(() => {
   )
 })
 
-function mergeLogs(source: LogEntry[] = [], newLogs: LogEntry[], direction: string) {
+function mergeLogs(existingLogs: LogEntry[] = [], newLogs: LogEntry[], direction: string) {
   // If direction is 'around', we just push and sort anyway
   // Logs are descending order
-  const logs = newLogs.filter(log => !logEntryIds.value.has(log.id))
+  console.log('merge', existingLogs.map(l => l.id), newLogs.map(l => l.id))
+  // Filter out any logs in newLogs that we already have
+  const filteredNewLogs = newLogs.filter(log => !logEntryIds.value.has(log.id))
+  console.log('filter', newLogs.map(l => l.id), filteredNewLogs.map(l => l.id))
   let buffer: LogEntry[]
   if(direction == 'before') {
     // Loading new entries on bottom, so they are older, append to front of list
-    buffer = [...logs, ...source]
+    buffer = [...existingLogs, ...filteredNewLogs, ]
   } else {
-    buffer = [...source, ...logs]
+    buffer = [...filteredNewLogs, ...existingLogs]
   }
+  console.log('buffer', buffer)
 
   // Keep under maximum
   // TODO: verify that we keep limit + 5 (buffer), so you see previous fetched entry + new
@@ -290,9 +300,9 @@ function mergeLogs(source: LogEntry[] = [], newLogs: LogEntry[], direction: stri
       buffer.splice(0, toRemove)
     }
   }
-
+  return buffer
   // Re-sort descending, ideally nothing changes
-  return buffer.sort((a,b) => b.timestamp - a.timestamp)
+  // return buffer.sort((a,b) => b.timestamp - a.timestamp)
 }
 
 function searchUserTransform(res: APIListPlayersResponse & { value: string }): InputMenuItem[] {
@@ -357,10 +367,11 @@ async function fetchDirection(dir: 'top' | 'bottom') {
     description: "No data source was found"
   })
 
-  console.debug('fetch', dir, )
+  console.debug('fetchDirection', dir)
   loadingSide.value = dir
-  id.value = (dir == 'top') ? dataRange.value.highest : dataRange.value.lowest
+  id.value = (dir === 'top') ? dataRange.value.highest : dataRange.value.lowest
   order.value = (dir == 'top') ? 'after' : 'before'
+  console.log('t', id.value)
   refresh()
 }
 
