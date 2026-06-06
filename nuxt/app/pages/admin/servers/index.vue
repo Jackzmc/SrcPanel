@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="bg-neutral-50 dark:bg-neutral-950 h-full pb-6">
     <StartServerModal v-if="createModalOpen" @close="createModalOpen = false" />
     <ListHelpModal v-if="helpModalOpen" @close="helpModalOpen = false" />
     <Hero title="Manage Servers" />
