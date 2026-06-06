@@ -206,7 +206,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     const tableName = ACTIVITY_LOG_TABLE_NAME
 
     const query = new QueryBuilder(tableName, "l")
-      .partition(req.query.source)
+      .partition(`p${req.query.source}`)
       .selectMultiple("id", "l.timestamp", "server", "type", "client", "target", "message", "metadata")
       .select("s1.last_name", "clientName")
       .select("s2.last_name", "targetName")
@@ -244,6 +244,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     }
 
     const startTime = Date.now()
+    console.log(query.buildUnsafe())
     const [rawLogs] = (await query.execute(fastify.db))
 
     let year = parseInt(req.query.source as string)

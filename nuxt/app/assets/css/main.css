@@ -1,6 +1,8 @@
 @import "tailwindcss";
 @import "@nuxt/ui";
 
+@source inline('bg-amber-200');
+
 :root:not(.dark) {
   --ui-warning: var(--ui-color-warning-400);
 }

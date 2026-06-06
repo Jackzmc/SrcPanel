@@ -45,8 +45,8 @@
             </div>
           </UCard>
         </template>
-        <UAlert v-else-if="error" color="error" title="Error fetching logs" :description="error?.message" />
-        <UCard v-else>
+        <UAlert v-if="error" color="error" title="Error fetching logs" :description="error?.message" class="mb-4" />
+        <UCard v-if="!logData" class="bg-light-blue">
           <div class="m-6 p-6 text-center">
             <h3 class="text-xl font-bold">
               <Icon name="i-lucide-loader-circle" class="animate-spin align-middle mb-1" />
@@ -147,7 +147,7 @@ import type { InputMenuItem, SelectItem } from '@nuxt/ui';
 
 const toast = useToast()
 /// How often to check for new entries
-const REFRESH_INTERVAL = 1000 * 60 * 2
+const REFRESH_INTERVAL = 1000 * 60 * 5
 /// Maximum amount to keep in buffer, entries in opposite direction removed
 const MAX_ENTRIES_IN_BUFFER = 50
 
@@ -165,7 +165,7 @@ const isClient = import.meta.client
 const route = useRoute()
 const router = useRouter()
 
-const { data, refresh: refreshMetaData } = useFetch<APILogData>("/api/logs/data", { key: "logs-data" })
+const { data, refresh: refreshMetaData } = await useFetch<APILogData>("/api/logs/data", { key: "logs-data" })
 
 const query = computed(() => {
   const params = new URLSearchParams()
@@ -206,18 +206,19 @@ const dataRange = computed(() => {
 })
 
 const loadingSide = ref<"bottom" | "top" | undefined>()
-const id = ref<number>(0)
-const order = ref<"before"|"after"|"around">("after")
+const order = ref<"before"|"after"|"around">("before")
 
 // Query parameters
-const aroundId = ref<number|undefined>(route.query.aroundId ? parseInt(route.query.aroundId as string) : undefined)
 const limit = ref<number>(route.query.limit ? parseInt(route.query.limit as string) : 10)
+const aroundId = ref<number|undefined>(route.query.aroundId ? parseInt(route.query.aroundId as string) : undefined)
 const dataSource = ref<string>(route.query.source as string || new Date().getFullYear().toString())
 const selectedTypes = ref<string[]>(route.query.types ? (route.query.types as string).split(',') : ["action","chat","state","quit","join","info"])
 const selectedSources = ref<string[]>(route.query.servers ? (route.query.servers as string).split(',') : (data.value?.servers ?? []))
 const searchClient = ref<string|undefined>(route.query.client as string)
 const searchTarget = ref<string|undefined>(route.query.target as string)
 const searchMessage = ref<string|undefined>(route.query.msg as string)
+
+const id = ref<number>(currentSource.value ? currentSource.value.maxId : 0)
 
 const searchUser = ref<string>("")
 
@@ -234,13 +235,15 @@ const startLoadingTime = ref<number|undefined>()
 const api = useApi()
 
 const { data: logData, refresh, status, error } = useLazyAsyncData<APILogQueryResult>(
-  () => `logs/${order.value}/${id.value}?${query.value.toString()}`,
+  () => `/logs/${order.value}/${id.value}?${query.value.toString()}`,
   async() => {
     console.debug('fetching', `order=${order.value} id=${id.value}`)
     // merge with prev result
     // avoid unnecessary sort by checking order.value for direction to push into
     startLoadingTime.value = Date.now()
-    const val: APILogQueryResult = await api(`/logs/${order.value}/${id.value}?${query.value.toString()}`)
+    const queryUrl = `/logs/${order.value}/${id.value}?${query.value.toString()}`
+    console.debug('fetch', queryUrl)
+    const val: APILogQueryResult = await api(queryUrl)
 
     console.debug(logData.value, val)
     // fullLogEntries.value = fullLogEntries.value.concat(val.logs)
@@ -251,10 +254,11 @@ const { data: logData, refresh, status, error } = useLazyAsyncData<APILogQueryRe
       loadingSide.value = undefined
     })
     startLoadingTime.value = undefined
+    
 
     return val
   },
-  { server: false, timeout: 60000 }
+  { server: false, timeout: 90_000 }
 )
 
 const logEntryIds = computed(() => {
