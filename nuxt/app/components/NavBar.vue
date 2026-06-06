@@ -8,11 +8,11 @@
     @update:open="s => open = s"
   >
     <template #title>
-      <strong :class="['font-sans text-2xl',openClassText]">JzPanel</strong>
+      <strong :class="['font-sans text-2xl',openClassText]">{{ appName }}</strong>
     </template>
 
     <template #left>
-      <strong :class="['font-sans text-2xl',openClassText]">JzPanel</strong>
+      <strong :class="['font-sans text-2xl',openClassText]">{{ appName }}</strong>
       <UNavigationMenu
         :items="ROUTES"
         popover
@@ -92,6 +92,7 @@ import type { NavigationMenuItem } from '@nuxt/ui/runtime/components/NavigationM
 const emit = defineEmits(["open-settings"])
 
 const { user, isLoggedIn, logout } = useAuth()
+const { appName } = useAppConfig()
 
 const docs = await queryCollection("docs").all()
 

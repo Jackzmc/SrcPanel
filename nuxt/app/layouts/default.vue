@@ -29,7 +29,7 @@
     <UFooter>
       <template #default>
         <p class="text-sm text-muted">
-          <b>jzPanel</b> v{{  pkg.version }}. Commit <b>{{ commit }}</b>. Built <b>{{ date }} UTC</b>
+          <b>{{ appName }}</b> v{{  pkg.version }}. Commit <b>{{ commit }}</b>. Built <b>{{ date }} UTC</b>
         </p>
       </template>
     </UFooter>
@@ -39,6 +39,8 @@
 <script setup lang="ts">
 import SettingsModal from '~/components/modals/SettingsModal.vue'
 import pkg from '../../package.json'
+
+const { appName } = useAppConfig()
 
 declare const __BUILD_DATE__: string
 declare const __BUILD_COMMIT__: string
@@ -55,7 +57,7 @@ const settingsTab = computed(() => {
 
 const hero = computed(() => {
   if(!route.meta.hero) return null
-  let title = route.meta.pageTitle ?? route.meta.title ?? "JzPanel"
+  let title = route.meta.pageTitle ?? route.meta.title ?? appName
   let subtitle = route.meta.description
   if(route.meta.hero != "default") {
     if(route.meta.hero.title) title = route.meta.hero.title

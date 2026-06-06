@@ -9,6 +9,7 @@
 
 <script setup lang="ts">
 const { user } = useAuth()
+const { appName } = useAppConfig()
 
 useHead({
   meta: [
@@ -22,10 +23,9 @@ useHead({
   }
 })
 
-const title = 'Jz Panel'
 const description = ''
 useSeoMeta({
-  titleTemplate: (chunk) => chunk ? `${chunk} | ${title}` : title,
+  titleTemplate: (chunk) => chunk ? `${chunk} | ${appName}` : appName,
   title: undefined, // let each page set its own
   description,
   ogTitle: undefined,
