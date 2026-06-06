@@ -1,17 +1,17 @@
 <template>
   <div class="flex flex-col gap-1">
-    <PlayerListEntry v-for="client in clients"
+    <LivePlayerListEntry v-for="client in liveClients"
       :key="client.userid"
       :server="data.server"
       :client="client"
     />
-    <p v-if="clients.length === 0" class="text-muted text-center p-4">No players connected</p>
+    <p v-if="liveClients.length === 0" class="text-muted text-center p-4">No players connected</p>
   </div>
 </template>
 
 <script setup lang="ts">
 import type { ServerDetailed } from '@jzpanel/common/Server';
-import PlayerListEntry from './PlayerListEntry.vue';
+import LivePlayerListEntry from './LivePlayerListEntry.vue';
 import type { WebsocketExport } from '~/composables/server/live.js';
 
 const props = defineProps<{
@@ -19,7 +19,7 @@ const props = defineProps<{
   ws: WebsocketExport
 }>()
 
-const clients = computed(() => {
+const liveClients = computed(() => {
   if(!props.ws.live.value?.clients) return []
   return Object.values(props.ws.live.value.clients)
     .map((client) => {
@@ -42,5 +42,10 @@ const clients = computed(() => {
 
       return a.team - b.team
     })
+})
+
+const playerNames = computed(() => {
+  if(liveClients.value) return liveClients.value.map(client => client.name)
+  return props.ws.serverStatus.value?.data?.players
 })
 </script>

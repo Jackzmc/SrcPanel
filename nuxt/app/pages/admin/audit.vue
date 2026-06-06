@@ -165,7 +165,7 @@ const isClient = import.meta.client
 const route = useRoute()
 const router = useRouter()
 
-const { data, refresh: refreshMetaData } = await useFetch<APILogData>("/api/logs/data", { key: "logs-data" })
+const { data, refresh: refreshMetaData } = useFetch<APILogData>("/api/logs/data", { key: "logs-data" })
 
 const query = computed(() => {
   const params = new URLSearchParams()

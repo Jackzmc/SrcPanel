@@ -4,24 +4,26 @@
     footer: 'p-0! rounded-b-4xl' }
   ">
     <div class="grid grid-rows sm:grid-cols-4 gap-0 sm:gap-4">
-      <div  v-if="data.server.status.data" class="min-w-3/12 my-2 border-r border-r-gray-200">
-        <h2 v-if="mapDetails?.name" class="text-sm font-bold text-nowrap">{{ mapDetails?.name }}</h2>
-        <h2 v-else-if="mapDetails" class="text-sm font-bold text-nowrap">{{ mapDetails.officialMap ? 'Official Map' : 'Custom Map' }}</h2>
-        <p class="text-xs text-nowrap">{{ mapDetails?.chapterName }} - Chapter {{ mapDetails?.chapterId }}</p>
-        <p v-if="mapDetails" class="text-xs text-nowrap"><code class="p-0! dark:bg-black!">{{ mapDetails.id }}</code></p>
-        <p v-else class="text-md text-muted">-</p>
-      </div>
-      <div v-else class="pr-20 my-2 border-r border-r-gray-200">
-        <h2 class="text-sm font-bold text-nowrap">No Data</h2>
-        <p class="text-xs text-nowrap">Server offline or unreachable</p>
-      </div>
+      <template v-if="isSourceGame">
+        <div v-if="mapDetails" class="min-w-3/12 my-2 border-r border-r-gray-200">
+          <h2 v-if="mapDetails?.name" class="text-sm font-bold text-nowrap">{{ mapDetails?.name }}</h2>
+          <h2 v-else-if="mapDetails" class="text-sm font-bold text-nowrap">{{ mapDetails.officialMap ? 'Official Map' : 'Custom Map' }}</h2>
+          <p class="text-xs text-nowrap">{{ mapDetails?.chapterName }} - Chapter {{ mapDetails?.chapterId }}</p>
+          <p v-if="mapDetails" class="text-xs text-nowrap"><code class="p-0! dark:bg-black!">{{ mapDetails.id }}</code></p>
+          <p v-else class="text-md text-muted">-</p>
+        </div>
+        <div v-else class="pr-20 my-2 border-r border-r-gray-200">
+          <h2 class="text-sm font-bold text-nowrap">No Data</h2>
+          <p class="text-xs text-nowrap">Server offline or unreachable</p>
+        </div>
+      </template>
       <div class="flex gap-6 items-center justify-between w-full">
-        <div class="flex flex-col items-center justify-center">
+        <div v-if="isSourceGame" class="flex flex-col items-center justify-center">
           <p class="text-xs text-muted">Gamemode</p>
           <p v-if="gamemode" class="font-semibold text-md">{{ gamemode}}</p>
           <p v-else class="text-md text-muted">-</p>
         </div>
-        <div class="flex flex-col items-center justify-center">
+        <div v-if="isSourceGame" class="flex flex-col items-center justify-center">
           <p class="text-xs text-muted">Difficulty</p>
           <p v-if="difficultyText" class="font-semibold text-md">{{ difficultyText }}</p>
           <p v-else class="text-md text-muted">-</p>
@@ -35,14 +37,15 @@
           <p v-else class="text-md text-muted">-</p>
         </div>
         <div class="flex flex-col items-center justify-center">
-          <p class="text-xs text-muted">In Voice</p>
-          <p class="font-semibold text-md">0</p>
+          <p class="text-xs text-muted min-w-12">In Voice</p>
+          <p v-if="props.ws.voiceMembers.value" class="font-semibold text-md text-center">{{ props.ws.voiceMembers.value.length }}</p>
+          <p v-else class="text-md text-muted">-</p>
         </div>
       </div>
     </div>
     <template #footer>
       <ClientOnly>
-        <div class="bg-cyan-100 text-cyan-800 dark:bg-cyan-900 dark:text-cyan-200 text-xs px-4 py-1 flex justify-between">
+        <div v-if="isSourceGame" class="bg-cyan-100 text-cyan-800 dark:bg-cyan-900 dark:text-cyan-200 text-xs px-4 py-1 flex justify-between">
           <div v-if="campaignDuration">
             Current campaign duration · {{ campaignDuration }}
           </div>
@@ -88,6 +91,11 @@ const difficultyText = computed(() => {
     case GameDifficulty.Expert: return "Expert"
   }
 })
+
+const isSourceGame = computed(() => {
+  return props.data.server.appid === 550
+})
+
 
 const gamemode = computed(() => {
   return props.ws.live.value?.game?.gamemode ?? props.data.server.status.data?.gamemode
