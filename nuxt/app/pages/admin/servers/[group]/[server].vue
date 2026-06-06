@@ -104,4 +104,9 @@ function onChangeServerSelected(id: string) {
 onMounted(() => {
   ws?.connect()
 })
+
+onUnmounted(() => {
+  ws?.disconnect()
+  
+})
 </script>
