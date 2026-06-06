@@ -206,6 +206,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     const tableName = ACTIVITY_LOG_TABLE_NAME
 
     const query = new QueryBuilder(tableName, "l")
+      .partition(req.query.source)
       .selectMultiple("id", "l.timestamp", "server", "type", "client", "target", "message", "metadata")
       .select("s1.last_name", "clientName")
       .select("s2.last_name", "targetName")
@@ -314,7 +315,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
       raw: process.env.NODE_ENV === "production" || req.query.raw ? null : {
         cache: yearInfo ? yearInfo[tableName] : undefined,
         query: query.buildUnsafe(),
-        tableName
+        tableName,
       }
     }
   })
