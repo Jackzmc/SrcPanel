@@ -1,11 +1,24 @@
 <template>
   <div class="flex flex-col gap-1">
-    <LivePlayerListEntry v-for="client in liveClients"
-      :key="client.userid"
-      :server="data.server"
-      :client="client"
-    />
-    <p v-if="liveClients.length === 0" class="text-muted text-center p-4">No players connected</p>
+    <template v-if="liveClients">
+      <LivePlayerListEntry v-for="client in liveClients"
+        :key="client.userid"
+        :server="data.server"
+        :client="client"
+      />
+    </template>
+    <template v-else-if="playerNames">
+      <h3 class="text-md font-semibold">Online Players</h3>
+      <p class="text-sm text-muted">No enhanced data available.</p>
+      <br>
+      <ul class="list-inside list-disc">
+        <li v-for="name in playerNames" :key="name">
+          {{ name }}
+        </li>
+      </ul>
+      <p v-if="playerNames.length === 0" class="text-muted text-center p-4">No players connected</p>
+    </template>
+    <p v-else class="text-muted text-center p-4">No server data available</p>
   </div>
 </template>
 
@@ -20,7 +33,7 @@ const props = defineProps<{
 }>()
 
 const liveClients = computed(() => {
-  if(!props.ws.live.value?.clients) return []
+  if(!props.ws.live.value?.clients) return undefined
   return Object.values(props.ws.live.value.clients)
     .map((client) => {
       let team = 0
