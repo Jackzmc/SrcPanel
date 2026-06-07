@@ -47,6 +47,8 @@
 
     <template #right>
       <UInput
+        v-model="searchQuery"
+        @keyup.enter="performSearch"
         variant="subtle"
         placeholder="Search"
         icon="ri:search-2-line"
@@ -103,6 +105,13 @@ const openClassText = computed(() => {
 const { routes, userDropdown } = useNavigation()
 
 const open = ref(false)
+const searchQuery = ref("")
+
+async function performSearch() {
+  if(!searchQuery.value) return
+  await navigateTo(`/search?q=${searchQuery.value}`)
+  searchQuery.value = ""
+}
 </script>
 
 <style>
