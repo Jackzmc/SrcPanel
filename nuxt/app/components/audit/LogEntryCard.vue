@@ -35,8 +35,8 @@
       <KeyValueRow label="Id">
         <div class="flex gap-2">
           <UBadge variant="outline"> #{{ entry.id }} </UBadge>
-          <UButton leading-icon="lucide:copy" color="neutral" variant="outline" @click="copyId">Share</UButton>
-          <UButton @click="findNearby">find nearby entries</UButton>
+          <UButton v-if="showActions" leading-icon="lucide:copy" color="neutral" variant="outline" @click="copyId">Share</UButton>
+          <UButton v-if="showActions" @click="findNearby">find nearby entries</UButton>
         </div>
       </KeyValueRow>
       <KeyValueRow label="Timestamp">
@@ -78,7 +78,8 @@ const emit = defineEmits<{
 const toast = useToast()
 
 const props = defineProps<{
-  entry: LogEntry
+  entry: LogEntry,
+  showActions?: boolean
 }>()
 
 const avatarUrl = computed(() => {

@@ -15,7 +15,7 @@
               Closes {{ expiresText }}
             </UBadge>
           </template>
-          <UBadge v-if="(discuss.flags & APIDiscussionFlags.RespondersPublic) && discuss.responses.totalCount > 0"class="align-right" leading-icon="lucide:users" variant="outline" color="neutral">
+          <UBadge v-if="(discuss.flags & APIDiscussionFlags.RespondersPublic) && discuss.responses && discuss.responses.totalCount > 0"class="align-right" leading-icon="lucide:users" variant="outline" color="neutral">
             <UTooltip text="Number of respondants">
               {{ discuss.responses.totalCount }}
             </UTooltip>
@@ -46,7 +46,7 @@
 
       <div v-if="type == 'list'" class="flex flex-wrap justify-between items-end">
         <div>
-          <UAvatarGroup v-if="discuss.responses.users" max="8">
+          <UAvatarGroup v-if="discuss.responses?.users" max="8">
             <UserComponent v-for="user in discuss.responses.users" :key="user.id" :user="user" hide-name />
           </UAvatarGroup>
         </div>
@@ -90,11 +90,11 @@ const options = computed(() => {
     const id = option.id.toString()
     return {
       option,
-      count: props.discuss.responses.counts[id] ?? {
+      count: props.discuss.responses?.counts[id] ?? {
         count: 0,
         percent: 0
       },
-      users: props.discuss.responses.users?.filter(user => user.choices?.includes(id))
+      users: props.discuss.responses?.users?.filter(user => user.choices?.includes(id))
     }
   })
 })
