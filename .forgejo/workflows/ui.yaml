@@ -6,6 +6,7 @@ on:
       - 'common-types/**'
       - '.forgejo/workflows/ui.yaml'
       - Dockerfile
+      - pnpm-*.yml
     # branches:
     #   - release
     #   - feat/*
