@@ -49,6 +49,7 @@ export default defineNuxtConfig({
   css: ['~/assets/css/main.css',],
 
   icon: {
+    localApiEndpoint: "/_nuxt_icon",
     serverBundle: {
       collections: ['lucide', 'ri', 'simple-icons'],
     },
