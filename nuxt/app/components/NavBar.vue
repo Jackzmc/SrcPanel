@@ -54,7 +54,10 @@
         icon="ri:search-2-line"
         class="hidden md:block"
       />
-      <UColorModeButton :class="[openClassText,'hover:light:text-muted']" />
+      <UTooltip text="Toggle light/dark mode">
+        <UColorModeButton :class="[openClassText,'hover:light:text-muted']" />
+      </UTooltip>
+      <NotificationsButton v-if="isLoggedIn" />
       <template v-if="isLoggedIn">
         <UDropdownMenu
           :items="userDropdown"
@@ -88,13 +91,12 @@
 </template>
 
 <script setup lang="ts">
-import type { DropdownMenuItem } from '@nuxt/ui/runtime/components/DropdownMenu.vue.js'
-import type { NavigationMenuItem } from '@nuxt/ui/runtime/components/NavigationMenu.vue.js'
 
 const emit = defineEmits(["open-settings"])
 
-const { user, isLoggedIn, logout } = useAuth()
+const { user, isLoggedIn } = useAuth()
 const { appName } = useAppConfig()
+
 
 const docs = await queryCollection("docs").all()
 

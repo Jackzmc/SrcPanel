@@ -29,7 +29,7 @@ export interface PromptInputOptions {
 
 export interface PromptAlertOptions {
   title: string,
-  subtitle: string,
+  subtitle?: string,
   body: string | VNode,
   okText?: string,
   okColor?: ButtonColor
@@ -66,10 +66,9 @@ export function useModal() {
     return result
   }
 
-  async function alert(options: PromptAlertOptions): Promise<undefined> {
+  async function alert(options: PromptAlertOptions): Promise<void> {
     const instance = alertModal.open(options)
-    const result = await instance.result
-    return result
+    await instance.result
   }
 
   return { promptConfirm, promptInput, alert }

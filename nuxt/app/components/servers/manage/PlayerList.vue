@@ -8,8 +8,7 @@
       />
     </template>
     <template v-else-if="playerNames">
-      <h3 class="text-md font-semibold">Online Players</h3>
-      <p class="text-sm text-muted">No enhanced data available.</p>
+      <h3 v-if="playerNames.length > 0" class="text-md font-semibold">Online Players</h3>
       <br>
       <ul class="list-inside list-disc">
         <li v-for="name in playerNames" :key="name">
