@@ -23,9 +23,10 @@
               </template>
             </UAlert>
             <a v-else @click="fetchDirection('top')" class="cursor-pointer">
-              <UAlert class="bg-light-blue text-black dark:text-white my-3 py-5 rounded-2xl" icon="lucide:info">
+              <UAlert v-if="newerEntries > 0" class="bg-light-blue text-black dark:text-white my-3 py-5 rounded-2xl" icon="lucide:info">
                 <template #description>
-                  <b>{{ newerEntries.toLocaleString() }}</b> new entries are available. Click here to load
+                  <b>{{ newerEntries.toLocaleString() }}</b> new entries are available. Click here to load.
+                  <p class="text-xs text-muted">Please note the new entry detection currently ignores filters and may be inaccurate</p>
                 </template>
               </UAlert>
             </a>

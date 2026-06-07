@@ -19,6 +19,7 @@ import yaml from 'yaml'
 import { loadShares } from '../shares/index.js';
 import { loadGroups } from './groups/index.js';
 import logger from '../../logger.js'
+import assert from 'assert';
 const log = logger.child({ name: "ServerManager" })
 const liveLog = log.child({ name: "ServerManager/Live" })
 
@@ -165,6 +166,7 @@ export default class ServerManager {
     this.#socketClients.set(clientHost, ps)
     
     client.on('data', async(buf) => {
+      if(typeof buf == "string") throw new Error("Invalid encoding")
       const packetReader = new BufferReader(buf)
       // If we aren't authenticate, read packet as an authentication packet and try to authenticate
       if(!ps.Authenticated) {

@@ -150,11 +150,11 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             steamid: req.params.steamid,
         }
 
-        const [ok] = await fastify.db.execute<OkPacket>(`
-            INSERT INTO bans (steamid, executor, reason, flags, public_message, expires, timestamp) 
+        const [ok] = await fastify.db.execute<OkPacket>(
+            `INSERT INTO bans (steamid, executor, reason, flags, public_message, expires, timestamp) 
             VALUES (:steamid, :executor, :reason, :flags, :public_message, :expires, UNIX_TIMESTAMP())`,
             {
-                executor: ban.executor,
+                executor: ban.executor!, // set above to current admin
                 reason: ban.reason ?? null,
                 flags: ban.flags ?? 0,
                 public_message: ban.public_message ?? null,
