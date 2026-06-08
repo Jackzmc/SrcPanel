@@ -30,6 +30,14 @@
     </template>
 
     <template #body>
+      <!-- Shown in mobile view only-->
+      <UInput
+        v-model="searchQuery"
+        @keyup.enter="performSearch"
+        placeholder="Search panel"
+        icon="ri:search-2-line"
+        class="mb-2"
+      />
       <UNavigationMenu
         :items="routes"
         popover
@@ -57,8 +65,10 @@
       <UTooltip text="Toggle light/dark mode">
         <UColorModeButton :class="[openClassText,'hover:light:text-muted']" />
       </UTooltip>
-      <NotificationsButton v-if="isLoggedIn" />
       <template v-if="isLoggedIn">
+        <NotificationsButton :class="[openClassText]" />
+        <!-- hacky spacer for mobile view, otherwise notifications btn doesn't show -->
+        <span class="invisible">spacer</span>
         <UDropdownMenu
           :items="userDropdown"
           :ui="{
