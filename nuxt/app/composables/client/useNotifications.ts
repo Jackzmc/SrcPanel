@@ -23,7 +23,7 @@ export function useNotifications() {
 
     async function clearNotifications() {
         const toast = useToast()
-        const result = await request("/api/auth/notifications", {
+        const result = await request<null>("/api/auth/notifications", {
             method: 'DELETE'
         }) 
         if('error' in result) {
