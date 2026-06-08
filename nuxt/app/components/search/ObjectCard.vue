@@ -1,7 +1,7 @@
 <template>
     <UCard
         class="bg-light-blue"
-        :ui="{ body: 'p-0! bg-white rounded-none', header: 'p-2!' }" 
+        :ui="{ body: 'p-0! bg-default rounded-none!', header: 'p-2!' }" 
     >   
         <template #header>
             <h3 class="text-lg font-semibold">
