@@ -1,7 +1,8 @@
 <template>
   <div class="mt-4 space-y-2">
     <div class="flex">
-      <UTabs :items="tabs" 
+      <UTabs
+:items="tabs" 
         variant="link" 
         :content="false" 
         :model-value="routeId"

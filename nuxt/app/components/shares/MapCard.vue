@@ -2,9 +2,13 @@
   <UCard :ui="{ header: 'p-0 m-0 px-0 sm:px-0', body: 'py-2 sm:py-2 px-3 sm:px-3' }">
     <template #header class="">
       <ULink :to="linkTo" class="text-primary">
-        <NuxtImg :src="map.workshop?.previewUrl" alt="Map Thumbnail"
+        <NuxtImg
+:src="map.workshop?.previewUrl"
+alt="Map Thumbnail"
           class="w-full object-cover aspect-square max-h-60"
-          placeholder loading="lazy" fetchpriority="low" />
+          placeholder
+loading="lazy"
+fetchpriority="low" />
       </ULink>
     </template>
     <h2 class="text-lg font-bold">
@@ -18,8 +22,11 @@
     <div class="grid grid-cols-2 mt-4">
       <IconText v-if="lastUpdatedText" leading-icon="lucide:clock" :text="lastUpdatedText" class="text-sm" tooltip="When addon last downloaded" />
       <IconText class="text-right" leading-icon="lucide:file" :text="formatSize(map.filesize ?? 0)" tooltip="Size of the addon" />
-      <div></div>
-      <IconText v-if="map.meta.chapterIds" class="text-right"  icon="lucide:book"
+      <div/>
+      <IconText
+v-if="map.meta.chapterIds"
+class="text-right"
+icon="lucide:book"
         :text="map.meta.chapterIds.length + ' chapters'"
         tooltip="Number of chapters in the map" />
     </div>

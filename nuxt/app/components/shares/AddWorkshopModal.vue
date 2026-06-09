@@ -7,14 +7,15 @@
             label="Enter workshop url or ID"
             :error="workshopUrlError"
           >
-            <UInput v-model="url"
-              @change="getWorkshopInfoDebounced"
+            <UInput
+v-model="url"
               class="w-full"
               size="lg"
               type="text"
               placeholder="https://steamcommunity.com/sharedfiles/filedetails/?id=######"
               :disabled="loadingState !== LoadingState.Idle"
               focus
+              @change="getWorkshopInfoDebounced"
             />
           </UFormField>
           <div v-if="loadingState == LoadingState.Loading" class="flex items-center gap-2" >
@@ -51,24 +52,27 @@
         <div v-else-if="step == Step.SelectAddons && workshopInfo && 'children' in workshopInfo">
           <h3 class="text-lg">Select addons in collection to download</h3>
 
-          <UCheckbox v-for="item in workshopInfo.children"
+          <UCheckbox
+v-for="item in workshopInfo.children"
             :key="item.publishedfileid"
-            :label="item.title"
             v-model="selectedAddons![item.publishedfileid]"
+            :label="item.title"
           />
         </div>
         <template v-else-if="step == Step.SelectDestinations && workshopInfo ">
           <h3 class="text-lg">Select destinations to install to</h3>
-          <UCheckbox v-for="data,id in share.destinations"
+          <UCheckbox
+v-for="data,id in share.destinations"
             :key="id"
-            :label="data.name ?? id"
             v-model="selectedDests[id]"
+            :label="data.name ?? id"
           />
         </template>
         <template v-else-if="step == Step.Download">
           <h3 class="text-lg font-semibold mb-1">Downloads</h3>
           <div class="flex flex-col gap-2">
-            <div v-for="(download, id) in downloads"
+            <div
+v-for="(download, id) in downloads"
               :key="id"
               class="flex items-center justify-between gap-2"
             >
@@ -90,7 +94,8 @@
 
           <h3 class="text-lg font-semibold mb-1 mt-2">Logs</h3>
           <div class="flex flex-col gap-2">
-            <div v-for="(entry, index) in downloadLog"
+            <div
+v-for="(entry, index) in downloadLog"
               :key="index"
             >
               <UBadge
@@ -108,22 +113,25 @@
     </template>
     <template #footer>
       <div class="flex justify-end gap-2">
-        <UButton @click="close" size="lg" variant="outline" color="neutral">Close</UButton>
-        <UButton v-if="step == Step.Input" :disabled="!url || !workshopInfo" @click="inputNext" size="lg">Next</UButton>
-        <UButton v-if="step == Step.SelectAddons"
+        <UButton size="lg" variant="outline" color="neutral" @click="close">Close</UButton>
+        <UButton v-if="step == Step.Input" :disabled="!url || !workshopInfo" size="lg" @click="inputNext">Next</UButton>
+        <UButton
+v-if="step == Step.SelectAddons"
           :disabled="!hasAnyItemSelected"
+          size="lg"
           @click="selectChildAddonsNext"
-          size="lg"
         >Next</UButton>
-        <UButton v-if="step == Step.SelectDestinations"
+        <UButton
+v-if="step == Step.SelectDestinations"
           :disabled="!hasAnyItemSelected"
+          size="lg"
           @click="selectDestinationsNext"
-          size="lg"
         >Next</UButton>
-        <UButton v-if="step == Step.Download"
+        <UButton
+v-if="step == Step.Download"
           :disabled="downloadState != DownloadState.Done"
-          @click="restartServers"
           size="lg"
+          @click="restartServers"
         >Restart Servers</UButton>
       </div>
     </template>

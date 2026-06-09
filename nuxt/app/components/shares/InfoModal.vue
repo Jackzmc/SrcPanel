@@ -1,5 +1,6 @@
 <template>
-  <UModal open
+  <UModal
+open
     :title="title"
     :description="description"
     @update:open="emit('close')"
@@ -11,7 +12,8 @@
         <h2 class="text-xl">Fetching workshop item details...</h2>
       </div>
       <div v-else-if="props.addon && active == 'overview'" class="space-y-2">
-        <UBanner v-if="props.addon.workshop && props.addon.workshop.deleted"
+        <UBanner
+v-if="props.addon.workshop && props.addon.workshop.deleted"
           color="warning"
           icon="i-lucide-triangle-alert"
           title="Addon may have been deleted since downloaded"
@@ -58,9 +60,7 @@
             </tr>
             <tr v-if="rating" class="border-b  odd:bg-gray-100 even:bg-white">
               <th>Rating</th>
-              <td v-if="rating">
-
-              </td>
+              <td v-if="rating"/>
               <td v-else>
                 Unavailable
               </td>
@@ -79,13 +79,15 @@
         <p class="text-md">Enable or disable addon for following share destinations</p>
         <p class="text-md">Any changes require the server to be restarted before they are applied</p>
 
-        <div class="py-2 px-4" v-if="checkedDestinations">
+        <div v-if="checkedDestinations" class="py-2 px-4">
           <!-- TODO: checkedDestinations, checkboxgroup -->
-          <UCheckbox v-for="(dest,id) in props.share.destinations" :key="id"
+          <UCheckbox
+v-for="(dest,id) in props.share.destinations"
+:key="id"
             v-model="checkedDestinations[id]"
-            @change="toggleDest(id, checkedDestinations[id]!)"
             :label="dest.name ?? id"
-             size="xl"
+            size="xl"
+             @change="toggleDest(id, checkedDestinations[id]!)"
           />
         </div>
 
@@ -98,7 +100,8 @@
       <div v-else-if="props.addon && active === 'actions'">
         <div class="grid grid-rows-1 gap-2 p-2">
           <UTooltip v-if="props.addon.workshop?.fileUrl" text="Download addon served by workshop. May be newer.">
-            <UButton leading-icon="lucide:download"
+            <UButton
+leading-icon="lucide:download"
               as="a"
               target="_blank"
               :href="props.addon.workshop.fileUrl"
@@ -107,7 +110,8 @@
             </UButton>
           </UTooltip>
           <UTooltip text="Download addon directly from panel">
-            <UButton leading-icon="lucide:download"
+            <UButton
+leading-icon="lucide:download"
               variant="outline"
               as="a"
               target="_blank"
@@ -117,7 +121,8 @@
             </UButton>
           </UTooltip>
           <UTooltip text="Delete addon">
-            <UButton leading-icon="lucide:trash"
+            <UButton
+leading-icon="lucide:trash"
               color="error"
               @click="deleteAddon"
             >

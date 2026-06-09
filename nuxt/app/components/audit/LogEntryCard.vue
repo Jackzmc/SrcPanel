@@ -23,7 +23,9 @@
         <UTooltip :text="expanded ? 'Click to hide details' : 'Click to show more details'">
           <UButton
             :leading-icon="expanded ? 'lucide:chevron-up' : 'lucide:chevron-down'"
-            variant="outline" color="neutral" size="xl"
+            variant="outline"
+color="neutral"
+size="xl"
             @click="expanded = !expanded"
           />
         </UTooltip>
@@ -63,8 +65,8 @@
 </template>
 
 <script setup lang="ts">
-import { type LogEntry } from '@jzpanel/common/Logs';
-import { type LogEntryUser } from '@jzpanel/common/logs'
+import type { LogEntry } from '@jzpanel/common/Logs';
+import type { LogEntryUser } from '@jzpanel/common/logs'
 import KeyValueTable from '../table/KeyValueTable.vue';
 import KeyValueRow from '../table/KeyValueRow.vue';
 import { formatDate, getRelDate } from '@jzpanel/common/format';
@@ -83,7 +85,7 @@ const props = defineProps<{
 }>()
 
 const avatarUrl = computed(() => {
-  let user = props.entry.client ?? props.entry.target
+  const user = props.entry.client ?? props.entry.target
   if(!user) return
   return `/api/users/${user}/avatar`
 })

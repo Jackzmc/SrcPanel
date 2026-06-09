@@ -24,8 +24,22 @@
               <span class="text-neutral-500 dark:text-neutral-300">(as {{ (props.discuss.flags & APIDiscussionFlags.CommentsPublic) ? user!.user.name : 'anonymous' }})</span>
             </h3>
           </div>
-          <UTextarea v-model="submitCommentText" placeholder="Your comment here..." :rows="5" required autocorrect tabindex="1" @keydown.enter.prevent.ctrl="submitComment" :disabled="submitCommentLoading" />
-          <UButton type="submit" class="w-fit" trailing-icon="lucide:send" :disabled="submitCommentText.length === 0" :loading="submitCommentLoading" tabindex="2">Submit Reply</UButton>
+          <UTextarea
+v-model="submitCommentText"
+placeholder="Your comment here..."
+:rows="5"
+required
+autocorrect
+tabindex="1"
+:disabled="submitCommentLoading"
+@keydown.enter.prevent.ctrl="submitComment" />
+          <UButton
+type="submit"
+class="w-fit"
+trailing-icon="lucide:send"
+:disabled="submitCommentText.length === 0"
+:loading="submitCommentLoading"
+tabindex="2">Submit Reply</UButton>
         </div>
       </UCard>
     </form>

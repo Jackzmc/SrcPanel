@@ -1,8 +1,10 @@
 <template>
     <UCard>
         <h3 class="text-lg font-bold">API Key</h3>
-        <IconText v-if="!data || status == 'pending'" 
-            leading-icon="lucide:loader-circle" leading-icon-class="animate-spin" 
+        <IconText
+v-if="!data || status == 'pending'" 
+            leading-icon="lucide:loader-circle"
+leading-icon-class="animate-spin" 
             text="Loading" 
         />
         <p v-else-if="!data.apikey" class="text-muted text-sm">
@@ -26,7 +28,8 @@
             </template>
             <div class="mt-1">
                 <UTooltip text="Generate a new API Key, invalidating any older key">
-                    <UButton leading-icon="lucide:rotate-ccw-key" 
+                    <UButton
+leading-icon="lucide:rotate-ccw-key" 
                         variant="outline" 
                         :loading="apikeyRolling"
                         @click="regenerate"

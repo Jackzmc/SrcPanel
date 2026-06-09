@@ -7,11 +7,12 @@
           layout="list"
           label="Drop files here"
           :description="'Accepts ' + accepts"
-          interactive dropzone
+          interactive
+          dropzone
           class="w-96 min-h-48"
           :accept="accepts"
         />
-        <br />
+        <br >
         <div v-if="selected">
           <UButton
             label="Upload"

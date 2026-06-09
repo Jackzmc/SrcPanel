@@ -16,7 +16,8 @@
       <!-- Status -->
       <span v-if="server.online && server.status.data" :class="['ml-auto text-s md:text-lg',cardTextColor]">
         <IconText leading-icon="lucide:users" >
-          <span :class="['font-semibold', {
+          <span
+:class="['font-semibold', {
             'text-black dark:text-white': server.online && server.status.data.players.length === 0,
             'text-info': server.status.data.players.length > 0
           }]">

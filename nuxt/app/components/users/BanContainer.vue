@@ -5,12 +5,25 @@
             <div class="flex flex-col gap-6">
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <UFormField label="Reason">
-                        <UTextarea v-model="editBan.reason" placeholder="Banned" class="w-full" size="lg" :rows="2" required :maxlen="255" />
+                        <UTextarea
+v-model="editBan.reason"
+placeholder="Banned"
+class="w-full"
+size="lg"
+:rows="2"
+required
+:maxlen="255" />
                         <p class="text-muted text-sm">Message will be shown to the user if no public reason is set</p>
                     </UFormField>
                     <UFormField label="Public Reason (Optional)">
-                        <UTextarea v-model="editBan.publicReason" placeholder="Optional reason to show to user instead of the private reason" 
-                            class="w-full" size="lg" :rows="2" :maxlen="255" :maxrows="3" />
+                        <UTextarea
+v-model="editBan.publicReason"
+placeholder="Optional reason to show to user instead of the private reason" 
+                            class="w-full"
+size="lg"
+:rows="2"
+:maxlen="255"
+:maxrows="3" />
                     </UFormField>
                 </div>
                 <UFormField label="Expires">
@@ -20,8 +33,11 @@
                         <UBadge v-else variant="soft" color="neutral" size="lg">Ban {{ hasExpiredEdit ? 'expired' : 'will expire' }} <b>{{ formatRelTime(editBan.expires) }}</b> on <b>{{ formatDate(editBan.expires)  }}</b></UBadge>
                     </div>
                     <div class="flex gap-1">
-                        <UButton v-for="option in expiresOptions" :key="option.value" 
-                            variant="outline" color="neutral"
+                        <UButton
+v-for="option in expiresOptions"
+:key="option.value" 
+                            variant="outline"
+color="neutral"
                             @click="extendExpires(option.value)"
                         >
                             {{ option.label }}
@@ -35,18 +51,22 @@
                     <p class="text-muted text-sm pb-2">Click the buttons to toggle option on or off</p>
                     <div class="flex flex-row gap-1">
                         <UTooltip text="Make the ban inactive">
-                            <UButton color="error" size="lg"
+                            <UButton
+color="error"
+size="lg"
                                 :variant="editBan.flags & APIBanFlags.Suspended ? 'solid' : 'outline'"  
-                                @click="toggleFlag(APIBanFlags.Suspended)"
                                 :leading-icon="editBan.flags & APIBanFlags.Suspended ? 'lucide:circle-check' : undefined"
+                                @click="toggleFlag(APIBanFlags.Suspended)"
                             >Suspend</UButton>
                         </UTooltip>
                         <UTooltip text="Ban by IP Address">
-                            <UButton color="neutral" size="lg"
+                            <UButton
+color="neutral"
+size="lg"
                                 :variant="editBan.flags & APIBanFlags.IPBan ? 'solid' : 'outline'"  
-                                @click="toggleFlag(APIBanFlags.IPBan)"
                                 :disabled="!editBan.ip"
                                 :leading-icon="editBan.flags & APIBanFlags.IPBan ? 'lucide:circle-check' : undefined"
+                                @click="toggleFlag(APIBanFlags.IPBan)"
                             >IP Ban</UButton>
                         </UTooltip>
                     </div>
@@ -56,10 +76,17 @@
             <template #footer>
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 items-center">
                     <div class="flex items-center col-span-2 gap-1">
-                        <UButton size="xl" class="my-2" :loading="saveActive" @click="saveOrAdd()" :disabled="!canSave">
+                        <UButton size="xl" class="my-2" :loading="saveActive" :disabled="!canSave" @click="saveOrAdd()">
                             {{ ban ? 'Save Changes' : 'Ban Player' }}
                         </UButton>
-                        <UButton size="xl" class="my-2" :loading="saveActive" @click="reset()" :disabled="hasChanges" variant="outline" color="neutral">Reset</UButton>
+                        <UButton
+size="xl"
+class="my-2"
+:loading="saveActive"
+:disabled="hasChanges"
+variant="outline"
+color="neutral"
+@click="reset()">Reset</UButton>
                     </div>
                     
                     <div v-if="ban" class="flex items-start">

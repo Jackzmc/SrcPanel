@@ -25,7 +25,7 @@
           <div class="flex justify-between">
             <h4 class="text-lg light:text-black">{{ option.label }}</h4>
             <UTooltip text="Remove option">
-              <UButton class="mt-2 cursor-pointer" size="sm" color="error" @click="emit('option:del', option.id)" leading-icon="lucide:trash" />
+              <UButton class="mt-2 cursor-pointer" size="sm" color="error" leading-icon="lucide:trash" @click="emit('option:del', option.id)" />
             </UTooltip>
           </div>
         </div>
@@ -41,7 +41,7 @@
 </template>
 
 <script setup lang="ts">
-import { type APIDiscussion, type APIDiscussionBase } from '@jzpanel/common/Discussions'
+import type { APIDiscussion, APIDiscussionBase } from '@jzpanel/common/Discussions'
 import EditText from './EditText.vue'
 
 const modal = useModal()

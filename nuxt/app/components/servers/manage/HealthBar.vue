@@ -1,19 +1,34 @@
 <template>
   <div class="flex gap-0">
-    <UProgress :modelValue="healthbar.perm.value" :min="0" :max="healthbar.perm.value" :color="color as any"
-      animation="elastic" class="rounded-none p-0 m-0 w-20"
+    <UProgress
+:model-value="healthbar.perm.value"
+:min="0"
+:max="healthbar.perm.value"
+:color="color as any"
+      animation="elastic"
+class="rounded-none p-0 m-0 w-20"
       :style="{ width: `${permWidth}%` }"
     />
     <!-- Width of both + perm width == 100 -->
     <template v-if="healthbar.temp">
       <!-- Always full, but width is based on how much temp health -->
-      <UProgress v-if="healthbar.temp.value > 0" :modelValue="100" :min="0" :max="100" :color="color as any"
-        animation="elastic" class="rounded-none p-0 m-0 opacity-50 temp-health"
+      <UProgress
+v-if="healthbar.temp.value > 0"
+:model-value="100"
+:min="0"
+:max="100"
+:color="color as any"
+        animation="elastic"
+class="rounded-none p-0 m-0 opacity-50 temp-health"
         :style="{ width: `${tempWidth}%` }"
       />
       <!-- Always empty, fills remaining space without temp-health styling -->
-      <UProgress :modelValue="0" :min="0" :max="100"
-      animation="elastic" class="rounded-none p-0 m-0 opacity-25 "
+      <UProgress
+:model-value="0"
+:min="0"
+:max="100"
+      animation="elastic"
+class="rounded-none p-0 m-0 opacity-25 "
       :style="{ width: `${tempEmptyWidth}%` }"
     />
     </template>

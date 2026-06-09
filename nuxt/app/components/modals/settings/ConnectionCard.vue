@@ -2,7 +2,7 @@
     <UCard :ui="{ body: 'py-2!' }">
         <div class="flex flex-row items-center justify-between">
             <div class="flex flex-row items-center gap-2 sm:gap-4">
-                <img :src="`/img/providers/${imageName}`" class="w-8 h-8" />
+                <img :src="`/img/providers/${imageName}`" class="w-8 h-8" >
                 <div>
                     <h3 class="text-lg font-bold">{{ name }}</h3>
                     <UBadge v-if="expired" color="error" variant="outline">Expired</UBadge>
@@ -14,12 +14,12 @@
             </div>
             <template v-if="!primary">
                 <template v-if="!data">
-                    <UButton @click="link()" class="hidden sm:block">Link Account</UButton>
-                    <UButton @click="link()" class="sm:hidden" size="sm">Link</UButton>
+                    <UButton class="hidden sm:block" @click="link()">Link Account</UButton>
+                    <UButton class="sm:hidden" size="sm" @click="link()">Link</UButton>
                 </template>
                 <template v-else>
-                    <UButton variant="outline" @click="unlink()" :loading="unlinking" class="hidden sm:block">Unlink Account</UButton>
-                    <UButton variant="outline" @click="unlink()" :loading="unlinking" size="sm" class="sm:hidden">Unlink</UButton>
+                    <UButton variant="outline" :loading="unlinking" class="hidden sm:block" @click="unlink()">Unlink Account</UButton>
+                    <UButton variant="outline" :loading="unlinking" size="sm" class="sm:hidden" @click="unlink()">Unlink</UButton>
                 </template>
 
             </template>

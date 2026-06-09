@@ -7,8 +7,12 @@
     class="sm:w-max max-w-none md:min-w-lg" 
   >
     <template #description>
-      <UTabs :items="tabs" :content="false" value-key="value" class="w-full" 
-        :modelValue="settingsTab"
+      <UTabs
+:items="tabs"
+:content="false"
+value-key="value"
+class="w-full" 
+        :model-value="settingsTab"
         @update:model-value="v => onSwitchTab(v)"
       />
     </template>
@@ -24,9 +28,7 @@
       </Transition>
     </template>
     <template #footer>
-      <div id="footer">
-
-      </div>
+      <div id="footer"/>
     </template>
   </UModal>
 </template>

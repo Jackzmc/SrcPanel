@@ -8,7 +8,7 @@
     <UFormField label="Search by name or Steam ID" :ui="{ label: 'font-bold' }">
       <UInput v-model="query" placeholder="STEAM_#:#:####### or name of player" class="w-100" size="lg" @input="searchDebounce" />
     </UFormField>
-    <UButton @click="search()" leading-icon="lucide:refresh-ccw" size="md" :loading="status == 'pending'">
+    <UButton leading-icon="lucide:refresh-ccw" size="md" :loading="status == 'pending'" @click="search()">
       Refresh
     </UButton>
    </template>

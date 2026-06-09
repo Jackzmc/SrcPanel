@@ -4,7 +4,7 @@
     <!-- <UBadge v-if="share.steamAppid" class="text-right">{{ share.steamAppid }}</UBadge> -->
 
     <h4 class="text-md font-semibold">Destinations</h4>
-    <div class="mt-2 flex flex-wrap gap-1" v-if="Object.keys(share.destinations).length > 0">
+    <div v-if="Object.keys(share.destinations).length > 0" class="mt-2 flex flex-wrap gap-1">
       <template v-for="_,id in share.destinations" :key="id" >
         <UBadge :label="id" color="neutral" variant="outline">
           {{ id }}
@@ -14,7 +14,7 @@
     <p v-else class="px-4 text-muted">No destinations</p>
 
     <h4 class="text-md font-semibold mt-2">Sources</h4>
-    <div class="mt-2 flex flex-wrap gap-1" v-if="enabledSources.length > 0">
+    <div v-if="enabledSources.length > 0" class="mt-2 flex flex-wrap gap-1">
       <template v-for="id in enabledSources" :key="id" >
         <UBadge color="neutral" variant="solid">
           {{ id.replace(/_/g, ' ') }}
@@ -27,7 +27,7 @@
 </template>
 
 <script setup lang="ts">
-import { type ShareData } from '@jzpanel/common/Share'
+import type { ShareData } from '@jzpanel/common/Share'
 
 const props = defineProps<{
   share: ShareData

@@ -8,6 +8,8 @@
 
 
 <script setup lang="ts">
+import * as Sentry from '@sentry/nuxt'
+
 const { user } = useAuth()
 const { appName } = useAppConfig()
 
@@ -31,8 +33,6 @@ useSeoMeta({
   ogTitle: undefined,
   ogDescription: description,
 })
-
-import * as Sentry from '@sentry/nuxt'
 if(user.value) Sentry.setUser({
   id: user.value.user.steamid,
   username: user.value.user.name,

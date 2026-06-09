@@ -3,11 +3,14 @@
     <template #header>
       <h3 class="text-lg font-bold">Recent Activity</h3>
     </template>
-    <UAlert v-if="error" color="error"
+    <UAlert
+      v-if="error"
+      color="error"
       title="Unable to retrieve activities"
       :description="errorMessage"
     />
-    <UCard v-else-if="isUnsupported"
+    <UCard
+v-else-if="isUnsupported"
       class="bg-sky-300 dark:bg-sky-500 my-1 mx-2 text-sm"
       :ui="{ body: 'p-4 md:p-4' }"
     >
@@ -22,19 +25,19 @@
       </UCard>
     </div>
     <div v-else class="mx-4">
-      <IconText leading-icon="lucide:loader-circle" leading-icon-class="animate-spin" text="Loading entries"></IconText>
+      <IconText leading-icon="lucide:loader-circle" leading-icon-class="animate-spin" text="Loading entries"/>
     </div>
   </UCard>
 </template>
 
 <script setup lang="ts">
 
+import type { LogEntry } from '@jzpanel/common/Logs'
 const REFRESH_INTERVAL_MS = 1000 * 60 * 5
 
 const props = defineProps<{
   serverId: string
 }>()
-import { type LogEntry } from '@jzpanel/common/Logs'
 const { data, error, refresh } = useLazyFetch<LogEntry[]>(
   `/api/servers/${props.serverId}/activities`,
   { key: 'servers.' + props.serverId + '.activities', immediate: true, server: false, timeout: 8_000 }

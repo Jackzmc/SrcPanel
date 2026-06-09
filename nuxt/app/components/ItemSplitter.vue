@@ -1,7 +1,7 @@
 <template>
     <!-- eslint-disable-next-line vue/no-multiple-template-root -->
     <template v-for="split in splitData">
-      <slot :data="split"></slot>
+      <slot :data="split"/>
     </template>
 </template>
 

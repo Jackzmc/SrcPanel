@@ -10,13 +10,17 @@
       <ServerBanner v-if="data&&ws" :data="data" :ws="ws" />
       <GameOverview v-if="data&&ws" :data="data" :ws="ws" />
 
-      <UTabs :default-value="activeTab" :items="tabs" :content="false" variant="pill"
-        @update:model-value="tab => navigateTo(`/admin/servers/${groupId}/${serverId}/${tab}`)"
+      <UTabs
+        :default-value="activeTab"
+        :items="tabs"
+        :content="false"
+        variant="pill"
         :ui="{
           list: 'bg-white dark:bg-black rounded-xl',
           label: 'data-[state=inactive]:text-black cursor-pointer',
           trigger: 'data-[state=active]:hover:bg-primary-400'
         }"
+        @update:model-value="tab => navigateTo(`/admin/servers/${groupId}/${serverId}/${tab}`)"
       />
 
       <NuxtPage v-if="data&&ws" :data="data" :ws="ws" :ws-status="ws.wsStatus" :logs="ws.logs" />
@@ -24,9 +28,11 @@
      <!-- right column -->
      <div class="col-span-1 flex flex-col gap-4 mt-10">
        <UFormField label="Select another server">
-         <USelect :items="servers" :default-value="serverId as string"
+         <USelect
+            :items="servers"
+            :default-value="serverId as string"
             class="w-full"
-            @update:modelValue="onChangeServerSelected"
+            @update:model-value="onChangeServerSelected"
           />
        </UFormField>
 
@@ -39,7 +45,7 @@
 </template>
 
 <script setup lang="ts">
-import { type APIListServersV1_Compact, type ServerDetailed } from '@jzpanel/common/Server';
+import type { APIListServersV1_Compact, ServerDetailed } from '@jzpanel/common/Server';
 import ServerBanner from '@/components/servers/ServerBanner.vue'
 import { useServerWebsocket, type WebsocketExportProp } from '~/composables/server/live';
 import RecentActivity from '@/components/servers/manage/RecentActivity.vue'
@@ -58,8 +64,6 @@ if (!data) throw createError({
   statusMessage: 'Server not found',
   fatal: true
 })
-
-import live2 from '@/assets/test_data/live/live2.json'
 
 // if(data.value) data.value.live = live2 as any
 useHead({

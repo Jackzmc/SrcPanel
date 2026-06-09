@@ -1,7 +1,9 @@
 <template>
   <table class="w-full border-collapse my-2">
     <tbody>
-      <GamePermissionRow v-for="(desc,flag) in FLAGS" :key="flag" 
+      <GamePermissionRow
+v-for="(desc,flag) in FLAGS"
+:key="flag" 
         :flag="flag" 
         :description="desc"
         :enabled="flags != undefined && flags.includes(flag)"

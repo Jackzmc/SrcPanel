@@ -1,7 +1,14 @@
 <template>
-  <UInput v-if="inEditState" @blur="toggle()" @keyup.enter="toggle()" v-model="model" autofocus class="w-80" :placeholder="inputPlaceholder" />
+  <UInput
+v-if="inEditState"
+v-model="model"
+autofocus
+class="w-80"
+:placeholder="inputPlaceholder"
+@blur="toggle()"
+@keyup.enter="toggle()" />
   <UTooltip v-else-if="model" text="Click text to start editing" @click="toggle()"><span>{{ model }}</span></UTooltip>
-  <UTooltip v-else text="Click text to start editing" @click="toggle()" class="text-muted"><em>{{ placeholder }}</em></UTooltip>
+  <UTooltip v-else text="Click text to start editing" class="text-muted" @click="toggle()"><em>{{ placeholder }}</em></UTooltip>
 </template>
 
 <script setup lang="ts">

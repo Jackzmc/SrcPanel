@@ -8,8 +8,12 @@
         <!-- Left Column-->
         <div class="col-span-2">
           <div class="flex flex-col gap-2">
-            <UTabs :items="items" :content="false" class="w-full" size="md"
-              v-model="view"
+            <UTabs
+v-model="view"
+:items="items"
+:content="false"
+class="w-full"
+              size="md"
             />
             <UInput v-model="searchQuery" class="w-full" icon="lucide:search" placeholder="Search for an item" />
           </div>
@@ -61,6 +65,10 @@
 </template>
 
 <script setup lang="ts">
+import type { SelectMenuItem, TabsItem } from '@nuxt/ui'
+import Hero from '~/components/Hero.vue'
+
+import FTT_DATA from '~/assets/data/ftt.json'
 useHead({
   title: "Feed The Trolls"
 })
@@ -69,10 +77,6 @@ definePageMeta({
   description: "The anti-troll arsenal",
   hero: "default"
 })
-import type { SelectMenuItem, TabsItem } from '@nuxt/ui'
-import Hero from '~/components/Hero.vue'
-
-import FTT_DATA from '~/assets/data/ftt.json'
 const data = FTT_DATA as FttData
 
 interface FttData {

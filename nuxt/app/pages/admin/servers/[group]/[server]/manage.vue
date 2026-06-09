@@ -2,7 +2,8 @@
   <div class="flex flex-col gap-4">
     <ServerConsole :data="data" :ws="ws" />
 
-    <UAlert color="warning"
+    <UAlert
+color="warning"
       title="Console gives you full acess to the server with every command available to you. Every command you use does not run as you but as the server. Access is a privilege and every command used is logged."
     />
   </div>

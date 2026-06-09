@@ -77,17 +77,17 @@
 </template>
 
 <script setup lang="ts">
+import Hero from '~/components/Hero.vue'
+import { parseCommandString } from '@jzpanel/common/cmds/util'
+import CmdArg from "~/components/commands/CmdArg.vue"
+
+import CVAR_DATA from '~/assets/data/cvars.json'
 definePageMeta({
   title: "Cvars - Tools",
   pageTitle: "Cvars",
   description: "All the cvars you may want to change up the gameplay",
   hero: "default"
 })
-import Hero from '~/components/Hero.vue'
-import { parseCommandString } from '@jzpanel/common/cmds/util'
-import CmdArg from "~/components/commands/CmdArg.vue"
-
-import CVAR_DATA from '~/assets/data/cvars.json'
 const cvars = CVAR_DATA as RawCvar[]
 
 interface RawCvar {

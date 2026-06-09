@@ -2,7 +2,11 @@
     <tr class="border-b bg-gray-100 dark:bg-gray-600">
         <th class="text-left px-5 py-2">{{ description }}</th>
         <td v-if="edit">
-            <UCheckbox label="Granted" size="lg" variant="card" class="bg-neutral-50" 
+            <UCheckbox
+label="Granted"
+size="lg"
+variant="card"
+class="bg-neutral-50" 
                 :checked="root || enabled" 
                 @change="emit('toggle', !enabled)"
             />

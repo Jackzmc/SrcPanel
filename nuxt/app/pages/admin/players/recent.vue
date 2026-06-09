@@ -9,7 +9,7 @@
     <UFormField label="Recently played on" :ui="{ label: 'font-bold' }">
       <USelectMenu v-model="server" :items="servers"  class="w-48" />
     </UFormField>
-    <UButton @click="refresh()" leading-icon="lucide:refresh-ccw" size="md" :loading="status == 'pending'">
+    <UButton leading-icon="lucide:refresh-ccw" size="md" :loading="status == 'pending'" @click="refresh()">
       Refresh
     </UButton>
   </template>

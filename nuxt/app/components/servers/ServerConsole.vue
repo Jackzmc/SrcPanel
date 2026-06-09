@@ -13,8 +13,8 @@
           class="text-neutral-300" />
       </div>
       <span 
-        class="flex flex-col h-full text-wrap overflow-x-hidden overflow-y-scroll" 
-        ref="consoleElem"
+        ref="consoleElem" 
+        class="flex flex-col h-full text-wrap overflow-x-hidden overflow-y-scroll"
         @scroll="onScroll"
       >
         <span v-for="(entry, i) in ws.logs.value" :key="i">
@@ -27,15 +27,15 @@
     <div class="flex">
       <UInput
         v-if="data.server.features.performCommands"
+        v-model="commandInput"
         type="text"
         leading-icon="lucide:terminal"
         placeholder="Enter a command"
         :loading="commandLoading"
         :disabled="ws.wsStatus.value != 'connected' || !data.server.features.performCommands"
-        v-model="commandInput"
         :ui="{ root: 'w-full', base: 'py-2 px-2 rounded-none bg-black dark:bg-blue-950 text-white' }"
-        @keyup.enter="sendCommand"
         :class="commandInputClass"
+        @keyup.enter="sendCommand"
       />
       <span v-else class='w-full text-sm py-2 px-2  bg-black dark:bg-blue-950 text-white border-2 border-neutral-500'>
         <IconText
@@ -44,10 +44,11 @@
           class="text-neutral-300"
         />
       </span>
-      <UButton leading-icon="lucide:circle-question-mark"
+      <UButton
+leading-icon="lucide:circle-question-mark"
          color="neutral"
-        @click="showHelp"
         class="cursor-help rounded-none"
+        @click="showHelp"
       >Help</UButton>
     </div>
   </div>
@@ -86,11 +87,11 @@ const currentCommandName = computed(() => {
   return split[0]?.toLowerCase()
 })
 
-let commandInput = ref<string>()
-let validCommands = ref<Set<string>>(new Set())
-let consoleElem = ref()
-let scrollAnchor = ref<HTMLElement>()
-let isAtBottom = ref(true)
+const commandInput = ref<string>()
+const validCommands = ref<Set<string>>(new Set())
+const consoleElem = ref()
+const scrollAnchor = ref<HTMLElement>()
+const isAtBottom = ref(true)
 
 let commandHistory: string[] = []
 let historyIndex: number = -1 // from the bottom of list

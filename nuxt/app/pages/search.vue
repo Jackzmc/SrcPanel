@@ -2,7 +2,14 @@
     <Hero :title="heroTitle" :subtitle="subtitle" />
     <UContainer>
         <UFormField class="p-2">
-            <UInput v-model="query" @keyup.enter="executeDebounce()" leading-icon="lucide:search" class="w-full" size="xl" placeholder="Search admin panel" />
+            <UInput
+                v-model="query"
+                leading-icon="lucide:search"
+                class="w-full"
+                size="xl"
+                placeholder="Search admin panel"
+                @keyup.enter="executeDebounce()" 
+            />
         </UFormField>
         <div class="p-1">
             <h2 class="text-xl font-bold mb-2">Pages

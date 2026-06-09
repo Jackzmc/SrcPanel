@@ -6,7 +6,8 @@
                 <p class="text-md text-neutral">
                     {{ notification.message }}
                 </p>
-                <UButton v-if="notification.link"
+                <UButton
+v-if="notification.link"
                     :href="notification.link"
                     :label="notification.link"
                     size="sm"

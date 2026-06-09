@@ -7,8 +7,7 @@
             <UInput v-model="query" placeholder="STEAM_#:#:####### or name of player" class="w-100" size="lg" />
           </UFormField>
         </div>
-        <div>
-        </div>
+        <div/>
       </div>
     </UCard>
 
@@ -17,7 +16,7 @@
     </div>
 
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-      <ItemSplitter v-if="filtered" :items-per-column="10" :data="filtered" v-slot="slotProps">
+      <ItemSplitter v-if="filtered" v-slot="slotProps" :items-per-column="10" :data="filtered">
         <div class="overflow-x-auto min-w-0">
           <UTable
             :data="slotProps.data"

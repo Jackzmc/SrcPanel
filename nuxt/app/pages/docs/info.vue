@@ -8,13 +8,13 @@
                     </div>
                     <div v-else-if="selectedItem">
                         <UCard>
-                            <h2 class="text-xl font-bold" :id="selectedItem.id">{{ selectedItem.title }}</h2>
+                            <h2 :id="selectedItem.id" class="text-xl font-bold">{{ selectedItem.title }}</h2>
                             <ContentRenderer :value="selectedItem" />
                         </UCard>
                     </div>
                     <template v-else>
                         <UCard v-for="entry in filteredItems" :key="entry.id">
-                            <h2 class="text-xl font-bold" :id="entry.id">{{ entry.title }}</h2>
+                            <h2 :id="entry.id" class="text-xl font-bold">{{ entry.title }}</h2>
                             <ContentRenderer :value="entry" />
                         </UCard>
                     </template>
@@ -34,14 +34,14 @@
 </template>
 
 <script setup lang="ts">
+import type { NavigationMenuItem } from '@nuxt/ui';
+import type { DocsRulesCollectionItem } from '@nuxt/content'
 definePageMeta({
     title: "Rules & Procedures - Docs",
     pageTitle: "Rules & Procedures",
     description: "Because it's necessary",
     hero: "default"
 })
-import type { NavigationMenuItem } from '@nuxt/ui';
-import type { DocsRulesCollectionItem } from '@nuxt/content'
 
 const route = useRoute()
 

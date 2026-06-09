@@ -3,7 +3,9 @@
     <div
       class="flex items-center gap-2 py-2"
     >
-      <img :src="imageSrc" alt="character"
+      <img
+:src="imageSrc"
+alt="character"
         :class="['w-12 h-12 rounded-full border-sold', {
           'opacity-50': !client.isAlive,
           'border-error': !client.isAlive,
@@ -11,7 +13,7 @@
           'border': client.isAlive,
           ' border-black': client.isAlive
         }]"
-      />
+      >
       <!-- TODO: add btn for details / actions -->
       <div class="flex flex-col w-full gap-1">
         <!-- Only show for survivors / infected. Spectators are 'alive' so need to filter-->
@@ -44,9 +46,11 @@
             </span>
             <UBadge v-else size="xs" color="error">Dead</UBadge>
             <UTooltip text="Show details">
-              <UButton size="xs" variant="outline" :leading-icon="showDetails ? 'lucide:chevron-up' : 'lucide:chevron-down'"
-                @click="showDetails = !showDetails">
-              </UButton>
+              <UButton
+size="xs"
+variant="outline"
+:leading-icon="showDetails ? 'lucide:chevron-up' : 'lucide:chevron-down'"
+                @click="showDetails = !showDetails"/>
             </UTooltip>
           </span>
         </div>

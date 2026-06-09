@@ -10,7 +10,8 @@
                       <UBadge>New Note</UBadge>
                   </div>
                   <UserComponent :user="user!.user" class='font-bold text-primary' hide-tooltip />
-                  <UTextarea v-model="newNoteContent"
+                  <UTextarea
+v-model="newNoteContent"
                     placeholder="Enter note content" 
                     icon="lucide:quote" 
                     :maxlen="255" 
@@ -26,7 +27,8 @@
               </UButton>
           </div>
       </UCard>
-      <NoteCard v-for="note in data?.notes" 
+      <NoteCard
+v-for="note in data?.notes" 
         :key="note.id" 
         :note="note" 
         @refresh="refresh()"
@@ -36,7 +38,7 @@
 </template>
 
 <script setup lang="ts">
-import { type APICreateNoteResponse, type APIListUserNotes, type APINotesResponse } from '@jzpanel/common/Note';
+import type { APICreateNoteResponse, APIListUserNotes, APINotesResponse } from '@jzpanel/common/Note';
 import type { APIUserDetails } from '@jzpanel/common/User'
 import NoteCard from '~/components/users/NoteCard.vue';
 

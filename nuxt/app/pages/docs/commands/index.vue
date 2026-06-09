@@ -14,7 +14,7 @@
             </h3>
             <ul>
               <li v-for="(cmd, i) in group.commands" :key="i">
-                <button @click="showCmd(cmd)" class="p-1 hover:bg-neutral-100 hover:dark:text-black w-full text-left cursor-pointer">
+                <button class="p-1 hover:bg-neutral-100 hover:dark:text-black w-full text-left cursor-pointer" @click="showCmd(cmd)">
                   <strong>
                     <CmdNode :cmd="cmd" :prefix="cmdPrefix"/>
                   </strong>
@@ -113,12 +113,6 @@
 </template>
 
 <script setup lang="ts">
-definePageMeta({
-  title: 'Commands - Tools',
-  pageTitle: 'Commands',
-  description: "All the information to have fun, and manage those troublemakers",
-  hero: "default"
-})
 import CmdArg from '~/components/commands/CmdArg.vue'
 import CmdNode from '~/components/commands/CmdNode.vue'
 import type { SelectItem } from '@nuxt/ui'
@@ -126,6 +120,12 @@ import { parseCommand, type Command } from '@jzpanel/common/cmds/util'
 import type { CommandGroups } from '@jzpanel/common/cmds/data'
 
 import CMD_DATA from '~/assets/data/commands.json'
+definePageMeta({
+  title: 'Commands - Tools',
+  pageTitle: 'Commands',
+  description: "All the information to have fun, and manage those troublemakers",
+  hero: "default"
+})
 const groups = CMD_DATA as CommandGroups
 
 const VISIBILITIES: SelectItem[] = [

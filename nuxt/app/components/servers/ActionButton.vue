@@ -1,8 +1,10 @@
 <template>
   <UTooltip :text="props.action.description">
-    <UButton v-if="!props.action.isHidden || props.showHidden"
+    <UButton
+v-if="!props.action.isHidden || props.showHidden"
       class="cursor-pointer"
-      :variant="attrs.variant" :color="attrs.color"
+      :variant="attrs.variant"
+:color="attrs.color"
       :style="{'background-color': props.action.color}"
       :size="size"
       :loading="loading"

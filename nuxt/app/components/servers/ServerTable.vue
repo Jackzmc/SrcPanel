@@ -8,8 +8,11 @@
             </tr>
         </thead>
         <tbody>
-            <ServerTableRow v-for="server in group.servers" :key="server.id" 
-                :group="group" :server="server"
+            <ServerTableRow
+v-for="server in group.servers"
+:key="server.id" 
+                :group="group"
+:server="server"
             />
         </tbody>
     </table>

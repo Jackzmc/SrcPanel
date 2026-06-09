@@ -1,7 +1,13 @@
 <template>
   <UPopover v-if="!hideTooltip" mode="hover" :open-delay="200" @update:open="onPopover">
     <ULink :to="steamid2 ? { path: `/users/${id}`, query: { returnTo: route.fullPath } } : undefined" class="flex items-center gap-1.5">
-      <UAvatar v-if="!hideAvatar && clientAvatarSrc" :src="clientAvatarSrc" :alt="props.user.name ?? id!" :size="size" loading="lazy" :as="{ img: 'img' }"  />
+      <UAvatar
+v-if="!hideAvatar && clientAvatarSrc"
+:src="clientAvatarSrc"
+:alt="props.user.name ?? id!"
+:size="size"
+loading="lazy"
+:as="{ img: 'img' }"  />
       <span v-if="!hideName" :class="nameClass">{{ props.user.name || id }}</span>
     </ULink>
     <template #content>
@@ -45,7 +51,7 @@
                   </span>
                 </div>
               </template>
-              <UAlert color="error" v-else leading-icon="lucide:triange-alert" description="Could not fetch user details" />
+              <UAlert v-else color="error" leading-icon="lucide:triange-alert" description="Could not fetch user details" />
             </div>
             <div v-else>
               <Icon name="i-lucide-loader-circle" class="animate-spin align-middle mb-1" />
@@ -59,7 +65,13 @@
 
   <!-- No tooltip variant -->
   <ULink v-else :to="steamid2 ? { path: `/users/${id}`, query: { returnTo: route.fullPath } } : undefined" class="flex items-center gap-1.5">
-    <UAvatar v-if="!hideAvatar && clientAvatarSrc" :src="clientAvatarSrc" :alt="props.user.name ?? id!" size="md" loading="lazy" :as="{ img: 'img' }"  />
+    <UAvatar
+v-if="!hideAvatar && clientAvatarSrc"
+:src="clientAvatarSrc"
+:alt="props.user.name ?? id!"
+size="md"
+loading="lazy"
+:as="{ img: 'img' }"  />
     <span v-if="!hideName" :class="nameClass">{{ props.user.name || id }}</span>
   </ULink>
 </template>

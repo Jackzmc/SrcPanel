@@ -1,8 +1,12 @@
 <template>
   <DiscussSettingsEntry :label="label" :value="value">
-    <UTabs :items="items" :content="false" class="w-full" size="sm"
-      @update:modelValue="onTabSelected"
-      :defaultValue="defaultValue"
+    <UTabs
+:items="items"
+:content="false"
+class="w-full"
+size="sm"
+      :default-value="defaultValue"
+      @update:model-value="onTabSelected"
     />
   </DiscussSettingsEntry>
 </template>

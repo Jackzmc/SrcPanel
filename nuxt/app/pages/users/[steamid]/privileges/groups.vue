@@ -1,7 +1,13 @@
 <template>
   <div>
     <UAlert v-if="error" color="error" title="Error while getting admin groups" :description="error.message" />
-    <UTable v-else :data="groups" :columns="columns" checkable v-model:row-selection="rowSelection" :getRowId="(row) => row.id.toString()">
+    <UTable
+v-else
+v-model:row-selection="rowSelection"
+:data="groups"
+:columns="columns"
+checkable
+:get-row-id="(row) => row.id.toString()">
       <template #expanded="{ row }">
         <PermissionsList :codes="row.original.codes" :flags="row.original.flags" />
       </template>
@@ -13,6 +19,8 @@
 import { FLAGS, type APIListAdminGroupsResponse, type APIUserDetails } from '@jzpanel/common/User'
 import PermissionsList from "@/components/users/permissions/PermissionsList.vue"
 import type { TableColumn } from '@nuxt/ui';
+
+import UCheckbox from '@nuxt/ui/components/Checkbox.vue'
 
 const emit = defineEmits<{
   (e: 'changes', state: boolean ): void
@@ -49,8 +57,6 @@ const hasChanges = computed(() => {
 watch(hasChanges, () => {
   emit("changes", hasChanges.value)
 })
-
-import UCheckbox from '@nuxt/ui/components/Checkbox.vue'
 const columns: TableColumn<APIListAdminGroupsResponse['groups'][0]>[] = [
   {
     id: 'select',

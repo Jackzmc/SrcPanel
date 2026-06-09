@@ -6,7 +6,7 @@
     aria-describedby="Alert Modal"
   >
     <template v-if="body" #body>
-      <component v-if="isVNode" :is="body" />
+      <component :is="body" v-if="isVNode" />
       <span v-else v-html="body" />
     </template>
     <template #footer>

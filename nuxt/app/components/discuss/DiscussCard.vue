@@ -30,7 +30,9 @@
       <p class="text-sm">{{ discuss.description }}</p>
 
       <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-4 py-4">
-        <DiscussChoice v-for="entry in options" :key="entry.option.id"
+        <DiscussChoice
+v-for="entry in options"
+:key="entry.option.id"
           :entry="entry"
           :type="discuss.type"
           :editable="type == 'edit'"

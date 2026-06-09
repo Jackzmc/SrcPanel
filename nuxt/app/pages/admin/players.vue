@@ -2,7 +2,8 @@
   <div>
     <Hero :title="tab.title" />
     <UContainer>
-      <UTabs class="mt-4"
+      <UTabs
+class="mt-4"
         :items="tabs"
         :model-value="tabId"
         @update:model-value="tab => navigateTo(`/admin/players/${tab}`)"

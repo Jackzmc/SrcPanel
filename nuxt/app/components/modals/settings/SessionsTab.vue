@@ -1,13 +1,16 @@
 <template>
-    <UTable v-if="data" 
+    <UTable
+v-if="data" 
+        ref="table" 
         :data="data.sessions" 
-        :columns="sessionsColumns" 
+        :columns="sessionsColumns"
         checkable
-        ref="table"
         :ui="{ td: 'p-0 py-2 px-3', th: 'py-1 px-3' }"
     />
-    <IconText v-else
-      leading-icon="lucide:loader-circle" leading-icon-class="animate-spin" 
+    <IconText
+v-else
+      leading-icon="lucide:loader-circle"
+leading-icon-class="animate-spin" 
       class="p-6 text-center" 
       text="Loading sessions" 
     />

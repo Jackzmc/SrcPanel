@@ -22,7 +22,7 @@
                 </h3>
               </template>
             </UAlert>
-            <a v-else @click="fetchDirection('top')" class="cursor-pointer">
+            <a v-else class="cursor-pointer" @click="fetchDirection('top')">
               <UAlert v-if="newerEntries > 0" class="bg-light-blue text-black dark:text-white my-3 py-5 rounded-2xl" icon="lucide:info">
                 <template #description>
                   <b>{{ newerEntries.toLocaleString() }}</b> new entries are available. Click here to load.
@@ -43,9 +43,9 @@
               </h3>
               <p class="text-md">
                 Adjust the filters and search options,
-                <br />or change the data source that's selected
+                <br >or change the data source that's selected
               </p>
-              <br />
+              <br >
               <div class="text-center">
                 <USelect v-model="dataSource" :items="dataSources" :loading="!dataSources" class="w-30" />
               </div>
@@ -61,7 +61,7 @@
             </h3>
             <p class="text-lg">This could take a few moments</p>
             <ClientOnly>
-              <br />
+              <br >
               <p class="text-lg">{{ fetchTimeElapsed }}</p>
             </ClientOnly>
           </div>
@@ -93,12 +93,34 @@
           <div class="space-y-2">
             <h3 class="text-lg py-2">{{ logData?.counts.queryRows  }} / <span class="font-bold">{{ (logData?.yearInfo?.count || 0).toLocaleString() }} entries</span></h3>
             <UFormField label="Search Client" :ui="{ label: 'font-semibold' }">
-              <UInputMenu v-model="searchClient" v-model:search-term="searchUser" @input="() => searchUserExecuteDebounce()" ignore-filter type="text" leading-icon="lucide:user" placeholder="Search for player name or steamid" class="w-full"
-                :items="searchUserItems" clear value-key="value" autocomplete />
+              <UInputMenu
+v-model="searchClient"
+v-model:search-term="searchUser"
+ignore-filter
+type="text"
+leading-icon="lucide:user"
+placeholder="Search for player name or steamid"
+class="w-full"
+:items="searchUserItems"
+                clear
+value-key="value"
+autocomplete
+@input="() => searchUserExecuteDebounce()" />
             </UFormField>
             <UFormField label="Search Target" :ui="{ label: 'font-semibold' }">
-              <UInputMenu v-model="searchTarget" v-model:search-term="searchUser" @input="() => searchUserExecuteDebounce()" ignore-filter type="text" leading-icon="lucide:user" placeholder="Search for player name or steamid" class="w-full"
-                :items="searchUserItems" clear value-key="value" autocomplete />
+              <UInputMenu
+v-model="searchTarget"
+v-model:search-term="searchUser"
+ignore-filter
+type="text"
+leading-icon="lucide:user"
+placeholder="Search for player name or steamid"
+class="w-full"
+:items="searchUserItems"
+                clear
+value-key="value"
+autocomplete
+@input="() => searchUserExecuteDebounce()" />
             </UFormField>
             <UFormField label="Search Message" :ui="{ label: 'font-semibold' }">
               <UInput v-model="searchMessage" type="text" leading-icon="lucide:search" placeholder="Search by message content" class="w-full" />
@@ -107,7 +129,13 @@
               <USelectMenu v-model="selectedTypes" class="w-full" multiple :items="TYPES" />
             </UFormField>
             <UFormField label="Enabled Sources" :ui="{ label: 'font-semibold' }">
-              <USelectMenu v-model="selectedSources" :loading="!data" :items="data?.servers" class="w-full" :disabled="!data" multiple />
+              <USelectMenu
+v-model="selectedSources"
+:loading="!data"
+:items="data?.servers"
+class="w-full"
+:disabled="!data"
+multiple />
             </UFormField>
             <div class="flex justify-between gap-2">
               <UFormField label="Around Id" :ui="{ label: 'font-semibold' }">
@@ -118,7 +146,7 @@
               </UFormField>
             </div>
             <UFormField class="mt-4">
-              <UButton @click="refresh()" leading-icon="lucide:refresh-cw" :loading="!isClient || status == 'pending'" size="lg" class="w-full">Refresh</UButton>
+              <UButton leading-icon="lucide:refresh-cw" :loading="!isClient || status == 'pending'" size="lg" class="w-full" @click="refresh()">Refresh</UButton>
             </UFormField>
           </div>
         </UCard>
@@ -141,16 +169,16 @@
 </template>
 
 <script setup lang="ts">
-useHead({
-  title: "Audit Logs"
-})
 import Hero from '@/components/Hero.vue';
 import AuditTable from '@/components/audit/AuditTable.vue'
-import { type APILogData, type APILogQueryResult, type LogEntry } from '@jzpanel/common/Logs';
+import type { APILogData, APILogQueryResult, LogEntry } from '@jzpanel/common/Logs';
 import { TYPE_MAP } from '#shared/types/logs'
 import type { APIListPlayersResponse } from '@jzpanel/common/User';
 import { debounce } from '@jzpanel/common/util'
 import type { InputMenuItem, SelectItem } from '@nuxt/ui';
+useHead({
+  title: "Audit Logs"
+})
 
 const toast = useToast()
 /// How often to check for new entries

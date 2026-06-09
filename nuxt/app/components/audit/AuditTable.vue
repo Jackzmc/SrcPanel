@@ -1,5 +1,7 @@
 <template>
-  <LogEntryCard v-for="log in entries" :key="log.id" 
+  <LogEntryCard
+v-for="log in entries"
+:key="log.id" 
     :entry="log" 
     show-actions
     @find-nearby="(id: number) => emit('find-nearby', id)"

@@ -8,7 +8,9 @@
             <NuxtLink to="/discuss" class="text-md text-primary">← Back to discussions list (cancel)</NuxtLink>
           </div>
           <p>Click on the discussion title or description to add or change the text.</p>
-          <DiscussCardEdit :discuss="editDiscuss" type="edit"
+          <DiscussCardEdit
+:discuss="editDiscuss"
+type="edit"
             @option:add="onAddOption"
             @option:del="onRemoveOption"
           />
@@ -22,12 +24,17 @@
             <DiscussSettingsEntry label="Type">
               <USelect v-model="editDiscuss.type" :items="discussionTypes" class="w-60" />
             </DiscussSettingsEntry>
-            <DiscussSettingsFlagEntry label="Respondants"
-              :flags="editDiscuss.flags" :items="respondantsOptions"
+            <DiscussSettingsFlagEntry
+label="Respondants"
+              :flags="editDiscuss.flags"
+:items="respondantsOptions"
               @update:flags="i => editDiscuss.flags = i"
             />
-            <DiscussSettingsFlagEntry v-show="editDiscuss.flags & APIDiscussionFlags.RespondersPublic" label="Responses"
-              :flags="editDiscuss.flags" :items="responsesOptions"
+            <DiscussSettingsFlagEntry
+v-show="editDiscuss.flags & APIDiscussionFlags.RespondersPublic"
+label="Responses"
+              :flags="editDiscuss.flags"
+:items="responsesOptions"
               @update:flags="i => editDiscuss.flags = i"
             />
             <DiscussSettingsEntry label="Closes">
@@ -36,7 +43,9 @@
                   {{ formatDate(editDiscuss.closedAt) }}
                 </span>
                 <span v-else>Never</span>
-                <UPopover modal :content="{
+                <UPopover
+modal
+:content="{
                   align: 'center',
                   side: 'bottom',
                 }">
@@ -45,20 +54,24 @@
                   <template #content>
                       <div class="flex justify-center pt-2 px-2 gap-2">
                         <UInputDate v-model="expiresDate" />
-                        <UButton @click="setExpiresDate()" size="sm" :variant="expiresDate ? 'solid' : 'outline'" :disabled="!expiresDate">Set</UButton>
-                        <UButton @click="expiresDate = null" size="sm" variant="ghost" color="neutral" :disabled="!expiresDate">Clear</UButton>
+                        <UButton size="sm" :variant="expiresDate ? 'solid' : 'outline'" :disabled="!expiresDate" @click="setExpiresDate()">Set</UButton>
+                        <UButton size="sm" variant="ghost" color="neutral" :disabled="!expiresDate" @click="expiresDate = null">Clear</UButton>
                       </div>
                       <UCalendar v-model="expiresDate" />
                   </template>
                 </UPopover>
               </div>
             </DiscussSettingsEntry>
-            <DiscussSettingsFlagEntry label="Comments"
-              :flags="editDiscuss.flags" :items="commentsOption"
+            <DiscussSettingsFlagEntry
+label="Comments"
+              :flags="editDiscuss.flags"
+:items="commentsOption"
               @update:flags="i => editDiscuss.flags = i"
             />
-            <DiscussSettingsFlagEntry label="Percents"
-              :flags="editDiscuss.flags" :items="resultsOption"
+            <DiscussSettingsFlagEntry
+label="Percents"
+              :flags="editDiscuss.flags"
+:items="resultsOption"
               @update:flags="i => editDiscuss.flags = i"
             />
           </div>
@@ -81,7 +94,8 @@ import type { SelectItem, TabsItem } from '@nuxt/ui';
 import type { SettingEntry } from '~~/shared/types/discuss';
 import DiscussSettingsEntry from '@/components/discuss/edit/DiscussSettingsEntry.vue'
 import DiscussSettingsFlagEntry from '@/components/discuss/edit/DiscussSettingsFlagEntry.vue'
-import { fromAbsolute, now, ZonedDateTime } from '@internationalized/date';
+import type { ZonedDateTime } from '@internationalized/date';
+import { fromAbsolute, now } from '@internationalized/date';
 import { formatDate, slugify } from '@jzpanel/common/format';
 
 const toast = useToast()

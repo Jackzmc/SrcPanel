@@ -11,16 +11,16 @@
             min="1"
             max="4"
             class="flex-1"
-          />
+          >
           <span class="text-sm">{{ gridCols }}</span>
         </div>
         <!-- TODO -->
-        <USelectMenu v-model="sortBy" :items="SORT_OPTIONS" class="w-48" :searchInput="false" />
+        <USelectMenu v-model="sortBy" :items="SORT_OPTIONS" class="w-48" :search-input="false" />
         <UTooltip :text="sortTooltipText">
           <UButton
             :icon="sortDir === SortDirection.Ascending ? 'i-lucide-arrow-up' : 'i-lucide-arrow-down'"
-            @click="sortDir = (sortDir === SortDirection.Ascending) ? SortDirection.Descending : SortDirection.Ascending"
             variant="outline"
+            @click="sortDir = (sortDir === SortDirection.Ascending) ? SortDirection.Descending : SortDirection.Ascending"
           />
         </UTooltip>
       </div>

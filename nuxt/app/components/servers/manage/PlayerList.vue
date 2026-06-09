@@ -1,7 +1,8 @@
 <template>
   <div class="flex flex-col gap-1">
     <template v-if="liveClients">
-      <LivePlayerListEntry v-for="client in liveClients"
+      <LivePlayerListEntry
+v-for="client in liveClients"
         :key="client.userid"
         :server="data.server"
         :client="client"

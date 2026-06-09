@@ -8,9 +8,7 @@
         default-value="item-0"
         type="single"
       />
-      <div v-if="hasChanges" class="flex flex-col p-2 gap-2" id="buttons">
-        
-      </div>
+      <div v-if="hasChanges" id="buttons" class="flex flex-col p-2 gap-2"/>
     </div>
     <div class="flex-1 min-w-0">
       <NuxtPage :steamid="steamid" :data="data" @changes="(val: boolean) => hasChanges = val" />
@@ -19,10 +17,10 @@
 </template>
 
 <script setup lang="ts">
+import type { APIUserDetails } from '@jzpanel/common/User'
 definePageMeta({
   tab: "privileges"
 })
-import type { APIUserDetails } from '@jzpanel/common/User'
 
 const props = defineProps<{
   steamid: string

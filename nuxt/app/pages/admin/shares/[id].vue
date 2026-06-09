@@ -1,15 +1,16 @@
 <template>
   <div v-if="share">
     <Hero :title="`Shares / ${ route.params.id }`" />
-    <InfoModal v-if="modals.file"
+    <InfoModal
+v-if="modals.file"
+      :id="modals.file.id"
       :share="share"
       :loading="modals.file.loading"
-      :id="modals.file.id"
       :addon="modals.file.addon"
       @close="closeModal"
       @refresh="refresh"
     />
-    <Component v-if="modal" :is="modal" :share="share" @close="closeModal" />
+    <Component :is="modal" v-if="modal" :share="share" @close="closeModal" />
     <UContainer class="fluid">
       <div v-if="status === 'pending'" class="flex justify-center py-12">
         <div class="flex flex-col items-center">
@@ -26,10 +27,11 @@
           <div class="space-y-2">
             <UCard>
               <h4 class="font-semibold font-2xl">{{ addons.length }} files</h4>
-              <UFormField label="Selected Share" v-if="shares">
+              <UFormField v-if="shares" label="Selected Share">
                 <USelect v-model="selectedShare" :items="shares.map((share) => share.id)" @change="onChangeShare" />
               </UFormField>
-              <UTabs class="mt-4"
+              <UTabs
+class="mt-4"
                 :items="tabs"
                 :model-value="route.name?.toString().split('-').pop()"
                 @update:model-value="val => navigateTo(`/admin/shares/${route.params.id}/${val}`)"
@@ -53,7 +55,7 @@
 </template>
 
 <script setup lang="ts">
-import { type APIShareAddons, type ShareData } from '@jzpanel/common/Share'
+import type { APIShareAddons, ShareData } from '@jzpanel/common/Share'
 import AddWorkshopModal from '~/components/shares/AddWorkshopModal.vue'
 import InfoModal from '~/components/shares/InfoModal.vue'
 import UploadModal from '~/components/shares/UploadModal.vue'

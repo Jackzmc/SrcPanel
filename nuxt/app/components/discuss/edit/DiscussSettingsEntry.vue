@@ -6,8 +6,7 @@
       </h3>
     </UTooltip>
     <div class="">
-      <slot>
-      </slot>
+      <slot/>
     </div>
   </div>
 </template>

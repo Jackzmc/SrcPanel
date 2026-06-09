@@ -1,5 +1,6 @@
 <template>
-  <UCard :ui="{
+  <UCard
+:ui="{
     body: '!p-4 !sm:p-6 mx-2 py-0 my-0 !py-1',
     footer: 'p-0! rounded-b-4xl' }
   ">

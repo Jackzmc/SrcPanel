@@ -84,7 +84,9 @@
         <p class="text-sm text-muted mt-3">New instances may be automatically removed after some period of inactivity</p>
       </div>
       <div v-else class="flex flex-col gap-4">
-        <GroupInstanceCard v-for="group in groups" :key="group.id"  
+        <GroupInstanceCard
+v-for="group in groups"
+:key="group.id"  
             :group="group"
             @select="select(group)"
         />
@@ -92,7 +94,13 @@
     </template>
     <template #footer>
       <div class="flex gap-2">
-        <UButton v-if="!error&&!createResult" color="info" label="Create Instance" @click="createInstance()" :disabled="selectedGroup == undefined" :loading="creating" />
+        <UButton
+v-if="!error&&!createResult"
+color="info"
+label="Create Instance"
+:disabled="selectedGroup == undefined"
+:loading="creating"
+@click="createInstance()" />
         <UButton color="neutral" variant="outline" :label="createResult||error?'Close':'Cancel'" @click="emit('close')" />
       </div>
     </template>

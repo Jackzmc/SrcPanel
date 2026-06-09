@@ -1,9 +1,11 @@
 <template>
     <UTooltip text="Notifications">
-        <UButton :leading-icon="notifications.length > 0 ? 'lucide:bell-dot' : 'lucide:bell'" 
-          color="secondary" variant="link" 
-          @click="showNotifications"
+        <UButton
+:leading-icon="notifications.length > 0 ? 'lucide:bell-dot' : 'lucide:bell'" 
+          color="secondary"
+variant="link" 
           class=" active:text-white/80 hover:bg-white/15 dark:hover:bg-black/15"
+          @click="showNotifications"
         >{{ notifications.length || '' }}</UButton>
     </UTooltip>
 </template>

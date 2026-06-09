@@ -5,7 +5,8 @@
     >   
         <template #header>
             <h3 class="text-lg font-semibold">
-                <IconText :leading-icon="entry.full ? TYPE_CONFIG[entry.type].icon : 'lucide:loader-circle'" 
+                <IconText
+:leading-icon="entry.full ? TYPE_CONFIG[entry.type].icon : 'lucide:loader-circle'" 
                     :leading-icon-class="entry.full ? '' : 'animate-spin'"
                 >
                     {{ TYPE_CONFIG[entry.type].title }}

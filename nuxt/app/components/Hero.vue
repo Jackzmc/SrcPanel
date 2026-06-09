@@ -1,7 +1,13 @@
 <template>
   <div class="bg-primary mb-6 text-center py-6 text-white">
     <h2 class="text-3xl font-semibold">
-      <UAvatar v-if="avatar" :src="avatarUrl" :text="avatar.text" :alt="avatar.alt" loading="lazy" :as="{ img: 'img' }" />
+      <UAvatar
+v-if="avatar"
+:src="avatarUrl"
+:text="avatar.text"
+:alt="avatar.alt"
+loading="lazy"
+:as="{ img: 'img' }" />
       {{ title }}
     </h2>
     <slot name="subtitle">

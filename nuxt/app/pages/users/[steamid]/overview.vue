@@ -12,10 +12,10 @@
 </template>
 
 <script setup lang="ts">
+import type { APIUserDetails } from '@jzpanel/common/User'
 definePageMeta({
   tab: "overview"
 })
-import type { APIUserDetails } from '@jzpanel/common/User'
 
 const props = defineProps<{
   steamid: string,

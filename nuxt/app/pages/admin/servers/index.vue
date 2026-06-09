@@ -12,13 +12,15 @@
             <span>{{ filteredServers.length }} servers</span>
           </div>
           <div class="flex gap-2">
-            <UButton leading-icon="lucide:refresh-ccw" variant="outline" color="neutral" @click="refresh()"></UButton>
+            <UButton leading-icon="lucide:refresh-ccw" variant="outline" color="neutral" @click="refresh()"/>
             <UButton leading-icon="lucide:plus" @click="createModalOpen = true">Start New Server</UButton>
             <UButton leading-icon="lucide:circle-question-mark" variant="outline" color="neutral" @click="helpModalOpen = true">Help</UButton>
           </div>
         </div>
-        <UTable :data="filteredServers" :columns="columns"
-          ref="table"
+        <UTable
+ref="table"
+:data="filteredServers"
+          :columns="columns"
           checkable
           :loading="status === 'pending'"
           sticky="header"
@@ -31,7 +33,7 @@
 <script setup lang="ts">
 import { IconText, UBadge, UCheckbox, ULink, UTooltip } from '#components';
 import Hero from '@/components/Hero.vue';
-import { type APIListServersV2, type APIListServersV2_Server } from '@jzpanel/common/Server';
+import type { APIListServersV2, APIListServersV2_Server } from '@jzpanel/common/Server';
 import type { TableColumn } from '@nuxt/ui';
 import { sortHeader } from '#imports';
 import ActionButton from '~/components/servers/ActionButton.vue';

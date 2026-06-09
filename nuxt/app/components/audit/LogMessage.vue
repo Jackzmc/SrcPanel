@@ -16,7 +16,7 @@
       <UTooltip v-else-if="part.type == 'variable'" class="mr-1" :text="'variable: ' + part.content">
         <strong>{{ (props.metadata && props.metadata[part.content]) ?? part.content }}</strong>
       </UTooltip>
-      <component v-else :is="part.isBold ? 'b' : 'span'" style="margin-right:2px">
+      <component :is="part.isBold ? 'b' : 'span'" v-else style="margin-right:2px">
         {{ part.content }}
       </component>
     </template>

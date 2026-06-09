@@ -9,12 +9,14 @@
       <UButton leading-icon="i-lucide-trash" color="error" size="sm" @click="deleteSelected">Delete Selected</UButton>
     </div>
 
-    <UTable :data="addons" :columns="columns"
-      ref="table"
+    <UTable
+ref="table"
+v-model:global-filter="searchQuery"
+      :data="addons"
+      :columns="columns"
       checkable
       :loading="status === 'pending'"
       sticky="header"
-      v-model:global-filter="searchQuery"
     />
   </div>
 </template>
@@ -26,6 +28,14 @@ import type { AddonInfo, ShareInfo } from '@jzpanel/common/Share';
 import type { AsyncDataRequestStatus } from '#app';
 import { sortHeader } from '#imports';
 
+// This is to stop TS from complaining about use in h()
+import ULink from '@nuxt/ui/components/Link.vue'
+import UCheckbox from '@nuxt/ui/components/Checkbox.vue'
+
+// fix TS errors
+import type { Table } from '@tanstack/vue-table'
+import { UProgress } from '#components';
+
 const props = defineProps<{
   share: ShareInfo,
   addons: AddonInfo[],
@@ -35,10 +45,6 @@ const props = defineProps<{
 useHead({
   title: `Maps - ${props.share.name} - Shares`
 })
-
-// This is to stop TS from complaining about use in h()
-import ULink from '@nuxt/ui/components/Link.vue'
-import UCheckbox from '@nuxt/ui/components/Checkbox.vue'
 
 const columns: TableColumn<AddonInfo>[] = [
   {
@@ -125,10 +131,6 @@ const rows = computed(() => {
   if(!table.value) return;
   return table.value.tableApi.getSelectedRowModel().rows;
 })
-
-// fix TS errors
-import type { Table } from '@tanstack/vue-table'
-import { UProgress } from '#components';
 
 const table = useTemplateRef<{ tableApi: Table<AddonInfo> }>('table')
 const searchQuery = ref<string|undefined>()

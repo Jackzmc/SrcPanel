@@ -22,7 +22,7 @@ export class ResponseError extends Error {
       const errCode = body.code || body.error
       let msg = `[${response.status} ${response.statusText}]`
       if (errCode) msg += ` ${errCode}`
-      if (body.message) errCode ? msg += `: ${body.message}` : body.message
+      if (body.message) msg += (errCode ? `: ${body.message}` : body.message)
 
       return new ResponseError({
         message: msg,

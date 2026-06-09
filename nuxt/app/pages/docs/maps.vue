@@ -16,7 +16,7 @@
         </div>
         <!-- Sidebar -->
         <div class="flex items-center text-center flex-col gap-2  sm:order-2 order-1">
-            <UButton size="xl" leading-icon="lucide:dices" @click="random" variant="outline">Reroll</UButton>
+            <UButton size="xl" leading-icon="lucide:dices" variant="outline" @click="random">Reroll</UButton>
             <UCard class="bg-light-blue w-full">
                 <h3 class="text-md font-semibold">Random Map</h3>
                 <h2 class="text-2xl font-bold p-4 my-2 border border-neutral-400 rounded-2xl">{{  randomMap.name }}</h2>
@@ -98,7 +98,7 @@ const CAMPAIGNS = [
 ]
 
 
-let randomMap = ref()
+const randomMap = ref()
 function random() {
   const newMap = CAMPAIGNS[Math.floor(Math.random()*CAMPAIGNS.length)]!
   // Prevent random chance of last item

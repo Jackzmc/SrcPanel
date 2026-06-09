@@ -30,7 +30,7 @@
           <UCard class="bg-light-blue">
             <h2 class="text-lg font-bold">
               Showing
-              <UInput type="number" min="1" max="100" v-model.lazy="limit" />
+              <UInput v-model.lazy="limit" type="number" min="1" max="100" />
               / {{ (data?.totalNotes ?? 0).toLocaleString() }} notes
             </h2>
             <p>
@@ -54,23 +54,23 @@
 </template>
 
 <script setup lang="ts">
+import type { TableColumn } from '@nuxt/ui'
+import { getRelDate } from '@jzpanel/common/format';
+import type { APINotesResponse, Note } from '@jzpanel/common/Note';
+
+import UserComponent from '@/components/UserComponent.vue'
+import { debounce } from '@jzpanel/common/util'
 useHead({
   title: 'Notes',
   meta: [
     { name: "robots", content: "noindex,nosnippet" }
   ]
 })
-import type { TableColumn } from '@nuxt/ui'
-import { getRelDate } from '@jzpanel/common/format';
-import type { APINotesResponse, Note } from '@jzpanel/common/Note';
 
 const api = useApi()
 const route = useRoute()
 
 const UButton = resolveComponent('UButton')
-
-import UserComponent from '@/components/UserComponent.vue'
-import { debounce } from '@jzpanel/common/util'
 
 const columns: TableColumn<Note>[] = [
   {

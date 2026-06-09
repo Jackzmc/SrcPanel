@@ -21,7 +21,7 @@ export default defineNuxtConfig({
 
   vue: {
     compilerOptions: {
-      isCustomElement: (tag) => false, // optional, just showing the nested config
+      isCustomElement: () => false, 
     },
   },
   vite: {

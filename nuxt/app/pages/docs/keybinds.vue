@@ -5,16 +5,16 @@
         <div class="space-y-4 col-span-3">
           <h4 class="text-lg font-semibold">Select a key to set a keybind</h4>
           <div class="keyboardContainer hidden! sm:block!">
-            <div class="simple-keyboard-main"></div>
+            <div class="simple-keyboard-main"/>
 
             <div class="controlArrows">
-              <div class="simple-keyboard-control"></div>
-              <div class="simple-keyboard-arrows"></div>
+              <div class="simple-keyboard-control"/>
+              <div class="simple-keyboard-arrows"/>
             </div>
 
             <div class="numPad">
-              <div class="simple-keyboard-numpad"></div>
-              <div class="simple-keyboard-numpadEnd"></div>
+              <div class="simple-keyboard-numpad"/>
+              <div class="simple-keyboard-numpadEnd"/>
             </div>
           </div>
           <div class="block sm:hidden">
@@ -52,22 +52,22 @@
 </template>
 
 <script setup lang="ts">
+import { ref, onMounted, onBeforeMount, computed } from 'vue';
 definePageMeta({
   title: "Keybind Generator - Tools",
   pageTitle: 'Keybinds',
   description: 'List of all L4D2 keybind codes and tool to create keybinds',
   hero: 'default'
 })
-import { ref, onMounted, onBeforeMount, computed } from 'vue';
 
-let keyboard = ref()
-let controlPad = ref()
-let keyboardArrows = ref()
-let numpad = ref()
-let numpadEnd = ref()
+const keyboard = ref()
+const controlPad = ref()
+const keyboardArrows = ref()
+const numpad = ref()
+const numpadEnd = ref()
 
-let keybinds = ref<any[]>([])
-let command = ref<string|null>("sm_example_command")
+const keybinds = ref<any[]>([])
+const command = ref<string|null>("sm_example_command")
 
 onMounted(async () => {
   load()

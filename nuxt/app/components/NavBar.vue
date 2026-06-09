@@ -33,10 +33,10 @@
       <!-- Shown in mobile view only-->
       <UInput
         v-model="searchQuery"
-        @keyup.enter="performSearch"
         placeholder="Search panel"
         icon="ri:search-2-line"
         class="mb-2"
+        @keyup.enter="performSearch"
       />
       <UNavigationMenu
         :items="routes"
@@ -56,11 +56,11 @@
     <template #right>
       <UInput
         v-model="searchQuery"
-        @keyup.enter="performSearch"
         variant="subtle"
         placeholder="Search"
         icon="ri:search-2-line"
         class="hidden md:block"
+        @keyup.enter="performSearch"
       />
       <UTooltip text="Toggle light/dark mode">
         <UColorModeButton :class="[openClassText,'hover:light:text-muted']" />
@@ -90,7 +90,8 @@
         </UDropdownMenu>
       </template>
       <template v-else>
-        <UButton leading-icon="lucide:user-circle" 
+        <UButton
+leading-icon="lucide:user-circle" 
           color="neutral" 
           size="lg"
           to="/login"

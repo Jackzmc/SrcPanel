@@ -12,7 +12,7 @@
             <UFormField label="Discussion topic / title" :ui="{ label: 'font-semibold' }">
               <UInput v-model="startDiscussionTitle" placeholder="Ask a question" leading-icon="lucide:message-square" class="w-full rounded-4xl" @keydown.enter="startDiscussion" />
             </UFormField>
-            <UButton :disabled="startDiscussionTitle.length === 0" @click="startDiscussion" trailing-icon="lucide:arrow-right" >Start discussion</UButton>
+            <UButton :disabled="startDiscussionTitle.length === 0" trailing-icon="lucide:arrow-right" @click="startDiscussion" >Start discussion</UButton>
           </div>
         </UCard>
       </div>
@@ -21,13 +21,13 @@
 </template>
 
 <script setup lang="ts">
+import type { APIDiscussion } from '@jzpanel/common/Discussions';
+import DiscussCard from '~/components/discuss/DiscussCard.vue';
 definePageMeta({
   title: 'Discussions',
   description: 'Vote and discuss anything',
   hero: "default"
 })
-import { type APIDiscussion } from '@jzpanel/common/Discussions';
-import DiscussCard from '~/components/discuss/DiscussCard.vue';
 
 const { requireAuth } = useAuth()
 await requireAuth()

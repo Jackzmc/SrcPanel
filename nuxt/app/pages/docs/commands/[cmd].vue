@@ -11,11 +11,11 @@ import { parseCommand, type Command } from '@jzpanel/common/cmds/util'
 import type { CommandGroups } from '@jzpanel/common/cmds/data'
 import CmdModal from '~/components/commands/CmdModal.vue'
 
+import CMD_DATA from '~/assets/data/commands.json'
+
 const route = useRoute()
 const router = useRouter()
 const cmdName = route.params.cmd as string
-
-import CMD_DATA from '~/assets/data/commands.json'
 const groups = CMD_DATA as CommandGroups
 
 const cmd = computed<Command | undefined>(() => {

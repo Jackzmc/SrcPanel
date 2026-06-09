@@ -9,13 +9,17 @@
             enabled
             primary
         />
-        <IconText v-if="status == 'pending'" 
-            leading-icon="lucide:loader-circle" leading-icon-class="animate-spin" 
+        <IconText
+v-if="status == 'pending'" 
+            leading-icon="lucide:loader-circle"
+leading-icon-class="animate-spin" 
             class="p-6 text-center" 
             text="Loading connections" 
         />
-        <ConnectionCard v-for="provider in data" :key="provider.id" 
-            :id="provider.id"
+        <ConnectionCard
+v-for="provider in data"
+:id="provider.id" 
+            :key="provider.id"
             :enabled="provider.enabled"
             :name="provider.name" 
             :image-name="provider.id + '.svg'"

@@ -2,7 +2,7 @@
 <ListItem>
   <template #image>
     <figure class="image is-48x48">
-      <img class="is-rounded" :src="imageUrl" />
+      <img class="is-rounded" :src="imageUrl" >
     </figure>
   </template>
   <template #content>
@@ -21,9 +21,7 @@
   </template>
   <template #controls>
     <div class="buttons is-right">
-      <slot :provider="provider" :data="'data' in provider ? provider.data : undefined">
-
-      </slot>
+      <slot :provider="provider" :data="'data' in provider ? provider.data : undefined"/>
     </div>
   </template>
 

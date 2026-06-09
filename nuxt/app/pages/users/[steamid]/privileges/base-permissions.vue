@@ -1,6 +1,7 @@
 <template>
   <div>
-    <UAlert v-if="adminErrors.length > 0" 
+    <UAlert
+v-if="adminErrors.length > 0" 
       :title="data.admin ? 'Cannot edit admin due to the following reasons:' : 'Cannot grant admin due to the following reasons:'" 
       color="error"
       class="mb-1"
@@ -27,7 +28,7 @@
     </div>
   </div>
   <Teleport to="#buttons">
-    <UButton v-if="hasChanges" color="success" leading-icon="lucide:save" @click="saveChanges" :disabled="adminErrors.length > 0">
+    <UButton v-if="hasChanges" color="success" leading-icon="lucide:save" :disabled="adminErrors.length > 0" @click="saveChanges">
       {{ props.data.admin ? 'Save Changes' : 'Grant Admin' }}
     </UButton>
     <UButton v-if="hasChanges" color="neutral" variant="outline" leading-icon="lucide:undo-2" @click="revertChanges">

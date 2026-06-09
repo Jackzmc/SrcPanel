@@ -16,13 +16,19 @@
             <div class="flex flex-col items-end justify-between gap-2">
                 <div class="flex flex-row gap-2">
                     <UTooltip text="Edit note">
-                        <UButton leading-icon="lucide:edit" variant="outline" color="neutral" 
+                        <UButton
+leading-icon="lucide:edit"
+variant="outline"
+color="neutral" 
                             :loading="noteEditing"
                             @click="editNote" 
                         />
                     </UTooltip>
                     <UTooltip text="Delete note">
-                        <UButton leading-icon="lucide:trash" variant="outline" color="error" 
+                        <UButton
+leading-icon="lucide:trash"
+variant="outline"
+color="error" 
                             :loading="noteDeleting"
                             @click="deleteNote" 
                         />

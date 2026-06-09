@@ -10,12 +10,12 @@
 </template>
 
 <script setup lang="ts">
+import type { ShareData } from '@jzpanel/common/Share'
+import ShareCard from '~/components/shares/ShareCard.vue'
 useSeoMeta({
   title: "Shares",
   description: 'Manage addons and files'
 })
-import { type ShareData } from '@jzpanel/common/Share'
-import ShareCard from '~/components/shares/ShareCard.vue'
 const { requireAuth } = useAuth()
 await requireAuth()
 

@@ -43,7 +43,7 @@
           <UCard class="bg-light-blue ">
             <h2 class="text-lg font-bold">
               Showing
-              <UInput type="number" min="1" max="100" v-model.lazy="limit" />
+              <UInput v-model.lazy="limit" type="number" min="1" max="100" />
               / {{ (data?.totalBans ?? 0).toLocaleString() }} bans
             </h2>
             <p>
@@ -60,16 +60,18 @@
 </template>
 
 <script setup lang="ts">
+import type { TableColumn } from '@nuxt/ui'
+import { APIBanFlags, type APIBanResponse, type ListAPIBan } from '@jzpanel/common/Ban'
+import UCheckbox from '@nuxt/ui/components/Checkbox.vue'
+import { formatDate, getRelDate } from '@jzpanel/common/format';
+
+import UserComponent from '@/components/UserComponent.vue'
 useHead({
   title: 'Bans',
   meta: [
     { name: "robots", content: "noindex,nosnippet" }
   ]
 })
-import type { TableColumn } from '@nuxt/ui'
-import { APIBanFlags, type APIBanResponse, type ListAPIBan } from '@jzpanel/common/Ban'
-import UCheckbox from '@nuxt/ui/components/Checkbox.vue'
-import { formatDate, getRelDate } from '@jzpanel/common/format';
 
 const api = useApi()
 const route = useRoute()
@@ -77,8 +79,6 @@ const route = useRoute()
 const UButton = resolveComponent('UButton')
 const UTooltip = resolveComponent('UTooltip')
 const UBadge = resolveComponent('UBadge')
-
-import UserComponent from '@/components/UserComponent.vue'
 
 const columns: TableColumn<UIBan>[] = [
   {

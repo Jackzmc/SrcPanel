@@ -7,7 +7,7 @@
             :type="inputType"
             :checked="selected"
             class="accent-primary-500 mt-2"
-          />
+          >
           <span class="text-md">
             {{ entry.option.label }}
           </span>
