@@ -4,6 +4,10 @@ on:
   push:
     branches:
       - master
+    paths:
+      - common-types/*
+      - server/*
+      - nuxt/*
   pull_request:
     branches:
       - master
