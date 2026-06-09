@@ -26,12 +26,12 @@ jobs:
       - name: Check out Git repository
         uses: https://git.jackz.me/actions/checkout@v4
 
-      - name: 🔧 Install pnpm
+      - name: Install pnpm
         uses: https://git.jackz.me/actions/pnpm-action-setup@v4
         with:
           version: 11
 
-      - name: Use Node.js ${{ matrix.node-version }}
+      - name: Setup node
         uses: https://git.jackz.me/actions/setup-node@v6
         with:
           node-version: ${{ matrix.node-version }}
