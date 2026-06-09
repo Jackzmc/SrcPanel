@@ -10,7 +10,7 @@ const buildCommit = (() => {
 })();
 const buildVersion = (() => {
   try {
-    return execSync("git describe --tags --always --dirty").toString().trim();
+    return execSync("git describe --tags --always").toString().trim();
   } catch {
     return "DEV";
   }
