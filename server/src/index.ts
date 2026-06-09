@@ -87,7 +87,7 @@ async function onSignal(signal: NodeJS.Signals) {
   app.log.trace("closing fastify")
   await app.close()
   app.log.trace('flushing sentry logs')
-  await Sentry.close(2000),
+  await Sentry.close(2000)
   process.exit(0)
 
 
