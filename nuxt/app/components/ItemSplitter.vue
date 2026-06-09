@@ -1,27 +1,27 @@
 <template>
-    <!-- eslint-disable-next-line vue/no-multiple-template-root -->
-    <template v-for="split in splitData">
-      <slot :data="split"/>
-    </template>
+  <!-- eslint-disable-next-line vue/no-multiple-template-root -->
+  <template v-for="split in splitData">
+    <slot :data="split" />
+  </template>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed } from "vue";
 
 const props = defineProps<{
-  itemsPerColumn: number,
-  data: any[]
-}>()
+  itemsPerColumn: number;
+  data: unknown[];
+}>();
 
 const columnCount = computed(() => {
-  return Math.ceil(props.data.length / props.itemsPerColumn)
-})
+  return Math.ceil(props.data.length / props.itemsPerColumn);
+});
 
 const splitData = computed(() => {
-  const a = []
-  for(let column = 0; column < columnCount.value; column++) {
-    a.push(props.data.slice(column * props.itemsPerColumn, (column + 1) * props.itemsPerColumn))
+  const a = [];
+  for (let column = 0; column < columnCount.value; column++) {
+    a.push(props.data.slice(column * props.itemsPerColumn, (column + 1) * props.itemsPerColumn));
   }
-  return a
-})
+  return a;
+});
 </script>

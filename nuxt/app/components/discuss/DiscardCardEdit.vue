@@ -12,7 +12,7 @@
       </p>
 
       <div class="grid grid-cols-2 gap-4 py-4">
-         <!-- <UCard v-for="option in discuss.options" :key="option.id" class="bg-light-blue">
+        <!-- <UCard v-for="option in discuss.options" :key="option.id" class="bg-light-blue">
           <div class="flex justify-between">
             <h4 class="text-lg">{{ option.label }}</h4>
             <UTooltip text="Remove option">
@@ -23,7 +23,9 @@
         </UCard> -->
         <div v-for="option in model.options" :key="option.id" class="bg-light-blue text-white items-center p-6 rounded-xl" @click="addOption">
           <div class="flex justify-between">
-            <h4 class="text-lg light:text-black">{{ option.label }}</h4>
+            <h4 class="text-lg light:text-black">
+              {{ option.label }}
+            </h4>
             <UTooltip text="Remove option">
               <UButton class="mt-2 cursor-pointer" size="sm" color="error" leading-icon="lucide:trash" @click="emit('option:del', option.id)" />
             </UTooltip>
@@ -32,7 +34,9 @@
 
         <div class="cursor-pointer bg-primary text-white flex items-center p-6 rounded-xl hover:bg-primary-400 dark:hover:bg-primary-600" @click="addOption">
           <h4 class="text-lg font-semibold">
-            <IconText leading-icon="lucide:plus">Add Option</IconText>
+            <IconText leading-icon="lucide:plus">
+              Add Option
+            </IconText>
           </h4>
         </div>
       </div>
@@ -41,28 +45,28 @@
 </template>
 
 <script setup lang="ts">
-import type { APIDiscussion, APIDiscussionBase } from '@jzpanel/common/Discussions'
-import EditText from './EditText.vue'
+import type { APIDiscussion, APIDiscussionBase } from "@jzpanel/common/Discussions";
+import EditText from "./EditText.vue";
 
-const model = defineModel<APIDiscussion|APIDiscussionBase>()
+const model = defineModel<APIDiscussion | APIDiscussionBase>();
 
-const { promptInput } = useModal()
+const { promptInput } = useModal();
 
 const emit = defineEmits<{
-  (e: "option:add", value: string): void,
-  (e: "option:del", id: number): void,
-}>()
+  (e: "option:add", value: string): void;
+  (e: "option:del", id: number): void;
+}>();
 
 const props = defineProps<{
-  type: "list" | "details" | "edit"
-}>()
+  type: "list" | "details" | "edit";
+}>();
 
 async function addOption() {
   const value = await promptInput({
-    title: "Enter Option Name"
-  })
+    title: "Enter Option Name",
+  });
   if (value) {
-    emit("option:add", value)
+    emit("option:add", value);
   }
 }
 </script>

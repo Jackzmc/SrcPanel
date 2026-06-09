@@ -1,18 +1,18 @@
 <template>
-  <UHeader 
-    :ui="{ 
-      container: 'max-w-none', 
-      toggle: openClassText
-      }" 
+  <UHeader
+    :ui="{
+      container: 'max-w-none',
+      toggle: openClassText,
+    }"
     class="group-header"
     @update:open="s => open = s"
   >
     <template #title>
-      <strong :class="['font-sans text-2xl',openClassText]">{{ appName }}</strong>
+      <strong :class="['font-sans text-2xl', openClassText]">{{ appName }}</strong>
     </template>
 
     <template #left>
-      <strong :class="['font-sans text-2xl',openClassText]">{{ appName }}</strong>
+      <strong :class="['font-sans text-2xl', openClassText]">{{ appName }}</strong>
       <UNavigationMenu
         :items="routes"
         popover
@@ -24,13 +24,13 @@
         :ui="{
           link: 'text-white group',
           linkTrailingBadge: 'bg-black',
-          linkLeadingIcon: 'group-data-[active]:text-black dark:group-data-[active]:text-white text-white'
+          linkLeadingIcon: 'group-data-[active]:text-black dark:group-data-[active]:text-white text-white',
         }"
       />
     </template>
 
     <template #body>
-      <!-- Shown in mobile view only-->
+      <!-- Shown in mobile view only -->
       <UInput
         v-model="searchQuery"
         placeholder="Search panel"
@@ -63,7 +63,7 @@
         @keyup.enter="performSearch"
       />
       <UTooltip text="Toggle light/dark mode">
-        <UColorModeButton :class="[openClassText,'hover:light:text-muted']" />
+        <UColorModeButton :class="[openClassText, 'hover:light:text-muted']" />
       </UTooltip>
       <template v-if="isLoggedIn">
         <NotificationsButton :class="[openClassText]" />
@@ -73,26 +73,24 @@
           :items="userDropdown"
           :ui="{
             content: 'px-2',
-            item: 'py-2'
+            item: 'py-2',
           }"
         >
           <UButton
-            :class="['hover:bg-white/15 w-max',openClassText]"
+            :class="['hover:bg-white/15 w-max', openClassText]"
             variant="ghost"
             block
             trailing-icon="i-lucide-chevron-down"
           >
-            <UAvatar 
-              :src="user!.user.avatarhash ? `https://avatars.akamai.steamstatic.com/${user!.user.avatarhash}_medium.jpg` : undefined" 
-            />
+            <UAvatar :src="user!.user.avatarhash ? `https://avatars.akamai.steamstatic.com/${user!.user.avatarhash}_medium.jpg` : undefined" />
             <span class="hidden md:block">{{ user!.user.name }}</span>
           </UButton>
         </UDropdownMenu>
       </template>
       <template v-else>
         <UButton
-leading-icon="lucide:user-circle" 
-          color="neutral" 
+          leading-icon="lucide:user-circle"
+          color="neutral"
           size="lg"
           to="/login"
         >Login</UButton>
@@ -102,28 +100,22 @@ leading-icon="lucide:user-circle"
 </template>
 
 <script setup lang="ts">
-
-const emit = defineEmits(["open-settings"])
-
-const { user, isLoggedIn } = useAuth()
-const { appName } = useAppConfig()
-
-
-const docs = await queryCollection("docs").all()
+const { user, isLoggedIn } = useAuth();
+const { appName } = useAppConfig();
 
 const openClassText = computed(() => {
-  return open.value ? "text-black dark:text-white" : "text-white"
-})
+  return open.value ? "text-black dark:text-white" : "text-white";
+});
 
-const { routes, userDropdown } = useNavigation()
+const { routes, userDropdown } = useNavigation();
 
-const open = ref(false)
-const searchQuery = ref("")
+const open = ref(false);
+const searchQuery = ref("");
 
 async function performSearch() {
-  if(!searchQuery.value) return
-  await navigateTo(`/search?q=${searchQuery.value}`)
-  searchQuery.value = ""
+  if (!searchQuery.value) return;
+  await navigateTo(`/search?q=${searchQuery.value}`);
+  searchQuery.value = "";
 }
 </script>
 

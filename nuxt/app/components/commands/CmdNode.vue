@@ -3,8 +3,8 @@
     {{ prefix }}
   </template>{{ cmd.name }}
   <CmdArg
-v-for="(data, i) in cmd.args"
-:key="i"
+    v-for="(data, i) in cmd.args"
+    :key="i"
     class="mx-1"
     :arg="data.name"
     :required="data.required"
@@ -14,11 +14,11 @@ v-for="(data, i) in cmd.args"
 </template>
 
 <script setup lang="ts">
-import type { Command } from '@jzpanel/common/cmds/util'
-import CmdArg from './CmdArg.vue'
+import type { Command } from "@jzpanel/common/cmds/util";
+import CmdArg from "./CmdArg.vue";
 
 const props = withDefaults(defineProps<{
-  cmd: Command,
-  prefix?: string
-}>(), { prefix: "/" })
+  cmd: Command;
+  prefix?: string;
+}>(), { prefix: "/" });
 </script>

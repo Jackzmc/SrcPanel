@@ -21,29 +21,29 @@
 </template>
 
 <script setup lang="ts">
-import { APIDiscussionType, type APIDiscussionOption } from '@jzpanel/common/Discussions';
-import type { DiscussOptionEntry } from '~~/shared/types/discuss';
+import { APIDiscussionType } from "@jzpanel/common/Discussions";
+import type { DiscussOptionEntry } from "~~/shared/types/discuss";
 
 const emit = defineEmits<{
   (e: "select", optionId: number): void;
-}>()
+}>();
 
 const props = defineProps<{
-  entry: DiscussOptionEntry,
-  type: APIDiscussionType,
-  userSelection: number[],
-  editable?: boolean
-}>()
+  entry: DiscussOptionEntry;
+  type: APIDiscussionType;
+  userSelection: number[];
+  editable?: boolean;
+}>();
 
 const inputType = computed(() => {
-  return props.type == APIDiscussionType.Checkbox ? 'checkbox' : 'radio'
-})
+  return props.type == APIDiscussionType.Checkbox ? "checkbox" : "radio";
+});
 
 const selected = computed(() => {
-  return props.userSelection.includes(props.entry.option.id)
-})
+  return props.userSelection.includes(props.entry.option.id);
+});
 
 function onClick() {
-  emit("select", props.entry.option.id)
+  emit("select", props.entry.option.id);
 }
 </script>

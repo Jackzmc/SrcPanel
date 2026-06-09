@@ -16,9 +16,11 @@
               <li v-for="(cmd, i) in group.commands" :key="i">
                 <button class="p-1 hover:bg-neutral-100 hover:dark:text-black w-full text-left cursor-pointer" @click="showCmd(cmd)">
                   <strong>
-                    <CmdNode :cmd="cmd" :prefix="cmdPrefix"/>
+                    <CmdNode :cmd="cmd" :prefix="cmdPrefix" />
                   </strong>
-                  <div class="text-sm">{{ cmd.description }}</div>
+                  <div class="text-sm">
+                    {{ cmd.description }}
+                  </div>
                 </button>
               </li>
             </ul>
@@ -89,7 +91,9 @@
             </h3>
             <ol class="list-decimal list-inside">
               <li>
-                <CmdArg required>user</CmdArg> means a required user while <CmdArg>user</CmdArg> means an optional user.
+                <CmdArg required>
+                  user
+                </CmdArg> means a required user while <CmdArg>user</CmdArg> means an optional user.
               </li>
               <li>
                 I want to kick jackz, the command is <code>{{ cmdPrefix }}kick &lt;player&gt; [reason]</code>, I don’t need to input a reason so I will just type in: <code>{{ cmdPrefix }}kick jackz</code></li>
@@ -113,61 +117,62 @@
 </template>
 
 <script setup lang="ts">
-import CmdArg from '~/components/commands/CmdArg.vue'
-import CmdNode from '~/components/commands/CmdNode.vue'
-import type { SelectItem } from '@nuxt/ui'
-import { parseCommand, type Command } from '@jzpanel/common/cmds/util'
-import type { CommandGroups } from '@jzpanel/common/cmds/data'
+import CmdArg from "~/components/commands/CmdArg.vue";
+import CmdNode from "~/components/commands/CmdNode.vue";
+import type { SelectItem } from "@nuxt/ui";
+import { parseCommand, type Command } from "@jzpanel/common/cmds/util";
+import type { CommandGroups } from "@jzpanel/common/cmds/data";
 
-import CMD_DATA from '~/assets/data/commands.json'
+import CMD_DATA from "~/assets/data/commands.json";
+
 definePageMeta({
-  title: 'Commands - Tools',
-  pageTitle: 'Commands',
+  title: "Commands - Tools",
+  pageTitle: "Commands",
   description: "All the information to have fun, and manage those troublemakers",
-  hero: "default"
-})
-const groups = CMD_DATA as CommandGroups
+  hero: "default",
+});
+const groups = CMD_DATA as CommandGroups;
 
 const VISIBILITIES: SelectItem[] = [
   { value: "sm_", label: "console" },
   { value: "/", label: "chat, privately" },
-  { value: "!", label: "chat, publicly" }
-]
-const cmdPrefix = ref<string>("/")
-const showLockedCommands = ref<boolean>(false)
-const searchQuery = ref<string>("")
+  { value: "!", label: "chat, publicly" },
+];
+const cmdPrefix = ref<string>("/");
+const showLockedCommands = ref<boolean>(false);
+const searchQuery = ref<string>("");
 
 const parsedGroups = computed(() => {
-  if (groups == undefined ) return []
+  if (groups == undefined) return [];
   return Object.entries(groups).map(([groupId, group]) => {
     return {
       id: groupId,
       name: group.name,
-      commands: group.commands.map(parseCommand)
-    }
-  })
-})
+      commands: group.commands.map(parseCommand),
+    };
+  });
+});
 
 const filteredGroups = computed(() => {
-  const query = searchQuery.value.toLowerCase()
-  if(!query) return parsedGroups.value
+  const query = searchQuery.value.toLowerCase();
+  if (!query) return parsedGroups.value;
   return parsedGroups.value
     .map(group => {
       const commands = group.commands.filter(command => {
         return command.name.toLowerCase().includes(query)
-          || command.description?.toLowerCase().includes(query)
-      })
+          || command.description?.toLowerCase().includes(query);
+      });
       return {
         id: group.id,
         name: group.name,
-        commands
-      }
+        commands,
+      };
     })
-    .filter(group => group.commands.length > 0)
-})
+    .filter(group => group.commands.length > 0);
+});
 
-const router = useRouter()
+const router = useRouter();
 function showCmd(cmd: Command) {
-  router.push(`/docs/commands/${cmd.name}`)
+  router.push(`/docs/commands/${cmd.name}`);
 }
 </script>

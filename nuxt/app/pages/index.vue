@@ -30,7 +30,7 @@
                 :class="[
                   'text-m',
                   entry.listStyle ?? 'list-none',
-                  { 'ml-5': entry.listStyle && entry.listStyle != 'list-none' }
+                  { 'ml-5': entry.listStyle && entry.listStyle != 'list-none' },
                 ]"
                 v-html="item"
               />
@@ -44,37 +44,37 @@
 </template>
 
 <script setup lang="ts">
-import type { APIListServersV1 } from '@jzpanel/common/Server'
-import ServerGroupList from '~/components/servers/ServerGroupList.vue'
-import type { TabsItem } from '@nuxt/ui'
+import type { APIListServersV1 } from "@jzpanel/common/Server";
+import ServerGroupList from "~/components/servers/ServerGroupList.vue";
+import type { TabsItem } from "@nuxt/ui";
 
 definePageMeta({
-  title: 'Overview',
-  description: 'Game server administration panel',
-})
+  title: "Overview",
+  description: "Game server administration panel",
+});
 
-const REFRESH_INTERVAL = 1000 * 20
+const REFRESH_INTERVAL = 1000 * 20;
 
-const api = useApi()
-const route = useRoute()
-const router = useRouter()
+const api = useApi();
+const route = useRoute();
+const router = useRouter();
 
 const tabs: TabsItem[] = [
-  { 
-    label: 'Cards',
-    value: 'cards',
-    icon: 'lucide:id-card'
+  {
+    label: "Cards",
+    value: "cards",
+    icon: "lucide:id-card",
   },
   {
-    label: 'Table',
-    value: 'table',
-    icon: 'lucide:table',
-  }
-]
+    label: "Table",
+    value: "table",
+    icon: "lucide:table",
+  },
+];
 interface FAQEntry {
-  title: string
-  list: string[]
-  listStyle?: "list-disc" | "list-decimal" | "list-none"
+  title: string;
+  list: string[];
+  listStyle?: "list-disc" | "list-decimal" | "list-none";
 }
 const FAQ: FAQEntry[] = [
   {
@@ -82,17 +82,17 @@ const FAQ: FAQEntry[] = [
     list: [
       "Go to <b>Options</b> then <b>Keyboard/Mouse</b>",
       "Enable the option <b>Allow Developer Console</b>",
-      "Open the console with the tilda key <code>`</code>, under ESC"
+      "Open the console with the tilda key <code>`</code>, under ESC",
     ],
-    listStyle: "list-decimal"
+    listStyle: "list-decimal",
   },
   {
     title: "Server notes",
     list: [
       "Only servers marked <b>5+</b> support 5+ campaign",
-      "Directly connecting does not start matchmaking - the server will not be public. See the below section on how to create a lobby:"
+      "Directly connecting does not start matchmaking - the server will not be public. See the below section on how to create a lobby:",
     ],
-    listStyle: "list-disc"
+    listStyle: "list-disc",
   },
   {
     title: "To create a lobby to a server",
@@ -101,36 +101,36 @@ const FAQ: FAQEntry[] = [
       "Select <b>Best Available Dedicated</b> (not Official, or Local)",
       "Open the console <em>(see above for instructions)</em>",
       "Copy <b>Create Lobby Command</b> <em>(on the left)</em> and paste and enter in the console",
-      "Start the lobby when ready"
+      "Start the lobby when ready",
     ],
-    listStyle: "list-decimal"
+    listStyle: "list-decimal",
   },
   {
     title: "Joining a 5+ server when its full",
     list: [
       "If there is 4 people on a 5+ server, you can still join: Use the <code>connect <b>ip_address</b></code> command shown on the server entries to join",
-      "If you get kicked because it's full, wait a few seconds for people to finish joining, or you maybe be trying to join a non 5+ server."
+      "If you get kicked because it's full, wait a few seconds for people to finish joining, or you maybe be trying to join a non 5+ server.",
     ],
-    listStyle: "list-none"
-  }
-]
+    listStyle: "list-none",
+  },
+];
 
 const { data: groups, pending, error, refresh } = await useAsyncData<APIListServersV1>(
-  'servers',
-  () => api('/servers')
-)
+  "servers",
+  () => api("/servers"),
+);
 
 const viewMode = computed({
   get() {
-    if(!route.query.view || (route.query.view !== 'cards' && route.query.view !== 'table')) return 'table'
-    return route.query.view
+    if (!route.query.view || (route.query.view !== "cards" && route.query.view !== "table")) return "table";
+    return route.query.view;
   },
   set(mode) {
-    router.replace({ query: { ...route.query, view: mode }, params:  route.params })
-  }
-})
+    router.replace({ query: { ...route.query, view: mode }, params: route.params });
+  },
+});
 
 onMounted(() => {
-  setInterval(() => refresh(), REFRESH_INTERVAL)
-})
+  setInterval(() => refresh(), REFRESH_INTERVAL);
+});
 </script>

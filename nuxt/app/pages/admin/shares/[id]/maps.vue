@@ -34,23 +34,23 @@
 </template>
 
 <script setup lang="ts">
-import type { AddonInfo, ShareInfo } from '@jzpanel/common/Share';
-import type { AsyncDataRequestStatus } from '#app';
-import MapCard from '~/components/shares/MapCard.vue';
+import type { AddonInfo, ShareInfo } from "@jzpanel/common/Share";
+import type { AsyncDataRequestStatus } from "#app";
+import MapCard from "~/components/shares/MapCard.vue";
 
 enum SortDirection { Ascending, Descending }
-const SORT_OPTIONS: { value: string, label: string, sortFn: (a: any, b: any) => number, defaultDirection: SortDirection }[] = [
+const SORT_OPTIONS: { value: string; label: string; sortFn: (a: AddonInfo, b: AddonInfo) => number; defaultDirection: SortDirection }[] = [
   {
     value: "none",
     label: "Default",
     defaultDirection: SortDirection.Ascending,
-    sortFn: ( a, b) => 0
+    sortFn: () => 0,
   },
   {
     value: "lastUpdated",
     label: "Last Updated",
     defaultDirection: SortDirection.Descending,
-    sortFn: (a, b) => a.lastUpdated - b.lastUpdated
+    sortFn: (a, b) => (a.lastModified ?? 0) - (b.lastModified ?? 0),
   },
   // gamesPlayed: {
   //   label: "Games Played",
@@ -81,54 +81,52 @@ const SORT_OPTIONS: { value: string, label: string, sortFn: (a: any, b: any) => 
     label: "Title",
     defaultDirection: SortDirection.Ascending,
     sortFn: (a, b) => {
-
-      const aName: string = a.collection?.name ?? a.workshop?.title ?? a.filename
-      const bName: string = b.collection?.name ?? b.workshop?.title ?? b.filename
-      return aName.localeCompare(bName)
-    }
+      const aName: string = a.collection?.name ?? a.workshop?.title ?? a.filename;
+      const bName: string = b.collection?.name ?? b.workshop?.title ?? b.filename;
+      return aName.localeCompare(bName);
+    },
   },
   {
     value: "random",
     label: "Random",
     defaultDirection: SortDirection.Ascending,
-    sortFn: (a, b) => {
-      return Math.random() ? 1 : -1
-    }
-  }
-]
+    sortFn: () => {
+      return Math.random() ? 1 : -1;
+    },
+  },
+];
 
 const props = defineProps<{
-  share: ShareInfo,
-  addons: AddonInfo[],
-  status: AsyncDataRequestStatus
-}>()
+  share: ShareInfo;
+  addons: AddonInfo[];
+  status: AsyncDataRequestStatus;
+}>();
 
 useHead({
-  title: `Maps - ${props.share.name} - Shares`
-})
+  title: `Maps - ${props.share.name} - Shares`,
+});
 
 const maps = computed(() => {
-  const query = searchQuery.value?.toLocaleLowerCase()
+  const query = searchQuery.value?.toLocaleLowerCase();
   return props.addons
     .filter(addon => addon.meta.chapterIds != undefined)
     .filter(addon => {
-      if(!query) return true
+      if (!query) return true;
       return addon.filename.toLocaleLowerCase().includes(query)
-        || (addon.workshop && addon.workshop.title?.toLocaleLowerCase().includes(query))
+        || (addon.workshop && addon.workshop.title?.toLocaleLowerCase().includes(query));
     })
     .sort((a, b) => {
-      if(!sortBy.value) return 0
-      if(sortDir.value == SortDirection.Ascending) return sortBy.value.sortFn(a, b)
-      else return sortBy.value.sortFn(b, a)
-    })
-})
+      if (!sortBy.value) return 0;
+      if (sortDir.value == SortDirection.Ascending) return sortBy.value.sortFn(a, b);
+      else return sortBy.value.sortFn(b, a);
+    });
+});
 const sortTooltipText = computed(() => {
-  return `Toggle sort direction (is ${sortDir.value == SortDirection.Ascending ? 'Ascending' : 'Descending'})`
-})
+  return `Toggle sort direction (is ${sortDir.value == SortDirection.Ascending ? "Ascending" : "Descending"})`;
+});
 
-const gridCols = ref(3)
-const searchQuery = ref<string | undefined>()
-const sortBy = ref(SORT_OPTIONS[0])
-const sortDir = ref<SortDirection>(SortDirection.Ascending)
-
+const gridCols = ref(3);
+const searchQuery = ref<string | undefined>();
+const sortBy = ref(SORT_OPTIONS[0]);
+const sortDir = ref<SortDirection>(SortDirection.Ascending);
 </script>

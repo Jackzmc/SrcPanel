@@ -8,16 +8,17 @@
   >
     <template #body>
       <UInput
-v-model="value"
-:type="type"
-:minlength="minlength"
-:maxlength="maxlength"
-:placeholder="placeholder"
-size="xl"
-class="w-full"
-autofocus
-tabindex="1"
-@keydown.enter="emit('close', value)" />
+        v-model="value"
+        :type="type"
+        :minlength="minlength"
+        :maxlength="maxlength"
+        :placeholder="placeholder"
+        size="xl"
+        class="w-full"
+        autofocus
+        tabindex="1"
+        @keydown.enter="emit('close', value)"
+      />
     </template>
     <template #footer>
       <div class="flex gap-2">
@@ -29,16 +30,16 @@ tabindex="1"
 </template>
 
 <script setup lang="ts">
-import type { PromptInputOptions } from '~/composables/useModal';
+import type { PromptInputOptions } from "~/composables/useModal";
 
 const props = withDefaults(defineProps<PromptInputOptions>(), {
   type: "text",
   placeholder: "Enter a value",
-})
+});
 
 const emit = defineEmits<{
-  (e: 'close', value?: string): void,
-}>()
+  (e: "close", value?: string): void;
+}>();
 
-const value = ref(props.defaultValue ?? "")
+const value = ref(props.defaultValue ?? "");
 </script>

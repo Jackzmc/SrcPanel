@@ -54,87 +54,86 @@
 </template>
 
 <script setup lang="ts">
-import type { TableColumn } from '@nuxt/ui'
-import { getRelDate } from '@jzpanel/common/format';
-import type { APINotesResponse, Note } from '@jzpanel/common/Note';
+import type { TableColumn } from "@nuxt/ui";
+import { getRelDate } from "@jzpanel/common/format";
+import type { APINotesResponse, Note } from "@jzpanel/common/Note";
 
-import UserComponent from '@/components/UserComponent.vue'
-import { debounce } from '@jzpanel/common/util'
+import UserComponent from "@/components/UserComponent.vue";
+import { debounce } from "@jzpanel/common/util";
+
 useHead({
-  title: 'Notes',
+  title: "Notes",
   meta: [
-    { name: "robots", content: "noindex,nosnippet" }
-  ]
-})
+    { name: "robots", content: "noindex,nosnippet" },
+  ],
+});
 
-const api = useApi()
-const route = useRoute()
-
-const UButton = resolveComponent('UButton')
+const api = useApi();
+const route = useRoute();
 
 const columns: TableColumn<Note>[] = [
   {
-    accessorKey: 'id',
+    accessorKey: "id",
     header: "Id",
     // cell: ({ row }) => h(UserComponent, { class: "text-primary font-bold", user: row.original.client })
     meta: {
       class: {
         th: "px-4",
-        td: "px-4"
-      }
-    }
+        td: "px-4",
+      },
+    },
   },
   {
-    accessorKey: 'client',
+    accessorKey: "client",
     header: "Client",
-    cell: ({ row }) => h(UserComponent, { class: "text-primary font-bold", user: row.original.client })
+    cell: ({ row }) => h(UserComponent, { class: "text-primary font-bold", user: row.original.client }),
   },
   {
-    accessorKey: 'markedBy',
+    accessorKey: "markedBy",
     header: "Added By",
     cell: ({ row }) => h(UserComponent, { class: "text-primary font-bold", user: row.original.markedBy }),
   },
   {
-    accessorKey: 'createdAt',
+    accessorKey: "createdAt",
     header: "Created At",
-    cell: ({ row }) => getRelDate(row.original.createdAt)
+    cell: ({ row }) => getRelDate(row.original.createdAt),
   },
   {
-    accessorKey: 'content',
+    accessorKey: "content",
     header: "Note",
     cell: ({ row }) => row.original.content,
     meta: {
       class: {
-        td: "whitespace-normal"
-      }
-    }
+        td: "whitespace-normal",
+      },
+    },
   },
-]
+];
 
-const limit = ref(parseInt(route.query.limit as string) || 40)
-const page = ref(parseInt(route.query.page as string) || 1)
+const limit = ref(parseInt(route.query.limit as string) || 40);
+const page = ref(parseInt(route.query.page as string) || 1);
 const search = ref({
-  user: '',
-  content: ''
-})
+  user: "",
+  content: "",
+});
 
 const params = computed(() => {
-  const params = new URLSearchParams()
-  if (search.value.user) params.set('search_user', search.value.user)
-  if (search.value.content) params.set('search_content', search.value.content)
-  params.append('limit', limit.value.toString())
-  params.append('page', page.value.toString())
-  return params
-})
+  const params = new URLSearchParams();
+  if (search.value.user) params.set("search_user", search.value.user);
+  if (search.value.content) params.set("search_content", search.value.content);
+  params.append("limit", limit.value.toString());
+  params.append("page", page.value.toString());
+  return params;
+});
 
 const { data, refresh } = await useAsyncData<APINotesResponse>(
-  'notes',
+  "notes",
   () => api(`/notes?${params.value.toString()}`),
-  { timeout: 10_000 }
-)
+  { timeout: 10_000 },
+);
 
-const refreshDebounce = debounce(refresh, 500)
+const refreshDebounce = debounce(refresh, 500);
 
-watch([limit, page], () => refresh())
-watch(search, () => refreshDebounce(), { deep: true })
+watch([limit, page], () => refresh());
+watch(search, () => refreshDebounce(), { deep: true });
 </script>

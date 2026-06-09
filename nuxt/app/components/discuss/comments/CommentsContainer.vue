@@ -10,7 +10,9 @@
 
     <div v-if="comments" class="flex flex-col my-3 mx-2">
       <Comment v-for="comment in comments" :key="comment.id" :comment="comment" class="border-b border-b-neutral-300 py-2 last:border-b-0" />
-      <p v-if="comments.length === 0" class="text-muted">No comments here, be the first</p>
+      <p v-if="comments.length === 0" class="text-muted">
+        No comments here, be the first
+      </p>
     </div>
     <UAlert v-else-if="error" color="error" :description="error.message" />
 
@@ -25,21 +27,23 @@
             </h3>
           </div>
           <UTextarea
-v-model="submitCommentText"
-placeholder="Your comment here..."
-:rows="5"
-required
-autocorrect
-tabindex="1"
-:disabled="submitCommentLoading"
-@keydown.enter.prevent.ctrl="submitComment" />
+            v-model="submitCommentText"
+            placeholder="Your comment here..."
+            :rows="5"
+            required
+            autocorrect
+            tabindex="1"
+            :disabled="submitCommentLoading"
+            @keydown.enter.prevent.ctrl="submitComment"
+          />
           <UButton
-type="submit"
-class="w-fit"
-trailing-icon="lucide:send"
-:disabled="submitCommentText.length === 0"
-:loading="submitCommentLoading"
-tabindex="2">Submit Reply</UButton>
+            type="submit"
+            class="w-fit"
+            trailing-icon="lucide:send"
+            :disabled="submitCommentText.length === 0"
+            :loading="submitCommentLoading"
+            tabindex="2"
+          >Submit Reply</UButton>
         </div>
       </UCard>
     </form>
@@ -47,47 +51,48 @@ tabindex="2">Submit Reply</UButton>
 </template>
 
 <script setup lang="ts">
-import { APIDiscussionFlags, type APIComment, type APIDiscussion } from '@jzpanel/common/Discussions';
-import Comment from './Comment.vue';
+import { APIDiscussionFlags, type APIComment, type APIDiscussion } from "@jzpanel/common/Discussions";
+import Comment from "./Comment.vue";
 
-const { user } = useAuth()
-const toast = useToast()
+const { user } = useAuth();
+const toast = useToast();
 
 const props = defineProps<{
-  discuss: APIDiscussion
-}>()
+  discuss: APIDiscussion;
+}>();
 
-const api = useApi()
+const api = useApi();
 
 const { data: comments, error, refresh, status } = useLazyAsyncData<APIComment[]>(
   `discuss.${props.discuss.id}.comments`,
-  () => api(`/discussions/${props.discuss.id}/comments`)
-)
-const submitCommentText = ref("")
-const submitCommentLoading = ref(false)
+  () => api(`/discussions/${props.discuss.id}/comments`),
+);
+const submitCommentText = ref("");
+const submitCommentLoading = ref(false);
 
 async function submitComment() {
-  if(!submitCommentText.value) return
-  submitCommentLoading.value = true
+  if (!submitCommentText.value) return;
+  submitCommentLoading.value = true;
   const result = await request(`/api/discussions/${props.discuss.id}/comments`, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'content-type': 'application/json'
+      "content-type": "application/json",
     },
     body: JSON.stringify({
-      content: submitCommentText.value
-    })
-  })
-  if ('error' in result) {
+      content: submitCommentText.value,
+    }),
+  });
+  if ("error" in result) {
     toast.add({
       color: "error",
       title: "Failed to submit comment",
       description: result.error.message,
-    })
-  } else {
-    submitCommentText.value = ""
-    refresh()
+    });
   }
-  submitCommentLoading.value = false
+  else {
+    submitCommentText.value = "";
+    refresh();
+  }
+  submitCommentLoading.value = false;
 }
 </script>

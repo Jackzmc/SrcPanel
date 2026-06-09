@@ -15,10 +15,11 @@
               Closes {{ expiresText }}
             </UBadge>
           </template>
-          <UBadge v-if="(discuss.flags & APIDiscussionFlags.RespondersPublic) && discuss.responses && discuss.responses.totalCount > 0"
-            class="align-right" 
-            leading-icon="lucide:users" 
-            variant="outline" 
+          <UBadge
+            v-if="(discuss.flags & APIDiscussionFlags.RespondersPublic) && discuss.responses && discuss.responses.totalCount > 0"
+            class="align-right"
+            leading-icon="lucide:users"
+            variant="outline"
             color="neutral"
           >
             <UTooltip text="Number of respondants">
@@ -32,12 +33,14 @@
           </UBadge>
         </div>
       </div>
-      <p class="text-sm">{{ discuss.description }}</p>
+      <p class="text-sm">
+        {{ discuss.description }}
+      </p>
 
       <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-4 py-4">
         <DiscussChoice
-v-for="entry in options"
-:key="entry.option.id"
+          v-for="entry in options"
+          :key="entry.option.id"
           :entry="entry"
           :type="discuss.type"
           :editable="type == 'edit'"
@@ -54,7 +57,7 @@ v-for="entry in options"
       <div v-if="type == 'list'" class="flex flex-wrap justify-between items-end">
         <div>
           <UAvatarGroup v-if="discuss.responses?.users" max="8">
-            <UserComponent v-for="user in discuss.responses.users" :key="user.id" :user="user" hide-name />
+            <UserComponent v-for="duser in discuss.responses.users" :key="duser.id" :user="duser" hide-name />
           </UAvatarGroup>
         </div>
         <div class="flex justify-between gap-4">
@@ -71,94 +74,98 @@ v-for="entry in options"
 </template>
 
 <script setup lang="ts">
-import { APIDiscussionFlags, APIDiscussionType, type APIDiscussion } from '@jzpanel/common/Discussions'
-import UserComponent from '@/components/UserComponent.vue'
-import IconText from '@/components/IconText.vue'
-import DiscussChoice from './DiscussChoice.vue';
-import type { DiscussOptionEntry } from '#shared/types/discuss'
-import { debounce } from '@jzpanel/common/util'
-import { formatRelTime, getRelDate, slugify } from '@jzpanel/common/format';
+import { APIDiscussionFlags, APIDiscussionType, type APIDiscussion } from "@jzpanel/common/Discussions";
+import UserComponent from "@/components/UserComponent.vue";
+import IconText from "@/components/IconText.vue";
+import DiscussChoice from "./DiscussChoice.vue";
+import type { DiscussOptionEntry } from "#shared/types/discuss";
+import { debounce } from "@jzpanel/common/util";
+import { formatRelTime, slugify } from "@jzpanel/common/format";
 
 const enum VoteState {
   Inactive,
   Success,
-  Error
+  Error,
 }
 
 const props = defineProps<{
-  discuss: APIDiscussion,
-  type: "list" | "details" | "edit"
-}>()
+  discuss: APIDiscussion;
+  type: "list" | "details" | "edit";
+}>();
 
-const { user } = useAuth()
+const { user } = useAuth();
 
 const options = computed(() => {
   return props.discuss.options?.map<DiscussOptionEntry>((option) => {
-    const id = option.id.toString()
+    const id = option.id.toString();
     return {
       option,
       count: props.discuss.responses?.counts[id] ?? {
         count: 0,
-        percent: 0
+        percent: 0,
       },
-      users: props.discuss.responses?.users?.filter(user => user.choices?.includes(id))
-    }
-  })
-})
+      users: props.discuss.responses?.users?.filter(user => user.choices?.includes(id)),
+    };
+  });
+});
 
 const expiresText = computed(() => {
-  return props.discuss.closedAt ? formatRelTime(props.discuss.closedAt) : null
-})
+  return props.discuss.closedAt ? formatRelTime(props.discuss.closedAt) : null;
+});
 const isClosed = computed(() => {
-  return props.discuss.closedAt && (props.discuss.closedAt*1000) < Date.now()
-})
+  return props.discuss.closedAt && (props.discuss.closedAt * 1000) < Date.now();
+});
 
-const userSelection = ref<number[]>(props.discuss.userSelection)
-const voteState = ref(VoteState.Inactive)
+const userSelection = ref<number[]>(props.discuss.userSelection);
+const voteState = ref(VoteState.Inactive);
 
 async function onSelectOption(optionId: number) {
-  if(props.discuss.type == APIDiscussionType.Checkbox) {
-    const index = userSelection.value.indexOf(optionId)
+  if (props.discuss.type == APIDiscussionType.Checkbox) {
+    const index = userSelection.value.indexOf(optionId);
     if (index > -1) {
-      userSelection.value = userSelection.value.splice(index, 1)
-    } else {
-      userSelection.value.push(optionId)
+      userSelection.value = userSelection.value.splice(index, 1);
     }
-    return
-  } else {
-    userSelection.value = [optionId]
+    else {
+      userSelection.value.push(optionId);
+    }
+    return;
+  }
+  else {
+    userSelection.value = [optionId];
   }
 }
 
-watch(userSelection, () => submitVoteDebounce())
+watch(userSelection, () => submitVoteDebounce());
 
 async function submitVote() {
-  voteState.value = VoteState.Inactive
+  voteState.value = VoteState.Inactive;
 
-  let body
-  if(props.discuss.type == APIDiscussionType.Checkbox) {
-    body = { option: userSelection.value }
-  } else if(props.discuss.type == APIDiscussionType.Radio) {
-    body = { option: userSelection.value.toString() }
+  let body;
+  if (props.discuss.type == APIDiscussionType.Checkbox) {
+    body = { option: userSelection.value };
+  }
+  else if (props.discuss.type == APIDiscussionType.Radio) {
+    body = { option: userSelection.value.toString() };
   }
 
   const result = await request<null>(`/api/discussions/${props.discuss.id}/choose`, {
-    method: 'POST',
+    method: "POST",
     body: JSON.stringify(body),
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
-  })
-  if ('body' in result) {
-    voteState.value = VoteState.Success
-  } else {
-    voteState.value = VoteState.Error
-    console.error('Submit vote error', result.error)
+  });
+  if ("body" in result) {
+    voteState.value = VoteState.Success;
   }
-  clearVoteResult()
+  else {
+    voteState.value = VoteState.Error;
+    console.error("Submit vote error", result.error);
+  }
+  clearVoteResult();
 }
 const clearVoteResult = debounce(() => {
-  voteState.value = VoteState.Inactive
-}, 4000)
-const submitVoteDebounce = debounce(submitVote, 200)
+  voteState.value = VoteState.Inactive;
+}, 4000);
+const submitVoteDebounce = debounce(submitVote, 200);
 </script>

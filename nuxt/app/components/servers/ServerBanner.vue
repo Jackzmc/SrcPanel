@@ -5,7 +5,9 @@
       <div class="flex flex-col">
         <!-- Title/desc -->
         <div class="flex flex-col">
-          <h2 class="text-2xl font-bold">{{ data.server?.name }}</h2>
+          <h2 class="text-2xl font-bold">
+            {{ data.server?.name }}
+          </h2>
           <p class="text-gray-600 dark:text-gray-400">
             {{ data.server?.ip }}:{{ data.server?.port }}
             <UTooltip text="Click to copy IP">
@@ -36,13 +38,19 @@
               >{{ liveStatusAttr.text }}</UBadge>
             </UTooltip>
           </ClientOnly>
-          <UTooltip text="Server Id"><UBadge variant="outline" color="neutral">{{ data.server.id }}</UBadge></UTooltip>
+          <UTooltip text="Server Id">
+            <UBadge variant="outline" color="neutral">
+              {{ data.server.id }}
+            </UBadge>
+          </UTooltip>
         </div>
         <!-- Actions -->
         <div class="flex gap-1">
           <div class="flex gap-1">
             <UTooltip text="tag">
-               <UBadge v-for="tag in data.server.tags" :key="tag" color="neutral">{{ tag }}</UBadge>
+              <UBadge v-for="tag in data.server.tags" :key="tag" color="neutral">
+                {{ tag }}
+              </UBadge>
             </UTooltip>
             <UTooltip v-for="(enabled, key) in data.server.features" :key="key" text="feature">
               <UBadge v-if="enabled" variant="outline">
@@ -68,68 +76,68 @@
 </template>
 
 <script setup lang="ts">
-import type { ServerDetailed } from '@jzpanel/common/Server';
-import type { WebsocketExport } from '~/composables/server/live';
+import type { ServerDetailed } from "@jzpanel/common/Server";
+import type { WebsocketExport } from "~/composables/server/live";
 
-const toast = useToast()
+const toast = useToast();
 
 const props = defineProps<{
-  data: ServerDetailed,
-  ws: WebsocketExport
-}>()
+  data: ServerDetailed;
+  ws: WebsocketExport;
+}>();
 
 const liveStatusAttr = computed(() => {
-  if(import.meta.client) {
-    if(props.ws.wsStatus.value == 'connecting') {
-      const prevConnected = props.ws.live.value?.lastUpdate != undefined
+  if (import.meta.client) {
+    if (props.ws.wsStatus.value == "connecting") {
+      const prevConnected = props.ws.live.value?.lastUpdate != undefined;
       return {
         ui: {
-          leadingIcon: 'animate-spin'
+          leadingIcon: "animate-spin",
         },
-        color: prevConnected ? 'error' : '',
-        variant: 'subtle',
-        leadingIcon: 'lucide:loader-circle',
-        text: prevConnected? 'Disconnected' : "Connecting",
+        color: prevConnected ? "error" : "",
+        variant: "subtle",
+        leadingIcon: "lucide:loader-circle",
+        text: prevConnected ? "Disconnected" : "Connecting",
+      };
+    }
+    else if (props.ws.wsStatus.value == "connected") {
+      if (props.ws.live.value != null) {
+        return {
+          ui: {
+            leadingIcon: "animate-pulse animate-slow",
+          },
+          leadingIcon: "lucide:radio",
+          text: "Live",
+        };
       }
-    } else if(props.ws.wsStatus.value == 'connected') {
-      if(props.ws.live.value != null) {
+      else {
         return {
           ui: {
-            leadingIcon: 'animate-pulse animate-slow'
+            leadingIcon: "animate-pulse",
           },
-          leadingIcon: 'lucide:radio',
-          text: "Live"
-        }
-      } else {
-        return {
-          ui: {
-            leadingIcon: 'animate-pulse'
-          },
-          variant: 'subtle',
-          leadingIcon: 'lucide:radio',
+          variant: "subtle",
+          leadingIcon: "lucide:radio",
           text: "No Data",
-          tooltipText: 'Connected but no data received'
-        }
+          tooltipText: "Connected but no data received",
+        };
       }
     }
   }
   return {
-    color: 'error',
-    leadingIcon: 'lucide:radio-off',
-    text: "Disconnected"
-  }
-})
-
-const showHiddenActions = ref(false)
+    color: "error",
+    leadingIcon: "lucide:radio-off",
+    text: "Disconnected",
+  };
+});
 
 async function copyIp() {
   await navigator.clipboard.writeText(`${props.data.server.ip}:${props.data.server.port}`);
   toast.add({
-    color: 'info',
-    description: 'Server IP copied to clipboard',
-    icon: 'lucide:copy',
-    duration: 2000
-  })
+    color: "info",
+    description: "Server IP copied to clipboard",
+    icon: "lucide:copy",
+    duration: 2000,
+  });
 }
 </script>
 

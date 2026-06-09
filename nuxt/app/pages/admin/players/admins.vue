@@ -7,7 +7,7 @@
             <UInput v-model="query" placeholder="STEAM_#:#:####### or name of player" class="w-100" size="lg" />
           </UFormField>
         </div>
-        <div/>
+        <div />
       </div>
     </UCard>
 
@@ -36,45 +36,45 @@
 </template>
 
 <script setup lang="ts">
-import { UserComponent } from '#components'
-import type { APIListAdmins, ReadableAdminData } from '@jzpanel/common/User'
-import type { TableColumn } from '@nuxt/ui'
+import { UserComponent } from "#components";
+import type { APIListAdmins, ReadableAdminData } from "@jzpanel/common/User";
+import type { TableColumn } from "@nuxt/ui";
 
-const query = ref<string>("")
+const query = ref<string>("");
 
-const { data, error, status } = await useFetch<APIListAdmins>('/api/admins', { key: "players.admins" })
+const { data, error } = await useFetch<APIListAdmins>("/api/admins", { key: "players.admins" });
 
 const filtered = computed(() => {
-  if(!data.value) return undefined
-  if(!query.value) return data.value.admins
-  const q = query.value.toLowerCase()
-  return data.value.admins.filter(admin => admin.name.toLowerCase().includes(q) || admin.steamid.toLowerCase().includes(q))
-})
+  if (!data.value) return undefined;
+  if (!query.value) return data.value.admins;
+  const q = query.value.toLowerCase();
+  return data.value.admins.filter(admin => admin.name.toLowerCase().includes(q) || admin.steamid.toLowerCase().includes(q));
+});
 
 const columns: TableColumn<ReadableAdminData>[] = [
   {
-    accessorKey: 'id',
-    header: "Id"
+    accessorKey: "id",
+    header: "Id",
   },
   {
-    accessorKey: 'name',
+    accessorKey: "name",
     header: "Name",
-    cell: ({row}) => h(UserComponent, {
+    cell: ({ row }) => h(UserComponent, {
       user: {
         steamid: row.original.steamid,
         name: row.original.name,
       },
-      class: "text-primary font-bold text-xs"
+      class: "text-primary font-bold text-xs",
     }),
   },
   {
-    accessorKey: 'steamid',
+    accessorKey: "steamid",
     header: "Steam ID",
     meta: {
       class: {
-        td: "text-xs"
-      }
-    }
-  }
-]
+        td: "text-xs",
+      },
+    },
+  },
+];
 </script>

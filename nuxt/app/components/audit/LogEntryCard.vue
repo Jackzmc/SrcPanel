@@ -2,30 +2,38 @@
   <UCard :ui="{ body: 'p-3 sm:p-2' }" class="log-card">
     <div class="flex justify-between">
       <div class="flex flex-row gap-2 items-center">
-        <UAvatar v-if="entry.type != 'INFO'" :src="avatarUrl"  :as="{ img: 'img' }" size="3xl" :alt="(entry.clientName || entry.client) ?? (entry.target || entry.targetName)" />
+        <UAvatar v-if="entry.type != 'INFO'" :src="avatarUrl" :as="{ img: 'img' }" size="3xl" :alt="(entry.clientName || entry.client) ?? (entry.target || entry.targetName)" />
         <div class="flex flex-col gap-1">
           <div class="space-x-2 text-xs">
-            <UBadge variant="outline" size="sm"> #{{ entry.id }} </UBadge>
+            <UBadge variant="outline" size="sm">
+              #{{ entry.id }}
+            </UBadge>
             <strong>{{ formatDate(entry.timestamp) }}</strong>
             <span class="text-muted">{{ getRelDate(entry.timestamp) }}</span>
           </div>
           <div class="gap-x-1 flex items-start flex-wrap text-wrap">
-            <UBadge :leading-icon="typeData?.icon" :class="typeData?.className" size="md">{{ typeData?.label ?? entry.type }}</UBadge>
+            <UBadge :leading-icon="typeData?.icon" :class="typeData?.className" size="md">
+              {{ typeData?.label ?? entry.type }}
+            </UBadge>
             <LogMessage :type="entry.type" :message="entry.message" :client="client" :target="target" :metadata="entry.metadata" />
           </div>
         </div>
       </div>
       <div class="flex items-center gap-2">
         <UTooltip text="Server event occurred on">
-          <UBadge v-if="entry.server" size="md">{{ entry.server ?? '?' }}</UBadge>
-          <UBadge v-else size="md" variant="outline">Unknown Server</UBadge>
+          <UBadge v-if="entry.server" size="md">
+            {{ entry.server ?? '?' }}
+          </UBadge>
+          <UBadge v-else size="md" variant="outline">
+            Unknown Server
+          </UBadge>
         </UTooltip>
         <UTooltip :text="expanded ? 'Click to hide details' : 'Click to show more details'">
           <UButton
             :leading-icon="expanded ? 'lucide:chevron-up' : 'lucide:chevron-down'"
             variant="outline"
-color="neutral"
-size="xl"
+            color="neutral"
+            size="xl"
             @click="expanded = !expanded"
           />
         </UTooltip>
@@ -36,9 +44,15 @@ size="xl"
     <KeyValueTable>
       <KeyValueRow label="Id">
         <div class="flex gap-2">
-          <UBadge variant="outline"> #{{ entry.id }} </UBadge>
-          <UButton v-if="showActions" leading-icon="lucide:copy" color="neutral" variant="outline" @click="copyId">Share</UButton>
-          <UButton v-if="showActions" @click="findNearby">find nearby entries</UButton>
+          <UBadge variant="outline">
+            #{{ entry.id }}
+          </UBadge>
+          <UButton v-if="showActions" leading-icon="lucide:copy" color="neutral" variant="outline" @click="copyId">
+            Share
+          </UButton>
+          <UButton v-if="showActions" @click="findNearby">
+            find nearby entries
+          </UButton>
         </div>
       </KeyValueRow>
       <KeyValueRow label="Timestamp">
@@ -55,7 +69,7 @@ size="xl"
       </KeyValueRow>
       <KeyValueRow v-if="entry.metadata" label="Metadata">
         <KeyValueTable>
-          <KeyValueRow v-for="value,key in entry.metadata" :key="key" :label="key">
+          <KeyValueRow v-for="value, key in entry.metadata" :key="key" :label="key">
             {{ value }}
           </KeyValueRow>
         </KeyValueTable>
@@ -65,65 +79,55 @@ size="xl"
 </template>
 
 <script setup lang="ts">
-import type { LogEntry } from '@jzpanel/common/Logs';
-import type { LogEntryUser } from '@jzpanel/common/logs'
-import KeyValueTable from '../table/KeyValueTable.vue';
-import KeyValueRow from '../table/KeyValueRow.vue';
-import { formatDate, getRelDate } from '@jzpanel/common/format';
-import LogMessage from './LogMessage.vue';
-import { TYPE_MAP } from '#shared/types/logs'
+import type { LogEntry } from "@jzpanel/common/Logs";
+import type { LogEntryUser } from "@jzpanel/common/logs";
+import KeyValueTable from "../table/KeyValueTable.vue";
+import KeyValueRow from "../table/KeyValueRow.vue";
+import { formatDate, getRelDate } from "@jzpanel/common/format";
+import LogMessage from "./LogMessage.vue";
+import { TYPE_MAP } from "#shared/types/logs";
 
 const emit = defineEmits<{
-  (e: 'find-nearby', id: number): void
-}>()
+  (e: "find-nearby", id: number): void;
+}>();
 
-const toast = useToast()
+const toast = useToast();
 
 const props = defineProps<{
-  entry: LogEntry,
-  showActions?: boolean
-}>()
+  entry: LogEntry;
+  showActions?: boolean;
+}>();
 
 const avatarUrl = computed(() => {
-  const user = props.entry.client ?? props.entry.target
-  if(!user) return
-  return `/api/users/${user}/avatar`
-})
+  const user = props.entry.client ?? props.entry.target;
+  if (!user) return;
+  return `/api/users/${user}/avatar`;
+});
 
 const typeData = computed(() => {
-  if(props.entry.type == 'CHAT' && props.entry.metadata?.admin_chat)
-    return TYPE_MAP["ADMIN_CHAT"]
-  return TYPE_MAP[props.entry.type as string]
-})
+  if (props.entry.type == "CHAT" && props.entry.metadata?.admin_chat)
+    return TYPE_MAP["ADMIN_CHAT"];
+  return TYPE_MAP[props.entry.type as string];
+});
 
-const typeStyle = computed(() => {
-  const data = typeData.value
-  if(data) {
-    return {
-      'background-color': data.color
-    }
-  }
-  return undefined
-})
+// TODO: replace by server-side
+const client = computed<LogEntryUser | undefined>(() => props.entry.client && props.entry.client.startsWith("STEAM_") ? { steamid: props.entry.client, name: props.entry.clientName! } : undefined);
+const target = computed<LogEntryUser | undefined>(() => props.entry.target && props.entry.target.startsWith("STEAM_") ? { steamid: props.entry.target, name: props.entry.targetName! } : undefined);
 
-// TODO: replace by server
-const client = computed<LogEntryUser|undefined>(() => props.entry.client && props.entry.client.startsWith('STEAM_') ? { steamid: props.entry.client, name: props.entry.clientName! } : undefined)
-const target = computed<LogEntryUser|undefined>(() => props.entry.target && props.entry.target.startsWith('STEAM_') ? { steamid: props.entry.target, name: props.entry.targetName! } : undefined)
-
-const expanded = ref(false)
+const expanded = ref(false);
 
 async function copyId() {
-  const link = `${location.protocol}//${window.location.host}${window.location.pathname}?id=${props.entry.id}`
-  await window.navigator.clipboard.writeText(link)
+  const link = `${location.protocol}//${window.location.host}${window.location.pathname}?id=${props.entry.id}`;
+  await window.navigator.clipboard.writeText(link);
   toast.add({
     color: "info",
     title: "Copied to clipboard",
-    description: link
-  })
+    description: link,
+  });
 }
 
 function findNearby() {
-  emit("find-nearby", props.entry.id)
+  emit("find-nearby", props.entry.id);
 }
 </script>
 

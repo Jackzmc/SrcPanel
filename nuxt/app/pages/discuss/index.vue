@@ -8,11 +8,15 @@
       <div>
         <UCard class="bg-light-blue">
           <div class="space-y-2">
-            <h2 class="text-xl font-bold">Start a discussion</h2>
+            <h2 class="text-xl font-bold">
+              Start a discussion
+            </h2>
             <UFormField label="Discussion topic / title" :ui="{ label: 'font-semibold' }">
               <UInput v-model="startDiscussionTitle" placeholder="Ask a question" leading-icon="lucide:message-square" class="w-full rounded-4xl" @keydown.enter="startDiscussion" />
             </UFormField>
-            <UButton :disabled="startDiscussionTitle.length === 0" trailing-icon="lucide:arrow-right" @click="startDiscussion" >Start discussion</UButton>
+            <UButton :disabled="startDiscussionTitle.length === 0" trailing-icon="lucide:arrow-right" @click="startDiscussion">
+              Start discussion
+            </UButton>
           </div>
         </UCard>
       </div>
@@ -21,23 +25,23 @@
 </template>
 
 <script setup lang="ts">
-import type { APIDiscussion } from '@jzpanel/common/Discussions';
-import DiscussCard from '~/components/discuss/DiscussCard.vue';
+import type { APIDiscussion } from "@jzpanel/common/Discussions";
+import DiscussCard from "~/components/discuss/DiscussCard.vue";
+
 definePageMeta({
-  title: 'Discussions',
-  description: 'Vote and discuss anything',
-  hero: "default"
-})
+  title: "Discussions",
+  description: "Vote and discuss anything",
+  hero: "default",
+});
 
-const { requireAuth } = useAuth()
-await requireAuth()
+const { requireAuth } = useAuth();
+await requireAuth();
 
-const { data, error } = await useFetch<APIDiscussion[]>('/api/discussions', { key: 'discuss.list' })
+const { data, error } = await useFetch<APIDiscussion[]>("/api/discussions", { key: "discuss.list" });
 
-const startDiscussionTitle = ref("")
+const startDiscussionTitle = ref("");
 
 async function startDiscussion() {
-  await navigateTo(`/discuss/new?title=${encodeURIComponent(startDiscussionTitle.value)}`)
+  await navigateTo(`/discuss/new?title=${encodeURIComponent(startDiscussionTitle.value)}`);
 }
-
 </script>

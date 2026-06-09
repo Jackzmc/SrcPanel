@@ -6,28 +6,25 @@
       </h3>
     </UTooltip>
     <div class="">
-      <slot/>
+      <slot />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-const emit = defineEmits<{
-  (e: 'update:flags', flags: number): void
-}>()
-
 const props = withDefaults(defineProps<{
-  label: string,
-  value?: "inline" | "below"
+  label: string;
+  value?: "inline" | "below";
 }>(), {
   value: "inline",
-})
+});
 
 const valueClass = computed(() => {
-  if(props.value == "below") {
-    return "flex-col"
-  } else {
-    return "justify-between"
+  if (props.value == "below") {
+    return "flex-col";
   }
-})
+  else {
+    return "justify-between";
+  }
+});
 </script>

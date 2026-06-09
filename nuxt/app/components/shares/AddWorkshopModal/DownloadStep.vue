@@ -1,16 +1,15 @@
 <script setup lang="ts">
-
 enum DownloadState {
   Idle,
   Downloading,
   PromptRedownload,
   RestartingServers,
-  Done
+  Done,
 }
 
-const downloadState = ref<DownloadState>(DownloadState.Idle)
-const downloadLog = ref<{state: string, message: string, error?: boolean, success?: boolean, filename?: string}[]>([])
-const downloads = ref<Record<string, { entryTitle: string, url: string, totalBytes: number, currentBytes: number, progress: number }>>({})
+const downloadState = ref<DownloadState>(DownloadState.Idle);
+const downloadLog = ref<{ state: string; message: string; error?: boolean; success?: boolean; filename?: string }[]>([]);
+const downloads = ref<Record<string, { entryTitle: string; url: string; totalBytes: number; currentBytes: number; progress: number }>>({});
 
 // function startDownload(force = false) {
 //   downloadState.value = DownloadState.Downloading

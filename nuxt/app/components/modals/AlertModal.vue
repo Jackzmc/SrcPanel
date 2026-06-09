@@ -18,14 +18,14 @@
 </template>
 
 <script setup lang="ts">
-import type { PromptAlertOptions } from '~/composables/useModal';
+import type { PromptAlertOptions } from "~/composables/useModal";
 
 const props = withDefaults(defineProps<PromptAlertOptions>(), {
   okText: "Close",
   okColor: "primary",
-})
+});
 
-const emit = defineEmits<{ close: [boolean] }>()
+const emit = defineEmits<{ close: [boolean] }>();
 
-const isVNode = computed(() => typeof props.body !== 'string')
+const isVNode = computed(() => typeof props.body !== "string");
 </script>

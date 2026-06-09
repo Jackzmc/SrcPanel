@@ -3,16 +3,16 @@
     <!-- TODO: re add permission check -->
     <NuxtPage />
     <UContainer class="space-y-2">
-      
+
       <div class="grid grid-cols-3 gap-4">
-        <!-- Left Column-->
+        <!-- Left Column -->
         <div class="col-span-2">
           <div class="flex flex-col gap-2">
             <UTabs
-v-model="view"
-:items="items"
-:content="false"
-class="w-full"
+              v-model="view"
+              :items="items"
+              :content="false"
+              class="w-full"
               size="md"
             />
             <UInput v-model="searchQuery" class="w-full" icon="lucide:search" placeholder="Search for an item" />
@@ -28,7 +28,9 @@ class="w-full"
                     <strong>
                       {{ troll.name }}
                     </strong>
-                    <div class="text-sm">{{ troll.description }}</div>
+                    <div class="text-sm">
+                      {{ troll.description }}
+                    </div>
                   </button>
                 </li>
               </ul>
@@ -65,80 +67,80 @@ class="w-full"
 </template>
 
 <script setup lang="ts">
-import type { SelectMenuItem, TabsItem } from '@nuxt/ui'
-import Hero from '~/components/Hero.vue'
+import type { TabsItem } from "@nuxt/ui";
 
-import FTT_DATA from '~/assets/data/ftt.json'
+import FTT_DATA from "~/assets/data/ftt.json";
+
 useHead({
-  title: "Feed The Trolls"
-})
+  title: "Feed The Trolls",
+});
 definePageMeta({
   title: "Feed The Trolls",
   description: "The anti-troll arsenal",
-  hero: "default"
-})
-const data = FTT_DATA as FttData
+  hero: "default",
+});
+const data = FTT_DATA as FttData;
 
 interface FttData {
   trolls: Record<string, {
-    name: string,
-    description?: string,
-    modes?: string[],
-    subnotes?: string[],
+    name: string;
+    description?: string;
+    modes?: string[];
+    subnotes?: string[];
     prompts?: {
-      flags: string[],
-      multiple?: boolean,
-      conditions?: string[]
-    }[]
-  }[]>,
-  combos: Record<string, string[]>
+      flags: string[];
+      multiple?: boolean;
+      conditions?: string[];
+    }[];
+  }[]>;
+  combos: Record<string, string[]>;
 }
 
 const items: TabsItem[] = [
   {
     label: "Trolls",
-    value: "trolls"
+    value: "trolls",
   },
   {
     label: "Combos",
-    value: 'combos'
-  }
-]
+    value: "combos",
+  },
+];
 
-const searchQuery = ref<string>("")
-const view = ref<"combos"|"trolls">("trolls")
+const searchQuery = ref<string>("");
+const view = ref<"combos" | "trolls">("trolls");
 
 const filtered = computed(() => {
-  if(!data) return []
-  if(view.value == "combos") {
-    if(!searchQuery.value) return data.combos
-    const query = searchQuery.value.toLowerCase()
+  if (!data) return [];
+  if (view.value == "combos") {
+    if (!searchQuery.value) return data.combos;
+    const query = searchQuery.value.toLowerCase();
     return Object.fromEntries(Object.entries(data.combos)
 
       .filter(([key, list]) => {
         return key.toLowerCase().includes(query)
-          || list.some(item => item.toLowerCase().includes(query))
-      }))
-  } else if(view.value == "trolls") {
-    if(!searchQuery.value) return data.trolls
-    const query = searchQuery.value.toLowerCase()
+          || list.some(item => item.toLowerCase().includes(query));
+      }));
+  }
+  else if (view.value == "trolls") {
+    if (!searchQuery.value) return data.trolls;
+    const query = searchQuery.value.toLowerCase();
     return Object.fromEntries(Object.entries(data.trolls)
       // Return for each category list of filtered out trolls
       .map(([category, trolls]) => {
         const list = trolls.filter(troll => {
           return troll.name.toLowerCase().includes(query)
-            || troll.description?.toLowerCase().includes(query)
-        })
-        return [category, list]
+            || troll.description?.toLowerCase().includes(query);
+        });
+        return [category, list];
       })
       // Only include categories that have items
-      .filter(([category, trolls]) => {
-        return trolls!.length > 0
-      }))
+      .filter(([, trolls]) => {
+        return trolls!.length > 0;
+      }));
   }
-  return null
-})
-
+  return null;
+});
 
 // // Lets server fetch in SSR
 // const baseURL = import.meta.server

@@ -2,9 +2,9 @@
   <table class="w-full border-collapse my-2">
     <tbody>
       <GamePermissionRow
-v-for="(desc,flag) in FLAGS"
-:key="flag" 
-        :flag="flag" 
+        v-for="(desc, flag) in FLAGS"
+        :key="flag"
+        :flag="flag"
         :description="desc"
         :enabled="flags != undefined && flags.includes(flag)"
         :root="hasRoot"
@@ -14,8 +14,8 @@ v-for="(desc,flag) in FLAGS"
       <!-- <tr v-for="(desc,flag) in FLAGS" :key="flag" class="border-b bg-gray-100 dark:bg-gray-600">
         <th class="text-left px-5 py-2">{{ desc }}</th>
         <td v-if="edit">
-          <UCheckbox label="Granted" size="lg" variant="card" class="bg-neutral-50" 
-            :checked="flags && (hasRoot || flags.includes(flag))" 
+          <UCheckbox label="Granted" size="lg" variant="card" class="bg-neutral-50"
+            :checked="flags && (hasRoot || flags.includes(flag))"
             @change="emit('toggle', )"
           />
         </td>
@@ -33,17 +33,17 @@ v-for="(desc,flag) in FLAGS"
 </template>
 
 <script setup lang="ts">
-import { FLAGS } from '@jzpanel/common/User';
-import GamePermissionRow from './GamePermissionRow.vue';
+import { FLAGS } from "@jzpanel/common/User";
+import GamePermissionRow from "./GamePermissionRow.vue";
 
 const emit = defineEmits<{
-  (e: 'toggle', flag: string, enabled: boolean): void,
-}>()
+  (e: "toggle", flag: string, enabled: boolean): void;
+}>();
 
 const props = defineProps<{
-  edit?: boolean,
-  flags?: string
-}>()
+  edit?: boolean;
+  flags?: string;
+}>();
 
-const hasRoot = computed(() => props.flags != undefined && props.flags.includes('z'))
+const hasRoot = computed(() => props.flags != undefined && props.flags.includes("z"));
 </script>

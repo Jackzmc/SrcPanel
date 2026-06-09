@@ -18,15 +18,15 @@
 </template>
 
 <script setup lang="ts">
-import type { PromptConfirmOptions } from '~/composables/useModal';
+import type { PromptConfirmOptions } from "~/composables/useModal";
 
 withDefaults(defineProps<PromptConfirmOptions>(), {
   okText: "Okay",
   okColor: "primary",
   okShown: true,
-  cancelText: 'Cancel',
-  cancelColor: "neutral"
-})
+  cancelText: "Cancel",
+  cancelColor: "neutral",
+});
 
-const emit = defineEmits<{ close: [boolean] }>()
+const emit = defineEmits<{ close: [boolean] }>();
 </script>

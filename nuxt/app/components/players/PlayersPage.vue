@@ -36,29 +36,29 @@
 </template>
 
 <script setup lang="ts">
-import { UserComponent } from '#components'
-import { getRelDate } from '@jzpanel/common/format'
-import type { PlayerEntry } from '@jzpanel/common/User'
-import type { TableColumn } from '@nuxt/ui'
+import { UserComponent } from "#components";
+import { getRelDate } from "@jzpanel/common/format";
+import type { PlayerEntry } from "@jzpanel/common/User";
+import type { TableColumn } from "@nuxt/ui";
 
 const props = defineProps<{
-  loading: boolean,
-  error?: Error,
-  players?: PlayerEntry[]
-  showServerColumn?: boolean,
-}>()
+  loading: boolean;
+  error?: Error;
+  players?: PlayerEntry[];
+  showServerColumn?: boolean;
+}>();
 
 const columns = computed(() => {
   const columns: TableColumn<PlayerEntry>[] = [
     {
       accessorKey: "name",
       header: "Name",
-      cell: ({row}) => h(UserComponent, {
+      cell: ({ row }) => h(UserComponent, {
         user: {
           steamid: row.original.steamid,
           name: row.original.name ?? undefined,
         },
-        class: "text-primary font-bold"
+        class: "text-primary font-bold",
       }),
     },
     {
@@ -68,31 +68,31 @@ const columns = computed(() => {
     {
       accessorKey: "bansCount",
       header: "Bans",
-      cell: ({row}) => h("span", { class: row.original.bansCount == 0 && "text-neutral-600/25" }, row.original.bansCount),
+      cell: ({ row }) => h("span", { class: row.original.bansCount == 0 && "text-neutral-600/25" }, row.original.bansCount),
     },
     {
       accessorKey: "notesCount",
       header: "Notes",
-      cell: ({row}) => h("span", { class: row.original.notesCount == 0 && "text-neutral-600/25" }, row.original.notesCount),
+      cell: ({ row }) => h("span", { class: row.original.notesCount == 0 && "text-neutral-600/25" }, row.original.notesCount),
     },
     {
       accessorKey: "firstJoinDate",
       header: "First Join",
-      cell: ({row}) => row.original.firstJoinDate ? new Date(row.original.firstJoinDate * 1000).toLocaleString() : "Never",
+      cell: ({ row }) => row.original.firstJoinDate ? new Date(row.original.firstJoinDate * 1000).toLocaleString() : "Never",
     },
     {
       accessorKey: "lastJoinDate",
       header: "Last Join",
-      cell: ({row}) => row.original.lastJoinDate ? getRelDate(row.original.lastJoinDate) : "Never",
-    }
-  ]
+      cell: ({ row }) => row.original.lastJoinDate ? getRelDate(row.original.lastJoinDate) : "Never",
+    },
+  ];
   // Hide server if we selected a server
-  if(props.showServerColumn) {
+  if (props.showServerColumn) {
     columns.push({
       accessorKey: "server",
       header: "Server",
-    },)
+    });
   }
-  return columns
-})
+  return columns;
+});
 </script>
