@@ -26,9 +26,9 @@
 </template>
 
 <script setup lang="ts">
-import type { ShareInfo } from "@jzpanel/common/Share";
+import type { ShareInfo } from "@jzpanel/common/Share"
 
-const toast = useToast();
+const toast = useToast()
 const emit = defineEmits(["close"])
 
 const props = defineProps<{
@@ -37,8 +37,8 @@ const props = defineProps<{
 
 const accepts = computed(() => {
   if (!props.share.fileExts) return undefined; // any file
-  return props.share.fileExts.map(ext => `.${ext}`).join(",");
-});
+  return props.share.fileExts.map(ext => `.${ext}`).join(",")
+})
 
 const selected = ref<File | undefined>();
 
@@ -53,7 +53,7 @@ async function uploadFile() {
       color: "success",
       description: `${selected.value?.name} was uploaded successfully`,
       icon: "lucide:upload",
-    });
+    })
   }
   else {
     toast.add({
@@ -61,9 +61,10 @@ async function uploadFile() {
       color: "error",
       description: `${selected.value?.name} failed: ${response.error}`,
       icon: "lucide:upload",
-    });
+    })
   }
 
-  selected.value = undefined;
+  selected.value = undefined
 }
 </script>
+

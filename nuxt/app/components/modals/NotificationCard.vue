@@ -18,7 +18,7 @@
 </template>
 
 <script setup lang="ts">
-import { type UserNotification } from "@jzpanel/common/User";
+import type { UserNotification } from "@jzpanel/common/User";
 import { getLevelData } from "~/composables/client/useNotifications.js";
 
 const props = defineProps<{

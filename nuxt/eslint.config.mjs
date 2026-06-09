@@ -6,7 +6,7 @@ export default withNuxt(
   {
     rules: {
       // "@stylistic/quotes": 'off',
-      // "@stylistic/semi": ["error", 'never'],
+      "@stylistic/semi": "off",
       // "@stylistic/comma-dangle": ["error", "only-multiline"],
       "vue/max-attributes-per-line": ["error", { singleline: 5, multiline: 1 }],
       "@eslint/no-explicit-any": "off",
