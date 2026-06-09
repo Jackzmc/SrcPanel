@@ -18,7 +18,8 @@
     </UFormField>
     <div class="my-2">
       <PermissionsList 
-        :codes="editData.codes" :flags="editData.flags" 
+        :codes="editData.codes" 
+        :flags="editData.flags" 
         edit
         @update:flags="onFlagsUpdated" 
         @add:code="onCodeAdd"

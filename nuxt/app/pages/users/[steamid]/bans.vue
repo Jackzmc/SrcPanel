@@ -14,13 +14,14 @@
 </template>
 
 <script setup lang="ts">
+import { APIBanFlags, type APIBanResponse, type ListAPIBan } from '@jzpanel/common/Ban';
+import type { APIUserDetails } from '@jzpanel/common/User'
+import type { TabsItem } from '@nuxt/ui';
+
 definePageMeta({
   tab: "bans",
 })
 
-import { APIBanFlags, type APIBanResponse, type ListAPIBan } from '@jzpanel/common/Ban';
-import type { APIUserDetails } from '@jzpanel/common/User'
-import type { TabsItem } from '@nuxt/ui';
 
 const api = useApi()
 

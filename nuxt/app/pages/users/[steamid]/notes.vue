@@ -26,7 +26,8 @@
               </UButton>
           </div>
       </UCard>
-      <NoteCard v-for="note in data?.notes" :key="note.id" 
+      <NoteCard v-for="note in data?.notes" 
+        :key="note.id" 
         :note="note" 
         @refresh="refresh()"
       />
@@ -35,13 +36,13 @@
 </template>
 
 <script setup lang="ts">
-definePageMeta({
-  tab: "notes",
-})
-
 import { type APICreateNoteResponse, type APIListUserNotes, type APINotesResponse } from '@jzpanel/common/Note';
 import type { APIUserDetails } from '@jzpanel/common/User'
 import NoteCard from '~/components/users/NoteCard.vue';
+
+definePageMeta({
+  tab: "notes",
+})
 
 const api = useApi()
 const toast = useToast()

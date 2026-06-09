@@ -10,7 +10,8 @@
       </template>
     </Hero>
     <UContainer v-if="data&&ids">
-      <UTabs class="mt-4"
+      <UTabs 
+        class="mt-4"
         :items="tabs"
         :model-value="tabId"
         @update:model-value="tab => navigateTo(`/users/${ids!.steamid2}/${tab}`)"
@@ -39,7 +40,7 @@
 </template>
 
 <script setup lang="ts">
-import { type APIUserDetails } from '@jzpanel/common/User'
+import type { APIUserDetails } from '@jzpanel/common/User'
 import SteamID from 'steamid'
 
 const route = useRoute()
@@ -59,7 +60,7 @@ const ids = computed(() => {
       steamid2: steamid.getSteam2RenderedID(),
       steamid64: steamid.getSteamID64(),
     }
-  } catch(err) {
+  } catch {
     return null
   }
 })

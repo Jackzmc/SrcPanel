@@ -34,11 +34,8 @@
 </template>
 
 <script setup lang="ts">
-import { ProseP } from '#components'
-import type { SearchType } from '@jzpanel/common/Search'
 import { debounce } from '@jzpanel/common/util'
 import type { NavigationMenuItem } from '@nuxt/ui'
-import LogEntryCard from '~/components/audit/LogEntryCard.vue'
 import ObjectCard from '~/components/search/ObjectCard.vue'
 import RouteCard from '~/components/search/RouteCard.vue'
 import { usePanelSearch } from '~/composables/client/usePanelSearch.js'

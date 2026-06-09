@@ -19,7 +19,7 @@ const props = defineProps<{
   data: APIUserDetails
 }>()
 
-const { data, refresh, error } = await useAsyncData<APIBanDetailsResponse>(
+const { data, error } = await useAsyncData<APIBanDetailsResponse>(
   `bans.${props.steamid}.${route.params.banId}`,
   () => api(`/bans/${route.params.banId}`)
 )

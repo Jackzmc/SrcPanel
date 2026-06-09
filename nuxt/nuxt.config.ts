@@ -121,14 +121,6 @@ export default defineNuxtConfig({
     }
   },
 
-  eslint: {
-    config: {
-      stylistic: {
-        braceStyle: '1tbs',
-      }
-    }
-  },
-
   sentry: {
     org: 'jackzmc',
     project: 'admin-panel-ui',

@@ -2,14 +2,10 @@ packages:
   - common-types
   - server
   - nuxt
-ignoredBuiltDependencies:
-  - cpu-features
-  - protobufjs
-  - ssh2
-
-onlyBuiltDependencies:
-  - sqlite3
-  - esbuild
-
+allowBuilds:
+  sharp: true
+  sqlite3: true
+  esbuild: true
+  cpu-features: flse
 overrides:
   "@vercel/nft": "^0.27.4"
