@@ -1,6 +1,5 @@
 <template>
   <div>
-    isAtBottom={{ isAtBottom }}
     <!-- Console Output -->
     <div class="bg-black dark:bg-blue-950 text-white h-80 rounded-t-md p-4 text-xs font-mono">
       <div v-if="ws.wsStatus.value == 'connecting'">
