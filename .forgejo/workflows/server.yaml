@@ -26,6 +26,7 @@ jobs:
         uses: https://git.jackz.me/actions/checkout@v4
       - name: Metadata
         uses: https://git.jackz.me/actions/docker-metadata-action@v6.1.0
+        id: meta
         with:
           images: |
             ${{ env.BASE_IMAGE_NAME }}-server
