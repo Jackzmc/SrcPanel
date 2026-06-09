@@ -67,4 +67,3 @@ async function uploadFile() {
   selected.value = undefined
 }
 </script>
-
