@@ -221,8 +221,7 @@ async function getWorkshopInfo() {
     const response = await fetch(`/api/shares/workshop/${match[2]}/details`);
     workshopInfo.value = await response.json();
     loadingState.value = LoadingState.Idle;
-  }
-  catch (error) {
+  } catch (error) {
     console.error(error);
     loadingState.value = LoadingState.Error;
   }
@@ -300,8 +299,7 @@ function startDownload(force = false) {
     try {
       const payload = JSON.parse(event.data);
       onDownloadPayload(payload, sse, force, startTime);
-    }
-    catch (err) {
+    } catch (err) {
       console.warn("Got invalid json payload: ", err, " data: ", event.data);
     }
   });
@@ -320,16 +318,14 @@ function onDownloadPayload(payload: APIDownloadAddonsMessage, sse: EventSource, 
         error: true,
       });
       sse.close();
-    }
-    else {
+    } else {
       downloadLog.value.push({
         state: ("state" in payload && payload.state) || payload.code,
         message: payload.message,
         error: true,
       });
     }
-  }
-  else if ("state" in payload && payload.state === "COMPLETE") {
+  } else if ("state" in payload && payload.state === "COMPLETE") {
     downloadLog.value.push({
       state: "DONE",
       message: `Took ${Math.round((Date.now() - startTime) / 1000)} seconds. Maps will not be playable until the server(s) have restarted. You can restart individual servers from the 'Server Management' page.`,
@@ -338,20 +334,17 @@ function onDownloadPayload(payload: APIDownloadAddonsMessage, sse: EventSource, 
     if (downloadState.value == DownloadState.Downloading || wasForced) downloadState.value = DownloadState.Done;
     else console.debug("COMPLETE on state=", downloadState.value);
     sse.close();
-  }
-  else if ("state" in payload && payload.state === "DOWNLOAD_PROGRESS") {
+  } else if ("state" in payload && payload.state === "DOWNLOAD_PROGRESS") {
     if (!payload.entry || !downloads.value[payload.entry]) return console.warn(`Progress update for download that we don't know: ${payload.entry}`);
     downloads.value[payload.entry]!.currentBytes = payload.currentBytes;
     downloads.value[payload.entry]!.progress = payload.progress;
-  }
-  else if ("state" in payload && payload.state === "DOWNLOADING") {
+  } else if ("state" in payload && payload.state === "DOWNLOADING") {
     // @ts-expect-error whatever this code is terrible
     downloads.value[payload.entry] = {
       ...payload,
       url: `https://steamcommunity.com/sharedfiles/filedetails/?id=${payload.entry}`,
     };
-  }
-  else {
+  } else {
     if ("state" in payload && payload.state === "DOWNLOADED") {
       if (!payload.entry || !downloads.value[payload.entry]) return console.warn(`Progress update for download that we don't know: ${payload.entry}`);
       downloads.value[payload.entry]!.progress = 1;

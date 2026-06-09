@@ -75,8 +75,7 @@ function transform(server: APIListServersV2_Server): UIServer {
   let statusClass;
   if (server.online) {
     statusClass = (server.status.data && server.status.data?.players.length > 0) ? "text-primary" : "text-success";
-  }
-  else {
+  } else {
     statusClass = "text-error";
   }
   return {

@@ -4,8 +4,14 @@ const buildDate = new Date().toLocaleString("en-US", { timeZone: "UTC" });
 const buildCommit = (() => {
   try {
     return execSync("git rev-parse --short HEAD").toString().trim();
+  } catch {
+    return "DEV";
   }
-  catch {
+})();
+const buildVersion = (() => {
+  try {
+    return execSync("git describe --tags --always --dirty").toString().trim();
+  } catch {
     return "DEV";
   }
 })();
@@ -59,6 +65,7 @@ export default defineNuxtConfig({
     define: {
       __BUILD_DATE__: JSON.stringify(buildDate),
       __BUILD_COMMIT__: JSON.stringify(buildCommit),
+      __BUILD_VERSION__: JSON.stringify(buildVersion),
       __VUE_PROD_DEVTOOLS__: true,
       __VUE_PROD_HYDRATION_MISMATCH_DETAILS__: true,
     },
@@ -73,14 +80,6 @@ export default defineNuxtConfig({
         output: {
           manualChunks: undefined, // let Rollup decide, can help memory
         },
-      },
-    },
-  },
-  eslint: {
-    config: {
-      stylistic: {
-        quotes: "double",
-        semi: true,
       },
     },
   },

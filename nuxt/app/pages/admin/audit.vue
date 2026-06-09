@@ -324,8 +324,7 @@ function mergeLogs(existingLogs: LogEntry[] = [], newLogs: LogEntry[], direction
   if (direction == "before") {
     // Loading new entries on bottom, so they are older, append to front of list
     buffer = [...existingLogs, ...filteredNewLogs];
-  }
-  else {
+  } else {
     buffer = [...filteredNewLogs, ...existingLogs];
   }
   console.log("buffer", buffer);
@@ -337,8 +336,7 @@ function mergeLogs(existingLogs: LogEntry[] = [], newLogs: LogEntry[], direction
     console.debug("removing", toRemove, "prelen=", buffer.length);
     if (order.value == "before") {
       buffer.splice(buffer.length - toRemove - 1, toRemove);
-    }
-    else {
+    } else {
       buffer.splice(0, toRemove);
     }
   }

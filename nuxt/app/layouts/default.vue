@@ -29,7 +29,7 @@
     <UFooter>
       <template #default>
         <p class="text-sm text-muted">
-          <b>{{ appName }}</b> v{{ pkg.version }}. Commit <b>{{ commit }}</b>. Built <b>{{ date }} UTC</b>
+          <b>{{ appName }}</b> {{ version }}. Built <b>{{ date }} UTC</b>
         </p>
       </template>
     </UFooter>
@@ -47,6 +47,7 @@ declare const __BUILD_COMMIT__: string;
 
 const commit = __BUILD_COMMIT__;
 const date = __BUILD_DATE__;
+const version = __BUILD_VERSION__
 
 const { steamOnline, notice } = await usePanelMeta();
 const route = useRoute();

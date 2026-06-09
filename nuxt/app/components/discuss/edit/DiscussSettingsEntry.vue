@@ -22,8 +22,7 @@ const props = withDefaults(defineProps<{
 const valueClass = computed(() => {
   if (props.value == "below") {
     return "flex-col";
-  }
-  else {
+  } else {
     return "justify-between";
   }
 });

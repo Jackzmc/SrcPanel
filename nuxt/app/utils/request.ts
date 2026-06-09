@@ -60,12 +60,10 @@ export async function request<T extends Record<string, any> | null>(url: string,
     await ResponseError.throwIfError(res);
 
     return res.status === 204 ? { body: null } : { body: await res.json() as T };
-  }
-  catch (err) {
+  } catch (err) {
     if (err instanceof Error) {
       return { error: new ResponseError({ message: err.message, cause: err }) };
-    }
-    else {
+    } else {
       return { error: new ResponseError({ message: String(err) }) };
     }
   }

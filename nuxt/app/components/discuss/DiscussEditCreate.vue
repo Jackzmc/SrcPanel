@@ -214,8 +214,7 @@ async function createDiscussion() {
       title: "Failed to create discussion",
       description: result.error.message,
     });
-  }
-  else {
+  } else {
     toast.add({
       color: "success",
       title: `Discussion #${result.body!.id}`,
@@ -241,8 +240,7 @@ async function putDiscussion() {
       title: "Failed to create discussion",
       description: result.error.message,
     });
-  }
-  else {
+  } else {
     toast.add({
       color: "success",
       title: `Discussion #${props.discuss.id}`,
@@ -256,8 +254,7 @@ async function putDiscussion() {
 async function saveChanges() {
   if (props.mode == "new") {
     await createDiscussion();
-  }
-  else {
+  } else {
     await putDiscussion();
   }
 }

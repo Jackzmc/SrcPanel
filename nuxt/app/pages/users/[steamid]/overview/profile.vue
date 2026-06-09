@@ -90,8 +90,7 @@ const birthDate = computed(() => {
   const date = new Date(2000, profile.birthMonth ?? 0, profile.birthDate);
   if (profile.birthMonth) {
     return date.toLocaleDateString("en-US", { month: "long", day: "numeric" });
-  }
-  else if (profile.birthDate) {
+  } else if (profile.birthDate) {
     return date.toLocaleDateString("en-US", { day: "numeric" });
   }
   return null;

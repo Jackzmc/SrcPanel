@@ -99,8 +99,7 @@ const liveStatusAttr = computed(() => {
         leadingIcon: "lucide:loader-circle",
         text: prevConnected ? "Disconnected" : "Connecting",
       };
-    }
-    else if (props.ws.wsStatus.value == "connected") {
+    } else if (props.ws.wsStatus.value == "connected") {
       if (props.ws.live.value != null) {
         return {
           ui: {
@@ -109,8 +108,7 @@ const liveStatusAttr = computed(() => {
           leadingIcon: "lucide:radio",
           text: "Live",
         };
-      }
-      else {
+      } else {
         return {
           ui: {
             leadingIcon: "animate-pulse",

@@ -9,6 +9,8 @@ overrides:
 
 importers:
 
+  .: {}
+
   common-types:
     devDependencies:
       typescript:

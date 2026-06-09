@@ -54,8 +54,7 @@ export function useNotifications() {
         description: result.error.message,
         color: "error",
       });
-    }
-    else {
+    } else {
       notifications.value = [];
     }
   }

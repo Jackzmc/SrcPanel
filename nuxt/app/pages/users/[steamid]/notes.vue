@@ -99,8 +99,7 @@ async function createNote() {
     });
     newNoteContent.value = "";
     refresh();
-  }
-  else {
+  } else {
     toast.add({
       title: `Note submission failed`,
       description: result.error.message,

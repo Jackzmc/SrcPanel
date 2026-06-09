@@ -49,12 +49,10 @@ function onTabSelected(value: number | string) {
   if ("unset" in selectedItem) {
     if (Array.isArray(selectedItem.unset)) {
       emit("update:flags", props.flags & ~selectedItem.unset.reduce((a, b) => a | b, 0));
-    }
-    else {
+    } else {
       emit("update:flags", props.flags & ~selectedItem.unset);
     }
-  }
-  else if ("set" in selectedItem) {
+  } else if ("set" in selectedItem) {
     emit("update:flags", props.flags | selectedItem.set);
   }
 }

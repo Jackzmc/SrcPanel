@@ -157,15 +157,13 @@ async function sendCommand() {
       title: "Command failed",
       description: result.error.message,
     });
-  }
-  else if (result.body) {
+  } else if (result.body) {
     pushCommandHistory(command);
 
     // Rcon output is not shown to the main server logs, include here:
     if (!result.body.message) {
       emit("log", ``);
-    }
-    else {
+    } else {
       for (const line of result.body.message.split(/\r?\n/)) {
         emit("log", line);
       }
@@ -181,8 +179,7 @@ function loadHistoryEntry(direction: number) {
     if (Math.abs(historyIndex) < commandHistory.length) {
       historyIndex--;
     }
-  }
-  else {
+  } else {
     // down
     if (historyIndex < -1) {
       historyIndex++;

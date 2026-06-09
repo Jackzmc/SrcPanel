@@ -47,15 +47,13 @@ function getBadge(ban: ListAPIBan): TabsItem["badge"] | undefined {
       color: "error",
       label: "Suspended",
     };
-  }
-  else if (ban.flags & APIBanFlags.AppealBanned) {
+  } else if (ban.flags & APIBanFlags.AppealBanned) {
     return {
       color: "success",
       label: "Appealed",
       variant: "soft",
     };
-  }
-  else if (ban.expired) {
+  } else if (ban.expired) {
     return {
       color: "error",
       label: "Expired",

@@ -126,8 +126,7 @@ export function useServerWebsocket(data: ServerDetailed) {
           if (index == -1) {
             voiceMembers.value.push({ id: payload.userId, name: payload.userName });
           }
-        }
-        else if (index > -1) {
+        } else if (index > -1) {
           voiceMembers.value.splice(index, 1);
         }
         break;

@@ -88,8 +88,7 @@ async function submitComment() {
       title: "Failed to submit comment",
       description: result.error.message,
     });
-  }
-  else {
+  } else {
     submitCommentText.value = "";
     refresh();
   }

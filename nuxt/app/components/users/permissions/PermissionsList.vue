@@ -26,8 +26,7 @@ const props = defineProps<{
 function onFlagToggled(flag: string, enabled: boolean) {
   if (enabled) {
     emit("update:flags", (props.flags ?? "") + flag);
-  }
-  else {
+  } else {
     emit("update:flags", props.flags?.replace(flag, "") ?? "");
   }
 }

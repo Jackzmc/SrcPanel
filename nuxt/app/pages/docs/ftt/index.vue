@@ -121,8 +121,7 @@ const filtered = computed(() => {
         return key.toLowerCase().includes(query)
           || list.some(item => item.toLowerCase().includes(query));
       }));
-  }
-  else if (view.value == "trolls") {
+  } else if (view.value == "trolls") {
     if (!searchQuery.value) return data.trolls;
     const query = searchQuery.value.toLowerCase();
     return Object.fromEntries(Object.entries(data.trolls)

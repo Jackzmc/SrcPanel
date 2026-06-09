@@ -124,13 +124,11 @@ async function onSelectOption(optionId: number) {
     const index = userSelection.value.indexOf(optionId);
     if (index > -1) {
       userSelection.value = userSelection.value.splice(index, 1);
-    }
-    else {
+    } else {
       userSelection.value.push(optionId);
     }
     return;
-  }
-  else {
+  } else {
     userSelection.value = [optionId];
   }
 }
@@ -143,8 +141,7 @@ async function submitVote() {
   let body;
   if (props.discuss.type == APIDiscussionType.Checkbox) {
     body = { option: userSelection.value };
-  }
-  else if (props.discuss.type == APIDiscussionType.Radio) {
+  } else if (props.discuss.type == APIDiscussionType.Radio) {
     body = { option: userSelection.value.toString() };
   }
 
@@ -157,8 +154,7 @@ async function submitVote() {
   });
   if ("body" in result) {
     voteState.value = VoteState.Success;
-  }
-  else {
+  } else {
     voteState.value = VoteState.Error;
     console.error("Submit vote error", result.error);
   }

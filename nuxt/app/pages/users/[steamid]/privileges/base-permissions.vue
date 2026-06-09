@@ -115,8 +115,7 @@ async function saveChanges() {
       description: props.data.admin ? `Admin #${props.data.admin.id}` : `Admin #${result.body?.id}`,
       color: "success",
     });
-  }
-  else {
+  } else {
     toast.add({
       title: props.data.admin ? "Updating admin permissions failed" : "Error granting admin",
       description: result.error.message,

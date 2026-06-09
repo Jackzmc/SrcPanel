@@ -67,8 +67,7 @@ async function executeAction() {
       title: `${props.action.name} failed`,
       description: response.error.message,
     });
-  }
-  else {
+  } else {
     toast.add({
       color: "success",
       title: `${props.action.name} succeeded`,

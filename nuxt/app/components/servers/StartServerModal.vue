@@ -143,8 +143,7 @@ const error = computed<{ title: string; subtitle?: string } | undefined>(() => {
       title: "Unable to list groups",
       subtitle: listError.value.message,
     };
-  }
-  else if (createError.value) {
+  } else if (createError.value) {
     if ("error" in createError.value)
       return {
         title: "Failed to create instance",
@@ -176,16 +175,13 @@ async function createInstance() {
     });
     if (response.ok) {
       createResult.value = await response.json();
-    }
-    else if (response.headers.get("content-type")?.includes("application/json")) {
+    } else if (response.headers.get("content-type")?.includes("application/json")) {
       const json: APICreateGroupInstanceResult_Error = await response.json();
       createError.value = { apiError: json };
-    }
-    else {
+    } else {
       createError.value = { error: await response.text() };
     }
-  }
-  catch (err: any) {
+  } catch (err: any) {
     createError.value = { error: err?.message ?? err };
   }
 }

@@ -183,12 +183,10 @@ const imageSrc = computed(() => {
   } else */if (props.client.infected) {
     if (props.client.infected.class == InfectedClass.Tank) {
       return "/img/survivors/tank.png";
-    }
-    else {
+    } else {
       return "/img/survivors/infected.png";
     }
-  }
-  else if (props.client.survivor?.survivor != undefined) {
+  } else if (props.client.survivor?.survivor != undefined) {
     return `/img/survivors/${SURVIVOR_IDS[props.client.survivor.survivor]}.png`;
   }
   return "/img/survivors/random.png";

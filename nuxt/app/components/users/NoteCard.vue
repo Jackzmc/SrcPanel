@@ -76,8 +76,7 @@ async function deleteNote() {
         icon: "lucide:note",
       });
       emit("refresh");
-    }
-    else {
+    } else {
       toast.add({
         title: "Deleting note failed",
         description: result.error.message,
@@ -121,8 +120,7 @@ async function editNote() {
       icon: "lucide:note",
     });
     emit("refresh");
-  }
-  else {
+  } else {
     toast.add({
       title: "Editing note failed",
       description: result.error.message,

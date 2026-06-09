@@ -264,8 +264,7 @@ async function toggleDest(destId: string, enabled: boolean) {
       color: "success",
       icon: enabled && "lucide:check",
     });
-  }
-  else {
+  } else {
     toast.add({
       title: `Error ${enabled ? "enabling" : "disabling"} ${props.id} on ${destId}`,
       description: response.error.message,
@@ -296,8 +295,7 @@ async function deleteAddon() {
       color: "success",
       icon: "lucide:trash",
     });
-  }
-  else {
+  } else {
     toast.add({
       title: `Error deleting ${props.id} from ${props.share.name ?? props.share.id}`,
       description: response.error.message,

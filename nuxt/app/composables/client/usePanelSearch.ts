@@ -56,8 +56,7 @@ export function usePanelSearch(query: Ref<string>) {
             };
           }
         }
-      }
-      else if (results.value && results.value[json.id]) {
+      } else if (results.value && results.value[json.id]) {
         // Update the partial with full data
         results.value[json.id]!.data = json.data;
         results.value[json.id]!.full = true;

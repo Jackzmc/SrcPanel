@@ -296,8 +296,7 @@ const deleteActive = ref(false);
 function toggleFlag(flag: APIBanFlags) {
   if (editBan.value.flags & flag) {
     editBan.value.flags &= ~flag;
-  }
-  else {
+  } else {
     editBan.value.flags |= flag;
   }
 }
@@ -305,8 +304,7 @@ function toggleFlag(flag: APIBanFlags) {
 function extendExpires(minutes: number) {
   if (minutes == 0) {
     editBan.value.expires = 0;
-  }
-  else {
+  } else {
     // If no expires OR has already expired, reset to current time + now
     if (editBan.value.expires == 0 || hasExpiredEdit.value) {
       editBan.value.expires = Math.floor(Date.now() / 1000);
@@ -338,8 +336,7 @@ function defaultBan(): EditBan {
 function reset() {
   if (props.ban === null) {
     editBan.value = defaultBan();
-  }
-  else {
+  } else {
     editBan.value = JSON.parse(JSON.stringify(props.ban));
   }
 }
@@ -347,8 +344,7 @@ function reset() {
 async function saveOrAdd() {
   if (props.ban) {
     await save();
-  }
-  else {
+  } else {
     await createBan();
   }
 }
@@ -370,8 +366,7 @@ async function save() {
       title: `Ban #${props.ban.id} updated successfully`,
       color: "success",
     });
-  }
-  else {
+  } else {
     toast.add({
       title: `Ban #${props.ban.id} update failed`,
       description: result.error.message,
@@ -398,8 +393,7 @@ async function createBan() {
       color: "success",
     });
     await navigateTo(`/users/${props.steamid}/bans/${result.body.banId}`);
-  }
-  else {
+  } else {
     toast.add({
       title: `Failed to ban player`,
       description: result.error.message,
@@ -430,8 +424,7 @@ async function deleteBan() {
         color: "success",
       });
       await navigateTo(`/users/${props.ban.client.id}/bans`);
-    }
-    else {
+    } else {
       toast.add({
         title: `Ban #${props.ban.id} deletion failed`,
         description: result.error.message,

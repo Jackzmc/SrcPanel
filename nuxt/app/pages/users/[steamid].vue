@@ -74,8 +74,7 @@ const ids = computed(() => {
       steamid2: steamid.getSteam2RenderedID(),
       steamid64: steamid.getSteamID64(),
     };
-  }
-  catch {
+  } catch {
     return null;
   }
 });

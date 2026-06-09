@@ -80,8 +80,7 @@ async function regenerate() {
       title: "API Key rotated",
       description: response.body!.apikey!.id,
     });
-  }
-  else {
+  } else {
     toast.add({
       title: "Failed to roll API Key",
       color: "error",

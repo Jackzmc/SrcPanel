@@ -54,8 +54,7 @@ async function uploadFile() {
       description: `${selected.value?.name} was uploaded successfully`,
       icon: "lucide:upload",
     })
-  }
-  else {
+  } else {
     toast.add({
       title: `Upload failed`,
       color: "error",

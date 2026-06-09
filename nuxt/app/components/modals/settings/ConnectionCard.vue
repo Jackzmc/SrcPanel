@@ -86,8 +86,7 @@ async function unlink() {
         color: "success",
       });
       emit("refresh");
-    }
-    else {
+    } else {
       toast.add({
         title: `Unlinking ${props.name} failed`,
         description: result.error.message,
