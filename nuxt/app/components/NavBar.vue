@@ -68,7 +68,7 @@
       <template v-if="isLoggedIn">
         <NotificationsButton :class="[openClassText]" />
         <!-- hacky spacer for mobile view, otherwise notifications btn doesn't show -->
-        <span class="invisible">spacer</span>
+        <span class="invisible sm:hidden">spacer</span>
         <UDropdownMenu
           :items="userDropdown"
           :ui="{
