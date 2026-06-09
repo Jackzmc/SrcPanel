@@ -1,43 +1,45 @@
 <template>  
-    <Hero :title="heroTitle" :subtitle="subtitle" />
-    <UContainer>
-        <UFormField class="p-2">
-            <UInput
-                v-model="query"
-                leading-icon="lucide:search"
-                class="w-full"
-                size="xl"
-                placeholder="Search admin panel"
-                @keyup.enter="executeDebounce()" 
-            />
-        </UFormField>
+    <div class="div">
+        <Hero :title="heroTitle" :subtitle="subtitle" />
+        <UContainer>
+            <UFormField class="p-2">
+                <UInput
+                    v-model="query"
+                    leading-icon="lucide:search"
+                    class="w-full"
+                    size="xl"
+                    placeholder="Search admin panel"
+                    @keyup.enter="executeDebounce()" 
+                />
+            </UFormField>
+            <div class="p-1">
+                <h2 class="text-xl font-bold mb-2">Pages
+                </h2>
+                <p v-if="routeResults.length === 0" class="text-muted py-3">No results</p>
+                <div class="grid grid-cols-0 sm:grid-cols-2 gap-2">
+                    <RouteCard 
+                        v-for="route in routeResults"
+                        :key="route.path"
+                        :route="route" 
+                    />
+                </div>
+            </div>
+            
         <div class="p-1">
-            <h2 class="text-xl font-bold mb-2">Pages
-            </h2>
-            <p v-if="routeResults.length === 0" class="text-muted py-3">No results</p>
-            <div class="grid grid-cols-0 sm:grid-cols-2 gap-2">
-                <RouteCard 
-                    v-for="route in routeResults"
-                    :key="route.path"
-                    :route="route" 
-                />
-            </div>
+                <h2 class="text-xl font-bold mb-2">Objects</h2>
+                <IconText v-if="status === 'pending'" leading-icon="lucide:loader-circle" leading-icon-class="animate-spin" text="Loading" />
+                <p v-if="!results" class="text-muted py-3">No results</p>
+                <div class="flex flex-col gap-3">
+                    <ObjectCard
+                        v-for="entry,id in results"
+                        :key="id" 
+                        :entry="entry"
+                    />
+                </div>
         </div>
-        
-       <div class="p-1">
-            <h2 class="text-xl font-bold mb-2">Objects</h2>
-            <IconText v-if="status === 'pending'" leading-icon="lucide:loader-circle" leading-icon-class="animate-spin" text="Loading" />
-            <p v-if="!results" class="text-muted py-3">No results</p>
-            <div class="flex flex-col gap-3">
-                <ObjectCard
-                    v-for="entry,id in results"
-                    :key="id" 
-                    :entry="entry"
-                />
-            </div>
-       </div>
-        <!-- <pre>{{ JSON.stringify(results,null, 2) }}</pre> -->
-    </UContainer>
+            <!-- <pre>{{ JSON.stringify(results,null, 2) }}</pre> -->
+        </UContainer>
+    </div>
 </template>
 
 <script setup lang="ts">

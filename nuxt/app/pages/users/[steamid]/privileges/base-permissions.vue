@@ -27,6 +27,7 @@ v-if="adminErrors.length > 0"
         @del:code="onCodeDel" />
     </div>
   </div>
+  <!-- eslint-disable vue/no-multiple-template-root -->
   <Teleport to="#buttons">
     <UButton v-if="hasChanges" color="success" leading-icon="lucide:save" :disabled="adminErrors.length > 0" @click="saveChanges">
       {{ props.data.admin ? 'Save Changes' : 'Grant Admin' }}

@@ -45,7 +45,11 @@ export default defineNuxtConfig({
       }
     }
   },
-
+  eslint: {
+    config: {
+      stylistic: true  // enables @stylistic/eslint-plugin
+    }
+  },
   css: ['~/assets/css/main.css',],
 
   icon: {

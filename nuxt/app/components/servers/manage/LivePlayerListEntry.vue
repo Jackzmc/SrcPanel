@@ -102,7 +102,12 @@ variant="outline"
       <div>
         <h3 class="text-md font-semibold">Actions</h3>
         <div class="flex gap-4 flex-wrap mx-2 py-3">
-          <ActionButton v-for="action in actionButtons" :server-id="server.id" :action="action" show-hidden />
+          <ActionButton v-for="action in actionButtons" 
+            :key="action.name" 
+            :action="action"
+            :server-id="server.id"
+            show-hidden
+          /> 
         </div>
       </div>
     </div>

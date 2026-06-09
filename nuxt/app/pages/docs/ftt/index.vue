@@ -136,6 +136,7 @@ const filtered = computed(() => {
         return trolls!.length > 0
       }))
   }
+  return null
 })
 
 

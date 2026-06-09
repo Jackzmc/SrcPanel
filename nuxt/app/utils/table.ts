@@ -1,3 +1,4 @@
+import type { TableColumn } from '@nuxt/ui'
 import UButton from '@nuxt/ui/components/Button.vue'
 
 export const sortHeader = (label: string) => (({ column }: { column: any }) => {

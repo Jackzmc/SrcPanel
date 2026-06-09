@@ -2,7 +2,7 @@
   <UCard>
     <div class="flex">
       <h3 class="text-lg">
-        <IconText leading-icon="lucide:message-square" text="Comments"" />
+        <IconText leading-icon="lucide:message-square" text="Comments" />
       </h3>
       <UBadge :label="discuss.commentsCount" variant="subtle" />
       <IconText v-if="status === 'pending'" leading-icon="i-lucide-loader-circle" leading-icon-class="animate-spin" class="ml-2" />

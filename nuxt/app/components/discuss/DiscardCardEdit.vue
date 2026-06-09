@@ -4,11 +4,11 @@
       <div class="flex justify-between gap-3 items-start">
         <h2 class="text-lg font-semibold">
           <strong class="font-bold text-xl">Discuss: </strong>
-          <EditText v-model="discuss.title" placeholder="Click to add a title" input-placeholder="Enter a title" />
+          <EditText v-model="model.title" placeholder="Click to add a title" input-placeholder="Enter a title" />
         </h2>
       </div>
       <p class="text-sm">
-        <EditText v-model="discuss.description" placeholder="Click to add a description" input-placeholder="Enter a description" />
+        <EditText v-model="model.description" placeholder="Click to add a description" input-placeholder="Enter a description" />
       </p>
 
       <div class="grid grid-cols-2 gap-4 py-4">
@@ -21,7 +21,7 @@
           </div>
 
         </UCard> -->
-        <div v-for="option in discuss.options" :key="option.id" class="bg-light-blue text-white items-center p-6 rounded-xl" @click="addOption">
+        <div v-for="option in model.options" :key="option.id" class="bg-light-blue text-white items-center p-6 rounded-xl" @click="addOption">
           <div class="flex justify-between">
             <h4 class="text-lg light:text-black">{{ option.label }}</h4>
             <UTooltip text="Remove option">
@@ -44,7 +44,9 @@
 import type { APIDiscussion, APIDiscussionBase } from '@jzpanel/common/Discussions'
 import EditText from './EditText.vue'
 
-const modal = useModal()
+const model = defineModel<APIDiscussion|APIDiscussionBase>()
+
+const { promptInput } = useModal()
 
 const emit = defineEmits<{
   (e: "option:add", value: string): void,
@@ -52,12 +54,11 @@ const emit = defineEmits<{
 }>()
 
 const props = defineProps<{
-  discuss: APIDiscussion | APIDiscussionBase,
   type: "list" | "details" | "edit"
 }>()
 
 async function addOption() {
-  const value = await modal.promptInput({
+  const value = await promptInput({
     title: "Enter Option Name"
   })
   if (value) {

@@ -1,5 +1,6 @@
 <template>
-  <Hero title="Discussions" />
+  <div class="div">
+    <Hero title="Discussions" />
   <UContainer>
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
       <div class="space-y-2 col-span-2">
@@ -56,6 +57,7 @@
       </div>
     </div>
   </UContainer>
+  </div>
 </template>
 
 <script setup lang="ts">

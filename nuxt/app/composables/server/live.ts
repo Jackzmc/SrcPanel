@@ -116,13 +116,13 @@ export function useServerWebsocket(data: ServerDetailed) {
         // }
         // No implementation on server. Possibly just indication of refresh
         break
-      case "voice_state":
+      case "voice_state": {
         // voiceMembers undefined if no voice configured,
         // so we *shouldn't* receive anything, but just incase, assume its supported:
-        if (!voiceMembers.value) voiceMembers.value = []
+        if (!voiceMembers.value) voiceMembers.value = [];
 
         // Remove or add user to list
-        const index = voiceMembers.value.findIndex(m => m.id == payload.userId)
+        const index = voiceMembers.value.findIndex(m => m.id == payload.userId);
         if (payload.connected) {
           if (index == -1) {
             voiceMembers.value.push({ id: payload.userId, name: payload.userName })
@@ -131,7 +131,7 @@ export function useServerWebsocket(data: ServerDetailed) {
           voiceMembers.value.splice(index, 1)
         }
         break
-      default:
+      } default:
         console.warn(prefix, "unknown payload type", payload)
     }
   }

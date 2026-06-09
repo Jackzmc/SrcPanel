@@ -1,6 +1,6 @@
 <template>
   <UCard :ui="{ header: 'p-0 m-0 px-0 sm:px-0', body: 'py-2 sm:py-2 px-3 sm:px-3' }">
-    <template #header class="">
+    <template #header>
       <ULink :to="linkTo" class="text-primary">
         <NuxtImg
 :src="map.workshop?.previewUrl"

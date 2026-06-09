@@ -44,7 +44,7 @@ async function executeAction() {
   if(props.action.isHidden) {
     const result = await promptConfirm({
       title: "Confirm Action",
-      description: `Are you sure you want to the command \"${props.action.command}\"`,
+      description: `Are you sure you want to the command "${props.action.command}"`,
       okColor: 'warning',
       okText: 'Yes',
       cancelText: 'No',

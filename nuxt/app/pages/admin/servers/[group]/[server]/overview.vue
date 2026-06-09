@@ -1,17 +1,19 @@
 <template>
-  <div class="flex flex-col gap-4">
-    <UAlert v-if="gameState === GameState.Transitioning" title="Transitioning to next map" variant="soft" icon="lucide:loader-circle" :ui="{'icon': 'animate-spin'}" />
-    <UAlert v-else-if="gameState === GameState.Hibernating" title="Server is hibernating" variant="soft" />
-    <UCard>
-      <PlayerList :data="props.data" :ws="ws" />
-    </UCard>
-  </div>
+  <div class="div">
+    <div class="flex flex-col gap-4">
+      <UAlert v-if="gameState === GameState.Transitioning" title="Transitioning to next map" variant="soft" icon="lucide:loader-circle" :ui="{'icon': 'animate-spin'}" />
+      <UAlert v-else-if="gameState === GameState.Hibernating" title="Server is hibernating" variant="soft" />
+      <UCard>
+        <PlayerList :data="props.data" :ws="ws" />
+      </UCard>
+    </div>
 
-  <ClientOnly>
-    <Teleport to="#sidebar">
-      <VoiceMembers :server-id="data.server.id" :voice-members="data?.voiceMembers" />
-    </Teleport>
-  </ClientOnly>
+    <ClientOnly>
+      <Teleport to="#sidebar">
+        <VoiceMembers :server-id="data.server.id" :voice-members="data?.voiceMembers" />
+      </Teleport>
+    </ClientOnly>
+  </div>
 </template>
 
 <script setup lang="ts">

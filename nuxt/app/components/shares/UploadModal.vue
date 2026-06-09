@@ -42,7 +42,7 @@ const accepts = computed(() => {
 const selected = ref<File|undefined>()
 
 async function uploadFile() {
-  const response = await request<{}>(`/api/shares/${props.share.id}/addons/upload`, {
+  const response = await request<null>(`/api/shares/${props.share.id}/addons/upload`, {
     method: 'POST',
     body: selected.value
   });

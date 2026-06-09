@@ -1,5 +1,6 @@
 <template>
-  <div class="flex flex-col gap-4">
+  <div class="div">
+    <div class="flex flex-col gap-4">
     <UCard>
       <ApexCharts type="line" :series="cpuSeries" :options="cpuOptions" height="300px" />
     </UCard>
@@ -18,6 +19,7 @@
       </UCard>
     </Teleport>
   </ClientOnly>
+  </div>
 </template>
 
 <script setup lang="ts">

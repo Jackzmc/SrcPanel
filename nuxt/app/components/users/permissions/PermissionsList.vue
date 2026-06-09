@@ -12,6 +12,7 @@ import type { UserPrivilegeCode } from "@jzpanel/common/Privileges";
 
 const emit = defineEmits<{
   (e: 'add:code', code: UserPrivilegeCode): void,
+  /* eslint-disable-next-line @typescript-eslint/unified-signatures */
   (e: 'del:code', code: UserPrivilegeCode): void,
   (e: 'update:flags', flags: string): void,
 }>()

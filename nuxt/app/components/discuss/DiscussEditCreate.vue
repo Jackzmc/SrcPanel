@@ -9,8 +9,8 @@
           </div>
           <p>Click on the discussion title or description to add or change the text.</p>
           <DiscussCardEdit
-:discuss="editDiscuss"
-type="edit"
+            v-model="editDiscuss"
+            type="edit"
             @option:add="onAddOption"
             @option:del="onRemoveOption"
           />

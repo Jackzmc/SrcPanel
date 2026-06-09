@@ -15,7 +15,12 @@
               Closes {{ expiresText }}
             </UBadge>
           </template>
-          <UBadge v-if="(discuss.flags & APIDiscussionFlags.RespondersPublic) && discuss.responses && discuss.responses.totalCount > 0"class="align-right" leading-icon="lucide:users" variant="outline" color="neutral">
+          <UBadge v-if="(discuss.flags & APIDiscussionFlags.RespondersPublic) && discuss.responses && discuss.responses.totalCount > 0"
+            class="align-right" 
+            leading-icon="lucide:users" 
+            variant="outline" 
+            color="neutral"
+          >
             <UTooltip text="Number of respondants">
               {{ discuss.responses.totalCount }}
             </UTooltip>

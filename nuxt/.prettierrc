@@ -5,5 +5,8 @@
   "useTabs": false,
   "vueIndentScriptAndStyle": false,
   "htmlWhitespaceSensitivity": "ignore",
-  "bracketSameLine": true
+  "bracketSameLine": false,
+  "bracketSpacing": true,
+  "printWidth": 120,
+  "singleAttributePerLine": false
 }

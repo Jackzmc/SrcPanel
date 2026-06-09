@@ -69,5 +69,6 @@ const birthDate = computed(() => {
   } else if(profile.birthDate) {
     return date.toLocaleDateString('en-US', { day: 'numeric' })
   }
+  return null
 })
 </script>
