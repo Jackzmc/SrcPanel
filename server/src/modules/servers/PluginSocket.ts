@@ -180,7 +180,10 @@ export default class PluginSocket {
       }
     } catch(err) {
       const parentDebug = reader.parent ? '\nparent: ' + reader.parent.toString('hex') : ''
-      throw new Error(`error reading record of type ${LiveRecordType[type]}(${type}) offset ${reader.offset}\n0x` + reader.buffer.toString('hex') + parentDebug + '\n' + err)
+      throw new Error(
+        `error reading record of type ${LiveRecordType[type]}(${type}) offset ${reader.offset}\n0x` + reader.buffer.toString('hex') + parentDebug,
+        {  cause: err }
+      )
     }
   }
   

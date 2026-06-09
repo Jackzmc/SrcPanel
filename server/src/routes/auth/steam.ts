@@ -2,7 +2,6 @@ import { FastifyInstance, FastifyPluginOptions, FastifyReply, FastifyRequest } f
 import SteamID from 'steamid'
 import { SteamAPIError } from '../../modules/steam.js';
 import { ErrorWithCode } from '../../util.js';
-import { sendMetric } from '../../modules/metrics/influx.js';
 
 export const SESSION_VERSION = "3.0"
 const RouteError = ErrorWithCode
@@ -27,7 +26,7 @@ interface OpenIDQuery {
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
     fastify.setErrorHandler(async (err: any, req: FastifyRequest<{Querystring: Record<string, any> }>, reply: FastifyReply) => {
-        let code: string = "INTERNAL_ERROR", message: string = ""
+        let code: string = "INTERNAL_ERROR", message: string
         if(err instanceof SteamAPIError) {
             if(err.status == 429) {
                 code = "STEAM_TEMPORARILY_UNAVAILABLE"

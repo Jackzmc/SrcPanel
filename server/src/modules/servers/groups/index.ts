@@ -17,7 +17,7 @@ async function loadData(configDir: string): Promise<{[key: string]: any}> {
         const content = await readFile(join(configDir, CONFIG_FILE), 'utf-8')
         return yaml.parse(content)
     } catch(err) {
-        throw new Error(`Could not parse ${CONFIG_FILE}: ${err}`)
+        throw new Error(`Could not parse ${CONFIG_FILE}`, { cause: err })
     }
 }
 

@@ -171,7 +171,7 @@ export default class User {
      */
     requirePermission(code: UserPrivilegeCode, options: RequirePermissionOptions = {}): PermissionResult {
         if(process.env.DEBUG_DISABLE_PERMISSION_SYSTEM) return ["*" as UserPrivilegeCode, true]
-        let permCode: string = code
+        let permCode: string
         if(options.isCreator != undefined) {
             permCode = `${code}.others`
             if(this.hasPermission(permCode as UserPrivilegeCode)) {

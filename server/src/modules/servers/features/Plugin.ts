@@ -93,6 +93,7 @@ export default class PluginFeature extends Feature implements IAction {
                 } else {
                     return
                 }
+                break
             }
             /* eslint-disable no-fallthrough -- bad check from eslint */
             case GameState.NewGame: {

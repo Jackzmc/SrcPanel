@@ -65,7 +65,7 @@ export default class RconFeature extends Feature implements IAction {
     }
 
     async performAction(command: string, namespace = "default"): Promise<ActionResponse> {
-      let cmd: string|null = command
+      let cmd: string|null
       if(namespace === "builtin") {
         cmd = getFallbackCommandForBuiltin(command)
         if(!cmd) throw new Error(`Unable to run builtin:${command} via rcon`)
