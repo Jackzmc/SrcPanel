@@ -26,5 +26,16 @@ export default defineAppConfig({
         label: "font-semibold",
       },
     },
+    alert: {
+      compoundVariants: [
+        {
+          color: 'warning',
+          variant: 'solid',
+          class: {
+            root: 'bg-warning dark:text-inverted text-black'  // dark text instead of text-inverted
+          }
+        }
+      ]
+    }
   },
 });
