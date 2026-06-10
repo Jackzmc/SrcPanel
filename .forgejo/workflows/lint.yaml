@@ -9,9 +9,6 @@ on:
       - server/*
       - nuxt/*
       - '.forgejo/workflows/lint.yaml'
-  pull_request:
-    branches:
-      - master
       
 
 jobs:
