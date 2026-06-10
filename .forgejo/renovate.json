@@ -1,10 +1,15 @@
 {
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
     "config:recommended"
   ],
   "automerge": false,
   "prHourlyLimit": 10,
   "packageRules": [
+    {
+      "matchDatasources": ["npm"],
+      "minimumReleaseAge": "7 days"
+    },
     {
       "matchFileNames": [
         "nuxt/**"
@@ -30,5 +35,6 @@
   ],
   "ignorePaths": ["ui/**"],
   "labels": ["dependencies"],
-  "patch": { "enabled": false }
+  "patch": { "enabled": false },
+  "minimumReleaseAge": ""
 }
