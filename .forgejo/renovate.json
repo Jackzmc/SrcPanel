@@ -5,6 +5,10 @@
   ],
   "automerge": false,
   "prHourlyLimit": 10,
+  "postUpdateOptions": ["pnpmDedupe"],
+  "lockFileMaintenance": {
+    "enabled": true
+  },
   "packageRules": [
     {
       "matchDatasources": ["npm"],
