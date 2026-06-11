@@ -13,10 +13,6 @@
       "path": "./nuxt"
     },
     {
-      "name": "ui (old,v1)",
-      "path": "./ui"
-    },
-    {
       "name": "root",
       "path": "."
     }
