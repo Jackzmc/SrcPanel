@@ -32,7 +32,8 @@
     "steamid": "^2.1.0",
     "tailwindcss": "^4.3.0",
     "vue3-apexcharts": "^1.11.1",
-    "zod": "^4.4.3"
+    "zod": "^4.4.3",
+    "@jackzmc/l4d2-stats-api-types": "1.0.2"
   },
   "devDependencies": {
     "@nuxt/eslint": "^1.15.2",

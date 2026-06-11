@@ -36,6 +36,7 @@ export default defineNuxtConfig({
   runtimeConfig: {
     apiInternalUrl: "http://localhost:8081",
     public: {
+      statsUrl: "",
       apiBase: "/api",
       // In dev, steam auth must go directly to the API server so Fastify sets
       // the session cookie itself (same localhost, shared across ports).
