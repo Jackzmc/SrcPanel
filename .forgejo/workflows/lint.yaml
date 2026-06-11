@@ -40,7 +40,7 @@ jobs:
       - name: Lint Common
         run: cd common-types && pnpm tsc
       - name: Lint Server
-        run: cd server && pnpm lint
+        run: cd server && pnpm lint && pnpm tsc
       - name: Lint UI
         run: cd nuxt && pnpm lint && pnpm tsc
 
