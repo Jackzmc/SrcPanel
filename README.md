@@ -35,6 +35,8 @@ You can support me on [Github Sponsors](https://github.com/sponsors/Jackzmc) or 
 
 Everything in repo except for `sourcemod` folder, is licensed under the [GNU Affero General Public License v3.0](https://choosealicense.com/licenses/agpl-3.0/). 
 
+The sourcemod folder and its plugins are licensed under [GNU General Public License v3.0](https://choosealicense.com/licenses/gpl-3.0/) 
+
 ## Contributing
 
 Contributions are welcome and appreciated. AI use itself is okay if the code is well reviewed, but "vibe-coded" (under my determinations) development is not welcome. 
@@ -43,4 +45,5 @@ It is recommend to first open an issue before creating any large PR to discuss i
 
 ## AI Use Disclaimer
 
-The only use of AI in this project is for consulting ways over blockers, ways to fix bugs, and as a rubber duck. AI was used intially for the Nuxt UI rewrite for templating, getting started and learning Nuxt. AI has not ever been used on the server or plugin side.
+AI was used intially for the Nuxt UI rewrite for templating, getting started and learning Nuxt. AI has not ever been used on the server or plugin side.
+The only use of AI in this project is for initial templating, reviewing/discussing/consulting blockers, bugfixes, and some feature additions. 
