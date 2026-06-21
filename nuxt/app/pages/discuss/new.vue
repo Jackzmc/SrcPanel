@@ -3,11 +3,11 @@
 </template>
 
 <script setup lang="ts">
-import { APIDiscussionFlags, APIDiscussionType, type APIDiscussionBase } from '@jzpanel/common/Discussions';
+import { APIDiscussionFlags, APIDiscussionType, type APIDiscussionBase } from "@jzpanel/common/Discussions";
 
-const route = useRoute()
-const { requireAuth } = useAuth()
-await requireAuth()
+const route = useRoute();
+const { requireAuth } = useAuth();
+await requireAuth();
 
 const defaultDiscuss: APIDiscussionBase = {
   title: route.query.title as string,
@@ -16,10 +16,10 @@ const defaultDiscuss: APIDiscussionBase = {
   type: APIDiscussionType.Radio,
   description: route.query.description as string,
   options: [],
-  flags: APIDiscussionFlags.None
-}
+  flags: APIDiscussionFlags.None,
+};
 
 useHead({
   title: `Create Discussion`,
-})
+});
 </script>

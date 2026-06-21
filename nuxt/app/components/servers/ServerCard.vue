@@ -2,7 +2,7 @@
   <UCard :class="cardClass">
     <div class="flex items-center justify-between pb-2 border-b border-b-black">
       <div class="flex items-center gap-2">
-        <a :class="['text-md md:text-lg',cardTextColor]">{{ server.name }}</a>
+        <a :class="['text-md md:text-lg', cardTextColor]">{{ server.name }}</a>
         <!-- buttons -->
         <UBadge :color="server.online ? 'neutral' : 'neutral'" variant="outline" class="hidden md:block">
           <UIcon
@@ -14,21 +14,23 @@
         </UBadge>
       </div>
       <!-- Status -->
-      <span v-if="server.online && server.status.data" :class="['ml-auto text-s md:text-lg',cardTextColor]">
-        <IconText leading-icon="lucide:users" >
-          <span :class="['font-semibold', {
-            'text-black dark:text-white': server.online && server.status.data.players.length === 0,
-            'text-info': server.status.data.players.length > 0
-          }]">
-          {{ server.status.data.players.length }}</span>/{{ server.status.data.maxplayers }} <span class="text-sm">players</span>
+      <span v-if="server.online && server.status.data" :class="['ml-auto text-s md:text-lg', cardTextColor]">
+        <IconText leading-icon="lucide:users">
+          <span
+            :class="['font-semibold', {
+              'text-black dark:text-white': server.online && server.status.data.players.length === 0,
+              'text-info': server.status.data.players.length > 0,
+            }]"
+          >
+            {{ server.status.data.players.length }}</span>/{{ server.status.data.maxplayers }} <span class="text-sm">players</span>
         </IconText>
       </span>
     </div>
 
     <div class="mt-2 text-sm text-muted space-y-1">
       <!-- Playing [gamemode] on [map] -->
-      <div v-if="server.status?.data" :class="['flex items-center gap-1 pb-2 border-b border-b-neutral-400',cardTextColor]">
-        <UIcon name="i-lucide-map" :class="['size-4',cardTextColor]" />
+      <div v-if="server.status?.data" :class="['flex items-center gap-1 pb-2 border-b border-b-neutral-400', cardTextColor]">
+        <UIcon name="i-lucide-map" :class="['size-4', cardTextColor]" />
         <span>Playing</span>
         <b>{{ server.status.data.gamemode }}</b>
         <span>on</span>
@@ -40,12 +42,12 @@
         :content="{
           align: 'start',
           side: 'top',
-          sideOffset: 8
+          sideOffset: 8,
         }"
       >
         <div class="flex items-center gap-1 border-b border-b-neutral-400">
-          <UIcon name="i-lucide-play" :class="['size-4',cardTextColor]" />
-          <code :class="['bg-inherit! p-1',textColor]">
+          <UIcon name="i-lucide-play" :class="['size-4', cardTextColor]" />
+          <code :class="['bg-inherit! p-1', textColor]">
             <ClickCopy :text="connectCommand">
               <b>connect</b> {{ server.host }}:{{ server.port }}
             </ClickCopy>
@@ -58,12 +60,12 @@
         :content="{
           align: 'start',
           side: 'top',
-          sideOffset: 8
+          sideOffset: 8,
         }"
       >
         <div class="flex items-center gap-1 border-b border-b-neutral-400">
-          <UIcon name="i-lucide-list" :class="['size-4',cardTextColor]" />
-          <code :class="['bg-inherit! p-1',textColor]">
+          <UIcon name="i-lucide-list" :class="['size-4', cardTextColor]" />
+          <code :class="['bg-inherit! p-1', textColor]">
             <ClickCopy :text="createLobbyCommand">
               <b>mm_dedicated_force_servers</b> {{ server.ip }}:{{ server.port }}
             </ClickCopy>
@@ -77,7 +79,7 @@
         <UButton color="info" variant="outline" size="md">
           <a :href="'steam://connect/' + server.ip + '/' + server.port">Join</a>
         </UButton>
-        <UButton color="neutral" variant="outline" size="md">
+        <UButton v-if="isLoggedIn" color="neutral" variant="outline" size="md">
           <a :href="'/admin/servers/' + group.id + '/' + server.id">Manage</a>
         </UButton>
       </div>
@@ -86,7 +88,7 @@
         :content="{
           align: 'center',
           side: 'left',
-          sideOffset: 8
+          sideOffset: 8,
         }"
       >
         <div class="mt-2 flex flex-wrap gap-1">
@@ -100,42 +102,44 @@
 </template>
 
 <script setup lang="ts">
-import type { APIListServersV1_Group, APIListServersV1_Server, GroupInfo, ServerInfo } from '@jzpanel/common/Server'
-import ClickCopy from '@/components/ClickCopy.vue'
+import type { APIListServersV1_Group, APIListServersV1_Server, GroupInfo, ServerInfo } from "@jzpanel/common/Server";
+import ClickCopy from "@/components/ClickCopy.vue";
+
+const { isLoggedIn } = useAuth();
 
 const props = defineProps<{
-  group: GroupInfo | APIListServersV1_Group
-  server: ServerInfo | APIListServersV1_Server
-}>()
+  group: GroupInfo | APIListServersV1_Group;
+  server: ServerInfo | APIListServersV1_Server;
+}>();
 
 const cardClass = computed(() => {
   if (props.server.online) {
     return props.server.status.data && props.server.status.data?.players.length > 0
       ? "bg-info-100 dark:bg-info-900  text-black"
-      : "bg-emerald-200 dark:bg-emerald-800 text-black"
+      : "bg-emerald-200 dark:bg-emerald-800 text-black";
   }
-  return "bg-yellow-50 dark:bg-neutral-900"
-})
+  return "bg-yellow-50 dark:bg-neutral-900";
+});
 const cardTextColor = computed(() => {
-  return 'text-black dark:text-white'
-})
+  return "text-black dark:text-white";
+});
 
 const connectCommand = computed(() => {
-  return `connect ${props.server.host}:${props.server.port}`
-})
+  return `connect ${props.server.host}:${props.server.port}`;
+});
 
 const createLobbyCommand = computed(() => {
-  return `mm_dedicated_force_servers ${props.server.ip}:${props.server.port}`
-})
+  return `mm_dedicated_force_servers ${props.server.ip}:${props.server.port}`;
+});
 
 const numPlayers = computed(() => {
-  if(!props.server.online) return null
-  return props.server.status.data && props.server.status.data?.players.length
-})
+  if (!props.server.online) return null;
+  return props.server.status.data && props.server.status.data?.players.length;
+});
 
 const textColor = computed(() => {
-  if(numPlayers.value == undefined) return "!text-black dark:text-white!"
-  if(numPlayers.value === 0) return "!text-black dark:text-neutral-300!"
-  return "!text-info"
-})
+  if (numPlayers.value == undefined) return "!text-black dark:text-white!";
+  if (numPlayers.value === 0) return "!text-black dark:text-neutral-300!";
+  return "!text-info";
+});
 </script>

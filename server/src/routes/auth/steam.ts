@@ -2,7 +2,6 @@ import { FastifyInstance, FastifyPluginOptions, FastifyReply, FastifyRequest } f
 import SteamID from 'steamid'
 import { SteamAPIError } from '../../modules/steam.js';
 import { ErrorWithCode } from '../../util.js';
-import { sendMetric } from '../../modules/metrics/influx.js';
 
 export const SESSION_VERSION = "3.0"
 const RouteError = ErrorWithCode
@@ -26,8 +25,8 @@ interface OpenIDQuery {
 
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
-    fastify.setErrorHandler(async (err, req: FastifyRequest<{Querystring: Record<string, any> }>, reply: FastifyReply) => {
-        let code: string = "INTERNAL_ERROR", message: string = ""
+    fastify.setErrorHandler(async (err: any, req: FastifyRequest<{Querystring: Record<string, any> }>, reply: FastifyReply) => {
+        let code: string = "INTERNAL_ERROR", message: string
         if(err instanceof SteamAPIError) {
             if(err.status == 429) {
                 code = "STEAM_TEMPORARILY_UNAVAILABLE"
@@ -113,6 +112,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                     const admin = fastify.authmngr.getAdminExport(steamid2)
                     if(admin) {
                         await fastify.authmngr.loginUser(req, reply, admin, userDetails)
+                        req.log.info({ steamid: steamid2, returnTo }, 'user logged in via steam')
+                        // TODO: return to /auth/return with ?return_to
                         return reply.redirect(returnTo)
                     } else {
                         throw new RouteError("UNAUTHORIZED", "Only admins can login to this panel")

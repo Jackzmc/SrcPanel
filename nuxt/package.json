@@ -5,39 +5,43 @@
   "type": "module",
   "scripts": {
     "build": "nuxt build",
-    "dev": "nuxt dev",
+    "dev": "nuxt dev  --host 127.0.0.1",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
     "lint": "eslint .",
     "typecheck": "nuxt typecheck"
   },
   "dependencies": {
-    "@iconify-json/lucide": "^1.2.102",
+    "@iconify-json/lucide": "^1.2.111",
     "@iconify-json/ri": "^1.2.10",
-    "@iconify-json/simple-icons": "^1.2.70",
-    "@internationalized/date": "^3.12.0",
-    "@jzpanel/common": "workspace:",
+    "@iconify-json/simple-icons": "^1.2.86",
+    "@internationalized/date": "^3.12.2",
+    "@jzpanel/common": "workspace:^",
     "@nuxt/a11y": "1.0.0-alpha.1",
-    "@nuxt/content": "3.13.0",
+    "@nuxt/content": "3.14.0",
     "@nuxt/image": "2.0.0",
-    "@nuxt/ui": "^4.7.1",
-    "@sentry/nuxt": "^10.53.1",
+    "@nuxt/ui": "^4.8.2",
+    "@sentry/nuxt": "^10.57.0",
+    "@stylistic/eslint-plugin": "^5.10.0",
     "@tanstack/vue-table": "^8.21.3",
-    "apexcharts": "^5.10.4",
-    "better-sqlite3": "^12.9.0",
-    "import-in-the-middle": "^3.0.1",
-    "nuxt": "^4.4.4",
-    "simple-keyboard": "^3.8.111",
+    "apexcharts": "^5.14.0",
+    "better-sqlite3": "^12.10.0",
+    "import-in-the-middle": "^3.0.2",
+    "nuxt": "^4.4.8",
+    "simple-keyboard": "^3.8.151",
     "steamid": "^2.1.0",
-    "tailwindcss": "^4.1.18",
+    "tailwindcss": "^4.3.0",
     "vue3-apexcharts": "^1.11.1",
-    "zod": "^4.4.1"
+    "zod": "^4.4.3",
+    "@jackzmc/l4d2-stats-api-types": "1.0.2"
   },
   "devDependencies": {
     "@nuxt/eslint": "^1.15.2",
-    "eslint": "^10.0.0",
+    "eslint": "^10.4.1",
+    "eslint-config-prettier": "^10.1.8",
+    "prettier": "^3.8.4",
     "typescript": "^5.9.3",
-    "vue-tsc": "^3.2.4"
+    "vue-tsc": "^3.3.4"
   },
-  "packageManager": "pnpm@10.29.3"
+  "packageManager": "pnpm@10.34.2"
 }

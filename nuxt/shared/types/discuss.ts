@@ -1,19 +1,19 @@
-import type { APICountData, APIUserWithChoice, APIDiscussionOption, APIDiscussionFlags } from '@jzpanel/common/Discussions'
+import type { APICountData, APIUserWithChoice, APIDiscussionOption, APIDiscussionFlags } from "@jzpanel/common/Discussions";
 
 export interface DiscussOptionEntry {
-  option: APIDiscussionOption,
-  count?: APICountData,
-  users?: APIUserWithChoice[]
+  option: APIDiscussionOption;
+  count?: APICountData;
+  users?: APIUserWithChoice[];
 }
 
 interface SettingEntry_Base {
-  icon?: string,
-  label?: string,
+  icon?: string;
+  label?: string;
 }
 export interface SettingEntry_Set extends SettingEntry_Base {
-  set: APIDiscussionFlags,
+  set: APIDiscussionFlags;
 }
 export interface SettingEntry_Unset extends SettingEntry_Base {
-  unset: APIDiscussionFlags | APIDiscussionFlags[]
+  unset: APIDiscussionFlags | APIDiscussionFlags[];
 }
-export type SettingEntry = SettingEntry_Set | SettingEntry_Unset
+export type SettingEntry = SettingEntry_Set | SettingEntry_Unset;

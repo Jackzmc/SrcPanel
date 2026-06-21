@@ -80,7 +80,9 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             })
         })
 
-        await Promise.all(detailQueries)
+        await Promise.allSettled(detailQueries)
+
+        sendSSE({ done: true })
 
         return reply.status(204)
     })

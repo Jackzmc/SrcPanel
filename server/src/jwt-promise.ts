@@ -11,7 +11,7 @@ export default {
     /// Verifies a token, returning payload T, erroring on invalid JWT, or incorrect secret
     verify<T extends JWT.JwtPayload>(token: string, secretOrPublicKey: JWT.Secret, options?: JWT.VerifyOptions): Promise<Jwt<T>> {
         return new Promise((resolve, reject) => {
-            JWT.verify(token, secretOrPublicKey, {...options, complete: true }, (err, data: JWT.Jwt) => {
+            JWT.verify(token, secretOrPublicKey, {...options, complete: true }, (err, data) => {
                 if(err) return reject(err)
                 else return resolve(data as Jwt<T>)
             })

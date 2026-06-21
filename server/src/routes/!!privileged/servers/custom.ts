@@ -53,7 +53,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
         const group = fastify.servers.getGroup("l4d2-custom") as CustomServerGroup
         const builder = new CustomServerBuilder(fastify.steam, group)
-        builder.SetEventCallback(onEvent)
+        builder.SetEventCallback((e,m,d) => onEvent(e,m,d as any))
         function onEvent(eventId: string, msg?: string, progress?: { current: number, total: number }) {
             send({
                 event: eventId,

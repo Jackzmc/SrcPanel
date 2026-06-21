@@ -1,17 +1,17 @@
-declare module '#app' {
+declare module "#app" {
   interface PageMeta {
     /** Title shown on hero and <title> tag */
-    title?: string,
+    title?: string;
     /** og:title, without the JzPanel part */
-    pageTitle?: string,
-    description?: string,
+    pageTitle?: string;
+    description?: string;
     /** Defaults to pageTitle, description unless set to null */
     hero?: {
-        title?: string,
-        subtitle?: string,
-    } | "default" | null
+      title?: string;
+      subtitle?: string;
+    } | "default" | null;
   }
 }
 
 // It is always important to ensure you import/export something when augmenting a type
-export {}
+export {};

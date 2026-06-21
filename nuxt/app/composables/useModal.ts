@@ -1,36 +1,45 @@
-import { LazyModalsConfirmModal, LazyModalsInputModal } from "#components"
+import { LazyModalsConfirmModal, LazyModalsInputModal, LazyModalsAlertModal } from "#components";
+
+type ButtonColor = "primary" | "neutral" | "secondary" | "success" | "info" | "warning" | "error" | undefined;
 
 export interface PromptConfirmOptions {
-  title: string,
-  description?: string,
+  title: string;
+  description?: string;
 
-  body?: string,
+  body?: string;
 
-  okText?: string,
-  okColor?: "primary" | "neutral" | "secondary" | "success" | "info" | "warning" | "error" | undefined,
+  okText?: string;
+  okColor?: ButtonColor;
   /** default true. set to false to hide ok button button */
-  okShown?: boolean,
+  okShown?: boolean;
 
-  cancelText?: string
-  cancelColor?: "primary" | "neutral" | "secondary" | "success" | "info" | "warning" | "error" | undefined,
-
-
+  cancelText?: string;
+  cancelColor?: ButtonColor;
 }
 
 export interface PromptInputOptions {
-  title: string,
-  description?: string,
-  defaultValue?: string,
-  minlength?: number,
-  maxlength?: number,
-  placeholder?: string,
-  type?: "number" | "text"
+  title: string;
+  description?: string;
+  defaultValue?: string;
+  minlength?: number;
+  maxlength?: number;
+  placeholder?: string;
+  type?: "number" | "text";
+}
+
+export interface PromptAlertOptions {
+  title: string;
+  subtitle?: string;
+  body: string | VNode;
+  okText?: string;
+  okColor?: ButtonColor;
 }
 
 export function useModal() {
-  const overlay = useOverlay()
-  const confirmModal = overlay.create(LazyModalsConfirmModal)
-  const inputModal = overlay.create(LazyModalsInputModal)
+  const overlay = useOverlay();
+  const confirmModal = overlay.create(LazyModalsConfirmModal);
+  const inputModal = overlay.create(LazyModalsInputModal);
+  const alertModal = overlay.create(LazyModalsAlertModal);
 
   // Modals return a value with emit('close', value
 
@@ -40,9 +49,9 @@ export function useModal() {
    * @returns boolean (true: left button / ok, false: right button / cancel)
    */
   async function promptConfirm(options?: PromptConfirmOptions) {
-    const instance = confirmModal.open(options)
-    const result = await instance.result
-    return result
+    const instance = confirmModal.open(options);
+    const result = await instance.result;
+    return result;
   }
 
   /**
@@ -52,10 +61,15 @@ export function useModal() {
    * @returns user's response value
    */
   async function promptInput(options: PromptInputOptions): Promise<string | undefined> {
-    const instance = inputModal.open(options)
-    const result = await instance.result
-    return result
+    const instance = inputModal.open(options);
+    const result = await instance.result;
+    return result;
   }
 
-  return { promptConfirm, promptInput }
+  async function alert(options: PromptAlertOptions): Promise<void> {
+    const instance = alertModal.open(options);
+    await instance.result;
+  }
+
+  return { promptConfirm, promptInput, alert };
 }

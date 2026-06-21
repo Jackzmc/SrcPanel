@@ -87,7 +87,6 @@ export default class DiscussionManager {
         }
         let usersResponse: APIUserWithChoice[]|undefined = undefined
         if(flags & APIDiscussionFlags.RespondersPublic) {
-            usersResponse = []
             const users = {}
             // Merge multiple responses (for multiselect) into one user object
             for(const response of responses) {

@@ -8,7 +8,7 @@ import { NamespacedMetric, sendMetric } from '../../modules/metrics/influx.js';
 
 const metric = new NamespacedMetric("discuss")
 
-const CreateDiscussion = Type.Strict(Type.Object({
+const CreateDiscussion = Type.Object({
   title: Type.String(),
   description: Type.Optional(Type.String()),
   closedAt: Type.Optional(Type.Integer()),
@@ -17,7 +17,7 @@ const CreateDiscussion = Type.Strict(Type.Object({
   options: Type.Array(Type.Object({
     label: Type.String()
   }))
-}))
+})
 type CreateDiscussionType = Static<typeof CreateDiscussion>
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
@@ -135,7 +135,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
   fastify.post('/', { schema: postSchema }, async (req: FastifyRequest<{ Body: CreateDiscussionType }>, reply): Promise<APIDiscussionCreateResponse> => {
     // TODO: check fields exist
-    const discuss = req.body
+    const discuss = req.body as CreateDiscussionType
     const conn = await fastify.db.getConnection()
     await conn.beginTransaction()
     const [ok] = await conn.query<OkPacket>(

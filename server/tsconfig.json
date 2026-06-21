@@ -20,6 +20,9 @@
             ]
         },
         "strictNullChecks": true,
+        // eventually set to true - need to redo all errors
+        "useUnknownInCatchVariables": false,
+        "strictPropertyInitialization": false
         // "incremental": true
     },
     "include": [

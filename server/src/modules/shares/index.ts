@@ -17,7 +17,7 @@ async function loadShareData(configDir: string): Promise<{[key: string]: any}> {
         const content = await readFile(join(configDir, "shares.yml"), 'utf-8')
         return yaml.parse(content)
     } catch(err) {
-        throw new Error("Could not parse shares.yml: " + err)
+        throw new Error("Could not parse shares.yml", { cause: err })
     }
 }
 

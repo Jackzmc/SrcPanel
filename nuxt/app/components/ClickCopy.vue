@@ -5,19 +5,19 @@
 </template>
 
 <script setup lang="ts">
-const toast = useToast()
+const toast = useToast();
 
 const props = defineProps<{
-  text: string
-}>()
+  text: string;
+}>();
 
 async function copyText() {
-  await navigator.clipboard.writeText(props.text)
+  await navigator.clipboard.writeText(props.text);
   toast.add({
-    title: 'Text copied to your clipboard',
-    icon: 'i-lucide-clipboard-check',
+    title: "Text copied to your clipboard",
+    icon: "i-lucide-clipboard-check",
     progress: false,
-    duration: 2000
-  })
+    duration: 2000,
+  });
 }
 </script>

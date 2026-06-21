@@ -26,7 +26,7 @@ export default class TaskManager {
         return this.#instance
     }
 
-    #tasks: Map<string, Task<unknown>>
+    #tasks: Map<string, Task<any>>
     // #tasks: Task<unknown>[]
     #schedule: string[]
     #timer: NodeJS.Timeout
@@ -122,21 +122,21 @@ export default class TaskManager {
      * @param {TimeOptions} timeOptions The relative amount of time for the next run
      * @return {Date}  {Date} The date provided when it will run
      */
-    schedule(task: Task<unknown>, timeOptions: TimeOptions): Date
+    schedule(task: Task<any>, timeOptions: TimeOptions): Date
     /**
      * Schedules a task to run on a specific date
      * @param {Task} task The task to run
      * @param {Date} date The date to run on
      * @return {Date}  {Date} The date provided when it will run
      */
-    schedule(task: Task<unknown>, date: Date): Date
+    schedule(task: Task<any>, date: Date): Date
     /**
      * Schedules a task to run once
      * @param task The task to run
      * @param dateOrTime the TimeOptions or Date to run at
      * @returns the date of the next execution
      */
-    schedule(task: Task<unknown>, dateOrTime: TimeOptions | Date): Date {
+    schedule(task: Task<any>, dateOrTime: TimeOptions | Date): Date {
         const startDate = new Date(task.CreatedTimestamp * 1000)
         if(!(dateOrTime instanceof Date)) {
             dateOrTime = calculateDate(startDate, dateOrTime)
@@ -154,7 +154,7 @@ export default class TaskManager {
      * @param {TimeOptions} timeOptions The relative amount of time for the next run
      * @return {Date}  {Date} The date provided when it will first run
      */
-    scheduleRepeating(task: Task<unknown>, timeOptions: TimeOptions): Date {
+    scheduleRepeating(task: Task<any>, timeOptions: TimeOptions): Date {
         const startDate = new Date(task.CreatedTimestamp * 1000)
         const nextRun = calculateDate(startDate, timeOptions)
         console.debug(`[TaskManager] Scheduled repeating "${task.Id}" for ${JSON.stringify(timeOptions)}`)
@@ -169,7 +169,7 @@ export default class TaskManager {
      * @param {Date} startDate the first date to start running
      * @param nextDateFn function that is given last date to schedule next date
      */
-    scheduleRepeatingCustom(task: Task<unknown>, startDate: Date, nextDateFn: (prevDate: Date) => Date) {
+    scheduleRepeatingCustom(task: Task<any> | DefinedTask<any>, startDate: Date, nextDateFn: (prevDate: Date) => Date) {
         console.debug(`[TaskManager] Scheduled repeating "${task.Id}" for ${startDate}`)
         task.setSchedule(startDate, nextDateFn)
         this.#schedule.push(task.Id)

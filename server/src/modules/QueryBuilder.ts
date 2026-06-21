@@ -27,15 +27,22 @@ export class QueryBuilder {
     #whereConditions: string[] = []
     #orConditions: WhereConditionInternal[] = []
     #whereData: any[] = []
-    #limit: [string, number, number?]
+    #limit?: [string, number, number?]
     #selects: string[][] = []
     #joins: Join[] = []
+    #partition?: string | null = null
 
     constructor(tableName: string, tableAlias?: string) {
         this.#tableName = tableName
         this.#tableAlias = tableAlias
         // "SERVER IN (?, ?, ?)
     }
+
+    partition(partition?: string | null) {
+        this.#partition = partition
+        return this
+    }
+
     
     selectMultiple(...column: string[]) {
         this.#selects = [...this.#selects, ...column.map(col => [escapeId(col)])]
@@ -217,7 +224,8 @@ export class QueryBuilder {
 
     build() {
         const tablePrefix = this.#tableAlias ? `AS ${this.#tableAlias}` : ''
-        return `SELECT ${this.#buildSelect()} FROM ${escapeId(this.#tableName)} ${tablePrefix} ${this.#buildJoins()} ${this.#buildWhere()} ${this.#buildSort()} ${this._buildLimit()}`
+        const partitionString = this.#partition ? `PARTITION (${this.#partition})` : ''
+        return `SELECT ${this.#buildSelect()} FROM ${escapeId(this.#tableName)} ${partitionString} ${tablePrefix} ${this.#buildJoins()} ${this.#buildWhere()} ${this.#buildSort()} ${this._buildLimit()}`
     }
 
     buildUnsafe() {

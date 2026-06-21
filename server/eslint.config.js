@@ -29,11 +29,6 @@ export default defineConfig(
             "no-empty": "warn",
             "no-unused-private-class-members": "warn",
             
-        },
-        languageOptions: {
-            parserOptions: {
-            }
         }
     }
-    // f  tseslint.configs.stylistic,
 );

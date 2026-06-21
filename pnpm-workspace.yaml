@@ -2,14 +2,19 @@ packages:
   - common-types
   - server
   - nuxt
-ignoredBuiltDependencies:
-  - cpu-features
-  - protobufjs
-  - ssh2
-
-onlyBuiltDependencies:
-  - sqlite3
-  - esbuild
-
+allowBuilds:
+  sharp: true
+  sqlite3: true
+  esbuild: true
+  cpu-features: false
+  '@parcel/watcher': false
+  '@sentry/cli': false
+  better-sqlite3: true
+  node-webcodecs: false
+  protobufjs: false
+  ssh2: false
+  unrs-resolver: false
+  vue-demi: false
 overrides:
-  "@vercel/nft": "^0.27.4"
+  "@vercel/nft": "^1.0.0"
+injectWorkspacePackages: true

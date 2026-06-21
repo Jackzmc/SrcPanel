@@ -3,25 +3,31 @@
     <UContainer>
       <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
         <div class="space-y-4 col-span-3">
-          <h4 class="text-lg font-semibold">Select a key to set a keybind</h4>
+          <h4 class="text-lg font-semibold">
+            Select a key to set a keybind
+          </h4>
           <div class="keyboardContainer hidden! sm:block!">
-            <div class="simple-keyboard-main"></div>
+            <div class="simple-keyboard-main" />
 
             <div class="controlArrows">
-              <div class="simple-keyboard-control"></div>
-              <div class="simple-keyboard-arrows"></div>
+              <div class="simple-keyboard-control" />
+              <div class="simple-keyboard-arrows" />
             </div>
 
             <div class="numPad">
-              <div class="simple-keyboard-numpad"></div>
-              <div class="simple-keyboard-numpadEnd"></div>
+              <div class="simple-keyboard-numpad" />
+              <div class="simple-keyboard-numpadEnd" />
             </div>
           </div>
           <div class="block sm:hidden">
-            <p class="p-6">Sorry, keybind tool only available on larger displays</p>
+            <p class="p-6">
+              Sorry, keybind tool only available on larger displays
+            </p>
           </div>
           <div class="my-4 p-2">
-            <h4 class="text-lg">Keybinds</h4>
+            <h4 class="text-lg">
+              Keybinds
+            </h4>
             <ul>
               <div v-for="(keybind, i) in keybinds" :key="keybind" class="list-disc list-inside grid grid-cols-1 sm:grid-cols-2 py-1">
                 <div>
@@ -52,136 +58,137 @@
 </template>
 
 <script setup lang="ts">
+import { ref, onMounted, onBeforeMount, computed } from "vue";
+
 definePageMeta({
   title: "Keybind Generator - Tools",
-  pageTitle: 'Keybinds',
-  description: 'List of all L4D2 keybind codes and tool to create keybinds',
-  hero: 'default'
-})
-import { ref, onMounted, onBeforeMount, computed } from 'vue';
+  pageTitle: "Keybinds",
+  description: "List of all L4D2 keybind codes and tool to create keybinds",
+  hero: "default",
+});
 
-let keyboard = ref()
-let controlPad = ref()
-let keyboardArrows = ref()
-let numpad = ref()
-let numpadEnd = ref()
+const keyboard = ref();
+const controlPad = ref();
+const keyboardArrows = ref();
+const numpad = ref();
+const numpadEnd = ref();
 
-let keybinds = ref<any[]>([])
-let command = ref<string|null>("sm_example_command")
+const keybinds = ref<string[]>([]);
+const command = ref<string | null>("sm_example_command");
 
 onMounted(async () => {
-  load()
+  load();
 
-  const {default:Keyboard} = await import('simple-keyboard');
-  await import('simple-keyboard/build/css/index.css');
+  const { default: Keyboard } = await import("simple-keyboard");
+  await import("simple-keyboard/build/css/index.css");
   const options = {
     onKeyPress,
     theme: "simple-keyboard hg-theme-default hg-layout-default",
     physicalKeyboardHighlight: true,
     syncInstanceInputs: true,
     mergeDisplay: true,
-  }
-  keyboard.value =  new Keyboard(".simple-keyboard-main", {
+  };
+  keyboard.value = new Keyboard(".simple-keyboard-main", {
     ...options,
     layout: {
-        default: [
-          "{escape} {f1} {f2} {f3} {f4} {f5} {f6} {f7} {f8} {f9} {f10} {f11} {f12}",
-          "` 1 2 3 4 5 6 7 8 9 0 - = {backspace}",
-          "{tab} q w e r t y u i o p [ ] \\",
-          "{capslock} a s d f g h j k l ; ' {enter}",
-          "{shiftleft} z x c v b n m , . / {shiftright}",
-          "{controlleft} {metaleft} {altleft} {space} {altright} {fnkey} {controlright}"
-        ],
-        shift: [
-          "{escape} {f1} {f2} {f3} {f4} {f5} {f6} {f7} {f8} {f9} {f10} {f11} {f12}",
-          "~ ! @ # $ % ^ & * ( ) _ + {backspace}",
-          "{tab} Q W E R T Y U I O P { } |",
-          '{capslock} A S D F G H J K L : " {enter}',
-          "{shiftleft} Z X C V B N M < > ? {shiftright}",
-          "{controlleft} {metaleft} {altleft} {space} {fnkey} {altright}"
-        ]
-      },
-      display: {
-        "{escape}": "esc ⎋",
-        "{tab}": "tab ⇥",
-        "{backspace}": "backspace ⌫",
-        "{enter}": "enter ↵",
-        "{capslock}": "caps lock ⇪",
-        "{shiftleft}": "shift ⇧",
-        "{shiftright}": "shift ⇧",
-        "{controlleft}": "ctrl",
-        "{controlright}": "ctrl",
-        "{altleft}": "alt",
-        "{altright}": "alt",
-        "{fnkey}": "fn",
-        "{metaleft}": "winkey",
-      }
+      default: [
+        "{escape} {f1} {f2} {f3} {f4} {f5} {f6} {f7} {f8} {f9} {f10} {f11} {f12}",
+        "` 1 2 3 4 5 6 7 8 9 0 - = {backspace}",
+        "{tab} q w e r t y u i o p [ ] \\",
+        "{capslock} a s d f g h j k l ; ' {enter}",
+        "{shiftleft} z x c v b n m , . / {shiftright}",
+        "{controlleft} {metaleft} {altleft} {space} {altright} {fnkey} {controlright}",
+      ],
+      shift: [
+        "{escape} {f1} {f2} {f3} {f4} {f5} {f6} {f7} {f8} {f9} {f10} {f11} {f12}",
+        "~ ! @ # $ % ^ & * ( ) _ + {backspace}",
+        "{tab} Q W E R T Y U I O P { } |",
+        "{capslock} A S D F G H J K L : \" {enter}",
+        "{shiftleft} Z X C V B N M < > ? {shiftright}",
+        "{controlleft} {metaleft} {altleft} {space} {fnkey} {altright}",
+      ],
+    },
+    display: {
+      "{escape}": "esc ⎋",
+      "{tab}": "tab ⇥",
+      "{backspace}": "backspace ⌫",
+      "{enter}": "enter ↵",
+      "{capslock}": "caps lock ⇪",
+      "{shiftleft}": "shift ⇧",
+      "{shiftright}": "shift ⇧",
+      "{controlleft}": "ctrl",
+      "{controlright}": "ctrl",
+      "{altleft}": "alt",
+      "{altright}": "alt",
+      "{fnkey}": "fn",
+      "{metaleft}": "winkey",
+    },
   });
   controlPad.value = new Keyboard(".simple-keyboard-control", {
-      ...options,
-      layout: {
-        default: [
-          "{prtscr} {scrolllock} {pause}",
-          "{insert} {home} {pageup}",
-          "{delete} {end} {pagedown}"
-        ]
-      }
-    });
-    keyboardArrows.value = new Keyboard(".simple-keyboard-arrows", {
-      ...options,
-      layout: {
-        default: ["{arrowup}", "{arrowleft} {arrowdown} {arrowright}"]
-      }
-    });
-    numpad.value = new Keyboard(".simple-keyboard-numpad", {
-      ...options,
-      layout: {
-        default: [
-          "{numlock} {numpaddivide} {numpadmultiply}",
-          "{numpad7} {numpad8} {numpad9}",
-          "{numpad4} {numpad5} {numpad6}",
-          "{numpad1} {numpad2} {numpad3}",
-          "{numpad0} {numpaddecimal}"
-        ]
-      }
-    });
-    numpadEnd.value = new Keyboard(".simple-keyboard-numpadEnd", {
-      ...options,
-      layout: {
-        default: ["{numpadsubtract}", "{numpadadd}", "{numpadenter}"]
-      }
-    });
-})
+    ...options,
+    layout: {
+      default: [
+        "{prtscr} {scrolllock} {pause}",
+        "{insert} {home} {pageup}",
+        "{delete} {end} {pagedown}",
+      ],
+    },
+  });
+  keyboardArrows.value = new Keyboard(".simple-keyboard-arrows", {
+    ...options,
+    layout: {
+      default: ["{arrowup}", "{arrowleft} {arrowdown} {arrowright}"],
+    },
+  });
+  numpad.value = new Keyboard(".simple-keyboard-numpad", {
+    ...options,
+    layout: {
+      default: [
+        "{numlock} {numpaddivide} {numpadmultiply}",
+        "{numpad7} {numpad8} {numpad9}",
+        "{numpad4} {numpad5} {numpad6}",
+        "{numpad1} {numpad2} {numpad3}",
+        "{numpad0} {numpaddecimal}",
+      ],
+    },
+  });
+  numpadEnd.value = new Keyboard(".simple-keyboard-numpadEnd", {
+    ...options,
+    layout: {
+      default: ["{numpadsubtract}", "{numpadadd}", "{numpadenter}"],
+    },
+  });
+});
 
 function onKeyPress(btnId: string) {
   const orgButton = btnId;
-  let button = BUTTON_MAP[btnId]
-  if(!button) {
-    if(orgButton.startsWith("{")) {
-      return //TOOD: notify
+  let button = BUTTON_MAP[btnId];
+  if (!button) {
+    if (orgButton.startsWith("{")) {
+      return; // TOOD: notify
     }
-    button = orgButton
+    button = orgButton;
   }
-  if(button == "`") {
-    if(!confirm("Warning: Using the ` backtick key will remove the default keybind to open the developer console.\n\nYou can restore the keybind if you launch the game with '-console' and enter 'bind ` toggleconsole'")) {
-      return
+  if (button == "`") {
+    if (!confirm("Warning: Using the ` backtick key will remove the default keybind to open the developer console.\n\nYou can restore the keybind if you launch the game with '-console' and enter 'bind ` toggleconsole'")) {
+      return;
     }
   }
-  const promptButtonText = button == orgButton ? button : `${orgButton} (${button})`
-  command.value = prompt(`Enter command for ${promptButtonText}`, command.value ?? "")
-  if(command.value) {
-    keybinds.value.splice(0, 0, `bind ${button} "${command.value}"`)
-    save()
+  const promptButtonText = button == orgButton ? button : `${orgButton} (${button})`;
+  command.value = prompt(`Enter command for ${promptButtonText}`, command.value ?? "");
+  if (command.value) {
+    keybinds.value.splice(0, 0, `bind ${button} "${command.value}"`);
+    save();
   }
 }
 
 function save() {
-  window.localStorage.setItem('srcds_keybinds', JSON.stringify(keybinds.value))
+  window.localStorage.setItem("srcds_keybinds", JSON.stringify(keybinds.value));
 }
 function load() {
-  const data = window.localStorage.getItem("srcds_keybinds")
-  if(data) {
-    keybinds.value = JSON.parse(data)
+  const data = window.localStorage.getItem("srcds_keybinds");
+  if (data) {
+    keybinds.value = JSON.parse(data);
   }
 }
 
@@ -241,8 +248,8 @@ const BUTTON_MAP: Record<string, string> = {
   "{f10}": "f10",
   "{f11}": "f11",
   "{f12}": "f12",
-  "{numlock}": "numlock"
-}
+  "{numlock}": "numlock",
+};
 </script>
 
 <style>

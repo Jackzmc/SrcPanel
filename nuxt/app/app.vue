@@ -6,36 +6,34 @@
   </UApp>
 </template>
 
-
 <script setup lang="ts">
-const { user } = useAuth()
+import * as Sentry from "@sentry/nuxt";
+
+const { user } = useAuth();
+const { appName } = useAppConfig();
 
 useHead({
   meta: [
-    { name: 'viewport', content: 'width=device-width, initial-scale=1' }
+    { name: "viewport", content: "width=device-width, initial-scale=1" },
   ],
   link: [
-    { rel: 'icon', href: '/favicon.ico' }
+    { rel: "icon", href: "/favicon.ico" },
   ],
   htmlAttrs: {
-    lang: 'en'
-  }
-})
+    lang: "en",
+  },
+});
 
-const title = 'Jz Panel'
-const description = ''
+const description = "";
 useSeoMeta({
-  titleTemplate: (chunk) => chunk ? `${chunk} | ${title}` : title,
+  titleTemplate: (chunk) => chunk ? `${chunk} | ${appName}` : appName,
   title: undefined, // let each page set its own
   description,
   ogTitle: undefined,
   ogDescription: description,
-})
-
-import * as Sentry from '@sentry/nuxt'
-if(user.value) Sentry.setUser({
+});
+if (user.value) Sentry.setUser({
   id: user.value.user.steamid,
   username: user.value.user.name,
-})
-
+});
 </script>

@@ -12,18 +12,19 @@
 </template>
 
 <script setup lang="ts">
+import type { APIUserDetails } from "@jzpanel/common/User";
+
 definePageMeta({
-  tab: "overview"
-})
-import type { APIUserDetails } from '@jzpanel/common/User'
+  tab: "overview",
+});
 
 const props = defineProps<{
-  steamid: string,
-  data: APIUserDetails,
-}>()
+  steamid: string;
+  data: APIUserDetails;
+}>();
 
 const items = [
-  { label: 'Profile',  icon: 'i-lucide-user', to: `/users/${props.steamid}/overview/profile` },
-  { label: 'Names',    icon: 'i-lucide-text', to: `/users/${props.steamid}/overview/names` },
-]
+  { label: "Profile", icon: "i-lucide-user", to: `/users/${props.steamid}/overview/profile` },
+  { label: "Names", icon: "i-lucide-text", to: `/users/${props.steamid}/overview/names` },
+];
 </script>

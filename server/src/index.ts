@@ -17,7 +17,7 @@ import fastifyUrlData from '@fastify/url-data'
 
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
-import { FastifyPluginOptions } from 'fastify';
+import fastify, { FastifyPluginOptions } from 'fastify';
 import { CustomFastifySession } from '@jzpanel/common/User'
 import User from './modules/users/User.js';
 import ConfigManager from './modules/ConfigManager.js';
@@ -75,7 +75,7 @@ async function onSignal(signal: NodeJS.Signals) {
     process.exit(1)
   }, FORCE_SHUTDOWN_TIMEOUT)
   // Handle shutdown logic
-  
+  app.log.trace('calling shutdown handlers')
   await Promise.allSettled([
     await app.servers?.onShutdown(),
     // flush & close influxdb global writer
@@ -84,8 +84,10 @@ async function onSignal(signal: NodeJS.Signals) {
       if(writer) await writer.close()
     })
   ])
-  app.log.info("Closing fastify")
+  app.log.trace("closing fastify")
   await app.close()
+  app.log.trace('flushing sentry logs')
+  await Sentry.close(2000)
   process.exit(0)
 
 
@@ -139,9 +141,16 @@ app.register(fastifyUrlData)
 import internalMetrics from './hooks/metrics.js'
 app.register(internalMetrics)
 
+app.setErrorHandler((error, request, reply) => {
+  app.log.error(error)
+  Sentry.captureException(error);
+  return reply.status(500).send({ error: 'INTERNAL_SERVER_ERROR', message: 'An unexpected error has occurred' });
+});
+
+
 app.register(MiddleManager)
   .then(async () => {
-    scheduleActivityLogPartition(app);
+    scheduleActivityLogPartition(app as unknown as FastifyInstance);
 
     if  (hadSignal) return
     if  (process.env.FLUXER_API_TOKEN) {
@@ -237,7 +246,7 @@ app.register(MiddleManager)
 
     await loadRoutes(mainPrefix, path.join(__dirname, './routes'))
 
-    await setupNotFound(app)
+    await setupNotFound(app as unknown as FastifyInstance)
     try {
       await app.listen({
         host: process.env.LISTEN_HOST,

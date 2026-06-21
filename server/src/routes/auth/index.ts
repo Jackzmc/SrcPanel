@@ -12,7 +12,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     })
 
     fastify.delete('/notifications', async(req, reply) => {
-        return await req.user!.clearNotifications()
+        await req.user!.clearNotifications()
+        return reply.status(204).send()
     })
 
     fastify.get('/notifications/sse', async(req, reply) => {

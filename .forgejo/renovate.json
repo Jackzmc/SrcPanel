@@ -1,0 +1,44 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended"
+  ],
+  "automerge": false,
+  "prHourlyLimit": 10,
+  "postUpdateOptions": ["pnpmDedupe"],
+  "lockFileMaintenance": {
+    "enabled": true
+  },
+  "packageRules": [
+    {
+      "matchDatasources": ["npm"],
+      "minimumReleaseAge": "7 days"
+    },
+    {
+      "matchFileNames": [
+        "nuxt/**"
+      ],
+      "groupName": "nuxt dependencies"
+    },
+    {
+      "matchFileNames": [
+        "server/**"
+      ],
+      "groupName": "fastify server dependencies"
+    },
+    {
+      "matchFileNames": [
+        "common-types/**"
+      ],
+      "groupName": "shared types dependencies"
+    },
+    {
+      "matchDepTypes": ["devDependencies"],
+      "automerge": true
+    }
+  ],
+  "ignorePaths": ["ui/**"],
+  "labels": ["dependencies"],
+  "patch": { "enabled": false },
+  "minimumReleaseAge": ""
+}

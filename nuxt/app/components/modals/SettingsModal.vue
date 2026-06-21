@@ -4,11 +4,15 @@
     title="User Settings"
     default-open
     aria-describedby="User Settings Modal"
-    class="sm:w-max max-w-none md:min-w-lg" 
+    class="sm:w-max max-w-none md:min-w-lg"
   >
     <template #description>
-      <UTabs :items="tabs" :content="false" value-key="value" class="w-full" 
-        :modelValue="settingsTab"
+      <UTabs
+        :items="tabs"
+        :content="false"
+        value-key="value"
+        class="w-full"
+        :model-value="settingsTab"
         @update:model-value="v => onSwitchTab(v)"
       />
     </template>
@@ -24,55 +28,53 @@
       </Transition>
     </template>
     <template #footer>
-      <div id="footer">
-
-      </div>
+      <div id="footer" />
     </template>
   </UModal>
 </template>
 
 <script setup lang="ts">
-import type { UserPrivilegeCode } from '@jzpanel/common/Privileges';
-import type { UserData } from '@jzpanel/common/User';
-import type { TableColumn, TabsItem } from '@nuxt/ui';
-import SessionsTab from './settings/SessionsTab.vue';
-import DeveloperTab from './settings/DeveloperTab.vue';
-import ConnectionsTab from './settings/ConnectionsTab.vue';
+import type { UserPrivilegeCode } from "@jzpanel/common/Privileges";
+import type { UserData } from "@jzpanel/common/User";
+import type { TabsItem } from "@nuxt/ui";
+import SessionsTab from "./settings/SessionsTab.vue";
+import DeveloperTab from "./settings/DeveloperTab.vue";
+import ConnectionsTab from "./settings/ConnectionsTab.vue";
 
-const api = useApi()
+const api = useApi();
 const emit = defineEmits<{
-  (e: 'close', value?: string): void,
-}>()
+  (e: "close", value?: string): void;
+}>();
 
-const route = useRoute()
+const route = useRoute();
 
 const tabs: TabsItem[] = [
   {
     label: "Sessions",
-    value: 'sessions',
+    value: "sessions",
   },
   {
     label: "Connections",
-    value: 'connections'
+    value: "connections",
   },
   {
     label: "Developer",
-    value: 'dev'
-  }
-]
+    value: "dev",
+  },
+];
 
 const settingsTab = computed(() => {
-  const hash = route.hash
-  const split = hash.split(":")
-  const tab = tabs.find(t => t.value === split[1])
-  return tab?.value ?? "sessions"
-})
+  const hash = route.hash;
+  const split = hash.split(":");
+  const tab = tabs.find(t => t.value === split[1]);
+  return tab?.value ?? "sessions";
+});
 
 const { data } = useAsyncData(
-  () => api<UserData<UserPrivilegeCode[]>>("/auth/profile")
-)
+  () => api<UserData<UserPrivilegeCode[]>>("/auth/profile"),
+);
 
-function onSwitchTab(tab: string|number) {
-  navigateTo({ path: route.path, hash: `#settings:${tab}` }, { replace: true })
+function onSwitchTab(tab: string | number) {
+  navigateTo({ path: route.path, hash: `#settings:${tab}` }, { replace: true });
 }
 </script>

@@ -12,11 +12,11 @@
 
 <script setup lang="ts">
 defineProps<{
-  leadingIcon?: string,
-  leadingIconClass?: string,
-  trailingIcon?: string,
-  trailingIconClass?: string,
-  text?: string,
-  tooltip?: string
-}>()
+  leadingIcon?: string;
+  leadingIconClass?: string;
+  trailingIcon?: string;
+  trailingIconClass?: string;
+  text?: string;
+  tooltip?: string;
+}>();
 </script>
