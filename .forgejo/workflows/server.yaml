@@ -8,11 +8,8 @@ on:
       - '.forgejo/workflows/server.yaml'
       - Dockerfile
       - pnpm-*.yml
-    tags:
-      - 'v*'
-  pull_request:
     branches:
-      - 'master'
+      - demo
   workflow_dispatch: {}
 
 env:
