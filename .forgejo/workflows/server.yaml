@@ -10,9 +10,6 @@ on:
       - pnpm-*.yml
     tags:
       - 'v*'
-  pull_request:
-    branches:
-      - 'master'
   workflow_dispatch: {}
 
 env:
