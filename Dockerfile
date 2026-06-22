@@ -57,7 +57,7 @@ FROM $IMAGE AS final-server
 
 RUN apt-get update && apt-get install -y curl && apt-get clean
 
-WORKDIR /app
+WORKDIR /app/server
 COPY --from=builder-server /app/node_modules ./node_modules
 COPY --from=builder-server /app/server ./server/
 COPY --from=builder-server /app/common-types ./common-types
@@ -68,7 +68,7 @@ ENV NODE_ENV=production
 
 EXPOSE 8080
 EXPOSE 7676
-CMD ["node", "server/dist/src/index.js"]
+CMD ["node", "dist/src/index.js"]
 
 # Production image for Nuxt UI
 FROM $IMAGE AS final-ui
