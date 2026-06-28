@@ -1,5 +1,6 @@
 <template>
   <div class="mt-4 space-y-2">
+    {{ JSON.stringify(data) }}
     <div class="flex">
       <UTabs
         :items="tabs"

@@ -61,94 +61,68 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     async handler(req: FastifyRequest<{ Params: { id: string }, Querystring: { filter: string } }>, reply) {
       const id = req.params.id
       const authorized = await fastify.authmngr.isAuthorized(req)
+      const isAccount = id.startsWith("STEAM_")
 
       const fetchStart = Date.now()
-
       const [bans] = await fastify.db.execute<RowDataPacket[]>(
-        `SELECT times_tried, id, public_message, bans.flags, bans.steamid, bans.executor, bans.reason, expires, expired, bans.timestamp, u1.last_name as client_name, u2.last_name AS executor_name, ip
+        `SELECT 
+          times_tried, 
+          id, 
+          public_message, 
+          bans.flags, 
+          bans.steamid, 
+          bans.executor, 
+          bans.reason, 
+          expires, 
+          expired, 
+          bans.timestamp, 
+          u1.last_name as client_name, 
+          u2.last_name AS executor_name, 
+          ip
         FROM bans
         LEFT JOIN view_panel_user u1 ON u1.account_id = SUBSTRING(bans.steamid, 11)
         LEFT JOIN view_panel_user u2 ON u2.account_id = SUBSTRING(bans.executor, 11)
-        WHERE bans.id = ? or bans.steamid = ?`,
+        WHERE 
+          bans.id = ? 
+          OR u1.account_id = SUBSTRING(?, 11)`,
         [id, id]
       )
-
       const fetchTime = Date.now() - fetchStart
 
-      const apiBans: FullAPIBan[] = []
+      const apiBans: FullAPIBan[] = bans
+        .filter(ban => req.query.filter !== "active" && !ban.expired && !(ban.flags & APIBanFlags.Suspended))
+        .map(ban => {
+          return {
+            id: ban.id,
+            client: ban.client,
+            reason: ban.reason,
+            flags: ban.flags,
+            timestamp: Number(ban.timestamp),
+            publicReason: ban.public_message,
+            executor: {
+              id: ban.executor,
+              name: ban.executor_name,
+              country: ban.country
+            },
+            expires: ban.expires,
+            expired: ban.expired,
+            joinAttempts: ban.times_tried,
+            ip: ban.ip,
+          }
+        })
 
       const parseStart = Date.now()
-
-      for (const ban of bans) {
-        // Ignore non ac
-        if (req.query.filter === "active" && ban.expired || ban.flags & APIBanFlags.Suspended) continue;
-        if (!authorized) delete ban.reason
-
-        // Grab their name either from l4d2 stats or from the resolve cache
-        if (ban.last_alias) {
-          ban.client = {
-            id: ban.steamid,
-            name: ban.last_alias,
-            nameResolver: "stats"
-          }
-        } else if (ban.resolved_name) {
-          ban.client = {
-            id: ban.steamid,
-            name: ban.resolved_name,
-            nameResolver: "name_db"
-          }
-        } else {
-          // User's name is not cached, fetch it:
-          const steamid = new SteamID(ban.steamid)
-          const resolvedNames = await fastify.steam.getUserDetails([steamid])
-          if (resolvedNames) {
-            const name = resolvedNames[0].personaname.replace(NAME_INVALID_CHAR_REPLACE, '�')
-            if (resolvedNames.length > 0) {
-              ban.client = {
-                id: ban.steamid,
-                name,
-                nameResolver: "name_db"
-              }
-              const accountid = steamid.getSteam2RenderedID().slice(10)
-              try {
-                await fastify.db.execute("INSERT INTO user_names (steamid, name) VALUES (?, ?)", [accountid, name])
-              } catch (err: any) {
-                console.warn(`Warn: Could not insert resolved name (${accountid}, name ${name}):`, err.sqlMessage)
-              }
-            }
-          }
-        }
-
-        if (authorized) ban.client.country = ban.country
-        delete ban.country
-
-        ban.executor = {
-          id: ban.executor,
-          name: ban.executor_name,
-          nameResolver: ban.executor !== null ? "stats" : "none"
-        }
-
-        apiBans.push({
-          id: ban.id,
-          client: ban.client,
-          reason: authorized ? ban.reason : undefined,
-          flags: ban.flags,
-          timestamp: Number(ban.timestamp),
-          publicReason: ban.public_message,
-          executor: ban.executor,
-          expires: ban.expires,
-          expired: ban.expired,
-          joinAttempts: ban.times_tried,
-          ip: ban.ip,
-        })
-      }
-
       const parseTime = Date.now() - parseStart
 
-      const [appeals] = await fastify.db.execute(
-        "SELECT * FROM `ban_appeals` WHERE `ban_id` = ?",
-        [id]
-      )
+      // Skip a query if it's for a user
+      const [appeals] = isAccount 
+        ? []
+        : await fastify.db.execute(
+          "SELECT * FROM `ban_appeals` WHERE `ban_id` = ?",
+          [id]
+        )
+
+      console.debug('apeals end')
 
       return {
         meta: {
