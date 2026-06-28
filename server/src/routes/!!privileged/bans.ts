@@ -1,7 +1,7 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
 import { OkPacket, RowDataPacket } from 'mysql2';
 import { Static, Type } from '@sinclair/typebox'
-import { APIBanFlags } from '@jzpanel/common/Ban';
+import { APIBanFlags, FullAPIBan } from '@jzpanel/common/Ban';
 import { computeChanges, replaceObject } from '../../util.js';
 import { NO_PERMISSION } from '../../responses.js';
 
@@ -107,6 +107,113 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             return {
                 banId: ban.id,
                 changes: ok.affectedRows
+            }
+        }
+    })
+
+    fastify.route({
+        method: 'GET',
+        url: '/:id',
+        schema: {
+            params: {
+            type: "object",
+            properties: {
+                id: { type: 'string' }
+            }
+            },
+            querystring: {
+            type: "object",
+            properties: {
+                filter: { type: 'string' }
+            }
+            },
+            response: {
+            200: {
+                type: 'object',
+                properties: {
+                meta: { type: 'object' },
+                bans: { type: 'array', default: [] },
+                appeals: { type: 'array', default: [] }
+                }
+            }
+            }
+        },
+        async handler(req: FastifyRequest<{ Params: { id: string }, Querystring: { filter: string } }>, reply) {
+            const id = req.params.id
+            const isAccount = id.startsWith("STEAM_")
+
+            const fetchStart = Date.now()
+            const [bans] = await fastify.db.execute<RowDataPacket[]>(
+            `SELECT 
+                times_tried, 
+                id, 
+                public_message, 
+                bans.flags, 
+                bans.steamid, 
+                bans.executor, 
+                bans.reason, 
+                expires, 
+                expired, 
+                bans.timestamp, 
+                u1.last_name as client_name, 
+                u2.last_name AS executor_name, 
+                ip
+            FROM bans
+            LEFT JOIN view_panel_user u1 ON u1.account_id = SUBSTRING(bans.steamid, 11)
+            LEFT JOIN view_panel_user u2 ON u2.account_id = SUBSTRING(bans.executor, 11)
+            WHERE 
+                bans.id = ? 
+                OR u1.account_id = SUBSTRING(?, 11)`,
+            [id, id]
+            )
+            const fetchTime = Date.now() - fetchStart
+
+            const apiBans: FullAPIBan[] = bans
+            .filter(ban => req.query.filter !== "active" && !ban.expired && !(ban.flags & APIBanFlags.Suspended))
+            .map(ban => {
+                return {
+                id: ban.id,
+                client: {
+                    id: ban.client,
+                    name: ban.client_name,
+                    country: ban.country
+                },
+                reason: ban.reason,
+                flags: ban.flags,
+                timestamp: Number(ban.timestamp),
+                publicReason: ban.public_message,
+                executor: {
+                    id: ban.executor,
+                    name: ban.executor_name,
+                },
+                expires: ban.expires,
+                expired: ban.expired,
+                joinAttempts: ban.times_tried,
+                ip: ban.ip,
+                }
+            })
+
+            const parseStart = Date.now()
+            const parseTime = Date.now() - parseStart
+
+            // Skip a query if it's for a user
+            const [appeals] = isAccount 
+            ? []
+            : await fastify.db.execute(
+                "SELECT * FROM `ban_appeals` WHERE `ban_id` = ?",
+                [id]
+            )
+
+            console.debug('apeals end')
+
+            return {
+            meta: {
+                fetchTime,
+                parseTime,
+                totalTime: fetchTime + parseTime,
+            },
+            bans: apiBans,
+            appeals
             }
         }
     })
