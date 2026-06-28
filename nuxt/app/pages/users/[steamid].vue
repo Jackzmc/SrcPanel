@@ -59,9 +59,12 @@ import SteamID from "steamid";
 
 const route = useRoute();
 const { requireAuth, user: myUser } = useAuth();
+
 if (route.params.steamid === "@me") {
   if (myUser.value) await navigateTo(`/users/${myUser.value?.user.steamid}/overview`, { replace: true });
   else await requireAuth();
+} else {
+  await requireAuth()
 }
 
 const ids = computed(() => {
