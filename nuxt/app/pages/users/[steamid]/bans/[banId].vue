@@ -27,6 +27,7 @@ if (!data.value) createError({
   message: "Ban not found",
 });
 
+
 const ban = computed(() => data.value?.bans[0]);
 
 useSeoMeta({
