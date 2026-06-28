@@ -94,7 +94,11 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         .map(ban => {
           return {
             id: ban.id,
-            client: ban.client,
+            client: {
+              id: ban.client,
+              name: ban.client_name,
+              country: ban.country
+            },
             reason: ban.reason,
             flags: ban.flags,
             timestamp: Number(ban.timestamp),
@@ -102,7 +106,6 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             executor: {
               id: ban.executor,
               name: ban.executor_name,
-              country: ban.country
             },
             expires: ban.expires,
             expired: ban.expired,
