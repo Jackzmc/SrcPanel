@@ -4,7 +4,7 @@ Game server administrator and manager for primarily source engine games. Include
 
 This tool has been developed over many years for my own server and has served me quite well. It's feature packed and comes with its own plugins for bans, notes, and live server data. 
 
-A demo site is avaialble at https://demo.example.com
+A demo site is avaialble at https://demo.srcpanel.app
 
 ## Parts
 
