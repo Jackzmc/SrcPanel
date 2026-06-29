@@ -1,7 +1,7 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
 import { OkPacket, RowDataPacket } from 'mysql2';
 import { Static, Type } from '@sinclair/typebox'
-import { APIBanFlags, FullAPIBan } from '@jzpanel/common/Ban';
+import { APIBanFlags, FullAPIBan } from '@srcpanel/common/Ban';
 import { computeChanges, replaceObject } from '../../util.js';
 import { NO_PERMISSION } from '../../responses.js';
 

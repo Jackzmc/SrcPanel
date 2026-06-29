@@ -1,5 +1,5 @@
-import type { UserPrivilegeCode } from "@jzpanel/common/Privileges";
-import type { ClientUserData } from "@jzpanel/common/User";
+import type { UserPrivilegeCode } from "@srcpanel/common/Privileges";
+import type { ClientUserData } from "@srcpanel/common/User";
 
 export function useAuth() {
   // useState key is shared across SSR → client hydration

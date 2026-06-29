@@ -21,7 +21,7 @@
 </template>
 
 <script setup lang="ts">
-import { APIDiscussionType } from "@jzpanel/common/Discussions";
+import { APIDiscussionType } from "@srcpanel/common/Discussions";
 import type { DiscussOptionEntry } from "~~/shared/types/discuss";
 
 const emit = defineEmits<{

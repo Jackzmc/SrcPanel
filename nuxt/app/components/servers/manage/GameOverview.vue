@@ -100,9 +100,9 @@
 </template>
 
 <script setup lang="ts">
-import { FinaleStage, GameDifficulty } from "@jzpanel/common/Live";
-import { formatRelTimeCompact } from "@jzpanel/common/format";
-import type { ServerDetailed } from "@jzpanel/common/Server";
+import { FinaleStage, GameDifficulty } from "@srcpanel/common/Live";
+import { formatRelTimeCompact } from "@srcpanel/common/format";
+import type { ServerDetailed } from "@srcpanel/common/Server";
 import type { WebsocketExport } from "~/composables/server/live.js";
 
 const props = defineProps<{

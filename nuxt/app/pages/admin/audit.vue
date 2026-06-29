@@ -182,10 +182,10 @@
 <script setup lang="ts">
 import Hero from "@/components/Hero.vue";
 import AuditTable from "@/components/audit/AuditTable.vue";
-import type { APILogData, APILogQueryResult, LogEntry } from "@jzpanel/common/Logs";
+import type { APILogData, APILogQueryResult, LogEntry } from "@srcpanel/common/Logs";
 import { TYPE_MAP } from "#shared/types/logs";
-import type { APIListPlayersResponse } from "@jzpanel/common/User";
-import { debounce } from "@jzpanel/common/util";
+import type { APIListPlayersResponse } from "@srcpanel/common/User";
+import { debounce } from "@srcpanel/common/util";
 import type { InputMenuItem, SelectItem } from "@nuxt/ui";
 
 useHead({

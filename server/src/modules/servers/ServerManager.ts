@@ -3,9 +3,9 @@ import Server, { ConfigServerData } from './Server.js'
 import Share from '../shares/Share.js';
 import path from 'path';
 import SteamAPI from '../steam.js'
-import { ServerAction, ServerType } from '@jzpanel/common/Server'
+import { ServerAction, ServerType } from '@srcpanel/common/Server'
 import net from 'net'
-import { LiveRecordType, LiveRecordResponse,PluginTokenPayload } from '@jzpanel/common/Live';
+import { LiveRecordType, LiveRecordResponse,PluginTokenPayload } from '@srcpanel/common/Live';
 import BufferReader from '../BufferReader.js';
 import PluginSocket from './PluginSocket.js';
 import JWT from '../../jwt-promise.js';

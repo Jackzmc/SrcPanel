@@ -24,9 +24,9 @@
 </template>
 
 <script setup lang="ts">
-import { formatDate, formatSize } from "@jzpanel/common/format";
+import { formatDate, formatSize } from "@srcpanel/common/format";
 import type { TableColumn } from "@nuxt/ui";
-import type { AddonInfo, ShareInfo } from "@jzpanel/common/Share";
+import type { AddonInfo, ShareInfo } from "@srcpanel/common/Share";
 import type { AsyncDataRequestStatus } from "#app";
 import { sortHeader } from "#imports";
 

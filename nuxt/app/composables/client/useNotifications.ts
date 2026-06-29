@@ -1,4 +1,4 @@
-import { NotificationLevel, type UserNotification } from "@jzpanel/common/User";
+import { NotificationLevel, type UserNotification } from "@srcpanel/common/User";
 import type { ToastProps } from "@nuxt/ui";
 
 export function useNotifications() {

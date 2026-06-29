@@ -1,4 +1,4 @@
-import { APICountData, APIDiscussionCacheableData, APIDiscussionFlags, APIResponsesData, APIUserWithChoice } from "@jzpanel/common/Discussions";
+import { APICountData, APIDiscussionCacheableData, APIDiscussionFlags, APIResponsesData, APIUserWithChoice } from "@srcpanel/common/Discussions";
 import ConfigManager from "./ConfigManager.js";
 import { Pool, RowDataPacket } from 'mysql2/promise';
 import User from "./users/User.js";

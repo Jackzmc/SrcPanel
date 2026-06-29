@@ -49,7 +49,7 @@
 </template>
 
 <script setup lang="ts">
-import { debounce } from "@jzpanel/common/util";
+import { debounce } from "@srcpanel/common/util";
 import type { NavigationMenuItem } from "@nuxt/ui";
 import ObjectCard from "~/components/search/ObjectCard.vue";
 import RouteCard from "~/components/search/RouteCard.vue";

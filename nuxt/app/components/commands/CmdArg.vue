@@ -21,7 +21,7 @@
 </template>
 
 <script setup lang="ts">
-import type { ParamType } from "@jzpanel/common/cmds/util";
+import type { ParamType } from "@srcpanel/common/cmds/util";
 
 const iconMap: Record<ParamType, string | undefined> = {
   text: "i-lucide-type",

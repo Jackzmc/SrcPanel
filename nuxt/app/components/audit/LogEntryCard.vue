@@ -79,11 +79,11 @@
 </template>
 
 <script setup lang="ts">
-import type { LogEntry } from "@jzpanel/common/Logs";
-import type { LogEntryUser } from "@jzpanel/common/logs";
+import type { LogEntry } from "@srcpanel/common/Logs";
+import type { LogEntryUser } from "@srcpanel/common/logs";
 import KeyValueTable from "../table/KeyValueTable.vue";
 import KeyValueRow from "../table/KeyValueRow.vue";
-import { formatDate, getRelDate } from "@jzpanel/common/format";
+import { formatDate, getRelDate } from "@srcpanel/common/format";
 import LogMessage from "./LogMessage.vue";
 import { TYPE_MAP } from "#shared/types/logs";
 

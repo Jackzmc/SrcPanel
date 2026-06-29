@@ -37,7 +37,7 @@
 </template>
 
 <script setup lang="ts">
-import type { ShareData } from "@jzpanel/common/Share";
+import type { ShareData } from "@srcpanel/common/Share";
 
 const props = defineProps<{
   share: ShareData;

@@ -40,8 +40,8 @@
 </template>
 
 <script setup lang="ts">
-import type { AdminPermissions, APIUserDetails } from "@jzpanel/common/User";
-import type { UserPrivilegeCode } from "@jzpanel/common/Privileges";
+import type { AdminPermissions, APIUserDetails } from "@srcpanel/common/User";
+import type { UserPrivilegeCode } from "@srcpanel/common/Privileges";
 import PermissionsList from "@/components/users/permissions/PermissionsList.vue";
 
 const { alert } = useModal();

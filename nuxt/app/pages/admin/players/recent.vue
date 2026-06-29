@@ -22,8 +22,8 @@
 </template>
 
 <script setup lang="ts">
-import type { APIListPlayersResponse, PlayerRecentEntry } from "@jzpanel/common/User";
-import type { APILogData } from "@jzpanel/common/Logs";
+import type { APIListPlayersResponse, PlayerRecentEntry } from "@srcpanel/common/User";
+import type { APILogData } from "@srcpanel/common/Logs";
 import type { SelectItem } from "@nuxt/ui";
 
 const AUTO_REFRESH_INTERVAL = 1000 * 60;

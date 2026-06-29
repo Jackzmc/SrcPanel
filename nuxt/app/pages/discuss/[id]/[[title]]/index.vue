@@ -73,8 +73,8 @@
 </template>
 
 <script setup lang="ts">
-import { APIDiscussionFlags, type APIDiscussion } from "@jzpanel/common/Discussions";
-import { getRelDate } from "@jzpanel/common/format";
+import { APIDiscussionFlags, type APIDiscussion } from "@srcpanel/common/Discussions";
+import { getRelDate } from "@srcpanel/common/format";
 import DiscussCard from "~/components/discuss/DiscussCard.vue";
 import CommentsContainer from "~/components/discuss/comments/CommentsContainer.vue";
 

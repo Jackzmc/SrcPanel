@@ -12,7 +12,7 @@
 </template>
 
 <script setup lang="ts">
-import type { APIUserDetails } from "@jzpanel/common/User";
+import type { APIUserDetails } from "@srcpanel/common/User";
 
 definePageMeta({
   tab: "overview",

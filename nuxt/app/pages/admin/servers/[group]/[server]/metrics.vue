@@ -23,8 +23,8 @@
 </template>
 
 <script setup lang="ts">
-import { formatSize } from "@jzpanel/common/format";
-import type { ServerDetailed } from "@jzpanel/common/Server";
+import { formatSize } from "@srcpanel/common/format";
+import type { ServerDetailed } from "@srcpanel/common/Server";
 import type { WebsocketExport } from "~/composables/server/live";
 import ApexCharts from "vue3-apexcharts";
 import type { ApexOptions } from "apexcharts";

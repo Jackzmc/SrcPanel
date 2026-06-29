@@ -24,7 +24,7 @@
 </template>
 
 <script setup lang="ts">
-import type { VoiceUser } from "@jzpanel/common/Server";
+import type { VoiceUser } from "@srcpanel/common/Server";
 import UserComponent from "@/components/UserComponent.vue";
 
 const props = defineProps<{

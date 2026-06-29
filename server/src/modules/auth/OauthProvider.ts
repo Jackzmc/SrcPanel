@@ -5,7 +5,7 @@ TODO:
     a. Refreshing of avatar on "Connections" page
 */
 
-import { OauthProvider, OauthProviderData } from "@jzpanel/common/User";
+import { OauthProvider, OauthProviderData } from "@srcpanel/common/User";
 import { OauthConfig } from "./OauthManager.js";
 import AuthManager from "./AuthManager.js";
 

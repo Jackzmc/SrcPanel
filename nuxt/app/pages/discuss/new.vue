@@ -3,7 +3,7 @@
 </template>
 
 <script setup lang="ts">
-import { APIDiscussionFlags, APIDiscussionType, type APIDiscussionBase } from "@jzpanel/common/Discussions";
+import { APIDiscussionFlags, APIDiscussionType, type APIDiscussionBase } from "@srcpanel/common/Discussions";
 
 const route = useRoute();
 const { requireAuth } = useAuth();

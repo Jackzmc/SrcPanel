@@ -55,11 +55,11 @@
 
 <script setup lang="ts">
 import type { TableColumn } from "@nuxt/ui";
-import { getRelDate } from "@jzpanel/common/format";
-import type { APINotesResponse, Note } from "@jzpanel/common/Note";
+import { getRelDate } from "@srcpanel/common/format";
+import type { APINotesResponse, Note } from "@srcpanel/common/Note";
 
 import UserComponent from "@/components/UserComponent.vue";
-import { debounce } from "@jzpanel/common/util";
+import { debounce } from "@srcpanel/common/util";
 
 useHead({
   title: "Notes",

@@ -1,4 +1,4 @@
-# JzPanel
+# SrcPanel
 
 Game server administrator and manager for primarily source engine games. Includes online viewing and management of in-game notes, bans, server management, player management, server documentation, and admin discussions. Automatically start new instances of servers, view live information about games, view activity logs, download new workshop addons or manage files.
 

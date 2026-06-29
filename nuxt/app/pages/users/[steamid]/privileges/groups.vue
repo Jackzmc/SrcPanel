@@ -17,7 +17,7 @@
 </template>
 
 <script setup lang="ts">
-import type { APIListAdminGroupsResponse, APIUserDetails } from "@jzpanel/common/User";
+import type { APIListAdminGroupsResponse, APIUserDetails } from "@srcpanel/common/User";
 import PermissionsList from "@/components/users/permissions/PermissionsList.vue";
 import type { TableColumn } from "@nuxt/ui";
 

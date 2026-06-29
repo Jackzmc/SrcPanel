@@ -1,8 +1,8 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest, FastifySchema } from 'fastify';
-import { APIComment, APIDiscussion, APIDiscussionCreateResponse, APIDiscussionDetails, APIDiscussionFlags, APIDiscussionOption, APIDiscussionType, BaseDiscussion } from '@jzpanel/common/Discussions';
+import { APIComment, APIDiscussion, APIDiscussionCreateResponse, APIDiscussionDetails, APIDiscussionFlags, APIDiscussionOption, APIDiscussionType, BaseDiscussion } from '@srcpanel/common/Discussions';
 import { OkPacket, RowDataPacket } from 'mysql2';
 import { NOT_FOUND, NO_PERMISSION } from '../../responses.js';
-import { APIPlayer, APIUser } from '@jzpanel/common/User';
+import { APIPlayer, APIUser } from '@srcpanel/common/User';
 import { Static, Type } from '@sinclair/typebox';
 import { NamespacedMetric, sendMetric } from '../../modules/metrics/influx.js';
 

@@ -18,7 +18,7 @@ import fastifyUrlData from '@fastify/url-data'
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
 import fastify, { FastifyPluginOptions } from 'fastify';
-import { CustomFastifySession } from '@jzpanel/common/User'
+import { CustomFastifySession } from '@srcpanel/common/User'
 import User from './modules/users/User.js';
 import ConfigManager from './modules/ConfigManager.js';
 

@@ -40,8 +40,8 @@
 </template>
 
 <script setup lang="ts">
-import type { APICreateNoteResponse, APIListUserNotes } from "@jzpanel/common/Note";
-import type { APIUserDetails } from "@jzpanel/common/User";
+import type { APICreateNoteResponse, APIListUserNotes } from "@srcpanel/common/Note";
+import type { APIUserDetails } from "@srcpanel/common/User";
 import NoteCard from "~/components/users/NoteCard.vue";
 
 definePageMeta({

@@ -17,11 +17,11 @@
 </template>
 
 <script setup lang="ts">
-import type { ServerDetailed } from "@jzpanel/common/Server";
+import type { ServerDetailed } from "@srcpanel/common/Server";
 import VoiceMembers from "@/components/servers/manage/VoiceMembers.vue";
 import PlayerList from "@/components/servers/manage/PlayerList.vue";
 import type { WebsocketExport } from "~/composables/server/live.js";
-import { GameState } from "@jzpanel/common/Live";
+import { GameState } from "@srcpanel/common/Live";
 
 const props = defineProps<{
   data: ServerDetailed;

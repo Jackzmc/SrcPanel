@@ -1,6 +1,6 @@
-import type { APILogData } from "@jzpanel/common/Logs";
-import type { APIUser } from "@jzpanel/common/User";
-import type { APISearchDetailResult, APISearchPartialResults, SearchType } from "@jzpanel/common/Search";
+import type { APILogData } from "@srcpanel/common/Logs";
+import type { APIUser } from "@srcpanel/common/User";
+import type { APISearchDetailResult, APISearchPartialResults, SearchType } from "@srcpanel/common/Search";
 import SteamID from "steamid";
 
 export interface SearchResultData {

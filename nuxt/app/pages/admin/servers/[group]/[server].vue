@@ -45,7 +45,7 @@
 </template>
 
 <script setup lang="ts">
-import type { APIListServersV1_Compact, ServerDetailed } from "@jzpanel/common/Server";
+import type { APIListServersV1_Compact, ServerDetailed } from "@srcpanel/common/Server";
 import ServerBanner from "@/components/servers/ServerBanner.vue";
 import { useServerWebsocket, type WebsocketExportProp } from "~/composables/server/live";
 import RecentActivity from "@/components/servers/manage/RecentActivity.vue";

@@ -44,8 +44,8 @@
 </template>
 
 <script setup lang="ts">
-import { formatDateSmart } from "@jzpanel/common/format";
-import type { Note } from "@jzpanel/common/Note";
+import { formatDateSmart } from "@srcpanel/common/format";
+import type { Note } from "@srcpanel/common/Note";
 
 const emit = defineEmits(["refresh"]);
 const { promptConfirm, promptInput } = useModal();

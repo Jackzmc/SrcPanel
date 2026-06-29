@@ -31,8 +31,8 @@
 </template>
 
 <script setup lang="ts">
-import type { UserPrivilegeCode } from "@jzpanel/common/Privileges";
-import type { APIConnections, OauthProviderData, UserData } from "@jzpanel/common/User";
+import type { UserPrivilegeCode } from "@srcpanel/common/Privileges";
+import type { APIConnections, OauthProviderData, UserData } from "@srcpanel/common/User";
 import ConnectionCard from "./ConnectionCard.vue";
 import IconText from "~/components/IconText.vue";
 

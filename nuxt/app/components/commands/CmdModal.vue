@@ -88,7 +88,7 @@
 </template>
 
 <script setup lang="ts">
-import type { Command } from "@jzpanel/common/cmds/util";
+import type { Command } from "@srcpanel/common/cmds/util";
 import CmdArg from "./CmdArg.vue";
 
 const emit = defineEmits<{

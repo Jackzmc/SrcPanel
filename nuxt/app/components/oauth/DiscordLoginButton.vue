@@ -7,7 +7,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import { useRoute } from "vue-router";
-import type { PanelMetaInfo } from "@jzpanel/common/Panel";
+import type { PanelMetaInfo } from "@srcpanel/common/Panel";
 
 const route = useRoute();
 

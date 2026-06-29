@@ -52,9 +52,9 @@
 
 <script setup lang="ts">
 import { UButton } from "#components";
-import { formatDate } from "@jzpanel/common/format";
-import type { UserPrivilegeCode } from "@jzpanel/common/Privileges";
-import type { APIDeveloperGenerateKeyResponse, APIDeveloperResponse, UserData } from "@jzpanel/common/User";
+import { formatDate } from "@srcpanel/common/format";
+import type { UserPrivilegeCode } from "@srcpanel/common/Privileges";
+import type { APIDeveloperGenerateKeyResponse, APIDeveloperResponse, UserData } from "@srcpanel/common/User";
 
 const api = useApi();
 const toast = useToast();

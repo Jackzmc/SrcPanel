@@ -1,6 +1,6 @@
 import { CreateGroupOptions } from "./ServerGroup.js"
 import DynamicServerManager, { DockerTemplateContainer } from '../docker/DynamicServerManager.js';
-import type { ServerAction } from "@jzpanel/common/Server";
+import type { ServerAction } from "@srcpanel/common/Server";
 import DockerServer from "../DockerServer.js";
 import User from '../../users/User.js';
 import { DockerGroupConfig } from "./index.js";

@@ -34,7 +34,7 @@
 </template>
 
 <script setup lang="ts">
-import type { AddonInfo, ShareInfo } from "@jzpanel/common/Share";
+import type { AddonInfo, ShareInfo } from "@srcpanel/common/Share";
 import type { AsyncDataRequestStatus } from "#app";
 import MapCard from "~/components/shares/MapCard.vue";
 

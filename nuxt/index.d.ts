@@ -2,7 +2,7 @@ declare module "#app" {
   interface PageMeta {
     /** Title shown on hero and <title> tag */
     title?: string;
-    /** og:title, without the JzPanel part */
+    /** og:title, without the SrcPanel part */
     pageTitle?: string;
     description?: string;
     /** Defaults to pageTitle, description unless set to null */

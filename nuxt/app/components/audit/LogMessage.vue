@@ -25,7 +25,7 @@
 
 <script setup lang="ts">
 import UserComponent from "@/components/UserComponent.vue";
-import { parseLogMessage, type LogEntryUser } from "@jzpanel/common/logs";
+import { parseLogMessage, type LogEntryUser } from "@srcpanel/common/logs";
 
 const props = defineProps<{
   client?: LogEntryUser;

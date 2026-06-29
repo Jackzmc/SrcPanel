@@ -34,8 +34,8 @@
 </template>
 
 <script setup lang="ts">
-import type { UserPrivilegeCode } from "@jzpanel/common/Privileges";
-import type { UserData } from "@jzpanel/common/User";
+import type { UserPrivilegeCode } from "@srcpanel/common/Privileges";
+import type { UserData } from "@srcpanel/common/User";
 import type { TabsItem } from "@nuxt/ui";
 import SessionsTab from "./settings/SessionsTab.vue";
 import DeveloperTab from "./settings/DeveloperTab.vue";

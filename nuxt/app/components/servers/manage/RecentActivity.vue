@@ -33,7 +33,7 @@
 </template>
 
 <script setup lang="ts">
-import type { LogEntry } from "@jzpanel/common/Logs";
+import type { LogEntry } from "@srcpanel/common/Logs";
 
 const REFRESH_INTERVAL_MS = 1000 * 60 * 5;
 

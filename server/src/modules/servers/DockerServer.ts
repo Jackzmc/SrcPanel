@@ -1,5 +1,5 @@
 import { GameDig } from "gamedig";
-import { CommandResultType } from "@jzpanel/common/Live";
+import { CommandResultType } from "@srcpanel/common/Live";
 import DynamicServerInstance from "./docker/DynamicServerInstance.js";
 import DockerLogs from "./features/logs/DockerLogs.js";
 import ServerGroup from "./groups/ServerGroup.js";

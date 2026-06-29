@@ -99,7 +99,7 @@
 </template>
 
 <script setup lang="ts">
-import { APIDiscussionFlags, APIDiscussionType, type APIDiscussion, type APIDiscussionBase, type APIDiscussionCreateResponse, type BaseDiscussion } from "@jzpanel/common/Discussions";
+import { APIDiscussionFlags, APIDiscussionType, type APIDiscussion, type APIDiscussionBase, type APIDiscussionCreateResponse, type BaseDiscussion } from "@srcpanel/common/Discussions";
 import DiscussCardEdit from "@/components/discuss/DiscardCardEdit.vue";
 import type { SelectItem } from "@nuxt/ui";
 import type { SettingEntry } from "~~/shared/types/discuss";
@@ -107,7 +107,7 @@ import DiscussSettingsEntry from "@/components/discuss/edit/DiscussSettingsEntry
 import DiscussSettingsFlagEntry from "@/components/discuss/edit/DiscussSettingsFlagEntry.vue";
 import type { ZonedDateTime } from "@internationalized/date";
 import { fromAbsolute, now } from "@internationalized/date";
-import { formatDate, slugify } from "@jzpanel/common/format";
+import { formatDate, slugify } from "@srcpanel/common/format";
 
 const toast = useToast();
 

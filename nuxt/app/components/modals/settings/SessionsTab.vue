@@ -23,9 +23,9 @@
 
 <script setup lang="ts">
 import { UButton, UCheckbox } from "#components";
-import { formatDate, getRelDate } from "@jzpanel/common/format";
-import type { UserPrivilegeCode } from "@jzpanel/common/Privileges";
-import type { APISessionList, SessionData, UserData } from "@jzpanel/common/User";
+import { formatDate, getRelDate } from "@srcpanel/common/format";
+import type { UserPrivilegeCode } from "@srcpanel/common/Privileges";
+import type { APISessionList, SessionData, UserData } from "@srcpanel/common/User";
 import type { TableColumn } from "@nuxt/ui";
 import IconText from "~/components/IconText.vue";
 

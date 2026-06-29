@@ -1,4 +1,4 @@
-import type { APICountData, APIUserWithChoice, APIDiscussionOption, APIDiscussionFlags } from "@jzpanel/common/Discussions";
+import type { APICountData, APIUserWithChoice, APIDiscussionOption, APIDiscussionFlags } from "@srcpanel/common/Discussions";
 
 export interface DiscussOptionEntry {
   option: APIDiscussionOption;

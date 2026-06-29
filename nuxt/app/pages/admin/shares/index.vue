@@ -11,7 +11,7 @@
 </template>
 
 <script setup lang="ts">
-import type { ShareData } from "@jzpanel/common/Share";
+import type { ShareData } from "@srcpanel/common/Share";
 import ShareCard from "~/components/shares/ShareCard.vue";
 
 useSeoMeta({

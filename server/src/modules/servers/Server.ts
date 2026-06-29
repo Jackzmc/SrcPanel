@@ -1,4 +1,4 @@
-import { ServerAction, ServerAvailableFeatures, ServerInfo, ServerStatus, ServerStatusData, ServerStatusSource,VoiceUser } from "@jzpanel/common/Server";
+import { ServerAction, ServerAvailableFeatures, ServerInfo, ServerStatus, ServerStatusData, ServerStatusSource,VoiceUser } from "@srcpanel/common/Server";
 import ConfigsFeature from "./features/Configs.js";
 import ConsoleFeature from "./features/logs/Console.js";
 import MetricsFeature from "./features/Metrics.js";
@@ -8,8 +8,8 @@ import ServerGroup from "./groups/ServerGroup.js";
 import { ActionResponse, IAction } from "./IAction.js";
 import { GameDig } from 'gamedig';
 import SocketClientUser from "./SocketClientUser.js";
-import { ClientOutPayload, Server_Status, ServerOutPacket, ServerOutPayload } from "@jzpanel/common/ServerWebsocket";
-import { LiveRecordResponse } from "@jzpanel/common/Live";
+import { ClientOutPayload, Server_Status, ServerOutPacket, ServerOutPayload } from "@srcpanel/common/ServerWebsocket";
+import { LiveRecordResponse } from "@srcpanel/common/Live";
 import { resolveIPv4, tryResolveIPv4 } from "../../util.js";
 import logger from '../../logger.js'
 import { Logger } from "pino";

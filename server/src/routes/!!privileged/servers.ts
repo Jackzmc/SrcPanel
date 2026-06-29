@@ -3,8 +3,8 @@ import { RowDataPacket } from 'mysql2';
 import { join } from 'path';
 import { readFile } from 'fs/promises';
 import { NO_PERMISSION, NOT_FOUND } from '../../responses.js';
-import { ServerDetailed, ServerInfo } from '@jzpanel/common/Server';
-import { UserPrivilegeCode } from '@jzpanel/common/Privileges';
+import { ServerDetailed, ServerInfo } from '@srcpanel/common/Server';
+import { UserPrivilegeCode } from '@srcpanel/common/Privileges';
 import { tryResolveIPv4 } from '../../util.js';
 
 const COMMENT_LINE_REGEX = new RegExp(/^\s*(\/\/|#)/)
