@@ -128,7 +128,7 @@ export default class DiscussionManager {
                 (
                     SELECT COUNT(*) FROM \`${ADMINS_DB}\`.${TABLE_PREFIX}_discussion_comments WHERE discussion_id = d.id
                 ) as comments 
-            FROM \`${ADMINS_DB}\`.${TABLE_PREFIX}__discussions d 
+            FROM \`${ADMINS_DB}\`.${TABLE_PREFIX}_discussions d 
             LEFT JOIN \`${MAIN_DB}\`.view_${TABLE_PREFIX}_user u ON SUBSTRING(d.creator, 11) = u.account_id 
             WHERE d.flags & ${APIDiscussionFlags.Archived} = 0 
             ORDER BY d.timestamp DESC`

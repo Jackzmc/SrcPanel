@@ -151,19 +151,6 @@ export default class UserManager {
   }
 
   /**
-   * Get a user's name from the l4d2 stats plugin's table
-   * @param steamid
-   * @returns
-   */
-  async getStatsName(steamid: string): Promise<string | undefined> {
-    const [rows] = await this.#db.execute<RowDataPacket[]>(
-      "SELECT last_alias FROM stats_users WHERE SUBSTRING(steamid, 11) = SUBSTRING(?, 11)",
-      [steamid]
-    )
-    return rows.length > 0 ? rows[0].last_alias : undefined
-  }
-
-  /**
    * Returns a list of all user's names, with their respective timestamp
    * @param steamid
    */

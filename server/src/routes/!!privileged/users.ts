@@ -74,15 +74,15 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     const start = Date.now()
     const [rows] = await fastify.db.execute<RowDataPacket[]>(
       `SELECT
-            (SELECT COUNT(*) FROM notes WHERE notes.steamid = stats_users.steamid) as notesCount,
-            (SELECT COUNT(*) FROM bans WHERE bans.steamid = stats_users.steamid) as bansCount,
+            (SELECT COUNT(*) FROM notes WHERE SUBSTRING(notes.steamid,11) = u.account_id) as notesCount,
+            (SELECT COUNT(*) FROM bans WHERE SUBSTRING(bans.steamid,11) = u.account_id) as bansCount,
             (SELECT COUNT(*) FROM ${ADMINS_DB}.sm_admins
-                WHERE SUBSTRING(${ADMINS_DB}.sm_admins.identity,11) = SUBSTRING(steamid, 11)
+                WHERE SUBSTRING(${ADMINS_DB}.sm_admins.identity,11) = u.account_id
             ) as isAdmin,
-            steamid, last_alias as name, country, last_join_date as lastJoinDate, created_date as firstJoinDate
-            FROM stats_users
+            steamid, last_name as name, country, last_join_time as lastJoinDate, create_time as firstJoinDate
+            FROM view_${TABLE_PREFIX}_users u
             WHERE SUBSTRING(steamid, 11) = SUBSTRING(:query, 11) or last_alias LIKE :fuzzyQuery
-            ORDER BY last_join_date DESC
+            ORDER BY last_join_time DESC
             LIMIT 10`,
       { query, fuzzyQuery }
     )

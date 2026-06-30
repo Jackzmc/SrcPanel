@@ -19,7 +19,7 @@ import { OauthAuthData } from './OauthProvider.js';
 import logger from '../../logger.js'
 import CacheManager from "../../modules/CacheManager.js";
 import { sendMetric } from "../metrics/influx.js";
-import { ADMINS_DB, TABLE_PREFIX } from "../../middlewares/managers.js";
+import { ADMINS_DB, MAIN_DB, TABLE_PREFIX } from "../../middlewares/managers.js";
 const log = logger.child({ name: "AuthManager" })
 
 interface AddAdmin {
@@ -584,10 +584,10 @@ export default class AuthManager {
      */
     public async refreshAdmins() {
         const [rows] = await this.#db.execute<RowDataPacket[]>(`
-            SELECT a.*, sag.group_id as group_id, u.last_alias as resolvedName
+            SELECT a.*, sag.group_id as group_id, u.last_name as resolvedName
             FROM sm_admins a
             LEFT JOIN sm_admins_groups sag on a.id = sag.admin_id
-            LEFT JOIN \`left4dead2\`.stats_users u ON SUBSTRING(a.identity, 11) = SUBSTRING(u.steamid, 11)
+            LEFT JOIN \`${MAIN_DB}\`.view_${TABLE_PREFIX}_user u ON SUBSTRING(a.identity, 11) = u.account_id 
         `)
         const admins: Record<string, AdminData> = {}
         for(const row of rows) {
