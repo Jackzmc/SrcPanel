@@ -37,8 +37,8 @@
 
 <script setup lang="ts">
 import { UserComponent } from "#components";
-import { getRelDate } from "@jzpanel/common/format";
-import type { PlayerEntry } from "@jzpanel/common/User";
+import { getRelDate } from "@srcpanel/common/format";
+import type { PlayerEntry } from "@srcpanel/common/User";
 import type { TableColumn } from "@nuxt/ui";
 
 const props = defineProps<{

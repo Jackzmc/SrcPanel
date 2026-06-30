@@ -6,8 +6,8 @@
 </template>
 
 <script setup lang="ts">
-import type { APIBanDetailsResponse } from "@jzpanel/common/Ban";
-import type { APIUserDetails } from "@jzpanel/common/User";
+import type { APIBanDetailsResponse } from "@srcpanel/common/Ban";
+import type { APIUserDetails } from "@srcpanel/common/User";
 import BanContainer from "~/components/users/BanContainer.vue";
 
 const route = useRoute();

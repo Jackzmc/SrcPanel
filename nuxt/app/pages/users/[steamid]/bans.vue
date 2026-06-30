@@ -15,8 +15,8 @@
 </template>
 
 <script setup lang="ts">
-import { APIBanFlags, type APIBanResponse, type ListAPIBan } from "@jzpanel/common/Ban";
-import type { APIUserDetails } from "@jzpanel/common/User";
+import { APIBanFlags, type APIBanResponse, type ListAPIBan } from "@srcpanel/common/Ban";
+import type { APIUserDetails } from "@srcpanel/common/User";
 import type { TabsItem } from "@nuxt/ui";
 
 definePageMeta({

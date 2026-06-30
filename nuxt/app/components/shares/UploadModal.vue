@@ -26,7 +26,7 @@
 </template>
 
 <script setup lang="ts">
-import type { ShareInfo } from "@jzpanel/common/Share"
+import type { ShareInfo } from "@srcpanel/common/Share"
 
 const toast = useToast()
 const emit = defineEmits(["close"])

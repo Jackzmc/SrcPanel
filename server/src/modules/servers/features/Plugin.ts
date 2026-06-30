@@ -1,9 +1,9 @@
-import { GameState, LiveDataCache, LiveRecord, LiveRecordGame, LiveRecordResponse, LiveRecordType, updateLiveCache } from "@jzpanel/common/Live";
+import { GameState, LiveDataCache, LiveRecord, LiveRecordGame, LiveRecordResponse, LiveRecordType, updateLiveCache } from "@srcpanel/common/Live";
 import { ActionResponse, IAction } from "../IAction.js";
 import Server from "../Server.js";
 import PluginSocket from "../PluginSocket.js";
 import Feature from "./Feature.js";
-import { ServerStatusData } from "@jzpanel/common/Server";
+import { ServerStatusData } from "@srcpanel/common/Server";
 import jwtPromise from "../../../jwt-promise.js";
 
 const LIVE_CACHE_TTL = 1000 * 60 * 3 // Live cache data expires after 3 minutes

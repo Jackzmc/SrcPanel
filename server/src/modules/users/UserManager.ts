@@ -2,7 +2,7 @@ import SteamID from 'steamid';
 import { SQL } from 'sql-template-strings'
 import SteamAPI from '../../modules/steam.js'
 import { Pool, RowDataPacket } from 'mysql2/promise';
-import { UserNameEntry } from '@jzpanel/common/User';
+import { UserNameEntry } from '@srcpanel/common/User';
 
 interface IUserData {
   accountId: string,

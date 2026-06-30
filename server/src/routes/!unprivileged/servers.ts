@@ -1,10 +1,10 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
-import type { APIListServersV2, APIListServersV2_Groups, APIListServerGroup, APIListServersCompactV2_Server, APIListServersCompactV2, APIListServersV1_Server, APIListServersV1_Compact } from '@jzpanel/common/Server';
-import { SERVER_TYPE_MAP } from '@jzpanel/common/Server';
+import type { APIListServersV2, APIListServersV2_Groups, APIListServerGroup, APIListServersCompactV2_Server, APIListServersCompactV2, APIListServersV1_Server, APIListServersV1_Compact } from '@srcpanel/common/Server';
+import { SERVER_TYPE_MAP } from '@srcpanel/common/Server';
 import Server from '../../modules/servers/Server.js';
 import SocketClientUser from '../../modules/servers/SocketClientUser.js';
-import type { APIListServersV2_Server } from '@jzpanel/common/Server';
-import type { ClientOutPayload } from '@jzpanel/common/ServerWebsocket';
+import type { APIListServersV2_Server } from '@srcpanel/common/Server';
+import type { ClientOutPayload } from '@srcpanel/common/ServerWebsocket';
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
 

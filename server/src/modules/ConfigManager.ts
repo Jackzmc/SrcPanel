@@ -1,8 +1,8 @@
 import path from 'path';
-import type { PanelConfigProvider, PublicConfigMeta } from '@jzpanel/common/Panel';
+import type { PanelConfigProvider, PublicConfigMeta } from '@srcpanel/common/Panel';
 import yaml from 'yaml'
 import { readFile } from 'fs/promises';
-import type { PanelConfig } from '@jzpanel/common/Panel';
+import type { PanelConfig } from '@srcpanel/common/Panel';
 import Logger from '../logger.js'
 const log = Logger.child({ name: "config" })
 

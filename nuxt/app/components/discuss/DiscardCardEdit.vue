@@ -45,7 +45,7 @@
 </template>
 
 <script setup lang="ts">
-import type { APIDiscussion, APIDiscussionBase } from "@jzpanel/common/Discussions";
+import type { APIDiscussion, APIDiscussionBase } from "@srcpanel/common/Discussions";
 import EditText from "./EditText.vue";
 
 const model = defineModel<APIDiscussion | APIDiscussionBase>();

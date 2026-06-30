@@ -16,9 +16,9 @@
 </template>
 
 <script setup lang="ts">
-import type { APIListPlayersResponse } from "@jzpanel/common/User";
+import type { APIListPlayersResponse } from "@srcpanel/common/User";
 import PlayersPage from "@/components/players/PlayersPage.vue";
-import { debounce } from "@jzpanel/common/util";
+import { debounce } from "@srcpanel/common/util";
 
 const route = useRoute();
 

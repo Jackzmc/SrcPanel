@@ -1,4 +1,4 @@
-import { APIDeveloperGenerateKeyResponse, APIDeveloperResponse } from '@jzpanel/common/User';
+import { APIDeveloperGenerateKeyResponse, APIDeveloperResponse } from '@srcpanel/common/User';
 import { FastifyInstance, FastifyPluginOptions } from 'fastify';
 
 

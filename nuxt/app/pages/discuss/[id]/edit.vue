@@ -3,7 +3,7 @@
 </template>
 
 <script setup lang="ts">
-import type { APIDiscussion } from "@jzpanel/common/Discussions";
+import type { APIDiscussion } from "@srcpanel/common/Discussions";
 import DiscussEditCreate from "@/components/discuss/DiscussEditCreate.vue";
 
 const { requireAuth } = useAuth();

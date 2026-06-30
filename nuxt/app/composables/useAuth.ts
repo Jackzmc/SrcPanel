@@ -1,5 +1,5 @@
-import type { UserPrivilegeCode } from "@jzpanel/common/Privileges";
-import type { ClientUserData } from "@jzpanel/common/User";
+import type { UserPrivilegeCode } from "@srcpanel/common/Privileges";
+import type { ClientUserData } from "@srcpanel/common/User";
 
 export function useAuth() {
   // useState key is shared across SSR → client hydration
@@ -8,7 +8,8 @@ export function useAuth() {
 
   async function fetchUser() {
     try {
-      user.value = await useApi()<ClientUserData>("/auth/profile");
+      // Reduce timeout on SSR to keep it responsive if server unavailable
+      user.value = await useApi()<ClientUserData>("/auth/profile", { timeout: import.meta.server ? 1000 : 8000 });
     } catch (err: any) {
       console.log(err);
       console.error("profile fetch error", err);

@@ -3,7 +3,7 @@ import path from 'path';
 import  { createWriteStream } from 'fs';
 import https from 'https';
 import { unlink } from 'fs/promises';
-import { WorkshopItem, SteamUserDetails } from '@jzpanel/common/Share'
+import { WorkshopItem, SteamUserDetails } from '@srcpanel/common/Share'
 import { EventEmitter } from 'node:events';
 import QuickLRU from 'quick-lru';
 import logger from '../logger.js'

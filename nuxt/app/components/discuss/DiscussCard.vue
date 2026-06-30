@@ -74,13 +74,13 @@
 </template>
 
 <script setup lang="ts">
-import { APIDiscussionFlags, APIDiscussionType, type APIDiscussion } from "@jzpanel/common/Discussions";
+import { APIDiscussionFlags, APIDiscussionType, type APIDiscussion } from "@srcpanel/common/Discussions";
 import UserComponent from "@/components/UserComponent.vue";
 import IconText from "@/components/IconText.vue";
 import DiscussChoice from "./DiscussChoice.vue";
 import type { DiscussOptionEntry } from "#shared/types/discuss";
-import { debounce } from "@jzpanel/common/util";
-import { formatRelTime, slugify } from "@jzpanel/common/format";
+import { debounce } from "@srcpanel/common/util";
+import { formatRelTime, slugify } from "@srcpanel/common/format";
 
 const enum VoteState {
   Inactive,

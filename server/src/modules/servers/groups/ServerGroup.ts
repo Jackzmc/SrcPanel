@@ -1,4 +1,4 @@
-import { ServerAction } from "@jzpanel/common/Server"
+import { ServerAction } from "@srcpanel/common/Server"
 import Server from "../Server.js"
 
 export interface CreateGroupOptions {

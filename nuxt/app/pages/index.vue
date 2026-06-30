@@ -44,7 +44,7 @@
 </template>
 
 <script setup lang="ts">
-import type { APIListServersV1 } from "@jzpanel/common/Server";
+import type { APIListServersV1 } from "@srcpanel/common/Server";
 import ServerGroupList from "~/components/servers/ServerGroupList.vue";
 import type { TabsItem } from "@nuxt/ui";
 

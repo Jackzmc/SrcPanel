@@ -64,7 +64,7 @@
 </template>
 
 <script setup lang="ts">
-import type { APIUserDetails } from "@jzpanel/common/User";
+import type { APIUserDetails } from "@srcpanel/common/User";
 import PlayerStats from "@/components/users/overview/PlayerStats.vue";
 import SteamID from "steamid";
 

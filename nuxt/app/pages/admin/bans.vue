@@ -61,9 +61,9 @@
 
 <script setup lang="ts">
 import type { TableColumn } from "@nuxt/ui";
-import { APIBanFlags, type APIBanResponse, type ListAPIBan } from "@jzpanel/common/Ban";
+import { APIBanFlags, type APIBanResponse, type ListAPIBan } from "@srcpanel/common/Ban";
 import UCheckbox from "@nuxt/ui/components/Checkbox.vue";
-import { formatDate, getRelDate } from "@jzpanel/common/format";
+import { formatDate, getRelDate } from "@srcpanel/common/format";
 
 import UserComponent from "@/components/UserComponent.vue";
 

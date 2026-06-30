@@ -1,7 +1,7 @@
 import yaml from 'yaml'
 import { join } from 'path'
 import { readFile, mkdir, copyFile, unlink } from 'fs/promises'
-import { ShareDestination, ShareInfo } from '@jzpanel/common/Share'
+import { ShareDestination, ShareInfo } from '@srcpanel/common/Share'
 import { doesFileExist } from '../../util.js'
 import { open as sqliteOpen } from 'sqlite'
 import Share from './Share.js'

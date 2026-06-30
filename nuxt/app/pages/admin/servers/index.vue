@@ -37,7 +37,7 @@
 <script setup lang="ts">
 import { IconText, UBadge, UCheckbox, ULink, UTooltip } from "#components";
 import Hero from "@/components/Hero.vue";
-import type { APIListServersV2, APIListServersV2_Server } from "@jzpanel/common/Server";
+import type { APIListServersV2, APIListServersV2_Server } from "@srcpanel/common/Server";
 import type { TableColumn } from "@nuxt/ui";
 import { sortHeader } from "#imports";
 import ActionButton from "~/components/servers/ActionButton.vue";

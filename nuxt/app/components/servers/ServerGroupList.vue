@@ -19,7 +19,7 @@
 </template>
 
 <script setup lang="ts">
-import type { APIListServersV1 } from "@jzpanel/common/Server";
+import type { APIListServersV1 } from "@srcpanel/common/Server";
 import ServerTable from "./ServerTable.vue";
 
 withDefaults(defineProps<{

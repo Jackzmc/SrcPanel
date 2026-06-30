@@ -76,7 +76,7 @@
 </template>
 
 <script setup lang="ts">
-import type { ServerDetailed } from "@jzpanel/common/Server";
+import type { ServerDetailed } from "@srcpanel/common/Server";
 import type { WebsocketExport } from "~/composables/server/live";
 
 const toast = useToast();

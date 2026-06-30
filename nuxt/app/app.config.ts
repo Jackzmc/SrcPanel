@@ -1,5 +1,5 @@
 export default defineAppConfig({
-  appName: "JzPanel",
+  appName: "SrcPanel",
   ui: {
     container: {
       base: "w-full mx-auto px-4 sm:px-6 lg:px-8",

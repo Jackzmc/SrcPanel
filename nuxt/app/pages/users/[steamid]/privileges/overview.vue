@@ -53,7 +53,7 @@
 </template>
 
 <script setup lang="ts">
-import type { APIUserDetails } from "@jzpanel/common/User";
+import type { APIUserDetails } from "@srcpanel/common/User";
 import PermissionsList from "@/components/users/permissions/PermissionsList.vue";
 
 const props = defineProps<{

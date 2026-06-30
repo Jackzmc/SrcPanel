@@ -6,7 +6,7 @@ import { QueryBuilder, SortDirection } from '../../modules/QueryBuilder.js';
 import SteamID from 'steamid';
 import { Pool } from 'mysql2/promise.js';
 import logger from '../../logger.js'
-import { APILogData, APILogQueryResult, LogEntry } from '@jzpanel/common/Logs';
+import { APILogData, APILogQueryResult, LogEntry } from '@srcpanel/common/Logs';
 
 const log = logger.child({ name: "logs" })
 

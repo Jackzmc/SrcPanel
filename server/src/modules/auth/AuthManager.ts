@@ -2,10 +2,10 @@ import { Pool, RowDataPacket, OkPacket } from "mysql2/promise";
 import QuickLRU from 'quick-lru'
 import { FastifyReply, FastifyRequest } from 'fastify';
 import ActivityLog from "../ActivityLog.js";
-import { AdminData, AdminGroup, OauthProvider, SessionData, ReadableAdminGroup, UserNotification, UserNotificationOptions, AddUserNotification, UserProfileData, APIKey } from '@jzpanel/common/User';
-import { ReadableAdminData, UserOauthProviders, OauthProviderData } from '@jzpanel/common/User';
-import { SteamInfo, UserPrivilegeCode } from  '@jzpanel/common/Privileges';
-import { SteamUserDetails } from '@jzpanel/common/Share';
+import { AdminData, AdminGroup, OauthProvider, SessionData, ReadableAdminGroup, UserNotification, UserNotificationOptions, AddUserNotification, UserProfileData, APIKey } from '@srcpanel/common/User';
+import { ReadableAdminData, UserOauthProviders, OauthProviderData } from '@srcpanel/common/User';
+import { SteamInfo, UserPrivilegeCode } from  '@srcpanel/common/Privileges';
+import { SteamUserDetails } from '@srcpanel/common/Share';
 import SteamID from "steamid";
 import FastGeoip from 'fast-geoip';
 import { SESSION_VERSION } from '../../routes/auth/steam.js';

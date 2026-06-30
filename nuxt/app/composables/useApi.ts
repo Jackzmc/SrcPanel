@@ -12,5 +12,6 @@ export function useApi() {
     baseURL: `${prefix}${config.public.apiBase}`,
     credentials: "include",
     headers,
+    timeout: import.meta.server ? 4000 : 8000
   });
 }

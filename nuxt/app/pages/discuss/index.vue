@@ -25,7 +25,7 @@
 </template>
 
 <script setup lang="ts">
-import type { APIDiscussion } from "@jzpanel/common/Discussions";
+import type { APIDiscussion } from "@srcpanel/common/Discussions";
 import DiscussCard from "~/components/discuss/DiscussCard.vue";
 
 definePageMeta({

@@ -1,7 +1,7 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
 import { NO_PERMISSION } from '../../responses.js';
 import path from 'node:path';
-import { UpdateState } from '@jzpanel/common/Panel';
+import { UpdateState } from '@srcpanel/common/Panel';
 import { rm } from 'fs/promises';
 import Server from '../../modules/servers/Server.js';
 import { CustomServerGroup } from '../../modules/servers/groups/CustomServerGroup.js';

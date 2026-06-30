@@ -8,7 +8,7 @@
 <script setup lang="ts">
 import GamePermissionsList from "@/components/users/permissions/GamePermissionsList.vue";
 import PanelPermissionsList from "@/components/users/permissions/PanelPermissionsList.vue";
-import type { UserPrivilegeCode } from "@jzpanel/common/Privileges";
+import type { UserPrivilegeCode } from "@srcpanel/common/Privileges";
 
 const emit = defineEmits<{
   (e: "add:code", code: UserPrivilegeCode): void;

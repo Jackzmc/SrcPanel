@@ -122,7 +122,7 @@
 </template>
 
 <script setup lang="ts">
-import type { APIListServerGroup, APICreateGroupInstanceResult_Error, APICreateGroupInstanceResult_Ok } from "@jzpanel/common/Server";
+import type { APIListServerGroup, APICreateGroupInstanceResult_Error, APICreateGroupInstanceResult_Ok } from "@srcpanel/common/Server";
 import GroupInstanceCard from "~/components/servers/GroupInstanceCard.vue";
 import KeyValueRow from "../table/KeyValueRow.vue";
 import KeyValueTable from "../table/KeyValueTable.vue";

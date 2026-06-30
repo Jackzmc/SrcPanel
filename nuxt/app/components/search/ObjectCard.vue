@@ -41,7 +41,7 @@
 </template>
 
 <script setup lang="ts">
-import type { SearchType } from "@jzpanel/common/Search";
+import type { SearchType } from "@srcpanel/common/Search";
 import type { SearchResultData } from "~/composables/client/usePanelSearch.js";
 import LogEntryCard from "../audit/LogEntryCard.vue";
 import NoteCard from "../users/NoteCard.vue";

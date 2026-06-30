@@ -2,7 +2,7 @@ import { stat, readdir, unlink, symlink } from 'fs/promises';
 import { createWriteStream } from 'fs'
 import path from 'path'
 import SteamAPI from '../steam.js';
-import type { AddonCollectionInfo, AddonInfo, AddonWorkshopInfo, ChildWorkshopItem, DownloadSourceRecord, ShareDestinations, ShareInfo, WorkshopCollectionInfo, WorkshopItem } from '@jzpanel/common/Share'
+import type { AddonCollectionInfo, AddonInfo, AddonWorkshopInfo, ChildWorkshopItem, DownloadSourceRecord, ShareDestinations, ShareInfo, WorkshopCollectionInfo, WorkshopItem } from '@srcpanel/common/Share'
 import sqlite3 from 'sqlite3'
 import sqlite from 'sqlite'
 import { SQL } from 'sql-template-strings';

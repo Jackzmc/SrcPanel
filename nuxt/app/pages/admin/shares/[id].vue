@@ -61,7 +61,7 @@
 </template>
 
 <script setup lang="ts">
-import type { APIShareAddons, ShareData } from "@jzpanel/common/Share";
+import type { APIShareAddons, ShareData } from "@srcpanel/common/Share";
 import AddWorkshopModal from "~/components/shares/AddWorkshopModal.vue";
 import InfoModal from "~/components/shares/InfoModal.vue";
 import UploadModal from "~/components/shares/UploadModal.vue";

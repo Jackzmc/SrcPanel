@@ -224,8 +224,8 @@
 </template>
 
 <script setup lang="ts">
-import { APIBanFlags, type APICreateBanResponse, type FullAPIBan } from "@jzpanel/common/Ban";
-import { formatDate, formatDateSmart, formatRelTime, getRelDate } from "@jzpanel/common/format";
+import { APIBanFlags, type APICreateBanResponse, type FullAPIBan } from "@srcpanel/common/Ban";
+import { formatDate, formatDateSmart, formatRelTime, getRelDate } from "@srcpanel/common/format";
 
 const toast = useToast();
 const { promptConfirm } = useModal();

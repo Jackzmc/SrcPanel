@@ -33,7 +33,7 @@
 </template>
 
 <script setup lang="ts">
-import { FLAGS } from "@jzpanel/common/User";
+import { FLAGS } from "@srcpanel/common/User";
 import GamePermissionRow from "./GamePermissionRow.vue";
 
 const emit = defineEmits<{

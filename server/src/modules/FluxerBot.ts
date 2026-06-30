@@ -1,7 +1,7 @@
 import { CategoryChannel, Client, Guild, GuildMember, User, VoiceChannel } from '@fluxerjs/core';
 import ServerManager from './servers/ServerManager.js';
 import { GatewayVoiceStateUpdateDispatchData, APIGuildMember, ChannelType, GatewayOpcodes, GatewayPresenceUpdateData } from '@fluxerjs/types'
-import type { VoiceUser } from '@jzpanel/common/Server';
+import type { VoiceUser } from '@srcpanel/common/Server';
 import CacheManager from './CacheManager.js';
 
 import Logger from '../logger.js'

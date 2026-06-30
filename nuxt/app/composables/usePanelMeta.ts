@@ -1,4 +1,4 @@
-import type { PanelMetaInfo } from "@jzpanel/common/Panel";
+import type { PanelMetaInfo } from "@srcpanel/common/Panel";
 
 export async function usePanelMeta() {
   const api = useApi();
@@ -6,7 +6,10 @@ export async function usePanelMeta() {
   // Same key = single fetch, shared across all components
   const { data, error } = await useAsyncData<PanelMetaInfo>(
     "meta",
-    () => api("/meta"),
+    () => api("/meta", { 
+      // Reduce timeout on SSR to keep it responsive if server unavailable
+      timeout: import.meta.server ? 1000 : 8000
+    }),
   );
 
   return {

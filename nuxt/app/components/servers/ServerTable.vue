@@ -23,7 +23,7 @@
 </template>
 
 <script setup lang="ts">
-import type { APIListServersV1_Group, APIListServersV1_Server, GroupInfo, ServerInfo } from "@jzpanel/common/Server";
+import type { APIListServersV1_Group, APIListServersV1_Server, GroupInfo, ServerInfo } from "@srcpanel/common/Server";
 import ServerTableRow from "./ServerTableRow.vue";
 
 const props = defineProps<{

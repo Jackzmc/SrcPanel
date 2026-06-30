@@ -1,4 +1,4 @@
-import { CommandResultType } from "@jzpanel/common/Live";
+import { CommandResultType } from "@srcpanel/common/Live";
 
 export interface ActionResponse {
     type: CommandResultType,

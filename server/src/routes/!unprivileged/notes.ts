@@ -1,7 +1,7 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
 import { RowDataPacket } from 'mysql2';
 import { ADMINS_DB } from '../../routes/!!privileged/admins.js';
-import { APIListUserNotes, APINotesResponse, Note } from '@jzpanel/common/Note';
+import { APIListUserNotes, APINotesResponse, Note } from '@srcpanel/common/Note';
 import SteamID from 'steamid';
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {

@@ -11,7 +11,7 @@
 </template>
 
 <script setup lang="ts">
-import type { UserPrivilegeCode } from "@jzpanel/common/Privileges";
+import type { UserPrivilegeCode } from "@srcpanel/common/Privileges";
 
 const emit = defineEmits<{
   (e: "remove", code: UserPrivilegeCode): void;

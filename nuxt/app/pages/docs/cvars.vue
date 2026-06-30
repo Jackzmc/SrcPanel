@@ -95,7 +95,7 @@
 </template>
 
 <script setup lang="ts">
-import { parseCommandString } from "@jzpanel/common/cmds/util";
+import { parseCommandString } from "@srcpanel/common/cmds/util";
 import CmdArg from "~/components/commands/CmdArg.vue";
 
 import CVAR_DATA from "~/assets/data/cvars.json";

@@ -151,10 +151,10 @@
 </template>
 
 <script setup lang="ts">
-import type { CollectionWorkshopItem, DetailsResponse, ShareInfo } from "@jzpanel/common/Share";
-import { debounce } from "@jzpanel/common/util";
-import { formatSize } from "@jzpanel/common/format";
-import type { APIDownloadAddonsMessage } from "@jzpanel/common/share/downloadWS";
+import type { CollectionWorkshopItem, DetailsResponse, ShareInfo } from "@srcpanel/common/Share";
+import { debounce } from "@srcpanel/common/util";
+import { formatSize } from "@srcpanel/common/format";
+import type { APIDownloadAddonsMessage } from "@srcpanel/common/share/downloadWS";
 
 const WORKSHOP_LINK_REGEX = new RegExp(/https:\/\/steamcommunity\.com\/(sharedfiles|workshop)\/filedetails\/\?id=(\d*)/);
 

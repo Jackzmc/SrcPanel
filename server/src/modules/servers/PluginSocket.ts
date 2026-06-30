@@ -1,5 +1,5 @@
 import { Socket } from 'net'
-import { CommandResultType, LiveRecord, LiveRecordCommandResponse, LiveRecordClient, LiveRecordResponse, LiveRecordType, RecordDataType, RecordParseConfig } from '@jzpanel/common/Live'
+import { CommandResultType, LiveRecord, LiveRecordCommandResponse, LiveRecordClient, LiveRecordResponse, LiveRecordType, RecordDataType, RecordParseConfig } from '@srcpanel/common/Live'
 import Server from './Server.js'
 import BufferReader from '../BufferReader.js'
 

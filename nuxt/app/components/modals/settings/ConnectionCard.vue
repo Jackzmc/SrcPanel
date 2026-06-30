@@ -47,7 +47,7 @@
 </template>
 
 <script setup lang="ts">
-import type { OauthProviderData } from "@jzpanel/common/User";
+import type { OauthProviderData } from "@srcpanel/common/User";
 
 const { promptConfirm } = useModal();
 const toast = useToast();
