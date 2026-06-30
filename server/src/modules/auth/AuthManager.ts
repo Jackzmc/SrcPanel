@@ -38,7 +38,7 @@ export type NotificationCallback = (notification: UserNotification) => void
 
 
 export default class AuthManager {
-    #db: Pool //left4dead2-admins
+    #db: Pool //${ADMINS_DB}
     #dbna: Pool //left4dead2
     private admins: Record<string, AdminData> = {}
     private groups: Record<number, AdminGroup> = {}
@@ -203,7 +203,7 @@ export default class AuthManager {
 
     public async getPermissions(adminId: number): Promise<Set<UserPrivilegeCode>> {
         const [rows] = await this.#db.execute<RowDataPacket[]>(
-            "SELECT code FROM dash_permissions WHERE admin_id = ?",
+            "SELECT code FROM ${TABLE_PREFIX}_permissions WHERE admin_id = ?",
             [adminId]
         )
         return new Set(rows.map(row => row.code))
@@ -214,7 +214,7 @@ export default class AuthManager {
         conn.beginTransaction()
         await conn.execute<OkPacket>("DELETE FROM sm_admins WHERE id = ?", [id])
         await conn.execute<OkPacket>("DELETE FROM sm_admins_groups WHERE admin_id = ?", [id])
-        await conn.execute<OkPacket>("DELETE FROM dash_permissions WHERE admin_id = ?", [id])
+        await conn.execute<OkPacket>("DELETE FROM ${TABLE_PREFIX}_permissions WHERE admin_id = ?", [id])
         await conn.commit()
         conn.release()
         delete this.admins[id.toString()]
@@ -680,7 +680,7 @@ export default class AuthManager {
     public async getSessions(steamid: string): Promise<SessionData[]> {
         const [sessions] = await this.#dbna.execute<RowDataPacket[]>(`
             SELECT session_id AS id, JSON_UNQUOTE(JSON_EXTRACT(data,'$.ip')) as ip, JSON_UNQUOTE(JSON_EXTRACT(data, '$.countryCode')) as countryCode, CAST(JSON_UNQUOTE(JSON_EXTRACT(data, '$.loginTime')) AS UNSIGNED) as loginTime, CAST((JSON_EXTRACT(data, '$.lastActive')) AS UNSIGNED) as lastActive
-            FROM dash_sessions 
+            FROM ${TABLE_PREFIX}_sessions 
             WHERE SUBSTRING(JSON_UNQUOTE(JSON_EXTRACT(data, '$.user.steamid')), 11) = SUBSTRING(?, 11)`,
             [steamid]
         )
@@ -695,7 +695,7 @@ export default class AuthManager {
      */
     public async getProviders(steamid: string): Promise<UserOauthProviders> {
         const [providers] = await this.#db.query<RowDataPacket[]>(
-            "SELECT provider, provider_id, username, avatar_url FROM dash_providers WHERE SUBSTRING(steamid, 11) = SUBSTRING(?, 11)",
+            "SELECT provider, provider_id, username, avatar_url FROM ${TABLE_PREFIX}_providers WHERE SUBSTRING(steamid, 11) = SUBSTRING(?, 11)",
             [ steamid ]
         )
         const result: UserOauthProviders = {}
@@ -723,12 +723,12 @@ export default class AuthManager {
         if(providerData === null) {
             // TOOD: also revoke token
             return await this.#db.query<OkPacket>(
-                "DELETE FROM dash_providers WHERE SUBSTRING(steamid, 11) = SUBSTRING(?, 11) AND provider = ?",
+                "DELETE FROM ${TABLE_PREFIX}_providers WHERE SUBSTRING(steamid, 11) = SUBSTRING(?, 11) AND provider = ?",
                 [ steamid, providerName ]
             )
         } else {
             return await this.#db.query<OkPacket>(
-                `INSERT INTO dash_providers (steamid, provider, provider_id, username, avatar_url) VALUES (?, ?, ?, ?, ?) 
+                `INSERT INTO ${TABLE_PREFIX}_providers (steamid, provider, provider_id, username, avatar_url) VALUES (?, ?, ?, ?, ?) 
                     ON DUPLICATE KEY UPDATE username = ?, avatar_url = ?`,
                 [ steamid, providerName, providerData.id, providerData.username, providerData.avatarUrl, providerData.username, providerData.avatarUrl ]
             )
@@ -765,7 +765,7 @@ export default class AuthManager {
 
     public async fetchProviderAuthData(steamid: string, providerName: OauthProvider): Promise<OauthAuthData|null> {
         const [provider] = await this.#db.query<RowDataPacket[]>(
-            "SELECT refresh_token, refresh_token_expired, access_token, access_token_expires FROM dash_providers WHERE SUBSTRING(steamid, 11) = SUBSTRING(?, 11) AND provider = ?",
+            "SELECT refresh_token, refresh_token_expired, access_token, access_token_expires FROM ${TABLE_PREFIX}_providers WHERE SUBSTRING(steamid, 11) = SUBSTRING(?, 11) AND provider = ?",
             [ steamid, providerName ]
         )
         if(!provider) return null
@@ -779,7 +779,7 @@ export default class AuthManager {
 
     public async setProviderAuthData(steamid: string, providerName: OauthProvider, providerData: OauthAuthData) {
         return await this.#db.query<OkPacket>(
-            "UPDATE dash_providers SET refresh_token = ?, refresh_token_expired = ?, access_token = ?, access_token_expires = ? WHERE SUBSTRING(steamid, 11) = SUBSTRING(?, 11) AND provider = ?",
+            "UPDATE ${TABLE_PREFIX}_providers SET refresh_token = ?, refresh_token_expired = ?, access_token = ?, access_token_expires = ? WHERE SUBSTRING(steamid, 11) = SUBSTRING(?, 11) AND provider = ?",
             [ providerData.refreshToken, providerData.refreshTokenExpired, providerData.accessToken, providerData.accessTokenExpires, steamid, providerName ]
         )
     }
@@ -792,7 +792,7 @@ export default class AuthManager {
      */
     public async getAdminByProvider(provider: OauthProvider, id: string) {
         const [rows] = await this.#db.execute<RowDataPacket[]>(
-            "SELECT steamid FROM dash_providers WHERE provider = ? and provider_id = ?", 
+            "SELECT steamid FROM ${TABLE_PREFIX}_providers WHERE provider = ? and provider_id = ?", 
             [provider, id]
         )
 
@@ -812,7 +812,7 @@ export default class AuthManager {
         const cached = this.providerNameCache.get(`${provider}:${providerId}`)
         if(cached) return cached
         const [rows] = await this.#db.query<RowDataPacket[]>(
-            "SELECT username FROM dash_providers WHERE provider_id = ? AND provider = ?",
+            "SELECT username FROM ${TABLE_PREFIX}_providers WHERE provider_id = ? AND provider = ?",
             [ providerId, provider ]
         )
         if(rows.length === 0) return null

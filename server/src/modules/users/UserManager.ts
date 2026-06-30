@@ -3,6 +3,7 @@ import { SQL } from 'sql-template-strings'
 import SteamAPI from '../../modules/steam.js'
 import { Pool, RowDataPacket } from 'mysql2/promise';
 import { UserNameEntry } from '@srcpanel/common/User';
+import { TABLE_PREFIX } from '../../middlewares/managers.js';
 
 interface IUserData {
   accountId: string,
@@ -42,8 +43,8 @@ export default class UserManager {
     if (!accountId) throw new Error("No account id provided")
     const conn = await this.#db.getConnection()
     await conn.beginTransaction()
-    await conn.query(SQL`INSERT INTO panel_user (account_id, avatar_hash) VALUES (${accountId}, ${user.avatarHash})`)
-    await conn.query(SQL`INSERT INTO panel_user_names (account_id, name) VALUES (${accountId}, ${user.name})`)
+    await conn.query(SQL`INSERT INTO ${TABLE_PREFIX}_user (account_id, avatar_hash) VALUES (${accountId}, ${user.avatarHash})`)
+    await conn.query(SQL`INSERT INTO ${TABLE_PREFIX}_user_names (account_id, name) VALUES (${accountId}, ${user.name})`)
     await conn.commit()
     conn.release()
   }
@@ -52,12 +53,12 @@ export default class UserManager {
     const accountId = user.accountId
     const conn = await this.#db.getConnection()
     await conn.beginTransaction()
-    await conn.query(SQL`UPDATE panel_user SET avatar_hash = ${user.avatarHash} WHERE account_id = ${accountId}`)
-    const [rows] = await conn.query<RowDataPacket[]>(SQL`SELECT last_name FROM view_panel_user WHERE account_id = ${accountId}`)
+    await conn.query(SQL`UPDATE ${TABLE_PREFIX}_user SET avatar_hash = ${user.avatarHash} WHERE account_id = ${accountId}`)
+    const [rows] = await conn.query<RowDataPacket[]>(SQL`SELECT last_name FROM view_${TABLE_PREFIX}_user WHERE account_id = ${accountId}`)
     if (rows.length > 0) {
       const lastName = rows[0].last_name
       if (lastName != user.name) {
-        await conn.query(SQL`INSERT INTO panel_user_names (account_id, name) VALUES (${accountId}, ${user.name})`)
+        await conn.query(SQL`INSERT INTO ${TABLE_PREFIX}_user_names (account_id, name) VALUES (${accountId}, ${user.name})`)
       }
     }
     await conn.commit()
@@ -79,7 +80,7 @@ export default class UserManager {
   }
 
   private async getUserDirect(steamid: string): Promise<IUserData | null> {
-    const [users] = await this.#db.execute<RowDataPacket[]>(SQL`SELECT * FROM view_panel_user WHERE account_id = SUBSTRING(${steamid}, 11)`)
+    const [users] = await this.#db.execute<RowDataPacket[]>(SQL`SELECT * FROM view_${TABLE_PREFIX}_user WHERE account_id = SUBSTRING(${steamid}, 11)`)
     const user = users[0]
     if (user) {
       return {
@@ -168,7 +169,7 @@ export default class UserManager {
    */
   async getUserNameHistory(steamid: string): Promise<UserNameEntry[]> {
     const [rows] = await this.#db.execute<RowDataPacket[]>(
-      "SELECT name, name_update_time FROM panel_user_names WHERE account_id = SUBSTRING(?, 11) ORDER BY name_update_time DESC",
+      `SELECT name, name_update_time FROM ${TABLE_PREFIX}_user_names WHERE account_id = SUBSTRING(?, 11) ORDER BY name_update_time DESC`,
       [steamid]
     )
     return rows.map(row => {

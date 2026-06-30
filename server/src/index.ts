@@ -27,7 +27,7 @@ import DiscussionManager from './modules/DiscussionManager.js';
 import TaskManager from './modules/tasks/TaskManager.js'
 import CacheManager from './modules/CacheManager.js'
 
-import MiddleManager from './middlewares/managers.js'
+import MiddleManager, { TABLE_PREFIX } from './middlewares/managers.js'
 import { FluxerBot } from './modules/FluxerBot.js'
 import { sleep } from './util.js'
 import { DataManagerInstance } from './modules/DataManager.js'
@@ -179,7 +179,7 @@ app.register(MiddleManager)
       },
       store: new MySQLStore({
         schema: {
-          tableName: 'dash_sessions',
+          tableName: `${TABLE_PREFIX}_sessions`,
         }
       }, app.db),
       saveUninitialized: false

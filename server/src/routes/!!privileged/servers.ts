@@ -6,6 +6,7 @@ import { NO_PERMISSION, NOT_FOUND } from '../../responses.js';
 import { ServerDetailed, ServerInfo } from '@srcpanel/common/Server';
 import { UserPrivilegeCode } from '@srcpanel/common/Privileges';
 import { tryResolveIPv4 } from '../../util.js';
+import { TABLE_PREFIX } from '../../middlewares/managers.js';
 
 const COMMENT_LINE_REGEX = new RegExp(/^\s*(\/\/|#)/)
 const HIDDEN_COMMANDS = [
@@ -203,8 +204,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     if (server.activityLogId) {
       const [rows] = await fastify.db.execute<RowDataPacket[]>(`SELECT client, target, type, id, message, timestamp, s1.last_name as clientName, s2.last_name as targetName
         FROM activity_log PARTITION (p${new Date().getFullYear()})
-        LEFT JOIN view_panel_user as u1 ON u1.account_id = SUBSTRING(client, 11)
-        LEFT JOIN view_panel_user as u2 ON u2.account_id = SUBSTRING(target, 11)
+        LEFT JOIN view_${TABLE_PREFIX}_user as u1 ON u1.account_id = SUBSTRING(client, 11)
+        LEFT JOIN view_${TABLE_PREFIX}_user as u2 ON u2.account_id = SUBSTRING(target, 11)
         WHERE server = ? AND FROM_UNIXTIME(timestamp) >= CURDATE() 
           AND FROM_UNIXTIME(timestamp) < CURDATE() + INTERVAL 1 DAY
         ORDER BY timestamp DESC

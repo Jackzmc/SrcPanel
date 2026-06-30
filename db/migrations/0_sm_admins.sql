@@ -1,7 +1,7 @@
 -- migrate:up
 -- https://github.com/alliedmodders/sourcemod/blob/master/configs/sql-init-scripts/mysql/create_admins.sql
 
--- Required for dash_permissions
+-- Required for ${TABLE_PREFIX}_permissions
 
 CREATE TABLE IF NOT EXISTS sm_admins (
   id int(10) unsigned NOT NULL auto_increment,

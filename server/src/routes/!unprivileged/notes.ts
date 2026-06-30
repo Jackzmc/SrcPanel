@@ -1,8 +1,8 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
 import { RowDataPacket } from 'mysql2';
-import { ADMINS_DB } from '../../routes/!!privileged/admins.js';
 import { APIListUserNotes, APINotesResponse, Note } from '@srcpanel/common/Note';
 import SteamID from 'steamid';
+import { ADMINS_DB, TABLE_PREFIX } from '../../middlewares/managers.js';
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
   fastify.get('/', async (req: FastifyRequest<{
@@ -35,7 +35,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
       whereCondition = `WHERE ${queryConditions.join(' AND ')}`
       const [notesCount] = await fastify.db.execute<RowDataPacket[]>(`
                 SELECT COUNT(*) as count FROM notes
-                LEFT JOIN view_panel_user as u ON SUBSTRING(notes.steamid, 11) = u.account_id
+                LEFT JOIN view_${TABLE_PREFIX}_user as u ON SUBSTRING(notes.steamid, 11) = u.account_id
                 ${whereCondition}`,
         queryData
       )
@@ -43,10 +43,10 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     }
     const [notes] = await fastify.db.execute<RowDataPacket[]>(
       `SELECT notes.id, notes.steamid, notes.createdAt, notes.markedBy, notes.content, u.last_name as user, e.last_name as executor, !b.expired as banned,
-            (SELECT COUNT(*) FROM ${ADMINS_DB}.sm_admins WHERE ${ADMINS_DB}.sm_admins.identity = notes.steamid) as targetIsAdmin
+            (SELECT COUNT(*) FROM \`${ADMINS_DB}\`.sm_admins WHERE \`${ADMINS_DB}\`.sm_admins.identity = notes.steamid) as targetIsAdmin
             FROM notes
-            LEFT JOIN view_panel_user u ON SUBSTRING(notes.steamid, 11) = u.account_id
-            LEFT JOIN view_panel_user e ON SUBSTRING(notes.markedBy, 11) = e.account_id
+            LEFT JOIN view_${TABLE_PREFIX}_user u ON SUBSTRING(notes.steamid, 11) = u.account_id
+            LEFT JOIN view_${TABLE_PREFIX}_user e ON SUBSTRING(notes.markedBy, 11) = e.account_id
             LEFT JOIN bans as b ON notes.steamid = b.steamid
             ${whereCondition}
             ORDER BY notes.id DESC LIMIT ?, ?`,
@@ -82,8 +82,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     const [notes] = await fastify.db.execute<RowDataPacket[]>(
       `SELECT notes.*, u.last_name as user, e.last_name as executor, !b.expired as banned
             FROM notes
-            LEFT JOIN view_panel_user as u ON SUBSTRING(notes.steamid, 11) = u.account_id
-            LEFT JOIN view_panel_user as e ON SUBSTRING(notes.markedBy, 11) = e.account_id
+            LEFT JOIN view_${TABLE_PREFIX}_user as u ON SUBSTRING(notes.steamid, 11) = u.account_id
+            LEFT JOIN view_${TABLE_PREFIX}_user as e ON SUBSTRING(notes.markedBy, 11) = e.account_id
             LEFT JOIN bans as b ON notes.steamid = b.steamid
             WHERE SUBSTRING(notes.steamid, 11) = SUBSTRING(?, 11)
             ORDER BY notes.id DESC`,
@@ -101,8 +101,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     const [notes] = await fastify.db.execute<RowDataPacket[]>(
       `SELECT notes.*, u.last_name as user, e.last_name as executor, !b.expired as banned
             FROM notes
-            LEFT JOIN view_panel_user as u ON SUBSTRING(notes.steamid, 11) = u.account_id
-            LEFT JOIN view_panel_user as e ON SUBSTRING(notes.markedBy, 11) = e.account_id
+            LEFT JOIN view_${TABLE_PREFIX}_user as u ON SUBSTRING(notes.steamid, 11) = u.account_id
+            LEFT JOIN view_${TABLE_PREFIX}_user as e ON SUBSTRING(notes.markedBy, 11) = e.account_id
             LEFT JOIN bans as b ON notes.steamid = b.steamid
             WHERE notes.markedBy = ?
             ORDER BY notes.id DESC`,
@@ -143,8 +143,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
       const [notes] = await fastify.db.execute<RowDataPacket[]>(
         `SELECT notes.*, u.last_name as user, e.last_name as executor, !b.expired as banned
                 FROM notes
-                LEFT JOIN view_panel_user as u ON SUBSTRING(notes.steamid, 11) = u.account_id
-                LEFT JOIN view_panel_user as e ON SUBSTRING(notes.markedBy, 11) = e.account_id
+                LEFT JOIN view_${TABLE_PREFIX}_user as u ON SUBSTRING(notes.steamid, 11) = u.account_id
+                LEFT JOIN view_${TABLE_PREFIX}_user as e ON SUBSTRING(notes.markedBy, 11) = e.account_id
                 LEFT JOIN bans as b ON notes.steamid = b.steamid
                 WHERE id = ?
                 ORDER BY notes.id DESC`,

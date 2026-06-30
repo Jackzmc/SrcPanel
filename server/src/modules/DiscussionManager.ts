@@ -5,7 +5,7 @@ import User from "./users/User.js";
 import AuthManager from "./auth/AuthManager.js";
 import { DefinedTask } from "./tasks/Task.js";
 import { FastifyInstance } from "fastify";
-import { ADMINS_DB, MAIN_DB } from "middlewares/managers.js";
+import { ADMINS_DB, MAIN_DB, TABLE_PREFIX } from "../middlewares/managers.js";
 
 const AUTO_ARCHIVE_TIME = 1000 * 60 * 60 * 24 * 10 // 10 days
 const CACHE_TTL = 1000 * 60 * 60 * 1
@@ -63,7 +63,7 @@ export default class DiscussionManager {
     async getUnrespondedCount(steamid2: string) {
         // Returns the number of non-archived, non-closed discussions user has responded to
         const [rows] = await this.#db.execute<RowDataPacket[]>(
-            `SELECT discussion_id FROM \`${ADMINS_DB}\`.dash_discussion_responses r JOIN \`${ADMINS_DB}\`.dash_discussions d ON d.id = r.discussion_id WHERE steamid = ? AND d.flags & ${APIDiscussionFlags.Archived} = 0 AND UNIX_TIMESTAMP() < d.closed_at GROUP BY r.discussion_id`, [steamid2])
+            `SELECT discussion_id FROM \`${ADMINS_DB}\`.${TABLE_PREFIX}_discussion_responses r JOIN \`${ADMINS_DB}\`.${TABLE_PREFIX}_discussions d ON d.id = r.discussion_id WHERE steamid = ? AND d.flags & ${APIDiscussionFlags.Archived} = 0 AND UNIX_TIMESTAMP() < d.closed_at GROUP BY r.discussion_id`, [steamid2])
         
         const totalOpenDiscussions = [...this.#discussions.values()].filter((d) => !d.closedAt || Date.now() < (d.closedAt*1000)).length
         return totalOpenDiscussions - rows.length
@@ -73,9 +73,9 @@ export default class DiscussionManager {
         const totalUsers = this.#authmngr.AdminCount
         const [responses] = await this.#db.execute<RowDataPacket[]>(`
             SELECT res.steamid, res.choice, res.text, opt.label, u.last_name as name 
-            FROM \`${ADMINS_DB}\`.dash_discussion_responses res 
-            LEFT JOIN \`${MAIN_DB}\`.view_panel_user u ON SUBSTRING(res.steamid, 11) = u.account_id 
-            LEFT JOIN \`${ADMINS_DB}\`.dash_discussion_options opt ON opt.id = res.choice 
+            FROM \`${ADMINS_DB}\`.${TABLE_PREFIX}_discussion_responses res 
+            LEFT JOIN \`${MAIN_DB}\`.view_${TABLE_PREFIX}_user u ON SUBSTRING(res.steamid, 11) = u.account_id 
+            LEFT JOIN \`${ADMINS_DB}\`.${TABLE_PREFIX}_discussion_options opt ON opt.id = res.choice 
             WHERE res.discussion_id = ?`, 
             [id]
         )
@@ -126,10 +126,10 @@ export default class DiscussionManager {
         const [rows] = await this.#db.execute<RowDataPacket[]>(
             `SELECT d.*, u.last_name as creator_name, 
                 (
-                    SELECT COUNT(*) FROM \`${ADMINS_DB}\`.dash_discussion_comments WHERE discussion_id = d.id
+                    SELECT COUNT(*) FROM \`${ADMINS_DB}\`.${TABLE_PREFIX}_discussion_comments WHERE discussion_id = d.id
                 ) as comments 
-            FROM \`${ADMINS_DB}\`.dash_discussions d 
-            LEFT JOIN \`${MAIN_DB}\`.view_panel_user u ON SUBSTRING(d.creator, 11) = u.account_id 
+            FROM \`${ADMINS_DB}\`.${TABLE_PREFIX}__discussions d 
+            LEFT JOIN \`${MAIN_DB}\`.view_${TABLE_PREFIX}_user u ON SUBSTRING(d.creator, 11) = u.account_id 
             WHERE d.flags & ${APIDiscussionFlags.Archived} = 0 
             ORDER BY d.timestamp DESC`
         )
@@ -137,10 +137,18 @@ export default class DiscussionManager {
             if(row.closed_at && Date.now() - (row.closed_at*1000) > AUTO_ARCHIVE_TIME) {
                 // Auto archive
                 console.info("[Discuss] Automatically archiving discussion #" + row.id)
-                await this.#db.execute(`UPDATE \`${ADMINS_DB}\`.dash_discussions SET flags = flags | ${APIDiscussionFlags.Archived} WHERE id = ?`, [row.id])
+                await this.#db.execute(
+                    `UPDATE \`${ADMINS_DB}\`.${TABLE_PREFIX}_discussions 
+                    SET flags = flags | ${APIDiscussionFlags.Archived} 
+                    WHERE id = ?`, 
+                    [row.id]
+                )
                 continue
             }
-            const [options] = await this.#db.execute<RowDataPacket[]>(`SELECT * FROM \`${ADMINS_DB}\`.dash_discussion_options WHERE discussion_id = ?`, [row.id])
+            const [options] = await this.#db.execute<RowDataPacket[]>(
+                `SELECT * FROM \`${ADMINS_DB}\`.${TABLE_PREFIX}_discussion_options WHERE discussion_id = ?`, 
+                [row.id]
+            )
             dis.set(row.id, {
                 id: row.id,
                 title: row.title,

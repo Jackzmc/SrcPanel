@@ -4,6 +4,7 @@ import { Static, Type } from '@sinclair/typebox'
 import { APIBanFlags, FullAPIBan } from '@srcpanel/common/Ban';
 import { computeChanges, replaceObject } from '../../util.js';
 import { NO_PERMISSION } from '../../responses.js';
+import { TABLE_PREFIX } from '../../middlewares/managers.js';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const PUTBanBody = Type.Object({
@@ -159,8 +160,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 u2.last_name AS executor_name, 
                 ip
             FROM bans
-            LEFT JOIN view_panel_user u1 ON u1.account_id = SUBSTRING(bans.steamid, 11)
-            LEFT JOIN view_panel_user u2 ON u2.account_id = SUBSTRING(bans.executor, 11)
+            LEFT JOIN view_${TABLE_PREFIX}_user u1 ON u1.account_id = SUBSTRING(bans.steamid, 11)
+            LEFT JOIN view_${TABLE_PREFIX}_user u2 ON u2.account_id = SUBSTRING(bans.executor, 11)
             WHERE 
                 bans.id = ? 
                 OR u1.account_id = SUBSTRING(?, 11)`,

@@ -3,6 +3,7 @@ import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
 import { RowDataPacket } from 'mysql2';
 import type { APIConnections, APISessionList, ProviderConnectionData, SessionData, UserData } from '@srcpanel/common/User';
 import type { UserPrivilegeCode } from '@srcpanel/common/Privileges';
+import { TABLE_PREFIX } from '../../middlewares/managers.js';
 
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
@@ -92,7 +93,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     fastify.delete('/sessions/:id', async(req: FastifyRequest<{ Params: { id: string } }>, reply) => {
         const [sessions] = await fastify.db.query<RowDataPacket[]>(
             `SELECT session_id 
-            FROM dash_sessions
+            FROM ${TABLE_PREFIX}_sessions
             WHERE session_id = ? AND JSON_UNQUOTE(JSON_EXTRACT(data, '$.user.accountid')) = ?`,
             [req.params.id, req.session.user.accountid]
         )

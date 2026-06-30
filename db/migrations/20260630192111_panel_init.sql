@@ -1,5 +1,5 @@
 -- migrate:up
-CREATE TABLE `dash_discussions` (
+CREATE TABLE `${TABLE_PREFIX}_discussions` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `title` varchar(255) NOT NULL,
   `description` varchar(255) DEFAULT NULL,
@@ -10,40 +10,40 @@ CREATE TABLE `dash_discussions` (
   `creator` varchar(32) NOT NULL,
   PRIMARY KEY (`id`)
 );
-CREATE TABLE `dash_discussion_responses` (
+CREATE TABLE `${TABLE_PREFIX}_discussion_responses` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `discussion_id` int(11) NOT NULL,
   `steamid` varchar(32) NOT NULL,
   `choice` int(11) DEFAULT NULL,
   `text` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`id`),
-  KEY `dash_discussion_responses_dash_discussions_id_fk` (`discussion_id`),
-  CONSTRAINT `dash_discussion_responses_dash_discussions_id_fk` FOREIGN KEY (`discussion_id`) REFERENCES `dash_discussions` (`id`)
+  KEY `${TABLE_PREFIX}_discussion_responses_${TABLE_PREFIX}_discussions_id_fk` (`discussion_id`),
+  CONSTRAINT `${TABLE_PREFIX}_discussion_responses_${TABLE_PREFIX}_discussions_id_fk` FOREIGN KEY (`discussion_id`) REFERENCES `${TABLE_PREFIX}_discussions` (`id`)
 );
-CREATE TABLE `dash_discussion_options` (
+CREATE TABLE `${TABLE_PREFIX}_discussion_options` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `discussion_id` int(11) NOT NULL,
   `label` varchar(255) NOT NULL,
   PRIMARY KEY (`id`),
-  KEY `dash_discussion_options_dash_discussions_id_fk` (`discussion_id`),
-  CONSTRAINT `dash_discussion_options_dash_discussions_id_fk` FOREIGN KEY (`discussion_id`) REFERENCES `dash_discussions` (`id`) ON DELETE CASCADE
+  KEY `${TABLE_PREFIX}_discussion_options_${TABLE_PREFIX}_discussions_id_fk` (`discussion_id`),
+  CONSTRAINT `${TABLE_PREFIX}_discussion_options_${TABLE_PREFIX}_discussions_id_fk` FOREIGN KEY (`discussion_id`) REFERENCES `${TABLE_PREFIX}_discussions` (`id`) ON DELETE CASCADE
 );
-CREATE TABLE `dash_discussion_comments` (
+CREATE TABLE `${TABLE_PREFIX}_discussion_comments` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `discussion_id` int(11) NOT NULL,
   `creator` varchar(32) DEFAULT NULL COMMENT 'anonymous if null',
   `content` text NOT NULL,
   `timestamp` int(11) NOT NULL DEFAULT unix_timestamp(),
   PRIMARY KEY (`id`),
-  KEY `dash_discussion_comments_dash_discussions_id_fk` (`discussion_id`),
-  CONSTRAINT `dash_discussion_comments_dash_discussions_id_fk` FOREIGN KEY (`discussion_id`) REFERENCES `dash_discussions` (`id`) ON DELETE CASCADE
+  KEY `${TABLE_PREFIX}_discussion_comments_${TABLE_PREFIX}_discussions_id_fk` (`discussion_id`),
+  CONSTRAINT `${TABLE_PREFIX}_discussion_comments_${TABLE_PREFIX}_discussions_id_fk` FOREIGN KEY (`discussion_id`) REFERENCES `${TABLE_PREFIX}_discussions` (`id`) ON DELETE CASCADE
 );
-create table dash_permissions
+create table ${TABLE_PREFIX}_permissions
 (
     admin_id int unsigned not null,
     code     varchar(64)  not null,
     primary key (admin_id, code),
-    constraint dash_permissions_sm_admins_id_fk
+    constraint ${TABLE_PREFIX}_permissions_sm_admins_id_fk
         foreign key (admin_id) references sm_admins (id)
 );
 create table sm_group_permissions
@@ -55,7 +55,7 @@ create table sm_group_permissions
         foreign key (group_id) references sm_groups (id)
 );
 
-create table dash_providers
+create table ${TABLE_PREFIX}_providers
 (
     steamid               varchar(32)          not null,
     provider              varchar(32)          not null,
@@ -96,7 +96,7 @@ CREATE TABLE `panel_user_names` (
   PRIMARY KEY (`account_id`, `name_update_time`),
   CONSTRAINT `panel_user_names_panel_user_account_id_fk` FOREIGN KEY (`account_id`) REFERENCES `panel_user` (`account_id`) ON DELETE CASCADE
 );
-CREATE VIEW `view_panel_user` AS
+CREATE VIEW `view_${TABLE_PREFIX}_user` AS
 select
   `u`.`account_id` AS `account_id`,
   `u`.`create_time` AS `create_time`,

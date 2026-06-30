@@ -17,64 +17,64 @@
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
--- Table structure for table `dash_discussion_comments`
+-- Table structure for table `${TABLE_PREFIX}_discussion_comments`
 --
 
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
-CREATE TABLE `dash_discussion_comments` (
+CREATE TABLE `${TABLE_PREFIX}_discussion_comments` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `discussion_id` int(11) NOT NULL,
   `creator` varchar(32) DEFAULT NULL COMMENT 'anonymous if null',
   `content` text NOT NULL,
   `timestamp` int(11) NOT NULL DEFAULT unix_timestamp(),
   PRIMARY KEY (`id`),
-  KEY `dash_discussion_comments_dash_discussions_id_fk` (`discussion_id`),
-  CONSTRAINT `dash_discussion_comments_dash_discussions_id_fk` FOREIGN KEY (`discussion_id`) REFERENCES `dash_discussions` (`id`) ON DELETE CASCADE
+  KEY `${TABLE_PREFIX}_discussion_comments_${TABLE_PREFIX}_discussions_id_fk` (`discussion_id`),
+  CONSTRAINT `${TABLE_PREFIX}_discussion_comments_${TABLE_PREFIX}_discussions_id_fk` FOREIGN KEY (`discussion_id`) REFERENCES `${TABLE_PREFIX}_discussions` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Table structure for table `dash_discussion_options`
+-- Table structure for table `${TABLE_PREFIX}_discussion_options`
 --
 
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
-CREATE TABLE `dash_discussion_options` (
+CREATE TABLE `${TABLE_PREFIX}_discussion_options` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `discussion_id` int(11) NOT NULL,
   `label` varchar(255) NOT NULL,
   PRIMARY KEY (`id`),
-  KEY `dash_discussion_options_dash_discussions_id_fk` (`discussion_id`),
-  CONSTRAINT `dash_discussion_options_dash_discussions_id_fk` FOREIGN KEY (`discussion_id`) REFERENCES `dash_discussions` (`id`) ON DELETE CASCADE
+  KEY `${TABLE_PREFIX}_discussion_options_${TABLE_PREFIX}_discussions_id_fk` (`discussion_id`),
+  CONSTRAINT `${TABLE_PREFIX}_discussion_options_${TABLE_PREFIX}_discussions_id_fk` FOREIGN KEY (`discussion_id`) REFERENCES `${TABLE_PREFIX}_discussions` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Table structure for table `dash_discussion_responses`
+-- Table structure for table `${TABLE_PREFIX}_discussion_responses`
 --
 
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
-CREATE TABLE `dash_discussion_responses` (
+CREATE TABLE `${TABLE_PREFIX}_discussion_responses` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `discussion_id` int(11) NOT NULL,
   `steamid` varchar(32) NOT NULL,
   `choice` int(11) DEFAULT NULL,
   `text` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`id`),
-  KEY `dash_discussion_responses_dash_discussions_id_fk` (`discussion_id`),
-  CONSTRAINT `dash_discussion_responses_dash_discussions_id_fk` FOREIGN KEY (`discussion_id`) REFERENCES `dash_discussions` (`id`)
+  KEY `${TABLE_PREFIX}_discussion_responses_${TABLE_PREFIX}_discussions_id_fk` (`discussion_id`),
+  CONSTRAINT `${TABLE_PREFIX}_discussion_responses_${TABLE_PREFIX}_discussions_id_fk` FOREIGN KEY (`discussion_id`) REFERENCES `${TABLE_PREFIX}_discussions` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Table structure for table `dash_discussions`
+-- Table structure for table `${TABLE_PREFIX}_discussions`
 --
 
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
-CREATE TABLE `dash_discussions` (
+CREATE TABLE `${TABLE_PREFIX}_discussions` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `title` varchar(255) NOT NULL,
   `description` varchar(255) DEFAULT NULL,
@@ -88,26 +88,26 @@ CREATE TABLE `dash_discussions` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Table structure for table `dash_permissions`
+-- Table structure for table `${TABLE_PREFIX}_permissions`
 --
 
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
-CREATE TABLE `dash_permissions` (
+CREATE TABLE `${TABLE_PREFIX}_permissions` (
   `admin_id` int(10) unsigned NOT NULL,
   `code` varchar(64) NOT NULL,
   PRIMARY KEY (`admin_id`,`code`),
-  CONSTRAINT `dash_permissions_sm_admins_id_fk` FOREIGN KEY (`admin_id`) REFERENCES `sm_admins` (`id`)
+  CONSTRAINT `${TABLE_PREFIX}_permissions_sm_admins_id_fk` FOREIGN KEY (`admin_id`) REFERENCES `sm_admins` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Table structure for table `dash_providers`
+-- Table structure for table `${TABLE_PREFIX}_providers`
 --
 
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
-CREATE TABLE `dash_providers` (
+CREATE TABLE `${TABLE_PREFIX}_providers` (
   `steamid` varchar(32) NOT NULL,
   `provider` varchar(32) NOT NULL,
   `provider_id` varchar(128) NOT NULL,
@@ -298,12 +298,12 @@ CREATE TABLE `sm_overrides` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Temporary table structure for view `view_panel_user`
+-- Temporary table structure for view `view_${TABLE_PREFIX}_user`
 --
 
 SET @saved_cs_client     = @@character_set_client;
 SET character_set_client = utf8mb4;
-/*!50001 CREATE VIEW `view_panel_user` AS SELECT
+/*!50001 CREATE VIEW `view_${TABLE_PREFIX}_user` AS SELECT
  NULL AS `account_id`,
  NULL AS `create_time`,
  NULL AS `avatar_hash`,
@@ -320,10 +320,10 @@ SET character_set_client = @saved_cs_client;
 --
 
 --
--- Final view structure for view `view_panel_user`
+-- Final view structure for view `view_${TABLE_PREFIX}_user`
 --
 
-/*!50001 DROP VIEW IF EXISTS `view_panel_user`*/;
+/*!50001 DROP VIEW IF EXISTS `view_${TABLE_PREFIX}_user`*/;
 /*!50001 SET @saved_cs_client          = @@character_set_client */;
 /*!50001 SET @saved_cs_results         = @@character_set_results */;
 /*!50001 SET @saved_col_connection     = @@collation_connection */;
@@ -332,7 +332,7 @@ SET character_set_client = @saved_cs_client;
 /*!50001 SET collation_connection      = utf8mb4_uca1400_ai_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
 /*!50013 DEFINER=`jackz`@`%` SQL SECURITY DEFINER */
-/*!50001 VIEW `view_panel_user` AS select `u`.`account_id` AS `account_id`,`u`.`create_time` AS `create_time`,`u`.`avatar_hash` AS `avatar_hash`,`u`.`last_ip` AS `last_ip`,`u`.`last_join_time` AS `last_join_time`,`u`.`last_country` AS `last_country`,`u`.`last_region` AS `last_region`,`pun`.`name_update_time` AS `last_name_update_time`,`pun`.`name` AS `last_name` from (`panel_user` `u` join `panel_user_names` `pun` on(`u`.`account_id` = `pun`.`account_id` and `pun`.`name_update_time` = (select max(`z`.`name_update_time`) from `panel_user_names` `z` where `u`.`account_id` = `z`.`account_id`))) */;
+/*!50001 VIEW `view_${TABLE_PREFIX}_user` AS select `u`.`account_id` AS `account_id`,`u`.`create_time` AS `create_time`,`u`.`avatar_hash` AS `avatar_hash`,`u`.`last_ip` AS `last_ip`,`u`.`last_join_time` AS `last_join_time`,`u`.`last_country` AS `last_country`,`u`.`last_region` AS `last_region`,`pun`.`name_update_time` AS `last_name_update_time`,`pun`.`name` AS `last_name` from (`panel_user` `u` join `panel_user_names` `pun` on(`u`.`account_id` = `pun`.`account_id` and `pun`.`name_update_time` = (select max(`z`.`name_update_time`) from `panel_user_names` `z` where `u`.`account_id` = `z`.`account_id`))) */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
 /*!50001 SET collation_connection      = @saved_col_connection */;
