@@ -122,7 +122,23 @@ from
       )
     )
   );
-
-
+CREATE TABLE `panel_user_notifications` (
+  `steamid` varchar(32) NOT NULL,
+  `timestamp` int(11) NOT NULL DEFAULT unix_timestamp(),
+  `message` varchar(255) NOT NULL,
+  `link` varchar(255) DEFAULT NULL,
+  `subject_steamid` varchar(32) DEFAULT NULL,
+  `level` tinyint(4) NOT NULL DEFAULT 0,
+  PRIMARY KEY (`steamid`, `timestamp`),
+  CONSTRAINT `user_notifications_sm_admins_identity_fk` FOREIGN KEY (`steamid`) REFERENCES `sm_admins` (`identity`) ON DELETE CASCADE
+)
+CREATE TABLE `panel_apikeys` (
+  `id` varchar(64) NOT NULL DEFAULT uuid(),
+  `steamid` varchar(32) NOT NULL,
+  `perms` smallint(6) NOT NULL,
+  `created` bigint(20) DEFAULT unix_timestamp(),
+  `lastUsed` bigint(20) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+);
 -- migrate:down
 

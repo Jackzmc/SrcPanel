@@ -19,6 +19,7 @@ import { OauthAuthData } from './OauthProvider.js';
 import logger from '../../logger.js'
 import CacheManager from "../../modules/CacheManager.js";
 import { sendMetric } from "../metrics/influx.js";
+import { ADMINS_DB, TABLE_PREFIX } from "../../middlewares/managers.js";
 const log = logger.child({ name: "AuthManager" })
 
 interface AddAdmin {
@@ -319,7 +320,10 @@ export default class AuthManager {
     public async getAPIKey(id: string): Promise<APIKey|null> {
         let apikey = this.apikeysCache.get(id)
         if(!apikey) {
-            const [rows] = await this.#db.execute<RowDataPacket[]>(`SELECT * FROM dash_apikeys WHERE id = ?`, [id])
+            const [rows] = await this.#db.execute<RowDataPacket[]>(
+                `SELECT * FROM ${TABLE_PREFIX}_apikeys WHERE id = ?`, 
+                [id]
+            )
             if(rows.length == 0) return null
             apikey = {
                 id: rows[0].id,
@@ -340,7 +344,7 @@ export default class AuthManager {
      */
     public async getAPIKeyForUser(steamid: string): Promise<APIKey|null> {
         const [rows] = await this.#db.execute<RowDataPacket[]>(
-            "SELECT * FROM dash_apikeys WHERE SUBSTRING(steamid, 11) = SUBSTRING(?, 11)",
+            `SELECT * FROM ${TABLE_PREFIX}_apikeys WHERE SUBSTRING(steamid, 11) = SUBSTRING(?, 11)`,
             [ steamid ]
         )
         return rows.length > 0 ? {
@@ -361,13 +365,13 @@ export default class AuthManager {
         const conn = await this.#db.getConnection()
         await conn.beginTransaction()
         await conn.execute<OkPacket>(
-            "DELETE FROM dash_apikeys WHERE SUBSTRING(steamid, 11) = SUBSTRING(?, 11)",
+            `DELETE FROM ${TABLE_PREFIX}_apikeys WHERE SUBSTRING(steamid, 11) = SUBSTRING(?, 11)`,
             [ steamid ]
         )
 
         const id = crypto.randomBytes(32).toString('hex')
         await conn.execute<OkPacket>(
-            "INSERT INTO dash_apikeys (id, steamid, perms, created, lastUsed) VALUES (?, ?, 0, UNIX_TIMESTAMP(), UNIX_TIMESTAMP())",
+            `INSERT INTO ${TABLE_PREFIX}_apikeys (id, steamid, perms, created, lastUsed) VALUES (?, ?, 0, UNIX_TIMESTAMP(), UNIX_TIMESTAMP())`,
             [ id, steamid ]
         )
 
@@ -391,7 +395,7 @@ export default class AuthManager {
      */
     public async getNotifications(steamid2: string): Promise<UserNotification[]> {
         const [rows] = await this.#db.execute<RowDataPacket[]>(
-            "SELECT * FROM user_notifications WHERE SUBSTRING(steamid, 11) = SUBSTRING(?, 11)", 
+            `SELECT * FROM ${TABLE_PREFIX}_user_notifications WHERE SUBSTRING(steamid, 11) = SUBSTRING(?, 11)`, 
             [steamid2]
         )
         return rows.map(row => {
@@ -429,7 +433,7 @@ export default class AuthManager {
      */
     public async addNotification(steamid2: string, message: string, options: UserNotificationOptions = {}) {
         await this.#db.execute(
-            "INSERT INTO user_notifications (steamid, message, link) VALUES (?, ?, ?)",
+            `INSERT INTO ${TABLE_PREFIX}_user_notifications (steamid, message, link) VALUES (?, ?, ?)`,
             [ steamid2, message, options.link ?? null ]
         )
         this.#notifyNotificationSubscribers(steamid2, {
@@ -451,7 +455,7 @@ export default class AuthManager {
         await conn.beginTransaction()
         for(const [steamid2, notification] of Object.entries(notifications)) {
             await conn.execute(
-                "INSERT INTO user_notifications (steamid, message, link) VALUES (?, ?, ?)",
+                `INSERT INTO ${TABLE_PREFIX}_ (steamid, message, link) VALUES (?, ?, ?)`,
                 [ steamid2, notification.message, notification.link ?? null ]
             )
             this.#notifyNotificationSubscribers(steamid2, {
@@ -480,7 +484,7 @@ export default class AuthManager {
         for(const admin of Object.values(this.admins)) {
             if(!permission || this.hasPermission(admin, permission)) {
                 await conn.execute(
-                    "INSERT INTO user_notifications (steamid, message, link) VALUES (?, ?, ?)",
+                    `INSERT INTO ${TABLE_PREFIX}_user_notifications (steamid, message, link) VALUES (?, ?, ?)`,
                     [ admin.identity, message, options.link ?? null ]
                 )
                 this.#notifyNotificationSubscribers(admin.identity, {
@@ -503,7 +507,7 @@ export default class AuthManager {
      */
     public async clearNotifications(steamid2: string) {
         await this.#db.execute(
-            "DELETE FROM user_notifications WHERE SUBSTRING(steamid, 11) = SUBSTRING(?, 11)",
+            `DELETE FROM ${TABLE_PREFIX}_user_notifications WHERE SUBSTRING(steamid, 11) = SUBSTRING(?, 11)`,
             [ steamid2 ]
         )
     }
@@ -822,7 +826,7 @@ export default class AuthManager {
      * @returns 
      */
     public async getProfileData(steamid2: string): Promise<UserProfileData|null> {
-        const [rows] = await this.#db.query<RowDataPacket[]>("SELECT * FROM `left4dead2-admins`.panel_user_data WHERE steamid = ? LIMIT 1", [ steamid2 ])
+        const [rows] = await this.#db.query<RowDataPacket[]>(`SELECT * FROM \`${ADMINS_DB}\`.panel_user_data WHERE steamid = ? LIMIT 1`, [ steamid2 ])
         if(rows.length == 0) return null
         return {
             birthDate: rows[0].birth_date,

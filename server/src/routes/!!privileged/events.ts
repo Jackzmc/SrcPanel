@@ -6,7 +6,12 @@ import { NOT_FOUND } from '../../responses.js';
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
     fastify.get('/', async (req, reply) => {
         const domain = await fastify.config.Domain
-        const [rows] = await fastify.db.query<RowDataPacket[]>("SELECT e.*, u.last_name as creator_name FROM `left4dead2-admins`.dash_events e LEFT JOIN `left4dead2`.view_panel_user u ON SUBSTRING(e.creator_id, 11) = u.account_id ORDER BY created_date desc", [])
+        const [rows] = await fastify.db.query<RowDataPacket[]>(`
+            SELECT e.*, u.last_name as creator_name 
+            FROM \`left4dead2-admins\`.dash_events e 
+            LEFT JOIN \`left4dead2\`.view_panel_user u ON SUBSTRING(e.creator_id, 11) = u.account_id 
+            ORDER BY created_date desc`, []
+        )
         return {
             events: rows.map(row => {
                 return {
