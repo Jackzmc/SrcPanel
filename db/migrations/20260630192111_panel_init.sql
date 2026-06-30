@@ -46,6 +46,15 @@ create table dash_permissions
     constraint dash_permissions_sm_admins_id_fk
         foreign key (admin_id) references sm_admins (id)
 );
+create table sm_group_permissions
+(
+    group_id int unsigned not null,
+    code     varchar(64)  not null,
+    primary key (group_id, code),
+    constraint sm_group_permissions_sm_groups_id_fk
+        foreign key (group_id) references sm_groups (id)
+);
+
 create table dash_providers
 (
     steamid               varchar(32)          not null,
