@@ -203,7 +203,7 @@ export default class AuthManager {
 
     public async getPermissions(adminId: number): Promise<Set<UserPrivilegeCode>> {
         const [rows] = await this.#db.execute<RowDataPacket[]>(
-            "SELECT code FROM ${TABLE_PREFIX}_permissions WHERE admin_id = ?",
+            `SELECT code FROM ${TABLE_PREFIX}_permissions WHERE admin_id = ?`,
             [adminId]
         )
         return new Set(rows.map(row => row.code))
