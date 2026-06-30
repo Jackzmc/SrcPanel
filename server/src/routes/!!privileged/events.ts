@@ -2,11 +2,17 @@ import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
 import { RowDataPacket } from 'mysql2';
 import { APIEvent, APIEventDetailed, APIWeekAvailability, EventDataSubmission } from '@srcpanel/common/Event';
 import { NOT_FOUND } from '../../responses.js';
+import { ADMINS_DB, MAIN_DB, TABLE_PREFIX } from '../../middlewares/managers.js';
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
     fastify.get('/', async (req, reply) => {
         const domain = await fastify.config.Domain
-        const [rows] = await fastify.db.query<RowDataPacket[]>("SELECT e.*, u.last_name as creator_name FROM `left4dead2-admins`.dash_events e LEFT JOIN `left4dead2`.view_panel_user u ON SUBSTRING(e.creator_id, 11) = u.account_id ORDER BY created_date desc", [])
+        const [rows] = await fastify.db.query<RowDataPacket[]>(`
+            SELECT e.*, u.last_name as creator_name 
+            FROM \`${ADMINS_DB}\`.${TABLE_PREFIX}_events e 
+            LEFT JOIN ${MAIN_DB}.view_${TABLE_PREFIX}_user u ON SUBSTRING(e.creator_id, 11) = u.account_id 
+            ORDER BY created_date desc`, []
+        )
         return {
             events: rows.map(row => {
                 return {
@@ -25,14 +31,14 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
     })
     fastify.get('/:id', async(req: FastifyRequest<{Params: {id: string}}>, reply): Promise<APIEventDetailed<string>> => {
-        const [rows] = await fastify.db.query<RowDataPacket[]>("SELECT e.*, u.last_name as creator_name FROM `left4dead2-admins`.dash_events e LEFT JOIN `left4dead2`.view_panel_user u ON SUBSTRING(e.creator_id, 11) = u.account_id WHERE id = ?", [req.params.id])
+        const [rows] = await fastify.db.query<RowDataPacket[]>("SELECT e.*, u.last_name as creator_name FROM `${ADMINS_DB}`.${TABLE_PREFIX}_events e LEFT JOIN `left4dead2`.view_${TABLE_PREFIX}_user u ON SUBSTRING(e.creator_id, 11) = u.account_id WHERE id = ?", [req.params.id])
         if(rows.length > 0) {
             const row = rows[0]
             const domain = await fastify.config.Domain
             const [rawWeeks] = await fastify.db.query<RowDataPacket[]>(`
                 SELECT r.steamid, u.last_name as name, week_start, week_end, TO_BASE64(days) as base64 
-                FROM \`left4dead2-admins\`.dash_event_responses r 
-                LEFT JOIN \`left4dead2\`.view_panel_user u ON SUBSTRING(r.steamid, 11) = u.account_id 
+                FROM \`${ADMINS_DB}\`.${TABLE_PREFIX}_event_responses r 
+                LEFT JOIN \`left4dead2\`.view_${TABLE_PREFIX}_user u ON SUBSTRING(r.steamid, 11) = u.account_id 
                 WHERE event_id = ?`, 
                 [req.params.id]
             )  
@@ -79,7 +85,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         const conn = await fastify.db.getConnection()
         await conn.beginTransaction()
         for(const week of req.body.weeks) {
-            await conn.execute("INSERT INTO `left4dead2-admins`.dash_event_responses (event_id, steamid, week_start, days) VALUES (?, ?, ?, FROM_BASE64(?)) ON DUPLICATE KEY UPDATE days = FROM_BASE64(?)", [req.params.id, req.user!.steamid2, week.startDate, week.data, week.data])    
+            await conn.execute("INSERT INTO `${ADMINS_DB}`.${TABLE_PREFIX}_event_responses (event_id, steamid, week_start, days) VALUES (?, ?, ?, FROM_BASE64(?)) ON DUPLICATE KEY UPDATE days = FROM_BASE64(?)", [req.params.id, req.user!.steamid2, week.startDate, week.data, week.data])    
         }
         await conn.commit()
         conn.release()

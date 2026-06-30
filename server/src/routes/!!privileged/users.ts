@@ -1,11 +1,11 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
 import { OkPacket, RowDataPacket } from 'mysql2';
-import { ADMINS_DB } from '../!!privileged/admins.js';
 import SteamID from 'steamid';
 import { BanAppeal, FullAPIBan } from '@srcpanel/common/Ban';
 import { NAME_INVALID_CHAR_REPLACE } from '../../routes/!unprivileged/bans.js';
 import { APIListPlayersResponse, APIUserDetails, PlayerEntry, PlayerRecentEntry, ReadableAdminData, UserNameEntry, UserProfileData } from '@srcpanel/common/User';
 import { NOT_FOUND, NO_PERMISSION } from '../../responses.js';
+import { ADMINS_DB, TABLE_PREFIX } from '../../middlewares/managers.js';
 
 
 const RECENT_DEFAULT_LIMIT = 25
@@ -29,12 +29,12 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         server,
         (SELECT COUNT(*) FROM notes WHERE notes.steamid = client) as notesCount,
         (SELECT COUNT(*) FROM bans WHERE bans.steamid = client) as bansCount,
-        (SELECT COUNT(*) FROM ${ADMINS_DB}.sm_admins
-            WHERE SUBSTRING(${ADMINS_DB}.sm_admins.identity,11) = SUBSTRING(client, 11)
+        (SELECT COUNT(*) FROM \`${ADMINS_DB}\`.sm_admins
+            WHERE SUBSTRING(\`${ADMINS_DB}\`.sm_admins.identity,11) = SUBSTRING(client, 11)
             LIMIT 1
         ) as isAdmin
       FROM activity_log PARTITION (p${new Date().getFullYear()}) l
-      LEFT JOIN view_panel_user u ON SUBSTRING(client, 11) = u.account_id
+      LEFT JOIN view_${TABLE_PREFIX}_user u ON SUBSTRING(client, 11) = u.account_id
       WHERE
           TYPE = 'JOIN' AND server = IFNULL(?,server) AND client != ? AND ISNULL(target)
       ORDER BY l.timestamp DESC
@@ -74,15 +74,15 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     const start = Date.now()
     const [rows] = await fastify.db.execute<RowDataPacket[]>(
       `SELECT
-            (SELECT COUNT(*) FROM notes WHERE notes.steamid = stats_users.steamid) as notesCount,
-            (SELECT COUNT(*) FROM bans WHERE bans.steamid = stats_users.steamid) as bansCount,
+            (SELECT COUNT(*) FROM notes WHERE SUBSTRING(notes.steamid,11) = u.account_id) as notesCount,
+            (SELECT COUNT(*) FROM bans WHERE SUBSTRING(bans.steamid,11) = u.account_id) as bansCount,
             (SELECT COUNT(*) FROM ${ADMINS_DB}.sm_admins
-                WHERE SUBSTRING(${ADMINS_DB}.sm_admins.identity,11) = SUBSTRING(steamid, 11)
+                WHERE SUBSTRING(${ADMINS_DB}.sm_admins.identity,11) = u.account_id
             ) as isAdmin,
-            steamid, last_alias as name, country, last_join_date as lastJoinDate, created_date as firstJoinDate
-            FROM stats_users
+            steamid, last_name as name, country, last_join_time as lastJoinDate, create_time as firstJoinDate
+            FROM view_${TABLE_PREFIX}_users u
             WHERE SUBSTRING(steamid, 11) = SUBSTRING(:query, 11) or last_alias LIKE :fuzzyQuery
-            ORDER BY last_join_date DESC
+            ORDER BY last_join_time DESC
             LIMIT 10`,
       { query, fuzzyQuery }
     )
@@ -150,7 +150,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
       return NO_PERMISSION(reply, "You can only edit your own profile")
     }
     await fastify.db.query<OkPacket>(
-      "INSERT INTO `left4dead2-admins`.panel_user_data (steamid, birth_date, birth_month) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE birth_date = ?, birth_month = ?",
+      "INSERT INTO `${ADMINS_DB}`.panel_user_data (steamid, birth_date, birth_month) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE birth_date = ?, birth_month = ?",
       [req.user!.steamid2, req.body.birthDate, req.body.birthMonth, req.body.birthDate, req.body.birthMonth]
     )
     return reply.status(204).send()
@@ -179,7 +179,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
           (SELECT COUNT(*) FROM notes WHERE SUBSTRING(notes.steamid,11) = SUBSTRING(:steamid, 11)) as notesCount,
           (SELECT COUNT(*) FROM bans WHERE SUBSTRING(bans.steamid,11) = SUBSTRING(:steamid, 11)) as bansCount,
           (SELECT COUNT(*) FROM ${ADMINS_DB}.sm_admins WHERE ${ADMINS_DB}.sm_admins.identity = :steamid) as isAdmin
-        FROM view_panel_user
+        FROM view_${TABLE_PREFIX}_user
         WHERE account_id = SUBSTRING(:steamid, 11)
         LIMIT 1`,
         { steamid: req.params.steamid }
@@ -262,8 +262,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
       const [bans] = await fastify.db.execute<RowDataPacket[]>(
         `SELECT times_tried, id, public_message, bans.flags, bans.steamid, bans.executor, bans.reason, expires, expired, bans.timestamp, u1.last_name as client_name, u1.last_country as client_country, u2.last_name AS executor_name, ip
                 FROM bans
-                LEFT JOIN view_panel_user AS u1 ON SUBSTRING(bans.steamid, 11) = u1.account_id
-                LEFT JOIN view_panel_user AS u2 ON SUBSTRING(bans.executor, 11) = u2.account_id
+                LEFT JOIN view_${TABLE_PREFIX}_user AS u1 ON SUBSTRING(bans.steamid, 11) = u1.account_id
+                LEFT JOIN view_${TABLE_PREFIX}_user AS u2 ON SUBSTRING(bans.executor, 11) = u2.account_id
                 WHERE SUBSTRING(bans.steamid, 11) = SUBSTRING(?, 11)`,
         [req.params.steamid]
       )
@@ -282,7 +282,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
           ban.client = {
             id: ban.steamid,
             name: ban.client_name,
-            nameResolver: "view_panel_user"
+            nameResolver: "view_${TABLE_PREFIX}_user"
           }
         } else {
           // User's name is not cached, fetch it:

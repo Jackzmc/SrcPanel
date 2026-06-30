@@ -7,6 +7,7 @@ import { AnalysisData } from '@srcpanel/common/User';
 import path from 'path';
 import readline from 'readline';
 import { getUpdateState } from '../../routes/!!privileged/panel.js';
+import { MAIN_DB, TABLE_PREFIX } from '../../middlewares/managers.js';
 
 
 
@@ -49,10 +50,10 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
   fastify.get('/analyze/:steamid', async (req: FastifyRequest<{ Params: { 'steamid': string } }>, reply): Promise<AnalysisData> => {
     const [notes] = await fastify.db.execute<RowDataPacket[]>(
-      `SELECT notes.*, u.last_alias as user, e.last_alias as executor, !b.expired as banned
+      `SELECT notes.*, u.last_name as user, e.last_name as executor, !b.expired as banned
             FROM notes
-            LEFT JOIN stats_users as u ON notes.steamid = u.steamid
-            LEFT JOIN stats_users as e ON notes.markedBy = e.steamid
+            LEFT JOIN \`${MAIN_DB}\`.view_${TABLE_PREFIX}_user u ON SUBSTRING(notes.steamid, 11) = u.account_id 
+            LEFT JOIN \`${MAIN_DB}\`.view_${TABLE_PREFIX}_user e ON SUBSTRING(notes.markedBy, 11) = e.account_id 
             LEFT JOIN bans as b ON notes.steamid = b.steamid
             WHERE notes.steamid = ?
             ORDER BY notes.id DESC`,

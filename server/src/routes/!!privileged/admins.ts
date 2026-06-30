@@ -29,8 +29,7 @@ const PUTAdmin = Type.Object({
 export type POSTAdminType = Static<typeof POSTAdmin>
 export type PUTAdminType = Static<typeof PUTAdmin>
 
-export const MAIN_DB = process.env.MYSQL_DB ? `\`${process.env.MYSQL_DB}\`` : null
-export const ADMINS_DB = process.env.MYSQL_ADMINS_DB ? `\`${process.env.MYSQL_ADMINS_DB}\`` : null
+
 
 // TODO: Policy checks
 // TODO: Disable policy checks

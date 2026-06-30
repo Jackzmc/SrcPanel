@@ -1,6 +1,7 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyReply, FastifyRequest } from 'fastify';
 import { NOT_FOUND } from '../../responses.js';
 import QuickLRU from 'quick-lru';
+import { ADMINS_DB } from '../../middlewares/managers.js';
 const CMS_CONFIG = {
     tables: {
         'rules_procedures': {
@@ -12,7 +13,6 @@ const CMS_CONFIG = {
     }
 }
 
-export const ADMINS_DB = process.env.MYSQL_ADMINS_DB ? `\`${process.env.MYSQL_ADMINS_DB}\`` : null
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions)  {
     const cache = new QuickLRU({
@@ -27,7 +27,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         if(cache.has(req.params.table)) {
             return cache.get(req.params.table)
         }
-        const [rows] = await fastify.db.query(`SELECT * FROM ${ADMINS_DB}.${req.params.table}`)
+        const [rows] = await fastify.db.query(`SELECT * FROM \`${ADMINS_DB}\`.${req.params.table}`)
         cache.set(req.params.table, rows)
         return rows
     })

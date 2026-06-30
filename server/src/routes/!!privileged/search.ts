@@ -3,17 +3,18 @@ import { RowDataPacket } from "mysql2";
 import pLimit from "p-limit";
 import { SearchType, APISearchPartialResults, APISearchDetailResult } from '@srcpanel/common/Search';
 import { APIDiscussionFlags } from "@srcpanel/common/Discussions";
+import { ADMINS_DB, TABLE_PREFIX } from "../../middlewares/managers.js";
 
 /// The maximum number of search inner queries to resolve concurrently
 const SEARCH_MAX_INNER_RESOLVE_CONCURRENT = 2
 
 const SEARCH_QUERIES = [
     "SELECT 'activity_log' type, id, message content FROM activity_log WHERE message LIKE :query ORDER BY id DESC LIMIT 10",
-    "SELECT 'user' type, u.account_id id, u.last_name content FROM view_panel_user u WHERE account_id LIKE :query OR last_name LIKE :query LIMIT 10",
-    "SELECT 'note' type, notes.id, notes.content content FROM notes JOIN view_panel_user u ON u.account_id = notes.steamid WHERE notes.steamid LIKE :query OR notes.markedBy LIKE :query OR u.last_name LIKE :query OR notes.id LIKE :query OR notes.content LIKE :query  ORDER BY id DESC LIMIT 10",
-    "SELECT 'ban' type, bans.id, bans.reason content FROM bans     JOIN view_panel_user u1 ON u1.account_id = bans.steamid     JOIN view_panel_user u2 ON u2.account_id = bans.executor       WHERE u1.last_name LIKE :query OR u2.last_name LIKE :query          OR bans.steamid LIKE :query OR bans.executor LIKE :query          OR bans.id LIKE :query OR bans.reason LIKE :query OR bans.public_message       LIKE :query       ORDER BY id DESC LIMIT 10",
-    `SELECT 'discuss' type, id, title content FROM \`left4dead2-admins\`.dash_discussions WHERE ~flags & ${APIDiscussionFlags.Archived} AND (id LIKE :query OR title LIKE :query OR description LIKE :query) ORDER BY id DESC`,
-    "SELECT 'event' type, id, name content FROM `left4dead2-admins`.dash_events WHERE id LIKE :query OR name LIKE :query OR description LIKE :query ORDER BY id DESC"
+    "SELECT 'user' type, u.account_id id, u.last_name content FROM view_${TABLE_PREFIX}_user u WHERE account_id LIKE :query OR last_name LIKE :query LIMIT 10",
+    "SELECT 'note' type, notes.id, notes.content content FROM notes JOIN view_${TABLE_PREFIX}_user u ON u.account_id = notes.steamid WHERE notes.steamid LIKE :query OR notes.markedBy LIKE :query OR u.last_name LIKE :query OR notes.id LIKE :query OR notes.content LIKE :query  ORDER BY id DESC LIMIT 10",
+    "SELECT 'ban' type, bans.id, bans.reason content FROM bans     JOIN view_${TABLE_PREFIX}_user u1 ON u1.account_id = bans.steamid     JOIN view_${TABLE_PREFIX}_user u2 ON u2.account_id = bans.executor       WHERE u1.last_name LIKE :query OR u2.last_name LIKE :query          OR bans.steamid LIKE :query OR bans.executor LIKE :query          OR bans.id LIKE :query OR bans.reason LIKE :query OR bans.public_message       LIKE :query       ORDER BY id DESC LIMIT 10",
+    `SELECT 'discuss' type, id, title content FROM \`${ADMINS_DB}\`.${TABLE_PREFIX}_discussions WHERE ~flags & ${APIDiscussionFlags.Archived} AND (id LIKE :query OR title LIKE :query OR description LIKE :query) ORDER BY id DESC`,
+    "SELECT 'event' type, id, name content FROM `${ADMINS_DB}`.${TABLE_PREFIX}_events WHERE id LIKE :query OR name LIKE :query OR description LIKE :query ORDER BY id DESC"
 ]
 const SEARCH_QUERY = SEARCH_QUERIES
     .map(q => `(${q})`)
@@ -21,12 +22,12 @@ const SEARCH_QUERY = SEARCH_QUERIES
 // TODO: add servers
 
 const SEARCH_DETAIL_QUERY_MAP: Record<SearchType, string> = {
-    activity_log: "SELECT l.*, u1.last_name client_name, u2.last_name target_name FROM activity_log l LEFT JOIN view_panel_user u1 ON u1.account_id = SUBSTRING(l.client, 11) LEFT JOIN view_panel_user u2 ON u2.account_id = SUBSTRING(l.target, 11)  WHERE id = ? LIMIT 1",
-    user: "SELECT * FROM view_panel_user WHERE account_id = ? LIMIT 1",
-    note: "SELECT notes.*, u1.last_name client_name, u2.last_name markedBy_name FROM notes JOIN view_panel_user u1 ON u1.account_id = SUBSTRING(notes.steamid, 11) JOIN view_panel_user u2 ON u2.account_id = SUBSTRING(notes.steamid, 11) WHERE id = ? LIMIT 1",
+    activity_log: "SELECT l.*, u1.last_name client_name, u2.last_name target_name FROM activity_log l LEFT JOIN view_${TABLE_PREFIX}_user u1 ON u1.account_id = SUBSTRING(l.client, 11) LEFT JOIN view_${TABLE_PREFIX}_user u2 ON u2.account_id = SUBSTRING(l.target, 11)  WHERE id = ? LIMIT 1",
+    user: "SELECT * FROM view_${TABLE_PREFIX}_user WHERE account_id = ? LIMIT 1",
+    note: `SELECT notes.*, u1.last_name client_name, u2.last_name markedBy_name FROM notes JOIN view_${TABLE_PREFIX}_user u1 ON u1.account_id = SUBSTRING(notes.steamid, 11) JOIN view_${TABLE_PREFIX}_user u2 ON u2.account_id = SUBSTRING(notes.steamid, 11) WHERE id = ? LIMIT 1`,
     ban: "SELECT * FROM bans WHERE id = ? LIMIT 1",
-    discuss: "SELECT * FROM `left4dead2-admins`.dash_discussions WHERE id = ? LIMIT 1",
-    event: "SELECT * FROM `left4dead2-admins`.dash_events WHERE id = ? LIMIT 1"
+    discuss: `SELECT * FROM \`${ADMINS_DB}\`.${TABLE_PREFIX}_discussions WHERE id = ? LIMIT 1`,
+    event: `SELECT * FROM \`${ADMINS_DB}\`.${TABLE_PREFIX}_events WHERE id = ? LIMIT 1`
 }
 
 interface SearchRawResult extends RowDataPacket {
