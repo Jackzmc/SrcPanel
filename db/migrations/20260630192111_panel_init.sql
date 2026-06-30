@@ -61,6 +61,7 @@ create table dash_providers
     constraint index_name
         unique (provider_id)
 );
+
 create table panel_user_data
 (
     steamid     varchar(32) not null
@@ -68,5 +69,51 @@ create table panel_user_data
     birth_date  tinyint     null,
     birth_month tinyint     null
 );
+
+CREATE TABLE `panel_user` (
+  `account_id` varchar(16) NOT NULL,
+  `create_time` int(11) NOT NULL DEFAULT unix_timestamp(),
+  `last_join_time` int(11) DEFAULT NULL,
+  `last_ip` varchar(64) DEFAULT NULL,
+  `last_country` varchar(255) DEFAULT NULL,
+  `last_region` varchar(255) DEFAULT NULL,
+  `avatar_hash` varchar(255) DEFAULT NULL,
+  PRIMARY KEY (`account_id`)
+);
+CREATE TABLE `panel_user_names` (
+  `account_id` varchar(16) NOT NULL,
+  `name` varchar(64) NOT NULL,
+  `name_update_time` int(11) NOT NULL DEFAULT unix_timestamp(),
+  PRIMARY KEY (`account_id`, `name_update_time`),
+  CONSTRAINT `panel_user_names_panel_user_account_id_fk` FOREIGN KEY (`account_id`) REFERENCES `panel_user` (`account_id`) ON DELETE CASCADE
+);
+CREATE VIEW `view_panel_user` AS
+select
+  `u`.`account_id` AS `account_id`,
+  `u`.`create_time` AS `create_time`,
+  `u`.`avatar_hash` AS `avatar_hash`,
+  `u`.`last_ip` AS `last_ip`,
+  `u`.`last_join_time` AS `last_join_time`,
+  `u`.`last_country` AS `last_country`,
+  `u`.`last_region` AS `last_region`,
+  `pun`.`name_update_time` AS `last_name_update_time`,
+  `pun`.`name` AS `last_name`
+from
+  (
+    `panel_user` `u`
+    join `panel_user_names` `pun` on (
+      `u`.`account_id` = `pun`.`account_id`
+      and `pun`.`name_update_time` = (
+        select
+          max(`z`.`name_update_time`)
+        from
+          `panel_user_names` `z`
+        where
+          `u`.`account_id` = `z`.`account_id`
+      )
+    )
+  );
+
+
 -- migrate:down
 
