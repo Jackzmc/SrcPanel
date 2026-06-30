@@ -192,14 +192,6 @@ app.register(MiddleManager)
       return next()
     })
 
-    const staticPath = process.env.STATIC_PATH ? path.resolve(process.env.STATIC_PATH) : path.join(import.meta.dirname, 'public')
-    await app.register(import('@fastify/static'), {
-      root: staticPath,
-      prefix: '/'
-    })
-    app.log.info({ path: staticPath }, "serving static files from ")
-
-
     const mainPrefix = `/api/`
 
     async function loadRoutes(rootPrefix: string = "/", folderPath: string) {
@@ -276,15 +268,10 @@ async function setupNotFound(app: FastifyInstance) {
       timeWindow: 500
     }),
   }, (req: FastifyRequest, reply: FastifyReply) => {
-    if (req.url.startsWith("/api")) {
-      return reply.status(404).send({
-        error: "NOT_FOUND",
-        message: `Route ${req.method} "${req.url}" not found`
-      })
-    } else {
-      // for UI files, serve /index.html always as last resort
-      return reply.sendFile('/index.html')
-    }
+    return reply.status(404).send({
+      error: "NOT_FOUND",
+      message: `Route ${req.method} "${req.url}" not found`
+    })
   })
 }
 
