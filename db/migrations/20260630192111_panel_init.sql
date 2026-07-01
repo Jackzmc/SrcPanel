@@ -1,5 +1,5 @@
 -- migrate:up
-CREATE TABLE `${TABLE_PREFIX}_discussions` (
+CREATE TABLE `panel_discussions` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `title` varchar(255) NOT NULL,
   `description` varchar(255) DEFAULT NULL,
@@ -10,40 +10,40 @@ CREATE TABLE `${TABLE_PREFIX}_discussions` (
   `creator` varchar(32) NOT NULL,
   PRIMARY KEY (`id`)
 );
-CREATE TABLE `${TABLE_PREFIX}_discussion_responses` (
+CREATE TABLE `panel_discussion_responses` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `discussion_id` int(11) NOT NULL,
   `steamid` varchar(32) NOT NULL,
   `choice` int(11) DEFAULT NULL,
   `text` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`id`),
-  KEY `${TABLE_PREFIX}_discussion_responses_${TABLE_PREFIX}_discussions_id_fk` (`discussion_id`),
-  CONSTRAINT `${TABLE_PREFIX}_discussion_responses_${TABLE_PREFIX}_discussions_id_fk` FOREIGN KEY (`discussion_id`) REFERENCES `${TABLE_PREFIX}_discussions` (`id`)
+  KEY `panel_discussion_responses_panel_discussions_id_fk` (`discussion_id`),
+  CONSTRAINT `panel_discussion_responses_panel_discussions_id_fk` FOREIGN KEY (`discussion_id`) REFERENCES `panel_discussions` (`id`)
 );
-CREATE TABLE `${TABLE_PREFIX}_discussion_options` (
+CREATE TABLE `panel_discussion_options` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `discussion_id` int(11) NOT NULL,
   `label` varchar(255) NOT NULL,
   PRIMARY KEY (`id`),
-  KEY `${TABLE_PREFIX}_discussion_options_${TABLE_PREFIX}_discussions_id_fk` (`discussion_id`),
-  CONSTRAINT `${TABLE_PREFIX}_discussion_options_${TABLE_PREFIX}_discussions_id_fk` FOREIGN KEY (`discussion_id`) REFERENCES `${TABLE_PREFIX}_discussions` (`id`) ON DELETE CASCADE
+  KEY `panel_discussion_options_panel_discussions_id_fk` (`discussion_id`),
+  CONSTRAINT `panel_discussion_options_panel_discussions_id_fk` FOREIGN KEY (`discussion_id`) REFERENCES `panel_discussions` (`id`) ON DELETE CASCADE
 );
-CREATE TABLE `${TABLE_PREFIX}_discussion_comments` (
+CREATE TABLE `panel_discussion_comments` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `discussion_id` int(11) NOT NULL,
   `creator` varchar(32) DEFAULT NULL COMMENT 'anonymous if null',
   `content` text NOT NULL,
   `timestamp` int(11) NOT NULL DEFAULT unix_timestamp(),
   PRIMARY KEY (`id`),
-  KEY `${TABLE_PREFIX}_discussion_comments_${TABLE_PREFIX}_discussions_id_fk` (`discussion_id`),
-  CONSTRAINT `${TABLE_PREFIX}_discussion_comments_${TABLE_PREFIX}_discussions_id_fk` FOREIGN KEY (`discussion_id`) REFERENCES `${TABLE_PREFIX}_discussions` (`id`) ON DELETE CASCADE
+  KEY `panel_discussion_comments_panel_discussions_id_fk` (`discussion_id`),
+  CONSTRAINT `panel_discussion_comments_panel_discussions_id_fk` FOREIGN KEY (`discussion_id`) REFERENCES `panel_discussions` (`id`) ON DELETE CASCADE
 );
-create table ${TABLE_PREFIX}_permissions
+create table panel_permissions
 (
     admin_id int unsigned not null,
     code     varchar(64)  not null,
     primary key (admin_id, code),
-    constraint ${TABLE_PREFIX}_permissions_sm_admins_id_fk
+    constraint panel_permissions_sm_admins_id_fk
         foreign key (admin_id) references sm_admins (id)
 );
 create table sm_group_permissions
@@ -55,7 +55,7 @@ create table sm_group_permissions
         foreign key (group_id) references sm_groups (id)
 );
 
-create table ${TABLE_PREFIX}_providers
+create table panel_providers
 (
     steamid               varchar(32)          not null,
     provider              varchar(32)          not null,
@@ -96,7 +96,7 @@ CREATE TABLE `panel_user_names` (
   PRIMARY KEY (`account_id`, `name_update_time`),
   CONSTRAINT `panel_user_names_panel_user_account_id_fk` FOREIGN KEY (`account_id`) REFERENCES `panel_user` (`account_id`) ON DELETE CASCADE
 );
-CREATE VIEW `view_${TABLE_PREFIX}_user` AS
+CREATE VIEW `view_panel_user` AS
 select
   `u`.`account_id` AS `account_id`,
   `u`.`create_time` AS `create_time`,
@@ -123,7 +123,7 @@ from
     )
   );
 CREATE TABLE `panel_user_notifications` (
-  `steamid` varchar(32) NOT NULL,
+  `steamid` varchar(65) NOT NULL,
   `timestamp` int(11) NOT NULL DEFAULT unix_timestamp(),
   `message` varchar(255) NOT NULL,
   `link` varchar(255) DEFAULT NULL,
@@ -131,7 +131,7 @@ CREATE TABLE `panel_user_notifications` (
   `level` tinyint(4) NOT NULL DEFAULT 0,
   PRIMARY KEY (`steamid`, `timestamp`),
   CONSTRAINT `user_notifications_sm_admins_identity_fk` FOREIGN KEY (`steamid`) REFERENCES `sm_admins` (`identity`) ON DELETE CASCADE
-)
+);
 CREATE TABLE `panel_apikeys` (
   `id` varchar(64) NOT NULL DEFAULT uuid(),
   `steamid` varchar(32) NOT NULL,
