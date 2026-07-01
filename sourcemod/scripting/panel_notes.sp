@@ -14,7 +14,7 @@
 #include <jutils>
 // Addons:
 #undef REQUIRE_PLUGIN
-#include <feedthetrolls>
+#tryinclude <feedthetrolls>
 #undef REQUIRE_PLUGIN
 #tryinclude <tkstopper>
 
@@ -241,10 +241,8 @@ public Action OnClientSayCommand(int client, const char[] command, const char[] 
 		if(StrEqual(sArgs, "cancel", false)) {
 			PrintToChat(client, "Note cancelled.");
 		} else {
-			int size = 2 * strlen(sArgs) + 1;
-			char buffer[32];
+			char buffer[128];
 			GetClientAuthId(client, AuthId_Steam2, buffer, sizeof(buffer));
-			// TODO: escape content
 			DB.Format(query, sizeof(query), "INSERT INTO notes (steamid, markedBy, content) VALUES ('%s', '%s', '%s')", menuNoteTarget, buffer, sArgs);
 			DB.Query(DB_AddNote, query);
 			LogAction(client, -1, "\"%L\" added note for \"%s\" (%s): \"%s\"", client, menuNoteTargetName, menuNoteTarget, sArgs);
@@ -341,7 +339,14 @@ public Action Command_ListNotes(int client, int args) {
 		char auth[32];
 		GetClientAuthId(target_list[0], AuthId_Steam2, auth, sizeof(auth));
 
-		DB.Format(query, sizeof(query), "SELECT notes.content, stats_users.last_alias FROM `notes` JOIN stats_users ON markedBy = stats_users.steamid WHERE notes.`steamid` = '%s' ORDER BY id DESC", auth);
+		DB.Format(query, sizeof(query), 
+			"SELECT notes.content, u.last_name as last_alias, markedBy"...
+			"FROM notes "...
+			"JOIN view_panel_user u ON SUBSTRING(markedBy, 11) = u.account_id " ...
+			"WHERE notes.`steamid` = '%s' "...
+			"ORDER BY id DESC", 
+			auth
+		);
 		ReplyToCommand(client, "Fetching notes...");
 		DataPack pack = new DataPack();
 		pack.WriteCell(client > 0 ? GetClientUserId(client) : 0);
@@ -374,7 +379,14 @@ public void Event_FirstSpawn(Event event, const char[] name, bool dontBroadcast)
 		static char auth[32];
 		// don't care if its spoofed or whatever
 		if(GetClientAuthId(client, AuthId_Steam2, auth, sizeof(auth), false)) {
-			DB.Format(query, sizeof(query), "SELECT notes.content, stats_users.last_alias, markedBy FROM `notes` JOIN stats_users ON markedBy = stats_users.steamid WHERE notes.`steamid` = '%s' ORDER BY id DESC", auth);
+			DB.Format(query, sizeof(query), 
+				"SELECT notes.content, u.last_name as last_alias"...
+				"FROM notes "...
+				"JOIN view_panel_user u ON SUBSTRING(markedBy, 11) = u.account_id " ...
+				"WHERE notes.`steamid` = '%s' "...
+				"ORDER BY id DESC", 
+				auth
+			);
 			DB.Query(DB_FindNotes, query, GetClientUserId(client));
 		}
 
