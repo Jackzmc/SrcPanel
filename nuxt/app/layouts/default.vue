@@ -4,7 +4,7 @@
     <UBanner
       icon="i-lucide-presentation"
       color="neutral"
-      title="Demo instance, login with any steam account to see admin features"
+      title="Demo instance, resets periodically. Do not put private information, login as any steam account to view admin features"
       :ui="{ title: 'whitespace-normal text-xs sm:text-sm text-white dark:text-black', icon: 'text-white dark:text-black', root: 'py-2 sm:py-0 -z-1 ' }"
     />
     <NavBar />

@@ -35,7 +35,9 @@ CREATE TABLE `activity_log` (
   KEY `activity_log_server_index` (`server`),
   KEY `activity_log_type_index` (`type`),
   FULLTEXT KEY `activity_log_message_index` (`message`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci
+ PARTITION BY RANGE (`timestamp`)
+(PARTITION `p2026` VALUES LESS THAN (1767225600) ENGINE = InnoDB);
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
