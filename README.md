@@ -10,20 +10,29 @@ A demo site is avaialble at https://demo.srcpanel.app
 
 This project contains 3 separate parts:
 
-* Web Server (Fastify server)
-* UI Server (nuxt) - handles serving SSR and CMS functionality
-* Sourcemod Plugins - adds functionality to panel 
+* **server/** (Fastify backend)
+* **ui/** (nuxt frontend) - handles serving SSR and CMS functionality
+* **sourcemod/** - adds functionality to panel
     * Required
-        * `adminpanel.smx` - live socket, handles commands from panel, sending live data
         * `admin-sql-threaded.smx` - for sourcemod admins
-        * `activitymonitor.smx` - record in-game actions/messages
+        * `panel_activitymonitor.smx` - record in-game actions/messages
+        * `panel_core.smx` - live socket, handles commands from panel, sending live data
     * Optional
-        * `globalbans.smx` - records bans to DB for use across multiple servers
-        * `sm_player_notes.smx`
+        * `panel_bans.smx` - records bans to DB for use across multiple servers
+        * `panel_notes.smx` - player notes
         * `l4d2-stats-plugin.smx` - [l4d2-stats](https://git.jackz.me/l4d2-stats) plugin for extended information about players and links to their pages
 
-
 The server and its plugins only supports MariaDB, Postgres is unfortunately not supported at this time. 
+
+## Getting Started / Docs
+
+The docs are currently not available, but temporarily documentation will be available in [the wiki]('./wiki).
+
+There are future plans to create a documentation site for better documentation.
+
+## Roadmap
+
+A roadmap for planned changes is available at https://sites.plane.so/issues/9eaf18d434f44c4c8dd56059ea939aaa/?board=kanban
 
 ## Supporting
 
@@ -33,13 +42,13 @@ You can support me on [Github Sponsors](https://github.com/sponsors/Jackzmc) or 
 
 ## License
 
-Everything in repo except for `sourcemod` folder, is licensed under the [GNU Affero General Public License v3.0](https://choosealicense.com/licenses/agpl-3.0/). 
+Everything in this repository, except for the `sourcemod` folder, is licensed under the [GNU Affero General Public License v3.0](https://choosealicense.com/licenses/agpl-3.0/). 
 
 The sourcemod folder and its plugins are licensed under [GNU General Public License v3.0](https://choosealicense.com/licenses/gpl-3.0/) 
 
 ## Contributing
 
-Contributions are welcome and appreciated. AI use itself is okay if the code is well reviewed, but "vibe-coded" (under my determinations) development is not welcome. 
+Contributions are welcome and appreciated. AI use itself is okay if limited and the code is well reviewed, but "vibe-coded" (under my determinations) development is not welcome. 
 
 It is recommend to first open an issue before creating any large PR to discuss it first.
 
