@@ -1,28 +1,16 @@
 export function useApi() {
   const config = useRuntimeConfig();
+  const headers = useRequestHeaders(["cookie"]);
+
   const prefix = import.meta.server ? config.apiInternalUrl : config.public.apiPublicUrl;
 
+  // console.debyg('useApi', `server=${import.meta.server}`, `${prefix}${config.public.apiBase}`)
   return $fetch.create({
+    // SSR: direct to fastify with /api prefix
+    // Client: relative to nitro proxy at /api
     baseURL: `${prefix}${config.public.apiBase}`,
     credentials: "include",
+    headers,
     timeout: import.meta.server ? 4000 : 8000,
-    onRequest({ options }) {
-      if (import.meta.server) {
-        const headers = useRequestHeaders(["cookie"]);
-        options.headers = {
-          ...options.headers,
-          ...headers,
-        };
-      }
-    },
-    onResponse({ response }) {
-      if (import.meta.server) {
-        const setCookie = response.headers.get("set-cookie");
-        if (setCookie) {
-          const event = useRequestEvent();
-          if(event) appendResponseHeader(event, "set-cookie", setCookie);
-        }
-      }
-    }
   });
 }
