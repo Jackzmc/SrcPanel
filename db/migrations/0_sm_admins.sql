@@ -11,7 +11,9 @@ CREATE TABLE IF NOT EXISTS sm_admins (
   flags varchar(30) NOT NULL,
   name varchar(65) NOT NULL,
   immunity int(10) unsigned NOT NULL,
-  PRIMARY KEY (id)
+  PRIMARY KEY (id),
+  UNIQUE KEY `sm_admins_authtype_identity_uindex` (`authtype`, `identity`),
+  KEY (`identity`)
 );
 
 CREATE TABLE IF NOT EXISTS sm_groups (
@@ -55,6 +57,8 @@ CREATE TABLE IF NOT EXISTS sm_config (
   cfg_value varchar(255) NOT NULL,
   PRIMARY KEY (cfg_key)
 );
+
+
 
 INSERT INTO sm_config (cfg_key, cfg_value) VALUES ('admin_version', '1.0.0.1409') ON DUPLICATE KEY UPDATE cfg_value = '1.0.0.1409';
 -- migrate:down
