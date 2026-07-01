@@ -151,6 +151,7 @@ app.setErrorHandler((error, request, reply) => {
 app.register(MiddleManager)
   .then(async () => {
     scheduleActivityLogPartition(app as unknown as FastifyInstance);
+    addPartitionForYear(app as unknown as FastifyInstance, new Date().getFullYear())
 
     if  (hadSignal) return
     if  (process.env.FLUXER_API_TOKEN) {
@@ -291,19 +292,23 @@ function scheduleActivityLogPartition(app: FastifyInstance) {
 
   const job = app.jobs.register("activity_log.add_year_partition", async () => {
     // This runs on Dec 31 of current year
-    const nextYear = new Date()
-    nextYear.setFullYear(nextYear.getFullYear() + 1) // get next year
-
-    const nextNextYear = new Date()
-    nextYear.setFullYear(nextYear.getFullYear() + 2) // get next year twice
-
-
-    await app.db.query(`ALTER TABLE activity_log ADD PARTITION
-            ( PARTITION p${nextYear.getFullYear()} VALUES LESS THAN ( UNIX_TIMESTAMP('${nextNextYear.getFullYear()}-01-01 00:00') ) )`)
-
-    app.log.info(`Added p${nextYear.getFullYear()} partition to activity log`)
+    const nextYear = new Date().getFullYear() + 1
+    await addPartitionForYear(app, nextYear)
   })
 
-
   app.jobs.scheduleRepeatingCustom(job, endOfYear, nextDate)
+  // fire immediately as well
+  job.execute()
+
+}
+
+async function addPartitionForYear(app: FastifyInstance, year: number) {
+  const nextYear = year
+
+  await app.db.query(`
+    ALTER TABLE activity_log ADD PARTITION IF NOT EXISTS
+    ( PARTITION p${year} VALUES LESS THAN ( UNIX_TIMESTAMP('${nextYear}-01-01 00:00') ) )`
+  )
+
+    app.log.info(`Added p${year} partition to activity log`)
 }
