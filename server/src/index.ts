@@ -172,7 +172,7 @@ app.register(MiddleManager)
     })
     app.register(FastifySession, {
       secret: process.env.SESSION_SECRET as string,
-      cookieName: 'srcds-sessid',
+      cookieName: 'srcpanel_session',
       cookie: {
         secure: process.env.NODE_ENV === "production",
         sameSite: "lax",

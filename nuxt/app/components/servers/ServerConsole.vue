@@ -189,8 +189,8 @@ function loadHistoryEntry(direction: number) {
 }
 
 function loadCommandHistory() {
-  if (localStorage["srcds_console_history"]) {
-    const list = JSON.parse(localStorage["srcds_console_history"])
+  if (localStorage["panel_console_history"]) {
+    const list = JSON.parse(localStorage["panel_console_history"])
     commandHistory = list ?? []
   }
 }
@@ -198,7 +198,7 @@ function loadCommandHistory() {
 function pushCommandHistory(cmd: string) {
   commandHistory.push(cmd)
   historyIndex = 0 // reset index
-  localStorage.setItem("srcds_console_history", JSON.stringify(commandHistory))
+  localStorage.setItem("panel_console_history", JSON.stringify(commandHistory))
 }
 
 onMounted(async () => {
