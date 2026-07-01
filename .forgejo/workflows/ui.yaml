@@ -7,8 +7,8 @@ on:
       - '.forgejo/workflows/ui.yaml'
       - Dockerfile
       - pnpm-*.yml
-    tags:
-      - 'v*'
+    branches:
+      - demo 
   workflow_dispatch: {}
 
 env:
@@ -52,6 +52,5 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=registry,ref=${{ env.BASE_IMAGE_NAME }}-ui:buildcache
-          cache-to: type=registry,ref=${{ env.BASE_IMAGE_NAME }}-ui:buildcache,mode=max
           context: . # need to keep .git folder
           target: final-ui

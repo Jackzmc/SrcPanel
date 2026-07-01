@@ -21,9 +21,9 @@
             <p class="text-sm text-muted">
               Logins must be linked to a Steam Account to be used
             </p>
-            <div class="flex flex-row gap-4 my-3">
+            <!-- <div class="flex flex-row gap-4 my-3">
               <FluxerLoginButton size="medium" />
-            </div>
+            </div> -->
           </div>
         </template>
       </UPageCard>
