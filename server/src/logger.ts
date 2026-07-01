@@ -53,6 +53,7 @@ const envToLogger = {
 
 const LOG_TO_FILE = Number(process.env.LOG_TO_FILE) || 1
 const logObj = envToLogger[process.env.NODE_ENV as string] ?? envToLogger["development"]
+console.info('log level:', logObj.level)
 if(process.env.LOG_PATH && LOG_TO_FILE) {
   console.debug({ env: process.env.NODE_ENV ?? "development", path: process.env.LOG_PATH }, "logging: using pino/file ")
   // make 'logs' folder, ignore if it already exists
