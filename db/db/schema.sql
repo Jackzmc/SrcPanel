@@ -17,6 +17,89 @@
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
+-- Table structure for table `activity_log`
+--
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `activity_log` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `timestamp` bigint(20) NOT NULL,
+  `server` varchar(64) DEFAULT NULL,
+  `type` varchar(64) DEFAULT NULL,
+  `client` varchar(32) DEFAULT NULL,
+  `target` varchar(32) DEFAULT NULL,
+  `message` varchar(256) DEFAULT NULL,
+  `metadata` longtext DEFAULT NULL,
+  PRIMARY KEY (`id`,`timestamp`),
+  KEY `activity_log_server_index` (`server`),
+  KEY `activity_log_type_index` (`type`),
+  FULLTEXT KEY `activity_log_message_index` (`message`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `ban_appeals`
+--
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `ban_appeals` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `ban_id` int(11) DEFAULT NULL,
+  `state` smallint(6) DEFAULT 0,
+  `message` varchar(255) NOT NULL,
+  `ip` varchar(32) DEFAULT NULL,
+  `created` bigint(20) NOT NULL DEFAULT unix_timestamp(),
+  `reject_reason` varchar(255) DEFAULT NULL,
+  `rejecter_id` varchar(32) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `ban_appeals_bans_id_fk` (`ban_id`),
+  CONSTRAINT `ban_appeals_bans_id_fk` FOREIGN KEY (`ban_id`) REFERENCES `bans` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `bans`
+--
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `bans` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `steamid` varchar(32) NOT NULL,
+  `reason` varchar(255) NOT NULL,
+  `public_message` varchar(255) DEFAULT NULL,
+  `ip` varchar(32) DEFAULT NULL,
+  `expires` bigint(20) DEFAULT NULL,
+  `timestamp` bigint(20) DEFAULT unix_timestamp(),
+  `flags` smallint(6) NOT NULL DEFAULT 0,
+  `expired` tinyint(1) GENERATED ALWAYS AS (ifnull(`expires`,0) > 1 and unix_timestamp() >= `expires`) VIRTUAL,
+  `times_tried` smallint(6) NOT NULL DEFAULT 0,
+  `executor` varchar(32) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `ip` (`ip`),
+  KEY `steamid` (`steamid`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `notes`
+--
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `notes` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `createdAt` int(10) unsigned DEFAULT unix_timestamp(),
+  `steamid` varchar(32) NOT NULL,
+  `markedBy` varchar(32) DEFAULT NULL,
+  `content` varchar(255) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
 -- Table structure for table `panel_apikeys`
 --
 
@@ -230,8 +313,8 @@ CREATE TABLE `sm_admins` (
   `name` varchar(65) NOT NULL,
   `immunity` int(10) unsigned NOT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `sm_admins_authtype_identity_uindex` (`authtype`,`identity`),
-  KEY `identity` (`identity`)
+  UNIQUE KEY `unique_identity` (`identity`),
+  UNIQUE KEY `sm_admins_authtype_identity_uindex` (`authtype`,`identity`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -391,5 +474,9 @@ SET character_set_client = @saved_cs_client;
 LOCK TABLES `schema_migrations` WRITE;
 INSERT INTO `schema_migrations` (version) VALUES
   ('0'),
-  ('20260630192111');
+  ('1'),
+  ('20260630192111'),
+  ('20260630210539'),
+  ('20260630210543'),
+  ('20260630210546');
 UNLOCK TABLES;
