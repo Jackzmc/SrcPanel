@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS sm_admins (
   immunity int(10) unsigned NOT NULL,
   PRIMARY KEY (id),
   UNIQUE KEY `sm_admins_authtype_identity_uindex` (`authtype`, `identity`),
-  KEY (`identity`)
+  UNIQUE KEY (`identity`)
 );
 
 CREATE TABLE IF NOT EXISTS sm_groups (
