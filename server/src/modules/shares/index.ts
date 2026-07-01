@@ -45,8 +45,12 @@ export async function loadShares(configDir: string, dataDir: string, steam: Stea
     }
 
     for(const [shareId, data] of Object.entries(raw)) {
-        const share = await loadShare(dataDir, steam, parseShare(shareId, data))
-        shares[shareId] = share
+        try {
+            const share = await loadShare(dataDir, steam, parseShare(shareId, data))
+            shares[shareId] = share
+        } catch(err) {
+            log.error({ shareId }, 'failed to load share: ' + err)
+        }
     }
     const time = performance.now() - startTime
     log.info(`Loaded ${Object.keys(shares).length} shares in ${time.toFixed(1)} ms`)
