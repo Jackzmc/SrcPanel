@@ -57,9 +57,18 @@ export interface HealthReport {
   memoryPercentage: number
 }
 
+/**
+ * List of OAuth 2 providers that are enabled
+ */
+export interface PublicProviderConfig {
+  id: string,
+  name: string,
+}
+
 export interface PanelMetaInfo {
   settings: PublicConfigMeta,
   steamAvailable: boolean,
+  providers: PublicProviderConfig[]
 }
 
 export enum FirstTimeSetupStage {

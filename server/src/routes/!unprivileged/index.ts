@@ -106,7 +106,9 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
   fastify.get('/meta', { logLevel: "warn" }, (req, reply): PanelMetaInfo => {
     return {
       settings: fastify.config.PublicMeta,
-      steamAvailable: fastify.steam.SteamAvailable
+      steamAvailable: fastify.steam.SteamAvailable,
+      // TODO: impl
+      providers: []
     }
   })
 

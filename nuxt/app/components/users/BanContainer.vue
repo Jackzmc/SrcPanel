@@ -323,8 +323,8 @@ function defaultBan(): EditBan {
       id: "",
     },
     executor: {
-      id: user.value?.user.steamid!,
-      name: user.value?.user.name,
+      id: user.value!.user.steamid!,
+      name: user.value!.user.name,
     },
     expires: 0,
     expired: false,

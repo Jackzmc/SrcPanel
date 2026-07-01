@@ -14,16 +14,16 @@
               <SteamLoginButton />
             </div>
           </div>
-          <div class="mt-4">
+          <div v-if="meta && meta.providers.length > 0" class="mt-4">
             <h4 class="text-md font-semibold">
               Other Logins
             </h4>
             <p class="text-sm text-muted">
               Logins must be linked to a Steam Account to be used
             </p>
-            <!-- <div class="flex flex-row gap-4 my-3">
+            <div class="flex flex-row gap-4 my-3">
               <FluxerLoginButton size="medium" />
-            </div> -->
+            </div>
           </div>
         </template>
       </UPageCard>
@@ -40,6 +40,7 @@ import SteamLoginButton from "~/components/oauth/SteamLoginButton.vue";
 
 const { isLoggedIn } = useAuth();
 const route = useRoute();
+const { meta } = await usePanelMeta()
 
 if (isLoggedIn.value) {
   await navigateTo(route.query.return_to as string ?? "/");

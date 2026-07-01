@@ -10,7 +10,7 @@
     <NavBar />
     <!-- Notification banners -->
     <UBanner
-      v-if="!steamOnline"
+      v-if="meta && !meta.steamAvailable"
       icon="i-lucide-circle-alert"
       color="warning"
       title="Notice: Steam appears to be down, most likely for maintenance. You will not be able to join games until it's back online."
@@ -18,10 +18,10 @@
       :ui="{ title: 'whitespace-normal text-xs sm:text-sm', root: 'py-2 sm:py-0 -z-1' }"
     />
     <UBanner
-      v-if="notice"
+      v-if="meta?.settings.notice"
       icon="lucide:circle-alert"
       color="info"
-      :title="notice.text"
+      :title="meta.settings.notice.text"
       close
       class="border-b border-b-white dark:border-b-black"
       :ui="{ title: 'whitespace-normal text-xs sm:text-sm text-white dark:text-black', icon: 'text-white dark:text-black', root: 'py-2 sm:py-0 -z-1' }"
@@ -53,7 +53,7 @@ declare const __BUILD_VERSION__: string;
 const date = __BUILD_DATE__;
 const version = __BUILD_VERSION__
 
-const { steamOnline, notice } = await usePanelMeta();
+const { meta } = await usePanelMeta();
 const route = useRoute();
 
 const settingsTab = computed(() => {
