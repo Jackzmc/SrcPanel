@@ -175,7 +175,8 @@ app.register(MiddleManager)
       cookieName: 'srcds-sessid',
       cookie: {
         secure: process.env.NODE_ENV === "production",
-        sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
+        sameSite: "lax",
+        // sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
         maxAge: 1.21e+9,
         httpOnly: true
       },
