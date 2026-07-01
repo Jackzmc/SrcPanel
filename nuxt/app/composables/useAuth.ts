@@ -9,7 +9,7 @@ export function useAuth() {
   async function fetchUser() {
     try {
       // Reduce timeout on SSR to keep it responsive if server unavailable
-      user.value = await useApi()<ClientUserData>("/auth/profile", { timeout: import.meta.server ? 1000 : 8000,  });
+      user.value = await useApi()<ClientUserData>("/auth/profile", { timeout: import.meta.server ? 1000 : 8000 });
     } catch (err: any) {
       if(err.status === 401) {
         user.value = null;
