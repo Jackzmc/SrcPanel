@@ -13,5 +13,9 @@ CREATE TABLE `activity_log` (
   KEY `activity_log_type_index` (`type`),
   FULLTEXT KEY `activity_log_message_index` (`message`)
 );
+ALTER TABLE activity_log
+PARTITION BY RANGE (`timestamp`) (
+  PARTITION p2026 VALUES LESS THAN (1767225600)
+);
 -- migrate:down
 
