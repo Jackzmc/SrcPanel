@@ -11,9 +11,7 @@ CREATE TABLE IF NOT EXISTS sm_admins (
   flags varchar(30) NOT NULL,
   name varchar(65) NOT NULL,
   immunity int(10) unsigned NOT NULL,
-  PRIMARY KEY (id),
-  UNIQUE KEY `sm_admins_authtype_identity_uindex` (`authtype`, `identity`),
-  UNIQUE KEY (`identity`)
+  PRIMARY KEY (id)
 );
 
 CREATE TABLE IF NOT EXISTS sm_groups (
