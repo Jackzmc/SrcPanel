@@ -169,25 +169,7 @@ export default class AuthManager {
     public getAdminExport(steamid2: string): ReadableAdminData | null {
         if(!steamid2) throw new Error("steamid2 is not defined")
         const admin = this.admins[steamid2.slice(10)]
-        if(!admin) {
-            // DEMO: Use fake user
-            return {
-                id: -1,
-                steamid: steamid2,
-                name: 'Demo User',
-                groups: [],
-                permissions: {
-                    base: {
-                        flags: '',
-                        codes: [],
-                        immunityLevel: 0
-                    },
-                    codes: [],
-                    flags: '',
-                    immunityLevel: 0
-                }
-            }
-        }
+        if(!admin) return null
         return {
             id: admin.id,
             steamid: admin.identity,

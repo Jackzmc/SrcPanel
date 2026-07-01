@@ -1,12 +1,6 @@
 <template>
   <div>
     <SettingsModal v-if="settingsTab" @close="closeSettingsModal()" />
-    <UBanner
-      icon="i-lucide-presentation"
-      color="neutral"
-      title="Demo instance, login with any steam account to see admin features"
-      :ui="{ title: 'whitespace-normal text-xs sm:text-sm text-white dark:text-black', icon: 'text-white dark:text-black', root: 'py-2 sm:py-0 -z-1 ' }"
-    />
     <NavBar />
     <!-- Notification banners -->
     <UBanner
