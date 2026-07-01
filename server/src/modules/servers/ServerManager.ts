@@ -82,7 +82,7 @@ export default class ServerManager {
     this.#steam = steam
     this.dataDir = dataDir
     this.configDir = configDir
-    if(process.env.DOCKER_ENABLE) {
+    if(process.env.DOCKER_ENABLE == "1" || process.env.DOCKER_ENABLE === "true") {
       log.debug("Docker enabled, initalzing dynamic server manager")
       this.#dynamicManager = new DynamicServerManager(this, configDir, {
         protocol: process.env.DOCKER_FORCE_PROTOCOL as "http" | "https" | "ssh" | undefined,
