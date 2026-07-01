@@ -108,7 +108,6 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                     const userDetails = await fastify.steam.getUserDetail(steamid)
                     const steamid2 = steamid.getSteam2RenderedID()
 
-                    // DEMO: getAdminExport always returns an admin
                     const admin = fastify.authmngr.getAdminExport(steamid2)
                     if(admin) {
                         await fastify.authmngr.loginUser(req, reply, admin, userDetails)
