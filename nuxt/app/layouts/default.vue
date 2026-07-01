@@ -44,14 +44,12 @@
 
 <script setup lang="ts">
 import SettingsModal from "~/components/modals/SettingsModal.vue";
-import pkg from "../../package.json";
 
 const { appName } = useAppConfig();
 
 declare const __BUILD_DATE__: string;
-declare const __BUILD_COMMIT__: string;
+declare const __BUILD_VERSION__: string;
 
-const commit = __BUILD_COMMIT__;
 const date = __BUILD_DATE__;
 const version = __BUILD_VERSION__
 
