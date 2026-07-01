@@ -183,10 +183,10 @@ function onKeyPress(btnId: string) {
 }
 
 function save() {
-  window.localStorage.setItem("srcds_keybinds", JSON.stringify(keybinds.value));
+  window.localStorage.setItem("panel_keybinds", JSON.stringify(keybinds.value));
 }
 function load() {
-  const data = window.localStorage.getItem("srcds_keybinds");
+  const data = window.localStorage.getItem("panel_keybinds");
   if (data) {
     keybinds.value = JSON.parse(data);
   }

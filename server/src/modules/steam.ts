@@ -72,7 +72,7 @@ export default class SteamAPI {
         apikey = apikey ?? process.env.STEAM_WEB_APIKEY
         if(!apikey) throw new Error("Missing env STEAM_WEB_APIKEY")
         this.#apikey = apikey
-        this.#userAgent = userAgent || "SrcdsDash-API-Client"
+        this.#userAgent = userAgent || `SrcPanel`
         this.#itemCache = new QuickLRU({
             maxSize: ITEM_CACHE_MAX_SIZE,
             maxAge: ITEM_CACHE_TTL
