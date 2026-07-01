@@ -114,7 +114,15 @@ async function getPartitions(pool: Pool): Promise<Map<number | null, PartitionDa
  * @returns
  */
 async function fetchYearDataQuick(pool: Pool, year: number): Promise<PartitionData> {
-  const [rows] = await pool.query<RowDataPacket[]>(`SELECT MAX(id) as highestId, MIN(id) as lowestId FROM activity_log PARTITION (p${year})`)
+  const [rows] = await pool.query<RowDataPacket[]>(`
+    SELECT MAX(id) as highestId, MIN(id) as lowestId 
+    FROM activity_log
+    WHERE timestamp >= ? AND timestamp < ?`,
+    [
+      Math.floor(new Date(`${year}-01-01T00:00:00`).getTime() / 1000),
+      Math.floor(new Date(`${year + 1}-01-01T00:00:00`).getTime() / 1000)
+    ]
+  )
   const row = rows[0]
   const out = row && {
     minId: row.lowestId,
@@ -206,7 +214,6 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     const tableName = ACTIVITY_LOG_TABLE_NAME
 
     const query = new QueryBuilder(tableName, "l")
-      .partition(`p${req.query.source}`)
       .selectMultiple("id", "l.timestamp", "server", "type", "client", "target", "message", "metadata")
       .select("s1.last_name", "clientName")
       .select("s2.last_name", "targetName")
@@ -214,6 +221,12 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
       .leftJoin("view_${TABLE_PREFIX}_user", "account_id", "=", "SUBSTRING(target, 11)", "s2", true)
       .limit(limit)
       .sort('id', SortDirection.Descending)
+    const sourceAsYear = req.query.source && parseInt(req.query.source)
+    if(sourceAsYear && !isNaN(sourceAsYear)) {
+      query
+        .where("timestamp", ">=", Math.floor(new Date(`${sourceAsYear}-01-01T00:00:00`).getTime() / 1000))
+        .where("timestamp", "<", Math.floor(new Date(`${sourceAsYear + 1}-01-01T00:00:00`).getTime() / 1000))
+    }
 
     if (type === 'before') query.where("id", '<=', req.params.id)
     else if (type === 'after') query.where("id", '>', req.params.id)

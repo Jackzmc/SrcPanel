@@ -33,10 +33,13 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             WHERE SUBSTRING(\`${ADMINS_DB}\`.sm_admins.identity,11) = SUBSTRING(client, 11)
             LIMIT 1
         ) as isAdmin
-      FROM activity_log PARTITION (p${new Date().getFullYear()}) l
+      FROM activity_log l
       LEFT JOIN view_${TABLE_PREFIX}_user u ON SUBSTRING(client, 11) = u.account_id
       WHERE
-          TYPE = 'JOIN' AND server = IFNULL(?,server) AND client != ? AND ISNULL(target)
+          timestamp >= UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 30 DAY))
+          AND TYPE = 'JOIN'
+          AND server = IFNULL(?,server) 
+          AND client != ? AND ISNULL(target)
       ORDER BY l.timestamp DESC
       LIMIT ?,?`,
       [server, req.session.user.steamid, offset, limit]
