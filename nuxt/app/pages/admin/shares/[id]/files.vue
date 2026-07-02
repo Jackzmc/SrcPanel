@@ -72,7 +72,8 @@ const columns: TableColumn<AddonInfo>[] = [
     // header: 'Name',
     cell: ({ row }) => h(ULink, {
       to: { name: "admin-shares-id-files", params: { id: props.share.id }, query: { file: row.original.filename } },
-      class: Object.entries(row.original.installInfo).filter(([, enabled]) => enabled).length > 0 ? "text-blue" : "text-black",
+      class: Object.entries(row.original.installInfo ?? {})
+        .filter(([, enabled]) => enabled).length > 0 ? "text-blue" : "text-black",
     }, () => row.original.workshop?.title ?? row.original.filename),
     header: sortHeader("Name"),
     meta: {
@@ -86,7 +87,7 @@ const columns: TableColumn<AddonInfo>[] = [
     accessorKey: "installInfo",
     header: "Enabled On",
     cell: ({ row }) => {
-      const list = Object.entries(row.original.installInfo)
+      const list = Object.entries(row.original.installInfo ?? {})
         .filter(([, enabled]) => enabled)
         .map(([destId]) => destId);
       return list.join(", ");
