@@ -12,9 +12,12 @@ jobs:
     steps:
       - name: Checkout
         uses: https://git.jackz.me/actions/checkout@v6
-      - run: python3 -m venv venv
-      - run: source venv/bin/activate
-      - run: pip install zensical
+      - name: Build 
+        run: |
+          python3 -m venv venv
+          source venv/bin/activate
+          pip install zensical
+          zensial build
       - name: Upload artifacts
         uses: https://git.jackz.me/actions/upload-artifact@v4
         with:
