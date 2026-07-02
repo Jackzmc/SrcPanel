@@ -17,7 +17,7 @@ jobs:
           python3 -m venv venv
           source venv/bin/activate
           pip install zensical
-          zensial build
+          zensical build
       - name: Upload artifacts
         uses: https://git.jackz.me/actions/upload-artifact@v4
         with:
