@@ -244,7 +244,7 @@ app.register(MiddleManager)
     await setupNotFound(app as unknown as FastifyInstance)
     try {
       await app.listen({
-        host: process.env.LISTEN_HOST,
+        host: process.env.LISTEN_HOST || '0.0.0.0',
         port: Number(process.env.LISTEN_PORT) || 8081
       })
       sendMetric("startup_time_ms", performance.now() - START_TIME)
@@ -307,10 +307,14 @@ function scheduleActivityLogPartition(app: FastifyInstance) {
 async function addPartitionForYear(app: FastifyInstance, year: number) {
   const nextYear = year
 
-  await app.db.query(`
-    ALTER TABLE activity_log ADD PARTITION IF NOT EXISTS
-    ( PARTITION p${year} VALUES LESS THAN ( UNIX_TIMESTAMP('${nextYear}-01-01 00:00') ) )`
-  )
+  try {
+    await app.db.query(`
+      ALTER TABLE activity_log ADD PARTITION IF NOT EXISTS
+      ( PARTITION p${year} VALUES LESS THAN ( UNIX_TIMESTAMP('${nextYear}-01-01 00:00') ) )`
+    )
 
     app.log.info(`Added p${year} partition to activity log`)
+  } catch(err) {
+    app.log.debug({}, err)
+  }
 }
