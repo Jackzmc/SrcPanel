@@ -12,7 +12,9 @@
     />
     <Component :is="modal" v-if="modal" :share="share" @close="closeModal" />
     <UContainer class="fluid">
-      <div v-if="status === 'pending'" class="flex justify-center py-12">
+      <UAlert v-if="error" color="error" title="Failed to load share files" :description="error.message" />
+      <UAlert v-else-if="sharesError" color="error" title="Failed to load shares" :description="sharesError.message" />
+      <div v-else-if="status === 'pending'" class="flex justify-center py-12">
         <div class="flex flex-col items-center">
           <UIcon name="i-lucide-loader-circle" class="animate-spin size-8 my-4" />
           <h2 class="text-2xl">
@@ -92,14 +94,14 @@ const modals = computed(() => ({
   },
 }));
 
-const { data: shares } = await useFetch<ShareData[]>(`/api/shares`, { key: `shares` });
+const { data: shares, error: sharesError } = await useFetch<ShareData[]>(`/api/shares`, { key: `shares` });
 
 const route = useRoute();
 const router = useRouter();
 
 const selectedShare = ref<string>(route.params.id as string);
 
-const { data, status, refresh } = useLazyFetch<APIShareAddons>(`/api/shares/${route.params.id}/addons`, { key: `shares.${route.params.id}` });
+const { data, status, refresh, error } = useLazyFetch<APIShareAddons>(`/api/shares/${route.params.id}/addons`, { key: `shares.${route.params.id}`, server: false });
 // if(!data.value?.shareInfo) {
 //   throw createError({ statusCode: 404, statusMessage: 'Share not found' })
 // }
