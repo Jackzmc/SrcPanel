@@ -42,4 +42,4 @@ jobs:
           # 
           known_hosts: ${{ secrets.DOCS_DEPLOY_KNOWN_HOSTS }}
       - name: rsync
-        run: rsync --verbose --archive --delete site ${{ secrets.DOCS_DEPLOY_USER}}@${{ secrets.DOCS_DEPLOY_HOST }}:${{ vars.DOCS_DEPLOY_PATH:/tmp/deploy }}
+        run: rsync --verbose --archive --delete site ${{ secrets.DOCS_DEPLOY_USER }}@${{ secrets.DOCS_DEPLOY_HOST }}:${{ vars.DOCS_DEPLOY_PATH || '/tmp/deploy' }}
