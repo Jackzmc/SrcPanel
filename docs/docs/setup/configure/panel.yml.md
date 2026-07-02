@@ -3,7 +3,7 @@
 ```yaml
 general:
   # Public URL of panel, should be same as NUXT_PUBLIC_API_PUBLIC_URL
-  public_url: https://demo.jzpanel.app
+  public_url: https://demo.srcpanel.app
 
 # Optional, URL to L4D2 Stats plugin 
 # https://github.com/jackzmc/l4d2-stats-plugin
