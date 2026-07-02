@@ -10,5 +10,6 @@ export default defineNuxtPlugin((nuxtApp) => {
                 },
             },
         })
+        console.error('vue:error', error, instance, info)
     })
 })

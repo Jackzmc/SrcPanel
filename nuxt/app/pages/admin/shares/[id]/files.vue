@@ -51,6 +51,7 @@ useHead({
   title: `Files - ${props.share.name} - Shares`,
 });
 
+console.debug('columns')
 const columns: TableColumn<AddonInfo>[] = [
   {
     id: "select",
@@ -132,6 +133,7 @@ const columns: TableColumn<AddonInfo>[] = [
     },
   },
 ];
+console.debug('rest')
 
 const rows = computed(() => {
   if (!table.value) return;

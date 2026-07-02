@@ -36,4 +36,6 @@ if (user.value) Sentry.setUser({
   id: user.value.user.steamid,
   username: user.value.user.name,
 });
+Sentry.setExtra("git:v", __BUILD_VERSION__)
+Sentry.setExtra("git:commit", __BUILD_COMMIT__)
 </script>
