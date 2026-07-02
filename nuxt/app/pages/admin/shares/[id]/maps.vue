@@ -41,6 +41,16 @@ import MapCard from "~/components/shares/MapCard.vue";
 const { requireAuth } = useAuth()
 await requireAuth()
 
+const props = defineProps<{
+  share: ShareInfo;
+  addons: AddonInfo[];
+  status: AsyncDataRequestStatus;
+}>();
+
+useHead({
+  title: `Maps - ${props.share.name} - Shares`,
+});
+
 enum SortDirection { Ascending, Descending }
 const SORT_OPTIONS: { value: string; label: string; sortFn: (a: AddonInfo, b: AddonInfo) => number; defaultDirection: SortDirection }[] = [
   {
@@ -98,16 +108,6 @@ const SORT_OPTIONS: { value: string; label: string; sortFn: (a: AddonInfo, b: Ad
     },
   },
 ];
-
-const props = defineProps<{
-  share: ShareInfo;
-  addons: AddonInfo[];
-  status: AsyncDataRequestStatus;
-}>();
-
-useHead({
-  title: `Maps - ${props.share.name} - Shares`,
-});
 
 const maps = computed(() => {
   const query = searchQuery.value?.toLocaleLowerCase();
