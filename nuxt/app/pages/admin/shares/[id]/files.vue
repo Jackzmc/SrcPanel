@@ -48,7 +48,7 @@ const props = defineProps<{
 }>();
 
 useHead({
-  title: `Maps - ${props.share.name} - Shares`,
+  title: `Files - ${props.share.name} - Shares`,
 });
 
 const columns: TableColumn<AddonInfo>[] = [
