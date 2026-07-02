@@ -12,9 +12,10 @@ jobs:
     steps:
       - name: Checkout
         uses: https://git.jackz.me/actions/checkout@v6
-      - uses: https://git.jackz.me/actions/setup-python@v6
+      - name: Setup python
+        uses: https://git.jackz.me/actions/setup-python@v6
         with:
-          python-version: 3.x
+          python-version: '3.13' 
       - run: pip install zensical
       - name: Upload artifacts
         uses: https://git.jackz.me/actions/upload-artifact@v4
