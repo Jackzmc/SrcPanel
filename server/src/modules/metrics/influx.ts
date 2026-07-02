@@ -8,6 +8,7 @@ dotenv.config()
 const FLUSH_INTERVAL = process.env.INFLUX_FLUSH_INTERVAL_MS ? parseInt(process.env.INFLUX_FLUSH_INTERVAL_MS) : 30_000
 const BATCH_SIZE = 30 // we don't write points often
 const NAMESPACE = process.env.INFLUX_NAMESPACEs ?? "panel"
+const influxDebug = process.env.INFLUX_DEBUG == "1" || process.env.INFLUX_DEBUG == "true"
 
 import { Agent as httpAgent } from 'http'
 import { AgentOptions, Agent as httpsAgent } from 'https'
@@ -16,8 +17,6 @@ const KEEP_ALIVE_OPTIONS: AgentOptions = {
   keepAlive: true, // reuse existing connections
   keepAliveMsecs: 20 * 1000, // 20 seconds keep alive
 }
-
-import { hostname } from "os";
 
 function getAgent(url: string, options: AgentOptions) {
     if(url.startsWith("https"))
@@ -101,7 +100,8 @@ export function sendMetric(field: string, value: number, labels: MetricLabels = 
         pt.stringField(field, value)
     }
     _writer.writePoint(pt)
-    log.trace({ labels, value, measurement: `${NAMESPACE}_${field}` }, `writing point`)
+    if(influxDebug)
+        log.trace({ labels, value, measurement: `${NAMESPACE}_${field}` }, `writing point`)
 }
 
 function writeTags(point: Point, labels: MetricLabels) {
@@ -169,7 +169,8 @@ export class NamespacedMetric {
         if(typeof value === "boolean") pt.booleanField(measurement, value ? "1" : "0")
         else if(typeof(value) == "number") pt.floatField(measurement, value)
         _writer.writePoint(pt)
-        log.trace({ labels: mergedLabels, measurement, value, prefix: this.metricPrefix }, `NamespacedMetric: writing point`)
+        if(influxDebug)
+            log.trace({ labels: mergedLabels, measurement, value, prefix: this.metricPrefix }, `NamespacedMetric: writing point`)
         return true
     }
 

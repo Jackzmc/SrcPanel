@@ -4,6 +4,9 @@ import SteamAPI from '../../modules/steam.js'
 import { Pool, RowDataPacket } from 'mysql2/promise';
 import { UserNameEntry } from '@srcpanel/common/User';
 import { TABLE_PREFIX } from '../../middlewares/managers.js';
+import logger from '../../logger.js'
+
+const log = logger.child({ name: 'UserManager' })
 
 interface IUserData {
   accountId: string,
@@ -74,15 +77,24 @@ export default class UserManager {
   async getUser(steamid: string): Promise<IUserData | null> {
     if (!steamid || !UserManager.isSteamID2(steamid)) return null
     const user = await this.getUserDirect(steamid)
-    // Don't wait for the result, serve the stale data:
-    if (user && (!user.timestamp || Date.now() - user.timestamp > STALE_USER_CACHE_TIME)) this.fetchUser(new SteamID(steamid))
+    if (!user || (!user.timestamp || Date.now() - user.timestamp > STALE_USER_CACHE_TIME)) {
+      log.debug({ steamid }, 'user missing or stale, fetching')
+      // Don't wait for the result, serve the stale data:
+      // TODO: instead add to queue/task system
+      this.fetchUser(new SteamID(steamid))
+    }
     return user
   }
 
   private async getUserDirect(steamid: string): Promise<IUserData | null> {
-    const [users] = await this.#db.execute<RowDataPacket[]>(SQL`SELECT * FROM view_${TABLE_PREFIX}_user WHERE account_id = SUBSTRING(${steamid}, 11)`)
+    log.trace({ steamid }, 'getUserDirect')
+    const [users] = await this.#db.execute<RowDataPacket[]>(
+      `SELECT * FROM view_${TABLE_PREFIX}_user WHERE account_id = SUBSTRING(?, 11) LIMIT 1`,
+      [ steamid ]
+    )
     const user = users[0]
     if (user) {
+      log.trace({ steamid, name: user.last_name }, 'getUserDirect got cached user')
       return {
         accountId: steamid,
         avatarHash: user.avatar_hash,
@@ -90,6 +102,7 @@ export default class UserManager {
         timestamp: user.last_name_update_time
       }
     }
+    log.trace({ steamid}, 'getUserDirect no cached user')
     return null
   }
 
@@ -104,8 +117,10 @@ export default class UserManager {
     let user = await this.getUserDirect(steamid2)
     const hasPrevious = user != undefined
     if (!user || force) {
+      log.debug({ steamid }, 'getting steam user details')
       const users = await this.#steam.getUserDetails([steamid])
       if (users.length > 0) {
+        log.debug({ steamid, name: users[0].personaname }, 'resolved steam user')
         user = {
           accountId: steamid2.slice(10),
           name: users[0].personaname,
@@ -130,6 +145,7 @@ export default class UserManager {
     const expUsers: IUserData[] = []
     while (steamids.length > 0) {
       const slice = steamids.splice(0, 100)
+      log.debug({ users: slice.length }, 'fetching steam users')
       const users = await this.#steam.getUserDetails(slice)
       if (!users) break
       for (const user of users) {
@@ -141,6 +157,7 @@ export default class UserManager {
           avatarHash: user.avatarhash
         }
         expUsers.push(expUser)
+        // TODO: need to be improved?
         const cacheUser = await this.getUserDirect(steamid2)
         await (cacheUser ? this.updateUser(expUser) : this.insertUser(expUser)).catch(err => {
           console.error("Failed to insert user", expUser.accountId, err)

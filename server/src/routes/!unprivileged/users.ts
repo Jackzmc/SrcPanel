@@ -4,9 +4,11 @@ import { toPng } from 'jdenticon'
 const IDENTICON_SIZE = 150
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
   fastify.get("/:steamid/avatar", { logLevel: "warn" }, async (req: FastifyRequest<{ Querystring: { noCache?: boolean }, Params: { steamid: string } }>, reply) => {
+    console.log('get', req.params.steamid)
     const user = await fastify.users.getUser(req.params.steamid)
     reply.header("access-control-allow-origin", "*")
     reply.header("cross-origin-resource-policy", "cross-origin")
+    console.log('got user')
     if (user?.avatarHash) {
       // Setup cache control to make the 301 have a lifetime
       if (!req.query.noCache) {
@@ -15,6 +17,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
       }
       // If the hash is same - don't bother fetching
       if (req.query["If-None-Match"] !== user.avatarHash) {
+        console.log('fetch')
         const res = await fetch(`https://avatars.steamstatic.com/${user.avatarHash}_full.jpg`, { cache: "force-cache" })
         reply.header("Content-Type", "image/jpeg")
         return res.body
@@ -24,6 +27,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
       // Fallback to an identicon based off their steamid, incase we don't have the user information, or its not a real steam user.
       // If If-None-Match set and is 'no-avatar', we won't bother regenerating:
       try {
+        console.log('generating')
         const buffer = toPng(req.params.steamid, IDENTICON_SIZE)
         if (buffer.length > 0 && !req.query.noCache) {
           reply.header("ETag", "no-avatar")
