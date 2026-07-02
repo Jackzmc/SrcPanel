@@ -17,6 +17,10 @@
       "path": "./db"
     },
     {
+      "name": "docs",
+      "path": "./docs"
+    },
+    {
       "name": "root",
       "path": "."
     }
