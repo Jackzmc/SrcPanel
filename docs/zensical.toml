@@ -68,7 +68,7 @@ Copyright &copy; 2026 The authors
 #extra_javascript = ["javascripts/extra.js"]
 
 repo_url = "https://codeberg.org/jackzmc/srcpanel"
-edit_uri = "_edit/master/docs/"
+edit_uri = "_edit/master/docs/docs/"
 repo_name = "jackzmc/srcpanel"
 
 nav = [
@@ -148,7 +148,7 @@ features = [
     # will generate a button that allows the user to view the Markdown
     # code for the current page.
     # https://zensical.org/docs/setup/repository/#content-actions
-    "content.action.view",
+    #"content.action.view",
 
     # Code annotations allow you to add an icon with a tooltip to your
     # code blocks to provide explanations at crucial points.
