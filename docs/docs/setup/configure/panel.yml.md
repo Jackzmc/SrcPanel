@@ -1,4 +1,4 @@
-# Panel Config (panel.yml)
+# Panel Config
 
 ```yaml
 general:
