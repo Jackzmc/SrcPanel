@@ -1,0 +1,40 @@
+name: Documentation
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - docs
+      - .forgejo/workflows/docs.yaml
+jobs:
+  build:
+    runs-on: debian-latest
+    steps:
+      - name: Checkout
+        uses: https://git.jackz.me/actions/checkout@v6
+      - uses: https://git.jackz.me/actions/setup-python@v6
+        with:
+          python-version: 3.x
+      - run: pip install zensical
+      - name: Upload artifacts
+        uses: https://git.jackz.me/actions/upload-artifact@v4
+        with:
+          name: site
+          path: site
+          compression-level: 8
+  deploy:
+    runs-on: debian-latest
+    steps:
+      - name: Download artifacts
+        uses: https://git.jackz.me/actions/download-artifact@v4
+        with:
+          name: site
+      - name: Install SSH Key
+        uses: https://github.com/shimataro/ssh-key-action@v2.7.0
+        with:
+          key: ${{ secrets.DOCS_DEPLOY_PRIVATE_KEY }}
+          name: id_rsa # optional
+          # 
+          known_hosts: ${{ secrets.DOCS_DEPLOY_KNOWN_HOSTS }}
+      - name: rsync
+        run: rsync --verbose --archive --delete site ${{ secrets.DOCS_DEPLOY_USER}}@${{ secrets.DOCS_DEPLOY_HOST }}:${{ vars.DOCS_DEPLOY_PATH:/tmp/deploy }}
