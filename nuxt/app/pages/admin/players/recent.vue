@@ -33,6 +33,7 @@ useHead({
 });
 const { data: serverIds } = useFetch("/api/logs/data", {
   key: "logs.data",
+  timeout: 60,
   transform: (res: APILogData) => res.servers
     .filter((s: string) => s !== "web" && s !== "unknown"),
 });

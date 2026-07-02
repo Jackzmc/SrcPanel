@@ -110,7 +110,7 @@
                 :items="searchUserItems"
                 clear
                 value-key="value"
-                autocomplete
+                autocomplete="on"
                 @input="() => searchUserExecuteDebounce()"
               />
             </UFormField>
@@ -126,7 +126,7 @@
                 :items="searchUserItems"
                 clear
                 value-key="value"
-                autocomplete
+                autocomplete="on"
                 @input="() => searchUserExecuteDebounce()"
               />
             </UFormField>
@@ -212,7 +212,7 @@ const isClient = import.meta.client;
 const route = useRoute();
 const router = useRouter();
 
-const { data, refresh: refreshMetaData } = await useFetch<APILogData>("/api/logs/data", { key: "logs-data" });
+const { data, refresh: refreshMetaData } = await useFetch<APILogData>("/api/logs/data", { key: "logs-data", timeout: 0 });
 
 const query = computed(() => {
   const params = new URLSearchParams();
