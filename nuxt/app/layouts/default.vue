@@ -41,9 +41,6 @@ import SettingsModal from "~/components/modals/SettingsModal.vue";
 
 const { appName } = useAppConfig();
 
-declare const __BUILD_DATE__: string;
-declare const __BUILD_VERSION__: string;
-
 const date = __BUILD_DATE__;
 const version = __BUILD_VERSION__
 

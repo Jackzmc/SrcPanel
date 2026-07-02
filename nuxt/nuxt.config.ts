@@ -64,9 +64,11 @@ export default defineNuxtConfig({
   },
   vite: {
     define: {
+      // ensure any other defines are in shared/types/global.d.ts
       __BUILD_DATE__: JSON.stringify(buildDate),
       __BUILD_COMMIT__: JSON.stringify(buildCommit),
       __BUILD_VERSION__: JSON.stringify(buildVersion),
+
       __VUE_PROD_DEVTOOLS__: true,
       __VUE_PROD_HYDRATION_MISMATCH_DETAILS__: true,
     },
