@@ -87,8 +87,8 @@ const columns: TableColumn<AddonInfo>[] = [
     },
   },
   {
-    accessorKey: "installInfo",
     header: "Enabled On",
+    accessorFn: (row) => row.installInfo ?? {},
     cell: ({ row }) => {
       const list = Object.entries(row.original.installInfo ?? {})
         .filter(([, enabled]) => enabled)
