@@ -13,6 +13,7 @@ jobs:
       - name: Checkout
         uses: https://git.jackz.me/actions/checkout@v6
       - name: Build 
+        working-directory: docs
         run: |
           python3 -m venv venv
           source venv/bin/activate
@@ -22,7 +23,7 @@ jobs:
         uses: https://git.jackz.me/actions/upload-artifact@v4
         with:
           name: site
-          path: site
+          path: docs/site
           compression-level: 8
   deploy:
     runs-on: debian-latest
