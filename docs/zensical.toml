@@ -69,6 +69,7 @@ Copyright &copy; 2026 The authors
 
 repo_url = "https://codeberg.org/jackzmc/srcpanel"
 edit_uri = "_edit/master/docs/"
+repo_name = "jackzmc/srcpanel"
 
 nav = [
   {"Home" = "index.md"},
@@ -188,7 +189,7 @@ features = [
     # Turn on this feature to expand all collapsible sections in the
     # navigation sidebar by default.
     # https://zensical.org/docs/setup/navigation/#navigation-expansion
-    # "navigation.expand",
+    "navigation.expand",
 
     # This feature turns on navigation elements in the footer that allow the
     # user to navigate to a next or previous page.
@@ -284,7 +285,8 @@ features = [
 # - https://zensical.org/docs/setup/logo-and-icons
 # - https://github.com/zensical/ui/tree/master/dist/.icons
 # ----------------------------------------------------------------------------
-#[project.theme.icon]
+[project.theme.icon]
+repo = "simple/codeberg"
 #logo = "lucide/smile"
 
 # ----------------------------------------------------------------------------
