@@ -38,6 +38,9 @@ import type { AddonInfo, ShareInfo } from "@srcpanel/common/Share";
 import type { AsyncDataRequestStatus } from "#app";
 import MapCard from "~/components/shares/MapCard.vue";
 
+const { requireAuth } = useAuth()
+await requireAuth()
+
 enum SortDirection { Ascending, Descending }
 const SORT_OPTIONS: { value: string; label: string; sortFn: (a: AddonInfo, b: AddonInfo) => number; defaultDirection: SortDirection }[] = [
   {

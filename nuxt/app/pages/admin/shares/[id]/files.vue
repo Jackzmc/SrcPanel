@@ -38,6 +38,9 @@ import UCheckbox from "@nuxt/ui/components/Checkbox.vue";
 import type { Table } from "@tanstack/vue-table";
 import { UProgress } from "#components";
 
+const { requireAuth } = useAuth()
+await requireAuth()
+
 const props = defineProps<{
   share: ShareInfo;
   addons: AddonInfo[];
