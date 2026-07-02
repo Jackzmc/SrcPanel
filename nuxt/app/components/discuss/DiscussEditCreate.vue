@@ -85,7 +85,11 @@
             />
           </div>
           <div class="flex gap-4 my-5">
-            <UButton color="primary" size="xl" :disabled="canCreate ? undefined : true" @click="saveChanges">
+            <UButton color="primary" size="xl" 
+              :disabled="canCreate ? undefined : true" 
+              @click="saveChanges"
+              :loading="isSaving"
+            >
               {{ props.mode == 'new' ? 'Create Discussion' : 'Save Changes' }}
             </UButton>
             <UButton variant="outline" size="xl" to="/discuss">
@@ -174,6 +178,7 @@ const editDiscuss = ref<APIDiscussionBase>({
   options: props.discuss.options ?? [],
   ...props.discuss,
 });
+const isSaving = ref(false)
 
 function onAddOption(value: string) {
   if (!editDiscuss.value.options) editDiscuss.value.options = [];
@@ -200,14 +205,15 @@ function onRemoveOption(id: number) {
 }
 
 async function createDiscussion() {
-  // TODO: PUT for edits
+  isSaving.value = true
   const result = await request<APIDiscussionCreateResponse>(`/api/discussions`, {
-    method: props.mode == "new" ? "POST" : "PUT",
+    method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
     body: JSON.stringify(editDiscuss.value as BaseDiscussion),
   });
+  isSaving.value = false
   if ("error" in result) {
     toast.add({
       color: "error",
@@ -225,8 +231,8 @@ async function createDiscussion() {
 }
 
 async function putDiscussion() {
-  // TODO: PUT for edits
   if (!props.discuss || !("id" in props.discuss)) return;
+  isSaving.value = true
   const result = await request<null>(`/api/discussions/${props.discuss.id}`, {
     method: "PUT",
     headers: {
@@ -234,6 +240,7 @@ async function putDiscussion() {
     },
     body: JSON.stringify(editDiscuss.value as BaseDiscussion),
   });
+  isSaving.value = false
   if ("error" in result) {
     toast.add({
       color: "error",
