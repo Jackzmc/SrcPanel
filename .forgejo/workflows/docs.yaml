@@ -24,6 +24,8 @@ jobs:
           compression-level: 8
   deploy:
     runs-on: debian-latest
+    needs:
+      - build
     steps:
       - name: Download artifacts
         uses: https://git.jackz.me/actions/download-artifact@v4
