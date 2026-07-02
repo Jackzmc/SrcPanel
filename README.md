@@ -26,9 +26,7 @@ The server and its plugins only supports MariaDB, Postgres is unfortunately not 
 
 ## Getting Started / Docs
 
-The docs are currently not available, but temporarily documentation will be available in [the wiki]('./wiki).
-
-There are future plans to create a documentation site for better documentation.
+Documentation is available at [docs.srcpanel.app](https://docs.srcpanel.app/)
 
 ## Roadmap
 
