@@ -39,6 +39,7 @@ import KeyValueRow from "./components/table/KeyValueRow.vue";
 const props = defineProps({
   error: Object as () => NuxtError,
 })
-if(props.error.status != 404)
-    Sentry.captureException(props.error, "fatal")
+if(props.error && props.error.status != 404) {
+    Sentry.captureException(props.error, { level: "fatal", extra: {"nuxt_error_page": true, status: props.error.status} })
+}
 </script>
