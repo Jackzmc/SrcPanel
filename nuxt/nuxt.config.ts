@@ -129,6 +129,7 @@ export default defineNuxtConfig({
         "lucide:radio-off",
         "lucide:radio",
         "lucide:arrow-up-down",
+        "lucide:asterik"
       ],
     },
   },
