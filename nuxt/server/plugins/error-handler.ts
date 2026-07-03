@@ -1,6 +1,8 @@
 import * as Sentry from '@sentry/nuxt'
 export default defineNitroPlugin((nitroApp) => {
   nitroApp.hooks.hook('error', (error, { event }) => {
+    if(error.message.startsWith("Page not found")) return
+    console.log(error, event)
     console.error('[nitro:error]', error?.stack ?? error)
 
     // Only send to Sentry if it's initialized on the server
