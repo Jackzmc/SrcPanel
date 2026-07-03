@@ -39,7 +39,18 @@ import KeyValueRow from "./components/table/KeyValueRow.vue";
 const props = defineProps({
   error: Object as () => NuxtError,
 })
-if(props.error && props.error.status != 404) {
+const is404 = props.error?.status === 404
+if(is404) {
     Sentry.captureException(props.error, { level: "fatal", extra: {"nuxt_error_page": true, status: props.error.status} })
 }
+useHead({
+  title: is404 ? '404 Page Not Found' : "Error",
+})
+useSeoMeta({
+  robots: {
+    noarchive: true,
+    nofollow: true,
+    noindex: true,
+  },
+});
 </script>
