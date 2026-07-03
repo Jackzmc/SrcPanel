@@ -1,17 +1,19 @@
 import * as Sentry from '@sentry/nuxt'
 export default defineNitroPlugin((nitroApp) => {
-  const originalErrorHandler = nitroApp.h3App.options.onError
+  nitroApp.hooks.hook('error', (error, { event }) => {
+    console.error('[nitro:error]', error?.stack ?? error)
 
-  nitroApp.h3App.options.onError = (error, event) => {
-    Sentry.captureException(error, {
-      extra: {
-        url: event?.path,
-        method: event?.method,
-      },
-    })
-    console.error('[nitro:error]', error)
-    if (originalErrorHandler) {
-      originalErrorHandler(error, event)
+    // Only send to Sentry if it's initialized on the server
+    // If using @sentry/nuxt, import from there
+    try {
+      Sentry.captureException(error, {
+        extra: {
+          url: event?.path,
+          method: event?.method,
+        },
+      })
+    } catch (e) {
+      console.error('[nitro:error] Sentry capture failed:', e)
     }
-  }
+  })
 })
