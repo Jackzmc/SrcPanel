@@ -58,17 +58,6 @@
               </UBadge>
             </UTooltip>
           </div>
-          <!-- <ActionButton v-for="action in server.actions" :key="action.name"
-            :server-id="server.id"
-            :action="action"
-            :show-hidden="showHiddenActions"
-            size="xs" />
-          <UTooltip text="Show hidden actions">
-            <UButton variant="outline" color="neutral"
-              size="xs"
-              :leading-icon="showHiddenActions ? 'lucide:chevron-left' : 'lucide:chevron-right'"
-              @click="showHiddenActions = !showHiddenActions" />
-          </UTooltip> -->
         </div>
       </div>
     </div>
