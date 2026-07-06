@@ -3,3 +3,5 @@ const { group: groupId, server: serverId } = useRoute().params;
 
 navigateTo(`/admin/servers/${groupId}/${serverId}/overview`);
 </script>
+
+<template></template>
