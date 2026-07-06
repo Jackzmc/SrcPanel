@@ -5,19 +5,19 @@
         Recent Activity
       </h3>
     </template>
-    <UAlert
-      v-if="error"
-      color="error"
-      title="Unable to retrieve activities"
-      :description="errorMessage"
-    />
     <UCard
-      v-else-if="isUnsupported"
+      v-if="isUnsupported"
       class="bg-sky-300 dark:bg-sky-500 my-1 mx-2 text-sm"
       :ui="{ body: 'p-4 md:p-4' }"
     >
       Server does not support or is not configured for activity logs
     </UCard>
+    <UAlert
+      v-else-if="error"
+      color="error"
+      title="Unable to retrieve activities"
+      :description="errorMessage"
+    />
     <div v-else-if="data">
       <div v-for="entry in data" :key="entry.id">
         <div>{{ entry.id }}</div>
@@ -42,7 +42,12 @@ const props = defineProps<{
 }>();
 const { data, error, refresh } = useLazyFetch<LogEntry[]>(
   `/api/servers/${props.serverId}/activities`,
-  { key: "servers." + props.serverId + ".activities", immediate: true, server: false, timeout: 8_000 },
+  { 
+    key: "servers." + props.serverId + ".activities", 
+    immediate: true, 
+    server: false, 
+    timeout: 8_000
+  },
 );
 
 const isUnsupported = computed(() => {
@@ -72,6 +77,7 @@ const errorMessage = computed(() => {
 let timer: ReturnType<typeof setInterval>;
 
 onMounted(() => {
+  refresh()
   timer = setInterval(() => refresh(), REFRESH_INTERVAL_MS);
 });
 
