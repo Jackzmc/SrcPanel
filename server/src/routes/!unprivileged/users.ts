@@ -2,9 +2,21 @@ import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
 import { toPng } from 'jdenticon'
 
 const IDENTICON_SIZE = 150
+const STEAM_IMG_FETCH_TIMEOUT = 10_000
+
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
   fastify.get("/:steamid/avatar", { logLevel: "warn" }, async (req: FastifyRequest<{ Querystring: { noCache?: boolean }, Params: { steamid: string } }>, reply) => {
+    const clientController = new AbortController();
+    const onClose = () => clientController.abort(new Error('client cancelled'));
+    req.raw.on('close', onClose);
+
     console.log('get', req.params.steamid)
+
+    const combinedSignal = AbortSignal.any([
+      AbortSignal.timeout(STEAM_IMG_FETCH_TIMEOUT),
+      clientController.signal,
+    ]);
+
     const user = await fastify.users.getUser(req.params.steamid)
     reply.header("access-control-allow-origin", "*")
     reply.header("cross-origin-resource-policy", "cross-origin")
@@ -18,7 +30,10 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
       // If the hash is same - don't bother fetching
       if (req.query["If-None-Match"] !== user.avatarHash) {
         console.log('fetch')
-        const res = await fetch(`https://avatars.steamstatic.com/${user.avatarHash}_full.jpg`, { cache: "force-cache" })
+        const res = await fetch(
+          `https://avatars.steamstatic.com/${user.avatarHash}_full.jpg`, 
+          { cache: "force-cache", signal: combinedSignal }
+        )
         reply.header("Content-Type", "image/jpeg")
         return res.body
       }
