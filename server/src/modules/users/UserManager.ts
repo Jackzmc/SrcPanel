@@ -8,7 +8,7 @@ import logger from '../../logger.js'
 
 const log = logger.child({ name: 'UserManager' })
 
-interface IUserData {
+export interface IUserData {
   accountId: string,
   name: string,
   avatarHash: string,
