@@ -24,7 +24,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
       }
     } catch (ex) {
       req.log.error(ex, "avatar request error")
-      return reply.code(502).send({
+      return reply.code(500).send({
         error: 'INTERNAL_SERVER_ERROR',
         message: 'Unknown error occurred while fetching avatar'
       })
