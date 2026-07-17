@@ -1,7 +1,7 @@
 <template>
   <div>
     <!-- Console Output -->
-    <div class="bg-black dark:bg-blue-950 text-white h-80 rounded-t-md p-4 text-xs font-mono">
+    <div class="bg-black dark:bg-blue-950 text-white h-90 rounded-t-md p-4 text-xs font-mono">
       <div v-if="ws.wsStatus.value == 'connecting'">
         <IconText leading-icon="lucide:loader-circle" leading-icon-class="animate-spin" text="Connecting..." class="text-neutral-300" />
       </div>
