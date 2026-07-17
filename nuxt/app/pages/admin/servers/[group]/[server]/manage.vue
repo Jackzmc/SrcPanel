@@ -24,7 +24,7 @@
               <UButton variant="outline" color="neutral"
                 size="xs"
                 :leading-icon="showHiddenActions ? 'lucide:chevron-left' : 'lucide:chevron-right'"
-                @click="showHiddenActions = !showHiddenActions"
+                @click="() => { showHiddenActions = !showHiddenActions }"
               >
                 Show Hidden ({{ hiddenActionCount }})
               </UButton>
