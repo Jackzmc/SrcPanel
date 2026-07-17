@@ -68,9 +68,12 @@ const errorMessage = computed(() => {
   if (!error.value) return;
   const cause = error.value.cause as any;
   if (cause) {
+    console.log('cause', cause, cause.data)
     if ("data" in cause) {
       return cause.data.error + ": " + cause.data.message;
     }
+  } else {
+    return error.value.message
   }
 });
 
