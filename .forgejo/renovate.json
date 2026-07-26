@@ -10,7 +10,6 @@
   "lockFileMaintenance": {
     "enabled": true
   },
-  "schedule": ["* 0 * * *"]
   "packageRules": [
     {
       "matchDatasources": ["npm"],
