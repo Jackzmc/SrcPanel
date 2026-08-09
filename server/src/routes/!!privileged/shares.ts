@@ -527,9 +527,13 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
           }
         }
       } catch (error) {
+        fastify.log.error({
+          params: req.params,
+          share: share.id
+        }, "Steam Error: " + error)
         const payload = {
           code: 'STEAM_ERROR',
-          error,
+          error: error.message,
           message: "An error occurred while fetching info or downloading the addon",
         }
         await send(payload, 500)
