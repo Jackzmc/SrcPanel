@@ -244,8 +244,7 @@ const destinationsChanged = computed(() => {
 
 const rating = ref();
 const madeChanges = ref(false)
-// TODO: prefill
-const checkedDestinations = ref<Record<string, boolean>>({});
+const checkedDestinations = ref<Record<string, boolean>>(props.addon?.installInfo ?? {});
 
 watch(() => props.addon?.installInfo, (_, installInfo) => {
   if (!props.addon || !installInfo) return;
