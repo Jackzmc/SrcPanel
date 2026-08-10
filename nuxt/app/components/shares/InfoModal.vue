@@ -3,7 +3,7 @@
     open
     :title="title"
     :description="description"
-    @update:open="emit('close')"
+    @update:open="close"
   >
     <template #body>
       <UTabs v-model="active" :items="items" class="w-full" />
@@ -174,7 +174,6 @@
 </template>
 
 <script setup lang="ts">
-// TODO: find out why this doesn't show when addons is loading
 import { formatSize } from "@srcpanel/common/format";
 import type { AddonInfo, ShareInfo } from "@srcpanel/common/Share";
 import type { TabsItem } from "@nuxt/ui";
@@ -244,6 +243,7 @@ const destinationsChanged = computed(() => {
 });
 
 const rating = ref();
+const madeChanges = ref(false)
 // TODO: prefill
 const checkedDestinations = ref<Record<string, boolean>>({});
 
@@ -252,12 +252,20 @@ watch(() => props.addon?.installInfo, (_, installInfo) => {
   checkedDestinations.value = installInfo ?? {};
 });
 
+function close() {
+  if(madeChanges.value) {
+    emit("refresh")
+    madeChanges.value = false
+  }
+  emit("close")
+}
+
 async function toggleDest(destId: string, enabled: boolean) {
   const mode = enabled ? "enable" : "disable";
   const response = await request(`/api/shares/${props.share.id}/addons/${props.id}/${mode}/${destId}`, { method: "POST" });
   if ("body" in response) {
     // Update local copy
-    emit("refresh");
+    madeChanges.value = true
     toast.add({
       title: `${enabled ? "Enabled" : "Disabled"} ${props.id} on ${destId}`,
       description: `${enabled ? "Enabled" : "Disabled"} ${props.id} on share ${props.share.name ?? props.share.id} / ${destId}`,
