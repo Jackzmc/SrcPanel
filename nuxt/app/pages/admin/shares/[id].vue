@@ -46,11 +46,11 @@
               />
             </UCard>
             <div class="flex flex-col gap-2">
-              <UButton color="primary" size="lg" @click="modal = AddWorkshopModal">
+              <UButton color="primary" size="lg" @click="setModal(AddWorkshopModal)">
                 <UIcon name="i-lucide-plus" />
                 Workshop Addon
               </UButton>
-              <UButton color="primary" size="lg" @click="modal = UploadModal">
+              <UButton color="primary" size="lg" @click="setModal(UploadModal)">
                 <UIcon name="i-lucide-upload" />
                 Upload
               </UButton>
@@ -123,5 +123,8 @@ async function onChangeShare() {
 function closeModal() {
   modal.value = null;
   router.replace({ query: { } });
+}
+function setModal(newModal: Component) {
+  modal.value = newModal
 }
 </script>
