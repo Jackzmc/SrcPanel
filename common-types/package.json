@@ -24,6 +24,7 @@
         "./Server": "./dist/types/Server.js",
         "./ServerWebsocket": "./dist/types/ServerWebsocket.js",
         "./Share": "./dist/types/Share.js",
+        "./shares/downloadWS": "./dist/types/share/downloadWS.js",
         "./Stats": "./dist/types/Stats.js",
         "./User": "./dist/types/User.js"
     },

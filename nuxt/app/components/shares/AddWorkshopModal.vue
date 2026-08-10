@@ -154,7 +154,7 @@
 import type { CollectionWorkshopItem, DetailsResponse, ShareInfo } from "@srcpanel/common/Share";
 import { debounce } from "@srcpanel/common/util";
 import { formatSize } from "@srcpanel/common/format";
-import type { APIDownloadAddonsMessage } from "@srcpanel/common/share/downloadWS";
+import type { APIDownloadAddonsMessage } from "@srcpanel/common/shares/downloadWS";
 
 const WORKSHOP_LINK_REGEX = new RegExp(/https:\/\/steamcommunity\.com\/(sharedfiles|workshop)\/filedetails\/\?id=(\d*)/);
 

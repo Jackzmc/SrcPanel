@@ -35,7 +35,7 @@ import ULink from "@nuxt/ui/components/Link.vue";
 import UCheckbox from "@nuxt/ui/components/Checkbox.vue";
 
 // fix TS errors
-import type { Table } from "@tanstack/vue-table";
+import type { Table, TableFeatures } from "@tanstack/vue-table";
 import { UProgress } from "#components";
 
 const { requireAuth } = useAuth()
@@ -51,7 +51,6 @@ useHead({
   title: `Files - ${props.share.name} - Shares`,
 });
 
-console.debug('columns')
 const columns: TableColumn<AddonInfo>[] = [
   {
     id: "select",
@@ -79,6 +78,10 @@ const columns: TableColumn<AddonInfo>[] = [
       class: Object.entries(row.original.installInfo ?? {})
         .filter(([, enabled]) => enabled).length > 0 ? "text-blue" : "text-black",
     }, () => row.original.workshop?.title ?? row.original.filename),
+    filterFn: (row, colId, val, addMeta) => {
+      console.log(row, colId, val)
+      return true
+    },
     header: sortHeader("Name"),
     meta: {
       class: {
@@ -140,7 +143,7 @@ const rows = computed(() => {
   return table.value.tableApi.getSelectedRowModel().rows;
 });
 
-const table = useTemplateRef<{ tableApi: Table<AddonInfo> }>("table");
+const table = useTemplateRef<{ tableApi: Table<TableFeatures, AddonInfo> }>("table");
 const searchQuery = ref<string | undefined>();
 
 const { promptConfirm } = useModal();
