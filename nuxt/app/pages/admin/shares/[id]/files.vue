@@ -13,8 +13,7 @@
 
     <UTable
       ref="table"
-      v-model:global-filter="searchQuery"
-      :data="addons"
+      :data="filteredData"
       :columns="columns"
       checkable
       :loading="status === 'pending'"
@@ -78,10 +77,6 @@ const columns: TableColumn<AddonInfo>[] = [
       class: Object.entries(row.original.installInfo ?? {})
         .filter(([, enabled]) => enabled).length > 0 ? "text-blue" : "text-black",
     }, () => row.original.workshop?.title ?? row.original.filename),
-    filterFn: (row, colId, val, addMeta) => {
-      console.log(row, colId, val)
-      return true
-    },
     header: sortHeader("Name"),
     meta: {
       class: {
@@ -142,6 +137,19 @@ const rows = computed(() => {
   if (!table.value) return;
   return table.value.tableApi.getSelectedRowModel().rows;
 });
+
+const filteredData = computed(() => {
+  if(!searchQuery.value) return props.addons
+  const query = searchQuery.value.toLowerCase()
+  return props.addons
+    .filter(addon => {
+      return addon.filename.toLowerCase().includes(query)
+        || (addon.workshop && addon.workshop.title?.toLowerCase().includes(query)) 
+        || (addon.collection &&
+          (addon.collection.name.toLowerCase().includes(query) || addon.collection?.id.toLowerCase().includes(query)))
+
+    })
+})
 
 const table = useTemplateRef<{ tableApi: Table<TableFeatures, AddonInfo> }>("table");
 const searchQuery = ref<string | undefined>();
