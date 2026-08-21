@@ -9,7 +9,7 @@ allowBuilds:
   cpu-features: false
   '@parcel/watcher': false
   '@sentry/cli': false
-  better-sqlite3: true
+  better-sqlite3: false
   node-webcodecs: false
   protobufjs: false
   ssh2: false
