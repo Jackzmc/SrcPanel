@@ -285,7 +285,7 @@ function startDownload(force = false) {
   const startTime = Date.now();
 
   const sse = new EventSource(
-    `/api/shares/${props.share.id}/addons/workshop/${props.share.appid}/download?${query.toString()}`);
+    `/api/shares/${props.share.id}/addons/workshop/${workshopInfo.value?.item?.publishedfileid}/download?${query.toString()}`);
   // Don't care about see.onerror, will trigger when server closes
   sse.onerror = () => {
     downloadLog.value.push({
