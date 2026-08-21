@@ -42,7 +42,14 @@
     "prettier": "^3.9.6",
     "typescript": "^5.9.3",
     "vue-tsc": "^3.3.10",
-    "@tanstack/vue-table": "8.21.3"
+    "@tanstack/vue-table": "8.21.3",
+    "@tanstack/table-core": "8.21.3"
+  },
+  "pnpm": {
+    "overrides": {
+      "@tanstack/vue-table": "8.21.3",
+      "@tanstack/table-core": "8.21.3"
+    }
   },
   "packageManager": "pnpm@10.34.2"
 }
