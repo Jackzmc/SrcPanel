@@ -41,5 +41,6 @@
   "ignorePaths": ["ui/**"],
   "labels": ["dependencies"],
   "patch": { "enabled": false },
-  "minimumReleaseAge": ""
+  "minimumReleaseAge": "",
+  "dependencyDashboard": false
 }
