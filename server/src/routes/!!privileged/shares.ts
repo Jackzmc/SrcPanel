@@ -309,6 +309,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     Params: { shareId: string, workshopId: string },
     Querystring: { 'destinations'?: string, force?: boolean, sse?: boolean, children: string[] }
   }>, reply) => {
+    req.log.trace({ shareId: req.params.shareId, workshopId: req.params.workshopId, children: req.query.children }, "download request")
     let allowDownload = true
     const useSSE = req.query.sse
     function sendSSE(payload: any) {
@@ -527,10 +528,10 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
           }
         }
       } catch (error) {
-        fastify.log.error({
+        req.log.error({
           params: req.params,
           share: share.id
-        }, "Steam Error: " + error)
+        }, "Steam Error: " + error.stack)
         const payload = {
           code: 'STEAM_ERROR',
           error: error.message,

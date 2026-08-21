@@ -1,0 +1,15 @@
+info:
+  name: Get Collection Details
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: https://api.steampowered.com/ISteamRemoteStorage/GetCollectionDetails/v1/
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

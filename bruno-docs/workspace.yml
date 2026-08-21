@@ -6,6 +6,8 @@ info:
 collections:
   - name: "Imported Collection"
     path: "collections/Imported Collection"
+  - name: "API Integrations"
+    path: "collections/API Integrations"
 
 specs:
 
