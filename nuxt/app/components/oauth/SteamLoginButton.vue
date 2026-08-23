@@ -31,6 +31,6 @@ const apiOrigin = config.public.apiAuthUrl || config.public.apiPublicUrl || uiOr
 const redirectUri = computed(() => {
   let path = url.pathname;
   if (path === "/login") path = "/";
-  return `${apiOrigin}/api/auth/steam/callback?return_uri=${uiOrigin}/auth/return${encodeURIComponent(`?return_to=${uiOrigin}${path}`)}`;
+  return `${apiOrigin}/api/auth/steam/callback?return_uri=${encodeURIComponent(`${uiOrigin}${path}`)}`;
 });
 </script>

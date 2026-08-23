@@ -20,7 +20,7 @@
     "@nuxt/a11y": "1.0.0-alpha.1",
     "@nuxt/content": "3.15.2",
     "@nuxt/image": "2.1.0",
-    "@nuxt/ui": "^4.10.0",
+    "@nuxt/ui": "^4.8.2",
     "@sentry/nuxt": "^10.70.0",
     "@srcpanel/common": "workspace:^",
     "@stylistic/eslint-plugin": "^5.10.0",

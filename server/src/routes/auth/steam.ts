@@ -2,6 +2,7 @@ import { FastifyInstance, FastifyPluginOptions, FastifyReply, FastifyRequest } f
 import SteamID from 'steamid'
 import { SteamAPIError } from '../../modules/steam.js';
 import { ErrorWithCode } from '../../util.js';
+import { USER_AGENT } from '../../modules/auth/OauthProvider.js';
 
 export const SESSION_VERSION = "3.0"
 const RouteError = ErrorWithCode
@@ -78,15 +79,15 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             }
         },
         async handler(req: FastifyRequest<{ Querystring: OpenIDQuery }>, reply: FastifyReply) {
-            const returnTo = req.query.return_uri ?? req.query['openid.return_to'] ?? fastify.config.Domain
+            const returnTo = req.query.return_uri ?? fastify.config.Domain
+
+            req.log.debug({ query: req.query }, 'steam login')
 
             if(req.query['openid.error']) {
                 throw new RouteError("OPENID_ERROR", req.query['openid.error'])
             } else if(!req.query['openid.response_nonce']) {
                 throw new RouteError("LOGIN_STALE_RETRY_LATER", "Login is stale, wait a few minutes and try again")
             }
-            req.log.debug({ query: req.query}, 'query')
-            req.log.debug(`return_uri=${req.query.return_uri} openid.return_to=${req.query['openid.return_to']}`)
 
 
             // Send data back to steam for validation
@@ -94,7 +95,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             params.set('openid.mode', 'check_authentication')
             const validateRes = await fetch(`https://steamcommunity.com/openid/login?${params.toString()}`, {
                 headers: {
-                    'User-Agent': 'admin.jackz.me'
+                    'User-Agent': USER_AGENT
                 }
             })
             if(validateRes.ok) {

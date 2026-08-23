@@ -33,7 +33,7 @@ export interface OauthAuthData {
 
 // Buffer to pre-emptively refresh before this, to compensate for any latency
 const EXPIRES_WINDOW_S = 100
-const USER_AGENT = 'admin-panel (admin.jackz.me, v1)'
+export const USER_AGENT = 'SrcPanel(https://codeberg.com/jackzmc/srcpanel)'
 
 
 // TODO: Add User-Agent: DiscordBot ($url, $versionNumber)
