@@ -7,6 +7,7 @@ import SteamID from 'steamid';
 import { Pool } from 'mysql2/promise.js';
 import logger from '../../logger.js'
 import { APILogData, APILogQueryResult, LogEntry } from '@srcpanel/common/Logs';
+import { TABLE_PREFIX } from '../../middlewares/managers.js';
 
 const log = logger.child({ name: "logs" })
 
@@ -217,8 +218,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
       .selectMultiple("id", "l.timestamp", "server", "type", "client", "target", "message", "metadata")
       .select("s1.last_name", "clientName")
       .select("s2.last_name", "targetName")
-      .leftJoin("view_${TABLE_PREFIX}_user", "account_id", "=", "SUBSTRING(client, 11)", "s1", true)
-      .leftJoin("view_${TABLE_PREFIX}_user", "account_id", "=", "SUBSTRING(target, 11)", "s2", true)
+      .leftJoin(`view_${TABLE_PREFIX}_user`, "account_id", "=", "SUBSTRING(client, 11)", "s1", true)
+      .leftJoin(`view_${TABLE_PREFIX}_user`, "account_id", "=", "SUBSTRING(target, 11)", "s2", true)
       .limit(limit)
       .sort('id', SortDirection.Descending)
     const sourceAsYear = req.query.source && parseInt(req.query.source)
