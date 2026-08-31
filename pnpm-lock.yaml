@@ -45,7 +45,7 @@ importers:
         specifier: 2.1.0
         version: 2.1.0(@types/node@25.9.4)(magic-string@1.2.2)(magicast@0.5.4)(oxc-parser@0.139.0)(rolldown@1.2.5)(unplugin@3.3.0(esbuild@0.28.2)(rolldown@1.2.5)(rollup@4.62.4)(vite@8.2.1(@types/node@25.9.4)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.50.0)(tsx@4.23.1)(yaml@2.9.0)))(unstorage@1.17.5(db0@0.3.4(better-sqlite3@13.0.3)(mysql2@3.23.0(@types/node@25.9.4))(sqlite3@5.1.7))(ioredis@5.11.1(supports-color@5.5.0)))
       '@nuxt/ui':
-        specifier: ^4.8.2
+        specifier: ^4.10.0
         version: 4.10.0(857d044714c838d22bf9fd6d9efe0b0e)
       '@sentry/nuxt':
         specifier: ^10.70.0
