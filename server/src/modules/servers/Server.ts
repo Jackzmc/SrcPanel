@@ -376,7 +376,6 @@ export default abstract class Server implements IAction {
       if(!bypassCache && this._lastRefresh && now - this._lastRefresh < MIN_REFRESH_TIME) return
       this._lastRefresh = now
       try {
-          this._log.trace({ id: this.id, host, port, type }, "querying status via gamedig")
           const state = await this.#gamedig.query({
             type: type,
             host: host,

@@ -11,6 +11,8 @@ import ValveKV from 'valve-kv'
 import { getChapterIds, getSpFileInfo } from './ShareUtils.js';
 import assert from 'assert';
 import Logger from '../../logger.js'
+import ShareScanner from './ShareScanner.js';
+import ShareDatabase from './ShareDB.js';
 
 const DOWNLOAD_TIMEOUT = 1000 * 60 * 3
 
@@ -21,30 +23,26 @@ export type DownloadSource = "steam_workshop" | "direct"
  * In the UI, this is enabling or disabling an addon/file. The source file is not deleted except by deleteAddon()
  */
 
-const MIGRATIONS = [
-  SQL`ALTER TABLE addoncache ADD metadata TEXT`,
-  // SQL`ALTER TABLE addoncache DELETE chapter_ids`
-]
-
 export default class Share {
   #id: string
   public name: string
   public sourceFolder: string
   public destinations: ShareDestinations = {}
   public appId?: number
-  #db: sqlite.Database<sqlite3.Database, sqlite3.Statement>
-  #steam: SteamAPI
+  #db: ShareDatabase
+  #scanner: ShareScanner
 
   private validExts?: string[]
   private downloadSources: DownloadSourceRecord
   #description: string
   #log: typeof Logger
 
-  constructor(db: sqlite.Database<sqlite3.Database, sqlite3.Statement>, steam: SteamAPI, shareInfo: Partial<ShareInfo>) {
+  constructor(shareInfo: ShareInfo, db: ShareDatabase, scanner: ShareScanner) {
     this.#log = Logger.child({ name: `Share/${shareInfo.id}` })
-    this.#id = shareInfo.id!
     this.#db = db
-    this.#steam = steam
+    this.#scanner = scanner
+
+    this.#id = shareInfo.id!
     this.name = shareInfo.name ?? this.#id!
     if (!shareInfo.sourceFolder) throw new Error(`Share ${this.#id} is missing source folder`)
     this.sourceFolder = shareInfo.sourceFolder
@@ -53,50 +51,9 @@ export default class Share {
     this.validExts = shareInfo.fileExts
     this.destinations = shareInfo.destinations || {}
     this.#description = shareInfo.description ?? ""
-    db.exec(SQL`CREATE TABLE IF NOT EXISTS meta (
-            key VARCHAR(128) NOT  NULL,
-            value VARCHAR(128) NOT NULL,
-            PRIMARY KEY(key)
-        );`)
-    db.exec(SQL`CREATE TABLE IF NOT EXISTS addoncache (
-            filename VARCHAR(128) NOT NULL,
-            filesize INT,
-            lastModified INT,
-            ws_info TEXT,
-            collection_id VARCHAR(32),
-            collection_name VARCHAR(64),
-            chapter_ids TEXT,
-            metadata TEXT,
-            PRIMARY KEY (filename)
-        );`)
-    db.exec(SQL`CREATE TABLE IF NOT EXISTS meta (
-            key VARCHAR(128) NOT NULL,
-            value VARCHAR(128) NOT NULL,
-            PRIMARY KEY (key)
-        );`)
-    this.runMigrations()
 
     // db.exec(SQL`ALTER TABLE addoncache
     //     ADD COLUMN chapter_ids TEXT;`).catch(() => {})
-  }
-
-  async runMigrations() {
-    const result = await this.#db.get("SELECT value FROM meta WHERE key = 'current_migration'")
-    let currentMigration = result ? result.value : 0
-    if (currentMigration >= MIGRATIONS.length) return;
-    while (currentMigration < MIGRATIONS.length) {
-      this.#log.debug(`Running migration #${currentMigration}`)
-      try {
-        await this.#db.exec(SQL`ALTER TABLE addoncache ADD metadata TEXT`).catch(() => { })
-        currentMigration++
-        this.#log.info(`Migration #${currentMigration}: OK`)
-      } catch (err: any) {
-        this.#log.error(`Migration #${currentMigration}: Error:`, err)
-        return
-      }
-    }
-    await this.#db.run(`INSERT INTO meta (key, value) VALUES ('current_migration', ?)`, [currentMigration])
-    await this.#db.run(`UPDATE meta SET value = ? WHERE key = 'current_migration'`, [currentMigration])
   }
 
   public get id() { return this.#id }
@@ -173,96 +130,20 @@ export default class Share {
   }
 
   /**
+   * @deprecated
+   */
+  async getAddonInfo(filename: string) {
+    return await this.#db.getAddonInfo(filename)
+  }
+
+  /**
    * Fetches all addons for this share, including returning if the destinations are
    * Warn: Expensive, may take a long time for a large directory, and if no cache
    **/
   // TODO: this is verrry messy now and hacky. SRCPNL-129
   // NOTE: this causes a large memory spike while mid check. container was using >= 512MB and hit limit 
-  public async getAddons() {
-    console.time('getAddons:readdir')
-    const dirents = await readdir(this.sourceFolder, { withFileTypes: true })
-    console.timeEnd('getAddons:readdir')
-    const results: (AddonInfo | AddonCollectionInfo)[] = []
-    const collections: Record<string, AddonCollectionInfo> = {}
-    for (const dirent of dirents) {
-      if(!dirent.isFile()) continue
-      // Only check the specified extenstions
-      const ext = dirent.name.split(".").pop()
-      if (!ext || ext == "db" || this.validExts && !this.validExts.includes(ext)) continue
-
-      try {
-        const addonInfo = await this.getAddonInfo(dirent.name)
-        if (addonInfo) {
-          // If we have cached addon info, check if its a collection or an item
-          if (addonInfo.collection) {
-            if (!collections[addonInfo.collection.id]) collections[addonInfo.collection.id] = {
-              collection: addonInfo.collection,
-              children: [],
-            }
-            collections[addonInfo.collection.id].children.push(addonInfo)
-            // Merge child addon into collection's map list
-            if (addonInfo.meta.chapterIds) {
-              if (!collections[addonInfo.collection.id].chapterIds) collections[addonInfo.collection.id].chapterIds = []
-              // Convert to set and back to remove duplicates
-              const set = new Set([...collections[addonInfo.collection.id].chapterIds!, ...addonInfo.meta.chapterIds])
-              collections[addonInfo.collection.id].chapterIds = [...set]
-            }
-            delete addonInfo.collection
-          } else {
-            results.push(addonInfo)
-          }
-        } else {
-          // Manually added item, just fs.stat it:
-          const fstat = await stat(path.join(this.sourceFolder, dirent.name))
-          const fsinfo = {
-            filesize: fstat.size,
-            lastModified: Math.round(fstat.mtime.getTime() / 1000),
-          }
-          const meta = await this.#getMetadata(path.join(this.sourceFolder, dirent.name))
-          let pendingResolve = false
-          if (ext === "vpk") {
-            // Check if this is a workshop addon, and fetch its details
-            const wsId = parseInt(dirent.name)
-            if (wsId) {
-              pendingResolve = true
-              this.#steam.addToWSResolveQueue(wsId, async (item) => {
-                const details: AddonWorkshopInfo = item
-                  ? Share.serializeWorkshopItem(item)
-                  : { deleted: true, publishedfileid: wsId }
-                await this.#addAddonEntry(dirent.name, fsinfo, details, undefined, meta)
-              })
-
-            }
-          }
-
-          try {
-            results.push({
-              filename: dirent.name,
-              ...fsinfo,
-              installInfo: (await this.getInstallInfo(dirent.name))!.states,
-              meta
-            })
-
-            if (!pendingResolve)
-              await this.#addAddonEntry(dirent.name, fsinfo, undefined, undefined, meta)
-          } catch(err) {
-            this.#log.error({ filename: dirent.name }, "failed to retrieve install info")
-          }
-        }
-      } catch(err) {
-        this.#log.error({ filename: dirent.name }, "failed to retrieve addon info")
-      }
-    }
-    await this.#steam.resolveWSQueue()
-    // Calculate total file size for collections
-    for (const collection of Object.values(collections)) {
-      results.push({
-        ...collection,
-        filesize: collection.children.reduce((pv, child) => pv + (child.filesize ?? 0), 0),
-        meta: {}
-      })
-    }
-    return results
+  public async getAddons(): Promise<AddonInfo[]> {
+    return []
   }
 
   static serializeWorkshopItem(item: WorkshopItem): AddonWorkshopInfo {
@@ -279,51 +160,6 @@ export default class Share {
   }
 
   /**
-   * Adds an addon to the cache
-   * @param filename the filename with ext
-   * @param fsInfo File system info (filesize, lastModified)
-   * @param workshop (optional) workshop item details info
-   * @param collection (optional) workshop collection info (collection id and name)
-   */
-  async #addAddonEntry(filename: string, fsInfo?: { filesize: number, lastModified: number }, workshop?: AddonWorkshopInfo, collection?: WorkshopCollectionInfo, meta: Record<string, any> | null = null) {
-    try {
-      // console.debug(`adding \"${filename}\" [fs=${fsInfo != null}] [workshop=${workshop != null}] [collection=${collection != null}]`)
-      await this.#db.run(
-        SQL`REPLACE INTO addoncache
-                    (filename, filesize, lastModified, ws_info, collection_id, collection_name, metadata)
-                    VALUES(${filename}, ${fsInfo?.filesize}, ${fsInfo?.lastModified}, ${workshop ? JSON.stringify(workshop) : null}, ${collection?.id}, ${collection?.name}, ${meta ? JSON.stringify(meta) : null})`
-      )
-    } catch (err) {
-      this.#log.error({ fsInfo: fsInfo !== null, workshop: workshop !== undefined }, `addAddonEntry failed for "${filename}"`, err)
-    }
-  }
-
-  /**
-   * Get addon info from cache
-   * @param filename filename with ext
-   * @returns Promise<AddonInfo | undefined>
-   */
-  public async getAddonInfo(filename: string): Promise<AddonInfo | null> {
-    const info = await this.#db.get(SQL`SELECT * FROM addoncache WHERE filename = ${filename}`)
-    if (!info) return null
-    const installInfo = await this.getInstallInfo(filename)
-    assert(installInfo != undefined, "addon info checked in cache")
-    return {
-      filename: info.filename,
-      filesize: info.filesize ?? installInfo.size,
-      lastModified: info.lastModified ?? installInfo.modified,
-      downloaded: installInfo.created,
-      workshop: info.ws_info ? JSON.parse(info.ws_info) as AddonWorkshopInfo : undefined,
-      installInfo: installInfo.states,
-      collection: info.collection_id ? {
-        id: info.collection_id,
-        name: info.collection_name
-      } : null,
-      meta: info.metadata ? JSON.parse(info.metadata) : {}
-    }
-  }
-
-  /**
    * Deletes an addon, removing it from all destinations, source folder, and cache
    * @param filename filename with ext
    */
@@ -335,7 +171,7 @@ export default class Share {
     // Delete the source file
     await unlink(path.join(this.sourceFolder, filename))
     // Remove cache from database
-    await this.#db.exec(SQL`DELETE FROM addoncache WHERE filename = ${filename}`)
+    await this.#db.remove(filename)
     this.#log.debug({ filename }, "deleted addon")
   }
 
@@ -479,7 +315,7 @@ export default class Share {
       }
       const chapterIds = this.#getChapterIds(path.join(this.sourceFolder, filename))
 
-      this.#addAddonEntry(filename, {
+      this.#db.addAddonEntry(filename, {
         filesize: item.file_size,
         lastModified: item.time_updated
       }, Share.serializeWorkshopItem(item), item.collection, { chapterIds })
