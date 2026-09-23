@@ -176,7 +176,8 @@ export default class Share {
    * Fetches all addons for this share, including returning if the destinations are
    * Warn: Expensive, may take a long time for a large directory, and if no cache
    **/
-  // TODO: this is verrry messy now and hacky. SRCDS-129
+  // TODO: this is verrry messy now and hacky. SRCPNL-129
+  // NOTE: this causes a large memory spike while mid check. container was using >= 512MB and hit limit 
   public async getAddons() {
     console.time('getAddons:readdir')
     const dirents = await readdir(this.sourceFolder, { withFileTypes: true })
@@ -344,6 +345,7 @@ export default class Share {
    * @param filename
    */
   public async getInstallInfo(filename: string): Promise<{ states: Record<string, boolean>, created: number, modified: number, size: number } | undefined> {
+    this.#log.trace({ filename }, "getInstallInfo")
     const statInfo = await this.#getFileInfo(this.sourceFolder, filename)
     if (statInfo) {
       const states: Record<string, boolean> = {}
@@ -351,6 +353,7 @@ export default class Share {
         for (const [id, dest] of Object.entries(this.destinations)) {
           // We just use the first path
           if (!dest.paths || dest.paths.length < 1) continue
+
           states[id] = false
           try {
             states[id] = await this.#getFileInfo(dest.paths[0], filename) !== null
@@ -455,7 +458,7 @@ export default class Share {
       return await stat(path.join(folder, file))
     } catch (err: any) {
       if (err.code === "ENOENT") {
-        this.#log.trace({}, "getFileInfo ENOENT", err)
+        this.#log.debug({}, "getFileInfo ENOENT: " + err)
         return null
       } else
         throw err
