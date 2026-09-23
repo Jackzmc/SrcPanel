@@ -8,6 +8,8 @@ import Share from './Share.js'
 import sqlite3 from 'sqlite3';
 import SteamAPI from '../../modules/steam.js'
 import Logger from '../../logger.js'
+import ShareDatabase from './ShareDB.js'
+import ShareScanner from './ShareScanner.js'
 
 const log = Logger.child({ name: "shares" })
 
@@ -98,28 +100,40 @@ export function parseShare(shareId: string, data: Record<string, any>): ShareInf
     } 
 }
 
-export async function loadShare(dataDir: string, steam: SteamAPI, share: ShareInfo): Promise<Share> {
+export interface Shares {
+    share: Share,
+    config: ShareDatabase,
+    scanner: ShareScanner
+}
+
+export async function loadShare(dataDir: string, steam: SteamAPI, info: ShareInfo): Promise<Shares> {
     // Check if source folder is valid
-    if(!await doesFileExist(share.sourceFolder)) {
-        throw new Error(`Source folder for share "${share.id}" does not exist (${share.sourceFolder})`)
+    if(!await doesFileExist(info.sourceFolder)) {
+        throw new Error(`Source folder for share "${info.id}" does not exist (${info.sourceFolder})`)
     }
 
-    for(const [destId, dest] of Object.entries(share.destinations)) {
+    for(const [destId, dest] of Object.entries(info.destinations)) {
         if(!dest.paths || dest.paths.length === 0) {
             throw new Error("Destination requires minimum of one path")
         }
     }
 
-    await migrateShare(dataDir, share)
+    await migrateShare(dataDir, info)
 
-    const path = join(share.sourceFolder, `panel_share.db`)
+    const path = join(info.sourceFolder, `panel_share.db`)
     try {
         log.trace({ path }, "opening db")
         const db = await sqliteOpen({
             filename: path,
             driver: sqlite3.Database
         })
-        return new Share(db, steam, share)
+        const share = new Share(db, steam, info)
+        const config = new ShareDatabase(share, db)
+        const scanner = new ShareScanner(share, config)
+
+        await scanner.start()
+
+        return { share, config, scanner }
     } catch(err) {
         log.error(`failed to open share db ${path}:`, err)
         throw err
