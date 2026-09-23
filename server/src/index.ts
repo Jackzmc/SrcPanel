@@ -315,6 +315,6 @@ async function addPartitionForYear(app: FastifyInstance, year: number) {
 
     app.log.info(`Added p${year} partition to activity log`)
   } catch(err) {
-    app.log.debug({}, err)
+    app.log.warn({}, "failed to update partition for year: " + err)
   }
 }
