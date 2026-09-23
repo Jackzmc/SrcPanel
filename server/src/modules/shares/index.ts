@@ -100,13 +100,7 @@ export function parseShare(shareId: string, data: Record<string, any>): ShareInf
     } 
 }
 
-export interface Shares {
-    share: Share,
-    config: ShareDatabase,
-    scanner: ShareScanner
-}
-
-export async function loadShare(dataDir: string, steam: SteamAPI, info: ShareInfo): Promise<Shares> {
+export async function loadShare(dataDir: string, steam: SteamAPI, info: ShareInfo): Promise<Share> {
     // Check if source folder is valid
     if(!await doesFileExist(info.sourceFolder)) {
         throw new Error(`Source folder for share "${info.id}" does not exist (${info.sourceFolder})`)
@@ -122,18 +116,14 @@ export async function loadShare(dataDir: string, steam: SteamAPI, info: ShareInf
 
     const path = join(info.sourceFolder, `panel_share.db`)
     try {
-        log.trace({ path }, "opening db")
-        const db = await sqliteOpen({
-            filename: path,
-            driver: sqlite3.Database
-        })
-        const share = new Share(db, steam, info)
-        const config = new ShareDatabase(share, db)
-        const scanner = new ShareScanner(share, config)
+        const config = await ShareDatabase.init(info)
+        const scanner = new ShareScanner(info, config, steam)
+
+        const share = new Share(info, config, scanner)
 
         await scanner.start()
 
-        return { share, config, scanner }
+        return share
     } catch(err) {
         log.error(`failed to open share db ${path}:`, err)
         throw err
