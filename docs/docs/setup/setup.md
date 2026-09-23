@@ -31,6 +31,9 @@ In addition, the database tables they use are required even if kept empty.
 There are two parts of the panel, the `admin-panel-server` and the `admin-panel-ui`. The UI handles serving the frontend/server-side rendering, while the server handles the rest.
 They are intentionally kept separate to allow the frontend to still be usable even if the backend is down.
 
+**Note:** If you wish to limit the memory usage, it's recommended to allow at least 1 GB if you have a large amount of addons, otherwise 512 MB may be sufficient.
+The addon scanning system is not ideal and it consistently hit the memory limit with ~400 addons. 
+
 ### Compose
 
 ```yaml
