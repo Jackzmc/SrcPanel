@@ -6,6 +6,13 @@ info:
 http:
   method: POST
   url: https://api.steampowered.com/ISteamRemoteStorage/GetCollectionDetails/v1/
+  body:
+    type: form-urlencoded
+    data:
+      - name: collectioncount
+        value: "1"
+      - name: publishedfileids[0]
+        value: "1646203073"
   auth: inherit
 
 settings:
@@ -13,3 +20,91 @@ settings:
   timeout: 0
   followRedirects: true
   maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+examples:
+  - name: collection response
+    description: example response of a collection of multiple items
+    request:
+      url: https://api.steampowered.com/ISteamRemoteStorage/GetCollectionDetails/v1/
+      method: POST
+      body:
+        type: form-urlencoded
+        data:
+          - name: collectioncount
+            value: "1"
+          - name: publishedfileids[0]
+            value: "1646203073"
+    response:
+      status: 200
+      statusText: OK
+      headers:
+        - name: server
+          value: nginx
+        - name: content-type
+          value: application/json; charset=UTF-8
+        - name: content-length
+          value: "600"
+        - name: expires
+          value: Wed, 23 Sep 2026 16:33:45 GMT
+        - name: date
+          value: Wed, 23 Sep 2026 16:32:46 GMT
+        - name: connection
+          value: keep-alive
+      body:
+        type: json
+        data: |-
+          {
+            "response": {
+              "result": 1,
+              "resultcount": 1,
+              "collectiondetails": [
+                {
+                  "publishedfileid": "1646203073",
+                  "result": 1,
+                  "children": [
+                    {
+                      "publishedfileid": "1540128972",
+                      "sortorder": 1,
+                      "filetype": 0
+                    },
+                    {
+                      "publishedfileid": "1586868911",
+                      "sortorder": 2,
+                      "filetype": 0
+                    },
+                    {
+                      "publishedfileid": "1586923137",
+                      "sortorder": 3,
+                      "filetype": 0
+                    },
+                    {
+                      "publishedfileid": "1586987961",
+                      "sortorder": 4,
+                      "filetype": 0
+                    },
+                    {
+                      "publishedfileid": "1587047030",
+                      "sortorder": 5,
+                      "filetype": 0
+                    },
+                    {
+                      "publishedfileid": "1587166349",
+                      "sortorder": 6,
+                      "filetype": 0
+                    },
+                    {
+                      "publishedfileid": "1586823798",
+                      "sortorder": 7,
+                      "filetype": 0
+                    },
+                    {
+                      "publishedfileid": "1619051776",
+                      "sortorder": 8,
+                      "filetype": 0
+                    }
+                  ]
+                }
+              ]
+            }
+          }
