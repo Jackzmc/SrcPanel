@@ -176,6 +176,7 @@ export default class Share {
    * Fetches all addons for this share, including returning if the destinations are
    * Warn: Expensive, may take a long time for a large directory, and if no cache
    **/
+  // TODO: this is verrry messy now and hacky. SRCDS-129
   public async getAddons() {
     console.time('getAddons:readdir')
     const dirents = await readdir(this.sourceFolder, { withFileTypes: true })
@@ -183,11 +184,12 @@ export default class Share {
     const results: (AddonInfo | AddonCollectionInfo)[] = []
     const collections: Record<string, AddonCollectionInfo> = {}
     for (const dirent of dirents) {
-      if (dirent.isFile()) {
-        // Only check the specified extenstions
-        const ext = dirent.name.split(".").pop()
-        if (!ext || ext == "db" || this.validExts && !this.validExts.includes(ext)) continue
+      if(!dirent.isFile()) continue
+      // Only check the specified extenstions
+      const ext = dirent.name.split(".").pop()
+      if (!ext || ext == "db" || this.validExts && !this.validExts.includes(ext)) continue
 
+      try {
         const addonInfo = await this.getAddonInfo(dirent.name)
         if (addonInfo) {
           // If we have cached addon info, check if its a collection or an item
@@ -231,16 +233,23 @@ export default class Share {
 
             }
           }
-          results.push({
-            filename: dirent.name,
-            ...fsinfo,
-            installInfo: (await this.getInstallInfo(dirent.name))!.states,
-            meta
-          })
 
-          if (!pendingResolve)
-            await this.#addAddonEntry(dirent.name, fsinfo, undefined, undefined, meta)
+          try {
+            results.push({
+              filename: dirent.name,
+              ...fsinfo,
+              installInfo: (await this.getInstallInfo(dirent.name))!.states,
+              meta
+            })
+
+            if (!pendingResolve)
+              await this.#addAddonEntry(dirent.name, fsinfo, undefined, undefined, meta)
+          } catch(err) {
+            this.#log.error({ filename: dirent.name }, "failed to retrieve install info")
+          }
         }
+      } catch(err) {
+        this.#log.error({ filename: dirent.name }, "failed to retrieve addon info")
       }
     }
     await this.#steam.resolveWSQueue()
@@ -342,7 +351,12 @@ export default class Share {
         for (const [id, dest] of Object.entries(this.destinations)) {
           // We just use the first path
           if (!dest.paths || dest.paths.length < 1) continue
-          states[id] = await this.#getFileInfo(dest.paths[0], filename) !== null
+          states[id] = false
+          try {
+            states[id] = await this.#getFileInfo(dest.paths[0], filename) !== null
+          } catch(err) {
+            this.#log.warn({ filename, dest: id }, "failed to get file info: " + err)
+          }
         }
       }
       return {
@@ -430,7 +444,7 @@ export default class Share {
   }
 
   /**
-   * Returns file system info (stat). Folder and file are path.join'd
+   * Returns file system info (stat). Folder and file are path.join'd. Returns null if ENOENT
    * @param folder The folder to check
    * @param file The filename to check
    * @returns Promise<Stats>
