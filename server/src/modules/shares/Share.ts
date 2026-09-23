@@ -262,7 +262,6 @@ export default class Share {
         meta: {}
       })
     }
-
     return results
   }
 
@@ -466,7 +465,7 @@ export default class Share {
   }
 
   /**
-   * Returns a stream of a workshop item download. Emits "finish" and "progress"
+   * Returns a stream of a workshop item dgetFileInfoownload. Emits "finish" and "progress"
    * @param item The workshop item object (needs publishedfileid, file_size, and time_updated)
    * @returns
    */

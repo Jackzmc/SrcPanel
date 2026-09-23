@@ -151,8 +151,6 @@ app.setErrorHandler((error, request, reply) => {
 app.register(MiddleManager)
   .then(async () => {
     scheduleActivityLogPartition(app as unknown as FastifyInstance);
-    // Is this going to be a race condition?
-    addPartitionForYear(app as unknown as FastifyInstance, new Date().getFullYear())
 
     if  (hadSignal) return
     if  (process.env.FLUXER_API_TOKEN) {
