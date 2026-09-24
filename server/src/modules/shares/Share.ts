@@ -105,8 +105,19 @@ export default class Share {
     return await this.#db.getAddonInfo(filename)
   }
 
+  /**
+   * Returns all scanned addons
+   */
   public async getAddons(): Promise<AddonInfo[]> {
     return await this.#db.getAddons()
+  }
+
+  /**
+   * Requests a scan of addons directory to find missing or new addons
+   * @returns if scan started or not
+   */
+  public requestScan() {
+    return this.#scanner.start()
   }
 
   /**

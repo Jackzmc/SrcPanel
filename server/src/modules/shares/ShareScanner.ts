@@ -14,8 +14,7 @@ const SCAN_INTERVAL_MINS = 60 // every hr
 
 export enum ScanResult {
     AlreadyActive,
-    Success,
-    Error
+    Started,
 }
 
 export default class ShareScanner {
@@ -24,8 +23,8 @@ export default class ShareScanner {
     #db: ShareDatabase
     #steam: SteamAPI
     #job: DefinedTask
-
-    #scanning = false
+    
+    #promise: Promise<void>
     #scanStart?: number = undefined
 
     constructor(share: ShareInfo, db: ShareDatabase, steam: SteamAPI) {
@@ -56,28 +55,24 @@ export default class ShareScanner {
         return this.#scanStart ? Date.now() - this.#scanStart : null
     }
 
+
     /** Start a scan
      * ScanResult.AlreadyActive if already active
      */
-    async start(): Promise<ScanResult> {
+    start(): ScanResult {
         if(this.isScanning) return ScanResult.AlreadyActive
-        this.#scanStart = Date.now()
 
-        this.#log.info(`Starting scan of share ${this.#share.name}`)
+        this.#promise = this.#process()
 
+        return ScanResult.Started
+    }
+
+    async #process() {
         try {
             await this.#scan()
         } catch(err) {
             this.#log.error({}, "scan failed: " + err)
-            return ScanResult.Error
         }
-
-        const durationSec = Math.round(( Date.now() - this.#scanStart ) / 1000)
-        this.#log.info(`Scan took ${durationSec} seconds`)
-
-        this.#scanStart = undefined
-
-        return ScanResult.Success
     }
 
     // async stop(): Promise<void> {
@@ -126,6 +121,8 @@ export default class ShareScanner {
     }
 
     async #scan() {
+        this.#scanStart = Date.now()
+
         const unchecked = await this.#db.getFilenames()
         const dirents = await readdir(this.#share.sourceFolder, { withFileTypes: true })
         for(const dirent of dirents) {
@@ -144,6 +141,9 @@ export default class ShareScanner {
         // Process all missing steam data
         await this.#steam.resolveWSQueue()
         await this.#db.markMissing(unchecked)
+
+        const durationSec = Math.round(( Date.now() - this.#scanStart ) / 1000)
+        this.#log.info(`Scan took ${durationSec} seconds`)
     }
 
 }
