@@ -305,6 +305,18 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     return reply.status(204).send()
   })
 
+  fastify.get(':/shareId/stream', { websocket: true}, async (ws, req: FastifyRequest<{ Params: { shareId: string }}>) => {
+    const share = fastify.servers.getShare(req.params.shareId)
+    if(!share) return ws.close(4004, "SHARE_NOT_FOUND")
+    
+    const unsub = share.workshopDLQueue.subscribe((event) => {
+      ws.send(JSON.stringify(event))
+    })
+
+    ws.on("close", unsub)
+    ws.on("error", unsub)
+  })
+
   fastify.get('/:shareId/addons/workshop/:workshopId/download', async (req: FastifyRequest<{
     Params: { shareId: string, workshopId: string },
     Querystring: { 'destinations'?: string, force?: boolean, sse?: boolean, children: string[] }
@@ -587,38 +599,36 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
       })
     }
     // Verify that the filename exists in the src:
-    const addonInfo = await share.getAddonInfo(filename)
-    if (addonInfo) {
-      try {
-        if (isInstall)
-          await share.enable(filename, req.params.destKey)
-        else
-          await share.disable(filename, req.params.destKey)
-        await req.user!.log(null, `${isInstall ? 'enabled' : 'disabled'} addon %filename% for %share%/%server%`, {
-          code,
-          metadata: {
-            share: share.id,
-            server: req.params.destKey,
-            filename: addonInfo.filename
-          }
-        })
-        addonInfo[req.params.destKey] = isInstall
-        return {
-          addonInfo
-        }
-      } catch (err) {
-        fastify.log.error(err)
-        return reply.code(500).send({
-          error: isInstall ? "ENABLE_ERROR" : "DISABLE_ERROR",
-          message: `Error occurred while ${isInstall ? 'enabling' : 'disabling'} addon`
-        })
-      }
-    } else {
+    const addonInfo = await share.isInstalled(filename)
+    if(!addonInfo) {
       return reply.status(404).send({
         error: "File not found",
         message: `Share does not have a downloaded filename "${filename}".`
       })
     }
+    
+    try {
+      if (isInstall)
+        await share.enable(filename, req.params.destKey)
+      else
+        await share.disable(filename, req.params.destKey)
+      await req.user!.log(null, `${isInstall ? 'enabled' : 'disabled'} addon %filename% for %share%/%server%`, {
+        code,
+        metadata: {
+          share: share.id,
+          server: req.params.destKey,
+          filename
+        }
+      })
+      return reply.status(204).send()
+    } catch (err) {
+      fastify.log.error(err)
+      return reply.code(500).send({
+        error: isInstall ? "ENABLE_ERROR" : "DISABLE_ERROR",
+        message: `Error occurred while ${isInstall ? 'enabling' : 'disabling'} addon`
+      })
+    }
+    
   })
 }
 

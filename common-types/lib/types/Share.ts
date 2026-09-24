@@ -158,3 +158,38 @@ export interface ItemWorkshopItem {
 export type DetailWorkshopItem = CollectionWorkshopItem | ItemWorkshopItem
 
 export type DetailsResponse = CollectionWorkshopItem | ItemWorkshopItem | { item: null | undefined, type: "none" }
+
+export interface DownloadProgress {
+    downloaded: number,
+    total: number,
+    state: DownloadState
+}
+
+export interface DownloadLogEntry {
+  message: string,
+  type: string,
+  timestamp: number
+}
+
+/** Event entry */ 
+export interface DownloadEventEntry<S extends DownloadEventType, T> {
+  type: S,
+  data: T
+}
+
+/** An event emitted from a download queue */
+export type DownloadEventType = "log" | "progress" | "finish"
+export type DownloadEvent = DownloadEventEntry<"log", DownloadLogEntry> 
+  | DownloadEventEntry<"progress", DownloadProgress>
+  | DownloadEventEntry<"finish", null>
+
+
+export enum DownloadState {
+    /** Waiting to start downloading */ 
+    Pending,
+    /** Currently downloading */
+    Downloading,
+    Complete,
+    Failed
+}
+
