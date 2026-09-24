@@ -20,9 +20,6 @@
           <h2 class="text-2xl">
             Loading files for share <span class="font-semibold">{{ route.params.id }}</span>
           </h2>
-          <p class="text-lg">
-            This may take some time, please wait...
-          </p>
         </div>
       </div>
       <div v-else-if="addons&&share" class="grid grid-cols-4 gap-4">

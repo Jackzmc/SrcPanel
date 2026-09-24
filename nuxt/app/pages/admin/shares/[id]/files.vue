@@ -25,7 +25,7 @@
 <script setup lang="ts">
 import { formatDate, formatSize } from "@srcpanel/common/format";
 import type { TableColumn } from "@nuxt/ui";
-import type { AddonInfo, ShareInfo } from "@srcpanel/common/Share";
+import { ShareItemState, type AddonInfo, type ShareInfo } from "@srcpanel/common/Share";
 import type { AsyncDataRequestStatus } from "#app";
 import { sortHeader } from "#imports";
 
@@ -35,7 +35,7 @@ import UCheckbox from "@nuxt/ui/components/Checkbox.vue";
 
 // fix TS errors
 import type { Table, TableFeatures } from "@tanstack/vue-table";
-import { UProgress } from "#components";
+import { UBadge, UProgress } from "#components";
 
 const { requireAuth } = useAuth()
 await requireAuth()
@@ -49,6 +49,16 @@ const props = defineProps<{
 useHead({
   title: `Files - ${props.share.name} - Shares`,
 });
+
+const enabledDests = computed(() => {
+  const kv: Record<string, string[]> = {}
+  for(const file of props.addons) {
+    kv[file.filename] = Object.entries(file.installInfo ?? {})
+      .filter(([, enabled]) => enabled)
+      .map(([id,]) => id)
+  }
+  return kv
+})
 
 const columns: TableColumn<AddonInfo>[] = [
   {
@@ -72,11 +82,21 @@ const columns: TableColumn<AddonInfo>[] = [
   {
     accessorKey: "filename",
     // header: 'Name',
-    cell: ({ row }) => h(ULink, {
-      to: { name: "admin-shares-id-files", params: { id: props.share.id }, query: { file: row.original.filename } },
-      class: Object.entries(row.original.installInfo ?? {})
-        .filter(([, enabled]) => enabled).length > 0 ? "text-blue" : "text-black",
-    }, () => row.original.workshop?.title ?? row.original.filename),
+    cell: ({ row }) => {
+      const dests = enabledDests.value[row.original.filename] ?? []
+      return h("div", { class: "flex flex-col"}, [
+        h(ULink, {
+          to: { name: "admin-shares-id-files", params: { id: props.share.id }, query: { file: row.original.filename } },
+          class: [
+            dests.length > 0 ? "text-black" : "text-muted",
+            { 'line-through text-error opacity-40': row.original.state === ShareItemState.Missing }
+          ],
+        }, () => row.original.workshop?.title ?? row.original.filename),
+        h("span", { class: "flex flex-row gap-1"}, 
+          dests.map(dest => h(UBadge, { color: "neutral", variant: "outline", size: "sm" }, dest))
+        )
+      ])
+    },
     header: sortHeader("Name"),
     meta: {
       class: {
@@ -86,13 +106,13 @@ const columns: TableColumn<AddonInfo>[] = [
     },
   },
   {
-    header: "Enabled On",
-    accessorFn: (row) => row.installInfo ?? {},
+    header: "State",
     cell: ({ row }) => {
-      const list = Object.entries(row.original.installInfo ?? {})
-        .filter(([, enabled]) => enabled)
-        .map(([destId]) => destId);
-      return list.join(", ");
+      switch(row.original.state) {
+        case ShareItemState.Missing: return h(UBadge, { color: "error", variant: "outline", size: "sm" }, "Missing")
+        case ShareItemState.Pending: return h(UBadge, { color: "warning", variant: "outline", size: "sm" }, "Resolving")
+        case ShareItemState.Ready: return
+      }
     },
     meta: {
       class: {
