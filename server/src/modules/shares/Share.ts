@@ -13,7 +13,7 @@ import assert from 'assert';
 import Logger from '../../logger.js'
 import ShareScanner from './ShareScanner.js';
 import ShareDatabase from './ShareDB.js';
-import DownloadManager from './DownloadQueue.js';
+import WorkshopDownloadQueue from './DownloadQueue.js';
 
 const DOWNLOAD_TIMEOUT = 1000 * 60 * 3
 
@@ -26,7 +26,7 @@ export type DownloadSource = "steam_workshop" | "direct"
 
 export default class Share {
   #id: string
-  #queue: DownloadManager
+  #steamQueue: WorkshopDownloadQueue
   public name: string
   public sourceFolder: string
   public destinations: ShareDestinations = {}
@@ -54,11 +54,11 @@ export default class Share {
     this.destinations = shareInfo.destinations || {}
     this.#description = shareInfo.description ?? ""
 
-    this.#queue = new DownloadManager(this)
+    this.#steamQueue = new WorkshopDownloadQueue(this)
   }
 
-  get queue() {
-    return this.#queue
+  get workshopDLQueue() {
+    return this.#steamQueue
   }
 
   get db() {
