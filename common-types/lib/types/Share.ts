@@ -37,7 +37,15 @@ export interface ExtendedShareInfo extends ShareInfo {
   appTitle: string
 }
 
+export enum ShareItemState {
+    Pending,
+    Resolving,
+    Ready,
+    Missing
+}
+
 export interface AddonInfo {
+  state: ShareItemState,
   filename: string,
   filesize?: number,
   /** When addon was downloaded */

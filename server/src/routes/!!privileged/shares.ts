@@ -497,7 +497,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             for (const detail of details) {
               try {
                 const filename = `${detail.publishedfileid}.vpk`
-                await share!.install(filename, destKey)
+                await share!.enable(filename, destKey)
                 destResults[destKey][detail.publishedfileid] = {
                   result: "success"
                 }
@@ -591,9 +591,9 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     if (addonInfo) {
       try {
         if (isInstall)
-          await share.install(filename, req.params.destKey)
+          await share.enable(filename, req.params.destKey)
         else
-          await share.uninstall(filename, req.params.destKey)
+          await share.disable(filename, req.params.destKey)
         await req.user!.log(null, `${isInstall ? 'enabled' : 'disabled'} addon %filename% for %share%/%server%`, {
           code,
           metadata: {
