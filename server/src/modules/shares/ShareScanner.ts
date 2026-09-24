@@ -3,8 +3,14 @@ import Logger from '../../logger.js'
 import Share from './Share.js'
 import ShareDatabase from './ShareDB.js'
 import SteamAPI from '../steam.js'
-import { ShareInfo, ShareItemState } from '@srcpanel/common/Share'
-import { readdir } from 'node:fs/promises'
+import { AddonWorkshopInfo, ShareInfo, ShareItemState } from '@srcpanel/common/Share'
+import { readdir, stat } from 'node:fs/promises'
+import { join } from 'node:path'
+import { getMetadata, serializeWorkshopItem } from './ShareUtils.js'
+import { DefinedTask, Task } from '../tasks/Task.js'
+import TaskManager from '../tasks/TaskManager.js'
+
+const SCAN_INTERVAL_MINS = 60 // every hr
 
 export enum ScanResult {
     AlreadyActive,
@@ -17,6 +23,7 @@ export default class ShareScanner {
     #share: ShareInfo
     #db: ShareDatabase
     #steam: SteamAPI
+    #job: DefinedTask
 
     #scanning = false
     #scanStart?: number = undefined
@@ -26,6 +33,8 @@ export default class ShareScanner {
         this.#share = share
         this.#db = db
         this.#steam = steam
+        this.#job = TaskManager.Instance.register(`scan/${share.id}`, () => this.start())
+        TaskManager.Instance.scheduleRepeating(this.#job, { minutes: SCAN_INTERVAL_MINS })
     }
 
     /**
@@ -77,14 +86,43 @@ export default class ShareScanner {
     // }
 
     async #checkAddon(filename: string) {
+        const filepath = join(this.#share.sourceFolder, filename)
+
+        const fstat = await stat(filepath)
+        const fsinfo = {
+            filesize: fstat.size,
+            lastModified: Math.round(fstat.mtime.getTime() / 1000),
+        }
+
+        const meta = await getMetadata(filepath)
+
+        // If we think it's a steam addon (resolveSteam says true), then mark it as resolving
+        const state = await this.#resolveSteam(filename) ? ShareItemState.Resolving : ShareItemState.Ready
+
+        await this.#db.addAddon(filename, fsinfo, state, meta)
+    }
+
+    /**
+     * Attempt to resolve file's info from steam
+     * @param filename 
+     * @returns true if added to queue, false if not valid steam addon
+     */
+    async #resolveSteam(filename: string): Promise<boolean> {
+        // Get steam workshop info if it looks like a workshop id
         if(filename.endsWith(".vpk")) {
             const id = parseInt(filename)
             if(!isNaN(id) && id > 0) {
-                this.#steam.addToWSResolveQueue(id, (item) => {
-
+                this.#steam.addToWSResolveQueue(id, async (item) => {
+                    // TODO: keep this? {deleted:true to change to state.missingsteam?}
+                    const details: AddonWorkshopInfo = item
+                          ? serializeWorkshopItem(item)
+                          : { deleted: true, publishedfileid: id }
+                    await this.#db.addWorkshopInfo(filename, details)
                 })
+                return true
             }
         }
+        return false
     }
 
     async #scan() {
@@ -96,97 +134,16 @@ export default class ShareScanner {
 
             const entry = await this.#db.getAddonInfo(dirent.name)
             if(!entry || entry.state == ShareItemState.Missing) {
-                await this.#checkAddon(dirent.name)
+                try {
+                    await this.#checkAddon(dirent.name)
+                } catch(err) {
+                    this.#log.warn({ filename: dirent.name }, "failed to add item: " + err)
+                }
             }
         }
         // Process all missing steam data
         await this.#steam.resolveWSQueue()
         await this.#db.markMissing(unchecked)
-
-            // console.time('getAddons:readdir')
-            // const dirents = await readdir(this.sourceFolder, { withFileTypes: true })
-            // console.timeEnd('getAddons:readdir')
-            // const results: (AddonInfo | AddonCollectionInfo)[] = []
-            // const collections: Record<string, AddonCollectionInfo> = {}
-            // for (const dirent of dirents) {
-            //   if(!dirent.isFile()) continue
-            //   // Only check the specified extenstions
-            //   const ext = dirent.name.split(".").pop()
-            //   if (!ext || ext == "db" || this.validExts && !this.validExts.includes(ext)) continue
-        
-            //   try {
-            //     const addonInfo = await this.getAddonInfo(dirent.name)
-            //     if (addonInfo) {
-            //       // If we have cached addon info, check if its a collection or an item
-            //       if (addonInfo.collection) {
-            //         if (!collections[addonInfo.collection.id]) collections[addonInfo.collection.id] = {
-            //           collection: addonInfo.collection,
-            //           children: [],
-            //         }
-            //         collections[addonInfo.collection.id].children.push(addonInfo)
-            //         // Merge child addon into collection's map list
-            //         if (addonInfo.meta.chapterIds) {
-            //           if (!collections[addonInfo.collection.id].chapterIds) collections[addonInfo.collection.id].chapterIds = []
-            //           // Convert to set and back to remove duplicates
-            //           const set = new Set([...collections[addonInfo.collection.id].chapterIds!, ...addonInfo.meta.chapterIds])
-            //           collections[addonInfo.collection.id].chapterIds = [...set]
-            //         }
-            //         delete addonInfo.collection
-            //       } else {
-            //         results.push(addonInfo)
-            //       }
-            //     } else {
-            //       // Manually added item, just fs.stat it:
-            //       const fstat = await stat(path.join(this.sourceFolder, dirent.name))
-            //       const fsinfo = {
-            //         filesize: fstat.size,
-            //         lastModified: Math.round(fstat.mtime.getTime() / 1000),
-            //       }
-            //       const meta = await this.#getMetadata(path.join(this.sourceFolder, dirent.name))
-            //       let pendingResolve = false
-            //       if (ext === "vpk") {
-            //         // Check if this is a workshop addon, and fetch its details
-            //         const wsId = parseInt(dirent.name)
-            //         if (wsId) {
-            //           pendingResolve = true
-            //           this.#steam.addToWSResolveQueue(wsId, async (item) => {
-            //             const details: AddonWorkshopInfo = item
-            //               ? Share.serializeWorkshopItem(item)
-            //               : { deleted: true, publishedfileid: wsId }
-            //             await this.#addAddonEntry(dirent.name, fsinfo, details, undefined, meta)
-            //           })
-        
-            //         }
-            //       }
-        
-            //       try {
-            //         results.push({
-            //           filename: dirent.name,
-            //           ...fsinfo,
-            //           installInfo: (await this.getInstallInfo(dirent.name))!.states,
-            //           meta
-            //         })
-        
-            //         if (!pendingResolve)
-            //           await this.#addAddonEntry(dirent.name, fsinfo, undefined, undefined, meta)
-            //       } catch(err) {
-            //         this.#log.error({ filename: dirent.name }, "failed to retrieve install info")
-            //       }
-            //     }
-            //   } catch(err) {
-            //     this.#log.error({ filename: dirent.name }, "failed to retrieve addon info")
-            //   }
-            // }
-            // await this.#steam.resolveWSQueue()
-            // // Calculate total file size for collections
-            // for (const collection of Object.values(collections)) {
-            //   results.push({
-            //     ...collection,
-            //     filesize: collection.children.reduce((pv, child) => pv + (child.filesize ?? 0), 0),
-            //     meta: {}
-            //   })
-            // }
-            // return results
     }
 
 }

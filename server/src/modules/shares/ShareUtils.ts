@@ -1,4 +1,5 @@
 import VPK from '@lowly1337/vpk';
+import { AddonWorkshopInfo, WorkshopItem } from '@srcpanel/common/Share';
 import { readFile } from 'fs/promises';
 import ValveKV from 'valve-kv';
 
@@ -82,4 +83,30 @@ export async function getSpFileInfo(filePath: string): Promise<SpInfo> {
         }
     }
     return info
+}
+
+export function serializeWorkshopItem(item: WorkshopItem): AddonWorkshopInfo {
+    return {
+      deleted: item.title === undefined,
+      title: item.title,
+      filesize: item.file_size,
+      fileUrl: item.file_url,
+      previewUrl: item.preview_url,
+      description: item.description,
+      lastUpdated: item.time_updated,
+      publishedfileid: Number(item.publishedfileid)
+    }
+}
+
+export async function getMetadata(filepath: string): Promise<Record<string, any>> {
+    if (filepath.endsWith(".vpk")) {
+        return {
+            chapterIds: getChapterIds(filepath)
+        }
+    } else if (filepath.endsWith(".sp")) {
+        return {
+            pluginInfo: await getSpFileInfo(filepath)
+        }
+    }
+    return {}
 }

@@ -2,13 +2,13 @@ import { stat, readdir, unlink, symlink } from 'fs/promises';
 import { createWriteStream } from 'fs'
 import path from 'path'
 import SteamAPI from '../steam.js';
-import type { AddonCollectionInfo, AddonInfo, AddonWorkshopInfo, ChildWorkshopItem, DownloadSourceRecord, ShareDestinations, ShareInfo, WorkshopCollectionInfo, WorkshopItem } from '@srcpanel/common/Share'
+import { ShareItemState, type AddonCollectionInfo, type AddonInfo, type AddonWorkshopInfo, type ChildWorkshopItem, type DownloadSourceRecord, type ShareDestinations, type ShareInfo, type WorkshopCollectionInfo, type WorkshopItem } from '@srcpanel/common/Share'
 import sqlite3 from 'sqlite3'
 import sqlite from 'sqlite'
 import { SQL } from 'sql-template-strings';
 import VPK from '@lowly1337/vpk'
 import ValveKV from 'valve-kv'
-import { getChapterIds, getSpFileInfo } from './ShareUtils.js';
+import { getChapterIds, getSpFileInfo, serializeWorkshopItem } from './ShareUtils.js';
 import assert from 'assert';
 import Logger from '../../logger.js'
 import ShareScanner from './ShareScanner.js';
@@ -83,80 +83,14 @@ export default class Share {
   }
 
   /**
-   * Parse a given VPK file, and return the map file names or chapter ids, from the missions/*.txt file
-   * @param filepath
-   * @returns string[] map file names without .bsp ext (ex: ["c1m1_hotel", ...])
-   */
-  #getChapterIds(filepath: string): string[] | null {
-    const vpk = new VPK(filepath)
-    try {
-      vpk.load()
-      for (const filepath of vpk.files) {
-        if (filepath.startsWith("missions")) {
-          const missionData = vpk.getFile(filepath)
-          const root = ValveKV.deserialize(missionData.toString('utf-8'))
-          const mission = root["mission"]
-          if (!mission) return null
-          const modes = mission["modes"]
-          if (!modes) return null
-          const chapters = modes["coop"]
-          if (!chapters) return null
-          // Sort chapter entries (keys are chapter #) ascendingly
-          // { "1": { Map: "...", ... }} -> chapters[1].Map
-          const sorted = Object.entries(chapters)
-            .sort(([k1, v1], [k2, v2]) => Number(k1) - Number(k2))
-            .map(([_, v]) => v)
-            .map((v: any) => v.Map)
-          return sorted
-        }
-      }
-    } catch (err: any) {
-      this.#log.warn(`Skipping vpk with error at ${filepath}:\n`, err.message)
-    }
-    return null
-  }
-
-  async #getMetadata(filepath: string): Promise<Record<string, any>> {
-    if (filepath.endsWith(".vpk")) {
-      return {
-        chapterIds: getChapterIds(filepath)
-      }
-    } else if (filepath.endsWith(".sp")) {
-      return {
-        pluginInfo: await getSpFileInfo(filepath)
-      }
-    }
-    return {}
-  }
-
-  /**
    * @deprecated
    */
   async getAddonInfo(filename: string) {
     return await this.#db.getAddonInfo(filename)
   }
 
-  /**
-   * Fetches all addons for this share, including returning if the destinations are
-   * Warn: Expensive, may take a long time for a large directory, and if no cache
-   **/
-  // TODO: this is verrry messy now and hacky. SRCPNL-129
-  // NOTE: this causes a large memory spike while mid check. container was using >= 512MB and hit limit 
   public async getAddons(): Promise<AddonInfo[]> {
-    return []
-  }
-
-  static serializeWorkshopItem(item: WorkshopItem): AddonWorkshopInfo {
-    return {
-      deleted: item.title === undefined,
-      title: item.title,
-      filesize: item.file_size,
-      fileUrl: item.file_url,
-      previewUrl: item.preview_url,
-      description: item.description,
-      lastUpdated: item.time_updated,
-      publishedfileid: Number(item.publishedfileid)
-    }
+    return await this.#db.getAddons()
   }
 
   /**
@@ -166,7 +100,7 @@ export default class Share {
   public async deleteAddon(filename: string) {
     // Uninstall from all destinations
     await Promise.all(Object.keys(this.destinations)
-      .map(destKey => this.uninstall(filename, destKey))
+      .map(destKey => this.disable(filename, destKey))
     )
     // Delete the source file
     await unlink(path.join(this.sourceFolder, filename))
@@ -181,70 +115,55 @@ export default class Share {
    */
   public async getInstallInfo(filename: string): Promise<{ states: Record<string, boolean>, created: number, modified: number, size: number } | undefined> {
     this.#log.trace({ filename }, "getInstallInfo")
-    const statInfo = await this.#getFileInfo(this.sourceFolder, filename)
-    if (statInfo) {
-      const states: Record<string, boolean> = {}
-      if (this.destinations) {
-        for (const [id, dest] of Object.entries(this.destinations)) {
-          // We just use the first path
-          if (!dest.paths || dest.paths.length < 1) continue
 
-          states[id] = false
-          try {
-            states[id] = await this.#getFileInfo(dest.paths[0], filename) !== null
-          } catch(err) {
-            this.#log.warn({ filename, dest: id }, "failed to get file info: " + err)
-          }
+    const statInfo = await this.#getFileInfo(this.sourceFolder, filename)
+    if(!statInfo) return undefined
+
+    const states: Record<string, boolean> = {}
+    if (this.destinations) {
+      for (const [id, dest] of Object.entries(this.destinations)) {
+        // We just use the first path
+        if (!dest.paths || dest.paths.length < 1) continue
+
+        states[id] = false
+        try {
+          states[id] = await this.#getFileInfo(dest.paths[0], filename) !== null
+        } catch(err) {
+          this.#log.warn({ filename, dest: id }, "failed to get file info: " + err)
         }
       }
-      return {
-        states,
-        created: Math.ceil(statInfo.birthtimeMs / 1000),
-        modified: Math.ceil(statInfo.mtimeMs / 1000),
-        size: statInfo.size
-      }
     }
-    return undefined
-
-  }
-
-  /**
-   * Returns all files in source folder with the allowed extenstions
-   * @returns string[]
-   */
-  public async getInstalledFiles() {
-    const files = await readdir(this.sourceFolder)
-    if (!this.validExts) return files
-    return files.filter(filename => {
-      const ext = filename.split(".").pop()
-      return ext && this.validExts!.includes(ext)
-    })
+    return {
+      states,
+      created: Math.ceil(statInfo.birthtimeMs / 1000),
+      modified: Math.ceil(statInfo.mtimeMs / 1000),
+      size: statInfo.size
+    }
   }
 
   /**
    * Is this file installed (and downloaded), checking the source folder
-   * @param query The filename to check
+   * @param filename The filename to check
    * @returns boolean
    */
-  public async isInstalled(query: string) {
-    const file = (await this.getInstalledFiles())
-      .find(filename => filename === query)
-    return file != null
+  public async isInstalled(filename: string) {
+    return await this.#getFileInfo(this.sourceFolder, filename) != null
   }
 
   /**
    * Enables an addon at a destinaton
    * @param filename The filename to enable
-   * @param destinationKey The destination id to enable on
+   * @param destinationId The destination id to enable on
    * @returns void
    */
-  public async install(filename: string, destinationKey: string) {
-    const dest = this.destinations[destinationKey]
-    if (!dest) throw new Error(`Destination "${destinationKey}" does not exist`)
+  public async enable(filename: string, destinationId: string) {
+    const dest = this.destinations[destinationId]
+    if (!dest) throw new Error(`Destination "${destinationId}" does not exist`)
 
-    if (!this.#getFileInfo(this.sourceFolder, filename)) {
+    if (!await this.isInstalled(filename)) {
       throw new Error(`File "${filename}" does not exist in ${this.sourceFolder}`)
     }
+
     try {
       for (const destPath of dest.paths) {
         await symlink(path.join(this.sourceFolder, filename), path.join(destPath, filename))
@@ -257,19 +176,17 @@ export default class Share {
     }
   }
 
+
+
   /**
    * Disables an addon from a destinaton
    * @param filename The filename to disable
-   * @param destinationKey The destination id to disable on
+   * @param destinationId The destination id to disable on
    * @returns
    */
-  public async uninstall(filename: string, destinationKey: string) {
-    const dest = this.destinations[destinationKey]
-    if (!dest) throw new Error(`Destination "${destinationKey}" does not exist`)
-
-    if (!this.#getFileInfo(this.sourceFolder, filename)) {
-      throw new Error(`File "${filename}" does not exist in ${this.sourceFolder}`)
-    }
+  public async disable(filename: string, destinationId: string) {
+    const dest = this.destinations[destinationId]
+    if (!dest) throw new Error(`Destination "${destinationId}" does not exist`)
 
     try {
       for (const destPath of dest.paths) {
@@ -284,13 +201,13 @@ export default class Share {
   /**
    * Returns file system info (stat). Folder and file are path.join'd. Returns null if ENOENT
    * @param folder The folder to check
-   * @param file The filename to check
+   * @param filename The filename to check
    * @returns Promise<Stats>
    */
-  async #getFileInfo(folder: string, file: string) {
-    this.#log.trace({ folder, file }, "getFileInfo")
+  async #getFileInfo(folder: string, filename: string) {
+    this.#log.trace({ folder, file: filename }, "getFileInfo")
     try {
-      return await stat(path.join(folder, file))
+      return await stat(path.join(folder, filename))
     } catch (err: any) {
       if (err.code === "ENOENT") {
         this.#log.debug({}, "getFileInfo ENOENT: " + err)
@@ -313,12 +230,13 @@ export default class Share {
       if (curBytes != item.file_size) {
         throw new Error(`Downloaded size mismatch (downloaded ${curBytes} bytes, expected ${item.file_size} bytes)`)
       }
-      const chapterIds = this.#getChapterIds(path.join(this.sourceFolder, filename))
+      const chapterIds = getChapterIds(path.join(this.sourceFolder, filename))
 
-      this.#db.addAddonEntry(filename, {
+      this.#db.addAddon(filename, {
         filesize: item.file_size,
         lastModified: item.time_updated
-      }, Share.serializeWorkshopItem(item), item.collection, { chapterIds })
+      }, ShareItemState.Ready, { chapterIds })
+      this.#db.addWorkshopInfo(filename, serializeWorkshopItem(item), item.collection)
     })
     return event
   }
