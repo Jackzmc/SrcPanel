@@ -71,6 +71,7 @@ async function db(fastify: FastifyInstance) {
     password: process.env.MYSQL_ADMINS_PASSWORD || process.env.MYSQL_PASSWORD,
     namedPlaceholders: true
   })
+  const jobScheduler = new TaskManager({ resolution: 1000 * 60 * 2 }) // Run every 2 minutes
 
   const userManager = new UserManager(db, steam)
   const configManager = await ConfigManager.Load(CONFIG_FOLDER)
@@ -80,7 +81,6 @@ async function db(fastify: FastifyInstance) {
     authManager.Init(),
     serverManager.Load()
   ])
-  const jobScheduler = new TaskManager({ resolution: 1000 * 60 * 2 }) // Run every 2 minutes
   fastify.decorate("paths", {
     config: CONFIG_FOLDER,
     cache: CACHE_FOLDER,
