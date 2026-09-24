@@ -1,15 +1,9 @@
-import { stat, readdir, unlink, symlink } from 'fs/promises';
+import { stat, unlink, symlink } from 'fs/promises';
 import { createWriteStream } from 'fs'
 import path from 'path'
 import SteamAPI from '../steam.js';
-import { ShareItemState, type AddonCollectionInfo, type AddonInfo, type AddonWorkshopInfo, type ChildWorkshopItem, type DownloadSourceRecord, type ShareDestinations, type ShareInfo, type WorkshopCollectionInfo, type WorkshopItem } from '@srcpanel/common/Share'
-import sqlite3 from 'sqlite3'
-import sqlite from 'sqlite'
-import { SQL } from 'sql-template-strings';
-import VPK from '@lowly1337/vpk'
-import ValveKV from 'valve-kv'
-import { getChapterIds, getSpFileInfo, serializeWorkshopItem } from './ShareUtils.js';
-import assert from 'assert';
+import { ExtendedShareInfo, ShareItemState, type AddonInfo, type ChildWorkshopItem, type DownloadSourceRecord, type ShareDestinations, type ShareInfo } from '@srcpanel/common/Share'
+import { getChapterIds, serializeWorkshopItem } from './ShareUtils.js';
 import Logger from '../../logger.js'
 import ShareScanner from './ShareScanner.js';
 import ShareDatabase from './ShareDB.js';
@@ -31,6 +25,7 @@ export default class Share {
   public sourceFolder: string
   public destinations: ShareDestinations = {}
   public appId?: number
+  #appTitle: string|null = null
   #db: ShareDatabase
   #scanner: ShareScanner
 
@@ -39,10 +34,11 @@ export default class Share {
   #description: string
   #log: typeof Logger
 
-  constructor(shareInfo: ShareInfo, db: ShareDatabase, scanner: ShareScanner) {
+  private constructor(shareInfo: ShareInfo, db: ShareDatabase, scanner: ShareScanner, appTitle: string | null) {
     this.#log = Logger.child({ name: `Share/${shareInfo.id}` })
     this.#db = db
     this.#scanner = scanner
+    this.#appTitle = appTitle
 
     this.#id = shareInfo.id!
     this.name = shareInfo.name ?? this.#id!
@@ -55,6 +51,12 @@ export default class Share {
     this.#description = shareInfo.description ?? ""
 
     this.#steamQueue = new WorkshopDownloadQueue(this)
+  }
+
+  static async create(steam: SteamAPI, shareInfo: ShareInfo, db: ShareDatabase, scanner: ShareScanner) {
+    const appTitle = shareInfo.appid ? await steam.getAppName(shareInfo.appid) : null
+
+    return new Share(shareInfo, db, scanner, appTitle)
   }
 
   get workshopDLQueue() {
@@ -85,6 +87,10 @@ export default class Share {
 
   public get exts() {
     return this.validExts ? [...this.validExts] : null
+  }
+
+  get appTitle() {
+    return this.#appTitle
   }
 
   /**
@@ -252,13 +258,14 @@ export default class Share {
   }
 
   // Exports to a saveable object
-  public export(): ShareInfo {
+  public export(): ExtendedShareInfo {
     return {
       id: this.id,
       name: this.name,
       description: this.description,
       sourceFolder: this.sourceFolder,
       appid: this.appId,
+      appTitle: this.appTitle,
       downloadSources: this.downloadSources,
       destinations: this.destinations,
       fileExts: this.validExts,
