@@ -109,7 +109,14 @@ export default class Share {
    * Returns all scanned addons
    */
   public async getAddons(): Promise<AddonInfo[]> {
-    return await this.#db.getAddons()
+    const addons = await this.#db.getAddons()
+    // Not the *best* but we depend on installInfo of what destinations are enabled
+    for(const addon of addons) {
+      console.log("addon", addon.filename, addon.installInfo)
+      const installInfo = await this.getInstallInfo(addon.filename)
+      if(installInfo) addon.installInfo = installInfo.states
+    }
+   return addons
   }
 
   /**
@@ -140,7 +147,9 @@ export default class Share {
    * Gets file info and any destinations this file is enabled on
    * @param filename
    */
-  public async getInstallInfo(filename: string): Promise<{ states: Record<string, boolean>, created: number, modified: number, size: number } | undefined> {
+  public async getInstallInfo(
+    filename: string
+  ): Promise<{ states: Record<string, boolean>, created: number, modified: number, size: number } | undefined> {
     this.#log.trace({ filename }, "getInstallInfo")
 
     const statInfo = await this.#getFileInfo(this.sourceFolder, filename)
