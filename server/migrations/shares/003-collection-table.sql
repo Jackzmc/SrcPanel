@@ -2,7 +2,7 @@ CREATE TABLE IF NOT EXISTS workshop_collections (
     id VARCHAR(64) NOT NULL,
     name VARCHAR(128) NOT NULL,
     PRIMARY KEY (id)
-)
+);
 
 -- Migrate all ids and names to table
 INSERT INTO workshop_collections (id, name) 
