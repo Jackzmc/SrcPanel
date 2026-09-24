@@ -147,14 +147,9 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         message: `No share with id "${shareId!.toLowerCase()}" could be found. Share may be unavailable, incorrecty configured or does not exist`
       })
     }
-    const addons = await share.getAddons();
-   
     return {
-      addons,
-      shareInfo: {
-        ...share.export(),
-        appTitle: (share.appId ? await fastify.steam.getAppName(share.appId) : null),
-      }
+      addons: await share.getAddons(),
+      shareInfo: share.export()
     }
   })
 

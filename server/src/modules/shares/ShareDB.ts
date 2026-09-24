@@ -48,11 +48,13 @@ export default class ShareDatabase {
     }
 
     async getAddons(): Promise<AddonInfo[]> {
+        this.#log.trace({ time: performance.now() }, "getAddons START")
         const rows = await this.#db.all(`
-            SELECT filename, filesize, state, lastModified, ws_info, collection_id, c.name as collection_name chapter_ids, metadata 
+            SELECT filename, filesize, state, lastModified, ws_info, collection_id, c.name as collection_name, chapter_ids, metadata 
             FROM addoncache
             LEFT JOIN workshop_collections c ON collection_id = c.id
         `);
+        this.#log.trace({ time: performance.now() }, "getAddons END")
         return rows.map<AddonInfo>(row => {
             return {
                 filename: row.filename,
