@@ -14,16 +14,25 @@ export default class ShareDatabase {
 
     static async init(share: ShareInfo) {
         const path = join(share.sourceFolder, `panel_share.db`)
-        const sqlDb = await sqliteOpen({
-            filename: path,
-            driver: sqlite3.Database
-        })
+        
+        try {
+            const sqlDb = await sqliteOpen({
+                filename: path,
+                driver: sqlite3.Database
+            })
+            
+            try {
+                await sqlDb.migrate({ 
+                    migrationsPath: "migrations/shares"
+                })
 
-        await sqlDb.migrate({ 
-            migrationsPath: "migrations/shares"
-        })
-
-        return new ShareDatabase(share, sqlDb)
+                return new ShareDatabase(share, sqlDb)
+            } catch(err) {
+                throw new Error("Failed to run migrations", { cause: err })
+            }
+        }catch(err) {
+            throw new Error(`Could not open database file at \"${path}\"`, { cause: err })
+        }
     }
 
     private constructor(share: ShareInfo, db: sqlite.Database<sqlite3.Database, sqlite3.Statement>) {
