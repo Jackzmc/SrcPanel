@@ -139,12 +139,6 @@
           size="lg"
           @click="selectDestinationsNext"
         >Next</UButton>
-        <UButton
-          v-if="step == Step.Download"
-          :disabled="downloadState != DownloadState.Done"
-          size="lg"
-          @click="restartServers"
-        >Restart Servers</UButton>
       </div>
     </template>
   </UModal>
@@ -199,6 +193,7 @@ const workshopUrlError = computed(() => {
   return "Invalid workshop URL";
 });
 
+const toast = useToast()
 const step = ref<Step>(Step.Input);
 const loadingState = ref<LoadingState>(LoadingState.Idle);
 const url = ref();
@@ -258,107 +253,43 @@ function selectDestinationsNext() {
   startDownload();
 }
 
-function restartServers() {
-  if (step.value != Step.Download) return;
-  // TODO: impl
-  alert("Restart servers not implemented");
-}
-
-function startDownload(force = false) {
+async function startDownload(force = false) {
   downloadState.value = DownloadState.Downloading;
   downloadLog.value = [];
-  const query = new URLSearchParams();
 
   const destIds = Object.entries(selectedDests.value)
     .filter(([, enabled]) => enabled)
     .map(([id]) => id);
-  query.append("destinations", destIds.join(","));
-  query.append("sse", "1");
-  if (force) query.append("force", "1");
+
+  const params = new URLSearchParams()
+  params.append("destinations", destIds.join(","))
+  if (force) params.append("force", "1");
   if (selectedAddons.value) {
     const addonIds = Object.entries(selectedAddons.value)
       .filter(([, enabled]) => enabled)
       .map(([id]) => id);
-    query.append("children", addonIds.join(","));
+    params.append("children", addonIds.join(","));
   }
 
-  const startTime = Date.now();
-
-  const sse = new EventSource(
-    `/api/shares/${props.share.id}/addons/workshop/${workshopInfo.value?.item?.publishedfileid}/download?${query.toString()}`);
-  // Don't care about see.onerror, will trigger when server closes
-  sse.onerror = () => {
-    downloadLog.value.push({
-      state: "SERVER_ERROR",
-      message: "Lost connection with server, please try again.",
-      error: true,
-    });
-    sse.close();
-  };
-  sse.addEventListener("message", event => {
-    try {
-      const payload = JSON.parse(event.data);
-      onDownloadPayload(payload, sse, force, startTime);
-    } catch (err) {
-      console.warn("Got invalid json payload: ", err, " data: ", event.data);
-    }
-  });
-}
-
-function onDownloadPayload(payload: APIDownloadAddonsMessage, sse: EventSource, wasForced: boolean, startTime: number) {
-  if ("error" in payload && payload.error) {
-    if ("code" in payload && payload.code === "FILE_EXISTS") {
-      console.debug("File already exist, asking for confirmation");
-      downloadState.value = DownloadState.PromptRedownload;
-      downloadLog.value.push({
-        // @ts-expect-error whatever this code is terrible
-        state: ("state" in payload && payload.state) || payload.code,
-        filename: payload.filename,
-        message: "Addon was already downloaded. Press the redownload button to download a fresh version",
-        error: true,
-      });
-      sse.close();
-    } else {
-      downloadLog.value.push({
-        state: ("state" in payload && payload.state) || payload.code,
-        message: payload.message,
-        error: true,
-      });
-    }
-  } else if ("state" in payload && payload.state === "COMPLETE") {
-    downloadLog.value.push({
-      state: "DONE",
-      message: `Took ${Math.round((Date.now() - startTime) / 1000)} seconds. Maps will not be playable until the server(s) have restarted. You can restart individual servers from the 'Server Management' page.`,
-    });
-    // If no force prompt shown or this was a force download, then we are done.
-    if (downloadState.value == DownloadState.Downloading || wasForced) downloadState.value = DownloadState.Done;
-    else console.debug("COMPLETE on state=", downloadState.value);
-    sse.close();
-  } else if ("state" in payload && payload.state === "DOWNLOAD_PROGRESS") {
-    if (!payload.entry || !downloads.value[payload.entry]) return console.warn(`Progress update for download that we don't know: ${payload.entry}`);
-    downloads.value[payload.entry]!.currentBytes = payload.currentBytes;
-    downloads.value[payload.entry]!.progress = payload.progress;
-  } else if ("state" in payload && payload.state === "DOWNLOADING") {
-    // @ts-expect-error whatever this code is terrible
-    downloads.value[payload.entry] = {
-      ...payload,
-      url: `https://steamcommunity.com/sharedfiles/filedetails/?id=${payload.entry}`,
-    };
+  const response = await request(
+    `/api/shares/${props.share.id}/addons/workshop/${workshopInfo.value?.item?.publishedfileid}?${params.toString()}`, 
+    {
+      method: "POST"
+    })
+  
+  if('body' in response) {
+    toast.add({
+      color: "success",
+      title: "Downloads enqueued",
+    })
+    emit("close")
   } else {
-    if ("state" in payload && payload.state === "DOWNLOADED") {
-      if (!payload.entry || !downloads.value[payload.entry]) return console.warn(`Progress update for download that we don't know: ${payload.entry}`);
-      downloads.value[payload.entry]!.progress = 1;
-      downloads.value[payload.entry]!.currentBytes = downloads.value[payload.entry]!.totalBytes;
-    }
-
-    downloadLog.value.push({
-      state: ("state" in payload && payload.state) || payload.code,
-      message: payload.message,
-      // @ts-expect-error whatever this code is terrible
-      success: payload.state == "SUCCESS",
-    });
+    toast.add({
+      color: "error",
+      title: "Download failed",
+      description: response.error.message
+    })
   }
-  return true;
 }
 
 function close() {

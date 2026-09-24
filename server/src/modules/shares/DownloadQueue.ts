@@ -28,11 +28,16 @@ const DOWNLOAD_TIMEOUT_MS = 1000 * 60 * 10 // 10 min
 const MAX_LOG_HISTORY = 20
 
 
+interface QueueEntry {
+    item: WorkshopItem|ChildWorkshopItem,
+    destinations?: string[]
+}
+
 export default class WorkshopDownloadQueue {
     #share: Share
 
     #items: Map<WorkshopItem, DownloadProgress> // id is key
-    #pending: Set<WorkshopItem> = new Set()
+    #pending: Set<QueueEntry> = new Set()
 
     #logs: DownloadLogEntry[] = []  // TODO: clear when queue completed
     #active: boolean
@@ -67,9 +72,9 @@ export default class WorkshopDownloadQueue {
      */
     subscribe(cb: (event: DownloadEvent) => void) {
           const bound = {
-            progress: (data) => cb({ type: "progress", data }),
-            log: (data) => cb({ type: "log", data }),
-            finish: () => cb({type: "finish", data: null }),
+            progress: (data) => cb({ type: "progress", source: "steam_workshop", data }),
+            log: (data) => cb({ type: "log", source: "steam_workshop", data }),
+            finish: () => cb({type: "finish", source: "steam_workshop", data: null }),
         };
         for (const [e, fn] of Object.entries(bound)) this.#event.on(e, fn);
         return () => {
@@ -125,20 +130,21 @@ export default class WorkshopDownloadQueue {
      * Enqueues items to be downloaded
      * @param items 
      */
-    downloadItems(items: (WorkshopItem|ChildWorkshopItem)[]) {
+    downloadItems(items: (WorkshopItem|ChildWorkshopItem)[], destinations?: string[]) {
+        // TODO: somehow keep track of destinations it should be automatically installed to
         for(const item of items) {
-            this.#pending.add(item)
+            this.#pending.add({ item, destinations })
         }
         this.#start()
     }
 
-    async #startDownload(item: WorkshopItem|ChildWorkshopItem) {
-        const filename = `${item.publishedfileid}.vpk`
+    async #startDownload(entry: QueueEntry) {
+        const filename = `${entry.item.publishedfileid}.vpk`
         this.#addLog("DOWNLOAD", `Started download of ${filename}`)
     
-        const event = SteamAPI.downloadItemProgress(item, this.#share.sourceFolder, { timeout: DOWNLOAD_TIMEOUT_MS })
+        const event = SteamAPI.downloadItemProgress(entry.item, this.#share.sourceFolder, { timeout: DOWNLOAD_TIMEOUT_MS })
         event.addListener("progress", (curBytes, totalBytes) => {
-            const progress = this.#items.get(item)
+            const progress = this.#items.get(entry.item)
             if(!progress) throw Error("Untracked item")
             progress.downloaded = curBytes
             this.#event.emit("progress", { 
@@ -148,8 +154,8 @@ export default class WorkshopDownloadQueue {
             //#this.items.set(item, progress)
         })
         event.addListener("finish", (curBytes, totalBytes) => {
-            if (curBytes != item.file_size) {
-                throw new Error(`Downloaded size mismatch (downloaded ${curBytes} bytes, expected ${item.file_size} bytes)`)
+            if (curBytes != entry.item.file_size) {
+                throw new Error(`Downloaded size mismatch (downloaded ${curBytes} bytes, expected ${entry.item.file_size} bytes)`)
             }
 
             this.#event.emit("progress", { 
@@ -162,11 +168,16 @@ export default class WorkshopDownloadQueue {
             const chapterIds = getChapterIds(join(this.#share.sourceFolder, filename))
     
             this.#share.db.addAddon(filename, {
-                filesize: item.file_size,
-                lastModified: item.time_updated
+                filesize: entry.item.file_size,
+                lastModified: entry.item.time_updated
                 }, ShareItemState.Ready, { chapterIds })
-            if('collection' in item)
-                this.#share.db.addWorkshopInfo(filename, serializeWorkshopItem(item), item.collection)
+            
+            // Enable for every destination
+            entry.destinations?.forEach(dest => this.#share.enable(filename, dest))
+
+            // Add workshop info
+            if('collection' in entry.item)
+                this.#share.db.addWorkshopInfo(filename, serializeWorkshopItem(entry.item), entry.item.collection)
         })
     }
 }
