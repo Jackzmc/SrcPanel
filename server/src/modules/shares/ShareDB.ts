@@ -7,11 +7,6 @@ import { join } from 'node:path';
 import { AddonInfo, AddonWorkshopInfo, ShareInfo, ShareItemState, WorkshopCollectionInfo } from '@srcpanel/common/Share';
 import { SQL } from 'sql-template-strings';
 
-const MIGRATIONS = [
-  `ALTER TABLE addoncache ADD metadata TEXT`,
-  `ALTER TABLE addoncache ADD state INTEGER`,
-]
-
 export default class ShareDatabase {
     #log: PinoLogger
     #share: ShareInfo
@@ -40,10 +35,28 @@ export default class ShareDatabase {
 
     async getFilenames(): Promise<Set<string>> {
         const rows = await this.#db.all<{ filename: string}[]>("SELECT filename FROM addoncache")
-        console.log("rows", rows)
         return new Set(rows.map(row => row.filename))
     }
 
+    async getAddons(): Promise<AddonInfo[]> {
+        const rows = await this.#db.all(`
+            SELECT filename, filesize, state, lastModified, ws_info, collection_id, c.name as collection_name chapter_ids, metadata 
+            FROM addoncache
+            LEFT JOIN workshop_collections c ON collection_id = c.id
+        `);
+        return rows.map<AddonInfo>(row => {
+            return {
+                filename: row.filename,
+                filesize: row.filesize,
+                state: row.state,
+                lastModified: row.lastModified,
+                workshop: row.ws_info ? JSON.parse(row.ws_info) : null,
+                collection: row,
+                installInfo: {}, // TODO: we don't have this here
+                meta: row.meta ? JSON.parse(row.meta) : {}
+            } 
+        })
+    }
 
     /**
      * Adds an addon to the cache
@@ -64,6 +77,39 @@ export default class ShareDatabase {
             this.#log.error({ fsInfo: fsInfo !== null, workshop: workshop !== undefined }, `addAddonEntry failed for "${filename}"`, err)
         }
     }
+
+    /**
+     * Attempt to create workshop collection entry, if doesn't exist, otherwise update name
+     * @param id workshop id
+     * @param name 
+     */
+    async tryCreateCollection(id: string, name: string): Promise<void> {
+        await this.#db.run(`
+            INSERT OR IGNORE INTO workshop_collections (id, name) 
+            VALUES (?, ?)    
+            ON CONFLICT(id) DO UPDATE SET name = ?
+        `, [ id, name, name ])
+    }
+
+    async addAddon(filename: string, fsInfo?: { filesize: number, lastModified: number }, state: ShareItemState = ShareItemState.Ready, meta: Record<string, any> | null = null): Promise<void> {
+        await this.#db.run(`
+            INSERT INTO addoncache
+                (filename, filesize, lastModified, state, metadata)
+                VALUES (?, ?, ?, ?, ?)`,
+            [ filename, fsInfo?.filesize, fsInfo?.lastModified, state, JSON.stringify(meta) ]
+        )
+    }
+
+    async addWorkshopInfo(filename: string, wsInfo: AddonWorkshopInfo, collection?: WorkshopCollectionInfo): Promise<void> {
+        if(collection != null) {
+            await this.tryCreateCollection(collection.id, collection.name)
+        }
+        await this.#db.run(`
+            UPDATE addoncache SET state = ?, ws_info = ?, collection_id = ? WHERE filename = ?`
+            [ ShareItemState.Ready, wsInfo, collection?.id, filename ]
+        )
+    }
+
 
     public async remove(filename: string): Promise<void> {
         await this.#db.exec(SQL`DELETE FROM addoncache WHERE filename = ${filename}`)
