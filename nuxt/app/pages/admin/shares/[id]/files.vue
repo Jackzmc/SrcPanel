@@ -146,7 +146,7 @@ const filteredData = computed(() => {
       return addon.filename.toLowerCase().includes(query)
         || (addon.workshop && addon.workshop.title?.toLowerCase().includes(query)) 
         || (addon.collection &&
-          (addon.collection.name.toLowerCase().includes(query) || addon.collection?.id.toLowerCase().includes(query)))
+          (addon.collection.name?.toLowerCase().includes(query) || addon.collection?.id.toLowerCase().includes(query)))
 
     })
 })
