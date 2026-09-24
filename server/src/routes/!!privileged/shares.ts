@@ -147,17 +147,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         message: `No share with id "${shareId!.toLowerCase()}" could be found. Share may be unavailable, incorrecty configured or does not exist`
       })
     }
-
-    let addons: (AddonInfo | AddonCollectionInfo)[]
-    try {
-      addons = await share.getAddons();
-    } catch (err) {
-      req.log.error({}, "getAddons error", err)
-      return reply.status(500).send({
-        error: "LIST_ADDONS_ERROR",
-        message: "Error occurred while returning list of addons"
-      })
-    }
+    const addons = await share.getAddons();
+   
     return {
       addons,
       shareInfo: {
@@ -187,6 +178,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     }
     return {
       addonInfo: await share.getAddonInfo(filename)
+      // TODO: need list of dests installed to?
     }
   })
 
@@ -239,6 +231,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     }
     reply.send()
   })
+
 
   fastify.get('/:shareId/addons/:filename/download', async (req: FastifyRequest<{ Params: { shareId: string, filename: string } }>, reply) => {
     // Filter out ../ or ..\
@@ -316,6 +309,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     ws.on("close", unsub)
     ws.on("error", unsub)
   })
+
+
 
   fastify.get('/:shareId/addons/workshop/:workshopId/download', async (req: FastifyRequest<{
     Params: { shareId: string, workshopId: string },

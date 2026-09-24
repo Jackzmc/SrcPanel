@@ -125,14 +125,14 @@ export default class WorkshopDownloadQueue {
      * Enqueues items to be downloaded
      * @param items 
      */
-    async downloadItems(items: ChildWorkshopItem[]) {
+    downloadItems(items: (WorkshopItem|ChildWorkshopItem)[]) {
         for(const item of items) {
             this.#pending.add(item)
         }
         this.#start()
     }
 
-    async #startDownload(item: ChildWorkshopItem) {
+    async #startDownload(item: WorkshopItem|ChildWorkshopItem) {
         const filename = `${item.publishedfileid}.vpk`
         this.#addLog("DOWNLOAD", `Started download of ${filename}`)
     
@@ -165,7 +165,8 @@ export default class WorkshopDownloadQueue {
                 filesize: item.file_size,
                 lastModified: item.time_updated
                 }, ShareItemState.Ready, { chapterIds })
-            this.#share.db.addWorkshopInfo(filename, serializeWorkshopItem(item), item.collection)
+            if('collection' in item)
+                this.#share.db.addWorkshopInfo(filename, serializeWorkshopItem(item), item.collection)
         })
     }
 }

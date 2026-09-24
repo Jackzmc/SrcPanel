@@ -95,9 +95,6 @@ export default class Share {
     return createWriteStream(path.join(this.sourceFolder, path.normalize(filename)))
   }
 
-  /**
-   * @deprecated
-   */
   async getAddonInfo(filename: string) {
     return await this.#db.getAddonInfo(filename)
   }
