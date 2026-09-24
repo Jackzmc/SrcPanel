@@ -6,6 +6,9 @@
       <div class="grid sm:grid-cols-4 grid-cols-1 gap-4">
         <ShareCard v-for="share in shares" :key="share.id" :share="share" />
       </div>
+      <div v-if="!shares || shares.length === 0" class="text muted text-center">
+        No shares have been found
+      </div>
     </UContainer>
   </div>
 </template>
