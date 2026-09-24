@@ -62,8 +62,11 @@ export default class ShareDatabase {
                 state: row.state,
                 lastModified: row.lastModified,
                 workshop: row.ws_info ? JSON.parse(row.ws_info) : null,
-                collection: row,
-                installInfo: {}, // TODO: we don't have this here
+                collection: row.collection_id ? {
+                    id: row.collection_id,
+                    name: row.collection_name
+                } : undefined,
+                installInfo: {}, // Not ideal but we fill it in Share
                 meta: row.meta ? JSON.parse(row.meta) : {}
             } 
         })
@@ -135,21 +138,7 @@ export default class ShareDatabase {
         const info = await this.#db.get(SQL`SELECT * FROM addoncache WHERE filename = ${filename}`)
         if (!info) return null
         return info
-        // const installInfo = await this.getInstallInfo(filename)
-        // assert(installInfo != undefined, "addon info checked in cache")
-        // return {
-        //     filename: info.filename,
-        //     filesize: info.filesize ?? installInfo.size,
-        //     lastModified: info.lastModified ?? installInfo.modified,
-        //     downloaded: installInfo.created,
-        //     workshop: info.ws_info ? JSON.parse(info.ws_info) as AddonWorkshopInfo : undefined,
-        //     installInfo: installInfo.states,
-        //     collection: info.collection_id ? {
-        //         id: info.collection_id,
-        //         name: info.collection_name
-        //     } : null,
-        //     meta: info.metadata ? JSON.parse(info.metadata) : {}
-        // }
+
     }
 
     /**

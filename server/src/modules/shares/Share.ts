@@ -115,6 +115,7 @@ export default class Share {
       console.log("addon", addon.filename, addon.installInfo)
       const installInfo = await this.getInstallInfo(addon.filename)
       if(installInfo) addon.installInfo = installInfo.states
+
     }
    return addons
   }
@@ -161,12 +162,15 @@ export default class Share {
         // We just use the first path
         if (!dest.paths || dest.paths.length < 1) continue
 
-        states[id] = false
-        try {
-          states[id] = await this.#getFileInfo(dest.paths[0], filename) !== null
-        } catch(err) {
-          this.#log.warn({ filename, dest: id }, "failed to get file info: " + err)
-        }
+        // FIXME: DEBUG
+        states[id] = true
+
+        // states[id] = false
+        // try {
+        //   states[id] = await this.#getFileInfo(dest.paths[0], filename) !== null
+        // } catch(err) {
+        //   this.#log.warn({ filename, dest: id }, "failed to get file info: " + err)
+        // }
       }
     }
     return {
