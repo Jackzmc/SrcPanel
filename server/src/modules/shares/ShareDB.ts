@@ -39,7 +39,7 @@ export default class ShareDatabase {
         this.#log = Logger.child({ name: `ShareDB/${share.id}` })
         this.#share = share
         this.#db = db
-        this.#log.info("DB Ready")
+        this.#log.info({}, `Loaded database at ${db.config.filename}`)
     }
 
     async getFilenames(): Promise<Set<string>> {
