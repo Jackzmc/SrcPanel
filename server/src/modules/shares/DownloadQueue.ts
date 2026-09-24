@@ -8,7 +8,7 @@
 // 
 
 
-import { ChildWorkshopItem, DownloadEvent, DownloadLogEntry, DownloadProgress, DownloadState, ShareItemState, WorkshopItem } from "@srcpanel/common/Share"
+import { ChildWorkshopItem, DownloadEvent, DownloadLogEntry, DownloadProgress, DownloadSource, DownloadState, ShareItemState, WorkshopItem } from "@srcpanel/common/Share"
 import SteamAPI from "../steam.js"
 import Share from "./Share.js"
 import { join } from "node:path"
@@ -27,6 +27,7 @@ const CONCURRENT_LIMIT = pLimit(5)
 const DOWNLOAD_TIMEOUT_MS = 1000 * 60 * 10 // 10 min
 const MAX_LOG_HISTORY = 20
 
+const SOURCE: DownloadSource = "steam_workshop"
 
 interface QueueEntry {
     item: WorkshopItem|ChildWorkshopItem,
@@ -72,9 +73,9 @@ export default class WorkshopDownloadQueue {
      */
     subscribe(cb: (event: DownloadEvent) => void) {
           const bound = {
-            progress: (data) => cb({ type: "progress", source: "steam_workshop", data }),
-            log: (data) => cb({ type: "log", source: "steam_workshop", data }),
-            finish: () => cb({type: "finish", source: "steam_workshop", data: null }),
+            progress: (data) => cb({ type: "progress", source: SOURCE, data }),
+            log: (data) => cb({ type: "log", source: SOURCE, data }),
+            finish: () => cb({type: "finish", source: SOURCE, data: null }),
         };
         for (const [e, fn] of Object.entries(bound)) this.#event.on(e, fn);
         return () => {

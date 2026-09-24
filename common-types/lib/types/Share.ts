@@ -174,7 +174,8 @@ export interface DownloadLogEntry {
 /** Event entry */ 
 export interface DownloadEventEntry<S extends DownloadEventType, T> {
   type: S,
-  data: T
+  source: DownloadSource,
+  data: T,
 }
 
 /** An event emitted from a download queue */
