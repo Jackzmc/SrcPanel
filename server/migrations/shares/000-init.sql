@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS addoncache (
     metadata TEXT,
     PRIMARY KEY (filename)
 );
+
 CREATE TABLE IF NOT EXISTS meta (
     key VARCHAR(128) NOT NULL,
     value VARCHAR(128) NOT NULL,
