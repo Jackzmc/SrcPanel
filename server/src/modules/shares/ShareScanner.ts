@@ -127,6 +127,9 @@ export default class ShareScanner {
         const dirents = await readdir(this.#share.sourceFolder, { withFileTypes: true })
         for(const dirent of dirents) {
             if(!dirent.isFile()) continue
+            // Check if has valid ext
+            if(!this.#share.fileExts?.some(ext => dirent.name.endsWith(ext))) continue
+            
             unchecked.delete(dirent.name)
 
             const entry = await this.#db.getAddonInfo(dirent.name)
