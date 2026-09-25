@@ -1,11 +1,12 @@
 import type { ToastProps } from "@nuxt/ui";
-import type { DownloadEvent, DownloadLogEntry, DownloadProgress, WebsocketMessage, WebsocketRequest } from "@srcpanel/common/Share";
+import type { AddonInfo, DownloadEvent, DownloadLogEntry, DownloadProgress, ScanEvent, WebsocketMessage, WebsocketRequest } from "@srcpanel/common/Share";
 
 const MAX_LOG_HISTORY = 20
 
 export function useShareWS() {
   const logs = ref<DownloadLogEntry[]>([])
   const items = ref<Map<string, DownloadProgress>>(new Map())
+  let addons = ref<AddonInfo[]>()
 
   const toast = useToast()
 
@@ -46,11 +47,15 @@ export function useShareWS() {
           console.warn("websocket error msg: ", msg)
         } else if(msg.type === "ok") {
           console.debug("websocket OK")
+        } else if(msg.type === "scan") {
+          if(addons.value) {
+            mergeAddons(msg.event)
+          }
         }
     })
   }
 
-  async function subscribe(shareId: string) {
+  async function subscribe(shareId: string, addons?: Ref<AddonInfo[]>) {
     if (import.meta.server) return
     if(!ws || ws.readyState == ws.CLOSED) setup()
     // Wait until it's open before subscribing
@@ -59,6 +64,21 @@ export function useShareWS() {
     } else {
       ws.addEventListener("open", () => sendRequest({ subscribe: shareId }))
     }
+  }
+
+  function mergeAddons(event: ScanEvent) {
+    if(!addons.value) return
+    for(let i = 0; i < addons.value.length; i++) {
+      const addon = addons.value[i]!
+      // Remove the removed
+      if(event.removed.includes(addon.filename)) {
+        addons.value.splice(i, 1)
+      } else if(event.changed[addon.filename]) {
+        addons.value[i] = event.changed[addon.filename]!
+      }
+    }
+    // Add all new ones
+    addons.value.push(...event.added)
   }
 
   async function unsubscribe() {

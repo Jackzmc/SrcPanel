@@ -1,4 +1,12 @@
-import { DownloadEvent } from "../Share.js"
+import { AddonInfo, DownloadEvent } from "../Share.js"
+
+export interface ScanEvent {
+  added: AddonInfo[],
+  changed: Record<string, AddonInfo>,
+  /** List of filenames that have been removed */
+  removed: string[]
+}
+
 
 export interface WebsocketError {
   type: "error",
@@ -13,10 +21,15 @@ export interface WebsocketDownloadEvent {
   event: DownloadEvent
 }
 
+export interface WebsocketScan {
+  type: "scan",
+  event: ScanEvent
+}
+
 /**
  * Represents a message from the socket, either meta (socket error, ack) or data (event)
  */
-export type WebsocketMessage = WebsocketError | WebsocketOK | WebsocketDownloadEvent
+export type WebsocketMessage = WebsocketError | WebsocketOK | WebsocketDownloadEvent | WebsocketScan
 
 /**
  * Requests to subscribe to a share's download queue
