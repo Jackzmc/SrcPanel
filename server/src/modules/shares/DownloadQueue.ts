@@ -38,30 +38,28 @@ interface QueueEntry {
 export default class WorkshopDownloadQueue {
     #share: Share
 
-    #items: Map<WorkshopItem, DownloadProgress> // id is key
-    #pending: Set<QueueEntry> = new Set()
+    #items: Map<WorkshopItem, DownloadProgress> = new Map() // id is key
 
     #logs: DownloadLogEntry[] = []  // TODO: clear when queue completed
-    #active: boolean
-
 
     #log: PinoLogger
 
     #pendingRestartServers: string[] = []
+    #inFlight = new Set<Promise<void>>()
 
     constructor(share: Share) {
         this.#share = share
         this.#log = Logger.child({ name: `WorkshopDLQueue/${share.id}` })
     }
 
+    get pendingItems() {
+        return this.#inFlight.size
+    }
+
     get logs() {
         return this.#logs
     }
 
-    get pendingCount() {
-        return this.#pending.size
-    }
-    
     get allItemsComplete() {
         for(const progress of this.#items.values()) {
             if(progress.state == DownloadState.Pending || progress.state == DownloadState.Downloading) {
@@ -86,67 +84,36 @@ export default class WorkshopDownloadQueue {
         this.#share.eventStream.emit("log", log, itemId)
     }
 
-    // how do i tell if done. promise.all but we keep dumping them all in the list
-    async #start() {
-        if(this.#active) return 
-        this.#active = true
-        this.#pendingRestartServers = []
-        this.#items.clear()
-        this.#pending.clear()
-
-        const itemIterator = this.#popNextItem()
-        let result = itemIterator.next()
-        while(!result.done) {
-            console.log("result", result.done, result.value)
-            // Schedule next item
-            if(!result.value) break
-            CONCURRENT_LIMIT(async(entry: QueueEntry) => {
-                try {
-                    await this.#startDownload(entry)
-                } catch(err) {
-                    this.#log.error({ id: entry.item.publishedfileid }, "download error: " + err.stack)
-                    this.#addLog("ERROR", `Failed to download ${entry.item.publishedfileid}`)
-                }
-            }, result.value)
-
-            result = itemIterator.next()
-        }
-
-        this.#addLog("INFO", "Queue completed")
-        this.#log.info("Queue completed")
-
-        // All items in queue have been consumed. Some may still be processing but no more after
-        // TODO: let them just run in bg, or do we need to check and wait for them?
-        this.#active = false
-        this.#share.eventStream.emit("done")
-    }
-
-    *#popNextItem() {
-        for(const item of this.#pending.keys()) {
-            this.#pending.delete(item)
-            yield item
-        }
-        return null
-    }
-
     /**
      * Enqueues items to be downloaded
-     * @param items 
+     * @param items list of items to install
+     * @param destinations list of optional destinations to install to on completition
      */
     downloadItems(items: (WorkshopItem|ChildWorkshopItem)[], destinations?: string[]) {
-        // TODO: somehow keep track of destinations it should be automatically installed to
+        this.#log.trace({ size: items.length }, "adding to queue")
         for(const item of items) {
             const progress = {
                 downloaded: 0,
-                total: item.file_size,
+                total: Number(item.file_size),
                 state: DownloadState.Pending
             }
-            this.#share.eventStream.emit("progress", progress, `${item.publishedfileid}.vpk`)
             this.#items.set(item, progress)
-            this.#pending.add({ item, destinations })
+            const p = CONCURRENT_LIMIT(() => this.#startDownload({ item, destinations }))
+                .catch(err => {
+                    this.#log.error({ id: item.publishedfileid }, `download error: ${err.stack}`)
+                    this.#addLog("ERROR", `Failed to download ${item.publishedfileid}`)
+                })
+                .finally(() => {
+                    this.#inFlight.delete(p)
+                    // Notify we completed queue
+                    if(this.#inFlight.size == 0) {
+                        this.#share.eventStream.emit("finish")
+                    }
+                })
+            this.#inFlight.add(p)
         }
-        this.#start()
     }
+
 
     /**
      * Restart all servers that this queue has downloaded to
@@ -158,6 +125,12 @@ export default class WorkshopDownloadQueue {
     async #startDownload(entry: QueueEntry) {
         const filename = `${entry.item.publishedfileid}.vpk`
         this.#addLog("DOWNLOAD", `Started download of ${filename}`)
+
+        this.#log.debug({ filename }, "download started")
+
+        const progress = this.#items.get(entry.item)
+        if(!progress) throw new Error("Untracked item")
+        progress.state = DownloadState.Downloading
     
         const event = SteamAPI.downloadItemProgress(entry.item, this.#share.sourceFolder, { timeout: DOWNLOAD_TIMEOUT_MS })
         event.addListener("progress", (curBytes, totalBytes) => {
@@ -167,7 +140,7 @@ export default class WorkshopDownloadQueue {
             this.#share.eventStream.emit("progress", progress, filename)
             //#this.items.set(item, progress)
         })
-        event.addListener("finish", (curBytes, totalBytes) => {
+        event.addListener("finish", async (curBytes, totalBytes) => {
             const progress = this.#items.get(entry.item)
             if(!progress) throw Error("Untracked item")
             progress.downloaded = curBytes
@@ -176,10 +149,13 @@ export default class WorkshopDownloadQueue {
                 this.#addLog("ERROR", `Downloaded size mismatch (downloaded ${curBytes} bytes, expected ${entry.item.file_size} bytes)`, filename)
                 this.#log.warn({ filename }, `downloaded size mismatch (downloaded ${curBytes} bytes, expected ${entry.item.file_size} bytes)`)
                 progress.state = DownloadState.Failed 
-            }
+                return
+            } 
 
+            progress.state = DownloadState.Complete
+            
             this.#share.eventStream.emit("progress", progress, filename)
-
+            this.#log.debug({ filename }, "download completed")
             this.#addLog("DOWNLOAD", `Downloaded ${filename}`, filename)
             
             let chapterIds: string[] | null = null
@@ -187,25 +163,41 @@ export default class WorkshopDownloadQueue {
                 chapterIds = getChapterIds(join(this.#share.sourceFolder, filename))
             } catch(err) {
                 this.#log.warn({ id: entry.item.publishedfileid }, "vpk parse error: " + err.stack)
-                this.#addLog("ERROR", `Could not parse ${entry.item.publishedfileid}'s VPK file`)
+                this.#addLog("ERROR", `Could not parse ${filename}'s VPK file`, filename)
             }
     
-            this.#share.db.addAddon(filename, {
+            await this.#share.db.addAddon(filename, {
                 filesize: entry.item.file_size,
                 lastModified: entry.item.time_updated
-                }, ShareItemState.Ready, { chapterIds })
+                }, ShareItemState.Ready, { chapterIds }
+            )
+                .catch(err => {
+                    this.#addLog("ERROR", `Could not record ${filename} to database`, filename)
+                    this.#log.error({ id: entry.item.publishedfileid }, "db error: " + err.stack)
+                })
             
             // Enable for every destination
-            entry.destinations?.forEach(dest => {
-                this.#share.enable(filename, dest)
-                // Add any servers we should restart once queue is over
-                if(this.#share.destinations[dest].restartTargets) 
-                    this.#pendingRestartServers.push(...this.#share.destinations[dest].restartTargets)
-            })
-
+            if(entry.destinations) {
+                for(const dest of entry.destinations) {
+                    try {
+                        await this.#share.enable(filename, dest)
+                        
+                        // Add any servers we should restart once queue is over
+                        if(this.#share.destinations[dest].restartTargets) 
+                        this.#pendingRestartServers.push(...this.#share.destinations[dest].restartTargets)
+                    } catch(err) {
+                        this.#addLog("ERROR", `Failed to enable ${filename} on destination ${dest} (${err.code})`, filename)
+                        this.#log.warn({ id: entry.item.publishedfileid, dest }, "could not symlink file: " + err.stack)
+                    }
+                }
+            }
             // Add workshop info
             if('collection' in entry.item)
-                this.#share.db.addWorkshopInfo(filename, serializeWorkshopItem(entry.item), entry.item.collection)
+                await this.#share.db.addWorkshopInfo(filename, serializeWorkshopItem(entry.item), entry.item.collection)
+                    .catch(err => {
+                        this.#addLog("ERROR", `Error adding workshop information for ${filename}`, filename)
+                        this.#log.warn({ id: entry.item.publishedfileid }, "addWorkshopInfo error: " + err.stack)
+                    })
         })
     }
 }

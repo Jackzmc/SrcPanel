@@ -80,8 +80,8 @@ export default class Share {
     return this.#scanner
   }
 
-  get eventStream() {
-    return this.eventStream
+  get eventStream(): EventEmitter {
+    return this.#event
   }
 
   public get id() { return this.#id }
@@ -121,6 +121,7 @@ export default class Share {
     };
     for (const [e, fn] of Object.entries(bound)) this.#event.on(e, fn);
     return () => {
+        console.log('unsubscribing')
         for (const [e, fn] of Object.entries(bound)) this.#event.removeListener(e, fn);
     };
   }
