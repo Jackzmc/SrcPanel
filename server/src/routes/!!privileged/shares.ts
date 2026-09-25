@@ -102,12 +102,21 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
       // Check if the item is a collection and either resolve the children or download them all
       const children = await fastify.steam.getCollectionChildren(req.params.publishedfileid)
       const details = await fastify.steam.getItemDetails([req.params.publishedfileid])
+
+      if(details.length === 0) return reply.status(404).send({
+        error: "ITEM_NOT_FOUND",
+        message: "No item found in workshop"
+      })
+
+      req.log.debug({ shareId: req.params.shareId, destinations, isCollection: children != null }, "download requested")
+
       share.workshopDLQueue.downloadItems(details, destinations)
 
-
+      req.log.trace({}, "items enqueued")
       // Check if a collection, if so grab the children too 
-      if(children) {
+      if(children != null) {
         const selectedChildrenIds = req.query.children?.split(",")
+        req.log.trace({}, "getting child details")
         const childrenItems = (await fastify.steam.getItemDetails(children))
           // Filter out unselected children addons
           .filter(child => !selectedChildrenIds || selectedChildrenIds.includes(child.publishedfileid))
@@ -121,7 +130,9 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
               ...item
             }
           })
+        req.log.trace({}, "adding child details to queue")
         share.workshopDLQueue.downloadItems(childrenItems, destinations)
+        req.log.debug({ shareId: req.params.shareId, children }, "adding collection children")
       }
 
       return reply.status(204).send()

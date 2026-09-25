@@ -72,6 +72,11 @@
             :label="data.name ?? id"
           />
         </template>
+        <template v-else-if="step == Step.Download">
+          <h3 class="text-lg text-center">
+            Starting downloads....
+          </h3>
+        </template>
       </div>
     </template>
     <template #footer>
@@ -212,7 +217,6 @@ async function startDownload(force = false) {
   downloadState.value = DownloadState.Downloading;
   downloadLog.value = [];
 
-  emit("close")
 
   const destIds = Object.entries(selectedDests.value)
     .filter(([, enabled]) => enabled)
@@ -233,6 +237,8 @@ async function startDownload(force = false) {
     {
       method: "POST"
     })
+
+  emit("close")
   
   if('body' in response) {
     toast.add({

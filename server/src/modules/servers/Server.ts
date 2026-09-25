@@ -395,7 +395,7 @@ export default abstract class Server implements IAction {
           }, "gamedig")
           this._online = true
       } catch(err: any) {
-        this._log.trace({ id: this.id, host, port, type }, "gamedig", err.stack)
+        // this._log.trace({ id: this.id, host, port, type }, "gamedig", err.stack)
         if(!err.message.includes("Failed all ")) {
           this._log.error(`host=${host} getStatus error: `, err)
         }

@@ -52,7 +52,8 @@ import * as Sentry from '@sentry/node'
 Sentry.setupFastifyErrorHandler(app);
 
 process.on('unhandledRejection', (reason: any, promise ) => {
-  app.log.fatal('Unhandled promise rejection:\n' + reason.stack);
+  app.log.fatal({}, 'Unhandled promise rejection:\n' + reason.stack);
+  process.exit(1)
 });
 // app.log.trace("trace")
 // app.log.debug("debug")
