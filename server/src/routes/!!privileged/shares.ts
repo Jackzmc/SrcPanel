@@ -2,7 +2,7 @@ import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
 import FastifyMultipart from '@fastify/multipart'
 import { pipeline } from 'stream'
 import { promisify } from 'util'
-import { AddonCollectionInfo, AddonInfo, ChildWorkshopItem, DetailsResponse, WorkshopItem } from '@srcpanel/common/Share';
+import { AddonCollectionInfo, AddonInfo, ChildWorkshopItem, DetailsResponse, DownloadEvent, WebsocketMessage, WebsocketRequest, WorkshopItem } from '@srcpanel/common/Share';
 import { NO_PERMISSION, NOT_FOUND } from '../../responses.js';
 import { UserPrivilegeCode } from '@srcpanel/common/Privileges';
 import { createReadStream } from 'fs';
@@ -336,16 +336,35 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     return reply.status(204).send()
   })
 
-  fastify.get(':/shareId/stream', { websocket: true}, async (ws, req: FastifyRequest<{ Params: { shareId: string }}>) => {
-    const share = fastify.servers.getShare(req.params.shareId)
-    if(!share) return ws.close(4004, "SHARE_NOT_FOUND")
-    
-    const unsub = share.workshopDLQueue.subscribe((event) => {
+  fastify.get('/event-stream', { websocket: true}, async (ws, req: FastifyRequest<{ Params: { shareId: string }}>) => {
+    function send(event: WebsocketMessage) {
       ws.send(JSON.stringify(event))
-    })
+    }
 
-    ws.on("close", unsub)
-    ws.on("error", unsub)
+    function onMsg(msg: WebsocketRequest) {
+      if(msg.subscribe) {
+        // TODO: send msg instead of exiting?
+        const share = fastify.servers.getShare(msg.subscribe)
+        if(!share) return send({ type: "error", error: "INVALID_SHARE_ID"})
+
+        const unsub = share.workshopDLQueue.subscribe((event) => {
+          send({ type: "event", event })
+        })
+        ws.on("close", unsub)
+        ws.on("error", unsub)
+
+        send({ type: "ok" })
+      }
+    }
+
+    ws.on('message', message => {
+      try {
+        const json = JSON.parse(message.toString())
+        onMsg(json)
+      } catch(err) {
+        req.log.warn("invalid message: " + err)
+      }
+    })
   })
 
 

@@ -45,8 +45,6 @@ const props = defineProps<{
   status: AsyncDataRequestStatus;
 }>();
 
-const ws = useShareWS(props.share.id)
-
 useHead({
   title: `Files - ${props.share.name} - Shares`,
 });
@@ -94,7 +92,7 @@ const columns: TableColumn<AddonInfo>[] = [
           ],
         }, () => row.original.workshop?.title ?? row.original.filename),
         h("span", { class: "flex flex-row gap-1"}, 
-          dests.map(dest => h(UBadge, { color: "neutral", variant: "outline", size: "sm" }, dest))
+          dests.map(dest => h(UBadge, { color: "neutral", variant: "outline", size: "sm" }, () => dest))
         )
       ])
     },
@@ -110,8 +108,8 @@ const columns: TableColumn<AddonInfo>[] = [
     header: "State",
     cell: ({ row }) => {
       switch(row.original.state) {
-        case ShareItemState.Missing: return h(UBadge, { color: "error", variant: "outline", size: "sm" }, "Missing")
-        case ShareItemState.Pending: return h(UBadge, { color: "warning", variant: "outline", size: "sm" }, "Resolving")
+        case ShareItemState.Missing: return h(UBadge, { color: "error", variant: "outline", size: "sm" }, () => "Missing")
+        case ShareItemState.Pending: return h(UBadge, { color: "warning", variant: "outline", size: "sm" }, () => "Resolving")
         case ShareItemState.Ready: return
       }
     },

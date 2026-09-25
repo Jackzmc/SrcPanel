@@ -4,8 +4,9 @@
     <div class="div px-4 py-2 pt-0 mb-2 ">
       <h2 class="text-lg font-bold mb-1">Download Queue (N)</h2>
       <div class="grid grid-flow-col gap-1 justify-start items-center">
-        <div class="flex flex-col items-center justify-center h-15 w-15 border border-success-200 bg-success-100">
+        <div v-for="[id, data] in ws.items.value.entries()" :key="id" class="flex flex-col items-center justify-center h-15 w-15 border border-success-200 bg-success-100">
           <h2 class="text-md font-bold text-center">#1</h2>
+          <h3 class="text-md text-muted">{{ data.downloaded/data.total*100 }}%</h3>
         </div>
         <div class="flex flex-col items-center justify-center h-15 w-15 border border-amber-200 bg-amber-100">
           <h2 class="text-md font-bold text-center">#2</h2>
@@ -91,6 +92,7 @@ import AddWorkshopModal from "~/components/shares/AddWorkshopModal.vue";
 import InfoModal from "~/components/shares/InfoModal.vue";
 import UploadModal from "~/components/shares/UploadModal.vue";
 
+
 const tabs = [
   {
     label: "Files",
@@ -121,6 +123,7 @@ const { data: shares, error: sharesError } = await useFetch<ShareData[]>(`/api/s
 
 const route = useRoute();
 const router = useRouter();
+const ws = useShareWS()
 
 const selectedShare = ref<string>(route.params.id as string);
 
@@ -133,8 +136,13 @@ watch(data, (val) => {
     throw createError({ statusCode: 404, statusMessage: "Share not found" });
   }
 });
+
+watch(() => selectedShare.value, (id) => {
+  ws.subscribe(id)
+}, { immediate: true })
 const share = computed(() => data.value?.shareInfo);
 const addons = computed(() => data.value?.addons);
+
 
 const modal = shallowRef<null | Component>(null);
 
