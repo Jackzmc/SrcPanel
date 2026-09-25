@@ -1,0 +1,19 @@
+meta {
+  name: Download Stream
+  type: ws
+  seq: 2
+}
+
+ws {
+  url: {{API_PROTOCOL}}:/{{API_HOST}}/api/shares/:shareId/stream
+  body: ws
+  auth: inherit
+}
+
+body:ws {
+  name: message 1
+  type: json
+  content: '''
+  
+  '''
+}

@@ -5,9 +5,13 @@ meta {
 }
 
 get {
-  url: {{API_PROTOCOL}}:/{{API_DOMAIN}}/api/servers/:id
+  url: {{API_PROTOCOL}}://{{API_HOST}}/api/servers/:id
   body: text
   auth: inherit
+}
+
+params:path {
+  id: 
 }
 
 headers {
@@ -16,4 +20,5 @@ headers {
 
 settings {
   encodeUrl: true
+  timeout: 0
 }
