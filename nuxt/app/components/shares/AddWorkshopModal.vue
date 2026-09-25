@@ -72,51 +72,6 @@
             :label="data.name ?? id"
           />
         </template>
-        <template v-else-if="step == Step.Download">
-          <h3 class="text-lg font-semibold mb-1">
-            Downloads
-          </h3>
-          <div class="flex flex-col gap-2">
-            <div
-              v-for="(download, id) in downloads"
-              :key="id"
-              class="flex items-center justify-between gap-2"
-            >
-              <div class="flex items-center gap-2">
-                <div class="flex flex-col">
-                  <span class="text-sm font-medium">
-                    <a :href="download.url">{{ download.entryTitle }}</a>
-                  </span>
-                </div>
-              </div>
-              <div class="flex items-center gap-2">
-                <UProgress :value="download.progress" :max="download.totalBytes" />
-                <span class="text-xs">
-                  {{ formatSize(download.currentBytes) }} / {{ formatSize(download.totalBytes) }}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <h3 class="text-lg font-semibold mb-1 mt-2">
-            Logs
-          </h3>
-          <div class="flex flex-col gap-2">
-            <div
-              v-for="(entry, index) in downloadLog"
-              :key="index"
-            >
-              <UBadge
-                class="mr-2"
-                :color="entry.error ? 'error' : 'primary'"
-              >
-                {{ entry.state }}
-              </UBadge>
-              <span v-html="entry.message" />
-            </div>
-          </div>
-        </template>
-        <!-- TODO: other steps -->
       </div>
     </template>
     <template #footer>
@@ -138,7 +93,7 @@
           :disabled="!hasAnyItemSelected"
           size="lg"
           @click="selectDestinationsNext"
-        >Next</UButton>
+        >Start Download</UButton>
       </div>
     </template>
   </UModal>
@@ -257,6 +212,8 @@ async function startDownload(force = false) {
   downloadState.value = DownloadState.Downloading;
   downloadLog.value = [];
 
+  emit("close")
+
   const destIds = Object.entries(selectedDests.value)
     .filter(([, enabled]) => enabled)
     .map(([id]) => id);
@@ -282,7 +239,6 @@ async function startDownload(force = false) {
       color: "success",
       title: "Downloads enqueued",
     })
-    emit("close")
   } else {
     toast.add({
       color: "error",

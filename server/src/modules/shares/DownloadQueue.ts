@@ -14,7 +14,9 @@ import Share from "./Share.js"
 import { join } from "node:path"
 import { getChapterIds, serializeWorkshopItem } from "./ShareUtils.js"
 import pLimit from "p-limit"
-import { EventEmitter } from "node:stream"
+import EventEmitter from "node:events"
+import Logger from '../../logger.js'
+import type { Logger as PinoLogger } from 'pino'
 
 /**
  * TODO: One queue per share. UI just shows like list of items. All items processed, then gives notification (w/ btn) to restart servers?
@@ -43,10 +45,15 @@ export default class WorkshopDownloadQueue {
     #logs: DownloadLogEntry[] = []  // TODO: clear when queue completed
     #active: boolean
 
-    #event: EventEmitter
+    #event: EventEmitter = new EventEmitter()
+
+    #log: PinoLogger
+
+    #pendingRestartServers: string[] = []
 
     constructor(share: Share) {
         this.#share = share
+        this.#log = Logger.child({ name: `WorkshopDLQueue/${share.id}` })
     }
 
     get logs() {
@@ -103,15 +110,31 @@ export default class WorkshopDownloadQueue {
     async #start() {
         if(this.#active) return 
         this.#active = true
+        this.#pendingRestartServers = []
+        this.#items.clear()
+        this.#pending.clear()
 
         const itemIterator = this.#popNextItem()
         let result = itemIterator.next()
         while(!result.done) {
+            console.log("result", result.done, result.value)
             // Schedule next item
-            CONCURRENT_LIMIT(() => this.#startDownload(result.value!))
+            if(!result.value) break
+            // FIXME: result.value null here??
+            CONCURRENT_LIMIT(async(entry: QueueEntry) => {
+                try {
+                    await this.#startDownload(entry)
+                } catch(err) {
+                    this.#log.error({ id: entry.item.publishedfileid }, "download error: " + err.stack)
+                    this.#addLog("ERROR", `Failed to download ${entry.item.publishedfileid}`)
+                }
+            }, result.value)
 
             result = itemIterator.next()
         }
+
+        this.#addLog("INFO", "Queue completed")
+        this.#log.info("Queue completed")
 
         // All items in queue have been consumed. Some may still be processing but no more after
         // TODO: let them just run in bg, or do we need to check and wait for them?
@@ -134,9 +157,21 @@ export default class WorkshopDownloadQueue {
     downloadItems(items: (WorkshopItem|ChildWorkshopItem)[], destinations?: string[]) {
         // TODO: somehow keep track of destinations it should be automatically installed to
         for(const item of items) {
+            this.#items.set(item, {
+                downloaded: 0,
+                total: item.file_size,
+                state: DownloadState.Pending
+            })
             this.#pending.add({ item, destinations })
         }
         this.#start()
+    }
+
+    /**
+     * Restart all servers that this queue has downloaded to
+     */
+    async restartServers() {
+
     }
 
     async #startDownload(entry: QueueEntry) {
@@ -165,8 +200,14 @@ export default class WorkshopDownloadQueue {
             })
 
             this.#addLog("DOWNLOAD", `Downloaded ${filename}`)
-
-            const chapterIds = getChapterIds(join(this.#share.sourceFolder, filename))
+            
+            let chapterIds: string[] | null = null
+            try {
+                chapterIds = getChapterIds(join(this.#share.sourceFolder, filename))
+            } catch(err) {
+                this.#log.warn({ id: entry.item.publishedfileid }, "vpk parse error: " + err.stack)
+                this.#addLog("ERROR", `Could not parse ${entry.item.publishedfileid}'s VPK file`)
+            }
     
             this.#share.db.addAddon(filename, {
                 filesize: entry.item.file_size,
@@ -174,7 +215,12 @@ export default class WorkshopDownloadQueue {
                 }, ShareItemState.Ready, { chapterIds })
             
             // Enable for every destination
-            entry.destinations?.forEach(dest => this.#share.enable(filename, dest))
+            entry.destinations?.forEach(dest => {
+                this.#share.enable(filename, dest)
+                // Add any servers we should restart once queue is over
+                if(this.#share.destinations[dest].restartTargets) 
+                    this.#pendingRestartServers.push(...this.#share.destinations[dest].restartTargets)
+            })
 
             // Add workshop info
             if('collection' in entry.item)
