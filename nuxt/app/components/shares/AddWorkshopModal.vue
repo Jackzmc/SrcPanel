@@ -15,7 +15,7 @@
               placeholder="https://steamcommunity.com/sharedfiles/filedetails/?id=######"
               :disabled="loadingState !== LoadingState.Idle"
               focus
-              @change="getWorkshopInfoDebounced"
+              @input="getWorkshopInfoDebounced"
             />
           </UFormField>
           <div v-if="loadingState == LoadingState.Loading" class="flex items-center gap-2">
