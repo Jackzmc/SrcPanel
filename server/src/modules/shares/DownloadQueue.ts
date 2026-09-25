@@ -136,11 +136,13 @@ export default class WorkshopDownloadQueue {
     downloadItems(items: (WorkshopItem|ChildWorkshopItem)[], destinations?: string[]) {
         // TODO: somehow keep track of destinations it should be automatically installed to
         for(const item of items) {
-            this.#items.set(item, {
+            const progress = {
                 downloaded: 0,
                 total: item.file_size,
                 state: DownloadState.Pending
-            })
+            }
+            this.#share.eventStream.emit("progress", progress, `${item.publishedfileid}.vpk`)
+            this.#items.set(item, progress)
             this.#pending.add({ item, destinations })
         }
         this.#start()
