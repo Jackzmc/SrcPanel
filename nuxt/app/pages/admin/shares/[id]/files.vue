@@ -33,18 +33,19 @@ import { sortHeader } from "#imports";
 import ULink from "@nuxt/ui/components/Link.vue";
 import UCheckbox from "@nuxt/ui/components/Checkbox.vue";
 
-// fix TS errors
-import type { Table, TableFeatures } from "@tanstack/vue-table";
 import { UBadge, UProgress } from "#components";
 
 const { requireAuth } = useAuth()
 await requireAuth()
+
 
 const props = defineProps<{
   share: ShareInfo;
   addons: AddonInfo[];
   status: AsyncDataRequestStatus;
 }>();
+
+const ws = useShareWS(props.share.id)
 
 useHead({
   title: `Files - ${props.share.name} - Shares`,
@@ -155,7 +156,7 @@ console.debug('rest')
 
 const rows = computed(() => {
   if (!table.value) return;
-  return table.value.tableApi.getSelectedRowModel().rows;
+  return table.value.tableApi.getSelectedRowModel().rows as AddonInfo[];
 });
 
 const filteredData = computed(() => {
@@ -171,7 +172,7 @@ const filteredData = computed(() => {
     })
 })
 
-const table = useTemplateRef<{ tableApi: Table<TableFeatures, AddonInfo> }>("table");
+const table: any = useTemplateRef("table");
 const searchQuery = ref<string | undefined>();
 
 const { promptConfirm } = useModal();
@@ -220,7 +221,7 @@ async function deleteSelected() {
 
   await Promise.all(addons.map(async (addon) => {
     // TODO: impl fetch()
-    await fetch(`/api/shares/${props.share.id}/addons/${addon.id}`, { method: "DELETE" });
+    await fetch(`/api/shares/${props.share.id}/addons/${addon.filename}`, { method: "DELETE" });
     count++;
     updateProgress();
   }));

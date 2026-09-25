@@ -160,9 +160,9 @@ export type DetailWorkshopItem = CollectionWorkshopItem | ItemWorkshopItem
 export type DetailsResponse = CollectionWorkshopItem | ItemWorkshopItem | { item: null | undefined, type: "none" }
 
 export interface DownloadProgress {
-    downloaded: number,
-    total: number,
-    state: DownloadState
+  downloaded: number,
+  total: number,
+  state: DownloadState
 }
 
 export interface DownloadLogEntry {
@@ -176,6 +176,7 @@ export interface DownloadEventEntry<S extends DownloadEventType, T> {
   type: S,
   source: DownloadSource,
   data: T,
+  itemId?: string
 }
 
 /** An event emitted from a download queue */
