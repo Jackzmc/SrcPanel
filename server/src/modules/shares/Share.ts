@@ -2,21 +2,23 @@ import { stat, unlink, symlink } from 'fs/promises';
 import { createWriteStream } from 'fs'
 import path from 'path'
 import SteamAPI from '../steam.js';
-import { ExtendedShareInfo, ShareItemState, type AddonInfo, type ChildWorkshopItem, type DownloadSourceRecord, type ShareDestinations, type ShareInfo } from '@srcpanel/common/Share'
+import { DownloadLogEntry, DownloadProgress, DownloadSource, ExtendedShareInfo, ShareItemState, WebsocketMessage, type AddonInfo, type ChildWorkshopItem, type DownloadSourceRecord, type ShareDestinations, type ShareInfo } from '@srcpanel/common/Share'
 import { getChapterIds, serializeWorkshopItem } from './ShareUtils.js';
 import Logger from '../../logger.js'
 import ShareScanner from './ShareScanner.js';
 import ShareDatabase from './ShareDB.js';
 import WorkshopDownloadQueue from './DownloadQueue.js';
+import EventEmitter from 'events';
 
 const DOWNLOAD_TIMEOUT = 1000 * 60 * 3
 
-export type DownloadSource = "steam_workshop" | "direct"
+const SOURCE: DownloadSource = "steam_workshop"
 
 /**
  * "Installing" refers to symlinking the file from the source directory to the destination(s) specified.
  * In the UI, this is enabling or disabling an addon/file. The source file is not deleted except by deleteAddon()
  */
+
 
 export default class Share {
   #id: string
@@ -34,11 +36,14 @@ export default class Share {
   #description: string
   #log: typeof Logger
 
-  private constructor(shareInfo: ShareInfo, db: ShareDatabase, scanner: ShareScanner, appTitle: string | null) {
+  #event: EventEmitter
+
+  private constructor(shareInfo: ShareInfo, db: ShareDatabase, scanner: ShareScanner, appTitle: string | null, eventEmitter: EventEmitter) {
     this.#log = Logger.child({ name: `Share/${shareInfo.id}` })
     this.#db = db
     this.#scanner = scanner
     this.#appTitle = appTitle
+    this.#event = eventEmitter
 
     this.#id = shareInfo.id!
     this.name = shareInfo.name ?? this.#id!
@@ -53,10 +58,14 @@ export default class Share {
     this.#steamQueue = new WorkshopDownloadQueue(this)
   }
 
-  static async create(steam: SteamAPI, shareInfo: ShareInfo, db: ShareDatabase, scanner: ShareScanner) {
+  static async create(steam: SteamAPI, shareInfo: ShareInfo, db: ShareDatabase) {
     const appTitle = shareInfo.appid ? await steam.getAppName(shareInfo.appid) : null
 
-    return new Share(shareInfo, db, scanner, appTitle)
+    const eventEmitter = new EventEmitter()
+
+    const scanner = new ShareScanner(shareInfo, db, steam, eventEmitter)
+
+    return new Share(shareInfo, db, scanner, appTitle, eventEmitter)
   }
 
   get workshopDLQueue() {
@@ -69,6 +78,10 @@ export default class Share {
 
   get scanner() {
     return this.#scanner
+  }
+
+  get eventStream() {
+    return this.eventStream
   }
 
   public get id() { return this.#id }
@@ -92,6 +105,26 @@ export default class Share {
   get appTitle() {
     return this.#appTitle
   }
+
+  /**
+   * Subscribe to event stream
+   * @param cb callback for every event
+   * @returns unsubscribe function - call to unsubscribe
+   */
+  subscribe(cb: (msg: WebsocketMessage) => void) {
+    const bound = {
+      progress: (data: DownloadProgress, filename: string) => cb({ 
+        type: "event", event: { type: "progress", source: SOURCE, data, itemId: filename } }),
+      log: (data: DownloadLogEntry, filename: string) => cb({ type: "event", event: {
+        type: "log", source: SOURCE, data, itemId: filename }}),
+      finish: () => cb({ type: "event", event: { type: "finish", source: SOURCE, data: null }}),
+    };
+    for (const [e, fn] of Object.entries(bound)) this.#event.on(e, fn);
+    return () => {
+        for (const [e, fn] of Object.entries(bound)) this.#event.removeListener(e, fn);
+    };
+  }
+
 
   /**
    * Creates a write stream for a filename, in the share's source folder
