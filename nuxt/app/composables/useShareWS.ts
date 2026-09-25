@@ -2,7 +2,7 @@ import type { ToastProps } from "@nuxt/ui";
 import type { AddonInfo, DownloadEvent, DownloadLogEntry, DownloadProgress, ScanEvent, WebsocketMessage, WebsocketRequest } from "@srcpanel/common/Share";
 
 const MAX_LOG_HISTORY = 20
-const RECONNECT_INTERVAL_MS = 1000 * 5
+const MAX_RECONNECT_INTERVAL_MS = 1000 * 60
 
 export function useShareWS() {
   const logs = ref<DownloadLogEntry[]>([])
@@ -12,6 +12,7 @@ export function useShareWS() {
   const toast = useToast()
 
   let ws: WebSocket
+  let reconnectAttempts = 0
 
   function sendRequest(msg: WebsocketRequest) {
     
@@ -28,8 +29,11 @@ export function useShareWS() {
       console.warn("websocket error: ", event)
     }
     ws.addEventListener("close", (event) => {
-      console.warn("Share event stream socket ended, reconnecting")
-      setTimeout(() => setup(), RECONNECT_INTERVAL_MS)
+      reconnectAttempts++
+      const retryTime = Math.min(1000 * (Math.pow(1.5, reconnectAttempts) + 3), MAX_RECONNECT_INTERVAL_MS);
+      console.warn("Share event stream socket ended, reconnecting in", retryTime)
+
+      setTimeout(() => setup(), retryTime)
     })
     ws.addEventListener("message", (wsEvent) => {
         const msg = JSON.parse(wsEvent.data) as WebsocketMessage
@@ -57,6 +61,9 @@ export function useShareWS() {
             mergeAddons(msg.event)
           }
         }
+    })
+    ws.addEventListener("open", () => {
+      reconnectAttempts = 0
     })
   }
 
