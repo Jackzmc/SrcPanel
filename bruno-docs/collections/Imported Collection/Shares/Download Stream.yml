@@ -1,0 +1,18 @@
+info:
+  name: Download Stream
+  type: websocket
+  seq: 2
+
+websocket:
+  url: "{{API_HOST}}/api/shares/event-stream"
+  message:
+    - title: message 1
+      selected: false
+      message:
+        type: json
+        data: '{"subscribe": "addons"}'
+  auth: inherit
+
+settings:
+  timeout: 0
+  keepAliveInterval: 0

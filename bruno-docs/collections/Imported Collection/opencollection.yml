@@ -1,0 +1,24 @@
+opencollection: 1.0.0
+
+info:
+  name: Main
+
+request:
+  auth:
+    type: apikey
+    key: x-apikey
+    value: "{{API_TOKEN}}"
+    placement: header
+  variables:
+    - name: BASE_URL
+      value: "{{API_PROTOCOL}}:/{{API_HOST}}"
+bundled: false
+extensions:
+  bruno:
+    ignore:
+      - node_modules
+      - .git
+    presets:
+      request:
+        type: http
+        url: "{{API_PROTOCOL}}:/{{API_HOST}}/api/"

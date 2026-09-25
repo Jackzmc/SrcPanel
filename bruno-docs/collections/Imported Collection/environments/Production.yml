@@ -1,0 +1,7 @@
+variables:
+  - name: API_HOST
+    value: admin.jackz.me
+  - name: API_PROTOCOL
+    value: https
+  - secret: true
+    name: API_TOKEN
