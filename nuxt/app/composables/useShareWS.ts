@@ -94,3 +94,5 @@ export function useShareWS() {
 
   return { logs, items, subscribe, unsubscribe };
 }
+
+export type UseShareWSInstance = ReturnType<typeof useShareWS>
