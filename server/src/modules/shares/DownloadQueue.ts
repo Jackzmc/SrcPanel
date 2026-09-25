@@ -80,8 +80,8 @@ export default class WorkshopDownloadQueue {
      */
     subscribe(cb: (event: DownloadEvent) => void) {
           const bound = {
-            progress: (data) => cb({ type: "progress", source: SOURCE, data }),
-            log: (data) => cb({ type: "log", source: SOURCE, data }),
+            progress: (data: DownloadProgress, filename: string) => cb({ type: "progress", source: SOURCE, data, itemId: filename }),
+            log: (data: DownloadLogEntry, filename: string) => cb({ type: "log", source: SOURCE, data, itemId: filename }),
             finish: () => cb({type: "finish", source: SOURCE, data: null }),
         };
         for (const [e, fn] of Object.entries(bound)) this.#event.on(e, fn);
@@ -91,7 +91,7 @@ export default class WorkshopDownloadQueue {
     }
 
 
-    #addLog(type: string, message: string) {
+    #addLog(type: string, message: string, itemId?: string) {
         const log = {
             type,
             message,
@@ -103,7 +103,7 @@ export default class WorkshopDownloadQueue {
             this.#logs.splice(0, this.#logs.length - MAX_LOG_HISTORY)
         }
 
-        this.#event.emit("log", log)
+        this.#event.emit("log", log, itemId)
     }
 
     // how do i tell if done. promise.all but we keep dumping them all in the list
@@ -120,7 +120,6 @@ export default class WorkshopDownloadQueue {
             console.log("result", result.done, result.value)
             // Schedule next item
             if(!result.value) break
-            // FIXME: result.value null here??
             CONCURRENT_LIMIT(async(entry: QueueEntry) => {
                 try {
                     await this.#startDownload(entry)
@@ -183,23 +182,23 @@ export default class WorkshopDownloadQueue {
             const progress = this.#items.get(entry.item)
             if(!progress) throw Error("Untracked item")
             progress.downloaded = curBytes
-            this.#event.emit("progress", { 
-                filename,
-                percent: curBytes / totalBytes
-            })
+            this.#event.emit("progress", progress, filename)
             //#this.items.set(item, progress)
         })
         event.addListener("finish", (curBytes, totalBytes) => {
+            const progress = this.#items.get(entry.item)
+            if(!progress) throw Error("Untracked item")
+            progress.downloaded = curBytes
+
             if (curBytes != entry.item.file_size) {
-                throw new Error(`Downloaded size mismatch (downloaded ${curBytes} bytes, expected ${entry.item.file_size} bytes)`)
+                this.#addLog("ERROR", `Downloaded size mismatch (downloaded ${curBytes} bytes, expected ${entry.item.file_size} bytes)`, filename)
+                this.#log.warn({ filename }, `downloaded size mismatch (downloaded ${curBytes} bytes, expected ${entry.item.file_size} bytes)`)
+                progress.state = DownloadState.Failed 
             }
 
-            this.#event.emit("progress", { 
-                filename,
-                percent: 1.0
-            })
+            this.#event.emit("progress", progress, filename)
 
-            this.#addLog("DOWNLOAD", `Downloaded ${filename}`)
+            this.#addLog("DOWNLOAD", `Downloaded ${filename}`, filename)
             
             let chapterIds: string[] | null = null
             try {
