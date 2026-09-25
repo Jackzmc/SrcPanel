@@ -1,0 +1,70 @@
+info:
+  name: Enqueue Workshop Download
+  type: http
+  seq: 3
+  tags:
+    - steam_workshop
+
+http:
+  method: post
+  url: http://localhost:3000/api/shares/:shareId/addons/workshop/:workshopId/?destinations=&children=
+  params:
+    - name: destinations
+      value: ""
+      type: query
+      description: comma separated list of destinations to enable to
+    - name: children
+      value: ""
+      type: query
+      description: if workshopId is a collection, can specify a specific list of children ids to install
+    - name: workshopId
+      value: ""
+      type: path
+      description: item to download
+    - name: shareId
+      value: ""
+      type: path
+  auth: inherit
+
+settings:
+  encodeUrl: false
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false
+
+examples:
+  - name: collection
+    description: Download a collection "Cold Front"
+    request:
+      url: http://localhost:3000/api/shares/:shareId/addons/workshop/:workshopId/?destinations=main&children=3135451698,3135458590,C3135460406
+      method: post
+      params:
+        - name: destinations
+          value: main
+          type: query
+          description: comma separated list of destinations to enable to
+        - name: children
+          value: 3135451698,3135458590,C3135460406
+          type: query
+          description: if workshopId is a collection, can specify a specific list of children ids to install
+        - name: workshopId
+          value: "3135470026"
+          type: path
+          description: item to download
+        - name: shareId
+          value: addons
+          type: path
+    response:
+      status: 200
+      statusText: OK
+      body:
+        type: text
+        data: ""
+
+docs: |-
+  Requests to enqueue download of a steam workshop addon or collection. Can optionally also enable (symlink) to specified destination ids.
+
+  If the given id is a collection, a list of child ids can be provided and only those child items will be installed.
+
+  Downloads are handled in a queue, subscribe to Event Stream to get progress reports
