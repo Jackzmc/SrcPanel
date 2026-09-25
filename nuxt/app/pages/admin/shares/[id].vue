@@ -128,7 +128,7 @@ const ws = useShareWS()
 const selectedShare = ref<string>(route.params.id as string);
 
 const { data, status, refresh, error } = useLazyFetch<APIShareAddons>(`/api/shares/${route.params.id}/addons`, { key: `shares.${route.params.id}`, server: false });
-// if(!data.value?.shareInfo) {
+  // if(!data.value?.shareInfo) {
 //   throw createError({ statusCode: 404, statusMessage: 'Share not found' })
 // }
 watch(data, (val) => {
