@@ -201,9 +201,17 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         message: `No share with id "${shareId!.toLowerCase()}" could be found. Share may be unavailable, incorrecty configured or does not exist`
       })
     }
-    return {
-      addons: await share.getAddons(),
-      shareInfo: share.export()
+    try {
+      return {
+        addons: await share.getAddons(),
+        shareInfo: share.export()
+      } 
+    } catch(err) {
+      req.log.error({ shareId: req.params.shareId}, "getAddons:"  + err.stack)
+      return reply.status(500).send({
+        error: "DB_ERROR",
+        message: "Failed to get list of addons"
+      })
     }
   })
 

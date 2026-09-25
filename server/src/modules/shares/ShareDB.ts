@@ -107,7 +107,7 @@ export default class ShareDatabase {
 
     async addAddon(filename: string, fsInfo?: { filesize: number, lastModified: number }, state: ShareItemState = ShareItemState.Ready, meta: Record<string, any> | null = null): Promise<void> {
         await this.#db.run(`
-            INSERT INTO OR REPLACE addoncache
+            REPLACE INTO addoncache
                 (filename, filesize, lastModified, state, metadata)
                 VALUES (?, ?, ?, ?, ?)`,
             [ filename, fsInfo?.filesize, fsInfo?.lastModified, state, JSON.stringify(meta) ]
@@ -120,7 +120,7 @@ export default class ShareDatabase {
         }
         await this.#db.run(
             `UPDATE addoncache SET state = ?, ws_info = ?, collection_id = ? WHERE filename = ?`,
-            [ ShareItemState.Ready, wsInfo, collection?.id, filename ]
+            [ ShareItemState.Ready, JSON.stringify(wsInfo), collection?.id, filename ]
         )
     }
 
