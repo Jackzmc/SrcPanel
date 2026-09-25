@@ -1,11 +1,11 @@
 info:
-  name: Get Share Files
+  name: Get Share Info
   type: http
-  seq: 5
+  seq: 4
 
 http:
   method: GET
-  url: "{{API_PROTOCOL}}://{{API_HOST}}/api/shares/:shareId/addons"
+  url: "{{API_PROTOCOL}}://{{API_HOST}}/api/shares/:shareId"
   params:
     - name: shareId
       value: addons
