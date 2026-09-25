@@ -52,5 +52,6 @@ It is recommend to first open an issue before creating any large PR to discuss i
 
 ## AI Use Disclaimer
 
-AI agent-generated code was used very initially to test the technology and generate boilerplate and initial getting started for Nuxt UI, never on the server or plugin side. 
+AI agent-generated code was used very initially to test the technology and generate boilerplate and initial getting started for the UI with nuxt, never on the server or plugin side. 
+
 Since then, AI chatbots have only been used for reviewing / discussing changes, getting past roadblocks if unable to resolved any otherway. 
