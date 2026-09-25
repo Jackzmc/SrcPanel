@@ -2,8 +2,6 @@
   <div>
     <Hero :title="`Shares / ${route.params.id}`" />
     <!-- TODO: move to own component -->
-
-    <DownloadsIndicator v-if="share" :share="share" :ws="ws" />
     <InfoModal
       v-if="share && modals.file"
       :id="modals.file.id"
@@ -46,13 +44,14 @@
               />
             </UCard>
             <div class="flex flex-col gap-2">
+              <DownloadsIndicator v-if="share" :share="share" :ws="ws" />
               <UButton color="primary" size="lg" @click="setModal(AddWorkshopModal)">
                 <UIcon name="i-lucide-plus" />
                 Workshop Addon
               </UButton>
               <UButton color="primary" size="lg" @click="setModal(UploadModal)">
                 <UIcon name="i-lucide-upload" />
-                Upload
+                Upload a file
               </UButton>
             </div>
           </div>
