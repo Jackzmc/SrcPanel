@@ -12,16 +12,20 @@ export function useShareWS() {
   let ws: WebSocket
 
   function sendRequest(msg: WebsocketRequest) {
+    
     ws.send(JSON.stringify(msg))
   }
 
   function setup() {
+    if (import.meta.server) return
+    // swap http(s)://example -> ws(s)://example
+    const host = useRuntimeConfig().public.apiAuthUrl.replace('http', 'ws')
     ws?.close()
-    ws = new WebSocket(`/api/shares/event-stream`)
+    ws = new WebSocket(`${host}/api/shares/event-stream`)
     ws.onerror = (event) => {
       console.warn("websocket error: ", event)
     }
-    ws.onmessage = (wsEvent) => {
+    ws.addEventListener("message", (wsEvent) => {
         const msg = JSON.parse(wsEvent.data) as WebsocketMessage
         if(msg.type === "event") {
           if(msg.event.type == "log") {
@@ -43,12 +47,18 @@ export function useShareWS() {
         } else if(msg.type === "ok") {
           console.debug("websocket OK")
         }
-    }
+    })
   }
 
   async function subscribe(shareId: string) {
-    if(!ws) setup()
-    sendRequest({ subscribe: shareId })
+    if (import.meta.server) return
+    if(!ws || ws.readyState == ws.CLOSED) setup()
+    // Wait until it's open before subscribing
+    if(ws.readyState == ws.OPEN) {
+      sendRequest({ subscribe: shareId })
+    } else {
+      ws.addEventListener("open", () => sendRequest({ subscribe: shareId }))
+    }
   }
 
   async function unsubscribe() {
