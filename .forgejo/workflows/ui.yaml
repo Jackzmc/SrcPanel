@@ -14,7 +14,7 @@ on:
   workflow_dispatch: {}
 
 env:
-  BASE_IMAGE_NAME: git.jackz.me/${{ github.repository_owner }}/admin-panel
+  BASE_IMAGE_NAME: git.jackz.me/${{ github.repository_owner }}/srcpanel
 
 jobs:
   build:

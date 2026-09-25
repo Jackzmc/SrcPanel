@@ -135,9 +135,4 @@ export default defineNuxtConfig({
       ],
     },
   },
-
-  sentry: {
-    org: "jackzmc",
-    project: "admin-panel-ui",
-  },
 });

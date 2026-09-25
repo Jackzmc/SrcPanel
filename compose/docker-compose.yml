@@ -1,6 +1,6 @@
 services:
   app:
-    image: admin-panel:latest
+    image: srcpanel:latest
     build:
       context: ../
     volumes:
