@@ -1,0 +1,7 @@
+variables:
+  - name: API_PROTOCOL
+    value: http
+  - name: API_HOST
+    value: localhost:8081
+  - secret: true
+    name: API_TOKEN
