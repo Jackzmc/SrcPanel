@@ -34,7 +34,7 @@ export interface ShareInfo {
 }
 
 export interface ExtendedShareInfo extends ShareInfo {
-  appTitle: string
+  appTitle: string | null
 }
 
 export enum ShareItemState {
@@ -171,6 +171,11 @@ export interface DownloadLogEntry {
   timestamp: number
 }
 
+export interface DownloadError {
+  error: string,
+  message?: string
+}
+
 /** Event entry */ 
 export interface DownloadEventEntry<S extends DownloadEventType, T> {
   type: S,
@@ -180,10 +185,11 @@ export interface DownloadEventEntry<S extends DownloadEventType, T> {
 }
 
 /** An event emitted from a download queue */
-export type DownloadEventType = "log" | "progress" | "finish"
+export type DownloadEventType = "log" | "progress" | "finish" | "error"
 export type DownloadEvent = DownloadEventEntry<"log", DownloadLogEntry> 
   | DownloadEventEntry<"progress", DownloadProgress>
   | DownloadEventEntry<"finish", null>
+  | DownloadEventEntry<"error", DownloadError>
 
 
 export enum DownloadState {
@@ -195,3 +201,4 @@ export enum DownloadState {
     Failed
 }
 
+export * from './share/websocket.js' 
