@@ -347,9 +347,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         const share = fastify.servers.getShare(msg.subscribe)
         if(!share) return send({ type: "error", error: "INVALID_SHARE_ID"})
 
-        const unsub = share.workshopDLQueue.subscribe((event) => {
-          send({ type: "event", event })
-        })
+        const unsub = share.subscribe((msg) => send(msg))
         ws.on("close", unsub)
         ws.on("error", unsub)
 

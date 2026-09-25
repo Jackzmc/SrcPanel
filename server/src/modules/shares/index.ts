@@ -114,11 +114,10 @@ export async function loadShare(dataDir: string, steam: SteamAPI, info: ShareInf
 
     try {
         const config = await ShareDatabase.init(info)
-        const scanner = new ShareScanner(info, config, steam)
 
-        const share = await Share.create(steam, info, config, scanner)
+        const share = await Share.create(steam, info, config)
 
-        await scanner.start()
+        share.scanner.start()
 
         return share
     } catch(err) {

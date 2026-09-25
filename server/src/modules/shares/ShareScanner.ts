@@ -3,12 +3,13 @@ import Logger from '../../logger.js'
 import Share from './Share.js'
 import ShareDatabase from './ShareDB.js'
 import SteamAPI from '../steam.js'
-import { AddonWorkshopInfo, ShareInfo, ShareItemState } from '@srcpanel/common/Share'
+import { AddonWorkshopInfo, ScanEvent, ShareInfo, ShareItemState } from '@srcpanel/common/Share'
 import { readdir, stat } from 'node:fs/promises'
 import { join } from 'node:path'
 import { getMetadata, serializeWorkshopItem } from './ShareUtils.js'
 import { DefinedTask, Task } from '../tasks/Task.js'
 import TaskManager from '../tasks/TaskManager.js'
+import EventEmitter from 'node:events'
 
 const SCAN_INTERVAL_MINS = 60 // every hr
 
@@ -24,15 +25,17 @@ export default class ShareScanner {
     #steam: SteamAPI
     #job: DefinedTask
     
+    #event: EventEmitter
     #promise: Promise<void>
     #scanStart?: number = undefined
 
-    constructor(share: ShareInfo, db: ShareDatabase, steam: SteamAPI) {
+    constructor(share: ShareInfo, db: ShareDatabase, steam: SteamAPI, event: EventEmitter) {
         this.#log = Logger.child({ name: `ShareScanner/${share.id}` })
         this.#share = share
         this.#db = db
         this.#steam = steam
         this.#job = TaskManager.Instance.register(`scan/${share.id}`, () => this.start())
+        this.#event = event
         TaskManager.Instance.scheduleRepeating(this.#job, { minutes: SCAN_INTERVAL_MINS })
     }
 
@@ -144,6 +147,13 @@ export default class ShareScanner {
         // Process all missing steam data
         await this.#steam.resolveWSQueue()
         await this.#db.markMissing(unchecked)
+
+        this.#event.emit("scan", {
+            added: [],
+            changed: {},
+            removed: [...unchecked.keys()]
+        } as ScanEvent)
+
 
         const durationSec = Math.round(( Date.now() - this.#scanStart ) / 1000)
         this.#log.info(`Scan took ${durationSec} seconds`)

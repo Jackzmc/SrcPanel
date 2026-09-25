@@ -29,7 +29,6 @@ const CONCURRENT_LIMIT = pLimit(5)
 const DOWNLOAD_TIMEOUT_MS = 1000 * 60 * 10 // 10 min
 const MAX_LOG_HISTORY = 20
 
-const SOURCE: DownloadSource = "steam_workshop"
 
 interface QueueEntry {
     item: WorkshopItem|ChildWorkshopItem,
@@ -45,7 +44,6 @@ export default class WorkshopDownloadQueue {
     #logs: DownloadLogEntry[] = []  // TODO: clear when queue completed
     #active: boolean
 
-    #event: EventEmitter = new EventEmitter()
 
     #log: PinoLogger
 
@@ -73,24 +71,6 @@ export default class WorkshopDownloadQueue {
         return true
     }
 
-    /**
-     * Subscribe to events
-     * @param cb callback for every event
-     * @returns unsubscribe function - call to unsubscribe
-     */
-    subscribe(cb: (event: DownloadEvent) => void) {
-          const bound = {
-            progress: (data: DownloadProgress, filename: string) => cb({ type: "progress", source: SOURCE, data, itemId: filename }),
-            log: (data: DownloadLogEntry, filename: string) => cb({ type: "log", source: SOURCE, data, itemId: filename }),
-            finish: () => cb({type: "finish", source: SOURCE, data: null }),
-        };
-        for (const [e, fn] of Object.entries(bound)) this.#event.on(e, fn);
-        return () => {
-            for (const [e, fn] of Object.entries(bound)) this.#event.removeListener(e, fn);
-        };
-    }
-
-
     #addLog(type: string, message: string, itemId?: string) {
         const log = {
             type,
@@ -103,7 +83,7 @@ export default class WorkshopDownloadQueue {
             this.#logs.splice(0, this.#logs.length - MAX_LOG_HISTORY)
         }
 
-        this.#event.emit("log", log, itemId)
+        this.#share.eventStream.emit("log", log, itemId)
     }
 
     // how do i tell if done. promise.all but we keep dumping them all in the list
@@ -138,7 +118,7 @@ export default class WorkshopDownloadQueue {
         // All items in queue have been consumed. Some may still be processing but no more after
         // TODO: let them just run in bg, or do we need to check and wait for them?
         this.#active = false
-        this.#event.emit("done")
+        this.#share.eventStream.emit("done")
     }
 
     *#popNextItem() {
@@ -182,7 +162,7 @@ export default class WorkshopDownloadQueue {
             const progress = this.#items.get(entry.item)
             if(!progress) throw Error("Untracked item")
             progress.downloaded = curBytes
-            this.#event.emit("progress", progress, filename)
+            this.#share.eventStream.emit("progress", progress, filename)
             //#this.items.set(item, progress)
         })
         event.addListener("finish", (curBytes, totalBytes) => {
@@ -196,7 +176,7 @@ export default class WorkshopDownloadQueue {
                 progress.state = DownloadState.Failed 
             }
 
-            this.#event.emit("progress", progress, filename)
+            this.#share.eventStream.emit("progress", progress, filename)
 
             this.#addLog("DOWNLOAD", `Downloaded ${filename}`, filename)
             
