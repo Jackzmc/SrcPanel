@@ -18,6 +18,7 @@
       checkable
       :loading="status === 'pending'"
       sticky="header"
+      virtualize
     />
   </div>
 </template>
