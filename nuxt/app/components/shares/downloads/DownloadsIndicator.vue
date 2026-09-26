@@ -10,7 +10,7 @@
 
 <script setup lang="ts">
 import { type ShareInfo } from '@srcpanel/common/Share';
-import DownloadModal from './DownloadModal.vue';
+import DownloadModal from './DownloadQueueModal.vue';
 
 const props = defineProps<{
     ws: UseShareWSInstance,

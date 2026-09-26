@@ -50,7 +50,7 @@ export function useShareWS() {
             toast.add({
                 color: "success",
                 title: "Download queue has finished"
-            })   
+            })
           }
         } else if(msg.type === "error") {
           console.warn("websocket error msg: ", msg)

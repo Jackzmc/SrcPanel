@@ -1,7 +1,7 @@
 <template>
-  <UModal open title="Workshop Downloads" @update:open="$emit('close')" class="min-w-200" :ui="{ body: 'pt-1!'}">
+  <UModal open title="Download Queue" @update:open="$emit('close')" class="min-w-200" :ui="{ body: 'pt-1!'}">
     <template #body >
-        <UTabs v-model="tab" :items="tabs">
+        <UTabs v-model="tab" :items="tabs" :ui="{content: 'pt-4'}">
             <template #content="{ item }">
                 <template v-if="tab == 'items'">
                     <div class="grid grid-flow-row gap-1 items-start">
@@ -14,10 +14,15 @@
                     <p v-if="ws.items.value.size === 0" class="text-muted text-center">No items in queue</p>
                 </template>
                 <template v-else-if="tab == 'logs'">
-                    <DownloadLog v-for="entry in ws.logs.value" 
-                        :key="entry.timestamp"
-                        :entry="entry"
-                    />
+                    <p class="text-muted text-sm pb-2">Logs are shown in ascending order</p>
+                    <table class="table-auto text-left text-sm">
+                        <tbody>
+                            <DownloadLog v-for="entry in ws.logs.value" 
+                                :key="entry.timestamp"
+                                :entry="entry"
+                            />
+                        </tbody>
+                    </table>
                     <p v-if="ws.logs.value.length === 0" class="text-muted text-center">No logs</p>
                 </template>
             </template>
@@ -45,7 +50,7 @@ const tabs = computed<TabsItem[]>(() => {
             value: "items"
         },
         {
-            label: "Logs",
+            label: `Logs (${props.ws.logs.value.length})`,
             value: "logs"
         }
     ]
