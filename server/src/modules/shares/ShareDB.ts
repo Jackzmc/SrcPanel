@@ -59,7 +59,7 @@ export default class ShareDatabase {
             return {
                 filename: row.filename,
                 filesize: row.filesize,
-                state: row.state,
+                state: row.state ?? ShareItemState.Ready,
                 lastModified: row.lastModified,
                 workshop: row.ws_info ? JSON.parse(row.ws_info) : null,
                 collection: row.collection_id ? {

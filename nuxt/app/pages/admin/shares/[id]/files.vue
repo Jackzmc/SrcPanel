@@ -34,7 +34,7 @@ import { sortHeader } from "#imports";
 import ULink from "@nuxt/ui/components/Link.vue";
 import UCheckbox from "@nuxt/ui/components/Checkbox.vue";
 
-import { UBadge, UProgress } from "#components";
+import { UBadge, UProgress, UTooltip } from "#components";
 
 const { requireAuth } = useAuth()
 await requireAuth()
@@ -111,10 +111,12 @@ const columns: TableColumn<AddonInfo>[] = [
       switch(row.original.state) {
         case ShareItemState.Missing: 
           return h(UBadge, { color: "error", variant: "soft", size: "sm" }, () => "Missing")
-        case ShareItemState.Resolving:
-          return h(UBadge, { color: "warning", variant: "soft", size: "sm", icon: 'lucide:hourglass', class: 'text-amber-500' })
-        case ShareItemState.Pending: 
-          return h(UBadge, { color: "warning", variant: "soft", size: "sm", icon: 'lucide:hourglass', class: 'text-amber-500' }, () => "Steam")
+        case ShareItemState.Pending:
+          return  h(UTooltip, { text: "File being processed"}, 
+            () => h(UBadge, { color: "warning", variant: "soft", size: "sm", icon: 'lucide:hourglass', class: 'text-amber-500' }))
+        case ShareItemState.Resolving: 
+          return h(UTooltip, { text: "Resolving steam workshop information"}, 
+            () => h(UBadge, { color: "warning", variant: "soft", size: "sm", icon: 'lucide:hourglass', class: 'text-amber-500' }, () => "Steam"))
       }
     },
     meta: {
