@@ -109,9 +109,12 @@ const columns: TableColumn<AddonInfo>[] = [
     header: "State",
     cell: ({ row }) => {
       switch(row.original.state) {
-        case ShareItemState.Missing: return h(UBadge, { color: "error", variant: "outline", size: "sm" }, () => "Missing")
-        case ShareItemState.Pending: return h(UBadge, { color: "warning", variant: "outline", size: "sm" }, () => "Resolving")
-        case ShareItemState.Ready: return
+        case ShareItemState.Missing: 
+          return h(UBadge, { color: "error", variant: "soft", size: "sm" }, () => "Missing")
+        case ShareItemState.Resolving:
+          return h(UBadge, { color: "warning", variant: "soft", size: "sm", icon: 'lucide:hourglass', class: 'text-amber-500' })
+        case ShareItemState.Pending: 
+          return h(UBadge, { color: "warning", variant: "soft", size: "sm", icon: 'lucide:hourglass', class: 'text-amber-500' }, () => "Steam")
       }
     },
     meta: {
