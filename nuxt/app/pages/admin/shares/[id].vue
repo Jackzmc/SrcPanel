@@ -28,12 +28,16 @@
         <div class="space-y">
           <div class="space-y-2">
             <UCard>
-              <h4 class="font-semibold font-2xl">
-                {{ addons?.length || '-' }} files
-              </h4>
-              <UFormField v-if="shares" label="Selected Share">
-                <USelect v-model="selectedShare" :items="shares.map((share) => share.id)" @change="onChangeShare" />
-              </UFormField>
+              <div class="flex flex-row justify-between items-center">
+                <h4 class="font-semibold font-2xl"> 
+                  {{ addons?.length || '-' }} files
+                </h4>
+                <UTooltip text="Select active share">
+                    <UFormField v-if="shares" label="Share" orientation="horizontal">
+                    <USelect v-model="selectedShare" :items="shares.map((share) => share.id)" @change="onChangeShare" />
+                  </UFormField>
+                </UTooltip>
+              </div>
               <UTabs
                 class="mt-4"
                 :items="tabs"
