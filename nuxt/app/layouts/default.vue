@@ -5,6 +5,7 @@
     <!-- Notification banners -->
     <UBanner
       v-if="meta && !meta.steamAvailable"
+      id="steam-notice"
       icon="i-lucide-circle-alert"
       color="warning"
       title="Notice: Steam appears to be down, most likely for maintenance. You will not be able to join games until it's back online."
@@ -13,12 +14,17 @@
     />
     <UBanner
       v-if="meta?.settings.notice"
+      id="general-banner"
       icon="lucide:circle-alert"
       color="info"
       :title="meta.settings.notice.text"
       close
       class="border-b border-b-white dark:border-b-black"
-      :ui="{ title: 'whitespace-normal text-xs sm:text-sm text-white dark:text-black', icon: 'text-white dark:text-black', root: 'py-2 sm:py-0 -z-1' }"
+      :ui="{ 
+        title: 'whitespace-normal text-xs sm:text-sm text-white dark:text-black', 
+        icon: 'text-white dark:text-black', 
+        root: 'py-2 sm:py-0' 
+      }"
     />
 
     <div>
