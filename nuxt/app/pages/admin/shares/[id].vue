@@ -1,16 +1,18 @@
 <template>
   <div>
     <Hero :title="`Shares / ${route.params.id}`" />
-    <InfoModal
-      v-if="share && modals.file"
-      :id="modals.file.id"
-      :share="share"
-      :loading="modals.file.loading"
-      :addon="modals.file.addon"
-      @close="closeModal"
-      @refresh="refresh"
-    />
-    <Component v-if="share && modal" :is="modal" :share="share" :ws="ws" @close="closeModal" />
+    <template v-if="share">
+      <InfoModal
+        v-if="modals.file"
+        :id="modals.file.id"
+        :share="share"
+        :loading="modals.file.loading"
+        :addon="modals.file.addon"
+        @close="closeModal"
+        @refresh="refresh"
+      />
+      <Component v-if="modal" :is="modal" :share="share" :ws="ws" @close="closeModal" />
+    </template>
     <UContainer class="fluid">
       <UAlert v-if="error" color="error" title="Failed to load share files" :description="error.message" />
       <UAlert v-else-if="sharesError" color="error" title="Failed to load shares" :description="sharesError.message" />
