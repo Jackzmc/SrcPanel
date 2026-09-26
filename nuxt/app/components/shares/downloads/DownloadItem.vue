@@ -1,14 +1,16 @@
 <template>
     <div
-        class="flex flex-row border border-neutral-100 items-center gap-4 p-2 bg-light-blue"
+        :class="['border border-neutral-100 items-center gap-4 m-0 p-0', bodyClass]"
     >
-        <div class="div">
-            <h5 class="text-lg font-bold">{{ id }}</h5>
-            <p class="text-sm">50%</p>
-        </div>
         <UProgress v-model="progress.downloaded" :max="progress.total" 
             size="xl" :intermediate="intermediate" :color="color" 
+            class="h-2 pt-0 mt-0"
         />
+        <div class="flex flex-row justify-between items-center gap-1 p-2">
+            <h5 class="text-lg font-bold">{{ id }}</h5>
+            <p class="text-sm">{{(progress.downloaded/progress.total*100).toFixed(1)}}%</p>
+        </div>
+
         <!-- <h3 v-if="data.state == DownloadState.Downloading" class="text-md text-muted">
             {{ Math.round(data.downloaded/data.total)*100 }}%
         </h3>
@@ -29,10 +31,20 @@ const props = defineProps<{
 const color = computed(() => {
     switch(props.progress.state) {
         case DownloadState.Pending: return "neutral"
-        case DownloadState.Downloading: "primary"
-        case DownloadState.Complete: "success"
-        case DownloadState.Failed: "error"
+        case DownloadState.Downloading: return "primary"
+        case DownloadState.Complete: return "success"
+        case DownloadState.Failed: return "error"
     }
+})
+
+const bodyClass = computed(() => {
+    switch(props.progress.state) {
+        case DownloadState.Pending: return "bg-neutral-200 opacity-20"
+        case DownloadState.Downloading: return "bg-light-blue"
+        case DownloadState.Complete: return "bg-success-100"
+        case DownloadState.Failed: return "bg-error"
+    }
+    
 })
 
 const intermediate = computed(() => {
