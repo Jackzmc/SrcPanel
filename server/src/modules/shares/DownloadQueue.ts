@@ -163,7 +163,7 @@ export default class WorkshopDownloadQueue {
                 chapterIds = getChapterIds(join(this.#share.sourceFolder, filename))
             } catch(err) {
                 this.#log.warn({ id: entry.item.publishedfileid }, "vpk parse error: " + err.stack)
-                this.#addLog("ERROR", `Could not parse ${filename}'s VPK file`, filename)
+                this.#addLog("WARN", `Could not parse ${filename}'s VPK file`, filename)
             }
     
             await this.#share.db.addAddon(filename, {
