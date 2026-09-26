@@ -93,7 +93,12 @@ const columns: TableColumn<AddonInfo>[] = [
           ],
         }, () => row.original.workshop?.title ?? row.original.filename),
         h("span", { class: "flex flex-row gap-1"}, 
-          dests.map(dest => h(UBadge, { color: "neutral", variant: "soft", size: "sm" }, () => dest))
+          dests.map(dest => 
+            h(UTooltip, { text: "Show all files with this destination" }, () => h(UBadge, 
+              { color: "neutral", variant: "soft", size: "sm", onclick: () => selectDest(dest), class: "cursor-pointer" }, 
+              () => dest
+            ))
+          )
         )
       ])
     },
@@ -205,6 +210,12 @@ const searchQuery = ref<string | undefined>();
 const { promptConfirm } = useModal();
 
 const toast = useToast();
+
+function selectDest(dest: string) {
+  if(!searchQuery.value) searchQuery.value = ""
+  else searchQuery.value += " "
+  searchQuery.value += `#${dest}` 
+}
 
 async function deleteSelected() {
   if (!rows.value) return;
