@@ -46,11 +46,12 @@ The sourcemod folder and its plugins are licensed under [GNU General Public Lice
 
 ## Contributing
 
-Contributions are welcome and appreciated. AI use itself is okay if limited and the code is well reviewed, but "vibe-coded" (under my determinations) development is not welcome. 
+Contributions are welcome and appreciated as long as they are reviewed and not vibe-coded.
 
 It is recommend to first open an issue before creating any large PR to discuss it first.
 
 ## AI Use Disclaimer
 
-AI was used intially for the Nuxt UI rewrite for templating, getting started and learning Nuxt. AI has not ever been used on the server or plugin side.
-The only use of AI in this project is for initial templating, reviewing/discussing/consulting blockers, bugfixes, and some feature additions. 
+AI agent-generated code was used very initially to test the technology and generate boilerplate and initial getting started for the UI with nuxt, never on the server or plugin side. 
+
+Since then, AI chatbots have only been used for reviewing / discussing changes, getting past roadblocks if unable to resolved any otherway. 
