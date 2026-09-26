@@ -105,15 +105,34 @@ export default class WorkshopDownloadQueue {
                 })
                 .finally(() => {
                     this.#inFlight.delete(p)
-                    // Notify we completed queue
+                    // Notify if we completed queue
                     if(this.#inFlight.size == 0) {
-                        this.#share.eventStream.emit("finish")
+                        this.#finish()
                     }
                 })
+            // If first item in queue, wipe any existing pending servers.
+            // Everything else was cleaned by #cleanup()
+            if(this.#inFlight.size === 0) {
+                this.#pendingRestartServers = []
+            }
             this.#inFlight.add(p)
         }
     }
 
+    #finish() {
+        this.#share.eventStream.emit("finish")
+        this.#addLog("INFO", "Queue has finished")
+        setTimeout(() => this.#cleanup(), 30_000)
+    }
+
+    /**
+     * Cleanup items and logs after queue completes
+     * We don't clean pending restart servers as we can keep that around until next queue starts
+     */
+    #cleanup() {
+        this.#items.clear()
+        this.#logs = []
+    }
 
     /**
      * Restart all servers that this queue has downloaded to

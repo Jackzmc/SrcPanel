@@ -30,9 +30,10 @@
           <div class="space-y-2">
             <UCard>
               <div class="flex flex-row justify-between items-center">
-                <h4 class="font-semibold font-2xl"> 
+                <h4 v-if="addons" class="font-semibold font-2xl"> 
                   {{ addons?.length || '-' }} files
                 </h4>
+                <IconText v-else leading-icon="lucide:loader-circle" leading-icon-class="animate-spin" />
                 <UTooltip text="Select active share">
                     <UFormField v-if="shares" label="Share" orientation="horizontal">
                     <USelect v-model="selectedShare" :items="shares.map((share) => share.id)" @change="onChangeShare" />
@@ -43,7 +44,7 @@
                 class="mt-4"
                 :items="tabs"
                 :model-value="route.name?.toString().split('-').pop()"
-                @update:model-value="val => navigateTo(`/admin/shares/${route.params.id}/${val}`)"
+                @update:model-value="(val:string) => navigateTo(`/admin/shares/${route.params.id}/${val}`)"
               />
             </UCard>
             <div class="flex flex-col gap-2">

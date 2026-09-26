@@ -143,7 +143,11 @@ const columns: TableColumn<AddonInfo>[] = [
   {
     accessorKey: "lastModified",
     header: sortHeader("Modified At"),
-    cell: ({ row }) => formatDate(row.getValue("lastModified"), true),
+    cell: ({ row }) => h(
+      UTooltip, 
+      { text: formatDate(row.getValue("lastModified"))}, 
+      () => formatDate(row.getValue("lastModified"), true)
+    ),
     meta: {
       class: {
         th: "whitespace-nowrap",
@@ -153,7 +157,11 @@ const columns: TableColumn<AddonInfo>[] = [
   {
     accessorKey: "downloaded",
     header: sortHeader("Downloaded At"),
-    cell: ({ row }) => formatDate(row.getValue("downloaded"), true),
+    cell: ({ row }) => h(
+      UTooltip, 
+      { text: formatDate(row.getValue("downloaded"))}, 
+      () => formatDate(row.getValue("downloaded"), true)
+    ),
     meta: {
       class: {
         th: "whitespace-nowrap",
