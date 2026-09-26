@@ -49,7 +49,7 @@
               <DownloadsIndicator :share="share" :ws="ws" :disabled="!share"/>
               <UButton color="primary" size="lg" @click="setModal(AddWorkshopModal)" :disabled="!share">
                 <UIcon name="i-lucide-plus" />
-                Workshop Addon
+                Download Steam Workshop Addon
               </UButton>
               <UButton color="primary" size="lg" @click="setModal(UploadModal)" :disabled="!share">
                 <UIcon name="i-lucide-upload" />

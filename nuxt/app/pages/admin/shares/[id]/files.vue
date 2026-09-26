@@ -92,7 +92,7 @@ const columns: TableColumn<AddonInfo>[] = [
           ],
         }, () => row.original.workshop?.title ?? row.original.filename),
         h("span", { class: "flex flex-row gap-1"}, 
-          dests.map(dest => h(UBadge, { color: "neutral", variant: "outline", size: "sm" }, () => dest))
+          dests.map(dest => h(UBadge, { color: "neutral", variant: "soft", size: "sm" }, () => dest))
         )
       ])
     },
@@ -158,16 +158,39 @@ const rows = computed(() => {
 });
 
 const filteredData = computed(() => {
-  if(!searchQuery.value) return props.addons
-  const query = searchQuery.value.toLowerCase()
+  if(!parsedQuery.value) return props.addons
+  const query = parsedQuery.value.query
   return props.addons
     .filter(addon => {
-      return addon.filename.toLowerCase().includes(query)
-        || (addon.workshop && addon.workshop.title?.toLowerCase().includes(query)) 
-        || (addon.collection &&
-          (addon.collection.name?.toLowerCase().includes(query) || addon.collection?.id.toLowerCase().includes(query)))
-
+      // Check if part of specified search groups
+      const groupMatch = !parsedQuery.value!.groups
+        || parsedQuery.value!.groups.every(group => addon.installInfo[group])
+      // Check if name matches
+      const fileMatch = !query || (
+          addon.filename.toLowerCase().includes(query)
+          || (addon.workshop && addon.workshop.title?.toLowerCase().includes(query)) 
+          || (addon.collection &&
+            (addon.collection.name?.toLowerCase().includes(query) || addon.collection?.id.toLowerCase().includes(query)))
+      )
+      return groupMatch && fileMatch
     })
+})
+
+const GROUP_REGEX = new RegExp(/#[^\s]+/g)
+
+const parsedQuery = computed(() => {
+  if(!searchQuery.value) return
+  let query: string|undefined = searchQuery.value.toLowerCase()
+  let groups = query.match(GROUP_REGEX)
+  if(groups) {
+    // Remove the '#<group>' from query, trim it, and remove prefix
+    for(let i = 0; i < groups.length; i++) {
+      query = query.replace(groups[i]!, '').trim()
+      groups[i] = groups[i]!.substring(1)
+    }
+  }
+  if(query === "") query = undefined
+  return { query, groups }
 })
 
 const table: any = useTemplateRef("table");
