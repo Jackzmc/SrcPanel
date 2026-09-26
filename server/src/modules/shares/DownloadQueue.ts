@@ -205,7 +205,8 @@ export default class WorkshopDownloadQueue {
                         if(this.#share.destinations[dest].restartTargets) 
                         this.#pendingRestartServers.push(...this.#share.destinations[dest].restartTargets)
                     } catch(err) {
-                        this.#addLog("ERROR", `Failed to enable ${filename} on destination ${dest} (${err.code})`, filename)
+                        const code = err.code ? `(${err.code})` : ''
+                        this.#addLog("ERROR", `Failed to enable ${filename} on destination ${dest} ${code}`, filename)
                         this.#log.warn({ id: entry.item.publishedfileid, dest }, "could not symlink file: " + err.stack)
                     }
                 }
