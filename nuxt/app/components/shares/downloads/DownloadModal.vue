@@ -29,13 +29,12 @@
 </template>
 
 <script setup lang="ts">
-import { DownloadState, type ShareInfo } from '@srcpanel/common/Share';
+import { type ShareInfo } from '@srcpanel/common/Share';
 import DownloadItem from './DownloadItem.vue';
 import DownloadLog from './DownloadLog.vue';
 import type { TabsItem } from '@nuxt/ui';
 
 const props = defineProps<{
-    share: ShareInfo,
     ws: UseShareWSInstance
 }>()
 

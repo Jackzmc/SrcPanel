@@ -15,23 +15,21 @@
     <UContainer class="fluid">
       <UAlert v-if="error" color="error" title="Failed to load share files" :description="error.message" />
       <UAlert v-else-if="sharesError" color="error" title="Failed to load shares" :description="sharesError.message" />
-      <div v-else-if="!addons || status === 'pending'" class="flex justify-center py-12">
-        <div class="flex flex-col items-center">
-          <UIcon name="i-lucide-loader-circle" class="animate-spin size-8 my-4" />
-          <h2 class="text-2xl">
-            Loading files for share <span class="font-semibold">{{ route.params.id }}</span>
-          </h2>
-        </div>
-      </div>
-      <div v-else-if="addons&&share" class="grid grid-cols-4 gap-4">
+      <div class="grid grid-cols-4 gap-4">
         <div class="col-span-3">
-          <NuxtPage :addons="addons" :share="share" :status="status" />
+          <NuxtPage v-if="addons&&share" :addons="addons" :share="share" :status="status" />
+          <div v-else class="flex flex-col items-center">
+            <UIcon name="i-lucide-loader-circle" class="animate-spin size-8 my-4" />
+            <h2 class="text-2xl">
+              Loading files for share <span class="font-semibold">{{ route.params.id }}</span>
+            </h2>
+          </div>
         </div>
         <div class="space-y">
           <div class="space-y-2">
             <UCard>
               <h4 class="font-semibold font-2xl">
-                {{ addons.length }} files
+                {{ addons?.length || '-' }} files
               </h4>
               <UFormField v-if="shares" label="Selected Share">
                 <USelect v-model="selectedShare" :items="shares.map((share) => share.id)" @change="onChangeShare" />
@@ -44,12 +42,12 @@
               />
             </UCard>
             <div class="flex flex-col gap-2">
-              <DownloadsIndicator v-if="share" :share="share" :ws="ws" />
-              <UButton color="primary" size="lg" @click="setModal(AddWorkshopModal)">
+              <DownloadsIndicator :share="share" :ws="ws" :disabled="!share"/>
+              <UButton color="primary" size="lg" @click="setModal(AddWorkshopModal)" :disabled="!share">
                 <UIcon name="i-lucide-plus" />
                 Workshop Addon
               </UButton>
-              <UButton color="primary" size="lg" @click="setModal(UploadModal)">
+              <UButton color="primary" size="lg" @click="setModal(UploadModal)" :disabled="!share">
                 <UIcon name="i-lucide-upload" />
                 Upload a file
               </UButton>
