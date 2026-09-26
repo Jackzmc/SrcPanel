@@ -1,11 +1,11 @@
 <template>
-  <UModal open title="Add Workshop Addon" @update:open="$emit('close')">
+  <UModal open title="Add Workshop Addon" @update:open="emit('close')">
     <template #body>
-      <div class="">
+      <div>
         <template v-if="step == Step.Input">
           <UFormField
             label="Enter workshop url or ID"
-            :error="workshopUrlError"
+            :error="loadingState == LoadingState.Error"
           >
             <UInput
               v-model="url"
@@ -13,7 +13,7 @@
               size="lg"
               type="text"
               placeholder="https://steamcommunity.com/sharedfiles/filedetails/?id=######"
-              :disabled="loadingState !== LoadingState.Idle"
+              :disabled="loadingState === LoadingState.Loading"
               focus
               @input="getWorkshopInfoDebounced"
             />
@@ -22,6 +22,11 @@
             <UIcon name="i-lucide-loader-circle" class="animate-spin size-6 my-4" />
             <h2 class="text-xl">
               Fetching workshop item details...
+            </h2>
+          </div>
+          <div v-else-if="loadingState == LoadingState.Error && !workshopInfo && url" class="flex items-center gap-2 my-2">
+            <h2 class="text-sm text-error">
+              Not a valid workshop url
             </h2>
           </div>
           <div v-else-if="workshopInfo?.item" class="my-4">
@@ -59,6 +64,7 @@
             :key="item.publishedfileid"
             v-model="selectedAddons![item.publishedfileid]"
             :label="item.title"
+            size="xl"
           />
         </div>
         <template v-else-if="step == Step.SelectDestinations && workshopInfo ">
@@ -70,19 +76,44 @@
             :key="id"
             v-model="selectedDests[id]"
             :label="data.name ?? id"
+            size="xl"
+          />
+          <UAlert v-if="!hasAnyItemSelected" 
+            color="warning" 
+            title="No destination selected" 
+            description="Addon will be downloaded but won't be enabled on any destination"
+            class="mt-2"
           />
         </template>
         <template v-else-if="step == Step.Download">
-          <h3 class="text-lg text-center">
+          <h3 v-if="loadingState === LoadingState.Loading" class="text-lg text-center">
             Starting downloads....
           </h3>
+          <template v-else-if="loadingState === LoadingState.Idle">
+            <h3 class="text-lg">
+              Download started
+            </h3>
+            <p class="text-sm">Check the download queue to see progress of the downloads. The server(s) installed to must be restarted once the downloads complete for the addons to be loaded.</p>
+            <div class="py-2">
+              <DownloadsIndicator :ws="ws" />
+            </div>
+          </template>
+          <template v-else-if="loadingState === LoadingState.Error">
+            <h3 class="text-lg text-error">
+              Download failed
+            </h3>
+            <p class="text-sm">An error occurred while attempting to queue downloads. Check the downloads queue to see any messages</p>
+            <div class="py-2">
+              <DownloadsIndicator :ws="ws" />
+            </div>
+          </template>
         </template>
       </div>
     </template>
     <template #footer>
       <div class="flex justify-end gap-2">
-        <UButton size="lg" variant="outline" color="neutral" @click="close">
-          Close
+        <UButton v-if="step !== Step.Download" size="lg" variant="outline" color="neutral" @click="back" :disabled="step == Step.Input">
+          Back
         </UButton>
         <UButton v-if="step == Step.Input" :disabled="!url || !workshopInfo" size="lg" @click="inputNext">
           Next
@@ -95,10 +126,18 @@
         >Next</UButton>
         <UButton
           v-if="step == Step.SelectDestinations"
-          :disabled="!hasAnyItemSelected"
           size="lg"
           @click="selectDestinationsNext"
         >Start Download</UButton>
+
+        <template v-if="step == Step.Download">
+          <UButton v-if="loadingState == LoadingState.Error" size="lg" color="primary" @click="startDownload()" leading-icon="lucide:rotate-ccw">
+            Try Again
+          </UButton>
+          <UButton size="lg" variant="outline" color="neutral" @click="reset" leading-icon="lucide:rotate-ccw">
+            Start Another
+          </UButton>
+        </template>
       </div>
     </template>
   </UModal>
@@ -107,10 +146,9 @@
 <script setup lang="ts">
 import type { CollectionWorkshopItem, DetailsResponse, ShareInfo } from "@srcpanel/common/Share";
 import { debounce } from "@srcpanel/common/util";
-import { formatSize } from "@srcpanel/common/format";
-import type { APIDownloadAddonsMessage } from "@srcpanel/common/shares/downloadWS";
+import DownloadsIndicator from "./downloads/DownloadsIndicator.vue";
 
-const WORKSHOP_LINK_REGEX = new RegExp(/https:\/\/steamcommunity\.com\/(sharedfiles|workshop)\/filedetails\/\?id=(\d*)/);
+const WORKSHOP_LINK_REGEX = new RegExp(/https:\/\/steamcommunity\.com\/(?:sharedfiles|workshop)\/filedetails\/\?id=(\d*)/);
 
 const emit = defineEmits<{
   (e: "close"): void;
@@ -118,6 +156,7 @@ const emit = defineEmits<{
 
 const props = defineProps<{
   share: ShareInfo;
+  ws: UseShareWSInstance
 }>();
 
 enum DownloadState {
@@ -147,33 +186,36 @@ const hasAnyItemSelected = computed(() => {
     : Object.values(selectedDests.value).some(selected => selected);
 });
 
-const workshopUrlError = computed(() => {
-  if (!url.value) return;
-  if (WORKSHOP_LINK_REGEX.test(url.value)) return;
-  return "Invalid workshop URL";
-});
-
 const toast = useToast()
 const step = ref<Step>(Step.Input);
 const loadingState = ref<LoadingState>(LoadingState.Idle);
-const url = ref();
+const url = ref<string>();
 const workshopInfo = ref<DetailsResponse | null>(null);
 const selectedAddons = ref<Record<string, boolean>>();
 const selectedDests = ref<Record<string, boolean>>({});
 
 const downloadState = ref<DownloadState>(DownloadState.Idle);
 const downloadLog = ref<{ state: string; message?: string; error?: boolean; success?: boolean; filename?: string }[]>([]);
-const downloads = ref<Record<string, { entryTitle: string; url: string; totalBytes: number; currentBytes: number; progress: number }>>({});
 
 const getWorkshopInfoDebounced = debounce(getWorkshopInfo, 500);
 async function getWorkshopInfo() {
-  const match = url.value.match(WORKSHOP_LINK_REGEX);
-  if (!match) return;
-
+  if(!url.value) {
+    loadingState.value = LoadingState.Error
+    return;
+  }
   workshopInfo.value = null;
+
+  // Get ID from url, or else just try to parse as number
+  const match = url.value.match(WORKSHOP_LINK_REGEX) ;
+  const id = match ? match[1] : parseInt(url.value)
+  if (!id) {
+    loadingState.value = LoadingState.Error
+    return;
+  }
   loadingState.value = LoadingState.Loading;
+
   try {
-    const response = await fetch(`/api/shares/workshop/${match[2]}/details`);
+    const response = await fetch(`/api/shares/workshop/${id}/details`);
     workshopInfo.value = await response.json();
     loadingState.value = LoadingState.Idle;
   } catch (error) {
@@ -199,6 +241,27 @@ function inputNext() {
     const item = workshopInfo.value as CollectionWorkshopItem;
     selectedAddons.value = Object.fromEntries(
       item.children.map(item => [item.publishedfileid, true]));
+  }
+}
+function back() {
+  switch(step.value) {
+    case Step.Input: 
+      emit("close");
+      break;
+    case Step.SelectAddons: 
+      step.value = Step.Input;
+      break;
+    case Step.SelectDestinations: 
+      step.value = Step.SelectAddons;
+      break;
+  }
+}
+
+function reset() {
+  if(step.value === Step.Download) {
+    workshopInfo.value = null
+    url.value = ""
+    step.value = Step.Input
   }
 }
 
@@ -231,30 +294,26 @@ async function startDownload(force = false) {
       .map(([id]) => id);
     params.append("children", addonIds.join(","));
   }
-
+  loadingState.value = LoadingState.Loading
   const response = await request(
     `/api/shares/${props.share.id}/addons/workshop/${workshopInfo.value?.item?.publishedfileid}?${params.toString()}`, 
     {
       method: "POST"
     })
 
-  emit("close")
-  
   if('body' in response) {
+    loadingState.value = LoadingState.Idle
     toast.add({
       color: "success",
       title: "Downloads enqueued",
     })
   } else {
+    loadingState.value = LoadingState.Error
     toast.add({
       color: "error",
       title: "Download failed",
       description: response.error.message
     })
   }
-}
-
-function close() {
-  emit("close");
 }
 </script>
