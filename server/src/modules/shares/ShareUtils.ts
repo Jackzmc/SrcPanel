@@ -3,7 +3,7 @@ import { AddonWorkshopInfo, WorkshopItem } from '@srcpanel/common/Share';
 import { readFile } from 'fs/promises';
 import ValveKV from 'valve-kv';
 
-export function getChapterIds(filepath: string): string[] | null {
+export function getChapterIds(filepath: string): string[] | undefined {
     const vpk = new VPK(filepath)
     vpk.load()
     for(const filepath of vpk.files) {
@@ -11,11 +11,11 @@ export function getChapterIds(filepath: string): string[] | null {
             const missionData = vpk.getFile(filepath)
             const root = ValveKV.deserialize(missionData.toString('utf-8'))
             const mission = root["mission"]
-            if(!mission) return null
+            if(!mission) return
             const modes = mission["modes"]
-            if(!modes) return null
+            if(!modes) return
             const chapters = modes["coop"]
-            if(!chapters) return null
+            if(!chapters) return
             // Sort chapter entries (keys are chapter #) ascendingly
             // { "1": { Map: "...", ... }} -> chapters[1].Map
             const sorted = Object.entries(chapters)
@@ -25,7 +25,7 @@ export function getChapterIds(filepath: string): string[] | null {
             return sorted
         }
     }
-    return null
+    return undefined
 }
 
 const startPattern = new RegExp(/\s*public\s*Plugin\s*:?myinfo\s*=/)
