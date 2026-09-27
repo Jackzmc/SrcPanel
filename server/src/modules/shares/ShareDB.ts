@@ -27,8 +27,10 @@ export default class ShareDatabase {
 
     static async #runMigrations(db: DBDriver) {
         try {
+            const migrationsPath = join(process.cwd(), "migrations/shares")
+            Logger.debug({ migrationsPath }, "running migrations")
             await db.migrate({ 
-                migrationsPath: "migrations/shares"
+                migrationsPath
             })
         }catch(err) {
             throw new Error(`Error running db migrations"`, { cause: err })
