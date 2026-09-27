@@ -1,3 +1,7 @@
+-------------
+-- UP 
+------------
+
 CREATE TABLE IF NOT EXISTS workshop_collections (
     id VARCHAR(64) NOT NULL,
     name VARCHAR(128) NOT NULL,

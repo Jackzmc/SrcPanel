@@ -1,4 +1,4 @@
-ARG IMAGE=node:24-slim
+ARG IMAGE=node:26-slim
 FROM $IMAGE AS base
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
