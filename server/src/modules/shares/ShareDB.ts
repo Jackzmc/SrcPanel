@@ -13,7 +13,11 @@ export default class ShareDatabase {
     #db: sqlite.Database<sqlite3.Database, sqlite3.Statement>
 
     static async init(share: ShareInfo) {
-        const path = join(share.sourceFolder, `panel_share.db`)
+        
+        const filename = process.env.NODE_ENV === "production"
+            ? `panel_share.db`
+            : `panel_share.${process.env.NODE_ENV?.toLowerCase() ?? 'dev'}.db`
+        const path = join(share.sourceFolder, filename)
         
         try {
             const sqlDb = await sqliteOpen({
