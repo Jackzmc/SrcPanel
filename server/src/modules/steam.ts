@@ -8,6 +8,7 @@ import { EventEmitter } from 'node:events';
 import QuickLRU from 'quick-lru';
 import logger from '../logger.js'
 import CacheManager from './CacheManager.js';
+import { sleep } from '../util.js';
 const log = logger.child({ name: "steam" })
 
 // How many bytes of progress to make before sending an update
@@ -221,7 +222,6 @@ export default class SteamAPI {
                 this.#itemCache.set(file.publishedfileid, file)
             }
             details = [...details, ...files]
-            log.trace({fn: "getItemDetails", details })
         }
         return details
     }
@@ -240,7 +240,7 @@ export default class SteamAPI {
     async resolveWSQueue() {
         const ids = Object.keys(this.#workshopResolveQueue)
         if(ids.length === 0) return
-        while(ids.length > 0) {
+        while(true) {
             const itemIds = ids.splice(0, 100)
             log.trace({ fn: "resolveWSQueue", itemIds, state: "processing"})
             const items = await this.getItemDetails(itemIds)
@@ -259,6 +259,10 @@ export default class SteamAPI {
                 }
                 delete this.#workshopResolveQueue[id]
             }
+
+            // Limit the amount of requests at once
+            if(ids.length === 0) break
+            await sleep(5_000)
         }
     }
 
