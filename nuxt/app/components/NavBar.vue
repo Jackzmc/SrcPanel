@@ -11,6 +11,7 @@
       <strong :class="['font-sans text-2xl', openClassText]">{{ appName }}</strong>
     </template>
 
+    <!-- FIXME: Can't use -1 z index for UBanner as its unclickable. Put the dropdown at higher? -->
     <template #left>
       <strong :class="['font-sans text-2xl', openClassText]">{{ appName }}</strong>
       <UNavigationMenu

@@ -10,7 +10,7 @@
       color="warning"
       title="Notice: Steam appears to be down, most likely for maintenance. You will not be able to join games until it's back online."
       close
-      :ui="{ title: 'whitespace-normal text-xs sm:text-sm', root: 'py-2 sm:py-0 -z-1' }"
+      :ui="{ title: 'whitespace-normal text-xs sm:text-sm', root: 'py-2 sm:py-0' }"
     />
     <UBanner
       v-if="meta?.settings.notice"
