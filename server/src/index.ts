@@ -44,7 +44,7 @@ const MySQLStore = MySQLSession(FastifySession)
 
 import loggerInstance from './logger.js'
 const app = Fastify({
-  pluginTimeout: 20000,
+  pluginTimeout: 30_000,
   trustProxy: process.env.NODE_ENV === "production",
   loggerInstance
 })
@@ -147,6 +147,11 @@ app.setErrorHandler((error, request, reply) => {
   Sentry.captureException(error);
   return reply.status(500).send({ error: 'INTERNAL_SERVER_ERROR', message: 'An unexpected error has occurred' });
 });
+
+
+// TODO: this realllly needs a refactor (SRCPNL-134)
+// pull the initalize outside of fastify, so we stop hitting plugin timeouts
+// and clean it up so external services (FluxerBot/DiscordBot) can be its own thing and not just thrown in
 
 
 await app.register(MiddleManager)
