@@ -38,8 +38,6 @@ import './sentry.js'
 const START_TIME = performance.now()
 const FORCE_SHUTDOWN_TIMEOUT = 20_000
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-
 const MySQLStore = MySQLSession(FastifySession)
 
 import loggerInstance from './logger.js'
@@ -120,8 +118,6 @@ declare module 'fastify' {
   export interface FastifyRequest {
     user?: User,
   }
-  // I dont know how to do this properly, its a fucking pain
-  // eslint-disable-next-line -- this works for typescript
   interface Session extends CustomFastifySession { }
 }
 
@@ -194,6 +190,7 @@ await app.register(MiddleManager, core)
       saveUninitialized: false
     })
 
+    // CORS: 
     app.addHook('preHandler', (request, reply, next) => {
       if (request.headers.origin && CORS_WHITELIST.includes(request.headers.origin)) {
         reply.header("Access-Control-Allow-Origin", request.headers.origin)
@@ -206,6 +203,12 @@ await app.register(MiddleManager, core)
     async function loadRoutes(rootPrefix: string = "/", folderPath: string) {
       const dirents = await readdir(folderPath, { withFileTypes: true })
 
+      /**
+       * This system is... old and messy
+       * The original idea was !! prefixed folders would be authenticated and single ! would be unauthenticated
+       * But should just have an "authorized" and "unauthorized" folder instead of the weird prefix system
+       */
+
       for (const dirent of dirents) {
         if (dirent.isDirectory()) {
           let prefix: string;
@@ -213,6 +216,7 @@ await app.register(MiddleManager, core)
             prefix = rootPrefix
             if (dirent.name[1] === "!") {
               app.register(async (fastify: FastifyInstance, opts: FastifyPluginOptions) => {
+                // Add auth check to !! folder routes
                 fastify.addHook('preHandler', async (req, reply) => {
                   await fastify.authmngr.verify(req, reply)
                 })
@@ -227,10 +231,12 @@ await app.register(MiddleManager, core)
           await loadRoutes(prefix, path.join(folderPath, dirent.name))
 
         } else if (dirent.isFile()) {
+          // Check if a file, then check if js/ts file
           const match = dirent.name.match(/^(.+)\.(.+)$/)
           if (!match) return
           const [, name, ext] = match
           if (ext === "js" || ext === "ts") {
+            // Figure out route prefix from name (index -> use folder, otherwise use file name)
             const prefix = (name === "index") ? rootPrefix : `${rootPrefix}${name}`
             try {
               await app.register(await import(`file://${path.join(folderPath, dirent.name)}`), { prefix })
@@ -245,7 +251,7 @@ await app.register(MiddleManager, core)
     }
     if (hadSignal) return
 
-    await loadRoutes(mainPrefix, path.join(__dirname, './routes'))
+    await loadRoutes(mainPrefix, path.join(import.meta.dirname, './routes'))
 
     await setupNotFound(app as unknown as FastifyInstance)
     try {
@@ -284,6 +290,7 @@ async function setupNotFound(app: FastifyInstance) {
   })
 }
 
+// TODO: move to own file?
 /**
  * Schedules to add new partition to activity_log in a yearly basis
  */
