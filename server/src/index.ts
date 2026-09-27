@@ -127,20 +127,20 @@ declare module 'fastify' {
 
 
 const CORS_WHITELIST = process.env.CORS_WHITELIST ? process.env.CORS_WHITELIST.split(",") : ["localhost:8080"]
-app.register(cors, {
+await app.register(cors, {
   origin: CORS_WHITELIST,
   methods: ["GET", "POST", "PATCH", "UPDATE", "DELETE"]
 })
-app.register(FastifyHelmet, {
+await app.register(FastifyHelmet, {
   // TODO: proper impl
   contentSecurityPolicy: false
 })
-app.register(FastifyEtag)
-app.register(fastifyWebsocket)
-app.register(fastifyUrlData)
+await app.register(FastifyEtag)
+await app.register(fastifyWebsocket)
+await app.register(fastifyUrlData)
 
 import internalMetrics from './hooks/metrics.js'
-app.register(internalMetrics)
+await app.register(internalMetrics)
 
 app.setErrorHandler((error, request, reply) => {
   app.log.error(error)
@@ -149,7 +149,7 @@ app.setErrorHandler((error, request, reply) => {
 });
 
 
-app.register(MiddleManager)
+await app.register(MiddleManager)
   .then(async () => {
     scheduleActivityLogPartition(app as unknown as FastifyInstance);
 
@@ -226,7 +226,7 @@ app.register(MiddleManager)
           if (ext === "js" || ext === "ts") {
             const prefix = (name === "index") ? rootPrefix : `${rootPrefix}${name}`
             try {
-              await app.register(import(`file://${path.join(folderPath, dirent.name)}`), { prefix })
+              await app.register(await import(`file://${path.join(folderPath, dirent.name)}`), { prefix })
             } catch (err) {
               app.log.fatal(`Could not load route ${name}. prefix=${prefix}\n${err.stack}`)
               process.exit(1)
