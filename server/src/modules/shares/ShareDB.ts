@@ -7,35 +7,42 @@ import { join } from 'node:path';
 import { AddonInfo, AddonWorkshopInfo, ShareInfo, ShareItemState, WorkshopCollectionInfo } from '@srcpanel/common/Share';
 import { SQL } from 'sql-template-strings';
 
+type DBDriver = sqlite.Database<sqlite3.Database, sqlite3.Statement>
+
 export default class ShareDatabase {
     #log: PinoLogger
     #share: ShareInfo
-    #db: sqlite.Database<sqlite3.Database, sqlite3.Statement>
+    #db: DBDriver
 
     static async init(share: ShareInfo) {
-        
         const filename = process.env.NODE_ENV === "production"
             ? `panel_share.db`
             : `panel_share.${process.env.NODE_ENV?.toLowerCase() ?? 'dev'}.db`
         const path = join(share.sourceFolder, filename)
-        
+
+        const sqlDb = await this.#openDatabase(path)
+        await this.#runMigrations(sqlDb)
+        return new ShareDatabase(share, sqlDb)
+    }
+
+    static async #runMigrations(db: DBDriver) {
         try {
-            const sqlDb = await sqliteOpen({
-                filename: path,
+            await db.migrate({ 
+                migrationsPath: "migrations/shares"
+            })
+        }catch(err) {
+            throw new Error(`Error running db migrations"`, { cause: err })
+        }
+    }
+
+    static async #openDatabase(filename: string): Promise<DBDriver> {
+        try {
+            return await sqliteOpen({
+                filename,
                 driver: sqlite3.Database
             })
-            
-            try {
-                await sqlDb.migrate({ 
-                    migrationsPath: "migrations/shares"
-                })
-
-                return new ShareDatabase(share, sqlDb)
-            } catch(err) {
-                throw new Error("Failed to run migrations", { cause: err })
-            }
         }catch(err) {
-            throw new Error(`Could not open database file at \"${path}\": ${err}`, { cause: err })
+            throw new Error(`Could not open database file at \"${filename}\"`, { cause: err })
         }
     }
 

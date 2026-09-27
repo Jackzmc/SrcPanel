@@ -121,7 +121,7 @@ export async function loadShare(dataDir: string, steam: SteamAPI, info: ShareInf
 
         return share
     } catch(err) {
-        log.error({ shareId: info.id }, `could not initalize share: ` + err)
+        log.error({ shareId: info.id, err }, `could not initialize share`)
         throw err
     }
 }
