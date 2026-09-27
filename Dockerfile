@@ -5,9 +5,8 @@ ENV PATH="$PNPM_HOME:$PATH"
 
 WORKDIR /app
 
-# Use Corepack for pnpm
 RUN apt-get update && apt-get install -y git
-RUN corepack enable pnpm && corepack install -g pnpm@latest-10
+RUN npm install -g pnpm@latest-10
 COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
 COPY common-types common-types/
 
