@@ -140,6 +140,7 @@ await app.register(fastifyWebsocket)
 await app.register(fastifyUrlData)
 
 import internalMetrics from './hooks/metrics.js'
+import init from './core/index.js'
 await app.register(internalMetrics)
 
 app.setErrorHandler((error, request, reply) => {
@@ -152,10 +153,11 @@ app.setErrorHandler((error, request, reply) => {
 // TODO: this realllly needs a refactor (SRCPNL-134)
 // pull the initalize outside of fastify, so we stop hitting plugin timeouts
 // and clean it up so external services (FluxerBot/DiscordBot) can be its own thing and not just thrown in
+const core = await init()
 
-
-await app.register(MiddleManager)
+await app.register(MiddleManager, core)
   .then(async () => {
+
     scheduleActivityLogPartition(app as unknown as FastifyInstance);
 
     if  (hadSignal) return

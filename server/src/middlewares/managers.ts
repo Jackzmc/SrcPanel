@@ -1,102 +1,36 @@
 import { FastifyInstance } from 'fastify';
 import FastifyPlugin from 'fastify-plugin'
-import AuthManager from '../modules/auth/AuthManager.js';
-
-import mysql from 'mysql2/promise'
-import { mkdir } from 'fs/promises'
-import UserManager from '../modules/users/UserManager.js';
-import { join, dirname } from 'path';
-import { fileURLToPath } from 'url';
-
-import ServerManager from '../modules/servers/ServerManager.js';
-import SteamAPI from '../modules/steam.js'
 import User from '../modules/users/User.js';
-import ConfigManager from '../modules/ConfigManager.js';
 import { SESSION_VERSION } from '../routes/auth/steam.js';
 import { NOT_LOGGED_IN } from '../responses.js';
-import DiscussionManager from '../modules/DiscussionManager.js';
-import TaskManager from '../modules/tasks/TaskManager.js';
-import CacheManager from '../modules/CacheManager.js';
-import DataManager from '../modules/DataManager.js'
 
 import * as Sentry from '@sentry/node'
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
+import { CACHE_FOLDER, CONFIG_FOLDER, CoreModules, DATA_FOLDER } from '../core/index.js';
 
 export const MAIN_DB = process.env.MYSQL_DB ?? 'left4dead2'
 export const ADMINS_DB = process.env.MYSQL_ADMINS_DB ?? MAIN_DB
 
 export const TABLE_PREFIX = "panel"
 
-/**
- * Tries to create a directory, does not error if exists
- * @param dir directory to create
- */
-async function tryMkdir(dir: string) {
-  try {
-    await mkdir(dir)
-  } catch (e: any) {
-    if (e.code !== "EEXIST") throw e
-  }
-}
 
-async function db(fastify: FastifyInstance) {
-  const DATA_FOLDER = join(__dirname, '/../../../data')
-  const CACHE_FOLDER = join(DATA_FOLDER, "cache")
-  const CONFIG_FOLDER = join(__dirname, '/../../../config')
-  fastify.log.debug('data %s', DATA_FOLDER)
-  fastify.log.debug('config %s', CONFIG_FOLDER)
-  fastify.log.debug('cache %s', CACHE_FOLDER)
-  await tryMkdir(DATA_FOLDER)
-  await tryMkdir(CACHE_FOLDER)
 
-  const cacheManager = await CacheManager.Create(CACHE_FOLDER)
-  fastify.decorate("cache", cacheManager)
-
-  const steam = new SteamAPI(cacheManager)
-
-  const db = mysql.createPool({
-    socketPath: process.env.MYSQL_SOCKET_PATH,
-    host: process.env.MYSQL_HOST,
-    database: MAIN_DB,
-    user: process.env.MYSQL_USER,
-    password: process.env.MYSQL_PASSWORD,
-    namedPlaceholders: true
-  })
-  const admindb = mysql.createPool({
-    socketPath: process.env.MYSQL_ADMINS_SOCKET_PATH || process.env.MYSQL_SOCKET_PATH,
-    host: process.env.MYSQL_ADMINS_HOST || process.env.MYSQL_HOST,
-    database: ADMINS_DB,
-    user: process.env.MYSQL_ADMINS_USER || process.env.MYSQL_USER,
-    password: process.env.MYSQL_ADMINS_PASSWORD || process.env.MYSQL_PASSWORD,
-    namedPlaceholders: true
-  })
-  const jobScheduler = new TaskManager({ resolution: 1000 * 60 * 2 }) // Run every 2 minutes
-
-  const userManager = new UserManager(db, steam)
-  const configManager = await ConfigManager.Load(CONFIG_FOLDER)
-  const authManager = new AuthManager(admindb, db, steam, configManager, cacheManager)
-  const serverManager = new ServerManager(steam, DATA_FOLDER, CONFIG_FOLDER)
-  await Promise.all([
-    authManager.Init(),
-    serverManager.Load()
-  ])
+async function db(fastify: FastifyInstance, options: CoreModules) {
+  fastify.decorate("cache", options.modules.cacheManager)
   fastify.decorate("paths", {
     config: CONFIG_FOLDER,
     cache: CACHE_FOLDER,
     data: DATA_FOLDER
   })
-  fastify.decorate('users', userManager)
-  fastify.decorate('authmngr', authManager)
-  fastify.decorate('db', db)
-  fastify.decorate('data', DataManager.create(db))
-  fastify.decorate('steam', steam)
-  fastify.decorate('servers', serverManager)
-  fastify.decorate('config', configManager)
-  fastify.decorate('jobs', jobScheduler)
-  fastify.decorate('managers', {
-    discussions: new DiscussionManager(fastify)
-  })
+  fastify.decorate('users', options.modules.userManager)
+  fastify.decorate('authmngr', options.modules.authManager)
+  fastify.decorate('db', options.db.db)
+  fastify.decorate('steam', options.modules.steam)
+  fastify.decorate('servers', options.modules.serverManager)
+  fastify.decorate('config', options.modules.configManager)
+  fastify.decorate('jobs', options.modules.jobScheduler)
+  fastify.decorate('managers', options.modules)
+  fastify.decorate('data', options.modules.dataManager)
+
   fastify.addHook('preHandler', async (req, reply) => {
     if (req.session?.user) {
       if (req.session.version !== SESSION_VERSION) {
@@ -120,13 +54,13 @@ async function db(fastify: FastifyInstance) {
       } else {
         return NOT_LOGGED_IN(reply, "INVALID_APIKEY", "Missing or invalid x-apikey or authorization header")
       }
-      const apikey = await authManager.getAPIKey(token)
+      const apikey = await fastify.authmngr.getAPIKey(token)
       if (apikey)
         req.user = new User(fastify, apikey.steamid)
     }
   })
   fastify.addHook("onClose", (inst, done) => {
-    serverManager.onShutdown()
+    fastify.servers.onShutdown()
     fastify.log.info("Shutdown complete")
     done()
   })

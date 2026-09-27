@@ -6,6 +6,7 @@ import AuthManager from "./auth/AuthManager.js";
 import { DefinedTask } from "./tasks/Task.js";
 import { FastifyInstance } from "fastify";
 import { ADMINS_DB, MAIN_DB, TABLE_PREFIX } from "../middlewares/managers.js";
+import TaskManager from "./tasks/TaskManager.js";
 
 const AUTO_ARCHIVE_TIME = 1000 * 60 * 60 * 24 * 10 // 10 days
 const CACHE_TTL = 1000 * 60 * 60 * 1
@@ -21,17 +22,19 @@ export default class DiscussionManager {
 
     #fetchJob: DefinedTask
 
-    constructor(fastify: FastifyInstance) {
-        this.#db = fastify.db
-        this.#config = fastify.config
-        this.#authmngr = fastify.authmngr
+
+    constructor(db: Pool, config: ConfigManager, authmngr: AuthManager, jobs: TaskManager) {
+        this.#db = db
+        this.#config = config
+        this.#authmngr = authmngr
 
         const task = async () => {
             this.#lastFetchTime = Date.now()
             await this.fetchDiscussions()
         }
-        this.#fetchJob = fastify.jobs.register("discussions.fetch", task.bind(this))
-        fastify.jobs.scheduleRepeating(this.#fetchJob, { hours: 2 })
+        this.#fetchJob = jobs.register("discussions.fetch", task.bind(this))
+        jobs.scheduleRepeating(this.#fetchJob, { hours: 2 })
+        jobs.schedule(this.#fetchJob, { seconds: 0 })
     }
 
     async #tryRefresh() {
