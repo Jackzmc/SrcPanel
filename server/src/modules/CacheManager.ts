@@ -1,9 +1,9 @@
 import { join } from "path"
-import { Database, open as sqliteOpen } from 'sqlite'
-import sqlite3 from 'sqlite3';
 import { SQL } from "sql-template-strings";
 import { unixTimestamp } from "../util.js";
 import Logger from '../logger.js'
+import BetterSqlite from 'better-sqlite3'
+import Database from "better-sqlite3";
 const log = Logger.child({ name: "cache" })
 
 enum RecordType {
@@ -29,7 +29,7 @@ export interface RecordOptions {
 }
 
 export type ValidType = number | string | object | boolean | Map<any, any> | Set<any>
-type DatabaseType = Database<sqlite3.Database, sqlite3.Statement>
+type DatabaseType = BetterSqlite.Database
 
 /**
  * A persistent keyvalue cache manager, supporting saving Maps, Sets, JSON, booleans directly
@@ -39,7 +39,7 @@ type DatabaseType = Database<sqlite3.Database, sqlite3.Statement>
  */
 export default class CacheManager {
   #db: DatabaseType;
-  constructor(db: Database) {
+  constructor(db: DatabaseType) {
     this.#db = db
   }
 
@@ -53,11 +53,7 @@ export default class CacheManager {
 
   static async #openDb(filepath: string): Promise<DatabaseType> {
     try {
-      const db = await sqliteOpen({
-        filename: filepath,
-        driver: sqlite3.Database
-      })
-      return db
+      return BetterSqlite(filepath)
     } catch (err) {
       throw new Error(`Failed to load cache ${filepath}`, { cause: err })
     }
@@ -65,14 +61,19 @@ export default class CacheManager {
 
   static async #initDb(db: DatabaseType) {
     try {
-      await db.exec(SQL`CREATE TABLE IF NOT EXISTS cache (
-                key TEXT NOT NULL,
-                data TEXT NOT NULL,
-                type INT NOT NULL,
-                updated_at INT NOT NULL,
-                expires_at INT,
-                PRIMARY KEY(key)
-            );`);
+      // TODO: migrate to migrations
+      db
+        .prepare(`
+          CREATE TABLE IF NOT EXISTS cache (
+            key TEXT NOT NULL,
+            data TEXT NOT NULL,
+            type INT NOT NULL,
+            updated_at INT NOT NULL,
+            expires_at INT,
+            PRIMARY KEY(key)
+          )
+        `)
+        .run();
     } catch (err) {
       throw new Error(`Failed to run database initalization scripts`, { cause: err })
     }
@@ -119,10 +120,11 @@ export default class CacheManager {
 
     const expiresAt = options.ttl ? unixTimestamp() + options.ttl : null
 
-    this.#db.run(
-      "INSERT OR REPLACE INTO cache (key,data,type,updated_at,expires_at) VALUES (?,?,?,?,?)",
-      [key, value, type, unixTimestamp(), expiresAt]
-    )
+    this.#db
+      .prepare(
+        "INSERT OR REPLACE INTO cache (key,data,type,updated_at,expires_at) VALUES (?,?,?,?,?)"
+      )
+      .run([key, value, type, unixTimestamp(), expiresAt])
   }
 
   /**
@@ -132,7 +134,9 @@ export default class CacheManager {
    * @return {*}  {(Promise<RecordRow | null>)}
    */
   async getRawRecord(key: string): Promise<RecordRow | null> {
-    const row = await this.#db.get<RecordRow>("SELECT * FROM cache WHERE key = ?", [key]) ?? null
+    const row = this.#db
+      .prepare<any[], RecordRow>("SELECT * FROM cache WHERE key = ?")
+      .get([key]) ?? null
 
     // Check if record expired
     if (row && row.expires_at >= unixTimestamp()) {
@@ -174,6 +178,8 @@ export default class CacheManager {
   }
 
   async delete(key: string) {
-    await this.#db.run("DELETE FROM cache WHERE key = ?", [key])
+    this.#db
+      .prepare("DELETE FROM cache WHERE key = ?")
+      .run([key])
   }
 }
