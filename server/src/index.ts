@@ -228,7 +228,7 @@ await app.register(MiddleManager)
             try {
               await app.register(await import(`file://${path.join(folderPath, dirent.name)}`), { prefix })
             } catch (err) {
-              app.log.fatal(`Could not load route ${name}. prefix=${prefix}\n${err.stack}`)
+              app.log.fatal({ err }, `Could not load route ${name}. prefix=${prefix}`)
               process.exit(1)
             }
           }
