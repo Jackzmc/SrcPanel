@@ -31,7 +31,7 @@ export default class ShareDatabase {
                 throw new Error("Failed to run migrations", { cause: err })
             }
         }catch(err) {
-            throw new Error(`Could not open database file at \"${path}\"`, { cause: err })
+            throw new Error(`Could not open database file at \"${path}\": ${err}`, { cause: err })
         }
     }
 
