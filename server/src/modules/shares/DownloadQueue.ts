@@ -8,7 +8,7 @@
 // 
 
 
-import { ChildWorkshopItem, DownloadEvent, DownloadLogEntry, DownloadProgress, DownloadSource, DownloadState, ShareItemState, WorkshopItem } from "@srcpanel/common/Share"
+import { ChildWorkshopItem, DownloadLogEntry, DownloadProgress, DownloadState, ShareItemState, WorkshopItem } from "@srcpanel/common/Share"
 import SteamAPI from "../steam.js"
 import Share from "./Share.js"
 import { join } from "node:path"
