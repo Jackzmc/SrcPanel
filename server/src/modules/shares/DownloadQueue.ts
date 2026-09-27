@@ -177,7 +177,7 @@ export default class WorkshopDownloadQueue {
             this.#log.debug({ filename }, "download completed")
             this.#addLog("DOWNLOAD", `Downloaded ${filename}`, filename)
             
-            let chapterIds: string[] | null = null
+            let chapterIds: string[] | undefined
             try {
                 chapterIds = getChapterIds(join(this.#share.sourceFolder, filename))
             } catch(err) {
