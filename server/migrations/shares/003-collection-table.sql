@@ -3,7 +3,7 @@
 -- Up
 --------------------------------------------------------------------------------
 
-CREATE TABLE IF NOT EXISTS workshop_collections (
+CREATE TABLE workshop_collections (
     id VARCHAR(64) NOT NULL,
     name VARCHAR(128) NOT NULL,
     PRIMARY KEY (id)
@@ -18,6 +18,10 @@ GROUP BY collection_id;
 
 ALTER TABLE addoncache DROP COLUMN collection_name;
 
+-- Different migration system
+DROP TABLE IF EXISTS migrations;
+
 --------------------------------------------------------------------------------
 -- Down
 --------------------------------------------------------------------------------
+DROP TABLE workshop_collections;

@@ -33,10 +33,12 @@ export default class ShareDatabase {
             for (const file of await findMigrationFilenames(migrationsPath)) {
                 Logger.trace({ file }, "reading migration file")
                 migrations.push(await readMigrationFile(file))
+                Logger.trace({ file }, "reading migration file")
+
             }
             Logger.debug({ migrationsPath, migrationFiles }, "running migrations")
             migrate(db, migrations)
-        }catch(err) {
+        } catch(err) {
             throw new Error(`Error running db migrations`, { cause: err })
         }
     }
@@ -55,7 +57,7 @@ export default class ShareDatabase {
         this.#log = Logger.child({ name: `ShareDB/${share.id}` })
         this.#share = share
         this.#db = db
-        this.#log.info({}, `DB Ready`)
+        this.#log.info({ name: db.name }, `DB Ready`)
     }
 
     async getFilenames(): Promise<Set<string>> {
