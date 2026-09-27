@@ -33,7 +33,7 @@ export default class ShareDatabase {
                 migrationsPath
             })
         }catch(err) {
-            throw new Error(`Error running db migrations"`, { cause: err })
+            throw new Error(`Error running db migrations`, { cause: err })
         }
     }
 
