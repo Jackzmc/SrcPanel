@@ -57,10 +57,11 @@ FROM $IMAGE AS final-server
 
 RUN apt-get update && apt-get install -y curl && apt-get clean
 
-WORKDIR /app/server
+WORKDIR /app
 COPY --from=builder-server /app/node_modules ./node_modules
 COPY --from=builder-server /app/server ./server/
 COPY --from=builder-server /app/common-types ./common-types
+WORKDIR /app/server
 
 ENV NODE_ENV=production
 
