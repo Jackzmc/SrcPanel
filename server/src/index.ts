@@ -239,7 +239,7 @@ await app.register(MiddleManager, core)
             // Figure out route prefix from name (index -> use folder, otherwise use file name)
             const prefix = (name === "index") ? rootPrefix : `${rootPrefix}${name}`
             try {
-              await app.register(await import(`file://${path.join(folderPath, dirent.name)}`), { prefix })
+              await app.register(import(`file://${path.join(folderPath, dirent.name)}`), { prefix })
             } catch (err) {
               app.log.fatal({ err }, `Could not load route ${name}. prefix=${prefix}`)
               process.exit(1)
@@ -254,16 +254,13 @@ await app.register(MiddleManager, core)
     await loadRoutes(mainPrefix, path.join(import.meta.dirname, './routes'))
 
     await setupNotFound(app as unknown as FastifyInstance)
-    try {
-      await app.listen({
-        host: process.env.LISTEN_HOST || '0.0.0.0',
-        port: Number(process.env.LISTEN_PORT) || 8081
-      })
-      sendMetric("startup_time_ms", performance.now() - START_TIME)
-    } catch (err) {
-      app.log.error(err)
-      process.exit(1)
-    }
+    
+    await app.listen({
+      host: process.env.LISTEN_HOST || '0.0.0.0',
+      port: Number(process.env.LISTEN_PORT) || 8081
+    })
+    sendMetric("startup_time_ms", performance.now() - START_TIME)
+    
     ready = true
 })
 
