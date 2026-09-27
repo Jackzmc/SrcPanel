@@ -49,7 +49,7 @@ export type ConfigGroupData = ConfigStandaloneGroupData | ConfigDynamicGroupData
 
 // BECAUSE FOR SOME **** REASON THIS ISNT LOADING HERE:
 
-dotenv.config()
+dotenv.config({ quiet: true })
 const DebugLivePlugin = process.env.LIVE_PLUGIN_DEBUG != undefined
 
 export default class ServerManager {

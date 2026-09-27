@@ -23,7 +23,6 @@ type CreateDiscussionType = Static<typeof CreateDiscussion>
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
   const discManager = fastify.managers.discussions
-  await discManager.fetchDiscussions()
 
   fastify.get('/', async (req, reply): Promise<APIDiscussion[]> => {
     const discussions: APIDiscussion[] = []
