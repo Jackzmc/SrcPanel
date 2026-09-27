@@ -28,8 +28,10 @@ export default class ShareDatabase {
         try {
             const migrationsPath = join(process.cwd(), "migrations/shares")
             const migrationFiles = await findMigrationFilenames(migrationsPath)
+            Logger.debug({ migrationFiles }, "found migration files")
             const migrations: IMigration[] = []
             for (const file of await findMigrationFilenames(migrationsPath)) {
+                Logger.trace({ file }, "reading migration file")
                 migrations.push(await readMigrationFile(file))
             }
             Logger.debug({ migrationsPath, migrationFiles }, "running migrations")
