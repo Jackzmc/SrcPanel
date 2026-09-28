@@ -108,7 +108,14 @@ export default class ShareDatabase {
             .run([ id, name, name ])
     }
 
-    async addAddon(filename: string, fsInfo?: { filesize: number, lastModified: number }, state: ShareItemState = ShareItemState.Ready, meta: Record<string, any> | null = null): Promise<void> {
+    /**
+     * Adds or updates an addon entry
+     * @param filename 
+     * @param fsInfo file system information
+     * @param state
+     * @param meta optional metadata
+     */
+    async upsertAddon(filename: string, fsInfo?: { filesize: number, lastModified: number }, state: ShareItemState = ShareItemState.Ready, meta: Record<string, any> | null = null): Promise<void> {
         this.#db
             .prepare(`
                 REPLACE INTO addoncache

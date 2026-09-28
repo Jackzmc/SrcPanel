@@ -306,7 +306,7 @@ export default class Share {
       }
       const chapterIds = getChapterIds(path.join(this.sourceFolder, filename))
 
-      this.#db.addAddon(filename, {
+      this.#db.upsertAddon(filename, {
         filesize: item.file_size,
         lastModified: item.time_updated
       }, ShareItemState.Ready, { chapterIds })

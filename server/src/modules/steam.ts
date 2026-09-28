@@ -226,15 +226,30 @@ export default class SteamAPI {
         return details
     }
 
+    /**
+     * Adds item to steam workshop resolve queue to be processed. Queue is not started automatically, call {@link resolveWSQueue}.
+     * NOTE: Callback is overwritten on duplicate calls with same workshopId
+     * @param workshopId workshop id
+     * @param cb callback that is called with the WorkshopItem once processed
+     */
     addToWSResolveQueue(workshopId: number, cb: WSResolveCallback) {
         if(isNaN(workshopId)) throw new Error("Workshop id must be a number")
+        // If cached, return cache instantly
         if(this.#itemCache[workshopId]) {
             log.trace({ fn: "addToWSResolveQueue", workshopId, state: "resolved"})
             cb(this.#itemCache[workshopId])
             return
         }
+        // if(this.#workshopResolveQueue[workshopId]) throw new Error(`Item "${workshopId}" already queued`)
         this.#workshopResolveQueue[workshopId] = cb
         log.trace({ fn: "addToWSResolveQueue", workshopId, state: "queued"})
+    }
+
+    /**
+     * Is an item in the workshop resolve queue?
+     */
+    isQueuedForWSResolve(workshopId: number): boolean {
+        return this.#workshopResolveQueue[workshopId] != undefined
     }
 
     async resolveWSQueue() {
