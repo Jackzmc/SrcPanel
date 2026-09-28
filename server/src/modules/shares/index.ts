@@ -7,7 +7,6 @@ import Share from './Share.js'
 import SteamAPI from '../../modules/steam.js'
 import Logger from '../../logger.js'
 import ShareDatabase from './ShareDB.js'
-import ShareScanner from './ShareScanner.js'
 
 const log = Logger.child({ name: "shares" })
 

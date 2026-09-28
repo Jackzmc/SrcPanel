@@ -89,7 +89,7 @@ export default class WorkshopDownloadQueue {
                 state: DownloadState.Pending
             }
             this.#items.set(item.publishedfileid, progress)
-            const p = CONCURRENT_LIMIT(() => this.#startDownload({ item, destinations }))
+            const p = CONCURRENT_LIMIT(async() => await this.#startDownload({ item, destinations }))
                 .catch(err => {
                     this.#log.error({ id: item.publishedfileid }, `download error: ${err.stack}`)
                     this.#addLog("ERROR", `Failed to download ${item.publishedfileid}`)
