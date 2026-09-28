@@ -3,6 +3,7 @@ import type { AddonInfo, DownloadEvent, DownloadLogEntry, DownloadProgress, Scan
 
 const MAX_LOG_HISTORY = 20
 const MAX_RECONNECT_INTERVAL_MS = 1000 * 60
+const prefix = '[ShareEventStream]'
 
 export function useShareWS() {
   const logs = ref<DownloadLogEntry[]>([])
@@ -27,16 +28,17 @@ export function useShareWS() {
     ws?.close()
     ws = new WebSocket(`${host}/api/shares/event-stream`)
     ws.onerror = (event) => {
-      console.warn("websocket error: ", event)
+      console.warn(prefix, "connection error: ", event)
     }
     ws.addEventListener("close", (event) => {
       const retryTime = Math.min(1000 * (Math.pow(1, reconnectAttempts)), MAX_RECONNECT_INTERVAL_MS);
       reconnectAttempts++
-      console.warn("Share event stream socket ended, reconnecting in", retryTime)
+      console.warn(prefix, "disconnected, reconnecting in", retryTime)
 
       setTimeout(() => setup(), retryTime)
     })
     ws.addEventListener("open", (event) => {
+      console.info(prefix, 'Connected, subscribing to', subscriptions.keys())
       for(const sub of subscriptions.keys()) {
         sendRequest({ subscribe: sub })
       }
@@ -80,12 +82,14 @@ export function useShareWS() {
     // Wait until it's open before subscribing
     if(ws.readyState == ws.OPEN) {
       sendRequest({ subscribe: shareId })
+    } else if(ws.readyState == ws.CLOSED) {
+      setup()
     }
   }
 
   function mergeAddons(event: ScanEvent) {
     if(!addons.value) return
-    console.info("merging addons", event)
+    console.debug(prefix, "merging addons", event)
     for(let i = 0; i < addons.value.length; i++) {
       const addon = addons.value[i]!
       // Remove the removed
