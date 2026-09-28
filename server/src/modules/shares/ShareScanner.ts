@@ -3,7 +3,7 @@ import Logger from '../../logger.js'
 import Share from './Share.js'
 import ShareDatabase from './ShareDB.js'
 import SteamAPI from '../steam.js'
-import { AddonWorkshopInfo, ScanEvent, ShareInfo, ShareItemState } from '@srcpanel/common/Share'
+import { AddonWorkshopInfo, ScanEvent, ShareInfo, ShareItemState, WorkshopItem } from '@srcpanel/common/Share'
 import { readdir, stat } from 'node:fs/promises'
 import { join } from 'node:path'
 import { getMetadata, serializeWorkshopItem } from './ShareUtils.js'
@@ -95,9 +95,9 @@ export default class ShareScanner {
         const meta = await getMetadata(filepath)
 
         // If we think it's a steam addon (resolveSteam says true), then mark it as resolving
-        const state = await this.#resolveSteam(filename) ? ShareItemState.Resolving : ShareItemState.Ready
+        const state = this.#resolveSteam(filename) ? ShareItemState.Resolving : ShareItemState.Ready
 
-        await this.#db.addAddon(filename, fsinfo, state, meta)
+        await this.#db.upsertAddon(filename, fsinfo, state, meta)
     }
 
     /**
@@ -105,7 +105,7 @@ export default class ShareScanner {
      * @param filename 
      * @returns true if added to queue, false if not valid steam addon
      */
-    async #resolveSteam(filename: string): Promise<boolean> {
+    #resolveSteam(filename: string): boolean {
         // Get steam workshop info if it looks like a workshop id
         if(filename.endsWith(".vpk")) {
             const id = parseInt(filename)
@@ -125,7 +125,6 @@ export default class ShareScanner {
 
     async #scan() {
         this.#scanStart = Date.now()
-
         const unchecked = await this.#db.getFilenames()
         const dirents = await readdir(this.#share.sourceFolder, { withFileTypes: true })
         for(const dirent of dirents) {
@@ -142,8 +141,12 @@ export default class ShareScanner {
                 } catch(err) {
                     this.#log.warn({ filename: dirent.name }, "failed to add item: " + err)
                 }
+            } else if(entry.state == ShareItemState.Resolving && !entry.workshop) {
+                // Item's workshop info was never resolved
+                this.#resolveSteam(dirent.name)
             }
         }
+
         // Process all missing steam data
         await this.#steam.resolveWSQueue()
         await this.#db.markMissing(unchecked)
