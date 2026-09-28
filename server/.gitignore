@@ -1,10 +1,11 @@
-dist/
 node_modules/
+/config/*
+!/config/*.sample.yml
+/dist
+/data
+/content
+/logs
+
 .env
-config/*
-!config/*.sample.yml
-data/
-content
 start.sh
 update.sh
-logs

@@ -61,11 +61,11 @@
     "systeminformation": "^5.31.7",
     "tail": "^2.2.6",
     "valve-kv": "^1.2.1",
-    "yaml": "^2.9.0"
+    "yaml": "^2.9.0",
+    "@fastify/url-data": "^6.0.3"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@fastify/url-data": "^6.0.3",
     "@sentry/types": "^10.56.0",
     "@types/better-sqlite3": "^9.6.0",
     "@types/dockerode": "^4.0.1",
