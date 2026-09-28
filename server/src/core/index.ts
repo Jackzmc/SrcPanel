@@ -30,10 +30,8 @@ export default async function init() {
     log.debug('config %s', CONFIG_FOLDER)
     log.debug('cache %s', CACHE_FOLDER)
 
-    await Promise.all([ 
-        tryMkdir(DATA_FOLDER),
-        tryMkdir(CACHE_FOLDER)
-    ])
+    await tryMkdir(DATA_FOLDER)
+    await tryMkdir(CACHE_FOLDER)
 
     const db = await loadDB()
     const modules = await loadModules(db)
