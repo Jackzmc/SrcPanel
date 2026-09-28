@@ -97,7 +97,9 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         message: "Steam workshop support is not enabled for this share"
       })
 
-      const destinations: string[]|undefined = req.query.destinations?.split(",")
+      const destinations: string[]|undefined = req.query.destinations && req.query.destinations != "" 
+        ? req.query.destinations.split(",")
+        : undefined
       
       // Check if the item is a collection and either resolve the children or download them all
       const children = await fastify.steam.getCollectionChildren(req.params.publishedfileid)
