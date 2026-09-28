@@ -60,15 +60,6 @@ export default class WorkshopDownloadQueue {
         return this.#logs
     }
 
-    get allItemsComplete() {
-        for(const progress of this.#items.values()) {
-            if(progress.state == DownloadState.Pending || progress.state == DownloadState.Downloading) {
-                return false
-            }
-        }
-        return true
-    }
-
     #addLog(type: string, message: string, itemId?: string) {
         const log = {
             type,
@@ -147,20 +138,20 @@ export default class WorkshopDownloadQueue {
 
         this.#log.debug({ filename }, "download started")
 
-        const progress = this.#items.get(filename)
+        const progress = this.#items.get(entry.item.publishedfileid)
         if(!progress) throw new Error("Untracked item")
         progress.state = DownloadState.Downloading
     
         const event = SteamAPI.downloadItemProgress(entry.item, this.#share.sourceFolder, { timeout: DOWNLOAD_TIMEOUT_MS })
         event.addListener("progress", (curBytes, totalBytes) => {
-            const progress = this.#items.get(filename)
+            const progress = this.#items.get(entry.item.publishedfileid)
             if(!progress) throw Error("Untracked item")
             progress.downloaded = curBytes
             this.#share.eventStream.emit("progress", progress, filename)
             //#this.items.set(item, progress)
         })
         event.addListener("finish", async (curBytes, totalBytes) => {
-            const progress = this.#items.get(filename)
+            const progress = this.#items.get(entry.item.publishedfileid)
             if(!progress) throw Error("Untracked item")
             progress.downloaded = curBytes
 
