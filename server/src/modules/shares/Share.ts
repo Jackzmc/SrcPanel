@@ -112,13 +112,18 @@ export default class Share {
    * @returns unsubscribe function - call to unsubscribe
    */
   subscribe(cb: (msg: WebsocketMessage) => void) {
+
     const bound = {
-      progress: (data: DownloadProgress, filename: string) => cb({ 
+      progress: (data: DownloadProgress, filename?: string) => cb({ 
         type: "event", event: { type: "progress", source: SOURCE, data, itemId: filename } }),
-      log: (data: DownloadLogEntry, filename: string) => cb({ type: "event", event: {
+      log: (data: DownloadLogEntry, filename?: string) => cb({ type: "event", event: {
         type: "log", source: SOURCE, data, itemId: filename }}),
       finish: () => cb({ type: "event", event: { type: "finish", source: SOURCE, data: null }}),
     };
+    // Maybe a liiitle hacky, but send an event for every log and progress on connect
+    this.#steamQueue.logs.forEach((log) => bound.log(log,undefined))
+    this.#steamQueue.itemsProgress.forEach((item) => bound.progress(item,undefined))
+
     for (const [e, fn] of Object.entries(bound)) this.#event.on(e, fn);
     return () => {
         console.log('unsubscribing')

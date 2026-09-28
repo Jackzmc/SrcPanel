@@ -38,7 +38,7 @@ export function useShareWS() {
       setTimeout(() => setup(), retryTime)
     })
     ws.addEventListener("open", (event) => {
-      console.info(prefix, 'Connected, subscribing to', subscriptions.keys())
+      console.info(prefix, 'Connected, subscribing to', [...subscriptions.keys()])
       for(const sub of subscriptions.keys()) {
         sendRequest({ subscribe: sub })
       }

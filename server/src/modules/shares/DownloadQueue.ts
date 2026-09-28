@@ -60,6 +60,10 @@ export default class WorkshopDownloadQueue {
         return this.#logs
     }
 
+    get itemsProgress() {
+        return structuredClone(this.#items)
+    }
+
     #addLog(type: string, message: string, itemId?: string) {
         const log = {
             type,
