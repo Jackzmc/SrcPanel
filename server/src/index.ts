@@ -32,6 +32,8 @@ import { FluxerBot } from './modules/FluxerBot.js'
 import { sleep } from './util.js'
 import { DataManagerInstance } from './modules/DataManager.js'
 import { getGlobalWriter, sendMetric } from './modules/metrics/influx.js'
+import init from './core/index.js'
+
 
 import './sentry.js'
 
@@ -41,6 +43,9 @@ const FORCE_SHUTDOWN_TIMEOUT = 20_000
 const MySQLStore = MySQLSession(FastifySession)
 
 import loggerInstance from './logger.js'
+
+const core = await init()
+
 const app = Fastify({
   pluginTimeout: 30_000,
   trustProxy: process.env.NODE_ENV === "production",
@@ -50,7 +55,7 @@ import * as Sentry from '@sentry/node'
 Sentry.setupFastifyErrorHandler(app);
 
 process.on('unhandledRejection', (reason: any, promise ) => {
-  app.log.fatal({}, 'Unhandled promise rejection:\n' + reason.stack);
+  app.log.fatal({ err: reason }, 'Unhandled promise rejection');
   process.exit(1)
 });
 // app.log.trace("trace")
@@ -136,7 +141,7 @@ await app.register(fastifyWebsocket)
 await app.register(fastifyUrlData)
 
 import internalMetrics from './hooks/metrics.js'
-import init from './core/index.js'
+
 await app.register(internalMetrics)
 
 app.setErrorHandler((error, request, reply) => {
@@ -146,10 +151,6 @@ app.setErrorHandler((error, request, reply) => {
 });
 
 
-// TODO: this realllly needs a refactor (SRCPNL-134)
-// pull the initalize outside of fastify, so we stop hitting plugin timeouts
-// and clean it up so external services (FluxerBot/DiscordBot) can be its own thing and not just thrown in
-const core = await init()
 
 await app.register(MiddleManager, core)
   .then(async () => {

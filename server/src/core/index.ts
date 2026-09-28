@@ -36,6 +36,8 @@ export default async function init() {
     const db = await loadDB()
     const modules = await loadModules(db)
 
+    log.info("core initialized")
+
     return {
         db,
         modules
