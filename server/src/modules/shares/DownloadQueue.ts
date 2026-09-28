@@ -38,7 +38,7 @@ interface QueueEntry {
 export default class WorkshopDownloadQueue {
     #share: Share
 
-    #items: Map<WorkshopItem, DownloadProgress> = new Map() // id is key
+    #items: Map<string, DownloadProgress> = new Map() // id is workshop id
 
     #logs: DownloadLogEntry[] = []  // TODO: clear when queue completed
 
@@ -97,7 +97,7 @@ export default class WorkshopDownloadQueue {
                 total: Number(item.file_size),
                 state: DownloadState.Pending
             }
-            this.#items.set(item, progress)
+            this.#items.set(item.publishedfileid, progress)
             const p = CONCURRENT_LIMIT(() => this.#startDownload({ item, destinations }))
                 .catch(err => {
                     this.#log.error({ id: item.publishedfileid }, `download error: ${err.stack}`)
@@ -147,20 +147,20 @@ export default class WorkshopDownloadQueue {
 
         this.#log.debug({ filename }, "download started")
 
-        const progress = this.#items.get(entry.item)
+        const progress = this.#items.get(filename)
         if(!progress) throw new Error("Untracked item")
         progress.state = DownloadState.Downloading
     
         const event = SteamAPI.downloadItemProgress(entry.item, this.#share.sourceFolder, { timeout: DOWNLOAD_TIMEOUT_MS })
         event.addListener("progress", (curBytes, totalBytes) => {
-            const progress = this.#items.get(entry.item)
+            const progress = this.#items.get(filename)
             if(!progress) throw Error("Untracked item")
             progress.downloaded = curBytes
             this.#share.eventStream.emit("progress", progress, filename)
             //#this.items.set(item, progress)
         })
         event.addListener("finish", async (curBytes, totalBytes) => {
-            const progress = this.#items.get(entry.item)
+            const progress = this.#items.get(filename)
             if(!progress) throw Error("Untracked item")
             progress.downloaded = curBytes
 
