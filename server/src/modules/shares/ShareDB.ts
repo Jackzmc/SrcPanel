@@ -59,7 +59,7 @@ export default class ShareDatabase {
         this.#db = db
         this.#log.info({ name: db.name }, `DB Ready`)
     }
-
+    
     async getFilenames(): Promise<Set<string>> {
         const rows = this.#db
             .prepare<any[], { filename: string}>("SELECT filename FROM addoncache")
@@ -125,10 +125,17 @@ export default class ShareDatabase {
             .run([ filename, fsInfo?.filesize, fsInfo?.lastModified, state, JSON.stringify(meta) ])
     }
 
+    /**
+     * Add workshop information and sets state to Ready 
+     * @param filename 
+     * @param wsInfo workshop addon information
+     * @param collection collection id/name. creates collection row automatically
+     */
     async addWorkshopInfo(filename: string, wsInfo: AddonWorkshopInfo, collection?: WorkshopCollectionInfo): Promise<void> {
         if(collection != null) {
             await this.tryCreateCollection(collection.id, collection.name)
         }
+        // TODO: Currently we set to Ready, but should we check *only* if it's ShareItemState.Resolving/Pending?
         this.#db
             .prepare(
                 `UPDATE addoncache SET state = ?, ws_info = ?, collection_id = ? WHERE filename = ?`
