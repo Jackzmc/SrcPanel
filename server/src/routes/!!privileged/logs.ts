@@ -59,6 +59,8 @@ interface PartitionData {
   fetchTime: number
 }
 
+// TODO: move all this init logic to core
+
 // Default values, will fetch full data after
 
 let availableServers = new Set(["web"])   // List of all distinct 'server' values
