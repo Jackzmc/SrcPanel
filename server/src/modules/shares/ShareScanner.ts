@@ -92,7 +92,12 @@ export default class ShareScanner {
             lastModified: Math.round(fstat.mtime.getTime() / 1000),
         }
 
-        const meta = await getMetadata(filepath)
+        let meta: Record<string, any> = {}
+        try {
+            meta = await getMetadata(filepath)
+        } catch(err) {
+            this.#log.warn({ err, filename }, "failed to get metadata")
+        }
 
         // If we think it's a steam addon (resolveSteam says true), then mark it as resolving
         const state = this.#resolveSteam(filename) ? ShareItemState.Resolving : ShareItemState.Ready
@@ -139,7 +144,7 @@ export default class ShareScanner {
                 try {
                     await this.#checkAddon(dirent.name)
                 } catch(err) {
-                    this.#log.warn({ filename: dirent.name }, "failed to add item: " + err)
+                    this.#log.warn({ filename: dirent.name }, "failed to scan item: " + err)
                 }
             } else if(entry.state == ShareItemState.Resolving && !entry.workshop) {
                 // Item's workshop info was never resolved
