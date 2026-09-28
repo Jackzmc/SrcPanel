@@ -80,10 +80,10 @@ export function useShareWS() {
     subscriptions.add(shareId)
     addons.value = _addons?.value
     // Wait until it's open before subscribing
-    if(ws.readyState == ws.OPEN) {
-      sendRequest({ subscribe: shareId })
-    } else if(ws.readyState == ws.CLOSED) {
+    if(!ws || ws.readyState == ws.CLOSED) {
       setup()
+    } else if(ws.readyState == ws.OPEN) {
+      sendRequest({ subscribe: shareId })
     }
   }
 
