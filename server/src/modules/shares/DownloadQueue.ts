@@ -12,7 +12,7 @@ import { ChildWorkshopItem, DownloadLogEntry, DownloadProgress, DownloadState, S
 import SteamAPI from "../steam.js"
 import Share from "./Share.js"
 import { join } from "node:path"
-import { getChapterIds, serializeWorkshopItem } from "./ShareUtils.js"
+import { getChapterIds, getMetadata, serializeWorkshopItem } from "./ShareUtils.js"
 import pLimit from "p-limit"
 import EventEmitter from "node:events"
 import Logger from '../../logger.js'
@@ -167,24 +167,37 @@ export default class WorkshopDownloadQueue {
             this.#share.eventStream.emit("progress", progress, filename)
             this.#log.debug({ filename }, "download completed")
             this.#addLog("DOWNLOAD", `Downloaded ${filename}`, filename)
-            
-            let chapterIds: string[] | undefined
+
+            let meta: Record<string, any> = {}
             try {
-                chapterIds = getChapterIds(join(this.#share.sourceFolder, filename))
+                meta = getMetadata(join(this.#share.sourceFolder, filename))
             } catch(err) {
-                this.#log.warn({ id: entry.item.publishedfileid }, "vpk parse error: " + err.stack)
-                this.#addLog("WARN", `Could not parse ${filename}'s VPK file`, filename)
+                this.#log.warn({ id: entry.item.publishedfileid, err }, "metadata error")
+                this.#addLog("WARN", `Could not get file metadata for ${filename}`, filename)
             }
-    
-            await this.#share.db.upsertAddon(filename, {
-                filesize: entry.item.file_size,
-                lastModified: entry.item.time_updated
-                }, ShareItemState.Ready, { chapterIds }
-            )
-                .catch(err => {
-                    this.#addLog("ERROR", `Could not record ${filename} to database`, filename)
-                    this.#log.error({ id: entry.item.publishedfileid }, "db error: " + err.stack)
-                })
+            
+            try {
+                await this.#share.db.upsertAddon(
+                    filename, 
+                    {
+                        filesize: entry.item.file_size,
+                        lastModified: entry.item.time_updated
+                    }, 
+                    ShareItemState.Ready, 
+                    meta
+                )
+
+                // Add workshop info
+                if('collection' in entry.item)
+                    await this.#share.db.addWorkshopInfo(filename, serializeWorkshopItem(entry.item), entry.item.collection)
+                        .catch(err => {
+                            this.#addLog("ERROR", `Error adding workshop information for ${filename}`, filename)
+                            this.#log.warn({ id: entry.item.publishedfileid }, "addWorkshopInfo error: " + err.stack)
+                        })
+            } catch(err) {
+                this.#addLog("ERROR", `Could not record ${filename} to database`, filename)
+                this.#log.error({ id: entry.item.publishedfileid }, "db error: " + err.stack)
+            }
             
             // Enable for every destination
             if(entry.destinations) {
@@ -202,13 +215,6 @@ export default class WorkshopDownloadQueue {
                     }
                 }
             }
-            // Add workshop info
-            if('collection' in entry.item)
-                await this.#share.db.addWorkshopInfo(filename, serializeWorkshopItem(entry.item), entry.item.collection)
-                    .catch(err => {
-                        this.#addLog("ERROR", `Error adding workshop information for ${filename}`, filename)
-                        this.#log.warn({ id: entry.item.publishedfileid }, "addWorkshopInfo error: " + err.stack)
-                    })
         })
     }
 }

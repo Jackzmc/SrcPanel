@@ -29,8 +29,8 @@ export function useShareWS() {
       console.warn("websocket error: ", event)
     }
     ws.addEventListener("close", (event) => {
+      const retryTime = Math.min(1000 * (Math.pow(1, reconnectAttempts)), MAX_RECONNECT_INTERVAL_MS);
       reconnectAttempts++
-      const retryTime = Math.min(1000 * (Math.pow(1.5, reconnectAttempts) + 3), MAX_RECONNECT_INTERVAL_MS);
       console.warn("Share event stream socket ended, reconnecting in", retryTime)
 
       setTimeout(() => setup(), retryTime)
