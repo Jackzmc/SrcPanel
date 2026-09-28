@@ -1,11 +1,12 @@
 .*
 !.git
-http-docs
-test
+*docs/
+test/
+sourcemod/
 **/dist
 **/node_modules
 node_modules/
 server/data
 server/config
 server/logs
-server/.env
+server/*.env

@@ -57,9 +57,11 @@ FROM $IMAGE AS final-server
 RUN apt-get update && apt-get install -y curl && apt-get clean
 
 WORKDIR /app
-COPY --from=builder-server /app/node_modules ./node_modules
-COPY --from=builder-server /app/server ./server/
 COPY --from=builder-server /app/common-types ./common-types
+COPY --from=builder-server /app/node_modules ./node_modules
+COPY --from=builder-server /app/server/package.json ./server/
+# node_modules copy twice (one for root, one for server - which symlinks to root)
+COPY --from=builder-server --parents /app/server/./node_modules /app/server/./migrations /app/server/./dist/ ./server
 WORKDIR /app/server
 
 ENV NODE_ENV=production
@@ -74,9 +76,9 @@ CMD ["node", "./dist/src/index.js"]
 FROM $IMAGE AS final-ui
 WORKDIR /app
 USER node
-COPY --from=builder-ui --chown=node /app/node_modules ./node_modules
-COPY --from=builder-ui --chown=node /app/nuxt/ ./ui/
 COPY --from=builder-ui --chown=node /app/common-types common-types/
+COPY --from=builder-ui --chown=node /app/node_modules ./node_modules
+COPY --from=builder-ui --chown=node /app/nuxt/.output/ ./ui/.output
 
 WORKDIR /app/ui
 
