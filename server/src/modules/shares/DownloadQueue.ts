@@ -185,7 +185,7 @@ export default class WorkshopDownloadQueue {
                 this.#addLog("WARN", `Could not parse ${filename}'s VPK file`, filename)
             }
     
-            await this.#share.db.addAddon(filename, {
+            await this.#share.db.upsertAddon(filename, {
                 filesize: entry.item.file_size,
                 lastModified: entry.item.time_updated
                 }, ShareItemState.Ready, { chapterIds }
