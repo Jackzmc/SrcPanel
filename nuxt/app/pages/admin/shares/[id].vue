@@ -44,7 +44,7 @@
                 class="mt-4"
                 :items="tabs"
                 :model-value="route.name?.toString().split('-').pop()"
-                @update:model-value="(val:string) => navigateTo(`/admin/shares/${route.params.id}/${val}`)"
+                @update:model-value="(val) => navigateTo(`/admin/shares/${route.params.id}/${val as string}`)"
               />
             </UCard>
             <div class="flex flex-col gap-2">

@@ -34,10 +34,9 @@
 </template>
 
 <script setup lang="ts">
-import { type ShareInfo } from '@srcpanel/common/Share';
 import DownloadItem from './DownloadItem.vue';
 import DownloadLog from './DownloadLog.vue';
-import type { TabsItem } from '@nuxt/ui';
+import { TabsItem } from '@nuxt/ui';
 
 const props = defineProps<{
     ws: UseShareWSInstance

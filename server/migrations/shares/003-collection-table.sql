@@ -20,6 +20,7 @@ ALTER TABLE addoncache DROP COLUMN collection_name;
 
 -- Different migration system
 DROP TABLE IF EXISTS migrations;
+DROP TABLE IF EXISTS meta;
 
 --------------------------------------------------------------------------------
 -- Down
