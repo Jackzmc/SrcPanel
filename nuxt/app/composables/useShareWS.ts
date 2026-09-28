@@ -80,6 +80,7 @@ export function useShareWS() {
 
   function mergeAddons(event: ScanEvent) {
     if(!addons.value) return
+    console.info("merging addons", event)
     for(let i = 0; i < addons.value.length; i++) {
       const addon = addons.value[i]!
       // Remove the removed
