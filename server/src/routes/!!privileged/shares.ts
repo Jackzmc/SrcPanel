@@ -112,11 +112,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
       req.log.debug({ shareId: req.params.shareId, destinations, isCollection: children != null }, "download requested")
 
-      share.workshopDLQueue.downloadItems(details, destinations)
-
-      req.log.trace({}, "items enqueued")
-      // Check if a collection, if so grab the children too 
       if(children != null) {
+        // If a collection - download only children
         const selectedChildrenIds = req.query.children?.split(",")
         req.log.trace({}, "getting child details")
         const childrenItems = (await fastify.steam.getItemDetails(children))
@@ -135,6 +132,9 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         req.log.trace({}, "adding child details to queue")
         share.workshopDLQueue.downloadItems(childrenItems, destinations)
         req.log.debug({ shareId: req.params.shareId, children }, "adding collection children")
+      } else {
+        // Not a collection - download item
+        share.workshopDLQueue.downloadItems(details, destinations)
       }
 
       return reply.status(204).send()

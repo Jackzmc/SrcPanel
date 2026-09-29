@@ -80,7 +80,7 @@ export default class WorkshopDownloadQueue {
     }
 
     /**
-     * Enqueues items to be downloaded
+     * Enqueues items to be downloaded. Does not check for items being collection themselves
      * @param items list of items to install
      * @param destinations list of optional destinations to install to on completition
      */
@@ -95,6 +95,8 @@ export default class WorkshopDownloadQueue {
             this.#items.set(item.publishedfileid, progress)
             const p = CONCURRENT_LIMIT(async() => await this.#startDownload({ item, destinations }))
                 .catch(err => {
+                    progress.state = DownloadState.Failed
+                    this.#items.set(item.publishedfileid, progress)
                     this.#log.error({ id: item.publishedfileid }, `download error: ${err.stack}`)
                     this.#addLog("ERROR", `Failed to download ${item.publishedfileid}`)
                 })
@@ -144,19 +146,20 @@ export default class WorkshopDownloadQueue {
 
         const progress = this.#items.get(entry.item.publishedfileid)
         if(!progress) throw new Error("Untracked item")
+        // if(!progress) return this.#log.error({ filename }, "untracked item")
         progress.state = DownloadState.Downloading
     
         const event = SteamAPI.downloadItemProgress(entry.item, this.#share.sourceFolder, { timeout: DOWNLOAD_TIMEOUT_MS })
         event.addListener("progress", (curBytes, totalBytes) => {
             const progress = this.#items.get(entry.item.publishedfileid)
-            if(!progress) throw Error("Untracked item")
+            if(!progress) return this.#log.error({ filename }, "untracked item (progress)")
             progress.downloaded = curBytes
             this.#share.eventStream.emit("progress", progress, filename)
             //#this.items.set(item, progress)
         })
         event.addListener("finish", async (curBytes, totalBytes) => {
             const progress = this.#items.get(entry.item.publishedfileid)
-            if(!progress) throw Error("Untracked item")
+            if(!progress) return this.#log.error({ filename }, "untracked item (finish)")
             progress.downloaded = curBytes
 
             if (curBytes != entry.item.file_size) {

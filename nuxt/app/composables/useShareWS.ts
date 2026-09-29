@@ -39,6 +39,8 @@ export function useShareWS() {
     })
     ws.addEventListener("open", (event) => {
       console.info(prefix, 'Connected, subscribing to', [...subscriptions.keys()])
+      logs.value = []
+      items.value.clear()
       for(const sub of subscriptions.keys()) {
         sendRequest({ subscribe: sub })
       }
