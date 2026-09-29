@@ -138,90 +138,94 @@ export default class WorkshopDownloadQueue {
 
     }
 
-    async #startDownload(entry: QueueEntry) {
-        const filename = `${entry.item.publishedfileid}.vpk`
-        this.#addLog("DOWNLOAD", `Started download of ${filename}`)
+    async #startDownload(entry: QueueEntry): Promise<void> {
+        return new Promise((resolve, reject) => {
+            const filename = `${entry.item.publishedfileid}.vpk`
+            this.#addLog("DOWNLOAD", `Started download of ${filename}`)
 
-        this.#log.debug({ filename }, "download started")
+            this.#log.debug({ filename }, "download started")
 
-        const progress = this.#items.get(entry.item.publishedfileid)
-        if(!progress) throw new Error("Untracked item")
-        // if(!progress) return this.#log.error({ filename }, "untracked item")
-        progress.state = DownloadState.Downloading
-    
-        const event = SteamAPI.downloadItemProgress(entry.item, this.#share.sourceFolder, { timeout: DOWNLOAD_TIMEOUT_MS })
-        event.addListener("progress", (curBytes, totalBytes) => {
             const progress = this.#items.get(entry.item.publishedfileid)
-            if(!progress) return this.#log.error({ filename }, "untracked item (progress)")
-            progress.downloaded = curBytes
-            this.#share.eventStream.emit("progress", progress, filename)
-            //#this.items.set(item, progress)
-        })
-        event.addListener("finish", async (curBytes, totalBytes) => {
-            const progress = this.#items.get(entry.item.publishedfileid)
-            if(!progress) return this.#log.error({ filename }, "untracked item (finish)")
-            progress.downloaded = curBytes
+            if(!progress) return reject(new Error("Untracked item"))
+            // if(!progress) return this.#log.error({ filename }, "untracked item")
+            progress.state = DownloadState.Downloading
+        
+            const event = SteamAPI.downloadItemProgress(entry.item, this.#share.sourceFolder, { timeout: DOWNLOAD_TIMEOUT_MS })
+            event.addListener("progress", (curBytes, totalBytes) => {
+                const progress = this.#items.get(entry.item.publishedfileid)
+                if(!progress) return reject(new Error("Untracked item (progress)"))
+                progress.downloaded = curBytes
+                this.#share.eventStream.emit("progress", progress, filename)
+                //#this.items.set(item, progress)
+            })
+            event.addListener("finish", async (curBytes, totalBytes) => {
+                const progress = this.#items.get(entry.item.publishedfileid)
+                if(!progress) return reject(new Error("Untracked item (finish)"))
+                progress.downloaded = curBytes
 
-            if (curBytes != entry.item.file_size) {
-                this.#addLog("ERROR", `Downloaded size mismatch (downloaded ${curBytes} bytes, expected ${entry.item.file_size} bytes)`, filename)
-                this.#log.warn({ filename }, `downloaded size mismatch (downloaded ${curBytes} bytes, expected ${entry.item.file_size} bytes)`)
-                progress.state = DownloadState.Failed 
-                return
-            } 
+                if (curBytes != entry.item.file_size) {
+                    this.#addLog("ERROR", `Downloaded size mismatch (downloaded ${curBytes} bytes, expected ${entry.item.file_size} bytes)`, filename)
+                    this.#log.warn({ filename }, `downloaded size mismatch (downloaded ${curBytes} bytes, expected ${entry.item.file_size} bytes)`)
+                    progress.state = DownloadState.Failed 
+                    return resolve()
+                } 
 
-            progress.state = DownloadState.Complete
-            
-            this.#share.eventStream.emit("progress", progress, filename)
-            this.#log.debug({ filename }, "download completed")
-            this.#addLog("DOWNLOAD", `Downloaded ${filename}`, filename)
+                progress.state = DownloadState.Complete
+                
+                this.#share.eventStream.emit("progress", progress, filename)
+                this.#log.debug({ filename }, "download completed")
+                this.#addLog("DOWNLOAD", `Downloaded ${filename}`, filename)
 
-            let meta: Record<string, any> = {}
-            try {
-                meta = await getMetadata(join(this.#share.sourceFolder, filename))
-            } catch(err) {
-                this.#log.warn({ id: entry.item.publishedfileid, err }, "metadata error")
-                this.#addLog("WARN", `Could not get file metadata for ${filename}`, filename)
-            }
-            
-            try {
-                await this.#share.db.upsertAddon(
-                    filename, 
-                    {
-                        filesize: entry.item.file_size,
-                        lastModified: entry.item.time_updated
-                    }, 
-                    ShareItemState.Ready, 
-                    meta
-                )
+                let meta: Record<string, any> = {}
+                try {
+                    meta = await getMetadata(join(this.#share.sourceFolder, filename))
+                } catch(err) {
+                    this.#log.warn({ id: entry.item.publishedfileid, err }, "metadata error")
+                    this.#addLog("WARN", `Could not get file metadata for ${filename}`, filename)
+                }
+                
+                try {
+                    await this.#share.db.upsertAddon(
+                        filename, 
+                        {
+                            filesize: entry.item.file_size,
+                            lastModified: entry.item.time_updated
+                        }, 
+                        ShareItemState.Ready, 
+                        meta
+                    )
 
-                // Add workshop info
-                if('collection' in entry.item)
-                    await this.#share.db.addWorkshopInfo(filename, serializeWorkshopItem(entry.item), entry.item.collection)
-                        .catch(err => {
-                            this.#addLog("ERROR", `Error adding workshop information for ${filename}`, filename)
-                            this.#log.warn({ id: entry.item.publishedfileid }, "addWorkshopInfo error: " + err.stack)
-                        })
-            } catch(err) {
-                this.#addLog("ERROR", `Could not record ${filename} to database`, filename)
-                this.#log.error({ id: entry.item.publishedfileid }, "db error: " + err.stack)
-            }
-            
-            // Enable for every destination
-            if(entry.destinations) {
-                for(const dest of entry.destinations) {
-                    try {
-                        await this.#share.enable(filename, dest)
-                        
-                        // Add any servers we should restart once queue is over
-                        if(this.#share.destinations[dest].restartTargets) 
-                        this.#pendingRestartServers.push(...this.#share.destinations[dest].restartTargets)
-                    } catch(err) {
-                        const code = err.code ? `(${err.code})` : ''
-                        this.#addLog("ERROR", `Failed to enable ${filename} on destination ${dest} ${code}`, filename)
-                        this.#log.warn({ id: entry.item.publishedfileid, dest }, "could not symlink file: " + err.stack)
+                    // Add workshop info
+                    if('collection' in entry.item)
+                        await this.#share.db.addWorkshopInfo(filename, serializeWorkshopItem(entry.item), entry.item.collection)
+                            .catch(err => {
+                                this.#addLog("ERROR", `Error adding workshop information for ${filename}`, filename)
+                                this.#log.warn({ id: entry.item.publishedfileid }, "addWorkshopInfo error: " + err.stack)
+                            })
+                } catch(err) {
+                    this.#addLog("ERROR", `Could not record ${filename} to database`, filename)
+                    this.#log.error({ id: entry.item.publishedfileid }, "db error: " + err.stack)
+                }
+                
+                // Enable for every destination
+                if(entry.destinations) {
+                    for(const dest of entry.destinations) {
+                        try {
+                            await this.#share.enable(filename, dest)
+                            
+                            // Add any servers we should restart once queue is over
+                            if(this.#share.destinations[dest].restartTargets) 
+                            this.#pendingRestartServers.push(...this.#share.destinations[dest].restartTargets)
+                        } catch(err) {
+                            const code = err.code ? `(${err.code})` : ''
+                            this.#addLog("ERROR", `Failed to enable ${filename} on destination ${dest} ${code}`, filename)
+                            this.#log.warn({ id: entry.item.publishedfileid, dest }, "could not symlink file: " + err.stack)
+                        }
                     }
                 }
-            }
+
+                resolve()
+            })
         })
     }
 }
