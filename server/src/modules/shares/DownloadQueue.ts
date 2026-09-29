@@ -174,7 +174,7 @@ export default class WorkshopDownloadQueue {
 
             let meta: Record<string, any> = {}
             try {
-                meta = getMetadata(join(this.#share.sourceFolder, filename))
+                meta = await getMetadata(join(this.#share.sourceFolder, filename))
             } catch(err) {
                 this.#log.warn({ id: entry.item.publishedfileid, err }, "metadata error")
                 this.#addLog("WARN", `Could not get file metadata for ${filename}`, filename)

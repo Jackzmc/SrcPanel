@@ -33,7 +33,7 @@ export function useShareWS() {
     ws.addEventListener("close", (event) => {
       const retryTime = Math.min(1000 * (Math.pow(1, reconnectAttempts)), MAX_RECONNECT_INTERVAL_MS);
       reconnectAttempts++
-      console.warn(prefix, "disconnected, reconnecting in", retryTime)
+      console.warn(prefix, `disconnected code=${event.reason}, reconnecting in`, retryTime, 'ms')
 
       setTimeout(() => setup(), retryTime)
     })
