@@ -52,12 +52,16 @@
         </UButton>
       </div>
       <div class="flex flex-cols gap-2 flex-wrap">
-        <UButton class="w-full" variant="outline" color="neutral" leading-icon="lucide:rotate-cw">
-          Update Steam Info
-        </UButton>
-        <UButton class="w-full impersonate" variant="outline" color="neutral" leading-icon="lucide:circle-user">
-          Impersonate
-        </UButton>
+        <UTooltip text="Request for steam information (name) to be updated">
+          <UButton class="w-full" variant="outline" color="neutral" leading-icon="lucide:rotate-cw">
+            Update Steam Info
+          </UButton>
+        </UTooltip>
+        <UTooltip text="Simulate logged in experience of user">
+          <UButton class="w-full impersonate" variant="outline" color="neutral" leading-icon="lucide:circle-user">
+            Impersonate
+          </UButton>
+        </UTooltip>
       </div>
     </div>
   </div>
@@ -72,6 +76,10 @@ const props = defineProps<{
   steamid: string;
   data: APIUserDetails;
 }>();
+
+definePageMeta({
+  subtab: "profile"
+})
 
 const steamid = computed(() => new SteamID(props.steamid));
 
