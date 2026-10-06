@@ -2,3 +2,5 @@
 const route = useRoute();
 navigateTo(`/users/${route.params.steamid}/privileges/overview`, { replace: true });
 </script>
+
+<template></template>
