@@ -9,13 +9,19 @@
         type="single"
       />
       <div v-show="hasChanges" class="flex flex-col p-2 gap-2">
-        <UButton color="success" leading-icon="lucide:save" 
+        <UButton color="success" 
+          leading-icon="lucide:save" 
           @click="saveEdits" 
+          :loading="loading"
           :disabled="adminErrors.length > 0 || !hasChanges || !hasAnyMeaningfulPermission"
         >
           {{ props.data.admin ? 'Save Changes' : 'Grant Admin' }}
         </UButton>
-        <UButton color="neutral" variant="outline" :leading-icon="props.data.admin ? 'lucide:undo-2' : 'lucide:rotate-ccw'" @click="resetEdits">
+        <UButton color="neutral" variant="outline" 
+          :leading-icon="props.data.admin ? 'lucide:undo-2' : 'lucide:rotate-ccw'" 
+          @click="resetEdits"
+          :loading="loading"
+        >
           {{ props.data.admin ? 'Revert Changes' : 'Reset' }}
         </UButton>
       </div>
@@ -60,7 +66,7 @@ export interface PrivilegesEditData {
   }
 }
 
-const { promptConfirm } = useModal()
+const { promptConfirm, alert } = useModal()
 const { user, hasPermission } = useAuth();
 const toast = useToast()
 
@@ -125,6 +131,14 @@ const hasAnyMeaningfulPermission = computed(() => {
 })
 
 async function saveEdits() {
+  if (adminErrors.value.length > 0) {
+    return alert({
+      title: props.data.admin ? 'Unable to edit permissions' : "Unable to grant admin",
+      subtitle: `${adminErrors.value.length} problems prevent you from continuing`,
+      body: h("ul", { class: "list-inside list-disc" }, adminErrors.value.map((line: string) => h("li", {}, line))),
+      okColor: "error",
+    });
+  } 
   if(!hasAnyMeaningfulPermission.value) {
     if(!await promptConfirm({
       title: "Confirm Changes",
@@ -135,47 +149,33 @@ async function saveEdits() {
     })) return
   }
 
-  async function saveChanges() {
-    if (!props.data.admin && adminErrors.value.length > 0) {
-      return alert({
-        title: "Unable to grant admin",
-        subtitle: `${adminErrors.value.length} problems prevent you from continuing`,
-        body: h("ul", { class: "list-inside list-disc" }, adminErrors.value.map((line: string) => h("li", {}, line))),
-        okColor: "error",
-      });
-    }
+  loading.value = true;
+  const result = await request<{ id: string }>(`/api/admins/${props.steamid}`, {
+    method: props.data.admin ? "PUT" : "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      immunityLevel: editData.value.base.immunityLevel,
+      flags: editData.value.base.immunityLevel,
+      codes: editData.value.base.codes,
+    }),
+  });
 
-    loading.value = true;
-    const result = await request<{ id: string }>(`/api/admins/${props.steamid}`, {
-      method: props.data.admin ? "PUT" : "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        immunityLevel: editData.value.base.immunityLevel,
-        flags: editData.value.base.immunityLevel,
-        codes: editData.value.base.codes,
-      }),
+  if ("body" in result) {
+    toast.add({
+      title: props.data.admin ? "Admin permissions changed" : "Admin powers granted",
+      description: props.data.admin ? `Admin #${props.data.admin.id}` : `Admin #${result.body?.id}`,
+      color: "success",
     });
-
-    if ("body" in result) {
-      toast.add({
-        title: props.data.admin ? "Admin permissions changed" : "Admin powers granted",
-        description: props.data.admin ? `Admin #${props.data.admin.id}` : `Admin #${result.body?.id}`,
-        color: "success",
-      });
-    } else {
-      toast.add({
-        title: props.data.admin ? "Updating admin permissions failed" : "Error granting admin",
-        description: result.error.message,
-        color: "error",
-      });
-    }
-    loading.value = false;
+  } else {
+    toast.add({
+      title: props.data.admin ? "Updating admin permissions failed" : "Error granting admin",
+      description: result.error.message,
+      color: "error",
+    });
   }
-
-  // TODO: impl
-  alert("Not implemented");
+  loading.value = false;
 }
 function resetEdits() {
   editData.value = {
