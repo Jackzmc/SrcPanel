@@ -80,12 +80,12 @@ nav = [
      "setup/setup.md",
      {"Configure" = [
       {"panel.yml" = "setup/configure/panel.yml.md"},
+      {"shares.yml" = "setup/configure/shares.yml.md"},
       {"Servers" = [
         {"server_groups.yml" = "setup/configure/server_groups.yml.md"},
         {"templates.yml" = "setup/configure/templates.yml.md"},
         {"actions.yml" = "setup/configure/actions.yml.md"},
       ]},
-      {"shares.yml" = "setup/configure/shares.yml.md"},
     ]}
   ]}
 ]
