@@ -1,5 +1,5 @@
 <template>
-  <div class="grid grid-cols-2 gap-4">
+  <div class="grid grid-cols-2 gap-x-4">
     <GamePermissionsList :flags="flags" :edit="edit" @toggle="onFlagToggled" />
     <PanelPermissionsList :codes="codes" :edit="edit" @add="onAdd" @remove="onDel" />
   </div>

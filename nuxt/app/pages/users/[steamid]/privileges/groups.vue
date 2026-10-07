@@ -6,7 +6,6 @@
       v-model:row-selection="rowSelection"
       :data="groups"
       :columns="columns"
-      checkable
       :get-row-id="(row) => row.id.toString()"
     >
       <template #expanded="{ row }">
@@ -22,6 +21,7 @@ import PermissionsList from "@/components/users/permissions/PermissionsList.vue"
 import type { TableColumn } from "@nuxt/ui";
 
 import UCheckbox from "@nuxt/ui/components/Checkbox.vue";
+import { UButton } from "#components";
 
 const emit = defineEmits<{
   (e: "changes", state: boolean): void;
@@ -44,7 +44,7 @@ const defaultState = computed(() => {
   }));
 });
 
-const rowSelection = ref(defaultState.value);
+const rowSelection = ref(JSON.parse(JSON.stringify(defaultState.value)));
 
 const hasChanges = computed(() => {
   for (const [id, enabled] of Object.entries(defaultState.value)) {
@@ -63,7 +63,7 @@ const columns: TableColumn<APIListAdminGroupsResponse["groups"][0]>[] = [
     cell: ({ row }) =>
       h(UCheckbox, {
         "modelValue": row.getIsSelected(),
-        "onUpdate:modelValue": (value: boolean | "indeterminate") => row.toggleSelected(!!value),
+        "onUpdate:modelValue": (value: unknown) => row.toggleSelected(!!value),
         "aria-label": "Select row",
       }),
   },
