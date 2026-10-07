@@ -27,6 +27,7 @@
     "apexcharts": "^7.5.1",
     "better-sqlite3": "^13.0.3",
     "import-in-the-middle": "^3.5.1",
+    "minimatch": "^10.2.6",
     "nuxt": "^4.5.2",
     "simple-keyboard": "^3.8.191",
     "steamid": "^2.1.0",
@@ -42,5 +43,5 @@
     "typescript": "^5.9.3",
     "vue-tsc": "^3.3.10"
   },
-  "packageManager": "pnpm@10.34.2"
+  "packageManager": "pnpm@12.10.1"
 }

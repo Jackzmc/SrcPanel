@@ -50,6 +50,7 @@
 
 <script setup lang="ts">
 import type { APIUserDetails } from "@srcpanel/common/User";
+import { isSteamIdSame } from '#shared/utils'
 
 const emit = defineEmits(["refresh"])
 
@@ -75,7 +76,6 @@ const props = defineProps<{
   data: APIUserDetails;
 }>();
 
-
 const items = [
   { id: "overview", label: "Overview", icon: "i-lucide-info", to: `/users/${props.steamid}/privileges/overview` },
   { id: "groups", label: "Groups", icon: "i-lucide-users", to: `/users/${props.steamid}/privileges/groups` },
@@ -95,7 +95,6 @@ const editData = ref<PrivilegesEditData>({
   },
 });
 
-import { isSteamIdSame } from '#shared/utils'
 
 const adminErrors = computed(() => {
   const list: string[] = [];
@@ -107,13 +106,6 @@ const adminErrors = computed(() => {
   return list;
 });
 
-const permissionsDiffer = computed(() => {
-  if (!props.data.admin || props.data.admin.permissions.base.codes.length !== editData.value.base.codes.length) return true;
-  for (let i = 0; i < props.data.admin.permissions.base.codes.length; i++) {
-    if (props.data.admin.permissions.base.codes[i] != editData.value.base.codes[i]) return true;
-  }
-  return false;
-});
 const isGroupsDirty = computed(() => orgGroupIds.value?.size != editData.value.groups.size 
   || orgGroupIds.value.difference(editData.value.groups).size > 0);
 // Always dirty on non-admin
@@ -189,6 +181,4 @@ function resetEdits() {
 }
 
 provide("editData", { editData, save: saveEdits, reset: resetEdits, isGroupsDirty, isBaseDirty });
-
-// const hasChanges = ref(false)
 </script>
