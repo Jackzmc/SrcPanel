@@ -32,9 +32,8 @@ export default class ShareDatabase {
             const migrations: IMigration[] = []
             for (const file of await findMigrationFilenames(migrationsPath)) {
                 migrations.push(await readMigrationFile(file))
-
             }
-            Logger.debug({ migrationsPath, migrationFiles }, "running migrations")
+            Logger.info({ migrationsPath, migrationFiles, db: db.name }, "Running migrations")
             migrate(db, migrations)
         } catch(err) {
             throw new Error(`Error running db migrations`, { cause: err })
