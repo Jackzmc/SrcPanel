@@ -30,8 +30,7 @@ const props = defineProps<{
 
 const model = defineModel<PrivilegesEditData>({ required: true })
 
-// can we do a v-model?
-
+// List of available groups
 const { data: groups, error } = await useFetch(() => `/api/admins/groups`, {
   transform: (res: APIListAdminGroupsResponse) => res.groups,
 });

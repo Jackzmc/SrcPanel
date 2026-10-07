@@ -51,9 +51,9 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     meta.offset = offset
 
     const [bansCount] = await fastify.db.execute<RowDataPacket[]>(`
-            SELECT COUNT(*) as count FROM bans
-            ${req.query.include !== "expired" ? 'WHERE bans.expired = 0' : ''}
-        `)
+      SELECT COUNT(*) as count FROM bans
+      ${req.query.include !== "expired" ? 'WHERE bans.expired = 0' : ''}
+    `)
 
     const [bans] = await fastify.db.execute<RowDataPacket[]>(`
             SELECT

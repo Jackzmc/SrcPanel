@@ -9,7 +9,10 @@
         type="single"
       />
       <div v-show="hasChanges" class="flex flex-col p-2 gap-2">
-        <UButton color="success" leading-icon="lucide:save" @click="saveEdits" :disabled="!hasChanges || !hasAnyMeaningfulPermission">
+        <UButton color="success" leading-icon="lucide:save" 
+          @click="saveEdits" 
+          :disabled="adminErrors.length > 0 || !hasChanges || !hasAnyMeaningfulPermission"
+        >
           {{ props.data.admin ? 'Save Changes' : 'Grant Admin' }}
         </UButton>
         <UButton color="neutral" variant="outline" :leading-icon="props.data.admin ? 'lucide:undo-2' : 'lucide:rotate-ccw'" @click="resetEdits">
@@ -34,13 +37,15 @@
     </div>
     <div class="flex-1 min-w-0">
 
-      <NuxtPage v-model="editData" :steamid="steamid" :data="data" />
+      <NuxtPage v-model="editData" :steamid="steamid" :data="data" @refresh="emit('refresh')" />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import type { APIUserDetails } from "@srcpanel/common/User";
+
+const emit = defineEmits(["refresh"])
 
 definePageMeta({
   tab: "privileges",
@@ -84,9 +89,11 @@ const editData = ref<PrivilegesEditData>({
   },
 });
 
+import { isSteamIdSame } from '#shared/utils'
+
 const adminErrors = computed(() => {
   const list: string[] = [];
-  if (props.data && props.data.user.steamid === props.steamid) list.push("Cannot edit your own profile");
+  if (isSteamIdSame(props.data.user.steamid!, user.value!.user.steamid)) list.push("Cannot edit your own profile");
   if (!hasPermission("admins.edit")) list.push("You lack the privileges to edit other users' privileges");
   if (props.data.admin && props.data.admin.permissions.immunityLevel < editData.value.base.immunityLevel) list.push("Immunity level cannot be equal or above to your current level");
   if (props.data.user.bansCount > 0) list.push("Player has bans on record");

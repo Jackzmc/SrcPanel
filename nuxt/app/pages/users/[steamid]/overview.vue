@@ -7,13 +7,15 @@
       class="w-40 shrink-0"
     />
     <div class="flex-1 min-w-0">
-      <NuxtPage :steamid="steamid" :data="data" />
+      <NuxtPage :steamid="steamid" :data="data" @refresh="emit('refresh')" />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import type { APIUserDetails } from "@srcpanel/common/User";
+
+const emit = defineEmits(["refresh"])
 
 const route = useRoute()
 
