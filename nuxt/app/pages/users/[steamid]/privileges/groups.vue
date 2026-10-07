@@ -12,6 +12,14 @@
         <PermissionsList :codes="row.original.codes" :flags="row.original.flags" />
       </template>
     </UTable>
+    <Teleport to="#buttons">
+      <UButton v-show="hasChanges" color="success" leading-icon="lucide:save">
+        {{ props.data.admin ? 'Save Changes' : 'Grant Admin' }}
+      </UButton>
+      <UButton v-show="hasChanges" color="neutral" variant="outline" leading-icon="lucide:undo-2">
+        Revert Changes
+      </UButton>
+    </Teleport>
   </div>
 </template>
 
@@ -32,6 +40,8 @@ const props = defineProps<{
   data: APIUserDetails;
 }>();
 
+// can we do a v-model?
+
 const { data: groups, error } = await useFetch(() => `/api/admins/groups`, {
   transform: (res: APIListAdminGroupsResponse) => res.groups,
 });
@@ -48,12 +58,14 @@ const rowSelection = ref(JSON.parse(JSON.stringify(defaultState.value)));
 
 const hasChanges = computed(() => {
   for (const [id, enabled] of Object.entries(defaultState.value)) {
-    if (rowSelection.value[id] != enabled) return true;
+    // The UTable checkboxes instead of setting to false set to undefined
+    // So we just check the truthy value instead
+    if (Boolean(rowSelection.value[id]) != Boolean(enabled)) return true;
   }
   return false;
 });
 
-watch(hasChanges, () => {
+watch(() => hasChanges.value, () => {
   emit("changes", hasChanges.value);
 });
 const columns: TableColumn<APIListAdminGroupsResponse["groups"][0]>[] = [

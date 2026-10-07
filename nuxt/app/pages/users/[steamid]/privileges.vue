@@ -8,7 +8,7 @@
         default-value="item-0"
         type="single"
       />
-      <div v-if="hasChanges" id="buttons" class="flex flex-col p-2 gap-2" />
+      <div v-show="hasChanges" id="buttons" class="flex flex-col p-2 gap-2" />
     </div>
     <div class="flex-1 min-w-0">
       <NuxtPage :steamid="steamid" :data="data" @changes="(val: boolean) => hasChanges = val" />
@@ -49,6 +49,10 @@ const isBaseDirty = computed(() => editData.value.base.immunityLevel != props.da
   || editData.value.base.flags != props.data.admin?.permissions.base.flags
   || editData.value.base.codes != props.data.admin?.permissions.base.codes);
 
+function onEdit() {
+
+}
+
 async function saveEdits() {
   // TODO: impl
   alert("Not implemented");
@@ -66,5 +70,6 @@ function resetEdits() {
 
 provide("editData", { editData, save: saveEdits, reset: resetEdits, isGroupsDirty, isBaseDirty });
 
-const hasChanges = computed(() => isBaseDirty.value || isGroupsDirty.value);
+const hasChanges = ref(false)
+// const hasChanges = computed(() => isBaseDirty.value || isGroupsDirty.value);
 </script>
