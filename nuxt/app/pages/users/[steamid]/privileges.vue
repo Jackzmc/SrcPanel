@@ -16,9 +16,24 @@
           {{ props.data.admin ? 'Revert Changes' : 'Reset' }}
         </UButton>
       </div>
+      <UAlert
+        v-if="adminErrors.length > 0"
+        :title="data.admin ? 'Cannot edit admin due to the following reasons:' : 'Cannot grant admin due to the following reasons:'"
+        color="error"
+        class="mb-1"
+      >
+        <template #description>
+          <ul class="list-disc list-inside">
+            <li v-for="error, i in adminErrors" :key="i">
+              {{ error }}
+            </li>
+          </ul>
+        </template>
+      </UAlert>
       <!-- baseDirty={{ isBaseDirty }} groupsDirty={{ isGroupsDirty }} meaningful={{ hasAnyMeaningfulPermission }} -->
     </div>
     <div class="flex-1 min-w-0">
+
       <NuxtPage v-model="editData" :steamid="steamid" :data="data" />
     </div>
   </div>
@@ -26,6 +41,10 @@
 
 <script setup lang="ts">
 import type { APIUserDetails } from "@srcpanel/common/User";
+
+definePageMeta({
+  tab: "privileges",
+});
 
 export interface PrivilegesEditData {
   groups: Set<number>,
@@ -37,15 +56,14 @@ export interface PrivilegesEditData {
 }
 
 const { promptConfirm } = useModal()
-
-definePageMeta({
-  tab: "privileges",
-});
+const { user, hasPermission } = useAuth();
+const toast = useToast()
 
 const props = defineProps<{
   steamid: string;
   data: APIUserDetails;
 }>();
+
 
 const items = [
   { id: "overview", label: "Overview", icon: "i-lucide-info", to: `/users/${props.steamid}/privileges/overview` },
@@ -56,6 +74,7 @@ const items = [
 
 const orgGroupIds = computed(() => new Set(props.data.admin?.groups.map(group => group.id)))
 
+const loading = ref(false)
 const editData = ref<PrivilegesEditData>({
   groups: structuredClone(orgGroupIds.value),
   base: {
@@ -63,6 +82,24 @@ const editData = ref<PrivilegesEditData>({
     flags: props.data.admin?.permissions.base.flags ?? "",
     codes: props.data.admin?.permissions.base.codes ?? [],
   },
+});
+
+const adminErrors = computed(() => {
+  const list: string[] = [];
+  if (props.data && props.data.user.steamid === props.steamid) list.push("Cannot edit your own profile");
+  if (!hasPermission("admins.edit")) list.push("You lack the privileges to edit other users' privileges");
+  if (props.data.admin && props.data.admin.permissions.immunityLevel < editData.value.base.immunityLevel) list.push("Immunity level cannot be equal or above to your current level");
+  if (props.data.user.bansCount > 0) list.push("Player has bans on record");
+  // TODO: add stats hours
+  return list;
+});
+
+const permissionsDiffer = computed(() => {
+  if (!props.data.admin || props.data.admin.permissions.base.codes.length !== editData.value.base.codes.length) return true;
+  for (let i = 0; i < props.data.admin.permissions.base.codes.length; i++) {
+    if (props.data.admin.permissions.base.codes[i] != editData.value.base.codes[i]) return true;
+  }
+  return false;
 });
 const isGroupsDirty = computed(() => orgGroupIds.value?.size != editData.value.groups.size 
   || orgGroupIds.value.difference(editData.value.groups).size > 0);
@@ -91,6 +128,44 @@ async function saveEdits() {
     })) return
   }
 
+  async function saveChanges() {
+    if (!props.data.admin && adminErrors.value.length > 0) {
+      return alert({
+        title: "Unable to grant admin",
+        subtitle: `${adminErrors.value.length} problems prevent you from continuing`,
+        body: h("ul", { class: "list-inside list-disc" }, adminErrors.value.map((line: string) => h("li", {}, line))),
+        okColor: "error",
+      });
+    }
+
+    loading.value = true;
+    const result = await request<{ id: string }>(`/api/admins/${props.steamid}`, {
+      method: props.data.admin ? "PUT" : "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        immunityLevel: editData.value.base.immunityLevel,
+        flags: editData.value.base.immunityLevel,
+        codes: editData.value.base.codes,
+      }),
+    });
+
+    if ("body" in result) {
+      toast.add({
+        title: props.data.admin ? "Admin permissions changed" : "Admin powers granted",
+        description: props.data.admin ? `Admin #${props.data.admin.id}` : `Admin #${result.body?.id}`,
+        color: "success",
+      });
+    } else {
+      toast.add({
+        title: props.data.admin ? "Updating admin permissions failed" : "Error granting admin",
+        description: result.error.message,
+        color: "error",
+      });
+    }
+    loading.value = false;
+  }
 
   // TODO: impl
   alert("Not implemented");

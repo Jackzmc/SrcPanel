@@ -8,7 +8,7 @@
       :get-row-id="(row) => row.id.toString()"
     >
       <template #expanded="{ row }">
-        <PermissionsList :codes="row.original.codes" :flags="row.original.flags" />
+        <PermissionsList v-model:codes="row.original.codes" v-model:flags="row.original.flags" />
       </template>
     </UTable>
   </div>

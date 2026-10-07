@@ -36,7 +36,12 @@ export function useAuth() {
   }
 
   function hasPermission(code: UserPrivilegeCode): boolean {
-    return user.value != null && user.value.permissions.codes.includes(code);
+    return user.value != null 
+      && (
+         // TODO: needs to check wildcards better
+        user.value.permissions.codes.includes("*" as UserPrivilegeCode)
+        || user.value.permissions.codes.includes(code)
+      );
   }
 
   const isLoggedIn = computed(() => user.value !== null);
