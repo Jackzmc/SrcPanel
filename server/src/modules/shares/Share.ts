@@ -151,7 +151,6 @@ export default class Share {
     const addons = await this.#db.getAddons()
     // Not the *best* but we depend on installInfo of what destinations are enabled
     for(const addon of addons) {
-      console.log("addon", addon.filename, addon.installInfo)
       const installInfo = await this.getInstallInfo(addon.filename)
       if(installInfo) addon.installInfo = installInfo.states
 
