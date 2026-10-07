@@ -133,7 +133,7 @@ const columns: TableColumn<AddonInfo>[] = [
   {
     accessorKey: "filesize",
     header: sortHeader("File Size"),
-    cell: ({ row }) => formatSize(row.getValue("filesize")),
+    cell: ({ row }) => row.getValue("filesize") ? formatSize(row.getValue("filesize")) : h('em', "Unknown"),
     meta: {
       class: {
         th: "whitespace-nowrap",
@@ -145,8 +145,8 @@ const columns: TableColumn<AddonInfo>[] = [
     header: sortHeader("Modified At"),
     cell: ({ row }) => h(
       UTooltip, 
-      { text: formatDate(row.getValue("lastModified"))}, 
-      () => formatDate(row.getValue("lastModified"), true)
+      { text: row.getValue('lastModified') ? formatDate(row.getValue('lastModified')) : '-' }, 
+      () => row.getValue('lastModified') ? formatDate(row.getValue('lastModified'), true) : '-'
     ),
     meta: {
       class: {
@@ -159,8 +159,8 @@ const columns: TableColumn<AddonInfo>[] = [
     header: sortHeader("Downloaded At"),
     cell: ({ row }) => h(
       UTooltip, 
-      { text: formatDate(row.getValue("downloaded"))}, 
-      () => formatDate(row.getValue("downloaded"), true)
+      { text: row.getValue("downloaded") ? formatDate(row.getValue("downloaded")) : '-' }, 
+      () => row.getValue("downloaded") ? formatDate(row.getValue("downloaded"), true) : '-'
     ),
     meta: {
       class: {
@@ -169,7 +169,6 @@ const columns: TableColumn<AddonInfo>[] = [
     },
   },
 ];
-console.debug('rest')
 
 const rows = computed(() => {
   if (!table.value) return;
