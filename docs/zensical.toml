@@ -73,6 +73,9 @@ repo_name = "jackzmc/srcpanel"
 
 nav = [
   {"Home" = "index.md"},
+  {"Showcase" = [
+    {"Features" = "showcase/features.md"},
+  ]},
   {"Setup" = [
      "setup/setup.md",
      {"Configure" = [
