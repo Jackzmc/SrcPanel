@@ -34,7 +34,7 @@ export default class ShareDatabase {
                 migrations.push(await readMigrationFile(file))
             }
             Logger.info({ migrationsPath, migrationFiles, db: db.name }, "Running migrations")
-            migrate(db, migrations)
+            migrate(db, migrations, { throwOnNewerVersion: true })
         } catch(err) {
             throw new Error(`Error running db migrations`, { cause: err })
         }
