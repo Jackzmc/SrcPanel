@@ -59,7 +59,7 @@ export async function register() {
     await getVersion()
         .then(v => _version = v)
         .catch(err => log.warn({err}, "could not get version"))
-        
+
     PromClient.register.registerMetric(METRIC_SERVERS_LIVE_VIEWERS)
     PromClient.register.setDefaultLabels(getLabels())
 }
@@ -83,6 +83,7 @@ export function getLabels() {
 
 export async function getVersion(): Promise<string> {
     return new Promise((resolve, reject) => {
+        if(process.env.GIT_BRANCH) return resolve(process.env.GIT_BRANCH)
         exec("git rev-parse --abbrev-ref HEAD", (err, output) => {
             if(err) return reject(err)
             resolve(output.trim())
