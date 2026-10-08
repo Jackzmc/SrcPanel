@@ -56,7 +56,10 @@ export const METRIC_STARTUP_TIME = new Gauge({
 })
 
 export async function register() {
-    _version = await getVersion()
+    await getVersion()
+        .then(v => _version = v)
+        .catch(err => log.warn({err}, "could not get version"))
+        
     PromClient.register.registerMetric(METRIC_SERVERS_LIVE_VIEWERS)
     PromClient.register.setDefaultLabels(getLabels())
 }
