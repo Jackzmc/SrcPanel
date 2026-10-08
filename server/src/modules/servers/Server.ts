@@ -13,6 +13,7 @@ import { LiveRecordResponse } from "@srcpanel/common/Live";
 import { resolveIPv4, tryResolveIPv4 } from "../../util.js";
 import logger from '../../logger.js'
 import { Logger } from "pino";
+import { METRIC_SERVERS_LIVE_AUTH_COUNT, METRIC_SERVERS_LIVE_VIEWERS, METRIC_SERVERS_STATUS_PLAYERS, METRIC_SERVERS_STATUS_STATE } from "../../core/prom-metrics.js";
 
 const MIN_REFRESH_TIME = 10_000
 
@@ -340,13 +341,15 @@ export default abstract class Server implements IAction {
       } as Server_Status)
       this.Metrics.broadcastWSFullMetrics()
       this.Metrics.recordViewerCount(this._wsClients.length)
+      METRIC_SERVERS_LIVE_VIEWERS.inc({ server_id: this.id })
     }
 
     removeWSClient(client: SocketClientUser) {
       const indexOf = this._wsClients.indexOf(client)
       if(indexOf > -1) {
-       this._log.debug("removed client " + client.user.steamid2)
+        this._log.debug("removed client " + client.user.steamid2)
         this._wsClients.splice(indexOf, 1)
+        METRIC_SERVERS_LIVE_VIEWERS.dec({ server_id: this.id })
       }
       this.Metrics.recordViewerCount(this._wsClients.length)
     }
@@ -425,6 +428,16 @@ export default abstract class Server implements IAction {
       if(this.Metrics.available && this.Metrics.hasInflux) {
         this.Metrics.recordStatus(data, source)
       }
+
+      const promLabels = {
+        server_id: this.id,
+        type: this.game
+      }
+
+      if(source == "gamedig") {
+        METRIC_SERVERS_STATUS_STATE.set(promLabels, data != null ? 1 : 0)
+      }
+      if(data) METRIC_SERVERS_STATUS_PLAYERS.set(promLabels, data.players.length)
     }
 
     markVoiceConnection(user: VoiceUser, connected: boolean) {

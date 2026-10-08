@@ -14,6 +14,8 @@ import TaskManager from '../modules/tasks/TaskManager.js';
 import CacheManager from '../modules/CacheManager.js';
 import DataManager from '../modules/DataManager.js'
 
+import * as PromMetrics from './prom-metrics.js'
+
 const log = Logger.child({ name: "core" })
 
 export const MAIN_DB = process.env.MYSQL_DB ?? 'left4dead2'
@@ -29,6 +31,8 @@ export default async function init() {
     log.debug('data %s', DATA_FOLDER)
     log.debug('config %s', CONFIG_FOLDER)
     log.debug('cache %s', CACHE_FOLDER)
+
+    await PromMetrics.register()
 
     await tryMkdir(DATA_FOLDER)
     await tryMkdir(CACHE_FOLDER)
@@ -56,7 +60,7 @@ export async function loadModules(db: Awaited<ReturnType<typeof loadDB>>) {
     const authManager = new AuthManager(db.admindb, db.db, steam, configManager, cacheManager)
     const serverManager = new ServerManager(steam, DATA_FOLDER, CONFIG_FOLDER)
     const discussions = new DiscussionManager(db.db, configManager, authManager, jobScheduler)
-    const dataManager = await DataManager.create(db.db)
+    const dataManager = DataManager.create(db.db)
 
     await Promise.all([
         authManager.Init(),

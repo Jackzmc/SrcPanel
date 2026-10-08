@@ -5,7 +5,6 @@ import type { APIConnections, APISessionList, ProviderConnectionData, SessionDat
 import type { UserPrivilegeCode } from '@srcpanel/common/Privileges';
 import { TABLE_PREFIX } from '../../middlewares/managers.js';
 
-
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
     // Ensure user is authenticated, thus req.user is defined
     fastify.addHook('preHandler', async(req, reply) => {
@@ -18,6 +17,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     })
 
     fastify.get('/notifications/sse', async(req, reply) => {
+        
         reply.raw.writeHead(200, {
             'Cache-Control': 'no-cache,no-transform',
             'Content-Type': 'text/event-stream',

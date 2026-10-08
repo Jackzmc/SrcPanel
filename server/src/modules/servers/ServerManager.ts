@@ -20,6 +20,7 @@ import { loadShares } from '../shares/index.js';
 import { loadGroups } from './groups/index.js';
 import logger from '../../logger.js'
 import assert from 'assert';
+import { METRIC_SERVERS_LIVE_AUTH_COUNT } from '../../core/prom-metrics.js';
 const log = logger.child({ name: "ServerManager" })
 const liveLog = log.child({ name: "ServerManager/Live" })
 
@@ -146,6 +147,7 @@ export default class ServerManager {
         server.Plugin?._setSocket(client)
         server._setGameInfo(record.appid, record.gameVersion)
         liveLog.info({ host: client.Host, server: server.id, appid: `${record.appid}/${record.gameVersion}`}, 'authenticated')
+        METRIC_SERVERS_LIVE_AUTH_COUNT.inc({ appid: record.appid, game_version: record.gameVersion })
         return true
       } else {
         client.send(LiveRecordResponse.Error, `Invalid or unknown id "${payload.sub}" (docker: ${payload.docker?'y':'n'})`)

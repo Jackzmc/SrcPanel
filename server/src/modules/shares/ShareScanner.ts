@@ -10,6 +10,7 @@ import { getMetadata, serializeWorkshopItem } from './ShareUtils.js'
 import { DefinedTask, Task } from '../tasks/Task.js'
 import TaskManager from '../tasks/TaskManager.js'
 import EventEmitter from 'node:events'
+import { METRIC_SHARE_SCAN_COUNT } from '../../core/prom-metrics.js'
 
 const SCAN_INTERVAL_MINS = 60 // every hr
 
@@ -99,10 +100,14 @@ export default class ShareScanner {
             this.#log.warn({ err, filename }, "failed to get metadata")
         }
 
+        const isSteamWorkshop = this.#resolveSteam(filename)
+
         // If we think it's a steam addon (resolveSteam says true), then mark it as resolving
-        const state = this.#resolveSteam(filename) ? ShareItemState.Resolving : ShareItemState.Ready
+        const state = isSteamWorkshop ? ShareItemState.Resolving : ShareItemState.Ready
 
         await this.#db.upsertAddon(filename, fsinfo, state, meta)
+        METRIC_SHARE_SCAN_COUNT.inc({ share_id: this.#share.id, steam_workshop: isSteamWorkshop ? 1 : 0 })
+
     }
 
     /**
@@ -156,6 +161,7 @@ export default class ShareScanner {
         await this.#steam.resolveWSQueue()
         await this.#db.markMissing(unchecked)
 
+        // TODO: impl added, changed
         this.#event.emit("scan", {
             added: [],
             changed: {},

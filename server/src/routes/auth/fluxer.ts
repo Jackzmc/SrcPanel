@@ -5,6 +5,7 @@ import User from '../../modules/users/User.js';
 import SteamID from 'steamid';
 import { ErrorWithCode } from '../../util.js';
 import { sendMetric } from '../../modules/metrics/influx.js';
+import { METRIC_AUTH_LOGIN_COUNT } from '../../core/prom-metrics.js';
 
 interface StateJwtPayoad {
     seed: string,
@@ -134,6 +135,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             await provider.save(admin.steamid)
             await fastify.authmngr.loginUser(req, reply, admin, details)
             sendMetric(`oauth_${PROVIDER_NAME}_login`, 1)
+            METRIC_AUTH_LOGIN_COUNT.inc({ source: PROVIDER_NAME })
             await reply.redirect(returnUrl, 302)
         }
     })

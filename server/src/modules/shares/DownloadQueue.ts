@@ -17,6 +17,7 @@ import pLimit from "p-limit"
 import EventEmitter from "node:events"
 import Logger from '../../logger.js'
 import type { Logger as PinoLogger } from 'pino'
+import { METRIC_SHARE_DOWNLOAD_COUNT } from "../../core/prom-metrics.js"
 
 /**
  * TODO: One queue per share. UI just shows like list of items. All items processed, then gives notification (w/ btn) to restart servers?
@@ -223,6 +224,8 @@ export default class WorkshopDownloadQueue {
                         }
                     }
                 }
+
+                METRIC_SHARE_DOWNLOAD_COUNT.inc({ share_id: this.#share.id, source: "steam_workshop" })
 
                 resolve()
             })

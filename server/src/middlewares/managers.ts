@@ -6,6 +6,7 @@ import { NOT_LOGGED_IN } from '../responses.js';
 
 import * as Sentry from '@sentry/node'
 import { CACHE_FOLDER, CONFIG_FOLDER, CoreModules, DATA_FOLDER } from '../core/index.js';
+import { registerPlugin } from '../core/prom-metrics.js';
 
 export const MAIN_DB = process.env.MYSQL_DB ?? 'left4dead2'
 export const ADMINS_DB = process.env.MYSQL_ADMINS_DB ?? MAIN_DB
@@ -15,6 +16,8 @@ export const TABLE_PREFIX = "panel"
 
 
 async function db(fastify: FastifyInstance, options: CoreModules) {
+  await registerPlugin(fastify)
+
   fastify.decorate("cache", options.modules.cacheManager)
   fastify.decorate("paths", {
     config: CONFIG_FOLDER,

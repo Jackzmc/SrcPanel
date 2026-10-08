@@ -15,9 +15,7 @@ import path from 'path'
 import cors from '@fastify/cors'
 import fastifyUrlData from '@fastify/url-data'
 
-import { dirname } from 'path';
-import { fileURLToPath } from 'url';
-import fastify, { FastifyPluginOptions } from 'fastify';
+import { FastifyPluginOptions } from 'fastify';
 import { CustomFastifySession } from '@srcpanel/common/User'
 import User from './modules/users/User.js';
 import ConfigManager from './modules/ConfigManager.js';
@@ -33,7 +31,6 @@ import { sleep } from './util.js'
 import { DataManagerInstance } from './modules/DataManager.js'
 import { getGlobalWriter, sendMetric } from './modules/metrics/influx.js'
 import init from './core/index.js'
-
 
 import './sentry.js'
 
@@ -139,8 +136,8 @@ await app.register(FastifyHelmet, {
 await app.register(FastifyEtag)
 await app.register(fastifyWebsocket)
 await app.register(fastifyUrlData)
-
 import internalMetrics from './hooks/metrics.js'
+import { METRIC_STARTUP_TIME } from './core/prom-metrics.js'
 
 await app.register(internalMetrics)
 
@@ -260,6 +257,7 @@ await app.register(MiddleManager, core)
       host: process.env.LISTEN_HOST || '0.0.0.0',
       port: Number(process.env.LISTEN_PORT) || 8081
     })
+    METRIC_STARTUP_TIME.set(performance.now() - START_TIME)
     sendMetric("startup_time_ms", performance.now() - START_TIME)
     
     ready = true
