@@ -19,52 +19,6 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     (req, body, done) => done(null, body)
   )
 
-  fastify.post('/validate/:address', async (req: FastifyRequest<{ Params: { address: 'string' } }>, reply) => {
-    const [host, port] = req.params.address.split(':')
-    if (!port) {
-      return reply.status(400).send({
-        error: "INVALID_ADDRESS",
-        message: "A port is required"
-      })
-    }
-
-    let foundType: string | undefined = undefined
-    console.debug('resolving', host)
-    const ip = await tryResolveIPv4(host)
-
-    if (ip != null) {
-      async function tryType(type: string) {
-        try {
-          const a = await fastify.servers.queryHost(ip!, parseInt(port), type)
-          console.log(a)
-          foundType = type
-          return true
-        } catch (err: any) {
-          console.log(err.cause)
-          // Underlying errors aren't exposed annoyingly...
-          if (err.stack.includes("Error: No protocols succeeded")) return false
-          throw err
-        }
-      }
-      for (const type of ["minecraft", "left4dead2"]) {
-        if (await tryType(type)) break
-      }
-    }
-    if (foundType) {
-      return {
-        ip: ip,
-        domain: host,
-        port: port,
-        type: foundType
-      }
-    } else {
-      return reply.status(501).send({
-        error: "UNKNOWN_TYPE",
-        message: "Server is either unavailable or unsupported. Could not determine it's type"
-      })
-    }
-  })
-
   fastify.get('/:id', async (req: FastifyRequest<{ Params: { id: 'string' } }>, reply): Promise<ServerInfo> => {
     const server = fastify.servers.getServer(req.params.id)
     if (!server) {
