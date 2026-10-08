@@ -38,10 +38,28 @@ export async function doesFileExist(filename: string) {
   }
 }
 
+/**
+ * Looks up only IPv4 addresses
+ * 
+ * Intended for source engine game servers as they do not support ipv6 
+ * 
+ * @param host hostname to resolve
+ * @returns address if found
+ */
 export async function resolveIPv4(host: string): Promise<string> {
     const lookup = await DNS.lookup(host, { verbatim: false, family: 4 })
     return lookup.address
 }
+/**
+ * Attempts to resolve an IPv4 Address or returns null if not found.
+ * 
+ * @throws on any other DNS lookup error
+ * 
+ * Intended for source engine game servers as they do not support ipv6 
+ * 
+ * @param host hostname to resolve
+ * @returns ipv4 address or null if none resolved
+ */
 export async function tryResolveIPv4(host: string): Promise<string|null> {
     try {
         return await resolveIPv4(host)

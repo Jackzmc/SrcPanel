@@ -10,7 +10,7 @@ import { GameDig } from 'gamedig';
 import SocketClientUser from "./SocketClientUser.js";
 import { ClientOutPayload, Server_Status, ServerOutPacket, ServerOutPayload } from "@srcpanel/common/ServerWebsocket";
 import { LiveRecordResponse } from "@srcpanel/common/Live";
-import { resolveIPv4, tryResolveIPv4 } from "../../util.js";
+import { tryResolveIPv4 } from "../../util.js";
 import logger from '../../logger.js'
 import { Logger } from "pino";
 import { METRIC_SERVERS_LIVE_VIEWERS, METRIC_SERVERS_STATUS_PLAYERS, METRIC_SERVERS_STATUS_STATE } from "../../core/prom-metrics.js";
@@ -165,8 +165,12 @@ export default abstract class Server implements IAction {
 
     async Init(): Promise<void> {
       // Resolve hostnames to IPa ddresses
-      this.publicIp = await tryResolveIPv4(this._options.public.host) ?? this._options.public.host
-      if(this._options.internal?.host) this.internalIp = await tryResolveIPv4(this._options.internal?.host) ?? undefined
+      try {
+        this.publicIp = await tryResolveIPv4(this._options.public.host) ?? this._options.public.host
+        if(this._options.internal?.host) this.internalIp = await tryResolveIPv4(this._options.internal?.host) ?? undefined
+      } catch(err) {
+        this._log.warn({ err, publicHost: this._options.public.host, internalHost: this._options.internal?.host }, "could not resolve IP address")
+      }
 
       await Promise.allSettled([
           this.Console?.init(),
