@@ -2,6 +2,7 @@ import { Socket } from 'net'
 import { CommandResultType, LiveRecord, LiveRecordCommandResponse, LiveRecordClient, LiveRecordResponse, LiveRecordType, RecordDataType, RecordParseConfig } from '@srcpanel/common/Live'
 import Server from './Server.js'
 import BufferReader from '../BufferReader.js'
+import { METRIC_SERVERS_LIVE_RECORDS_RECV, METRIC_SERVERS_LIVE_RECORDS_SENT } from '../../core/prom-metrics.js'
 
 /** How long to wait in milliseconds for a command response payload to be received */
 const RESPONSE_TIMEOUT_MS = 1000 * 60
@@ -229,6 +230,7 @@ export default class PluginSocket {
   /** Process an incoming record */
   onRecord(record: LiveRecord) {
     this.#totalRecordsReceived++
+    METRIC_SERVERS_LIVE_RECORDS_RECV.inc()
     if(record.type === LiveRecordType.CommandResponse) {
       const cb = this.#responseQueue.shift()
       if(cb) cb(record)
@@ -304,6 +306,7 @@ export default class PluginSocket {
       }
       if(!this.#socket.write(writer.buffer)) return reject(new Error("Failed to write to socket"))
       this.#totalRecordsSent++
+      METRIC_SERVERS_LIVE_RECORDS_SENT.inc()
       if(type != LiveRecordResponse.RunCommand) return resolve()
       // For RunCommand, we wait for a response:
       const rejectTimeout = setTimeout(() => {

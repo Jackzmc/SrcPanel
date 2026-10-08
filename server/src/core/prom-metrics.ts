@@ -37,6 +37,21 @@ export const METRIC_SERVERS_LIVE_AUTH_COUNT = new Counter({
   help: "number of times servers have authenticated with panel live server",
   labelNames: ["appid", "game_version"]
 })
+export const METRIC_SERVERS_UPTIME = new Gauge({
+  name: "panel_servers_uptime_seconds",
+  help: "number of seconds that server has been detected online",
+  labelNames: ["server_id"]
+})
+export const METRIC_SERVERS_LIVE_RECORDS_SENT = new Counter({
+  name: "panel_servers_live_tx",
+  help: "number of requests to game server that have been sent over live protocol",
+  labelNames: ["server_id"]
+})
+export const METRIC_SERVERS_LIVE_RECORDS_RECV = new Counter({
+  name: "panel_servers_live_rx",
+  help: "number of records from game server that have been received over live protocol",
+  labelNames: ["server_id"]
+})
 
 export const METRIC_SHARE_DOWNLOAD_COUNT = new Counter({
   name: "panel_share_download_count",

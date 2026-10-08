@@ -7,6 +7,7 @@ import { AnnotationX, AnnotationY, FinaleStage, GAME_DIFFICULTY_STRINGS, GameSta
 import DockerServer from "../DockerServer.js";
 import { ContainerStats } from "dockerode";
 import { Server_Metric, Server_MetricFull } from "@srcpanel/common/ServerWebsocket";
+import { METRIC_SERVERS_LIVE_RECORDS_RECV, METRIC_SERVERS_LIVE_RECORDS_SENT, METRIC_SERVERS_UPTIME } from "../../../core/prom-metrics.js";
 
 // The maximum number of statistics to hold
 const MAX_STATS_HISTORY = 400
@@ -151,8 +152,10 @@ export default class MetricsFeature extends Feature {
     recordStatus(data: ServerStatusData | null, source: ServerStatusSource) {
       if(!this.hasInflux) return
 
-      if(this._server.uptime)
+      if(this._server.uptime) {
         this.#metric.send("uptime_secs", this._server.uptime)
+        METRIC_SERVERS_UPTIME.set({ server_id: this._server.id }, this._server.uptime)
+      }
 
       // Defaults to gamedig's value, but overwritten by live as source of truth
       let playerCount: number|undefined = data?.players.length
