@@ -58,4 +58,4 @@ jobs:
           context: . # need to keep .git folder
           target: final-server
           build-args: |
-            GIT_BRANCH="${{ github.ref_name }}"
+            GIT_BRANCH=${{ github.ref_name }}
