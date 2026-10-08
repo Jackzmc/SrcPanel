@@ -8,16 +8,16 @@ const log = Logger.child({ name: "Core/PromMetrics" })
 
 let _version: string
 
-export const METRIC_AUTH_LOGIN_COUNT = new Gauge({
+export const METRIC_AUTH_LOGIN_COUNT = new Counter({
   name: "panel_auth_login_count",
   help: "number of times any user has logged in",
-  labelNames: ["source"]
+  labelNames: ["source"],
 })
 
 export const METRIC_SERVERS_LIVE_VIEWERS = new Gauge({
-  name: "panel_servers_ws_viewers",
+  name: "panel_servers_ws_viewer_count",
   help: "number of viewers of Live view",
-  labelNames: ["server_id"]
+  labelNames: ["server_id"],
 })
 
 export const METRIC_SERVERS_STATUS_STATE = new Gauge({
@@ -38,20 +38,20 @@ export const METRIC_SERVERS_LIVE_AUTH_COUNT = new Counter({
   labelNames: ["appid", "game_version"]
 })
 
-export const METRIC_SHARE_DOWNLOAD_COUNT = new Gauge({
-  name: "panel_share_downloads",
+export const METRIC_SHARE_DOWNLOAD_COUNT = new Counter({
+  name: "panel_share_download_count",
   help: "number of items downloaded",
   labelNames: ["share_id", "source"]
 })
 
-export const METRIC_SHARE_SCAN_COUNT = new Gauge({
-  name: "panel_share_scanned",
+export const METRIC_SHARE_SCAN_COUNT = new Counter({
+  name: "panel_share_scanned_count",
   help: "number of items scanned",
   labelNames: ["share_id", "steam_workshop"]
 })
 
 export const METRIC_STARTUP_TIME = new Gauge({
-    name: "panel_startup_time",
+    name: "panel_startup_time_ms",
     help: "startup time in ms of panel until fastify ready"
 })
 
