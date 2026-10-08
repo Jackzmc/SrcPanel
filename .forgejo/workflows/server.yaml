@@ -57,3 +57,5 @@ jobs:
           cache-to: type=registry,ref=${{ env.BASE_IMAGE_NAME }}-server:buildcache,mode=max
           context: . # need to keep .git folder
           target: final-server
+          build-args: |
+            GIT_BRANCH="${{ github.ref_name }}"
