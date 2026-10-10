@@ -152,6 +152,16 @@
               Download (Direct Download)
             </UButton>
           </UTooltip>
+          <UTooltip text="Rescan file, fetching latest information from steam">
+            <UButton
+              leading-icon="lucide:rotate-ccw"
+              color="neutral"
+              variant="outline"
+              @click="checkAddon"
+            >
+              Re-scan addon 
+            </UButton>
+          </UTooltip>
           <UTooltip text="Delete addon">
             <UButton
               leading-icon="lucide:trash"
@@ -305,6 +315,25 @@ async function deleteAddon() {
   } else {
     toast.add({
       title: `Error deleting ${props.id} from ${props.share.name ?? props.share.id}`,
+      description: response.error.message,
+      color: "error",
+      icon: "lucide:circle-alert",
+    });
+  }
+}
+
+async function checkAddon() {
+  const response = await request(`/api/shares/${props.share.id}/addons/${props.id}/check`, { method: "POST" });
+  if ("body" in response) {
+    toast.add({
+      title: `Addon checked`,
+      description: `Refresh page to see changes`,
+      color: "success",
+      icon: "lucide:circle-check",
+    });
+  } else {
+    toast.add({
+      title: `Failed to check addon`,
       description: response.error.message,
       color: "error",
       icon: "lucide:circle-alert",
