@@ -15,6 +15,7 @@
         "rootDir": "lib",
         "outDir": "./dist",
         "strictNullChecks": true,
+        "declarationMap": true
         // "incremental": true
     },
     "include": [
