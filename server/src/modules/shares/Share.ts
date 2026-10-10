@@ -126,8 +126,7 @@ export default class Share {
 
     for (const [e, fn] of Object.entries(bound)) this.#event.on(e, fn);
     return () => {
-        console.log('unsubscribing')
-        for (const [e, fn] of Object.entries(bound)) this.#event.removeListener(e, fn);
+      for (const [e, fn] of Object.entries(bound)) this.#event.removeListener(e, fn);
     };
   }
 
