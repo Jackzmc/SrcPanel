@@ -197,12 +197,12 @@ export default class WorkshopDownloadQueue {
                     )
 
                     // Add workshop info
-                    if('collection' in entry.item)
-                        await this.#share.db.addWorkshopInfo(filename, serializeWorkshopItem(entry.item), entry.item.collection)
-                            .catch(err => {
-                                this.#addLog("ERROR", `Error adding workshop information for ${filename}`, filename)
-                                this.#log.warn({ id: entry.item.publishedfileid }, "addWorkshopInfo error: " + err.stack)
-                            })
+                    const coll = 'collection' in entry.item ? entry.item.collection : undefined
+                    await this.#share.db.addWorkshopInfo(filename, serializeWorkshopItem(entry.item), coll)
+                        .catch(err => {
+                            this.#addLog("ERROR", `Error adding workshop information for ${filename}`, filename)
+                            this.#log.warn({ id: entry.item.publishedfileid }, "addWorkshopInfo error: " + err.stack)
+                        })
                 } catch(err) {
                     this.#addLog("ERROR", `Could not record ${filename} to database`, filename)
                     this.#log.error({ id: entry.item.publishedfileid }, "db error: " + err.stack)
