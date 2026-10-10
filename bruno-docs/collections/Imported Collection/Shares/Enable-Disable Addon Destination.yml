@@ -1,24 +1,24 @@
 info:
   name: Enable/Disable Addon Destination
   type: http
-  seq: 7
+  seq: 8
 
 http:
   method: POST
   url: "{{API_PROTOCOL}}://{{API_HOST}}/api/shares/:shareId/addons/:filename/:operation/:destKey"
   params:
-    - name: destKey
-      value: addons
+    - name: shareId
+      value: "{{shareId}}"
+      type: path
+    - name: filename
+      value: "{{filename}}"
       type: path
     - name: operation
       value: install
       type: path
       description: '"install"/"enable" or "uninstall"/"disable"'
-    - name: filename
-      value: 1587166349.vpk
-      type: path
-    - name: shareId
-      value: addons
+    - name: destKey
+      value: "{{destKey}}"
       type: path
   auth: inherit
 

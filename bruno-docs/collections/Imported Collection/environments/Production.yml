@@ -1,7 +1,11 @@
+name: Production
 variables:
-  - name: API_HOST
-    value: admin.jackz.me
   - name: API_PROTOCOL
     value: https
+    description: ""
   - secret: true
     name: API_TOKEN
+    description: API token to use for requests
+  - secret: true
+    name: API_HOST
+    description: hostname (no protocol) of API

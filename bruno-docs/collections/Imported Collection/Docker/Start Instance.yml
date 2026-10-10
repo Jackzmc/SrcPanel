@@ -5,10 +5,14 @@ info:
 
 http:
   method: POST
-  url: "{{API_PROTOCOL}}:/{{API_DOMAIN}}/api/docker/instances/:id/start"
+  url: "{{API_PROTOCOL}}:/{{API_HOST}}/api/docker/instances/:id/start"
   headers:
     - name: x-apikey
       value: "{{API_TOKEN}}"
+  params:
+    - name: id
+      value: ""
+      type: path
   body:
     type: text
     data: ""

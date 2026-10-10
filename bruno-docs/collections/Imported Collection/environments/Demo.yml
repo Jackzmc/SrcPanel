@@ -1,0 +1,8 @@
+name: Demo
+variables:
+  - name: API_HOST
+    value: demo.srcpanel.app
+    description: "Hostname of panel "
+  - name: API_PROTOCOL
+    value: https
+    description: Protocol for normal REST requests

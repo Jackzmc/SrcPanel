@@ -1,7 +1,7 @@
 info:
   name: Event Stream
   type: websocket
-  seq: 2
+  seq: 1
 
 websocket:
   url: "{{API_HOST}}/api/shares/event-stream"

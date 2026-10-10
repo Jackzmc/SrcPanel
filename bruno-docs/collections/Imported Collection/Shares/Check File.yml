@@ -1,17 +1,17 @@
 info:
   name: Check File
   type: http
-  seq: 6
+  seq: 7
 
 http:
   method: POST
   url: "{{API_PROTOCOL}}://{{API_HOST}}/api/shares/:shareId/addons/:filename/check"
   params:
     - name: filename
-      value: 1587166349.vpk
+      value: "{{filename}}"
       type: path
     - name: shareId
-      value: addons
+      value: "{{shareId}}"
       type: path
   auth: inherit
 

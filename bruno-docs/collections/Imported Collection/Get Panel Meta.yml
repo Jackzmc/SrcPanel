@@ -1,14 +1,11 @@
 info:
-  name: Create New Group Instance
+  name: Get Panel Meta
   type: http
-  seq: 1
+  seq: 5
 
 http:
-  method: POST
-  url: "{{API_PROTOCOL}}:/{{API_DOMAIN}}/api/groups/:groupId/servers"
-  headers:
-    - name: x-apikey
-      value: "{{API_TOKEN}}"
+  method: GET
+  url: "{{API_PROTOCOL}}://{{API_HOST}}/api/meta"
   body:
     type: text
     data: ""
