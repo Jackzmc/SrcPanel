@@ -200,15 +200,13 @@ export default class Share {
         // We just use the first path
         if (!dest.paths || dest.paths.length < 1) continue
 
-        // FIXME: DEBUG
-        states[id] = true
+        states[id] = false
 
-        // states[id] = false
-        // try {
-        //   states[id] = await this.#getFileInfo(dest.paths[0], filename) !== null
-        // } catch(err) {
-        //   this.#log.warn({ filename, dest: id }, "failed to get file info: " + err)
-        // }
+        try {
+          states[id] = await this.#getFileInfo(dest.paths[0], filename) !== null
+        } catch(err) {
+          this.#log.warn({ filename, dest: id, err }, "get file info failed")
+        }
       }
     }
     return {
