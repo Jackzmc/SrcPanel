@@ -12,7 +12,10 @@ import TaskManager from '../tasks/TaskManager.js'
 import EventEmitter from 'node:events'
 import { METRIC_SHARE_SCAN_COUNT } from '../../core/prom-metrics.js'
 
+/** Interval that scans are scheduled to run */
 const SCAN_INTERVAL_MINS = 60 // every hr
+/** The time at which an addon is considered stale and is to be re-checked */
+const SCAN_STALE_TIME_MS = 1000 * 60 * 60 * 24 * 7
 
 export enum ScanResult {
     AlreadyActive,
@@ -84,7 +87,11 @@ export default class ShareScanner {
 
     // }
 
-    async #checkAddon(filename: string) {
+    /**
+     * Processes a file, updating file info, metadata, and checking for steam workshop information
+     * @param filename filename to check
+     */
+    async checkAddon(filename: string) {
         const filepath = join(this.#share.sourceFolder, filename)
 
         const fstat = await stat(filepath)
@@ -107,7 +114,6 @@ export default class ShareScanner {
 
         await this.#db.upsertAddon(filename, fsinfo, state, meta)
         METRIC_SHARE_SCAN_COUNT.inc({ share_id: this.#share.id, steam_workshop: isSteamWorkshop ? 1 : 0 })
-
     }
 
     /**
@@ -145,9 +151,18 @@ export default class ShareScanner {
             unchecked.delete(dirent.name)
 
             const entry = await this.#db.getAddonInfo(dirent.name)
-            if(!entry || entry.state == ShareItemState.Missing) {
+            /*
+                Check if a file either:
+                 1. Has no DB entry
+                 2. Was recorded missing (was in DB, but file disappeared last scan)
+                 3. Last time it was checked was over SCAN_STALE_TIME_MS
+            */
+            if(!entry 
+                || entry.state == ShareItemState.Missing 
+                || !entry.lastCheckedTime || (Date.now() - entry.lastCheckedTime*1000 > SCAN_STALE_TIME_MS)
+            ) {
                 try {
-                    await this.#checkAddon(dirent.name)
+                    await this.checkAddon(dirent.name)
                 } catch(err) {
                     this.#log.warn({ filename: dirent.name }, "failed to scan item: " + err)
                 }

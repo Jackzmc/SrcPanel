@@ -68,7 +68,7 @@ export default class ShareDatabase {
         this.#log.trace({ time: performance.now() }, "getAddons START")
         const rows = this.#db
             .prepare<any[], any>(`
-                SELECT filename, filesize, state, lastModified, ws_info, collection_id, c.name as collection_name, metadata 
+                SELECT filename, filesize, state, lastModified, ws_info, collection_id, c.name as collection_name, metadata, last_checked_time 
                 FROM addoncache
                 LEFT JOIN workshop_collections c ON collection_id = c.id
             `).all();
@@ -102,8 +102,8 @@ export default class ShareDatabase {
         this.#db
             .prepare(`
                 REPLACE INTO addoncache
-                    (filename, filesize, lastModified, state, metadata)
-                    VALUES (?, ?, ?, ?, ?)
+                    (filename, filesize, lastModified, state, metadata, last_checked_time)
+                    VALUES (?, ?, ?, ?, ?, unixepoch())
             `)
             .run([ filename, fsInfo?.filesize, fsInfo?.lastModified, state, JSON.stringify(meta) ])
     }
@@ -121,7 +121,7 @@ export default class ShareDatabase {
         // TODO: Currently we set to Ready, but should we check *only* if it's ShareItemState.Resolving/Pending?
         this.#db
             .prepare(
-                `UPDATE addoncache SET state = ?, ws_info = ?, collection_id = ? WHERE filename = ?`
+                `UPDATE addoncache SET state = ?, ws_info = ?, collection_id = ?, last_checked_time = unixepoch() WHERE filename = ?`
             )
             .run([ ShareItemState.Ready, JSON.stringify(wsInfo), collection?.id, filename ])
     }
@@ -144,7 +144,7 @@ export default class ShareDatabase {
         this.#log.trace({ time: performance.now() }, "getAddons START")
         const info = this.#db
             .prepare<any[], any>(`
-                SELECT filename, filesize, state, lastModified, ws_info, collection_id, c.name as collection_name, metadata 
+                SELECT filename, filesize, state, lastModified, ws_info, collection_id, c.name as collection_name, metadata, last_checked_time
                 FROM addoncache
                 LEFT JOIN workshop_collections c ON collection_id = c.id
                 WHERE filename = ?
@@ -166,7 +166,8 @@ export default class ShareDatabase {
                 name: row.collection_name
             } : undefined,
             installInfo: {}, // Not ideal but we fill it in Share
-            meta: row.meta ? JSON.parse(row.meta) : {}
+            meta: row.meta ? JSON.parse(row.meta) : {},
+            lastCheckedTime: row.last_checked_time
         }
     }
 
@@ -175,7 +176,7 @@ export default class ShareDatabase {
      * @param filenames 
      */
     async markMissing(filenames: Set<string>) {
-        const stmt = this.#db.prepare("UPDATE addoncache SET state = ? WHERE filename = ?")
+        const stmt = this.#db.prepare("UPDATE addoncache SET state = ?, last_checked_time = unixepoch() WHERE filename = ?")
         for(const filename of filenames) {
             stmt.run([ ShareItemState.Missing, filename ])
         }
