@@ -68,7 +68,7 @@ export default class ShareDatabase {
         this.#log.trace({ time: performance.now() }, "getAddons START")
         const rows = this.#db
             .prepare<any[], any>(`
-                SELECT filename, filesize, state, lastModified, ws_info, collection_id, c.name as collection_name, chapter_ids, metadata 
+                SELECT filename, filesize, state, lastModified, ws_info, collection_id, c.name as collection_name, metadata 
                 FROM addoncache
                 LEFT JOIN workshop_collections c ON collection_id = c.id
             `).all();
