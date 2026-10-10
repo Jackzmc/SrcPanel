@@ -73,21 +73,7 @@ export default class ShareDatabase {
                 LEFT JOIN workshop_collections c ON collection_id = c.id
             `).all();
         this.#log.trace({ time: performance.now() }, "getAddons END")
-        return rows.map<AddonInfo>(row => {
-            return {
-                filename: row.filename,
-                filesize: row.filesize,
-                state: row.state ?? ShareItemState.Ready,
-                lastModified: row.lastModified,
-                workshop: row.ws_info ? JSON.parse(row.ws_info) : null,
-                collection: row.collection_id ? {
-                    id: row.collection_id,
-                    name: row.collection_name
-                } : undefined,
-                installInfo: {}, // Not ideal but we fill it in Share
-                meta: row.meta ? JSON.parse(row.meta) : {}
-            } 
-        })
+        return rows.map<AddonInfo>(this.#formatAddon)
     }
 
     /**
@@ -155,12 +141,33 @@ export default class ShareDatabase {
      * @returns Promise<AddonInfo | undefined>
      */
     public async getAddonInfo(filename: string): Promise<AddonInfo | null> {
+        this.#log.trace({ time: performance.now() }, "getAddons START")
         const info = this.#db
-            .prepare<any[], AddonInfo>(`SELECT * FROM addoncache WHERE filename = ?`)
-            .get([filename])
-        if (!info) return null
-        return info
+            .prepare<any[], any>(`
+                SELECT filename, filesize, state, lastModified, ws_info, collection_id, c.name as collection_name, metadata 
+                FROM addoncache
+                LEFT JOIN workshop_collections c ON collection_id = c.id
+                WHERE filename = ?
+                LIMIT 1
+            `)
+            .get([filename]);
+        return info ? this.#formatAddon(info) : null
+    }
 
+    #formatAddon(row: any): AddonInfo {
+        return {
+            filename: row.filename,
+            filesize: row.filesize,
+            state: row.state ?? ShareItemState.Ready,
+            lastModified: row.lastModified,
+            workshop: row.ws_info ? JSON.parse(row.ws_info) : null,
+            collection: row.collection_id ? {
+                id: row.collection_id,
+                name: row.collection_name
+            } : undefined,
+            installInfo: {}, // Not ideal but we fill it in Share
+            meta: row.meta ? JSON.parse(row.meta) : {}
+        }
     }
 
     /**
