@@ -1,4 +1,4 @@
-import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
+import { FastifyInstance, FastifyPluginOptions, FastifyReply, FastifyRequest, preHandlerAsyncHookHandler } from 'fastify';
 import FastifyMultipart from '@fastify/multipart'
 import { pipeline } from 'stream'
 import { promisify } from 'util'
@@ -9,13 +9,20 @@ import { createReadStream } from 'fs';
 import path from 'path';
 import assert from 'assert';
 import { log } from 'console';
+import Share from '../../modules/shares/Share.js';
+import { RequirePermissionOptions } from '../../modules/users/User.js';
 const pump = promisify(pipeline)
 
 const VALID_FILENAME_REGEX = new RegExp(/[a-z0-9_\- .]+/i)
 const UPLOAD_MAX_FILESIZE_BYTES = 1000 * 1000 * 1000 * 5 // 5 GB
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
+  fastify.decorateRequest('filename', '')
+  fastify.decorateRequest('share', null)
+  fastify.decorateRequest('shareDest', '')
+  fastify.decorateRequest('permCode', '')
 
+  // For direct upload
   fastify.register(FastifyMultipart, {
     limits: {
       fileSize: UPLOAD_MAX_FILESIZE_BYTES
@@ -386,92 +393,136 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     })
   })
 
+  fastify.post(
+    '/:shareId/addons/:filename/check', 
+    { preHandler: [ requireShare(), requireFilename() ]},
+    async (req: FastifyRequest<{ Params: { shareId: string, filename: string } }>, reply) => {
+      const share = req.getDecorator<Share>("share")
+      const filename = req.getDecorator<string>("filename")
 
-  fastify.post('/:shareId/addons/:filename/:operation/:destKey', async (req: FastifyRequest<{ Params: { shareId: string, operation: string, filename: string, destKey: string } }>, reply) => {
-    // Filter out ../ or ..\
-    const filename = req.params.filename.replace(/\.\.(\/|\\|$)+/, '')
-    if (!filename) {
-      return reply.status(401).send({
-        error: "No filename provided",
-        message: `Filename is blank`
-      })
+      await share.scanner.checkAddon(filename)
+      return await reply.send(204)
     }
-    const isInstall = req.params.operation === "install" || req.params.operation === "enable"
-    if (!isInstall && req.params.operation !== "uninstall" && req.params.operation !== "disable") {
-      return reply.status(400).send({
-        error: "INVALID_OPERATION",
-        message: `Operation must be of 'enable' or 'disable', not ${req.params.operation}`
-      })
-    }
+  )
 
-    const shareId = req.params.shareId
-    const [code, granted] = req.user!.requirePermission("shares.addons.edit", { resourceId: shareId })
-    if (!granted) return NO_PERMISSION(reply)
+  fastify.post(
+    '/:shareId/addons/:filename/:operation/:destKey', 
+    { preHandler: [ 
+        requirePermission("shares.addons.edit", (req) => ({ resourceId: (req.params as any).shareId})), 
+        requireShare(true), 
+        requireFilename()
+      ]
+    },
+    async (
+      req: FastifyRequest<{ Params: { shareId: string, operation: string, filename: string, destKey: string } }>, 
+      reply
+    ) => {
+      const share = req.getDecorator<Share>("share")
+      const filename = req.getDecorator<string>("filename")
+      const code = req.getDecorator<UserPrivilegeCode>("permCode")
+      
+      const isInstall = req.params.operation === "install" || req.params.operation === "enable"
+      if (!isInstall && req.params.operation !== "uninstall" && req.params.operation !== "disable") {
+        return reply.status(400).send({
+          error: "INVALID_OPERATION",
+          message: `Operation must be of 'enable' or 'disable', not ${req.params.operation}`
+        })
+      }
+      // Verify that the filename exists in the src:
+      const addonInfo = await share.isInstalled(filename)
+      if(!addonInfo) {
+        return reply.status(404).send({
+          error: "File not found",
+          message: `Share does not have a downloaded filename "${filename}".`
+        })
+      }
+      
+      try {
+        if (isInstall)
+          await share.enable(filename, req.params.destKey)
+        else
+          await share.disable(filename, req.params.destKey)
 
-    const share = fastify.servers.getShare(shareId)
-    if (!share) {
-      return reply.status(404).send({
-        error: "SHARE_NOT_FOUND",
-        message: `No share with id "${shareId.toLowerCase()}" could be found. Share may be unavailable, incorrecty configured or does not exist`
-      })
-    } else if (!share.destinations[req.params.destKey]) {
-      return reply.status(404).send({
-        error: "SHARE_DEST_NOT_FOUND",
-        message: `Share does not have a destination of id "${req.params.destKey}".`
-      })
+        await req.user!.log(null, `${isInstall ? 'enabled' : 'disabled'} addon %filename% for %share%/%server%`, {
+          code,
+          metadata: {
+            share: share.id,
+            server: req.params.destKey,
+            filename
+          }
+        })
+
+        return reply.status(204).send()
+      } catch (err) {
+        fastify.log.error(err)
+        return reply.code(500).send({
+          error: isInstall ? "ENABLE_ERROR" : "DISABLE_ERROR",
+          message: `Error occurred while ${isInstall ? 'enabling' : 'disabling'} addon`
+        })
+      }
     }
-    // Verify that the filename exists in the src:
-    const addonInfo = await share.isInstalled(filename)
-    if(!addonInfo) {
-      return reply.status(404).send({
-        error: "File not found",
-        message: `Share does not have a downloaded filename "${filename}".`
-      })
-    }
-    
-    try {
-      if (isInstall)
-        await share.enable(filename, req.params.destKey)
-      else
-        await share.disable(filename, req.params.destKey)
-      await req.user!.log(null, `${isInstall ? 'enabled' : 'disabled'} addon %filename% for %share%/%server%`, {
-        code,
-        metadata: {
-          share: share.id,
-          server: req.params.destKey,
-          filename
-        }
-      })
-      return reply.status(204).send()
-    } catch (err) {
-      fastify.log.error(err)
-      return reply.code(500).send({
-        error: isInstall ? "ENABLE_ERROR" : "DISABLE_ERROR",
-        message: `Error occurred while ${isInstall ? 'enabling' : 'disabling'} addon`
-      })
-    }
-    
-  })
+  )
 }
 
-function humanFileSize(bytes: number, si = false, dp = 1) {
-  const thresh = si ? 1000 : 1024;
-
-  if (Math.abs(bytes) < thresh) {
-    return bytes + ' B';
+/**
+ * Check for a valid filename
+ * @returns decorator 'filename'
+ */
+function requireFilename(): preHandlerAsyncHookHandler {
+  return async (req: FastifyRequest, reply: FastifyReply) => {
+    let { filename } = req.params as { filename: string }
+    filename = filename
+      .replace(/\.\.(\/|\\|$)+/, '')
+      .trim()
+    if (!filename) {
+      return reply.status(401).send({ error: 'No filename provided', message: 'Filename is blank' })
+    }
+    req.setDecorator("filename", filename)
   }
+}
 
-  const units = si
-    ? ['kB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
-    : ['KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB', 'ZiB', 'YiB'];
-  let u = -1;
-  const r = 10 ** dp;
+/**
+ * Require a valid share
+ * @param requireDest if true, require a valid destKey
+ * @returns decorator 'share' and optionally 'shareDest'
+ */
+function requireShare(requireDest = false): preHandlerAsyncHookHandler {
+  return async (req: FastifyRequest, reply: FastifyReply) => {
+    const { shareId, destKey } = req.params as { shareId: string, destKey: string }
+    const share = req.server.servers.getShare(shareId)
+    if(!share) {
+      return reply.status(404).send({
+        error: "Share Not Found",
+        message: `No share with id "${shareId.toLowerCase()}" could be found. Share may be unavailable, incorrecty configured or does not exist`
+      })
+    }
+    req.setDecorator("share", share)
 
-  do {
-    bytes /= thresh;
-    ++u;
-  } while (Math.round(Math.abs(bytes) * r) / r >= thresh && u < units.length - 1);
+    if(requireDest) {
+      if (!destKey || !share.destinations[destKey]) {
+        return reply.status(404).send({
+          error: "SHARE_DEST_NOT_FOUND",
+          message: `Share does not have a destination of id "${destKey}".`
+        })
+      }
+      req.setDecorator("shareDest", destKey)
+    }
+  }
+}
 
-
-  return bytes.toFixed(dp) + ' ' + units[u];
+/**
+ * Check for a user permission, by calling req.user.requirePermission to check if granted
+ * @param checkCode code to check
+ * @param options fn that returns options such as resourceId for requirePermission
+ * @returns decorator 'permCode' with code from requirePermission
+ */
+function requirePermission(
+  checkCode: UserPrivilegeCode, 
+  options?: (req: FastifyRequest) => RequirePermissionOptions
+): preHandlerAsyncHookHandler {
+  return async (req: FastifyRequest, reply: FastifyReply) => {
+    const [code, granted] = req.user!.requirePermission(checkCode, options ? options(req) : {})
+    if (!granted) return NO_PERMISSION(reply)
+    req.setDecorator('permCode', code)
+  }
 }

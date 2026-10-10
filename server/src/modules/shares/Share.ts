@@ -145,6 +145,16 @@ export default class Share {
   }
 
   /**
+   * Check if filename is valid (only checks relative to source folder)
+   * @param filename 
+   * @returns true if valid
+   */
+  isFileValid(filename: string) {
+    const checkPath = path.join(this.sourceFolder, path.normalize(filename))
+    return checkPath.startsWith(this.sourceFolder)
+  }
+
+  /**
    * Returns all scanned addons
    */
   public async getAddons(): Promise<AddonInfo[]> {

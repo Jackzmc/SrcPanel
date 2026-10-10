@@ -1,0 +1,32 @@
+info:
+  name: Enable/Disable Addon Destination
+  type: http
+  seq: 7
+
+http:
+  method: POST
+  url: "{{API_PROTOCOL}}://{{API_HOST}}/api/shares/:shareId/addons/:filename/:operation/:destKey"
+  params:
+    - name: destKey
+      value: addons
+      type: path
+    - name: operation
+      value: install
+      type: path
+      description: '"install"/"enable" or "uninstall"/"disable"'
+    - name: filename
+      value: 1587166349.vpk
+      type: path
+    - name: shareId
+      value: addons
+      type: path
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: Requests a filename to be re-scanned

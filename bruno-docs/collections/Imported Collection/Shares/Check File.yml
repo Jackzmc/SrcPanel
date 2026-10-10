@@ -1,0 +1,25 @@
+info:
+  name: Check File
+  type: http
+  seq: 6
+
+http:
+  method: POST
+  url: "{{API_PROTOCOL}}://{{API_HOST}}/api/shares/:shareId/addons/:filename/check"
+  params:
+    - name: filename
+      value: 1587166349.vpk
+      type: path
+    - name: shareId
+      value: addons
+      type: path
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: Requests a filename to be re-scanned
