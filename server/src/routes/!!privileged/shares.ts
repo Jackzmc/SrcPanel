@@ -366,6 +366,9 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
   fastify.get('/event-stream', { websocket: true}, async (ws, req: FastifyRequest<{ Params: { shareId: string }}>) => {
     function send(event: WebsocketMessage) {
+      if (ws.readyState !== ws.OPEN) return
+      try { ws.send(JSON.stringify(event)) }
+      catch (err) { req.log.warn({ err }, 'ws send failed') }
       ws.send(JSON.stringify(event))
     }
 
@@ -383,6 +386,10 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
       }
     }
 
+    const pingTimer = setInterval(() => {
+      ws.ping()
+    }, 25_000)
+
     ws.on('message', message => {
       try {
         const json = JSON.parse(message.toString())
@@ -390,6 +397,10 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
       } catch(err) {
         req.log.warn("invalid message: " + err)
       }
+    })
+
+    ws.on("close", () => {
+      clearInterval(pingTimer)
     })
   })
 

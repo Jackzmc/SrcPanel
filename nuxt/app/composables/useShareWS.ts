@@ -31,9 +31,10 @@ export function useShareWS() {
       console.warn(prefix, "connection error: ", event)
     }
     ws.addEventListener("close", (event) => {
-      const retryTime = Math.min(1000 * (Math.pow(1, reconnectAttempts)), MAX_RECONNECT_INTERVAL_MS);
+      const base = Math.min(1000 * 2 ** reconnectAttempts, MAX_RECONNECT_INTERVAL_MS)
+      const retryTime = base / 2 + Math.random() * (base / 2)
       reconnectAttempts++
-      console.warn(prefix, `disconnected code=${event.reason}, reconnecting in`, retryTime, 'ms')
+      console.warn(prefix, `disconnected code=${event.code} reason="${event.reason}", reconnecting in`, retryTime, 'ms')
 
       setTimeout(() => setup(), retryTime)
     })
@@ -44,6 +45,7 @@ export function useShareWS() {
       for(const sub of subscriptions.keys()) {
         sendRequest({ subscribe: sub })
       }
+      reconnectAttempts = 0
     })
     ws.addEventListener("message", (wsEvent) => {
         const msg = JSON.parse(wsEvent.data) as WebsocketMessage
@@ -71,9 +73,6 @@ export function useShareWS() {
             mergeAddons(msg.event)
           }
         }
-    })
-    ws.addEventListener("open", () => {
-      reconnectAttempts = 0
     })
   }
 
