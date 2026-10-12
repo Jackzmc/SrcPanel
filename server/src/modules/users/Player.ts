@@ -8,6 +8,7 @@ import { Note } from "@srcpanel/common/Note";
 import { formatBan } from "../bans/utils.js";
 import NotesManager from "../notes/index.js";
 import { formatPlayer } from "./utils.js";
+import PlayerManager from "./PlayerManager.js";
 
 /**
  * determine:
@@ -57,6 +58,7 @@ export default class PanelPlayer {
             // TODO: is this okay? we don't want to have to fetch an entry if its not actually used (but rather calling getBans)
             if(rows.length === 0) throw new Error("No player found")
             this.#cachedEntry = formatPlayer(this.steamid, rows[0])
+            if(!this.#cachedEntry.name) PlayerManager.instance.enqueueNameResolve(this.steamid)
         }
         return this.#cachedEntry
     }

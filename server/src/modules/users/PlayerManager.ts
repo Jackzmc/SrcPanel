@@ -6,9 +6,11 @@ import AuthManager from "../auth/AuthManager.js";
 import { formatPlayer } from "./utils.js";
 import PanelPlayer from "./Player.js";
 import LRU from 'quick-lru'
-import { PlayerEntry } from "@srcpanel/common/User";
+import TaskManager from "../tasks/TaskManager.js";
 
 const CACHE_TTL = 1000 * 60 * 5
+
+const NAME_CACHE_TASK_INTERVAL_HRS = 1
 
 export default class PlayerManager {
     static #instance: PlayerManager
@@ -17,10 +19,25 @@ export default class PlayerManager {
     #db: Pool
     #authMngr: AuthManager
     #playerCache: LRU<SteamID, PanelPlayer> = new LRU({ maxAge: CACHE_TTL, maxSize: 1000 })
+    #missingNameQueue: Set<SteamID> = new Set() // prob moved to usermanager?
     constructor(db: Pool, authMngr: AuthManager) {
         PlayerManager.#instance = this
         this.#db = db
         this.#authMngr = authMngr
+
+        const task = TaskManager.Instance.register("resolveNames", this.resolveNames)
+        TaskManager.Instance.scheduleRepeating(task, { hours: NAME_CACHE_TASK_INTERVAL_HRS })
+    }
+
+    enqueueNameResolve(steamid: SteamID) {
+        this.#missingNameQueue.add(steamid)
+    }
+    
+    /**
+     * Processes names in the resolve queue
+     */
+    async resolveNames() {
+        await UserManager.instance.fetchUsers([...this.#missingNameQueue.keys()])
     }
 
     get(steamid: SteamID): PanelPlayer {
@@ -59,6 +76,8 @@ export default class PlayerManager {
             .map(row => {
                 const steamid = SteamID.fromIndividualAccountID(row.account_id)
                 const playerData = formatPlayer(steamid, row)
+                // Side effects but oh well
+                if(!playerData.name) this.enqueueNameResolve(steamid)
                 const player = new PanelPlayer(this.#db, this.#authMngr, steamid, playerData)
                 this.#playerCache.set(steamid, player)
                 return player
@@ -102,6 +121,8 @@ export default class PlayerManager {
         return rows.map(row => {
             const steamid = SteamID.fromIndividualAccountID(row.account_id)
             const playerEntry = formatPlayer(steamid, row)
+            // Side effects but oh well
+            if(!playerEntry.name) this.enqueueNameResolve(steamid)
             const player = new PanelPlayer(this.#db, this.#authMngr, steamid, playerEntry)
             const server = row.server
             return { player, server }
