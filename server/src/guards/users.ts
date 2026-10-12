@@ -1,8 +1,10 @@
 import { FastifyInstance, FastifyReply, FastifyRequest, preHandlerAsyncHookHandler } from "fastify"
 import { sendMissingParamError } from "./index.js"
 import SteamID from "steamid"
+import PlayerManager from "../modules/users/PlayerManager.js"
+import PanelPlayer from "../modules/users/Player.js"
 
-export const GUARD_REQUIRE_STEAMID = {
+export const GUARD_REQUIRE_PLAYER = {
   register(fastify: FastifyInstance) {
     fastify.decorateRequest("steamid", null)
   },
@@ -21,5 +23,6 @@ export const GUARD_REQUIRE_STEAMID = {
       req.setDecorator("steamid", id)
     }
   },
-  get: (req: FastifyRequest) => req.getDecorator<SteamID>("steamid") 
+  getSteamID: (req: FastifyRequest) => req.getDecorator<SteamID>("steamid"),
+  getPlayer: (req: FastifyRequest) => PlayerManager.instance.get(req.getDecorator<SteamID>("steamid")) 
 }

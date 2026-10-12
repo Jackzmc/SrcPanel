@@ -209,10 +209,6 @@ export interface PlayerRecentEntry extends PlayerEntry {
 }
 
 export interface APIListPlayersResponse<T extends PlayerEntry = PlayerEntry> {
-  meta: {
-    queryTimeSec: number,
-    nextOffset?: number
-  },
   users: T[]
 }
 
