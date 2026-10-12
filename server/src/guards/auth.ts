@@ -1,9 +1,12 @@
 import { UserPrivilegeCode, UserPrivilegeCodes } from "@srcpanel/common/Privileges"
-import { FastifyReply, FastifyRequest, preHandlerAsyncHookHandler } from "fastify"
+import { FastifyInstance, FastifyReply, FastifyRequest, preHandlerAsyncHookHandler } from "fastify"
 import { RequirePermissionOptions } from "../modules/users/User.js"
 import { NO_PERMISSION } from "../responses.js"
 
 export const GUARD_REQUIRE_PERMISSION = {
+    register(fastify: FastifyInstance) {
+        fastify.decorateRequest("permCode", "")
+    },
     /**
      * Check for a user permission, by calling req.user.requirePermission to check if granted
      * @param checkCode code to check

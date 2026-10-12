@@ -1,24 +1,22 @@
-import { FastifyInstance, FastifyPluginOptions, FastifyReply, FastifyRequest, preHandlerAsyncHookHandler } from 'fastify';
+import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
 import FastifyMultipart from '@fastify/multipart'
 import { pipeline } from 'stream'
 import { promisify } from 'util'
 import { ChildWorkshopItem, DetailsResponse, WebsocketMessage, WebsocketRequest, WorkshopItem } from '@srcpanel/common/Share';
-import { NO_PERMISSION } from '../../responses.js';
-import { UserPrivilegeCode } from '@srcpanel/common/Privileges';
 import { createReadStream } from 'fs';
 import path from 'path';
-import Share from '../../modules/shares/Share.js';
 import { GUARD_REQUIRE_PERMISSION } from '../../guards/auth.js';
+import { GUARD_REQUIRE_FILENAME, GUARD_REQUIRE_SHARE } from '../../guards/shares.js';
 const pump = promisify(pipeline)
 
 const VALID_FILENAME_REGEX = new RegExp(/[a-z0-9_\- .]+/i)
 const UPLOAD_MAX_FILESIZE_BYTES = 1000 * 1000 * 1000 * 5 // 5 GB
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
-  fastify.decorateRequest('filename', '')
-  fastify.decorateRequest('share', null)
-  fastify.decorateRequest('shareDest', '')
   fastify.decorateRequest('permCode', '')
+  
+  GUARD_REQUIRE_FILENAME.register(fastify)
+  GUARD_REQUIRE_SHARE.register(fastify)
 
   // For direct upload
   fastify.register(FastifyMultipart, {
@@ -33,7 +31,6 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     { preHandler: [
       // require addon permission to just prevent using our API as proxy
       GUARD_REQUIRE_PERMISSION.prehandler("shares.addons.view", (req) => ({ resourceId: (req.params as any).shareId})), 
-      requireShare()
     ]},
     async (req: FastifyRequest<{ Params: { publishedfileid: string } }>, reply): Promise<DetailsResponse> => {
       const results = await fastify.steam.getItemDetails([req.params.publishedfileid])
@@ -61,13 +58,18 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     }
   )
 
-  fastify.get('/workshop/search/:appid', async (req: FastifyRequest<{ Params: { appid: string }, Querystring: { query: string } }>, reply): Promise<{ results: WorkshopItem[] }> => {
-    if (!req.user!.hasPermission("shares.addons.view")) return NO_PERMISSION(reply)
-    const results = await fastify.steam.searchItems(req.query.query, req.params.appid)
-    return {
-      results: results
+  fastify.get(
+    '/workshop/search/:appid', 
+    { preHandler: [
+      GUARD_REQUIRE_PERMISSION.prehandler("shares.addons.view", (req) => ({ resourceId: (req.params as any).shareId}))
+    ]},
+    async (req: FastifyRequest<{ Params: { appid: string }, Querystring: { query: string } }>, reply): Promise<{ results: WorkshopItem[] }> => {
+      const results = await fastify.steam.searchItems(req.query.query, req.params.appid)
+      return {
+        results: results
+      }
     }
-  })
+  )
 
 
   fastify.get(
@@ -84,10 +86,10 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     '/:shareId', 
     { preHandler: [
       GUARD_REQUIRE_PERMISSION.prehandler("shares.view", (req) => ({ resourceId: (req.params as any).shareId})), 
-      requireShare()
+      GUARD_REQUIRE_SHARE.prehandler()
     ]},
     async (req: FastifyRequest<{ Params: { shareId?: string } }>, reply) => {
-      const share = req.getDecorator<Share>("share")
+      const share = GUARD_REQUIRE_SHARE.getShare(req)
       return {
         share: share.export()
       }
@@ -98,13 +100,13 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     '/:shareId/addons/workshop/:publishedfileid', 
     { preHandler: [
       GUARD_REQUIRE_PERMISSION.prehandler("shares.addons.upload.steam_workshop", (req) => ({ resourceId: (req.params as any).shareId})), 
-      requireShare()
+      GUARD_REQUIRE_SHARE.prehandler()
     ]},
     async (req: FastifyRequest<{ 
       Params: { shareId: string, publishedfileid: string },
       Querystring: { destinations: string, children?: string }
     }>, reply) => {
-      const share = req.getDecorator<Share>("share")
+      const share = GUARD_REQUIRE_SHARE.getShare(req)
       const code = GUARD_REQUIRE_PERMISSION.get(req)
       // const code = req.getDecorator<UserPrivilegeCode>("permCode")
       if(!share.sources.steam_workshop) return reply.send({
@@ -168,11 +170,11 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     '/:shareId/restart-servers',
     { preHandler: [
       GUARD_REQUIRE_PERMISSION.prehandler("shares.manage", (req) => ({ resourceId: (req.params as any).shareId})), 
-      requireShare()
+      GUARD_REQUIRE_SHARE.prehandler(true)
     ]},
     async (req: FastifyRequest<{ Params: { shareId: string, destId: string } }>, reply) => {
-      const share = req.getDecorator<Share>("share")
-      const destKey = req.getDecorator<string>("shareDest")
+      const share = GUARD_REQUIRE_SHARE.getShare(req)
+      const destKey = GUARD_REQUIRE_SHARE.getShareDest(req)
 
       const dest = share.destinations[destKey]
 
@@ -188,10 +190,10 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     '/:shareId/addons', 
     { preHandler: [
       GUARD_REQUIRE_PERMISSION.prehandler("shares.addons.view", (req) => ({ resourceId: (req.params as any).shareId})), 
-      requireShare(false)
+      GUARD_REQUIRE_SHARE.prehandler()
     ]},
     async (req: FastifyRequest<{ Params: { shareId?: string } }>, reply) => {
-      const share = req.getDecorator<Share>("share")
+      const share = GUARD_REQUIRE_SHARE.getShare(req)
 
       try {
         return {
@@ -212,12 +214,12 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     '/:shareId/addons/:filename', 
     { preHandler: [
       GUARD_REQUIRE_PERMISSION.prehandler("shares.addons.view", (req) => ({ resourceId: (req.params as any).shareId})), 
-      requireFilename(),
-      requireShare(false),
+      GUARD_REQUIRE_FILENAME.prehandler(),
+      GUARD_REQUIRE_SHARE.prehandler()
     ]},
     async (req: FastifyRequest<{ Params: { shareId: string, filename: string } }>, reply) => {
-      const filename = req.getDecorator<string>("filename")
-      const share = req.getDecorator<Share>("share")
+      const share = GUARD_REQUIRE_SHARE.getShare(req)
+      const filename = GUARD_REQUIRE_FILENAME.get(req)
 
       return {
         addonInfo: await share.getAddonInfo(filename)
@@ -229,10 +231,10 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     '/:shareId/addons/upload', 
     { preHandler: [
       GUARD_REQUIRE_PERMISSION.prehandler("shares.addons.upload.direct", (req) => ({ resourceId: (req.params as any).shareId})), 
-      requireShare(false)
+      GUARD_REQUIRE_SHARE.prehandler()
     ]},
     async (req: FastifyRequest<{ Params: { shareId: string } }>, reply) => {
-      const share = req.getDecorator<Share>("share")
+      const share = GUARD_REQUIRE_SHARE.getShare(req)
       const code = GUARD_REQUIRE_PERMISSION.get(req)
 
       if (!share.exts) {
@@ -281,12 +283,12 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     '/:shareId/addons/:filename/download', 
     { preHandler: [
       GUARD_REQUIRE_PERMISSION.prehandler("shares.addons.view", (req) => ({ resourceId: (req.params as any).shareId})), 
-      requireFilename(),
-      requireShare(false)
+      GUARD_REQUIRE_FILENAME.prehandler(),
+      GUARD_REQUIRE_SHARE.prehandler()
     ]},
     async (req: FastifyRequest<{ Params: { shareId: string, filename: string } }>, reply) => {
-      const filename = req.getDecorator<string>("filename")
-      const share = req.getDecorator<Share>("share")
+      const filename = GUARD_REQUIRE_FILENAME.get(req)
+      const share = GUARD_REQUIRE_SHARE.getShare(req)
 
       const addonInfo = await share.isInstalled(filename)
       if (!addonInfo) {
@@ -306,13 +308,13 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     '/:shareId/addons/:filename', 
     { preHandler: [ 
         GUARD_REQUIRE_PERMISSION.prehandler("shares.addons.delete", (req) => ({ resourceId: (req.params as any).shareId})), 
-        requireShare(), 
-        requireFilename()
+        GUARD_REQUIRE_SHARE.prehandler(),
+        GUARD_REQUIRE_FILENAME.prehandler()
       ]
     },
     async (req: FastifyRequest<{ Params: { shareId: string, filename: string } }>, reply) => {
-      const filename = req.getDecorator<string>("filename")
-      const share = req.getDecorator<Share>("share")
+      const filename = GUARD_REQUIRE_FILENAME.get(req)
+      const share = GUARD_REQUIRE_SHARE.getShare(req)
       const code = GUARD_REQUIRE_PERMISSION.get(req)
 
       await share.deleteAddon(filename)
@@ -374,10 +376,10 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
   fastify.post(
     '/:shareId/addons/:filename/check', 
-    { preHandler: [ requireShare(), requireFilename() ]},
+    { preHandler: [ GUARD_REQUIRE_SHARE.prehandler(), GUARD_REQUIRE_FILENAME.prehandler() ]},
     async (req: FastifyRequest<{ Params: { shareId: string, filename: string } }>, reply) => {
-      const share = req.getDecorator<Share>("share")
-      const filename = req.getDecorator<string>("filename")
+      const share = GUARD_REQUIRE_SHARE.getShare(req)
+      const filename = GUARD_REQUIRE_FILENAME.get(req)
 
       await share.scanner.checkAddon(filename)
       return await reply.send(204)
@@ -441,101 +443,4 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
       }
     }
   )
-}
-
-/**
- * Check for a valid filename
- * @returns decorator 'filename'
- * @deprecated
- */
-function requireFilename(): preHandlerAsyncHookHandler {
-  return async (req: FastifyRequest, reply: FastifyReply) => {
-    let { filename } = req.params as { filename: string }
-    filename = filename
-      .replace(/\.\.(\/|\\|$)+/, '')
-      .trim()
-    if (!filename) {
-      return reply.status(401).send({ error: 'No filename provided', message: 'Filename is blank' })
-    }
-    req.setDecorator("filename", filename)
-  }
-}
-
-/**
- * Require a valid share
- * @param requireDest if true, require a valid destKey
- * @returns decorator 'share' and optionally 'shareDest'
- * @deprecated
- */
-function requireShare(requireDest = false): preHandlerAsyncHookHandler {
-  return async (req: FastifyRequest, reply: FastifyReply) => {
-    const { shareId, destKey } = req.params as { shareId: string, destKey: string }
-    const share = req.server.servers.getShare(shareId)
-    if(!share) {
-      return reply.status(404).send({
-        error: "Share Not Found",
-        message: `No share with id "${shareId.toLowerCase()}" could be found. Share may be unavailable, incorrecty configured or does not exist`
-      })
-    }
-    req.setDecorator("share", share)
-
-    if(requireDest) {
-      if (!destKey || !share.destinations[destKey]) {
-        return reply.status(404).send({
-          error: "SHARE_DEST_NOT_FOUND",
-          message: `Share does not have a destination of id "${destKey}".`
-        })
-      }
-      req.setDecorator("shareDest", destKey)
-    }
-  }
-}
-
-const GUARD_REQUIRE_FILENAME = {
-  prehandler(): preHandlerAsyncHookHandler {
-    return async (req: FastifyRequest, reply: FastifyReply) => {
-      let { filename } = req.params as { filename: string }
-      filename = filename
-        .replace(/\.\.(\/|\\|$)+/, '')
-        .trim()
-      if (!filename) {
-        return reply.status(401).send({ error: 'No filename provided', message: 'Filename is blank' })
-      }
-      req.setDecorator("filename", filename)
-    }
-  },
-  get: (req: FastifyRequest) => req.getDecorator<string>("filename") 
-}
-
-const GUARD_REQUIRE_SHARE = {
-  /**
-   * Require a valid share
-   * @param requireDest if true, require a valid destKey
-   * @returns decorator 'share' and optionally 'shareDest'
-  */
-  prehandler(requireDest = false): preHandlerAsyncHookHandler {
-    return async (req: FastifyRequest, reply: FastifyReply) => {
-      const { shareId, destKey } = req.params as { shareId: string, destKey: string }
-      const share = req.server.servers.getShare(shareId)
-      if(!share) {
-        return reply.status(404).send({
-          error: "Share Not Found",
-          message: `No share with id "${shareId.toLowerCase()}" could be found. Share may be unavailable, incorrecty configured or does not exist`
-        })
-      }
-      req.setDecorator("share", share)
-
-      if(requireDest) {
-        if (!destKey || !share.destinations[destKey]) {
-          return reply.status(404).send({
-            error: "SHARE_DEST_NOT_FOUND",
-            message: `Share does not have a destination of id "${destKey}".`
-          })
-        }
-        req.setDecorator("shareDest", destKey)
-      }
-    }
-  },
-  getShare: (req: FastifyRequest) => req.getDecorator<Share>("share"),
-  getShareDest: (req: FastifyRequest) => req.getDecorator<string>("shareDest"),
 }
