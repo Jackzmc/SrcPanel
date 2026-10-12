@@ -334,75 +334,75 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     return reply.send(stream)
   })
 
-  fastify.delete('/:shareId/addons/:filename', async (req: FastifyRequest<{ Params: { shareId: string, filename: string } }>, reply) => {
-    // Filter out ../ or ..\
-    const filename = req.params.filename.replace(/\.\.(\/|\\|$)+/, '')
-    if (!filename) {
-      return reply.status(401).send({
-        error: "No filename provided",
-        message: `Filename is blank`
+  fastify.delete(
+    '/:shareId/addons/:filename', 
+    { preHandler: [ 
+        requirePermission("shares.addons.delete", (req) => ({ resourceId: (req.params as any).shareId})), 
+        requireShare(), 
+        requireFilename()
+      ]
+    },
+    async (req: FastifyRequest<{ Params: { shareId: string, filename: string } }>, reply) => {
+      const filename = req.getDecorator<string>("filename")
+      const share = req.getDecorator<Share>("share")
+      const code = req.getDecorator<UserPrivilegeCode>("permCode")
+
+      await share.deleteAddon(filename)
+      await req.user!.log(null, `deleted addon %filename%`, {
+        code,
+        metadata: {
+          filename
+        }
+      })
+      return reply.status(204).send()
+    }
+  )
+
+  fastify.get(
+    '/event-stream', 
+    { websocket: true },
+    async (ws, req: FastifyRequest<{ Params: { shareId: string }}>) => {
+      function send(event: WebsocketMessage) {
+        if (ws.readyState !== ws.OPEN) return
+        try { ws.send(JSON.stringify(event)) }
+        catch (err) { req.log.warn({ err }, 'ws send failed') }
+        ws.send(JSON.stringify(event))
+      }
+
+      function onMsg(msg: WebsocketRequest) {
+        if(msg.subscribe) {
+          const share = fastify.servers.getShare(msg.subscribe)
+          if(!share) return send({ type: "error", error: "INVALID_SHARE_ID"})
+          if(req.user?.requirePermission("shares.view", { resourceId: share.id })) {
+            const unsub = share.subscribe((msg) => send(msg))
+            ws.on("close", unsub)
+            ws.on("error", unsub)
+            
+            send({ type: "ok" })
+          } else {
+            send({ type: "error", error: "NO_PERMISSION", message: "no permission" })
+          }
+        }
+      }
+
+      const pingTimer = setInterval(() => {
+        ws.ping()
+      }, 25_000)
+
+      ws.on('message', message => {
+        try {
+          const json = JSON.parse(message.toString())
+          onMsg(json)
+        } catch(err) {
+          req.log.warn("invalid message: " + err)
+        }
+      })
+
+      ws.on("close", () => {
+        clearInterval(pingTimer)
       })
     }
-
-    const shareId = req.params.shareId
-    const [code, granted] = req.user!.requirePermission("shares.addons.delete", { resourceId: shareId })
-    if (!granted) return NO_PERMISSION(reply)
-
-    const share = fastify.servers.getShare(shareId)
-    if (!share) {
-      return reply.status(404).send({
-        error: "Share Not Found",
-        message: `No share with id "${shareId.toLowerCase()}" could be found. Share may be unavailable, incorrecty configured or does not exist`
-      })
-    }
-    await share.deleteAddon(filename)
-    await req.user!.log(null, `deleted addon %filename%`, {
-      code,
-      metadata: {
-        filename
-      }
-    })
-    return reply.status(204).send()
-  })
-
-  fastify.get('/event-stream', { websocket: true}, async (ws, req: FastifyRequest<{ Params: { shareId: string }}>) => {
-    function send(event: WebsocketMessage) {
-      if (ws.readyState !== ws.OPEN) return
-      try { ws.send(JSON.stringify(event)) }
-      catch (err) { req.log.warn({ err }, 'ws send failed') }
-      ws.send(JSON.stringify(event))
-    }
-
-    function onMsg(msg: WebsocketRequest) {
-      if(msg.subscribe) {
-        const share = fastify.servers.getShare(msg.subscribe)
-        if(!share) return send({ type: "error", error: "INVALID_SHARE_ID"})
-
-        const unsub = share.subscribe((msg) => send(msg))
-        ws.on("close", unsub)
-        ws.on("error", unsub)
-
-        send({ type: "ok" })
-      }
-    }
-
-    const pingTimer = setInterval(() => {
-      ws.ping()
-    }, 25_000)
-
-    ws.on('message', message => {
-      try {
-        const json = JSON.parse(message.toString())
-        onMsg(json)
-      } catch(err) {
-        req.log.warn("invalid message: " + err)
-      }
-    })
-
-    ws.on("close", () => {
-      clearInterval(pingTimer)
-    })
-  })
+  )
 
   fastify.post(
     '/:shareId/addons/:filename/check', 
