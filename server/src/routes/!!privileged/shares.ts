@@ -31,29 +31,38 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
   })
 
 
-  fastify.get('/workshop/:publishedfileid/details', async (req: FastifyRequest<{ Params: { publishedfileid: string } }>, reply): Promise<DetailsResponse> => {
-    if (!req.user!.hasPermission("shares.addons.view")) return NO_PERMISSION(reply)
-    const results = await fastify.steam.getItemDetails([req.params.publishedfileid])
-    if (results.length == 0) return { type: "none", item: null }
-    const children = await fastify.steam.getCollectionChildren(req.params.publishedfileid)
-    const item = {
-      ...results[0],
-      consumer_app_title: results[0].consumer_app_id ? await fastify.steam.getAppName(results[0].consumer_app_id) : null,
-    }
-    if (children) {
-      const childrenDetails = await fastify.steam.getItemDetails(children)
-      return {
-        item,
-        type: "collection",
-        children: childrenDetails
+  fastify.get(
+    '/workshop/:publishedfileid/details', 
+    { preHandler: [
+      // require addon permission to just prevent using our API as proxy
+      requirePermission("shares.addons.view", (req) => ({ resourceId: (req.params as any).shareId})), 
+      requireShare()
+    ]},
+    async (req: FastifyRequest<{ Params: { publishedfileid: string } }>, reply): Promise<DetailsResponse> => {
+      const results = await fastify.steam.getItemDetails([req.params.publishedfileid])
+      if (results.length == 0) return { type: "none", item: null }
+      // check if collection
+      const children = await fastify.steam.getCollectionChildren(req.params.publishedfileid)
+      const item = {
+        ...results[0],
+        consumer_app_title: results[0].consumer_app_id ? await fastify.steam.getAppName(results[0].consumer_app_id) : null,
       }
-    } else {
-      return {
-        item,
-        type: "item"
+
+      if (children) {
+        const childrenDetails = await fastify.steam.getItemDetails(children)
+        return {
+          item,
+          type: "collection",
+          children: childrenDetails
+        }
+      } else {
+        return {
+          item,
+          type: "item"
+        }
       }
     }
-  })
+  )
 
   fastify.get('/workshop/search/:appid', async (req: FastifyRequest<{ Params: { appid: string }, Querystring: { query: string } }>, reply): Promise<{ results: WorkshopItem[] }> => {
     if (!req.user!.hasPermission("shares.addons.view")) return NO_PERMISSION(reply)
@@ -64,42 +73,42 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
   })
 
 
-  fastify.get('/', async (req: FastifyRequest, reply) => {
+  fastify.get(
+    '/', 
+    { preHandler: [
+      requirePermission("shares.view", (req) => ({ resourceId: (req.params as any).shareId})), 
+    ]},
+    async (req: FastifyRequest, reply) => {
     if (!req.user!.hasPermission("shares.view")) return NO_PERMISSION(reply)
     return fastify.servers.shares
   })
 
-  fastify.get('/:shareId', async (req: FastifyRequest<{ Params: { shareId?: string } }>, reply) => {
-    if (!req.user!.hasPermission("shares.view", req.params.shareId)) return NO_PERMISSION(reply)
-    const shareId = req.params.shareId
-    const share = fastify.servers.getShare(shareId)
-    if (!share) {
-      return reply.status(404).send({
-        error: "Share Not Found",
-        message: `No share with id "${shareId!.toLowerCase()}" could be found. Share may be unavailable, incorrecty configured or does not exist`
-      })
-    }
-    return {
-      share: {
-        id: share.id,
-        name: share.name,
-        sourceFolder: share.sourceFolder,
-        destinations: share.destinations,
-        appId: share.appId,
-        validExtenstions: share.exts,
-        installSources: share.sources,
-        appTitle: (share.appId ? await fastify.steam.getAppName(share.appId) : null)
+  fastify.get(
+    '/:shareId', 
+    { preHandler: [
+      requirePermission("shares.view", (req) => ({ resourceId: (req.params as any).shareId})), 
+      requireShare()
+    ]},
+    async (req: FastifyRequest<{ Params: { shareId?: string } }>, reply) => {
+      const share = req.getDecorator<Share>("share")
+      return {
+        share: share.export()
       }
     }
-  })
+  )
 
-  fastify.post('/:shareId/addons/workshop/:publishedfileid', 
+  fastify.post(
+    '/:shareId/addons/workshop/:publishedfileid', 
+    { preHandler: [
+      requirePermission("shares.addons.upload.steam_workshop", (req) => ({ resourceId: (req.params as any).shareId})), 
+      requireShare()
+    ]},
     async (req: FastifyRequest<{ 
       Params: { shareId: string, publishedfileid: string },
       Querystring: { destinations: string, children?: string }
     }>, reply) => {
-      const share = fastify.servers.getShare(req.params.shareId)
-      if(!share) return NOT_FOUND(reply, "SHARE_NOT_FOUND", "No share found with id")
+      const share = req.getDecorator<Share>("share")
+      const code = req.getDecorator<UserPrivilegeCode>("permCode")
       if(!share.sources.steam_workshop) return reply.send({
         error: "SOURCE_UNSUPPORTED",
         message: "Steam workshop support is not enabled for this share"
@@ -140,199 +149,160 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         req.log.trace({}, "adding child details to queue")
         share.workshopDLQueue.downloadItems(childrenItems, destinations)
         req.log.debug({ shareId: req.params.shareId, children }, "adding collection children")
+
       } else {
         // Not a collection - download item
         share.workshopDLQueue.downloadItems(details, destinations)
       }
 
+      req.user?.log(null, "started steam workshop download for %filename%", {
+        code,
+        metadata: {
+          filename: req.params.publishedfileid
+        }
+      })
+
       return reply.status(204).send()
     }
   )
 
-  fastify.post('/:shareId/restart-servers', async (req: FastifyRequest<{ Params: { shareId: string, destId: string } }>, reply) => {
-    if (!req.user!.hasPermission("shares.view", req.params.shareId)) return NO_PERMISSION(reply)
-    const shareId = req.params.shareId
-    const share = fastify.servers.getShare(shareId)
-    if (!share) {
-      return reply.status(404).send({
-        error: "SHARE_NOT_FOUND",
-        message: `No share with id "${shareId!.toLowerCase()}" could be found. Share may be unavailable, incorrecty configured or does not exist`
-      })
-    } else if (!share.destinations[req.params.destId]) {
-      return reply.status(404).send({
-        error: "SHARE_DEST_NOT_FOUND",
-        message: `Share has no destination id "${shareId!.toLowerCase()}"`
-      })
-    }
+  fastify.post(
+    '/:shareId/restart-servers',
+    { preHandler: [
+      requirePermission("shares.manage", (req) => ({ resourceId: (req.params as any).shareId})), 
+      requireShare()
+    ]},
+    async (req: FastifyRequest<{ Params: { shareId: string, destId: string } }>, reply) => {
+      const share = req.getDecorator<Share>("share")
+      const destKey = req.getDecorator<string>("shareDest")
 
-    const dest = share.destinations[req.params.destId]
+      const dest = share.destinations[destKey]
 
-    const success: string[] = []
-    const failed: string[] = []
+      if(!dest.restartTargets) {
+        return reply.send({})
+      }
 
-    if (dest.groupIds) {
-      const promises = dest.groupIds.map(async (id) => {
-        const group = fastify.servers.getGroup(id)
-        if (!group) {
-          failed.push(id)
-          return null
-        }
-        await group.performActionAll("request_stop", "builtin")
-        success.push(id)
-      })
-      await Promise.allSettled(promises).catch(() => { })
+      return await fastify.servers.performActionBulk(dest.restartTargets, "request_stop", "builtin", req.user)
     }
-    if (dest.serverIds) {
-      const promises = dest.serverIds.map(async (id) => {
-        const server = fastify.servers.getServer(id)
-        if (!server) {
-          failed.push(id)
-          return null
-        }
-        await server.performAction("request_stop", "builtin")
-        success.push(id)
-      })
-      await Promise.allSettled(promises).catch(() => { })
-    }
+  )
 
-    return {
-      success,
-      failed
-    }
-  })
+  fastify.get(
+    '/:shareId/addons', 
+    { preHandler: [
+      requirePermission("shares.addons.view", (req) => ({ resourceId: (req.params as any).shareId})), 
+      requireShare(false)
+    ]},
+    async (req: FastifyRequest<{ Params: { shareId?: string } }>, reply) => {
+      const share = req.getDecorator<Share>("share")
 
-  fastify.get('/:shareId/addons', async (req: FastifyRequest<{ Params: { shareId?: string } }>, reply) => {
-    if (!req.user!.hasPermission("shares.addons.view", req.params.shareId)) return NO_PERMISSION(reply)
-    const shareId = req.params.shareId
-    const share = fastify.servers.getShare(shareId)
-    if (!share) {
-      return reply.status(404).send({
-        error: "Share Not Found",
-        message: `No share with id "${shareId!.toLowerCase()}" could be found. Share may be unavailable, incorrecty configured or does not exist`
-      })
+      try {
+        return {
+          addons: await share.getAddons(),
+          shareInfo: share.export()
+        } 
+      } catch(err) {
+        req.log.error({ shareId: req.params.shareId}, "getAddons:"  + err.stack)
+        return reply.status(500).send({
+          error: "DB_ERROR",
+          message: "Failed to get list of addons"
+        })
+      }
     }
-    try {
+  )
+
+  fastify.get(
+    '/:shareId/addons/:filename', 
+    { preHandler: [
+      requirePermission("shares.addons.view", (req) => ({ resourceId: (req.params as any).shareId})), 
+      requireFilename(),
+      requireShare(false),
+    ]},
+    async (req: FastifyRequest<{ Params: { shareId: string, filename: string } }>, reply) => {
+      const filename = req.getDecorator<string>("filename")
+      const share = req.getDecorator<Share>("share")
+
       return {
-        addons: await share.getAddons(),
-        shareInfo: share.export()
-      } 
-    } catch(err) {
-      req.log.error({ shareId: req.params.shareId}, "getAddons:"  + err.stack)
-      return reply.status(500).send({
-        error: "DB_ERROR",
-        message: "Failed to get list of addons"
-      })
+        addonInfo: await share.getAddonInfo(filename)
+      }
     }
-  })
+  )
 
-  fastify.get('/:shareId/addons/:filename', async (req: FastifyRequest<{ Params: { shareId: string, filename: string } }>, reply) => {
-    // Filter out ../ or ..\
-    const filename = req.params.filename.replace(/\.\.(\/|\\|$)+/, '')
-    if (!filename) {
-      return reply.status(401).send({
-        error: "No filename provided",
-        message: `Filename is blank`
-      })
-    }
-    if (!req.user!.hasPermission("shares.addons.view", req.params.shareId, filename)) return NO_PERMISSION(reply)
-    const shareId = req.params.shareId
-    const share = fastify.servers.getShare(shareId)
-    if (!share) {
-      return reply.status(404).send({
-        error: "Share Not Found",
-        message: `No share with id "${shareId.toLowerCase()}" could be found. Share may be unavailable, incorrecty configured or does not exist`
-      })
-    }
-    return {
-      addonInfo: await share.getAddonInfo(filename)
-      // TODO: need list of dests installed to?
-    }
-  })
+  fastify.post(
+    '/:shareId/addons/upload', 
+    { preHandler: [
+      requirePermission("shares.addons.upload.direct", (req) => ({ resourceId: (req.params as any).shareId})), 
+      requireShare(false)
+    ]},
+    async (req: FastifyRequest<{ Params: { shareId: string } }>, reply) => {
+      const share = req.getDecorator<Share>("share")
+      const code = req.getDecorator<UserPrivilegeCode>("permCode")
 
-  fastify.post('/:shareId/addons/upload', async (req: FastifyRequest<{ Params: { shareId: string } }>, reply) => {
-    if (!req.user!.hasPermission("shares.addons.upload.direct", req.params.shareId)) return NO_PERMISSION(reply)
-    const shareId = req.params.shareId
-    const share = fastify.servers.getShare(shareId)
-    if (!share) {
-      return reply.status(404).send({
-        error: "SHARE_NOT_FOUND",
-        message: `No share with id "${shareId.toLowerCase()}" could be found. Share may be unavailable, incorrecty configured or does not exist`
-      })
-    } else if (!share.exts) {
-      return reply.status(401).send({
-        error: "SHARE_UPLOAD_EXT_MISSING",
-        message: `Share does not have valid extensions setup, uploading is disabled`
-      })
-    }
-
-    const parts = req.files()
-    for await (const part of parts) {
-      const ext = part.filename.split(".").pop()
-      if (!ext || !share.exts.includes(ext)) {
-        // TODO: Possibly req.user!.hasPermission check?
-        return reply.status(400).send({
-          error: "TYPE_NOT_ALLOWED",
-          message: "The file type is not allowed for this share"
-        })
-      } else if (!VALID_FILENAME_REGEX.test(part.filename)) {
-        return reply.status(400).send({
-          error: "INVALID_FILENAME",
-          message: `The filename must match the pattern /${VALID_FILENAME_REGEX.source}/`
+      if (!share.exts) {
+        return reply.status(401).send({
+          error: "SHARE_UPLOAD_UNSUPPORTED",
+          message: `Share does not have valid extensions setup, uploading is disabled`
         })
       }
 
-      await pump(part.file, share.createUploadStream(part.filename))
-
-      if (part.file.truncated) {
-        console.warn(`${part.filename} is truncated, clearing downloaded piece`)
-        await share.deleteAddon(part.filename)
-        reply.send(new fastify.multipartErrors.FilesLimitError());
-      }
-
-      await req.user!.log(null, `uploaded addon %filename%`, {
-        code: "shares.addons.upload.direct",
-        metadata: {
-          filename: part.filename
+      const parts = req.files()
+      for await (const part of parts) {
+        const ext = part.filename.split(".").pop()
+        if (!ext || !share.exts.includes(ext)) {
+          return reply.status(400).send({
+            error: "TYPE_NOT_ALLOWED",
+            message: "The file type is not allowed for this share"
+          })
+        } else if (!VALID_FILENAME_REGEX.test(part.filename)) {
+          return reply.status(400).send({
+            error: "INVALID_FILENAME",
+            message: `The filename must match the pattern /${VALID_FILENAME_REGEX.source}/`
+          })
         }
-      })
+
+        await pump(part.file, share.createUploadStream(part.filename))
+
+        if (part.file.truncated) {
+          req.log.warn({ filename: part.filename }, `file truncated, clearing downloaded piece`)
+          await share.deleteAddon(part.filename)
+          reply.send(new fastify.multipartErrors.FilesLimitError());
+        }
+
+        await req.user!.log(null, `uploaded addon %filename%`, {
+          code,
+          metadata: {
+            filename: part.filename
+          }
+        })
+      }
+      reply.send()
     }
-    reply.send()
-  })
+  )
 
 
-  fastify.get('/:shareId/addons/:filename/download', async (req: FastifyRequest<{ Params: { shareId: string, filename: string } }>, reply) => {
-    // Filter out ../ or ..\
-    const filename = req.params.filename.replace(/\.\.(\/|\\|$)+/, '')
-    if (!filename) {
-      return reply.status(401).send({
-        error: "No filename provided",
-        message: `Filename is blank`
-      })
+  fastify.get(
+    '/:shareId/addons/:filename/download', 
+    { preHandler: [
+      requirePermission("shares.addons.view", (req) => ({ resourceId: (req.params as any).shareId})), 
+      requireFilename(),
+      requireShare(false)
+    ]},
+    async (req: FastifyRequest<{ Params: { shareId: string, filename: string } }>, reply) => {
+      const filename = req.getDecorator<string>("filename")
+      const share = req.getDecorator<Share>("share")
+
+      const addonInfo = await share.isInstalled(filename)
+      if (!addonInfo) {
+        return reply.status(404).send({
+          error: "Addon Not Found",
+          message: `No addon with filename "${filename} for share "${share.id.toLowerCase()}" could be found.`
+        })
+      }
+
+      const stream = createReadStream(path.join(share.sourceFolder, filename))
+      reply.header("Content-Disposition", "attachment; filename=" + filename)
+      return reply.send(stream)
     }
-
-    const shareId = req.params.shareId
-    const [code, granted] = req.user!.requirePermission("shares.addons.view", { resourceId: shareId })
-    if (!granted) return NO_PERMISSION(reply)
-
-    const share = fastify.servers.getShare(shareId)
-    if (!share) {
-      return reply.status(404).send({
-        error: "Share Not Found",
-        message: `No share with id "${shareId.toLowerCase()}" could be found. Share may be unavailable, incorrecty configured or does not exist`
-      })
-    }
-    const addonInfo = await share.isInstalled(filename)
-    if (!addonInfo) {
-      return reply.status(404).send({
-        error: "Addon Not Found",
-        message: `No addon with filename "${filename} for share "${shareId.toLowerCase()}" could be found.`
-      })
-    }
-
-    const stream = createReadStream(path.join(share.sourceFolder, filename))
-    reply.header("Content-Disposition", "attachment; filename=" + filename)
-    return reply.send(stream)
-  })
+  )
 
   fastify.delete(
     '/:shareId/addons/:filename', 

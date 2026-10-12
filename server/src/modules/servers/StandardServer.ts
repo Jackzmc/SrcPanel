@@ -1,13 +1,14 @@
 import { GameDig } from "gamedig";
 import StandardLogs from "./features/logs/StandardLogs.js";
 import ServerGroup from "./groups/ServerGroup.js";
-import { ActionResponse } from "./IAction.js";
+import { ActionResponse, IAction } from "./IAction.js";
 import Server from "./Server.js";
 import { ListGroupConfig_Server } from "./groups/index.js";
+import User from "../users/User.js";
 
 const sleep = (time: number) => new Promise(res => setTimeout(res, time));
 
-export default class StandardServer extends Server {
+export default class StandardServer extends Server implements IAction {
     #startTime: number | null
     #cvars: Record<string, string>
 
@@ -58,7 +59,7 @@ export default class StandardServer extends Server {
         return timeoutSeconds > 0
     }
 
-    async performAction( command: string, namespace: string ): Promise<ActionResponse> {
+    async performAction(command: string, namespace: string, runAsUser?: User): Promise<ActionResponse> {
         if(this.Plugin?.available) {
             return await this.Plugin.performAction(command, namespace)
         } else if(this.Rcon?.available) {

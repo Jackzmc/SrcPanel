@@ -1,4 +1,5 @@
 import { CommandResultType } from "@srcpanel/common/Live";
+import User from "../users/User.js";
 
 export interface ActionResponse {
     type: CommandResultType,
@@ -6,7 +7,13 @@ export interface ActionResponse {
     message?: string
 }
 export interface IAction {
-    performAction(command: string, namespace:string): Promise<ActionResponse>;
+    /**
+     * Perform an action on server
+     * @param command command to run
+     * @param namespace namespace to run on ('builtin' for panel plugin)
+     * @param runAsUser optionally, attempts to run command as user, checking for panel permissions (not game permission)
+     */
+    performAction(command: string, namespace: string, runAsUser: User): Promise<ActionResponse>;
 }
 
 /**

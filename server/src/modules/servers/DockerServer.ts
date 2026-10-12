@@ -6,6 +6,7 @@ import ServerGroup from "./groups/ServerGroup.js";
 import { ActionResponse, getFallbackCommandForBuiltin, IAction } from "./IAction.js";
 import Server, { CreateServerOptions } from "./Server.js";
 import DynamicServerManager from "./docker/DynamicServerManager.js";
+import User from "../users/User.js";
 
 const PERFORM_ACTION_TIMEOUT = 20_000
 
@@ -87,7 +88,7 @@ export default class DockerServer extends Server implements IAction {
     return true
   }
 
-  public async performAction(command: string, namespace: string): Promise<ActionResponse> {
+  public async performAction(command: string, namespace: string, runAsUser?: User): Promise<ActionResponse> {
     if (namespace === "builtin") {
       // Try to run built in directly, and fallback to alternative command sent to server instead
       if (!await this.#performBuiltin(command)) {

@@ -3,7 +3,7 @@ import Server, { ConfigServerData } from './Server.js'
 import Share from '../shares/Share.js';
 import path from 'path';
 import SteamAPI from '../steam.js'
-import { ServerAction, ServerType } from '@srcpanel/common/Server'
+import { BulkActionResult, ServerAction, ServerType } from '@srcpanel/common/Server'
 import net from 'net'
 import { LiveRecordType, LiveRecordResponse,PluginTokenPayload } from '@srcpanel/common/Live';
 import BufferReader from '../BufferReader.js';
@@ -19,8 +19,9 @@ import yaml from 'yaml'
 import { loadShares } from '../shares/index.js';
 import { loadGroups } from './groups/index.js';
 import logger from '../../logger.js'
-import assert from 'assert';
 import { METRIC_SERVERS_LIVE_AUTH_COUNT } from '../../core/prom-metrics.js';
+import User from '../users/User.js';
+import { UserPrivilegeCode } from '@srcpanel/common/Privileges';
 const log = logger.child({ name: "ServerManager" })
 const liveLog = log.child({ name: "ServerManager/Live" })
 
@@ -348,6 +349,59 @@ export default class ServerManager {
    */
   public async refresh() {
     await Promise.allSettled(this.getAll().map(server => server.update(false)))
+  }
+
+  /**
+   * Request a list of targetIds ('groupId' or 'groupId/serverId') to be restarted
+   * 
+   * Group ids perform action on all servers in group
+   * 
+   * @param targets list of targets
+   * @param action action to run
+   * @param namespace namespace to run action on
+   * @returns results of target { targetId: "failed" | "invalid" | "success" }
+   */
+  async performActionBulk(targets: string[], action: string, namespace: string, runAsUser?: User): Promise<Record<string, BulkActionResult>> {
+    const results: Record<string, BulkActionResult> = {}
+    const promises: Promise<void>[] = []
+    for(const target of targets) {
+      results[target] = "failed"
+      const [groupId,serverId] = target.split("/")
+      const group = this.getGroup(groupId)
+      if(!group) {
+        results[target] = "invalid"
+        continue
+      }
+
+      if(serverId) {
+        const server = group.getServer(serverId)
+        if (!server) {
+          results[target] = "invalid"
+          continue
+        }
+        promises.push((async() => {
+          try {
+            await server.performAction(action, namespace, runAsUser)
+            results[target] = "success"
+          } catch(err) {
+            log.warn({ target, namespace, action }, "action failed")
+          }
+        })())
+      } else {
+        promises.push((async() => {
+          try {
+            await group.performActionAll(action, namespace, runAsUser)
+            results[target] = "success"
+          } catch(err) {
+            log.warn({ target, namespace, action }, "action failed")
+          }
+        })())
+      }
+      
+    }
+
+    await Promise.allSettled(promises)
+    return results
   }
 
   /**

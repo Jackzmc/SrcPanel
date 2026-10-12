@@ -15,6 +15,7 @@ import logger from '../../logger.js'
 import { Logger } from "pino";
 import { METRIC_SERVERS_LIVE_VIEWERS, METRIC_SERVERS_STATUS_PLAYERS, METRIC_SERVERS_STATUS_STATE } from "../../core/prom-metrics.js";
 import { resolve4 } from "node:dns/promises";
+import User from "../users/User.js";
 
 const MIN_REFRESH_TIME = 10_000
 const METRIC_INTERVAL_TIME = 1000 * 30 // 30s
@@ -331,7 +332,7 @@ export default abstract class Server implements IAction {
     abstract stop(force: boolean): Promise<boolean>;
     abstract stopWait(force: boolean, timeoutSeconds: number): Promise<boolean>;
 
-    abstract performAction(command: string, namespace: string): Promise<ActionResponse>;
+    abstract performAction(command: string, namespace: string, runAsUser?: User): Promise<ActionResponse>;
 
     /**
      * Trigger update (status update, DNS IP addr resolv.)
