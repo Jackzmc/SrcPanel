@@ -11,6 +11,7 @@ import assert from 'assert';
 import { log } from 'console';
 import Share from '../../modules/shares/Share.js';
 import { RequirePermissionOptions } from '../../modules/users/User.js';
+import { requirePermission } from '../../guards/auth.js';
 const pump = promisify(pipeline)
 
 const VALID_FILENAME_REGEX = new RegExp(/[a-z0-9_\- .]+/i)
@@ -374,7 +375,6 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
     function onMsg(msg: WebsocketRequest) {
       if(msg.subscribe) {
-        // TODO: send msg instead of exiting?
         const share = fastify.servers.getShare(msg.subscribe)
         if(!share) return send({ type: "error", error: "INVALID_SHARE_ID"})
 
@@ -518,22 +518,5 @@ function requireShare(requireDest = false): preHandlerAsyncHookHandler {
       }
       req.setDecorator("shareDest", destKey)
     }
-  }
-}
-
-/**
- * Check for a user permission, by calling req.user.requirePermission to check if granted
- * @param checkCode code to check
- * @param options fn that returns options such as resourceId for requirePermission
- * @returns decorator 'permCode' with code from requirePermission
- */
-function requirePermission(
-  checkCode: UserPrivilegeCode, 
-  options?: (req: FastifyRequest) => RequirePermissionOptions
-): preHandlerAsyncHookHandler {
-  return async (req: FastifyRequest, reply: FastifyReply) => {
-    const [code, granted] = req.user!.requirePermission(checkCode, options ? options(req) : {})
-    if (!granted) return NO_PERMISSION(reply)
-    req.setDecorator('permCode', code)
   }
 }
