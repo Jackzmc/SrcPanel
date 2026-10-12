@@ -99,25 +99,6 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     })
   })
 
-  fastify.get('/admins/:steamid', async (req: FastifyRequest<{ Params: { steamid: string } }>, reply): Promise<APIListUserNotes> => {
-    const [notes] = await fastify.db.execute<RowDataPacket[]>(
-      `SELECT notes.*, u.last_name as user, e.last_name as executor, !b.expired as banned
-            FROM notes
-            LEFT JOIN view_${TABLE_PREFIX}_user as u ON SUBSTRING(notes.steamid, 11) = u.account_id
-            LEFT JOIN view_${TABLE_PREFIX}_user as e ON SUBSTRING(notes.markedBy, 11) = e.account_id
-            LEFT JOIN bans as b ON notes.steamid = b.steamid
-            WHERE notes.markedBy = ?
-            ORDER BY notes.id DESC`,
-      [req.params.steamid]
-    )
-
-    return {
-      notes: notes.map(note => {
-        return formatNote(note)
-      })
-    }
-  })
-
   fastify.route({
     url: '/:id',
     method: 'GET',
