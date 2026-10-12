@@ -128,7 +128,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
       server.processInPayload(client, json)
     })
 
-    await server.refreshStatus(true)
+    await server.update(true)
 
   })
 }

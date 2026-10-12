@@ -69,7 +69,7 @@ export default class StandardServer extends Server {
         }
     }
 
-    public override async refreshStatus(bypassCache = false) {
-        await super.refreshStatus(bypassCache)
+    public override async update(bypassCache = false) {
+        await super.update(bypassCache)
     }
 }

@@ -347,7 +347,7 @@ export default class ServerManager {
    * Refreshes all servers at once
    */
   public async refresh() {
-    await Promise.allSettled(this.getAll().map(server => server.refreshStatus(false)))
+    await Promise.allSettled(this.getAll().map(server => server.update(false)))
   }
 
   /**

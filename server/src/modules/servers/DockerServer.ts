@@ -123,7 +123,7 @@ export default class DockerServer extends Server implements IAction {
     })
   }
 
-  public override async refreshStatus(bypassCache = false) {
+  public override async update(bypassCache = false) {
     // Don't need to do a refresh if we have plugin data
     if (!this.Plugin || !this.Plugin.authenticated)
       await this.getStatus(bypassCache, this.game, this.ip, this.port)

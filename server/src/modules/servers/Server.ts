@@ -10,12 +10,15 @@ import { GameDig } from 'gamedig';
 import SocketClientUser from "./SocketClientUser.js";
 import { ClientOutPayload, Server_Status, ServerOutPacket, ServerOutPayload } from "@srcpanel/common/ServerWebsocket";
 import { LiveRecordResponse } from "@srcpanel/common/Live";
-import { tryResolveIPv4 } from "../../util.js";
+import { resolveIPv4, tryResolveIPv4 } from "../../util.js";
 import logger from '../../logger.js'
 import { Logger } from "pino";
 import { METRIC_SERVERS_LIVE_VIEWERS, METRIC_SERVERS_STATUS_PLAYERS, METRIC_SERVERS_STATUS_STATE } from "../../core/prom-metrics.js";
+import { resolve4 } from "node:dns/promises";
 
 const MIN_REFRESH_TIME = 10_000
+const METRIC_INTERVAL_TIME = 1000 * 30 // 30s
+const DNS_LOOKUP_INTERVAL_MS = 1000 * 60 * 5 // 5 min
 
 export interface BaseServerData {
   id : string;
@@ -87,7 +90,7 @@ export interface CreateServerOptions {
   actions?: ServerAction[]
 }
 
-const METRIC_INTERVAL_TIME = 1000 * 30 // 30s
+
 
 export default abstract class Server implements IAction {
   protected _log: Logger;
@@ -116,6 +119,8 @@ export default abstract class Server implements IAction {
   #activeVoiceMembers: VoiceUser[]
 
   #metricsTimer: ReturnType<typeof setInterval>
+  /** ms timestamp for when ips updated */
+  #ipLastResolvedTime: number = 0
 
   protected publicIp: string | null = null // the resolved IP to show end users
   protected internalIp?: string   // the resolved IP to use if set for internal requests (status) instead of internal
@@ -328,10 +333,45 @@ export default abstract class Server implements IAction {
 
     abstract performAction(command: string, namespace: string): Promise<ActionResponse>;
 
-    async refreshStatus( bypassCache: boolean = false): Promise<void> {
-        // Don't need to do a refresh if we have plugin data
-        if(this.Plugin && this.Plugin.authenticated) return;
+    /**
+     * Trigger update (status update, DNS IP addr resolv.)
+     * @param bypassCache 
+     * @returns 
+     */
+    async update( bypassCache: boolean = false): Promise<void> {
+      // Only get status via gamedig if there's no plugin/live connection
+      if(!this.Plugin || !this.Plugin.authenticated) 
         await this.getStatus(bypassCache, this.game, this.InternalIp, this.InternalPort)
+
+      if(Date.now() - this.#ipLastResolvedTime >= DNS_LOOKUP_INTERVAL_MS) await this.#updateIPs()
+    }
+
+    async #updateIPs(): Promise<void> {
+      this._log.debug("updating ip addresses")
+
+      try {
+        const ip = await resolveIPv4(this._options.public.host)
+        if(ip) {
+          if(ip != this.publicIp)  this._log.info({ ip: ip }, "updated public ip")
+          this.publicIp = ip
+        }
+      } catch(err) {
+        this._log.warn({ err, host: this._options.public.host }, "error resolving public ip")
+      }
+
+      if(this._options.internal?.host) {
+        try {
+          const ip = await resolveIPv4(this._options.internal.host)
+          if(ip) {
+            if(ip != this.internalIp)  this._log.info({ ip: ip }, "updated internal ip")
+            this.internalIp = ip
+          }
+        } catch(err) {
+          this._log.warn({ err, host: this._options.internal.host }, "error resolving internal ip")
+        }
+      }
+
+      this.#ipLastResolvedTime = Date.now()
     }
 
     addWSClient(client: SocketClientUser) {
