@@ -6,3 +6,6 @@ variables:
   - name: API_PROTOCOL
     value: https
     description: Protocol for normal REST requests
+  - name: WS_PROTOCOL
+    value: wss
+    description: ""

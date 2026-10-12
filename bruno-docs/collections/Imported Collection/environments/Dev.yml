@@ -2,8 +2,12 @@ name: Dev
 variables:
   - name: API_PROTOCOL
     value: http
+    description: ""
   - name: API_HOST
     value: localhost:8081
+    description: ""
+  - name: WS_PROTOCOL
+    value: ws
+    description: ""
   - secret: true
     name: API_TOKEN
-    description: ""
