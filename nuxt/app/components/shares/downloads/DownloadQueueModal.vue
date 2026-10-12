@@ -36,7 +36,7 @@
 <script setup lang="ts">
 import DownloadItem from './DownloadItem.vue';
 import DownloadLog from './DownloadLog.vue';
-import { TabsItem } from '@nuxt/ui';
+import type { TabsItem } from '@nuxt/ui';
 
 const props = defineProps<{
     ws: UseShareWSInstance
