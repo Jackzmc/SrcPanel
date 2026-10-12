@@ -138,6 +138,11 @@ export default class AuthManager {
         return this.actLog
     }
 
+    /**
+     * Checks if there is a logged in user for this request
+     * @param req 
+     * @returns 
+     */
     async isAuthorized(req: FastifyRequest): Promise<boolean> {
         return req.user != undefined
     }

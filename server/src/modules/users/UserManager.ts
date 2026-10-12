@@ -74,14 +74,15 @@ export default class UserManager {
    * @param steamid Steamid2
    * @returns
    */
-  async getUser(steamid: string): Promise<IUserData | null> {
-    if (!steamid || !UserManager.isSteamID2(steamid)) return null
-    const user = await this.getUserDirect(steamid)
+  async getUser(steamid: string | SteamID): Promise<IUserData | null> {
+    if (typeof steamid == 'string' && !UserManager.isSteamID2(steamid)) return null
+    if (typeof steamid === "string") steamid = new SteamID(steamid)
+    const user = await this.getUserDirect(steamid.getSteam2RenderedID())
     if (!user || (!user.timestamp || Date.now() - user.timestamp > STALE_USER_CACHE_TIME)) {
       log.debug({ steamid }, 'user missing or stale, fetching')
       // Don't wait for the result, serve the stale data:
       // TODO: instead add to queue/task system
-      this.fetchUser(new SteamID(steamid))
+      this.fetchUser(steamid)
     }
     return user
   }

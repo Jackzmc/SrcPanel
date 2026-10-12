@@ -1,5 +1,6 @@
 import { FastifyInstance, FastifyReply, FastifyRequest, preHandlerAsyncHookHandler } from "fastify"
 import Share from "../modules/shares/Share.js"
+import { sendMissingParamError } from "./index.js"
 
 export const GUARD_REQUIRE_FILENAME = {
   register(fastify: FastifyInstance) {
@@ -12,7 +13,7 @@ export const GUARD_REQUIRE_FILENAME = {
         .replace(/\.\.(\/|\\|$)+/, '')
         .trim()
       if (!filename) {
-        return reply.status(401).send({ error: 'No filename provided', message: 'Filename is blank' })
+        return reply.status(400).send({ error: 'PARAM_MISSING_FILENAME', message: "Missing parameter 'filename'" })
       }
       req.setDecorator("filename", filename)
     }
@@ -32,25 +33,28 @@ export const GUARD_REQUIRE_SHARE = {
   */
   prehandler(requireDest = false): preHandlerAsyncHookHandler {
     return async (req: FastifyRequest, reply: FastifyReply) => {
-      const { shareId, destKey } = req.params as { shareId: string, destKey: string }
-      const share = req.server.servers.getShare(shareId)
-      if(!share) {
-        return reply.status(404).send({
-          error: "Share Not Found",
-          message: `No share with id "${shareId.toLowerCase()}" could be found. Share may be unavailable, incorrecty configured or does not exist`
-        })
-      }
-      req.setDecorator("share", share)
+        const { shareId, destKey } = req.params as { shareId: string, destKey: string }
+        if(!shareId) return sendMissingParamError(reply, "shareId")
+        if(requireDest && !destKey) return sendMissingParamError(reply, "destKey")
 
-      if(requireDest) {
-        if (!destKey || !share.destinations[destKey]) {
-          return reply.status(404).send({
-            error: "SHARE_DEST_NOT_FOUND",
-            message: `Share does not have a destination of id "${destKey}".`
-          })
+        const share = req.server.servers.getShare(shareId)
+        if(!share) {
+            return reply.status(404).send({
+            error: "Share Not Found",
+            message: `No share with id "${shareId.toLowerCase()}" could be found. Share may be unavailable, incorrecty configured or does not exist`
+            })
         }
-        req.setDecorator("shareDest", destKey)
-      }
+        req.setDecorator("share", share)
+
+        if(requireDest) {
+            if (!destKey || !share.destinations[destKey]) {
+            return reply.status(404).send({
+                error: "SHARE_DEST_NOT_FOUND",
+                message: `Share does not have a destination of id "${destKey}".`
+            })
+            }
+            req.setDecorator("shareDest", destKey)
+        }
     }
   },
   getShare: (req: FastifyRequest) => req.getDecorator<Share>("share"),
