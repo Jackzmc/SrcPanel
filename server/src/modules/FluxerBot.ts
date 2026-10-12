@@ -40,7 +40,7 @@ export class FluxerBot {
       intents: 0,
       presence: {
         status: "idle",
-        custom_status: {
+        customStatus: {
           text: "Starting up"
         },
       }
@@ -90,7 +90,7 @@ export class FluxerBot {
 
     this.#client.events.Ready(async () => {
       const category = await this.#client.channels.fetch(this.#categoryId)
-      if (!(category instanceof CategoryChannel)) {
+      if (!(category instanceof CategoryChannel) || !category.guildId) {
         throw new Error("Category ID does not map to a category channel")
       }
 
@@ -170,7 +170,7 @@ export class FluxerBot {
         channel = await this.#guild.createChannel({
           name: server.name ?? server.id,
           type: ChannelType.GuildVoice,
-          parent_id: this.#category.id,
+          parentId: this.#category.id,
         }) as unknown as VoiceChannel /* discord.js type failures */;
         if (!channel) throw new Error("Could not create channel (channel null)")
         log.debug({ id: channel.id, type: channel.type }, 'create channel')
@@ -187,7 +187,7 @@ export class FluxerBot {
         {
           id: channel.id,
           position: pos,
-          parent_id: this.#category.id,
+          parentId: this.#category.id,
         }
       ])
       pos++
