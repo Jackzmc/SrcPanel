@@ -199,6 +199,7 @@ export interface PlayerEntry extends APIUser {
   bansCount: number,
   isAdmin: boolean,
   country?: string | null,
+  region?: string | null,
   firstJoinDate?: number | null,
   lastJoinDate?: number | null,
 }

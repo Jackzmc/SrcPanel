@@ -3,6 +3,8 @@ import { RowDataPacket } from 'mysql2';
 import { APIListUserNotes, APINotesResponse, Note } from '@srcpanel/common/Note';
 import SteamID from 'steamid';
 import { ADMINS_DB, TABLE_PREFIX } from '../../middlewares/managers.js';
+import { formatNote } from '../../modules/notes/utils.js';
+import NotesManager from '../../modules/notes/index.js';
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
   fastify.get('/', async (req: FastifyRequest<{
@@ -140,43 +142,11 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     async handler(req: FastifyRequest<{
       Params: { id: number }
     }>, reply) {
-      const [notes] = await fastify.db.execute<RowDataPacket[]>(
-        `SELECT notes.*, u.last_name as user, e.last_name as executor, !b.expired as banned
-                FROM notes
-                LEFT JOIN view_${TABLE_PREFIX}_user as u ON SUBSTRING(notes.steamid, 11) = u.account_id
-                LEFT JOIN view_${TABLE_PREFIX}_user as e ON SUBSTRING(notes.markedBy, 11) = e.account_id
-                LEFT JOIN bans as b ON notes.steamid = b.steamid
-                WHERE id = ?
-                ORDER BY notes.id DESC`,
-        [req.params.id]
-      )
+      const note = await NotesManager.instance.getNote(req.params.id)
 
       return {
-        note: notes.length > 0 ? formatNote(notes[0]) : null
+        note
       }
     }
   })
-
-  function formatNote(note: any): Note {
-    let action = undefined
-    if (note.content.startsWith("@") && note.content.length > 1) {
-      action = note.content.slice(1).split(".")
-    }
-    return {
-      id: note.id,
-      content: note.content,
-      client: {
-        id: note.steamid,
-        name: note.user,
-        isAdmin: note.targetIsAdmin == 1
-      },
-      markedBy: {
-        id: note.markedBy,
-        name: note.executor,
-      },
-      createdAt: note.createdAt,
-      banned: note.banned == 1,
-      action
-    }
-  }
 }

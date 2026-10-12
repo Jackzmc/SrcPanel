@@ -7,6 +7,7 @@ import { APIListPlayersResponse, APIUserDetails, PlayerEntry, PlayerRecentEntry,
 import { NOT_FOUND, NO_PERMISSION } from '../../responses.js';
 import { ADMINS_DB, TABLE_PREFIX } from '../../middlewares/managers.js';
 import { GUARD_REQUIRE_STEAMID } from '../../guards/users.js';
+import PlayerManager from '../../modules/users/PlayerManager.js';
 
 
 const RECENT_DEFAULT_LIMIT = 25
@@ -71,57 +72,26 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
   })
 
 
-  fastify.get('/search/:query?', async (req: FastifyRequest<{ Params: { query?: string }, Querystring: { query?: string } }>, reply): Promise<APIListPlayersResponse> => {
-    const query = req.params.query || req.query.query
-    if (!query) return reply.status(400).send({ error: 'MISISNG_PARAM', message: "Query (route OR query) parameter missing" })
-    const fuzzyQuery = `%${query}%`
-    const start = Date.now()
-    const [rows] = await fastify.db.execute<RowDataPacket[]>(
-      `SELECT
-            (SELECT COUNT(*) FROM notes WHERE SUBSTRING(notes.steamid,11) = u.account_id) as notesCount,
-            (SELECT COUNT(*) FROM bans WHERE SUBSTRING(bans.steamid,11) = u.account_id) as bansCount,
-            (SELECT COUNT(*) FROM ${ADMINS_DB}.sm_admins
-                WHERE SUBSTRING(${ADMINS_DB}.sm_admins.identity,11) = u.account_id
-            ) as isAdmin,
-            steamid, last_name as name, country, last_join_time as lastJoinDate, create_time as firstJoinDate
-            FROM view_${TABLE_PREFIX}_users u
-            WHERE SUBSTRING(steamid, 11) = SUBSTRING(:query, 11) or last_alias LIKE :fuzzyQuery
-            ORDER BY last_join_time DESC
-            LIMIT 10`,
-      { query, fuzzyQuery }
-    )
+  fastify.get(
+    '/search/:query?', 
+    async (
+      req: FastifyRequest<{ Params: { query?: string }, Querystring: { query?: string } }>, 
+      reply
+    ): Promise<APIListPlayersResponse> => {
+      const query = req.params.query || req.query.query
+      if (!query) return reply.status(400).send({ error: 'MISISNG_PARAM', message: "Query (route OR query) parameter missing" })
 
-    if (STEAM_ID_REGEX.test(query) && rows.length === 0) {
-      const steamid = new SteamID(req.params.query)
-      const userInfos = await fastify.steam.getUserDetails([steamid])
-      if (userInfos.length > 0) {
-        const userInfo = userInfos[0]
-        rows.push({
-          id: steamid.getSteam2RenderedID(),
-          steamid2: steamid.getSteam2RenderedID(),
-          name: userInfo.personaname,
-          country: null,
-          lastJoinDate: null,
-          firstJoinDate: null,
-          notesCount: 0,
-          bansCount: 0,
-          isAdmin: false
-        } as RowDataPacket)
+      const start = Date.now()
+      const players = await PlayerManager.instance.findPlayers(query, 10)
+
+      return {
+        meta: {
+          queryTimeSec: Date.now() - start,
+        },
+        users: players.map(player => player.entry)
       }
     }
-
-    return {
-      meta: {
-        queryTimeSec: Date.now() - start,
-      },
-      users: rows.map(row => {
-        return {
-          ...row,
-          country: row.country?.length > 0 ? row.country : null
-        } as PlayerEntry
-      })
-    }
-  })
+  )
 
   fastify.post('/:steamid/update', async (req: FastifyRequest<{ Params: { steamid: string } }>, reply) => {
     if (!req.params.steamid || req.params.steamid.length < 10) {
@@ -175,32 +145,12 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
       const includes = req.query.include ? req.query.include.split(',') : []
 
       const userStart = Date.now()
-      const [[userdata]] = await Promise.all([
-        fastify.db.execute<(RowDataPacket & { accountId: number, name: string, createTime?: number, lastJoinTime?: number, lastRegion?: string, notesCount: number, bansCount: number, isAdmin: number })[]>(
-          `SELECT
-            account_id accountId, last_name name, create_time firstJoinDate, last_join_time lastJoinDate, last_country country, last_region region,
-            (SELECT COUNT(*) FROM notes WHERE SUBSTRING(notes.steamid,11) = SUBSTRING(:steamid, 11)) as notesCount,
-            (SELECT COUNT(*) FROM bans WHERE SUBSTRING(bans.steamid,11) = SUBSTRING(:steamid, 11)) as bansCount,
-            (SELECT COUNT(*) FROM ${ADMINS_DB}.sm_admins WHERE ${ADMINS_DB}.sm_admins.identity = :steamid) as isAdmin
-          FROM view_${TABLE_PREFIX}_user
-          WHERE account_id = SUBSTRING(:steamid, 11)
-          LIMIT 1`,
-          { steamid: steamid.getSteam2RenderedID() }
-        )
-      ])
-      if (userdata.length == 0) {
+      const player = await PlayerManager.instance.find(steamid)
+      if (!player) {
         return reply.status(404).send({
           error: "NO_USER_FOUND",
           message: "Steamid did not match any users."
         })
-      }
-
-      const id = steamid.getSteam2RenderedID()
-      const user: PlayerEntry = {
-        ...userdata[0],
-        id,
-        steamid: id,
-        isAdmin: userdata[0].isAdmin === 1,
       }
 
       const result: APIUserDetails = {
@@ -214,7 +164,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             user: Date.now() - userStart
           }
         },
-        user
+        user: player.entry
       }
 
       if (includes.includes("admin")) {
@@ -266,10 +216,10 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
       const [bans] = await fastify.db.execute<RowDataPacket[]>(
         `SELECT times_tried, id, public_message, bans.flags, bans.steamid, bans.executor, bans.reason, expires, expired, bans.timestamp, u1.last_name as client_name, u1.last_country as client_country, u2.last_name AS executor_name, ip
-                FROM bans
-                LEFT JOIN view_${TABLE_PREFIX}_user AS u1 ON SUBSTRING(bans.steamid, 11) = u1.account_id
-                LEFT JOIN view_${TABLE_PREFIX}_user AS u2 ON SUBSTRING(bans.executor, 11) = u2.account_id
-                WHERE SUBSTRING(bans.steamid, 11) = SUBSTRING(?, 11)`,
+          FROM bans
+          LEFT JOIN view_${TABLE_PREFIX}_user AS u1 ON SUBSTRING(bans.steamid, 11) = u1.account_id
+          LEFT JOIN view_${TABLE_PREFIX}_user AS u2 ON SUBSTRING(bans.executor, 11) = u2.account_id
+          WHERE SUBSTRING(bans.steamid, 11) = SUBSTRING(?, 11)`,
         [steamid.getSteam2RenderedID()]
       )
 

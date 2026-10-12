@@ -25,6 +25,9 @@ export interface RequirePermissionOptions {
     resourceIds?: (string | number | undefined)[]
 }
 
+/**
+ * A logged in panel user
+ */
 export default class User {
     #adminData?: AdminData
     #providers?: UserOauthProviders = undefined
