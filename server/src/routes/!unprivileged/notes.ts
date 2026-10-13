@@ -5,6 +5,7 @@ import SteamID from 'steamid';
 import { ADMINS_DB, TABLE_PREFIX } from '../../middlewares/managers.js';
 import { formatNote } from '../../modules/notes/utils.js';
 import NotesManager from '../../modules/notes/index.js';
+import PlayerManager from '../../modules/users/PlayerManager.js';
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
   fastify.get('/', async (req: FastifyRequest<{
@@ -55,19 +56,16 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
       [...queryData, offset, limit]
     )
 
-    const missingNameQueue = new Set<SteamID>()
     for (const note of notes) {
       if (!note.user) {
-        missingNameQueue.add(new SteamID(note.steamid))
+        PlayerManager.instance.enqueueNameResolve(new SteamID(note.steamid))
       }
       if (!note.executor) {
-        missingNameQueue.add(new SteamID(note.markedBy))
+        PlayerManager.instance.enqueueNameResolve(new SteamID(note.markedBy))
       }
     }
     // Lazy but just fetch them for the next request
-    if (missingNameQueue.size > 0) {
-      await fastify.users.fetchUsers([...missingNameQueue.values()])
-    }
+    await PlayerManager.instance.resolveNames()
 
     const [notesCount] = await fastify.db.execute<RowDataPacket[]>(`SELECT COUNT(*) as count FROM notes`)
 
