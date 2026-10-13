@@ -9,16 +9,13 @@ import { OauthProviderUser } from "../modules/auth/OauthProvider.js"
 
 export const GUARD_REQUIRE_LOGGED_IN = {
     register(fastify: FastifyInstance) {
-        fastify.decorateRequest("permCode", "")
+
     },
     prehandler: (): preHandlerAsyncHookHandler => {
         return async (req: FastifyRequest, reply: FastifyReply) => {
-            await req.server.authmngr.verify(req, reply)
+            if(!await req.server.authmngr.verify(req, reply)) return
         }
-    },
-    get(req: FastifyRequest): UserPrivilegeCode {
-        return req.getDecorator("permCode")
-    },
+    }
 }
 
 export const GUARD_REQUIRE_PERMISSION = {

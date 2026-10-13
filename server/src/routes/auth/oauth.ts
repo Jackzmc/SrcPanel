@@ -1,4 +1,4 @@
-import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
+import { FastifyInstance, FastifyPluginOptions, FastifyReply, FastifyRequest } from 'fastify';
 import crypto, { createHash } from 'node:crypto'
 import User from '../../modules/users/User.js';
 import SteamID from 'steamid';
@@ -17,7 +17,34 @@ interface StateData {
     userId?: string,
 }
 
+
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
+    fastify.setErrorHandler(async (err: any, req: FastifyRequest<{Querystring: Record<string, any> }>, reply: FastifyReply) => {
+        const { provider } = req.params as { provider: string } 
+        let errorCode: string = "INTERNAL_ERROR"
+        let message: string = "Unknown error occurred while processing request"
+        if(err instanceof ErrorWithCode) {
+            errorCode = err.code
+        }
+        if(err instanceof Error) {
+            message = err.message
+        }
+        fastify.log.error({
+            err,
+            provider,
+            errorCode
+        }, `oauth error`)
+
+        const params = new URLSearchParams()
+        params.append("type", "oauth_error")
+        params.append("provider", provider)
+        params.append("code", errorCode)
+        params.append("message", message)
+        params.append("req_id", req.id)
+        return reply.redirect(`${fastify.config.Domain ?? ''}/error?${params.toString()}`)
+    })
+
+
     const loginLinkHandler = async (req, reply) => {
         const provider = GUARD_REQUIRE_OAUTH_PROVIDER.get(req)
         const isLink = req.url.endsWith("/link")
@@ -35,7 +62,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         })
         return reply.redirect(`${provider.config.authorize_url}?${params.toString()}`)
     }
-    ["/login", "/link"].forEach(url => fastify.get.bind(fastify)(
+    ["/:provider/login", "/:provider/link"].forEach(url => fastify.get.bind(fastify)(
         url, 
         { preHandler: [
             GUARD_REQUIRE_OAUTH_PROVIDER.prehandler()
@@ -79,7 +106,10 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             const domain = fastify.config.Domain;
             if(!domain) {
                 req.log.error({ provider: provider.config.name }, "missing DOMAIN config key for oauth support")
-                throw new RouteError("PROVIDER_ERROR_NO_DOMAIN", "Login provider is not configured correctly and cannot be used")
+                throw new RouteError(
+                    "PROVIDER_ERROR_NO_DOMAIN", 
+                    "Login provider is not configured correctly and cannot be used"
+                )
             }
             // this route - /api/auth/callback
             const redirectUri = await getRedirectUri(provider.config.name) as string
@@ -102,7 +132,10 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 // User is logging in to their account via provider
                 // We need to find their steam account
                 const admin = await fastify.authmngr.getAdminByProvider(provider.config.name as OauthProviderId, userInfo!.id)
-                if(!admin) throw new RouteError("NO_ACCOUNT_FOUND", `No steam account is linked to this ${provider.config.name} account. A steam account must be linked to login with ${provider.config.name}`)
+                if(!admin) throw new RouteError(
+                    "NO_ACCOUNT_FOUND", 
+                    `No steam account is linked to this ${provider.config.name} account. A steam account must be linked to login with ${provider.config.name}`
+                )
 
                 // We need to refresh steam info as well
                 const details = await fastify.steam.getUserDetail(new SteamID(admin.steamid))
