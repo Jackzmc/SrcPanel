@@ -1,6 +1,6 @@
 import { Pool, RowDataPacket } from "mysql2/promise";
 import SteamID from "steamid";
-import { OauthProvider, PlayerEntry } from "@srcpanel/common/User";
+import { OauthProviderId, PlayerEntry } from "@srcpanel/common/User";
 import { FullAPIBan } from "@srcpanel/common/Ban";
 import { ADMINS_DB, TABLE_PREFIX } from "../../core/index.js";
 import AuthManager from "../auth/AuthManager.js";
@@ -102,7 +102,7 @@ export default class PanelPlayer {
       // Fetch provider name if necessary
       for(const ban of formattedBans) {
         if(ban.executor.nameResolver === "provider" && ban.executor.provider) {
-            ban.executor.name = await this.#authMngr.getNameFromProvider(ban.executor.provider as OauthProvider, ban.executor.id)
+            ban.executor.name = await this.#authMngr.getNameFromProvider(ban.executor.provider as OauthProviderId, ban.executor.id)
         }
       }
 

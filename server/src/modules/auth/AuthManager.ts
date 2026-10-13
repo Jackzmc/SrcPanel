@@ -2,7 +2,7 @@ import { Pool, RowDataPacket, OkPacket } from "mysql2/promise";
 import QuickLRU from 'quick-lru'
 import { FastifyReply, FastifyRequest } from 'fastify';
 import ActivityLog from "../ActivityLog.js";
-import { AdminData, AdminGroup, OauthProvider, SessionData, ReadableAdminGroup, UserNotification, UserNotificationOptions, AddUserNotification, UserProfileData, APIKey } from '@srcpanel/common/User';
+import { AdminData, AdminGroup, OauthProviderId, SessionData, ReadableAdminGroup, UserNotification, UserNotificationOptions, AddUserNotification, UserProfileData, APIKey } from '@srcpanel/common/User';
 import { ReadableAdminData, UserOauthProviders, OauthProviderData } from '@srcpanel/common/User';
 import { SteamInfo, UserPrivilegeCode } from  '@srcpanel/common/Privileges';
 import { SteamUserDetails } from '@srcpanel/common/Share';
@@ -725,7 +725,7 @@ export default class AuthManager {
      * @param refreshToken The refresh token for the user's access
      * @returns 
      */
-    public async setProvider(steamid: string, providerName: OauthProvider, providerData: OauthProviderData | null) {
+    public async setProvider(steamid: string, providerName: OauthProviderId, providerData: OauthProviderData | null) {
         if(providerData === null) {
             // TOOD: also revoke token
             return await this.#db.query<OkPacket>(
@@ -769,7 +769,7 @@ export default class AuthManager {
         return result
     }
 
-    public async fetchProviderAuthData(steamid: string, providerName: OauthProvider): Promise<OauthAuthData|null> {
+    public async fetchProviderAuthData(steamid: string, providerName: OauthProviderId): Promise<OauthAuthData|null> {
         const [provider] = await this.#db.query<RowDataPacket[]>(
             "SELECT refresh_token, refresh_token_expired, access_token, access_token_expires FROM ${TABLE_PREFIX}_providers WHERE SUBSTRING(steamid, 11) = SUBSTRING(?, 11) AND provider = ?",
             [ steamid, providerName ]
@@ -783,7 +783,7 @@ export default class AuthManager {
         }
     }
 
-    public async setProviderAuthData(steamid: string, providerName: OauthProvider, providerData: OauthAuthData) {
+    public async setProviderAuthData(steamid: string, providerName: OauthProviderId, providerData: OauthAuthData) {
         return await this.#db.query<OkPacket>(
             "UPDATE ${TABLE_PREFIX}_providers SET refresh_token = ?, refresh_token_expired = ?, access_token = ?, access_token_expires = ? WHERE SUBSTRING(steamid, 11) = SUBSTRING(?, 11) AND provider = ?",
             [ providerData.refreshToken, providerData.refreshTokenExpired, providerData.accessToken, providerData.accessTokenExpires, steamid, providerName ]
@@ -796,7 +796,7 @@ export default class AuthManager {
      * @param id id for provider service
      * @returns 
      */
-    public async getAdminByProvider(provider: OauthProvider, id: string) {
+    public async getAdminByProvider(provider: OauthProviderId, id: string) {
         const [rows] = await this.#db.execute<RowDataPacket[]>(
             "SELECT steamid FROM ${TABLE_PREFIX}_providers WHERE provider = ? and provider_id = ?", 
             [provider, id]
@@ -814,7 +814,7 @@ export default class AuthManager {
      * @param id id for provider service
      * @returns 
      */
-    public async getNameFromProvider(provider: OauthProvider, providerId: string): Promise<string|null> {
+    public async getNameFromProvider(provider: OauthProviderId, providerId: string): Promise<string|null> {
         const cached = this.providerNameCache.get(`${provider}:${providerId}`)
         if(cached) return cached
         const [rows] = await this.#db.query<RowDataPacket[]>(

@@ -38,6 +38,8 @@ type DatabaseType = BetterSqlite.Database
  * @class CacheManager
  */
 export default class CacheManager {
+  static #instance: CacheManager
+  static get instance() { return this.#instance }
   #db: DatabaseType;
   constructor(db: DatabaseType) {
     this.#db = db

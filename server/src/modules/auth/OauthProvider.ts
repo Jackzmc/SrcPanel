@@ -5,7 +5,7 @@ TODO:
     a. Refreshing of avatar on "Connections" page
 */
 
-import { OauthProvider, OauthProviderData } from "@srcpanel/common/User";
+import { OauthProviderId, OauthProviderData } from "@srcpanel/common/User";
 import { OauthConfig } from "./OauthManager.js";
 import AuthManager from "./AuthManager.js";
 
@@ -151,7 +151,7 @@ export class OauthProviderUser {
     /** Initalizes a user by acquiring authentication data saved in auth manager */
     async setUser(steamid2: string) {
         this.#steamid2 = steamid2
-        this.#authData = await this.#authManager.fetchProviderAuthData(steamid2, this.#providerName as OauthProvider)
+        this.#authData = await this.#authManager.fetchProviderAuthData(steamid2, this.#providerName as OauthProviderId)
         // Attempt to request a token, to check if it expired
         await this.#getAccessToken()
     }
@@ -164,8 +164,8 @@ export class OauthProviderUser {
             // No user data means .setUser was not called and .fetchDetails was not called
             throw new Error("No user data, either call .setUser() to get cached, or .fetchDetails to fetch")
         }
-        await this.#authManager.setProvider(this.#steamid2, this.#providerName as OauthProvider, this.#userData)
-        await this.#authManager.setProviderAuthData(this.#steamid2, this.#providerName as OauthProvider, this.#authData!)
+        await this.#authManager.setProvider(this.#steamid2, this.#providerName as OauthProviderId, this.#userData)
+        await this.#authManager.setProviderAuthData(this.#steamid2, this.#providerName as OauthProviderId, this.#authData!)
     }
 
     /** 
@@ -222,6 +222,6 @@ export class OauthProviderUser {
         })
         this.#authData = null
         this.#userData = null
-        await this.#authManager.setProvider(this.#steamid2, this.#providerName as OauthProvider, null)
+        await this.#authManager.setProvider(this.#steamid2, this.#providerName as OauthProviderId, null)
     }
 }
