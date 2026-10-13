@@ -130,7 +130,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
         await CacheManager.instance.set(
             `oauth:state:${hashed}`,
-            JSON.stringify(data),
+            data,
             { ttl: 60 }
         );
         return state
