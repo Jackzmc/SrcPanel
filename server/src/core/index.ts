@@ -52,6 +52,8 @@ export default async function init() {
 
 export type CoreModules = Awaited<ReturnType<typeof init>>
 
+const shutdownFunctions: (() => Promise<void>)[] = []
+
 export async function loadModules(db: Awaited<ReturnType<typeof loadDB>>) {
     const cacheManager = await CacheManager.Create(CACHE_FOLDER)
     const steam = new SteamAPI(cacheManager)
@@ -64,12 +66,18 @@ export async function loadModules(db: Awaited<ReturnType<typeof loadDB>>) {
     const discussions = new DiscussionManager(db.db, configManager, authManager, jobScheduler)
     const dataManager = DataManager.create(db.db)
     const notesManager = new NotesManager(db.db)
-    const playerManager = new PlayerManager(db.db, authManager)
 
     await Promise.all([
+
+    ])
+
+    const [ playerManager ] = await Promise.all([
+        await PlayerManager.create(db.db, authManager),
         authManager.Init(),
         serverManager.Load(),
     ])
+
+    shutdownFunctions.push(async() => await playerManager.onShutdown())
 
     return {
         cacheManager,
@@ -84,6 +92,11 @@ export async function loadModules(db: Awaited<ReturnType<typeof loadDB>>) {
         notesManager,
         playerManager
     }
+}
+
+export async function onCoreShutdown() {
+    const promises = shutdownFunctions.map(fn => fn())
+    await Promise.all(promises)
 }
 
 

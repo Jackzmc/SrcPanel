@@ -30,7 +30,7 @@ import { FluxerBot } from './modules/FluxerBot.js'
 import { sleep } from './util.js'
 import { DataManagerInstance } from './modules/DataManager.js'
 import { getGlobalWriter, sendMetric } from './modules/metrics/influx.js'
-import init from './core/index.js'
+import init, { onCoreShutdown } from './core/index.js'
 
 import './sentry.js'
 
@@ -78,6 +78,7 @@ async function onSignal(signal: NodeJS.Signals) {
   // Handle shutdown logic
   app.log.trace('calling shutdown handlers')
   await Promise.allSettled([
+    await onCoreShutdown(),
     await app.servers?.onShutdown(),
     // flush & close influxdb global writer
     (async() => {

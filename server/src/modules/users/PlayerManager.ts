@@ -7,26 +7,46 @@ import { formatPlayer } from "./utils.js";
 import PanelPlayer from "./Player.js";
 import LRU from 'quick-lru'
 import TaskManager from "../tasks/TaskManager.js";
+import CacheManager from "../CacheManager.js";
 
 const CACHE_TTL = 1000 * 60 * 5
+const CACHE_KEY = "resolve.names"
 
 const NAME_CACHE_TASK_INTERVAL_HRS = 1
 
-export default class PlayerManager {
+interface IShutdown {
+    onShutdown(): Promise<void>;
+}
+
+
+export default class PlayerManager implements IShutdown {
     static #instance: PlayerManager
     static get instance() { return this.#instance }
 
     #db: Pool
     #authMngr: AuthManager
     #playerCache: LRU<SteamID, PanelPlayer> = new LRU({ maxAge: CACHE_TTL, maxSize: 1000 })
-    #missingNameQueue: Set<SteamID> = new Set() // prob moved to usermanager?
-    constructor(db: Pool, authMngr: AuthManager) {
+    #missingNameQueue: Set<SteamID> // prob moved to usermanager?
+    private constructor(db: Pool, authMngr: AuthManager, queue: Set<SteamID>) {
         PlayerManager.#instance = this
         this.#db = db
         this.#authMngr = authMngr
+        this.#missingNameQueue = queue
+    }
 
-        const task = TaskManager.Instance.register("resolveNames", this.resolveNames)
+    static async create(db: Pool, authMngr: AuthManager) {
+        const queueSet = await CacheManager.instance.get<number[]>(CACHE_KEY)
+        const queue = queueSet?.map(acctId => SteamID.fromIndividualAccountID(acctId)) ?? []
+
+        const manager = new PlayerManager(db, authMngr, new Set(queue))
+        const task = TaskManager.Instance.register("resolveNames", manager.resolveNames)
         TaskManager.Instance.scheduleRepeating(task, { hours: NAME_CACHE_TASK_INTERVAL_HRS })
+        return manager
+    }
+
+    async onShutdown() {
+        const saveData = [...this.#missingNameQueue.values()].map(s => s.accountid)
+        await CacheManager.instance.set(CACHE_KEY, saveData)
     }
 
     enqueueNameResolve(steamid: SteamID) {
