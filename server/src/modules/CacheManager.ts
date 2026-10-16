@@ -42,6 +42,7 @@ export default class CacheManager {
   static get instance() { return this.#instance }
   #db: DatabaseType;
   constructor(db: DatabaseType) {
+    CacheManager.#instance = this;
     this.#db = db
   }
 

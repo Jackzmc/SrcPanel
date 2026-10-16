@@ -302,18 +302,18 @@ function scheduleActivityLogPartition(app: FastifyInstance) {
   }
 
   const job = app.jobs.register("activity_log.add_year_partition", async () => {
+    console.log('absolutely no run bad very bad')
     // This runs on Dec 31 of current year
     const nextYear = new Date().getFullYear() + 1
     await addPartitionForYear(app, nextYear)
   })
 
   app.jobs.scheduleRepeatingCustom(job, endOfYear, nextDate)
-  // fire immediately as well
-  job.execute()
 
 }
 
 async function addPartitionForYear(app: FastifyInstance, year: number) {
+  console.log('SHOULD NOT RUN')
   const nextYear = year
 
   try {

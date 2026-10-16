@@ -65,14 +65,12 @@ export default class ShareDatabase {
     }
 
     async getAddons() : Promise<AddonInfo[]> {
-        this.#log.trace({ time: performance.now() }, "getAddons START")
         const rows = this.#db
             .prepare<any[], any>(`
                 SELECT filename, filesize, state, lastModified, ws_info, collection_id, c.name as collection_name, metadata, last_checked_time 
                 FROM addoncache
                 LEFT JOIN workshop_collections c ON collection_id = c.id
             `).all();
-        this.#log.trace({ time: performance.now() }, "getAddons END")
         return rows.map<AddonInfo>(this.#formatAddon)
     }
 
@@ -141,7 +139,6 @@ export default class ShareDatabase {
      * @returns Promise<AddonInfo | undefined>
      */
     public async getAddonInfo(filename: string): Promise<AddonInfo | null> {
-        this.#log.trace({ time: performance.now() }, "getAddons START")
         const info = this.#db
             .prepare<any[], any>(`
                 SELECT filename, filesize, state, lastModified, ws_info, collection_id, c.name as collection_name, metadata, last_checked_time

@@ -1,5 +1,8 @@
 import { DefinedTask, Task, TaskFunction, TempTask } from "./Task.js"
 import { calculateDate, TimeOptions } from "./util.js"
+import Logger from '../../logger.js'
+
+const log = Logger.child({ name: "TaskManager" })
 
 
 // interface ScheduleEntry {
@@ -43,12 +46,13 @@ export default class TaskManager {
                 // console.debug({ id: task.Id, now: now, nextRun: entry.nextRun, nextNextRun: entry.getNextRunDate(entry.nextRun), compare: now >= entry.nextRun })
                 const task = this.#tasks.get(taskId)
                 if(!task) {
+                    log.warn({ taskId, schedIndex }, "scheduled task is missing task definition")
                     this.#schedule.splice(schedIndex, 1)
                     continue // shouldn't happen
                 }
                 if(task.NextRunDate && now >= task.NextRunDate) {
                     count++
-                    console.info(`[TaskManager] Running task "${task.Id}" [${count}/${tasksPerTick}]`)
+                    log.info({ taskId: task.Id }, `Running task "${task.Id}" [${count}/${tasksPerTick}]`)
                     await task.execute() // TODO: error handling?
 
                     if(!task.reschedule()) {
@@ -73,7 +77,7 @@ export default class TaskManager {
     register<T = object>(name: string, fn: TaskFunction<T>, defaultState?: T | undefined) {
         if(this.get(name) != undefined) throw new Error("Task already registered")
         const task = new DefinedTask<T>(name, fn, defaultState)
-        console.debug(`[TaskManager] Registered task "${name}"`)
+        log.info({ name }, `Registered task "${name}"`)
         this.#tasks.set(name, task)
         return task
     }
@@ -141,7 +145,7 @@ export default class TaskManager {
         if(!(dateOrTime instanceof Date)) {
             dateOrTime = calculateDate(startDate, dateOrTime)
         }
-        console.debug(`[TaskManager] Scheduled "${task.Id}" for ${dateOrTime}`)
+        log.info({ taskId: task.Id }, `Scheduled "${task.Id}" for ${dateOrTime}`)
             // Does not repeat, set fn to null
         task.setSchedule(dateOrTime, null)
         this.#schedule.push(task.Id)
@@ -157,7 +161,7 @@ export default class TaskManager {
     scheduleRepeating(task: Task<any>, timeOptions: TimeOptions): Date {
         const startDate = new Date(task.CreatedTimestamp * 1000)
         const nextRun = calculateDate(startDate, timeOptions)
-        console.debug(`[TaskManager] Scheduled repeating "${task.Id}" for ${JSON.stringify(timeOptions)}`)
+        log.info({ taskId: task.Id, ...timeOptions }, `Scheduled repeating "${task.Id}"`)
         task.setSchedule(nextRun, (prevRunDate) => calculateDate(prevRunDate, timeOptions) )
         this.#schedule.push(task.Id)
         return nextRun
@@ -170,7 +174,7 @@ export default class TaskManager {
      * @param nextDateFn function that is given last date to schedule next date
      */
     scheduleRepeatingCustom(task: Task<any> | DefinedTask<any>, startDate: Date, nextDateFn: (prevDate: Date) => Date) {
-        console.debug(`[TaskManager] Scheduled repeating "${task.Id}" for ${startDate}`)
+        log.info({ taskId: task.Id }, `Scheduled custom repeating "${task.Id}" for ${startDate}`)
         task.setSchedule(startDate, nextDateFn)
         this.#schedule.push(task.Id)
     }
