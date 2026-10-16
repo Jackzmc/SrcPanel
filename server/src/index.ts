@@ -79,7 +79,6 @@ async function onSignal(signal: NodeJS.Signals) {
   app.log.trace('calling shutdown handlers')
   await Promise.allSettled([
     await onCoreShutdown(),
-    await app.servers?.onShutdown(),
     // flush & close influxdb global writer
     (async() => {
       const writer = getGlobalWriter()

@@ -77,7 +77,10 @@ export async function loadModules(db: Awaited<ReturnType<typeof loadDB>>) {
         serverManager.Load(),
     ])
 
-    shutdownFunctions.push(async() => await playerManager.onShutdown())
+    shutdownFunctions.push(
+        async() => await playerManager.onShutdown(),
+        async() => await serverManager.onShutdown(),
+    )
 
     return {
         cacheManager,
