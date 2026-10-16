@@ -5,7 +5,7 @@ import FastifySession from '@fastify/session'
 import fastifyWebsocket from '@fastify/websocket'
 import FastifyEtag from '@fastify/etag'
 import MySQLSession from 'express-mysql-session'
-import { Pool } from 'mysql2/promise';
+import { Pool, RowDataPacket } from 'mysql2/promise';
 import SteamAPI from './modules/steam.js'
 import AuthManager from './modules/auth/AuthManager.js';
 import ServerManager from './modules/servers/ServerManager.js';
@@ -30,7 +30,7 @@ import { FluxerBot } from './modules/FluxerBot.js'
 import { sleep } from './util.js'
 import { DataManagerInstance } from './modules/DataManager.js'
 import { getGlobalWriter, sendMetric } from './modules/metrics/influx.js'
-import init, { onCoreShutdown } from './core/index.js'
+import init, { MAIN_DB, onCoreShutdown } from './core/index.js'
 
 import './sentry.js'
 
@@ -317,12 +317,25 @@ async function addPartitionForYear(app: FastifyInstance, year: number) {
   const nextYear = year
 
   try {
-    await app.db.query(`
-      ALTER TABLE activity_log ADD PARTITION IF NOT EXISTS
-      ( PARTITION p${year} VALUES LESS THAN ( UNIX_TIMESTAMP('${nextYear}-01-01 00:00') ) )`
+    // Check if we need to add a partition
+    const [partitions] = await app.db.query<RowDataPacket[]>(`
+      SELECT * FROM information_schema.partitions
+         WHERE TABLE_SCHEMA='left4dead2'
+           AND TABLE_NAME = 'activity_log'
+           AND PARTITION_NAME IS NOT NULL
+        ORDER BY PARTITION_DESCRIPTION
+        LIMIT 1`
     )
+    // Maybe not the best check but it should work
+    const hasYear = partitions.some(part => parseInt(part.PARTITION_NAME.substring(1)) === year)
+    if(!hasYear) {
+      await app.db.query(`
+        ALTER TABLE activity_log ADD PARTITION IF NOT EXISTS
+        ( PARTITION p${year} VALUES LESS THAN ( UNIX_TIMESTAMP('${nextYear}-01-01 00:00') ) )`
+      )
 
-    app.log.info(`Added p${year} partition to activity log`)
+      app.log.info(`Added p${year} partition to activity log`)
+  }
   } catch(err) {
     app.log.warn({}, "failed to update partition for year: " + err)
   }
