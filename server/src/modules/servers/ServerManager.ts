@@ -248,18 +248,17 @@ export default class ServerManager {
 
   async onShutdown() {
     if(this.#socket) {
-      // Inform all clients that we are shutting down, try to reconnect
-      for(const client of this.#socketClients.values()) {
-        if(client.Authenticated)
-          client.send(LiveRecordResponse.Reconnect)
-      }
-      // Wait for socket to close:
+      // Inform all clients that we are shutting down, for them to try to reconnect
+      const promises = [...this.#socketClients.values()]
+        .filter(client => client.Authenticated)
+        .map(client => client.send(LiveRecordResponse.Reconnect))
+      await Promise.all(promises)
+      // Wait for socket to close (don't care about the error)
       await new Promise((resolve) => this.#socket?.close(resolve))
     }
 
-    for(const group of Object.values(this.#groups)) {
-      await group.onShutdown()
-    }
+    const groups = Object.values(this.#groups)
+    await Promise.all(groups.map(group => group.onShutdown()))
   }
 
   /**
