@@ -7,7 +7,10 @@ import { AnnotationX, AnnotationY, FinaleStage, GAME_DIFFICULTY_STRINGS, GameSta
 import DockerServer from "../DockerServer.js";
 import { ContainerStats } from "dockerode";
 import { Server_Metric, Server_MetricFull } from "@srcpanel/common/ServerWebsocket";
-import { METRIC_SERVERS_LIVE_RECORDS_RECV, METRIC_SERVERS_LIVE_RECORDS_SENT, METRIC_SERVERS_UPTIME } from "../../../core/prom-metrics.js";
+import { METRIC_SERVERS_UPTIME } from "../../../core/prom-metrics.js";
+import Logger from '../../../logger.js'
+import type { Logger as PinoLogger } from 'pino'
+
 
 // The maximum number of statistics to hold
 const MAX_STATS_HISTORY = 400
@@ -31,9 +34,12 @@ export default class MetricsFeature extends Feature {
     #annotationsY: AnnotationY[] = []
 
     #metric: NamespacedMetric
+    
+    #log: PinoLogger
 
     constructor(server: Server) {
         super("Metrics", server)
+        this.#log = Logger.child({ name: `Servers/${server.name}/Metrics`})
         this.#metric = new NamespacedMetric(`servers`, { 
           server_id: server.id, 
           game: server.game 
@@ -56,54 +62,50 @@ export default class MetricsFeature extends Feature {
       return getGlobalWriter() != null
     }
 
-    async init() {
-      if(!this.available) return
-      if(this.#dockerServer) {
-        const stream = await this.#dockerServer.ContainerInstance.Container.stats({ stream: true})
-        stream.on("data", (data) => {
-          const stats: ContainerStats = JSON.parse(data.toString())
-          const cpuDelta = stats.cpu_stats.cpu_usage.total_usage - stats.precpu_stats.cpu_usage.total_usage
-          const systemCpuDelta = stats.cpu_stats.system_cpu_usage - stats.precpu_stats.system_cpu_usage
-          const memoryUsed = stats.memory_stats.usage - stats.memory_stats.stats?.inactive_file
-          const collectionTime = Math.round(Date.now()/1000)
-          const computeStats: ComputeStats = {
-            collectionTime,
-            // https://docs.docker.com/reference/api/engine/version/v1.45/#tag/Container/operation/ContainerExport
-            cpu_stats: stats.cpu_stats ? {
-              cpu_usage: (cpuDelta / systemCpuDelta) * stats.cpu_stats.online_cpus * 100.0,
-              online_cpus: stats.cpu_stats.online_cpus
-            } : null,
-            memory_stats: stats.memory_stats ? {
-              usage: memoryUsed,
-              usage_percent: (memoryUsed / stats.memory_stats.limit) * 100.0,
-              limit: stats.memory_stats.limit
-            } : null,
-            network_stats: stats.networks ? Object.fromEntries(Object.entries(stats.networks).map(([intf, net]) => {
-              let rxRate = 0
-              let txRate = 0
-              if(this.#latestComputeStats?.network_stats[intf]) {
-                const timeDiff = this.#latestComputeStats.collectionTime - collectionTime
-                rxRate = (this.#latestComputeStats?.network_stats[intf].bytesRxTotal - net.rx_bytes) / timeDiff
-                txRate = (this.#latestComputeStats?.network_stats[intf].bytesTxTotal - net.tx_bytes) / timeDiff
-              }
+    #parseDockerStats(data: string) {
+        const stats: ContainerStats = JSON.parse(data)
+        const cpuDelta = stats.cpu_stats.cpu_usage.total_usage - stats.precpu_stats.cpu_usage.total_usage
+        const systemCpuDelta = stats.cpu_stats.system_cpu_usage - stats.precpu_stats.system_cpu_usage
+        const memoryUsed = stats.memory_stats.usage - stats.memory_stats.stats?.inactive_file
+        const collectionTime = Math.round(Date.now()/1000)
+        const computeStats: ComputeStats = {
+          collectionTime,
+          // https://docs.docker.com/reference/api/engine/version/v1.45/#tag/Container/operation/ContainerExport
+          cpu_stats: stats.cpu_stats ? {
+            cpu_usage: (cpuDelta / systemCpuDelta) * stats.cpu_stats.online_cpus * 100.0,
+            online_cpus: stats.cpu_stats.online_cpus
+          } : null,
+          memory_stats: stats.memory_stats ? {
+            usage: memoryUsed,
+            usage_percent: (memoryUsed / stats.memory_stats.limit) * 100.0,
+            limit: stats.memory_stats.limit
+          } : null,
+          network_stats: stats.networks ? Object.fromEntries(Object.entries(stats.networks).map(([intf, net]) => {
+            let rxRate = 0
+            let txRate = 0
+            if(this.#latestComputeStats?.network_stats[intf]) {
+              const timeDiff = this.#latestComputeStats.collectionTime - collectionTime
+              rxRate = (this.#latestComputeStats?.network_stats[intf].bytesRxTotal - net.rx_bytes) / timeDiff
+              txRate = (this.#latestComputeStats?.network_stats[intf].bytesTxTotal - net.tx_bytes) / timeDiff
+            }
 
-              return [intf, {
-                bytesRxTotal: net.rx_bytes,
-                bytesTxTotal: net.tx_bytes,
+            return [intf, {
+              bytesRxTotal: net.rx_bytes,
+              bytesTxTotal: net.tx_bytes,
 
-                bytesRxRate: rxRate,
-                bytesTxRate: txRate,
+              bytesRxRate: rxRate,
+              bytesTxRate: txRate,
 
-                packetsRx: net.rx_packets,
-                packetsTx: net.tx_packets,
-                droppedTx: net.tx_errors,
-                droppedRx: net.rx_dropped
-              } as NetworkStats]
-            })) : {}
-          }
-          this.#latestComputeStats = computeStats
-          // Only record every STATS_HISTORY_INTERVAL, as we don't want to store the last 100ms but the last 100 minutes
-          if(Date.now() - this.#lastHistoryTime > STATS_HISTORY_INTERVAL) {
+              packetsRx: net.rx_packets,
+              packetsTx: net.tx_packets,
+              droppedTx: net.tx_errors,
+              droppedRx: net.rx_dropped
+            } as NetworkStats]
+          })) : {}
+        }
+        this.#latestComputeStats = computeStats
+        // Only record every STATS_HISTORY_INTERVAL, as we don't want to store the last 100ms but the last 100 minutes
+        if(Date.now() - this.#lastHistoryTime > STATS_HISTORY_INTERVAL) {
             this._server.broadcastWS({
               type: "metric",
               metric: computeStats
@@ -115,6 +117,18 @@ export default class MetricsFeature extends Feature {
               this.#computeStatsHistory.splice(0, 1)
             }
         }
+    }
+
+    async init() {
+      if(!this.available) return
+      if(this.#dockerServer) {
+        const stream = await this.#dockerServer.ContainerInstance.Container.stats({ stream: true})
+        stream.on("data", (data) => {
+          try {
+            this.#parseDockerStats(data.toString())
+          } catch(err) {
+            this.#log.error({ err }, "failed to parse docker stats")
+          }
         })
       }
     } 

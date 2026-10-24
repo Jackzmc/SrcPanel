@@ -160,7 +160,7 @@ await app.register(MiddleManager, core)
         const bot = new FluxerBot(app.servers, app.cache, process.env.FLUXER_API_TOKEN as string)
         await bot.init()
       } catch (err) {
-        app.log.error({}, "fluxer unavailable, error: ", err)
+        app.log.error({err}, "fluxer initialize error")
       }
     }
 
