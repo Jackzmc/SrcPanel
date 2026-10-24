@@ -60,7 +60,7 @@ export default class MetricsFeature extends Feature {
       if(!this.available) return
       if(this.#dockerServer) {
         const stream = await this.#dockerServer.ContainerInstance.Container.stats({ stream: true})
-        stream.on("data", async (data) => {
+        stream.on("data", (data) => {
           const stats: ContainerStats = JSON.parse(data.toString())
           const cpuDelta = stats.cpu_stats.cpu_usage.total_usage - stats.precpu_stats.cpu_usage.total_usage
           const systemCpuDelta = stats.cpu_stats.system_cpu_usage - stats.precpu_stats.system_cpu_usage

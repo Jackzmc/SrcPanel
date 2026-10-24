@@ -157,8 +157,8 @@ await app.register(MiddleManager, core)
     if  (hadSignal) return
     if  (process.env.FLUXER_API_TOKEN) {
       try {
-      const bot = new FluxerBot(app.servers, app.cache, process.env.FLUXER_API_TOKEN as string)
-      await bot.init()
+        const bot = new FluxerBot(app.servers, app.cache, process.env.FLUXER_API_TOKEN as string)
+        await bot.init()
       } catch (err) {
         app.log.error({}, "fluxer unavailable, error: ", err)
       }
