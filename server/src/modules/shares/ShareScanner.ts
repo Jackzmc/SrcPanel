@@ -1,6 +1,4 @@
-import type { Logger as PinoLogger } from 'pino'
-import Logger from '#/logger.js'
-import Share from './Share.js'
+import Logger, { type PinoLogger } from '#/logger.js'
 import ShareDatabase from './ShareDB.js'
 import SteamAPI from '../steam.js'
 import { AddonWorkshopInfo, ScanEvent, ShareInfo, ShareItemState, WorkshopItem } from '@srcpanel/common/Share'

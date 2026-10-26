@@ -12,11 +12,9 @@ import { ChildWorkshopItem, DownloadLogEntry, DownloadProgress, DownloadState, S
 import SteamAPI from "../steam.js"
 import Share from "./Share.js"
 import { join } from "node:path"
-import { getChapterIds, getMetadata, serializeWorkshopItem } from "./ShareUtils.js"
+import { getMetadata, serializeWorkshopItem } from "./ShareUtils.js"
 import pLimit from "p-limit"
-import EventEmitter from "node:events"
-import Logger from '#/logger.js'
-import type { Logger as PinoLogger } from 'pino'
+import Logger, { type PinoLogger } from '#/logger.js'
 import { METRIC_SHARE_DOWNLOAD_COUNT } from "../../core/prom-metrics.js"
 
 /**

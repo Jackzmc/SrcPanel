@@ -8,8 +8,7 @@ import DockerServer from "../DockerServer.js";
 import { ContainerStats } from "dockerode";
 import { Server_Metric, Server_MetricFull } from "@srcpanel/common/ServerWebsocket";
 import { METRIC_SERVERS_UPTIME } from "../../../core/prom-metrics.js";
-import Logger from '#/logger.js'
-import type { Logger as PinoLogger } from 'pino'
+import Logger, { type PinoLogger } from '#/logger.js'
 
 
 // The maximum number of statistics to hold
