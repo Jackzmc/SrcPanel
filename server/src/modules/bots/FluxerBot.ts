@@ -1,10 +1,10 @@
 import { CategoryChannel, Client, Guild, GuildMember, User, VoiceChannel } from '@fluxerjs/core';
-import ServerManager from './servers/ServerManager.js';
+import ServerManager from '../servers/ServerManager.js';
 import { GatewayVoiceStateUpdateDispatchData, APIGuildMember, ChannelType, GatewayOpcodes, GatewayPresenceUpdateData } from '@fluxerjs/types'
 import type { VoiceUser } from '@srcpanel/common/Server';
-import CacheManager from './CacheManager.js';
+import CacheManager from '../CacheManager.js';
 
-import Logger from '../logger.js'
+import Logger from '../../logger.js'
 const log = Logger.child({ name: "fluxer" })
 
 interface ChannelData {
@@ -26,7 +26,7 @@ export class FluxerBot {
 
   #categoryId: string
 
-  constructor(serverManager: ServerManager, cacheManager: CacheManager, discordToken: string) {
+  constructor(client: Client, serverManager: ServerManager, cacheManager: CacheManager) {
     const categoryId = process.env.FLUXER_VOICELINK_CATEGORY_ID
     if (!categoryId) {
       throw new Error("FLUXER_VOICELINK_CATEGORY_ID not set")
@@ -34,8 +34,9 @@ export class FluxerBot {
     this.#categoryId = categoryId!
 
     this.#cache = cacheManager
-    this.#token = discordToken
     this.#servers = serverManager
+    this.#channelData = new Map()
+
     this.#client = new Client({
       intents: 0,
       presence: {
@@ -45,70 +46,81 @@ export class FluxerBot {
         },
       }
     })
-    this.#channelData = new Map()
+    this.#client.events.VoiceStateUpdate(this.#onVoiceStateUpdate)
+    this.#client.events.Ready(this.#onReady)
   }
 
-  async init() {
-    await this.#client.login(this.#token)
+  static async create(serverManager: ServerManager, cacheManager: CacheManager, discordToken: string): Promise<FluxerBot> {
+    const client = new Client({
+      intents: 0,
+      presence: {
+        status: "idle",
+        customStatus: {
+          text: "Starting up"
+        },
+      }
+    })
+    const bot = new FluxerBot(client, serverManager, cacheManager)
+    await bot.loadCache()
+    await client.login(discordToken)
+    return bot
+  }
 
-    // TODO: check voice members on start
-    this.#client.events.VoiceStateUpdate((data) => {
-      if (data.guild_id != this.#category.guildId) return
+  async #onVoiceStateUpdate(data: GatewayVoiceStateUpdateDispatchData) {
+    if (data.guild_id != this.#category.guildId) return
 
-      const newState = data
-      if (!newState.member) return
-      const oldState = this.#oldState.get(newState.member!)
-      this.#oldState.set(newState.member, newState)
-      if (!oldState) return
+    const newState = data
+    if (!newState.member) return
+    const oldState = this.#oldState.get(newState.member!)
+    this.#oldState.set(newState.member, newState)
+    if (!oldState) return
 
-      if (newState.channel_id == oldState.channel_id) return // incase we didnt get mapping, just prevent other state changes
-      // Fetch the servers that the channels map to
-      const channelData = [
-        oldState.channel_id ? this.#channelData.get(oldState.channel_id) : null,
-        newState.channel_id ? this.#channelData.get(newState.channel_id) : null,
-      ]
-      const [oldStateServer, newStateServer] = channelData.map(data => data ? this.#servers.getServer(data.serverId) : null)
+    if (newState.channel_id == oldState.channel_id) return // incase we didnt get mapping, just prevent other state changes
+    // Fetch the servers that the channels map to
+    const channelData = [
+      oldState.channel_id ? this.#channelData.get(oldState.channel_id) : null,
+      newState.channel_id ? this.#channelData.get(newState.channel_id) : null,
+    ]
+    const [oldStateServer, newStateServer] = channelData.map(data => data ? this.#servers.getServer(data.serverId) : null)
 
-      const member = FluxerBot.toPanelUser(newState.member)
+    const member = FluxerBot.toPanelUser(newState.member)
 
-      if (newStateServer && (!oldStateServer || oldStateServer.id != newStateServer.id)) {
-        // User connected or switched channels
-        // Mark new as connected, old as disconnected
-        newStateServer.markVoiceConnection(member, true)
-        // log.debug(`informing ${newStateServer.name} client connected`)
-        if (oldStateServer) {
-          oldStateServer.markVoiceConnection(member, false)
-          // log.debug(`informing ${oldStateServer.name} client disconnected`)
-        }
-      } else if (!newStateServer && oldStateServer) {
-        // User disconnected (from voice)
+    if (newStateServer && (!oldStateServer || oldStateServer.id != newStateServer.id)) {
+      // User connected or switched channels
+      // Mark new as connected, old as disconnected
+      newStateServer.markVoiceConnection(member, true)
+      // log.debug(`informing ${newStateServer.name} client connected`)
+      if (oldStateServer) {
         oldStateServer.markVoiceConnection(member, false)
         // log.debug(`informing ${oldStateServer.name} client disconnected`)
       }
-    })
-    await this.load()
+    } else if (!newStateServer && oldStateServer) {
+      // User disconnected (from voice)
+      oldStateServer.markVoiceConnection(member, false)
+      // log.debug(`informing ${oldStateServer.name} client disconnected`)
+    }
+  }
 
-    this.#client.events.Ready(async () => {
-      const category = await this.#client.channels.fetch(this.#categoryId)
-      if (!(category instanceof CategoryChannel) || !category.guildId) {
-        throw new Error("Category ID does not map to a category channel")
+  async #onReady() {
+    const category = await this.#client.channels.fetch(this.#categoryId)
+    if (!(category instanceof CategoryChannel) || !category.guildId) {
+      throw new Error("Category ID does not map to a category channel")
+    }
+
+    this.#category = category
+    const guild = await this.#client.guilds.fetch(category.guildId) as Guild
+    this.#guild = guild
+
+    await this.updateChannels()
+
+    this.setPresence({
+      status: "online",
+      custom_status: {
+        text: "Active"
       }
-
-      this.#category = category
-      const guild = await this.#client.guilds.fetch(category.guildId) as Guild
-      this.#guild = guild
-
-      await this.updateChannels()
-
-      this.setPresence({
-        status: "online",
-        custom_status: {
-          text: "Killing zombies"
-        }
-      })
-
-      log.info("Bot initalized")
     })
+
+    log.info("Bot initalized")
   }
 
   setPresence(presence: GatewayPresenceUpdateData) {
@@ -209,24 +221,20 @@ export class FluxerBot {
     await this.#findExisting(reverseMap)
     await this.#createMissing(reverseMap)
 
-    await this.save()
+    await this.saveCache()
   }
 
-  async save() {
+  async saveCache() {
     await this.#cache.set("fluxer.voice_chnl_map", JSON.stringify(Object.fromEntries(this.#channelData.entries())))
   }
 
-  async load() {
+  async loadCache() {
     try {
       const content = await this.#cache.get<string>("fluxer.voice_chnl_map")
-      if (!content) return {}
+      if (!content) return
       this.#channelData = new Map(Object.entries(JSON.parse(content)))
     } catch (err) {
-      if (err.code !== "ENOENT") {
-        log.warn("Error loading channel mapping:\n", err)
-        // log.warn("[Discord] Force recreating channels")
-        // await this.updateChannels()
-      }
+      log.warn({ err }, "failed to load cache")
     }
   }
 

@@ -26,7 +26,6 @@ import TaskManager from './modules/tasks/TaskManager.js'
 import CacheManager from './modules/CacheManager.js'
 
 import MiddleManager, { TABLE_PREFIX } from './middlewares/managers.js'
-import { FluxerBot } from './modules/FluxerBot.js'
 import { sleep } from './util.js'
 import { DataManagerInstance } from './modules/DataManager.js'
 import { getGlobalWriter, sendMetric } from './modules/metrics/influx.js'
@@ -138,6 +137,7 @@ await app.register(fastifyWebsocket)
 await app.register(fastifyUrlData)
 import internalMetrics from './hooks/metrics.js'
 import { METRIC_STARTUP_TIME } from './core/prom-metrics.js'
+import { loadBots } from './modules/bots/index.js'
 
 await app.register(internalMetrics)
 
@@ -155,14 +155,6 @@ await app.register(MiddleManager, core)
     scheduleActivityLogPartition(app as unknown as FastifyInstance);
 
     if  (hadSignal) return
-    if  (process.env.FLUXER_API_TOKEN) {
-      try {
-        const bot = new FluxerBot(app.servers, app.cache, process.env.FLUXER_API_TOKEN as string)
-        await bot.init()
-      } catch (err) {
-        app.log.error({err}, "fluxer initialize error")
-      }
-    }
 
     app.register(import('@fastify/rate-limit'), {
       global: true,
@@ -261,6 +253,9 @@ await app.register(MiddleManager, core)
     sendMetric("startup_time_ms", performance.now() - START_TIME)
     
     ready = true
+
+    // Load anything later
+    await loadBots(core.modules)
 })
 
 async function setupNotFound(app: FastifyInstance) {

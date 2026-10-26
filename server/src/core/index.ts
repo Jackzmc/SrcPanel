@@ -17,6 +17,7 @@ import DataManager from '../modules/DataManager.js'
 import * as PromMetrics from './prom-metrics.js'
 import NotesManager from '../modules/notes/index.js';
 import PlayerManager from '../modules/users/PlayerManager.js';
+import { FluxerBot } from '../modules/bots/FluxerBot.js';
 
 const log = Logger.child({ name: "core" })
 
@@ -66,10 +67,6 @@ export async function loadModules(db: Awaited<ReturnType<typeof loadDB>>) {
     const discussions = new DiscussionManager(db.db, configManager, authManager, jobScheduler)
     const dataManager = DataManager.create(db.db)
     const notesManager = new NotesManager(db.db)
-
-    await Promise.all([
-
-    ])
 
     const [ playerManager ] = await Promise.all([
         await PlayerManager.create(db.db, authManager),
