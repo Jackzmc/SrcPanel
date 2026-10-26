@@ -4,7 +4,6 @@ import { Pool, RowDataPacket } from 'mysql2/promise';
 import User from "./users/User.js";
 import AuthManager from "./auth/AuthManager.js";
 import { DefinedTask } from "./tasks/Task.js";
-import { FastifyInstance } from "fastify";
 import { ADMINS_DB, MAIN_DB, TABLE_PREFIX } from "../middlewares/managers.js";
 import TaskManager from "./tasks/TaskManager.js";
 

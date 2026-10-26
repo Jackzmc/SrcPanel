@@ -1,14 +1,14 @@
 import Logger, { type PinoLogger } from '#/logger.js'
 import ShareDatabase from './ShareDB.js'
 import SteamAPI from '../steam.js'
-import { AddonWorkshopInfo, ScanEvent, ShareInfo, ShareItemState, WorkshopItem } from '@srcpanel/common/Share'
+import { AddonWorkshopInfo, ScanEvent, ShareInfo, ShareItemState } from '@srcpanel/common/Share'
 import { readdir, stat } from 'node:fs/promises'
 import { join } from 'node:path'
 import { getMetadata, serializeWorkshopItem } from './ShareUtils.js'
-import { DefinedTask, Task } from '../tasks/Task.js'
-import TaskManager from '../tasks/TaskManager.js'
+import { DefinedTask } from '../tasks/Task.js'
+import TaskManager from '#/modules/tasks/TaskManager.js'
 import EventEmitter from 'node:events'
-import { METRIC_SHARE_SCAN_COUNT } from '../../core/prom-metrics.js'
+import { METRIC_SHARE_SCAN_COUNT } from '#/core/prom-metrics.js'
 
 /** Interval that scans are scheduled to run */
 const SCAN_INTERVAL_MINS = 60 // every hr

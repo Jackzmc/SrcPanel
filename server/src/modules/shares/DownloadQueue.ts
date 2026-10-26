@@ -1,13 +1,3 @@
-// IDEA: start download, gives download id (i++), and client polls/subscribes to that id
-
-/**
- * UI you put id, it resolves, if collection, shows all items to select or adds just one item
- * backend system should just support adding multiple items to the queue
- * 
- */
-// 
-
-
 import { ChildWorkshopItem, DownloadLogEntry, DownloadProgress, DownloadState, ShareItemState, WorkshopItem } from "@srcpanel/common/Share"
 import SteamAPI from "../steam.js"
 import Share from "./Share.js"
@@ -15,12 +5,7 @@ import { join } from "node:path"
 import { getMetadata, serializeWorkshopItem } from "./ShareUtils.js"
 import pLimit from "p-limit"
 import Logger, { type PinoLogger } from '#/logger.js'
-import { METRIC_SHARE_DOWNLOAD_COUNT } from "../../core/prom-metrics.js"
-
-/**
- * TODO: One queue per share. UI just shows like list of items. All items processed, then gives notification (w/ btn) to restart servers?
- * Global log
- */
+import { METRIC_SHARE_DOWNLOAD_COUNT } from "#/core/prom-metrics.js"
 
 /// Limits the number of active downloads. Globally shared between all queues
 const CONCURRENT_LIMIT = pLimit(5)
@@ -36,13 +21,10 @@ interface QueueEntry {
 
 export default class WorkshopDownloadQueue {
     #share: Share
-
-    #items: Map<string, DownloadProgress> = new Map() // id is workshop id
-
-    #logs: DownloadLogEntry[] = []  // TODO: clear when queue completed
-
     #log: PinoLogger
 
+    #items: Map<string, DownloadProgress> = new Map() // id is workshop id
+    #logs: DownloadLogEntry[] = []  // TODO: clear when queue completed
     #pendingRestartServers: string[] = []
     #inFlight = new Set<Promise<void>>()
 

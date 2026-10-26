@@ -2,7 +2,7 @@ import { Pool, RowDataPacket } from "mysql2/promise";
 import SteamID from "steamid";
 import { OauthProviderId, PlayerEntry } from "@srcpanel/common/User";
 import { FullAPIBan } from "@srcpanel/common/Ban";
-import { ADMINS_DB, TABLE_PREFIX } from "../../core/index.js";
+import { ADMINS_DB, TABLE_PREFIX } from "#/core/index.js";
 import AuthManager from "../auth/AuthManager.js";
 import { Note } from "@srcpanel/common/Note";
 import { formatBan } from "../bans/utils.js";
