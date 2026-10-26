@@ -1,7 +1,7 @@
 import { join } from "path"
 import { SQL } from "sql-template-strings";
 import { unixTimestamp } from "../util.js";
-import Logger from '../logger.js'
+import Logger from '#/logger.js'
 import BetterSqlite from 'better-sqlite3'
 import Database from "better-sqlite3";
 const log = Logger.child({ name: "cache" })

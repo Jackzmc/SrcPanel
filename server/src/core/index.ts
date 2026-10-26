@@ -1,4 +1,4 @@
-import Logger from '../logger.js'
+import Logger from '#/logger.js'
 import AuthManager from '../modules/auth/AuthManager.js';
 
 import mysql from 'mysql2/promise'
@@ -17,7 +17,6 @@ import DataManager from '../modules/DataManager.js'
 import * as PromMetrics from './prom-metrics.js'
 import NotesManager from '../modules/notes/index.js';
 import PlayerManager from '../modules/users/PlayerManager.js';
-import { FluxerBot } from '../modules/bots/FluxerBot.js';
 
 const log = Logger.child({ name: "core" })
 

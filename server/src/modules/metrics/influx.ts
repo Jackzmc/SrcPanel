@@ -1,8 +1,8 @@
 import { InfluxDB, Point, WriteApi } from "@influxdata/influxdb-client";
 import dotenv from 'dotenv'
 import pkg from '../../../package.json' with { type: "json" }
-import logger from '../../logger.js'
-const log = logger.child({ name: "influx" })
+import Logger from '#/logger.js'
+const log = Logger.child({ name: "influx" })
 dotenv.config({ quiet: true })
 
 const FLUSH_INTERVAL = process.env.INFLUX_FLUSH_INTERVAL_MS ? parseInt(process.env.INFLUX_FLUSH_INTERVAL_MS) : 30_000

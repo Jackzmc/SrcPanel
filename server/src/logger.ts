@@ -102,3 +102,5 @@ const logger = pino(logObj);
 
 
 export default logger;
+
+export type PinoLogger = pino.Logger

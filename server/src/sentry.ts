@@ -1,7 +1,7 @@
-import logger from './logger.js'
+import Logger from '#/logger.js'
 import * as Sentry from '@sentry/node'
 
-const log = logger.child({ name: 'sentry' })
+const log = Logger.child({ name: 'sentry' })
 
 log.debug({}, 'initalizing sentry ' + process.env.SENTRY_DSN)
 Sentry.init({

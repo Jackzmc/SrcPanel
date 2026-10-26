@@ -4,7 +4,7 @@ import path from 'path'
 import SteamAPI from '../steam.js';
 import { DownloadLogEntry, DownloadProgress, DownloadSource, ExtendedShareInfo, ShareItemState, WebsocketMessage, type AddonInfo, type ChildWorkshopItem, type DownloadSourceRecord, type ShareDestinations, type ShareInfo } from '@srcpanel/common/Share'
 import { getChapterIds, serializeWorkshopItem } from './ShareUtils.js';
-import Logger from '../../logger.js'
+import Logger from '#/logger.js'
 import ShareScanner from './ShareScanner.js';
 import ShareDatabase from './ShareDB.js';
 import WorkshopDownloadQueue from './DownloadQueue.js';

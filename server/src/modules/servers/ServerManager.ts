@@ -18,11 +18,11 @@ import { DynamicServerGroup } from './groups/DynamicServerGroup.js';
 import yaml from 'yaml'
 import { loadShares } from '../shares/index.js';
 import { loadGroups } from './groups/index.js';
-import logger from '../../logger.js'
+import Logger from '#/logger.js'
 import { METRIC_SERVERS_LIVE_AUTH_COUNT } from '../../core/prom-metrics.js';
 import User from '../users/User.js';
 import { UserPrivilegeCode } from '@srcpanel/common/Privileges';
-const log = logger.child({ name: "ServerManager" })
+const log = Logger.child({ name: "ServerManager" })
 const liveLog = log.child({ name: "ServerManager/Live" })
 
 

@@ -16,12 +16,12 @@ import { OauthManager } from "./OauthManager.js";
 import ConfigManager from "../ConfigManager.js";
 import { OauthAuthData } from './OauthProvider.js';
 
-import logger from '../../logger.js'
+import Logger from '#/logger.js'
 import CacheManager from "../../modules/CacheManager.js";
 import { sendMetric } from "../metrics/influx.js";
 import { ADMINS_DB, MAIN_DB, TABLE_PREFIX } from "../../middlewares/managers.js";
 import { METRIC_AUTH_LOGIN_COUNT } from "../../core/prom-metrics.js";
-const log = logger.child({ name: "AuthManager" })
+const log = Logger.child({ name: "AuthManager" })
 
 interface AddAdmin {
     authtype: "steam" | "name" | "ip",

@@ -5,7 +5,7 @@ import { ShareDestination, ShareInfo } from '@srcpanel/common/Share'
 import { doesFileExist } from '../../util.js'
 import Share from './Share.js'
 import SteamAPI from '../../modules/steam.js'
-import Logger from '../../logger.js'
+import Logger from '#/logger.js'
 import ShareDatabase from './ShareDB.js'
 
 const log = Logger.child({ name: "shares" })

@@ -4,9 +4,9 @@ import DynamicServerManager, { DockerTemplateContainer } from "../docker/Dynamic
 import DockerServer from "../DockerServer.js"
 import { DockerGroupConfig } from "./index.js"
 import ServerGroup from "./ServerGroup.js"
-import logger from '../../../logger.js'
+import Logger from '#/logger.js'
 
-const log = logger.child({name: "BaseDynamicGroup"})
+const log = Logger.child({name: "BaseDynamicGroup"})
 
 export default abstract class BaseDynamicServerGroup extends ServerGroup<DockerServer> {
     protected manager: DynamicServerManager

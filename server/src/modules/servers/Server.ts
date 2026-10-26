@@ -11,10 +11,8 @@ import SocketClientUser from "./SocketClientUser.js";
 import { ClientOutPayload, Server_Status, ServerOutPacket, ServerOutPayload } from "@srcpanel/common/ServerWebsocket";
 import { LiveRecordResponse } from "@srcpanel/common/Live";
 import { resolveIPv4, tryResolveIPv4 } from "../../util.js";
-import logger from '../../logger.js'
-import { Logger } from "pino";
+import Logger, { PinoLogger } from '#/logger.js'
 import { METRIC_SERVERS_LIVE_VIEWERS, METRIC_SERVERS_STATUS_PLAYERS, METRIC_SERVERS_STATUS_STATE } from "../../core/prom-metrics.js";
-import { resolve4 } from "node:dns/promises";
 import User from "../users/User.js";
 
 const MIN_REFRESH_TIME = 10_000
@@ -94,7 +92,7 @@ export interface CreateServerOptions {
 
 
 export default abstract class Server implements IAction {
-  protected _log: Logger;
+  protected _log: PinoLogger;
   protected _options: CreateServerOptions
   protected _group: ServerGroup
 
@@ -127,7 +125,7 @@ export default abstract class Server implements IAction {
   protected internalIp?: string   // the resolved IP to use if set for internal requests (status) instead of internal
 
     constructor(group: ServerGroup, server: CreateServerOptions, gamedig: GameDig) {
-    this._log = logger.child({ name: `Server/${server.id}` })
+    this._log = Logger.child({ name: `Server/${server.id}` })
       this.#activeVoiceMembers = []
       this.#gamedig = gamedig
       this._group = group

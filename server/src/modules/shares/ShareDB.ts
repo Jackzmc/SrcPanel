@@ -1,5 +1,5 @@
 import type { Logger as PinoLogger } from 'pino'
-import Logger from '../../logger.js'
+import Logger from '#/logger.js'
 import BetterSqlite from 'better-sqlite3'
 import { migrate } from '@blackglory/better-sqlite3-migrations'
 import { join } from 'node:path';

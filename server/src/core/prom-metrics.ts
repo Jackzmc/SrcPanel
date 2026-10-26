@@ -2,7 +2,7 @@ import PromClient, { Counter, Gauge } from '@platformatic/prom-client'
 import FastifyMetrics from 'fastify-metrics'
 import { FastifyInstance } from 'fastify';
 import { exec } from 'node:child_process';
-import Logger from '../logger.js'
+import Logger from '#/logger.js'
 
 const log = Logger.child({ name: "Core/PromMetrics" })
 

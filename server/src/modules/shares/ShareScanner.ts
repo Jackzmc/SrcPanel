@@ -1,5 +1,5 @@
 import type { Logger as PinoLogger } from 'pino'
-import Logger from '../../logger.js'
+import Logger from '#/logger.js'
 import Share from './Share.js'
 import ShareDatabase from './ShareDB.js'
 import SteamAPI from '../steam.js'

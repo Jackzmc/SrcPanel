@@ -4,12 +4,12 @@ import SteamAPI from '../../modules/steam.js'
 import { Pool, RowDataPacket } from 'mysql2/promise';
 import { PlayerEntry, UserNameEntry } from '@srcpanel/common/User';
 import { TABLE_PREFIX } from '../../middlewares/managers.js';
-import logger from '../../logger.js'
+import Logger from '#/logger.js'
 import AuthManager from '../auth/AuthManager.js';
 import { ADMINS_DB } from '../../core/index.js';
 import { formatPlayer } from './utils.js';
 
-const log = logger.child({ name: 'UserManager' })
+const log = Logger.child({ name: 'UserManager' })
 
 export interface IUserData {
   accountId: string,

@@ -6,10 +6,10 @@ import { unlink } from 'fs/promises';
 import { WorkshopItem, SteamUserDetails } from '@srcpanel/common/Share'
 import { EventEmitter } from 'node:events';
 import QuickLRU from 'quick-lru';
-import logger from '../logger.js'
+import Logger from '#/logger.js'
 import CacheManager from './CacheManager.js';
 import { sleep } from '../util.js';
-const log = logger.child({ name: "steam" })
+const log = Logger.child({ name: "steam" })
 
 // How many bytes of progress to make before sending an update
 const PROGRES_MIN_BYTES = 10_000 // 10KB

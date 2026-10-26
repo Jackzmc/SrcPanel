@@ -1,6 +1,6 @@
 import { DefinedTask, Task, TaskFunction, TempTask } from "./Task.js"
 import { calculateDate, TimeOptions } from "./util.js"
-import Logger from '../../logger.js'
+import Logger from '#/logger.js'
 
 const log = Logger.child({ name: "TaskManager" })
 

@@ -15,7 +15,7 @@ import { join } from "node:path"
 import { getChapterIds, getMetadata, serializeWorkshopItem } from "./ShareUtils.js"
 import pLimit from "p-limit"
 import EventEmitter from "node:events"
-import Logger from '../../logger.js'
+import Logger from '#/logger.js'
 import type { Logger as PinoLogger } from 'pino'
 import { METRIC_SHARE_DOWNLOAD_COUNT } from "../../core/prom-metrics.js"
 

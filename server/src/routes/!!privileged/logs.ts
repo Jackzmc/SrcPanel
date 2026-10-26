@@ -5,11 +5,11 @@ import { NO_PERMISSION } from '../../responses.js';
 import { QueryBuilder, SortDirection } from '../../modules/QueryBuilder.js';
 import SteamID from 'steamid';
 import { Pool } from 'mysql2/promise.js';
-import logger from '../../logger.js'
+import Logger from '#/logger.js'
 import { APILogData, APILogQueryResult, LogEntry } from '@srcpanel/common/Logs';
 import { TABLE_PREFIX } from '../../middlewares/managers.js';
 
-const log = logger.child({ name: "logs" })
+const log = Logger.child({ name: "logs" })
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const LogQuery = Type.Object({

@@ -4,7 +4,7 @@ import { GatewayVoiceStateUpdateDispatchData, APIGuildMember, ChannelType, Gatew
 import type { VoiceUser } from '@srcpanel/common/Server';
 import CacheManager from '../CacheManager.js';
 
-import Logger from '../../logger.js'
+import Logger from '#/logger.js'
 const log = Logger.child({ name: "fluxer" })
 
 interface ChannelData {
