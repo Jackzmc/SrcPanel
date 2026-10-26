@@ -17,7 +17,8 @@
         "paths": {
             "*": [
                 "./src/*"
-            ]
+            ],
+            "#/*": ["./src/*"]
         },
         "strictNullChecks": true,
         // eventually set to true - need to redo all errors
