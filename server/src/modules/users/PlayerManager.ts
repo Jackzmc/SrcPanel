@@ -39,7 +39,7 @@ export default class PlayerManager implements IShutdown {
         const queue = queueSet?.map(acctId => SteamID.fromIndividualAccountID(acctId)) ?? []
 
         const manager = new PlayerManager(db, authMngr, new Set(queue))
-        const task = TaskManager.Instance.register("resolveNames", manager.resolveNames)
+        const task = TaskManager.Instance.register("resolveNames", () => manager.resolveNames())
         TaskManager.Instance.scheduleRepeating(task, { hours: NAME_CACHE_TASK_INTERVAL_HRS })
         return manager
     }
