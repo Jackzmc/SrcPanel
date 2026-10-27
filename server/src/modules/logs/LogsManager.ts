@@ -166,6 +166,25 @@ export default class LogsManager {
         }
     }
 
+    async redactId(id: number) {
+        await this.#pool.query(`
+            UPDATE ${ACTIVITY_LOG_TABLE_NAME} 
+            SET message = '[redacted]' 
+            WHERE id = ?`, 
+            [ id ]
+        )
+    }
+
+    async getLog(id: number): Promise<{ id: number, message: string, type: string, client: string } | null> {
+        const [rows] = await this.#pool.query<RowDataPacket[]>(
+            `SELECT id, message, type, client 
+            FROM ${ACTIVITY_LOG_TABLE_NAME} 
+            WHERE id = ?`, 
+            [ id ]
+        )
+
+        return rows.length > 0 ? rows[0] as ReturnType<typeof this.getLog> : null
+    }
 
     async saveCache() {
         try {

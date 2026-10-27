@@ -1,17 +1,13 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
-import { RowDataPacket } from 'mysql2';
 import { Static, Type } from '@sinclair/typebox'
 import { NO_PERMISSION } from '../../responses.js';
 import { QueryBuilder, SortDirection } from '../../modules/QueryBuilder.js';
 import SteamID from 'steamid';
-import { Pool } from 'mysql2/promise.js';
-import Logger from '#/logger.js'
 import { APILogData, APILogQueryResult, LogEntry } from '@srcpanel/common/Logs';
 import { TABLE_PREFIX } from '../../middlewares/managers.js';
 import { ACTIVITY_LOG_TABLE_NAME } from '../../modules/logs/LogsManager.js';
 import PlayerManager from '../../modules/users/PlayerManager.js';
-
-const log = Logger.child({ name: "logs" })
+import { sendInvalidParamError } from '../../guards/index.js';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const LogQuery = Type.Object({
@@ -110,17 +106,9 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     if (types) {
       // type in (?,?,?) OR server = 'web' AND server IN (?,?,?)
       query.whereIn('type', types)
-      // if (servers?.includes('web')) {
-      //   // TODO: if .servers includes 'web', do AND type IN () OR server = 'web'
-      //   // query.where('server', 'web')
-      //   query.or([
-      //     ['server', '=', 'web']
-      //   ])
-      // }
     }
 
     const startTime = Date.now()
-    console.log(query.buildUnsafe())
     const [rawLogs] = (await query.execute(fastify.db))
 
     let year = parseInt(req.query.source as string)
@@ -174,26 +162,24 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
   fastify.post("/:id/redact", async (req: FastifyRequest<{ Params: { id: 'string' } }>, reply) => {
     if (!req.user!.hasPermission("logs.redact")) return NO_PERMISSION(reply)
-    if (!req.params.id) {
+    const id = parseInt(req.params.id)
+    if (isNaN(id)) {
+      return sendInvalidParamError(reply, "id")
+    }
+
+    const log = await fastify.logs.getLog(id)
+    if (!log) {
       return reply.code(404).send({
         error: "NOT_FOUND",
         message: `Could not find log id ${req.params.id}`
       })
     }
 
-    const [rows] = await fastify.db.query<RowDataPacket[]>(`SELECT id, message, type, client FROM ${ACTIVITY_LOG_TABLE_NAME} WHERE id = ?`, [req.params.id])
-    if (rows.length == 0) {
-      return reply.code(404).send({
-        error: "NOT_FOUND",
-        message: `Could not find log id ${req.params.id}`
-      })
-    }
-
-    if (rows[0].type === "CHAT" || (rows[0].type === "ACTION" && rows[0].message.includes("sm_chat"))) {
-      if (rows[0].client === req.session.user.steamid) {
-        fastify.log.info(`${req.session.user.steamid} has redacted message ${rows[0].message}`)
-
-        await fastify.db.query(`UPDATE ${ACTIVITY_LOG_TABLE_NAME} SET message = '[redacted]' WHERE id = ?`, [rows[0].id])
+    if (log.type === "CHAT" || (log.type === "ACTION" && log.message.includes("sm_chat"))) {
+      if (log.client === req.session.user.steamid) {
+        await fastify.logs.redactId(id)
+        
+        req.log.info({ steamid: req.session.user.steamid, message: log.message }, "redacted message")
 
         return reply.code(204).send()
       } else {
