@@ -52,7 +52,7 @@ export default class TaskManager {
                 }
                 if(task.NextRunDate && now >= task.NextRunDate) {
                     count++
-                    log.info({ taskId: task.Id }, `Running task "${task.Id}" [${count}/${tasksPerTick}]`)
+                    log.info({ taskId: task.Id }, `Running task [${count}/${tasksPerTick}]`)
                     await task.execute() // TODO: error handling?
 
                     if(!task.reschedule()) {

@@ -8,6 +8,8 @@ import { Pool } from 'mysql2/promise.js';
 import Logger from '#/logger.js'
 import { APILogData, APILogQueryResult, LogEntry } from '@srcpanel/common/Logs';
 import { TABLE_PREFIX } from '../../middlewares/managers.js';
+import { ACTIVITY_LOG_TABLE_NAME } from '../../modules/logs/LogsManager.js';
+import PlayerManager from '../../modules/users/PlayerManager.js';
 
 const log = Logger.child({ name: "logs" })
 
@@ -39,168 +41,26 @@ const LogQuery = Type.Object({
 
 type LogQueryType = Static<typeof LogQuery>
 
-export const ACTIVITY_LOG_TABLE_NAME = 'activity_log'
-// Only update partition's row cache (for latest year only) if its been under this long
-const LOG_TOTAL_ROW_CACHE_TIME = 20_000 //ms
-// Do not fetch if last fetch was between this
-const MISSING_NAME_MIN_INTERVAL = 1000 * 20
-
-// Cache data for partitions
-let lastMissingNameFetchTime = 0
-
-let ready = false
-
-const currentYear = () => new Date().getFullYear()
-
-interface PartitionData {
-  minId: number,
-  maxId: number,
-  count?: number,
-  fetchTime: number
-}
-
-// TODO: move all this init logic to core
-
-// Default values, will fetch full data after
-
-let availableServers = new Set(["web"])   // List of all distinct 'server' values
-
-// Map of partitions to its min and max ids, and later count
-let yearData: Map<number | null, PartitionData> = new Map()
-
-/**
- * Fetches all distinct servers from all years
- * IS SLOW
- * @param pool
- * @returns
- */
-async function fetchServers(pool: Pool): Promise<Set<string>> {
-  const [rows] = await pool.query<RowDataPacket[]>(`SELECT DISTINCT server FROM activity_log ORDER BY timestamp DESC`)
-  const list: string[] = rows.filter(row => row.server).map(row => row.server)
-  for (const item of list) {
-    availableServers.add(item)
-  }
-  return availableServers
-}
-
-/**
- * Fetches partitions, their lowest and highest ids, and the number of rows.
- * IS SLOW
- * @param pool
- * @returns
- */
-async function getPartitions(pool: Pool): Promise<Map<number | null, PartitionData>> {
-  console.time("getPartitions")
-  const [rows] = await pool.query<RowDataPacket[]>(`SELECT
-        MAX(id) as highestId, MIN(id) as lowestId, COUNT(*) as count, YEAR(from_unixtime(timestamp)) year
-        FROM activity_log
-        GROUP BY year`
-  )
-  console.timeEnd("getPartitions")
-  log.debug(rows)
-  for (const row of rows) {
-    yearData.set(row.year, {
-      minId: row.lowestId,
-      maxId: row.highestId,
-      count: row.count,
-      fetchTime: Date.now()
-    })
-  }
-  console.log("resolved all partitions")
-  return yearData
-}
-
-/**
- * Fetches min and max id for year, but not count. Is not slow like above functions
- * @param pool
- * @param year
- * @returns
- */
-async function fetchYearDataQuick(pool: Pool, year: number): Promise<PartitionData> {
-  const [rows] = await pool.query<RowDataPacket[]>(`
-    SELECT MAX(id) as highestId, MIN(id) as lowestId 
-    FROM activity_log
-    WHERE timestamp >= ? AND timestamp < ?`,
-    [
-      Math.floor(new Date(`${year}-01-01T00:00:00`).getTime() / 1000),
-      Math.floor(new Date(`${year + 1}-01-01T00:00:00`).getTime() / 1000)
-    ]
-  )
-  const row = rows[0]
-  const out = row && {
-    minId: row.lowestId,
-    maxId: row.highestId,
-    fetchTime: Date.now()
-  }
-  yearData.set(year, out)
-  return out
-}
-
-async function getYearData(pool: Pool, year: number) {
-  let data = yearData.get(year)
-  if (!data || Date.now() - data.fetchTime >= LOG_TOTAL_ROW_CACHE_TIME) {
-    await getPartitions(pool)
-    data = yearData.get(year)
-  }
-  return data
-}
-
-async function quickInit(fastify: FastifyInstance) {
-  try {
-    const cacheServers = await fastify.cache.get<typeof availableServers>("log.servers")
-    const cachePartitions = await fastify.cache.get<typeof yearData>("log.partitions")
-    if (cacheServers) availableServers = cacheServers
-    if (cachePartitions) yearData = cachePartitions
-    await fetchYearDataQuick(fastify.db, currentYear())
-  } catch (err: any) {
-    if (err.code === "ER_UNKNOWN_PARTITION") {
-      log.warn({}, "quickInit: No partition for current year")
-    } else {
-      throw err
-    }
-  }
-}
-
-async function fetchFullData(fastify: FastifyInstance) {
-  log.debug("START FETCH FULL")
-  await Promise.allSettled([
-    fetchServers(fastify.db),
-    getPartitions(fastify.db)
-  ])
-
-  log.debug("END FETCH FULL")
-  ready = true
-
-  await fastify.cache.set("logs.partitions", yearData)
-  await fastify.cache.set("logs.servers", availableServers)
-}
-
 const ADMIN_CHAT_REGEX = new RegExp(/triggered (sm_say|sm_chat) \(text (.*)\)/)
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
-  // Quick initalize
-  await quickInit(fastify)
-  // Don't wait for full data to resolve
-  fetchFullData(fastify)
 
   fastify.get('/data', async (req, reply): Promise<APILogData> => {
     // update data
-    await getYearData(fastify.db, currentYear())
+    await fastify.logs.updateCurrentYear()
 
-    const years: Record<number, PartitionData> = Object.fromEntries(yearData.entries());
-    const computedTotal = Object.values(years).reduce((pv, cv) => (cv.count ?? 0) + pv, 0)
     return {
-      servers: [...availableServers],
-      years,
-      computedTotal,
+      servers: fastify.logs.servers,
+      years: fastify.logs.yearData,
+      computedTotal: fastify.logs.totalRows,
 
-      fullyLoaded: ready
+      fullyLoaded: fastify.logs.loaded
     }
   })
 
   const VALID_TYPES = ["before", "after", "around"]
   fastify.get('/:type/:id', async (req: FastifyRequest<{ Querystring: LogQueryType, Params: { type: string, id: number } }>, reply): Promise<APILogQueryResult> => {
-    if (!ready) return reply.status(503).send({
+    if (!fastify.logs.loaded) return reply.status(503).send({
       error: "NOT_READY",
       message: "Logs is not yet ready, try again later"
     })
@@ -264,18 +124,17 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     const [rawLogs] = (await query.execute(fastify.db))
 
     let year = parseInt(req.query.source as string)
-    if (!year || isNaN(year)) year = currentYear()
-    const yearInfo = await getYearData(fastify.db, year)
-    const missingNameSet = new Set<SteamID>()
+    if (!year || isNaN(year)) year = fastify.logs.currentYear
+    const yearInfo = await fastify.logs.getYearData(year)
 
     const logs = rawLogs.map(log => {
       if (log.metadata) log.metadata = JSON.parse(log.metadata)
       // If its a valid user but no name, then put it in a list to be updated:
       if (!log.clientName && log.client?.startsWith("STEAM_")) {
-        missingNameSet.add(new SteamID(log.client))
+        PlayerManager.instance.enqueueNameResolve(new SteamID(log.client))
       }
       if (!log.targetName && log.target?.startsWith("STEAM_")) {
-        missingNameSet.add(new SteamID(log.target))
+        PlayerManager.instance.enqueueNameResolve(new SteamID(log.target))
       }
       // Side effect, but update highest id recorded
       if (yearInfo && log.id > yearInfo.maxId) {
@@ -296,30 +155,6 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
       }
       return log as LogEntry
     })
-    // If we have missing names, fetch it in bulk (only every MISSING_NAME_MIN_INTERVAL ms)
-    if (missingNameSet.size > 0 && Date.now() - lastMissingNameFetchTime > MISSING_NAME_MIN_INTERVAL) {
-      try {
-        const newNames = await fastify.users.fetchUsers([...missingNameSet])
-        const nameRecord: Record<string, string> = {}
-        // Push the array into a record
-        for (const user of newNames) {
-          nameRecord[user.accountId] = user.name
-        }
-        // Iterate logs and replace
-        // TODO: this is failing to find and replace
-        for (const log of logs) {
-          if (log.client && !log.clientName) {
-            log.clientName = nameRecord[log.client.slice(10)]
-          }
-          if (log.target && !log.targetName) {
-            log.targetName = nameRecord[log.target.slice(10)]
-          }
-        }
-        lastMissingNameFetchTime = Date.now()
-      } catch (err: any) {
-        fastify.log.warn(`[logs] Could not fetch missing names (${[...missingNameSet].toString()}):`, err)
-      }
-    }
 
     return {
       logs,

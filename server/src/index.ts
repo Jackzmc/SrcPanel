@@ -114,7 +114,8 @@ declare module 'fastify' {
       data: string,
       cache: string
     },
-    cache: CacheManager
+    cache: CacheManager,
+    logs: LogsManager
   }
   export interface FastifyRequest {
     user?: User,
@@ -138,6 +139,7 @@ await app.register(fastifyUrlData)
 import internalMetrics from './hooks/metrics.js'
 import { METRIC_STARTUP_TIME } from './core/prom-metrics.js'
 import { loadBots } from './modules/bots/index.js'
+import LogsManager from './modules/logs/LogsManager.js'
 
 await app.register(internalMetrics)
 

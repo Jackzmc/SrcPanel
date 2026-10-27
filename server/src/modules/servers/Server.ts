@@ -346,12 +346,12 @@ export default abstract class Server implements IAction {
     }
 
     async #updateIPs(): Promise<void> {
-      this._log.debug("updating ip addresses")
+      this._log.trace("updating ip addresses")
 
       try {
         const ip = await resolveIPv4(this._options.public.host)
         if(ip) {
-          if(ip != this.publicIp)  this._log.info({ ip: ip }, "updated public ip")
+          if(ip != this.publicIp)  this._log.info({ ip: ip, oldIp: this.publicIp }, "updated public ip")
           this.publicIp = ip
         }
       } catch(err) {
@@ -362,7 +362,7 @@ export default abstract class Server implements IAction {
         try {
           const ip = await resolveIPv4(this._options.internal.host)
           if(ip) {
-            if(ip != this.internalIp)  this._log.info({ ip: ip }, "updated internal ip")
+            if(ip != this.internalIp)  this._log.info({ ip: ip, oldIp: this.internalIp }, "updated internal ip")
             this.internalIp = ip
           }
         } catch(err) {

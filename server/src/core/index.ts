@@ -17,6 +17,7 @@ import DataManager from '../modules/DataManager.js'
 import * as PromMetrics from './prom-metrics.js'
 import NotesManager from '../modules/notes/index.js';
 import PlayerManager from '../modules/users/PlayerManager.js';
+import LogsManager from '../modules/logs/LogsManager.js';
 
 const log = Logger.child({ name: "core" })
 
@@ -67,8 +68,9 @@ export async function loadModules(db: Awaited<ReturnType<typeof loadDB>>) {
     const dataManager = DataManager.create(db.db)
     const notesManager = new NotesManager(db.db)
 
-    const [ playerManager ] = await Promise.all([
+    const [ playerManager, logsManager ] = await Promise.all([
         await PlayerManager.create(db.db, authManager),
+        await LogsManager.create(db.db, cacheManager),
         authManager.Init(),
         serverManager.Load(),
     ])
@@ -76,6 +78,7 @@ export async function loadModules(db: Awaited<ReturnType<typeof loadDB>>) {
     shutdownFunctions.push(
         async() => await playerManager.onShutdown(),
         async() => await serverManager.onShutdown(),
+        async() => await logsManager.onShutdown(),
     )
 
     return {
@@ -89,7 +92,8 @@ export async function loadModules(db: Awaited<ReturnType<typeof loadDB>>) {
         serverManager,
         discussions,
         notesManager,
-        playerManager
+        playerManager,
+        logsManager
     }
 }
 

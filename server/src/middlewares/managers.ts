@@ -33,6 +33,7 @@ async function db(fastify: FastifyInstance, options: CoreModules) {
   fastify.decorate('jobs', options.modules.jobScheduler)
   fastify.decorate('managers', options.modules)
   fastify.decorate('data', options.modules.dataManager)
+  fastify.decorate('logs', options.modules.logsManager)
 
   fastify.addHook('preHandler', async (req, reply) => {
     if (req.session?.user) {
