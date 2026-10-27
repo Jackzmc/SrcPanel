@@ -302,38 +302,9 @@ function scheduleActivityLogPartition(app: FastifyInstance) {
     console.log('absolutely no run bad very bad')
     // This runs on Dec 31 of current year
     const nextYear = new Date().getFullYear() + 1
-    await addPartitionForYear(app, nextYear)
+    await app.logs.addPartitionForYear(nextYear)
   })
 
   app.jobs.scheduleRepeatingCustom(job, endOfYear, nextDate)
 
-}
-
-async function addPartitionForYear(app: FastifyInstance, year: number) {
-  console.log('SHOULD NOT RUN')
-  const nextYear = year
-
-  try {
-    // Check if we need to add a partition
-    const [partitions] = await app.db.query<RowDataPacket[]>(`
-      SELECT * FROM information_schema.partitions
-         WHERE TABLE_SCHEMA='left4dead2'
-           AND TABLE_NAME = 'activity_log'
-           AND PARTITION_NAME IS NOT NULL
-        ORDER BY PARTITION_DESCRIPTION
-        LIMIT 1`
-    )
-    // Maybe not the best check but it should work
-    const hasYear = partitions.some(part => parseInt(part.PARTITION_NAME.substring(1)) === year)
-    if(!hasYear) {
-      await app.db.query(`
-        ALTER TABLE activity_log ADD PARTITION IF NOT EXISTS
-        ( PARTITION p${year} VALUES LESS THAN ( UNIX_TIMESTAMP('${nextYear}-01-01 00:00') ) )`
-      )
-
-      app.log.info(`Added p${year} partition to activity log`)
-  }
-  } catch(err) {
-    app.log.warn({}, "failed to update partition for year: " + err)
-  }
 }

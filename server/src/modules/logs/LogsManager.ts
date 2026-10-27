@@ -22,7 +22,7 @@ export default class LogsManager {
     #availableServers: Set<string> = new Set(["web"])
 
     // Map of partitions to its min and max ids, and later count
-    #yearData: Map<number | null, PartitionData> = new Map()
+    #yearData: Map<number, PartitionData> = new Map()
 
     #ready = false
 
@@ -57,7 +57,8 @@ export default class LogsManager {
     }
 
     get totalRows(): number {
-        return Object.values(this.#yearData).reduce((pv, cv) => (cv.count ?? 0) + pv, 0)
+        return Object.values(this.yearData)
+            .reduce((pv, cv) => (cv.count ?? 0) + pv, 0)
     }
 
     get loaded() {
@@ -70,6 +71,7 @@ export default class LogsManager {
                 this.getPartitions(),
                 this.fetchServers()
             ])
+            this.#log.info({}, "ready")
         } catch(err) {
             this.#log.error({ err }, "lazy load error")
         }
@@ -95,9 +97,8 @@ export default class LogsManager {
      * @param pool
      * @returns
      */
-    async getPartitions(): Promise<Map<number | null, PartitionData>> {
-        
-        console.time("getPartitions")
+    async getPartitions(): Promise<Map<number, PartitionData>> {
+        const startTime = performance.now()
         const [rows] = await this.#pool.query<RowDataPacket[]>(`
             SELECT
                 MIN(id) as lowestId, 
@@ -108,7 +109,7 @@ export default class LogsManager {
             GROUP BY year
             ORDER BY year
         `)
-        console.timeEnd("getPartitions")
+        this.#log.debug({ duration_ms: performance.now() - startTime }, "getPartitions")
         for (const row of rows) {
             this.#yearData.set(row.year, {
                 minId: row.lowestId,
@@ -131,12 +132,40 @@ export default class LogsManager {
     async getYearData(year: number) {
         let data = this.#yearData.get(year)
         if (!data || Date.now() - data.fetchTime >= LOG_TOTAL_ROW_CACHE_TIME) {
-            this.#log.debug({ }, "no year data or stale, fetching fresh data")
+            this.#log.debug({ year }, "no year data or stale, fetching fresh data")
             await this.getPartitions()
             data = this.#yearData.get(year)
         }
         return data
     }
+
+    async addPartitionForYear(year: number) {
+        const nextYear = year
+
+        try {
+            // Check if we need to add a partition
+            const [partitions] = await this.#pool.query<RowDataPacket[]>(`
+            SELECT * FROM information_schema.partitions
+                WHERE TABLE_SCHEMA='left4dead2'
+                AND TABLE_NAME = 'activity_log'
+                AND PARTITION_NAME IS NOT NULL
+                ORDER BY PARTITION_DESCRIPTION
+                LIMIT 1`
+            )
+            // Maybe not the best check but it should work
+            const hasYear = partitions.some(part => parseInt(part.PARTITION_NAME.substring(1)) === year)
+            if(!hasYear) {
+                await this.#pool.query(`
+                    ALTER TABLE activity_log ADD PARTITION IF NOT EXISTS
+                    ( PARTITION p${year} VALUES LESS THAN ( UNIX_TIMESTAMP('${nextYear}-01-01 00:00') ) )`
+                )
+                this.#log.info({ year }, `Added new partition to activity log`)
+            }
+        } catch(err) {
+            this.#log.warn({ year, err }, "failed to add new partition for year")
+        }
+    }
+
 
     async saveCache() {
         try {
@@ -152,10 +181,11 @@ export default class LogsManager {
             const cacheServers = await this.#cache.get<Set<string>>("log.servers")
             if (cacheServers) this.#availableServers = cacheServers
 
-            const cachePartitions = await this.#cache.get<Map<number|null,PartitionData>>("log.partitions")
+            const cachePartitions = await this.#cache.get<Map<number,PartitionData>>("log.partitions")
             if (cachePartitions) this.#yearData = cachePartitions
         } catch(err) {
             this.#log.warn({ err }, "failed to load cache")
         }
     }
+    
 }
