@@ -6,11 +6,7 @@ import { PanelMetaInfo } from '@srcpanel/common/Panel';
 import { AnalysisData } from '@srcpanel/common/User';
 import path from 'path';
 import readline from 'readline';
-import { getUpdateState } from '../../routes/!!privileged/panel.js';
 import { MAIN_DB, TABLE_PREFIX } from '../../middlewares/managers.js';
-
-
-
 
 async function loadSentiments(configFolder: string) {
   try {
@@ -107,14 +103,13 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     return {
       settings: fastify.config.PublicMeta,
       steamAvailable: fastify.steam.SteamAvailable,
-      // TODO: impl
-      providers: []
+      providers: Object.entries(fastify.config.Providers)
+        .map(([id, data]) => ({ id, name: data.name }))
     }
   })
 
   fastify.get('/health', { logLevel: "warn" }, async (req, reply) => {
     return {
-      currentState: getUpdateState(),
       uptime: process.uptime(),
       pid: process.pid,
       versions: {
