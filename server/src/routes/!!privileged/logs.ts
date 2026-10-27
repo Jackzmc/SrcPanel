@@ -2,11 +2,9 @@ import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
 import { Static, Type } from '@sinclair/typebox'
 import { NO_PERMISSION } from '../../responses.js';
 import { QueryBuilder, SortDirection } from '../../modules/QueryBuilder.js';
-import SteamID from 'steamid';
-import { APILogData, APILogQueryResult, LogEntry } from '@srcpanel/common/Logs';
+import { APILogData, APILogQueryResult } from '@srcpanel/common/Logs';
 import { TABLE_PREFIX } from '../../middlewares/managers.js';
-import { ACTIVITY_LOG_TABLE_NAME } from '../../modules/logs/LogsManager.js';
-import PlayerManager from '../../modules/users/PlayerManager.js';
+import { ACTIVITY_LOG_TABLE_NAME, formatLogEntry } from '../../modules/logs/LogsManager.js';
 import { sendInvalidParamError } from '../../guards/index.js';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -58,7 +56,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
   fastify.get('/:type/:id', async (req: FastifyRequest<{ Querystring: LogQueryType, Params: { type: string, id: number } }>, reply): Promise<APILogQueryResult> => {
     if (!fastify.logs.loaded) return reply.status(503).send({
       error: "NOT_READY",
-      message: "Logs is not yet ready, try again later"
+      message: "Logs have not been loaded yet, please try again later"
     })
     const type = req.params.type
     if (!VALID_TYPES.includes(type)) {
@@ -70,9 +68,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
     const limit = req.query.limit ?? 30
 
-    const tableName = ACTIVITY_LOG_TABLE_NAME
-
-    const query = new QueryBuilder(tableName, "l")
+    const query = new QueryBuilder(ACTIVITY_LOG_TABLE_NAME, "l")
       .selectMultiple("id", "l.timestamp", "server", "type", "client", "target", "message", "metadata")
       .select("s1.last_name", "clientName")
       .select("s2.last_name", "targetName")
@@ -109,39 +105,17 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     }
 
     const startTime = Date.now()
-    const [rawLogs] = (await query.execute(fastify.db))
+    const [rawLogs] = await query.execute(fastify.db)
+    const logs = rawLogs.map(formatLogEntry)
 
     let year = parseInt(req.query.source as string)
     if (!year || isNaN(year)) year = fastify.logs.currentYear
     const yearInfo = await fastify.logs.getYearData(year)
 
-    const logs = rawLogs.map(log => {
-      if (log.metadata) log.metadata = JSON.parse(log.metadata)
-      // If its a valid user but no name, then put it in a list to be updated:
-      if (!log.clientName && log.client?.startsWith("STEAM_")) {
-        PlayerManager.instance.enqueueNameResolve(new SteamID(log.client))
-      }
-      if (!log.targetName && log.target?.startsWith("STEAM_")) {
-        PlayerManager.instance.enqueueNameResolve(new SteamID(log.target))
-      }
-      // Side effect, but update highest id recorded
-      if (yearInfo && log.id > yearInfo.maxId) {
-        yearInfo.maxId = log.id
-      }
-
-      if (log.type == 'ACTION') {
-        const match = log.message.match(ADMIN_CHAT_REGEX)
-        if (match) {
-          log.type = 'CHAT'
-          // Kindaaa messy, but we do want to keep the raw message
-          log.metadata = {
-            admin_chat: true,
-            command: match[1],
-            text: match[2]
-          }
-        }
-      }
-      return log as LogEntry
+    // Update cached data incase we get new logs
+    // TODO: With LogsManager migration, this only updates our copy. Is this necessary?
+    logs.forEach(log => {
+      if(yearInfo) yearInfo.maxId = Math.max(yearInfo.maxId, log.id)
     })
 
     return {
@@ -153,9 +127,9 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
       },
       // pages: Math.ceil(count[0].count / limit),
       raw: process.env.NODE_ENV === "production" || req.query.raw ? null : {
-        cache: yearInfo ? yearInfo[tableName] : undefined,
+        cache: yearInfo ? yearInfo[year] : undefined,
         query: query.buildUnsafe(),
-        tableName,
+        ACTIVITY_LOG_TABLE_NAME,
       }
     }
   })
