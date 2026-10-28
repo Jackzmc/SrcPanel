@@ -72,10 +72,19 @@ export default class DiscussionManager {
      */
     async getUnrespondedCount(steamid2: string) {
         // Returns the number of non-archived, non-closed discussions user has responded to
-        const [rows] = await this.#db.execute<RowDataPacket[]>(
-            `SELECT discussion_id FROM \`${ADMINS_DB}\`.${TABLE_PREFIX}_discussion_responses r JOIN \`${ADMINS_DB}\`.${TABLE_PREFIX}_discussions d ON d.id = r.discussion_id WHERE steamid = ? AND d.flags & ${APIDiscussionFlags.Archived} = 0 AND UNIX_TIMESTAMP() < d.closed_at GROUP BY r.discussion_id`, [steamid2])
+        const [rows] = await this.#db.execute<RowDataPacket[]>(`
+            SELECT discussion_id 
+            FROM \`${ADMINS_DB}\`.${TABLE_PREFIX}_discussion_responses r 
+            JOIN \`${ADMINS_DB}\`.${TABLE_PREFIX}_discussions d ON d.id = r.discussion_id 
+            WHERE steamid = ? 
+                AND d.flags & ${APIDiscussionFlags.Archived} = 0 
+                AND UNIX_TIMESTAMP() < d.closed_at 
+            GROUP BY r.discussion_id`, 
+            [steamid2]
+        )
         
-        const totalOpenDiscussions = [...this.#discussions.values()].filter((d) => !d.closedAt || Date.now() < (d.closedAt*1000)).length
+        const totalOpenDiscussions = [...this.#discussions.values()]
+            .filter((d) => !d.closedAt || Date.now() < (d.closedAt*1000)).length
         return totalOpenDiscussions - rows.length
     }
 
@@ -90,7 +99,12 @@ export default class DiscussionManager {
     async getResponses(id: number, user: User, flags: APIDiscussionFlags): Promise<{ responses: APIResponsesData, userSelection: number[] }> {
         const totalUsers = this.#authmngr.AdminCount
         const [responses] = await this.#db.execute<RowDataPacket[]>(`
-            SELECT res.steamid, res.choice, res.text, opt.label, u.last_name as name 
+            SELECT 
+                res.steamid, 
+                res.choice, 
+                res.text, 
+                opt.label, 
+                u.last_name as name 
             FROM \`${ADMINS_DB}\`.${TABLE_PREFIX}_discussion_responses res 
             LEFT JOIN \`${MAIN_DB}\`.view_${TABLE_PREFIX}_user u ON SUBSTRING(res.steamid, 11) = u.account_id 
             LEFT JOIN \`${ADMINS_DB}\`.${TABLE_PREFIX}_discussion_options opt ON opt.id = res.choice 

@@ -1,10 +1,10 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest, FastifySchema } from 'fastify';
-import { APIComment, APIDiscussion, APIDiscussionCreateResponse, APIDiscussionDetails, APIDiscussionFlags, APIDiscussionOption, APIDiscussionType, BaseDiscussion } from '@srcpanel/common/Discussions';
+import { APIComment, APIDiscussion, APIDiscussionCreateResponse, APIDiscussionDetails, APIDiscussionFlags, APIDiscussionOption, APIDiscussionType } from '@srcpanel/common/Discussions';
 import { OkPacket, RowDataPacket } from 'mysql2';
 import { NOT_FOUND, NO_PERMISSION } from '../../responses.js';
-import { APIPlayer, APIUser } from '@srcpanel/common/User';
+import { APIPlayer } from '@srcpanel/common/User';
 import { Static, Type } from '@sinclair/typebox';
-import { NamespacedMetric, sendMetric } from '../../modules/metrics/influx.js';
+import { NamespacedMetric } from '../../modules/metrics/influx.js';
 import { ADMINS_DB, TABLE_PREFIX } from '../../middlewares/managers.js';
 import { MAIN_DB } from '../../core/index.js';
 
@@ -99,11 +99,17 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     const conn = await fastify.db.getConnection()
     await conn.beginTransaction()
     await conn.query<OkPacket>(
-      `UPDATE ${ADMINS_DB}.${TABLE_PREFIX}_discussions SET title = ?, description = ?, closed_at = ?, type = ?, flags = ? WHERE id = ?`,
+      `UPDATE ${ADMINS_DB}.${TABLE_PREFIX}_discussions 
+      SET title = ?, description = ?, closed_at = ?, type = ?, flags = ? 
+      WHERE id = ?`,
       [discuss.title, discuss.description, discuss.closedAt, discuss.type, discuss.flags, req.params.id]
     )
 
-    const [options] = await conn.query<RowDataPacket[]>("SELECT * FROM `${ADMINS_DB}`.${TABLE_PREFIX}_discussion_options WHERE discussion_id = ?", [req.params.id])
+    const [options] = await conn.query<RowDataPacket[]>(`
+      SELECT * FROM ${ADMINS_DB}.${TABLE_PREFIX}_discussion_options 
+      WHERE discussion_id = ?`, 
+      [req.params.id]
+    )
     if (discuss.options) {
       for (const option of discuss.options) {
         const existingOption = options.find(o => o.id === option.id)
@@ -151,7 +157,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
       for (const option of discuss.options) {
         //option.id here is a dummy value used by UI.
         const [row] = await conn.query<OkPacket>(
-          `INSERT INTO ${ADMINS_DB}.${TABLE_PREFIX}_discussion_options (discussion_id, label) VALUES (?, ?)`,
+          `INSERT INTO ${ADMINS_DB}.${TABLE_PREFIX}_discussion_options (discussion_id, label) 
+          VALUES (?, ?)`,
           [id, option.label]
         );
         (option as APIDiscussionOption).id = row.insertId;
@@ -231,7 +238,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     const [comments] = await fastify.db.execute<RowDataPacket[]>(`
       SELECT com.id, com.timestamp, com.creator, com.content, u.last_name as creator_name 
       FROM ${ADMINS_DB}.${TABLE_PREFIX}_discussion_comments com 
-      LEFT JOIN ${MAIN_DB}.view_${TABLE_PREFIX}_user u ON SUBSTRING(com.creator, 11) = u.account_id WHERE com.discussion_id = ? `, 
+      LEFT JOIN ${MAIN_DB}.view_${TABLE_PREFIX}_user u ON SUBSTRING(com.creator, 11) = u.account_id 
+      WHERE com.discussion_id = ? `, 
       [discuss.id]
     )
 
