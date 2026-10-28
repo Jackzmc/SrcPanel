@@ -27,6 +27,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
   fastify.get('/', async (req, reply): Promise<APIDiscussion[]> => {
     const discussions: APIDiscussion[] = []
+    // TODO: either all cache or no cache?
     for (const discussion of discManager.getAll()) {
       const responses = await discManager.getResponses(discussion.id, req.user!, discussion.flags)
       discussions.push({

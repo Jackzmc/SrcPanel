@@ -5,7 +5,7 @@ import FastifySession from '@fastify/session'
 import fastifyWebsocket from '@fastify/websocket'
 import FastifyEtag from '@fastify/etag'
 import MySQLSession from 'express-mysql-session'
-import { Pool, RowDataPacket } from 'mysql2/promise';
+import { Pool } from 'mysql2/promise';
 import SteamAPI from './modules/steam.js'
 import AuthManager from './modules/auth/AuthManager.js';
 import ServerManager from './modules/servers/ServerManager.js';
@@ -21,7 +21,7 @@ import User from './modules/users/User.js';
 import ConfigManager from './modules/ConfigManager.js';
 
 import FastifyHelmet from '@fastify/helmet'
-import DiscussionManager from './modules/DiscussionManager.js';
+import DiscussionManager from './modules/discussions/DiscussionManager.js';
 import TaskManager from './modules/tasks/TaskManager.js'
 import CacheManager from './modules/CacheManager.js'
 
@@ -29,7 +29,7 @@ import MiddleManager, { TABLE_PREFIX } from './middlewares/managers.js'
 import { sleep } from './util.js'
 import { DataManagerInstance } from './modules/DataManager.js'
 import { getGlobalWriter, sendMetric } from './modules/metrics/influx.js'
-import init, { MAIN_DB, onCoreShutdown } from './core/index.js'
+import init, { onCoreShutdown } from './core/index.js'
 
 import './sentry.js'
 

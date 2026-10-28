@@ -9,7 +9,7 @@ import { join } from 'path';
 import ServerManager from '../modules/servers/ServerManager.js';
 import SteamAPI from '../modules/steam.js'
 import ConfigManager from '../modules/ConfigManager.js';
-import DiscussionManager from '../modules/DiscussionManager.js';
+import DiscussionManager from '../modules/discussions/DiscussionManager.js';
 import TaskManager from '../modules/tasks/TaskManager.js';
 import CacheManager from '../modules/CacheManager.js';
 import DataManager from '../modules/DataManager.js'
@@ -64,7 +64,7 @@ export async function loadModules(db: Awaited<ReturnType<typeof loadDB>>) {
     const configManager = await ConfigManager.Load(CONFIG_FOLDER)
     const authManager = new AuthManager(db.admindb, db.db, steam, configManager, cacheManager)
     const serverManager = new ServerManager(steam, DATA_FOLDER, CONFIG_FOLDER)
-    const discussions = new DiscussionManager(db.db, configManager, authManager, jobScheduler)
+    const discussions = new DiscussionManager(db.db, authManager, jobScheduler)
     const dataManager = DataManager.create(db.db)
     const notesManager = new NotesManager(db.db)
 

@@ -1,6 +1,5 @@
 import Feature from "./Feature.js";
 import Server from "../Server.js";
-import { Point, WriteApi } from '@influxdata/influxdb-client'
 import { getGlobalWriter, NamespacedMetric } from "../../metrics/influx.js";
 import { ComputeStats, NetworkStats, ServerStatusData, ServerStatusSource } from "@srcpanel/common/Server";
 import { AnnotationX, AnnotationY, FinaleStage, GAME_DIFFICULTY_STRINGS, GameState, InfectedClass, LiveDataCache, PlayerGameAction, PlayerMove, PlayerState } from "@srcpanel/common/Live";

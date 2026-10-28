@@ -10,7 +10,6 @@ import BufferReader from '../BufferReader.js';
 import PluginSocket from './PluginSocket.js';
 import JWT from '../../jwt-promise.js';
 import { WriteStream, createWriteStream } from 'fs';
-import dotenv from 'dotenv'
 import { GameDig, QueryOptions } from 'gamedig';
 import DynamicServerManager from './docker/DynamicServerManager.js';
 import ServerGroup from './groups/ServerGroup.js';
@@ -21,7 +20,6 @@ import { loadGroups } from './groups/index.js';
 import Logger from '#/logger.js'
 import { METRIC_SERVERS_LIVE_AUTH_COUNT } from '../../core/prom-metrics.js';
 import User from '../users/User.js';
-import { UserPrivilegeCode } from '@srcpanel/common/Privileges';
 const log = Logger.child({ name: "ServerManager" })
 const liveLog = log.child({ name: "ServerManager/Live" })
 
@@ -48,11 +46,6 @@ export interface ConfigDynamicGroupData extends BaseConfigGroupData {
 }
 export type ConfigGroupData = ConfigStandaloneGroupData | ConfigDynamicGroupData
 
-
-// BECAUSE FOR SOME **** REASON THIS ISNT LOADING HERE:
-
-dotenv.config({ quiet: true })
-const DebugLivePlugin = process.env.LIVE_PLUGIN_DEBUG != undefined
 
 export default class ServerManager {
   // private servers: Record<string, Server> = {}

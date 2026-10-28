@@ -303,7 +303,7 @@ export const RecordParseConfig: Record<LiveRecordType, RecordParserInterface<Bas
 
 }
 
-export const enum LiveRecordResponse {
+export enum LiveRecordResponse {
   OK, // OK(byte) ViewCount(byte)
   Reconnect,
   Error,

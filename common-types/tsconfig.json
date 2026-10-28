@@ -15,7 +15,8 @@
         "rootDir": "lib",
         "outDir": "./dist",
         "strictNullChecks": true,
-        "declarationMap": true
+        "declarationMap": true,
+        "preserveConstEnums": true
         // "incremental": true
     },
     "include": [

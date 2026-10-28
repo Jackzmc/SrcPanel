@@ -1,9 +1,7 @@
 import { InfluxDB, Point, WriteApi } from "@influxdata/influxdb-client";
-import dotenv from 'dotenv'
 import pkg from '../../../package.json' with { type: "json" }
 import Logger from '#/logger.js'
 const log = Logger.child({ name: "influx" })
-dotenv.config({ quiet: true })
 
 const FLUSH_INTERVAL = process.env.INFLUX_FLUSH_INTERVAL_MS ? parseInt(process.env.INFLUX_FLUSH_INTERVAL_MS) : 30_000
 const BATCH_SIZE = 30 // we don't write points often
@@ -57,8 +55,6 @@ if(process.env.INFLUX_URL) {
         log.info({ url: process.env.INFLUX_URL, proxy: proxyUrl }, 'Influx connected')
         _writer = createWriter()
     }
-} else {
-    log.warn('not available - no env variables found')
 }
 
 export function getGlobalWriter(): WriteApi | null {

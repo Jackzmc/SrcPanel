@@ -1,11 +1,10 @@
-import { APICountData, APIDiscussion, APIDiscussionCacheableData, APIDiscussionFlags, APIResponsesData, APIUserWithChoice } from "@srcpanel/common/Discussions";
-import ConfigManager from "./ConfigManager.js";
+import { APICountData, APIDiscussionCacheableData, APIDiscussionFlags, APIResponsesData, APIUserWithChoice } from "@srcpanel/common/Discussions";
 import { Pool, RowDataPacket } from 'mysql2/promise';
-import User from "./users/User.js";
-import AuthManager from "./auth/AuthManager.js";
-import { DefinedTask } from "./tasks/Task.js";
-import { ADMINS_DB, MAIN_DB, TABLE_PREFIX } from "../middlewares/managers.js";
-import TaskManager from "./tasks/TaskManager.js";
+import User from "../users/User.js";
+import AuthManager from "../auth/AuthManager.js";
+import { DefinedTask } from "../tasks/Task.js";
+import { ADMINS_DB, MAIN_DB, TABLE_PREFIX } from "../../middlewares/managers.js";
+import TaskManager from "../tasks/TaskManager.js";
 import Logger, { PinoLogger } from '#/logger.js'
 
 const AUTO_ARCHIVE_TIME = 1000 * 60 * 60 * 24 * 10 // 10 days
@@ -13,7 +12,6 @@ const CACHE_TTL = 1000 * 60 * 60 * 1
 
 export default class DiscussionManager {
     #db: Pool
-    #config: ConfigManager
     #log: PinoLogger
     #authmngr: AuthManager
 
@@ -24,10 +22,9 @@ export default class DiscussionManager {
     #fetchJob: DefinedTask
 
 
-    constructor(db: Pool, config: ConfigManager, authmngr: AuthManager, jobs: TaskManager) {
+    constructor(db: Pool, authmngr: AuthManager, jobs: TaskManager) {
         this.#log = Logger.child({ name: "Discussions" })
         this.#db = db
-        this.#config = config
         this.#authmngr = authmngr
 
         const task = async () => {
@@ -207,23 +204,5 @@ export default class DiscussionManager {
             })
         }
         this.#discussions = dis
-    }
-}
-
-export function formatDiscussion(row: any, options: any[], commentCount = 0): APIDiscussionCacheableData {
-    return {
-        id: row.id,
-        title: row.title,
-        description: row.description,
-        timestamp: parseInt(row.timestamp),
-        creator: {
-            id: row.creator,
-            name: row.creator_name,
-        },
-        closedAt: parseInt(row.closedAt) ?? 0,
-        type: parseInt(row.type),
-        flags: parseInt(row.flags),
-        options: options.map(o => ({ id: o.id, label: o.label })),
-        commentsCount: commentCount,
     }
 }

@@ -9,7 +9,7 @@ export interface SMPluginMeta {
   flags?: SMPluginFlag,
   requires?: string
 }
-export const enum SMPluginFlag {
+export enum SMPluginFlag {
   None,
   Required = 1,
   Recommended = 2,
