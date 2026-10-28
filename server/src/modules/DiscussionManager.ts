@@ -1,4 +1,4 @@
-import { APICountData, APIDiscussionCacheableData, APIDiscussionFlags, APIResponsesData, APIUserWithChoice } from "@srcpanel/common/Discussions";
+import { APICountData, APIDiscussion, APIDiscussionCacheableData, APIDiscussionFlags, APIResponsesData, APIUserWithChoice } from "@srcpanel/common/Discussions";
 import ConfigManager from "./ConfigManager.js";
 import { Pool, RowDataPacket } from 'mysql2/promise';
 import User from "./users/User.js";
@@ -6,6 +6,7 @@ import AuthManager from "./auth/AuthManager.js";
 import { DefinedTask } from "./tasks/Task.js";
 import { ADMINS_DB, MAIN_DB, TABLE_PREFIX } from "../middlewares/managers.js";
 import TaskManager from "./tasks/TaskManager.js";
+import Logger, { PinoLogger } from '#/logger.js'
 
 const AUTO_ARCHIVE_TIME = 1000 * 60 * 60 * 24 * 10 // 10 days
 const CACHE_TTL = 1000 * 60 * 60 * 1
@@ -13,6 +14,7 @@ const CACHE_TTL = 1000 * 60 * 60 * 1
 export default class DiscussionManager {
     #db: Pool
     #config: ConfigManager
+    #log: PinoLogger
     #authmngr: AuthManager
 
     #lastFetchTime
@@ -23,6 +25,7 @@ export default class DiscussionManager {
 
 
     constructor(db: Pool, config: ConfigManager, authmngr: AuthManager, jobs: TaskManager) {
+        this.#log = Logger.child({ name: "Discussions" })
         this.#db = db
         this.#config = config
         this.#authmngr = authmngr
@@ -62,6 +65,11 @@ export default class DiscussionManager {
         this.#discussions.delete(id)
     }
 
+    /**
+     * Returns the amount of discussions user has not responded to
+     * @param steamid2 
+     * @returns number
+     */
     async getUnrespondedCount(steamid2: string) {
         // Returns the number of non-archived, non-closed discussions user has responded to
         const [rows] = await this.#db.execute<RowDataPacket[]>(
@@ -71,6 +79,14 @@ export default class DiscussionManager {
         return totalOpenDiscussions - rows.length
     }
 
+    /**
+     * Get all the discussion responses, with the user's choice included.
+     * If discussion is public, other user's choices included, but the user's choice is always included
+     * @param id discussion id
+     * @param user user to get their choice for
+     * @param flags discusion flags to select for
+     * @returns 
+     */
     async getResponses(id: number, user: User, flags: APIDiscussionFlags): Promise<{ responses: APIResponsesData, userSelection: number[] }> {
         const totalUsers = this.#authmngr.AdminCount
         const [responses] = await this.#db.execute<RowDataPacket[]>(`
@@ -88,7 +104,7 @@ export default class DiscussionManager {
                 counts[response.choice] = { count: 0, percent: 0 }
             counts[response.choice].count++
             counts[response.choice].percent = counts[response.choice].count / responses.length
-
+            // Always include user's response
             if(response.steamid == user.steamid2) {
                 userSelection.push(response.choice)
             }
@@ -126,10 +142,19 @@ export default class DiscussionManager {
     async fetchDiscussions() {
         const dis = new Map()
         const [rows] = await this.#db.execute<RowDataPacket[]>(
-            `SELECT d.*, u.last_name as creator_name, 
+            `SELECT 
+                d.id,
+                d.title,
+                d.description,
+                d.type,
+                d.timestamp,
+                d.closed_at,
+                d.flags,
+                d.creator, 
+                u.last_name as creator_name, 
                 (
                     SELECT COUNT(*) FROM \`${ADMINS_DB}\`.${TABLE_PREFIX}_discussion_comments WHERE discussion_id = d.id
-                ) as comments 
+                ) as commentsCount 
             FROM \`${ADMINS_DB}\`.${TABLE_PREFIX}_discussions d 
             LEFT JOIN \`${MAIN_DB}\`.view_${TABLE_PREFIX}_user u ON SUBSTRING(d.creator, 11) = u.account_id 
             WHERE d.flags & ${APIDiscussionFlags.Archived} = 0 
@@ -138,7 +163,7 @@ export default class DiscussionManager {
         for(const row of rows) {
             if(row.closed_at && Date.now() - (row.closed_at*1000) > AUTO_ARCHIVE_TIME) {
                 // Auto archive
-                console.info("[Discuss] Automatically archiving discussion #" + row.id)
+                this.#log.info({ id: row.id }, "Automatically archiving discussion")
                 await this.#db.execute(
                     `UPDATE \`${ADMINS_DB}\`.${TABLE_PREFIX}_discussions 
                     SET flags = flags | ${APIDiscussionFlags.Archived} 
@@ -168,5 +193,23 @@ export default class DiscussionManager {
             })
         }
         this.#discussions = dis
+    }
+}
+
+export function formatDiscussion(row: any, options: any[], commentCount = 0): APIDiscussionCacheableData {
+    return {
+        id: row.id,
+        title: row.title,
+        description: row.description,
+        timestamp: parseInt(row.timestamp),
+        creator: {
+            id: row.creator,
+            name: row.creator_name,
+        },
+        closedAt: parseInt(row.closedAt) ?? 0,
+        type: parseInt(row.type),
+        flags: parseInt(row.flags),
+        options: options.map(o => ({ id: o.id, label: o.label })),
+        commentsCount: commentCount,
     }
 }
