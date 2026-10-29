@@ -15,7 +15,7 @@ export default class DiscussionManager {
     #log: PinoLogger
     #authmngr: AuthManager
 
-    #lastFetchTime
+    #lastFetchTime: number = 0
 
     #discussions = new Map<number, APIDiscussionCacheableData>()
 

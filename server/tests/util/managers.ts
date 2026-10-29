@@ -6,7 +6,7 @@ import AuthManager from "../../src/modules/auth/AuthManager.js";
 console.log('data', import.meta.dirname, import.meta.filename)
 const CONFIG_FOLDER = path.join(import.meta.dirname, "../data")
 
-export const taskManager = new TaskManager()
+export const taskManager = new TaskManager({ resolution: 1000 * 60, tasksPerTick: 0 }) /* make this never run */
 
 export const configManager = await ConfigManager.Load(CONFIG_FOLDER)
 
