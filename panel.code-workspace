@@ -39,7 +39,7 @@
       }
     ],
     "terminals.autorun": false,
-    "js/ts.suggest.completeFunctionCalls": true,
+    "js/ts.suggest.completeFunctionCalls": false,
     "js/ts.preferences.preferTypeOnlyAutoImports": true
   },
 }

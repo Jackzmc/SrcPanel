@@ -17,7 +17,7 @@ import * as PromMetrics from './prom-metrics.js'
 import NotesManager from '../modules/notes/index.js';
 import PlayerManager from '../modules/users/PlayerManager.js';
 import LogsManager from '../modules/logs/LogsManager.js';
-import { loadDB } from './database.ts';
+import { loadDB } from './database.js';
 
 const log = Logger.child({ name: "core" })
 
