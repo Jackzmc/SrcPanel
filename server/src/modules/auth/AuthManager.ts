@@ -18,9 +18,7 @@ import { OauthAuthData } from './OauthProvider.js';
 
 import Logger from '#/logger.js'
 import CacheManager from "../../modules/CacheManager.js";
-import { sendMetric } from "../metrics/influx.js";
-import { ADMINS_DB, MAIN_DB, TABLE_PREFIX } from "../../middlewares/managers.js";
-import { METRIC_AUTH_LOGIN_COUNT } from "../../core/prom-metrics.js";
+import { ADMINS_DB, MAIN_DB, TABLE_PREFIX } from "../../core/database.js";
 const log = Logger.child({ name: "AuthManager" })
 
 interface AddAdmin {

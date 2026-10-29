@@ -1,6 +1,6 @@
 import { Note } from "@srcpanel/common/Note";
 import { RowDataPacket } from "mysql2";
-import { ADMINS_DB, TABLE_PREFIX } from "../../core/index.js";
+import { ADMINS_DB, TABLE_PREFIX } from "../../core/database.js";
 import { Pool } from "mysql2/promise";
 import { formatNote } from "./utils.js";
 import SteamID from "steamid";

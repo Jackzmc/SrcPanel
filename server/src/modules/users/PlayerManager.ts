@@ -1,7 +1,7 @@
 import { Pool, RowDataPacket } from "mysql2/promise";
 import SteamID from "steamid";
 import UserManager from "./UserManager.js";
-import { ADMINS_DB, TABLE_PREFIX } from "../../core/index.js";
+import { ADMINS_DB, TABLE_PREFIX } from "../../core/database.js";
 import AuthManager from "../auth/AuthManager.js";
 import { formatPlayer } from "./utils.js";
 import PanelPlayer from "./Player.js";

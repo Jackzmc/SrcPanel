@@ -52,6 +52,7 @@
     "gamedig": "^5.3.3",
     "jdenticon": "^3.3.0",
     "jsonwebtoken": "^9.0.3",
+    "knex": "^3.3.0",
     "migration-files": "^0.4.3",
     "minimatch": "^10.2.6",
     "mysql2": "^3.24.5",

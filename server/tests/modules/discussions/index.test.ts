@@ -1,5 +1,4 @@
 // TODO: setup DiscussionManager, test all methods
-import assert from 'node:assert/strict';
 import { test, describe, before } from "node:test";
 
 import DiscussionManager from "#/modules/discussions/DiscussionManager.js";

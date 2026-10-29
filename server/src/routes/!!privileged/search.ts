@@ -3,7 +3,7 @@ import { RowDataPacket } from "mysql2";
 import pLimit from "p-limit";
 import { SearchType, APISearchPartialResults, APISearchDetailResult } from '@srcpanel/common/Search';
 import { APIDiscussionFlags } from "@srcpanel/common/Discussions";
-import { ADMINS_DB, TABLE_PREFIX } from "../../middlewares/managers.js";
+import { ADMINS_DB, TABLE_PREFIX } from "../../core/database.js";
 
 /// The maximum number of search inner queries to resolve concurrently
 const SEARCH_MAX_INNER_RESOLVE_CONCURRENT = 2

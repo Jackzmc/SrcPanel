@@ -6,7 +6,7 @@ import { PanelMetaInfo } from '@srcpanel/common/Panel';
 import { AnalysisData } from '@srcpanel/common/User';
 import path from 'path';
 import readline from 'readline';
-import { MAIN_DB, TABLE_PREFIX } from '../../middlewares/managers.js';
+import { MAIN_DB, TABLE_PREFIX } from '../../core/database.js';
 
 async function loadSentiments(configFolder: string) {
   try {

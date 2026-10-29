@@ -3,7 +3,7 @@ import { Static, Type } from '@sinclair/typebox'
 import { NO_PERMISSION } from '../../responses.js';
 import { QueryBuilder, SortDirection } from '../../modules/QueryBuilder.js';
 import { APILogData, APILogQueryResult } from '@srcpanel/common/Logs';
-import { TABLE_PREFIX } from '../../middlewares/managers.js';
+import { TABLE_PREFIX } from '../../core/database.js';
 import { ACTIVITY_LOG_TABLE_NAME, formatLogEntry } from '../../modules/logs/LogsManager.js';
 import { sendInvalidParamError } from '../../guards/index.js';
 

@@ -3,7 +3,7 @@ import { Pool, RowDataPacket } from 'mysql2/promise';
 import User from "../users/User.js";
 import AuthManager from "../auth/AuthManager.js";
 import { DefinedTask } from "../tasks/Task.js";
-import { ADMINS_DB, MAIN_DB, TABLE_PREFIX } from "../../middlewares/managers.js";
+import { ADMINS_DB, MAIN_DB, TABLE_PREFIX } from "../../core/database.js";
 import TaskManager from "../tasks/TaskManager.js";
 import Logger, { PinoLogger } from '#/logger.js'
 

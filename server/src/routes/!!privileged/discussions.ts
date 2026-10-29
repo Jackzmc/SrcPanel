@@ -5,8 +5,7 @@ import { NOT_FOUND, NO_PERMISSION } from '../../responses.js';
 import { APIPlayer } from '@srcpanel/common/User';
 import { Static, Type } from '@sinclair/typebox';
 import { NamespacedMetric } from '../../modules/metrics/influx.js';
-import { ADMINS_DB, TABLE_PREFIX } from '../../middlewares/managers.js';
-import { MAIN_DB } from '../../core/index.js';
+import { MAIN_DB, ADMINS_DB, TABLE_PREFIX } from '../../core/database.js';
 
 const metric = new NamespacedMetric("discuss")
 

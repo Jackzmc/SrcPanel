@@ -1,7 +1,7 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyReply, FastifyRequest } from 'fastify';
 import { NOT_FOUND } from '../../responses.js';
 import QuickLRU from 'quick-lru';
-import { ADMINS_DB } from '../../middlewares/managers.js';
+import { ADMINS_DB } from '../../core/database.js';
 const CMS_CONFIG = {
     tables: {
         'rules_procedures': {

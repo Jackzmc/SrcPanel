@@ -1,7 +1,6 @@
 import Logger from '#/logger.js'
 import AuthManager from '../modules/auth/AuthManager.js';
 
-import mysql from 'mysql2/promise'
 import { mkdir } from 'fs/promises'
 import UserManager from '../modules/users/UserManager.js';
 import { join } from 'path';
@@ -18,13 +17,9 @@ import * as PromMetrics from './prom-metrics.js'
 import NotesManager from '../modules/notes/index.js';
 import PlayerManager from '../modules/users/PlayerManager.js';
 import LogsManager from '../modules/logs/LogsManager.js';
+import { loadDB } from './database.ts';
 
 const log = Logger.child({ name: "core" })
-
-export const MAIN_DB = process.env.MYSQL_DB ?? 'left4dead2'
-export const ADMINS_DB = process.env.MYSQL_ADMINS_DB ?? MAIN_DB
-
-export const TABLE_PREFIX = "panel"
 
 export const DATA_FOLDER = join(import.meta.dirname, '/../../../data')
 export const CACHE_FOLDER = join(DATA_FOLDER, "cache")
@@ -102,26 +97,6 @@ export async function onCoreShutdown() {
     await Promise.all(promises)
 }
 
-
-export async function loadDB() {
-    const db = mysql.createPool({
-        socketPath: process.env.MYSQL_SOCKET_PATH,
-        host: process.env.MYSQL_HOST,
-        database: MAIN_DB,
-        user: process.env.MYSQL_USER,
-        password: process.env.MYSQL_PASSWORD,
-        namedPlaceholders: true
-    })
-  const admindb = mysql.createPool({
-        socketPath: process.env.MYSQL_ADMINS_SOCKET_PATH || process.env.MYSQL_SOCKET_PATH,
-        host: process.env.MYSQL_ADMINS_HOST || process.env.MYSQL_HOST,
-        database: ADMINS_DB,
-        user: process.env.MYSQL_ADMINS_USER || process.env.MYSQL_USER,
-        password: process.env.MYSQL_ADMINS_PASSWORD || process.env.MYSQL_PASSWORD,
-        namedPlaceholders: true
-  })
-  return { db, admindb }
-}
 
 /**
  * Tries to create a directory, does not error if exists

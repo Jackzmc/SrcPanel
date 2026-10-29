@@ -2,7 +2,7 @@ import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
 import { RowDataPacket } from 'mysql2';
 import { APIListUserNotes, APINotesResponse, Note } from '@srcpanel/common/Note';
 import SteamID from 'steamid';
-import { ADMINS_DB, TABLE_PREFIX } from '../../middlewares/managers.js';
+import { ADMINS_DB, TABLE_PREFIX } from '../../core/database.js';
 import { formatNote } from '../../modules/notes/utils.js';
 import NotesManager from '../../modules/notes/index.js';
 import PlayerManager from '../../modules/users/PlayerManager.js';

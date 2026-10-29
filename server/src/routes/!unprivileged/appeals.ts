@@ -1,6 +1,6 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
 import { RowDataPacket } from 'mysql2';
-import { TABLE_PREFIX } from '../../middlewares/managers.js';
+import { TABLE_PREFIX } from '../../core/database.js';
 
 
 

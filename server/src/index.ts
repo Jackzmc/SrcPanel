@@ -25,7 +25,7 @@ import DiscussionManager from './modules/discussions/DiscussionManager.js';
 import TaskManager from './modules/tasks/TaskManager.js'
 import CacheManager from './modules/CacheManager.js'
 
-import MiddleManager, { TABLE_PREFIX } from './middlewares/managers.js'
+import MiddleManager from './middlewares/managers.js'
 import { sleep } from './util.js'
 import { DataManagerInstance } from './modules/DataManager.js'
 import { getGlobalWriter, sendMetric } from './modules/metrics/influx.js'
@@ -140,6 +140,7 @@ import internalMetrics from './hooks/metrics.js'
 import { METRIC_STARTUP_TIME } from './core/prom-metrics.js'
 import { loadBots } from './modules/bots/index.js'
 import LogsManager from './modules/logs/LogsManager.js'
+import { TABLE_PREFIX } from './core/database.ts'
 
 await app.register(internalMetrics)
 
