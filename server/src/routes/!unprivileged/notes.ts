@@ -2,7 +2,10 @@ import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
 import { RowDataPacket } from 'mysql2';
 import { APIListUserNotes, APINotesResponse, Note } from '@srcpanel/common/Note';
 import SteamID from 'steamid';
-import { ADMINS_DB, TABLE_PREFIX } from '../../middlewares/managers.js';
+import { ADMINS_DB, TABLE_PREFIX } from '../../core/database.js';
+import { formatNote } from '../../modules/notes/utils.js';
+import NotesManager from '../../modules/notes/index.js';
+import PlayerManager from '../../modules/users/PlayerManager.js';
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
   fastify.get('/', async (req: FastifyRequest<{
@@ -53,19 +56,16 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
       [...queryData, offset, limit]
     )
 
-    const missingNameQueue = new Set<SteamID>()
     for (const note of notes) {
       if (!note.user) {
-        missingNameQueue.add(new SteamID(note.steamid))
+        PlayerManager.instance.enqueueNameResolve(new SteamID(note.steamid))
       }
       if (!note.executor) {
-        missingNameQueue.add(new SteamID(note.markedBy))
+        PlayerManager.instance.enqueueNameResolve(new SteamID(note.markedBy))
       }
     }
     // Lazy but just fetch them for the next request
-    if (missingNameQueue.size > 0) {
-      await fastify.users.fetchUsers([...missingNameQueue.values()])
-    }
+    await PlayerManager.instance.resolveNames()
 
     const [notesCount] = await fastify.db.execute<RowDataPacket[]>(`SELECT COUNT(*) as count FROM notes`)
 
@@ -97,25 +97,6 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     })
   })
 
-  fastify.get('/admins/:steamid', async (req: FastifyRequest<{ Params: { steamid: string } }>, reply): Promise<APIListUserNotes> => {
-    const [notes] = await fastify.db.execute<RowDataPacket[]>(
-      `SELECT notes.*, u.last_name as user, e.last_name as executor, !b.expired as banned
-            FROM notes
-            LEFT JOIN view_${TABLE_PREFIX}_user as u ON SUBSTRING(notes.steamid, 11) = u.account_id
-            LEFT JOIN view_${TABLE_PREFIX}_user as e ON SUBSTRING(notes.markedBy, 11) = e.account_id
-            LEFT JOIN bans as b ON notes.steamid = b.steamid
-            WHERE notes.markedBy = ?
-            ORDER BY notes.id DESC`,
-      [req.params.steamid]
-    )
-
-    return {
-      notes: notes.map(note => {
-        return formatNote(note)
-      })
-    }
-  })
-
   fastify.route({
     url: '/:id',
     method: 'GET',
@@ -140,43 +121,11 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     async handler(req: FastifyRequest<{
       Params: { id: number }
     }>, reply) {
-      const [notes] = await fastify.db.execute<RowDataPacket[]>(
-        `SELECT notes.*, u.last_name as user, e.last_name as executor, !b.expired as banned
-                FROM notes
-                LEFT JOIN view_${TABLE_PREFIX}_user as u ON SUBSTRING(notes.steamid, 11) = u.account_id
-                LEFT JOIN view_${TABLE_PREFIX}_user as e ON SUBSTRING(notes.markedBy, 11) = e.account_id
-                LEFT JOIN bans as b ON notes.steamid = b.steamid
-                WHERE id = ?
-                ORDER BY notes.id DESC`,
-        [req.params.id]
-      )
+      const note = await NotesManager.instance.getNote(req.params.id)
 
       return {
-        note: notes.length > 0 ? formatNote(notes[0]) : null
+        note
       }
     }
   })
-
-  function formatNote(note: any): Note {
-    let action = undefined
-    if (note.content.startsWith("@") && note.content.length > 1) {
-      action = note.content.slice(1).split(".")
-    }
-    return {
-      id: note.id,
-      content: note.content,
-      client: {
-        id: note.steamid,
-        name: note.user,
-        isAdmin: note.targetIsAdmin == 1
-      },
-      markedBy: {
-        id: note.markedBy,
-        name: note.executor,
-      },
-      createdAt: note.createdAt,
-      banned: note.banned == 1,
-      action
-    }
-  }
 }

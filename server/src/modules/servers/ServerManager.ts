@@ -3,14 +3,13 @@ import Server, { ConfigServerData } from './Server.js'
 import Share from '../shares/Share.js';
 import path from 'path';
 import SteamAPI from '../steam.js'
-import { ServerAction, ServerType } from '@srcpanel/common/Server'
+import { BulkActionResult, ServerAction, ServerType } from '@srcpanel/common/Server'
 import net from 'net'
 import { LiveRecordType, LiveRecordResponse,PluginTokenPayload } from '@srcpanel/common/Live';
 import BufferReader from '../BufferReader.js';
 import PluginSocket from './PluginSocket.js';
 import JWT from '../../jwt-promise.js';
 import { WriteStream, createWriteStream } from 'fs';
-import dotenv from 'dotenv'
 import { GameDig, QueryOptions } from 'gamedig';
 import DynamicServerManager from './docker/DynamicServerManager.js';
 import ServerGroup from './groups/ServerGroup.js';
@@ -18,9 +17,10 @@ import { DynamicServerGroup } from './groups/DynamicServerGroup.js';
 import yaml from 'yaml'
 import { loadShares } from '../shares/index.js';
 import { loadGroups } from './groups/index.js';
-import logger from '../../logger.js'
-import assert from 'assert';
-const log = logger.child({ name: "ServerManager" })
+import Logger from '#/logger.js'
+import { METRIC_SERVERS_LIVE_AUTH_COUNT } from '../../core/prom-metrics.js';
+import User from '../users/User.js';
+const log = Logger.child({ name: "ServerManager" })
 const liveLog = log.child({ name: "ServerManager/Live" })
 
 
@@ -46,11 +46,6 @@ export interface ConfigDynamicGroupData extends BaseConfigGroupData {
 }
 export type ConfigGroupData = ConfigStandaloneGroupData | ConfigDynamicGroupData
 
-
-// BECAUSE FOR SOME **** REASON THIS ISNT LOADING HERE:
-
-dotenv.config({ quiet: true })
-const DebugLivePlugin = process.env.LIVE_PLUGIN_DEBUG != undefined
 
 export default class ServerManager {
   // private servers: Record<string, Server> = {}
@@ -146,6 +141,7 @@ export default class ServerManager {
         server.Plugin?._setSocket(client)
         server._setGameInfo(record.appid, record.gameVersion)
         liveLog.info({ host: client.Host, server: server.id, appid: `${record.appid}/${record.gameVersion}`}, 'authenticated')
+        METRIC_SERVERS_LIVE_AUTH_COUNT.inc({ appid: record.appid, game_version: record.gameVersion })
         return true
       } else {
         client.send(LiveRecordResponse.Error, `Invalid or unknown id "${payload.sub}" (docker: ${payload.docker?'y':'n'})`)
@@ -245,18 +241,17 @@ export default class ServerManager {
 
   async onShutdown() {
     if(this.#socket) {
-      // Inform all clients that we are shutting down, try to reconnect
-      for(const client of this.#socketClients.values()) {
-        if(client.Authenticated)
-          client.send(LiveRecordResponse.Reconnect)
-      }
-      // Wait for socket to close:
+      // Inform all clients that we are shutting down, for them to try to reconnect
+      const promises = [...this.#socketClients.values()]
+        .filter(client => client.Authenticated)
+        .map(client => client.send(LiveRecordResponse.Reconnect))
+      await Promise.all(promises)
+      // Wait for socket to close (don't care about the error)
       await new Promise((resolve) => this.#socket?.close(resolve))
     }
 
-    for(const group of Object.values(this.#groups)) {
-      await group.onShutdown()
-    }
+    const groups = Object.values(this.#groups)
+    await Promise.all(groups.map(group => group.onShutdown()))
   }
 
   /**
@@ -345,7 +340,60 @@ export default class ServerManager {
    * Refreshes all servers at once
    */
   public async refresh() {
-    await Promise.allSettled(this.getAll().map(server => server.refreshStatus(false)))
+    await Promise.allSettled(this.getAll().map(server => server.update(false)))
+  }
+
+  /**
+   * Request a list of targetIds ('groupId' or 'groupId/serverId') to be restarted
+   * 
+   * Group ids perform action on all servers in group
+   * 
+   * @param targets list of targets
+   * @param action action to run
+   * @param namespace namespace to run action on
+   * @returns results of target { targetId: "failed" | "invalid" | "success" }
+   */
+  async performActionBulk(targets: string[], action: string, namespace: string, runAsUser?: User): Promise<Record<string, BulkActionResult>> {
+    const results: Record<string, BulkActionResult> = {}
+    const promises: Promise<void>[] = []
+    for(const target of targets) {
+      results[target] = "failed"
+      const [groupId,serverId] = target.split("/")
+      const group = this.getGroup(groupId)
+      if(!group) {
+        results[target] = "invalid"
+        continue
+      }
+
+      if(serverId) {
+        const server = group.getServer(serverId)
+        if (!server) {
+          results[target] = "invalid"
+          continue
+        }
+        promises.push((async() => {
+          try {
+            await server.performAction(action, namespace, runAsUser)
+            results[target] = "success"
+          } catch(err) {
+            log.warn({ target, namespace, action }, "action failed")
+          }
+        })())
+      } else {
+        promises.push((async() => {
+          try {
+            await group.performActionAll(action, namespace, runAsUser)
+            results[target] = "success"
+          } catch(err) {
+            log.warn({ target, namespace, action }, "action failed")
+          }
+        })())
+      }
+      
+    }
+
+    await Promise.allSettled(promises)
+    return results
   }
 
   /**

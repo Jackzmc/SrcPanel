@@ -1,5 +1,6 @@
 import type { UserPrivilegeCode } from "@srcpanel/common/Privileges";
 import type { ClientUserData } from "@srcpanel/common/User";
+import { minimatch } from 'minimatch'
 
 export function useAuth() {
   // useState key is shared across SSR → client hydration
@@ -35,8 +36,13 @@ export function useAuth() {
     }
   }
 
+  /**
+   * Does user have permission for this action?
+   * @param code 
+   * @returns boolean
+   */
   function hasPermission(code: UserPrivilegeCode): boolean {
-    return user.value != null && user.value.permissions.codes.includes(code);
+    return user.value != null && user.value.permissions.codes.some(c => minimatch(code, c))
   }
 
   const isLoggedIn = computed(() => user.value !== null);

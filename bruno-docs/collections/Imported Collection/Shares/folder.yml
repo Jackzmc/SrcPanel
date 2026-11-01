@@ -5,3 +5,13 @@ info:
 
 request:
   auth: inherit
+  variables:
+    - name: shareId
+      value: addons
+      description: Share ID to use for examples
+    - name: filename
+      value: 1587166349.vpk
+      description: filename of addon to use for examples
+    - name: destKey
+      value: main
+      description: Share destination ID for examples

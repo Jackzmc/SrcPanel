@@ -44,10 +44,7 @@ export interface PublicConfigMeta {
   stats_url: string
 }
 
-export type UpdateState = "NORMAL" | "GIT_PULL" | "UNLINK_NODE_MODULES" | "PACKAGES_INSTALL" | "TSC" | "RESTARTING" | "CLEANUP_OLD_BUILD"
-
 export interface HealthReport {
-  currentState: UpdateState,
   uptime: number
   pid: number,
   versions: {

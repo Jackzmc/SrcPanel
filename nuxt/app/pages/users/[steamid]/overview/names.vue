@@ -14,6 +14,10 @@ defineProps<{
   data: APIUserDetails;
 }>();
 
+definePageMeta({
+  subtab: "names"
+})
+
 const namesColumns: TableColumn<UserNameEntry>[] = [
   {
     accessorKey: "name",

@@ -2,6 +2,17 @@ opencollection: 1.0.0
 
 info:
   name: Main
+config:
+  proxy:
+    inherit: true
+    config:
+      protocol: http
+      hostname: ""
+      port: ""
+      auth:
+        username: ""
+        password: ""
+      bypassProxy: ""
 
 request:
   auth:
@@ -9,9 +20,6 @@ request:
     key: x-apikey
     value: "{{API_TOKEN}}"
     placement: header
-  variables:
-    - name: BASE_URL
-      value: "{{API_PROTOCOL}}:/{{API_HOST}}"
 bundled: false
 extensions:
   bruno:
@@ -21,4 +29,5 @@ extensions:
     presets:
       request:
         type: http
-        url: "{{API_PROTOCOL}}:/{{API_HOST}}/api/"
+        url: "{{WS_PROTOCOL}}://{{API_HOST}}/api/"
+      defaultEnvironment: Dev

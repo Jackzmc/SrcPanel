@@ -4,7 +4,7 @@ import { Static, Type } from '@sinclair/typebox'
 import { APIBanFlags, FullAPIBan } from '@srcpanel/common/Ban';
 import { computeChanges, replaceObject } from '../../util.js';
 import { NO_PERMISSION } from '../../responses.js';
-import { TABLE_PREFIX } from '../../middlewares/managers.js';
+import { TABLE_PREFIX } from '../../core/database.js';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const PUTBanBody = Type.Object({

@@ -3,8 +3,7 @@ import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
 import { RowDataPacket } from 'mysql2';
 import type { APIConnections, APISessionList, ProviderConnectionData, SessionData, UserData } from '@srcpanel/common/User';
 import type { UserPrivilegeCode } from '@srcpanel/common/Privileges';
-import { TABLE_PREFIX } from '../../middlewares/managers.js';
-
+import { TABLE_PREFIX } from '../../core/database.js'
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
     // Ensure user is authenticated, thus req.user is defined
@@ -18,6 +17,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     })
 
     fastify.get('/notifications/sse', async(req, reply) => {
+        
         reply.raw.writeHead(200, {
             'Cache-Control': 'no-cache,no-transform',
             'Content-Type': 'text/event-stream',

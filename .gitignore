@@ -10,6 +10,5 @@ nuxt/.env
 
 deploy.sh
 http-docs
-test-compose
-
-docs/site
+test-compose/
+compose/

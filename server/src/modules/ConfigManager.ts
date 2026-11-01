@@ -3,7 +3,7 @@ import type { PanelConfigProvider, PublicConfigMeta } from '@srcpanel/common/Pan
 import yaml from 'yaml'
 import { readFile } from 'fs/promises';
 import type { PanelConfig } from '@srcpanel/common/Panel';
-import Logger from '../logger.js'
+import Logger from '#/logger.js'
 const log = Logger.child({ name: "config" })
 
 export interface RegisteredProvider {

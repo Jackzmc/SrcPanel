@@ -1,4 +1,4 @@
-import type { AdminData, OauthProvider, OauthProviderData, UserNotification, UserNotificationOptions, UserOauthProviders } from '@srcpanel/common/User';
+import type { AdminData, OauthProviderId, OauthProviderData, UserNotification, UserNotificationOptions, UserOauthProviders } from '@srcpanel/common/User';
 import { UserPrivilegeCode } from '@srcpanel/common/Privileges';
 import AuthManager from '../auth/AuthManager.js';
 import { FastifyInstance } from 'fastify';
@@ -25,6 +25,9 @@ export interface RequirePermissionOptions {
     resourceIds?: (string | number | undefined)[]
 }
 
+/**
+ * A logged in panel user
+ */
 export default class User {
     #adminData?: AdminData
     #providers?: UserOauthProviders = undefined
@@ -210,11 +213,11 @@ export default class User {
         return await this.#fastify.authmngr.log.logWeb(this, user, message, payload)
     }
 
-    async removeProvider(provider: OauthProvider) {
+    async removeProvider(provider: OauthProviderId) {
         return await this.#fastify.authmngr.setProvider(this.steamid2, provider, null)
     }
 
-    async getProvider(provider: OauthProvider) {
+    async getProvider(provider: OauthProviderId) {
         if(!this.#providers) await this.getProviders()
         return this.#providers![provider]
     }

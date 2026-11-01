@@ -3,6 +3,8 @@ import SteamID from 'steamid'
 import { SteamAPIError } from '../../modules/steam.js';
 import { ErrorWithCode } from '../../util.js';
 import { USER_AGENT } from '../../modules/auth/OauthProvider.js';
+import { METRIC_AUTH_LOGIN_COUNT } from '../../core/prom-metrics.js';
+import { sendMetric } from '../../modules/metrics/influx.js';
 
 export const SESSION_VERSION = "3.0"
 const RouteError = ErrorWithCode
@@ -113,6 +115,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                     if(admin) {
                         await fastify.authmngr.loginUser(req, reply, admin, userDetails)
                         req.log.info({ steamid: steamid2, returnTo }, 'user logged in via steam')
+                        METRIC_AUTH_LOGIN_COUNT.inc({ source: "steam" })
+                        sendMetric("oauth_login", 1)
                         // TODO: return to /auth/return with ?return_to
                         return reply.redirect(returnTo)
                     } else {

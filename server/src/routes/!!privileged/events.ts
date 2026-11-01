@@ -2,7 +2,7 @@ import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
 import { RowDataPacket } from 'mysql2';
 import { APIEvent, APIEventDetailed, APIWeekAvailability, EventDataSubmission } from '@srcpanel/common/Event';
 import { NOT_FOUND } from '../../responses.js';
-import { ADMINS_DB, MAIN_DB, TABLE_PREFIX } from '../../middlewares/managers.js';
+import { ADMINS_DB, MAIN_DB, TABLE_PREFIX } from '../../core/database.js';
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
     fastify.get('/', async (req, reply) => {

@@ -8,8 +8,8 @@ import { CustomServerGroup } from "./groups/CustomServerGroup.js";
 import DockerServer from "./DockerServer.js";
 import SteamAPI from "../../modules/steam.js";
 import type { WorkshopItem } from "@srcpanel/common/Share";
-import logger from '../../logger.js'
-const log = logger.child({ name: "CustomServerBuilder" })
+import Logger from '#/logger.js'
+const log = Logger.child({ name: "CustomServerBuilder" })
 
 export interface CustomServerOptions {
     extraPlayers?: boolean,

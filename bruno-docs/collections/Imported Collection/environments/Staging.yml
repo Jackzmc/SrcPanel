@@ -1,0 +1,6 @@
+name: Staging
+extends: Production
+variables:
+  - secret: true
+    name: API_HOST
+    description: hostname (no protocol) for API

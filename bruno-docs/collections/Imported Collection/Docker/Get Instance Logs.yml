@@ -5,7 +5,7 @@ info:
 
 http:
   method: GET
-  url: "{{API_PROTOCOL}}://{{API_DOMAIN}}/api/docker/instances/:id/logs"
+  url: "{{API_PROTOCOL}}://{{API_HOST}}/api/docker/instances/:id/logs"
   headers:
     - name: x-apikey
       value: "{{API_TOKEN}}"

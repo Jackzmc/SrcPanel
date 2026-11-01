@@ -15,23 +15,21 @@ import path from 'path'
 import cors from '@fastify/cors'
 import fastifyUrlData from '@fastify/url-data'
 
-import { dirname } from 'path';
-import { fileURLToPath } from 'url';
-import fastify, { FastifyPluginOptions } from 'fastify';
+import { FastifyPluginOptions } from 'fastify';
 import { CustomFastifySession } from '@srcpanel/common/User'
 import User from './modules/users/User.js';
 import ConfigManager from './modules/ConfigManager.js';
 
 import FastifyHelmet from '@fastify/helmet'
-import DiscussionManager from './modules/DiscussionManager.js';
+import DiscussionManager from './modules/discussions/DiscussionManager.js';
 import TaskManager from './modules/tasks/TaskManager.js'
 import CacheManager from './modules/CacheManager.js'
 
-import MiddleManager, { TABLE_PREFIX } from './middlewares/managers.js'
-import { FluxerBot } from './modules/FluxerBot.js'
-import { sleep } from './util.js'
+import MiddleManager from './middlewares/managers.js'
+import { LISTEN_HOST, LISTEN_PORT, sleep } from './util.js'
 import { DataManagerInstance } from './modules/DataManager.js'
 import { getGlobalWriter, sendMetric } from './modules/metrics/influx.js'
+import init, { onCoreShutdown } from './core/index.js'
 
 import './sentry.js'
 
@@ -41,6 +39,9 @@ const FORCE_SHUTDOWN_TIMEOUT = 20_000
 const MySQLStore = MySQLSession(FastifySession)
 
 import loggerInstance from './logger.js'
+
+const core = await init()
+
 const app = Fastify({
   pluginTimeout: 30_000,
   trustProxy: process.env.NODE_ENV === "production",
@@ -50,7 +51,7 @@ import * as Sentry from '@sentry/node'
 Sentry.setupFastifyErrorHandler(app);
 
 process.on('unhandledRejection', (reason: any, promise ) => {
-  app.log.fatal({}, 'Unhandled promise rejection:\n' + reason.stack);
+  app.log.fatal({ err: reason }, 'Unhandled promise rejection');
   process.exit(1)
 });
 // app.log.trace("trace")
@@ -76,7 +77,7 @@ async function onSignal(signal: NodeJS.Signals) {
   // Handle shutdown logic
   app.log.trace('calling shutdown handlers')
   await Promise.allSettled([
-    await app.servers?.onShutdown(),
+    await onCoreShutdown(),
     // flush & close influxdb global writer
     (async() => {
       const writer = getGlobalWriter()
@@ -113,7 +114,8 @@ declare module 'fastify' {
       data: string,
       cache: string
     },
-    cache: CacheManager
+    cache: CacheManager,
+    logs: LogsManager
   }
   export interface FastifyRequest {
     user?: User,
@@ -134,9 +136,12 @@ await app.register(FastifyHelmet, {
 await app.register(FastifyEtag)
 await app.register(fastifyWebsocket)
 await app.register(fastifyUrlData)
-
 import internalMetrics from './hooks/metrics.js'
-import init from './core/index.js'
+import { METRIC_STARTUP_TIME } from './core/prom-metrics.js'
+import { loadBots } from './modules/bots/index.js'
+import LogsManager from './modules/logs/LogsManager.js'
+import { TABLE_PREFIX } from './core/database.ts'
+
 await app.register(internalMetrics)
 
 app.setErrorHandler((error, request, reply) => {
@@ -146,10 +151,6 @@ app.setErrorHandler((error, request, reply) => {
 });
 
 
-// TODO: this realllly needs a refactor (SRCPNL-134)
-// pull the initalize outside of fastify, so we stop hitting plugin timeouts
-// and clean it up so external services (FluxerBot/DiscordBot) can be its own thing and not just thrown in
-const core = await init()
 
 await app.register(MiddleManager, core)
   .then(async () => {
@@ -157,14 +158,6 @@ await app.register(MiddleManager, core)
     scheduleActivityLogPartition(app as unknown as FastifyInstance);
 
     if  (hadSignal) return
-    if  (process.env.FLUXER_API_TOKEN) {
-      try {
-      const bot = new FluxerBot(app.servers, app.cache, process.env.FLUXER_API_TOKEN as string)
-      await bot.init()
-      } catch (err) {
-        app.log.error({}, "fluxer unavailable, error: ", err)
-      }
-    }
 
     app.register(import('@fastify/rate-limit'), {
       global: true,
@@ -256,12 +249,16 @@ await app.register(MiddleManager, core)
     await setupNotFound(app as unknown as FastifyInstance)
     
     await app.listen({
-      host: process.env.LISTEN_HOST || '0.0.0.0',
-      port: Number(process.env.LISTEN_PORT) || 8081
+      host: LISTEN_HOST,
+      port: LISTEN_PORT
     })
+    METRIC_STARTUP_TIME.set(performance.now() - START_TIME)
     sendMetric("startup_time_ms", performance.now() - START_TIME)
     
     ready = true
+
+    // Load anything later
+    await loadBots(core.modules)
 })
 
 async function setupNotFound(app: FastifyInstance) {
@@ -303,28 +300,12 @@ function scheduleActivityLogPartition(app: FastifyInstance) {
   }
 
   const job = app.jobs.register("activity_log.add_year_partition", async () => {
+    console.log('absolutely no run bad very bad')
     // This runs on Dec 31 of current year
     const nextYear = new Date().getFullYear() + 1
-    await addPartitionForYear(app, nextYear)
+    await app.logs.addPartitionForYear(nextYear)
   })
 
   app.jobs.scheduleRepeatingCustom(job, endOfYear, nextDate)
-  // fire immediately as well
-  job.execute()
 
-}
-
-async function addPartitionForYear(app: FastifyInstance, year: number) {
-  const nextYear = year
-
-  try {
-    await app.db.query(`
-      ALTER TABLE activity_log ADD PARTITION IF NOT EXISTS
-      ( PARTITION p${year} VALUES LESS THAN ( UNIX_TIMESTAMP('${nextYear}-01-01 00:00') ) )`
-    )
-
-    app.log.info(`Added p${year} partition to activity log`)
-  } catch(err) {
-    app.log.warn({}, "failed to update partition for year: " + err)
-  }
 }

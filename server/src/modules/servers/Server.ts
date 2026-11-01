@@ -11,10 +11,13 @@ import SocketClientUser from "./SocketClientUser.js";
 import { ClientOutPayload, Server_Status, ServerOutPacket, ServerOutPayload } from "@srcpanel/common/ServerWebsocket";
 import { LiveRecordResponse } from "@srcpanel/common/Live";
 import { resolveIPv4, tryResolveIPv4 } from "../../util.js";
-import logger from '../../logger.js'
-import { Logger } from "pino";
+import Logger, { PinoLogger } from '#/logger.js'
+import { METRIC_SERVERS_LIVE_VIEWERS, METRIC_SERVERS_STATUS_PLAYERS, METRIC_SERVERS_STATUS_STATE } from "../../core/prom-metrics.js";
+import User from "../users/User.js";
 
 const MIN_REFRESH_TIME = 10_000
+const METRIC_INTERVAL_TIME = 1000 * 30 // 30s
+const DNS_LOOKUP_INTERVAL_MS = 1000 * 60 * 5 // 5 min
 
 export interface BaseServerData {
   id : string;
@@ -86,10 +89,10 @@ export interface CreateServerOptions {
   actions?: ServerAction[]
 }
 
-const METRIC_INTERVAL_TIME = 1000 * 30 // 30s
+
 
 export default abstract class Server implements IAction {
-  protected _log: Logger;
+  protected _log: PinoLogger;
   protected _options: CreateServerOptions
   protected _group: ServerGroup
 
@@ -115,12 +118,14 @@ export default abstract class Server implements IAction {
   #activeVoiceMembers: VoiceUser[]
 
   #metricsTimer: ReturnType<typeof setInterval>
+  /** ms timestamp for when ips updated */
+  #ipLastResolvedTime: number = 0
 
   protected publicIp: string | null = null // the resolved IP to show end users
   protected internalIp?: string   // the resolved IP to use if set for internal requests (status) instead of internal
 
     constructor(group: ServerGroup, server: CreateServerOptions, gamedig: GameDig) {
-    this._log = logger.child({ name: `Server/${server.id}` })
+    this._log = Logger.child({ name: `Server/${server.id}` })
       this.#activeVoiceMembers = []
       this.#gamedig = gamedig
       this._group = group
@@ -164,8 +169,12 @@ export default abstract class Server implements IAction {
 
     async Init(): Promise<void> {
       // Resolve hostnames to IPa ddresses
-      this.publicIp = await tryResolveIPv4(this._options.public.host) ?? this._options.public.host
-      if(this._options.internal?.host) this.internalIp = await tryResolveIPv4(this._options.internal?.host) ?? undefined
+      try {
+        this.publicIp = await tryResolveIPv4(this._options.public.host) ?? this._options.public.host
+        if(this._options.internal?.host) this.internalIp = await tryResolveIPv4(this._options.internal?.host) ?? undefined
+      } catch(err) {
+        this._log.warn({ err, publicHost: this._options.public.host, internalHost: this._options.internal?.host }, "could not resolve IP address")
+      }
 
       await Promise.allSettled([
           this.Console?.init(),
@@ -321,12 +330,47 @@ export default abstract class Server implements IAction {
     abstract stop(force: boolean): Promise<boolean>;
     abstract stopWait(force: boolean, timeoutSeconds: number): Promise<boolean>;
 
-    abstract performAction(command: string, namespace: string): Promise<ActionResponse>;
+    abstract performAction(command: string, namespace: string, runAsUser?: User): Promise<ActionResponse>;
 
-    async refreshStatus( bypassCache: boolean = false): Promise<void> {
-        // Don't need to do a refresh if we have plugin data
-        if(this.Plugin && this.Plugin.authenticated) return;
+    /**
+     * Trigger update (status update, DNS IP addr resolv.)
+     * @param bypassCache 
+     * @returns 
+     */
+    async update( bypassCache: boolean = false): Promise<void> {
+      // Only get status via gamedig if there's no plugin/live connection
+      if(!this.Plugin || !this.Plugin.authenticated) 
         await this.getStatus(bypassCache, this.game, this.InternalIp, this.InternalPort)
+
+      if(Date.now() - this.#ipLastResolvedTime >= DNS_LOOKUP_INTERVAL_MS) await this.#updateIPs()
+    }
+
+    async #updateIPs(): Promise<void> {
+      this._log.trace("updating ip addresses")
+
+      try {
+        const ip = await resolveIPv4(this._options.public.host)
+        if(ip) {
+          if(ip != this.publicIp)  this._log.info({ ip: ip, oldIp: this.publicIp }, "updated public ip")
+          this.publicIp = ip
+        }
+      } catch(err) {
+        this._log.warn({ err, host: this._options.public.host }, "error resolving public ip")
+      }
+
+      if(this._options.internal?.host) {
+        try {
+          const ip = await resolveIPv4(this._options.internal.host)
+          if(ip) {
+            if(ip != this.internalIp)  this._log.info({ ip: ip, oldIp: this.internalIp }, "updated internal ip")
+            this.internalIp = ip
+          }
+        } catch(err) {
+          this._log.warn({ err, host: this._options.internal.host }, "error resolving internal ip")
+        }
+      }
+
+      this.#ipLastResolvedTime = Date.now()
     }
 
     addWSClient(client: SocketClientUser) {
@@ -340,13 +384,15 @@ export default abstract class Server implements IAction {
       } as Server_Status)
       this.Metrics.broadcastWSFullMetrics()
       this.Metrics.recordViewerCount(this._wsClients.length)
+      METRIC_SERVERS_LIVE_VIEWERS.inc({ server_id: this.id })
     }
 
     removeWSClient(client: SocketClientUser) {
       const indexOf = this._wsClients.indexOf(client)
       if(indexOf > -1) {
-       this._log.debug("removed client " + client.user.steamid2)
+        this._log.debug("removed client " + client.user.steamid2)
         this._wsClients.splice(indexOf, 1)
+        METRIC_SERVERS_LIVE_VIEWERS.dec({ server_id: this.id })
       }
       this.Metrics.recordViewerCount(this._wsClients.length)
     }
@@ -425,6 +471,16 @@ export default abstract class Server implements IAction {
       if(this.Metrics.available && this.Metrics.hasInflux) {
         this.Metrics.recordStatus(data, source)
       }
+
+      const promLabels = {
+        server_id: this.id,
+        type: this.game
+      }
+
+      if(source == "gamedig") {
+        METRIC_SERVERS_STATUS_STATE.set(promLabels, data != null ? 1 : 0)
+      }
+      if(data) METRIC_SERVERS_STATUS_PLAYERS.set(promLabels, data.players.length)
     }
 
     markVoiceConnection(user: VoiceUser, connected: boolean) {

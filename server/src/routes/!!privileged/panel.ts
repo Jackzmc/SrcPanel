@@ -1,22 +1,8 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
 import { NO_PERMISSION } from '../../responses.js';
-import path from 'node:path';
-import { UpdateState } from '@srcpanel/common/Panel';
-import { rm } from 'fs/promises';
 import Server from '../../modules/servers/Server.js';
 import { CustomServerGroup } from '../../modules/servers/groups/CustomServerGroup.js';
 import { DynamicServerGroup } from '../../modules/servers/groups/DynamicServerGroup.js';
-import { exec } from 'node:child_process';
-
-let updateState: UpdateState = "NORMAL"
-
-/**
- * HACKY!
- * TODO: REMOVE, PROPER SOLUTION
- */
-export function getUpdateState() {
-  return updateState
-}
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
   fastify.get('/', async (req, reply) => {
@@ -95,53 +81,4 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
       }
     })
   })
-
-  fastify.get('/first-time-setup', async (req: FastifyRequest, reply) => {
-    return {
-      stage: -1
-    }
-  })
-
-  fastify.post('/first-time-setup', async (req: FastifyRequest<{ Querystring: { stage: number, [s: string]: any } }>, reply) => {
-    // const stage = Number(req.query.stage)
-    // const currentStage = await fastify.config.GetKV<number>("first-time-setup.stage", 0)
-    // if(currentStage == FirstTimeSetupStage.DONE) return reply.code(403).send({
-    //     error: "SETUP_COMPLETE",
-    //     message: "Setup has already been completed"
-    // })
-    // if(stage === FirstTimeSetupStage.FirstSetupComplete) {
-    //     console.log("setting domain", req.query.domain)
-    //     // await fastify.config.SetKV("domain", req.query.domain)
-    // } else {
-    //     return reply.code(400).send({
-    //         error: "INVALID_STAGE",
-    //         message: "Invalid stage"
-    //     })
-    // }
-    // await fastify.config.SetKV("first-time-setup.stage", stage)
-    return reply.status(204).send()
-  })
-}
-
-/**
- * Executes a shell command and return it as a Promise.
- * @param cmd {string}
- * @return {Promise<string>}
- */
-function execPromise(cmd: string): Promise<{ stdout: string, stderr: string }> {
-  return new Promise((resolve, reject) => {
-    exec(cmd, { cwd: process.cwd() }, (error, stdout, stderr) => {
-      if (error) {
-        console.warn("execPromise", error);
-        return reject({
-          stdout,
-          stderr
-        });
-      }
-      resolve({
-        stdout,
-        stderr
-      });
-    });
-  });
 }

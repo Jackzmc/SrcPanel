@@ -57,7 +57,11 @@ export interface AddonInfo {
   installInfo: Record<string, boolean>,
   /** The collection this addon is a child of, if any */
   collection?: WorkshopCollectionInfo | null,
-  meta: Record<string, any>
+  /** The time in unix seconds of when the item was last checked/scanned */
+  lastCheckedTime: number,
+  /** Any extra metadata, JSON encoded */
+  meta: Record<string, any>,
+
 }
 
 export interface AddonCollectionInfo {

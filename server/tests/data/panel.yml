@@ -1,0 +1,12 @@
+general:
+  listen:
+    host: 0.0.0.0
+    port: 8081
+  public_url: http://localhost:8080
+
+notice:
+  enabled: true
+  text: "Example notice"
+
+providers:
+  

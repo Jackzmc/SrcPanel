@@ -19,7 +19,7 @@
       :ui="{ title: 'whitespace-normal text-xs sm:text-sm', root: 'py-2 sm:py-0 z-0' }"
     />
     <UBanner
-      v-if="meta?.settings.notice"
+      v-if="meta?.settings.notice?.enabled"
       id="general-banner"
       icon="lucide:circle-alert"
       color="info"

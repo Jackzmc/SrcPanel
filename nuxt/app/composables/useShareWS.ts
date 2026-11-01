@@ -3,11 +3,13 @@ import type { AddonInfo, DownloadEvent, DownloadLogEntry, DownloadProgress, Scan
 
 const MAX_LOG_HISTORY = 20
 const MAX_RECONNECT_INTERVAL_MS = 1000 * 60
+const prefix = '[ShareEventStream]'
 
 export function useShareWS() {
   const logs = ref<DownloadLogEntry[]>([])
   const items = ref<Map<string, DownloadProgress>>(new Map())
-  let addons = ref<AddonInfo[]>()
+  const subscriptions = new Set<string>()
+  let addons = shallowRef<AddonInfo[]>()
 
   const toast = useToast()
 
@@ -26,14 +28,24 @@ export function useShareWS() {
     ws?.close()
     ws = new WebSocket(`${host}/api/shares/event-stream`)
     ws.onerror = (event) => {
-      console.warn("websocket error: ", event)
+      console.warn(prefix, "connection error: ", event)
     }
     ws.addEventListener("close", (event) => {
+      const base = Math.min(1000 * 2 ** reconnectAttempts, MAX_RECONNECT_INTERVAL_MS)
+      const retryTime = base / 2 + Math.random() * (base / 2)
       reconnectAttempts++
-      const retryTime = Math.min(1000 * (Math.pow(1.5, reconnectAttempts) + 3), MAX_RECONNECT_INTERVAL_MS);
-      console.warn("Share event stream socket ended, reconnecting in", retryTime)
+      console.warn(prefix, `disconnected code=${event.code} reason="${event.reason}", reconnecting in`, retryTime, 'ms')
 
       setTimeout(() => setup(), retryTime)
+    })
+    ws.addEventListener("open", (event) => {
+      console.info(prefix, 'Connected, subscribing to', [...subscriptions.keys()])
+      logs.value = []
+      items.value.clear()
+      for(const sub of subscriptions.keys()) {
+        sendRequest({ subscribe: sub })
+      }
+      reconnectAttempts = 0
     })
     ws.addEventListener("message", (wsEvent) => {
         const msg = JSON.parse(wsEvent.data) as WebsocketMessage
@@ -62,25 +74,23 @@ export function useShareWS() {
           }
         }
     })
-    ws.addEventListener("open", () => {
-      reconnectAttempts = 0
-    })
   }
 
-  async function subscribe(shareId: string, addons?: Ref<AddonInfo[]>) {
+  async function subscribe(shareId: string, _addons?: Ref<AddonInfo[]>) {
     if (import.meta.server) return
-    if(!ws || ws.readyState == ws.CLOSED) setup()
+    subscriptions.add(shareId)
+    addons.value = _addons?.value
     // Wait until it's open before subscribing
-    if(ws.readyState == ws.OPEN) {
+    if(!ws || ws.readyState == ws.CLOSED) {
+      setup()
+    } else if(ws.readyState == ws.OPEN) {
       sendRequest({ subscribe: shareId })
-    } else {
-      ws.addEventListener("open", () => sendRequest({ subscribe: shareId }))
     }
   }
 
   function mergeAddons(event: ScanEvent) {
     if(!addons.value) return
-    console.info("merging addons", event)
+    console.debug(prefix, "merging addons", event)
     for(let i = 0; i < addons.value.length; i++) {
       const addon = addons.value[i]!
       // Remove the removed
@@ -94,7 +104,15 @@ export function useShareWS() {
     addons.value.push(...event.added)
   }
 
-  async function unsubscribe() {
+  /**
+   * Unsubscribe from events for all shares or specific
+   * @param shareId if set, unsubs for just that share. not set, all shares
+   */
+  async function unsubscribe(shareId?: string) {
+    if(shareId) subscriptions.delete(shareId)
+    else subscriptions.clear()
+
+    if(subscriptions.size === 0)
     ws?.close()
   }
 

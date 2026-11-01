@@ -274,3 +274,5 @@ export interface APICreateGroupInstanceResult_ErrorMemory {
     },
     message: string
 }
+
+export type BulkActionResult = "failed" | "success" | "no_permission" | "invalid"

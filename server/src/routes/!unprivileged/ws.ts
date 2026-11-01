@@ -4,7 +4,6 @@ import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions)  {
     fastify.get('/', { websocket: true }, async (socket: WebSocket, req: FastifyRequest) => {
         // authentiate using existing session cookie?
-        console.log("cookies", req.cookies)
         socket.on('message', async message => {
             try {
                 const json = JSON.parse(message.toString())

@@ -6,9 +6,9 @@ import ServerManager from "../ServerManager.js";
 import { DynamicServerGroup } from "../groups/DynamicServerGroup.js";
 import { ServerEvent } from "../DockerServer.js";
 import yaml from "yaml";
-import logger from "../../../logger.js";
+import Logger from '#/logger.js';
 
-const log = logger.child({ name: "DynamicServerManager" });
+const log = Logger.child({ name: "DynamicServerManager" });
 
 export interface DockerTemplateConfig {
   id: string;

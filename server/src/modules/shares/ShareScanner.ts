@@ -1,17 +1,19 @@
-import type { Logger as PinoLogger } from 'pino'
-import Logger from '../../logger.js'
-import Share from './Share.js'
+import Logger, { type PinoLogger } from '#/logger.js'
 import ShareDatabase from './ShareDB.js'
 import SteamAPI from '../steam.js'
-import { AddonWorkshopInfo, ScanEvent, ShareInfo, ShareItemState, WorkshopItem } from '@srcpanel/common/Share'
+import { AddonWorkshopInfo, ScanEvent, ShareInfo, ShareItemState } from '@srcpanel/common/Share'
 import { readdir, stat } from 'node:fs/promises'
 import { join } from 'node:path'
 import { getMetadata, serializeWorkshopItem } from './ShareUtils.js'
-import { DefinedTask, Task } from '../tasks/Task.js'
-import TaskManager from '../tasks/TaskManager.js'
+import { DefinedTask } from '../tasks/Task.js'
+import TaskManager from '#/modules/tasks/TaskManager.js'
 import EventEmitter from 'node:events'
+import { METRIC_SHARE_SCAN_COUNT } from '#/core/prom-metrics.js'
 
+/** Interval that scans are scheduled to run */
 const SCAN_INTERVAL_MINS = 60 // every hr
+/** The time at which an addon is considered stale and is to be re-checked */
+const SCAN_STALE_TIME_MS = 1000 * 60 * 60 * 24 * 7
 
 export enum ScanResult {
     AlreadyActive,
@@ -83,6 +85,17 @@ export default class ShareScanner {
 
     // }
 
+    /**
+     * Processes a file, updating file info, metadata, and checking for steam workshop information
+     * 
+     * @param filename filename to check
+     * @param resolveSteam if true, immediately resolves workshop information from steam, otherwise adds to queue for next scan
+     */
+    async checkAddon(filename: string, resolveSteam = true): Promise<void> {
+        await this.#checkAddon(filename)
+        if(resolveSteam) await this.#steam.resolveWSQueue()
+    }
+
     async #checkAddon(filename: string) {
         const filepath = join(this.#share.sourceFolder, filename)
 
@@ -92,12 +105,20 @@ export default class ShareScanner {
             lastModified: Math.round(fstat.mtime.getTime() / 1000),
         }
 
-        const meta = await getMetadata(filepath)
+        let meta: Record<string, any> = {}
+        try {
+            meta = await getMetadata(filepath)
+        } catch(err) {
+            this.#log.warn({ err, filename }, "failed to get metadata")
+        }
+
+        const isSteamWorkshop = this.#resolveSteam(filename)
 
         // If we think it's a steam addon (resolveSteam says true), then mark it as resolving
-        const state = this.#resolveSteam(filename) ? ShareItemState.Resolving : ShareItemState.Ready
+        const state = isSteamWorkshop ? ShareItemState.Resolving : ShareItemState.Ready
 
         await this.#db.upsertAddon(filename, fsinfo, state, meta)
+        METRIC_SHARE_SCAN_COUNT.inc({ share_id: this.#share.id, steam_workshop: isSteamWorkshop ? 1 : 0 })
     }
 
     /**
@@ -135,11 +156,20 @@ export default class ShareScanner {
             unchecked.delete(dirent.name)
 
             const entry = await this.#db.getAddonInfo(dirent.name)
-            if(!entry || entry.state == ShareItemState.Missing) {
+            /*
+                Check if a file either:
+                 1. Has no DB entry
+                 2. Was recorded missing (was in DB, but file disappeared last scan)
+                 3. Last time it was checked was over SCAN_STALE_TIME_MS
+            */
+            if(!entry 
+                || entry.state == ShareItemState.Missing 
+                || !entry.lastCheckedTime || (Date.now() - entry.lastCheckedTime*1000 > SCAN_STALE_TIME_MS)
+            ) {
                 try {
                     await this.#checkAddon(dirent.name)
                 } catch(err) {
-                    this.#log.warn({ filename: dirent.name }, "failed to add item: " + err)
+                    this.#log.warn({ filename: dirent.name }, "failed to scan item: " + err)
                 }
             } else if(entry.state == ShareItemState.Resolving && !entry.workshop) {
                 // Item's workshop info was never resolved
@@ -151,6 +181,7 @@ export default class ShareScanner {
         await this.#steam.resolveWSQueue()
         await this.#db.markMissing(unchecked)
 
+        // TODO: impl added, changed
         this.#event.emit("scan", {
             added: [],
             changed: {},

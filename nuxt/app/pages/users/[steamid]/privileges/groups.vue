@@ -3,14 +3,12 @@
     <UAlert v-if="error" color="error" title="Error while getting admin groups" :description="error.message" />
     <UTable
       v-else
-      v-model:row-selection="rowSelection"
       :data="groups"
       :columns="columns"
-      checkable
       :get-row-id="(row) => row.id.toString()"
     >
       <template #expanded="{ row }">
-        <PermissionsList :codes="row.original.codes" :flags="row.original.flags" />
+        <PermissionsList v-model:codes="row.original.codes" v-model:flags="row.original.flags" />
       </template>
     </UTable>
   </div>
@@ -22,48 +20,34 @@ import PermissionsList from "@/components/users/permissions/PermissionsList.vue"
 import type { TableColumn } from "@nuxt/ui";
 
 import UCheckbox from "@nuxt/ui/components/Checkbox.vue";
-
-const emit = defineEmits<{
-  (e: "changes", state: boolean): void;
-}>();
+import { UButton } from "#components";
+import type { PrivilegesEditData } from "../privileges.vue";
 
 const props = defineProps<{
   steamid: string;
   data: APIUserDetails;
 }>();
 
+const model = defineModel<PrivilegesEditData>({ required: true })
+
+// List of available groups
 const { data: groups, error } = await useFetch(() => `/api/admins/groups`, {
   transform: (res: APIListAdminGroupsResponse) => res.groups,
 });
 
-const defaultState = computed(() => {
-  if (!groups.value) return {};
-  return Object.fromEntries(groups.value.map(group => {
-    const isEnabled = props.data.admin?.groups.some(theirGroup => theirGroup.id === group.id) || false;
-    return [group.id.toString(), isEnabled];
-  }));
-});
-
-const rowSelection = ref(defaultState.value);
-
-const hasChanges = computed(() => {
-  for (const [id, enabled] of Object.entries(defaultState.value)) {
-    if (rowSelection.value[id] != enabled) return true;
-  }
-  return false;
-});
-
-watch(hasChanges, () => {
-  emit("changes", hasChanges.value);
-});
 const columns: TableColumn<APIListAdminGroupsResponse["groups"][0]>[] = [
   {
     id: "select",
     header: "",
     cell: ({ row }) =>
       h(UCheckbox, {
-        "modelValue": row.getIsSelected(),
-        "onUpdate:modelValue": (value: boolean | "indeterminate") => row.toggleSelected(!!value),
+        modelValue: model.value.groups.has(row.original.id),
+        "onUpdate:modelValue": (checked) => {
+          if(checked)
+            model.value.groups.add(row.original.id)
+          else
+            model.value.groups.delete(row.original.id)
+        },
         "aria-label": "Select row",
       }),
   },

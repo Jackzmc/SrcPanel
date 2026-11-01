@@ -40,12 +40,17 @@ COPY .git .git/
 
 RUN --mount=type=cache,target=/pnpm/store pnpm install --frozen-lockfile --offline
 WORKDIR /app/nuxt
+
 # Use 6GB heap space cuz nuxt be like that ig
 ENV NODE_OPTIONS="--max-old-space-size=12288" 
 RUN pnpm build
 
 ## Final Stage
 FROM $IMAGE AS final-ui
+
+ARG GIT_BRANCH=unknown
+ENV GIT_BRANCH=$GIT_BRANCH
+
 WORKDIR /app
 USER node
 COPY --from=builder-ui --chown=node /app/nuxt/.output/ ./ui/.output
@@ -80,9 +85,14 @@ RUN pnpm --filter=server --prod deploy /out
 ## Final Stage
 FROM $IMAGE AS final-server
 
+ARG GIT_BRANCH=unknown
+ENV GIT_BRANCH=$GIT_BRANCH
+
 WORKDIR /app
 COPY --from=builder-server /out ./server/
 WORKDIR /app/server
+
+HEALTHCHECK --interval=30s --timeout=30s --start-period=30s --retries=3 CMD ["/usr/local/bin/node", "dist/src/healthcheck.js"]
 
 ENV NODE_ENV=production
 

@@ -23,6 +23,6 @@ const props = defineProps<{
 }>();
 const loginUri = computed(() => {
   if (!meta.value) return;
-  return `${meta.value.settings.domain ?? `${window.location.protocol}//${window.location.host}`}/api/auth/fluxer/login?return_uri=${route.fullPath}`;
+  return `${meta.value.settings.domain ?? `${window.location.protocol}//${window.location.host}`}/api/auth/oauth/fluxer/login?return_uri=${route.fullPath}`;
 });
 </script>

@@ -1,0 +1,6 @@
+name: Dev (prod DB)
+extends: Dev
+variables:
+  - secret: true
+    name: API_TOKEN
+    description: ""

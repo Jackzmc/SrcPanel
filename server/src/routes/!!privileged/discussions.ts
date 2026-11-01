@@ -1,11 +1,11 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest, FastifySchema } from 'fastify';
-import { APIComment, APIDiscussion, APIDiscussionCreateResponse, APIDiscussionDetails, APIDiscussionFlags, APIDiscussionOption, APIDiscussionType, BaseDiscussion } from '@srcpanel/common/Discussions';
+import { APIComment, APIDiscussion, APIDiscussionCreateResponse, APIDiscussionDetails, APIDiscussionFlags, APIDiscussionOption, APIDiscussionType } from '@srcpanel/common/Discussions';
 import { OkPacket, RowDataPacket } from 'mysql2';
 import { NOT_FOUND, NO_PERMISSION } from '../../responses.js';
-import { APIPlayer, APIUser } from '@srcpanel/common/User';
+import { APIPlayer } from '@srcpanel/common/User';
 import { Static, Type } from '@sinclair/typebox';
-import { NamespacedMetric, sendMetric } from '../../modules/metrics/influx.js';
-import { ADMINS_DB, TABLE_PREFIX } from '../../middlewares/managers.js';
+import { NamespacedMetric } from '../../modules/metrics/influx.js';
+import { MAIN_DB, ADMINS_DB, TABLE_PREFIX } from '../../core/database.js';
 
 const metric = new NamespacedMetric("discuss")
 
@@ -26,6 +26,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
   fastify.get('/', async (req, reply): Promise<APIDiscussion[]> => {
     const discussions: APIDiscussion[] = []
+    // TODO: either all cache or no cache?
     for (const discussion of discManager.getAll()) {
       const responses = await discManager.getResponses(discussion.id, req.user!, discussion.flags)
       discussions.push({
@@ -49,26 +50,27 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         })
       }
     }
-    await fastify.db.execute("DELETE FROM `${ADMINS_DB}`.${TABLE_PREFIX}_discussion_responses WHERE discussion_id = ? AND steamid = ?", [discuss.id, req.user!.steamid2])
+    // TODO: move ALL to DiscussionManager
+    await fastify.db.execute(`DELETE FROM ${ADMINS_DB}.${TABLE_PREFIX}_discussion_responses WHERE discussion_id = ? AND steamid = ?`, [discuss.id, req.user!.steamid2])
     if (discuss.type == APIDiscussionType.Radio) {
       // Insert new, or update existing
       if (!body.option || Array.isArray(body.option)) return reply.status(400).send({ error: "INVALID_OPTION", message: "Options must be a string for radio" })
       await fastify.db.execute(
-        "INSERT INTO `${ADMINS_DB}`.${TABLE_PREFIX}_discussion_responses (discussion_id, steamid, choice) VALUES (?, ?, ?)",
+        `INSERT INTO ${ADMINS_DB}.${TABLE_PREFIX}_discussion_responses (discussion_id, steamid, choice) VALUES (?, ?, ?)`,
         [discuss.id, req.user!.steamid2, body.option]
       )
     } else if (discuss.type == APIDiscussionType.Checkbox || discuss.type == APIDiscussionType.Selection) {
       if (!body.option || !Array.isArray(body.option)) return reply.status(400).send({ error: "INVALID_OPTION", message: "Options must be an array for checkbox or selection" })
       for (const option of body.option) {
         await fastify.db.execute(
-          "INSERT INTO `${ADMINS_DB}`.${TABLE_PREFIX}_discussion_responses (discussion_id, steamid, choice) VALUES (?, ?, ?)",
+          `INSERT INTO ${ADMINS_DB}.${TABLE_PREFIX}_discussion_responses (discussion_id, steamid, choice) VALUES (?, ?, ?)`,
           [discuss.id, req.user!.steamid2, option]
         )
       }
     } else if (discuss.type == APIDiscussionType.ShortText || discuss.type == APIDiscussionType.LongText) {
       if (!body.text || body.text == "") return reply.status(400).send({ error: "INVALID_CHOICE", message: "Must include the text of the choice" })
       await fastify.db.execute(
-        "INSERT INTO `${ADMINS_DB}`.${TABLE_PREFIX}_discussion_responses (discussion_id, steamid, text) VALUES (?, ?, ?)",
+        `INSERT INTO ${ADMINS_DB}.${TABLE_PREFIX}_discussion_responses (discussion_id, steamid, text) VALUES (?, ?, ?)`,
         [discuss.id, req.user!.steamid2, body.text]
       )
     } else {
@@ -91,28 +93,35 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         message: "Cannot reopen a closed discussion"
       })
     }
+    // TODO: move ALL to DiscussionManager
     // Merge new data onto existing
     discuss = { ...discuss, ...newDiscuss }
     const conn = await fastify.db.getConnection()
     await conn.beginTransaction()
     await conn.query<OkPacket>(
-      "UPDATE `${ADMINS_DB}`.${TABLE_PREFIX}_discussions SET title = ?, description = ?, closed_at = ?, type = ?, flags = ? WHERE id = ?",
+      `UPDATE ${ADMINS_DB}.${TABLE_PREFIX}_discussions 
+      SET title = ?, description = ?, closed_at = ?, type = ?, flags = ? 
+      WHERE id = ?`,
       [discuss.title, discuss.description, discuss.closedAt, discuss.type, discuss.flags, req.params.id]
     )
 
-    const [options] = await conn.query<RowDataPacket[]>("SELECT * FROM `${ADMINS_DB}`.${TABLE_PREFIX}_discussion_options WHERE discussion_id = ?", [req.params.id])
+    const [options] = await conn.query<RowDataPacket[]>(`
+      SELECT * FROM ${ADMINS_DB}.${TABLE_PREFIX}_discussion_options 
+      WHERE discussion_id = ?`, 
+      [req.params.id]
+    )
     if (discuss.options) {
       for (const option of discuss.options) {
         const existingOption = options.find(o => o.id === option.id)
         if (existingOption) {
           if (existingOption.label === option.label) continue
           await conn.query(
-            "UPDATE `${ADMINS_DB}`.${TABLE_PREFIX}_discussion_options SET label = ? WHERE id = ?",
+            `UPDATE ${ADMINS_DB}.${TABLE_PREFIX}_discussion_options SET label = ? WHERE id = ?`,
             [option.label, existingOption.id]
           )
         } else {
           await conn.query(
-            "INSERT INTO `${ADMINS_DB}`.${TABLE_PREFIX}_discussion_options (discussion_id, label) VALUES (?, ?)",
+            `INSERT INTO ${ADMINS_DB}.${TABLE_PREFIX}_discussion_options (discussion_id, label) VALUES (?, ?)`,
             [req.params.id, option.label]
           )
         }
@@ -139,7 +148,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     const conn = await fastify.db.getConnection()
     await conn.beginTransaction()
     const [ok] = await conn.query<OkPacket>(
-      "INSERT INTO`${ADMINS_DB}`.${TABLE_PREFIX}_discussions (title, description, creator, closed_at, type, flags) VALUES (?, ?, ?, ?, ?, ?)",
+      `INSERT INTO ${ADMINS_DB}.${TABLE_PREFIX}_discussions (title, description, creator, closed_at, type, flags) VALUES (?, ?, ?, ?, ?, ?)`,
       [discuss.title, discuss.description, req.user!.steamid2, discuss.closedAt, discuss.type, discuss.flags]
     )
     const id = ok.insertId
@@ -148,7 +157,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
       for (const option of discuss.options) {
         //option.id here is a dummy value used by UI.
         const [row] = await conn.query<OkPacket>(
-          "INSERT INTO `${ADMINS_DB}`.${TABLE_PREFIX}_discussion_options (discussion_id, label) VALUES (?, ?)",
+          `INSERT INTO ${ADMINS_DB}.${TABLE_PREFIX}_discussion_options (discussion_id, label) 
+          VALUES (?, ?)`,
           [id, option.label]
         );
         (option as APIDiscussionOption).id = row.insertId;
@@ -183,11 +193,16 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
   fastify.get('/:id', async (req: FastifyRequest<{ Params: { id: string } }>, reply): Promise<APIDiscussionDetails> => {
     let discuss = discManager.get(Number(req.params.id))
     if (!discuss) {
-      const [rows] = await fastify.db.execute<RowDataPacket[]>("SELECT d.*, COUNT(c.id) as comment_count FROM `${ADMINS_DB}`.${TABLE_PREFIX}_discussions d right join `${ADMINS_DB}`.${TABLE_PREFIX}_discussion_comments c on c.discussion_id = d.id WHERE d.id = ?", [req.params.id])
+      const [rows] = await fastify.db.execute<RowDataPacket[]>(`
+        SELECT d.*, COUNT(c.id) as comment_count FROM ${ADMINS_DB}.${TABLE_PREFIX}_discussions d 
+        right join ${ADMINS_DB}.${TABLE_PREFIX}_discussion_comments c on c.discussion_id = d.id 
+        WHERE d.id = ?`, 
+        [req.params.id]
+      )
       if (rows.length == 0) {
         return NOT_FOUND(reply, req.params.id)
       }
-      const [options] = await fastify.db.execute<RowDataPacket[]>("SELECT * FROM `${ADMINS_DB}`.${TABLE_PREFIX}_discussion_options WHERE discussion_id = ?", [req.params.id])
+      const [options] = await fastify.db.execute<RowDataPacket[]>(`SELECT * FROM ${ADMINS_DB}.${TABLE_PREFIX}_discussion_options WHERE discussion_id = ?`, [req.params.id])
       const row = rows[0]
       discuss = {
         id: row.id,
@@ -220,7 +235,13 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
       return NOT_FOUND(reply, req.params.id)
     }
 
-    const [comments] = await fastify.db.execute<RowDataPacket[]>("SELECT com.id, com.timestamp, com.creator, com.content, u.last_name as creator_name FROM `${ADMINS_DB}`.${TABLE_PREFIX}_discussion_comments com LEFT JOIN `left4dead2`.view_${TABLE_PREFIX}_user u ON SUBSTRING(com.creator, 11) = u.account_id WHERE com.discussion_id = ? ", [discuss.id])
+    const [comments] = await fastify.db.execute<RowDataPacket[]>(`
+      SELECT com.id, com.timestamp, com.creator, com.content, u.last_name as creator_name 
+      FROM ${ADMINS_DB}.${TABLE_PREFIX}_discussion_comments com 
+      LEFT JOIN ${MAIN_DB}.view_${TABLE_PREFIX}_user u ON SUBSTRING(com.creator, 11) = u.account_id 
+      WHERE com.discussion_id = ? `, 
+      [discuss.id]
+    )
 
     return comments.map(c => {
       let creator: APIPlayer

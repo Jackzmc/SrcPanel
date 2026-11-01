@@ -2,10 +2,10 @@
     "compilerOptions": {
         "preserveSymlinks": true,
         "skipLibCheck": true,
-        "module": "node20",
+        "module": "nodenext",
         "esModuleInterop": true,
         "allowSyntheticDefaultImports": true,
-        "target": "es2022",
+        "target": "es2025",
         "noImplicitAny": false,
         "moduleResolution": "nodenext",
         "sourceMap": true,
@@ -17,16 +17,22 @@
         "paths": {
             "*": [
                 "./src/*"
-            ]
+            ],
+            "#/*": ["./src/*"]
         },
         "strictNullChecks": true,
         // eventually set to true - need to redo all errors
         "useUnknownInCatchVariables": false,
-        "strictPropertyInitialization": false
+        "strictPropertyInitialization": false,
+        "verbatimModuleSyntax": false,
+        "rewriteRelativeImportExtensions": true,
+        "preserveConstEnums": true
         // "incremental": true
     },
     "include": [
         "./src/**/*",
+        "./src/healthcheck.ts",
+        "./tests/**/*"
     ],
     "exclude": [
         "node_modules"

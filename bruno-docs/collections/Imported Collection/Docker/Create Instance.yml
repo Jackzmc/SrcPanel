@@ -5,10 +5,15 @@ info:
 
 http:
   method: POST
-  url: "{{API_PROTOCOL}}:/{{API_DOMAIN}}/api/docker/templates/:template/create-server"
+  url: "{{API_PROTOCOL}}:/{{API_HOST}}/api/docker/templates/:template/create-server"
   headers:
     - name: x-apikey
       value: "{{API_TOKEN}}"
+  params:
+    - name: template
+      value: ""
+      type: path
+      description: docker template to use
   body:
     type: text
     data: ""

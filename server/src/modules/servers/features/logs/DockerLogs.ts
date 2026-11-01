@@ -5,7 +5,7 @@ import Stream from 'node:stream'
 
 import stripAnsi from 'strip-ansi';
 import { isDate } from "node:util/types";
-import Logger from '../../../../logger.js'
+import Logger from '#/logger.js'
 import DynamicServerManager from "../../../../modules/servers/docker/DynamicServerManager.js";
 const log = Logger.child({ name: "DockerLogs" })
 

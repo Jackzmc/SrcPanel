@@ -31,7 +31,7 @@ export interface UserData<T> extends BaseSession<T> {
 }
 export type ClientUserData = UserData<UserPrivilegeCode[]>
 
-export type OauthProvider = "discord" | "fluxer"
+export type OauthProviderId = "discord" | "fluxer"
 
 export interface OauthTokenResponse {
   access_token: string;
@@ -61,7 +61,7 @@ export interface ProviderConnectionDataDisabled extends RegisteredProvider {
 }
 export type ProviderConnectionData = ProviderConnectionDataEnabled | ProviderConnectionDataDisabled
 
-export type UserOauthProviders = Partial<Record<OauthProvider, OauthProviderData>>
+export type UserOauthProviders = Partial<Record<OauthProviderId, OauthProviderData>>
 
 export interface SessionUser {
   steamid: string,
@@ -199,6 +199,7 @@ export interface PlayerEntry extends APIUser {
   bansCount: number,
   isAdmin: boolean,
   country?: string | null,
+  region?: string | null,
   firstJoinDate?: number | null,
   lastJoinDate?: number | null,
 }
@@ -208,10 +209,6 @@ export interface PlayerRecentEntry extends PlayerEntry {
 }
 
 export interface APIListPlayersResponse<T extends PlayerEntry = PlayerEntry> {
-  meta: {
-    queryTimeSec: number,
-    nextOffset?: number
-  },
   users: T[]
 }
 

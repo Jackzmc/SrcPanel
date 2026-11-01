@@ -16,7 +16,7 @@
         :model-value="tabId"
         @update:model-value="tab => navigateTo(`/users/${ids!.steamid2}/${tab}`)"
       />
-      <NuxtPage :steamids="ids" :steamid="ids.steamid2" :player-name="playerName" :data="data" />
+      <NuxtPage :steamids="ids" :steamid="ids.steamid2" :player-name="playerName" :data="data" @refresh="refresh" />
       <UFooter>
         <p class="text-xs text-muted">
           Profile fetched in {{ data.meta.times.user }} ms
@@ -82,7 +82,10 @@ const ids = computed(() => {
   }
 });
 
-const { data } = useFetch<APIUserDetails>(() => `/api/users/${ids.value?.steamid2 ?? route.params.steamid}?include=admin,profile,names`, { key: `users.${ids.value?.steamid2 ?? route.params.steamid} ` });
+const { data, refresh } = useFetch<APIUserDetails>(
+  () => `/api/users/${ids.value?.steamid2 ?? route.params.steamid}?include=admin,profile,names`, 
+  { key: `users.${route.params.steamid}` }
+);
 const title = computed(() => {
   return data.value?.user.name ?? ids.value?.steamid2 ?? "Invalid User";
 });

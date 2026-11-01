@@ -1,6 +1,10 @@
 {
   "folders": [
     {
+      "name": "root",
+      "path": "."
+    },
+    {
       "name": "common",
       "path": "./common-types"
     },
@@ -19,11 +23,23 @@
     {
       "name": "docs",
       "path": "./docs"
-    },
-    {
-      "name": "root",
-      "path": "."
     }
   ],
-  "settings": {}
+  "settings": {
+    "terminals.terminals": [
+      {
+        "name": "UI (Nuxt)",
+        "persistent": "nuxt",
+        "command": "cd nuxt; pnpm dev --host 127.0.0.1"
+      },
+      {
+        "name": "Server",
+        "persistent": "server",
+        "command": "cd server; pnpm dev"
+      }
+    ],
+    "terminals.autorun": false,
+    "js/ts.suggest.completeFunctionCalls": false,
+    "js/ts.preferences.preferTypeOnlyAutoImports": true
+  },
 }

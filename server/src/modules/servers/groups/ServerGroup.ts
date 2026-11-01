@@ -1,5 +1,6 @@
 import { ServerAction } from "@srcpanel/common/Server"
 import Server from "../Server.js"
+import User from "../../users/User.js"
 
 export interface CreateGroupOptions {
     name?: string
@@ -62,9 +63,17 @@ export default class ServerGroup<T extends Server = Server> {
         delete this.servers[server.id]
     }
 
-    async performActionAll(command: string, namespace: string) {
+    /**
+     * Perform action on all servers in this group
+     * @param command 
+     * @param namespace 
+     * @param runAsUser optionally, if given, only performs action the user can perform it on
+     * @returns 
+     */
+    async performActionAll(command: string, namespace: string, runAsUser?: User) {
+        // TODO: impl runAsUser
         for(const server of Object.values(this.servers)) {
-            await server.performAction(command, namespace)
+            await server.performAction(command, namespace, runAsUser)
         }
         return null
     }
