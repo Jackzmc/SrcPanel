@@ -26,7 +26,7 @@ import TaskManager from './modules/tasks/TaskManager.js'
 import CacheManager from './modules/CacheManager.js'
 
 import MiddleManager from './middlewares/managers.js'
-import { sleep } from './util.js'
+import { LISTEN_HOST, LISTEN_PORT, sleep } from './util.js'
 import { DataManagerInstance } from './modules/DataManager.js'
 import { getGlobalWriter, sendMetric } from './modules/metrics/influx.js'
 import init, { onCoreShutdown } from './core/index.js'
@@ -249,8 +249,8 @@ await app.register(MiddleManager, core)
     await setupNotFound(app as unknown as FastifyInstance)
     
     await app.listen({
-      host: process.env.LISTEN_HOST || '0.0.0.0',
-      port: Number(process.env.LISTEN_PORT) || 8081
+      host: LISTEN_HOST,
+      port: LISTEN_PORT
     })
     METRIC_STARTUP_TIME.set(performance.now() - START_TIME)
     sendMetric("startup_time_ms", performance.now() - START_TIME)

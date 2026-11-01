@@ -1,6 +1,9 @@
 import { stat } from "fs/promises"
 import DNS from 'dns/promises';
 
+export const LISTEN_HOST = process.env.LISTEN_HOST || '0.0.0.0'
+export const LISTEN_PORT = Number(process.env.LISTEN_PORT) || 8081
+
 // Replaces any member of T that is set in replace, ignoring undefined
 export function replaceObject<T>(original: T, replace: Partial<T>): T {
     const obj = original

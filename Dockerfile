@@ -92,6 +92,8 @@ WORKDIR /app
 COPY --from=builder-server /out ./server/
 WORKDIR /app/server
 
+HEALTHCHECK --interval=30s --timeout=30s --start-period=30s --retries=3 CMD ["/usr/local/bin/node", "dist/src/healthcheck.js"]
+
 ENV NODE_ENV=production
 
 # We run as root - needs docker access anyway
