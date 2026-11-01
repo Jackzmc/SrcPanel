@@ -153,7 +153,7 @@ export class NamespacedMetric {
      */
     send(measurement: string, value: string | number | boolean, labels: MetricLabels = {}): boolean {
         if(!_writer) {
-            log.debug('NamespacedMetric.send(): influx not available, ignoring')
+            log.trace('NamespacedMetric.send(): influx not available, ignoring')
             return false
         }
         const pt = new Point(this.metricPrefix)
@@ -178,7 +178,7 @@ export class NamespacedMetric {
      */
     sendMultiple(measurements: [string, number][], labels: MetricLabels = {}): boolean {
         if(!_writer) {
-            log.debug('NamespacedMetric.send(): influx not available, ignoring')
+            log.trace('NamespacedMetric.send(): influx not available, ignoring')
             return false
         }
         // TODO: possibly use _writer.writePoints
