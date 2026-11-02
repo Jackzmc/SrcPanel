@@ -6,7 +6,6 @@ import { ADMINS_DB, MAIN_DB, TABLE_PREFIX } from '../../core/database.js';
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
     fastify.get('/', async (req, reply) => {
-        const domain = await fastify.config.Domain
         const [rows] = await fastify.db.query<RowDataPacket[]>(`
             SELECT e.*, u.last_name as creator_name 
             FROM \`${ADMINS_DB}\`.${TABLE_PREFIX}_events e 
@@ -20,7 +19,6 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                     creator: {
                         id: row.creator_id,
                         name: row.creator_name,
-                        avatarUrl: `${domain}/api/users/${row.creator_id}/avatar`
                     },
                     name: row.name,
                     description: row.description,
@@ -34,7 +32,6 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         const [rows] = await fastify.db.query<RowDataPacket[]>("SELECT e.*, u.last_name as creator_name FROM `${ADMINS_DB}`.${TABLE_PREFIX}_events e LEFT JOIN `left4dead2`.view_${TABLE_PREFIX}_user u ON SUBSTRING(e.creator_id, 11) = u.account_id WHERE id = ?", [req.params.id])
         if(rows.length > 0) {
             const row = rows[0]
-            const domain = await fastify.config.Domain
             const [rawWeeks] = await fastify.db.query<RowDataPacket[]>(`
                 SELECT r.steamid, u.last_name as name, week_start, week_end, TO_BASE64(days) as base64 
                 FROM \`${ADMINS_DB}\`.${TABLE_PREFIX}_event_responses r 
@@ -53,7 +50,6 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                     user: {
                         id: row.steamid,
                         name: row.name,
-                        avatarUrl: `${domain}/api/users/${row.steamid}/avatar`
                     },
                     data: row.base64
                 })
@@ -63,7 +59,6 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 creator: {
                     id: row.creator_id,
                     name: row.creator_name,
-                    avatarUrl: `${domain}/api/users/${row.creator_id}/avatar`
                 },
                 name: row.name,
                 description: row.description,
@@ -75,6 +70,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             return NOT_FOUND(reply, "Event")
         }
     })
+
     fastify.post('/:id/my-schedule', async(req: FastifyRequest<{Params: {id: number}, Body: EventDataSubmission<string> }>, reply) => {
         if(!req.body.weeks) {
             return reply.code(400).send({
@@ -85,7 +81,11 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         const conn = await fastify.db.getConnection()
         await conn.beginTransaction()
         for(const week of req.body.weeks) {
-            await conn.execute("INSERT INTO `${ADMINS_DB}`.${TABLE_PREFIX}_event_responses (event_id, steamid, week_start, days) VALUES (?, ?, ?, FROM_BASE64(?)) ON DUPLICATE KEY UPDATE days = FROM_BASE64(?)", [req.params.id, req.user!.steamid2, week.startDate, week.data, week.data])    
+            await conn.execute(`
+                INSERT INTO ${ADMINS_DB}.${TABLE_PREFIX}_event_responses (event_id, steamid, week_start, days) 
+                VALUES (?, ?, ?, FROM_BASE64(?)) ON DUPLICATE KEY UPDATE days = FROM_BASE64(?)`, 
+                [req.params.id, req.user!.steamid2, week.startDate, week.data, week.data]
+            )    
         }
         await conn.commit()
         conn.release()
