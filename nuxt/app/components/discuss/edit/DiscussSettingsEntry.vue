@@ -1,6 +1,6 @@
 <template>
   <div :class="['flex', 'mx-3', 'p-3', 'gap-4', 'border-b', 'border-t-gray-200', valueClass, 'items-center']">
-    <UTooltip>
+    <UTooltip :text="description">
       <h3 class="text-md font-semibold">
         {{ label }}
       </h3>
@@ -14,6 +14,7 @@
 <script setup lang="ts">
 const props = withDefaults(defineProps<{
   label: string;
+  description?: string
   value?: "inline" | "below";
 }>(), {
   value: "inline",

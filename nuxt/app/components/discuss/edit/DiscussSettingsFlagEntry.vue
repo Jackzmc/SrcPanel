@@ -1,5 +1,5 @@
 <template>
-  <DiscussSettingsEntry :label="label" :value="value">
+  <DiscussSettingsEntry :label="label" :description="description" :value="value">
     <UTabs
       :items="items"
       :content="false"
@@ -22,6 +22,7 @@ const emit = defineEmits<{
 
 const props = defineProps<{
   label: string;
+  description?: string;
   flags: number;
   items: SettingEntry[];
   value?: "inline" | "below";

@@ -28,6 +28,7 @@
             </DiscussSettingsEntry>
             <DiscussSettingsFlagEntry
               label="Respondants"
+              description="Should the names of the respondants be shown"
               :flags="editDiscuss.flags"
               :items="respondantsOptions"
               @update:flags="i => editDiscuss.flags = i"
@@ -35,11 +36,15 @@
             <DiscussSettingsFlagEntry
               v-show="editDiscuss.flags & APIDiscussionFlags.RespondersPublic"
               label="Responses"
+              description="Should every user's response be shown"
               :flags="editDiscuss.flags"
               :items="responsesOptions"
               @update:flags="i => editDiscuss.flags = i"
             />
-            <DiscussSettingsEntry label="Closes">
+            <DiscussSettingsEntry 
+              label="Closes"
+              description="When the discussion is closed to voting and comments"
+            >
               <div class="flex gap-2">
                 <span v-if="editDiscuss.closedAt">
                   {{ formatDate(editDiscuss.closedAt) }}
@@ -75,16 +80,18 @@
             </DiscussSettingsEntry>
             <DiscussSettingsFlagEntry
               label="Comments"
+              description="Should comments be anonymous or show the commentor"
               :flags="editDiscuss.flags"
               :items="commentsOption"
               @update:flags="i => editDiscuss.flags = i"
             />
-            <DiscussSettingsFlagEntry
+            <!-- <DiscussSettingsFlagEntry
               label="Percents"
+              description="Should percent values be shown"
               :flags="editDiscuss.flags"
               :items="resultsOption"
               @update:flags="i => editDiscuss.flags = i"
-            />
+            /> -->
           </div>
           <div class="flex gap-4 my-5">
             <UButton color="primary" size="xl" 
@@ -144,10 +151,10 @@ const commentsOption: SettingEntry[] = [
   { label: "Anonymous", unset: APIDiscussionFlags.CommentsPublic, icon: "lucide:eye-off" },
 ];
 
-const resultsOption: SettingEntry[] = [
-  { label: "Show", set: APIDiscussionFlags.ResponsesPublic, icon: "lucide:eye" },
-  { label: "Hidden", unset: APIDiscussionFlags.ResponsesPublic, icon: "lucide:eye-off" },
-];
+// const resultsOption: SettingEntry[] = [
+//   { label: "Show", set: APIDiscussionFlags.PercentsPublic, icon: "lucide:eye" },
+//   { label: "Hidden", unset: APIDiscussionFlags.PercentsPublic, icon: "lucide:eye-off" },
+// ];
 
 const problems = computed(() => {
   const list = [];
