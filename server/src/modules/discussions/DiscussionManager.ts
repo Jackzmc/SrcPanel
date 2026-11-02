@@ -1,11 +1,13 @@
-import { APICountData, APIDiscussionCacheableData, APIDiscussionFlags, APIResponsesData, APIUserWithChoice } from "@srcpanel/common/Discussions";
+import { APICountData, APIDiscussionCacheableData, APIDiscussionFlags, APIResponsesData, APIUserWithChoice, type APIDiscussionType } from "@srcpanel/common/Discussions";
 import { Pool, RowDataPacket } from 'mysql2/promise';
 import User from "../users/User.js";
 import AuthManager from "../auth/AuthManager.js";
 import { DefinedTask } from "../tasks/Task.js";
-import { ADMINS_DB, MAIN_DB, TABLE_PREFIX } from "../../core/database.js";
+import { ADMINS_DB, doTransaction, MAIN_DB, TABLE_PREFIX } from "../../core/database.js";
 import TaskManager from "../tasks/TaskManager.js";
 import Logger, { PinoLogger } from '#/util/logger.js'
+import * as Repo from "./DiscussionRepo.js";
+import { arrayToKvObject } from "valve-kv";
 
 const AUTO_ARCHIVE_TIME = 1000 * 60 * 60 * 24 * 10 // 10 days
 const CACHE_TTL = 1000 * 60 * 60 * 1
@@ -204,5 +206,40 @@ export default class DiscussionManager {
             })
         }
         this.#discussions = dis
+    }
+    
+    async setAnswerText(discussionId: number, user: User, text: string) {
+        await doTransaction(this.#db, async (tx) => {
+            await Repo.clearAnswers(tx, discussionId, user.steamid2)
+            await Repo.insertAnswerText(tx, discussionId, user.steamid2, text)
+        })
+    }
+
+    async setAnswerChoice(discussionId: number, user: User, choiceIds: string | string[]) {
+        await doTransaction(this.#db, async (tx) => {
+            await Repo.clearAnswers(tx, discussionId, user.steamid2)
+            if(Array.isArray(choiceIds)) {
+                for(const val of choiceIds) {
+                    await Repo.insertAnswerChoice(tx, discussionId, user.steamid2, val)
+                }
+            } else {
+                await Repo.insertAnswerChoice(tx, discussionId, user.steamid2, choiceIds)
+            }
+        })
+    }
+
+    async updateDiscussion(discussionId: number, 
+        title: string, description: string | null, closedAt: number, type: APIDiscussionType, flags: number, 
+        options?: { label: string }[]
+    ) {
+        await doTransaction(this.#db, async (tx) => {
+            await Repo.clearOptions(tx, discussionId)
+            await Repo.updateDiscussion(tx, discussionId, title, description, closedAt, type, flags)
+            if(options) {
+                for(const option of options) {
+                    await Repo.insertOption(tx, discussionId, option.label)
+                }
+            }
+        })
     }
 }

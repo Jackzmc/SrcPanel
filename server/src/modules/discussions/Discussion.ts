@@ -1,5 +1,6 @@
 import { BaseDiscussion } from "@srcpanel/common/Discussions";
 import { Pool } from "mysql2";
+import type User from "../users/User.js";
 
 export class Discussion {
     #pool: Pool
@@ -29,6 +30,18 @@ export class Discussion {
     }
 
     async getResponses() {
+        
+    }
+
+    setAnswerChoice(user: User, option: string | string[]) {
+
+    }
+
+    setAnswerText(user: User, text: string) {
+
+    }
+
+    #clearAnswer(user: User) {
         
     }
 }

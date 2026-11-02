@@ -140,7 +140,7 @@ async function submitVote() {
 
   let body;
   if (props.discuss.type == APIDiscussionType.Checkbox) {
-    body = { option: userSelection.value };
+    body = { option: userSelection.value.toString() };
   } else if (props.discuss.type == APIDiscussionType.Radio) {
     body = { option: userSelection.value.toString() };
   }
