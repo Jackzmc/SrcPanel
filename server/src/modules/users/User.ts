@@ -210,7 +210,7 @@ export default class User {
             if(targetUser instanceof User) user = targetUser
             else user = new User(this.#fastify, targetUser) 
         }
-        return await this.#fastify.authmngr.log.logWeb(this, user, message, payload)
+        return await this.#fastify.logs.logWeb(this, user, message, payload)
     }
 
     async removeProvider(provider: OauthProviderId) {

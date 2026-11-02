@@ -1,7 +1,6 @@
 import { Pool, RowDataPacket, OkPacket } from "mysql2/promise";
 import QuickLRU from 'quick-lru'
 import { FastifyReply, FastifyRequest } from 'fastify';
-import ActivityLog from "../ActivityLog.js";
 import { AdminData, AdminGroup, OauthProviderId, SessionData, ReadableAdminGroup, UserNotification, UserNotificationOptions, AddUserNotification, UserProfileData, APIKey } from '@srcpanel/common/User';
 import { ReadableAdminData, UserOauthProviders, OauthProviderData } from '@srcpanel/common/User';
 import { SteamInfo, UserPrivilegeCode } from  '@srcpanel/common/Privileges';
@@ -42,7 +41,6 @@ export default class AuthManager {
     private admins: Record<string, AdminData> = {}
     private groups: Record<number, AdminGroup> = {}
     private apikeysCache: QuickLRU<string, APIKey>
-    private actLog: ActivityLog
     private steam: SteamAPI
     #config: ConfigManager
     #cache: CacheManager
@@ -67,7 +65,6 @@ export default class AuthManager {
         this.#dbna = sessionDatabase
         this.steam = steam
         this.#config = configManager
-        this.actLog = new ActivityLog(sessionDatabase)
         this.#oauthManager = new OauthManager(this, this.#config)
     }
 
@@ -130,10 +127,6 @@ export default class AuthManager {
 
     getConnection() {
         return this.#db
-    }
-
-    get log() {
-        return this.actLog
     }
 
     /**

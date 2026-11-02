@@ -1,9 +1,11 @@
 import Logger, { PinoLogger } from '#/util/logger.js'
-import { Pool, RowDataPacket } from 'mysql2/promise'
+import { Pool, ResultSetHeader, RowDataPacket } from 'mysql2/promise'
 import CacheManager from '../CacheManager.js'
 import PlayerManager from '../users/PlayerManager.js'
 import SteamID from 'steamid'
 import { LogEntry } from '@srcpanel/common/Logs'
+import type User from '../users/User.js'
+import type { LogData } from '../users/User.js'
 
 export const ACTIVITY_LOG_TABLE_NAME = "activity_log"
 
@@ -187,6 +189,41 @@ export default class LogsManager {
         )
 
         return rows.length > 0 ? rows[0] as ReturnType<typeof this.getLog> : null
+    }
+
+    async logWeb(activator: User, target?: User|null, message?: string, payload?: LogData): Promise<number> {
+        let msg: string|null = null
+        if(message) {
+            msg = (message || "")
+                .replace(/%client%/g, `"${await activator.name() ?? "Activator"}<0><${activator.steamid2}><>"`)
+            if(target) msg = msg.replace(/%target%/g, `"${await target.name() ?? "Target"}<0><${target.steamid2}><>"`)
+        }
+        
+        // Legacy
+        let permission:string|null = null
+        if(payload) {
+            if('code' in payload) permission = payload.code
+            else if('type' in payload) permission = payload.type
+        }
+
+        let metadata = payload?.metadata
+
+        if(!metadata) metadata = {}
+        metadata.permission = permission
+
+        const [r] = await this.#pool.execute<ResultSetHeader>(
+            `INSERT INTO activity_log (server, type, client, target, message, timestamp, metadata) 
+            VALUES ('web', :type, :client, :target, :msg, UNIX_TIMESTAMP(), :metadata)`,
+            {
+                client: activator.steamid2,
+                target: target ? target.steamid2 : null,
+                msg,
+                type: "web",
+                metadata: JSON.stringify(metadata)
+            }
+        )
+
+        return r.insertId
     }
 
     async saveCache() {
