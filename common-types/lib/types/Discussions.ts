@@ -23,7 +23,7 @@ export enum APIDiscussionType {
 export interface APIDiscussionBase {
   title: string,
   timestamp: number,
-  closedAt: number
+  closedAt: number | null
   type: APIDiscussionType,
   description?: string,
   options?: APIDiscussionOption[],
@@ -59,7 +59,7 @@ export interface APIDiscussionDetails extends APIDiscussion {
 }
 export interface APIComment {
   id: number,
-  creator: APIPlayer, // null if comments are anonymous
+  creator: APIPlayer | null,
   content: string,
   timestamp: number
 }
@@ -95,5 +95,9 @@ export type Discussion = DiscussionRadio | DiscussionMulti<APIDiscussionType.Sel
 export type DiscussionDetailed = Discussion & APIDiscussionDetails
 
 export interface APIDiscussionCreateResponse {
+  id: number
+}
+
+export interface APISubmitCommentResponse {
   id: number
 }

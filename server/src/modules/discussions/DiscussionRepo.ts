@@ -1,6 +1,75 @@
-import type { APIDiscussionType } from "@srcpanel/common/Discussions";
-import { ADMINS_DB, TABLE_PREFIX, type DBClient } from "../../core/database.js";
-import type { ResultSetHeader } from 'mysql2/promise'
+import { APIDiscussionFlags, type APIComment, type APIDiscussion, type APIDiscussionBase, type APIDiscussionCacheableData, type APIDiscussionOption, type APIDiscussionType } from "@srcpanel/common/Discussions";
+import { ADMINS_DB, MAIN_DB, TABLE_PREFIX, type DBClient } from "../../core/database.js";
+import type { ResultSetHeader, RowDataPacket } from 'mysql2/promise'
+import { formatDiscussion, formatDiscussionComment } from "./index.js";
+
+
+
+export async function getDiscussions(db: DBClient): Promise<APIDiscussionCacheableData[]> {
+    const [rows] = await db.execute<RowDataPacket[]>(
+        `SELECT 
+            d.id,
+            d.title,
+            d.description,
+            d.type,
+            d.timestamp,
+            d.closed_at,
+            d.flags,
+            d.creator, 
+            u.last_name as creator_name, 
+            (
+                SELECT COUNT(*) FROM \`${ADMINS_DB}\`.${TABLE_PREFIX}_discussion_comments WHERE discussion_id = d.id
+            ) as comments_count 
+        FROM \`${ADMINS_DB}\`.${TABLE_PREFIX}_discussions d 
+        LEFT JOIN \`${MAIN_DB}\`.view_${TABLE_PREFIX}_user u ON SUBSTRING(d.creator, 11) = u.account_id 
+        WHERE d.flags & ${APIDiscussionFlags.Archived} = 0 
+        ORDER BY d.timestamp DESC`
+    )
+    return rows.map(formatDiscussion)
+}
+
+export async function getDiscussion(db: DBClient, id: number): Promise<APIDiscussionCacheableData | null> {
+    const [rows] = await db.execute<RowDataPacket[]>(
+        `SELECT 
+            d.id,
+            d.title,
+            d.description,
+            d.type,
+            d.timestamp,
+            d.closed_at,
+            d.flags,
+            d.creator, 
+            u.last_name as creator_name, 
+            (
+                SELECT COUNT(*) FROM \`${ADMINS_DB}\`.${TABLE_PREFIX}_discussion_comments WHERE discussion_id = d.id
+            ) as comments_count 
+        FROM \`${ADMINS_DB}\`.${TABLE_PREFIX}_discussions d 
+        LEFT JOIN \`${MAIN_DB}\`.view_${TABLE_PREFIX}_user u ON SUBSTRING(d.creator, 11) = u.account_id 
+        WHERE d.flags & ${APIDiscussionFlags.Archived} = 0 AND d.id = ?
+        ORDER BY d.timestamp DESC`,
+        [ id ]
+    )
+
+    return rows.length > 0 ? formatDiscussion(rows[0]) : null
+}
+
+export async function getOptions(db: DBClient, discussionId: number): Promise<APIDiscussionOption[]> {
+    const [rows] = await db.execute<RowDataPacket[]>(
+        `SELECT * FROM ${ADMINS_DB}.${TABLE_PREFIX}_discussion_options 
+        WHERE discussion_id = ?`, 
+        [ discussionId ]
+    )
+    return rows.map(o => ({ id: o.id, label: o.label }))
+}
+
+export async function setDiscussionFlags(db: DBClient, discussionId: number, flags: number) {
+    await db.execute(`
+        UPDATE ${ADMINS_DB}.${TABLE_PREFIX}_discussions 
+        SET flags = ?
+        WHERE id = ?`, 
+        [flags, discussionId]
+    )
+}
 
 export async function clearAnswers(db: DBClient, discussionId: number, userSteamid: string) {
      await db.execute(`
@@ -29,13 +98,23 @@ export async function insertAnswerChoice(db: DBClient, discussionId: number, use
     )
 }
 
-export async function updateDiscussion(db: DBClient, discussionId: number, title: string, description: string | null, closedAt: number, type: APIDiscussionType, flags: number) {
+export async function updateDiscussion(db: DBClient, discussionId: number, title: string, description: string | null, closedAt: number | null, type: APIDiscussionType, flags: number) {
     await db.query<ResultSetHeader>(
         `UPDATE ${ADMINS_DB}.${TABLE_PREFIX}_discussions 
         SET title = ?, description = ?, closed_at = ?, type = ?, flags = ? 
         WHERE id = ?`,
         [ title, description, closedAt, type, flags, discussionId ]
     )
+}
+
+export async function createDiscussion(db: DBClient, creatorSteamId, title: string, description: string | null, closedAt: number | null, type: APIDiscussionType, flags: number): Promise<number> {
+    const [r] = await db.query<ResultSetHeader>(`
+        INSERT INTO ${ADMINS_DB}.${TABLE_PREFIX}_discussions 
+        (title, description, creator, closed_at, type, flags) 
+        VALUES (?, ?, ?, ?, ?, ?)`,
+        [ title, description, creatorSteamId, closedAt, type, flags ]
+    )
+    return r.insertId
 }
 
 export async function clearOptions(db: DBClient, discussionId: Number) {
@@ -54,8 +133,36 @@ export async function insertOption(db: DBClient, discussionId: number, label: st
         VALUES (?, ?)`,
         [ discussionId, label ]
     )
-
 }
+
+export async function getComments(db: DBClient, discussionId: number, withCreator = true): Promise<APIComment[]> {
+    const selectName = withCreator
+        ? `, com.creator, u.last_name as creator_name`
+        : ''
+    const joinStatement = withCreator 
+        ? ` LEFT JOIN ${MAIN_DB}.view_${TABLE_PREFIX}_user u ON SUBSTRING(com.creator, 11) = u.account_id`
+        : ''
+    const [rows] = await db.execute<RowDataPacket[]>(`
+      SELECT com.id, com.timestamp, com.content${selectName}
+      FROM ${ADMINS_DB}.${TABLE_PREFIX}_discussion_comments com
+      ${joinStatement}
+      WHERE com.discussion_id = ? `, 
+      [ discussionId ]
+    )
+    return rows.map(formatDiscussionComment)
+}
+
+export async function insertComment(db: DBClient, discussionId: number, creatorSteamId: string, content: string): Promise<number> {
+    const [result] = await db.query<ResultSetHeader>(
+      `INSERT INTO ${ADMINS_DB}.${TABLE_PREFIX}_discussion_comments 
+        (discussion_id, creator, content, timestamp) 
+      VALUES 
+        (?, ?, ?, UNIX_TIMESTAMP())`,
+      [discussionId, creatorSteamId, content]
+    )
+    return result.insertId
+}
+
 
 // export async function addOrUpdateChoice(db: DBClient, discussionId: number, label: string) {
 //     await db.query<ResultSetHeader>(`

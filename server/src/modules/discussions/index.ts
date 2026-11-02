@@ -1,19 +1,31 @@
-import { APIDiscussionCacheableData } from "@srcpanel/common/Discussions";
+import { APIDiscussionCacheableData, type APIComment } from "@srcpanel/common/Discussions";
+import type { RowDataPacket } from "mysql2";
 
-export function formatDiscussion(row: any, options: any[], commentCount = 0): APIDiscussionCacheableData {
+export function formatDiscussion(row: RowDataPacket): APIDiscussionCacheableData {
     return {
-        id: row.id,
+        id: Number(row.id),
         title: row.title,
         description: row.description,
-        timestamp: parseInt(row.timestamp),
+        type: Number(row.type),
+        timestamp: Number(row.timestamp),
+        closedAt: row.closed_at ? Number(row.closed_at) : null,
+        flags: Number(row.flags),
         creator: {
             id: row.creator,
-            name: row.creator_name,
+            name: row.creator_name
         },
-        closedAt: parseInt(row.closedAt) ?? 0,
-        type: parseInt(row.type),
-        flags: parseInt(row.flags),
-        options: options.map(o => ({ id: o.id, label: o.label })),
-        commentsCount: commentCount,
+        commentsCount: row.comments_count
+    }
+}
+
+export function formatDiscussionComment(row: RowDataPacket): APIComment {
+    return {
+        id: Number(row.id),
+        timestamp: Number(row.timestamp),
+        creator: row.creator ? {
+            id: row.creator,
+            name: row.creator_name
+        } : null,
+        content: row.content
     }
 }

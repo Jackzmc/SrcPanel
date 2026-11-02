@@ -1,4 +1,4 @@
-import { APICountData, APIDiscussionCacheableData, APIDiscussionFlags, APIResponsesData, APIUserWithChoice, type APIDiscussionType } from "@srcpanel/common/Discussions";
+import { APICountData, APIDiscussionCacheableData, APIDiscussionFlags, APIResponsesData, APIUserWithChoice, type APIComment, type APIDiscussionType } from "@srcpanel/common/Discussions";
 import { Pool, RowDataPacket } from 'mysql2/promise';
 import User from "../users/User.js";
 import AuthManager from "../auth/AuthManager.js";
@@ -7,7 +7,8 @@ import { ADMINS_DB, doTransaction, MAIN_DB, TABLE_PREFIX } from "../../core/data
 import TaskManager from "../tasks/TaskManager.js";
 import Logger, { PinoLogger } from '#/util/logger.js'
 import * as Repo from "./DiscussionRepo.js";
-import { arrayToKvObject } from "valve-kv";
+import Discussion from "@srcpanel/common/discussions/Discussion";
+import { linesToRowsIterable } from "@influxdata/influxdb-client";
 
 const AUTO_ARCHIVE_TIME = 1000 * 60 * 60 * 24 * 10 // 10 days
 const CACHE_TTL = 1000 * 60 * 60 * 1
@@ -19,7 +20,7 @@ export default class DiscussionManager {
 
     #lastFetchTime: number = 0
 
-    #discussions = new Map<number, APIDiscussionCacheableData>()
+    #discussions = new Map<number, Discussion>()
 
     #fetchJob: DefinedTask
 
@@ -53,10 +54,10 @@ export default class DiscussionManager {
     getAll() {
         this.#tryRefresh()
         return [...this.#discussions.values()]
-            .sort((a,b) => b.timestamp - a.timestamp)
+            .sort((a,b) => b.createdAt.valueOf() - a.createdAt.valueOf())
     }
 
-    set(id: number, discussion: APIDiscussionCacheableData) {
+    set(id: number, discussion: Discussion) {
         this.#discussions.set(id, discussion)
     }
 
@@ -83,7 +84,7 @@ export default class DiscussionManager {
         )
         
         const totalOpenDiscussions = [...this.#discussions.values()]
-            .filter((d) => !d.closedAt || Date.now() < (d.closedAt*1000)).length
+            .filter((d) => !d.isClosed).length
         return totalOpenDiscussions - rows.length
     }
 
@@ -153,59 +154,28 @@ export default class DiscussionManager {
     }
 
     async fetchDiscussions() {
-        const dis = new Map()
-        const [rows] = await this.#db.execute<RowDataPacket[]>(
-            `SELECT 
-                d.id,
-                d.title,
-                d.description,
-                d.type,
-                d.timestamp,
-                d.closed_at,
-                d.flags,
-                d.creator, 
-                u.last_name as creator_name, 
-                (
-                    SELECT COUNT(*) FROM \`${ADMINS_DB}\`.${TABLE_PREFIX}_discussion_comments WHERE discussion_id = d.id
-                ) as commentsCount 
-            FROM \`${ADMINS_DB}\`.${TABLE_PREFIX}_discussions d 
-            LEFT JOIN \`${MAIN_DB}\`.view_${TABLE_PREFIX}_user u ON SUBSTRING(d.creator, 11) = u.account_id 
-            WHERE d.flags & ${APIDiscussionFlags.Archived} = 0 
-            ORDER BY d.timestamp DESC`
-        )
-        for(const row of rows) {
-            if(row.closed_at && Date.now() - (row.closed_at*1000) > AUTO_ARCHIVE_TIME) {
+        const discussions = await Repo.getDiscussions(this.#db)
+        for(const row of discussions) {
+            const options = await Repo.getOptions(this.#db, row.id)
+            const disc = new Discussion(row, options)
+            if(disc.closedAt && disc.closedAt.getTime() > AUTO_ARCHIVE_TIME) {
                 // Auto archive
                 this.#log.info({ id: row.id }, "Automatically archiving discussion")
-                await this.#db.execute(
-                    `UPDATE \`${ADMINS_DB}\`.${TABLE_PREFIX}_discussions 
-                    SET flags = flags | ${APIDiscussionFlags.Archived} 
-                    WHERE id = ?`, 
-                    [row.id]
-                )
+                await Repo.setDiscussionFlags(this.#db, disc.id, disc.flags | APIDiscussionFlags.Archived)
+                this.#discussions.delete(row.id) // remove from cache
                 continue
             }
-            const [options] = await this.#db.execute<RowDataPacket[]>(
-                `SELECT * FROM \`${ADMINS_DB}\`.${TABLE_PREFIX}_discussion_options WHERE discussion_id = ?`, 
-                [row.id]
-            )
-            dis.set(row.id, {
-                id: row.id,
-                title: row.title,
-                description: row.description,
-                timestamp: row.timestamp,
-                closedAt: row.closed_at,
-                type: row.type,
-                options: options.map(o => ({ id: o.id, label: o.label })),
-                flags: row.flags,
-                commentsCount: row.comments,
-                creator: {
-                    id: row.creator,
-                    name: row.creator_name,
-                },
-            })
+            this.#discussions.set(row.id, disc)
         }
-        this.#discussions = dis
+    }
+
+    async fetchDiscussion(id: number) {
+        const data = await Repo.getDiscussion(this.#db, id)
+        if(!data) throw new Error("Unknown discussion")
+        const options = await Repo.getOptions(this.#db, data.id)
+        const disc = new Discussion(data, options)
+        this.#discussions.set(disc.id, disc)
+        return disc
     }
     
     async setAnswerText(discussionId: number, user: User, text: string) {
@@ -213,6 +183,7 @@ export default class DiscussionManager {
             await Repo.clearAnswers(tx, discussionId, user.steamid2)
             await Repo.insertAnswerText(tx, discussionId, user.steamid2, text)
         })
+        await this.fetchDiscussion(discussionId)
     }
 
     async setAnswerChoice(discussionId: number, user: User, choiceIds: string | string[]) {
@@ -226,10 +197,11 @@ export default class DiscussionManager {
                 await Repo.insertAnswerChoice(tx, discussionId, user.steamid2, choiceIds)
             }
         })
+        await this.fetchDiscussion(discussionId)
     }
 
     async updateDiscussion(discussionId: number, 
-        title: string, description: string | null, closedAt: number, type: APIDiscussionType, flags: number, 
+        title: string, description: string | null, closedAt: number | null, type: APIDiscussionType, flags: number, 
         options?: { label: string }[]
     ) {
         await doTransaction(this.#db, async (tx) => {
@@ -241,5 +213,53 @@ export default class DiscussionManager {
                 }
             }
         })
+        await this.fetchDiscussion(discussionId)
     }
+
+    async createDiscussion(
+        creator: User, title: string, description: string | null, closedAt: number | null, type: APIDiscussionType, flags: number, 
+        options?: { label: string }[]
+    ): Promise<number> {
+        const id = await doTransaction(this.#db, async (tx) => {
+            const id = await Repo.createDiscussion(tx, creator.steamid2, title, description, closedAt, type, flags)
+            if(options) {
+                for(const option of options) {
+                    await Repo.insertOption(tx, id, option.label)
+                }
+            }
+            return id
+        })
+        await this.fetchDiscussion(id)
+        return id
+    }
+
+    async getComments(
+        discussionId: number,
+    ): Promise<APIComment[]> {
+        const discuss = this.get(discussionId)
+        if(!discuss) throw Error("Discussion not found")
+        const withCreator = (discuss.flags & APIDiscussionFlags.CommentsPublic) == APIDiscussionFlags.CommentsPublic
+
+        return Repo.getComments(this.#db, discussionId, withCreator)
+    }
+
+    async submitComment(discussionId: number, user: User, content: string) {
+        const discuss = this.get(discussionId)
+        if(!discuss) throw Error("Discussion not found")
+        const withCreator = (discuss.flags & APIDiscussionFlags.CommentsPublic) == APIDiscussionFlags.CommentsPublic
+
+        const name = withCreator ? await user.name() : 'Someone'
+
+        await this.#authmngr.addNotification(discuss.creatorId, 
+            `${name} commented on your discussion "${discuss.title}"`, 
+            {
+                link: `/discuss/${discuss.id}`,
+            }
+        )
+
+        const id = await Repo.insertComment(this.#db, discussionId, user.steamid2, content)
+        await this.fetchDiscussion(discussionId) // refresh cache
+        return id
+    }
+
 }

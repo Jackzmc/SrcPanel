@@ -14,6 +14,7 @@
         "./Ban": "./dist/types/Ban.js",
         "./CustomServer": "./dist/types/CustomServer.js",
         "./Discussions": "./dist/types/Discussions.js",
+        "./discussions/Discussion": "./dist/discussions/Discussion.js",
         "./Event": "./dist/types/Event.js",
         "./Live": "./dist/types/Live.js",
         "./Logs": "./dist/types/Logs.js",

@@ -40,12 +40,13 @@ export async function loadDB() {
  * @param fn function that performs SQL statements and gets access to the connection performing the transaction
  * @param args any args to pass to fn
  */
-export async function doTransaction(db: DBPool, fn: (conn: DBConn, ...args: any[]) => Promise<void>, ...args: any[]) {
+export async function doTransaction<T = void>(db: DBPool, fn: (conn: DBConn, ...args: any[]) => Promise<T>, ...args: any[]): Promise<T> {
   const conn = await db.getConnection()
   await conn.beginTransaction()
   try {
-    await fn(conn, ...args)
+    const v = await fn(conn, ...args)
     await conn.commit()
+    return v
   } catch(err) {
     await conn.rollback()
     throw err
