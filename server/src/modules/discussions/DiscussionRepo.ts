@@ -11,7 +11,7 @@ export async function getArchivedCount(db: DBClient): Promise<number> {
     return Number(rows[0].count)
 }
 
-export async function getDiscussions(db: DBClient): Promise<APIDiscussionCacheableData[]> {
+export async function getDiscussions(db: DBClient, archived = false): Promise<APIDiscussionCacheableData[]> {
     const [rows] = await db.execute<RowDataPacket[]>(
         `SELECT 
             d.id,
@@ -28,7 +28,7 @@ export async function getDiscussions(db: DBClient): Promise<APIDiscussionCacheab
             ) as comments_count 
         FROM \`${ADMINS_DB}\`.${TABLE_PREFIX}_discussions d 
         LEFT JOIN \`${MAIN_DB}\`.view_${TABLE_PREFIX}_user u ON SUBSTRING(d.creator, 11) = u.account_id 
-        WHERE d.flags & ${APIDiscussionFlags.Archived} = 0 
+        WHERE d.flags & ${APIDiscussionFlags.Archived} = ${archived ? APIDiscussionFlags.Archived : 0} 
         ORDER BY d.timestamp DESC`
     )
     return rows.map(formatDiscussion)
