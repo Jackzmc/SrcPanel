@@ -20,6 +20,7 @@ export default class DiscussionManager {
 
     #lastFetchTime: number = 0
 
+    // Holds unarchived discussions
     #discussions = new Map<number, Discussion>()
 
     #fetchJob: DefinedTask
@@ -151,6 +152,10 @@ export default class DiscussionManager {
             },
             userSelection
         }
+    }
+
+    async getArchivedCount(): Promise<number> {
+        return await Repo.getArchivedCount(this.#db)
     }
 
     async fetchDiscussions() {

@@ -3,7 +3,13 @@ import { ADMINS_DB, MAIN_DB, TABLE_PREFIX, type DBClient } from "../../core/data
 import type { ResultSetHeader, RowDataPacket } from 'mysql2/promise'
 import { formatDiscussion, formatDiscussionComment } from "./index.js";
 
-
+export async function getArchivedCount(db: DBClient): Promise<number> {
+    const [rows] = await db.execute<RowDataPacket[]>(
+        `SELECT COUNT(*) count FROM \`${ADMINS_DB}\`.${TABLE_PREFIX}_discussions d
+        WHERE d.flags & ${APIDiscussionFlags.Archived} = ${APIDiscussionFlags.Archived}`
+    )
+    return Number(rows[0].count)
+}
 
 export async function getDiscussions(db: DBClient): Promise<APIDiscussionCacheableData[]> {
     const [rows] = await db.execute<RowDataPacket[]>(
