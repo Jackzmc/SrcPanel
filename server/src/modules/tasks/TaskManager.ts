@@ -29,15 +29,13 @@ export default class TaskManager {
         return this.#instance
     }
 
-    #tasks: Map<string, Task<any>>
+    #tasks: Map<string, Task<any>> = new Map()
     // #tasks: Task<unknown>[]
-    #schedule: string[]
+    #schedule: Set<string> = new Set()
     #timer: NodeJS.Timeout
 
     constructor(options: TaskManagerOptions = {}) {
         TaskManager.#instance = this
-        this.#tasks = new Map()
-        this.#schedule = []
         const tasksPerTick = options.tasksPerTick ?? 1
         this.#timer = setInterval(async () => {
             const now = new Date()
@@ -47,7 +45,7 @@ export default class TaskManager {
                 const task = this.#tasks.get(taskId)
                 if(!task) {
                     log.warn({ taskId, schedIndex }, "scheduled task is missing task definition")
-                    this.#schedule.splice(schedIndex, 1)
+                    this.#schedule.delete(taskId)
                     continue // shouldn't happen
                 }
                 if(task.NextRunDate && now >= task.NextRunDate) {
@@ -56,7 +54,7 @@ export default class TaskManager {
                     await task.execute() // TODO: error handling?
 
                     if(!task.reschedule()) {
-                        this.#schedule.splice(schedIndex, 1)
+                        this.#schedule.delete(taskId)
                     }
 
                     // Limit # of tasks in a tick
@@ -98,12 +96,7 @@ export default class TaskManager {
             task = checkTask as Task<T> // convert DefinedTask -> Task
         }
         this.#tasks.delete(task.Id)
-
-        // Delete from schedule:
-        const schedIndex = this.#schedule.findIndex(taskId => taskId === task.Id)
-        if(schedIndex != -1) {
-            this.#schedule.splice(schedIndex, 1)
-        }
+        this.#schedule.delete(task.Id)
     }
 
     getNamedTasks(): DefinedTask[] {
@@ -118,7 +111,7 @@ export default class TaskManager {
 
     get TaskCount() { return this.#tasks.size }
     get NamedTaskCount() { return this.getNamedTasks().length }
-    get ScheduledTaskCount() { return this.#schedule.length }
+    get ScheduledTaskCount() { return this.#schedule.size }
     
     /**
      * Schedules a task to run once, relative from task creation date
@@ -148,7 +141,7 @@ export default class TaskManager {
         log.info({ taskId: task.Id }, `Scheduled "${task.Id}" for ${dateOrTime}`)
             // Does not repeat, set fn to null
         task.setSchedule(dateOrTime, null)
-        this.#schedule.push(task.Id)
+        this.#schedule.add(task.Id)
         return dateOrTime
     }
 
@@ -163,7 +156,7 @@ export default class TaskManager {
         const nextRun = calculateDate(startDate, timeOptions)
         log.info({ taskId: task.Id, ...timeOptions }, `Scheduled repeating "${task.Id}"`)
         task.setSchedule(nextRun, (prevRunDate) => calculateDate(prevRunDate, timeOptions) )
-        this.#schedule.push(task.Id)
+        this.#schedule.add(task.Id)
         return nextRun
     }
 
@@ -176,7 +169,7 @@ export default class TaskManager {
     scheduleRepeatingCustom(task: Task<any> | DefinedTask<any>, startDate: Date, nextDateFn: (prevDate: Date) => Date) {
         log.info({ taskId: task.Id }, `Scheduled custom repeating "${task.Id}" for ${startDate}`)
         task.setSchedule(startDate, nextDateFn)
-        this.#schedule.push(task.Id)
+        this.#schedule.add(task.Id)
     }
     
 }
