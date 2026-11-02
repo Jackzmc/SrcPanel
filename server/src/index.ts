@@ -144,10 +144,25 @@ import { TABLE_PREFIX } from './core/database.js'
 
 await app.register(internalMetrics)
 
-app.setErrorHandler((error, request, reply) => {
+app.setErrorHandler(async (error, request, reply) => {
   app.log.error(error)
-  Sentry.captureException(error);
-  return reply.status(500).send({ error: 'INTERNAL_SERVER_ERROR', message: 'An unexpected error has occurred' });
+  Sentry.captureException(error, { 
+    user: request.user ? {
+      id: request.user.steamid2,
+      username: request.user.cachedName,
+      ip_address: request.ip
+    } : undefined,
+    extra: {
+      route: request.url,
+    },
+    tags: {
+      errorHandler: true
+    }
+  });
+  return reply.status(500).send({ 
+    error: 'INTERNAL_SERVER_ERROR', 
+    message: 'An unexpected error has occurred' 
+  });
 });
 
 
@@ -175,11 +190,15 @@ await app.register(MiddleManager, core)
         maxAge: 1.21e+9,
         httpOnly: true
       },
-      store: new MySQLStore({
-        schema: {
-          tableName: `${TABLE_PREFIX}_sessions`,
-        }
-      }, app.db),
+      store: new MySQLStore(
+        {
+          schema: {
+            tableName: `${TABLE_PREFIX}_sessions`,
+          }
+        }, 
+        /* @ts-expect-error this works okay, breaks in fastify-session@11.1.6 */ 
+        app.db
+      ),
       saveUninitialized: false
     })
 
