@@ -1,6 +1,6 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest, FastifySchema } from 'fastify';
 import { APIComment, APIDiscussion, APIDiscussionCreateResponse, APIDiscussionDetails, APIDiscussionFlags, APIDiscussionOption, APIDiscussionType } from '@srcpanel/common/Discussions';
-import { OkPacket, RowDataPacket } from 'mysql2';
+import { ResultSetHeader, RowDataPacket } from 'mysql2';
 import { NOT_FOUND, NO_PERMISSION } from '../../util/responses.js';
 import { APIPlayer } from '@srcpanel/common/User';
 import { Static, Type } from '@sinclair/typebox';
@@ -98,7 +98,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     discuss = { ...discuss, ...newDiscuss }
     const conn = await fastify.db.getConnection()
     await conn.beginTransaction()
-    await conn.query<OkPacket>(
+    await conn.query<ResultSetHeader>(
       `UPDATE ${ADMINS_DB}.${TABLE_PREFIX}_discussions 
       SET title = ?, description = ?, closed_at = ?, type = ?, flags = ? 
       WHERE id = ?`,
@@ -147,7 +147,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     const discuss = req.body as CreateDiscussionType
     const conn = await fastify.db.getConnection()
     await conn.beginTransaction()
-    const [ok] = await conn.query<OkPacket>(
+    const [ok] = await conn.query<ResultSetHeader>(
       `INSERT INTO ${ADMINS_DB}.${TABLE_PREFIX}_discussions (title, description, creator, closed_at, type, flags) VALUES (?, ?, ?, ?, ?, ?)`,
       [discuss.title, discuss.description, req.user!.steamid2, discuss.closedAt, discuss.type, discuss.flags]
     )
@@ -156,7 +156,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     if (discuss.options) {
       for (const option of discuss.options) {
         //option.id here is a dummy value used by UI.
-        const [row] = await conn.query<OkPacket>(
+        const [row] = await conn.query<ResultSetHeader>(
           `INSERT INTO ${ADMINS_DB}.${TABLE_PREFIX}_discussion_options (discussion_id, label) 
           VALUES (?, ?)`,
           [id, option.label]
@@ -280,7 +280,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     }
     const comment: Record<string, any> = req.body as Record<string, any>
     const timestamp = Math.round(Date.now() / 1000)
-    const [ok] = await fastify.db.query<OkPacket>(
+    const [ok] = await fastify.db.query<ResultSetHeader>(
       `INSERT INTO \`${ADMINS_DB}\`.${TABLE_PREFIX}_discussion_comments 
         (discussion_id, creator, content, timestamp) 
       VALUES 

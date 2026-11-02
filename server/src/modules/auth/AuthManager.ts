@@ -1,4 +1,4 @@
-import { Pool, RowDataPacket, OkPacket } from "mysql2/promise";
+import { Pool, RowDataPacket, ResultSetHeader } from "mysql2/promise";
 import QuickLRU from 'quick-lru'
 import { FastifyReply, FastifyRequest } from 'fastify';
 import { AdminData, AdminGroup, OauthProviderId, SessionData, ReadableAdminGroup, UserNotification, UserNotificationOptions, AddUserNotification, UserProfileData, APIKey } from '@srcpanel/common/User';
@@ -209,9 +209,9 @@ export default class AuthManager {
     public async revokeAdmin(id: number) {
         const conn = await this.#db.getConnection()
         conn.beginTransaction()
-        await conn.execute<OkPacket>("DELETE FROM sm_admins WHERE id = ?", [id])
-        await conn.execute<OkPacket>("DELETE FROM sm_admins_groups WHERE admin_id = ?", [id])
-        await conn.execute<OkPacket>("DELETE FROM ${TABLE_PREFIX}_permissions WHERE admin_id = ?", [id])
+        await conn.execute<ResultSetHeader>("DELETE FROM sm_admins WHERE id = ?", [id])
+        await conn.execute<ResultSetHeader>("DELETE FROM sm_admins_groups WHERE admin_id = ?", [id])
+        await conn.execute<ResultSetHeader>("DELETE FROM ${TABLE_PREFIX}_permissions WHERE admin_id = ?", [id])
         await conn.commit()
         conn.release()
         delete this.admins[id.toString()]
@@ -229,7 +229,7 @@ export default class AuthManager {
         }
         const conn = await this.#db.getConnection()
         await conn.beginTransaction()
-        await conn.query<OkPacket>(
+        await conn.query<ResultSetHeader>(
             "UPDATE sm_admins SET flags = ?, name = ?, immunity = ?, password = ?, authtype = ? WHERE id = ?", 
             [newAdminData.flags, newAdminData.name, newAdminData.immunity, newAdminData.password, newAdminData.authtype, id]
         )
@@ -239,7 +239,7 @@ export default class AuthManager {
         // If a change in groups
         if(data.groupIds) {
             // We don't know how many groups there are, easier to nuke them all and re-add
-            await conn.query<OkPacket>(
+            await conn.query<ResultSetHeader>(
                 "DELETE FROM sm_admins_groups WHERE admin_id = ?", 
                 [id]
             )
@@ -276,7 +276,7 @@ export default class AuthManager {
 
         const conn = await this.#db.getConnection()
         await conn.beginTransaction()
-        const [ok] = await conn.execute<OkPacket>(
+        const [ok] = await conn.execute<ResultSetHeader>(
             `INSERT INTO sm_admins (\`authtype\`, \`identity\`, \`password\`, \`flags\`, \`name\`, \`immunity\`) VALUES (:authtype, :identity, :password, :flags, :name, :immunity)`,
             {
                 authtype: admin.authtype || "steam",
@@ -361,13 +361,13 @@ export default class AuthManager {
     public async createApiKey(steamid: string): Promise<APIKey> {
         const conn = await this.#db.getConnection()
         await conn.beginTransaction()
-        await conn.execute<OkPacket>(
+        await conn.execute<ResultSetHeader>(
             `DELETE FROM ${TABLE_PREFIX}_apikeys WHERE SUBSTRING(steamid, 11) = SUBSTRING(?, 11)`,
             [ steamid ]
         )
 
         const id = crypto.randomBytes(32).toString('hex')
-        await conn.execute<OkPacket>(
+        await conn.execute<ResultSetHeader>(
             `INSERT INTO ${TABLE_PREFIX}_apikeys (id, steamid, perms, created, lastUsed) VALUES (?, ?, 0, UNIX_TIMESTAMP(), UNIX_TIMESTAMP())`,
             [ id, steamid ]
         )
@@ -719,12 +719,12 @@ export default class AuthManager {
     public async setProvider(steamid: string, providerName: OauthProviderId, providerData: OauthProviderData | null) {
         if(providerData === null) {
             // TOOD: also revoke token
-            return await this.#db.query<OkPacket>(
+            return await this.#db.query<ResultSetHeader>(
                 "DELETE FROM ${TABLE_PREFIX}_providers WHERE SUBSTRING(steamid, 11) = SUBSTRING(?, 11) AND provider = ?",
                 [ steamid, providerName ]
             )
         } else {
-            return await this.#db.query<OkPacket>(
+            return await this.#db.query<ResultSetHeader>(
                 `INSERT INTO ${TABLE_PREFIX}_providers (steamid, provider, provider_id, username, avatar_url) VALUES (?, ?, ?, ?, ?) 
                     ON DUPLICATE KEY UPDATE username = ?, avatar_url = ?`,
                 [ steamid, providerName, providerData.id, providerData.username, providerData.avatarUrl, providerData.username, providerData.avatarUrl ]
@@ -775,7 +775,7 @@ export default class AuthManager {
     }
 
     public async setProviderAuthData(steamid: string, providerName: OauthProviderId, providerData: OauthAuthData) {
-        return await this.#db.query<OkPacket>(
+        return await this.#db.query<ResultSetHeader>(
             "UPDATE ${TABLE_PREFIX}_providers SET refresh_token = ?, refresh_token_expired = ?, access_token = ?, access_token_expires = ? WHERE SUBSTRING(steamid, 11) = SUBSTRING(?, 11) AND provider = ?",
             [ providerData.refreshToken, providerData.refreshTokenExpired, providerData.accessToken, providerData.accessTokenExpires, steamid, providerName ]
         )

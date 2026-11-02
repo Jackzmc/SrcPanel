@@ -1,5 +1,5 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
-import { OkPacket, RowDataPacket } from 'mysql2';
+import { ResultSetHeader, RowDataPacket } from 'mysql2';
 import { NO_PERMISSION } from '../../util/responses.js';
 import { NamespacedMetric } from '../../modules/metrics/influx.js';
 
@@ -29,7 +29,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         },
         async handler(req: FastifyRequest<{ Body: POSTNotesType, Params: { steamid: string } }>, reply) {
             if(!req.user!.hasPermission("notes.create")) return NO_PERMISSION(reply)
-            const [ok] = await fastify.db.execute<OkPacket>(`
+            const [ok] = await fastify.db.execute<ResultSetHeader>(`
                 INSERT INTO notes (steamid, markedBy, content)
                 VALUES (:steamid, :markedBy, :content)`,
                 {
@@ -101,7 +101,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             }
 
 
-            const [ok] = await fastify.db.execute<OkPacket>(`
+            const [ok] = await fastify.db.execute<ResultSetHeader>(`
                 UPDATE notes
                 SET content = :content, markedBy = :markedBy
                 WHERE id = :id`,
@@ -169,7 +169,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             const [code, granted] = req.user!.requirePermission("notes.delete", {isCreator})
             if(!granted) return NO_PERMISSION(reply)
 
-            const [ok] = await fastify.db.execute<OkPacket>(
+            const [ok] = await fastify.db.execute<ResultSetHeader>(
                 `DELETE FROM notes WHERE id = ?`,
                 [req.params.id]
             )

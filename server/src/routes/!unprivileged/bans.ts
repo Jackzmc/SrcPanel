@@ -1,5 +1,5 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
-import { OkPacket, RowDataPacket } from 'mysql2';
+import { ResultSetHeader, RowDataPacket } from 'mysql2';
 
 import SteamID from 'steamid'
 import { APIBanFlags, APIBanResponse, FullAPIBan, ListAPIBan } from '@srcpanel/common/Ban';
@@ -198,7 +198,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
       })
     }
 
-    const [ok] = await fastify.db.execute<OkPacket>(
+    const [ok] = await fastify.db.execute<ResultSetHeader>(
       "INSERT INTO ban_appeals (ban_id, state, message, ip, created) VALUES (?, 0, ?, ?, UNIX_TIMESTAMP())",
       [req.params.id, req.query.message, req.ip]
     )

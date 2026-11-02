@@ -1,5 +1,5 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
-import { OkPacket, RowDataPacket } from 'mysql2';
+import { ResultSetHeader, RowDataPacket } from 'mysql2';
 import { Static, Type } from '@sinclair/typebox'
 import { APIBanFlags, FullAPIBan } from '@srcpanel/common/Ban';
 import { computeChanges, replaceObject } from '../../util/index.js';
@@ -75,7 +75,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 ban.executor = req.user!.steamid2
             }
 
-            const [ok] = await fastify.db.execute<OkPacket>(`
+            const [ok] = await fastify.db.execute<ResultSetHeader>(`
                 UPDATE bans 
                 SET executor = :executor, reason = :reason, flags = :flags, 
                 public_message = :public_message, expires = :expires 
@@ -258,7 +258,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             steamid: req.params.steamid,
         }
 
-        const [ok] = await fastify.db.execute<OkPacket>(
+        const [ok] = await fastify.db.execute<ResultSetHeader>(
             `INSERT INTO bans (steamid, executor, reason, flags, public_message, expires, timestamp) 
             VALUES (:steamid, :executor, :reason, :flags, :public_message, :expires, UNIX_TIMESTAMP())`,
             {
@@ -326,7 +326,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             const [code, granted] = req.user!.requirePermission("bans.delete", { isCreator })
             if(!granted) return NO_PERMISSION(reply)
 
-            const [ok] = await fastify.db.execute<OkPacket>(
+            const [ok] = await fastify.db.execute<ResultSetHeader>(
                 `DELETE FROM bans WHERE id = ?`,
                 [req.params.id]
             )
