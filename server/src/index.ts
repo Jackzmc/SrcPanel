@@ -159,9 +159,16 @@ app.setErrorHandler(async (error, request, reply) => {
       errorHandler: true
     }
   });
+
+  let code: string = "INTERNAL_SERVER_ERROR", message: string = "An unexpected error has occurred"
+
+  if(error instanceof Error) {
+    if('code' in error && typeof error.code === "string") code = error.code
+    message = error.message
+  }
   return reply.status(500).send({ 
-    error: 'INTERNAL_SERVER_ERROR', 
-    message: 'An unexpected error has occurred' 
+    error: code, 
+    message: message 
   });
 });
 

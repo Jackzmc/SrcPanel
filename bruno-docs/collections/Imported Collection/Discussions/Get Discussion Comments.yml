@@ -8,7 +8,7 @@ http:
   url: "{{API_HOST}}/api/discussions/:id/comments"
   params:
     - name: id
-      value: ""
+      value: "53"
       type: path
   auth: inherit
 
@@ -18,3 +18,72 @@ settings:
   followRedirects: true
   maxRedirects: 5
   forwardAuthorizationHeader: true
+
+examples:
+  - name: example
+    request:
+      url: "{{API_HOST}}/api/discussions/:id/comments"
+      method: GET
+      params:
+        - name: id
+          value: "53"
+          type: path
+    response:
+      status: 200
+      statusText: OK
+      headers:
+        - name: cross-origin-opener-policy
+          value: same-origin
+        - name: cross-origin-resource-policy
+          value: same-origin
+        - name: origin-agent-cluster
+          value: ?1
+        - name: referrer-policy
+          value: no-referrer
+        - name: strict-transport-security
+          value: max-age=31536000; includeSubDomains
+        - name: x-content-type-options
+          value: nosniff
+        - name: x-dns-prefetch-control
+          value: off
+        - name: x-download-options
+          value: noopen
+        - name: x-frame-options
+          value: SAMEORIGIN
+        - name: x-permitted-cross-domain-policies
+          value: none
+        - name: x-xss-protection
+          value: "0"
+        - name: vary
+          value: Origin
+        - name: x-ratelimit-limit
+          value: "1000"
+        - name: x-ratelimit-remaining
+          value: "999"
+        - name: x-ratelimit-reset
+          value: "60"
+        - name: content-type
+          value: application/json; charset=utf-8
+        - name: etag
+          value: '"ABz613lD24N2Gxr00I6RpjyPESg="'
+        - name: set-cookie
+          value: srcpanel_session=YbSPx197fRgZvNjE3AjAN14juTIUmewz.MvAxQ5+wSJuD2rXM5BvNE5LkO73e2wvh71uaSEPIUME; Path=/; Expires=Mon, 16 Nov 2026 22:54:31 GMT; HttpOnly; SameSite=Lax
+        - name: content-length
+          value: "67"
+        - name: date
+          value: Mon, 02 Nov 2026 22:47:51 GMT
+        - name: connection
+          value: keep-alive
+        - name: keep-alive
+          value: timeout=72
+      body:
+        type: json
+        data: |-
+          [
+            {
+              "id": 141,
+              "timestamp": 1777844995,
+              "creator": null,
+              "content": "agdf"
+            }
+          ]
