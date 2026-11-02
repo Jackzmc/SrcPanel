@@ -4,7 +4,7 @@ import Server from "../Server.js";
 import PluginSocket from "../PluginSocket.js";
 import Feature from "./Feature.js";
 import { ServerStatusData } from "@srcpanel/common/Server";
-import jwtPromise from "../../../jwt-promise.js";
+import jwtPromise from "../../../util/jwt-promise.js";
 
 const LIVE_CACHE_TTL = 1000 * 60 * 3 // Live cache data expires after 3 minutes
 

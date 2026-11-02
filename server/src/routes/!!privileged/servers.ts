@@ -2,7 +2,7 @@ import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
 import { RowDataPacket } from 'mysql2';
 import { join } from 'path';
 import { readFile } from 'fs/promises';
-import { NO_PERMISSION, NOT_FOUND } from '../../responses.js';
+import { NO_PERMISSION, NOT_FOUND } from '../../util/responses.js';
 import { ServerDetailed, ServerInfo } from '@srcpanel/common/Server';
 import { UserPrivilegeCode } from '@srcpanel/common/Privileges';
 import { TABLE_PREFIX } from '../../core/database.js';

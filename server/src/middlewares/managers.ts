@@ -2,7 +2,7 @@ import { FastifyInstance } from 'fastify';
 import FastifyPlugin from 'fastify-plugin'
 import User from '../modules/users/User.js';
 import { SESSION_VERSION } from '../routes/auth/steam.js';
-import { NOT_LOGGED_IN } from '../responses.js';
+import { NOT_LOGGED_IN } from '../util/responses.js';
 
 import * as Sentry from '@sentry/node'
 import { CACHE_FOLDER, CONFIG_FOLDER, CoreModules, DATA_FOLDER } from '../core/index.js';

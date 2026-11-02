@@ -6,7 +6,7 @@ import ServerManager from "../ServerManager.js";
 import { DynamicServerGroup } from "../groups/DynamicServerGroup.js";
 import { ServerEvent } from "../DockerServer.js";
 import yaml from "yaml";
-import Logger from '#/logger.js';
+import Logger from '#/util/logger.js';
 
 const log = Logger.child({ name: "DynamicServerManager" });
 

@@ -1,10 +1,10 @@
 import { ChildWorkshopItem, DownloadLogEntry, DownloadProgress, DownloadState, ShareItemState, WorkshopItem } from "@srcpanel/common/Share"
-import SteamAPI from "../steam.js"
+import SteamAPI from "../../util/steam.js"
 import Share from "./Share.js"
 import { join } from "node:path"
 import { getMetadata, serializeWorkshopItem } from "./ShareUtils.js"
 import pLimit from "p-limit"
-import Logger, { type PinoLogger } from '#/logger.js'
+import Logger, { type PinoLogger } from '#/util/logger.js'
 import { METRIC_SHARE_DOWNLOAD_COUNT } from "#/core/prom-metrics.js"
 
 /// Limits the number of active downloads. Globally shared between all queues

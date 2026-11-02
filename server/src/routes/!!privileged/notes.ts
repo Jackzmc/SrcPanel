@@ -1,6 +1,6 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
 import { OkPacket, RowDataPacket } from 'mysql2';
-import { NO_PERMISSION } from '../../responses.js';
+import { NO_PERMISSION } from '../../util/responses.js';
 import { NamespacedMetric } from '../../modules/metrics/influx.js';
 
 const metric = new NamespacedMetric("notes")

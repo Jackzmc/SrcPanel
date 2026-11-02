@@ -6,9 +6,9 @@ import type { SMPluginMeta } from '@srcpanel/common/CustomServer';
 import User from "../../modules/users/User.js";
 import { CustomServerGroup } from "./groups/CustomServerGroup.js";
 import DockerServer from "./DockerServer.js";
-import SteamAPI from "../../modules/steam.js";
+import SteamAPI from "../../util/steam.js";
 import type { WorkshopItem } from "@srcpanel/common/Share";
-import Logger from '#/logger.js'
+import Logger from '#/util/logger.js'
 const log = Logger.child({ name: "CustomServerBuilder" })
 
 export interface CustomServerOptions {

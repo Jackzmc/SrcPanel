@@ -1,4 +1,4 @@
-import Logger from '#/logger.js'
+import Logger from '#/util/logger.js'
 import * as Sentry from '@sentry/node'
 
 const log = Logger.child({ name: 'sentry' })

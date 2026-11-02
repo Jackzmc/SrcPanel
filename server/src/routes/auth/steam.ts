@@ -1,7 +1,7 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyReply, FastifyRequest } from 'fastify';
 import SteamID from 'steamid'
-import { SteamAPIError } from '../../modules/steam.js';
-import { ErrorWithCode } from '../../util.js';
+import { SteamAPIError } from '../../util/steam.js';
+import { ErrorWithCode } from '../../util/index.js';
 import { USER_AGENT } from '../../modules/auth/OauthProvider.js';
 import { METRIC_AUTH_LOGIN_COUNT } from '../../core/prom-metrics.js';
 import { sendMetric } from '../../modules/metrics/influx.js';

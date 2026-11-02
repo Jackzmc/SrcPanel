@@ -1,6 +1,6 @@
 import { InfluxDB, Point, WriteApi } from "@influxdata/influxdb-client";
 import pkg from '../../../package.json' with { type: "json" }
-import Logger from '#/logger.js'
+import Logger from '#/util/logger.js'
 const log = Logger.child({ name: "influx" })
 
 const FLUSH_INTERVAL = process.env.INFLUX_FLUSH_INTERVAL_MS ? parseInt(process.env.INFLUX_FLUSH_INTERVAL_MS) : 30_000

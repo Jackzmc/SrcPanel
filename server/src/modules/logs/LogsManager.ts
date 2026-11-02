@@ -1,4 +1,4 @@
-import Logger, { PinoLogger } from '#/logger.js'
+import Logger, { PinoLogger } from '#/util/logger.js'
 import { Pool, RowDataPacket } from 'mysql2/promise'
 import CacheManager from '../CacheManager.js'
 import PlayerManager from '../users/PlayerManager.js'

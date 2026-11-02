@@ -1,5 +1,5 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
-import { NO_PERMISSION } from '../../responses.js';
+import { NO_PERMISSION } from '../../util/responses.js';
 import Server from '../../modules/servers/Server.js';
 import { CustomServerGroup } from '../../modules/servers/groups/CustomServerGroup.js';
 import { DynamicServerGroup } from '../../modules/servers/groups/DynamicServerGroup.js';

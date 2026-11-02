@@ -10,8 +10,8 @@ import { GameDig } from 'gamedig';
 import SocketClientUser from "./SocketClientUser.js";
 import { ClientOutPayload, Server_Status, ServerOutPacket, ServerOutPayload } from "@srcpanel/common/ServerWebsocket";
 import { LiveRecordResponse } from "@srcpanel/common/Live";
-import { resolveIPv4, tryResolveIPv4 } from "../../util.js";
-import Logger, { PinoLogger } from '#/logger.js'
+import { resolveIPv4, tryResolveIPv4 } from "../../util/index.js";
+import Logger, { PinoLogger } from '#/util/logger.js'
 import { METRIC_SERVERS_LIVE_VIEWERS, METRIC_SERVERS_STATUS_PLAYERS, METRIC_SERVERS_STATUS_STATE } from "../../core/prom-metrics.js";
 import User from "../users/User.js";
 

@@ -1,6 +1,6 @@
-import Logger, { type PinoLogger } from '#/logger.js'
+import Logger, { type PinoLogger } from '#/util/logger.js'
 import ShareDatabase from './ShareDB.js'
-import SteamAPI from '../steam.js'
+import SteamAPI from '../../util/steam.js'
 import { AddonWorkshopInfo, ScanEvent, ShareInfo, ShareItemState } from '@srcpanel/common/Share'
 import { readdir, stat } from 'node:fs/promises'
 import { join } from 'node:path'

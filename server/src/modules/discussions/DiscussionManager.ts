@@ -5,7 +5,7 @@ import AuthManager from "../auth/AuthManager.js";
 import { DefinedTask } from "../tasks/Task.js";
 import { ADMINS_DB, MAIN_DB, TABLE_PREFIX } from "../../core/database.js";
 import TaskManager from "../tasks/TaskManager.js";
-import Logger, { PinoLogger } from '#/logger.js'
+import Logger, { PinoLogger } from '#/util/logger.js'
 
 const AUTO_ARCHIVE_TIME = 1000 * 60 * 60 * 24 * 10 // 10 days
 const CACHE_TTL = 1000 * 60 * 60 * 1

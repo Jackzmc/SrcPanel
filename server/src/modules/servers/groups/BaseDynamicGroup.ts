@@ -4,7 +4,7 @@ import DynamicServerManager, { DockerTemplateContainer } from "../docker/Dynamic
 import DockerServer from "../DockerServer.js"
 import { DockerGroupConfig } from "./index.js"
 import ServerGroup from "./ServerGroup.js"
-import Logger from '#/logger.js'
+import Logger from '#/util/logger.js'
 
 const log = Logger.child({name: "BaseDynamicGroup"})
 

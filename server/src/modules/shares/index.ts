@@ -2,10 +2,10 @@ import yaml from 'yaml'
 import { join } from 'path'
 import { readFile, mkdir, copyFile, unlink } from 'fs/promises'
 import { ShareDestination, ShareInfo } from '@srcpanel/common/Share'
-import { doesFileExist } from '../../util.js'
+import { doesFileExist } from '../../util/index.js'
 import Share from './Share.js'
-import SteamAPI from '../../modules/steam.js'
-import Logger from '#/logger.js'
+import SteamAPI from '../../util/steam.js'
+import Logger from '#/util/logger.js'
 import ShareDatabase from './ShareDB.js'
 
 const log = Logger.child({ name: "shares" })

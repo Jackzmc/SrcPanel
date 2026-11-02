@@ -1,6 +1,6 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
 import { APIBanFlags, BanAppealState } from '@srcpanel/common/Ban';
-import { NO_PERMISSION } from '../../responses.js';
+import { NO_PERMISSION } from '../../util/responses.js';
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
     fastify.post('/:appealid/approve', async(req: FastifyRequest<{Params: { appealid: string }}>, reply) => {

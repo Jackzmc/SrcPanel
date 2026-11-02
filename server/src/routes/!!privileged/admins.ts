@@ -4,8 +4,8 @@ import { Static, Type } from '@sinclair/typebox'
 import SteamID from 'steamid';
 import type { AdminData, APIListAdminGroupsResponse, ReadableAdminData } from '@srcpanel/common/User';
 import { APIBanFlags } from '@srcpanel/common/Ban';
-import { computeChanges } from '../../util.js';
-import { NO_PERMISSION } from '../../responses.js';
+import { computeChanges } from '../../util/index.js';
+import { NO_PERMISSION } from '../../util/responses.js';
 
 /* eslint-disable @typescript-eslint/no-unused-vars */
 const POSTAdmin = Type.Object({

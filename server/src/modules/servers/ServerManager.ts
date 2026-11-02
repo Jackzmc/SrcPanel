@@ -2,13 +2,13 @@ import { readFile, open } from 'fs/promises'
 import Server, { ConfigServerData } from './Server.js'
 import Share from '../shares/Share.js';
 import path from 'path';
-import SteamAPI from '../steam.js'
+import SteamAPI from '../../util/steam.js'
 import { BulkActionResult, ServerAction, ServerType } from '@srcpanel/common/Server'
 import net from 'net'
 import { LiveRecordType, LiveRecordResponse,PluginTokenPayload } from '@srcpanel/common/Live';
 import BufferReader from '../BufferReader.js';
 import PluginSocket from './PluginSocket.js';
-import JWT from '../../jwt-promise.js';
+import JWT from '../../util/jwt-promise.js';
 import { WriteStream, createWriteStream } from 'fs';
 import { GameDig, QueryOptions } from 'gamedig';
 import DynamicServerManager from './docker/DynamicServerManager.js';
@@ -17,7 +17,7 @@ import { DynamicServerGroup } from './groups/DynamicServerGroup.js';
 import yaml from 'yaml'
 import { loadShares } from '../shares/index.js';
 import { loadGroups } from './groups/index.js';
-import Logger from '#/logger.js'
+import Logger from '#/util/logger.js'
 import { METRIC_SERVERS_LIVE_AUTH_COUNT } from '../../core/prom-metrics.js';
 import User from '../users/User.js';
 const log = Logger.child({ name: "ServerManager" })

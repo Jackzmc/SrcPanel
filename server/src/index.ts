@@ -6,7 +6,7 @@ import fastifyWebsocket from '@fastify/websocket'
 import FastifyEtag from '@fastify/etag'
 import MySQLSession from 'express-mysql-session'
 import { Pool } from 'mysql2/promise';
-import SteamAPI from './modules/steam.js'
+import SteamAPI from './util/steam.js'
 import AuthManager from './modules/auth/AuthManager.js';
 import ServerManager from './modules/servers/ServerManager.js';
 import UserManager from './modules/users/UserManager.js';
@@ -26,7 +26,7 @@ import TaskManager from './modules/tasks/TaskManager.js'
 import CacheManager from './modules/CacheManager.js'
 
 import MiddleManager from './middlewares/managers.js'
-import { LISTEN_HOST, LISTEN_PORT, sleep } from './util.js'
+import { LISTEN_HOST, LISTEN_PORT, sleep } from './util/index.js'
 import { DataManagerInstance } from './modules/DataManager.js'
 import { getGlobalWriter, sendMetric } from './modules/metrics/influx.js'
 import init, { onCoreShutdown } from './core/index.js'
@@ -38,7 +38,7 @@ const FORCE_SHUTDOWN_TIMEOUT = 20_000
 
 const MySQLStore = MySQLSession(FastifySession)
 
-import loggerInstance from './logger.js'
+import loggerInstance from '#/util/logger.js'
 
 const core = await init()
 
@@ -140,7 +140,7 @@ import internalMetrics from './hooks/metrics.js'
 import { METRIC_STARTUP_TIME } from './core/prom-metrics.js'
 import { loadBots } from './modules/bots/index.js'
 import LogsManager from './modules/logs/LogsManager.js'
-import { TABLE_PREFIX } from './core/database.ts'
+import { TABLE_PREFIX } from './core/database.js'
 
 await app.register(internalMetrics)
 

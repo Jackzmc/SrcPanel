@@ -1,4 +1,4 @@
-import Logger from '#/logger.js'
+import Logger from '#/util/logger.js'
 import AuthManager from '../modules/auth/AuthManager.js';
 
 import { mkdir } from 'fs/promises'
@@ -6,7 +6,7 @@ import UserManager from '../modules/users/UserManager.js';
 import { join } from 'path';
 
 import ServerManager from '../modules/servers/ServerManager.js';
-import SteamAPI from '../modules/steam.js'
+import SteamAPI from '../util/steam.js'
 import ConfigManager from '../modules/ConfigManager.js';
 import DiscussionManager from '../modules/discussions/DiscussionManager.js';
 import TaskManager from '../modules/tasks/TaskManager.js';

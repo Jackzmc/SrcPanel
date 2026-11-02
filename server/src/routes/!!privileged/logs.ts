@@ -1,6 +1,6 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
 import { Static, Type } from '@sinclair/typebox'
-import { NO_PERMISSION } from '../../responses.js';
+import { NO_PERMISSION } from '../../util/responses.js';
 import { QueryBuilder, SortDirection } from '../../modules/QueryBuilder.js';
 import { APILogData, APILogQueryResult } from '@srcpanel/common/Logs';
 import { TABLE_PREFIX } from '../../core/database.js';

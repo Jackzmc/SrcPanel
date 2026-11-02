@@ -1,6 +1,6 @@
 import { CoreModules } from "#/core/index.js"
 import { FluxerBot } from "#/modules/bots/FluxerBot.js"
-import Logger from '#/logger.js'
+import Logger from '#/util/logger.js'
 
 const log = Logger.child({ name: "Bots" })
 

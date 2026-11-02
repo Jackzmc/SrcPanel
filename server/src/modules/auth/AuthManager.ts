@@ -9,14 +9,14 @@ import { SteamUserDetails } from '@srcpanel/common/Share';
 import SteamID from "steamid";
 import FastGeoip from 'fast-geoip';
 import { SESSION_VERSION } from '../../routes/auth/steam.js';
-import SteamAPI from "../steam.js";
+import SteamAPI from "../../util/steam.js";
 import crypto from 'crypto'
 import { minimatch } from 'minimatch'
 import { OauthManager } from "./OauthManager.js";
 import ConfigManager from "../ConfigManager.js";
 import { OauthAuthData } from './OauthProvider.js';
 
-import Logger from '#/logger.js'
+import Logger from '#/util/logger.js'
 import CacheManager from "../../modules/CacheManager.js";
 import { ADMINS_DB, MAIN_DB, TABLE_PREFIX } from "../../core/database.js";
 const log = Logger.child({ name: "AuthManager" })

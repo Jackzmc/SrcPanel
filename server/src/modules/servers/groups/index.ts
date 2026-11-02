@@ -7,7 +7,7 @@ import { CustomServerGroup } from "./CustomServerGroup.js";
 import { DynamicServerGroup } from "./DynamicServerGroup.js";
 import { StandardServerGroup } from "./StandardServerGroup.js";
 import { ServerAction } from "@srcpanel/common/Server";
-import Logger from '#/logger.js'
+import Logger from '#/util/logger.js'
 const log = Logger.child({ name: "groups/index" })
 
 const CONFIG_FILE = "server_groups.yml"

@@ -1,7 +1,7 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
 import SteamID from 'steamid';
 import { APIListPlayersResponse, APIUserDetails, PlayerRecentEntry, UserNameEntry, UserProfileData } from '@srcpanel/common/User';
-import { NOT_FOUND, NO_PERMISSION } from '../../responses.js';
+import { NOT_FOUND, NO_PERMISSION } from '../../util/responses.js';
 import { ADMINS_DB, TABLE_PREFIX } from '../../core/database.js';
 import { GUARD_REQUIRE_PLAYER } from '../../guards/users.js';
 import PlayerManager from '../../modules/users/PlayerManager.js';

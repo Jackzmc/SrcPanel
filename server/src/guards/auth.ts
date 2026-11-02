@@ -1,7 +1,7 @@
 import { UserPrivilegeCode, UserPrivilegeCodes } from "@srcpanel/common/Privileges"
 import { FastifyInstance, FastifyReply, FastifyRequest, preHandlerAsyncHookHandler } from "fastify"
 import { RequirePermissionOptions } from "../modules/users/User.js"
-import { NO_PERMISSION } from "../responses.js"
+import { NO_PERMISSION } from "../util/responses.js"
 import AuthManager from "../modules/auth/AuthManager.js"
 import { PanelConfigProvider } from "@srcpanel/common/Panel"
 import { sendMissingParamError } from "./index.js"

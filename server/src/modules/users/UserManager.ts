@@ -1,10 +1,10 @@
 import SteamID from 'steamid';
 import { SQL } from 'sql-template-strings'
-import SteamAPI from '../../modules/steam.js'
+import SteamAPI from '../../util/steam.js'
 import { Pool, RowDataPacket } from 'mysql2/promise';
 import { UserNameEntry } from '@srcpanel/common/User';
 import { TABLE_PREFIX } from '../../core/database.js';
-import Logger from '#/logger.js'
+import Logger from '#/util/logger.js'
 
 const log = Logger.child({ name: 'UserManager' })
 

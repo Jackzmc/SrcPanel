@@ -2,7 +2,7 @@ import { FastifyInstance, FastifyPluginOptions, FastifyReply, FastifyRequest } f
 import crypto, { createHash } from 'node:crypto'
 import User from '../../modules/users/User.js';
 import SteamID from 'steamid';
-import { ErrorWithCode } from '../../util.js';
+import { ErrorWithCode } from '../../util/index.js';
 import { sendMetric } from '../../modules/metrics/influx.js';
 import { METRIC_AUTH_LOGIN_COUNT } from '../../core/prom-metrics.js';
 import { GUARD_REQUIRE_LOGGED_IN, GUARD_REQUIRE_OAUTH_PROVIDER } from '../../guards/auth.js';

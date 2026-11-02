@@ -1,5 +1,5 @@
 import http from 'node:http'
-import { LISTEN_PORT } from './util.ts';
+import { LISTEN_PORT } from './util/index.js';
 
 http
     .request(

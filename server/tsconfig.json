@@ -25,7 +25,7 @@
         "useUnknownInCatchVariables": false,
         "strictPropertyInitialization": false,
         "verbatimModuleSyntax": false,
-        "rewriteRelativeImportExtensions": true,
+        "rewriteRelativeImportExtensions": false,
         "preserveConstEnums": true
         // "incremental": true
     },

@@ -1,5 +1,5 @@
 import mysql from 'mysql2/promise'
-import Logger from '#/logger.js'
+import Logger from '#/util/logger.js'
 
 const log = Logger.child({ name: "db" })
 
