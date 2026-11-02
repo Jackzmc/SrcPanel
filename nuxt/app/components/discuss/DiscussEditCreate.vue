@@ -58,7 +58,8 @@
 
                   <template #content>
                     <div class="flex justify-center pt-2 px-2 gap-2">
-                      <UInputDate v-model="expiresDate" />
+                        <!-- @vue-expect-error TS complains but this is valid -->
+                      <UInputDate v-model="expiresDate" type="date" />
                       <UButton size="sm" :variant="expiresDate ? 'solid' : 'outline'" :disabled="!expiresDate" @click="setExpiresDate()">
                         Set
                       </UButton>
@@ -66,7 +67,8 @@
                         Clear
                       </UButton>
                     </div>
-                    <UCalendar v-model="expiresDate" />
+                      <!-- @vue-expect-error TS complains but this is valid -->
+                    <UCalendar v-model="expiresDate" type="date" />
                   </template>
                 </UPopover>
               </div>
@@ -109,7 +111,7 @@ import type { SelectItem } from "@nuxt/ui";
 import type { SettingEntry } from "~~/shared/types/discuss";
 import DiscussSettingsEntry from "@/components/discuss/edit/DiscussSettingsEntry.vue";
 import DiscussSettingsFlagEntry from "@/components/discuss/edit/DiscussSettingsFlagEntry.vue";
-import type { ZonedDateTime } from "@internationalized/date";
+import { CalendarDate, getLocalTimeZone, type ZonedDateTime } from "@internationalized/date";
 import { fromAbsolute, now } from "@internationalized/date";
 import { formatDate, slugify } from "@srcpanel/common/format";
 
@@ -150,7 +152,7 @@ const resultsOption: SettingEntry[] = [
 const problems = computed(() => {
   const list = [];
   if (!editDiscuss.value.title) list.push("Title is required");
-  if (!editDiscuss.value.options || editDiscuss.value.options.length < 2) list.push("Minimum of 2 options are required");
+  if (!editDiscuss.value.options || editDiscuss.value.options.length < 2) list.push("A minimum of 2 options are required");
   return list;
 });
 
@@ -163,17 +165,20 @@ useHead({
   title: title,
 });
 
-const initExpiresTime = computed(() => {
-  if (props.discuss.closedAt) return fromAbsolute(props.discuss.closedAt * 1000, "UTC");
-  const n = now("UTC");
-  n.set({
-    day: n.day + 14,
-    hour: 6, minute: 0, second: 0, millisecond: 0,
-  });
-  return n;
+const defaultSuggestedExpiresTime = computed(() => {
+  let n: ZonedDateTime
+  if (props.discuss.closedAt) n = fromAbsolute(props.discuss.closedAt * 1000, "UTC");
+  else {
+    n = now("UTC")
+    n.set({
+      day: n.day + 14,
+      hour: 6, minute: 0, second: 0, millisecond: 0,
+    })
+  }
+  return new CalendarDate(n.year, n.month, n.day)
 });
 
-const expiresDate = ref<ZonedDateTime | null>(initExpiresTime.value);
+const expiresDate = ref<CalendarDate | null>(defaultSuggestedExpiresTime.value);
 const editDiscuss = ref<APIDiscussionBase>({
   options: props.discuss.options ?? [],
   ...props.discuss,
@@ -195,7 +200,7 @@ function onAddOption(value: string) {
 }
 
 function setExpiresDate() {
-  editDiscuss.value.closedAt = expiresDate.value ? Math.round(expiresDate.value.toDate().valueOf() / 1000) : 0;
+  editDiscuss.value.closedAt = expiresDate.value ? Math.round(expiresDate.value.toDate(getLocalTimeZone()).valueOf() / 1000) : 0;
   console.log("setExpiresDate", { expiresDate: expiresDate.value, closedAt: editDiscuss.value.closedAt });
 }
 

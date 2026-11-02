@@ -5,13 +5,16 @@
       <div v-else class="space-y-4 col-span-2">
         <DiscussCard v-for="discuss in data" :key="discuss.id" :discuss="discuss" type="list" />
       </div>
+      <p v-if="data && data.length === 0" class="space-y-4 col-span-2 text-center text-muted py-6">
+        There are no active discussions at this time
+      </p>
       <div>
         <UCard class="bg-light-blue">
           <div class="space-y-2">
             <h2 class="text-xl font-bold">
               Start a discussion
             </h2>
-            <UFormField label="Discussion topic / title" :ui="{ label: 'font-semibold' }">
+            <UFormField label="Discussion topic or title" :ui="{ label: 'font-semibold' }">
               <UInput v-model="startDiscussionTitle" placeholder="Ask a question" leading-icon="lucide:message-square" class="w-full rounded-4xl" @keydown.enter="startDiscussion" />
             </UFormField>
             <UButton :disabled="startDiscussionTitle.length === 0" trailing-icon="lucide:arrow-right" @click="startDiscussion">
