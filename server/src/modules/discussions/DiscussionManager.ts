@@ -37,7 +37,7 @@ export default class DiscussionManager {
         }
         this.#fetchJob = jobs.register("discussions.fetch", task.bind(this))
         jobs.scheduleRepeating(this.#fetchJob, { hours: 2 })
-        jobs.schedule(this.#fetchJob, { seconds: 0 })
+        task()
     }
 
     async #tryRefresh() {
@@ -47,8 +47,8 @@ export default class DiscussionManager {
         }
     }
 
-    get(id: number) {
-        this.#tryRefresh()
+    async get(id: number) {
+        await this.#tryRefresh()
         return this.#discussions.get(id)
     }
 
@@ -241,7 +241,7 @@ export default class DiscussionManager {
     async getComments(
         discussionId: number,
     ): Promise<APIComment[]> {
-        const discuss = this.get(discussionId)
+        const discuss = await this.get(discussionId)
         if(!discuss) throw Error("Discussion not found")
         const withCreator = (discuss.flags & APIDiscussionFlags.CommentsPublic) == APIDiscussionFlags.CommentsPublic
 
@@ -249,7 +249,7 @@ export default class DiscussionManager {
     }
 
     async submitComment(discussionId: number, user: User, content: string) {
-        const discuss = this.get(discussionId)
+        const discuss = await this.get(discussionId)
         if(!discuss) throw Error("Discussion not found")
         const withCreator = (discuss.flags & APIDiscussionFlags.CommentsPublic) == APIDiscussionFlags.CommentsPublic
 

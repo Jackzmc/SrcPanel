@@ -5,11 +5,7 @@ info:
 
 http:
   method: GET
-  url: "{{API_PROTOCOL}}://{{API_HOST}}/api/servers/:id"
-  params:
-    - name: id
-      value: ""
-      type: path
+  url: "{{API_HOST}}/api/discussions"
   auth: inherit
 
 settings:

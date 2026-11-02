@@ -1,13 +1,8 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest, FastifySchema } from 'fastify';
-import { APIComment, APIDiscussion, APIDiscussionCreateResponse, APIDiscussionDetails, APIDiscussionFlags, APIDiscussionOption, APIDiscussionType, type APISubmitCommentResponse } from '@srcpanel/common/Discussions';
-import { ResultSetHeader, RowDataPacket } from 'mysql2';
-import { NOT_FOUND, NO_PERMISSION } from '../../util/responses.js';
-import { APIPlayer } from '@srcpanel/common/User';
+import { APIComment, APIDiscussion, APIDiscussionCreateResponse, APIDiscussionDetails, APIDiscussionFlags, APIDiscussionType, type APISubmitCommentResponse } from '@srcpanel/common/Discussions';
+import { NO_PERMISSION } from '../../util/responses.js';
 import { Static, Type } from '@sinclair/typebox';
 import { NamespacedMetric } from '../../modules/metrics/influx.js';
-import { MAIN_DB, ADMINS_DB, TABLE_PREFIX, doTransaction } from '../../core/database.js';
-import { disksIO } from 'systeminformation';
-import { sendInvalidParamError } from '../../guards/index.js';
 import { GUARD_REQUIRE_DISCUSSION } from '#/guards/discussions.js'
 
 const metric = new NamespacedMetric("discuss")
@@ -29,6 +24,7 @@ type CreateDiscussionType = Static<typeof CreateDiscussion>
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
   const discManager = fastify.managers.discussions
 
+  GUARD_REQUIRE_DISCUSSION.register(fastify)
 
   fastify.get('/', async (req, reply): Promise<APIDiscussion[]> => {
     const discussions: APIDiscussion[] = []
@@ -121,7 +117,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     async (req: FastifyRequest<{ Params: { id: string } }>, reply): Promise<APIDiscussionDetails> => {
       const discuss = GUARD_REQUIRE_DISCUSSION.get(req)
 
-      const responses = await discManager.getResponses(Number(req.params.id), req.user!, discuss.flags)
+      const responses = await fastify.managers.discussions.getResponses(Number(req.params.id), req.user!, discuss.flags)
+
       return {
         ...discuss.base,
         responses: responses.responses,

@@ -12,13 +12,13 @@ export const GUARD_REQUIRE_DISCUSSION = {
     return async (req: FastifyRequest, reply: FastifyReply) => {
         let { id } = req.params as { id: string }
         if (!id) {
-            return sendMissingParamError(reply, "id", "missing discussion id parameter")
+          return sendMissingParamError(reply, "id", "missing discussion id parameter")
         }
         const discussId = parseInt(id)
         if(isNaN(discussId)) {
-            return sendInvalidParamError(reply, "id")
+          return sendInvalidParamError(reply, "id")
         }
-        const discuss = req.server.managers.discussions.get(discussId)
+        const discuss = await req.server.managers.discussions.get(discussId)
         if(!discuss) return NOT_FOUND(reply, "DISCUSS")
         req.setDecorator("discussionId", discussId)
         req.setDecorator("discussion", discuss)

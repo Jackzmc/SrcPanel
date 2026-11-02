@@ -1,10 +1,10 @@
 <template>
   <div class="flex justify-between items-start">
     <div class="flex flex-row gap-2 items-center">
-      <UserComponent :user="comment.creator" hide-tooltip hide-name />
+      <UserComponent v-if="comment.creator" :user="comment.creator" hide-tooltip hide-name />
       <div class="flex flex-col">
         <h4 class="text-lg font-semibold">
-          {{ comment.creator.name ?? comment.creator.id }}
+          {{ comment.creator ? (comment.creator.name ?? comment.creator.id) : 'Anonymous' }}
         </h4>
         <div class="gap-x-1 flex items-start flex-wrap text-wrap">
           <p>{{ comment.content }}</p>

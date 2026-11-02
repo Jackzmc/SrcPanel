@@ -4,7 +4,7 @@ variables:
     value: http
     description: ""
   - name: API_HOST
-    value: localhost:8081
+    value: http://127.0.0.1:8081
     description: ""
   - name: WS_PROTOCOL
     value: ws
