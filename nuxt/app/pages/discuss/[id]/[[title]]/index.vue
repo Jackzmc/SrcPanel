@@ -34,13 +34,13 @@
           </template>
         </div>
         <div>
-          <h2 class="text-xl font-bold">
+          <h2 class="text-xl font-bold flex gap-1">
             Respondants
             <UTooltip text="# of admins who voted">
-              ({{ discuss?.responses.totalCount ?? 0 }})
+              <span>({{ discuss?.responses.totalCount ?? 0 }})</span>
             </UTooltip>
             <UTooltip text="Percentage of admins who voted">
-              ({{ Math.round(100 * (discuss?.responses.percentVoted ?? 0)) }}%)
+              <span>({{ Math.round(100 * (discuss?.responses.percentVoted ?? 0)) }}%)</span>
             </UTooltip>
           </h2>
           <p v-if="!discuss || !(discuss.flags & APIDiscussionFlags.RespondersPublic)">
