@@ -26,18 +26,20 @@ export default class DiscussionManager {
     #fetchJob: DefinedTask
 
 
-    constructor(db: Pool, authmngr: AuthManager, jobs: TaskManager) {
+    constructor(db: Pool, authmngr: AuthManager, jobs?: TaskManager) {
         this.#log = Logger.child({ name: "Discussions" })
         this.#db = db
         this.#authmngr = authmngr
 
-        const task = async () => {
-            this.#lastFetchTime = Date.now()
-            await this.fetchDiscussions()
+        if(jobs) {
+            const task = async () => {
+                this.#lastFetchTime = Date.now()
+                await this.fetchDiscussions()
+            }
+            this.#fetchJob = jobs.register("discussions.fetch", task.bind(this))
+            jobs.scheduleRepeating(this.#fetchJob, { hours: 2 })
+            task()
         }
-        this.#fetchJob = jobs.register("discussions.fetch", task.bind(this))
-        jobs.scheduleRepeating(this.#fetchJob, { hours: 2 })
-        task()
     }
 
     async #tryRefresh() {
