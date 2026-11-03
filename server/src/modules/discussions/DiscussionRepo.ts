@@ -113,7 +113,7 @@ export async function updateDiscussion(db: DBClient, discussionId: number, title
     )
 }
 
-export async function createDiscussion(db: DBClient, creatorSteamId, title: string, description: string | null, closedAt: number | null, type: APIDiscussionType, flags: number): Promise<number> {
+export async function createDiscussion(db: DBClient, creatorSteamId, title: string, description: string | null, closedAt: number | null, type: APIDiscussionType, flags: number = 0): Promise<number> {
     const [r] = await db.query<ResultSetHeader>(`
         INSERT INTO ${ADMINS_DB}.${TABLE_PREFIX}_discussions 
         (title, description, creator, closed_at, type, flags) 

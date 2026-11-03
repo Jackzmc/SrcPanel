@@ -11,7 +11,7 @@
     "dev": "nodemon --signal SIGTERM -e ts --exec \"pnpm run build && pnpm run start || exit 1\"",
     "dev:proxy": "nodemon --signal SIGTERM -e ts --exec \"pnpm run build && pnpm run start:proxy || exit 1\"",
     "lint": "eslint",
-    "test": "dotenvx run -f .env.test -- node --import tsx --test"
+    "test": "pnpm run build && dotenvx run -f .env.test -- node --import tsx --test"
   },
   "imports": {
     "#/*": {
