@@ -4,7 +4,7 @@ import { NO_PERMISSION } from '../../util/responses.js';
 import { NamespacedMetric } from '../../modules/metrics/influx.js';
 import { GUARD_REQUIRE_DISCUSSION } from '#/guards/discussions.js'
 import { mapDiscussionType } from '../../modules/discussions/index.js';
-import { CreateDiscussionSchema, EditDiscussionSchema, SubmitCommentSchema, type APICreateDiscussionRequest, type APIEditDiscussionRequest, type APISubmitCommentRequest as APISubmitCommentRequest } from '@srcpanel/common/discussions/schemas'
+import { CreateDiscussionSchema, EditDiscussionSchema, SubmitCommentSchema, SubmitVoteSchema, type APICreateDiscussionRequest, type APIEditDiscussionRequest, type APISubmitCommentRequest as APISubmitCommentRequest, type APISubmitVoteRequest } from '@srcpanel/common/discussions/schemas'
 
 const metric = new NamespacedMetric("discuss")
 
@@ -26,10 +26,13 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
   fastify.post(
     '/:id/choose', 
-    { preHandler: [ GUARD_REQUIRE_DISCUSSION.prehandler() ] },
-    async (req: FastifyRequest<{ Params: { id: string } }>, reply) => {
+    { 
+      preHandler: [ GUARD_REQUIRE_DISCUSSION.prehandler() ],
+      schema: { body: SubmitVoteSchema } 
+    },
+    async (req: FastifyRequest<{ Body: APISubmitVoteRequest, Params: { id: string } }>, reply) => {
       const discuss = GUARD_REQUIRE_DISCUSSION.get(req)
-      const body: { option?: string[] | string, text?: string } = req.body as Record<string, any>
+
       if (discuss.closedAt) {
         if (discuss.isClosed) {
           return reply.status(400).send({
@@ -42,22 +45,22 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
       switch(discuss.type) {
         case APIDiscussionType.Selection:
         case APIDiscussionType.Radio: {
-          if (!body.option || Array.isArray(body.option)) 
+          if (!('option' in req.body) || Array.isArray(req.body.option)) 
             return reply.status(400).send({ error: "INVALID_OPTION", message: "Options must be a string for radio" })
-          await fastify.managers.discussions.setAnswerChoice(discuss.id, req.user!, body.option)
+          await fastify.managers.discussions.setAnswerChoice(discuss.id, req.user!, req.body.option)
           break;
         }
         case APIDiscussionType.Checkbox: {
-          if (!body.option || !Array.isArray(body.option)) 
+          if(!('option' in req.body) || typeof req.body.option === "number")
             return reply.status(400).send({ error: "INVALID_OPTION", message: "Options must be an array for checkbox or selection" })
-          await fastify.managers.discussions.setAnswerChoice(discuss.id, req.user!, body.option)
+          await fastify.managers.discussions.setAnswerChoice(discuss.id, req.user!, req.body.option)
           break;
         }
         case APIDiscussionType.LongText:
         case APIDiscussionType.ShortText: {
-          if (!body.text || body.text == "") 
+          if (!("text" in req.body)) 
             return reply.status(400).send({ error: "INVALID_CHOICE", message: "Must include the text of the choice" })
-          await fastify.managers.discussions.setAnswerText(discuss.id, req.user!, body.text)
+          await fastify.managers.discussions.setAnswerText(discuss.id, req.user!, req.body.text)
           break;
         }
         default: {

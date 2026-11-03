@@ -95,7 +95,7 @@ export async function insertAnswerText(db: DBClient, discussionId: number, userS
     )
 }
 
-export async function insertAnswerChoice(db: DBClient, discussionId: number, userSteamid: string, optionId: string) {
+export async function insertAnswerChoice(db: DBClient, discussionId: number, userSteamid: string, optionId: number) {
     await db.execute(`
         INSERT INTO ${ADMINS_DB}.${TABLE_PREFIX}_discussion_responses 
         (discussion_id, steamid, choice) 
@@ -113,7 +113,7 @@ export async function updateDiscussion(db: DBClient, discussionId: number, title
     )
 }
 
-export async function createDiscussion(db: DBClient, creatorSteamId, title: string, description: string | null, closedAt: number | null, type: APIDiscussionType, flags: number = 0): Promise<number> {
+export async function createDiscussion(db: DBClient, creatorSteamId: string, title: string, description: string | null, closedAt: number | null, type: APIDiscussionType, flags: number = 0): Promise<number> {
     const [r] = await db.query<ResultSetHeader>(`
         INSERT INTO ${ADMINS_DB}.${TABLE_PREFIX}_discussions 
         (title, description, creator, closed_at, type, flags) 
@@ -132,13 +132,14 @@ export async function clearOptions(db: DBClient, discussionId: Number) {
 
 }
 
-export async function insertOption(db: DBClient, discussionId: number, label: string) {
-    await db.query<ResultSetHeader>(`
+export async function insertOption(db: DBClient, discussionId: number, label: string): Promise<number> {
+    const [r] = await db.query<ResultSetHeader>(`
         INSERT INTO ${ADMINS_DB}.${TABLE_PREFIX}_discussion_options 
         (discussion_id, label)
         VALUES (?, ?)`,
         [ discussionId, label ]
     )
+    return r.insertId
 }
 
 export async function getComments(db: DBClient, discussionId: number, withCreator = true): Promise<APIComment[]> {

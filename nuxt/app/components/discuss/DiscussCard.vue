@@ -75,6 +75,7 @@
 
 <script setup lang="ts">
 import { APIDiscussionFlags, APIDiscussionType, type APIDiscussion } from "@srcpanel/common/Discussions";
+import type { APISubmitVoteRequest } from '@srcpanel/common/discussions/schemas'
 import UserComponent from "@/components/UserComponent.vue";
 import IconText from "@/components/IconText.vue";
 import DiscussChoice from "./DiscussChoice.vue";
@@ -117,6 +118,7 @@ const isClosed = computed(() => {
 });
 
 const userSelection = ref<number[]>(props.discuss.userSelection);
+const userInput = ref<string>("")
 const voteState = ref(VoteState.Inactive);
 
 async function onSelectOption(optionId: number) {
@@ -138,11 +140,15 @@ watch(userSelection, () => submitVoteDebounce());
 async function submitVote() {
   voteState.value = VoteState.Inactive;
 
-  let body;
+  let body: APISubmitVoteRequest;
   if (props.discuss.type == APIDiscussionType.Checkbox) {
-    body = { option: userSelection.value.toString() };
+    body = { option: userSelection.value };
   } else if (props.discuss.type == APIDiscussionType.Radio) {
-    body = { option: userSelection.value.toString() };
+    body = { option: userSelection.value };
+  } else if (props.discuss.type == APIDiscussionType.ShortText || props.discuss.type == APIDiscussionType.LongText) {
+    body = { text: userInput.value }
+  } else {
+    throw new Error("Unsupported discussion type")
   }
 
   const result = await request<null>(`/api/discussions/${props.discuss.id}/choose`, {

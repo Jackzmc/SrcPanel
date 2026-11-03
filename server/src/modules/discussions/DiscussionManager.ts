@@ -193,7 +193,7 @@ export default class DiscussionManager {
         await this.fetchDiscussion(discussionId)
     }
 
-    async setAnswerChoice(discussionId: number, user: User, choiceIds: string | string[]) {
+    async setAnswerChoice(discussionId: number, user: User, choiceIds: number | number[]) {
         await doTransaction(this.#db, async (tx) => {
             await Repo.clearAnswers(tx, discussionId, user.steamid2)
             if(Array.isArray(choiceIds)) {

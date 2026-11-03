@@ -26,6 +26,16 @@ export const SubmitCommentSchema = Type.Object({
   content: Type.String()
 })
 
+export const SubmitVoteSchema = Type.Union([
+    Type.Object({
+        option: Type.Union([ Type.Array(Type.Integer()), Type.Integer() ])
+    }),
+    Type.Object({
+        text: Type.String()
+    })
+])
+
 export type APICreateDiscussionRequest = Static<typeof CreateDiscussionSchema>
 export type APIEditDiscussionRequest = Static<typeof EditDiscussionSchema>
 export type APISubmitCommentRequest = Static<typeof SubmitCommentSchema>
+export type APISubmitVoteRequest = Static<typeof SubmitVoteSchema>
