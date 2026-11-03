@@ -120,6 +120,19 @@ export default class DiscussionManager {
         const users = new Map<APIUser, SubmissionEntry[]>()
         const options = new Map<number, APIDiscussionOptionWithCount>()
 
+        // Add all options
+        if(discuss.options) {
+            console.log('add', discuss.options)
+            for(const option of discuss.options) {
+                options.set(option.id, { 
+                    id: option.id,
+                    label: option.label,
+                    count: 0,
+                    percent: 0.0
+                })
+            }
+        }
+
         for(const entry of submissions) {
             // Add list of user entries
             let entries = users.get(entry.user)
@@ -130,12 +143,7 @@ export default class DiscussionManager {
             // Calculate counts
             if('choice' in entry) {
                 let option = options.get(entry.choice.id)
-                if(!option) option = { 
-                    id: entry.choice.id,
-                    label: entry.choice.label,
-                    count: 0,
-                    percent: 0.0
-                }
+                if(!option) throw new Error("submission for option that does not exist")
                 option.count++
                 option.percent = elgibleVoters > 0 ? option.count / elgibleVoters : 0
                 options.set(entry.choice.id, option)
@@ -156,8 +164,8 @@ export default class DiscussionManager {
 
         return {
             totalVoted,
-            percentVoted: elgibleVoters > 0 ? submissions.length / elgibleVoters : 0,
-            options: Object.values(options),
+            percentVoted: elgibleVoters > 0 ? (totalVoted / elgibleVoters) : 0,
+            options: [...options.values()],
             users: shownUsers
         }
     }

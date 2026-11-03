@@ -7,6 +7,7 @@ import { authManager }  from '../../util/managers.js'
 import * as Repo from '#/modules/discussions/DiscussionRepo.js'
 import { APIDiscussionFlags, APIDiscussionType } from "@srcpanel/common/Discussions";
 import { TABLE_PREFIX } from "../../../src/core/database.js";
+import User from "../../../src/modules/users/User.js";
 
 describe("discussions repo", (t) => {
     let manager: DiscussionManager;
@@ -120,12 +121,28 @@ describe("discussions repo", (t) => {
         })
     })
 
-    describe("voting", () => {
-        test("submission", async (t: TestContext) => {
+    describe("submissions", () => {
+        test("submission counts match", async (t: TestContext) => {
             const id = await Repo.createDiscussion(DB, "DUMMY", "Test Discussion", "Testing 123", null, APIDiscussionType.Checkbox, 0)
-            const optionId = await Repo.insertOption(DB, id, "Option A")
+            const optionA = await Repo.insertOption(DB, id, "Option A")
+            const optionB = await Repo.insertOption(DB, id, "Option B")
 
-            await Repo.insertAnswerChoice(DB, id, "DUMMY", optionId)
+            await Repo.insertAnswerChoice(DB, id, "DUMMY A", optionA)
+            await Repo.insertAnswerChoice(DB, id, "DUMMY B", optionB)
+            await Repo.insertAnswerChoice(DB, id, "DUMMY C", optionA)
+
+            await manager.fetchDiscussion(id)
+            const results = await manager.getSubmissions(id)
+            console.log(results)
+
+            t.assert.equal(results.totalVoted, 3, "number voted match")
+            // we cannot check percents as the # eligble voters is tied to # of admins, 
+            // which we do not control here as we use dummy users
+            t.assert.equal(results.users, undefined, "users not provided")
+            t.assert.equal(results.options.length, 2, "number of options match")
+            t.assert.equal(results.options[0].count, 2, "option A selected twice")
+            t.assert.equal(results.options[1].count, 1, "option A selected once")
         })
+        // TODO: test submi
     })
 })
