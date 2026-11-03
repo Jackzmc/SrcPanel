@@ -1,51 +1,20 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
 import { APIComment, APIDiscussion, APIDiscussionCreateResponse, APIDiscussionDetails, APIDiscussionFlags, APIDiscussionType, type APISubmitCommentResponse } from '@srcpanel/common/Discussions';
 import { NO_PERMISSION } from '../../util/responses.js';
-import { Static, Type } from '@sinclair/typebox';
 import { NamespacedMetric } from '../../modules/metrics/influx.js';
 import { GUARD_REQUIRE_DISCUSSION } from '#/guards/discussions.js'
 import { mapDiscussionType } from '../../modules/discussions/index.js';
+import { CreateDiscussionSchema, EditDiscussionSchema, SubmitCommentSchema, type APICreateDiscussionRequest, type APIEditDiscussionRequest, type APISubmitCommentRequest as APISubmitCommentRequest } from '@srcpanel/common/discussions/schemas'
 
 const metric = new NamespacedMetric("discuss")
 
-const CreateDiscussion = Type.Object({
-  title: Type.String(),
-  description: Type.Optional(Type.String()),
-  closedAt: Type.Optional(Type.Integer()),
-  flags: Type.Optional(Type.Integer()),
-  type: Type.Union([Type.Integer(), Type.String()]),
-  options: Type.Array(Type.Object({
-    label: Type.String()
-  }))
-})
-type CreateDiscussionType = Static<typeof CreateDiscussion>
-
-const EditDiscussion = Type.Object({
-  title: Type.Optional(Type.String()),
-  description: Type.Optional(Type.String()),
-  closedAt: Type.Optional(Type.Integer()),
-  flags: Type.Optional(Type.Integer()),
-  type: Type.Optional(Type.Union([Type.Integer(), Type.String()])),
-  options: Type.Optional(Type.Array(Type.Object({
-    label: Type.String()
-  })))
-})
-type EditDiscussionType = Static<typeof EditDiscussion>
-
-const SubmitComment = Type.Object({
-  content: Type.String()
-})
-type SubmitComentType = Static<typeof SubmitComment>
-
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
-  const discManager = fastify.managers.discussions
-
   GUARD_REQUIRE_DISCUSSION.register(fastify)
 
   fastify.get('/', async (req, reply): Promise<APIDiscussion[]> => {
     const discussions: APIDiscussion[] = []
-    for (const discussion of discManager.getAll()) {
-      const responses = await discManager.getResponses(discussion.id, req.user!, discussion.flags)
+    for (const discussion of fastify.managers.discussions.getAll()) {
+      const responses = await fastify.managers.discussions.getResponses(discussion.id, req.user!, discussion.flags)
       discussions.push({
         ...discussion.base,
         responses: responses.responses,
@@ -103,9 +72,9 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
   fastify.put('/:id', 
     { 
       preHandler: [ GUARD_REQUIRE_DISCUSSION.prehandler() ],
-      schema: { body: EditDiscussion }
+      schema: { body: EditDiscussionSchema }
     },
-    async (req: FastifyRequest<{ Body: EditDiscussionType, Params: { id: string } }>, reply) => {
+    async (req: FastifyRequest<{ Body: APIEditDiscussionRequest, Params: { id: string } }>, reply) => {
       const discuss = GUARD_REQUIRE_DISCUSSION.get(req)
       if (discuss.creatorId !== req.user!.steamid2) {
         return NO_PERMISSION(reply, "You can only edit your own discussions")
@@ -159,9 +128,9 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
   fastify.post(
     '/', 
-    { schema: { body: CreateDiscussion } }, 
-    async (req: FastifyRequest<{ Body: CreateDiscussionType }>, reply): Promise<APIDiscussionCreateResponse> => {
-      const discuss = req.body as CreateDiscussionType
+    { schema: { body: CreateDiscussionSchema } }, 
+    async (req: FastifyRequest<{ Body: APICreateDiscussionRequest }>, reply): Promise<APIDiscussionCreateResponse> => {
+      const discuss = req.body
       const type = mapDiscussionType(discuss.type)
 
       const id = await fastify.managers.discussions.createDiscussion(req.user!, discuss.title, discuss.description ?? null, discuss.closedAt ?? null, type, discuss.flags ?? 0)
@@ -178,9 +147,9 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     '/:id/comments', 
     { 
       preHandler: [ GUARD_REQUIRE_DISCUSSION.prehandler() ], 
-      schema: { body: SubmitComment } 
+      schema: { body: SubmitCommentSchema } 
     },
-    async (req: FastifyRequest<{ Body: SubmitComentType, Params: { id: string } }>, reply): Promise<APISubmitCommentResponse> => {
+    async (req: FastifyRequest<{ Body: APISubmitCommentRequest, Params: { id: string } }>, reply): Promise<APISubmitCommentResponse> => {
       const discuss = GUARD_REQUIRE_DISCUSSION.get(req)
 
       if (discuss.flags & APIDiscussionFlags.Archived) {

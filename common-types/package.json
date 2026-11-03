@@ -15,6 +15,7 @@
         "./CustomServer": "./dist/types/CustomServer.js",
         "./Discussions": "./dist/types/Discussions.js",
         "./discussions/Discussion": "./dist/discussions/Discussion.js",
+        "./discussions/schemas": "./dist/discussions/schemas.js",
         "./Event": "./dist/types/Event.js",
         "./Live": "./dist/types/Live.js",
         "./Logs": "./dist/types/Logs.js",
@@ -31,5 +32,8 @@
     },
     "devDependencies": {
         "typescript": "^7.0.2"
+    },
+    "dependencies": {
+        "@sinclair/typebox": "^0.34.52"
     }
 }
