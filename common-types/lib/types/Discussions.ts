@@ -12,7 +12,6 @@ export enum APIDiscussionFlags {
   PercentsPublic = 16
 }
 
-
 export enum APIDiscussionType {
   Radio,
   Checkbox,
@@ -20,6 +19,9 @@ export enum APIDiscussionType {
   ShortText,
   LongText
 }
+
+/// MAIN 
+
 export interface APIDiscussionBase {
   title: string,
   timestamp: number,
@@ -36,37 +38,76 @@ export interface APIDiscussionCacheableData extends APIDiscussionBase {
   creator: APIUser,
 }
 
-export interface APIDiscussion extends APIDiscussionCacheableData {
-  responses: APIResponsesData,
-  userSelection: number[]
+export type APIDiscussion = APIDiscussionCacheableData
+export interface APIDiscussionWithSubmissions extends APIDiscussion {
+  submissions: APISubmissions
+  /** The list of all options the user has selected */
+  userSelection: UserSubmission[]
 }
 
-export interface APIUserWithChoice extends APIUser {
-  choices?: string[]
+/** A discussion option (radio, checkbox, select) */
+export interface APIDiscussionOption {
+  id: number,
+  label: string
 }
-export interface APIResponsesData {
-  totalCount: number,
+
+
+/// SUBMISSIONS
+
+/** A submission entry, including the user */
+export type SubmissionEntry = UserSubmission & { user: APIUser }
+/** The submission of a user, either text input or a specific option */
+export type UserSubmission = { text: string} | { choice: APIDiscussionOption }
+
+export interface APISubmissions {
+  /** Total number of users who have voted */
+  totalVoted: number,
+  /** The percentage of all available admins that have voted */
   percentVoted: number,
-  counts: Record<string, APICountData>
-  users?: APIUserWithChoice[]
+  /** the options and their counts */
+  options: (APIDiscussionOption & APICountData)[]
+  /** If public, the list of submission entries, including the user and their input */
+  users?: SubmissionEntry[]
 }
+
+/** @deprecated use APISubmissions */
+export interface APIResponsesData {
+  /** Total number of users who have voted */
+  totalCount: number,
+  /** The percentage of all available admins that have voted */
+  percentVoted: number,
+  /** The counts and percents for each option. Key is the stringified id of option */
+  counts: Record<string, APICountData>
+  /** If public, the list of submission entries, including the user and their input */
+  users?: SubmissionEntry[]
+}
+/** The count and percent of a specific option */
 export interface APICountData {
   count: number,
   percent: number
 }
-export interface APIDiscussionDetails extends APIDiscussion {
-  // comments: APIComment[]
+
+/// RESPONSES
+
+export interface APIDiscussionCreateResponse {
+  id: number
 }
+
+export interface APISubmitCommentResponse {
+  id: number
+}
+
+/// COMMENTS
+
 export interface APIComment {
   id: number,
   creator: APIPlayer | null,
   content: string,
   timestamp: number
 }
-export interface APIDiscussionOption {
-  id: number,
-  label: string
-}
+
+
+/// UI stuff that shouldn't belong here but its too late
 
 export enum DiscussionState {
   PendingAnswer,
@@ -92,12 +133,4 @@ export interface DiscussionText<T extends APIDiscussionType> extends BaseDiscuss
   value: string
 }
 export type Discussion = DiscussionRadio | DiscussionMulti<APIDiscussionType.Selection> | DiscussionMulti<APIDiscussionType.Checkbox> | DiscussionText<APIDiscussionType.LongText> | DiscussionText<APIDiscussionType.ShortText>
-export type DiscussionDetailed = Discussion & APIDiscussionDetails
 
-export interface APIDiscussionCreateResponse {
-  id: number
-}
-
-export interface APISubmitCommentResponse {
-  id: number
-}

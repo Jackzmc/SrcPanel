@@ -1,4 +1,4 @@
-import { APIDiscussionFlags, type APIComment, type APIDiscussion, type APIDiscussionBase, type APIDiscussionCacheableData, type APIDiscussionOption, type APIDiscussionType } from "@srcpanel/common/Discussions";
+import { APIDiscussionFlags, type APIComment, type APIDiscussionCacheableData, type APIDiscussionOption, type APIDiscussionType, type SubmissionEntry, type UserSubmission } from "@srcpanel/common/Discussions";
 import { ADMINS_DB, MAIN_DB, TABLE_PREFIX, type DBClient } from "../../core/database.js";
 import type { ResultSetHeader, RowDataPacket } from 'mysql2/promise'
 import { formatDiscussion, formatDiscussionComment } from "./index.js";
@@ -57,6 +57,57 @@ export async function getDiscussion(db: DBClient, id: number): Promise<APIDiscus
     )
 
     return rows.length > 0 ? formatDiscussion(rows[0]) : null
+}
+
+export async function getSubmissions(db: DBClient, discussionId: number): Promise<SubmissionEntry[]> {
+    const [responses] = await db.execute<RowDataPacket[]>(`
+        SELECT 
+            res.steamid, 
+            u.last_name as name,
+            res.text, 
+            res.choice, 
+            opt.label
+        FROM \`${ADMINS_DB}\`.${TABLE_PREFIX}_discussion_responses res 
+        LEFT JOIN \`${MAIN_DB}\`.view_${TABLE_PREFIX}_user u ON SUBSTRING(res.steamid, 11) = u.account_id 
+        LEFT JOIN \`${ADMINS_DB}\`.${TABLE_PREFIX}_discussion_options opt ON opt.id = res.choice 
+        WHERE res.discussion_id = ?`, 
+        [ discussionId ]
+    )
+    return responses.map(row => {
+        return {
+            user: {
+                id: row.steamid,
+                name: row.name
+            },
+            text: row.text,
+            choice: row.choice && {
+                id: row.choice,
+                label: row.label
+            } || undefined
+        }
+    })
+}
+
+export async function getUserSubmissions(db: DBClient, discussionId: number, userSteamid: string): Promise<UserSubmission[]> {
+    const [responses] = await db.execute<RowDataPacket[]>(`
+        SELECT 
+            res.text, 
+            res.choice, 
+            opt.label
+        FROM \`${ADMINS_DB}\`.${TABLE_PREFIX}_discussion_responses res 
+        LEFT JOIN \`${ADMINS_DB}\`.${TABLE_PREFIX}_discussion_options opt ON opt.id = res.choice 
+        WHERE res.discussion_id = ? AND SUBSTRING(res.steamid, 11) = SUBSTRING(?, 11)`, 
+        [ discussionId, userSteamid ]
+    )
+    return responses.map(row => {
+        return {
+            text: row.text,
+            choice: row.choice && {
+                id: row.choice,
+                label: row.label
+            } || undefined
+        }
+    })
 }
 
 export async function getOptions(db: DBClient, discussionId: number): Promise<APIDiscussionOption[]> {

@@ -27,6 +27,16 @@ export default class Discussion {
         return this.#base.commentsCount
     }
 
+    /** Should the users who responded be shown with their submission itself? */
+    get submissionsPublic(): boolean {
+        return this.submittersPublic && (this.#base.flags & APIDiscussionFlags.ResponsesPublic) === APIDiscussionFlags.ResponsesPublic
+    }
+
+    /** Should the users who responded be shown?  */
+    get submittersPublic(): boolean {
+        return (this.#base.flags & APIDiscussionFlags.RespondersPublic) === APIDiscussionFlags.RespondersPublic
+    }
+
     get id(): number {
         return this.#base.id
     }

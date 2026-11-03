@@ -1,14 +1,14 @@
-import { APICountData, APIDiscussionCacheableData, APIDiscussionFlags, APIResponsesData, APIUserWithChoice, type APIComment, type APIDiscussionType } from "@srcpanel/common/Discussions";
+import { APICountData, APIDiscussionFlags, APIResponsesData, type APIComment, type APIDiscussionOption, type APIDiscussionType, type APISubmissions, type SubmissionEntry, type UserSubmission } from "@srcpanel/common/Discussions";
 import { Pool, RowDataPacket } from 'mysql2/promise';
 import User from "../users/User.js";
 import AuthManager from "../auth/AuthManager.js";
 import { DefinedTask } from "../tasks/Task.js";
-import { ADMINS_DB, doTransaction, MAIN_DB, TABLE_PREFIX } from "../../core/database.js";
+import { ADMINS_DB, doTransaction, TABLE_PREFIX } from "../../core/database.js";
 import TaskManager from "../tasks/TaskManager.js";
 import Logger, { PinoLogger } from '#/util/logger.js'
 import * as Repo from "./DiscussionRepo.js";
 import Discussion from "@srcpanel/common/discussions/Discussion";
-import { linesToRowsIterable } from "@influxdata/influxdb-client";
+import type { APIUser } from "@srcpanel/common/User";
 
 const AUTO_ARCHIVE_TIME = 1000 * 60 * 60 * 24 * 10 // 10 days
 const CACHE_TTL = 1000 * 60 * 60 * 1
@@ -92,67 +92,66 @@ export default class DiscussionManager {
     }
 
     /**
-     * Get all the discussion responses, with the user's choice included.
-     * If discussion is public, other user's choices included, but the user's choice is always included
-     * @param id discussion id
-     * @param user user to get their choice for
-     * @param flags discusion flags to select for
-     * @returns 
+     * Gets the submissions for a specific user
+     * @param discussionId discussion id
+     * @param user the user to fetch for
+     * @returns list of either one single text submission or list of selected choices
      */
-    async getResponses(id: number, user: User, flags: APIDiscussionFlags): Promise<{ responses: APIResponsesData, userSelection: number[] }> {
-        const totalUsers = this.#authmngr.AdminCount
-        const [responses] = await this.#db.execute<RowDataPacket[]>(`
-            SELECT 
-                res.steamid, 
-                res.choice, 
-                res.text, 
-                opt.label, 
-                u.last_name as name 
-            FROM \`${ADMINS_DB}\`.${TABLE_PREFIX}_discussion_responses res 
-            LEFT JOIN \`${MAIN_DB}\`.view_${TABLE_PREFIX}_user u ON SUBSTRING(res.steamid, 11) = u.account_id 
-            LEFT JOIN \`${ADMINS_DB}\`.${TABLE_PREFIX}_discussion_options opt ON opt.id = res.choice 
-            WHERE res.discussion_id = ?`, 
-            [id]
-        )
-        const counts: Record<string, APICountData> = {}
-        const userSelection: number[] = []
-        for(const response of responses) {
-            if(!counts[response.choice])
-                counts[response.choice] = { count: 0, percent: 0 }
-            counts[response.choice].count++
-            counts[response.choice].percent = counts[response.choice].count / responses.length
-            // Always include user's response
-            if(response.steamid == user.steamid2) {
-                userSelection.push(response.choice)
+    async getUserSubmissions(discussionId: number, user: User): Promise<UserSubmission[]> {
+        return await Repo.getUserSubmissions(this.#db, discussionId, user.steamid2)
+    }
+
+    /**
+     * Gets all submissions for given discussion
+     * @param discussionId 
+     */
+    async getSubmissions(discussionId: number): Promise<APISubmissions> {
+        const discuss = await this.get(discussionId)
+        if(!discuss) throw new Error("Discussion not found")
+        /**
+         * MUST CONSIDER FLAGS:
+         * ~APIDiscussionFlags.PercentsPublic~ - unused
+         * APIDiscussionFlags.RespondersPublic
+         * APIDiscussionFlags.ResponsesPublic
+         */
+        const submissions = await Repo.getSubmissions(this.#db, discussionId)
+        const elgibleVoters = this.#authmngr.AdminCount
+
+        const users = new Set<APIUser>()
+        const options = new Map<number, APIDiscussionOption & APICountData>()
+
+        for(const entry of submissions) {
+            users.add(entry.user)
+            if('choice' in entry) {
+                let option = options.get(entry.choice.id)
+                if(!option) option = { 
+                    id: entry.choice.id,
+                    label: entry.choice.label,
+                    count: 0,
+                    percent: 0.0
+                }
+                option.count++
+                option.percent = elgibleVoters > 0 ? option.count / elgibleVoters : 0
+                options.set(entry.choice.id, option)
             }
         }
-        let usersResponse: APIUserWithChoice[]|undefined = undefined
-        if(flags & APIDiscussionFlags.RespondersPublic) {
-            const users = {}
-            // Merge multiple responses (for multiselect) into one user object
-            for(const response of responses) {
-                if(!users[response.steamid]) {
-                    users[response.steamid] = { 
-                        id: response.steamid, 
-                        name: response.name, 
-                        choices: flags & APIDiscussionFlags.RespondersPublic ? [] : undefined
-                    }
-                }
-                if(flags & APIDiscussionFlags.RespondersPublic) {
-                    // Try choice, if choice is undefined/null, then its not radio/multi, its text
-                    users[response.steamid].choices.push(response.label ?? response.text)
-                }
-            }
-            usersResponse = Object.values(users)
-        }
+
+        // We need the unique count of users, but depending on the discussion, multiple submissions can be made per user
+        const totalVoted = users.size
+
+        const shownUsers = discuss.submittersPublic ? submissions.map(sub => {
+            return {
+                user: sub.user,
+                choice: discuss.submissionsPublic && 'choice' in sub ? sub.choice : undefined,
+                text: discuss.submissionsPublic && 'text' in sub ? sub.text : undefined
+            } as SubmissionEntry
+        }) : undefined
+
         return {
-            responses: {
-                totalCount: responses.length,
-                percentVoted: responses.length / totalUsers,
-                counts,
-                users: usersResponse
-            },
-            userSelection
+            totalVoted,
+            percentVoted: elgibleVoters > 0 ? submissions.length / elgibleVoters : 0,
+            options: Object.values(options),
+            users: shownUsers
         }
     }
 

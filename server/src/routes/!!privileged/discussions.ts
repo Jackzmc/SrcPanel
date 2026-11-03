@@ -1,5 +1,5 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
-import { APIComment, APIDiscussion, APIDiscussionCreateResponse, APIDiscussionDetails, APIDiscussionFlags, APIDiscussionType, type APISubmitCommentResponse } from '@srcpanel/common/Discussions';
+import { APIComment, APIDiscussion, APIDiscussionCreateResponse, APIDiscussionFlags, APIDiscussionType, type APIDiscussionWithSubmissions, type APISubmitCommentResponse } from '@srcpanel/common/Discussions';
 import { NO_PERMISSION } from '../../util/responses.js';
 import { NamespacedMetric } from '../../modules/metrics/influx.js';
 import { GUARD_REQUIRE_DISCUSSION } from '#/guards/discussions.js'
@@ -11,14 +11,15 @@ const metric = new NamespacedMetric("discuss")
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
   GUARD_REQUIRE_DISCUSSION.register(fastify)
 
-  fastify.get('/', async (req, reply): Promise<APIDiscussion[]> => {
-    const discussions: APIDiscussion[] = []
+  fastify.get('/', async (req, reply): Promise<APIDiscussionWithSubmissions[]> => {
+    const discussions: APIDiscussionWithSubmissions[] = []
     for (const discussion of fastify.managers.discussions.getAll()) {
-      const responses = await fastify.managers.discussions.getResponses(discussion.id, req.user!, discussion.flags)
+      const submissions = await fastify.managers.discussions.getSubmissions(discussion.id)
+      const userSelection = await fastify.managers.discussions.getUserSubmissions(discussion.id, req.user!)
       discussions.push({
         ...discussion.base,
-        responses: responses.responses,
-        userSelection: responses.userSelection
+        submissions,
+        userSelection
       })
     }
     return discussions
@@ -104,15 +105,16 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
   fastify.get(
     '/:id', 
     { preHandler: [ GUARD_REQUIRE_DISCUSSION.prehandler() ]},
-    async (req: FastifyRequest<{ Params: { id: string } }>, reply): Promise<APIDiscussionDetails> => {
+    async (req: FastifyRequest<{ Params: { id: string } }>, reply): Promise<APIDiscussionWithSubmissions> => {
       const discuss = GUARD_REQUIRE_DISCUSSION.get(req)
 
-      const responses = await fastify.managers.discussions.getResponses(Number(req.params.id), req.user!, discuss.flags)
+      const submissions = await fastify.managers.discussions.getSubmissions(discuss.id)
+      const userSelection = await fastify.managers.discussions.getUserSubmissions(discuss.id, req.user!)
 
       return {
         ...discuss.base,
-        responses: responses.responses,
-        userSelection: responses.userSelection
+        submissions,
+        userSelection
       }
     }
   )
