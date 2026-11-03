@@ -1,10 +1,10 @@
-import { FastifyInstance, FastifyPluginOptions, FastifyRequest, FastifySchema } from 'fastify';
+import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
 import { APIComment, APIDiscussion, APIDiscussionCreateResponse, APIDiscussionDetails, APIDiscussionFlags, APIDiscussionType, type APISubmitCommentResponse } from '@srcpanel/common/Discussions';
 import { NO_PERMISSION } from '../../util/responses.js';
 import { Static, Type } from '@sinclair/typebox';
 import { NamespacedMetric } from '../../modules/metrics/influx.js';
 import { GUARD_REQUIRE_DISCUSSION } from '#/guards/discussions.js'
-import { sendInvalidParamError } from '../../guards/index.js';
+import { mapDiscussionType } from '../../modules/discussions/index.js';
 
 const metric = new NamespacedMetric("discuss")
 
@@ -18,13 +18,23 @@ const CreateDiscussion = Type.Object({
     label: Type.String()
   }))
 })
-
 type CreateDiscussionType = Static<typeof CreateDiscussion>
+
+const EditDiscussion = Type.Object({
+  title: Type.Optional(Type.String()),
+  description: Type.Optional(Type.String()),
+  closedAt: Type.Optional(Type.Integer()),
+  flags: Type.Optional(Type.Integer()),
+  type: Type.Optional(Type.Union([Type.Integer(), Type.String()])),
+  options: Type.Optional(Type.Array(Type.Object({
+    label: Type.String()
+  })))
+})
+type EditDiscussionType = Static<typeof EditDiscussion>
 
 const SubmitComment = Type.Object({
   content: Type.String()
 })
-
 type SubmitComentType = Static<typeof SubmitComment>
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
@@ -91,13 +101,19 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
   )
 
   fastify.put('/:id', 
-    { preHandler: [ GUARD_REQUIRE_DISCUSSION.prehandler() ] },
-    async (req: FastifyRequest<{ Params: { id: string } }>, reply) => {
+    { 
+      preHandler: [ GUARD_REQUIRE_DISCUSSION.prehandler() ],
+      schema: { body: EditDiscussion }
+    },
+    async (req: FastifyRequest<{ Body: EditDiscussionType, Params: { id: string } }>, reply) => {
       const discuss = GUARD_REQUIRE_DISCUSSION.get(req)
       if (discuss.creatorId !== req.user!.steamid2) {
         return NO_PERMISSION(reply, "You can only edit your own discussions")
       }
-      const newDiscuss = req.body as APIDiscussion
+      const newDiscuss = {
+        ...req.body,
+        type: req.body.type ? mapDiscussionType(req.body.type) : undefined
+      }
       if (discuss.closedAt && !newDiscuss.closedAt) {
         return reply.status(400).send({
           error: "CANNOT_REOPEN",
@@ -106,7 +122,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
       }
 
       const discussObj = { ...discuss.base, ...newDiscuss }
-      await fastify.managers.discussions.updateDiscussion(discuss.id, discussObj.title, discussObj.description ?? null, discussObj.closedAt, discussObj.type, discussObj.flags, discussObj.options ?? undefined)
+      // discussObj.type should never be undefined - discuss.base is not undefined
+      await fastify.managers.discussions.updateDiscussion(discuss.id, discussObj.title, discussObj.description ?? null, discussObj.closedAt, discussObj.type!, discussObj.flags, discussObj.options ?? undefined)
 
       return reply.status(204).send()
     }
@@ -145,31 +162,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     { schema: { body: CreateDiscussion } }, 
     async (req: FastifyRequest<{ Body: CreateDiscussionType }>, reply): Promise<APIDiscussionCreateResponse> => {
       const discuss = req.body as CreateDiscussionType
-      let type: APIDiscussionType
-      if(typeof discuss.type === "number") type = discuss.type as APIDiscussionType
-      else {
-        switch(discuss.type) {
-          case "radio":
-          case "single": 
-            type = APIDiscussionType.Radio
-            break
-          case "select":
-            type = APIDiscussionType.Selection
-            break
-          case "checkbox":
-          case "multiple":
-            type = APIDiscussionType.Checkbox
-            break
-          case "short":
-            type = APIDiscussionType.ShortText
-            break
-          case "long":
-          case "essay":
-            type = APIDiscussionType.LongText
-          default:
-            return sendInvalidParamError(reply, "type", "invalid or unknown discussion type")
-        }
-      }
+      const type = mapDiscussionType(discuss.type)
+
       const id = await fastify.managers.discussions.createDiscussion(req.user!, discuss.title, discuss.description ?? null, discuss.closedAt ?? null, type, discuss.flags ?? 0)
 
       metric.send("created", 1)

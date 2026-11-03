@@ -1,4 +1,4 @@
-import { APIDiscussionCacheableData, type APIComment } from "@srcpanel/common/Discussions";
+import { APIDiscussionCacheableData, APIDiscussionType, type APIComment } from "@srcpanel/common/Discussions";
 import type { RowDataPacket } from "mysql2";
 
 export function formatDiscussion(row: RowDataPacket): APIDiscussionCacheableData {
@@ -28,4 +28,24 @@ export function formatDiscussionComment(row: RowDataPacket): APIComment {
         } : null,
         content: row.content
     }
+}
+
+export function mapDiscussionType(input: string | number): APIDiscussionType {
+    if(typeof input === "number") return input as APIDiscussionType
+    switch(input) {
+        case "radio":
+        case "single": 
+            return APIDiscussionType.Radio
+        case "select":
+            return APIDiscussionType.Selection
+        case "checkbox":
+        case "multiple":
+            return APIDiscussionType.Checkbox
+        case "short":
+            return APIDiscussionType.ShortText
+        case "long":
+        case "essay":
+            return APIDiscussionType.LongText
+    }
+    throw new Error('Invalid or unknown discussion type')
 }
