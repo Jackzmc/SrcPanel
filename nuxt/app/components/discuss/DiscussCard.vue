@@ -16,14 +16,14 @@
             </UBadge>
           </template>
           <UBadge
-            v-if="(discuss.flags & APIDiscussionFlags.RespondersPublic) && discuss.responses && discuss.responses.totalCount > 0"
+            v-if="(discuss.flags & APIDiscussionFlags.RespondersPublic) && discuss.submissions.totalVoted > 0"
             class="align-right"
             leading-icon="lucide:users"
             variant="outline"
             color="neutral"
           >
             <UTooltip text="Number of respondants">
-              {{ discuss.responses.totalCount }}
+              {{ discuss.submissions.totalVoted }}
             </UTooltip>
           </UBadge>
           <UBadge class="align-right" leading-icon="lucide:message-square" variant="outline" color="neutral">
@@ -40,11 +40,11 @@
       <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-4 py-4">
         <DiscussChoice
           v-for="entry in options"
-          :key="entry.option.id"
+          :key="entry.id"
           :entry="entry"
           :type="discuss.type"
           :editable="type == 'edit'"
-          :user-selection="userSelection"
+          :user-selection="userSelectedOptionIds"
           @select="onSelectOption"
         />
       </div>
@@ -56,8 +56,8 @@
 
       <div v-if="type == 'list'" class="flex flex-wrap justify-between items-end">
         <div>
-          <UAvatarGroup v-if="discuss.responses?.users" max="8">
-            <UserComponent v-for="duser in discuss.responses.users" :key="duser.id" :user="duser" hide-name />
+          <UAvatarGroup v-if="discuss.submissions?.users" max="8">
+            <UserComponent v-for="entry in discuss.submissions.users" :key="entry.user.id" :user="entry.user" hide-name />
           </UAvatarGroup>
         </div>
         <div class="flex justify-between gap-4">
@@ -74,12 +74,11 @@
 </template>
 
 <script setup lang="ts">
-import { APIDiscussionFlags, APIDiscussionType, type APIDiscussion } from "@srcpanel/common/Discussions";
+import { APIDiscussionFlags, APIDiscussionType, type APIDiscussionWithSubmissions } from "@srcpanel/common/Discussions";
 import type { APISubmitVoteRequest } from '@srcpanel/common/discussions/schemas'
 import UserComponent from "@/components/UserComponent.vue";
 import IconText from "@/components/IconText.vue";
 import DiscussChoice from "./DiscussChoice.vue";
-import type { DiscussOptionEntry } from "#shared/types/discuss";
 import { debounce } from "@srcpanel/common/util";
 import { formatRelTime, slugify } from "@srcpanel/common/format";
 
@@ -90,24 +89,14 @@ const enum VoteState {
 }
 
 const props = defineProps<{
-  discuss: APIDiscussion;
+  discuss: APIDiscussionWithSubmissions;
   type: "list" | "details" | "edit";
 }>();
 
 const { user } = useAuth();
 
 const options = computed(() => {
-  return props.discuss.options?.map<DiscussOptionEntry>((option) => {
-    const id = option.id.toString();
-    return {
-      option,
-      count: props.discuss.responses?.counts[id] ?? {
-        count: 0,
-        percent: 0,
-      },
-      users: props.discuss.responses?.users?.filter(user => user.choices?.includes(id)),
-    };
-  });
+  return props.discuss.options
 });
 
 const expiresText = computed(() => {
@@ -117,34 +106,42 @@ const isClosed = computed(() => {
   return props.discuss.closedAt && (props.discuss.closedAt * 1000) < Date.now();
 });
 
-const userSelection = ref<number[]>(props.discuss.userSelection);
+function getUserSelection(): number[] {
+  const ids: number[] = []
+  props.discuss.userSelection?.map(sub => {
+    if('choice' in sub) ids.push(sub.choice.id)
+  })
+  return ids
+}
+
+const userSelectedOptionIds = ref<number[]>(getUserSelection());
 const userInput = ref<string>("")
 const voteState = ref(VoteState.Inactive);
 
 async function onSelectOption(optionId: number) {
   if (props.discuss.type == APIDiscussionType.Checkbox) {
-    const index = userSelection.value.indexOf(optionId);
+    const index = userSelectedOptionIds.value.indexOf(optionId);
     if (index > -1) {
-      userSelection.value = userSelection.value.splice(index, 1);
+      userSelectedOptionIds.value = userSelectedOptionIds.value.splice(index, 1);
     } else {
-      userSelection.value.push(optionId);
+      userSelectedOptionIds.value.push(optionId);
     }
     return;
   } else {
-    userSelection.value = [optionId];
+    userSelectedOptionIds.value = [optionId];
   }
 }
 
-watch(userSelection, () => submitVoteDebounce());
+watch(userSelectedOptionIds, () => submitVoteDebounce());
 
 async function submitVote() {
   voteState.value = VoteState.Inactive;
 
   let body: APISubmitVoteRequest;
   if (props.discuss.type == APIDiscussionType.Checkbox) {
-    body = { option: userSelection.value };
+    body = { option: userSelectedOptionIds.value };
   } else if (props.discuss.type == APIDiscussionType.Radio) {
-    body = { option: userSelection.value };
+    body = { option: userSelectedOptionIds.value };
   } else if (props.discuss.type == APIDiscussionType.ShortText || props.discuss.type == APIDiscussionType.LongText) {
     body = { text: userInput.value }
   } else {

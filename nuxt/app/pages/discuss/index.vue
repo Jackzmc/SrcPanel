@@ -28,7 +28,7 @@
 </template>
 
 <script setup lang="ts">
-import type { APIDiscussion } from "@srcpanel/common/Discussions";
+import type { APIDiscussion, APIDiscussionWithSubmissions } from "@srcpanel/common/Discussions";
 import DiscussCard from "~/components/discuss/DiscussCard.vue";
 
 definePageMeta({
@@ -40,7 +40,7 @@ definePageMeta({
 const { requireAuth } = useAuth();
 await requireAuth();
 
-const { data, error } = await useFetch<APIDiscussion[]>("/api/discussions", { key: "discuss.list" });
+const { data, error } = await useFetch<APIDiscussionWithSubmissions[]>("/api/discussions", { key: "discuss.list" });
 
 const startDiscussionTitle = ref("");
 

@@ -45,10 +45,10 @@
 </template>
 
 <script setup lang="ts">
-import type { APIDiscussion, APIDiscussionBase } from "@srcpanel/common/Discussions";
+import type { APIDiscussionBase } from "@srcpanel/common/Discussions";
 import EditText from "./EditText.vue";
 
-const model = defineModel<APIDiscussion | APIDiscussionBase>();
+const model = defineModel<APIDiscussionBase>({ required: true });
 
 const { promptInput } = useModal();
 

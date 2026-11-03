@@ -37,31 +37,37 @@
           <h2 class="text-xl font-bold flex gap-1">
             Respondants
             <UTooltip text="# of admins who voted">
-              <span>({{ discuss?.responses.totalCount ?? 0 }})</span>
+              <span>({{ discuss?.submissions.totalVoted ?? 0 }})</span>
             </UTooltip>
             <UTooltip text="Percentage of admins who voted">
-              <span>({{ Math.round(100 * (discuss?.responses.percentVoted ?? 0)) }}%)</span>
+              <span>({{ Math.round(100 * (discuss?.submissions.percentVoted ?? 0)) }}%)</span>
             </UTooltip>
           </h2>
           <p v-if="!discuss || !(discuss.flags & APIDiscussionFlags.RespondersPublic)">
             Responses are hidden
           </p>
-          <p v-else-if="discuss?.responses.users?.length === 0">
+          <p v-else-if="discuss?.submissions.users?.length === 0">
             No respondants yet.
           </p>
 
           <div>
-            <table v-if="discuss?.responses.users?.length" class="table-auto w-full">
+            <table v-if="discuss?.submissions.users && discuss.submissions.users.length > 0" class="table-auto w-full">
               <tbody>
-                <tr v-for="respondant in discuss.responses.users" :key="respondant.id" class="border-b border-b-neutral-400 last:border-b-0">
+                <tr v-for="entry in discuss.submissions.users" :key="entry.user.id" class="border-b border-b-neutral-400 last:border-b-0">
                   <td class="py-2">
-                    <UserComponent :user="respondant" name-class="text-black font-semibold text-sm" hide-tooltip />
+                    <UserComponent :user="entry.user" name-class="text-black font-semibold text-sm" hide-tooltip />
                   </td>
-                  <td>
-                    <div v-for="choice in respondant.choices" :key="choice" class="text-xs text-muted">
-                      {{ choice }}
-                    </div>
-                  </td>
+                  <template v-if="entry.submissions && entry.submissions.length > 0">
+                    <td v-if="'text' in entry.submissions[0]!">
+                      <!-- We assume only one ever text submission -->
+                      {{ entry.submissions[0]!.text }}
+                    </td>
+                    <td v-else>
+                      <div v-for="sub, i in entry.submissions" :key="i" class="text-xs text-muted">
+                        {{ 'choice' in sub && sub.choice.label }}
+                      </div>
+                    </td>
+                  </template>
                 </tr>
               </tbody>
             </table>
@@ -73,7 +79,7 @@
 </template>
 
 <script setup lang="ts">
-import { APIDiscussionFlags, type APIDiscussion } from "@srcpanel/common/Discussions";
+import { APIDiscussionFlags, APIDiscussionType, type APIDiscussionWithSubmissions } from "@srcpanel/common/Discussions";
 import { getRelDate } from "@srcpanel/common/format";
 import DiscussCard from "~/components/discuss/DiscussCard.vue";
 import CommentsContainer from "~/components/discuss/comments/CommentsContainer.vue";
@@ -85,7 +91,7 @@ await requireAuth();
 
 const api = useApi();
 
-const { data: discuss, status, error } = await useAsyncData<APIDiscussion>(
+const { data: discuss, status, error } = await useAsyncData<APIDiscussionWithSubmissions>(
   `discuss.${route.params.id}`,
   () => api(`/discussions/${route.params.id}`),
 );

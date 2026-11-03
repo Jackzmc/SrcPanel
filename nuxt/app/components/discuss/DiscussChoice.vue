@@ -9,11 +9,11 @@
             class="accent-primary-500 mt-2"
           >
           <span class="text-md">
-            {{ entry.option.label }}
+            {{ entry.label }}
           </span>
         </div>
-        <div v-if="entry.count" class="text-primary text-lg">
-          {{ Math.round(entry.count.percent*100) }}%
+        <div v-if="'percent' in entry" class="text-primary text-lg">
+          {{ Math.round(entry.percent*100) }}%
         </div>
       </div>
     </UCard>
@@ -21,15 +21,14 @@
 </template>
 
 <script setup lang="ts">
-import { APIDiscussionType } from "@srcpanel/common/Discussions";
-import type { DiscussOptionEntry } from "~~/shared/types/discuss";
+import { APIDiscussionType, type APIDiscussionOption, type APIDiscussionOptionWithCount } from "@srcpanel/common/Discussions";
 
 const emit = defineEmits<{
   (e: "select", optionId: number): void;
 }>();
 
 const props = defineProps<{
-  entry: DiscussOptionEntry;
+  entry: APIDiscussionOption | APIDiscussionOptionWithCount;
   type: APIDiscussionType;
   userSelection: number[];
   editable?: boolean;
@@ -40,10 +39,10 @@ const inputType = computed(() => {
 });
 
 const selected = computed(() => {
-  return props.userSelection.includes(props.entry.option.id);
+  return props.userSelection.includes(props.entry.id);
 });
 
 function onClick() {
-  emit("select", props.entry.option.id);
+  emit("select", props.entry.id);
 }
 </script>

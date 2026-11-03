@@ -1,4 +1,4 @@
-import { APICountData, APIDiscussionFlags, APIResponsesData, type APIComment, type APIDiscussionOption, type APIDiscussionType, type APISubmissions, type SubmissionEntry, type UserSubmission } from "@srcpanel/common/Discussions";
+import { APIDiscussionFlags, type APIComment, type APIDiscussionOption, type APIDiscussionOptionWithCount, type APIDiscussionType, type APISubmissions, type SubmissionEntry, type UserSubmission } from "@srcpanel/common/Discussions";
 import { Pool, RowDataPacket } from 'mysql2/promise';
 import User from "../users/User.js";
 import AuthManager from "../auth/AuthManager.js";
@@ -117,11 +117,17 @@ export default class DiscussionManager {
         const submissions = await Repo.getSubmissions(this.#db, discussionId)
         const elgibleVoters = this.#authmngr.AdminCount
 
-        const users = new Set<APIUser>()
-        const options = new Map<number, APIDiscussionOption & APICountData>()
+        const users = new Map<APIUser, SubmissionEntry[]>()
+        const options = new Map<number, APIDiscussionOptionWithCount>()
 
         for(const entry of submissions) {
-            users.add(entry.user)
+            // Add list of user entries
+            let entries = users.get(entry.user)
+            if(!entries) entries = []
+            entries.push(entry)
+            users.set(entry.user, entries)
+
+            // Calculate counts
             if('choice' in entry) {
                 let option = options.get(entry.choice.id)
                 if(!option) option = { 
@@ -139,13 +145,14 @@ export default class DiscussionManager {
         // We need the unique count of users, but depending on the discussion, multiple submissions can be made per user
         const totalVoted = users.size
 
-        const shownUsers = discuss.submittersPublic ? submissions.map(sub => {
-            return {
-                user: sub.user,
-                choice: discuss.submissionsPublic && 'choice' in sub ? sub.choice : undefined,
-                text: discuss.submissionsPublic && 'text' in sub ? sub.text : undefined
-            } as SubmissionEntry
-        }) : undefined
+        const shownUsers = discuss.submittersPublic 
+            ? [...users.entries().map(([user, submissions]) => {
+                return {
+                    user: user,
+                    submissions: discuss.submissionsPublic ? submissions : undefined
+                }
+            })]
+            : undefined
 
         return {
             totalVoted,

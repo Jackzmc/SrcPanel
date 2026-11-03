@@ -65,24 +65,17 @@ export interface APISubmissions {
   /** The percentage of all available admins that have voted */
   percentVoted: number,
   /** the options and their counts */
-  options: (APIDiscussionOption & APICountData)[]
+  options: APIDiscussionOptionWithCount[]
   /** If public, the list of submission entries, including the user and their input */
-  users?: SubmissionEntry[]
+  users?: { 
+    user: APIUser,
+    /** If public, the user's submissions */
+    submissions?: UserSubmission[]
+  }[]
 }
 
-/** @deprecated use APISubmissions */
-export interface APIResponsesData {
-  /** Total number of users who have voted */
-  totalCount: number,
-  /** The percentage of all available admins that have voted */
-  percentVoted: number,
-  /** The counts and percents for each option. Key is the stringified id of option */
-  counts: Record<string, APICountData>
-  /** If public, the list of submission entries, including the user and their input */
-  users?: SubmissionEntry[]
-}
 /** The count and percent of a specific option */
-export interface APICountData {
+export interface APIDiscussionOptionWithCount extends APIDiscussionOption {
   count: number,
   percent: number
 }
