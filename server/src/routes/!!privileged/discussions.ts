@@ -4,6 +4,7 @@ import { NO_PERMISSION } from '../../util/responses.js';
 import { Static, Type } from '@sinclair/typebox';
 import { NamespacedMetric } from '../../modules/metrics/influx.js';
 import { GUARD_REQUIRE_DISCUSSION } from '#/guards/discussions.js'
+import { sendInvalidParamError } from '../../guards/index.js';
 
 const metric = new NamespacedMetric("discuss")
 
@@ -12,14 +13,12 @@ const CreateDiscussion = Type.Object({
   description: Type.Optional(Type.String()),
   closedAt: Type.Optional(Type.Integer()),
   flags: Type.Optional(Type.Integer()),
-  type: Type.Integer(),
+  type: Type.Union([Type.Integer(), Type.String()]),
   options: Type.Array(Type.Object({
     label: Type.String()
   }))
 })
 type CreateDiscussionType = Static<typeof CreateDiscussion>
-
-// TODO: MOVE ALL LOGIC / formatting TO DISCUSSION MANAGER
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
   const discManager = fastify.managers.discussions
@@ -53,22 +52,33 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
           })
         }
       }
-      if (discuss.type == APIDiscussionType.Radio) {
-        // Insert new, or update existing
-        if (!body.option || Array.isArray(body.option)) 
-          return reply.status(400).send({ error: "INVALID_OPTION", message: "Options must be a string for radio" })
-        await fastify.managers.discussions.setAnswerChoice(discuss.id, req.user!, body.option)
-      } else if (discuss.type == APIDiscussionType.Checkbox || discuss.type == APIDiscussionType.Selection) {
-        if (!body.option || !Array.isArray(body.option)) 
-          return reply.status(400).send({ error: "INVALID_OPTION", message: "Options must be an array for checkbox or selection" })
-        await fastify.managers.discussions.setAnswerChoice(discuss.id, req.user!, body.option)
-      } else if (discuss.type == APIDiscussionType.ShortText || discuss.type == APIDiscussionType.LongText) {
-        if (!body.text || body.text == "") 
-          return reply.status(400).send({ error: "INVALID_CHOICE", message: "Must include the text of the choice" })
-        await fastify.managers.discussions.setAnswerText(discuss.id, req.user!, body.text)
-      } else {
-        return reply.status(501).send({ error: "UNSUPPORTED_TYPE", message: "Server does not support this type of discussion" })
+
+      switch(discuss.type) {
+        case APIDiscussionType.Selection:
+        case APIDiscussionType.Radio: {
+          if (!body.option || Array.isArray(body.option)) 
+            return reply.status(400).send({ error: "INVALID_OPTION", message: "Options must be a string for radio" })
+          await fastify.managers.discussions.setAnswerChoice(discuss.id, req.user!, body.option)
+          break;
+        }
+        case APIDiscussionType.Checkbox: {
+          if (!body.option || !Array.isArray(body.option)) 
+            return reply.status(400).send({ error: "INVALID_OPTION", message: "Options must be an array for checkbox or selection" })
+          await fastify.managers.discussions.setAnswerChoice(discuss.id, req.user!, body.option)
+          break;
+        }
+        case APIDiscussionType.LongText:
+        case APIDiscussionType.ShortText: {
+          if (!body.text || body.text == "") 
+            return reply.status(400).send({ error: "INVALID_CHOICE", message: "Must include the text of the choice" })
+          await fastify.managers.discussions.setAnswerText(discuss.id, req.user!, body.text)
+          break;
+        }
+        default: {
+          return reply.status(501).send({ error: "UNSUPPORTED_TYPE", message: "Server does not support this type of discussion" })
+        }
       }
+
       return reply.status(204).send()
     }
   )
@@ -101,7 +111,32 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
   fastify.post('/', { schema: postSchema }, async (req: FastifyRequest<{ Body: CreateDiscussionType }>, reply): Promise<APIDiscussionCreateResponse> => {
     const discuss = req.body as CreateDiscussionType
-    const id = await fastify.managers.discussions.createDiscussion(req.user!, discuss.title, discuss.description ?? null, discuss.closedAt ?? null, discuss.type, discuss.flags ?? 0)
+    let type: APIDiscussionType
+    if(typeof discuss.type === "number") type = discuss.type as APIDiscussionType
+    else {
+      switch(discuss.type) {
+        case "radio":
+        case "single": 
+          type = APIDiscussionType.Radio
+          break
+        case "select":
+          type = APIDiscussionType.Selection
+          break
+        case "checkbox":
+        case "multiple":
+          type = APIDiscussionType.Checkbox
+          break
+        case "short":
+          type = APIDiscussionType.ShortText
+          break
+        case "long":
+        case "essay":
+          type = APIDiscussionType.LongText
+        default:
+          return sendInvalidParamError(reply, "type", "invalid or unknown discussion type")
+      }
+    }
+    const id = await fastify.managers.discussions.createDiscussion(req.user!, discuss.title, discuss.description ?? null, discuss.closedAt ?? null, type, discuss.flags ?? 0)
 
     metric.send("created", 1)
 

@@ -6,6 +6,22 @@ info:
 http:
   method: POST
   url: "{{API_HOST}}/api/discussions"
+  body:
+    type: json
+    data: |-
+      {
+        "title": "My discussion",
+        "description": "",
+        "type": 1,
+        "options": [
+          {
+            "label": "Option A"
+          },
+           {
+            "label": "Option B"
+          }
+        ]
+      }
   auth: inherit
 
 settings:
