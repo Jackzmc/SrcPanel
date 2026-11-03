@@ -18,7 +18,14 @@ const CreateDiscussion = Type.Object({
     label: Type.String()
   }))
 })
+
 type CreateDiscussionType = Static<typeof CreateDiscussion>
+
+const SubmitComment = Type.Object({
+  content: Type.String()
+})
+
+type SubmitComentType = Static<typeof SubmitComment>
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
   const discManager = fastify.managers.discussions
@@ -105,47 +112,6 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     }
   )
 
-  const postSchema: FastifySchema = {
-    body: CreateDiscussion
-  }
-
-  fastify.post('/', { schema: postSchema }, async (req: FastifyRequest<{ Body: CreateDiscussionType }>, reply): Promise<APIDiscussionCreateResponse> => {
-    const discuss = req.body as CreateDiscussionType
-    let type: APIDiscussionType
-    if(typeof discuss.type === "number") type = discuss.type as APIDiscussionType
-    else {
-      switch(discuss.type) {
-        case "radio":
-        case "single": 
-          type = APIDiscussionType.Radio
-          break
-        case "select":
-          type = APIDiscussionType.Selection
-          break
-        case "checkbox":
-        case "multiple":
-          type = APIDiscussionType.Checkbox
-          break
-        case "short":
-          type = APIDiscussionType.ShortText
-          break
-        case "long":
-        case "essay":
-          type = APIDiscussionType.LongText
-        default:
-          return sendInvalidParamError(reply, "type", "invalid or unknown discussion type")
-      }
-    }
-    const id = await fastify.managers.discussions.createDiscussion(req.user!, discuss.title, discuss.description ?? null, discuss.closedAt ?? null, type, discuss.flags ?? 0)
-
-    metric.send("created", 1)
-
-    return {
-      id
-    }
-  })
-
-
   fastify.get(
     '/:id', 
     { preHandler: [ GUARD_REQUIRE_DISCUSSION.prehandler() ]},
@@ -173,10 +139,54 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     }
   )
 
+
+  fastify.post(
+    '/', 
+    { schema: { body: CreateDiscussion } }, 
+    async (req: FastifyRequest<{ Body: CreateDiscussionType }>, reply): Promise<APIDiscussionCreateResponse> => {
+      const discuss = req.body as CreateDiscussionType
+      let type: APIDiscussionType
+      if(typeof discuss.type === "number") type = discuss.type as APIDiscussionType
+      else {
+        switch(discuss.type) {
+          case "radio":
+          case "single": 
+            type = APIDiscussionType.Radio
+            break
+          case "select":
+            type = APIDiscussionType.Selection
+            break
+          case "checkbox":
+          case "multiple":
+            type = APIDiscussionType.Checkbox
+            break
+          case "short":
+            type = APIDiscussionType.ShortText
+            break
+          case "long":
+          case "essay":
+            type = APIDiscussionType.LongText
+          default:
+            return sendInvalidParamError(reply, "type", "invalid or unknown discussion type")
+        }
+      }
+      const id = await fastify.managers.discussions.createDiscussion(req.user!, discuss.title, discuss.description ?? null, discuss.closedAt ?? null, type, discuss.flags ?? 0)
+
+      metric.send("created", 1)
+
+      return {
+        id
+      }
+    }
+  )
+
   fastify.post(
     '/:id/comments', 
-    { preHandler: [ GUARD_REQUIRE_DISCUSSION.prehandler() ] },
-    async (req: FastifyRequest<{ Params: { id: string } }>, reply): Promise<APISubmitCommentResponse> => {
+    { 
+      preHandler: [ GUARD_REQUIRE_DISCUSSION.prehandler() ], 
+      schema: { body: SubmitComment } 
+    },
+    async (req: FastifyRequest<{ Body: SubmitComentType, Params: { id: string } }>, reply): Promise<APISubmitCommentResponse> => {
       const discuss = GUARD_REQUIRE_DISCUSSION.get(req)
 
       if (discuss.flags & APIDiscussionFlags.Archived) {
@@ -186,8 +196,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         })
       }
 
-      const body = req.body as { content: string }
-      const commentId = await fastify.managers.discussions.submitComment(discuss.id, req.user!, body.content)
+      const commentId = await fastify.managers.discussions.submitComment(discuss.id, req.user!, req.body.content)
 
       metric.send("comment_created", 1)
 

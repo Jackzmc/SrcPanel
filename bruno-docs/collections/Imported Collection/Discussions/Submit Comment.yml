@@ -1,0 +1,26 @@
+info:
+  name: Submit Comment
+  type: http
+  seq: 6
+
+http:
+  method: POST
+  url: "{{API_HOST}}/api/discussions/:id/comments"
+  params:
+    - name: id
+      value: "54"
+      type: path
+  body:
+    type: json
+    data: |-
+      {
+        "content": "My comment"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
