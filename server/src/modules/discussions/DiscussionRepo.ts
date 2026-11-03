@@ -65,11 +65,11 @@ export async function getSubmissions(db: DBClient, discussionId: number): Promis
             res.steamid, 
             u.last_name as name,
             res.text, 
-            res.choice, 
+            res.choice_id, 
             opt.label
         FROM \`${ADMINS_DB}\`.${TABLE_PREFIX}_discussion_responses res 
         LEFT JOIN \`${MAIN_DB}\`.view_${TABLE_PREFIX}_user u ON SUBSTRING(res.steamid, 11) = u.account_id 
-        LEFT JOIN \`${ADMINS_DB}\`.${TABLE_PREFIX}_discussion_options opt ON opt.id = res.choice 
+        LEFT JOIN \`${ADMINS_DB}\`.${TABLE_PREFIX}_discussion_options opt ON opt.id = res.choice_id
         WHERE res.discussion_id = ?`, 
         [ discussionId ]
     )
@@ -80,8 +80,8 @@ export async function getSubmissions(db: DBClient, discussionId: number): Promis
                 name: row.name
             },
             text: row.text,
-            choice: row.choice && {
-                id: row.choice,
+            choice: row.choice_id && {
+                id: row.choice_id,
                 label: row.label
             } || undefined
         }
@@ -92,18 +92,18 @@ export async function getUserSubmissions(db: DBClient, discussionId: number, use
     const [responses] = await db.execute<RowDataPacket[]>(`
         SELECT 
             res.text, 
-            res.choice, 
+            res.choice_id, 
             opt.label
         FROM \`${ADMINS_DB}\`.${TABLE_PREFIX}_discussion_responses res 
-        LEFT JOIN \`${ADMINS_DB}\`.${TABLE_PREFIX}_discussion_options opt ON opt.id = res.choice 
+        LEFT JOIN \`${ADMINS_DB}\`.${TABLE_PREFIX}_discussion_options opt ON opt.id = res.choice_id
         WHERE res.discussion_id = ? AND SUBSTRING(res.steamid, 11) = SUBSTRING(?, 11)`, 
         [ discussionId, userSteamid ]
     )
     return responses.map(row => {
         return {
             text: row.text,
-            choice: row.choice && {
-                id: row.choice,
+            choice: row.choice_id && {
+                id: row.choice_id,
                 label: row.label
             } || undefined
         }
@@ -149,7 +149,7 @@ export async function insertAnswerText(db: DBClient, discussionId: number, userS
 export async function insertAnswerChoice(db: DBClient, discussionId: number, userSteamid: string, optionId: number) {
     await db.execute(`
         INSERT INTO ${ADMINS_DB}.${TABLE_PREFIX}_discussion_responses 
-        (discussion_id, steamid, choice) 
+        (discussion_id, steamid, choice_id) 
         VALUES (?, ?, ?)`, 
         [discussionId, userSteamid, optionId]
     )

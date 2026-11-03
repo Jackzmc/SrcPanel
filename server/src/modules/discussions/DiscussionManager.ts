@@ -1,4 +1,4 @@
-import { APIDiscussionFlags, type APIComment, type APIDiscussionOption, type APIDiscussionOptionWithCount, type APIDiscussionType, type APISubmissions, type SubmissionEntry, type UserSubmission } from "@srcpanel/common/Discussions";
+import { APIDiscussionFlags, type APIComment, type APIDiscussionOptionWithCount, type APIDiscussionType, type APISubmissions, type SubmissionEntry, type UserSubmission } from "@srcpanel/common/Discussions";
 import { Pool, RowDataPacket } from 'mysql2/promise';
 import User from "../users/User.js";
 import AuthManager from "../auth/AuthManager.js";
@@ -122,7 +122,6 @@ export default class DiscussionManager {
 
         // Add all options
         if(discuss.options) {
-            console.log('add', discuss.options)
             for(const option of discuss.options) {
                 options.set(option.id, { 
                     id: option.id,

@@ -7,7 +7,6 @@ import { authManager }  from '../../util/managers.js'
 import * as Repo from '#/modules/discussions/DiscussionRepo.js'
 import { APIDiscussionFlags, APIDiscussionType } from "@srcpanel/common/Discussions";
 import { TABLE_PREFIX } from "../../../src/core/database.js";
-import User from "../../../src/modules/users/User.js";
 
 describe("discussions repo", (t) => {
     let manager: DiscussionManager;

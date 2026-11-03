@@ -2,6 +2,6 @@
   "name": "migrations",
   "type": "module",
   "devDependencies": {
-    "dbmate": "^2.33.0"
+    "dbmate": "^2.37.0"
   }
 }
