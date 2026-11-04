@@ -93,4 +93,19 @@ describe("QueryBuilder", () => {
         t.assert.equal(build1[1].length, 3, "query data correct amount")
     })
 
+    test("query limits are correct", async (t: TestContext) => {
+        await DB.execute("INSERT INTO querybuilder (col_a, col_b) VALUES ('1','1')")
+        await DB.execute("INSERT INTO querybuilder (col_a, col_b) VALUES ('2','2')")
+
+        const q = QueryBuilder.startSelect("querybuilder", "e")
+            .select("col_a")
+            .limit(1, 0)
+            .sort("col_a", SortDirection.Ascending)
+
+        const [rows] = await q.execute(DB)
+
+        t.assert.equal(rows.length, 1, "number of rows matches")
+        t.assert.equal(rows[0].col_a, "1", "query is offset correctly")
+    })
+
 })

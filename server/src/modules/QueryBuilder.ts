@@ -246,7 +246,7 @@ export class QueryBuilder {
     limit(limit: number, offset?: number) {
         if(limit == undefined || isNaN(limit)) throw Error("limit is not defined or invalid")
         if(offset != undefined) {
-            this.#limit = ["LIMIT ?, ?", limit, offset]
+            this.#limit = ["LIMIT ?, ?", offset, limit]
         } else {
             this.#limit = ["LIMIT ?", limit]
         }
