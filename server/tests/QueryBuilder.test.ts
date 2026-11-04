@@ -1,5 +1,5 @@
 import { test, describe, before, type TestContext, beforeEach, after } from "node:test";
-import { QueryBuilder } from "../src/modules/QueryBuilder.js";
+import { QueryBuilder, SortDirection } from "../src/modules/QueryBuilder.js";
 
 import DB from './util/db.js'
 import { RowDataPacket } from "mysql2";
@@ -73,6 +73,24 @@ describe("QueryBuilder", () => {
 
         t.assert.equal(rows.length, 1)
         t.assert.equal(rows[0].col_a, '2')
+    })
+
+    test("query builds are repeatable", (t: TestContext) => {
+        // Use all possible options, doesn't need to make sense or be valid
+        const q = QueryBuilder.startSelect("querybuilder", "e")
+            .select("col_a")
+            .where("col_b", "=", "2")
+            .join("querybuilder", "col_b", "=", "col_b")
+            .limit(20, 5)
+            .sort("col_a", SortDirection.Ascending)
+            .partition("part")
+        
+        const build1 = q.build()
+        const build2 = q.build()
+
+        t.assert.equal(build1[0], build2[0], "build statements match")
+        t.assert.deepEqual(build1[1], build2[1], "build data match")
+        t.assert.equal(build1[1].length, 3, "query data correct amount")
     })
 
 })
