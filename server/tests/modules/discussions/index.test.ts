@@ -57,8 +57,6 @@ describe("discussions repo", (t) => {
             t.assert.equal(discuss.options[0].label, "Option A", "option A exists")
             t.assert.equal(discuss.options[1].label, "Option B", "option B exists")
         })
-
-
     })
 
     describe("edit discussion", () => {
@@ -74,6 +72,18 @@ describe("discussions repo", (t) => {
             t.assert.equal(secondDiscuss.type, APIDiscussionType.Radio, "type changed")
 
             t.assert.equal(firstDiscuss.timestamp, secondDiscuss.timestamp, "timestamp not change")
+        })
+        test("removing options", async (t: TestContext) => {
+            const id = await Repo.createDiscussion(DB, "DUMMY", "Test Discussion", "Testing 123", null, APIDiscussionType.Checkbox, 0)
+            await Repo.insertOption(DB, id, "Option A")
+
+            const preOptions = await Repo.getOptions(DB, id)
+            t.assert.equal(preOptions.length, 1, "has one option")
+
+            await Repo.clearOptions(DB, id)
+
+            const postOptions = await Repo.getOptions(DB, id)
+            t.assert.equal(postOptions.length, 0, "has no options")
         })
     })
 
@@ -141,6 +151,24 @@ describe("discussions repo", (t) => {
             t.assert.equal(results.options.length, 2, "number of options match")
             t.assert.equal(results.options[0].count, 2, "option A selected twice")
             t.assert.equal(results.options[1].count, 1, "option A selected once")
+        })
+
+        // test("changing submission removes old entries", async (t: TestContext) => {
+        //     // TODO: need manager... so need User
+        // })
+
+        test("clearing answers", async (t: TestContext) => {
+            const id = await Repo.createDiscussion(DB, "DUMMY", "Test Discussion", "Testing 123", null, APIDiscussionType.Checkbox, 0)
+            const optionA = await Repo.insertOption(DB, id, "Option A")
+
+            await Repo.insertAnswerChoice(DB, id, "DUMMY A", optionA)
+            const initSubs = await Repo.getSubmissions(DB, id)
+            t.assert.equal(initSubs.length, 1, "has one submission")
+
+            await Repo.clearAnswers(DB, id, "DUMMY A")
+
+            const postSubs = await Repo.getSubmissions(DB, id)
+            t.assert.equal(postSubs.length, 0, "no submissions")
         })
     })
 })
