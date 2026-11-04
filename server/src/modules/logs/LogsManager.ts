@@ -221,24 +221,12 @@ export default class LogsManager {
             else if('type' in payload) permission = payload.type
         }
 
-        let metadata = payload?.metadata
-
-        if(!metadata) metadata = {}
+        const metadata = payload?.metadata ?? {}
         metadata.permission = permission
 
-        const [r] = await this.#pool.execute<ResultSetHeader>(
-            `INSERT INTO activity_log (server, type, client, target, message, timestamp, metadata) 
-            VALUES ('web', :type, :client, :target, :msg, UNIX_TIMESTAMP(), :metadata)`,
-            {
-                client: activator.steamid2,
-                target: target ? target.steamid2 : null,
-                msg,
-                type: "web",
-                metadata: JSON.stringify(metadata)
-            }
-        )
+        const id = await Repo.addLogEntry(this.#pool, 'web', 'web', activator.steamid2, target?.steamid2 ?? null, msg, metadata)
 
-        return r.insertId
+        return id
     }
 
     async saveCache() {

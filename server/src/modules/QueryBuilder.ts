@@ -246,9 +246,9 @@ export class QueryBuilder {
     limit(limit: number, offset?: number) {
         if(limit == undefined || isNaN(limit)) throw Error("limit is not defined or invalid")
         if(offset != undefined) {
-            this.#limit = ["LIMIT ?, ?", Number(limit), Number(offset)]
+            this.#limit = ["LIMIT ?, ?", limit, offset]
         } else {
-            this.#limit = ["LIMIT ?", Number(limit)]
+            this.#limit = ["LIMIT ?", limit]
         }
         return this
     }
@@ -265,11 +265,12 @@ export class QueryBuilder {
      * @returns [ query, data[] ]
      */
     build(): [ string, any[] ] {
+        this.#data = []
         const tablePrefix = this.#tableAlias ? `AS ${this.#tableAlias}` : ''
         const partitionString = this.#partition ? `PARTITION (${this.#partition})` : ''
         return [
             `SELECT ${this.#buildSelect()} FROM ${escapeId(this.#tableName)} ${partitionString} ${tablePrefix} ${this.#buildJoins()} ${this.#buildWhere()} ${this.#buildSort()} ${this.#buildLimit()}`,
-            this.#whereData
+            this.#data
         ]
     }
 

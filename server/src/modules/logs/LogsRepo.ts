@@ -1,7 +1,9 @@
+import type { LogEntry } from "@srcpanel/common/Logs"
 import { TABLE_PREFIX, type DBClient } from "../../core/database.js"
 import { QueryBuilder, SortDirection } from "../QueryBuilder.js"
 import { formatLogEntry } from "./index.js"
 import { ACTIVITY_LOG_TABLE_NAME } from "./LogsManager.js"
+import type { ResultSetHeader } from "mysql2"
 
 export interface FetchLogOptions {
     limit?: number,
@@ -14,8 +16,9 @@ export interface FetchLogOptions {
     servers?: string[]
 }
 
-export async function fetchLogs(db: DBClient, type: "before" | "after" | "around", id: number, options: FetchLogOptions = {}) {
+export async function fetchLogs(db: DBClient, type: "before" | "after" | "around", id: number, options: FetchLogOptions = {}): Promise<LogEntry[]> {
     const limit = options.limit ?? 30
+
     const query = QueryBuilder.startSelect(ACTIVITY_LOG_TABLE_NAME, "l")
         .selectMultiple("id", "l.timestamp", "server", "type", "client", "target", "message", "metadata")
         .select("s1.last_name", "clientName")
@@ -48,4 +51,20 @@ export async function fetchLogs(db: DBClient, type: "before" | "after" | "around
     const [rawLogs] = await query.execute(db)
     const logs = rawLogs.map(formatLogEntry)
     return logs
+}
+
+export async function addLogEntry(db: DBClient, type: string, server: string, clientId?: string | null, targetId?: string | null, msg?: string | null, metadata?: Record<string, string|number>): Promise<number> {
+    const [r] = await db.execute<ResultSetHeader>(
+        `INSERT INTO activity_log (server, type, client, target, message, timestamp, metadata) 
+        VALUES (:server, :type, :client, :target, :msg, UNIX_TIMESTAMP(), :metadata)`,
+        {
+            client: clientId ?? null,
+            target: targetId ?? null,
+            msg: msg ?? null,
+            type,
+            server,
+            metadata: metadata ? JSON.stringify(metadata) : null
+        }
+    )
+    return r.insertId
 }

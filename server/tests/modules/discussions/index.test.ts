@@ -11,7 +11,6 @@ import { TABLE_PREFIX } from "../../../src/core/database.js";
 describe("discussions repo", (t) => {
     let manager: DiscussionManager;
     before(async() => {
-        // TODO: wipe + insert sample data
         manager = new DiscussionManager(DB, authManager)
     })
 

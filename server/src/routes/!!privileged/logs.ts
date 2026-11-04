@@ -1,40 +1,8 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
-import { Static, Type } from '@sinclair/typebox'
 import { NO_PERMISSION } from '../../util/responses.js';
 import { APILogData, APILogQueryResult } from '@srcpanel/common/Logs';
-import { ACTIVITY_LOG_TABLE_NAME } from '../../modules/logs/LogsManager.js';
 import { sendInvalidParamError } from '../../guards/index.js';
 import { FetchLogsParamsSchema, FetchLogsQuerySchema, type APIFetchLogsParams, type APIFetchLogsQuery } from '@srcpanel/common/logs/schemas'
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const LogQuery = Type.Object({
-  raw: Type.Optional(Type.Boolean({ default: false })),
-  servers: Type.Optional(Type.String()),
-  types: Type.Optional(Type.String()),
-  client: Type.Optional(Type.String()),
-  target: Type.Optional(Type.String()),
-  timestamp: Type.Optional(Type.Integer()),
-  timestampBefore: Type.Optional(Type.Boolean()),
-  orderByColumn: Type.Optional(Type.String()),
-  orderByAscending: Type.Optional(Type.Boolean()),
-  searchMessage: Type.Optional(Type.String()),
-  search_message: Type.Optional(Type.String()),
-  search_id: Type.Optional(Type.Integer()),
-  search_client: Type.Optional(Type.String()),
-  search_target: Type.Optional(Type.String()),
-  aroundId: Type.Optional(Type.Integer()),
-  fetchAll: Type.Optional(Type.Boolean()),
-  limit: Type.Optional(Type.Integer()),
-  page: Type.Optional(Type.Integer()),
-  optimized: Type.Optional(Type.String()),
-  timestampOnly: Type.Optional(Type.Boolean({ default: false })),
-  source: Type.Optional(Type.String()),
-  afterId: Type.Optional(Type.Number())
-})
-
-type LogQueryType = Static<typeof LogQuery>
-
-const ADMIN_CHAT_REGEX = new RegExp(/triggered (sm_say|sm_chat) \(text (.*)\)/)
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
 
