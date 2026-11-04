@@ -8,7 +8,7 @@
             <UPagination
               v-model:page="page"
               :items-per-page="limit"
-              :total="data?.totalNotes ?? 0"
+              :total="data?.notes.length ?? 0"
             />
           </div>
           <UTable
@@ -22,7 +22,7 @@
             <UPagination
               v-model:page="page"
               :items-per-page="limit"
-              :total="data?.totalNotes ?? 0"
+              :total="data?.notes.length ?? 0"
             />
           </div>
         </div>
@@ -31,7 +31,7 @@
             <h2 class="text-lg font-bold">
               Showing
               <UInput v-model.lazy="limit" type="number" min="1" max="100" />
-              / {{ (data?.totalNotes ?? 0).toLocaleString() }} notes
+              / {{ (data?.notes.length ?? 0).toLocaleString() }} notes
             </h2>
             <p>
               The color in the ID column represents their reputation.
@@ -56,7 +56,7 @@
 <script setup lang="ts">
 import type { TableColumn } from "@nuxt/ui";
 import { getRelDate } from "@srcpanel/common/format";
-import type { APINotesResponse, Note } from "@srcpanel/common/Note";
+import type { APINotesResponse, APINote } from "@srcpanel/common/Note";
 
 import UserComponent from "@/components/UserComponent.vue";
 import { debounce } from "@srcpanel/common/util";
@@ -71,7 +71,7 @@ useHead({
 const api = useApi();
 const route = useRoute();
 
-const columns: TableColumn<Note>[] = [
+const columns: TableColumn<APINote>[] = [
   {
     accessorKey: "id",
     header: "Id",

@@ -1,5 +1,4 @@
-
-export interface Note {
+export interface APINote {
   id: number,
   content: string,
   client: NoteUser,
@@ -8,6 +7,8 @@ export interface Note {
   banned: boolean
   action?: string[]
 }
+/** @deprecated use APINote */
+export type Note = APINote
 export interface NoteUser {
   id: string,
   name?: string,
@@ -16,12 +17,12 @@ export interface NoteUser {
 }
 
 export interface APINotesResponse {
-  totalNotes: number,
-  notesCount: number,
+  totalNotes?: number,
+  notesCount?: number,
   notes: Note[]
 }
 export interface APIListUserNotes {
-    notes: Note[]
+  notes: Note[]
 }
 
 export interface APICreateNoteResponse {

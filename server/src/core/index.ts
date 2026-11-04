@@ -14,7 +14,6 @@ import CacheManager from '../modules/CacheManager.js';
 import DataManager from '../modules/DataManager.js'
 
 import * as PromMetrics from './prom-metrics.js'
-import NotesManager from '../modules/notes/index.js';
 import PlayerManager from '../modules/users/PlayerManager.js';
 import LogsManager from '../modules/logs/LogsManager.js';
 import { loadDB } from './database.js';
@@ -61,7 +60,6 @@ export async function loadModules(db: Awaited<ReturnType<typeof loadDB>>) {
     const serverManager = new ServerManager(steam, DATA_FOLDER, CONFIG_FOLDER)
     const discussions = new DiscussionManager(db.db, authManager, jobScheduler)
     const dataManager = DataManager.create(db.db)
-    const notesManager = new NotesManager(db.db)
 
     const [ playerManager, logsManager ] = await Promise.all([
         await PlayerManager.create(db.db, authManager),
@@ -86,7 +84,6 @@ export async function loadModules(db: Awaited<ReturnType<typeof loadDB>>) {
         authManager,
         serverManager,
         discussions,
-        notesManager,
         playerManager,
         logsManager
     }
