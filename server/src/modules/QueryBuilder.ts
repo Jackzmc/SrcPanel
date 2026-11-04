@@ -1,5 +1,9 @@
 import { FieldPacket, Pool, RowDataPacket } from 'mysql2/promise'
 import type { DBClient } from '../core/database.js'
+import Logger from '#/util/logger.js'
+
+const log = Logger.child({ name: "QueryBuilder" })
+
 export enum SortDirection {
     Ascending,
     Descending
@@ -79,6 +83,38 @@ export class QueryBuilder {
         const select = [escapeId(column)]
         if(alias) select.push(alias)
         this.#selects.push(select)
+        return this
+    }
+
+    selectRaw(text: string, alias?: string) {
+        const select = [text]
+        if(alias) select.push(alias)
+        this.#selects.push(select)
+        return this
+    }
+
+    /**
+     * Adds a select for a raw SQL statement as a subquery. The statement will be wrapped with parenthesis automatically
+     * The statement is NOT checked. 
+     * @param rawStatement the SQL statement without wrapping parenthesis
+     * @param alias name of statement
+     */
+    selectSubQuery(rawStatement: string, alias: string) {
+        this.#selects.push([`(${rawStatement})`, alias])
+        return this
+    }
+
+    /**
+     * Adds a subquery via a nested QueryBuilder. UNTESTED
+     * @param query 
+     * @param alias 
+     * @returns 
+     */
+    // TODO: NEEDS TEST
+    selectSubBuilder(query: QueryBuilder, alias: string) {
+        const [stmt, data] = query.build()
+        this.#selects.push([`(${stmt})`, alias])
+        this.#data.push(...data)
         return this
     }
 
@@ -294,6 +330,7 @@ export class QueryBuilder {
 
     async execute(pool: DBClient): Promise<[RowDataPacket[], FieldPacket[]]> {
         const [query, data] = this.build()
+        log.trace({ query, data }, "executing query")
         const result = await pool.execute<RowDataPacket[]>(query, data)
         this.#data = []
         return result
