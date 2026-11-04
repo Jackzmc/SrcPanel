@@ -7,7 +7,7 @@ describe("BufferReader", () => {
     test("reads bytes in order", (t: TestContext) => {
         // Add dummy data
         const buffer = Buffer.from([ 0x0, 0x1, 0x2 ])
-        const reader = new BufferReader(buffer)
+        const reader = BufferReader.from(buffer)
         
         t.assert.equal(reader.readByte(), 0, "read byte at offset 0")
         t.assert.equal(reader.readByte(), 1, "read byte at offset 1")
@@ -22,7 +22,7 @@ describe("BufferReader", () => {
             0x2, 0x0, 
             0x8, 0x0, 0x0, 0x0
         ])
-        const reader = new BufferReader(buffer)
+        const reader = BufferReader.from(buffer)
         
         t.assert.equal(reader.readByte(), 0, "read byte")
         t.assert.equal(reader.offset, 1)
@@ -47,7 +47,7 @@ describe("BufferReader", () => {
 
         console.log('writer', { length: writer.length, offset: writer.offset })
 
-        const reader = new BufferReader(writer.buffer)
+        const reader = BufferReader.from(writer.buffer)
 
         console.log('reader', { length: reader.length, offset: reader.offset })
 
@@ -77,7 +77,7 @@ describe("BufferReader", () => {
 
         t.assert.equal(writer.offset, str.length + 1, "proper null terminated length")
 
-        const reader = new BufferReader(writer.buffer)
+        const reader = BufferReader.from(writer.buffer)
 
         t.assert.equal(reader.readString(), str, "read string matches")
         t.assert.equal(reader.offset, writer.offset, "same offsets")
@@ -90,7 +90,7 @@ describe("BufferReader", () => {
             BufferReader.RecordSeparator // end symbol
         ])
 
-        const reader = new BufferReader(buf)
+        const reader = BufferReader.from(buf)
         const gen = reader.readRecords()
         
         const recordReader = gen.next().value
@@ -110,7 +110,7 @@ describe("BufferReader", () => {
         console.log(`data size=${size}`, data)
         console.log(`full size=${buf.length}`, buf)
 
-        const reader = new BufferReader(buf)
+        const reader = BufferReader.from(buf)
         const gen = reader.readRecords()
         
         const recordReader = gen.next().value
@@ -127,6 +127,7 @@ describe("BufferReader", () => {
 
         for(let i = 0; i < numRecords; i++) {
             const size = getRandomInt(4, 16) // smaller size so its easier to diagnose
+            
             const data = Crypto.randomBytes(size)
             const record = generateRecord(data)
 
@@ -135,7 +136,7 @@ describe("BufferReader", () => {
 
         const buf = Buffer.concat(buffers.map(b => b.record))
 
-        const parentReader = new BufferReader(buf)
+        const parentReader = BufferReader.from(buf)
         for(const reader of parentReader.readRecords()) {
             const target = buffers.shift()
             t.assert.ok(target, "has target")

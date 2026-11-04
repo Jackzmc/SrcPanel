@@ -5,6 +5,7 @@ node_modules/
 /data
 /content
 /logs
+/coverage
 
 .env
 start.sh
