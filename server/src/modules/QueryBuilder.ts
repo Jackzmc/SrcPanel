@@ -163,7 +163,7 @@ export class QueryBuilder {
                 joinData.leftColumn = escapeId(joinData.leftColumn)
                 joinData.rightColumn = escapeId(joinData.rightColumn)
             }
-            return `${joinData.type} JOIN ${escapeId(joinData.table)} ${joinData.alias} ON ${name}.${joinData.leftColumn} ${joinData.condition} ${joinData.rightColumn}`
+            return `${joinData.type} JOIN ${escapeId(joinData.table)} ${joinData.alias ?? ''} ON ${name}.${joinData.leftColumn} ${joinData.condition} ${joinData.rightColumn}`
             
         }).join(" ")
     }
