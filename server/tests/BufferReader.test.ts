@@ -127,7 +127,7 @@ describe("BufferReader", () => {
 
         for(let i = 0; i < numRecords; i++) {
             const size = getRandomInt(4, 16) // smaller size so its easier to diagnose
-            
+
             const data = Crypto.randomBytes(size)
             const record = generateRecord(data)
 
@@ -145,6 +145,16 @@ describe("BufferReader", () => {
         }
 
         t.assert.ok(parentReader.isEOF, "at eof")
+    })
+
+    test("read invalid packet", (t: TestContext) => {
+        const buf = generateRecord(Buffer.alloc(0))
+
+        const reader = BufferReader.from(buf)
+        const gen = reader.readRecords()
+
+        const recordReader = gen.next().value
+        t.assert.equal(recordReader, null, "record was discarded")
     })
 })
 
