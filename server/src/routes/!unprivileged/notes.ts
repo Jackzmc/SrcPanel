@@ -1,10 +1,10 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
 import { RowDataPacket } from 'mysql2';
-import { APIListUserNotes, APINotesResponse, Note } from '@srcpanel/common/Note';
+import { APINotesResponse } from '@srcpanel/common/Note';
 import SteamID from 'steamid';
 import { ADMINS_DB, TABLE_PREFIX } from '../../core/database.js';
-import { formatNote } from '../../modules/notes/utils.js';
-import NotesManager from '../../modules/notes/index.js';
+import { formatNote } from '../../modules/notes/index.js';
+import * as NotesRepo from '../../modules/notes/NotesRepo.js';
 import PlayerManager from '../../modules/users/PlayerManager.js';
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
@@ -121,7 +121,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     async handler(req: FastifyRequest<{
       Params: { id: number }
     }>, reply) {
-      const note = await NotesManager.instance.getNote(req.params.id)
+      const note = await NotesRepo.getNote(fastify.db, req.params.id)
 
       return {
         note

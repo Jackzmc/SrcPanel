@@ -68,9 +68,6 @@ describe("logs", () => {
         const sortedIds = (await Promise.all(promises))
             .sort((a,b) => a - b)
 
-        // 'before' fetches all *before* or equal to given id, so we expect same length
-        // fetchLogs also fetches logs in descending order
-
         const [logs] = await manager.fetchLogs("around", sortedIds[Math.floor(sortedIds.length / 2)])
         t.assert.equal(logs.length, sortedIds.length, "expected number of fetched logs")
 

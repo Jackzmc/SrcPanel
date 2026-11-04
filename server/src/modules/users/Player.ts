@@ -6,7 +6,7 @@ import { ADMINS_DB, TABLE_PREFIX } from "#/core/database.js";
 import AuthManager from "../auth/AuthManager.js";
 import { Note } from "@srcpanel/common/Note";
 import { formatBan } from "../bans/utils.js";
-import NotesManager from "../notes/index.js";
+import * as NotesRepo from "../notes/NotesRepo.js";
 import { formatPlayer } from "./utils.js";
 import PlayerManager from "./PlayerManager.js";
 
@@ -70,7 +70,7 @@ export default class PanelPlayer {
      * @returns 
      */
     async getNotes(limit: number = 1000, page: number = 1): Promise<Note[]> {
-        return NotesManager.instance.getNotesForPlayer(this.steamid, limit, page)
+        return NotesRepo.getNotesForPlayer(this.#db, this.steamid.getSteam2RenderedID(), limit, page)
     }
 
     async getBans(): Promise<FullAPIBan[]> {
