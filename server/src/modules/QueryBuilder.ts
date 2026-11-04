@@ -73,12 +73,20 @@ export class QueryBuilder {
         return this
     }
 
-    
+    /**
+     * Adds multiple column at once
+     * @param columns array of column names 
+     */
     selectMultiple(...column: string[]) {
         this.#selects = [...this.#selects, ...column.map(col => [escapeId(col)])]
         return this
     }
 
+    /**
+     * Adds a new column to select
+     * @param column 
+     * @param alias 
+     */
     select(column: string, alias?: string) {
         const select = [escapeId(column)]
         if(alias) select.push(alias)
@@ -124,7 +132,7 @@ export class QueryBuilder {
             else return data[0]
         })
     }
-
+    
     leftJoin(table: string, leftColumn: string, condition: Condition, rightColumn: string, alias?: string, unsafe = false) {
         this.#addJoin("LEFT", {
             table,
