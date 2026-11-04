@@ -187,6 +187,21 @@ export default class LogsManager {
     }
 
     /**
+     * Fetches logs after a given id
+     * @param id defaults to the last known log entry
+     * @param options other options such as limit and filters
+     * @returns a tuple of [an array of log entries, the info about the specific year's data range]
+     */
+    async fetchLogsAfter(id?: number | null, options: Repo.FetchLogOptions = {}): Promise<[LogEntry[], YearInfo]> {
+        if(!id) {
+            const year = await this.getYearData(this.currentYear)
+            if(!year) throw new Error("missing year data")
+            id = year.maxId
+        }
+        return await this.fetchLogs("after", id, options)
+    }
+
+    /**
      * Logs that an action happened on the panel
      * @param activator the user who performed the action
      * @param target if any, the user this action was performed against
