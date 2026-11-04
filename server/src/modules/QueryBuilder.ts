@@ -1,4 +1,5 @@
 import { FieldPacket, Pool, RowDataPacket } from 'mysql2/promise'
+import type { DBClient } from '../core/database.js'
 export enum SortDirection {
     Ascending,
     Descending
@@ -290,7 +291,7 @@ export class QueryBuilder {
         return query
     }
 
-    async execute(pool: Pool): Promise<[RowDataPacket[], FieldPacket[]]> {
+    async execute(pool: DBClient): Promise<[RowDataPacket[], FieldPacket[]]> {
         const [query, data] = this.build()
         const result = await pool.execute<RowDataPacket[]>(query, data)
         this.#data = []

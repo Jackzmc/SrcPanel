@@ -1,11 +1,11 @@
 import Logger, { PinoLogger } from '#/util/logger.js'
 import { Pool, ResultSetHeader, RowDataPacket } from 'mysql2/promise'
 import CacheManager from '../CacheManager.js'
-import PlayerManager from '../users/PlayerManager.js'
-import SteamID from 'steamid'
-import { LogEntry } from '@srcpanel/common/Logs'
 import type User from '../users/User.js'
 import type { LogData } from '../users/User.js'
+import * as Repo from './LogsRepo.js'
+import type { DBClient } from '../../core/database.js'
+import type { LogEntry, YearInfo } from '@srcpanel/common/Logs'
 
 export const ACTIVITY_LOG_TABLE_NAME = "activity_log"
 
@@ -191,6 +191,21 @@ export default class LogsManager {
         return rows.length > 0 ? rows[0] as ReturnType<typeof this.getLog> : null
     }
 
+    async fetchLogs(type: "before" | "after" | "around", id: number, options: Repo.FetchLogOptions = {}): Promise<[LogEntry[], YearInfo]>  {
+        const logs = await Repo.fetchLogs(this.#pool, type, id, options)
+
+        // Update cached data incase we get new logs
+        if (!options.year) options.year = this.currentYear
+        const yearInfo = await this.getYearData(options.year)
+        if(!yearInfo) throw new Error("no year info")
+        logs.forEach(log => {
+            yearInfo.maxId = Math.max(yearInfo.maxId, log.id)
+        })
+        this.#yearData.set(options.year, yearInfo)
+            
+        return [logs, yearInfo]
+    }
+
     async logWeb(activator: User, target?: User|null, message?: string, payload?: LogData): Promise<number> {
         let msg: string|null = null
         if(message) {
@@ -247,32 +262,4 @@ export default class LogsManager {
         }
     }
     
-}
-
-const ADMIN_CHAT_REGEX = new RegExp(/triggered (sm_say|sm_chat) \(text (.*)\)/)
-
-export function formatLogEntry(log: any): LogEntry {
-    if (log.metadata) log.metadata = JSON.parse(log.metadata)
-    // If its a valid user but no name, then put it in a list to be updated:
-    if (!log.clientName && log.client?.startsWith("STEAM_")) {
-        PlayerManager.instance.enqueueNameResolve(new SteamID(log.client))
-    }
-    if (!log.targetName && log.target?.startsWith("STEAM_")) {
-        PlayerManager.instance.enqueueNameResolve(new SteamID(log.target))
-    }
-    // Admin chats are performed via sm_say / sm_chat commands
-    // So we detect that, grab the message and mark it as actually 'CHAT'
-    if (log.type == 'ACTION') {
-        const match = log.message.match(ADMIN_CHAT_REGEX)
-        if (match) {
-            log.type = 'CHAT'
-            // Kindaaa messy, but we do want to keep the raw message
-            log.metadata = {
-                admin_chat: true,
-                command: match[1],
-                text: match[2]
-            }
-        }
-    }
-    return log as LogEntry
 }

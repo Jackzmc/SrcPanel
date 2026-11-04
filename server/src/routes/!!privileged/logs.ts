@@ -1,11 +1,10 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
 import { Static, Type } from '@sinclair/typebox'
 import { NO_PERMISSION } from '../../util/responses.js';
-import { QueryBuilder, SortDirection } from '../../modules/QueryBuilder.js';
 import { APILogData, APILogQueryResult } from '@srcpanel/common/Logs';
-import { TABLE_PREFIX } from '../../core/database.js';
-import { ACTIVITY_LOG_TABLE_NAME, formatLogEntry } from '../../modules/logs/LogsManager.js';
+import { ACTIVITY_LOG_TABLE_NAME } from '../../modules/logs/LogsManager.js';
 import { sendInvalidParamError } from '../../guards/index.js';
+import { FetchLogsParamsSchema, FetchLogsQuerySchema, type APIFetchLogsParams, type APIFetchLogsQuery } from '@srcpanel/common/logs/schemas'
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const LogQuery = Type.Object({
@@ -53,86 +52,41 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
   })
 
   const VALID_TYPES = ["before", "after", "around"]
-  fastify.get('/:type/:id', async (req: FastifyRequest<{ Querystring: LogQueryType, Params: { type: string, id: number } }>, reply): Promise<APILogQueryResult> => {
-    if (!fastify.logs.loaded) return reply.status(503).send({
-      error: "NOT_READY",
-      message: "Logs have not been loaded yet, please try again later"
-    })
-    const type = req.params.type
-    if (!VALID_TYPES.includes(type)) {
-      return reply.status(400).send({
-        error: "BAD_REQUEST",
-        message: `Unknown type ${req.params.type}, should be one of: ${VALID_TYPES}`
+  fastify.get(
+    '/:type/:id', 
+    { schema: { querystring: FetchLogsQuerySchema, params: FetchLogsParamsSchema }},
+    async (req: FastifyRequest<{ Querystring: APIFetchLogsQuery, Params: APIFetchLogsParams }>, reply): Promise<APILogQueryResult> => {
+      if (!fastify.logs.loaded) return reply.status(503).send({
+        error: "NOT_READY",
+        message: "Logs have not been loaded yet, please try again later"
       })
-    }
+      const type = req.params.type
+      if (!VALID_TYPES.includes(type)) {
+        return reply.status(400).send({
+          error: "BAD_REQUEST",
+          message: `Unknown type ${req.params.type}, should be one of: ${VALID_TYPES}`
+        })
+      }
+      const startTime = performance.now()
+      const [logs, yearInfo] = await fastify.logs.fetchLogs(type as "before" | "after" | "around", req.params.id, {
+        year: req.query.year,
+        types: req.query.types,
+        servers: req.query.servers,
+        searchClient: req.query.searchClient,
+        searchTarget: req.query.searchTarget,
+        searchMessage: req.query.searchMessage
+      })
 
-    const limit = req.query.limit ?? 30
-
-    const query = new QueryBuilder(ACTIVITY_LOG_TABLE_NAME, "l")
-      .selectMultiple("id", "l.timestamp", "server", "type", "client", "target", "message", "metadata")
-      .select("s1.last_name", "clientName")
-      .select("s2.last_name", "targetName")
-      .leftJoin(`view_${TABLE_PREFIX}_user`, "account_id", "=", "SUBSTRING(client, 11)", "s1", true)
-      .leftJoin(`view_${TABLE_PREFIX}_user`, "account_id", "=", "SUBSTRING(target, 11)", "s2", true)
-      .limit(limit)
-      .sort('id', SortDirection.Descending)
-    const sourceAsYear = req.query.source && parseInt(req.query.source)
-    if(sourceAsYear && !isNaN(sourceAsYear)) {
-      query
-        .where("timestamp", ">=", Math.floor(new Date(`${sourceAsYear}-01-01T00:00:00`).getTime() / 1000))
-        .where("timestamp", "<", Math.floor(new Date(`${sourceAsYear + 1}-01-01T00:00:00`).getTime() / 1000))
-    }
-
-    if (type === 'before') query.where("id", '<=', req.params.id)
-    else if (type === 'after') query.where("id", '>', req.params.id)
-    else if (type === 'around') {
-      const half = Math.ceil(limit / 2)
-      query.where("id", '>', Number(req.params.id) - half)
-        .where("id", '<=', Number(req.params.id) + half)
-    }
-
-    if (req.query.search_client) query.where('client', '=', req.query.search_client)
-    if (req.query.search_target) query.where('target', '=', req.query.search_target)
-    if (req.query.search_message) query.where('message', 'LIKE', `%${req.query.search_message}%`)
-    const servers = req.query.servers?.split(/[+, ]/g)
-    const types = req.query.types?.split(/[+, ]/g)
-    if (servers) {
-      query.whereIn('server', servers)
-    }
-    if (types) {
-      // type in (?,?,?) OR server = 'web' AND server IN (?,?,?)
-      query.whereIn('type', types)
-    }
-
-    const startTime = Date.now()
-    const [rawLogs] = await query.execute(fastify.db)
-    const logs = rawLogs.map(formatLogEntry)
-
-    let year = parseInt(req.query.source as string)
-    if (!year || isNaN(year)) year = fastify.logs.currentYear
-    const yearInfo = await fastify.logs.getYearData(year)
-
-    // Update cached data incase we get new logs
-    // TODO: With LogsManager migration, this only updates our copy. Is this necessary?
-    logs.forEach(log => {
-      if(yearInfo) yearInfo.maxId = Math.max(yearInfo.maxId, log.id)
-    })
-
-    return {
-      logs,
-      timeTaken: Date.now() - startTime,
-      yearInfo: yearInfo,
-      counts: {
-        queryRows: logs.length
-      },
-      // pages: Math.ceil(count[0].count / limit),
-      raw: process.env.NODE_ENV === "production" || req.query.raw ? null : {
-        cache: yearInfo ? yearInfo[year] : undefined,
-        query: query.buildUnsafe(),
-        ACTIVITY_LOG_TABLE_NAME,
+      return {
+        logs,
+        yearInfo,
+        timeTaken: performance.now() - startTime,
+        counts: {
+          queryRows: logs.length
+        }
       }
     }
-  })
+  )
 
   fastify.post("/:id/redact", async (req: FastifyRequest<{ Params: { id: 'string' } }>, reply) => {
     if (!req.user!.hasPermission("logs.redact")) return NO_PERMISSION(reply)
