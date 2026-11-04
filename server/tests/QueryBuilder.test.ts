@@ -3,23 +3,31 @@ import { QueryBuilder } from "../src/modules/QueryBuilder.js";
 
 import DB from './util/db.js'
 import { RowDataPacket } from "mysql2";
+import { doTransaction } from "../src/core/database.js";
 
 describe("QueryBuilder", () => {
 
     before(async() => {
-        await DB.execute("DROP TABLE IF EXISTS querybuilder")
-        await DB.execute("CREATE TABLE querybuilder (col_a VARCHAR(64) NULL, col_b VARCHAR(64) NULL)")
+        await doTransaction(DB, async(conn) => {
+            await conn.execute("DROP TEMPORARY TABLE IF EXISTS querybuilder")
+            await conn.execute("CREATE TEMPORARY TABLE querybuilder (col_a VARCHAR(64) NULL, col_b VARCHAR(64) NULL)")
+        })
+
     })
 
     beforeEach(async() => {
-        await DB.query("DELETE FROM querybuilder WHERE 1=1")
+        await DB.execute("DELETE FROM querybuilder")
     })
 
-    after(async() => await DB.end())
+
+    after(async() => {
+        await DB.execute('DROP TEMPORARY TABLE IF EXISTS querybuilder');
+        await DB.end()
+    })
 
     test("valid select statement that works", async (t: TestContext) => {
         // Add dummy data
-        await DB.query("INSERT INTO querybuilder (col_a, col_b) VALUES ('1','2')")
+        await DB.execute("INSERT INTO querybuilder (col_a, col_b) VALUES ('1','2')")
 
         const q = QueryBuilder.startSelect("querybuilder", "e")
         q.select("col_a")
@@ -55,7 +63,7 @@ describe("QueryBuilder", () => {
 
     test("valid where that works", async (t: TestContext) => {
         // Add dummy data
-        await DB.query("INSERT INTO querybuilder (col_a, col_b) VALUES ('1','1'), ('2','2')")
+        await DB.execute("INSERT INTO querybuilder (col_a, col_b) VALUES ('1','1'), ('2','2')")
 
         const q = QueryBuilder.startSelect("querybuilder", "e")
             .select("col_a")
