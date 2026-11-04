@@ -11,10 +11,7 @@ export const ACTIVITY_LOG_TABLE_NAME = "activity_log"
 
 const LOG_TOTAL_ROW_CACHE_TIME = 20_000
 
-interface PartitionData {
-  minId: number,
-  maxId: number,
-  count?: number,
+interface PartitionDataCache extends Repo.PartitionData {
   fetchTime: number
 }
 
@@ -27,7 +24,7 @@ export default class LogsManager {
     #availableServers: Set<string> = new Set(["web"])
 
     // Map of partitions to its min and max ids, and later count
-    #yearData: Map<number, PartitionData> = new Map()
+    #yearData: Map<number, PartitionDataCache> = new Map()
 
     #ready = false
 
@@ -57,7 +54,7 @@ export default class LogsManager {
         return [...this.#availableServers.values()]
     }
 
-    get yearData(): Record<number, PartitionData> {
+    get yearData(): Record<number, PartitionDataCache> {
         return Object.fromEntries(this.#yearData.entries());
     }
 
@@ -87,12 +84,8 @@ export default class LogsManager {
      * @returns
      */
     async fetchServers(): Promise<Set<string>> {
-        const [rows] = await this.#pool.query<RowDataPacket[]>(`
-            SELECT DISTINCT server FROM activity_log
-            WHERE server IS NOT NULL
-            ORDER BY timestamp DESC
-        `)
-        rows.forEach(row => this.#availableServers.add(row.server))
+        const servers = await Repo.getDistinctServers(this.#pool)
+        servers.forEach(row => this.#availableServers.add(row))
         return this.#availableServers
     }
 
@@ -102,24 +95,13 @@ export default class LogsManager {
      * @param pool
      * @returns
      */
-    async getPartitions(): Promise<Map<number, PartitionData>> {
+    async getPartitions(): Promise<Map<number, PartitionDataCache>> {
         const startTime = performance.now()
-        const [rows] = await this.#pool.query<RowDataPacket[]>(`
-            SELECT
-                MIN(id) as lowestId, 
-                MAX(id) as highestId, 
-                COUNT(*) as count, 
-                YEAR(from_unixtime(timestamp)) year
-            FROM activity_log
-            GROUP BY year
-            ORDER BY year
-        `)
+        const partitions = await Repo.getPartitionData(this.#pool)
         this.#log.debug({ duration_ms: performance.now() - startTime }, "getPartitions")
-        for (const row of rows) {
+        for (const row of partitions) {
             this.#yearData.set(row.year, {
-                minId: row.lowestId,
-                maxId: row.highestId,
-                count: row.count,
+                ...row,
                 fetchTime: Date.now()
             })
         }
@@ -144,26 +126,20 @@ export default class LogsManager {
         return data
     }
 
+    /**
+     * Creates a new partition in the database for the specific year. Skips if one already exists for year.
+     * @param year the year to add partition for
+     */
     async addPartitionForYear(year: number) {
-        const nextYear = year
+        const nextYear = year + 1
 
         try {
             // Check if we need to add a partition
-            const [partitions] = await this.#pool.query<RowDataPacket[]>(`
-            SELECT * FROM information_schema.partitions
-                WHERE TABLE_SCHEMA='left4dead2'
-                AND TABLE_NAME = 'activity_log'
-                AND PARTITION_NAME IS NOT NULL
-                ORDER BY PARTITION_DESCRIPTION
-                LIMIT 1`
-            )
+            const partitions = await Repo.getPartitionNames(this.#pool)
             // Maybe not the best check but it should work
             const hasYear = partitions.some(part => parseInt(part.PARTITION_NAME.substring(1)) === year)
             if(!hasYear) {
-                await this.#pool.query(`
-                    ALTER TABLE activity_log ADD PARTITION IF NOT EXISTS
-                    ( PARTITION p${year} VALUES LESS THAN ( UNIX_TIMESTAMP('${nextYear}-01-01 00:00') ) )`
-                )
+                await Repo.addPartition(this.#pool, year, nextYear)
                 this.#log.info({ year }, `Added new partition to activity log`)
             }
         } catch(err) {
@@ -171,26 +147,30 @@ export default class LogsManager {
         }
     }
 
+    /**
+     * Redacts a specific log entry by setting its message to ['redacted']
+     * @param id 
+     */
     async redactId(id: number) {
-        await this.#pool.query(`
-            UPDATE ${ACTIVITY_LOG_TABLE_NAME} 
-            SET message = '[redacted]' 
-            WHERE id = ?`, 
-            [ id ]
-        )
+        Repo.redactId(this.#pool, id)
+    }
+    
+    /**
+     * Gets a specific log entry.
+     * @param id 
+     * @returns 
+     */
+    async getLog(id: number): Promise<LogEntry | null> {
+        return Repo.getLogEntry(this.#pool, id)
     }
 
-    async getLog(id: number): Promise<{ id: number, message: string, type: string, client: string } | null> {
-        const [rows] = await this.#pool.query<RowDataPacket[]>(
-            `SELECT id, message, type, client 
-            FROM ${ACTIVITY_LOG_TABLE_NAME} 
-            WHERE id = ?`, 
-            [ id ]
-        )
-
-        return rows.length > 0 ? rows[0] as ReturnType<typeof this.getLog> : null
-    }
-
+    /**
+     * Fetches logs in 'before' an id (inclusive), 'after' an id (exclusive), or around an id (id's entry in the center). 
+     * @param type either 'before', 'after', or 'around'
+     * @param id the id to use for direction
+     * @param options other options such as limit and filters
+     * @returns a tuple of [an array of log entries, the info about the specific year's data range]
+     */
     async fetchLogs(type: "before" | "after" | "around", id: number, options: Repo.FetchLogOptions = {}): Promise<[LogEntry[], YearInfo]>  {
         const logs = await Repo.fetchLogs(this.#pool, type, id, options)
 
@@ -206,6 +186,14 @@ export default class LogsManager {
         return [logs, yearInfo]
     }
 
+    /**
+     * Logs that an action happened on the panel
+     * @param activator the user who performed the action
+     * @param target if any, the user this action was performed against
+     * @param message a message
+     * @param payload extra data
+     * @returns id of entry
+     */
     async logWeb(activator: User, target?: User|null, message?: string, payload?: LogData): Promise<number> {
         let msg: string|null = null
         if(message) {
@@ -243,7 +231,7 @@ export default class LogsManager {
             const cacheServers = await this.#cache.get<Set<string>>("log.servers")
             if (cacheServers) this.#availableServers = cacheServers
 
-            const cachePartitions = await this.#cache.get<Map<number,PartitionData>>("log.partitions")
+            const cachePartitions = await this.#cache.get<Map<number,PartitionDataCache>>("log.partitions")
             if (cachePartitions) this.#yearData = cachePartitions
         } catch(err) {
             this.#log.warn({ err }, "failed to load cache")

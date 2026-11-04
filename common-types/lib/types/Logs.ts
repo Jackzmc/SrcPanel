@@ -47,7 +47,7 @@ export interface LogEntry {
   /** The server this was tagged with */
   server?: string,
   /** The type of entry */
-  type?: string,
+  type?: LogType,
   /**
    * The client, may be steamid2 (STEAM_#:#:####), or any arbitary string that performed action
    * If undefined, may be server or console, or unknown
@@ -66,3 +66,6 @@ export interface LogEntry {
   /** Any extra metadata, should replace message %variable% with the same property key */
   metadata?: Record<string, string | number | boolean | undefined>,
 }
+
+
+export type LogType = "ACTION" | "CHAT" | "JOIN" | "QUIT" | "web" | "STATE" | "INFO"
