@@ -8,6 +8,10 @@ export default class BufferReader {
     static new(size: number) {
         return new BufferReader(Buffer.alloc(size))
     }
+
+    static from(data: Buffer, parent?: Buffer) {
+      return new BufferReader(data, parent)
+    }
   
     constructor(data: Buffer, parent?: Buffer) {
       if(!data) throw new Error("buffer is null or undefined")	
@@ -94,55 +98,55 @@ export default class BufferReader {
           console.debug("discarding entire packet, bad record length\n", '0x'+this.#buffer.toString('hex'))
           return null
         }
-        const endRecord = this.#offset + length
+        const endRecordOffset = this.#offset + length
         // console.log(`record len=${length} type=${this.peakByte(this.#offset)} bounds=[${this.#offset}, ${endRecord}]`, this.#buffer.subarray(this.#offset, endRecord).toString('hex'), '\nfull:' + this.#buffer.toString('hex'))
-        yield new BufferReader(this.#buffer.subarray(this.#offset, endRecord), this.#buffer)
+        yield new BufferReader(this.#buffer.subarray(this.#offset, endRecordOffset), this.#buffer)
         // records are separated by 0x1e or 0x0a (concatted), so skip +1
-        this.#offset = endRecord + 1
+        this.#offset = endRecordOffset + 1
       }
       return null
     }
   
-    #expand(newSize?: number) {
-      if(!newSize) newSize = 2 * this.buffer.length
-      if(newSize < this.#buffer.length) throw new Error("new size must be greater than the current size")
-      const newBuffer = Buffer.alloc(newSize)
+    #expand(increment?: number) {
+      if(!increment) increment = 2 * this.buffer.length
+      if(increment == 0) increment = 4 // Start with int size
+      const newBuffer = Buffer.alloc(this.#length + increment)
       this.buffer.copy(newBuffer, 0, 0, this.buffer.length)
       this.#buffer = newBuffer
-      this.#length = newSize
+      this.#length = newBuffer.length
     }
 
     
     writeByte(value: number) {
-        if(this.#offset + 1 >= this.#length) this.#expand()
+        if(this.#offset + 1 > this.#length) this.#expand()
         this.#buffer.writeInt8(value, this.#offset)
         this.#offset++
         return this
     }
   
     writeShort(value: number) {
-        if(this.#offset + 2 >= this.#length) this.#expand()
+        if(this.#offset + 2 > this.#length) this.#expand()
         this.#buffer.writeInt16LE(value, this.#offset)
         this.#offset += 2
         return this
     }   
   
     writeInt(value: number) {
-        if(this.#offset + 4 >= this.#length) this.#expand()
+        if(this.#offset + 4 > this.#length) this.#expand()
         this.#buffer.writeInt32LE(value, this.#offset)
         this.#offset += 4
         return this
     }
 
     writeFloat(value: number) {
-       if(this.#offset + 4 >= this.#length) this.#expand()
+       if(this.#offset + 4 > this.#length) this.#expand()
         this.#buffer.writeFloatLE(value, this.#offset)
         this.#offset += 4
         return this
     }
 
     writeString(value: string) {
-        if(this.#offset + value.length + 1 >= this.#length) this.#expand(this.#length + value.length + 1)
+        if(this.#offset + value.length + 1 >= this.#length) this.#expand(value.length + 1)
         if(value == undefined) value = ""
         this.#buffer.write(value + "\0", this.#offset, "ascii")
         this.#offset += value.length + 1
