@@ -78,6 +78,7 @@ nav = [
   ]},
   {"Setup" = [
      "setup/setup.md",
+     {"Live Server" = "setup/live-server.md"},
      {"Configure" = [
       {"panel.yml" = "setup/configure/panel.yml.md"},
       {"shares.yml" = "setup/configure/shares.yml.md"},

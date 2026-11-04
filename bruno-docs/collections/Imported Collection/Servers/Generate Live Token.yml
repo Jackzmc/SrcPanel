@@ -1,0 +1,26 @@
+info:
+  name: Generate Live Token
+  type: http
+  seq: 2
+
+http:
+  method: GET
+  url: "{{API_HOST}}/api/servers/:id/generate-jwt"
+  headers:
+    - name: x-apikey
+      value: "{{API_TOKEN}}"
+  params:
+    - name: id
+      value: prod-27101
+      type: path
+  body:
+    type: text
+    data: ""
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true

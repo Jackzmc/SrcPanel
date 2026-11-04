@@ -3,7 +3,7 @@ icon: lucide/rocket
 ---
 
 !!! warning
-    Documentation is being worked on
+    SrcPanel is still under active development and its documentation is being worked on
 
 <b>SrcPanel</b> is an web-based administration panel intended for communities, allowing admins to manage bans, notes, and players & admins, manage server files (maps, addons, plugins), create intra-admin discussions, view audit logs (in-game and panel activity), manage servers (perform actions, console, live status, create instances), and lastly custom documentation (tutorials/pages/plugin docs for admins)
 
