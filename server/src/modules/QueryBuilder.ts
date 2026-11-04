@@ -14,11 +14,16 @@ interface Join {
     condition: Condition,
     unsafe?: boolean
 }
+type QueryType = "SELECT" | "UPDATE" | "DELETE" | "INSERT INTO"
 type WhereCondition = [string, Condition, any]
 interface WhereConditionInternal {
     conditions: string[],
     data: any[]
 }
+/**
+ * Utility to build queries with dynamic data. 
+ * Only supports select conditions
+ */
 export class QueryBuilder {
     #tableName: string
     #tableAlias?: string
@@ -31,12 +36,32 @@ export class QueryBuilder {
     #selects: string[][] = []
     #joins: Join[] = []
     #partition?: string | null = null
+    #type: QueryType
 
-    constructor(tableName: string, tableAlias?: string) {
+    /**
+     * Starts a SELECT statement
+     * @deprecated publically use startSelect()
+     */
+    constructor(tableName: string, tableAlias?: string, type: QueryType = "SELECT") {
         this.#tableName = tableName
         this.#tableAlias = tableAlias
+        this.#type = type
         // "SERVER IN (?, ?, ?)
     }
+
+    /**
+     * Starts a SELECT statement
+     * @param tableName table to select FROM
+     * @param tableAlias optional alias to add
+     */
+    static startSelect(tableName: string, tableAlias?: string) {
+        return new QueryBuilder(tableName, tableAlias, "SELECT")
+    }
+
+    // static startUpdate(tableName: string, tableAlias?: string) {
+    //     return new QueryBuilder(tableName, tableAlias, "UPDATE")
+    // }
+
 
     partition(partition?: string | null) {
         this.#partition = partition
@@ -142,6 +167,10 @@ export class QueryBuilder {
         }).join(" ")
     }
 
+    /**
+     * A collection of where conditions
+     * @param conditions 
+     */
     or(conditions: WhereCondition[]) {
         const cond: WhereConditionInternal = {
             conditions: [],
@@ -154,6 +183,13 @@ export class QueryBuilder {
         this.#orConditions.push(cond)
     }
 
+    /**
+     * Adds a where condition
+     * @param column the column to check
+     * @param condition the condition to use
+     * @param value value to compare to
+     * @returns 
+     */
     where(column: string, condition: Condition, value: any) {
         this.#whereConditions.push(`${escapeId(column)} ${condition} ?`)
         this.#whereData.push(value)
@@ -216,20 +252,34 @@ export class QueryBuilder {
         return this
     }
 
-    private _buildLimit() {
+    #buildLimit() {
         if(!this.#limit) return ""
         this.#data = [...this.#data, ...this.#limit.slice(1)]
         return this.#limit[0]
     }
 
-    build() {
+    /**
+     * Builds a query with placeholders. Returns query and all data.
+     * You may want to call <see>execute()</see> instead
+     * @returns [ query, data[] ]
+     */
+    build(): [ string, any[] ] {
         const tablePrefix = this.#tableAlias ? `AS ${this.#tableAlias}` : ''
         const partitionString = this.#partition ? `PARTITION (${this.#partition})` : ''
-        return `SELECT ${this.#buildSelect()} FROM ${escapeId(this.#tableName)} ${partitionString} ${tablePrefix} ${this.#buildJoins()} ${this.#buildWhere()} ${this.#buildSort()} ${this._buildLimit()}`
+        return [
+            `SELECT ${this.#buildSelect()} FROM ${escapeId(this.#tableName)} ${partitionString} ${tablePrefix} ${this.#buildJoins()} ${this.#buildWhere()} ${this.#buildSort()} ${this.#buildLimit()}`,
+            this.#whereData
+        ]
     }
 
+    /**
+     * Builds the query by manually replacing placeholders with their value.
+     * Values are NOT escaped.
+     * DO NOT USE. It for viewing what the query should maybe be
+     * @returns raw query
+     */
     buildUnsafe() {
-        let query = this.build()
+        let [query] = this.build()
         for(let data of this.#data) {
             if(typeof data === "string") {
                 data = `'${data}'`
@@ -241,7 +291,8 @@ export class QueryBuilder {
     }
 
     async execute(pool: Pool): Promise<[RowDataPacket[], FieldPacket[]]> {
-        const result = await pool.execute<RowDataPacket[]>(this.build(), this.#data)
+        const [query, data] = this.build()
+        const result = await pool.execute<RowDataPacket[]>(query, data)
         this.#data = []
         return result
     }

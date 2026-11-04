@@ -142,6 +142,5 @@ describe("discussions repo", (t) => {
             t.assert.equal(results.options[0].count, 2, "option A selected twice")
             t.assert.equal(results.options[1].count, 1, "option A selected once")
         })
-        // TODO: test submi
     })
 })
