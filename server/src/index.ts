@@ -82,15 +82,16 @@ async function onSignal(signal: NodeJS.Signals) {
     (async() => {
       const writer = getGlobalWriter()
       if(writer) await writer.close()
-    })
+    }),
   ])
   app.log.trace("closing fastify")
   await app.close()
   app.log.trace('flushing sentry logs')
   await Sentry.close(2000)
+  app.log.trace("closing pool")
+  await app.db.end()
+
   process.exit(0)
-
-
 }
 ["SIGUSR2", "SIGINT", "SIGTERM"].map((signal) => {
   process.on(signal, onSignal)
