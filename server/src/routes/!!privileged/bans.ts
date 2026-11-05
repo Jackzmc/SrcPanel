@@ -1,10 +1,8 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
-import { ResultSetHeader, RowDataPacket } from 'mysql2';
-import { APIBanFlags, FullAPIBan } from '@srcpanel/common/Ban';
-import { computeChanges, replaceObject } from '../../util/index.js';
+import { APIBanFlags } from '@srcpanel/common/Ban';
 import { NO_PERMISSION, NOT_FOUND } from '../../util/responses.js';
-import { TABLE_PREFIX } from '../../core/database.js';
 import { AddBanBodySchema, EditBanBodySchema, type APIAddBanRequest, type APIEditBanRequest } from '@srcpanel/common/bans/schemas'
+import * as BansRepo from '#/modules/bans/BansRepo.js'
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
     fastify.route({
@@ -30,58 +28,84 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         },
         async handler(req: FastifyRequest<{ Body: APIEditBanRequest, Params: { id: number } }>, reply) {
             if(!req.user!.hasPermission("bans.edit")) return NO_PERMISSION(reply)
-            const [existing] = await fastify.db.execute<RowDataPacket[]>(`
-                SELECT * FROM bans WHERE id = ?`,
-                [req.params.id]
-            )
-
-            if(existing.length === 0) {
+            const existingBan = await BansRepo.getBan(fastify.db, req.params.id)
+            if(!existingBan) {
                 return NOT_FOUND(reply, "Ban")
             }
             // Check if they are creator or if CONSOLE (automatic ban), can always edit
-            const isCreator = existing[0].executor === "CONSOLE" || req.user!.equals(existing[0].executor) 
+            const isCreator = existingBan.executor.id === "CONSOLE" || req.user!.equals(existingBan.executor.id) 
             const [code, granted] = req.user!.requirePermission("bans.edit", { isCreator })
             if(!granted) return NO_PERMISSION(reply)
 
-            const ban = replaceObject<any>(existing[0], req.body)
             // Make the user claim any automatic bans they edit:
-            if(existing[0].executor === "CONSOLE") {
-                ban.executor = req.user!.steamid2
+            if(existingBan.executor.id === "CONSOLE") {
+                req.body.executor = req.user!.steamid2
             }
 
-            const [ok] = await fastify.db.execute<ResultSetHeader>(`
-                UPDATE bans 
-                SET executor = :executor, reason = :reason, flags = :flags, 
-                public_message = :public_message, expires = :expires 
-                WHERE id = :id`,
-                {
-                    executor: ban.executor,
-                    reason: ban.reason,
-                    flags: ban.flags,
-                    public_message: ban.public_message,
-                    expires: ban.expires,
-                    id: req.params.id
-                }
-            )
+            await BansRepo.updateBan(fastify.db, req.params.id, {
+                executor: req.body.executor ?? existingBan.executor.id,
+                reason: req.body.reason,
+                publicReason: req.body.public_reason ?? null,
+                flags: req.body.flags,
+                expires: req.body.expires ?? null
+            })
+            
             const logPayload = {
                 code,
                 metadata: {
-                    ...computeChanges<any>(existing[0], ban),
-                    id: existing[0].id, // After spread, incase it returns null
+                    id: existingBan.id,
                 }
             }
 
-            if(req.body.flags && req.body.flags & APIBanFlags.Suspended && ~existing[0].flags & APIBanFlags.Suspended) {
-                await req.user!.log(existing[0].steamid, `%client% suspended ban #%id% for %target%`, logPayload)
-            } else if(req.body.flags && ~req.body.flags & APIBanFlags.Suspended && existing[0].flags & APIBanFlags.Suspended) {
-                await req.user!.log(existing[0].steamid, `%client% reinstate ban #%id% for %target%`, logPayload)
+            const isSuspendedNow = req.body.flags 
+                && (req.body.flags & APIBanFlags.Suspended) 
+                && (~existingBan.flags & APIBanFlags.Suspended)
+            const isActiveNow = req.body.flags 
+                && (~req.body.flags & APIBanFlags.Suspended) 
+                && (existingBan.flags & APIBanFlags.Suspended)
+
+            if(isSuspendedNow) {
+                await req.user!.log(existingBan.client.id, `%client% suspended ban #%id% for %target%`, logPayload)
+            } else if(isActiveNow) {
+                await req.user!.log(existingBan.client.id, `%client% reinstate ban #%id% for %target%`, logPayload)
             } else {
-                await req.user!.log(existing[0].steamid, `%client% edited ban #%id%'s details for %target%`, logPayload)
+                await req.user!.log(existingBan.client.id, `%client% edited ban #%id%'s details for %target%`, logPayload)
             }
 
+            return reply.status(204).send()
+        }
+    })
+
+    // TODO: Moving steamid checks to /users/:steamid/bans ? or /bans/user/:steamid
+
+    fastify.route({
+        method: 'GET',
+        url: '/user/:steamid',
+        schema: {
+            params: {
+                type: "object",
+                properties: {
+                    id: { type: 'string' }
+                }
+            },
+            response: {
+                200: {
+                    type: 'object',
+                    properties: {
+                        ban: { type: 'object' },
+                        appeals: { type: 'array', default: [] }
+                    }
+                }
+            }
+        },
+        async handler(req: FastifyRequest<{ Params: { steamid: string } }>, reply) {
+            const bans = await BansRepo.getBanForUser(fastify.db, req.params.steamid)
+
+            const appeals = BansRepo.getAppealsForUser(fastify.db, req.params.steamid)
+
             return {
-                banId: ban.id,
-                changes: ok.affectedRows
+                bans,
+                appeals
             }
         }
     })
@@ -91,104 +115,37 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         url: '/:id',
         schema: {
             params: {
-            type: "object",
-            properties: {
-                id: { type: 'string' }
-            }
+                type: "object",
+                properties: {
+                    id: { type: 'string' }
+                }
             },
             querystring: {
-            type: "object",
-            properties: {
-                filter: { type: 'string' }
-            }
+                type: "object",
+                properties: {
+                    filter: { type: 'string' }
+                }
             },
             response: {
-            200: {
-                type: 'object',
-                properties: {
-                meta: { type: 'object' },
-                bans: { type: 'array', default: [] },
-                appeals: { type: 'array', default: [] }
+                200: {
+                    type: 'object',
+                    properties: {
+                        ban: { type: 'object' },
+                        appeals: { type: 'array', default: [] }
+                    }
                 }
-            }
             }
         },
-        async handler(req: FastifyRequest<{ Params: { id: string }, Querystring: { filter: string } }>, reply) {
-            const id = req.params.id
-            const isAccount = id.startsWith("STEAM_")
+        async handler(req: FastifyRequest<{ Params: { id: number }, Querystring: { filter: string } }>, reply) {
+            const ban = await BansRepo.getBan(fastify.db, req.params.id)
+            // No appeals if no ban
+            if(!ban) return NOT_FOUND(reply, "Ban")
 
-            const fetchStart = Date.now()
-            const [bans] = await fastify.db.execute<RowDataPacket[]>(
-            `SELECT 
-                times_tried, 
-                id, 
-                public_message, 
-                bans.flags, 
-                bans.steamid, 
-                bans.executor, 
-                bans.reason, 
-                expires, 
-                expired, 
-                bans.timestamp, 
-                u1.last_name as client_name, 
-                u2.last_name AS executor_name, 
-                ip
-            FROM bans
-            LEFT JOIN view_${TABLE_PREFIX}_user u1 ON u1.account_id = SUBSTRING(bans.steamid, 11)
-            LEFT JOIN view_${TABLE_PREFIX}_user u2 ON u2.account_id = SUBSTRING(bans.executor, 11)
-            WHERE 
-                bans.id = ? 
-                OR u1.account_id = SUBSTRING(?, 11)`,
-            [id, id]
-            )
-            const fetchTime = Date.now() - fetchStart
-
-            const apiBans: FullAPIBan[] = bans
-            .filter(ban => req.query.filter !== "active" && !ban.expired && !(ban.flags & APIBanFlags.Suspended))
-            .map(ban => {
-                return {
-                id: ban.id,
-                client: {
-                    id: ban.client,
-                    name: ban.client_name,
-                    country: ban.country
-                },
-                reason: ban.reason,
-                flags: ban.flags,
-                timestamp: Number(ban.timestamp),
-                publicReason: ban.public_message,
-                executor: {
-                    id: ban.executor,
-                    name: ban.executor_name,
-                },
-                expires: ban.expires,
-                expired: ban.expired,
-                joinAttempts: ban.times_tried,
-                ip: ban.ip,
-                }
-            })
-
-            const parseStart = Date.now()
-            const parseTime = Date.now() - parseStart
-
-            // Skip a query if it's for a user
-            const [appeals] = isAccount 
-            ? []
-            : await fastify.db.execute(
-                "SELECT * FROM `ban_appeals` WHERE `ban_id` = ?",
-                [id]
-            )
-
-            console.debug('apeals end')
+            const appeals = BansRepo.getAppeals(fastify.db, ban.id)
 
             return {
-            meta: {
-                fetchTime,
-                parseTime,
-                totalTime: fetchTime + parseTime,
-            },
-            bans: apiBans,
-            appeals
+                ban,
+                appeals
             }
         }
     })
@@ -210,13 +167,10 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 })
             }
 
-            const [existing] = await fastify.db.execute<RowDataPacket[]>(`
-                SELECT * FROM bans WHERE SUBSTRING(steamid, 11) = SUBSTRING(?, 11)`,
-                [req.params.steamid]
-            )
+            const bans = await BansRepo.getBanForUser(fastify.db, req.params.steamid)
 
-            if(existing.length > 0) {
-                for(const ban of existing) {
+            if(bans.length > 0) {
+                for(const ban of bans) {
                     if(~ban.flags & APIBanFlags.Suspended && !ban.expired) {
                         return reply.code(409).send({
                             error: 'BAN_EXISTS',
@@ -228,30 +182,25 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             }
 
 
-            const [ok] = await fastify.db.execute<ResultSetHeader>(
-                `INSERT INTO bans (steamid, executor, reason, flags, public_message, expires, timestamp) 
-                VALUES (:steamid, :executor, :reason, :flags, :public_message, :expires, UNIX_TIMESTAMP())`,
-                {
-                    executor: req.user!.steamid2,
-                    reason: req.body.reason ?? null,
-                    flags: req.body.flags ?? 0,
-                    public_message: req.body.public_reason ?? null,
-                    expires: req.body.expires ?? 0,
-                    steamid: req.params.steamid
-                }
-            )
+            const id = await BansRepo.insertBan(fastify.db, {
+                steamid: req.params.steamid,
+                executor: req.user!.steamid2,
+                flags: req.body.flags ?? 0,
+                reason: req.body.reason ?? null,
+                publicReason: req.body.public_reason ?? null,
+                expires: req.body.expires ?? 0,
+            })
 
             await req.user!.log(req.params.steamid, `%client% banned user %target%`, {
                 code: "bans.create",
                 metadata: {
-                    id: ok.insertId, 
+                    id, 
                     ...req.body
                 }
             })
 
             return {
-                banId: ok.insertId,
-                success: true
+                id
             }
         }
     )
@@ -280,40 +229,27 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             Params: { id: number }
         }>, reply) {
             if(!req.user!.hasPermission("bans.delete")) return NO_PERMISSION(reply)
-            const [existing] = await fastify.db.execute<RowDataPacket[]>(`
-                SELECT * FROM bans WHERE id = ?`,
-                [req.params.id]
-            )
+            const existingBan = await BansRepo.getBan(fastify.db, req.params.id)
 
-            if(existing.length === 0) {
-                return reply.code(404).send({
-                    error: 'NOT_FOUND',
-                    message: 'Ban not found',
-                    statusCode: 404
-                })
+            if(!existingBan) {
+                return NOT_FOUND(reply, "Ban")
             }
             // Check if they can edit this
-            const isCreator = req.user!.equals(existing[0].executor) 
+            const isCreator = req.user!.equals(existingBan.executor.id) 
             const [code, granted] = req.user!.requirePermission("bans.delete", { isCreator })
             if(!granted) return NO_PERMISSION(reply)
 
-            const [ok] = await fastify.db.execute<ResultSetHeader>(
-                `DELETE FROM bans WHERE id = ?`,
-                [req.params.id]
-            )
+            await BansRepo.deleteBan(fastify.db, req.params.id)
 
-            await req.user!.log(existing[0].steamid, `%client% removed ban #%id% for %target%`, {
+            await req.user!.log(existingBan.client.id, `%client% removed ban #%id% for %target%`, {
                 code,
                 metadata: {
-                    id: existing[0].id, 
+                    id: existingBan.id, 
                 }
             })
             
 
-            return {
-                changes: ok.affectedRows,
-                rawBan: existing[0]
-            }
+            return reply.status(204).send()
         }
     })
 

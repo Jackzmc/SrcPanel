@@ -18,8 +18,8 @@ export interface FullAPIBanPlayer extends APIBanPlayer {
 export interface BaseAPIBan {
   id: number,
   client: APIBanPlayer
-  reason?: string,
-  publicReason: string,
+  reason: string,
+  publicReason?: string,
   flags: number,
   timestamp: number,
   executor: APIBanPlayer
@@ -28,11 +28,13 @@ export interface BaseAPIBan {
   joinAttempts: number
 }
 
-export interface FullAPIBan extends BaseAPIBan {
+export interface APIBan extends BaseAPIBan {
   client: FullAPIBanPlayer
   ip?: string,
   appeals?: BanAppeal[]
 }
+/** @deprecated use APIBan */
+export type FullAPIBan = APIBan
 
 export interface ListAPIBan extends BaseAPIBan {
   notesCount: number,
@@ -45,7 +47,7 @@ export enum BanAppealState {
   Rejected
 }
 
-export interface BanAppeal {
+export interface APIBanAppeal {
   id: number,
   state: BanAppealState,
   message: string,
@@ -54,6 +56,8 @@ export interface BanAppeal {
   reject_reason?: string
   rejecter_id?: string
 }
+/** @deprecated use APIBanAppeal */
+export type BanAppeal = APIBanAppeal
 
 export interface APIBanResponse {
   meta: Record<string, number>,

@@ -1,18 +1,18 @@
 import Type, { type Static } from "typebox";
 
 export const AddBanBodySchema = Type.Object({
-    flags: Type.Optional(Type.Integer()),
+    flags: Type.Integer({ default: 0 }),
     expires: Type.Optional(Type.Integer()),
-    reason: Type.Optional(Type.String()),
+    reason: Type.String(),
     public_reason: Type.Optional(Type.String()),
 })
 
 export const EditBanBodySchema = Type.Object({
-    flags: Type.Optional(Type.Integer()),
+    flags: Type.Integer({ default: 0 }),
     expires: Type.Optional(Type.Integer()),
-    reason: Type.Optional(Type.String()),
+    reason: Type.String(),
     public_reason: Type.Optional(Type.String()),
-    
+    /** If not set, will keep previous */
     executor: Type.Optional(Type.String()),
 })
 
