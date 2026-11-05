@@ -1,6 +1,6 @@
 import { FastifyInstance, FastifyReply, FastifyRequest, preHandlerAsyncHookHandler } from "fastify"
 import Share from "../modules/shares/Share.js"
-import { sendMissingParamError } from "./index.js"
+import { sendMissingParamError } from "./responses.js"
 
 export const GUARD_REQUIRE_FILENAME = {
   register(fastify: FastifyInstance) {

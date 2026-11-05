@@ -4,7 +4,7 @@ import { RequirePermissionOptions } from "../modules/users/User.js"
 import { NO_PERMISSION } from "../util/responses.js"
 import AuthManager from "../modules/auth/AuthManager.js"
 import { PanelConfigProvider } from "@srcpanel/common/Panel"
-import { sendMissingParamError } from "./index.js"
+import { sendMissingParamError } from "./responses.js"
 import { OauthProviderUser } from "../modules/auth/OauthProvider.js"
 
 export const GUARD_REQUIRE_LOGGED_IN = {

@@ -1,5 +1,5 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest, preHandlerAsyncHookHandler } from "fastify"
-import { sendInvalidParamError, sendMissingParamError } from "./index.js"
+import { sendInvalidParamError, sendMissingParamError } from "./responses.js"
 import type Discussion from "@srcpanel/common/discussions/Discussion"
 import { NOT_FOUND } from "../util/responses.js"
 

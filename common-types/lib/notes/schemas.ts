@@ -1,4 +1,5 @@
 import { Type, type Static } from "typebox";
+import { STEAMID_TYPE } from "../schemas.js";
 
 /// QUERY SCHEMA
 
@@ -15,7 +16,7 @@ export type APIListNotesQuery = Static<typeof ListNotesQuerySchema>
 
 export const CreateNoteBodySchema = Type.Object({
     content: Type.String(),
-    steamid: Type.String()
+    steamid: STEAMID_TYPE
 })
 
 export const UpdateNoteBodySchema = Type.Object({

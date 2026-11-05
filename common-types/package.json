@@ -8,6 +8,7 @@
     "exports": {
         "./logs": "./dist/logs.js",
         "./util": "./dist/util.js",
+        "./schemas": "./dist/schemas.js",
         "./format": "./dist/format.js",
         "./cmds/data": "./dist/cmds/data.js",
         "./cmds/util": "./dist/cmds/util.js",

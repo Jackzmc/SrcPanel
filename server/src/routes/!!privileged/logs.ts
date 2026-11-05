@@ -1,7 +1,7 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
 import { NO_PERMISSION } from '../../util/responses.js';
 import { APILogData, APILogQueryResult } from '@srcpanel/common/Logs';
-import { sendInvalidParamError } from '../../guards/index.js';
+import { sendInvalidParamError } from '../../guards/responses.js';
 import { FetchLogsParamsSchema, FetchLogsQuerySchema, type APIFetchLogsParams, type APIFetchLogsQuery } from '@srcpanel/common/logs/schemas'
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {

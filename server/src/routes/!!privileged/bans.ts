@@ -3,6 +3,7 @@ import { APIBanFlags } from '@srcpanel/common/Ban';
 import { NO_PERMISSION, NOT_FOUND } from '../../util/responses.js';
 import { AddBanBodySchema, EditBanBodySchema, type APIAddBanRequest, type APIEditBanRequest } from '@srcpanel/common/bans/schemas'
 import * as BansRepo from '#/modules/bans/BansRepo.js'
+import { SteamIdParams, type APISteamIdParams } from '@srcpanel/common/schemas'
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
     fastify.route({
@@ -152,15 +153,10 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
     fastify.post(
         '/:steamid', 
-        { schema: { body: AddBanBodySchema }},
-        async(req: FastifyRequest<{ Body: APIAddBanRequest, Params: { steamid: string } }>, reply) => {
+        { schema: { body: AddBanBodySchema, params: SteamIdParams }},
+        async(req: FastifyRequest<{ Body: APIAddBanRequest, Params: APISteamIdParams }>, reply) => {
             if(!req.user!.hasPermission("bans.create")) return NO_PERMISSION(reply)
-            if(req.params.steamid.length < 10) {
-                return reply.status(400).send({
-                    error: "INVALID_STEAMID",
-                    message: "The steamid is invalid"
-                })
-            } else if(fastify.authmngr.isAdmin(req.params.steamid)) {
+            if(fastify.authmngr.isAdmin(req.params.steamid)) {
                 return reply.status(403).send({
                     error: "IS_ADMIN",
                     message: "Cannot ban a user with privileges, revoke the privileges first"
