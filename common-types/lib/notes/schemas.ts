@@ -13,13 +13,18 @@ export type APIListNotesQuery = Static<typeof ListNotesQuerySchema>
 
 /// BODY SCHEMA
 
-export const CreateEditNoteBodySchema = Type.Object({
+export const CreateNoteBodySchema = Type.Object({
+    content: Type.String(),
+    steamid: Type.String()
+})
+
+export const UpdateNoteBodySchema = Type.Object({
     content: Type.String()
 })
 
 
-export type APICreateNoteRequest = Static<typeof CreateEditNoteBodySchema>
-export type APIUpdateNoteRequest = Static<typeof CreateEditNoteBodySchema>
+export type APICreateNoteRequest = Static<typeof CreateNoteBodySchema>
+export type APIUpdateNoteRequest = Static<typeof UpdateNoteBodySchema>
 
 
 /// PARAMS SCHEMA

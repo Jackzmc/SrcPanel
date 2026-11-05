@@ -1,7 +1,7 @@
 import type { Note } from "@srcpanel/common/Note"
 import { ADMINS_DB, TABLE_PREFIX, type DBClient } from "../../core/database.js"
 import { formatNote } from "./index.js"
-import type { RowDataPacket } from "mysql2"
+import type { ResultSetHeader, RowDataPacket } from "mysql2"
 import type { APIListNotesQuery } from "@srcpanel/common/notes/schemas"
 import { QueryBuilder } from "../QueryBuilder.js"
 import PlayerManager from "../users/PlayerManager.js"
@@ -23,7 +23,7 @@ export async function getNote(db: DBClient, id: number): Promise<Note | null> {
         LEFT JOIN view_${TABLE_PREFIX}_user as e ON SUBSTRING(notes.markedBy, 11) = e.account_id
         LEFT JOIN bans as b ON notes.steamid = b.steamid
         WHERE id = ?
-        ORDER BY notes.id DESC`,
+        LIMIT 1`,
         [id]
     )
     return notes.length > 0 ? formatNote(notes[0]) : null
@@ -94,4 +94,34 @@ export async function getNotes(db: DBClient, options: APIListNotesQuery = {}) {
         .forEach(note => PlayerManager.instance.enqueueNameResolve(new SteamID(note.client.id)))
 
     return notes
+}
+
+export async function createNote(db: DBClient, targetSteamId: string, creatorSteamId: string, content: string): Promise<number> {
+    const [r] = await db.execute<ResultSetHeader>(`
+        INSERT INTO notes (steamid, markedBy, content)
+        VALUES (:steamid, :markedBy, :content)`,
+        {
+            content: content,
+            steamid: targetSteamId,
+            markedBy: creatorSteamId
+        }
+    )
+    return r.insertId
+}
+
+export async function updateNote(db: DBClient, id: number, newContent: string): Promise<void> {
+    await db.execute<ResultSetHeader>(`
+        UPDATE notes
+        SET content = ?
+        WHERE id = ?`,
+        [ newContent, id ]
+    )
+}
+
+export async function deleteNote(db: DBClient, id: number): Promise<void> {
+    await db.execute<ResultSetHeader>(`
+        DELETE notes
+        WHERE id = ?`,
+        [ id ]
+    )
 }

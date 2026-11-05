@@ -23,7 +23,6 @@ interface OpenIDQuery {
     'openid.error'?: string
     'openid.sig': string,
     'return_uri': string,
-    'F_U_STEAM': string
 }
 
 

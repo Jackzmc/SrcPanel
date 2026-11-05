@@ -1,193 +1,101 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
 import { ResultSetHeader, RowDataPacket } from 'mysql2';
-import { NO_PERMISSION } from '../../util/responses.js';
+import { NO_PERMISSION, NOT_FOUND } from '../../util/responses.js';
 import { NamespacedMetric } from '../../modules/metrics/influx.js';
+import { CreateNoteBodySchema, NoteParamsSchema, UpdateNoteBodySchema, type APICreateNoteRequest, type APINoteParams, type APIUpdateNoteRequest } from '@srcpanel/common/notes/schemas';
+import * as NotesRepo from '#/modules/notes/NotesRepo.js'
+import type { APINote } from '@srcpanel/common/Note';
 
 const metric = new NamespacedMetric("notes")
 
-interface POSTNotesType {
-    content: string
-}
-
-interface PUTNotesType {
-    markedBy: string,
-    content: string
-}
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
-    fastify.route({
-        url: '/:steamid', 
-        method: 'POST',
-        schema: {
-            body: {
-                type: 'object',
-                properties: {
-                    content: { type: 'string' },
-                    steamid: { type: 'string' },
-                }
-            }
-        },
-        async handler(req: FastifyRequest<{ Body: POSTNotesType, Params: { steamid: string } }>, reply) {
+    fastify.post(
+        '/:steamid',
+        { schema: { body: CreateNoteBodySchema } },
+        async (req: FastifyRequest<{ Body: APICreateNoteRequest, Params: { steamid: string } }>, reply) => {
             if(!req.user!.hasPermission("notes.create")) return NO_PERMISSION(reply)
-            const [ok] = await fastify.db.execute<ResultSetHeader>(`
-                INSERT INTO notes (steamid, markedBy, content)
-                VALUES (:steamid, :markedBy, :content)`,
-                {
-                    content: req.body.content,
-                    steamid: req.params.steamid,
-                    markedBy: req.user!.steamid2
-                }
-            )
+
+            const id = await NotesRepo.createNote(fastify.db, req.params.steamid, req.user!.steamid2, req.body.content)
 
             metric.send("created", 1)
             await req.user!.log(req.params.steamid, `%client% created note #%id% for %target%`, {
                 code: "notes.create",
                 metadata: {
-                    id: ok.insertId,
+                    id,
                     content: req.body.content,
                 }
             })
 
             return {
-                id: ok.insertId,
+                id
             }
         }
-    })
+    )
 
-    fastify.route({
-        url: '/:id', 
-        method: 'PUT',
-        schema: {
-            body: {
-                type: 'object',
-                additionalProperties: false,
-                properties: {
-                    content: { type: 'string' },
-                    markedBy: { type: 'string' },
-                }
-            },
-            response: {
-                200: {
-                    type: 'object',
-                    properties: {
-                        changes: { type: 'number' },
-                    }
-                }
-            }
-        },
-        async handler(req: FastifyRequest<{ Body: PUTNotesType, Params: { id: string } }>, reply) {
+    fastify.put(
+        '/:id',
+        { schema: { body: UpdateNoteBodySchema, params: NoteParamsSchema }},
+        async (req: FastifyRequest<{ Body: APIUpdateNoteRequest, Params: APINoteParams }>, reply) => {
             if(!req.user!.hasPermission("notes.edit")) return NO_PERMISSION(reply)
-            const [existing] = await fastify.db.execute<RowDataPacket[]>(`
-                SELECT * FROM notes WHERE id = ?`,
-                [req.params.id]
-            )
 
-            if(existing.length === 0) {
-                return reply.code(404).send({
-                    error: 'NOT_FOUND',
-                    message: 'Note not found',
-                    statusCode: 404
-                })
+            const note = await NotesRepo.getNote(fastify.db, req.params.id)
+
+            if(!note) {
+                return NOT_FOUND(reply, "Note")
             }
 
             // Check if they can edit this
-            const isCreator = req.user!.equals(existing[0].markedBy) 
+            const isCreator = req.user!.equals(note.markedBy.id) 
             const [code, granted] = req.user!.requirePermission("notes.edit", {isCreator})
             if(!granted) return NO_PERMISSION(reply)
 
-            const note: any = {
-                ...existing[0],
-                ...req.body
-            }
-
-
-            const [ok] = await fastify.db.execute<ResultSetHeader>(`
-                UPDATE notes
-                SET content = :content, markedBy = :markedBy
-                WHERE id = :id`,
-                note
-            )
+            await NotesRepo.updateNote(fastify.db, note.id, req.body.content)
+            
 
             metric.send("updated", 1)
-            await req.user!.log(note.steamid, `%client% edited note #%id% for %target%`, {
+            await req.user!.log(note.client.id, `%client% edited note #%id% for %target%`, {
                 code,
                 metadata: {
                     id: note.id,
-                    oldContent: existing[0].content,
+                    oldContent: note.content,
                     newContent: req.body.content,
-                    markedBy: req.body.markedBy
                 }
             })
 
-            return {
-                changes: ok.affectedRows
-            }
+            return reply.status(204).send()
         }
-    })
+    )
 
-    fastify.route({
-        url: '/:id', 
-        method: 'DELETE',
-        schema: {
-            params: {
-                type: "object",
-                properties: {
-                    id: {
-                        type: 'number'
-                    }
-                }
-            },
-            response: {
-                200: {
-                    type: 'object',
-                    properties: {
-                        changes: { type: 'number' },
-                        note: { type: 'object' }
-                    }
-                }
-            }
-        },
-        async handler(req: FastifyRequest<{ 
-            Params: { id: number }
-        }>, reply) {
+    fastify.delete(
+        '/:id',
+        { schema: { params: NoteParamsSchema }},
+        async (req: FastifyRequest<{ Params: APINoteParams }>, reply) => {
             if(!req.user!.hasPermission("notes.delete")) return NO_PERMISSION(reply)
-            const [existing] = await fastify.db.execute<RowDataPacket[]>(`
-                SELECT * FROM notes WHERE id = ?`,
-                [req.params.id]
-            )
 
-            if(existing.length === 0) {
-                return reply.code(404).send({
-                    error: 'NOT_FOUND',
-                    message: 'Note not found',
-                    statusCode: 404
-                })
+            const note = await NotesRepo.getNote(fastify.db, req.params.id)
+            if(!note) {
+                return NOT_FOUND(reply, "Note")
             }
 
-            // Check if they can edit this
-            const isCreator = req.user!.equals(existing[0].markedBy) 
+            const isCreator = req.user!.equals(note.markedBy.id) 
             const [code, granted] = req.user!.requirePermission("notes.delete", {isCreator})
             if(!granted) return NO_PERMISSION(reply)
 
-            const [ok] = await fastify.db.execute<ResultSetHeader>(
-                `DELETE FROM notes WHERE id = ?`,
-                [req.params.id]
-            )
+            await NotesRepo.deleteNote(fastify.db, req.params.id)
 
-            metric.send("deleted", 1)
-            await req.user!.log(existing[0].steamid, `%client% deleted note #%id% for %target%`, {
+            await req.user!.log(note.client.id, `%client% deleted note #%id% for %target%`, {
                 code,
                 metadata: {
                     id: req.params.id,
-                    markedBy: existing[0].markedBy,
-                    content: existing[0].content
+                    markedBy: note.markedBy.id,
+                    content: note.content
                 }
             })
 
             return {
-                changes: ok.affectedRows,
-                note: existing[0]
+                note
             }
         }
-    })
+    )
 }
