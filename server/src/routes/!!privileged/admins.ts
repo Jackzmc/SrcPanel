@@ -1,6 +1,6 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
 import { RowDataPacket } from 'mysql2';
-import { Static, Type } from '@sinclair/typebox'
+import { Static, Type } from 'typebox'
 import SteamID from 'steamid';
 import type { AdminData, APIListAdminGroupsResponse, ReadableAdminData } from '@srcpanel/common/User';
 import { APIBanFlags } from '@srcpanel/common/Ban';

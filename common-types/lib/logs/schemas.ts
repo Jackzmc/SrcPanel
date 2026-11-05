@@ -1,12 +1,11 @@
-import { Type, type Static } from "@sinclair/typebox";
+import { Type, type Static } from "typebox";
 
 export const FetchLogsQuerySchema = Type.Object({
   servers: Type.Optional(Type.Array(Type.String())),
   types: Type.Optional(Type.Array(Type.String())),
-  searchClient: Type.Optional(Type.String()),
-  searchTarget: Type.Optional(Type.String()),
-  searchMessage: Type.Optional(Type.String()),
-  aroundId: Type.Optional(Type.Integer()),
+  search_client: Type.Optional(Type.String()),
+  search_target: Type.Optional(Type.String()),
+  search_message: Type.Optional(Type.String()),
   /** Number of items to fetch */
   limit: Type.Optional(Type.Integer()),
   /** A specific year to fetch logs for. Defaults to current year */
@@ -14,8 +13,8 @@ export const FetchLogsQuerySchema = Type.Object({
 })
 
 export const FetchLogsParamsSchema = Type.Object({
-    type: Type.String(),
-    id: Type.Number()
+  type: Type.Enum(["before","after","around"], { title: "fetch direction", description: "'before' fetches before entry (inclusive), 'after' fetches after entry (exclusive), or around an id (id in the middle)" }),
+  id: Type.Number()
 })
 
 export type APIFetchLogsQuery = Static<typeof FetchLogsQuerySchema>

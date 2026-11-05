@@ -14,9 +14,9 @@ importers:
 
   common-types:
     dependencies:
-      '@sinclair/typebox':
-        specifier: ^0.34.52
-        version: 0.34.52
+      typebox:
+        specifier: ^1.4.3
+        version: 1.4.3
     devDependencies:
       typescript:
         specifier: ^7.0.2
@@ -139,6 +139,9 @@ importers:
       '@fastify/session':
         specifier: 11.1.5
         version: 11.1.5
+      '@fastify/type-provider-typebox':
+        specifier: ^6.3.0
+        version: 6.3.0(ajv-formats@3.0.1)(typebox@1.4.3)
       '@fastify/url-data':
         specifier: ^6.0.5
         version: 6.0.5
@@ -166,9 +169,6 @@ importers:
       '@sentry/node':
         specifier: ^11.10.0
         version: 11.10.0(rollup@4.67.4)
-      '@sinclair/typebox':
-        specifier: ^0.34.52
-        version: 0.34.52
       '@srcpanel/common':
         specifier: workspace:^
         version: link:../common-types
@@ -265,6 +265,9 @@ importers:
       tail:
         specifier: ^2.2.6
         version: 2.2.6
+      typebox:
+        specifier: ^1.4.3
+        version: 1.4.3
       valve-kv:
         specifier: ^1.2.1
         version: 1.2.1
@@ -1064,6 +1067,12 @@ packages:
 
   '@fastify/session@11.1.5':
     resolution: {integrity: sha512-tsoOTzLSDdnBgHNI/SsyNA+f0LNkDoxODUfGrUticeXy6X37FwAB3SdcRzAGZL7f/upCzfcIVZsuX1QLGS7SDA==}
+
+  '@fastify/type-provider-typebox@6.3.0':
+    resolution: {integrity: sha512-zsaoyyAdNvkuf2HOMJvf7vykRTFA/1M9J3HC0vHNtFhxNhwL36iDJl/2Tpl0XzMR0f0aATSeDV20ChH720wXYQ==}
+    peerDependencies:
+      ajv-formats: ^3.0.1
+      typebox: ^1.1.14
 
   '@fastify/url-data@6.0.5':
     resolution: {integrity: sha512-yto1rggOwPaZVptmr21om8RtGPY+xcO3YpeTUEkSHzEQvZ/qXTehfgoBIJgR6ybtZOObeIZqVDlpnUXrHObWhg==}
@@ -2592,9 +2601,6 @@ packages:
 
   '@simple-git/argv-parser@2.0.1':
     resolution: {integrity: sha512-M++IaVWrN+vYalilOHfwvT2IL3wYZtVEBQpmX6DLSOJLtxbZ+SUeIDE3IiPogzhPACLajwtxfa5rp+ZX1FczzQ==}
-
-  '@sinclair/typebox@0.34.52':
-    resolution: {integrity: sha512-XiMQh7qqVlxZzcVD+kkGMNGMzcTrDMLWI7S4x7z1MkCkbDPrekpZXEUK0eZqZFMuHQg2a2DZOcDIh9o5v3Gonw==}
 
   '@sindresorhus/base62@1.0.0':
     resolution: {integrity: sha512-TeheYy0ILzBEI/CO55CP6zJCSdSWeRtGnHy8U8dWSUH4I68iqTsy7HkMktR4xakThc9jotkPQUXT4ITdbV7cHA==}
@@ -7654,6 +7660,9 @@ packages:
   type-level-regexp@0.1.17:
     resolution: {integrity: sha512-wTk4DH3cxwk196uGLK/E9pE45aLfeKJacKmcEgEOA/q5dnPGNxXt0cfYdFxb57L+sEpf1oJH4Dnx/pnRcku9jg==}
 
+  typebox@1.4.3:
+    resolution: {integrity: sha512-u3nyf7ZciAv1GOijVpI0TDt9At5wmEi7lSHSlRrnjuThv1DcB7fgGBqqrz+fGZ54jAfTpOOX0JXwxSIg3pnxQA==}
+
   typed-array-buffer@1.0.3:
     resolution: {integrity: sha512-nAYYwfY3qnzX30IkA6AQZjVbtK6duGontcQm1WSG1MD94YLqK0515GNApXkoxKOWMusVssAHWLh9SeaoefYFGw==}
     engines: {node: '>= 0.4'}
@@ -9199,6 +9208,11 @@ snapshots:
     dependencies:
       fastify-plugin: 6.0.1
       safe-stable-stringify: 2.5.0
+
+  '@fastify/type-provider-typebox@6.3.0(ajv-formats@3.0.1)(typebox@1.4.3)':
+    dependencies:
+      ajv-formats: 3.0.1
+      typebox: 1.4.3
 
   '@fastify/url-data@6.0.5':
     dependencies:
@@ -11148,8 +11162,6 @@ snapshots:
   '@simple-git/argv-parser@2.0.1':
     dependencies:
       '@simple-git/args-pathspec': 1.0.4
-
-  '@sinclair/typebox@0.34.52': {}
 
   '@sindresorhus/base62@1.0.0': {}
 
@@ -17201,6 +17213,8 @@ snapshots:
       tagged-tag: 1.0.0
 
   type-level-regexp@0.1.17: {}
+
+  typebox@1.4.3: {}
 
   typed-array-buffer@1.0.3:
     dependencies:

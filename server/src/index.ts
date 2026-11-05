@@ -30,6 +30,7 @@ import { LISTEN_HOST, LISTEN_PORT, sleep } from './util/index.js'
 import { DataManagerInstance } from './modules/DataManager.js'
 import { getGlobalWriter, sendMetric } from './modules/metrics/influx.js'
 import init, { onCoreShutdown } from './core/index.js'
+import { TypeBoxTypeProvider } from '@fastify/type-provider-typebox'
 
 import './sentry.js'
 
@@ -47,6 +48,7 @@ const app = Fastify({
   trustProxy: process.env.NODE_ENV === "production",
   loggerInstance
 })
+app.withTypeProvider<TypeBoxTypeProvider>()
 import * as Sentry from '@sentry/node' 
 Sentry.setupFastifyErrorHandler(app);
 

@@ -1,6 +1,6 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
 import { ResultSetHeader, RowDataPacket } from 'mysql2';
-import { Static, Type } from '@sinclair/typebox'
+import { Static, Type } from 'typebox'
 import { APIBanFlags, FullAPIBan } from '@srcpanel/common/Ban';
 import { computeChanges, replaceObject } from '../../util/index.js';
 import { NO_PERMISSION } from '../../util/responses.js';

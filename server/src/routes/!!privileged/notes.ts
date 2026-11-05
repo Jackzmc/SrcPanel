@@ -1,13 +1,12 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
-import { ResultSetHeader, RowDataPacket } from 'mysql2';
 import { NO_PERMISSION, NOT_FOUND } from '../../util/responses.js';
 import { NamespacedMetric } from '../../modules/metrics/influx.js';
 import { CreateNoteBodySchema, NoteParamsSchema, UpdateNoteBodySchema, type APICreateNoteRequest, type APINoteParams, type APIUpdateNoteRequest } from '@srcpanel/common/notes/schemas';
 import * as NotesRepo from '#/modules/notes/NotesRepo.js'
-import type { APINote } from '@srcpanel/common/Note';
 
 const metric = new NamespacedMetric("notes")
 
+// TODO: Make NotesManager to handle some logic
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
     fastify.post(

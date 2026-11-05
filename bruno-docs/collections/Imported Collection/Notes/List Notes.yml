@@ -5,7 +5,7 @@ info:
 
 http:
   method: GET
-  url: "{{API_HOST}}/api/logs/data?limit=100&page=1&search_client=&search_content="
+  url: "{{API_HOST}}/api/notes?limit=100&page=1&search_client=&search_conten="
   params:
     - name: limit
       value: "100"
@@ -13,11 +13,10 @@ http:
     - name: page
       value: "1"
       type: query
-      description: 1-indexed
     - name: search_client
       value: ""
       type: query
-    - name: search_content
+    - name: search_conten
       value: ""
       type: query
   auth: inherit

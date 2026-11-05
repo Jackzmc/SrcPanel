@@ -19,7 +19,6 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     }
   })
 
-  const VALID_TYPES = ["before", "after", "around"]
   fastify.get(
     '/:type/:id', 
     { schema: { querystring: FetchLogsQuerySchema, params: FetchLogsParamsSchema }},
@@ -28,21 +27,14 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         error: "NOT_READY",
         message: "Logs have not been loaded yet, please try again later"
       })
-      const type = req.params.type
-      if (!VALID_TYPES.includes(type)) {
-        return reply.status(400).send({
-          error: "BAD_REQUEST",
-          message: `Unknown type ${req.params.type}, should be one of: ${VALID_TYPES}`
-        })
-      }
       const startTime = performance.now()
-      const [logs, yearInfo] = await fastify.logs.fetchLogs(type as "before" | "after" | "around", req.params.id, {
+      const [logs, yearInfo] = await fastify.logs.fetchLogs(req.params.type, req.params.id, {
         year: req.query.year,
         types: req.query.types,
         servers: req.query.servers,
-        searchClient: req.query.searchClient,
-        searchTarget: req.query.searchTarget,
-        searchMessage: req.query.searchMessage
+        searchClient: req.query.search_client,
+        searchTarget: req.query.search_target,
+        searchMessage: req.query.search_message
       })
 
       return {

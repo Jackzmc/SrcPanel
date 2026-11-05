@@ -30,6 +30,7 @@
     "@fastify/multipart": "^10.1.6",
     "@fastify/rate-limit": "^11.2.1",
     "@fastify/session": "11.1.5",
+    "@fastify/type-provider-typebox": "^6.3.0",
     "@fastify/url-data": "^6.0.5",
     "@fastify/websocket": "^11.3.6",
     "@fluxerjs/core": "^3.3.0",
@@ -39,7 +40,6 @@
     "@lowly1337/vpk": "^0.2.6",
     "@platformatic/prom-client": "^1.0.0",
     "@sentry/node": "^11.10.0",
-    "@sinclair/typebox": "^0.34.52",
     "@srcpanel/common": "workspace:^",
     "better-sqlite3": "^13.0.3",
     "discord-api-types": "^0.38.57",
@@ -72,6 +72,7 @@
     "strip-ansi": "^7.2.0",
     "systeminformation": "^5.33.19",
     "tail": "^2.2.6",
+    "typebox": "^1.4.3",
     "valve-kv": "^1.2.1",
     "yaml": "^2.9.1"
   },

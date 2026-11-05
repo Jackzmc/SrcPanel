@@ -36,6 +36,6 @@
         "typescript": "^7.0.2"
     },
     "dependencies": {
-        "@sinclair/typebox": "^0.34.52"
+        "typebox": "^1.4.3"
     }
 }
