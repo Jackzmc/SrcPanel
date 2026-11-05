@@ -1,35 +1,11 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
 import { RowDataPacket } from 'mysql2';
-import { Static, Type } from 'typebox'
 import SteamID from 'steamid';
 import type { AdminData, APIListAdminGroupsResponse, ReadableAdminData } from '@srcpanel/common/User';
 import { APIBanFlags } from '@srcpanel/common/Ban';
 import { computeChanges } from '../../util/index.js';
 import { NO_PERMISSION } from '../../util/responses.js';
-
-/* eslint-disable @typescript-eslint/no-unused-vars */
-const POSTAdmin = Type.Object({
-  immunityLevel: Type.Number(),
-  flags: Type.String(),
-  groupIds: Type.Optional(Type.String()),
-  name: Type.Optional(Type.String()),
-  webCodes: Type.Optional(Type.Array(Type.String())),
-})
-
-
-const PUTAdmin = Type.Object({
-  immunityLevel: Type.Optional(Type.Number()),
-  flags: Type.Optional(Type.String()),
-  groupIds: Type.Optional(Type.String()),
-  webCodes: Type.Optional(Type.Array(Type.String())),
-  name: Type.Optional(Type.String())
-})
-/* eslint-enable @typescript-eslint/no-unused-vars */
-
-export type POSTAdminType = Static<typeof POSTAdmin>
-export type PUTAdminType = Static<typeof PUTAdmin>
-
-
+import { EditAdminBodySchema, GrantAdminBodySchema, type APIEditAdminRequest, type APIGrantAdminRequest } from '@srcpanel/common/admins/schemas'
 
 // TODO: Policy checks
 // TODO: Disable policy checks
@@ -129,72 +105,72 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     }
   })
 
-  fastify.put('/:steamid', async (req: FastifyRequest<{
-    Params: { steamid: string },
-    Body: PUTAdminType
-  }>, reply) => {
-    if (!req.user!.hasPermission("admins.edit.others")) return NO_PERMISSION(reply, "You do not have permission to edit other users", "admins.edit.others")
-    if (req.params.steamid.length > 10) {
-      const admin = fastify.authmngr.getAdmin(req.params.steamid)
-      if (admin) {
-        let immunity = req.body.immunityLevel
-        if (immunity && immunity < 0) immunity = 0
+  fastify.put(
+    '/:steamid', 
+    { schema: { body: EditAdminBodySchema } },
+    async (req: FastifyRequest<{ Params: { steamid: string }, Body: APIEditAdminRequest }>, reply) => {
+      if (!req.user!.hasPermission("admins.edit.others")) return NO_PERMISSION(reply, "You do not have permission to edit other users", "admins.edit.others")
+      if (req.params.steamid.length > 10) {
+        const admin = fastify.authmngr.getAdmin(req.params.steamid)
+        if (admin) {
+          let immunity = req.body.immunityLevel
+          if (immunity && immunity < 0) immunity = 0
 
-        if (admin.permissions.immunityLevel >= req.session.permissions.immunityLevel) {
-          reply.code(403).send({
-            error: 'INVALID_IMMUNITY',
-            message: 'Cannot edit an admin at or above your immunity level',
-            statusCode: 403
-          })
-        } else if (immunity && immunity >= req.session.permissions.immunityLevel) {
-          reply.code(403).send({
-            error: 'INVALID_IMMUNITY',
-            message: "Cannot set an admin's immunity to a level higher than your own",
-            statusCode: 403
-          })
-        }
-
-        const newAdminData = {
-          authtype: "steam" as const,
-          identity: req.params.steamid,
-          password: null,
-          name: req.body.name || "",
-          immunity,
-          flags: req.body.flags,
-          codes: req.body.webCodes as string[],
-          groupIds: req.body.groupIds ? req.body.groupIds.split(',') : []
-        }
-        const newAdmin = await fastify.authmngr.editAdmin(admin.id, newAdminData)
-
-        await req.user!.log(admin.identity, `%client% edited admin #%id%'s privileges for %target%`, {
-          code: "admins.edit",
-          metadata: {
-            id: admin.id,
-            ...computeChanges<any>(admin, newAdminData)
+          if (admin.permissions.immunityLevel >= req.session.permissions.immunityLevel) {
+            reply.code(403).send({
+              error: 'INVALID_IMMUNITY',
+              message: 'Cannot edit an admin at or above your immunity level',
+              statusCode: 403
+            })
+          } else if (immunity && immunity >= req.session.permissions.immunityLevel) {
+            reply.code(403).send({
+              error: 'INVALID_IMMUNITY',
+              message: "Cannot set an admin's immunity to a level higher than your own",
+              statusCode: 403
+            })
           }
-        })
 
-        return {
-          meta: {
-            steamid: admin.identity,
-            adminId: admin.id
-          },
-          changes: newAdmin
+          const newAdminData = {
+            authtype: "steam" as const,
+            identity: req.params.steamid,
+            password: null,
+            name: req.body.name || "",
+            immunity,
+            flags: req.body.flags,
+            codes: req.body.webCodes as string[],
+            groupIds: req.body.groupIds ? req.body.groupIds.split(',') : []
+          }
+          const newAdmin = await fastify.authmngr.editAdmin(admin.id, newAdminData)
+
+          await req.user!.log(admin.identity, `%client% edited admin #%id%'s privileges for %target%`, {
+            code: "admins.edit",
+            metadata: {
+              id: admin.id,
+              ...computeChanges<any>(admin, newAdminData)
+            }
+          })
+
+          return {
+            meta: {
+              steamid: admin.identity,
+              adminId: admin.id
+            },
+            changes: newAdmin
+          }
+        } else {
+          return reply.code(404).send({
+            error: 'ADMIN_DOES_NOT_EXIST',
+            message: "No admin exists with that steamid"
+          })
         }
       } else {
-        return reply.code(404).send({
-          error: 'ADMIN_DOES_NOT_EXIST',
-          message: "No admin exists with that steamid"
+        return reply.code(400).send({
+          error: "INVALID_STEAMID",
+          message: "The steamid is invalid"
         })
       }
-    } else {
-      return reply.code(400).send({
-        error: "INVALID_STEAMID",
-        message: "The steamid is invalid"
-      })
     }
-
-  })
+  )
 
   fastify.post('/impersonate/:steamid?', async (req: FastifyRequest<{ Params: { steamid: string } }>, reply) => {
     if (req.params.steamid) {
@@ -237,72 +213,73 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     }
   })
 
-  fastify.post('/:steamid', async (req: FastifyRequest<{
-    Params: { steamid: string },
-    Body: POSTAdminType
-  }>, reply) => {
-    if (!req.user!.hasPermission("admins.grant")) return NO_PERMISSION(reply)
-    if (req.params.steamid.length > 10) {
-      const steamid = req.params.steamid.slice(10)
-      const [existing] = await fastify.db.execute<RowDataPacket[]>(`
-                SELECT * FROM bans WHERE SUBSTRING(steamid, 11) = ? AND ~FLAGS & ${APIBanFlags.Suspended}`,
-        [steamid]
-      )
-      if (existing.length > 0) {
-        return reply.code(403).send({
-          error: 'POLICY_ERROR',
-          message: 'Cannot give privileges to a user who has any active bans',
-          statusCode: 403
-        })
-      }
-      if (!fastify.authmngr.isAdmin(steamid)) {
-        let immunity = req.body.immunityLevel || 0
-        if (immunity < 0) immunity = 0
-
-        if (immunity > req.session.permissions.immunityLevel) {
+  fastify.post(
+    '/:steamid', 
+    { schema: { body: GrantAdminBodySchema }},
+    async (req: FastifyRequest<{ Params: { steamid: string }, Body: APIGrantAdminRequest}>, reply) => {
+      if (!req.user!.hasPermission("admins.grant")) return NO_PERMISSION(reply)
+      if (req.params.steamid.length > 10) {
+        const steamid = req.params.steamid.slice(10)
+        const [existing] = await fastify.db.execute<RowDataPacket[]>(`
+          SELECT * FROM bans WHERE SUBSTRING(steamid, 11) = ? AND ~FLAGS & ${APIBanFlags.Suspended}`,
+          [steamid]
+        )
+        if (existing.length > 0) {
           return reply.code(403).send({
-            error: 'INVALID_IMMUNITY',
-            message: 'You can only add admins to an immunity level at or below yours',
+            error: 'POLICY_ERROR',
+            message: 'Cannot give privileges to a user who has any active bans',
             statusCode: 403
           })
         }
+        if (!fastify.authmngr.isAdmin(steamid)) {
+          let immunity = req.body.immunityLevel || 0
+          if (immunity < 0) immunity = 0
 
-        const groupIds = req.body.groupIds ? req.body.groupIds.split(',') : []
-        const id = await fastify.authmngr.addAdmin({
-          authtype: "steam" as const,
-          identity: `STEAM_1:0:${steamid}`,
-          password: null,
-          name: req.body.name || "",
-          immunity,
-          flags: req.body.flags,
-          codes: req.body.webCodes!,
-          groupIds
-        })
+          if (immunity > req.session.permissions.immunityLevel) {
+            return reply.code(403).send({
+              error: 'INVALID_IMMUNITY',
+              message: 'You can only add admins to an immunity level at or below yours',
+              statusCode: 403
+            })
+          }
 
-        await req.user!.log(req.params.steamid, `%client% granted admin to %target% (#%id%)`, {
-          code: "admins.grant",
-          metadata: {
-            id,
+          const groupIds = req.body.groupIds ? req.body.groupIds.split(',') : []
+          const id = await fastify.authmngr.addAdmin({
+            authtype: "steam" as const,
+            identity: `STEAM_1:0:${steamid}`,
+            password: null,
+            name: req.body.name || "",
             immunity,
             flags: req.body.flags,
-            groupIds,
-          }
-        })
+            codes: req.body.webCodes!,
+            groupIds
+          })
 
-        return {
-          adminId: id
+          await req.user!.log(req.params.steamid, `%client% granted admin to %target% (#%id%)`, {
+            code: "admins.grant",
+            metadata: {
+              id,
+              immunity,
+              flags: req.body.flags,
+              groupIds,
+            }
+          })
+
+          return {
+            adminId: id
+          }
+        } else {
+          return reply.code(409).send({
+            error: 'ADMIN_EXISTS',
+            message: "An admin account already exist with that steamid"
+          })
         }
       } else {
-        return reply.code(409).send({
-          error: 'ADMIN_EXISTS',
-          message: "An admin account already exist with that steamid"
+        return reply.code(400).send({
+          error: "INVALID_STEAMID",
+          message: "The steamid is invalid"
         })
       }
-    } else {
-      return reply.code(400).send({
-        error: "INVALID_STEAMID",
-        message: "The steamid is invalid"
-      })
     }
-  })
+  )
 }

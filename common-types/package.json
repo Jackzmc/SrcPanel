@@ -13,6 +13,8 @@
         "./cmds/util": "./dist/cmds/util.js",
         "./Ban": "./dist/types/Ban.js",
         "./CustomServer": "./dist/types/CustomServer.js",
+        "./bans/schemas": "./dist/bans/schemas.js",
+        "./admins/schemas": "./dist/admins/schemas.js",
         "./logs/schemas": "./dist/logs/schemas.js",
         "./notes/schemas": "./dist/notes/schemas.js",
         "./Discussions": "./dist/types/Discussions.js",

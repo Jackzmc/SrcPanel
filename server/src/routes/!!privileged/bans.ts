@@ -1,39 +1,17 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
 import { ResultSetHeader, RowDataPacket } from 'mysql2';
-import { Static, Type } from 'typebox'
 import { APIBanFlags, FullAPIBan } from '@srcpanel/common/Ban';
 import { computeChanges, replaceObject } from '../../util/index.js';
-import { NO_PERMISSION } from '../../util/responses.js';
+import { NO_PERMISSION, NOT_FOUND } from '../../util/responses.js';
 import { TABLE_PREFIX } from '../../core/database.js';
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const PUTBanBody = Type.Object({
-    steamid: Type.String(),
-    executor: Type.Optional(Type.String()),
-    reason: Type.Optional(Type.String()),
-    flags: Type.Optional(Type.Integer()),
-    expires: Type.Optional(Type.String()),
-    public_message: Type.Optional(Type.String()),
-})
-
-type PUTBanBodyType = Static<typeof PUTBanBody>;
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const POSTBanBody = Type.Object({
-    executor: Type.Optional(Type.String()),
-    reason: Type.Optional(Type.String()),
-    flags: Type.Optional(Type.Integer()),
-    expires: Type.Optional(Type.String()),
-    public_message: Type.Optional(Type.String()),
-})
-
-type POSTBanBodyType = Static<typeof POSTBanBody>;
+import { AddBanBodySchema, EditBanBodySchema, type APIAddBanRequest, type APIEditBanRequest } from '@srcpanel/common/bans/schemas'
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
     fastify.route({
         url: '/:id', 
         method: 'PUT',
         schema: {
+            body: EditBanBodySchema,
             response: {
                 200: {
                     type: 'object',
@@ -50,7 +28,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 }
             }
         },
-        async handler(req: FastifyRequest<{ Body: PUTBanBodyType, Params: { id: number } }>, reply) {
+        async handler(req: FastifyRequest<{ Body: APIEditBanRequest, Params: { id: number } }>, reply) {
             if(!req.user!.hasPermission("bans.edit")) return NO_PERMISSION(reply)
             const [existing] = await fastify.db.execute<RowDataPacket[]>(`
                 SELECT * FROM bans WHERE id = ?`,
@@ -58,11 +36,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             )
 
             if(existing.length === 0) {
-                return reply.code(404).send({
-                    error: 'NOT_FOUND',
-                    message: 'Ban not found',
-                    statusCode: 404
-                })
+                return NOT_FOUND(reply, "Ban")
             }
             // Check if they are creator or if CONSOLE (automatic ban), can always edit
             const isCreator = existing[0].executor === "CONSOLE" || req.user!.equals(existing[0].executor) 
@@ -219,71 +193,68 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
     })
 
-    fastify.post('/:steamid', async(req: FastifyRequest<{ Body: POSTBanBodyType, Params: { steamid: string } }>, reply) => {
-        if(!req.user!.hasPermission("bans.create")) return NO_PERMISSION(reply)
-        if(!req.body.executor) {
-            req.body.executor = req.session.user.steamid
-        }
-        if(req.params.steamid.length < 10) {
-            return reply.status(400).send({
-                error: "INVALID_STEAMID",
-                message: "The steamid is invalid"
-            })
-        } else if(fastify.authmngr.isAdmin(req.params.steamid)) {
-            return reply.status(403).send({
-                error: "IS_ADMIN",
-                message: "Cannot ban a user with privileges, revoke the privileges first"
-            })
-        }
+    fastify.post(
+        '/:steamid', 
+        { schema: { body: AddBanBodySchema }},
+        async(req: FastifyRequest<{ Body: APIAddBanRequest, Params: { steamid: string } }>, reply) => {
+            if(!req.user!.hasPermission("bans.create")) return NO_PERMISSION(reply)
+            if(req.params.steamid.length < 10) {
+                return reply.status(400).send({
+                    error: "INVALID_STEAMID",
+                    message: "The steamid is invalid"
+                })
+            } else if(fastify.authmngr.isAdmin(req.params.steamid)) {
+                return reply.status(403).send({
+                    error: "IS_ADMIN",
+                    message: "Cannot ban a user with privileges, revoke the privileges first"
+                })
+            }
 
-        const [existing] = await fastify.db.execute<RowDataPacket[]>(`
-            SELECT * FROM bans WHERE SUBSTRING(steamid, 11) = SUBSTRING(?, 11)`,
-            [req.params.steamid]
-        )
+            const [existing] = await fastify.db.execute<RowDataPacket[]>(`
+                SELECT * FROM bans WHERE SUBSTRING(steamid, 11) = SUBSTRING(?, 11)`,
+                [req.params.steamid]
+            )
 
-        if(existing.length > 0) {
-            for(const ban of existing) {
-                if(~ban.flags & APIBanFlags.Suspended && !ban.expired) {
-                    return reply.code(409).send({
-                        error: 'BAN_EXISTS',
-                        message: `User currently has an active ban: #${ban.id}`,
-                        statusCode: 409
-                    })
+            if(existing.length > 0) {
+                for(const ban of existing) {
+                    if(~ban.flags & APIBanFlags.Suspended && !ban.expired) {
+                        return reply.code(409).send({
+                            error: 'BAN_EXISTS',
+                            message: `User currently has an active ban: #${ban.id}`,
+                            statusCode: 409
+                        })
+                    }
                 }
             }
-        }
 
-        const ban = {
-            ...req.body,
-            steamid: req.params.steamid,
-        }
 
-        const [ok] = await fastify.db.execute<ResultSetHeader>(
-            `INSERT INTO bans (steamid, executor, reason, flags, public_message, expires, timestamp) 
-            VALUES (:steamid, :executor, :reason, :flags, :public_message, :expires, UNIX_TIMESTAMP())`,
-            {
-                executor: ban.executor!, // set above to current admin
-                reason: ban.reason ?? null,
-                flags: ban.flags ?? 0,
-                public_message: ban.public_message ?? null,
-                expires: ban.expires ?? 0,
-                steamid: ban.steamid
+            const [ok] = await fastify.db.execute<ResultSetHeader>(
+                `INSERT INTO bans (steamid, executor, reason, flags, public_message, expires, timestamp) 
+                VALUES (:steamid, :executor, :reason, :flags, :public_message, :expires, UNIX_TIMESTAMP())`,
+                {
+                    executor: req.user!.steamid2,
+                    reason: req.body.reason ?? null,
+                    flags: req.body.flags ?? 0,
+                    public_message: req.body.public_reason ?? null,
+                    expires: req.body.expires ?? 0,
+                    steamid: req.params.steamid
+                }
+            )
+
+            await req.user!.log(req.params.steamid, `%client% banned user %target%`, {
+                code: "bans.create",
+                metadata: {
+                    id: ok.insertId, 
+                    ...req.body
+                }
+            })
+
+            return {
+                banId: ok.insertId,
+                success: true
             }
-        )
-
-        await req.user!.log(req.params.steamid, `%client% banned user %target%`, {
-            code: "bans.create",
-            metadata: {
-                id: ok.insertId, 
-                ...req.body
-            }
-        })
-
-        return {
-            banId: ok.insertId,
-            success: true
         }
-    })
+    )
 
     fastify.route({
         url: '/:id', 
