@@ -138,7 +138,7 @@ await app.register(FastifyEtag)
 await app.register(fastifyWebsocket)
 await app.register(fastifyUrlData)
 import internalMetrics from './hooks/metrics.js'
-import { METRIC_STARTUP_TIME } from './core/prom-metrics.js'
+import { METRIC_STARTUP_TIME } from './modules/metrics/prometheus.js'
 import { loadBots } from './modules/bots/index.js'
 import LogsManager from './modules/logs/LogsManager.js'
 import { TABLE_PREFIX } from './core/database.js'

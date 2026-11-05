@@ -2,7 +2,7 @@ import { Socket } from 'net'
 import { CommandResultType, LiveRecord, LiveRecordCommandResponse, LiveRecordClient, LiveRecordResponse, LiveRecordType, RecordDataType, RecordParseConfig } from '@srcpanel/common/Live'
 import Server from './Server.js'
 import BufferReader from '../BufferReader.js'
-import { METRIC_SERVERS_LIVE_RECORDS_RECV, METRIC_SERVERS_LIVE_RECORDS_SENT } from '../../core/prom-metrics.js'
+import { METRIC_SERVERS_LIVE_RECORDS_RECV, METRIC_SERVERS_LIVE_RECORDS_SENT } from '../../modules/metrics/prometheus.js'
 
 /** How long to wait in milliseconds for a command response payload to be received */
 const RESPONSE_TIMEOUT_MS = 1000 * 60

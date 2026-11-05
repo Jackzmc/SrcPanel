@@ -8,7 +8,7 @@ import { getMetadata, serializeWorkshopItem } from './ShareUtils.js'
 import { DefinedTask } from '../tasks/Task.js'
 import TaskManager from '#/modules/tasks/TaskManager.js'
 import EventEmitter from 'node:events'
-import { METRIC_SHARE_SCAN_COUNT } from '#/core/prom-metrics.js'
+import { METRIC_SHARE_SCAN_COUNT } from '#/modules/metrics/prometheus.js'
 
 /** Interval that scans are scheduled to run */
 const SCAN_INTERVAL_MINS = 60 // every hr

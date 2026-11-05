@@ -3,7 +3,7 @@ import SteamID from 'steamid'
 import { SteamAPIError } from '../../util/steam.js';
 import { ErrorWithCode } from '../../util/index.js';
 import { USER_AGENT } from '../../modules/auth/OauthProvider.js';
-import { METRIC_AUTH_LOGIN_COUNT } from '../../core/prom-metrics.js';
+import { METRIC_AUTH_LOGIN_COUNT } from '../../modules/metrics/prometheus.js';
 import { sendMetric } from '../../modules/metrics/influx.js';
 
 export const SESSION_VERSION = "3.0"

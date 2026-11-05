@@ -6,7 +6,7 @@ import { NOT_LOGGED_IN } from '../util/responses.js';
 
 import * as Sentry from '@sentry/node'
 import { CACHE_FOLDER, CONFIG_FOLDER, CoreModules, DATA_FOLDER } from '../core/index.js';
-import { registerPlugin } from '../core/prom-metrics.js';
+import { registerPlugin } from '../modules/metrics/prometheus.js';
 
 
 

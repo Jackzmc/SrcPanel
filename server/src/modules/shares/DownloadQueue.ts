@@ -5,7 +5,7 @@ import { join } from "node:path"
 import { getMetadata, serializeWorkshopItem } from "./ShareUtils.js"
 import pLimit from "p-limit"
 import Logger, { type PinoLogger } from '#/util/logger.js'
-import { METRIC_SHARE_DOWNLOAD_COUNT } from "#/core/prom-metrics.js"
+import { METRIC_SHARE_DOWNLOAD_COUNT } from "#/modules/metrics/prometheus.js"
 
 /// Limits the number of active downloads. Globally shared between all queues
 const CONCURRENT_LIMIT = pLimit(5)

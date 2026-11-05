@@ -13,7 +13,7 @@ import TaskManager from '../modules/tasks/TaskManager.js';
 import CacheManager from '../modules/CacheManager.js';
 import DataManager from '../modules/DataManager.js'
 
-import * as PromMetrics from './prom-metrics.js'
+import * as PromMetrics from '../modules/metrics/prometheus.js'
 import PlayerManager from '../modules/users/PlayerManager.js';
 import LogsManager from '../modules/logs/LogsManager.js';
 import { loadDB } from './database.js';

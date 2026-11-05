@@ -18,7 +18,7 @@ import yaml from 'yaml'
 import { loadShares } from '../shares/index.js';
 import { loadGroups } from './groups/index.js';
 import Logger from '#/util/logger.js'
-import { METRIC_SERVERS_LIVE_AUTH_COUNT } from '../../core/prom-metrics.js';
+import { METRIC_SERVERS_LIVE_AUTH_COUNT } from '../../modules/metrics/prometheus.js';
 import User from '../users/User.js';
 const log = Logger.child({ name: "ServerManager" })
 const liveLog = log.child({ name: "ServerManager/Live" })

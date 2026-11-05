@@ -6,7 +6,7 @@ import { AnnotationX, AnnotationY, FinaleStage, GAME_DIFFICULTY_STRINGS, GameSta
 import DockerServer from "../DockerServer.js";
 import { ContainerStats } from "dockerode";
 import { Server_Metric, Server_MetricFull } from "@srcpanel/common/ServerWebsocket";
-import { METRIC_SERVERS_UPTIME } from "../../../core/prom-metrics.js";
+import { METRIC_SERVERS_UPTIME } from "../../../modules/metrics/prometheus.js";
 import Logger, { type PinoLogger } from '#/util/logger.js'
 
 

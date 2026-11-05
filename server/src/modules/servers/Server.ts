@@ -12,7 +12,7 @@ import { ClientOutPayload, Server_Status, ServerOutPacket, ServerOutPayload } fr
 import { LiveRecordResponse } from "@srcpanel/common/Live";
 import { resolveIPv4, tryResolveIPv4 } from "../../util/index.js";
 import Logger, { PinoLogger } from '#/util/logger.js'
-import { METRIC_SERVERS_LIVE_VIEWERS, METRIC_SERVERS_STATUS_PLAYERS, METRIC_SERVERS_STATUS_STATE } from "../../core/prom-metrics.js";
+import { METRIC_SERVERS_LIVE_VIEWERS, METRIC_SERVERS_STATUS_PLAYERS, METRIC_SERVERS_STATUS_STATE } from "../../modules/metrics/prometheus.js";
 import User from "../users/User.js";
 
 const MIN_REFRESH_TIME = 10_000
