@@ -1,7 +1,7 @@
 import { Pool, RowDataPacket } from "mysql2/promise";
 import SteamID from "steamid";
 import { OauthProviderId, PlayerEntry } from "@srcpanel/common/User";
-import { FullAPIBan } from "@srcpanel/common/Ban";
+import { APIBan } from "@srcpanel/common/Ban";
 import { ADMINS_DB, TABLE_PREFIX } from "#/core/database.js";
 import AuthManager from "../auth/AuthManager.js";
 import { Note } from "@srcpanel/common/Note";
@@ -61,52 +61,6 @@ export default class PanelPlayer {
             if(!this.#cachedEntry.name) PlayerManager.instance.enqueueNameResolve(this.steamid)
         }
         return this.#cachedEntry
-    }
-
-    /**
-     * Return list of notes for player
-     * @param limit 
-     * @param page page to access, starting at 1
-     * @returns 
-     */
-    async getNotes(limit: number = 1000, page: number = 1): Promise<Note[]> {
-        return NotesRepo.getNotesForPlayer(this.#db, this.steamid.getSteam2RenderedID(), limit, page)
-    }
-
-    async getBans(): Promise<FullAPIBan[]> {
-        // TODO: BansManager
-        const [bans] = await this.#db.execute<RowDataPacket[]>(
-            `SELECT 
-                id, 
-                times_tried, 
-                public_message, 
-                bans.flags, 
-                bans.steamid, 
-                bans.executor, 
-                bans.reason, 
-                ip
-                expires, 
-                expired, 
-                bans.timestamp, 
-                u1.last_name as client_name, 
-                u1.last_country as client_country, 
-                u2.last_name AS executor_name, 
-            FROM bans
-            LEFT JOIN view_${TABLE_PREFIX}_user AS u1 ON SUBSTRING(bans.steamid, 11) = u1.account_id
-            LEFT JOIN view_${TABLE_PREFIX}_user AS u2 ON SUBSTRING(bans.executor, 11) = u2.account_id
-            WHERE SUBSTRING(bans.steamid, 11) = SUBSTRING(?, 11)`,
-            [this.steamid2]
-      )
-      
-      const formattedBans = bans.map(formatBan)
-      // Fetch provider name if necessary
-      for(const ban of formattedBans) {
-        if(ban.executor.nameResolver === "provider" && ban.executor.provider) {
-            ban.executor.name = await this.#authMngr.getNameFromProvider(ban.executor.provider as OauthProviderId, ban.executor.id)
-        }
-      }
-
-      return formattedBans
     }
 }
 

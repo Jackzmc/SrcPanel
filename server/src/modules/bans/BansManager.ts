@@ -4,14 +4,18 @@ import * as Repo from './BansRepo.js'
 import PlayerManager from '../users/PlayerManager.js'
 import SteamID from 'steamid'
 import type { APIBan, APIBanAppeal, ListAPIBan } from '@srcpanel/common/Ban'
+import type AuthManager from '../auth/AuthManager.js'
+import type { OauthProviderId } from '@srcpanel/common/User'
 
 export default class BansManager {
     #pool: Pool
     #playerManager: PlayerManager
+    #authManager: AuthManager
 
-    constructor(pool: Pool, playerManager: PlayerManager) {
+    constructor(pool: Pool, playerManager: PlayerManager, authManager: AuthManager) {
         this.#pool = pool
         this.#playerManager = playerManager
+        this.#authManager = authManager
     }
 
     async getBan(banId: number): Promise<APIBan | null> {
@@ -28,12 +32,21 @@ export default class BansManager {
             if(!ban.executor.nameResolver && !ban.executor.name && ban.executor.id.startsWith("STEAM"))  {
                 this.#playerManager.enqueueNameResolve(new SteamID(ban.executor.id))
             }
+            if(ban.executor.nameResolver === "provider" && ban.executor.provider) {
+                ban.executor.name = await this.#authManager.getNameFromProvider(ban.executor.provider as OauthProviderId, ban.executor.id)
+            }
         }
         return bans
     }
 
     async getBansForUser(steamid: string): Promise<APIBan[]> {
-        return await Repo.getBansForUser(this.#pool, steamid)
+        const bans = await Repo.getBansForUser(this.#pool, steamid)
+        for(const ban of bans) {
+            if(ban.executor.nameResolver === "provider" && ban.executor.provider) {
+                ban.executor.name = await this.#authManager.getNameFromProvider(ban.executor.provider as OauthProviderId, ban.executor.id)
+            }
+        }
+        return bans
     }
 
     async getAppeals(banId: number): Promise<APIBanAppeal[]> {

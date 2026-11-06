@@ -34,7 +34,7 @@ export interface APIBan extends BaseAPIBan {
   appeals?: APIBanAppeal[]
 }
 /** @deprecated use APIBan */
-export type FullAPIBan = APIBan
+export type APIBan = APIBan
 
 export interface ListAPIBan extends BaseAPIBan {
   notesCount: number,
@@ -65,7 +65,7 @@ export interface APIBanResponse {
 }
 export interface APIBanDetailsResponse {
   meta: Record<string, number>,
-  bans: FullAPIBan[],
+  bans: APIBan[],
   appeals: BanAppeal[]
 }
 

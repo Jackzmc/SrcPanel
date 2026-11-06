@@ -175,7 +175,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     preHandler: [ GUARD_REQUIRE_PLAYER.prehandler() ],
     async handler(req: FastifyRequest<{ Params: { steamid: string } }>, reply) {
       const player = GUARD_REQUIRE_PLAYER.getPlayer(req)
-      const bans = await player.getBans()
+      const bans = await fastify.managers.bans.getBansForUser(player.steamid2)
 
       return {
         bans,

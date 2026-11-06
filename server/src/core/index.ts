@@ -62,7 +62,7 @@ export async function loadModules(db: Awaited<ReturnType<typeof loadDB>>) {
     const discussions = new DiscussionManager(db.db, authManager, jobScheduler)
     const dataManager = DataManager.create(db.db)
     const playerManager = await PlayerManager.create(db.db, authManager)
-    const bansManager = new BansManager(db.db, playerManager)
+    const bansManager = new BansManager(db.db, playerManager, authManager)
 
     const [ logsManager ] = await Promise.all([
         await LogsManager.create(db.db, cacheManager),
