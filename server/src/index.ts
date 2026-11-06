@@ -139,21 +139,6 @@ await app.register(FastifyHelmet, {
 await app.register(FastifyEtag)
 await app.register(fastifyWebsocket)
 await app.register(fastifyUrlData)
-await app.register(fastifyRateLimit, {
-  global: true,
-  max: (req, ctx) => {
-    console.log('logged in?', req.user, ctx)
-    return  req.user ? 50 : 14
-  },
-  timeWindow: '1 second',
-  keyGenerator: (request) => {
-    return request.headers['x-real-ip'] as string // nginx
-    || request.headers['x-forwarded-for'] as string
-    || request.user?.steamid2 
-    || request.ip 
-  },
-  errorResponseBuilder: (request, context) => new ErrorWithCode("RATE_LIMIT", `Rate limit exceeded, retry in ${context.after}`)
-})
 import internalMetrics from './hooks/metrics.js'
 import { METRIC_STARTUP_TIME } from './modules/metrics/prometheus.js'
 import { loadBots } from './modules/bots/index.js'
@@ -210,10 +195,22 @@ app.setErrorHandler(async (error, request, reply) => {
 
 await app.register(MiddleManager, core)
   .then(async () => {
+    if  (hadSignal) return
 
     scheduleActivityLogPartition(app as unknown as FastifyInstance);
 
-    if  (hadSignal) return
+    await app.register(fastifyRateLimit, {
+      global: true,
+      max: (req, ctx) => req.user ? 50 : 14,
+      timeWindow: '1 second',
+      keyGenerator: (request) => {
+        return request.headers['x-real-ip'] as string // nginx
+        || request.headers['x-forwarded-for'] as string
+        || request.user?.steamid2 
+        || request.ip 
+      },
+      errorResponseBuilder: (request, context) => new ErrorWithCode("RATE_LIMIT", `Rate limit exceeded, retry in ${context.after}`)
+    })
 
     app.register(FastifyCookie, {
       secret: process.env.SESSION_SECRET as string,
