@@ -33,9 +33,6 @@ export interface APIBan extends BaseAPIBan {
   ip?: string,
   appeals?: APIBanAppeal[]
 }
-/** @deprecated use APIBan */
-export type APIBan = APIBan
-
 export interface ListAPIBan extends BaseAPIBan {
   notesCount: number,
   appealsCount: number

@@ -224,17 +224,17 @@
 </template>
 
 <script setup lang="ts">
-import { APIBanFlags, type APICreateBanResponse, type FullAPIBan } from "@srcpanel/common/Ban";
+import { APIBanFlags, type APICreateBanResponse, type APIBan } from "@srcpanel/common/Ban";
 import { formatDate, formatDateSmart, formatRelTime, getRelDate } from "@srcpanel/common/format";
 
 const toast = useToast();
 const { promptConfirm } = useModal();
 const { user } = useAuth();
 
-type EditBan = Omit<FullAPIBan, "id">;
+type EditBan = Omit<APIBan, "id">;
 
 const props = defineProps<{
-  ban?: FullAPIBan;
+  ban?: APIBan;
   steamid: string;
 }>();
 

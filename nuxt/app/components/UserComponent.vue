@@ -94,7 +94,7 @@ import { getRelDate } from "@srcpanel/common/format";
 const route = useRoute();
 
 interface UserMeta {
-  name?: string;
+  name?: string | null;
   avatarUrl?: string;
 }
 
