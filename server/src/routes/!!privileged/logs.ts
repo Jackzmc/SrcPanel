@@ -38,12 +38,12 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
       })
 
       return {
-        logs,
         yearInfo,
         timeTaken: performance.now() - startTime,
         counts: {
           queryRows: logs.length
-        }
+        },
+        logs,
       }
     }
   )

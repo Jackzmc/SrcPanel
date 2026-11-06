@@ -74,9 +74,11 @@ export async function tryResolveIPv4(host: string): Promise<string|null> {
 
 export class ErrorWithCode extends Error {
     code: string
-    constructor(_code: string, message: string) {
+    statusCode: number
+    constructor(_code: string, message: string, statusCode = 500) {
         super(message)
         this.code = _code
+        this.statusCode = statusCode
     }
 }
 

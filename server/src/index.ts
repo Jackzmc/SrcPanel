@@ -50,7 +50,6 @@ const app = Fastify({
 })
 app.withTypeProvider<TypeBoxTypeProvider>()
 import * as Sentry from '@sentry/node' 
-Sentry.setupFastifyErrorHandler(app);
 
 process.on('unhandledRejection', (reason: any, promise ) => {
   app.log.fatal({ err: reason }, 'Unhandled promise rejection');
@@ -142,7 +141,10 @@ await app.register(fastifyWebsocket)
 await app.register(fastifyUrlData)
 await app.register(fastifyRateLimit, {
   global: true,
-  max: 14,
+  max: (req, ctx) => {
+    console.log('logged in?', req.user, ctx)
+    return  req.user ? 50 : 14
+  },
   timeWindow: '1 second',
   keyGenerator: (request) => {
     return request.headers['x-real-ip'] as string // nginx
@@ -177,7 +179,7 @@ app.setErrorHandler(async (error, request, reply) => {
   }
   if(code === "RATE_LIMIT") statusCode = 429
 
-  app.log.error({ err: error, statusCode, error, message })
+    app.log.error({ err: error, statusCode, error, message })
 
   if(statusCode === 500) {
     Sentry.captureException(error, { 
@@ -193,7 +195,11 @@ app.setErrorHandler(async (error, request, reply) => {
         errorHandler: true
       }
     });
+    app.log.error({ err: error, statusCode, error, message })
+  } else if(statusCode === 429) {
+    request.log.warn({ ip: request.ip, user: request.user?.steamid2 }, "rate limit")
   }
+  if(reply.sent) return request.log.warn("reply already sent")
   return reply.status(statusCode).send({ 
     error: code, 
     message: message 

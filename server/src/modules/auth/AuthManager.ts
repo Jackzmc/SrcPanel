@@ -18,6 +18,7 @@ import { OauthAuthData } from './OauthProvider.js';
 import Logger from '#/util/logger.js'
 import CacheManager from "../../modules/CacheManager.js";
 import { ADMINS_DB, MAIN_DB, TABLE_PREFIX } from "../../core/database.js";
+import { ErrorWithCode } from "../../util/index.js";
 const log = Logger.child({ name: "AuthManager" })
 
 interface AddAdmin {
@@ -33,6 +34,12 @@ interface AddAdmin {
 
 
 export type NotificationCallback = (notification: UserNotification) => void
+
+export class UnauthorizedError extends ErrorWithCode {
+    constructor() {
+        super("UNAUTHORIZED", "No user is authenticated or apikey is invalid", 401)
+    }
+}
 
 
 export default class AuthManager {
@@ -140,18 +147,13 @@ export default class AuthManager {
 
     async verify(req: FastifyRequest, reply: FastifyReply): Promise<boolean> {
         const authorized = await this.isAuthorized(req)
-
         if(!authorized) {
-            reply.code(401).send({
-                error: 'UNAUTHORIZED',
-                message: 'No user is authenticated or apikey is invalid',
-                statusCode: 401
-            })
+            throw new UnauthorizedError()
         }
 
         req.session.lastActive = Math.floor(Date.now() / 1000)
     
-        return authorized
+        return true
     }
     
     public isAdmin(steamid2: string): boolean {
