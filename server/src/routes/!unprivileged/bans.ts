@@ -34,7 +34,10 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
   // TODO: we probably need to add some sort of limitation to this
   fastify.post(
     '/:id/appeal',
-    { schema: { querystring: CreateBanAppealQuerySchema }}, 
+    { 
+      schema: { querystring: CreateBanAppealQuerySchema },
+      config: { rateLimit: { max: 3, timeWindow: 60_000 } }
+    }, 
     async (req: FastifyRequest<{ Params: { id: number }, Querystring: APICreateAppealQuery }>, reply) => {
     const ban = await fastify.managers.bans.getBan(req.params.id)
     if (!ban) {

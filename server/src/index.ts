@@ -26,7 +26,7 @@ import TaskManager from './modules/tasks/TaskManager.js'
 import CacheManager from './modules/CacheManager.js'
 
 import MiddleManager from './middlewares/managers.js'
-import { LISTEN_HOST, LISTEN_PORT, sleep } from './util/index.js'
+import { ErrorWithCode, LISTEN_HOST, LISTEN_PORT, sleep } from './util/index.js'
 import { DataManagerInstance } from './modules/DataManager.js'
 import { getGlobalWriter, sendMetric } from './modules/metrics/influx.js'
 import init, { onCoreShutdown } from './core/index.js'
@@ -140,12 +140,25 @@ await app.register(FastifyHelmet, {
 await app.register(FastifyEtag)
 await app.register(fastifyWebsocket)
 await app.register(fastifyUrlData)
+await app.register(fastifyRateLimit, {
+  global: true,
+  max: 14,
+  timeWindow: '1 second',
+  keyGenerator: (request) => {
+    return request.headers['x-real-ip'] as string // nginx
+    || request.headers['x-forwarded-for'] as string
+    || request.user?.steamid2 
+    || request.ip 
+  },
+  errorResponseBuilder: (request, context) => new ErrorWithCode("RATE_LIMIT", `Rate limit exceeded, retry in ${context.after}`)
+})
 import internalMetrics from './hooks/metrics.js'
 import { METRIC_STARTUP_TIME } from './modules/metrics/prometheus.js'
 import { loadBots } from './modules/bots/index.js'
 import LogsManager from './modules/logs/LogsManager.js'
 import { TABLE_PREFIX } from './core/database.js'
 import type BansManager from './modules/bans/BansManager.js'
+import fastifyRateLimit from '@fastify/rate-limit'
 
 await app.register(internalMetrics)
 
@@ -164,12 +177,13 @@ app.setErrorHandler(async (error, request, reply) => {
       errorHandler: true
     }
   });
-
   let code: string = "INTERNAL_SERVER_ERROR", message: string = "An unexpected error has occurred"
-
   if(error instanceof Error) {
     if('code' in error && typeof error.code === "string") code = error.code
     message = error.message
+  } else if(typeof error == "object" && error) {
+    if('code' in error && typeof error.code === "string") code = error.code
+    if('message' in error && typeof error.message === "string") message = error.message
   }
   return reply.status(500).send({ 
     error: code, 
@@ -186,9 +200,6 @@ await app.register(MiddleManager, core)
 
     if  (hadSignal) return
 
-    app.register(import('@fastify/rate-limit'), {
-      global: true,
-    })
     app.register(FastifyCookie, {
       secret: process.env.SESSION_SECRET as string,
     })
