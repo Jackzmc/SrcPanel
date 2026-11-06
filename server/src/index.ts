@@ -163,20 +163,6 @@ import fastifyRateLimit from '@fastify/rate-limit'
 await app.register(internalMetrics)
 
 app.setErrorHandler(async (error, request, reply) => {
-  app.log.error(error)
-  Sentry.captureException(error, { 
-    user: request.user ? {
-      id: request.user.steamid2,
-      username: request.user.cachedName,
-      ip_address: request.ip
-    } : undefined,
-    extra: {
-      route: request.url,
-    },
-    tags: {
-      errorHandler: true
-    }
-  });
   // This is a *little* hacky but want consistent errors.
   // Unfortunately some things throw errors such as rate limits
   let code: string = "INTERNAL_SERVER_ERROR", message: string = "An unexpected error has occurred", statusCode = 500
@@ -190,6 +176,24 @@ app.setErrorHandler(async (error, request, reply) => {
     if('statusCode' in error && typeof error.statusCode === "number") statusCode = error.statusCode
   }
   if(code === "RATE_LIMIT") statusCode = 429
+
+  app.log.error({ err: error, statusCode, error, message })
+
+  if(statusCode === 500) {
+    Sentry.captureException(error, { 
+      user: request.user ? {
+        id: request.user.steamid2,
+        username: request.user.cachedName,
+        ip_address: request.ip
+      } : undefined,
+      extra: {
+        route: request.url,
+      },
+      tags: {
+        errorHandler: true
+      }
+    });
+  }
   return reply.status(statusCode).send({ 
     error: code, 
     message: message 
