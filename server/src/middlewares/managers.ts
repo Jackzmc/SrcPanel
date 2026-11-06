@@ -37,15 +37,10 @@ async function db(fastify: FastifyInstance, options: CoreModules) {
   fastify.addHook('preHandler', async (req, reply) => {
     if (req.session?.user) {
       if (req.session.version !== SESSION_VERSION) {
-        req.session.destroy()
+        await req.session.destroy()
         return NOT_LOGGED_IN(reply, "SESSION_EXPIRED", `Session has expired (target:${SESSION_VERSION}, cur:${req.session.version})`)
       }
       req.user = new User(fastify, req.session.user.steamid)
-      Sentry.setUser({
-        id: req.user.steamid2,
-        username: req.user.cachedName,
-        ip: req.ip
-      })
     } else if (req.headers['x-apikey'] || req.headers['authorization']) {
       let token: string;
       if (req.headers['authorization']) {
@@ -57,15 +52,21 @@ async function db(fastify: FastifyInstance, options: CoreModules) {
       } else {
         return NOT_LOGGED_IN(reply, "INVALID_APIKEY", "Missing or invalid x-apikey or authorization header")
       }
+
       const apikey = await fastify.authmngr.getAPIKey(token)
-      if (apikey)
+      if (apikey) {
         req.user = new User(fastify, apikey.steamid)
+      }
+    }
+
+    if(req.user) {
+      Sentry.setUser({
+        id: req.user.steamid2,
+        username: req.user.cachedName,
+        ip: req.ip
+      })
     }
   })
-  fastify.addHook("onClose", (inst, done) => {
-    fastify.servers.onShutdown()
-    fastify.log.info("Shutdown complete")
-    done()
-  })
+
 }
 export default FastifyPlugin(db)
