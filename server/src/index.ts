@@ -177,15 +177,20 @@ app.setErrorHandler(async (error, request, reply) => {
       errorHandler: true
     }
   });
-  let code: string = "INTERNAL_SERVER_ERROR", message: string = "An unexpected error has occurred"
+  // This is a *little* hacky but want consistent errors.
+  // Unfortunately some things throw errors such as rate limits
+  let code: string = "INTERNAL_SERVER_ERROR", message: string = "An unexpected error has occurred", statusCode = 500
   if(error instanceof Error) {
     if('code' in error && typeof error.code === "string") code = error.code
+    if('statusCode' in error && typeof error.statusCode === "number") statusCode = error.statusCode
     message = error.message
   } else if(typeof error == "object" && error) {
     if('code' in error && typeof error.code === "string") code = error.code
     if('message' in error && typeof error.message === "string") message = error.message
+    if('statusCode' in error && typeof error.statusCode === "number") statusCode = error.statusCode
   }
-  return reply.status(500).send({ 
+  if(code === "RATE_LIMIT") statusCode = 429
+  return reply.status(statusCode).send({ 
     error: code, 
     message: message 
   });
