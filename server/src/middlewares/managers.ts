@@ -43,9 +43,9 @@ async function db(fastify: FastifyInstance, options: CoreModules) {
       req.user = new User(fastify, req.session.user.steamid)
     } else if (req.headers['x-apikey'] || req.headers['authorization']) {
       let token: string;
-      if (req.headers['authorization']) {
+      if (typeof req.headers['authorization'] === 'string') {
         const split = req.headers['authorization'].split(" ")
-        if (split.length == 2 && split[0] == "Bearer") token = split[1]
+        if (split.length == 2 && split[0].toLowerCase() == "Bearer") token = split[1]
         else return NOT_LOGGED_IN(reply, "INVALID_APIKEY", "Invalid token or token type, must be Bearer <token>")
       } else if (typeof req.headers['x-apikey'] == 'string') {
         token = req.headers['x-apikey']
@@ -63,7 +63,7 @@ async function db(fastify: FastifyInstance, options: CoreModules) {
       Sentry.setUser({
         id: req.user.steamid2,
         username: req.user.cachedName,
-        ip: req.ip
+        ip_address: req.ip
       })
     }
   })
