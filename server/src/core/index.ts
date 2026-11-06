@@ -17,6 +17,7 @@ import * as PromMetrics from '../modules/metrics/prometheus.js'
 import PlayerManager from '../modules/users/PlayerManager.js';
 import LogsManager from '../modules/logs/LogsManager.js';
 import { loadDB } from './database.js';
+import BansManager from '../modules/bans/BansManager.js';
 
 const log = Logger.child({ name: "core" })
 
@@ -60,9 +61,10 @@ export async function loadModules(db: Awaited<ReturnType<typeof loadDB>>) {
     const serverManager = new ServerManager(steam, DATA_FOLDER, CONFIG_FOLDER)
     const discussions = new DiscussionManager(db.db, authManager, jobScheduler)
     const dataManager = DataManager.create(db.db)
+    const playerManager = await PlayerManager.create(db.db, authManager)
+    const bansManager = new BansManager(db.db, playerManager)
 
-    const [ playerManager, logsManager ] = await Promise.all([
-        await PlayerManager.create(db.db, authManager),
+    const [ logsManager ] = await Promise.all([
         await LogsManager.create(db.db, cacheManager),
         authManager.Init(),
         serverManager.Load(),
@@ -85,7 +87,8 @@ export async function loadModules(db: Awaited<ReturnType<typeof loadDB>>) {
         serverManager,
         discussions,
         playerManager,
-        logsManager
+        logsManager,
+        bansManager
     }
 }
 

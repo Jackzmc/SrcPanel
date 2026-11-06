@@ -18,7 +18,7 @@ export interface FullAPIBanPlayer extends APIBanPlayer {
 export interface BaseAPIBan {
   id: number,
   client: APIBanPlayer
-  reason: string,
+  reason?: string,
   publicReason?: string,
   flags: number,
   timestamp: number,
@@ -31,7 +31,7 @@ export interface BaseAPIBan {
 export interface APIBan extends BaseAPIBan {
   client: FullAPIBanPlayer
   ip?: string,
-  appeals?: BanAppeal[]
+  appeals?: APIBanAppeal[]
 }
 /** @deprecated use APIBan */
 export type FullAPIBan = APIBan
@@ -60,7 +60,6 @@ export interface APIBanAppeal {
 export type BanAppeal = APIBanAppeal
 
 export interface APIBanResponse {
-  meta: Record<string, number>,
   bans: ListAPIBan[],
   totalBans: number
 }

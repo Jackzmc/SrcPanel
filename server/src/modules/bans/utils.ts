@@ -1,11 +1,13 @@
-import { APIBan, type APIBanAppeal } from "@srcpanel/common/Ban"
+import { APIBan, type APIBanAppeal, type ListAPIBan } from "@srcpanel/common/Ban"
 import { RowDataPacket } from "mysql2"
 
 /**
  * Format ban object
  * WARN: If executor is from a provider, name will not be fetched.
  */
-export function formatBan(ban: RowDataPacket): APIBan {
+export function formatBan(ban: RowDataPacket, includeExtra: true): ListAPIBan
+export function formatBan(ban: RowDataPacket, includeExtra: false): APIBan
+export function formatBan(ban: RowDataPacket, includeExtra?: boolean): ListAPIBan | APIBan {
     const executor = {
         id: ban.executor,
         name: ban.executor_name,
@@ -22,7 +24,7 @@ export function formatBan(ban: RowDataPacket): APIBan {
           }
         }
     }
-    return {
+    const output: APIBan = {
         id: ban.id,
         timestamp: parseInt(ban.timestamp),
         ip: ban.ip,
@@ -36,7 +38,15 @@ export function formatBan(ban: RowDataPacket): APIBan {
             id: ban.steamid,
             name: ban.client_name,
         },
-        executor
+        executor,
+    }
+    if(includeExtra) {
+        const output2 = output as ListAPIBan
+        output2.notesCount = parseInt(ban.client_notes_count)
+        output2.appealsCount = parseInt(ban.appeals_count)
+        return output2
+    } else {
+        return output
     }
 }
 

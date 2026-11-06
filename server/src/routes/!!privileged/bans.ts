@@ -2,7 +2,6 @@ import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from 'fastify';
 import { APIBanFlags } from '@srcpanel/common/Ban';
 import { NO_PERMISSION, NOT_FOUND } from '../../util/responses.js';
 import { AddBanBodySchema, EditBanBodySchema, type APIAddBanRequest, type APIEditBanRequest } from '@srcpanel/common/bans/schemas'
-import * as BansRepo from '#/modules/bans/BansRepo.js'
 import { SteamIdParams, type APISteamIdParams } from '@srcpanel/common/schemas'
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
@@ -29,7 +28,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         },
         async handler(req: FastifyRequest<{ Body: APIEditBanRequest, Params: { id: number } }>, reply) {
             if(!req.user!.hasPermission("bans.edit")) return NO_PERMISSION(reply)
-            const existingBan = await BansRepo.getBan(fastify.db, req.params.id)
+            const existingBan = await fastify.managers.bans.getBan(req.params.id)
             if(!existingBan) {
                 return NOT_FOUND(reply, "Ban")
             }
@@ -43,7 +42,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 req.body.executor = req.user!.steamid2
             }
 
-            await BansRepo.updateBan(fastify.db, req.params.id, {
+            await fastify.managers.bans.updateBan(req.params.id, {
                 executor: req.body.executor ?? existingBan.executor.id,
                 reason: req.body.reason,
                 publicReason: req.body.public_reason ?? null,
@@ -77,18 +76,11 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
     })
 
-    // TODO: Moving steamid checks to /users/:steamid/bans ? or /bans/user/:steamid
-
     fastify.route({
         method: 'GET',
         url: '/user/:steamid',
         schema: {
-            params: {
-                type: "object",
-                properties: {
-                    id: { type: 'string' }
-                }
-            },
+            params: SteamIdParams,
             response: {
                 200: {
                     type: 'object',
@@ -99,10 +91,10 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 }
             }
         },
-        async handler(req: FastifyRequest<{ Params: { steamid: string } }>, reply) {
-            const bans = await BansRepo.getBanForUser(fastify.db, req.params.steamid)
+        async handler(req: FastifyRequest<{ Params: APISteamIdParams }>, reply) {
+            const bans = await fastify.managers.bans.getBansForUser(req.params.steamid)
 
-            const appeals = BansRepo.getAppealsForUser(fastify.db, req.params.steamid)
+            const appeals = fastify.managers.bans.getAppealsForUser(req.params.steamid)
 
             return {
                 bans,
@@ -138,11 +130,11 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             }
         },
         async handler(req: FastifyRequest<{ Params: { id: number }, Querystring: { filter: string } }>, reply) {
-            const ban = await BansRepo.getBan(fastify.db, req.params.id)
+            const ban = await fastify.managers.bans.getBan(req.params.id)
             // No appeals if no ban
             if(!ban) return NOT_FOUND(reply, "Ban")
 
-            const appeals = BansRepo.getAppeals(fastify.db, ban.id)
+            const appeals = fastify.managers.bans.getAppeals(ban.id)
 
             return {
                 ban,
@@ -163,7 +155,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 })
             }
 
-            const bans = await BansRepo.getBanForUser(fastify.db, req.params.steamid)
+            const bans = await fastify.managers.bans.getBansForUser(req.params.steamid)
 
             if(bans.length > 0) {
                 for(const ban of bans) {
@@ -178,7 +170,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             }
 
 
-            const id = await BansRepo.insertBan(fastify.db, {
+            const id = await fastify.managers.bans.insertBan({
                 steamid: req.params.steamid,
                 executor: req.user!.steamid2,
                 flags: req.body.flags ?? 0,
@@ -225,7 +217,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             Params: { id: number }
         }>, reply) {
             if(!req.user!.hasPermission("bans.delete")) return NO_PERMISSION(reply)
-            const existingBan = await BansRepo.getBan(fastify.db, req.params.id)
+            const existingBan = await fastify.managers.bans.getBan(req.params.id)
 
             if(!existingBan) {
                 return NOT_FOUND(reply, "Ban")
@@ -235,7 +227,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             const [code, granted] = req.user!.requirePermission("bans.delete", { isCreator })
             if(!granted) return NO_PERMISSION(reply)
 
-            await BansRepo.deleteBan(fastify.db, req.params.id)
+            await fastify.managers.bans.deleteBan(req.params.id)
 
             await req.user!.log(existingBan.client.id, `%client% removed ban #%id% for %target%`, {
                 code,

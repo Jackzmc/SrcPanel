@@ -1,4 +1,4 @@
-import type { APIBan, APIBanAppeal, BanAppeal } from "@srcpanel/common/Ban";
+import { APIBanFlags, type APIBan, type APIBanAppeal, type BanAppeal, type ListAPIBan } from "@srcpanel/common/Ban";
 import { TABLE_PREFIX, type DBClient } from "../../core/database.js";
 import type { ResultSetHeader, RowDataPacket } from "mysql2";
 import { formatAppeal, formatBan } from "./utils.js";
@@ -27,10 +27,10 @@ export async function getBan(db: DBClient, banId: number): Promise<APIBan | null
         [ banId ]
     )
 
-    return rows.length > 0 ? formatBan(rows[0]) : null
+    return rows.length > 0 ? formatBan(rows[0], false) : null
 }
 
-export async function getBanForUser(db: DBClient, steamid: string): Promise<APIBan[]> {
+export async function getBansForUser(db: DBClient, steamid: string, activeOnly = false): Promise<APIBan[]> {
     const [rows] = await db.execute<RowDataPacket[]>(`
         SELECT 
             b.id,
@@ -49,10 +49,50 @@ export async function getBanForUser(db: DBClient, steamid: string): Promise<APIB
         FROM bans b
         LEFT JOIN view_${TABLE_PREFIX}_user ON u1 u1.account_id = SUBSTRING(steamid, 11)
         LEFT JOIN view_${TABLE_PREFIX}_user u2 ON u2.account_id = SUBSTRING(executor, 11)
-        WHERE steamid = ?`,
+        WHERE steamid = ?
+        ${activeOnly ? `AND ~flags & ${APIBanFlags.Suspended}` : ''}
+        `,
         [ steamid ]
     )
-    return rows.map(formatBan)
+    return rows.map(ban => formatBan(ban, false))
+}
+
+export interface GetBanOptions {
+    activeOnly?: boolean,
+    expiredOnly?: boolean
+    limit?: number,
+    offset?: number,
+}
+
+export async function getBans(db: DBClient, options: GetBanOptions): Promise<ListAPIBan[]> {
+    const [rows] = await db.execute<RowDataPacket[]>(`
+        SELECT 
+            b.id,
+            b.timestamp,
+            b.times_tried,
+            b.flags,
+            b.public_message,
+            b.reason,
+            b.expired,
+            b.expires,
+            b.ip,
+            b.steamid,
+            u1.last_name as client_name,
+            (SELECT COUNT(*) FROM ban_appeals a WHERE a.ban_id = b.id) appeal_count,
+            (SELECT COUNT(*) FROM notes n WHERE SUBSTRING(n.steamid, 11) = SUBSTRING(b.steamid, 11)) client_notes_count,
+            b.executor,
+            u2.last_name as executor_name
+        FROM bans b
+        LEFT JOIN view_${TABLE_PREFIX}_user u1 ON u1.account_id = SUBSTRING(steamid, 11)
+        LEFT JOIN view_${TABLE_PREFIX}_user u2 ON u2.account_id = SUBSTRING(executor, 11)
+        WHERE 1=1
+        ${options.activeOnly ? `AND ~b.flags & ${APIBanFlags.Suspended}` : ''}
+        ${options.expiredOnly ? 'AND b.expired = 0' : ''}
+        ORDER BY b.timestamp DESC
+        LIMIT ?, ?`,
+        [ options.offset ?? 0, options.limit ?? 100 ]
+    )
+    return rows.map(ban => formatBan(ban, true))
 }
 
 /**
@@ -108,8 +148,8 @@ export interface EditBanOptions {
     flags: number,
     expires: number | null
 }
-export async function updateBan(db: DBClient, banId: number, options: EditBanOptions): Promise<void> {
-    await db.execute<ResultSetHeader>(`
+export async function updateBan(db: DBClient, banId: number, options: EditBanOptions): Promise<boolean> {
+    const [r] = await db.execute<ResultSetHeader>(`
         UPDATE bans 
         SET executor = :executor, reason = :reason, flags = :flags, 
         public_message = :public_message, expires = :expires 
@@ -123,6 +163,7 @@ export async function updateBan(db: DBClient, banId: number, options: EditBanOpt
             id: banId
         }
     )
+    return r.affectedRows > 0
 }
 
 export interface InsertBanOptions {
@@ -149,9 +190,18 @@ export async function insertBan(db: DBClient, options: InsertBanOptions): Promis
     return ok.insertId
 }
 
-export async function deleteBan(db: DBClient, banId: number): Promise<void> {
-    await db.execute<ResultSetHeader>(
+export async function deleteBan(db: DBClient, banId: number): Promise<boolean> {
+    const [r] = await db.execute<ResultSetHeader>(
         `DELETE FROM bans WHERE id = ?`,
         [banId]
     )
+    return r.affectedRows > 0
+}
+
+export async function insertBanAppeal(db: DBClient, banId: number, message: string, ip: string): Promise<number> {
+    const [ok] = await db.execute<ResultSetHeader>(
+      "INSERT INTO ban_appeals (ban_id, state, message, ip, created) VALUES (?, 0, ?, ?, UNIX_TIMESTAMP())",
+      [banId, message, ip]
+    )
+    return ok.insertId
 }

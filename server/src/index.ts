@@ -109,7 +109,8 @@ declare module 'fastify' {
     users: UserManager,
     config: ConfigManager,
     managers: {
-      discussions: DiscussionManager
+      discussions: DiscussionManager,
+      bans: BansManager
     },
     jobs: TaskManager,
     paths: {
@@ -144,6 +145,7 @@ import { METRIC_STARTUP_TIME } from './modules/metrics/prometheus.js'
 import { loadBots } from './modules/bots/index.js'
 import LogsManager from './modules/logs/LogsManager.js'
 import { TABLE_PREFIX } from './core/database.js'
+import type BansManager from './modules/bans/BansManager.js'
 
 await app.register(internalMetrics)
 

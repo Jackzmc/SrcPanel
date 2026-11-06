@@ -27,7 +27,10 @@ async function db(fastify: FastifyInstance, options: CoreModules) {
   fastify.decorate('servers', options.modules.serverManager)
   fastify.decorate('config', options.modules.configManager)
   fastify.decorate('jobs', options.modules.jobScheduler)
-  fastify.decorate('managers', options.modules)
+  fastify.decorate('managers', {
+    discussions: options.modules.discussions,
+    bans: options.modules.bansManager,
+  })
   fastify.decorate('data', options.modules.dataManager)
   fastify.decorate('logs', options.modules.logsManager)
 
