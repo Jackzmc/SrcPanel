@@ -152,19 +152,24 @@ await app.register(internalMetrics)
 app.setErrorHandler(async (error, request, reply) => {
   // This is a *little* hacky but want consistent errors.
   // Unfortunately some things throw errors such as rate limits
-  let code: string = "INTERNAL_SERVER_ERROR", message: string = "An unexpected error has occurred", statusCode = 500
-  if(error instanceof Error) {
-    if('code' in error && typeof error.code === "string") code = error.code
-    if('statusCode' in error && typeof error.statusCode === "number") statusCode = error.statusCode
-    message = error.message
-  } else if(typeof error == "object" && error) {
-    if('code' in error && typeof error.code === "string") code = error.code
-    if('message' in error && typeof error.message === "string") message = error.message
-    if('statusCode' in error && typeof error.statusCode === "number") statusCode = error.statusCode
+  let statusCode = 500
+  const obj: Record<string, any> = {
+    code: "INTERNAL_SERVER_ERROR",
+    message: "An unexpected internal error has occurred"
   }
-  if(code === "RATE_LIMIT") statusCode = 429
+  if(error instanceof Error) {
+    if('code' in error && typeof error.code === "string") obj.code = error.code
+    if('statusCode' in error && typeof error.statusCode === "number") statusCode = error.statusCode
+    obj.message = error.message
+  } else if(typeof error == "object" && error) {
+    if('code' in error && typeof error.code === "string") obj.code = error.code
+    if('message' in error && typeof error.message === "string") obj.message = error.message
+    if('statusCode' in error && typeof error.statusCode === "number") statusCode = error.statusCode
+  } else if(typeof error == "string") {
+    obj.message = error
+  }
 
-    app.log.error({ err: error, statusCode, error, message })
+  if(obj.code === "RATE_LIMIT") statusCode = 429
 
   if(statusCode === 500) {
     Sentry.captureException(error, { 
@@ -180,15 +185,14 @@ app.setErrorHandler(async (error, request, reply) => {
         errorHandler: true
       }
     });
-    app.log.error({ err: error, statusCode, error, message })
+    app.log.error({ err: error, statusCode, obj })
+  } else if(typeof error == 'object' && error != null && 'validation' in error) {
+    obj.errors = error.validation
   } else if(statusCode === 429) {
     request.log.warn({ ip: request.ip, user: request.user?.steamid2 }, "rate limit")
   }
   if(reply.sent) return request.log.warn("reply already sent")
-  return reply.status(statusCode).send({ 
-    error: code, 
-    message: message 
-  });
+  return reply.status(statusCode).send(obj);
 });
 
 
