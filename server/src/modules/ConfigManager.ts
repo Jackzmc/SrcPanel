@@ -68,7 +68,8 @@ export default class ConfigManager {
 
   static async #ParseFile(filepath: string): Promise<PanelConfig> {
     const contents = await readFile(filepath, 'utf-8')
-    const parsed = Schema.Parse(ConfigSchema, contents)
+    const raw = yaml.parse(contents)
+    const parsed = Schema.Parse(ConfigSchema, raw)
 
     const out: PanelConfig = {
       general: {
@@ -96,7 +97,7 @@ export default class ConfigManager {
       const newConfig = await ConfigManager.#ParseFile(this.#filepath)
       this.#config = newConfig
     } catch (err: any) {
-      log.error("reload failed: " + err.message)
+      log.error({ err}, "error reloading panel config")
     }
   }
 
