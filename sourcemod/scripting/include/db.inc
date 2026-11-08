@@ -99,7 +99,7 @@ methodmap DatabaseManager {
      * Returns false if not connected
      */
     public bool TryConnect() {
-        DB_TryConnect();
+        return DB_TryConnect();
     }
 
     public void Disconnect() {
@@ -132,7 +132,7 @@ methodmap DatabaseManager {
 	// @return              True, if character set was changed, false otherwise.
 	public bool SetCharset(const char[] charset) {
         Database db = this.GetConn();
-        db.SetCharset(charset);
+        return db.SetCharset(charset);
     }
 
 	// Escapes a database string for literal insertion.  This is not needed
@@ -156,7 +156,7 @@ methodmap DatabaseManager {
 	//                      The buffer must be at least 2*strlen(string)+1.
 	public bool Escape(const char[] string, char[] buffer, int maxlength, int &written=0) {
         Database db = this.GetConn();
-        db.Escape(string, buffer, maxlength, written);
+        return db.Escape(string, buffer, maxlength, written);
     }
 
 	// Returns whether a database is the same connection as another database.
