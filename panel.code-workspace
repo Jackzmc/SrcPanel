@@ -17,6 +17,10 @@
       "path": "./nuxt"
     },
     {
+      "name": "sourcemod",
+      "path": "./sourcemod"
+    },
+    {
       "name": "db",
       "path": "./db"
     },
