@@ -40,6 +40,20 @@
     ],
     "terminals.autorun": false,
     "js/ts.suggest.completeFunctionCalls": false,
-    "js/ts.preferences.preferTypeOnlyAutoImports": true
+    "js/ts.preferences.preferTypeOnlyAutoImports": true,
+    "sourcepawn.AuthorName": "jackzmc",
+    "sourcepawn.availableAPIs": [
+      {
+        "name": "SM 1.12-7255",
+        "includeDirectories": ["sourcemod/vendor/sm_1_12_7255/include/"],
+        "compilerPath": "sourcemod/vendor/sm_1_12_7255/spcomp64",
+        "outputDirectoryPath": "sourcemod/plugins",
+        "compilerArguments": []
+      }
+    ],
+    "SourcePawnLanguageServer.includeDirectories": [
+      "sourcemod/vendor/sm_1_12_7255/include"
+    ],
+    "sourcepawn.outputDirectoryPath": "sourcemod/plugins/"
   },
 }
