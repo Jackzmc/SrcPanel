@@ -77,16 +77,13 @@ export default class DynamicServerManager {
     await this.#loadTemplates();
     await this.findExisting();
 
-    const stream = await this.#docker.getEvents();
+    const stream = await this.#docker.getEvents({ filters: { container: ["start", "stop" ]}});
     stream.on("data", (chunk) => {
       const event = JSON.parse(chunk.toString());
       // event.status === 'restart' or start
       if (event.status === "start") {
-        // const container = this.#instances[]
-        // const container = this.findContainerById(event.id)
         const server = this.#srvManager.getServerByContainerId(event.id);
         server?._notifyEvent(ServerEvent.Started);
-        // container._notifyState(?)
       } else if (event.status === "stop") {
         const server = this.#srvManager.getServerByContainerId(event.id);
         server?._notifyEvent(ServerEvent.Stopped);
@@ -176,12 +173,12 @@ export default class DynamicServerManager {
           };
           log.trace({ config }, `Loaded template ${id}`);
         } catch (err) {
-          log.error(`Failed to pull image "${config.image}":`, err);
+          log.error( { err, image: config.image }, `failed to pull image "${config.image}"`);
         }
       }
       log.info(`Loaded ${Object.keys(this.#templates).length} templates`);
     } catch (err) {
-      log.error("Failed to load templates.yaml: ", err);
+      log.error({ err }, "failed to load templates.yaml ");
     }
   }
 
@@ -236,7 +233,7 @@ export default class DynamicServerManager {
     labels: Record<string, string> = {},
   ) {
     const template = this.#templates[templateId];
-    if (!template) throw new Error(`Unknown template id: "${templateId}"`);
+    if (!template) throw new Error(`Unknown template id "${templateId}"`);
     const port = await this.#getNextPort(template.config);
 
     const templVars = {
@@ -314,8 +311,6 @@ export default class DynamicServerManager {
     await instance.Init();
     this.#instances[instance.ContainerName] = instance;
   }
-
-  async deleteInstance(instance: DynamicServerInstance) {}
 
   async unregisterInstance(instance: DynamicServerInstance) {
     delete this.#instances[instance.ContainerName];
