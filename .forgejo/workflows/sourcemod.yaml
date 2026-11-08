@@ -1,4 +1,13 @@
-on: [push]
+name: Build SM Plugins
+on:
+  push:
+    paths:
+      - 'sourcemod/**'
+    tags:
+      - 'v*'
+    branches:
+      - master
+  workflow_dispatch: {}
 jobs:
   build:
     runs-on: debian-latest
@@ -17,14 +26,16 @@ jobs:
       - name: Build Plugins
         env:
           SPCOMP_PATH: spcomp
-        run: chmod +x sourcemod/compile_all.sh && ./sourcemod/compile_all.sh
+        working-directory: sourcemod
+        run: chmod +x compile_all.sh && ./compile_all.sh
       - name: Upload artifacts
         uses: https://git.jackz.me/actions/upload-artifact@v4
         with:
           name: plugins-${{ matrix.sm-version }}
           path: |
-            plugins/*
-            scripting/**/*
-            data/**/*
-            gamedata/*
+            sourcemod/plugins
+            sourcemod/scripting
+            sourcemod/data
+            sourcemod/gamedata
           compression-level: 8
+          if-no-files-found: error
