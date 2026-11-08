@@ -1,0 +1,30 @@
+on: [push]
+jobs:
+  build:
+    runs-on: debian-latest
+    strategy:
+      matrix:
+        sm-version: [ '1.11.x', '1.12.x', '1.13.x']
+    name: Sourcemod v${{ matrix.sm-version }}
+    steps:
+      - name: Checkout
+        uses: https://git.jackz.me/actions/checkout@v5
+      - name: Setup sourcepawn
+        uses: https://git.jackz.me/jackz/setup-sp@b466309e44923e2deaf065cea2b6fd2016ae256d
+        with:
+          version: ${{ matrix.sm-version }}
+          github-token: ${{ secrets.GH_PUBLIC_TOKEN }}
+      - name: Build Plugins
+        env:
+          SPCOMP_PATH: spcomp
+        run: chmod +x sourcemod/compile_all.sh && ./sourcemod/compile_all.sh
+      - name: Upload artifacts
+        uses: https://git.jackz.me/actions/upload-artifact@v4
+        with:
+          name: plugins-${{ matrix.sm-version }}
+          path: |
+            plugins/*
+            scripting/**/*
+            data/**/*
+            gamedata/*
+          compression-level: 8
