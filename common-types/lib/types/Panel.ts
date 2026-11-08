@@ -65,11 +65,3 @@ export interface PanelMetaInfo {
   steamAvailable: boolean,
   providers: PublicProviderConfig[]
 }
-
-export enum FirstTimeSetupStage {
-  Default,
-  FirstSetupComplete = 1,
-  SteamAdminCreated = 2,
-
-  DONE = 100
-}

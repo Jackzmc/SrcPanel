@@ -17,7 +17,7 @@ import User from "../users/User.js";
 
 const MIN_REFRESH_TIME = 10_000
 const METRIC_INTERVAL_TIME = 1000 * 30 // 30s
-const DNS_LOOKUP_INTERVAL_MS = 1000 * 60 * 15 // 5 min
+const DNS_LOOKUP_INTERVAL_MS = 1000 * 60 * 15 // 15 min
 
 export interface BaseServerData {
   id : string;
