@@ -2,11 +2,10 @@
 #pragma newdecls required
 
 //#define DEBUG
-
+#define DB_NAME "srcpanel"
 #define PLUGIN_VERSION "1.0"
 #define MAX_PLAYER_HISTORY 25
 #define MAX_NOTES_TO_SHOW 4
-#define DATABASE_CONFIG_NAME "stats"
 
 #include <sourcemod>
 #include <sdktools>
@@ -20,11 +19,11 @@
 
 public Plugin myinfo = 
 {
-	name =  "Player Notes", 
+	name =  "SrcPanel Notes", 
 	author = "jackzmc", 
 	description = "", 
 	version = PLUGIN_VERSION, 
-	url = "https://github.com/Jackzmc/sourcemod-plugins"
+	url = "https://codeberg.org/jackzmc/SrcPanel"
 };
 
 static Database DB;
@@ -48,8 +47,8 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 }
 
 public void OnPluginStart() {
-	if(!SQL_CheckConfig(DATABASE_CONFIG_NAME)) {
-		SetFailState("No database entry for %s; no database to connect to.", DATABASE_CONFIG_NAME);
+	if(!SQL_CheckConfig(DB_NAME)) {
+		SetFailState("No database entry for %s; no database to connect to.", DB_NAME);
 	} else if(!ConnectDB()) {
 		SetFailState("Failed to connect to database.");
 	}
@@ -359,13 +358,13 @@ public Action Command_ListNotes(int client, int args) {
 
 bool ConnectDB() {
 	char error[255];
-	DB = SQL_Connect(DATABASE_CONFIG_NAME, true, error, sizeof(error));
+	DB = SQL_Connect(DB_NAME, true, error, sizeof(error));
 	if (DB== null) {
 		LogError("Database error %s", error);
 		delete DB;
 		return false;
 	} else {
-		PrintToServer("Connected to database %s", DATABASE_CONFIG_NAME);
+		PrintToServer("Connected to database %s", DB_NAME);
 		SQL_LockDatabase(DB);
 		SQL_UnlockDatabase(DB);
 		DB.SetCharset("utf8mb4");

@@ -1,5 +1,6 @@
 #pragma semicolon 1
 
+#define SM_DATABASE_NAME "srcpanel"
 // Every attempt waits exponentionally longer, up to this value.
 #define MAX_ATTEMPT_TIMEOUT 120.0
 #define DEFAULT_SERVER_PORT 7888
@@ -7,7 +8,6 @@
 #define FULL_SYNC_INTERVAL_S 60.0
 
 // Name of sourcemod database
-#define SM_DATABASE_NAME "adminpanel"
 // TODO: rename adminpanel, Admin panel -> SrcPanel
 
 #include <sourcemod>
@@ -26,7 +26,7 @@
 
 public Plugin myinfo = 
 {
-	name = "SrcPanel",
+	name = "SrcPanel Core",
 	author = "jackzmc",
 	description = "Plugin to integrate with SrcPanel",
 	version = "1.0.0",

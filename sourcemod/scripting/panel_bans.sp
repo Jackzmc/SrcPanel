@@ -1,7 +1,7 @@
 #pragma semicolon 1
 #pragma newdecls required
 
-#define DB_NAME "globalbans"
+#define DB_NAME "srcpanel"
 /// How long in ms until we kick user for auth timeout to prevent spoofed banned players. 
 /// May be unnecessary as server will eventually kick the user on their own with "No steam logon" but can take long time
 #define AUTH_TIMEOUT 22.0  
@@ -19,11 +19,11 @@
 
 public Plugin myinfo = 
 {
-    name =  "Global Bans", 
+    name =  "SrcPanel Global Bans", 
     author = "jackzmc", 
-    description = "Manages bans via MySQL", 
+    description = "Manages bans via MySQL/MariaDB across servers", 
     version = "1.1.0", 
-    url = "https://github.com/Jackzmc/sourcemod-plugins"
+    url = "https://codeberg.org/jackzmc/SrcPanel"
 };
 
 static DatabaseManager g_db;
