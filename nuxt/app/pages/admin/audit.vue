@@ -192,11 +192,18 @@ useHead({
   title: "Audit Logs",
 });
 
-const toast = useToast();
 /// How often to check for new entries
 const REFRESH_INTERVAL = 1000 * 60 * 5;
 /// Maximum amount to keep in buffer, entries in opposite direction removed
 const MAX_ENTRIES_IN_BUFFER = 50;
+
+const isClient = import.meta.client;
+
+const { requireAuth } = useAuth()
+await requireAuth()
+const toast = useToast();
+const route = useRoute();
+const router = useRouter();
 
 const TYPES: SelectItem[] = Object.entries(TYPE_MAP).map(([id, data]) => {
   id = id.toLocaleLowerCase();
@@ -206,11 +213,6 @@ const TYPES: SelectItem[] = Object.entries(TYPE_MAP).map(([id, data]) => {
     value: id,
   };
 });
-
-const isClient = import.meta.client;
-
-const route = useRoute();
-const router = useRouter();
 
 const { data, refresh: refreshMetaData } = await useFetch<APILogData>("/api/logs/data", { key: "logs-data", timeout: 0 });
 
