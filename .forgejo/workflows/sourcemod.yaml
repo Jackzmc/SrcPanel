@@ -3,6 +3,7 @@ on:
   push:
     paths:
       - 'sourcemod/**'
+      - .forgejo/workflows/sourcemod.yaml
     tags:
       - 'v*'
     branches:
