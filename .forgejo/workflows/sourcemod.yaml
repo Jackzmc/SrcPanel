@@ -14,7 +14,7 @@ jobs:
     runs-on: debian-latest
     strategy:
       matrix:
-        sm-version: [ '1.11.x', '1.12.x', '1.13.x']
+        sm-version: [ '1.12.x', '1.13.x']
     name: Sourcemod v${{ matrix.sm-version }}
     steps:
       - name: Checkout
@@ -27,6 +27,7 @@ jobs:
       - name: Build Plugins
         env:
           SPCOMP_PATH: spcomp
+          SPCOMP_FAIL_ON_ERROR: 1
         working-directory: sourcemod
         run: chmod +x compile_all.sh && ./compile_all.sh
       - name: Upload artifacts
