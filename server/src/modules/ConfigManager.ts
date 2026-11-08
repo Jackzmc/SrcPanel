@@ -4,6 +4,8 @@ import yaml from 'yaml'
 import { readFile } from 'fs/promises';
 import type { PanelConfig } from '@srcpanel/common/Panel';
 import Logger from '#/util/logger.js'
+import Type from 'typebox';
+import Schema from 'typebox/schema';
 const log = Logger.child({ name: "config" })
 
 export interface RegisteredProvider {
@@ -16,6 +18,37 @@ export class ParseError extends Error {
     super(`Parse failed on ${field}: ${message}`)
   }
 }
+
+export const ConfigProvidersSchema = Type.Object({
+  name: Type.String(),
+  client_id: Type.String(),
+  client_secret: Type.String(),
+  token_url: Type.String(),
+  revoke_url: Type.String(),
+  user_url: Type.String(),
+  authorize_url: Type.String(),
+  avatar_url_format: Type.String()
+})
+
+export const ConfigSchema = Type.Object({ 
+  general: Type.Object({
+    listen: Type.Object({
+      host: Type.String({ default: '0.0.0.0' }),
+      port: Type.Integer({ exclusiveMinimum: 0, exclusiveMaximum: 65535, default: 8081 })
+    }),
+    public_url: Type.String({ format: "url" })
+  }),
+  links: Type.Optional(Type.Record(Type.String(), Type.String())),
+  /** Link to github.com/jackzmc/l4d2-stats-plugin website, without /api prefix.  */
+  stats_url: Type.Optional(Type.String({ format: "url" })),
+  notice: Type.Optional(Type.Object({
+    enabled: Type.Boolean(),
+    text: Type.String(),
+    class: Type.Optional(Type.String())
+  })),
+  providers: Type.Optional(Type.Record(Type.String(), ConfigProvidersSchema))
+})
+
 
 export default class ConfigManager {
   #filepath: string
@@ -35,55 +68,24 @@ export default class ConfigManager {
 
   static async #ParseFile(filepath: string): Promise<PanelConfig> {
     const contents = await readFile(filepath, 'utf-8')
-    const raw = yaml.parse(contents)
-
-    if (!raw.general.public_url) {
-      throw new ParseError("public_url", "required field missing")
-    }
-    let listenPort: number | null = null
-    if (raw.general.listen && raw.general.listen.port) {
-      const port = parseInt(raw.general.listen.port)
-      if (isNaN(port)) throw new ParseError("general.listen.port", "Invalid port number")
-      listenPort = port
-    }
-    if (!raw.general.public_url) throw new ParseError("general.public_url", "required field missing")
-    if (!raw.general.public_url.startsWith("http")) throw new ParseError("general.public_url", "public url must include protocol")
-
-    const providers: Record<string, PanelConfigProvider> = {}
-    if (raw.providers) {
-      const requiredFields = ["client_id", "client_secret", "token_url", "revoke_url", "user_url", "authorize_url", "avatar_url_format"]
-      for (const [key, data] of Object.entries<any>(raw.providers)) {
-        const provider: Partial<PanelConfigProvider> = {
-          name: data.name,
-        }
-        for (const field of requiredFields) {
-          if (!data[field]) throw new ParseError(`providers.${key}.${field}`, "required field missing")
-          if (typeof data[field] !== "string") throw new ParseError(`providers.${key}.${field}`, "field must be type string")
-          provider[field] = data[field]
-        }
-
-        providers[key] = provider as PanelConfigProvider
-      }
-    }
+    const parsed = Schema.Parse(ConfigSchema, contents)
 
     const out: PanelConfig = {
       general: {
-        listen: raw.general.listen && {
-          host: raw.general.listen.host,
-          port: listenPort
+        listen: parsed.general.listen && {
+          host: parsed.general.listen.host ?? '0.0.0.0',
+          port: parsed.general.listen.port ?? 8081
         },
-        public_url: raw.general.public_url
+        public_url: parsed.general.public_url
       },
-      discord: {
-        link: raw.discord?.link
+      links: parsed.links ?? {},
+      stats_url: parsed.stats_url,
+      notice: parsed.notice && {
+        enabled: parsed.notice.enabled,
+        text: parsed.notice.text,
+        class: parsed.notice.class ?? ""
       },
-      stats_url: raw.stats_url,
-      notice: raw.notice && {
-        enabled: Boolean(raw.notice.enabled),
-        text: raw.notice.text,
-        class: raw.notice.class ?? ""
-      } || { enabled: false, text: "", class: "" },
-      providers
+      providers: parsed.providers ?? {}
     }
     return out
   }

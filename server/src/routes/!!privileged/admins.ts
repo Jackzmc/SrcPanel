@@ -48,19 +48,10 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     }
   })
 
-  fastify.get('/discord', async (req, reply) => {
-    const inviteUrl = fastify.config.Config.discord?.link
+  fastify.get('/links/:linkId', async (req: FastifyRequest<{ Params: { linkId: string }}>, reply) => {
+    const inviteUrl = fastify.config.Config.links[req.params.linkId]
     if (!inviteUrl) {
-      reply.status(404).send("No discord invite link was set, sorry.")
-    } else {
-      reply.redirect(inviteUrl, 301)
-    }
-  })
-
-  fastify.get('/fluxer', async (req, reply) => {
-    const inviteUrl = fastify.config.Config.fluxer?.link
-    if (!inviteUrl) {
-      reply.status(404).send("No fluxer invite link was set, sorry.")
+      reply.status(404).send("No link has been set")
     } else {
       reply.redirect(inviteUrl, 301)
     }

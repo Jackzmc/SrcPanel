@@ -1,16 +1,14 @@
 export interface PanelConfig {
   general: PanelConfigGeneral,
 
-  discord?: {
-    link: string
-  },
+  links: {
+    steamGroup?: string,
+    discord?: string,
+    fluxer?: string,
+    [key: string]: string | undefined
+  }
 
-  fluxer?: {
-    link: string
-  },
-
-
-  stats_url: string,
+  stats_url?: string,
 
   notice?: PanelConfigNotice
   providers: Record<string, PanelConfigProvider>
@@ -41,7 +39,7 @@ export interface PanelConfigProvider {
 export interface PublicConfigMeta {
   notice?: PanelConfigNotice,
   domain: string,
-  stats_url: string
+  stats_url?: string
 }
 
 export interface HealthReport {

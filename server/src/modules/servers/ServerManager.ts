@@ -20,6 +20,7 @@ import { loadGroups } from './groups/index.js';
 import Logger from '#/util/logger.js'
 import { METRIC_SERVERS_LIVE_AUTH_COUNT } from '../../modules/metrics/prometheus.js';
 import User from '../users/User.js';
+import Type, { OmitAction } from 'typebox';
 const log = Logger.child({ name: "ServerManager" })
 const liveLog = log.child({ name: "ServerManager/Live" })
 
@@ -46,6 +47,16 @@ export interface ConfigDynamicGroupData extends BaseConfigGroupData {
 }
 export type ConfigGroupData = ConfigStandaloneGroupData | ConfigDynamicGroupData
 
+
+export const ServerActionsConfigSchema = Type.Object({ 
+  name: Type.String(),
+  command: Type.String(),
+  isHidden: Type.Boolean({ defalt: false }),
+  showWhen: Type.Enum(["offline", "online", "any"], { default: "any" }),
+  color: Type.Optional(Type.String()),
+  requiresFeatures: Type.Array(Type.String(), { default: [] }),
+  inQuickAction: Type.Boolean({ default: false })
+})
 
 export default class ServerManager {
   // private servers: Record<string, Server> = {}
