@@ -55,7 +55,7 @@
           </UCard>
         </template>
         <UAlert v-if="error" color="error" title="Error fetching logs" :description="error?.message" class="mb-4" />
-        <UCard v-if="!logData" class="bg-light-blue">
+        <UCard v-else-if="!logData" class="bg-light-blue">
           <div class="m-6 p-6 text-center">
             <h3 class="text-xl font-bold">
               <Icon name="i-lucide-loader-circle" class="animate-spin align-middle mb-1" />
@@ -164,15 +164,16 @@
           </div>
         </UCard>
         <div class="text-sm mx-2 mt-1 text-center space-y-1">
-          <p>Took <b>{{ logData ? logData.timeTaken.toLocaleString() + ' ms' : fetchTimeElapsed }}</b> to fetch</p>
-          <p>
+          <p v-if="logData && status == 'success'">Took <b>{{ logData ? logData.timeTaken.toLocaleString() + ' ms' : fetchTimeElapsed }}</b> to fetch</p>
+          <p v-else-if="status == 'pending'">Took <b>{{ fetchTimeElapsed }}</b> to fetch</p>
+          <p v-if="status != 'error'">
             <b v-if="logData">{{ logData?.yearInfo?.count?.toLocaleString() }}</b>
-            <Icon v-else name="i-lucide-loader-circle" class="animate-spin align-middle mb-1" size="xs" />
+            <Icon v-else-if="status == 'pending'" name="i-lucide-loader-circle" class="animate-spin align-middle mb-1" size="xs" />
             entries this year,
           </p>
           <p>
             <b v-if="data">{{ data?.computedTotal?.toLocaleString() }}</b>
-            <Icon v-else name="i-lucide-loader-circle" class="animate-spin align-middle mb-1" size="xs" />
+            <Icon v-else-if="status == 'pending'" name="i-lucide-loader-circle" class="animate-spin align-middle mb-1" size="xs" />
             entries total
           </p>
         </div>
