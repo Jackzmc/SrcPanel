@@ -34,7 +34,9 @@ export async function fetchLogs(db: DBClient, type: "before" | "after" | "around
         .leftJoin(`view_${TABLE_PREFIX}_user`, "account_id", "=", "SUBSTRING(client, 11)", "s1", true)
         .leftJoin(`view_${TABLE_PREFIX}_user`, "account_id", "=", "SUBSTRING(target, 11)", "s2", true)
         .limit(limit)
-        .sort('id', SortDirection.Descending)
+        // FIXME: This is a fix for a mariadb engine bug on 12.3.3. Is fixed on 12.3.4
+        // The bug causes the number of rows returned to be wrong in DESC
+        .sort('id+0', SortDirection.Descending)
 
     if(options.year) {
         query
