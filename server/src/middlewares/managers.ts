@@ -34,7 +34,7 @@ async function db(fastify: FastifyInstance, options: CoreModules) {
   fastify.decorate('data', options.modules.dataManager)
   fastify.decorate('logs', options.modules.logsManager)
 
-  fastify.addHook('onRequest', async (req, reply) => {
+  fastify.addHook('preHandler', async (req, reply) => {
     if (req.session?.user) {
       if (req.session.version !== SESSION_VERSION) {
         await req.session.destroy()

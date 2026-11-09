@@ -877,6 +877,8 @@ export default class AuthManager {
         req.session.lastActive = Math.round(Date.now() / 1000)
         req.session.version = SESSION_VERSION
 
+        await req.session.save()
+
         // reply.setCookie('panel-sessdata', JSON.stringify({
         //     steamid: steamInfo.steamid,
         //     name: steamInfo.name,

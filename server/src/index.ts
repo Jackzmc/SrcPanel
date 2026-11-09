@@ -205,6 +205,7 @@ await app.register(MiddleManager, core)
 
     await app.register(fastifyRateLimit, {
       global: true,
+      hook: 'preHandler',
       max: (req, ctx) => req.user ? 50 : 14,
       timeWindow: '1 second',
       keyGenerator: (request) => {
@@ -236,7 +237,7 @@ await app.register(MiddleManager, core)
           }
         }, 
         /* @ts-expect-error this works okay, breaks in fastify-session@11.1.6 */ 
-        app.db
+        await app.db.getConnection()
       ),
       saveUninitialized: false
     })

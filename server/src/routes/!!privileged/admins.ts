@@ -192,6 +192,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         profileurl: userDetails ? `https://avatars.steamstatic.com/${userDetails.avatarHash}_full.jpg` : undefined,
       }
       req.session.permissions = user.permissions
+      await req.session.save()
       return {
         user: req.session.user,
         permissions: req.session.permissions
@@ -200,6 +201,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
       req.session.user = req.session.impersonate!.original.user
       req.session.permissions = req.session.impersonate!.original.permissions
       delete req.session.impersonate
+      await req.session.save()
       return {
         user: req.session.user,
         permissions: req.session.permissions
