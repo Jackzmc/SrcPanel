@@ -217,10 +217,10 @@ await app.register(MiddleManager, core)
       errorResponseBuilder: (request, context) => new ErrorWithCode("RATE_LIMIT", `Rate limit exceeded, retry in ${context.after}`)
     })
 
-    app.register(FastifyCookie, {
+    await app.register(FastifyCookie, {
       secret: process.env.SESSION_SECRET as string,
     })
-    app.register(FastifySession, {
+    await app.register(FastifySession, {
       secret: process.env.SESSION_SECRET as string,
       cookieName: 'srcpanel_session',
       cookie: {
