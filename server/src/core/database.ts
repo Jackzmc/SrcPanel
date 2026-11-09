@@ -14,6 +14,7 @@ export type DBClient = Pool | Connection
 
 export async function loadDB() {
   const db = mysql.createPool({
+      uri: process.env.DB_URI,
       socketPath: process.env.MYSQL_SOCKET_PATH,
       host: process.env.MYSQL_HOST,
       database: MAIN_DB,
@@ -22,12 +23,13 @@ export async function loadDB() {
       namedPlaceholders: true
   })
   const admindb = mysql.createPool({
-        socketPath: process.env.MYSQL_ADMINS_SOCKET_PATH || process.env.MYSQL_SOCKET_PATH,
-        host: process.env.MYSQL_ADMINS_HOST || process.env.MYSQL_HOST,
-        database: ADMINS_DB,
-        user: process.env.MYSQL_ADMINS_USER || process.env.MYSQL_USER,
-        password: process.env.MYSQL_ADMINS_PASSWORD || process.env.MYSQL_PASSWORD,
-        namedPlaceholders: true
+      uri: process.env.DB_URI,
+      socketPath: process.env.MYSQL_ADMINS_SOCKET_PATH || process.env.MYSQL_SOCKET_PATH,
+      host: process.env.MYSQL_ADMINS_HOST || process.env.MYSQL_HOST,
+      database: ADMINS_DB,
+      user: process.env.MYSQL_ADMINS_USER || process.env.MYSQL_USER,
+      password: process.env.MYSQL_ADMINS_PASSWORD || process.env.MYSQL_PASSWORD,
+      namedPlaceholders: true
   })
   return { db, admindb }
 }

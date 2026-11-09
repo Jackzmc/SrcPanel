@@ -4,13 +4,14 @@
     <UContainer class="fluid grid grid-cols-1 sm:grid-cols-4 gap-4">
       <div class="col-span-3">
         <!-- TODO: check periodically for entries -->
-        <!-- <pre>{{ JSON.stringify({
+        <pre>{{ JSON.stringify({
             dataRange,
             dataSource,
             currentSource,
             order,
-            id
-          }, null, 2) }}</pre> -->
+            id,
+            numLoaded: logData?.logs.length
+          }, null, 2) }}</pre>
         <!-- Top Loading -->
         <ClientOnly>
           <UAlert v-if="metaError" color="error" title="Could not resolve essential metadata" :description="metaError?.message" class="mb-4" />

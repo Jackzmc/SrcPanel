@@ -100,6 +100,7 @@ export default class LogsManager {
         const partitions = await Repo.getPartitionData(this.#pool)
         this.#log.debug({ duration_ms: performance.now() - startTime }, "getPartitions")
         for (const row of partitions) {
+            this.#log.debug({ row }, "row")
             this.#yearData.set(row.year, {
                 ...row,
                 fetchTime: Date.now()
