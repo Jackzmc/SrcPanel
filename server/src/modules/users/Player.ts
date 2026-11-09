@@ -50,7 +50,7 @@ export default class PanelPlayer {
                         WHERE SUBSTRING(\`${ADMINS_DB}\`.sm_admins.identity,11) = SUBSTRING(client, 11)
                         LIMIT 1
                     ) as isAdmin
-                FROM FROM view_${TABLE_PREFIX}_users u
+                FROM view_${TABLE_PREFIX}_user u
                 WHERE account_id = SUBSTRING(?, 11) 
                 LIMIT 1`,
                 [this.steamid2]

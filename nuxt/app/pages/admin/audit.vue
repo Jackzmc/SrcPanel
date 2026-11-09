@@ -219,7 +219,7 @@ const TYPES: SelectItem[] = Object.entries(TYPE_MAP).map(([id, data]) => {
   };
 });
 
-const { data, refresh: refreshMetaData, error: metaError } = await useFetch<APILogData>("/api/logs/data", { key: "logs-data", timeout: 1000 * 60 });
+const { data, refresh: refreshMetaData, error: metaError } = await useFetch<APILogData>("/api/logs/data", { key: "logs-data", timeout: 1000 * 60 * 2 });
 
 const query = computed(() => {
   const params = new URLSearchParams();
@@ -322,7 +322,7 @@ const { data: logData, refresh, status, error } = useLazyAsyncData<APILogQueryRe
 
     return newLogs;
   },
-  { server: false, timeout: 90_000, watch: undefined, immediate: false },
+  { server: false, timeout: 1000 * 60 * 4, watch: undefined, immediate: false },
 );
 
 const newEntriesCount = computed(() => {
@@ -418,6 +418,7 @@ watch([limit, dataSource, selectedTypes, selectedSources, searchClient, searchTa
 // const { data: logData, refresh, status, error } = useFetch<APILogQueryResult>(() => `/api/logs/after/${id.value}?${query.value.toString()}`, { lazy: true, immediate: false })
 
 function findNearby(jumpId: number) {
+  if(isNaN(jumpId)) throw new Error("Jump Id is not a valid number")
   order.value = "around";
   id.value = jumpId;
   refresh();
@@ -432,7 +433,9 @@ async function fetchDirection(dir: "top" | "bottom") {
 
   console.debug("fetchDirection", dir);
   loadingSide.value = dir;
-  id.value = (dir === "top") ? dataRange.value.highest : dataRange.value.lowest;
+  const newId = (dir === "top") ? dataRange.value.highest : dataRange.value.lowest;
+  if(isNaN(newId)) throw new Error("Invalid new id number")
+  id.value = newId
   order.value = (dir == "top") ? "after" : "before";
   console.log("t", id.value);
   refresh();
