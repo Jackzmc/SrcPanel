@@ -39,7 +39,7 @@ describe("logs", () => {
         // 'after' fetches all *after* given id, so we expect one less than sortedIds
         // fetchLogs also fetches logs in descending order
 
-        const [logs] = await manager.fetchLogs("after", sortedIds[0])
+        const {logs} = await manager.fetchLogs("after", sortedIds[0])
         t.assert.equal(logs.length, sortedIds.length - 1, "expected number of fetched logs")
 
         t.assert.deepEqual(sortedIds.slice(1).reverse(), logs.map(log => log.id), "expected order")
@@ -55,7 +55,7 @@ describe("logs", () => {
         // 'before' fetches all *before* or equal to given id, so we expect same length
         // fetchLogs also fetches logs in descending order
 
-        const [logs] = await manager.fetchLogs("before", sortedIds[sortedIds.length - 1])
+        const {logs} = await manager.fetchLogs("before", sortedIds[sortedIds.length - 1])
         t.assert.equal(logs.length, sortedIds.length, "expected number of fetched logs")
 
         t.assert.deepEqual(sortedIds.reverse(), logs.map(log => log.id), "expected order")
@@ -68,7 +68,7 @@ describe("logs", () => {
         const sortedIds = (await Promise.all(promises))
             .sort((a,b) => a - b)
 
-        const [logs] = await manager.fetchLogs("around", sortedIds[Math.floor(sortedIds.length / 2)])
+        const {logs} = await manager.fetchLogs("around", sortedIds[Math.floor(sortedIds.length / 2)])
         t.assert.equal(logs.length, sortedIds.length, "expected number of fetched logs")
 
         t.assert.deepEqual(sortedIds.reverse(), logs.map(log => log.id), "expected order")
@@ -78,7 +78,7 @@ describe("logs", () => {
         await Repo.addLogEntry(DB, "ACTION", "test", null, null, "message_1")
         await Repo.addLogEntry(DB, "ACTION", "test", null, null, "message_2")
 
-        const [logs] = await manager.fetchLogsAfter(null, { searchMessage: 'message_2' })
+        const {logs} = await manager.fetchLogsAfter(null, { searchMessage: 'message_2' })
 
         t.assert.equal(logs.length, 1, "found one log")
         t.assert.equal(logs[0].message, "message_2")
@@ -88,7 +88,7 @@ describe("logs", () => {
         await Repo.addLogEntry(DB, "ACTION", "test", "client_1", null, "message_1")
         await Repo.addLogEntry(DB, "ACTION", "test", "client_2", null, "message_2")
 
-        const [logs] = await manager.fetchLogsAfter(null, { searchClient: 'client_1' })
+        const {logs} = await manager.fetchLogsAfter(null, { searchClient: 'client_1' })
 
         t.assert.equal(logs.length, 1, "found one log")
         t.assert.equal(logs[0].client, "client_1")
@@ -98,7 +98,7 @@ describe("logs", () => {
         await Repo.addLogEntry(DB, "ACTION", "test", null, "target_1", "message_1")
         await Repo.addLogEntry(DB, "ACTION", "test", null, "target_2", "message_2")
 
-        const [logs] = await manager.fetchLogsAfter(null, { searchTarget: 'target_2' })
+        const {logs} = await manager.fetchLogsAfter(null, { searchTarget: 'target_2' })
 
         t.assert.equal(logs.length, 1, "found one log")
         t.assert.equal(logs[0].target, "target_2")
@@ -108,7 +108,7 @@ describe("logs", () => {
         await Repo.addLogEntry(DB, "ACTION", "server_1", null, "target_1", "message_1")
         await Repo.addLogEntry(DB, "ACTION", "server_2", null, "target_2", "message_2")
 
-        const [logs] = await manager.fetchLogsAfter(null, { servers: ["server_1"] })
+        const {logs} = await manager.fetchLogsAfter(null, { servers: ["server_1"] })
 
         t.assert.equal(logs.length, 1, "found one log")
         t.assert.equal(logs[0].server, "server_1")

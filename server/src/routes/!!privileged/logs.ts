@@ -23,12 +23,14 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     '/:type/:id', 
     { schema: { querystring: FetchLogsQuerySchema, params: FetchLogsParamsSchema }},
     async (req: FastifyRequest<{ Querystring: APIFetchLogsQuery, Params: APIFetchLogsParams }>, reply): Promise<APILogQueryResult> => {
-      if (!fastify.logs.loaded) return reply.status(503).send({
-        error: "NOT_READY",
-        message: "Logs have not been loaded yet, please try again later"
-      })
+      if (!fastify.logs.loaded) return reply.status(503)
+        .header('retry-after', 15)
+        .send({
+          error: "NOT_READY",
+          message: "Logs have not been loaded yet, please try again later",
+        })
       const startTime = performance.now()
-      const [logs, yearInfo] = await fastify.logs.fetchLogs(req.params.type, req.params.id, {
+      const { logs, yearInfo, totalFilteredRows } = await fastify.logs.fetchLogs(req.params.type, req.params.id, {
         year: req.query.year,
         types: req.query.types ? req.query.types.split(",") : undefined,
         servers: req.query.servers ? req.query.servers.split(",") : undefined,
@@ -41,7 +43,9 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         yearInfo,
         timeTaken: performance.now() - startTime,
         counts: {
-          queryRows: logs.length
+          totalAbsoluteRows: fastify.logs.totalRows,
+          currentFilteredRows: logs.length,
+          totalFilteredRows
         },
         logs,
       }

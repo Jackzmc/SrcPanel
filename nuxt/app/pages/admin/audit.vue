@@ -10,7 +10,8 @@
             currentSource,
             order,
             id,
-            numLoaded: logData?.logs.length
+            numLoaded: logData?.logs.length,
+            newEntriesCount
           }, null, 2) }}</pre>
         <!-- Top Loading -->
         <ClientOnly>
@@ -98,7 +99,7 @@
         <UCard>
           <div class="space-y-2">
             <h3 class="text-lg py-2">
-              {{ logData?.counts.queryRows }} / <span class="font-bold">{{ (logData?.yearInfo?.count || 0).toLocaleString() }} entries</span>
+              {{ logData?.counts.currentFilteredRows }} / <span class="font-bold">{{ ( logData?.counts.totalFilteredRows || 0).toLocaleString() }} entries</span>
             </h3>
             <UFormField label="Search Client" :ui="{ label: 'font-semibold' }">
               <UInputMenu
@@ -207,6 +208,7 @@ await requireAuth()
 const toast = useToast();
 const route = useRoute();
 const router = useRouter();
+const api = useApi();
 
 const TYPES: SelectItem[] = Object.entries(TYPE_MAP).map(([id, data]) => {
   id = id.toLocaleLowerCase();
@@ -285,7 +287,17 @@ const fetchTimeElapsed = computed(() => {
 const now = ref<number>(Date.now());
 const startLoadingTime = ref<number | undefined>();
 
-const api = useApi();
+
+const { data: newEntriesData, refresh: refreshNewEntries } = useLazyAsyncData<APILogQueryResult>(
+  () => `logs-after`,
+  async () => {
+    const queryUrl = `/logs/after/${dataRange.value.highest}/${query.value.toString()}`;
+    const newLogs: APILogQueryResult = await api(queryUrl);
+
+    return newLogs
+  },
+  { server: false, timeout: 60_000, watch: undefined, immediate: false },
+)
 
 const { data: logData, refresh, status, error } = useLazyAsyncData<APILogQueryResult>(
   () => `/logs/${order.value}/${id.value}?${query.value.toString()}`,
@@ -312,6 +324,11 @@ const { data: logData, refresh, status, error } = useLazyAsyncData<APILogQueryRe
   },
   { server: false, timeout: 90_000, watch: undefined, immediate: false },
 );
+
+const newEntriesCount = computed(() => {
+  if(!newEntriesData.value || !logData.value) return 0
+  newEntriesData.value.counts.totalFilteredRows - logData.value.counts.totalFilteredRows
+})
 
 const logEntryIds = computed(() => {
   return new Set(
@@ -422,14 +439,16 @@ async function fetchDirection(dir: "top" | "bottom") {
 }
 
 onMounted(() => {
-  // update now.value every second, so it updates fetchTimeElapsed properly
+  // update now.value every 1/10 second, so it updates fetchTimeElapsed properly
   setInterval(() => now.value = Date.now(), 100);
   setInterval(() => {
     console.info("refreshing metadata");
     console.debug("prev range:", dataRange.value);
     refreshMetaData();
+    refreshNewEntries()
   }, REFRESH_INTERVAL);
 
   refresh()
+  // refreshNewEntries()
 });
 </script>

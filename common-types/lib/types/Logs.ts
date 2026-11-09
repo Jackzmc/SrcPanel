@@ -32,8 +32,11 @@ export interface APILogQueryResult {
 
   counts: {
     /** The number of rows in query results */
-    queryRows: number,
-    /** The total number of rows to query in specific year */
+    currentFilteredRows: number,
+    /** The total number of rows that can be queried with iven filters */
+    totalFilteredRows: number,
+    /** Absolute total number of rows in table */
+    totalAbsoluteRows: number
   }
   /** Only avaible in development */
   raw?: any

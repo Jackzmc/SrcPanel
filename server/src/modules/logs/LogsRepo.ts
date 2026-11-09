@@ -22,9 +22,9 @@ export interface FetchLogOptions {
  * @param type either 'before', 'after', or 'around'
  * @param id the id to use for direction
  * @param options other options such as limit and filters
- * @returns an array of log entries
+ * @returns [ an array of log entries, total filtered rows ]
  */
-export async function fetchLogs(db: DBClient, type: "before" | "after" | "around", id: number, options: FetchLogOptions = {}): Promise<LogEntry[]> {
+export async function fetchLogs(db: DBClient, type: "before" | "after" | "around", id: number, options: FetchLogOptions = {}): Promise<[ LogEntry[], number ]> {
     const limit = options.limit ?? 30
 
     const query = QueryBuilder.startSelect(ACTIVITY_LOG_TABLE_NAME, "l")
@@ -48,7 +48,7 @@ export async function fetchLogs(db: DBClient, type: "before" | "after" | "around
     if (type === 'before') query.whereRaw("id+0", '<=', id)
     else if (type === 'after') query.whereRaw("id+0", '>', id)
     else if (type === 'around') {
-    const half = Math.ceil(limit / 2)
+        const half = Math.ceil(limit / 2)
         query
             .whereRaw("id+0", '>', id - half)
             .whereRaw("id+0", '<=', id + half)
@@ -60,9 +60,9 @@ export async function fetchLogs(db: DBClient, type: "before" | "after" | "around
     if (options.servers) query.whereIn('server', options.servers)
     if (options.types) query.whereIn('type', options.types)
 
-    const [rawLogs] = await query.execute(db)
+    const [ [ rawLogs ], totalFilteredRows ] = await Promise.all([ query.execute(db), query.executeCount(db) ])
     const logs = rawLogs.map(formatLogEntry)
-    return logs
+    return [ logs, totalFilteredRows ]
 }
 
 /**

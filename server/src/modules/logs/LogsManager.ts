@@ -15,6 +15,12 @@ interface PartitionDataCache extends Repo.PartitionData {
   fetchTime: number
 }
 
+export interface GetLogsResult {
+    logs: LogEntry[],
+    totalFilteredRows: number,
+    yearInfo: YearInfo
+}
+
 export default class LogsManager {
     #pool: Pool
     #log: PinoLogger
@@ -58,6 +64,7 @@ export default class LogsManager {
         return Object.fromEntries(this.#yearData.entries());
     }
 
+    /** The absolute total nubmer of rows in table */
     get totalRows(): number {
         return Object.values(this.yearData)
             .reduce((pv, cv) => (cv.count ?? 0) + pv, 0)
@@ -172,8 +179,8 @@ export default class LogsManager {
      * @param options other options such as limit and filters
      * @returns a tuple of [an array of log entries, the info about the specific year's data range]
      */
-    async fetchLogs(type: "before" | "after" | "around", id: number, options: Repo.FetchLogOptions = {}): Promise<[LogEntry[], YearInfo]>  {
-        const logs = await Repo.fetchLogs(this.#pool, type, id, options)
+    async fetchLogs(type: "before" | "after" | "around", id: number, options: Repo.FetchLogOptions = {}): Promise<GetLogsResult>  {
+        const [ logs, totalFilteredRows ] = await Repo.fetchLogs(this.#pool, type, id, options)
 
         // Update cached data incase we get new logs
         if (!options.year) options.year = this.currentYear
@@ -184,7 +191,11 @@ export default class LogsManager {
         })
         this.#yearData.set(options.year, yearInfo)
             
-        return [logs, yearInfo]
+        return {
+            logs, 
+            yearInfo, 
+            totalFilteredRows
+        }
     }
 
     /**
@@ -193,7 +204,7 @@ export default class LogsManager {
      * @param options other options such as limit and filters
      * @returns a tuple of [an array of log entries, the info about the specific year's data range]
      */
-    async fetchLogsAfter(id?: number | null, options: Repo.FetchLogOptions = {}): Promise<[LogEntry[], YearInfo]> {
+    async fetchLogsAfter(id?: number | null, options: Repo.FetchLogOptions = {}): Promise<GetLogsResult> {
         if(!id) {
             const year = await this.getYearData(this.currentYear)
             if(!year) throw new Error("missing year data")

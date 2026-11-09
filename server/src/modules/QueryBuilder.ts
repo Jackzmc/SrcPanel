@@ -333,20 +333,34 @@ export class QueryBuilder {
     }
 
     /**
+     * Builds a query that gets the number of rows with given filters
+     * You may want to call <see>executeCount()</see> instead
+     * @returns [ query, data[] ]
+     */
+    buildCount(): [ string, any[] ] {
+        this.#data = []
+        const tablePrefix = this.#tableAlias ? `AS ${this.#tableAlias}` : ''
+        const partitionString = this.#partition ? `PARTITION (${this.#partition})` : ''
+        return [
+            `SELECT COUNT(*) count FROM ${escapeId(this.#tableName)} ${partitionString} ${tablePrefix} ${this.#buildJoins()} ${this.#buildWhere()} ${this.#buildSort()}`,
+            this.#data
+        ]
+    }
+
+    /**
      * Builds the query by manually replacing placeholders with their value.
      * Values are NOT escaped.
      * DO NOT USE. It for viewing what the query should maybe be
      * @returns raw query
      */
     buildUnsafe() {
-        let [query] = this.build()
-        for(let data of this.#data) {
+        let [query, dataList] = this.build()
+        for(let data of dataList) {
             if(typeof data === "string") {
                 data = `'${data}'`
             }
             query = query.replace(/\?/, data)
         }
-        this.#data = []
         return query
     }
 
@@ -358,6 +372,14 @@ export class QueryBuilder {
         return result
     }
 
+    async executeCount(pool: DBClient): Promise<number> {
+        const [query, data] = this.buildCount()
+        log.trace({ query, data }, "executing count query")
+        const [rows] = await pool.execute<RowDataPacket[]>(query, data)
+        this.#data = []
+        if(rows.length === 0) throw new Error("Count query returned no rows")
+        return Number(rows[0].count)
+    }
 }
 
 const ESCAPE_REGEX = new RegExp(/([^a-zA-Z_.0-9])/g)
