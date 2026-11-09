@@ -34,9 +34,7 @@ export async function fetchLogs(db: DBClient, type: "before" | "after" | "around
         .leftJoin(`view_${TABLE_PREFIX}_user`, "account_id", "=", "SUBSTRING(client, 11)", "s1", true)
         .leftJoin(`view_${TABLE_PREFIX}_user`, "account_id", "=", "SUBSTRING(target, 11)", "s2", true)
         .limit(limit)
-        // FIXME: This is a fix for a mariadb engine bug on 12.3.3. Is fixed on 12.3.4
-        // The bug causes the number of rows returned to be wrong in DESC
-        .sort('id+0', SortDirection.Descending)
+        .sort('id', SortDirection.Descending)
 
     if(options.year) {
         query
@@ -44,13 +42,16 @@ export async function fetchLogs(db: DBClient, type: "before" | "after" | "around
             .where("timestamp", "<", Math.floor(new Date(`${options.year + 1}-01-01T00:00:00`).getTime() / 1000))
     }
 
-    if (type === 'before') query.where("id", '<=', id)
-    else if (type === 'after') query.where("id", '>', id)
+    // FIXME: A mariadb bug (https://jira.mariadb.org/browse/MDEV-40479) causes DESC to give wrong
+    // number of rows with partitioned tables. Fixed in 12.3.4, but we stuck on 12.3.3
+    // As a hack, we use id+0 with a raw WHERE to fix it
+    if (type === 'before') query.whereRaw("id+0", '<=', id)
+    else if (type === 'after') query.whereRaw("id+0", '>', id)
     else if (type === 'around') {
     const half = Math.ceil(limit / 2)
         query
-            .where("id", '>', id - half)
-            .where("id", '<=', id + half)
+            .whereRaw("id+0", '>', id - half)
+            .whereRaw("id+0", '<=', id + half)
     }
 
     if (options.searchClient) query.where('client', '=', options.searchClient)

@@ -241,6 +241,20 @@ export class QueryBuilder {
         return this
     }
 
+
+    /**
+     * Adds a where condition
+     * @param column the column to check (is not checked!)
+     * @param condition the condition to use
+     * @param value value to compare to
+     * @returns 
+     */
+    whereRaw(column: string, condition: Condition, value: any) {
+        this.#whereConditions.push(`${column} ${condition} ?`)
+        this.#whereData.push(value)
+        return this
+    }
+
     whereIn(column: string, values: any[]) {
         this.#whereConditions.push(`${escapeId(column)} IN (${generateParams(values.length)})`)
         this.#whereData = [ ...this.#whereData, ...values ]

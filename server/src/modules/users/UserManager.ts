@@ -102,7 +102,7 @@ export default class UserManager {
         timestamp: user.last_name_update_time
       }
     }
-    log.trace({ steamid}, 'getUserDirect no cached user')
+    log.trace({ steamid }, 'getUserDirect no cached user')
     return null
   }
 
@@ -120,7 +120,6 @@ export default class UserManager {
       log.debug({ steamid }, 'getting steam user details')
       const users = await this.#steam.getUserDetails([steamid])
       if (users.length > 0) {
-        log.debug({ steamid, name: users[0].personaname }, 'resolved steam user')
         user = {
           accountId: steamid2.slice(10),
           name: users[0].personaname,

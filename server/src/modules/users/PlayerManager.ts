@@ -8,6 +8,10 @@ import PanelPlayer from "./Player.js";
 import LRU from 'quick-lru'
 import TaskManager from "../tasks/TaskManager.js";
 import CacheManager from "../CacheManager.js";
+import Logger from '#/util/logger.js'
+import { This } from "typebox";
+
+const log = Logger.child({ name: "PlayerManager" })
 
 const CACHE_TTL = 1000 * 60 * 5
 const CACHE_KEY = "resolve.names"
@@ -57,6 +61,8 @@ export default class PlayerManager implements IShutdown {
      * Processes names in the resolve queue
      */
     async resolveNames() {
+        if(this.#missingNameQueue.size == 0) return
+        log.info({ size: this.#missingNameQueue.size }, "resolving name queue")
         await UserManager.instance.fetchUsers([...this.#missingNameQueue.keys()])
     }
 
