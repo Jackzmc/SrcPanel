@@ -10,6 +10,8 @@ import PlayerManager from '../../modules/users/PlayerManager.js';
 const RECENT_DEFAULT_LIMIT = 25
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
+  GUARD_REQUIRE_PLAYER.register(fastify)
+
   fastify.get(
     '/recent/:server?', 
     async (
