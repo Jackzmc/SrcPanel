@@ -32,7 +32,7 @@ export default class PanelPlayer {
 
     get cachedEntry() { return this.#cachedEntry }
 
-    async getEntry(cached = true): Promise<PlayerEntry> {
+    async getEntry(cached = true): Promise<PlayerEntry | null> {
         if(!this.#cachedEntry || !cached) {
             const [rows] = await this.#db.execute<RowDataPacket[]>(
                 `SELECT
@@ -40,23 +40,23 @@ export default class PanelPlayer {
                     u.last_name as name, 
                     u.last_country as country, 
                     u.last_region as region,
-                    u.ip,
+                    u.last_ip as ip,
                     u.create_time as firstJoinDate, 
                     u.last_join_time as lastJoinDate,
-                    server,
-                    (SELECT COUNT(*) FROM notes WHERE notes.steamid = client) as notesCount,
-                    (SELECT COUNT(*) FROM bans WHERE bans.steamid = client) as bansCount,
+                    (SELECT COUNT(*) FROM notes WHERE SUBSTRING(notes.steamid, 11) = account_id) as notesCount,
+                    (SELECT COUNT(*) FROM bans WHERE SUBSTRING(bans.steamid, 11) = account_id) as bansCount,
                     (SELECT COUNT(*) FROM \`${ADMINS_DB}\`.sm_admins
-                        WHERE SUBSTRING(\`${ADMINS_DB}\`.sm_admins.identity,11) = SUBSTRING(client, 11)
+                        WHERE SUBSTRING(\`${ADMINS_DB}\`.sm_admins.identity,11) = account_id
                         LIMIT 1
                     ) as isAdmin
                 FROM view_${TABLE_PREFIX}_user u
                 WHERE account_id = SUBSTRING(?, 11) 
                 LIMIT 1`,
-                [this.steamid2]
+                [ this.steamid2 ]
             )
+            console.log(rows)
             // TODO: is this okay? we don't want to have to fetch an entry if its not actually used (but rather calling getBans)
-            if(rows.length === 0) throw new Error("No player found")
+            if(rows.length === 0) return null
             this.#cachedEntry = formatPlayer(this.steamid, rows[0])
             if(!this.#cachedEntry.name) PlayerManager.instance.enqueueNameResolve(this.steamid)
         }
