@@ -13,7 +13,8 @@
           }, null, 2) }}</pre> -->
         <!-- Top Loading -->
         <ClientOnly>
-          <template v-if="logData && logData.logs.length > 0 && newerEntries > 0">
+          <UAlert v-if="metaError" color="error" title="Could not resolve essential metadata" :description="metaError?.message" class="mb-4" />
+          <template v-else-if="logData && logData.logs.length > 0 && newerEntriesCount > 0">
             <UAlert v-if="loadingSide == 'top'" class="bg-light-blue text-black dark:text-white my-3 py-5 rounded-2xl">
               <template #description>
                 <h3 class="text-xl font-bold">
@@ -23,9 +24,9 @@
               </template>
             </UAlert>
             <a v-else class="cursor-pointer" @click="fetchDirection('top')">
-              <UAlert v-if="newerEntries > 0" class="bg-light-blue text-black dark:text-white my-3 py-5 rounded-2xl" icon="lucide:info">
+              <UAlert v-if="newerEntriesCount > 0" class="bg-light-blue text-black dark:text-white my-3 py-5 rounded-2xl" icon="lucide:info">
                 <template #description>
-                  <b>{{ newerEntries.toLocaleString() }}</b> new entries are available. Click here to load.
+                  <b>{{ newerEntriesCount.toLocaleString() }}</b> new entries are available. Click here to load.
                   <p class="text-xs text-muted">Please note the new entry detection currently ignores filters and may be inaccurate</p>
                 </template>
               </UAlert>
@@ -214,7 +215,7 @@ const TYPES: SelectItem[] = Object.entries(TYPE_MAP).map(([id, data]) => {
   };
 });
 
-const { data, refresh: refreshMetaData } = await useFetch<APILogData>("/api/logs/data", { key: "logs-data", timeout: 0 });
+const { data, refresh: refreshMetaData, error: metaError } = await useFetch<APILogData>("/api/logs/data", { key: "logs-data", timeout: 1000 * 60 });
 
 const query = computed(() => {
   const params = new URLSearchParams();
@@ -239,11 +240,12 @@ const currentSource = computed(() => {
    - or just pre-fetch?
    - or add a ?count-only query to not actually grab logs (complicated)
  */
-const newerEntries = computed(() => {
+const newerEntriesCount = computed(() => {
   if (!currentSource.value) return 0;
   return currentSource.value.maxId - dataRange.value.highest;
 });
 
+/** The id range of current loaded logs */
 const dataRange = computed(() => {
   if (!logData.value) return { lowest: 0, highest: 0 };
   let lowest = Infinity, highest = 0;
@@ -306,7 +308,7 @@ const { data: logData, refresh, status, error } = useLazyAsyncData<APILogQueryRe
 
     return newLogs;
   },
-  { server: false, timeout: 90_000, watch: undefined },
+  { server: false, timeout: 90_000, watch: undefined, immediate: false },
 );
 
 const logEntryIds = computed(() => {
@@ -426,7 +428,6 @@ onMounted(() => {
     refreshMetaData();
   }, REFRESH_INTERVAL);
 
-  // Check if loading from server initially and trigger
-  if (!data.value) refresh();
+  refresh()
 });
 </script>

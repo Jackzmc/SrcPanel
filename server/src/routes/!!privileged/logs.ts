@@ -30,8 +30,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
       const startTime = performance.now()
       const [logs, yearInfo] = await fastify.logs.fetchLogs(req.params.type, req.params.id, {
         year: req.query.year,
-        types: req.query.types,
-        servers: req.query.servers,
+        types: req.query.types ? req.query.types.split(",") : undefined,
+        servers: req.query.servers ? req.query.servers.split(",") : undefined,
         searchClient: req.query.search_client,
         searchTarget: req.query.search_target,
         searchMessage: req.query.search_message

@@ -1,8 +1,10 @@
 import { Type, type Static } from "typebox";
 
 export const FetchLogsQuerySchema = Type.Object({
-  servers: Type.Optional(Type.Array(Type.String())),
-  types: Type.Optional(Type.Array(Type.String())),
+  /** comma separated list */
+  servers: Type.Optional(Type.String()),
+  /** comma separated list */
+  types: Type.Optional(Type.String()),
   search_client: Type.Optional(Type.String()),
   search_target: Type.Optional(Type.String()),
   search_message: Type.Optional(Type.String()),
