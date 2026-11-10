@@ -39,11 +39,11 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
       const children = await fastify.steam.getCollectionChildren(req.params.publishedfileid)
       const item = {
         ...results[0],
-        consumer_app_title: results[0].consumer_app_id ? await fastify.steam.getAppName(results[0].consumer_app_id) : null,
+        consumer_app_title: results[0].consumer_app_id ? await fastify.steam.getAppName(results[0].consumer_app_id, req.signal) : null,
       }
 
       if (children) {
-        const childrenDetails = await fastify.steam.getItemDetails(children)
+        const childrenDetails = await fastify.steam.getItemDetails(children, req.signal)
         return {
           item,
           type: "collection",
@@ -119,8 +119,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         : undefined
       
       // Check if the item is a collection and either resolve the children or download them all
-      const children = await fastify.steam.getCollectionChildren(req.params.publishedfileid)
-      const details = await fastify.steam.getItemDetails([req.params.publishedfileid])
+      const children = await fastify.steam.getCollectionChildren(req.params.publishedfileid, req.signal)
+      const details = await fastify.steam.getItemDetails([req.params.publishedfileid], req.signal)
 
       if(details.length === 0) return reply.status(404).send({
         error: "ITEM_NOT_FOUND",
@@ -133,7 +133,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         // If a collection - download only children
         const selectedChildrenIds = req.query.children?.split(",")
         req.log.trace({}, "getting child details")
-        const childrenItems = (await fastify.steam.getItemDetails(children))
+        const childrenItems = (await fastify.steam.getItemDetails(children, req.signal))
           // Filter out unselected children addons
           .filter(child => !selectedChildrenIds || selectedChildrenIds.includes(child.publishedfileid))
           // Convert it to ChildWorkshopItem to keep track of collection its in

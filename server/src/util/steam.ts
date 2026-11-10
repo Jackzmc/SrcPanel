@@ -89,19 +89,20 @@ export default class SteamAPI {
         }
     }
 
-    async getAppName(id: number) {
+    async getAppName(id: number, signal?: AbortSignal) {
         if(!id) throw new Error("App id is null: " + id)
         let name = await this.#cache.get<string>(`steam.apptitles.${id}`)
         if(!name) {
             log.debug({ id }, "fetching app name from steam")
-            name = await this.#fetchAppName(id)            
+            name = await this.#fetchAppName(id, signal)            
         }
         return name
     }
 
-    async #fetchAppName(id: number) {
+    async #fetchAppName(id: number, signal?: AbortSignal) {
         const res = await fetch(`https://store.steampowered.com/api/appdetails?format=json&appids=${id}`, {
-            headers: { 'User-Agent': this.#userAgent }
+            headers: { 'User-Agent': this.#userAgent },
+            signal
         })
         if(res.ok) {
             const json = await res.json()
@@ -115,12 +116,13 @@ export default class SteamAPI {
         throw new SteamAPIError("unexpected response from steam", 500)
     }
 
-    async getUserDetails(steamids: (SteamID | string)[]): Promise<SteamUserDetails[]> {
+    async getUserDetails(steamids: (SteamID | string)[], signal?: AbortSignal): Promise<SteamUserDetails[]> {
         this.#checkKey()
         const ids = steamids.map(steamid => steamid instanceof SteamID ? steamid.getSteamID64() : steamid).slice(0, 100).join(",")
         log.debug(`GetPlayerSummaries ids=${ids}`)
         const res = await fetch(`https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v2/?key=${this.#apikey}&format=json&steamids=${ids}`, {
-            headers: { 'User-Agent': this.#userAgent }
+            headers: { 'User-Agent': this.#userAgent },
+            signal
         })
         await SteamAPIError.throwIfResponseError(res, { fn: "getUserDetails", ids })
 
@@ -135,14 +137,14 @@ export default class SteamAPI {
     }
 
     /** Get a single user's information */
-    async getUserDetail(steamid: SteamID|string): Promise<SteamUserDetails> {
-        const details = await this.getUserDetails([steamid])
+    async getUserDetail(steamid: SteamID|string, signal?: AbortSignal): Promise<SteamUserDetails> {
+        const details = await this.getUserDetails([steamid], signal)
         if(details.length === 0) throw new SteamAPIError("Invalid response returned, no users details given", 500, "")
         return details[0]
     }
 
     // Gets a collection's children items or null if is not a collection
-    async getCollectionChildren(fileid: string): Promise<string[]|null> {
+    async getCollectionChildren(fileid: string, signal?: AbortSignal): Promise<string[]|null> {
         log.trace("getCollectionChildren %s", fileid)
         const response = await fetch('https://api.steampowered.com/ISteamRemoteStorage/GetCollectionDetails/v1/', {
             method: 'POST',
@@ -150,7 +152,8 @@ export default class SteamAPI {
                 'Content-Type': 'application/x-www-form-urlencoded',
                 'User-Agent': this.#userAgent
             },
-            body: `collectioncount=1&publishedfileids[0]=${fileid}`
+            body: `collectioncount=1&publishedfileids[0]=${fileid}`,
+            signal
         })
         if(response.ok) {
             const json = await response.json() as any
@@ -163,7 +166,7 @@ export default class SteamAPI {
         return null
     }
 
-    async searchItems(query: string, appid: string): Promise<WorkshopItem[]> {
+    async searchItems(query: string, appid: string, signal?: AbortSignal): Promise<WorkshopItem[]> {
         this.#checkKey()
         const params = new URLSearchParams()
         params.append("appid", appid)
@@ -177,7 +180,8 @@ export default class SteamAPI {
                 'Content-Type': 'application/x-www-form-urlencoded',
                 'User-Agent': this.#userAgent
             },
-            body: `?${params.toString()}`
+            body: `?${params.toString()}`,
+            signal
         })
         await SteamAPIError.throwIfResponseError(response, { fn: "searchItems", appid, query })
 
@@ -190,7 +194,7 @@ export default class SteamAPI {
     }
 
 
-    async getItemDetails(fileids: string[]): Promise<WorkshopItem[]> {
+    async getItemDetails(fileids: string[], signal?: AbortSignal): Promise<WorkshopItem[]> {
         let details: WorkshopItem[] = []
         const params = new URLSearchParams()
         let index = 0
@@ -211,7 +215,8 @@ export default class SteamAPI {
                     'Content-Type': 'application/x-www-form-urlencoded',
                     'User-Agent': this.#userAgent
                 },
-                body: `itemcount=${index}&${params.toString()}`
+                body: `itemcount=${index}&${params.toString()}`,
+                signal
             })
 
             await SteamAPIError.throwIfResponseError(response, { fn: "getItemDetails", params })
@@ -289,14 +294,14 @@ export default class SteamAPI {
      * @param filenameTemplate How the file should be namedm variables: %ID%, %TITLE%. Default is %ID%.vpk
      * @returns Promise<number> - bytes written
      */
-    static downloadItem(item: WorkshopItem, destFolder: string, requestOptions?: any, filenameTemplate: string = "%ID%.vpk"): Promise<number> {
+    static downloadItem(item: WorkshopItem, destFolder: string, requestOptions?: https.RequestOptions, filenameTemplate: string = "%ID%.vpk"): Promise<number> {
         return new Promise((resolve, reject) => {
             const filename = filenameTemplate
                 .replace(/%ID%/g, item.publishedfileid)
                 .replace(/%TITLE%/g, item.title)
             const filepath = path.join(destFolder, filename)
             const file = createWriteStream(filepath)
-            https.get(item.file_url, requestOptions, (response) => {
+            https.get(item.file_url, requestOptions ?? {}, (response) => {
                 file.on('finish', () => {
                     file.close(() => {
                         resolve(file.bytesWritten)

@@ -97,7 +97,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             const validateRes = await fetch(`https://steamcommunity.com/openid/login?${params.toString()}`, {
                 headers: {
                     'User-Agent': USER_AGENT
-                }
+                },
+                signal: req.signal
             })
             if(validateRes.ok) {
                 const text = await validateRes.text()
