@@ -24,7 +24,7 @@ export interface FetchLogOptions {
  * @param options other options such as limit and filters
  * @returns [ an array of log entries, total filtered rows ]
  */
-export async function fetchLogs(db: DBClient, type: "before" | "after" | "around", id: number, options: FetchLogOptions = {}): Promise<[ LogEntry[], number ]> {
+export async function fetchLogs(db: DBClient, type: "before" | "after" | "around", id: number, options: FetchLogOptions = {}): Promise<LogEntry[]> {
     const limit = options.limit ?? 30
 
     const query = QueryBuilder.startSelect(ACTIVITY_LOG_TABLE_NAME, "l")
@@ -60,9 +60,38 @@ export async function fetchLogs(db: DBClient, type: "before" | "after" | "around
     if (options.servers) query.whereIn('server', options.servers)
     if (options.types) query.whereIn('type', options.types)
 
-    const [ [ rawLogs ], totalFilteredRows ] = await Promise.all([ query.execute(db), query.executeCount(db) ])
+    const [ rawLogs ] = await query.execute(db)
     const logs = rawLogs.map(formatLogEntry)
-    return [ logs, totalFilteredRows ]
+    return logs
+}
+
+/**
+ * Fetches number of logs for given filter
+ * @param db connection or pool
+ * @param options other options such as filters
+ * @returns  number of rows
+ */
+export async function fetchLogCounts(db: DBClient, options: Omit<FetchLogOptions, 'limit'> = {}): Promise<number> {
+    const query = QueryBuilder.startSelect(ACTIVITY_LOG_TABLE_NAME, "l")
+        .selectRaw("COUNT(*) count")
+        .limit(1)
+        .sort('id', SortDirection.Descending)
+
+    if(options.year) {
+        query
+            .where("timestamp", ">=", Math.floor(new Date(`${options.year}-01-01T00:00:00`).getTime() / 1000))
+            .where("timestamp", "<", Math.floor(new Date(`${options.year + 1}-01-01T00:00:00`).getTime() / 1000))
+    }
+
+    if (options.searchClient) query.where('client', '=', options.searchClient)
+    if (options.searchTarget) query.where('target', '=', options.searchTarget)
+    if (options.searchMessage) query.where('message', 'LIKE', `%${options.searchMessage}%`)
+    if (options.servers) query.whereIn('server', options.servers)
+    if (options.types) query.whereIn('type', options.types)
+
+    const [rows] = await query.execute(db)
+    if(rows.length === 0) throw new Error("count query returned no data")
+    return rows[0].count
 }
 
 /**

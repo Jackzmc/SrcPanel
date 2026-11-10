@@ -4,19 +4,23 @@
     <UContainer class="fluid grid grid-cols-1 sm:grid-cols-4 gap-4">
       <div class="col-span-3">
         <!-- TODO: check periodically for entries -->
-        <pre>{{ JSON.stringify({
+        <!-- <pre>{{ JSON.stringify({
             dataRange,
             dataSource,
             currentSource,
             order,
             id,
             numLoaded: logData?.logs.length,
+            counts: {
+              logData: logData?.counts,
+              newEntries: newEntriesData?.counts,
+            },
             newEntriesCount
-          }, null, 2) }}</pre>
+          }, null, 2) }}</pre> -->
         <!-- Top Loading -->
         <ClientOnly>
           <UAlert v-if="metaError" color="error" title="Could not resolve essential metadata" :description="metaError?.message" class="mb-4" />
-          <template v-else-if="logData && logData.logs.length > 0 && newerEntriesCount > 0">
+          <template v-else-if="logData && logData.logs.length > 0 && newEntriesCount > 0">
             <UAlert v-if="loadingSide == 'top'" class="bg-light-blue text-black dark:text-white my-3 py-5 rounded-2xl">
               <template #description>
                 <h3 class="text-xl font-bold">
@@ -25,11 +29,11 @@
                 </h3>
               </template>
             </UAlert>
-            <a v-else class="cursor-pointer" @click="fetchDirection('top')">
-              <UAlert v-if="newerEntriesCount > 0" class="bg-light-blue text-black dark:text-white my-3 py-5 rounded-2xl" icon="lucide:info">
+            <a v-else class="cursor-pointer" @click="loadNewEntries">
+              <UAlert v-if="newEntriesCount > 0" class="bg-light-blue text-black dark:text-white my-3 py-5 rounded-2xl" icon="lucide:info">
                 <template #description>
-                  <b>{{ newerEntriesCount.toLocaleString() }}</b> new entries are available. Click here to load.
-                  <p class="text-xs text-muted">Please note the new entry detection currently ignores filters and may be inaccurate</p>
+                  <b>{{ newEntriesCount.toLocaleString() }}</b> new entries are available. Click here to load.
+                  <!-- <p class="text-xs text-muted">Please note the new entry detection currently ignores filters and may be inaccurate</p> -->
                 </template>
               </UAlert>
             </a>
@@ -99,7 +103,7 @@
         <UCard>
           <div class="space-y-2">
             <h3 class="text-lg py-2">
-              {{ logData?.counts.currentFilteredRows }} / <span class="font-bold">{{ ( logData?.counts.totalFilteredRows || 0).toLocaleString() }} entries</span>
+              {{ logData?.logs.length ?? '-' }} / <span class="font-bold">{{ logData?.counts.totalFilteredRows.toLocaleString() ?? '-' }} entries</span>
             </h3>
             <UFormField label="Search Client" :ui="{ label: 'font-semibold' }">
               <UInputMenu
@@ -162,6 +166,11 @@
                 Refresh
               </UButton>
             </UFormField>
+            <!-- <UFormField class="mt-4">
+              <UButton leading-icon="lucide:refresh-cw" size="lg" class="w-full" @click="refreshNewEntries()">
+                Refresh meta temp
+              </UButton>
+            </UFormField> -->
           </div>
         </UCard>
         <div class="text-sm mx-2 mt-1 text-center space-y-1">
@@ -197,7 +206,7 @@ useHead({
 });
 
 /// How often to check for new entries
-const REFRESH_INTERVAL = 1000 * 60 * 5;
+const REFRESH_INTERVAL = 1000 * 60 * 2;
 /// Maximum amount to keep in buffer, entries in opposite direction removed
 const MAX_ENTRIES_IN_BUFFER = 50;
 
@@ -244,10 +253,10 @@ const currentSource = computed(() => {
    - or just pre-fetch?
    - or add a ?count-only query to not actually grab logs (complicated)
  */
-const newerEntriesCount = computed(() => {
-  if (!currentSource.value) return 0;
-  return currentSource.value.maxId - dataRange.value.highest;
-});
+// const newerEntriesCount = computed(() => {
+//   if (!currentSource.value) return 0;
+//   return currentSource.value.maxId - dataRange.value.highest;
+// });
 
 /** The id range of current loaded logs */
 const dataRange = computed(() => {
@@ -286,18 +295,27 @@ const fetchTimeElapsed = computed(() => {
 
 const now = ref<number>(Date.now());
 const startLoadingTime = ref<number | undefined>();
+const newEntriesCount = ref<number>(0)
 
-
-const { data: newEntriesData, refresh: refreshNewEntries } = useLazyAsyncData<APILogQueryResult>(
+const { data: newEntriesData, refresh: refreshNewEntries } = useLazyAsyncData<APILogQueryResult | null>(
   () => `logs-after`,
   async () => {
-    const queryUrl = `/logs/after/${dataRange.value.highest}/${query.value.toString()}`;
+    if(!logData.value) return null
+
+    const queryUrl = `/logs/after/${dataRange.value.highest}?${query.value.toString()}`;
     const newLogs: APILogQueryResult = await api(queryUrl);
+
+    newEntriesCount.value = newLogs.counts.totalFilteredRows
 
     return newLogs
   },
   { server: false, timeout: 60_000, watch: undefined, immediate: false },
 )
+
+function loadNewEntries() {
+  newEntriesCount.value = 0
+  fetchDirection('top')
+}
 
 const { data: logData, refresh, status, error } = useLazyAsyncData<APILogQueryResult>(
   () => `/logs/${order.value}/${id.value}?${query.value.toString()}`,
@@ -324,11 +342,6 @@ const { data: logData, refresh, status, error } = useLazyAsyncData<APILogQueryRe
   },
   { server: false, timeout: 1000 * 60 * 4, watch: undefined, immediate: false },
 );
-
-const newEntriesCount = computed(() => {
-  if(!newEntriesData.value || !logData.value) return 0
-  newEntriesData.value.counts.totalFilteredRows - logData.value.counts.totalFilteredRows
-})
 
 const logEntryIds = computed(() => {
   return new Set(
@@ -445,9 +458,8 @@ onMounted(() => {
   // update now.value every 1/10 second, so it updates fetchTimeElapsed properly
   setInterval(() => now.value = Date.now(), 100);
   setInterval(() => {
-    console.info("refreshing metadata");
-    console.debug("prev range:", dataRange.value);
-    refreshMetaData();
+    console.info("checking for new entries");
+    // refreshMetaData();
     refreshNewEntries()
   }, REFRESH_INTERVAL);
 

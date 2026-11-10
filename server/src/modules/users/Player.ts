@@ -54,7 +54,6 @@ export default class PanelPlayer {
                 LIMIT 1`,
                 [ this.steamid2 ]
             )
-            console.log(rows)
             // TODO: is this okay? we don't want to have to fetch an entry if its not actually used (but rather calling getBans)
             if(rows.length === 0) return null
             this.#cachedEntry = formatPlayer(this.steamid, rows[0])

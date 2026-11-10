@@ -180,7 +180,10 @@ export default class LogsManager {
      * @returns a tuple of [an array of log entries, the info about the specific year's data range]
      */
     async fetchLogs(type: "before" | "after" | "around", id: number, options: Repo.FetchLogOptions = {}): Promise<GetLogsResult>  {
-        const [ logs, totalFilteredRows ] = await Repo.fetchLogs(this.#pool, type, id, options)
+        const [ logs, totalFilteredRows ] = await Promise.all([
+            await Repo.fetchLogs(this.#pool, type, id, options),
+            await Repo.fetchLogCounts(this.#pool, options)
+        ])
 
         // Update cached data incase we get new logs
         if (!options.year) options.year = this.currentYear
@@ -239,7 +242,7 @@ export default class LogsManager {
         const metadata = payload?.metadata ?? {}
         metadata.permission = permission
 
-        const id = await Repo.addLogEntry(this.#pool, 'web', 'web', activator.steamid2, target?.steamid2 ?? null, msg, metadata)
+        const id = await Repo.addLogEntry(this.#pool, 'ACTION', 'web', activator.steamid2, target?.steamid2 ?? null, msg, metadata)
 
         return id
     }

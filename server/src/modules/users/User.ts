@@ -17,7 +17,7 @@ export interface LogPropertiesPermCode extends LogProperties {
     code: UserPrivilegeCode,
 }
 
-export type LogData = LogPropertiesType | LogPropertiesPermCode
+export type LogData = LogPropertiesType | LogPropertiesPermCode | LogProperties
 export type PermissionResult = [UserPrivilegeCode, boolean]
 export interface RequirePermissionOptions {
     isCreator?: boolean,

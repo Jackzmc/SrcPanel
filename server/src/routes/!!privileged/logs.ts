@@ -3,6 +3,7 @@ import { NO_PERMISSION } from '../../util/responses.js';
 import { APILogData, APILogQueryResult } from '@srcpanel/common/Logs';
 import { sendInvalidParamError } from '../../guards/responses.js';
 import { FetchLogsParamsSchema, FetchLogsQuerySchema, type APIFetchLogsParams, type APIFetchLogsQuery } from '@srcpanel/common/logs/schemas'
+import LogsManager from '../../modules/logs/LogsManager.js';
 
 export default async function routes(fastify: FastifyInstance, opts: FastifyPluginOptions) {
 
@@ -86,6 +87,11 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         message: "You can only redact chat messages"
       })
     }
+  })
+
+  fastify.post('/test', async (req, reply) => {
+    await fastify.logs.logWeb(req.user!, null, "test record", { metadata: { test: true } })
+    return reply.status(204).send()
   })
 }
 
