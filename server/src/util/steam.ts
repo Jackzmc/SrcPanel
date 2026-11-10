@@ -9,6 +9,7 @@ import QuickLRU from 'quick-lru';
 import Logger from '#/util/logger.js'
 import CacheManager from '../modules/CacheManager.js';
 import { sleep } from './index.js';
+import { USER_AGENT } from './version.js';
 const log = Logger.child({ name: "steam" })
 
 // How many bytes of progress to make before sending an update
@@ -73,7 +74,7 @@ export default class SteamAPI {
         apikey = apikey ?? process.env.STEAM_WEB_APIKEY
         if(!apikey) throw new Error("Missing env STEAM_WEB_APIKEY")
         this.#apikey = apikey
-        this.#userAgent = userAgent || `SrcPanel`
+        this.#userAgent = userAgent || USER_AGENT
         this.#itemCache = new QuickLRU({
             maxSize: ITEM_CACHE_MAX_SIZE,
             maxAge: ITEM_CACHE_TTL

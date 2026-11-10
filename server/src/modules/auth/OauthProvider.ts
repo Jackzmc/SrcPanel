@@ -8,6 +8,7 @@ TODO:
 import { OauthProviderId, OauthProviderData } from "@srcpanel/common/User";
 import { OauthConfig } from "./OauthManager.js";
 import AuthManager from "./AuthManager.js";
+import { USER_AGENT } from "#/util/version.js";
 
 interface AccessTokenResponse {
     access_token: string;
@@ -33,7 +34,6 @@ export interface OauthAuthData {
 
 // Buffer to pre-emptively refresh before this, to compensate for any latency
 const EXPIRES_WINDOW_S = 100
-export const USER_AGENT = 'SrcPanel(https://codeberg.com/jackzmc/srcpanel)'
 
 
 // TODO: Add User-Agent: DiscordBot ($url, $versionNumber)
@@ -216,7 +216,8 @@ export class OauthProviderUser {
         await fetch(this.#oauth.urls.revokeUrl, {
             method: "POST",
             headers: {
-                Authorization: this.#basicAuth
+                authorization: this.#basicAuth,
+                'user-agent': USER_AGENT
             },
             body: params
         })

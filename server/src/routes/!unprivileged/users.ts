@@ -1,6 +1,7 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyReply, FastifyRequest } from 'fastify';
 import { toPng } from 'jdenticon'
 import { IUserData } from '../../modules/users/UserManager.js';
+import { USER_AGENT } from '../../util/version.js';
 
 const IDENTICON_SIZE = 150
 const STEAM_IMG_FETCH_TIMEOUT = 10_000
@@ -52,7 +53,7 @@ async function handleSteamAvatar(user: IUserData, clientController: AbortControl
       { 
         signal: AbortSignal.any([AbortSignal.timeout(STEAM_IMG_FETCH_TIMEOUT), clientController.signal]),
         headers: {
-          'User-Agent': 'SrcPanel'
+          'User-Agent': USER_AGENT
         }
       }
     )

@@ -2,9 +2,9 @@ import { FastifyInstance, FastifyPluginOptions, FastifyReply, FastifyRequest } f
 import SteamID from 'steamid'
 import { SteamAPIError } from '../../util/steam.js';
 import { ErrorWithCode } from '../../util/index.js';
-import { USER_AGENT } from '../../modules/auth/OauthProvider.js';
 import { METRIC_AUTH_LOGIN_COUNT } from '../../modules/metrics/prometheus.js';
 import { sendMetric } from '../../modules/metrics/influx.js';
+import { USER_AGENT } from '#/util/version.js';
 
 export const SESSION_VERSION = "3.0"
 const RouteError = ErrorWithCode
@@ -89,7 +89,6 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             } else if(!req.query['openid.response_nonce']) {
                 throw new RouteError("LOGIN_STALE_RETRY_LATER", "Login is stale, wait a few minutes and try again")
             }
-
 
             // Send data back to steam for validation
             const params = new URLSearchParams({...req.query})

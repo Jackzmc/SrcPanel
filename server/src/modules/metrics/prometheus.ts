@@ -3,6 +3,7 @@ import FastifyMetrics from 'fastify-metrics'
 import { FastifyInstance } from 'fastify';
 import { exec } from 'node:child_process';
 import Logger from '#/util/logger.js'
+import { getPanelBranchVersion } from '../../util/version.js';
 
 const log = Logger.child({ name: "Core/PromMetrics" })
 
@@ -71,7 +72,7 @@ export const METRIC_STARTUP_TIME = new Gauge({
 })
 
 export async function register() {
-    await getVersion()
+    await getPanelBranchVersion()
         .then(v => _version = v)
         .catch(err => log.warn({err}, "could not get version"))
 
@@ -94,14 +95,4 @@ export function getLabels() {
         panel_ip: process.env.LISTEN_HOST ?? '127.0.0.1',
         panel_port: process.env.LISTEN_PORT && parseInt(process.env.LISTEN_PORT) || 8081,
     }
-}
-
-export async function getVersion(): Promise<string> {
-    return new Promise((resolve, reject) => {
-        if(process.env.GIT_BRANCH) return resolve(process.env.GIT_BRANCH)
-        exec("git rev-parse --abbrev-ref HEAD", (err, output) => {
-            if(err) return reject(err)
-            resolve(output.trim())
-        })
-    })
 }
