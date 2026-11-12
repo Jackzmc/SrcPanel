@@ -4,6 +4,7 @@ import { ADMINS_DB, TABLE_PREFIX } from "#/core/database.js";
 import AuthManager from "../auth/AuthManager.js";
 import { formatPlayer } from "./utils.js";
 import PlayerManager from "./PlayerManager.js";
+import type { PlayerEntry } from "@srcpanel/common/User";
 
 /**
  * determine:
