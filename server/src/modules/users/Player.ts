@@ -1,12 +1,7 @@
 import { Pool, RowDataPacket } from "mysql2/promise";
 import SteamID from "steamid";
-import { OauthProviderId, PlayerEntry } from "@srcpanel/common/User";
-import { APIBan } from "@srcpanel/common/Ban";
 import { ADMINS_DB, TABLE_PREFIX } from "#/core/database.js";
 import AuthManager from "../auth/AuthManager.js";
-import { Note } from "@srcpanel/common/Note";
-import { formatBan } from "../bans/utils.js";
-import * as NotesRepo from "../notes/NotesRepo.js";
 import { formatPlayer } from "./utils.js";
 import PlayerManager from "./PlayerManager.js";
 

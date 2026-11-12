@@ -67,6 +67,8 @@ export default class PlayerManager implements IShutdown {
     }
 
     get(steamid: SteamID): PanelPlayer {
+        if(this.#playerCache.has(steamid))
+            return this.#playerCache.get(steamid)!
         const player = new PanelPlayer(this.#db, this.#authMngr, steamid)
         this.#playerCache.set(steamid, player)
         return player

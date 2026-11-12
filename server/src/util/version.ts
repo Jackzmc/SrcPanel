@@ -29,3 +29,4 @@ export async function getPanelVersion(): Promise<string | null> {
 }
 
 export const USER_AGENT = `SrcPanel/${(await getPanelVersion()) ?? '2'} (+https://codeberg.com/jackzmc/srcpanel)`
+
