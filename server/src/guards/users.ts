@@ -2,7 +2,6 @@ import { FastifyInstance, FastifyReply, FastifyRequest, preHandlerAsyncHookHandl
 import { sendMissingParamError } from "./responses.js"
 import SteamID from "steamid"
 import PlayerManager from "../modules/users/PlayerManager.js"
-import PanelPlayer from "../modules/users/Player.js"
 
 export const GUARD_REQUIRE_PLAYER = {
   register(fastify: FastifyInstance) {
