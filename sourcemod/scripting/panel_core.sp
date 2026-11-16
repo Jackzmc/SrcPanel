@@ -219,6 +219,10 @@ void SetupUserInDB(int client) {
 			LogError("SetupUserInDB called before database is ready");
 			return;
 		}
+		if(steamidCache[client][0] == '\0') {
+			LogWarn("User \"%N\" has no steamid", client);
+			return;
+		}
 		char country[128];
 		char region[128];
 		char ip[64];
