@@ -61,7 +61,7 @@
           <KeyValueRow label="Connect with">
             <code>connect {{ createResult.hostname }}:{{ createResult.port }}</code>
           </KeyValueRow>
-          <KeyValueRow label="Create lobby with">
+          <KeyValueRow v-if="createResult.type == 'source' || createResult.type == 'l4d2'" label="Create lobby with">
             <code>mm_dedicated_force_servers {{ createResult.hostname }}:{{ createResult.port }}</code>
           </KeyValueRow>
         </KeyValueTable>

@@ -11,6 +11,7 @@
           </div>
         </b>
         <UTooltip
+          v-if="createLobbyCommand"
           text="Create lobby command. Click to copy"
           :content="{
             align: 'start',
@@ -96,7 +97,9 @@ const connectCommand = computed(() => {
 });
 
 const createLobbyCommand = computed(() => {
-  return `mm_dedicated_force_servers ${props.server.ip}:${props.server.port}`;
+  if(props.server.type == 'source' || props.server.type == 'l4d2')
+    return `mm_dedicated_force_servers ${props.server.ip}:${props.server.port}`;
+  return null
 });
 
 const rowClass = computed(() => {
