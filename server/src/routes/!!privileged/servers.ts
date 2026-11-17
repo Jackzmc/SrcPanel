@@ -155,7 +155,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
 
 
     if (server.activityLogId) {
-      const [rows] = await fastify.db.execute<RowDataPacket[]>(`SELECT client, target, type, id, message, timestamp, s1.last_name as clientName, s2.last_name as targetName
+      const [rows] = await fastify.db.execute<RowDataPacket[]>(`SELECT client, target, type, id, message, timestamp, u1.last_name as clientName, u2.last_name as targetName
         FROM activity_log
         LEFT JOIN view_${TABLE_PREFIX}_user as u1 ON u1.account_id = SUBSTRING(client, 11)
         LEFT JOIN view_${TABLE_PREFIX}_user as u2 ON u2.account_id = SUBSTRING(target, 11)
