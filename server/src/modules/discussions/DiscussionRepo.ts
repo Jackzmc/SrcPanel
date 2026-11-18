@@ -68,7 +68,7 @@ export async function getSubmissions(db: DBClient, discussionId: number): Promis
             res.choice_id, 
             opt.label
         FROM \`${ADMINS_DB}\`.${TABLE_PREFIX}_discussion_responses res 
-        LEFT JOIN \`${MAIN_DB}\`.view_${TABLE_PREFIX}_user u ON SUBSTRING(res.steamid, 11) = u.account_id 
+        LEFT JOIN \`${MAIN_DB}\`.view_${TABLE_PREFIX}_user u ON SUBSTRING(res.steamid, 9)) = u.account_id 
         LEFT JOIN \`${ADMINS_DB}\`.${TABLE_PREFIX}_discussion_options opt ON opt.id = res.choice_id
         WHERE res.discussion_id = ?`, 
         [ discussionId ]
@@ -96,7 +96,7 @@ export async function getUserSubmissions(db: DBClient, discussionId: number, use
             opt.label
         FROM \`${ADMINS_DB}\`.${TABLE_PREFIX}_discussion_responses res 
         LEFT JOIN \`${ADMINS_DB}\`.${TABLE_PREFIX}_discussion_options opt ON opt.id = res.choice_id
-        WHERE res.discussion_id = ? AND SUBSTRING(res.steamid, 11) = SUBSTRING(?, 11)`, 
+        WHERE res.discussion_id = ? AND SUBSTRING(res.steamid, 9)) = SUBSTRING(?, 11)`, 
         [ discussionId, userSteamid ]
     )
     return responses.map(row => {

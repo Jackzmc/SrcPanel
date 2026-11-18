@@ -20,7 +20,7 @@ export async function getBan(db: DBClient, banId: number): Promise<APIBan | null
             b.executor,
             u2.last_name as executor_name
         FROM bans b
-        LEFT JOIN view_${TABLE_PREFIX}_user ON u1 u1.account_id = SUBSTRING(steamid, 11)
+        LEFT JOIN view_${TABLE_PREFIX}_user ON u1 u1.account_id = SUBSTRING(steamid, 9)
         LEFT JOIN view_${TABLE_PREFIX}_user u2 ON u2.account_id = SUBSTRING(executor, 11)
         WHERE id = ? 
         LIMIT 1`,
@@ -47,7 +47,7 @@ export async function getBansForUser(db: DBClient, steamid: string, activeOnly =
             b.executor,
             u2.last_name as executor_name
         FROM bans b
-        LEFT JOIN view_${TABLE_PREFIX}_user ON u1 u1.account_id = SUBSTRING(steamid, 11)
+        LEFT JOIN view_${TABLE_PREFIX}_user ON u1 u1.account_id = SUBSTRING(steamid, 9)
         LEFT JOIN view_${TABLE_PREFIX}_user u2 ON u2.account_id = SUBSTRING(executor, 11)
         WHERE steamid = ?
         ${activeOnly ? `AND ~flags & ${APIBanFlags.Suspended}` : ''}
@@ -79,11 +79,11 @@ export async function getBans(db: DBClient, options: GetBanOptions): Promise<Lis
             b.steamid,
             u1.last_name as client_name,
             (SELECT COUNT(*) FROM ban_appeals a WHERE a.ban_id = b.id) appeal_count,
-            (SELECT COUNT(*) FROM notes n WHERE SUBSTRING(n.steamid, 11) = SUBSTRING(b.steamid, 11)) client_notes_count,
+            (SELECT COUNT(*) FROM notes n WHERE SUBSTRING(n.steamid, 9)) = SUBSTRING(b.steamid, 9))) client_notes_count,
             b.executor,
             u2.last_name as executor_name
         FROM bans b
-        LEFT JOIN view_${TABLE_PREFIX}_user u1 ON u1.account_id = SUBSTRING(steamid, 11)
+        LEFT JOIN view_${TABLE_PREFIX}_user u1 ON u1.account_id = SUBSTRING(steamid, 9)
         LEFT JOIN view_${TABLE_PREFIX}_user u2 ON u2.account_id = SUBSTRING(executor, 11)
         WHERE 1=1
         ${options.activeOnly ? `AND ~b.flags & ${APIBanFlags.Suspended}` : ''}

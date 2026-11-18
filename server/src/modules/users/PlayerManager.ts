@@ -88,13 +88,13 @@ export default class PlayerManager implements IShutdown {
                 last_country,
                 last_join_time,
                 create_time,
-                (SELECT COUNT(*) FROM notes WHERE SUBSTRING(notes.steamid,11) = u.account_id) as notes_count,
-                (SELECT COUNT(*) FROM bans WHERE SUBSTRING(bans.steamid,11) = u.account_id) as bans_count,
+                (SELECT COUNT(*) FROM notes WHERE SUBSTRING(notes.steamid, 9)) = u.account_id) as notes_count,
+                (SELECT COUNT(*) FROM bans WHERE SUBSTRING(bans.steamid, 9)) = u.account_id) as bans_count,
                 (SELECT COUNT(*) FROM ${ADMINS_DB}.sm_admins
                     WHERE SUBSTRING(${ADMINS_DB}.sm_admins.identity,11) = u.account_id
                 ) as is_admin
             FROM view_${TABLE_PREFIX}_users u
-            WHERE SUBSTRING(steamid, 11) = SUBSTRING(:query, 11) 
+            WHERE SUBSTRING(steamid, 9) = SUBSTRING(:query, 11) 
                 OR last_name LIKE CONCAT('%', :query, '%')
             ORDER BY last_join_time DESC
             LIMIT :limit`,

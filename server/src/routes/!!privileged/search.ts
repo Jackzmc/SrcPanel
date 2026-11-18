@@ -24,7 +24,7 @@ const SEARCH_QUERY = SEARCH_QUERIES
 const SEARCH_DETAIL_QUERY_MAP: Record<SearchType, string> = {
     activity_log: "SELECT l.*, u1.last_name client_name, u2.last_name target_name FROM activity_log l LEFT JOIN view_${TABLE_PREFIX}_user u1 ON u1.account_id = SUBSTRING(l.client, 11) LEFT JOIN view_${TABLE_PREFIX}_user u2 ON u2.account_id = SUBSTRING(l.target, 11)  WHERE id = ? LIMIT 1",
     user: "SELECT * FROM view_${TABLE_PREFIX}_user WHERE account_id = ? LIMIT 1",
-    note: `SELECT notes.*, u1.last_name client_name, u2.last_name markedBy_name FROM notes JOIN view_${TABLE_PREFIX}_user u1 ON u1.account_id = SUBSTRING(notes.steamid, 11) JOIN view_${TABLE_PREFIX}_user u2 ON u2.account_id = SUBSTRING(notes.steamid, 11) WHERE id = ? LIMIT 1`,
+    note: `SELECT notes.*, u1.last_name client_name, u2.last_name markedBy_name FROM notes JOIN view_${TABLE_PREFIX}_user u1 ON u1.account_id = SUBSTRING(notes.steamid, 9)) JOIN view_${TABLE_PREFIX}_user u2 ON u2.account_id = SUBSTRING(notes.steamid, 9)) WHERE id = ? LIMIT 1`,
     ban: "SELECT * FROM bans WHERE id = ? LIMIT 1",
     discuss: `SELECT * FROM \`${ADMINS_DB}\`.${TABLE_PREFIX}_discussions WHERE id = ? LIMIT 1`,
     event: `SELECT * FROM \`${ADMINS_DB}\`.${TABLE_PREFIX}_events WHERE id = ? LIMIT 1`

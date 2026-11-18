@@ -19,7 +19,7 @@ export async function getNote(db: DBClient, id: number): Promise<Note | null> {
             e.last_name as executor, 
             !b.expired as banned
         FROM notes
-        LEFT JOIN view_${TABLE_PREFIX}_user as u ON SUBSTRING(notes.steamid, 11) = u.account_id
+        LEFT JOIN view_${TABLE_PREFIX}_user as u ON SUBSTRING(notes.steamid, 9)) = u.account_id
         LEFT JOIN view_${TABLE_PREFIX}_user as e ON SUBSTRING(notes.markedBy, 11) = e.account_id
         LEFT JOIN bans as b ON notes.steamid = b.steamid
         WHERE id = ?
@@ -46,10 +46,10 @@ export async function getNotesForPlayer(db: DBClient, userSteamId: string, limit
                 WHERE \`${ADMINS_DB}\`.sm_admins.identity = notes.steamid
             ) as targetIsAdmin
         FROM notes
-        LEFT JOIN view_${TABLE_PREFIX}_user u ON SUBSTRING(notes.steamid, 11) = u.account_id
+        LEFT JOIN view_${TABLE_PREFIX}_user u ON SUBSTRING(notes.steamid, 9)) = u.account_id
         LEFT JOIN view_${TABLE_PREFIX}_user e ON SUBSTRING(notes.markedBy, 11) = e.account_id
         LEFT JOIN bans as b ON notes.steamid = b.steamid
-        WHERE SUBSTRING(steamid, 11) = ? 
+        WHERE SUBSTRING(steamid, 9) = ? 
         ORDER BY notes.id DESC 
         LIMIT ?, ?`,
         [ userSteamId, offset, limit]
@@ -74,7 +74,7 @@ export async function getNotes(db: DBClient, options: APIListNotesQuery = {}) {
         .select("u2.last_name", "user")
         .selectRaw("!bans.expired", "banned")
         .selectSubQuery(`SELECT COUNT(*) FROM ${ADMINS_DB}.sm_admins WHERE ${ADMINS_DB}.sm_admins.identity = notes.steamid`, "targetIsAdmin")
-        .leftJoin(`view_${TABLE_PREFIX}_user`, "account_id", "=", "SUBSTRING(steamid, 11)", "u1", true)
+        .leftJoin(`view_${TABLE_PREFIX}_user`, "account_id", "=", "SUBSTRING(steamid, 9)", "u1", true)
         .leftJoin(`view_${TABLE_PREFIX}_user`, "account_id", "=", "SUBSTRING(markedBy, 11)", "u2", true)
         .leftJoin("bans", "steamid", "=", "notes.steamid", undefined, true)
         .limit(options.limit, offset)

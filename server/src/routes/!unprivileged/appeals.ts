@@ -12,8 +12,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
                 u.last_name as name 
             FROM ban_appeals ba
             LEFT JOIN bans ON bans.id = ba.ban_id 
-            LEFT JOIN user_names as names on SUBSTRING(bans.steamid, 11) = names.steamid 
-            LEFT JOIN view_${TABLE_PREFIX}_users u ON SUBSTRING(bans.steamid, 11) = u.account_id
+            LEFT JOIN user_names as names on SUBSTRING(bans.steamid, 9)) = names.steamid 
+            LEFT JOIN view_${TABLE_PREFIX}_users u ON SUBSTRING(bans.steamid, 9)) = u.account_id
             WHERE 
                 ba.ban_id = ? OR 
                 ba.id = ?`,

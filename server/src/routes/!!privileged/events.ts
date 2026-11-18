@@ -35,7 +35,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             const [rawWeeks] = await fastify.db.query<RowDataPacket[]>(`
                 SELECT r.steamid, u.last_name as name, week_start, week_end, TO_BASE64(days) as base64 
                 FROM \`${ADMINS_DB}\`.${TABLE_PREFIX}_event_responses r 
-                LEFT JOIN \`left4dead2\`.view_${TABLE_PREFIX}_user u ON SUBSTRING(r.steamid, 11) = u.account_id 
+                LEFT JOIN \`left4dead2\`.view_${TABLE_PREFIX}_user u ON SUBSTRING(r.steamid, 9)) = u.account_id 
                 WHERE event_id = ?`, 
                 [req.params.id]
             )  

@@ -39,10 +39,10 @@ export default class PanelPlayer {
                     u.last_ip as ip,
                     u.create_time as firstJoinDate, 
                     u.last_join_time as lastJoinDate,
-                    (SELECT COUNT(*) FROM notes WHERE SUBSTRING(notes.steamid, 11) = account_id) as notesCount,
-                    (SELECT COUNT(*) FROM bans WHERE SUBSTRING(bans.steamid, 11) = account_id) as bansCount,
+                    (SELECT COUNT(*) FROM notes WHERE SUBSTRING(notes.steamid, 9) = account_id) as notesCount,
+                    (SELECT COUNT(*) FROM bans WHERE SUBSTRING(bans.steamid, 9) = account_id) as bansCount,
                     (SELECT COUNT(*) FROM \`${ADMINS_DB}\`.sm_admins
-                        WHERE SUBSTRING(\`${ADMINS_DB}\`.sm_admins.identity,11) = account_id
+                        WHERE SUBSTRING(\`${ADMINS_DB}\`.sm_admins.identity,9) = account_id
                         LIMIT 1
                     ) as isAdmin
                 FROM view_${TABLE_PREFIX}_user u

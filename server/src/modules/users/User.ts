@@ -261,7 +261,7 @@ export default class User {
     equals(id: string) {
         if(!id) throw new Error("<User>.equals: id is null or undefined")
         if(id === this.steamid2) return true
-        else if(id.substring(10) == id.substring(10)) return true
+        else if(id.substring(8) == id.substring(8)) return true
 
         // Check if id is part of providers (ie, discord)
         const [provider, identifier] = id.split(":")
