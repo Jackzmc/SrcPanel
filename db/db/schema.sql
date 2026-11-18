@@ -1,9 +1,9 @@
 /*M!999999\- enable the sandbox mode */
 -- MariaDB dump 10.19-11.8.8-MariaDB, for Linux (x86_64)
 --
--- Host: localhost    Database: left4dead2
+-- Host: 10.30.1.3    Database: left4dead2
 -- ------------------------------------------------------
--- Server version	11.8.8-MariaDB
+-- Server version	12.3.3-MariaDB-deb13
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -32,12 +32,39 @@ CREATE TABLE `activity_log` (
   `message` varchar(256) DEFAULT NULL,
   `metadata` longtext DEFAULT NULL,
   PRIMARY KEY (`id`,`timestamp`),
-  KEY `activity_log_type_id_index` (`type`,`id`),
-  KEY `activity_log_server_id_index` (`server`,`id`)
+  KEY `activity_log_server_index` (`server`),
+  KEY `activity_log_type_index` (`type`),
+  FULLTEXT KEY `activity_log_message_index` (`message`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
  PARTITION BY RANGE (`timestamp`)
-(PARTITION `p2026` VALUES LESS THAN (1798783200) ENGINE = InnoDB);
+(PARTITION `p2022` VALUES LESS THAN (1672552800) ENGINE = InnoDB,
+ PARTITION `p2023` VALUES LESS THAN (1704088800) ENGINE = InnoDB,
+ PARTITION `p2024` VALUES LESS THAN (1735711200) ENGINE = InnoDB,
+ PARTITION `p2025` VALUES LESS THAN (1767225600) ENGINE = InnoDB,
+ PARTITION `p2026` VALUES LESS THAN (1798761600) ENGINE = InnoDB,
+ PARTITION `p2027` VALUES LESS THAN (1798783200) ENGINE = InnoDB);
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Temporary table structure for view `appeals`
+--
+
+SET @saved_cs_client     = @@character_set_client;
+SET character_set_client = utf8mb4;
+/*!50001 CREATE VIEW `appeals` AS SELECT
+ NULL AS `id`,
+ NULL AS `appeal_id`,
+ NULL AS `steamid`,
+ NULL AS `client_name`,
+ NULL AS `executor`,
+ NULL AS `exectuor_name`,
+ NULL AS `timestamp`,
+ NULL AS `reason`,
+ NULL AS `public_message`,
+ NULL AS `ip`,
+ NULL AS `created`,
+ NULL AS `appeal_message` */;
+SET character_set_client = @saved_cs_client;
 
 --
 -- Table structure for table `ban_appeals`
@@ -49,11 +76,11 @@ CREATE TABLE `ban_appeals` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `ban_id` int(11) DEFAULT NULL,
   `state` smallint(6) DEFAULT 0,
-  `message` varchar(255) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL,
-  `ip` varchar(32) CHARACTER SET latin1 COLLATE latin1_swedish_ci DEFAULT NULL,
+  `message` varchar(255) NOT NULL,
+  `ip` varchar(32) DEFAULT NULL,
   `created` bigint(20) NOT NULL DEFAULT unix_timestamp(),
-  `reject_reason` varchar(255) CHARACTER SET latin1 COLLATE latin1_swedish_ci DEFAULT NULL,
-  `rejecter_id` varchar(32) CHARACTER SET latin1 COLLATE latin1_swedish_ci DEFAULT NULL,
+  `reject_reason` varchar(255) DEFAULT NULL,
+  `rejecter_id` varchar(32) DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `ban_appeals_bans_id_fk` (`ban_id`),
   CONSTRAINT `ban_appeals_bans_id_fk` FOREIGN KEY (`ban_id`) REFERENCES `bans` (`id`)
@@ -85,16 +112,17 @@ CREATE TABLE `bans` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Table structure for table `dash_sessions`
+-- Table structure for table `editor_favorites`
 --
 
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
-CREATE TABLE `dash_sessions` (
-  `session_id` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
-  `expires` int(11) unsigned NOT NULL,
-  `data` mediumtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
-  PRIMARY KEY (`session_id`)
+CREATE TABLE `editor_favorites` (
+  `steamid` varchar(32) NOT NULL,
+  `model` varchar(128) NOT NULL,
+  `name` varchar(64) DEFAULT NULL,
+  `position` smallint(6) NOT NULL DEFAULT 0,
+  PRIMARY KEY (`steamid`,`model`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -106,7 +134,7 @@ CREATE TABLE `dash_sessions` (
 /*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `notes` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `createdAt` int(11) NOT NULL DEFAULT unix_timestamp(),
+  `createdAt` int(10) unsigned DEFAULT unix_timestamp(),
   `steamid` varchar(32) NOT NULL,
   `markedBy` varchar(32) DEFAULT NULL,
   `content` varchar(255) DEFAULT NULL,
@@ -143,7 +171,8 @@ CREATE TABLE `panel_discussion_comments` (
   `content` text NOT NULL,
   `timestamp` int(11) NOT NULL DEFAULT unix_timestamp(),
   PRIMARY KEY (`id`),
-  KEY `dash_discussion_comments_dash_discussions_id_fk` (`discussion_id`)
+  KEY `dash_discussion_comments_dash_discussions_id_fk` (`discussion_id`),
+  CONSTRAINT `dash_discussion_comments_dash_discussions_id_fk` FOREIGN KEY (`discussion_id`) REFERENCES `panel_discussions` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -158,7 +187,8 @@ CREATE TABLE `panel_discussion_options` (
   `discussion_id` int(11) NOT NULL,
   `label` varchar(255) NOT NULL,
   PRIMARY KEY (`id`),
-  KEY `dash_discussion_options_dash_discussions_id_fk` (`discussion_id`)
+  KEY `dash_discussion_options_dash_discussions_id_fk` (`discussion_id`),
+  CONSTRAINT `dash_discussion_options_dash_discussions_id_fk` FOREIGN KEY (`discussion_id`) REFERENCES `panel_discussions` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -176,8 +206,7 @@ CREATE TABLE `panel_discussion_responses` (
   `text` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `dash_discussion_responses_dash_discussions_id_fk` (`discussion_id`),
-  KEY `panel_discussion_responses_panel_discussion_options_id_fk` (`choice_id`),
-  CONSTRAINT `panel_discussion_responses_panel_discussion_options_id_fk` FOREIGN KEY (`choice_id`) REFERENCES `panel_discussion_options` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+  CONSTRAINT `dash_discussion_responses_dash_discussions_id_fk` FOREIGN KEY (`discussion_id`) REFERENCES `panel_discussions` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -323,14 +352,15 @@ CREATE TABLE `panel_sessions` (
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `panel_user` (
-  `account_id` varchar(16) NOT NULL,
+  `steamid_part` varchar(12) NOT NULL,
   `create_time` int(11) NOT NULL DEFAULT unix_timestamp(),
   `last_join_time` int(11) DEFAULT NULL,
   `last_ip` varchar(64) DEFAULT NULL,
   `last_country` varchar(255) DEFAULT NULL,
   `last_region` varchar(255) DEFAULT NULL,
   `avatar_hash` varchar(255) DEFAULT NULL,
-  PRIMARY KEY (`account_id`)
+  `account_id` varchar(16) GENERATED ALWAYS AS (substr(`steamid_part`,3)) VIRTUAL COMMENT 'deprecated, legacy',
+  PRIMARY KEY (`steamid_part`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -355,11 +385,12 @@ CREATE TABLE `panel_user_data` (
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `panel_user_names` (
-  `account_id` varchar(16) NOT NULL,
+  `steamid_part` varchar(12) NOT NULL,
   `name` varchar(64) NOT NULL,
   `name_update_time` int(11) NOT NULL DEFAULT unix_timestamp(),
-  PRIMARY KEY (`account_id`,`name_update_time`),
-  CONSTRAINT `panel_user_names_panel_user_account_id_fk` FOREIGN KEY (`account_id`) REFERENCES `panel_user` (`account_id`) ON DELETE CASCADE
+  `account_id` varchar(16) GENERATED ALWAYS AS (substr(`steamid_part`,3)) VIRTUAL COMMENT 'deprecated, legacy',
+  PRIMARY KEY (`steamid_part`,`name_update_time`),
+  CONSTRAINT `panel_user_names__panel_user_account_id_fk` FOREIGN KEY (`steamid_part`) REFERENCES `panel_user` (`steamid_part`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -376,7 +407,8 @@ CREATE TABLE `panel_user_notifications` (
   `link` varchar(255) DEFAULT NULL,
   `subject_steamid` varchar(32) DEFAULT NULL,
   `level` tinyint(4) NOT NULL DEFAULT 0,
-  PRIMARY KEY (`steamid`,`timestamp`)
+  PRIMARY KEY (`steamid`,`timestamp`),
+  CONSTRAINT `user_notifications_sm_admins_identity_fk` FOREIGN KEY (`steamid`) REFERENCES `sm_admins` (`identity`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -387,8 +419,21 @@ CREATE TABLE `panel_user_notifications` (
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `schema_migrations` (
-  `version` varchar(128) NOT NULL,
-  PRIMARY KEY (`version`)
+  `version` varchar(128) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `sessions`
+--
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `sessions` (
+  `session_id` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+  `expires` int(11) unsigned NOT NULL,
+  `data` mediumtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
+  PRIMARY KEY (`session_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -407,7 +452,6 @@ CREATE TABLE `sm_admins` (
   `name` varchar(65) NOT NULL,
   `immunity` int(10) unsigned NOT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `unique_identity` (`identity`),
   UNIQUE KEY `sm_admins_authtype_identity_uindex` (`authtype`,`identity`),
   KEY `sm_admins_dash_perms_steamid_fk` (`identity`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -528,6 +572,36 @@ CREATE TABLE `sm_overrides` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Temporary table structure for view `sorry_response_actions`
+--
+
+SET @saved_cs_client     = @@character_set_client;
+SET character_set_client = utf8mb4;
+/*!50001 CREATE VIEW `sorry_response_actions` AS SELECT
+ NULL AS `id`,
+ NULL AS `response`,
+ NULL AS `response_id`,
+ NULL AS `client`,
+ NULL AS `target`,
+ NULL AS `client_name`,
+ NULL AS `timestamp`,
+ NULL AS `server` */;
+SET character_set_client = @saved_cs_client;
+
+--
+-- Table structure for table `sorry_responses`
+--
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `sorry_responses` (
+  `id` smallint(6) NOT NULL,
+  `name` varchar(64) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
 -- Table structure for table `stats_games`
 --
 
@@ -541,10 +615,10 @@ CREATE TABLE `stats_games` (
   `date_end` bigint(20) DEFAULT NULL COMMENT 'unix timestamp',
   `duration_game` bigint(20) GENERATED ALWAYS AS (`date_end` - `date_start`) VIRTUAL COMMENT 'seconds of game',
   `duration_finale` bigint(20) GENERATED ALWAYS AS (`date_end` - `date_start_finale`) VIRTUAL COMMENT 'seconds of finale',
-  `map_id` varchar(64) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL COMMENT 'map id of last chapter',
-  `gamemode` varchar(64) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL,
+  `map_id` varchar(64) NOT NULL COMMENT 'map id of last chapter',
+  `gamemode` varchar(64) NOT NULL,
   `difficulty` tinyint(4) DEFAULT NULL COMMENT '0=easy, 1=normal, 2=advanced, 3=expert',
-  `server_tags` varchar(255) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL COMMENT 'comma separated list of tags',
+  `server_tags` varchar(255) NOT NULL COMMENT 'comma separated list of tags',
   `stat_version` tinyint(3) unsigned NOT NULL COMMENT 'version of metrics',
   PRIMARY KEY (`id`),
   UNIQUE KEY `uuid` (`uuid`),
@@ -554,73 +628,23 @@ CREATE TABLE `stats_games` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Table structure for table `stats_games_bak`
+-- Table structure for table `stats_heatmaps`
 --
 
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
-CREATE TABLE `stats_games_bak` (
-  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+CREATE TABLE `stats_heatmaps` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
   `steamid` varchar(32) NOT NULL,
-  `map` varchar(128) NOT NULL COMMENT 'the map id',
-  `flags` tinyint(4) NOT NULL DEFAULT 0,
-  `campaignID` uuid NOT NULL COMMENT 'unique campaign session id',
-  `gamemode` varchar(30) CHARACTER SET ascii COLLATE ascii_general_ci NOT NULL,
-  `difficulty` tinyint(2) NOT NULL DEFAULT 0,
-  `duration` int(11) GENERATED ALWAYS AS ((`date_end` - `date_start`) / 60) VIRTUAL COMMENT 'in minutes',
-  `join_time` bigint(20) unsigned NOT NULL COMMENT 'when user first joined game',
-  `date_start` bigint(20) unsigned DEFAULT NULL COMMENT 'when campaign started',
-  `date_end` bigint(20) NOT NULL,
-  `finale_time` int(11) unsigned NOT NULL,
-  `character_type` tinyint(3) unsigned DEFAULT NULL,
-  `ping` tinyint(4) unsigned DEFAULT NULL,
-  `server_tags` text DEFAULT NULL,
-  `zombie_kills` int(10) unsigned NOT NULL DEFAULT 0,
-  `melee_kills` smallint(10) unsigned NOT NULL DEFAULT 0,
-  `SurvivorDamage` int(10) unsigned NOT NULL DEFAULT 0,
-  `SurvivorFFCount` mediumint(8) unsigned NOT NULL DEFAULT 0,
-  `SurvivorFFTakenCount` int(11) DEFAULT NULL,
-  `SurvivorFFDamage` int(11) DEFAULT NULL,
-  `SurvivorFFTakenDamage` int(11) DEFAULT NULL,
-  `MedkitsUsed` tinyint(10) unsigned NOT NULL DEFAULT 0,
-  `FirstAidShared` tinyint(10) unsigned NOT NULL DEFAULT 0,
-  `PillsUsed` smallint(10) unsigned NOT NULL DEFAULT 0,
-  `MolotovsUsed` smallint(10) unsigned NOT NULL DEFAULT 0,
-  `PipebombsUsed` smallint(10) unsigned NOT NULL DEFAULT 0,
-  `BoomerBilesUsed` smallint(10) unsigned NOT NULL DEFAULT 0,
-  `AdrenalinesUsed` smallint(10) unsigned NOT NULL DEFAULT 0,
-  `DefibrillatorsUsed` smallint(10) unsigned NOT NULL DEFAULT 0,
-  `DamageTaken` int(10) unsigned NOT NULL DEFAULT 0,
-  `ReviveOtherCount` smallint(10) unsigned NOT NULL DEFAULT 0,
-  `Incaps` smallint(10) unsigned NOT NULL DEFAULT 0,
-  `Deaths` tinyint(10) unsigned NOT NULL DEFAULT 0,
-  `boomer_kills` smallint(10) unsigned DEFAULT NULL,
-  `smoker_kills` smallint(10) unsigned DEFAULT NULL,
-  `jockey_kills` smallint(10) unsigned DEFAULT NULL,
-  `hunter_kills` smallint(10) unsigned DEFAULT NULL,
-  `spitter_kills` smallint(10) unsigned DEFAULT NULL,
-  `charger_kills` smallint(10) unsigned DEFAULT NULL,
-  `SpecialInfectedKills` int(10) unsigned GENERATED ALWAYS AS (`boomer_kills` + `spitter_kills` + `jockey_kills` + `charger_kills` + `hunter_kills` + `smoker_kills`) VIRTUAL,
-  `honks` smallint(5) unsigned DEFAULT 0,
-  `top_weapon` varchar(64) DEFAULT NULL,
-  `minutes_idle` mediumint(8) unsigned NOT NULL DEFAULT 0,
-  `WitchesCrowned` mediumint(8) unsigned NOT NULL DEFAULT 0,
-  `SmokersSelfCleared` mediumint(8) unsigned NOT NULL DEFAULT 0,
-  `RocksHitBy` mediumint(8) unsigned NOT NULL DEFAULT 0,
-  `RocksDodged` mediumint(8) unsigned NOT NULL DEFAULT 0,
-  `HuntersDeadstopped` mediumint(8) unsigned NOT NULL DEFAULT 0,
-  `TimesPinned` mediumint(8) unsigned NOT NULL DEFAULT 0,
-  `ClearedPinned` mediumint(8) unsigned DEFAULT 0,
-  `BoomedTeammates` smallint(5) unsigned NOT NULL DEFAULT 0,
-  `TimesBoomed` mediumint(8) unsigned NOT NULL DEFAULT 0,
-  `DamageToTank` mediumint(8) unsigned NOT NULL DEFAULT 0,
-  `DamageToWitch` mediumint(8) unsigned NOT NULL DEFAULT 0,
-  `DamageDealt` int(10) unsigned NOT NULL DEFAULT 0,
-  `CarAlarmsActivated` tinyint(3) unsigned NOT NULL DEFAULT 0,
+  `timestamp` int(11) NOT NULL DEFAULT unix_timestamp(),
+  `map` varchar(64) NOT NULL,
+  `type` smallint(6) NOT NULL,
+  `x` int(11) DEFAULT NULL,
+  `y` int(11) DEFAULT NULL,
+  `z` int(11) DEFAULT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `campaignID` (`campaignID`,`steamid`),
-  KEY `stats_games_campaignID_index` (`campaignID`),
-  KEY `stats_games_stats_users_steamid_fk` (`steamid`)
+  KEY `stats_heatmaps_stats_users_steamid_fk` (`steamid`),
+  CONSTRAINT `stats_heatmaps_stats_users_steamid_fk` FOREIGN KEY (`steamid`) REFERENCES `stats_users` (`steamid`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -652,6 +676,37 @@ CREATE TABLE `stats_map_ratings` (
   `value` tinyint(4) NOT NULL,
   `comment` varchar(200) DEFAULT NULL,
   PRIMARY KEY (`map_id`,`steamid`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `stats_migrations`
+--
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `stats_migrations` (
+  `id` smallint(6) NOT NULL,
+  `timestamp` datetime DEFAULT NULL,
+  `state` tinyint(4) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `stats_names_history`
+--
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `stats_names_history` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `steamid` varchar(32) NOT NULL,
+  `name` varchar(64) NOT NULL,
+  `created` int(11) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `stats_names_history_stats_users_steamid_fk` (`steamid`),
+  CONSTRAINT `stats_names_history_stats_users_steamid_fk` FOREIGN KEY (`steamid`) REFERENCES `stats_users` (`steamid`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -709,19 +764,19 @@ CREATE TABLE `stats_sessions` (
   `kills_common` int(10) unsigned NOT NULL DEFAULT 0,
   `kills_melee` smallint(10) unsigned NOT NULL DEFAULT 0,
   `damage_dealt` int(10) unsigned NOT NULL DEFAULT 0,
-  `damage_dealt_friendly_count` mediumint(8) unsigned NOT NULL DEFAULT 0,
-  `damage_taken_friendly_count` int(11) DEFAULT NULL,
-  `damage_dealt_friendly` int(11) DEFAULT NULL,
-  `damage_taken_friendly` int(11) DEFAULT NULL,
-  `used_kit_self` tinyint(10) unsigned NOT NULL DEFAULT 0 COMMENT 'heal self',
-  `used_kit_other` tinyint(10) unsigned NOT NULL DEFAULT 0 COMMENT 'healed teammate',
+  `damage_taken` int(10) unsigned NOT NULL DEFAULT 0,
+  `damage_dealt_friendly_count` int(10) unsigned NOT NULL DEFAULT 0,
+  `damage_taken_friendly_count` int(10) unsigned DEFAULT NULL,
+  `damage_dealt_friendly` int(10) unsigned DEFAULT NULL,
+  `damage_taken_friendly` int(10) unsigned DEFAULT NULL,
+  `used_kit_self` smallint(10) unsigned NOT NULL DEFAULT 0 COMMENT 'heal self',
+  `used_kit_other` smallint(10) unsigned NOT NULL DEFAULT 0 COMMENT 'healed teammate',
   `used_pills` smallint(10) unsigned NOT NULL DEFAULT 0,
   `used_molotov` smallint(10) unsigned NOT NULL DEFAULT 0,
   `used_pipebomb` smallint(10) unsigned NOT NULL DEFAULT 0,
   `used_bile` smallint(10) unsigned NOT NULL DEFAULT 0,
   `used_adrenaline` smallint(10) unsigned NOT NULL DEFAULT 0,
   `used_defib` smallint(10) unsigned NOT NULL DEFAULT 0,
-  `damage_taken` int(10) unsigned NOT NULL DEFAULT 0,
   `times_revived_other` smallint(10) unsigned NOT NULL DEFAULT 0,
   `times_hanging` smallint(5) unsigned DEFAULT 0,
   `times_incapped` smallint(10) unsigned NOT NULL DEFAULT 0,
@@ -752,14 +807,19 @@ CREATE TABLE `stats_sessions` (
   `damage_dealt_tank` mediumint(8) unsigned NOT NULL DEFAULT 0 COMMENT 'dmg to tank',
   `damage_dealt_witch` mediumint(8) unsigned NOT NULL DEFAULT 0 COMMENT 'dmg to witch',
   `caralarms_activated` tinyint(3) unsigned NOT NULL DEFAULT 0,
+  `used_kit` smallint(11) unsigned GENERATED ALWAYS AS (`used_kit_self` + `used_kit_other`) VIRTUAL COMMENT 'any usage',
   `longest_shot_distance` float DEFAULT NULL,
   `seconds_alive` int(10) unsigned NOT NULL,
   `seconds_idle` int(10) unsigned NOT NULL,
   `seconds_dead` int(10) unsigned DEFAULT 0,
   `seconds_total` int(10) unsigned GENERATED ALWAYS AS (`seconds_alive` + `seconds_idle` + `seconds_dead`) VIRTUAL,
+  `damage_taken_fall` float DEFAULT NULL,
+  `times_shove` mediumint(9) DEFAULT NULL,
+  `times_jumped` mediumint(9) DEFAULT NULL,
+  `bullets_fired` mediumint(9) DEFAULT NULL,
   PRIMARY KEY (`id`),
+  UNIQUE KEY `stats_sessions_game_id_steamid_uindex` (`game_id`,`steamid`) COMMENT 'ensure no duplicate sessions',
   KEY `stats_games_stats_users_steamid_fk` (`steamid`),
-  KEY `stats_sessions_stats_games_id_fk` (`game_id`),
   CONSTRAINT `stats_games_stats_users_steamid_fk` FOREIGN KEY (`steamid`) REFERENCES `stats_users` (`steamid`) ON DELETE CASCADE,
   CONSTRAINT `stats_sessions_stats_games_id_fk` FOREIGN KEY (`game_id`) REFERENCES `stats_games` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -782,33 +842,33 @@ CREATE TABLE `stats_users` (
   `points` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'current points earned',
   `points_start_time` int(10) unsigned NOT NULL DEFAULT unix_timestamp() COMMENT 'unix timestamp when current points had reset',
   `points_cuml` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'total points earned',
-  `deaths` int(11) unsigned NOT NULL DEFAULT 0,
-  `damage_taken` bigint(11) unsigned NOT NULL DEFAULT 0,
-  `damage_dealt` bigint(11) unsigned NOT NULL DEFAULT 0,
+  `deaths` mediumint(11) unsigned NOT NULL DEFAULT 0,
+  `damage_taken` int(11) unsigned NOT NULL DEFAULT 0,
+  `damage_dealt` int(11) unsigned NOT NULL DEFAULT 0,
   `pickups_molotov` int(11) unsigned NOT NULL DEFAULT 0,
-  `pickups_bile` int(11) unsigned NOT NULL DEFAULT 0,
-  `pickups_pipebomb` int(11) unsigned NOT NULL DEFAULT 0,
-  `pickups_pills` int(11) unsigned NOT NULL DEFAULT 0,
-  `times_incapped` int(11) unsigned NOT NULL DEFAULT 0,
-  `times_hanging` int(11) unsigned NOT NULL DEFAULT 0 COMMENT 'ledge grabs',
-  `used_pills` int(11) unsigned NOT NULL DEFAULT 0,
-  `used_adrenaline` int(11) unsigned NOT NULL DEFAULT 0,
-  `used_kit_self` int(11) unsigned NOT NULL DEFAULT 0 COMMENT 'healed self',
-  `used_kit_other` int(11) unsigned NOT NULL DEFAULT 0 COMMENT 'healed teammate',
-  `used_defib` int(11) unsigned NOT NULL DEFAULT 0,
-  `times_revived` int(11) unsigned NOT NULL DEFAULT 0 COMMENT 'self got incapped',
-  `times_revived_other` int(11) unsigned NOT NULL DEFAULT 0,
-  `pickups_adrenaline` int(11) DEFAULT NULL,
+  `pickups_bile` mediumint(11) unsigned NOT NULL DEFAULT 0,
+  `pickups_pipebomb` mediumint(11) unsigned NOT NULL DEFAULT 0,
+  `pickups_pills` mediumint(11) unsigned NOT NULL DEFAULT 0,
+  `times_incapped` mediumint(11) unsigned NOT NULL DEFAULT 0,
+  `times_hanging` mediumint(11) unsigned NOT NULL DEFAULT 0 COMMENT 'ledge grabs',
+  `used_pills` mediumint(8) unsigned NOT NULL DEFAULT 0,
+  `used_adrenaline` mediumint(8) unsigned NOT NULL DEFAULT 0,
+  `used_kit_self` mediumint(8) unsigned NOT NULL DEFAULT 0 COMMENT 'healed self',
+  `used_kit_other` mediumint(8) unsigned NOT NULL DEFAULT 0 COMMENT 'healed teammate',
+  `used_defib` mediumint(8) unsigned NOT NULL DEFAULT 0,
+  `times_revived` mediumint(8) unsigned NOT NULL DEFAULT 0 COMMENT 'self got incapped',
+  `times_revived_other` mediumint(11) unsigned NOT NULL DEFAULT 0,
+  `pickups_adrenaline` mediumint(8) unsigned NOT NULL DEFAULT 0,
   `kills_melee` int(11) unsigned NOT NULL DEFAULT 0 COMMENT 'kils with melee',
-  `kills_tank` int(10) unsigned NOT NULL DEFAULT 0,
+  `kills_tank` int(11) unsigned NOT NULL DEFAULT 0,
   `kills_tank_solo` int(10) unsigned NOT NULL DEFAULT 0,
   `kills_tank_melee` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'with melee',
   `damage_dealt_friendly` int(10) unsigned NOT NULL DEFAULT 0,
-  `damage_taken_friendly` int(11) DEFAULT 0 COMMENT 'ff recv',
-  `kills_common` int(10) unsigned DEFAULT 0,
+  `damage_taken_friendly` int(11) NOT NULL DEFAULT 0 COMMENT 'ff recv',
+  `kills_common` int(10) unsigned NOT NULL DEFAULT 0,
   `kills_common_headshots` int(10) unsigned NOT NULL DEFAULT 0,
   `door_opens` int(10) unsigned NOT NULL DEFAULT 0,
-  `damage_dealt_tank` int(10) unsigned DEFAULT 0,
+  `damage_dealt_tank` int(10) unsigned NOT NULL DEFAULT 0,
   `damage_dealt_witch` int(10) unsigned NOT NULL DEFAULT 0,
   `finales_won` int(10) unsigned NOT NULL DEFAULT 0,
   `kills_smoker` int(10) unsigned NOT NULL DEFAULT 0,
@@ -818,11 +878,10 @@ CREATE TABLE `stats_users` (
   `kills_jockey` int(10) unsigned NOT NULL DEFAULT 0,
   `kills_charger` int(10) unsigned NOT NULL DEFAULT 0,
   `kills_witch` int(10) unsigned NOT NULL DEFAULT 0,
-  `used_ammo_packs` int(10) unsigned NOT NULL DEFAULT 0,
   `kills_friendly` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'teammates killed',
-  `used_bile` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'throws',
-  `used_molotov` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'throws',
-  `used_pipebomb` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'throws',
+  `used_bile` mediumint(8) unsigned NOT NULL DEFAULT 0 COMMENT 'throws',
+  `used_molotov` mediumint(8) unsigned NOT NULL DEFAULT 0 COMMENT 'throws',
+  `used_pipebomb` mediumint(8) unsigned NOT NULL DEFAULT 0 COMMENT 'throws',
   `damage_dealt_fire` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'gascan/molotov',
   `kills_fire` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'gascan/molotov',
   `kills_pipebomb` int(10) unsigned NOT NULL DEFAULT 0,
@@ -832,25 +891,37 @@ CREATE TABLE `stats_users` (
   `witches_crowned_angry` smallint(5) unsigned NOT NULL DEFAULT 0,
   `smokers_selfcleared` int(10) unsigned NOT NULL DEFAULT 0,
   `rocks_hitby` int(10) unsigned NOT NULL DEFAULT 0,
-  `rocks_dodged` int(10) unsigned NOT NULL DEFAULT 0,
+  `rocks_dodged` mediumint(8) unsigned NOT NULL DEFAULT 0,
   `hunters_deadstopped` int(10) unsigned NOT NULL DEFAULT 0,
-  `times_cleared_pinned` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'helped survivor that was pinned',
+  `times_cleared_pinned` mediumint(8) unsigned NOT NULL DEFAULT 0 COMMENT 'helped survivor that was pinned',
   `times_pinned` int(10) unsigned NOT NULL DEFAULT 0,
-  `honks` smallint(5) unsigned NOT NULL DEFAULT 0 COMMENT 'clown honks',
-  `times_boomed_teammates` int(11) DEFAULT 0 COMMENT 'popped boomer and got someone boomed',
-  `times_boomed_self` smallint(6) DEFAULT 0 COMMENT 'popped boomer and got self boomed',
-  `times_boomed` int(11) DEFAULT NULL,
+  `honks` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'clown honks',
+  `times_boomed_teammates` mediumint(8) unsigned NOT NULL DEFAULT 0 COMMENT 'popped boomer and got someone boomed',
+  `times_boomed_self` mediumint(8) unsigned NOT NULL DEFAULT 0 COMMENT 'popped boomer and got self boomed',
+  `times_boomed` mediumint(8) unsigned NOT NULL DEFAULT 0,
   `forgot_kit_count` smallint(5) unsigned NOT NULL DEFAULT 0 COMMENT 'forgot kit in saferoom if some left',
-  `total_distance_travelled` float DEFAULT 0,
+  `total_distance_travelled` float NOT NULL DEFAULT 0,
   `kills_all_specials` int(11) GENERATED ALWAYS AS (`kills_boomer` + `kills_charger` + `kills_smoker` + `kills_jockey` + `kills_hunter` + `kills_spitter`) VIRTUAL,
   `kits_slapped` int(11) NOT NULL DEFAULT 0,
   `damage_dealt_friendly_count` mediumint(8) unsigned NOT NULL DEFAULT 0,
-  `damage_taken_friendly_count` mediumint(8) unsigned DEFAULT 0,
+  `damage_taken_friendly_count` mediumint(8) unsigned NOT NULL DEFAULT 0,
+  `used_ammopack_fire` mediumint(8) unsigned NOT NULL DEFAULT 0,
+  `used_ammopack_explosive` mediumint(8) unsigned NOT NULL DEFAULT 0,
   `used_kit` int(11) GENERATED ALWAYS AS (`used_kit_self` + `used_kit_other`) VIRTUAL COMMENT 'any usage',
-  `seconds_alive` int(10) unsigned NOT NULL,
-  `seconds_idle` int(10) unsigned NOT NULL,
-  `seconds_dead` int(10) unsigned DEFAULT 0,
+  `seconds_alive` int(10) unsigned NOT NULL DEFAULT 0,
+  `seconds_idle` int(10) unsigned NOT NULL DEFAULT 0,
+  `seconds_dead` int(10) unsigned NOT NULL DEFAULT 0,
   `seconds_total` int(10) unsigned GENERATED ALWAYS AS (`seconds_alive` + `seconds_idle` + `seconds_dead`) VIRTUAL,
+  `damage_taken_fall` float NOT NULL DEFAULT 0,
+  `times_shove` mediumint(9) unsigned NOT NULL DEFAULT 0,
+  `times_jumped` mediumint(9) unsigned NOT NULL DEFAULT 0,
+  `bullets_fired` mediumint(9) unsigned NOT NULL DEFAULT 0,
+  `times_incapped_fire` mediumint(9) unsigned NOT NULL DEFAULT 0,
+  `times_incapped_acid` mediumint(9) unsigned NOT NULL DEFAULT 0,
+  `times_incapped_zombie` mediumint(9) unsigned NOT NULL DEFAULT 0,
+  `times_incapped_special` mediumint(9) unsigned NOT NULL DEFAULT 0,
+  `times_incapped_tank` mediumint(9) unsigned NOT NULL DEFAULT 0,
+  `times_incapped_witch` mediumint(9) unsigned NOT NULL DEFAULT 0,
   PRIMARY KEY (`steamid`),
   KEY `points` (`steamid`),
   FULLTEXT KEY `last_alias` (`last_alias`)
@@ -890,26 +961,169 @@ CREATE TABLE `stats_weapon_usages` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Table structure for table `user_names`
+--
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `user_names` (
+  `steamid` varchar(32) NOT NULL,
+  `name` varchar(64) NOT NULL,
+  `avatar_hash` tinytext DEFAULT NULL,
+  `timestamp` bigint(20) NOT NULL DEFAULT unix_timestamp(),
+  PRIMARY KEY (`steamid`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Temporary table structure for view `view_activity_log`
+--
+
+SET @saved_cs_client     = @@character_set_client;
+SET character_set_client = utf8mb4;
+/*!50001 CREATE VIEW `view_activity_log` AS SELECT
+ NULL AS `date`,
+ NULL AS `type`,
+ NULL AS `client_name`,
+ NULL AS `target_name`,
+ NULL AS `message`,
+ NULL AS `server`,
+ NULL AS `id`,
+ NULL AS `client`,
+ NULL AS `target`,
+ NULL AS `metadata` */;
+SET character_set_client = @saved_cs_client;
+
+--
 -- Temporary table structure for view `view_panel_user`
 --
 
 SET @saved_cs_client     = @@character_set_client;
 SET character_set_client = utf8mb4;
 /*!50001 CREATE VIEW `view_panel_user` AS SELECT
- NULL AS `account_id`,
+ NULL AS `steamid_part`,
  NULL AS `create_time`,
  NULL AS `avatar_hash`,
  NULL AS `last_ip`,
  NULL AS `last_join_time`,
  NULL AS `last_country`,
  NULL AS `last_region`,
+ NULL AS `last_name`,
  NULL AS `last_name_update_time`,
- NULL AS `last_name` */;
+ NULL AS `name_change_count` */;
 SET character_set_client = @saved_cs_client;
 
 --
 -- Dumping routines for database 'left4dead2'
 --
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION' */ ;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_unicode_ci */ ;
+DELIMITER ;;
+CREATE DEFINER=`jackz`@`76.84.94.53` PROCEDURE `left4dead2.cleanup_log`()
+BEGIN
+  	SELECT * FROM `activity_log`
+	WHERE `timestamp` < UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 30 DAY));
+END
+;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'IGNORE_SPACE,STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION' */ ;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_uca1400_ai_ci */ ;
+DELIMITER ;;
+CREATE DEFINER=`jackz`@`localhost` PROCEDURE `stats_points_reset_next`()
+begin
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION, SQLWARNING
+        ROLLBACK;
+
+    insert into stats_points_history (period_start, period_end, steamid, points)
+        select points_start_time, unix_timestamp(), steamid, points from stats_users where points > 0;
+
+
+    update stats_users SET points_cuml=points_cuml+points;
+
+
+    update stats_users SET points=0, points_start_time=unix_timestamp();
+    delete from stats_points;
+    select * FROM stats_points_history;
+    select * FROM stats_users order by kills_all_specials desc;
+
+    commit;
+end
+;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+
+--
+-- Final view structure for view `appeals`
+--
+
+/*!50001 DROP VIEW IF EXISTS `appeals`*/;
+/*!50001 SET @saved_cs_client          = @@character_set_client */;
+/*!50001 SET @saved_cs_results         = @@character_set_results */;
+/*!50001 SET @saved_col_connection     = @@collation_connection */;
+/*!50001 SET character_set_client      = utf8mb4 */;
+/*!50001 SET character_set_results     = utf8mb4 */;
+/*!50001 SET collation_connection      = utf8mb4_uca1400_ai_ci */;
+/*!50001 CREATE ALGORITHM=UNDEFINED */
+/*!50013 DEFINER=`jackz`@`localhost` SQL SECURITY DEFINER */
+/*!50001 VIEW `appeals` AS select `b`.`id` AS `id`,`a`.`id` AS `appeal_id`,`b`.`steamid` AS `steamid`,`u_t`.`last_alias` AS `client_name`,`b`.`executor` AS `executor`,`u_e`.`last_alias` AS `exectuor_name`,`b`.`timestamp` AS `timestamp`,`b`.`reason` AS `reason`,`b`.`public_message` AS `public_message`,`b`.`ip` AS `ip`,`a`.`created` AS `created`,`a`.`message` AS `appeal_message` from (((`ban_appeals` `a` join `bans` `b` on(`b`.`id` = `a`.`ban_id`)) left join `stats_users` `u_e` on(`u_e`.`steamid` = `b`.`executor`)) left join `stats_users` `u_t` on(`u_t`.`steamid` = `b`.`steamid`)) */;
+/*!50001 SET character_set_client      = @saved_cs_client */;
+/*!50001 SET character_set_results     = @saved_cs_results */;
+/*!50001 SET collation_connection      = @saved_col_connection */;
+
+--
+-- Final view structure for view `sorry_response_actions`
+--
+
+/*!50001 DROP VIEW IF EXISTS `sorry_response_actions`*/;
+/*!50001 SET @saved_cs_client          = @@character_set_client */;
+/*!50001 SET @saved_cs_results         = @@character_set_results */;
+/*!50001 SET @saved_col_connection     = @@collation_connection */;
+/*!50001 SET character_set_client      = utf8mb4 */;
+/*!50001 SET character_set_results     = utf8mb4 */;
+/*!50001 SET collation_connection      = utf8mb4_uca1400_ai_ci */;
+/*!50001 CREATE ALGORITHM=UNDEFINED */
+/*!50013 DEFINER=`jackz`@`localhost` SQL SECURITY DEFINER */
+/*!50001 VIEW `sorry_response_actions` AS select `l`.`id` AS `id`,`sr`.`name` AS `response`,`sr`.`id` AS `response_id`,`l`.`client` AS `client`,`l`.`target` AS `target`,`u`.`last_alias` AS `client_name`,`l`.`timestamp` AS `timestamp`,`l`.`server` AS `server` from ((`activity_log` `l` join `stats_users` `u` on(`l`.`client` = `u`.`steamid`)) join `sorry_responses` `sr` on(nullif(regexp_substr(regexp_substr(`l`.`message`,'response = -?[0-9]+'),'-?[0-9]+'),'') = `sr`.`id`)) where `l`.`type` = 'ACTION' order by `l`.`id` desc */;
+/*!50001 SET character_set_client      = @saved_cs_client */;
+/*!50001 SET character_set_results     = @saved_cs_results */;
+/*!50001 SET collation_connection      = @saved_col_connection */;
+
+--
+-- Final view structure for view `view_activity_log`
+--
+
+/*!50001 DROP VIEW IF EXISTS `view_activity_log`*/;
+/*!50001 SET @saved_cs_client          = @@character_set_client */;
+/*!50001 SET @saved_cs_results         = @@character_set_results */;
+/*!50001 SET @saved_col_connection     = @@collation_connection */;
+/*!50001 SET character_set_client      = utf8mb4 */;
+/*!50001 SET character_set_results     = utf8mb4 */;
+/*!50001 SET collation_connection      = utf8mb4_uca1400_ai_ci */;
+/*!50001 CREATE ALGORITHM=UNDEFINED */
+/*!50013 DEFINER=`jackz`@`localhost` SQL SECURITY DEFINER */
+/*!50001 VIEW `view_activity_log` AS select from_unixtime(`activity_log`.`timestamp`) AS `date`,`activity_log`.`type` AS `type`,`u_c`.`last_alias` AS `client_name`,`u_t`.`last_alias` AS `target_name`,`activity_log`.`message` AS `message`,`activity_log`.`server` AS `server`,`activity_log`.`id` AS `id`,`activity_log`.`client` AS `client`,`activity_log`.`target` AS `target`,`activity_log`.`metadata` AS `metadata` from ((`activity_log` left join `stats_users` `u_c` on(`activity_log`.`client` = `u_c`.`steamid`)) left join `stats_users` `u_t` on(`activity_log`.`target` = `u_t`.`steamid`)) order by `activity_log`.`id` desc */;
+/*!50001 SET character_set_client      = @saved_cs_client */;
+/*!50001 SET character_set_results     = @saved_cs_results */;
+/*!50001 SET collation_connection      = @saved_col_connection */;
 
 --
 -- Final view structure for view `view_panel_user`
@@ -921,10 +1135,10 @@ SET character_set_client = @saved_cs_client;
 /*!50001 SET @saved_col_connection     = @@collation_connection */;
 /*!50001 SET character_set_client      = utf8mb4 */;
 /*!50001 SET character_set_results     = utf8mb4 */;
-/*!50001 SET collation_connection      = utf8mb4_general_ci */;
+/*!50001 SET collation_connection      = utf8mb4_uca1400_ai_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`jackz`@`localhost` SQL SECURITY DEFINER */
-/*!50001 VIEW `view_panel_user` AS select `u`.`account_id` AS `account_id`,`u`.`create_time` AS `create_time`,`u`.`avatar_hash` AS `avatar_hash`,`u`.`last_ip` AS `last_ip`,`u`.`last_join_time` AS `last_join_time`,`u`.`last_country` AS `last_country`,`u`.`last_region` AS `last_region`,`pun`.`name_update_time` AS `last_name_update_time`,`pun`.`name` AS `last_name` from ((`panel_user` `u` left join (select `panel_user_names`.`account_id` AS `account_id`,max(`panel_user_names`.`name_update_time`) AS `name_update_time` from `panel_user_names` group by `panel_user_names`.`account_id`) `latest` on(`u`.`account_id` = `latest`.`account_id`)) left join `panel_user_names` `pun` on(`latest`.`account_id` = `pun`.`account_id` and `latest`.`name_update_time` = `pun`.`name_update_time`)) */;
+/*!50013 DEFINER=`jackz`@`%` SQL SECURITY DEFINER */
+/*!50001 VIEW `view_panel_user` AS select `u`.`steamid_part` AS `steamid_part`,`u`.`create_time` AS `create_time`,`u`.`avatar_hash` AS `avatar_hash`,`u`.`last_ip` AS `last_ip`,`u`.`last_join_time` AS `last_join_time`,`u`.`last_country` AS `last_country`,`u`.`last_region` AS `last_region`,`n`.`name` AS `last_name`,`n`.`name_update_time` AS `last_name_update_time`,coalesce(`n`.`name_change_count` - 1,0) AS `name_change_count` from (`panel_user` `u` left join (select `panel_user_names`.`steamid_part` AS `steamid_part`,`panel_user_names`.`name` AS `name`,`panel_user_names`.`name_update_time` AS `name_update_time`,count(0) over ( partition by `panel_user_names`.`steamid_part`) AS `name_change_count`,row_number() over ( partition by `panel_user_names`.`steamid_part` order by `panel_user_names`.`name_update_time` desc,`panel_user_names`.`steamid_part` desc) AS `rn` from `panel_user_names`) `n` on(`n`.`steamid_part` = `u`.`steamid_part` and `n`.`rn` = 1)) order by `u`.`create_time` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
 /*!50001 SET collation_connection      = @saved_col_connection */;
@@ -952,5 +1166,6 @@ INSERT INTO `schema_migrations` (version) VALUES
   ('20260630210539'),
   ('20260630210543'),
   ('20260630210546'),
-  ('20261103184914');
+  ('20261103184914'),
+  ('20261118210544');
 UNLOCK TABLES;
