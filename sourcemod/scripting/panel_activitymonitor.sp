@@ -4,7 +4,7 @@
 //#define DEBUG
 #define DB_NAME "srcpanel"
 #define PUSH_TIMER 60.0
-#define PLUGIN_VERSION "1.0"
+#define PLUGIN_VERSION "1.1.0"
 
 #include <sourcemod>
 #include <sdktools>
@@ -177,7 +177,10 @@ public Action Timer_PushLogs(Handle h) {
 		Transaction transaction = new Transaction();
 		for(int i = 0; i < length; i++) {
 			logs.GetArray(i, log, sizeof(log));
-			g_db.Format(query, sizeof(query), "INSERT INTO `activity_log` (`timestamp`, `server`, `type`, `client`, `target`, `message`) VALUES (%d, NULLIF('%s', ''), '%s', NULLIF('%s', ''), NULLIF('%s', ''), NULLIF('%s', ''))",
+			g_db.Format(
+				query, sizeof(query), 
+				"INSERT INTO `activity_log` (`timestamp`, `server`, `type`, `client`, `target`, `message`)"...
+				"VALUES (%d, NULLIF('%s', ''), '%s', NULLIF('%s', ''), NULLIF('%s', ''), NULLIF('%s', ''))",
 				log.timestamp,
 				serverID, 
 				log.name,

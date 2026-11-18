@@ -6,6 +6,7 @@
 #define DEFAULT_SERVER_PORT 7888
 #define SOCKET_TIMEOUT_DURATION 90.0
 #define FULL_SYNC_INTERVAL_S 60.0
+#define PREFIX "[AdminPanel] "
 
 // Name of sourcemod database
 // TODO: rename adminpanel, Admin panel -> SrcPanel
@@ -29,7 +30,7 @@ public Plugin myinfo =
 	name = "SrcPanel Core",
 	author = "jackzmc",
 	description = "Plugin to integrate with SrcPanel",
-	version = "1.0.0",
+	version = "1.1.0",
 	url = "https://codeberg.org/jackzmc/SrcPanel"
 };
 
@@ -234,10 +235,10 @@ void SetupUserInDB(int client) {
 
 		char query[512];
 		g_db.Format(query, sizeof(query), "INSERT INTO panel_user "
-			..."(account_id,create_time,last_join_time,last_ip,last_country,last_region)"
-			..."VALUES ('%s',UNIX_TIMESTAMP(),%d,'%s','%s','%s')"
+			..."(steamid_part,create_time,last_join_time,last_ip,last_country,last_region)"
+			..."VALUES (SUBSTRING('%s',9),UNIX_TIMESTAMP(),%d,'%s','%s','%s')"
 			..."ON DUPLICATE KEY UPDATE last_join_time=%d,last_ip='%s',last_country='%s',last_region='%s';",
-			steamidCache[client][10], // strip STEAM_#:#:##### returning only ending #######
+			steamidCache[client],
 			// insert:
 			time,
 			ip,
@@ -258,8 +259,8 @@ bool GetNamesForPlayer(int client, int player, int count = 10) {
 	if(steamidCache[player][0] == '\0') return false;
 	char query[512];
 	g_db.Format(query, sizeof(query), 
-		"SELECT name FROM user_names_history WHERE SUBSTRING(steamid, 11) = ? ORDER BY created DESC LIMIT ?",
-		steamidCache[player][10], // strip STEAM_#:#:##### returning only ending #######
+		"SELECT name FROM panel_user_names WHERE SUBSTRING(steamid_part, 9) = ? ORDER BY name_updated_time DESC LIMIT ?",
+		steamidCache[player], // strip STEAM_#:#:##### returning only ending #######
 		count
 	);
 	DataPack pack;
@@ -303,7 +304,11 @@ void DBCT_PanelUser(Database db, DBResultSet results, const char[] error, int us
 	int client = GetClientOfUserId(userId);
 	if(client > 0) {
 		char query[128];
-		g_db.Format(query, sizeof(query), "SELECT name FROM panel_user_names WHERE account_id = '%s' ORDER BY name_update_time 	DESC LIMIT 1", steamidCache[client][10]);  // strip STEAM_#:#:##### returning only ending #######
+		g_db.Format(
+			query, sizeof(query), 
+			"SELECT name FROM panel_user_names WHERE steamid_part = SUBSTRING('%s',9) ORDER BY name_update_time DESC LIMIT 1", 
+			steamidCache[client]
+		);  // strip STEAM_#:#:##### returning only ending #######
 		g_db.Query(DBCT_CheckUserName, query, userId);
 	}
 }
@@ -334,14 +339,14 @@ void DBCT_CheckUserName(Database db, DBResultSet results, const char[] error, in
 				insertNewName = false;
 			} else {
 				// Name changed, tell admins
-				PrintChatToAdmins("[AdminPanel] \x04\"%N\"\x01 was previously known as \x05\"%s\"\x01", client, prevName);
+				PrintChatToAdmins("%s \x04\"%N\"\x01 was previously known as \x05\"%s\"\x01", PREFIX, client, prevName);
 			}
 		}
 
 		if(insertNewName) {
-			PrintToServer("[AdminPanel] Updating/Inserting name '%s' for %s", nameCache[client], steamidCache[client]);
+			PrintToServer("%s Updating/Inserting name '%s' for %s", PREFIX, nameCache[client], steamidCache[client]);
 			char query[255];
-			g_db.Format(query, sizeof(query), "INSERT INTO panel_user_names (account_id,name,name_update_time) VALUES ('%s','%s',%d)", steamidCache[client][10], nameCache[client], GetTime());
+			g_db.Format(query, sizeof(query), "INSERT INTO panel_user_names (steamid_part,name,name_update_time) VALUES (SUBSTRING('%s', 9),'%s',%d)", steamidCache[client], nameCache[client], GetTime());
 			g_db.Query(DBCT_Insert, query);
 		}
 	}
@@ -351,7 +356,7 @@ stock void Debug(const char[] format, any ...) {
 	if(!cvar_debug.BoolValue) return;
 	char buffer[254];
 	VFormat(buffer, sizeof(buffer), format, 2);
-	PrintToServer("[AdminPanel] debug: %s", buffer);
+	PrintToServer("%s debug: %s", PREFIX, buffer);
 }
 
 Action Timer_FullSync(Handle h) {
@@ -379,12 +384,12 @@ void TriggerItemUpdate(int client) {
 }
 
 void OnSocketError(Socket socket, int errorType, int errorNumber, int attempt) {
-	PrintToServer("[AdminPanel] Socket Error %d %d", errorType, errorNumber);
+	PrintToServer("%s Socket Error %d %d", PREFIX, errorType, errorNumber);
 	if(!socket.Connected) {
-		PrintToServer("[AdminPanel] Lost connection to socket, reconnecting", errorType, errorNumber);
+		PrintToServer("%s Lost connection to socket, reconnecting", PREFIX, errorType, errorNumber);
 		float nextAttempt = Exponential(float(attempt) / 2.0) + 2.0;
 		if(nextAttempt > MAX_ATTEMPT_TIMEOUT) nextAttempt = MAX_ATTEMPT_TIMEOUT;
-		PrintToServer("[AdminPanel] Disconnected, retrying in %.0f seconds", nextAttempt);
+		PrintToServer("%s Disconnected, retrying in %.0f seconds", PREFIX, nextAttempt);
 		g_socket.SetArg(attempt + 1);
 		CreateTimer(nextAttempt, Timer_Reconnect);
 	}
@@ -418,7 +423,7 @@ void OnSocketReceive(Socket socket, const char[] receiveData, int dataSize, int 
 		if(response == Live_OK) {
 			authState = Auth_Success;
 			pendingAuthTries = 0;
-			PrintToServer("[AdminPanel] Authenticated with server successfully.");
+			PrintToServer("%s Authenticated with server successfully.", PREFIX);
 			CreateTimer(1.0, Timer_FullSync);
 		} else if(response == Live_Error) {
 			authState = Auth_Fail;
@@ -457,7 +462,7 @@ void OnSocketReceive(Socket socket, const char[] receiveData, int dataSize, int 
 			receiveBuffer.ReadString(command, sizeof(command));
 			receiveBuffer.ReadString(cmdNamespace, sizeof(cmdNamespace));
 			if(cvar_debug.BoolValue) {
-				PrintToServer("[AdminPanel] Running %s:%s", cmdNamespace, command);
+				PrintToServer("%s Running %s:%s", PREFIX, cmdNamespace, command);
 			}
 			ProcessCommand(id, command, cmdNamespace);
 		}
@@ -474,12 +479,12 @@ void OnSocketReceive(Socket socket, const char[] receiveData, int dataSize, int 
 			if(userid > 0) {
 				int client = GetClientOfUserId(userid);
 				if(client > 0 && StartPayload(true)) {
-					PrintToServer("[AdminPanel] Sync requested for #%d, performing", userid);
+					PrintToServer("%s Sync requested for #%d, performing", PREFIX, userid);
 					AddPlayerRecord(client, Client_Connected);
 					SendPayload();
 				}
 			} else {
-				PrintToServer("[AdminPanel] Sync requested, performing");
+				PrintToServer("%s Sync requested, performing", PREFIX);
 				SendFullSync();
 			}
 		}
@@ -669,7 +674,7 @@ void SendAuthPayload() {
 	StartPayloadEx();
 	AddAuthRecord();
 	SendPayload();
-	PrintToServer("[AdminPanel] Authenticating with server");
+	PrintToServer("%s Authenticating with server", PREFIX);
 }
 
 // This does not trigger if the server is hibernating.
@@ -683,7 +688,7 @@ void OnSocketDisconnect(Socket socket, int attempt) {
 	g_socket.SetArg(attempt + 1);
 	float nextAttempt = Exponential(float(attempt) / 2.0) + 2.0;
 	if(nextAttempt > MAX_ATTEMPT_TIMEOUT) nextAttempt = MAX_ATTEMPT_TIMEOUT;
-	PrintToServer("[AdminPanel] Disconnected, retrying in %.0f seconds", nextAttempt);
+	PrintToServer("%s Disconnected, retrying in %.0f seconds", PREFIX, nextAttempt);
 	CreateTimer(nextAttempt, Timer_Reconnect);
 }
 
@@ -692,11 +697,11 @@ Handle hibernateTimer;
 public void L4D_OnServerHibernationUpdate(bool hibernating) {
 	if(hibernating) {
 		g_gameState = State_Hibernating;
-		PrintToServer("[AdminPanel] Server is hibernating, disconnecting from socket");
+		PrintToServer("%s Server is hibernating, disconnecting from socket", PREFIX);
 		// hibernateTimer = CreateTimer(30.0, Timer_Wake, 0, TIMER_REPEAT);
 	} else {
 		g_gameState = State_None;
-		PrintToServer("[AdminPanel] Server is not hibernating");
+		PrintToServer("%s Server is not hibernating", PREFIX);
 		if(hibernateTimer != null) {
 			delete hibernateTimer;
 		}
@@ -731,7 +736,7 @@ public void SteamWorks_SteamServersDisconnected() {
 
 Action Timer_Reconnect(Handle h, int type) {
 	if(type == 1) {
-		PrintToServer("[AdminPanel] No response after %f seconds, attempting reconnect", SOCKET_TIMEOUT_DURATION);
+		PrintToServer("%s No response after %f seconds, attempting reconnect", PREFIX, SOCKET_TIMEOUT_DURATION);
 	}
 	ConnectSocket();
 	return Plugin_Continue;
@@ -1206,14 +1211,14 @@ void OnCvarChanged(ConVar convar, const char[] oldValue, const char[] newValue) 
 				g_socket.Disconnect();
 			serverPort = DEFAULT_SERVER_PORT;
 			serverIp = "127.0.0.1";
-			PrintToServer("[AdminPanel] Deactivated");
+			PrintToServer("%s Deactivated", PREFIX);
 		} else {
 			int index = SplitString(newValue, ":", serverIp, sizeof(serverIp));
 			if(index > -1) {
 				serverPort = StringToInt(newValue[index]);
 				if(serverPort == 0) serverPort = DEFAULT_SERVER_PORT;
 			}
-			PrintToServer("[AdminPanel] Sending data to %s:%d", serverIp, serverPort);
+			PrintToServer("%s Sending data to %s:%d", PREFIX, serverIp, serverPort);
 			if(authToken[0] != '\0')
 				ConnectSocket();
 		}
@@ -1501,7 +1506,7 @@ void AddSurvivorRecord(int client) {
 		survivorType += 4; 
 	}
 	if(survivorType >= 8) {
-		PrintToServer("adminpanel: warn: invalid survivor type %d", survivorType);
+		PrintToServer("%s warn: invalid survivor type %d", PREFIX, survivorType);
 		survivorType = 7;
 	}
 

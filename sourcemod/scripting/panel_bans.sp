@@ -22,7 +22,7 @@ public Plugin myinfo =
     name =  "SrcPanel Global Bans", 
     author = "jackzmc", 
     description = "Manages bans via MySQL/MariaDB across servers", 
-    version = "1.1.0", 
+    version = "1.2.0", 
     url = "https://codeberg.org/jackzmc/SrcPanel"
 };
 
@@ -107,7 +107,7 @@ void RequestClientCheck(int client, bool validate = true) {
     GetClientIP(client, ip, sizeof(ip));
 
     char query[256];
-    g_db.Database.Format(query, sizeof(query), "SELECT reason, steamid, expired, public_message, flags, id FROM bans WHERE expired = 0 AND SUBSTRING(steamid, 11) = SUBSTRING('%s', 11) OR ip = '%s'", auth, ip);
+    g_db.Database.Format(query, sizeof(query), "SELECT reason, steamid, expired, public_message, flags, id FROM bans WHERE expired = 0 AND SUBSTRING(steamid, 9) = SUBSTRING('%s', 9) OR ip = '%s'", auth, ip);
     g_db.Database.Query(DB_OnConnectCheck, query, GetClientUserId(client), DBPrio_High);
     Log(Log_Info, Target_ServerConsole, "Checking client #%d (Name: %N) (ID: %s %s) (IP: %s)", client, client, auth, (validate ? "[CHECKED]" : "[UNCHECKED]"), ip);
 }
@@ -157,7 +157,7 @@ bool GetExecutorId(int source, char[] output, int maxlen) {
     if(source > 0 && source <= MaxClients && IsClientConnected(source)) {
         if(GetClientAuthId(source, AuthId_Steam2, output, maxlen)) {
             return true;
-        } 
+        }
 
         Log(Log_Warn, Target_ServerConsole, "Failed to get steamid for ban source %d", source);
     }
@@ -180,7 +180,7 @@ enum struct PendingBanData {
 
     void GetPrecheckQuery(char[] buffer, int maxlen) {
         g_db.GetConn().Format(buffer, maxlen, 
-            "SELECT expired,flags FROM bans WHERE expired = 0 AND SUBSTRING(steamid, 11) = '%s' OR ip = '%s'",
+            "SELECT expired,flags FROM bans WHERE expired = 0 AND SUBSTRING(steamid, 9) = '%s' OR ip = '%s'",
             this.steamid,
             this.ip
         );

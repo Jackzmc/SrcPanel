@@ -3,7 +3,7 @@
 
 //#define DEBUG
 #define DB_NAME "srcpanel"
-#define PLUGIN_VERSION "1.0"
+#define PLUGIN_VERSION "1.1"
 #define MAX_PLAYER_HISTORY 25
 #define MAX_NOTES_TO_SHOW 4
 
@@ -27,7 +27,7 @@ public Plugin myinfo =
 };
 
 static Database DB;
-static char query[1024];
+static char g_queryCache[1024];
 static char reason[256];
 static int waitingForNote[MAXPLAYERS+1];
 static char menuNoteTarget[32];
@@ -242,8 +242,8 @@ public Action OnClientSayCommand(int client, const char[] command, const char[] 
 		} else {
 			char buffer[128];
 			GetClientAuthId(client, AuthId_Steam2, buffer, sizeof(buffer));
-			DB.Format(query, sizeof(query), "INSERT INTO notes (steamid, markedBy, content) VALUES ('%s', '%s', '%s')", menuNoteTarget, buffer, sArgs);
-			DB.Query(DB_AddNote, query);
+			DB.Format(g_queryCache, sizeof(g_queryCache), "INSERT INTO notes (steamid, markedBy, content) VALUES ('%s', '%s', '%s')", menuNoteTarget, buffer, sArgs);
+			DB.Query(DB_AddNote, g_queryCache);
 			LogAction(client, -1, "\"%L\" added note for \"%s\" (%s): \"%s\"", client, menuNoteTargetName, menuNoteTarget, sArgs);
 			Format(buffer, sizeof(buffer), "%N: ", client);
 			CShowActivity2(client, "[Notes] ", "added a note for {green}%s: {default}\"%s\"", menuNoteTargetName, sArgs);
@@ -304,8 +304,8 @@ public Action Command_AddNote(int client, int args) {
 		char authMarker[32];
 		if(client > 0)
 			GetClientAuthId(client, AuthId_Steam2, authMarker, sizeof(authMarker));
-		DB.Format(query, sizeof(query), "INSERT INTO `notes` (steamid, markedBy, content) VALUES ('%s', '%s', '%s')", auth, authMarker, reason);
-		DB.Query(DB_AddNote, query);
+		DB.Format(g_queryCache, sizeof(g_queryCache), "INSERT INTO `notes` (steamid, markedBy, content) VALUES ('%s', '%s', '%s')", auth, authMarker, reason);
+		DB.Query(DB_AddNote, g_queryCache);
 		LogAction(client, target_list[0], "\"%L\" added note for \"%L\": \"%s\"", client, target_list[0], reason);
 		CShowActivity(client, "added a note for {green}%N: {default}\"%s\"", target_list[0], reason);
 	}
@@ -338,22 +338,26 @@ public Action Command_ListNotes(int client, int args) {
 		char auth[32];
 		GetClientAuthId(target_list[0], AuthId_Steam2, auth, sizeof(auth));
 
-		DB.Format(query, sizeof(query), 
-			"SELECT notes.content, u.last_name as last_alias, markedBy"...
-			"FROM notes "...
-			"JOIN view_panel_user u ON SUBSTRING(markedBy, 11) = u.account_id " ...
-			"WHERE notes.`steamid` = '%s' "...
-			"ORDER BY id DESC", 
-			auth
-		);
+		FormatSelectQuery(DB, g_queryCache, sizeof(g_queryCache), auth);
 		ReplyToCommand(client, "Fetching notes...");
 		DataPack pack = new DataPack();
 		pack.WriteCell(client > 0 ? GetClientUserId(client) : 0);
 		pack.WriteCell(GetClientUserId(target_list[0]));
 		pack.WriteString(auth);
-		DB.Query(DB_ListNotesForPlayer, query, pack);
+		DB.Query(DB_ListNotesForPlayer, g_queryCache, pack);
 	}
 	return Plugin_Handled;
+}
+
+void FormatSelectQuery(Database db, char[] query, int maxlen, const char[] auth) {
+	db.Format(query, maxlen, 
+		"SELECT notes.content, u.last_name as last_alias, markedBy"...
+		"FROM notes "...
+		"JOIN view_panel_user u ON SUBSTRING(markedBy, 9) = u.steamid_part " ...
+		"WHERE SUBSTRING(notes.steamid, 9) = SUBSTRING('%s',9)"...
+		"ORDER BY id DESC", 
+		auth
+	);
 }
 
 bool ConnectDB() {
@@ -378,15 +382,8 @@ public void Event_FirstSpawn(Event event, const char[] name, bool dontBroadcast)
 		static char auth[32];
 		// don't care if its spoofed or whatever
 		if(GetClientAuthId(client, AuthId_Steam2, auth, sizeof(auth), false)) {
-			DB.Format(query, sizeof(query), 
-				"SELECT notes.content, u.last_name as last_alias"...
-				"FROM notes "...
-				"JOIN view_panel_user u ON SUBSTRING(markedBy, 11) = u.account_id " ...
-				"WHERE notes.`steamid` = '%s' "...
-				"ORDER BY id DESC", 
-				auth
-			);
-			DB.Query(DB_FindNotes, query, GetClientUserId(client));
+			FormatSelectQuery(DB, g_queryCache, sizeof(g_queryCache), auth);
+			DB.Query(DB_FindNotes, g_queryCache, GetClientUserId(client));
 		}
 
 	}
@@ -633,6 +630,6 @@ void AddNoteIdentity(const char noteCreator[32], const char noteTarget[32], cons
 	int size = 2 * strlen(message) + 1;
 	char[] content = new char[size];
 	DB.Escape(message, content, size);
-	DB.Format(query, sizeof(query), "INSERT INTO `notes` (steamid, markedBy, content) VALUES ('%s', '%s', '%s')", noteTarget, noteCreator, content);
-	DB.Query(DB_AddNote, query);
+	DB.Format(g_queryCache, sizeof(g_queryCache), "INSERT INTO `notes` (steamid, markedBy, content) VALUES ('%s', '%s', '%s')", noteTarget, noteCreator, content);
+	DB.Query(DB_AddNote, g_queryCache);
 }
