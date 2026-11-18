@@ -52,12 +52,16 @@ export default defineNuxtConfig({
   },
 
   sourcemap: {
-    client: "hidden",
+    client: process.env.NODE_ENV !== 'production',
+    server: process.env.NODE_ENV !== 'production'
   },
 
   compatibilityDate: "2025-01-15",
 
   nitro: {
+    prerender: {
+      concurrency: 2
+    },
     routeRules: {
       "/api/_nuxt_icon/**": {},
       // '/api/**': { proxy: 'http://localhost:8081/api/**' }
