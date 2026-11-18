@@ -36,7 +36,7 @@
 </template>
 
 <script setup lang="ts">
-import { UserComponent } from "#components";
+import UserComponent from "@/components/UserComponent.vue";
 import { getRelDate } from "@srcpanel/common/format";
 import type { PlayerEntry } from "@srcpanel/common/User";
 import type { TableColumn } from "@nuxt/ui";
@@ -55,7 +55,7 @@ const columns = computed(() => {
       header: "Name",
       cell: ({ row }) => h(UserComponent, {
         user: {
-          steamid: row.original.steamid,
+          steamid: row.original.id,
           name: row.original.name ?? undefined,
         },
         class: "text-primary font-bold",
