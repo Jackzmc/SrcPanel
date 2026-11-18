@@ -15,7 +15,7 @@ export const GUARD_REQUIRE_PLAYER = {
       } else if(steamid.length < 10) {
         return reply.status(400).send({ error: "INVALID_STEAMID", message: "SteamID is not valid" })
       }
-      const id = SteamID.fromIndividualAccountID(steamid.substring(10))
+      const id = new SteamID(steamid)
       if(id.accountid === 0) {
         return reply.status(400).send({ error: "INVALID_STEAMID", message: "SteamID is not valid" })
       }

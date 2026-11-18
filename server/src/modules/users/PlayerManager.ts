@@ -40,7 +40,7 @@ export default class PlayerManager implements IShutdown {
 
     static async create(db: Pool, authMngr: AuthManager) {
         const queueSet = await CacheManager.instance.get<number[]>(CACHE_KEY)
-        const queue = queueSet?.map(acctId => SteamID.fromIndividualAccountID(acctId)) ?? []
+        const queue = queueSet?.map(acctId => new SteamID(acctId.toString())) ?? []
 
         const manager = new PlayerManager(db, authMngr, new Set(queue))
         const task = TaskManager.Instance.register("resolveNames", () => manager.resolveNames())
@@ -102,7 +102,7 @@ export default class PlayerManager implements IShutdown {
         )
         return rows
             .map(row => {
-                const steamid = SteamID.fromIndividualAccountID(row.account_id)
+                const steamid = new SteamID(row.account_id)
                 const playerData = formatPlayer(steamid, row)
                 // Side effects but oh well
                 if(!playerData.name) this.enqueueNameResolve(steamid)
@@ -147,7 +147,7 @@ export default class PlayerManager implements IShutdown {
         )
 
         return rows.map(row => {
-            const steamid = SteamID.fromIndividualAccountID(row.account_id)
+            const steamid = new SteamID(row.account_id)
             const playerEntry = formatPlayer(steamid, row)
             // Side effects but oh well
             if(!playerEntry.name) this.enqueueNameResolve(steamid)

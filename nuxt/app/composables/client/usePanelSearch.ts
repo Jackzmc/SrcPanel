@@ -48,7 +48,7 @@ export function usePanelSearch(query: Ref<string>) {
           };
 
           if (result.type === "user") {
-            const steamid2 = SteamID.fromIndividualAccountID(result.id).getSteam2RenderedID();
+            const steamid2 = new SteamID(result.id).getSteam2RenderedID();
             results.value[result.id]!.userData = {
               id: steamid2,
               name: result.content,
