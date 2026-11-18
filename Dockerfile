@@ -5,6 +5,7 @@ ENV PATH="$PNPM_HOME:$PATH"
 
 WORKDIR /app
 
+COPY .npmrc ./
 RUN apt-get update && apt-get install -y git
 RUN npm install -g pnpm@12
 COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
