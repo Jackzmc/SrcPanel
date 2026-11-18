@@ -42,7 +42,7 @@ RUN --mount=type=cache,target=/pnpm/store pnpm install --frozen-lockfile --offli
 WORKDIR /app/nuxt
 
 # Use 6GB heap space cuz nuxt be like that ig
-ENV NODE_OPTIONS="--max-old-space-size=12288" 
+ENV NODE_OPTIONS="--max-old-space-size=12288 --expose-gc" 
 RUN pnpm build
 
 ## Final Stage
