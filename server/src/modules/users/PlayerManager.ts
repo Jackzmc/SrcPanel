@@ -102,7 +102,7 @@ export default class PlayerManager implements IShutdown {
         )
         return rows
             .map(row => {
-                const steamid = new SteamID(row.steamid_part)
+                const steamid = new SteamID(`STEAM_0:${row.steamid_part}`)
                 const playerData = formatPlayer(steamid, row)
                 // Side effects but oh well
                 if(!playerData.name) this.enqueueNameResolve(steamid)
@@ -147,7 +147,7 @@ export default class PlayerManager implements IShutdown {
         )
 
         return rows.map(row => {
-            const steamid = new SteamID(row.steamid_part)
+            const steamid = new SteamID(`STEAM_0:${row.steamid_part}`)
             const playerEntry = formatPlayer(steamid, row)
             // Side effects but oh well
             if(!playerEntry.name) this.enqueueNameResolve(steamid)
