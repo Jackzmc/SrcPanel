@@ -83,15 +83,15 @@ export default class PlayerManager implements IShutdown {
     async findPlayers(query: string, limit = 10): Promise<PanelPlayer[]> {
         const [rows] = await this.#db.execute<RowDataPacket[]>(
             `SELECT
-                steamid_slice,
+                steamid_part,
                 last_name,
                 last_country,
                 last_join_time,
                 create_time,
-                (SELECT COUNT(*) FROM notes WHERE SUBSTRING(notes.steamid, 9)) = u.steamid_slice) as notes_count,
-                (SELECT COUNT(*) FROM bans WHERE SUBSTRING(bans.steamid, 9)) = u.steamid_slice) as bans_count,
+                (SELECT COUNT(*) FROM notes WHERE SUBSTRING(notes.steamid, 9)) = u.steamid_part) as notes_count,
+                (SELECT COUNT(*) FROM bans WHERE SUBSTRING(bans.steamid, 9)) = u.steamid_part) as bans_count,
                 (SELECT COUNT(*) FROM ${ADMINS_DB}.sm_admins
-                    WHERE SUBSTRING(${ADMINS_DB}.sm_admins.identity,9) = u.steamid_slice
+                    WHERE SUBSTRING(${ADMINS_DB}.sm_admins.identity,9) = u.steamid_part
                 ) as is_admin
             FROM view_${TABLE_PREFIX}_users u
             WHERE SUBSTRING(steamid, 9) = SUBSTRING(:query, 9) 
@@ -102,7 +102,7 @@ export default class PlayerManager implements IShutdown {
         )
         return rows
             .map(row => {
-                const steamid = new SteamID(row.steamid_slice)
+                const steamid = new SteamID(row.steamid_part)
                 const playerData = formatPlayer(steamid, row)
                 // Side effects but oh well
                 if(!playerData.name) this.enqueueNameResolve(steamid)
@@ -122,7 +122,7 @@ export default class PlayerManager implements IShutdown {
         const offset = (page - 1) * limit
         const [rows] = await this.#db.execute<RowDataPacket[]>(
             `SELECT
-                u.steamid_slice,
+                u.steamid_part,
                 u.last_name as name, 
                 u.last_country as country, 
                 u.create_time as create_time, 
@@ -135,7 +135,7 @@ export default class PlayerManager implements IShutdown {
                     LIMIT 1
                 ) as is_admin
             FROM activity_log l
-            LEFT JOIN view_${TABLE_PREFIX}_user u ON SUBSTRING(client, 9) = u.steamid_slice
+            LEFT JOIN view_${TABLE_PREFIX}_user u ON SUBSTRING(client, 9) = u.steamid_part
             WHERE
                 timestamp >= UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 30 DAY))
                 AND TYPE = 'JOIN'
@@ -147,7 +147,7 @@ export default class PlayerManager implements IShutdown {
         )
 
         return rows.map(row => {
-            const steamid = new SteamID(row.steamid_slice)
+            const steamid = new SteamID(row.steamid_part)
             const playerEntry = formatPlayer(steamid, row)
             // Side effects but oh well
             if(!playerEntry.name) this.enqueueNameResolve(steamid)

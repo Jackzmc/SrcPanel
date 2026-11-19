@@ -49,8 +49,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     const [notes] = await fastify.db.execute<RowDataPacket[]>(
       `SELECT notes.*, u.last_name as user, e.last_name as executor, !b.expired as banned
             FROM notes
-            LEFT JOIN \`${MAIN_DB}\`.view_${TABLE_PREFIX}_user u ON SUBSTRING(notes.steamid, 9)) = u.steamid_slice 
-            LEFT JOIN \`${MAIN_DB}\`.view_${TABLE_PREFIX}_user e ON SUBSTRING(notes.markedBy, 9) = e.steamid_slice
+            LEFT JOIN \`${MAIN_DB}\`.view_${TABLE_PREFIX}_user u ON SUBSTRING(notes.steamid, 9)) = u.steamid_part 
+            LEFT JOIN \`${MAIN_DB}\`.view_${TABLE_PREFIX}_user e ON SUBSTRING(notes.markedBy, 9) = e.steamid_part
             LEFT JOIN bans as b ON notes.steamid = b.steamid
             WHERE notes.steamid = ?
             ORDER BY notes.id DESC`,

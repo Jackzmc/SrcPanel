@@ -32,21 +32,21 @@ export default class PanelPlayer {
         if(!this.#cachedEntry || !cached) {
             const [rows] = await this.#db.execute<RowDataPacket[]>(
                 `SELECT
-                    steamid_slice,
+                    steamid_part,
                     u.last_name as name, 
                     u.last_country as country, 
                     u.last_region as region,
                     u.last_ip as ip,
                     u.create_time as firstJoinDate, 
                     u.last_join_time as lastJoinDate,
-                    (SELECT COUNT(*) FROM notes WHERE SUBSTRING(notes.steamid, 9) = steamid_slice) as notesCount,
-                    (SELECT COUNT(*) FROM bans WHERE SUBSTRING(bans.steamid, 9) = steamid_slice) as bansCount,
+                    (SELECT COUNT(*) FROM notes WHERE SUBSTRING(notes.steamid, 9) = steamid_part) as notesCount,
+                    (SELECT COUNT(*) FROM bans WHERE SUBSTRING(bans.steamid, 9) = steamid_part) as bansCount,
                     (SELECT COUNT(*) FROM \`${ADMINS_DB}\`.sm_admins
-                        WHERE SUBSTRING(\`${ADMINS_DB}\`.sm_admins.identity,9) = steamid_slice
+                        WHERE SUBSTRING(\`${ADMINS_DB}\`.sm_admins.identity,9) = steamid_part
                         LIMIT 1
                     ) as isAdmin
                 FROM view_${TABLE_PREFIX}_user u
-                WHERE steamid_slice = SUBSTRING(?, 9) 
+                WHERE steamid_part = SUBSTRING(?, 9) 
                 LIMIT 1`,
                 [ this.steamid2 ]
             )

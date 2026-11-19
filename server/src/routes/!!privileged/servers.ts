@@ -157,8 +157,8 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
     if (server.activityLogId) {
       const [rows] = await fastify.db.execute<RowDataPacket[]>(`SELECT client, target, type, id, message, timestamp, u1.last_name as clientName, u2.last_name as targetName
         FROM activity_log
-        LEFT JOIN view_${TABLE_PREFIX}_user as u1 ON u1.steamid_slice = SUBSTRING(client, 9)
-        LEFT JOIN view_${TABLE_PREFIX}_user as u2 ON u2.steamid_slice = SUBSTRING(target, 9)
+        LEFT JOIN view_${TABLE_PREFIX}_user as u1 ON u1.steamid_part = SUBSTRING(client, 9)
+        LEFT JOIN view_${TABLE_PREFIX}_user as u2 ON u2.steamid_part = SUBSTRING(target, 9)
         WHERE 
           timestamp >= UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 2 DAY))
           AND server = ?

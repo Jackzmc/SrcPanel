@@ -271,11 +271,11 @@ export default class AuthManager {
         if(!details) throw new Error("Failed to get user details for " + admin.identity)
         try {
             await this.#dbna.execute(
-                "INSERT IGNORE INTO panel_user (steamid_slice, avatar_hash) VALUES (SUBSTRING(?, 9), ?, ?)", 
+                "INSERT IGNORE INTO panel_user (steamid_part, avatar_hash) VALUES (SUBSTRING(?, 9), ?, ?)", 
                 [admin.identity, details[0].avatarhash]
             )
             await this.#dbna.execute(
-                "INSERT INTO panel_user_names (steamid_slice, name, name_update_time) VALUES (SUBSTRING(?, 9), ?, UNIX_TIMESTAMP())", 
+                "INSERT INTO panel_user_names (steamid_part, name, name_update_time) VALUES (SUBSTRING(?, 9), ?, UNIX_TIMESTAMP())", 
                 [admin.identity, details[0].personaname]
             )
         } catch(err: any) {
@@ -597,7 +597,7 @@ export default class AuthManager {
             SELECT a.*, sag.group_id as group_id, u.last_name as resolvedName
             FROM sm_admins a
             LEFT JOIN sm_admins_groups sag on a.id = sag.admin_id
-            LEFT JOIN \`${MAIN_DB}\`.view_${TABLE_PREFIX}_user u ON SUBSTRING(a.identity, 9) = u.steamid_slice 
+            LEFT JOIN \`${MAIN_DB}\`.view_${TABLE_PREFIX}_user u ON SUBSTRING(a.identity, 9) = u.steamid_part 
         `)
         const admins: Record<string, AdminData> = {}
         for(const row of rows) {

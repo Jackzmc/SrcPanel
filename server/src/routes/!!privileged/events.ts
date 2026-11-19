@@ -9,7 +9,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         const [rows] = await fastify.db.query<RowDataPacket[]>(`
             SELECT e.*, u.last_name as creator_name 
             FROM \`${ADMINS_DB}\`.${TABLE_PREFIX}_events e 
-            LEFT JOIN ${MAIN_DB}.view_${TABLE_PREFIX}_user u ON SUBSTRING(e.creator_id, 9) = u.steamid_slice 
+            LEFT JOIN ${MAIN_DB}.view_${TABLE_PREFIX}_user u ON SUBSTRING(e.creator_id, 9) = u.steamid_part 
             ORDER BY created_date desc`, []
         )
         return {
@@ -33,7 +33,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             SELECT e.*, u.last_name as creator_name 
             FROM ${ADMINS_DB}.${TABLE_PREFIX}_events e 
             LEFT JOIN view_${TABLE_PREFIX}_user u 
-                ON SUBSTRING(e.creator_id, 9) = u.steamid_slice
+                ON SUBSTRING(e.creator_id, 9) = u.steamid_part
             WHERE id = ?`, 
             [req.params.id]
         )
@@ -42,7 +42,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
             const [rawWeeks] = await fastify.db.query<RowDataPacket[]>(`
                 SELECT r.steamid, u.last_name as name, week_start, week_end, TO_BASE64(days) as base64 
                 FROM \`${ADMINS_DB}\`.${TABLE_PREFIX}_event_responses r 
-                LEFT JOIN left4dead2.view_${TABLE_PREFIX}_user u ON SUBSTRING(r.steamid, 9)) = u.steamid_slice 
+                LEFT JOIN left4dead2.view_${TABLE_PREFIX}_user u ON SUBSTRING(r.steamid, 9)) = u.steamid_part 
                 WHERE event_id = ?`, 
                 [req.params.id]
             )  

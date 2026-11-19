@@ -44,8 +44,8 @@ export default class UserManager {
     if (!user.steamid2) throw new Error("No account id provided")
     const conn = await this.#db.getConnection()
     await conn.beginTransaction()
-    await conn.query(`INSERT INTO ${TABLE_PREFIX}_user (steamid_slice, avatar_hash) VALUES (SUBSTRING(?,9), ?)`, [ user.steamid2, user.avatarHash ]);
-    await conn.query(`INSERT INTO ${TABLE_PREFIX}_user_names (steamid_slice, name) VALUES (SUBSTRING(?,9), ?)`, [ user.steamid2, user.name ]);
+    await conn.query(`INSERT INTO ${TABLE_PREFIX}_user (steamid_part, avatar_hash) VALUES (SUBSTRING(?,9), ?)`, [ user.steamid2, user.avatarHash ]);
+    await conn.query(`INSERT INTO ${TABLE_PREFIX}_user_names (steamid_part, name) VALUES (SUBSTRING(?,9), ?)`, [ user.steamid2, user.name ]);
     await conn.commit()
     conn.release()
   }
@@ -53,12 +53,12 @@ export default class UserManager {
   async updateUser(user: IUserData) {
     const conn = await this.#db.getConnection()
     await conn.beginTransaction()
-    await conn.query(`UPDATE ${TABLE_PREFIX}_user SET avatar_hash = ? WHERE steamid_slice = SUBSTRING(?,9)`, [ user.avatarHash, user.steamid2 ]);
+    await conn.query(`UPDATE ${TABLE_PREFIX}_user SET avatar_hash = ? WHERE steamid_part = SUBSTRING(?,9)`, [ user.avatarHash, user.steamid2 ]);
     const [rows] = await conn.query<RowDataPacket[]>(`SELECT last_name FROM view_${TABLE_PREFIX}_user WHERE user.steamid2 = SUBSTRING(?,9)`, [ user.steamid2 ])
     if (rows.length > 0) {
       const lastName = rows[0].last_name
       if (lastName != user.name) {
-        await conn.query(`INSERT INTO ${TABLE_PREFIX}_user_names (steamid_slice, name) VALUES (SUBSTRING(?,9), ?)`, [ user.steamid2, user.name ]);
+        await conn.query(`INSERT INTO ${TABLE_PREFIX}_user_names (steamid_part, name) VALUES (SUBSTRING(?,9), ?)`, [ user.steamid2, user.name ]);
       }
     }
     await conn.commit()
@@ -87,7 +87,7 @@ export default class UserManager {
   private async getUserDirect(steamid: string): Promise<IUserData | null> {
     log.trace({ steamid }, 'getUserDirect')
     const [users] = await this.#db.execute<RowDataPacket[]>(
-      `SELECT * FROM view_${TABLE_PREFIX}_user WHERE steamid_slice = SUBSTRING(?, 9) LIMIT 1`,
+      `SELECT * FROM view_${TABLE_PREFIX}_user WHERE steamid_part = SUBSTRING(?, 9) LIMIT 1`,
       [ steamid ]
     )
     const user = users[0]
@@ -170,7 +170,7 @@ export default class UserManager {
    */
   async getUserNameHistory(steamid: string): Promise<UserNameEntry[]> {
     const [rows] = await this.#db.execute<RowDataPacket[]>(
-      `SELECT name, name_update_time FROM ${TABLE_PREFIX}_user_names WHERE steamid_slice = SUBSTRING(?, 9) ORDER BY name_update_time DESC`,
+      `SELECT name, name_update_time FROM ${TABLE_PREFIX}_user_names WHERE steamid_part = SUBSTRING(?, 9) ORDER BY name_update_time DESC`,
       [steamid]
     )
     return rows.map(row => {

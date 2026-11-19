@@ -11,7 +11,7 @@ export interface CreateUserOptions {
 }
 export async function insertUser(db: DBClient, steamid: SteamID, options: CreateUserOptions = {}): Promise<boolean> {
     const [r] = await db.execute<ResultSetHeader>(
-        `INSERT INTO panel_user (steamid_slice, last_join_time, last_ip, last_country, last_region, avatar_hash)
+        `INSERT INTO panel_user (steamid_part, last_join_time, last_ip, last_country, last_region, avatar_hash)
         VALUES (SUBSTRING(?, 9), ?, ?, ?, ?, ?)`,
         [ 
             steamid.getSteam2RenderedID(), 

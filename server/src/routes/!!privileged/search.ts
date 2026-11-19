@@ -16,15 +16,15 @@ const SEARCH_QUERIES = [
     ORDER BY id DESC 
     LIMIT 10`,
     // users
-    `SELECT 'user' type, u.steamid_slice id, u.last_name content 
+    `SELECT 'user' type, u.steamid_part id, u.last_name content 
         FROM view_${TABLE_PREFIX}_user u 
-        WHERE steamid_slice LIKE :query 
+        WHERE steamid_part LIKE :query 
             OR last_name LIKE :query 
         LIMIT 10`,
     // notes
     `SELECT 'note' type, notes.id, notes.content content 
     FROM notes JOIN view_${TABLE_PREFIX}_user u 
-        ON u.steamid_slice = SUBSTRING(notes.steamid,9) 
+        ON u.steamid_part = SUBSTRING(notes.steamid,9) 
     WHERE notes.steamid LIKE :query 
         OR notes.markedBy LIKE :query 
         OR u.last_name LIKE :query 
@@ -36,9 +36,9 @@ const SEARCH_QUERIES = [
     `SELECT 'ban' type, bans.id, bans.reason content 
         FROM bans     
     JOIN view_${TABLE_PREFIX}_user u1 
-        ON u1.steamid_slice = SUBSTRING(bans.steamid,9) 
+        ON u1.steamid_part = SUBSTRING(bans.steamid,9) 
     JOIN view_${TABLE_PREFIX}_user u2 
-        ON u2.steamid_slice = SUBSTRING(bans.executor,9)       
+        ON u2.steamid_part = SUBSTRING(bans.executor,9)       
     WHERE u1.last_name LIKE :query 
         OR u2.last_name LIKE :query          
         OR bans.steamid LIKE :query 
@@ -74,20 +74,20 @@ const SEARCH_DETAIL_QUERY_MAP: Record<SearchType, string> = {
     activity_log: `SELECT l.*, u1.last_name client_name, u2.last_name target_name 
         FROM activity_log l 
         LEFT JOIN view_${TABLE_PREFIX}_user u1 
-            ON u1.steamid_slice = SUBSTRING(l.client, 9) 
+            ON u1.steamid_part = SUBSTRING(l.client, 9) 
         LEFT JOIN view_${TABLE_PREFIX}_user u2 
-            ON u2.steamid_slice = SUBSTRING(l.target, 9)  
+            ON u2.steamid_part = SUBSTRING(l.target, 9)  
         WHERE id = ? 
         LIMIT 1`,
     user: `SELECT * 
         FROM view_${TABLE_PREFIX}_user 
-        WHERE steamid_slice = SUBSTRING(?,9)
+        WHERE steamid_part = SUBSTRING(?,9)
         LIMIT 1`,
     note: `SELECT notes.*, u1.last_name client_name, u2.last_name markedBy_name 
         FROM notes JOIN view_${TABLE_PREFIX}_user u1 
-            ON u1.steamid_slice = SUBSTRING(notes.steamid, 9)) 
+            ON u1.steamid_part = SUBSTRING(notes.steamid, 9)) 
         JOIN view_${TABLE_PREFIX}_user u2 
-            ON u2.steamid_slice = SUBSTRING(notes.steamid, 9)) 
+            ON u2.steamid_part = SUBSTRING(notes.steamid, 9)) 
         WHERE id = ? 
         LIMIT 1`,
     ban: `SELECT * FROM bans 
