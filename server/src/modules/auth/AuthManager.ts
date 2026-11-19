@@ -270,10 +270,16 @@ export default class AuthManager {
         const details = await this.steam.getUserDetails([new SteamID(admin.identity)])
         if(!details) throw new Error("Failed to get user details for " + admin.identity)
         try {
-            await this.#dbna.execute("INSERT IGNORE INTO panel_user (account_id, avatar_hash) VALUES (?, ?, ?)", [admin.identity.slice(10), details[0].avatarhash])
-            await this.#dbna.execute("INSERT INTO panel_user_names (account_id, name, name_update_time) VALUES (?, ?, UNIX_TIMESTAMP())", [admin.identity.slice(10), details[0].personaname])
+            await this.#dbna.execute(
+                "INSERT IGNORE INTO panel_user (steamid_slice, avatar_hash) VALUES (SUBSTRING(?, 9), ?, ?)", 
+                [admin.identity, details[0].avatarhash]
+            )
+            await this.#dbna.execute(
+                "INSERT INTO panel_user_names (steamid_slice, name, name_update_time) VALUES (SUBSTRING(?, 9), ?, UNIX_TIMESTAMP())", 
+                [admin.identity, details[0].personaname]
+            )
         } catch(err: any) {
-            log.warn(`Could not insert admin resolved name (${admin.identity.slice(10)}, name ${details[0].personaname}):`, err.sqlMessage)
+            log.warn(`Could not insert admin resolved name (${admin.identity}, name ${details[0].personaname}):`, err.sqlMessage)
         }
 
         const conn = await this.#db.getConnection()
@@ -344,7 +350,7 @@ export default class AuthManager {
      */
     public async getAPIKeyForUser(steamid: string): Promise<APIKey|null> {
         const [rows] = await this.#db.execute<RowDataPacket[]>(
-            `SELECT * FROM ${TABLE_PREFIX}_apikeys WHERE SUBSTRING(steamid, 9) = SUBSTRING(?, 11)`,
+            `SELECT * FROM ${TABLE_PREFIX}_apikeys WHERE SUBSTRING(steamid, 9) = SUBSTRING(?, 9)`,
             [ steamid ]
         )
         return rows.length > 0 ? {
@@ -365,7 +371,7 @@ export default class AuthManager {
         const conn = await this.#db.getConnection()
         await conn.beginTransaction()
         await conn.execute<ResultSetHeader>(
-            `DELETE FROM ${TABLE_PREFIX}_apikeys WHERE SUBSTRING(steamid, 9) = SUBSTRING(?, 11)`,
+            `DELETE FROM ${TABLE_PREFIX}_apikeys WHERE SUBSTRING(steamid, 9) = SUBSTRING(?, 9)`,
             [ steamid ]
         )
 
@@ -395,7 +401,7 @@ export default class AuthManager {
      */
     public async getNotifications(steamid2: string): Promise<UserNotification[]> {
         const [rows] = await this.#db.execute<RowDataPacket[]>(
-            `SELECT * FROM ${TABLE_PREFIX}_user_notifications WHERE SUBSTRING(steamid, 9) = SUBSTRING(?, 11)`, 
+            `SELECT * FROM ${TABLE_PREFIX}_user_notifications WHERE SUBSTRING(steamid, 9) = SUBSTRING(?, 9)`, 
             [steamid2]
         )
         return rows.map(row => {
@@ -507,7 +513,7 @@ export default class AuthManager {
      */
     public async clearNotifications(steamid2: string) {
         await this.#db.execute(
-            `DELETE FROM ${TABLE_PREFIX}_user_notifications WHERE SUBSTRING(steamid, 9) = SUBSTRING(?, 11)`,
+            `DELETE FROM ${TABLE_PREFIX}_user_notifications WHERE SUBSTRING(steamid, 9) = SUBSTRING(?, 9)`,
             [ steamid2 ]
         )
     }
@@ -591,7 +597,7 @@ export default class AuthManager {
             SELECT a.*, sag.group_id as group_id, u.last_name as resolvedName
             FROM sm_admins a
             LEFT JOIN sm_admins_groups sag on a.id = sag.admin_id
-            LEFT JOIN \`${MAIN_DB}\`.view_${TABLE_PREFIX}_user u ON SUBSTRING(a.identity, 11) = u.account_id 
+            LEFT JOIN \`${MAIN_DB}\`.view_${TABLE_PREFIX}_user u ON SUBSTRING(a.identity, 9) = u.steamid_slice 
         `)
         const admins: Record<string, AdminData> = {}
         for(const row of rows) {
@@ -691,7 +697,7 @@ export default class AuthManager {
                 CAST(JSON_UNQUOTE(JSON_EXTRACT(data, '$.loginTime')) AS UNSIGNED) as loginTime, 
                 CAST((JSON_EXTRACT(data, '$.lastActive')) AS UNSIGNED) as lastActive
             FROM ${TABLE_PREFIX}_sessions 
-            WHERE SUBSTRING(JSON_UNQUOTE(JSON_EXTRACT(data, '$.user.steamid')), 11) = SUBSTRING(?, 11)`,
+            WHERE SUBSTRING(JSON_UNQUOTE(JSON_EXTRACT(data, '$.user.steamid')), 9) = SUBSTRING(?, 9)`,
             [steamid]
         )
         return sessions as SessionData[]
@@ -707,7 +713,7 @@ export default class AuthManager {
         const [providers] = await this.#db.query<RowDataPacket[]>(
             `SELECT provider, provider_id, username, avatar_url 
             FROM ${TABLE_PREFIX}_providers 
-            WHERE SUBSTRING(steamid, 9) = SUBSTRING(?, 11)`,
+            WHERE SUBSTRING(steamid, 9) = SUBSTRING(?, 9)`,
             [ steamid ]
         )
         const result: UserOauthProviders = {}
@@ -735,12 +741,15 @@ export default class AuthManager {
         if(providerData === null) {
             // TOOD: also revoke token
             return await this.#db.query<ResultSetHeader>(
-                "DELETE FROM ${TABLE_PREFIX}_providers WHERE SUBSTRING(steamid, 9) = SUBSTRING(?, 11) AND provider = ?",
+                `DELETE FROM ${TABLE_PREFIX}_providers 
+                WHERE SUBSTRING(steamid, 9) = SUBSTRING(?, 9) 
+                    AND provider = ?`,
                 [ steamid, providerName ]
             )
         } else {
             return await this.#db.query<ResultSetHeader>(
-                `INSERT INTO ${TABLE_PREFIX}_providers (steamid, provider, provider_id, username, avatar_url) VALUES (?, ?, ?, ?, ?) 
+                `INSERT INTO ${TABLE_PREFIX}_providers (steamid, provider, provider_id, username, avatar_url) 
+                    VALUES (?, ?, ?, ?, ?) 
                     ON DUPLICATE KEY UPDATE username = ?, avatar_url = ?`,
                 [ steamid, providerName, providerData.id, providerData.username, providerData.avatarUrl, providerData.username, providerData.avatarUrl ]
             )
@@ -780,7 +789,7 @@ export default class AuthManager {
             `SELECT 
                 refresh_token, refresh_token_expired, access_token, access_token_expires 
             FROM ${TABLE_PREFIX}_providers 
-            WHERE SUBSTRING(steamid, 9) = SUBSTRING(?, 11) 
+            WHERE SUBSTRING(steamid, 9) = SUBSTRING(?, 9) 
             AND provider = ?`,
             [ steamid, providerName ]
         )
@@ -797,7 +806,7 @@ export default class AuthManager {
         return await this.#db.query<ResultSetHeader>(
             `UPDATE ${TABLE_PREFIX}_providers 
             SET refresh_token = ?, refresh_token_expired = ?, access_token = ?, access_token_expires = ? 
-            WHERE SUBSTRING(steamid, 9) = SUBSTRING(?, 11) 
+            WHERE SUBSTRING(steamid, 9) = SUBSTRING(?, 9) 
                 AND provider = ?`,
             [ providerData.refreshToken, providerData.refreshTokenExpired, providerData.accessToken, providerData.accessTokenExpires, steamid, providerName ]
         )

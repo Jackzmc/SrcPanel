@@ -9,7 +9,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         const [rows] = await fastify.db.query<RowDataPacket[]>(`
             SELECT e.*, u.last_name as creator_name 
             FROM \`${ADMINS_DB}\`.${TABLE_PREFIX}_events e 
-            LEFT JOIN ${MAIN_DB}.view_${TABLE_PREFIX}_user u ON SUBSTRING(e.creator_id, 11) = u.account_id 
+            LEFT JOIN ${MAIN_DB}.view_${TABLE_PREFIX}_user u ON SUBSTRING(e.creator_id, 9) = u.steamid_slice 
             ORDER BY created_date desc`, []
         )
         return {
@@ -29,13 +29,20 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
         }
     })
     fastify.get('/:id', async(req: FastifyRequest<{Params: {id: string}}>, reply): Promise<APIEventDetailed<string>> => {
-        const [rows] = await fastify.db.query<RowDataPacket[]>("SELECT e.*, u.last_name as creator_name FROM `${ADMINS_DB}`.${TABLE_PREFIX}_events e LEFT JOIN `left4dead2`.view_${TABLE_PREFIX}_user u ON SUBSTRING(e.creator_id, 11) = u.account_id WHERE id = ?", [req.params.id])
+        const [rows] = await fastify.db.query<RowDataPacket[]>(`
+            SELECT e.*, u.last_name as creator_name 
+            FROM ${ADMINS_DB}.${TABLE_PREFIX}_events e 
+            LEFT JOIN view_${TABLE_PREFIX}_user u 
+                ON SUBSTRING(e.creator_id, 9) = u.steamid_slice
+            WHERE id = ?`, 
+            [req.params.id]
+        )
         if(rows.length > 0) {
             const row = rows[0]
             const [rawWeeks] = await fastify.db.query<RowDataPacket[]>(`
                 SELECT r.steamid, u.last_name as name, week_start, week_end, TO_BASE64(days) as base64 
                 FROM \`${ADMINS_DB}\`.${TABLE_PREFIX}_event_responses r 
-                LEFT JOIN \`left4dead2\`.view_${TABLE_PREFIX}_user u ON SUBSTRING(r.steamid, 9)) = u.account_id 
+                LEFT JOIN left4dead2.view_${TABLE_PREFIX}_user u ON SUBSTRING(r.steamid, 9)) = u.steamid_slice 
                 WHERE event_id = ?`, 
                 [req.params.id]
             )  

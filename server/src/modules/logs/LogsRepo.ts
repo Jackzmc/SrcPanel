@@ -31,8 +31,8 @@ export async function fetchLogs(db: DBClient, type: "before" | "after" | "around
         .selectMultiple("id", "l.timestamp", "server", "type", "client", "target", "message", "metadata")
         .select("s1.last_name", "clientName")
         .select("s2.last_name", "targetName")
-        .leftJoin(`view_${TABLE_PREFIX}_user`, "account_id", "=", "SUBSTRING(client, 11)", "s1", true)
-        .leftJoin(`view_${TABLE_PREFIX}_user`, "account_id", "=", "SUBSTRING(target, 11)", "s2", true)
+        .leftJoin(`view_${TABLE_PREFIX}_user`, "steamid_slice", "=", "SUBSTRING(client, 9)", "s1", true)
+        .leftJoin(`view_${TABLE_PREFIX}_user`, "steamid_slice", "=", "SUBSTRING(target, 9)", "s2", true)
         .limit(limit)
         .sort('id', SortDirection.Descending)
 
@@ -163,8 +163,8 @@ export async function getLogEntry(db: DBClient, id: number): Promise<LogEntry | 
             s1.last_name clientName, 
             s2.last_name targetName
         FROM ${ACTIVITY_LOG_TABLE_NAME} 
-        LEFT JOIN view_${TABLE_PREFIX}_user s1 ON s1.account_id = SUBSTRING(client, 11)
-        LEFT JOIN view_${TABLE_PREFIX}_user s2 ON s2.account_id = SUBSTRING(target, 11)
+        LEFT JOIN view_${TABLE_PREFIX}_user s1 ON s1.steamid_slice = SUBSTRING(client, 9)
+        LEFT JOIN view_${TABLE_PREFIX}_user s2 ON s2.steamid_slice = SUBSTRING(target, 9)
         WHERE id = ?
         LIMIT 1`, 
         [ id ]

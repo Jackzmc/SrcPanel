@@ -20,8 +20,8 @@ export async function getBan(db: DBClient, banId: number): Promise<APIBan | null
             b.executor,
             u2.last_name as executor_name
         FROM bans b
-        LEFT JOIN view_${TABLE_PREFIX}_user ON u1 u1.account_id = SUBSTRING(steamid, 9)
-        LEFT JOIN view_${TABLE_PREFIX}_user u2 ON u2.account_id = SUBSTRING(executor, 11)
+        LEFT JOIN view_${TABLE_PREFIX}_user ON u1 u1.steamid_slice = SUBSTRING(steamid, 9)
+        LEFT JOIN view_${TABLE_PREFIX}_user u2 ON u2.steamid_slice = SUBSTRING(executor, 9)
         WHERE id = ? 
         LIMIT 1`,
         [ banId ]
@@ -47,8 +47,8 @@ export async function getBansForUser(db: DBClient, steamid: string, activeOnly =
             b.executor,
             u2.last_name as executor_name
         FROM bans b
-        LEFT JOIN view_${TABLE_PREFIX}_user ON u1 u1.account_id = SUBSTRING(steamid, 9)
-        LEFT JOIN view_${TABLE_PREFIX}_user u2 ON u2.account_id = SUBSTRING(executor, 11)
+        LEFT JOIN view_${TABLE_PREFIX}_user ON u1 u1.steamid_slice = SUBSTRING(steamid, 9)
+        LEFT JOIN view_${TABLE_PREFIX}_user u2 ON u2.steamid_slice = SUBSTRING(executor, 9)
         WHERE steamid = ?
         ${activeOnly ? `AND ~flags & ${APIBanFlags.Suspended}` : ''}
         `,
@@ -83,8 +83,8 @@ export async function getBans(db: DBClient, options: GetBanOptions): Promise<Lis
             b.executor,
             u2.last_name as executor_name
         FROM bans b
-        LEFT JOIN view_${TABLE_PREFIX}_user u1 ON u1.account_id = SUBSTRING(steamid, 9)
-        LEFT JOIN view_${TABLE_PREFIX}_user u2 ON u2.account_id = SUBSTRING(executor, 11)
+        LEFT JOIN view_${TABLE_PREFIX}_user u1 ON u1.steamid_slice = SUBSTRING(steamid, 9)
+        LEFT JOIN view_${TABLE_PREFIX}_user u2 ON u2.steamid_slice = SUBSTRING(executor, 9)
         WHERE 1=1
         ${options.activeOnly ? `AND ~b.flags & ${APIBanFlags.Suspended}` : ''}
         ${options.expiredOnly ? 'AND b.expired = 0' : ''}
@@ -135,7 +135,7 @@ export async function getAppealsForUser(db: DBClient, steamid: string): Promise<
             bans.steamid
         FROM ban_appeals 
         LEFT JOIN bans ON ban_appeals.ban_id = bans.id
-        WHERE bans.steamid = SUBSTRING(?, 11)`,
+        WHERE bans.steamid = SUBSTRING(?, 9)`,
         [ steamid ]
     )
     return rows.map(formatAppeal)

@@ -27,7 +27,7 @@ export async function getDiscussions(db: DBClient, archived = false): Promise<AP
                 SELECT COUNT(*) FROM \`${ADMINS_DB}\`.${TABLE_PREFIX}_discussion_comments WHERE discussion_id = d.id
             ) as comments_count 
         FROM \`${ADMINS_DB}\`.${TABLE_PREFIX}_discussions d 
-        LEFT JOIN \`${MAIN_DB}\`.view_${TABLE_PREFIX}_user u ON SUBSTRING(d.creator, 11) = u.account_id 
+        LEFT JOIN \`${MAIN_DB}\`.view_${TABLE_PREFIX}_user u ON SUBSTRING(d.creator, 9) = u.steamid_slice 
         WHERE d.flags & ${APIDiscussionFlags.Archived} = ${archived ? APIDiscussionFlags.Archived : 0} 
         ORDER BY d.timestamp DESC`
     )
@@ -50,7 +50,7 @@ export async function getDiscussion(db: DBClient, id: number): Promise<APIDiscus
                 SELECT COUNT(*) FROM \`${ADMINS_DB}\`.${TABLE_PREFIX}_discussion_comments WHERE discussion_id = d.id
             ) as comments_count 
         FROM \`${ADMINS_DB}\`.${TABLE_PREFIX}_discussions d 
-        LEFT JOIN \`${MAIN_DB}\`.view_${TABLE_PREFIX}_user u ON SUBSTRING(d.creator, 11) = u.account_id 
+        LEFT JOIN \`${MAIN_DB}\`.view_${TABLE_PREFIX}_user u ON SUBSTRING(d.creator, 9) = u.steamid_slice
         WHERE d.flags & ${APIDiscussionFlags.Archived} = 0 AND d.id = ?
         ORDER BY d.timestamp DESC`,
         [ id ]
@@ -68,7 +68,7 @@ export async function getSubmissions(db: DBClient, discussionId: number): Promis
             res.choice_id, 
             opt.label
         FROM \`${ADMINS_DB}\`.${TABLE_PREFIX}_discussion_responses res 
-        LEFT JOIN \`${MAIN_DB}\`.view_${TABLE_PREFIX}_user u ON SUBSTRING(res.steamid, 9)) = u.account_id 
+        LEFT JOIN \`${MAIN_DB}\`.view_${TABLE_PREFIX}_user u ON SUBSTRING(res.steamid, 9)) = u.steamid_slice
         LEFT JOIN \`${ADMINS_DB}\`.${TABLE_PREFIX}_discussion_options opt ON opt.id = res.choice_id
         WHERE res.discussion_id = ?`, 
         [ discussionId ]
@@ -96,7 +96,7 @@ export async function getUserSubmissions(db: DBClient, discussionId: number, use
             opt.label
         FROM \`${ADMINS_DB}\`.${TABLE_PREFIX}_discussion_responses res 
         LEFT JOIN \`${ADMINS_DB}\`.${TABLE_PREFIX}_discussion_options opt ON opt.id = res.choice_id
-        WHERE res.discussion_id = ? AND SUBSTRING(res.steamid, 9)) = SUBSTRING(?, 11)`, 
+        WHERE res.discussion_id = ? AND SUBSTRING(res.steamid, 9)) = SUBSTRING(?, 9)`, 
         [ discussionId, userSteamid ]
     )
     return responses.map(row => {
@@ -198,7 +198,7 @@ export async function getComments(db: DBClient, discussionId: number, withCreato
         ? `, com.creator, u.last_name as creator_name`
         : ''
     const joinStatement = withCreator 
-        ? ` LEFT JOIN ${MAIN_DB}.view_${TABLE_PREFIX}_user u ON SUBSTRING(com.creator, 11) = u.account_id`
+        ? ` LEFT JOIN ${MAIN_DB}.view_${TABLE_PREFIX}_user u ON SUBSTRING(com.creator, 9) = u.steamid_slice`
         : ''
     const [rows] = await db.execute<RowDataPacket[]>(`
       SELECT com.id, com.timestamp, com.content${selectName}

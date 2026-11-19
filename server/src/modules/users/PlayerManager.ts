@@ -83,18 +83,18 @@ export default class PlayerManager implements IShutdown {
     async findPlayers(query: string, limit = 10): Promise<PanelPlayer[]> {
         const [rows] = await this.#db.execute<RowDataPacket[]>(
             `SELECT
-                account_id,
+                steamid_slice,
                 last_name,
                 last_country,
                 last_join_time,
                 create_time,
-                (SELECT COUNT(*) FROM notes WHERE SUBSTRING(notes.steamid, 9)) = u.account_id) as notes_count,
-                (SELECT COUNT(*) FROM bans WHERE SUBSTRING(bans.steamid, 9)) = u.account_id) as bans_count,
+                (SELECT COUNT(*) FROM notes WHERE SUBSTRING(notes.steamid, 9)) = u.steamid_slice) as notes_count,
+                (SELECT COUNT(*) FROM bans WHERE SUBSTRING(bans.steamid, 9)) = u.steamid_slice) as bans_count,
                 (SELECT COUNT(*) FROM ${ADMINS_DB}.sm_admins
-                    WHERE SUBSTRING(${ADMINS_DB}.sm_admins.identity,11) = u.account_id
+                    WHERE SUBSTRING(${ADMINS_DB}.sm_admins.identity,9) = u.steamid_slice
                 ) as is_admin
             FROM view_${TABLE_PREFIX}_users u
-            WHERE SUBSTRING(steamid, 9) = SUBSTRING(:query, 11) 
+            WHERE SUBSTRING(steamid, 9) = SUBSTRING(:query, 9) 
                 OR last_name LIKE CONCAT('%', :query, '%')
             ORDER BY last_join_time DESC
             LIMIT :limit`,
@@ -102,7 +102,7 @@ export default class PlayerManager implements IShutdown {
         )
         return rows
             .map(row => {
-                const steamid = new SteamID(row.account_id)
+                const steamid = new SteamID(row.steamid_slice)
                 const playerData = formatPlayer(steamid, row)
                 // Side effects but oh well
                 if(!playerData.name) this.enqueueNameResolve(steamid)
@@ -122,7 +122,7 @@ export default class PlayerManager implements IShutdown {
         const offset = (page - 1) * limit
         const [rows] = await this.#db.execute<RowDataPacket[]>(
             `SELECT
-                u.account_id as account_id,
+                u.steamid_slice,
                 u.last_name as name, 
                 u.last_country as country, 
                 u.create_time as create_time, 
@@ -131,11 +131,11 @@ export default class PlayerManager implements IShutdown {
                 (SELECT COUNT(*) FROM notes WHERE notes.steamid = client) as notes_count,
                 (SELECT COUNT(*) FROM bans WHERE bans.steamid = client) as bans_count,
                 (SELECT COUNT(*) FROM \`${ADMINS_DB}\`.sm_admins
-                    WHERE SUBSTRING(\`${ADMINS_DB}\`.sm_admins.identity,11) = SUBSTRING(client, 11)
+                    WHERE SUBSTRING(\`${ADMINS_DB}\`.sm_admins.identity,9) = SUBSTRING(client, 9)
                     LIMIT 1
                 ) as is_admin
             FROM activity_log l
-            LEFT JOIN view_${TABLE_PREFIX}_user u ON SUBSTRING(client, 11) = u.account_id
+            LEFT JOIN view_${TABLE_PREFIX}_user u ON SUBSTRING(client, 9) = u.steamid_slice
             WHERE
                 timestamp >= UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 30 DAY))
                 AND TYPE = 'JOIN'
@@ -147,7 +147,7 @@ export default class PlayerManager implements IShutdown {
         )
 
         return rows.map(row => {
-            const steamid = new SteamID(row.account_id)
+            const steamid = new SteamID(row.steamid_slice)
             const playerEntry = formatPlayer(steamid, row)
             // Side effects but oh well
             if(!playerEntry.name) this.enqueueNameResolve(steamid)
