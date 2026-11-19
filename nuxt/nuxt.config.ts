@@ -60,7 +60,7 @@ export default defineNuxtConfig({
 
   nitro: {
     prerender: {
-      concurrency: 2
+      concurrency: 1
     },
     routeRules: {
       "/api/_nuxt_icon/**": {},
