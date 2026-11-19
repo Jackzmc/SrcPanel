@@ -270,7 +270,11 @@ await app.register(MiddleManager, core)
               app.register(async (fastify: FastifyInstance, opts: FastifyPluginOptions) => {
                 // Add auth check to !! folder routes
                 fastify.addHook('preHandler', async (req, reply) => {
-                  await fastify.authmngr.verify(req, reply)
+                  if(process.env.DANGER_IGNORE_AUTH != "1") {
+                    await fastify.authmngr.verify(req, reply)
+                  } else {
+                    req.log.warn({}, "ignoring auth for request")
+                  }
                 })
                 await loadRoutes(prefix, path.join(folderPath, dirent.name))
               })

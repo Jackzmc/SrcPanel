@@ -84,17 +84,18 @@ export default class PlayerManager implements IShutdown {
         const [rows] = await this.#db.execute<RowDataPacket[]>(
             `SELECT
                 steamid_part,
-                last_name,
-                last_country,
-                last_join_time,
-                create_time,
-                (SELECT COUNT(*) FROM notes WHERE SUBSTRING(notes.steamid, 9)) = u.steamid_part) as notes_count,
-                (SELECT COUNT(*) FROM bans WHERE SUBSTRING(bans.steamid, 9)) = u.steamid_part) as bans_count,
+                last_name as name,
+                last_country as country,
+                last_region as region,
+                create_time as create_time,
+                last_join_time as last_join_time,
+                (SELECT COUNT(*) FROM notes WHERE SUBSTRING(notes.steamid, 9) = u.steamid_part) as notes_count,
+                (SELECT COUNT(*) FROM bans WHERE SUBSTRING(bans.steamid, 9) = u.steamid_part) as bans_count,
                 (SELECT COUNT(*) FROM ${ADMINS_DB}.sm_admins
                     WHERE SUBSTRING(${ADMINS_DB}.sm_admins.identity,9) = u.steamid_part
                 ) as is_admin
-            FROM view_${TABLE_PREFIX}_users u
-            WHERE SUBSTRING(steamid, 9) = SUBSTRING(:query, 9) 
+            FROM view_${TABLE_PREFIX}_user u
+            WHERE steamid_part = SUBSTRING(:query, 9) 
                 OR last_name LIKE CONCAT('%', :query, '%')
             ORDER BY last_join_time DESC
             LIMIT :limit`,
@@ -122,9 +123,10 @@ export default class PlayerManager implements IShutdown {
         const offset = (page - 1) * limit
         const [rows] = await this.#db.execute<RowDataPacket[]>(
             `SELECT
-                u.steamid_part,
+                l.client,
                 u.last_name as name, 
                 u.last_country as country, 
+                last_region as region,
                 u.create_time as create_time, 
                 u.last_join_time as last_join_time,
                 server,
@@ -140,14 +142,14 @@ export default class PlayerManager implements IShutdown {
                 timestamp >= UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 30 DAY))
                 AND TYPE = 'JOIN'
                 AND server = IFNULL(?,server) 
-                AND client != ? AND ISNULL(target)
+                AND SUBSTRING(client,9) != SUBSTRING(IFNULL(?, ''), 9) AND ISNULL(target)
             ORDER BY l.timestamp DESC
             LIMIT ?,?`,
             [options.server || null, options.ignoreSteamID || null, offset, limit]
         )
 
         return rows.map(row => {
-            const steamid = new SteamID(`STEAM_0:${row.steamid_part}`)
+            const steamid = new SteamID(row.client)
             const playerEntry = formatPlayer(steamid, row)
             // Side effects but oh well
             if(!playerEntry.name) this.enqueueNameResolve(steamid)
