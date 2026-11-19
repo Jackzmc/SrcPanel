@@ -7,6 +7,7 @@ import { AnalysisData } from '@srcpanel/common/User';
 import path from 'path';
 import readline from 'readline';
 import { MAIN_DB, TABLE_PREFIX } from '../../core/database.js';
+import { getPanelBranchVersion, getPanelVersion } from '../../util/version.js';
 
 async function loadSentiments(configFolder: string) {
   try {
@@ -113,6 +114,7 @@ export default async function routes(fastify: FastifyInstance, opts: FastifyPlug
       uptime: process.uptime(),
       pid: process.pid,
       versions: {
+        srcpanel: await getPanelBranchVersion(),
         fastify: fastify.version,
         node: process.versions.node,
       },
