@@ -240,10 +240,9 @@ public Action OnClientSayCommand(int client, const char[] command, const char[] 
 		if(StrEqual(sArgs, "cancel", false)) {
 			PrintToChat(client, "Note cancelled.");
 		} else {
-			char buffer[128];
+			char buffer[32];
 			GetClientAuthId(client, AuthId_Steam2, buffer, sizeof(buffer));
-			DB.Format(g_queryCache, sizeof(g_queryCache), "INSERT INTO notes (steamid, markedBy, content) VALUES ('%s', '%s', '%s')", menuNoteTarget, buffer, sArgs);
-			DB.Query(DB_AddNote, g_queryCache);
+			AddNoteIdentity(buffer, menuNoteTarget, sArgs);
 			LogAction(client, -1, "\"%L\" added note for \"%s\" (%s): \"%s\"", client, menuNoteTargetName, menuNoteTarget, sArgs);
 			Format(buffer, sizeof(buffer), "%N: ", client);
 			CShowActivity2(client, "[Notes] ", "added a note for {green}%s: {default}\"%s\"", menuNoteTargetName, sArgs);
@@ -304,8 +303,7 @@ public Action Command_AddNote(int client, int args) {
 		char authMarker[32];
 		if(client > 0)
 			GetClientAuthId(client, AuthId_Steam2, authMarker, sizeof(authMarker));
-		DB.Format(g_queryCache, sizeof(g_queryCache), "INSERT INTO `notes` (steamid, markedBy, content) VALUES ('%s', '%s', '%s')", auth, authMarker, reason);
-		DB.Query(DB_AddNote, g_queryCache);
+		AddNoteIdentity(auth, authMarker, reason);
 		LogAction(client, target_list[0], "\"%L\" added note for \"%L\": \"%s\"", client, target_list[0], reason);
 		CShowActivity(client, "added a note for {green}%N: {default}\"%s\"", target_list[0], reason);
 	}
@@ -351,10 +349,10 @@ public Action Command_ListNotes(int client, int args) {
 
 void FormatSelectQuery(Database db, char[] query, int maxlen, const char[] auth) {
 	db.Format(query, maxlen, 
-		"SELECT notes.content, u.last_name as last_alias, markedBy"...
+		"SELECT notes.content, u.last_name as last_alias, markedBy "...
 		"FROM notes "...
 		"JOIN view_panel_user u ON SUBSTRING(markedBy, 9) = u.steamid_part " ...
-		"WHERE SUBSTRING(notes.steamid, 9) = SUBSTRING('%s',9)"...
+		"WHERE SUBSTRING(notes.steamid, 9) = SUBSTRING('%s',9) "...
 		"ORDER BY id DESC", 
 		auth
 	);
@@ -433,7 +431,7 @@ public void DB_FindNotes(Database db, DBResultSet results, const char[] error, a
 			DBResult result;
 			results.FetchString(0, reason, sizeof(reason));
 			results.FetchString(1, noteCreator, sizeof(noteCreator), result);
-			if(result == DBVal_Null) {
+			if(result == DBVal_Null || noteCreator[0] == '\0') {
 				// No name for admin, get the raw id:
 				results.FetchString(2, noteCreator, sizeof(noteCreator), result);
 			}
@@ -589,8 +587,13 @@ public void DB_ListNotesForPlayer(Database db, DBResultSet results, const char[]
 			CPrintToChat(client, "{green}> Notes for %s:", auth);
 			char noteCreator[32];
 			while(results.FetchRow()) {
+				DBResult result;
 				results.FetchString(0, reason, sizeof(reason));
-				results.FetchString(1, noteCreator, sizeof(noteCreator));
+				results.FetchString(1, noteCreator, sizeof(noteCreator), result);
+				if(result == DBVal_Null || noteCreator[0] == '\0') {
+					// No name for admin, get the raw id:
+					results.FetchString(2, noteCreator, sizeof(noteCreator), result);
+				}
 				CPrintToChat(client, "  {olive}%s: {default}%s", noteCreator, reason);
 			}
 			

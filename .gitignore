@@ -12,3 +12,4 @@ deploy.sh
 http-docs
 test-compose/
 compose/
+.vscode/sftp.json
